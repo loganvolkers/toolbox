@@ -500,12 +500,25 @@ synchronization**, not LLM tool calls.
   - (3) **Push**: the connector runs anywhere (CI, cron, inside a vendor's product) and POSTs the same
     messages to `POST /v1/tcp/ingest`.
 - **Capabilities**, negotiated at `initialize`; a connector implements any subset:
-  - `source`: emits fragments, relations, facts and docs.
-    - Endpoints: `spec`, `check`, `discover`, `read(state) → stream of FRAGMENT | RELATION | FACT |
-      DOC | DELETE | STATE | SNAPSHOT_COMPLETE | LOG`, `webhook(event)`.
+  - `source`: emits raw records (preferred) or pre-mapped fragments, plus relations, facts and docs.
+    - Endpoints: `spec`, `check` (returns a per-kind permission verdict), `discover` (record kinds,
+      each with a selector JSON Schema), `read(state, selectors) → stream of RECORD | FRAGMENT |
+      RELATION | FACT | DOC | DELETE | STATE | SNAPSHOT_COMPLETE | LOG | ERROR`, `webhook(event)`.
+    - **Raw records + engine-side mapping** (lesson from Port Ocean, see [ocean.md](./ocean.md)).
+      Connectors emit `RECORD {kind, data}` without knowing the customer's model. The portal program
+      maps records to entities with CEL (`where`, `explode`, `rel.lookup`), and connector packages
+      ship overridable `defaults()`. The engine keeps a bounded raw-record store, so a mapping change
+      re-maps without re-fetching, and `toolbox plan` can preview it.
+    - **Engine-side reconciliation:**
+      - No `SNAPSHOT_COMPLETE` or any `ERROR` in a full sync means no deletes for that kind.
+      - A mass-deletion threshold applies, and deletes can be turned off per kind.
+      - Unresolved relation lookups become flagged placeholder entities.
   - `evaluate`: batched rule or transform functions, e.g. `POST /evaluate {rule, entities[≤1000]} →
     outcomes[]`.
-  - `act`: an action executor with `dry_run`, `run` and status callbacks.
+  - `act`: an action executor with `dry_run`, `run` and status callbacks. Standard fields are a
+    `partition_key` (serialize runs per resource), `rate_limit` hints, async completion via webhook, and
+    `identity: service | user` (on-behalf-of tokens, so an agent acting for Alice opens the PR as
+    Alice).
   - `resolve`: on-demand lookups, e.g. live deploy status for an entity page. These are cached and never
     called on the ingest hot path.
 - **Contract:**
@@ -514,9 +527,18 @@ synchronization**, not LLM tool calls.
     negotiation.
   - The connector's `discover` output declares what it emits, so `toolbox plan` can show it and the
     SDKs can type it.
+- **Run modes:** `serve` (long-running HTTP) and `once` (cron or CI: `toolbox connector run --once
+  --push <portal>`), so a connector can feed a portal with no extra infrastructure.
 - **Tooling:**
   - **Conformance test kit** (`toolbox connector test`): replays recorded fixtures and checks ordering,
     idempotency and deletion semantics.
+  - A first-party **declarative HTTP connector** (OpenAPI-aware endpoints, auth and pagination) for
+    internal systems that need no code.
+  - A connector-authoring agent skill plus `toolbox connector new`.
+  - SDK helpers for webhook processing (authenticate → validate → handle, retries) and incremental
+    strategies (server-side `since` vs. client-side early stop).
+  - Spike: an **Ocean compatibility runner** that executes unmodified Port Ocean integrations as TCP
+    sources (see [ocean.md](./ocean.md) §4).
   - SDKs that reduce a connector to a few typed handlers.
   - Connector packages are distributed through standard registries (npm, PyPI, Go modules, OCI) and
     pinned in `toolbox.lock`.

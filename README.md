@@ -8,3 +8,4 @@ exposed identically over API, MCP, CLI and UI.
 
 - [docs/research.md](docs/research.md) — landscape (Backstage, Port, Cortex, DX, OpsLevel, Datadog, OSS alternatives) and validation
 - [docs/plan.md](docs/plan.md) — architecture and delivery roadmap
+- [docs/ocean.md](docs/ocean.md) — lessons from Port Ocean for the connector protocol
