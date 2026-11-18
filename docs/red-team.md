@@ -5,8 +5,8 @@
 to what this research verified:*
 - *Port's Terraform provider schemas (approvals; automations including `timer_property_expired_event`
   TTLs; `upsert_entity_method`; webhook and Kafka changelog destinations).*
-- *Its public repos (`port-sender` scorecard/initiative reminders to Slack, `port-agent`, Ocean's
-  centralized rate limiter).*
+- *Its public repos (`port-sender`, a GitHub Action that sends scorecard and initiative reports and
+  reminders; `port-agent`; Ocean's centralized rate limiter).*
 - *Its public positioning (context lake, AI agents, AI Builder).*
 
 *Everything else is phrased as what a competitor **would** pitch.*
@@ -59,8 +59,8 @@ storage design, no exports and no leadership views. **The economic buyer is not 
 - **Initiative burndown** views, CSV export, and scheduled digests (see A3).
 
 ### A3. "Scorecards nobody hears about don't improve anything." 🔴
-**Pitch:** "Port sends scorecard and initiative reminders to Slack (we even open-sourced the GitHub
-Action). Engagement drives adoption. How does a team learn its security score went red in Toolbox?"
+**Pitch:** "Port sends scorecard and initiative reports and reminders (we even open-sourced the
+GitHub Action that does it). Engagement drives adoption. How does a team learn its security score went red in Toolbox?"
 
 **Reality check:** automations *could* call a webhook. There is no notification subsystem: no
 Slack/Teams/email channels, digests, routing to owners, quiet hours or dedup. There is also no chat
