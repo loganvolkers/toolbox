@@ -310,3 +310,16 @@ Fold these into the plan as follows:
 - **New design sections:** A2, A3, B1, B4 and C1. These are product-defining.
 - **Constraints on existing sections:** B2, B3, B5, B6, C2, C3 and C4.
 - **A tracked "-ilities" checklist** gating 1.0: section D plus A6.
+
+## G. Status (2026-11-18)
+
+| Gap | Status |
+|---|---|
+| A1 Time to value | Partly addressed by the SDLC and reusable workflow; demos and starter portals **deferred** by decision |
+| A2 Dashboards, reports, trends | **Designed:** [design/canvases.md](./design/canvases.md) |
+| A3 Notifications | **Designed** (GitHub, email, webhook; Slack out of scope): [design/notifications.md](./design/notifications.md) |
+| B1 Identity resolution, B2 renames/merges | **Designed:** [design/identity-resolution.md](./design/identity-resolution.md) |
+| B3 Pending state, B4 action-created entities, TTL, day-2 | **Designed:** [design/action-entities.md](./design/action-entities.md) |
+| C1 Plan data leak, C2 lock-out | **Designed:** [design/sdlc.md](./design/sdlc.md) (remote plan, gates, verify/rollback, break-glass) |
+| B8 Portal ownership at scale | **Designed:** [design/meta-catalog.md](./design/meta-catalog.md) |
+| A4, A5, A6, B5–B7, C3–C5, D | Open |

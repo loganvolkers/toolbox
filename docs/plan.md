@@ -42,7 +42,8 @@ the same truth through a fast, mostly read-only UI.
 - **Runtime configuration stored in a database.** There is no admin UI for blueprints, scorecards or
   actions. The server refuses runtime config mutation.
 - A hosted SaaS, a plugin marketplace that runs arbitrary code in-process, or a drag-and-drop dashboard
-  builder.
+  builder. Dashboards are *canvases*: agent-written code, either ephemeral drafts or promoted, reviewed
+  modules ([canvases.md](./design/canvases.md)).
 - Engineering-metrics analytics (DORA, surveys). Toolbox *ingests* such facts as inputs; it does not
   compete with DX-style analytics.
 - Running agents. Toolbox *informs and governs* agents; runners such as Claude Code or engrams can
@@ -464,7 +465,7 @@ Every capability is declared once (kind, scorecard, action, view, query) and pro
 
 **CLI** (`toolbox`): one binary for authoring and operating.
 - Authoring: `init`, `dev` (Tilt-like live reload with fixtures), `fmt`, `lint`, `test`,
-  `plan [--against URL]`, `build`, `upgrade` (codemods), `ext new rule --lang python`, `connector test`.
+  `plan [--remote URL]`, `build`, `upgrade` (codemods), `ext new rule --lang python`, `connector test`.
 - Operating: `login`, `get`, `query`, `search`, `graph`, `context`, `score`, `explain`, `run`, `runs`.
 - Output modes: `-o table|json|yaml|md`, stable for agents (kubectl / `tilt get` conventions).
 
@@ -559,6 +560,19 @@ synchronization**, not LLM tool calls.
   declared.
 
 ---
+
+### 4.7 Product capabilities (detailed designs)
+
+These designs close the gaps found in the [red-team review](./red-team.md). Each has its own document:
+
+| Capability | Summary | Design |
+|---|---|---|
+| **Meta catalog** | The portal's kinds, connectors, scorecards, rules, actions, canvases, authz modules and packages are owned catalog entities, with a dependency graph and default scorecards (ownership, connector health, scorecard quality, …). The portal scores itself, including the scorecards that score scorecards | [meta-catalog.md](./design/meta-catalog.md) |
+| **Canvases** (dashboards) | Agent-generated interactive views in the Cursor Canvas / Claude Artifacts style: TSX over a typed, permission-scoped data bridge in a sandboxed iframe. Drafts are ephemeral; promoted canvases are code. Includes a score/fact history store and scheduled reports | [canvases.md](./design/canvases.md) |
+| **Identity resolution** | External ids, declared matchers, structural inference, unmatched/ambiguous/conflict states, PR-based link proposals, aliases for renames, merges and splits | [identity-resolution.md](./design/identity-resolution.md) |
+| **Notifications + GitHub** | Ownership-routed events; GitHub App with living dashboard issue, PR score-delta checks, fix PRs and initiative issues; email; CloudEvents webhooks; GitHub Actions for service repos (validate, push, scorecard-check, context, run-action). Slack is out of scope for now | [notifications.md](./design/notifications.md) |
+| **Portal SDLC** | Local → CI → PR → ephemeral preview → prod. **Remote plan** (no prod data in CI, output redacted per viewer), policy gates (deletion, authz loss, operator lock-out, notification volume), signed + attested builds, verify + rollback, GitHub Actions + reusable workflow | [sdlc.md](./design/sdlc.md) |
+| **Action-created entities** | Action scopes (`create`/`day2`/`delete`/`global`), action-sourced fragments, TTL lifecycles with expiry automations, pending overlays for PR-based changes, bulk-edit PRs | [action-entities.md](./design/action-entities.md) |
 
 ## 5. Security model
 
@@ -832,21 +846,43 @@ Timelines assume 3–5 engineers working heavily with agents. Each phase ends wi
   - Analytics event catalog v0 with the `posthog`, `otlp` and `none` sinks.
   - `toolbox admin status|config|resync`; Grafana overview and connector dashboards.
 - `toolbox init/dev/lint/test/build`. Helm chart and Docker image.
+- **Meta catalog v1:** meta kinds derived from the manifest; required owners with resolution order;
+  `ownership` scorecard (bronze/silver); the portal cataloged as a system.
+- **Identity resolution v1:** external ids, annotation translation, declared matchers,
+  unmatched/conflict states, aliases on rename.
+- **Notifications v1:** event model, ownership routing, inbox, email, shadow mode.
+- **SDLC v1:** `setup-toolbox`/`test`/`build`/`verify` Actions; signed and attested images; service-repo
+  Actions `validate-catalog` and `push` with GitHub OIDC.
 - **Exit:** import the Backstage demo catalog plus a 50k-entity synthetic org. An agent answers
   "who owns X, what depends on Y, who do I page" via MCP, with correct permissions.
 
 ### Phase 2 — Scorecards (weeks 14–22) → `v0.2`
 - CEL rules, levels and points, `skip`/`unknown`, waivers, initiatives, facts ingestion.
-- Incremental evaluator; `explain`; `toolbox plan --against`.
+- Incremental evaluator; `explain`.
+- **Remote plan** service and planner principal; `plan` Action with sticky comment, gates
+  (deletion, authz loss, operator access, notification volume) and detailed plan pages. Production data
+  never goes to CI.
 - Extension rules via TCP `evaluate` (TS and Python SDKs) and a WASM path for Rust; `toolbox ext new`.
-- UI dashboards; MCP `scorecard_status` and `explain`; score-transition events.
-- **Exit:** 100 rules × 100k entities rescored in < 5 min. A plan diff is shown as a PR comment via a
-  GitHub Action.
+- **Canvases v1:** history store (score/fact/catalog daily), `@toolbox/canvas` components, promoted
+  canvases in slots, built-in scorecard/ownership/portal-health canvases, snapshot tests.
+- **Meta scorecards:** `scorecard-quality`, `connector-health`, `kind-quality`; `RuleResult` virtual
+  kind; routing of `unknown` outcomes to connector owners.
+- **GitHub App:** living dashboard issue, PR score-delta check runs (`scorecard-check` Action).
+- Identity proposals queue + PR-based resolution; coverage metrics.
+- MCP `scorecard_status` and `explain`; score-transition events.
+- **Exit:** 100 rules × 100k entities rescored in < 5 min. A remote-plan diff (redacted aggregates)
+  is shown as a PR comment, and a team's living dashboard issue updates on a score transition.
 
 ### Phase 3 — Actions (weeks 22–32) → `v0.3`
 - Action registry, run state machine, approvals, idempotency, dry-run.
 - Executors: webhook, GitHub workflow, GitLab pipeline, k8s Job, template + PR.
 - Automations (entity, score and schedule triggers).
+- **Action scopes** (`create`/`day2`/`delete`/`global`), action-sourced fragments, TTL lifecycle
+  engine, pending overlays, bulk-edit PRs.
+- **Canvas drafts** via MCP (`canvas_create/preview/promote`), `ActionButton`.
+- **Preview environments** (compose, k8s) with GitHub Deployments and GC; ownership-aware review.
+- Fix PRs, initiative tracking issues, approvals via GitHub Environments, `run-action` Action;
+  `action-quality` scorecard and Rule day-2 actions (waiver, false positive).
 - MCP `list_actions`/`describe_action`/`run_action`/`get_run` with elicitation and tasks. UI forms and
   run logs.
 - **Exit:** an agent creates a service from a golden path end to end, with approval, audit and catalog
@@ -856,6 +892,10 @@ Timelines assume 3–5 engineers working heavily with agents. Each phase ends wi
 - Docs pipeline (Markdown, mkdocs nav, OpenAPI/AsyncAPI/proto), entity linking.
 - tantivy hybrid search, optional embeddings, permission-filtered results.
 - Context packs; `Skill`/`Rule` distribution as MCP prompts and resources; docs reader UI.
+- Scheduled canvas reports (per-recipient rendering), shared links, design-mode feedback;
+  `context` Action for AI review agents; CloudEvents webhook channel.
+- Redacted production sample for previews; `upgrade --check` PRs; remaining meta scorecards
+  (`canvas-quality`, `authz-quality`, `package-hygiene`), contribution-based ownership facts.
 - **Exit:** a context-pack benchmark. On a fixed set of change/incident/onboarding tasks, agents with
   `context` beat agents without it on success rate at an equal token budget.
 
@@ -873,7 +913,8 @@ Timelines assume 3–5 engineers working heavily with agents. Each phase ends wi
 - Metric and event catalogs frozen under SemVer.
 - Meet the SLOs in §6.6. HA and chaos tests, security review and fuzzing (manifest/CEL/TCP/WASM inputs),
   upgrade codemods, docs site, LTS policy.
-- Reference deployment: a public demo portal configured entirely in a public repo.
+- Reference deployment: a portal configured entirely in a public repo (dogfooding: the project's own
+  portal, including its meta catalog). Demos are explicitly deferred.
 
 ---
 
