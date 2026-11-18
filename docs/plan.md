@@ -269,6 +269,12 @@ flowchart LR
 | `toolbox-telemetry` | OTel setup (traces/metrics/logs), metric catalog, analytics event catalog, `AnalyticsSink` adapters (PostHog, OTLP, HTTP, file), PII scrubbing | opentelemetry, tracing |
 | `toolbox-ops` | Admin API, `/mcp/ops`, health model, dashboard/alert/SLO generators (Grafana renderer first) | — |
 | `toolbox-synth` | Synthetic-organization generator for benchmarks and tests | — |
+| `toolbox-env` | The single seam for nondeterminism (clock, rng, net, store, spawn, proc, fs); `buggify!`; `always!`/`sometimes!` assertion facade | — |
+| `toolbox-ref` | Executable reference models (merge, identity, derivation, scoring, shaping, native store, plan); the full-pipeline oracle `expected(world, manifest, native_history)` | — |
+| `toolbox-sim` | Deterministic simulation: multi-replica cluster on `MemStore` + faults; simulated sources, executors, IdP, agents; chaos → quiescence → liveness phases; seed replay | turmoil |
+| `toolbox-gen` | Generators of random valid portals (manifests, OpenFGA models, CEL rules) and matching worlds for configuration-space testing | proptest/bolero |
+
+**Architecture rule:** functional core, imperative shell. All nondeterminism goes through `toolbox-env`, so the whole cluster can run under deterministic simulation ([verification.md](./design/verification.md) §3).
 
 A single binary runs as `toolbox serve --role all|api|worker`. Workers claim jobs from Postgres with
 `FOR UPDATE SKIP LOCKED`. Schedulers use a Postgres advisory-lock leader. There is no Redis, Kafka or
@@ -580,6 +586,7 @@ These designs close the gaps found in the [red-team review](./red-team.md). Each
 | **Portal SDLC** | Local → CI → PR → ephemeral preview → prod. **Remote plan** (no prod data in CI, output redacted per viewer), policy gates (deletion, authz loss, operator lock-out, notification volume), signed + attested builds, verify + rollback, GitHub Actions + reusable workflow | [sdlc.md](./design/sdlc.md) |
 | **Context lake** | Layered lake: raw (bronze) → two-tier graph (curated catalog + bounded discovered *inventory*, joined by bridge edges, temporal validity) + catalog-anchored knowledge → derived scores/findings/context packs. Federates security graphs (Wiz, Cartography) instead of copying them; exports ownership so Toolbox is the ownership system of record; graph predicates in CEL; read-only GQL later | [context-lake.md](./design/context-lake.md) |
 | **Source of truth** | Field-level ownership declared in code (`git:` / `connector:` / `native` / `computed` / `action`, with precedence). One write path routes edits: native fields are edited inline (revisions, approvals, changesets with preview and revert), git fields get a PR, connector fields are rejected with an explanation. Write-back to GitHub custom properties; export and git mirror | [source-of-truth.md](./design/source-of-truth.md) |
+| **Verification** | TDD against named properties (safety, liveness, equivalences, non-interference). Executable reference models (ShardStore-style) as the full-pipeline oracle. Differential testing vs OpenFGA, the CEL conformance suite and across stores. Deterministic simulation (FoundationDB/TigerBeetle/S2-style, in-process) plus optional whole-system Antithesis. Generated portals × covering-array deployments × a real-portal corpus. Kani, shuttle, mutation testing; release gates with published assurance metrics. Customers get `toolbox simulate` for their own configs | [verification.md](./design/verification.md) |
 | **Action-created entities** | Action scopes (`create`/`day2`/`delete`/`global`), action-sourced fragments, TTL lifecycles with expiry automations, pending overlays for PR-based changes, bulk-edit PRs | [action-entities.md](./design/action-entities.md) |
 
 ## 5. Security model
@@ -840,7 +847,16 @@ Timelines assume 3–5 engineers working heavily with agents. Each phase ends wi
   - Postgres with 100k synthetic entities (merge throughput, graph load, query plans)
   - rmcp Streamable HTTP with OAuth
 - `toolbox-synth` generator; CI with benchmarks.
-- **Exit:** go/no-go on the language-host model, CEL, TCP-over-HTTP and WASM, with numbers.
+- **Verification foundations** ([verification.md](./design/verification.md) §3, §10):
+  - the `Env` seam with clippy bans
+  - `buggify!` and the assertion facade
+  - `MemStore` + fault wrapper + store conformance suite
+  - `toolbox-ref` skeleton
+  - minimal `toolbox-sim` (chaos → liveness)
+  - OpenFGA corpus and CEL conformance harnesses
+  - `spec/properties.md`
+- **Exit:** go/no-go on the language-host model, CEL, TCP-over-HTTP and WASM, with numbers. In
+  addition, a planted unsafe-delete bug is found by simulation within 1,000 seeds.
 - Draft TCP spec v0 (OpenAPI + JSON Schemas) and conformance kit skeleton.
 
 ### Phase 1 — Catalog core (weeks 4–14) → `v0.1`
@@ -941,6 +957,7 @@ Timelines assume 3–5 engineers working heavily with agents. Each phase ends wi
 | MCP spec churn (deprecations under way, e.g. sampling) | Use the official rmcp SDK, isolated in `toolbox-mcp`; avoid deprecated primitives |
 | Static config needs a redeploy for any change | Fast builds (< 1 min), cheap rollouts, `toolbox dev` for iteration. This is by design, as with Terraform |
 | Building a correct ReBAC evaluator | OpenFGA's Apache-2.0 conformance corpus on every build; nightly differential fuzzing against real OpenFGA; stock `fga model test` as an oracle in portal CI (see authorization.md §7) |
+| Correctness at scale across unbounded customer configurations | Deterministic simulation + reference-model oracles + differential testing + generated portals + covering arrays + a corpus; release gates with published metrics ([verification.md](./design/verification.md)) |
 | Lock-in to monitoring vendors (PostHog, Grafana) | OTLP + Prometheus formats as the contract; analytics via a versioned event catalog and pluggable sinks; dashboards generated from a neutral spec; vendor packs are optional |
 | Feature breadth of funded vendors | Compete on agent surface, dev loop (`plan`/`test`) and ownership. Don't build analytics |
 | Adjacent OSS entrants (Frontkeep, OpsCat, Lekton) | Differentiate on config as code + catalog/scorecard depth + Backstage compatibility; collaborate where interfaces overlap (e.g. MCPServer/Skill kinds) |
