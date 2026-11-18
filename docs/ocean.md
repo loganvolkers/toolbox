@@ -53,6 +53,25 @@ Toolbox can copy. The implementation itself doesn't fit Toolbox:
 One exception is worth a spike: **41 of 52 integrations never touch the Port client directly**. They
 only implement `on_resync` and similar hooks, so a thin compatibility runner could reuse them (§4).
 
+### Reuse decision: don't adopt Ocean as the connector framework
+
+| Question | Evidence (from source) |
+|---|---|
+| Is the framework neutral, or Port's client? | It is Port's client. The only mapping-config source is `APIPortAppConfig` (read from Port's API), settings require a Port `client_id`, and **39 of 231** framework modules reference `port_client`, including the core sync path, which diffs against Port's entities. |
+| Could we fork and decouple it? | That means owning ~61k lines of Python that track a fast-moving 0.x upstream: **497 releases**, three patch releases in the three days before this review. Port controls the direction. |
+| Does it fit the polyglot goal? | No. It would make Python the de facto connector language. |
+| Does it fit our architecture? | No. Its connectors are thick (each reconciles against the central store), its config lives in a DB, and it maps with JQ. |
+
+**Reuse the integrations, not the framework:**
+- **Compatibility runner (§4).** Run unmodified integrations as TCP sources, if the spike's bar is met.
+- **Ocean-shaped Python SDK.** Give the TCP Python SDK the same decorator surface
+  (`@source.on_resync("repository")`, `@source.on_incremental_resync`, webhook processors), so porting an
+  Ocean integration is mostly mechanical, for people and for agents.
+- **Converted defaults.** Machine-convert each integration's default JQ mappings and blueprints into
+  CEL `defaults()` helpers.
+- **API knowledge.** Use the integrations as the reference for each vendor's pagination, rate-limit and
+  webhook quirks. This is the most valuable thing in the repo.
+
 ## 1. Ideas to adopt (changes to the plan)
 
 | # | Ocean idea | Where in Ocean | Toolbox change |
