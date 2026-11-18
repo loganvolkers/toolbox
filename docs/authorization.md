@@ -289,20 +289,23 @@ Portal repo layout:
 
 ```
 authz/
-├── fga.mod                     # modular model manifest (stock OpenFGA format)
+├── fga.mod                     # modular model manifest (stock OpenFGA format: schema "1.2", contents: [...])
 ├── core.fga                    # module core (above)
 ├── pagerduty.fga               # contributed by a connector package (vendored, pinned)
-└── tests/
-    ├── scorecards.fga.yaml     # stock OpenFGA store-file tests: model + tuples + assertions
-    └── scorecards.catalog.yaml # Toolbox catalog fixtures → derived tuples (tests the derivation too)
+├── scorecards.fga.yaml         # stock OpenFGA store-file tests: model + tuples + assertions
+└── scorecards.catalog.yaml     # Toolbox catalog fixtures → derived tuples (tests the derivation too)
 ```
 
 **Level 1: pure model tests (100% stock OpenFGA format).** These run with `toolbox test` *and* with
-`fga model test --tests "authz/tests/*.fga.yaml"`:
+`fga model test --tests "authz/*.fga.yaml"`.
+Test files sit beside `fga.mod`, because the `fga` CLI refuses `../` model references.
+
+*Verified: this exact model and test file pass with the OpenFGA CLI (`fga model test`: 6/6 checks,
+2/2 ListObjects, 1/1 ListUsers). Flipping one expectation makes it fail as expected.*
 
 ```yaml
 name: Scorecard visibility
-model_file: ../fga.mod
+model_file: ./fga.mod
 tuples:
   - { user: "user:*",                  relation: member,   object: "portal:acme" }
   - { user: "group:security#member",   relation: security, object: "portal:acme" }
