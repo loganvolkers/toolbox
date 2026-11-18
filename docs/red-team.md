@@ -319,7 +319,7 @@ Fold these into the plan as follows:
 | A2 Dashboards, reports, trends | **Designed:** [design/canvases.md](./design/canvases.md) |
 | A3 Notifications | **Designed** (GitHub, email, webhook; Slack out of scope): [design/notifications.md](./design/notifications.md) |
 | B1 Identity resolution, B2 renames/merges | **Designed:** [design/identity-resolution.md](./design/identity-resolution.md) |
-| B3 Pending state, B4 action-created entities, TTL, day-2 | **Designed:** [design/action-entities.md](./design/action-entities.md) |
+| B3 Pending state, B4 action-created entities, TTL, day-2 | **Designed:** [design/action-entities.md](./design/action-entities.md); data with no system of record → [design/source-of-truth.md](./design/source-of-truth.md) |
 | C1 Plan data leak, C2 lock-out | **Designed:** [design/sdlc.md](./design/sdlc.md) (remote plan, gates, verify/rollback, break-glass) |
 | B8 Portal ownership at scale | **Designed:** [design/meta-catalog.md](./design/meta-catalog.md) |
 | A4, A5, A6, B5–B7, C3–C5, D | Open |

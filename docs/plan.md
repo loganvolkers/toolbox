@@ -40,7 +40,9 @@ the same truth through a fast, mostly read-only UI.
 
 ### Non-goals
 - **Runtime configuration stored in a database.** There is no admin UI for blueprints, scorecards or
-  actions. The server refuses runtime config mutation.
+  actions, and the server refuses runtime config mutation. *Catalog data* may be stored natively, but
+  only for fields the schema (in code) declares `native`
+  ([source-of-truth.md](./design/source-of-truth.md)).
 - A hosted SaaS, a plugin marketplace that runs arbitrary code in-process, or a drag-and-drop dashboard
   builder. Dashboards are *canvases*: agent-written code, either ephemeral drafts or promoted, reviewed
   modules ([canvases.md](./design/canvases.md)).
@@ -53,7 +55,7 @@ the same truth through a fast, mostly read-only UI.
 
 | **Config (in git, immutable per deploy)** | **State (in Postgres, changes at runtime)** |
 |---|---|
-| Kinds and schemas, relation types | Entities, relations, provenance |
+| Kinds and schemas, relation types, **per-field source of truth** | Entities, relations, provenance; **native field values with revisions** |
 | Connector declarations and mappings | Connector cursors, sync status |
 | Scorecards, rules, levels, initiatives, waivers | Rule outcomes, score history |
 | Actions, executors, approval rules, automations | Action runs, approvals given, logs |
@@ -61,8 +63,9 @@ the same truth through a fast, mostly read-only UI.
 | UI views, navigation, branding | Search indexes, embeddings, doc renders |
 | Docs sources | Docs content (re-derivable) |
 
-Everything in the right column can be rebuilt from the sources and the left column. The only data that
-cannot be rebuilt is the audit log and run history.
+Everything in the right column can be rebuilt from the sources and the left column, except three
+things: the audit log, run history, and **native data** (fields the schema declares Toolbox-owned). The
+native data is mirrored to git and exportable.
 
 ---
 
@@ -294,8 +297,10 @@ provenance: { "spec.owner": { source: "git:acme/payments/catalog-info.yaml", at:
 
 **Multi-source merge (fixes a Backstage limitation).** Connectors emit *fragments* keyed by entity
 identity. The merge is a **pure, deterministic function** with these properties:
-- Field-level precedence is declared in config (e.g. `owner` comes from `catalog-info` over
-  `codeowners` over inference).
+- Field-level precedence is declared in config, as each kind's **`sources`** list (e.g. `owner` comes
+  from `catalog-info`, then `native`, then inference). The same declaration governs writes: native
+  fields are edited in Toolbox, git-owned fields get a PR, and connector-owned fields are read-only
+  ([source-of-truth.md](./design/source-of-truth.md)).
 - Arrays and sets are canonicalized, which prevents the hash churn Backstage warns about.
 - Hash-based change detection: only changed entities propagate downstream.
 - Pure WASM *transforms* can run in the merge step, so it is extensible, unlike Backstage stitching.
@@ -574,6 +579,7 @@ These designs close the gaps found in the [red-team review](./red-team.md). Each
 | **Notifications + GitHub** | Ownership-routed events; GitHub App with living dashboard issue, PR score-delta checks, fix PRs and initiative issues; email; CloudEvents webhooks; GitHub Actions for service repos (validate, push, scorecard-check, context, run-action). Slack is out of scope for now | [notifications.md](./design/notifications.md) |
 | **Portal SDLC** | Local → CI → PR → ephemeral preview → prod. **Remote plan** (no prod data in CI, output redacted per viewer), policy gates (deletion, authz loss, operator lock-out, notification volume), signed + attested builds, verify + rollback, GitHub Actions + reusable workflow | [sdlc.md](./design/sdlc.md) |
 | **Context lake** | Layered lake: raw (bronze) → two-tier graph (curated catalog + bounded discovered *inventory*, joined by bridge edges, temporal validity) + catalog-anchored knowledge → derived scores/findings/context packs. Federates security graphs (Wiz, Cartography) instead of copying them; exports ownership so Toolbox is the ownership system of record; graph predicates in CEL; read-only GQL later | [context-lake.md](./design/context-lake.md) |
+| **Source of truth** | Field-level ownership declared in code (`git:` / `connector:` / `native` / `computed` / `action`, with precedence). One write path routes edits: native fields are edited inline (revisions, approvals, changesets with preview and revert), git fields get a PR, connector fields are rejected with an explanation. Write-back to GitHub custom properties; export and git mirror | [source-of-truth.md](./design/source-of-truth.md) |
 | **Action-created entities** | Action scopes (`create`/`day2`/`delete`/`global`), action-sourced fragments, TTL lifecycles with expiry automations, pending overlays for PR-based changes, bulk-edit PRs | [action-entities.md](./design/action-entities.md) |
 
 ## 5. Security model
@@ -848,6 +854,8 @@ Timelines assume 3–5 engineers working heavily with agents. Each phase ends wi
   - Analytics event catalog v0 with the `posthog`, `otlp` and `none` sinks.
   - `toolbox admin status|config|resync`; Grafana overview and connector dashboards.
 - `toolbox init/dev/lint/test/build`. Helm chart and Docker image.
+- **Source of truth v1:** per-field `sources` declarations; enforcement on every write path; native
+  store with revisions for `Group` metadata and business fields; `update_entity` MCP tool with routing.
 - **Meta catalog v1:** meta kinds derived from the manifest; required owners with resolution order;
   `ownership` scorecard (bronze/silver); the portal cataloged as a system.
 - **Identity resolution v1:** external ids, annotation translation, declared matchers,

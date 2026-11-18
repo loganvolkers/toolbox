@@ -19,3 +19,4 @@ exposed identically over API, MCP, CLI and UI.
   - [design/identity-resolution.md](docs/design/identity-resolution.md): matching one service across many tools
   - [design/action-entities.md](docs/design/action-entities.md): action-created entities, TTL, day-2 actions
   - [design/context-lake.md](docs/design/context-lake.md): context lakes, and how the catalog, knowledge and security graphs overlap
+  - [design/source-of-truth.md](docs/design/source-of-truth.md): field-level source of truth, and when Toolbox owns the data
