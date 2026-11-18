@@ -367,10 +367,11 @@ initiative("tier1-oncall", scorecard = "production-readiness", rules = ["oncall-
   they read. A change re-evaluates only the dependent `(rule, entity)` pairs. A scorecard config change
   triggers a full re-evaluation when the new deployment starts.
   - Target: 100 rules × 100k entities fully rescored in < 5 minutes on one worker.
-- **`toolbox plan` score diff:** the killer feature for agents and reviewers. `toolbox plan --against
-  https://portal.acme.dev` pulls a read-only snapshot and evaluates the *new* config against it. It
-  reports, for example: "+1 rule; 214 services drop silver→bronze; owners: …; 3 waivers expire before
-  deadline".
+- **`toolbox plan` score diff:** the killer feature for agents and reviewers. `toolbox plan --remote
+  https://portal.acme.dev` uploads the new manifest (config only), and the portal evaluates it
+  **server-side** against current state. No production data reaches CI, and detailed output is
+  redacted to the viewer's permissions ([sdlc.md](./design/sdlc.md) §4). It reports, for example:
+  "+1 rule; 214 services drop silver→bronze; 3 waivers expire before deadline".
 - **Explain:** for every failing rule, return the expression, the observed values, the provenance of
   those values, the `fix` text, and a linked remediation action. This feeds MCP `explain` and the UI.
 
