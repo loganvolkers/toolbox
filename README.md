@@ -11,6 +11,7 @@ exposed identically over API, MCP, CLI and UI.
 - [docs/ocean.md](docs/ocean.md) — lessons from Port Ocean for the connector protocol
 - [docs/authorization.md](docs/authorization.md) — relationship-based access control on the catalog graph (OpenFGA-compatible)
 - [docs/red-team.md](docs/red-team.md) — devil's-advocate review: gaps a competitor would exploit, ranked by deal risk
+- [docs/principal-review.md](docs/principal-review.md) — principal-engineer review: security, consistency, scope holes and proposed ADRs
 - Detailed designs:
   - [design/meta-catalog.md](docs/design/meta-catalog.md): the portal catalogs, owns and scores itself
   - [design/canvases.md](docs/design/canvases.md): dashboards as agent-written canvases
