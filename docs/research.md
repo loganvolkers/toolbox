@@ -262,7 +262,8 @@ is not yet an incumbent in it.
 | **WASM Component Model** | WIT interfaces, wasmtime host. **WASI 0.3 shipped June 2026** with native async. Guests in Rust, Python (componentize-py), JS (jco; `componentize` still marked experimental), Go (TinyGo / componentize-go). | Sandboxed, deterministic, in-process extension for *pure* logic (rules, transforms, computed fields). Not for connectors. |
 | **Extism** | Simpler cross-language plugin ABI (BSD-3). | Fallback if component-model tooling disappoints for a language. |
 | **Grafana as code / Foundation SDK** | Dashboards generated from typed SDKs in several languages, provisioned from files. | Optional future TypeScript/Python SDKs that emit the same manifest IR. |
-| **Cedar** (AWS) | Authorization policy language and engine in Rust. | Policies as code (`policies/*.cedar`), one enforcement point. |
+| **Cedar** (AWS) | Authorization policy language and engine in Rust. | Considered first; superseded by ReBAC: relationships must be supplied per request and there are no list primitives. See [authorization.md](./authorization.md). |
+| **OpenFGA** (CNCF) | Zanzibar-style ReBAC: DSL, CEL conditions, modular models, `.fga.yaml` model tests, public conformance corpus. | **Chosen authorization language and test format**, evaluated natively over the catalog graph. See [authorization.md](./authorization.md). |
 | **CEL** | Non-Turing-complete expression language (Kubernetes admission policies). Rust crate `cel` (cel-rust) is maintained, but conformance should be verified. | One expression language for filters, rules, mappings and conditions. |
 
 ---
