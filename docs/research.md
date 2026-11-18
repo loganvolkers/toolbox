@@ -252,11 +252,13 @@ is not yet an incumbent in it.
 | Tool | Pattern | Take for Toolbox |
 |---|---|---|
 | **Terraform** | HCL config → `plan` (diff vs. state) → `apply`. Providers are separate binaries speaking gRPC via `hashicorp/go-plugin`, pinned in `.terraform.lock.hcl`. Modules come from registries or git. | `toolbox plan` previewing the *effect* of config changes on live data; provider-style connectors pinned by digest in `toolbox.lock`; reusable modules. |
+| **Pulumi** | Programs in TS/Python/Go/C#/Java/YAML run by per-language **language hosts**. Thin SDKs send `RegisterResource` gRPC calls to the Go engine's **resource monitor**; the engine diffs against state (`preview`/`up`). Providers and multi-language components are plugins behind a language-neutral protocol; per-language SDKs are **generated from one package schema**. | **Chosen config model.** Language hosts + config monitor → manifest IR; schema-generated SDKs; portal packages shareable across languages; YAML for zero-runtime setups. |
 | **Tilt** | Tiltfile in **Starlark**, evaluated into objects registered in an embedded **Kubernetes-style API server**. Query with `tilt get` / `tilt describe` / `tilt explain`. `tilt up` live-reloads. Extensions via `load('ext://…')` from git repos. | Starlark entrypoint; evaluated config becomes typed objects inspectable through the same API; `toolbox dev` live reload; `load()` of shared modules from git. |
-| **starlark-rust** (Meta) | Deterministic, hermetic Python dialect used by Buck2; Rust-native; LSP and DAP; optional types; **no API-stability promise**. | Primary authoring language, wrapped behind our own crate. |
+| **starlark-rust** (Meta) | Deterministic, hermetic Python dialect used by Buck2; Rust-native; LSP and DAP; optional types; **no API-stability promise**. | Considered as the single config DSL, then superseded by the Pulumi model (real languages). Could return later as another "language" emitting the same manifest. |
 | **Pkl / CUE / KCL / Nickel** | Typed configuration languages. KCL and Nickel are Rust-implemented; Pkl's Rust support is community IPC wrappers; CUE is Go. | Strong typing is attractive, but agents know Python syntax far better than any of these. Starlark + JSON Schema validation gives most of the benefit. Revisit KCL/Nickel if typing pain appears. |
 | **hashicorp/go-plugin** | Subprocess + gRPC, crash isolation, protocol versioning, local-only. | The model for out-of-process connectors (we use JSON-lines over stdio; see plan). |
-| **Airbyte / Singer** | Connectors as containers emitting JSON messages (`spec`/`check`/`discover`/`read`, `RECORD`/`STATE`) on stdout. | The connector protocol shape: language-agnostic, testable, CI-runnable. |
+| **Airbyte / Singer** | Connectors as containers emitting JSON messages (`spec`/`check`/`discover`/`read`, `RECORD`/`STATE`) on stdout. | The connector message shape; TCP keeps a compatible stdio transport. |
+| **MCP** | Capability negotiation, JSON-RPC messages, Streamable HTTP + stdio transports, OAuth for remote servers. | The protocol *style* for TCP over HTTP. Not the semantics: MCP has no sync cursors, deletion/snapshot rules or entity identity. |
 | **WASM Component Model** | WIT interfaces, wasmtime host. **WASI 0.3 shipped June 2026** with native async. Guests in Rust, Python (componentize-py), JS (jco; `componentize` still marked experimental), Go (TinyGo / componentize-go). | Sandboxed, deterministic, in-process extension for *pure* logic (rules, transforms, computed fields). Not for connectors. |
 | **Extism** | Simpler cross-language plugin ABI (BSD-3). | Fallback if component-model tooling disappoints for a language. |
 | **Grafana as code / Foundation SDK** | Dashboards generated from typed SDKs in several languages, provisioned from files. | Optional future TypeScript/Python SDKs that emit the same manifest IR. |
@@ -350,3 +352,8 @@ Agent tool design:
 - [Too many MCP tools (EclipseSource)](https://eclipsesource.com/blogs/2026/01/22/mcp-context-overload/) ·
   [Amplitude: consolidating our MCP server](https://amplitude.com/blog/lessons-from-consolidating-our-mcp-server) ·
   [Roadie: IDP as context engineering](https://roadie.io/blog/idp-ai-goldmine-context-engineering/)
+
+Pulumi (added after a follow-up review):
+- [Pulumi architecture (developer docs)](https://pulumi-developer-docs.readthedocs.io/latest/docs/architecture/README.html) ·
+  [Resource registration](https://pulumi-developer-docs.readthedocs.io/latest/docs/architecture/deployment-execution/resource-registration.html) ·
+  [Deployment execution](https://pulumi-developer-docs.readthedocs.io/latest/docs/architecture/deployment-execution/README.html)
