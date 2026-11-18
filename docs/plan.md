@@ -31,6 +31,12 @@ the same truth through a fast, mostly read-only UI.
 4. Extensions (connectors, scorecard rules, transforms, actions, UI) can be written **in any mainstream
    language**.
 5. Upgrading Toolbox is a **version bump**, not a merge of scaffolded code.
+6. Operators get boring, observable operations:
+   - only Postgres to back up
+   - documented metric and event catalogs
+   - shipped dashboards, alerts and runbooks
+   - **replaceable monitoring vendors**: Grafana and PostHog are the reference backends, not
+     dependencies
 
 ### Non-goals
 - **Runtime configuration stored in a database.** There is no admin UI for blueprints, scorecards or
@@ -256,6 +262,8 @@ flowchart LR
 | `toolbox-mcp` | MCP server (Streamable HTTP + stdio bridge), tools/resources/prompts/elicitation/tasks | rmcp |
 | `toolbox-ui` | Embedded SPA assets and the server side of view rendering | rust-embed |
 | `toolbox-cli` | `toolbox` binary: authoring commands + remote client | clap |
+| `toolbox-telemetry` | OTel setup (traces/metrics/logs), metric catalog, analytics event catalog, `AnalyticsSink` adapters (PostHog, OTLP, HTTP, file), PII scrubbing | opentelemetry, tracing |
+| `toolbox-ops` | Admin API, `/mcp/ops`, health model, dashboard/alert/SLO generators (Grafana renderer first) | — |
 | `toolbox-synth` | Synthetic-organization generator for benchmarks and tests | — |
 
 A single binary runs as `toolbox serve --role all|api|worker`. Workers claim jobs from Postgres with
@@ -571,25 +579,179 @@ synchronization**, not LLM tool calls.
 
 ---
 
-## 6. Deployment & operations
+## 6. Operator experience
+
+Operators are the people (and increasingly the SRE agents) who install, run, upgrade, monitor and recover
+a portal. They are a different audience from portal authors and portal users, and they get first-class
+treatment: every operational concern has a documented interface, and every monitoring vendor is
+replaceable.
+
+### 6.1 Three kinds of configuration, three owners
+
+| Layer | Owned by | Where | Examples | Rule |
+|---|---|---|---|---|
+| **Portal behaviour** | Portal authors | Portal program (build time) | Kinds, scorecards, actions, connectors, policies, *which* telemetry sinks exist | All behaviour is here, reviewed in PRs |
+| **Environment binding** | Operators | Env vars / Helm values / Terraform (deploy time) | DB URL, replicas, OTLP endpoint, PostHog host and key, log level, sink on/off | Can only **bind or disable** what the program declared, never add behaviour. The same image runs in staging and prod. |
+| **State** | The system | Postgres | Entities, runs, audit, cursors | Backed up, never hand-edited |
+
+`toolbox admin config` prints the effective configuration, with secrets redacted and the source of
+each value (program, env or default). "Why is it doing that?" is answerable in one command.
+
+### 6.2 Deploy, upgrade, recover
 
 - **Artifact:** `toolbox build` produces an OCI image: `FROM ghcr.io/toolbox-dev/toolbox:<pinned>` plus
   the manifest bundle (evaluated IR, WASM components, UI assets, generated OpenAPI). Config is immutable
   per image, and rollback = deploy the previous image.
 - **Targets:** a Helm chart, docker-compose, and Terraform modules for ECS, Cloud Run and Fly. Anything
-  that runs a container works.
+  that runs a container works. Reference sizes:
+  - *small*: 1 container + Postgres, up to ~5k entities
+  - *medium*: 2 API + 1 worker
+  - *large*: 3+ API, N workers, read replica
 - **Dependencies:**
   - **Postgres ≥ 15** for production (pgvector optional).
   - **SQLite** for `toolbox dev` and small single-node installs.
   - Object storage optional (doc assets, index snapshots).
+  - No other required services.
 - **Scale-out:** stateless API replicas plus N workers. The graph and search indexes are local per
   replica, fed by the changefeed, and readiness waits for catch-up.
-- **Observability:** OpenTelemetry traces and metrics, structured logs, and `/healthz` and `/readyz`.
-  Connector lag and scoring lag are exported as metrics.
+- **Database migrations:** expand/contract only, so rolling deploys are always safe across N → N+1.
+  - `toolbox admin migrate plan` shows the SQL and the expected lock impact.
+  - Migrations run as a Helm pre-upgrade job or on leader start-up; the operator chooses.
 - **Upgrades:** SemVer. The manifest IR is versioned with migrations, `toolbox lint` warns on
   deprecations, and `toolbox upgrade` applies SDK codemods (TS/Python first). LTS lines start at 1.0.
+  Release notes are machine-readable, so upgrade agents can act on them.
+- **Backup and DR:**
+  - **Only Postgres needs backing up.** Search indexes, the graph, doc renders and embeddings are
+    rebuildable.
+  - RPO = Postgres RPO. RTO is bounded by re-indexing, which is shortened by index snapshots in object
+    storage.
+  - `toolbox admin backup verify` restores into a scratch database and checks invariants. A DR drill is
+    part of the v1.0 exit criteria.
+- **Retention** (in code, per data type): raw connector records, run logs, analytics events and audit,
+  each with its own window. Defaults are conservative and documented.
 
-### Scale targets (v1.0 SLOs, verified in CI by `toolbox-synth`)
+### 6.3 Observability: replaceable by design
+
+Toolbox emits three different kinds of telemetry. Each goes through a **vendor-neutral boundary**, and
+each has a **reference backend**:
+
+| Signal | Questions it answers | Neutral boundary | Reference backend | Swap for |
+|---|---|---|---|---|
+| **Operational**: traces, metrics, logs | Is it up? Is it fast? Are connectors lagging? | **OpenTelemetry (OTLP)** with documented semantic conventions; also a Prometheus `/metrics` endpoint and JSON logs on stdout | **Grafana** (Prometheus/Mimir, Loki, Tempo via an OTel Collector or Alloy) | Datadog, Honeycomb, New Relic, Elastic, CloudWatch: anything that speaks OTLP or scrapes Prometheus |
+| **Product analytics**: usage events | Who uses the portal, humans vs. which agents? Which MCP tools succeed? Where do searches return nothing? Which actions get abandoned? | Toolbox's own **versioned event catalog**, delivered through an `AnalyticsSink` | **PostHog** | Any sink adapter: OTLP log events, generic HTTP/NDJSON webhook, file/stdout, or `none` |
+| **Audit**: security record | Who did what, on whose behalf? | Append-only table in Postgres; export stream | (internal) | Any SIEM, via webhook or OTLP logs export |
+
+Audit is deliberately **not** analytics. It is never sampled, never routed to an analytics vendor, and
+has its own retention.
+
+**Operational telemetry (Grafana as reference, OTel as contract)**
+- All crates instrument with `tracing` and export via OpenTelemetry. Trace context propagates through
+  API, MCP and CLI calls, connector protocol requests, and action executors, so one trace can follow
+  an agent's `run_action` all the way into the GitHub workflow callback.
+- A **metric catalog** is part of the public, SemVer-covered surface: names, units and labels are
+  documented and stable. Examples:
+  - `toolbox_connector_lag_seconds{connector,kind}`
+  - `toolbox_ingest_records_total`
+  - `toolbox_scoring_backlog`
+  - `toolbox_mcp_tool_calls_total{tool,client,outcome}`
+  - `toolbox_action_runs_total{action,state}`
+  - `toolbox_index_freshness_seconds{index}`
+- Toolbox ships the Grafana pack as code, in an **optional** package (`@toolbox/grafana`, `toolbox ops
+  export grafana`). It contains:
+  - Dashboards (overview, connectors, scoring, actions, MCP/agents, Postgres) generated with Grafana's
+    Foundation SDK.
+  - **Alert rules in Prometheus rule format.** These work in Prometheus, Mimir, Grafana-managed
+    alerting and other PromQL-compatible backends.
+  - SLO definitions (§6.5) compiled to recording and alerting rules.
+  - Each alert links to a runbook in the docs.
+- Replacing Grafana loses only the dashboards, because metrics, traces, logs and alert rules are
+  portable. Dashboards are generated from an internal, backend-neutral panel spec, so a renderer for
+  another tool (e.g. Perses, the CNCF dashboards-as-code project) can be added without touching the
+  core.
+
+**Product analytics (PostHog as reference, event catalog as contract)**
+- **Event catalog:** a versioned schema of ~30 events, published in the docs and covered by SemVer.
+  Every event carries `actor_type` (`human | agent | service`), the `client` (MCP `clientInfo`, CLI,
+  UI) and a pseudonymous `actor_id`. Examples:
+
+  | Event | Key properties |
+  |---|---|
+  | `search.performed` | surface, result_count, zero_results, latency_ms |
+  | `mcp.tool.called` | tool, client, outcome, latency_ms, response_tokens |
+  | `context.pack.served` | budget, used_tokens, sections, for |
+  | `entity.viewed` | kind, surface |
+  | `scorecard.explained` | scorecard, rule_count_failing |
+  | `action.run.transitioned` | action, from, to, dry_run, identity |
+  | `pr.proposed` | origin (ui \| mcp), target |
+
+  The agent-specific events give a rare view of *agent experience*: which tools agents pick, how often
+  they fail, and how many tokens the portal costs them.
+- **Single pipeline:** UI events go to the Toolbox server (`POST /v1/analytics`) instead of loading a
+  vendor script in the browser. Server events and UI events then share one schema, one PII scrubber and
+  one sink switch.
+- **`AnalyticsSink` adapters** are compiled into the binary:
+  - `posthog`: batched capture API. Toolbox Groups map to PostHog group analytics, so usage rolls up
+    by team.
+  - `otlp`: events as OTel log records.
+  - `http`: signed NDJSON to any receiver, written in any language.
+  - `file`
+  - `none`
+- **Privacy defaults:**
+  - Actor ids are HMAC-pseudonymized with a deploy-time key.
+  - No entity content, search text or doc text is sent unless the program opts in per event field.
+  - Self-hosted PostHog is supported, and there is one kill switch (`TOOLBOX_ANALYTICS=off`).
+- **Kept out on purpose:**
+  - **PostHog feature flags and experiments are not used to change portal behaviour**, because that
+    would move configuration out of code.
+  - PostHog session replay is an opt-in UI plugin, off by default, with inputs masked.
+
+### 6.4 Telemetry in the portal program
+
+```ts
+new tb.Telemetry("default", {
+  otel: tb.otel.otlp({ endpoint: tb.env("OTEL_EXPORTER_OTLP_ENDPOINT") }),   // standard OTel env vars also honoured
+  metrics: { prometheus: true },                                           // /metrics on the admin port
+  analytics: [
+    tb.analytics.posthog({ host: tb.env("POSTHOG_HOST"), key: tb.secret("env:POSTHOG_KEY"),
+                           groups: { team: "owner" } }),
+    // tb.analytics.http({ url: tb.env("ANALYTICS_WEBHOOK") }),            // swap or fan out
+  ],
+  analyticsFields: { "search.performed": { includeQueryText: false } },
+  retention: { analytics: "90d", runLogs: "30d", rawRecords: "14d", audit: "400d" },
+});
+```
+
+The operator binds endpoints and keys per environment and can disable any sink with an env var. The
+program decides what exists.
+
+### 6.5 Day-2 operations
+
+- **Self-observation in the product:** a *Portal health* page (UI) and `toolbox admin status` (CLI)
+  show:
+  - connector status and lag per kind, with the last error and permission-probe verdicts
+  - queue depths, scoring backlog, index freshness
+  - migration state, version skew between replicas
+  - dead-lettered webhooks
+- **Admin commands** are remote, policy-gated (Cedar `Operator` role) and audited:
+  - `resync <connector> [--kind]`, `replay --dead-letter`
+  - `reindex search|graph`, `rescore [--scorecard]`
+  - `drain` (stop workers for maintenance)
+  - `migrate status|plan|apply`
+  - `backup verify`, `export audit`
+- **Agent operators:** the same admin operations are exposed on a separate MCP endpoint (`/mcp/ops`),
+  available only to operator principals. An SRE agent can diagnose and remediate the portal itself,
+  for example: "connector X is lagging because of 403s, the token lost the `repo` scope".
+- **Built-in SLOs** (defaults in code, adjustable):
+  - API availability and latency
+  - connector freshness (`connector_lag < 15m`)
+  - scoring freshness
+  - action-run success
+  - MCP tool success rate
+  These compile to the alert rules in §6.3.
+- **Runbooks** ship with the docs, one per alert. Each has symptoms, a diagnosis command, a fix and an
+  escalation path.
+
+### 6.6 Scale targets (v1.0 SLOs, verified in CI by `toolbox-synth`)
 
 | Dimension | Target |
 |---|---|
@@ -652,6 +814,10 @@ Timelines assume 3–5 engineers working heavily with agents. Each phase ends wi
   webhooks), Backstage import, generic push API.
 - MCP read tools: `search` (Postgres FTS initially), `get`, `query`, `graph`.
 - Minimal UI: catalog, entity page, graph view, login.
+- Operations baseline:
+  - OTel traces, metrics and logs; `/metrics`; health and readiness endpoints.
+  - Analytics event catalog v0 with the `posthog`, `otlp` and `none` sinks.
+  - `toolbox admin status|config|resync`; Grafana overview and connector dashboards.
 - `toolbox init/dev/lint/test/build`. Helm chart and Docker image.
 - **Exit:** import the Backstage demo catalog plus a 50k-entity synthetic org. An agent answers
   "who owns X, what depends on Y, who do I page" via MCP, with correct permissions.
@@ -689,7 +855,10 @@ Timelines assume 3–5 engineers working heavily with agents. Each phase ends wi
 - Terraform modules for ECS and Cloud Run.
 
 ### Phase 6 — Hardening → `v1.0` (≈ months 12–15)
-- Meet the SLOs in §6. HA and chaos tests, security review and fuzzing (manifest/CEL/TCP/WASM inputs),
+- Full operator pack: all dashboards, SLO alert rules, a runbook per alert, `/mcp/ops`, the backup-verify
+  command, and a DR drill.
+- Metric and event catalogs frozen under SemVer.
+- Meet the SLOs in §6.6. HA and chaos tests, security review and fuzzing (manifest/CEL/TCP/WASM inputs),
   upgrade codemods, docs site, LTS policy.
 - Reference deployment: a public demo portal configured entirely in a public repo.
 
@@ -707,6 +876,7 @@ Timelines assume 3–5 engineers working heavily with agents. Each phase ends wi
 | WASM tooling uneven across languages (JS `componentize` still experimental) | WASM is optional; the process protocol and executors cover every language; support Rust/Python/TS first |
 | MCP spec churn (deprecations under way, e.g. sampling) | Use the official rmcp SDK, isolated in `toolbox-mcp`; avoid deprecated primitives |
 | Static config needs a redeploy for any change | Fast builds (< 1 min), cheap rollouts, `toolbox dev` for iteration. This is by design, as with Terraform |
+| Lock-in to monitoring vendors (PostHog, Grafana) | OTLP + Prometheus formats as the contract; analytics via a versioned event catalog and pluggable sinks; dashboards generated from a neutral spec; vendor packs are optional |
 | Feature breadth of funded vendors | Compete on agent surface, dev loop (`plan`/`test`) and ownership. Don't build analytics |
 | Adjacent OSS entrants (Frontkeep, OpsCat, Lekton) | Differentiate on config as code + catalog/scorecard depth + Backstage compatibility; collaborate where interfaces overlap (e.g. MCPServer/Skill kinds) |
 | Name collision: "Toolbox" is generic, and other MCP-related projects use it | Check trademark and package namespaces (crates.io, npm, ghcr) in phase 0 |
