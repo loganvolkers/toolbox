@@ -4,7 +4,9 @@ An open-source, agent-first internal developer portal (IDP) framework: Rust core
 code, deployed by you. Catalog, scorecards, self-service actions, knowledge/context lake and search —
 exposed identically over API, MCP, CLI and UI.
 
-**Status:** research & planning.
+**Status:** research & planning (design phase).
+
+**Start here:** [AGENTS.md](AGENTS.md) for working rules and parallel tracks, [docs/decisions.md](docs/decisions.md) for every decision and open question, [docs/glossary.md](docs/glossary.md) for vocabulary, and [docs/research-log.md](docs/research-log.md) for methods and hands-on verifications.
 
 - [docs/research.md](docs/research.md) — landscape (Backstage, Port, Cortex, DX, OpsLevel, Datadog, OSS alternatives) and validation
 - [docs/plan.md](docs/plan.md) — architecture and delivery roadmap

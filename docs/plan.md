@@ -1126,6 +1126,8 @@ real organisation.
 
 ## 10. Decisions
 
+The full, chronological log is in [decisions.md](./decisions.md). This section summarises it.
+
 **Decided (2026-11-19):**
 - Launch languages: TypeScript, Python, YAML.
 - Predicates and mappings: typed CEL (JSONata rejected, JQ not adopted).

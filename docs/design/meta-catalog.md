@@ -264,14 +264,14 @@ acme-portal/
 | 3 | `action-quality`; Rule day-2 actions (waiver, false positive); ownership-aware review in `plan` |
 | 4 | `view-quality`, `authz-quality`, `package-hygiene`; contribution-based ownership facts; verification cadence |
 
-## 11. Open questions
+## 11. Resolved questions (2026-11-19, decision D11)
 
-1. Should individuals ever be valid owners (small orgs), or always teams with an accountable lead?
-   *Proposal:* teams required, with an org-size override.
-2. Verification cadence default: 180 days (proposed), or tied to reorganisation events from the IdP?
-3. Should meta entities be hidden from non-admins by default? *Proposal:* visible to all (transparency
-   about standards and who owns them), with operational facts (credentials scope, error details) in an
-   `ops` facet.
+1. **Owners must be teams,** with an optional accountable individual (the team lead by default).
+   Small organisations can enable an override that allows individual owners.
+2. **Ownership is re-verified every 180 days,** and additionally whenever the IdP reports a
+   reorganisation affecting the owning team.
+3. **Meta entities are visible to all portal members.** Operational facts (credential scopes, error
+   details) sit in an operator-only `ops` facet.
 
 ## Sources
 

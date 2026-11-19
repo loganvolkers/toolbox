@@ -56,6 +56,47 @@ function with the original JQ in a comment for review.
 fixes upstream, and fall back to running cel-go through the same Go FFI boundary used for OpenFGA if
 gaps block us.
 
+## 2b. Where CEL and WASM fit: the four tiers
+
+Custom behaviour uses the **first tier that can express it**:
+
+| Tier | Used for | Runs |
+|---|---|---|
+| 1. Declarative config (portal program) | Kinds, sources, scorecards, actions, permissions, views | Build time only |
+| 2. **CEL** | Predicates (rules, `appliesTo`, eligibility, approval and automation conditions, filters, OpenFGA conditions, `calc`) and **field mappings** (object construction) | In-engine, on every change |
+| 3. **WASM functions** (TS via Javy, Rust, Go) | Logic CEL can't express: recursion, grouping, parsing, heavy reshaping, complex rule checks | In-engine, sandboxed, fuel-limited |
+| 4. Connectors and executors (any language) | Anything with I/O or side effects | Out of process (TCP) |
+
+**CEL**
+- *Pros:*
+  - Formally specified, with a conformance suite.
+  - Non-Turing-complete and cost-bounded.
+  - Type-checked at build against generated schemas.
+  - **Analysable:** the fields it reads drive incremental updates, information-flow labels and
+    selective tests.
+  - Identical meaning in every SDK; agents know it.
+- *Cons:*
+  - Limited expressiveness (no recursion or general fold), and awkward deep reshaping.
+  - Lives in strings inside TS or Python (mitigated by Toolbox's CEL checker and LSP).
+  - cel-rust conformance must be verified (Q10).
+
+**WASM**
+- *Pros:*
+  - Real languages and unit tests.
+  - Sandboxed and deterministic, which keeps simulation and result caching valid.
+  - No service for customers to host.
+  - Fast iteration (Javy dynamic linking, precompile cache).
+- *Cons:*
+  - **Opaque:** functions must declare their inputs, so incremental updates are coarser and
+    information flow is more conservative.
+  - Slower per call than CEL (JS via QuickJS slower still).
+  - Uneven toolchains beyond Rust.
+  - Harder to debug.
+  - An extra build step.
+
+**Rule of thumb:** CEL by default; WASM only when a real programming language is needed; never either
+for I/O.
+
 ## 3. What changed from the previous plan
 
 - **Kept:** the Pulumi model (code-first config), TypeScript first and Python second, a
