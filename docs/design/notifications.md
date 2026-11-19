@@ -3,7 +3,7 @@
 *Status: design. Addresses red-team gap A3 (nobody hears about scorecards). Scope: **GitHub-native
 channels, email and webhooks. Slack and Teams are out of scope for now.** The webhook channel lets
 customers bridge to anything themselves.
-Related: [sdlc.md](./sdlc.md) (Actions for the portal repo), [canvases.md](./canvases.md) (reports),
+Related: [sdlc.md](./sdlc.md) (Actions for the portal repo), [dashboards.md](./dashboards.md) (reports),
 [meta-catalog.md](./meta-catalog.md) (routing data problems to connector owners).*
 
 There are two halves:
@@ -160,7 +160,7 @@ a later adapter rather than a redesign.
 | 1 | Event model, routing by ownership, inbox, email channel, `shadow` mode, `validate-catalog` + `push` Actions with OIDC |
 | 2 | GitHub App: living dashboard issue, PR check runs, `scorecard-check`, notification-volume estimate + gate in `plan` |
 | 3 | Fix PRs, initiative tracking issues with sub-issues, approvals via GitHub Environments, `run-action` |
-| 4 | `context` Action, digests rendered from canvases, webhook (CloudEvents) channel GA |
+| 4 | `context` Action, digests rendered from report templates, webhook (CloudEvents) channel GA |
 
 ## Sources
 

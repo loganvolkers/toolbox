@@ -53,7 +53,7 @@ assertions in code, simulation checkers, property tests, differential tests.
 
 | Id | Property |
 |---|---|
-| S1 | **Non-interference:** a principal's view (API, MCP, CLI, UI, search, counts, canvases, changefeed, context packs, notifications, plan output) is identical across any two worlds that differ only in data that principal cannot read |
+| S1 | **Non-interference:** a principal's view (API, MCP, CLI, UI, search, counts, views, changefeed, context packs, notifications, plan output) is identical across any two worlds that differ only in data that principal cannot read |
 | S2 | **Authorization agreement:** every Check, ListObjects and ListUsers result equals OpenFGA's for the same model and tuples |
 | S3 | **No unsafe deletes:** no entity is removed by a sync without `SNAPSHOT_COMPLETE`, with any `ERROR`, or above the deletion threshold |
 | S4 | **At-most-once side effects per idempotency key.** No execution without the required approvals. Permission re-checked at execution |
@@ -79,7 +79,7 @@ liveness phase):**
 | Id | Property |
 |---|---|
 | E1 | Incremental scoring ≡ full re-evaluation |
-| E2 | Permission bitmaps ≡ per-object Check |
+| E2 | Cached permission results and circuit permission views ≡ per-object Check by the embedded OpenFGA |
 | E3 | Incremental search/graph index ≡ rebuild from the database |
 | E4 | `plan` predicted diff ≡ observed diff after deploy (plan/apply equivalence) |
 | E5 | Postgres store ≡ SQLite store ≡ in-memory model store (same operation histories, same results) |
@@ -97,7 +97,7 @@ liveness phase):**
 ## 3. Architecture requirements (decide in Phase 0, enforce by lint)
 
 1. **Functional core, imperative shell.** Merge, mapping, identity matching, derivation, scoring,
-   authorization, response shaping, plan computation and canvas query evaluation are **pure functions**
+   authorization, response shaping, plan computation and view query evaluation are **pure functions**
    over explicit inputs. I/O lives only in the shell.
 2. **One `Env` seam for all nondeterminism**, injected everywhere:
    - `Clock`, `Rng` (seeded)
@@ -122,7 +122,22 @@ liveness phase):**
    randomness unless injected from `Env`.
 8. **Language hosts stay at the edge.** Simulation consumes *manifests*. The TS/Python program →
    manifest path is tested separately (golden manifests + determinism checks).
-9. **Structured history log** (`cfg(sim)` and opt-in in production) of every client operation and
+9. **`MemStore` fidelity:** `MemStore` models the **isolation level Toolbox actually runs at**,
+   including permitted anomalies, serialization failures and **commit reordering**, not an idealised
+   serializable store. Critical transactions run at `SERIALIZABLE` with retry. Elle-style history
+   checks run against **real Postgres** in container tests on every PR that touches the store, and
+   continuously on `main` ([principal-review.md](../principal-review.md) §3.2).
+10. **Dependency determinism audit:** every dependency with its own threads or clocks (tantivy,
+    wasmtime compilation, sqlx pools, hyper/reqwest, rmcp, DBSP workers, the embedded Go runtime) is
+    configured single-threaded or injected under `cfg(sim)`. A CI check replays each seed twice and
+    diffs the traces.
+11. **Engines under simulation:**
+    - The DBSP circuit runs single-worker and steps on `Env` time.
+    - The DBOS-style durable runtime is substituted by an in-memory durable store with **crash
+      injection between every pair of steps**.
+    - Embedded OpenFGA runs with `GOMAXPROCS=1` as a synchronous pure function of the circuit's
+      tuple index.
+12. **Structured history log** (`cfg(sim)` and opt-in in production) of every client operation and
    result, for history checkers (Elle-style) and trace validation against models.
 
 ## 4. The verification stack
@@ -131,20 +146,20 @@ liveness phase):**
 |---|---|---|---|---|
 | L0 | Types, `forbid(unsafe)` in core, clippy bans (§3), `cargo-deny`, **`cargo-semver-checks`** on SDK/IR crates, JSON-Schema compatibility checks on the manifest IR and MCP tool schemas | All crates | Compiler/linters | Every commit |
 | L1 | **TDD unit tests + snapshot tests** (insta), golden manifests, MCP tool-surface snapshots | All | Expected values / reviewed snapshots | Every commit |
-| L2 | **Property-based tests against executable reference models** (ShardStore approach) using `proptest`/`bolero` | Merge, identity matching, derivation, scoring, response shaping, native store, plan diff, canvas query engine | `toolbox-ref` crate: slow, obviously-correct models | Every commit (bounded); nightly (deep) |
-| L3 | **Differential testing vs. external oracles** | ReBAC vs **OpenFGA** (conformance corpus of ~1,200 checks + random model/tuple fuzzing); CEL vs the **cel-spec conformance suite**; Backstage descriptor parsing vs Backstage; read-only GQL subset vs Neo4j (later); stores vs each other (E5) | The external implementation | Per PR (corpora); nightly (random) |
-| L4 | **Fuzzing** (cargo-fuzz/bolero, structure-aware), enrolled in OSS-Fuzz | Parsers (OpenFGA DSL, YAML/catalog-info, CEL, manifest JSON, connector-protocol NDJSON, MCP JSON-RPC, AuthZEN), the WASM host boundary, canvas bridge messages | Crash-freedom, sanitizers, round-trip properties | Continuous |
-| L5 | **Bounded proofs** (Kani via bolero harnesses) | Small critical pure functions: ref/alias normalisation, bitmap set ops, CEL cost accounting (no overflow, bounded), the facet-redaction function (totality, never emits a disallowed path) | Model checker | Nightly |
-| L6 | **Concurrency checking** (shuttle randomized/PCT; loom for tiny primitives) | Index swap on changefeed apply, bitmap cache, lease/job claiming logic, revision CAS | Linearizability against the reference model | Per PR (bounded) |
-| L7 | **In-process DST** (`toolbox-sim`, turmoil + `Env`, S2-style) | **The whole server cluster:** N API replicas, M workers, scheduler leader, `MemStore`+faults, simulated connectors/executors/IdP/agents, simulated time | **Safety invariants continuously; liveness phase then L1–L4; full-state oracle `Reference(...)`** | Per PR: ~1k seeds. Nightly: millions of seeds. Every failing seed becomes a permanent regression test |
-| L8 | **Whole-system DST** (Antithesis, optional but recommended) | Real binaries + **real Postgres** + connector containers + preview of the GitHub Action flow | Same `always`/`sometimes` assertions + an external checker container | Nightly/weekly; release gate |
-| L9 | **Configuration-space testing** (§6) | Generated portals × covering-array deployments × the corpus | All oracles above | Nightly + release |
+| L2 | **Property-based tests against executable reference models** (ShardStore approach) using `proptest`/`bolero` | Merge, identity matching, derivation, scoring, response shaping, native store, plan diff | `toolbox-ref` crate: slow, obviously-correct models | Every commit (bounded); continuous campaign on `main` (deep) |
+| L3 | **Differential and conformance testing vs. external oracles** | Embedded OpenFGA datastore adapter vs the stock OpenFGA server with its own storage (conformance corpus of ~1,200 checks + random model/tuple fuzzing); DBSP incremental vs batch evaluation of the same circuit (E1); CEL vs the **cel-spec conformance suite**; Backstage descriptor parsing vs Backstage; read-only GQL subset vs Neo4j (later); stores vs each other (E5) | The external implementation | Per PR (corpora + random) |
+| L4 | **Fuzzing** (cargo-fuzz/bolero, structure-aware), enrolled in OSS-Fuzz | Parsers (OpenFGA DSL, YAML/catalog-info, CEL, manifest JSON, connector-protocol NDJSON, MCP JSON-RPC, AuthZEN), the WASM host boundary, the OpenFGA C ABI | Crash-freedom, sanitizers, round-trip properties | Continuous |
+| L5 | **Bounded proofs** (Kani via bolero harnesses) | Small critical pure functions: ref/alias normalisation, C ABI buffer encode/decode, CEL cost accounting (no overflow, bounded), the facet-redaction function (totality, never emits a disallowed path) | Model checker | Per PR (changed harnesses) |
+| L6 | **Concurrency checking** (shuttle randomized/PCT; loom for tiny primitives) | Index swap on circuit step, permission result cache, lease/job claiming logic, revision CAS | Linearizability against the reference model | Per PR (bounded) |
+| L7 | **In-process DST** (`toolbox-sim`, turmoil + `Env`, S2-style) | **The whole server cluster:** N API replicas, M workers, scheduler leader, `MemStore`+faults, simulated connectors/executors/IdP/agents, simulated time | **Safety invariants continuously; liveness phase then L1–L4; full-state oracle `Reference(...)`** | Per PR: ~1k seeds. Continuously on `main`: millions of seeds. Every failing seed becomes a permanent regression test |
+| L8 | **Whole-system DST** (Antithesis, optional but recommended) | Real binaries + **real Postgres** + connector containers + preview of the GitHub Action flow | Same `always`/`sometimes` assertions + an external checker container | Continuous on `main`; release gate |
+| L9 | **Configuration-space testing** (§6) | Generated portals × covering-array deployments × the corpus | All oracles above | Per PR (sampled) + continuous on `main` |
 | L10 | **Upgrade and migration simulation** | N−2 → N upgrades under load; mixed-version rolling clusters; model and source-ownership migrations | L1 + E8 + no data loss | Release |
-| L11 | **Surface E2E** | UI (Playwright), MCP conformance, CLI, canvases, GitHub App (recorded API cassettes), Actions (`act`-style runner + a real GitHub sandbox org) | Snapshots + S1/E6 | Per PR (smoke) + nightly |
+| L11 | **Surface E2E** | UI (Playwright), MCP conformance, CLI, operator views, GitHub App (recorded API cassettes), Actions (`act`-style runner + a real GitHub sandbox org) | Snapshots + S1/E6 | Per PR |
 | L12 | **Agent evals** | The ~50-task authoring and usage suite on real models | Success rate, retries, tokens (statistical) | Release |
-| L13 | **Mutation testing** (cargo-mutants) | Core crates | Mutation score threshold | Weekly; per-PR on changed files |
-| L14 | **Lightweight formal models** | Distributed protocols: changefeed → replica readiness, leases, run state machine + approvals + idempotency, native-store concurrency, plan/apply | **Stateright** (Rust) or TLA+/P model checking at small scope, plus **trace validation**: simulation histories replayed against the model | Per change to a protocol; nightly trace checks |
-| L15 | **Production verification** | Background "auditors": recompute a sample of scores from scratch (E1), compare bitmaps vs Check (E2), checksum replica indexes vs the database (E3), validate revision chains (S5) | The same oracles, online | Continuous; exported as metrics and alerts |
+| L13 | **Mutation testing** (cargo-mutants) | Core crates | Mutation score threshold | Per PR on changed files |
+| L14 | **Lightweight formal models** | Distributed protocols: changefeed → replica readiness, leases, run state machine + approvals + idempotency, native-store concurrency, plan/apply | **Stateright** (Rust) or TLA+/P model checking at small scope, plus **trace validation**: simulation histories replayed against the model | Per change to a protocol; trace checks per PR |
+| L15 | **Production verification** | Background "auditors": recompute a sample of scores from scratch (E1), compare cached permission results vs Check (E2), checksum replica indexes vs the database (E3), validate revision chains (S5) | The same oracles, online | Continuous; exported as metrics and alerts |
 
 ## 5. `toolbox-sim`: the deterministic world
 
@@ -178,7 +193,7 @@ liveness phase):**
 3. **Liveness phase:** within a simulated time bound, L1–L4 must hold. The full state is compared with
    `toolbox-ref::expected(world_truth, manifest, native_history)`.
 
-**Coverage proof.** `sometimes!` assertions must each be hit across the nightly seed set, for
+**Coverage proof.** `sometimes!` assertions must each be hit across the continuous seed campaign, for
 example:
 - a connector crashed mid-snapshot
 - the deletion threshold tripped
@@ -187,7 +202,7 @@ example:
 - a replica served while behind (and was not ready)
 - a duplicate executor callback
 
-A `sometimes!` that is never hit fails the nightly job, because it means the simulation isn't
+A `sometimes!` that is never hit fails the campaign gate, because it means the simulation isn't
 exploring that state.
 
 **Reproduction:** `toolbox-sim --seed <n> --commit <sha>` replays exactly. Failing seeds are minimised
@@ -200,7 +215,7 @@ The configuration space has four axes, and each gets its own technique:
 | Axis | Examples | Technique |
 |---|---|---|
 | **Portal configuration** (the customer's program) | Kinds, fields, facets, `sources` precedence, relations, authz model, derivation rules, scorecards and CEL rules, actions, canvases, notification policies, gates | **Generative:** `toolbox-gen` produces random *valid* manifests: random kinds and relation graphs, random OpenFGA models (seeded from OpenFGA's own corpus and mutated), random CEL rules type-checked against the generated schema, random facet assignments and source precedences. Each generated portal comes with a matching generated world and runs through L2/L3/L7. A small fraction goes through the TS/Python SDK path to cover language hosts |
-| **Deployment configuration** | Store (SQLite / PG 15/16/17), topology (all-in-one / split roles), replicas (1/3), embeddings (on/off), authz mode (embedded / external OpenFGA), notification mode (shadow/pilot/on), telemetry sinks, preview data mode, arch (x86/arm) | **Covering arrays:** a 3-way array (≈ dozens of configurations) in nightly CI; 4-way before releases. NIST's evidence is that 4–6-way coverage matches exhaustive testing's fault detection |
+| **Deployment configuration** | Store (SQLite / PG 15/16/17), topology (all-in-one / split roles), replicas (1/3), embeddings (on/off), auth mode (identity-aware proxy / OIDC), notification mode (shadow/pilot/on), telemetry sinks, preview data mode, arch (x86/arm) | **Covering arrays:** a 3-way array (≈ dozens of configurations) on every PR; 4-way before releases. NIST's evidence is that 4–6-way coverage matches exhaustive testing's fault detection |
 | **Real portals** | Reference portals (startup, mid-size, regulated, multi-team, Backstage-migrated); public portal repos; opt-in anonymised customer manifests | **Corpus runs, "crater for portals":** every release candidate runs every corpus portal through `toolbox test`, remote-plan equivalence (E4) and DST |
 | **Versions** | Toolbox N−2…N, SDK versions, connector protocol versions | Upgrade simulations (L10); protocol version-negotiation fuzzing |
 
@@ -261,7 +276,7 @@ status. This makes the assurance claim auditable rather than rhetorical.
 | Need | Choice | Why / alternative |
 |---|---|---|
 | In-process simulation | **turmoil** + our `Env` seam (time and randomness controlled through `Env` rather than libc overrides) | Maintained tokio project; S2's production path. *Alt:* madsim (RisingWave), but it swaps tokio at compile time and its fault injection is reportedly lighter |
-| Whole-system simulation | **Antithesis** (optional, commercial) | Proven on WarpStream's whole SaaS and on Turso; real Postgres and containers; replay. The Rust SDK assertions run locally as no-ops or file output, so the code is not coupled to it. *Fallback:* non-deterministic container chaos (Jepsen-style) nightly |
+| Whole-system simulation | **Antithesis** (optional, commercial) | Proven on WarpStream's whole SaaS and on Turso; real Postgres and containers; replay. The Rust SDK assertions run locally as no-ops or file output, so the code is not coupled to it. *Fallback:* non-deterministic container chaos (Jepsen-style), run continuously on `main` |
 | Property tests / fuzz / proofs | **bolero** (with proptest strategies), cargo-fuzz, **Kani** | One harness, three engines |
 | Concurrency | **shuttle** (+ loom for primitives) | ShardStore precedent |
 | Protocol models | **Stateright** (Rust-native, so engineers stay in one language) or TLA+ for the trickiest protocol | Model check plus simulation trace validation |
@@ -278,7 +293,7 @@ status. This makes the assurance claim auditable rather than rhetorical.
 | 1 | Reference models for merge, identity, derivation, shaping; S1 paired-world checks; multi-replica simulation with changefeed + readiness; covering array v1 (3-way); fuzzing of parsers; `toolbox simulate` preview |
 | 2 | Scoring E1, plan/apply E4; simulated GitHub App + Actions flows; Kani harnesses; mutation testing on core crates |
 | 3 | Action runs S4/S10 (Stateright model + trace validation); executor fault simulation; native store S5 + history checker |
-| 4 | Knowledge/search E3 + S9; canvas bridge S1; Antithesis whole-system runs |
+| 4 | Knowledge/search E3 + S9; operator views S1; Antithesis whole-system runs |
 | 5–6 | Corpus "crater" runs; 4-way arrays; upgrade simulations; published assurance report per release |
 
 ## 11. Honest limits

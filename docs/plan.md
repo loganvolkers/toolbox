@@ -9,8 +9,9 @@
 ## 1. Thesis
 
 A Toolbox portal is a **build artifact of a git repository**. A platform team or an agent writes a
-portal program **in the language they already use** (TypeScript, Python, Go, C#, Java, or plain YAML,
-following the Pulumi model). The program pins a Toolbox version and declares connectors, scorecards,
+portal program **in the language they already use** (TypeScript and Python first, or a plain
+YAML/JSON manifest; more languages via codegen), following the Pulumi model
+([extensibility.md](./design/extensibility.md)). The program pins a Toolbox version and declares connectors, scorecards,
 actions, docs and UI views. Then they run:
 
 ```
@@ -27,12 +28,20 @@ the same truth through a fast, mostly read-only UI.
 2. Agents can **use** a portal: find, understand, assess and act on the software estate within a token
    budget, with safe side effects.
 3. The portal scales to **10k+ services, 100k+ entities, 10k+ users** on boring infrastructure
-   (Postgres plus stateless replicas).
-4. Extensions (connectors, scorecard rules, transforms, actions, UI) can be written **in any mainstream
-   language**.
+   (Postgres + object storage + stateless replicas). Every derived value is maintained
+   **incrementally** by one rigorous engine; there is no batch or nightly recomputation
+   ([incremental-computation.md](./design/incremental-computation.md)).
+4. Extensions use **the right language for each job**, optimised for the agent developer experience:
+   - TypeScript/Python programs for configuration
+   - CEL for predicates and mappings
+   - WASM functions for complex in-engine logic
+   - any language for connectors and executors
+   - Web Components for operator UI
+
+   ([extensibility.md](./design/extensibility.md))
 5. Upgrading Toolbox is a **version bump**, not a merge of scaffolded code.
 6. Operators get boring, observable operations:
-   - only Postgres to back up
+   - only Postgres and one object-storage bucket to back up
    - documented metric and event catalogs
    - shipped dashboards, alerts and runbooks
    - **replaceable monitoring vendors**: Grafana and PostHog are the reference backends, not
@@ -43,9 +52,12 @@ the same truth through a fast, mostly read-only UI.
   actions, and the server refuses runtime config mutation. *Catalog data* may be stored natively, but
   only for fields the schema (in code) declares `native`
   ([source-of-truth.md](./design/source-of-truth.md)).
-- A hosted SaaS, a plugin marketplace that runs arbitrary code in-process, or a drag-and-drop dashboard
-  builder. Dashboards are *canvases*: agent-written code, either ephemeral drafts or promoted, reviewed
-  modules ([canvases.md](./design/canvases.md)).
+- A hosted SaaS, a plugin marketplace that runs arbitrary code in-process, a drag-and-drop dashboard
+  builder, or **user-authored dashboards inside Toolbox**. Ad-hoc dashboards are built in Claude
+  Artifacts, Cursor Canvas and similar tools over the Toolbox MCP server. UI customisation is for
+  operators only, in code ([dashboards.md](./design/dashboards.md)).
+- Hosting customers' general-purpose server code. In-engine logic is sandboxed WASM. Connectors and
+  executors run wherever the customer runs them (the Salesforce Functions lesson).
 - Engineering-metrics analytics (DORA, surveys). Toolbox *ingests* such facts as inputs; it does not
   compete with DX-style analytics.
 - Running agents. Toolbox *informs and governs* agents; runners such as Claude Code or engrams can
@@ -55,17 +67,23 @@ the same truth through a fast, mostly read-only UI.
 
 | **Config (in git, immutable per deploy)** | **State (in Postgres, changes at runtime)** |
 |---|---|
-| Kinds and schemas, relation types, **per-field source of truth** | Entities, relations, provenance; **native field values with revisions** |
-| Connector declarations and mappings | Connector cursors, sync status |
-| Scorecards, rules, levels, initiatives, waivers | Rule outcomes, score history |
+| Kinds and schemas, relation types, **per-field source of truth** | **Inputs (written once):** raw connector records, native field values with revisions |
+| Connector declarations and mappings | Connector cursors, sync status (durable workflow state) |
+| Scorecards, rules, levels, initiatives, waivers | **Derived views (never written as source data):** entities, relations, authz tuples, rule outcomes; plus an archive of their deltas for history |
 | Actions, executors, approval rules, automations | Action runs, approvals given, logs |
 | Authorization model (OpenFGA DSL), derivation rules, roles | Sessions, tokens, audit log |
 | UI views, navigation, branding | Search indexes, embeddings, doc renders |
 | Docs sources | Docs content (re-derivable) |
 
-Everything in the right column can be rebuilt from the sources and the left column, except three
-things: the audit log, run history, and **native data** (fields the schema declares Toolbox-owned). The
-native data is mirrored to git and exportable.
+**Every fact is written exactly once.** Entities, relations, tuples, scores and search documents are
+views computed by the incremental circuit from the commit-ordered change log
+([incremental-computation.md](./design/incremental-computation.md)). The only irreplaceable state is:
+- the audit log
+- workflow and run history
+- **native data** (fields the schema declares Toolbox-owned), which is also mirrored to git and
+  exportable
+
+Everything else can be rebuilt by replaying the log.
 
 ---
 
@@ -77,7 +95,7 @@ acme-portal/                # a TypeScript portal; Python/Go/C#/Java/YAML repos 
 ├── toolbox.lock            # pinned toolbox + connector/extension digests (like .terraform.lock.hcl)
 ├── package.json            # depends on @toolbox/sdk (+ any shared org packages)
 ├── src/index.ts            # the portal program: kinds, connectors, scorecards, actions, views
-├── src/rules/*.ts          # optional: rule/transform functions run at runtime (see §4.6)
+├── src/transforms/*.ts     # optional: complex rule/transform functions, compiled to WASM (see §4.6)
 ├── connectors/             # optional custom connectors (any language, Toolbox Connector Protocol)
 ├── ui/                     # optional web components (TS/JS)
 ├── authz/                  # OpenFGA-language model (fga.mod + modules) + .fga.yaml tests
@@ -117,8 +135,10 @@ new tb.Connector("github", {
 new tb.Connector("pagerduty", {
   package: "toolbox-dev/pagerduty@^1",
   config: { token: tb.secret("vault:kv/pd#token") },
-  map: { service: { target: "'service:default/' + record.name",   // CEL mapping, evaluated in Rust
-                    set: { "spec.oncall": "record.escalation_policy.id" } } },
+  map: {                                                 // CEL mapping with object construction, typed and checked at build
+    service: `{ "ref": "service:default/" + record.name,
+                "spec": { "oncall": record.escalation_policy.id, "url": record.html_url } }`,
+  },
 });
 
 prodReadiness(portal, { appliesTo: service });
@@ -166,7 +186,7 @@ Toolbox copies this split:
 | Pulumi | Toolbox |
 |---|---|
 | Engine (Go) | Toolbox engine (Rust): validation, type-checking, plan, build |
-| Language host + SDK per language | `toolbox-language-{nodejs,python,go,dotnet,java}` + `@toolbox/sdk`, `toolbox-sdk` (PyPI), Go module, NuGet, Maven |
+| Language host + SDK per language | `toolbox-language-{nodejs,python}` + `@toolbox/sdk`, `toolbox-sdk` (PyPI) first; Go, .NET and Java through the same codegen when contributors appear |
 | `RegisterResource` → resource monitor | `Register(kind\|connector\|scorecard\|action\|view…)` → **config monitor** (local gRPC/HTTP) |
 | State + `pulumi preview` | Live data snapshot + `toolbox plan` (score, permission and MCP-surface diffs) |
 | Pulumi Package schema → generated SDKs | **Toolbox schema** (all built-in resource types) → generated SDKs, so every language has identical features on day one |
@@ -181,8 +201,11 @@ Rules that keep this safe for config as code:
 - **Determinism is enforced, not assumed.** The engine runs programs with no network by default and
   evaluates twice in CI to detect non-determinism. Secrets are references, never values.
 - **Expressions stay language-neutral.** Filters, rule checks and mappings are CEL strings, so they mean
-  the same thing in every SDK and evaluate in Rust at runtime at full speed. Logic that needs a real
-  language becomes a runtime extension (§4.6), written in the same language as the program.
+  the same thing in every SDK and evaluate in Rust at runtime at full speed.
+  - **Typed CEL:** the CLI and LSP type-check every expression against the generated kind schemas, so
+    the logic that matters is checked whatever the authoring language.
+  - Logic that needs a real language becomes a **WASM function** (§4.6), written in TypeScript or
+    Rust and run sandboxed in-engine. It never becomes a service the customer must host.
 - **Why this beats a single DSL (Starlark, HCL, CUE):**
   - Developers and agents work in a language they already know, with their normal package manager,
     type checker, IDE, tests and code review.
@@ -197,7 +220,8 @@ The costs are real:
 
 Mitigations:
 - All SDKs are generated from one schema, and hand-written code is limited to a thin runtime.
-- Ship TypeScript, Python and YAML first; Go next; C# and Java on demand.
+- Ship TypeScript, Python and YAML first; other languages through the same codegen when contributors
+  appear.
 
 ---
 
@@ -212,32 +236,35 @@ flowchart LR
   end
   subgraph Toolbox["toolbox server (single Rust binary, roles: api | worker | all)"]
     CR[Connector runtime<br/>stdio protocol / WASM / push]
-    ING[Ingest + merge<br/>fragments → entities, provenance]
-    G[(Graph index<br/>in-memory topology)]
-    SC[Scorecard engine<br/>CEL / WASM / SQL, incremental]
-    ACT[Action engine<br/>runs, approvals, automations]
+    LOG[Change log<br/>logical decoding, commit-ordered]
+    IVM[Incremental circuit — DBSP<br/>map → merge → entities → relations →<br/>closures → tuples → scores → rollups]
+    G[(Indexed views<br/>graph, tuples, scores)]
+    FGA[Embedded OpenFGA<br/>Go module via C ABI]
+    WF[Durable workflows — DBOS model<br/>actions, syncs, notifications, timers]
     KN[Knowledge pipeline<br/>docs, schemas, chunks, embeddings]
     S[Search<br/>tantivy BM25 + vectors]
-    AZ[AuthN/Z<br/>OIDC, OAuth2.1, PAT,<br/>ReBAC on the graph]
+    AZ[AuthN/Z<br/>IAP / OIDC / OAuth2.1 / PAT,<br/>facets + info-flow shaping]
     API[REST + OpenAPI<br/>changefeed SSE/webhooks]
     MCP[MCP<br/>Streamable HTTP]
     UI[Web UI<br/>embedded SPA]
   end
-  PG[(Postgres<br/>or SQLite in dev)]
+  PG[(Postgres<br/>inputs + workflow state<br/>or SQLite in dev)]
+  OBJ[(Object storage<br/>checkpoints, history archive)]
   EXE[Executors<br/>GitHub Actions, GitLab, Argo, k8s Job, webhook]
   CLI[toolbox CLI]
   AG[Agents<br/>Claude Code, Cursor, Codex...]
   H[Humans]
 
-  GIT & SAAS --> CR --> ING
-  PUSH --> API --> ING
-  ING --> PG
-  ING --> G & SC & KN
-  KN --> S
-  SC --> PG
-  ACT --> EXE
+  GIT & SAAS --> CR --> PG
+  PUSH --> API --> PG
+  PG --> LOG --> IVM --> G
+  IVM --> KN --> S
+  IVM --> OBJ
+  IVM -- event deltas --> WF --> EXE
+  WF --> PG
+  G --> FGA
   API & MCP & UI --> AZ
-  AZ --> G & SC & ACT & S & PG
+  AZ --> G & FGA & S & WF
   AG --> MCP
   AG & H --> CLI --> API
   H --> UI
@@ -252,15 +279,19 @@ flowchart LR
 | `toolbox-schema` + `toolbox-codegen` | The Toolbox schema for every built-in resource type; generates SDKs (TS, Python, Go, C#, Java), docs and JSON Schema | — |
 | `sdk/*` (non-Rust) | Thin per-language runtimes plus generated types; language hosts | npm, PyPI, Go, NuGet, Maven |
 | `toolbox-tcp` | Toolbox Connector Protocol: spec, conformance kit, Rust client/server; SDKs per language | axum, reqwest |
-| `toolbox-expr` | CEL compile/eval, static field-dependency extraction, type-checking against kind schemas | cel (cel-rust) |
-| `toolbox-store` | Storage traits; Postgres and SQLite implementations; migrations; outbox/changefeed; job queue (`SKIP LOCKED`) | sqlx |
-| `toolbox-ingest` | Connector runtime (process protocol, push API, WASM), fragment merge, provenance, deletion semantics | tokio, wasmtime |
-| `toolbox-graph` | In-memory CSR topology, traversals, impact/path queries, ownership resolution | petgraph-style custom CSR |
-| `toolbox-score` | Scorecard compile, incremental evaluation, levels/points, initiatives, waivers, explain | toolbox-expr, wasmtime |
-| `toolbox-actions` | Action registry, executors, run state machine, approvals, idempotency, automations, templates | minijinja, reqwest |
+| `toolbox-expr` | Typed CEL: compile, type-check against kind schemas (Salsa-memoised for CLI/LSP), object construction for mappings, cost estimation | cel (cel-rust), salsa |
+| `toolbox-store` | Input tables (raw records, native values, audit), migrations, `MemStore` with modelled isolation | sqlx |
+| `toolbox-changelog` | Commit-ordered change log via Postgres logical decoding; log positions as consistency tokens | sqlx / pgwire replication |
+| `toolbox-ivm` | **The incremental circuit**: compiles the manifest to a DBSP circuit (mapping, merge by `sources`, relations, recursive closures, tuples, rule outcomes, levels, rollups, facet labels, search documents); epochs; checkpoints; history-delta archive | **dbsp** (MIT) |
+| `toolbox-durable` | Durable execution (DBOS model): workflows and steps checkpointed in Postgres, queues, scheduled workflows; behind a `Durable` trait | **dbos** Rust SDK (or a schema-compatible minimal runtime) |
+| `toolbox-ingest` | Connector runtime (process protocol, push API), sync workflows, cursor and snapshot bookkeeping, deletion safety valves | tokio |
+| `toolbox-graph` | Query layer over the circuit's indexed views: neighbours, paths, impact, ownership | — |
+| `toolbox-score` | Scorecard definitions → circuit operators; explain; waivers; initiatives | toolbox-ivm, toolbox-expr |
+| `toolbox-actions` | Action registry, executors, run workflows, approvals, idempotency, automations, templates | toolbox-durable, minijinja |
 | `toolbox-knowledge` | Docs/schema ingest, Markdown render, chunking, embeddings, context packs | comrak, pulldown-cmark |
 | `toolbox-search` | Unified index, hybrid ranking (BM25 + vectors with RRF), permission filtering | tantivy, pgvector / usearch |
-| `toolbox-authz` | OIDC login, PATs, MCP OAuth 2.1 resource server; OpenFGA-compatible parser and evaluator over the catalog graph (derived tuples, facets, permission bitmaps, explain); AuthZEN endpoint; audit | openidconnect, roaring, toolbox-expr |
+| `toolbox-authz` | Identity-aware-proxy JWT verification, OIDC, PATs, MCP OAuth 2.1; facet shaping with information-flow labels; CODEOWNERS authority; result caches per log position; explain; AuthZEN endpoint; audit | openidconnect, jsonwebtoken |
+| `toolbox-fga` (Go) | **Embedded OpenFGA** (`pkg/server`) with a read-only datastore over the circuit's tuple index; built as a c-archive and called through a batched C ABI | openfga/openfga |
 | `toolbox-wasm` | wasmtime host, WIT worlds, fuel/memory limits, component cache | wasmtime |
 | `toolbox-api` | axum REST, OpenAPI 3.1 (generated per portal), SSE changefeed, outbound webhooks | axum, utoipa |
 | `toolbox-mcp` | MCP server (Streamable HTTP + stdio bridge), tools/resources/prompts/elicitation/tasks | rmcp |
@@ -276,9 +307,11 @@ flowchart LR
 
 **Architecture rule:** functional core, imperative shell. All nondeterminism goes through `toolbox-env`, so the whole cluster can run under deterministic simulation ([verification.md](./design/verification.md) §3).
 
-A single binary runs as `toolbox serve --role all|api|worker`. Workers claim jobs from Postgres with
-`FOR UPDATE SKIP LOCKED`. Schedulers use a Postgres advisory-lock leader. There is no Redis, Kafka or
-Elasticsearch dependency.
+A single binary runs as `toolbox serve --role all|api|worker`.
+- **Every replica runs the same deterministic circuit** over the same change log, so state at a given
+  log position is identical everywhere.
+- **Workers execute durable workflows.**
+- **Dependencies:** Postgres and object storage. There is no Redis, Kafka or Elasticsearch dependency.
 
 ---
 
@@ -301,15 +334,19 @@ status:
 provenance: { "spec.owner": { source: "git:acme/payments/catalog-info.yaml", at: "...", confidence: 1.0 } }
 ```
 
-**Multi-source merge (fixes a Backstage limitation).** Connectors emit *fragments* keyed by entity
-identity. The merge is a **pure, deterministic function** with these properties:
+**Multi-source merge (fixes a Backstage limitation).** Connectors emit raw records; the circuit maps
+them to *fragments* keyed by entity identity. The merge is a **circuit operator**: a pure,
+deterministic, incrementally maintained function with these properties:
 - Field-level precedence is declared in config, as each kind's **`sources`** list (e.g. `owner` comes
   from `catalog-info`, then `native`, then inference). The same declaration governs writes: native
   fields are edited in Toolbox, git-owned fields get a PR, and connector-owned fields are read-only
   ([source-of-truth.md](./design/source-of-truth.md)).
 - Arrays and sets are canonicalized, which prevents the hash churn Backstage warns about.
-- Hash-based change detection: only changed entities propagate downstream.
+- Only changed entities propagate downstream. This is inherent to the incremental circuit (Z-set
+  deltas).
 - Pure WASM *transforms* can run in the merge step, so it is extensible, unlike Backstage stitching.
+- **Permission-relevant claims** (`spec.owner`, external ids) apply only when backed by CODEOWNERS
+  ([authorization.md](./authorization.md) §4.8).
 - The ingest path never calls out to the network, following Backstage's processing-loop lesson.
 
 **Deletion semantics.** Connectors declare `full` or `incremental` sync. After a full sync, a
@@ -323,9 +360,9 @@ so the portal can catalog and distribute agent standards. Custom kinds support P
 and inherited ownership.
 
 **Graph.**
-- Relations are stored in Postgres (`edges` table, both directions).
-- Every replica keeps an **in-memory CSR topology**, refreshed from the changefeed. At 100k nodes and
-  2M edges this is tens of MB, and it gives sub-millisecond traversals.
+- Relations are a circuit view, indexed in memory in both directions.
+- Recursive closures are maintained incrementally by the circuit. Examples: nested group membership,
+  inherited ownership, `dependsOn` reachability, system and domain roll-ups.
 - Queries:
   - `neighbors(ref, types, depth)`
   - `path(a, b)`
@@ -369,19 +406,19 @@ initiative("tier1-oncall", scorecard = "production-readiness", rules = ["oncall-
   Datadog's outcome model and are essential for honest explanations to agents.
 - **Rule languages, in tiers:**
   1. **CEL** inline: covers ~90% of rules. It is type-checked at `toolbox build` against kind schemas.
-  2. **Extension functions** for complex logic, written in the program's own language. They run behind
-     the Toolbox Connector Protocol's `evaluate` capability (batched over HTTP), or compile to WASM
-     when the language supports it (§4.6).
-  3. **SQL** (phase 5): aggregate and cross-entity checks over a read-only relational view, the
-     pattern DX validated.
-- **Incremental evaluation:** CEL rules are statically analysed for the fields, relations and facts
-  they read. A change re-evaluates only the dependent `(rule, entity)` pairs. A scorecard config change
-  triggers a full re-evaluation when the new deployment starts.
-  - Target: 100 rules × 100k entities fully rescored in < 5 minutes on one worker.
+  2. **WASM functions** for complex logic, written in TypeScript or Rust (§4.6).
+  3. **SQL-style aggregate rules**: cross-entity checks expressed as circuit queries, the pattern DX
+     validated.
+- **Incremental evaluation is the circuit.** Rules are operators, and outcomes update as their inputs
+  change, with no invalidation logic to maintain by hand. A scorecard config change creates a new
+  circuit epoch, built in the background from a checkpoint and the log, then cut over atomically. Only
+  the operators the manifest diff touches recompute.
+- **Information flow:** outcomes carry the facet labels of their inputs. Making outcomes public
+  requires an explicit `declassify` ([authorization.md](./authorization.md) §4.2).
 - **`toolbox plan` score diff:** the killer feature for agents and reviewers. `toolbox plan --remote
   https://portal.acme.dev` uploads the new manifest (config only), and the portal evaluates it
-  **server-side** against current state. No production data reaches CI, and detailed output is
-  redacted to the viewer's permissions ([sdlc.md](./design/sdlc.md) §4). It reports, for example:
+  **server-side** against current state. No production data reaches CI. Plan output is posted to the
+  PR, and access to the portal repo is the boundary, as with Terraform ([sdlc.md](./design/sdlc.md) §4). It reports, for example:
   "+1 rule; 214 services drop silver→bronze; 3 waivers expire before deadline".
 - **Explain:** for every failing rule, return the expression, the observed values, the provenance of
   those values, the `fix` text, and a linked remediation action. This feeds MCP `explain` and the UI.
@@ -402,9 +439,11 @@ initiative("tier1-oncall", scorecard = "production-readiness", rules = ["oncall-
     catalog
   - `pull_request`: apply a patch and open a PR
   - `wasm`: sandboxed; host-granted HTTP only
-- **Runs:** a durable state machine in Postgres (`pending → awaiting_approval → running → succeeded |
-  failed | cancelled`). It supports idempotency keys, logs streamed over SSE, and callbacks for external
-  executors (signed run tokens).
+- **Runs are durable workflows** (DBOS model, [incremental-computation.md](./design/incremental-computation.md) §4).
+  - States: `pending → awaiting_approval → running → succeeded | failed | cancelled`.
+  - Each step is checkpointed in Postgres; approval waits and timeouts are durable.
+  - Idempotency keys, logs streamed over SSE, and callbacks for external executors (signed run
+    tokens).
 - **Dry-run is mandatory to declare.** An action declares `dry_run = "native" | "validate_only"`. Agents
   always see what a run *would* do before doing it: the rendered template diff, the target workflow and
   inputs, and the approval path.
@@ -428,8 +467,8 @@ initiative("tier1-oncall", scorecard = "production-readiness", rules = ["oncall-
     an embedded HNSW in SQLite mode.
   - Results are fused with reciprocal-rank fusion, boosted by graph proximity to the caller's teams.
   - Permission filtering is applied before results leave the server.
-  - Indexes are per replica and rebuilt from the changefeed. Snapshots can go to object storage for
-    fast cold start.
+  - Indexes are per replica, fed by the circuit's search-document deltas. Snapshots in object storage
+    give fast cold start.
 - **Embeddings are optional.** Any OpenAI-compatible endpoint works, or local ONNX. With embeddings off,
   everything still works on BM25 plus the graph, which keeps self-hosting simple.
 - **Context packs** (the agent-first core). `GET /v1/context/{ref}?budget=8000&for=change|incident|onboard`
@@ -461,6 +500,8 @@ Every capability is declared once (kind, scorecard, action, view, query) and pro
 - REST/JSON under `/v1`. The **OpenAPI 3.1 document is generated per portal at build time**, including
   typed schemas for each custom kind, so customers can generate typed clients for their own portal.
 - Cursor pagination, field projection, ETags.
+- Every response carries its **log position**. Clients can require "at least position N" for
+  read-your-writes.
 - Changefeed via SSE (`/v1/events`) and signed outbound webhooks.
 
 **MCP** (rmcp; Streamable HTTP at `/mcp`; `toolbox mcp` stdio bridge for local clients)
@@ -473,11 +514,14 @@ Every capability is declared once (kind, scorecard, action, view, query) and pro
   Long runs use MCP tasks.
 - Server `instructions` are generated from the portal description and model.
 - Auth uses MCP OAuth 2.1, with Toolbox as the resource server and the customer IdP as the authorization
-  server. PATs cover headless agents.
+  server. PATs cover headless agents. Identity-aware-proxy programmatic tokens are also accepted.
+- Analysis tools (`trend`, `rollup`, `distribution`, `history`, `as_of`) let agents build dashboards in
+  Claude Artifacts, Cursor Canvas and similar tools ([dashboards.md](./design/dashboards.md)).
 
 **CLI** (`toolbox`): one binary for authoring and operating.
 - Authoring: `init`, `dev` (Tilt-like live reload with fixtures), `fmt`, `lint`, `test`,
-  `plan [--remote URL]`, `build`, `upgrade` (codemods), `ext new rule --lang python`, `connector test`.
+  `plan [--remote URL]`, `build`, `upgrade` (codemods), `ext new transform --lang ts|rust`,
+  `connector test`.
 - Operating: `login`, `get`, `query`, `search`, `graph`, `context`, `score`, `explain`, `run`, `runs`.
 - Output modes: `-o table|json|yaml|md`, stable for agents (kubectl / `tilt get` conventions).
 
@@ -485,20 +529,25 @@ Every capability is declared once (kind, scorecard, action, view, query) and pro
 - The *exception* to "Rust everywhere", by design. Agents and humans build UI fastest in TS, and UI
   extensions must be web-native anyway.
 - Entity pages and lists are generated from kind schemas and declarative `view()` config.
-- Custom UI ships as **Web Components** (ES modules) built by `toolbox build` with a Rust-native
-  bundler, using `@toolbox/ui-sdk` (typed API client, theme, auth).
+- **Operator-only customisation:** custom UI ships as **Web Components / TSX views** in the portal
+  repo, built by `toolbox build`, using `@toolbox/ui-sdk` (typed API client, theme, auth). Users don't
+  author UI inside Toolbox ([dashboards.md](./design/dashboards.md)).
 - **The UI mostly reads.** "Edit" on git-sourced data, or on config, **opens a pull request**. Edits to
   connector-sourced data are refused with a pointer to the source.
 
-### 4.6 Extension model: one open protocol, any language
+### 4.6 Extension model: the right language for each job
+
+Full rationale (Backstage, Port, Salesforce, Shopify Functions) is in
+[extensibility.md](./design/extensibility.md).
 
 | Need | Mechanism | Isolation | Languages |
 |---|---|---|---|
-| Config and reuse | Portal programs + **portal packages** (Pulumi model, §2) | Build time only | TS, Python, Go, C#, Java, YAML |
-| Connectors: I/O, vendor SDKs, long-running | **Toolbox Connector Protocol (TCP)**, an open HTTP+JSON spec | Separate process, container or service; least-privilege secrets | Any language with an HTTP server. SDKs: TS, Python, Go, Rust, C#, Java |
-| Runtime logic: rules, merge transforms, computed props | TCP `evaluate` capability (batched), or a **WASM component** where the toolchain is mature (Rust, Go, Python) | Process/container, or wasmtime sandbox (fuel + memory limits, no I/O) | Any (HTTP); Rust/Go/Python/JS (WASM) |
-| Side-effecting actions | **Executors**: CI systems, Argo, k8s Job, PR, *or a TCP `act` capability* | Out of process | Any |
-| UI | Declarative views; **Web Components** | Browser; CSP; scoped API token | TS/JS or anything compiling to JS/WASM |
+| Config and reuse | Portal programs + **portal packages** (Pulumi model, §2) | Build time only | TypeScript, Python, YAML/JSON manifest; more via codegen |
+| Predicates and field mappings | **Typed CEL** (with object construction for mappings, the Kubernetes MutatingAdmissionPolicy precedent) | In-engine; non-Turing-complete; cost-bounded | CEL |
+| Complex logic: rules, transforms, computed props | **WASM functions** (Shopify Functions model: deterministic, fuel-limited) | wasmtime sandbox, no I/O | TypeScript (Javy/StarlingMonkey), Rust, Go |
+| Connectors: I/O, vendor SDKs, long-running | **Toolbox Connector Protocol (TCP)**, an open HTTP+JSON spec | Separate process, container or service; least-privilege secrets | Any language. SDKs: TS, Python, Go, Rust |
+| Side-effecting actions | **Executors**: CI systems, Argo, k8s Job, PR, *or a TCP `act` capability*; durable steps optionally via DBOS SDKs | Out of process | Any |
+| Operator UI | Declarative views; **Web Components / TSX** (operators only) | Browser; CSP; scoped API token | TS/JS |
 
 #### Toolbox Connector Protocol (TCP)
 
@@ -527,15 +576,13 @@ synchronization**, not LLM tool calls.
       RELATION | FACT | DOC | DELETE | STATE | SNAPSHOT_COMPLETE | LOG | ERROR`, `webhook(event)`.
     - **Raw records + engine-side mapping** (lesson from Port Ocean, see [ocean.md](./ocean.md)).
       Connectors emit `RECORD {kind, data}` without knowing the customer's model. The portal program
-      maps records to entities with CEL (`where`, `explode`, `rel.lookup`), and connector packages
-      ship overridable `defaults()`. The engine keeps a bounded raw-record store, so a mapping change
-      re-maps without re-fetching, and `toolbox plan` can preview it.
+      maps records to entities with typed CEL (`where`, `explode`, `rel.lookup`, object construction),
+      and connector packages ship overridable `defaults()`. Raw records are input tables, so a mapping
+      change is a circuit change that re-maps without re-fetching, and `toolbox plan` can preview it.
     - **Engine-side reconciliation:**
       - No `SNAPSHOT_COMPLETE` or any `ERROR` in a full sync means no deletes for that kind.
       - A mass-deletion threshold applies, and deletes can be turned off per kind.
       - Unresolved relation lookups become flagged placeholder entities.
-  - `evaluate`: batched rule or transform functions, e.g. `POST /evaluate {rule, entities[≤1000]} →
-    outcomes[]`.
   - `act`: an action executor with `dry_run`, `run` and status callbacks. Standard fields are a
     `partition_key` (serialize runs per resource), `rate_limit` hints, async completion via webhook, and
     `identity: service | user` (on-behalf-of tokens, so an agent acting for Alice opens the PR as
@@ -579,44 +626,55 @@ These designs close the gaps found in the [red-team review](./red-team.md). Each
 
 | Capability | Summary | Design |
 |---|---|---|
-| **Meta catalog** | The portal's kinds, connectors, scorecards, rules, actions, canvases, authz modules and packages are owned catalog entities, with a dependency graph and default scorecards (ownership, connector health, scorecard quality, …). The portal scores itself, including the scorecards that score scorecards | [meta-catalog.md](./design/meta-catalog.md) |
-| **Canvases** (dashboards) | Agent-generated interactive views in the Cursor Canvas / Claude Artifacts style: TSX over a typed, permission-scoped data bridge in a sandboxed iframe. Drafts are ephemeral; promoted canvases are code. Includes a score/fact history store and scheduled reports | [canvases.md](./design/canvases.md) |
+| **Meta catalog** | The portal's kinds, connectors, scorecards, rules, actions, views, authz modules and packages are owned catalog entities, with a dependency graph and default scorecards (ownership, connector health, scorecard quality, …). The portal scores itself, including the scorecards that score scorecards | [meta-catalog.md](./design/meta-catalog.md) |
+| **Incremental computation** | One commit-ordered change log feeds one **DBSP** circuit (MIT, Rust, VLDB'23 best paper) that maintains every derived value incrementally, including recursive graph closures. **DBOS-model** durable workflows (Postgres) run every side effect. No dual writes, no batch recompute; log positions are consistency tokens; epochs for upgrades | [incremental-computation.md](./design/incremental-computation.md) |
+| **Extensibility & languages** | Code-first (Pulumi model), right tool per job: TS/Python programs, typed CEL predicates and mappings, WASM functions, any-language connectors, Web Components for operator UI. JSONata rejected; JQ not adopted | [extensibility.md](./design/extensibility.md) |
+| **Dashboards** | No user-authored dashboards in Toolbox: Claude Artifacts / Cursor Canvas + Toolbox MCP analysis tools. Operator-only UI views in code. History archive for trends | [dashboards.md](./design/dashboards.md) |
 | **Identity resolution** | External ids, declared matchers, structural inference, unmatched/ambiguous/conflict states, PR-based link proposals, aliases for renames, merges and splits | [identity-resolution.md](./design/identity-resolution.md) |
 | **Notifications + GitHub** | Ownership-routed events; GitHub App with living dashboard issue, PR score-delta checks, fix PRs and initiative issues; email; CloudEvents webhooks; GitHub Actions for service repos (validate, push, scorecard-check, context, run-action). Slack is out of scope for now | [notifications.md](./design/notifications.md) |
-| **Portal SDLC** | Local → CI → PR → ephemeral preview → prod. **Remote plan** (no prod data in CI, output redacted per viewer), policy gates (deletion, authz loss, operator lock-out, notification volume), signed + attested builds, verify + rollback, GitHub Actions + reusable workflow | [sdlc.md](./design/sdlc.md) |
+| **Portal SDLC** | Local → CI → PR → ephemeral preview → prod. **Remote plan** (no prod data in CI; full output on the PR, with the portal repo as the access boundary), policy gates (deletion, authz loss, operator lock-out, notification volume), signed + attested builds, verify + rollback, GitHub Actions + reusable workflow | [sdlc.md](./design/sdlc.md) |
 | **Context lake** | Layered lake: raw (bronze) → two-tier graph (curated catalog + bounded discovered *inventory*, joined by bridge edges, temporal validity) + catalog-anchored knowledge → derived scores/findings/context packs. Federates security graphs (Wiz, Cartography) instead of copying them; exports ownership so Toolbox is the ownership system of record; graph predicates in CEL; read-only GQL later | [context-lake.md](./design/context-lake.md) |
 | **Source of truth** | Field-level ownership declared in code (`git:` / `connector:` / `native` / `computed` / `action`, with precedence). One write path routes edits: native fields are edited inline (revisions, approvals, changesets with preview and revert), git fields get a PR, connector fields are rejected with an explanation. Write-back to GitHub custom properties; export and git mirror | [source-of-truth.md](./design/source-of-truth.md) |
-| **Verification** | TDD against named properties (safety, liveness, equivalences, non-interference). Executable reference models (ShardStore-style) as the full-pipeline oracle. Differential testing vs OpenFGA, the CEL conformance suite and across stores. Deterministic simulation (FoundationDB/TigerBeetle/S2-style, in-process) plus optional whole-system Antithesis. Generated portals × covering-array deployments × a real-portal corpus. Kani, shuttle, mutation testing; release gates with published assurance metrics. Customers get `toolbox simulate` for their own configs | [verification.md](./design/verification.md) |
+| **Verification** | TDD against named properties (safety, liveness, equivalences, non-interference). Executable reference models (ShardStore-style) as the full-pipeline oracle. Conformance via the embedded OpenFGA, the CEL conformance suite, incremental ≡ batch, and across stores. Deterministic simulation (FoundationDB/TigerBeetle/S2-style, in-process) plus optional whole-system Antithesis. Generated portals × covering-array deployments × a real-portal corpus. Kani, shuttle, mutation testing; release gates with published assurance metrics. Customers get `toolbox simulate` for their own configs | [verification.md](./design/verification.md) |
 | **Action-created entities** | Action scopes (`create`/`day2`/`delete`/`global`), action-sourced fragments, TTL lifecycles with expiry automations, pending overlays for PR-based changes, bulk-edit PRs | [action-entities.md](./design/action-entities.md) |
 
 ## 5. Security model
 
 - **One policy enforcement point** for API, MCP, CLI and UI. Backstage's MCP registry leaves permission
   checks to each action; Toolbox does not.
-- **AuthN:** OIDC SSO for humans; MCP OAuth 2.1 for agents acting on behalf of a user; scoped PATs and
-  service tokens for CI.
+- **AuthN:** delegated to the organisation's **identity-aware proxy** (Google IAP, Cloudflare Access,
+  Pomerium and similar; signed JWT headers are always verified) or built-in OIDC. MCP OAuth 2.1 for
+  agents acting on behalf of a user; scoped PATs and GitHub OIDC for CI. **Toolbox owns the
+  permissions boundary.**
+- **Revocation SLO** (default 60 s from an IdP event to enforcement) via a SCIM/webhook fast path, with
+  token group claims as a ceiling.
   - Agent principals are first-class. Every audit entry records the agent *and* the human it acts for.
 - **AuthZ: relationship-based access control on the catalog graph.** Full design in
   [authorization.md](./authorization.md).
   - The model is written in the OpenFGA language (CEL conditions, modular models).
-  - Tuples are *derived* from catalog relations by rules in code, so there is no separate permission
-    store and no sync.
-  - It is evaluated in-process in Rust, with OpenFGA's conformance corpus and the stock `fga` CLI as
-    test oracles.
-  - **Facets** give field-level visibility: e.g. a scorecard summary is visible to all, its details
-    only to the owning team.
+  - Tuples are *derived* views of catalog data maintained by the circuit, so there is no separate
+    permission store, no sync and no duplicate writes.
+  - **OpenFGA itself is embedded as a Go module** (C ABI, single binary) with a read-only datastore
+    over the circuit's tuple index. Production, `toolbox test` and `fga model test` run the same
+    engine.
+  - **Facets with information-flow labels** give field-level visibility. Catalogs are public by
+    default. Derived values inherit their inputs' labels, and **declassification is explicit and
+    reviewed** (e.g. a scorecard summary is visible to all while its details are visible only to the
+    owning team), with minimum-cardinality protection for aggregates.
+  - **Permission-relevant claims require CODEOWNERS backing:** `spec.owner` must be a code owner of
+    the claiming file, and conflicting external-id claims freeze rather than first-claim-wins.
   - One response-shaping layer enforces this for API, MCP, CLI, UI, search, context packs and the
     changefeed.
   - `.fga.yaml` model tests, catalog-fixture derivation tests and surface snapshot tests all run in
     `toolbox test`. `toolbox plan` reports authorization impact, e.g. who gains or loses which
     permission.
-  - An AuthZEN 1.0 endpoint and an optional external OpenFGA mode keep the decision engine
-    replaceable.
+  - An AuthZEN 1.0 endpoint lets other systems reuse Toolbox's decisions.
 - **Secrets** are never in config; config holds only references (`env:`, `vault:`, `aws-sm:`,
   `gcp-sm:`, `k8s:`). WASM gets no secrets.
-- **Untrusted content:** doc and README text returned to agents is wrapped and labelled as untrusted
-  data, to resist prompt injection. Actions marked `destructive` require explicit confirmation via
-  elicitation or approval.
+- **Agent safety is layered, and Toolbox does its part:** accurate MCP tool annotations, untrusted-text
+  markers in responses, approval policies for destructive actions, and full audit. Defence against
+  prompt-injected misuse is delegated to the MCP client's approval UI, agent-harness permissions,
+  egress controls and the identity-aware proxy. Toolbox does not taint sessions.
 - Append-only audit log, rate limits, signed webhooks, SBOM and provenance for releases.
 
 ---
@@ -634,7 +692,7 @@ replaceable.
 |---|---|---|---|---|
 | **Portal behaviour** | Portal authors | Portal program (build time) | Kinds, scorecards, actions, connectors, policies, *which* telemetry sinks exist | All behaviour is here, reviewed in PRs |
 | **Environment binding** | Operators | Env vars / Helm values / Terraform (deploy time) | DB URL, replicas, OTLP endpoint, PostHog host and key, log level, sink on/off | Can only **bind or disable** what the program declared, never add behaviour. The same image runs in staging and prod. |
-| **State** | The system | Postgres | Entities, runs, audit, cursors | Backed up, never hand-edited |
+| **State** | The system | Postgres (inputs, workflows, audit) + object storage (circuit checkpoints, history archive) | Raw records, native values, runs, audit, cursors | Backed up, never hand-edited |
 
 `toolbox admin config` prints the effective configuration, with secrets redacted and the source of
 each value (program, env or default). "Why is it doing that?" is answerable in one command.
@@ -652,10 +710,15 @@ each value (program, env or default). "Why is it doing that?" is answerable in o
 - **Dependencies:**
   - **Postgres ≥ 15** for production (pgvector optional).
   - **SQLite** for `toolbox dev` and small single-node installs.
-  - Object storage optional (doc assets, index snapshots).
+  - **Object storage** (S3/GCS/Azure/MinIO) for circuit checkpoints, the history archive, doc assets and
+    index snapshots. A local directory works for `toolbox dev`.
+  - **Postgres logical replication enabled** (`wal_level=logical`) for the change log.
   - No other required services.
-- **Scale-out:** stateless API replicas plus N workers. The graph and search indexes are local per
-  replica, fed by the changefeed, and readiness waits for catch-up.
+- **Scale-out:** every API replica runs the same deterministic circuit over the change log. Readiness
+  waits until the replica has caught up to the log head. Workers execute durable workflows.
+- **Epochs:** a deploy that changes derivations builds the new circuit epoch in the background, from
+  a checkpoint plus the log, and cuts over atomically. Presentational-only changes skip this
+  ([incremental-computation.md](./design/incremental-computation.md) §3).
 - **Database migrations:** expand/contract only, so rolling deploys are always safe across N → N+1.
   - `toolbox admin migrate plan` shows the SQL and the expected lock impact.
   - Migrations run as a Helm pre-upgrade job or on leader start-up; the operator chooses.
@@ -663,10 +726,9 @@ each value (program, env or default). "Why is it doing that?" is answerable in o
   deprecations, and `toolbox upgrade` applies SDK codemods (TS/Python first). LTS lines start at 1.0.
   Release notes are machine-readable, so upgrade agents can act on them.
 - **Backup and DR:**
-  - **Only Postgres needs backing up.** Search indexes, the graph, doc renders and embeddings are
-    rebuildable.
-  - RPO = Postgres RPO. RTO is bounded by re-indexing, which is shortened by index snapshots in object
-    storage.
+  - **Back up Postgres and the object-storage bucket.** Every derived view (graph, tuples, scores,
+    search, embeddings) is rebuildable by replaying the log. Checkpoints only make that fast.
+  - RPO = Postgres RPO. RTO is bounded by checkpoint restore + log tail replay.
   - `toolbox admin backup verify` restores into a scratch database and checks invariants. A DR drill is
     part of the v1.0 exit criteria.
 - **Retention** (in code, per data type): raw connector records, run logs, analytics events and audit,
@@ -776,7 +838,7 @@ program decides what exists.
   - dead-lettered webhooks
 - **Admin commands** are remote, policy-gated (`operator` relation on `portal`) and audited:
   - `resync <connector> [--kind]`, `replay --dead-letter`
-  - `reindex search|graph`, `rescore [--scorecard]`
+  - `rebuild-epoch` (rebuild derived state from checkpoint + log), `reindex search`
   - `drain` (stop workers for maintenance)
   - `migrate status|plan|apply`
   - `backup verify`, `export audit`
@@ -786,7 +848,8 @@ program decides what exists.
 - **Built-in SLOs** (defaults in code, adjustable):
   - API availability and latency
   - connector freshness (`connector_lag < 15m`)
-  - scoring freshness
+  - circuit lag (log head → views applied)
+  - **revocation latency** (IdP event → enforcement, default ≤ 60 s)
   - action-run success
   - MCP tool success rate
   These compile to the alert rules in §6.3.
@@ -829,118 +892,137 @@ This is a stated product goal, so it is a **tested requirement**:
 
 ## 8. Delivery roadmap
 
-Timelines assume 3–5 engineers working heavily with agents. Each phase ends with a demo and exit criteria.
+There are no time estimates: the project is built with agents, and phases are defined by **exit
+criteria**, not dates. Phase 1 is deliberately a focused first release, *ownership and standards for
+agents* ([principal-review.md](./principal-review.md) §5.1). Breadth follows once it is useful on a
+real organisation.
 
-### Phase 0 — Foundations & spikes (weeks 0–4)
-- ADRs:
-  - 001 Pulumi-style multi-language programs + manifest IR
-  - 002 CEL
-  - 003 Postgres/SQLite
-  - 004 extension tiers
-  - 005 TS UI with Web Components
-  - 006 license (recommend **Apache-2.0** so it works as a dependency in any company)
-- Spikes:
-  - Toolbox schema → generated TS and Python SDKs; config monitor; nodejs and python language hosts;
-    typed manifest emission and a determinism check
-  - CEL conformance and static field-dependency extraction
-  - a wasmtime rule component authored in Rust, Python and TS
-  - Postgres with 100k synthetic entities (merge throughput, graph load, query plans)
-  - rmcp Streamable HTTP with OAuth
-- `toolbox-synth` generator; CI with benchmarks.
+### Phase 0 — Foundations and spikes
+- **ADRs** (recorded in `docs/adr/`):
+  - Pulumi-style programs (TS/Python/YAML) + manifest IR
+  - typed CEL for predicates and mappings
+  - Postgres + object storage, with a logical-decoding change log
+  - **DBSP circuit** for all derived state
+  - **DBOS-model** durable workflows
+  - **embedded OpenFGA via C ABI**
+  - information flow and declassification
+  - CODEOWNERS authority
+  - proxy/OIDC authentication + revocation SLO
+  - WASM functions for in-engine logic
+  - operator-only Web Components UI
+  - licence (recommend **Apache-2.0**)
+- **Spikes, each with numbers:**
+  - Manifest → DBSP circuit for mapping, merge, a recursive closure (nested groups) and a CEL rule;
+    measure incremental update latency and memory at 100k entities.
+  - `toolbox-fga` c-archive: embedded OpenFGA with a read-only datastore over an in-memory tuple
+    index. Run the OpenFGA conformance corpus through the adapter; measure cgo overhead; test signals
+    and shutdown.
+  - Logical-decoding change log with log positions as consistency tokens.
+  - DBOS Rust SDK behind a `Durable` trait: crash between steps, exactly-once checks; decide adopt vs.
+    minimal schema-compatible runtime.
+  - Typed CEL with object construction against generated schemas; cel-spec conformance status.
+  - Schema → generated TS and Python SDKs; language hosts; manifest determinism check.
+  - rmcp Streamable HTTP with OAuth; identity-aware-proxy JWT verification.
 - **Verification foundations** ([verification.md](./design/verification.md) §3, §10):
-  - the `Env` seam with clippy bans
+  - the `Env` seam with clippy bans and the dependency determinism audit
   - `buggify!` and the assertion facade
-  - `MemStore` + fault wrapper + store conformance suite
+  - `MemStore` with modelled isolation + store conformance suite
   - `toolbox-ref` skeleton
   - minimal `toolbox-sim` (chaos → liveness)
-  - OpenFGA corpus and CEL conformance harnesses
   - `spec/properties.md`
-- **Exit:** go/no-go on the language-host model, CEL, TCP-over-HTTP and WASM, with numbers. In
-  addition, a planted unsafe-delete bug is found by simulation within 1,000 seeds.
 - Draft TCP spec v0 (OpenAPI + JSON Schemas) and conformance kit skeleton.
+- **Exit:** go/no-go on DBSP, embedded OpenFGA, the change log, DBOS and typed CEL, with
+  measurements. A planted unsafe-delete bug is found by simulation within 1,000 seeds.
 
-### Phase 1 — Catalog core (weeks 4–14) → `v0.1`
-- `toolbox-model`, `-config`, `-store`, `-ingest`, `-graph`, `-api`, `-cli`, `-authz` (OIDC, PAT; OpenFGA-compatible Check/ListObjects over derived tuples; facets and response shaping; Level 1–2 authz tests).
-- Connectors: `git-files` (catalog-info.yaml incl. Backstage format), GitHub (repos, CODEOWNERS,
-  webhooks), Backstage import, generic push API.
-- MCP read tools: `search` (Postgres FTS initially), `get`, `query`, `graph`.
-- Minimal UI: catalog, entity page, graph view, login.
-- Operations baseline:
-  - OTel traces, metrics and logs; `/metrics`; health and readiness endpoints.
-  - Analytics event catalog v0 with the `posthog`, `otlp` and `none` sinks.
-  - `toolbox admin status|config|resync`; Grafana overview and connector dashboards.
-- `toolbox init/dev/lint/test/build`. Helm chart and Docker image.
-- **Source of truth v1:** per-field `sources` declarations; enforcement on every write path; native
-  store with revisions for `Group` metadata and business fields; `update_entity` MCP tool with routing.
-- **Meta catalog v1:** meta kinds derived from the manifest; required owners with resolution order;
-  `ownership` scorecard (bronze/silver); the portal cataloged as a system.
+### Phase 1 — Ownership and standards for agents (first release, `v0.1`)
+- **Ingest:**
+  - `git-files` (catalog-info.yaml incl. Backstage format)
+  - GitHub (repos, CODEOWNERS, webhooks)
+  - IdP/SCIM connector with the revocation fast path
+  - Backstage import; generic push API
+- **Circuit:** mapping, merge by `sources`, relations, recursive closures, authz tuples, facet labels,
+  with incremental views served from memory.
+- **Authorization:**
+  - embedded OpenFGA with the public-by-default module
+  - facets, information flow and explicit declassification
+  - CODEOWNERS authority for ownership and external-id claims
+  - identity-aware proxy / OIDC / PAT authentication
+- **Scorecards:** CEL rules, levels, `skip`/`unknown`, waivers, explain, all as circuit operators.
+  Includes the meta catalog's `ownership` scorecard (bronze/silver).
+- **Source of truth v1:** per-field `sources`; native store with revisions for `Group` metadata and
+  business fields; `update_entity` routing.
+- **Meta catalog v1:** meta kinds from the manifest; required owners; the portal cataloged as a
+  system.
 - **Identity resolution v1:** external ids, annotation translation, declared matchers,
-  unmatched/conflict states, aliases on rename.
-- **Notifications v1:** event model, ownership routing, inbox, email, shadow mode.
-- **SDLC v1:** `setup-toolbox`/`test`/`build`/`verify` Actions; signed and attested images; service-repo
-  Actions `validate-catalog` and `push` with GitHub OIDC.
-- **Exit:** import the Backstage demo catalog plus a 50k-entity synthetic org. An agent answers
-  "who owns X, what depends on Y, who do I page" via MCP, with correct permissions.
+  unmatched/conflict/frozen states, aliases on rename.
+- **Interfaces:** MCP (`search`, `get`, `query`, `graph`, `explain`, `context` v0, `trend`/`history`),
+  CLI, minimal read-only UI.
+- **Operations baseline:** OTel, `/metrics`, health/readiness, analytics sinks (`posthog`, `otlp`,
+  `none`), `toolbox admin status|config|resync`, Grafana overview.
+- **SDLC v1:** `toolbox init/dev/lint/test/build`; `setup-toolbox`/`test`/`build`/`verify` Actions;
+  signed and attested images; Helm chart.
+- **Exit:**
+  - On a real organisation's GitHub + IdP, an agent in Claude Code correctly answers "who owns X, what
+    depends on Y, is X meeting our standards and why not", with permissions enforced.
+  - Unverified ownership claims are surfaced.
+  - Every replica returns identical answers at the same log position.
 
-### Phase 2 — Scorecards (weeks 14–22) → `v0.2`
-- CEL rules, levels and points, `skip`/`unknown`, waivers, initiatives, facts ingestion.
-- Incremental evaluator; `explain`.
-- **Remote plan** service and planner principal; `plan` Action with sticky comment, gates
-  (deletion, authz loss, operator access, notification volume) and detailed plan pages. Production data
-  never goes to CI.
-- Extension rules via TCP `evaluate` (TS and Python SDKs) and a WASM path for Rust; `toolbox ext new`.
-- **Canvases v1:** history store (score/fact/catalog daily), `@toolbox/canvas` components, promoted
-  canvases in slots, built-in scorecard/ownership/portal-health canvases, snapshot tests.
+### Phase 2 — Standards at scale and the review loop
+- Facts ingestion, initiatives, aggregate and graph-predicate rules, roll-ups with minimum
+  cardinality.
+- History archive and MCP analysis tools; agent skills for building dashboards in Claude Artifacts /
+  Cursor Canvas.
+- **Remote plan** (durable workflow, candidate epoch) with full output on the PR; gates (deletion,
+  authz loss, operator access, notification volume, declassifications); epochs for config deploys.
 - **Meta scorecards:** `scorecard-quality`, `connector-health`, `kind-quality`; `RuleResult` virtual
   kind; routing of `unknown` outcomes to connector owners.
-- **GitHub App:** living dashboard issue, PR score-delta check runs (`scorecard-check` Action).
-- Identity proposals queue + PR-based resolution; coverage metrics.
-- MCP `scorecard_status` and `explain`; score-transition events.
-- **Exit:** 100 rules × 100k entities rescored in < 5 min. A remote-plan diff (redacted aggregates)
-  is shown as a PR comment, and a team's living dashboard issue updates on a score transition.
+- **Notifications:** event model, ownership routing, inbox, email, shadow mode; GitHub App with the
+  living dashboard issue and PR score-delta checks; service-repo Actions (`validate-catalog`, `push`,
+  `scorecard-check`) with GitHub OIDC.
+- **Private networks:** an outbound-only relay, or documented self-hosted runners, so GitHub-hosted
+  CI and GitHub webhooks work with internal-only portals.
+- Identity proposals + PR-based resolution; coverage metrics.
+- **Exit:** a scorecard change shows its full plan on the PR. A score transition updates a team's
+  dashboard issue. 100 rules × 100k entities stay incrementally current under continuous change.
 
-### Phase 3 — Actions (weeks 22–32) → `v0.3`
-- Action registry, run state machine, approvals, idempotency, dry-run.
+### Phase 3 — Actions
+- Action registry; runs as durable workflows; approvals, idempotency, dry-run.
 - Executors: webhook, GitHub workflow, GitLab pipeline, k8s Job, template + PR.
-- Automations (entity, score and schedule triggers).
-- **Action scopes** (`create`/`day2`/`delete`/`global`), action-sourced fragments, TTL lifecycle
-  engine, pending overlays, bulk-edit PRs.
-- **Canvas drafts** via MCP (`canvas_create/preview/promote`), `ActionButton`.
-- **Preview environments** (compose, k8s) with GitHub Deployments and GC; ownership-aware review.
-- Fix PRs, initiative tracking issues, approvals via GitHub Environments, `run-action` Action;
-  `action-quality` scorecard and Rule day-2 actions (waiver, false positive).
-- MCP `list_actions`/`describe_action`/`run_action`/`get_run` with elicitation and tasks. UI forms and
-  run logs.
+- Automations from circuit event deltas (entity, score, schedule triggers).
+- Action scopes, action-sourced fragments, TTL lifecycles (scheduled workflows), pending overlays,
+  bulk-edit PRs.
+- Preview environments with GitHub Deployments and GC; ownership-aware review.
+- Fix PRs, initiative issues, approvals via GitHub Environments, `run-action` Action;
+  `action-quality` scorecard and Rule day-2 actions.
 - **Exit:** an agent creates a service from a golden path end to end, with approval, audit and catalog
-  registration, and no human UI needed.
+  registration, surviving injected crashes between every step without duplicate effects.
 
-### Phase 4 — Knowledge & search (weeks 32–42) → `v0.4`
-- Docs pipeline (Markdown, mkdocs nav, OpenAPI/AsyncAPI/proto), entity linking.
-- tantivy hybrid search, optional embeddings, permission-filtered results.
-- Context packs; `Skill`/`Rule` distribution as MCP prompts and resources; docs reader UI.
-- Scheduled canvas reports (per-recipient rendering), shared links, design-mode feedback;
-  `context` Action for AI review agents; CloudEvents webhook channel.
-- Redacted production sample for previews; `upgrade --check` PRs; remaining meta scorecards
-  (`canvas-quality`, `authz-quality`, `package-hygiene`), contribution-based ownership facts.
-- **Exit:** a context-pack benchmark. On a fixed set of change/incident/onboarding tasks, agents with
-  `context` beat agents without it on success rate at an equal token budget.
+### Phase 4 — Knowledge, search and the context lake
+- Docs pipeline, catalog-anchored entity linking, tantivy hybrid search from circuit deltas, optional
+  embeddings, permission-filtered results.
+- Context packs with inventory and findings sections; `Skill`/`Rule` distribution.
+- Inventory tier, bridge edges, Wiz/Cartography findings connectors, ownership export
+  (Backstage-compatible catalog API).
+- Report templates via notifications; `context` Action; CloudEvents webhooks.
+- Redacted production sample for previews; `upgrade --check` PRs; remaining meta scorecards.
+- **Exit:** context-pack benchmark. Agents with `context` beat agents without it on success rate at
+  an equal token budget.
 
-### Phase 5 — Ecosystem (weeks 42–52) → `v0.5`
-- Connector SDKs (Python, TS, Go, Rust) and the first-party connector set (§4.6).
-- UI SDK and Web Components; portal packages (multi-language sharing via schema and codegen); Go SDK, then C# and Java.
-- SQL rules over a read-only relational view.
-- Importers from Backstage (full), Port (blueprints, scorecards, actions → TS or Python program) and Cortex
-  (scorecard YAML → TS or Python program).
-- Terraform modules for ECS and Cloud Run.
+### Phase 5 — Ecosystem
+- Connector SDKs (TS, Python, Go, Rust) and the first-party connector set (§4.6).
+- Operator UI SDK; portal packages; further SDK languages via codegen as contributors appear.
+- WASM function toolchains (TS via Javy/StarlingMonkey, Rust, Go); the JQ→CEL converter for Port
+  imports.
+- Importers: Backstage (full), Port (blueprints, scorecards, actions → TS program), Cortex.
+- AuthZEN endpoint; Terraform modules for ECS and Cloud Run.
 
-### Phase 6 — Hardening → `v1.0` (≈ months 12–15)
-- Full operator pack: all dashboards, SLO alert rules, a runbook per alert, `/mcp/ops`, the backup-verify
-  command, and a DR drill.
+### Phase 6 — Hardening → `v1.0`
+- Full operator pack (dashboards, SLO alerts, runbooks, `/mcp/ops`, backup verify, DR drill).
 - Metric and event catalogs frozen under SemVer.
-- Meet the SLOs in §6.6. HA and chaos tests, security review and fuzzing (manifest/CEL/TCP/WASM inputs),
-  upgrade codemods, docs site, LTS policy.
-- Reference deployment: a portal configured entirely in a public repo (dogfooding: the project's own
-  portal, including its meta catalog). Demos are explicitly deferred.
+- SLOs in §6.6 met; HA and chaos tests; security review (including side channels and the FFI
+  boundary); upgrade codemods; LTS policy.
+- Reference deployment: the project's own portal, configured in a public repo, including its meta
+  catalog.
 
 ---
 
@@ -950,31 +1032,42 @@ Timelines assume 3–5 engineers working heavily with agents. Each phase ends wi
 |---|---|
 | Backstage ecosystem gravity (250+ plugins) | Read `catalog-info.yaml` unchanged; a Backstage importer; possibly a Backstage plugin that reads Toolbox data, so both can coexist during migration |
 | Non-engineers can't edit config | UI and MCP "propose change" opens PRs; agents do the editing; `plan` makes review easy |
-| Per-language SDK maintenance (Pulumi's biggest ongoing cost) | Generate SDKs from one schema; thin hand-written runtimes; TS, Python and YAML first; the manifest IR is the stable contract |
+| Per-language SDK maintenance (Pulumi's biggest ongoing cost) | Generate SDKs from one schema; thin hand-written runtimes; TS, Python and YAML first; typed CEL makes the logic language-independent |
+| DBSP API churn or memory at large scale | Pin and wrap in `toolbox-ivm`; contribute upstream; spill-to-storage; checkpoints; differential dataflow (MIT) as the fallback engine |
+| DBOS Rust SDK not production-ready when needed | Behind a `Durable` trait; minimal schema-compatible runtime as fallback; Temporal/Restate remain options |
+| Go runtime embedded in a Rust process (signals, GC, determinism) | Narrow batched C ABI; CI stress tests; `GOMAXPROCS=1` under simulation; `wasip1` build as a deterministic fallback |
+| Internal-only portals unreachable from GitHub (webhooks, hosted runners) | Outbound-only relay or self-hosted runners (Phase 2) |
 | Non-deterministic config programs | Build-time only; no network by default; double-evaluation check in CI; the manifest is the reviewed artifact |
 | TCP fails to attract third-party implementers | Dogfood it for all first-party connectors; keep it small; conformance kit; also accept Airbyte-style stdio images |
-| WASM tooling uneven across languages (JS `componentize` still experimental) | WASM is optional; the process protocol and executors cover every language; support Rust/Python/TS first |
+| WASM tooling uneven across languages | Rust first-class; TS via Javy/StarlingMonkey (the Shopify Functions precedent); CEL covers most logic without WASM |
 | MCP spec churn (deprecations under way, e.g. sampling) | Use the official rmcp SDK, isolated in `toolbox-mcp`; avoid deprecated primitives |
-| Static config needs a redeploy for any change | Fast builds (< 1 min), cheap rollouts, `toolbox dev` for iteration. This is by design, as with Terraform |
-| Building a correct ReBAC evaluator | OpenFGA's Apache-2.0 conformance corpus on every build; nightly differential fuzzing against real OpenFGA; stock `fga model test` as an oracle in portal CI (see authorization.md §7) |
+| Static config needs a redeploy for any change | Fast builds, background epoch builds, presentational changes without recomputation, `toolbox dev` for iteration. This is by design, as with Terraform |
+| Authorization correctness | We don't build an evaluator: OpenFGA is embedded. Its conformance corpus tests our read-only datastore adapter on every build ([authorization.md](./authorization.md)) |
 | Correctness at scale across unbounded customer configurations | Deterministic simulation + reference-model oracles + differential testing + generated portals + covering arrays + a corpus; release gates with published metrics ([verification.md](./design/verification.md)) |
 | Lock-in to monitoring vendors (PostHog, Grafana) | OTLP + Prometheus formats as the contract; analytics via a versioned event catalog and pluggable sinks; dashboards generated from a neutral spec; vendor packs are optional |
 | Feature breadth of funded vendors | Compete on agent surface, dev loop (`plan`/`test`) and ownership. Don't build analytics |
 | Adjacent OSS entrants (Frontkeep, OpsCat, Lekton) | Differentiate on config as code + catalog/scorecard depth + Backstage compatibility; collaborate where interfaces overlap (e.g. MCPServer/Skill kinds) |
-| Name collision: "Toolbox" is generic, and other MCP-related projects use it | Check trademark and package namespaces (crates.io, npm, ghcr) in phase 0 |
+| Name collision: "Toolbox" is generic, and other MCP-related projects use it | Check trademark and package namespaces (crates.io, npm, ghcr) in Phase 0 |
 
 ---
 
-## 10. Open decisions for the maintainer
+## 10. Decisions
 
-1. **Launch languages:** TypeScript + Python + YAML (recommended), with Go next? Every SDK is generated
-   from the same schema, so this only sets order and test burden.
-2. **TCP governance:** publish it as a separate spec repo under a neutral name from day one
+**Decided (2026-11-19):**
+- Launch languages: TypeScript, Python, YAML.
+- Predicates and mappings: typed CEL (JSONata rejected, JQ not adopted).
+- UI: TS SPA + Web Components, operator-only customisation.
+- Dashboards: via Claude Artifacts and Cursor Canvas over MCP.
+- Derived state: DBSP. Side effects: DBOS model.
+- Authorization: embedded OpenFGA, information flow, CODEOWNERS authority.
+- Authentication: identity-aware proxy or OIDC, with a revocation SLO.
+- Remote plan: Git is the access boundary.
+- Agent safety: delegated to client and harness layers.
+
+**Still open:**
+1. **TCP governance:** publish it as a separate spec repo under a neutral name from day one
    (recommended), or keep it inside Toolbox until it stabilises?
-3. **UI stack:** TS SPA plus Web Components (recommended), or an all-Rust UI (Leptos), which is more
-   consistent but has a weaker extension story?
-4. **License:** Apache-2.0 (recommended) vs. MPL-2.0 vs. AGPL (protects against hosting forks but deters
-   adoption as a dependency).
-5. **Expression language:** CEL everywhere (recommended), or also support JQ mappings for Port Ocean
-   familiarity?
-6. **Scope of v0.1 connectors:** GitHub-first, or GitHub and GitLab together?
+2. **Licence:** Apache-2.0 (recommended) vs. MPL-2.0 vs. AGPL.
+3. **Scope of first-release connectors:** GitHub-first, or GitHub and GitLab together?
+4. **Durable runtime:** adopt the DBOS Rust SDK as-is once production-ready, or own a minimal
+   schema-compatible runtime (decided after the Phase 0 spike)?

@@ -2,11 +2,11 @@
 
 *Status: design. A cornerstone of the default model. Related: [plan.md](../plan.md),
 [authorization.md](../authorization.md), [identity-resolution.md](./identity-resolution.md),
-[notifications.md](./notifications.md), [sdlc.md](./sdlc.md), [canvases.md](./canvases.md).*
+[notifications.md](./notifications.md), [sdlc.md](./sdlc.md), [dashboards.md](./dashboards.md).*
 
 > **Thesis.** A portal that asks every team to own, document and score its software must hold itself
 > to the same standard. Every Toolbox portal ships a **meta catalog**. Its entity types, connectors,
-> scorecards, rules, actions, canvases, authorization modules and packages are themselves catalog
+> scorecards, rules, actions, views, authorization modules and packages are themselves catalog
 > entities, with **owners**, **relations** and **default scorecards**. This includes the scorecards
 > that score scorecards.
 >
@@ -19,7 +19,7 @@
 ## 1. Why this matters (beyond dogfooding)
 
 1. **Distributed ownership needs a map.** Once security owns the security scorecard and the Snyk
-   connector, SRE owns production readiness and PagerDuty, and FinOps owns cost canvases, *who owns
+   connector, SRE owns production readiness and PagerDuty, and FinOps owns cost views, *who owns
    which part of the portal* is a first-class question. Without a map, the portal team becomes the
    bottleneck: the Backstage failure mode, recreated.
 2. **Correct routing of problems.** When a rule's outcome is `unknown` because the Snyk connector is
@@ -33,7 +33,7 @@
 
    The same `graph`, `impact` and `explain` machinery answers it, because these are ordinary entities.
 4. **Portal quality is measurable.** Dead kinds, flapping or always-passing rules, actions nobody
-   uses, connectors with poor identity coverage and canvases with broken queries all become visible
+   uses, connectors with poor identity coverage and views with broken queries all become visible
    and scored.
 5. **Walk the talk.** The portal's own deployment is a `Component` in its own catalog, scored by the
    same production-readiness scorecard as everyone else's services.
@@ -96,7 +96,7 @@ runtime state**. They are never hand-authored as YAML: the definition in code *i
 | `Rule` | Manifest | `reads` → Fact types / fields (from **CEL static analysis**); `remediatedBy` → Action | pass/fail/skip/unknown rates, flapping index, waivers |
 | `RuleResult` (virtual) | Outcome store | `of` → Rule; `for` → entity | outcome, remark, since. *Not stored as entities* (see below) |
 | `Action` / `Automation` | Manifest | `scopedTo` → Kind; `executesVia` → Connector/executor | runs, success rate, p95 duration, last used |
-| `Canvas` | Manifest | `reads` → Kind/Scorecard/Fact (from the query manifest); `shownIn` → slots | views (from analytics), query errors |
+| `View` | Manifest (operator-authored UI views) | `reads` → Kind/Scorecard/Fact (from its declared queries); `shownIn` → slots | page views (from analytics), query errors |
 | `AuthzModule` | `fga.mod` | `governs` → Kind; `providedBy` → Package | test coverage %, relations without assertions |
 | `NotificationPolicy`, `Matcher`, `PlanGates` | Manifest | `ownedBy`; `appliesTo` | volumes, gate triggers |
 | `MCPTool` | Generated agent surface | `exposes` → Action/Kind | calls, error rate, response tokens (from analytics) |
@@ -112,7 +112,7 @@ These are scored by the same production-readiness scorecard as every other servi
 
 **Why rule results aren't entities (vs. Port's `_rule_result`):** 100 rules × 100k entities = 10M
 results. Port documents a 5M rule-result limit. Toolbox keeps outcomes in a columnar outcome store,
-with the history store from [canvases.md](./canvases.md) §6. It exposes them as a **virtual
+with the history archive from [incremental-computation.md](./incremental-computation.md) §3. It exposes them as a **virtual
 `RuleResult` kind**: queryable, relatable and permission-faceted like entities, without paying entity
 overhead.
 
@@ -141,10 +141,10 @@ rule and by `plan`.
 | **Route data problems to data owners** | An outcome is `unknown` because a fact is stale → follow `Rule.reads` → fact → `Connector` → notify the connector owner. Service owners see "unknown (data stale, owned by @security)" rather than a false failure |
 | **Contest a rule** | Day-2 actions on `Rule` entities: *request waiver* (PR to the waivers file, reviewed by the rule owner), *report false positive* (issue assigned to the rule owner), *propose change* (agent drafts a PR) |
 | **Ownership-aware review** | `plan` computes the touched meta entities and their owners, and requires approval from each affected owner team ([sdlc.md](./sdlc.md) §6) |
-| **Impact analysis** | "What breaks if we remove `facts.snyk.critical`?" → `impact(fact)` → rules, canvases, initiatives, actions and their owners |
+| **Impact analysis** | "What breaks if we remove `facts.snyk.critical`?" → `impact(fact)` → rules, views, initiatives, actions and their owners |
 | **Agent answers** | MCP `get`, `graph`, `explain` and `impact` work on meta entities unchanged, e.g. "who owns the PCI scorecard and which connectors does it depend on?" |
 | **Permissions** | Meta entities participate in ReBAC. Rule *definitions* are visible to all, but a rule's per-entity results follow the details facet. Owners of a `Kind` can approve its schema changes |
-| **Portal health canvas** | Built-in canvas over meta entities: ownership coverage of portal parts, connector freshness, rule quality, unused actions, dead kinds |
+| **Portal health view** | Built-in view over meta entities: ownership coverage of portal parts, connector freshness, rule quality, unused actions, dead kinds |
 
 ## 7. Default scorecards shipped with every portal
 
@@ -206,11 +206,11 @@ cycles* (≤ t−1), never the outcome being computed.
 | silver | Dry-run supported; tests; destructive → approval policy |
 | gold | Success rate ≥ 95% over 30 days; used in the last 90 days (otherwise a retirement candidate) |
 
-### 7.6 `canvas-quality`, `authz-quality`, `package-hygiene`
+### 7.6 `view-quality`, `authz-quality`, `package-hygiene`
 
 | Scorecard | Rules |
 |---|---|
-| Canvas | Owner; valid queries; snapshot tests; viewed in the last 60 days |
+| View | Owner; valid queries; snapshot tests; viewed in the last 60 days |
 | AuthzModule | Owner; Level 1 test coverage ≥ 80% of relations; no `user:*` on details facets without an explicit acknowledgement |
 | Package | Local steward; ≤ 1 minor version behind; signed; license on allowlist |
 
@@ -233,8 +233,8 @@ acme-portal/
 ├── modules/
 │   ├── core/       (portal, kinds, ownership policy, default scorecards, authz core)   owner: platform
 │   ├── security/   (security scorecard, snyk connector, security authz module)          owner: security
-│   ├── sre/        (prod-readiness, pagerduty connector, incident kinds, on-call canvases) owner: sre
-│   └── finops/     (cost connector, cost facets, cost canvases)                           owner: finops
+│   ├── sre/        (prod-readiness, pagerduty connector, incident kinds, on-call views)    owner: sre
+│   └── finops/     (cost connector, cost facets, cost views)                               owner: finops
 └── authz/fga.mod   (lists modules' .fga files)
 ```
 
@@ -262,7 +262,7 @@ acme-portal/
 | 1 | Meta kinds derived from the manifest (`Portal`, `Module`, `Package`, `Kind`, `Connector`, `Scorecard`, `Rule`, `Action`); required owners with resolution order; `ownership` scorecard bronze/silver; the portal cataloged as a system |
 | 2 | `scorecard-quality`, `connector-health`, `kind-quality`; `RuleResult` virtual kind; CEL `reads` edges; routing of `unknown` outcomes to connector owners; portal-health canvas |
 | 3 | `action-quality`; Rule day-2 actions (waiver, false positive); ownership-aware review in `plan` |
-| 4 | `canvas-quality`, `authz-quality`, `package-hygiene`; contribution-based ownership facts; verification cadence |
+| 4 | `view-quality`, `authz-quality`, `package-hygiene`; contribution-based ownership facts; verification cadence |
 
 ## 11. Open questions
 

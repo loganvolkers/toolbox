@@ -14,7 +14,9 @@ exposed identically over API, MCP, CLI and UI.
 - [docs/principal-review.md](docs/principal-review.md) — principal-engineer review: security, consistency, scope holes and proposed ADRs
 - Detailed designs:
   - [design/meta-catalog.md](docs/design/meta-catalog.md): the portal catalogs, owns and scores itself
-  - [design/canvases.md](docs/design/canvases.md): dashboards as agent-written canvases
+  - [design/incremental-computation.md](docs/design/incremental-computation.md): DBSP incremental circuit + DBOS-model durable workflows over one change log
+  - [design/extensibility.md](docs/design/extensibility.md): code-first extensibility and the right language for each job
+  - [design/dashboards.md](docs/design/dashboards.md): dashboards via agent artifacts + MCP; operator-only UI views; history
   - [design/sdlc.md](docs/design/sdlc.md): local → CI → PR → preview → prod, remote plan, GitHub Actions
   - [design/notifications.md](docs/design/notifications.md): ownership-routed notifications, GitHub App, Actions for service repos
   - [design/identity-resolution.md](docs/design/identity-resolution.md): matching one service across many tools

@@ -4,7 +4,7 @@
 lock-out), and the request to ship GitHub Actions so customers can plan, build and test their portal
 locally, in CI, on PRs and in ephemeral staging environments.
 Related: [plan.md](../plan.md) §2 and §6, [authorization.md](../authorization.md),
-[canvases.md](./canvases.md), [notifications.md](./notifications.md).*
+[dashboards.md](./dashboards.md), [notifications.md](./notifications.md).*
 
 ## 1. Prior art
 
@@ -32,19 +32,19 @@ with SBOM and provenance), and promotion is by digest.
 
 ```bash
 toolbox dev                      # live reload of the portal program, fixtures, UI at :7000 (Tilt-like)
-toolbox test                     # model, derivation, surface, canvas snapshot, scorecard fixture tests
+toolbox test                     # model, derivation, surface, view snapshot, scorecard fixture tests
 toolbox plan --remote prod       # remote plan (§4) using *your* identity; details redacted to your permissions
 toolbox preview up               # docker compose: the built image + SQLite + fixtures
 ```
 
-## 4. Remote plan (fixes C1)
+## 4. Remote plan: Git is the access boundary
 
 **Never pull production data into CI.** CI uploads the **manifest bundle** (config only: no data and
-no secrets) to the production portal. The portal computes the plan **server-side** in an isolated plan
-worker:
-- It compiles the new manifest and runs WASM rules in the sandbox.
-- It calls connector-protocol `evaluate` extensions only if they are marked `plan_safe`.
+no secrets) to the production portal. The portal computes the plan **server-side**:
+- It compiles the new manifest into a candidate circuit epoch, using the same incremental engine
+  ([incremental-computation.md](./incremental-computation.md)).
 - It evaluates against current state.
+- WASM rules run in their usual sandbox. Plan jobs run as durable workflows with resource limits.
 
 **Plan sections:**
 
@@ -55,23 +55,24 @@ worker:
 | Identity coverage | +212 linked, 3 new ambiguities |
 | Scorecards | 214 services drop silver→bronze; rule `has-runbook` new |
 | **Authorization diff** | +12 users gain `can_view_score_details` on 3 services; 1,240 lose `can_run_actions` on `system:checkout` |
+| **Declassifications** | New: `security` rule outcomes declassified to summary |
+| Unverified claims | 2 `spec.owner` claims not backed by CODEOWNERS |
 | Notifications | Estimated 41 new dashboard-issue updates, 0 new fix PRs |
 | Agent surface | MCP tool `scorecard_status` gains param `history`; no removals |
-| Canvases | `security-overview` reads `facts.snyk.critical` (renamed: **broken**) |
+| Views | `security-overview` reads `facts.snyk.critical` (renamed: **broken**) |
 | Meta catalog | 2 new kinds without owners (**blocks**: ownership required) |
 
-**Who sees what:**
-- **The PR comment and check run contain aggregates only:** counts, kinds and rule ids, with no
-  entity names or user names unless policy marks them safe.
-- **The detailed plan is a portal page,** rendered with the *viewer's* permissions, like a Terraform
-  Cloud run link. A reviewer who can't see the payments team's details sees "+N redacted".
-- **Fork PRs:** plans are disabled, or aggregate-only behind a maintainer label, matching Terraform
-  Cloud's default.
+**Who sees what: the portal repo is the boundary (the Terraform model).**
+- Plan output is posted in full to the PR, as a sticky comment and check run, like `terraform plan`.
+- Anyone who can read the portal repo can read plan output. **The portal repo is therefore a
+  privileged repository**, with access managed in Git like an infrastructure repo. `toolbox init`
+  documents this, and `toolbox verify` warns when the repo is public.
+- **Fork PRs never trigger plans.**
+- *Considered and rejected:* per-viewer redaction, aggregate-only output and k-anonymity floors for
+  plans. They are complex, and they duplicate controls Git already provides.
 
-**Authentication:**
-- CI uses GitHub OIDC.
-- The portal maps `repository = acme/acme-portal` plus a `pull_request` event to a **planner**
-  principal. A planner can submit plans and read aggregates; it **cannot read entity data**.
+**Authentication:** CI uses GitHub OIDC. The portal accepts plan submissions only from the configured
+portal repository's workflows.
 
 ## 5. Ephemeral PR environments (preview portals)
 
@@ -131,7 +132,7 @@ new tb.PlanGates("default", {
   - MCP tool list = the plan's expected list
   - connectors healthy
   - migrations complete
-  - canvas queries valid
+  - view queries valid
   A failure exits non-zero, and the workflow **rolls back to the previous digest**.
 - **Break-glass** (C2): a deploy-time break-glass principal (environment-bound, not in the model) has
   read access and admin-ops rights for recovery. Every use is audited and triggers a notification to
@@ -145,7 +146,7 @@ them together, so adoption is one file.
 | Action | Inputs | Outputs |
 |---|---|---|
 | `toolbox-dev/setup-toolbox` | version (default from `toolbox.lock`) | CLI on PATH; caches language hosts and connector images |
-| `toolbox-dev/test` | test globs, shards | JUnit + job summary; canvas snapshot artifacts |
+| `toolbox-dev/test` | test globs, shards | JUnit + job summary; view snapshot artifacts |
 | `toolbox-dev/plan` | portal URL, gates | Sticky PR comment (aggregates), check run with link to detailed plan, gate status |
 | `toolbox-dev/build` | registry, tags | Image digest, SBOM, provenance attestation, signature |
 | `toolbox-dev/preview` | adapter (`k8s`/`compose`), data mode | GitHub Deployment + URL; teardown on close |
@@ -189,7 +190,7 @@ What the reusable workflow does:
 | Phase | Scope |
 |---|---|
 | 1 | `toolbox dev/test/build`; `setup-toolbox`, `test`, `build` Actions; signing + provenance; `verify` + rollback |
-| 2 | Remote plan service + planner principal; `plan` Action with sticky comment and gates (deletion, authz, operator access, notifications); detailed plan pages |
+| 2 | Remote plan as a durable workflow (portal repo is the access boundary); `plan` Action with sticky comment and gates (deletion, authz, operator access, notifications); detailed plan pages |
 | 3 | Preview environments (compose, k8s), GitHub Deployments, GC; fixture/synthetic data modes; ownership-aware review |
 | 4 | Redacted production sample mode; `upgrade --check` PRs; agent authoring tools for plan and preview |
 

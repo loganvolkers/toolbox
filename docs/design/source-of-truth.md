@@ -68,7 +68,7 @@ of silently overwritten.
 | Scorecards, rules, levels, thresholds | Ownership verification attestations, acknowledgements |
 | Actions, executors, automations, notification policies | Team metadata (charter, notify, accountable lead) |
 | Authorization model and derivation rules | Business metadata (tier, criticality, data classification, cost centre) |
-| Canvases (promoted), plan gates, connectors | Entities of kinds declared `native` (e.g. vendor SaaS, Systems, Domains, non-IdP teams) |
+| Operator UI views, plan gates, connectors | Entities of kinds declared `native` (e.g. vendor SaaS, Systems, Domains, non-IdP teams) |
 
 The non-goal is restated as: **"Portal configuration (schema and behaviour) is never stored in the
 database. Catalog data may be, when the schema declares it."**

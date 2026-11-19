@@ -316,7 +316,7 @@ Fold these into the plan as follows:
 | Gap | Status |
 |---|---|
 | A1 Time to value | Partly addressed by the SDLC and reusable workflow; demos and starter portals **deferred** by decision |
-| A2 Dashboards, reports, trends | **Designed:** [design/canvases.md](./design/canvases.md) |
+| A2 Dashboards, reports, trends | **Decided:** dashboards via Claude Artifacts / Cursor Canvas + Toolbox MCP; operator-only UI views; history archive ([design/dashboards.md](./design/dashboards.md)) |
 | A3 Notifications | **Designed** (GitHub, email, webhook; Slack out of scope): [design/notifications.md](./design/notifications.md) |
 | B1 Identity resolution, B2 renames/merges | **Designed:** [design/identity-resolution.md](./design/identity-resolution.md) |
 | B3 Pending state, B4 action-created entities, TTL, day-2 | **Designed:** [design/action-entities.md](./design/action-entities.md); data with no system of record → [design/source-of-truth.md](./design/source-of-truth.md) |

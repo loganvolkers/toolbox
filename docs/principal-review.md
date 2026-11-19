@@ -14,7 +14,7 @@ amounts to six products:
 5. a dashboard runtime
 6. a simulation framework
 
-The plan says 3–5 engineers and 12–15 months. Several components are internally inconsistent, and
+The plan's original schedule was unrealistic for its scope. Several components are internally inconsistent, and
 three are security holes. The fixes are mostly *subtractions*.
 
 Severity key: 🔴 must resolve before building · 🟠 resolve before the relevant phase · 🟡 track.
@@ -329,7 +329,7 @@ document self-hosted runners as required, and make the GitHub App work in pollin
 Every phase adds breadth. There is no point where a team gets **one painful problem solved end to
 end**. Six products at once will produce six demos and zero adopters.
 
-**A proposed wedge** (≈ 3 months, 3 engineers): *"Ownership and standards for agents."*
+**A proposed wedge:** *"Ownership and standards for agents."*
 - Ingest Backstage `catalog-info.yaml` + GitHub (repos, CODEOWNERS) + the IdP.
 - Ownership resolution with authority checks (1.3), the meta catalog's `ownership` scorecard, and
   scorecards with CEL.
@@ -389,3 +389,24 @@ The plan has SLOs for latency, not for **outcomes**. Add:
 - A thin connector protocol that emits raw records, with engine-side mapping and deletion safety
   valves.
 - Federating security graphs instead of copying them.
+
+---
+
+## 8. Resolution (2026-11-19)
+
+| Finding | Decision | Where |
+|---|---|---|
+| 1.1 Declassification | **Accepted.** Facets with information-flow labels; explicit, reviewed declassification; minimum cardinality. Catalogs stay public by default | [authorization.md](./authorization.md) §4.2 |
+| 1.2 Plan as inference oracle | **Rejected as over-engineering.** Git is the boundary: the portal repo is privileged, plan output goes to the PR in full, forks never plan | [design/sdlc.md](./design/sdlc.md) §4 |
+| 1.3 Squatted claims | **Accepted, using CODEOWNERS** as the authority | [authorization.md](./authorization.md) §4.8 |
+| 1.4 Lethal trifecta | **Rejected.** Protection is delegated to MCP clients, agent harnesses, egress controls and the identity-aware proxy. Toolbox provides annotations, markers, approvals and audit | [authorization.md](./authorization.md) §4.5 |
+| 1.5 Canvases | **Canvases cancelled.** Dashboards are built via Claude Artifacts / Cursor Canvas + MCP; UI customisation is operator-only | [design/dashboards.md](./design/dashboards.md) |
+| 1.6 Revocation | **Accepted:** revocation SLO, identity-aware-proxy authentication, Toolbox owns the permissions boundary | [authorization.md](./authorization.md) §4.9 |
+| 2.1–2.6 Consistency | **Accepted and superseded** by one logical-decoding change log + a DBSP circuit (no batch or nightly recomputation) + DBOS-model workflows + epochs | [design/incremental-computation.md](./design/incremental-computation.md) |
+| 3.x Verification realism | **Accepted:** `MemStore` isolation fidelity, dependency determinism audit, engines under simulation; continuous rather than nightly campaigns | [design/verification.md](./design/verification.md) |
+| 4.1 Pulumi model | **Kept** (code-first extensibility), TS/Python/YAML first; typed CEL; WASM instead of HTTP `evaluate` services | [design/extensibility.md](./design/extensibility.md) |
+| 4.2 CEL for mapping | **CEL kept, with object construction** (the Kubernetes MutatingAdmissionPolicy precedent); JSONata rejected; JQ not adopted; WASM functions for the rest | [design/extensibility.md](./design/extensibility.md) |
+| 4.3 Too many languages | **Rejected:** the right language for each job, judged by agent developer experience (the Salesforce Lightning lesson) | [design/extensibility.md](./design/extensibility.md) |
+| 4.4 Private networks | Accepted: outbound relay or self-hosted runners | [plan.md](./plan.md) Phase 2 |
+| 4.5 Own ReBAC engine | **Superseded:** OpenFGA embedded as a Go module via C ABI; no duplicate tuple writes | [authorization.md](./authorization.md) §4.3 |
+| 5.x Scope and estimates | Time estimates removed (built with agents). Phase 1 is the "ownership and standards for agents" first release | [plan.md](./plan.md) §8 |

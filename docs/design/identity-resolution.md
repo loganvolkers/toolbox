@@ -68,7 +68,7 @@ coverage metrics, and PR-based resolution.**
 
 ## 5. Resolving proposals: PRs, not clicks
 
-- The **Unlinked & ambiguous** view (UI canvas + MCP `identity_proposals`) lists proposals with
+- The **Unlinked & ambiguous** view (built-in UI view + MCP `identity_proposals`) lists proposals with
   evidence.
 - Accepting a proposal (by a human or an agent) opens a PR. The preferred target is the
   **owner's `catalog-info.yaml`**, by adding the annotation, so identity lives with the owner. The
@@ -86,7 +86,7 @@ coverage metrics, and PR-based resolution.**
 | **Kind or property rename** (model change) | `toolbox plan` detects it and requires a declared migration (`rename`, `retype`, `move`). Data is migrated in an online expand/contract migration |
 | **Rule rename** | Rule ids are stable, and `renamedFrom` keeps history continuous |
 
-Aliases resolve everywhere: API, MCP, search, ReBAC subject and object refs, and canvases.
+Aliases resolve everywhere: API, MCP, search, ReBAC subject and object refs, and views.
 
 ## 7. Metrics, scorecards and plan
 

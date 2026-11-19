@@ -1,6 +1,7 @@
 # Toolbox Authorization — Relationship-Based Access Control on the Catalog Graph
 
-*Research date 2026-11-18. Primary sources:*
+*Research date 2026-11-18, updated 2026-11-19 (embedded OpenFGA, information flow, CODEOWNERS
+authority, proxy authentication). Primary sources:*
 - *The OpenFGA docs repo (`openfga/openfga.dev`: testing, store file format, conditions, modular
   models, agent/RAG guides).*
 - *The `openfga/language` repo (grammar and conformance data).*
@@ -14,34 +15,29 @@ search on the same date. Companion to [plan.md](./plan.md) §5.*
 
 ## 1. TL;DR
 
-**Recommendation:**
-- **Adopt OpenFGA's modelling language, semantics and test file format (`.fga.yaml`) as Toolbox's
-  authorization language.**
-- **Implement the evaluator natively in Rust over Toolbox's own catalog graph**, instead of running
-  OpenFGA (or SpiceDB) as a separate service.
-- Keep the real OpenFGA as a **test oracle** in CI, and as an **optional external decision service**.
+**Decisions (updated 2026-11-19):**
+- **Language and tests:** adopt OpenFGA's modelling language, semantics and test file format
+  (`.fga.yaml`) as Toolbox's authorization contract.
+- **Evaluator:** **OpenFGA itself, embedded as a Go module** and linked into the Rust binary through a
+  C ABI (§4.3). This replaces the earlier plan to write our own evaluator. There is no separate
+  OpenFGA service, and **no tuple writes anywhere**. A custom read-only `OpenFGADatastore` serves
+  tuples straight from the incremental circuit's output index
+  ([incremental-computation.md](./design/incremental-computation.md)).
+- **Information flow:** explicit facets, taint propagation and reviewed declassification (§4.2), so
+  "summary public, details private" is principled rather than accidental.
+- **Authority:** ownership and other permission-relevant claims are accepted only when backed by
+  **CODEOWNERS** (§4.8).
+- **Authentication:** delegated to the organisation's **identity-aware proxy** (Google IAP, Cloudflare
+  Access and similar) or OIDC. **Toolbox owns the permissions boundary.** Revocation has an SLO (§4.9).
 
 This gives you:
-1. **The OpenFGA testing story, unchanged.** An authorization model plus small fixture files, runnable
-   both by `toolbox test` and by the stock `fga model test` CLI.
-2. **No synchronization problem.** The catalog graph *is* the relationship store. Permission tuples are
-   *derived* from entity relations (`spec.owner`, group membership, `partOf` and so on) by rules
-   declared in code, so there is nothing to dual-write and no lag between "ownership changed" and
-   "access changed".
-3. **Field-level visibility.** Kinds and scorecards declare **facets**, each guarded by a permission.
-   For example, a scorecard's summary is visible to everyone, but its details (the list of critical
-   issues) only to the owning team and security. One shared response-shaping layer enforces this
-   identically in API, MCP, CLI, UI, search, context packs and the changefeed.
-4. **One expression language.** OpenFGA conditions are written in CEL, which Toolbox already uses for
-   filters, rules and mappings. This proposal replaces Cedar (see the earlier plan) with the OpenFGA
-   model plus CEL conditions.
-5. **Performance beyond the hosted engines' list limits.** OpenFGA caps ListObjects at 1,000 results
-   by default, and SpiceDB documents LookupResources degrading past ~10k results. Toolbox can avoid
-   this because the graph is in memory, so it can precompute group closures (Zanzibar's "Leopard"
-   idea) and per-user permission bitmaps.
-
-The cost is building a correct ReBAC evaluator. OpenFGA publishes a language-neutral conformance
-corpus (Apache-2.0) that de-risks this substantially (§4.3).
+1. **The OpenFGA testing story, unchanged and exact.** The same engine runs in `fga model test`, in
+   `toolbox test`, and in production.
+2. **No synchronization problem.** Tuples are *derived views* of catalog data, read in-process by
+   OpenFGA. "Ownership changed" and "access changed" are the same log position.
+3. **Field-level visibility.** Facets are guarded by permissions, and a single response-shaping layer
+   is shared by API, MCP, CLI, UI, search, context packs and the changefeed.
+4. **One predicate language.** OpenFGA conditions are CEL, as are Toolbox's rules and mappings.
 
 ---
 
@@ -91,14 +87,14 @@ corpus (Apache-2.0) that de-risks this substantially (§4.3).
 ### 4.1 Where relationships come from: derived, not written
 
 ```
- catalog graph (entities + relations, from connectors and catalog-info.yaml)
-        │  derivation rules (portal program, build-time validated)
+ input tables (raw records, native values) ──► change log ──► DBSP circuit
+        │  derivation rules (portal program, build-time validated) are circuit operators
         ▼
- authz tuples (virtual: computed views over the graph, never separately stored)
-        │  + static tuples in code (e.g. break-glass, portal-wide roles)
-        │  + contextual tuples from the request token (e.g. IdP group claims)
+ authz tuples = an indexed circuit OUTPUT VIEW (in memory, per log position; never written to a table)
+        │  + static tuples in code (portal-wide roles, break-glass)
+        │  + contextual tuples from the request identity (e.g. IdP group claims)
         ▼
- OpenFGA-semantics evaluator (Rust, in-process)  →  decisions, lists, explanations
+ embedded OpenFGA (Go module, in-process) reads tuples via a read-only datastore → decisions, lists, explain
 ```
 
 Three sources of tuples, and **none of them is a runtime "grant" API** (R5):
@@ -139,39 +135,25 @@ Violations are build errors, not runtime surprises.
 `define oncall: [user]` and ship the matching derivation rule. The portal's `fga.mod` lists the
 modules it accepts.
 
-### 4.2 Facets: field-level visibility
+### 4.2 Facets, information flow and declassification
+
+Most catalogs are **public by default**, and Toolbox keeps that default: the shipped model grants
+`can_view` to every portal member. Facets exist for the data that genuinely needs protection.
 
 Kinds, facts and scorecards declare **facets**: named groups of fields, each guarded by a permission
-in the model. The scorecard example from the requirements:
+in the model.
 
-```
-# authz/core.fga
-module core
+**Information-flow rules** (enforced by the circuit, [incremental-computation.md](./design/incremental-computation.md) §3):
+- Every circuit column carries a **facet label**.
+- A derived value (rule outcome, `calc`/`mirror`/`aggregate` property, roll-up, `explain` text,
+  search count) takes the **join of its inputs' labels** by default.
+- **Declassification** lowers a label only where the program says so, explicitly. Each
+  declassification is listed by `toolbox plan` and reviewed like any other change.
+- **Minimum cardinality:** an aggregate that is declassified over restricted inputs is suppressed when
+  it covers fewer than `k` entities (configurable, default 3). Otherwise a roll-up of one service
+  reveals that service's details.
 
-type user
-type agent
-  relations
-    define acts_for: [user]
-
-type group
-  relations
-    define member: [user, group#member]
-
-type portal
-  relations
-    define member: [user, user:*, group#member]
-    define security: [group#member]
-    define admin: [group#member]
-
-type service
-  relations
-    define portal: [portal]
-    define owner: [group]
-    define can_view: member from portal
-    define can_view_score_summary: can_view
-    define can_view_score_details: member from owner or security from portal or admin from portal
-    define can_run_actions: member from owner or admin from portal
-```
+The scorecard example from the requirements:
 
 ```ts
 new tb.Scorecard("security", {
@@ -180,9 +162,12 @@ new tb.Scorecard("security", {
     summary: "can_view_score_summary",   // level, colour, pass/fail counts, trend
     details: "can_view_score_details",   // rule-level outcomes, observed values, remarks, issue lists
   },
+  declassify: { outcome: "summary" },    // explicit: rule outcomes computed from details are visible as summary
   // ...rules
 });
+```
 
+```ts
 new tb.Kind("Service", {
   // ...
   facets: { default: "can_view", oncall: "can_view", costs: "can_view_costs" },
@@ -208,46 +193,52 @@ details to everyone, while the security scorecard restricts them.
    ```
    Portals that must hide even the *existence* of a facet can switch markers off per facet.
 
-### 4.3 The evaluator (Rust, `toolbox-authz`)
+### 4.3 The evaluator: OpenFGA embedded as a Go module
 
-- **Language front end:** a parser for the OpenFGA DSL and `fga.mod` that produces OpenFGA's JSON model
-  (`schema 1.1`), from which a typed IR is compiled.
-  - It is validated against `openfga/language`'s shared test data: DSL syntax and semantic validation
-    cases, and DSL↔JSON transformer cases (~29 transformer fixtures plus module cases).
-  - The ANTLR grammar (`OpenFGALexer.g4`/`OpenFGAParser.g4`) is the reference.
-- **APIs** (OpenFGA semantics):
-  - `Check`, `BatchCheck`
-  - `ListObjects`, `ListUsers`
-  - `Expand` (for explanations)
-  - Conditions (CEL, via the same `toolbox-expr` crate)
-  - Wildcards (`user:*`), usersets (`group#member`), tuple-to-userset (`X from Y`), `and`/`or`/`but not`
-  - Contextual tuples, cycle detection, depth limits
-- **Conformance:**
-  - Every build runs OpenFGA's server test corpus: `consolidated_1_1_tests.yaml` (153 cases, ~960
-    check assertions, plus list-objects and list-users assertions) and `abac_tests.yaml` (34 cases,
-    ~260 checks). Both are Apache-2.0.
-  - A nightly **differential fuzzer** generates random models and tuples and compares answers with a
-    real OpenFGA server in a container. Any divergence is a bug.
-- **Performance design** (the in-memory graph makes this cheap):
-  - *Principal context:* on the first request in a graph version, compute the principal's transitive
-    usersets, such as all `group#member` they reach through nested groups. This is Zanzibar's Leopard
-    idea, made cheap by the in-memory graph. It is cached per (principal, graph version) and
-    invalidated by the changefeed.
-  - *Permission bitmaps:* for hot (type, permission) pairs (`service#can_view`,
-    `service#can_view_score_details`), materialize a roaring bitmap of accessible object ids per
-    principal on demand. List, search and context-pack filtering become bitmap intersections.
-  - *Targets:* Check p99 < 1 ms; ListObjects over 100k services < 20 ms warm; principal context
-    < 5 ms for users in ≤ 200 groups. Verified with `toolbox-synth` (10k users, 1k teams, nested
-    groups, 100k entities).
-- **Consistency:**
-  - Every decision is made against a graph version, returned as `X-Toolbox-Graph-Version`.
-  - Clients can request "at least version N" for read-after-write, like Zanzibar's zookies. An agent
-    that just changed ownership via an action can rely on that.
-- **Explain:**
-  - `explain(principal, object, permission)` returns the satisfied path (e.g. `anne → member
-    group:payments → owner service:payments-api`), or for a denial the nearest missing edges and
-    who can create them.
-  - It is exposed as an MCP tool and a CLI command, and used by the UI's "request access" hint.
+OpenFGA is designed to be embeddable:
+- `server.NewServerWithOpts(server.WithDatastore(ds))` builds an in-process server.
+- `(*Server).Check`, `ListObjects`, `ListUsers` and `Expand` are ordinary Go methods.
+- The datastore is a public interface, `storage.OpenFGADatastore`, with `RelationshipTupleReader`
+  methods (`Read`, `ReadPage`, `ReadUserTuple`, `ReadUsersetTuples`, `ReadStartingWithUser`, …).
+- Verified against `openfga/openfga` `main` (Go 1.26 module).
+
+**Integration:**
+1. **`toolbox-fga` (Go)** wraps the OpenFGA server and implements a **read-only `OpenFGADatastore`**.
+   - Tuple reads call back into Rust through exported C functions, which read the circuit's
+     tuple index at the request's log position.
+   - Model reads return the compiled model from the manifest.
+   - All write methods return "unsupported".
+   - The optional typed `Querier` surface returns `nil`, which the interface permits.
+2. **Built as a `c-archive`** and linked into the Rust binary, so Toolbox stays a single static binary.
+3. **The C ABI is batched to amortise cgo overhead:**
+   - Requests are sent as protobuf bytes.
+   - Callbacks return pages of tuples rather than one tuple per call. Published measurements put a
+     cgo call in the tens of nanoseconds.
+   - No Go pointers cross the boundary, and memory is freed explicitly per cgo rules.
+4. **Pinned version.** The OpenFGA module version is pinned in `toolbox.lock` and upgraded deliberately
+   with its own conformance run.
+
+**Consequences:**
+- **Exact semantics.** OpenFGA's own conformance corpus (`assets/tests`, ~1,200 checks) now tests *our
+  datastore adapter*, not a re-implementation. `fga model test` in portal CI uses the same engine as
+  production.
+- **No duplicate writes.** OpenFGA never stores tuples. They exist once, as a derived view.
+- **Consistency.** Every decision is evaluated at a log position, returned as `X-Toolbox-Log-Position`.
+  "At least position N" gives read-your-writes across replicas.
+- **List filtering.** ListObjects and ListUsers limits are configured for in-process use. Toolbox
+  caches *results* per (principal, permission, log position), with LRU bounds. Unconditional hot
+  permissions can also be maintained *in the circuit* as `principal → objects` views; that path doesn't
+  apply to conditional or contextual tuples.
+- **Explain** uses OpenFGA `Expand` plus circuit provenance: which source fact produced each tuple.
+
+**Risks and mitigations:**
+
+| Risk | Mitigation |
+|---|---|
+| **Go runtime in a Rust process:** GC, its own threads, signal handlers | Isolate the boundary in `toolbox-fga`; stress-test signals and shutdown in CI |
+| **Determinism under simulation** | Results are pure functions of the datastore reads, which come from the deterministic circuit. Go-internal scheduling affects ordering, not answers. The simulator runs with `GOMAXPROCS=1` and treats calls as synchronous. If strict replay is needed, a `GOOS=wasip1` build of the same module runs under wasmtime |
+| **API churn** in `pkg/server`/`pkg/storage` | Pin; upgrade with the conformance corpus; contribute an "embedded datastore" example upstream |
+| **Build needs a Go toolchain** | Hermetic build images; prebuilt `toolbox-fga` archives per target |
 
 ### 4.4 Enforcement points (one decision engine, every surface)
 
@@ -257,8 +248,8 @@ details to everyone, while the security scorecard restricts them.
 | MCP | Same as API. Tools are filtered from `tools/list` when the principal can't use them at all | MCP handlers call the same service layer. Context packs are built only from allowed facets, and token budgets are computed *after* redaction |
 | CLI | Via API | No local enforcement logic to diverge |
 | UI | Via API | Hidden facets render as "restricted, owned by X, request access" |
-| Catalog lists and queries | `ListObjects` bitmap ∩ query results | Counts and pagination are computed after filtering, so totals don't leak |
-| Search | Per-facet index documents with object ids; results ∩ permission bitmaps | Snippets, highlights and facet counts come only from allowed documents. Detail text is indexed in a separate facet document, so it can never rank or snippet for an unauthorized user |
+| Catalog lists and queries | `ListObjects` (cached per log position) or circuit permission views ∩ query results | Counts and pagination are computed after filtering, so totals don't leak |
+| Search | Per-facet index documents with object ids; results ∩ the principal's accessible set | Snippets, highlights and facet counts come only from allowed documents. Detail text is indexed in a separate facet document, so it can never rank or snippet for an unauthorized user |
 | Changefeed / SSE / webhooks | Each event is checked against the subscriber principal; facet fields are stripped | Outbound webhooks run as a declared service principal |
 | Actions | `can_run` at request time **and again at execution**. Approvers = `ListUsers(run, can_approve)` | Agents acting on behalf of a user get the intersection of both principals (§4.5) |
 | AuthZEN endpoint | Other systems ask Toolbox for decisions | `POST /access/v1/evaluation(s)` and the search endpoints, backed by the same engine |
@@ -278,10 +269,15 @@ applies them as follows:
   `agent:claude-code`).
 - **Effective permission = user permission ∧ agent ceiling.** The ceiling is defined in the model, e.g.
   `define can_run_destructive: [agent]` granted only to specific agents in code.
+- **Prompt-injection defence is delegated to other layers.** That means the MCP client's approval UI,
+  agent-harness permissions, network egress controls and the identity-aware proxy. Toolbox does not
+  taint sessions. It provides accurate MCP tool annotations (`readOnlyHint`, `destructiveHint`,
+  `idempotentHint`, `openWorldHint`), marks untrusted text in responses, enforces approval policies on
+  actions, and audits everything.
 - A headless agent with a service token is just an `agent` principal, with no user.
 - The audit log and analytics record both principals.
-- Context packs and search follow the RAG pre-filter pattern via permission bitmaps, so an agent never
-  receives a chunk it could not have opened directly.
+- Context packs and search follow the RAG pre-filter pattern via the principal's accessible set, so
+  an agent never receives a chunk it could not have opened directly.
 
 ### 4.6 Testing: OpenFGA's story, extended to the catalog
 
@@ -368,59 +364,94 @@ as a PR comment. Permission changes become reviewable by impact, not just by dif
 **Coverage**, borrowed from `permify coverage`: report every relation and permission that no
 assertion touches.
 
-**CI oracle:** in portal repos, the stock `fga model test` runs alongside `toolbox test` on Level-1
-files, and any divergence fails the build. Users get two independent implementations agreeing on their
-authorization model.
+**Same engine everywhere:** Level-1 files run unchanged under the stock `fga model test` and
+`toolbox test`, because both use OpenFGA. Toolbox's added value is Levels 2 and 3: derivation from
+catalog data, and what each surface actually returns.
 
 ### 4.7 Interop and replaceability
 
 - **AuthZEN 1.0 PDP endpoint:** other tools can ask Toolbox "can X do Y on Z?" using the standard API.
   Examples: an API gateway, an MCP gateway, or an internal admin tool that wants to reuse
   catalog-derived permissions.
-- **External PDP mode (optional):** for organisations that already run OpenFGA centrally, Toolbox
-  streams derived tuples to it and delegates decisions. Because the model is OpenFGA's language, this
-  is a configuration switch rather than a rewrite. Expect higher latency and lower list-filtering
-  limits; the in-process engine stays the default.
 - **`toolbox authz export --fga`** writes a standard OpenFGA store file (model plus derived tuples from
   a snapshot) for offline analysis in the OpenFGA tooling.
+- *Removed:* the "external OpenFGA service" mode. Streaming tuples to a central OpenFGA would
+  reintroduce duplicate writes. Organisations with a central OpenFGA can call Toolbox's AuthZEN
+  endpoint instead.
+
+### 4.8 Authority of permission-relevant claims (CODEOWNERS)
+
+Permission-relevant fields (`spec.owner`, `system`/`partOf` links that confer access, external-id
+annotations) are accepted from git only when **CODEOWNERS** backs them:
+- **Ownership claim:** a `catalog-info.yaml` may set `spec.owner: group:X` only if team X (mapped from
+  its GitHub team via external ids) is a code owner of that file's path in the repo's CODEOWNERS.
+  Otherwise the claim is recorded but **not applied**: the entity gets an `ownership: unverified`
+  status, and the `ownership` scorecard fails at bronze.
+- **External-id claims** (e.g. `pagerduty.com/service-id`) are applied only from files whose code
+  owners include the entity's owner. A conflicting claim from another repo **freezes both claims**
+  until resolved. First claim does not win.
+- **Central data** (the catalog-data repo, native fields) is governed by that repo's CODEOWNERS and by
+  ReBAC write permissions respectively.
+- `toolbox plan` and the GitHub check report unverified claims on the PR that introduces them.
+
+### 4.9 Authentication, identity-aware proxies and revocation
+
+**Toolbox authenticates through what the organisation already runs, and owns the permissions
+boundary.**
+
+| Mode | How | Notes |
+|---|---|---|
+| **Identity-aware proxy** (recommended for the UI and API) | Google **IAP** (`x-goog-iap-jwt-assertion`), Cloudflare **Access** (`Cf-Access-Jwt-Assertion`, per-application AUD), or generic JWKS-verified headers for Pomerium, oauth2-proxy and similar | Toolbox **always verifies the signed JWT** (signature, `aud`, issuer, expiry). Google notes signed headers protect against requests that bypass the proxy. Identity maps to a `User` entity by external id or email |
+| **OIDC** (built-in) | Standard authorization-code flow | For deployments without a proxy |
+| **Agents / MCP** | MCP OAuth 2.1, PATs, or the proxy's programmatic access (IAP service-account tokens, Access service tokens) | Browser-only proxy flows don't suit agents, so the MCP endpoint may use a separate hostname or path with OAuth |
+| **CI** | GitHub OIDC tokens | Repo-scoped principals |
+
+**Revocation SLO.** The default is 60 s from an IdP event to enforcement:
+- The proxy revokes *sessions* at the edge, but team-based *permissions* come from the IdP connector.
+- **Fast path:** SCIM deprovisioning and IdP group-change webhooks are written to the input tables
+  immediately, flow through the change log, and update the circuit's membership views. Cached
+  permission results are keyed by log position, so they go stale automatically.
+- Group claims in the proxy or OIDC token are used as a **ceiling**: a membership absent from a fresh
+  token is treated as revoked even before the connector catches up.
+- Revocation latency is a published metric and alert ([plan.md](./plan.md) §6).
 
 ---
 
 ## 5. Changes to the plan
 
-1. **Replace Cedar with OpenFGA model + CEL conditions** as the single authorization language. Cedar's
-   formal verification and policy analysis are real strengths, but it lacks graph traversal and list
-   primitives. Running two languages (ReBAC for relationships plus Cedar for policies) costs more than
-   it gains at this stage. Revisit if attribute-heavy guardrails outgrow CEL conditions.
-2. `toolbox-authz` becomes the OpenFGA-compatible parser and evaluator, principal context, permission
-   bitmaps, explain, AuthZEN endpoint, and the external-PDP adapter.
-3. Kinds, facts and scorecards gain **facets**. A single response-shaping layer is mandatory for all
-   surfaces.
-4. `toolbox test` runs Level 1–3 authorization tests. `toolbox plan` reports authorization impact.
-5. Ship a default module (`@toolbox/authz-default`) with portal membership, ownership, security and
-   admin roles, plus facet conventions, so most portals start secure and only extend.
+1. **Replace Cedar with the OpenFGA model + CEL conditions** as the single authorization language.
+2. **`toolbox-authz` + `toolbox-fga`:**
+   - **`toolbox-fga`** is the Go module: embedded OpenFGA with a read-only datastore over the circuit
+     index.
+   - **`toolbox-authz`** is the Rust side: principals, proxy/OIDC/PAT authentication, facet shaping,
+     result caches, explain, AuthZEN, CODEOWNERS authority checks.
+3. Kinds, facts and scorecards gain **facets with information-flow labels and explicit
+   declassification**. A single response-shaping layer is mandatory for all surfaces.
+4. `toolbox test` runs Level 1–3 authorization tests. `toolbox plan` reports authorization impact and
+   declassifications.
+5. Ship a default module (`@toolbox/authz-default`) that is **public by default**: portal membership,
+   ownership, security and admin roles, plus facet conventions.
 
 ## 6. Phasing
 
 | Phase | Authorization scope |
 |---|---|
-| 0 (spike, 2–3 weeks) | DSL parser + Check evaluator. Exit: ≥ 95% of OpenFGA's consolidated Check assertions pass. Bitmap list filtering is benchmarked at 100k objects. |
-| 1 (catalog) | Full conformance (Check/BatchCheck/ListObjects/ListUsers, conditions, modules); derivation rules; facets + response shaping; Level 1–2 tests; contextual tuples from OIDC |
-| 2 (scorecards) | Scorecard summary/detail facets; facts with facets; `plan` authz diff |
+| 0 (spike) | `toolbox-fga` c-archive linked into Rust; read-only datastore over an in-memory tuple index; OpenFGA conformance corpus green through the adapter; cgo overhead and signal behaviour measured |
+| 1 (catalog) | Derivation rules as circuit operators; facets + information-flow labels + response shaping; CODEOWNERS authority; proxy/OIDC authentication; revocation fast path; Level 1–2 tests |
+| 2 (scorecards) | Scorecard summary/detail facets with declassification and minimum cardinality; facts with facets; `plan` authz diff |
 | 3 (actions) | `can_run` at request and execution; approvers via ListUsers; agent ceilings |
-| 4 (knowledge/search) | Per-facet search documents, bitmap-filtered search and context packs |
-| 5 (ecosystem) | AuthZEN endpoint; connector-contributed modules; external OpenFGA mode; `authz export` |
-| 6 (hardening) | Nightly differential fuzzing vs OpenFGA; side-channel review; Level-3 surface snapshot suite |
+| 4 (knowledge/search) | Per-facet search documents, filtered search and context packs |
+| 5 (ecosystem) | AuthZEN endpoint; connector-contributed modules; `authz export` |
+| 6 (hardening) | Continuous conformance + fuzzing of the datastore adapter; side-channel review; Level-3 surface snapshot suite |
 
 ## 7. Risks
 
 | Risk | Mitigation |
 |---|---|
-| Semantic divergence from OpenFGA (especially `but not`, intersections, conditions, list APIs) | Conformance corpus on every build; differential fuzzing; the stock `fga model test` oracle in portal CI |
-| Authorization data leaks through side channels (counts, search snippets, timing, 403 vs 404, changefeed) | One shaping layer; per-facet search documents; post-filter aggregates; uniform 404s; Level-3 surface tests; a dedicated security review in phase 6 |
-| Model complexity for portal authors | Default module with secure defaults; facets as a simple declarative concept; agent skill for "add a permission + tests"; `explain` |
-| Performance of list operations with exclusions or intersections on huge sets | Bitmaps for hot permissions; fall back to batched Check post-filtering with over-fetch; benchmarks in CI |
-| Stale permissions after IdP changes | IdP/HR connectors on webhooks; contextual tuples from fresh tokens; connector-lag SLOs (plan §6) |
+| FFI boundary bugs (memory, panics across the boundary, signals) | Narrow C ABI with byte buffers; fuzz the ABI; panic and recover guards on both sides; CI stress tests |
+| Authorization data leaks through side channels (counts, search snippets, timing, 403 vs 404, changefeed) | Information-flow labels; explicit declassification with minimum cardinality; per-facet search documents; uniform 404s; Level-3 surface tests; a dedicated security review |
+| Model complexity for portal authors | Public-by-default module; facets as a simple declarative concept; agent skill for "add a permission + tests"; `explain` |
+| Stale permissions after IdP changes | Revocation SLO with the SCIM/webhook fast path and token claims as a ceiling |
 
 ## 8. Open questions
 
@@ -441,6 +472,13 @@ authorization model.
     [openfga/language](https://github.com/openfga/language)
   - [Server test corpus](https://github.com/openfga/openfga/tree/main/assets/tests) ·
     [Continuous authorization testing (Auth0 blog)](https://auth0.com/blog/continuous-authorization-testing-fga-github-ci-cd/)
+  - Embedding API: `pkg/server` (`NewServerWithOpts`, `WithDatastore`) and `pkg/storage`
+    (`OpenFGADatastore`, `RelationshipTupleReader`) in [openfga/openfga](https://github.com/openfga/openfga)
+- Go/Rust FFI: [embedding Go in a Rust program](https://engineered.at/articles/embedding-go-in-a-rust-program) ·
+  [rust2go](https://github.com/ShabbirHasan1/rust2go)
+- Identity-aware proxies:
+  [Google IAP signed headers](https://docs.cloud.google.com/iap/docs/signed-headers-howto) ·
+  [Cloudflare Access: validate JWTs](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/validating-json/)
 - SpiceDB:
   - [Validation & testing](https://authzed.com/docs/spicedb/modeling/validation-testing-debugging) ·
     [Querying data (LookupResources limits)](https://authzed.com/docs/spicedb/concepts/querying-data) ·

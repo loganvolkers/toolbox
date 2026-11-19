@@ -134,7 +134,7 @@ SubImage):
 ## 5. Design: Toolbox's context lake
 
 ```
-                         ┌──────────────── interfaces: API · MCP · CLI · UI (canvases) ────────────────┐
+                         ┌──────────────── interfaces: API · MCP · CLI · UI (operator views) ────────────────┐
   GOLD (derived)         │ scores · findings (incl. imported toxic combos) · facts · context packs ·  │
                          │ embeddings · history (daily)                                                │
                          ├─────────────────────────────────────────────────────────────────────────────┤
