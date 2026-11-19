@@ -294,6 +294,7 @@ flowchart LR
 | `toolbox-fga` (Go) | **Embedded OpenFGA** (`pkg/server`) with a read-only datastore over the circuit's tuple index; built as a c-archive and called through a batched C ABI | openfga/openfga |
 | `toolbox-wasm` | wasmtime host, WIT worlds, fuel/memory limits, component cache | wasmtime |
 | `toolbox-api` | axum REST, OpenAPI 3.1 (generated per portal), SSE changefeed, outbound webhooks | axum, utoipa |
+| `toolbox-graphql` | Read-only GraphQL: dynamic schema from the manifest, trusted-document registry, cost analysis, batched authorization/facet loaders, GET + ETag | async-graphql (`dynamic-schema`) |
 | `toolbox-mcp` | MCP server (Streamable HTTP + stdio bridge), tools/resources/prompts/elicitation/tasks | rmcp |
 | `toolbox-ui` | Embedded SPA assets and the server side of view rendering | rust-embed |
 | `toolbox-cli` | `toolbox` binary: authoring commands + remote client | clap |
@@ -515,6 +516,15 @@ Every capability is declared once (kind, scorecard, action, view, query) and pro
 - Cursor pagination, field projection, ETags.
 - Every response carries its **log position**. Clients can require "at least position N" for
   read-your-writes.
+
+**GraphQL** (read-only data layer for the UI and operator views; [graphql.md](./design/graphql.md))
+- A dynamic schema is built from the manifest at runtime; there is no codegen.
+- No mutations or subscriptions.
+- **Trusted documents only in production**, declared by views and validated and costed at build.
+- Batched authorization and facet loaders over the same service layer, with nullable faceted fields
+  returning `REDACTED` markers.
+- Relay connections with caps; IBM cost directives.
+- Agents keep the MCP task tools.
 - Changefeed via SSE (`/v1/events`) and signed outbound webhooks.
 
 **MCP** (rmcp; Streamable HTTP at `/mcp`; `toolbox mcp` stdio bridge for local clients)
@@ -650,6 +660,7 @@ These designs close the gaps found in the [red-team review](./red-team.md). Each
 | **Source of truth** | Field-level ownership declared in code (`git:` / `connector:` / `native` / `computed` / `action`, with precedence). One write path routes edits: native fields are edited inline (revisions, approvals, changesets with preview and revert), git fields get a PR, connector fields are rejected with an explanation. Write-back to GitHub custom properties; export and git mirror | [source-of-truth.md](./design/source-of-truth.md) |
 | **Verification** | TDD against named properties (safety, liveness, equivalences, non-interference). Executable reference models (ShardStore-style) as the full-pipeline oracle. Conformance via the embedded OpenFGA, the CEL conformance suite, incremental ≡ batch, and across stores. Deterministic simulation (FoundationDB/TigerBeetle/S2-style, in-process) plus optional whole-system Antithesis. Generated portals × covering-array deployments × a real-portal corpus. Kani, shuttle, mutation testing; release gates with published assurance metrics. Customers get `toolbox simulate` for their own configs | [verification.md](./design/verification.md) |
 | **Developer velocity** | Measured dev-loop SLOs for maintainers and operators. No per-portal codegen (the Feldera lesson). Wide/shallow workspace with interface crates. nextest, Bacon, hakari, sccache in CI. `toolbox dev` daemon with hot reload through a Salsa-memoised manifest → circuit → affected tests pipeline. Graph-based selective tests with a content-addressed result cache. Content-addressed sub-circuits for fast plans and epochs | [developer-velocity.md](./design/developer-velocity.md) |
+| **GraphQL** | Read-only GraphQL for rich entity pages and operator views: trusted documents only in production, generated from the manifest at runtime, batched authorization, nullable facets, cost limits; not exposed to agents | [graphql.md](./design/graphql.md) |
 | **Agent plugins** | Two Agent Plugins 1.0.0 packages: `toolbox-operator` (in this repo; authoring skills + local MCP) and a user plugin generated from each portal's config (production MCP URL; config-derived skills; data fetched live) | [agent-plugins.md](./design/agent-plugins.md) |
 | **Action-created entities** | Action scopes (`create`/`day2`/`delete`/`global`), action-sourced fragments, TTL lifecycles with expiry automations, pending overlays for PR-based changes, bulk-edit PRs | [action-entities.md](./design/action-entities.md) |
 
@@ -1011,6 +1022,8 @@ real organisation.
 ### Phase 2 — Standards at scale and the review loop
 - Facts ingestion, initiatives, aggregate and graph-predicate rules, roll-ups with minimum
   cardinality.
+- **GraphQL v1:** trusted documents for the built-in entity pages and operator views; schema diff in
+  `plan`; added to the S1/E6 checks.
 - History archive and MCP analysis tools; agent skills for building dashboards in Claude Artifacts /
   Cursor Canvas.
 - User plugin: one skill per promoted action; `build-dashboard`; publishing pipeline; plugin diff in

@@ -53,7 +53,7 @@ assertions in code, simulation checkers, property tests, differential tests.
 
 | Id | Property |
 |---|---|
-| S1 | **Non-interference:** a principal's view (API, MCP, CLI, UI, search, counts, views, changefeed, context packs, notifications, plan output) is identical across any two worlds that differ only in data that principal cannot read |
+| S1 | **Non-interference:** a principal's view (API, GraphQL, MCP, CLI, UI, search, counts, views, changefeed, context packs, notifications, plan output) is identical across any two worlds that differ only in data that principal cannot read |
 | S2 | **Authorization agreement:** every Check, ListObjects and ListUsers result equals OpenFGA's for the same model and tuples |
 | S3 | **No unsafe deletes:** no entity is removed by a sync without `SNAPSHOT_COMPLETE`, with any `ERROR`, or above the deletion threshold |
 | S4 | **At-most-once side effects per idempotency key.** No execution without the required approvals. Permission re-checked at execution |
@@ -83,7 +83,7 @@ liveness phase):**
 | E3 | Incremental search/graph index ≡ rebuild from the database |
 | E4 | `plan` predicted diff ≡ observed diff after deploy (plan/apply equivalence) |
 | E5 | Postgres store ≡ SQLite store ≡ in-memory model store (same operation histories, same results) |
-| E6 | Surfaces are projections of the same data: API ≡ MCP ≡ CLI for the same request and principal |
+| E6 | Surfaces are projections of the same data: API ≡ GraphQL ≡ MCP ≡ CLI for the same request and principal |
 | E7 | Re-map from the raw layer ≡ re-fetch from sources |
 | E8 | Export → import round-trip is the identity |
 

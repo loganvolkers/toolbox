@@ -17,6 +17,7 @@ exposed identically over API, MCP, CLI and UI.
   - [design/incremental-computation.md](docs/design/incremental-computation.md): DBSP incremental circuit + DBOS-model durable workflows over one change log
   - [design/extensibility.md](docs/design/extensibility.md): code-first extensibility and the right language for each job
   - [design/developer-velocity.md](docs/design/developer-velocity.md): fast inner loops for maintainers and operators (build speed, selective/parallel/cached tests, watch mode)
+  - [design/graphql.md](docs/design/graphql.md): read-only GraphQL with trusted documents for rich catalog pages
   - [design/agent-plugins.md](docs/design/agent-plugins.md): the operator agent plugin (in `plugins/`) and the generated user plugin
   - [design/dashboards.md](docs/design/dashboards.md): dashboards via agent artifacts + MCP; operator-only UI views; history
   - [design/sdlc.md](docs/design/sdlc.md): local → CI → PR → preview → prod, remote plan, GitHub Actions
