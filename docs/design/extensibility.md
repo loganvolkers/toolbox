@@ -23,8 +23,8 @@ where it runs best:
 - **In-engine logic:** sandboxed, deterministic WASM (Shopify), never a service the customer must host
   (Salesforce Functions).
 - **Side effects:** executors and connectors out of process.
-- **UI:** web standards (Lightning Web Components), but only for operators (see
-  [dashboards.md](./dashboards.md)).
+- **UI:** a single, widely known web stack (React + TypeScript on the `@toolbox/ui` design system), for
+  operators only ([frontend.md](./frontend.md), [dashboards.md](./dashboards.md)).
 
 ## 2. The language map
 
@@ -36,7 +36,7 @@ where it runs best:
 | Complex transforms (recursion, grouping, folds, heavy reshaping) | **TypeScript or Rust functions compiled to WASM** (Javy/StarlingMonkey for TS; native for Rust/Go) | Deterministic, fuel-limited, sandboxed (Shopify model); unit-testable in the author's language; no service to host | `toolbox ext new transform --lang ts`; fixtures; property tests |
 | Authorization model | **OpenFGA DSL** | The evaluator *is* OpenFGA ([authorization.md](../authorization.md)) | `fga model test` + `toolbox test` |
 | Connectors, action executors | **Any language** (connector protocol; DBOS SDKs for durable steps) | I/O-heavy and vendor-SDK-heavy; out of process by nature | SDKs, conformance kit |
-| Operator UI extensions | **Web Components / TSX** | Web standards (the Lightning Web Components lesson) | `@toolbox/ui-sdk`, snapshot tests |
+| Operator UI extensions | **React/TSX** on `@toolbox/ui`; Web Component island as an escape hatch | One design system, one test stack; agent fluency ([frontend.md](./frontend.md) §4) | `@toolbox/ui`, Storybook 10, story-based tests |
 | Ad-hoc graph queries (agents, later) | Read-only **GQL** subset | ISO standard, Cypher-like, familiar to agents | — |
 
 **Why not JSONata or jq for mappings:**

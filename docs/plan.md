@@ -36,7 +36,7 @@ the same truth through a fast, mostly read-only UI.
    - CEL for predicates and mappings
    - WASM functions for complex in-engine logic
    - any language for connectors and executors
-   - Web Components for operator UI
+   - React (TSX) on the `@toolbox/ui` design system for operator UI ([frontend.md](./design/frontend.md))
 
    ([extensibility.md](./design/extensibility.md))
 5. Upgrading Toolbox is a **version bump**, not a merge of scaffolded code.
@@ -552,7 +552,10 @@ Every capability is declared once (kind, scorecard, action, view, query) and pro
 - The *exception* to "Rust everywhere", by design. Agents and humans build UI fastest in TS, and UI
   extensions must be web-native anyway.
 - Entity pages and lists are generated from kind schemas and declarative `view()` config.
-- **Operator-only customisation:** custom UI ships as **Web Components / TSX views** in the portal
+- **Operator-only customisation:** custom UI ships as **React (TSX) views and action UIs** on the
+  `@toolbox/ui` design system (React Aria; Storybook 10), with a Web Component island as the escape
+  hatch. Actions get three UI tiers: generated form → field widgets → custom component
+  ([frontend.md](./design/frontend.md)). This UI ships in the portal
   repo, built by `toolbox build`, using `@toolbox/ui-sdk` (typed API client, theme, auth). Users don't
   author UI inside Toolbox ([dashboards.md](./design/dashboards.md)).
 - **The UI mostly reads.** "Edit" on git-sourced data, or on config, **opens a pull request**. Edits to
@@ -570,7 +573,7 @@ Full rationale (Backstage, Port, Salesforce, Shopify Functions) is in
 | Complex logic: rules, transforms, computed props | **WASM functions** (Shopify Functions model: deterministic, fuel-limited) | wasmtime sandbox, no I/O | TypeScript (Javy/StarlingMonkey), Rust, Go |
 | Connectors: I/O, vendor SDKs, long-running | **Toolbox Connector Protocol (TCP)**, an open HTTP+JSON spec | Separate process, container or service; least-privilege secrets | Any language. SDKs: TS, Python, Go, Rust |
 | Side-effecting actions | **Executors**: CI systems, Argo, k8s Job, PR, *or a TCP `act` capability*; durable steps optionally via DBOS SDKs | Out of process | Any |
-| Operator UI | Declarative views; **Web Components / TSX** (operators only) | Browser; CSP; scoped API token | TS/JS |
+| Operator UI | Declarative views; **React/TSX** on `@toolbox/ui` (operators only); Web Component island escape hatch | Browser; same-origin bundle built by `toolbox build`; strict CSP; server enforces everything | TS/TSX |
 
 #### Toolbox Connector Protocol (TCP)
 
@@ -661,6 +664,7 @@ These designs close the gaps found in the [red-team review](./red-team.md). Each
 | **Verification** | TDD against named properties (safety, liveness, equivalences, non-interference). Executable reference models (ShardStore-style) as the full-pipeline oracle. Conformance via the embedded OpenFGA, the CEL conformance suite, incremental ≡ batch, and across stores. Deterministic simulation (FoundationDB/TigerBeetle/S2-style, in-process) plus optional whole-system Antithesis. Generated portals × covering-array deployments × a real-portal corpus. Kani, shuttle, mutation testing; release gates with published assurance metrics. Customers get `toolbox simulate` for their own configs | [verification.md](./design/verification.md) |
 | **Developer velocity** | Measured dev-loop SLOs for maintainers and operators. No per-portal codegen (the Feldera lesson). Wide/shallow workspace with interface crates. nextest, Bacon, hakari, sccache in CI. `toolbox dev` daemon with hot reload through a Salsa-memoised manifest → circuit → affected tests pipeline. Graph-based selective tests with a content-addressed result cache. Content-addressed sub-circuits for fast plans and epochs | [developer-velocity.md](./design/developer-velocity.md) |
 | **GraphQL** | Read-only GraphQL for rich entity pages and operator views: trusted documents only in production, generated from the manifest at runtime, batched authorization, nullable facets, cost limits; not exposed to agents | [graphql.md](./design/graphql.md) |
+| **Frontend** | React + TypeScript on `@toolbox/ui` (React Aria, tokens, domain components, typed hooks). Action UIs in three tiers (generated → field widgets → custom TSX). Option-search API with rich, permission-shaped options shared with MCP. Dry-run latency SLO. Storybook 10 for primitives *and* page-level, persona-aware stories, backed by engine-recorded fixtures; stories are tests. Vite 8 HMR inside `toolbox dev` | [frontend.md](./design/frontend.md) |
 | **Agent plugins** | Two Agent Plugins 1.0.0 packages: `toolbox-operator` (in this repo; authoring skills + local MCP) and a user plugin generated from each portal's config (production MCP URL; config-derived skills; data fetched live) | [agent-plugins.md](./design/agent-plugins.md) |
 | **Action-created entities** | Action scopes (`create`/`day2`/`delete`/`global`), action-sourced fragments, TTL lifecycles with expiry automations, pending overlays for PR-based changes, bulk-edit PRs | [action-entities.md](./design/action-entities.md) |
 
@@ -947,7 +951,7 @@ real organisation.
   - CODEOWNERS authority
   - proxy/OIDC authentication + revocation SLO
   - WASM functions for in-engine logic
-  - operator-only Web Components UI
+  - React + `@toolbox/ui` + Storybook for first-party and operator UI
   - licence (recommend **Apache-2.0**)
 - **Spikes, each with numbers:**
   - Manifest → DBSP circuit for mapping, merge, a recursive closure (nested groups) and a CEL rule;
@@ -1004,6 +1008,11 @@ real organisation.
   CLI, minimal read-only UI.
 - **Operations baseline:** OTel, `/metrics`, health/readiness, analytics sinks (`posthog`, `otlp`,
   `none`), `toolbox admin status|config|resync`, Grafana overview.
+- **Frontend v1:**
+  - `@toolbox/ui` primitives
+  - Storybook 10 with story-based Vitest, a11y and visual tests
+  - generated action forms and per-persona page stories
+  - Vite in `toolbox dev`
 - **Inner loop:** `toolbox dev` daemon (watch, hot reload, attached authoring MCP);
   `toolbox check`; `test --affected` with a content-addressed result cache and parallel per-file
   execution; `simulate --quick`; `plan --local`.
@@ -1048,6 +1057,12 @@ real organisation.
 - Automations from circuit event deltas (entity, score, schedule triggers).
 - Action scopes, action-sourced fragments, TTL lifecycles (scheduled workflows), pending overlays,
   bulk-edit PRs.
+- **Action UIs:**
+  - option-search API with rich `enumFrom` metadata (and the MCP `action_options` tool)
+  - a dry-run latency SLO
+  - field widgets and custom action components
+  - `RunTimeline`
+  - the install-approved-app reference UI
 - Preview environments with GitHub Deployments and GC; ownership-aware review.
 - Fix PRs, initiative issues, approvals via GitHub Environments, `run-action` Action;
   `action-quality` scorecard and Rule day-2 actions.
@@ -1114,7 +1129,7 @@ real organisation.
 **Decided (2026-11-19):**
 - Launch languages: TypeScript, Python, YAML.
 - Predicates and mappings: typed CEL (JSONata rejected, JQ not adopted).
-- UI: TS SPA + Web Components, operator-only customisation.
+- UI: React + TypeScript SPA on `@toolbox/ui` (React Aria), Storybook 10, operator-only customisation with three action-UI tiers; Web Component island as the escape hatch.
 - Dashboards: via Claude Artifacts and Cursor Canvas over MCP.
 - Derived state: DBSP. Side effects: DBOS model.
 - Authorization: embedded OpenFGA, information flow, CODEOWNERS authority.

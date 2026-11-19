@@ -54,7 +54,8 @@ plugins/toolbox-operator/
 │   ├── add-permission/            # OpenFGA modules, .fga.yaml tests, derivation, CODEOWNERS authority
 │   ├── write-cel/                 # typed CEL: predicates and object construction, common errors
 │   ├── write-wasm-transform/      # TS/Rust → WASM functions
-│   ├── add-view/                  # operator UI views (Web Components/TSX)
+│   ├── add-view/                  # operator UI views (React/TSX on @toolbox/ui), story first
+│   ├── add-action-ui/             # generated → field widget → custom action UI; Storybook page stories + play tests
 │   ├── review-plan/               # reading plan output and gates; when to acknowledge
 │   ├── debug-simulation/          # replaying seeds, reading invariant failures
 │   ├── upgrade-toolbox/           # version bumps, codemods, epoch notes

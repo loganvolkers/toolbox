@@ -13,7 +13,7 @@ A2 (dashboards, reports, trends).*
    - This removes the confused-deputy risks of user-authored canvases running inside the portal
      ([principal-review.md](../principal-review.md) §1.5).
 2. **UI customisation is for Toolbox operators only, in code.** Operators extend the portal UI with
-   **Web Components / TSX views** in the portal repo. Those views are reviewed, tested and versioned
+   **React (TSX) views** on `@toolbox/ui` ([frontend.md](./frontend.md)) in the portal repo. Those views are reviewed, tested and versioned
    like every other part of the program (the Lightning Web Components lesson in
    [extensibility.md](./extensibility.md)).
 3. **Toolbox ships good built-in views:**

@@ -216,6 +216,8 @@ Toolbox workspace and times time-to-feedback. They run on every PR, and regressi
 | Operator: add a WASM transform (TS) → reloaded | ≤ 3 s |
 | Operator: `simulate --quick` on affected modules | ≤ 30 s |
 | Operator: `plan --remote` for a single-rule change at 100k entities | ≤ 60 s |
+| UI edit → HMR update (maintainers and operators) | ≤ 200 ms |
+| Affected story tests after editing one component | ≤ 10 s |
 
 ## 7. Changes to the plan
 

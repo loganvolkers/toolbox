@@ -89,7 +89,7 @@ GitHub App in one step from the API, CLI or MCP:
 | **API** | `POST /v1/actions/install-approved-app/runs {entity: "repository:default/payments-api", inputs: {app: "renovate", justification: "..."}, dry_run: true}`; typed in the portal's generated OpenAPI |
 | **CLI** | `toolbox run install-approved-app --entity repository:default/payments-api --app renovate --dry-run`, then without `--dry-run`; `toolbox runs watch <id>` |
 | **MCP** | Discoverable via `list_actions(ref)`. **Promoted to a first-class tool** `install_approved_github_app` (annotations: `readOnlyHint: false`, `destructiveHint: false`, `idempotentHint: true`, `openWorldHint: true`). Elicitation asks for a missing justification; long approvals use MCP tasks |
-| **UI** | The action appears on the repository page, with the dry-run diff and approval status |
+| **UI** | A custom action UI (tier 3, [frontend.md](../design/frontend.md) §1, §3): repository and app comboboxes with rich, permission-shaped options and disabled reasons, a live dry-run panel, the approval path, and an inline run timeline with undo. Covered by page-level Storybook stories per persona |
 
 ### 2.5 Dry-run output (what humans and agents see before acting)
 
