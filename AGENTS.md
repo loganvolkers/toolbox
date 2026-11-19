@@ -26,6 +26,7 @@ docs/ocean.md                Port Ocean review
 docs/red-team.md             competitor-perspective gap review (with status)
 docs/principal-review.md     principal-engineer review (with resolutions)
 docs/adversarial-critique.md whether to build at all: hypotheses, alternatives, kill criteria
+docs/technology-critique.md  sprawl and replaceability review; proposed minimal architecture
 docs/design/*.md             one detailed design per capability
 docs/examples/*.md           worked examples (e.g. approved GitHub Apps)
 docs/glossary.md, docs/research-log.md

@@ -15,6 +15,7 @@ exposed identically over API, MCP, CLI and UI.
 - [docs/red-team.md](docs/red-team.md) — devil's-advocate review: gaps a competitor would exploit, ranked by deal risk
 - [docs/principal-review.md](docs/principal-review.md) — principal-engineer review: security, consistency, scope holes and proposed ADRs
 - [docs/adversarial-critique.md](docs/adversarial-critique.md) — adversarial critique: should Toolbox be built at all? Hypotheses, alternatives, kill criteria
+- [docs/technology-critique.md](docs/technology-critique.md) — technology-only critique: sprawl, replaceability by generic components, the Backstage compatibility claim, a minimal architecture
 - [experiments/](experiments/) — small reproducible experiments cited by the docs
 - Detailed designs:
   - [design/meta-catalog.md](docs/design/meta-catalog.md): the portal catalogs, owns and scores itself

@@ -1,0 +1,8 @@
+[package]
+name = "leaf-ivm"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+[dependencies]
+model = { path = "../model" }
+dbsp.workspace = true

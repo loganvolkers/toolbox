@@ -1,0 +1,8 @@
+[package]
+name = "leaf-web"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+[dependencies]
+model = { path = "../model" }
+axum.workspace = true

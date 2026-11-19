@@ -1,0 +1,24 @@
+machine: 4 vCPU, rustc 1.97.0 (2d8144b78 2026-07-07)
+boring clean_dev_build_s 106.798370929
+boring crates_compiled 167
+boring dev_binary_bytes 17908816
+boring incr_edit_app_s .524624157
+boring incr_edit_app_s .525132601
+boring incr_edit_leaf_cel_s .597950718
+boring check_edit_leaf_cel_s 16.331532580
+boring check_edit_leaf_cel_s .359562946
+full clean_dev_build_s FAILED (internal compiler error while compiling dbsp 0.384.0):
+error: the compiler unexpectedly panicked. This is a bug
+note: rustc 1.97.0 (2d8144b78 2026-07-07) running on x86_64-unknown-linux-gnu
+note: compiler flags: --crate-type lib -C opt-level=2 -C embed-bitcode=no -C debug-assertions=on -C strip=debuginfo
+query stack during panic:
+#0 [instantiate_and_check_impossible_predicates] checking impossible instantiated predicates: `operator::dynamic::multijoin::star_join::StarJoinFuncTrait`
+#1 [first_method_vtable_slot] finding the slot within the vtable of `dyn operator::dynamic::multijoin::star_join::StarJoinFuncTrait<circuit::circuit_builder::ChildCircuit<circuit::circuit_builder::ChildCircuit<(), ()>, time::product::Product<u32, u32>>, trace::ord::fallback::indexed_wset::FallbackIndexedWSet<dyn dynamic::data::Data, dyn dynamic::data::Data, dyn dynamic::weight::WeightTyped<Type = 
+#2 [resolve_instance_raw] resolving instance `<dyn operator::dynamic::multijoin::star_join::StarJoinFuncTrait<circuit::circuit_builder::ChildCircuit<circuit::circuit_builder::ChildCircuit<(), ()>, time::product::Product<u32, u32>>, trace::ord::fallback::indexed_wset::FallbackIndexedWSet<dyn dynamic::data::Data, dyn dynamic::data::Data, dyn dynamic::weight::WeightTyped<Type = i64>>, dyn dynamic::da
+#3 [items_of_instance] collecting items used by `dyn_clone::clone_box::<dyn operator::dynamic::multijoin::star_join::StarJoinFuncTrait<circuit::circuit_builder::ChildCircuit<circuit::circuit_builder::ChildCircuit<(), ()>, time::product::Product<u32, u32>>, trace::ord::fallback::indexed_wset::FallbackIndexedWSet<dyn dynamic::data::Data, dyn dynamic::data::Data, dyn dynamic::weight::WeightTyped<Type
+#4 [collect_and_partition_mono_items] collect_and_partition_mono_items
+#5 [exported_generic_symbols] collecting exported generic symbols for crate `0`
+error: could not compile `dbsp` (lib)
+error: the compiler unexpectedly panicked. This is a bug
+note: rustc 1.97.0 (2d8144b78 2026-07-07) running on x86_64-unknown-linux-gnu
+note: compiler flags: --crate-type lib -C opt-level=2 -C embed-bitcode=no -C debug-assertions=on -C strip=debuginfo

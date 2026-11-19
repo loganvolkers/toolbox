@@ -1,0 +1,19 @@
+[package]
+name = "app"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+[features]
+boring = ["dep:leaf-web", "dep:leaf-store", "dep:leaf-mcp", "dep:leaf-cel"]
+full = ["boring", "dep:leaf-ivm", "dep:leaf-wasm", "dep:leaf-search", "dep:leaf-graphql"]
+[dependencies]
+tokio.workspace = true
+model = { path = "../model" }
+leaf-web = { path = "../leaf-web", optional = true }
+leaf-store = { path = "../leaf-store", optional = true }
+leaf-mcp = { path = "../leaf-mcp", optional = true }
+leaf-cel = { path = "../leaf-cel", optional = true }
+leaf-ivm = { path = "../leaf-ivm", optional = true }
+leaf-wasm = { path = "../leaf-wasm", optional = true }
+leaf-search = { path = "../leaf-search", optional = true }
+leaf-graphql = { path = "../leaf-graphql", optional = true }

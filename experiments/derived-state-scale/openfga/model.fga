@@ -1,0 +1,21 @@
+model
+  schema 1.1
+
+type user
+
+type team
+  relations
+    define parent: [team]
+    define member: [user] or member from parent
+
+type domain
+
+type system
+  relations
+    define parent: [domain]
+
+type service
+  relations
+    define owner: [team]
+    define parent: [system]
+    define can_view_details: member from owner

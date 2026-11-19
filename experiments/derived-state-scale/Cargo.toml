@@ -1,0 +1,12 @@
+[package]
+name = "derived-state-scale"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+cel = { git = "https://github.com/cel-rust/cel-rust.git", rev = "004a4b88b99d65a5daece2c82636e278eb671e2d" }
+rayon = "=1.12.0"
+
+[profile.release]
+debug = false

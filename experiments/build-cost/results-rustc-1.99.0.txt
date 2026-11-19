@@ -1,0 +1,21 @@
+machine: 4 vCPU, rustc 1.99.0 (b940084d7 2026-09-28)
+boring clean_dev_build_s 96.453139161
+boring crates_compiled 167
+boring dev_binary_bytes 17997600
+boring incr_edit_app_s .446556053
+boring incr_edit_app_s .484746217
+boring incr_edit_leaf_cel_s .500285871
+boring check_edit_leaf_cel_s 16.536353257
+boring check_edit_leaf_cel_s .298987650
+full clean_dev_build_s 495.782936652
+full crates_compiled 494
+full dev_binary_bytes 101370272
+full incr_edit_app_s 1.287373370
+full incr_edit_app_s 1.270439804
+full incr_edit_leaf_cel_s 1.213430217
+full check_edit_leaf_cel_s 67.394547143
+full check_edit_leaf_cel_s .497941496
+boring clean_release_build_s 63.779956816
+boring release_binary_bytes 10086648
+full clean_release_build_s 362.816666082
+full release_binary_bytes 52867000
