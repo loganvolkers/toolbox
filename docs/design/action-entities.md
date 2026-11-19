@@ -90,6 +90,17 @@ Actions whose executor opens a PR (templates, "edit catalog data", identity link
 **Bulk edits** (e.g. re-tier 200 services) produce **one PR** against the catalog-data repo, or one PR
 per owning repo when the owners differ. Grouping is configurable.
 
+## 5b. Entity-dependent inputs and user identity (from the GitHub Apps example)
+
+- **`tb.schema.enumFrom(query)`:** an input's allowed values are computed by the circuit for the
+  target entity, e.g. "approved apps eligible for this repo". They appear in dry-run, the MCP input
+  schema and the UI. They are re-validated at execution.
+- **Executor identity `user`:** the executor acts with the requesting user's own token in the
+  external system, so that system enforces its own rules too. Refresh tokens (e.g. GitHub Apps
+  `offline_access`) are kept in the secrets vault and refreshed inside durable workflow steps, which
+  survives long approval waits.
+- Worked example: [examples/approved-github-apps.md](../examples/approved-github-apps.md).
+
 ## 6. Phasing
 
 | Phase | Scope |

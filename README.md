@@ -24,3 +24,5 @@ exposed identically over API, MCP, CLI and UI.
   - [design/context-lake.md](docs/design/context-lake.md): context lakes, and how the catalog, knowledge and security graphs overlap
   - [design/source-of-truth.md](docs/design/source-of-truth.md): field-level source of truth, and when Toolbox owns the data
   - [design/verification.md](docs/design/verification.md): TDD, deterministic simulation, reference models, differential and configuration-space testing
+- Worked examples:
+  - [examples/approved-github-apps.md](docs/examples/approved-github-apps.md): self-service installation of approved GitHub Apps, and how an operator has an agent build, test and ship it
