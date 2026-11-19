@@ -305,7 +305,20 @@ flowchart LR
 | `toolbox-sim` | Deterministic simulation: multi-replica cluster on `MemStore` + faults; simulated sources, executors, IdP, agents; chaos → quiescence → liveness phases; seed replay | turmoil |
 | `toolbox-gen` | Generators of random valid portals (manifests, OpenFGA models, CEL rules) and matching worlds for configuration-space testing | proptest/bolero |
 
-**Architecture rule:** functional core, imperative shell. All nondeterminism goes through `toolbox-env`, so the whole cluster can run under deterministic simulation ([verification.md](./design/verification.md) §3).
+**Architecture rules:**
+- **Functional core, imperative shell.** All nondeterminism goes through `toolbox-env`, so the whole
+  cluster can run under deterministic simulation ([verification.md](./design/verification.md) §3).
+- **No per-portal code generation, ever.** Circuits are built at runtime from a fixed, precompiled
+  operator library over one dynamic row type. CEL is interpreted, and custom logic is WASM. This avoids
+  the multi-minute compile loop Feldera had to engineer its way out of.
+- **Wide, shallow workspace:**
+  - interface crates separate from implementations
+  - heavy dependencies (dbsp, wasmtime, tantivy, the OpenFGA archive, sqlx) isolated in leaf crates
+  - `dyn` at crate boundaries
+  - `cargo hakari`
+
+  Fast inner loops for maintainers and operators are a measured requirement
+  ([developer-velocity.md](./design/developer-velocity.md)).
 
 A single binary runs as `toolbox serve --role all|api|worker`.
 - **Every replica runs the same deterministic circuit** over the same change log, so state at a given
@@ -636,6 +649,7 @@ These designs close the gaps found in the [red-team review](./red-team.md). Each
 | **Context lake** | Layered lake: raw (bronze) → two-tier graph (curated catalog + bounded discovered *inventory*, joined by bridge edges, temporal validity) + catalog-anchored knowledge → derived scores/findings/context packs. Federates security graphs (Wiz, Cartography) instead of copying them; exports ownership so Toolbox is the ownership system of record; graph predicates in CEL; read-only GQL later | [context-lake.md](./design/context-lake.md) |
 | **Source of truth** | Field-level ownership declared in code (`git:` / `connector:` / `native` / `computed` / `action`, with precedence). One write path routes edits: native fields are edited inline (revisions, approvals, changesets with preview and revert), git fields get a PR, connector fields are rejected with an explanation. Write-back to GitHub custom properties; export and git mirror | [source-of-truth.md](./design/source-of-truth.md) |
 | **Verification** | TDD against named properties (safety, liveness, equivalences, non-interference). Executable reference models (ShardStore-style) as the full-pipeline oracle. Conformance via the embedded OpenFGA, the CEL conformance suite, incremental ≡ batch, and across stores. Deterministic simulation (FoundationDB/TigerBeetle/S2-style, in-process) plus optional whole-system Antithesis. Generated portals × covering-array deployments × a real-portal corpus. Kani, shuttle, mutation testing; release gates with published assurance metrics. Customers get `toolbox simulate` for their own configs | [verification.md](./design/verification.md) |
+| **Developer velocity** | Measured dev-loop SLOs for maintainers and operators. No per-portal codegen (the Feldera lesson). Wide/shallow workspace with interface crates. nextest, Bacon, hakari, sccache in CI. `toolbox dev` daemon with hot reload through a Salsa-memoised manifest → circuit → affected tests pipeline. Graph-based selective tests with a content-addressed result cache. Content-addressed sub-circuits for fast plans and epochs | [developer-velocity.md](./design/developer-velocity.md) |
 | **Agent plugins** | Two Agent Plugins 1.0.0 packages: `toolbox-operator` (in this repo; authoring skills + local MCP) and a user plugin generated from each portal's config (production MCP URL; config-derived skills; data fetched live) | [agent-plugins.md](./design/agent-plugins.md) |
 | **Action-created entities** | Action scopes (`create`/`day2`/`delete`/`global`), action-sourced fragments, TTL lifecycles with expiry automations, pending overlays for PR-based changes, bulk-edit PRs | [action-entities.md](./design/action-entities.md) |
 
@@ -936,6 +950,13 @@ real organisation.
   - Typed CEL with object construction against generated schemas; cel-spec conformance status.
   - Schema → generated TS and Python SDKs; language hosts; manifest determinism check.
   - rmcp Streamable HTTP with OAuth; identity-aware-proxy JWT verification.
+- **Developer velocity foundations** ([developer-velocity.md](./design/developer-velocity.md)):
+  - **Workspace:** wide/shallow layout with interface crates; profiles, LLD, hakari; nextest + Bacon +
+    `xtask affected` (guppy).
+  - **Spikes:** dynamic DBSP circuit construction from a manifest (reconfiguration time at 2k and 100k
+    entities); sub-circuit state reuse; warm language-host evaluation latency; the Salsa manifest
+    pipeline; a prebuilt `toolbox-fga` archive cache.
+  - **Measurement:** the dev-loop benchmark harness with the SLOs enforced on every PR.
 - **Verification foundations** ([verification.md](./design/verification.md) §3, §10):
   - the `Env` seam with clippy bans and the dependency determinism audit
   - `buggify!` and the assertion facade
@@ -972,6 +993,9 @@ real organisation.
   CLI, minimal read-only UI.
 - **Operations baseline:** OTel, `/metrics`, health/readiness, analytics sinks (`posthog`, `otlp`,
   `none`), `toolbox admin status|config|resync`, Grafana overview.
+- **Inner loop:** `toolbox dev` daemon (watch, hot reload, attached authoring MCP);
+  `toolbox check`; `test --affected` with a content-addressed result cache and parallel per-file
+  execution; `simulate --quick`; `plan --local`.
 - **SDLC v1:** `toolbox init/dev/lint/test/build`; `setup-toolbox`/`test`/`build`/`verify` Actions;
   signed and attested images; Helm chart.
 - **Agent plugins v1:**
@@ -991,6 +1015,7 @@ real organisation.
   Cursor Canvas.
 - User plugin: one skill per promoted action; `build-dashboard`; publishing pipeline; plugin diff in
   `plan`.
+- **Content-addressed sub-circuits:** plans and epochs recompute only changed operators.
 - **Remote plan** (durable workflow, candidate epoch) with full output on the PR; gates (deletion,
   authz loss, operator access, notification volume, declassifications); epochs for config deploys.
 - **Meta scorecards:** `scorecard-quality`, `connector-health`, `kind-quality`; `RuleResult` virtual
@@ -1063,6 +1088,7 @@ real organisation.
 | Static config needs a redeploy for any change | Fast builds, background epoch builds, presentational changes without recomputation, `toolbox dev` for iteration. This is by design, as with Terraform |
 | Authorization correctness | We don't build an evaluator: OpenFGA is embedded. Its conformance corpus tests our read-only datastore adapter on every build ([authorization.md](./authorization.md)) |
 | Correctness at scale across unbounded customer configurations | Deterministic simulation + reference-model oracles + differential testing + generated portals + covering arrays + a corpus; release gates with published metrics ([verification.md](./design/verification.md)) |
+| Slow inner loops as the codebase and portals grow | Dev-loop SLOs measured on every PR; no per-portal codegen; selective tests + result cache; tiered simulation seeds ([developer-velocity.md](./design/developer-velocity.md)) |
 | Lock-in to monitoring vendors (PostHog, Grafana) | OTLP + Prometheus formats as the contract; analytics via a versioned event catalog and pluggable sinks; dashboards generated from a neutral spec; vendor packs are optional |
 | Feature breadth of funded vendors | Compete on agent surface, dev loop (`plan`/`test`) and ownership. Don't build analytics |
 | Adjacent OSS entrants (Frontkeep, OpsCat, Lekton) | Differentiate on config as code + catalog/scorecard depth + Backstage compatibility; collaborate where interfaces overlap (e.g. MCPServer/Skill kinds) |

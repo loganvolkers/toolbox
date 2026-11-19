@@ -250,6 +250,16 @@ runs in their CI through the `toolbox-dev/test` Action.
    differential tests and simulation make "the agent says it works" checkable. Agents get
    `toolbox-sim --seed` as a debugging tool.
 
+## 7b. Tiers for speed
+
+Every layer runs at three intensities:
+- **Inner loop:** affected components, tiny case counts, tens of seeds, cached results.
+- **PR:** affected components, ~1k seeds, full conformance corpora.
+- **Continuous on `main` / merge queue:** everything, millions of seeds, uncached.
+
+The tiers use the same harnesses, so a failure found at any tier replays locally from its seed
+([developer-velocity.md](./developer-velocity.md)).
+
 ## 8. Release gates and confidence metrics
 
 A release ships only if (Cedar-style gate):

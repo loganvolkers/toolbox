@@ -30,9 +30,15 @@ with SBOM and provenance), and promotion is by digest.
 
 ## 3. Local
 
+The inner loop is designed for speed; see [developer-velocity.md](./developer-velocity.md).
+
 ```bash
-toolbox dev                      # live reload of the portal program, fixtures, UI at :7000 (Tilt-like)
-toolbox test                     # model, derivation, surface, view snapshot, scorecard fixture tests
+toolbox dev                      # daemon: watch → warm language host → manifest diff → circuit reconfig → affected tests; UI at :7000
+toolbox check                    # changed definitions only: manifest, CEL types, authz model (≤ 300 ms target)
+toolbox test --affected          # tests whose inputs changed, in parallel, with a content-addressed result cache
+toolbox test --all               # everything, no cache (what CI runs on merge)
+toolbox simulate --quick         # tens of seeds on affected modules
+toolbox plan --local             # full plan sections against fixtures/synthetic data
 toolbox plan --remote prod       # remote plan (§4) using *your* identity; details redacted to your permissions
 toolbox preview up               # docker compose: the built image + SQLite + fixtures
 ```
