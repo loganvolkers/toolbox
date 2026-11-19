@@ -39,6 +39,7 @@ How the design research was done, so parallel agents can reproduce, extend or ch
 | The authorization doc's OpenFGA model + `.fga.yaml` test, run with the real `fga` CLI (`go install github.com/openfga/cli/cmd/fga`) | 6/6 checks, 2/2 ListObjects, 1/1 ListUsers pass; flipping one expectation fails as expected. Found that `fga model test` refuses `../` model paths, so tests sit beside `fga.mod` |
 | `plugins/toolbox-operator/plugin.json` and `mcp.json` against the official Agent Plugins 1.0.0 JSON schemas (`jsonschema`, Draft 2020-12) | Valid |
 | All operator-plugin skills with `skills-ref validate` | Valid |
+| Naive full recompute, 100 CEL rules × 100k entities (cel-rust 0.16 at `004a4b8`, 4 vCPU), [`experiments/full-recompute`](../experiments/full-recompute) | 6.3–7.1 s single-threaded, 1.75–2.0 s on 4 threads; team closure + roll-up 5–7 ms. Basis for [adversarial-critique.md](./adversarial-critique.md) §7 (H4) |
 | Measured coupling of Ocean integrations to Port's API | 41 of 52 integrations never use `port_client`; 39 of 231 framework modules do |
 
 ## How to re-run the verifications

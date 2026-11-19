@@ -25,9 +25,11 @@ docs/authorization.md        ReBAC / OpenFGA design
 docs/ocean.md                Port Ocean review
 docs/red-team.md             competitor-perspective gap review (with status)
 docs/principal-review.md     principal-engineer review (with resolutions)
+docs/adversarial-critique.md whether to build at all: hypotheses, alternatives, kill criteria
 docs/design/*.md             one detailed design per capability
 docs/examples/*.md           worked examples (e.g. approved GitHub Apps)
 docs/glossary.md, docs/research-log.md
+experiments/                 reproducible experiments cited by the docs
 plugins/toolbox-operator/    Agent Plugins 1.0.0 package (pre-release skeleton)
 ```
 
