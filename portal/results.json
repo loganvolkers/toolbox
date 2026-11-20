@@ -40,6 +40,14 @@
         "level": "none"
       }
     },
+    "maintainer-agent-doc": {
+      "agent-doc:AGENTS.md": {
+        "level": "gold"
+      },
+      "agent-doc:CLAUDE.md": {
+        "level": "gold"
+      }
+    },
     "maintainer-ci-reliability": {
       "workflow:.github/workflows/ci.yml": {
         "failing": {
@@ -341,6 +349,9 @@
       "doc:docs/design/agent-plugins.md": {
         "level": "silver"
       },
+      "doc:docs/design/agents-md-standards.md": {
+        "level": "silver"
+      },
       "doc:docs/design/connector-control.md": {
         "level": "silver"
       },
@@ -593,6 +604,27 @@
         "level": "gold"
       },
       "rule:toolbox/maintainer-action-deps/pinned-everywhere": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-agent-doc/has-commands": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-agent-doc/links-resolve": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-agent-doc/names-the-decision-log": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-agent-doc/no-hardcoded-secrets": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-agent-doc/no-hidden-instructions": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-agent-doc/single-source": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-agent-doc/within-budget": {
         "level": "gold"
       },
       "rule:toolbox/maintainer-ci-reliability/cancels-superseded-runs": {
@@ -988,6 +1020,9 @@
         "level": "silver"
       },
       "scorecard:toolbox/maintainer-action-deps": {
+        "level": "gold"
+      },
+      "scorecard:toolbox/maintainer-agent-doc": {
         "level": "gold"
       },
       "scorecard:toolbox/maintainer-ci-reliability": {

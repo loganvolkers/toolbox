@@ -20,7 +20,9 @@
 //!   (docs/design/connector-standards.md);
 //! - `dependency` (`"dependencies": true`): one per direct external Cargo dependency, with the
 //!   requirement, the `Cargo.lock` versions and whether `[workspace.dependencies]` declares it
-//!   (docs/design/dependency-standards.md).
+//!   (docs/design/dependency-standards.md);
+//! - `agent-doc` (`agentDocs` globs): one per `AGENTS.md` and its aliases (`CLAUDE.md`, `GEMINI.md`),
+//!   with link, command and size facts (docs/design/agents-md-standards.md).
 //!
 //! `docs` and `file` records also carry `captures` (each configured regex's first group, unique,
 //! sorted, with runs of whitespace replaced by `-`) and `counts` (matches per configured regex),
@@ -29,8 +31,10 @@
 //!
 //! `TOOLBOX_CONNECTOR_CONFIG`: `{"root"?: ".", "docs"?: [glob], "files"?: [glob],
 //! "captures"?: {name: regex}, "counts"?: {name: regex}, "crates"?: true, "repo"?: false,
-//! "betterer"?: [glob], "skills"?: [glob], "connectors"?: [glob], "dependencies"?: false}`.
+//! "betterer"?: [glob], "skills"?: [glob], "connectors"?: [glob], "dependencies"?: false,
+//! "agentDocs"?: [glob]}`.
 
+mod agentsmd;
 mod betterer;
 mod connectors;
 mod deps;
@@ -59,6 +63,8 @@ struct Workspace {
     connectors: Vec<Regex>,
     /// Emit one `dependency` record per direct external Cargo dependency.
     dependencies: bool,
+    /// Agent instruction files (`agent-doc` records): `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`.
+    agent_docs: Vec<Regex>,
     captures: Vec<(String, Regex)>,
     counts: Vec<(String, Regex)>,
     crates: bool,
@@ -113,6 +119,7 @@ impl Workspace {
             skills: globs(&cfg, "skills")?,
             connectors: globs(&cfg, "connectors")?,
             dependencies: cfg["dependencies"].as_bool().unwrap_or(false),
+            agent_docs: globs(&cfg, "agentDocs")?,
             captures: named_regexes(&cfg, "captures")?,
             counts: named_regexes(&cfg, "counts")?,
             crates: cfg["crates"].as_bool().unwrap_or(true),
@@ -341,6 +348,7 @@ impl Workspace {
                     "skill",
                     "connector",
                     "dependency",
+                    "agent-doc",
                 ]
             });
         if self.crates && kinds.contains(&"crate") {
@@ -355,6 +363,7 @@ impl Workspace {
         self.emit_skills(&paths, &kinds, out);
         self.emit_connectors(&paths, &kinds, out);
         self.emit_dependencies(&kinds, out);
+        self.emit_agent_docs(&paths, &kinds, out);
         Ok(())
     }
 
@@ -439,6 +448,20 @@ impl Workspace {
             }
         }
         out.snapshot_complete("dependency");
+    }
+
+    fn emit_agent_docs(&self, paths: &[String], kinds: &[&str], out: &mut Out) {
+        if self.agent_docs.is_empty() || !kinds.contains(&"agent-doc") {
+            return;
+        }
+        for rel in paths.iter().filter(|p| Self::matches(&self.agent_docs, p)) {
+            out.record(
+                "agent-doc",
+                &format!("agent-doc:{rel}"),
+                agentsmd::analyse(&self.root, rel),
+            );
+        }
+        out.snapshot_complete("agent-doc");
     }
 
     fn emit_skills(&self, paths: &[String], kinds: &[&str], out: &mut Out) {
@@ -535,6 +558,7 @@ impl Workspace {
             "skill" => self.refresh_skill(id, out),
             "connector" => self.refresh_connector(id, out),
             "dependency" => self.refresh_dependency(id, out),
+            "agent-doc" => self.refresh_agent_doc(id, out),
             _ => out.not_found(kind, id),
         }
     }
@@ -572,6 +596,15 @@ impl Workspace {
     fn refresh_named_action(&self, id: &str, out: &mut Out) {
         let name = id.strip_prefix("action-ref:").unwrap_or("");
         self.refresh_action_ref(name, id, out);
+    }
+
+    fn refresh_agent_doc(&self, id: &str, out: &mut Out) {
+        let rel = id.strip_prefix("agent-doc:").unwrap_or("");
+        if Self::matches(&self.agent_docs, rel) && self.root.join(rel).is_file() {
+            out.record("agent-doc", id, agentsmd::analyse(&self.root, rel));
+        } else {
+            out.not_found("agent-doc", id);
+        }
     }
 
     fn refresh_dependency(&self, id: &str, out: &mut Out) {
@@ -626,6 +659,7 @@ impl Source for Workspace {
             ("skill", !self.skills.is_empty()),
             ("connector", !self.connectors.is_empty()),
             ("dependency", self.dependencies),
+            ("agent-doc", !self.agent_docs.is_empty()),
         ];
         let kinds: Vec<&str> = on.iter().filter(|(_, b)| *b).map(|(k, _)| *k).collect();
         let refresh: Map<String, Value> = kinds
