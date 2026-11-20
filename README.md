@@ -6,9 +6,11 @@ exposed identically over API, MCP, CLI and UI.
 
 **Status:** research & planning (design phase).
 
-**Start here:** [AGENTS.md](AGENTS.md) for working rules and parallel tracks, [docs/decisions.md](docs/decisions.md) for every decision and open question, [docs/glossary.md](docs/glossary.md) for vocabulary, and [docs/research-log.md](docs/research-log.md) for methods and hands-on verifications.
+**Start here:** [AGENTS.md](AGENTS.md) for working rules and parallel tracks, [docs/v1-spec.md](docs/v1-spec.md) for what v1 must do, [examples/reference-portal](examples/reference-portal/README.md) for the reference implementation anchor. Also: [docs/decisions.md](docs/decisions.md) for every decision and open question, [docs/glossary.md](docs/glossary.md) for vocabulary, and [docs/research-log.md](docs/research-log.md) for methods and hands-on verifications.
 
 - [docs/research.md](docs/research.md) — landscape (Backstage, Port, Cortex, DX, OpsLevel, Datadog, OSS alternatives) and validation
+- [docs/v1-spec.md](docs/v1-spec.md) — the v1 implementation contract (milestones, contracts, API, MCP, CLI, data model, properties)
+- [examples/reference-portal/](examples/reference-portal/README.md) — reference implementation anchor: manifest, schemas, fixtures, oracle and authz tests
 - [docs/plan.md](docs/plan.md) — architecture and delivery roadmap
 - [docs/ocean.md](docs/ocean.md) — lessons from Port Ocean for the connector protocol
 - [docs/authorization.md](docs/authorization.md) — relationship-based access control on the catalog graph (OpenFGA-compatible)

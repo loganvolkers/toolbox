@@ -49,3 +49,8 @@ Shared vocabulary across the design documents. Keep entries short and link to th
 | **Postcondition** | A CEL expression an action declares, which must hold after the run for it to succeed | [design/action-runs.md](./design/action-runs.md) |
 | **Confirmation token** | Binds a run to the exact preview the requester saw; stale previews are rejected | [design/action-runs.md](./design/action-runs.md) |
 | **`unverified`** | Run state when the executor reported success but Toolbox could not observe the effect; never shown as success | [design/action-runs.md](./design/action-runs.md) |
+| **v1 spec** | The implementation contract: milestones, contracts, API, MCP, CLI, data model, properties | [v1-spec.md](./v1-spec.md) |
+| **Reference portal** | The example portal (GitHub + IdP) whose outputs and scenarios define "done" for v1 | [examples/reference-portal](../examples/reference-portal/README.md) |
+| **Reference model / oracle** | `tools/reference.py`: a small executable model of the pipeline that the Rust implementation must match | [v1-spec.md](./v1-spec.md) §6 |
+| **Ownership status** | `verified`, `inferred`, `unverified` or `none`, from the CODEOWNERS authority rule | [v1-spec.md](./v1-spec.md) §6.2 |
+| **Action context lookup** | Catalog entities an action declares (`{kind, where}`) and passes to its executor as `related` | [decisions.md](./decisions.md) D52 |

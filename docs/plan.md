@@ -473,7 +473,8 @@ initiative("tier1-oncall", scorecard = "production-readiness", rules = ["oncall-
   2. **WASM functions** for complex logic, written in TypeScript or Rust (§4.6).
   3. **SQL-style aggregate rules**: cross-entity checks expressed as circuit queries, the pattern DX
      validated.
-- **Incremental evaluation is the circuit.** Rules are operators, and outcomes update as their inputs
+- **Evaluation** *(v1: full recompute from a snapshot, D37; the circuit text below is the deferred
+  path)*. **Incremental evaluation is the circuit.** Rules are operators, and outcomes update as their inputs
   change, with no invalidation logic to maintain by hand. A scorecard config change creates a new
   circuit epoch, built in the background from a checkpoint and the log, then cut over atomically. Only
   the operators the manifest diff touches recompute.
@@ -568,10 +569,10 @@ Every capability is declared once (kind, scorecard, action, view, query) and pro
 - REST/JSON under `/v1`. The **OpenAPI 3.1 document is generated per portal at build time**, including
   typed schemas for each custom kind, so customers can generate typed clients for their own portal.
 - Cursor pagination, field projection, ETags.
-- Every response carries its **log position**. Clients can require "at least position N" for
-  read-your-writes.
+- Every response carries its **snapshot id**. Clients can require `min_snapshot` for read-your-writes
+  (D37).
 
-**GraphQL** (read-only data layer for the UI and operator views; [graphql.md](./design/graphql.md))
+**GraphQL** *(deferred, D43)* (read-only data layer for the UI and operator views; [graphql.md](./design/graphql.md))
 - A dynamic schema is built from the manifest at runtime; there is no codegen.
 - No mutations or subscriptions.
 - **Trusted documents only in production**, declared by views and validated and costed at build.
@@ -997,6 +998,11 @@ This is a stated product goal, so it is a **tested requirement**:
 
 ## 8. Delivery roadmap
 
+> **For implementers:** v1 (Phases 0–1 plus the action runtime) is specified milestone by milestone in
+> [v1-spec.md](./v1-spec.md) §3, anchored on the [reference portal](../examples/reference-portal/README.md).
+> Where a phase below still names a deferred technology (GraphQL, sub-circuits, epochs, simulation),
+> the spec and [decisions.md](./decisions.md) win.
+
 There are no time estimates: the project is built with agents, and phases are defined by **exit
 criteria**, not dates. Phase 1 is deliberately a focused first release, *ownership and standards for
 agents* ([principal-review.md](./principal-review.md) §5.1). Breadth follows once it is useful on a
@@ -1054,20 +1060,16 @@ real organisation.
   system.
 - **Identity resolution v1:** external ids, annotation translation, declared matchers,
   unmatched/conflict/frozen states, aliases on rename.
-- **Interfaces:** MCP (`search`, `get`, `query`, `graph`, `explain`, `context` v0, `trend`/`history`),
-  CLI, minimal read-only UI.
+- **Interfaces:** MCP (the v1 tool list in [v1-spec.md](./v1-spec.md) §7.3), REST (§7.2), CLI,
+  minimal UI on the UI extension contract.
 - **Operations baseline:** OTel, `/metrics`, health/readiness, analytics sinks (`posthog`, `otlp`,
   `none`), `toolbox admin status|config|resync`, Grafana overview.
-- **Frontend v1:**
-  - `@toolbox/ui` primitives
-  - Storybook 10 with story-based Vitest, a11y and visual tests
-  - generated action forms and per-persona page stories
-  - Vite in `toolbox dev`
-- **Inner loop:** `toolbox dev` daemon (watch, hot reload, attached authoring MCP);
-  `toolbox check`; `test --affected` with a content-addressed result cache and parallel per-file
-  execution; `simulate --quick`; `plan --local`.
-- **SDLC v1:** `toolbox init/dev/lint/test/build`; `setup-toolbox`/`test`/`build`/`verify` Actions;
-  signed and attested images; Helm chart.
+- **Frontend v1:** the minimal UI and the UI extension contract; the default React kit
+  (`@toolbox/ui` primitives, Storybook 10) for operator bundles (D40).
+- **Inner loop:** `toolbox dev` (watch, recompute over fixtures, local API/MCP/UI); `toolbox
+  validate`; `toolbox test`; `plan --local` (D44).
+- **SDLC v1:** `toolbox validate/test/plan/build/verify`; `setup-toolbox`/`plan-comment` Actions; the
+  reference workflow deploying one image to Cloud Run (D33, D34).
 - **Agent plugins v1:**
   - the operator plugin (authoring loop, `add-*` skills, local MCP)
   - the generated user plugin (overview, find-owner, fix-scorecard-failures, team-standards)
@@ -1076,20 +1078,19 @@ real organisation.
   - On a real organisation's GitHub + IdP, an agent in Claude Code correctly answers "who owns X, what
     depends on Y, is X meeting our standards and why not", with permissions enforced.
   - Unverified ownership claims are surfaced.
-  - Every replica returns identical answers at the same log position.
+  - Every instance returns identical answers at the same snapshot id.
+  - The reference portal passes [v1-spec.md](./v1-spec.md) §11.
 
 ### Phase 2 — Standards at scale and the review loop
 - Facts ingestion, initiatives, aggregate and graph-predicate rules, roll-ups with minimum
   cardinality.
-- **GraphQL v1:** trusted documents for the built-in entity pages and operator views; schema diff in
-  `plan`; added to the S1/E6 checks.
+- *(GraphQL deferred, D43.)*
 - History archive and MCP analysis tools; agent skills for building dashboards in Claude Artifacts /
   Cursor Canvas.
 - User plugin: one skill per promoted action; `build-dashboard`; publishing pipeline; plugin diff in
   `plan`.
-- **Content-addressed sub-circuits:** plans and epochs recompute only changed operators.
-- **Remote plan** (durable workflow, candidate epoch) with full output on the PR; gates (deletion,
-  authz loss, operator access, notification volume, declassifications); epochs for config deploys.
+- **Remote plan** (durable workflow, two recomputes over one snapshot) with full output on the PR;
+  gates (deletion, authz loss, operator access, notification volume, declassifications).
 - **Meta scorecards:** `scorecard-quality`, `connector-health`, `kind-quality`; `RuleResult` virtual
   kind; routing of `unknown` outcomes to connector owners.
 - **Notifications:** event model, ownership routing, inbox, email, shadow mode; GitHub App with the
@@ -1099,12 +1100,14 @@ real organisation.
   CI and GitHub webhooks work with internal-only portals.
 - Identity proposals + PR-based resolution; coverage metrics.
 - **Exit:** a scorecard change shows its full plan on the PR. A score transition updates a team's
-  dashboard issue. 100 rules × 100k entities stay incrementally current under continuous change.
+  dashboard issue. 100 rules × 100k entities stay within the freshness SLO under continuous change (full recompute,
+D37).
 
 ### Phase 3 — Actions
-- Action registry; runs as durable workflows; approvals, idempotency, dry-run.
-- Executors: webhook, GitHub workflow, GitLab pipeline, k8s Job, template + PR.
-- Automations from circuit event deltas (entity, score, schedule triggers).
+- *The action runtime (registry, preview/confirm/verify runs, in-image/HTTP/GitHub Actions/webhook
+  executors) moves into v1 ([v1-spec.md](./v1-spec.md) M5). Phase 3 adds:*
+- Executors: GitLab pipeline, k8s Job, template + PR.
+- Automations from snapshot deltas (entity, score, schedule triggers).
 - Action scopes, action-sourced fragments, TTL lifecycles (scheduled workflows), pending overlays,
   bulk-edit PRs.
 - **Action UIs:**

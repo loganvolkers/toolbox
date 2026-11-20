@@ -15,6 +15,11 @@ not product code.
 5. [docs/research-log.md](./docs/research-log.md): how research was done, blocked hosts, and what was
    verified hands-on.
 
+**Implementing?** Build from [docs/v1-spec.md](./docs/v1-spec.md) (milestones M0–M6, contracts, API,
+MCP, CLI, data model, properties) and test against
+[examples/reference-portal](./examples/reference-portal/README.md): your pipeline must reproduce its
+`expected/` outputs byte for byte, and its acceptance scenarios define "done".
+
 ## Repository layout
 
 ```
@@ -30,6 +35,8 @@ docs/technology-critique.md  sprawl and replaceability review; proposed minimal 
 docs/design/*.md             one detailed design per capability
 docs/examples/*.md           worked examples (e.g. approved GitHub Apps)
 docs/glossary.md, docs/research-log.md
+docs/v1-spec.md              the implementation contract for v1
+examples/reference-portal/   reference implementation anchor: manifest, schemas, fixtures, oracle, authz tests
 experiments/                 reproducible experiments cited by the docs
 plugins/toolbox-operator/    Agent Plugins 1.0.0 package (pre-release skeleton)
 ```
@@ -50,6 +57,9 @@ plugins/toolbox-operator/    Agent Plugins 1.0.0 package (pre-release skeleton)
 - **Verify what you can:**
   - Runnable examples (OpenFGA models, plugin manifests, skills) must be run or validated before they
     are committed. Record the result in `docs/research-log.md`.
+  - When you change the reference portal, run its three checks (`tools/validate.py`,
+    `tools/reference.py --check`, `fga model test`) and regenerate outputs with `--write` only after
+    reviewing the diff.
 - **Plugin changes:** validate `plugin.json`/`mcp.json` against the official 1.0.0 schemas, and every
   skill with `skills-ref validate`. Don't add a `license` field until the project licence is decided
   (Q1).
@@ -68,8 +78,7 @@ Every design choice must serve these. Check new work against them.
 
 ## Parallel work: independent tracks
 
-These Phase 0 spikes ([docs/plan.md](./docs/plan.md) §8, rewritten 2026-11-20 for the v1 baseline)
-can be taken by separate agents with few interactions. Coordinate through `docs/decisions.md`. Design
+These Phase 0 spikes and v1 milestones ([docs/v1-spec.md](./docs/v1-spec.md) §3) can be taken by separate agents with few interactions. Coordinate through `docs/decisions.md`. Design
 docs carry a status banner at the top when a later decision changed them; the banner wins.
 
 | Track | Scope | Primary docs |
