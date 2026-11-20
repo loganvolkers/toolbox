@@ -1,0 +1,811 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://toolbox.dev/schemas/manifest/v1alpha1.json",
+  "title": "Toolbox portal manifest (v1alpha1)",
+  "description": "The v1 configuration contract (docs/v1-spec.md \u00a75). Produced by hand in YAML/JSON or printed by the TypeScript builder. The server refuses any configuration that does not come from a manifest (D2).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "apiVersion",
+    "portal",
+    "kinds"
+  ],
+  "properties": {
+    "apiVersion": {
+      "const": "toolbox.dev/v1alpha1"
+    },
+    "portal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "owner",
+        "toolbox"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/name"
+        },
+        "title": {
+          "type": "string"
+        },
+        "owner": {
+          "$ref": "#/$defs/entityRef"
+        },
+        "toolbox": {
+          "type": "string",
+          "description": "Pinned Toolbox version (major.minor)."
+        }
+      }
+    },
+    "policies": {
+      "type": "object",
+      "description": "Named values readable from CEL as policy.<name>.",
+      "additionalProperties": true
+    },
+    "connectors": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/connector"
+      }
+    },
+    "kinds": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/kind"
+      }
+    },
+    "scorecards": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/scorecard"
+      }
+    },
+    "authz": {
+      "$ref": "#/$defs/authz"
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/action"
+      }
+    },
+    "ui": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "bundles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/uiBundle"
+          }
+        }
+      }
+    },
+    "mcp": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "instructions": {
+          "type": "string"
+        }
+      }
+    },
+    "tests": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "$defs": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "kindName": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Za-z0-9]*$"
+    },
+    "fieldName": {
+      "type": "string",
+      "pattern": "^[a-z][A-Za-z0-9]*$"
+    },
+    "entityRef": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*:[a-z0-9][a-z0-9._/-]*$"
+    },
+    "cel": {
+      "type": "string",
+      "minLength": 1,
+      "description": "A CEL expression (cel-spec)."
+    },
+    "duration": {
+      "type": "string",
+      "pattern": "^[0-9]+(s|m|h|d)$"
+    },
+    "sourceId": {
+      "type": "string",
+      "pattern": "^(connector:[a-z0-9-]+|git:[a-z0-9-]+|native)$"
+    },
+    "connector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "package",
+        "runtime",
+        "records"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/name"
+        },
+        "package": {
+          "type": "string",
+          "description": "builtin:<name>, oci://\u2026, npm:\u2026, or a path inside the image."
+        },
+        "runtime": {
+          "enum": [
+            "in-image",
+            "remote"
+          ]
+        },
+        "config": {
+          "type": "object"
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/name"
+          },
+          "minItems": 1
+        },
+        "refresh": {
+          "type": "object",
+          "description": "Refresh scopes the connector must declare at registration (connector-control \u00a74).",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "external_ids",
+                "selector",
+                "since"
+              ]
+            }
+          }
+        },
+        "freshness": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/duration"
+          }
+        }
+      }
+    },
+    "field": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "string",
+            "boolean",
+            "integer",
+            "number",
+            "enum",
+            "ref",
+            "list",
+            "object"
+          ]
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "to": {
+          "$ref": "#/$defs/kindName"
+        },
+        "items": {
+          "type": "string"
+        },
+        "facet": {
+          "$ref": "#/$defs/name"
+        },
+        "computed": {
+          "$ref": "#/$defs/cel"
+        },
+        "authority": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "claim",
+            "rules",
+            "path",
+            "teamField"
+          ],
+          "properties": {
+            "type": {
+              "const": "codeowners"
+            },
+            "claim": {
+              "$ref": "#/$defs/fieldName"
+            },
+            "rules": {
+              "$ref": "#/$defs/fieldName"
+            },
+            "path": {
+              "type": "string"
+            },
+            "teamField": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Za-z0-9]*\\.[a-z][A-Za-z0-9]*$"
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "enum"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "values"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "ref"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "to"
+            ]
+          }
+        },
+        {
+          "not": {
+            "required": [
+              "computed",
+              "authority"
+            ]
+          }
+        }
+      ]
+    },
+    "mapRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "id",
+        "set"
+      ],
+      "properties": {
+        "from": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+/[a-z0-9-]+$",
+          "description": "<connector>/<record kind>"
+        },
+        "source": {
+          "$ref": "#/$defs/sourceId",
+          "description": "Source label for precedence; default connector:<connector>."
+        },
+        "id": {
+          "$ref": "#/$defs/cel"
+        },
+        "set": {
+          "$ref": "#/$defs/cel"
+        },
+        "relations": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/cel"
+          }
+        }
+      }
+    },
+    "kind": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "identityFrom",
+        "fields",
+        "sources"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/kindName"
+        },
+        "identityFrom": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/sourceId"
+          }
+        },
+        "fields": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/fieldName"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/field"
+          }
+        },
+        "relations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "to"
+            ],
+            "properties": {
+              "to": {
+                "$ref": "#/$defs/kindName"
+              },
+              "many": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "sources": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "default"
+          ],
+          "properties": {
+            "default": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/sourceId"
+              }
+            },
+            "fields": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "$ref": "#/$defs/sourceId"
+                }
+              }
+            }
+          }
+        },
+        "writeBack": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "map": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/mapRule"
+          }
+        }
+      }
+    },
+    "scorecard": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "kind",
+        "owner",
+        "levels",
+        "rules"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/name"
+        },
+        "kind": {
+          "$ref": "#/$defs/kindName"
+        },
+        "owner": {
+          "$ref": "#/$defs/entityRef"
+        },
+        "levels": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/name"
+          }
+        },
+        "appliesTo": {
+          "$ref": "#/$defs/cel"
+        },
+        "rules": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "level",
+              "check"
+            ],
+            "properties": {
+              "name": {
+                "$ref": "#/$defs/name"
+              },
+              "level": {
+                "$ref": "#/$defs/name"
+              },
+              "check": {
+                "$ref": "#/$defs/cel"
+              },
+              "fix": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "facets": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "summary": {
+              "enum": [
+                "public",
+                "owner",
+                "operator"
+              ]
+            },
+            "details": {
+              "enum": [
+                "public",
+                "owner",
+                "operator"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "authz": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "model",
+        "tuples"
+      ],
+      "properties": {
+        "model": {
+          "type": "string"
+        },
+        "tests": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tuples": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "static"
+                ],
+                "properties": {
+                  "static": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/tuple"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "emit"
+                ],
+                "properties": {
+                  "kind": {
+                    "$ref": "#/$defs/kindName"
+                  },
+                  "emit": {
+                    "$ref": "#/$defs/cel"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "tuple": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "user",
+        "relation",
+        "object"
+      ],
+      "properties": {
+        "user": {
+          "type": "string"
+        },
+        "relation": {
+          "type": "string"
+        },
+        "object": {
+          "type": "string"
+        }
+      }
+    },
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "kind",
+        "scope",
+        "description",
+        "inputs",
+        "permission",
+        "executor"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/name"
+        },
+        "kind": {
+          "$ref": "#/$defs/kindName"
+        },
+        "scope": {
+          "enum": [
+            "create",
+            "day2",
+            "delete",
+            "global"
+          ]
+        },
+        "description": {
+          "type": "string",
+          "minLength": 10
+        },
+        "inputs": {
+          "type": "object",
+          "description": "JSON Schema for inputs; string properties may add enumFrom (CEL returning a list)."
+        },
+        "permission": {
+          "type": "string",
+          "description": "OpenFGA relation checked on the target entity."
+        },
+        "approval": {
+          "$ref": "#/$defs/cel"
+        },
+        "preconditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/cel"
+          }
+        },
+        "executor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "enum": [
+                "in-image",
+                "http",
+                "github-workflow",
+                "webhook"
+              ]
+            },
+            "command": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "url": {
+              "type": "string"
+            },
+            "workflow": {
+              "type": "string"
+            },
+            "identity": {
+              "enum": [
+                "user",
+                "service"
+              ]
+            },
+            "secrets": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "expect": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "postcondition",
+            "within"
+          ],
+          "properties": {
+            "postcondition": {
+              "$ref": "#/$defs/cel"
+            },
+            "refresh": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "connector",
+                  "kind"
+                ],
+                "properties": {
+                  "connector": {
+                    "$ref": "#/$defs/name"
+                  },
+                  "kind": {
+                    "$ref": "#/$defs/name"
+                  },
+                  "selector": {
+                    "$ref": "#/$defs/cel"
+                  },
+                  "ids": {
+                    "$ref": "#/$defs/cel"
+                  }
+                }
+              }
+            },
+            "within": {
+              "$ref": "#/$defs/duration"
+            }
+          }
+        },
+        "unverified": {
+          "const": true,
+          "description": "Explicitly accept runs that can never be verified (action-runs \u00a75)."
+        },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "destructive": {
+              "type": "boolean"
+            },
+            "idempotent": {
+              "type": "boolean"
+            },
+            "openWorld": {
+              "type": "boolean"
+            }
+          }
+        },
+        "mcp": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "promote": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            }
+          }
+        },
+        "ui": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "bundle": {
+              "$ref": "#/$defs/name"
+            }
+          }
+        },
+        "context": {
+          "type": "object",
+          "description": "Catalog lookups resolved at preview and run time and passed to the executor as `related`. `where` is CEL over `candidate`, `entity` and `inputs`.",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "where"
+            ],
+            "properties": {
+              "kind": {
+                "$ref": "#/$defs/kindName"
+              },
+              "where": {
+                "$ref": "#/$defs/cel"
+              }
+            }
+          }
+        }
+      },
+      "anyOf": [
+        {
+          "required": [
+            "expect"
+          ]
+        },
+        {
+          "required": [
+            "unverified"
+          ]
+        }
+      ]
+    },
+    "uiBundle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "path",
+        "entry",
+        "mounts"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/name"
+        },
+        "path": {
+          "type": "string"
+        },
+        "entry": {
+          "type": "string"
+        },
+        "framework": {
+          "type": "string"
+        },
+        "mounts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "slot"
+            ],
+            "properties": {
+              "slot": {
+                "type": "string",
+                "pattern": "^(action|entity-tab|page):[a-zA-Z0-9-]+$"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

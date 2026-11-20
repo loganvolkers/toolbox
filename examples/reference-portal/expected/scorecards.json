@@ -1,0 +1,89 @@
+{
+  "app-approval": {
+    "githubapp:renovate": {
+      "level": "bronze",
+      "rules": {
+        "permissions-match-snapshot": "pass"
+      }
+    },
+    "githubapp:sketchy-bot": {
+      "level": "skipped"
+    },
+    "githubapp:snyk-security": {
+      "level": "none",
+      "rules": {
+        "permissions-match-snapshot": "fail"
+      }
+    }
+  },
+  "github-app-hygiene": {
+    "repository:checkout-web": {
+      "level": "none",
+      "rules": {
+        "only-approved-apps": "fail"
+      }
+    },
+    "repository:ledger": {
+      "level": "bronze",
+      "rules": {
+        "only-approved-apps": "pass"
+      }
+    },
+    "repository:legacy-tool": {
+      "level": "skipped"
+    },
+    "repository:payments-api": {
+      "level": "bronze",
+      "rules": {
+        "only-approved-apps": "pass"
+      }
+    },
+    "repository:platform-infra": {
+      "level": "bronze",
+      "rules": {
+        "only-approved-apps": "pass"
+      }
+    }
+  },
+  "ownership": {
+    "repository:checkout-web": {
+      "level": "bronze",
+      "rules": {
+        "branch-protected": "fail",
+        "claim-verified": "pass",
+        "has-owner": "pass",
+        "has-tier": "pass"
+      }
+    },
+    "repository:ledger": {
+      "level": "none",
+      "rules": {
+        "branch-protected": "pass",
+        "claim-verified": "fail",
+        "has-owner": "fail",
+        "has-tier": "pass"
+      }
+    },
+    "repository:legacy-tool": {
+      "level": "skipped"
+    },
+    "repository:payments-api": {
+      "level": "silver",
+      "rules": {
+        "branch-protected": "pass",
+        "claim-verified": "pass",
+        "has-owner": "pass",
+        "has-tier": "pass"
+      }
+    },
+    "repository:platform-infra": {
+      "level": "bronze",
+      "rules": {
+        "branch-protected": "pass",
+        "claim-verified": "fail",
+        "has-owner": "pass",
+        "has-tier": "pass"
+      }
+    }
+  }
+}

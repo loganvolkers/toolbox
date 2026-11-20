@@ -1,0 +1,112 @@
+[
+  {
+    "object": "group:checkout",
+    "relation": "member",
+    "user": "user:bob"
+  },
+  {
+    "object": "group:engineering",
+    "relation": "member",
+    "user": "group:payments#member"
+  },
+  {
+    "object": "group:engineering",
+    "relation": "member",
+    "user": "group:platform#member"
+  },
+  {
+    "object": "group:payments",
+    "relation": "member",
+    "user": "group:checkout#member"
+  },
+  {
+    "object": "group:payments",
+    "relation": "member",
+    "user": "user:alice"
+  },
+  {
+    "object": "group:platform",
+    "relation": "member",
+    "user": "user:dave"
+  },
+  {
+    "object": "group:security",
+    "relation": "member",
+    "user": "user:carol"
+  },
+  {
+    "object": "portal:acme",
+    "relation": "admin",
+    "user": "group:platform#member"
+  },
+  {
+    "object": "portal:acme",
+    "relation": "viewer",
+    "user": "user:*"
+  },
+  {
+    "object": "repository:checkout-web",
+    "relation": "gh_admin",
+    "user": "user:bob"
+  },
+  {
+    "object": "repository:checkout-web",
+    "relation": "owner",
+    "user": "group:checkout"
+  },
+  {
+    "object": "repository:checkout-web",
+    "relation": "portal",
+    "user": "portal:acme"
+  },
+  {
+    "object": "repository:ledger",
+    "relation": "gh_admin",
+    "user": "user:alice"
+  },
+  {
+    "object": "repository:ledger",
+    "relation": "gh_admin",
+    "user": "user:dave"
+  },
+  {
+    "object": "repository:ledger",
+    "relation": "portal",
+    "user": "portal:acme"
+  },
+  {
+    "object": "repository:legacy-tool",
+    "relation": "portal",
+    "user": "portal:acme"
+  },
+  {
+    "object": "repository:payments-api",
+    "relation": "gh_admin",
+    "user": "user:alice"
+  },
+  {
+    "object": "repository:payments-api",
+    "relation": "owner",
+    "user": "group:payments"
+  },
+  {
+    "object": "repository:payments-api",
+    "relation": "portal",
+    "user": "portal:acme"
+  },
+  {
+    "object": "repository:platform-infra",
+    "relation": "gh_admin",
+    "user": "user:dave"
+  },
+  {
+    "object": "repository:platform-infra",
+    "relation": "owner",
+    "user": "group:platform"
+  },
+  {
+    "object": "repository:platform-infra",
+    "relation": "portal",
+    "user": "portal:acme"
+  }
+]

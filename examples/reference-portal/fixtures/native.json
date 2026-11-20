@@ -1,0 +1,3 @@
+[
+  {"entity": "repository:platform-infra", "field": "tier", "value": "1", "revision": 1, "author": "user:dave", "at": "2026-11-02T09:14:00Z", "reason": "Runs shared CI and DNS; tier agreed in the platform review"}
+]

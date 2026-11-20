@@ -1,0 +1,301 @@
+# Toolbox reference portal: "acme" on GitHub + an IdP.
+# This manifest is the v1 contract in practice (docs/v1-spec.md §5). It is validated against
+# schema/manifest.schema.json, and tools/reference.py executes its CEL against fixtures/.
+apiVersion: toolbox.dev/v1alpha1
+
+portal:
+  name: acme
+  title: Acme developer portal
+  owner: group:platform
+  toolbox: "0.1"
+
+# Named values that CEL can read as `policy.<name>`. Owned by security via CODEOWNERS on this file's
+# policy section (in a real repo this would be its own file, e.g. policies/approved-apps.yaml).
+policies:
+  approvedApps:
+    renovate:
+      steward: group:platform
+      reviewed: "2026-09-02"
+      permissions: {contents: write, pull_requests: write, issues: write, checks: read, metadata: read}
+      eligible: "entity.lifecycle != 'deprecated'"
+      approval: "entity.tier in ['0', '1'] ? 'security' : 'none'"
+    snyk-security:
+      steward: group:security
+      reviewed: "2026-08-14"
+      permissions: {contents: read, metadata: read, security_events: write}
+      eligible: "true"
+      approval: "'none'"
+
+connectors:
+  - name: github
+    package: builtin:github
+    runtime: in-image                      # child process over stdio (D40, D48)
+    config:
+      org: acme
+      apiVersion: "2026-03-10"
+      appId: ${env:GITHUB_APP_ID}
+      privateKey: ${secret:github-app-private-key}
+    records: [repository, codeowners, app, installation]
+    refresh:                               # scopes this connector must support (connector-control §4)
+      installation: [external_ids, selector]
+      repository: [external_ids, since]
+    freshness: {repository: 15m, installation: 15m, app: 24h}
+  - name: git-files
+    package: builtin:git-files
+    runtime: in-image
+    config: {org: acme, paths: [catalog-info.yaml]}
+    records: [catalog-info]
+    freshness: {catalog-info: 15m}
+  - name: idp
+    package: builtin:scim
+    runtime: remote                        # pushes to /v1/ingest, pulls commands by long-poll
+    records: [user, group]
+    freshness: {user: 1h, group: 1h}
+
+kinds:
+  - name: Group
+    identityFrom: [connector:idp]
+    fields:
+      title: {type: string}
+      parent: {type: ref, to: Group}
+      githubTeam: {type: string}
+      members: {type: list, items: string}
+    sources: {default: [connector:idp]}
+    map:
+      - from: idp/group
+        id: "'group:' + record.slug"
+        set: >-
+          {'title': record.displayName,
+           'parent': has(record.parent) ? 'group:' + record.parent : null,
+           'githubTeam': record.githubTeam,
+           'members': record.members}
+
+  - name: User
+    identityFrom: [connector:idp]
+    fields:
+      displayName: {type: string}
+      email: {type: string, facet: contact}
+    sources: {default: [connector:idp]}
+    map:
+      - from: idp/user
+        id: "'user:' + record.login"
+        set: "{'displayName': record.name, 'email': record.email}"
+
+  - name: Repository
+    identityFrom: [connector:github]       # catalog-info for a repo GitHub doesn't report creates nothing
+    fields:
+      title: {type: string}
+      archived: {type: boolean}
+      defaultBranchProtected: {type: boolean}
+      lifecycle: {type: enum, values: [experimental, production, deprecated]}
+      tier: {type: enum, values: ["0", "1", "2", "3"]}
+      ownerClaim: {type: ref, to: Group}
+      codeowners: {type: list, items: object}
+      admins: {type: list, items: string}
+      ownership:
+        type: object
+        authority:                         # D17: CODEOWNERS backs permission-relevant claims
+          type: codeowners
+          claim: ownerClaim
+          rules: codeowners
+          path: catalog-info.yaml
+          teamField: Group.githubTeam
+      installedApps:
+        type: list
+        items: string
+        computed: "inbound.installedOn.map(i, i.app)"
+    sources:
+      default: [connector:github]
+      fields:
+        title: [git:catalog-info, connector:github]
+        lifecycle: [connector:github, git:catalog-info]   # archived in GitHub wins over the claim
+        tier: [git:catalog-info, native]
+        ownerClaim: [git:catalog-info]
+    writeBack: {ownership.owner: github:custom-property/owner, tier: github:custom-property/tier}
+    map:
+      - from: github/repository
+        id: "'repository:' + record.name"
+        set: >-
+          {'title': record.name,
+           'archived': record.archived,
+           'defaultBranchProtected': record.default_branch_protected,
+           'lifecycle': record.archived ? 'deprecated' : null,
+           'admins': record.admins}
+      - from: github/codeowners
+        id: "'repository:' + record.repo"
+        set: "{'codeowners': record.rules}"
+      - from: git-files/catalog-info
+        source: git:catalog-info
+        id: "'repository:' + record.repo"
+        set: >-
+          {'title': has(record.content.metadata.title) ? record.content.metadata.title : null,
+           'lifecycle': has(record.content.spec.lifecycle) ? record.content.spec.lifecycle : null,
+           'tier': has(record.content.spec.tier) ? record.content.spec.tier : null,
+           'ownerClaim': has(record.content.spec.owner) ? record.content.spec.owner : null}
+
+  - name: GitHubApp
+    identityFrom: [connector:github]
+    fields:
+      slug: {type: string}
+      vendor: {type: string}
+      permissions: {type: object}
+    sources: {default: [connector:github]}
+    map:
+      - from: github/app
+        id: "'githubapp:' + record.slug"
+        set: "{'slug': record.slug, 'vendor': record.owner, 'permissions': record.permissions}"
+
+  - name: GitHubAppInstallation
+    identityFrom: [connector:github]
+    fields:
+      app: {type: string}
+      selection: {type: enum, values: [all, selected]}
+    relations:
+      installedOn: {to: Repository, many: true}
+    sources: {default: [connector:github]}
+    map:
+      - from: github/installation
+        id: "'installation:' + string(record.id)"
+        set: "{'app': record.app_slug, 'selection': record.repository_selection}"
+        relations:
+          installedOn: "record.repositories.map(r, 'repository:' + r)"
+
+scorecards:
+  - name: ownership
+    kind: Repository
+    owner: group:platform
+    levels: [bronze, silver]
+    appliesTo: "!entity.archived"
+    rules:
+      - name: has-owner
+        level: bronze
+        check: "entity.ownership.status in ['verified', 'inferred']"
+        fix: "Add catalog-info.yaml with spec.owner, backed by CODEOWNERS for that file."
+      - name: claim-verified
+        level: silver
+        check: "entity.ownership.status == 'verified'"
+        fix: "Declare spec.owner in catalog-info.yaml and make that team a code owner of the file."
+      - name: has-tier
+        level: silver
+        check: "has(entity.tier)"
+        fix: "Set spec.tier in catalog-info.yaml, or ask the platform team to set it in Toolbox."
+      - name: branch-protected
+        level: silver
+        check: "entity.defaultBranchProtected"
+        fix: "Enable a ruleset protecting the default branch."
+    facets: {summary: public, details: owner}   # level public; rule details owner-only (D15)
+
+  - name: github-app-hygiene
+    kind: Repository
+    owner: group:security
+    levels: [bronze]
+    appliesTo: "!entity.archived"
+    rules:
+      - name: only-approved-apps
+        level: bronze
+        check: "entity.installedApps.all(a, a in policy.approvedApps)"
+        fix: "Remove unapproved apps, or request approval with the request-new-app action."
+    facets: {summary: public, details: owner}
+
+  - name: app-approval
+    kind: GitHubApp
+    owner: group:security
+    levels: [bronze]
+    appliesTo: "entity.slug in policy.approvedApps"
+    rules:
+      - name: permissions-match-snapshot
+        level: bronze
+        check: "entity.permissions == policy.approvedApps[entity.slug].permissions"
+        fix: "The app requests permissions beyond its approved snapshot; security must re-approve it."
+    facets: {summary: public, details: public}
+
+authz:
+  model: authz/model.fga
+  tests: [authz/model.fga.yaml]
+  tuples:                                  # derived, never written separately (D26, D38)
+    - static:
+        - {user: "user:*", relation: viewer, object: "portal:acme"}
+        - {user: "group:platform#member", relation: admin, object: "portal:acme"}
+    - kind: Group
+      emit: "entity.members.map(m, {'user': 'user:' + m, 'relation': 'member', 'object': entity.id})"
+    - kind: Group
+      emit: "has(entity.parent) ? [{'user': entity.id + '#member', 'relation': 'member', 'object': entity.parent}] : []"
+    - kind: Repository
+      emit: >-
+        [{'user': 'portal:acme', 'relation': 'portal', 'object': entity.id}]
+        + (entity.ownership.status in ['verified', 'inferred']
+             ? [{'user': entity.ownership.owner, 'relation': 'owner', 'object': entity.id}] : [])
+        + entity.admins.map(a, {'user': 'user:' + a, 'relation': 'gh_admin', 'object': entity.id})
+
+actions:
+  - name: install-approved-app
+    kind: Repository
+    scope: day2
+    description: Add this repository to a security-approved GitHub App already installed in the org.
+    inputs:
+      type: object
+      required: [app, justification]
+      properties:
+        app:
+          type: string
+          enumFrom: "policy.approvedApps.filter(a, !(a in entity.installedApps))"
+        justification: {type: string, minLength: 10}
+    permission: can_install_apps
+    approval: "policy.approvedApps[inputs.app].approval == 'security' ? ['group:security'] : []"
+    context:                               # catalog lookups passed to the executor as `related`
+      installation: {kind: GitHubAppInstallation, where: "candidate.app == inputs.app"}
+    preconditions:
+      - "inputs.app in policy.approvedApps"
+      - "!entity.archived"
+    executor:
+      type: in-image
+      command: [/portal/executors/github-apps/bin/github-apps]
+      identity: user                       # on-behalf-of token (offline_access)
+      secrets: [github-app-private-key]
+    expect:
+      postcondition: "inputs.app in entity.installedApps"
+      refresh:
+        - {connector: github, kind: installation, selector: "app == inputs.app"}
+      within: 2m
+    annotations: {destructive: false, idempotent: true, openWorld: true}
+    mcp: {promote: install_approved_github_app}
+    ui: {bundle: install-approved-app}
+
+  - name: remove-app
+    kind: Repository
+    scope: day2
+    description: Remove this repository from a GitHub App installation.
+    inputs:
+      type: object
+      required: [app]
+      properties:
+        app: {type: string, enumFrom: "entity.installedApps"}
+    permission: can_install_apps
+    context:
+      installation: {kind: GitHubAppInstallation, where: "candidate.app == inputs.app"}
+    executor:
+      type: in-image
+      command: [/portal/executors/github-apps/bin/github-apps]
+      identity: user
+      secrets: [github-app-private-key]
+    expect:
+      postcondition: "!(inputs.app in entity.installedApps)"
+      refresh:
+        - {connector: github, kind: installation, selector: "app == inputs.app"}
+      within: 2m
+    annotations: {destructive: true, idempotent: true, openWorld: true}
+
+ui:
+  bundles:
+    - name: install-approved-app
+      path: ui/install-approved-app
+      entry: dist/index.js
+      framework: react                     # informational; the contract is framework-agnostic (D40)
+      mounts: [{slot: "action:install-approved-app"}]
+
+mcp:
+  instructions: >-
+    Acme's developer portal. Use it to find owners, check standards and run approved self-service
+    actions. Always preview an action and get the user's confirmation before running it.
+
+tests: [tests/ownership.test.yaml, tests/apps.test.yaml]

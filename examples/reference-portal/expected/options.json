@@ -1,0 +1,39 @@
+{
+  "install-approved-app": {
+    "app": {
+      "repository:checkout-web": [
+        "snyk-security"
+      ],
+      "repository:ledger": [
+        "renovate",
+        "snyk-security"
+      ],
+      "repository:legacy-tool": [
+        "renovate",
+        "snyk-security"
+      ],
+      "repository:payments-api": [
+        "snyk-security"
+      ],
+      "repository:platform-infra": [
+        "renovate"
+      ]
+    }
+  },
+  "remove-app": {
+    "app": {
+      "repository:checkout-web": [
+        "renovate",
+        "sketchy-bot"
+      ],
+      "repository:ledger": [],
+      "repository:legacy-tool": [],
+      "repository:payments-api": [
+        "renovate"
+      ],
+      "repository:platform-infra": [
+        "snyk-security"
+      ]
+    }
+  }
+}

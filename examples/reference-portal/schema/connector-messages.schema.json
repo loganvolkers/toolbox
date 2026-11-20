@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://toolbox.dev/schemas/connector-messages/v1.json",
+  "title": "Toolbox connector API v1 messages",
+  "description": "Ingest and control messages between Toolbox and connectors (docs/design/connector-control.md, docs/v1-spec.md §7.4). Identical over stdio (NDJSON), POST /v1/ingest bodies, and the long-poll command stream.",
+  "oneOf": [
+    {"$ref": "#/$defs/register"},
+    {"$ref": "#/$defs/command"},
+    {"$ref": "#/$defs/ack"},
+    {"$ref": "#/$defs/record"},
+    {"$ref": "#/$defs/delete"},
+    {"$ref": "#/$defs/notFound"},
+    {"$ref": "#/$defs/state"},
+    {"$ref": "#/$defs/snapshotComplete"},
+    {"$ref": "#/$defs/complete"},
+    {"$ref": "#/$defs/log"}
+  ],
+  "$defs": {
+    "commandId": {"type": "string", "pattern": "^cmd_[A-Za-z0-9]+$"},
+    "kind": {"type": "string", "pattern": "^[a-z0-9-]+$"},
+    "register": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "connector", "version", "instance", "capabilities"],
+      "properties": {
+        "type": {"const": "register"},
+        "connector": {"type": "string"},
+        "version": {"type": "string"},
+        "instance": {"type": "string"},
+        "capabilities": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "refresh": {"type": "object", "additionalProperties": {"type": "array", "items": {"enum": ["external_ids", "selector", "since"]}}},
+            "resync": {"type": "array", "items": {"$ref": "#/$defs/kind"}},
+            "max_concurrency": {"type": "integer", "minimum": 1},
+            "rate_limit": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {"remaining": {"type": "integer"}, "resets_at": {"type": "string", "format": "date-time"}}
+            }
+          }
+        }
+      }
+    },
+    "command": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "command_id", "command"],
+      "properties": {
+        "type": {"const": "command"},
+        "command_id": {"$ref": "#/$defs/commandId"},
+        "command": {"enum": ["refresh", "resync", "cancel"]},
+        "kind": {"$ref": "#/$defs/kind"},
+        "kinds": {"type": "array", "items": {"$ref": "#/$defs/kind"}},
+        "external_ids": {"type": "array", "items": {"type": "string"}},
+        "selector": {"type": "object", "description": "Field equality selector, e.g. {\"app\": \"renovate\"}."},
+        "since": {"type": "string", "description": "Opaque cursor or RFC 3339 time."},
+        "reason": {"type": "string"},
+        "priority": {"enum": ["interactive", "verification", "freshness", "background"]},
+        "deadline": {"type": "string", "format": "date-time"},
+        "target": {"$ref": "#/$defs/commandId", "description": "For cancel: the command to stop."}
+      },
+      "allOf": [
+        {"if": {"properties": {"command": {"const": "refresh"}}},
+         "then": {"required": ["kind", "priority", "deadline"],
+                  "oneOf": [{"required": ["external_ids"]}, {"required": ["selector"]}, {"required": ["since"]}]}},
+        {"if": {"properties": {"command": {"const": "resync"}}}, "then": {"required": ["kinds"]}},
+        {"if": {"properties": {"command": {"const": "cancel"}}}, "then": {"required": ["target"]}}
+      ]
+    },
+    "ack": {
+      "type": "object", "additionalProperties": false, "required": ["type", "command_id"],
+      "properties": {"type": {"const": "ack"}, "command_id": {"$ref": "#/$defs/commandId"}}
+    },
+    "record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "kind", "externalId", "data"],
+      "properties": {
+        "type": {"const": "record"},
+        "kind": {"$ref": "#/$defs/kind"},
+        "externalId": {"type": "string", "pattern": "^[a-z0-9-]+:.+$"},
+        "data": {"type": "object"},
+        "observed_at": {"type": "string", "format": "date-time"},
+        "command_id": {"$ref": "#/$defs/commandId"}
+      }
+    },
+    "delete": {
+      "type": "object", "additionalProperties": false, "required": ["type", "kind", "externalId"],
+      "properties": {"type": {"const": "delete"}, "kind": {"$ref": "#/$defs/kind"}, "externalId": {"type": "string"}, "command_id": {"$ref": "#/$defs/commandId"}}
+    },
+    "notFound": {
+      "type": "object", "additionalProperties": false, "required": ["type", "kind", "externalId", "command_id"],
+      "properties": {"type": {"const": "not_found"}, "kind": {"$ref": "#/$defs/kind"}, "externalId": {"type": "string"}, "command_id": {"$ref": "#/$defs/commandId"}}
+    },
+    "state": {
+      "type": "object", "additionalProperties": false, "required": ["type", "kind", "cursor"],
+      "properties": {"type": {"const": "state"}, "kind": {"$ref": "#/$defs/kind"}, "cursor": {"type": "string"}}
+    },
+    "snapshotComplete": {
+      "type": "object", "additionalProperties": false, "required": ["type", "kind", "command_id"],
+      "properties": {"type": {"const": "snapshot_complete"}, "kind": {"$ref": "#/$defs/kind"}, "command_id": {"$ref": "#/$defs/commandId"}}
+    },
+    "complete": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "command_id", "status"],
+      "properties": {
+        "type": {"const": "complete"},
+        "command_id": {"$ref": "#/$defs/commandId"},
+        "status": {"enum": ["succeeded", "partial", "failed", "cancelled"]},
+        "counts": {"type": "object", "additionalProperties": {"type": "integer"}},
+        "errors": {"type": "array", "items": {"type": "object", "required": ["code", "message"], "properties": {"code": {"type": "string"}, "message": {"type": "string"}, "externalId": {"type": "string"}}}},
+        "snapshot_id": {"type": "string", "description": "Set by Toolbox when it reports completion to requesters, never by the connector."}
+      }
+    },
+    "log": {
+      "type": "object", "additionalProperties": false, "required": ["type", "level", "message"],
+      "properties": {"type": {"const": "log"}, "level": {"enum": ["debug", "info", "warn", "error"]}, "message": {"type": "string"}, "command_id": {"$ref": "#/$defs/commandId"}}
+    }
+  }
+}

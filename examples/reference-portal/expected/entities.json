@@ -1,0 +1,435 @@
+[
+  {
+    "fields": {
+      "permissions": {
+        "checks": "read",
+        "contents": "write",
+        "issues": "write",
+        "metadata": "read",
+        "pull_requests": "write"
+      },
+      "slug": "renovate",
+      "vendor": "mend"
+    },
+    "id": "githubapp:renovate",
+    "kind": "GitHubApp",
+    "provenance": {
+      "permissions": "connector:github",
+      "slug": "connector:github",
+      "vendor": "connector:github"
+    }
+  },
+  {
+    "fields": {
+      "permissions": {
+        "contents": "write",
+        "metadata": "read"
+      },
+      "slug": "sketchy-bot",
+      "vendor": "unknown-vendor"
+    },
+    "id": "githubapp:sketchy-bot",
+    "kind": "GitHubApp",
+    "provenance": {
+      "permissions": "connector:github",
+      "slug": "connector:github",
+      "vendor": "connector:github"
+    }
+  },
+  {
+    "fields": {
+      "permissions": {
+        "administration": "read",
+        "contents": "read",
+        "metadata": "read",
+        "security_events": "write"
+      },
+      "slug": "snyk-security",
+      "vendor": "snyk"
+    },
+    "id": "githubapp:snyk-security",
+    "kind": "GitHubApp",
+    "provenance": {
+      "permissions": "connector:github",
+      "slug": "connector:github",
+      "vendor": "connector:github"
+    }
+  },
+  {
+    "fields": {
+      "githubTeam": "acme/checkout",
+      "members": [
+        "bob"
+      ],
+      "parent": "group:payments",
+      "title": "Checkout"
+    },
+    "id": "group:checkout",
+    "kind": "Group",
+    "provenance": {
+      "githubTeam": "connector:idp",
+      "members": "connector:idp",
+      "parent": "connector:idp",
+      "title": "connector:idp"
+    }
+  },
+  {
+    "fields": {
+      "githubTeam": "acme/engineering",
+      "members": [],
+      "title": "Engineering"
+    },
+    "id": "group:engineering",
+    "kind": "Group",
+    "provenance": {
+      "githubTeam": "connector:idp",
+      "members": "connector:idp",
+      "title": "connector:idp"
+    }
+  },
+  {
+    "fields": {
+      "githubTeam": "acme/payments",
+      "members": [
+        "alice"
+      ],
+      "parent": "group:engineering",
+      "title": "Payments"
+    },
+    "id": "group:payments",
+    "kind": "Group",
+    "provenance": {
+      "githubTeam": "connector:idp",
+      "members": "connector:idp",
+      "parent": "connector:idp",
+      "title": "connector:idp"
+    }
+  },
+  {
+    "fields": {
+      "githubTeam": "acme/platform",
+      "members": [
+        "dave"
+      ],
+      "parent": "group:engineering",
+      "title": "Platform"
+    },
+    "id": "group:platform",
+    "kind": "Group",
+    "provenance": {
+      "githubTeam": "connector:idp",
+      "members": "connector:idp",
+      "parent": "connector:idp",
+      "title": "connector:idp"
+    }
+  },
+  {
+    "fields": {
+      "githubTeam": "acme/security",
+      "members": [
+        "carol"
+      ],
+      "title": "Security"
+    },
+    "id": "group:security",
+    "kind": "Group",
+    "provenance": {
+      "githubTeam": "connector:idp",
+      "members": "connector:idp",
+      "title": "connector:idp"
+    }
+  },
+  {
+    "fields": {
+      "app": "renovate",
+      "selection": "selected"
+    },
+    "id": "installation:4412",
+    "kind": "GitHubAppInstallation",
+    "provenance": {
+      "app": "connector:github",
+      "selection": "connector:github"
+    }
+  },
+  {
+    "fields": {
+      "app": "snyk-security",
+      "selection": "selected"
+    },
+    "id": "installation:4413",
+    "kind": "GitHubAppInstallation",
+    "provenance": {
+      "app": "connector:github",
+      "selection": "connector:github"
+    }
+  },
+  {
+    "fields": {
+      "app": "sketchy-bot",
+      "selection": "selected"
+    },
+    "id": "installation:4414",
+    "kind": "GitHubAppInstallation",
+    "provenance": {
+      "app": "connector:github",
+      "selection": "connector:github"
+    }
+  },
+  {
+    "fields": {
+      "admins": [
+        "bob"
+      ],
+      "archived": false,
+      "codeowners": [
+        {
+          "owners": [
+            "@acme/checkout"
+          ],
+          "pattern": "*"
+        },
+        {
+          "owners": [
+            "@acme/checkout",
+            "@acme/platform"
+          ],
+          "pattern": "/catalog-info.yaml"
+        }
+      ],
+      "defaultBranchProtected": false,
+      "installedApps": [
+        "renovate",
+        "sketchy-bot"
+      ],
+      "lifecycle": "production",
+      "ownerClaim": "group:checkout",
+      "ownership": {
+        "claim": "group:checkout",
+        "owner": "group:checkout",
+        "status": "verified"
+      },
+      "tier": "2",
+      "title": "Checkout web app"
+    },
+    "id": "repository:checkout-web",
+    "kind": "Repository",
+    "provenance": {
+      "admins": "connector:github",
+      "archived": "connector:github",
+      "codeowners": "connector:github",
+      "defaultBranchProtected": "connector:github",
+      "installedApps": "computed",
+      "lifecycle": "git:catalog-info",
+      "ownerClaim": "git:catalog-info",
+      "ownership": "authority:codeowners",
+      "tier": "git:catalog-info",
+      "title": "git:catalog-info"
+    }
+  },
+  {
+    "fields": {
+      "admins": [
+        "alice",
+        "dave"
+      ],
+      "archived": false,
+      "codeowners": [
+        {
+          "owners": [
+            "@acme/platform"
+          ],
+          "pattern": "*"
+        }
+      ],
+      "defaultBranchProtected": true,
+      "installedApps": [],
+      "lifecycle": "production",
+      "ownerClaim": "group:payments",
+      "ownership": {
+        "claim": "group:payments",
+        "status": "unverified"
+      },
+      "tier": "0",
+      "title": "ledger"
+    },
+    "id": "repository:ledger",
+    "kind": "Repository",
+    "provenance": {
+      "admins": "connector:github",
+      "archived": "connector:github",
+      "codeowners": "connector:github",
+      "defaultBranchProtected": "connector:github",
+      "installedApps": "computed",
+      "lifecycle": "git:catalog-info",
+      "ownerClaim": "git:catalog-info",
+      "ownership": "authority:codeowners",
+      "tier": "git:catalog-info",
+      "title": "connector:github"
+    }
+  },
+  {
+    "fields": {
+      "admins": [],
+      "archived": true,
+      "defaultBranchProtected": false,
+      "installedApps": [],
+      "lifecycle": "deprecated",
+      "ownership": {
+        "status": "none"
+      },
+      "title": "legacy-tool"
+    },
+    "id": "repository:legacy-tool",
+    "kind": "Repository",
+    "provenance": {
+      "admins": "connector:github",
+      "archived": "connector:github",
+      "defaultBranchProtected": "connector:github",
+      "installedApps": "computed",
+      "lifecycle": "connector:github",
+      "ownership": "authority:codeowners",
+      "title": "connector:github"
+    }
+  },
+  {
+    "fields": {
+      "admins": [
+        "alice"
+      ],
+      "archived": false,
+      "codeowners": [
+        {
+          "owners": [
+            "@acme/payments"
+          ],
+          "pattern": "*"
+        }
+      ],
+      "defaultBranchProtected": true,
+      "installedApps": [
+        "renovate"
+      ],
+      "lifecycle": "production",
+      "ownerClaim": "group:payments",
+      "ownership": {
+        "claim": "group:payments",
+        "owner": "group:payments",
+        "status": "verified"
+      },
+      "tier": "1",
+      "title": "Payments API"
+    },
+    "id": "repository:payments-api",
+    "kind": "Repository",
+    "provenance": {
+      "admins": "connector:github",
+      "archived": "connector:github",
+      "codeowners": "connector:github",
+      "defaultBranchProtected": "connector:github",
+      "installedApps": "computed",
+      "lifecycle": "git:catalog-info",
+      "ownerClaim": "git:catalog-info",
+      "ownership": "authority:codeowners",
+      "tier": "git:catalog-info",
+      "title": "git:catalog-info"
+    }
+  },
+  {
+    "fields": {
+      "admins": [
+        "dave"
+      ],
+      "archived": false,
+      "codeowners": [
+        {
+          "owners": [
+            "@acme/platform"
+          ],
+          "pattern": "*"
+        }
+      ],
+      "defaultBranchProtected": true,
+      "installedApps": [
+        "snyk-security"
+      ],
+      "ownership": {
+        "owner": "group:platform",
+        "status": "inferred"
+      },
+      "tier": "1",
+      "title": "platform-infra"
+    },
+    "id": "repository:platform-infra",
+    "kind": "Repository",
+    "provenance": {
+      "admins": "connector:github",
+      "archived": "connector:github",
+      "codeowners": "connector:github",
+      "defaultBranchProtected": "connector:github",
+      "installedApps": "computed",
+      "ownership": "authority:codeowners",
+      "tier": "native",
+      "title": "connector:github"
+    }
+  },
+  {
+    "fields": {
+      "displayName": "Alice Ng",
+      "email": "alice@acme.example"
+    },
+    "id": "user:alice",
+    "kind": "User",
+    "provenance": {
+      "displayName": "connector:idp",
+      "email": "connector:idp"
+    }
+  },
+  {
+    "fields": {
+      "displayName": "Bob Osei",
+      "email": "bob@acme.example"
+    },
+    "id": "user:bob",
+    "kind": "User",
+    "provenance": {
+      "displayName": "connector:idp",
+      "email": "connector:idp"
+    }
+  },
+  {
+    "fields": {
+      "displayName": "Carol Diaz",
+      "email": "carol@acme.example"
+    },
+    "id": "user:carol",
+    "kind": "User",
+    "provenance": {
+      "displayName": "connector:idp",
+      "email": "connector:idp"
+    }
+  },
+  {
+    "fields": {
+      "displayName": "Dave Kim",
+      "email": "dave@acme.example"
+    },
+    "id": "user:dave",
+    "kind": "User",
+    "provenance": {
+      "displayName": "connector:idp",
+      "email": "connector:idp"
+    }
+  },
+  {
+    "fields": {
+      "displayName": "Erin Park",
+      "email": "erin@acme.example"
+    },
+    "id": "user:erin",
+    "kind": "User",
+    "provenance": {
+      "displayName": "connector:idp",
+      "email": "connector:idp"
+    }
+  }
+]

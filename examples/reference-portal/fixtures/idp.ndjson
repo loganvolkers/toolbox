@@ -1,0 +1,10 @@
+{"type":"record","kind":"group","externalId":"idp:group/engineering","data":{"slug":"engineering","displayName":"Engineering","githubTeam":"acme/engineering","members":[]}}
+{"type":"record","kind":"group","externalId":"idp:group/payments","data":{"slug":"payments","displayName":"Payments","parent":"engineering","githubTeam":"acme/payments","members":["alice"]}}
+{"type":"record","kind":"group","externalId":"idp:group/checkout","data":{"slug":"checkout","displayName":"Checkout","parent":"payments","githubTeam":"acme/checkout","members":["bob"]}}
+{"type":"record","kind":"group","externalId":"idp:group/platform","data":{"slug":"platform","displayName":"Platform","parent":"engineering","githubTeam":"acme/platform","members":["dave"]}}
+{"type":"record","kind":"group","externalId":"idp:group/security","data":{"slug":"security","displayName":"Security","githubTeam":"acme/security","members":["carol"]}}
+{"type":"record","kind":"user","externalId":"idp:user/alice","data":{"login":"alice","name":"Alice Ng","email":"alice@acme.example"}}
+{"type":"record","kind":"user","externalId":"idp:user/bob","data":{"login":"bob","name":"Bob Osei","email":"bob@acme.example"}}
+{"type":"record","kind":"user","externalId":"idp:user/carol","data":{"login":"carol","name":"Carol Diaz","email":"carol@acme.example"}}
+{"type":"record","kind":"user","externalId":"idp:user/dave","data":{"login":"dave","name":"Dave Kim","email":"dave@acme.example"}}
+{"type":"record","kind":"user","externalId":"idp:user/erin","data":{"login":"erin","name":"Erin Park","email":"erin@acme.example"}}

@@ -1,0 +1,26 @@
+model
+  schema 1.1
+
+type user
+
+type group
+  relations
+    define member: [user, group#member]
+
+type portal
+  relations
+    define admin: [user, group#member]
+    define viewer: [user:*]
+
+type repository
+  relations
+    define portal: [portal]
+    define owner: [group]
+    define gh_admin: [user]
+    # Catalogs are public by default (D15): every signed-in user sees summaries.
+    define can_view: viewer from portal
+    # Owner-only facets (scorecard rule details, contact fields) and operators.
+    define can_view_details: member from owner or admin from portal
+    define can_refresh: member from owner or gh_admin or admin from portal
+    # GitHub repo admins (mirrored from collaborator permission=admin) or portal admins.
+    define can_install_apps: gh_admin or admin from portal

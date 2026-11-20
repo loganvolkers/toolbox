@@ -1,0 +1,397 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://toolbox.dev/schemas/executor-messages/v1.json",
+  "title": "Toolbox executor protocol v1 messages",
+  "description": "Messages between Toolbox and an executor (docs/design/action-runs.md \u00a75, docs/v1-spec.md \u00a77.5). NDJSON over stdio for in-image executors; the same JSON bodies over HTTP for remote executors.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/preview"
+    },
+    {
+      "$ref": "#/$defs/previewResult"
+    },
+    {
+      "$ref": "#/$defs/run"
+    },
+    {
+      "$ref": "#/$defs/accepted"
+    },
+    {
+      "$ref": "#/$defs/progress"
+    },
+    {
+      "$ref": "#/$defs/result"
+    },
+    {
+      "$ref": "#/$defs/cancel"
+    },
+    {
+      "$ref": "#/$defs/verify"
+    },
+    {
+      "$ref": "#/$defs/verifyResult"
+    }
+  ],
+  "$defs": {
+    "runId": {
+      "type": "string",
+      "pattern": "^run_[A-Za-z0-9]+$"
+    },
+    "requestId": {
+      "type": "string",
+      "pattern": "^req_[A-Za-z0-9]+$"
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "principal"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "user",
+            "service"
+          ]
+        },
+        "principal": {
+          "type": "string",
+          "description": "user:<id> for user mode; the portal for service mode."
+        },
+        "credentials": {
+          "type": "object",
+          "description": "Short-lived tokens injected for this request only, keyed by provider (e.g. github). Never logged."
+        }
+      }
+    },
+    "context": {
+      "type": "object",
+      "required": [
+        "action",
+        "action_version",
+        "entity",
+        "inputs",
+        "identity"
+      ],
+      "properties": {
+        "action": {
+          "type": "string"
+        },
+        "action_version": {
+          "type": "string",
+          "description": "Manifest hash of the action definition."
+        },
+        "entity": {
+          "type": "object",
+          "required": [
+            "id"
+          ],
+          "description": "The target entity as Toolbox sees it at the preview snapshot."
+        },
+        "inputs": {
+          "type": "object"
+        },
+        "identity": {
+          "$ref": "#/$defs/identity"
+        },
+        "related": {
+          "type": "object",
+          "description": "Results of the action's `context` lookups at the same snapshot as `entity` (name \u2192 list of entities)."
+        }
+      }
+    },
+    "effect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "resource",
+        "operation"
+      ],
+      "properties": {
+        "resource": {
+          "type": "string"
+        },
+        "operation": {
+          "enum": [
+            "create",
+            "update",
+            "delete",
+            "grant",
+            "revoke",
+            "noop"
+          ]
+        },
+        "before": {},
+        "after": {},
+        "permissions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "detail": {
+          "type": "string"
+        }
+      }
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "message",
+        "retryable"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "retryable": {
+          "type": "boolean"
+        }
+      }
+    },
+    "preview": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/context"
+        }
+      ],
+      "type": "object",
+      "required": [
+        "type",
+        "request_id"
+      ],
+      "properties": {
+        "type": {
+          "const": "preview"
+        },
+        "request_id": {
+          "$ref": "#/$defs/requestId"
+        }
+      }
+    },
+    "previewResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "request_id",
+        "effects"
+      ],
+      "properties": {
+        "type": {
+          "const": "preview_result"
+        },
+        "request_id": {
+          "$ref": "#/$defs/requestId"
+        },
+        "effects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/effect"
+          }
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "blockers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "run": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/context"
+        }
+      ],
+      "type": "object",
+      "required": [
+        "type",
+        "run_id",
+        "idempotency_key",
+        "confirmed_effects"
+      ],
+      "properties": {
+        "type": {
+          "const": "run"
+        },
+        "run_id": {
+          "$ref": "#/$defs/runId"
+        },
+        "idempotency_key": {
+          "type": "string"
+        },
+        "confirmed_effects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/effect"
+          },
+          "description": "The effects the requester confirmed; the executor must not exceed them."
+        }
+      }
+    },
+    "accepted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "run_id"
+      ],
+      "properties": {
+        "type": {
+          "const": "accepted"
+        },
+        "run_id": {
+          "$ref": "#/$defs/runId"
+        },
+        "executor_run_id": {
+          "type": "string"
+        }
+      }
+    },
+    "progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "run_id",
+        "message"
+      ],
+      "properties": {
+        "type": {
+          "const": "progress"
+        },
+        "run_id": {
+          "$ref": "#/$defs/runId"
+        },
+        "step": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "percent": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        }
+      }
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "run_id",
+        "status"
+      ],
+      "properties": {
+        "type": {
+          "const": "result"
+        },
+        "run_id": {
+          "$ref": "#/$defs/runId"
+        },
+        "status": {
+          "enum": [
+            "succeeded",
+            "failed"
+          ]
+        },
+        "outputs": {
+          "type": "object"
+        },
+        "error": {
+          "$ref": "#/$defs/error"
+        }
+      },
+      "if": {
+        "properties": {
+          "status": {
+            "const": "failed"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "error"
+        ]
+      }
+    },
+    "cancel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "run_id"
+      ],
+      "properties": {
+        "type": {
+          "const": "cancel"
+        },
+        "run_id": {
+          "$ref": "#/$defs/runId"
+        }
+      }
+    },
+    "verify": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/context"
+        }
+      ],
+      "type": "object",
+      "required": [
+        "type",
+        "run_id",
+        "outputs"
+      ],
+      "properties": {
+        "type": {
+          "const": "verify"
+        },
+        "run_id": {
+          "$ref": "#/$defs/runId"
+        },
+        "outputs": {
+          "type": "object"
+        }
+      }
+    },
+    "verifyResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "run_id",
+        "ok"
+      ],
+      "properties": {
+        "type": {
+          "const": "verify_result"
+        },
+        "run_id": {
+          "$ref": "#/$defs/runId"
+        },
+        "ok": {
+          "type": "boolean"
+        },
+        "observed": {
+          "type": "object"
+        }
+      }
+    }
+  }
+}

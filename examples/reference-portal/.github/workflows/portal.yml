@@ -1,0 +1,48 @@
+# Portal SDLC (G2, docs/design/sdlc.md): test and plan on PRs; build, deploy and verify on main.
+# Toolbox actions (toolbox-dev/*) are planned, not yet published; the Google actions exist today.
+name: portal
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+  id-token: write          # GitHub OIDC for remote plan and Google auth
+  pull-requests: write     # plan comment
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: toolbox-dev/setup-toolbox@v0
+      - run: toolbox validate                          # manifest schema + cross-references
+      - run: toolbox test                              # tests/*.test.yaml, authz/*.fga.yaml, executor cassettes
+  plan:
+    if: github.event_name == 'pull_request'
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: toolbox-dev/setup-toolbox@v0
+      - run: toolbox plan --remote "${{ vars.PORTAL_URL }}" --oidc --format md > plan.md
+      - uses: toolbox-dev/plan-comment@v0              # posts plan.md and enforces gates
+        with: {plan: plan.md}
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: test
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: toolbox-dev/setup-toolbox@v0
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SA }}
+      - run: toolbox build --image "${{ vars.IMAGE }}:${{ github.sha }}" --push
+      - uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: portal
+          region: ${{ vars.GCP_REGION }}
+          image: ${{ vars.IMAGE }}:${{ github.sha }}
+      - run: toolbox verify --url "${{ vars.PORTAL_URL }}" --rollback-on-failure

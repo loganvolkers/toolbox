@@ -1,0 +1,15 @@
+{"type":"record","kind":"repository","externalId":"github:repo/1001","data":{"id":1001,"name":"payments-api","archived":false,"default_branch_protected":true,"admins":["alice"]}}
+{"type":"record","kind":"repository","externalId":"github:repo/1002","data":{"id":1002,"name":"checkout-web","archived":false,"default_branch_protected":false,"admins":["bob"]}}
+{"type":"record","kind":"repository","externalId":"github:repo/1003","data":{"id":1003,"name":"ledger","archived":false,"default_branch_protected":true,"admins":["alice","dave"]}}
+{"type":"record","kind":"repository","externalId":"github:repo/1004","data":{"id":1004,"name":"legacy-tool","archived":true,"default_branch_protected":false,"admins":[]}}
+{"type":"record","kind":"repository","externalId":"github:repo/1005","data":{"id":1005,"name":"platform-infra","archived":false,"default_branch_protected":true,"admins":["dave"]}}
+{"type":"record","kind":"codeowners","externalId":"github:codeowners/1001","data":{"repo":"payments-api","rules":[{"pattern":"*","owners":["@acme/payments"]}]}}
+{"type":"record","kind":"codeowners","externalId":"github:codeowners/1002","data":{"repo":"checkout-web","rules":[{"pattern":"*","owners":["@acme/checkout"]},{"pattern":"/catalog-info.yaml","owners":["@acme/checkout","@acme/platform"]}]}}
+{"type":"record","kind":"codeowners","externalId":"github:codeowners/1003","data":{"repo":"ledger","rules":[{"pattern":"*","owners":["@acme/platform"]}]}}
+{"type":"record","kind":"codeowners","externalId":"github:codeowners/1005","data":{"repo":"platform-infra","rules":[{"pattern":"*","owners":["@acme/platform"]}]}}
+{"type":"record","kind":"app","externalId":"github:app/renovate","data":{"slug":"renovate","owner":"mend","permissions":{"contents":"write","pull_requests":"write","issues":"write","checks":"read","metadata":"read"}}}
+{"type":"record","kind":"app","externalId":"github:app/snyk-security","data":{"slug":"snyk-security","owner":"snyk","permissions":{"contents":"read","metadata":"read","security_events":"write","administration":"read"}}}
+{"type":"record","kind":"app","externalId":"github:app/sketchy-bot","data":{"slug":"sketchy-bot","owner":"unknown-vendor","permissions":{"contents":"write","metadata":"read"}}}
+{"type":"record","kind":"installation","externalId":"github:installation/4412","data":{"id":4412,"app_slug":"renovate","repository_selection":"selected","repositories":["payments-api","checkout-web"]}}
+{"type":"record","kind":"installation","externalId":"github:installation/4413","data":{"id":4413,"app_slug":"snyk-security","repository_selection":"selected","repositories":["platform-infra"]}}
+{"type":"record","kind":"installation","externalId":"github:installation/4414","data":{"id":4414,"app_slug":"sketchy-bot","repository_selection":"selected","repositories":["checkout-web"]}}

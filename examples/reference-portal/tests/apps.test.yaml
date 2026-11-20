@@ -1,0 +1,14 @@
+name: github-apps
+assert:
+  - name: installations become installedApps through the inbound relation
+    expect: "entity('repository:checkout-web').installedApps == ['renovate', 'sketchy-bot']"
+  - name: an unapproved app fails hygiene
+    expect: "score('github-app-hygiene', 'repository:checkout-web').level == 'none'"
+  - name: approved apps pass hygiene
+    expect: "score('github-app-hygiene', 'repository:platform-infra').level == 'bronze'"
+  - name: an app whose permissions drifted from the approved snapshot fails
+    expect: "score('app-approval', 'githubapp:snyk-security').level == 'none' && score('app-approval', 'githubapp:renovate').level == 'bronze'"
+  - name: unapproved apps are out of scope for the approval scorecard
+    expect: "score('app-approval', 'githubapp:sketchy-bot').level == 'skipped'"
+  - name: options exclude apps already installed
+    expect: "options('install-approved-app', 'repository:checkout-web') == ['snyk-security'] && options('install-approved-app', 'repository:ledger') == ['renovate', 'snyk-security']"
