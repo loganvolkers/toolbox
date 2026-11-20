@@ -3,13 +3,14 @@
 //!
 //! One record per file. Facts only: whether it is the canonical `AGENTS.md` or an alias that
 //! points at one, whether its relative links exist, whether a canonical file says how to test
-//! and where decisions live, and a size. Thresholds live in the manifest.
+//! and where decisions live, whether those check commands appear in a workflow, and a size.
+//! Thresholds live in the manifest.
 
 use regex::Regex;
 use serde_json::{Value, json};
 use std::path::Path;
 
-pub(crate) fn analyse(root: &Path, rel: &str) -> Value {
+pub(crate) fn analyse(root: &Path, rel: &str, workflows: &str) -> Value {
     let text = std::fs::read_to_string(root.join(rel)).unwrap_or_default();
     let name = Path::new(rel)
         .file_name()
@@ -24,10 +25,45 @@ pub(crate) fn analyse(root: &Path, rel: &str) -> Value {
         "commandLines": command_lines(&text),
         "pointsAtAgents": text.contains("AGENTS.md"),
         "mentionsDecisions": text.contains("decisions.md"),
+        "ciMissingCommands": ci_missing(&text, workflows),
         "missingFiles": missing_links(root, rel, &text),
         "hiddenChars": hidden_count(&text),
         "secretHits": secrets(rel, &text),
     })
+}
+
+/// Backtick invocations (`cargo test`, `toolbox validate`, `python scripts/…`) whose tool and
+/// subcommand do not appear in `workflows`. Table rows are the track index, not the check
+/// procedure, so a command that exists only there is not required to run in CI.
+fn ci_missing(text: &str, workflows: &str) -> Vec<String> {
+    let tick = compile(r"`([^`]{1,400})`");
+    let inv = compile(
+        r"(?i)^(?:(?:\./)?(?:target/debug/)?)?(cargo|npm|pnpm|yarn|pytest|python3?|fga|toolbox)\s+([A-Za-z][A-Za-z0-9-]*)",
+    );
+    let low = workflows.to_lowercase();
+    let mut missing = Vec::new();
+    for cap in tick.captures_iter(text) {
+        let start = cap.get(0).map(|m| m.start()).unwrap_or(0);
+        let line_at = text[..start].rfind('\n').map_or(0, |i| i + 1);
+        let line = text[line_at..].lines().next().unwrap_or("");
+        if line.trim_start().starts_with('|') {
+            continue;
+        }
+        let body = cap
+            .get(1)
+            .map(|m| m.as_str().trim().lines().next().unwrap_or("").trim())
+            .unwrap_or("");
+        let Some(hit) = inv.captures(body) else {
+            continue;
+        };
+        let needle = format!("{} {}", hit[1].to_lowercase(), hit[2].to_lowercase());
+        if !low.contains(&needle) {
+            missing.push(needle);
+        }
+    }
+    missing.sort();
+    missing.dedup();
+    missing
 }
 
 fn command_lines(text: &str) -> i64 {
@@ -140,7 +176,7 @@ mod tests {
             "good",
             &[("AGENTS.md", body), ("docs/decisions.md", "# Decisions\n")],
         );
-        let rec = analyse(&tmp.0, "AGENTS.md");
+        let rec = analyse(&tmp.0, "AGENTS.md", "run: cargo test\n");
         assert_eq!(rec["canonical"], true);
         assert_eq!(rec["missingFiles"], json!([]));
         assert!(rec["commandLines"].as_i64().unwrap() >= 1);
@@ -157,7 +193,7 @@ mod tests {
                 "See [missing](docs/nope.md).\nAKIAIOSFODNN7EXAMPLE\n",
             )],
         );
-        let rec = analyse(&tmp.0, "CLAUDE.md");
+        let rec = analyse(&tmp.0, "CLAUDE.md", "");
         assert_eq!(rec["canonical"], false);
         assert_eq!(rec["pointsAtAgents"], false);
         assert_eq!(rec["missingFiles"], json!(["docs/nope.md"]));
@@ -167,16 +203,39 @@ mod tests {
     #[test]
     fn the_files_in_this_repo_are_canonical_or_a_short_pointer() {
         let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
-        let agents = analyse(&root, "AGENTS.md");
+        let workflows = std::fs::read_dir(root.join(".github/workflows"))
+            .into_iter()
+            .flatten()
+            .flatten()
+            .filter_map(|e| std::fs::read_to_string(e.path()).ok())
+            .collect::<Vec<_>>()
+            .join("\n");
+        let agents = analyse(&root, "AGENTS.md", &workflows);
         assert_eq!(agents["canonical"], true);
         assert_eq!(agents["missingFiles"], json!([]));
         assert!(agents["commandLines"].as_i64().unwrap() >= 1);
         assert_eq!(agents["mentionsDecisions"], true);
+        assert_eq!(agents["ciMissingCommands"], json!([]));
         assert!(agents["lines"].as_i64().unwrap() <= 500);
-        let claude = analyse(&root, "CLAUDE.md");
+        let claude = analyse(&root, "CLAUDE.md", &workflows);
         assert_eq!(claude["canonical"], false);
         assert_eq!(claude["pointsAtAgents"], true);
         assert_eq!(claude["missingFiles"], json!([]));
         assert!(claude["lines"].as_i64().unwrap() <= 30);
+    }
+
+    #[test]
+    fn a_check_command_missing_from_workflows_is_named_and_a_cursor_rule_is_an_alias() {
+        let body =
+            "# Agents\n\nRun `cargo test` and `toolbox nope`.\n| Operator | `toolbox dev` |\n";
+        let tmp = scratch(
+            "ci",
+            &[("AGENTS.md", body), (".cursorrules", "See AGENTS.md\n")],
+        );
+        let agents = analyse(&tmp.0, "AGENTS.md", "cargo test\n");
+        assert_eq!(agents["ciMissingCommands"], json!(["toolbox nope"]));
+        let alias = analyse(&tmp.0, ".cursorrules", "");
+        assert_eq!(alias["canonical"], false);
+        assert_eq!(alias["pointsAtAgents"], true);
     }
 }

@@ -1,8 +1,10 @@
 # AGENTS.md Standards: Cataloguing the Instructions Agents Load
 
-*Status: deterministic catalog and scorecard built, 2026-11-20 (D75). Toolbox for Toolbox catalogues
-`AGENTS.md` and the aliases harnesses still read, and scores them with `maintainer-agent-doc`.
-Related: [agent-plugins.md](./agent-plugins.md), [toolbox-for-toolbox.md](./toolbox-for-toolbox.md).*
+*Status: deterministic catalog and scorecard built, 2026-11-20 (D75). Alias globs widened and check
+commands joined to workflows, 2026-11-20 (D81, D82). Toolbox for Toolbox catalogues `AGENTS.md` and
+the aliases harnesses still read, and scores them with `maintainer-agent-doc`. Related:
+[agent-plugins.md](./agent-plugins.md), [plugin-standards.md](./plugin-standards.md),
+[toolbox-for-toolbox.md](./toolbox-for-toolbox.md).*
 
 ---
 
@@ -18,7 +20,7 @@ by one agent and ignored by another. The checks that do not need a model:
 |---|---|---|
 | Is there one source of instructions, and do its links resolve? | The filename, a mention of `AGENTS.md`, relative links | bronze |
 | Does the canonical file say how to test, and is it short enough to load? | Command words, a 500-line ceiling | silver |
-| Does it point at the decision log, and is nothing hostile hiding in it? | A `decisions.md` link, secret shapes, hidden characters | gold |
+| Does it point at the decision log, and do its check commands run in CI? | A `decisions.md` link; backtick invocations whose tool and subcommand appear in a workflow | gold |
 
 The 500-line ceiling is the agents.md v1.1 proposal's guideline ("aim for under 500 lines"), not a
 field the current format requires. The format has no required headings. Frontmatter is optional, so
@@ -36,7 +38,10 @@ of problem as an LLM assessment: useful, and not a gate.
 
 ## 3. The catalog
 
-`agentDocs` globs: `**/AGENTS.md`, `**/CLAUDE.md`, `**/GEMINI.md`. Id `agent-doc:<path>`. The same
+`agentDocs` globs: `**/AGENTS.md`, `**/CLAUDE.md`, `**/GEMINI.md`, `**/.cursorrules`,
+`**/.github/copilot-instructions.md`, `**/.github/instructions/*.instructions.md`,
+`**/.cursor/rules/**/*.md`, `**/.cursor/rules/**/*.mdc`, `**/.claude/rules/**/*.md` (D81). Id
+`agent-doc:<path>`. The same
 file is also a `doc` when the docs glob matches it. The doc scorecard checks links and which SDLC
 layer a document names. This scorecard checks the instruction-file contract.
 
@@ -47,6 +52,7 @@ layer a document names. This scorecard checks the instruction-file contract.
 | `commandLines` | Lines containing `cargo`, `npm`, `pnpm`, `yarn`, `pytest` or `toolbox` |
 | `lines` | Line count |
 | `mentionsDecisions` | The body contains `decisions.md` |
+| `ciMissingCommands` | Backtick invocations (`cargo test`, `toolbox validate`, `python scripts/…`) whose tool and subcommand do not appear in a workflow. Lines that are markdown table rows are the track index, not the check procedure (D82) |
 | `missingFiles` | Relative link targets that are not files |
 | `hiddenChars`, `secretHits` | The same hidden-character and high-precision secret checks as skills, on this file only |
 
@@ -62,6 +68,7 @@ this repository.
 | silver | `has-commands` | A canonical file names a build or test command. An alias does not have to repeat it |
 | silver | `within-budget` | At most 500 lines |
 | gold | `names-the-decision-log` | A canonical file mentions `decisions.md`. An alias does not have to |
+| gold | `checks-run-in-ci` | A canonical file's backtick check commands appear in a workflow. An alias does not have to repeat them |
 | gold | `no-hardcoded-secrets` | No secret shape |
 | gold | `no-hidden-instructions` | No hidden or bidi character |
 

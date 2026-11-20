@@ -3,6 +3,7 @@
 //! it names (sorted, unique). It is the entity
 //! that repo-level scorecards (e.g. examples/repo-portal-starter) score.
 
+use regex::Regex;
 use serde_json::{Value, json};
 use std::path::Path;
 
@@ -82,6 +83,7 @@ pub fn record(root: &Path, paths: &[String]) -> (String, Value) {
     owners.sort();
     owners.dedup();
     let name = name(root);
+    let supply = supply_chain(root, paths, codeowners.as_ref());
     (
         name.clone(),
         json!({
@@ -92,8 +94,117 @@ pub fn record(root: &Path, paths: &[String]) -> (String, Value) {
             "readmeWords": readme_words,
             "license": license,
             "codeowners": codeowners,
+            "dependabotGaps": supply.dependabot_gaps,
+            "codeScanning": supply.code_scanning,
+            "codeScanningPinned": supply.code_scanning_pinned,
+            "securityPolicy": supply.security_policy,
+            "workflowOwners": supply.workflow_owners,
         }),
     )
+}
+
+struct Supply {
+    dependabot_gaps: Vec<String>,
+    code_scanning: bool,
+    code_scanning_pinned: bool,
+    security_policy: bool,
+    workflow_owners: bool,
+}
+
+/// GitHub Advanced Security configuration that lives in the tree. Alert counts need the API and
+/// are not reported here.
+fn supply_chain(root: &Path, paths: &[String], codeowners: Option<&Value>) -> Supply {
+    let ecosystems = dependabot_ecosystems(root, paths);
+    let wanted = ["cargo", "npm", "github-actions"];
+    let dependabot_gaps = wanted
+        .iter()
+        .filter(|e| !ecosystems.iter().any(|g| g == *e))
+        .map(|e| (*e).to_owned())
+        .collect();
+    let workflows: Vec<String> = paths
+        .iter()
+        .filter(|p| {
+            p.starts_with(".github/workflows/") && (p.ends_with(".yml") || p.ends_with(".yaml"))
+        })
+        .filter_map(|p| std::fs::read_to_string(root.join(p)).ok())
+        .collect();
+    let code_scanning = workflows.iter().any(|t| t.contains("codeql-action"));
+    let pinned = Regex::new(r"codeql-action/[\w.-]+@[0-9a-f]{40}").unwrap();
+    let code_scanning_pinned = workflows.iter().any(|t| pinned.is_match(t));
+    let security_policy = ["SECURITY.md", ".github/SECURITY.md", "docs/SECURITY.md"]
+        .iter()
+        .any(|p| paths.iter().any(|f| f == p));
+    let workflow_owners = codeowners
+        .and_then(|c| c["rules"].as_array())
+        .is_some_and(|rules| workflow_owned(rules));
+    Supply {
+        dependabot_gaps,
+        code_scanning,
+        code_scanning_pinned,
+        security_policy,
+        workflow_owners,
+    }
+}
+
+fn dependabot_ecosystems(root: &Path, paths: &[String]) -> Vec<String> {
+    if !paths
+        .iter()
+        .any(|p| p == ".github/dependabot.yml" || p == ".github/dependabot.yaml")
+    {
+        return Vec::new();
+    }
+    let rel = if paths.iter().any(|p| p == ".github/dependabot.yml") {
+        ".github/dependabot.yml"
+    } else {
+        ".github/dependabot.yaml"
+    };
+    let text = std::fs::read_to_string(root.join(rel)).unwrap_or_default();
+    let re = Regex::new(r#"package-ecosystem:\s*["']?([A-Za-z0-9_-]+)"#).unwrap();
+    let mut found: Vec<String> = re
+        .captures_iter(&text)
+        .filter_map(|c| c.get(1).map(|m| m.as_str().to_owned()))
+        .collect();
+    found.sort();
+    found.dedup();
+    found
+}
+
+/// The last CODEOWNERS rule that matches `.github/workflows/ci.yml` names an owner.
+fn workflow_owned(rules: &[Value]) -> bool {
+    let path = ".github/workflows/ci.yml";
+    let mut owned = false;
+    for rule in rules {
+        let Some(pattern) = rule["pattern"].as_str() else {
+            continue;
+        };
+        if codeowners_matches(pattern, path) {
+            owned = rule["owners"].as_array().is_some_and(|o| !o.is_empty());
+        }
+    }
+    owned
+}
+
+/// A subset of GitHub CODEOWNERS patterns: `*`, a directory prefix, or `*` within one segment.
+fn codeowners_matches(pattern: &str, path: &str) -> bool {
+    let pat = pattern.trim_start_matches('/');
+    if pat == "*" {
+        return true;
+    }
+    if let Some(dir) = pat.strip_suffix('/') {
+        return path == dir || path.starts_with(&format!("{dir}/"));
+    }
+    if !pat.contains('*') {
+        return path == pat || path.starts_with(&format!("{pat}/"));
+    }
+    let mut re = String::from("^");
+    for (i, part) in pat.split('*').enumerate() {
+        if i > 0 {
+            re.push_str("[^/]*");
+        }
+        re.push_str(&regex::escape(part));
+    }
+    re.push('$');
+    Regex::new(&re).is_ok_and(|r| r.is_match(path))
 }
 
 #[cfg(test)]
@@ -111,5 +222,35 @@ mod tests {
                 json!({"pattern": "/docs/", "owners": ["@acme/docs", "@alice"], "line": 4}),
             ]
         );
+    }
+
+    #[test]
+    fn a_catch_all_codeowners_covers_workflows_and_dependabot_gaps_are_named() {
+        let root = std::env::temp_dir().join(format!("toolbox-repo-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        std::fs::create_dir_all(root.join(".github/workflows")).unwrap();
+        std::fs::write(root.join("CODEOWNERS"), "* @acme/platform\n").unwrap();
+        std::fs::write(
+            root.join(".github/dependabot.yml"),
+            "updates:\n  - package-ecosystem: cargo\n",
+        )
+        .unwrap();
+        std::fs::write(
+            root.join(".github/workflows/codeql.yml"),
+            "uses: github/codeql-action/init@v3\n",
+        )
+        .unwrap();
+        let paths = vec![
+            "CODEOWNERS".into(),
+            ".github/dependabot.yml".into(),
+            ".github/workflows/codeql.yml".into(),
+        ];
+        let (_, rec) = record(&root, &paths);
+        assert_eq!(rec["workflowOwners"], true);
+        assert_eq!(rec["dependabotGaps"], json!(["npm", "github-actions"]));
+        assert_eq!(rec["codeScanning"], true);
+        assert_eq!(rec["codeScanningPinned"], false);
+        assert_eq!(rec["securityPolicy"], false);
+        let _ = std::fs::remove_dir_all(&root);
     }
 }

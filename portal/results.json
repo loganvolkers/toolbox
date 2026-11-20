@@ -364,6 +364,9 @@
       "doc:docs/design/dashboards.md": {
         "level": "silver"
       },
+      "doc:docs/design/decision-citations.md": {
+        "level": "silver"
+      },
       "doc:docs/design/dependency-standards.md": {
         "level": "silver"
       },
@@ -409,7 +412,13 @@
       "doc:docs/design/package-standards.md": {
         "level": "silver"
       },
+      "doc:docs/design/plugin-standards.md": {
+        "level": "silver"
+      },
       "doc:docs/design/ratchets.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/repo-level.md": {
         "level": "silver"
       },
       "doc:docs/design/repo-portals.md": {
@@ -428,6 +437,9 @@
         "level": "silver"
       },
       "doc:docs/design/source-of-truth.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/supply-chain-standards.md": {
         "level": "silver"
       },
       "doc:docs/design/toolbox-for-toolbox.md": {
@@ -568,6 +580,21 @@
         "level": "silver"
       }
     },
+    "maintainer-plugin": {
+      "plugin:plugins/toolbox-operator": {
+        "level": "gold"
+      }
+    },
+    "maintainer-repo": {
+      "repo:loganvolkers/toolbox": {
+        "failing": {
+          "constituents-at-least-bronze": 3,
+          "constituents-at-least-gold": 9,
+          "constituents-at-least-silver": 7
+        },
+        "level": "none"
+      }
+    },
     "maintainer-schema": {
       "json-schema:schema/assessment.schema.json": {
         "level": "gold"
@@ -618,6 +645,18 @@
           "has-example": 1
         },
         "level": "bronze"
+      }
+    },
+    "maintainer-supply-chain": {
+      "repo:loganvolkers/toolbox": {
+        "failing": {
+          "code-scanning": 1,
+          "code-scanning-pinned": 1,
+          "dependabot": 3,
+          "security-policy": 1,
+          "workflows-have-owners": 1
+        },
+        "level": "none"
       }
     },
     "meta-connector": {
@@ -888,6 +927,9 @@
           "described": 1
         },
         "level": "bronze"
+      },
+      "field:toolbox/AgentDoc.ciMissingCommands": {
+        "level": "gold"
       },
       "field:toolbox/AgentDoc.commandLines": {
         "failing": {
@@ -1392,6 +1434,9 @@
         },
         "level": "bronze"
       },
+      "field:toolbox/Doc.missingDecisions": {
+        "level": "gold"
+      },
       "field:toolbox/Doc.path": {
         "failing": {
           "described": 1
@@ -1742,6 +1787,45 @@
         },
         "level": "bronze"
       },
+      "field:toolbox/Plugin.commandToken": {
+        "level": "gold"
+      },
+      "field:toolbox/Plugin.descriptionChars": {
+        "level": "gold"
+      },
+      "field:toolbox/Plugin.dir": {
+        "level": "gold"
+      },
+      "field:toolbox/Plugin.hasMcp": {
+        "level": "gold"
+      },
+      "field:toolbox/Plugin.headerSecrets": {
+        "level": "gold"
+      },
+      "field:toolbox/Plugin.mcpSchemaOk": {
+        "level": "gold"
+      },
+      "field:toolbox/Plugin.misplacedSkills": {
+        "level": "gold"
+      },
+      "field:toolbox/Plugin.name": {
+        "level": "gold"
+      },
+      "field:toolbox/Plugin.nameOk": {
+        "level": "gold"
+      },
+      "field:toolbox/Plugin.path": {
+        "level": "gold"
+      },
+      "field:toolbox/Plugin.pathEscapes": {
+        "level": "gold"
+      },
+      "field:toolbox/Plugin.schemaOk": {
+        "level": "gold"
+      },
+      "field:toolbox/Plugin.secretHits": {
+        "level": "gold"
+      },
       "field:toolbox/PortalConnector.fixtureRecords": {
         "level": "gold"
       },
@@ -1770,6 +1854,30 @@
         "level": "gold"
       },
       "field:toolbox/PortalConnector.withoutFreshness": {
+        "level": "gold"
+      },
+      "field:toolbox/Repository.codeScanning": {
+        "level": "gold"
+      },
+      "field:toolbox/Repository.codeScanningPinned": {
+        "level": "gold"
+      },
+      "field:toolbox/Repository.dependabotGaps": {
+        "level": "gold"
+      },
+      "field:toolbox/Repository.name": {
+        "level": "gold"
+      },
+      "field:toolbox/Repository.securityPolicy": {
+        "level": "gold"
+      },
+      "field:toolbox/Repository.watch": {
+        "level": "gold"
+      },
+      "field:toolbox/Repository.watchOverride": {
+        "level": "gold"
+      },
+      "field:toolbox/Repository.workflowOwners": {
         "level": "gold"
       },
       "field:toolbox/Rule.check": {
@@ -2317,7 +2425,13 @@
         },
         "level": "bronze"
       },
+      "kind:toolbox/Plugin": {
+        "level": "gold"
+      },
       "kind:toolbox/PortalConnector": {
+        "level": "gold"
+      },
+      "kind:toolbox/Repository": {
         "level": "gold"
       },
       "kind:toolbox/Rule": {
@@ -2416,6 +2530,9 @@
         "level": "gold"
       },
       "rule:toolbox/maintainer-action-deps/pinned-everywhere": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-agent-doc/checks-run-in-ci": {
         "level": "gold"
       },
       "rule:toolbox/maintainer-agent-doc/has-commands": {
@@ -2615,6 +2732,9 @@
       "rule:toolbox/maintainer-dependency/version-bounded": {
         "level": "gold"
       },
+      "rule:toolbox/maintainer-docs/cited-decisions-exist": {
+        "level": "gold"
+      },
       "rule:toolbox/maintainer-docs/cites-sources": {
         "failing": {
           "always-explains": 1,
@@ -2682,6 +2802,36 @@
       "rule:toolbox/maintainer-package/version-bounded": {
         "level": "gold"
       },
+      "rule:toolbox/maintainer-plugin/manifest-valid": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-plugin/mcp-declared": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-plugin/no-hardcoded-secrets": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-plugin/no-secret-headers": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-plugin/paths-stay-inside": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-plugin/portable-components": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-plugin/stdio-command": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-repo/constituents-at-least-bronze": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-repo/constituents-at-least-gold": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-repo/constituents-at-least-silver": {
+        "level": "gold"
+      },
       "rule:toolbox/maintainer-schema/described": {
         "level": "gold"
       },
@@ -2740,6 +2890,21 @@
         "level": "gold"
       },
       "rule:toolbox/maintainer-skill/within-body-budget": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-supply-chain/code-scanning": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-supply-chain/code-scanning-pinned": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-supply-chain/dependabot": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-supply-chain/security-policy": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-supply-chain/workflows-have-owners": {
         "level": "gold"
       },
       "rule:toolbox/meta-connector/freshness-declared": {
@@ -3000,10 +3165,19 @@
       "scorecard:toolbox/maintainer-package": {
         "level": "gold"
       },
+      "scorecard:toolbox/maintainer-plugin": {
+        "level": "gold"
+      },
+      "scorecard:toolbox/maintainer-repo": {
+        "level": "gold"
+      },
       "scorecard:toolbox/maintainer-schema": {
         "level": "gold"
       },
       "scorecard:toolbox/maintainer-skill": {
+        "level": "gold"
+      },
+      "scorecard:toolbox/maintainer-supply-chain": {
         "level": "gold"
       },
       "scorecard:toolbox/meta-connector": {
