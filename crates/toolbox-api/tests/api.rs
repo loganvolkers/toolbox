@@ -29,7 +29,12 @@ async fn start() -> String {
 #[tokio::test]
 async fn ingest_then_read_with_filters() {
     let url = start().await;
-    let c = reqwest::Client::new();
+    let mut h = reqwest::header::HeaderMap::new();
+    h.insert("x-toolbox-user", "dave".parse().unwrap());
+    let c = reqwest::Client::builder()
+        .default_headers(h)
+        .build()
+        .unwrap();
     let (batches, native) = toolbox_store::read_fixtures(&portal()).unwrap();
     let mut last = 0;
     for (connector, batch) in &batches {

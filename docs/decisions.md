@@ -85,6 +85,9 @@ minimal architecture adopted with amendments where it conflicted with them.
 | D57 | **Approvals API, human-only in v1:** approval decisions need an interactive session (proxy or OIDC), not a PAT or MCP token, and aren't MCP tools | ✅ | [design/minimal-ui.md](./design/minimal-ui.md) |
 | D58 | **Action inputs use a form-renderable JSON Schema subset**, enforced by `toolbox validate`, so every action gets a usable generated form; richer inputs need an operator UI bundle | ✅ | [design/minimal-ui.md](./design/minimal-ui.md) §4 |
 
+| D59 | **Toolbox converts the OpenFGA DSL to model JSON itself** (`toolbox-authz::fga_dsl`, checked against `fga model transform`), so the image carries only the `openfga` server binary, not the `fga` CLI (sprawl budget, D45). Conditions and modular models are rejected until needed | ✅ | [v1-spec.md](./v1-spec.md) §9 |
+| D60 | **Facet mapping:** `public` → `can_view`; `operator` → portal `admin`; any other facet name → `can_view_details`. Kinds outside the authorization model are public to signed-in users, with owner-only facets limited to portal admins | ✅ refines D15 | [v1-spec.md](./v1-spec.md) §9 |
+
 ## Open questions (consolidated)
 
 | # | Question | Recommendation | Where |

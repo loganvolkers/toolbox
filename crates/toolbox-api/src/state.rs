@@ -32,6 +32,9 @@ pub struct Metrics {
 }
 
 pub struct AppState {
+    pub authn: toolbox_authz::authn::Authenticator,
+    /// `None` = no authorization (in-memory development without OpenFGA): everything is visible.
+    pub authz: Option<Arc<dyn toolbox_authz::Authorizer>>,
     pub manifest: Arc<Manifest>,
     pub manifest_hash: String,
     pub store: Arc<dyn Store>,
@@ -104,6 +107,7 @@ impl AppState {
         &self,
         pg: Option<&PgStore>,
         previous_tuples: &mut Option<BTreeSet<(String, String, String)>>,
+        synced: &mut BTreeSet<(String, String, String)>,
     ) {
         let started = Instant::now();
         let inputs = match self.store.snapshot().await {
@@ -168,6 +172,29 @@ impl AppState {
                 Err(e) => eprintln!("toolbox: publish failed: {e}"),
             }
         }
+        // In-memory OpenFGA holds tuples itself: apply the delta before publishing the snapshot,
+        // so authorization never lags the data it guards. (With Postgres, OpenFGA reads the view.)
+        if let Some(authz) = &self.authz {
+            let now: BTreeSet<(String, String, String)> = derived
+                .tuples
+                .iter()
+                .map(|t| {
+                    let s = |k: &str| {
+                        t.get(k)
+                            .and_then(Value::as_str)
+                            .unwrap_or_default()
+                            .to_owned()
+                    };
+                    (s("user"), s("relation"), s("object"))
+                })
+                .collect();
+            let added: Vec<_> = now.difference(synced).cloned().collect();
+            let removed: Vec<_> = synced.difference(&now).cloned().collect();
+            match authz.sync_tuples(&added, &removed).await {
+                Ok(()) => *synced = now,
+                Err(e) => eprintln!("toolbox: authorization tuple sync failed: {e}"),
+            }
+        }
         let published = Arc::new(Published {
             snapshot_id,
             input_version,
@@ -183,6 +210,7 @@ impl AppState {
         // Only the advisory-lock holder publishes snapshots and tuple deltas (v1-spec §8).
         let mut leader = None;
         let mut previous_tuples = None;
+        let mut synced = BTreeSet::new();
         loop {
             if let (Some(pg), None) = (&self.pg, &leader) {
                 leader = pg.try_lead().await.ok().flatten();
@@ -212,7 +240,8 @@ impl AppState {
                 } else {
                     None
                 };
-                self.recompute_and_publish(pg, &mut previous_tuples).await;
+                self.recompute_and_publish(pg, &mut previous_tuples, &mut synced)
+                    .await;
                 continue;
             }
             tokio::select! {

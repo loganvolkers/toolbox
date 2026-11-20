@@ -10,7 +10,6 @@ use axum::routing::{get, post, put};
 use axum::{Json, Router};
 use serde::Deserialize;
 use serde_json::{Map, Value, json};
-use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
 use std::time::Duration;
@@ -31,6 +30,9 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/v1/entities/{id}/native/{field}", put(put_native))
         .route("/v1/ingest", post(ingest))
         .route("/v1/ops/derived", get(ops_derived))
+        .route("/v1/me", get(me))
+        .route("/v1/actions", get(crate::actions::list))
+        .route("/v1/actions/{name}/previews", post(crate::actions::preview))
         .with_state(state)
 }
 
@@ -89,21 +91,6 @@ async fn snapshot_for(state: &AppState, min: Option<&str>) -> Result<Arc<Publish
             )
         }),
     }
-}
-
-fn entity_body(p: &Published, id: &str, fields: Option<&[&str]>) -> Option<Value> {
-    let e = p.derived.entities.get(id)?;
-    let pick = |m: &Map<String, Value>| -> Map<String, Value> {
-        match fields {
-            Some(fs) => m
-                .iter()
-                .filter(|(k, _)| fs.contains(&k.as_str()))
-                .map(|(k, v)| (k.clone(), v.clone()))
-                .collect(),
-            None => m.clone(),
-        }
-    };
-    Some(json!({"id": id, "kind": e.kind, "fields": pick(&e.fields), "provenance": e.provenance}))
 }
 
 async fn readyz(State(s): S) -> Response {
@@ -170,7 +157,11 @@ struct ListQuery {
     min_snapshot: Option<String>,
 }
 
-async fn list_entities(State(s): S, Query(q): Query<ListQuery>) -> Response {
+async fn list_entities(State(s): S, headers: HeaderMap, Query(q): Query<ListQuery>) -> Response {
+    let caller = match s.caller(&headers).await {
+        Ok(c) => c,
+        Err(r) => return r,
+    };
     let p = match snapshot_for(&s, q.min_snapshot.as_deref()).await {
         Ok(p) => p,
         Err(r) => return r,
@@ -192,48 +183,70 @@ async fn list_entities(State(s): S, Query(q): Query<ListQuery>) -> Response {
     let limit = q.limit.unwrap_or(100).clamp(1, 1000);
     let policy = to_cel(&Value::Object(s.manifest.policies.clone()));
     let needle = q.q.as_deref().map(str::to_lowercase);
-    let mut items = Vec::new();
+    // Candidates in id order from the cursor; visibility is checked in batches; filters see only
+    // what the caller may see, so a filter can't probe hidden facets.
+    let lower = q
+        .cursor
+        .as_ref()
+        .map_or(std::ops::Bound::Unbounded, std::ops::Bound::Excluded);
+    let candidates: Vec<&String> = p
+        .derived
+        .entities
+        .range::<String, _>((lower, std::ops::Bound::Unbounded))
+        .filter(|(_, e)| {
+            q.kind
+                .as_deref()
+                .is_none_or(|k| k.eq_ignore_ascii_case(&e.kind))
+        })
+        .filter(|(id, e)| {
+            needle.as_ref().is_none_or(|n| {
+                let title = e
+                    .fields
+                    .get("title")
+                    .and_then(Value::as_str)
+                    .unwrap_or_default()
+                    .to_lowercase();
+                id.to_lowercase().contains(n) || title.contains(n)
+            })
+        })
+        .map(|(id, _)| id)
+        .collect();
+    let truthy = to_cel(&Value::Bool(true));
+    let mut items: Vec<Value> = Vec::new();
     let mut next = None;
-    for (id, e) in p.derived.entities.range::<String, _>((
-        q.cursor
-            .as_ref()
-            .map_or(std::ops::Bound::Unbounded, std::ops::Bound::Excluded),
-        std::ops::Bound::Unbounded,
-    )) {
-        if q.kind
-            .as_deref()
-            .is_some_and(|k| !k.eq_ignore_ascii_case(&e.kind))
-        {
-            continue;
-        }
-        if let Some(n) = &needle {
-            let title = e
-                .fields
-                .get("title")
-                .and_then(Value::as_str)
-                .unwrap_or_default()
-                .to_lowercase();
-            if !id.to_lowercase().contains(n) && !title.contains(n) {
+    'outer: for chunk in candidates.chunks(200) {
+        let ids: Vec<&str> = chunk.iter().map(|s| s.as_str()).collect();
+        let vis = match s.visibility(&caller, &ids).await {
+            Ok(v) => v,
+            Err(r) => return r,
+        };
+        for (id, v) in ids.iter().zip(vis) {
+            if !v.view {
                 continue;
             }
-        }
-        if let Some(f) = &filter {
-            let entity = to_cel(&p.derived.entity_json(id).unwrap());
-            match with_vars(&[("entity", &entity), ("policy", &policy)], |ctx| {
-                f.eval_in(ctx)
-            }) {
-                Ok(cel_bool) if cel_bool == toolbox_expr::to_cel(&Value::Bool(true)) => {}
-                Ok(_) => continue,
-                Err(_) => continue, // a filter that errors on an entity doesn't match it
+            if let Some(f) = &filter {
+                let shaped = s.shape_entity(&p, &caller, id, v, None).unwrap();
+                let mut visible = shaped["fields"].clone();
+                visible["id"] = json!(id);
+                let entity = to_cel(&visible);
+                match with_vars(&[("entity", &entity), ("policy", &policy)], |ctx| {
+                    f.eval_in(ctx)
+                }) {
+                    Ok(b) if b == truthy => {}
+                    _ => continue,
+                }
             }
+            if items.len() == limit {
+                next = items
+                    .last()
+                    .and_then(|v| v["id"].as_str().map(str::to_owned));
+                break 'outer;
+            }
+            items.push(
+                s.shape_entity(&p, &caller, id, v, fields.as_deref())
+                    .unwrap(),
+            );
         }
-        if items.len() == limit {
-            next = items
-                .last()
-                .and_then(|v: &Value| v["id"].as_str().map(str::to_owned));
-            break;
-        }
-        items.push(entity_body(&p, id, fields.as_deref()).unwrap());
     }
     with_snapshot(
         &p,
@@ -241,12 +254,28 @@ async fn list_entities(State(s): S, Query(q): Query<ListQuery>) -> Response {
     )
 }
 
-async fn get_entity(State(s): S, Path(id): Path<String>, Query(q): Query<SnapQuery>) -> Response {
+async fn get_entity(
+    State(s): S,
+    headers: HeaderMap,
+    Path(id): Path<String>,
+    Query(q): Query<SnapQuery>,
+) -> Response {
+    let caller = match s.caller(&headers).await {
+        Ok(c) => c,
+        Err(r) => return r,
+    };
     let p = match snapshot_for(&s, q.min_snapshot.as_deref()).await {
         Ok(p) => p,
         Err(r) => return r,
     };
-    match entity_body(&p, &id, None) {
+    let vis = match s.visibility(&caller, &[id.as_str()]).await {
+        Ok(v) => v[0],
+        Err(r) => return r,
+    };
+    match s
+        .shape_entity(&p, &caller, &id, vis, None)
+        .filter(|_| vis.view)
+    {
         Some(mut body) => {
             body["inbound"] = json!(p.derived.entities[&id].inbound);
             body["snapshot"] = json!(p.snapshot_id);
@@ -262,26 +291,30 @@ async fn get_entity(State(s): S, Path(id): Path<String>, Query(q): Query<SnapQue
 
 async fn entity_scorecards(
     State(s): S,
+    headers: HeaderMap,
     Path(id): Path<String>,
     Query(q): Query<SnapQuery>,
 ) -> Response {
+    let caller = match s.caller(&headers).await {
+        Ok(c) => c,
+        Err(r) => return r,
+    };
     let p = match snapshot_for(&s, q.min_snapshot.as_deref()).await {
         Ok(p) => p,
         Err(r) => return r,
     };
-    if !p.derived.entities.contains_key(&id) {
+    let vis = match s.visibility(&caller, &[id.as_str()]).await {
+        Ok(v) => v[0],
+        Err(r) => return r,
+    };
+    if !p.derived.entities.contains_key(&id) || !vis.view {
         return problem(
             StatusCode::NOT_FOUND,
             "not-found",
             format!("no entity {id}"),
         );
     }
-    let cards: HashMap<&String, &toolbox_derive::Score> = p
-        .derived
-        .scores
-        .iter()
-        .filter_map(|(card, by)| by.get(&id).map(|sc| (card, sc)))
-        .collect();
+    let cards = s.shape_scores(&p, &caller, &id, vis);
     with_snapshot(
         &p,
         json!({"entity": id, "snapshot": p.snapshot_id, "scorecards": cards}),
@@ -335,14 +368,26 @@ async fn put_native(
             ),
         );
     }
+    let caller = match s.caller(&headers).await {
+        Ok(c) => c,
+        Err(r) => return r,
+    };
+    let may = caller.admin || matches!(s.allowed(&caller, "can_edit", &id).await, Ok(true));
+    if !may {
+        return problem(
+            StatusCode::FORBIDDEN,
+            "forbidden",
+            format!(
+                "{} may not edit native fields of {id} (needs `can_edit` or portal admin)",
+                caller.user
+            ),
+        );
+    }
     let revision = headers
         .get(header::IF_MATCH)
         .and_then(|v| v.to_str().ok())
         .and_then(|v| v.trim_matches('"').parse::<u64>().ok());
-    let author = headers
-        .get("x-toolbox-user")
-        .and_then(|v| v.to_str().ok())
-        .map(|u| format!("user:{u}"));
+    let author = Some(caller.user.clone());
     let write = NativeValue {
         entity: id,
         field,
@@ -474,7 +519,18 @@ async fn ingest(State(s): S, headers: HeaderMap, body: Bytes) -> Response {
 }
 
 /// The reference-format outputs of the current snapshot (operator export for differential checks).
-async fn ops_derived(State(s): S, Query(q): Query<SnapQuery>) -> Response {
+async fn ops_derived(State(s): S, headers: HeaderMap, Query(q): Query<SnapQuery>) -> Response {
+    match s.caller(&headers).await {
+        Ok(c) if c.admin => {}
+        Ok(c) => {
+            return problem(
+                StatusCode::FORBIDDEN,
+                "forbidden",
+                format!("{} is not a portal admin", c.user),
+            );
+        }
+        Err(r) => return r,
+    }
     let p = match snapshot_for(&s, q.min_snapshot.as_deref()).await {
         Ok(p) => p,
         Err(r) => return r,
@@ -486,4 +542,14 @@ async fn ops_derived(State(s): S, Query(q): Query<SnapQuery>) -> Response {
         .map(|(k, v)| (k.to_owned(), Value::String(v)))
         .collect();
     with_snapshot(&p, json!({"snapshot": p.snapshot_id, "files": files}))
+}
+
+async fn me(State(s): S, headers: HeaderMap) -> Response {
+    match s.caller(&headers).await {
+        Ok(c) => Json(
+            json!({"user": c.user, "subject": c.subject, "method": c.method, "admin": c.admin}),
+        )
+        .into_response(),
+        Err(r) => r,
+    }
 }

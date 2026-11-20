@@ -72,6 +72,11 @@ enum Command {
         #[arg(long, default_value = "http://127.0.0.1:8080")]
         url: String,
     },
+    /// Manage personal access tokens.
+    Token {
+        #[command(subcommand)]
+        command: TokenCommand,
+    },
     /// Recompute derived state from fixtures and print a summary, or write the reference-format
     /// files (expected/*.json, authz/tuples.expected.json) to --out.
     Derive {
@@ -79,6 +84,19 @@ enum Command {
         path: PathBuf,
         #[arg(long)]
         out: Option<PathBuf>,
+    },
+}
+
+#[derive(Subcommand)]
+enum TokenCommand {
+    /// Create a token for a user (the subject: a login or an email) and print it once.
+    Create {
+        #[arg(long)]
+        user: String,
+        #[arg(long)]
+        label: Option<String>,
+        #[arg(long, env = "DATABASE_URL")]
+        database_url: String,
     },
 }
 
@@ -109,6 +127,14 @@ fn main() -> ExitCode {
             fixtures,
         } => server::serve(&path, &listen, database_url, fixtures),
         Command::Push { path, url } => server::push(&path, &url),
+        Command::Token {
+            command:
+                TokenCommand::Create {
+                    user,
+                    label,
+                    database_url,
+                },
+        } => server::create_token(&user, label.as_deref(), &database_url),
     }
 }
 
@@ -137,7 +163,7 @@ fn test(path: &std::path::Path, format: Format) -> ExitCode {
     let failed = results.iter().filter(|r| !r.passed).count();
     if format == Format::Json {
         let v = serde_json::json!({"results": results, "failed": failed, "diagnostics": derived.diagnostics,
-                                   "authz_tests_pending": authz_tests});
+                                   "authz_tests": authz_tests});
         println!("{}", serde_json::to_string_pretty(&v).unwrap());
     } else {
         for d in &derived.diagnostics {
@@ -156,12 +182,40 @@ fn test(path: &std::path::Path, format: Format) -> ExitCode {
                 r.name
             );
         }
-        for t in &authz_tests {
-            println!("SKIP  {t}: authorization tests run through the Authorizer (M3)");
-        }
         println!("{} passed, {failed} failed", results.len() - failed);
     }
-    if failed == 0 {
+    let mut authz_failed = 0;
+    if !authz_tests.is_empty() {
+        let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
+        for t in &authz_tests {
+            match rt.block_on(toolbox_authz::fgatest::run_file(&local.root.join(t))) {
+                Ok(r) => {
+                    for f in &r.failures {
+                        println!(
+                            "FAIL  {t}: {}: {} (expected {}, got {})",
+                            f.test, f.assertion, f.expected, f.got
+                        );
+                    }
+                    println!(
+                        "{}  {t}: tests {}/{}, checks {}/{}, list_objects {}/{}",
+                        if r.ok() { "PASS" } else { "FAIL" },
+                        r.tests_passed,
+                        r.tests,
+                        r.checks_passed,
+                        r.checks,
+                        r.list_objects_passed,
+                        r.list_objects
+                    );
+                    authz_failed += usize::from(!r.ok());
+                }
+                Err(e) => {
+                    println!("FAIL  {t}: {e}");
+                    authz_failed += 1;
+                }
+            }
+        }
+    }
+    if failed == 0 && authz_failed == 0 {
         ExitCode::SUCCESS
     } else {
         ExitCode::from(1)

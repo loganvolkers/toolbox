@@ -3,7 +3,57 @@
 use std::path::Path;
 use std::process::ExitCode;
 use std::sync::Arc;
+use toolbox_authz::authn::{AuthConfig, Authenticator, Mode, PatLookup};
 use toolbox_store::{SharedMem, Store};
+
+struct PgPats(toolbox_store::PgStore);
+
+#[async_trait::async_trait]
+impl PatLookup for PgPats {
+    async fn subject_for(&self, hash: &str) -> Option<String> {
+        self.0.token_subject(hash).await
+    }
+}
+
+/// Start OpenFGA for the portal's model: on Postgres with the tuple view, else in memory.
+async fn start_authz(
+    root: &Path,
+    manifest: &toolbox_model::Manifest,
+    pg: Option<&toolbox_store::PgStore>,
+    database_url: Option<&str>,
+) -> Result<Option<Arc<dyn toolbox_authz::Authorizer>>, String> {
+    let Some(authz) = &manifest.authz else {
+        return Ok(None);
+    };
+    let dsl = std::fs::read_to_string(root.join(&authz.model))
+        .map_err(|e| format!("{}: {e}", authz.model))?;
+    let model = toolbox_authz::fga_dsl::to_json(&dsl)?;
+    let datastore = match database_url {
+        Some(url) => {
+            let uri = std::env::var("TOOLBOX_OPENFGA_DATASTORE_URI").unwrap_or_else(|_| {
+                if url.contains("sslmode=") {
+                    url.to_owned()
+                } else if url.contains('?') {
+                    format!("{url}&sslmode=disable")
+                } else {
+                    format!("{url}?sslmode=disable")
+                }
+            });
+            toolbox_authz::Datastore::Postgres(uri)
+        }
+        None => toolbox_authz::Datastore::Memory,
+    };
+    let fga = toolbox_authz::OpenFga::start(
+        datastore,
+        &format!("toolbox-{}", manifest.portal.name),
+        model,
+    )
+    .await?;
+    if let Some(pg) = pg {
+        toolbox_authz::openfga::install_tuple_view(&pg.pool, &fga.store).await?;
+    }
+    Ok(Some(Arc::new(fga)))
+}
 
 fn config_from_env() -> toolbox_api::Config {
     let mut c = toolbox_api::Config::default();
@@ -40,6 +90,7 @@ pub fn serve(path: &Path, listen: &str, database_url: Option<String>, fixtures: 
     let manifest =
         crate::portal::manifest_from(&src.document, &src.manifest_file).expect("validated above");
     let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
+    let database_url_for_fga = database_url.clone();
     rt.block_on(async move {
         let (store, pg): (Arc<dyn Store>, _) = match database_url {
             Some(url) => match toolbox_store::PgStore::connect(&url).await {
@@ -64,12 +115,37 @@ pub fn serve(path: &Path, listen: &str, database_url: Option<String>, fixtures: 
                 (Arc::new(SharedMem(std::sync::Mutex::new(mem))), None)
             }
         };
-        let mode = if pg.is_some() {
-            "postgres"
-        } else {
-            "in-memory"
+        let mode = if pg.is_some() { "postgres" } else { "in-memory" };
+        let config = config_from_env();
+        let auth_mode = match Mode::parse(&config.auth_mode) {
+            Ok(m) => m,
+            Err(e) => {
+                eprintln!("error: {e}");
+                return ExitCode::from(2);
+            }
         };
-        let state = toolbox_api::app_state(manifest, &src.document, store, pg, config_from_env());
+        let authn = Authenticator::new(
+            AuthConfig::from_env(auth_mode.clone()),
+            pg.clone().map(|p| Box::new(PgPats(p)) as Box<dyn PatLookup>),
+        );
+        let openfga_available = std::process::Command::new(toolbox_authz::openfga::binary()).arg("version").output().is_ok();
+        let authz = if openfga_available {
+            match start_authz(&src.root, &manifest, pg.as_ref(), database_url_for_fga.as_deref()).await {
+                Ok(a) => a,
+                Err(e) => {
+                    eprintln!("error: authorization: {e}");
+                    return ExitCode::from(2);
+                }
+            }
+        } else if auth_mode == Mode::Dev {
+            eprintln!("toolbox: warning: no `openfga` binary (TOOLBOX_OPENFGA_BIN); running WITHOUT authorization (dev mode only)");
+            None
+        } else {
+            eprintln!("error: authorization needs the `openfga` binary (TOOLBOX_OPENFGA_BIN); refusing to start in {} mode without it", config.auth_mode);
+            return ExitCode::from(2);
+        };
+        let authz_label = if authz.is_some() { "OpenFGA" } else { "none" };
+        let state = toolbox_api::app_state_with(manifest, &src.document, store, pg, config, authn, authz);
         let listener = match tokio::net::TcpListener::bind(listen).await {
             Ok(l) => l,
             Err(e) => {
@@ -78,7 +154,7 @@ pub fn serve(path: &Path, listen: &str, database_url: Option<String>, fixtures: 
             }
         };
         eprintln!(
-            "toolbox: serving {} on http://{listen} ({mode} store, manifest {})",
+            "toolbox: serving {} on http://{listen} ({mode} store, {auth_mode:?} auth, authorization: {authz_label}, manifest {})",
             src.manifest_file, state.manifest_hash
         );
         tokio::select! {
@@ -205,6 +281,40 @@ pub fn push(path: &Path, url: &str) -> ExitCode {
             }
             _ => {
                 eprintln!("snapshot {last} was not published within 10 s");
+                ExitCode::from(1)
+            }
+        }
+    })
+}
+
+pub fn create_token(user: &str, label: Option<&str>, database_url: &str) -> ExitCode {
+    let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
+    rt.block_on(async move {
+        let pg = match toolbox_store::PgStore::connect(database_url).await {
+            Ok(p) => p,
+            Err(e) => {
+                eprintln!("error: Postgres: {e}");
+                return ExitCode::from(2);
+            }
+        };
+        let token = match toolbox_authz::authn::new_pat() {
+            Ok(t) => t,
+            Err(e) => {
+                eprintln!("error: {e}");
+                return ExitCode::from(2);
+            }
+        };
+        match pg
+            .create_token(&toolbox_authz::authn::pat_hash(&token), user, label)
+            .await
+        {
+            Ok(()) => {
+                println!("{token}");
+                eprintln!("personal access token for {user} (shown once; only its hash is stored)");
+                ExitCode::SUCCESS
+            }
+            Err(e) => {
+                eprintln!("error: {e}");
                 ExitCode::from(1)
             }
         }

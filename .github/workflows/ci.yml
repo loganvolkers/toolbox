@@ -22,8 +22,16 @@ jobs:
       - run: pip install -r examples/reference-portal/tools/requirements.txt
       - name: M0 parity with tools/validate.py
         run: cargo build --locked && python scripts/validate-parity.py
+      - uses: actions/setup-go@v5
+        with: {go-version: "1.26"}
+      - name: Install OpenFGA (the co-process Toolbox supervises, D38)
+        run: go install github.com/openfga/openfga/cmd/openfga@v1.22.1 && echo "TOOLBOX_OPENFGA_BIN=$(go env GOPATH)/bin/openfga" >> "$GITHUB_ENV"
+      - name: Tests that need OpenFGA (authz, .fga.yaml through the Authorizer)
+        run: cargo test --locked -p toolbox-authz -p toolbox-api
       - name: M2 acceptance (Postgres, ingest API, read-your-writes, restart)
         run: PGDIR=$RUNNER_TEMP/pg scripts/m2-acceptance.sh
+      - name: M3 acceptance (Postgres + OpenFGA over the tuple view, facets, A10, PATs, revocation)
+        run: PGDIR=$RUNNER_TEMP/pg3 scripts/m3-acceptance.sh
       - name: toolbox validate, test and derive on the reference portal
         run: |
           target/debug/toolbox validate examples/reference-portal

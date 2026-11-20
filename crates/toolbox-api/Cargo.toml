@@ -16,6 +16,7 @@ toolbox-derive.workspace = true
 toolbox-expr.workspace = true
 toolbox-model.workspace = true
 toolbox-store.workspace = true
+toolbox-authz.workspace = true
 
 [dev-dependencies]
 reqwest.workspace = true

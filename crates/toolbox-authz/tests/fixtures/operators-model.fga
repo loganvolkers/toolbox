@@ -1,0 +1,13 @@
+model
+  schema 1.1
+
+type user
+
+type team
+  relations
+    define member: [user, user:*, team#member]
+    define banned: [user]
+    define lead: [user]
+    define active: member but not banned
+    define senior: (member and lead) or lead
+    define viewer: member or lead

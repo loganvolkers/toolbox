@@ -1,6 +1,8 @@
 //! The Toolbox server (docs/v1-spec.md §4): snapshot loop + REST API. Later milestones add
 //! authorization (M3), MCP, the UI host and connectors (M4).
 
+pub mod access;
+pub mod actions;
 pub mod routes;
 pub mod state;
 
@@ -10,7 +12,7 @@ use std::sync::Arc;
 use toolbox_model::Manifest;
 use toolbox_store::{PgStore, Store};
 
-/// Build the shared state for a manifest and a store.
+/// Build the shared state for a manifest and a store, with dev authentication and no Authorizer.
 pub fn app_state(
     manifest: Manifest,
     manifest_doc: &serde_json::Value,
@@ -18,8 +20,27 @@ pub fn app_state(
     pg: Option<PgStore>,
     config: Config,
 ) -> Arc<AppState> {
+    let authn = toolbox_authz::authn::Authenticator::new(
+        toolbox_authz::authn::AuthConfig::from_env(toolbox_authz::authn::Mode::Dev),
+        None,
+    );
+    app_state_with(manifest, manifest_doc, store, pg, config, authn, None)
+}
+
+/// Build the shared state with an explicit authenticator and Authorizer.
+pub fn app_state_with(
+    manifest: Manifest,
+    manifest_doc: &serde_json::Value,
+    store: Arc<dyn Store>,
+    pg: Option<PgStore>,
+    config: Config,
+    authn: toolbox_authz::authn::Authenticator,
+    authz: Option<Arc<dyn toolbox_authz::Authorizer>>,
+) -> Arc<AppState> {
     let (current, _) = tokio::sync::watch::channel(None);
     Arc::new(AppState {
+        authn,
+        authz,
         manifest: Arc::new(manifest),
         manifest_hash: state::manifest_hash(manifest_doc),
         store,

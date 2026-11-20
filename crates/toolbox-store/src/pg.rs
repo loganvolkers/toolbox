@@ -8,8 +8,10 @@ use sqlx::{Postgres, Row, Transaction};
 
 /// Migrations, applied in order at start-up under an advisory lock. Each is idempotent
 /// (expand-only, `IF NOT EXISTS`), so re-running is safe.
-pub const MIGRATIONS: &[(&str, &str)] =
-    &[("0001_inputs", include_str!("../migrations/0001_inputs.sql"))];
+pub const MIGRATIONS: &[(&str, &str)] = &[
+    ("0001_inputs", include_str!("../migrations/0001_inputs.sql")),
+    ("0002_tokens", include_str!("../migrations/0002_tokens.sql")),
+];
 
 #[derive(Clone)]
 pub struct PgStore {
@@ -298,6 +300,36 @@ impl PgStore {
         .map_err(err)?;
         tx.commit().await.map_err(err)?;
         Ok(())
+    }
+
+    /// Store a personal access token hash for `subject`.
+    pub async fn create_token(
+        &self,
+        hash: &str,
+        subject: &str,
+        label: Option<&str>,
+    ) -> Result<(), StoreError> {
+        sqlx::query("INSERT INTO toolbox.tokens (token_hash, subject, label) VALUES ($1, $2, $3)")
+            .bind(hash)
+            .bind(subject)
+            .bind(label)
+            .execute(&self.pool)
+            .await
+            .map_err(err)?;
+        Ok(())
+    }
+
+    /// The subject of a live (unrevoked, unexpired) token hash.
+    pub async fn token_subject(&self, hash: &str) -> Option<String> {
+        sqlx::query_scalar(
+            "SELECT subject FROM toolbox.tokens WHERE token_hash = $1 AND revoked_at IS NULL
+             AND (expires_at IS NULL OR expires_at > now())",
+        )
+        .bind(hash)
+        .fetch_optional(&self.pool)
+        .await
+        .ok()
+        .flatten()
     }
 
     pub async fn tuple_count(&self) -> Result<i64, StoreError> {

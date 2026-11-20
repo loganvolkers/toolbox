@@ -17,6 +17,8 @@ toolbox-model.workspace = true
 toolbox-derive.workspace = true
 toolbox-store.workspace = true
 toolbox-api.workspace = true
+toolbox-authz.workspace = true
+async-trait.workspace = true
 tokio.workspace = true
 reqwest.workspace = true
 

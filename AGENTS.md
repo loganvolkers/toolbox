@@ -23,7 +23,7 @@ MCP, CLI, data model, properties) and test against
 **Building:** `cargo build` (toolchain pinned in `rust-toolchain.toml`), `cargo test`, `cargo clippy
 --all-targets -- -D warnings`, then `target/debug/toolbox validate examples/reference-portal`.
 `python scripts/validate-parity.py` checks `toolbox validate` against `tools/validate.py`.
-`.github/workflows/ci.yml` runs all of this. **M0–M2 are done** (`toolbox test`, `plan --local --base <manifest>`, `derive`, `serve [--database-url]`, `push`; `scripts/m2-acceptance.sh` needs Postgres 16); M3 (authorization) is next.
+`.github/workflows/ci.yml` runs all of this. **M0–M3 are done** (`toolbox test`, `plan --local --base <manifest>`, `derive`, `serve [--database-url]`, `push`, `token create`; `scripts/m2-acceptance.sh` and `scripts/m3-acceptance.sh` need Postgres 16, M3 also `TOOLBOX_OPENFGA_BIN`); M4 (MCP, CLI reads, UI, connectors) is next.
 
 ## Repository layout
 
