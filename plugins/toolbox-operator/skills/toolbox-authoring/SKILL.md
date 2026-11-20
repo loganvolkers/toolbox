@@ -16,7 +16,8 @@ Work test-first. Pass the portal repo root as `workspace` to every `toolbox-dev`
    - `.fga.yaml` for permission changes
    - for actions: preview snapshots, a postcondition test, and the failure cases (stale preview,
      executor success with the effect missing)
-3. **Implement** in `toolbox.yaml` (or the files the builder merges). Every new definition needs an
+3. **Implement** in `toolbox.config.ts` with `@toolbox/manifest` if the repo has one, otherwise in
+   `toolbox.yaml` and the files it `include`s. Every new definition needs an
    `owner`. Follow the reference portal's patterns.
 4. **Check:** run `validate`, then `test`. Use `explain_error` on any diagnostic; errors include a
    suggested fix.

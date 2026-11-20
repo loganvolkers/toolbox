@@ -54,3 +54,7 @@ Shared vocabulary across the design documents. Keep entries short and link to th
 | **Reference model / oracle** | `tools/reference.py`: a small executable model of the pipeline that the Rust implementation must match | [v1-spec.md](./v1-spec.md) §6 |
 | **Ownership status** | `verified`, `inferred`, `unverified` or `none`, from the CODEOWNERS authority rule | [v1-spec.md](./v1-spec.md) §6.2 |
 | **Action context lookup** | Catalog entities an action declares (`{kind, where}`) and passes to its executor as `related` | [decisions.md](./decisions.md) D52 |
+| **Canonical manifest** | The single key-sorted `manifest.json` that `toolbox build` produces from any source; what the server loads and `plan` diffs | [decisions.md](./decisions.md) D53 |
+| **`include`** | Source-only list of YAML files merged into the canonical manifest | [decisions.md](./decisions.md) D54 |
+| **View endpoint** | A composite, facet-shaped REST response serving one UI page in one request | [design/minimal-ui.md](./design/minimal-ui.md) §6 |
+| **Form-renderable subset** | The JSON Schema keywords allowed in action inputs so a form can always be generated | [design/minimal-ui.md](./design/minimal-ui.md) §4 |

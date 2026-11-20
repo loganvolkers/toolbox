@@ -79,19 +79,19 @@ Every design choice must serve these. Check new work against them.
 ## Parallel work: independent tracks
 
 These Phase 0 spikes and v1 milestones ([docs/v1-spec.md](./docs/v1-spec.md) §3) can be taken by separate agents with few interactions. Coordinate through `docs/decisions.md`. Design
-docs carry a status banner at the top when a later decision changed them; the banner wins.
+docs put their current v1 design first and keep deferred material in a labelled appendix; where a status banner remains, it wins.
 
 | Track | Scope | Primary docs |
 |---|---|---|
 | Derived state | Full-recompute pipeline from a real manifest behind `DerivedState`; `plan` as two recomputes + diff; extend `experiments/derived-state-scale` | incremental-computation, technology-critique §7–8 |
 | Authorization | OpenFGA inside one container: co-process vs c-archive (Q11); tuple view; conditions and wildcards; `.fga.yaml` corpus through `Authorizer` | authorization |
-| Durable runtime | DBOS Rust SDK vs minimal runtime behind `Durable` (Q4); crash between steps; cross-instance recovery after scale-in (Q13) | incremental-computation §4 |
+| Durable runtime | `Durable` on the DBOS-compatible schema (`experiments/durable-schema`); DBOS Rust SDK spike (Q4); crash between steps; cross-instance recovery after scale-in (Q13) | v1-spec §8.1, incremental-computation |
 | Deployment | One image on Cloud Run + Cloud SQL with a UI bundle and an in-image executor; instance-based billing; rollback by image | plan §6.2 |
 | Operator SDLC | `toolbox dev` / `test` / `plan` / preview deploys; dev-loop benchmark with SLOs | sdlc, developer-velocity |
 | Connectors & actions runtime | Control channel (stdio / long-poll) with scoped refresh and completion; action run lifecycle with preview tokens and postcondition verification; in-image and GitHub Actions executors | connector-control, action-runs |
 | Expressions | CEL conformance (Q10); fixture-based output validation against JSON Schemas | extensibility |
-| Config | Manifest JSON Schema + TypeScript typed builder; manifest determinism | extensibility, plan §2 |
-| Frontend | UI extension contract; default React kit (`@toolbox/ui`, Storybook 10); one non-React bundle through the same contract | frontend |
+| Config | Canonical manifest, `include`, `toolbox validate`; the `@toolbox/manifest` builder from the prototype in `experiments/typescript-builder` | typescript-builder, v1-spec §5 |
+| Frontend | Minimal UI pages and view endpoints; UI extension contract; default React kit (`@toolbox/ui`, Storybook 10); one non-React bundle through the same contract | minimal-ui, frontend |
 | Verification | Differential tests (Rust vs SQL, OpenFGA vs SQL); property catalogue | verification |
 | Backstage parity audit | D47: Phase 1 features vs Backstage 1.57 + plugins | technology-critique §4 |
 | GitHub Apps example | Verify Q8 against the GitHub API | examples/approved-github-apps |

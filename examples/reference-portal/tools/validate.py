@@ -69,6 +69,26 @@ for a in manifest.get("actions", []):
         if r["connector"] not in connectors or r["kind"] not in connectors[r["connector"]]:
             errors.append(f"action {a['name']}: refresh names an undeclared connector/record")
 
+# Action inputs must stay within the form-renderable subset (D58, docs/design/minimal-ui.md §4).
+SCALAR = {"string", "integer", "number", "boolean"}
+KEYS = {"type", "title", "description", "default", "examples", "enum", "enumFrom", "minLength", "maxLength",
+        "pattern", "format", "minimum", "maximum", "items", "minItems", "maxItems", "uniqueItems",
+        "properties", "required", "x-toolbox-widget"}
+def form_ok(schema, where, depth=0):
+    bad = set(schema) - KEYS
+    if bad: errors.append(f"{where}: keywords outside the form subset: {sorted(bad)}")
+    t = schema.get("type")
+    if t == "object":
+        if depth > 1: errors.append(f"{where}: objects may be nested one level only")
+        for name, sub in schema.get("properties", {}).items(): form_ok(sub, f"{where}.{name}", depth + 1)
+    elif t == "array":
+        if schema.get("items", {}).get("type") not in SCALAR: errors.append(f"{where}: arrays must hold scalars")
+    elif t not in SCALAR:
+        errors.append(f"{where}: unsupported type {t!r}")
+for a in manifest.get("actions", []):
+    if a["inputs"].get("type") != "object": errors.append(f"action {a['name']}: inputs must be an object")
+    form_ok(a["inputs"], f"action {a['name']} inputs")
+
 for e in errors: print("ERROR", e)
 print(f"validated toolbox.yaml + {n} messages: {len(errors)} error(s)")
 sys.exit(1 if errors else 0)

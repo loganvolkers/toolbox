@@ -32,6 +32,8 @@ exposed identically over API, MCP, CLI and UI.
   - [design/notifications.md](docs/design/notifications.md): ownership-routed notifications, GitHub App, Actions for service repos
   - [design/identity-resolution.md](docs/design/identity-resolution.md): matching one service across many tools
   - [design/action-entities.md](docs/design/action-entities.md): action-created entities, TTL, day-2 actions
+  - [design/typescript-builder.md](docs/design/typescript-builder.md): the typed TS builder that prints the canonical manifest
+  - [design/minimal-ui.md](docs/design/minimal-ui.md): the built-in pages, view endpoints and generated forms
   - [design/action-runs.md](docs/design/action-runs.md): preview, confirm and verified completion for self-service actions
   - [design/connector-control.md](docs/design/connector-control.md): commands to connectors (scoped refresh, resync) and read-your-writes
   - [design/context-lake.md](docs/design/context-lake.md): context lakes, and how the catalog, knowledge and security graphs overlap

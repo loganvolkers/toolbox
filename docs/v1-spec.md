@@ -56,8 +56,8 @@ earlier ones. Tracks in [AGENTS.md](../AGENTS.md) map onto these.
 | **M1** | Derived state | `MemStore`, NDJSON fixture loader, the §6 pipeline behind `DerivedState`, `toolbox test`, `toolbox plan --local` | **Byte-identical** `expected/*.json` and `authz/tuples.expected.json` vs `tools/reference.py`; all `tests/*.test.yaml` pass; a plan between two manifests lists changed fields, levels, tuples and options; 100k-entity synthetic run under the §10.4 budget |
 | **M2** | Postgres and API | `PgStore` (§8), ingest endpoint, snapshot loop, REST reads (§7.2), snapshot ids | Same outputs as M1 when fixtures arrive through `POST /v1/ingest`; `min_snapshot` read-your-writes works; restart loses nothing |
 | **M3** | Authorization | Authn (IAP JWT, OIDC, PAT), OpenFGA co-process over the tuple view, facet shaping, `toolbox test` runs `.fga.yaml` | Reference `authz/model.fga.yaml` passes through `Authorizer`; A3/A4/A10 behave as specified; a membership removal is enforced within 60 s |
-| **M4** | Agents and connectors | MCP (§7.3), CLI (§7.7), minimal UI, connector runtime with control channel (§7.4), GitHub, git-files and SCIM connectors | Acceptance A1–A5 and A11; connector conformance kit passes for all three connectors |
-| **M5** | Actions | Executor protocol (§7.5), run lifecycle (§6.6), previews and tokens, verification, UI extension contract (§7.6), the `github-apps` executor | Acceptance A6–A10 with simulated executor and connector; failure-injection properties P9–P12 hold; the sandbox-org integration test passes |
+| **M4** | Agents and connectors | MCP (§7.3), CLI (§7.7), the read pages of the [minimal UI](./design/minimal-ui.md), connector runtime with control channel (§7.4), GitHub, git-files and SCIM connectors | Acceptance A1–A5 and A11; connector conformance kit passes for all three connectors |
+| **M5** | Actions | Executor protocol (§7.5), run lifecycle (§6.6), previews and tokens, approvals, verification, durable tables (§8.1), UI extension contract (§7.6), the minimal UI's action, run and approval pages, the `github-apps` executor | Acceptance A6–A10 with simulated executor and connector; failure-injection properties P9–P12 hold; the sandbox-org integration test passes |
 | **M6** | Ship | Image build, Cloud Run deployment, `plan --remote`, `verify`, the SDLC workflow, metrics | A12; the reference workflow runs end to end on a sandbox project; `v0.1` tagged |
 
 ## 4. Architecture and crates
@@ -107,17 +107,29 @@ example copy is canonical.
 | `authz` | OpenFGA model and tests; tuple derivations (static or CEL per kind) |
 | `actions` | Inputs (JSON Schema + `enumFrom`), permission, approval, preconditions, context lookups, executor, `expect` (postcondition, refresh, within) or `unverified: true`, annotations, MCP promotion, UI bundle |
 | `ui.bundles` | Operator UI bundles and their mount slots |
+| `include` | Source-only: other YAML files merged into the canonical manifest (D54) |
 | `mcp.instructions` | Server instructions shown to agents |
 | `tests` | Test files (§11.2) |
+
+**Sources and the canonical manifest (D53–D55).** A portal's source is one YAML file, several YAML files
+joined by a top-level `include` list (globs; sources only), or a TypeScript program using the
+[builder](./design/typescript-builder.md). `toolbox build` turns any of them into **one canonical,
+key-sorted `manifest.json`**, which is what the server loads, `plan` diffs and the image hash covers.
+Neither the builder nor `build` resolves `${env:…}` or `${secret:…}`; the server does at start-up.
+
+**Action inputs (D58)** use the form-renderable JSON Schema subset in
+[minimal-ui.md](./design/minimal-ui.md) §4, so every action has a generated form.
 
 **Validation (`toolbox validate`)** runs the JSON Schema, then cross-reference checks: map rules name
 declared connectors and record kinds; precedence lists name sources some rule provides (or `native`);
 scorecards and actions name declared kinds and levels; refreshes name declared connectors; UI bundles
-exist; every CEL expression compiles with the variables available at its site (§6.2).
+exist; action inputs stay within the form-renderable subset; every CEL expression compiles with the
+variables available at its site (§6.2).
 
-**The TypeScript builder** (`@toolbox/manifest`) is a typed library whose only output is this JSON. It
-must round-trip: building the reference manifest from TS and printing it equals `toolbox.yaml`
-semantically.
+**The TypeScript builder** (`@toolbox/manifest`, [design](./design/typescript-builder.md)) is a typed
+library whose only output is this JSON. CI keeps it honest: the TS reference portal must equal
+`toolbox.yaml` ([prototype](../experiments/typescript-builder/README.md): identical), its output must
+pass the schema, and its negative type tests must fail to compile.
 
 ## 6. Derived-state pipeline (semantics)
 
@@ -264,7 +276,10 @@ pub struct Derived { pub snapshot: SnapshotId, pub entities: Entities, pub score
 | `GET /v1/actions/{name}/options/{input}?entity=&q=` | Options with labels and disabled reasons |
 | `POST /v1/actions/{name}/previews` | Preview → effects, warnings, blockers, `confirm_token` |
 | `POST /v1/actions/{name}/runs` | Start a run with `confirm_token` |
-| `GET /v1/runs/{id}` · `GET /v1/runs/{id}/events` (SSE) · `POST /v1/runs/{id}/cancel` | Run status and events |
+| `GET /v1/runs/{id}` · `GET /v1/runs/{id}/events` (SSE) · `POST /v1/runs/{id}/cancel` · `GET /v1/runs?mine=true` | Run status, events, the caller's runs |
+| `GET /v1/approvals?mine=true` · `POST /v1/approvals/{id}/decision` | Approvals for the caller; decisions need a human session (D57) |
+| `GET /v1/views/home` · `/v1/views/entity/{id}` · `/v1/views/scorecard/{name}` · `/v1/views/ops` | Composite, facet-shaped page views for the UI and operator bundles (D56) |
+| `GET /v1/events` (SSE) | Snapshot published, command completed and run transition events visible to the caller |
 | `POST /v1/ingest` | Connector ingest (connector token) |
 | `GET /v1/connectors/{name}/commands?wait=` | Long-poll command stream (connector token) |
 | `POST /v1/plans` | Remote plan (CI OIDC token) |
@@ -364,9 +379,27 @@ Migrations are expand/contract only. Tables (schema `toolbox`):
 | `commands` | `command_id` | Command, scope, priority, deadline, status, requester, result snapshot |
 | `snapshots` | `snapshot_id` | Input version, manifest hash, published at, summary counts, diagnostics |
 | `derived_tuples` | `(object, relation, subject)` | Current tuples, written as deltas by the leader |
-| `workflows`, `workflow_steps`, `workflow_events` | ids | Durable state (Q4 decides the exact schema) |
+| `toolbox_durable.*` | — | Durable workflow state (§8.1) |
 | `runs` | `run_id` | Action, entity, inputs, requester, state, confirm token hash, executor run id, timeline |
 | `audit` | `id` | Every authorization decision that denied, every write, command and run transition |
+
+### 8.1 Durable workflow tables
+
+[`experiments/durable-schema/schema.sql`](../experiments/durable-schema/schema.sql) is the v1 schema:
+a column subset of DBOS's `workflow_status`, `operation_outputs` and `notifications` (same names), plus
+a Toolbox `executors` heartbeat table. Semantics, each shown by the experiment's test:
+
+| Operation | Implementation |
+|---|---|
+| `start(workflow, input, key)` | Insert `workflow_status` (`PENDING`, `deduplication_id = key`); a duplicate key returns the existing workflow |
+| `ctx.step(n, name, f)` | If `operation_outputs(workflow, n)` exists, return it; else run `f`, then insert the output (`ON CONFLICT DO NOTHING`) |
+| `ctx.wait_for(topic, deadline)` / `signal` | `notifications` rows consumed with `FOR UPDATE SKIP LOCKED`; `LISTEN/NOTIFY` wakes waiters; deadline via `workflow_deadline_epoch_ms` |
+| `recover()` | Every 15 s, claim `PENDING` workflows whose `executor_id` heartbeat is older than 60 s; increment `recovery_attempts`; replay from the last stored step |
+| Completion | `status = SUCCESS | ERROR | CANCELLED`, `output` / `error` JSON |
+
+Adopting the DBOS SDK later (Q4) means migrating these tables to DBOS's full schema, not redesigning.
+
+### 8.2 OpenFGA tables
 
 OpenFGA uses its own schema with its Postgres datastore; its `tuple` table is replaced by a view over
 `toolbox.derived_tuples` (the critique's §7.2 experiment). OpenFGA's write API is never used.
@@ -386,6 +419,8 @@ instance can run workflows; `Durable::recover` reclaims those of dead instances.
 - **Revocation:** a SCIM membership removal is ingested, recomputed and published within 60 s
   (P7).
 - **Agents:** an agent acts as a user (OAuth or PAT); agent ceilings stay open (Q7).
+- **Approvals are human-only in v1 (D57):** approval decisions require an interactive session (proxy
+  or OIDC), not a PAT or MCP token, and aren't exposed as MCP tools.
 
 ## 10. Deployment, configuration and operations
 
@@ -468,7 +503,7 @@ plus every milestone exit in §3.
 | Q | Default until decided |
 |---|---|
 | Q1 licence | No licence field anywhere; don't publish packages |
-| Q4 durable runtime | Implement `Durable` on a minimal Postgres schema; keep the DBOS SDK spike separate |
+| Q4 durable runtime | Implement `Durable` on the §8.1 schema (DBOS-compatible names); keep the DBOS SDK spike separate |
 | Q7 agent ceilings | Agents act as users only |
 | Q8 GitHub API details | Path confirmed (§7.5); token types verified in the sandbox spike before M5 |
 | Q11 OpenFGA packaging | Co-process |

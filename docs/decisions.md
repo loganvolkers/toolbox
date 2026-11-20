@@ -78,6 +78,13 @@ minimal architecture adopted with amendments where it conflicted with them.
 | D51 | **The action runtime is part of v1** (milestone M5: preview/confirm/verify runs, in-image, HTTP, GitHub Actions and webhook executors, the UI extension contract), moved forward from Phase 3 so the reference action ships with the first release. Phase 3 keeps the extra executors, automations and golden paths | ✅ amends plan §8 | [v1-spec.md](./v1-spec.md) §3 |
 | D52 | **Action `context` lookups:** an action may declare catalog lookups (`{kind, where}`) resolved at the preview snapshot and passed to the executor as `related` (e.g. the app's installation for `install-approved-app`) | ✅ extends D49 | [v1-spec.md](./v1-spec.md) §5 |
 
+| D53 | **One canonical manifest.** Whatever the source (one YAML file, YAML files joined by `include`, or a TS program), `toolbox build` emits one key-sorted `manifest.json`; the server loads only that, `plan` diffs it and the image hash covers it | ✅ | [design/typescript-builder.md](./design/typescript-builder.md) |
+| D54 | **YAML sources may be split** with a top-level `include` list (source-only; never in the canonical manifest), so files such as security's approved-apps policy can have their own CODEOWNERS | ✅ | [v1-spec.md](./v1-spec.md) §5 |
+| D55 | **Neither the builder nor `build` resolves environment variables or secrets.** `${env:…}` and `${secret:…}` stay placeholders until server start-up, so one manifest serves every environment and a CI plan is valid for production | ✅ | [design/typescript-builder.md](./design/typescript-builder.md) |
+| D56 | **Composite REST view endpoints** (`/v1/views/home`, `entity/{id}`, `scorecard/{name}`, `ops`) and an SSE event stream serve the minimal UI and operator bundles in one request per page, instead of GraphQL. The browser UI's TypeScript is the one front-end language, counted outside D45's server-side budget | ✅ | [design/minimal-ui.md](./design/minimal-ui.md) |
+| D57 | **Approvals API, human-only in v1:** approval decisions need an interactive session (proxy or OIDC), not a PAT or MCP token, and aren't MCP tools | ✅ | [design/minimal-ui.md](./design/minimal-ui.md) |
+| D58 | **Action inputs use a form-renderable JSON Schema subset**, enforced by `toolbox validate`, so every action gets a usable generated form; richer inputs need an operator UI bundle | ✅ | [design/minimal-ui.md](./design/minimal-ui.md) §4 |
+
 ## Open questions (consolidated)
 
 | # | Question | Recommendation | Where |
@@ -85,7 +92,7 @@ minimal architecture adopted with amendments where it conflicted with them.
 | Q1 | Licence | Apache-2.0 | [plan.md](./plan.md) §10 |
 | Q2 | TCP governance: separate neutral spec repo now, or later? | **Resolved by D42: not now** | [plan.md](./plan.md) §10 |
 | Q3 | First-release connectors: GitHub only, or GitHub + GitLab? | GitHub first | [plan.md](./plan.md) §10 |
-| Q4 | Durable runtime behind the `Durable` contract (D39): adopt the DBOS Rust SDK, or own a schema-compatible minimal runtime? | Decide after the Phase 0 spike | [design/incremental-computation.md](./design/incremental-computation.md) |
+| Q4 | Durable runtime behind the `Durable` contract (D39): adopt the DBOS Rust SDK, or own a schema-compatible minimal runtime? | v1 implements the DBOS-compatible minimal schema ([experiments/durable-schema](../experiments/durable-schema/README.md)); decide on the SDK after the Phase 0 spike | [design/incremental-computation.md](./design/incremental-computation.md) |
 | Q5 | Temporary/just-in-time grants as approved, time-bound state? | Open | [authorization.md](./authorization.md) §8 |
 | Q6 | Redaction markers on or off by default | On (helps agents ask for access) | [authorization.md](./authorization.md) §8 |
 | Q7 | Agent ceilings in the authorization model, or a simpler allow-list? | Open | [authorization.md](./authorization.md) §8 |

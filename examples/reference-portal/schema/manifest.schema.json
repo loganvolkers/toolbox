@@ -97,6 +97,13 @@
       "items": {
         "type": "string"
       }
+    },
+    "include": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Source-only (D54): globs of further YAML files merged by `toolbox build`. Never present in the canonical manifest."
     }
   },
   "$defs": {
