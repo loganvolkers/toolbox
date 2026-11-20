@@ -41,6 +41,20 @@ pub fn router(state: Arc<AppState>) -> Router {
             post(crate::connectors::refresh_entity),
         )
         .route("/v1/commands/{id}", get(crate::connectors::command_status))
+        .route("/v1/entities/{id}/graph", get(crate::reads::graph))
+        .route("/v1/entities/{id}/explain", get(crate::reads::explain))
+        .route(
+            "/v1/actions/{name}/options/{input}",
+            get(crate::reads::options),
+        )
+        .route("/v1/views/home", get(crate::reads::view_home))
+        .route("/v1/views/entity/{id}", get(crate::reads::view_entity))
+        .route(
+            "/v1/views/scorecard/{name}",
+            get(crate::reads::view_scorecard),
+        )
+        .route("/v1/views/ops", get(crate::reads::view_ops))
+        .route("/mcp", post(crate::mcp::handle))
         .route("/v1/actions", get(crate::actions::list))
         .route("/v1/actions/{name}/previews", post(crate::actions::preview))
         .with_state(state)

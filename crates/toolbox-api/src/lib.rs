@@ -4,6 +4,8 @@
 pub mod access;
 pub mod actions;
 pub mod connectors;
+pub mod mcp;
+pub mod reads;
 pub mod routes;
 pub mod state;
 
