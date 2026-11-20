@@ -620,6 +620,62 @@
         "level": "bronze"
       }
     },
+    "meta-assessment": {
+      "assessment:assessment-quality/assessment:crate-design/crate:toolbox-expr": {
+        "failing": {
+          "cites-everything": 1,
+          "cites-for-findings": 1
+        },
+        "level": "bronze"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-crate/has-tests": {
+        "failing": {
+          "cites-everything": 2,
+          "cites-for-findings": 2
+        },
+        "level": "bronze"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-ci-reliability": {
+        "failing": {
+          "cites-everything": 2,
+          "cites-for-findings": 1
+        },
+        "level": "bronze"
+      },
+      "assessment:crate-design/crate:toolbox-expr": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-ci-reliability/fail-rate-under-20": {
+        "failing": {
+          "cites-everything": 2,
+          "cites-for-findings": 1
+        },
+        "level": "bronze"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-crate/has-tests": {
+        "failing": {
+          "cites-everything": 3,
+          "cites-for-findings": 2
+        },
+        "level": "bronze"
+      },
+      "assessment:rule-quality/rule:toolbox/meta-rule/readable": {
+        "failing": {
+          "cites-everything": 2,
+          "cites-for-findings": 1
+        },
+        "level": "bronze"
+      },
+      "assessment:rule-quality/rule:toolbox/user-mcp/contract-tested": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/maintainer-ci-reliability": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      }
+    },
     "meta-connector": {
       "connector:acme/git-files": {
         "failing": {
@@ -958,10 +1014,22 @@
       "field:toolbox/Assessment.failing": {
         "level": "gold"
       },
+      "field:toolbox/Assessment.hash": {
+        "level": "gold"
+      },
       "field:toolbox/Assessment.path": {
         "level": "gold"
       },
       "field:toolbox/Assessment.reasons": {
+        "level": "gold"
+      },
+      "field:toolbox/Assessment.reviewFailing": {
+        "level": "gold"
+      },
+      "field:toolbox/Assessment.reviewState": {
+        "level": "gold"
+      },
+      "field:toolbox/Assessment.reviewUnsure": {
         "level": "gold"
       },
       "field:toolbox/Assessment.rubric": {
@@ -971,6 +1039,12 @@
         "level": "gold"
       },
       "field:toolbox/Assessment.summary": {
+        "level": "gold"
+      },
+      "field:toolbox/Assessment.uncited": {
+        "level": "gold"
+      },
+      "field:toolbox/Assessment.unsuggested": {
         "level": "gold"
       },
       "field:toolbox/Assessment.unsure": {
@@ -1772,6 +1846,36 @@
       "field:toolbox/PortalConnector.withoutFreshness": {
         "level": "gold"
       },
+      "field:toolbox/Rubric.alwaysPass": {
+        "level": "gold"
+      },
+      "field:toolbox/Rubric.assessments": {
+        "level": "gold"
+      },
+      "field:toolbox/Rubric.criteria": {
+        "level": "gold"
+      },
+      "field:toolbox/Rubric.described": {
+        "level": "gold"
+      },
+      "field:toolbox/Rubric.hash": {
+        "level": "gold"
+      },
+      "field:toolbox/Rubric.name": {
+        "level": "gold"
+      },
+      "field:toolbox/Rubric.portal": {
+        "level": "gold"
+      },
+      "field:toolbox/Rubric.rubricKind": {
+        "level": "gold"
+      },
+      "field:toolbox/Rubric.subject": {
+        "level": "gold"
+      },
+      "field:toolbox/Rubric.unguided": {
+        "level": "gold"
+      },
       "field:toolbox/Rule.check": {
         "failing": {
           "described": 1,
@@ -2320,6 +2424,9 @@
       "kind:toolbox/PortalConnector": {
         "level": "gold"
       },
+      "kind:toolbox/Rubric": {
+        "level": "gold"
+      },
       "kind:toolbox/Rule": {
         "failing": {
           "fields-described": 11
@@ -2342,6 +2449,32 @@
       "kind:toolbox/Workflow": {
         "failing": {
           "fields-described": 15
+        },
+        "level": "silver"
+      }
+    },
+    "meta-rubric": {
+      "rubric:toolbox/assessment-quality": {
+        "failing": {
+          "discriminates": 1
+        },
+        "level": "silver"
+      },
+      "rubric:toolbox/crate-design": {
+        "failing": {
+          "discriminates": 1
+        },
+        "level": "silver"
+      },
+      "rubric:toolbox/rule-quality": {
+        "failing": {
+          "discriminates": 1
+        },
+        "level": "silver"
+      },
+      "rubric:toolbox/scorecard-quality": {
+        "failing": {
+          "discriminates": 1
         },
         "level": "silver"
       }
@@ -2742,6 +2875,18 @@
       "rule:toolbox/maintainer-skill/within-body-budget": {
         "level": "gold"
       },
+      "rule:toolbox/meta-assessment/assessor-named": {
+        "level": "gold"
+      },
+      "rule:toolbox/meta-assessment/cites-everything": {
+        "level": "gold"
+      },
+      "rule:toolbox/meta-assessment/cites-for-findings": {
+        "level": "gold"
+      },
+      "rule:toolbox/meta-assessment/suggests-fixes": {
+        "level": "gold"
+      },
       "rule:toolbox/meta-connector/freshness-declared": {
         "level": "gold"
       },
@@ -2773,6 +2918,18 @@
         "level": "gold"
       },
       "rule:toolbox/meta-kind/tested": {
+        "level": "gold"
+      },
+      "rule:toolbox/meta-rubric/described": {
+        "level": "gold"
+      },
+      "rule:toolbox/meta-rubric/discriminates": {
+        "level": "gold"
+      },
+      "rule:toolbox/meta-rubric/guided": {
+        "level": "gold"
+      },
+      "rule:toolbox/meta-rubric/in-use": {
         "level": "gold"
       },
       "rule:toolbox/meta-rule/always-explains": {
@@ -2839,6 +2996,15 @@
           "tested": 1
         },
         "level": "none"
+      },
+      "rule:toolbox/review-assessment/assessed": {
+        "level": "gold"
+      },
+      "rule:toolbox/review-assessment/no-doubts": {
+        "level": "gold"
+      },
+      "rule:toolbox/review-assessment/passes-review": {
+        "level": "gold"
       },
       "rule:toolbox/review-crate/assessed": {
         "level": "gold"
@@ -3006,6 +3172,9 @@
       "scorecard:toolbox/maintainer-skill": {
         "level": "gold"
       },
+      "scorecard:toolbox/meta-assessment": {
+        "level": "gold"
+      },
       "scorecard:toolbox/meta-connector": {
         "level": "gold"
       },
@@ -3013,6 +3182,9 @@
         "level": "gold"
       },
       "scorecard:toolbox/meta-kind": {
+        "level": "gold"
+      },
+      "scorecard:toolbox/meta-rubric": {
         "level": "gold"
       },
       "scorecard:toolbox/meta-rule": {
@@ -3026,6 +3198,9 @@
           "every-rule-tested": 3
         },
         "level": "silver"
+      },
+      "scorecard:toolbox/review-assessment": {
+        "level": "gold"
       },
       "scorecard:toolbox/review-crate": {
         "level": "gold"
@@ -3236,10 +3411,7 @@
         "level": "gold"
       },
       "mcp-tool:assessment_brief": {
-        "failing": {
-          "documented": 3
-        },
-        "level": "bronze"
+        "level": "gold"
       },
       "mcp-tool:explain": {
         "level": "gold"

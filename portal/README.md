@@ -19,6 +19,9 @@ no Postgres, no OpenFGA, no network.
 | `maintainer-action-deps` | 1. Maintainer | ActionDependency | Each third-party action is SHA-pinned in every workflow that uses it |
 | `meta-rule` | all (our standards) | Rule | Fix text; tested; decided and both outcomes on fixtures; evidence; no nested loops; readable. New rules must reach bronze |
 | `meta-scorecard` | all (our standards) | Scorecard | Tested; no empty level; fixtures reach two levels; every rule tested. New scorecards must reach bronze |
+| `meta-kind`, `meta-field`, `meta-connector` (`PortalConnector`) | all (our model) | Kind, Field, PortalConnector | In fixtures and tested, described, fields described; populated, described, has a shape; records mapped, fixtures, freshness, refreshable (D79) |
+| `meta-assessment`, `meta-rubric` | all (our judgement) | Assessment, Rubric | Suggestions and a named assessor, then cited findings, then cited reasons; rubrics described, used, guided, discriminating (D80) |
+| `review-rule`, `review-scorecard`, `review-crate`, `review-assessment` | advisory | Rule, Scorecard, Crate, Assessment | Coding agents' assessments against the rubrics in `toolbox.yaml`, stored in `assessments/`: fresh, no failing criterion, no doubts. Never gate (D79, D80) |
 | `maintainer-skill` | 1. Maintainer | Skill | Spec-valid frontmatter; description says when, in third person; then a short procedure with an example and a body budget; then limits, eval cases, and no hidden text or hardcoded secrets. New skills must reach bronze |
 | `maintainer-connector` | 1. Maintainer | Connector | Described, config documented, speaks stdio or remote; then named kinds, snapshot and not-found (push-only exempt), a unit test; then CI runs it and no hardcoded secrets. New connectors must reach bronze |
 | `maintainer-dependency` | 1. Maintainer | Dependency | Bounded registry requirement; then one version in the lockfile; then a shared dependency is declared in the workspace. New dependencies must reach bronze |
@@ -37,6 +40,8 @@ toolbox report portal --skip runner,github-actions --baseline portal/results.jso
 toolbox report portal --skip runner,github-actions -o html --out report.html            # one page to publish
 scripts/self-portal.sh serve                        # live portal on :8090 (API, MCP, UI)
 toolbox test portal                                 # the standards' own tests, over the curated fixtures
+toolbox assess brief rule:toolbox/user-mcp/contract-tested --portal portal --skip runner,github-actions   # brief your agent
+toolbox assess check portal --skip runner,github-actions                       # validate assessments/: fresh, stale, missing
 ```
 
 `toolbox` here is `target/debug/toolbox` (connectors are found next to it). The ratchet needs

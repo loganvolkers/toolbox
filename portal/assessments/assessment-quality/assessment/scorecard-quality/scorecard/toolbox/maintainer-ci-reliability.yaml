@@ -1,0 +1,28 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:scorecard-quality/scorecard:toolbox/maintainer-ci-reliability
+rubric: assessment-quality
+subjectHash: "3537863360ac"
+assessor: {kind: agent, name: claude-code}
+at: "2026-11-20"
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The rules it names exist in portal/toolbox.yaml (main-not-stuck-red, fail-rate-under-20/10/5,
+      every-job-has-timeout, few-reruns, cancels-superseded-runs, fast-feedback), and the concern is
+      the one github-actions-standards.md states.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The continue-on-error gap it reports is real: no rule in portal/toolbox.yaml reads it, and the
+      workflow parse (crates/toolbox-connector-workspace/src/workflows.rs) doesn't extract it either.
+  - criterion: reproducible
+    verdict: unsure
+    reason: Self-review by the session that wrote the assessment (assessor claude-code in both files).
+    suggestion: Have a different agent or person review it and replace this file.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Adding the suggested continue-on-error rule would close the gap no-obvious-gap failed on; the
+      actionable verdict itself cites no source, which meta-assessment reports separately.
+summary: Accurate; the only weakness is an uncited pass, which the deterministic card already catches.

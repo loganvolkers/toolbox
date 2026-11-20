@@ -219,7 +219,50 @@ fn connector_record(portal: &str, c: &toolbox_model::manifest::Connector, local:
     })
 }
 
-/// `kind`, `field` and `connector` records for a loaded portal; `expects` is the text of its test
+/// The portal's assessment files (`assessments/**`), parsed; unreadable files are skipped
+/// (`toolbox assess check` reports them).
+fn assessments(local: &Local) -> Vec<Value> {
+    let dir = local.root.join("assessments");
+    toolbox_connect::files::walk(&dir)
+        .iter()
+        .filter(|r| r.ends_with(".yaml") || r.ends_with(".yml") || r.ends_with(".json"))
+        .filter_map(|r| std::fs::read_to_string(dir.join(r)).ok())
+        .filter_map(|t| serde_norway::from_str::<Value>(&t).ok())
+        .collect()
+}
+
+/// A rubric with how it has been used: assessments made with it and, once there are three or more,
+/// the criteria every one of them passed (a question that never discriminates).
+fn rubric_record(portal: &str, r: &toolbox_model::manifest::Rubric, docs: &[Value]) -> Value {
+    let used: Vec<&Value> = docs
+        .iter()
+        .filter(|d| d["rubric"] == r.name.as_str())
+        .collect();
+    let verdicts_for = |c: &str| -> Vec<&Value> {
+        used.iter()
+            .flat_map(|d| d["verdicts"].as_array().into_iter().flatten())
+            .filter(|v| v["criterion"] == c)
+            .collect()
+    };
+    let always_pass: Vec<&String> = if used.len() >= 3 {
+        r.criteria
+            .iter()
+            .map(|c| &c.name)
+            .filter(|c| verdicts_for(c).iter().all(|v| v["verdict"] == "pass"))
+            .collect()
+    } else {
+        vec![]
+    };
+    json!({
+        "portal": portal, "name": r.name, "kind": r.kind, "subject": r.subject(),
+        "described": r.description.is_some(),
+        "criteria": r.criteria.iter().map(|c| &c.name).collect::<Vec<_>>(),
+        "unguided": r.criteria.iter().filter(|c| c.guidance.is_none()).map(|c| &c.name).collect::<Vec<_>>(),
+        "assessments": used.len(), "alwaysPass": always_pass, "hash": hash(r),
+    })
+}
+
+/// `kind`, `field`, `rubric` and `connector` records for a loaded portal; `expects` is the text of its test
 /// expectations (to tell which kinds tests reach).
 pub fn records(local: &Local, expects: &str) -> Vec<(String, String, Value)> {
     let m = &local.manifest;
@@ -243,6 +286,14 @@ pub fn records(local: &Local, expects: &str) -> Vec<(String, String, Value)> {
                 field_record(portal, &k.name, name, f, &ctx),
             ));
         }
+    }
+    let docs = assessments(local);
+    for r in &m.rubrics {
+        out.push((
+            "rubric".into(),
+            format!("rubric:{portal}/{}", r.name),
+            rubric_record(portal, r, &docs),
+        ));
     }
     for c in &m.connectors {
         out.push((

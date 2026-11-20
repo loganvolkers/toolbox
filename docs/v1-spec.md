@@ -312,6 +312,7 @@ Errors use RFC 9457 problem details with `code`, and for authorization failures 
 | `owner_of` | `id` | Owner, ownership status, evidence (claim, CODEOWNERS) |
 | `scorecard_status` | `id`, `scorecard?` | Levels, rule outcomes, fix text and evidence for failing rules (facet-shaped) |
 | `scorecard_report` | `scorecard?`, `rule?`, `outcome?`, `level?` | One scorecard across visible entities: level counts and failing rules with evidence; without `scorecard`, every scorecard (D66) |
+| `assessment_brief` | `id`, `rubric?` | What a coding agent judges the entity on: the portal's rubric for its kind, the entity's facts, its subject hash, the assessment file path and a template. Read-only; the agent writes the assessment (D79) |
 | `explain` | `id`, `field` or `rule` | Why: sources, precedence, CEL, observed values |
 | `refresh_entity` | `id` | Waits for completion (MCP task if long); returns the new snapshot and what changed (fields, entities over the snapshot range) |
 | `list_actions` | `id` | Actions available to the caller on that entity |
@@ -378,6 +379,7 @@ to `result`; previews come from the Toolbox layer only.
 | `toolbox derive [--out DIR]` | Recompute from fixtures; print a summary or write the reference-format outputs |
 | `toolbox report [--skip C] [-o md\|json\|html] [--baseline F [--update\|--ci]]` | Score a repository without a server: connectors once, recompute, scorecards with evidence; a ratchet against a committed baseline (D66, [repo-portals.md](./design/repo-portals.md)) |
 | `toolbox scorecard [NAME] [--rule R]` | One scorecard across entities: a work list (MCP `scorecard_report`) |
+| `toolbox assess brief ID` / `assess check` / `assess submit FILE` | Brief a coding agent on an entity (MCP `assessment_brief`), validate a portal's `assessments/`, or push an assessment to a server (D79) |
 | `toolbox describe` | Print Toolbox's own CLI commands and MCP tools as connector records (contract snapshots; Toolbox for Toolbox, D65) |
 | `toolbox token create --user U` | Create a personal access token (printed once) |
 | `toolbox get|query|search|graph|owner|explain|score|refresh|actions` | Read commands, each calling the MCP tool of the same purpose (`-o md|json|yaml`) |
