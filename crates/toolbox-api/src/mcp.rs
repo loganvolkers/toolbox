@@ -16,35 +16,53 @@ use tower::ServiceExt;
 
 const PROTOCOL: &str = "2025-06-18";
 
-fn tools() -> Value {
+/// The built-in MCP tools (v1-spec §7.3), as `tools/list` reports them before promoted actions.
+pub fn builtin_tools() -> Value {
     let s = |props: Value, req: &[&str]| json!({"type": "object", "properties": props, "required": req});
     let id = json!({"type": "string", "description": "Entity id, e.g. repository:payments-api"});
     json!([
         {"name": "search", "description": "Find entities by name or title.", "annotations": {"readOnlyHint": true},
-         "inputSchema": s(json!({"query": {"type": "string"}, "kind": {"type": "string"}, "limit": {"type": "integer"}}), &["query"])},
+         "inputSchema": s(json!({
+             "query": {"type": "string", "description": "Text to find in entity ids and titles (case-insensitive substring)"},
+             "kind": {"type": "string", "description": "Only entities of this kind, e.g. Repository"},
+             "limit": {"type": "integer", "description": "Maximum number of results (default 20)"}}), &["query"])},
         {"name": "get", "description": "One entity with its fields and where each came from.", "annotations": {"readOnlyHint": true},
          "inputSchema": s(json!({"id": id, "fields": {"type": "string", "description": "Comma-separated"}}), &["id"])},
         {"name": "query", "description": "Entities of a kind matching a CEL filter over `entity`, e.g. entity.ownership.status != 'verified'.",
          "annotations": {"readOnlyHint": true},
-         "inputSchema": s(json!({"kind": {"type": "string"}, "filter": {"type": "string"}, "fields": {"type": "string"}}), &["kind"])},
+         "inputSchema": s(json!({
+             "kind": {"type": "string", "description": "Entity kind to list, e.g. Repository"},
+             "filter": {"type": "string", "description": "CEL expression over `entity` (its visible fields and `id`); keeps entities where it is true"},
+             "fields": {"type": "string", "description": "Comma-separated fields to return (default: every visible field)"}}), &["kind"])},
         {"name": "graph", "description": "Neighbours of an entity (relations, references, owner).", "annotations": {"readOnlyHint": true},
-         "inputSchema": s(json!({"id": id, "relation": {"type": "string"}, "direction": {"enum": ["in", "out", "both"]}, "depth": {"type": "integer"}}), &["id"])},
+         "inputSchema": s(json!({"id": id,
+             "relation": {"type": "string", "description": "Only edges with this relation name (default: all relations)"},
+             "direction": {"enum": ["in", "out", "both"], "description": "Follow outgoing edges, incoming edges or both (default both)"},
+             "depth": {"type": "integer", "description": "How many hops to follow, 1 to 3 (default 1)"}}), &["id"])},
         {"name": "owner_of", "description": "Who owns an entity, whether the claim is verified (CODEOWNERS), and how to fix it.",
          "annotations": {"readOnlyHint": true}, "inputSchema": s(json!({"id": id}), &["id"])},
         {"name": "scorecard_status", "description": "Scorecard levels and, if you may see them, rule outcomes and fixes.",
-         "annotations": {"readOnlyHint": true}, "inputSchema": s(json!({"id": id, "scorecard": {"type": "string"}}), &["id"])},
+         "annotations": {"readOnlyHint": true}, "inputSchema": s(json!({"id": id, "scorecard": {"type": "string", "description": "Only this scorecard (default: every scorecard)"}}), &["id"])},
         {"name": "explain", "description": "Why a field has its value (sources, precedence, evidence) or why a rule passes or fails.",
          "annotations": {"readOnlyHint": true},
-         "inputSchema": s(json!({"id": id, "field": {"type": "string"}, "rule": {"type": "string", "description": "<scorecard>/<rule>"}}), &["id"])},
+         "inputSchema": s(json!({"id": id,
+             "field": {"type": "string", "description": "Field to explain, e.g. ownership (used when `rule` is not set)"},
+             "rule": {"type": "string", "description": "<scorecard>/<rule>"}}), &["id"])},
         {"name": "refresh_entity", "description": "Ask the connectors behind an entity to re-read it; returns once the fresh data is visible.",
          "annotations": {"readOnlyHint": false, "idempotentHint": true, "openWorldHint": true}, "inputSchema": s(json!({"id": id}), &["id"])},
         {"name": "list_actions", "description": "Self-service actions available on an entity, and whether you may run them.",
          "annotations": {"readOnlyHint": true}, "inputSchema": s(json!({"id": id}), &["id"])},
         {"name": "action_options", "description": "Allowed values for an action input on an entity.", "annotations": {"readOnlyHint": true},
-         "inputSchema": s(json!({"action": {"type": "string"}, "input": {"type": "string"}, "id": id}), &["action", "input", "id"])},
+         "inputSchema": s(json!({
+             "action": {"type": "string", "description": "Action name, as list_actions reports it"},
+             "input": {"type": "string", "description": "Name of one of the action's input properties"},
+             "id": id}), &["action", "input", "id"])},
         {"name": "preview_action", "description": "Preview an action: validation, blockers and the approval path. Always preview before running.",
          "annotations": {"readOnlyHint": true},
-         "inputSchema": s(json!({"action": {"type": "string"}, "id": id, "inputs": {"type": "object"}}), &["action", "id"])}
+         "inputSchema": s(json!({
+             "action": {"type": "string", "description": "Action name, as list_actions reports it"},
+             "id": id,
+             "inputs": {"type": "object", "description": "Proposed input values, keyed by input property name"}}), &["action", "id"])}
     ])
 }
 
@@ -507,7 +525,7 @@ pub async fn handle(
             "instructions": state.manifest.mcp.as_ref().and_then(|m| m.get("instructions")).cloned().unwrap_or(Value::Null),
         })),
         "ping" => Ok(json!({})),
-        "tools/list" => Ok(json!({"tools": tools()})),
+        "tools/list" => Ok(json!({"tools": builtin_tools()})),
         "tools/call" => {
             let name = msg["params"]["name"]
                 .as_str()

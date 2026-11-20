@@ -46,6 +46,11 @@ jobs:
           for f in expected/entities.json expected/scorecards.json expected/options.json expected/orphans.json authz/tuples.expected.json; do
             cmp /tmp/derived/$f examples/reference-portal/$f
           done
+      - name: Toolbox for Toolbox (D65) — the standards' tests, then this repo's scorecards (report only, not a gate)
+        run: |
+          target/debug/toolbox validate portal
+          target/debug/toolbox test portal
+          scripts/self-portal.sh report --static | tee -a "$GITHUB_STEP_SUMMARY"
   scale-budget:
     runs-on: ubuntu-latest
     steps:

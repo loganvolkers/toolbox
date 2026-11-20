@@ -52,7 +52,7 @@ The parts that make layer 3 first-class are still to build:
 | | Authenticate an app | Service identities with their own relations (not a person's PAT) | Planned (§5) |
 | **Test** | Get deterministic reads | Snapshot ids on every response; `min_snapshot` to read your own writes | ✅ |
 | | Test the hidden-data path | Facet redaction markers that say which relation is needed, so apps handle "hidden" explicitly | ✅ |
-| | Check contracts | Schema-checked MCP tool inputs; stable problem codes (`not-found`, `forbidden`, `snapshot-not-ready` …) | ✅ codes; contract test kit planned |
+| | Check contracts | Schema-checked MCP tool inputs; stable problem codes (`not-found`, `forbidden`, `snapshot-not-ready` …) | ✅ codes; every built-in MCP tool contract-tested over `tools/call` (`crates/toolbox-api/tests/mcp.rs`, D65); a kit for users' own CI planned |
 | | Test actions | Previews are side-effect free; confirm tokens; postconditions | Preview gate ✅ (M3); runs in M5 |
 | **Deploy** | Run the app with least privilege | PAT or service identity scoped by OpenFGA relations | PATs ✅; service identities planned |
 | **Monitor** | See usage and failures | `toolbox_mcp_tool_calls_total`, audit of denials and runs | Partly (metrics planned per v1-spec §10.5) |

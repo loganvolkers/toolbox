@@ -61,14 +61,28 @@ pub async fn ingest_messages(
             errors.join("; "),
         ));
     }
-    let records = messages.iter().filter(|m| m.get("type").and_then(Value::as_str) == Some("record")).count();
-    let changes_inputs = messages.iter().any(|m| matches!(m.get("type").and_then(Value::as_str), Some("record" | "delete")));
+    let records = messages
+        .iter()
+        .filter(|m| m.get("type").and_then(Value::as_str) == Some("record"))
+        .count();
+    let changes_inputs = messages.iter().any(|m| {
+        matches!(
+            m.get("type").and_then(Value::as_str),
+            Some("record" | "delete")
+        )
+    });
     // Control-only batches (register, ack, complete, …) don't change inputs, so they don't create
     // an input version: the snapshot id changes only when data does.
     let version = if changes_inputs {
-        s.store.ingest(connector, &messages).await.map_err(|e| problem(StatusCode::INTERNAL_SERVER_ERROR, "store", e.to_string()))?
+        s.store
+            .ingest(connector, &messages)
+            .await
+            .map_err(|e| problem(StatusCode::INTERNAL_SERVER_ERROR, "store", e.to_string()))?
     } else {
-        s.store.input_version().await.map_err(|e| problem(StatusCode::INTERNAL_SERVER_ERROR, "store", e.to_string()))?
+        s.store
+            .input_version()
+            .await
+            .map_err(|e| problem(StatusCode::INTERNAL_SERVER_ERROR, "store", e.to_string()))?
     };
     s.metrics
         .ingest_records

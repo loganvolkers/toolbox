@@ -62,6 +62,7 @@ case "${1:-report}" in
     printf 'name: none\nassert: []\n' > "$WORK/tests/standards.test.yaml"
     snapshot "$WORK/fixtures" "${2:-}"
     "$T/toolbox" derive "$WORK" --out "$WORK/out" >/dev/null
+    [[ "${2:-}" == "--static" ]] && echo "(--static: no test or clippy runs, so maintainer-crate's tests-pass and clippy-clean fail by design)"
     python3 - "$WORK/out/expected" <<'PY'
 import json, sys
 d = sys.argv[1]

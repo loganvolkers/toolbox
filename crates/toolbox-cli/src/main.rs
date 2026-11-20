@@ -4,7 +4,7 @@ mod client;
 mod portal;
 mod server;
 
-use clap::{Parser, Subcommand, ValueEnum};
+use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
 use std::path::PathBuf;
 use std::process::ExitCode;
 
@@ -159,7 +159,23 @@ enum Command {
         #[arg(long)]
         out: Option<PathBuf>,
     },
+    /// Print Toolbox's own interfaces (CLI commands and built-in MCP tools) as connector record
+    /// messages (NDJSON), for contract snapshots and the Toolbox-for-Toolbox portal.
+    Describe,
 }
+
+/// CLI read commands and the MCP tool each one calls (they share one authorization path, D61).
+const CLI_MCP_TOOLS: &[(&str, &str)] = &[
+    ("get", "get"),
+    ("query", "query"),
+    ("search", "search"),
+    ("graph", "graph"),
+    ("owner", "owner_of"),
+    ("explain", "explain"),
+    ("score", "scorecard_status"),
+    ("refresh", "refresh_entity"),
+    ("actions", "list_actions"),
+];
 
 #[derive(clap::Args, Clone)]
 struct Remote {
@@ -240,6 +256,7 @@ fn main() -> ExitCode {
             path, base, format, ..
         } => plan(&path, &base, format),
         Command::Derive { path, out } => derive(&path, out.as_deref()),
+        Command::Describe => describe(),
         Command::Serve {
             path,
             listen,
@@ -571,4 +588,73 @@ fn connector_test(
     } else {
         ExitCode::from(1)
     }
+}
+
+/// One `command` record per CLI (sub)command and one `mcp-tool` record per built-in MCP tool.
+fn describe() -> ExitCode {
+    use serde_json::{Value, json};
+    fn walk(cmd: &clap::Command, prefix: &str, out: &mut Vec<Value>) {
+        for sub in cmd.get_subcommands().filter(|s| s.get_name() != "help") {
+            let name = format!("{prefix}{}", sub.get_name()).trim().to_owned();
+            if sub.has_subcommands() {
+                walk(sub, &format!("{name} "), out);
+                continue;
+            }
+            let args: Vec<Value> = sub
+                .get_arguments()
+                .filter(|a| !matches!(a.get_id().as_str(), "help" | "version"))
+                .map(|a| {
+                    json!({"name": a.get_id().as_str(), "long": a.get_long(), "positional": a.is_positional(),
+                           "described": a.get_help().is_some()})
+                })
+                .collect();
+            let undocumented: Vec<&str> = args
+                .iter()
+                .filter(|a| a["described"] == false)
+                .filter_map(|a| a["name"].as_str())
+                .collect();
+            let json_output = sub
+                .get_arguments()
+                .any(|a| matches!(a.get_long(), Some("output" | "format")));
+            let tool = CLI_MCP_TOOLS
+                .iter()
+                .find(|(c, _)| *c == name)
+                .map(|(_, t)| *t);
+            out.push(json!({"type": "record", "kind": "command", "externalId": format!("cli:{}", name.replace(' ', "-")),
+                "data": {"name": name, "slug": name.replace(' ', "-"), "about": sub.get_about().map(|s| s.to_string()),
+                         "args": args, "undocumentedArgs": undocumented, "structuredOutput": json_output,
+                         "mcpTool": tool}}));
+        }
+    }
+    let mut out = Vec::new();
+    walk(&Cli::command(), "", &mut out);
+    for t in toolbox_api::mcp::builtin_tools()
+        .as_array()
+        .into_iter()
+        .flatten()
+    {
+        let props = t["inputSchema"]["properties"]
+            .as_object()
+            .cloned()
+            .unwrap_or_default();
+        let undescribed: Vec<&String> = props
+            .iter()
+            .filter(|(_, p)| p.get("description").is_none())
+            .map(|(k, _)| k)
+            .collect();
+        let name = t["name"].as_str().unwrap_or_default();
+        let cli: Vec<&str> = CLI_MCP_TOOLS
+            .iter()
+            .filter(|(_, tool)| *tool == name)
+            .map(|(c, _)| *c)
+            .collect();
+        out.push(json!({"type": "record", "kind": "mcp-tool", "externalId": format!("mcp:{name}"),
+            "data": {"name": name, "description": t["description"], "annotations": t["annotations"],
+                     "properties": props.keys().collect::<Vec<_>>(), "required": t["inputSchema"]["required"],
+                     "undescribedProperties": undescribed, "cliCommands": cli}}));
+    }
+    for line in out {
+        println!("{line}");
+    }
+    ExitCode::SUCCESS
 }

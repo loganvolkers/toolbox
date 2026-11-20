@@ -1,4 +1,4 @@
-# Toolbox for Toolbox: Scoring Our Own SDLC With Toolbox
+# Toolbox for Toolbox: Scoring Our Own Three SDLC Layers With Toolbox
 
 *Status: experiment built 2026-11-20 (D65). The portal is [`portal/`](../../portal/README.md); run
 it with `scripts/self-portal.sh`. It applies Toolbox to the [three SDLC layers](../sdlc.md) of
@@ -23,8 +23,8 @@ What the experiment showed:
 |---|---|
 | Can Toolbox run usefully as a local, single-repo portal? | **Yes.** In-memory store, dev auth, no authorization. A static report takes about 1 s; with tests and clippy per crate, about 2 min; a per-crate refresh, about 7 s |
 | Do local connectors fit the connector model? | **Yes**, including the control channel. `refresh crate:X` routes to both connectors through the records behind the entity; the runner reruns only that crate's jobs |
-| Can an agent raise a standard using only the portal? | **Yes** (§6): a fresh agent with only the portal's interfaces raised the user-SDLC MCP scorecard, and I raised the maintainer docs scorecard |
-| Did it find real problems? | **Yes**, on its first run (§5). Examples: 9 of 11 MCP tools had no direct contract test, several CLI arguments had no help, a 418-line function, and three docs (one mine, written minutes earlier) with an unnamed SDLC or no sources |
+| Can an agent raise a standard using only the portal? | **Yes** (§6): a fresh agent with only the portal's interfaces took all 11 MCP tools to gold on the user SDLC scorecard, and I raised the maintainer docs scorecard |
+| Did it find real problems? | **Yes**, on its first run (§5). Examples: none of the 11 MCP tools had a direct contract test, several CLI arguments had no help, a 418-line function, and three docs (one mine, written minutes earlier) with an SDLC layer left unnamed or no sources |
 | Did it find gaps in Toolbox itself? | **Yes** (§7): rule-level evidence, multi-hop derivation, score history and ratchets, connector hot reload, and a productised local mode |
 
 **The recursion.** Each SDLC layer of Toolbox becomes a catalog that Toolbox scores:
@@ -43,8 +43,8 @@ is a layer-3 use of Toolbox: developers building on its context.
 ## 2. Why
 
 - **Standards are the point of a catalog.** A catalog without standards is an inventory. What
-  organisations want is to measure, maintain and raise their SDLC standards across every component
-  of their SDLC.
+  organisations want is to measure, maintain and raise their engineering standards across every part
+  of their software lifecycle.
 - **We should hold ourselves to it.** AGENTS.md states standards (docs, verification, naming the
   SDLC layer, sources). Until now they were checked by reading. Now they are rules with evidence and
   fixes.
@@ -101,7 +101,7 @@ The rules are deliberately simple. Their value is in the evidence fields an agen
 | Scorecard | Result |
 |---|---|
 | `maintainer-crate` | 1 gold, 3 silver, 6 bronze, 3 none, 2 skipped (placeholders). Tests and clippy pass everywhere. The failures are docs coverage, `toolbox-derive`'s 418-line `Pipeline::run`, complexity up to 51, and 3 crates with no tests (`toolbox-cli`, `git-files`, `scim`) |
-| `maintainer-docs` | 33 silver; failures: `dashboards.md` (a false positive, F8), `maintainer-sdlc.md` with no sources, 3 docs with an unnamed SDLC |
+| `maintainer-docs` | 33 silver; failures: `dashboards.md` (a false positive, F8), `maintainer-sdlc.md` with no sources, 3 docs that left the SDLC layer unnamed |
 | `operator-cli` | 2 silver, 5 bronze, 2 none. `push` and `describe` aren't documented; most commands have undescribed arguments; `plan` and `token create` aren't exercised by any script |
 | `user-cli` | 1 silver, 9 bronze: undescribed arguments; 7 of 9 read commands are run by no script |
 | `user-mcp` | 4 silver, 7 bronze: 7 tools have undescribed inputs; **no tool is called directly over MCP in any test** (they are reached only through the CLI) |
@@ -119,7 +119,36 @@ The rules are deliberately simple. Their value is in the evidence fields an agen
 
 ### 6.1 Fresh-agent run
 
-PENDING
+A fresh general-purpose agent was given AGENTS.md, the portal URL, and the goal "raise the
+`user-mcp` scorecard". It was told to use only the CLI and MCP, not to change `portal/` or `docs/`,
+and not to game the checks. It had no knowledge of what failed.
+
+| | Before (snapshot `18`) | After (snapshot `27`) |
+|---|---|---|
+| `user-mcp` | 4 silver, 7 bronze; every tool failed `contract-tested`, 7 failed `inputs-described` | **11 gold** |
+
+What it changed (reviewed, then committed with this experiment):
+- **Descriptions** for the 15 undescribed MCP input properties in `crates/toolbox-api/src/mcp.rs`.
+  Each one was taken from the REST handler's actual behaviour, with defaults.
+- **`crates/toolbox-api/tests/mcp.rs`**: 5 contract tests that call every built-in tool with
+  `tools/call` and assert on both `structuredContent` and the Markdown:
+  - `tools/list` checks names, hints and that every input is described;
+  - reads, including A5 and field projection;
+  - actions, matching `expected/options.json`, plus a 422;
+  - `refresh_entity` end to end: the test plays a remote connector that long-polls for the command
+    and returns a changed record;
+  - unknown tools.
+
+  This closes the user SDLC gap "contract test kit" for the built-in tools.
+
+It took 56 tool calls and found a real bug while writing tests: MCP `get` advertises a `fields`
+input that nothing reads.
+
+The fresh agent's friction report produced findings F9–F14 below. The manifest fixes it justified
+were applied at once:
+- `documented` now requires `docs/v1-spec.md`, not any doc;
+- the runner's `refresh` block declares `command` and `mcp-tool`;
+- the MCP instructions list every evidence field.
 
 ## 7. Findings: what Toolbox lacks (proposals)
 
@@ -134,10 +163,18 @@ PENDING
 | F7 | **CLI and MCP drift.** MCP `query` takes `fields`; the CLI has no `--fields`, and its markdown output lists ids only. The read commands' arguments mostly lack help | Generate CLI read commands from the MCP tool schemas, or test them against each other (`user-cli` + `user-mcp` now show the drift) |
 | F8 | **Standards need tests too.** Two rules had false positives on the first run: a numbered `## 5. Sources` heading, and a quoted "SDLC". A time-estimate rule was dropped because market facts ("6–12 months to production") look like estimates | Keep curated fixtures and expectations per scorecard (done: `portal/tests`); treat rule changes like code changes |
 
+| F9 | **"Contract-tested" means "mentioned", not "called".** The rule matches a `"name": "<tool>"` literal in tests and scripts. So a helper like `call("search", …)` doesn't count, any fixture JSON with `"name": "get"` does, and `#[cfg(test)]` unit tests aren't scanned | Measure *observed* calls, in keeping with "done means observed" (D49): the server records each `tools/call` (tool and outcome) to a coverage file when `TOOLBOX_MCP_TRACE` is set; a runner job runs the tests with it set and reports tools actually called and asserted |
+| F10 | **No scorecard-wide view for agents.** "Which entities fail rule X?" took 11 `score` calls; scorecard results aren't visible to `query` filters; `score scorecard:user-mcp` is a 404 (the UI's `/v1/views/scorecard/{name}` exists but has no MCP tool or CLI) | An MCP tool and CLI over the scorecard view (`scorecard_report <name> [--rule R --outcome fail]`), and scorecard outcomes exposed to `query` filters |
+| F11 | **`scorecard_status` gives fixes, not evidence.** The agent needed one `explain --rule` per rule per entity to see observed values | Fold the F2 `evidence:` into `scorecard_status` output for failing rules |
+| F12 | **Refresh doesn't say what it changed.** `refresh mcp-tool:search` reran `toolbox describe` and updated all 11 tools silently. Background resyncs advance the snapshot (18 → 23 with no action), so before and after by snapshot id mixes in unrelated changes | Refresh results list the entities whose fields changed; add `toolbox diff <snapshot> <snapshot>` (the `plan` diff, over inputs instead of manifests) |
+| F13 | **MCP and CLI bugs found by the tests.** MCP `get` advertises an unused `fields` input; `scorecard_status`'s `scorecard` argument filters only the Markdown, not `structuredContent`; `get` on an entity shows only inbound relations (outbound needs `graph`) | Fix in the next maintainer pass; the `user-mcp` rules can't see these, which is F9 again |
+| F14 | **Common names make "documented" noisy.** `query`, `get` and `search` are "documented" by any backticked word in any doc | Fixed in the manifest: `documented` requires `docs/v1-spec.md`. Generally, rules should name the authoritative doc |
+
 ## 8. Next steps (proposed)
 
-1. Decide on F1 (`toolbox report`) and F2 (rule evidence). Both are small, and they help every portal,
-   not just this one.
+1. Decide on F1 (`toolbox report`), F2/F11 (rule evidence), F10 (scorecard-wide view) and F9
+   (observed MCP coverage). Each is small and helps every portal, not just this one; together they
+   turn "an agent can raise a standard" from possible into easy.
 2. Add a ratchet baseline for the self portal in CI (F4), starting as a report and then becoming a
    gate.
 3. Extend the catalogue:

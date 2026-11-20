@@ -53,7 +53,7 @@ connectors:
         - {name: clippy, per: crate, command: [cargo, clippy, -q, -p, "{crate}", --all-targets, --message-format=json], parse: clippy}
         - {name: surfaces, command: [target/debug/toolbox, describe], parse: ndjson, kinds: [command, mcp-tool]}
     records: [test, clippy, command, mcp-tool]
-    refresh: {test: [external_ids], clippy: [external_ids]}
+    refresh: {test: [external_ids], clippy: [external_ids], command: [external_ids], mcp-tool: [external_ids]}   # surfaces: any id reruns `toolbox describe` (all of them)
     freshness: {test: 1h, clippy: 1h, command: 1h, mcp-tool: 1h}
 
 kinds:
@@ -373,7 +373,7 @@ scorecards:
         fix: "Add a description to each input property in `undescribedProperties` (crates/toolbox-api/src/mcp.rs)."
       - name: documented
         level: silver
-        check: "entity.documentedIn.size() > 0"
+        check: "'docs/v1-spec.md' in entity.documentedIn"   # common names (`get`, `query`) appear in many docs
         fix: "List the tool, in backticks, in docs/v1-spec.md §7.3."
       - name: contract-tested
         level: gold
@@ -385,8 +385,10 @@ mcp:
   instructions: >-
     Toolbox for Toolbox: the catalogue of Toolbox's own crates, docs, scripts, CLI commands and MCP
     tools, scored against the maintainer, operator and user SDLC standards. To raise the bar, pick
-    a failing rule with scorecard_status, read the entity's evidence fields (undocumented,
-    longFunctions, clippy.messages, undocumentedArgs …), change the code, then refresh_entity and
-    check the score again.
+    a failing rule with scorecard_status, read the evidence with explain (rule) or get: Crate
+    undocumented, longFunctions, complexFunctions, clippy.messages, tests.output; Doc brokenLinks,
+    counts; Command undocumentedArgs, documentedIn, exercisedBy; McpTool undescribedProperties,
+    documentedIn, exercisedBy, viaCli. Change the code, refresh_entity, and check the score again.
+    Contract tests count when a test or script contains a tools/call body naming the tool.
 
 tests: [tests/standards.test.yaml]
