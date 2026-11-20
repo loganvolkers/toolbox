@@ -24,6 +24,7 @@ no Postgres, no OpenFGA, no network.
 | `maintainer-dependency` | 1. Maintainer | Dependency | Bounded registry requirement; then one version in the lockfile; then a shared dependency is declared in the workspace. New dependencies must reach bronze |
 | `maintainer-agent-doc` | 1. Maintainer | AgentDoc | One source of instructions whose links resolve; then a test command and a 500-line ceiling; then a pointer at the decision log and no secrets or hidden characters. New files must reach bronze |
 | `maintainer-package` | 1. Maintainer | PackageJson | Named, private or versioned, bounded registry ranges; then a lockfile and a check script; then a description, `engines.node`, and `npm ci` in CI. New manifests must reach bronze |
+| `maintainer-schema` | 1. Maintainer | JsonSchema | Draft 2020-12, an absolute id, a description; then a title and the compiler loads it; then local `$ref`s only. New schemas must reach bronze |
 
 ## Run it
 
@@ -60,7 +61,7 @@ To register it in an MCP client (for example Claude Code's `.mcp.json`), use the
 
 | Connector | Records | How | Refresh |
 |---|---|---|---|
-| `workspace` ([crate](../crates/toolbox-connector-workspace)) | `crate`, `doc`, `file`, `skill`, `connector`, `dependency`, `agent-doc`, `package-json` | `cargo metadata`, a `syn` parse of each crate, markdown and file scans with configurable regex captures and counts, one record per `SKILL.md`, one record per `toolbox-connector-*` crate, one record per direct Cargo dependency, one record per `AGENTS.md` and its aliases, and one record per `package.json` | Re-reads one crate, doc, file, skill, connector, dependency, agent instruction file or npm manifest |
+| `workspace` ([crate](../crates/toolbox-connector-workspace)) | `crate`, `doc`, `file`, `skill`, `connector`, `dependency`, `agent-doc`, `package-json`, `json-schema` | `cargo metadata`, a `syn` parse of each crate, markdown and file scans with configurable regex captures and counts, one record per `SKILL.md`, one record per `toolbox-connector-*` crate, one record per direct Cargo dependency, one record per `AGENTS.md` and its aliases, one record per `package.json`, and one record per JSON Schema | Re-reads one crate, doc, file, skill, connector, dependency, agent instruction file, npm manifest or schema |
 | `surfaces` (the runner binary) | `command`, `mcp-tool` | Runs `toolbox describe` | Reruns it |
 | `ci-lint` (the runner binary) | `zizmor`, `actionlint` | Runs both linters over `.github/workflows` and `actions/`; one record per file, clean ones included | Reruns them |
 | `github-actions` (the github binary) | `workflow-runs` | Run history per workflow on `main` from the GitHub API: fail rate, re-runs, failing streak, p90 time | Re-reads it |

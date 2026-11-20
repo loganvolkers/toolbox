@@ -24,7 +24,9 @@
 //! - `agent-doc` (`agentDocs` globs): one per `AGENTS.md` and its aliases (`CLAUDE.md`, `GEMINI.md`),
 //!   with link, command and size facts (docs/design/agents-md-standards.md);
 //! - `package-json` (`packages` globs): one per npm manifest, with its ranges, lockfile and the
-//!   script CI can run (docs/design/package-standards.md).
+//!   script CI can run (docs/design/package-standards.md);
+//! - `json-schema` (`schemas` globs): one per JSON Schema document, with its dialect, id and
+//!   whether the binary compiles it (docs/design/schema-standards.md).
 //!
 //! `docs` and `file` records also carry `captures` (each configured regex's first group, unique,
 //! sorted, with runs of whitespace replaced by `-`) and `counts` (matches per configured regex),
@@ -34,7 +36,7 @@
 //! `TOOLBOX_CONNECTOR_CONFIG`: `{"root"?: ".", "docs"?: [glob], "files"?: [glob],
 //! "captures"?: {name: regex}, "counts"?: {name: regex}, "crates"?: true, "repo"?: false,
 //! "betterer"?: [glob], "skills"?: [glob], "connectors"?: [glob], "dependencies"?: false,
-//! "agentDocs"?: [glob], "packages"?: [glob]}`.
+//! "agentDocs"?: [glob], "packages"?: [glob], "schemas"?: [glob]}`.
 
 mod agentsmd;
 mod betterer;
@@ -44,6 +46,7 @@ mod npm;
 mod repo;
 mod rust;
 mod skills;
+mod specs;
 mod workflows;
 
 use regex::Regex;
@@ -70,6 +73,8 @@ struct Workspace {
     agent_docs: Vec<Regex>,
     /// npm manifests (`package-json` records), usually `**/package.json`.
     packages: Vec<Regex>,
+    /// JSON Schema documents (`json-schema` records), usually `schema/*.json`.
+    schemas: Vec<Regex>,
     captures: Vec<(String, Regex)>,
     counts: Vec<(String, Regex)>,
     crates: bool,
@@ -126,6 +131,7 @@ impl Workspace {
             dependencies: cfg["dependencies"].as_bool().unwrap_or(false),
             agent_docs: globs(&cfg, "agentDocs")?,
             packages: globs(&cfg, "packages")?,
+            schemas: globs(&cfg, "schemas")?,
             captures: named_regexes(&cfg, "captures")?,
             counts: named_regexes(&cfg, "counts")?,
             crates: cfg["crates"].as_bool().unwrap_or(true),
@@ -356,6 +362,7 @@ impl Workspace {
                     "dependency",
                     "agent-doc",
                     "package-json",
+                    "json-schema",
                 ]
             });
         if self.crates && kinds.contains(&"crate") {
@@ -372,6 +379,7 @@ impl Workspace {
         self.emit_dependencies(&kinds, out);
         self.emit_agent_docs(&paths, &kinds, out);
         self.emit_packages(&paths, &kinds, out);
+        self.emit_schemas(&paths, &kinds, out);
         Ok(())
     }
 
@@ -456,6 +464,20 @@ impl Workspace {
             }
         }
         out.snapshot_complete("dependency");
+    }
+
+    fn emit_schemas(&self, paths: &[String], kinds: &[&str], out: &mut Out) {
+        if self.schemas.is_empty() || !kinds.contains(&"json-schema") {
+            return;
+        }
+        for rel in paths.iter().filter(|p| Self::matches(&self.schemas, p)) {
+            out.record(
+                "json-schema",
+                &format!("json-schema:{rel}"),
+                specs::analyse(&self.root, rel),
+            );
+        }
+        out.snapshot_complete("json-schema");
     }
 
     fn emit_packages(&self, paths: &[String], kinds: &[&str], out: &mut Out) {
@@ -582,6 +604,7 @@ impl Workspace {
             "dependency" => self.refresh_dependency(id, out),
             "agent-doc" => self.refresh_agent_doc(id, out),
             "package-json" => self.refresh_package(id, out),
+            "json-schema" => self.refresh_schema(id, out),
             _ => out.not_found(kind, id),
         }
     }
@@ -619,6 +642,15 @@ impl Workspace {
     fn refresh_named_action(&self, id: &str, out: &mut Out) {
         let name = id.strip_prefix("action-ref:").unwrap_or("");
         self.refresh_action_ref(name, id, out);
+    }
+
+    fn refresh_schema(&self, id: &str, out: &mut Out) {
+        let rel = id.strip_prefix("json-schema:").unwrap_or("");
+        if Self::matches(&self.schemas, rel) && self.root.join(rel).is_file() {
+            out.record("json-schema", id, specs::analyse(&self.root, rel));
+        } else {
+            out.not_found("json-schema", id);
+        }
     }
 
     fn refresh_package(&self, id: &str, out: &mut Out) {
@@ -693,6 +725,7 @@ impl Source for Workspace {
             ("dependency", self.dependencies),
             ("agent-doc", !self.agent_docs.is_empty()),
             ("package-json", !self.packages.is_empty()),
+            ("json-schema", !self.schemas.is_empty()),
         ];
         let kinds: Vec<&str> = on.iter().filter(|(_, b)| *b).map(|(k, _)| *k).collect();
         let refresh: Map<String, Value> = kinds

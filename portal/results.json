@@ -412,6 +412,9 @@
       "doc:docs/design/repo-portals.md": {
         "level": "silver"
       },
+      "doc:docs/design/schema-standards.md": {
+        "level": "silver"
+      },
       "doc:docs/design/scorecards-for-scorecards.md": {
         "level": "silver"
       },
@@ -522,6 +525,17 @@
           "engines-declared": 1
         },
         "level": "silver"
+      }
+    },
+    "maintainer-schema": {
+      "json-schema:schema/connector-messages.schema.json": {
+        "level": "gold"
+      },
+      "json-schema:schema/executor-messages.schema.json": {
+        "level": "gold"
+      },
+      "json-schema:schema/manifest.schema.json": {
+        "level": "gold"
       }
     },
     "maintainer-skill": {
@@ -876,6 +890,27 @@
       "rule:toolbox/maintainer-package/version-bounded": {
         "level": "gold"
       },
+      "rule:toolbox/maintainer-schema/described": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-schema/draft-2020-12": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-schema/has-id": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-schema/local-refs": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-schema/no-hardcoded-secrets": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-schema/titled": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-schema/wired-in": {
+        "level": "gold"
+      },
       "rule:toolbox/maintainer-skill/description-says-when": {
         "level": "gold"
       },
@@ -1108,6 +1143,9 @@
         "level": "silver"
       },
       "scorecard:toolbox/maintainer-package": {
+        "level": "gold"
+      },
+      "scorecard:toolbox/maintainer-schema": {
         "level": "gold"
       },
       "scorecard:toolbox/maintainer-skill": {
