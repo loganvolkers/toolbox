@@ -2,6 +2,86 @@
   "format": "toolbox-report/v1",
   "portal": "toolbox",
   "results": {
+    "cli-skill": {
+      "command:actions": {
+        "level": "bronze"
+      },
+      "command:assess-brief": {
+        "level": "bronze"
+      },
+      "command:assess-check": {
+        "level": "bronze"
+      },
+      "command:assess-submit": {
+        "level": "bronze"
+      },
+      "command:connector-test": {
+        "level": "bronze"
+      },
+      "command:derive": {
+        "level": "bronze"
+      },
+      "command:describe-portal": {
+        "level": "bronze"
+      },
+      "command:doctor": {
+        "level": "bronze"
+      },
+      "command:explain": {
+        "level": "bronze"
+      },
+      "command:get": {
+        "level": "bronze"
+      },
+      "command:graph": {
+        "level": "bronze"
+      },
+      "command:install": {
+        "level": "bronze"
+      },
+      "command:mcp": {
+        "level": "bronze"
+      },
+      "command:owner": {
+        "level": "bronze"
+      },
+      "command:plan": {
+        "level": "bronze"
+      },
+      "command:push": {
+        "level": "bronze"
+      },
+      "command:query": {
+        "level": "bronze"
+      },
+      "command:refresh": {
+        "level": "bronze"
+      },
+      "command:report": {
+        "level": "bronze"
+      },
+      "command:score": {
+        "level": "bronze"
+      },
+      "command:scorecard": {
+        "level": "bronze"
+      },
+      "command:search": {
+        "level": "bronze"
+      },
+      "command:serve": {
+        "level": "bronze"
+      },
+      "command:test": {
+        "level": "bronze"
+      },
+      "command:token-create": {
+        "level": "bronze"
+      },
+      "command:validate": {
+        "level": "bronze"
+      }
+    },
     "maintainer-action-deps": {
       "action:Swatinem/rust-cache": {
         "level": "bronze"
@@ -406,6 +486,9 @@
       "doc:docs/design/agents-md-standards.md": {
         "level": "silver"
       },
+      "doc:docs/design/cli-skills.md": {
+        "level": "silver"
+      },
       "doc:docs/design/connector-control.md": {
         "level": "silver"
       },
@@ -571,19 +654,97 @@
       "doc:plugins/toolbox-operator/README.md": {
         "level": "silver"
       },
+      "doc:plugins/toolbox-operator/skills/actions/SKILL.md": {
+        "level": "silver"
+      },
       "doc:plugins/toolbox-operator/skills/add-permission/SKILL.md": {
         "level": "silver"
       },
       "doc:plugins/toolbox-operator/skills/add-scorecard/SKILL.md": {
         "level": "silver"
       },
+      "doc:plugins/toolbox-operator/skills/assess-brief/SKILL.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/skills/assess-check/SKILL.md": {
+        "level": "silver"
+      },
       "doc:plugins/toolbox-operator/skills/assess-entity/SKILL.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/skills/assess-submit/SKILL.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/skills/connector-test/SKILL.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/skills/derive/SKILL.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/skills/describe-portal/SKILL.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/skills/doctor/SKILL.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/skills/explain/SKILL.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/skills/get/SKILL.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/skills/graph/SKILL.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/skills/install/SKILL.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/skills/mcp/SKILL.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/skills/owner/SKILL.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/skills/plan/SKILL.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/skills/push/SKILL.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/skills/query/SKILL.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/skills/refresh/SKILL.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/skills/report/SKILL.md": {
         "level": "silver"
       },
       "doc:plugins/toolbox-operator/skills/review-plan/SKILL.md": {
         "level": "silver"
       },
+      "doc:plugins/toolbox-operator/skills/score/SKILL.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/skills/scorecard/SKILL.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/skills/search/SKILL.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/skills/serve/SKILL.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/skills/test/SKILL.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/skills/token-create/SKILL.md": {
+        "level": "silver"
+      },
       "doc:plugins/toolbox-operator/skills/toolbox-authoring/SKILL.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/skills/validate/SKILL.md": {
         "level": "silver"
       },
       "doc:portal/README.md": {
@@ -702,6 +863,12 @@
       }
     },
     "maintainer-skill": {
+      "skill:plugins/toolbox-operator/skills/actions": {
+        "failing": {
+          "has-evals": 1
+        },
+        "level": "silver"
+      },
       "skill:plugins/toolbox-operator/skills/add-permission": {
         "failing": {
           "has-evals": 1,
@@ -717,12 +884,120 @@
         },
         "level": "bronze"
       },
+      "skill:plugins/toolbox-operator/skills/assess-brief": {
+        "failing": {
+          "has-evals": 1
+        },
+        "level": "silver"
+      },
+      "skill:plugins/toolbox-operator/skills/assess-check": {
+        "failing": {
+          "has-evals": 1
+        },
+        "level": "silver"
+      },
       "skill:plugins/toolbox-operator/skills/assess-entity": {
         "failing": {
           "has-evals": 1,
           "has-example": 1
         },
         "level": "bronze"
+      },
+      "skill:plugins/toolbox-operator/skills/assess-submit": {
+        "failing": {
+          "has-evals": 1
+        },
+        "level": "silver"
+      },
+      "skill:plugins/toolbox-operator/skills/connector-test": {
+        "failing": {
+          "has-evals": 1
+        },
+        "level": "silver"
+      },
+      "skill:plugins/toolbox-operator/skills/derive": {
+        "failing": {
+          "has-evals": 1
+        },
+        "level": "silver"
+      },
+      "skill:plugins/toolbox-operator/skills/describe-portal": {
+        "failing": {
+          "has-evals": 1
+        },
+        "level": "silver"
+      },
+      "skill:plugins/toolbox-operator/skills/doctor": {
+        "failing": {
+          "has-evals": 1
+        },
+        "level": "silver"
+      },
+      "skill:plugins/toolbox-operator/skills/explain": {
+        "failing": {
+          "has-evals": 1
+        },
+        "level": "silver"
+      },
+      "skill:plugins/toolbox-operator/skills/get": {
+        "failing": {
+          "has-evals": 1
+        },
+        "level": "silver"
+      },
+      "skill:plugins/toolbox-operator/skills/graph": {
+        "failing": {
+          "has-evals": 1
+        },
+        "level": "silver"
+      },
+      "skill:plugins/toolbox-operator/skills/install": {
+        "failing": {
+          "has-evals": 1
+        },
+        "level": "silver"
+      },
+      "skill:plugins/toolbox-operator/skills/mcp": {
+        "failing": {
+          "has-evals": 1
+        },
+        "level": "silver"
+      },
+      "skill:plugins/toolbox-operator/skills/owner": {
+        "failing": {
+          "has-evals": 1
+        },
+        "level": "silver"
+      },
+      "skill:plugins/toolbox-operator/skills/plan": {
+        "failing": {
+          "has-evals": 1
+        },
+        "level": "silver"
+      },
+      "skill:plugins/toolbox-operator/skills/push": {
+        "failing": {
+          "has-evals": 1
+        },
+        "level": "silver"
+      },
+      "skill:plugins/toolbox-operator/skills/query": {
+        "failing": {
+          "has-evals": 1
+        },
+        "level": "silver"
+      },
+      "skill:plugins/toolbox-operator/skills/refresh": {
+        "failing": {
+          "has-evals": 1
+        },
+        "level": "silver"
+      },
+      "skill:plugins/toolbox-operator/skills/report": {
+        "failing": {
+          "has-evals": 1
+        },
+        "level": "silver"
       },
       "skill:plugins/toolbox-operator/skills/review-plan": {
         "failing": {
@@ -731,12 +1006,54 @@
         },
         "level": "bronze"
       },
+      "skill:plugins/toolbox-operator/skills/score": {
+        "failing": {
+          "has-evals": 1
+        },
+        "level": "silver"
+      },
+      "skill:plugins/toolbox-operator/skills/scorecard": {
+        "failing": {
+          "has-evals": 1
+        },
+        "level": "silver"
+      },
+      "skill:plugins/toolbox-operator/skills/search": {
+        "failing": {
+          "has-evals": 1
+        },
+        "level": "silver"
+      },
+      "skill:plugins/toolbox-operator/skills/serve": {
+        "failing": {
+          "has-evals": 1
+        },
+        "level": "silver"
+      },
+      "skill:plugins/toolbox-operator/skills/test": {
+        "failing": {
+          "has-evals": 1
+        },
+        "level": "silver"
+      },
+      "skill:plugins/toolbox-operator/skills/token-create": {
+        "failing": {
+          "has-evals": 1
+        },
+        "level": "silver"
+      },
       "skill:plugins/toolbox-operator/skills/toolbox-authoring": {
         "failing": {
           "has-evals": 1,
           "has-example": 1
         },
         "level": "bronze"
+      },
+      "skill:plugins/toolbox-operator/skills/validate": {
+        "failing": {
+          "has-evals": 1
+        },
+        "level": "silver"
       }
     },
     "maintainer-supply-chain": {
@@ -2877,6 +3194,9 @@
       "rule:repo/repo-hygiene/owners-are-teams": {
         "level": "gold"
       },
+      "rule:toolbox/cli-skill/has-skill": {
+        "level": "gold"
+      },
       "rule:toolbox/maintainer-action-deps/pinned-everywhere": {
         "level": "gold"
       },
@@ -3550,6 +3870,9 @@
           "every-rule-tested": 1
         },
         "level": "silver"
+      },
+      "scorecard:toolbox/cli-skill": {
+        "level": "gold"
       },
       "scorecard:toolbox/maintainer-action-deps": {
         "level": "gold"

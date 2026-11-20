@@ -1020,6 +1020,21 @@ scorecards:
         fix: "Run the command in an acceptance script or an integration test."
     facets: {summary: public, details: public}
 
+  # Every CLI command has a skill that names its invocation (D94). The doc capture already
+  # turns `toolbox <command>` in a SKILL.md into documentedIn.
+  - name: cli-skill
+    kind: Command
+    owner: group:maintainers
+    levels: [bronze]
+    ratchet: {newEntitiesAtLeast: bronze}
+    rules:
+      - name: has-skill
+        level: bronze
+        check: "entity.documentedIn.filter(p, p.endsWith('SKILL.md')).size() > 0"
+        evidence: "['missing skill for toolbox ' + entity.name]"
+        fix: "Add plugins/toolbox-operator/skills/<slug>/SKILL.md that includes the invocation toolbox <command>, with the flags and the exit codes."
+    facets: {summary: public, details: public}
+
   - name: user-mcp
     kind: McpTool
     owner: group:maintainers

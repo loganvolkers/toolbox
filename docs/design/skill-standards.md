@@ -25,8 +25,8 @@ different questions, and the tools that answer them should not be mixed into one
 
 The workspace connector emits one `skill` record per `SKILL.md`. It reports facts. `portal/toolbox.yaml`
 holds the thresholds. A skill added after this baseline must reach bronze (`ratchet.newEntitiesAtLeast`),
-which is the spec plus a routable description. The four skills in `plugins/toolbox-operator/skills/`
-are the catalog today.
+which is the spec plus a routable description. CLI commands are catalogued separately: each leaf has
+one skill, and `cli-skill` scores the command (D94, [cli-skills.md](./cli-skills.md)).
 
 **What we did not adopt, and why:**
 
@@ -124,6 +124,9 @@ The four operator skills:
 `review-plan` and `toolbox-authoring` already say *before* / *whenever* and *never*. They still stop
 at bronze because none of the four skills includes an example block. That is the authoring checklist,
 not a parser quirk.
+
+D94 adds one skill per CLI command and scores the command, not the file, with `cli-skill`
+([cli-skills.md](./cli-skills.md)). `maintainer-skill` still scores each of those files.
 
 `toolbox test portal` pins the three fixture skills: `plugins/demo/focused` at gold,
 `plugins/demo/partial` at bronze, `plugins/demo/unsafe` at none. Every `maintainer-skill` rule is
