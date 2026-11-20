@@ -3,6 +3,7 @@ name = "toolbox-connector-github"
 description = "Toolbox connector: GitHub repositories, CODEOWNERS, apps and installations (docs/v1-spec.md §7.4)."
 version.workspace = true
 edition.workspace = true
+license.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 

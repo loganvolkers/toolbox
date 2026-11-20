@@ -1,6 +1,6 @@
 # Toolbox Packages: Sharing Standards, Publishing Our Own, and Running Them Across a Fleet
 
-*Status: research and proposal, 2026-11-20. Answers the flagged open question Q15 (federation's
+*Status: decided, 2026-11-20 (D89, resolving Q15); implementation in progress. Originally research and proposal. Answers the flagged open question Q15 (federation's
 package registry) with a recommendation that is **not yet decided**. Covers four questions raised
 while building Toolbox for Toolbox (T4T):*
 1. *How should we catalogue the open-source packages we publish?*
@@ -45,7 +45,7 @@ This is the Go-modules shape, which the configuration ecosystems we surveyed are
 1. Adopt R1+ (§4.4), which resolves Q15.
 2. Split T4T with `include` (§5).
 3. Package format v0, including how parameters work (§3.3).
-4. The project licence (Q1). It already blocks publishing and now blocks the package scorecard too.
+4. ~~The project licence (Q1).~~ Decided: MIT (D88). Items 1 and 3 are decided too (D89); item 2 is next.
 
 ## 2. What the ecosystems do
 

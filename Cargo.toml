@@ -10,7 +10,7 @@ edition = "2024"
 rust-version = "1.97"
 publish = false
 repository = "https://github.com/loganvolkers/toolbox"
-# No `license` field until the project licence is decided (Q1).
+license = "MIT"
 
 [workspace.dependencies]
 toolbox-model = { path = "crates/toolbox-model" }

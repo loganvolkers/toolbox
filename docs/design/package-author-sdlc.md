@@ -1,6 +1,6 @@
 # Package Author SDLC: Shipping Standards, Connectors and the Binaries They Need
 
-*Status: design, 2026-11-20 (D87). Adds a fourth SDLC layer, the **package author SDLC**, to the
+*Status: design, 2026-11-20 (D87); distribution decided (D90, resolving Q16), implementation in progress. Adds a fourth SDLC layer, the **package author SDLC**, to the
 maintainer, operator and user SDLCs ([sdlc.md](../sdlc.md)). It revises
 [packages.md](./packages.md), which treated a package as data alone. Every layer's stages are now
 catalogued and scored in Toolbox for Toolbox (`portal/sdlc/`, scorecards `sdlc-stage`, `sdlc-layer`

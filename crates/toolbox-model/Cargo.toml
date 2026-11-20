@@ -3,6 +3,7 @@ name = "toolbox-model"
 description = "Toolbox: manifest types, loading, JSON Schema validation and cross-reference checks (docs/v1-spec.md §4, §5)."
 version.workspace = true
 edition.workspace = true
+license.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 

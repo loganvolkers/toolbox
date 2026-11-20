@@ -3,6 +3,7 @@ name = "toolbox-authz"
 description = "Toolbox: authentication, the Authorizer contract, the OpenFGA co-process and .fga.yaml tests (docs/v1-spec.md §9, D38)."
 version.workspace = true
 edition.workspace = true
+license.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 

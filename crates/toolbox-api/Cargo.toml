@@ -3,6 +3,7 @@ name = "toolbox-api"
 description = "Toolbox: the server — snapshot loop, REST API (docs/v1-spec.md §6.1, §7.2); MCP and UI host arrive in M4."
 version.workspace = true
 edition.workspace = true
+license.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 
