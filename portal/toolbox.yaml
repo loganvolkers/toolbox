@@ -51,10 +51,26 @@ connectors:
       jobs:
         - {name: test, per: crate, command: [cargo, test, -q, -p, "{crate}"], parse: cargo-test}
         - {name: clippy, per: crate, command: [cargo, clippy, -q, -p, "{crate}", --all-targets, --message-format=json], parse: clippy}
-        - {name: surfaces, command: [target/debug/toolbox, describe], parse: ndjson, kinds: [command, mcp-tool]}
-    records: [test, clippy, command, mcp-tool]
-    refresh: {test: [external_ids], clippy: [external_ids], command: [external_ids], mcp-tool: [external_ids]}   # surfaces: any id reruns `toolbox describe` (all of them)
-    freshness: {test: 1h, clippy: 1h, command: 1h, mcp-tool: 1h}
+        # MCP calls the contract tests actually make (TOOLBOX_MCP_TRACE), not just name (F9)
+        - name: mcp-calls
+          command: [sh, -c, 'TOOLBOX_MCP_TRACE="$PWD/target/mcp-trace.ndjson" cargo test -q -p toolbox-api --test mcp']
+          parse: tally
+          file: target/mcp-trace.ndjson
+          key: tool
+    records: [test, clippy, mcp-calls]
+    refresh: {test: [external_ids], clippy: [external_ids], mcp-calls: [external_ids]}
+    freshness: {test: 1h, clippy: 1h, mcp-calls: 1h}
+  - name: surfaces
+    package: builtin:runner                # the same runner, one fast job: Toolbox's own CLI and MCP surfaces
+    runtime: in-image
+    config:
+      name: surfaces
+      root: "."
+      jobs:
+        - {name: describe, command: [target/debug/toolbox, describe], parse: ndjson, kinds: [command, mcp-tool]}
+    records: [command, mcp-tool]
+    refresh: {command: [external_ids], mcp-tool: [external_ids]}   # any id reruns `toolbox describe` (every surface)
+    freshness: {command: 5m, mcp-tool: 5m}
 
 kinds:
   # ── Layer 1: what maintainers build ──────────────────────────────────────────────────────
@@ -143,9 +159,9 @@ kinds:
           : entity.path.startsWith('examples/') || entity.path.startsWith('experiments/') ? 'example'
           : 'repo'
     relations:
-      mentionsCommand: {to: Command, many: true}
-      mentionsTool: {to: McpTool, many: true}
-      mentionsCrate: {to: Crate, many: true}
+      mentionsCommand: {to: Command, many: true, unresolved: ignore}   # candidates from captures/code spans
+      mentionsTool: {to: McpTool, many: true, unresolved: ignore}   # candidates from captures/code spans
+      mentionsCrate: {to: Crate, many: true, unresolved: ignore}   # candidates from captures/code spans
     sources: {default: [connector:workspace]}
     map:
       - from: workspace/doc
@@ -167,8 +183,8 @@ kinds:
       lines: {type: integer}
       lastChange: {type: string}
     relations:
-      exercisesCommand: {to: Command, many: true}
-      exercisesTool: {to: McpTool, many: true}
+      exercisesCommand: {to: Command, many: true, unresolved: ignore}   # candidates from captures/code spans
+      exercisesTool: {to: McpTool, many: true, unresolved: ignore}   # candidates from captures/code spans
     sources: {default: [connector:workspace]}
     map:
       - from: workspace/file
@@ -180,7 +196,7 @@ kinds:
 
   # ── Layers 2 and 3: what operators and users rely on ─────────────────────────────────────
   - name: Command
-    identityFrom: [connector:runner]
+    identityFrom: [connector:surfaces]
     fields:
       name: {type: string}
       about: {type: string}
@@ -196,9 +212,9 @@ kinds:
       exercisedBy: {type: list, items: string, computed: "inbound.exercisesCommand.map(f, f.path)"}
     relations:
       callsTool: {to: McpTool, many: false}
-    sources: {default: [connector:runner]}
+    sources: {default: [connector:surfaces]}
     map:
-      - from: runner/command
+      - from: surfaces/command
         id: "'command:' + record.slug"
         set: >-
           {'name': record.name, 'about': record.about, 'args': record.args,
@@ -208,19 +224,25 @@ kinds:
           callsTool: "record.mcpTool == null ? [] : ['mcp-tool:' + record.mcpTool]"
 
   - name: McpTool
-    identityFrom: [connector:runner]
+    identityFrom: [connector:surfaces]
     fields:
       name: {type: string}
       description: {type: string}
       annotations: {type: object}
       properties: {type: list, items: string}
       undescribedProperties: {type: list, items: string}
+      observed: {type: object}             # from the runner: {calls, errors} in the MCP contract tests
       documentedIn: {type: list, items: string, computed: "inbound.mentionsTool.map(d, d.path)"}
       exercisedBy: {type: list, items: string, computed: "inbound.exercisesTool.map(f, f.path)"}
       viaCli: {type: list, items: string, computed: "inbound.callsTool.map(c, c.name)"}
-    sources: {default: [connector:runner]}
+    sources:
+      default: [connector:surfaces]
+      fields: {observed: [connector:runner]}
     map:
-      - from: runner/mcp-tool
+      - from: runner/mcp-calls
+        id: "'mcp-tool:' + record.tool"
+        set: "{'observed': record}"
+      - from: surfaces/mcp-tool
         id: "'mcp-tool:' + record.name"
         set: >-
           {'name': record.name, 'description': record.description, 'annotations': record.annotations,
@@ -245,38 +267,47 @@ scorecards:
       - name: tests-pass
         level: bronze
         check: "has(entity.tests) && entity.tests.status == 'pass'"
-        fix: "Run `cargo test -p <crate>`; tests.output holds the failing tail."
+        evidence: "has(entity.tests) ? [entity.tests.status + ': ' + string(entity.tests.failed) + ' failed'] + (has(entity.tests.output) ? [entity.tests.output] : []) : ['no test run yet (refresh the crate)']"
+        fix: "Run `cargo test -p <crate>` and fix the failures in the evidence."
       - name: clippy-clean
         level: bronze
         check: "has(entity.clippy) && entity.clippy.status == 'pass'"
-        fix: "Run `cargo clippy -p <crate> --all-targets`; clippy.messages lists the warnings."
+        evidence: "has(entity.clippy) ? entity.clippy.messages : ['no clippy run yet (refresh the crate)']"
+        fix: "Fix the clippy warnings in the evidence (`cargo clippy -p <crate> --all-targets`)."
       - name: public-api-documented
         level: silver
         check: "entity.docCoverage >= 80"
-        fix: "Add /// docs to the public items listed in `undocumented`."
+        evidence: "entity.undocumented"
+        fix: "Add /// docs to the public items in the evidence."
       - name: no-huge-functions
         level: silver
         check: "entity.maxFnLines <= 150"
-        fix: "Split the functions listed in `longFunctions` into named steps."
+        evidence: "entity.functions.filter(f, f.lines > 150).map(f, f.name + ' at ' + f.at + ': ' + string(f.lines) + ' lines')"
+        fix: "Split the functions in the evidence into named steps."
       - name: bounded-complexity
         level: silver
         check: "entity.maxComplexity <= 30"
-        fix: "Simplify the functions listed in `complexFunctions` (extract match arms, early returns)."
+        evidence: "entity.functions.filter(f, f.complexity > 30).map(f, f.name + ' at ' + f.at + ': complexity ' + string(f.complexity))"
+        fix: "Simplify the functions in the evidence (extract match arms, early returns)."
       - name: fully-documented
         level: gold
         check: "entity.docCoverage == 100"
-        fix: "Document every item in `undocumented`."
+        evidence: "entity.undocumented"
+        fix: "Document every item in the evidence."
       - name: short-functions
         level: gold
         check: "entity.longFunctions.size() == 0"
-        fix: "Keep functions at 80 lines or fewer; see `longFunctions`."
+        evidence: "entity.longFunctions"
+        fix: "Keep functions at 80 lines or fewer; split those in the evidence."
       - name: simple-functions
         level: gold
         check: "entity.complexFunctions.size() == 0"
-        fix: "Keep cyclomatic complexity at 15 or lower; see `complexFunctions`."
+        evidence: "entity.complexFunctions"
+        fix: "Keep cyclomatic complexity at 15 or lower; simplify those in the evidence."
       - name: few-unwraps
         level: gold
         check: "entity.unwraps * 100 <= entity.codeLines"
+        evidence: "[string(entity.unwraps) + ' unwrap/expect calls in ' + string(entity.codeLines) + ' lines']"
         fix: "At most one unwrap/expect per 100 lines outside tests: return errors or document the invariant."
     facets: {summary: public, details: public}
 
@@ -289,10 +320,12 @@ scorecards:
       - name: links-resolve
         level: bronze
         check: "entity.brokenLinks.size() == 0"
-        fix: "Fix or remove the relative links listed in `brokenLinks`."
+        evidence: "entity.brokenLinks"
+        fix: "Fix or remove the relative links in the evidence."
       - name: names-sdlc-layer
         level: bronze
         check: "entity.counts.sdlc <= entity.counts.layeredSdlc"
+        evidence: "[string(entity.counts.sdlc - entity.counts.layeredSdlc) + ' mention(s) of SDLC without a layer']"
         fix: "Say which SDLC you mean: maintainer, operator or user (docs/sdlc.md, D63)."
       - name: status-banner
         level: silver
@@ -318,11 +351,13 @@ scorecards:
       - name: documented
         level: bronze
         check: "entity.documentedIn.size() > 0"
+        evidence: "['not mentioned as `toolbox ' + entity.name + '` in any doc']"
         fix: "Describe `toolbox <command>` in docs/v1-spec.md §7.7 or the operator SDLC doc."
       - name: args-described
         level: silver
         check: "entity.undocumentedArgs.size() == 0"
-        fix: "Add a /// doc comment to each argument in `undocumentedArgs`."
+        evidence: "entity.undocumentedArgs"
+        fix: "Add a /// doc comment to each argument in the evidence."
       - name: exercised
         level: silver
         check: "entity.exercisedBy.size() > 0"
@@ -347,7 +382,8 @@ scorecards:
       - name: args-described
         level: silver
         check: "entity.undocumentedArgs.size() == 0"
-        fix: "Add a /// doc comment to each argument in `undocumentedArgs`."
+        evidence: "entity.undocumentedArgs"
+        fix: "Add a /// doc comment to each argument in the evidence."
       - name: exercised
         level: silver
         check: "entity.exercisedBy.size() > 0"
@@ -370,14 +406,19 @@ scorecards:
       - name: inputs-described
         level: silver
         check: "entity.undescribedProperties.size() == 0"
-        fix: "Add a description to each input property in `undescribedProperties` (crates/toolbox-api/src/mcp.rs)."
+        evidence: "entity.undescribedProperties"
+        fix: "Add a description to each input property in the evidence (crates/toolbox-api/src/mcp.rs)."
       - name: documented
         level: silver
         check: "'docs/v1-spec.md' in entity.documentedIn"   # common names (`get`, `query`) appear in many docs
+        evidence: "['documented in: ' + (entity.documentedIn.size() == 0 ? 'nothing' : entity.documentedIn.join(', '))]"
         fix: "List the tool, in backticks, in docs/v1-spec.md §7.3."
       - name: contract-tested
         level: gold
-        check: "entity.exercisedBy.size() > 0"
+        # Observed calls when the runner has run the contract tests; otherwise a tools/call body that
+        # names the tool (static mode, weaker: it can't see whether the call happens).
+        check: "has(entity.observed) ? entity.observed.calls > 0 : entity.exercisedBy.size() > 0"
+        evidence: "has(entity.observed) ? ['observed ' + string(entity.observed.calls) + ' call(s) in the MCP contract tests'] : ['no tools/call naming this tool in tests or scripts (static mode)']"
         fix: "Call the tool directly (tools/call) in a test, e.g. crates/toolbox-api/tests; the CLI path in `viaCli` doesn't pin the MCP contract."
     facets: {summary: public, details: public}
 

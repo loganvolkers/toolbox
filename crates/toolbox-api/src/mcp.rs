@@ -43,6 +43,13 @@ pub fn builtin_tools() -> Value {
          "annotations": {"readOnlyHint": true}, "inputSchema": s(json!({"id": id}), &["id"])},
         {"name": "scorecard_status", "description": "Scorecard levels and, if you may see them, rule outcomes and fixes.",
          "annotations": {"readOnlyHint": true}, "inputSchema": s(json!({"id": id, "scorecard": {"type": "string", "description": "Only this scorecard (default: every scorecard)"}}), &["id"])},
+        {"name": "scorecard_report", "description": "Results of one scorecard across every entity you may see: level counts and, per entity, the failing rules with their evidence. Filter to one rule's failures to get a work list. Without `scorecard`, lists the scorecards.",
+         "annotations": {"readOnlyHint": true},
+         "inputSchema": s(json!({
+             "scorecard": {"type": "string", "description": "Scorecard name (omit to list every scorecard with its level counts)"},
+             "rule": {"type": "string", "description": "Only entities where this rule has `outcome`"},
+             "outcome": {"enum": ["fail", "pass", "unknown"], "description": "Outcome to match for `rule` (default fail)"},
+             "level": {"type": "string", "description": "Only entities at this level, e.g. none, bronze, skipped"}}), &[])},
         {"name": "explain", "description": "Why a field has its value (sources, precedence, evidence) or why a rule passes or fails.",
          "annotations": {"readOnlyHint": true},
          "inputSchema": s(json!({"id": id,
@@ -126,6 +133,82 @@ fn show(v: &Value) -> String {
     }
 }
 
+/// What a refresh changed: the entity's changed fields, and every entity the caller may see whose
+/// fields changed between the snapshot before the refresh and now (capped at 50 ids). Other writes
+/// in that range (resyncs, other refreshes) are included, so the range is reported with them.
+async fn changes_since(
+    state: &Arc<AppState>,
+    h: &HeaderMap,
+    before: Option<&crate::state::Published>,
+    id: &str,
+) -> Value {
+    let (Some(before), Some(after)) = (before, state.snapshot()) else {
+        return Value::Null;
+    };
+    let b = &before.derived.entities;
+    let a = &after.derived.entities;
+    let mut changed: Vec<&str> = a
+        .iter()
+        .filter(|(k, e)| b.get(*k).is_none_or(|old| old.fields != e.fields))
+        .map(|(k, _)| k.as_str())
+        .chain(b.keys().filter(|k| !a.contains_key(*k)).map(String::as_str))
+        .collect();
+    changed.sort_unstable();
+    let fields: Vec<&String> = match (b.get(id), a.get(id)) {
+        (Some(o), Some(n)) => n
+            .fields
+            .keys()
+            .chain(o.fields.keys())
+            .collect::<std::collections::BTreeSet<_>>()
+            .into_iter()
+            .filter(|f| o.fields.get(*f) != n.fields.get(*f))
+            .collect(),
+        _ => vec![],
+    };
+    let visible: Vec<&str> = match state.caller(h).await {
+        Ok(caller) => match state.visibility(&caller, &changed).await {
+            Ok(vis) => changed
+                .iter()
+                .zip(vis)
+                .filter(|(_, v)| v.view)
+                .map(|(e, _)| *e)
+                .collect(),
+            Err(_) => vec![],
+        },
+        Err(_) => vec![],
+    };
+    json!({"from": before.snapshot_id, "to": after.snapshot_id, "fields": fields,
+           "count": visible.len(), "entities": visible.iter().take(50).collect::<Vec<_>>()})
+}
+
+/// With `TOOLBOX_MCP_TRACE=<file>`, append one line per `tools/call` (`{"tool", "error"}`), so a
+/// test run can report which tools were *observed* being called, not just mentioned (F9).
+fn trace_call(tool: &str, error: bool) {
+    trace_line(&json!({"tool": tool, "error": error}));
+}
+
+/// At server start (with `TOOLBOX_MCP_TRACE`): declare every built-in tool, so a tool that no test
+/// calls shows up with zero calls instead of not at all.
+pub fn trace_declare() {
+    for t in builtin_tools().as_array().into_iter().flatten() {
+        trace_line(&json!({"tool": t["name"], "declared": true}));
+    }
+}
+
+fn trace_line(v: &Value) {
+    let Some(path) = std::env::var_os("TOOLBOX_MCP_TRACE") else {
+        return;
+    };
+    use std::io::Write as _;
+    if let Ok(mut f) = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(path)
+    {
+        let _ = writeln!(f, "{v}");
+    }
+}
+
 /// Run one tool; returns (markdown, structured JSON, is_error).
 async fn run_tool(
     state: &Arc<AppState>,
@@ -146,7 +229,27 @@ async fn run_tool(
             }
             call_rest(state, h, Method::GET, uri, None).await
         }
-        "get" => call_rest(state, h, Method::GET, format!("/v1/entities/{id}"), None).await,
+        "get" => {
+            let mut uri = format!("/v1/entities/{id}");
+            if !arg(a, "fields").is_empty() {
+                uri += &format!("?fields={}", enc(arg(a, "fields")));
+            }
+            call_rest(state, h, Method::GET, uri, None).await
+        }
+        "scorecard_report" => {
+            let card = arg(a, "scorecard");
+            if card.is_empty() {
+                call_rest(state, h, Method::GET, "/v1/scorecards".into(), None).await
+            } else {
+                let q: Vec<String> = ["rule", "outcome", "level"]
+                    .iter()
+                    .filter(|k| !arg(a, k).is_empty())
+                    .map(|k| format!("{k}={}", enc(arg(a, k))))
+                    .collect();
+                let uri = format!("/v1/scorecards/{}?{}", enc(card), q.join("&"));
+                call_rest(state, h, Method::GET, uri, None).await
+            }
+        }
         "query" => {
             let mut uri = format!("/v1/entities?kind={}&limit=200", enc(arg(a, "kind")));
             for k in ["filter", "fields"] {
@@ -179,14 +282,22 @@ async fn run_tool(
             .await
         }
         "scorecard_status" => {
-            call_rest(
+            let (status, mut v) = call_rest(
                 state,
                 h,
                 Method::GET,
                 format!("/v1/entities/{id}/scorecards"),
                 None,
             )
-            .await
+            .await;
+            // `scorecard` narrows the structured result too, not just the Markdown.
+            let only = arg(a, "scorecard");
+            if !only.is_empty()
+                && let Some(m) = v.get_mut("scorecards").and_then(Value::as_object_mut)
+            {
+                m.retain(|k, _| k == only);
+            }
+            (status, v)
         }
         "explain" => {
             let q = if !arg(a, "rule").is_empty() {
@@ -204,6 +315,7 @@ async fn run_tool(
             .await
         }
         "refresh_entity" => {
+            let before = state.snapshot();
             let (st, r) = call_rest(
                 state,
                 h,
@@ -234,7 +346,11 @@ async fn run_tool(
                         .1,
                     );
                 }
-                (st, json!({"entity": arg(a, "id"), "commands": done}))
+                let changes = changes_since(state, h, before.as_deref(), arg(a, "id")).await;
+                (
+                    st,
+                    json!({"entity": arg(a, "id"), "commands": done, "changes": changes}),
+                )
             }
         }
         "list_actions" => {
@@ -284,6 +400,30 @@ async fn run_tool(
         return (msg, v, true);
     }
     (markdown(name, a, &v), v, false)
+}
+
+/// A failing rule's evidence under its bullet: list items one per line (at most 20), other values inline.
+fn write_evidence(s: &mut String, evidence: Option<&Value>) {
+    use std::fmt::Write as _;
+    match evidence {
+        None | Some(Value::Null) => {}
+        Some(Value::Array(items)) => {
+            for item in items.iter().take(20) {
+                let _ = writeln!(
+                    s,
+                    "  - {}",
+                    item.as_str()
+                        .map_or_else(|| item.to_string(), str::to_owned)
+                );
+            }
+            if items.len() > 20 {
+                let _ = writeln!(s, "  - … {} more", items.len() - 20);
+            }
+        }
+        Some(v) => {
+            let _ = writeln!(s, "  - evidence: {v}");
+        }
+    }
 }
 
 fn markdown(name: &str, a: &Value, v: &Value) -> String {
@@ -387,9 +527,72 @@ fn markdown(name: &str, a: &Value, v: &Value) -> String {
                                 "- {rule}: {}{fix}",
                                 o["outcome"].as_str().unwrap_or("?")
                             );
+                            write_evidence(&mut s, o.get("evidence"));
                         }
                     }
                     None => {}
+                }
+            }
+        }
+        "scorecard_report" if v.get("scorecards").is_some() => {
+            for c in v["scorecards"].as_array().into_iter().flatten() {
+                let counts: Vec<String> = c["by_level"]
+                    .as_object()
+                    .into_iter()
+                    .flatten()
+                    .map(|(l, n)| format!("{l}: {n}"))
+                    .collect();
+                let _ = writeln!(
+                    s,
+                    "- **{}** ({}; levels {}): {}",
+                    c["name"].as_str().unwrap_or(""),
+                    c["kind"].as_str().unwrap_or(""),
+                    c["levels"]
+                        .as_array()
+                        .map(|l| l
+                            .iter()
+                            .filter_map(Value::as_str)
+                            .collect::<Vec<_>>()
+                            .join(" < "))
+                        .unwrap_or_default(),
+                    counts.join(", ")
+                );
+            }
+        }
+        "scorecard_report" => {
+            let counts: Vec<String> = v["by_level"]
+                .as_object()
+                .into_iter()
+                .flatten()
+                .map(|(l, n)| format!("{l}: {n}"))
+                .collect();
+            let _ = writeln!(
+                s,
+                "**{}**: {} entities ({})",
+                v["scorecard"].as_str().unwrap_or(""),
+                v["count"],
+                counts.join(", ")
+            );
+            for e in v["entities"].as_array().into_iter().flatten() {
+                let _ = writeln!(
+                    s,
+                    "- `{}`: {}",
+                    e["id"].as_str().unwrap_or(""),
+                    show(&e["level"])
+                );
+                if e["failing"].get("redacted").is_some() {
+                    let _ = writeln!(s, "  - rule details: {}", show(&e["failing"]));
+                    continue;
+                }
+                for (rule, o) in e["failing"].as_object().into_iter().flatten() {
+                    let _ = writeln!(s, "  - {rule}: {}", o["outcome"].as_str().unwrap_or("?"));
+                    if let Some(items) = o.get("evidence") {
+                        let mut sub = String::new();
+                        write_evidence(&mut sub, Some(items));
+                        for line in sub.lines() {
+                            let _ = writeln!(s, "  {line}");
+                        }
+                    }
                 }
             }
         }
@@ -409,6 +612,10 @@ fn markdown(name: &str, a: &Value, v: &Value) -> String {
                 }
                 if let Some(f) = v["fix"].as_str() {
                     let _ = writeln!(s, "- fix: {f}");
+                }
+                if v.get("evidence").is_some_and(|e| !e.is_null()) {
+                    let _ = writeln!(s, "- evidence:");
+                    write_evidence(&mut s, v.get("evidence"));
                 }
             } else {
                 let _ = writeln!(
@@ -433,6 +640,50 @@ fn markdown(name: &str, a: &Value, v: &Value) -> String {
             }
         }
         "refresh_entity" => {
+            let ch = &v["changes"];
+            let fields: Vec<&str> = ch["fields"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter_map(Value::as_str)
+                .collect();
+            let _ = writeln!(
+                s,
+                "`{}`: {} (snapshot {} → {})",
+                v["entity"].as_str().unwrap_or(""),
+                if fields.is_empty() {
+                    "no field changed".to_owned()
+                } else {
+                    format!("changed {}", fields.join(", "))
+                },
+                ch["from"].as_str().unwrap_or("?"),
+                ch["to"].as_str().unwrap_or("?")
+            );
+            let others: Vec<&str> = ch["entities"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter_map(Value::as_str)
+                .filter(|e| Some(*e) != v["entity"].as_str())
+                .collect();
+            if !others.is_empty() {
+                let _ = writeln!(
+                    s,
+                    "- {} other entit{} changed in that range (refreshes, resyncs or other writes): {}{}",
+                    ch["count"]
+                        .as_u64()
+                        .unwrap_or(0)
+                        .saturating_sub(u64::from(!fields.is_empty())),
+                    if others.len() == 1 { "y" } else { "ies" },
+                    others
+                        .iter()
+                        .take(10)
+                        .map(|e| format!("`{e}`"))
+                        .collect::<Vec<_>>()
+                        .join(", "),
+                    if others.len() > 10 { ", …" } else { "" }
+                );
+            }
             for c in v["commands"].as_array().into_iter().flatten() {
                 let _ = writeln!(
                     s,
@@ -533,6 +784,7 @@ pub async fn handle(
                 .to_owned();
             let args = msg["params"]["arguments"].clone();
             let (text, structured, is_error) = run_tool(&state, &headers, &name, &args).await;
+            trace_call(&name, is_error);
             Ok(
                 json!({"content": [{"type": "text", "text": text}], "structuredContent": structured, "isError": is_error}),
             )

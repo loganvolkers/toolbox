@@ -273,7 +273,13 @@ impl AppState {
                         .collect();
                     let detailed: serde_json::Map<String, Value> = rules
                         .iter()
-                        .map(|(name, outcome)| (name.clone(), json!({"outcome": outcome, "fix": if outcome == "pass" { Value::Null } else { fixes.get(name).cloned().unwrap_or(Value::Null) }})))
+                        .map(|(name, outcome)| {
+                            let mut o = json!({"outcome": outcome, "fix": if outcome == "pass" { Value::Null } else { fixes.get(name).cloned().unwrap_or(Value::Null) }});
+                            if let Some(ev) = score.evidence.get(name) {
+                                o["evidence"] = ev.clone();
+                            }
+                            (name.clone(), o)
+                        })
                         .collect();
                     Value::Object(detailed)
                 } else {

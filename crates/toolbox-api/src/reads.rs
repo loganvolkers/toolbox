@@ -18,7 +18,7 @@ type S = State<Arc<AppState>>;
 
 /// Outgoing references of an entity: declared relations (inverse of inbound), `ref` fields and the
 /// applied owner.
-fn outgoing(s: &AppState, p: &Published, id: &str) -> Vec<(String, String)> {
+pub(crate) fn outgoing(s: &AppState, p: &Published, id: &str) -> Vec<(String, String)> {
     let mut out = Vec::new();
     for (tid, t) in &p.derived.entities {
         for (rel, srcs) in &t.inbound {
@@ -333,6 +333,7 @@ pub async fn explain(
             json!({"entity": id, "scorecard": card, "rule": rname, "snapshot": p.snapshot_id,
             "level": r.level, "check": r.check, "fix": r.fix,
             "outcome": if hidden { outcome.clone() } else { outcome[rname]["outcome"].clone() },
+            "evidence": if hidden { Value::Null } else { outcome[rname].get("evidence").cloned().unwrap_or(Value::Null) },
             "observed": observed}),
         )
         .into_response();
@@ -623,6 +624,145 @@ pub async fn view_scorecard(State(s): S, headers: HeaderMap, Path(name): Path<St
         }
     }
     Json(json!({"snapshot": p.snapshot_id, "scorecard": sc, "by_level": by_level, "failing_rules": fails})).into_response()
+}
+
+/// `GET /v1/scorecards` — every scorecard with its kind, levels and level counts over the entities
+/// the caller may see.
+pub async fn scorecards(State(s): S, headers: HeaderMap) -> Response {
+    let caller = match s.caller(&headers).await {
+        Ok(c) => c,
+        Err(r) => return r,
+    };
+    let Some(p) = s.snapshot() else {
+        return problem(
+            StatusCode::SERVICE_UNAVAILABLE,
+            "starting",
+            "no snapshot yet",
+        );
+    };
+    let mut out = Vec::new();
+    for sc in &s.manifest.scorecards {
+        let rows = match visible_rows(&s, &p, &caller, &sc.name).await {
+            Ok(r) => r,
+            Err(r) => return r,
+        };
+        let mut by_level: BTreeMap<String, usize> = BTreeMap::new();
+        for r in &rows {
+            *by_level.entry(level_name(&r.1)).or_default() += 1;
+        }
+        out.push(json!({"name": sc.name, "kind": sc.kind, "owner": sc.owner, "levels": sc.levels,
+                        "rules": sc.rules.iter().map(|r| json!({"name": r.name, "level": r.level})).collect::<Vec<_>>(),
+                        "by_level": by_level}));
+    }
+    Json(json!({"snapshot": p.snapshot_id, "scorecards": out})).into_response()
+}
+
+#[derive(Deserialize)]
+pub struct ResultsQuery {
+    /// Only entities where this rule has `outcome` (default `fail` when a rule is given).
+    rule: Option<String>,
+    outcome: Option<String>,
+    /// Only entities at this level (`none`, `skipped`, or a scorecard level).
+    level: Option<String>,
+}
+
+/// `GET /v1/scorecards/{name}?rule=&outcome=&level=` — one row per visible entity: its level, the
+/// rules it fails and their evidence. Answers "which entities fail rule X, and why" in one call.
+pub async fn scorecard_results(
+    State(s): S,
+    headers: HeaderMap,
+    Path(name): Path<String>,
+    Query(q): Query<ResultsQuery>,
+) -> Response {
+    let caller = match s.caller(&headers).await {
+        Ok(c) => c,
+        Err(r) => return r,
+    };
+    let Some(p) = s.snapshot() else {
+        return problem(
+            StatusCode::SERVICE_UNAVAILABLE,
+            "starting",
+            "no snapshot yet",
+        );
+    };
+    let Some(sc) = s.manifest.scorecards.iter().find(|x| x.name == name) else {
+        return problem(
+            StatusCode::NOT_FOUND,
+            "not-found",
+            format!("no scorecard {name}"),
+        );
+    };
+    if let Some(r) = &q.rule
+        && !sc.rules.iter().any(|x| &x.name == r)
+    {
+        return problem(
+            StatusCode::NOT_FOUND,
+            "not-found",
+            format!("{name} has no rule {r}"),
+        );
+    }
+    let rows = match visible_rows(&s, &p, &caller, &name).await {
+        Ok(r) => r,
+        Err(r) => return r,
+    };
+    let want = q.outcome.as_deref().unwrap_or("fail");
+    let mut out = Vec::new();
+    let mut by_level: BTreeMap<String, usize> = BTreeMap::new();
+    for (id, card) in rows {
+        let level = level_name(&card);
+        if q.level.as_deref().is_some_and(|l| l != level) {
+            continue;
+        }
+        let rules = card["rules"].as_object();
+        if let Some(r) = &q.rule {
+            let outcome = rules.and_then(|m| m.get(r)).map(|o| o["outcome"].clone());
+            if outcome != Some(json!(want)) {
+                continue;
+            }
+        }
+        *by_level.entry(level.clone()).or_default() += 1;
+        let failing: BTreeMap<&String, &Value> = rules
+            .into_iter()
+            .flatten()
+            .filter(|(_, o)| o["outcome"] != "pass")
+            .collect();
+        let hidden = card["rules"].get("redacted").is_some();
+        out.push(json!({"id": id, "level": card["level"],
+                        "failing": if hidden { card["rules"].clone() } else { json!(failing) }}));
+    }
+    Json(json!({"snapshot": p.snapshot_id, "scorecard": name, "kind": sc.kind, "levels": sc.levels,
+                "filter": {"rule": q.rule, "outcome": q.rule.as_ref().map(|_| want), "level": q.level},
+                "count": out.len(), "by_level": by_level, "entities": out}))
+    .into_response()
+}
+
+/// The visible entities scored by `name`, with their shaped (facet-checked) scorecard.
+async fn visible_rows(
+    s: &AppState,
+    p: &Published,
+    caller: &Caller,
+    name: &str,
+) -> Result<Vec<(String, Value)>, Response> {
+    let ids: Vec<&str> = p
+        .derived
+        .scores
+        .get(name)
+        .map(|m| m.keys().map(String::as_str).collect())
+        .unwrap_or_default();
+    let vis = s.visibility(caller, &ids).await?;
+    Ok(ids
+        .iter()
+        .zip(vis)
+        .filter(|(_, v)| v.view)
+        .filter_map(|(id, v)| {
+            let card = s.shape_scores(p, caller, id, v).remove(name)?;
+            Some((id.to_string(), card))
+        })
+        .collect())
+}
+
+fn level_name(card: &Value) -> String {
+    card["level"].as_str().unwrap_or("hidden").to_owned()
 }
 
 /// `GET /v1/views/ops` — operator page: snapshot, connectors, pending commands, diagnostics.

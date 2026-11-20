@@ -1,0 +1,513 @@
+{
+  "format": "toolbox-report/v1",
+  "portal": "toolbox",
+  "results": {
+    "maintainer-crate": {
+      "crate:toolbox-api": {
+        "failing": {
+          "bounded-complexity": 2,
+          "clippy-clean": 1,
+          "fully-documented": 14,
+          "no-huge-functions": 4,
+          "public-api-documented": 14,
+          "short-functions": 9,
+          "simple-functions": 3,
+          "tests-pass": 1
+        },
+        "level": "none"
+      },
+      "crate:toolbox-authz": {
+        "failing": {
+          "clippy-clean": 1,
+          "fully-documented": 12,
+          "public-api-documented": 12,
+          "simple-functions": 1,
+          "tests-pass": 1
+        },
+        "level": "none"
+      },
+      "crate:toolbox-cli": {
+        "failing": {
+          "clippy-clean": 1,
+          "fully-documented": 9,
+          "public-api-documented": 9,
+          "short-functions": 4,
+          "simple-functions": 2,
+          "tests-pass": 1
+        },
+        "level": "none"
+      },
+      "crate:toolbox-connect": {
+        "failing": {
+          "clippy-clean": 1,
+          "few-unwraps": 1,
+          "fully-documented": 18,
+          "no-huge-functions": 1,
+          "public-api-documented": 18,
+          "short-functions": 1,
+          "simple-functions": 1,
+          "tests-pass": 1
+        },
+        "level": "none"
+      },
+      "crate:toolbox-connector-git-files": {
+        "failing": {
+          "clippy-clean": 1,
+          "has-tests": null,
+          "tests-pass": 1
+        },
+        "level": "none"
+      },
+      "crate:toolbox-connector-github": {
+        "failing": {
+          "clippy-clean": 1,
+          "short-functions": 1,
+          "simple-functions": 1,
+          "tests-pass": 1
+        },
+        "level": "none"
+      },
+      "crate:toolbox-connector-runner": {
+        "failing": {
+          "clippy-clean": 1,
+          "tests-pass": 1
+        },
+        "level": "none"
+      },
+      "crate:toolbox-connector-scim": {
+        "failing": {
+          "clippy-clean": 1,
+          "few-unwraps": 1,
+          "has-tests": null,
+          "tests-pass": 1
+        },
+        "level": "none"
+      },
+      "crate:toolbox-connector-workspace": {
+        "failing": {
+          "clippy-clean": 1,
+          "simple-functions": 1,
+          "tests-pass": 1
+        },
+        "level": "none"
+      },
+      "crate:toolbox-derive": {
+        "failing": {
+          "bounded-complexity": 1,
+          "clippy-clean": 1,
+          "fully-documented": 5,
+          "no-huge-functions": 1,
+          "public-api-documented": 5,
+          "short-functions": 3,
+          "simple-functions": 1,
+          "tests-pass": 1
+        },
+        "level": "none"
+      },
+      "crate:toolbox-durable": {
+        "level": "skipped"
+      },
+      "crate:toolbox-exec": {
+        "level": "skipped"
+      },
+      "crate:toolbox-expr": {
+        "failing": {
+          "clippy-clean": 1,
+          "fully-documented": 3,
+          "tests-pass": 1
+        },
+        "level": "none"
+      },
+      "crate:toolbox-model": {
+        "failing": {
+          "bounded-complexity": 1,
+          "clippy-clean": 1,
+          "fully-documented": 28,
+          "no-huge-functions": 1,
+          "public-api-documented": 28,
+          "short-functions": 3,
+          "simple-functions": 2,
+          "tests-pass": 1
+        },
+        "level": "none"
+      },
+      "crate:toolbox-store": {
+        "failing": {
+          "clippy-clean": 1,
+          "fully-documented": 5,
+          "public-api-documented": 5,
+          "tests-pass": 1
+        },
+        "level": "none"
+      }
+    },
+    "maintainer-docs": {
+      "doc:AGENTS.md": {
+        "level": "silver"
+      },
+      "doc:CLAUDE.md": {
+        "level": "silver"
+      },
+      "doc:README.md": {
+        "level": "silver"
+      },
+      "doc:docs/adversarial-critique.md": {
+        "level": "skipped"
+      },
+      "doc:docs/authorization.md": {
+        "level": "silver"
+      },
+      "doc:docs/decisions.md": {
+        "level": "skipped"
+      },
+      "doc:docs/design/action-entities.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/action-runs.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/agent-plugins.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/connector-control.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/context-lake.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/dashboards.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/developer-velocity.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/extensibility.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/federation.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/frontend.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/graphql.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/identity-resolution.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/incremental-computation.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/maintainer-sdlc.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/meta-catalog.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/minimal-ui.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/notifications.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/ratchets.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/repo-portals.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/sdlc.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/source-of-truth.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/toolbox-for-toolbox.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/typescript-builder.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/user-sdlc.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/verification.md": {
+        "level": "silver"
+      },
+      "doc:docs/examples/approved-github-apps.md": {
+        "level": "silver"
+      },
+      "doc:docs/glossary.md": {
+        "level": "silver"
+      },
+      "doc:docs/ocean.md": {
+        "level": "skipped"
+      },
+      "doc:docs/plan.md": {
+        "level": "silver"
+      },
+      "doc:docs/principal-review.md": {
+        "level": "skipped"
+      },
+      "doc:docs/red-team.md": {
+        "level": "skipped"
+      },
+      "doc:docs/research-log.md": {
+        "level": "skipped"
+      },
+      "doc:docs/research.md": {
+        "level": "skipped"
+      },
+      "doc:docs/sdlc.md": {
+        "level": "silver"
+      },
+      "doc:docs/technology-critique.md": {
+        "level": "skipped"
+      },
+      "doc:docs/v1-spec.md": {
+        "level": "silver"
+      },
+      "doc:examples/reference-portal/README.md": {
+        "level": "silver"
+      },
+      "doc:experiments/build-cost/README.md": {
+        "level": "silver"
+      },
+      "doc:experiments/derived-state-scale/README.md": {
+        "level": "silver"
+      },
+      "doc:experiments/durable-schema/README.md": {
+        "level": "silver"
+      },
+      "doc:experiments/typescript-builder/README.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/README.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/skills/add-permission/SKILL.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/skills/add-scorecard/SKILL.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/skills/review-plan/SKILL.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/skills/toolbox-authoring/SKILL.md": {
+        "level": "silver"
+      },
+      "doc:portal/README.md": {
+        "level": "silver"
+      }
+    },
+    "operator-cli": {
+      "command:actions": {
+        "level": "skipped"
+      },
+      "command:connector-test": {
+        "level": "silver"
+      },
+      "command:derive": {
+        "failing": {
+          "exercised": null
+        },
+        "level": "bronze"
+      },
+      "command:describe": {
+        "failing": {
+          "exercised": null
+        },
+        "level": "bronze"
+      },
+      "command:explain": {
+        "level": "skipped"
+      },
+      "command:get": {
+        "level": "skipped"
+      },
+      "command:graph": {
+        "level": "skipped"
+      },
+      "command:mcp": {
+        "level": "skipped"
+      },
+      "command:owner": {
+        "level": "skipped"
+      },
+      "command:plan": {
+        "failing": {
+          "exercised": null
+        },
+        "level": "bronze"
+      },
+      "command:push": {
+        "failing": {
+          "exercised": null
+        },
+        "level": "bronze"
+      },
+      "command:query": {
+        "level": "skipped"
+      },
+      "command:refresh": {
+        "level": "skipped"
+      },
+      "command:report": {
+        "level": "silver"
+      },
+      "command:score": {
+        "level": "skipped"
+      },
+      "command:scorecard": {
+        "level": "skipped"
+      },
+      "command:search": {
+        "level": "skipped"
+      },
+      "command:serve": {
+        "level": "silver"
+      },
+      "command:test": {
+        "level": "silver"
+      },
+      "command:token-create": {
+        "failing": {
+          "exercised": null
+        },
+        "level": "bronze"
+      },
+      "command:validate": {
+        "level": "silver"
+      }
+    },
+    "user-cli": {
+      "command:actions": {
+        "failing": {
+          "exercised": null
+        },
+        "level": "bronze"
+      },
+      "command:connector-test": {
+        "level": "skipped"
+      },
+      "command:derive": {
+        "level": "skipped"
+      },
+      "command:describe": {
+        "level": "skipped"
+      },
+      "command:explain": {
+        "failing": {
+          "exercised": null
+        },
+        "level": "bronze"
+      },
+      "command:get": {
+        "failing": {
+          "exercised": null
+        },
+        "level": "bronze"
+      },
+      "command:graph": {
+        "failing": {
+          "exercised": null
+        },
+        "level": "bronze"
+      },
+      "command:mcp": {
+        "level": "silver"
+      },
+      "command:owner": {
+        "level": "silver"
+      },
+      "command:plan": {
+        "level": "skipped"
+      },
+      "command:push": {
+        "level": "skipped"
+      },
+      "command:query": {
+        "failing": {
+          "exercised": null
+        },
+        "level": "bronze"
+      },
+      "command:refresh": {
+        "failing": {
+          "exercised": null
+        },
+        "level": "bronze"
+      },
+      "command:report": {
+        "level": "skipped"
+      },
+      "command:score": {
+        "level": "silver"
+      },
+      "command:scorecard": {
+        "failing": {
+          "exercised": null
+        },
+        "level": "bronze"
+      },
+      "command:search": {
+        "failing": {
+          "exercised": null
+        },
+        "level": "bronze"
+      },
+      "command:serve": {
+        "level": "skipped"
+      },
+      "command:test": {
+        "level": "skipped"
+      },
+      "command:token-create": {
+        "level": "skipped"
+      },
+      "command:validate": {
+        "level": "skipped"
+      }
+    },
+    "user-mcp": {
+      "mcp-tool:action_options": {
+        "level": "gold"
+      },
+      "mcp-tool:explain": {
+        "level": "gold"
+      },
+      "mcp-tool:get": {
+        "level": "gold"
+      },
+      "mcp-tool:graph": {
+        "level": "gold"
+      },
+      "mcp-tool:list_actions": {
+        "level": "gold"
+      },
+      "mcp-tool:owner_of": {
+        "level": "gold"
+      },
+      "mcp-tool:preview_action": {
+        "level": "gold"
+      },
+      "mcp-tool:query": {
+        "level": "gold"
+      },
+      "mcp-tool:refresh_entity": {
+        "level": "gold"
+      },
+      "mcp-tool:scorecard_report": {
+        "level": "gold"
+      },
+      "mcp-tool:scorecard_status": {
+        "level": "gold"
+      },
+      "mcp-tool:search": {
+        "level": "gold"
+      }
+    }
+  }
+}

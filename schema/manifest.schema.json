@@ -372,6 +372,10 @@
               },
               "many": {
                 "type": "boolean"
+              },
+              "unresolved": {
+                "enum": ["report", "ignore"],
+                "description": "Edges whose target is no entity are dropped; `report` (default) lists them as a derive diagnostic, `ignore` is for candidate relations (e.g. every code span that might name a tool)."
               }
             }
           }
@@ -465,6 +469,10 @@
               },
               "check": {
                 "$ref": "#/$defs/cel"
+              },
+              "evidence": {
+                "$ref": "#/$defs/cel",
+                "description": "CEL evaluated when the rule fails: the items that make it fail (usually a list), shown with the fix and counted by `toolbox report` baselines."
               },
               "fix": {
                 "type": "string"

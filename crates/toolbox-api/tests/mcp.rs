@@ -89,6 +89,7 @@ async fn tools_list_describes_every_input() {
             "graph",
             "owner_of",
             "scorecard_status",
+            "scorecard_report",
             "explain",
             "refresh_entity",
             "list_actions",
@@ -240,6 +241,11 @@ async fn read_tools_over_tools_call() {
     assert!(
         !text.contains("github-app-hygiene"),
         "only the requested scorecard: {text}"
+    );
+    assert_eq!(
+        v["scorecards"].as_object().unwrap().len(),
+        1,
+        "the structured result is narrowed too: {v}"
     );
 
     let (v, text) = ok(
@@ -435,6 +441,20 @@ async fn refresh_entity_over_tools_call() {
         "{text}"
     );
 
+    // What changed: the entity's fields, over the snapshot range the refresh covered.
+    assert_eq!(v["changes"]["fields"], json!(["displayName"]), "{v}");
+    assert_eq!(v["changes"]["to"], json!(snapshot));
+    assert!(
+        v["changes"]["entities"]
+            .as_array()
+            .unwrap()
+            .contains(&json!("user:dave"))
+    );
+    assert!(
+        text.starts_with("`user:dave`: changed displayName (snapshot "),
+        "{text}"
+    );
+
     // "Returns once the fresh data is visible."
     let (v, _) = ok(
         &url,
@@ -442,6 +462,105 @@ async fn refresh_entity_over_tools_call() {
     )
     .await;
     assert_eq!(v["fields"]["displayName"], "Dave Kim-Park");
+}
+
+#[tokio::test]
+async fn scorecard_report_over_tools_call() {
+    let url = start().await;
+    // Without a scorecard: every scorecard with its level counts.
+    let (v, text) = ok(&url, json!({"name": "scorecard_report", "arguments": {}})).await;
+    let names: Vec<&str> = v["scorecards"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|c| c["name"].as_str().unwrap())
+        .collect();
+    assert_eq!(names, ["ownership", "github-app-hygiene", "app-approval"]);
+    assert_eq!(
+        v["scorecards"][0]["by_level"],
+        json!({"bronze": 2, "none": 1, "silver": 1, "skipped": 1})
+    );
+    assert!(
+        text.contains("- **ownership** (Repository; levels bronze < silver): bronze: 2"),
+        "{text}"
+    );
+
+    // One rule's failures: a work list (the same entities as expected/scorecards.json).
+    let (v, text) = ok(
+        &url,
+        json!({"name": "scorecard_report", "arguments": {"scorecard": "ownership", "rule": "has-owner"}}),
+    )
+    .await;
+    let ids: Vec<&str> = v["entities"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|e| e["id"].as_str().unwrap())
+        .collect();
+    assert_eq!(ids, ["repository:ledger"]);
+    assert_eq!(v["entities"][0]["failing"]["has-owner"]["outcome"], "fail");
+    assert!(v["entities"][0]["failing"]["has-owner"]["fix"].is_string());
+    assert!(
+        text.starts_with("**ownership**: 1 entities (none: 1)\n- `repository:ledger`: none\n"),
+        "{text}"
+    );
+    assert!(text.contains("\n  - has-owner: fail\n"), "{text}");
+
+    // By level, and passing outcomes.
+    let (v, _) = ok(
+        &url,
+        json!({"name": "scorecard_report", "arguments": {"scorecard": "ownership", "level": "silver"}}),
+    )
+    .await;
+    assert_eq!(v["entities"][0]["id"], "repository:payments-api");
+    assert_eq!(v["entities"][0]["failing"], json!({}));
+    let (v, _) = ok(
+        &url,
+        json!({"name": "scorecard_report", "arguments": {"scorecard": "ownership", "rule": "branch-protected", "outcome": "pass"}}),
+    )
+    .await;
+    assert_eq!(v["count"], 3);
+
+    // Unknown scorecard or rule: a tool error, not an empty list.
+    let (_, text, is_error) = call(
+        &url,
+        json!({"name": "scorecard_report", "arguments": {"scorecard": "ownership", "rule": "nope"}}),
+    )
+    .await;
+    assert!(
+        is_error && text.contains("ownership has no rule nope"),
+        "{text}"
+    );
+}
+
+#[tokio::test]
+async fn query_filters_on_scores_and_get_projects_fields() {
+    let url = start().await;
+    let (v, _) = ok(
+        &url,
+        json!({"name": "query", "arguments": {"kind": "Repository",
+            "filter": "scores['ownership'].rules['branch-protected'] == 'fail'", "fields": "title"}}),
+    )
+    .await;
+    let ids: Vec<&str> = v["items"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|e| e["id"].as_str().unwrap())
+        .collect();
+    assert_eq!(ids, ["repository:checkout-web"]);
+    let (v, _) = ok(
+        &url,
+        json!({"name": "get", "arguments": {"id": "repository:checkout-web", "fields": "title,tier"}}),
+    )
+    .await;
+    let fields: Vec<&String> = v["fields"].as_object().unwrap().keys().collect();
+    assert_eq!(fields, ["tier", "title"]);
+    assert_eq!(
+        v["outbound"],
+        json!({"ownedBy": ["group:checkout"], "ownerClaim": ["group:checkout"]}),
+        "outgoing references next to inbound relations: {v}"
+    );
 }
 
 #[tokio::test]

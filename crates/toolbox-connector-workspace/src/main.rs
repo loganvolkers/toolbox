@@ -5,7 +5,9 @@
 //!   sources (doc coverage of public items, function length and complexity, tests, unwraps);
 //! - `doc`: one per markdown file matching `docs` globs (status banner, sources section, broken
 //!   relative links, inline code spans);
-//! - `file`: one per file matching `files` globs (scripts, integration tests).
+//! - `file`: one per file matching `files` globs (scripts, integration tests);
+//! - `betterer`: one per test in each Betterer results file matching `betterer` globs (issue counts
+//!   per file for file tests), so existing Betterer ratchets roll up into scorecards.
 //!
 //! `docs` and `file` records also carry `captures` (each configured regex's first group, unique,
 //! sorted, with runs of whitespace replaced by `-`) and `counts` (matches per configured regex),
@@ -13,8 +15,9 @@
 //! commands and tools they mention without the connector knowing about them.
 //!
 //! `TOOLBOX_CONNECTOR_CONFIG`: `{"root"?: ".", "docs"?: [glob], "files"?: [glob],
-//! "captures"?: {name: regex}, "counts"?: {name: regex}, "crates"?: true}`.
+//! "captures"?: {name: regex}, "counts"?: {name: regex}, "crates"?: true, "betterer"?: [glob]}`.
 
+mod betterer;
 mod rust;
 
 use regex::Regex;
@@ -30,6 +33,7 @@ struct Workspace {
     root: PathBuf,
     docs: Vec<Regex>,
     files: Vec<Regex>,
+    betterer: Vec<Regex>,
     captures: Vec<(String, Regex)>,
     counts: Vec<(String, Regex)>,
     crates: bool,
@@ -101,6 +105,7 @@ impl Workspace {
             root: PathBuf::from(cfg["root"].as_str().unwrap_or(".")),
             docs: globs(&cfg, "docs")?,
             files: globs(&cfg, "files")?,
+            betterer: globs(&cfg, "betterer")?,
             captures: named_regexes(&cfg, "captures")?,
             counts: named_regexes(&cfg, "counts")?,
             crates: cfg["crates"].as_bool().unwrap_or(true),
@@ -333,7 +338,7 @@ impl Source for Workspace {
 
     fn capabilities(&self) -> Value {
         json!({"refresh": {"crate": ["external_ids"], "doc": ["external_ids"], "file": ["external_ids"]},
-               "resync": ["crate", "doc", "file"], "max_concurrency": 1})
+               "resync": ["crate", "doc", "file", "betterer"], "max_concurrency": 1})
     }
 
     async fn handle(&mut self, cmd: &Value, out: &mut Out) -> Result<(), String> {
@@ -342,7 +347,7 @@ impl Source for Workspace {
                 let kinds: Vec<&str> = cmd["kinds"]
                     .as_array()
                     .map(|k| k.iter().filter_map(Value::as_str).collect())
-                    .unwrap_or_else(|| vec!["crate", "doc", "file"]);
+                    .unwrap_or_else(|| vec!["crate", "doc", "file", "betterer"]);
                 if self.crates && kinds.contains(&"crate") {
                     self.emit_crates(None, out)?;
                     out.snapshot_complete("crate");
@@ -363,6 +368,16 @@ impl Source for Workspace {
                         }
                     }
                     out.snapshot_complete(kind);
+                }
+                if kinds.contains(&"betterer") && !self.betterer.is_empty() {
+                    for rel in paths.iter().filter(|p| Self::matches(&self.betterer, p)) {
+                        let text = std::fs::read_to_string(self.root.join(rel)).unwrap_or_default();
+                        for (test, mut data) in betterer::parse(&text) {
+                            data["path"] = json!(rel);
+                            out.record("betterer", &format!("betterer:{rel}#{test}"), data);
+                        }
+                    }
+                    out.snapshot_complete("betterer");
                 }
                 Ok(())
             }

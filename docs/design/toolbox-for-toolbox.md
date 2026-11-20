@@ -150,7 +150,28 @@ were applied at once:
 - the runner's `refresh` block declares `command` and `mcp-tool`;
 - the MCP instructions list every evidence field.
 
-## 7. Findings: what Toolbox lacks (proposals)
+## 7. Findings: what Toolbox lacked, and what's now built
+
+**Status 2026-11-20 (D66):** the core changes these findings asked for are built:
+
+| Finding | Built |
+|---|---|
+| F1, F4 | `toolbox report` (connectors once, recompute, md/json/html) with a Betterer-style ratchet (`--baseline`, `--update`, `--ci`). CI gates this repo on `portal/results.json` ([ratchets.md](./ratchets.md), [repo-portals.md](./repo-portals.md)) |
+| F2, F11 | Rule `evidence:` CEL, shown by `scorecard_status`, `explain`, `scorecard_report` and `report`, and counted by the ratchet |
+| F5 | `relation.dropped` diagnostics per relation; `unresolved: ignore` for candidate relations |
+| F7 | `--fields` on `get` and `query`; every CLI argument has help |
+| F9 | `TOOLBOX_MCP_TRACE` records observed `tools/call`s, and the runner's `tally` job reports them per tool. `contract-tested` uses observed calls when the runner ran |
+| F10 | MCP `scorecard_report`, CLI `toolbox scorecard`, REST `/v1/scorecards[/{name}]`; `query` filters can read `scores['<card>']` |
+| F12 | `refresh_entity` reports changed fields and the changed entities over the snapshot range |
+| F13 | `get` honours `fields` and lists `outbound` references; `scorecard_status` narrows `structuredContent` too |
+
+**Still open:**
+- F3: multi-hop derivation;
+- F6: connector hot reload (`toolbox dev`);
+- the `toolbox diff` half of F12.
+
+The original findings follow.
+
 
 | # | Finding | Proposal |
 |---|---|---|
@@ -172,11 +193,8 @@ were applied at once:
 
 ## 8. Next steps (proposed)
 
-1. Decide on F1 (`toolbox report`), F2/F11 (rule evidence), F10 (scorecard-wide view) and F9
-   (observed MCP coverage). Each is small and helps every portal, not just this one; together they
-   turn "an agent can raise a standard" from possible into easy.
-2. Add a ratchet baseline for the self portal in CI (F4), starting as a report and then becoming a
-   gate.
+1. ~~Decide on F1, F2/F11, F10 and F9~~: built (D66), see §7.
+2. ~~Add a ratchet baseline for the self portal in CI (F4)~~: built and gating (`portal/results.json`).
 3. Extend the catalogue:
    - acceptance scenarios (A1–A12) as entities, with status from the scripts;
    - decisions and open questions as entities, so an agent can ask "which decisions have no owning

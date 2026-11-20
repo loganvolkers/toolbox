@@ -39,3 +39,16 @@ assert:
     expect: "entity('mcp-tool:owner_of').viaCli == ['owner'] && score('user-mcp', 'mcp-tool:owner_of').rules['contract-tested'] == 'fail'"
   - name: undescribed MCP inputs fail silver
     expect: "score('user-mcp', 'mcp-tool:search').level == 'bronze' && score('user-mcp', 'mcp-tool:search').rules['inputs-described'] == 'fail'"
+  # Evidence: failing rules say exactly what fails
+  - name: failing rules carry their evidence
+    expect: "score('maintainer-crate', 'crate:toolbox-derive').evidence['short-functions'].size() == 3 && score('maintainer-crate', 'crate:toolbox-connector-git-files').evidence['clippy-clean'] == ['src/main.rs:12 clippy::needless_return unneeded `return` statement']"
+  - name: passing rules have no evidence
+    expect: "!('crate-docs' in score('maintainer-crate', 'crate:toolbox-derive').evidence) && !('tests-pass' in score('maintainer-crate', 'crate:toolbox-expr').evidence)"
+  - name: evidence lists what fails
+    expect: "score('user-mcp', 'mcp-tool:search').evidence['inputs-described'] == ['kind', 'limit', 'query'] && score('user-mcp', 'mcp-tool:search').evidence['documented'] == ['documented in: nothing']"
+  - name: a failing rule without an evidence expression has none
+    expect: "score('operator-cli', 'command:validate').rules['exercised'] == 'fail' && (!has(score('operator-cli', 'command:validate').evidence) || !('exercised' in score('operator-cli', 'command:validate').evidence))"
+  - name: without a runner run, contract-tested falls back to tools/call bodies and says so
+    expect: "score('user-mcp', 'mcp-tool:owner_of').evidence['contract-tested'] == ['no tools/call naming this tool in tests or scripts (static mode)']"
+  - name: observed calls from the runner decide contract-tested when present
+    expect: "entity('mcp-tool:get').observed.calls == 0 && score('user-mcp', 'mcp-tool:get').rules['contract-tested'] == 'fail' && entity('mcp-tool:search').observed.calls == 4 && score('user-mcp', 'mcp-tool:search').rules['contract-tested'] == 'pass'"

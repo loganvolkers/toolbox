@@ -29,6 +29,10 @@ cargo build && target/debug/toolbox validate examples/reference-portal
   - [design/meta-catalog.md](docs/design/meta-catalog.md): the portal catalogs, owns and scores itself
   - [design/incremental-computation.md](docs/design/incremental-computation.md): DBSP incremental circuit + DBOS-model durable workflows over one change log
   - [design/extensibility.md](docs/design/extensibility.md): code-first extensibility and the right language for each job
+  - [design/repo-portals.md](docs/design/repo-portals.md): Toolbox without a server — `toolbox report`, evidence, ratchets, one-file HTML
+  - [design/ratchets.md](docs/design/ratchets.md): what we learned from Betterer and other baselines (ESLint, PHPStan, basedpyright, OpenSSF Scorecard)
+  - [design/federation.md](docs/design/federation.md): standards that graduate from one repo to the company (design only)
+  - [design/toolbox-for-toolbox.md](docs/design/toolbox-for-toolbox.md): Toolbox scoring its own repository
   - [design/maintainer-sdlc.md](docs/design/maintainer-sdlc.md): **SDLC layer 1**, how Toolbox itself is built and verified (check pyramid, measured loop)
   - [design/user-sdlc.md](docs/design/user-sdlc.md): **SDLC layer 3**, building apps and agents on a portal's context and actions
   - [design/developer-velocity.md](docs/design/developer-velocity.md): fast inner loops for maintainers and operators (SDLC layers 1–2: build speed, selective/parallel/cached tests, watch mode)

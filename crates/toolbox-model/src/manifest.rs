@@ -90,6 +90,8 @@ pub struct Relation {
     pub to: String,
     #[serde(default)]
     pub many: bool,
+    /// `report` (default) or `ignore`: whether dropped edges (no such target) are a diagnostic.
+    pub unresolved: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -141,6 +143,8 @@ pub struct Rule {
     pub name: String,
     pub level: String,
     pub check: String,
+    /// CEL evaluated when the rule fails: what makes it fail (usually a list of items).
+    pub evidence: Option<String>,
     pub fix: Option<String>,
 }
 

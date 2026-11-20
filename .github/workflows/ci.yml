@@ -46,11 +46,14 @@ jobs:
           for f in expected/entities.json expected/scorecards.json expected/options.json expected/orphans.json authz/tuples.expected.json; do
             cmp /tmp/derived/$f examples/reference-portal/$f
           done
-      - name: Toolbox for Toolbox (D65) — the standards' tests, then this repo's scorecards (report only, not a gate)
+      - name: Toolbox for Toolbox (D65, D66) — the standards' tests, then the ratchet against portal/results.json
         run: |
           target/debug/toolbox validate portal
           target/debug/toolbox test portal
-          scripts/self-portal.sh report --static | tee -a "$GITHUB_STEP_SUMMARY"
+          # Fails on any regression, and when portal/results.json is out of date (update it with
+          # `toolbox report portal --skip runner --baseline portal/results.json --update`).
+          target/debug/toolbox report portal --skip runner --baseline portal/results.json --ci --out "$RUNNER_TEMP/report.md"
+          cat "$RUNNER_TEMP/report.md" >> "$GITHUB_STEP_SUMMARY"
   scale-budget:
     runs-on: ubuntu-latest
     steps:

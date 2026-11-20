@@ -18,17 +18,23 @@ no Postgres, no OpenFGA, no network.
 ## Run it
 
 ```bash
-scripts/self-portal.sh report --static   # ~1 s: static facts + surfaces, every scorecard
-scripts/self-portal.sh report            # ~2 min: also runs cargo test and clippy per crate
-scripts/self-portal.sh serve             # live portal on :8090 (API, MCP, UI); connectors re-read on refresh
-toolbox test portal                      # the standards' own tests, over the curated fixtures
+toolbox report portal --skip runner                 # ~1 s: every scorecard, with evidence for failing rules
+toolbox report portal                               # ~2 min: also cargo test, clippy and the MCP trace per crate
+toolbox report portal --skip runner --baseline portal/results.json          # the ratchet (CI adds --ci)
+toolbox report portal --skip runner --baseline portal/results.json --update # record an improvement; commit it
+toolbox report portal --skip runner -o html --out report.html              # one page to publish
+scripts/self-portal.sh serve                        # live portal on :8090 (API, MCP, UI)
+toolbox test portal                                 # the standards' own tests, over the curated fixtures
 ```
+
+`toolbox` here is `target/debug/toolbox` (connectors are found next to it). CI fails when anything
+gets worse than `portal/results.json`, and when an improvement hasn't been recorded in it.
 
 With `serve` running, any agent can use it:
 
 ```bash
 toolbox score crate:toolbox-derive --url http://127.0.0.1:8090 --as maintainer
-toolbox query --kind McpTool --filter "entity.exercisedBy.size() == 0" --url http://127.0.0.1:8090 --as maintainer
+toolbox scorecard maintainer-crate --rule fully-documented --url http://127.0.0.1:8090 --as maintainer   # a work list with evidence
 toolbox refresh crate:toolbox-derive --url http://127.0.0.1:8090 --as maintainer   # reruns that crate's tests + clippy
 toolbox mcp --url http://127.0.0.1:8090 --as maintainer                             # stdio MCP for an agent harness
 ```
@@ -41,7 +47,8 @@ To register it in an MCP client (for example Claude Code's `.mcp.json`), use the
 | Connector | Records | How | Refresh |
 |---|---|---|---|
 | `workspace` ([crate](../crates/toolbox-connector-workspace)) | `crate`, `doc`, `file` | `cargo metadata`, a `syn` parse of each crate, markdown and file scans with configurable regex captures and counts | Re-reads one crate, doc or file |
-| `runner` ([crate](../crates/toolbox-connector-runner)) | `test`, `clippy`, `command`, `mcp-tool` | Runs `cargo test -p`, `cargo clippy -p` and `toolbox describe` | Reruns one crate's jobs |
+| `surfaces` (the runner binary) | `command`, `mcp-tool` | Runs `toolbox describe` | Reruns it |
+| `runner` ([crate](../crates/toolbox-connector-runner)) | `test`, `clippy`, `mcp-calls` | Runs `cargo test -p`, `cargo clippy -p` per crate, and the MCP contract tests with `TOOLBOX_MCP_TRACE` (observed calls per tool) | Reruns one crate's jobs |
 
 Connectors report raw facts (every function with its length and complexity, every undocumented
 public item); the manifest's scorecards set the thresholds. `fixtures/` is a trimmed snapshot of

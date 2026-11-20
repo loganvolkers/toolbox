@@ -34,11 +34,11 @@ MCP, CLI, data model, properties) and test against
 `python scripts/validate-parity.py` checks `toolbox validate` against `tools/validate.py`.
 `.github/workflows/ci.yml` runs all of this. **M0–M4 are done.** Commands: `validate`, `test`,
 `plan --local --base <manifest>`, `derive`, `serve [--database-url]`, `push`, `token create`, the reads
-(`get`, `query`, `search`, `graph`, `owner`, `explain`, `score`, `refresh`, `actions`), `mcp` (stdio
-bridge) and `connector test`. The server also hosts `/mcp` and the UI at `/`, and supervises the
+(`get`, `query`, `search`, `graph`, `owner`, `explain`, `score`, `scorecard`, `refresh`, `actions`), `mcp` (stdio
+bridge), `connector test`, `describe` and `report` (repo portals and the ratchet, D66). The server also hosts `/mcp` and the UI at `/`, and supervises the
 `toolbox-connector-{github,git-files}` binaries; `toolbox-connector-scim` runs remotely. The
 acceptance scripts `scripts/m2…m4-acceptance.sh` need Postgres 16; M3 and M4 also need
-`TOOLBOX_OPENFGA_BIN`, and M4 needs Node with Playwright. **M5 (actions) is paused (D64)** until a review of self-service coordination lands; don't start it. Meanwhile [`portal/`](./portal/README.md) is Toolbox for Toolbox: `scripts/self-portal.sh report` scores this repo against the three SDLC layers' standards (D65).
+`TOOLBOX_OPENFGA_BIN`, and M4 needs Node with Playwright. **M5 (actions) is paused (D64)** until a review of self-service coordination lands; don't start it. Meanwhile [`portal/`](./portal/README.md) is Toolbox for Toolbox: `toolbox report portal --skip runner --baseline portal/results.json` scores this repo against the three SDLC layers' standards (D65) and CI fails on regressions (D66); if you improve something, rerun with `--update` and commit `portal/results.json`. Federation is designed, not built (D68).
 
 ## Repository layout
 

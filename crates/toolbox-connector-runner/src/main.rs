@@ -3,12 +3,15 @@
 //! slower to produce and are refreshed per entity: `refresh_entity crate:toolbox-derive` reruns
 //! only that crate's jobs (docs/design/toolbox-for-toolbox.md §3).
 //!
-//! `TOOLBOX_CONNECTOR_CONFIG`: `{"root"?: ".", "jobs": [job]}` where a job is
+//! `TOOLBOX_CONNECTOR_CONFIG`: `{"name"?: "runner", "root"?: ".", "jobs": [job]}` where a job is
 //! `{"name", "command": [argv], "per"?: "crate" | "once", "parse": "cargo-test" | "clippy" | "ndjson"}`.
 //! In `per: crate` jobs, `{crate}` in the command is replaced by each workspace member's name and
 //! the job emits one record of kind `<name>` with external id `<name>:<crate>`. `ndjson` jobs print
 //! connector `record` messages themselves (e.g. `toolbox describe`); they are passed through, and
-//! the job declares their `kinds`.
+//! the job declares their `kinds`. `tally` jobs run their command, then count the lines of the NDJSON
+//! `file` it wrote by the value of `key` (one record per value: `{<key>, calls, errors}`, where a
+//! line with `"error": true` is an error, and a line with `"declared": true` only declares the key,
+//! so keys nothing used are reported with zero calls); the file is removed before each run.
 
 use regex::Regex;
 use serde_json::{Value, json};
@@ -25,9 +28,14 @@ struct Job {
     parse: String,
     /// Record kinds an `ndjson` job produces (for refresh routing and resync deletions).
     kinds: Vec<String>,
+    /// `tally` jobs: the NDJSON file the command writes, and the field to count by.
+    file: Option<String>,
+    key: Option<String>,
 }
 
 struct Runner {
+    /// The connector's name in the manifest (`name` in the config; default `runner`).
+    name: String,
     root: PathBuf,
     jobs: Vec<Job>,
 }
@@ -146,7 +154,7 @@ impl Runner {
                 return Err(format!("job {name}: empty command"));
             }
             let parse = j["parse"].as_str().unwrap_or("ndjson").to_owned();
-            if !matches!(parse.as_str(), "cargo-test" | "clippy" | "ndjson") {
+            if !matches!(parse.as_str(), "cargo-test" | "clippy" | "ndjson" | "tally") {
                 return Err(format!("job {name}: unknown parser {parse}"));
             }
             let kinds = j["kinds"]
@@ -155,8 +163,14 @@ impl Runner {
                 .flatten()
                 .filter_map(|k| k.as_str().map(str::to_owned))
                 .collect();
+            let s = |k: &str| j[k].as_str().map(str::to_owned);
+            if parse == "tally" && (s("file").is_none() || s("key").is_none()) {
+                return Err(format!("job {name}: tally needs `file` and `key`"));
+            }
             jobs.push(Job {
                 per_crate: j["per"] == "crate",
+                file: s("file"),
+                key: s("key"),
                 name,
                 command,
                 parse,
@@ -164,6 +178,7 @@ impl Runner {
             });
         }
         Ok(Runner {
+            name: cfg["name"].as_str().unwrap_or("runner").to_owned(),
             root: PathBuf::from(cfg["root"].as_str().unwrap_or(".")),
             jobs,
         })
@@ -230,6 +245,47 @@ impl Runner {
         out.record(&job.name, &format!("{}:{name}", job.name), data);
     }
 
+    /// Run the command, then count the lines of its NDJSON `file` by `key`.
+    async fn run_tally(&self, job: &Job, out: &mut Out) -> Result<(), String> {
+        let (file, key) = (
+            job.file.as_deref().unwrap_or(""),
+            job.key.as_deref().unwrap_or(""),
+        );
+        let path = self.root.join(file);
+        let _ = std::fs::remove_file(&path);
+        let run = self.run(&job.command).await;
+        if !run.ok {
+            return Err(format!(
+                "job {}: {}",
+                job.name,
+                tail(&run.stderr, 500).trim()
+            ));
+        }
+        let text = std::fs::read_to_string(&path).unwrap_or_default();
+        let mut counts: BTreeMap<String, (u64, u64)> = BTreeMap::new();
+        for line in text.lines() {
+            let Ok(v) = serde_json::from_str::<Value>(line) else {
+                continue;
+            };
+            if let Some(k) = v[key].as_str() {
+                let c = counts.entry(k.to_owned()).or_default();
+                if v["declared"] == true {
+                    continue; // a declared key: reported even with no lines counted
+                }
+                c.0 += 1;
+                c.1 += u64::from(v["error"] == true);
+            }
+        }
+        for (k, (calls, errors)) in counts {
+            out.record(
+                &job.name,
+                &format!("{}:{k}", job.name),
+                json!({key: k, "calls": calls, "errors": errors}),
+            );
+        }
+        Ok(())
+    }
+
     async fn run_ndjson(&self, job: &Job, out: &mut Out) -> Result<(), String> {
         let run = self.run(&job.command).await;
         if !run.ok {
@@ -262,65 +318,85 @@ impl Runner {
         let crates = self.crates().await?;
         for job in &self.jobs {
             if job.per_crate {
-                for (name, manifest) in &crates {
-                    let id = format!("{}:{name}", job.name);
-                    if ids.is_none_or(|ids| ids.contains(&id)) {
-                        self.run_for_crate(job, name, manifest, out).await;
-                    }
+                self.execute_per_crate(job, &crates, ids, out).await;
+            } else if self.selected(job, ids) {
+                if job.parse == "tally" {
+                    self.run_tally(job, out).await?;
+                } else {
+                    self.run_ndjson(job, out).await?;
                 }
-                for id in ids
-                    .into_iter()
-                    .flatten()
-                    .filter(|i| i.starts_with(&format!("{}:", job.name)))
-                {
-                    if !crates.contains_key(&id[job.name.len() + 1..]) {
-                        out.not_found(&job.name, id);
-                    }
-                }
-                if resync {
-                    out.snapshot_complete(&job.name);
-                }
-            } else if ids.is_none() || self.owns_any(ids.unwrap_or_default()) {
-                self.run_ndjson(job, out).await?;
-                if resync {
-                    for k in &job.kinds {
-                        out.snapshot_complete(k);
-                    }
+            } else {
+                continue;
+            }
+            if resync {
+                for k in self.kinds_of(job) {
+                    out.snapshot_complete(k);
                 }
             }
         }
         Ok(())
     }
 
+    /// A per-crate job for every crate (resync) or the crates its refresh ids name.
+    async fn execute_per_crate(
+        &self,
+        job: &Job,
+        crates: &BTreeMap<String, String>,
+        ids: Option<&[String]>,
+        out: &mut Out,
+    ) {
+        for (name, manifest) in crates {
+            let id = format!("{}:{name}", job.name);
+            if ids.is_none_or(|ids| ids.contains(&id)) {
+                self.run_for_crate(job, name, manifest, out).await;
+            }
+        }
+        let prefix = format!("{}:", job.name);
+        for id in ids.into_iter().flatten().filter(|i| i.starts_with(&prefix)) {
+            if !crates.contains_key(&id[prefix.len()..]) {
+                out.not_found(&job.name, id);
+            }
+        }
+    }
+
+    /// Whether a once-per-run job runs: always on resync; on refresh when an id is its own (tally
+    /// ids carry the job name; ndjson ids are whatever the command printed).
+    fn selected(&self, job: &Job, ids: Option<&[String]>) -> bool {
+        let Some(ids) = ids else { return true };
+        if job.parse == "tally" {
+            ids.iter().any(|i| i.starts_with(&format!("{}:", job.name)))
+        } else {
+            self.owns_any(ids)
+        }
+    }
+
+    /// The record kinds a job produces.
+    fn kinds_of<'a>(&self, job: &'a Job) -> Vec<&'a str> {
+        if job.per_crate || job.parse == "tally" {
+            vec![job.name.as_str()]
+        } else {
+            job.kinds.iter().map(String::as_str).collect()
+        }
+    }
+
     /// Whether a refresh names a record that this ndjson job produced (its ids carry no job name,
     /// so any id without a `<per-crate job>:` prefix belongs to the ndjson jobs).
     fn owns_any(&self, ids: &[String]) -> bool {
         ids.iter().any(|id| {
-            !self
-                .jobs
-                .iter()
-                .any(|j| j.per_crate && id.starts_with(&format!("{}:", j.name)))
+            !self.jobs.iter().any(|j| {
+                (j.per_crate || j.parse == "tally") && id.starts_with(&format!("{}:", j.name))
+            })
         })
     }
 }
 
 impl Source for Runner {
     fn name(&self) -> &str {
-        "runner"
+        &self.name
     }
 
     fn capabilities(&self) -> Value {
-        let kinds: Vec<&str> = self
-            .jobs
-            .iter()
-            .flat_map(|j| {
-                if j.per_crate {
-                    vec![j.name.as_str()]
-                } else {
-                    j.kinds.iter().map(String::as_str).collect()
-                }
-            })
-            .collect();
+        let kinds: Vec<&str> = self.jobs.iter().flat_map(|j| self.kinds_of(j)).collect();
         let refresh: serde_json::Map<String, Value> = kinds
             .iter()
             .map(|k| (k.to_string(), json!(["external_ids"])))

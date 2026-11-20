@@ -2,6 +2,7 @@
 
 mod client;
 mod portal;
+mod report;
 mod server;
 
 use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
@@ -34,13 +35,16 @@ enum Command {
     /// Recompute derived state from the portal's fixtures and run its expectation files
     /// (tests/*.test.yaml). Exit code 1 if any expectation fails.
     Test {
+        /// A portal directory (containing toolbox.yaml) or a manifest file.
         #[arg(default_value = ".")]
         path: PathBuf,
+        /// Output format.
         #[arg(long, value_enum, default_value_t = Format::Text)]
         format: Format,
     },
     /// Show what a manifest change would do: two recomputes over the same inputs, then a diff.
     Plan {
+        /// The portal with the changed manifest (the "after").
         #[arg(default_value = ".")]
         path: PathBuf,
         /// Compare against this manifest file (the "before"); the portal's manifest is the "after".
@@ -49,54 +53,102 @@ enum Command {
         /// Use the portal's fixtures (the only mode until M6 adds --remote).
         #[arg(long, default_value_t = true)]
         local: bool,
+        /// Output format: Markdown for PR comments, or JSON.
         #[arg(long, value_enum, default_value_t = PlanFormat::Md)]
         format: PlanFormat,
     },
     /// Run the server: snapshot loop + REST API. Uses Postgres when --database-url (or
     /// DATABASE_URL) is set, otherwise an in-memory store (optionally preloaded with fixtures).
     Serve {
+        /// A portal directory (containing toolbox.yaml) or a manifest file.
         #[arg(default_value = ".")]
         path: PathBuf,
+        /// Address to listen on.
         #[arg(long, env = "TOOLBOX_LISTEN", default_value = "127.0.0.1:8080")]
         listen: String,
+        /// Postgres URL; without it the store is in memory and lost on exit.
         #[arg(long, env = "DATABASE_URL")]
         database_url: Option<String>,
         /// In-memory mode only: load the portal's fixtures at start.
         #[arg(long)]
         fixtures: bool,
     },
+    /// Score a repository locally: run the portal's in-image connectors once (or use its fixtures),
+    /// recompute, and print every scorecard with the evidence for failing rules. With --baseline,
+    /// compare against a committed results file (a ratchet): regressions exit 1, --update records
+    /// improvements, --ci also fails when the file is out of date.
+    Report {
+        /// A portal directory (containing toolbox.yaml) or a manifest file.
+        #[arg(default_value = ".")]
+        path: PathBuf,
+        /// Use the portal's fixtures instead of running its connectors.
+        #[arg(long)]
+        fixtures: bool,
+        /// Connectors not to run (comma-separated), e.g. a slow runner.
+        #[arg(long, value_delimiter = ',')]
+        skip: Vec<String>,
+        /// Output: md (default), json, or html (one self-contained page to publish).
+        #[arg(short = 'o', long, default_value = "md")]
+        output: String,
+        /// Write the output to this file instead of stdout.
+        #[arg(long)]
+        out: Option<PathBuf>,
+        /// Results file to compare against (the ratchet).
+        #[arg(long)]
+        baseline: Option<PathBuf>,
+        /// With --baseline: write the new results when nothing regressed (creates a missing file).
+        #[arg(long)]
+        update: bool,
+        /// With --baseline: fail when the results differ from the file in any way.
+        #[arg(long)]
+        ci: bool,
+    },
     /// Send a portal's fixtures to a running server through the ingest API (one batch per
     /// connector, then native values), and wait for the snapshot that contains them.
     Push {
+        /// A portal directory (containing toolbox.yaml) or a manifest file.
         #[arg(default_value = ".")]
         path: PathBuf,
+        /// The running server.
         #[arg(long, default_value = "http://127.0.0.1:8080")]
         url: String,
     },
     /// Read one entity (fields and where each came from).
     Get {
+        /// Entity id, e.g. repository:payments-api.
         id: String,
+        /// Comma-separated fields to return (default: every visible field).
+        #[arg(long)]
+        fields: Option<String>,
         #[command(flatten)]
         remote: Remote,
     },
-    /// Entities of a kind matching a CEL filter over `entity`.
+    /// Entities of a kind matching a CEL filter over `entity` (and `scores`).
     Query {
+        /// Entity kind, e.g. Repository.
         #[arg(long)]
         kind: String,
+        /// CEL over `entity` and `scores['<scorecard>']` ({level, rules}); keeps matches.
         #[arg(long)]
         filter: Option<String>,
+        /// Comma-separated fields to return (default: every visible field).
+        #[arg(long)]
+        fields: Option<String>,
         #[command(flatten)]
         remote: Remote,
     },
     /// Find entities by name or title.
     Search {
+        /// Text to find in entity ids and titles.
         query: String,
         #[command(flatten)]
         remote: Remote,
     },
     /// Neighbours of an entity.
     Graph {
+        /// Entity id.
         id: String,
+        /// How many hops to follow (1 to 3).
         #[arg(long, default_value_t = 1)]
         depth: u64,
         #[command(flatten)]
@@ -104,34 +156,58 @@ enum Command {
     },
     /// Who owns an entity and why (CODEOWNERS evidence).
     Owner {
+        /// Entity id.
         id: String,
         #[command(flatten)]
         remote: Remote,
     },
     /// Why a field has its value (--field) or why a rule passes or fails (--rule scorecard/rule).
     Explain {
+        /// Entity id.
         id: String,
+        /// Field to explain.
         #[arg(long)]
         field: Option<String>,
+        /// Rule to explain, as <scorecard>/<rule>.
         #[arg(long)]
         rule: Option<String>,
         #[command(flatten)]
         remote: Remote,
     },
-    /// Scorecard levels and rule outcomes.
+    /// Scorecard levels and rule outcomes for one entity.
     Score {
+        /// Entity id.
         id: String,
+        #[command(flatten)]
+        remote: Remote,
+    },
+    /// One scorecard across every entity: level counts, failing rules and evidence (a work list).
+    /// Without a name, lists the scorecards.
+    Scorecard {
+        /// Scorecard name.
+        name: Option<String>,
+        /// Only entities where this rule has --outcome (default fail).
+        #[arg(long)]
+        rule: Option<String>,
+        /// Outcome to match for --rule: fail, pass or unknown.
+        #[arg(long)]
+        outcome: Option<String>,
+        /// Only entities at this level.
+        #[arg(long)]
+        level: Option<String>,
         #[command(flatten)]
         remote: Remote,
     },
     /// Ask the connectors behind an entity to re-read it, and wait for the fresh snapshot.
     Refresh {
+        /// Entity id.
         id: String,
         #[command(flatten)]
         remote: Remote,
     },
     /// Actions available on an entity.
     Actions {
+        /// Entity id.
         id: String,
         #[command(flatten)]
         remote: Remote,
@@ -154,8 +230,10 @@ enum Command {
     /// Recompute derived state from fixtures and print a summary, or write the reference-format
     /// files (expected/*.json, authz/tuples.expected.json) to --out.
     Derive {
+        /// A portal directory (containing toolbox.yaml) or a manifest file.
         #[arg(default_value = ".")]
         path: PathBuf,
+        /// Directory to write the reference-format files to.
         #[arg(long)]
         out: Option<PathBuf>,
     },
@@ -173,6 +251,7 @@ const CLI_MCP_TOOLS: &[(&str, &str)] = &[
     ("owner", "owner_of"),
     ("explain", "explain"),
     ("score", "scorecard_status"),
+    ("scorecard", "scorecard_report"),
     ("refresh", "refresh_entity"),
     ("actions", "list_actions"),
 ];
@@ -227,10 +306,13 @@ enum ConnectorCommand {
 enum TokenCommand {
     /// Create a token for a user (the subject: a login or an email) and print it once.
     Create {
+        /// The token's subject: a login or an email.
         #[arg(long)]
         user: String,
+        /// A note to recognise the token by.
         #[arg(long)]
         label: Option<String>,
+        /// The portal's Postgres, where token hashes are stored.
         #[arg(long, env = "DATABASE_URL")]
         database_url: String,
     },
@@ -264,20 +346,21 @@ fn main() -> ExitCode {
             fixtures,
         } => server::serve(&path, &listen, database_url, fixtures),
         Command::Push { path, url } => server::push(&path, &url),
-        Command::Get { id, remote } => client::tool(
+        Command::Get { id, fields, remote } => client::tool(
             &remote.target(),
             "get",
-            serde_json::json!({"id": id}),
+            serde_json::json!({"id": id, "fields": fields}),
             &remote.output,
         ),
         Command::Query {
             kind,
             filter,
+            fields,
             remote,
         } => client::tool(
             &remote.target(),
             "query",
-            serde_json::json!({"kind": kind, "filter": filter}),
+            serde_json::json!({"kind": kind, "filter": filter, "fields": fields}),
             &remote.output,
         ),
         Command::Search { query, remote } => client::tool(
@@ -315,6 +398,37 @@ fn main() -> ExitCode {
             serde_json::json!({"id": id}),
             &remote.output,
         ),
+        Command::Scorecard {
+            name,
+            rule,
+            outcome,
+            level,
+            remote,
+        } => client::tool(
+            &remote.target(),
+            "scorecard_report",
+            serde_json::json!({"scorecard": name, "rule": rule, "outcome": outcome, "level": level}),
+            &remote.output,
+        ),
+        Command::Report {
+            path,
+            fixtures,
+            skip,
+            output,
+            out,
+            baseline,
+            update,
+            ci,
+        } => report::run(&report::Options {
+            path,
+            fixtures,
+            skip,
+            output,
+            out,
+            baseline,
+            update,
+            ci,
+        }),
         Command::Refresh { id, remote } => client::tool(
             &remote.target(),
             "refresh_entity",

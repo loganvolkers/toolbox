@@ -59,6 +59,7 @@ pub fn app_state_with(
 
 /// Serve on `listener` until the process exits (the snapshot loop runs alongside).
 pub async fn serve(state: Arc<AppState>, listener: tokio::net::TcpListener) -> std::io::Result<()> {
+    mcp::trace_declare();
     tokio::spawn(state.clone().run_snapshot_loop());
     tokio::spawn(connectors::freshness_loop(state.clone()));
     connectors::spawn_in_image(&state);

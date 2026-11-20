@@ -207,7 +207,8 @@ pub async fn freshness_loop(s: Arc<AppState>) {
 /// Resolve `${env:X}` and `${secret:Y}` in connector config. Unresolvable keys are dropped (with a
 /// warning) so connectors can tell "not configured" from "configured". `TOOLBOX_CONNECTOR_CONFIG_OVERRIDES`
 /// (JSON: connector → object) is merged on top, for local runs and tests.
-fn resolve_config(connector: &str, cfg: &Value) -> Value {
+/// A connector's manifest config with `${env:…}` and `${secret:…}` placeholders resolved.
+pub fn resolve_config(connector: &str, cfg: &Value) -> Value {
     let mut out = serde_json::Map::new();
     for (k, v) in cfg.as_object().into_iter().flatten() {
         match v.as_str() {
@@ -249,7 +250,9 @@ fn resolve_config(connector: &str, cfg: &Value) -> Value {
 
 /// The binary for a connector package: `builtin:<name>` → `toolbox-connector-<name>`, found in
 /// `TOOLBOX_CONNECTORS_DIR`, next to the running binary, or on PATH. Other packages are paths.
-fn binary_for(package: &str) -> String {
+/// The program for a connector package: `builtin:<name>` → `toolbox-connector-<name>` from
+/// `TOOLBOX_CONNECTORS_DIR` or next to this executable; anything else is a path.
+pub fn binary_for(package: &str) -> String {
     let Some(name) = package.strip_prefix("builtin:") else {
         return package.to_owned();
     };

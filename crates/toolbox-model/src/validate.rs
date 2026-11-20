@@ -489,6 +489,13 @@ impl Checker {
                     &r.check,
                     Site::Scorecard,
                 ));
+                if let Some(e) = &r.evidence {
+                    exprs.push((
+                        format!("/scorecards/{si}/rules/{ri}/evidence"),
+                        e,
+                        Site::Scorecard,
+                    ));
+                }
             }
         }
         if let Some(authz) = &m.authz {

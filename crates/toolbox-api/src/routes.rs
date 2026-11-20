@@ -10,6 +10,7 @@ use axum::routing::{get, post, put};
 use axum::{Json, Router};
 use serde::Deserialize;
 use serde_json::{Map, Value, json};
+use std::collections::BTreeMap;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
 use std::time::Duration;
@@ -54,6 +55,11 @@ pub fn router(state: Arc<AppState>) -> Router {
             get(crate::reads::view_scorecard),
         )
         .route("/v1/views/ops", get(crate::reads::view_ops))
+        .route("/v1/scorecards", get(crate::reads::scorecards))
+        .route(
+            "/v1/scorecards/{name}",
+            get(crate::reads::scorecard_results),
+        )
         .route("/mcp", post(crate::mcp::handle))
         .fallback(crate::ui::asset)
         .route("/v1/actions", get(crate::actions::list))
@@ -237,6 +243,7 @@ async fn list_entities(State(s): S, headers: HeaderMap, Query(q): Query<ListQuer
         .map(|(id, _)| id)
         .collect();
     let truthy = to_cel(&Value::Bool(true));
+    let wants_scores = q.filter.as_deref().is_some_and(|f| f.contains("scores"));
     let mut items: Vec<Value> = Vec::new();
     let mut next = None;
     'outer: for chunk in candidates.chunks(200) {
@@ -254,9 +261,20 @@ async fn list_entities(State(s): S, headers: HeaderMap, Query(q): Query<ListQuer
                 let mut visible = shaped["fields"].clone();
                 visible["id"] = json!(id);
                 let entity = to_cel(&visible);
-                match with_vars(&[("entity", &entity), ("policy", &policy)], |ctx| {
-                    f.eval_in(ctx)
-                }) {
+                // `scores['<scorecard>']` = {level, rules: {rule: outcome}}, as the caller may see it.
+                let scores = if wants_scores {
+                    to_cel(&score_outcomes(s.shape_scores(&p, &caller, id, v)))
+                } else {
+                    to_cel(&json!({}))
+                };
+                match with_vars(
+                    &[
+                        ("entity", &entity),
+                        ("policy", &policy),
+                        ("scores", &scores),
+                    ],
+                    |ctx| f.eval_in(ctx),
+                ) {
                     Ok(b) if b == truthy => {}
                     _ => continue,
                 }
@@ -279,11 +297,18 @@ async fn list_entities(State(s): S, headers: HeaderMap, Query(q): Query<ListQuer
     )
 }
 
+#[derive(Deserialize)]
+struct GetQuery {
+    min_snapshot: Option<String>,
+    /// Comma-separated fields to return (default: every visible field).
+    fields: Option<String>,
+}
+
 async fn get_entity(
     State(s): S,
     headers: HeaderMap,
     Path(id): Path<String>,
-    Query(q): Query<SnapQuery>,
+    Query(q): Query<GetQuery>,
 ) -> Response {
     let caller = match s.caller(&headers).await {
         Ok(c) => c,
@@ -297,12 +322,21 @@ async fn get_entity(
         Ok(v) => v[0],
         Err(r) => return r,
     };
+    let fields: Option<Vec<&str>> = q
+        .fields
+        .as_deref()
+        .map(|f| f.split(',').map(str::trim).collect());
     match s
-        .shape_entity(&p, &caller, &id, vis, None)
+        .shape_entity(&p, &caller, &id, vis, fields.as_deref())
         .filter(|_| vis.view)
     {
         Some(mut body) => {
             body["inbound"] = json!(p.derived.entities[&id].inbound);
+            let mut outbound: BTreeMap<String, Vec<String>> = BTreeMap::new();
+            for (rel, target) in crate::reads::outgoing(&s, &p, &id) {
+                outbound.entry(rel).or_default().push(target);
+            }
+            body["outbound"] = json!(outbound);
             body["snapshot"] = json!(p.snapshot_id);
             with_snapshot(&p, body)
         }
@@ -537,4 +571,25 @@ async fn me(State(s): S, headers: HeaderMap) -> Response {
         .into_response(),
         Err(r) => r,
     }
+}
+
+/// Shaped scorecards reduced to `{card: {level, rules: {rule: outcome}}}` for filters (a redacted
+/// part stays a redaction marker, so filters can't probe it).
+pub(crate) fn score_outcomes(shaped: serde_json::Map<String, Value>) -> Value {
+    let mut out = serde_json::Map::new();
+    for (card, c) in shaped {
+        let rules = match c.get("rules") {
+            Some(r) if r.get("redacted").is_some() => r.clone(),
+            Some(r) => Value::Object(
+                r.as_object()
+                    .into_iter()
+                    .flatten()
+                    .map(|(k, o)| (k.clone(), o["outcome"].clone()))
+                    .collect(),
+            ),
+            None => json!({}),
+        };
+        out.insert(card, json!({"level": c["level"], "rules": rules}));
+    }
+    Value::Object(out)
 }

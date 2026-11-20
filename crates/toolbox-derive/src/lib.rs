@@ -54,6 +54,9 @@ pub struct Score {
     pub level: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rules: Option<BTreeMap<String, String>>,
+    /// For failing rules with an `evidence` expression: what makes them fail.
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub evidence: BTreeMap<String, Value>,
 }
 
 /// A problem found while deriving (never fatal: the pipeline always produces a result).
@@ -149,6 +152,7 @@ impl<'m> Pipeline<'m> {
         for s in &m.scorecards {
             sources.extend(s.applies_to.as_deref());
             sources.extend(s.rules.iter().map(|r| r.check.as_str()));
+            sources.extend(s.rules.iter().filter_map(|r| r.evidence.as_deref()));
         }
         for t in m.authz.iter().flat_map(|a| &a.tuples) {
             if let TupleDerivation::Kind { emit, .. } = t {
@@ -365,7 +369,12 @@ impl<'m> Pipeline<'m> {
                 }
             }
         }
+        // Edges whose target isn't an entity are dropped, and reported per relation (a count and a
+        // sample), so a mistyped reference doesn't vanish silently.
+        let mut dropped: BTreeMap<&str, (usize, usize, Vec<&str>)> = BTreeMap::new();
         for (rel, src, target) in &edges {
+            let d = dropped.entry(rel.as_str()).or_default();
+            d.1 += 1;
             if let (Some(&s), Some(&t)) = (index.get(src.as_str()), index.get(target.as_str())) {
                 inbound
                     .entry(t)
@@ -373,7 +382,33 @@ impl<'m> Pipeline<'m> {
                     .entry(rel.clone())
                     .or_default()
                     .push(s);
+            } else {
+                d.0 += 1;
+                if d.2.len() < 3 {
+                    d.2.push(target.as_str());
+                }
             }
+        }
+        let ignored: std::collections::HashSet<&str> = self
+            .m
+            .kinds
+            .iter()
+            .flat_map(|k| &k.relations)
+            .filter(|(_, r)| r.unresolved.as_deref() == Some("ignore"))
+            .map(|(name, _)| name.as_str())
+            .collect();
+        for (rel, (n, total, sample)) in dropped
+            .into_iter()
+            .filter(|(rel, d)| d.0 > 0 && !ignored.contains(rel))
+        {
+            d.diagnostics.push(Diagnostic {
+                code: "relation.dropped",
+                location: format!("relation {rel}"),
+                message: format!(
+                    "{n} of {total} edges point at no entity and were dropped, e.g. {}",
+                    sample.join(", ")
+                ),
+            });
         }
         drop(edges);
         inbound.par_iter_mut().for_each(|(_, rels)| {
@@ -611,9 +646,11 @@ impl<'m> Pipeline<'m> {
             return Score {
                 level: "skipped".into(),
                 rules: None,
+                evidence: BTreeMap::new(),
             };
         }
         let mut outcomes = BTreeMap::new();
+        let mut evidence = BTreeMap::new();
         for r in &sc.rules {
             let outcome = match applies
                 .clone()
@@ -623,6 +660,15 @@ impl<'m> Pipeline<'m> {
                 Ok(false) => "fail",
                 Err(_) => "unknown",
             };
+            if outcome == "fail"
+                && let Some(e) = &r.evidence
+            {
+                // Evidence is best-effort: an error is shown as such, never fails the rule twice.
+                let v = self
+                    .json_in(e, ctx)
+                    .unwrap_or_else(|m| serde_json::json!({"error": m}));
+                evidence.insert(r.name.clone(), v);
+            }
             outcomes.insert(r.name.clone(), outcome.to_string());
         }
         let mut level = "none".to_string();
@@ -642,6 +688,7 @@ impl<'m> Pipeline<'m> {
         Score {
             level,
             rules: Some(outcomes),
+            evidence,
         }
     }
 

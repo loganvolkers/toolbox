@@ -290,6 +290,7 @@ pub struct Derived { pub snapshot: SnapshotId, pub entities: Entities, pub score
 | `POST /v1/actions/{name}/runs` | Start a run with `confirm_token` |
 | `GET /v1/runs/{id}` · `GET /v1/runs/{id}/events` (SSE) · `POST /v1/runs/{id}/cancel` · `GET /v1/runs?mine=true` | Run status, events, the caller's runs |
 | `GET /v1/approvals?mine=true` · `POST /v1/approvals/{id}/decision` | Approvals for the caller; decisions need a human session (D57) |
+| `GET /v1/scorecards` · `/v1/scorecards/{name}?rule=&outcome=&level=` | Scorecards with level counts; one scorecard's per-entity results with failing rules and evidence (D66). `GET /v1/entities?filter=` may read `scores['<card>']` |
 | `GET /v1/views/home` · `/v1/views/entity/{id}` · `/v1/views/scorecard/{name}` · `/v1/views/ops` | Composite, facet-shaped page views for the UI and operator bundles (D56) |
 | `GET /v1/events` (SSE) | Snapshot published, command completed and run transition events visible to the caller |
 | `POST /v1/ingest` | Connector ingest (connector token) |
@@ -309,9 +310,10 @@ Errors use RFC 9457 problem details with `code`, and for authorization failures 
 | `query` | `kind`, `filter` (CEL), `fields?` | Matching entities |
 | `graph` | `id`, `relation?`, `direction?`, `depth?` | Neighbours |
 | `owner_of` | `id` | Owner, ownership status, evidence (claim, CODEOWNERS) |
-| `scorecard_status` | `id`, `scorecard?` | Levels, rule outcomes, fix text (facet-shaped) |
+| `scorecard_status` | `id`, `scorecard?` | Levels, rule outcomes, fix text and evidence for failing rules (facet-shaped) |
+| `scorecard_report` | `scorecard?`, `rule?`, `outcome?`, `level?` | One scorecard across visible entities: level counts and failing rules with evidence; without `scorecard`, every scorecard (D66) |
 | `explain` | `id`, `field` or `rule` | Why: sources, precedence, CEL, observed values |
-| `refresh_entity` | `id` | Waits for completion (MCP task if long); returns the new snapshot |
+| `refresh_entity` | `id` | Waits for completion (MCP task if long); returns the new snapshot and what changed (fields, entities over the snapshot range) |
 | `list_actions` | `id` | Actions available to the caller on that entity |
 | `action_options` | `action`, `input`, `id`, `q?` | Options with disabled reasons |
 | `preview_action` | `action`, `id`, `inputs` | Effects and `confirm_token` |
@@ -374,6 +376,8 @@ to `result`; previews come from the Toolbox layer only.
 | `toolbox serve [--role all|api|worker]` | Run the server |
 | `toolbox push [--url URL]` | Send a portal's fixtures through the ingest API and wait for the snapshot (dev and tests) |
 | `toolbox derive [--out DIR]` | Recompute from fixtures; print a summary or write the reference-format outputs |
+| `toolbox report [--skip C] [-o md\|json\|html] [--baseline F [--update\|--ci]]` | Score a repository without a server: connectors once, recompute, scorecards with evidence; a ratchet against a committed baseline (D66, [repo-portals.md](./design/repo-portals.md)) |
+| `toolbox scorecard [NAME] [--rule R]` | One scorecard across entities: a work list (MCP `scorecard_report`) |
 | `toolbox describe` | Print Toolbox's own CLI commands and MCP tools as connector records (contract snapshots; Toolbox for Toolbox, D65) |
 | `toolbox token create --user U` | Create a personal access token (printed once) |
 | `toolbox get|query|search|graph|owner|explain|score|refresh|actions` | Read commands, each calling the MCP tool of the same purpose (`-o md|json|yaml`) |
