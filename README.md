@@ -4,7 +4,11 @@ An open-source, agent-first internal developer portal (IDP) framework: Rust core
 code, deployed by you. Catalog, scorecards, self-service actions, knowledge/context lake and search —
 exposed identically over API, MCP, CLI and UI.
 
-**Status:** research & planning (design phase).
+**Status:** design phase, with implementation started: M0 (`toolbox validate`) is done ([docs/v1-spec.md](docs/v1-spec.md) §3).
+
+```bash
+cargo build && target/debug/toolbox validate examples/reference-portal
+```
 
 **Start here:** [AGENTS.md](AGENTS.md) for working rules and parallel tracks, [docs/v1-spec.md](docs/v1-spec.md) for what v1 must do, [examples/reference-portal](examples/reference-portal/README.md) for the reference implementation anchor. Also: [docs/decisions.md](docs/decisions.md) for every decision and open question, [docs/glossary.md](docs/glossary.md) for vocabulary, and [docs/research-log.md](docs/research-log.md) for methods and hands-on verifications.
 

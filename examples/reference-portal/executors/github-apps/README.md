@@ -2,7 +2,7 @@
 
 The executor behind `install-approved-app` and `remove-app`. It ships inside the portal image at
 `/portal/executors/github-apps/bin/github-apps` (D40) and speaks the executor protocol over stdio
-([`schema/executor-messages.schema.json`](../../schema/executor-messages.schema.json); a full
+([`schema/executor-messages.schema.json`](../../../../schema/executor-messages.schema.json); a full
 conversation is in [`protocol/install-approved-app.executor.ndjson`](../../protocol/install-approved-app.executor.ndjson)).
 Any language works; this spec is what the implementation must do.
 

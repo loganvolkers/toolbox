@@ -20,6 +20,11 @@ MCP, CLI, data model, properties) and test against
 [examples/reference-portal](./examples/reference-portal/README.md): your pipeline must reproduce its
 `expected/` outputs byte for byte, and its acceptance scenarios define "done".
 
+**Building:** `cargo build` (toolchain pinned in `rust-toolchain.toml`), `cargo test`, `cargo clippy
+--all-targets -- -D warnings`, then `target/debug/toolbox validate examples/reference-portal`.
+`python scripts/validate-parity.py` checks `toolbox validate` against `tools/validate.py`.
+`.github/workflows/ci.yml` runs all of this. **M0 is done**; M1 (derived state) is next.
+
 ## Repository layout
 
 ```
@@ -36,6 +41,9 @@ docs/design/*.md             one detailed design per capability
 docs/examples/*.md           worked examples (e.g. approved GitHub Apps)
 docs/glossary.md, docs/research-log.md
 docs/v1-spec.md              the implementation contract for v1
+Cargo.toml, crates/          Rust workspace (v1-spec §4); `toolbox-cli` builds the `toolbox` binary
+schema/                      JSON Schemas (manifest, connector and executor messages), compiled into the binary
+scripts/                     repo checks (validate-parity.py)
 examples/reference-portal/   reference implementation anchor: manifest, schemas, fixtures, oracle, authz tests
 experiments/                 reproducible experiments cited by the docs
 plugins/toolbox-operator/    Agent Plugins 1.0.0 package (pre-release skeleton)

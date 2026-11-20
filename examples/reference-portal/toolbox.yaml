@@ -1,6 +1,7 @@
 # Toolbox reference portal: "acme" on GitHub + an IdP.
 # This manifest is the v1 contract in practice (docs/v1-spec.md §5). It is validated against
-# schema/manifest.schema.json, and tools/reference.py executes its CEL against fixtures/.
+# the repo-root schema/manifest.schema.json (`toolbox validate`), and tools/reference.py executes its
+# CEL against fixtures/.
 apiVersion: toolbox.dev/v1alpha1
 
 portal:

@@ -12,7 +12,7 @@ need the Toolbox binary are specified precisely enough to implement against.
 
 | Capability | Where | Decisions |
 |---|---|---|
-| Manifest as the only configuration | [`toolbox.yaml`](./toolbox.yaml), validated by [`schema/manifest.schema.json`](./schema/manifest.schema.json) | D2, D41 |
+| Manifest as the only configuration | [`toolbox.yaml`](./toolbox.yaml), validated by [`schema/manifest.schema.json`](../../schema/manifest.schema.json) and by `toolbox validate` | D2, D41 |
 | Raw records mapped to entities with CEL (object construction) | `kinds[].map` | D24 |
 | Field-level sources and precedence, native values | `kinds[].sources`, [`fixtures/native.json`](./fixtures/native.json) | D13 |
 | Entities created only by identity sources; orphans reported | `identityFrom`; the `ghost-service` fixture | D13 |
@@ -82,7 +82,8 @@ Run from this directory (Python 3.11+):
 
 ```bash
 python -m venv .venv && .venv/bin/pip install -r tools/requirements.txt
-.venv/bin/python tools/validate.py          # manifest + 40 protocol messages against the schemas
+.venv/bin/python tools/validate.py          # manifest + 40 messages against ../../schema
+cargo run -q -p toolbox-cli -- validate .   # the same checks in Rust, plus CEL, files and fixtures (from the repo root: toolbox validate examples/reference-portal)
 .venv/bin/python tools/reference.py --check # pipeline, 20 hand-written assertions, committed outputs
 fga model test --tests authz/model.fga.yaml # OpenFGA over the derived tuples
 ```
@@ -99,7 +100,6 @@ workflow (they need the Toolbox binary and actions, which don't exist yet); the 
 
 ```
 toolbox.yaml                       the manifest
-schema/                            manifest, connector-message and executor-message JSON Schemas
 fixtures/*.ndjson, native.json     connector records (valid connector messages) and native values
 tests/*.test.yaml                  hand-written expectations (CEL over entity/score/options/orphans)
 expected/, authz/tuples.expected.json   generated oracle outputs

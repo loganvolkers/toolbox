@@ -52,7 +52,7 @@ earlier ones. Tracks in [AGENTS.md](../AGENTS.md) map onto these.
 
 | # | Milestone | Delivers | Exit criteria |
 |---|---|---|---|
-| **M0** | Skeleton | Cargo workspace (§4), `toolbox validate` | Validates the reference `toolbox.yaml` with the same results as `tools/validate.py`, including cross-reference errors; rejects the negative cases recorded in [research-log.md](./research-log.md) |
+| **M0** ✅ | Skeleton | Cargo workspace (§4), `toolbox validate` (done 2026-11-20: [research-log.md](./research-log.md)) | Validates the reference `toolbox.yaml` with the same results as `tools/validate.py`, including cross-reference errors; rejects the negative cases recorded in [research-log.md](./research-log.md) |
 | **M1** | Derived state | `MemStore`, NDJSON fixture loader, the §6 pipeline behind `DerivedState`, `toolbox test`, `toolbox plan --local` | **Byte-identical** `expected/*.json` and `authz/tuples.expected.json` vs `tools/reference.py`; all `tests/*.test.yaml` pass; a plan between two manifests lists changed fields, levels, tuples and options; 100k-entity synthetic run under the §10.4 budget |
 | **M2** | Postgres and API | `PgStore` (§8), ingest endpoint, snapshot loop, REST reads (§7.2), snapshot ids | Same outputs as M1 when fixtures arrive through `POST /v1/ingest`; `min_snapshot` read-your-writes works; restart loses nothing |
 | **M3** | Authorization | Authn (IAP JWT, OIDC, PAT), OpenFGA co-process over the tuple view, facet shaping, `toolbox test` runs `.fga.yaml` | Reference `authz/model.fga.yaml` passes through `Authorizer`; A3/A4/A10 behave as specified; a membership removal is enforced within 60 s |
@@ -92,10 +92,9 @@ Small, shallow workspace; heavy dependencies isolated in leaf crates (D44, D46):
 
 ## 5. The manifest
 
-The schema is [`examples/reference-portal/schema/manifest.schema.json`](../examples/reference-portal/schema/manifest.schema.json)
-(`apiVersion: toolbox.dev/v1alpha1`); [`toolbox.yaml`](../examples/reference-portal/toolbox.yaml) uses
-every v1 feature. Move the schema to `schema/` at the repo root when code starts; until then the
-example copy is canonical.
+The schema is [`schema/manifest.schema.json`](../schema/manifest.schema.json)
+(`apiVersion: toolbox.dev/v1alpha1`), compiled into the `toolbox` binary;
+[`toolbox.yaml`](../examples/reference-portal/toolbox.yaml) uses every v1 feature.
 
 | Section | Meaning |
 |---|---|
@@ -313,7 +312,7 @@ preview → run flow.
 
 ### 7.4 Connector API
 
-Messages: [`schema/connector-messages.schema.json`](../examples/reference-portal/schema/connector-messages.schema.json);
+Messages: [`schema/connector-messages.schema.json`](../schema/connector-messages.schema.json);
 semantics: [connector-control.md](./design/connector-control.md). Golden conversation:
 [`protocol/install-approved-app.connector.ndjson`](../examples/reference-portal/protocol/install-approved-app.connector.ndjson).
 In-image connectors: NDJSON over stdin/stdout, started and supervised by the server (restart with
@@ -326,7 +325,7 @@ webhooks for repository and push events; installation visibility per Q14), `git-
 
 ### 7.5 Executor protocol
 
-Messages: [`schema/executor-messages.schema.json`](../examples/reference-portal/schema/executor-messages.schema.json);
+Messages: [`schema/executor-messages.schema.json`](../schema/executor-messages.schema.json);
 semantics: [action-runs.md](./design/action-runs.md) §5. Golden conversation:
 [`protocol/install-approved-app.executor.ndjson`](../examples/reference-portal/protocol/install-approved-app.executor.ndjson).
 In-image executors are child processes over stdio, run as a separate Unix user with only their
