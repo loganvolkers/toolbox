@@ -19,6 +19,7 @@ no Postgres, no OpenFGA, no network.
 | `maintainer-action-deps` | 1. Maintainer | ActionDependency | Each third-party action is SHA-pinned in every workflow that uses it |
 | `meta-rule` | all (our standards) | Rule | Fix text; tested; decided and both outcomes on fixtures; evidence; no nested loops; readable. New rules must reach bronze |
 | `meta-scorecard` | all (our standards) | Scorecard | Tested; no empty level; fixtures reach two levels; every rule tested. New scorecards must reach bronze |
+| `maintainer-skill` | 1. Maintainer | Skill | Spec-valid frontmatter; description says when, in third person; then a short procedure with an example and a body budget; then limits, eval cases, and no hidden text or hardcoded secrets. New skills must reach bronze |
 
 ## Run it
 
@@ -55,7 +56,7 @@ To register it in an MCP client (for example Claude Code's `.mcp.json`), use the
 
 | Connector | Records | How | Refresh |
 |---|---|---|---|
-| `workspace` ([crate](../crates/toolbox-connector-workspace)) | `crate`, `doc`, `file` | `cargo metadata`, a `syn` parse of each crate, markdown and file scans with configurable regex captures and counts | Re-reads one crate, doc or file |
+| `workspace` ([crate](../crates/toolbox-connector-workspace)) | `crate`, `doc`, `file`, `skill` | `cargo metadata`, a `syn` parse of each crate, markdown and file scans with configurable regex captures and counts, and one record per `SKILL.md` | Re-reads one crate, doc, file or skill |
 | `surfaces` (the runner binary) | `command`, `mcp-tool` | Runs `toolbox describe` | Reruns it |
 | `ci-lint` (the runner binary) | `zizmor`, `actionlint` | Runs both linters over `.github/workflows` and `actions/`; one record per file, clean ones included | Reruns them |
 | `github-actions` (the github binary) | `workflow-runs` | Run history per workflow on `main` from the GitHub API: fail rate, re-runs, failing streak, p90 time | Re-reads it |

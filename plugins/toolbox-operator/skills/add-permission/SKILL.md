@@ -1,6 +1,6 @@
 ---
 name: add-permission
-description: Change who can see or do what in a Toolbox portal. Edits OpenFGA model modules (authz/*.fga, fga.mod), .fga.yaml tests, derivation rules from catalog relations, facets and CODEOWNERS-backed claims. Use for permissions, roles, access control, ReBAC, OpenFGA or fga.yaml work.
+description: Change who can see or do what in a Toolbox portal. Edits OpenFGA model modules (authz/*.fga, fga.mod), .fga.yaml tests, derivation rules from catalog relations, facets and CODEOWNERS-backed claims. Use when changing permissions, roles, access control, ReBAC, OpenFGA models or fga.yaml tests.
 metadata:
   status: pre-release
 ---

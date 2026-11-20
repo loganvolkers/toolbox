@@ -301,6 +301,9 @@
       "doc:docs/design/sdlc.md": {
         "level": "silver"
       },
+      "doc:docs/design/skill-standards.md": {
+        "level": "silver"
+      },
       "doc:docs/design/source-of-truth.md": {
         "level": "silver"
       },
@@ -384,6 +387,37 @@
       },
       "doc:portal/README.md": {
         "level": "silver"
+      }
+    },
+    "maintainer-skill": {
+      "skill:plugins/toolbox-operator/skills/add-permission": {
+        "failing": {
+          "has-evals": 1,
+          "has-example": 1
+        },
+        "level": "bronze"
+      },
+      "skill:plugins/toolbox-operator/skills/add-scorecard": {
+        "failing": {
+          "has-evals": 1,
+          "has-example": 1,
+          "states-boundaries": 1
+        },
+        "level": "bronze"
+      },
+      "skill:plugins/toolbox-operator/skills/review-plan": {
+        "failing": {
+          "has-evals": 1,
+          "has-example": 1
+        },
+        "level": "bronze"
+      },
+      "skill:plugins/toolbox-operator/skills/toolbox-authoring": {
+        "failing": {
+          "has-evals": 1,
+          "has-example": 1
+        },
+        "level": "bronze"
       }
     },
     "meta-rule": {
@@ -614,6 +648,45 @@
         },
         "level": "none"
       },
+      "rule:toolbox/maintainer-skill/description-says-when": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-skill/has-evals": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-skill/has-example": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-skill/has-procedure": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-skill/links-resolve": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-skill/no-hardcoded-secrets": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-skill/no-hidden-instructions": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-skill/one-level-deep": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-skill/portable-paths": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-skill/states-boundaries": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-skill/third-person": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-skill/valid-frontmatter": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-skill/within-body-budget": {
+        "level": "gold"
+      },
       "rule:toolbox/meta-rule/always-explains": {
         "level": "gold"
       },
@@ -796,6 +869,9 @@
           "every-rule-tested": 1
         },
         "level": "silver"
+      },
+      "scorecard:toolbox/maintainer-skill": {
+        "level": "gold"
       },
       "scorecard:toolbox/meta-rule": {
         "level": "gold"

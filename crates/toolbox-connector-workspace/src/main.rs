@@ -12,7 +12,9 @@
 //!   (triggers, permissions, timeouts, `uses:` and how each is pinned), and one record per external
 //!   action with every ref used and the files using it;
 //! - `betterer`: one per test in each Betterer results file matching `betterer` globs (issue counts
-//!   per file for file tests), so existing Betterer ratchets roll up into scorecards.
+//!   per file for file tests), so existing Betterer ratchets roll up into scorecards;
+//! - `skill` (`skills` globs): one per Agent Skills directory (`SKILL.md`), with spec frontmatter
+//!   checks and the counts `maintainer-skill` thresholds (docs/design/skill-standards.md).
 //!
 //! `docs` and `file` records also carry `captures` (each configured regex's first group, unique,
 //! sorted, with runs of whitespace replaced by `-`) and `counts` (matches per configured regex),
@@ -20,11 +22,13 @@
 //! commands and tools they mention without the connector knowing about them.
 //!
 //! `TOOLBOX_CONNECTOR_CONFIG`: `{"root"?: ".", "docs"?: [glob], "files"?: [glob],
-//! "captures"?: {name: regex}, "counts"?: {name: regex}, "crates"?: true, "repo"?: false, "betterer"?: [glob]}`.
+//! "captures"?: {name: regex}, "counts"?: {name: regex}, "crates"?: true, "repo"?: false,
+//! "betterer"?: [glob], "skills"?: [glob]}`.
 
 mod betterer;
 mod repo;
 mod rust;
+mod skills;
 mod workflows;
 
 use regex::Regex;
@@ -41,6 +45,8 @@ struct Workspace {
     betterer: Vec<Regex>,
     /// GitHub Actions workflow and action metadata files (`workflow` and `action-ref` records).
     workflows: Vec<Regex>,
+    /// Agent skill files (`skill` records), usually `**/SKILL.md`.
+    skills: Vec<Regex>,
     captures: Vec<(String, Regex)>,
     counts: Vec<(String, Regex)>,
     crates: bool,
@@ -92,6 +98,7 @@ impl Workspace {
             files: globs(&cfg, "files")?,
             betterer: globs(&cfg, "betterer")?,
             workflows: globs(&cfg, "workflows")?,
+            skills: globs(&cfg, "skills")?,
             captures: named_regexes(&cfg, "captures")?,
             counts: named_regexes(&cfg, "counts")?,
             crates: cfg["crates"].as_bool().unwrap_or(true),
@@ -317,6 +324,7 @@ impl Workspace {
                     "betterer",
                     "workflow",
                     "action-ref",
+                    "skill",
                 ]
             });
         if self.crates && kinds.contains(&"crate") {
@@ -324,11 +332,23 @@ impl Workspace {
             out.snapshot_complete("crate");
         }
         let paths = self.walk();
+        self.emit_repo(&paths, &kinds, out);
+        self.emit_docs_and_files(&paths, &kinds, out);
+        self.emit_workflows(&paths, &kinds, out);
+        self.emit_betterer(&paths, &kinds, out);
+        self.emit_skills(&paths, &kinds, out);
+        Ok(())
+    }
+
+    fn emit_repo(&self, paths: &[String], kinds: &[&str], out: &mut Out) {
         if self.repo && kinds.contains(&"repo") {
-            let (name, data) = repo::record(&self.root, &paths);
+            let (name, data) = repo::record(&self.root, paths);
             out.record("repo", &format!("repo:{name}"), data);
             out.snapshot_complete("repo");
         }
+    }
+
+    fn emit_docs_and_files(&self, paths: &[String], kinds: &[&str], out: &mut Out) {
         for (kind, set) in [("doc", &self.docs), ("file", &self.files)] {
             if !kinds.contains(&kind) {
                 continue;
@@ -345,25 +365,47 @@ impl Workspace {
             }
             out.snapshot_complete(kind);
         }
-        if !self.workflows.is_empty() {
-            self.emit_workflows(&paths, &kinds, out);
-        }
-        if kinds.contains(&"betterer") && !self.betterer.is_empty() {
-            for rel in paths.iter().filter(|p| Self::matches(&self.betterer, p)) {
-                let text = std::fs::read_to_string(self.root.join(rel)).unwrap_or_default();
-                for (test, mut data) in betterer::parse(&text) {
-                    data["path"] = json!(rel);
-                    out.record("betterer", &format!("betterer:{rel}#{test}"), data);
-                }
-            }
-            out.snapshot_complete("betterer");
-        }
-        Ok(())
     }
 
-    /// Re-read the records named by `external_ids`; `not_found` for those that are gone.
+    fn emit_betterer(&self, paths: &[String], kinds: &[&str], out: &mut Out) {
+        if !kinds.contains(&"betterer") || self.betterer.is_empty() {
+            return;
+        }
+        for rel in paths.iter().filter(|p| Self::matches(&self.betterer, p)) {
+            let text = std::fs::read_to_string(self.root.join(rel)).unwrap_or_default();
+            for (test, mut data) in betterer::parse(&text) {
+                data["path"] = json!(rel);
+                out.record("betterer", &format!("betterer:{rel}#{test}"), data);
+            }
+        }
+        out.snapshot_complete("betterer");
+    }
+
+    fn skill_record(&self, rel: &str) -> Value {
+        let mut rec = skills::analyse(&self.root, rel);
+        if let Some(obj) = rec.as_object_mut() {
+            obj.insert("lastChange".into(), json!(last_change(&self.root, rel)));
+        }
+        rec
+    }
+
+    fn emit_skills(&self, paths: &[String], kinds: &[&str], out: &mut Out) {
+        if self.skills.is_empty() || !kinds.contains(&"skill") {
+            return;
+        }
+        for rel in paths.iter().filter(|p| Self::matches(&self.skills, p)) {
+            let rec = self.skill_record(rel);
+            let dir = rec["dir"].as_str().unwrap_or(rel).to_owned();
+            out.record("skill", &format!("skill:{dir}"), rec);
+        }
+        out.snapshot_complete("skill");
+    }
+
     /// `workflow` records for files matching `workflows`, and `action-ref` records derived from them.
     fn emit_workflows(&self, paths: &[String], kinds: &[&str], out: &mut Out) {
+        if self.workflows.is_empty() {
+            return;
+        }
         let records: Vec<Value> = paths
             .iter()
             .filter(|p| Self::matches(&self.workflows, p))
@@ -417,40 +459,75 @@ impl Workspace {
             .flatten()
             .filter_map(Value::as_str)
         {
-            if id.starts_with("repo:") {
-                let (name, data) = repo::record(&self.root, &self.walk());
-                if id == format!("repo:{name}") {
-                    out.record("repo", id, data);
-                } else {
-                    out.not_found("repo", id);
-                }
-            } else if let Some(name) = id.strip_prefix("crate:") {
-                crates.insert(name.to_owned());
-            } else if let Some(rel) = id.strip_prefix("doc:") {
-                match self.doc_record(rel) {
-                    Some(r) => out.record("doc", id, r),
-                    None => out.not_found("doc", id),
-                }
-            } else if let Some(rel) = id.strip_prefix("workflow:") {
-                match std::fs::read_to_string(self.root.join(rel)) {
-                    Ok(text) => out.record("workflow", id, workflows::record(rel, &text)),
-                    Err(_) => out.not_found("workflow", id),
-                }
-            } else if let Some(name) = id.strip_prefix("action-ref:") {
-                self.refresh_action_ref(name, id, out);
-            } else if let Some(rel) = id.strip_prefix("file:") {
-                match self.file_record(rel) {
-                    Some(r) => out.record("file", id, r),
-                    None => out.not_found("file", id),
-                }
-            } else {
-                out.not_found(id.split(':').next().unwrap_or("record"), id);
-            }
+            self.refresh_id(id, &mut crates, out);
         }
         if !crates.is_empty() {
             self.emit_crates(Some(&crates), out)?;
         }
         Ok(())
+    }
+
+    fn refresh_id(&self, id: &str, crates: &mut BTreeSet<String>, out: &mut Out) {
+        let kind = id.split(':').next().unwrap_or("record");
+        match kind {
+            "crate" => {
+                if let Some(name) = id.strip_prefix("crate:") {
+                    crates.insert(name.to_owned());
+                }
+            }
+            "repo" => self.refresh_repo(id, out),
+            "doc" => self.refresh_text(id, "doc", out),
+            "file" => self.refresh_text(id, "file", out),
+            "workflow" => self.refresh_workflow(id, out),
+            "action-ref" => self.refresh_named_action(id, out),
+            "skill" => self.refresh_skill(id, out),
+            _ => out.not_found(kind, id),
+        }
+    }
+
+    fn refresh_repo(&self, id: &str, out: &mut Out) {
+        let (name, data) = repo::record(&self.root, &self.walk());
+        if id == format!("repo:{name}") {
+            out.record("repo", id, data);
+        } else {
+            out.not_found("repo", id);
+        }
+    }
+
+    fn refresh_text(&self, id: &str, kind: &str, out: &mut Out) {
+        let rel = id.split_once(':').map(|(_, r)| r).unwrap_or("");
+        let rec = if kind == "doc" {
+            self.doc_record(rel)
+        } else {
+            self.file_record(rel)
+        };
+        match rec {
+            Some(r) => out.record(kind, id, r),
+            None => out.not_found(kind, id),
+        }
+    }
+
+    fn refresh_workflow(&self, id: &str, out: &mut Out) {
+        let rel = id.strip_prefix("workflow:").unwrap_or("");
+        match std::fs::read_to_string(self.root.join(rel)) {
+            Ok(text) => out.record("workflow", id, workflows::record(rel, &text)),
+            Err(_) => out.not_found("workflow", id),
+        }
+    }
+
+    fn refresh_named_action(&self, id: &str, out: &mut Out) {
+        let name = id.strip_prefix("action-ref:").unwrap_or("");
+        self.refresh_action_ref(name, id, out);
+    }
+
+    fn refresh_skill(&self, id: &str, out: &mut Out) {
+        let dir = id.strip_prefix("skill:").unwrap_or("");
+        let rel = format!("{dir}/SKILL.md");
+        if Self::matches(&self.skills, &rel) && self.root.join(&rel).is_file() {
+            out.record("skill", id, self.skill_record(&rel));
+        } else {
+            out.not_found("skill", id);
+        }
     }
 }
 
@@ -469,6 +546,7 @@ impl Source for Workspace {
             ("betterer", !self.betterer.is_empty()),
             ("workflow", !self.workflows.is_empty()),
             ("action-ref", !self.workflows.is_empty()),
+            ("skill", !self.skills.is_empty()),
         ];
         let kinds: Vec<&str> = on.iter().filter(|(_, b)| *b).map(|(k, _)| *k).collect();
         let refresh: Map<String, Value> = kinds
