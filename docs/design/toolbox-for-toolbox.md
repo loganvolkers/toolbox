@@ -13,7 +13,8 @@ are too (D82, D83, [agents-md-standards.md](./agents-md-standards.md)), cited de
 (D84, [decision-citations.md](./decision-citations.md)), GitHub Advanced Security config is too
 (D85, [supply-chain-standards.md](./supply-chain-standards.md)), and the repository's level is the
 lowest of those scorecards (D86, [repo-level.md](./repo-level.md)). Public docs pages are too
-(D87, [site-standards.md](./site-standards.md)). The portal is [`portal/`](../../portal/README.md); run
+(D87, [site-standards.md](./site-standards.md)), and the site publishes this repo's HTML report
+(D88). The portal is [`portal/`](../../portal/README.md); run
 it with `scripts/self-portal.sh`. It applies Toolbox to the [three SDLC layers](../sdlc.md) of
 Toolbox itself. Related: [meta-catalog.md](./meta-catalog.md) (a portal cataloguing its own
 configuration), [maintainer-sdlc.md](./maintainer-sdlc.md), [user-sdlc.md](./user-sdlc.md).*

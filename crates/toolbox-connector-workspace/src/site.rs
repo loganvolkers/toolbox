@@ -168,6 +168,18 @@ fn site_link_exists(root: &Path, rel: &str, target: &str) -> bool {
         || base.join(format!("{slug}.mdx")).is_file()
         || base.join(&slug).join("index.md").is_file()
         || base.join(&slug).join("index.mdx").is_file()
+        || public_file(root, dir, &slug)
+}
+
+/// A file shipped next to the site (`public/report/index.html` → `/report/`).
+fn public_file(root: &Path, site: &str, slug: &str) -> bool {
+    if slug.is_empty() {
+        return false;
+    }
+    let public = root.join(site).join("public");
+    public.join(format!("{slug}.html")).is_file()
+        || public.join(slug).join("index.html").is_file()
+        || public.join(slug).is_file()
 }
 
 fn file_exists(root: &Path, rel: &str, target: &str) -> bool {
@@ -268,6 +280,24 @@ mod tests {
         );
         let page = analyse(&tmp.0, "site/src/content/docs/index.md");
         assert_eq!(page["missingFiles"], json!(["/start/run/"]));
+    }
+
+    #[test]
+    fn a_link_to_a_published_file_resolves() {
+        let tmp = scratch(
+            "public",
+            &[
+                ("site/astro.config.mjs", "base: '/toolbox',"),
+                ("site/public/report/index.html", "<h1>report</h1>"),
+                (
+                    "site/src/content/docs/demo/report.md",
+                    "---\ntitle: Report\ndescription: The report.\n---\n[Open it](/toolbox/report/)\n",
+                ),
+            ],
+        );
+        let page = analyse(&tmp.0, "site/src/content/docs/demo/report.md");
+        assert_eq!(page["missingFiles"], json!([]));
+        assert_eq!(page["inSidebar"], false);
     }
 
     #[test]

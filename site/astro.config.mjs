@@ -17,6 +17,7 @@ export default defineConfig({
         { label: 'Concepts', items: [{ autogenerate: { directory: 'concepts' } }] },
         { label: 'Operators', items: [{ autogenerate: { directory: 'operators' } }] },
         { label: 'Agents', items: [{ autogenerate: { directory: 'agents' } }] },
+        { label: 'Demo', items: [{ autogenerate: { directory: 'demo' } }] },
       ],
     }),
   ],

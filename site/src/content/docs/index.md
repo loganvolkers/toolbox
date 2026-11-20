@@ -24,5 +24,6 @@ Toolbox names three software-development layers, so a sentence about "the SDLC" 
 - [Scorecards](/toolbox/concepts/scorecards/)
 - [Change a portal](/toolbox/operators/portal/)
 - [Read the catalog from an agent](/toolbox/agents/reads/)
+- [This repository, scored](/toolbox/demo/report/)
 
 The source of this site is in the [Toolbox repository](https://github.com/loganvolkers/toolbox). The pages you are reading are catalogued and scored with the rest of the repository.
