@@ -1,26 +1,38 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: sdlc-stage:operator/build-connector
 rubric: sdlc-stage-quality
-subjectHash: "dc88286bf099"
-assessor: {kind: agent, name: claude-code}
+subjectHash: "2a5ee852aa40"
+assessor: {kind: agent, name: cursor-grok, model: grok-4.7}
 at: "2026-11-20"
 verdicts:
   - criterion: executable-exit
     verdict: pass
-    reason: "`toolbox connector test` runs the conformance kit (crates/toolbox-connect/src/conformance.rs) against any executable and fails on protocol violations."
+    reason: >-
+      The stage's command toolbox connector test runs the kit in
+      crates/toolbox-connect/src/conformance.rs and fails on a protocol violation.
+      crates/toolbox-cli/tests/install.rs fails a tampered release archive.
   - criterion: agent-can-complete
     verdict: unsure
     reason: >-
-      An agent can write a remote connector from docs/design/connector-control.md and schema/connector-messages.schema.json,
-      but there is no scaffold or non-Rust SDK, and nothing tells it which form (remote or in-image) to choose.
-    suggestion: Add `toolbox connector new <lang>` and a short guide that ends with the conformance kit passing.
+      docs/design/connector-control.md and schema/connector-messages.schema.json describe the
+      protocol, and the stage lists toolbox connector test, install, doctor and push. The stage gap
+      is that there is no scaffold or non-Rust SDK, and connector-control.md does not say which form
+      to choose.
+    suggestion: >-
+      Add toolbox connector new, as docs/design/package-author-sdlc.md proposes, ending at a passing
+      conformance run.
   - criterion: reuses-artifacts
     verdict: pass
-    reason: A remote connector needs no Toolbox build; it pushes to /v1/ingest with a token (scripts/m4-acceptance.sh runs the SCIM connector that way).
-  - criterion: decoupled-from-core
-    verdict: fail
     reason: >-
-      An in-image connector can only be `package: builtin:<name>` (crates/toolbox-api/src/connectors.rs resolves
-      binaries next to toolbox), so an operator who needs one must add a crate to this repository.
-    suggestion: Resolve `package:` values that name a released executable (pinned per platform in toolbox.lock) or a WASM component, as docs/design/package-author-sdlc.md §3.2 proposes.
-summary: Remote connectors work for anyone; in-image connectors are maintainer-only, which is the coupling to fix.
+      An in-image connector can be github:owner/repo@v1, which toolbox install downloads
+      (crates/toolbox-api/src/artifacts.rs). A remote connector pushes to /v1/ingest and does not
+      compile Toolbox.
+  - criterion: decoupled-from-core
+    verdict: pass
+    reason: >-
+      connectors.rs binary_for resolves github: packages from the install cache (D90). An operator
+      does not add a crate or a builtin to this repository; builtin: remains only for the connectors
+      that ship in the image.
+summary: >-
+  An operator can install a released connector without a crate change. What is missing is a scaffold
+  outside Rust.

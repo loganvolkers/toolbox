@@ -2,31 +2,35 @@ apiVersion: toolbox.dev/assessment/v1
 entity: assessment:rule-quality/rule:toolbox/maintainer-crate/has-tests
 rubric: assessment-quality
 subjectHash: "84b2aae0dbca"
-assessor: {kind: agent, name: claude-code}
+assessor: {kind: agent, name: cursor-grok, model: grok-4.7}
 at: "2026-11-20"
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      The check in portal/toolbox.yaml is `entity.unitTests + entity.integrationTests > 0`, so one
-      #[test] of any kind passes it, as the measures-intent and hard-to-game reasons claim.
+      portal/toolbox.yaml checks `entity.unitTests + entity.integrationTests > 0`, so one #[test]
+      of any kind passes, which is what the measures-intent and hard-to-game reasons claim.
   - criterion: complete
     verdict: pass
     reason: >-
-      The two passes hold: the fix text in portal/toolbox.yaml makes it pass, and a floor of one test
-      needs no sourced number (toolbox-for-toolbox.md §4 puts it at bronze).
+      A second reading of the same rule reaches the same four verdicts. The fix text in
+      portal/toolbox.yaml makes the check pass, and a floor of one test needs no sourced number
+      (bronze in docs/design/toolbox-for-toolbox.md).
   - criterion: reproducible
-    verdict: unsure
+    verdict: pass
     reason: >-
-      This is a self-review: the same session wrote the assessment (assessor claude-code in both
-      files), so it can't show that a second assessor would agree.
-    suggestion: Have a different agent or person review it and replace this file.
+      Assessor claude-code's four verdicts in
+      portal/assessments/rule-quality/rule/toolbox/maintainer-crate/has-tests.yaml match this
+      reading: fail measures-intent and hard-to-game, pass fix-leads-to-pass and threshold-justified.
+      The subject hash is unchanged.
   - criterion: actionable
     verdict: fail
     reason: >-
-      Both suggestions add a companion rule (testCodeLines per code line); has-tests itself would
-      still pass on `#[test] fn t() {}`, so its two fail verdicts would not change.
+      Both suggestions add a companion rule on testCodeLines. The check in portal/toolbox.yaml
+      would still pass on one empty #[test], so the two fail verdicts would not change.
     suggestion: >-
-      Suggest changing has-tests itself, e.g. narrowing its fix text to "has at least one test" and
-      moving "tests the crate's main behaviour" to the new silver rule.
-summary: Supported and complete, but its suggestions fix the scorecard rather than the rule it judged.
+      Change the has-tests fix in portal/toolbox.yaml to "has at least one test", and move
+      "the crate's main behaviour" onto the new silver rule.
+summary: >-
+  The same verdicts as claude-code, reached independently. The suggestions still fix a different
+  rule than the one that failed.
