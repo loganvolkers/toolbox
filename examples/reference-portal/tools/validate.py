@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Validate the reference portal against its JSON Schemas.
+"""Validate the reference portal (or the portal directory given as the first argument) against the
+JSON Schemas in the repo-root schema/ directory.
 
 - toolbox.yaml against schema/manifest.schema.json
 - every fixture line against schema/connector-messages.schema.json
@@ -11,9 +12,11 @@ Requires: pyyaml, jsonschema.
 import glob, json, os, sys
 import jsonschema, yaml
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SCHEMAS = os.path.join(HERE, "..", "..", "schema")          # repo-root schema/
+ROOT = os.path.abspath(sys.argv[1]) if len(sys.argv) > 1 else HERE   # portal to validate
 def schema(name):
-    s = json.load(open(os.path.join(ROOT, "schema", name)))
+    s = json.load(open(os.path.join(SCHEMAS, name)))
     jsonschema.Draft202012Validator.check_schema(s)
     return jsonschema.Draft202012Validator(s, format_checker=jsonschema.FormatChecker())
 

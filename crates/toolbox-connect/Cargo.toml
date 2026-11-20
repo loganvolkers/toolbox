@@ -1,0 +1,10 @@
+[package]
+name = "toolbox-connect"
+description = "Toolbox: Connector runtime and control channel (M4). Placeholder until its milestone."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true

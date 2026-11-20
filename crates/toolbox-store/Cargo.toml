@@ -1,0 +1,10 @@
+[package]
+name = "toolbox-store"
+description = "Toolbox: Store trait, MemStore and PgStore (M1–M2). Placeholder until its milestone."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true

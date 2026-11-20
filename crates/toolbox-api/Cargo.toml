@@ -1,0 +1,10 @@
+[package]
+name = "toolbox-api"
+description = "Toolbox: REST, MCP and UI host (M2–M5). Placeholder until its milestone."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
