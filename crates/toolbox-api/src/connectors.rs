@@ -61,15 +61,15 @@ pub async fn ingest_messages(
             errors.join("; "),
         ));
     }
-    let records = messages
-        .iter()
-        .filter(|m| m.get("type").and_then(Value::as_str) == Some("record"))
-        .count();
-    let version = s
-        .store
-        .ingest(connector, &messages)
-        .await
-        .map_err(|e| problem(StatusCode::INTERNAL_SERVER_ERROR, "store", e.to_string()))?;
+    let records = messages.iter().filter(|m| m.get("type").and_then(Value::as_str) == Some("record")).count();
+    let changes_inputs = messages.iter().any(|m| matches!(m.get("type").and_then(Value::as_str), Some("record" | "delete")));
+    // Control-only batches (register, ack, complete, …) don't change inputs, so they don't create
+    // an input version: the snapshot id changes only when data does.
+    let version = if changes_inputs {
+        s.store.ingest(connector, &messages).await.map_err(|e| problem(StatusCode::INTERNAL_SERVER_ERROR, "store", e.to_string()))?
+    } else {
+        s.store.input_version().await.map_err(|e| problem(StatusCode::INTERNAL_SERVER_ERROR, "store", e.to_string()))?
+    };
     s.metrics
         .ingest_records
         .fetch_add(records as u64, Ordering::Relaxed);
@@ -257,8 +257,12 @@ fn binary_for(package: &str) -> String {
     file
 }
 
-/// Start a supervisor for every in-image connector.
+/// Start a supervisor for every in-image connector (unless `TOOLBOX_CONNECTORS=off`).
 pub fn spawn_in_image(s: &Arc<AppState>) {
+    if std::env::var("TOOLBOX_CONNECTORS").is_ok_and(|v| v == "off") {
+        eprintln!("toolbox: in-image connectors disabled (TOOLBOX_CONNECTORS=off)");
+        return;
+    }
     for c in s
         .manifest
         .connectors

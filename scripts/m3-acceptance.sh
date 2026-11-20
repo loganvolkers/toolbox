@@ -18,6 +18,7 @@ $RUNAS rm -rf "$PGDIR"; $RUNAS mkdir -p "$PGDIR"
 $RUNAS "$PGBIN/initdb" -A trust -U postgres -D "$PGDIR/data" >/dev/null
 $RUNAS "$PGBIN/pg_ctl" -D "$PGDIR/data" -o "-p $PORT -k $PGDIR -c listen_addresses=127.0.0.1" -l "$PGDIR/pg.log" -w start >/dev/null
 export DATABASE_URL="postgres://postgres@127.0.0.1:$PORT/postgres"
+export TOOLBOX_CONNECTORS=off  # M3 feeds inputs through the ingest API only
 as() { curl -s -H "x-toolbox-user: $1" "${@:2}"; }
 json() { python3 -c "import json,sys; d=json.load(sys.stdin); print($1)"; }
 

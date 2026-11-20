@@ -34,11 +34,13 @@ const entityLink = (id: string) => <Link to={`/e/${enc(id)}`}>{id}</Link>;
 function useApi(path: string | null, deps: unknown[] = []): [ApiResult | null, () => void] {
   const [res, setRes] = useState<ApiResult | null>(null);
   const [n, setN] = useState(0);
+  const [shownPath, setShownPath] = useState<string | null>(null);
   useEffect(() => {
     if (!path) return;
     let live = true;
-    setRes(null);
-    api(path).then((r) => live && setRes(r));
+    // Clear only when navigating; a reload keeps the current page (and its controls) on screen.
+    if (path !== shownPath) setRes(null);
+    api(path).then((r) => { if (live) { setRes(r); setShownPath(path); } });
     return () => { live = false; };
   }, [path, n, ...deps]);
   return [res, () => setN((x) => x + 1)];

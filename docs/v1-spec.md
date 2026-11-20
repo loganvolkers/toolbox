@@ -56,7 +56,7 @@ earlier ones. Tracks in [AGENTS.md](../AGENTS.md) map onto these.
 | **M1** ✅ | Derived state | `MemStore`, NDJSON fixture loader, the §6 pipeline behind `DerivedState`, `toolbox test`, `toolbox plan --local` | **Byte-identical** `expected/*.json` and `authz/tuples.expected.json` vs `tools/reference.py`; all `tests/*.test.yaml` pass; a plan between two manifests lists changed fields, levels, tuples and options; 100k-entity synthetic run under the §10.4 budget |
 | **M2** ✅ | Postgres and API | `PgStore` (§8), ingest endpoint, snapshot loop, REST reads (§7.2), snapshot ids | Same outputs as M1 when fixtures arrive through `POST /v1/ingest`; `min_snapshot` read-your-writes works; restart loses nothing |
 | **M3** ✅ | Authorization | Authn (IAP JWT, OIDC, PAT), OpenFGA co-process over the tuple view, facet shaping, `toolbox test` runs `.fga.yaml` | Reference `authz/model.fga.yaml` passes through `Authorizer`; A3/A4/A10 behave as specified; a membership removal is enforced within 60 s |
-| **M4** | Agents and connectors | MCP (§7.3), CLI (§7.7), the read pages of the [minimal UI](./design/minimal-ui.md), connector runtime with control channel (§7.4), GitHub, git-files and SCIM connectors | Acceptance A1–A5 and A11; connector conformance kit passes for all three connectors |
+| **M4** ✅ | Agents and connectors | MCP (§7.3), CLI (§7.7), the read pages of the [minimal UI](./design/minimal-ui.md), connector runtime with control channel (§7.4), GitHub, git-files and SCIM connectors | Acceptance A1–A5 and A11; connector conformance kit passes for all three connectors |
 | **M5** | Actions | Executor protocol (§7.5), run lifecycle (§6.6), previews and tokens, approvals, verification, durable tables (§8.1), UI extension contract (§7.6), the minimal UI's action, run and approval pages, the `github-apps` executor | Acceptance A6–A10 with simulated executor and connector; failure-injection properties P9–P12 hold; the sandbox-org integration test passes |
 | **M6** | Ship | Image build, Cloud Run deployment, `plan --remote`, `verify`, the SDLC workflow, metrics | A12; the reference workflow runs end to end on a sandbox project; `v0.1` tagged |
 
@@ -429,6 +429,13 @@ instance can run workflows; `Durable::recover` reclaims those of dead instances.
   (public by default) and their owner-only facets to portal admins. Filters are evaluated over the
   shaped entity, so they can't probe hidden values. Native writes need `can_edit` (if the model
   defines it) or portal `admin`.
+- **M4 implementation notes (D61, D62):** MCP is Toolbox's own JSON-RPC handler at `/mcp` (plain
+  JSON responses over Streamable HTTP; no SSE streams or MCP tasks yet), whose tools call the REST
+  handlers in-process. Connector commands are held in memory (lost on restart; they become durable
+  with M5). The UI polls `/v1/snapshot` every 10 s for "newer data" instead of the `/v1/events`
+  SSE stream, which isn't built yet. The UI uses plain React and CSS; `@toolbox/ui` and Storybook
+  stories are still to come. The stdio conformance kit applies to in-image connectors; the
+  push-only SCIM connector is checked end to end by `scripts/m4-acceptance.sh`.
 - **Browser sign-in:** v1 relies on the identity-aware proxy for browsers; `oidc` mode verifies bearer
   JWTs (API, MCP) but has no OAuth code flow yet.
 - **Approvals are human-only in v1 (D57):** approval decisions require an interactive session (proxy

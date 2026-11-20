@@ -23,7 +23,13 @@ MCP, CLI, data model, properties) and test against
 **Building:** `cargo build` (toolchain pinned in `rust-toolchain.toml`), `cargo test`, `cargo clippy
 --all-targets -- -D warnings`, then `target/debug/toolbox validate examples/reference-portal`.
 `python scripts/validate-parity.py` checks `toolbox validate` against `tools/validate.py`.
-`.github/workflows/ci.yml` runs all of this. **M0–M3 are done** (`toolbox test`, `plan --local --base <manifest>`, `derive`, `serve [--database-url]`, `push`, `token create`; `scripts/m2-acceptance.sh` and `scripts/m3-acceptance.sh` need Postgres 16, M3 also `TOOLBOX_OPENFGA_BIN`); M4 (MCP, CLI reads, UI, connectors) is next.
+`.github/workflows/ci.yml` runs all of this. **M0–M4 are done.** Commands: `validate`, `test`,
+`plan --local --base <manifest>`, `derive`, `serve [--database-url]`, `push`, `token create`, the reads
+(`get`, `query`, `search`, `graph`, `owner`, `explain`, `score`, `refresh`, `actions`), `mcp` (stdio
+bridge) and `connector test`. The server also hosts `/mcp` and the UI at `/`, and supervises the
+`toolbox-connector-{github,git-files}` binaries; `toolbox-connector-scim` runs remotely. The
+acceptance scripts `scripts/m2…m4-acceptance.sh` need Postgres 16; M3 and M4 also need
+`TOOLBOX_OPENFGA_BIN`, and M4 needs Node with Playwright. **M5 (actions) is next.**
 
 ## Repository layout
 
@@ -43,7 +49,8 @@ docs/glossary.md, docs/research-log.md
 docs/v1-spec.md              the implementation contract for v1
 Cargo.toml, crates/          Rust workspace (v1-spec §4); `toolbox-cli` builds the `toolbox` binary
 schema/                      JSON Schemas (manifest, connector and executor messages), compiled into the binary
-scripts/                     repo checks (validate-parity.py)
+scripts/                     repo checks and acceptance scripts (validate-parity.py, m2–m4-acceptance.sh)
+ui/                          the minimal UI (React + Vite; dist/ is embedded in the binary)
 examples/reference-portal/   reference implementation anchor: manifest, schemas, fixtures, oracle, authz tests
 experiments/                 reproducible experiments cited by the docs
 plugins/toolbox-operator/    Agent Plugins 1.0.0 package (pre-release skeleton)

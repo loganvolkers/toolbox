@@ -32,6 +32,12 @@ jobs:
         run: PGDIR=$RUNNER_TEMP/pg scripts/m2-acceptance.sh
       - name: M3 acceptance (Postgres + OpenFGA over the tuple view, facets, A10, PATs, revocation)
         run: PGDIR=$RUNNER_TEMP/pg3 scripts/m3-acceptance.sh
+      - uses: actions/setup-node@v4
+        with: {node-version: "22"}
+      - name: Playwright for the A11 browser check
+        run: npm install --no-save --prefix "$RUNNER_TEMP/pw" playwright@1.64.1 && "$RUNNER_TEMP/pw/node_modules/.bin/playwright" install --with-deps chromium && echo "NODE_PATH=$RUNNER_TEMP/pw/node_modules" >> "$GITHUB_ENV"
+      - name: M4 acceptance (real connectors only, A1–A5, A11 in a browser, SCIM revocation, conformance kit)
+        run: PGDIR=$RUNNER_TEMP/pg4 scripts/m4-acceptance.sh
       - name: toolbox validate, test and derive on the reference portal
         run: |
           target/debug/toolbox validate examples/reference-portal
@@ -60,6 +66,16 @@ jobs:
       - run: python tools/validate.py
       - run: python tools/reference.py --check
       - run: fga model test --tests authz/model.fga.yaml
+  ui:
+    runs-on: ubuntu-latest
+    defaults: {run: {working-directory: ui}}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: "22"}
+      - run: npm install --no-audit --no-fund
+      - name: The embedded build (ui/dist) matches the source
+        run: npm run build && git diff --exit-code -- dist
   typescript-builder:
     runs-on: ubuntu-latest
     defaults: {run: {working-directory: experiments/typescript-builder}}

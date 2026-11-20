@@ -18,6 +18,7 @@ $RUNAS rm -rf "$PGDIR"; $RUNAS mkdir -p "$PGDIR"
 $RUNAS "$PGBIN/initdb" -A trust -U postgres -D "$PGDIR/data" >/dev/null
 $RUNAS "$PGBIN/pg_ctl" -D "$PGDIR/data" -o "-p $PORT -k $PGDIR -c listen_addresses=127.0.0.1" -l "$PGDIR/pg.log" -w start >/dev/null
 export DATABASE_URL="postgres://postgres@127.0.0.1:$PORT/postgres"
+export TOOLBOX_CONNECTORS=off  # M2 feeds inputs through the ingest API only
 start() { "$TOOLBOX" serve "$PORTAL" --listen "$API" >>"$WORK/server.log" 2>&1 & SERVER_PID=$!
   for _ in $(seq 100); do curl -fs "$URL/readyz" >/dev/null 2>&1 && return; sleep 0.1; done; cat "$WORK/server.log"; exit 1; }
 compare() { # compare the server's reference-format export with the committed files

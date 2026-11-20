@@ -88,6 +88,9 @@ minimal architecture adopted with amendments where it conflicted with them.
 | D59 | **Toolbox converts the OpenFGA DSL to model JSON itself** (`toolbox-authz::fga_dsl`, checked against `fga model transform`), so the image carries only the `openfga` server binary, not the `fga` CLI (sprawl budget, D45). Conditions and modular models are rejected until needed | ✅ | [v1-spec.md](./v1-spec.md) §9 |
 | D60 | **Facet mapping:** `public` → `can_view`; `operator` → portal `admin`; any other facet name → `can_view_details`. Kinds outside the authorization model are public to signed-in users, with owner-only facets limited to portal admins | ✅ refines D15 | [v1-spec.md](./v1-spec.md) §9 |
 
+| D61 | **MCP is implemented in Toolbox, not with rmcp:** a small JSON-RPC handler whose tools call the REST handlers in-process, so MCP, REST, CLI (`toolbox get`/`owner`/… call the MCP tools) and the UI share one authorization and facet-shaping path. rmcp can replace it behind the same endpoint if MCP features beyond tools are needed | ✅ amends v1-spec §7.3 | [v1-spec.md](./v1-spec.md) §7.3 |
+| D62 | **Only records and deletes create input versions.** Control-only connector batches (register, ack, complete, log) don't, so snapshot ids change only when data does. `TOOLBOX_CONNECTORS=off` disables in-image connector supervision (fixture-driven dev and tests) | ✅ | [v1-spec.md](./v1-spec.md) §6.1 |
+
 ## Open questions (consolidated)
 
 | # | Question | Recommendation | Where |
