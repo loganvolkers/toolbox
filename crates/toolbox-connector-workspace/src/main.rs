@@ -387,6 +387,28 @@ impl Workspace {
         }
     }
 
+    /// One action ref: its usage spans files, so it is re-derived from every workflow.
+    fn refresh_action_ref(&self, name: &str, id: &str, out: &mut Out) {
+        let records: Vec<Value> = self
+            .walk()
+            .iter()
+            .filter(|p| Self::matches(&self.workflows, p))
+            .filter_map(|rel| {
+                Some(workflows::record(
+                    rel,
+                    &std::fs::read_to_string(self.root.join(rel)).ok()?,
+                ))
+            })
+            .collect();
+        match workflows::action_refs(&records)
+            .into_iter()
+            .find(|(n, _)| n == name)
+        {
+            Some((_, data)) => out.record("action-ref", id, data),
+            None => out.not_found("action-ref", id),
+        }
+    }
+
     fn refresh(&self, cmd: &Value, out: &mut Out) -> Result<(), String> {
         let mut crates = BTreeSet::new();
         for id in cmd["external_ids"]
@@ -414,14 +436,15 @@ impl Workspace {
                     Ok(text) => out.record("workflow", id, workflows::record(rel, &text)),
                     Err(_) => out.not_found("workflow", id),
                 }
-            } else if id.starts_with("action-ref:") {
-                // Usage spans files, so re-derive every action ref from the workflows.
-                self.emit_workflows(&self.walk(), &["action-ref"], out);
+            } else if let Some(name) = id.strip_prefix("action-ref:") {
+                self.refresh_action_ref(name, id, out);
             } else if let Some(rel) = id.strip_prefix("file:") {
                 match self.file_record(rel) {
                     Some(r) => out.record("file", id, r),
                     None => out.not_found("file", id),
                 }
+            } else {
+                out.not_found(id.split(':').next().unwrap_or("record"), id);
             }
         }
         if !crates.is_empty() {
@@ -437,8 +460,23 @@ impl Source for Workspace {
     }
 
     fn capabilities(&self) -> Value {
-        json!({"refresh": {"repo": ["external_ids"], "workflow": ["external_ids"], "action-ref": ["external_ids"], "crate": ["external_ids"], "doc": ["external_ids"], "file": ["external_ids"]},
-               "resync": ["repo", "crate", "doc", "file", "betterer", "workflow", "action-ref"], "max_concurrency": 1})
+        // Only the kinds this configuration produces.
+        let on = [
+            ("repo", self.repo),
+            ("crate", self.crates),
+            ("doc", !self.docs.is_empty()),
+            ("file", !self.files.is_empty()),
+            ("betterer", !self.betterer.is_empty()),
+            ("workflow", !self.workflows.is_empty()),
+            ("action-ref", !self.workflows.is_empty()),
+        ];
+        let kinds: Vec<&str> = on.iter().filter(|(_, b)| *b).map(|(k, _)| *k).collect();
+        let refresh: Map<String, Value> = kinds
+            .iter()
+            .filter(|k| **k != "betterer")
+            .map(|k| (k.to_string(), json!(["external_ids"])))
+            .collect();
+        json!({"refresh": refresh, "resync": kinds, "max_concurrency": 1})
     }
 
     async fn handle(&mut self, cmd: &Value, out: &mut Out) -> Result<(), String> {

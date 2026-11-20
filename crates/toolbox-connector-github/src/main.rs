@@ -402,10 +402,18 @@ impl Source for GitHub {
     }
 
     fn capabilities(&self) -> Value {
-        json!({"refresh": {"repository": ["external_ids"], "codeowners": ["external_ids"],
-                           "installation": ["external_ids", "selector"], "app": ["external_ids"],
-                           "workflow-runs": ["external_ids"]},
-               "resync": ["repository", "codeowners", "installation", "app", "workflow-runs"], "max_concurrency": 1})
+        // `workflow-runs` only when configured (`actions`): capabilities name only kinds this
+        // instance can produce, and the conformance kit checks them against the manifest.
+        let mut caps = json!({"refresh": {"repository": ["external_ids"], "codeowners": ["external_ids"],
+                                          "installation": ["external_ids", "selector"], "app": ["external_ids"]},
+                              "resync": ["repository", "codeowners", "installation", "app"], "max_concurrency": 1});
+        if self.actions.is_some() {
+            caps["refresh"]["workflow-runs"] = json!(["external_ids"]);
+            if let Some(r) = caps["resync"].as_array_mut() {
+                r.push(json!("workflow-runs"));
+            }
+        }
+        caps
     }
 
     async fn handle(&mut self, cmd: &Value, out: &mut Out) -> Result<(), String> {

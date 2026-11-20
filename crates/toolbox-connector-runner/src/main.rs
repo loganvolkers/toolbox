@@ -148,6 +148,63 @@ fn parse_clippy(run: &Run, manifest: &str) -> Value {
     v
 }
 
+/// The SDK's output, narrowed to what a command asked for: on refresh only the requested ids, on a
+/// resync of named kinds only those kinds (the conformance kit checks both). Remembers what it
+/// emitted, so ids nothing produced are reported `not_found`.
+struct Sink<'o> {
+    out: &'o mut Out,
+    ids: Option<Vec<String>>,
+    kinds: Option<Vec<String>>,
+    emitted: std::collections::BTreeSet<String>,
+}
+
+impl<'o> Sink<'o> {
+    fn new(out: &'o mut Out, ids: Option<Vec<String>>, kinds: Option<Vec<String>>) -> Self {
+        Sink {
+            out,
+            ids,
+            kinds,
+            emitted: Default::default(),
+        }
+    }
+
+    fn wanted_kind(&self, kind: &str) -> bool {
+        self.kinds
+            .as_ref()
+            .is_none_or(|k| k.iter().any(|x| x == kind))
+    }
+
+    fn wants_any(&self, kinds: &[&str]) -> bool {
+        kinds.iter().any(|k| self.wanted_kind(k))
+    }
+
+    fn record(&mut self, kind: &str, id: &str, data: Value) {
+        if self.wanted_kind(kind)
+            && self
+                .ids
+                .as_ref()
+                .is_none_or(|ids| ids.iter().any(|i| i == id))
+        {
+            self.emitted.insert(id.to_owned());
+            self.out.record(kind, id, data);
+        }
+    }
+
+    fn not_found(&mut self, kind: &str, id: &str) {
+        self.out.not_found(kind, id);
+    }
+
+    fn snapshot_complete(&mut self, kind: &str) {
+        if self.wanted_kind(kind) {
+            self.out.snapshot_complete(kind);
+        }
+    }
+
+    fn log(&mut self, level: &str, message: &str) {
+        self.out.log(level, message);
+    }
+}
+
 impl Runner {
     fn from_env() -> Result<Self, String> {
         let cfg: Value = serde_json::from_str(
@@ -257,7 +314,7 @@ impl Runner {
             .collect())
     }
 
-    async fn run_for_crate(&self, job: &Job, name: &str, manifest: &str, out: &mut Out) {
+    async fn run_for_crate(&self, job: &Job, name: &str, manifest: &str, out: &mut Sink<'_>) {
         let argv: Vec<String> = job
             .command
             .iter()
@@ -274,7 +331,7 @@ impl Runner {
 
     /// Run a linter over the repository and emit one record per covered file (`<job>:<path>`),
     /// clean files included. A missing optional program emits nothing (its rules become unknown).
-    async fn run_lint(&self, job: &Job, out: &mut Out) -> Result<(), String> {
+    async fn run_lint(&self, job: &Job, out: &mut Sink<'_>) -> Result<(), String> {
         let run = self.run(&job.command).await;
         if run.stderr.starts_with("cannot run ") {
             if job.optional {
@@ -320,7 +377,7 @@ impl Runner {
     }
 
     /// Run the command, then count the lines of its NDJSON `file` by `key`.
-    async fn run_tally(&self, job: &Job, out: &mut Out) -> Result<(), String> {
+    async fn run_tally(&self, job: &Job, out: &mut Sink<'_>) -> Result<(), String> {
         let (file, key) = (
             job.file.as_deref().unwrap_or(""),
             job.key.as_deref().unwrap_or(""),
@@ -360,7 +417,7 @@ impl Runner {
         Ok(())
     }
 
-    async fn run_ndjson(&self, job: &Job, out: &mut Out) -> Result<(), String> {
+    async fn run_ndjson(&self, job: &Job, out: &mut Sink<'_>) -> Result<(), String> {
         let run = self.run(&job.command).await;
         if !run.ok {
             return Err(format!(
@@ -386,11 +443,14 @@ impl Runner {
     async fn execute(
         &self,
         ids: Option<&[String]>,
-        out: &mut Out,
+        out: &mut Sink<'_>,
         resync: bool,
     ) -> Result<(), String> {
         let crates = self.crates().await?;
         for job in &self.jobs {
+            if !out.wants_any(&self.kinds_of(job)) {
+                continue;
+            }
             if job.per_crate {
                 self.execute_per_crate(job, &crates, ids, out).await;
             } else if self.selected(job, ids) {
@@ -410,6 +470,17 @@ impl Runner {
                 }
             }
         }
+        // Refresh: anything asked for that no job produced (and no per-crate job already reported).
+        for id in ids.into_iter().flatten() {
+            let per_crate = self
+                .jobs
+                .iter()
+                .any(|j| j.per_crate && id.starts_with(&format!("{}:", j.name)));
+            if !per_crate && !out.emitted.contains(id) {
+                let kind = id.split(':').next().unwrap_or("record").to_owned();
+                out.not_found(&kind, id);
+            }
+        }
         Ok(())
     }
 
@@ -419,7 +490,7 @@ impl Runner {
         job: &Job,
         crates: &BTreeMap<String, String>,
         ids: Option<&[String]>,
-        out: &mut Out,
+        out: &mut Sink<'_>,
     ) {
         for (name, manifest) in crates {
             let id = format!("{}:{name}", job.name);
@@ -483,7 +554,15 @@ impl Source for Runner {
 
     async fn handle(&mut self, cmd: &Value, out: &mut Out) -> Result<(), String> {
         match cmd["command"].as_str() {
-            Some("resync") => self.execute(None, out, true).await,
+            Some("resync") => {
+                let kinds: Option<Vec<String>> = cmd["kinds"].as_array().map(|a| {
+                    a.iter()
+                        .filter_map(|v| v.as_str().map(str::to_owned))
+                        .collect()
+                });
+                let mut sink = Sink::new(out, None, kinds);
+                self.execute(None, &mut sink, true).await
+            }
             Some("refresh") => {
                 let ids: Vec<String> = cmd["external_ids"]
                     .as_array()
@@ -491,7 +570,8 @@ impl Source for Runner {
                     .flatten()
                     .filter_map(|v| v.as_str().map(str::to_owned))
                     .collect();
-                self.execute(Some(&ids), out, false).await
+                let mut sink = Sink::new(out, Some(ids.clone()), None);
+                self.execute(Some(&ids), &mut sink, false).await
             }
             other => Err(format!("unsupported command {other:?}")),
         }

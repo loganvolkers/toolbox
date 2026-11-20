@@ -69,6 +69,11 @@ jobs:
           pip install zizmor==1.32.0
           go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
           echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+      - name: Toolbox for Toolbox — connector conformance (the protocol checks every connector must pass)
+        run: |
+          target/debug/toolbox connector test --name workspace --portal portal -- target/debug/toolbox-connector-workspace
+          target/debug/toolbox connector test --name surfaces --portal portal -- target/debug/toolbox-connector-runner
+          target/debug/toolbox connector test --name ci-lint --portal portal -- target/debug/toolbox-connector-runner
       - name: Toolbox for Toolbox — ratchet against portal/results.json
         uses: ./actions/report
         with:
