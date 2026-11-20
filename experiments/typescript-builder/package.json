@@ -1,0 +1,16 @@
+{
+  "name": "toolbox-manifest-builder-prototype",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "print": "tsx portal/acme.ts",
+    "check": "tsc --noEmit && tsx scripts/roundtrip.ts"
+  },
+  "devDependencies": {
+    "typescript": "7.0.2",
+    "tsx": "4.23.15",
+    "yaml": "2.9.1",
+    "@types/node": "24.10.1"
+  }
+}
