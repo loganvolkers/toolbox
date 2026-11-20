@@ -9,11 +9,10 @@ records:
     intent: Write standards (kinds, scorecards, rubrics, skills) as a package with typed parameters.
     exitCriterion: A package manifest validates and its fragments validate against the manifest schema.
     commands: ["toolbox validate"]
-    checks: []
-    docs: [docs/design/packages.md]
-    status: designed
+    checks: [packages/github-actions/toolbox-package.yaml]
+    docs: [docs/design/packages.md, packages/github-actions/README.md]
+    status: partial
     gaps:
-      - "no package manifest (toolbox-package.yaml) or parameters: only local `include` of YAML files"
       - "no scaffold (toolbox package new)"
   - id: package-author/build-connector
     layer: package-author
@@ -21,23 +20,22 @@ records:
     order: 2
     intent: Build a connector outside this repository, in any language, against the connector protocol.
     exitCriterion: The connector passes the conformance kit as a standalone executable or WASM component.
-    commands: ["toolbox connector test"]
-    checks: [crates/toolbox-connect/src/conformance.rs]
+    commands: ["toolbox connector test", "toolbox install"]
+    checks: [crates/toolbox-connect/src/conformance.rs, crates/toolbox-cli/tests/install.rs]
     docs: [docs/design/connector-control.md, docs/design/package-author-sdlc.md]
     status: partial
     gaps:
-      - "in-image connectors must be builtin crates in this repository (builtin:<name>): no way to reference an external executable"
       - "the Rust SDK (toolbox-connect) is not published; no SDK for other languages"
       - "no `toolbox connector new` scaffold"
-      - "only remote connectors (push to /v1/ingest) can live outside this repository today"
+      - "no WASM component connectors yet"
   - id: package-author/test
     layer: package-author
     name: test
     order: 3
     intent: Prove the package's rules both ways on its fixtures, on every Toolbox version it claims to support.
     exitCriterion: toolbox test passes for each supported Toolbox release and platform; meta bronze for every exported rule.
-    commands: ["toolbox test", "toolbox connector test"]
-    checks: []
+    commands: ["toolbox test packages/github-actions/tests", "toolbox connector test"]
+    checks: [packages/github-actions/tests/standards.test.yaml, .github/workflows/ci.yml]
     docs: [docs/design/package-author-sdlc.md]
     status: partial
     gaps:
@@ -54,8 +52,7 @@ records:
     docs: [docs/design/packages.md]
     status: missing
     gaps:
-      - "no package format, archive or toolbox.lock"
-      - "no way to declare upstream tools (zizmor, actionlint) beyond prose in a README"
+      - "git packages are pinned by content hash; no deterministic archive for OCI mirrors yet"
   - id: package-author/distribute
     layer: package-author
     name: distribute

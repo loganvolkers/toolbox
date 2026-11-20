@@ -5,7 +5,7 @@ members = ["crates/*"]
 exclude = ["experiments"]
 
 [workspace.package]
-version = "0.0.0"
+version = "0.1.0"
 edition = "2024"
 rust-version = "1.97"
 publish = false
@@ -33,6 +33,7 @@ reqwest = { version = "0.13", default-features = false, features = ["json", "que
 jsonwebtoken = { version = "12", default-features = false, features = ["use_pem", "aws_lc_rs"] }
 toolbox-authz = { path = "crates/toolbox-authz" }
 sha2 = "0.11"
+walkdir = "2"
 sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "postgres", "json"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "sync", "time", "process", "io-util", "io-std", "net", "fs"] }
 toolbox-api = { path = "crates/toolbox-api" }
@@ -48,4 +49,9 @@ debug = "line-tables-only"
 
 [profile.release]
 codegen-units = 1
+lto = "thin"
+
+# The profile that 'dist' will build with
+[profile.dist]
+inherits = "release"
 lto = "thin"

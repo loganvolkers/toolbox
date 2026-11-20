@@ -3,11 +3,14 @@
   "portal": "toolbox",
   "results": {
     "maintainer-action-deps": {
+      "action:Swatinem/rust-cache": {
+        "level": "bronze"
+      },
+      "action:actions/attest": {
+        "level": "bronze"
+      },
       "action:actions/cache": {
-        "failing": {
-          "pinned-everywhere": 2
-        },
-        "level": "none"
+        "level": "bronze"
       },
       "action:actions/checkout": {
         "level": "bronze"
@@ -15,28 +18,34 @@
       "action:actions/deploy-pages": {
         "level": "bronze"
       },
-      "action:actions/setup-go": {
-        "failing": {
-          "pinned-everywhere": 2
-        },
-        "level": "none"
+      "action:actions/download-artifact": {
+        "level": "bronze"
       },
       "action:actions/setup-node": {
         "level": "bronze"
       },
       "action:actions/setup-python": {
         "failing": {
-          "pinned-everywhere": 2
+          "pinned-everywhere": 1
         },
         "level": "none"
       },
       "action:actions/upload-artifact": {
-        "failing": {
-          "pinned-everywhere": 2
-        },
-        "level": "none"
+        "level": "bronze"
       },
       "action:actions/upload-pages-artifact": {
+        "level": "bronze"
+      },
+      "action:docker/build-push-action": {
+        "level": "bronze"
+      },
+      "action:docker/login-action": {
+        "level": "bronze"
+      },
+      "action:docker/setup-buildx-action": {
+        "level": "bronze"
+      },
+      "action:docker/setup-qemu-action": {
         "level": "bronze"
       }
     },
@@ -62,8 +71,32 @@
         },
         "level": "none"
       },
+      "workflow:.github/workflows/image.yml": {
+        "failing": {
+          "fail-rate-under-10": 1,
+          "fail-rate-under-20": 1,
+          "fail-rate-under-5": 1,
+          "fast-feedback": 1,
+          "few-reruns": 1,
+          "main-not-stuck-red": 1
+        },
+        "level": "none"
+      },
       "workflow:.github/workflows/pages.yml": {
         "failing": {
+          "fail-rate-under-10": 1,
+          "fail-rate-under-20": 1,
+          "fail-rate-under-5": 1,
+          "fast-feedback": 1,
+          "few-reruns": 1,
+          "main-not-stuck-red": 1
+        },
+        "level": "none"
+      },
+      "workflow:.github/workflows/release.yml": {
+        "failing": {
+          "cancels-superseded-runs": 1,
+          "every-job-has-timeout": 5,
           "fail-rate-under-10": 1,
           "fail-rate-under-20": 1,
           "fail-rate-under-5": 1,
@@ -81,20 +114,30 @@
       "workflow:.github/workflows/ci.yml": {
         "failing": {
           "no-medium-findings": 6,
-          "pinned-to-sha": 2,
-          "zizmor-clean": 18
+          "pinned-to-sha": 1,
+          "zizmor-clean": 16
         },
         "level": "none"
+      },
+      "workflow:.github/workflows/image.yml": {
+        "level": "gold"
       },
       "workflow:.github/workflows/pages.yml": {
         "level": "gold"
       },
-      "workflow:actions/report/action.yml": {
+      "workflow:.github/workflows/release.yml": {
         "failing": {
-          "pinned-to-sha": 2,
-          "zizmor-clean": 3
+          "no-high-findings": 4,
+          "no-medium-findings": 3,
+          "zizmor-clean": 11
         },
         "level": "none"
+      },
+      "workflow:actions/report/action.yml": {
+        "failing": {
+          "zizmor-clean": 1
+        },
+        "level": "silver"
       }
     },
     "maintainer-connector": {
@@ -326,10 +369,7 @@
         "level": "gold"
       },
       "dependency:cargo:walkdir": {
-        "failing": {
-          "shared-is-inherited": 2
-        },
-        "level": "silver"
+        "level": "gold"
       }
     },
     "maintainer-docs": {
@@ -3656,6 +3696,9 @@
       "command:describe-portal": {
         "level": "silver"
       },
+      "command:doctor": {
+        "level": "silver"
+      },
       "command:explain": {
         "level": "skipped"
       },
@@ -3664,6 +3707,9 @@
       },
       "command:graph": {
         "level": "skipped"
+      },
+      "command:install": {
+        "level": "silver"
       },
       "command:mcp": {
         "level": "skipped"
@@ -3720,10 +3766,9 @@
     "sdlc-layer": {
       "sdlc:maintainer": {
         "failing": {
-          "every-stage-built": 1,
-          "nothing-missing": 1
+          "every-stage-built": 1
         },
-        "level": "bronze"
+        "level": "silver"
       },
       "sdlc:operator": {
         "failing": {
@@ -3761,11 +3806,9 @@
       },
       "sdlc-stage:maintainer/release": {
         "failing": {
-          "agent-operable": 1,
-          "automated": 1,
-          "built": 5
+          "built": 4
         },
-        "level": "bronze"
+        "level": "silver"
       },
       "sdlc-stage:maintainer/test": {
         "level": "gold"
@@ -3784,7 +3827,7 @@
       },
       "sdlc-stage:operator/build-connector": {
         "failing": {
-          "built": 2
+          "built": 1
         },
         "level": "silver"
       },
@@ -3838,14 +3881,13 @@
       },
       "sdlc-stage:package-author/author": {
         "failing": {
-          "automated": 1,
-          "built": 2
+          "built": 1
         },
-        "level": "bronze"
+        "level": "silver"
       },
       "sdlc-stage:package-author/build-connector": {
         "failing": {
-          "built": 4
+          "built": 3
         },
         "level": "silver"
       },
@@ -3861,16 +3903,15 @@
         "failing": {
           "agent-operable": 1,
           "automated": 1,
-          "built": 2
+          "built": 1
         },
         "level": "bronze"
       },
       "sdlc-stage:package-author/test": {
         "failing": {
-          "automated": 1,
           "built": 2
         },
-        "level": "bronze"
+        "level": "silver"
       },
       "sdlc-stage:user/build": {
         "failing": {
@@ -3927,6 +3968,9 @@
       "command:describe-portal": {
         "level": "skipped"
       },
+      "command:doctor": {
+        "level": "skipped"
+      },
       "command:explain": {
         "failing": {
           "exercised": null
@@ -3944,6 +3988,9 @@
           "exercised": null
         },
         "level": "bronze"
+      },
+      "command:install": {
+        "level": "skipped"
       },
       "command:mcp": {
         "level": "silver"

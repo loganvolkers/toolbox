@@ -249,14 +249,22 @@ pub fn resolve_config(connector: &str, cfg: &Value) -> Value {
 }
 
 /// The binary for a connector package: `builtin:<name>` → `toolbox-connector-<name>`, found in
-/// `TOOLBOX_CONNECTORS_DIR`, next to the running binary, or on PATH. Other packages are paths.
-/// The program for a connector package: `builtin:<name>` → `toolbox-connector-<name>` from
-/// `TOOLBOX_CONNECTORS_DIR` or next to this executable; anything else is a path.
+/// `TOOLBOX_CONNECTORS_DIR`, next to the running binary, or on PATH; `github:owner/repo[/app]@version`
+/// → the release installed in the cache by `toolbox install`. Other packages are paths.
 pub fn binary_for(package: &str) -> String {
+    if let Some(spec) = crate::artifacts::parse(package) {
+        // A released executable, unpacked into the cache by `toolbox install` (D90).
+        return spec.installed().display().to_string();
+    }
     let Some(name) = package.strip_prefix("builtin:") else {
         return package.to_owned();
     };
-    let file = format!("toolbox-connector-{name}");
+    let file = format!("toolbox-connector-{name}{}", std::env::consts::EXE_SUFFIX);
+    // TOOLBOX_CONNECTORS_DIR, then next to toolbox, then PATH: release installers put each
+    // connector app in the same bin directory, but a separately installed one may live elsewhere.
+    let path = std::env::var_os("PATH")
+        .map(|p| std::env::split_paths(&p).collect::<Vec<_>>())
+        .unwrap_or_default();
     let dirs = std::env::var("TOOLBOX_CONNECTORS_DIR")
         .ok()
         .map(std::path::PathBuf::from)
@@ -265,7 +273,8 @@ pub fn binary_for(package: &str) -> String {
             std::env::current_exe()
                 .ok()
                 .and_then(|p| p.parent().map(|d| d.to_path_buf())),
-        );
+        )
+        .chain(path);
     for d in dirs {
         if d.join(&file).is_file() {
             return d.join(&file).display().to_string();

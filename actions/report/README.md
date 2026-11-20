@@ -57,6 +57,7 @@ The job summary says which, and how to update the baseline.
 | `html` | `true` | Also produce the one-page HTML report |
 | `artifact-name` | `toolbox-report` | Name of the uploaded artifact (Markdown and HTML reports; the baseline in `update` mode) |
 | `toolbox-dir` | | A directory with prebuilt `toolbox` and `toolbox-connector-*` binaries. When empty, the action builds them from its own source at the pinned commit and caches them, so the first run per commit compiles and later runs restore |
+| `toolbox-version` | — | A released Toolbox version (e.g. `0.1.0`): download its binaries, SHA-256-verified, instead of building from source (D90) |
 
 **Outputs:**
 - `result`: `pass`, `regressed`, `stale`, `missing-baseline` or `error`;

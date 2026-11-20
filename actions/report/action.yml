@@ -39,8 +39,14 @@ inputs:
     default: toolbox-report
   toolbox-dir:
     description: >-
-      A directory that already holds the toolbox binaries (toolbox, toolbox-connector-*). When empty,
-      the action builds them from its own source at the action's ref, and caches them.
+      A directory that already holds the toolbox binaries (toolbox, toolbox-connector-*). Takes
+      precedence over toolbox-version.
+    default: ""
+  toolbox-version:
+    description: >-
+      A released Toolbox version (e.g. 0.1.0) to download, checksum-verified, from the action's
+      repository's GitHub releases (D90). When empty, the action builds toolbox from its own source at
+      the action's ref, and caches it.
     default: ""
 
 outputs:
@@ -63,9 +69,17 @@ outputs:
 runs:
   using: composite
   steps:
+    - name: Download released toolbox binaries
+      if: inputs.toolbox-dir == '' && inputs.toolbox-version != ''
+      shell: bash
+      env:
+        TOOLBOX_REPO: ${{ github.action_repository || 'loganvolkers/toolbox' }}
+        TOOLBOX_VERSION: ${{ inputs.toolbox-version }}
+        TOOLBOX_BIN: ${{ runner.temp }}/toolbox-bin
+      run: bash "$GITHUB_ACTION_PATH/install.sh"
     - name: Cache key for the toolbox build
       id: key
-      if: inputs.toolbox-dir == ''
+      if: inputs.toolbox-dir == '' && inputs.toolbox-version == ''
       shell: bash
       run: |
         root="$GITHUB_ACTION_PATH/../.."
@@ -73,13 +87,23 @@ runs:
         echo "key=toolbox-bin-${RUNNER_OS}-${RUNNER_ARCH}-$h" >> "$GITHUB_OUTPUT"
     - name: Restore toolbox binaries
       id: cache
-      if: inputs.toolbox-dir == ''
-      uses: actions/cache@v4
+      if: inputs.toolbox-dir == '' && inputs.toolbox-version == ''
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
       with:
         path: ${{ runner.temp }}/toolbox-bin
         key: ${{ steps.key.outputs.key }}
+    - name: Restore the Cargo build (incremental across commits)
+      if: inputs.toolbox-dir == '' && inputs.toolbox-version == '' && steps.cache.outputs.cache-hit != 'true'
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          ${{ runner.temp }}/toolbox-target
+        key: ${{ steps.key.outputs.key }}-target
+        restore-keys: toolbox-bin-${{ runner.os }}-${{ runner.arch }}-
     - name: Build toolbox from the action's source
-      if: inputs.toolbox-dir == '' && steps.cache.outputs.cache-hit != 'true'
+      if: inputs.toolbox-dir == '' && inputs.toolbox-version == '' && steps.cache.outputs.cache-hit != 'true'
       shell: bash
       run: |
         cd "$GITHUB_ACTION_PATH/../.."          # rust-toolchain.toml pins the toolchain here
@@ -102,7 +126,7 @@ runs:
       run: bash "$GITHUB_ACTION_PATH/run.sh"
     - name: Upload the report
       if: always() && steps.run.outputs.report != ''
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
         name: ${{ inputs.artifact-name }}
         path: |

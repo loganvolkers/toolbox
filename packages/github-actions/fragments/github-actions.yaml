@@ -1,0 +1,213 @@
+# GitHub Actions standards (docs/design/github-actions-standards.md, D70), packaged (D89, D90).
+# Requires a `workspace` connector with `workflows` globs (workflow and action-ref records).
+connectors:
+  - name: ci-lint
+    package: builtin:runner                # zizmor and actionlint: fast, offline, deterministic at pinned versions
+    runtime: in-image
+    config:
+      name: ci-lint
+      root: "."
+      jobs:
+        - name: zizmor                     # security audits (regular persona), offline
+          command: [zizmor, --offline, --no-exit-codes, --format, json, .github/workflows, actions]
+          parse: zizmor
+          files: [".github/workflows/*.y*ml", "actions/*/action.y*ml"]
+          optional: true                   # not installed → its rules are unknown, not failing
+        - name: actionlint                 # workflow syntax, expressions, types; shellcheck off so local = CI
+          command: [actionlint, -shellcheck=, -pyflakes=, -format, "{{json .}}"]
+          parse: actionlint
+          files: [".github/workflows/*.y*ml"]
+          optional: true
+    records: [zizmor, actionlint]
+    refresh: {zizmor: [external_ids], actionlint: [external_ids]}
+    freshness: {zizmor: 5m, actionlint: 5m}
+  - name: github-actions
+    package: builtin:github                # run history: changes with time, so not in the ratchet (--skip it)
+    runtime: in-image
+    config:
+      org: "${param:githubOrg}"
+      token: ${env:GITHUB_TOKEN}
+      actions: {repos: ["${param:githubRepo}"], branch: "${param:branch}", runs: 50}
+    records: [workflow-runs]
+    refresh: {workflow-runs: [external_ids]}
+    freshness: {workflow-runs: 15m}
+
+tools:
+  zizmor: {version: 1.32.0, mise: "pipx:zizmor"}
+  actionlint: {version: 1.7.12, mise: "aqua:rhysd/actionlint", versionArgs: ["-version"]}
+
+
+kinds:
+  # ── CI: the workflows and actions that build, test and ship Toolbox ──────────────────────
+  - name: Workflow
+    description: "A GitHub Actions workflow or action metadata file, with lint findings and run history."
+    identityFrom: [connector:workspace]
+    fields:
+      path: {type: string}
+      type: {type: enum, values: [workflow, action]}
+      name: {type: string}
+      triggers: {type: list, items: string}
+      riskyTriggers: {type: list, items: string}
+      topPermissions: {type: boolean}
+      jobs: {type: integer}
+      jobsWithoutTimeout: {type: list, items: string}
+      jobsWithoutPermissions: {type: list, items: string}
+      jobsWithWrite: {type: list, items: string}
+      concurrency: {type: boolean}
+      unpinned: {type: list, items: string}
+      zizmor: {type: object}               # {total, counts: {high, medium, low, informational}, findings}
+      actionlint: {type: object}           # {total, findings}
+      runs: {type: object}                 # from the GitHub API: failRate, rerunRate, failingStreak, p90Seconds …
+    relations:
+      usesAction: {to: ActionDependency, many: true}
+    sources:
+      default: [connector:workspace]
+      fields:
+        zizmor: [connector:ci-lint]
+        actionlint: [connector:ci-lint]
+        runs: [connector:github-actions]
+    map:
+      - from: workspace/workflow
+        id: "'workflow:' + record.path"
+        set: >-
+          {'path': record.path, 'type': record.type, 'name': record.name, 'triggers': record.triggers,
+           'riskyTriggers': record.riskyTriggers, 'topPermissions': record.topPermissions, 'jobs': record.jobs,
+           'jobsWithoutTimeout': record.jobsWithoutTimeout, 'jobsWithoutPermissions': record.jobsWithoutPermissions,
+           'jobsWithWrite': record.jobsWithWrite, 'concurrency': record.concurrency, 'unpinned': record.unpinned}
+        relations:
+          usesAction: "record.actions.map(a, 'action:' + a)"
+      - from: ci-lint/zizmor
+        id: "'workflow:' + record.path"
+        set: "{'zizmor': record}"
+      - from: ci-lint/actionlint
+        id: "'workflow:' + record.path"
+        set: "{'actionlint': record}"
+      - from: github-actions/workflow-runs
+        id: "'workflow:' + record.path"
+        set: "{'runs': record}"
+
+  - name: ActionDependency
+    description: "A third-party action or reusable workflow our CI runs, across every workflow using it."
+    identityFrom: [connector:workspace]
+    fields:
+      name: {type: string}
+      owner: {type: string}
+      refs: {type: list, items: string}
+      pins: {type: list, items: string}
+      usedBy: {type: list, items: string}
+    sources: {default: [connector:workspace]}
+    map:
+      - from: workspace/action-ref
+        id: "'action:' + record.name"
+        set: "{'name': record.name, 'owner': record.owner, 'refs': record.refs, 'pins': record.pins, 'usedBy': record.usedBy}"
+
+scorecards:
+  # ── Layer 1: maintainer SDLC — CI (docs/design/github-actions-standards.md) ──────────────
+  # Security: what an attacker could do through a workflow or the report action (which pilot repos
+  # run, so it is operator-facing too). zizmor and actionlint rules evaluate to `unknown`, not `fail`,
+  # where those tools aren't installed.
+  - name: maintainer-ci-security
+    kind: Workflow
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    rules:
+      - name: actionlint-clean
+        level: bronze
+        check: "entity.type == 'action' || entity.actionlint.total == 0"
+        evidence: "entity.actionlint.findings.map(f, f.rule + ' at line ' + string(f.line) + ': ' + f.message)"
+        fix: "Fix what actionlint reports (`actionlint` in the repository root)."
+      - name: no-high-findings
+        level: bronze
+        check: "entity.zizmor.findings.filter(f, f.severity == 'high' && f.rule != 'unpinned-uses').size() == 0"
+        evidence: "entity.zizmor.findings.filter(f, f.severity == 'high' && f.rule != 'unpinned-uses').map(f, f.rule + ' at line ' + string(f.line) + ': ' + f.message)"
+        fix: "Fix zizmor's high-severity findings (`zizmor --offline .github/workflows actions`); see https://docs.zizmor.sh/audits/."
+      - name: least-privilege-token
+        level: bronze
+        check: "entity.type == 'action' || entity.topPermissions || entity.jobsWithoutPermissions.size() == 0"
+        evidence: "entity.jobsWithoutPermissions"
+        fix: "Declare `permissions:` at the top of the workflow (read-only, e.g. `contents: read`) and grant writes per job."
+      - name: pinned-to-sha
+        level: bronze
+        check: "entity.unpinned.size() == 0"
+        evidence: "entity.unpinned"
+        fix: "Pin every third-party `uses:` to a full commit SHA (with the tag in a comment), or adopt a workflow lockfile; let Dependabot update them."
+      - name: no-medium-findings
+        level: silver
+        check: "entity.zizmor.counts.medium == 0"
+        evidence: "entity.zizmor.findings.filter(f, f.severity == 'medium').map(f, f.rule + ' at line ' + string(f.line) + ': ' + f.message)"
+        fix: "Fix zizmor's medium findings (e.g. `artipacked`: set `persist-credentials: false` on checkout)."
+      - name: no-write-tokens-on-risky-triggers
+        level: silver
+        check: "entity.riskyTriggers.size() == 0 || entity.jobsWithWrite.size() == 0"
+        evidence: "entity.riskyTriggers.map(t, 'trigger ' + t) + entity.jobsWithWrite.map(j, 'write token in job ' + j)"
+        fix: "Don't combine pull_request_target/workflow_run/issue_comment with write permissions; split privileged steps into a separate workflow."
+      - name: zizmor-clean
+        level: gold
+        check: "entity.zizmor.total == 0"
+        evidence: "entity.zizmor.findings.map(f, f.severity + ' ' + f.rule + ' at line ' + string(f.line))"
+        fix: "Resolve or explicitly ignore (with a reason) zizmor's low and informational findings."
+    facets: {summary: public, details: public}
+
+  # Reliability: whether CI can be trusted to say "green means good". Run history comes from the
+  # GitHub API (github-actions connector); without it those rules fail with "no run data".
+  - name: maintainer-ci-reliability
+    kind: Workflow
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    appliesTo: "entity.type == 'workflow'"
+    rules:
+      - name: main-not-stuck-red
+        level: bronze
+        check: "has(entity.runs) && entity.runs.failingStreak < 3"
+        evidence: "has(entity.runs) ? [string(entity.runs.failingStreak) + ' failures in a row on ' + entity.runs.branch + ', last run ' + entity.runs.lastRunAt] : ['no run data (github-actions connector skipped or no token)']"
+        fix: "Fix main before anything else: a red default branch hides new failures."
+      - name: fail-rate-under-20
+        level: bronze
+        check: "has(entity.runs) && entity.runs.failRate <= ${param:failRateBronze}"
+        evidence: "has(entity.runs) ? [string(entity.runs.failRate) + '% of the last ' + string(entity.runs.decided) + ' decided runs on ' + entity.runs.branch + ' failed'] : ['no run data']"
+        fix: "Find the failing jobs (`toolbox get workflow:<path>` shows run data) and fix or quarantine their causes."
+      - name: every-job-has-timeout
+        level: bronze
+        check: "entity.jobsWithoutTimeout.size() == 0"
+        evidence: "entity.jobsWithoutTimeout"
+        fix: "Set `timeout-minutes` on every job; the default is 360 minutes of a hung runner."
+      - name: fail-rate-under-10
+        level: silver
+        check: "has(entity.runs) && entity.runs.failRate <= ${param:failRateSilver}"
+        evidence: "has(entity.runs) ? [string(entity.runs.failRate) + '% failed'] : ['no run data']"
+        fix: "Track failures to their causes: flaky tests, infrastructure, or real breakage merged to main."
+      - name: few-reruns
+        level: silver
+        check: "has(entity.runs) && entity.runs.rerunRate <= 5"
+        evidence: "has(entity.runs) ? [string(entity.runs.rerunRate) + '% of runs were re-run'] : ['no run data']"
+        fix: "Re-runs mean flakiness: find the flaky jobs and fix or isolate them instead of retrying."
+      - name: cancels-superseded-runs
+        level: silver
+        check: "entity.concurrency || !('pull_request' in entity.triggers)"
+        evidence: "['no concurrency group on a workflow triggered by pull_request']"
+        fix: "Add `concurrency: {group: ${{ github.workflow }}-${{ github.ref }}, cancel-in-progress: true}` so a new push cancels the old run."
+      - name: fail-rate-under-5
+        level: gold
+        check: "has(entity.runs) && entity.runs.failRate <= ${param:failRateGold}"
+        evidence: "has(entity.runs) ? [string(entity.runs.failRate) + '% failed'] : ['no run data']"
+        fix: "Keep main green: failures should be rare enough that each one gets looked at."
+      - name: fast-feedback
+        level: gold
+        check: "has(entity.runs) && entity.runs.p90Seconds <= ${param:p90Seconds}"
+        evidence: "has(entity.runs) ? ['p90 run time ' + string(entity.runs.p90Seconds / 60) + ' min'] : ['no run data']"
+        fix: "Keep the p90 run under 15 minutes: split slow jobs, cache builds, move long suites off the PR path."
+    facets: {summary: public, details: public}
+
+  # Supply chain: each third-party action, across every workflow that uses it (the "who uses
+  # tj-actions/changed-files?" question).
+  - name: maintainer-action-deps
+    kind: ActionDependency
+    owner: group:maintainers
+    levels: [bronze]
+    rules:
+      - name: pinned-everywhere
+        level: bronze
+        check: "entity.pins.all(p, p == 'sha')"
+        evidence: "entity.refs.filter(r, !r.matches('@[0-9a-f]{40}$'))"   # only what to change: pinned users don't count
+        fix: "Pin this action to a full commit SHA in every workflow that uses it."
+    facets: {summary: public, details: public}

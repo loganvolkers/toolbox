@@ -60,7 +60,7 @@ PY
 
 echo "3. A1 (CLI → MCP owner_of as alice)"; ask owner repository:payments-api --as alice | sed -n 1p   # sed reads it all: no broken pipe
 echo "4. A2 (explain ledger)"; ask owner repository:ledger --as alice | sed -n '1p;3p'
-echo "5. A3 (erin: levels only)"; ask score repository:checkout-web --as erin | grep -E 'ownership|rule details' | head -2
+echo "5. A3 (erin: levels only)"; ask score repository:checkout-web --as erin | grep -E 'ownership|rule details' | sed -n 1,2p   # sed reads all input: no broken-pipe race under pipefail
 echo "6. A4 (bob: details)"; ask score repository:checkout-web --as bob | grep -E 'branch-protected'
 echo "7. A5 (API filter)"
 curl -fs -G -H x-toolbox-user:erin "$URL/v1/entities" --data-urlencode "kind=Repository" --data-urlencode "filter=entity.ownership.status != 'verified'" \

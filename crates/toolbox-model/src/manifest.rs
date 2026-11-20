@@ -20,6 +20,9 @@ pub struct Manifest {
     /// Rubrics coding agents assess entities with (assessments are data, read by scorecards).
     #[serde(default)]
     pub rubrics: Vec<Rubric>,
+    /// Upstream tools the portal needs (`toolbox doctor` checks them; D90).
+    #[serde(default)]
+    pub tools: BTreeMap<String, Tool>,
     pub authz: Option<Authz>,
     #[serde(default)]
     pub actions: Vec<Action>,
@@ -145,6 +148,15 @@ pub struct Scorecard {
     /// `{newEntitiesAtLeast: <level>}`: ratchet policy for entities new since the baseline.
     pub ratchet: Option<Value>,
     pub facets: Option<Value>,
+}
+
+/// An upstream tool: the version required and how mise installs it.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Tool {
+    pub version: String,
+    pub mise: Option<String>,
+    pub version_args: Option<Vec<String>>,
 }
 
 /// A rubric: the questions an agent answers when it assesses an entity of `kind`.

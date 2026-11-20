@@ -1,6 +1,6 @@
 # Toolbox Packages: Sharing Standards, Publishing Our Own, and Running Them Across a Fleet
 
-*Status: decided, 2026-11-20 (D89, resolving Q15); implementation in progress. Originally research and proposal. Answers the flagged open question Q15 (federation's
+*Status: decided, 2026-11-20 (D89, resolving Q15). Package includes, parameters and git pinning are built; the first package is `packages/github-actions/`. Originally research and proposal. Answers the flagged open question Q15 (federation's
 package registry) with a recommendation that is **not yet decided**. Covers four questions raised
 while building Toolbox for Toolbox (T4T):*
 1. *How should we catalogue the open-source packages we publish?*

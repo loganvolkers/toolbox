@@ -182,6 +182,21 @@ digest, data packages with typed parameters) stands. A package now has three par
 | Connectors | builtin, executable (per-platform assets) or WASM component | `toolbox.lock` (one digest per platform or component) |
 | Tools | declared versions and mise/aqua identifiers | `mise.lock` (the consumer's) |
 
+**Implementation status (D90):**
+- **Step 1, built but not yet released:** `dist` config and `release.yml` (actions pinned by SHA), the image workflow, and `actions/report` `toolbox-version`. Internal iteration uses caches, not tags: `Swatinem/rust-cache`, an incremental Cargo cache in the report action, and tools downloaded by checksum (`scripts/ci-tools.sh`).
+- **Steps 2–3, built:**
+  - `package: github:owner/repo[/app]@version`;
+  - `toolbox install` (pins per-platform SHA-256 in `toolbox.lock`, refuses mismatches, `--frozen` for CI);
+  - `tools:` and `toolbox doctor` (`--mise`);
+  - covered end to end by `crates/toolbox-cli/tests/install.rs`.
+
+- **Step 4, built:**
+  - `include: [{package, with}]` with typed parameters that may only tighten;
+  - git packages cloned and pinned by content hash in `toolbox.lock`, verified on every load;
+  - the first package, `packages/github-actions/` (D70's standards, with connectors and tools), extracted from T4T with an identical ratchet;
+  - the package tests itself in `packages/github-actions/tests`.
+- **Not built:** WASM connectors (step 5), deterministic archives and the OCI mirror, Homebrew, npm and aqua channels, and a first release (deliberately not cut; internal iteration uses caches).
+
 **Build order**, because each step unblocks the next stage in the catalogue:
 1. maintainer/release (`dist`, image, attestations);
 2. executable connectors resolved from `toolbox.lock`, plus a published Rust SDK and scaffold;

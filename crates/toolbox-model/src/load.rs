@@ -17,7 +17,13 @@ pub enum LoadError {
     },
     #[error("{path}: not valid YAML or JSON: {message}")]
     Parse { path: String, message: String },
-    #[error("{path}: `include` must be a list of file paths or globs")]
+    #[error("{path}: package {spec}: {message}")]
+    Package {
+        path: String,
+        spec: String,
+        message: String,
+    },
+    #[error("{path}: `include` must be a list of file paths, globs or {{package, with}} entries")]
     BadInclude { path: String },
     #[error("{path}: include pattern `{pattern}` matched no files")]
     NoMatch { path: String, pattern: String },
@@ -107,6 +113,11 @@ fn read_doc(root: &Path, rel: &str) -> Result<Value, LoadError> {
 
 /// Expand an include pattern relative to `root`. Supports literal paths and `*` within the final
 /// path segment (e.g. `policies/*.yaml`).
+/// [`expand`] for other directories (package fragments).
+pub(crate) fn expand_in(root: &Path, pattern: &str) -> Vec<String> {
+    expand(root, pattern)
+}
+
 fn expand(root: &Path, pattern: &str) -> Vec<String> {
     let (dir, file_pat) = match pattern.rsplit_once('/') {
         Some((d, f)) => (d.to_string(), f.to_string()),
@@ -183,42 +194,101 @@ fn merge(into: &mut Value, from: Value, pointer: &str, a: &str, b: &str) -> Resu
     }
 }
 
+fn include_files(
+    root: &Path,
+    manifest_file: &str,
+    pattern: &str,
+    document: &mut Value,
+    included: &mut Vec<String>,
+) -> Result<(), LoadError> {
+    let files = expand(root, pattern);
+    if files.is_empty() {
+        return Err(LoadError::NoMatch {
+            path: manifest_file.to_owned(),
+            pattern: pattern.to_owned(),
+        });
+    }
+    for file in files {
+        let mut doc = read_doc(root, &file)?;
+        if let Some(o) = doc.as_object_mut() {
+            o.remove("include"); // includes don't nest
+        }
+        merge(document, doc, "", manifest_file, &file)?;
+        included.push(file);
+    }
+    Ok(())
+}
+
+/// A package (D89): its fragments with `with` applied, after checking its pin in toolbox.lock.
+fn include_package(
+    root: &Path,
+    manifest_file: &str,
+    entry: &serde_json::Map<String, Value>,
+    document: &mut Value,
+    included: &mut Vec<String>,
+) -> Result<(), LoadError> {
+    let spec = entry["package"].as_str().unwrap_or_default();
+    let err = |message: String| LoadError::Package {
+        path: manifest_file.to_owned(),
+        spec: spec.to_owned(),
+        message,
+    };
+    let dir = crate::package::locate(root, spec);
+    let lock: Value = std::fs::read_to_string(root.join("toolbox.lock"))
+        .ok()
+        .and_then(|t| serde_json::from_str(&t).ok())
+        .unwrap_or(Value::Null);
+    if let Some(pinned) = lock["packages"][spec].as_str() {
+        let got = crate::package::content_hash(&dir);
+        if got != pinned {
+            return Err(err(format!(
+                "content {got} doesn't match toolbox.lock ({pinned})"
+            )));
+        }
+    }
+    let with = entry
+        .get("with")
+        .and_then(Value::as_object)
+        .cloned()
+        .unwrap_or_default();
+    for (label, mut doc) in crate::package::fragments(&dir, &with).map_err(err)? {
+        if let Some(o) = doc.as_object_mut() {
+            o.remove("include");
+        }
+        merge(document, doc, "", manifest_file, &label)?;
+        included.push(label);
+    }
+    Ok(())
+}
+
 /// Load the portal at `path` (a manifest file or a portal directory).
 pub fn load(path: &Path) -> Result<Source, LoadError> {
     let (root, manifest_file) = resolve(path)?;
     let mut document = read_doc(&root, &manifest_file)?;
     let mut included = Vec::new();
     if let Some(inc) = document.as_object_mut().and_then(|o| o.remove("include")) {
-        let patterns: Vec<String> = match inc {
-            Value::Array(items) => items
-                .into_iter()
-                .map(|v| {
-                    v.as_str().map(str::to_owned).ok_or(LoadError::BadInclude {
-                        path: manifest_file.clone(),
-                    })
-                })
-                .collect::<Result<_, _>>()?,
-            _ => {
-                return Err(LoadError::BadInclude {
-                    path: manifest_file.clone(),
-                });
-            }
+        let Value::Array(items) = inc else {
+            return Err(LoadError::BadInclude {
+                path: manifest_file.clone(),
+            });
         };
-        for pattern in patterns {
-            let files = expand(&root, &pattern);
-            if files.is_empty() {
-                return Err(LoadError::NoMatch {
-                    path: manifest_file.clone(),
-                    pattern,
-                });
-            }
-            for file in files {
-                let mut doc = read_doc(&root, &file)?;
-                if let Some(o) = doc.as_object_mut() {
-                    o.remove("include"); // includes don't nest
+        for item in items {
+            match item {
+                Value::String(pattern) => include_files(
+                    &root,
+                    &manifest_file,
+                    &pattern,
+                    &mut document,
+                    &mut included,
+                )?,
+                Value::Object(o) if o.get("package").is_some_and(Value::is_string) => {
+                    include_package(&root, &manifest_file, &o, &mut document, &mut included)?
                 }
-                merge(&mut document, doc, "", &manifest_file, &file)?;
-                included.push(file);
+                _ => {
+                    return Err(LoadError::BadInclude {
+                        path: manifest_file.clone(),
+                    });
+                }
             }
         }
     }
