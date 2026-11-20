@@ -28,7 +28,9 @@
 //! - `json-schema` (`schemas` globs): one per JSON Schema document, with its dialect, id and
 //!   whether the binary compiles it (docs/design/schema-standards.md);
 //! - `example` (`examples` globs): one per example or experiment write-up, with its links and the
-//!   command that checks it (docs/design/example-standards.md).
+//!   command that checks it (docs/design/example-standards.md);
+//! - `assessment` (`assessments` globs): one per assessment file (YAML or JSON, see
+//!   `schema/assessment.schema.json`): agents' judgements of entities against the portal's rubrics.
 //!
 //! `docs` and `file` records also carry `captures` (each configured regex's first group, unique,
 //! sorted, with runs of whitespace replaced by `-`) and `counts` (matches per configured regex),
@@ -38,7 +40,8 @@
 //! `TOOLBOX_CONNECTOR_CONFIG`: `{"root"?: ".", "docs"?: [glob], "files"?: [glob],
 //! "captures"?: {name: regex}, "counts"?: {name: regex}, "crates"?: true, "repo"?: false,
 //! "betterer"?: [glob], "skills"?: [glob], "connectors"?: [glob], "dependencies"?: false,
-//! "agentDocs"?: [glob], "packages"?: [glob], "schemas"?: [glob], "examples"?: [glob]}`.
+//! "agentDocs"?: [glob], "packages"?: [glob], "schemas"?: [glob], "examples"?: [glob],
+//! "assessments"?: [glob]}`.
 
 mod agentsmd;
 mod betterer;
@@ -64,6 +67,8 @@ struct Workspace {
     docs: Vec<Regex>,
     files: Vec<Regex>,
     betterer: Vec<Regex>,
+    /// Assessment files (`assessment` records).
+    assessments: Vec<Regex>,
     /// GitHub Actions workflow and action metadata files (`workflow` and `action-ref` records).
     workflows: Vec<Regex>,
     /// Agent skill files (`skill` records), usually `**/SKILL.md`.
@@ -130,6 +135,7 @@ impl Workspace {
             docs: globs(&cfg, "docs")?,
             files: globs(&cfg, "files")?,
             betterer: globs(&cfg, "betterer")?,
+            assessments: globs(&cfg, "assessments")?,
             workflows: globs(&cfg, "workflows")?,
             skills: globs(&cfg, "skills")?,
             connectors: globs(&cfg, "connectors")?,
@@ -370,6 +376,7 @@ impl Workspace {
                     "package-json",
                     "json-schema",
                     "example",
+                    "assessment",
                 ]
             });
         if self.crates && kinds.contains(&"crate") {
@@ -381,6 +388,7 @@ impl Workspace {
         self.emit_docs_and_files(&paths, &kinds, out);
         self.emit_workflows(&paths, &kinds, out);
         self.emit_betterer(&paths, &kinds, out);
+        self.emit_assessments(&paths, &kinds, out);
         self.emit_skills(&paths, &kinds, out);
         self.emit_connectors(&paths, &kinds, out);
         self.emit_dependencies(&kinds, out);
@@ -416,6 +424,31 @@ impl Workspace {
             }
             out.snapshot_complete(kind);
         }
+    }
+
+    /// `assessment` records; files that aren't assessments are logged and skipped.
+    fn emit_assessments(&self, paths: &[String], kinds: &[&str], out: &mut Out) {
+        if !kinds.contains(&"assessment") || self.assessments.is_empty() {
+            return;
+        }
+        for rel in paths.iter().filter(|p| Self::matches(&self.assessments, p)) {
+            match self.assessment(rel) {
+                Ok((id, data)) => out.record("assessment", &id, data),
+                Err(e) => out.log("warn", &format!("{rel}: {e}")),
+            }
+        }
+        out.snapshot_complete("assessment");
+    }
+
+    /// One assessment file as `(external id, record)`.
+    fn assessment(&self, rel: &str) -> Result<(String, Value), String> {
+        let text = std::fs::read_to_string(self.root.join(rel)).map_err(|e| e.to_string())?;
+        let doc: Value = serde_norway::from_str(&text).map_err(|e| e.to_string())?;
+        if !doc["entity"].is_string() || !doc["rubric"].is_string() {
+            return Err("not an assessment (needs entity and rubric)".into());
+        }
+        let id = toolbox_connect::assessment::external_id(&doc);
+        Ok((id, toolbox_connect::assessment::record(&doc, Some(rel))))
     }
 
     fn emit_betterer(&self, paths: &[String], kinds: &[&str], out: &mut Out) {
@@ -759,11 +792,12 @@ impl Source for Workspace {
             ("package-json", !self.packages.is_empty()),
             ("json-schema", !self.schemas.is_empty()),
             ("example", !self.examples.is_empty()),
+            ("assessment", !self.assessments.is_empty()),
         ];
         let kinds: Vec<&str> = on.iter().filter(|(_, b)| *b).map(|(k, _)| *k).collect();
         let refresh: Map<String, Value> = kinds
             .iter()
-            .filter(|k| **k != "betterer")
+            .filter(|k| !matches!(**k, "betterer" | "assessment"))
             .map(|k| (k.to_string(), json!(["external_ids"])))
             .collect();
         json!({"refresh": refresh, "resync": kinds, "max_concurrency": 1})

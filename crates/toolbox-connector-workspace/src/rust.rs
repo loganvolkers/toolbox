@@ -3,6 +3,7 @@
 //! portal's scorecards decide what "too long" or "too complex" means.
 
 use serde_json::{Value, json};
+use sha2::{Digest, Sha256};
 use std::path::Path;
 use syn::spanned::Spanned;
 use syn::visit::{self, Visit};
@@ -223,6 +224,26 @@ fn parse(path: &Path, m: &mut Metrics, rel: &str) -> Option<syn::File> {
     }
 }
 
+/// The first 12 hex digits of the SHA-256 over the crate's `src/` files (paths and contents): an
+/// assessment of the crate is stale when it changes.
+fn source_hash(dir: &Path) -> String {
+    let mut h = Sha256::new();
+    for path in rust_files(&dir.join("src")) {
+        h.update(
+            path.strip_prefix(dir)
+                .unwrap_or(&path)
+                .to_string_lossy()
+                .as_bytes(),
+        );
+        h.update(std::fs::read(&path).unwrap_or_default());
+    }
+    h.finalize()
+        .iter()
+        .take(6)
+        .map(|b| format!("{b:02x}"))
+        .collect()
+}
+
 /// Metrics for the crate in `dir`; `entry` is its lib or bin root (for crate-level docs).
 pub fn analyse(dir: &Path, entry: Option<&Path>) -> Value {
     let mut m = Metrics::default();
@@ -285,5 +306,6 @@ pub fn analyse(dir: &Path, entry: Option<&Path>) -> Value {
         "integrationTests": integration_tests,
         "unwraps": m.unwraps,
         "parseErrors": m.parse_errors,
+        "hash": source_hash(dir),
     })
 }

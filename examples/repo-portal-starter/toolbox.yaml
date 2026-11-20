@@ -22,6 +22,8 @@ connectors:
       repo: true                           # README, LICENSE, CODEOWNERS
       docs: ["*.md", "docs/**/*.md"]
     records: [repo, doc]
+    refresh: {repo: [external_ids], doc: [external_ids]}
+    freshness: {repo: 5m, doc: 5m}
 
 kinds:
   - name: Repository

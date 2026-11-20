@@ -17,6 +17,9 @@ pub struct Manifest {
     pub kinds: Vec<Kind>,
     #[serde(default)]
     pub scorecards: Vec<Scorecard>,
+    /// Rubrics coding agents assess entities with (assessments are data, read by scorecards).
+    #[serde(default)]
+    pub rubrics: Vec<Rubric>,
     pub authz: Option<Authz>,
     #[serde(default)]
     pub actions: Vec<Action>,
@@ -51,6 +54,8 @@ pub struct Connector {
 #[serde(rename_all = "camelCase")]
 pub struct Kind {
     pub name: String,
+    /// What the kind is, for people and agents.
+    pub description: Option<String>,
     pub identity_from: Vec<String>,
     pub fields: BTreeMap<String, Field>,
     #[serde(default)]
@@ -72,6 +77,8 @@ pub struct Field {
     pub facet: Option<String>,
     pub computed: Option<String>,
     pub authority: Option<Authority>,
+    /// What the field means, for people and agents.
+    pub description: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -138,6 +145,33 @@ pub struct Scorecard {
     /// `{newEntitiesAtLeast: <level>}`: ratchet policy for entities new since the baseline.
     pub ratchet: Option<Value>,
     pub facets: Option<Value>,
+}
+
+/// A rubric: the questions an agent answers when it assesses an entity of `kind`.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Rubric {
+    pub name: String,
+    pub kind: String,
+    pub description: Option<String>,
+    /// The entity field that versions what is assessed (default `hash`): an assessment whose
+    /// `subjectHash` differs from it is stale.
+    pub subject: Option<String>,
+    pub criteria: Vec<Criterion>,
+}
+
+impl Rubric {
+    /// The field assessments are versioned by (`subject`, default `hash`).
+    pub fn subject(&self) -> &str {
+        self.subject.as_deref().unwrap_or("hash")
+    }
+}
+
+/// One question of a rubric, with optional guidance on how to answer it.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Criterion {
+    pub name: String,
+    pub question: String,
+    pub guidance: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

@@ -1,7 +1,9 @@
 //! The `toolbox` binary (docs/v1-spec.md §7.7).
 
+mod assess;
 mod client;
 mod meta;
+mod model;
 mod portal;
 mod report;
 mod server;
@@ -248,13 +250,81 @@ enum Command {
         #[command(subcommand)]
         what: Option<DescribeWhat>,
     },
+    /// Agent assessments: brief your coding agent on an entity, check the assessment files it
+    /// writes, or push them to a server. Toolbox calls no model; your agent does the judging.
+    Assess {
+        #[command(subcommand)]
+        what: AssessWhat,
+    },
+}
+
+#[derive(Subcommand)]
+enum AssessWhat {
+    /// What to judge an entity on: the rubric's criteria, the entity's facts, its subject hash, and
+    /// a template and file path for the assessment.
+    Brief {
+        /// Entity id, e.g. rule:portal/user-mcp/contract-tested.
+        entity: String,
+        /// Rubric name (default: the only rubric for the entity's kind).
+        #[arg(long)]
+        rubric: Option<String>,
+        /// A portal directory (containing toolbox.yaml) or a manifest file.
+        #[arg(long, default_value = ".")]
+        portal: PathBuf,
+        /// Use the portal's fixtures instead of running its connectors.
+        #[arg(long)]
+        fixtures: bool,
+        /// Connectors not to run (comma-separated), e.g. a slow runner.
+        #[arg(long, value_delimiter = ',')]
+        skip: Vec<String>,
+        /// Output: md (instructions for an agent, default) or json.
+        #[arg(short = 'o', long, default_value = "md")]
+        output: String,
+    },
+    /// Validate the portal's assessments/ files and list, per rubric, which entities are assessed
+    /// (fresh), assessed against an older version (stale), or not assessed (missing).
+    Check {
+        /// A portal directory (containing toolbox.yaml) or a manifest file.
+        #[arg(default_value = ".")]
+        portal: PathBuf,
+        /// Use the portal's fixtures instead of running its connectors.
+        #[arg(long)]
+        fixtures: bool,
+        /// Connectors not to run (comma-separated), e.g. a slow runner.
+        #[arg(long, value_delimiter = ',')]
+        skip: Vec<String>,
+        /// Output: md (default) or json.
+        #[arg(short = 'o', long, default_value = "md")]
+        output: String,
+    },
+    /// Validate assessment files and push them to a running server as `assessment` records of a
+    /// remote connector (for portals whose assessments live in Postgres, not in a repository).
+    Submit {
+        /// Assessment files (YAML or JSON).
+        #[arg(required = true)]
+        files: Vec<PathBuf>,
+        /// The portal whose rubrics the files must match.
+        #[arg(long, default_value = ".")]
+        portal: PathBuf,
+        /// The running server.
+        #[arg(long, env = "TOOLBOX_URL", default_value = "http://127.0.0.1:8080")]
+        url: String,
+        /// The remote connector the records belong to (dev servers, without a token).
+        #[arg(long, default_value = "assessments")]
+        connector: String,
+        /// That connector's token.
+        #[arg(long, env = "TOOLBOX_CONNECTOR_TOKEN")]
+        token: Option<String>,
+    },
 }
 
 #[derive(Subcommand)]
 enum DescribeWhat {
-    /// Scorecards and rules of portals as `scorecard` and `rule` records: manifest facts, CEL size
-    /// and loops, test coverage, outcomes over fixtures and (with --results) on real data.
-    Scorecards {
+    /// Every part of portals as records — `kind`, `field`, `connector`, `scorecard`, `rule`: manifest
+    /// facts, content hashes, usage, CEL size and loops, test coverage, outcomes over fixtures and
+    /// (with --results) on real data.
+    #[command(alias = "scorecards")]
+    Portal {
         /// Portal directories to describe.
         #[arg(required = true)]
         portals: Vec<PathBuf>,
@@ -362,11 +432,12 @@ fn main() -> ExitCode {
         Command::Derive { path, out } => derive(&path, out.as_deref()),
         Command::Describe { what: None } => describe(),
         Command::Describe {
-            what: Some(DescribeWhat::Scorecards { portals, results }),
+            what: Some(DescribeWhat::Portal { portals, results }),
         } => match meta::describe(&portals, &results) {
             Ok(()) => ExitCode::SUCCESS,
             Err(e) => fail(e),
         },
+        Command::Assess { what } => assess_command(what),
         Command::Serve {
             path,
             listen,
@@ -731,6 +802,46 @@ fn connector_test(
         ExitCode::SUCCESS
     } else {
         ExitCode::from(1)
+    }
+}
+
+/// Dispatch `toolbox assess …`.
+fn assess_command(what: AssessWhat) -> ExitCode {
+    match what {
+        AssessWhat::Brief {
+            entity,
+            rubric,
+            portal,
+            fixtures,
+            skip,
+            output,
+        } => assess::brief(
+            &portal,
+            &entity,
+            rubric.as_deref(),
+            fixtures,
+            &skip,
+            &output,
+        ),
+        AssessWhat::Check {
+            portal,
+            fixtures,
+            skip,
+            output,
+        } => assess::check(&portal, fixtures, &skip, &output),
+        AssessWhat::Submit {
+            files,
+            portal,
+            url,
+            connector,
+            token,
+        } => assess::submit(&assess::Submit {
+            portal,
+            files,
+            url,
+            connector,
+            token,
+        }),
     }
 }
 

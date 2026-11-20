@@ -225,9 +225,9 @@
         "failing": {
           "bounded-complexity": 1,
           "clippy-clean": 1,
-          "fully-documented": 28,
+          "fully-documented": 22,
           "no-huge-functions": 1,
-          "public-api-documented": 28,
+          "public-api-documented": 22,
           "short-functions": 3,
           "simple-functions": 2,
           "tests-pass": 1
@@ -502,6 +502,9 @@
       "doc:plugins/toolbox-operator/skills/add-scorecard/SKILL.md": {
         "level": "silver"
       },
+      "doc:plugins/toolbox-operator/skills/assess-entity/SKILL.md": {
+        "level": "silver"
+      },
       "doc:plugins/toolbox-operator/skills/review-plan/SKILL.md": {
         "level": "silver"
       },
@@ -566,6 +569,9 @@
       }
     },
     "maintainer-schema": {
+      "json-schema:schema/assessment.schema.json": {
+        "level": "gold"
+      },
       "json-schema:schema/connector-messages.schema.json": {
         "level": "gold"
       },
@@ -592,6 +598,13 @@
         },
         "level": "bronze"
       },
+      "skill:plugins/toolbox-operator/skills/assess-entity": {
+        "failing": {
+          "has-evals": 1,
+          "has-example": 1
+        },
+        "level": "bronze"
+      },
       "skill:plugins/toolbox-operator/skills/review-plan": {
         "failing": {
           "has-evals": 1,
@@ -605,6 +618,1732 @@
           "has-example": 1
         },
         "level": "bronze"
+      }
+    },
+    "meta-connector": {
+      "connector:acme/git-files": {
+        "failing": {
+          "refreshable": 1
+        },
+        "level": "silver"
+      },
+      "connector:acme/github": {
+        "failing": {
+          "freshness-declared": 1,
+          "refreshable": 2
+        },
+        "level": "bronze"
+      },
+      "connector:acme/idp": {
+        "failing": {
+          "refreshable": 2
+        },
+        "level": "silver"
+      },
+      "connector:repo/workspace": {
+        "level": "gold"
+      },
+      "connector:toolbox/ci-lint": {
+        "level": "gold"
+      },
+      "connector:toolbox/github-actions": {
+        "level": "gold"
+      },
+      "connector:toolbox/runner": {
+        "level": "gold"
+      },
+      "connector:toolbox/surfaces": {
+        "level": "gold"
+      },
+      "connector:toolbox/workspace": {
+        "failing": {
+          "refreshable": 1
+        },
+        "level": "silver"
+      }
+    },
+    "meta-field": {
+      "field:acme/GitHubApp.permissions": {
+        "failing": {
+          "described": 1,
+          "has-shape": 1
+        },
+        "level": "bronze"
+      },
+      "field:acme/GitHubApp.slug": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:acme/GitHubApp.vendor": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:acme/GitHubAppInstallation.app": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:acme/GitHubAppInstallation.selection": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:acme/Group.githubTeam": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:acme/Group.members": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:acme/Group.parent": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:acme/Group.title": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:acme/Repository.admins": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:acme/Repository.archived": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:acme/Repository.codeowners": {
+        "failing": {
+          "described": 1,
+          "has-shape": 1
+        },
+        "level": "bronze"
+      },
+      "field:acme/Repository.defaultBranchProtected": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:acme/Repository.installedApps": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:acme/Repository.lifecycle": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:acme/Repository.ownerClaim": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:acme/Repository.ownership": {
+        "failing": {
+          "described": 1,
+          "has-shape": 1
+        },
+        "level": "bronze"
+      },
+      "field:acme/Repository.tier": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:acme/Repository.title": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:acme/User.displayName": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:acme/User.email": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:repo/Doc.brokenLinks": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:repo/Doc.path": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:repo/Doc.title": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:repo/Repository.codeowners": {
+        "failing": {
+          "described": 1,
+          "has-shape": 1
+        },
+        "level": "bronze"
+      },
+      "field:repo/Repository.files": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:repo/Repository.license": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:repo/Repository.name": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:repo/Repository.owners": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:repo/Repository.readme": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:repo/Repository.readmeWords": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/ActionDependency.name": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/ActionDependency.owner": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/ActionDependency.pins": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/ActionDependency.refs": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/ActionDependency.usedBy": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/AgentDoc.canonical": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/AgentDoc.commandLines": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/AgentDoc.hiddenChars": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/AgentDoc.lines": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/AgentDoc.mentionsDecisions": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/AgentDoc.missingFiles": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/AgentDoc.name": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/AgentDoc.path": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/AgentDoc.pointsAtAgents": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/AgentDoc.secretHits": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Assessment.assessorKind": {
+        "level": "gold"
+      },
+      "field:toolbox/Assessment.assessorName": {
+        "level": "gold"
+      },
+      "field:toolbox/Assessment.at": {
+        "level": "gold"
+      },
+      "field:toolbox/Assessment.entity": {
+        "level": "gold"
+      },
+      "field:toolbox/Assessment.failing": {
+        "level": "gold"
+      },
+      "field:toolbox/Assessment.path": {
+        "level": "gold"
+      },
+      "field:toolbox/Assessment.reasons": {
+        "level": "gold"
+      },
+      "field:toolbox/Assessment.rubric": {
+        "level": "gold"
+      },
+      "field:toolbox/Assessment.subjectHash": {
+        "level": "gold"
+      },
+      "field:toolbox/Assessment.summary": {
+        "level": "gold"
+      },
+      "field:toolbox/Assessment.unsure": {
+        "level": "gold"
+      },
+      "field:toolbox/Assessment.verdict": {
+        "level": "gold"
+      },
+      "field:toolbox/Command.about": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Command.args": {
+        "failing": {
+          "described": 1,
+          "has-shape": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Command.documentedIn": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Command.exercisedBy": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Command.layer": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Command.mcpTool": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Command.name": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Command.structuredOutput": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Command.undocumentedArgs": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Connector.ciMentions": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Connector.configDocumented": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Connector.conformanceMentions": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Connector.crateDoc": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Connector.description": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Connector.descriptionChars": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Connector.dir": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Connector.documentedKinds": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Connector.genericKinds": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Connector.lastChange": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Connector.name": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Connector.path": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Connector.pushOnly": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Connector.reportsNotFound": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Connector.secretHits": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Connector.snapshotComplete": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Connector.tests": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Connector.transport": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Crate.clippy": {
+        "failing": {
+          "described": 1,
+          "has-shape": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Crate.codeLines": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Crate.complexFunctions": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Crate.crateDoc": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Crate.dependents": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Crate.description": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Crate.docCoverage": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Crate.externalDeps": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Crate.functions": {
+        "failing": {
+          "described": 1,
+          "has-shape": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Crate.hash": {
+        "level": "gold"
+      },
+      "field:toolbox/Crate.integrationTests": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Crate.lastChange": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Crate.longFunctions": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Crate.maxComplexity": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Crate.maxFnLines": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Crate.path": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Crate.pubDocumented": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Crate.pubItems": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Crate.readme": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Crate.reviewFailing": {
+        "level": "gold"
+      },
+      "field:toolbox/Crate.reviewState": {
+        "level": "gold"
+      },
+      "field:toolbox/Crate.reviewUnsure": {
+        "level": "gold"
+      },
+      "field:toolbox/Crate.targets": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Crate.testCodeLines": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Crate.tests": {
+        "failing": {
+          "described": 1,
+          "has-shape": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Crate.undocumented": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Crate.unitTests": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Crate.unwraps": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Dependency.ecosystem": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Dependency.git": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Dependency.inherited": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Dependency.name": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Dependency.requirements": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Dependency.sources": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Dependency.usedBy": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Dependency.versions": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Dependency.wildcard": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Doc.area": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Doc.brokenLinks": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Doc.counts": {
+        "failing": {
+          "described": 1,
+          "has-shape": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Doc.hasSources": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Doc.hasStatus": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Doc.lastChange": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Doc.path": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Doc.title": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Doc.words": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Example.citesDesign": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Example.commandLines": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Example.lines": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Example.missingFiles": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Example.path": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Example.secretHits": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Example.title": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Field.computed": {
+        "level": "gold"
+      },
+      "field:toolbox/Field.described": {
+        "level": "gold"
+      },
+      "field:toolbox/Field.fieldType": {
+        "level": "gold"
+      },
+      "field:toolbox/Field.fixtureEntities": {
+        "level": "gold"
+      },
+      "field:toolbox/Field.fixtureWithValue": {
+        "level": "gold"
+      },
+      "field:toolbox/Field.hash": {
+        "level": "gold"
+      },
+      "field:toolbox/Field.kind": {
+        "level": "gold"
+      },
+      "field:toolbox/Field.name": {
+        "level": "gold"
+      },
+      "field:toolbox/Field.opaque": {
+        "level": "gold"
+      },
+      "field:toolbox/Field.portal": {
+        "level": "gold"
+      },
+      "field:toolbox/Field.readBy": {
+        "level": "gold"
+      },
+      "field:toolbox/Field.sources": {
+        "level": "gold"
+      },
+      "field:toolbox/File.extension": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/File.lastChange": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/File.lines": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/File.path": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/JsonSchema.descriptionChars": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/JsonSchema.dialect": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/JsonSchema.draft202012": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/JsonSchema.externalRefs": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/JsonSchema.name": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/JsonSchema.path": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/JsonSchema.schemaId": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/JsonSchema.secretHits": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/JsonSchema.titleChars": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/JsonSchema.wired": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Kind.described": {
+        "level": "gold"
+      },
+      "field:toolbox/Kind.fieldCount": {
+        "level": "gold"
+      },
+      "field:toolbox/Kind.fieldsDescribed": {
+        "level": "gold"
+      },
+      "field:toolbox/Kind.fixtureEntities": {
+        "level": "gold"
+      },
+      "field:toolbox/Kind.hash": {
+        "level": "gold"
+      },
+      "field:toolbox/Kind.name": {
+        "level": "gold"
+      },
+      "field:toolbox/Kind.portal": {
+        "level": "gold"
+      },
+      "field:toolbox/Kind.relationsIn": {
+        "level": "gold"
+      },
+      "field:toolbox/Kind.relationsOut": {
+        "level": "gold"
+      },
+      "field:toolbox/Kind.scorecards": {
+        "level": "gold"
+      },
+      "field:toolbox/Kind.tested": {
+        "level": "gold"
+      },
+      "field:toolbox/Kind.undescribedFields": {
+        "level": "gold"
+      },
+      "field:toolbox/McpTool.annotations": {
+        "failing": {
+          "described": 1,
+          "has-shape": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/McpTool.description": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/McpTool.documentedIn": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/McpTool.exercisedBy": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/McpTool.name": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/McpTool.observed": {
+        "failing": {
+          "described": 1,
+          "has-shape": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/McpTool.properties": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/McpTool.undescribedProperties": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/McpTool.viaCli": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/PackageJson.checkScripts": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/PackageJson.ciUsesInstall": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/PackageJson.descriptionChars": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/PackageJson.engines": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/PackageJson.gitRanges": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/PackageJson.lockfile": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/PackageJson.name": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/PackageJson.path": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/PackageJson.private": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/PackageJson.requirements": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/PackageJson.secretHits": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/PackageJson.version": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/PackageJson.wildcardRanges": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/PortalConnector.fixtureRecords": {
+        "level": "gold"
+      },
+      "field:toolbox/PortalConnector.hash": {
+        "level": "gold"
+      },
+      "field:toolbox/PortalConnector.name": {
+        "level": "gold"
+      },
+      "field:toolbox/PortalConnector.package": {
+        "level": "gold"
+      },
+      "field:toolbox/PortalConnector.portal": {
+        "level": "gold"
+      },
+      "field:toolbox/PortalConnector.records": {
+        "level": "gold"
+      },
+      "field:toolbox/PortalConnector.refreshable": {
+        "level": "gold"
+      },
+      "field:toolbox/PortalConnector.runtime": {
+        "level": "gold"
+      },
+      "field:toolbox/PortalConnector.unmapped": {
+        "level": "gold"
+      },
+      "field:toolbox/PortalConnector.withoutFreshness": {
+        "level": "gold"
+      },
+      "field:toolbox/Rule.check": {
+        "failing": {
+          "described": 1,
+          "has-shape": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Rule.checkCel": {
+        "level": "gold"
+      },
+      "field:toolbox/Rule.evidence": {
+        "failing": {
+          "described": 1,
+          "has-shape": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Rule.evidenceCel": {
+        "level": "gold"
+      },
+      "field:toolbox/Rule.fixText": {
+        "level": "gold"
+      },
+      "field:toolbox/Rule.fixWords": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Rule.fixture": {
+        "failing": {
+          "described": 1,
+          "has-shape": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Rule.hasEvidence": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Rule.hash": {
+        "level": "gold"
+      },
+      "field:toolbox/Rule.level": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Rule.live": {
+        "failing": {
+          "described": 1,
+          "has-shape": 1,
+          "populated-in-fixtures": 1
+        },
+        "level": "none"
+      },
+      "field:toolbox/Rule.name": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Rule.portal": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Rule.reviewFailing": {
+        "level": "gold"
+      },
+      "field:toolbox/Rule.reviewState": {
+        "level": "gold"
+      },
+      "field:toolbox/Rule.reviewUnsure": {
+        "level": "gold"
+      },
+      "field:toolbox/Rule.scorecard": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Rule.tested": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Scorecard.fixtureLevels": {
+        "failing": {
+          "described": 1,
+          "has-shape": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Scorecard.hash": {
+        "level": "gold"
+      },
+      "field:toolbox/Scorecard.kind": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Scorecard.levels": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Scorecard.liveEntities": {
+        "failing": {
+          "described": 1,
+          "populated-in-fixtures": 1
+        },
+        "level": "none"
+      },
+      "field:toolbox/Scorecard.meta": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Scorecard.name": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Scorecard.owner": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Scorecard.portal": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Scorecard.reviewFailing": {
+        "level": "gold"
+      },
+      "field:toolbox/Scorecard.reviewState": {
+        "level": "gold"
+      },
+      "field:toolbox/Scorecard.reviewUnsure": {
+        "level": "gold"
+      },
+      "field:toolbox/Scorecard.rules": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Scorecard.rulesPerLevel": {
+        "failing": {
+          "described": 1,
+          "has-shape": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Scorecard.tested": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Scorecard.untestedRules": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Skill.bodyLines": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Skill.boundaryCues": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Skill.codeFences": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Skill.description": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Skill.descriptionChars": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Skill.dir": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Skill.estimatedTokens": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Skill.evalCases": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Skill.frontmatterErrors": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Skill.hiddenChars": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Skill.lastChange": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Skill.linkDepth": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Skill.missingFiles": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Skill.name": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Skill.numberedSteps": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Skill.path": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Skill.plugin": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Skill.pronouns": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Skill.secretHits": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Skill.supportFiles": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Skill.triggerCues": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Skill.windowsPaths": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Workflow.actionlint": {
+        "failing": {
+          "described": 1,
+          "has-shape": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Workflow.concurrency": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Workflow.jobs": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Workflow.jobsWithWrite": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Workflow.jobsWithoutPermissions": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Workflow.jobsWithoutTimeout": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Workflow.name": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Workflow.path": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Workflow.riskyTriggers": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Workflow.runs": {
+        "failing": {
+          "described": 1,
+          "has-shape": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Workflow.topPermissions": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Workflow.triggers": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Workflow.type": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Workflow.unpinned": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Workflow.zizmor": {
+        "failing": {
+          "described": 1,
+          "has-shape": 1
+        },
+        "level": "bronze"
+      }
+    },
+    "meta-kind": {
+      "kind:acme/GitHubApp": {
+        "failing": {
+          "described": 1,
+          "fields-described": 3
+        },
+        "level": "bronze"
+      },
+      "kind:acme/GitHubAppInstallation": {
+        "failing": {
+          "described": 1,
+          "fields-described": 2,
+          "tested": 1
+        },
+        "level": "none"
+      },
+      "kind:acme/Group": {
+        "failing": {
+          "described": 1,
+          "fields-described": 4
+        },
+        "level": "bronze"
+      },
+      "kind:acme/Repository": {
+        "failing": {
+          "described": 1,
+          "fields-described": 10
+        },
+        "level": "bronze"
+      },
+      "kind:acme/User": {
+        "failing": {
+          "described": 1,
+          "fields-described": 2,
+          "tested": 1
+        },
+        "level": "none"
+      },
+      "kind:repo/Doc": {
+        "failing": {
+          "described": 1,
+          "fields-described": 3
+        },
+        "level": "bronze"
+      },
+      "kind:repo/Repository": {
+        "failing": {
+          "described": 1,
+          "fields-described": 7
+        },
+        "level": "bronze"
+      },
+      "kind:toolbox/ActionDependency": {
+        "failing": {
+          "fields-described": 5
+        },
+        "level": "silver"
+      },
+      "kind:toolbox/AgentDoc": {
+        "failing": {
+          "described": 1,
+          "fields-described": 10
+        },
+        "level": "bronze"
+      },
+      "kind:toolbox/Assessment": {
+        "level": "gold"
+      },
+      "kind:toolbox/Command": {
+        "failing": {
+          "fields-described": 9
+        },
+        "level": "silver"
+      },
+      "kind:toolbox/Connector": {
+        "failing": {
+          "described": 1,
+          "fields-described": 18
+        },
+        "level": "bronze"
+      },
+      "kind:toolbox/Crate": {
+        "failing": {
+          "fields-described": 24
+        },
+        "level": "silver"
+      },
+      "kind:toolbox/Dependency": {
+        "failing": {
+          "described": 1,
+          "fields-described": 9
+        },
+        "level": "bronze"
+      },
+      "kind:toolbox/Doc": {
+        "failing": {
+          "fields-described": 9
+        },
+        "level": "silver"
+      },
+      "kind:toolbox/Example": {
+        "failing": {
+          "described": 1,
+          "fields-described": 7
+        },
+        "level": "bronze"
+      },
+      "kind:toolbox/Field": {
+        "level": "gold"
+      },
+      "kind:toolbox/File": {
+        "failing": {
+          "fields-described": 4,
+          "tested": 1
+        },
+        "level": "none"
+      },
+      "kind:toolbox/JsonSchema": {
+        "failing": {
+          "described": 1,
+          "fields-described": 10
+        },
+        "level": "bronze"
+      },
+      "kind:toolbox/Kind": {
+        "level": "gold"
+      },
+      "kind:toolbox/McpTool": {
+        "failing": {
+          "fields-described": 9
+        },
+        "level": "silver"
+      },
+      "kind:toolbox/PackageJson": {
+        "failing": {
+          "described": 1,
+          "fields-described": 13
+        },
+        "level": "bronze"
+      },
+      "kind:toolbox/PortalConnector": {
+        "level": "gold"
+      },
+      "kind:toolbox/Rule": {
+        "failing": {
+          "fields-described": 11
+        },
+        "level": "silver"
+      },
+      "kind:toolbox/Scorecard": {
+        "failing": {
+          "fields-described": 12
+        },
+        "level": "silver"
+      },
+      "kind:toolbox/Skill": {
+        "failing": {
+          "described": 1,
+          "fields-described": 22
+        },
+        "level": "bronze"
+      },
+      "kind:toolbox/Workflow": {
+        "failing": {
+          "fields-described": 15
+        },
+        "level": "silver"
       }
     },
     "meta-rule": {
@@ -1003,6 +2742,39 @@
       "rule:toolbox/maintainer-skill/within-body-budget": {
         "level": "gold"
       },
+      "rule:toolbox/meta-connector/freshness-declared": {
+        "level": "gold"
+      },
+      "rule:toolbox/meta-connector/has-fixtures": {
+        "level": "gold"
+      },
+      "rule:toolbox/meta-connector/records-mapped": {
+        "level": "gold"
+      },
+      "rule:toolbox/meta-connector/refreshable": {
+        "level": "gold"
+      },
+      "rule:toolbox/meta-field/described": {
+        "level": "gold"
+      },
+      "rule:toolbox/meta-field/has-shape": {
+        "level": "gold"
+      },
+      "rule:toolbox/meta-field/populated-in-fixtures": {
+        "level": "gold"
+      },
+      "rule:toolbox/meta-kind/described": {
+        "level": "gold"
+      },
+      "rule:toolbox/meta-kind/fields-described": {
+        "level": "gold"
+      },
+      "rule:toolbox/meta-kind/in-fixtures": {
+        "level": "gold"
+      },
+      "rule:toolbox/meta-kind/tested": {
+        "level": "gold"
+      },
       "rule:toolbox/meta-rule/always-explains": {
         "level": "gold"
       },
@@ -1067,6 +2839,33 @@
           "tested": 1
         },
         "level": "none"
+      },
+      "rule:toolbox/review-crate/assessed": {
+        "level": "gold"
+      },
+      "rule:toolbox/review-crate/no-doubts": {
+        "level": "gold"
+      },
+      "rule:toolbox/review-crate/passes-review": {
+        "level": "gold"
+      },
+      "rule:toolbox/review-rule/assessed": {
+        "level": "gold"
+      },
+      "rule:toolbox/review-rule/no-doubts": {
+        "level": "gold"
+      },
+      "rule:toolbox/review-rule/passes-review": {
+        "level": "gold"
+      },
+      "rule:toolbox/review-scorecard/assessed": {
+        "level": "gold"
+      },
+      "rule:toolbox/review-scorecard/no-doubts": {
+        "level": "gold"
+      },
+      "rule:toolbox/review-scorecard/passes-review": {
+        "level": "gold"
       },
       "rule:toolbox/user-cli/args-described": {
         "failing": {
@@ -1207,6 +3006,15 @@
       "scorecard:toolbox/maintainer-skill": {
         "level": "gold"
       },
+      "scorecard:toolbox/meta-connector": {
+        "level": "gold"
+      },
+      "scorecard:toolbox/meta-field": {
+        "level": "gold"
+      },
+      "scorecard:toolbox/meta-kind": {
+        "level": "gold"
+      },
       "scorecard:toolbox/meta-rule": {
         "level": "gold"
       },
@@ -1218,6 +3026,15 @@
           "every-rule-tested": 3
         },
         "level": "silver"
+      },
+      "scorecard:toolbox/review-crate": {
+        "level": "gold"
+      },
+      "scorecard:toolbox/review-rule": {
+        "level": "gold"
+      },
+      "scorecard:toolbox/review-scorecard": {
+        "level": "gold"
       },
       "scorecard:toolbox/user-cli": {
         "failing": {
@@ -1237,21 +3054,23 @@
       "command:actions": {
         "level": "skipped"
       },
+      "command:assess-brief": {
+        "level": "silver"
+      },
+      "command:assess-check": {
+        "level": "silver"
+      },
+      "command:assess-submit": {
+        "level": "silver"
+      },
       "command:connector-test": {
         "level": "silver"
       },
       "command:derive": {
-        "failing": {
-          "exercised": null
-        },
-        "level": "bronze"
+        "level": "silver"
       },
-      "command:describe-scorecards": {
-        "failing": {
-          "documented": 1,
-          "exercised": null
-        },
-        "level": "none"
+      "command:describe-portal": {
+        "level": "silver"
       },
       "command:explain": {
         "level": "skipped"
@@ -1321,13 +3140,22 @@
         },
         "level": "bronze"
       },
+      "command:assess-brief": {
+        "level": "skipped"
+      },
+      "command:assess-check": {
+        "level": "skipped"
+      },
+      "command:assess-submit": {
+        "level": "skipped"
+      },
       "command:connector-test": {
         "level": "skipped"
       },
       "command:derive": {
         "level": "skipped"
       },
-      "command:describe-scorecards": {
+      "command:describe-portal": {
         "level": "skipped"
       },
       "command:explain": {
@@ -1406,6 +3234,12 @@
     "user-mcp": {
       "mcp-tool:action_options": {
         "level": "gold"
+      },
+      "mcp-tool:assessment_brief": {
+        "failing": {
+          "documented": 3
+        },
+        "level": "bronze"
       },
       "mcp-tool:explain": {
         "level": "gold"

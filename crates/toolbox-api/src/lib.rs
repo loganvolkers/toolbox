@@ -3,6 +3,7 @@
 
 pub mod access;
 pub mod actions;
+pub mod assess;
 pub mod connectors;
 pub mod mcp;
 pub mod reads;

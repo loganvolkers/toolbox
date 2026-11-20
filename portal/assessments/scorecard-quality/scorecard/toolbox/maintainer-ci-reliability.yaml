@@ -1,0 +1,25 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: scorecard:toolbox/maintainer-ci-reliability
+rubric: scorecard-quality
+subjectHash: "2543bd4b76d6"
+assessor: {kind: agent, name: claude-code}
+at: "2026-11-20"
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: Every rule answers "does green mean good, and does red get fixed?" for maintainers (github-actions-standards.md).
+  - criterion: levels-are-a-ladder
+    verdict: pass
+    reason: >-
+      Fail rate tightens 20 → 10 → 5%; bronze adds timeouts and a not-stuck-red main, silver re-runs
+      and cancellation, gold speed. Each level is reachable from the one below.
+  - criterion: no-obvious-gap
+    verdict: fail
+    reason: >-
+      Flakiness is only seen through re-runs. Nothing checks continue-on-error or quarantined jobs,
+      which hide failures from every fail-rate rule (see the fail-rate-under-20 assessment).
+    suggestion: Add a bronze rule that jobs on main don't use continue-on-error without a comment naming the issue.
+  - criterion: actionable
+    verdict: pass
+    reason: Each rule's evidence names the number or the job, and fixes say where (workflow file, run data via toolbox get).
+summary: A coherent ladder with one gap that undermines its fail-rate rules.

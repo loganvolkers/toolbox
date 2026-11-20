@@ -16,6 +16,15 @@ use std::path::{Path, PathBuf};
 use toolbox_model::Manifest;
 
 /// `(scorecard, rule)` pairs and scorecards named by the portal's test expectations.
+/// The text of every test expectation (to tell which entities tests reach).
+fn expectations(root: &Path, m: &Manifest) -> String {
+    m.tests
+        .iter()
+        .filter_map(|t| std::fs::read_to_string(root.join(t)).ok())
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
 fn test_mentions(root: &Path, m: &Manifest) -> (BTreeSet<(String, String)>, BTreeSet<String>) {
     let score = regex::Regex::new(r"score\('([^']+)'").expect("regex");
     let rule = regex::Regex::new(r"(?:rules|evidence)\['([^']+)'\]").expect("regex");
@@ -44,14 +53,25 @@ fn test_mentions(root: &Path, m: &Manifest) -> (BTreeSet<(String, String)>, BTre
     (rules, cards)
 }
 
-/// Kinds that describe scorecards themselves (fed by `scorecard` or `rule` records).
+/// Kinds that describe portals themselves (fed by `describe portal` records).
 fn meta_kinds(m: &Manifest) -> BTreeSet<String> {
+    // `connector` is also a common record name (e.g. connector crates), so it counts only from a
+    // connector that also sends `scorecard` records: the one running `describe portal`.
+    const META: [&str; 4] = ["scorecard", "rule", "kind", "field"];
+    let describers: BTreeSet<&str> = m
+        .kinds
+        .iter()
+        .flat_map(|k| &k.map)
+        .filter(|r| r.from_parts().1 == "scorecard")
+        .map(|r| r.from_parts().0)
+        .collect();
     m.kinds
         .iter()
         .filter(|k| {
-            k.map
-                .iter()
-                .any(|r| r.from.ends_with("/scorecard") || r.from.ends_with("/rule"))
+            k.map.iter().any(|r| {
+                let (conn, rec) = r.from_parts();
+                META.contains(&rec) || (rec == "connector" && describers.contains(conn))
+            })
         })
         .map(|k| k.name.clone())
         .collect()
@@ -177,6 +197,7 @@ fn describe_portal(
         if let Some(n) = live_entities {
             data["liveEntities"] = json!(n);
         }
+        data["hash"] = json!(crate::model::hash(sc));
         out.push(("scorecard".into(), format!("scorecard:{card_id}"), data));
         for r in &sc.rules {
             let key = (sc.name.clone(), r.name.clone());
@@ -184,6 +205,7 @@ fn describe_portal(
             let mut data = json!({
                 "portal": portal, "scorecard": sc.name, "card": card_id, "name": r.name, "level": r.level,
                 "fixWords": words(r.fix.as_deref()), "hasEvidence": r.evidence.is_some(),
+                "definition": {"check": r.check, "evidence": r.evidence, "fix": r.fix},
                 "check": cel(&r.check),
                 "evidence": r.evidence.as_deref().map(cel),
                 "tested": tested_rules.contains(&key),
@@ -194,9 +216,12 @@ fn describe_portal(
                 data["live"] = json!({"entities": n, "fail": c[1], "unknown": c[2],
                                       "pass": n.saturating_sub(c[1] + c[2])});
             }
+            data["hash"] = json!(crate::model::hash(r));
             out.push(("rule".into(), format!("rule:{card_id}/{}", r.name), data));
         }
     }
+    let expects = expectations(&local.root, m);
+    out.extend(crate::model::records(&local, &expects));
     Ok(out)
 }
 

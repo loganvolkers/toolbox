@@ -69,6 +69,10 @@ jobs:
           pip install zizmor==1.32.0
           go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
           echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+      - name: Toolbox for Toolbox — agent assessments are valid and briefs build (D79)
+        run: |
+          target/debug/toolbox assess check portal --skip runner,github-actions
+          target/debug/toolbox assess brief rule:toolbox/meta-rule/tested --portal portal --fixtures -o json > /dev/null
       - name: Toolbox for Toolbox — connector conformance (the protocol checks every connector must pass)
         run: |
           target/debug/toolbox connector test --name workspace --portal portal -- target/debug/toolbox-connector-workspace

@@ -30,10 +30,11 @@ connectors:
     config:
       root: "."
       docs: ["*.md", "docs/**/*.md", "examples/*/README.md", "experiments/*/README.md", "plugins/**/*.md", "portal/*.md", "actions/*/README.md"]
-      files: ["scripts/*", "crates/*/tests/*.rs", "examples/reference-portal/tools/*.py"]
+      files: ["scripts/*", "crates/*/tests/*.rs", "examples/reference-portal/tools/*.py", ".github/workflows/*.yml"]
       captures:
-        # `toolbox get …`, `"$T/toolbox" serve …`, the acceptance scripts' `ask owner …`
-        commands: '(?:\btoolbox"?|\bask)\s+((?:connector|token)\s+[a-z]+|[a-z][a-z-]*)'
+        # `toolbox get …`, `"$T/toolbox" serve …`, the acceptance scripts' `ask owner …`, and
+        # subcommands (`toolbox assess check`)
+        commands: '(?:\btoolbox"?|\bask)\s+((?:connector|token)\s+[a-z]+|assess[ \t]+(?:brief|check|submit)|describe[ \t]+(?:portal|scorecards)|[a-z][a-z-]*)'
         # MCP tools/call bodies: {"name": "owner_of", …}
         tools: '"name"\s*:\s*"([a-z][a-z_]*)"'
       counts:
@@ -56,9 +57,11 @@ connectors:
       schemas: ["schema/*.json"]
       # Example and experiment write-ups (docs/design/example-standards.md).
       examples: ["examples/**/README.md", "experiments/**/README.md", "docs/examples/*.md"]
-    records: [crate, doc, file, workflow, action-ref, skill, connector, dependency, agent-doc, package-json, json-schema, example]
-    refresh: {crate: [external_ids], doc: [external_ids], file: [external_ids], skill: [external_ids], connector: [external_ids], dependency: [external_ids], agent-doc: [external_ids], package-json: [external_ids], json-schema: [external_ids], example: [external_ids]}
-    freshness: {crate: 5m, doc: 5m, file: 5m, skill: 5m, connector: 5m, dependency: 5m, agent-doc: 5m, package-json: 5m, json-schema: 5m, example: 5m}
+      # Coding agents' judgements of our standards and crates (`toolbox assess`, D79)
+      assessments: ["portal/assessments/**/*.y*ml"]
+    records: [crate, doc, file, workflow, action-ref, skill, connector, dependency, agent-doc, package-json, json-schema, example, assessment]
+    refresh: {crate: [external_ids], doc: [external_ids], file: [external_ids], workflow: [external_ids], action-ref: [external_ids], skill: [external_ids], connector: [external_ids], dependency: [external_ids], agent-doc: [external_ids], package-json: [external_ids], json-schema: [external_ids], example: [external_ids]}
+    freshness: {crate: 5m, doc: 5m, file: 5m, workflow: 5m, action-ref: 5m, skill: 5m, connector: 5m, dependency: 5m, agent-doc: 5m, package-json: 5m, json-schema: 5m, example: 5m, assessment: 5m}
   - name: runner
     package: builtin:runner                # executes things; slow, so it's refreshed per entity
     runtime: in-image
@@ -84,16 +87,16 @@ connectors:
       root: "."
       jobs:
         - {name: describe, command: [target/debug/toolbox, describe], parse: ndjson, kinds: [command, mcp-tool]}
-        # Our standards as entities (docs/design/scorecards-for-scorecards.md): this portal, the
-        # starter pilots copy, and the reference portal. Live outcomes come from the committed
-        # results and are information only, so the meta scorecards never depend on their own output.
-        - name: scorecards
-          command: [target/debug/toolbox, describe, scorecards, portal, examples/repo-portal-starter, examples/reference-portal, --results, portal=portal/results.json]
+        # Every part of a portal as entities (docs/design/scorecards-for-scorecards.md): this
+        # portal, the starter pilots copy, and the reference portal. Live outcomes come from the
+        # committed results and are information only, so meta scorecards never depend on their own output.
+        - name: portals
+          command: [target/debug/toolbox, describe, portal, portal, examples/repo-portal-starter, examples/reference-portal, --results, portal=portal/results.json]
           parse: ndjson
-          kinds: [scorecard, rule]
-    records: [command, mcp-tool, scorecard, rule]
-    refresh: {command: [external_ids], mcp-tool: [external_ids], scorecard: [external_ids], rule: [external_ids]}
-    freshness: {command: 5m, mcp-tool: 5m, scorecard: 5m, rule: 5m}
+          kinds: [scorecard, rule, kind, field, connector]
+    records: [command, mcp-tool, scorecard, rule, kind, field, connector]
+    refresh: {command: [external_ids], mcp-tool: [external_ids], scorecard: [external_ids], rule: [external_ids], kind: [external_ids], field: [external_ids], connector: [external_ids]}
+    freshness: {command: 5m, mcp-tool: 5m, scorecard: 5m, rule: 5m, kind: 5m, field: 5m, connector: 5m}
   - name: ci-lint
     package: builtin:runner                # zizmor and actionlint: fast, offline, deterministic at pinned versions
     runtime: in-image
@@ -128,6 +131,7 @@ connectors:
 kinds:
   # ── Layer 1: what maintainers build ──────────────────────────────────────────────────────
   - name: Crate
+    description: "A Rust crate in the Cargo workspace: its docs, size, functions, tests and lint results."
     identityFrom: [connector:workspace]
     fields:
       path: {type: string}
@@ -150,6 +154,10 @@ kinds:
       unwraps: {type: integer}
       tests: {type: object}                # from the runner: status, passed, failed, output
       clippy: {type: object}               # from the runner: status, warnings, messages
+      hash: {type: string, description: "SHA-256 (12 hex) of the crate's src/ files: an assessment is stale when it changes."}
+      reviewState: {type: string, description: "crate-design assessment: fresh, stale or missing.", computed: "inbound.assessesCrate.size() == 0 ? 'missing' : (inbound.assessesCrate[0].subjectHash == entity.hash ? 'fresh' : 'stale')"}
+      reviewFailing: {type: list, items: string, description: "Criteria the crate-design assessment failed.", computed: "inbound.assessesCrate.size() == 0 ? [] : inbound.assessesCrate[0].failing"}
+      reviewUnsure: {type: list, items: string, description: "Criteria the assessor was unsure of.", computed: "inbound.assessesCrate.size() == 0 ? [] : inbound.assessesCrate[0].unsure"}
       docCoverage:
         type: integer
         computed: "entity.pubItems == 0 ? 100 : entity.pubDocumented * 100 / entity.pubItems"
@@ -183,7 +191,7 @@ kinds:
            'undocumented': record.undocumented, 'functions': record.functions,
            'maxFnLines': record.maxFnLines, 'maxComplexity': record.maxComplexity,
            'unitTests': record.unitTests, 'integrationTests': record.integrationTests,
-           'unwraps': record.unwraps}
+           'unwraps': record.unwraps, 'hash': has(record.hash) ? record.hash : null}
         relations:
           dependsOn: "record.dependsOn.map(d, 'crate:' + d)"
       - from: runner/test
@@ -194,6 +202,7 @@ kinds:
         set: "{'clippy': record}"
 
   - name: Doc
+    description: "A markdown document: its links, status banner, sources and the SDLC layer it names."
     identityFrom: [connector:workspace]
     fields:
       path: {type: string}
@@ -229,6 +238,7 @@ kinds:
           mentionsCrate: "record.codeSpans.map(s, 'crate:' + s)"
 
   - name: File
+    description: "A script or integration test, with the commands and MCP tools it exercises."
     identityFrom: [connector:workspace]
     fields:
       path: {type: string}
@@ -450,6 +460,7 @@ kinds:
 
   # ── Layers 2 and 3: what operators and users rely on ─────────────────────────────────────
   - name: Command
+    description: "A `toolbox` CLI (sub)command, from `toolbox describe`."
     identityFrom: [connector:surfaces]
     fields:
       name: {type: string}
@@ -478,6 +489,7 @@ kinds:
           callsTool: "record.mcpTool == null ? [] : ['mcp-tool:' + record.mcpTool]"
 
   - name: McpTool
+    description: "A built-in MCP tool the server exposes, from `toolbox describe`."
     identityFrom: [connector:surfaces]
     fields:
       name: {type: string}
@@ -504,6 +516,7 @@ kinds:
 
   # ── CI: the workflows and actions that build, test and ship Toolbox ──────────────────────
   - name: Workflow
+    description: "A GitHub Actions workflow or action metadata file, with lint findings and run history."
     identityFrom: [connector:workspace]
     fields:
       path: {type: string}
@@ -549,7 +562,8 @@ kinds:
         id: "'workflow:' + record.path"
         set: "{'runs': record}"
 
-  - name: ActionDependency                 # a third-party action or reusable workflow our CI runs
+  - name: ActionDependency
+    description: "A third-party action or reusable workflow our CI runs, across every workflow using it."
     identityFrom: [connector:workspace]
     fields:
       name: {type: string}
@@ -565,6 +579,7 @@ kinds:
 
   # ── Our standards themselves (scorecards for scorecards) ──────────────────────────────────
   - name: Scorecard
+    description: "A scorecard one of the described portals declares (this one, the starter or the reference portal)."
     identityFrom: [connector:surfaces]
     fields:
       portal: {type: string}
@@ -579,6 +594,10 @@ kinds:
       fixtureLevels: {type: object}        # levels the portal's own fixtures reach
       liveEntities: {type: integer}        # information only (from the committed results)
       untestedRules: {type: list, items: string, computed: "inbound.ruleOf.filter(r, !r.tested).map(r, r.name)"}
+      hash: {type: string, description: "Content hash of the scorecard's definition: assessments of it go stale when it changes."}
+      reviewState: {type: string, description: "scorecard-quality assessment: fresh, stale or missing.", computed: "inbound.assessesScorecard.size() == 0 ? 'missing' : (inbound.assessesScorecard[0].subjectHash == entity.hash ? 'fresh' : 'stale')"}
+      reviewFailing: {type: list, items: string, description: "Criteria the scorecard-quality assessment failed.", computed: "inbound.assessesScorecard.size() == 0 ? [] : inbound.assessesScorecard[0].failing"}
+      reviewUnsure: {type: list, items: string, description: "Criteria the assessor was unsure of.", computed: "inbound.assessesScorecard.size() == 0 ? [] : inbound.assessesScorecard[0].unsure"}
     sources: {default: [connector:surfaces]}
     map:
       - from: surfaces/scorecard
@@ -587,9 +606,10 @@ kinds:
           {'portal': record.portal, 'name': record.name, 'kind': record.kind, 'owner': record.owner,
            'levels': record.levels, 'rulesPerLevel': record.rulesPerLevel, 'rules': record.rules,
            'tested': record.tested, 'meta': record.meta, 'fixtureLevels': record.fixtureLevels,
-           'liveEntities': has(record.liveEntities) ? record.liveEntities : null}
+           'liveEntities': has(record.liveEntities) ? record.liveEntities : null, 'hash': record.hash}
 
   - name: Rule
+    description: "A rule of one of those scorecards: what it is made of, its tests and its outcomes."
     identityFrom: [connector:surfaces]
     fields:
       portal: {type: string}
@@ -603,6 +623,13 @@ kinds:
       tested: {type: boolean}              # a test expectation names it
       fixture: {type: object}              # {pass, fail, unknown} over the portal's fixtures
       live: {type: object}                 # information only: {entities, pass, fail, unknown} on real data
+      checkCel: {type: string, description: "The rule's check, as written."}
+      evidenceCel: {type: string, description: "The rule's evidence expression, as written."}
+      fixText: {type: string, description: "The rule's fix text."}
+      hash: {type: string, description: "Content hash of the rule's definition: assessments of it go stale when it changes."}
+      reviewState: {type: string, description: "rule-quality assessment: fresh, stale or missing.", computed: "inbound.assessesRule.size() == 0 ? 'missing' : (inbound.assessesRule[0].subjectHash == entity.hash ? 'fresh' : 'stale')"}
+      reviewFailing: {type: list, items: string, description: "Criteria the rule-quality assessment failed.", computed: "inbound.assessesRule.size() == 0 ? [] : inbound.assessesRule[0].failing"}
+      reviewUnsure: {type: list, items: string, description: "Criteria the assessor was unsure of.", computed: "inbound.assessesRule.size() == 0 ? [] : inbound.assessesRule[0].unsure"}
     relations:
       ruleOf: {to: Scorecard, many: false}
     sources: {default: [connector:surfaces]}
@@ -613,9 +640,126 @@ kinds:
           {'portal': record.portal, 'scorecard': record.scorecard, 'name': record.name, 'level': record.level,
            'fixWords': record.fixWords, 'hasEvidence': record.hasEvidence, 'check': record.check,
            'evidence': record.evidence, 'tested': record.tested, 'fixture': record.fixture,
-           'live': has(record.live) ? record.live : null}
+           'live': has(record.live) ? record.live : null, 'hash': record.hash,
+           'checkCel': record.definition.check, 'evidenceCel': record.definition.evidence, 'fixText': record.definition.fix}
         relations:
           ruleOf: "['scorecard:' + record.card]"
+
+  # ── The rest of a portal's model (docs/design/scorecards-for-scorecards.md §5) ──────────────
+  - name: Kind
+    description: A kind of entity one of the described portals declares.
+    identityFrom: [connector:surfaces]
+    fields:
+      portal: {type: string, description: Portal that declares it.}
+      name: {type: string, description: The kind's name.}
+      described: {type: boolean, description: The manifest gives the kind a description.}
+      fieldCount: {type: integer, description: "Declared fields, computed ones included."}
+      fieldsDescribed: {type: integer, description: Fields with a description.}
+      scorecards: {type: list, items: string, description: Scorecards on this kind.}
+      relationsOut: {type: list, items: string, description: Relations it declares.}
+      relationsIn: {type: list, items: string, description: "Relations other kinds declare to it, as Kind.relation."}
+      fixtureEntities: {type: integer, description: Entities of this kind the portal's fixtures produce.}
+      tested: {type: boolean, description: A test expectation names one of those entities.}
+      hash: {type: string, description: Content hash of the kind's definition.}
+      undescribedFields: {type: list, items: string, description: Fields without a description., computed: "inbound.fieldOf.filter(f, !f.described).map(f, f.name)"}
+    sources: {default: [connector:surfaces]}
+    map:
+      - from: surfaces/kind
+        id: "'kind:' + record.portal + '/' + record.name"
+        set: >-
+          {'portal': record.portal, 'name': record.name, 'described': record.described,
+           'fieldCount': record.fields, 'fieldsDescribed': record.fieldsDescribed, 'scorecards': record.scorecards,
+           'relationsOut': record.relationsOut, 'relationsIn': record.relationsIn,
+           'fixtureEntities': record.fixtureEntities, 'tested': record.tested, 'hash': record.hash}
+
+  - name: Field
+    description: A field of a kind in one of the described portals.
+    identityFrom: [connector:surfaces]
+    fields:
+      portal: {type: string, description: Portal that declares it.}
+      kind: {type: string, description: The kind it belongs to.}
+      name: {type: string, description: The field's name.}
+      fieldType: {type: string, description: "Declared type (string, integer, boolean, list, object, …)."}
+      described: {type: boolean, description: The manifest gives the field a description.}
+      computed: {type: boolean, description: A CEL expression computes it.}
+      opaque: {type: boolean, description: "An object, or a list of objects: no declared shape for validation, CEL type checks or agents."}
+      sources: {type: list, items: string, description: "Sources allowed to set it, in precedence order."}
+      readBy: {type: list, items: string, description: "Rules, evidence, computed fields and authorization that read it (information: display fields are read by no CEL)."}
+      fixtureEntities: {type: integer, description: Fixture entities of its kind.}
+      fixtureWithValue: {type: integer, description: Fixture entities with a value for it.}
+      hash: {type: string, description: Content hash of the field's definition.}
+    relations:
+      fieldOf: {to: Kind, many: false}
+    sources: {default: [connector:surfaces]}
+    map:
+      - from: surfaces/field
+        id: "'field:' + record.portal + '/' + record.kind + '.' + record.name"
+        set: >-
+          {'portal': record.portal, 'kind': record.kind, 'name': record.name, 'fieldType': record.type,
+           'described': record.described, 'computed': record.computed, 'opaque': record.opaque,
+           'sources': record.sources, 'readBy': record.readBy, 'fixtureEntities': record.fixture.entities,
+           'fixtureWithValue': record.fixture.withValue, 'hash': record.hash}
+        relations:
+          fieldOf: "['kind:' + record.portal + '/' + record.kind]"
+
+  - name: PortalConnector
+    description: A connector one of the described portals declares.
+    identityFrom: [connector:surfaces]
+    fields:
+      portal: {type: string, description: Portal that declares it.}
+      name: {type: string, description: The connector's name.}
+      runtime: {type: string, description: in-image or remote.}
+      package: {type: string, description: "Package (builtin:<name> or an image)."}
+      records: {type: list, items: string, description: Record kinds it declares.}
+      unmapped: {type: list, items: string, description: Declared record kinds no map rule reads.}
+      withoutFreshness: {type: list, items: string, description: Record kinds with no freshness bound.}
+      refreshable: {type: list, items: string, description: Record kinds it can refresh by id.}
+      fixtureRecords: {type: integer, description: Messages in the portal's fixture file for it.}
+      hash: {type: string, description: Content hash of the connector's declaration.}
+    sources: {default: [connector:surfaces]}
+    map:
+      - from: surfaces/connector
+        id: "'connector:' + record.portal + '/' + record.name"
+        set: >-
+          {'portal': record.portal, 'name': record.name, 'runtime': record.runtime, 'package': record.package,
+           'records': record.records, 'unmapped': record.unmapped, 'withoutFreshness': record.withoutFreshness,
+           'refreshable': record.refreshable, 'fixtureRecords': record.fixtureRecords, 'hash': record.hash}
+
+  # ── Judgement, pushed by coding agents (D79) ─────────────────────────────────────────────
+  - name: Assessment
+    description: "One coding agent's (or person's) judgement of one entity against a rubric: a file in portal/assessments/, written after `toolbox assess brief`."
+    identityFrom: [connector:workspace]
+    fields:
+      entity: {type: string, description: The entity assessed.}
+      rubric: {type: string, description: The rubric it was assessed against.}
+      subjectHash: {type: string, description: "The entity's hash when assessed; a different hash now means stale."}
+      assessorName: {type: string, description: "The agent harness or person (assessor.name)."}
+      assessorKind: {type: string, description: "agent or person."}
+      at: {type: string, description: When it was assessed.}
+      verdict: {type: string, description: "fail if any criterion failed, else unsure if any was unsure, else pass."}
+      failing: {type: list, items: string, description: Criteria that failed.}
+      unsure: {type: list, items: string, description: Criteria the assessor could not decide.}
+      reasons: {type: list, items: string, description: "One line per criterion: verdict, name and reason."}
+      summary: {type: string, description: The assessor's summary.}
+      path: {type: string, description: The file it was read from.}
+    relations:
+      assessesRule: {to: Rule, many: false, unresolved: ignore}
+      assessesScorecard: {to: Scorecard, many: false, unresolved: ignore}
+      assessesCrate: {to: Crate, many: false, unresolved: ignore}
+    sources: {default: [connector:workspace]}
+    map:
+      - from: workspace/assessment
+        id: "'assessment:' + record.rubric + '/' + record.entity"
+        set: >-
+          {'entity': record.entity, 'rubric': record.rubric, 'subjectHash': record.subjectHash,
+           'assessorName': has(record.assessor.name) ? record.assessor.name : null, 'assessorKind': record.assessor.kind,
+           'at': string(record.at), 'verdict': record.verdict, 'failing': record.failing, 'unsure': record.unsure,
+           'reasons': record.verdicts.map(v, v.verdict + ' ' + v.criterion + ': ' + v.reason),
+           'summary': record.summary, 'path': record.path}
+        relations:
+          assessesRule: "record.entity.startsWith('rule:') ? [record.entity] : []"
+          assessesScorecard: "record.entity.startsWith('scorecard:') ? [record.entity] : []"
+          assessesCrate: "record.entity.startsWith('crate:') ? [record.entity] : []"
 
 scorecards:
   # ── Layer 1: maintainer SDLC ─────────────────────────────────────────────────────────────
@@ -1343,6 +1487,209 @@ scorecards:
         evidence: "entity.untestedRules"
         fix: "Add an expectation for each untested rule."
     facets: {summary: public, details: public}
+
+  # ── The rest of the model: kinds, fields, connectors (§5) ─────────────────────────────────
+  - name: meta-kind
+    kind: Kind
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    ratchet: {newEntitiesAtLeast: bronze}   # a new kind must be in the fixtures and the tests
+    rules:
+      - name: in-fixtures
+        level: bronze
+        check: "entity.fixtureEntities > 0"
+        evidence: "['no fixture record maps to ' + entity.name + ' in portal ' + entity.portal]"
+        fix: "Add fixture records that map to the kind, so its map rules and computed fields run in tests."
+      - name: tested
+        level: bronze
+        check: "entity.tested"
+        evidence: "['no test expectation names an entity of ' + entity.name]"
+        fix: "Add a test expectation about one of the kind's fixture entities (a field, a relation or a score)."
+      - name: described
+        level: silver
+        check: "entity.described"
+        evidence: "['kind ' + entity.name + ' has no description']"
+        fix: "Give the kind a `description:` saying what one entity is; agents read it before any field."
+      - name: fields-described
+        level: gold
+        check: "entity.undescribedFields.size() == 0"
+        evidence: "entity.undescribedFields"
+        fix: "Give each listed field a `description:`: what it means, its unit, and where it comes from."
+    facets: {summary: public, details: public}
+
+  - name: meta-field
+    kind: Field
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    ratchet: {newEntitiesAtLeast: bronze}   # a new field must have a value somewhere in the fixtures
+    rules:
+      - name: populated-in-fixtures
+        level: bronze
+        check: "entity.fixtureWithValue > 0"
+        evidence: "['none of ' + string(entity.fixtureEntities) + ' fixture ' + entity.kind + ' entities has a value']"
+        fix: "Give at least one fixture record a value for the field, so its mapping (or computation) is exercised."
+      - name: described
+        level: silver
+        check: "entity.described"
+        evidence: "[entity.kind + '.' + entity.name + ' has no description']"
+        fix: "Add a `description:` to the field: what it means, its unit, and where it comes from."
+      - name: has-shape
+        level: gold
+        check: "!entity.opaque"
+        evidence: "[entity.kind + '.' + entity.name + ' is ' + entity.fieldType + ' with no declared shape']"
+        fix: "Replace the object with typed fields (or a list of strings), so CEL, validation and agents know its shape."
+    facets: {summary: public, details: public}
+
+  - name: meta-connector
+    kind: PortalConnector
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    ratchet: {newEntitiesAtLeast: bronze}   # a new connector needs fixtures and a mapping for every record
+    rules:
+      - name: records-mapped
+        level: bronze
+        check: "entity.unmapped.size() == 0"
+        evidence: "entity.unmapped"
+        fix: "Map each listed record kind to a kind (`map: - from: <connector>/<record>`), or stop declaring it."
+      - name: has-fixtures
+        level: bronze
+        check: "entity.fixtureRecords > 0"
+        evidence: "['no fixtures/' + entity.name + '.ndjson in portal ' + entity.portal]"
+        fix: "Add fixtures/<connector>.ndjson with representative records, so tests run without the live system."
+      - name: freshness-declared
+        level: silver
+        check: "entity.withoutFreshness.size() == 0"
+        evidence: "entity.withoutFreshness"
+        fix: "Declare `freshness:` for each listed record kind, so stale data shows as stale rather than current."
+      - name: refreshable
+        level: gold
+        check: "entity.records.all(r, r in entity.refreshable)"
+        evidence: "entity.records.filter(r, !(r in entity.refreshable))"
+        fix: "Support refresh by external id for each listed record kind, so an agent can see its fix land."
+    facets: {summary: public, details: public}
+
+  # ── Judgement: coding agents' assessments against the rubrics below (D79) ──────────────────
+  # Advisory: reported, never gating. An assessment goes stale when its subject changes, and the
+  # agent that changed it should re-assess — but a stale review must not block the change.
+  - name: review-rule
+    kind: Rule
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    ratchet: {advisory: true}
+    appliesTo: "entity.portal == 'toolbox'"  # our own rules; the starter and reference are examples
+    rules:
+      - name: assessed
+        level: bronze
+        check: "entity.reviewState == 'fresh'"
+        evidence: "[entity.reviewState == 'stale' ? 'the rule changed since it was assessed' : 'not assessed against rule-quality']"
+        fix: "Run `toolbox assess brief <rule id> --portal portal`, have your agent write the assessment file it names, then `toolbox assess check portal`."
+      - name: passes-review
+        level: silver
+        check: "entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0"
+        evidence: "entity.reviewState == 'fresh' ? entity.reviewFailing : ['no current assessment']"
+        fix: "Act on the failing criteria's suggestions in the assessment (portal/assessments/), then re-assess."
+      - name: no-doubts
+        level: gold
+        check: "entity.reviewState == 'fresh' && entity.reviewUnsure.size() == 0"
+        evidence: "entity.reviewState == 'fresh' ? entity.reviewUnsure : ['no current assessment']"
+        fix: "Resolve what the assessor was unsure of: usually a missing source for a threshold or an unstated intent."
+    facets: {summary: public, details: public}
+
+  - name: review-scorecard
+    kind: Scorecard
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    ratchet: {advisory: true}
+    appliesTo: "entity.portal == 'toolbox'"
+    rules:
+      - name: assessed
+        level: bronze
+        check: "entity.reviewState == 'fresh'"
+        evidence: "[entity.reviewState == 'stale' ? 'the scorecard changed since it was assessed' : 'not assessed against scorecard-quality']"
+        fix: "Run `toolbox assess brief <scorecard id> --portal portal`, have your agent write the assessment file it names, then `toolbox assess check portal`."
+      - name: passes-review
+        level: silver
+        check: "entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0"
+        evidence: "entity.reviewState == 'fresh' ? entity.reviewFailing : ['no current assessment']"
+        fix: "Act on the failing criteria's suggestions in the assessment (portal/assessments/), then re-assess."
+      - name: no-doubts
+        level: gold
+        check: "entity.reviewState == 'fresh' && entity.reviewUnsure.size() == 0"
+        evidence: "entity.reviewState == 'fresh' ? entity.reviewUnsure : ['no current assessment']"
+        fix: "Resolve what the assessor was unsure of: usually a level whose purpose isn't written down."
+    facets: {summary: public, details: public}
+
+  - name: review-crate
+    kind: Crate
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    ratchet: {advisory: true}
+    appliesTo: "entity.codeLines >= 50"
+    rules:
+      - name: assessed
+        level: bronze
+        check: "entity.reviewState == 'fresh'"
+        evidence: "[entity.reviewState == 'stale' ? 'the crate\\'s sources changed since it was assessed' : 'not assessed against crate-design']"
+        fix: "Run `toolbox assess brief crate:<name> --portal portal`, have your agent write the assessment file it names, then `toolbox assess check portal`."
+      - name: passes-review
+        level: silver
+        check: "entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0"
+        evidence: "entity.reviewState == 'fresh' ? entity.reviewFailing : ['no current assessment']"
+        fix: "Act on the failing criteria's suggestions in the assessment (portal/assessments/), then re-assess."
+      - name: no-doubts
+        level: gold
+        check: "entity.reviewState == 'fresh' && entity.reviewUnsure.size() == 0"
+        evidence: "entity.reviewState == 'fresh' ? entity.reviewUnsure : ['no current assessment']"
+        fix: "Resolve what the assessor was unsure of, or record the open question in docs/decisions.md and link it."
+    facets: {summary: public, details: public}
+
+rubrics:
+  # What a coding agent judges, given `toolbox assess brief` (or the assessment_brief MCP tool).
+  # Criteria are questions a deterministic check can't answer; anything a check can answer belongs
+  # in a scorecard rule instead (docs/design/scorecards-for-scorecards.md §6).
+  - name: rule-quality
+    kind: Rule
+    description: Is this rule a good standard? Read its check, evidence and fix in the portal's toolbox.yaml, its tests, and the design doc its scorecard cites.
+    criteria:
+      - name: measures-intent
+        question: Does passing the check mean what the rule's name and fix say it means, rather than a proxy that can drift from it?
+        guidance: Fail when an entity could pass while missing the intent (e.g. any test counts as tested), or fail while meeting it.
+      - name: hard-to-game
+        question: Is the cheapest way to pass the rule to do the right thing?
+        guidance: Fail when an empty doc comment, a renamed item, a trivial test or a suppression would pass it.
+      - name: fix-leads-to-pass
+        question: Would following the fix text alone, with the evidence, make the rule pass?
+        guidance: Fail when the fix is vague, names the wrong place, or the rule needs data the fix doesn't mention.
+      - name: threshold-justified
+        question: Are its thresholds and its level (bronze, silver or gold) justified by a design doc, a decision or evidence?
+        guidance: Pass for rules with no threshold. Cite the source; unsure when no source states the number.
+  - name: scorecard-quality
+    kind: Scorecard
+    description: Is this scorecard a good standard? Read it in the portal's toolbox.yaml with the doc that motivates it (portal/README.md says which layer it raises).
+    criteria:
+      - name: one-concern
+        question: Does it measure one concern for one audience (one SDLC layer), so its level means one thing?
+      - name: levels-are-a-ladder
+        question: Does each level build on the one below, with bronze reachable now and gold worth reaching?
+        guidance: Fail when a level mixes unrelated rules or a gold rule is cheaper than a bronze one.
+      - name: no-obvious-gap
+        question: Is there no obvious standard for this concern that the scorecard leaves out?
+        guidance: Fail and name the missing rule; compare with the research its design doc cites.
+      - name: actionable
+        question: Can an agent raise an entity one level using only the scorecard's fixes, evidence and the portal's tools?
+  - name: crate-design
+    kind: Crate
+    description: Is this crate well designed for its place in Toolbox? Read its crate docs, public API and tests, and docs/v1-spec.md §4.
+    criteria:
+      - name: one-responsibility
+        question: Does the crate do one thing, stated in its crate docs, that matches its role in docs/v1-spec.md §4?
+      - name: small-contract
+        question: Do other crates use it through a small, documented public API rather than its internals?
+      - name: replaceable-defaults
+        question: If it wraps a default (cel-rust, OpenFGA, DBOS, Postgres, React), could that default be swapped behind a Toolbox-owned contract (charter goal 3)?
+        guidance: Pass when it wraps no third-party default.
+      - name: tests-match-risk
+        question: Are its riskiest paths (parsing, authorization, persistence, protocol handling) tested, not only the easy ones?
 
 mcp:
   instructions: >-

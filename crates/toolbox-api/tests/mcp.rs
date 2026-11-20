@@ -13,7 +13,13 @@ fn portal() -> PathBuf {
 }
 
 async fn start() -> String {
-    let src = toolbox_model::load::load(&portal()).unwrap();
+    start_with(|_| {}).await
+}
+
+/// Start a server on the reference portal with its manifest document changed by `edit`.
+async fn start_with(edit: impl FnOnce(&mut Value)) -> String {
+    let mut src = toolbox_model::load::load(&portal()).unwrap();
+    edit(&mut src.document);
     let (m, errors) = toolbox_model::validate_manifest(&src.document, "toolbox.yaml");
     assert!(errors.is_empty());
     let store = Arc::new(SharedMem(Mutex::new(
@@ -90,6 +96,7 @@ async fn tools_list_describes_every_input() {
             "owner_of",
             "scorecard_status",
             "scorecard_report",
+            "assessment_brief",
             "explain",
             "refresh_entity",
             "list_actions",
@@ -569,4 +576,48 @@ async fn unknown_tool_is_a_tool_error() {
     let (_, text, is_error) = call(&url, json!({"name": "drop_tables", "arguments": {}})).await;
     assert!(is_error);
     assert_eq!(text, "Unknown tool `drop_tables`.");
+}
+
+#[tokio::test]
+async fn assessment_brief_over_tools_call() {
+    // The reference portal has no rubrics: add one, versioned by `title` (any string field).
+    let url = start_with(|doc| {
+        doc["rubrics"] = json!([{"name": "repo-review", "kind": "Repository", "subject": "title",
+            "description": "Is this repository ready for production?",
+            "criteria": [{"name": "owned", "question": "Does a real team own it?", "guidance": "Check CODEOWNERS."},
+                         {"name": "documented", "question": "Can a newcomer run it from its README?"}]}]);
+    })
+    .await;
+    let (v, text) = ok(
+        &url,
+        json!({"name": "assessment_brief", "arguments": {"id": "repository:checkout-web"}}),
+    )
+    .await;
+    assert_eq!(v["rubric"]["name"], "repo-review");
+    assert_eq!(v["subjectHash"], v["facts"]["title"]);
+    assert_eq!(
+        v["file"],
+        "assessments/repo-review/repository/checkout-web.yaml"
+    );
+    assert!(
+        v["template"]
+            .as_str()
+            .unwrap()
+            .contains("criterion: documented")
+    );
+    assert!(
+        text.starts_with("# Assess `repository:checkout-web` against `repo-review`"),
+        "{text}"
+    );
+    assert!(
+        text.contains("- **owned**: Does a real team own it?\n  Check CODEOWNERS."),
+        "{text}"
+    );
+    let (_, text, is_error) = call(
+        &url,
+        json!({"name": "assessment_brief", "arguments": {"id": "repository:checkout-web", "rubric": "nope"}}),
+    )
+    .await;
+    assert!(is_error);
+    assert_eq!(text, "no rubric nope for kind Repository");
 }

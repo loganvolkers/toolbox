@@ -5,11 +5,16 @@ use jsonschema::Validator;
 use serde_json::Value;
 use std::sync::OnceLock;
 
+/// `schema/manifest.schema.json`: the portal manifest.
 pub const MANIFEST_SCHEMA: &str = include_str!("../../../schema/manifest.schema.json");
+/// `schema/connector-messages.schema.json`: what connectors send.
 pub const CONNECTOR_MESSAGES_SCHEMA: &str =
     include_str!("../../../schema/connector-messages.schema.json");
+/// `schema/executor-messages.schema.json`: what action executors send.
 pub const EXECUTOR_MESSAGES_SCHEMA: &str =
     include_str!("../../../schema/executor-messages.schema.json");
+/// `schema/assessment.schema.json`: an agent's assessment of one entity against a rubric.
+pub const ASSESSMENT_SCHEMA: &str = include_str!("../../../schema/assessment.schema.json");
 
 fn compile(source: &str) -> Validator {
     let schema: Value = serde_json::from_str(source).expect("embedded schema is valid JSON");
@@ -20,19 +25,28 @@ fn compile(source: &str) -> Validator {
         .expect("embedded schema compiles")
 }
 
+/// The compiled manifest schema.
 pub fn manifest() -> &'static Validator {
     static V: OnceLock<Validator> = OnceLock::new();
     V.get_or_init(|| compile(MANIFEST_SCHEMA))
 }
 
+/// The compiled connector message schema.
 pub fn connector_messages() -> &'static Validator {
     static V: OnceLock<Validator> = OnceLock::new();
     V.get_or_init(|| compile(CONNECTOR_MESSAGES_SCHEMA))
 }
 
+/// The compiled executor message schema.
 pub fn executor_messages() -> &'static Validator {
     static V: OnceLock<Validator> = OnceLock::new();
     V.get_or_init(|| compile(EXECUTOR_MESSAGES_SCHEMA))
+}
+
+/// The compiled assessment schema.
+pub fn assessment() -> &'static Validator {
+    static V: OnceLock<Validator> = OnceLock::new();
+    V.get_or_init(|| compile(ASSESSMENT_SCHEMA))
 }
 
 /// Validate `doc` and return `(json pointer, message)` pairs. Messages that would embed a large

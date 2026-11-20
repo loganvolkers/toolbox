@@ -50,6 +50,10 @@ pub fn builtin_tools() -> Value {
              "rule": {"type": "string", "description": "Only entities where this rule has `outcome`"},
              "outcome": {"enum": ["fail", "pass", "unknown"], "description": "Outcome to match for `rule` (default fail)"},
              "level": {"type": "string", "description": "Only entities at this level, e.g. none, bronze, skipped"}}), &[])},
+        {"name": "assessment_brief", "description": "What to judge an entity on, as a coding agent: the portal's rubric for its kind (criteria with questions and guidance), the entity's facts, its subject hash and a template to fill in. Write the result as an assessment file (or `toolbox assess submit`); scorecards read assessments as data.",
+         "annotations": {"readOnlyHint": true},
+         "inputSchema": s(json!({"id": id,
+             "rubric": {"type": "string", "description": "Rubric name (default: the only rubric for the entity's kind)"}}), &["id"])},
         {"name": "explain", "description": "Why a field has its value (sources, precedence, evidence) or why a rule passes or fails.",
          "annotations": {"readOnlyHint": true},
          "inputSchema": s(json!({"id": id,
@@ -299,6 +303,18 @@ async fn run_tool(
             }
             (status, v)
         }
+        "assessment_brief" => {
+            let (st, e) =
+                call_rest(state, h, Method::GET, format!("/v1/entities/{id}"), None).await;
+            if !st.is_success() {
+                (st, e)
+            } else {
+                match crate::assess::brief(&state.manifest, &e, a["rubric"].as_str()) {
+                    Ok(b) => (st, b),
+                    Err(msg) => return (msg, Value::Null, true),
+                }
+            }
+        }
         "explain" => {
             let q = if !arg(a, "rule").is_empty() {
                 format!("rule={}", enc(arg(a, "rule")))
@@ -433,6 +449,7 @@ fn markdown(name: &str, a: &Value, v: &Value) -> String {
         .map(|x| format!("\n\n_as of snapshot {x}_"))
         .unwrap_or_default();
     match name {
+        "assessment_brief" => return crate::assess::markdown(v),
         "search" | "query" => {
             let items = v["items"].as_array().cloned().unwrap_or_default();
             let _ = writeln!(s, "{} result(s):", items.len());

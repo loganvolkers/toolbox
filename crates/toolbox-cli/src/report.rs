@@ -10,7 +10,7 @@
 //! matches the code.
 
 use serde_json::{Map, Value, json};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::io::{BufRead, BufReader, Write};
 use std::path::PathBuf;
 use std::process::{Command, ExitCode, Stdio};
@@ -83,17 +83,18 @@ fn resync(
 
 /// Inputs from the connectors (in parallel) or the fixtures.
 fn inputs(
-    o: &Options,
+    fixtures: bool,
+    skip: &[String],
     root: &std::path::Path,
     m: &toolbox_model::Manifest,
 ) -> Result<toolbox_store::MemStore, String> {
-    if o.fixtures {
+    if fixtures {
         return toolbox_store::load_fixtures(root).map_err(|e| e.to_string());
     }
     let jobs: Vec<_> = m
         .connectors
         .iter()
-        .filter(|c| c.runtime == "in-image" && !o.skip.contains(&c.name))
+        .filter(|c| c.runtime == "in-image" && !skip.contains(&c.name))
         .collect();
     for c in m.connectors.iter().filter(|c| c.runtime != "in-image") {
         eprintln!(
@@ -133,9 +134,9 @@ fn inputs(
 
 /// The ratchet's view of the results: level and failing rules with evidence counts (null when the
 /// evidence isn't a list), per scorecard and entity.
-fn results(d: &Derived) -> Value {
+fn results(d: &Derived, advisory: &BTreeSet<String>) -> Value {
     let mut cards = Map::new();
-    for (card, entities) in &d.scores {
+    for (card, entities) in d.scores.iter().filter(|(c, _)| !advisory.contains(*c)) {
         let mut rows = Map::new();
         for (id, s) in entities {
             let failing: Map<String, Value> = s
@@ -199,6 +200,16 @@ fn new_policy(m: &toolbox_model::Manifest) -> NewPolicy {
             let min = sc.ratchet.as_ref()?.get("newEntitiesAtLeast")?.as_str()?;
             Some((sc.name.clone(), (sc.levels.clone(), min.to_owned())))
         })
+        .collect()
+}
+
+/// Scorecards with `ratchet: {advisory: true}`: reported, never in the baseline or the comparison
+/// (judgement-based cards, whose assessments go stale when their subject changes).
+fn advisory(m: &toolbox_model::Manifest) -> BTreeSet<String> {
+    m.scorecards
+        .iter()
+        .filter(|sc| sc.ratchet.as_ref().and_then(|r| r["advisory"].as_bool()) == Some(true))
+        .map(|sc| sc.name.clone())
         .collect()
 }
 
@@ -411,28 +422,33 @@ fn html(m: &toolbox_model::Manifest, d: &Derived) -> String {
     include_str!("report.html").replace("/*DATA*/null", &embedded)
 }
 
+/// A portal's manifest and derived state from one run of its in-image connectors (or its fixtures),
+/// with derivation warnings printed to stderr. Returns the portal directory too.
+pub fn live(
+    path: &std::path::Path,
+    fixtures: bool,
+    skip: &[String],
+) -> Result<(PathBuf, toolbox_model::Manifest, Derived), String> {
+    let src = toolbox_model::load::load(path).map_err(|e| e.to_string())?;
+    let m = crate::portal::manifest_from(&src.document, &src.manifest_file)?;
+    let store = inputs(fixtures, skip, &src.root, &m)?;
+    let d = FullRecompute.recompute(&m, &store.snapshot());
+    for diag in &d.diagnostics {
+        eprintln!("WARN  {}: {} [{}]", diag.location, diag.message, diag.code);
+    }
+    Ok((src.root, m, d))
+}
+
 pub fn run(o: &Options) -> ExitCode {
     let fail = |m: String| {
         eprintln!("error: {m}");
         ExitCode::from(2)
     };
-    let src = match toolbox_model::load::load(&o.path) {
-        Ok(s) => s,
-        Err(e) => return fail(e.to_string()),
-    };
-    let m = match crate::portal::manifest_from(&src.document, &src.manifest_file) {
-        Ok(m) => m,
+    let (_, m, d) = match live(&o.path, o.fixtures, &o.skip) {
+        Ok(x) => x,
         Err(e) => return fail(e),
     };
-    let store = match inputs(o, &src.root, &m) {
-        Ok(s) => s,
-        Err(e) => return fail(e),
-    };
-    let d = FullRecompute.recompute(&m, &store.snapshot());
-    for diag in &d.diagnostics {
-        eprintln!("WARN  {}: {} [{}]", diag.location, diag.message, diag.code);
-    }
-    let now = results(&d);
+    let now = results(&d, &advisory(&m));
     let mut code = ExitCode::SUCCESS;
     let mut summary = String::new();
     if let Some(path) = &o.baseline {

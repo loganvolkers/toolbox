@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://toolbox.dev/schemas/manifest/v1alpha1.json",
   "title": "Toolbox portal manifest (v1alpha1)",
-  "description": "The v1 configuration contract (docs/v1-spec.md \u00a75). Produced by hand in YAML/JSON or printed by the TypeScript builder. The server refuses any configuration that does not come from a manifest (D2).",
+  "description": "The v1 configuration contract (docs/v1-spec.md §5). Produced by hand in YAML/JSON or printed by the TypeScript builder. The server refuses any configuration that does not come from a manifest (D2).",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -60,6 +60,57 @@
       "type": "array",
       "items": {
         "$ref": "#/$defs/scorecard"
+      }
+    },
+    "rubrics": {
+      "type": "array",
+      "description": "Rubrics coding agents use to assess entities (docs/design/scorecards-for-scorecards.md §6). Assessments are data: committed files or ingested records, read by scorecards.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "kind",
+          "criteria"
+        ],
+        "properties": {
+          "name": {
+            "$ref": "#/$defs/name"
+          },
+          "kind": {
+            "$ref": "#/$defs/kindName"
+          },
+          "description": {
+            "type": "string"
+          },
+          "subject": {
+            "$ref": "#/$defs/fieldName",
+            "description": "The entity field that versions what is assessed (default `hash`). An assessment whose `subjectHash` differs from the entity's value is stale."
+          },
+          "criteria": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "question"
+              ],
+              "properties": {
+                "name": {
+                  "$ref": "#/$defs/name"
+                },
+                "question": {
+                  "type": "string"
+                },
+                "guidance": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "authz": {
@@ -151,7 +202,7 @@
         },
         "package": {
           "type": "string",
-          "description": "builtin:<name>, oci://\u2026, npm:\u2026, or a path inside the image."
+          "description": "builtin:<name>, oci://…, npm:…, or a path inside the image."
         },
         "runtime": {
           "enum": [
@@ -171,7 +222,7 @@
         },
         "refresh": {
           "type": "object",
-          "description": "Refresh scopes the connector must declare at registration (connector-control \u00a74).",
+          "description": "Refresh scopes the connector must declare at registration (connector-control §4).",
           "additionalProperties": {
             "type": "array",
             "items": {
@@ -256,6 +307,10 @@
               "pattern": "^[A-Z][A-Za-z0-9]*\\.[a-z][A-Za-z0-9]*$"
             }
           }
+        },
+        "description": {
+          "type": "string",
+          "description": "What this means, for people and agents reading entities (shown by get and in the UI)."
         }
       },
       "allOf": [
@@ -342,6 +397,10 @@
         "name": {
           "$ref": "#/$defs/kindName"
         },
+        "description": {
+          "type": "string",
+          "description": "What this means, for people and agents reading entities (shown by get and in the UI)."
+        },
         "identityFrom": {
           "type": "array",
           "minItems": 1,
@@ -374,7 +433,10 @@
                 "type": "boolean"
               },
               "unresolved": {
-                "enum": ["report", "ignore"],
+                "enum": [
+                  "report",
+                  "ignore"
+                ],
                 "description": "Edges whose target is no entity are dropped; `report` (default) lists them as a derive diagnostic, `ignore` is for candidate relations (e.g. every code span that might name a tool)."
               }
             }
@@ -488,6 +550,10 @@
             "newEntitiesAtLeast": {
               "type": "string",
               "description": "A level (or `none`) every entity new since the baseline must reach; below it is a regression, as new issues are in Betterer."
+            },
+            "advisory": {
+              "type": "boolean",
+              "description": "Report this scorecard but never gate on it: `toolbox report --baseline` leaves it out of the baseline and the comparison. For judgement-based scorecards (agent assessments), which go stale when their subject changes."
             }
           }
         },
@@ -722,7 +788,7 @@
         },
         "unverified": {
           "const": true,
-          "description": "Explicitly accept runs that can never be verified (action-runs \u00a75)."
+          "description": "Explicitly accept runs that can never be verified (action-runs §5)."
         },
         "annotations": {
           "type": "object",

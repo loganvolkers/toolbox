@@ -20,6 +20,9 @@ pub struct Analysis {
     pub comprehension_depth: usize,
     /// Fields read as `entity.<field>` (top level only).
     pub fields: Vec<String>,
+    /// Every field name selected anywhere (`x.<name>`), e.g. fields of related entities read
+    /// through `inbound` lists.
+    pub selects: Vec<String>,
     /// Named functions called (operators excluded).
     pub functions: Vec<String>,
     /// Functions the runtime doesn't declare: the expression fails when it reaches them.
@@ -32,6 +35,7 @@ struct Walk {
     depth: usize,
     comprehension_depth: usize,
     fields: BTreeSet<String>,
+    selects: BTreeSet<String>,
     functions: BTreeSet<String>,
 }
 
@@ -74,6 +78,7 @@ impl Walk {
                 .map(|x| (x, loops))
                 .collect(),
             Expr::Select(s) => {
+                self.selects.insert(s.field.clone());
                 if matches!(&s.operand.expr, Expr::Ident(root) if root == "entity") {
                     self.fields.insert(s.field.clone());
                 }
@@ -136,6 +141,7 @@ pub fn analyse(expr: &str) -> Result<Analysis, String> {
         depth: w.depth,
         comprehension_depth: w.comprehension_depth,
         fields: w.fields.into_iter().collect(),
+        selects: w.selects.into_iter().collect(),
         functions,
         undeclared,
     })

@@ -1,0 +1,32 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: crate:toolbox-expr
+rubric: crate-design
+subjectHash: "8c6869a49ad1"
+assessor: {kind: agent, name: claude-code}
+at: "2026-11-20"
+verdicts:
+  - criterion: one-responsibility
+    verdict: pass
+    reason: >-
+      Everything in it is CEL: static checks (lib.rs), evaluation (eval.rs), lazy lists (lazy.rs, now
+      indexable) and complexity analysis (analysis.rs), matching its row in v1-spec §4. Re-assessed
+      after the lazy-list indexing change made the first assessment stale.
+    suggestion: The crate docs still describe only the M0 static checks; update them to cover eval, lazy and analysis.
+  - criterion: small-contract
+    verdict: pass
+    reason: Other crates use check, Site, CelIssue, analysis::analyse and the eval helpers re-exported from lib.rs; nothing reaches into private modules.
+  - criterion: replaceable-defaults
+    verdict: fail
+    reason: >-
+      The public API returns and takes cel::Value (to_cel, from_cel, with_vars, Expr::eval), and
+      toolbox-derive depends on the cel crate directly. Swapping cel-rust (Q10) would change every
+      caller, against charter goal 3.
+    suggestion: Wrap cel::Value in a Toolbox-owned value type (or keep serde_json::Value at the boundary) and drop toolbox-derive's direct cel dependency.
+  - criterion: tests-match-risk
+    verdict: unsure
+    reason: >-
+      Six unit tests in the crate; the risky path, evaluation semantics, is exercised indirectly
+      through toolbox-derive and the reference portal's expected outputs. CEL conformance (Q10) hasn't
+      been measured, so how much of the spec it covers is unknown.
+    suggestion: Run a subset of the CEL conformance suite against eval.rs.
+summary: Focused and used through its API, but cel-rust leaks through that API, so the default isn't replaceable yet.

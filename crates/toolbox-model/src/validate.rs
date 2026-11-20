@@ -72,6 +72,42 @@ struct Checker {
 }
 
 impl Checker {
+    /// Rubrics: the kind exists, it has the subject field, and criterion names are unique.
+    fn rubrics(&mut self, m: &Manifest, kinds: &BTreeMap<&str, usize>) {
+        for (ri, r) in m.rubrics.iter().enumerate() {
+            let Some(k) = kinds.get(r.kind.as_str()).map(|&i| &m.kinds[i]) else {
+                self.push(
+                    "xref.kind",
+                    format!("/rubrics/{ri}/kind"),
+                    format!("rubric {}: unknown kind {}", r.name, r.kind),
+                );
+                continue;
+            };
+            if !k.fields.contains_key(r.subject()) {
+                self.push(
+                    "xref.field",
+                    format!("/rubrics/{ri}/subject"),
+                    format!(
+                        "rubric {}: {} has no field {} to version assessments by",
+                        r.name,
+                        r.kind,
+                        r.subject()
+                    ),
+                );
+            }
+            let mut seen = BTreeSet::new();
+            for (ci, c) in r.criteria.iter().enumerate() {
+                if !seen.insert(c.name.as_str()) {
+                    self.push(
+                        "rubric.duplicate",
+                        format!("/rubrics/{ri}/criteria/{ci}/name"),
+                        format!("rubric {}: criterion {} is repeated", r.name, c.name),
+                    );
+                }
+            }
+        }
+    }
+
     fn push(&mut self, code: &'static str, path: String, message: String) {
         self.errors.push(Diagnostic {
             code,
@@ -253,6 +289,7 @@ impl Checker {
             }
         }
 
+        self.rubrics(m, &kinds);
         for (si, s) in m.scorecards.iter().enumerate() {
             if !kinds.contains_key(s.kind.as_str()) {
                 self.push(

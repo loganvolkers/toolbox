@@ -147,13 +147,23 @@ mod tests {
             to_cel(&json!({"app": "a"})),
             to_cel(&json!({"app": "b"})),
         ]);
-        let e = Expr::compile("inbound.r.size() == 2 && inbound.r.map(i, i.app) == ['a', 'b'] && inbound.r.exists(i, i.app == 'b')").unwrap();
+        let e = Expr::compile("inbound.r.size() == 2 && inbound.r.map(i, i.app) == ['a', 'b'] && inbound.r.exists(i, i.app == 'b') && inbound.r[1].app == 'b'").unwrap();
         let out = with_vals(
             &[],
             vec![("inbound", crate::lazy_map([("r".to_string(), items)]))],
             |ctx| e.eval_in(ctx),
         );
         assert_eq!(out, Ok(Value::Bool(true)));
+        let e = Expr::compile("inbound.r[2]").unwrap();
+        let out = with_vals(
+            &[],
+            vec![(
+                "inbound",
+                crate::lazy_map([("r".to_string(), Default::default())]),
+            )],
+            |ctx| e.eval_in(ctx),
+        );
+        assert!(out.is_err(), "out of bounds: {out:?}");
     }
 
     #[test]

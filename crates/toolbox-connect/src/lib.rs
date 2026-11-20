@@ -1,6 +1,7 @@
 //! Connector control (docs/design/connector-control.md): the server-side [`hub`], the
-//! [`sdk`] connectors use, and the [`conformance`] kit.
+//! [`sdk`] connectors use, the [`conformance`] kit, and the shared [`assessment`] record.
 
+pub mod assessment;
 pub mod conformance;
 pub mod files;
 pub mod hub;

@@ -2,13 +2,15 @@
 //! them. Used for `inbound.<relation>` (docs/v1-spec.md §6.2): `size()` is O(1), and
 //! `map`/`exists`/`all`/`filter` convert just the elements they visit.
 //!
-//! Supported operations: `size`, iteration macros. Indexing (`xs[0]`) and `in` are not
-//! (they fail with a no-overload error, which the pipeline reports as a diagnostic).
+//! Supported operations: `size`, iteration macros and indexing by int (`xs[0]`, converting just
+//! that element). `in` is not (it fails with a no-overload error, which the pipeline reports as a
+//! diagnostic).
 
+use cel::ExecutionError;
 use cel::Value;
-use cel::common::traits::{Iterable, Iterator as CelIterator, Sizer};
+use cel::common::traits::{Indexer, Iterable, Iterator as CelIterator, Sizer};
 use cel::common::types::{CelInt, CelMap, CelMapKey, CelString, LIST_TYPE, Type};
-use cel::common::value::Val;
+use cel::common::value::{CowVal, Val};
 use std::collections::HashMap;
 use std::sync::{Arc, OnceLock};
 
@@ -69,6 +71,33 @@ impl Iterable for LazyList {
     }
 }
 
+impl Indexer for LazyList {
+    fn get<'b, 'v>(&'b self, idx: &dyn Val) -> Result<CowVal<'b, 'v>, ExecutionError>
+    where
+        Self: 'v,
+    {
+        let i = idx
+            .downcast_ref::<CelInt>()
+            .map(|i| *i.inner())
+            // reported by the interpreter as no overload for `_[_]`
+            .ok_or_else(|| ExecutionError::UnexpectedType {
+                got: format!("{:?}", idx.get_type().kind()),
+                want: "int".into(),
+            })?;
+        match usize::try_from(i).ok().filter(|&i| i < self.items.len()) {
+            Some(i) => Ok(CowVal::Borrowed(self.at(i))),
+            None => Err(ExecutionError::IndexOutOfBounds(i.into())),
+        }
+    }
+
+    fn steal<'v>(self: Box<Self>, idx: &dyn Val) -> Result<Box<dyn Val + 'v>, ExecutionError>
+    where
+        Self: 'v,
+    {
+        self.get(idx).map(CowVal::into_owned)
+    }
+}
+
 impl Val for LazyList {
     fn get_type(&self) -> &Type {
         &LIST_TYPE
@@ -83,6 +112,13 @@ impl Val for LazyList {
     }
 
     fn as_iterable<'b, 'v>(&'b self) -> Option<&'b (dyn Iterable + 'v)> {
+        Some(self)
+    }
+
+    fn as_indexer<'b, 'v>(&'b self) -> Option<&'b (dyn Indexer + 'v)>
+    where
+        Self: 'v,
+    {
         Some(self)
     }
 
