@@ -54,6 +54,22 @@ pub fn binary() -> String {
     std::env::var("TOOLBOX_OPENFGA_BIN").unwrap_or_else(|_| "openfga".into())
 }
 
+/// The answers of one batch-check response, in request order. A per-check error (e.g. a datastore
+/// timeout) is not a denial: it fails the batch, so the API answers 502 instead of pretending the
+/// entity doesn't exist. An absent `allowed` with no error is `false` (proto3 omits default values).
+fn batch_results(r: &Value, chunk: &[Tuple]) -> Result<Vec<bool>, String> {
+    (0..chunk.len())
+        .map(|i| {
+            let item = &r["result"][format!("c{i}")];
+            match (&item["error"], item["allowed"].as_bool()) {
+                (e, _) if !e.is_null() => Err(format!("check {:?} failed: {e}", chunk[i])),
+                (_, a) if item.is_object() => Ok(a.unwrap_or(false)),
+                _ => Err(format!("check {:?}: no result in the response", chunk[i])),
+            }
+        })
+        .collect()
+}
+
 impl OpenFga {
     /// Start OpenFGA, create (or reuse) the store `store_name` and write `model` (JSON).
     pub async fn start(
@@ -274,13 +290,7 @@ impl OpenFga {
                     Some(body),
                 )
                 .await?;
-            for i in 0..chunk.len() {
-                out.push(
-                    r["result"][format!("c{i}")]["allowed"]
-                        .as_bool()
-                        .unwrap_or(false),
-                );
-            }
+            out.extend(batch_results(&r, chunk)?);
         }
         Ok(out)
     }
@@ -342,4 +352,22 @@ CREATE OR REPLACE VIEW public.tuple AS
         .await
         .map_err(|e| format!("installing the tuple view: {e}"))?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn batch_errors_are_not_denials() {
+        let t = |o: &str| ("user:alice".to_owned(), "viewer".to_owned(), o.to_owned());
+        let chunk = [t("repository:a"), t("repository:b")];
+        let ok = json!({"result": {"c0": {"allowed": true}, "c1": {}}});
+        assert_eq!(batch_results(&ok, &chunk).unwrap(), vec![true, false]);
+        let err =
+            json!({"result": {"c0": {"allowed": true}, "c1": {"error": {"message": "timeout"}}}});
+        assert!(batch_results(&err, &chunk).unwrap_err().contains("timeout"));
+        let missing = json!({"result": {"c0": {"allowed": true}}});
+        assert!(batch_results(&missing, &chunk).is_err());
+    }
 }

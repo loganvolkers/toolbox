@@ -7,6 +7,10 @@ const { chromium } = require("playwright");
   const browser = await chromium.launch();
   const page = await browser.newPage();
   page.on("console", (m) => m.type() === "error" && console.error("  browser:", m.text()));
+  // Name the failing request: a bare console error doesn't say which resource it was.
+  page.on("response", async (r) => {
+    if (r.status() >= 400) console.error(`  http ${r.status()} ${r.request().method()} ${r.url()} ${(await r.text().catch(() => "")).slice(0, 200)} snapshot=${r.headers()["x-toolbox-snapshot"] ?? "?"}`);
+  });
   await page.goto(`${url}/e/repository%3Apayments-api?as=alice`);
   await page.getByRole("heading", { name: "Payments API" }).waitFor();
   const before = await page.locator(".asof code").first().textContent();
@@ -17,7 +21,7 @@ const { chromium } = require("playwright");
   try {
     await page.getByRole("status").filter({ hasText: "Refreshed at snapshot" }).waitFor({ timeout: 30000 });
   } catch (e) {
-    console.error("  status text:", await page.getByRole("status").first().textContent());
+    console.error("  page text:", (await page.locator("main, body").first().innerText({ timeout: 2000 }).catch(() => "?")).slice(0, 400));
     throw e;
   }
   await page.waitForFunction((b) => document.querySelector(".asof code")?.textContent !== b, before, { timeout: 10000 });
