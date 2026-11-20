@@ -182,6 +182,14 @@ digest, data packages with typed parameters) stands. A package now has three par
 | Connectors | builtin, executable (per-platform assets) or WASM component | `toolbox.lock` (one digest per platform or component) |
 | Tools | declared versions and mise/aqua identifiers | `mise.lock` (the consumer's) |
 
+**Implementation status (D90):**
+- **Step 1, built but not yet released:** `dist` config and `release.yml` (actions pinned by SHA), the image workflow, and `actions/report` `toolbox-version`. Internal iteration uses caches, not tags: `Swatinem/rust-cache`, an incremental Cargo cache in the report action, and tools downloaded by checksum (`scripts/ci-tools.sh`).
+- **Steps 2–3, built:**
+  - `package: github:owner/repo[/app]@version`;
+  - `toolbox install` (pins per-platform SHA-256 in `toolbox.lock`, refuses mismatches, `--frozen` for CI);
+  - `tools:` and `toolbox doctor` (`--mise`);
+  - covered end to end by `crates/toolbox-cli/tests/install.rs`.
+
 **Build order**, because each step unblocks the next stage in the catalogue:
 1. maintainer/release (`dist`, image, attestations);
 2. executable connectors resolved from `toolbox.lock`, plus a published Rust SDK and scaffold;

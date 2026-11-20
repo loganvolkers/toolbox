@@ -249,8 +249,13 @@ pub fn resolve_config(connector: &str, cfg: &Value) -> Value {
 }
 
 /// The binary for a connector package: `builtin:<name>` → `toolbox-connector-<name>`, found in
-/// `TOOLBOX_CONNECTORS_DIR`, next to the running binary, or on PATH. Other packages are paths.
+/// `TOOLBOX_CONNECTORS_DIR`, next to the running binary, or on PATH; `github:owner/repo[/app]@version`
+/// → the release installed in the cache by `toolbox install`. Other packages are paths.
 pub fn binary_for(package: &str) -> String {
+    if let Some(spec) = crate::artifacts::parse(package) {
+        // A released executable, unpacked into the cache by `toolbox install` (D90).
+        return spec.installed().display().to_string();
+    }
     let Some(name) = package.strip_prefix("builtin:") else {
         return package.to_owned();
     };

@@ -152,6 +152,12 @@ connectors:
     refresh: {workflow-runs: [external_ids]}
     freshness: {workflow-runs: 15m}
 
+# The upstream tools ci-lint runs (D90): `toolbox doctor portal` checks them, and
+# `toolbox doctor portal --mise` prints the mise config that installs them.
+tools:
+  zizmor: {version: 1.32.0, mise: "pipx:zizmor"}
+  actionlint: {version: 1.7.12, mise: "aqua:rhysd/actionlint", versionArgs: ["-version"]}
+
 kinds:
   # ── Layer 1: what maintainers build ──────────────────────────────────────────────────────
   - name: Crate

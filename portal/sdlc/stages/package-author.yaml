@@ -21,15 +21,14 @@ records:
     order: 2
     intent: Build a connector outside this repository, in any language, against the connector protocol.
     exitCriterion: The connector passes the conformance kit as a standalone executable or WASM component.
-    commands: ["toolbox connector test"]
-    checks: [crates/toolbox-connect/src/conformance.rs]
+    commands: ["toolbox connector test", "toolbox install"]
+    checks: [crates/toolbox-connect/src/conformance.rs, crates/toolbox-cli/tests/install.rs]
     docs: [docs/design/connector-control.md, docs/design/package-author-sdlc.md]
     status: partial
     gaps:
-      - "in-image connectors must be builtin crates in this repository (builtin:<name>): no way to reference an external executable"
       - "the Rust SDK (toolbox-connect) is not published; no SDK for other languages"
       - "no `toolbox connector new` scaffold"
-      - "only remote connectors (push to /v1/ingest) can live outside this repository today"
+      - "no WASM component connectors yet"
   - id: package-author/test
     layer: package-author
     name: test
@@ -54,8 +53,7 @@ records:
     docs: [docs/design/packages.md]
     status: missing
     gaps:
-      - "no package format, archive or toolbox.lock"
-      - "no way to declare upstream tools (zizmor, actionlint) beyond prose in a README"
+      - "no package format or archive (toolbox.lock pins connectors only)"
   - id: package-author/distribute
     layer: package-author
     name: distribute

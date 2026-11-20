@@ -113,6 +113,34 @@
         }
       }
     },
+    "tools": {
+      "type": "object",
+      "description": "Upstream tools the portal's connectors and rules need (D90). Toolbox never installs them: `toolbox doctor` checks them and `toolbox doctor --mise` prints the mise configuration that installs them.",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version"
+        ],
+        "properties": {
+          "version": {
+            "type": "string",
+            "description": "The exact version required, as the tool prints it."
+          },
+          "mise": {
+            "type": "string",
+            "description": "The mise tool id, e.g. aqua:rhysd/actionlint or pipx:zizmor."
+          },
+          "versionArgs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Arguments that print the version (default [\"--version\"])."
+          }
+        }
+      }
+    },
     "authz": {
       "$ref": "#/$defs/authz"
     },
@@ -202,7 +230,7 @@
         },
         "package": {
           "type": "string",
-          "description": "builtin:<name>, oci://…, npm:…, or a path inside the image."
+          "description": "builtin:<name> (shipped with toolbox), github:owner/repo[/app]@version (a released executable, installed by `toolbox install` and pinned in toolbox.lock, D90), or a path inside the image."
         },
         "runtime": {
           "enum": [

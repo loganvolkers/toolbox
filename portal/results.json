@@ -355,10 +355,7 @@
         "level": "gold"
       },
       "dependency:cargo:walkdir": {
-        "failing": {
-          "shared-is-inherited": 2
-        },
-        "level": "silver"
+        "level": "gold"
       }
     },
     "maintainer-docs": {
@@ -3605,6 +3602,9 @@
       "command:describe-portal": {
         "level": "silver"
       },
+      "command:doctor": {
+        "level": "silver"
+      },
       "command:explain": {
         "level": "skipped"
       },
@@ -3613,6 +3613,9 @@
       },
       "command:graph": {
         "level": "skipped"
+      },
+      "command:install": {
+        "level": "silver"
       },
       "command:mcp": {
         "level": "skipped"
@@ -3730,7 +3733,7 @@
       },
       "sdlc-stage:operator/build-connector": {
         "failing": {
-          "built": 2
+          "built": 1
         },
         "level": "silver"
       },
@@ -3791,7 +3794,7 @@
       },
       "sdlc-stage:package-author/build-connector": {
         "failing": {
-          "built": 4
+          "built": 3
         },
         "level": "silver"
       },
@@ -3807,7 +3810,7 @@
         "failing": {
           "agent-operable": 1,
           "automated": 1,
-          "built": 2
+          "built": 1
         },
         "level": "bronze"
       },
@@ -3873,6 +3876,9 @@
       "command:describe-portal": {
         "level": "skipped"
       },
+      "command:doctor": {
+        "level": "skipped"
+      },
       "command:explain": {
         "failing": {
           "exercised": null
@@ -3890,6 +3896,9 @@
           "exercised": null
         },
         "level": "bronze"
+      },
+      "command:install": {
+        "level": "skipped"
       },
       "command:mcp": {
         "level": "silver"

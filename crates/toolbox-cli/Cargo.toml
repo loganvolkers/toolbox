@@ -26,6 +26,7 @@ toolbox-store.workspace = true
 toolbox-api.workspace = true
 toolbox-authz.workspace = true
 toolbox-connect = { path = "../toolbox-connect" }
+walkdir.workspace = true
 async-trait.workspace = true
 tokio.workspace = true
 reqwest.workspace = true

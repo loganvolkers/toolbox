@@ -380,6 +380,8 @@ to `result`; previews come from the Toolbox layer only.
 | `toolbox report [--skip C] [-o md\|json\|html] [--baseline F [--update\|--ci]]` | Score a repository without a server: connectors once, recompute, scorecards with evidence; a ratchet against a committed baseline (D66, [repo-portals.md](./design/repo-portals.md)) |
 | `toolbox scorecard [NAME] [--rule R]` | One scorecard across entities: a work list (MCP `scorecard_report`) |
 | `toolbox assess brief ID` / `assess check` / `assess submit FILE` | Brief a coding agent on an entity (MCP `assessment_brief`), validate a portal's `assessments/`, or push an assessment to a server (D79) |
+| `toolbox install [PORTAL] [--frozen]` | Download released executable connectors (`package: github:owner/repo[/app]@version`) for this platform, verify them against `toolbox.lock` (pinning new ones), and unpack them into the cache (D90) |
+| `toolbox doctor [PORTAL] [--mise]` | Check every in-image connector resolves and every declared `tools:` entry is at its pinned version; `--mise` prints the mise config that installs them (D90) |
 | `toolbox describe` | Print Toolbox's own CLI commands and MCP tools as connector records (contract snapshots; Toolbox for Toolbox, D65) |
 | `toolbox token create --user U` | Create a personal access token (printed once) |
 | `toolbox get|query|search|graph|owner|explain|score|refresh|actions` | Read commands, each calling the MCP tool of the same purpose (`-o md|json|yaml`) |

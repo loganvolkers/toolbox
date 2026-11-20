@@ -17,12 +17,11 @@ records:
     order: 2
     intent: Connect a system Toolbox has no connector for.
     exitCriterion: The operator's connector passes the conformance kit and runs in-image or remotely.
-    commands: ["toolbox connector test", "toolbox push"]
-    checks: [crates/toolbox-connect/src/conformance.rs]
-    docs: [docs/design/connector-control.md]
+    commands: ["toolbox connector test", "toolbox install", "toolbox doctor", "toolbox push"]
+    checks: [crates/toolbox-connect/src/conformance.rs, crates/toolbox-cli/tests/install.rs]
+    docs: [docs/design/connector-control.md, docs/design/package-author-sdlc.md]
     status: partial
     gaps:
-      - "operators can only write remote connectors (push to /v1/ingest); in-image connectors are builtin crates in this repository"
       - "no scaffold or SDK outside Rust"
   - id: operator/validate
     layer: operator

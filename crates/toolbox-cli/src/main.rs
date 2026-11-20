@@ -2,6 +2,7 @@
 
 mod assess;
 mod client;
+mod install;
 mod meta;
 mod model;
 mod portal;
@@ -256,6 +257,27 @@ enum Command {
         #[command(subcommand)]
         what: AssessWhat,
     },
+    /// Download the portal's released executable connectors (`github:owner/repo[/app]@version`)
+    /// for this platform, verify them against toolbox.lock (pinning them the first time), and
+    /// unpack them into the cache.
+    Install {
+        /// A portal directory (containing toolbox.yaml) or a manifest file.
+        #[arg(default_value = ".")]
+        path: PathBuf,
+        /// Fail instead of pinning connectors that toolbox.lock doesn't list yet (for CI).
+        #[arg(long)]
+        frozen: bool,
+    },
+    /// Check that every in-image connector resolves and every declared tool is at its pinned
+    /// version; exit 1 when something is missing.
+    Doctor {
+        /// A portal directory (containing toolbox.yaml) or a manifest file.
+        #[arg(default_value = ".")]
+        path: PathBuf,
+        /// Print the mise `[tools]` section that installs the declared tools instead.
+        #[arg(long)]
+        mise: bool,
+    },
 }
 
 #[derive(Subcommand)]
@@ -438,6 +460,8 @@ fn main() -> ExitCode {
             Err(e) => fail(e),
         },
         Command::Assess { what } => assess_command(what),
+        Command::Install { path, frozen } => install::install(&path, frozen),
+        Command::Doctor { path, mise } => install::doctor(&path, mise),
         Command::Serve {
             path,
             listen,
