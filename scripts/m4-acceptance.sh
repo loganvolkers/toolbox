@@ -57,7 +57,7 @@ for rel, text in sorted(d["files"].items()):
 sys.exit(1 if bad else 0)
 PY
 
-echo "3. A1 (CLI → MCP owner_of as alice)"; ask owner repository:payments-api --as alice | head -1
+echo "3. A1 (CLI → MCP owner_of as alice)"; ask owner repository:payments-api --as alice | sed -n 1p   # sed reads it all: no broken pipe
 echo "4. A2 (explain ledger)"; ask owner repository:ledger --as alice | sed -n '1p;3p'
 echo "5. A3 (erin: levels only)"; ask score repository:checkout-web --as erin | grep -E 'ownership|rule details' | head -2
 echo "6. A4 (bob: details)"; ask score repository:checkout-web --as bob | grep -E 'branch-protected'
