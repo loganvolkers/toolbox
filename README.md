@@ -14,7 +14,7 @@ The public docs are a Starlight site in [site/](site/src/content/docs/index.md),
 cargo build && target/debug/toolbox validate examples/reference-portal
 ```
 
-**Start here:** [AGENTS.md](AGENTS.md) for working rules and parallel tracks, [docs/v1-spec.md](docs/v1-spec.md) for what v1 must do, [examples/reference-portal](examples/reference-portal/README.md) for the reference implementation anchor. Also: [docs/decisions.md](docs/decisions.md) for every decision and open question, [docs/glossary.md](docs/glossary.md) for vocabulary, and [docs/research-log.md](docs/research-log.md) for methods and hands-on verifications.
+**Start here:** [AGENTS.md](AGENTS.md) for working rules and parallel tracks, [docs/v1-spec.md](docs/v1-spec.md) for what v1 must do, [examples/reference-portal](examples/reference-portal/README.md) for the reference implementation anchor. Also: [docs/decisions/](docs/decisions/README.md) for every decision, [docs/questions.md](docs/questions.md) for open questions, [docs/glossary.md](docs/glossary.md) for vocabulary, and [docs/research-log.md](docs/research-log.md) for methods and hands-on verifications.
 
 - [docs/research.md](docs/research.md) — landscape (Backstage, Port, Cortex, DX, OpsLevel, Datadog, OSS alternatives) and validation
 - [docs/v1-spec.md](docs/v1-spec.md) — the v1 implementation contract (milestones, contracts, API, MCP, CLI, data model, properties)

@@ -17,6 +17,7 @@ Shared vocabulary across the design documents. Keep entries short and link to th
 | **Assessment** | One agent's or person's verdicts on one entity against a rubric, stored as a file in `assessments/` or pushed with `toolbox assess submit`; stale when the entity's hash changes. Assessments are scored (`meta-assessment`) and reviewed once (`assessment-quality`) (D79, D80) | [design/scorecards-for-scorecards.md](./design/scorecards-for-scorecards.md) §6 |
 | **CLI skill** | The agent skill whose text names one `toolbox` command's invocation. `cli-skill` fails a command that has none (D94) | [design/cli-skills.md](./design/cli-skills.md) |
 | **YAML format** | The fixed point of Yamark 0.6.1 with `compact`: a collection that fits in 80 columns is flow style (D97) | [design/yaml-format.md](./design/yaml-format.md) |
+| **Decision id** | `D` plus a ULID. The file `docs/decisions/<id>.md` is the decision, and the filenames sort by time. D1–D98 remain valid as each file's `legacy` (D01M7XKEXQH4HG5371629M50E2G) | [design/decision-files.md](./design/decision-files.md) |
 | **Advisory scorecard** | `ratchet: {advisory: true}`: reported, kept out of the ratchet's baseline, never gating (D79) | [design/scorecards-for-scorecards.md](./design/scorecards-for-scorecards.md) §6 |
 | **Unknown outcome** | A rule whose data is missing (e.g. a linter not installed): reported, never a regression or an improvement; `--ci` and `--update` refuse it (D70) | [design/github-actions-standards.md](./design/github-actions-standards.md) |
 | **Repo portal** | A portal run by `toolbox report` in one repository, without a server (D66) | [design/repo-portals.md](./design/repo-portals.md) |
@@ -66,13 +67,13 @@ Shared vocabulary across the design documents. Keep entries short and link to th
 | **Agent plugin package** | A directory with `plugin.json` (Agent Plugins 1.0.0). Catalogued and scored (`maintainer-plugin`, D81). Skills inside it stay on the skill scorecard | [design/plugin-standards.md](./design/plugin-standards.md) |
 | **Repository level** | The lowest level among the scorecards a repository counts. Unknown rules are excluded. Catalogued on the repository record (`maintainer-repo`, D86) | [design/repo-level.md](./design/repo-level.md) |
 | **Supply-chain config** | Dependabot ecosystems, a code-scanning workflow, a `SECURITY.md`, and a CODEOWNERS rule for CI. Catalogued on the repository record (`maintainer-supply-chain`, D85). Alert counts are not included | [design/supply-chain-standards.md](./design/supply-chain-standards.md) |
-| **Charter goals (G1–G3)** | Simple single-container deployment, agent SDLC (in four layers, D63, D87), replaceable components | [decisions.md](./decisions.md) D33–D35 |
-| **Snapshot / snapshot id** | A consistent (`REPEATABLE READ`) read of Postgres inputs from which all derived state is recomputed; its id is the consistency token | [decisions.md](./decisions.md) D37 |
+| **Charter goals (G1–G3)** | Simple single-container deployment, agent SDLC (in four layers, D63, D87), replaceable components | [decisions.md](./decisions/README.md) D33–D35 |
+| **Snapshot / snapshot id** | A consistent (`REPEATABLE READ`) read of Postgres inputs from which all derived state is recomputed; its id is the consistency token | [decisions.md](./decisions/README.md) D37 |
 | **Full recompute** | The v1 derived-state engine: recompute every derived value from a snapshot on change, behind the `DerivedState` contract | [technology-critique.md](./technology-critique.md) §7.1 |
 | **Replaceable contract** | A Toolbox-owned trait, protocol or mount contract with conformance tests, behind which a default technology sits (`DerivedState`, `Authorizer`, `Durable`, UI extension contract, executor protocol) | [plan.md](./plan.md) §3 |
-| **UI extension contract** | How operator UI bundles (any framework; React by default) are built into the image and mounted | [decisions.md](./decisions.md) D40 |
-| **In-image executor** | Action code packaged into the Toolbox image and run as a child process over stdio | [decisions.md](./decisions.md) D40 |
-| **Sprawl budget** | The cap on implementation languages, required services and author-facing languages in v1 | [decisions.md](./decisions.md) D45 |
+| **UI extension contract** | How operator UI bundles (any framework; React by default) are built into the image and mounted | [decisions.md](./decisions/README.md) D40 |
+| **In-image executor** | Action code packaged into the Toolbox image and run as a child process over stdio | [decisions.md](./decisions/README.md) D40 |
+| **Sprawl budget** | The cap on implementation languages, required services and author-facing languages in v1 | [decisions.md](./decisions/README.md) D45 |
 | **Connector command** | A Toolbox → connector instruction (`refresh`, `resync`, `cancel`) with an id, priority, deadline and terminal status | [design/connector-control.md](./design/connector-control.md) |
 | **Scoped refresh** | A re-read of specific records (by external ids, selector or `since`); never causes implicit deletes | [design/connector-control.md](./design/connector-control.md) |
 | **Postcondition** | A CEL expression an action declares, which must hold after the run for it to succeed | [design/action-runs.md](./design/action-runs.md) |
@@ -82,8 +83,8 @@ Shared vocabulary across the design documents. Keep entries short and link to th
 | **Reference portal** | The example portal (GitHub + IdP) whose outputs and scenarios define "done" for v1 | [examples/reference-portal](../examples/reference-portal/README.md) |
 | **Reference model / oracle** | `tools/reference.py`: a small executable model of the pipeline that the Rust implementation must match | [v1-spec.md](./v1-spec.md) §6 |
 | **Ownership status** | `verified`, `inferred`, `unverified` or `none`, from the CODEOWNERS authority rule | [v1-spec.md](./v1-spec.md) §6.2 |
-| **Action context lookup** | Catalog entities an action declares (`{kind, where}`) and passes to its executor as `related` | [decisions.md](./decisions.md) D52 |
-| **Canonical manifest** | The single key-sorted `manifest.json` that `toolbox build` produces from any source; what the server loads and `plan` diffs | [decisions.md](./decisions.md) D53 |
-| **`include`** | Source-only list of YAML files merged into the canonical manifest | [decisions.md](./decisions.md) D54 |
+| **Action context lookup** | Catalog entities an action declares (`{kind, where}`) and passes to its executor as `related` | [decisions.md](./decisions/README.md) D52 |
+| **Canonical manifest** | The single key-sorted `manifest.json` that `toolbox build` produces from any source; what the server loads and `plan` diffs | [decisions.md](./decisions/README.md) D53 |
+| **`include`** | Source-only list of YAML files merged into the canonical manifest | [decisions.md](./decisions/README.md) D54 |
 | **View endpoint** | A composite, facet-shaped REST response serving one UI page in one request | [design/minimal-ui.md](./design/minimal-ui.md) §6 |
 | **Form-renderable subset** | The JSON Schema keywords allowed in action inputs so a form can always be generated | [design/minimal-ui.md](./design/minimal-ui.md) §4 |

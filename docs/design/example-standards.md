@@ -22,7 +22,7 @@ example:
 |---|---|---|
 | Does it have a heading, and do its relative links exist? | The first heading, the link targets | bronze |
 | Does it name a command that checks it? | `cargo`, `npm`, `python`, `fga`, `toolbox validate`/`test`/`report`, or `./run` | silver |
-| Does it point at the design or a decision, and is there no secret in it? | `docs/`, `decisions.md`, a `D` number, secret shapes | gold |
+| Does it point at the design or a decision, and is there no secret in it? | `docs/`, a `D` number, or a `D` plus ULID, secret shapes | gold |
 
 The product name "Toolbox" in a sentence is not a command. A directory link counts when the
 directory exists.
@@ -45,7 +45,7 @@ Globs: `examples/**/README.md`, `experiments/**/README.md`, `docs/examples/*.md`
 | `title`, `lines` | The level-1 heading and the length |
 | `missingFiles` | Relative link targets that are neither a file nor a directory |
 | `commandLines` | Lines that invoke `cargo`, `npm`, `pnpm`, `yarn`, `pytest`, `python`, `fga`, `toolbox` with a subcommand, or `./run` |
-| `citesDesign` | The body contains `docs/`, `decisions.md`, or a decision id such as `D40` |
+| `citesDesign` | The body contains `docs/`, or a decision id such as `D40` or a `D` plus ULID |
 | `secretHits` | High-precision secret shapes |
 
 ## 4. The scorecard

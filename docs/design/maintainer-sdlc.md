@@ -23,12 +23,12 @@ The inner loop takes seconds, so this stays cheap enough to run after every chan
 
 | Step | What the maintainer does | Tooling |
 |---|---|---|
-| **Orient** | Read [AGENTS.md](../../AGENTS.md), [decisions.md](../decisions.md) and the milestone in [v1-spec.md](../v1-spec.md) §3 | `CLAUDE.md` → `AGENTS.md` |
+| **Orient** | Read [AGENTS.md](../../AGENTS.md), [decisions.md](../decisions/README.md) and the milestone in [v1-spec.md](../v1-spec.md) §3 | `CLAUDE.md` → `AGENTS.md` |
 | **Plan** | Turn exit criteria into checks *before* coding: a test, an acceptance-script step, or a reference-model case | §4 |
 | **Build** | Small changes in a crate of the [workspace](../v1-spec.md) §4 | `cargo build` (toolchain pinned in `rust-toolchain.toml`) |
 | **Test** | Unit and integration tests, the differential tests, the relevant acceptance script | §4 |
 | **Review** | `cargo fmt --check`, `cargo clippy -D warnings`; read your own diff | CI |
-| **Record** | Results in [research-log.md](../research-log.md); decisions in [decisions.md](../decisions.md); spec status in v1-spec §3 | Working rules in AGENTS.md |
+| **Record** | Results in [research-log.md](../research-log.md); decisions in [decisions.md](../decisions/README.md); spec status in v1-spec §3 | Working rules in AGENTS.md |
 | **Ship** | Small commits straight to `main` (D32), pulled with rebase first | `git` |
 | **Monitor** | CI on every push; the scale budget and acceptance jobs catch regressions | `.github/workflows/ci.yml` |
 
@@ -82,7 +82,7 @@ closes.
   each statement in a commit or document.
 - **The reference model leads.** Semantics change in `tools/reference.py` and the expectations
   first; the Rust implementation follows until the outputs are identical.
-- **Decisions are logged, never rewritten** ([decisions.md](../decisions.md)).
+- **Decisions are logged, never rewritten** ([decisions.md](../decisions/README.md)).
 - **No time estimates** (D25). Measurements of the software are welcome.
 - **Commits are small and scoped**, so parallel agents rarely conflict.
 

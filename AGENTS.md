@@ -20,8 +20,8 @@ below). The design documents remain the source of intent, and an agent plugin sk
 ## Read first
 
 1. [README.md](./README.md): the document map.
-2. [docs/decisions.md](./docs/decisions.md): every decision made so far, plus open questions.
-   **This is the source of truth for what's decided.**
+2. [docs/decisions/](./docs/decisions/README.md): one file per decision. Open questions are
+   [docs/questions.md](./docs/questions.md). **This is the source of truth for what's decided.**
 3. [docs/plan.md](./docs/plan.md): architecture and roadmap. §4.7 indexes the detailed designs.
 4. [docs/glossary.md](./docs/glossary.md): shared vocabulary.
 5. [docs/research-log.md](./docs/research-log.md): how research was done, blocked hosts, and what was
@@ -35,7 +35,7 @@ MCP, CLI, data model, properties) and test against
 **Building:** `cargo build` (toolchain pinned in `rust-toolchain.toml`), `cargo test`, `cargo clippy
 --all-targets -- -D warnings`, then `target/debug/toolbox validate examples/reference-portal`.
 `python scripts/validate-parity.py` checks `toolbox validate` against `tools/validate.py`.
-`yamark format --check` (yamark 0.6.1, D97) checks every tracked `.yaml` and `.yml` except `.github/workflows/release.yml`, which `dist plan` owns (D98).
+`yamark format --check` (yamark 0.6.1, D97) checks every tracked `.yaml` and `.yml` except `.github/workflows/release.yml`, which `dist plan` owns (D98). `python3 scripts/decision-id.py --self-test` checks the ULID encoding for decision ids (D01M7XKEXQH4HG5371629M50E2G).
 `.github/workflows/ci.yml` runs all of this. **M0–M4 are done.** Commands: `validate`, `test`,
 `plan --local --base <manifest>`, `derive`, `serve [--database-url]`, `push`, `token create`, the reads
 (`get`, `query`, `search`, `graph`, `owner`, `explain`, `score`, `scorecard`, `refresh`, `actions`), `mcp` (stdio
@@ -48,7 +48,8 @@ acceptance scripts `scripts/m2…m4-acceptance.sh` need Postgres 16; M3 and M4 a
 
 ```
 docs/plan.md                 architecture + roadmap (no time estimates; phases end in exit criteria)
-docs/decisions.md            decision log + consolidated open questions
+docs/decisions/             one file per decision; the filename is a ULID (D01M7XKEXQH4HG5371629M50E2G)
+docs/questions.md            open questions (Q numbers)
 docs/research.md             landscape and validation
 docs/authorization.md        ReBAC / OpenFGA design
 docs/ocean.md                Port Ocean review
@@ -86,8 +87,9 @@ The full loop, check pyramid and measured timings are in
   and rerun `--update` ([portal/README.md](./portal/README.md#layout), D95). When scores change,
   also regenerate the site's copy (`toolbox report portal --skip runner,github-actions -o web --out
   site/public/report`, D92); CI checks both. New T4T standards go in `portal/standards/<topic>.yaml`.
-- **When you change a decision:** add an entry to `docs/decisions.md` (never rewrite past entries),
-  update the owning design doc, and update `plan.md` §4.7/§8/§10 if affected.
+- **When you change a decision:** mint an id with `python3 scripts/decision-id.py` and add
+  `docs/decisions/<id>.md`. Do not edit a decision file that is already there. Update the owning
+  design doc, and update `plan.md` §4.7/§8/§10 if affected.
 - **Sources:**
   - Prefer primary sources. Many vendor docs sites are blocked in cloud sessions; read their GitHub
     repos instead (see [docs/research-log.md](./docs/research-log.md)).
@@ -122,7 +124,7 @@ Every design choice must serve these. Check new work against them.
 
 ## Parallel work: independent tracks
 
-These Phase 0 spikes and v1 milestones ([docs/v1-spec.md](./docs/v1-spec.md) §3) can be taken by separate agents with few interactions. Coordinate through `docs/decisions.md`. Design
+These Phase 0 spikes and v1 milestones ([docs/v1-spec.md](./docs/v1-spec.md) §3) can be taken by separate agents with few interactions. Coordinate through `docs/decisions/`. Design
 docs put their current v1 design first and keep deferred material in a labelled appendix; where a status banner remains, it wins.
 
 | Track | Scope | Primary docs |

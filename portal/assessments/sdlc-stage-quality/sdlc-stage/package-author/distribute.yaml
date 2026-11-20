@@ -9,7 +9,7 @@ verdicts:
     verdict: fail
     reason: >-
       Nothing exists to run; the registry is undecided (Q15 in
-      docs/decisions.md).
+      docs/questions.md).
     suggestion: Decide Q15, then make `toolbox package publish --dry-run` the check.
   - criterion: agent-can-complete
     verdict: fail

@@ -218,5 +218,5 @@ Read on 2026-11-20 through web search summaries; secondary sources are marked.
 - zizmor installation https://docs.zizmor.sh/installation/ ; actionlint installation https://github.com/rhysd/actionlint/blob/main/docs/install.md
 - This repo: [packages.md](./packages.md), [connector-control.md](./connector-control.md),
   [sdlc.md](../sdlc.md), [maintainer-sdlc.md](./maintainer-sdlc.md),
-  [toolbox-for-toolbox.md](./toolbox-for-toolbox.md), [decisions.md](../decisions.md) D40, D45, D63,
+  [toolbox-for-toolbox.md](./toolbox-for-toolbox.md), [decisions.md](../decisions/README.md) D40, D45, D63,
   D70, D87, Q12, Q15.

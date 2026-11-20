@@ -403,4 +403,4 @@ gh-aw's dependency page were read only through search excerpts.
   OSPS Baseline: https://baseline.openssf.org/versions/2026-08-28
 - This repo: [federation.md](./federation.md), [typescript-builder.md](./typescript-builder.md),
   [repo-portals.md](./repo-portals.md), [agent-plugins.md](./agent-plugins.md),
-  [scorecards-for-scorecards.md](./scorecards-for-scorecards.md), [decisions.md](../decisions.md) D53–D54, D68–D69, D79, Q1, Q15.
+  [scorecards-for-scorecards.md](./scorecards-for-scorecards.md), [decisions.md](../decisions/README.md) D53–D54, D68–D69, D79, Q1, Q15.

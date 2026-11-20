@@ -24,7 +24,7 @@ pub(crate) fn analyse(root: &Path, rel: &str, workflows: &str) -> Value {
         "lines": text.lines().count() as i64,
         "commandLines": command_lines(&text),
         "pointsAtAgents": text.contains("AGENTS.md"),
-        "mentionsDecisions": text.contains("decisions.md"),
+        "mentionsDecisions": text.contains("docs/decisions"),
         "ciMissingCommands": ci_missing(&text, workflows),
         "missingFiles": missing_links(root, rel, &text),
         "hiddenChars": hidden_count(&text),

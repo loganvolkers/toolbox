@@ -147,24 +147,66 @@ fn workflow_text(root: &Path, paths: &[String], globs: &[Regex]) -> String {
         .join("\n")
 }
 
-/// Decision ids that are rows of `docs/decisions.md` (`| D78 |`).
-fn known_decisions(root: &Path) -> BTreeSet<String> {
-    let text = std::fs::read_to_string(root.join("docs/decisions.md")).unwrap_or_default();
-    let re = Regex::new(r"(?m)^\|\s*(D\d+)\s*\|").unwrap();
-    re.captures_iter(&text)
-        .filter_map(|c| c.get(1).map(|m| m.as_str().to_owned()))
+/// `D84` stays `D84`. A ULID citation is canonicalised to uppercase.
+fn canon_decision(id: &str) -> String {
+    let rest = id.get(1..).unwrap_or("");
+    if rest.chars().all(|c| c.is_ascii_digit()) {
+        format!("D{rest}")
+    } else {
+        format!("D{}", rest.to_ascii_uppercase())
+    }
+}
+
+/// `id` and `legacy` from a decision file's frontmatter.
+fn decision_file_ids(text: &str) -> Vec<String> {
+    let Some(rest) = text.strip_prefix("---\n") else {
+        return Vec::new();
+    };
+    let Some(end) = rest.find("\n---") else {
+        return Vec::new();
+    };
+    rest[..end]
+        .lines()
+        .filter_map(|line| {
+            let (key, value) = line.split_once(':')?;
+            let key = key.trim();
+            if key != "id" && key != "legacy" {
+                return None;
+            }
+            let value = value.trim().trim_matches('"');
+            (!value.is_empty()).then(|| canon_decision(value))
+        })
         .collect()
 }
 
-/// `Dnn` citations that are not rows of the decision log. The log itself is the index.
+/// Decision ids declared by `docs/decisions/*.md` (`id`, and `legacy` for a backfilled row).
+fn known_decisions(root: &Path) -> BTreeSet<String> {
+    let mut ids = BTreeSet::new();
+    let Ok(dir) = std::fs::read_dir(root.join("docs/decisions")) else {
+        return ids;
+    };
+    for entry in dir.flatten() {
+        let path = entry.path();
+        if path.extension().and_then(|e| e.to_str()) != Some("md") {
+            continue;
+        }
+        if let Ok(text) = std::fs::read_to_string(&path) {
+            ids.extend(decision_file_ids(&text));
+        }
+    }
+    ids
+}
+
+/// Citations that are not a decision file. The log directory is the index, so it is not checked.
+/// A citation is a legacy `D` plus one to four digits, or `D` plus a 26-character ULID.
 fn missing_decisions(text: &str, known: &BTreeSet<String>, rel: &str) -> Vec<String> {
-    if rel == "docs/decisions.md" {
+    if rel == "docs/decisions.md" || rel.starts_with("docs/decisions/") {
         return Vec::new();
     }
-    let re = Regex::new(r"\b(D\d+)\b").unwrap();
+    let re = Regex::new(r"(?i)\b(D\d{1,4}|D[0-9A-HJKMNP-TV-Z]{26})\b").unwrap();
     let mut missing: Vec<String> = re
         .captures_iter(text)
-        .filter_map(|c| c.get(1).map(|m| m.as_str().to_owned()))
+        .filter_map(|c| c.get(1).map(|m| canon_decision(m.as_str())))
         .filter(|id| !known.contains(id))
         .collect();
     missing.sort();
@@ -988,5 +1030,50 @@ async fn main() {
             eprintln!("toolbox-connector-workspace: {e}");
             std::process::exit(2);
         }
+    }
+}
+
+#[cfg(test)]
+mod decision_ids {
+    use super::{decision_file_ids, known_decisions, missing_decisions};
+
+    #[test]
+    fn a_file_declares_its_id_and_its_legacy_number() {
+        let text = "---\nid: D01ARYZ6S410000000000000000\nlegacy: D84\ndecided: 2026-11-20T14:12:04Z\n---\n\n# D84\n";
+        assert_eq!(
+            decision_file_ids(text),
+            vec!["D01ARYZ6S410000000000000000".to_string(), "D84".to_string()]
+        );
+    }
+
+    #[test]
+    fn a_legacy_citation_and_a_ulid_citation_both_resolve() {
+        let root = std::env::temp_dir().join(format!("toolbox-decisions-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        let dir = root.join("docs/decisions");
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(
+            dir.join("D01ARYZ6S410000000000000000.md"),
+            "---\nid: D01ARYZ6S410000000000000000\nlegacy: D84\n---\n",
+        )
+        .unwrap();
+        std::fs::write(dir.join("README.md"), "# Decisions\n").unwrap();
+        let known = known_decisions(&root);
+        assert!(known.contains("D84"));
+        assert!(known.contains("D01ARYZ6S410000000000000000"));
+        assert!(
+            missing_decisions(
+                "see D84 and d01aryz6s410000000000000000",
+                &known,
+                "docs/plan.md"
+            )
+            .is_empty()
+        );
+        assert_eq!(
+            missing_decisions("cites D999", &known, "docs/plan.md"),
+            vec!["D999".to_string()]
+        );
+        assert!(missing_decisions("cites D999", &known, "docs/decisions/README.md").is_empty());
+        let _ = std::fs::remove_dir_all(&root);
     }
 }

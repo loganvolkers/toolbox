@@ -188,4 +188,4 @@ and only regressions fail.
 - Toolbox: [ratchets.md](./ratchets.md), [repo-portals.md](./repo-portals.md),
   [toolbox-for-toolbox.md](./toolbox-for-toolbox.md), [meta-catalog.md](./meta-catalog.md),
   [source-of-truth.md](./source-of-truth.md), [adversarial-critique.md](../adversarial-critique.md),
-  [decisions.md](../decisions.md) D17, D53, D54.
+  [decisions.md](../decisions/README.md) D17, D53, D54.
