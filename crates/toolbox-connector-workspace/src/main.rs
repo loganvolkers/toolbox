@@ -17,7 +17,10 @@
 //!   checks and the counts `maintainer-skill` thresholds (docs/design/skill-standards.md);
 //! - `connector` (`connectors` globs, usually `crates/toolbox-connector-*/Cargo.toml`): one per
 //!   first-party connector crate, with the protocol facts `maintainer-connector` thresholds
-//!   (docs/design/connector-standards.md).
+//!   (docs/design/connector-standards.md);
+//! - `dependency` (`"dependencies": true`): one per direct external Cargo dependency, with the
+//!   requirement, the `Cargo.lock` versions and whether `[workspace.dependencies]` declares it
+//!   (docs/design/dependency-standards.md).
 //!
 //! `docs` and `file` records also carry `captures` (each configured regex's first group, unique,
 //! sorted, with runs of whitespace replaced by `-`) and `counts` (matches per configured regex),
@@ -26,10 +29,11 @@
 //!
 //! `TOOLBOX_CONNECTOR_CONFIG`: `{"root"?: ".", "docs"?: [glob], "files"?: [glob],
 //! "captures"?: {name: regex}, "counts"?: {name: regex}, "crates"?: true, "repo"?: false,
-//! "betterer"?: [glob], "skills"?: [glob], "connectors"?: [glob]}`.
+//! "betterer"?: [glob], "skills"?: [glob], "connectors"?: [glob], "dependencies"?: false}`.
 
 mod betterer;
 mod connectors;
+mod deps;
 mod repo;
 mod rust;
 mod skills;
@@ -53,6 +57,8 @@ struct Workspace {
     skills: Vec<Regex>,
     /// Connector crate manifests (`connector` records), usually `crates/toolbox-connector-*/Cargo.toml`.
     connectors: Vec<Regex>,
+    /// Emit one `dependency` record per direct external Cargo dependency.
+    dependencies: bool,
     captures: Vec<(String, Regex)>,
     counts: Vec<(String, Regex)>,
     crates: bool,
@@ -106,6 +112,7 @@ impl Workspace {
             workflows: globs(&cfg, "workflows")?,
             skills: globs(&cfg, "skills")?,
             connectors: globs(&cfg, "connectors")?,
+            dependencies: cfg["dependencies"].as_bool().unwrap_or(false),
             captures: named_regexes(&cfg, "captures")?,
             counts: named_regexes(&cfg, "counts")?,
             crates: cfg["crates"].as_bool().unwrap_or(true),
@@ -333,6 +340,7 @@ impl Workspace {
                     "action-ref",
                     "skill",
                     "connector",
+                    "dependency",
                 ]
             });
         if self.crates && kinds.contains(&"crate") {
@@ -346,6 +354,7 @@ impl Workspace {
         self.emit_betterer(&paths, &kinds, out);
         self.emit_skills(&paths, &kinds, out);
         self.emit_connectors(&paths, &kinds, out);
+        self.emit_dependencies(&kinds, out);
         Ok(())
     }
 
@@ -416,6 +425,20 @@ impl Workspace {
             out.record("connector", &format!("connector:{dir}"), rec);
         }
         out.snapshot_complete("connector");
+    }
+
+    fn emit_dependencies(&self, kinds: &[&str], out: &mut Out) {
+        if !self.dependencies || !kinds.contains(&"dependency") {
+            return;
+        }
+        if let Ok(meta) = self.cargo_metadata() {
+            for rec in deps::records(&self.root, &meta) {
+                let name = rec["name"].as_str().unwrap_or_default();
+                let eco = rec["ecosystem"].as_str().unwrap_or("cargo");
+                out.record("dependency", &format!("dependency:{eco}:{name}"), rec);
+            }
+        }
+        out.snapshot_complete("dependency");
     }
 
     fn emit_skills(&self, paths: &[String], kinds: &[&str], out: &mut Out) {
@@ -511,6 +534,7 @@ impl Workspace {
             "action-ref" => self.refresh_named_action(id, out),
             "skill" => self.refresh_skill(id, out),
             "connector" => self.refresh_connector(id, out),
+            "dependency" => self.refresh_dependency(id, out),
             _ => out.not_found(kind, id),
         }
     }
@@ -548,6 +572,19 @@ impl Workspace {
     fn refresh_named_action(&self, id: &str, out: &mut Out) {
         let name = id.strip_prefix("action-ref:").unwrap_or("");
         self.refresh_action_ref(name, id, out);
+    }
+
+    fn refresh_dependency(&self, id: &str, out: &mut Out) {
+        let name = id.rsplit(':').next().unwrap_or("");
+        let found = self.cargo_metadata().ok().and_then(|meta| {
+            deps::records(&self.root, &meta)
+                .into_iter()
+                .find(|r| r["name"].as_str() == Some(name))
+        });
+        match found {
+            Some(rec) => out.record("dependency", id, rec),
+            None => out.not_found("dependency", id),
+        }
     }
 
     fn refresh_connector(&self, id: &str, out: &mut Out) {
@@ -588,6 +625,7 @@ impl Source for Workspace {
             ("action-ref", !self.workflows.is_empty()),
             ("skill", !self.skills.is_empty()),
             ("connector", !self.connectors.is_empty()),
+            ("dependency", self.dependencies),
         ];
         let kinds: Vec<&str> = on.iter().filter(|(_, b)| *b).map(|(k, _)| *k).collect();
         let refresh: Map<String, Value> = kinds

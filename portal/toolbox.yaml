@@ -46,9 +46,11 @@ connectors:
       skills: ["plugins/**/SKILL.md", "skills/**/SKILL.md"]
       # First-party connectors (docs/design/connector-standards.md). One record per crate manifest.
       connectors: ["crates/toolbox-connector-*/Cargo.toml"]
-    records: [crate, doc, file, workflow, action-ref, skill, connector]
-    refresh: {crate: [external_ids], doc: [external_ids], file: [external_ids], skill: [external_ids], connector: [external_ids]}
-    freshness: {crate: 5m, doc: 5m, file: 5m, skill: 5m, connector: 5m}
+      # Direct Cargo dependencies (docs/design/dependency-standards.md).
+      dependencies: true
+    records: [crate, doc, file, workflow, action-ref, skill, connector, dependency]
+    refresh: {crate: [external_ids], doc: [external_ids], file: [external_ids], skill: [external_ids], connector: [external_ids], dependency: [external_ids]}
+    freshness: {crate: 5m, doc: 5m, file: 5m, skill: 5m, connector: 5m, dependency: 5m}
   - name: runner
     package: builtin:runner                # executes things; slow, so it's refreshed per entity
     runtime: in-image
@@ -316,6 +318,29 @@ kinds:
            'tests': record.tests, 'conformanceMentions': record.conformanceMentions,
            'ciMentions': record.ciMentions, 'secretHits': record.secretHits,
            'lastChange': record.lastChange}
+
+  # Direct Cargo dependencies (docs/design/dependency-standards.md).
+  - name: Dependency
+    identityFrom: [connector:workspace]
+    fields:
+      name: {type: string}
+      ecosystem: {type: string}
+      requirements: {type: list, items: string}
+      usedBy: {type: list, items: string}
+      versions: {type: list, items: string}
+      sources: {type: list, items: string}
+      git: {type: boolean}
+      wildcard: {type: boolean}
+      inherited: {type: boolean}
+    sources: {default: [connector:workspace]}
+    map:
+      - from: workspace/dependency
+        id: "'dependency:' + record.ecosystem + ':' + record.name"
+        set: >-
+          {'name': record.name, 'ecosystem': record.ecosystem,
+           'requirements': record.requirements, 'usedBy': record.usedBy,
+           'versions': record.versions, 'sources': record.sources,
+           'git': record.git, 'wildcard': record.wildcard, 'inherited': record.inherited}
 
   # ── Layers 2 and 3: what operators and users rely on ─────────────────────────────────────
   - name: Command
@@ -905,6 +930,44 @@ scorecards:
         fix: "Remove the hardcoded credentials in the evidence. Read tokens from the environment or from TOOLBOX_CONNECTOR_CONFIG."
     facets: {summary: public, details: public}
 
+  # ── Direct library dependencies (docs/design/dependency-standards.md) ────────────────────
+  # Bronze is "the requirement is bounded and the source is a registry". Silver is "Cargo.lock
+  # resolves it to one version". Gold is "a dependency used by more than one crate is declared
+  # once, in [workspace.dependencies]". Advisories and licence allow-lists need a database and
+  # a policy; they are not gated.
+  - name: maintainer-dependency
+    kind: Dependency
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    ratchet: {newEntitiesAtLeast: bronze}
+    rules:
+      - name: version-bounded
+        level: bronze
+        check: "!entity.wildcard && entity.requirements.size() > 0"
+        evidence: "entity.requirements"
+        fix: "Replace the requirement in the evidence with a caret, tilde or exact version. An empty requirement, *, or a bare >= has no ceiling."
+      - name: from-a-registry
+        level: bronze
+        check: "!entity.git"
+        evidence: "entity.sources"
+        fix: "Depend on a crates.io release. A git dependency is not reproducible from the registry and is not reviewed here."
+      - name: locked
+        level: silver
+        check: "entity.versions.size() > 0"
+        evidence: "['not in Cargo.lock']"
+        fix: "Run cargo generate-lockfile so Cargo.lock records this dependency. The lockfile is what makes the build reproducible."
+      - name: one-version
+        level: silver
+        check: "entity.versions.size() == 1"
+        evidence: "entity.versions"
+        fix: "The lockfile resolves this crate to more than one version. Move the direct requirement onto the newer release, or drop the dependency that pulls the other one in."
+      - name: shared-is-inherited
+        level: gold
+        check: "entity.usedBy.size() <= 1 || entity.inherited"
+        evidence: "entity.usedBy"
+        fix: "Declare this dependency once in [workspace.dependencies] and inherit it. It is used by more than one crate, so two requirements can drift."
+    facets: {summary: public, details: public}
+
   # ── Scorecards for scorecards (docs/design/scorecards-for-scorecards.md) ─────────────────
   # They score every rule and scorecard of this portal, the starter and the reference portal —
   # themselves included, so there is no further level. Only deterministic facts (manifest, CEL,
@@ -988,12 +1051,12 @@ scorecards:
 mcp:
   instructions: >-
     Toolbox for Toolbox: the catalogue of Toolbox's own crates, docs, scripts, CLI commands and MCP
-    tools, agent skills and first-party connectors, scored against the maintainer, operator and user SDLC standards. To raise the bar, pick
+    tools, agent skills, first-party connectors and direct Cargo dependencies, scored against the maintainer, operator and user SDLC standards. To raise the bar, pick
     a failing rule with scorecard_status, read the evidence with explain (rule) or get: Crate
     undocumented, longFunctions, complexFunctions, clippy.messages, tests.output; Doc brokenLinks,
     counts; Command undocumentedArgs, documentedIn, exercisedBy; McpTool undescribedProperties,
     documentedIn, exercisedBy, viaCli; Skill frontmatterErrors, triggerCues, pronouns, missingFiles,
-    secretHits, boundaryCues, evalCases; Connector documentedKinds, transport, tests, conformanceMentions, secretHits. Change the code, refresh_entity, and check the score again.
+    secretHits, boundaryCues, evalCases; Connector documentedKinds, transport, tests, conformanceMentions, secretHits; Dependency requirements, versions, sources, usedBy. Change the code, refresh_entity, and check the score again.
     Contract tests count when a test or script contains a tools/call body naming the tool.
 
 tests: [tests/standards.test.yaml]

@@ -236,6 +236,80 @@
         "level": "none"
       }
     },
+    "maintainer-dependency": {
+      "dependency:cargo:async-trait": {
+        "level": "gold"
+      },
+      "dependency:cargo:axum": {
+        "level": "gold"
+      },
+      "dependency:cargo:cel": {
+        "level": "gold"
+      },
+      "dependency:cargo:clap": {
+        "level": "gold"
+      },
+      "dependency:cargo:jsonschema": {
+        "level": "gold"
+      },
+      "dependency:cargo:jsonwebtoken": {
+        "level": "gold"
+      },
+      "dependency:cargo:proc-macro2": {
+        "level": "gold"
+      },
+      "dependency:cargo:rayon": {
+        "level": "gold"
+      },
+      "dependency:cargo:regex": {
+        "failing": {
+          "shared-is-inherited": 4
+        },
+        "level": "silver"
+      },
+      "dependency:cargo:reqwest": {
+        "level": "gold"
+      },
+      "dependency:cargo:serde": {
+        "level": "gold"
+      },
+      "dependency:cargo:serde_json": {
+        "level": "gold"
+      },
+      "dependency:cargo:serde_norway": {
+        "level": "gold"
+      },
+      "dependency:cargo:sha2": {
+        "failing": {
+          "one-version": 2
+        },
+        "level": "bronze"
+      },
+      "dependency:cargo:sqlx": {
+        "level": "gold"
+      },
+      "dependency:cargo:syn": {
+        "failing": {
+          "one-version": 2
+        },
+        "level": "bronze"
+      },
+      "dependency:cargo:thiserror": {
+        "level": "gold"
+      },
+      "dependency:cargo:tokio": {
+        "level": "gold"
+      },
+      "dependency:cargo:tower": {
+        "level": "gold"
+      },
+      "dependency:cargo:walkdir": {
+        "failing": {
+          "shared-is-inherited": 2
+        },
+        "level": "silver"
+      }
+    },
     "maintainer-docs": {
       "doc:AGENTS.md": {
         "level": "silver"
@@ -277,6 +351,9 @@
         "level": "silver"
       },
       "doc:docs/design/dashboards.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/dependency-standards.md": {
         "level": "silver"
       },
       "doc:docs/design/developer-velocity.md": {
@@ -679,6 +756,21 @@
       "rule:toolbox/maintainer-crate/tests-pass": {
         "level": "gold"
       },
+      "rule:toolbox/maintainer-dependency/from-a-registry": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-dependency/locked": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-dependency/one-version": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-dependency/shared-is-inherited": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-dependency/version-bounded": {
+        "level": "gold"
+      },
       "rule:toolbox/maintainer-docs/cites-sources": {
         "failing": {
           "always-explains": 1,
@@ -919,6 +1011,9 @@
           "every-rule-tested": 6
         },
         "level": "silver"
+      },
+      "scorecard:toolbox/maintainer-dependency": {
+        "level": "gold"
       },
       "scorecard:toolbox/maintainer-docs": {
         "failing": {

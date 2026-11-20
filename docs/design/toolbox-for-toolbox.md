@@ -2,7 +2,8 @@
 
 *Status: experiment built 2026-11-20 (D65). Agent skills are catalogued and scored (D72,
 [skill-standards.md](./skill-standards.md)). First-party connectors are too (D73,
-[connector-standards.md](./connector-standards.md)). The portal is [`portal/`](../../portal/README.md); run
+[connector-standards.md](./connector-standards.md)). Direct Cargo dependencies are too (D74,
+[dependency-standards.md](./dependency-standards.md)). The portal is [`portal/`](../../portal/README.md); run
 it with `scripts/self-portal.sh`. It applies Toolbox to the [three SDLC layers](../sdlc.md) of
 Toolbox itself. Related: [meta-catalog.md](./meta-catalog.md) (a portal cataloguing its own
 configuration), [maintainer-sdlc.md](./maintainer-sdlc.md), [user-sdlc.md](./user-sdlc.md).*
@@ -33,7 +34,7 @@ What the experiment showed:
 
 | Layer | What is catalogued | Scorecards here |
 |---|---|---|
-| 1. Maintainer | Crates, docs, scripts and tests of this repository, the agent skills it ships, and its first-party connectors | `maintainer-crate`, `maintainer-docs`, `maintainer-skill`, `maintainer-connector` |
+| 1. Maintainer | Crates, docs, scripts and tests of this repository, the agent skills it ships, its first-party connectors, and the libraries it builds against | `maintainer-crate`, `maintainer-docs`, `maintainer-skill`, `maintainer-connector`, `maintainer-dependency` |
 | 2. Operator | The commands and docs operators use to build portals (and, through the [meta catalog](./meta-catalog.md), a portal's own configuration) | `operator-cli` |
 | 3. User | The contracts apps and agents rely on: MCP tools and read commands | `user-mcp`, `user-cli` |
 
@@ -65,7 +66,7 @@ scripts/self-portal.sh serve|report|snapshot
 
 | Piece | What it does | Generic? |
 |---|---|---|
-| [`toolbox-connector-workspace`](../../crates/toolbox-connector-workspace) | `crate` records: `cargo metadata` plus a `syn` parse of each crate. Reports every function (lines, cyclomatic complexity), every undocumented public item, unit and integration test counts, unwraps outside tests, and in-workspace dependencies. `doc` records: title, status banner, sources section, broken relative links, inline code spans. `file` records: lines. `skill` records: one per `SKILL.md` (D72, [skill-standards.md](./skill-standards.md)). `connector` records: one per `toolbox-connector-*` crate (D73, [connector-standards.md](./connector-standards.md)). Docs and files also get **configurable regex `captures` and `counts`** | Any Rust workspace, markdown docs, Agent Skills directories, and connector crates |
+| [`toolbox-connector-workspace`](../../crates/toolbox-connector-workspace) | `crate` records: `cargo metadata` plus a `syn` parse of each crate. Reports every function (lines, cyclomatic complexity), every undocumented public item, unit and integration test counts, unwraps outside tests, and in-workspace dependencies. `doc` records: title, status banner, sources section, broken relative links, inline code spans. `file` records: lines. `skill` records: one per `SKILL.md` (D72, [skill-standards.md](./skill-standards.md)). `connector` records: one per `toolbox-connector-*` crate (D73, [connector-standards.md](./connector-standards.md)). `dependency` records: one per direct Cargo dependency (D74, [dependency-standards.md](./dependency-standards.md)). Docs and files also get **configurable regex `captures` and `counts`** | Any Rust workspace, markdown docs, Agent Skills directories, and connector crates |
 | [`toolbox-connector-runner`](../../crates/toolbox-connector-runner) | Runs configured jobs, per crate or once, and parses `cargo test`, clippy JSON, or passes through NDJSON records from any command. Supports refresh by external id | Any local command |
 | `toolbox describe` | Prints Toolbox's CLI commands (from clap) and built-in MCP tools as connector records: help, undocumented arguments, structured output, the MCP tool each read command calls | Toolbox-specific, and doubles as a contract snapshot for the user SDLC |
 | [`portal/toolbox.yaml`](../../portal/toolbox.yaml) | Kinds `Crate`, `Doc`, `File`, `Command`, `McpTool`. Relations from docs and files to commands, tools and crates come from captures. Five scorecards; one policy (append-only docs exempt from wording rules) | — |
@@ -95,6 +96,7 @@ scripts/self-portal.sh serve|report|snapshot
 | `user-mcp` | Described; annotated | Inputs described; documented | Contract-tested over MCP (not just via the CLI) |
 | `maintainer-skill` | Spec-valid frontmatter; description says when, in third person | At least three numbered steps; a fenced example; links resolve; body within 500 lines / ~5000 tokens; no Windows paths | States a limit or error path; at least three eval cases; no hidden text or hardcoded secrets; one reference hop and at most three supporting files |
 | `maintainer-connector` | Description and crate docs; config documented; `run_stdio` or `run_remote` | Named kinds; `snapshot_complete` and `not_found` (push-only exempt); at least one unit test | CI runs `connector test` (or an acceptance script for a push connector); no hardcoded secret shapes |
+| `maintainer-dependency` | A bounded version requirement from a registry, not git | Present in `Cargo.lock` as exactly one version | A dependency used by more than one crate is declared in `[workspace.dependencies]` |
 
 The rules are deliberately simple. Their value is in the evidence fields an agent can act on, such as
 `undocumented`, `longFunctions`, `complexFunctions`, `clippy.messages`, `tests.output`,
