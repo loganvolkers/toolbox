@@ -104,6 +104,7 @@ scripts/self-portal.sh serve|report|snapshot
 | `maintainer-docs` (skips append-only logs) | Relative links resolve; every "SDLC" names its layer | Design docs: status banner, sources section | — |
 | `operator-cli` | Has help; documented | All arguments described; run by a script or test | — |
 | `user-cli` | Has help; `-o json` | All arguments described; exercised | — |
+| `cli-skill` | A `SKILL.md` mentions the command's invocation | — | — |
 | `user-mcp` | Described; annotated | Inputs described; documented | Contract-tested over MCP (not just via the CLI) |
 | `maintainer-skill` | Spec-valid frontmatter; description says when, in third person | At least three numbered steps; a fenced example; links resolve; body within 500 lines / ~5000 tokens; no Windows paths | States a limit or error path; at least three eval cases; no hidden text or hardcoded secrets; one reference hop and at most three supporting files |
 | `maintainer-connector` | Description and crate docs; config documented; `run_stdio` or `run_remote` | Named kinds; `snapshot_complete` and `not_found` (push-only exempt); at least one unit test | CI runs `connector test` (or an acceptance script for a push connector); no hardcoded secret shapes |

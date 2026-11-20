@@ -32,6 +32,8 @@ assert:
     expect: "'docs/v1-spec.md' in entity('command:validate').documentedIn && score('operator-cli', 'command:validate').level == 'bronze'"
   - name: an undocumented, unexercised command fails bronze
     expect: "score('operator-cli', 'command:push').level == 'none'"
+  - name: a command whose skill names the invocation reaches bronze
+    expect: "score('cli-skill', 'command:validate').rules['has-skill'] == 'pass' && score('cli-skill', 'command:validate').level == 'bronze' && score('cli-skill', 'command:push').rules['has-skill'] == 'fail' && score('cli-skill', 'command:push').evidence['has-skill'] == ['missing skill for toolbox push'] && score('cli-skill', 'command:push').level == 'none'"
   # Layer 3: user interfaces
   - name: the acceptance script exercises the owner command
     expect: "entity('command:owner').exercisedBy == ['scripts/m4-acceptance.sh']"

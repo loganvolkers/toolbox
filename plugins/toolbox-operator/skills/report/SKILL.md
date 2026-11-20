@@ -1,0 +1,17 @@
+---
+name: report
+description: >-
+  Scores a repository with its portal and prints every scorecard, including evidence for failing rules. Use when checking a repo portal, ratcheting against a committed baseline, or refreshing the published HTML report.
+---
+
+# toolbox report
+
+1. Skip connectors that need a network or a long run when the baseline was built that way.
+2. Compare with --baseline. A new failure or larger evidence is a regression and the exit code is 1.
+3. Write the baseline with --update only after reading the diff. --ci fails when the file is stale.
+
+```
+toolbox report portal --skip runner,github-actions --baseline portal/results.json
+```
+
+Do not pass --update to hide a regression that has not been reviewed. If it fails, read the evidence first.
