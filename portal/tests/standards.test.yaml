@@ -1,0 +1,41 @@
+# Hand-written expectations for the Toolbox-for-Toolbox standards, over the curated fixtures in
+# ../fixtures (a trimmed snapshot of this repo plus hand-made runner results). They pin what each
+# rule means; the live portal applies the same rules to the whole repository.
+name: standards
+assert:
+  # Layer 1: crates
+  - name: a crate with passing tests and clippy, 80%+ documented, no huge functions reaches silver
+    expect: "score('maintainer-crate', 'crate:toolbox-expr').level == 'silver' && score('maintainer-crate', 'crate:toolbox-expr').rules['fully-documented'] == 'fail'"
+  - name: a failing test run caps a crate below bronze
+    expect: "score('maintainer-crate', 'crate:toolbox-derive').rules['tests-pass'] == 'fail' && score('maintainer-crate', 'crate:toolbox-derive').level == 'none'"
+  - name: clippy warnings and missing tests both fail bronze
+    expect: "score('maintainer-crate', 'crate:toolbox-connector-git-files').rules['clippy-clean'] == 'fail' && score('maintainer-crate', 'crate:toolbox-connector-git-files').rules['has-tests'] == 'fail'"
+  - name: placeholder crates are skipped
+    expect: "score('maintainer-crate', 'crate:toolbox-durable').level == 'skipped'"
+  - name: runner results land on the crate entity
+    expect: "entity('crate:toolbox-derive').tests.failed == 1 && entity('crate:toolbox-connector-git-files').clippy.warnings == 1"
+  - name: evidence names the functions to split
+    expect: "entity('crate:toolbox-derive').longFunctions.exists(f, f.startsWith('Pipeline::run at src/lib.rs'))"
+  - name: workspace dependencies become inbound relations
+    expect: "'crates/toolbox-derive' in entity('crate:toolbox-expr').dependents"
+  # Layer 1: docs
+  - name: a design doc without a Sources section stops at bronze
+    expect: "score('maintainer-docs', 'doc:docs/design/dashboards.md').level == 'bronze' && score('maintainer-docs', 'doc:docs/design/dashboards.md').rules['cites-sources'] == 'fail'"
+  - name: broken links and a bare SDLC fail bronze
+    expect: "score('maintainer-docs', 'doc:docs/v1-spec.md').rules['links-resolve'] == 'fail' && score('maintainer-docs', 'doc:docs/v1-spec.md').rules['names-sdlc-layer'] == 'fail'"
+  - name: append-only logs are exempt from wording rules
+    expect: "score('maintainer-docs', 'doc:docs/decisions.md').level == 'skipped'"
+  # Layer 2: operator commands
+  - name: commands split into operator and user layers
+    expect: "entity('command:validate').layer == 'operator' && entity('command:owner').layer == 'user' && entity('command:mcp').layer == 'user'"
+  - name: a documented command that no script runs stops at bronze
+    expect: "'docs/v1-spec.md' in entity('command:validate').documentedIn && score('operator-cli', 'command:validate').level == 'bronze'"
+  - name: an undocumented, unexercised command fails bronze
+    expect: "score('operator-cli', 'command:push').level == 'none'"
+  # Layer 3: user interfaces
+  - name: the acceptance script exercises the owner command
+    expect: "entity('command:owner').exercisedBy == ['scripts/m4-acceptance.sh']"
+  - name: an MCP tool reached only through the CLI is not contract-tested
+    expect: "entity('mcp-tool:owner_of').viaCli == ['owner'] && score('user-mcp', 'mcp-tool:owner_of').rules['contract-tested'] == 'fail'"
+  - name: undescribed MCP inputs fail silver
+    expect: "score('user-mcp', 'mcp-tool:search').level == 'bronze' && score('user-mcp', 'mcp-tool:search').rules['inputs-described'] == 'fail'"

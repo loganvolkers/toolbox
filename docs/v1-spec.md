@@ -65,7 +65,7 @@ earlier ones. Tracks in [AGENTS.md](../AGENTS.md) map onto these. Every mileston
 | **M2** ✅ | Postgres and API | `PgStore` (§8), ingest endpoint, snapshot loop, REST reads (§7.2), snapshot ids | Same outputs as M1 when fixtures arrive through `POST /v1/ingest`; `min_snapshot` read-your-writes works; restart loses nothing |
 | **M3** ✅ | Authorization | Authn (IAP JWT, OIDC, PAT), OpenFGA co-process over the tuple view, facet shaping, `toolbox test` runs `.fga.yaml` | Reference `authz/model.fga.yaml` passes through `Authorizer`; A3/A4/A10 behave as specified; a membership removal is enforced within 60 s |
 | **M4** ✅ | Agents and connectors | MCP (§7.3), CLI (§7.7), the read pages of the [minimal UI](./design/minimal-ui.md), connector runtime with control channel (§7.4), GitHub, git-files and SCIM connectors | Acceptance A1–A5 and A11; connector conformance kit passes for all three connectors |
-| **M5** | Actions | Executor protocol (§7.5), run lifecycle (§6.6), previews and tokens, approvals, verification, durable tables (§8.1), UI extension contract (§7.6), the minimal UI's action, run and approval pages, the `github-apps` executor | Acceptance A6–A10 with simulated executor and connector; failure-injection properties P9–P12 hold; the sandbox-org integration test passes |
+| **M5** ⏸ | Actions (**paused, D64**: waiting on a review of self-service coordination) | Executor protocol (§7.5), run lifecycle (§6.6), previews and tokens, approvals, verification, durable tables (§8.1), UI extension contract (§7.6), the minimal UI's action, run and approval pages, the `github-apps` executor | Acceptance A6–A10 with simulated executor and connector; failure-injection properties P9–P12 hold; the sandbox-org integration test passes |
 | **M6** | Ship | Image build, Cloud Run deployment, `plan --remote`, `verify`, the operator SDLC workflow, metrics | A12; the reference workflow runs end to end on a sandbox project; `v0.1` tagged |
 
 ## 4. Architecture and crates
@@ -372,7 +372,12 @@ to `result`; previews come from the Toolbox layer only.
 | `toolbox build [--image REF] [--push]` | Build the portal image |
 | `toolbox verify --url URL [--rollback-on-failure]` | Post-deploy smoke checks (MCP tools present, snapshot fresh, scorecards evaluating) |
 | `toolbox serve [--role all|api|worker]` | Run the server |
-| `toolbox get|query|search|graph|explain|score` | Read commands (`-o table|json|yaml|md`) |
+| `toolbox push [--url URL]` | Send a portal's fixtures through the ingest API and wait for the snapshot (dev and tests) |
+| `toolbox derive [--out DIR]` | Recompute from fixtures; print a summary or write the reference-format outputs |
+| `toolbox describe` | Print Toolbox's own CLI commands and MCP tools as connector records (contract snapshots; Toolbox for Toolbox, D65) |
+| `toolbox token create --user U` | Create a personal access token (printed once) |
+| `toolbox get|query|search|graph|owner|explain|score|refresh|actions` | Read commands, each calling the MCP tool of the same purpose (`-o md|json|yaml`) |
+| `toolbox mcp` | Stdio MCP server bridging to a portal's `/mcp` (for agent harnesses) |
 | `toolbox run <action> --entity ID [--preview | --confirm TOKEN]` · `toolbox runs watch ID` | Actions |
 | `toolbox connector refresh|resync|test` | Connector operations and the conformance kit |
 | `toolbox login` | OIDC device flow or PAT |

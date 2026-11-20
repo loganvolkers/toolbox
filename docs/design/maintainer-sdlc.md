@@ -59,6 +59,7 @@ caching) comes back only when these numbers regress (D44, [developer-velocity.md
 | Acceptance | One script per milestone, on real Postgres 16, OpenFGA, connectors and Chromium | Exit criteria | `scripts/m2-acceptance.sh`, `m3-…`, `m4-…` |
 | Scale | 100k entities / 2M relations / 100 rules ≤ 10 s | Budget §10.4 | `cargo run --release -p toolbox-derive --example scale` |
 | Freshness | `ui/dist` matches its source | Embedded UI is current | CI `ui` job |
+| Standards | Toolbox for Toolbox scorecards over crates, docs, CLI and MCP (report, not yet a gate) | Docs, tests, clippy, size and complexity, interface contracts | `scripts/self-portal.sh report`; `toolbox test portal` |
 
 Each row is recorded with its result in [research-log.md](../research-log.md) when a milestone
 closes.
@@ -94,3 +95,12 @@ closes.
 | Property tests over generated portals (P1–P13 beyond the reference portal) | Planned ([verification.md](./verification.md)) |
 | Deterministic simulation | Deferred (D44) |
 | Velocity tooling (hakari, affected tests, result cache) | Deferred until the loop regresses (D44) |
+
+## Sources
+
+- Measurements and acceptance results: [research-log.md](../research-log.md) (M0–M4 rows and the
+  maintainer loop timings).
+- Milestones and exit criteria: [v1-spec.md](../v1-spec.md) §3; properties §11.3.
+- CI: [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml); acceptance scripts in
+  [`scripts/`](../../scripts).
+- The repository's own scorecards for this layer: [toolbox-for-toolbox.md](./toolbox-for-toolbox.md).

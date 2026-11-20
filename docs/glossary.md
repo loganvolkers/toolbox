@@ -8,6 +8,7 @@ Shared vocabulary across the design documents. Keep entries short and link to th
 | **Operator** | Someone (or an agent) who builds and runs a portal: platform engineers | [plan.md](./plan.md) §6 |
 | **Maintainer** | Someone (or an agent) who builds Toolbox itself | [design/maintainer-sdlc.md](./design/maintainer-sdlc.md) |
 | **User** | Someone (or an agent, bot or app) who builds on a running portal's context and actions | [design/user-sdlc.md](./design/user-sdlc.md) |
+| **Toolbox for Toolbox** | The local portal in `portal/` that scores Toolbox's own crates, docs and interfaces per SDLC layer (D65) | [design/toolbox-for-toolbox.md](./design/toolbox-for-toolbox.md) |
 | **SDLC layers** | Maintainer SDLC (building Toolbox), operator SDLC (building a portal), user SDLC (building apps on a portal); documents always say which (D63) | [sdlc.md](./sdlc.md) |
 | **Portal program** | The TypeScript/Python/YAML code in a portal repo that declares kinds, connectors, scorecards, actions, views and policies | [plan.md](./plan.md) §2 |
 | **Manifest** | The canonical, versioned JSON emitted by the portal program at build time; the real contract | [plan.md](./plan.md) §2 |

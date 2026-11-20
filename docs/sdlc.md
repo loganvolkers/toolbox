@@ -38,6 +38,13 @@ the boundary between the layers. It is a layer-2 portal that layer 1 uses as its
 and its acceptance scenarios are written as layer-3 tasks ("who owns X?", "refresh this", "install
 this app").
 
+## Toolbox scores its own layers
+
+[Toolbox for Toolbox](./design/toolbox-for-toolbox.md) (D65) turns these layers into scorecards on
+this repository: `maintainer-crate` and `maintainer-docs` (layer 1), `operator-cli` (layer 2), and
+`user-cli` and `user-mcp` (layer 3). Run `scripts/self-portal.sh report`, or point an agent at
+`scripts/self-portal.sh serve`.
+
 ## Rules for documents
 
 1. Name the layer: "maintainer SDLC", "operator SDLC" or "user SDLC", never bare "SDLC".

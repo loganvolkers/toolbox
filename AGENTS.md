@@ -38,7 +38,7 @@ MCP, CLI, data model, properties) and test against
 bridge) and `connector test`. The server also hosts `/mcp` and the UI at `/`, and supervises the
 `toolbox-connector-{github,git-files}` binaries; `toolbox-connector-scim` runs remotely. The
 acceptance scripts `scripts/m2…m4-acceptance.sh` need Postgres 16; M3 and M4 also need
-`TOOLBOX_OPENFGA_BIN`, and M4 needs Node with Playwright. **M5 (actions) is next.**
+`TOOLBOX_OPENFGA_BIN`, and M4 needs Node with Playwright. **M5 (actions) is paused (D64)** until a review of self-service coordination lands; don't start it. Meanwhile [`portal/`](./portal/README.md) is Toolbox for Toolbox: `scripts/self-portal.sh report` scores this repo against the three SDLC layers' standards (D65).
 
 ## Repository layout
 
@@ -53,6 +53,7 @@ docs/principal-review.md     principal-engineer review (with resolutions)
 docs/adversarial-critique.md whether to build at all: hypotheses, alternatives, kill criteria
 docs/technology-critique.md  sprawl and replaceability review; proposed minimal architecture
 docs/sdlc.md                 the three SDLC layers: maintainer, operator, user (D63)
+portal/                      Toolbox for Toolbox: this repo's own portal and standards (D65)
 docs/design/*.md             one detailed design per capability (maintainer-, user-sdlc.md and sdlc.md = operator)
 docs/examples/*.md           worked examples (e.g. approved GitHub Apps)
 docs/glossary.md, docs/research-log.md
@@ -101,8 +102,8 @@ Every design choice must serve these. Check new work against them.
 
 1. **Simple deployment:** one container image plus Postgres (Cloud Run or equivalent); custom UIs and
    action code ship inside the image.
-2. **Agent SDLC, in three layers (D63):** agents can plan, build, test, deploy and monitor with a
-   mature SDLC at every layer:
+2. **Agent SDLC, in three layers (D63):** agents can plan, build, test, deploy and monitor at every
+   layer, with the maturity of regular software engineering:
    - *maintainers* build and verify Toolbox in isolation, with executable exit criteria;
    - *operators* change a portal with validate → test → plan → preview → deploy → verify;
    - *users* build apps on stable, versioned API/MCP contracts with reproducible reads.
@@ -120,7 +121,7 @@ docs put their current v1 design first and keep deferred material in a labelled 
 | Authorization | OpenFGA inside one container: co-process vs c-archive (Q11); tuple view; conditions and wildcards; `.fga.yaml` corpus through `Authorizer` | authorization |
 | Durable runtime | `Durable` on the DBOS-compatible schema (`experiments/durable-schema`); DBOS Rust SDK spike (Q4); crash between steps; cross-instance recovery after scale-in (Q13) | v1-spec §8.1, incremental-computation |
 | Deployment | One image on Cloud Run + Cloud SQL with a UI bundle and an in-image executor; instance-based billing; rollback by image | plan §6.2 |
-| Maintainer SDLC | Keep the check pyramid green and fast; property tests over generated portals; acceptance scripts for M5–M6 | maintainer-sdlc, verification, developer-velocity |
+| Maintainer SDLC | Keep the check pyramid green and fast; raise the Toolbox-for-Toolbox scorecards (`scripts/self-portal.sh`); property tests over generated portals; acceptance scripts for M5–M6 | maintainer-sdlc, verification, developer-velocity |
 | Operator SDLC | `toolbox dev` / `plan --remote` / `build` / `verify` / preview deploys; dev-loop benchmark with SLOs | sdlc, developer-velocity |
 | User SDLC | Per-portal OpenAPI + typed clients; service identities; generated user plugin; stability and deprecation policy | user-sdlc, agent-plugins |
 | Connectors & actions runtime | Control channel (stdio / long-poll) with scoped refresh and completion; action run lifecycle with preview tokens and postcondition verification; in-image and GitHub Actions executors | connector-control, action-runs |

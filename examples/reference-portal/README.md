@@ -24,7 +24,7 @@ need the Toolbox binary are specified precisely enough to implement against.
 | Connector control (scoped refresh for verification) | `connectors[].refresh`, [`protocol/install-approved-app.connector.ndjson`](./protocol/install-approved-app.connector.ndjson) | D48 |
 | In-image executor | [`executors/github-apps/`](./executors/github-apps/README.md), [`protocol/install-approved-app.executor.ndjson`](./protocol/install-approved-app.executor.ndjson) | D40, D49 |
 | Custom action UI through the UI extension contract | [`ui/install-approved-app/`](./ui/install-approved-app/README.md) | D40 |
-| One image, deployed to Cloud Run by a full SDLC | [`Dockerfile`](./Dockerfile), [`.github/workflows/portal.yml`](./.github/workflows/portal.yml) | D33, D34 |
+| One image, deployed to Cloud Run by the operator SDLC | [`Dockerfile`](./Dockerfile), [`.github/workflows/portal.yml`](./.github/workflows/portal.yml) | D33, D34 |
 
 ## The organisation (fixtures)
 
@@ -120,6 +120,6 @@ authz/model.fga, model.fga.yaml    OpenFGA model and tests over the derived tupl
 protocol/*.ndjson                  golden executor and connector conversations
 executors/github-apps/             in-image executor specification
 ui/install-approved-app/           UI bundle specification
-Dockerfile, .github/workflows/     one image; SDLC to Cloud Run
+Dockerfile, .github/workflows/     one image; operator SDLC to Cloud Run
 tools/                             reference.py (oracle), validate.py (schemas + cross-references)
 ```

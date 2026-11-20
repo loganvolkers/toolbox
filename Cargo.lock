@@ -3028,6 +3028,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "toolbox-connector-runner"
+version = "0.0.0"
+dependencies = [
+ "regex",
+ "serde_json",
+ "tokio",
+ "toolbox-connect",
+]
+
+[[package]]
 name = "toolbox-connector-scim"
 version = "0.0.0"
 dependencies = [
@@ -3035,6 +3045,19 @@ dependencies = [
  "serde_json",
  "tokio",
  "toolbox-connect",
+]
+
+[[package]]
+name = "toolbox-connector-workspace"
+version = "0.0.0"
+dependencies = [
+ "proc-macro2",
+ "regex",
+ "serde_json",
+ "syn 2.0.119",
+ "tokio",
+ "toolbox-connect",
+ "walkdir",
 ]
 
 [[package]]

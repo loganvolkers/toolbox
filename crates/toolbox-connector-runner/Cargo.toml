@@ -1,0 +1,16 @@
+[package]
+name = "toolbox-connector-runner"
+description = "Toolbox connector: runs local commands (cargo test, clippy, any NDJSON-printing tool) and reports their results as records (docs/design/toolbox-for-toolbox.md)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+regex = "1"
+serde_json.workspace = true
+tokio.workspace = true
+toolbox-connect = { path = "../toolbox-connect" }
+
+[lints]
+workspace = true

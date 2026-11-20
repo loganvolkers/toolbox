@@ -12,7 +12,7 @@ anyone who builds on a running portal rather than on Toolbox or the portal itsel
 
 ## 1. Conclusion
 
-Users need the same SDLC maturity operators get: discover what's available, develop against
+Users need a user SDLC as mature as the operator SDLC: discover what's available, develop against
 realistic data, test deterministically, ship with a proper identity, and get warned before
 something they rely on changes.
 

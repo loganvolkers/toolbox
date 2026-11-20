@@ -1,0 +1,392 @@
+# Toolbox for Toolbox: the portal Toolbox maintainers run on their own repository
+# (docs/design/toolbox-for-toolbox.md). It catalogues our crates, docs, scripts and tests, the CLI
+# commands and MCP tools we promise, and scores each against the standard of one SDLC layer
+# (docs/sdlc.md). It runs locally (`scripts/self-portal.sh`): no Postgres, no OpenFGA, no network.
+apiVersion: toolbox.dev/v1alpha1
+
+portal:
+  name: toolbox
+  title: Toolbox for Toolbox
+  owner: group:maintainers
+  toolbox: "0.1"
+
+policies:
+  # Logs and reviews whose past entries are never rewritten (AGENTS.md), so wording rules
+  # introduced later don't apply to them.
+  historicalDocs:
+    - docs/decisions.md
+    - docs/research-log.md
+    - docs/red-team.md
+    - docs/principal-review.md
+    - docs/adversarial-critique.md
+    - docs/technology-critique.md
+    - docs/research.md
+    - docs/ocean.md
+
+connectors:
+  - name: workspace
+    package: builtin:workspace             # reads files; fast, so it resyncs often
+    runtime: in-image
+    config:
+      root: "."
+      docs: ["*.md", "docs/**/*.md", "examples/*/README.md", "experiments/*/README.md", "plugins/**/*.md", "portal/*.md"]
+      files: ["scripts/*", "crates/*/tests/*.rs", "examples/reference-portal/tools/*.py"]
+      captures:
+        # `toolbox get …`, `"$T/toolbox" serve …`, the acceptance scripts' `ask owner …`
+        commands: '(?:\btoolbox"?|\bask)\s+((?:connector|token)\s+[a-z]+|[a-z][a-z-]*)'
+        # MCP tools/call bodies: {"name": "owner_of", …}
+        tools: '"name"\s*:\s*"([a-z][a-z_]*)"'
+      counts:
+        sdlc: '\bSDLC\b'
+        # A named layer (`maintainer SDLC`, `*operator* SDLC`), the layer model itself, or a quoted mention
+        layeredSdlc: '(?i:maintainer|operator|user|agent|three|portal)[*_ ’''-]*s?[*_]*\s+SDLC\b|\bSDLC\s+(?:layers?\b|has\b|in Toolbox)|"SDLC"'
+    records: [crate, doc, file]
+    refresh: {crate: [external_ids], doc: [external_ids], file: [external_ids]}
+    freshness: {crate: 5m, doc: 5m, file: 5m}
+  - name: runner
+    package: builtin:runner                # executes things; slow, so it's refreshed per entity
+    runtime: in-image
+    config:
+      root: "."
+      jobs:
+        - {name: test, per: crate, command: [cargo, test, -q, -p, "{crate}"], parse: cargo-test}
+        - {name: clippy, per: crate, command: [cargo, clippy, -q, -p, "{crate}", --all-targets, --message-format=json], parse: clippy}
+        - {name: surfaces, command: [target/debug/toolbox, describe], parse: ndjson, kinds: [command, mcp-tool]}
+    records: [test, clippy, command, mcp-tool]
+    refresh: {test: [external_ids], clippy: [external_ids]}
+    freshness: {test: 1h, clippy: 1h, command: 1h, mcp-tool: 1h}
+
+kinds:
+  # ── Layer 1: what maintainers build ──────────────────────────────────────────────────────
+  - name: Crate
+    identityFrom: [connector:workspace]
+    fields:
+      path: {type: string}
+      description: {type: string}
+      targets: {type: list, items: string}
+      externalDeps: {type: integer}
+      readme: {type: boolean}
+      lastChange: {type: string}
+      crateDoc: {type: boolean}
+      codeLines: {type: integer}
+      testCodeLines: {type: integer}
+      pubItems: {type: integer}
+      pubDocumented: {type: integer}
+      undocumented: {type: list, items: string}
+      functions: {type: list, items: object}
+      maxFnLines: {type: integer}
+      maxComplexity: {type: integer}
+      unitTests: {type: integer}
+      integrationTests: {type: integer}
+      unwraps: {type: integer}
+      tests: {type: object}                # from the runner: status, passed, failed, output
+      clippy: {type: object}               # from the runner: status, warnings, messages
+      docCoverage:
+        type: integer
+        computed: "entity.pubItems == 0 ? 100 : entity.pubDocumented * 100 / entity.pubItems"
+      longFunctions:
+        type: list
+        items: string
+        computed: "entity.functions.filter(f, f.lines > 80).map(f, f.name + ' at ' + f.at + ': ' + string(f.lines) + ' lines')"
+      complexFunctions:
+        type: list
+        items: string
+        computed: "entity.functions.filter(f, f.complexity > 15).map(f, f.name + ' at ' + f.at + ': complexity ' + string(f.complexity))"
+      dependents:
+        type: list
+        items: string
+        computed: "inbound.dependsOn.map(c, c.path)"
+    relations:
+      dependsOn: {to: Crate, many: true}
+    sources:
+      default: [connector:workspace]
+      fields:
+        tests: [connector:runner]
+        clippy: [connector:runner]
+    map:
+      - from: workspace/crate
+        id: "'crate:' + record.name"
+        set: >-
+          {'path': record.path, 'description': record.description, 'targets': record.targets,
+           'externalDeps': record.externalDeps, 'readme': record.readme, 'lastChange': record.lastChange,
+           'crateDoc': record.crateDoc, 'codeLines': record.codeLines, 'testCodeLines': record.testCodeLines,
+           'pubItems': record.pubItems, 'pubDocumented': record.pubDocumented,
+           'undocumented': record.undocumented, 'functions': record.functions,
+           'maxFnLines': record.maxFnLines, 'maxComplexity': record.maxComplexity,
+           'unitTests': record.unitTests, 'integrationTests': record.integrationTests,
+           'unwraps': record.unwraps}
+        relations:
+          dependsOn: "record.dependsOn.map(d, 'crate:' + d)"
+      - from: runner/test
+        id: "'crate:' + record.crate"
+        set: "{'tests': record}"
+      - from: runner/clippy
+        id: "'crate:' + record.crate"
+        set: "{'clippy': record}"
+
+  - name: Doc
+    identityFrom: [connector:workspace]
+    fields:
+      path: {type: string}
+      title: {type: string}
+      words: {type: integer}
+      hasStatus: {type: boolean}
+      hasSources: {type: boolean}
+      brokenLinks: {type: list, items: string}
+      counts: {type: object}
+      lastChange: {type: string}
+      area:
+        type: string
+        computed: >-
+          entity.path.startsWith('docs/design/') ? 'design'
+          : entity.path.startsWith('docs/') ? 'docs'
+          : entity.path.startsWith('examples/') || entity.path.startsWith('experiments/') ? 'example'
+          : 'repo'
+    relations:
+      mentionsCommand: {to: Command, many: true}
+      mentionsTool: {to: McpTool, many: true}
+      mentionsCrate: {to: Crate, many: true}
+    sources: {default: [connector:workspace]}
+    map:
+      - from: workspace/doc
+        id: "'doc:' + record.path"
+        set: >-
+          {'path': record.path, 'title': record.title, 'words': record.words,
+           'hasStatus': record.hasStatus, 'hasSources': record.hasSources,
+           'brokenLinks': record.brokenLinks, 'counts': record.counts, 'lastChange': record.lastChange}
+        relations:
+          mentionsCommand: "record.captures.commands.map(c, 'command:' + c)"
+          mentionsTool: "record.codeSpans.map(s, 'mcp-tool:' + s)"
+          mentionsCrate: "record.codeSpans.map(s, 'crate:' + s)"
+
+  - name: File
+    identityFrom: [connector:workspace]
+    fields:
+      path: {type: string}
+      extension: {type: string}
+      lines: {type: integer}
+      lastChange: {type: string}
+    relations:
+      exercisesCommand: {to: Command, many: true}
+      exercisesTool: {to: McpTool, many: true}
+    sources: {default: [connector:workspace]}
+    map:
+      - from: workspace/file
+        id: "'file:' + record.path"
+        set: "{'path': record.path, 'extension': record.extension, 'lines': record.lines, 'lastChange': record.lastChange}"
+        relations:
+          exercisesCommand: "record.captures.commands.map(c, 'command:' + c)"
+          exercisesTool: "record.captures.tools.map(t, 'mcp-tool:' + t)"
+
+  # ── Layers 2 and 3: what operators and users rely on ─────────────────────────────────────
+  - name: Command
+    identityFrom: [connector:runner]
+    fields:
+      name: {type: string}
+      about: {type: string}
+      args: {type: list, items: object}
+      undocumentedArgs: {type: list, items: string}
+      structuredOutput: {type: boolean}
+      mcpTool: {type: string}
+      layer:
+        type: enum
+        values: [operator, user]
+        computed: "has(entity.mcpTool) || entity.name == 'mcp' ? 'user' : 'operator'"
+      documentedIn: {type: list, items: string, computed: "inbound.mentionsCommand.map(d, d.path)"}
+      exercisedBy: {type: list, items: string, computed: "inbound.exercisesCommand.map(f, f.path)"}
+    relations:
+      callsTool: {to: McpTool, many: false}
+    sources: {default: [connector:runner]}
+    map:
+      - from: runner/command
+        id: "'command:' + record.slug"
+        set: >-
+          {'name': record.name, 'about': record.about, 'args': record.args,
+           'undocumentedArgs': record.undocumentedArgs, 'structuredOutput': record.structuredOutput,
+           'mcpTool': record.mcpTool}
+        relations:
+          callsTool: "record.mcpTool == null ? [] : ['mcp-tool:' + record.mcpTool]"
+
+  - name: McpTool
+    identityFrom: [connector:runner]
+    fields:
+      name: {type: string}
+      description: {type: string}
+      annotations: {type: object}
+      properties: {type: list, items: string}
+      undescribedProperties: {type: list, items: string}
+      documentedIn: {type: list, items: string, computed: "inbound.mentionsTool.map(d, d.path)"}
+      exercisedBy: {type: list, items: string, computed: "inbound.exercisesTool.map(f, f.path)"}
+      viaCli: {type: list, items: string, computed: "inbound.callsTool.map(c, c.name)"}
+    sources: {default: [connector:runner]}
+    map:
+      - from: runner/mcp-tool
+        id: "'mcp-tool:' + record.name"
+        set: >-
+          {'name': record.name, 'description': record.description, 'annotations': record.annotations,
+           'properties': record.properties, 'undescribedProperties': record.undescribedProperties}
+
+scorecards:
+  # ── Layer 1: maintainer SDLC ─────────────────────────────────────────────────────────────
+  - name: maintainer-crate
+    kind: Crate
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    appliesTo: "entity.codeLines >= 50"    # placeholder crates (toolbox-durable, toolbox-exec) are skipped
+    rules:
+      - name: crate-docs
+        level: bronze
+        check: "entity.crateDoc"
+        fix: "Start the crate's lib.rs or main.rs with //! docs: what it is and which spec section it implements."
+      - name: has-tests
+        level: bronze
+        check: "entity.unitTests + entity.integrationTests > 0"
+        fix: "Add a #[test] for the crate's main behaviour, or an integration test in tests/."
+      - name: tests-pass
+        level: bronze
+        check: "has(entity.tests) && entity.tests.status == 'pass'"
+        fix: "Run `cargo test -p <crate>`; tests.output holds the failing tail."
+      - name: clippy-clean
+        level: bronze
+        check: "has(entity.clippy) && entity.clippy.status == 'pass'"
+        fix: "Run `cargo clippy -p <crate> --all-targets`; clippy.messages lists the warnings."
+      - name: public-api-documented
+        level: silver
+        check: "entity.docCoverage >= 80"
+        fix: "Add /// docs to the public items listed in `undocumented`."
+      - name: no-huge-functions
+        level: silver
+        check: "entity.maxFnLines <= 150"
+        fix: "Split the functions listed in `longFunctions` into named steps."
+      - name: bounded-complexity
+        level: silver
+        check: "entity.maxComplexity <= 30"
+        fix: "Simplify the functions listed in `complexFunctions` (extract match arms, early returns)."
+      - name: fully-documented
+        level: gold
+        check: "entity.docCoverage == 100"
+        fix: "Document every item in `undocumented`."
+      - name: short-functions
+        level: gold
+        check: "entity.longFunctions.size() == 0"
+        fix: "Keep functions at 80 lines or fewer; see `longFunctions`."
+      - name: simple-functions
+        level: gold
+        check: "entity.complexFunctions.size() == 0"
+        fix: "Keep cyclomatic complexity at 15 or lower; see `complexFunctions`."
+      - name: few-unwraps
+        level: gold
+        check: "entity.unwraps * 100 <= entity.codeLines"
+        fix: "At most one unwrap/expect per 100 lines outside tests: return errors or document the invariant."
+    facets: {summary: public, details: public}
+
+  - name: maintainer-docs
+    kind: Doc
+    owner: group:maintainers
+    levels: [bronze, silver]
+    appliesTo: "!(entity.path in policy.historicalDocs)"
+    rules:
+      - name: links-resolve
+        level: bronze
+        check: "entity.brokenLinks.size() == 0"
+        fix: "Fix or remove the relative links listed in `brokenLinks`."
+      - name: names-sdlc-layer
+        level: bronze
+        check: "entity.counts.sdlc <= entity.counts.layeredSdlc"
+        fix: "Say which SDLC you mean: maintainer, operator or user (docs/sdlc.md, D63)."
+      - name: status-banner
+        level: silver
+        check: "entity.area != 'design' || entity.hasStatus"
+        fix: "Start the design doc with a *Status:* line saying what is decided and what is built."
+      - name: cites-sources
+        level: silver
+        check: "entity.area != 'design' || entity.hasSources"
+        fix: "End the design doc with a ## Sources section (AGENTS.md working rules)."
+    facets: {summary: public, details: public}
+
+  # ── Layer 2: operator SDLC ───────────────────────────────────────────────────────────────
+  - name: operator-cli
+    kind: Command
+    owner: group:maintainers
+    levels: [bronze, silver]
+    appliesTo: "entity.layer == 'operator'"
+    rules:
+      - name: has-help
+        level: bronze
+        check: "has(entity.about) && entity.about.size() >= 10"
+        fix: "Give the command a /// doc comment; clap shows it as the command's help."
+      - name: documented
+        level: bronze
+        check: "entity.documentedIn.size() > 0"
+        fix: "Describe `toolbox <command>` in docs/v1-spec.md §7.7 or the operator SDLC doc."
+      - name: args-described
+        level: silver
+        check: "entity.undocumentedArgs.size() == 0"
+        fix: "Add a /// doc comment to each argument in `undocumentedArgs`."
+      - name: exercised
+        level: silver
+        check: "entity.exercisedBy.size() > 0"
+        fix: "Run the command in an acceptance script or an integration test."
+    facets: {summary: public, details: public}
+
+  # ── Layer 3: user SDLC ───────────────────────────────────────────────────────────────────
+  - name: user-cli
+    kind: Command
+    owner: group:maintainers
+    levels: [bronze, silver]
+    appliesTo: "entity.layer == 'user'"
+    rules:
+      - name: has-help
+        level: bronze
+        check: "has(entity.about) && entity.about.size() >= 10"
+        fix: "Give the command a /// doc comment; clap shows it as the command's help."
+      - name: structured-output
+        level: bronze
+        check: "entity.name == 'mcp' || entity.structuredOutput"
+        fix: "Support -o json so scripts and apps can parse the output."
+      - name: args-described
+        level: silver
+        check: "entity.undocumentedArgs.size() == 0"
+        fix: "Add a /// doc comment to each argument in `undocumentedArgs`."
+      - name: exercised
+        level: silver
+        check: "entity.exercisedBy.size() > 0"
+        fix: "Run the command in an acceptance script or an integration test."
+    facets: {summary: public, details: public}
+
+  - name: user-mcp
+    kind: McpTool
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    rules:
+      - name: described
+        level: bronze
+        check: "entity.description.size() >= 20"
+        fix: "Describe what the tool returns and when an agent should call it."
+      - name: annotated
+        level: bronze
+        check: "has(entity.annotations.readOnlyHint)"
+        fix: "Set annotations.readOnlyHint (and idempotent/openWorld hints for writes)."
+      - name: inputs-described
+        level: silver
+        check: "entity.undescribedProperties.size() == 0"
+        fix: "Add a description to each input property in `undescribedProperties` (crates/toolbox-api/src/mcp.rs)."
+      - name: documented
+        level: silver
+        check: "entity.documentedIn.size() > 0"
+        fix: "List the tool, in backticks, in docs/v1-spec.md §7.3."
+      - name: contract-tested
+        level: gold
+        check: "entity.exercisedBy.size() > 0"
+        fix: "Call the tool directly (tools/call) in a test, e.g. crates/toolbox-api/tests; the CLI path in `viaCli` doesn't pin the MCP contract."
+    facets: {summary: public, details: public}
+
+mcp:
+  instructions: >-
+    Toolbox for Toolbox: the catalogue of Toolbox's own crates, docs, scripts, CLI commands and MCP
+    tools, scored against the maintainer, operator and user SDLC standards. To raise the bar, pick
+    a failing rule with scorecard_status, read the entity's evidence fields (undocumented,
+    longFunctions, clippy.messages, undocumentedArgs …), change the code, then refresh_entity and
+    check the score again.
+
+tests: [tests/standards.test.yaml]
