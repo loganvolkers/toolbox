@@ -86,7 +86,6 @@
       "crate:toolbox-connector-workspace": {
         "failing": {
           "clippy-clean": 1,
-          "simple-functions": 1,
           "tests-pass": 1
         },
         "level": "none"
@@ -149,6 +148,9 @@
         "level": "silver"
       },
       "doc:README.md": {
+        "level": "silver"
+      },
+      "doc:actions/report/README.md": {
         "level": "silver"
       },
       "doc:docs/adversarial-critique.md": {
@@ -269,6 +271,9 @@
         "level": "silver"
       },
       "doc:examples/reference-portal/README.md": {
+        "level": "silver"
+      },
+      "doc:examples/repo-portal-starter/README.md": {
         "level": "silver"
       },
       "doc:experiments/build-cost/README.md": {

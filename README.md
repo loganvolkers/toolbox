@@ -29,7 +29,7 @@ cargo build && target/debug/toolbox validate examples/reference-portal
   - [design/meta-catalog.md](docs/design/meta-catalog.md): the portal catalogs, owns and scores itself
   - [design/incremental-computation.md](docs/design/incremental-computation.md): DBSP incremental circuit + DBOS-model durable workflows over one change log
   - [design/extensibility.md](docs/design/extensibility.md): code-first extensibility and the right language for each job
-  - [design/repo-portals.md](docs/design/repo-portals.md): Toolbox without a server — `toolbox report`, evidence, ratchets, one-file HTML
+  - [design/repo-portals.md](docs/design/repo-portals.md): Toolbox without a server — `toolbox report`, evidence, ratchets, one-file HTML; adopt it with the [report action](actions/report/README.md) and the [starter](examples/repo-portal-starter/README.md)
   - [design/ratchets.md](docs/design/ratchets.md): what we learned from Betterer and other baselines (ESLint, PHPStan, basedpyright, OpenSSF Scorecard)
   - [design/federation.md](docs/design/federation.md): standards that graduate from one repo to the company (design only)
   - [design/toolbox-for-toolbox.md](docs/design/toolbox-for-toolbox.md): Toolbox scoring its own repository

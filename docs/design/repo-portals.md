@@ -27,6 +27,7 @@ portal, these repos are already its children ([federation.md](./federation.md) �
 | Work lists | `toolbox scorecard <name> --rule R` / MCP `scorecard_report` (needs `serve`) | ✅ |
 | Live, agent-driven loop | `toolbox serve` + `toolbox mcp`, with refreshes that report what changed | ✅ |
 | Static publishing | `report -o html`: one self-contained page | ✅ (§4); a multi-page site is a proposal (§5) |
+| **GitHub Action** | `uses: loganvolkers/toolbox/actions/report@<sha>`: one step, with a starter portal ([examples/repo-portal-starter](../../examples/repo-portal-starter/README.md)) | ✅ (D69, §6) |
 | Readers for existing ratchets | Betterer results files; ESLint, PHPStan and basedpyright baselines | Betterer ✅; others proposed (ratchets.md R2) |
 
 ## 2. What runs where
@@ -95,6 +96,29 @@ publishing of central data is ever needed, it would render *as* a principal
 | S1 | `toolbox report -o site --out DIR`: an index plus one page per entity (fields, provenance, relations, scores, evidence) | Browse a repo portal like the minimal UI, offline |
 | S2 | **Static federation:** an index page that loads several children's `report -o json` files (by URL or path) and shows them together, like Storybook composition (secondary) | A "parent" with no server, the minimal answer to [federation.md](./federation.md) FQ5 |
 | S3 | Embed the snapshot id and git commit in the page; link entities to files at that commit | Every claim on the page is checkable |
+
+## 6. Adoption in one step: the GitHub Action
+
+**[`actions/report`](../../actions/report/README.md)** is a composite action. A pilot repository:
+1. copies the starter manifest to `.toolbox/toolbox.yaml`;
+2. adds one workflow step;
+3. runs it once with `mode: update` to create `.toolbox/results.json`.
+
+From then on, pull requests fail on regressions and on unrecorded improvements. The job summary says
+which, and how to update the baseline. The Markdown and HTML reports are uploaded as an artifact.
+
+| Design choice | Why |
+|---|---|
+| Composite action + `run.sh` | Testable locally with the same environment variables. This repo tested `run.sh` through every result: missing baseline, update, pass, regression, unrecorded improvement, unknown mode, missing portal |
+| Build from the action's own source at the pinned commit, cached by a hash of `Cargo.lock`, the toolchain file, `crates/` and `schema/` | No releases exist yet (licence Q1). Pinning a commit pins both the action and the toolbox it runs |
+| `toolbox-dir` input | Repos that already build toolbox (this one) skip the build |
+| Starter: `repo-hygiene` + `docs` | Useful on day one in any repository, with no build and no network. It is also stage 1 of the federation graduation example |
+| `pull_request`, never `pull_request_target` | Connectors run the manifest's commands; fork code must not get write tokens |
+
+**Dogfooding.** This repository's CI:
+- runs the Toolbox-for-Toolbox ratchet through the action, with prebuilt binaries;
+- runs a `report-action` job that builds from source, sets up a pilot from the starter, creates its
+  baseline in `update` mode, and passes in `ci` mode.
 
 ## Sources
 

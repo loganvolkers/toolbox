@@ -93,6 +93,9 @@ enum Command {
         /// Write the output to this file instead of stdout.
         #[arg(long)]
         out: Option<PathBuf>,
+        /// Also write the one-page HTML report to this file (from the same run).
+        #[arg(long)]
+        html: Option<PathBuf>,
         /// Results file to compare against (the ratchet).
         #[arg(long)]
         baseline: Option<PathBuf>,
@@ -416,6 +419,7 @@ fn main() -> ExitCode {
             skip,
             output,
             out,
+            html,
             baseline,
             update,
             ci,
@@ -425,6 +429,7 @@ fn main() -> ExitCode {
             skip,
             output,
             out,
+            html,
             baseline,
             update,
             ci,

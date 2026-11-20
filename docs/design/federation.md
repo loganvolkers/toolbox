@@ -168,7 +168,7 @@ and only regressions fail.
 
 | # | Question |
 |---|---|
-| FQ1 | The package registry: OCI artifacts (fits "one image"), git refs (fits portal repos), or npm (fits the TS builder)? Possibly all three behind one resolver |
+| FQ1 | 🚩 **Flagged for rigorous research (decisions.md Q15); no recommendation.** The package registry: OCI artifacts (fits "one image"), git refs (fits portal repos), or npm (fits the TS builder)? Possibly all three behind one resolver. Phase F1 can't start until this is researched |
 | FQ2 | Should a child be able to *extend* a parent kind with fields, Apollo-style, or only add its own kinds? Extension is powerful but makes the parent's schema depend on children |
 | FQ3 | How are waivers approved? This is the approvals design from M5, which is paused (D64), so revisit after the self-service review |
 | FQ4 | Do repo portals need entity identity beyond the repo (e.g. services inside a monorepo) to merge cleanly at the parent? This is [identity-resolution.md](./identity-resolution.md) at the federation boundary |

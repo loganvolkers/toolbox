@@ -46,14 +46,56 @@ jobs:
           for f in expected/entities.json expected/scorecards.json expected/options.json expected/orphans.json authz/tuples.expected.json; do
             cmp /tmp/derived/$f examples/reference-portal/$f
           done
-      - name: Toolbox for Toolbox (D65, D66) — the standards' tests, then the ratchet against portal/results.json
+      - name: Toolbox for Toolbox (D65) — the standards' own tests
         run: |
           target/debug/toolbox validate portal
           target/debug/toolbox test portal
-          # Fails on any regression, and when portal/results.json is out of date (update it with
-          # `toolbox report portal --skip runner --baseline portal/results.json --update`).
-          target/debug/toolbox report portal --skip runner --baseline portal/results.json --ci --out "$RUNNER_TEMP/report.md"
-          cat "$RUNNER_TEMP/report.md" >> "$GITHUB_STEP_SUMMARY"
+          target/debug/toolbox validate examples/repo-portal-starter
+          target/debug/toolbox test examples/repo-portal-starter
+      # The ratchet, through the same action pilot repos use (D66, D69), with the binaries built above.
+      # Fails on any regression, and when portal/results.json is out of date (update it with
+      # `toolbox report portal --skip runner --baseline portal/results.json --update`).
+      - name: Toolbox for Toolbox — ratchet against portal/results.json
+        uses: ./actions/report
+        with:
+          portal: portal
+          skip: runner
+          toolbox-dir: target/debug
+          artifact-name: toolbox-for-toolbox-report
+  report-action:
+    # The report action as a pilot repo runs it: builds toolbox from the action's own source (cached),
+    # then scores a repository set up from the starter portal (D69).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: A pilot repository, set up from the starter
+        run: |
+          mkdir -p "$RUNNER_TEMP/pilot/.toolbox" "$RUNNER_TEMP/pilot/.github"
+          cp examples/repo-portal-starter/toolbox.yaml "$RUNNER_TEMP/pilot/.toolbox/"
+          cp README.md "$RUNNER_TEMP/pilot/"
+          echo '* @acme/pilot' > "$RUNNER_TEMP/pilot/.github/CODEOWNERS"
+          git -C "$RUNNER_TEMP/pilot" init -q
+          git -C "$RUNNER_TEMP/pilot" remote add origin https://github.com/acme/pilot.git
+      - name: First run creates the baseline (mode update)
+        id: first
+        uses: ./actions/report
+        with:
+          working-directory: ${{ runner.temp }}/pilot
+          mode: update
+          artifact-name: pilot-first-run
+      - name: Then the ratchet passes (mode ci)
+        id: ratchet
+        uses: ./actions/report
+        with:
+          working-directory: ${{ runner.temp }}/pilot
+          artifact-name: pilot-ci
+      - name: Check the action's outputs
+        run: |
+          test "${{ steps.first.outputs.result }}" = pass
+          test -s "$RUNNER_TEMP/pilot/.toolbox/results.json"
+          test "${{ steps.ratchet.outputs.result }}" = pass
+          test -s "${{ steps.ratchet.outputs.html }}"
+          grep -q "repository:acme/pilot" "${{ steps.ratchet.outputs.report }}"
   scale-budget:
     runs-on: ubuntu-latest
     steps:

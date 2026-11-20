@@ -22,6 +22,7 @@ pub struct Options {
     pub skip: Vec<String>,
     pub output: String,
     pub out: Option<PathBuf>,
+    pub html: Option<PathBuf>,
     pub baseline: Option<PathBuf>,
     pub update: bool,
     pub ci: bool,
@@ -405,6 +406,11 @@ pub fn run(o: &Options) -> ExitCode {
         "html" => html(&m, &d),
         _ => markdown(&m, &d),
     };
+    if let Some(p) = &o.html
+        && let Err(e) = std::fs::write(p, html(&m, &d))
+    {
+        return fail(format!("{}: {e}", p.display()));
+    }
     match &o.out {
         Some(p) => {
             if let Err(e) = std::fs::write(p, body) {

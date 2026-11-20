@@ -6,6 +6,8 @@
 //! - `doc`: one per markdown file matching `docs` globs (status banner, sources section, broken
 //!   relative links, inline code spans);
 //! - `file`: one per file matching `files` globs (scripts, integration tests);
+//! - `repo` (opt-in, `"repo": true`): the checkout itself — README, LICENSE, `.github` files and
+//!   CODEOWNERS parsed into rules — for repository-level standards;
 //! - `betterer`: one per test in each Betterer results file matching `betterer` globs (issue counts
 //!   per file for file tests), so existing Betterer ratchets roll up into scorecards.
 //!
@@ -15,9 +17,10 @@
 //! commands and tools they mention without the connector knowing about them.
 //!
 //! `TOOLBOX_CONNECTOR_CONFIG`: `{"root"?: ".", "docs"?: [glob], "files"?: [glob],
-//! "captures"?: {name: regex}, "counts"?: {name: regex}, "crates"?: true, "betterer"?: [glob]}`.
+//! "captures"?: {name: regex}, "counts"?: {name: regex}, "crates"?: true, "repo"?: false, "betterer"?: [glob]}`.
 
 mod betterer;
+mod repo;
 mod rust;
 
 use regex::Regex;
@@ -37,6 +40,8 @@ struct Workspace {
     captures: Vec<(String, Regex)>,
     counts: Vec<(String, Regex)>,
     crates: bool,
+    /// Emit one `repo` record for the checkout (opt-in: `"repo": true`).
+    repo: bool,
 }
 
 /// A glob over `/`-separated relative paths: `**` spans directories, `*` and `?` don't.
@@ -109,6 +114,7 @@ impl Workspace {
             captures: named_regexes(&cfg, "captures")?,
             counts: named_regexes(&cfg, "counts")?,
             crates: cfg["crates"].as_bool().unwrap_or(true),
+            repo: cfg["repo"].as_bool().unwrap_or(false),
         })
     }
 
@@ -331,83 +337,103 @@ impl Workspace {
     }
 }
 
+impl Workspace {
+    /// Every record of the requested kinds (all by default), each kind closed by `snapshot_complete`.
+    fn resync(&self, cmd: &Value, out: &mut Out) -> Result<(), String> {
+        let kinds: Vec<&str> = cmd["kinds"]
+            .as_array()
+            .map(|k| k.iter().filter_map(Value::as_str).collect())
+            .unwrap_or_else(|| vec!["repo", "crate", "doc", "file", "betterer"]);
+        if self.crates && kinds.contains(&"crate") {
+            self.emit_crates(None, out)?;
+            out.snapshot_complete("crate");
+        }
+        let paths = self.walk();
+        if self.repo && kinds.contains(&"repo") {
+            let (name, data) = repo::record(&self.root, &paths);
+            out.record("repo", &format!("repo:{name}"), data);
+            out.snapshot_complete("repo");
+        }
+        for (kind, set) in [("doc", &self.docs), ("file", &self.files)] {
+            if !kinds.contains(&kind) {
+                continue;
+            }
+            for rel in paths.iter().filter(|p| Self::matches(set, p)) {
+                let rec = if kind == "doc" {
+                    self.doc_record(rel)
+                } else {
+                    self.file_record(rel)
+                };
+                if let Some(r) = rec {
+                    out.record(kind, &format!("{kind}:{rel}"), r);
+                }
+            }
+            out.snapshot_complete(kind);
+        }
+        if kinds.contains(&"betterer") && !self.betterer.is_empty() {
+            for rel in paths.iter().filter(|p| Self::matches(&self.betterer, p)) {
+                let text = std::fs::read_to_string(self.root.join(rel)).unwrap_or_default();
+                for (test, mut data) in betterer::parse(&text) {
+                    data["path"] = json!(rel);
+                    out.record("betterer", &format!("betterer:{rel}#{test}"), data);
+                }
+            }
+            out.snapshot_complete("betterer");
+        }
+        Ok(())
+    }
+
+    /// Re-read the records named by `external_ids`; `not_found` for those that are gone.
+    fn refresh(&self, cmd: &Value, out: &mut Out) -> Result<(), String> {
+        let mut crates = BTreeSet::new();
+        for id in cmd["external_ids"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(Value::as_str)
+        {
+            if id.starts_with("repo:") {
+                let (name, data) = repo::record(&self.root, &self.walk());
+                if id == format!("repo:{name}") {
+                    out.record("repo", id, data);
+                } else {
+                    out.not_found("repo", id);
+                }
+            } else if let Some(name) = id.strip_prefix("crate:") {
+                crates.insert(name.to_owned());
+            } else if let Some(rel) = id.strip_prefix("doc:") {
+                match self.doc_record(rel) {
+                    Some(r) => out.record("doc", id, r),
+                    None => out.not_found("doc", id),
+                }
+            } else if let Some(rel) = id.strip_prefix("file:") {
+                match self.file_record(rel) {
+                    Some(r) => out.record("file", id, r),
+                    None => out.not_found("file", id),
+                }
+            }
+        }
+        if !crates.is_empty() {
+            self.emit_crates(Some(&crates), out)?;
+        }
+        Ok(())
+    }
+}
+
 impl Source for Workspace {
     fn name(&self) -> &str {
         "workspace"
     }
 
     fn capabilities(&self) -> Value {
-        json!({"refresh": {"crate": ["external_ids"], "doc": ["external_ids"], "file": ["external_ids"]},
-               "resync": ["crate", "doc", "file", "betterer"], "max_concurrency": 1})
+        json!({"refresh": {"repo": ["external_ids"], "crate": ["external_ids"], "doc": ["external_ids"], "file": ["external_ids"]},
+               "resync": ["repo", "crate", "doc", "file", "betterer"], "max_concurrency": 1})
     }
 
     async fn handle(&mut self, cmd: &Value, out: &mut Out) -> Result<(), String> {
         match cmd["command"].as_str() {
-            Some("resync") => {
-                let kinds: Vec<&str> = cmd["kinds"]
-                    .as_array()
-                    .map(|k| k.iter().filter_map(Value::as_str).collect())
-                    .unwrap_or_else(|| vec!["crate", "doc", "file", "betterer"]);
-                if self.crates && kinds.contains(&"crate") {
-                    self.emit_crates(None, out)?;
-                    out.snapshot_complete("crate");
-                }
-                let paths = self.walk();
-                for (kind, set) in [("doc", &self.docs), ("file", &self.files)] {
-                    if !kinds.contains(&kind) {
-                        continue;
-                    }
-                    for rel in paths.iter().filter(|p| Self::matches(set, p)) {
-                        let rec = if kind == "doc" {
-                            self.doc_record(rel)
-                        } else {
-                            self.file_record(rel)
-                        };
-                        if let Some(r) = rec {
-                            out.record(kind, &format!("{kind}:{rel}"), r);
-                        }
-                    }
-                    out.snapshot_complete(kind);
-                }
-                if kinds.contains(&"betterer") && !self.betterer.is_empty() {
-                    for rel in paths.iter().filter(|p| Self::matches(&self.betterer, p)) {
-                        let text = std::fs::read_to_string(self.root.join(rel)).unwrap_or_default();
-                        for (test, mut data) in betterer::parse(&text) {
-                            data["path"] = json!(rel);
-                            out.record("betterer", &format!("betterer:{rel}#{test}"), data);
-                        }
-                    }
-                    out.snapshot_complete("betterer");
-                }
-                Ok(())
-            }
-            Some("refresh") => {
-                let mut crates = BTreeSet::new();
-                for id in cmd["external_ids"]
-                    .as_array()
-                    .into_iter()
-                    .flatten()
-                    .filter_map(Value::as_str)
-                {
-                    if let Some(name) = id.strip_prefix("crate:") {
-                        crates.insert(name.to_owned());
-                    } else if let Some(rel) = id.strip_prefix("doc:") {
-                        match self.doc_record(rel) {
-                            Some(r) => out.record("doc", id, r),
-                            None => out.not_found("doc", id),
-                        }
-                    } else if let Some(rel) = id.strip_prefix("file:") {
-                        match self.file_record(rel) {
-                            Some(r) => out.record("file", id, r),
-                            None => out.not_found("file", id),
-                        }
-                    }
-                }
-                if !crates.is_empty() {
-                    self.emit_crates(Some(&crates), out)?;
-                }
-                Ok(())
-            }
+            Some("resync") => self.resync(cmd, out),
+            Some("refresh") => self.refresh(cmd, out),
             other => Err(format!("unsupported command {other:?}")),
         }
     }

@@ -38,7 +38,7 @@ MCP, CLI, data model, properties) and test against
 bridge), `connector test`, `describe` and `report` (repo portals and the ratchet, D66). The server also hosts `/mcp` and the UI at `/`, and supervises the
 `toolbox-connector-{github,git-files}` binaries; `toolbox-connector-scim` runs remotely. The
 acceptance scripts `scripts/m2…m4-acceptance.sh` need Postgres 16; M3 and M4 also need
-`TOOLBOX_OPENFGA_BIN`, and M4 needs Node with Playwright. **M5 (actions) is paused (D64)** until a review of self-service coordination lands; don't start it. Meanwhile [`portal/`](./portal/README.md) is Toolbox for Toolbox: `toolbox report portal --skip runner --baseline portal/results.json` scores this repo against the three SDLC layers' standards (D65) and CI fails on regressions (D66); if you improve something, rerun with `--update` and commit `portal/results.json`. Federation is designed, not built (D68).
+`TOOLBOX_OPENFGA_BIN`, and M4 needs Node with Playwright. **M5 (actions) is paused (D64)** until a review of self-service coordination lands; don't start it. Meanwhile [`portal/`](./portal/README.md) is Toolbox for Toolbox: `toolbox report portal --skip runner --baseline portal/results.json` scores this repo against the three SDLC layers' standards (D65) and CI fails on regressions (D66); if you improve something, rerun with `--update` and commit `portal/results.json`. Pilot repos adopt this with one step, the `actions/report` GitHub Action and `examples/repo-portal-starter` (D69). Federation is designed, not built (D68); its package registry is a flagged open question (Q15).
 
 ## Repository layout
 
@@ -65,6 +65,7 @@ ui/                          the minimal UI (React + Vite; dist/ is embedded in 
 examples/reference-portal/   reference implementation anchor: manifest, schemas, fixtures, oracle, authz tests
 experiments/                 reproducible experiments cited by the docs
 plugins/toolbox-operator/    Agent Plugins 1.0.0 package (pre-release skeleton)
+actions/report/              GitHub Action: `toolbox report` with a ratchet, for pilot repos (D69)
 ```
 
 ## Working rules (maintainer SDLC)

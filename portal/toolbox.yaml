@@ -29,7 +29,7 @@ connectors:
     runtime: in-image
     config:
       root: "."
-      docs: ["*.md", "docs/**/*.md", "examples/*/README.md", "experiments/*/README.md", "plugins/**/*.md", "portal/*.md"]
+      docs: ["*.md", "docs/**/*.md", "examples/*/README.md", "experiments/*/README.md", "plugins/**/*.md", "portal/*.md", "actions/*/README.md"]
       files: ["scripts/*", "crates/*/tests/*.rs", "examples/reference-portal/tools/*.py"]
       captures:
         # `toolbox get …`, `"$T/toolbox" serve …`, the acceptance scripts' `ask owner …`
