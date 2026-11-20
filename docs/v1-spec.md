@@ -494,7 +494,7 @@ Webhooks and MCP share the service URL.
 
 | Measure | Budget | Evidence |
 |---|---|---|
-| Full recompute, 100k entities / 2M relations / 100 rules, 4 vCPU | ≤ 10 s (measured ~3 s) | [technology-critique.md](./technology-critique.md) §7.1 |
+| Full recompute, 100k entities / 2M relations / 100 rules, 4 vCPU | ≤ 10 s (the prototype measured ~3 s; the pipeline measures 8.0–8.6 s, see [research-log.md](./research-log.md), *Scale profile*) | [technology-critique.md](./technology-critique.md) §7.1 |
 | Webhook → visible | p95 ≤ 60 s | plan §6.6 |
 | Check latency (OpenFGA over the view) | p95 ≤ 10 ms in-container | critique §7.2 (2.4 ms p50 over HTTP) |
 | Toolbox preview | p95 ≤ 150 ms | [frontend.md](./design/frontend.md) §6 |
