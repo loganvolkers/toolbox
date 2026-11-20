@@ -79,6 +79,7 @@ docs carry a status banner at the top when a later decision changed them; the ba
 | Durable runtime | DBOS Rust SDK vs minimal runtime behind `Durable` (Q4); crash between steps; cross-instance recovery after scale-in (Q13) | incremental-computation §4 |
 | Deployment | One image on Cloud Run + Cloud SQL with a UI bundle and an in-image executor; instance-based billing; rollback by image | plan §6.2 |
 | Operator SDLC | `toolbox dev` / `test` / `plan` / preview deploys; dev-loop benchmark with SLOs | sdlc, developer-velocity |
+| Connectors & actions runtime | Control channel (stdio / long-poll) with scoped refresh and completion; action run lifecycle with preview tokens and postcondition verification; in-image and GitHub Actions executors | connector-control, action-runs |
 | Expressions | CEL conformance (Q10); fixture-based output validation against JSON Schemas | extensibility |
 | Config | Manifest JSON Schema + TypeScript typed builder; manifest determinism | extensibility, plan §2 |
 | Frontend | UI extension contract; default React kit (`@toolbox/ui`, Storybook 10); one non-React bundle through the same contract | frontend |

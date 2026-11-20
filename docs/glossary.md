@@ -44,3 +44,8 @@ Shared vocabulary across the design documents. Keep entries short and link to th
 | **UI extension contract** | How operator UI bundles (any framework; React by default) are built into the image and mounted | [decisions.md](./decisions.md) D40 |
 | **In-image executor** | Action code packaged into the Toolbox image and run as a child process over stdio | [decisions.md](./decisions.md) D40 |
 | **Sprawl budget** | The cap on implementation languages, required services and author-facing languages in v1 | [decisions.md](./decisions.md) D45 |
+| **Connector command** | A Toolbox → connector instruction (`refresh`, `resync`, `cancel`) with an id, priority, deadline and terminal status | [design/connector-control.md](./design/connector-control.md) |
+| **Scoped refresh** | A re-read of specific records (by external ids, selector or `since`); never causes implicit deletes | [design/connector-control.md](./design/connector-control.md) |
+| **Postcondition** | A CEL expression an action declares, which must hold after the run for it to succeed | [design/action-runs.md](./design/action-runs.md) |
+| **Confirmation token** | Binds a run to the exact preview the requester saw; stale previews are rejected | [design/action-runs.md](./design/action-runs.md) |
+| **`unverified`** | Run state when the executor reported success but Toolbox could not observe the effect; never shown as success | [design/action-runs.md](./design/action-runs.md) |

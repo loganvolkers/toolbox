@@ -30,6 +30,8 @@ exposed identically over API, MCP, CLI and UI.
   - [design/notifications.md](docs/design/notifications.md): ownership-routed notifications, GitHub App, Actions for service repos
   - [design/identity-resolution.md](docs/design/identity-resolution.md): matching one service across many tools
   - [design/action-entities.md](docs/design/action-entities.md): action-created entities, TTL, day-2 actions
+  - [design/action-runs.md](docs/design/action-runs.md): preview, confirm and verified completion for self-service actions
+  - [design/connector-control.md](docs/design/connector-control.md): commands to connectors (scoped refresh, resync) and read-your-writes
   - [design/context-lake.md](docs/design/context-lake.md): context lakes, and how the catalog, knowledge and security graphs overlap
   - [design/source-of-truth.md](docs/design/source-of-truth.md): field-level source of truth, and when Toolbox owns the data
   - [design/verification.md](docs/design/verification.md): TDD, deterministic simulation, reference models, differential and configuration-space testing

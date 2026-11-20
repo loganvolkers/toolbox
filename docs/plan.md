@@ -494,8 +494,12 @@ initiative("tier1-oncall", scorecard = "production-readiness", rules = ["oncall-
     use JSON-Schema inputs)
   - executor, policy, approvals (`any`/`all` of groups, Port-style), timeouts and concurrency keys
   - annotations: `read_only`, `destructive`, `idempotent`, which map 1:1 to MCP tool annotations
-- **Executors:** built-in executors are listed below. All *side effects run outside the portal
-  process*; the exception is sandboxed `wasm`, which has no I/O beyond host-granted HTTP.
+> **2026-11-20 (D40, D49):** run lifecycle, preview/confirm and verification are now defined in
+> [action-runs.md](./design/action-runs.md): a run succeeds only when its postconditions are observed.
+> In-image executors (child processes over stdio) are the default for rich actions; `wasm` is deferred.
+
+- **Executors:** built-in executors are listed below. All *side effects run outside the server
+  process* (in-image executors are separate child processes).
   - `webhook` (HMAC-signed)
   - `github_workflow` (workflow_dispatch) and `gitlab_pipeline`
   - `argo_workflow` and `k8s_job`
@@ -627,6 +631,11 @@ Full rationale (Backstage, Port, Salesforce, Shopify Functions) is in
 
 #### Toolbox Connector Protocol (TCP)
 
+> **2026-11-20 (D42, D48):** v1 keeps TCP's semantics (raw records, snapshot markers, deletion valves)
+> as a versioned Toolbox API: the ingest endpoint plus a **control channel** for scoped refreshes
+> ([connector-control.md](./design/connector-control.md)). Spec governance and a neutral home are not
+> pursued now.
+
 TCP is a small, versioned, open spec, published separately from Toolbox. It is modelled on MCP's
 shape (capability negotiation, JSON messages, transport-independent) but built for **data
 synchronization**, not LLM tool calls.
@@ -716,6 +725,8 @@ These designs close the gaps found in the [red-team review](./red-team.md). Each
 | **GraphQL** | Read-only GraphQL for rich entity pages and operator views: trusted documents only in production, generated from the manifest at runtime, batched authorization, nullable facets, cost limits; not exposed to agents | [graphql.md](./design/graphql.md) |
 | **Frontend** | React + TypeScript on `@toolbox/ui` (React Aria, tokens, domain components, typed hooks). Action UIs in three tiers (generated → field widgets → custom TSX). Option-search API with rich, permission-shaped options shared with MCP. Dry-run latency SLO. Storybook 10 for primitives *and* page-level, persona-aware stories, backed by engine-recorded fixtures; stories are tests. Vite 8 HMR inside `toolbox dev` | [frontend.md](./design/frontend.md) |
 | **Agent plugins** | Two Agent Plugins 1.0.0 packages: `toolbox-operator` (in this repo; authoring skills + local MCP) and a user plugin generated from each portal's config (production MCP URL; config-derived skills; data fetched live) | [agent-plugins.md](./design/agent-plugins.md) |
+| **Connector control** | Commands to connectors (scoped refresh, resync, cancel) over stdio, long-poll pull or push; completion with the snapshot id that holds the results; freshness policies in the manifest | [connector-control.md](./design/connector-control.md) |
+| **Action runs** | Preview → confirm (token-bound) → dispatch → verify. A run succeeds only when CEL postconditions hold after a scoped refresh. Executor contract and fidelity tiers (in-image, HTTP, GitHub Actions, webhook) | [action-runs.md](./design/action-runs.md) |
 | **Action-created entities** | Action scopes (`create`/`day2`/`delete`/`global`), action-sourced fragments, TTL lifecycles with expiry automations, pending overlays for PR-based changes, bulk-edit PRs | [action-entities.md](./design/action-entities.md) |
 
 ## 5. Security model

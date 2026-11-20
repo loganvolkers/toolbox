@@ -71,6 +71,9 @@ minimal architecture adopted with amendments where it conflicted with them.
 | D46 | **Toolchain risk** (critique C10): a dependency that pins a newer Rust toolchain than the workspace is isolated or rejected | ✅ | [design/developer-velocity.md](./design/developer-velocity.md) |
 | D47 | **Run the Backstage parity audit** (critique C11, adversarial E6) as a Phase 0 task | ✅ | [technology-critique.md](./technology-critique.md) §4 |
 
+| D48 | **Connector control channel.** Besides the ingest endpoint, Toolbox sends connectors commands (scoped `refresh`, `resync`, `cancel`) with acknowledgements, completion and the snapshot id that contains the results. Delivered over stdio for in-image connectors, long-poll pull for remote ones (no inbound ports), optional push. Still a versioned Toolbox API, not a governed standard | ✅ amends D42 | [design/connector-control.md](./design/connector-control.md) |
+| D49 | **Action runs: preview → confirm → dispatch → verify.** A run succeeds only when declared CEL postconditions hold at a snapshot taken after a scoped connector refresh ("done means observed"). Confirmation is bound to the preview by a token. Executors implement `preview`, `run` with progress, `cancel` and optional `verify`. In-image and HTTP executors are the high-fidelity default; GitHub Actions is supported at a coarser preview tier; fire-and-forget webhooks or queues never count as completion and end `unverified` without a postcondition | ✅ replaces the run states in plan §4.3 | [design/action-runs.md](./design/action-runs.md) |
+
 ## Open questions (consolidated)
 
 | # | Question | Recommendation | Where |
