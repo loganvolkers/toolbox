@@ -1,7 +1,7 @@
 # Site Standards: Cataloguing the Public Docs
 
-*Status: deterministic catalog and scorecard built, 2026-11-20 (D87). The report element takes
-host slots (D89). The public docs are a
+*Status: deterministic catalog and scorecard built, 2026-11-20 (D88). The report element takes
+host slots (D90). The public docs are a
 Starlight site in `site/`, published to GitHub Pages. Toolbox for Toolbox catalogues each content
 page and scores it with `maintainer-site`. This is the maintainer SDLC: the site is part of this
 repository, and a page is held to the same shape of standard as a skill or a plugin. Related:
@@ -35,7 +35,7 @@ does not list, stops at bronze: it exists, and it is not yet part of the site.
 |---|---|---|
 | **Astro Starlight** | Content is markdown under `src/content/docs`, with `title` and `description` in frontmatter, and a sidebar declared in `astro.config` | The site is `site/`. The sidebar is an autogenerate entry per section |
 | **GitHub Pages** | A project site is served at `https://<user>.github.io/<repo>/` | `site` is `https://loganvolkers.github.io` and `base` is `/toolbox`. A workflow builds with `npm ci` and deploys with the Pages actions, pinned to commits |
-| **The one-file HTML report** ([repo-portals.md](./repo-portals.md)) | `toolbox report -o html` is one self-contained page. `-o web` also writes the `<toolbox-report>` element and `report.json` | The site publishes that directory (D88). `src/pages/report-hosted.astro` fills the header, nav, and footer slots (D89). CI checks the three generated files against a fresh run |
+| **The one-file HTML report** ([repo-portals.md](./repo-portals.md)) | `toolbox report -o html` is one self-contained page. `-o web` also writes the `<toolbox-report>` element and `report.json` | The site publishes that directory (D89). `src/pages/report-hosted.astro` fills the header, nav, and footer slots (D90). CI checks the three generated files against a fresh run |
 | **Packages** ([packages.md](./packages.md)) | Where shared standard packages live is Q15, still open | The site is documentation. It is not a package registry, and `site/package.json` is `private` |
 
 ## 3. The catalog
@@ -67,5 +67,5 @@ lives only in `portal/fixtures/workspace.ndjson`, so a fixture is not published.
 
 - Astro Starlight, content pages and sidebar: the `site/` config in this repository, built with `npm run build`.
 - GitHub Pages project sites: `actions/upload-pages-artifact` and `actions/deploy-pages` in `.github/workflows/pages.yml`.
-- [repo-portals.md](./repo-portals.md) §4, the one-file HTML report and the `<toolbox-report>` slots (D88, D89).
+- [repo-portals.md](./repo-portals.md) §4, the one-file HTML report and the `<toolbox-report>` slots (D89, D90).
 - [packages.md](./packages.md), Q15, which this site does not decide.

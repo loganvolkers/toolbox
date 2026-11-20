@@ -51,6 +51,7 @@
 mod agentsmd;
 mod betterer;
 mod connectors;
+mod data;
 mod deps;
 mod examples;
 mod npm;
@@ -101,6 +102,8 @@ struct Workspace {
     crates: bool,
     /// Emit one `repo` record for the checkout (opt-in: `"repo": true`).
     repo: bool,
+    /// Declared records (`data`): YAML or JSON files read into a configured record kind.
+    data: Vec<data::Source>,
 }
 
 fn named_regexes(cfg: &Value, key: &str) -> Result<Vec<(String, Regex)>, String> {
@@ -195,6 +198,7 @@ impl Workspace {
             counts: named_regexes(&cfg, "counts")?,
             crates: cfg["crates"].as_bool().unwrap_or(true),
             repo: cfg["repo"].as_bool().unwrap_or(false),
+            data: data::sources(&cfg)?,
         })
     }
 
@@ -405,7 +409,7 @@ impl Workspace {
 impl Workspace {
     /// Every record of the requested kinds (all by default), each kind closed by `snapshot_complete`.
     fn resync(&self, cmd: &Value, out: &mut Out) -> Result<(), String> {
-        let kinds: Vec<&str> = cmd["kinds"]
+        let mut kinds: Vec<&str> = cmd["kinds"]
             .as_array()
             .map(|k| k.iter().filter_map(Value::as_str).collect())
             .unwrap_or_else(|| {
@@ -429,6 +433,9 @@ impl Workspace {
                     "assessment",
                 ]
             });
+        if cmd["kinds"].as_array().is_none() {
+            kinds.extend(self.data.iter().map(|d| d.kind.as_str()));
+        }
         if self.crates && kinds.contains(&"crate") {
             self.emit_crates(None, out)?;
             out.snapshot_complete("crate");
@@ -438,6 +445,7 @@ impl Workspace {
         self.emit_docs_and_files(&paths, &kinds, out);
         self.emit_workflows(&paths, &kinds, out);
         self.emit_betterer(&paths, &kinds, out);
+        self.emit_data(&paths, &kinds, out);
         self.emit_assessments(&paths, &kinds, out);
         self.emit_skills(&paths, &kinds, out);
         self.emit_connectors(&paths, &kinds, out);
@@ -557,6 +565,27 @@ impl Workspace {
             }
         }
         out.snapshot_complete("dependency");
+    }
+
+    /// Declared records for each configured `data` kind that was requested.
+    fn emit_data(&self, paths: &[String], kinds: &[&str], out: &mut Out) {
+        for src in self
+            .data
+            .iter()
+            .filter(|d| kinds.contains(&d.kind.as_str()))
+        {
+            for rel in paths.iter().filter(|p| Self::matches(&src.globs, p)) {
+                match data::records(&self.root, rel, src) {
+                    Ok(recs) => {
+                        for (id, rec) in recs {
+                            out.record(&src.kind, &id, rec);
+                        }
+                    }
+                    Err(e) => out.log("warn", &format!("{rel}: {e}")),
+                }
+            }
+            out.snapshot_complete(&src.kind);
+        }
     }
 
     fn emit_examples(&self, paths: &[String], kinds: &[&str], out: &mut Out) {
@@ -725,6 +754,10 @@ impl Workspace {
         if self.refresh_catalog(kind, id, out) {
             return;
         }
+        if let Some(src) = self.data.iter().find(|d| d.kind == kind) {
+            self.refresh_data(src, id, out);
+            return;
+        }
         match kind {
             "crate" => {
                 if let Some(name) = id.strip_prefix("crate:") {
@@ -754,6 +787,21 @@ impl Workspace {
             _ => return false,
         }
         true
+    }
+
+    /// One declared record: re-read the source's files and emit the entry with this id.
+    fn refresh_data(&self, src: &data::Source, id: &str, out: &mut Out) {
+        let found = self
+            .walk()
+            .iter()
+            .filter(|p| Self::matches(&src.globs, p))
+            .filter_map(|rel| data::records(&self.root, rel, src).ok())
+            .flatten()
+            .find(|(eid, _)| eid == id);
+        match found {
+            Some((_, rec)) => out.record(&src.kind, id, rec),
+            None => out.not_found(&src.kind, id),
+        }
     }
 
     fn refresh_repo(&self, id: &str, out: &mut Out) {
@@ -912,7 +960,9 @@ impl Source for Workspace {
             ("site-page", !self.pages.is_empty()),
             ("assessment", !self.assessments.is_empty()),
         ];
-        let kinds: Vec<&str> = on.iter().filter(|(_, b)| *b).map(|(k, _)| *k).collect();
+        let mut kinds: Vec<&str> = on.iter().filter(|(_, b)| *b).map(|(k, _)| *k).collect();
+        let declared: Vec<&str> = self.data.iter().map(|d| d.kind.as_str()).collect();
+        kinds.extend(&declared);
         let refresh: Map<String, Value> = kinds
             .iter()
             .filter(|k| !matches!(**k, "betterer" | "assessment"))

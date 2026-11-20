@@ -103,7 +103,7 @@ and it never goes stale relative to the commit it describes.
 </toolbox-report>
 ```
 
-This site does that in `site/src/pages/report-hosted.astro` (D89). The data script inside the one-file page is the only interpolation, and a `</` in the JSON is escaped so it cannot close the script.
+This site does that in `site/src/pages/report-hosted.astro` (D90). The data script inside the one-file page is the only interpolation, and a `</` in the JSON is escaped so it cannot close the script.
 
 **Visibility caveat.** The page shows *everything*, because `report` has no caller and applies no
 facets. That is right for a repo portal, whose readers can read the repo anyway. It is wrong for a

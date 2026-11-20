@@ -1,0 +1,84 @@
+# Package author SDLC stages (docs/design/package-author-sdlc.md, D87). Like the maintainer SDLC
+# until test, then it forks: a package is tested against released Toolbox versions and distributed
+# to consumers instead of merged into one repository.
+records:
+  - id: package-author/author
+    layer: package-author
+    name: author
+    order: 1
+    intent: Write standards (kinds, scorecards, rubrics, skills) as a package with typed parameters.
+    exitCriterion: A package manifest validates and its fragments validate against the manifest schema.
+    commands: ["toolbox validate"]
+    checks: []
+    docs: [docs/design/packages.md]
+    status: designed
+    gaps:
+      - "no package manifest (toolbox-package.yaml) or parameters: only local `include` of YAML files"
+      - "no scaffold (toolbox package new)"
+  - id: package-author/build-connector
+    layer: package-author
+    name: build-connector
+    order: 2
+    intent: Build a connector outside this repository, in any language, against the connector protocol.
+    exitCriterion: The connector passes the conformance kit as a standalone executable or WASM component.
+    commands: ["toolbox connector test"]
+    checks: [crates/toolbox-connect/src/conformance.rs]
+    docs: [docs/design/connector-control.md, docs/design/package-author-sdlc.md]
+    status: partial
+    gaps:
+      - "in-image connectors must be builtin crates in this repository (builtin:<name>): no way to reference an external executable"
+      - "the Rust SDK (toolbox-connect) is not published; no SDK for other languages"
+      - "no `toolbox connector new` scaffold"
+      - "only remote connectors (push to /v1/ingest) can live outside this repository today"
+  - id: package-author/test
+    layer: package-author
+    name: test
+    order: 3
+    intent: Prove the package's rules both ways on its fixtures, on every Toolbox version it claims to support.
+    exitCriterion: toolbox test passes for each supported Toolbox release and platform; meta bronze for every exported rule.
+    commands: ["toolbox test", "toolbox connector test"]
+    checks: []
+    docs: [docs/design/package-author-sdlc.md]
+    status: partial
+    gaps:
+      - "no released Toolbox versions to test against (maintainer/release is missing)"
+      - "no compatibility matrix or `toolbox` version range in a package"
+  - id: package-author/package
+    layer: package-author
+    name: package
+    order: 4
+    intent: Produce one deterministic archive with fragments, fixtures, tests, skills, connector artifacts and tool requirements.
+    exitCriterion: The same source produces the same archive digest; tool requirements are pinned with checksums.
+    commands: []
+    checks: []
+    docs: [docs/design/packages.md]
+    status: missing
+    gaps:
+      - "no package format, archive or toolbox.lock"
+      - "no way to declare upstream tools (zizmor, actionlint) beyond prose in a README"
+  - id: package-author/distribute
+    layer: package-author
+    name: distribute
+    order: 5
+    intent: Release the archive and connector binaries so consumers can pin and verify them.
+    exitCriterion: A tag publishes attested artifacts, mirrored to OCI, and consumers resolve them by digest.
+    commands: []
+    checks: []
+    docs: [docs/design/packages.md]
+    status: missing
+    gaps:
+      - "registry undecided (Q15)"
+      - "no release workflow, attestations or installers for connector binaries"
+  - id: package-author/adopt
+    layer: package-author
+    name: adopt
+    order: 6
+    intent: Show a consumer what an upgrade changes before it lands, and roll it out across a fleet.
+    exitCriterion: toolbox plan shows entities whose level changes for a package upgrade; a fleet rollout opens one PR per repository.
+    commands: ["toolbox plan --local"]
+    checks: [actions/report/action.yml]
+    docs: [docs/design/federation.md]
+    status: designed
+    gaps:
+      - "plan compares local manifests only; no remote package resolution"
+      - "no fleet rollout workflow (gh-aw or otherwise)"

@@ -9,7 +9,9 @@ while building Toolbox for Toolbox (T4T):*
 4. *How do we tell what is unique to us from what is worth sharing?*
 
 *Layers: the **operator SDLC** (sharing and importing standards) and the **maintainer SDLC** (what we
-publish). No code changes. Builds on [federation.md](./federation.md), [typescript-builder.md](./typescript-builder.md)
+publish). **Revised by [package-author-sdlc.md](./package-author-sdlc.md) (D87):** a package also
+carries connector artifacts and tool requirements, and this design was blind to binaries; read §3–4
+here with §3 and §5 there. No code changes. Builds on [federation.md](./federation.md), [typescript-builder.md](./typescript-builder.md)
 and [repo-portals.md](./repo-portals.md).*
 
 ---

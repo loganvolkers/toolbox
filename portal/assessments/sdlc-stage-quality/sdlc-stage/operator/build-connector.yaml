@@ -1,0 +1,26 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: sdlc-stage:operator/build-connector
+rubric: sdlc-stage-quality
+subjectHash: "dc88286bf099"
+assessor: {kind: agent, name: claude-code}
+at: "2026-11-20"
+verdicts:
+  - criterion: executable-exit
+    verdict: pass
+    reason: "`toolbox connector test` runs the conformance kit (crates/toolbox-connect/src/conformance.rs) against any executable and fails on protocol violations."
+  - criterion: agent-can-complete
+    verdict: unsure
+    reason: >-
+      An agent can write a remote connector from docs/design/connector-control.md and schema/connector-messages.schema.json,
+      but there is no scaffold or non-Rust SDK, and nothing tells it which form (remote or in-image) to choose.
+    suggestion: Add `toolbox connector new <lang>` and a short guide that ends with the conformance kit passing.
+  - criterion: reuses-artifacts
+    verdict: pass
+    reason: A remote connector needs no Toolbox build; it pushes to /v1/ingest with a token (scripts/m4-acceptance.sh runs the SCIM connector that way).
+  - criterion: decoupled-from-core
+    verdict: fail
+    reason: >-
+      An in-image connector can only be `package: builtin:<name>` (crates/toolbox-api/src/connectors.rs resolves
+      binaries next to toolbox), so an operator who needs one must add a crate to this repository.
+    suggestion: Resolve `package:` values that name a released executable (pinned per platform in toolbox.lock) or a WASM component, as docs/design/package-author-sdlc.md §3.2 proposes.
+summary: Remote connectors work for anyone; in-image connectors are maintainer-only, which is the coupling to fix.

@@ -6,12 +6,15 @@ milestone by milestone from [docs/v1-spec.md](./docs/v1-spec.md); M0–M4 are do
 below). The design documents remain the source of intent, and an agent plugin skeleton lives in
 `plugins/`.
 
-**Three SDLC layers ([docs/sdlc.md](./docs/sdlc.md), D63).** Say which one you mean:
+**Four SDLC layers ([docs/sdlc.md](./docs/sdlc.md), D63, D87).** Say which one you mean:
 1. **Maintainer SDLC**: you, building and testing Toolbox itself in this repo
    ([maintainer-sdlc.md](./docs/design/maintainer-sdlc.md)). The working rules below are its rules.
-2. **Operator SDLC**: platform teams building and changing a *portal*
+2. **Package author SDLC**: anyone publishing packages, connectors and standards for others
+   ([package-author-sdlc.md](./docs/design/package-author-sdlc.md)). It forks from the maintainer
+   SDLC at *test*: test against released Toolbox versions, then distribute.
+3. **Operator SDLC**: platform teams building and changing a *portal*
    ([sdlc.md](./docs/design/sdlc.md)).
-3. **User SDLC**: developers and agents building *apps* on a portal's context and actions
+4. **User SDLC**: developers and agents building *apps* on a portal's context and actions
    ([user-sdlc.md](./docs/design/user-sdlc.md)).
 
 ## Read first
@@ -38,7 +41,7 @@ MCP, CLI, data model, properties) and test against
 bridge), `connector test`, `describe` and `report` (repo portals and the ratchet, D66). The server also hosts `/mcp` and the UI at `/`, and supervises the
 `toolbox-connector-{github,git-files}` binaries; `toolbox-connector-scim` runs remotely. The
 acceptance scripts `scripts/m2…m4-acceptance.sh` need Postgres 16; M3 and M4 also need
-`TOOLBOX_OPENFGA_BIN`, and M4 needs Node with Playwright. **M5 (actions) is paused (D64)** until a review of self-service coordination lands; don't start it. Meanwhile [`portal/`](./portal/README.md) is Toolbox for Toolbox: `toolbox report portal --skip runner,github-actions --baseline portal/results.json` (with zizmor 1.32.0 and actionlint 1.7.12 installed) scores this repo against the three SDLC layers' standards (D65), including the agent skills in `plugins/` (`maintainer-skill`, D72) and the first-party connectors (`maintainer-connector`, D73) and direct Cargo dependencies (`maintainer-dependency`, D74) and agent instruction files (`maintainer-agent-doc`, D75) and npm manifests (`maintainer-package`, D76) and the JSON Schemas it compiles (`maintainer-schema`, D77) and the example write-ups agents copy (`maintainer-example`, D78) and the agent plugin packages it ships (`maintainer-plugin`, D81) and harness aliases plus the check commands named in `AGENTS.md` (`maintainer-agent-doc`, D82, D83) and cited decision ids (`maintainer-docs`, D84) and GitHub Advanced Security config (`maintainer-supply-chain`, D85) and the repository level, which is the lowest of those scorecards (`maintainer-repo`, D86) and the public docs pages (`maintainer-site`, D87) and the HTML report the site publishes (`toolbox report`, D88; host slots, D89), and CI fails on regressions (D66); if you improve something, rerun with `--update` and commit `portal/results.json`. Pilot repos adopt this with one step, the `actions/report` GitHub Action and `examples/repo-portal-starter` (D69). Scorecards are scored too (`meta-rule`, `meta-scorecard`, D71): a new rule must be tested, explained and decided on fixtures from its first commit. Judgement is pushed, not pulled: brief yourself with `toolbox assess brief`, write the assessment to `portal/assessments/`, and run `toolbox assess check portal` (D79, D80; skill `assess-entity`). Federation is designed, not built (D68); its package registry is a flagged open question (Q15).
+`TOOLBOX_OPENFGA_BIN`, and M4 needs Node with Playwright. **M5 (actions) is paused (D64)** until a review of self-service coordination lands; don't start it. Meanwhile [`portal/`](./portal/README.md) is Toolbox for Toolbox: `toolbox report portal --skip runner,github-actions --baseline portal/results.json` (with zizmor 1.32.0 and actionlint 1.7.12 installed) scores this repo against the three SDLC layers' standards (D65), including the agent skills in `plugins/` (`maintainer-skill`, D72) and the first-party connectors (`maintainer-connector`, D73) and direct Cargo dependencies (`maintainer-dependency`, D74) and agent instruction files (`maintainer-agent-doc`, D75) and npm manifests (`maintainer-package`, D76) and the JSON Schemas it compiles (`maintainer-schema`, D77) and the example write-ups agents copy (`maintainer-example`, D78) and the agent plugin packages it ships (`maintainer-plugin`, D81) and harness aliases plus the check commands named in `AGENTS.md` (`maintainer-agent-doc`, D82, D83) and cited decision ids (`maintainer-docs`, D84) and GitHub Advanced Security config (`maintainer-supply-chain`, D85) and the repository level, which is the lowest of those scorecards (`maintainer-repo`, D86) and the public docs pages (`maintainer-site`, D88) and the HTML report the site publishes (`toolbox report`, D89; host slots, D90), and CI fails on regressions (D66); if you improve something, rerun with `--update` and commit `portal/results.json`. Pilot repos adopt this with one step, the `actions/report` GitHub Action and `examples/repo-portal-starter` (D69). Scorecards are scored too (`meta-rule`, `meta-scorecard`, D71): a new rule must be tested, explained and decided on fixtures from its first commit. Judgement is pushed, not pulled: brief yourself with `toolbox assess brief`, write the assessment to `portal/assessments/`, and run `toolbox assess check portal` (D79, D80; skill `assess-entity`). Every layer's stages are catalogued in `portal/sdlc/` and scored (`sdlc-stage`, `sdlc-layer`, D87). Federation is designed, not built (D68); its package registry is a flagged open question (Q15).
 
 ## Repository layout
 
@@ -52,7 +55,7 @@ docs/red-team.md             competitor-perspective gap review (with status)
 docs/principal-review.md     principal-engineer review (with resolutions)
 docs/adversarial-critique.md whether to build at all: hypotheses, alternatives, kill criteria
 docs/technology-critique.md  sprawl and replaceability review; proposed minimal architecture
-docs/sdlc.md                 the three SDLC layers: maintainer, operator, user (D63)
+docs/sdlc.md                 the four SDLC layers: maintainer, package author, operator, user (D63, D87)
 portal/                      Toolbox for Toolbox: this repo's own portal and standards (D65)
 docs/design/*.md             one detailed design per capability (maintainer-, user-sdlc.md and sdlc.md = operator)
 docs/examples/*.md           worked examples (e.g. approved GitHub Apps)
@@ -103,9 +106,10 @@ Every design choice must serve these. Check new work against them.
 
 1. **Simple deployment:** one container image plus Postgres (Cloud Run or equivalent); custom UIs and
    action code ship inside the image.
-2. **Agent SDLC, in three layers (D63):** agents can plan, build, test, deploy and monitor at every
+2. **Agent SDLC, in four layers (D63, D87):** agents can plan, build, test, deploy and monitor at every
    layer, with the maturity of regular software engineering:
    - *maintainers* build and verify Toolbox in isolation, with executable exit criteria;
+   - *package authors* test packages and connectors against released Toolbox versions, then distribute them;
    - *operators* change a portal with validate → test → plan → preview → deploy → verify;
    - *users* build apps on stable, versioned API/MCP contracts with reproducible reads.
 3. **Replaceable components:** React, DBOS, OpenFGA packaging and the derived-state engine are defaults
