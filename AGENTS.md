@@ -23,7 +23,7 @@ MCP, CLI, data model, properties) and test against
 **Building:** `cargo build` (toolchain pinned in `rust-toolchain.toml`), `cargo test`, `cargo clippy
 --all-targets -- -D warnings`, then `target/debug/toolbox validate examples/reference-portal`.
 `python scripts/validate-parity.py` checks `toolbox validate` against `tools/validate.py`.
-`.github/workflows/ci.yml` runs all of this. **M0 is done**; M1 (derived state) is next.
+`.github/workflows/ci.yml` runs all of this. **M0 and M1 are done** (`toolbox test`, `toolbox plan --local --base <manifest>`, `toolbox derive`); M2 (Postgres and API) is next.
 
 ## Repository layout
 

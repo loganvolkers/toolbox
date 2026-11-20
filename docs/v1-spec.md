@@ -53,7 +53,7 @@ earlier ones. Tracks in [AGENTS.md](../AGENTS.md) map onto these.
 | # | Milestone | Delivers | Exit criteria |
 |---|---|---|---|
 | **M0** ✅ | Skeleton | Cargo workspace (§4), `toolbox validate` (done 2026-11-20: [research-log.md](./research-log.md)) | Validates the reference `toolbox.yaml` with the same results as `tools/validate.py`, including cross-reference errors; rejects the negative cases recorded in [research-log.md](./research-log.md) |
-| **M1** | Derived state | `MemStore`, NDJSON fixture loader, the §6 pipeline behind `DerivedState`, `toolbox test`, `toolbox plan --local` | **Byte-identical** `expected/*.json` and `authz/tuples.expected.json` vs `tools/reference.py`; all `tests/*.test.yaml` pass; a plan between two manifests lists changed fields, levels, tuples and options; 100k-entity synthetic run under the §10.4 budget |
+| **M1** ✅ | Derived state | `MemStore`, NDJSON fixture loader, the §6 pipeline behind `DerivedState`, `toolbox test`, `toolbox plan --local` | **Byte-identical** `expected/*.json` and `authz/tuples.expected.json` vs `tools/reference.py`; all `tests/*.test.yaml` pass; a plan between two manifests lists changed fields, levels, tuples and options; 100k-entity synthetic run under the §10.4 budget |
 | **M2** | Postgres and API | `PgStore` (§8), ingest endpoint, snapshot loop, REST reads (§7.2), snapshot ids | Same outputs as M1 when fixtures arrive through `POST /v1/ingest`; `min_snapshot` read-your-writes works; restart loses nothing |
 | **M3** | Authorization | Authn (IAP JWT, OIDC, PAT), OpenFGA co-process over the tuple view, facet shaping, `toolbox test` runs `.fga.yaml` | Reference `authz/model.fga.yaml` passes through `Authorizer`; A3/A4/A10 behave as specified; a membership removal is enforced within 60 s |
 | **M4** | Agents and connectors | MCP (§7.3), CLI (§7.7), the read pages of the [minimal UI](./design/minimal-ui.md), connector runtime with control channel (§7.4), GitHub, git-files and SCIM connectors | Acceptance A1–A5 and A11; connector conformance kit passes for all three connectors |
@@ -177,7 +177,12 @@ Rules, in order of importance:
   error) is `unknown`, not `fail`. The level is the highest level whose rules, and all lower levels'
   rules, all `pass`; otherwise `none`.
 - **Determinism:** every output is sorted; the same manifest and inputs produce byte-identical JSON
-  (P1).
+  (P1). Records are processed in (connector, record kind, external id) order, so arrival order never
+  matters.
+- **Computed fields** see the entity's merged and authority fields, not other computed fields, so
+  their evaluation order doesn't matter. `inbound.<relation>` is a lazy list: `size()` and the
+  iteration macros (`map`, `exists`, `all`, `filter`) work; indexing and `in` don't (implementation
+  note from M1, where converting 2M inbound elements eagerly cost seconds).
 
 ### 6.3 Deletions and safety valves
 

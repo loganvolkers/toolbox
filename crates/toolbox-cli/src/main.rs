@@ -1,4 +1,6 @@
-//! The `toolbox` binary (docs/v1-spec.md §7.7). M0 implements `toolbox validate`.
+//! The `toolbox` binary (docs/v1-spec.md §7.7).
+
+mod portal;
 
 use clap::{Parser, Subcommand, ValueEnum};
 use std::path::PathBuf;
@@ -27,9 +29,44 @@ enum Command {
         #[arg(long, value_enum, default_value_t = Format::Text)]
         format: Format,
     },
+    /// Recompute derived state from the portal's fixtures and run its expectation files
+    /// (tests/*.test.yaml). Exit code 1 if any expectation fails.
+    Test {
+        #[arg(default_value = ".")]
+        path: PathBuf,
+        #[arg(long, value_enum, default_value_t = Format::Text)]
+        format: Format,
+    },
+    /// Show what a manifest change would do: two recomputes over the same inputs, then a diff.
+    Plan {
+        #[arg(default_value = ".")]
+        path: PathBuf,
+        /// Compare against this manifest file (the "before"); the portal's manifest is the "after".
+        #[arg(long)]
+        base: PathBuf,
+        /// Use the portal's fixtures (the only mode until M6 adds --remote).
+        #[arg(long, default_value_t = true)]
+        local: bool,
+        #[arg(long, value_enum, default_value_t = PlanFormat::Md)]
+        format: PlanFormat,
+    },
+    /// Recompute derived state from fixtures and print a summary, or write the reference-format
+    /// files (expected/*.json, authz/tuples.expected.json) to --out.
+    Derive {
+        #[arg(default_value = ".")]
+        path: PathBuf,
+        #[arg(long)]
+        out: Option<PathBuf>,
+    },
 }
 
 #[derive(Clone, Copy, ValueEnum)]
+enum PlanFormat {
+    Md,
+    Json,
+}
+
+#[derive(Clone, Copy, PartialEq, ValueEnum)]
 enum Format {
     Text,
     Json,
@@ -38,7 +75,128 @@ enum Format {
 fn main() -> ExitCode {
     match Cli::parse().command {
         Command::Validate { path, format } => validate(&path, format),
+        Command::Test { path, format } => test(&path, format),
+        Command::Plan {
+            path, base, format, ..
+        } => plan(&path, &base, format),
+        Command::Derive { path, out } => derive(&path, out.as_deref()),
     }
+}
+
+fn fail(msg: impl std::fmt::Display) -> ExitCode {
+    eprintln!("{msg}");
+    ExitCode::from(2)
+}
+
+fn test(path: &std::path::Path, format: Format) -> ExitCode {
+    let local = match portal::load(path) {
+        Ok(l) => l,
+        Err(e) => return fail(e),
+    };
+    let derived = std::sync::Arc::new(local.derived);
+    let results =
+        match toolbox_derive::testing::run(&local.root, &local.manifest.tests, derived.clone()) {
+            Ok(r) => r,
+            Err(e) => return fail(e),
+        };
+    let authz_tests = local
+        .manifest
+        .authz
+        .as_ref()
+        .map(|a| a.tests.clone())
+        .unwrap_or_default();
+    let failed = results.iter().filter(|r| !r.passed).count();
+    if format == Format::Json {
+        let v = serde_json::json!({"results": results, "failed": failed, "diagnostics": derived.diagnostics,
+                                   "authz_tests_pending": authz_tests});
+        println!("{}", serde_json::to_string_pretty(&v).unwrap());
+    } else {
+        for d in &derived.diagnostics {
+            println!("WARN  {}: {} [{}]", d.location, d.message, d.code);
+        }
+        for r in &results {
+            let err = r
+                .error
+                .as_ref()
+                .map(|e| format!("  ({e})"))
+                .unwrap_or_default();
+            println!(
+                "{}  {}: {}{err}",
+                if r.passed { "PASS" } else { "FAIL" },
+                r.suite,
+                r.name
+            );
+        }
+        for t in &authz_tests {
+            println!("SKIP  {t}: authorization tests run through the Authorizer (M3)");
+        }
+        println!("{} passed, {failed} failed", results.len() - failed);
+    }
+    if failed == 0 {
+        ExitCode::SUCCESS
+    } else {
+        ExitCode::from(1)
+    }
+}
+
+fn plan(path: &std::path::Path, base: &std::path::Path, format: PlanFormat) -> ExitCode {
+    use toolbox_derive::DerivedState;
+    let after = match portal::load(path) {
+        Ok(l) => l,
+        Err(e) => return fail(e),
+    };
+    let base_src = match toolbox_model::load::load(base) {
+        Ok(s) => s,
+        Err(e) => return fail(e),
+    };
+    let before_m = match portal::manifest_from(&base_src.document, &base_src.manifest_file) {
+        Ok(m) => m,
+        Err(e) => return fail(format!("base manifest is invalid:\n{e}")),
+    };
+    let snapshot = match toolbox_store::load_fixtures(&after.root) {
+        Ok(s) => s.snapshot(),
+        Err(e) => return fail(e),
+    };
+    let before = toolbox_derive::FullRecompute.recompute(&before_m, &snapshot);
+    let diff = toolbox_derive::plan::diff(&before_m, &before, &after.manifest, &after.derived);
+    match format {
+        PlanFormat::Md => print!("{}", diff.markdown()),
+        PlanFormat::Json => println!("{}", serde_json::to_string_pretty(&diff).unwrap()),
+    }
+    ExitCode::SUCCESS
+}
+
+fn derive(path: &std::path::Path, out: Option<&std::path::Path>) -> ExitCode {
+    let local = match portal::load(path) {
+        Ok(l) => l,
+        Err(e) => return fail(e),
+    };
+    let d = &local.derived;
+    if let Some(dir) = out {
+        for (rel, text) in d.reference_files() {
+            let target = dir.join(rel);
+            if let Some(parent) = target.parent() {
+                let _ = std::fs::create_dir_all(parent);
+            }
+            if let Err(e) = std::fs::write(&target, text) {
+                return fail(format!("{}: {e}", target.display()));
+            }
+        }
+    }
+    let scored: usize = d.scores.values().map(|m| m.len()).sum();
+    println!(
+        "snapshot {}: {} entities, {} scorecard results, {} tuples, {} orphans, {} diagnostics",
+        d.snapshot,
+        d.entities.len(),
+        scored,
+        d.tuples.len(),
+        d.orphans.len(),
+        d.diagnostics.len()
+    );
+    for diag in &d.diagnostics {
+        println!("WARN  {}: {} [{}]", diag.location, diag.message, diag.code);
+    }
+    ExitCode::SUCCESS
 }
 
 fn validate(path: &std::path::Path, format: Format) -> ExitCode {

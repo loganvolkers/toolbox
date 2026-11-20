@@ -5,6 +5,12 @@
 //! `xs.map(i, i.app)`) are not top-level references and are ignored. Type checking is out of scope
 //! (cel-rust has no checker; see Q10).
 
+pub mod eval;
+pub mod lazy;
+
+pub use eval::{Expr, from_cel, map_value, to_cel, with_vals, with_vars};
+pub use lazy::lazy_map;
+
 use std::fmt;
 
 /// Variables available to CEL at each manifest site (docs/v1-spec.md §6.2).

@@ -1,10 +1,15 @@
 [package]
 name = "toolbox-store"
-description = "Toolbox: Store trait, MemStore and PgStore (M1–M2). Placeholder until its milestone."
+description = "Toolbox: inputs (records, native values), the Store contract, MemStore and fixture loading (docs/v1-spec.md §4, §8)."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
 
 [lints]
 workspace = true

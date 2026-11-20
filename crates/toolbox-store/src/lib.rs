@@ -1,4 +1,216 @@
-//! Store trait, MemStore and PgStore (M1–M2)
-//!
-//! Placeholder created by M0 so the workspace layout in docs/v1-spec.md §4 is fixed and parallel
-//! tracks share crate names. It has no code until its milestone.
+//! Inputs to the derived-state pipeline (docs/v1-spec.md §6.1, §8): raw connector records and
+//! native values, a consistent [`InputSnapshot`] of them, an in-memory store for tests and
+//! `toolbox dev`, and the NDJSON fixture loader. `PgStore` arrives with M2.
+
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+use std::collections::BTreeMap;
+use std::path::Path;
+
+/// The latest version of one raw record.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct Record {
+    pub connector: String,
+    pub kind: String,
+    pub external_id: String,
+    pub data: Value,
+}
+
+/// One native value revision (a field whose source of truth is Toolbox, D13).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct NativeValue {
+    pub entity: String,
+    pub field: String,
+    pub value: Value,
+    #[serde(default)]
+    pub revision: u64,
+    #[serde(default)]
+    pub author: Option<String>,
+    #[serde(default)]
+    pub at: Option<String>,
+    #[serde(default)]
+    pub reason: Option<String>,
+}
+
+/// A consistent read of every input. Records are ordered by (connector, kind, external id) and
+/// native values by (entity, field), so the pipeline's output never depends on arrival order (P1).
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct InputSnapshot {
+    pub version: u64,
+    pub records: Vec<Record>,
+    pub native: Vec<NativeValue>,
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum StoreError {
+    #[error("{0}")]
+    Io(String),
+    #[error("{file}:{line}: {message}")]
+    Message {
+        file: String,
+        line: usize,
+        message: String,
+    },
+}
+
+/// In-memory inputs: the test and `toolbox dev` store.
+#[derive(Debug, Clone, Default)]
+pub struct MemStore {
+    version: u64,
+    records: BTreeMap<(String, String, String), Value>,
+    native: BTreeMap<(String, String), NativeValue>,
+}
+
+impl MemStore {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Apply connector messages from `connector` as one batch. `record` upserts, `delete` removes;
+    /// other message types (register, ack, complete, …) carry no input data and are ignored here.
+    pub fn ingest(&mut self, connector: &str, batch: &[Value]) -> u64 {
+        for msg in batch {
+            let field = |k: &str| {
+                msg.get(k)
+                    .and_then(Value::as_str)
+                    .unwrap_or_default()
+                    .to_owned()
+            };
+            let key = (connector.to_owned(), field("kind"), field("externalId"));
+            match msg.get("type").and_then(Value::as_str) {
+                Some("record") => {
+                    self.records
+                        .insert(key, msg.get("data").cloned().unwrap_or(Value::Null));
+                }
+                Some("delete") => {
+                    self.records.remove(&key);
+                }
+                _ => {}
+            }
+        }
+        self.version += 1;
+        self.version
+    }
+
+    /// Write native values; for one (entity, field) the highest revision wins, ties go to the later write.
+    pub fn put_native(&mut self, values: impl IntoIterator<Item = NativeValue>) -> u64 {
+        for v in values {
+            let key = (v.entity.clone(), v.field.clone());
+            match self.native.get(&key) {
+                Some(old) if old.revision > v.revision => {}
+                _ => {
+                    self.native.insert(key, v);
+                }
+            }
+        }
+        self.version += 1;
+        self.version
+    }
+
+    pub fn snapshot(&self) -> InputSnapshot {
+        InputSnapshot {
+            version: self.version,
+            records: self
+                .records
+                .iter()
+                .map(|((c, k, id), data)| Record {
+                    connector: c.clone(),
+                    kind: k.clone(),
+                    external_id: id.clone(),
+                    data: data.clone(),
+                })
+                .collect(),
+            native: self.native.values().cloned().collect(),
+        }
+    }
+}
+
+/// Message batches per connector, in file order.
+pub type Batches = Vec<(String, Vec<Value>)>;
+
+/// Read `fixtures/<connector>.ndjson` files (connector = file stem) and `fixtures/native.json`.
+pub fn read_fixtures(root: &Path) -> Result<(Batches, Vec<NativeValue>), StoreError> {
+    let dir = root.join("fixtures");
+    let mut batches = Vec::new();
+    let mut native = Vec::new();
+    let Ok(entries) = std::fs::read_dir(&dir) else {
+        return Ok((batches, native));
+    };
+    let mut paths: Vec<_> = entries.flatten().map(|e| e.path()).collect();
+    paths.sort();
+    for path in paths {
+        let name = path
+            .file_name()
+            .unwrap_or_default()
+            .to_string_lossy()
+            .into_owned();
+        let text =
+            std::fs::read_to_string(&path).map_err(|e| StoreError::Io(format!("{name}: {e}")))?;
+        if name.ends_with(".ndjson") {
+            let connector = name.trim_end_matches(".ndjson").to_owned();
+            let mut batch = Vec::new();
+            for (i, line) in text.lines().enumerate() {
+                if line.trim().is_empty() {
+                    continue;
+                }
+                batch.push(serde_json::from_str(line).map_err(|e| StoreError::Message {
+                    file: format!("fixtures/{name}"),
+                    line: i + 1,
+                    message: e.to_string(),
+                })?);
+            }
+            batches.push((connector, batch));
+        } else if name == "native.json" {
+            native = serde_json::from_str(&text).map_err(|e| StoreError::Message {
+                file: "fixtures/native.json".into(),
+                line: 0,
+                message: e.to_string(),
+            })?;
+        }
+    }
+    Ok((batches, native))
+}
+
+/// A `MemStore` loaded with a portal's fixtures.
+pub fn load_fixtures(root: &Path) -> Result<MemStore, StoreError> {
+    let (batches, native) = read_fixtures(root)?;
+    let mut store = MemStore::new();
+    for (connector, batch) in batches {
+        store.ingest(&connector, &batch);
+    }
+    if !native.is_empty() {
+        store.put_native(native);
+    }
+    Ok(store)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn snapshot_is_ordered_and_deletes_apply() {
+        let mut s = MemStore::new();
+        s.ingest(
+            "b",
+            &[json!({"type": "record", "kind": "k", "externalId": "2", "data": {"v": 2}})],
+        );
+        s.ingest(
+            "a",
+            &[
+                json!({"type": "record", "kind": "k", "externalId": "9", "data": {}}),
+                json!({"type": "record", "kind": "k", "externalId": "1", "data": {}}),
+                json!({"type": "delete", "kind": "k", "externalId": "9"}),
+            ],
+        );
+        let snap = s.snapshot();
+        let ids: Vec<_> = snap
+            .records
+            .iter()
+            .map(|r| (r.connector.as_str(), r.external_id.as_str()))
+            .collect();
+        assert_eq!(ids, vec![("a", "1"), ("b", "2")]);
+        assert_eq!(snap.version, 2);
+    }
+}
