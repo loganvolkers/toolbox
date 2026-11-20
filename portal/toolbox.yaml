@@ -54,9 +54,11 @@ connectors:
       packages: ["**/package.json"]
       # JSON Schema documents (docs/design/schema-standards.md). The contracts compiled into the binary.
       schemas: ["schema/*.json"]
-    records: [crate, doc, file, workflow, action-ref, skill, connector, dependency, agent-doc, package-json, json-schema]
-    refresh: {crate: [external_ids], doc: [external_ids], file: [external_ids], skill: [external_ids], connector: [external_ids], dependency: [external_ids], agent-doc: [external_ids], package-json: [external_ids], json-schema: [external_ids]}
-    freshness: {crate: 5m, doc: 5m, file: 5m, skill: 5m, connector: 5m, dependency: 5m, agent-doc: 5m, package-json: 5m, json-schema: 5m}
+      # Example and experiment write-ups (docs/design/example-standards.md).
+      examples: ["examples/**/README.md", "experiments/**/README.md", "docs/examples/*.md"]
+    records: [crate, doc, file, workflow, action-ref, skill, connector, dependency, agent-doc, package-json, json-schema, example]
+    refresh: {crate: [external_ids], doc: [external_ids], file: [external_ids], skill: [external_ids], connector: [external_ids], dependency: [external_ids], agent-doc: [external_ids], package-json: [external_ids], json-schema: [external_ids], example: [external_ids]}
+    freshness: {crate: 5m, doc: 5m, file: 5m, skill: 5m, connector: 5m, dependency: 5m, agent-doc: 5m, package-json: 5m, json-schema: 5m, example: 5m}
   - name: runner
     package: builtin:runner                # executes things; slow, so it's refreshed per entity
     runtime: in-image
@@ -425,6 +427,26 @@ kinds:
            'titleChars': record.titleChars, 'descriptionChars': record.descriptionChars,
            'externalRefs': record.externalRefs, 'wired': record.wired,
            'draft202012': record.draft202012, 'secretHits': record.secretHits}
+
+  # Example and experiment write-ups (docs/design/example-standards.md).
+  - name: Example
+    identityFrom: [connector:workspace]
+    fields:
+      path: {type: string}
+      title: {type: string}
+      lines: {type: integer}
+      commandLines: {type: integer}
+      missingFiles: {type: list, items: string}
+      citesDesign: {type: boolean}
+      secretHits: {type: list, items: string}
+    sources: {default: [connector:workspace]}
+    map:
+      - from: workspace/example
+        id: "'example:' + record.path"
+        set: >-
+          {'path': record.path, 'title': record.title, 'lines': record.lines,
+           'commandLines': record.commandLines, 'missingFiles': record.missingFiles,
+           'citesDesign': record.citesDesign, 'secretHits': record.secretHits}
 
   # ── Layers 2 and 3: what operators and users rely on ─────────────────────────────────────
   - name: Command
@@ -1206,6 +1228,42 @@ scorecards:
         fix: "Remove the credential in the evidence. A schema is compiled into the binary and published with the repository."
     facets: {summary: public, details: public}
 
+  # ── Examples and experiments (docs/design/example-standards.md) ──────────────────────────
+  # A write-up is useful when a reader can follow its links and run the check it names.
+  # The reference portal's expected/ outputs stay the oracle; this scorecard does not regenerate them.
+  - name: maintainer-example
+    kind: Example
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    ratchet: {newEntitiesAtLeast: bronze}
+    rules:
+      - name: has-a-heading
+        level: bronze
+        check: "entity.title != ''"
+        evidence: "['no heading']"
+        fix: "Start the write-up with a level-1 heading that names the example."
+      - name: links-resolve
+        level: bronze
+        check: "entity.missingFiles.size() == 0"
+        evidence: "entity.missingFiles"
+        fix: "Fix or remove the relative links in the evidence. An agent follows them to the files the example depends on."
+      - name: says-how-to-check
+        level: silver
+        check: "entity.commandLines > 0"
+        evidence: "[string(entity.commandLines) + ' command lines']"
+        fix: "Name the command that checks this example (toolbox, cargo, npm, python, fga, or a ./run script). A reader should be able to reproduce it."
+      - name: cites-the-design
+        level: gold
+        check: "entity.citesDesign"
+        evidence: "['does not point at a design doc or a decision']"
+        fix: "Link the write-up at the design doc or the decision it demonstrates, so the example is not a second source of truth."
+      - name: no-hardcoded-secrets
+        level: gold
+        check: "entity.secretHits.size() == 0"
+        evidence: "entity.secretHits"
+        fix: "Remove the credential in the evidence. An example is copied and read by agents."
+    facets: {summary: public, details: public}
+
   # ── Scorecards for scorecards (docs/design/scorecards-for-scorecards.md) ─────────────────
   # They score every rule and scorecard of this portal, the starter and the reference portal —
   # themselves included, so there is no further level. Only deterministic facts (manifest, CEL,
@@ -1289,12 +1347,12 @@ scorecards:
 mcp:
   instructions: >-
     Toolbox for Toolbox: the catalogue of Toolbox's own crates, docs, scripts, CLI commands and MCP
-    tools, agent skills, first-party connectors, direct Cargo dependencies, agent instruction files, npm manifests and JSON Schemas, scored against the maintainer, operator and user SDLC standards. To raise the bar, pick
+    tools, agent skills, first-party connectors, direct Cargo dependencies, agent instruction files, npm manifests, JSON Schemas and example write-ups, scored against the maintainer, operator and user SDLC standards. To raise the bar, pick
     a failing rule with scorecard_status, read the evidence with explain (rule) or get: Crate
     undocumented, longFunctions, complexFunctions, clippy.messages, tests.output; Doc brokenLinks,
     counts; Command undocumentedArgs, documentedIn, exercisedBy; McpTool undescribedProperties,
     documentedIn, exercisedBy, viaCli; Skill frontmatterErrors, triggerCues, pronouns, missingFiles,
-    secretHits, boundaryCues, evalCases; Connector documentedKinds, transport, tests, conformanceMentions, secretHits; Dependency requirements, versions, sources, usedBy; AgentDoc missingFiles, commandLines, secretHits, hiddenChars; PackageJson wildcardRanges, gitRanges, lockfile, checkScripts, ciUsesInstall; JsonSchema dialect, id, externalRefs. Change the code, refresh_entity, and check the score again.
+    secretHits, boundaryCues, evalCases; Connector documentedKinds, transport, tests, conformanceMentions, secretHits; Dependency requirements, versions, sources, usedBy; AgentDoc missingFiles, commandLines, secretHits, hiddenChars; PackageJson wildcardRanges, gitRanges, lockfile, checkScripts, ciUsesInstall; JsonSchema dialect, schemaId, externalRefs; Example missingFiles, commandLines. Change the code, refresh_entity, and check the score again.
     Contract tests count when a test or script contains a tools/call body naming the tool.
 
 tests: [tests/standards.test.yaml]

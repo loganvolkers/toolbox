@@ -370,6 +370,9 @@
       "doc:docs/design/developer-velocity.md": {
         "level": "silver"
       },
+      "doc:docs/design/example-standards.md": {
+        "level": "silver"
+      },
       "doc:docs/design/extensibility.md": {
         "level": "silver"
       },
@@ -507,6 +510,41 @@
       },
       "doc:portal/README.md": {
         "level": "silver"
+      }
+    },
+    "maintainer-example": {
+      "example:docs/examples/approved-github-apps.md": {
+        "level": "gold"
+      },
+      "example:examples/reference-portal/README.md": {
+        "level": "gold"
+      },
+      "example:examples/reference-portal/executors/github-apps/README.md": {
+        "failing": {
+          "says-how-to-check": 1
+        },
+        "level": "bronze"
+      },
+      "example:examples/reference-portal/ui/install-approved-app/README.md": {
+        "level": "gold"
+      },
+      "example:examples/repo-portal-starter/README.md": {
+        "level": "gold"
+      },
+      "example:experiments/README.md": {
+        "level": "gold"
+      },
+      "example:experiments/build-cost/README.md": {
+        "level": "gold"
+      },
+      "example:experiments/derived-state-scale/README.md": {
+        "level": "gold"
+      },
+      "example:experiments/durable-schema/README.md": {
+        "level": "gold"
+      },
+      "example:experiments/typescript-builder/README.md": {
+        "level": "gold"
       }
     },
     "maintainer-package": {
@@ -860,6 +898,21 @@
         },
         "level": "none"
       },
+      "rule:toolbox/maintainer-example/cites-the-design": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-example/has-a-heading": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-example/links-resolve": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-example/no-hardcoded-secrets": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-example/says-how-to-check": {
+        "level": "gold"
+      },
       "rule:toolbox/maintainer-package/ci-installs-from-the-lockfile": {
         "level": "gold"
       },
@@ -1141,6 +1194,9 @@
           "every-rule-tested": 1
         },
         "level": "silver"
+      },
+      "scorecard:toolbox/maintainer-example": {
+        "level": "gold"
       },
       "scorecard:toolbox/maintainer-package": {
         "level": "gold"

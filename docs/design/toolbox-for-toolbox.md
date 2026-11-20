@@ -6,7 +6,8 @@
 [dependency-standards.md](./dependency-standards.md)). Agent instruction files are too (D75,
 [agents-md-standards.md](./agents-md-standards.md)). npm manifests are too (D76,
 [package-standards.md](./package-standards.md)). JSON Schemas are too (D77,
-[schema-standards.md](./schema-standards.md)). The portal is [`portal/`](../../portal/README.md); run
+[schema-standards.md](./schema-standards.md)). Example and experiment write-ups are too (D78,
+[example-standards.md](./example-standards.md)). The portal is [`portal/`](../../portal/README.md); run
 it with `scripts/self-portal.sh`. It applies Toolbox to the [three SDLC layers](../sdlc.md) of
 Toolbox itself. Related: [meta-catalog.md](./meta-catalog.md) (a portal cataloguing its own
 configuration), [maintainer-sdlc.md](./maintainer-sdlc.md), [user-sdlc.md](./user-sdlc.md).*
@@ -37,7 +38,7 @@ What the experiment showed:
 
 | Layer | What is catalogued | Scorecards here |
 |---|---|---|
-| 1. Maintainer | Crates, docs, scripts and tests of this repository, the agent skills it ships, its first-party connectors, the libraries it builds against, the instruction files agents load, the npm manifests it builds, and the JSON Schemas it compiles | `maintainer-crate`, `maintainer-docs`, `maintainer-skill`, `maintainer-connector`, `maintainer-dependency`, `maintainer-agent-doc`, `maintainer-package`, `maintainer-schema` |
+| 1. Maintainer | Crates, docs, scripts and tests of this repository, the agent skills it ships, its first-party connectors, the libraries it builds against, the instruction files agents load, the npm manifests it builds, the JSON Schemas it compiles, and the examples it asks agents to copy | `maintainer-crate`, `maintainer-docs`, `maintainer-skill`, `maintainer-connector`, `maintainer-dependency`, `maintainer-agent-doc`, `maintainer-package`, `maintainer-schema`, `maintainer-example` |
 | 2. Operator | The commands and docs operators use to build portals (and, through the [meta catalog](./meta-catalog.md), a portal's own configuration) | `operator-cli` |
 | 3. User | The contracts apps and agents rely on: MCP tools and read commands | `user-mcp`, `user-cli` |
 
@@ -69,7 +70,7 @@ scripts/self-portal.sh serve|report|snapshot
 
 | Piece | What it does | Generic? |
 |---|---|---|
-| [`toolbox-connector-workspace`](../../crates/toolbox-connector-workspace) | `crate` records: `cargo metadata` plus a `syn` parse of each crate. Reports every function (lines, cyclomatic complexity), every undocumented public item, unit and integration test counts, unwraps outside tests, and in-workspace dependencies. `doc` records: title, status banner, sources section, broken relative links, inline code spans. `file` records: lines. `skill` records: one per `SKILL.md` (D72, [skill-standards.md](./skill-standards.md)). `connector` records: one per `toolbox-connector-*` crate (D73, [connector-standards.md](./connector-standards.md)). `dependency` records: one per direct Cargo dependency (D74, [dependency-standards.md](./dependency-standards.md)). `agent-doc` records: one per `AGENTS.md` and its aliases (D75, [agents-md-standards.md](./agents-md-standards.md)). `package-json` records: one per npm manifest (D76, [package-standards.md](./package-standards.md)). `json-schema` records: one per document in `schema/` (D77, [schema-standards.md](./schema-standards.md)). Docs and files also get **configurable regex `captures` and `counts`** | Any Rust workspace, markdown docs, Agent Skills directories, connector crates, agent instruction files, npm manifests, and JSON Schemas |
+| [`toolbox-connector-workspace`](../../crates/toolbox-connector-workspace) | `crate` records: `cargo metadata` plus a `syn` parse of each crate. Reports every function (lines, cyclomatic complexity), every undocumented public item, unit and integration test counts, unwraps outside tests, and in-workspace dependencies. `doc` records: title, status banner, sources section, broken relative links, inline code spans. `file` records: lines. `skill` records: one per `SKILL.md` (D72, [skill-standards.md](./skill-standards.md)). `connector` records: one per `toolbox-connector-*` crate (D73, [connector-standards.md](./connector-standards.md)). `dependency` records: one per direct Cargo dependency (D74, [dependency-standards.md](./dependency-standards.md)). `agent-doc` records: one per `AGENTS.md` and its aliases (D75, [agents-md-standards.md](./agents-md-standards.md)). `package-json` records: one per npm manifest (D76, [package-standards.md](./package-standards.md)). `json-schema` records: one per document in `schema/` (D77, [schema-standards.md](./schema-standards.md)). `example` records: one per example or experiment write-up (D78, [example-standards.md](./example-standards.md)). Docs and files also get **configurable regex `captures` and `counts`** | Any Rust workspace, markdown docs, Agent Skills directories, connector crates, agent instruction files, npm manifests, JSON Schemas, and example write-ups |
 | [`toolbox-connector-runner`](../../crates/toolbox-connector-runner) | Runs configured jobs, per crate or once, and parses `cargo test`, clippy JSON, or passes through NDJSON records from any command. Supports refresh by external id | Any local command |
 | `toolbox describe` | Prints Toolbox's CLI commands (from clap) and built-in MCP tools as connector records: help, undocumented arguments, structured output, the MCP tool each read command calls | Toolbox-specific, and doubles as a contract snapshot for the user SDLC |
 | [`portal/toolbox.yaml`](../../portal/toolbox.yaml) | Kinds `Crate`, `Doc`, `File`, `Command`, `McpTool`. Relations from docs and files to commands, tools and crates come from captures. Five scorecards; one policy (append-only docs exempt from wording rules) | — |
@@ -103,6 +104,7 @@ scripts/self-portal.sh serve|report|snapshot
 | `maintainer-agent-doc` | The file is `AGENTS.md`, or an alias that points at it; relative links resolve | The canonical file names a build or test command and stays within 500 lines | The canonical file points at the decision log; no secret shapes or hidden characters |
 | `maintainer-package` | Named; private or versioned; no wildcard, git or tarball range | A lockfile beside the manifest, and a test, build, check or typecheck script | A description, `engines.node`, and CI that installs with `npm ci` |
 | `maintainer-schema` | Draft 2020-12, an absolute `https` `$id`, a root description | A title, and the compiler or the reference validator loads the file | Every `$ref` is local; no secret shape |
+| `maintainer-example` | A heading, and relative links resolve | The write-up names a command that checks it | It points at a design doc or a decision; no secret shape |
 
 The rules are deliberately simple. Their value is in the evidence fields an agent can act on, such as
 `undocumented`, `longFunctions`, `complexFunctions`, `clippy.messages`, `tests.output`,
