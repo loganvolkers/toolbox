@@ -13,17 +13,17 @@ kinds:
       plugin: {type: string}
       description: {type: string}
       descriptionChars: {type: integer}
-      triggerCues: {type: list, items: string}       # when / whenever / before / after in the description
-      pronouns: {type: list, items: string}          # you / I / we … in the description
+      triggerCues: {type: list, items: string} # when / whenever / before / after in the description
+      pronouns: {type: list, items: string} # you / I / we … in the description
       frontmatterErrors: {type: list, items: string}
       bodyLines: {type: integer}
-      estimatedTokens: {type: integer}               # body characters / 4, not a tokenizer count
+      estimatedTokens: {type: integer} # body characters / 4, not a tokenizer count
       numberedSteps: {type: integer}
       codeFences: {type: integer}
       missingFiles: {type: list, items: string}
       windowsPaths: {type: list, items: string}
       boundaryCues: {type: list, items: string}
-      evalCases: {type: integer}                     # cases in evals/evals.json
+      evalCases: {type: integer} # cases in evals/evals.json
       hiddenChars: {type: integer}
       secretHits: {type: list, items: string}
       linkDepth: {type: integer}
@@ -31,19 +31,19 @@ kinds:
       lastChange: {type: string}
     sources: {default: [connector:workspace]}
     map:
-      - from: workspace/skill
-        id: "'skill:' + record.dir"
-        set: >-
-          {'path': record.path, 'dir': record.dir, 'name': record.name, 'plugin': record.plugin,
-           'description': record.description, 'descriptionChars': record.descriptionChars,
-           'triggerCues': record.triggerCues, 'pronouns': record.pronouns,
-           'frontmatterErrors': record.frontmatterErrors, 'bodyLines': record.bodyLines,
-           'estimatedTokens': record.estimatedTokens, 'numberedSteps': record.numberedSteps,
-           'codeFences': record.codeFences, 'missingFiles': record.missingFiles,
-           'windowsPaths': record.windowsPaths, 'boundaryCues': record.boundaryCues,
-           'evalCases': record.evalCases, 'hiddenChars': record.hiddenChars,
-           'secretHits': record.secretHits, 'linkDepth': record.linkDepth,
-           'supportFiles': record.supportFiles, 'lastChange': record.lastChange}
+    - from: workspace/skill
+      id: "'skill:' + record.dir"
+      set: >-
+        {'path': record.path, 'dir': record.dir, 'name': record.name, 'plugin': record.plugin,
+         'description': record.description, 'descriptionChars': record.descriptionChars,
+         'triggerCues': record.triggerCues, 'pronouns': record.pronouns,
+         'frontmatterErrors': record.frontmatterErrors, 'bodyLines': record.bodyLines,
+         'estimatedTokens': record.estimatedTokens, 'numberedSteps': record.numberedSteps,
+         'codeFences': record.codeFences, 'missingFiles': record.missingFiles,
+         'windowsPaths': record.windowsPaths, 'boundaryCues': record.boundaryCues,
+         'evalCases': record.evalCases, 'hiddenChars': record.hiddenChars,
+         'secretHits': record.secretHits, 'linkDepth': record.linkDepth,
+         'supportFiles': record.supportFiles, 'lastChange': record.lastChange}
 
 scorecards:
   # Bronze is "a harness can load it and route to it". Silver is "an agent can follow it".
@@ -55,69 +55,106 @@ scorecards:
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze}
     rules:
-      - name: valid-frontmatter
-        level: bronze
-        check: "entity.frontmatterErrors.size() == 0"
-        evidence: "entity.frontmatterErrors"
-        fix: "Fix the Agent Skills frontmatter errors in the evidence (name, description, directory match, allowed fields)."
-      - name: description-says-when
-        level: bronze
-        check: "entity.descriptionChars >= 20 && entity.descriptionChars <= 1024 && entity.triggerCues.size() > 0"
-        evidence: "entity.triggerCues + [string(entity.descriptionChars) + ' characters']"
-        fix: "Say what the skill does and when to use it in the description (20 to 1024 characters), including when, whenever, before, or after."
-      - name: third-person
-        level: bronze
-        check: "entity.descriptionChars > 0 && entity.pronouns.size() == 0"
-        evidence: "entity.pronouns.size() == 0 ? ['description is empty'] : entity.pronouns.map(p, 'pronoun: ' + p)"
-        fix: "Rewrite the description in third person. Drop you, your, I, we, my, and our; the description is loaded into the agent's prompt."
-      - name: has-procedure
-        level: silver
-        check: "entity.numberedSteps >= 3"
-        evidence: "[string(entity.numberedSteps) + ' numbered step(s); want at least 3']"
-        fix: "Write at least three numbered steps in SKILL.md so an agent can follow the procedure."
-      - name: has-example
-        level: silver
-        check: "entity.codeFences > 0"
-        evidence: "['no fenced code block in SKILL.md']"
-        fix: "Add a fenced code block in SKILL.md with a concrete command, input, or output."
-      - name: links-resolve
-        level: silver
-        check: "entity.missingFiles.size() == 0"
-        evidence: "entity.missingFiles"
-        fix: "Fix or remove the relative links in the evidence. Paths are relative to the file that contains them."
-      - name: within-body-budget
-        level: silver
-        check: "entity.bodyLines <= 500 && entity.estimatedTokens <= 5000"
-        evidence: "[string(entity.bodyLines) + ' lines, ~' + string(entity.estimatedTokens) + ' tokens (characters/4)']"
-        fix: "Keep the SKILL.md body under 500 lines and about 5000 tokens (characters divided by 4). Move detail into references/."
-      - name: portable-paths
-        level: silver
-        check: "entity.windowsPaths.size() == 0"
-        evidence: "entity.windowsPaths"
-        fix: "Replace the Windows paths in the evidence with forward-slash paths relative to the skill directory."
-      - name: states-boundaries
-        level: gold
-        check: "entity.boundaryCues.size() > 0"
-        evidence: "['no error, limit, or prerequisite cue in the body']"
-        fix: "Name a limit, an error path, or a prerequisite in the body (never, do not, limitation, prerequisite, troubleshooting, or on error)."
-      - name: has-evals
-        level: gold
-        check: "entity.evalCases >= 3"
-        evidence: "[string(entity.evalCases) + ' cases in evals/evals.json (want at least 3)']"
-        fix: "Add at least three eval cases to evals/evals.json (a JSON array, or an object with an evals array). One element is one prompt. Running them is a separate, non-gating step."
-      - name: no-hidden-instructions
-        level: gold
-        check: "entity.hiddenChars == 0"
-        evidence: "[string(entity.hiddenChars) + ' hidden or bidi characters']"
-        fix: "Remove hidden Unicode from the skill files: zero-width characters, bidi overrides, and Unicode tags."
-      - name: no-hardcoded-secrets
-        level: gold
-        check: "entity.secretHits.size() == 0"
-        evidence: "entity.secretHits"
-        fix: "Remove the hardcoded credentials in the evidence. Refer to a secret by name instead of pasting it into the skill."
-      - name: one-level-deep
-        level: gold
-        check: "entity.linkDepth <= 1 && entity.supportFiles <= 3"
-        evidence: "[string(entity.linkDepth) + ' link hops, ' + string(entity.supportFiles) + ' supporting files']"
-        fix: "Keep references one hop from SKILL.md and the skill to at most three supporting files. Focused skills outperform large bundles."
+    - name: valid-frontmatter
+      level: bronze
+      check: entity.frontmatterErrors.size() == 0
+      evidence: entity.frontmatterErrors
+      fix: >-
+        Fix the Agent Skills frontmatter errors in the evidence (name,
+        description, directory match, allowed fields).
+    - name: description-says-when
+      level: bronze
+      check: >-
+        entity.descriptionChars >= 20 && entity.descriptionChars <= 1024 &&
+        entity.triggerCues.size() > 0
+      evidence: entity.triggerCues + [string(entity.descriptionChars) + ' characters']
+      fix: >-
+        Say what the skill does and when to use it in the description (20 to
+        1024 characters), including when, whenever, before, or after.
+    - name: third-person
+      level: bronze
+      check: entity.descriptionChars > 0 && entity.pronouns.size() == 0
+      evidence: >-
+        entity.pronouns.size() == 0 ? ['description is empty'] :
+        entity.pronouns.map(p, 'pronoun: ' + p)
+      fix: >-
+        Rewrite the description in third person. Drop you, your, I, we, my, and
+        our; the description is loaded into the agent's prompt.
+    - name: has-procedure
+      level: silver
+      check: entity.numberedSteps >= 3
+      evidence: "[string(entity.numberedSteps) + ' numbered step(s); want at least 3']"
+      fix: >-
+        Write at least three numbered steps in SKILL.md so an agent can follow
+        the procedure.
+    - name: has-example
+      level: silver
+      check: entity.codeFences > 0
+      evidence: "['no fenced code block in SKILL.md']"
+      fix: >-
+        Add a fenced code block in SKILL.md with a concrete command, input, or
+        output.
+    - name: links-resolve
+      level: silver
+      check: entity.missingFiles.size() == 0
+      evidence: entity.missingFiles
+      fix: >-
+        Fix or remove the relative links in the evidence. Paths are relative to
+        the file that contains them.
+    - name: within-body-budget
+      level: silver
+      check: entity.bodyLines <= 500 && entity.estimatedTokens <= 5000
+      evidence: >-
+        [string(entity.bodyLines) + ' lines, ~' + string(entity.estimatedTokens)
+        + ' tokens (characters/4)']
+      fix: >-
+        Keep the SKILL.md body under 500 lines and about 5000 tokens (characters
+        divided by 4). Move detail into references/.
+    - name: portable-paths
+      level: silver
+      check: entity.windowsPaths.size() == 0
+      evidence: entity.windowsPaths
+      fix: >-
+        Replace the Windows paths in the evidence with forward-slash paths
+        relative to the skill directory.
+    - name: states-boundaries
+      level: gold
+      check: entity.boundaryCues.size() > 0
+      evidence: "['no error, limit, or prerequisite cue in the body']"
+      fix: >-
+        Name a limit, an error path, or a prerequisite in the body (never, do
+        not, limitation, prerequisite, troubleshooting, or on error).
+    - name: has-evals
+      level: gold
+      check: entity.evalCases >= 3
+      evidence: >-
+        [string(entity.evalCases) + ' cases in evals/evals.json (want at least
+        3)']
+      fix: >-
+        Add at least three eval cases to evals/evals.json (a JSON array, or an
+        object with an evals array). One element is one prompt. Running them is
+        a separate, non-gating step.
+    - name: no-hidden-instructions
+      level: gold
+      check: entity.hiddenChars == 0
+      evidence: "[string(entity.hiddenChars) + ' hidden or bidi characters']"
+      fix: >-
+        Remove hidden Unicode from the skill files: zero-width characters, bidi
+        overrides, and Unicode tags.
+    - name: no-hardcoded-secrets
+      level: gold
+      check: entity.secretHits.size() == 0
+      evidence: entity.secretHits
+      fix: >-
+        Remove the hardcoded credentials in the evidence. Refer to a secret by
+        name instead of pasting it into the skill.
+    - name: one-level-deep
+      level: gold
+      check: entity.linkDepth <= 1 && entity.supportFiles <= 3
+      evidence: >-
+        [string(entity.linkDepth) + ' link hops, ' + string(entity.supportFiles)
+        + ' supporting files']
+      fix: >-
+        Keep references one hop from SKILL.md and the skill to at most three
+        supporting files. Focused skills outperform large bundles.
     facets: {summary: public, details: public}

@@ -1,21 +1,68 @@
 # The package's own expectations, over its own fixtures (package author SDLC: test).
 name: github-actions
 assert:
-- name: tag-pinned actions fail bronze, and zizmor's unpinned-uses isn't counted twice
-  expect: score('maintainer-ci-security', 'workflow:.github/workflows/ci.yml').rules['pinned-to-sha'] == 'fail' && score('maintainer-ci-security', 'workflow:.github/workflows/ci.yml').rules['no-high-findings'] == 'pass' && score('maintainer-ci-security', 'workflow:.github/workflows/ci.yml').evidence['pinned-to-sha'] == ['actions/checkout@v4', 'actions/setup-go@v5', 'actions/setup-node@v4', 'actions/setup-python@v5']
-- name: a dangerous trigger is a high finding with evidence, and a write token on it fails silver
-  expect: 'score(''maintainer-ci-security'', ''workflow:.github/workflows/release.yml'').evidence[''no-high-findings''] == [''dangerous-triggers at line 3: use of fundamentally insecure workflow trigger''] && score(''maintainer-ci-security'', ''workflow:.github/workflows/release.yml'').rules[''no-write-tokens-on-risky-triggers''] == ''fail'''
-- name: without actionlint's output its rule is unknown, not failing
-  expect: score('maintainer-ci-security', 'workflow:.github/workflows/release.yml').rules['actionlint-clean'] == 'unknown'
-- name: medium findings (artipacked) fail silver
-  expect: 'score(''maintainer-ci-security'', ''workflow:.github/workflows/ci.yml'').evidence[''no-medium-findings''] == [''artipacked at line 14: credential persistence through GitHub Actions artifacts'']'
-- name: a 92% fail rate and 11 red runs in a row fail bronze
-  expect: score('maintainer-ci-reliability', 'workflow:.github/workflows/ci.yml').evidence['fail-rate-under-20'] == ['92% of the last 12 decided runs on main failed'] && score('maintainer-ci-reliability', 'workflow:.github/workflows/ci.yml').rules['main-not-stuck-red'] == 'fail'
-- name: no job timeouts and no concurrency group are named
-  expect: score('maintainer-ci-reliability', 'workflow:.github/workflows/ci.yml').evidence['every-job-has-timeout'].size() == 6 && score('maintainer-ci-reliability', 'workflow:.github/workflows/ci.yml').rules['cancels-superseded-runs'] == 'fail'
-- name: without run data the run rules fail and say why
-  expect: score('maintainer-ci-reliability', 'workflow:.github/workflows/release.yml').evidence['main-not-stuck-red'] == ['no run data (github-actions connector skipped or no token)']
-- name: action metadata isn't scored for reliability
-  expect: score('maintainer-ci-reliability', 'workflow:actions/report/action.yml').level == 'skipped'
-- name: an action pinned by SHA in one workflow and by tag in another fails, naming both
-  expect: score('maintainer-action-deps', 'action:actions/checkout').evidence['pinned-everywhere'] == ['actions/checkout@v4'] && score('maintainer-action-deps', 'action:actions/cache').level == 'bronze'
+  - name: >-
+      tag-pinned actions fail bronze, and zizmor's unpinned-uses isn't counted
+      twice
+    expect: >-
+      score('maintainer-ci-security',
+      'workflow:.github/workflows/ci.yml').rules['pinned-to-sha'] == 'fail' &&
+      score('maintainer-ci-security',
+      'workflow:.github/workflows/ci.yml').rules['no-high-findings'] == 'pass'
+      && score('maintainer-ci-security',
+      'workflow:.github/workflows/ci.yml').evidence['pinned-to-sha'] ==
+      ['actions/checkout@v4', 'actions/setup-go@v5', 'actions/setup-node@v4',
+      'actions/setup-python@v5']
+  - name: >-
+      a dangerous trigger is a high finding with evidence, and a write token
+      on it fails silver
+    expect: >-
+      score('maintainer-ci-security',
+      'workflow:.github/workflows/release.yml').evidence['no-high-findings']
+      == ['dangerous-triggers at line 3: use of fundamentally insecure
+      workflow trigger'] && score('maintainer-ci-security',
+      'workflow:.github/workflows/release.yml').rules['no-write-tokens-on-risky-triggers']
+      == 'fail'
+  - name: without actionlint's output its rule is unknown, not failing
+    expect: >-
+      score('maintainer-ci-security',
+      'workflow:.github/workflows/release.yml').rules['actionlint-clean'] ==
+      'unknown'
+  - name: medium findings (artipacked) fail silver
+    expect: >-
+      score('maintainer-ci-security',
+      'workflow:.github/workflows/ci.yml').evidence['no-medium-findings'] ==
+      ['artipacked at line 14: credential persistence through GitHub Actions
+      artifacts']
+  - name: a 92% fail rate and 11 red runs in a row fail bronze
+    expect: >-
+      score('maintainer-ci-reliability',
+      'workflow:.github/workflows/ci.yml').evidence['fail-rate-under-20'] ==
+      ['92% of the last 12 decided runs on main failed'] &&
+      score('maintainer-ci-reliability',
+      'workflow:.github/workflows/ci.yml').rules['main-not-stuck-red'] ==
+      'fail'
+  - name: no job timeouts and no concurrency group are named
+    expect: >-
+      score('maintainer-ci-reliability',
+      'workflow:.github/workflows/ci.yml').evidence['every-job-has-timeout'].size()
+      == 6 && score('maintainer-ci-reliability',
+      'workflow:.github/workflows/ci.yml').rules['cancels-superseded-runs'] ==
+      'fail'
+  - name: without run data the run rules fail and say why
+    expect: >-
+      score('maintainer-ci-reliability',
+      'workflow:.github/workflows/release.yml').evidence['main-not-stuck-red']
+      == ['no run data (github-actions connector skipped or no token)']
+  - name: action metadata isn't scored for reliability
+    expect: >-
+      score('maintainer-ci-reliability',
+      'workflow:actions/report/action.yml').level == 'skipped'
+  - name: >-
+      an action pinned by SHA in one workflow and by tag in another fails,
+      naming both
+    expect: >-
+      score('maintainer-action-deps',
+      'action:actions/checkout').evidence['pinned-everywhere'] ==
+      ['actions/checkout@v4'] && score('maintainer-action-deps',
+      'action:actions/cache').level == 'bronze'

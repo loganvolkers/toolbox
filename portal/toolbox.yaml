@@ -41,89 +41,229 @@ policies:
 
 connectors:
   - name: workspace
-    package: builtin:workspace             # reads files; fast, so it resyncs often
+    package: builtin:workspace # reads files; fast, so it resyncs often
     runtime: in-image
     config:
-      root: "."
-      docs: ["*.md", "docs/**/*.md", "examples/*/README.md", "experiments/*/README.md", "plugins/**/*.md", "portal/*.md", "actions/*/README.md"]
-      files: ["scripts/*", "crates/*/tests/*.rs", "examples/reference-portal/tools/*.py", ".github/workflows/*.yml"]
+      root: .
+      docs:
+        - "*.md"
+        - docs/**/*.md
+        - examples/*/README.md
+        - experiments/*/README.md
+        - plugins/**/*.md
+        - portal/*.md
+        - actions/*/README.md
+      files:
+        - scripts/*
+        - crates/*/tests/*.rs
+        - examples/reference-portal/tools/*.py
+        - .github/workflows/*.yml
       captures:
         # `toolbox get …`, `"$T/toolbox" serve …`, the acceptance scripts' `ask owner …`, and
         # subcommands (`toolbox assess check`)
-        commands: '(?:\btoolbox"?|\bask)\s+((?:connector|token)\s+[a-z]+|assess[ \t]+(?:brief|check|submit)|describe[ \t]+(?:portal|scorecards)|[a-z][a-z-]*)'
+        commands: >-
+          (?:\btoolbox"?|\bask)\s+((?:connector|token)\s+[a-z]+|assess[
+          \t]+(?:brief|check|submit)|describe[
+          \t]+(?:portal|scorecards)|[a-z][a-z-]*)
         # MCP tools/call bodies: {"name": "owner_of", …}
         tools: '"name"\s*:\s*"([a-z][a-z_]*)"'
       counts:
-        sdlc: '\bSDLC\b'
+        sdlc: \bSDLC\b
         # A named layer (`maintainer SDLC`, `*operator* SDLC`), the layer model itself, or a quoted mention
-        layeredSdlc: '(?i:maintainer|operator|user|agent|three|four|author|portal)[*_ ’''-]*s?[*_]*\s+SDLC\b|\bSDLC\s+(?:layers?\b|stages?\b|has\b|in Toolbox)|"SDLC"'
+        layeredSdlc: >-
+          (?i:maintainer|operator|user|agent|three|four|author|portal)[*_
+          ’'-]*s?[*_]*\s+SDLC\b|\bSDLC\s+(?:layers?\b|stages?\b|has\b|in
+          Toolbox)|"SDLC"
       # GitHub Actions workflows and action metadata (docs/design/github-actions-standards.md)
-      workflows: [".github/workflows/*.y*ml", "actions/*/action.y*ml"]
+      workflows: [.github/workflows/*.y*ml, actions/*/action.y*ml]
       # Agent skills (docs/design/skill-standards.md). The directory is the skill; SKILL.md is its manifest.
-      skills: ["plugins/**/SKILL.md", "skills/**/SKILL.md"]
+      skills: [plugins/**/SKILL.md, skills/**/SKILL.md]
       # First-party connectors (docs/design/connector-standards.md). One record per crate manifest.
-      connectors: ["crates/toolbox-connector-*/Cargo.toml"]
+      connectors: [crates/toolbox-connector-*/Cargo.toml]
       # Direct Cargo dependencies (docs/design/dependency-standards.md).
       dependencies: true
       # Agent instruction files (docs/design/agents-md-standards.md). AGENTS.md is canonical.
       # The other names are harness aliases and must point at it.
-      agentDocs: ["**/AGENTS.md", "**/CLAUDE.md", "**/GEMINI.md", "**/.cursorrules", "**/.github/copilot-instructions.md", "**/.github/instructions/*.instructions.md", "**/.cursor/rules/**/*.md", "**/.cursor/rules/**/*.mdc", "**/.claude/rules/**/*.md"]
+      agentDocs:
+        - "**/AGENTS.md"
+        - "**/CLAUDE.md"
+        - "**/GEMINI.md"
+        - "**/.cursorrules"
+        - "**/.github/copilot-instructions.md"
+        - "**/.github/instructions/*.instructions.md"
+        - "**/.cursor/rules/**/*.md"
+        - "**/.cursor/rules/**/*.mdc"
+        - "**/.claude/rules/**/*.md"
       # Agent plugin packages (docs/design/plugin-standards.md).
-      plugins: ["plugins/*/plugin.json"]
+      plugins: [plugins/*/plugin.json]
       # The checkout itself: supply-chain config and the repository rollup (D85, D86).
       repo: true
       # npm manifests (docs/design/package-standards.md). One record per package.json.
       packages: ["**/package.json"]
       # JSON Schema documents (docs/design/schema-standards.md). The contracts compiled into the binary.
-      schemas: ["schema/*.json"]
+      schemas: [schema/*.json]
       # Example and experiment write-ups (docs/design/example-standards.md).
-      examples: ["examples/**/README.md", "experiments/**/README.md", "docs/examples/*.md"]
+      examples:
+        - examples/**/README.md
+        - experiments/**/README.md
+        - docs/examples/*.md
       # Coding agents' judgements of our standards and crates (`toolbox assess`, D79)
-      assessments: ["portal/assessments/**/*.y*ml"]
+      assessments: [portal/assessments/**/*.y*ml]
       # Starlight content pages (docs/design/site-standards.md)
-      pages: ["site/src/content/docs/**/*.md", "site/src/content/docs/**/*.mdx"]
+      pages: [site/src/content/docs/**/*.md, site/src/content/docs/**/*.mdx]
       # The SDLC layers and their stages, declared as data (D87)
       data:
-        - {kind: sdlc-layer, globs: ["portal/sdlc/layers.yaml"], paths: [doc]}
-        - {kind: sdlc-stage, globs: ["portal/sdlc/stages/*.yaml"], paths: [docs, checks]}
-    records: [crate, doc, file, repo, workflow, action-ref, skill, connector, dependency, agent-doc, plugin, package-json, json-schema, example, site-page, assessment, sdlc-layer, sdlc-stage]
-    refresh: {crate: [external_ids], doc: [external_ids], file: [external_ids], repo: [external_ids], workflow: [external_ids], action-ref: [external_ids], skill: [external_ids], connector: [external_ids], dependency: [external_ids], agent-doc: [external_ids], plugin: [external_ids], package-json: [external_ids], json-schema: [external_ids], example: [external_ids], site-page: [external_ids], sdlc-layer: [external_ids], sdlc-stage: [external_ids]}
-    freshness: {crate: 5m, doc: 5m, file: 5m, repo: 5m, workflow: 5m, action-ref: 5m, skill: 5m, connector: 5m, dependency: 5m, agent-doc: 5m, plugin: 5m, package-json: 5m, json-schema: 5m, example: 5m, site-page: 5m, assessment: 5m, sdlc-layer: 5m, sdlc-stage: 5m}
+        - {kind: sdlc-layer, globs: [portal/sdlc/layers.yaml], paths: [doc]}
+        - kind: sdlc-stage
+          globs: [portal/sdlc/stages/*.yaml]
+          paths: [docs, checks]
+    records:
+    - crate
+    - doc
+    - file
+    - repo
+    - workflow
+    - action-ref
+    - skill
+    - connector
+    - dependency
+    - agent-doc
+    - plugin
+    - package-json
+    - json-schema
+    - example
+    - site-page
+    - assessment
+    - sdlc-layer
+    - sdlc-stage
+    refresh:
+      crate: [external_ids]
+      doc: [external_ids]
+      file: [external_ids]
+      repo: [external_ids]
+      workflow: [external_ids]
+      action-ref: [external_ids]
+      skill: [external_ids]
+      connector: [external_ids]
+      dependency: [external_ids]
+      agent-doc: [external_ids]
+      plugin: [external_ids]
+      package-json: [external_ids]
+      json-schema: [external_ids]
+      example: [external_ids]
+      site-page: [external_ids]
+      sdlc-layer: [external_ids]
+      sdlc-stage: [external_ids]
+    freshness:
+      crate: 5m
+      doc: 5m
+      file: 5m
+      repo: 5m
+      workflow: 5m
+      action-ref: 5m
+      skill: 5m
+      connector: 5m
+      dependency: 5m
+      agent-doc: 5m
+      plugin: 5m
+      package-json: 5m
+      json-schema: 5m
+      example: 5m
+      site-page: 5m
+      assessment: 5m
+      sdlc-layer: 5m
+      sdlc-stage: 5m
   - name: runner
-    package: builtin:runner                # executes things; slow, so it's refreshed per entity
+    package: builtin:runner # executes things; slow, so it's refreshed per entity
     runtime: in-image
     config:
-      root: "."
+      root: .
       jobs:
-        - {name: test, per: crate, command: [cargo, test, -q, -p, "{crate}"], parse: cargo-test}
-        - {name: clippy, per: crate, command: [cargo, clippy, -q, -p, "{crate}", --all-targets, --message-format=json], parse: clippy}
+        - name: test
+          per: crate
+          command: [cargo, test, -q, -p, "{crate}"]
+          parse: cargo-test
+        - name: clippy
+          per: crate
+          command:
+          - cargo
+          - clippy
+          - -q
+          - -p
+          - "{crate}"
+          - --all-targets
+          - --message-format=json
+          parse: clippy
         # MCP calls the contract tests actually make (TOOLBOX_MCP_TRACE), not just name (F9)
         - name: mcp-calls
-          command: [sh, -c, 'TOOLBOX_MCP_TRACE="$PWD/target/mcp-trace.ndjson" cargo test -q -p toolbox-api --test mcp']
+          command:
+          - sh
+          - -c
+          - >-
+            TOOLBOX_MCP_TRACE="$PWD/target/mcp-trace.ndjson" cargo test -q -p
+            toolbox-api --test mcp
           parse: tally
           file: target/mcp-trace.ndjson
           key: tool
     records: [test, clippy, mcp-calls]
-    refresh: {test: [external_ids], clippy: [external_ids], mcp-calls: [external_ids]}
+    refresh:
+      test: [external_ids]
+      clippy: [external_ids]
+      mcp-calls: [external_ids]
     freshness: {test: 1h, clippy: 1h, mcp-calls: 1h}
   - name: surfaces
-    package: builtin:runner                # the same runner, one fast job: Toolbox's own CLI and MCP surfaces
+    package: builtin:runner # the same runner, one fast job: Toolbox's own CLI and MCP surfaces
     runtime: in-image
     config:
       name: surfaces
-      root: "."
+      root: .
       jobs:
-        - {name: describe, command: [target/debug/toolbox, describe], parse: ndjson, kinds: [command, mcp-tool]}
+        - name: describe
+          command: [target/debug/toolbox, describe]
+          parse: ndjson
+          kinds: [command, mcp-tool]
         # Every part of a portal as entities (docs/design/scorecards-for-scorecards.md): this
         # portal, the starter pilots copy, and the reference portal. Live outcomes come from the
         # committed results and are information only, so meta scorecards never depend on their own output.
         - name: portals
-          command: [target/debug/toolbox, describe, portal, portal, examples/repo-portal-starter, examples/reference-portal, --results, portal=portal/results.json]
+          command:
+          - target/debug/toolbox
+          - describe
+          - portal
+          - portal
+          - examples/repo-portal-starter
+          - examples/reference-portal
+          - --results
+          - portal=portal/results.json
           parse: ndjson
           kinds: [scorecard, rule, kind, field, connector, rubric]
-    records: [command, mcp-tool, scorecard, rule, kind, field, connector, rubric]
-    refresh: {command: [external_ids], mcp-tool: [external_ids], scorecard: [external_ids], rule: [external_ids], kind: [external_ids], field: [external_ids], connector: [external_ids], rubric: [external_ids]}
-    freshness: {command: 5m, mcp-tool: 5m, scorecard: 5m, rule: 5m, kind: 5m, field: 5m, connector: 5m, rubric: 5m}
+    records:
+    - command
+    - mcp-tool
+    - scorecard
+    - rule
+    - kind
+    - field
+    - connector
+    - rubric
+    refresh:
+      command: [external_ids]
+      mcp-tool: [external_ids]
+      scorecard: [external_ids]
+      rule: [external_ids]
+      kind: [external_ids]
+      field: [external_ids]
+      connector: [external_ids]
+      rubric: [external_ids]
+    freshness:
+      command: 5m
+      mcp-tool: 5m
+      scorecard: 5m
+      rule: 5m
+      kind: 5m
+      field: 5m
+      connector: 5m
+      rubric: 5m
 
 include:
   # One file per topic: its kinds, scorecards and rubrics (portal/README.md).
@@ -134,13 +274,28 @@ include:
 
 mcp:
   instructions: >-
-    Toolbox for Toolbox: the catalogue of Toolbox's own crates, docs, scripts, CLI commands and MCP
-    tools, agent skills, first-party connectors, direct Cargo dependencies, agent instruction files, npm manifests, JSON Schemas, example write-ups, agent plugins, public docs pages and the repository rollup, scored against the maintainer, operator and user SDLC standards. To raise the bar, pick
-    a failing rule with scorecard_status, read the evidence with explain (rule) or get: Crate
-    undocumented, longFunctions, complexFunctions, clippy.messages, tests.output; Doc brokenLinks,
-    counts; Command undocumentedArgs, documentedIn, exercisedBy; McpTool undescribedProperties,
-    documentedIn, exercisedBy, viaCli; Skill frontmatterErrors, triggerCues, pronouns, missingFiles,
-    secretHits, boundaryCues, evalCases; Connector documentedKinds, transport, tests, conformanceMentions, secretHits; Dependency requirements, versions, sources, usedBy; AgentDoc missingFiles, commandLines, ciMissingCommands, secretHits, hiddenChars; PackageJson wildcardRanges, gitRanges, lockfile, checkScripts, ciUsesInstall; JsonSchema dialect, schemaId, externalRefs; Example missingFiles, commandLines; Plugin misplacedSkills, headerSecrets, pathEscapes, commandToken; SitePage missingFiles, inSidebar, secretHits; Repository dependabotGaps, codeScanning, securityPolicy, workflowOwners. Change the code, refresh_entity, and check the score again.
-    Contract tests count when a test or script contains a tools/call body naming the tool.
+    Toolbox for Toolbox: the catalogue of Toolbox's own crates, docs,
+    scripts, CLI commands and MCP tools, agent skills, first-party
+    connectors, direct Cargo dependencies, agent instruction files, npm
+    manifests, JSON Schemas, example write-ups, agent plugins, public docs
+    pages and the repository rollup, scored against the maintainer, operator
+    and user SDLC standards. To raise the bar, pick a failing rule with
+    scorecard_status, read the evidence with explain (rule) or get: Crate
+    undocumented, longFunctions, complexFunctions, clippy.messages,
+    tests.output; Doc brokenLinks, counts; Command undocumentedArgs,
+    documentedIn, exercisedBy; McpTool undescribedProperties, documentedIn,
+    exercisedBy, viaCli; Skill frontmatterErrors, triggerCues, pronouns,
+    missingFiles, secretHits, boundaryCues, evalCases; Connector
+    documentedKinds, transport, tests, conformanceMentions, secretHits;
+    Dependency requirements, versions, sources, usedBy; AgentDoc
+    missingFiles, commandLines, ciMissingCommands, secretHits, hiddenChars;
+    PackageJson wildcardRanges, gitRanges, lockfile, checkScripts,
+    ciUsesInstall; JsonSchema dialect, schemaId, externalRefs; Example
+    missingFiles, commandLines; Plugin misplacedSkills, headerSecrets,
+    pathEscapes, commandToken; SitePage missingFiles, inSidebar, secretHits;
+    Repository dependabotGaps, codeScanning, securityPolicy, workflowOwners.
+    Change the code, refresh_entity, and check the score again. Contract
+    tests count when a test or script contains a tools/call body naming the
+    tool.
 
 tests: [tests/standards.test.yaml]

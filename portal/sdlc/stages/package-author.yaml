@@ -6,76 +6,111 @@ records:
     layer: package-author
     name: author
     order: 1
-    intent: Write standards (kinds, scorecards, rubrics, skills) as a package with typed parameters.
-    exitCriterion: A package manifest validates and its fragments validate against the manifest schema.
-    commands: ["toolbox validate"]
+    intent: >-
+      Write standards (kinds, scorecards, rubrics, skills) as a package with
+      typed parameters.
+    exitCriterion: >-
+      A package manifest validates and its fragments validate against the
+      manifest schema.
+    commands: [toolbox validate]
     checks: [packages/github-actions/toolbox-package.yaml]
     docs: [docs/design/packages.md, packages/github-actions/README.md]
     status: partial
-    gaps:
-      - "no scaffold (toolbox package new)"
+    gaps: [no scaffold (toolbox package new)]
   - id: package-author/build-connector
     layer: package-author
     name: build-connector
     order: 2
-    intent: Build a connector outside this repository, in any language, against the connector protocol.
-    exitCriterion: The connector passes the conformance kit as a standalone executable or WASM component.
-    commands: ["toolbox connector test", "toolbox install"]
-    checks: [crates/toolbox-connect/src/conformance.rs, crates/toolbox-cli/tests/install.rs]
+    intent: >-
+      Build a connector outside this repository, in any language, against the
+      connector protocol.
+    exitCriterion: >-
+      The connector passes the conformance kit as a standalone executable or
+      WASM component.
+    commands: [toolbox connector test, toolbox install]
+    checks:
+    - crates/toolbox-connect/src/conformance.rs
+    - crates/toolbox-cli/tests/install.rs
     docs: [docs/design/connector-control.md, docs/design/package-author-sdlc.md]
     status: partial
     gaps:
-      - "the Rust SDK (toolbox-connect) is not published; no SDK for other languages"
-      - "no `toolbox connector new` scaffold"
-      - "no WASM component connectors yet"
+    - >-
+      the Rust SDK (toolbox-connect) is not published; no SDK for other
+      languages
+    - no `toolbox connector new` scaffold
+    - no WASM component connectors yet
   - id: package-author/test
     layer: package-author
     name: test
     order: 3
-    intent: Prove the package's rules both ways on its fixtures, on every Toolbox version it claims to support.
-    exitCriterion: toolbox test passes for each supported Toolbox release and platform; meta bronze for every exported rule.
-    commands: ["toolbox test packages/github-actions/tests", "toolbox connector test"]
-    checks: [packages/github-actions/tests/standards.test.yaml, .github/workflows/ci.yml]
+    intent: >-
+      Prove the package's rules both ways on its fixtures, on every Toolbox
+      version it claims to support.
+    exitCriterion: >-
+      toolbox test passes for each supported Toolbox release and platform;
+      meta bronze for every exported rule.
+    commands:
+    - toolbox test packages/github-actions/tests
+    - toolbox connector test
+    checks:
+    - packages/github-actions/tests/standards.test.yaml
+    - .github/workflows/ci.yml
     docs: [docs/design/package-author-sdlc.md]
     status: partial
     gaps:
-      - "no released Toolbox versions to test against (maintainer/release is missing)"
-      - "no compatibility matrix or `toolbox` version range in a package"
+    - >-
+      no released Toolbox versions to test against (maintainer/release is
+      missing)
+    - no compatibility matrix or `toolbox` version range in a package
   - id: package-author/package
     layer: package-author
     name: package
     order: 4
-    intent: Produce one deterministic archive with fragments, fixtures, tests, skills, connector artifacts and tool requirements.
-    exitCriterion: The same source produces the same archive digest; tool requirements are pinned with checksums.
+    intent: >-
+      Produce one deterministic archive with fragments, fixtures, tests,
+      skills, connector artifacts and tool requirements.
+    exitCriterion: >-
+      The same source produces the same archive digest; tool requirements are
+      pinned with checksums.
     commands: []
     checks: []
     docs: [docs/design/packages.md]
     status: missing
     gaps:
-      - "git packages are pinned by content hash; no deterministic archive for OCI mirrors yet"
+    - >-
+      git packages are pinned by content hash; no deterministic archive for
+      OCI mirrors yet
   - id: package-author/distribute
     layer: package-author
     name: distribute
     order: 5
-    intent: Release the archive and connector binaries so consumers can pin and verify them.
-    exitCriterion: A tag publishes attested artifacts, mirrored to OCI, and consumers resolve them by digest.
+    intent: >-
+      Release the archive and connector binaries so consumers can pin and
+      verify them.
+    exitCriterion: >-
+      A tag publishes attested artifacts, mirrored to OCI, and consumers
+      resolve them by digest.
     commands: []
     checks: []
     docs: [docs/design/packages.md]
     status: missing
     gaps:
-      - "registry undecided (Q15)"
-      - "no release workflow, attestations or installers for connector binaries"
+    - registry undecided (Q15)
+    - no release workflow, attestations or installers for connector binaries
   - id: package-author/adopt
     layer: package-author
     name: adopt
     order: 6
-    intent: Show a consumer what an upgrade changes before it lands, and roll it out across a fleet.
-    exitCriterion: toolbox plan shows entities whose level changes for a package upgrade; a fleet rollout opens one PR per repository.
-    commands: ["toolbox plan --local"]
+    intent: >-
+      Show a consumer what an upgrade changes before it lands, and roll it out
+      across a fleet.
+    exitCriterion: >-
+      toolbox plan shows entities whose level changes for a package upgrade; a
+      fleet rollout opens one PR per repository.
+    commands: [toolbox plan --local]
     checks: [actions/report/action.yml]
     docs: [docs/design/federation.md]
     status: designed
     gaps:
-      - "plan compares local manifests only; no remote package resolution"
-      - "no fleet rollout workflow (gh-aw or otherwise)"
+    - plan compares local manifests only; no remote package resolution
+    - no fleet rollout workflow (gh-aw or otherwise)

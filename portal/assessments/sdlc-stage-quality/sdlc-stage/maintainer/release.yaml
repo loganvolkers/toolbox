@@ -1,41 +1,46 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: sdlc-stage:maintainer/release
 rubric: sdlc-stage-quality
-subjectHash: "49fc442fd1af"
+subjectHash: 49fc442fd1af
 assessor: {kind: agent, name: cursor-grok, model: grok-4.7}
-at: "2026-11-20"
+at: 2026-11-20
 verdicts:
   - criterion: executable-exit
     verdict: fail
     reason: >-
-      .github/workflows/release.yml and image.yml, generated from dist-workspace.toml
-      (github-attestations = true), fail a tag whose binaries, shell installer or image do not build.
-      Nothing in those checks fails when consumers still compile: actions/report/action.yml runs
-      cargo build unless toolbox-version is set, which the stage lists as a gap.
+      .github/workflows/release.yml and image.yml, generated from
+      dist-workspace.toml (github-attestations = true), fail a tag whose
+      binaries, shell installer or image do not build. Nothing in those checks
+      fails when consumers still compile: actions/report/action.yml runs cargo
+      build unless toolbox-version is set, which the stage lists as a gap.
     suggestion: >-
-      Add a CI check that fails while actions/report's default path is still cargo build, or require
-      toolbox-version on the pilot job.
+      Add a CI check that fails while actions/report's default path is still
+      cargo build, or require toolbox-version on the pilot job.
   - criterion: agent-can-complete
     verdict: fail
     reason: >-
-      docs/design/maintainer-sdlc.md "Releasing (D90)" lists dist plan and git tag && git push, which
-      matches the stage commands. The stage gaps (no release cut, no Homebrew, npm, cargo-binstall
-      or aqua) have no command, and pushing the tag needs a maintainer credential.
+      docs/design/maintainer-sdlc.md "Releasing (D90)" lists dist plan and git
+      tag && git push, which matches the stage commands. The stage gaps (no
+      release cut, no Homebrew, npm, cargo-binstall or aqua) have no command,
+      and pushing the tag needs a maintainer credential.
     suggestion: >-
-      Document the remaining installer steps as commands, and name the credential the tag push uses.
+      Document the remaining installer steps as commands, and name the
+      credential the tag push uses.
   - criterion: reuses-artifacts
     verdict: fail
     reason: >-
-      No release has been cut (the stage says so), and actions/report/action.yml still runs
-      cargo build --locked when toolbox-version is empty, so consumers compile Toolbox.
+      No release has been cut (the stage says so), and
+      actions/report/action.yml still runs cargo build --locked when
+      toolbox-version is empty, so consumers compile Toolbox.
     suggestion: >-
-      Cut the first tag and set toolbox-version on actions/report so the default path downloads
-      the attested binaries.
+      Cut the first tag and set toolbox-version on actions/report so the
+      default path downloads the attested binaries.
   - criterion: decoupled-from-core
     verdict: pass
     reason: >-
-      Releasing this repository is the maintainer stage in docs/design/maintainer-sdlc.md. It does
-      not require adding a crate, a builtin or a schema change.
+      Releasing this repository is the maintainer stage in
+      docs/design/maintainer-sdlc.md. It does not require adding a crate, a
+      builtin or a schema change.
 summary: >-
-  The release workflows exist and would attest a tag, but nothing is published yet and the default
-  consumer still builds from source.
+  The release workflows exist and would attest a tag, but nothing is
+  published yet and the default consumer still builds from source.

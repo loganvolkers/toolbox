@@ -1,35 +1,42 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: assessment:crate-design/crate:toolbox-expr
 rubric: assessment-quality
-subjectHash: "77d1bcf778ea"
+subjectHash: 77d1bcf778ea
 assessor: {kind: agent, name: cursor-grok, model: grok-4.7}
-at: "2026-11-20"
+at: 2026-11-20
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      crates/toolbox-expr/src/lib.rs documents only the M0 static checks, docs/v1-spec.md §4 says
-      compile and evaluate, eval.rs returns cel::Value, and toolbox-derive/Cargo.toml lists
-      cel.workspace = true. Those are the sources the three fail reasons cite.
+      crates/toolbox-expr/src/lib.rs documents only the M0 static checks,
+      docs/v1-spec.md §4 says compile and evaluate, eval.rs returns
+      cel::Value, and toolbox-derive/Cargo.toml lists cel.workspace = true.
+      Those are the sources the three fail reasons cite.
   - criterion: complete
     verdict: pass
     reason: >-
-      The four criteria match the sources in crates/toolbox-expr/src/lib.rs, eval.rs and
-      toolbox-derive/Cargo.toml. one-responsibility fails because the crate docs are stale, which
-      is the miss in the previous assessment that passed it.
+      The four criteria match the sources in crates/toolbox-expr/src/lib.rs,
+      eval.rs and toolbox-derive/Cargo.toml. one-responsibility fails because
+      the crate docs are stale, which is the miss in the previous assessment
+      that passed it.
   - criterion: reproducible
     verdict: unsure
     reason: >-
-      This session wrote the assessment and this review, so a further assessor's verdicts are
-      unknown. tests-match-risk in particular rests on judging 8 unit tests short of Q10.
-    suggestion: Have a different agent or person review the assessment and replace this file.
+      This session wrote the assessment and this review, so a further
+      assessor's verdicts are unknown. tests-match-risk in particular rests on
+      judging 8 unit tests short of Q10.
+    suggestion: >-
+      Have a different agent or person review the assessment and replace this
+      file.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Updating the crate docs in lib.rs would pass one-responsibility. Keeping serde_json::Value
-      at the eval.rs boundary, and dropping cel from toolbox-derive/Cargo.toml, would pass
-      small-contract and replaceable-defaults. A CEL conformance run (Q10) would settle
+      Updating the crate docs in lib.rs would pass one-responsibility. Keeping
+      serde_json::Value at the eval.rs boundary, and dropping cel from
+      toolbox-derive/Cargo.toml, would pass small-contract and
+      replaceable-defaults. A CEL conformance run (Q10) would settle
       tests-match-risk.
 summary: >-
-  The citations hold, and the stale-docs miss in the previous assessment is now a fail. This
-  review is not independent of the assessment it reviews.
+  The citations hold, and the stale-docs miss in the previous assessment
+  is now a fail. This review is not independent of the assessment it
+  reviews.

@@ -3,13 +3,38 @@
 apiVersion: toolbox.dev/package/v0
 name: github-actions
 version: 0.1.0
-description: Score GitHub Actions workflows and the third-party actions they use, with zizmor, actionlint and run history.
+description: >-
+  Score GitHub Actions workflows and the third-party actions they use,
+  with zizmor, actionlint and run history.
 parameters:
-  githubOrg: {type: string, description: "The GitHub organisation whose run history is read."}
-  githubRepo: {type: string, description: "The repository whose workflows' run history is read."}
-  branch: {type: string, default: main, description: "The branch run history is read from."}
-  failRateBronze: {type: integer, default: 20, tighten: lower, description: "Max % failed runs on the branch for bronze."}
-  failRateSilver: {type: integer, default: 10, tighten: lower, description: "Max % failed runs for silver."}
-  failRateGold: {type: integer, default: 5, tighten: lower, description: "Max % failed runs for gold."}
-  p90Seconds: {type: integer, default: 900, tighten: lower, description: "Max p90 run time in seconds for gold."}
-fragments: ["fragments/*.yaml"]
+  githubOrg:
+    type: string
+    description: The GitHub organisation whose run history is read.
+  githubRepo:
+    type: string
+    description: The repository whose workflows' run history is read.
+  branch:
+    type: string
+    default: main
+    description: The branch run history is read from.
+  failRateBronze:
+    type: integer
+    default: 20
+    tighten: lower
+    description: Max % failed runs on the branch for bronze.
+  failRateSilver:
+    type: integer
+    default: 10
+    tighten: lower
+    description: Max % failed runs for silver.
+  failRateGold:
+    type: integer
+    default: 5
+    tighten: lower
+    description: Max % failed runs for gold.
+  p90Seconds:
+    type: integer
+    default: 900
+    tighten: lower
+    description: Max p90 run time in seconds for gold.
+fragments: [fragments/*.yaml]

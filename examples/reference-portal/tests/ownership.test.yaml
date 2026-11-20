@@ -3,30 +3,48 @@
 name: ownership
 assert:
   - name: claim backed by CODEOWNERS is verified
-    expect: "entity('repository:payments-api').ownership == {'status': 'verified', 'owner': 'group:payments', 'claim': 'group:payments'}"
+    expect: >-
+      entity('repository:payments-api').ownership == {'status': 'verified',
+      'owner': 'group:payments', 'claim': 'group:payments'}
   - name: file-specific CODEOWNERS rule backs the claim
-    expect: "entity('repository:checkout-web').ownership.status == 'verified'"
+    expect: entity('repository:checkout-web').ownership.status == 'verified'
   - name: claim not backed by CODEOWNERS is recorded but not applied (D17)
-    expect: "entity('repository:ledger').ownership.status == 'unverified' && !has(entity('repository:ledger').ownership.owner)"
+    expect: >-
+      entity('repository:ledger').ownership.status == 'unverified' &&
+      !has(entity('repository:ledger').ownership.owner)
   - name: CODEOWNERS alone gives an inferred owner
-    expect: "entity('repository:platform-infra').ownership == {'status': 'inferred', 'owner': 'group:platform'}"
+    expect: >-
+      entity('repository:platform-infra').ownership == {'status': 'inferred',
+      'owner': 'group:platform'}
   - name: no claim and no CODEOWNERS means no owner
-    expect: "entity('repository:legacy-tool').ownership.status == 'none'"
+    expect: entity('repository:legacy-tool').ownership.status == 'none'
   - name: archived in GitHub overrides the catalog-info lifecycle
-    expect: "entity('repository:legacy-tool').lifecycle == 'deprecated'"
+    expect: entity('repository:legacy-tool').lifecycle == 'deprecated'
   - name: catalog-info title wins; GitHub name is the fallback
-    expect: "entity('repository:payments-api').title == 'Payments API' && entity('repository:ledger').title == 'ledger'"
+    expect: >-
+      entity('repository:payments-api').title == 'Payments API' &&
+      entity('repository:ledger').title == 'ledger'
   - name: native tier is used when git has none
-    expect: "entity('repository:platform-infra').tier == '1'"
+    expect: entity('repository:platform-infra').tier == '1'
   - name: payments-api reaches silver
-    expect: "score('ownership', 'repository:payments-api').level == 'silver'"
+    expect: score('ownership', 'repository:payments-api').level == 'silver'
   - name: unprotected branch caps checkout-web at bronze
-    expect: "score('ownership', 'repository:checkout-web').level == 'bronze' && score('ownership', 'repository:checkout-web').rules['branch-protected'] == 'fail'"
+    expect: >-
+      score('ownership', 'repository:checkout-web').level == 'bronze' &&
+      score('ownership', 'repository:checkout-web').rules['branch-protected']
+      == 'fail'
   - name: unverified claim fails bronze
-    expect: "score('ownership', 'repository:ledger').level == 'none' && score('ownership', 'repository:ledger').rules['has-owner'] == 'fail'"
+    expect: >-
+      score('ownership', 'repository:ledger').level == 'none' &&
+      score('ownership', 'repository:ledger').rules['has-owner'] == 'fail'
   - name: inferred owner is bronze, not silver
-    expect: "score('ownership', 'repository:platform-infra').level == 'bronze' && score('ownership', 'repository:platform-infra').rules['claim-verified'] == 'fail'"
+    expect: >-
+      score('ownership', 'repository:platform-infra').level == 'bronze' &&
+      score('ownership', 'repository:platform-infra').rules['claim-verified']
+      == 'fail'
   - name: archived repositories are skipped
-    expect: "score('ownership', 'repository:legacy-tool').level == 'skipped'"
-  - name: catalog-info for a repository GitHub doesn't report creates no entity (identityFrom)
-    expect: "orphans() == ['repository:ghost-service']"
+    expect: score('ownership', 'repository:legacy-tool').level == 'skipped'
+  - name: >-
+      catalog-info for a repository GitHub doesn't report creates no entity
+      (identityFrom)
+    expect: orphans() == ['repository:ghost-service']

@@ -4,30 +4,54 @@
 kinds:
   # The checkout (docs/design/supply-chain-standards.md, docs/design/repo-level.md).
   - name: Repository
-    description: "This checkout: the files that turn on supply-chain tools, and the scorecards it rolls up."
+    description: >-
+      This checkout: the files that turn on supply-chain tools, and the
+      scorecards it rolls up.
     identityFrom: [connector:workspace]
     fields:
-      name: {type: string, description: "owner/name from the origin remote, or the directory name."}
-      dependabotGaps: {type: list, items: string, description: "Of cargo, npm and github-actions, the ecosystems dependabot.yml does not update."}
-      codeScanning: {type: boolean, description: "A workflow uses github/codeql-action."}
-      codeScanningPinned: {type: boolean, description: "That use is pinned to a 40-character commit."}
-      securityPolicy: {type: boolean, description: "SECURITY.md exists at the root, under .github, or under docs."}
-      workflowOwners: {type: boolean, description: "A CODEOWNERS rule covers .github/workflows/ci.yml."}
-      watchOverride: {type: list, items: string, description: "Constituents a fixture watches. Empty on a live checkout, which then uses policy.repoRollup."}
+      name:
+        type: string
+        description: owner/name from the origin remote, or the directory name.
+      dependabotGaps:
+        type: list
+        items: string
+        description: >-
+          Of cargo, npm and github-actions, the ecosystems dependabot.yml does not
+          update.
+      codeScanning:
+        type: boolean
+        description: A workflow uses github/codeql-action.
+      codeScanningPinned:
+        type: boolean
+        description: That use is pinned to a 40-character commit.
+      securityPolicy:
+        type: boolean
+        description: SECURITY.md exists at the root, under .github, or under docs.
+      workflowOwners:
+        type: boolean
+        description: A CODEOWNERS rule covers .github/workflows/ci.yml.
+      watchOverride:
+        type: list
+        items: string
+        description: >-
+          Constituents a fixture watches. Empty on a live checkout, which then
+          uses policy.repoRollup.
       watch:
         type: list
         items: string
-        description: "Constituent scorecards whose lowest level is this repository's level."
-        computed: "entity.watchOverride.size() > 0 ? entity.watchOverride : policy.repoRollup"
+        description: Constituent scorecards whose lowest level is this repository's level.
+        computed: >-
+          entity.watchOverride.size() > 0 ? entity.watchOverride :
+          policy.repoRollup
     sources: {default: [connector:workspace]}
     map:
-      - from: workspace/repo
-        id: "'repo:' + record.name"
-        set: >-
-          {'name': record.name, 'dependabotGaps': record.dependabotGaps,
-           'codeScanning': record.codeScanning, 'codeScanningPinned': record.codeScanningPinned,
-           'securityPolicy': record.securityPolicy, 'workflowOwners': record.workflowOwners,
-           'watchOverride': has(record.watchOverride) ? record.watchOverride : []}
+    - from: workspace/repo
+      id: "'repo:' + record.name"
+      set: >-
+        {'name': record.name, 'dependabotGaps': record.dependabotGaps,
+         'codeScanning': record.codeScanning, 'codeScanningPinned': record.codeScanningPinned,
+         'securityPolicy': record.securityPolicy, 'workflowOwners': record.workflowOwners,
+         'watchOverride': has(record.watchOverride) ? record.watchOverride : []}
 
 scorecards:
   # The files that turn GitHub Advanced Security on. Alert counts need the API and are not gated.
@@ -38,31 +62,41 @@ scorecards:
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze}
     rules:
-      - name: dependabot
-        level: bronze
-        check: "entity.dependabotGaps.size() == 0"
-        evidence: "entity.dependabotGaps"
-        fix: "Add .github/dependabot.yml updates for the ecosystems in the evidence (cargo, npm, github-actions)."
-      - name: code-scanning
-        level: bronze
-        check: "entity.codeScanning"
-        evidence: "['no workflow uses github/codeql-action']"
-        fix: "Add a code scanning workflow that uses github/codeql-action. Alert counts stay a report, not a gate."
-      - name: security-policy
-        level: bronze
-        check: "entity.securityPolicy"
-        evidence: "['no SECURITY.md']"
-        fix: "Add SECURITY.md at the repository root, under .github/, or under docs/, with how to report a vulnerability."
-      - name: workflows-have-owners
-        level: silver
-        check: "entity.workflowOwners"
-        evidence: "['no CODEOWNERS rule covers .github/workflows/ci.yml']"
-        fix: "Add a CODEOWNERS rule that covers .github/workflows (a catch-all * does). Workflow changes should have an owner."
-      - name: code-scanning-pinned
-        level: gold
-        check: "entity.codeScanningPinned"
-        evidence: "['code scanning action is missing or not pinned to a commit']"
-        fix: "Pin github/codeql-action to a 40-character commit, the same way other actions are pinned."
+    - name: dependabot
+      level: bronze
+      check: entity.dependabotGaps.size() == 0
+      evidence: entity.dependabotGaps
+      fix: >-
+        Add .github/dependabot.yml updates for the ecosystems in the evidence
+        (cargo, npm, github-actions).
+    - name: code-scanning
+      level: bronze
+      check: entity.codeScanning
+      evidence: "['no workflow uses github/codeql-action']"
+      fix: >-
+        Add a code scanning workflow that uses github/codeql-action. Alert
+        counts stay a report, not a gate.
+    - name: security-policy
+      level: bronze
+      check: entity.securityPolicy
+      evidence: "['no SECURITY.md']"
+      fix: >-
+        Add SECURITY.md at the repository root, under .github/, or under docs/,
+        with how to report a vulnerability.
+    - name: workflows-have-owners
+      level: silver
+      check: entity.workflowOwners
+      evidence: "['no CODEOWNERS rule covers .github/workflows/ci.yml']"
+      fix: >-
+        Add a CODEOWNERS rule that covers .github/workflows (a catch-all *
+        does). Workflow changes should have an owner.
+    - name: code-scanning-pinned
+      level: gold
+      check: entity.codeScanningPinned
+      evidence: "['code scanning action is missing or not pinned to a commit']"
+      fix: >-
+        Pin github/codeql-action to a 40-character commit, the same way other
+        actions are pinned.
     facets: {summary: public, details: public}
 
   # The level is the lowest constituent. A weighted 0–10 is not the gate. `cards` is bound on a
@@ -74,19 +108,23 @@ scorecards:
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze}
     rules:
-      - name: constituents-at-least-bronze
-        level: bronze
-        check: "cards.all(c, c.rank >= 1)"
-        evidence: "cards.filter(c, c.rank < 1).map(c, c.name + ' is ' + c.level)"
-        fix: "The repository level is the lowest constituent scorecard. Raise each one in the evidence to bronze."
-      - name: constituents-at-least-silver
-        level: silver
-        check: "cards.all(c, c.rank >= 2)"
-        evidence: "cards.filter(c, c.rank < 2).map(c, c.name + ' is ' + c.level)"
-        fix: "Raise each constituent in the evidence to silver. A card whose highest level is bronze caps the repository at bronze."
-      - name: constituents-at-least-gold
-        level: gold
-        check: "cards.all(c, c.rank >= 3)"
-        evidence: "cards.filter(c, c.rank < 3).map(c, c.name + ' is ' + c.level)"
-        fix: "Raise each constituent in the evidence to gold."
+    - name: constituents-at-least-bronze
+      level: bronze
+      check: cards.all(c, c.rank >= 1)
+      evidence: cards.filter(c, c.rank < 1).map(c, c.name + ' is ' + c.level)
+      fix: >-
+        The repository level is the lowest constituent scorecard. Raise each one
+        in the evidence to bronze.
+    - name: constituents-at-least-silver
+      level: silver
+      check: cards.all(c, c.rank >= 2)
+      evidence: cards.filter(c, c.rank < 2).map(c, c.name + ' is ' + c.level)
+      fix: >-
+        Raise each constituent in the evidence to silver. A card whose highest
+        level is bronze caps the repository at bronze.
+    - name: constituents-at-least-gold
+      level: gold
+      check: cards.all(c, c.rank >= 3)
+      evidence: cards.filter(c, c.rank < 3).map(c, c.name + ' is ' + c.level)
+      fix: Raise each constituent in the evidence to gold.
     facets: {summary: public, details: public}

@@ -4,219 +4,983 @@
 name: standards
 assert:
   # Layer 1: crates
-  - name: a crate with passing tests and clippy, 80%+ documented, no huge functions reaches silver
-    expect: "score('maintainer-crate', 'crate:toolbox-expr').level == 'silver' && score('maintainer-crate', 'crate:toolbox-expr').rules['fully-documented'] == 'fail'"
+  - name: >-
+      a crate with passing tests and clippy, 80%+ documented, no huge
+      functions reaches silver
+    expect: >-
+      score('maintainer-crate', 'crate:toolbox-expr').level == 'silver' &&
+      score('maintainer-crate',
+      'crate:toolbox-expr').rules['fully-documented'] == 'fail'
   - name: a failing test run caps a crate below bronze
-    expect: "score('maintainer-crate', 'crate:toolbox-derive').rules['tests-pass'] == 'fail' && score('maintainer-crate', 'crate:toolbox-derive').level == 'none'"
+    expect: >-
+      score('maintainer-crate', 'crate:toolbox-derive').rules['tests-pass'] ==
+      'fail' && score('maintainer-crate', 'crate:toolbox-derive').level ==
+      'none'
   - name: clippy warnings and missing tests both fail bronze
-    expect: "score('maintainer-crate', 'crate:toolbox-connector-git-files').rules['clippy-clean'] == 'fail' && score('maintainer-crate', 'crate:toolbox-connector-git-files').rules['has-tests'] == 'fail'"
+    expect: >-
+      score('maintainer-crate',
+      'crate:toolbox-connector-git-files').rules['clippy-clean'] == 'fail' &&
+      score('maintainer-crate',
+      'crate:toolbox-connector-git-files').rules['has-tests'] == 'fail'
   - name: placeholder crates are skipped
-    expect: "score('maintainer-crate', 'crate:toolbox-durable').level == 'skipped'"
+    expect: score('maintainer-crate', 'crate:toolbox-durable').level == 'skipped'
   - name: runner results land on the crate entity
-    expect: "entity('crate:toolbox-derive').tests.failed == 1 && entity('crate:toolbox-connector-git-files').clippy.warnings == 1"
+    expect: >-
+      entity('crate:toolbox-derive').tests.failed == 1 &&
+      entity('crate:toolbox-connector-git-files').clippy.warnings == 1
   - name: evidence names the functions to split
-    expect: "entity('crate:toolbox-derive').longFunctions.exists(f, f.startsWith('Pipeline::run at src/lib.rs'))"
+    expect: >-
+      entity('crate:toolbox-derive').longFunctions.exists(f,
+      f.startsWith('Pipeline::run at src/lib.rs'))
   - name: workspace dependencies become inbound relations
     expect: "'crates/toolbox-derive' in entity('crate:toolbox-expr').dependents"
   # Layer 1: docs
   - name: a design doc without a Sources section stops at bronze
-    expect: "score('maintainer-docs', 'doc:docs/design/dashboards.md').level == 'bronze' && score('maintainer-docs', 'doc:docs/design/dashboards.md').rules['cites-sources'] == 'fail'"
+    expect: >-
+      score('maintainer-docs', 'doc:docs/design/dashboards.md').level ==
+      'bronze' && score('maintainer-docs',
+      'doc:docs/design/dashboards.md').rules['cites-sources'] == 'fail'
   - name: broken links and a bare SDLC fail bronze
-    expect: "score('maintainer-docs', 'doc:docs/v1-spec.md').rules['links-resolve'] == 'fail' && score('maintainer-docs', 'doc:docs/v1-spec.md').rules['names-sdlc-layer'] == 'fail'"
+    expect: >-
+      score('maintainer-docs', 'doc:docs/v1-spec.md').rules['links-resolve']
+      == 'fail' && score('maintainer-docs',
+      'doc:docs/v1-spec.md').rules['names-sdlc-layer'] == 'fail'
   - name: append-only logs are exempt from wording rules
-    expect: "score('maintainer-docs', 'doc:docs/decisions.md').level == 'skipped'"
+    expect: score('maintainer-docs', 'doc:docs/decisions.md').level == 'skipped'
   # Layer 2: operator commands
   - name: commands split into operator and user layers
-    expect: "entity('command:validate').layer == 'operator' && entity('command:owner').layer == 'user' && entity('command:mcp').layer == 'user'"
+    expect: >-
+      entity('command:validate').layer == 'operator' &&
+      entity('command:owner').layer == 'user' && entity('command:mcp').layer
+      == 'user'
   - name: a documented command that no script runs stops at bronze
-    expect: "'docs/v1-spec.md' in entity('command:validate').documentedIn && score('operator-cli', 'command:validate').level == 'bronze'"
+    expect: >-
+      'docs/v1-spec.md' in entity('command:validate').documentedIn &&
+      score('operator-cli', 'command:validate').level == 'bronze'
   - name: an undocumented, unexercised command fails bronze
-    expect: "score('operator-cli', 'command:push').level == 'none'"
+    expect: score('operator-cli', 'command:push').level == 'none'
   - name: a command whose skill names the invocation reaches bronze
-    expect: "score('cli-skill', 'command:validate').rules['has-skill'] == 'pass' && score('cli-skill', 'command:validate').level == 'bronze' && score('cli-skill', 'command:push').rules['has-skill'] == 'fail' && score('cli-skill', 'command:push').evidence['has-skill'] == ['missing skill for toolbox push'] && score('cli-skill', 'command:push').level == 'none'"
+    expect: >-
+      score('cli-skill', 'command:validate').rules['has-skill'] == 'pass' &&
+      score('cli-skill', 'command:validate').level == 'bronze' &&
+      score('cli-skill', 'command:push').rules['has-skill'] == 'fail' &&
+      score('cli-skill', 'command:push').evidence['has-skill'] == ['missing
+      skill for toolbox push'] && score('cli-skill', 'command:push').level ==
+      'none'
   # Layer 3: user interfaces
   - name: the acceptance script exercises the owner command
-    expect: "entity('command:owner').exercisedBy == ['scripts/m4-acceptance.sh']"
+    expect: entity('command:owner').exercisedBy == ['scripts/m4-acceptance.sh']
   - name: an MCP tool reached only through the CLI is not contract-tested
-    expect: "entity('mcp-tool:owner_of').viaCli == ['owner'] && score('user-mcp', 'mcp-tool:owner_of').rules['contract-tested'] == 'fail'"
+    expect: >-
+      entity('mcp-tool:owner_of').viaCli == ['owner'] && score('user-mcp',
+      'mcp-tool:owner_of').rules['contract-tested'] == 'fail'
   - name: undescribed MCP inputs fail silver
-    expect: "score('user-mcp', 'mcp-tool:search').level == 'bronze' && score('user-mcp', 'mcp-tool:search').rules['inputs-described'] == 'fail'"
+    expect: >-
+      score('user-mcp', 'mcp-tool:search').level == 'bronze' &&
+      score('user-mcp', 'mcp-tool:search').rules['inputs-described'] == 'fail'
   # Evidence: failing rules say exactly what fails
   - name: failing rules carry their evidence
-    expect: "score('maintainer-crate', 'crate:toolbox-derive').evidence['short-functions'].size() == 3 && score('maintainer-crate', 'crate:toolbox-connector-git-files').evidence['clippy-clean'] == ['src/main.rs:12 clippy::needless_return unneeded `return` statement']"
+    expect: >-
+      score('maintainer-crate',
+      'crate:toolbox-derive').evidence['short-functions'].size() == 3 &&
+      score('maintainer-crate',
+      'crate:toolbox-connector-git-files').evidence['clippy-clean'] ==
+      ['src/main.rs:12 clippy::needless_return unneeded `return` statement']
   - name: passing rules have no evidence
-    expect: "!('crate-docs' in score('maintainer-crate', 'crate:toolbox-derive').evidence) && !('tests-pass' in score('maintainer-crate', 'crate:toolbox-expr').evidence)"
+    expect: >-
+      !('crate-docs' in score('maintainer-crate',
+      'crate:toolbox-derive').evidence) && !('tests-pass' in
+      score('maintainer-crate', 'crate:toolbox-expr').evidence)
   - name: evidence lists what fails
-    expect: "score('user-mcp', 'mcp-tool:search').evidence['inputs-described'] == ['kind', 'limit', 'query'] && score('user-mcp', 'mcp-tool:search').evidence['documented'] == ['documented in: nothing']"
+    expect: >-
+      score('user-mcp', 'mcp-tool:search').evidence['inputs-described'] ==
+      ['kind', 'limit', 'query'] && score('user-mcp',
+      'mcp-tool:search').evidence['documented'] == ['documented in: nothing']
   - name: a failing rule without an evidence expression has none
-    expect: "score('operator-cli', 'command:validate').rules['exercised'] == 'fail' && (!has(score('operator-cli', 'command:validate').evidence) || !('exercised' in score('operator-cli', 'command:validate').evidence))"
-  - name: without a runner run, contract-tested falls back to tools/call bodies and says so
-    expect: "score('user-mcp', 'mcp-tool:owner_of').evidence['contract-tested'] == ['no tools/call naming this tool in tests or scripts (static mode)']"
+    expect: >-
+      score('operator-cli', 'command:validate').rules['exercised'] == 'fail'
+      && (!has(score('operator-cli', 'command:validate').evidence) ||
+      !('exercised' in score('operator-cli', 'command:validate').evidence))
+  - name: >-
+      without a runner run, contract-tested falls back to tools/call bodies
+      and says so
+    expect: >-
+      score('user-mcp', 'mcp-tool:owner_of').evidence['contract-tested'] ==
+      ['no tools/call naming this tool in tests or scripts (static mode)']
   - name: observed calls from the runner decide contract-tested when present
-    expect: "entity('mcp-tool:get').observed.calls == 0 && score('user-mcp', 'mcp-tool:get').rules['contract-tested'] == 'fail' && entity('mcp-tool:search').observed.calls == 4 && score('user-mcp', 'mcp-tool:search').rules['contract-tested'] == 'pass'"
+    expect: >-
+      entity('mcp-tool:get').observed.calls == 0 && score('user-mcp',
+      'mcp-tool:get').rules['contract-tested'] == 'fail' &&
+      entity('mcp-tool:search').observed.calls == 4 && score('user-mcp',
+      'mcp-tool:search').rules['contract-tested'] == 'pass'
   # CI security (fixtures: this repo's ci.yml and report action, trimmed; a synthetic release.yml)
-  - name: tag-pinned actions fail bronze, and zizmor's unpinned-uses isn't counted twice
-    expect: "score('maintainer-ci-security', 'workflow:.github/workflows/ci.yml').rules['pinned-to-sha'] == 'fail' && score('maintainer-ci-security', 'workflow:.github/workflows/ci.yml').rules['no-high-findings'] == 'pass' && score('maintainer-ci-security', 'workflow:.github/workflows/ci.yml').evidence['pinned-to-sha'] == ['actions/checkout@v4', 'actions/setup-go@v5', 'actions/setup-node@v4', 'actions/setup-python@v5']"
-  - name: a dangerous trigger is a high finding with evidence, and a write token on it fails silver
-    expect: "score('maintainer-ci-security', 'workflow:.github/workflows/release.yml').evidence['no-high-findings'] == ['dangerous-triggers at line 3: use of fundamentally insecure workflow trigger'] && score('maintainer-ci-security', 'workflow:.github/workflows/release.yml').rules['no-write-tokens-on-risky-triggers'] == 'fail'"
+  - name: >-
+      tag-pinned actions fail bronze, and zizmor's unpinned-uses isn't counted
+      twice
+    expect: >-
+      score('maintainer-ci-security',
+      'workflow:.github/workflows/ci.yml').rules['pinned-to-sha'] == 'fail' &&
+      score('maintainer-ci-security',
+      'workflow:.github/workflows/ci.yml').rules['no-high-findings'] == 'pass'
+      && score('maintainer-ci-security',
+      'workflow:.github/workflows/ci.yml').evidence['pinned-to-sha'] ==
+      ['actions/checkout@v4', 'actions/setup-go@v5', 'actions/setup-node@v4',
+      'actions/setup-python@v5']
+  - name: >-
+      a dangerous trigger is a high finding with evidence, and a write token
+      on it fails silver
+    expect: >-
+      score('maintainer-ci-security',
+      'workflow:.github/workflows/release.yml').evidence['no-high-findings']
+      == ['dangerous-triggers at line 3: use of fundamentally insecure
+      workflow trigger'] && score('maintainer-ci-security',
+      'workflow:.github/workflows/release.yml').rules['no-write-tokens-on-risky-triggers']
+      == 'fail'
   - name: without actionlint's output its rule is unknown, not failing
-    expect: "score('maintainer-ci-security', 'workflow:.github/workflows/release.yml').rules['actionlint-clean'] == 'unknown'"
+    expect: >-
+      score('maintainer-ci-security',
+      'workflow:.github/workflows/release.yml').rules['actionlint-clean'] ==
+      'unknown'
   - name: medium findings (artipacked) fail silver
-    expect: "score('maintainer-ci-security', 'workflow:.github/workflows/ci.yml').evidence['no-medium-findings'] == ['artipacked at line 14: credential persistence through GitHub Actions artifacts']"
+    expect: >-
+      score('maintainer-ci-security',
+      'workflow:.github/workflows/ci.yml').evidence['no-medium-findings'] ==
+      ['artipacked at line 14: credential persistence through GitHub Actions
+      artifacts']
   # CI reliability (fixture: this repo's real run history on main, 2026-11-20)
   - name: a 92% fail rate and 11 red runs in a row fail bronze
-    expect: "score('maintainer-ci-reliability', 'workflow:.github/workflows/ci.yml').evidence['fail-rate-under-20'] == ['92% of the last 12 decided runs on main failed'] && score('maintainer-ci-reliability', 'workflow:.github/workflows/ci.yml').rules['main-not-stuck-red'] == 'fail'"
+    expect: >-
+      score('maintainer-ci-reliability',
+      'workflow:.github/workflows/ci.yml').evidence['fail-rate-under-20'] ==
+      ['92% of the last 12 decided runs on main failed'] &&
+      score('maintainer-ci-reliability',
+      'workflow:.github/workflows/ci.yml').rules['main-not-stuck-red'] ==
+      'fail'
   - name: no job timeouts and no concurrency group are named
-    expect: "score('maintainer-ci-reliability', 'workflow:.github/workflows/ci.yml').evidence['every-job-has-timeout'].size() == 6 && score('maintainer-ci-reliability', 'workflow:.github/workflows/ci.yml').rules['cancels-superseded-runs'] == 'fail'"
+    expect: >-
+      score('maintainer-ci-reliability',
+      'workflow:.github/workflows/ci.yml').evidence['every-job-has-timeout'].size()
+      == 6 && score('maintainer-ci-reliability',
+      'workflow:.github/workflows/ci.yml').rules['cancels-superseded-runs'] ==
+      'fail'
   - name: without run data the run rules fail and say why
-    expect: "score('maintainer-ci-reliability', 'workflow:.github/workflows/release.yml').evidence['main-not-stuck-red'] == ['no run data (github-actions connector skipped or no token)']"
+    expect: >-
+      score('maintainer-ci-reliability',
+      'workflow:.github/workflows/release.yml').evidence['main-not-stuck-red']
+      == ['no run data (github-actions connector skipped or no token)']
   - name: action metadata isn't scored for reliability
-    expect: "score('maintainer-ci-reliability', 'workflow:actions/report/action.yml').level == 'skipped'"
+    expect: >-
+      score('maintainer-ci-reliability',
+      'workflow:actions/report/action.yml').level == 'skipped'
   # Supply chain
-  - name: an action pinned by SHA in one workflow and by tag in another fails, naming both
-    expect: "score('maintainer-action-deps', 'action:actions/checkout').evidence['pinned-everywhere'] == ['actions/checkout@v4'] && score('maintainer-action-deps', 'action:actions/cache').level == 'bronze'"
+  - name: >-
+      an action pinned by SHA in one workflow and by tag in another fails,
+      naming both
+    expect: >-
+      score('maintainer-action-deps',
+      'action:actions/checkout').evidence['pinned-everywhere'] ==
+      ['actions/checkout@v4'] && score('maintainer-action-deps',
+      'action:actions/cache').level == 'bronze'
   # Scorecards for scorecards (fixtures: real records from `toolbox describe scorecards` for a few of
   # our rules, plus a synthetic "sprawling" scorecard). They also score themselves.
   - name: a well-made rule reaches gold
-    expect: "score('meta-rule', 'rule:toolbox/maintainer-ci-security/no-medium-findings').level == 'gold'"
+    expect: >-
+      score('meta-rule',
+      'rule:toolbox/maintainer-ci-security/no-medium-findings').level ==
+      'gold'
   - name: an untested rule that never fails on the fixtures stops below bronze
-    expect: "score('meta-rule', 'rule:toolbox/maintainer-ci-security/least-privilege-token').rules['tested'] == 'fail' && score('meta-rule', 'rule:toolbox/maintainer-ci-security/least-privilege-token').rules['both-outcomes-on-fixtures'] == 'fail'"
-  - name: a rule that never evaluates on fixtures, with a two-word fix, fails every bronze rule
-    expect: "score('meta-rule', 'rule:demo/sprawling/everything').rules['explains-fix'] == 'fail' && score('meta-rule', 'rule:demo/sprawling/everything').rules['decided-on-fixtures'] == 'fail' && score('meta-rule', 'rule:demo/sprawling/everything').evidence['explains-fix'] == ['fix has 2 words']"
+    expect: >-
+      score('meta-rule',
+      'rule:toolbox/maintainer-ci-security/least-privilege-token').rules['tested']
+      == 'fail' && score('meta-rule',
+      'rule:toolbox/maintainer-ci-security/least-privilege-token').rules['both-outcomes-on-fixtures']
+      == 'fail'
+  - name: >-
+      a rule that never evaluates on fixtures, with a two-word fix, fails
+      every bronze rule
+    expect: >-
+      score('meta-rule',
+      'rule:demo/sprawling/everything').rules['explains-fix'] == 'fail' &&
+      score('meta-rule',
+      'rule:demo/sprawling/everything').rules['decided-on-fixtures'] == 'fail'
+      && score('meta-rule',
+      'rule:demo/sprawling/everything').evidence['explains-fix'] == ['fix has
+      2 words']
   - name: nested loops and a large check are named
-    expect: "score('meta-rule', 'rule:demo/sprawling/everything').evidence['no-nested-loops'] == ['check loops 2'] && score('meta-rule', 'rule:demo/sprawling/everything').rules['readable'] == 'fail'"
-  - name: a non-trivial check without evidence fails shows-evidence; a trivial one is exempt until gold
-    expect: "score('meta-rule', 'rule:acme/github-app-hygiene/only-approved-apps').rules['shows-evidence'] == 'fail' && score('meta-rule', 'rule:toolbox/user-cli/has-help').rules['always-explains'] == 'fail'"
+    expect: >-
+      score('meta-rule',
+      'rule:demo/sprawling/everything').evidence['no-nested-loops'] == ['check
+      loops 2'] && score('meta-rule',
+      'rule:demo/sprawling/everything').rules['readable'] == 'fail'
+  - name: >-
+      a non-trivial check without evidence fails shows-evidence; a trivial one
+      is exempt until gold
+    expect: >-
+      score('meta-rule',
+      'rule:acme/github-app-hygiene/only-approved-apps').rules['shows-evidence']
+      == 'fail' && score('meta-rule',
+      'rule:toolbox/user-cli/has-help').rules['always-explains'] == 'fail'
   - name: the meta scorecard scores its own rules (no further level)
-    expect: "score('meta-rule', 'rule:toolbox/meta-rule/tested').rules['tested'] == 'pass' && score('meta-scorecard', 'scorecard:toolbox/meta-rule').rules['tested'] == 'pass'"
-  - name: a scorecard with an empty level and fixtures at one level fails bronze, naming them
-    expect: "score('meta-scorecard', 'scorecard:demo/sprawling').evidence['every-level-has-rules'] == ['gold'] && score('meta-scorecard', 'scorecard:demo/sprawling').rules['fixtures-show-the-ladder'] == 'fail'"
-  - name: an untested scorecard fails bronze, and untested rules roll up to their scorecard
-    expect: "score('meta-scorecard', 'scorecard:toolbox/user-cli').rules['tested'] == 'fail' && entity('scorecard:toolbox/maintainer-ci-security').untestedRules == ['least-privilege-token']"
-  - name: always-explains, every-rule-tested and the rest of the meta rules are pinned here too
-    expect: "'always-explains' in score('meta-rule', 'rule:toolbox/meta-rule/tested').rules && score('meta-scorecard', 'scorecard:toolbox/maintainer-ci-security').rules['every-rule-tested'] == 'fail' && score('meta-scorecard', 'scorecard:toolbox/maintainer-ci-security').rules['every-level-has-rules'] == 'pass'"
+    expect: >-
+      score('meta-rule', 'rule:toolbox/meta-rule/tested').rules['tested'] ==
+      'pass' && score('meta-scorecard',
+      'scorecard:toolbox/meta-rule').rules['tested'] == 'pass'
+  - name: >-
+      a scorecard with an empty level and fixtures at one level fails bronze,
+      naming them
+    expect: >-
+      score('meta-scorecard',
+      'scorecard:demo/sprawling').evidence['every-level-has-rules'] ==
+      ['gold'] && score('meta-scorecard',
+      'scorecard:demo/sprawling').rules['fixtures-show-the-ladder'] == 'fail'
+  - name: >-
+      an untested scorecard fails bronze, and untested rules roll up to their
+      scorecard
+    expect: >-
+      score('meta-scorecard', 'scorecard:toolbox/user-cli').rules['tested'] ==
+      'fail' &&
+      entity('scorecard:toolbox/maintainer-ci-security').untestedRules ==
+      ['least-privilege-token']
+  - name: >-
+      always-explains, every-rule-tested and the rest of the meta rules are
+      pinned here too
+    expect: >-
+      'always-explains' in score('meta-rule',
+      'rule:toolbox/meta-rule/tested').rules && score('meta-scorecard',
+      'scorecard:toolbox/maintainer-ci-security').rules['every-rule-tested']
+      == 'fail' && score('meta-scorecard',
+      'scorecard:toolbox/maintainer-ci-security').rules['every-level-has-rules']
+      == 'pass'
   # Agent skills (synthetic fixtures: one gold, one bronze, one below bronze)
   - name: a focused skill with evals, a procedure and no hidden text reaches gold
-    expect: "score('maintainer-skill', 'skill:plugins/demo/focused').level == 'gold' && score('maintainer-skill', 'skill:plugins/demo/focused').rules['valid-frontmatter'] == 'pass' && score('maintainer-skill', 'skill:plugins/demo/focused').rules['description-says-when'] == 'pass' && score('maintainer-skill', 'skill:plugins/demo/focused').rules['third-person'] == 'pass' && score('maintainer-skill', 'skill:plugins/demo/focused').rules['has-procedure'] == 'pass' && score('maintainer-skill', 'skill:plugins/demo/focused').rules['has-example'] == 'pass' && score('maintainer-skill', 'skill:plugins/demo/focused').rules['links-resolve'] == 'pass' && score('maintainer-skill', 'skill:plugins/demo/focused').rules['within-body-budget'] == 'pass' && score('maintainer-skill', 'skill:plugins/demo/focused').rules['portable-paths'] == 'pass' && score('maintainer-skill', 'skill:plugins/demo/focused').rules['states-boundaries'] == 'pass' && score('maintainer-skill', 'skill:plugins/demo/focused').rules['has-evals'] == 'pass' && score('maintainer-skill', 'skill:plugins/demo/focused').rules['no-hidden-instructions'] == 'pass' && score('maintainer-skill', 'skill:plugins/demo/focused').rules['no-hardcoded-secrets'] == 'pass' && score('maintainer-skill', 'skill:plugins/demo/focused').rules['one-level-deep'] == 'pass'"
-  - name: a routable skill without steps, an example or a body budget stops at bronze
-    expect: "score('maintainer-skill', 'skill:plugins/demo/partial').level == 'bronze' && score('maintainer-skill', 'skill:plugins/demo/partial').rules['has-procedure'] == 'fail' && score('maintainer-skill', 'skill:plugins/demo/partial').evidence['has-example'] == ['no fenced code block in SKILL.md'] && score('maintainer-skill', 'skill:plugins/demo/partial').evidence['links-resolve'] == ['references/missing.md'] && score('maintainer-skill', 'skill:plugins/demo/partial').evidence['within-body-budget'] == ['600 lines, ~6000 tokens (characters/4)'] && score('maintainer-skill', 'skill:plugins/demo/partial').evidence['has-evals'] == ['0 cases in evals/evals.json (want at least 3)'] && score('maintainer-skill', 'skill:plugins/demo/partial').evidence['one-level-deep'] == ['2 link hops, 5 supporting files'] && score('maintainer-skill', 'skill:plugins/demo/partial').evidence['states-boundaries'] == ['no error, limit, or prerequisite cue in the body']"
-  - name: an invalid skill fails bronze and names the frontmatter, pronoun and secret
-    expect: "score('maintainer-skill', 'skill:plugins/demo/unsafe').level == 'none' && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['valid-frontmatter'] == [\"Directory name 'unsafe' must match skill name 'Unsafe'\"] && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['description-says-when'] == ['12 characters'] && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['third-person'] == ['pronoun: you'] && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['no-hidden-instructions'] == ['3 hidden or bidi characters'] && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['no-hardcoded-secrets'] == ['SKILL.md:9 github-token'] && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['portable-paths'] == ['SKILL.md:4'] && score('maintainer-skill', 'skill:plugins/demo/unsafe').rules['has-procedure'] == 'fail'"
+    expect: >-
+      score('maintainer-skill', 'skill:plugins/demo/focused').level == 'gold'
+      && score('maintainer-skill',
+      'skill:plugins/demo/focused').rules['valid-frontmatter'] == 'pass' &&
+      score('maintainer-skill',
+      'skill:plugins/demo/focused').rules['description-says-when'] == 'pass'
+      && score('maintainer-skill',
+      'skill:plugins/demo/focused').rules['third-person'] == 'pass' &&
+      score('maintainer-skill',
+      'skill:plugins/demo/focused').rules['has-procedure'] == 'pass' &&
+      score('maintainer-skill',
+      'skill:plugins/demo/focused').rules['has-example'] == 'pass' &&
+      score('maintainer-skill',
+      'skill:plugins/demo/focused').rules['links-resolve'] == 'pass' &&
+      score('maintainer-skill',
+      'skill:plugins/demo/focused').rules['within-body-budget'] == 'pass' &&
+      score('maintainer-skill',
+      'skill:plugins/demo/focused').rules['portable-paths'] == 'pass' &&
+      score('maintainer-skill',
+      'skill:plugins/demo/focused').rules['states-boundaries'] == 'pass' &&
+      score('maintainer-skill',
+      'skill:plugins/demo/focused').rules['has-evals'] == 'pass' &&
+      score('maintainer-skill',
+      'skill:plugins/demo/focused').rules['no-hidden-instructions'] == 'pass'
+      && score('maintainer-skill',
+      'skill:plugins/demo/focused').rules['no-hardcoded-secrets'] == 'pass' &&
+      score('maintainer-skill',
+      'skill:plugins/demo/focused').rules['one-level-deep'] == 'pass'
+  - name: >-
+      a routable skill without steps, an example or a body budget stops at
+      bronze
+    expect: >-
+      score('maintainer-skill', 'skill:plugins/demo/partial').level ==
+      'bronze' && score('maintainer-skill',
+      'skill:plugins/demo/partial').rules['has-procedure'] == 'fail' &&
+      score('maintainer-skill',
+      'skill:plugins/demo/partial').evidence['has-example'] == ['no fenced
+      code block in SKILL.md'] && score('maintainer-skill',
+      'skill:plugins/demo/partial').evidence['links-resolve'] ==
+      ['references/missing.md'] && score('maintainer-skill',
+      'skill:plugins/demo/partial').evidence['within-body-budget'] == ['600
+      lines, ~6000 tokens (characters/4)'] && score('maintainer-skill',
+      'skill:plugins/demo/partial').evidence['has-evals'] == ['0 cases in
+      evals/evals.json (want at least 3)'] && score('maintainer-skill',
+      'skill:plugins/demo/partial').evidence['one-level-deep'] == ['2 link
+      hops, 5 supporting files'] && score('maintainer-skill',
+      'skill:plugins/demo/partial').evidence['states-boundaries'] == ['no
+      error, limit, or prerequisite cue in the body']
+  - name: >-
+      an invalid skill fails bronze and names the frontmatter, pronoun and
+      secret
+    expect: |-
+      score('maintainer-skill', 'skill:plugins/demo/unsafe').level == 'none' && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['valid-frontmatter'] == ["Directory name 'unsafe' must match skill name 'Unsafe'"] && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['description-says-when'] == ['12 characters'] && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['third-person'] == ['pronoun: you'] && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['no-hidden-instructions'] == ['3 hidden or bidi characters'] && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['no-hardcoded-secrets'] == ['SKILL.md:9 github-token'] && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['portable-paths'] == ['SKILL.md:4'] && score('maintainer-skill', 'skill:plugins/demo/unsafe').rules['has-procedure'] == 'fail'
   # Connectors (synthetic fixtures: one gold, one bronze, one below bronze)
   - name: a documented connector that CI conformance-tests reaches gold
-    expect: "score('maintainer-connector', 'connector:crates/demo/focused').level == 'gold' && score('maintainer-connector', 'connector:crates/demo/focused').rules['described'] == 'pass' && score('maintainer-connector', 'connector:crates/demo/focused').rules['config-documented'] == 'pass' && score('maintainer-connector', 'connector:crates/demo/focused').rules['speaks-the-protocol'] == 'pass' && score('maintainer-connector', 'connector:crates/demo/focused').rules['names-its-kinds'] == 'pass' && score('maintainer-connector', 'connector:crates/demo/focused').rules['closes-snapshots'] == 'pass' && score('maintainer-connector', 'connector:crates/demo/focused').rules['reports-missing-ids'] == 'pass' && score('maintainer-connector', 'connector:crates/demo/focused').rules['has-tests'] == 'pass' && score('maintainer-connector', 'connector:crates/demo/focused').rules['exercised-in-ci'] == 'pass' && score('maintainer-connector', 'connector:crates/demo/focused').rules['no-hardcoded-secrets'] == 'pass'"
+    expect: >-
+      score('maintainer-connector', 'connector:crates/demo/focused').level ==
+      'gold' && score('maintainer-connector',
+      'connector:crates/demo/focused').rules['described'] == 'pass' &&
+      score('maintainer-connector',
+      'connector:crates/demo/focused').rules['config-documented'] == 'pass' &&
+      score('maintainer-connector',
+      'connector:crates/demo/focused').rules['speaks-the-protocol'] == 'pass'
+      && score('maintainer-connector',
+      'connector:crates/demo/focused').rules['names-its-kinds'] == 'pass' &&
+      score('maintainer-connector',
+      'connector:crates/demo/focused').rules['closes-snapshots'] == 'pass' &&
+      score('maintainer-connector',
+      'connector:crates/demo/focused').rules['reports-missing-ids'] == 'pass'
+      && score('maintainer-connector',
+      'connector:crates/demo/focused').rules['has-tests'] == 'pass' &&
+      score('maintainer-connector',
+      'connector:crates/demo/focused').rules['exercised-in-ci'] == 'pass' &&
+      score('maintainer-connector',
+      'connector:crates/demo/focused').rules['no-hardcoded-secrets'] == 'pass'
   - name: a configured connector with no kinds, tests or CI stops at bronze
-    expect: "score('maintainer-connector', 'connector:crates/demo/partial').level == 'bronze' && score('maintainer-connector', 'connector:crates/demo/partial').rules['names-its-kinds'] == 'fail' && score('maintainer-connector', 'connector:crates/demo/partial').evidence['closes-snapshots'] == ['resync never sends snapshot_complete'] && score('maintainer-connector', 'connector:crates/demo/partial').evidence['reports-missing-ids'] == ['refresh never sends not_found'] && score('maintainer-connector', 'connector:crates/demo/partial').evidence['has-tests'] == ['0 #[test] functions'] && score('maintainer-connector', 'connector:crates/demo/partial').evidence['exercised-in-ci'] == ['0 connector-test lines, 0 CI files'] && score('maintainer-connector', 'connector:crates/demo/partial').evidence['names-its-kinds'] == ['crate docs and source name no record kind']"
+    expect: >-
+      score('maintainer-connector', 'connector:crates/demo/partial').level ==
+      'bronze' && score('maintainer-connector',
+      'connector:crates/demo/partial').rules['names-its-kinds'] == 'fail' &&
+      score('maintainer-connector',
+      'connector:crates/demo/partial').evidence['closes-snapshots'] ==
+      ['resync never sends snapshot_complete'] &&
+      score('maintainer-connector',
+      'connector:crates/demo/partial').evidence['reports-missing-ids'] ==
+      ['refresh never sends not_found'] && score('maintainer-connector',
+      'connector:crates/demo/partial').evidence['has-tests'] == ['0 #[test]
+      functions'] && score('maintainer-connector',
+      'connector:crates/demo/partial').evidence['exercised-in-ci'] == ['0
+      connector-test lines, 0 CI files'] && score('maintainer-connector',
+      'connector:crates/demo/partial').evidence['names-its-kinds'] == ['crate
+      docs and source name no record kind']
   - name: a binary that speaks no protocol fails bronze and names the secret
-    expect: "score('maintainer-connector', 'connector:crates/demo/unsafe').level == 'none' && score('maintainer-connector', 'connector:crates/demo/unsafe').evidence['described'] == ['Cargo.toml has no description'] && score('maintainer-connector', 'connector:crates/demo/unsafe').evidence['config-documented'] == ['crate docs name neither TOOLBOX_CONNECTOR_CONFIG nor a CLI flag'] && score('maintainer-connector', 'connector:crates/demo/unsafe').evidence['speaks-the-protocol'] == ['none'] && score('maintainer-connector', 'connector:crates/demo/unsafe').evidence['no-hardcoded-secrets'] == ['src/main.rs:4 aws-access-key']"
+    expect: >-
+      score('maintainer-connector', 'connector:crates/demo/unsafe').level ==
+      'none' && score('maintainer-connector',
+      'connector:crates/demo/unsafe').evidence['described'] == ['Cargo.toml
+      has no description'] && score('maintainer-connector',
+      'connector:crates/demo/unsafe').evidence['config-documented'] == ['crate
+      docs name neither TOOLBOX_CONNECTOR_CONFIG nor a CLI flag'] &&
+      score('maintainer-connector',
+      'connector:crates/demo/unsafe').evidence['speaks-the-protocol'] ==
+      ['none'] && score('maintainer-connector',
+      'connector:crates/demo/unsafe').evidence['no-hardcoded-secrets'] ==
+      ['src/main.rs:4 aws-access-key']
   # Direct Cargo dependencies (synthetic fixtures: one gold, one silver, one below bronze)
   - name: a locked registry dependency declared in the workspace reaches gold
-    expect: "score('maintainer-dependency', 'dependency:cargo:focused').level == 'gold' && score('maintainer-dependency', 'dependency:cargo:focused').rules['version-bounded'] == 'pass' && score('maintainer-dependency', 'dependency:cargo:focused').rules['from-a-registry'] == 'pass' && score('maintainer-dependency', 'dependency:cargo:focused').rules['locked'] == 'pass' && score('maintainer-dependency', 'dependency:cargo:focused').rules['one-version'] == 'pass' && score('maintainer-dependency', 'dependency:cargo:focused').rules['shared-is-inherited'] == 'pass'"
+    expect: >-
+      score('maintainer-dependency', 'dependency:cargo:focused').level ==
+      'gold' && score('maintainer-dependency',
+      'dependency:cargo:focused').rules['version-bounded'] == 'pass' &&
+      score('maintainer-dependency',
+      'dependency:cargo:focused').rules['from-a-registry'] == 'pass' &&
+      score('maintainer-dependency',
+      'dependency:cargo:focused').rules['locked'] == 'pass' &&
+      score('maintainer-dependency',
+      'dependency:cargo:focused').rules['one-version'] == 'pass' &&
+      score('maintainer-dependency',
+      'dependency:cargo:focused').rules['shared-is-inherited'] == 'pass'
   - name: two resolved versions of a shared dependency stop at bronze
-    expect: "score('maintainer-dependency', 'dependency:cargo:partial').level == 'bronze' && score('maintainer-dependency', 'dependency:cargo:partial').evidence['one-version'] == ['1.0.0', '2.0.0'] && score('maintainer-dependency', 'dependency:cargo:partial').evidence['shared-is-inherited'] == ['a', 'b'] && score('maintainer-dependency', 'dependency:cargo:partial').rules['locked'] == 'pass'"
+    expect: >-
+      score('maintainer-dependency', 'dependency:cargo:partial').level ==
+      'bronze' && score('maintainer-dependency',
+      'dependency:cargo:partial').evidence['one-version'] == ['1.0.0',
+      '2.0.0'] && score('maintainer-dependency',
+      'dependency:cargo:partial').evidence['shared-is-inherited'] == ['a',
+      'b'] && score('maintainer-dependency',
+      'dependency:cargo:partial').rules['locked'] == 'pass'
   - name: a git dependency with a star requirement fails bronze
-    expect: "score('maintainer-dependency', 'dependency:cargo:unsafe').level == 'none' && score('maintainer-dependency', 'dependency:cargo:unsafe').evidence['version-bounded'] == ['*'] && score('maintainer-dependency', 'dependency:cargo:unsafe').evidence['from-a-registry'] == ['git+https://example.invalid/leftpad'] && score('maintainer-dependency', 'dependency:cargo:unsafe').evidence['locked'] == ['not in Cargo.lock']"
+    expect: >-
+      score('maintainer-dependency', 'dependency:cargo:unsafe').level ==
+      'none' && score('maintainer-dependency',
+      'dependency:cargo:unsafe').evidence['version-bounded'] == ['*'] &&
+      score('maintainer-dependency',
+      'dependency:cargo:unsafe').evidence['from-a-registry'] ==
+      ['git+https://example.invalid/leftpad'] &&
+      score('maintainer-dependency',
+      'dependency:cargo:unsafe').evidence['locked'] == ['not in Cargo.lock']
   # Agent instruction files
-  - name: a canonical AGENTS.md that links, names a command and the decision log reaches gold
-    expect: "score('maintainer-agent-doc', 'agent-doc:agents/demo/focused/AGENTS.md').level == 'gold' && score('maintainer-agent-doc', 'agent-doc:agents/demo/focused/AGENTS.md').rules['single-source'] == 'pass' && score('maintainer-agent-doc', 'agent-doc:agents/demo/focused/AGENTS.md').rules['links-resolve'] == 'pass' && score('maintainer-agent-doc', 'agent-doc:agents/demo/focused/AGENTS.md').rules['has-commands'] == 'pass' && score('maintainer-agent-doc', 'agent-doc:agents/demo/focused/AGENTS.md').rules['within-budget'] == 'pass' && score('maintainer-agent-doc', 'agent-doc:agents/demo/focused/AGENTS.md').rules['names-the-decision-log'] == 'pass' && score('maintainer-agent-doc', 'agent-doc:agents/demo/focused/AGENTS.md').rules['no-hardcoded-secrets'] == 'pass' && score('maintainer-agent-doc', 'agent-doc:agents/demo/focused/AGENTS.md').rules['no-hidden-instructions'] == 'pass'"
-  - name: a long canonical file with no command and no decision link stops at bronze
-    expect: "score('maintainer-agent-doc', 'agent-doc:agents/demo/partial/AGENTS.md').level == 'bronze' && score('maintainer-agent-doc', 'agent-doc:agents/demo/partial/AGENTS.md').evidence['has-commands'] == ['0 command lines'] && score('maintainer-agent-doc', 'agent-doc:agents/demo/partial/AGENTS.md').evidence['within-budget'] == ['600 lines'] && score('maintainer-agent-doc', 'agent-doc:agents/demo/partial/AGENTS.md').evidence['names-the-decision-log'] == ['does not link to decisions.md']"
-  - name: an alias that does not point at AGENTS.md fails bronze and names the secret
-    expect: "score('maintainer-agent-doc', 'agent-doc:agents/demo/unsafe/CLAUDE.md').level == 'none' && score('maintainer-agent-doc', 'agent-doc:agents/demo/unsafe/CLAUDE.md').evidence['single-source'] == ['alias does not point at AGENTS.md'] && score('maintainer-agent-doc', 'agent-doc:agents/demo/unsafe/CLAUDE.md').evidence['links-resolve'] == ['docs/nope.md'] && score('maintainer-agent-doc', 'agent-doc:agents/demo/unsafe/CLAUDE.md').evidence['no-hardcoded-secrets'] == ['CLAUDE.md:2 aws-access-key'] && score('maintainer-agent-doc', 'agent-doc:agents/demo/unsafe/CLAUDE.md').evidence['no-hidden-instructions'] == ['1 hidden characters']"
+  - name: >-
+      a canonical AGENTS.md that links, names a command and the decision log
+      reaches gold
+    expect: >-
+      score('maintainer-agent-doc',
+      'agent-doc:agents/demo/focused/AGENTS.md').level == 'gold' &&
+      score('maintainer-agent-doc',
+      'agent-doc:agents/demo/focused/AGENTS.md').rules['single-source'] ==
+      'pass' && score('maintainer-agent-doc',
+      'agent-doc:agents/demo/focused/AGENTS.md').rules['links-resolve'] ==
+      'pass' && score('maintainer-agent-doc',
+      'agent-doc:agents/demo/focused/AGENTS.md').rules['has-commands'] ==
+      'pass' && score('maintainer-agent-doc',
+      'agent-doc:agents/demo/focused/AGENTS.md').rules['within-budget'] ==
+      'pass' && score('maintainer-agent-doc',
+      'agent-doc:agents/demo/focused/AGENTS.md').rules['names-the-decision-log']
+      == 'pass' && score('maintainer-agent-doc',
+      'agent-doc:agents/demo/focused/AGENTS.md').rules['no-hardcoded-secrets']
+      == 'pass' && score('maintainer-agent-doc',
+      'agent-doc:agents/demo/focused/AGENTS.md').rules['no-hidden-instructions']
+      == 'pass'
+  - name: >-
+      a long canonical file with no command and no decision link stops at
+      bronze
+    expect: >-
+      score('maintainer-agent-doc',
+      'agent-doc:agents/demo/partial/AGENTS.md').level == 'bronze' &&
+      score('maintainer-agent-doc',
+      'agent-doc:agents/demo/partial/AGENTS.md').evidence['has-commands'] ==
+      ['0 command lines'] && score('maintainer-agent-doc',
+      'agent-doc:agents/demo/partial/AGENTS.md').evidence['within-budget'] ==
+      ['600 lines'] && score('maintainer-agent-doc',
+      'agent-doc:agents/demo/partial/AGENTS.md').evidence['names-the-decision-log']
+      == ['does not link to decisions.md']
+  - name: >-
+      an alias that does not point at AGENTS.md fails bronze and names the
+      secret
+    expect: >-
+      score('maintainer-agent-doc',
+      'agent-doc:agents/demo/unsafe/CLAUDE.md').level == 'none' &&
+      score('maintainer-agent-doc',
+      'agent-doc:agents/demo/unsafe/CLAUDE.md').evidence['single-source'] ==
+      ['alias does not point at AGENTS.md'] && score('maintainer-agent-doc',
+      'agent-doc:agents/demo/unsafe/CLAUDE.md').evidence['links-resolve'] ==
+      ['docs/nope.md'] && score('maintainer-agent-doc',
+      'agent-doc:agents/demo/unsafe/CLAUDE.md').evidence['no-hardcoded-secrets']
+      == ['CLAUDE.md:2 aws-access-key'] && score('maintainer-agent-doc',
+      'agent-doc:agents/demo/unsafe/CLAUDE.md').evidence['no-hidden-instructions']
+      == ['1 hidden characters']
   # npm manifests
-  - name: a private package with a lockfile, a check script and a description reaches gold
-    expect: "score('maintainer-package', 'package-json:packages/demo/focused/package.json').level == 'gold' && score('maintainer-package', 'package-json:packages/demo/focused/package.json').rules['named'] == 'pass' && score('maintainer-package', 'package-json:packages/demo/focused/package.json').rules['publish-intent'] == 'pass' && score('maintainer-package', 'package-json:packages/demo/focused/package.json').rules['version-bounded'] == 'pass' && score('maintainer-package', 'package-json:packages/demo/focused/package.json').rules['from-a-registry'] == 'pass' && score('maintainer-package', 'package-json:packages/demo/focused/package.json').rules['locked'] == 'pass' && score('maintainer-package', 'package-json:packages/demo/focused/package.json').rules['has-a-check'] == 'pass' && score('maintainer-package', 'package-json:packages/demo/focused/package.json').rules['described'] == 'pass' && score('maintainer-package', 'package-json:packages/demo/focused/package.json').rules['engines-declared'] == 'pass' && score('maintainer-package', 'package-json:packages/demo/focused/package.json').rules['ci-installs-from-the-lockfile'] == 'pass' && score('maintainer-package', 'package-json:packages/demo/focused/package.json').rules['no-hardcoded-secrets'] == 'pass'"
+  - name: >-
+      a private package with a lockfile, a check script and a description
+      reaches gold
+    expect: >-
+      score('maintainer-package',
+      'package-json:packages/demo/focused/package.json').level == 'gold' &&
+      score('maintainer-package',
+      'package-json:packages/demo/focused/package.json').rules['named'] ==
+      'pass' && score('maintainer-package',
+      'package-json:packages/demo/focused/package.json').rules['publish-intent']
+      == 'pass' && score('maintainer-package',
+      'package-json:packages/demo/focused/package.json').rules['version-bounded']
+      == 'pass' && score('maintainer-package',
+      'package-json:packages/demo/focused/package.json').rules['from-a-registry']
+      == 'pass' && score('maintainer-package',
+      'package-json:packages/demo/focused/package.json').rules['locked'] ==
+      'pass' && score('maintainer-package',
+      'package-json:packages/demo/focused/package.json').rules['has-a-check']
+      == 'pass' && score('maintainer-package',
+      'package-json:packages/demo/focused/package.json').rules['described'] ==
+      'pass' && score('maintainer-package',
+      'package-json:packages/demo/focused/package.json').rules['engines-declared']
+      == 'pass' && score('maintainer-package',
+      'package-json:packages/demo/focused/package.json').rules['ci-installs-from-the-lockfile']
+      == 'pass' && score('maintainer-package',
+      'package-json:packages/demo/focused/package.json').rules['no-hardcoded-secrets']
+      == 'pass'
   - name: a private package with no lockfile and no check script stops at bronze
-    expect: "score('maintainer-package', 'package-json:packages/demo/partial/package.json').level == 'bronze' && score('maintainer-package', 'package-json:packages/demo/partial/package.json').evidence['locked'] == ['no lockfile beside package.json'] && score('maintainer-package', 'package-json:packages/demo/partial/package.json').evidence['has-a-check'] == ['0 check scripts'] && score('maintainer-package', 'package-json:packages/demo/partial/package.json').evidence['described'] == ['no description'] && score('maintainer-package', 'package-json:packages/demo/partial/package.json').evidence['engines-declared'] == ['engines.node is not set']"
+    expect: >-
+      score('maintainer-package',
+      'package-json:packages/demo/partial/package.json').level == 'bronze' &&
+      score('maintainer-package',
+      'package-json:packages/demo/partial/package.json').evidence['locked'] ==
+      ['no lockfile beside package.json'] && score('maintainer-package',
+      'package-json:packages/demo/partial/package.json').evidence['has-a-check']
+      == ['0 check scripts'] && score('maintainer-package',
+      'package-json:packages/demo/partial/package.json').evidence['described']
+      == ['no description'] && score('maintainer-package',
+      'package-json:packages/demo/partial/package.json').evidence['engines-declared']
+      == ['engines.node is not set']
   - name: a public manifest with a star, a git URL and a secret fails bronze
-    expect: "score('maintainer-package', 'package-json:packages/demo/unsafe/package.json').level == 'none' && score('maintainer-package', 'package-json:packages/demo/unsafe/package.json').evidence['named'] == ['no name'] && score('maintainer-package', 'package-json:packages/demo/unsafe/package.json').evidence['publish-intent'] == ['public package with no version'] && score('maintainer-package', 'package-json:packages/demo/unsafe/package.json').evidence['version-bounded'] == ['leftpad@*'] && score('maintainer-package', 'package-json:packages/demo/unsafe/package.json').evidence['from-a-registry'] == ['leftpad@git+https://example.invalid/leftpad'] && score('maintainer-package', 'package-json:packages/demo/unsafe/package.json').evidence['ci-installs-from-the-lockfile'] == ['CI runs npm install, which can update the lockfile'] && score('maintainer-package', 'package-json:packages/demo/unsafe/package.json').evidence['no-hardcoded-secrets'] == ['package.json:4 aws-access-key']"
+    expect: >-
+      score('maintainer-package',
+      'package-json:packages/demo/unsafe/package.json').level == 'none' &&
+      score('maintainer-package',
+      'package-json:packages/demo/unsafe/package.json').evidence['named'] ==
+      ['no name'] && score('maintainer-package',
+      'package-json:packages/demo/unsafe/package.json').evidence['publish-intent']
+      == ['public package with no version'] && score('maintainer-package',
+      'package-json:packages/demo/unsafe/package.json').evidence['version-bounded']
+      == ['leftpad@*'] && score('maintainer-package',
+      'package-json:packages/demo/unsafe/package.json').evidence['from-a-registry']
+      == ['leftpad@git+https://example.invalid/leftpad'] &&
+      score('maintainer-package',
+      'package-json:packages/demo/unsafe/package.json').evidence['ci-installs-from-the-lockfile']
+      == ['CI runs npm install, which can update the lockfile'] &&
+      score('maintainer-package',
+      'package-json:packages/demo/unsafe/package.json').evidence['no-hardcoded-secrets']
+      == ['package.json:4 aws-access-key']
   # JSON Schema documents
-  - name: a draft 2020-12 schema with a title, an id and only local refs reaches gold
-    expect: "score('maintainer-schema', 'json-schema:schema/demo/focused.schema.json').level == 'gold' && score('maintainer-schema', 'json-schema:schema/demo/focused.schema.json').rules['draft-2020-12'] == 'pass' && score('maintainer-schema', 'json-schema:schema/demo/focused.schema.json').rules['has-id'] == 'pass' && score('maintainer-schema', 'json-schema:schema/demo/focused.schema.json').rules['described'] == 'pass' && score('maintainer-schema', 'json-schema:schema/demo/focused.schema.json').rules['titled'] == 'pass' && score('maintainer-schema', 'json-schema:schema/demo/focused.schema.json').rules['wired-in'] == 'pass' && score('maintainer-schema', 'json-schema:schema/demo/focused.schema.json').rules['local-refs'] == 'pass' && score('maintainer-schema', 'json-schema:schema/demo/focused.schema.json').rules['no-hardcoded-secrets'] == 'pass'"
+  - name: >-
+      a draft 2020-12 schema with a title, an id and only local refs reaches
+      gold
+    expect: >-
+      score('maintainer-schema',
+      'json-schema:schema/demo/focused.schema.json').level == 'gold' &&
+      score('maintainer-schema',
+      'json-schema:schema/demo/focused.schema.json').rules['draft-2020-12'] ==
+      'pass' && score('maintainer-schema',
+      'json-schema:schema/demo/focused.schema.json').rules['has-id'] == 'pass'
+      && score('maintainer-schema',
+      'json-schema:schema/demo/focused.schema.json').rules['described'] ==
+      'pass' && score('maintainer-schema',
+      'json-schema:schema/demo/focused.schema.json').rules['titled'] == 'pass'
+      && score('maintainer-schema',
+      'json-schema:schema/demo/focused.schema.json').rules['wired-in'] ==
+      'pass' && score('maintainer-schema',
+      'json-schema:schema/demo/focused.schema.json').rules['local-refs'] ==
+      'pass' && score('maintainer-schema',
+      'json-schema:schema/demo/focused.schema.json').rules['no-hardcoded-secrets']
+      == 'pass'
   - name: a described draft 2020-12 schema that nothing compiles stops at bronze
-    expect: "score('maintainer-schema', 'json-schema:schema/demo/partial.schema.json').level == 'bronze' && score('maintainer-schema', 'json-schema:schema/demo/partial.schema.json').evidence['titled'] == ['no title'] && score('maintainer-schema', 'json-schema:schema/demo/partial.schema.json').evidence['wired-in'] == ['not compiled by schema.rs or applied by the reference validator']"
+    expect: >-
+      score('maintainer-schema',
+      'json-schema:schema/demo/partial.schema.json').level == 'bronze' &&
+      score('maintainer-schema',
+      'json-schema:schema/demo/partial.schema.json').evidence['titled'] ==
+      ['no title'] && score('maintainer-schema',
+      'json-schema:schema/demo/partial.schema.json').evidence['wired-in'] ==
+      ['not compiled by schema.rs or applied by the reference validator']
   - name: a draft-07 schema with a remote ref and a secret fails bronze
-    expect: "score('maintainer-schema', 'json-schema:schema/demo/unsafe.schema.json').level == 'none' && score('maintainer-schema', 'json-schema:schema/demo/unsafe.schema.json').evidence['draft-2020-12'] == ['https://json-schema.org/draft-07/schema#'] && score('maintainer-schema', 'json-schema:schema/demo/unsafe.schema.json').evidence['has-id'] == ['no $id'] && score('maintainer-schema', 'json-schema:schema/demo/unsafe.schema.json').evidence['described'] == ['no description'] && score('maintainer-schema', 'json-schema:schema/demo/unsafe.schema.json').evidence['local-refs'] == ['https://example.invalid/other.json'] && score('maintainer-schema', 'json-schema:schema/demo/unsafe.schema.json').evidence['no-hardcoded-secrets'] == ['schema/demo/unsafe.schema.json:4 aws-access-key']"
+    expect: >-
+      score('maintainer-schema',
+      'json-schema:schema/demo/unsafe.schema.json').level == 'none' &&
+      score('maintainer-schema',
+      'json-schema:schema/demo/unsafe.schema.json').evidence['draft-2020-12']
+      == ['https://json-schema.org/draft-07/schema#'] &&
+      score('maintainer-schema',
+      'json-schema:schema/demo/unsafe.schema.json').evidence['has-id'] == ['no
+      $id'] && score('maintainer-schema',
+      'json-schema:schema/demo/unsafe.schema.json').evidence['described'] ==
+      ['no description'] && score('maintainer-schema',
+      'json-schema:schema/demo/unsafe.schema.json').evidence['local-refs'] ==
+      ['https://example.invalid/other.json'] && score('maintainer-schema',
+      'json-schema:schema/demo/unsafe.schema.json').evidence['no-hardcoded-secrets']
+      == ['schema/demo/unsafe.schema.json:4 aws-access-key']
   # Examples and experiments
   - name: an example that links, names a check and cites the design reaches gold
-    expect: "score('maintainer-example', 'example:examples/demo/focused/README.md').level == 'gold' && score('maintainer-example', 'example:examples/demo/focused/README.md').rules['has-a-heading'] == 'pass' && score('maintainer-example', 'example:examples/demo/focused/README.md').rules['links-resolve'] == 'pass' && score('maintainer-example', 'example:examples/demo/focused/README.md').rules['says-how-to-check'] == 'pass' && score('maintainer-example', 'example:examples/demo/focused/README.md').rules['cites-the-design'] == 'pass' && score('maintainer-example', 'example:examples/demo/focused/README.md').rules['no-hardcoded-secrets'] == 'pass'"
+    expect: >-
+      score('maintainer-example',
+      'example:examples/demo/focused/README.md').level == 'gold' &&
+      score('maintainer-example',
+      'example:examples/demo/focused/README.md').rules['has-a-heading'] ==
+      'pass' && score('maintainer-example',
+      'example:examples/demo/focused/README.md').rules['links-resolve'] ==
+      'pass' && score('maintainer-example',
+      'example:examples/demo/focused/README.md').rules['says-how-to-check'] ==
+      'pass' && score('maintainer-example',
+      'example:examples/demo/focused/README.md').rules['cites-the-design'] ==
+      'pass' && score('maintainer-example',
+      'example:examples/demo/focused/README.md').rules['no-hardcoded-secrets']
+      == 'pass'
   - name: a specification with no check command stops at bronze
-    expect: "score('maintainer-example', 'example:examples/demo/partial/README.md').level == 'bronze' && score('maintainer-example', 'example:examples/demo/partial/README.md').evidence['says-how-to-check'] == ['0 command lines']"
+    expect: >-
+      score('maintainer-example',
+      'example:examples/demo/partial/README.md').level == 'bronze' &&
+      score('maintainer-example',
+      'example:examples/demo/partial/README.md').evidence['says-how-to-check']
+      == ['0 command lines']
   - name: a write-up with a broken link and no heading fails bronze
-    expect: "score('maintainer-example', 'example:examples/demo/unsafe/README.md').level == 'none' && score('maintainer-example', 'example:examples/demo/unsafe/README.md').evidence['has-a-heading'] == ['no heading'] && score('maintainer-example', 'example:examples/demo/unsafe/README.md').evidence['links-resolve'] == ['nope.md'] && score('maintainer-example', 'example:examples/demo/unsafe/README.md').evidence['cites-the-design'] == ['does not point at a design doc or a decision'] && score('maintainer-example', 'example:examples/demo/unsafe/README.md').evidence['no-hardcoded-secrets'] == ['README.md:3 aws-access-key']"
+    expect: >-
+      score('maintainer-example',
+      'example:examples/demo/unsafe/README.md').level == 'none' &&
+      score('maintainer-example',
+      'example:examples/demo/unsafe/README.md').evidence['has-a-heading'] ==
+      ['no heading'] && score('maintainer-example',
+      'example:examples/demo/unsafe/README.md').evidence['links-resolve'] ==
+      ['nope.md'] && score('maintainer-example',
+      'example:examples/demo/unsafe/README.md').evidence['cites-the-design']
+      == ['does not point at a design doc or a decision'] &&
+      score('maintainer-example',
+      'example:examples/demo/unsafe/README.md').evidence['no-hardcoded-secrets']
+      == ['README.md:3 aws-access-key']
   - name: a cited decision that is not a row fails, and a real citation passes
-    expect: "score('maintainer-docs', 'doc:docs/v1-spec.md').rules['cited-decisions-exist'] == 'fail' && score('maintainer-docs', 'doc:docs/v1-spec.md').evidence['cited-decisions-exist'] == ['D999'] && score('maintainer-docs', 'doc:docs/design/dashboards.md').rules['cited-decisions-exist'] == 'pass'"
+    expect: >-
+      score('maintainer-docs',
+      'doc:docs/v1-spec.md').rules['cited-decisions-exist'] == 'fail' &&
+      score('maintainer-docs',
+      'doc:docs/v1-spec.md').evidence['cited-decisions-exist'] == ['D999'] &&
+      score('maintainer-docs',
+      'doc:docs/design/dashboards.md').rules['cited-decisions-exist'] ==
+      'pass'
   - name: a canonical file whose check command is not in CI fails that rule
-    expect: "score('maintainer-agent-doc', 'agent-doc:agents/demo/partial/AGENTS.md').rules['checks-run-in-ci'] == 'fail' && score('maintainer-agent-doc', 'agent-doc:agents/demo/partial/AGENTS.md').evidence['checks-run-in-ci'] == ['cargo nope'] && score('maintainer-agent-doc', 'agent-doc:agents/demo/focused/AGENTS.md').rules['checks-run-in-ci'] == 'pass' && score('maintainer-agent-doc', 'agent-doc:.cursor/rules/demo/ok.mdc').level == 'gold' && score('maintainer-agent-doc', 'agent-doc:.cursor/rules/demo/ok.mdc').rules['single-source'] == 'pass'"
+    expect: >-
+      score('maintainer-agent-doc',
+      'agent-doc:agents/demo/partial/AGENTS.md').rules['checks-run-in-ci'] ==
+      'fail' && score('maintainer-agent-doc',
+      'agent-doc:agents/demo/partial/AGENTS.md').evidence['checks-run-in-ci']
+      == ['cargo nope'] && score('maintainer-agent-doc',
+      'agent-doc:agents/demo/focused/AGENTS.md').rules['checks-run-in-ci'] ==
+      'pass' && score('maintainer-agent-doc',
+      'agent-doc:.cursor/rules/demo/ok.mdc').level == 'gold' &&
+      score('maintainer-agent-doc',
+      'agent-doc:.cursor/rules/demo/ok.mdc').rules['single-source'] == 'pass'
   - name: a spec plugin with mcp.json reaches gold
-    expect: "score('maintainer-plugin', 'plugin:plugins/demo/focused').level == 'gold' && score('maintainer-plugin', 'plugin:plugins/demo/focused').rules['manifest-valid'] == 'pass' && score('maintainer-plugin', 'plugin:plugins/demo/focused').rules['portable-components'] == 'pass' && score('maintainer-plugin', 'plugin:plugins/demo/focused').rules['mcp-declared'] == 'pass' && score('maintainer-plugin', 'plugin:plugins/demo/focused').rules['stdio-command'] == 'pass' && score('maintainer-plugin', 'plugin:plugins/demo/focused').rules['no-secret-headers'] == 'pass' && score('maintainer-plugin', 'plugin:plugins/demo/focused').rules['paths-stay-inside'] == 'pass' && score('maintainer-plugin', 'plugin:plugins/demo/focused').rules['no-hardcoded-secrets'] == 'pass'"
+    expect: >-
+      score('maintainer-plugin', 'plugin:plugins/demo/focused').level ==
+      'gold' && score('maintainer-plugin',
+      'plugin:plugins/demo/focused').rules['manifest-valid'] == 'pass' &&
+      score('maintainer-plugin',
+      'plugin:plugins/demo/focused').rules['portable-components'] == 'pass' &&
+      score('maintainer-plugin',
+      'plugin:plugins/demo/focused').rules['mcp-declared'] == 'pass' &&
+      score('maintainer-plugin',
+      'plugin:plugins/demo/focused').rules['stdio-command'] == 'pass' &&
+      score('maintainer-plugin',
+      'plugin:plugins/demo/focused').rules['no-secret-headers'] == 'pass' &&
+      score('maintainer-plugin',
+      'plugin:plugins/demo/focused').rules['paths-stay-inside'] == 'pass' &&
+      score('maintainer-plugin',
+      'plugin:plugins/demo/focused').rules['no-hardcoded-secrets'] == 'pass'
   - name: a plugin with no mcp.json stops at bronze
-    expect: "score('maintainer-plugin', 'plugin:plugins/demo/partial').level == 'bronze' && score('maintainer-plugin', 'plugin:plugins/demo/partial').evidence['mcp-declared'] == ['no mcp.json']"
+    expect: >-
+      score('maintainer-plugin', 'plugin:plugins/demo/partial').level ==
+      'bronze' && score('maintainer-plugin',
+      'plugin:plugins/demo/partial').evidence['mcp-declared'] == ['no
+      mcp.json']
   - name: a plugin with a bad name, a shell command and a secret fails bronze
-    expect: "score('maintainer-plugin', 'plugin:plugins/demo/unsafe').level == 'none' && score('maintainer-plugin', 'plugin:plugins/demo/unsafe').rules['manifest-valid'] == 'fail' && score('maintainer-plugin', 'plugin:plugins/demo/unsafe').rules['portable-components'] == 'fail' && score('maintainer-plugin', 'plugin:plugins/demo/unsafe').rules['stdio-command'] == 'fail' && score('maintainer-plugin', 'plugin:plugins/demo/unsafe').evidence['no-secret-headers'] == ['dev header Authorization'] && score('maintainer-plugin', 'plugin:plugins/demo/unsafe').evidence['paths-stay-inside'] == ['dev arg'] && score('maintainer-plugin', 'plugin:plugins/demo/unsafe').evidence['no-hardcoded-secrets'] == ['mcp.json:6 aws-access-key']"
-  - name: supply-chain config reaches gold only when the files exist and code scanning is pinned
-    expect: "score('maintainer-supply-chain', 'repo:acme/focused').level == 'gold' && score('maintainer-supply-chain', 'repo:acme/focused').rules['dependabot'] == 'pass' && score('maintainer-supply-chain', 'repo:acme/focused').rules['code-scanning'] == 'pass' && score('maintainer-supply-chain', 'repo:acme/focused').rules['security-policy'] == 'pass' && score('maintainer-supply-chain', 'repo:acme/focused').rules['workflows-have-owners'] == 'pass' && score('maintainer-supply-chain', 'repo:acme/focused').rules['code-scanning-pinned'] == 'pass'"
-  - name: a repository missing dependabot, code scanning and a security policy fails bronze
-    expect: "score('maintainer-supply-chain', 'repo:acme/unsafe').level == 'none' && score('maintainer-supply-chain', 'repo:acme/unsafe').evidence['dependabot'] == ['cargo', 'npm', 'github-actions'] && score('maintainer-supply-chain', 'repo:acme/unsafe').evidence['code-scanning'] == ['no workflow uses github/codeql-action'] && score('maintainer-supply-chain', 'repo:acme/unsafe').evidence['security-policy'] == ['no SECURITY.md'] && score('maintainer-supply-chain', 'repo:acme/partial').rules['code-scanning-pinned'] == 'fail'"
+    expect: >-
+      score('maintainer-plugin', 'plugin:plugins/demo/unsafe').level == 'none'
+      && score('maintainer-plugin',
+      'plugin:plugins/demo/unsafe').rules['manifest-valid'] == 'fail' &&
+      score('maintainer-plugin',
+      'plugin:plugins/demo/unsafe').rules['portable-components'] == 'fail' &&
+      score('maintainer-plugin',
+      'plugin:plugins/demo/unsafe').rules['stdio-command'] == 'fail' &&
+      score('maintainer-plugin',
+      'plugin:plugins/demo/unsafe').evidence['no-secret-headers'] == ['dev
+      header Authorization'] && score('maintainer-plugin',
+      'plugin:plugins/demo/unsafe').evidence['paths-stay-inside'] == ['dev
+      arg'] && score('maintainer-plugin',
+      'plugin:plugins/demo/unsafe').evidence['no-hardcoded-secrets'] ==
+      ['mcp.json:6 aws-access-key']
+  - name: >-
+      supply-chain config reaches gold only when the files exist and code
+      scanning is pinned
+    expect: >-
+      score('maintainer-supply-chain', 'repo:acme/focused').level == 'gold' &&
+      score('maintainer-supply-chain',
+      'repo:acme/focused').rules['dependabot'] == 'pass' &&
+      score('maintainer-supply-chain',
+      'repo:acme/focused').rules['code-scanning'] == 'pass' &&
+      score('maintainer-supply-chain',
+      'repo:acme/focused').rules['security-policy'] == 'pass' &&
+      score('maintainer-supply-chain',
+      'repo:acme/focused').rules['workflows-have-owners'] == 'pass' &&
+      score('maintainer-supply-chain',
+      'repo:acme/focused').rules['code-scanning-pinned'] == 'pass'
+  - name: >-
+      a repository missing dependabot, code scanning and a security policy
+      fails bronze
+    expect: >-
+      score('maintainer-supply-chain', 'repo:acme/unsafe').level == 'none' &&
+      score('maintainer-supply-chain',
+      'repo:acme/unsafe').evidence['dependabot'] == ['cargo', 'npm',
+      'github-actions'] && score('maintainer-supply-chain',
+      'repo:acme/unsafe').evidence['code-scanning'] == ['no workflow uses
+      github/codeql-action'] && score('maintainer-supply-chain',
+      'repo:acme/unsafe').evidence['security-policy'] == ['no SECURITY.md'] &&
+      score('maintainer-supply-chain',
+      'repo:acme/partial').rules['code-scanning-pinned'] == 'fail'
   - name: a titled described page in the sidebar reaches gold
-    expect: "score('maintainer-site', 'site-page:site/src/content/docs/index.md').level == 'gold' && score('maintainer-site', 'site-page:site/src/content/docs/index.md').rules['titled'] == 'pass' && score('maintainer-site', 'site-page:site/src/content/docs/index.md').rules['described'] == 'pass' && score('maintainer-site', 'site-page:site/src/content/docs/index.md').rules['links-resolve'] == 'pass' && score('maintainer-site', 'site-page:site/src/content/docs/index.md').rules['reachable'] == 'pass' && score('maintainer-site', 'site-page:site/src/content/docs/index.md').rules['no-hardcoded-secrets'] == 'pass'"
+    expect: >-
+      score('maintainer-site',
+      'site-page:site/src/content/docs/index.md').level == 'gold' &&
+      score('maintainer-site',
+      'site-page:site/src/content/docs/index.md').rules['titled'] == 'pass' &&
+      score('maintainer-site',
+      'site-page:site/src/content/docs/index.md').rules['described'] == 'pass'
+      && score('maintainer-site',
+      'site-page:site/src/content/docs/index.md').rules['links-resolve'] ==
+      'pass' && score('maintainer-site',
+      'site-page:site/src/content/docs/index.md').rules['reachable'] == 'pass'
+      && score('maintainer-site',
+      'site-page:site/src/content/docs/index.md').rules['no-hardcoded-secrets']
+      == 'pass'
   - name: a draft page with a title stops at bronze
-    expect: "score('maintainer-site', 'site-page:site/src/content/docs/draft.md').level == 'bronze' && score('maintainer-site', 'site-page:site/src/content/docs/draft.md').rules['reachable'] == 'fail' && score('maintainer-site', 'site-page:site/src/content/docs/draft.md').evidence['reachable'] == ['not in the sidebar']"
+    expect: >-
+      score('maintainer-site',
+      'site-page:site/src/content/docs/draft.md').level == 'bronze' &&
+      score('maintainer-site',
+      'site-page:site/src/content/docs/draft.md').rules['reachable'] == 'fail'
+      && score('maintainer-site',
+      'site-page:site/src/content/docs/draft.md').evidence['reachable'] ==
+      ['not in the sidebar']
   - name: a page with no title, a broken link and a secret fails bronze
-    expect: "score('maintainer-site', 'site-page:site/src/content/docs/unsafe.md').level == 'none' && score('maintainer-site', 'site-page:site/src/content/docs/unsafe.md').rules['titled'] == 'fail' && score('maintainer-site', 'site-page:site/src/content/docs/unsafe.md').rules['described'] == 'fail' && score('maintainer-site', 'site-page:site/src/content/docs/unsafe.md').evidence['links-resolve'] == ['/missing/'] && score('maintainer-site', 'site-page:site/src/content/docs/unsafe.md').evidence['no-hardcoded-secrets'] == ['page:2 github-token']"
+    expect: >-
+      score('maintainer-site',
+      'site-page:site/src/content/docs/unsafe.md').level == 'none' &&
+      score('maintainer-site',
+      'site-page:site/src/content/docs/unsafe.md').rules['titled'] == 'fail'
+      && score('maintainer-site',
+      'site-page:site/src/content/docs/unsafe.md').rules['described'] ==
+      'fail' && score('maintainer-site',
+      'site-page:site/src/content/docs/unsafe.md').evidence['links-resolve']
+      == ['/missing/'] && score('maintainer-site',
+      'site-page:site/src/content/docs/unsafe.md').evidence['no-hardcoded-secrets']
+      == ['page:2 github-token']
   - name: the repository level is the lowest constituent it watches
-    expect: "score('maintainer-repo', 'repo:acme/focused').level == 'gold' && score('maintainer-repo', 'repo:acme/focused').rules['constituents-at-least-gold'] == 'pass' && score('maintainer-repo', 'repo:acme/partial').level == 'bronze' && score('maintainer-repo', 'repo:acme/partial').rules['constituents-at-least-silver'] == 'fail' && score('maintainer-repo', 'repo:acme/unsafe').level == 'none' && score('maintainer-repo', 'repo:acme/unsafe').rules['constituents-at-least-bronze'] == 'fail'"
+    expect: >-
+      score('maintainer-repo', 'repo:acme/focused').level == 'gold' &&
+      score('maintainer-repo',
+      'repo:acme/focused').rules['constituents-at-least-gold'] == 'pass' &&
+      score('maintainer-repo', 'repo:acme/partial').level == 'bronze' &&
+      score('maintainer-repo',
+      'repo:acme/partial').rules['constituents-at-least-silver'] == 'fail' &&
+      score('maintainer-repo', 'repo:acme/unsafe').level == 'none' &&
+      score('maintainer-repo',
+      'repo:acme/unsafe').rules['constituents-at-least-bronze'] == 'fail'
   # The rest of the model: kinds, fields, connectors (scorecards-for-scorecards.md §5)
-  - name: a described, tested kind in the fixtures stops at silver while a field is undescribed
-    expect: "score('meta-kind', 'kind:toolbox/Crate').level == 'silver' && score('meta-kind', 'kind:toolbox/Crate').rules['fields-described'] == 'fail' && score('meta-kind', 'kind:toolbox/Crate').evidence['fields-described'] == ['codeLines'] && score('meta-kind', 'kind:demo/Tiny').level == 'gold'"
+  - name: >-
+      a described, tested kind in the fixtures stops at silver while a field
+      is undescribed
+    expect: >-
+      score('meta-kind', 'kind:toolbox/Crate').level == 'silver' &&
+      score('meta-kind', 'kind:toolbox/Crate').rules['fields-described'] ==
+      'fail' && score('meta-kind',
+      'kind:toolbox/Crate').evidence['fields-described'] == ['codeLines'] &&
+      score('meta-kind', 'kind:demo/Tiny').level == 'gold'
   - name: a kind no fixture or test reaches fails bronze, and says so
-    expect: "score('meta-kind', 'kind:demo/Bare').rules['in-fixtures'] == 'fail' && score('meta-kind', 'kind:demo/Bare').rules['described'] == 'fail' && score('meta-kind', 'kind:toolbox/File').rules['tested'] == 'fail' && score('meta-kind', 'kind:toolbox/File').rules['in-fixtures'] == 'pass'"
+    expect: >-
+      score('meta-kind', 'kind:demo/Bare').rules['in-fixtures'] == 'fail' &&
+      score('meta-kind', 'kind:demo/Bare').rules['described'] == 'fail' &&
+      score('meta-kind', 'kind:toolbox/File').rules['tested'] == 'fail' &&
+      score('meta-kind', 'kind:toolbox/File').rules['in-fixtures'] == 'pass'
   - name: fields climb from populated to described to shaped
-    expect: "score('meta-field', 'field:toolbox/Crate.codeLines').level == 'bronze' && score('meta-field', 'field:toolbox/Crate.codeLines').rules['described'] == 'fail' && score('meta-field', 'field:toolbox/Crate.hash').level == 'gold' && score('meta-field', 'field:toolbox/Crate.hash').rules['has-shape'] == 'pass'"
+    expect: >-
+      score('meta-field', 'field:toolbox/Crate.codeLines').level == 'bronze'
+      && score('meta-field',
+      'field:toolbox/Crate.codeLines').rules['described'] == 'fail' &&
+      score('meta-field', 'field:toolbox/Crate.hash').level == 'gold' &&
+      score('meta-field', 'field:toolbox/Crate.hash').rules['has-shape'] ==
+      'pass'
   - name: object fields are opaque and empty fields fail bronze
-    expect: "score('meta-field', 'field:toolbox/Rule.check').rules['has-shape'] == 'fail' && score('meta-field', 'field:demo/Bare.blob').rules['populated-in-fixtures'] == 'fail' && score('meta-field', 'field:demo/Tiny.size').rules['populated-in-fixtures'] == 'pass' && entity('field:demo/Bare.blob').fieldType == 'object'"
+    expect: >-
+      score('meta-field', 'field:toolbox/Rule.check').rules['has-shape'] ==
+      'fail' && score('meta-field',
+      'field:demo/Bare.blob').rules['populated-in-fixtures'] == 'fail' &&
+      score('meta-field',
+      'field:demo/Tiny.size').rules['populated-in-fixtures'] == 'pass' &&
+      entity('field:demo/Bare.blob').fieldType == 'object'
   - name: connectors need mappings and fixtures, then freshness, then refresh
-    expect: "score('meta-connector', 'connector:demo/feed').rules['records-mapped'] == 'fail' && score('meta-connector', 'connector:demo/feed').rules['has-fixtures'] == 'fail' && score('meta-connector', 'connector:acme/github').evidence['freshness-declared'] == ['codeowners'] && score('meta-connector', 'connector:toolbox/workspace').evidence['refreshable'] == ['assessment']"
-  - name: a connector that maps, fixtures, bounds and refreshes every record reaches gold
-    expect: "score('meta-connector', 'connector:toolbox/surfaces').level == 'gold' && score('meta-connector', 'connector:toolbox/surfaces').rules['records-mapped'] == 'pass' && score('meta-connector', 'connector:toolbox/surfaces').rules['has-fixtures'] == 'pass' && score('meta-connector', 'connector:acme/github').rules['freshness-declared'] == 'fail' && score('meta-connector', 'connector:toolbox/surfaces').rules['freshness-declared'] == 'pass' && score('meta-connector', 'connector:toolbox/surfaces').rules['refreshable'] == 'pass'"
+    expect: >-
+      score('meta-connector', 'connector:demo/feed').rules['records-mapped']
+      == 'fail' && score('meta-connector',
+      'connector:demo/feed').rules['has-fixtures'] == 'fail' &&
+      score('meta-connector',
+      'connector:acme/github').evidence['freshness-declared'] ==
+      ['codeowners'] && score('meta-connector',
+      'connector:toolbox/workspace').evidence['refreshable'] == ['assessment']
+  - name: >-
+      a connector that maps, fixtures, bounds and refreshes every record
+      reaches gold
+    expect: >-
+      score('meta-connector', 'connector:toolbox/surfaces').level == 'gold' &&
+      score('meta-connector',
+      'connector:toolbox/surfaces').rules['records-mapped'] == 'pass' &&
+      score('meta-connector',
+      'connector:toolbox/surfaces').rules['has-fixtures'] == 'pass' &&
+      score('meta-connector',
+      'connector:acme/github').rules['freshness-declared'] == 'fail' &&
+      score('meta-connector',
+      'connector:toolbox/surfaces').rules['freshness-declared'] == 'pass' &&
+      score('meta-connector',
+      'connector:toolbox/surfaces').rules['refreshable'] == 'pass'
   # Judgement: agent assessments (D79)
   - name: an assessment file becomes an entity related to what it assesses
-    expect: "entity('assessment:rule-quality/rule:toolbox/maintainer-ci-security/least-privilege-token').verdict == 'fail' && entity('rule:toolbox/maintainer-ci-security/least-privilege-token').reviewFailing == ['hard-to-game']"
-  - name: a fresh, all-pass assessment is gold; failing criteria stop at bronze; doubts at silver
-    expect: "score('review-rule', 'rule:toolbox/maintainer-ci-security/no-medium-findings').level == 'gold' && score('review-rule', 'rule:toolbox/maintainer-ci-security/least-privilege-token').rules['passes-review'] == 'fail' && score('review-rule', 'rule:toolbox/user-cli/has-help').level == 'silver' && score('review-rule', 'rule:toolbox/user-cli/has-help').rules['no-doubts'] == 'fail'"
+    expect: >-
+      entity('assessment:rule-quality/rule:toolbox/maintainer-ci-security/least-privilege-token').verdict
+      == 'fail' &&
+      entity('rule:toolbox/maintainer-ci-security/least-privilege-token').reviewFailing
+      == ['hard-to-game']
+  - name: >-
+      a fresh, all-pass assessment is gold; failing criteria stop at bronze;
+      doubts at silver
+    expect: >-
+      score('review-rule',
+      'rule:toolbox/maintainer-ci-security/no-medium-findings').level ==
+      'gold' && score('review-rule',
+      'rule:toolbox/maintainer-ci-security/least-privilege-token').rules['passes-review']
+      == 'fail' && score('review-rule',
+      'rule:toolbox/user-cli/has-help').level == 'silver' &&
+      score('review-rule',
+      'rule:toolbox/user-cli/has-help').rules['no-doubts'] == 'fail'
   - name: an assessment of an older version is stale, not current
-    expect: "entity('rule:toolbox/meta-rule/tested').reviewState == 'stale' && score('review-rule', 'rule:toolbox/meta-rule/tested').rules['assessed'] == 'fail' && score('review-rule', 'rule:toolbox/meta-rule/tested').evidence['assessed'] == ['the rule changed since it was assessed']"
+    expect: >-
+      entity('rule:toolbox/meta-rule/tested').reviewState == 'stale' &&
+      score('review-rule', 'rule:toolbox/meta-rule/tested').rules['assessed']
+      == 'fail' && score('review-rule',
+      'rule:toolbox/meta-rule/tested').evidence['assessed'] == ['the rule
+      changed since it was assessed']
   - name: only our own rules are reviewed
-    expect: "score('review-rule', 'rule:demo/sprawling/everything').level == 'skipped' && score('review-rule', 'rule:toolbox/maintainer-ci-security/no-medium-findings').rules['assessed'] == 'pass'"
+    expect: >-
+      score('review-rule', 'rule:demo/sprawling/everything').level ==
+      'skipped' && score('review-rule',
+      'rule:toolbox/maintainer-ci-security/no-medium-findings').rules['assessed']
+      == 'pass'
   - name: scorecards are reviewed against scorecard-quality
-    expect: "score('review-scorecard', 'scorecard:toolbox/maintainer-ci-security').level == 'gold' && score('review-scorecard', 'scorecard:toolbox/meta-rule').evidence['passes-review'] == ['no-obvious-gap'] && score('review-scorecard', 'scorecard:toolbox/user-cli').rules['assessed'] == 'fail' && score('review-scorecard', 'scorecard:toolbox/meta-rule').rules['assessed'] == 'pass' && score('review-scorecard', 'scorecard:toolbox/maintainer-ci-security').rules['passes-review'] == 'pass' && score('review-scorecard', 'scorecard:toolbox/maintainer-ci-security').rules['no-doubts'] == 'pass' && score('review-scorecard', 'scorecard:toolbox/user-cli').rules['no-doubts'] == 'fail'"
-  - name: crates are reviewed against crate-design, and go stale when their sources change
-    expect: "score('review-crate', 'crate:toolbox-expr').level == 'bronze' && score('review-crate', 'crate:toolbox-expr').evidence['passes-review'] == ['replaceable-defaults'] && score('review-crate', 'crate:toolbox-expr').rules['no-doubts'] == 'fail' && score('review-crate', 'crate:toolbox-derive').rules['no-doubts'] == 'pass' && score('review-crate', 'crate:toolbox-derive').rules['passes-review'] == 'pass' && score('review-crate', 'crate:toolbox-connector-git-files').rules['assessed'] == 'fail' && score('review-crate', 'crate:toolbox-derive').rules['assessed'] == 'pass'"
+    expect: >-
+      score('review-scorecard',
+      'scorecard:toolbox/maintainer-ci-security').level == 'gold' &&
+      score('review-scorecard',
+      'scorecard:toolbox/meta-rule').evidence['passes-review'] ==
+      ['no-obvious-gap'] && score('review-scorecard',
+      'scorecard:toolbox/user-cli').rules['assessed'] == 'fail' &&
+      score('review-scorecard',
+      'scorecard:toolbox/meta-rule').rules['assessed'] == 'pass' &&
+      score('review-scorecard',
+      'scorecard:toolbox/maintainer-ci-security').rules['passes-review'] ==
+      'pass' && score('review-scorecard',
+      'scorecard:toolbox/maintainer-ci-security').rules['no-doubts'] == 'pass'
+      && score('review-scorecard',
+      'scorecard:toolbox/user-cli').rules['no-doubts'] == 'fail'
+  - name: >-
+      crates are reviewed against crate-design, and go stale when their
+      sources change
+    expect: >-
+      score('review-crate', 'crate:toolbox-expr').level == 'bronze' &&
+      score('review-crate', 'crate:toolbox-expr').evidence['passes-review'] ==
+      ['replaceable-defaults'] && score('review-crate',
+      'crate:toolbox-expr').rules['no-doubts'] == 'fail' &&
+      score('review-crate', 'crate:toolbox-derive').rules['no-doubts'] ==
+      'pass' && score('review-crate',
+      'crate:toolbox-derive').rules['passes-review'] == 'pass' &&
+      score('review-crate',
+      'crate:toolbox-connector-git-files').rules['assessed'] == 'fail' &&
+      score('review-crate', 'crate:toolbox-derive').rules['assessed'] ==
+      'pass'
   - name: review rules pass where the assessment is current and clean
-    expect: "score('review-rule', 'rule:toolbox/maintainer-ci-security/no-medium-findings').rules['passes-review'] == 'pass' && score('review-rule', 'rule:toolbox/maintainer-ci-security/no-medium-findings').rules['no-doubts'] == 'pass'"
+    expect: >-
+      score('review-rule',
+      'rule:toolbox/maintainer-ci-security/no-medium-findings').rules['passes-review']
+      == 'pass' && score('review-rule',
+      'rule:toolbox/maintainer-ci-security/no-medium-findings').rules['no-doubts']
+      == 'pass'
   # Assessments and rubrics are standards too (D80)
   - name: an assessment that cites a source for every verdict reaches gold
-    expect: "score('meta-assessment', 'assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-medium-findings').level == 'gold' && score('meta-assessment', 'assessment:scorecard-quality/scorecard:toolbox/maintainer-ci-security').level == 'silver' && score('meta-assessment', 'assessment:scorecard-quality/scorecard:toolbox/maintainer-ci-security').evidence['cites-everything'] == ['actionable']"
+    expect: >-
+      score('meta-assessment',
+      'assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-medium-findings').level
+      == 'gold' && score('meta-assessment',
+      'assessment:scorecard-quality/scorecard:toolbox/maintainer-ci-security').level
+      == 'silver' && score('meta-assessment',
+      'assessment:scorecard-quality/scorecard:toolbox/maintainer-ci-security').evidence['cites-everything']
+      == ['actionable']
   - name: a fail without a suggestion, or an unnamed assessor, fails bronze
-    expect: "score('meta-assessment', 'assessment:rule-quality/rule:toolbox/maintainer-ci-security/least-privilege-token').evidence['suggests-fixes'] == ['hard-to-game'] && score('meta-assessment', 'assessment:rule-quality/rule:toolbox/meta-rule/tested').rules['assessor-named'] == 'fail' && score('meta-assessment', 'assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-medium-findings').rules['assessor-named'] == 'pass' && score('meta-assessment', 'assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-medium-findings').rules['suggests-fixes'] == 'pass'"
+    expect: >-
+      score('meta-assessment',
+      'assessment:rule-quality/rule:toolbox/maintainer-ci-security/least-privilege-token').evidence['suggests-fixes']
+      == ['hard-to-game'] && score('meta-assessment',
+      'assessment:rule-quality/rule:toolbox/meta-rule/tested').rules['assessor-named']
+      == 'fail' && score('meta-assessment',
+      'assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-medium-findings').rules['assessor-named']
+      == 'pass' && score('meta-assessment',
+      'assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-medium-findings').rules['suggests-fixes']
+      == 'pass'
   - name: an uncited finding stops at bronze
-    expect: "score('meta-assessment', 'assessment:rule-quality/rule:toolbox/user-cli/has-help').level == 'bronze' && score('meta-assessment', 'assessment:rule-quality/rule:toolbox/user-cli/has-help').evidence['cites-for-findings'] == ['threshold-justified'] && score('meta-assessment', 'assessment:scorecard-quality/scorecard:toolbox/maintainer-ci-security').rules['cites-for-findings'] == 'pass' && score('meta-assessment', 'assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-medium-findings').rules['cites-everything'] == 'pass'"
+    expect: >-
+      score('meta-assessment',
+      'assessment:rule-quality/rule:toolbox/user-cli/has-help').level ==
+      'bronze' && score('meta-assessment',
+      'assessment:rule-quality/rule:toolbox/user-cli/has-help').evidence['cites-for-findings']
+      == ['threshold-justified'] && score('meta-assessment',
+      'assessment:scorecard-quality/scorecard:toolbox/maintainer-ci-security').rules['cites-for-findings']
+      == 'pass' && score('meta-assessment',
+      'assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-medium-findings').rules['cites-everything']
+      == 'pass'
   - name: rubrics climb from described and used, to guided, to discriminating
-    expect: "score('meta-rubric', 'rubric:demo/vague').level == 'none' && score('meta-rubric', 'rubric:demo/vague').rules['described'] == 'fail' && score('meta-rubric', 'rubric:demo/vague').rules['in-use'] == 'fail' && score('meta-rubric', 'rubric:toolbox/crate-design').level == 'bronze' && score('meta-rubric', 'rubric:toolbox/crate-design').rules['guided'] == 'fail' && score('meta-rubric', 'rubric:demo/sharp').level == 'gold'"
+    expect: >-
+      score('meta-rubric', 'rubric:demo/vague').level == 'none' &&
+      score('meta-rubric', 'rubric:demo/vague').rules['described'] == 'fail'
+      && score('meta-rubric', 'rubric:demo/vague').rules['in-use'] == 'fail'
+      && score('meta-rubric', 'rubric:toolbox/crate-design').level == 'bronze'
+      && score('meta-rubric', 'rubric:toolbox/crate-design').rules['guided']
+      == 'fail' && score('meta-rubric', 'rubric:demo/sharp').level == 'gold'
   - name: a criterion every assessment passed keeps a rubric from gold
-    expect: "score('meta-rubric', 'rubric:toolbox/rule-quality').level == 'silver' && score('meta-rubric', 'rubric:toolbox/rule-quality').evidence['discriminates'] == ['fix-leads-to-pass passed in every assessment'] && score('meta-rubric', 'rubric:toolbox/rule-quality').rules['guided'] == 'pass' && score('meta-rubric', 'rubric:demo/sharp').rules['discriminates'] == 'pass' && score('meta-rubric', 'rubric:toolbox/rule-quality').rules['described'] == 'pass' && score('meta-rubric', 'rubric:toolbox/rule-quality').rules['in-use'] == 'pass'"
-  - name: assessments are reviewed against assessment-quality, and the reviews are not
-    expect: "score('review-assessment', 'assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-medium-findings').level == 'gold' && score('review-assessment', 'assessment:rule-quality/rule:toolbox/user-cli/has-help').evidence['passes-review'] == ['complete'] && score('review-assessment', 'assessment:assessment-quality/assessment:rule-quality/rule:toolbox/user-cli/has-help').level == 'skipped'"
+    expect: >-
+      score('meta-rubric', 'rubric:toolbox/rule-quality').level == 'silver' &&
+      score('meta-rubric',
+      'rubric:toolbox/rule-quality').evidence['discriminates'] ==
+      ['fix-leads-to-pass passed in every assessment'] && score('meta-rubric',
+      'rubric:toolbox/rule-quality').rules['guided'] == 'pass' &&
+      score('meta-rubric', 'rubric:demo/sharp').rules['discriminates'] ==
+      'pass' && score('meta-rubric',
+      'rubric:toolbox/rule-quality').rules['described'] == 'pass' &&
+      score('meta-rubric', 'rubric:toolbox/rule-quality').rules['in-use'] ==
+      'pass'
+  - name: >-
+      assessments are reviewed against assessment-quality, and the reviews are
+      not
+    expect: >-
+      score('review-assessment',
+      'assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-medium-findings').level
+      == 'gold' && score('review-assessment',
+      'assessment:rule-quality/rule:toolbox/user-cli/has-help').evidence['passes-review']
+      == ['complete'] && score('review-assessment',
+      'assessment:assessment-quality/assessment:rule-quality/rule:toolbox/user-cli/has-help').level
+      == 'skipped'
   - name: a review of an older version of an assessment is stale
-    expect: "entity('assessment:rule-quality/rule:toolbox/maintainer-ci-security/least-privilege-token').reviewState == 'stale' && score('review-assessment', 'assessment:rule-quality/rule:toolbox/maintainer-ci-security/least-privilege-token').rules['assessed'] == 'fail' && score('review-assessment', 'assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-medium-findings').rules['assessed'] == 'pass' && score('review-assessment', 'assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-medium-findings').rules['passes-review'] == 'pass' && score('review-assessment', 'assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-medium-findings').rules['no-doubts'] == 'pass' && score('review-assessment', 'assessment:crate-design/crate:toolbox-derive').rules['no-doubts'] == 'fail'"
+    expect: >-
+      entity('assessment:rule-quality/rule:toolbox/maintainer-ci-security/least-privilege-token').reviewState
+      == 'stale' && score('review-assessment',
+      'assessment:rule-quality/rule:toolbox/maintainer-ci-security/least-privilege-token').rules['assessed']
+      == 'fail' && score('review-assessment',
+      'assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-medium-findings').rules['assessed']
+      == 'pass' && score('review-assessment',
+      'assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-medium-findings').rules['passes-review']
+      == 'pass' && score('review-assessment',
+      'assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-medium-findings').rules['no-doubts']
+      == 'pass' && score('review-assessment',
+      'assessment:crate-design/crate:toolbox-derive').rules['no-doubts'] ==
+      'fail'
   # The SDLC layers and their stages (D87)
   - name: a built, documented, automated stage with a command reaches gold
-    expect: "score('sdlc-stage', 'sdlc-stage:demo-done/plan').level == 'gold' && score('sdlc-stage', 'sdlc-stage:demo-done/plan').rules['has-exit-criterion'] == 'pass' && score('sdlc-stage', 'sdlc-stage:demo-done/plan').rules['documented'] == 'pass' && score('sdlc-stage', 'sdlc-stage:demo-done/plan').rules['agent-operable'] == 'pass' && score('sdlc-stage', 'sdlc-stage:demo-done/plan').rules['automated'] == 'pass' && score('sdlc-stage', 'sdlc-stage:demo-done/plan').rules['built'] == 'pass'"
+    expect: >-
+      score('sdlc-stage', 'sdlc-stage:demo-done/plan').level == 'gold' &&
+      score('sdlc-stage',
+      'sdlc-stage:demo-done/plan').rules['has-exit-criterion'] == 'pass' &&
+      score('sdlc-stage', 'sdlc-stage:demo-done/plan').rules['documented'] ==
+      'pass' && score('sdlc-stage',
+      'sdlc-stage:demo-done/plan').rules['agent-operable'] == 'pass' &&
+      score('sdlc-stage', 'sdlc-stage:demo-done/plan').rules['automated'] ==
+      'pass' && score('sdlc-stage',
+      'sdlc-stage:demo-done/plan').rules['built'] == 'pass'
   - name: a vague exit criterion or a missing doc fails bronze
-    expect: "score('sdlc-stage', 'sdlc-stage:demo-gap/plan').rules['has-exit-criterion'] == 'fail' && score('sdlc-stage', 'sdlc-stage:demo-gap/release').evidence['documented'] == ['docs/p.md does not exist']"
+    expect: >-
+      score('sdlc-stage',
+      'sdlc-stage:demo-gap/plan').rules['has-exit-criterion'] == 'fail' &&
+      score('sdlc-stage',
+      'sdlc-stage:demo-gap/release').evidence['documented'] == ['docs/p.md
+      does not exist']
   - name: a missing stage names what an agent lacks and its gaps
-    expect: "score('sdlc-stage', 'sdlc-stage:demo-gap/release').rules['agent-operable'] == 'fail' && score('sdlc-stage', 'sdlc-stage:demo-gap/release').rules['automated'] == 'fail' && score('sdlc-stage', 'sdlc-stage:demo-partial/ship').evidence['built'] == ['rebuilds from source'] && score('sdlc-stage', 'sdlc-stage:demo-partial/ship').level == 'bronze'"
+    expect: >-
+      score('sdlc-stage',
+      'sdlc-stage:demo-gap/release').rules['agent-operable'] == 'fail' &&
+      score('sdlc-stage', 'sdlc-stage:demo-gap/release').rules['automated'] ==
+      'fail' && score('sdlc-stage',
+      'sdlc-stage:demo-partial/ship').evidence['built'] == ['rebuilds from
+      source'] && score('sdlc-stage', 'sdlc-stage:demo-partial/ship').level ==
+      'bronze'
   - name: a layer needs every stage declared, none missing, then all built
-    expect: "score('sdlc-layer', 'sdlc:demo-gap').evidence['stages-declared'] == ['build'] && score('sdlc-layer', 'sdlc:demo-gap').rules['nothing-missing'] == 'fail' && score('sdlc-layer', 'sdlc:demo-partial').level == 'silver' && score('sdlc-layer', 'sdlc:demo-partial').evidence['every-stage-built'] == ['ship (partial)'] && score('sdlc-layer', 'sdlc:demo-done').level == 'gold' && score('sdlc-layer', 'sdlc:demo-done').rules['stages-declared'] == 'pass' && score('sdlc-layer', 'sdlc:demo-done').rules['nothing-missing'] == 'pass' && score('sdlc-layer', 'sdlc:demo-done').rules['every-stage-built'] == 'pass'"
-  - name: stages are reviewed against sdlc-stage-quality, and go stale when the declaration changes
-    expect: "score('review-sdlc-stage', 'sdlc-stage:demo-done/plan').level == 'gold' && score('review-sdlc-stage', 'sdlc-stage:demo-partial/ship').evidence['passes-review'] == ['reuses-artifacts'] && entity('sdlc-stage:demo-gap/release').reviewState == 'stale' && score('review-sdlc-stage', 'sdlc-stage:demo-gap/release').rules['assessed'] == 'fail' && score('review-sdlc-stage', 'sdlc-stage:demo-done/plan').rules['assessed'] == 'pass' && score('review-sdlc-stage', 'sdlc-stage:demo-done/plan').rules['passes-review'] == 'pass' && score('review-sdlc-stage', 'sdlc-stage:demo-done/plan').rules['no-doubts'] == 'pass' && score('review-sdlc-stage', 'sdlc-stage:demo-gap/plan').rules['no-doubts'] == 'fail'"
+    expect: >-
+      score('sdlc-layer', 'sdlc:demo-gap').evidence['stages-declared'] ==
+      ['build'] && score('sdlc-layer',
+      'sdlc:demo-gap').rules['nothing-missing'] == 'fail' &&
+      score('sdlc-layer', 'sdlc:demo-partial').level == 'silver' &&
+      score('sdlc-layer', 'sdlc:demo-partial').evidence['every-stage-built']
+      == ['ship (partial)'] && score('sdlc-layer', 'sdlc:demo-done').level ==
+      'gold' && score('sdlc-layer', 'sdlc:demo-done').rules['stages-declared']
+      == 'pass' && score('sdlc-layer',
+      'sdlc:demo-done').rules['nothing-missing'] == 'pass' &&
+      score('sdlc-layer', 'sdlc:demo-done').rules['every-stage-built'] ==
+      'pass'
+  - name: >-
+      stages are reviewed against sdlc-stage-quality, and go stale when the
+      declaration changes
+    expect: >-
+      score('review-sdlc-stage', 'sdlc-stage:demo-done/plan').level == 'gold'
+      && score('review-sdlc-stage',
+      'sdlc-stage:demo-partial/ship').evidence['passes-review'] ==
+      ['reuses-artifacts'] &&
+      entity('sdlc-stage:demo-gap/release').reviewState == 'stale' &&
+      score('review-sdlc-stage',
+      'sdlc-stage:demo-gap/release').rules['assessed'] == 'fail' &&
+      score('review-sdlc-stage',
+      'sdlc-stage:demo-done/plan').rules['assessed'] == 'pass' &&
+      score('review-sdlc-stage',
+      'sdlc-stage:demo-done/plan').rules['passes-review'] == 'pass' &&
+      score('review-sdlc-stage',
+      'sdlc-stage:demo-done/plan').rules['no-doubts'] == 'pass' &&
+      score('review-sdlc-stage',
+      'sdlc-stage:demo-gap/plan').rules['no-doubts'] == 'fail'

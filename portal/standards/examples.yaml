@@ -15,12 +15,12 @@ kinds:
       secretHits: {type: list, items: string}
     sources: {default: [connector:workspace]}
     map:
-      - from: workspace/example
-        id: "'example:' + record.path"
-        set: >-
-          {'path': record.path, 'title': record.title, 'lines': record.lines,
-           'commandLines': record.commandLines, 'missingFiles': record.missingFiles,
-           'citesDesign': record.citesDesign, 'secretHits': record.secretHits}
+    - from: workspace/example
+      id: "'example:' + record.path"
+      set: >-
+        {'path': record.path, 'title': record.title, 'lines': record.lines,
+         'commandLines': record.commandLines, 'missingFiles': record.missingFiles,
+         'citesDesign': record.citesDesign, 'secretHits': record.secretHits}
 
 scorecards:
   # A write-up is useful when a reader can follow its links and run the check it names.
@@ -31,29 +31,37 @@ scorecards:
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze}
     rules:
-      - name: has-a-heading
-        level: bronze
-        check: "entity.title != ''"
-        evidence: "['no heading']"
-        fix: "Start the write-up with a level-1 heading that names the example."
-      - name: links-resolve
-        level: bronze
-        check: "entity.missingFiles.size() == 0"
-        evidence: "entity.missingFiles"
-        fix: "Fix or remove the relative links in the evidence. An agent follows them to the files the example depends on."
-      - name: says-how-to-check
-        level: silver
-        check: "entity.commandLines > 0"
-        evidence: "[string(entity.commandLines) + ' command lines']"
-        fix: "Name the command that checks this example (toolbox, cargo, npm, python, fga, or a ./run script). A reader should be able to reproduce it."
-      - name: cites-the-design
-        level: gold
-        check: "entity.citesDesign"
-        evidence: "['does not point at a design doc or a decision']"
-        fix: "Link the write-up at the design doc or the decision it demonstrates, so the example is not a second source of truth."
-      - name: no-hardcoded-secrets
-        level: gold
-        check: "entity.secretHits.size() == 0"
-        evidence: "entity.secretHits"
-        fix: "Remove the credential in the evidence. An example is copied and read by agents."
+    - name: has-a-heading
+      level: bronze
+      check: entity.title != ''
+      evidence: "['no heading']"
+      fix: Start the write-up with a level-1 heading that names the example.
+    - name: links-resolve
+      level: bronze
+      check: entity.missingFiles.size() == 0
+      evidence: entity.missingFiles
+      fix: >-
+        Fix or remove the relative links in the evidence. An agent follows them
+        to the files the example depends on.
+    - name: says-how-to-check
+      level: silver
+      check: entity.commandLines > 0
+      evidence: "[string(entity.commandLines) + ' command lines']"
+      fix: >-
+        Name the command that checks this example (toolbox, cargo, npm, python,
+        fga, or a ./run script). A reader should be able to reproduce it.
+    - name: cites-the-design
+      level: gold
+      check: entity.citesDesign
+      evidence: "['does not point at a design doc or a decision']"
+      fix: >-
+        Link the write-up at the design doc or the decision it demonstrates, so
+        the example is not a second source of truth.
+    - name: no-hardcoded-secrets
+      level: gold
+      check: entity.secretHits.size() == 0
+      evidence: entity.secretHits
+      fix: >-
+        Remove the credential in the evidence. An example is copied and read by
+        agents.
     facets: {summary: public, details: public}

@@ -600,6 +600,9 @@
       "doc:docs/design/verification.md": {
         "level": "silver"
       },
+      "doc:docs/design/yaml-format.md": {
+        "level": "silver"
+      },
       "doc:docs/examples/approved-github-apps.md": {
         "level": "silver"
       },

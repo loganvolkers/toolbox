@@ -1,32 +1,38 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: sdlc-stage:maintainer/build
 rubric: sdlc-stage-quality
-subjectHash: "f09419482056"
+subjectHash: f09419482056
 assessor: {kind: agent, name: cursor-grok, model: grok-4.7}
-at: "2026-11-20"
+at: 2026-11-20
 verdicts:
   - criterion: executable-exit
     verdict: pass
     reason: >-
-      .github/workflows/ci.yml runs cargo build --locked in the rust job, and the ui job fails when
-      ui/dist does not match the source (`git diff --exit-code -- dist`).
+      .github/workflows/ci.yml runs cargo build --locked in the rust job, and
+      the ui job fails when ui/dist does not match the source (`git diff
+      --exit-code -- dist`).
   - criterion: agent-can-complete
     verdict: pass
     reason: >-
-      The commands are in AGENTS.md and rust-toolchain.toml pins the toolchain. No secret or manual
-      step is required to compile.
+      The commands are in AGENTS.md and rust-toolchain.toml pins the
+      toolchain. No secret or manual step is required to compile.
   - criterion: reuses-artifacts
     verdict: fail
     reason: >-
-      OpenFGA, actionlint and the fga CLI now come from releases (scripts/ci-tools.sh) and cargo is
-      cached (Swatinem/rust-cache in ci.yml). The report-action job still builds Toolbox from source,
-      and scale-budget runs cargo run --release, so the stage still compiles Toolbox more than once.
+      OpenFGA, actionlint and the fga CLI now come from releases
+      (scripts/ci-tools.sh) and cargo is cached (Swatinem/rust-cache in
+      ci.yml). The report-action job still builds Toolbox from source, and
+      scale-budget runs cargo run --release, so the stage still compiles
+      Toolbox more than once.
     suggestion: >-
-      Point report-action at the binary the rust job already built, and keep the scale job on the
-      cached release target.
+      Point report-action at the binary the rust job already built, and keep
+      the scale job on the cached release target.
   - criterion: decoupled-from-core
     verdict: pass
-    reason: Building Toolbox is the maintainer's own job (docs/design/maintainer-sdlc.md); nothing outside this repository is needed.
+    reason: >-
+      Building Toolbox is the maintainer's own job
+      (docs/design/maintainer-sdlc.md); nothing outside this repository is
+      needed.
 summary: >-
-  Correct and agent-runnable. Third-party tools are downloaded; Toolbox itself is still compiled
-  in more than one job.
+  Correct and agent-runnable. Third-party tools are downloaded; Toolbox
+  itself is still compiled in more than one job.

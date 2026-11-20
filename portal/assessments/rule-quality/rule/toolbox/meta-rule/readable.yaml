@@ -1,28 +1,39 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/meta-rule/readable
 rubric: rule-quality
-subjectHash: "f754b2e5b152"
+subjectHash: f754b2e5b152
 assessor: {kind: agent, name: claude-code}
-at: "2026-11-20"
+at: 2026-11-20
 verdicts:
   - criterion: measures-intent
     verdict: pass
     reason: >-
-      Node count of the parsed CEL tracks how much a reader must hold at once; the analysis counts
-      AST nodes, so formatting and long identifiers don't change it.
+      Node count of the parsed CEL tracks how much a reader must hold at once;
+      the analysis counts AST nodes, so formatting and long identifiers don't
+      change it.
   - criterion: hard-to-game
     verdict: unsure
     reason: >-
-      Moving logic into a computed field passes it, which is the intended fix, but so does moving it
-      into an equally unreadable computed field; the rule doesn't follow the logic there.
-    suggestion: Add computed fields to the describe output and score their CEL with the same limits.
+      Moving logic into a computed field passes it, which is the intended fix,
+      but so does moving it into an equally unreadable computed field; the
+      rule doesn't follow the logic there.
+    suggestion: >-
+      Add computed fields to the describe output and score their CEL with the
+      same limits.
   - criterion: fix-leads-to-pass
     verdict: pass
-    reason: The fix says where to move logic (computed field or connector) and the evidence gives the current node count against 30.
+    reason: >-
+      The fix says where to move logic (computed field or connector) and the
+      evidence gives the current node count against 30.
   - criterion: threshold-justified
     verdict: unsure
     reason: >-
-      30 nodes is stated in scorecards-for-scorecards.md §3 without a derivation; it passes 20 of our
-      rules and fails the synthetic demo/sprawling one, which suggests it is reasonable but not why 30.
-    suggestion: Record the node-count distribution of our rules in the design doc as the rationale.
-summary: Measures the right thing cheaply; the number and the computed-field loophole want a sentence each.
+      30 nodes is stated in scorecards-for-scorecards.md §3 without a
+      derivation; it passes 20 of our rules and fails the synthetic
+      demo/sprawling one, which suggests it is reasonable but not why 30.
+    suggestion: >-
+      Record the node-count distribution of our rules in the design doc as the
+      rationale.
+summary: >-
+  Measures the right thing cheaply; the number and the computed-field
+  loophole want a sentence each.

@@ -3,7 +3,7 @@
 
 kinds:
   - name: Command
-    description: "A `toolbox` CLI (sub)command, from `toolbox describe`."
+    description: A `toolbox` CLI (sub)command, from `toolbox describe`.
     identityFrom: [connector:surfaces]
     fields:
       name: {type: string}
@@ -16,23 +16,28 @@ kinds:
         type: enum
         values: [operator, user]
         computed: "has(entity.mcpTool) || entity.name == 'mcp' ? 'user' : 'operator'"
-      documentedIn: {type: list, items: string, computed: "inbound.mentionsCommand.map(d, d.path)"}
-      exercisedBy: {type: list, items: string, computed: "inbound.exercisesCommand.map(f, f.path)"}
-    relations:
-      callsTool: {to: McpTool, many: false}
+      documentedIn:
+        type: list
+        items: string
+        computed: inbound.mentionsCommand.map(d, d.path)
+      exercisedBy:
+        type: list
+        items: string
+        computed: inbound.exercisesCommand.map(f, f.path)
+    relations: {callsTool: {to: McpTool, many: false}}
     sources: {default: [connector:surfaces]}
     map:
-      - from: surfaces/command
-        id: "'command:' + record.slug"
-        set: >-
-          {'name': record.name, 'about': record.about, 'args': record.args,
-           'undocumentedArgs': record.undocumentedArgs, 'structuredOutput': record.structuredOutput,
-           'mcpTool': record.mcpTool}
-        relations:
-          callsTool: "record.mcpTool == null ? [] : ['mcp-tool:' + record.mcpTool]"
+    - from: surfaces/command
+      id: "'command:' + record.slug"
+      set: >-
+        {'name': record.name, 'about': record.about, 'args': record.args,
+         'undocumentedArgs': record.undocumentedArgs, 'structuredOutput': record.structuredOutput,
+         'mcpTool': record.mcpTool}
+      relations:
+        callsTool: "record.mcpTool == null ? [] : ['mcp-tool:' + record.mcpTool]"
 
   - name: McpTool
-    description: "A built-in MCP tool the server exposes, from `toolbox describe`."
+    description: A built-in MCP tool the server exposes, from `toolbox describe`.
     identityFrom: [connector:surfaces]
     fields:
       name: {type: string}
@@ -40,73 +45,84 @@ kinds:
       annotations: {type: object}
       properties: {type: list, items: string}
       undescribedProperties: {type: list, items: string}
-      observed: {type: object}             # from the runner: {calls, errors} in the MCP contract tests
-      documentedIn: {type: list, items: string, computed: "inbound.mentionsTool.map(d, d.path)"}
-      exercisedBy: {type: list, items: string, computed: "inbound.exercisesTool.map(f, f.path)"}
-      viaCli: {type: list, items: string, computed: "inbound.callsTool.map(c, c.name)"}
+      observed: {type: object} # from the runner: {calls, errors} in the MCP contract tests
+      documentedIn:
+        type: list
+        items: string
+        computed: inbound.mentionsTool.map(d, d.path)
+      exercisedBy:
+        type: list
+        items: string
+        computed: inbound.exercisesTool.map(f, f.path)
+      viaCli:
+        type: list
+        items: string
+        computed: inbound.callsTool.map(c, c.name)
     sources:
       default: [connector:surfaces]
       fields: {observed: [connector:runner]}
     map:
-      - from: runner/mcp-calls
-        id: "'mcp-tool:' + record.tool"
-        set: "{'observed': record}"
-      - from: surfaces/mcp-tool
-        id: "'mcp-tool:' + record.name"
-        set: >-
-          {'name': record.name, 'description': record.description, 'annotations': record.annotations,
-           'properties': record.properties, 'undescribedProperties': record.undescribedProperties}
+    - from: runner/mcp-calls
+      id: "'mcp-tool:' + record.tool"
+      set: "{'observed': record}"
+    - from: surfaces/mcp-tool
+      id: "'mcp-tool:' + record.name"
+      set: >-
+        {'name': record.name, 'description': record.description, 'annotations': record.annotations,
+         'properties': record.properties, 'undescribedProperties': record.undescribedProperties}
 
 scorecards:
   - name: operator-cli
     kind: Command
     owner: group:maintainers
     levels: [bronze, silver]
-    appliesTo: "entity.layer == 'operator'"
+    appliesTo: entity.layer == 'operator'
     rules:
-      - name: has-help
-        level: bronze
-        check: "has(entity.about) && entity.about.size() >= 10"
-        fix: "Give the command a /// doc comment; clap shows it as the command's help."
-      - name: documented
-        level: bronze
-        check: "entity.documentedIn.size() > 0"
-        evidence: "['not mentioned as `toolbox ' + entity.name + '` in any doc']"
-        fix: "Describe `toolbox <command>` in docs/v1-spec.md §7.7 or the operator SDLC doc."
-      - name: args-described
-        level: silver
-        check: "entity.undocumentedArgs.size() == 0"
-        evidence: "entity.undocumentedArgs"
-        fix: "Add a /// doc comment to each argument in the evidence."
-      - name: exercised
-        level: silver
-        check: "entity.exercisedBy.size() > 0"
-        fix: "Run the command in an acceptance script or an integration test."
+    - name: has-help
+      level: bronze
+      check: has(entity.about) && entity.about.size() >= 10
+      fix: Give the command a /// doc comment; clap shows it as the command's help.
+    - name: documented
+      level: bronze
+      check: entity.documentedIn.size() > 0
+      evidence: "['not mentioned as `toolbox ' + entity.name + '` in any doc']"
+      fix: >-
+        Describe `toolbox <command>` in docs/v1-spec.md §7.7 or the operator
+        SDLC doc.
+    - name: args-described
+      level: silver
+      check: entity.undocumentedArgs.size() == 0
+      evidence: entity.undocumentedArgs
+      fix: Add a /// doc comment to each argument in the evidence.
+    - name: exercised
+      level: silver
+      check: entity.exercisedBy.size() > 0
+      fix: Run the command in an acceptance script or an integration test.
     facets: {summary: public, details: public}
 
   - name: user-cli
     kind: Command
     owner: group:maintainers
     levels: [bronze, silver]
-    appliesTo: "entity.layer == 'user'"
+    appliesTo: entity.layer == 'user'
     rules:
-      - name: has-help
-        level: bronze
-        check: "has(entity.about) && entity.about.size() >= 10"
-        fix: "Give the command a /// doc comment; clap shows it as the command's help."
-      - name: structured-output
-        level: bronze
-        check: "entity.name == 'mcp' || entity.structuredOutput"
-        fix: "Support -o json so scripts and apps can parse the output."
-      - name: args-described
-        level: silver
-        check: "entity.undocumentedArgs.size() == 0"
-        evidence: "entity.undocumentedArgs"
-        fix: "Add a /// doc comment to each argument in the evidence."
-      - name: exercised
-        level: silver
-        check: "entity.exercisedBy.size() > 0"
-        fix: "Run the command in an acceptance script or an integration test."
+    - name: has-help
+      level: bronze
+      check: has(entity.about) && entity.about.size() >= 10
+      fix: Give the command a /// doc comment; clap shows it as the command's help.
+    - name: structured-output
+      level: bronze
+      check: entity.name == 'mcp' || entity.structuredOutput
+      fix: Support -o json so scripts and apps can parse the output.
+    - name: args-described
+      level: silver
+      check: entity.undocumentedArgs.size() == 0
+      evidence: entity.undocumentedArgs
+      fix: Add a /// doc comment to each argument in the evidence.
+    - name: exercised
+      level: silver
+      check: entity.exercisedBy.size() > 0
+      fix: Run the command in an acceptance script or an integration test.
     facets: {summary: public, details: public}
 
   # Every CLI command has a skill that names its invocation (D94). The doc capture already
@@ -117,11 +133,13 @@ scorecards:
     levels: [bronze]
     ratchet: {newEntitiesAtLeast: bronze}
     rules:
-      - name: has-skill
-        level: bronze
-        check: "entity.documentedIn.filter(p, p.endsWith('SKILL.md')).size() > 0"
-        evidence: "['missing skill for toolbox ' + entity.name]"
-        fix: "Add plugins/toolbox-operator/skills/<slug>/SKILL.md that includes the invocation toolbox <command>, with the flags and the exit codes."
+    - name: has-skill
+      level: bronze
+      check: entity.documentedIn.filter(p, p.endsWith('SKILL.md')).size() > 0
+      evidence: "['missing skill for toolbox ' + entity.name]"
+      fix: >-
+        Add plugins/toolbox-operator/skills/<slug>/SKILL.md that includes the
+        invocation toolbox <command>, with the flags and the exit codes.
     facets: {summary: public, details: public}
 
   - name: user-mcp
@@ -129,29 +147,44 @@ scorecards:
     owner: group:maintainers
     levels: [bronze, silver, gold]
     rules:
-      - name: described
-        level: bronze
-        check: "entity.description.size() >= 20"
-        fix: "Describe what the tool returns and when an agent should call it."
-      - name: annotated
-        level: bronze
-        check: "has(entity.annotations.readOnlyHint)"
-        fix: "Set annotations.readOnlyHint (and idempotent/openWorld hints for writes)."
-      - name: inputs-described
-        level: silver
-        check: "entity.undescribedProperties.size() == 0"
-        evidence: "entity.undescribedProperties"
-        fix: "Add a description to each input property in the evidence (crates/toolbox-api/src/mcp.rs)."
-      - name: documented
-        level: silver
-        check: "'docs/v1-spec.md' in entity.documentedIn"   # common names (`get`, `query`) appear in many docs
-        evidence: "entity.documentedIn.size() == 0 ? ['documented in: nothing'] : entity.documentedIn.map(d, 'documented in ' + d + ', not docs/v1-spec.md')"
-        fix: "List the tool, in backticks, in docs/v1-spec.md §7.3."
-      - name: contract-tested
-        level: gold
+    - name: described
+      level: bronze
+      check: entity.description.size() >= 20
+      fix: Describe what the tool returns and when an agent should call it.
+    - name: annotated
+      level: bronze
+      check: has(entity.annotations.readOnlyHint)
+      fix: >-
+        Set annotations.readOnlyHint (and idempotent/openWorld hints for
+        writes).
+    - name: inputs-described
+      level: silver
+      check: entity.undescribedProperties.size() == 0
+      evidence: entity.undescribedProperties
+      fix: >-
+        Add a description to each input property in the evidence
+        (crates/toolbox-api/src/mcp.rs).
+    - name: documented
+      level: silver
+      check: "'docs/v1-spec.md' in entity.documentedIn" # common names (`get`, `query`) appear in many docs
+      evidence: >-
+        entity.documentedIn.size() == 0 ? ['documented in: nothing'] :
+        entity.documentedIn.map(d, 'documented in ' + d + ', not
+        docs/v1-spec.md')
+      fix: List the tool, in backticks, in docs/v1-spec.md §7.3.
+    - name: contract-tested
+      level: gold
         # Observed calls when the runner has run the contract tests; otherwise a tools/call body that
         # names the tool (static mode, weaker: it can't see whether the call happens).
-        check: "has(entity.observed) ? entity.observed.calls > 0 : entity.exercisedBy.size() > 0"
-        evidence: "has(entity.observed) ? ['observed ' + string(entity.observed.calls) + ' call(s) in the MCP contract tests'] : ['no tools/call naming this tool in tests or scripts (static mode)']"
-        fix: "Call the tool directly (tools/call) in a test, e.g. crates/toolbox-api/tests; the CLI path in `viaCli` doesn't pin the MCP contract."
+      check: >-
+        has(entity.observed) ? entity.observed.calls > 0 :
+        entity.exercisedBy.size() > 0
+      evidence: >-
+        has(entity.observed) ? ['observed ' + string(entity.observed.calls) + '
+        call(s) in the MCP contract tests'] : ['no tools/call naming this tool
+        in tests or scripts (static mode)']
+      fix: >-
+        Call the tool directly (tools/call) in a test, e.g.
+        crates/toolbox-api/tests; the CLI path in `viaCli` doesn't pin the MCP
+        contract.
     facets: {summary: public, details: public}

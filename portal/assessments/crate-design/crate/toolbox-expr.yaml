@@ -1,41 +1,50 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: crate:toolbox-expr
 rubric: crate-design
-subjectHash: "ba7cc118973e"
+subjectHash: ba7cc118973e
 assessor: {kind: agent, name: cursor-grok, model: grok-4.7}
-at: "2026-11-20"
+at: 2026-11-20
 verdicts:
   - criterion: one-responsibility
     verdict: fail
     reason: >-
-      The crate does one job, CEL, and docs/v1-spec.md §4 says "CEL compile and evaluate", but
-      crates/toolbox-expr/src/lib.rs still documents only the M0 static checks. eval.rs, lazy.rs and
-      analysis.rs are part of the crate and are not in those docs, so the crate docs are stale.
+      The crate does one job, CEL, and docs/v1-spec.md §4 says "CEL compile
+      and evaluate", but crates/toolbox-expr/src/lib.rs still documents only
+      the M0 static checks. eval.rs, lazy.rs and analysis.rs are part of the
+      crate and are not in those docs, so the crate docs are stale.
     suggestion: >-
-      Rewrite the crate docs in lib.rs so they state compile, evaluate, lazy lists and analysis,
-      matching the v1-spec.md §4 row.
+      Rewrite the crate docs in lib.rs so they state compile, evaluate, lazy
+      lists and analysis, matching the v1-spec.md §4 row.
   - criterion: small-contract
     verdict: fail
     reason: >-
-      Callers use the re-exports (toolbox-derive/src/lib.rs imports Expr, from_cel, to_cel, with_vars),
-      not private modules, but eval.rs returns and takes cel::Value (to_cel, from_cel, with_vars,
-      Expr::eval), so other crates receive a third-party type.
+      Callers use the re-exports (toolbox-derive/src/lib.rs imports Expr,
+      from_cel, to_cel, with_vars), not private modules, but eval.rs returns
+      and takes cel::Value (to_cel, from_cel, with_vars, Expr::eval), so other
+      crates receive a third-party type.
     suggestion: >-
-      Keep serde_json::Value at the boundary in eval.rs so callers never name cel::Value.
+      Keep serde_json::Value at the boundary in eval.rs so callers never name
+      cel::Value.
   - criterion: replaceable-defaults
     verdict: fail
     reason: >-
-      Swapping cel-rust (Q10) would change every caller: eval.rs puts cel::Value in the public
-      signatures, and toolbox-derive/Cargo.toml depends on cel directly. That breaks charter goal 3.
+      Swapping cel-rust (Q10) would change every caller: eval.rs puts
+      cel::Value in the public signatures, and toolbox-derive/Cargo.toml
+      depends on cel directly. That breaks charter goal 3.
     suggestion: >-
-      Wrap cel::Value inside toolbox-expr and drop the cel dependency from toolbox-derive/Cargo.toml.
+      Wrap cel::Value inside toolbox-expr and drop the cel dependency from
+      toolbox-derive/Cargo.toml.
   - criterion: tests-match-risk
     verdict: unsure
     reason: >-
-      The risky paths have direct tests: lib.rs covers parse and unknown variables (4 tests),
-      analysis.rs has 2, and eval.rs covers JSON round-trip and lazy indexing. CEL conformance (Q10)
-      has not been run, so how much of the spec eval.rs covers is unknown.
-    suggestion: Run a subset of the CEL conformance suite against eval.rs and record the result.
+      The risky paths have direct tests: lib.rs covers parse and unknown
+      variables (4 tests), analysis.rs has 2, and eval.rs covers JSON
+      round-trip and lazy indexing. CEL conformance (Q10) has not been run, so
+      how much of the spec eval.rs covers is unknown.
+    suggestion: >-
+      Run a subset of the CEL conformance suite against eval.rs and record the
+      result.
 summary: >-
-  One CEL crate whose docs still say M0, and whose public API and toolbox-derive both depend on
-  cel::Value, so cel-rust is not replaceable. Conformance is unmeasured.
+  One CEL crate whose docs still say M0, and whose public API and
+  toolbox-derive both depend on cel::Value, so cel-rust is not
+  replaceable. Conformance is unmeasured.
