@@ -39,8 +39,14 @@ inputs:
     default: toolbox-report
   toolbox-dir:
     description: >-
-      A directory that already holds the toolbox binaries (toolbox, toolbox-connector-*). When empty,
-      the action builds them from its own source at the action's ref, and caches them.
+      A directory that already holds the toolbox binaries (toolbox, toolbox-connector-*). Takes
+      precedence over toolbox-version.
+    default: ""
+  toolbox-version:
+    description: >-
+      A released Toolbox version (e.g. 0.1.0) to download, checksum-verified, from the action's
+      repository's GitHub releases (D90). When empty, the action builds toolbox from its own source at
+      the action's ref, and caches it.
     default: ""
 
 outputs:
@@ -63,9 +69,17 @@ outputs:
 runs:
   using: composite
   steps:
+    - name: Download released toolbox binaries
+      if: inputs.toolbox-dir == '' && inputs.toolbox-version != ''
+      shell: bash
+      env:
+        TOOLBOX_REPO: ${{ github.action_repository || 'loganvolkers/toolbox' }}
+        TOOLBOX_VERSION: ${{ inputs.toolbox-version }}
+        TOOLBOX_BIN: ${{ runner.temp }}/toolbox-bin
+      run: bash "$GITHUB_ACTION_PATH/install.sh"
     - name: Cache key for the toolbox build
       id: key
-      if: inputs.toolbox-dir == ''
+      if: inputs.toolbox-dir == '' && inputs.toolbox-version == ''
       shell: bash
       run: |
         root="$GITHUB_ACTION_PATH/../.."
@@ -73,13 +87,13 @@ runs:
         echo "key=toolbox-bin-${RUNNER_OS}-${RUNNER_ARCH}-$h" >> "$GITHUB_OUTPUT"
     - name: Restore toolbox binaries
       id: cache
-      if: inputs.toolbox-dir == ''
+      if: inputs.toolbox-dir == '' && inputs.toolbox-version == ''
       uses: actions/cache@v4
       with:
         path: ${{ runner.temp }}/toolbox-bin
         key: ${{ steps.key.outputs.key }}
     - name: Build toolbox from the action's source
-      if: inputs.toolbox-dir == '' && steps.cache.outputs.cache-hit != 'true'
+      if: inputs.toolbox-dir == '' && inputs.toolbox-version == '' && steps.cache.outputs.cache-hit != 'true'
       shell: bash
       run: |
         cd "$GITHUB_ACTION_PATH/../.."          # rust-toolchain.toml pins the toolchain here

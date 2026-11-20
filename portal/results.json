@@ -3,41 +3,59 @@
   "portal": "toolbox",
   "results": {
     "maintainer-action-deps": {
+      "action:actions/attest": {
+        "level": "bronze"
+      },
       "action:actions/cache": {
         "failing": {
-          "pinned-everywhere": 2
+          "pinned-everywhere": 1
         },
         "level": "none"
       },
       "action:actions/checkout": {
         "failing": {
-          "pinned-everywhere": 2
+          "pinned-everywhere": 1
         },
         "level": "none"
       },
+      "action:actions/download-artifact": {
+        "level": "bronze"
+      },
       "action:actions/setup-go": {
         "failing": {
-          "pinned-everywhere": 2
+          "pinned-everywhere": 1
         },
         "level": "none"
       },
       "action:actions/setup-node": {
         "failing": {
-          "pinned-everywhere": 2
+          "pinned-everywhere": 1
         },
         "level": "none"
       },
       "action:actions/setup-python": {
         "failing": {
-          "pinned-everywhere": 2
+          "pinned-everywhere": 1
         },
         "level": "none"
       },
       "action:actions/upload-artifact": {
         "failing": {
-          "pinned-everywhere": 2
+          "pinned-everywhere": 1
         },
         "level": "none"
+      },
+      "action:docker/build-push-action": {
+        "level": "bronze"
+      },
+      "action:docker/login-action": {
+        "level": "bronze"
+      },
+      "action:docker/setup-buildx-action": {
+        "level": "bronze"
+      },
+      "action:docker/setup-qemu-action": {
+        "level": "bronze"
       }
     },
     "maintainer-agent-doc": {
@@ -62,6 +80,30 @@
         },
         "level": "none"
       },
+      "workflow:.github/workflows/image.yml": {
+        "failing": {
+          "fail-rate-under-10": 1,
+          "fail-rate-under-20": 1,
+          "fail-rate-under-5": 1,
+          "fast-feedback": 1,
+          "few-reruns": 1,
+          "main-not-stuck-red": 1
+        },
+        "level": "none"
+      },
+      "workflow:.github/workflows/release.yml": {
+        "failing": {
+          "cancels-superseded-runs": 1,
+          "every-job-has-timeout": 5,
+          "fail-rate-under-10": 1,
+          "fail-rate-under-20": 1,
+          "fail-rate-under-5": 1,
+          "fast-feedback": 1,
+          "few-reruns": 1,
+          "main-not-stuck-red": 1
+        },
+        "level": "none"
+      },
       "workflow:actions/report/action.yml": {
         "level": "skipped"
       }
@@ -72,6 +114,17 @@
           "no-medium-findings": 6,
           "pinned-to-sha": 4,
           "zizmor-clean": 27
+        },
+        "level": "none"
+      },
+      "workflow:.github/workflows/image.yml": {
+        "level": "gold"
+      },
+      "workflow:.github/workflows/release.yml": {
+        "failing": {
+          "no-high-findings": 4,
+          "no-medium-findings": 3,
+          "zizmor-clean": 11
         },
         "level": "none"
       },
@@ -3626,10 +3679,9 @@
     "sdlc-layer": {
       "sdlc:maintainer": {
         "failing": {
-          "every-stage-built": 1,
-          "nothing-missing": 1
+          "every-stage-built": 1
         },
-        "level": "bronze"
+        "level": "silver"
       },
       "sdlc:operator": {
         "failing": {
@@ -3667,11 +3719,9 @@
       },
       "sdlc-stage:maintainer/release": {
         "failing": {
-          "agent-operable": 1,
-          "automated": 1,
-          "built": 5
+          "built": 4
         },
-        "level": "bronze"
+        "level": "silver"
       },
       "sdlc-stage:maintainer/test": {
         "level": "gold"

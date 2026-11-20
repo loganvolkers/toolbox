@@ -1219,7 +1219,7 @@ scorecards:
       - name: pinned-everywhere
         level: bronze
         check: "entity.pins.all(p, p == 'sha')"
-        evidence: "entity.refs.filter(r, !r.matches('@[0-9a-f]{40}$')) + entity.usedBy.map(u, 'used by ' + u)"
+        evidence: "entity.refs.filter(r, !r.matches('@[0-9a-f]{40}$'))"   # only what to change: pinned users don't count
         fix: "Pin this action to a full commit SHA in every workflow that uses it."
     facets: {summary: public, details: public}
 
