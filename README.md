@@ -4,7 +4,9 @@ An open-source, agent-first internal developer portal (IDP) framework: Rust core
 code, deployed by you. Catalog, scorecards, self-service actions, knowledge/context lake and search —
 exposed identically over API, MCP, CLI and UI.
 
-**Status:** design phase, with implementation started: M0 (`toolbox validate`) is done ([docs/v1-spec.md](docs/v1-spec.md) §3).
+**Status:** v1 implementation in progress: M0–M4 are done (validate, derived state, Postgres store and REST reads, authentication and OpenFGA facets, MCP, CLI, minimal UI and connectors); M5 (actions) is next ([docs/v1-spec.md](docs/v1-spec.md) §3).
+
+**SDLC has three layers** ([docs/sdlc.md](docs/sdlc.md)): the *maintainer* SDLC for building Toolbox, the *operator* SDLC for building a portal, and the *user* SDLC for building apps on a portal.
 
 ```bash
 cargo build && target/debug/toolbox validate examples/reference-portal
@@ -27,12 +29,14 @@ cargo build && target/debug/toolbox validate examples/reference-portal
   - [design/meta-catalog.md](docs/design/meta-catalog.md): the portal catalogs, owns and scores itself
   - [design/incremental-computation.md](docs/design/incremental-computation.md): DBSP incremental circuit + DBOS-model durable workflows over one change log
   - [design/extensibility.md](docs/design/extensibility.md): code-first extensibility and the right language for each job
-  - [design/developer-velocity.md](docs/design/developer-velocity.md): fast inner loops for maintainers and operators (build speed, selective/parallel/cached tests, watch mode)
+  - [design/maintainer-sdlc.md](docs/design/maintainer-sdlc.md): **SDLC layer 1**, how Toolbox itself is built and verified (check pyramid, measured loop)
+  - [design/user-sdlc.md](docs/design/user-sdlc.md): **SDLC layer 3**, building apps and agents on a portal's context and actions
+  - [design/developer-velocity.md](docs/design/developer-velocity.md): fast inner loops for maintainers and operators (SDLC layers 1–2: build speed, selective/parallel/cached tests, watch mode)
   - [design/frontend.md](docs/design/frontend.md): delightful code-defined action UIs, React + `@toolbox/ui`, Storybook page-level stories
   - [design/graphql.md](docs/design/graphql.md): read-only GraphQL with trusted documents for rich catalog pages
   - [design/agent-plugins.md](docs/design/agent-plugins.md): the operator agent plugin (in `plugins/`) and the generated user plugin
   - [design/dashboards.md](docs/design/dashboards.md): dashboards via agent artifacts + MCP; operator-only UI views; history
-  - [design/sdlc.md](docs/design/sdlc.md): local → CI → PR → preview → prod, remote plan, GitHub Actions
+  - [design/sdlc.md](docs/design/sdlc.md): **SDLC layer 2 (operator)**, local → CI → PR → preview → prod, remote plan, GitHub Actions
   - [design/notifications.md](docs/design/notifications.md): ownership-routed notifications, GitHub App, Actions for service repos
   - [design/identity-resolution.md](docs/design/identity-resolution.md): matching one service across many tools
   - [design/action-entities.md](docs/design/action-entities.md): action-created entities, TTL, day-2 actions

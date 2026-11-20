@@ -1,6 +1,6 @@
 # Verification: Test-Driven, Simulation-Tested, Differentially Checked
 
-*Status: v1 design updated 2026-11-20 (D14, D44). Properties P1–P13: [v1-spec.md](../v1-spec.md) §11.3.*
+*Status: v1 design updated 2026-11-20 (D14, D44). Properties P1–P13: [v1-spec.md](../v1-spec.md) §11.3. This is part of the [maintainer SDLC](./maintainer-sdlc.md) (layer 1); what is running today is in its §4 check pyramid.*
 
 ## v1 design
 

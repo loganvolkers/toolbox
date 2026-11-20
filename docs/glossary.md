@@ -6,7 +6,9 @@ Shared vocabulary across the design documents. Keep entries short and link to th
 |---|---|---|
 | **Portal** | One organisation's Toolbox deployment, defined by a portal repo | [plan.md](./plan.md) §1 |
 | **Operator** | Someone (or an agent) who builds and runs a portal: platform engineers | [plan.md](./plan.md) §6 |
-| **Maintainer** | Someone who builds Toolbox itself | [design/developer-velocity.md](./design/developer-velocity.md) |
+| **Maintainer** | Someone (or an agent) who builds Toolbox itself | [design/maintainer-sdlc.md](./design/maintainer-sdlc.md) |
+| **User** | Someone (or an agent, bot or app) who builds on a running portal's context and actions | [design/user-sdlc.md](./design/user-sdlc.md) |
+| **SDLC layers** | Maintainer SDLC (building Toolbox), operator SDLC (building a portal), user SDLC (building apps on a portal); documents always say which (D63) | [sdlc.md](./sdlc.md) |
 | **Portal program** | The TypeScript/Python/YAML code in a portal repo that declares kinds, connectors, scorecards, actions, views and policies | [plan.md](./plan.md) §2 |
 | **Manifest** | The canonical, versioned JSON emitted by the portal program at build time; the real contract | [plan.md](./plan.md) §2 |
 | **Kind** | An entity type (e.g. `Service`), declared in code; Backstage-compatible envelope | [plan.md](./plan.md) §4.1 |
@@ -37,7 +39,7 @@ Shared vocabulary across the design documents. Keep entries short and link to th
 | **`toolbox dev`** | The local daemon: watch → manifest diff → circuit reconfiguration → affected tests → UI hot reload | [design/developer-velocity.md](./design/developer-velocity.md) §4 |
 | **`Env` seam** | The single crate through which all nondeterminism flows, enabling deterministic simulation | [design/verification.md](./design/verification.md) §3 |
 | **Operator plugin / user plugin** | The two Agent Plugins packages: authoring (in this repo) and generated per portal | [design/agent-plugins.md](./design/agent-plugins.md) |
-| **Charter goals (G1–G3)** | Simple single-container deployment, agent SDLC, replaceable components | [decisions.md](./decisions.md) D33–D35 |
+| **Charter goals (G1–G3)** | Simple single-container deployment, agent SDLC (in three layers, D63), replaceable components | [decisions.md](./decisions.md) D33–D35 |
 | **Snapshot / snapshot id** | A consistent (`REPEATABLE READ`) read of Postgres inputs from which all derived state is recomputed; its id is the consistency token | [decisions.md](./decisions.md) D37 |
 | **Full recompute** | The v1 derived-state engine: recompute every derived value from a snapshot on change, behind the `DerivedState` contract | [technology-critique.md](./technology-critique.md) §7.1 |
 | **Replaceable contract** | A Toolbox-owned trait, protocol or mount contract with conformance tests, behind which a default technology sits (`DerivedState`, `Authorizer`, `Durable`, UI extension contract, executor protocol) | [plan.md](./plan.md) §3 |

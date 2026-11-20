@@ -1,5 +1,7 @@
 # Toolbox Authorization — Relationship-Based Access Control on the Catalog Graph
 
+> **Implemented (M3):** OpenFGA v1.22.1 runs as a supervised co-process reading derived tuples through the Postgres view; Toolbox converts the DSL itself (D59); facets follow D60; `toolbox test` runs the `.fga.yaml` corpus. See [v1-spec.md](./v1-spec.md) §9.
+>
 > **Status 2026-11-20:** §4.3 updated for D38 (OpenFGA inside the container, co-process by default, reading derived tuples through a Postgres view). The rest of the design stands; the reference model and tests are in [examples/reference-portal](../examples/reference-portal/README.md).
 
 *Research date 2026-11-18, updated 2026-11-19 (embedded OpenFGA, information flow, CODEOWNERS

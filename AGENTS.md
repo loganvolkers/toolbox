@@ -1,9 +1,18 @@
 # AGENTS.md: Working on Toolbox
 
 Toolbox is an open-source, agent-first internal developer portal (IDP) framework. It has a Rust core,
-is configured entirely in code, and exposes API, MCP, CLI and UI. **The project is in the design
-phase:** this repository currently holds design documents and a pre-release agent plugin skeleton,
-not product code.
+is configured entirely in code, and exposes API, MCP, CLI and UI. **Status:** v1 is being implemented
+milestone by milestone from [docs/v1-spec.md](./docs/v1-spec.md); M0–M4 are done (see *Building*
+below). The design documents remain the source of intent, and an agent plugin skeleton lives in
+`plugins/`.
+
+**Three SDLC layers ([docs/sdlc.md](./docs/sdlc.md), D63).** Say which one you mean:
+1. **Maintainer SDLC**: you, building and testing Toolbox itself in this repo
+   ([maintainer-sdlc.md](./docs/design/maintainer-sdlc.md)). The working rules below are its rules.
+2. **Operator SDLC**: platform teams building and changing a *portal*
+   ([sdlc.md](./docs/design/sdlc.md)).
+3. **User SDLC**: developers and agents building *apps* on a portal's context and actions
+   ([user-sdlc.md](./docs/design/user-sdlc.md)).
 
 ## Read first
 
@@ -43,7 +52,8 @@ docs/red-team.md             competitor-perspective gap review (with status)
 docs/principal-review.md     principal-engineer review (with resolutions)
 docs/adversarial-critique.md whether to build at all: hypotheses, alternatives, kill criteria
 docs/technology-critique.md  sprawl and replaceability review; proposed minimal architecture
-docs/design/*.md             one detailed design per capability
+docs/sdlc.md                 the three SDLC layers: maintainer, operator, user (D63)
+docs/design/*.md             one detailed design per capability (maintainer-, user-sdlc.md and sdlc.md = operator)
 docs/examples/*.md           worked examples (e.g. approved GitHub Apps)
 docs/glossary.md, docs/research-log.md
 docs/v1-spec.md              the implementation contract for v1
@@ -56,7 +66,11 @@ experiments/                 reproducible experiments cited by the docs
 plugins/toolbox-operator/    Agent Plugins 1.0.0 package (pre-release skeleton)
 ```
 
-## Working rules
+## Working rules (maintainer SDLC)
+
+The full loop, check pyramid and measured timings are in
+[docs/design/maintainer-sdlc.md](./docs/design/maintainer-sdlc.md).
+
 
 - **Branching:** during the design phase, commit directly to `main` (decision D32). Pull with rebase
   before you start and again before you push. Keep commits small and scoped to one topic, so parallel
@@ -87,7 +101,11 @@ Every design choice must serve these. Check new work against them.
 
 1. **Simple deployment:** one container image plus Postgres (Cloud Run or equivalent); custom UIs and
    action code ship inside the image.
-2. **Agent SDLC:** plan, build, test, deploy and monitor a portal with a full, mature SDLC.
+2. **Agent SDLC, in three layers (D63):** agents can plan, build, test, deploy and monitor with a
+   mature SDLC at every layer:
+   - *maintainers* build and verify Toolbox in isolation, with executable exit criteria;
+   - *operators* change a portal with validate → test → plan → preview → deploy → verify;
+   - *users* build apps on stable, versioned API/MCP contracts with reproducible reads.
 3. **Replaceable components:** React, DBOS, OpenFGA packaging and the derived-state engine are defaults
    behind Toolbox-owned contracts, not lock-ins. Respect the sprawl budget (D45).
 
@@ -102,7 +120,9 @@ docs put their current v1 design first and keep deferred material in a labelled 
 | Authorization | OpenFGA inside one container: co-process vs c-archive (Q11); tuple view; conditions and wildcards; `.fga.yaml` corpus through `Authorizer` | authorization |
 | Durable runtime | `Durable` on the DBOS-compatible schema (`experiments/durable-schema`); DBOS Rust SDK spike (Q4); crash between steps; cross-instance recovery after scale-in (Q13) | v1-spec §8.1, incremental-computation |
 | Deployment | One image on Cloud Run + Cloud SQL with a UI bundle and an in-image executor; instance-based billing; rollback by image | plan §6.2 |
-| Operator SDLC | `toolbox dev` / `test` / `plan` / preview deploys; dev-loop benchmark with SLOs | sdlc, developer-velocity |
+| Maintainer SDLC | Keep the check pyramid green and fast; property tests over generated portals; acceptance scripts for M5–M6 | maintainer-sdlc, verification, developer-velocity |
+| Operator SDLC | `toolbox dev` / `plan --remote` / `build` / `verify` / preview deploys; dev-loop benchmark with SLOs | sdlc, developer-velocity |
+| User SDLC | Per-portal OpenAPI + typed clients; service identities; generated user plugin; stability and deprecation policy | user-sdlc, agent-plugins |
 | Connectors & actions runtime | Control channel (stdio / long-poll) with scoped refresh and completion; action run lifecycle with preview tokens and postcondition verification; in-image and GitHub Actions executors | connector-control, action-runs |
 | Expressions | CEL conformance (Q10); fixture-based output validation against JSON Schemas | extensibility |
 | Config | Canonical manifest, `include`, `toolbox validate`; the `@toolbox/manifest` builder from the prototype in `experiments/typescript-builder` | typescript-builder, v1-spec §5 |

@@ -30,10 +30,15 @@ with them, they win, and [decisions.md](./decisions.md) records the change.
   on Google Cloud Run or an equivalent. Custom UIs and self-service action code ship *inside* that
   image, not as separate Kubernetes pods or microservices to wire together. Modular deployment (split
   API and worker roles, external OpenFGA, external executors) is available but never required.
-- **G2. Agent SDLC.** Operators and their agents can **plan, build, test, deploy and monitor** a portal
-  with a full SDLC, at the maturity of regular programming or force.com (local dev, tests, previews,
-  reviewed plans, deploys, rollbacks, monitoring). This is the main counterpoint to Port and Backstage,
-  whose configuration lifecycles lack that maturity.
+- **G2. Agent SDLC.** Agents can **plan, build, test, deploy and monitor** at the maturity of regular
+  programming or force.com, at each of three layers ([sdlc.md](./sdlc.md), D63):
+  - **maintainer SDLC:** building Toolbox itself, with executable exit criteria and a reference-model
+    oracle ([maintainer-sdlc.md](./design/maintainer-sdlc.md));
+  - **operator SDLC:** building a portal: local dev, tests, previews, reviewed plans, deploys,
+    rollbacks, monitoring ([design/sdlc.md](./design/sdlc.md)). This is the main counterpoint to Port
+    and Backstage, whose configuration lifecycles lack that maturity;
+  - **user SDLC:** building apps on a portal's context and actions, against stable contracts with
+    reproducible reads ([user-sdlc.md](./design/user-sdlc.md)).
 - **G3. Replaceable components.** React, DBOS, OpenFGA's packaging, the derived-state engine and the
   monitoring vendors are good defaults, not lock-ins. Each sits behind a Toolbox-owned contract (a Rust
   trait, a protocol or a UI mount contract) with conformance tests, so it can be replaced when better
@@ -622,10 +627,12 @@ These designs close the gaps found in the [red-team review](./red-team.md). Each
 | **Dashboards** | No user-authored dashboards in Toolbox: Claude Artifacts / Cursor Canvas + Toolbox MCP analysis tools. Operator-only UI views in code. History archive for trends | [dashboards.md](./design/dashboards.md) |
 | **Identity resolution** | External ids, declared matchers, structural inference, unmatched/ambiguous/conflict states, PR-based link proposals, aliases for renames, merges and splits | [identity-resolution.md](./design/identity-resolution.md) |
 | **Notifications + GitHub** | Ownership-routed events; GitHub App with living dashboard issue, PR score-delta checks, fix PRs and initiative issues; email; CloudEvents webhooks; GitHub Actions for service repos (validate, push, scorecard-check, context, run-action). Slack is out of scope for now | [notifications.md](./design/notifications.md) |
-| **Portal SDLC** | Local → CI → PR → ephemeral preview → prod. **Remote plan** (no prod data in CI; full output on the PR, with the portal repo as the access boundary), policy gates (deletion, authz loss, operator lock-out, notification volume), signed + attested builds, verify + rollback, GitHub Actions + reusable workflow | [sdlc.md](./design/sdlc.md) |
+| **Operator SDLC** (layer 2) | Local → CI → PR → ephemeral preview → prod. **Remote plan** (no prod data in CI; full output on the PR, with the portal repo as the access boundary), policy gates (deletion, authz loss, operator lock-out, notification volume), signed + attested builds, verify + rollback, GitHub Actions + reusable workflow | [sdlc.md](./design/sdlc.md) |
 | **Context lake** | Layered lake: raw (bronze) → two-tier graph (curated catalog + bounded discovered *inventory*, joined by bridge edges, temporal validity) + catalog-anchored knowledge → derived scores/findings/context packs. Federates security graphs (Wiz, Cartography) instead of copying them; exports ownership so Toolbox is the ownership system of record; graph predicates in CEL; read-only GQL later | [context-lake.md](./design/context-lake.md) |
 | **Source of truth** | Field-level ownership declared in code (`git:` / `connector:` / `native` / `computed` / `action`, with precedence). One write path routes edits: native fields are edited inline (revisions, approvals, changesets with preview and revert), git fields get a PR, connector fields are rejected with an explanation. Write-back to GitHub custom properties; export and git mirror | [source-of-truth.md](./design/source-of-truth.md) |
 | **Verification** | *v1:* the reference model as oracle, differential tests (Rust ≡ reference ≡ SQL; OpenFGA ≡ SQL), property tests P1–P13, schema and transcript contract tests. Deterministic simulation deferred (D44) | [verification.md](./design/verification.md) |
+| **Maintainer SDLC** (layer 1) | How Toolbox itself is built and verified: AGENTS.md harness, check pyramid (unit, contract, parity, reference-model differential, `.fga.yaml`, acceptance per milestone, scale budget), measured loop, CI | [maintainer-sdlc.md](./design/maintainer-sdlc.md) |
+| **User SDLC** (layer 3) | Building apps and agents on a portal: discover via MCP/REST/CLI, develop against fixture or preview portals, deterministic tests with snapshot ids, PATs and service identities, stability and deprecation contract | [user-sdlc.md](./design/user-sdlc.md) |
 | **Developer velocity** | *v1:* small workspace, no per-portal codegen, `toolbox dev` as watch + full recompute, measured dev-loop SLOs; heavy tooling deferred (D44, D46) | [developer-velocity.md](./design/developer-velocity.md) |
 | **GraphQL** | Read-only GraphQL for rich entity pages and operator views: trusted documents only in production, generated from the manifest at runtime, batched authorization, nullable facets, cost limits; not exposed to agents | [graphql.md](./design/graphql.md) |
 | **Frontend** | React + TypeScript on `@toolbox/ui` (React Aria, tokens, domain components, typed hooks). Action UIs in three tiers (generated → field widgets → custom TSX). Option-search API with rich, permission-shaped options shared with MCP. Dry-run latency SLO. Storybook 10 for primitives *and* page-level, persona-aware stories, backed by engine-recorded fixtures; stories are tests. Vite 8 HMR inside `toolbox dev` | [frontend.md](./design/frontend.md) |
@@ -938,7 +945,7 @@ real organisation.
   - **CEL:** cel-spec conformance status (Q10) and fixture-based output validation.
   - rmcp Streamable HTTP with OAuth; identity-aware-proxy JWT verification.
   - **Backstage parity audit** (D47).
-- **Operator SDLC foundations (G2):** `toolbox dev` (watch + full recompute over fixtures), `toolbox
+- **Operator SDLC foundations (G2, layer 2):** `toolbox dev` (watch + full recompute over fixtures), `toolbox
   test`, `toolbox plan`, preview deploys, and the dev-loop benchmark with SLOs on every PR.
 - **Verification foundations:** differential tests (Rust vs SQL, OpenFGA vs SQL) and property tests,
   with the full recompute as the reference model (D44).
@@ -974,7 +981,7 @@ real organisation.
   (`@toolbox/ui` primitives, Storybook 10) for operator bundles (D40).
 - **Inner loop:** `toolbox dev` (watch, recompute over fixtures, local API/MCP/UI); `toolbox
   validate`; `toolbox test`; `plan --local` (D44).
-- **SDLC v1:** `toolbox validate/test/plan/build/verify`; `setup-toolbox`/`plan-comment` Actions; the
+- **Operator SDLC v1:** `toolbox validate/test/plan/build/verify`; `setup-toolbox`/`plan-comment` Actions; the
   reference workflow deploying one image to Cloud Run (D33, D34).
 - **Agent plugins v1:**
   - the operator plugin (authoring loop, `add-*` skills, local MCP)
@@ -1098,7 +1105,7 @@ The full, chronological log is in [decisions.md](./decisions.md). This section s
 - Remote plan: Git is the access boundary.
 - Agent safety: delegated to client and harness layers.
 
-**Decided (2026-11-20):** charter goals G1 simple deployment, G2 agent SDLC, G3 replaceable components;
+**Decided (2026-11-20):** charter goals G1 simple deployment, G2 agent SDLC (in three layers since D63), G3 replaceable components;
 the minimal architecture as the v1 baseline: full recompute, OpenFGA inside the container, in-process
 DBOS-model workflows, UI extension contract with React as default, in-image executors, manifest + TS
 builder, GraphQL deferred, sprawl budget (D33–D47). These supersede the 2026-11-19 lines above where they

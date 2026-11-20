@@ -2,7 +2,7 @@
 
 *Status: design, 2026-11-20 (decisions D53–D55). Replaces the Pulumi-style SDK sketches in
 [plan.md](../plan.md) §2 and [extensibility.md](./extensibility.md) for v1. Prototype and measurements:
-[experiments/typescript-builder](../../experiments/typescript-builder/README.md).*
+[experiments/typescript-builder](../../experiments/typescript-builder/README.md). **Implementation status:** prototype only; `include`-split YAML is implemented in `toolbox validate`, and the `@toolbox/manifest` package and `toolbox build` are not yet built.*
 
 ---
 
@@ -109,7 +109,7 @@ The prototype hand-wrote its types. For the real package:
 ## 6. Effect on other designs
 
 - **Manifest schema:** add `include` (sources only, D54). No other change.
-- **SDLC:** `toolbox build` produces `manifest.json` (canonical) next to the image; `plan` hashes it;
+- **Operator SDLC:** `toolbox build` produces `manifest.json` (canonical) next to the image; `plan` hashes it;
   CI caches on it.
 - **Dev loop:** `toolbox dev` re-runs the config program on change (≈0.3 s) before recomputing.
 - **Agent plugin:** the `toolbox-authoring` skill should prefer the builder when `toolbox.config.ts`

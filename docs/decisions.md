@@ -90,6 +90,7 @@ minimal architecture adopted with amendments where it conflicted with them.
 
 | D61 | **MCP is implemented in Toolbox, not with rmcp:** a small JSON-RPC handler whose tools call the REST handlers in-process, so MCP, REST, CLI (`toolbox get`/`owner`/… call the MCP tools) and the UI share one authorization and facet-shaping path. rmcp can replace it behind the same endpoint if MCP features beyond tools are needed | ✅ amends v1-spec §7.3 | [v1-spec.md](./v1-spec.md) §7.3 |
 | D62 | **Only records and deletes create input versions.** Control-only connector batches (register, ack, complete, log) don't, so snapshot ids change only when data does. `TOOLBOX_CONNECTORS=off` disables in-image connector supervision (fixture-driven dev and tests) | ✅ | [v1-spec.md](./v1-spec.md) §6.1 |
+| D63 | **SDLC has three layers, and documents name the one they mean.** *Maintainer SDLC*: building and verifying Toolbox itself in this repo (reference-model oracle, check pyramid, executable exit criteria). *Operator SDLC*: building a portal (validate → test → plan → preview → deploy → verify). *User SDLC*: building apps and agents on a portal's context and actions (stable `/v1` and MCP contracts, reproducible reads, service identities). Amends D34/G2, which named only the operator layer | ✅ amends D34 | [sdlc.md](./sdlc.md) |
 
 ## Open questions (consolidated)
 

@@ -4,6 +4,11 @@
 Builds on [frontend.md](./frontend.md) (UX bar, design system, Storybook) and the UI extension
 contract in [v1-spec.md](../v1-spec.md) §7.6. Planned here because it changes the API.*
 
+> **Implementation status (M4 done):** the read pages (home, entity, scorecard, ops) over the
+> `/v1/views/*` endpoints, embedded in the binary with a strict CSP, with refresh and redaction
+> markers. **Not yet:** the `/v1/events` SSE stream (the UI polls `/v1/snapshot`), generated action
+> forms and approvals (M5), `@toolbox/ui` and Storybook stories.
+
 ---
 
 ## 1. Conclusion

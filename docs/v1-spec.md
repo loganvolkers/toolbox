@@ -23,7 +23,11 @@ One Rust server, shipped as **one container image plus Postgres** (G1), that:
    permissions and owner-only facets;
 4. runs **self-service actions** with preview, confirmation, durable execution and verification;
 5. is configured only by a **manifest in git**, with `validate`, `test`, `plan`, `build`, `deploy` and
-   `verify` as the operator SDLC (G2).
+   `verify` as the operator SDLC (G2, layer 2 of [the three SDLC layers](./sdlc.md));
+6. gives apps built on a portal (the user SDLC, layer 3) a versioned `/v1` API, stable MCP tool
+   names and snapshot ids for reproducible reads; and is itself built under the maintainer SDLC
+   (layer 1): every milestone below ends in executable checks
+   ([maintainer-sdlc.md](./design/maintainer-sdlc.md)).
 
 The acceptance bar is the reference portal: an implementation is done when it passes §11 against
 [`examples/reference-portal`](../examples/reference-portal/README.md).
@@ -48,7 +52,11 @@ The acceptance bar is the reference portal: an implementation is done when it pa
 ## 3. Milestones
 
 Each milestone ends in exit criteria an agent can check. Build in this order; later milestones assume
-earlier ones. Tracks in [AGENTS.md](../AGENTS.md) map onto these.
+earlier ones. Tracks in [AGENTS.md](../AGENTS.md) map onto these. Every milestone is closed under the
+[maintainer SDLC](./design/maintainer-sdlc.md) (its exit criteria are scripts and tests). By the
+[SDLC layer](./sdlc.md) each mainly serves: M1 and M6 the operator SDLC (`test`, `plan`, then
+`build`/`verify`/deploy); M2–M5 the user SDLC (REST, authorization, MCP, CLI, actions), with M3's
+`.fga.yaml` tests and M4's `connector test` also serving operators.
 
 | # | Milestone | Delivers | Exit criteria |
 |---|---|---|---|
@@ -58,7 +66,7 @@ earlier ones. Tracks in [AGENTS.md](../AGENTS.md) map onto these.
 | **M3** ✅ | Authorization | Authn (IAP JWT, OIDC, PAT), OpenFGA co-process over the tuple view, facet shaping, `toolbox test` runs `.fga.yaml` | Reference `authz/model.fga.yaml` passes through `Authorizer`; A3/A4/A10 behave as specified; a membership removal is enforced within 60 s |
 | **M4** ✅ | Agents and connectors | MCP (§7.3), CLI (§7.7), the read pages of the [minimal UI](./design/minimal-ui.md), connector runtime with control channel (§7.4), GitHub, git-files and SCIM connectors | Acceptance A1–A5 and A11; connector conformance kit passes for all three connectors |
 | **M5** | Actions | Executor protocol (§7.5), run lifecycle (§6.6), previews and tokens, approvals, verification, durable tables (§8.1), UI extension contract (§7.6), the minimal UI's action, run and approval pages, the `github-apps` executor | Acceptance A6–A10 with simulated executor and connector; failure-injection properties P9–P12 hold; the sandbox-org integration test passes |
-| **M6** | Ship | Image build, Cloud Run deployment, `plan --remote`, `verify`, the SDLC workflow, metrics | A12; the reference workflow runs end to end on a sandbox project; `v0.1` tagged |
+| **M6** | Ship | Image build, Cloud Run deployment, `plan --remote`, `verify`, the operator SDLC workflow, metrics | A12; the reference workflow runs end to end on a sandbox project; `v0.1` tagged |
 
 ## 4. Architecture and crates
 

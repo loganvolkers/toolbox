@@ -1,6 +1,6 @@
 # Developer Velocity: Fast Inner Loops for Maintainers and Operators
 
-*Status: v1 design updated 2026-11-20 (D29, D44, D46, G2).*
+*Status: v1 design updated 2026-11-20 (D29, D44, D46, G2). Serves SDLC layers 1 and 2 ([sdlc.md](../sdlc.md)): §3 is the [maintainer SDLC](./maintainer-sdlc.md), §4 the [operator SDLC](./sdlc.md). Measured maintainer timings: [maintainer-sdlc.md](./maintainer-sdlc.md) §3.*
 
 ## v1 design
 

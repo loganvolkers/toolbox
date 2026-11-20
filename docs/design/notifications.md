@@ -86,7 +86,7 @@ requests, contents for fix PRs only, and members (read).
   required reviewers**, so approvals happen where engineers already are. The portal mirrors the state
   into the run.
 
-## 4. GitHub Actions for service repos (customers' SDLC)
+## 4. GitHub Actions for service repos (user SDLC, layer 3)
 
 These are thin wrappers over the `toolbox` CLI, so GitLab CI and others get the same features. They
 authenticate with **GitHub OIDC**, with no long-lived secrets. The portal trusts GitHub's OIDC issuer

@@ -5,6 +5,10 @@
 [approved GitHub Apps example](../examples/approved-github-apps.md). Uses
 [connector-control.md](./connector-control.md) for verification.*
 
+> **Implementation status:** M3 built action listing and the Toolbox-layer preview gate (permission
+> and option checks, no side effects). Run states, confirm tokens, executors, approvals and
+> postcondition verification are milestone M5 ([v1-spec.md](../v1-spec.md) §3).
+
 ---
 
 ## 1. Conclusion

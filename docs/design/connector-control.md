@@ -4,6 +4,14 @@
 still not a governed standard, but Toolbox now also owns a **control channel** to connectors. Works
 with [action-runs.md](./action-runs.md), which uses scoped refreshes to verify action outcomes.*
 
+> **Implementation status (M4 done):** the hub (queues, coalescing, priorities, deadlines,
+> `ack`/`complete`), the stdio supervisor for in-image connectors, long-poll for remote ones, initial
+> resync on register, the freshness loop, resync reconciliation with a deletion threshold, and
+> entity refresh routed by the records that produced the entity are built, with the GitHub, git-files
+> and SCIM connectors and a conformance kit (`toolbox connector test`). **Not yet:** commands are held
+> in memory and lost on restart (durable with M5); the simulated connector for `toolbox dev`. Details:
+> [v1-spec.md](../v1-spec.md) §9 (M4 notes).
+
 ---
 
 ## 1. Conclusion

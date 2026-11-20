@@ -245,7 +245,7 @@ export const NeedsSecurityApproval = {
 };
 ```
 
-## 6. Fast SDLC for both audiences
+## 6. Fast loops for maintainers and operators (SDLC layers 1–2)
 
 | Loop | Maintainers (Toolbox repo) | Operators (portal repo) |
 |---|---|---|

@@ -61,6 +61,19 @@ intended behaviour, and the generator is only trusted because they pass.
 
 ## Acceptance scenarios (with the Toolbox binary)
 
+Each scenario is a **user SDLC** task (layer 3, [docs/sdlc.md](../../docs/sdlc.md)) that the
+**maintainer SDLC** (layer 1) runs as an acceptance check. Status on 2026-11-20 (M0–M4 done):
+
+| Scenarios | State | Checked by |
+|---|---|---|
+| A3, A4, A10 (preview gate only) | ✅ | `scripts/m3-acceptance.sh` |
+| A1–A5, A11 | ✅ | `scripts/m4-acceptance.sh` (A11 in Chromium via Playwright) |
+| A6–A9, A10 (runs) | Pending | M5 (actions) |
+| A12 | Pending | M6 (ship) |
+
+The scripts need Postgres 16; M3 and M4 also need `TOOLBOX_OPENFGA_BIN`, and M4 needs Node with
+Playwright. Run them from the repo root, for example `scripts/m4-acceptance.sh`.
+
 | # | Interface | Scenario | Expected |
 |---|---|---|---|
 | A1 | MCP `get` / CLI | "Who owns payments-api?" | `group:payments`, verified via CODEOWNERS, with the snapshot id |
@@ -93,8 +106,8 @@ Results on 2026-11-20 (recorded in [docs/research-log.md](../../docs/research-lo
 - reference: 20/20 assertions pass, outputs unchanged
 - OpenFGA: 3/3 tests, 16/16 checks, 3/3 ListObjects
 
-Each check was also shown to fail when an expectation is wrong. Not run: the Dockerfile and the
-workflow (they need the Toolbox binary and actions, which don't exist yet); the workflow YAML parses.
+Each check was also shown to fail when an expectation is wrong. Not run yet: the Dockerfile and the
+workflow (they need `toolbox build` and actions, M5–M6); the workflow YAML parses.
 
 ## Layout
 

@@ -1,4 +1,18 @@
-# The Portal SDLC: Local → CI → PR → Ephemeral → Production
+# Operator SDLC (Layer 2): Local → CI → PR → Ephemeral → Production
+
+> **Layer 2 of [the three SDLC layers](../sdlc.md) (D63):** how operators build and change a portal.
+> Building Toolbox itself is the [maintainer SDLC](./maintainer-sdlc.md); building apps on a portal
+> is the [user SDLC](./user-sdlc.md). Section numbers are stable because other documents cite them.
+>
+> **Implementation status (M0–M4 done):**
+>
+> | Command / capability | State |
+> |---|---|
+> | `toolbox validate`, `toolbox test` (expectations + `.fga.yaml`), `plan --local --base`, `derive` | ✅ |
+> | `toolbox serve --fixtures` / `--database-url`, `push`, `token create`, `connector test` | ✅ |
+> | `toolbox dev` (watch mode) | Not yet: rerun `test` / restart `serve` |
+> | `plan --remote` (§4), preview portals (§5), gates (§6), `build`, deploy, `verify`, rollback (§7) | M6 |
+> | GitHub Actions for the portal repo (§8) | M6 |
 
 > **Status 2026-11-20 (D34, G2):** the operator SDLC (plan, build, test, deploy, monitor) is now a **charter goal** and the main counterpoint to Port and Backstage. The default deploy target is one image on Cloud Run or equivalent (D33); `plan` is two full recomputes over one snapshot and a diff (D37).
 
