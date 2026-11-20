@@ -60,17 +60,47 @@ The job summary says which, and how to update the baseline.
 | `toolbox-version` | — | A released Toolbox version (e.g. `0.1.0`): download its binaries, SHA-256-verified, instead of building from source (D90) |
 
 **Outputs:**
-- `result`: `pass`, `regressed`, `stale`, `missing-baseline` or `error`;
+- `result`: `pass`, `regressed`, `stale`, `missing-baseline`, `unknown` or `error`;
 - `exit-code`;
 - `report`;
 - `html`;
-- `baseline`.
+- `baseline`;
+- `verdict`: the verdict JSON (below), also uploaded in the artifact.
+
+Each regression is also an `::error` annotation on the run and the pull request, naming the
+scorecard, the entity and what got worse.
+
+## Other CI systems
+
+The action is a thin wrapper. Any pipeline gets the same gate from the CLI and its verdict file
+(D96):
+
+```bash
+toolbox report .toolbox --baseline .toolbox/results.json --ci --verdict verdict.json
+# exit 0: pass. 1: the ratchet failed (see .result). 2: toolbox couldn't run (see .message)
+jq -r '.regressions[] | "\(.scorecard) · \(.entity): \(.message)"' verdict.json
+```
+
+`verdict.json` (`toolbox-verdict/v1`) holds:
+
+| Field | Meaning |
+|---|---|
+| `result` | `pass`, `regressed`, `stale` (better, but the file doesn't record it), `missing-baseline`, `unknown` (a rule couldn't be evaluated, under `--ci` or `--update`) or `error` |
+| `exitCode` | The process's exit code: 0, 1 or 2 |
+| `mode` | `ci`, `check` (`--baseline` alone), `update` or `report` (no baseline) |
+| `baseline`, `written` | The results file, and whether this run wrote it |
+| `regressions`, `improvements`, `changes` | Each `{scorecard, entity, message}`; `changes` are neither, such as a new entity at or above the floor |
+| `unknownRules`, `message` | How many rule outcomes are unknown; the error, when `result` is `error` |
+
+`stale` exits 1 only under `--ci`. A verdict is written on every run, including errors, so a
+pipeline step can always read it. To post the regressions in a merge request, turn them into your
+system's format (for example a GitLab Code Quality report, or a comment).
 
 ## Notes
 
 - **Linux runners only** for now; it builds with the toolchain pinned in the toolbox repository.
-  Prebuilt release binaries will replace the build once Toolbox publishes releases (that waits on the
-  licence decision, Q1).
+  Prebuilt release binaries (`toolbox-version`, D90) will replace the build once Toolbox publishes
+  releases; there are none yet.
 - **Security:**
   - Connectors run on the runner with the job's permissions. The `workspace` connector only reads
     files.
@@ -81,4 +111,5 @@ The job summary says which, and how to update the baseline.
   connectors cover the whole tree.
 - **This repository** uses the action on itself (`.github/workflows/ci.yml`): the
   Toolbox-for-Toolbox ratchet with prebuilt binaries, and a `report-action` job that builds from
-  source and scores a pilot set up from the starter.
+  source and scores a pilot set up from the starter: it creates the baseline, passes, then adds an
+  individual to CODEOWNERS and checks that the job fails with that regression in the verdict.

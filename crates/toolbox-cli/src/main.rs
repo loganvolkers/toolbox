@@ -111,6 +111,10 @@ enum Command {
         /// With --baseline: fail when the results differ from the file in any way.
         #[arg(long)]
         ci: bool,
+        /// Write the ratchet's verdict as JSON to this file (result, exit code, regressions,
+        /// improvements), for any CI system to read.
+        #[arg(long)]
+        verdict: Option<PathBuf>,
     },
     /// Send a portal's fixtures to a running server through the ingest API (one batch per
     /// connector, then native values), and wait for the snapshot that contains them.
@@ -545,6 +549,7 @@ fn main() -> ExitCode {
             baseline,
             update,
             ci,
+            verdict,
         } => report::run(&report::Options {
             path,
             fixtures,
@@ -555,6 +560,7 @@ fn main() -> ExitCode {
             baseline,
             update,
             ci,
+            verdict,
         }),
         Command::Refresh { id, remote } => client::tool(
             &remote.target(),

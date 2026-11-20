@@ -18,7 +18,7 @@ jobs:
       - run: cargo test --locked
       - {uses: actions/setup-python@v5, with: {python-version: "3.13"}}
       - run: pip install -r examples/reference-portal/tools/requirements.txt
-      - name: YAML is formatted (yamark 0.6.1, D96)
+      - name: YAML is formatted (yamark 0.6.1, D97)
         run: |
           python3 -m pip install yamark==0.6.1
           yamark format --check $(git ls-files '*.yaml' '*.yml' ':!.github/workflows/release.yml')
@@ -134,19 +134,31 @@ jobs:
           working-directory: ${{ runner.temp }}/pilot
           mode: update
           artifact-name: pilot-first-run
-      - name: Then the ratchet passes (mode ci)
-        id: ratchet
-        uses: ./actions/report
-        with:
-          working-directory: ${{ runner.temp }}/pilot
-          artifact-name: pilot-ci
+      # The passing ci path through the action is the Toolbox-for-Toolbox step above, on every run;
+      # crates/toolbox-cli/tests/ratchet.rs covers every verdict through the CLI.
       - name: Check the action's outputs
         run: |
           test "${{ steps.first.outputs.result }}" = pass
           test -s "$RUNNER_TEMP/pilot/.toolbox/results.json"
-          test "${{ steps.ratchet.outputs.result }}" = pass
-          test -s "${{ steps.ratchet.outputs.html }}"
-          grep -q "repository:acme/pilot" "${{ steps.ratchet.outputs.report }}"
+          test -s "${{ steps.first.outputs.html }}"
+          grep -q "repository:acme/pilot" "${{ steps.first.outputs.report }}"
+      - name: A pull request makes something worse (an individual in CODEOWNERS)
+        run: echo '/docs/ @alice' >> "$RUNNER_TEMP/pilot/.github/CODEOWNERS"
+      - name: Then the ratchet fails the job (mode ci)
+        id: regressed
+        continue-on-error: true
+        uses: ./actions/report
+        with:
+          working-directory: ${{ runner.temp }}/pilot
+          artifact-name: pilot-regressed
+      - name: Check it failed, and that the verdict names the regression (D96)
+        env:
+          OUTCOME: ${{ steps.regressed.outcome }}
+        run: |
+          test "$OUTCOME" = failure
+          verdict="$RUNNER_TEMP/toolbox-report/verdict.json"
+          jq -e '.result == "regressed" and .exitCode == 1' "$verdict"
+          jq -e '.regressions[] | select(.entity == "repository:acme/pilot" and .message == "owners-are-teams now fails")' "$verdict"
   scale-budget:
     runs-on: ubuntu-latest
     steps:
