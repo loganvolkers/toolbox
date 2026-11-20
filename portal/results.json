@@ -412,6 +412,9 @@
       "doc:docs/design/package-standards.md": {
         "level": "silver"
       },
+      "doc:docs/design/packages.md": {
+        "level": "silver"
+      },
       "doc:docs/design/plugin-standards.md": {
         "level": "silver"
       },
