@@ -14,7 +14,10 @@
 //! - `betterer`: one per test in each Betterer results file matching `betterer` globs (issue counts
 //!   per file for file tests), so existing Betterer ratchets roll up into scorecards;
 //! - `skill` (`skills` globs): one per Agent Skills directory (`SKILL.md`), with spec frontmatter
-//!   checks and the counts `maintainer-skill` thresholds (docs/design/skill-standards.md).
+//!   checks and the counts `maintainer-skill` thresholds (docs/design/skill-standards.md);
+//! - `connector` (`connectors` globs, usually `crates/toolbox-connector-*/Cargo.toml`): one per
+//!   first-party connector crate, with the protocol facts `maintainer-connector` thresholds
+//!   (docs/design/connector-standards.md).
 //!
 //! `docs` and `file` records also carry `captures` (each configured regex's first group, unique,
 //! sorted, with runs of whitespace replaced by `-`) and `counts` (matches per configured regex),
@@ -23,9 +26,10 @@
 //!
 //! `TOOLBOX_CONNECTOR_CONFIG`: `{"root"?: ".", "docs"?: [glob], "files"?: [glob],
 //! "captures"?: {name: regex}, "counts"?: {name: regex}, "crates"?: true, "repo"?: false,
-//! "betterer"?: [glob], "skills"?: [glob]}`.
+//! "betterer"?: [glob], "skills"?: [glob], "connectors"?: [glob]}`.
 
 mod betterer;
+mod connectors;
 mod repo;
 mod rust;
 mod skills;
@@ -47,6 +51,8 @@ struct Workspace {
     workflows: Vec<Regex>,
     /// Agent skill files (`skill` records), usually `**/SKILL.md`.
     skills: Vec<Regex>,
+    /// Connector crate manifests (`connector` records), usually `crates/toolbox-connector-*/Cargo.toml`.
+    connectors: Vec<Regex>,
     captures: Vec<(String, Regex)>,
     counts: Vec<(String, Regex)>,
     crates: bool,
@@ -99,6 +105,7 @@ impl Workspace {
             betterer: globs(&cfg, "betterer")?,
             workflows: globs(&cfg, "workflows")?,
             skills: globs(&cfg, "skills")?,
+            connectors: globs(&cfg, "connectors")?,
             captures: named_regexes(&cfg, "captures")?,
             counts: named_regexes(&cfg, "counts")?,
             crates: cfg["crates"].as_bool().unwrap_or(true),
@@ -325,6 +332,7 @@ impl Workspace {
                     "workflow",
                     "action-ref",
                     "skill",
+                    "connector",
                 ]
             });
         if self.crates && kinds.contains(&"crate") {
@@ -337,6 +345,7 @@ impl Workspace {
         self.emit_workflows(&paths, &kinds, out);
         self.emit_betterer(&paths, &kinds, out);
         self.emit_skills(&paths, &kinds, out);
+        self.emit_connectors(&paths, &kinds, out);
         Ok(())
     }
 
@@ -387,6 +396,26 @@ impl Workspace {
             obj.insert("lastChange".into(), json!(last_change(&self.root, rel)));
         }
         rec
+    }
+
+    fn connector_record(&self, rel: &str) -> Value {
+        let mut rec = connectors::analyse(&self.root, rel);
+        if let Some(obj) = rec.as_object_mut() {
+            obj.insert("lastChange".into(), json!(last_change(&self.root, rel)));
+        }
+        rec
+    }
+
+    fn emit_connectors(&self, paths: &[String], kinds: &[&str], out: &mut Out) {
+        if self.connectors.is_empty() || !kinds.contains(&"connector") {
+            return;
+        }
+        for rel in paths.iter().filter(|p| Self::matches(&self.connectors, p)) {
+            let rec = self.connector_record(rel);
+            let dir = rec["dir"].as_str().unwrap_or(rel).to_owned();
+            out.record("connector", &format!("connector:{dir}"), rec);
+        }
+        out.snapshot_complete("connector");
     }
 
     fn emit_skills(&self, paths: &[String], kinds: &[&str], out: &mut Out) {
@@ -481,6 +510,7 @@ impl Workspace {
             "workflow" => self.refresh_workflow(id, out),
             "action-ref" => self.refresh_named_action(id, out),
             "skill" => self.refresh_skill(id, out),
+            "connector" => self.refresh_connector(id, out),
             _ => out.not_found(kind, id),
         }
     }
@@ -520,6 +550,16 @@ impl Workspace {
         self.refresh_action_ref(name, id, out);
     }
 
+    fn refresh_connector(&self, id: &str, out: &mut Out) {
+        let dir = id.strip_prefix("connector:").unwrap_or("");
+        let rel = format!("{dir}/Cargo.toml");
+        if Self::matches(&self.connectors, &rel) && self.root.join(&rel).is_file() {
+            out.record("connector", id, self.connector_record(&rel));
+        } else {
+            out.not_found("connector", id);
+        }
+    }
+
     fn refresh_skill(&self, id: &str, out: &mut Out) {
         let dir = id.strip_prefix("skill:").unwrap_or("");
         let rel = format!("{dir}/SKILL.md");
@@ -547,6 +587,7 @@ impl Source for Workspace {
             ("workflow", !self.workflows.is_empty()),
             ("action-ref", !self.workflows.is_empty()),
             ("skill", !self.skills.is_empty()),
+            ("connector", !self.connectors.is_empty()),
         ];
         let kinds: Vec<&str> = on.iter().filter(|(_, b)| *b).map(|(k, _)| *k).collect();
         let refresh: Map<String, Value> = kinds

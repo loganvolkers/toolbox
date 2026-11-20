@@ -44,9 +44,11 @@ connectors:
       workflows: [".github/workflows/*.y*ml", "actions/*/action.y*ml"]
       # Agent skills (docs/design/skill-standards.md). The directory is the skill; SKILL.md is its manifest.
       skills: ["plugins/**/SKILL.md", "skills/**/SKILL.md"]
-    records: [crate, doc, file, workflow, action-ref, skill]
-    refresh: {crate: [external_ids], doc: [external_ids], file: [external_ids], skill: [external_ids]}
-    freshness: {crate: 5m, doc: 5m, file: 5m, skill: 5m}
+      # First-party connectors (docs/design/connector-standards.md). One record per crate manifest.
+      connectors: ["crates/toolbox-connector-*/Cargo.toml"]
+    records: [crate, doc, file, workflow, action-ref, skill, connector]
+    refresh: {crate: [external_ids], doc: [external_ids], file: [external_ids], skill: [external_ids], connector: [external_ids]}
+    freshness: {crate: 5m, doc: 5m, file: 5m, skill: 5m, connector: 5m}
   - name: runner
     package: builtin:runner                # executes things; slow, so it's refreshed per entity
     runtime: in-image
@@ -277,6 +279,43 @@ kinds:
            'evalCases': record.evalCases, 'hiddenChars': record.hiddenChars,
            'secretHits': record.secretHits, 'linkDepth': record.linkDepth,
            'supportFiles': record.supportFiles, 'lastChange': record.lastChange}
+
+  # First-party connectors (docs/design/connector-standards.md). Facts from the crate; thresholds below.
+  - name: Connector
+    identityFrom: [connector:workspace]
+    fields:
+      path: {type: string}
+      dir: {type: string}
+      name: {type: string}
+      description: {type: string}
+      descriptionChars: {type: integer}
+      crateDoc: {type: boolean}
+      configDocumented: {type: boolean}
+      transport: {type: string}                 # stdio, remote, both, or none
+      pushOnly: {type: boolean}
+      documentedKinds: {type: list, items: string}
+      genericKinds: {type: boolean}             # kinds come from config, as the runner's jobs do
+      snapshotComplete: {type: boolean}
+      reportsNotFound: {type: boolean}
+      tests: {type: integer}
+      conformanceMentions: {type: integer}      # lines that run `connector test` on this binary
+      ciMentions: {type: integer}               # CI scripts or workflows that name the binary
+      secretHits: {type: list, items: string}
+      lastChange: {type: string}
+    sources: {default: [connector:workspace]}
+    map:
+      - from: workspace/connector
+        id: "'connector:' + record.dir"
+        set: >-
+          {'path': record.path, 'dir': record.dir, 'name': record.name,
+           'description': record.description, 'descriptionChars': record.descriptionChars,
+           'crateDoc': record.crateDoc, 'configDocumented': record.configDocumented,
+           'transport': record.transport, 'pushOnly': record.pushOnly,
+           'documentedKinds': record.documentedKinds, 'genericKinds': record.genericKinds,
+           'snapshotComplete': record.snapshotComplete, 'reportsNotFound': record.reportsNotFound,
+           'tests': record.tests, 'conformanceMentions': record.conformanceMentions,
+           'ciMentions': record.ciMentions, 'secretHits': record.secretHits,
+           'lastChange': record.lastChange}
 
   # ── Layers 2 and 3: what operators and users rely on ─────────────────────────────────────
   - name: Command
@@ -808,6 +847,64 @@ scorecards:
         fix: "Keep references one hop from SKILL.md and the skill to at most three supporting files. Focused skills outperform large bundles."
     facets: {summary: public, details: public}
 
+  # ── Connectors we ship (docs/design/connector-standards.md) ──────────────────────────────
+  # Bronze is "it is a connector an operator can configure". Silver is "a resync and a refresh
+  # have the shapes the conformance kit checks, and someone wrote a test". Gold is "CI runs it,
+  # and no credential is pasted into the source". Lag, error rate and permission probes need a
+  # live portal; they are the meta-catalog's connector-health and are not gated here.
+  - name: maintainer-connector
+    kind: Connector
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    ratchet: {newEntitiesAtLeast: bronze}
+    rules:
+      - name: described
+        level: bronze
+        check: "entity.descriptionChars > 0 && entity.crateDoc"
+        evidence: "entity.descriptionChars == 0 ? ['Cargo.toml has no description'] : (!entity.crateDoc ? ['no crate-level doc comment'] : ['described'])"
+        fix: "Add a Cargo.toml description and a //! crate doc that says what the connector emits."
+      - name: config-documented
+        level: bronze
+        check: "entity.configDocumented"
+        evidence: "['crate docs name neither TOOLBOX_CONNECTOR_CONFIG nor a CLI flag']"
+        fix: "Document the configuration in the crate doc: TOOLBOX_CONNECTOR_CONFIG for an in-image connector, or the --toolbox and --listen flags for a remote one."
+      - name: speaks-the-protocol
+        level: bronze
+        check: "entity.transport == 'stdio' || entity.transport == 'remote' || entity.transport == 'both'"
+        evidence: "[entity.transport]"
+        fix: "Serve commands with run_stdio (in-image) or run_remote (long-poll). A connector that does neither is not on the control channel."
+      - name: names-its-kinds
+        level: silver
+        check: "entity.documentedKinds.size() > 0 || entity.genericKinds"
+        evidence: "['crate docs and source name no record kind']"
+        fix: "Name each record kind in the source (record or snapshot_complete) or, for a generic runner, document that kinds come from the job config."
+      - name: closes-snapshots
+        level: silver
+        check: "entity.pushOnly || entity.snapshotComplete"
+        evidence: "['resync never sends snapshot_complete']"
+        fix: "End every resync kind with snapshot_complete. A push-only connector is exempt: it has no resync."
+      - name: reports-missing-ids
+        level: silver
+        check: "entity.pushOnly || entity.reportsNotFound"
+        evidence: "['refresh never sends not_found']"
+        fix: "A refresh of an unknown external id must send not_found. A push-only connector is exempt: the provider sends deletes."
+      - name: has-tests
+        level: silver
+        check: "entity.tests >= 1"
+        evidence: "[string(entity.tests) + ' #[test] functions']"
+        fix: "Add a unit test that does not need the upstream API: a parser, a record shape, or a capabilities case."
+      - name: exercised-in-ci
+        level: gold
+        check: "entity.conformanceMentions > 0 || (entity.pushOnly && entity.ciMentions > 0)"
+        evidence: "[string(entity.conformanceMentions) + ' connector-test lines, ' + string(entity.ciMentions) + ' CI files']"
+        fix: "Run toolbox connector test on this binary from CI. A push-only connector has no resync for that kit; an acceptance script must start it instead."
+      - name: no-hardcoded-secrets
+        level: gold
+        check: "entity.secretHits.size() == 0"
+        evidence: "entity.secretHits"
+        fix: "Remove the hardcoded credentials in the evidence. Read tokens from the environment or from TOOLBOX_CONNECTOR_CONFIG."
+    facets: {summary: public, details: public}
+
   # ── Scorecards for scorecards (docs/design/scorecards-for-scorecards.md) ─────────────────
   # They score every rule and scorecard of this portal, the starter and the reference portal —
   # themselves included, so there is no further level. Only deterministic facts (manifest, CEL,
@@ -891,12 +988,12 @@ scorecards:
 mcp:
   instructions: >-
     Toolbox for Toolbox: the catalogue of Toolbox's own crates, docs, scripts, CLI commands and MCP
-    tools and agent skills, scored against the maintainer, operator and user SDLC standards. To raise the bar, pick
+    tools, agent skills and first-party connectors, scored against the maintainer, operator and user SDLC standards. To raise the bar, pick
     a failing rule with scorecard_status, read the evidence with explain (rule) or get: Crate
     undocumented, longFunctions, complexFunctions, clippy.messages, tests.output; Doc brokenLinks,
     counts; Command undocumentedArgs, documentedIn, exercisedBy; McpTool undescribedProperties,
     documentedIn, exercisedBy, viaCli; Skill frontmatterErrors, triggerCues, pronouns, missingFiles,
-    secretHits, boundaryCues, evalCases. Change the code, refresh_entity, and check the score again.
+    secretHits, boundaryCues, evalCases; Connector documentedKinds, transport, tests, conformanceMentions, secretHits. Change the code, refresh_entity, and check the score again.
     Contract tests count when a test or script contains a tools/call body naming the tool.
 
 tests: [tests/standards.test.yaml]

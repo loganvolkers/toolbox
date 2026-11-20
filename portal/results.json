@@ -75,6 +75,29 @@
         "level": "none"
       }
     },
+    "maintainer-connector": {
+      "connector:crates/toolbox-connector-git-files": {
+        "failing": {
+          "has-tests": 1
+        },
+        "level": "bronze"
+      },
+      "connector:crates/toolbox-connector-github": {
+        "level": "gold"
+      },
+      "connector:crates/toolbox-connector-runner": {
+        "level": "gold"
+      },
+      "connector:crates/toolbox-connector-scim": {
+        "failing": {
+          "has-tests": 1
+        },
+        "level": "bronze"
+      },
+      "connector:crates/toolbox-connector-workspace": {
+        "level": "gold"
+      }
+    },
     "maintainer-crate": {
       "crate:toolbox-api": {
         "failing": {
@@ -245,6 +268,9 @@
         "level": "silver"
       },
       "doc:docs/design/connector-control.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/connector-standards.md": {
         "level": "silver"
       },
       "doc:docs/design/context-lake.md": {
@@ -568,6 +594,33 @@
         },
         "level": "none"
       },
+      "rule:toolbox/maintainer-connector/closes-snapshots": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-connector/config-documented": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-connector/described": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-connector/exercised-in-ci": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-connector/has-tests": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-connector/names-its-kinds": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-connector/no-hardcoded-secrets": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-connector/reports-missing-ids": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-connector/speaks-the-protocol": {
+        "level": "gold"
+      },
       "rule:toolbox/maintainer-crate/bounded-complexity": {
         "failing": {
           "tested": 1
@@ -857,6 +910,9 @@
           "fixtures-show-the-ladder": 1
         },
         "level": "bronze"
+      },
+      "scorecard:toolbox/maintainer-connector": {
+        "level": "gold"
       },
       "scorecard:toolbox/maintainer-crate": {
         "failing": {

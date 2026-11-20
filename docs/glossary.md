@@ -49,6 +49,7 @@ Shared vocabulary across the design documents. Keep entries short and link to th
 | **`Env` seam** | The single crate through which all nondeterminism flows, enabling deterministic simulation | [design/verification.md](./design/verification.md) §3 |
 | **Operator plugin / user plugin** | The two Agent Plugins packages: authoring (in this repo) and generated per portal | [design/agent-plugins.md](./design/agent-plugins.md) |
 | **Agent skill** | A directory with `SKILL.md` (Agent Skills spec). This repo catalogues and scores the ones it ships (`maintainer-skill`, D72) | [design/skill-standards.md](./design/skill-standards.md) |
+| **Connector (catalog)** | A first-party `toolbox-connector-*` crate. This repo catalogues and scores the ones it ships (`maintainer-connector`, D73). Distinct from a portal's configured connector instance | [design/connector-standards.md](./design/connector-standards.md) |
 | **Charter goals (G1–G3)** | Simple single-container deployment, agent SDLC (in three layers, D63), replaceable components | [decisions.md](./decisions.md) D33–D35 |
 | **Snapshot / snapshot id** | A consistent (`REPEATABLE READ`) read of Postgres inputs from which all derived state is recomputed; its id is the consistency token | [decisions.md](./decisions.md) D37 |
 | **Full recompute** | The v1 derived-state engine: recompute every derived value from a snapshot on change, behind the `DerivedState` contract | [technology-critique.md](./technology-critique.md) §7.1 |
