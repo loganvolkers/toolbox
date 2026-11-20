@@ -32,6 +32,7 @@ pub struct Metrics {
 }
 
 pub struct AppState {
+    pub hub: toolbox_connect::Hub,
     pub authn: toolbox_authz::authn::Authenticator,
     /// `None` = no authorization (in-memory development without OpenFGA): everything is visible.
     pub authz: Option<Arc<dyn toolbox_authz::Authorizer>>,

@@ -3,6 +3,7 @@
 
 pub mod access;
 pub mod actions;
+pub mod connectors;
 pub mod routes;
 pub mod state;
 
@@ -39,6 +40,7 @@ pub fn app_state_with(
 ) -> Arc<AppState> {
     let (current, _) = tokio::sync::watch::channel(None);
     Arc::new(AppState {
+        hub: toolbox_connect::Hub::new(),
         authn,
         authz,
         manifest: Arc::new(manifest),
@@ -55,5 +57,7 @@ pub fn app_state_with(
 /// Serve on `listener` until the process exits (the snapshot loop runs alongside).
 pub async fn serve(state: Arc<AppState>, listener: tokio::net::TcpListener) -> std::io::Result<()> {
     tokio::spawn(state.clone().run_snapshot_loop());
+    tokio::spawn(connectors::freshness_loop(state.clone()));
+    connectors::spawn_in_image(&state);
     axum::serve(listener, routes::router(state)).await
 }

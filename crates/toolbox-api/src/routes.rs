@@ -31,6 +31,16 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/v1/ingest", post(ingest))
         .route("/v1/ops/derived", get(ops_derived))
         .route("/v1/me", get(me))
+        .route("/v1/connectors", get(crate::connectors::list_connectors))
+        .route(
+            "/v1/connectors/{name}/commands",
+            get(crate::connectors::poll_commands),
+        )
+        .route(
+            "/v1/entities/{id}/refresh",
+            post(crate::connectors::refresh_entity),
+        )
+        .route("/v1/commands/{id}", get(crate::connectors::command_status))
         .route("/v1/actions", get(crate::actions::list))
         .route("/v1/actions/{name}/previews", post(crate::actions::preview))
         .with_state(state)
@@ -414,7 +424,7 @@ async fn put_native(
 }
 
 /// The connector a request comes from: a configured bearer token, or (dev mode) a header.
-fn connector_of(s: &AppState, headers: &HeaderMap) -> Option<String> {
+pub fn connector_of(s: &AppState, headers: &HeaderMap) -> Option<String> {
     let bearer = headers
         .get(header::AUTHORIZATION)
         .and_then(|v| v.to_str().ok())
@@ -439,13 +449,6 @@ async fn ingest(State(s): S, headers: HeaderMap, body: Bytes) -> Response {
             StatusCode::UNAUTHORIZED,
             "unauthenticated",
             "ingest needs a connector token",
-        );
-    };
-    let Some(declared) = s.manifest.connectors.iter().find(|c| c.name == connector) else {
-        return problem(
-            StatusCode::FORBIDDEN,
-            "unknown-connector",
-            format!("connector {connector} is not declared in the manifest"),
         );
     };
     let text = String::from_utf8_lossy(&body);
@@ -474,47 +477,14 @@ async fn ingest(State(s): S, headers: HeaderMap, body: Bytes) -> Response {
         }
         out
     };
-    let mut errors = Vec::new();
-    for (i, m) in messages.iter().enumerate() {
-        for (ptr, msg) in
-            toolbox_model::schema::errors(toolbox_model::schema::connector_messages(), m)
-        {
-            errors.push(format!("message {i}{ptr}: {msg}"));
-        }
-        if m.get("type").and_then(Value::as_str) == Some("record") {
-            let kind = m.get("kind").and_then(Value::as_str).unwrap_or_default();
-            if !declared.records.iter().any(|r| r == kind) {
-                errors.push(format!(
-                    "message {i}: record kind {kind} is not declared by connector {connector}"
-                ));
-            }
-        }
-    }
-    if !errors.is_empty() {
-        return problem(
-            StatusCode::UNPROCESSABLE_ENTITY,
-            "invalid-messages",
-            errors.join("; "),
-        );
-    }
-    let records = messages
-        .iter()
-        .filter(|m| m.get("type").and_then(Value::as_str) == Some("record"))
-        .count();
-    match s.store.ingest(&connector, &messages).await {
-        Ok(version) => {
-            s.metrics
-                .ingest_records
-                .fetch_add(records as u64, Ordering::Relaxed);
-            s.metrics.ingest_batches.fetch_add(1, Ordering::Relaxed);
-            s.changed.notify_one();
-            (
-                StatusCode::ACCEPTED,
-                Json(json!({"input_version": version, "accepted": messages.len()})),
-            )
-                .into_response()
-        }
-        Err(e) => problem(StatusCode::INTERNAL_SERVER_ERROR, "store", e.to_string()),
+    let n = messages.len();
+    match crate::connectors::ingest_messages(&s, &connector, messages).await {
+        Ok(version) => (
+            StatusCode::ACCEPTED,
+            Json(json!({"input_version": version, "accepted": n})),
+        )
+            .into_response(),
+        Err(r) => r,
     }
 }
 

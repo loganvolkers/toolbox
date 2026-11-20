@@ -2953,6 +2953,7 @@ dependencies = [
  "sha2 0.11.1",
  "tokio",
  "toolbox-authz",
+ "toolbox-connect",
  "toolbox-derive",
  "toolbox-expr",
  "toolbox-model",
@@ -2985,6 +2986,7 @@ dependencies = [
  "tokio",
  "toolbox-api",
  "toolbox-authz",
+ "toolbox-connect",
  "toolbox-derive",
  "toolbox-model",
  "toolbox-store",
@@ -2993,6 +2995,45 @@ dependencies = [
 [[package]]
 name = "toolbox-connect"
 version = "0.0.0"
+dependencies = [
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tokio",
+ "toolbox-model",
+]
+
+[[package]]
+name = "toolbox-connector-git-files"
+version = "0.0.0"
+dependencies = [
+ "reqwest",
+ "serde_json",
+ "serde_norway",
+ "tokio",
+ "toolbox-connect",
+]
+
+[[package]]
+name = "toolbox-connector-github"
+version = "0.0.0"
+dependencies = [
+ "jsonwebtoken",
+ "reqwest",
+ "serde_json",
+ "tokio",
+ "toolbox-connect",
+]
+
+[[package]]
+name = "toolbox-connector-scim"
+version = "0.0.0"
+dependencies = [
+ "axum",
+ "serde_json",
+ "tokio",
+ "toolbox-connect",
+]
 
 [[package]]
 name = "toolbox-derive"

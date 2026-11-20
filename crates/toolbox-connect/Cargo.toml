@@ -1,10 +1,17 @@
 [package]
 name = "toolbox-connect"
-description = "Toolbox: Connector runtime and control channel (M4). Placeholder until its milestone."
+description = "Toolbox: connector control channel — command hub, connector SDK and conformance kit (docs/design/connector-control.md)."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+reqwest.workspace = true
+toolbox-model.workspace = true
 
 [lints]
 workspace = true

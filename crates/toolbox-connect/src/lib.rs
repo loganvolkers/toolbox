@@ -1,4 +1,8 @@
-//! Connector runtime and control channel (M4)
-//!
-//! Placeholder created by M0 so the workspace layout in docs/v1-spec.md §4 is fixed and parallel
-//! tracks share crate names. It has no code until its milestone.
+//! Connector control (docs/design/connector-control.md): the server-side [`hub`], the
+//! [`sdk`] connectors use, and the [`conformance`] kit.
+
+pub mod conformance;
+pub mod hub;
+pub mod sdk;
+
+pub use hub::{Command, Hub, Request, Status};

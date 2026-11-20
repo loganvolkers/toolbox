@@ -72,6 +72,11 @@ enum Command {
         #[arg(long, default_value = "http://127.0.0.1:8080")]
         url: String,
     },
+    /// Connector tools.
+    Connector {
+        #[command(subcommand)]
+        command: ConnectorCommand,
+    },
     /// Manage personal access tokens.
     Token {
         #[command(subcommand)]
@@ -84,6 +89,26 @@ enum Command {
         path: PathBuf,
         #[arg(long)]
         out: Option<PathBuf>,
+    },
+}
+
+#[derive(Subcommand)]
+enum ConnectorCommand {
+    /// Run the conformance kit against a connector binary in in-image (stdio) mode. Its config
+    /// comes from the portal manifest (with --config overriding it as JSON).
+    Test {
+        /// The connector's name in the manifest.
+        #[arg(long)]
+        name: String,
+        /// Portal directory or manifest.
+        #[arg(long, default_value = ".")]
+        portal: PathBuf,
+        /// JSON merged over the manifest's connector config (e.g. an apiUrl for a mock).
+        #[arg(long)]
+        config: Option<String>,
+        /// The connector program and its arguments.
+        #[arg(required = true, last = true)]
+        program: Vec<String>,
     },
 }
 
@@ -127,6 +152,15 @@ fn main() -> ExitCode {
             fixtures,
         } => server::serve(&path, &listen, database_url, fixtures),
         Command::Push { path, url } => server::push(&path, &url),
+        Command::Connector {
+            command:
+                ConnectorCommand::Test {
+                    name,
+                    portal,
+                    config,
+                    program,
+                },
+        } => connector_test(&name, &portal, config.as_deref(), &program),
         Command::Token {
             command:
                 TokenCommand::Create {
@@ -321,6 +355,59 @@ fn validate(path: &std::path::Path, format: Format) -> ExitCode {
         }
     }
     if report.ok() {
+        ExitCode::SUCCESS
+    } else {
+        ExitCode::from(1)
+    }
+}
+
+fn connector_test(
+    name: &str,
+    portal: &std::path::Path,
+    config: Option<&str>,
+    program: &[String],
+) -> ExitCode {
+    let src = match toolbox_model::load::load(portal) {
+        Ok(s) => s,
+        Err(e) => return fail(e),
+    };
+    let manifest = match portal::manifest_from(&src.document, &src.manifest_file) {
+        Ok(m) => m,
+        Err(e) => return fail(e),
+    };
+    let Some(c) = manifest.connectors.iter().find(|c| c.name == name) else {
+        return fail(format!("no connector {name} in the manifest"));
+    };
+    let mut cfg = c.config.clone().unwrap_or(serde_json::json!({}));
+    if let Some(extra) = config {
+        match serde_json::from_str::<serde_json::Value>(extra) {
+            Ok(serde_json::Value::Object(m)) => cfg.as_object_mut().unwrap().extend(m),
+            _ => return fail("--config must be a JSON object"),
+        }
+    }
+    let envs = vec![("TOOLBOX_CONNECTOR_CONFIG".to_owned(), cfg.to_string())];
+    let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
+    let results = rt.block_on(toolbox_connect::conformance::run(
+        &program[0],
+        &program[1..],
+        &envs,
+        &c.records,
+    ));
+    let failed = results.iter().filter(|r| !r.passed).count();
+    for r in &results {
+        let detail = if r.detail.is_empty() {
+            String::new()
+        } else {
+            format!("  ({})", r.detail)
+        };
+        println!(
+            "{}  {}{detail}",
+            if r.passed { "PASS" } else { "FAIL" },
+            r.name
+        );
+    }
+    println!("{name}: {} passed, {failed} failed", results.len() - failed);
+    if failed == 0 {
         ExitCode::SUCCESS
     } else {
         ExitCode::from(1)

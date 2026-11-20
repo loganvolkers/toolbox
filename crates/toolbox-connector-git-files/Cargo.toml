@@ -1,0 +1,17 @@
+[package]
+name = "toolbox-connector-git-files"
+description = "Toolbox connector: catalog-info.yaml files from a local checkout or the GitHub contents API (docs/v1-spec.md §7.4)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+reqwest.workspace = true
+serde_json.workspace = true
+serde_norway.workspace = true
+tokio.workspace = true
+toolbox-connect = { path = "../toolbox-connect" }
+
+[lints]
+workspace = true

@@ -42,6 +42,10 @@ pub struct Entity {
     /// Inbound relation → source entity ids, sorted.
     #[serde(skip)]
     pub inbound: BTreeMap<String, Vec<String>>,
+    /// The raw records that contributed fragments: (connector, record kind, external id), sorted.
+    /// Used to route refresh commands to connectors (connector-control §6).
+    #[serde(skip)]
+    pub records: Vec<(String, String, String)>,
 }
 
 /// One scorecard result for one entity.
@@ -197,15 +201,19 @@ impl<'m> Pipeline<'m> {
         // 1. Map raw records to fragments per source, plus relation edges.
         let mut fragments: Fragments = BTreeMap::new();
         let mut kind_of: HashMap<String, String> = HashMap::new();
+        let mut records_of: HashMap<String, Vec<(String, String, String)>> = HashMap::new();
         let mut edges: Vec<(String, String, String)> = Vec::new();
         for kind in &self.m.kinds {
             for (ri, rule) in kind.map.iter().enumerate() {
                 let (conn, rkind) = rule.from_parts();
                 let source = rule.source_label();
-                let mapped: Vec<Result<Mapped, String>> = inputs
+                let recs: Vec<&toolbox_store::Record> = inputs
                     .records
-                    .par_iter()
+                    .iter()
                     .filter(|r| r.connector == conn && r.kind == rkind)
+                    .collect();
+                let mapped: Vec<Result<Mapped, String>> = recs
+                    .par_iter()
                     .map(|r| {
                         let record = to_cel(&r.data);
                         with_vars(&[("record", &record)], |ctx| {
@@ -246,10 +254,15 @@ impl<'m> Pipeline<'m> {
                         })
                     })
                     .collect();
-                for item in mapped {
+                for (rec, item) in recs.iter().zip(mapped) {
                     match item {
                         Ok((id, values, rels)) => {
                             kind_of.insert(id.clone(), kind.name.clone());
+                            records_of.entry(id.clone()).or_default().push((
+                                rec.connector.clone(),
+                                rec.kind.clone(),
+                                rec.external_id.clone(),
+                            ));
                             let frag = fragments
                                 .entry(id.clone())
                                 .or_default()
@@ -315,6 +328,11 @@ impl<'m> Pipeline<'m> {
                     fields,
                     provenance,
                     inbound: BTreeMap::new(),
+                    records: {
+                        let mut r = records_of.remove(id).unwrap_or_default();
+                        r.sort();
+                        r
+                    },
                 },
             );
         }

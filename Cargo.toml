@@ -33,7 +33,7 @@ jsonwebtoken = { version = "12", default-features = false, features = ["use_pem"
 toolbox-authz = { path = "crates/toolbox-authz" }
 sha2 = "0.11"
 sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "postgres", "json"] }
-tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "sync", "time", "process", "io-util", "net"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "sync", "time", "process", "io-util", "io-std", "net", "fs"] }
 toolbox-api = { path = "crates/toolbox-api" }
 
 [workspace.lints.rust]

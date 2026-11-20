@@ -17,6 +17,7 @@ toolbox-expr.workspace = true
 toolbox-model.workspace = true
 toolbox-store.workspace = true
 toolbox-authz.workspace = true
+toolbox-connect = { path = "../toolbox-connect" }
 
 [dev-dependencies]
 reqwest.workspace = true
