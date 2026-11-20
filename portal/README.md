@@ -30,6 +30,7 @@ no Postgres, no OpenFGA, no network.
 | `maintainer-schema` | 1. Maintainer | JsonSchema | Draft 2020-12, an absolute id, a description; then a title and the compiler loads it; then local `$ref`s only. New schemas must reach bronze |
 | `maintainer-example` | 1. Maintainer | Example | A heading and resolving links; then a command that checks the example; then a pointer at the design. New write-ups must reach bronze |
 | `maintainer-plugin` | 1. Maintainer | Plugin | The 1.0.0 plugin schema and legal skill paths; then `mcp.json` and a one-token stdio command; then no secret header, path escape or hardcoded secret. New packages must reach bronze |
+| `maintainer-site` | 1. Maintainer | SitePage | A title, a description and resolving links; then in the sidebar and not a draft; then no secret shape. New pages must reach bronze |
 | `maintainer-supply-chain` | 1. Maintainer | Repository | Dependabot, code scanning and a security policy; then CODEOWNERS covers CI; then the code-scanning action is pinned. New repositories must reach bronze |
 | `maintainer-repo` | 1. Maintainer | Repository | The lowest counted scorecard, with unknown rules excluded. New repositories must reach bronze |
 

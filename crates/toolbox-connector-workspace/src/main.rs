@@ -30,6 +30,8 @@
 //!   script CI can run (docs/design/package-standards.md);
 //! - `json-schema` (`schemas` globs): one per JSON Schema document, with its dialect, id and
 //!   whether the binary compiles it (docs/design/schema-standards.md);
+//! - `site-page` (`pages` globs): one per Starlight content page, with its title, sidebar reach,
+//!   links and secret shapes (docs/design/site-standards.md);
 //! - `example` (`examples` globs): one per example or experiment write-up, with its links and the
 //!   command that checks it (docs/design/example-standards.md);
 //! - `assessment` (`assessments` globs): one per assessment file (YAML or JSON, see
@@ -44,7 +46,7 @@
 //! "captures"?: {name: regex}, "counts"?: {name: regex}, "crates"?: true, "repo"?: false,
 //! "betterer"?: [glob], "skills"?: [glob], "connectors"?: [glob], "dependencies"?: false,
 //! "agentDocs"?: [glob], "plugins"?: [glob], "packages"?: [glob], "schemas"?: [glob],
-//! "examples"?: [glob], "assessments"?: [glob]}`.
+//! "examples"?: [glob], "pages"?: [glob], "assessments"?: [glob]}`.
 
 mod agentsmd;
 mod betterer;
@@ -55,6 +57,7 @@ mod npm;
 mod plugins;
 mod repo;
 mod rust;
+mod site;
 mod skills;
 mod specs;
 mod workflows;
@@ -91,6 +94,8 @@ struct Workspace {
     schemas: Vec<Regex>,
     /// Example and experiment write-ups (`example` records).
     examples: Vec<Regex>,
+    /// Starlight content pages (`site-page` records).
+    pages: Vec<Regex>,
     captures: Vec<(String, Regex)>,
     counts: Vec<(String, Regex)>,
     crates: bool,
@@ -185,6 +190,7 @@ impl Workspace {
             packages: globs(&cfg, "packages")?,
             schemas: globs(&cfg, "schemas")?,
             examples: globs(&cfg, "examples")?,
+            pages: globs(&cfg, "pages")?,
             captures: named_regexes(&cfg, "captures")?,
             counts: named_regexes(&cfg, "counts")?,
             crates: cfg["crates"].as_bool().unwrap_or(true),
@@ -419,6 +425,7 @@ impl Workspace {
                     "package-json",
                     "json-schema",
                     "example",
+                    "site-page",
                     "assessment",
                 ]
             });
@@ -440,6 +447,7 @@ impl Workspace {
         self.emit_packages(&paths, &kinds, out);
         self.emit_schemas(&paths, &kinds, out);
         self.emit_examples(&paths, &kinds, out);
+        self.emit_pages(&paths, &kinds, out);
         Ok(())
     }
 
@@ -563,6 +571,20 @@ impl Workspace {
             );
         }
         out.snapshot_complete("example");
+    }
+
+    fn emit_pages(&self, paths: &[String], kinds: &[&str], out: &mut Out) {
+        if self.pages.is_empty() || !kinds.contains(&"site-page") {
+            return;
+        }
+        for rel in paths.iter().filter(|p| Self::matches(&self.pages, p)) {
+            out.record(
+                "site-page",
+                &format!("site-page:{rel}"),
+                site::analyse(&self.root, rel),
+            );
+        }
+        out.snapshot_complete("site-page");
     }
 
     fn emit_schemas(&self, paths: &[String], kinds: &[&str], out: &mut Out) {
@@ -728,6 +750,7 @@ impl Workspace {
             "package-json" => self.refresh_package(id, out),
             "json-schema" => self.refresh_schema(id, out),
             "example" => self.refresh_example(id, out),
+            "site-page" => self.refresh_page(id, out),
             _ => return false,
         }
         true
@@ -766,6 +789,15 @@ impl Workspace {
     fn refresh_named_action(&self, id: &str, out: &mut Out) {
         let name = id.strip_prefix("action-ref:").unwrap_or("");
         self.refresh_action_ref(name, id, out);
+    }
+
+    fn refresh_page(&self, id: &str, out: &mut Out) {
+        let rel = id.strip_prefix("site-page:").unwrap_or("");
+        if Self::matches(&self.pages, rel) && self.root.join(rel).is_file() {
+            out.record("site-page", id, site::analyse(&self.root, rel));
+        } else {
+            out.not_found("site-page", id);
+        }
     }
 
     fn refresh_example(&self, id: &str, out: &mut Out) {
@@ -877,6 +909,7 @@ impl Source for Workspace {
             ("package-json", !self.packages.is_empty()),
             ("json-schema", !self.schemas.is_empty()),
             ("example", !self.examples.is_empty()),
+            ("site-page", !self.pages.is_empty()),
             ("assessment", !self.assessments.is_empty()),
         ];
         let kinds: Vec<&str> = on.iter().filter(|(_, b)| *b).map(|(k, _)| *k).collect();
