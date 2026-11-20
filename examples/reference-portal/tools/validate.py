@@ -9,10 +9,15 @@ JSON Schemas in the repo-root schema/ directory.
   kinds, precedence lists only name sources that some map rule (or native) provides
 Requires: pyyaml, jsonschema.
 """
-import glob, json, os, sys
+import glob, importlib.util, json, os, sys
 import jsonschema
 
-from yamlutil import load as load_yaml
+# `python -I` (validate-parity.py) does not put this directory on sys.path.
+_spec = importlib.util.spec_from_file_location(
+    "yamlutil", os.path.join(os.path.dirname(os.path.abspath(__file__)), "yamlutil.py"))
+_yamlutil = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_yamlutil)
+load_yaml = _yamlutil.load
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SCHEMAS = os.path.join(HERE, "..", "..", "schema")          # repo-root schema/

@@ -35,7 +35,7 @@ MCP, CLI, data model, properties) and test against
 **Building:** `cargo build` (toolchain pinned in `rust-toolchain.toml`), `cargo test`, `cargo clippy
 --all-targets -- -D warnings`, then `target/debug/toolbox validate examples/reference-portal`.
 `python scripts/validate-parity.py` checks `toolbox validate` against `tools/validate.py`.
-`yamark format --check` (yamark 0.6.1, D95) checks every tracked `.yaml` and `.yml`.
+`yamark format --check` (yamark 0.6.1, D95) checks every tracked `.yaml` and `.yml` except `.github/workflows/release.yml`, which `dist plan` owns (D96).
 `.github/workflows/ci.yml` runs all of this. **M0–M4 are done.** Commands: `validate`, `test`,
 `plan --local --base <manifest>`, `derive`, `serve [--database-url]`, `push`, `token create`, the reads
 (`get`, `query`, `search`, `graph`, `owner`, `explain`, `score`, `scorecard`, `refresh`, `actions`), `mcp` (stdio

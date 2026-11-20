@@ -128,6 +128,7 @@ minimal architecture adopted with amendments where it conflicted with them.
 | # | Decision | Status | Where |
 |---|---|---|---|
 | D95 | **Tracked YAML is formatted by Yamark 0.6.1.** `compact` keeps a collection that fits in 80 columns in flow style, which is the rule for the JSON Schema objects embedded in manifests; a wider collection is a block. CI runs `yamark format --check` on every tracked `.yaml` and `.yml`. Markdown and `schema/*.json` are not rewritten: the compiler loads those schemas as JSON. Plain timestamps are strings (YAML 1.2); the reference tools drop PyYAML's 1.1 timestamp resolver so they agree | ✅ | [design/yaml-format.md](./design/yaml-format.md) |
+| D96 | **`release.yml` stays the bytes `dist` generates.** `dist plan` fails when that file differs from the generator, which is what a Yamark pass does. The formatter check excludes `.github/workflows/release.yml`. Every other tracked `.yaml` and `.yml` is still checked (D95) | ✅ | [design/yaml-format.md](./design/yaml-format.md) |
 
 ## Open questions (consolidated)
 
