@@ -50,9 +50,11 @@ connectors:
       dependencies: true
       # Agent instruction files (docs/design/agents-md-standards.md).
       agentDocs: ["**/AGENTS.md", "**/CLAUDE.md", "**/GEMINI.md"]
-    records: [crate, doc, file, workflow, action-ref, skill, connector, dependency, agent-doc]
-    refresh: {crate: [external_ids], doc: [external_ids], file: [external_ids], skill: [external_ids], connector: [external_ids], dependency: [external_ids], agent-doc: [external_ids]}
-    freshness: {crate: 5m, doc: 5m, file: 5m, skill: 5m, connector: 5m, dependency: 5m, agent-doc: 5m}
+      # npm manifests (docs/design/package-standards.md). One record per package.json.
+      packages: ["**/package.json"]
+    records: [crate, doc, file, workflow, action-ref, skill, connector, dependency, agent-doc, package-json]
+    refresh: {crate: [external_ids], doc: [external_ids], file: [external_ids], skill: [external_ids], connector: [external_ids], dependency: [external_ids], agent-doc: [external_ids], package-json: [external_ids]}
+    freshness: {crate: 5m, doc: 5m, file: 5m, skill: 5m, connector: 5m, dependency: 5m, agent-doc: 5m, package-json: 5m}
   - name: runner
     package: builtin:runner                # executes things; slow, so it's refreshed per entity
     runtime: in-image
@@ -368,6 +370,35 @@ kinds:
            'pointsAtAgents': record.pointsAtAgents, 'mentionsDecisions': record.mentionsDecisions,
            'missingFiles': record.missingFiles, 'hiddenChars': record.hiddenChars,
            'secretHits': record.secretHits}
+
+  # npm manifests (docs/design/package-standards.md).
+  - name: PackageJson
+    identityFrom: [connector:workspace]
+    fields:
+      path: {type: string}
+      name: {type: string}
+      version: {type: string}
+      private: {type: boolean}
+      descriptionChars: {type: integer}
+      engines: {type: boolean}
+      requirements: {type: list, items: string}
+      wildcardRanges: {type: list, items: string}
+      gitRanges: {type: list, items: string}
+      lockfile: {type: string}
+      checkScripts: {type: integer}
+      ciUsesInstall: {type: boolean}
+      secretHits: {type: list, items: string}
+    sources: {default: [connector:workspace]}
+    map:
+      - from: workspace/package-json
+        id: "'package-json:' + record.path"
+        set: >-
+          {'path': record.path, 'name': record.name, 'version': record.version,
+           'private': record.private, 'descriptionChars': record.descriptionChars,
+           'engines': record.engines, 'requirements': record.requirements,
+           'wildcardRanges': record.wildcardRanges, 'gitRanges': record.gitRanges,
+           'lockfile': record.lockfile, 'checkScripts': record.checkScripts,
+           'ciUsesInstall': record.ciUsesInstall, 'secretHits': record.secretHits}
 
   # ── Layers 2 and 3: what operators and users rely on ─────────────────────────────────────
   - name: Command
@@ -1042,6 +1073,67 @@ scorecards:
         fix: "Remove zero-width and bidi characters. They are invisible to a reviewer and visible to a model."
     facets: {summary: public, details: public}
 
+  # ── npm manifests (docs/design/package-standards.md) ─────────────────────────────────────
+  # Private packages are applications: npm will not publish them, and a lockfile is the pin.
+  # A licence field is not required (Q1). Advisory databases are not a gate.
+  - name: maintainer-package
+    kind: PackageJson
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    ratchet: {newEntitiesAtLeast: bronze}
+    rules:
+      - name: named
+        level: bronze
+        check: "entity.name != ''"
+        evidence: "entity.name != '' ? [entity.name] : ['no name']"
+        fix: "Set name in package.json. npm uses it as the package identity, including when the package is private."
+      - name: publish-intent
+        level: bronze
+        check: "entity.private || entity.version != ''"
+        evidence: "['public package with no version']"
+        fix: "Set private to true for a package this repository does not publish, or set version before publishing. npm refuses to publish a private package."
+      - name: version-bounded
+        level: bronze
+        check: "entity.wildcardRanges.size() == 0"
+        evidence: "entity.wildcardRanges"
+        fix: "Replace the ranges in the evidence. A star, x, latest or unbounded minimum can move without a review. Caret and tilde ranges stay bounded."
+      - name: from-a-registry
+        level: bronze
+        check: "entity.gitRanges.size() == 0"
+        evidence: "entity.gitRanges"
+        fix: "Depend on a registry version. The evidence names a git URL or a tarball URL instead of a version the registry serves."
+      - name: locked
+        level: silver
+        check: "entity.lockfile != ''"
+        evidence: "entity.lockfile != '' ? [entity.lockfile] : ['no lockfile beside package.json']"
+        fix: "Commit a lockfile beside package.json. package-lock.json records an integrity hash for every installed package."
+      - name: has-a-check
+        level: silver
+        check: "entity.checkScripts > 0"
+        evidence: "[string(entity.checkScripts) + ' check scripts']"
+        fix: "Add a test, build, check or typecheck script. npm's guidance is to keep a smoke test, and this repository runs build and check in CI."
+      - name: described
+        level: gold
+        check: "entity.descriptionChars > 0"
+        evidence: "['no description']"
+        fix: "Add a description. npm's package.json document says to put a description in it, so a reader can tell packages apart."
+      - name: engines-declared
+        level: gold
+        check: "entity.engines"
+        evidence: "['engines.node is not set']"
+        fix: "Set engines.node to the Node version this package is developed with. That is the field npm documents for the runtime."
+      - name: ci-installs-from-the-lockfile
+        level: gold
+        check: "!entity.ciUsesInstall"
+        evidence: "['CI runs npm install, which can update the lockfile']"
+        fix: "Change this package's CI install from npm install to npm ci. npm ci installs the lockfile as written and does not rewrite it."
+      - name: no-hardcoded-secrets
+        level: gold
+        check: "entity.secretHits.size() == 0"
+        evidence: "entity.secretHits"
+        fix: "Remove the credential in the evidence. The manifest is committed and read by the installer."
+    facets: {summary: public, details: public}
+
   # ── Scorecards for scorecards (docs/design/scorecards-for-scorecards.md) ─────────────────
   # They score every rule and scorecard of this portal, the starter and the reference portal —
   # themselves included, so there is no further level. Only deterministic facts (manifest, CEL,
@@ -1125,12 +1217,12 @@ scorecards:
 mcp:
   instructions: >-
     Toolbox for Toolbox: the catalogue of Toolbox's own crates, docs, scripts, CLI commands and MCP
-    tools, agent skills, first-party connectors, direct Cargo dependencies and agent instruction files, scored against the maintainer, operator and user SDLC standards. To raise the bar, pick
+    tools, agent skills, first-party connectors, direct Cargo dependencies, agent instruction files and npm manifests, scored against the maintainer, operator and user SDLC standards. To raise the bar, pick
     a failing rule with scorecard_status, read the evidence with explain (rule) or get: Crate
     undocumented, longFunctions, complexFunctions, clippy.messages, tests.output; Doc brokenLinks,
     counts; Command undocumentedArgs, documentedIn, exercisedBy; McpTool undescribedProperties,
     documentedIn, exercisedBy, viaCli; Skill frontmatterErrors, triggerCues, pronouns, missingFiles,
-    secretHits, boundaryCues, evalCases; Connector documentedKinds, transport, tests, conformanceMentions, secretHits; Dependency requirements, versions, sources, usedBy; AgentDoc missingFiles, commandLines, secretHits, hiddenChars. Change the code, refresh_entity, and check the score again.
+    secretHits, boundaryCues, evalCases; Connector documentedKinds, transport, tests, conformanceMentions, secretHits; Dependency requirements, versions, sources, usedBy; AgentDoc missingFiles, commandLines, secretHits, hiddenChars; PackageJson wildcardRanges, gitRanges, lockfile, checkScripts, ciUsesInstall. Change the code, refresh_entity, and check the score again.
     Contract tests count when a test or script contains a tools/call body naming the tool.
 
 tests: [tests/standards.test.yaml]

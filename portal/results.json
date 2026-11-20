@@ -403,6 +403,9 @@
       "doc:docs/design/notifications.md": {
         "level": "silver"
       },
+      "doc:docs/design/package-standards.md": {
+        "level": "silver"
+      },
       "doc:docs/design/ratchets.md": {
         "level": "silver"
       },
@@ -500,6 +503,24 @@
         "level": "silver"
       },
       "doc:portal/README.md": {
+        "level": "silver"
+      }
+    },
+    "maintainer-package": {
+      "package-json:experiments/typescript-builder/package.json": {
+        "failing": {
+          "ci-installs-from-the-lockfile": 1,
+          "described": 1,
+          "engines-declared": 1
+        },
+        "level": "silver"
+      },
+      "package-json:ui/package.json": {
+        "failing": {
+          "ci-installs-from-the-lockfile": 1,
+          "described": 1,
+          "engines-declared": 1
+        },
         "level": "silver"
       }
     },
@@ -825,6 +846,36 @@
         },
         "level": "none"
       },
+      "rule:toolbox/maintainer-package/ci-installs-from-the-lockfile": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-package/described": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-package/engines-declared": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-package/from-a-registry": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-package/has-a-check": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-package/locked": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-package/named": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-package/no-hardcoded-secrets": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-package/publish-intent": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-package/version-bounded": {
+        "level": "gold"
+      },
       "rule:toolbox/maintainer-skill/description-says-when": {
         "level": "gold"
       },
@@ -1055,6 +1106,9 @@
           "every-rule-tested": 1
         },
         "level": "silver"
+      },
+      "scorecard:toolbox/maintainer-package": {
+        "level": "gold"
       },
       "scorecard:toolbox/maintainer-skill": {
         "level": "gold"
