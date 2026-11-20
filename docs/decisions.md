@@ -48,17 +48,43 @@ Status key: ✅ decided · ❓ open · ⏸ deferred.
 | D31 | **Frontend:** React + TypeScript on `@toolbox/ui` (React Aria); three action-UI tiers (generated → field widgets → custom); not framework-agnostic (Astro islands rejected); Storybook 10 for primitives *and* page-level, persona-aware stories | ✅ | [design/frontend.md](./design/frontend.md) |
 | D32 | During the design phase, commit directly to `main` (no PRs) so parallel agents and harnesses share one source of truth | ✅ | [../AGENTS.md](../AGENTS.md) |
 
+## 2026-11-20
+
+Charter goals added by the maintainer (G1–G3), and the [technology-critique.md](./technology-critique.md)
+minimal architecture adopted with amendments where it conflicted with them.
+
+| # | Decision | Status | Where |
+|---|---|---|---|
+| D33 | **Charter goal G1, simple deployment.** The default deployment is **one container image plus Postgres**, runnable on Google Cloud Run or an equivalent. Custom UIs and self-service action code ship *inside* that image, not as separate pods or microservices. Modular deployment (split roles, external services) is optional, never required | ✅ | [plan.md](./plan.md) §1, §6.2 |
+| D34 | **Charter goal G2, agent SDLC.** Operators (and their agents) can plan, build, test, deploy and monitor a portal with a full SDLC, at the maturity of regular programming or force.com (sandboxes, tests, deploys, rollbacks). This is the main counterpoint to Port and Backstage | ✅ | [plan.md](./plan.md) §1, [design/sdlc.md](./design/sdlc.md) |
+| D35 | **Charter goal G3, replaceable components.** React, DBOS, OpenFGA's packaging, the derived-state engine and monitoring vendors are *defaults*, not lock-ins. Each sits behind a Toolbox-owned contract with conformance tests, so a better technology can replace it | ✅ | [plan.md](./plan.md) §1, §3 |
+| D36 | **Adopt the minimal architecture** ([technology-critique.md](./technology-critique.md) §8) as the v1 baseline: one Rust binary, Postgres, derived state by full recompute, curated MCP, `plan` diffs, field-level sources, CODEOWNERS authority, facets. Amended by D37–D40 | ✅ | [plan.md](./plan.md) §3 |
+| D37 | **Derived state: full recompute from a consistent Postgres snapshot** (critique C1). The snapshot id is the consistency token; the logical-decoding change log and object-storage checkpoints are deferred. Recompute is triggered by changes, so "no batch or nightly recomputation" (D21) still holds. DBSP comes back, behind the same derived-state contract, only if a real portal's full recompute exceeds 30 s or freshness misses 60 s p95 | ✅ supersedes D21's engine choice | [design/incremental-computation.md](./design/incremental-computation.md) |
+| D38 | **OpenFGA runs inside the Toolbox container** (G1), unmodified upstream, reading derived tuples through a Postgres view (critique §7.2), behind an `Authorizer` contract (G3). How it's packaged inside the container is Q11. An external OpenFGA service is a modular option. Amends critique C2 (sidecar) and D26 (c-archive no longer assumed) | ✅ | [authorization.md](./authorization.md) §4.3 |
+| D39 | **Durable execution stays in-process on Postgres (DBOS model)** (G1), behind a `Durable` contract (G3); no Temporal or other external engine by default. Q4 (adopt the DBOS Rust SDK vs own a minimal runtime) stays open. Amends critique C3 | ✅ refines D22 | [design/incremental-computation.md](./design/incremental-computation.md) §4 |
+| D40 | **Custom UIs and actions deploy in the image.** UI: a framework-agnostic **UI extension contract** (static bundles built by `toolbox build`, mounted as ES modules or Web Components, calling the public API through a generated typed client); React + `@toolbox/ui` + Storybook is the default kit (G3). Actions: **in-image executors** run as child processes over the stdio transport (any language, packaged into the image), alongside external executors (GitHub Actions, webhooks). Amends critique C7 and D31's "not framework-agnostic" | ✅ | [design/frontend.md](./design/frontend.md), [design/action-entities.md](./design/action-entities.md) |
+| D41 | **Authoring: YAML/JSON manifest + JSON Schema, plus one TypeScript typed builder** that prints the manifest (critique C4). Pulumi-style language hosts, the Python SDK and WASM functions are deferred | ✅ supersedes D3; amends D23, D24 | [design/extensibility.md](./design/extensibility.md) |
+| D42 | **Ingestion is an OpenAPI endpoint plus the stdio transport, not a governed protocol** (critique C5). Q2 resolved: not now | ✅ amends D4 | [plan.md](./plan.md) §4.6 |
+| D43 | **GraphQL deferred** (critique C6) | ⏸ supersedes D30 | [design/graphql.md](./design/graphql.md) |
+| D44 | **Verification and velocity scope cut** (critique C8): the full recompute is the reference model; differential tests (Rust vs SQL, OpenFGA vs SQL) and property tests first. Deterministic simulation and the velocity tooling (hakari, `xtask affected`, result cache) are deferred until multi-replica concurrency or workspace size needs them. The operator SDLC (G2) is not cut | ✅ amends D14, D29 | [design/verification.md](./design/verification.md), [design/developer-velocity.md](./design/developer-velocity.md) |
+| D45 | **Sprawl budget for v1** (critique C9, tightened by G1): ≤ 2 implementation languages in the default image (Rust; Go only inside the OpenFGA component), **no required runtime service besides Postgres**, ≤ 3 author-facing languages (manifest, CEL, OpenFGA DSL; TypeScript optional for the builder and UIs). Any addition needs an ADR with a measurement | ✅ | [plan.md](./plan.md) §3 |
+| D46 | **Toolchain risk** (critique C10): a dependency that pins a newer Rust toolchain than the workspace is isolated or rejected | ✅ | [design/developer-velocity.md](./design/developer-velocity.md) |
+| D47 | **Run the Backstage parity audit** (critique C11, adversarial E6) as a Phase 0 task | ✅ | [technology-critique.md](./technology-critique.md) §4 |
+
 ## Open questions (consolidated)
 
 | # | Question | Recommendation | Where |
 |---|---|---|---|
 | Q1 | Licence | Apache-2.0 | [plan.md](./plan.md) §10 |
-| Q2 | TCP governance: separate neutral spec repo now, or later? | Separate repo now | [plan.md](./plan.md) §10 |
+| Q2 | TCP governance: separate neutral spec repo now, or later? | **Resolved by D42: not now** | [plan.md](./plan.md) §10 |
 | Q3 | First-release connectors: GitHub only, or GitHub + GitLab? | GitHub first | [plan.md](./plan.md) §10 |
-| Q4 | Durable runtime: adopt the DBOS Rust SDK, or own a schema-compatible minimal runtime? | Decide after the Phase 0 spike | [design/incremental-computation.md](./design/incremental-computation.md) |
+| Q4 | Durable runtime behind the `Durable` contract (D39): adopt the DBOS Rust SDK, or own a schema-compatible minimal runtime? | Decide after the Phase 0 spike | [design/incremental-computation.md](./design/incremental-computation.md) |
 | Q5 | Temporary/just-in-time grants as approved, time-bound state? | Open | [authorization.md](./authorization.md) §8 |
 | Q6 | Redaction markers on or off by default | On (helps agents ask for access) | [authorization.md](./authorization.md) §8 |
 | Q7 | Agent ceilings in the authorization model, or a simpler allow-list? | Open | [authorization.md](./authorization.md) §8 |
 | Q8 | GitHub spike: the exact "add repository to installation" endpoint path, and whether the owner-only install restriction applies to Apps | Verify in the spike | [examples/approved-github-apps.md](./examples/approved-github-apps.md) §2.6 |
-| Q9 | How much DBSP state survives a circuit rebuild (sub-circuit reuse)? | Verify in Phase 0 | [design/developer-velocity.md](./design/developer-velocity.md) §5 |
-| Q10 | cel-rust conformance level | Measure in Phase 0; cel-go via FFI as fallback | [design/extensibility.md](./design/extensibility.md) |
+| Q9 | How much DBSP state survives a circuit rebuild (sub-circuit reuse)? | **Deferred with DBSP (D37)** | [design/developer-velocity.md](./design/developer-velocity.md) §5 |
+| Q10 | cel-rust conformance level (688 of ~2,771 conformance tests skipped; no type checker) | Measure in Phase 0; validate rule outputs against JSON Schemas on fixtures | [design/extensibility.md](./design/extensibility.md) |
+| Q11 | How OpenFGA is packaged inside the one container (D38): **a supervised co-process** (the unmodified upstream binary, talking over localhost, reading the tuple view) or **linked in-process** via the c-archive (78 MB, 45 s build, Go runtime inside the Rust process) | **Co-process**: one container either way, no FFI, upstream unmodified. Phase 0 measures cold start, memory and crash recovery on Cloud Run for both | [authorization.md](./authorization.md) §4.3 |
+| Q12 | Isolation for in-image executors (D40): separate Unix user, scrubbed environment, per-action secrets, resource limits; is that enough, or is a sandbox (gVisor, WASM) needed? | Unix user + scoped secrets for v1; revisit in Phase 3 | [design/action-entities.md](./design/action-entities.md) |
+| Q13 | Cloud Run fit (D33): background recompute and workflows need instance-based billing and ≥ 1 minimum instance; autoscaling can stop an instance mid-workflow, so another instance must recover it from Postgres. Split worker role on Cloud Run worker pools (GA 2026, secondary source) or keep one service? | One service with min instances ≥ 1 by default; verify recovery in the Phase 0 deployment spike | [plan.md](./plan.md) §6.2 |

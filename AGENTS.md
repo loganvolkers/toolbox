@@ -56,20 +56,32 @@ plugins/toolbox-operator/    Agent Plugins 1.0.0 package (pre-release skeleton)
 - **Writing style:** state conclusions first, then evidence. Prefer tables for comparisons. Keep docs
   self-contained, with relative links that resolve.
 
+## Charter goals (D33–D35)
+
+Every design choice must serve these. Check new work against them.
+
+1. **Simple deployment:** one container image plus Postgres (Cloud Run or equivalent); custom UIs and
+   action code ship inside the image.
+2. **Agent SDLC:** plan, build, test, deploy and monitor a portal with a full, mature SDLC.
+3. **Replaceable components:** React, DBOS, OpenFGA packaging and the derived-state engine are defaults
+   behind Toolbox-owned contracts, not lock-ins. Respect the sprawl budget (D45).
+
 ## Parallel work: independent tracks
 
-These Phase 0 spikes ([docs/plan.md](./docs/plan.md) §8) can be taken by separate agents with few
-interactions. Coordinate through `docs/decisions.md`.
+These Phase 0 spikes ([docs/plan.md](./docs/plan.md) §8, rewritten 2026-11-20 for the v1 baseline)
+can be taken by separate agents with few interactions. Coordinate through `docs/decisions.md`. Design
+docs carry a status banner at the top when a later decision changed them; the banner wins.
 
 | Track | Scope | Primary docs |
 |---|---|---|
-| Circuit | Manifest → DBSP circuit at runtime (mapping, merge, recursive closure, CEL rule); reconfiguration time; sub-circuit state reuse (Q9) | incremental-computation, developer-velocity |
-| Authorization | `toolbox-fga` c-archive + read-only datastore; OpenFGA corpus through the adapter; cgo overhead and signals | authorization |
-| Change log | Logical-decoding change log; log positions as tokens | incremental-computation |
-| Durable runtime | DBOS Rust SDK behind a `Durable` trait; crash-between-steps tests (Q4) | incremental-computation |
-| Expressions | Typed CEL with object construction; cel-spec conformance (Q10) | extensibility |
-| Config SDK | Schema → TS/Python SDK codegen; language hosts; manifest determinism | plan §2, extensibility |
-| Verification | `Env` seam, `MemStore` isolation model, minimal `toolbox-sim`, property catalogue | verification |
-| Velocity | Workspace skeleton (interface crates, profiles, hakari, nextest, Bacon, `xtask affected`); dev-loop benchmark harness | developer-velocity |
-| Frontend | `@toolbox/ui` primitives, Storybook 10, story-based tests | frontend |
+| Derived state | Full-recompute pipeline from a real manifest behind `DerivedState`; `plan` as two recomputes + diff; extend `experiments/derived-state-scale` | incremental-computation, technology-critique §7–8 |
+| Authorization | OpenFGA inside one container: co-process vs c-archive (Q11); tuple view; conditions and wildcards; `.fga.yaml` corpus through `Authorizer` | authorization |
+| Durable runtime | DBOS Rust SDK vs minimal runtime behind `Durable` (Q4); crash between steps; cross-instance recovery after scale-in (Q13) | incremental-computation §4 |
+| Deployment | One image on Cloud Run + Cloud SQL with a UI bundle and an in-image executor; instance-based billing; rollback by image | plan §6.2 |
+| Operator SDLC | `toolbox dev` / `test` / `plan` / preview deploys; dev-loop benchmark with SLOs | sdlc, developer-velocity |
+| Expressions | CEL conformance (Q10); fixture-based output validation against JSON Schemas | extensibility |
+| Config | Manifest JSON Schema + TypeScript typed builder; manifest determinism | extensibility, plan §2 |
+| Frontend | UI extension contract; default React kit (`@toolbox/ui`, Storybook 10); one non-React bundle through the same contract | frontend |
+| Verification | Differential tests (Rust vs SQL, OpenFGA vs SQL); property catalogue | verification |
+| Backstage parity audit | D47: Phase 1 features vs Backstage 1.57 + plugins | technology-critique §4 |
 | GitHub Apps example | Verify Q8 against the GitHub API | examples/approved-github-apps |

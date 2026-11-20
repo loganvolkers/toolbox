@@ -1,5 +1,7 @@
 # Developer Velocity: Fast Inner Loops for Maintainers and Operators
 
+> **Status 2026-11-20 (D44, D46, G2):** maintainer velocity tooling (hakari, `xtask affected`, result cache, sub-circuits, Salsa pipeline) is **deferred** until workspace size needs it; `toolbox dev` is a watcher plus full recompute over fixtures. Operator SDLC speed (G2) remains a measured requirement. A dependency pinning a newer Rust toolchain than the workspace is isolated or rejected ([technology-critique.md](../technology-critique.md) §7.3).
+
 *Status: research + decisions, 2026-11-19. Applies to [plan.md](../plan.md),
 [sdlc.md](./sdlc.md), [verification.md](./verification.md) and
 [incremental-computation.md](./incremental-computation.md). Goal: speed is designed in **before**

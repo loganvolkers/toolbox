@@ -1,5 +1,7 @@
 # Toolbox Authorization — Relationship-Based Access Control on the Catalog Graph
 
+> **Status 2026-11-20 (D38):** OpenFGA runs **inside the Toolbox container**, unmodified, reading derived tuples through a Postgres view, behind an `Authorizer` contract. Whether it is a supervised co-process or linked via the c-archive described in §4.3 is open (Q11, co-process recommended). The model, facets, declassification, CODEOWNERS authority and IAP sections are unchanged. See [decisions.md](./decisions.md).
+
 *Research date 2026-11-18, updated 2026-11-19 (embedded OpenFGA, information flow, CODEOWNERS
 authority, proxy authentication). Primary sources:*
 - *The OpenFGA docs repo (`openfga/openfga.dev`: testing, store file format, conditions, modular

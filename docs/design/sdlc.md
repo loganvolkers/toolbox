@@ -1,5 +1,7 @@
 # The Portal SDLC: Local → CI → PR → Ephemeral → Production
 
+> **Status 2026-11-20 (D34, G2):** the operator SDLC (plan, build, test, deploy, monitor) is now a **charter goal** and the main counterpoint to Port and Backstage. The default deploy target is one image on Cloud Run or equivalent (D33); `plan` is two full recomputes over one snapshot and a diff (D37).
+
 *Status: design. Addresses red-team gaps C1 (`plan --against prod` leaks data) and C2 (authz
 lock-out), and the request to ship GitHub Actions so customers can plan, build and test their portal
 locally, in CI, on PRs and in ephemeral staging environments.

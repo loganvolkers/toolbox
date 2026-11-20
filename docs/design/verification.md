@@ -1,5 +1,7 @@
 # Verification: Test-Driven, Simulation-Tested, Differentially Checked
 
+> **Status 2026-11-20 (D44):** v1 verification is the **full recompute as the reference model**, differential tests (Rust vs SQL, OpenFGA vs SQL) and property tests. Deterministic simulation (turmoil), Antithesis and configuration-space campaigns are **deferred** until multi-replica concurrency exists (workflows, Phase 3). The `Env` seam is kept so they stay possible.
+
 *Status: research + recommendation. Research date 2026-11-18. Related: every design doc, since each
 contributes properties to check. The WarpStream post could not be fetched directly from this
 environment; its details come from the post's indexed excerpts, the Antithesis case study and

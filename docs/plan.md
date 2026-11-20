@@ -22,26 +22,52 @@ The resulting server exposes **the same capabilities through four interfaces (AP
 generated from one definition, with one authorization model. Agents are the primary user. Humans get
 the same truth through a fast, mostly read-only UI.
 
+### Charter goals (added 2026-11-20, D33–D35)
+
+These three goals constrain every other design choice. Where an older section of this plan conflicts
+with them, they win, and [decisions.md](./decisions.md) records the change.
+
+- **G1. Simple deployment.** The default deployment is **one container image plus Postgres**, runnable
+  on Google Cloud Run or an equivalent. Custom UIs and self-service action code ship *inside* that
+  image, not as separate Kubernetes pods or microservices to wire together. Modular deployment (split
+  API and worker roles, external OpenFGA, external executors) is available but never required.
+- **G2. Agent SDLC.** Operators and their agents can **plan, build, test, deploy and monitor** a portal
+  with a full SDLC, at the maturity of regular programming or force.com (local dev, tests, previews,
+  reviewed plans, deploys, rollbacks, monitoring). This is the main counterpoint to Port and Backstage,
+  whose configuration lifecycles lack that maturity.
+- **G3. Replaceable components.** React, DBOS, OpenFGA's packaging, the derived-state engine and the
+  monitoring vendors are good defaults, not lock-ins. Each sits behind a Toolbox-owned contract (a Rust
+  trait, a protocol or a UI mount contract) with conformance tests, so it can be replaced when better
+  technology arrives.
+
+The v1 architecture is the **minimal architecture** from [technology-critique.md](./technology-critique.md)
+§8, amended by these goals (D36–D47): one Rust binary, Postgres, OpenFGA inside the same container,
+derived state by full recompute, durable workflows in-process.
+
 ### Goals
 1. Agents can **author** a portal: they write the config, test it, preview its effects and upgrade it,
    without bespoke knowledge.
 2. Agents can **use** a portal: find, understand, assess and act on the software estate within a token
    budget, with safe side effects.
 3. The portal scales to **10k+ services, 100k+ entities, 10k+ users** on boring infrastructure
-   (Postgres + object storage + stateless replicas). Every derived value is maintained
-   **incrementally** by one rigorous engine; there is no batch or nightly recomputation
-   ([incremental-computation.md](./design/incremental-computation.md)).
-4. Extensions use **the right language for each job**, optimised for the agent developer experience:
-   - TypeScript/Python programs for configuration
+   (Postgres + stateless replicas). Every derived value is **recomputed from a consistent snapshot
+   whenever its inputs change**: about 3 s at 100k entities and 2M relations
+   ([technology-critique.md](./technology-critique.md) §7.1). There is no batch or nightly
+   recomputation. An incremental engine (DBSP) can replace full recompute behind the same contract if
+   a real portal needs it (D37).
+4. Extensions use **the right language for each job**, optimised for the agent developer experience
+   (v1 scope per D41):
+   - a YAML/JSON manifest, optionally produced by a TypeScript typed builder, for configuration
    - CEL for predicates and mappings
-   - WASM functions for complex in-engine logic
-   - any language for connectors and executors
-   - React (TSX) on the `@toolbox/ui` design system for operator UI ([frontend.md](./design/frontend.md))
+   - any language for connectors and executors, including in-image executors over stdio (D40)
+   - custom UIs through a framework-agnostic UI extension contract, with React (TSX) on the
+     `@toolbox/ui` design system as the default kit ([frontend.md](./design/frontend.md))
+   - deferred: Python SDK, Pulumi-style language hosts, WASM functions
 
    ([extensibility.md](./design/extensibility.md))
 5. Upgrading Toolbox is a **version bump**, not a merge of scaffolded code.
 6. Operators get boring, observable operations:
-   - only Postgres and one object-storage bucket to back up
+   - only Postgres to back up (object storage is optional, for doc assets and archives)
    - documented metric and event catalogs
    - shipped dashboards, alerts and runbooks
    - **replaceable monitoring vendors**: Grafana and PostHog are the reference backends, not
@@ -56,8 +82,9 @@ the same truth through a fast, mostly read-only UI.
   builder, or **user-authored dashboards inside Toolbox**. Ad-hoc dashboards are built in Claude
   Artifacts, Cursor Canvas and similar tools over the Toolbox MCP server. UI customisation is for
   operators only, in code ([dashboards.md](./design/dashboards.md)).
-- Hosting customers' general-purpose server code. In-engine logic is sandboxed WASM. Connectors and
-  executors run wherever the customer runs them (the Salesforce Functions lesson).
+- Toolbox *as a service* hosting customers' code (the Salesforce Functions lesson). Customers deploy
+  their own image, so their action executors and UI bundles may ship inside it (G1, D40); Toolbox never
+  runs other organisations' code.
 - Engineering-metrics analytics (DORA, surveys). Toolbox *ingests* such facts as inputs; it does not
   compete with DX-style analytics.
 - Running agents. Toolbox *informs and governs* agents; runners such as Claude Code or engrams can
@@ -227,50 +254,73 @@ Mitigations:
 
 ## 3. System architecture
 
+**v1 baseline (D36–D45):** one container image (`toolbox serve`) plus Postgres. Everything in the box
+below ships in that image. Dashed components are defaults behind Toolbox-owned contracts (G3).
+
 ```mermaid
 flowchart LR
   subgraph Sources
-    GIT[Git repos<br/>catalog-info.yaml, docs, CODEOWNERS, OpenAPI]
-    SAAS[SaaS APIs<br/>PagerDuty, Datadog, Jira, Snyk, k8s...]
-    PUSH[CI / scripts<br/>push via API]
+    GIT[Git repos<br/>manifest, catalog-info.yaml, CODEOWNERS, docs]
+    SAAS[SaaS APIs<br/>GitHub, PagerDuty, IdP/SCIM...]
+    PUSH[CI / scripts / connectors<br/>POST /v1/ingest]
   end
-  subgraph Toolbox["toolbox server (single Rust binary, roles: api | worker | all)"]
-    CR[Connector runtime<br/>stdio protocol / WASM / push]
-    LOG[Change log<br/>logical decoding, commit-ordered]
-    IVM[Incremental circuit — DBSP<br/>map → merge → entities → relations →<br/>closures → tuples → scores → rollups]
-    G[(Indexed views<br/>graph, tuples, scores)]
-    FGA[Embedded OpenFGA<br/>Go module via C ABI]
-    WF[Durable workflows — DBOS model<br/>actions, syncs, notifications, timers]
-    KN[Knowledge pipeline<br/>docs, schemas, chunks, embeddings]
-    S[Search<br/>tantivy BM25 + vectors]
-    AZ[AuthN/Z<br/>IAP / OIDC / OAuth2.1 / PAT,<br/>facets + info-flow shaping]
-    API[REST + OpenAPI<br/>changefeed SSE/webhooks]
-    MCP[MCP<br/>Streamable HTTP]
-    UI[Web UI<br/>embedded SPA]
+  subgraph Image["one container image (Cloud Run or equivalent)"]
+    ING[Ingest<br/>OpenAPI endpoint + stdio connectors]
+    DER[Derived state — full recompute<br/>map → merge by sources → CODEOWNERS →<br/>rules → levels → aggregates → tuples<br/>immutable snapshot, swapped atomically]
+    FGA[OpenFGA, unmodified<br/>reads tuple view<br/>Authorizer contract]
+    WF[Durable workflows — DBOS model<br/>in-process, Durable contract]
+    EXE[In-image executors<br/>child processes over stdio]
+    AZ[AuthN/Z<br/>IAP / OIDC / PAT,<br/>facet shaping]
+    API[REST + OpenAPI]
+    MCP[MCP<br/>curated task tools]
+    UI[UI host<br/>default React kit +<br/>operator UI bundles]
   end
-  PG[(Postgres<br/>inputs + workflow state<br/>or SQLite in dev)]
-  OBJ[(Object storage<br/>checkpoints, history archive)]
-  EXE[Executors<br/>GitHub Actions, GitLab, Argo, k8s Job, webhook]
-  CLI[toolbox CLI]
-  AG[Agents<br/>Claude Code, Cursor, Codex...]
+  PG[(Postgres<br/>raw records, fragments, native values,<br/>derived tables, jobs, audit)]
+  EXT[External executors<br/>GitHub Actions, webhooks]
+  CLI[toolbox CLI<br/>plan · test · dev · deploy]
+  AG[Agents]
   H[Humans]
 
-  GIT & SAAS --> CR --> PG
+  GIT & SAAS --> ING --> PG
   PUSH --> API --> PG
-  PG --> LOG --> IVM --> G
-  IVM --> KN --> S
-  IVM --> OBJ
-  IVM -- event deltas --> WF --> EXE
+  PG -- REPEATABLE READ snapshot --> DER
+  DER -- derived tables, tuples --> PG
+  PG -- tuple view --> FGA
+  DER -- change events --> WF
+  WF --> EXE & EXT
   WF --> PG
-  G --> FGA
   API & MCP & UI --> AZ
-  AZ --> G & FGA & S & WF
+  AZ --> DER & FGA & WF
   AG --> MCP
   AG & H --> CLI --> API
   H --> UI
 ```
 
+`toolbox plan` runs two full recomputes (current and candidate manifest) over one snapshot and diffs
+scores, ownership, tuples and mappings. The snapshot id is the consistency token returned to clients.
+
+**Sprawl budget (D45):** ≤ 2 implementation languages in the default image (Rust; Go only inside the
+OpenFGA component), no required runtime service besides Postgres, ≤ 3 author-facing languages
+(manifest, CEL, OpenFGA DSL; TypeScript optional). Additions need an ADR with a measurement.
+
+**Replaceable contracts (G3):**
+
+| Contract | v1 default | Possible replacements |
+|---|---|---|
+| `DerivedState` | Full recompute in Rust | DBSP incremental circuit; Postgres materialised views (measured equal, §7.1 of the critique) |
+| `Authorizer` | OpenFGA inside the container (packaging: Q11) | External OpenFGA; another Zanzibar engine passing the `.fga.yaml` corpus |
+| `Durable` | DBOS-model workflows on Postgres (Q4) | DBOS Rust SDK; Temporal/Restate for modular deployments |
+| UI extension contract | React + `@toolbox/ui` + Storybook | Any framework that builds a static ES module / Web Component bundle |
+| Executor protocol (stdio / HTTP) | In-image child processes; GitHub Actions | Any executor speaking the protocol |
+| Telemetry sinks | OTel/Prometheus → Grafana; PostHog | Any OTLP or HTTP sink |
+
 ### Rust workspace (crates)
+
+*The table below is the full-scope design. **v1 status (D37–D44):** `toolbox-ivm` becomes
+`toolbox-derive` (full recompute behind `DerivedState`); `toolbox-changelog`, `toolbox-wasm`,
+`toolbox-graphql`, `toolbox-sim`, `toolbox-gen`, tantivy in `toolbox-search`, the language hosts in
+`toolbox-config` and every SDK except TypeScript are **deferred**; `toolbox-tcp` shrinks to the ingest
+API and the stdio executor/connector transport; `toolbox-fga` becomes the OpenFGA packaging (Q11).*
 
 | Crate | Responsibility | Key dependencies |
 |---|---|---|
@@ -307,25 +357,25 @@ flowchart LR
 | `toolbox-gen` | Generators of random valid portals (manifests, OpenFGA models, CEL rules) and matching worlds for configuration-space testing | proptest/bolero |
 
 **Architecture rules:**
-- **Functional core, imperative shell.** All nondeterminism goes through `toolbox-env`, so the whole
-  cluster can run under deterministic simulation ([verification.md](./design/verification.md) §3).
-- **No per-portal code generation, ever.** Circuits are built at runtime from a fixed, precompiled
-  operator library over one dynamic row type. CEL is interpreted, and custom logic is WASM. This avoids
-  the multi-minute compile loop Feldera had to engineer its way out of.
-- **Wide, shallow workspace:**
-  - interface crates separate from implementations
-  - heavy dependencies (dbsp, wasmtime, tantivy, the OpenFGA archive, sqlx) isolated in leaf crates
-  - `dyn` at crate boundaries
-  - `cargo hakari`
+- **Functional core, imperative shell.** All nondeterminism goes through `toolbox-env`, so deterministic
+  simulation stays possible when it is needed ([verification.md](./design/verification.md) §3; deferred
+  by D44).
+- **Every replaceable component sits behind a Toolbox-owned contract with a conformance suite (G3).**
+- **No per-portal code generation, ever.** The recompute pipeline is built at runtime from the manifest
+  over one dynamic row type, and CEL is interpreted. This avoids the multi-minute compile loop Feldera
+  had to engineer its way out of.
+- **Small, shallow workspace:** interface crates separate from implementations; heavy dependencies
+  isolated in leaf crates; `dyn` at crate boundaries. Velocity tooling such as `cargo hakari` comes back
+  only when workspace size needs it (D44).
 
   Fast inner loops for maintainers and operators are a measured requirement
   ([developer-velocity.md](./design/developer-velocity.md)).
 
-A single binary runs as `toolbox serve --role all|api|worker`.
-- **Every replica runs the same deterministic circuit** over the same change log, so state at a given
-  log position is identical everywhere.
-- **Workers execute durable workflows.**
-- **Dependencies:** Postgres and object storage. There is no Redis, Kafka or Elasticsearch dependency.
+A single binary runs as `toolbox serve --role all|api|worker`; `all` is the default (G1).
+- **Every instance recomputes the same snapshot** from Postgres, so state at a given snapshot id is
+  identical everywhere.
+- **Any instance can execute durable workflows**; a split worker role is optional.
+- **Dependencies:** Postgres only. There is no Redis, Kafka, Elasticsearch or required object storage.
 
 ---
 
@@ -653,7 +703,7 @@ These designs close the gaps found in the [red-team review](./red-team.md). Each
 | Capability | Summary | Design |
 |---|---|---|
 | **Meta catalog** | The portal's kinds, connectors, scorecards, rules, actions, views, authz modules and packages are owned catalog entities, with a dependency graph and default scorecards (ownership, connector health, scorecard quality, …). The portal scores itself, including the scorecards that score scorecards | [meta-catalog.md](./design/meta-catalog.md) |
-| **Incremental computation** | One commit-ordered change log feeds one **DBSP** circuit (MIT, Rust, VLDB'23 best paper) that maintains every derived value incrementally, including recursive graph closures. **DBOS-model** durable workflows (Postgres) run every side effect. No dual writes, no batch recompute; log positions are consistency tokens; epochs for upgrades | [incremental-computation.md](./design/incremental-computation.md) |
+| **Incremental computation** | *v1: full recompute from a Postgres snapshot (D37); the design below is the deferred DBSP path.* One commit-ordered change log feeds one **DBSP** circuit (MIT, Rust, VLDB'23 best paper) that maintains every derived value incrementally, including recursive graph closures. **DBOS-model** durable workflows (Postgres) run every side effect. No dual writes, no batch recompute; log positions are consistency tokens; epochs for upgrades | [incremental-computation.md](./design/incremental-computation.md) |
 | **Extensibility & languages** | Code-first (Pulumi model), right tool per job: TS/Python programs, typed CEL predicates and mappings, WASM functions, any-language connectors, Web Components for operator UI. JSONata rejected; JQ not adopted | [extensibility.md](./design/extensibility.md) |
 | **Dashboards** | No user-authored dashboards in Toolbox: Claude Artifacts / Cursor Canvas + Toolbox MCP analysis tools. Operator-only UI views in code. History archive for trends | [dashboards.md](./design/dashboards.md) |
 | **Identity resolution** | External ids, declared matchers, structural inference, unmatched/ambiguous/conflict states, PR-based link proposals, aliases for renames, merges and splits | [identity-resolution.md](./design/identity-resolution.md) |
@@ -722,7 +772,7 @@ replaceable.
 |---|---|---|---|---|
 | **Portal behaviour** | Portal authors | Portal program (build time) | Kinds, scorecards, actions, connectors, policies, *which* telemetry sinks exist | All behaviour is here, reviewed in PRs |
 | **Environment binding** | Operators | Env vars / Helm values / Terraform (deploy time) | DB URL, replicas, OTLP endpoint, PostHog host and key, log level, sink on/off | Can only **bind or disable** what the program declared, never add behaviour. The same image runs in staging and prod. |
-| **State** | The system | Postgres (inputs, workflows, audit) + object storage (circuit checkpoints, history archive) | Raw records, native values, runs, audit, cursors | Backed up, never hand-edited |
+| **State** | The system | Postgres (inputs, derived tables, workflows, audit); object storage optional | Raw records, native values, runs, audit, cursors | Backed up, never hand-edited |
 
 `toolbox admin config` prints the effective configuration, with secrets redacted and the source of
 each value (program, env or default). "Why is it doing that?" is answerable in one command.
@@ -732,23 +782,25 @@ each value (program, env or default). "Why is it doing that?" is answerable in o
 - **Artifact:** `toolbox build` produces an OCI image: `FROM ghcr.io/toolbox-dev/toolbox:<pinned>` plus
   the manifest bundle (evaluated IR, WASM components, UI assets, generated OpenAPI). Config is immutable
   per image, and rollback = deploy the previous image.
-- **Targets:** a Helm chart, docker-compose, and Terraform modules for ECS, Cloud Run and Fly. Anything
-  that runs a container works. Reference sizes:
-  - *small*: 1 container + Postgres, up to ~5k entities
-  - *medium*: 2 API + 1 worker
-  - *large*: 3+ API, N workers, read replica
+- **Reference target: Google Cloud Run + Cloud SQL for Postgres** (G1, D33). Other targets: docker-compose,
+  a Helm chart, Terraform modules for ECS and Fly. Anything that runs one container works.
+  - **One image contains everything:** the server, OpenFGA (Q11), the default UI and the operator's UI
+    bundles, and the operator's in-image executors (D40).
+  - **Cloud Run settings:** background recompute and durable workflows need **instance-based billing**
+    (formerly "CPU always allocated") and **≥ 1 minimum instance**. Autoscaling can still stop an
+    instance, so pending workflows are recovered from Postgres by another instance (Q13).
+  - **Reference sizes:** *small*: 1 instance + Postgres; *medium*: 2–3 instances; *large*: more
+    instances plus a read replica, optionally a split worker role (e.g. Cloud Run worker pools).
 - **Dependencies:**
   - **Postgres ≥ 15** for production (pgvector optional).
-  - **SQLite** for `toolbox dev` and small single-node installs.
-  - **Object storage** (S3/GCS/Azure/MinIO) for circuit checkpoints, the history archive, doc assets and
-    index snapshots. A local directory works for `toolbox dev`.
-  - **Postgres logical replication enabled** (`wal_level=logical`) for the change log.
+  - **In-memory store** for `toolbox dev` (SQLite mode cut, D44).
+  - **Object storage** is optional (doc assets, archives). Circuit checkpoints and logical replication
+    are no longer needed (D37).
   - No other required services.
-- **Scale-out:** every API replica runs the same deterministic circuit over the change log. Readiness
-  waits until the replica has caught up to the log head. Workers execute durable workflows.
-- **Epochs:** a deploy that changes derivations builds the new circuit epoch in the background, from
-  a checkpoint plus the log, and cuts over atomically. Presentational-only changes skip this
-  ([incremental-computation.md](./design/incremental-computation.md) §3).
+- **Scale-out:** every instance recomputes its in-memory snapshot from Postgres (about 3 s and ~0.6 GB at
+  100k entities). Readiness waits for the first snapshot. Any instance can run durable workflows.
+- **Config changes:** a new image recomputes derived state under the new manifest before it takes
+  traffic; rollback = the previous image.
 - **Database migrations:** expand/contract only, so rolling deploys are always safe across N → N+1.
   - `toolbox admin migrate plan` shows the SQL and the expected lock impact.
   - Migrations run as a Helm pre-upgrade job or on leader start-up; the operator chooses.
@@ -940,48 +992,35 @@ agents* ([principal-review.md](./principal-review.md) §5.1). Breadth follows on
 real organisation.
 
 ### Phase 0 — Foundations and spikes
-- **ADRs** (recorded in `docs/adr/`):
-  - Pulumi-style programs (TS/Python/YAML) + manifest IR
-  - typed CEL for predicates and mappings
-  - Postgres + object storage, with a logical-decoding change log
-  - **DBSP circuit** for all derived state
-  - **DBOS-model** durable workflows
-  - **embedded OpenFGA via C ABI**
-  - information flow and declassification
-  - CODEOWNERS authority
-  - proxy/OIDC authentication + revocation SLO
-  - WASM functions for in-engine logic
-  - React + `@toolbox/ui` + Storybook for first-party and operator UI
-  - licence (recommend **Apache-2.0**)
+
+*Rewritten 2026-11-20 for the v1 baseline (D33–D47).*
+
+- **ADRs** (recorded in `docs/adr/`): manifest + JSON Schema + TS builder; CEL for predicates and
+  mappings; derived state by full recompute behind `DerivedState`; OpenFGA in the container behind
+  `Authorizer`; DBOS-model workflows behind `Durable`; the UI extension contract; in-image executors;
+  information flow and declassification; CODEOWNERS authority; proxy/OIDC authentication + revocation
+  SLO; the sprawl budget; licence (recommend **Apache-2.0**).
 - **Spikes, each with numbers:**
-  - Manifest → DBSP circuit for mapping, merge, a recursive closure (nested groups) and a CEL rule;
-    measure incremental update latency and memory at 100k entities.
-  - `toolbox-fga` c-archive: embedded OpenFGA with a read-only datastore over an in-memory tuple
-    index. Run the OpenFGA conformance corpus through the adapter; measure cgo overhead; test signals
-    and shutdown.
-  - Logical-decoding change log with log positions as consistency tokens.
-  - DBOS Rust SDK behind a `Durable` trait: crash between steps, exactly-once checks; decide adopt vs.
-    minimal schema-compatible runtime.
-  - Typed CEL with object construction against generated schemas; cel-spec conformance status.
-  - Schema → generated TS and Python SDKs; language hosts; manifest determinism check.
+  - **Derived state:** the full-recompute pipeline against a real manifest (build on
+    [experiments/derived-state-scale](../experiments/derived-state-scale)); `plan` as two recomputes
+    and a diff.
+  - **OpenFGA packaging (Q11):** co-process vs c-archive in one Cloud Run container: cold start,
+    memory, crash recovery, Check latency over the tuple view, conditions and wildcards.
+  - **Durable (Q4):** DBOS Rust SDK vs a minimal runtime behind `Durable`; crash between steps;
+    recovery of another instance's workflows after scale-in (Q13).
+  - **Deployment (G1):** one image on Cloud Run + Cloud SQL with an operator UI bundle and an in-image
+    executor; instance-based billing; rollback by image.
+  - **UI extension contract:** one React bundle and one non-React bundle mounted through the same
+    contract.
+  - **CEL:** cel-spec conformance status (Q10) and fixture-based output validation.
   - rmcp Streamable HTTP with OAuth; identity-aware-proxy JWT verification.
-- **Developer velocity foundations** ([developer-velocity.md](./design/developer-velocity.md)):
-  - **Workspace:** wide/shallow layout with interface crates; profiles, LLD, hakari; nextest + Bacon +
-    `xtask affected` (guppy).
-  - **Spikes:** dynamic DBSP circuit construction from a manifest (reconfiguration time at 2k and 100k
-    entities); sub-circuit state reuse; warm language-host evaluation latency; the Salsa manifest
-    pipeline; a prebuilt `toolbox-fga` archive cache.
-  - **Measurement:** the dev-loop benchmark harness with the SLOs enforced on every PR.
-- **Verification foundations** ([verification.md](./design/verification.md) §3, §10):
-  - the `Env` seam with clippy bans and the dependency determinism audit
-  - `buggify!` and the assertion facade
-  - `MemStore` with modelled isolation + store conformance suite
-  - `toolbox-ref` skeleton
-  - minimal `toolbox-sim` (chaos → liveness)
-  - `spec/properties.md`
-- Draft TCP spec v0 (OpenAPI + JSON Schemas) and conformance kit skeleton.
-- **Exit:** go/no-go on DBSP, embedded OpenFGA, the change log, DBOS and typed CEL, with
-  measurements. A planted unsafe-delete bug is found by simulation within 1,000 seeds.
+  - **Backstage parity audit** (D47).
+- **Operator SDLC foundations (G2):** `toolbox dev` (watch + full recompute over fixtures), `toolbox
+  test`, `toolbox plan`, preview deploys, and the dev-loop benchmark with SLOs on every PR.
+- **Verification foundations:** differential tests (Rust vs SQL, OpenFGA vs SQL) and property tests,
+  with the full recompute as the reference model (D44).
+- **Exit:** go/no-go on full recompute at scale, OpenFGA packaging, the durable runtime and the
+  single-container deployment, with measurements.
 
 ### Phase 1 — Ownership and standards for agents (first release, `v0.1`)
 - **Ingest:**
@@ -989,14 +1028,14 @@ real organisation.
   - GitHub (repos, CODEOWNERS, webhooks)
   - IdP/SCIM connector with the revocation fast path
   - Backstage import; generic push API
-- **Circuit:** mapping, merge by `sources`, relations, recursive closures, authz tuples, facet labels,
-  with incremental views served from memory.
+- **Derived state:** mapping, merge by `sources`, relations, recursive closures, authz tuples, facet
+  labels, recomputed from a snapshot and served from memory (D37).
 - **Authorization:**
-  - embedded OpenFGA with the public-by-default module
+  - OpenFGA in the container (D38) with the public-by-default module
   - facets, information flow and explicit declassification
   - CODEOWNERS authority for ownership and external-id claims
   - identity-aware proxy / OIDC / PAT authentication
-- **Scorecards:** CEL rules, levels, `skip`/`unknown`, waivers, explain, all as circuit operators.
+- **Scorecards:** CEL rules, levels, `skip`/`unknown`, waivers, explain, all in the recompute pipeline.
   Includes the meta catalog's `ownership` scorecard (bronze/silver).
 - **Source of truth v1:** per-field `sources`; native store with revisions for `Group` metadata and
   business fields; `update_entity` routing.
@@ -1105,7 +1144,7 @@ real organisation.
 | Backstage ecosystem gravity (250+ plugins) | Read `catalog-info.yaml` unchanged; a Backstage importer; possibly a Backstage plugin that reads Toolbox data, so both can coexist during migration |
 | Non-engineers can't edit config | UI and MCP "propose change" opens PRs; agents do the editing; `plan` makes review easy |
 | Per-language SDK maintenance (Pulumi's biggest ongoing cost) | Generate SDKs from one schema; thin hand-written runtimes; TS, Python and YAML first; typed CEL makes the logic language-independent |
-| DBSP API churn or memory at large scale | Pin and wrap in `toolbox-ivm`; contribute upstream; spill-to-storage; checkpoints; differential dataflow (MIT) as the fallback engine |
+| DBSP API churn or memory at large scale (deferred, D37) | Pin and wrap in `toolbox-ivm`; contribute upstream; spill-to-storage; checkpoints; differential dataflow (MIT) as the fallback engine |
 | DBOS Rust SDK not production-ready when needed | Behind a `Durable` trait; minimal schema-compatible runtime as fallback; Temporal/Restate remain options |
 | Go runtime embedded in a Rust process (signals, GC, determinism) | Narrow batched C ABI; CI stress tests; `GOMAXPROCS=1` under simulation; `wasip1` build as a deterministic fallback |
 | Internal-only portals unreachable from GitHub (webhooks, hosted runners) | Outbound-only relay or self-hosted runners (Phase 2) |
@@ -1139,7 +1178,14 @@ The full, chronological log is in [decisions.md](./decisions.md). This section s
 - Remote plan: Git is the access boundary.
 - Agent safety: delegated to client and harness layers.
 
-**Still open:**
+**Decided (2026-11-20):** charter goals G1 simple deployment, G2 agent SDLC, G3 replaceable components;
+the minimal architecture as the v1 baseline: full recompute, OpenFGA inside the container, in-process
+DBOS-model workflows, UI extension contract with React as default, in-image executors, manifest + TS
+builder, GraphQL deferred, sprawl budget (D33–D47). These supersede the 2026-11-19 lines above where they
+conflict (DBSP, embedded c-archive, Python SDK, GraphQL).
+
+**Still open:** see [decisions.md](./decisions.md) for the current list (Q1, Q3–Q8, Q10–Q13). Items 1 and 4
+below are updated there (Q2 resolved by D42; Q4 is now behind the `Durable` contract).
 1. **TCP governance:** publish it as a separate spec repo under a neutral name from day one
    (recommended), or keep it inside Toolbox until it stabilises?
 2. **Licence:** Apache-2.0 (recommended) vs. MPL-2.0 vs. AGPL.

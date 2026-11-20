@@ -1,5 +1,7 @@
 # Incremental Computation and Durable Execution
 
+> **Status 2026-11-20 (D37, D39):** v1 derives state by **full recompute from a consistent Postgres snapshot** behind a `DerivedState` contract; the DBSP circuit, logical-decoding change log, epochs and checkpoints below are the **deferred** incremental path, brought back only if a real portal's recompute exceeds 30 s or freshness misses 60 s p95. Durable workflows (§4) stay: DBOS model, in-process on Postgres, behind a `Durable` contract (Q4 open). See [decisions.md](../decisions.md).
+
 *Status: research + decision. Research date 2026-11-19. Supersedes the hand-rolled incremental
 evaluation in [plan.md](../plan.md) §4.1–4.2 and the "periodic full recomputation" suggestion in
 [principal-review.md](../principal-review.md) §2.2. Decision: **no batch or nightly recomputation.

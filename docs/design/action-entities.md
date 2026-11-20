@@ -1,5 +1,7 @@
 # Action-Created Entities, Lifecycles (TTL) and Day-2 Actions
 
+> **Status 2026-11-20 (D40):** action code can ship **inside the Toolbox image** as in-image executors (child processes over the stdio transport, any language), alongside external executors such as GitHub Actions. Isolation for in-image executors is Q12. See [decisions.md](../decisions.md).
+
 *Status: design. Addresses red-team gaps B4 (self-service results must exist immediately and expire)
 and B3 (visible pending state for PR-based changes).
 Related: [plan.md](../plan.md) §4.3, [identity-resolution.md](./identity-resolution.md),

@@ -15,15 +15,15 @@ Shared vocabulary across the design documents. Keep entries short and link to th
 | **Native data** | Field values whose source of truth is Toolbox itself, where the schema declares it | [design/source-of-truth.md](./design/source-of-truth.md) |
 | **TCP (Toolbox Connector Protocol)** | The open HTTP+JSON (and stdio, push) protocol for connectors and executors; capabilities `source`, `act`, `resolve` | [plan.md](./plan.md) §4.6 |
 | **Raw record** | An unmodified connector payload stored once as input; mapping runs in the engine | [design/context-lake.md](./design/context-lake.md) §5.1 |
-| **Change log** | The commit-ordered log of input-table changes (Postgres logical decoding) | [design/incremental-computation.md](./design/incremental-computation.md) §3 |
-| **Log position** | A position in the change log; used as a consistency token in responses | [design/incremental-computation.md](./design/incremental-computation.md) §3 |
-| **Circuit** | The DBSP dataflow, built at runtime from the manifest, that incrementally maintains every derived value | [design/incremental-computation.md](./design/incremental-computation.md) |
-| **Epoch** | A circuit version identified by `(engine version, manifest hash)`; built in the background and cut over atomically | [design/incremental-computation.md](./design/incremental-computation.md) §3 |
+| **Change log** | *(Deferred, D37.)* The commit-ordered log of input-table changes (Postgres logical decoding) | [design/incremental-computation.md](./design/incremental-computation.md) §3 |
+| **Log position** | *(Deferred, D37; replaced by the snapshot id.)* A position in the change log | [design/incremental-computation.md](./design/incremental-computation.md) §3 |
+| **Circuit** | *(Deferred, D37.)* The DBSP dataflow, built at runtime from the manifest, that incrementally maintains every derived value | [design/incremental-computation.md](./design/incremental-computation.md) |
+| **Epoch** | *(Deferred, D37.)* A circuit version identified by `(engine version, manifest hash)`; built in the background and cut over atomically | [design/incremental-computation.md](./design/incremental-computation.md) §3 |
 | **Durable workflow** | A side-effecting process checkpointed in Postgres (DBOS model): actions, syncs, notifications, timers | [design/incremental-computation.md](./design/incremental-computation.md) §4 |
 | **Facet** | A named group of fields guarded by a permission (e.g. score summary vs details) | [authorization.md](./authorization.md) §4.2 |
 | **Declassification** | An explicit, reviewed declaration that lowers a derived value's facet label | [authorization.md](./authorization.md) §4.2 |
 | **Derived tuples** | OpenFGA relationship tuples computed from catalog data as a circuit view; never written separately | [authorization.md](./authorization.md) §4.1 |
-| **Embedded OpenFGA** | OpenFGA's Go server linked into the Rust binary via a C ABI with a read-only datastore | [authorization.md](./authorization.md) §4.3 |
+| **OpenFGA in the container** | Unmodified OpenFGA shipped in the Toolbox image, reading derived tuples through a Postgres view; co-process or c-archive is Q11 (D38) | [authorization.md](./authorization.md) §4.3 |
 | **Meta catalog** | Catalog entities describing the portal itself (kinds, connectors, scorecards, rules, actions, views…), with owners and default scorecards | [design/meta-catalog.md](./design/meta-catalog.md) |
 | **Inventory tier** | Bounded, discovered entities (workloads, images, cloud identities) that bridge the catalog to security graphs | [design/context-lake.md](./design/context-lake.md) §5.2 |
 | **Finding** | An imported security result (e.g. a Wiz toxic combination) attached to entities | [design/context-lake.md](./design/context-lake.md) §5.4 |
@@ -37,3 +37,10 @@ Shared vocabulary across the design documents. Keep entries short and link to th
 | **`toolbox dev`** | The local daemon: watch → manifest diff → circuit reconfiguration → affected tests → UI hot reload | [design/developer-velocity.md](./design/developer-velocity.md) §4 |
 | **`Env` seam** | The single crate through which all nondeterminism flows, enabling deterministic simulation | [design/verification.md](./design/verification.md) §3 |
 | **Operator plugin / user plugin** | The two Agent Plugins packages: authoring (in this repo) and generated per portal | [design/agent-plugins.md](./design/agent-plugins.md) |
+| **Charter goals (G1–G3)** | Simple single-container deployment, agent SDLC, replaceable components | [decisions.md](./decisions.md) D33–D35 |
+| **Snapshot / snapshot id** | A consistent (`REPEATABLE READ`) read of Postgres inputs from which all derived state is recomputed; its id is the consistency token | [decisions.md](./decisions.md) D37 |
+| **Full recompute** | The v1 derived-state engine: recompute every derived value from a snapshot on change, behind the `DerivedState` contract | [technology-critique.md](./technology-critique.md) §7.1 |
+| **Replaceable contract** | A Toolbox-owned trait, protocol or mount contract with conformance tests, behind which a default technology sits (`DerivedState`, `Authorizer`, `Durable`, UI extension contract, executor protocol) | [plan.md](./plan.md) §3 |
+| **UI extension contract** | How operator UI bundles (any framework; React by default) are built into the image and mounted | [decisions.md](./decisions.md) D40 |
+| **In-image executor** | Action code packaged into the Toolbox image and run as a child process over stdio | [decisions.md](./decisions.md) D40 |
+| **Sprawl budget** | The cap on implementation languages, required services and author-facing languages in v1 | [decisions.md](./decisions.md) D45 |

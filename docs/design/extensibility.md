@@ -1,5 +1,7 @@
 # Extensibility and Languages: The Right Tool for Each Job
 
+> **Status 2026-11-20 (D41, D42):** v1 authoring is a **YAML/JSON manifest + JSON Schema, plus one TypeScript typed builder** that prints it. Pulumi-style language hosts, the Python SDK and WASM functions are **deferred**; in-image executors over stdio cover custom action logic (D40). CEL stays. Ingestion is an OpenAPI endpoint, not a governed protocol. See [decisions.md](../decisions.md).
+
 *Status: research + decision. Research date 2026-11-19. Revisits [plan.md](../plan.md) §2 (the Pulumi
 model) and §4.6, and [principal-review.md](../principal-review.md) §4.1–4.3. The goal is the **agent
 developer experience**: each extension point uses the language best suited to it, and every language

@@ -1,5 +1,7 @@
 # Technology Critique: Is the Toolbox Architecture Sprawl?
 
+> **Status 2026-11-20:** adopted as the v1 baseline with amendments (D36–D47). C2 (OpenFGA sidecar) became "OpenFGA inside the container" (D38), C3 (no durable engine before Phase 3) became "DBOS-model workflows in-process" (D39) and C7 (headless UI) became the UI extension contract with in-image bundles (D40), all because of charter goal G1 (single-container deployment).
+
 *Written 2026-11-19 as a skeptical principal engineer's **technology-only** review. Go-to-market,
 demand, adoption and funding are out of scope (the maintainer set them aside). The question is whether
 the architecture in [plan.md](./plan.md) and [design/](./design/) is justified, or whether it is

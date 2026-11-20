@@ -1,5 +1,7 @@
 # GraphQL for Rich Catalog Pages: Evaluation and Decision
 
+> **Status 2026-11-20 (D43): deferred.** v1's UI uses a handful of REST view endpoints. This design returns if a non-first-party UI client appears or entity pages need more than three round trips at the p95 budget ([technology-critique.md](../technology-critique.md) §8.1).
+
 *Status: research + decision, 2026-11-19. Related: [plan.md](../plan.md) §4.5 (interfaces),
 [authorization.md](../authorization.md), [incremental-computation.md](./incremental-computation.md),
 [dashboards.md](./dashboards.md), [developer-velocity.md](./developer-velocity.md).*
