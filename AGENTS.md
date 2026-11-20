@@ -81,8 +81,9 @@ The full loop, check pyramid and measured timings are in
   before you start and again before you push. Keep commits small and scoped to one topic, so parallel
   agents rarely conflict.
 - **Generated files:** never hand-merge `portal/results.json`. On a conflict, take upstream's copy
-  and rerun `--update` ([portal/README.md](./portal/README.md#layout), D95). New T4T standards go in
-  `portal/standards/<topic>.yaml`.
+  and rerun `--update` ([portal/README.md](./portal/README.md#layout), D95). When scores change,
+  also regenerate the site's copy (`toolbox report portal --skip runner,github-actions -o web --out
+  site/public/report`, D92); CI checks both. New T4T standards go in `portal/standards/<topic>.yaml`.
 - **When you change a decision:** add an entry to `docs/decisions.md` (never rewrite past entries),
   update the owning design doc, and update `plan.md` §4.7/§8/§10 if affected.
 - **Sources:**
