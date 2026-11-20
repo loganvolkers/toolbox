@@ -10,7 +10,9 @@ JSON Schemas in the repo-root schema/ directory.
 Requires: pyyaml, jsonschema.
 """
 import glob, json, os, sys
-import jsonschema, yaml
+import jsonschema
+
+from yamlutil import load as load_yaml
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SCHEMAS = os.path.join(HERE, "..", "..", "schema")          # repo-root schema/
@@ -25,7 +27,7 @@ def check(validator, doc, where):
     for e in validator.iter_errors(doc):
         errors.append(f"{where}: {'/'.join(map(str, e.absolute_path))}: {e.message}")
 
-manifest = yaml.safe_load(open(os.path.join(ROOT, "toolbox.yaml")))
+manifest = load_yaml(os.path.join(ROOT, "toolbox.yaml"))
 check(schema("manifest.schema.json"), manifest, "toolbox.yaml")
 
 conn = schema("connector-messages.schema.json")

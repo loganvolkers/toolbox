@@ -1,31 +1,42 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/maintainer-ci-reliability/fail-rate-under-20
 rubric: rule-quality
-subjectHash: "ac9683e15641"
+subjectHash: ac9683e15641
 assessor: {kind: agent, name: claude-code}
-at: "2026-11-20"
+at: 2026-11-20
 verdicts:
   - criterion: measures-intent
     verdict: pass
     reason: >-
-      The scorecard asks "does green mean good, and does red get fixed?" (github-actions-standards.md);
-      the share of decided runs on main that failed is a direct measure of the first half.
+      The scorecard asks "does green mean good, and does red get fixed?"
+      (github-actions-standards.md); the share of decided runs on main that
+      failed is a direct measure of the first half.
   - criterion: hard-to-game
     verdict: fail
     reason: >-
-      Marking a job continue-on-error, or deleting a flaky test, lowers the fail rate without making
-      CI more trustworthy; the rule can't tell those from real fixes. Excluding cancelled runs
-      (decided runs only) also rewards cancelling a run that is about to fail.
+      Marking a job continue-on-error, or deleting a flaky test, lowers the
+      fail rate without making CI more trustworthy; the rule can't tell those
+      from real fixes. Excluding cancelled runs (decided runs only) also
+      rewards cancelling a run that is about to fail.
     suggestion: >-
-      Pair it with a rule on continue-on-error in the workflow parse (maintainer-ci-security already
-      parses jobs), and report cancelled runs next to the rate.
+      Pair it with a rule on continue-on-error in the workflow parse
+      (maintainer-ci-security already parses jobs), and report cancelled runs
+      next to the rate.
   - criterion: fix-leads-to-pass
     verdict: pass
-    reason: The fix points at the run data (toolbox get workflow:<path>) and the action (fix or quarantine causes); the evidence gives rate, window and branch.
+    reason: >-
+      The fix points at the run data (toolbox get workflow:<path>) and the
+      action (fix or quarantine causes); the evidence gives rate, window and
+      branch.
   - criterion: threshold-justified
     verdict: unsure
     reason: >-
-      scorecards-for-scorecards.md L9 says the 20/10/5% tiers have no published source; the design
-      states that openly but doesn't derive the numbers.
-    suggestion: Record a rationale (e.g. our own history on main) or cite a source, in github-actions-standards.md.
-summary: Measures the right thing but is gameable through continue-on-error and its threshold is unsourced.
+      scorecards-for-scorecards.md L9 says the 20/10/5% tiers have no
+      published source; the design states that openly but doesn't derive the
+      numbers.
+    suggestion: >-
+      Record a rationale (e.g. our own history on main) or cite a source, in
+      github-actions-standards.md.
+summary: >-
+  Measures the right thing but is gameable through continue-on-error and
+  its threshold is unsourced.

@@ -1,26 +1,41 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: sdlc-stage:package-author/distribute
 rubric: sdlc-stage-quality
-subjectHash: "80311bf34ef0"
+subjectHash: 80311bf34ef0
 assessor: {kind: agent, name: claude-code}
-at: "2026-11-20"
+at: 2026-11-20
 verdicts:
   - criterion: executable-exit
     verdict: fail
-    reason: Nothing exists to run; the registry is undecided (Q15 in docs/decisions.md).
+    reason: >-
+      Nothing exists to run; the registry is undecided (Q15 in
+      docs/decisions.md).
     suggestion: Decide Q15, then make `toolbox package publish --dry-run` the check.
   - criterion: agent-can-complete
     verdict: fail
-    reason: No package format, archive or lockfile exists (docs/design/packages.md §3 is a proposal).
-    suggestion: Build the package format v0 after maintainer/release, so packages can name a Toolbox version.
+    reason: >-
+      No package format, archive or lockfile exists (docs/design/packages.md
+      §3 is a proposal).
+    suggestion: >-
+      Build the package format v0 after maintainer/release, so packages can
+      name a Toolbox version.
   - criterion: reuses-artifacts
     verdict: fail
     reason: >-
-      A package that needs zizmor and actionlint can only say so in prose; consumers install them by hand
-      (.github/workflows/ci.yml lines 69–70 use pip and go install).
-    suggestion: Add `tools:` to the package format, resolved through mise or aqua with checksums.
+      A package that needs zizmor and actionlint can only say so in prose;
+      consumers install them by hand (.github/workflows/ci.yml lines 69–70 use
+      pip and go install).
+    suggestion: >-
+      Add `tools:` to the package format, resolved through mise or aqua with
+      checksums.
   - criterion: decoupled-from-core
     verdict: fail
-    reason: Today the only way to share standards is to copy YAML or land them in this repository's portal/.
-    suggestion: Ship packages from their authors' own repositories (git-first, docs/design/packages.md §4.4).
-summary: Missing end to end; it depends on maintainer/release, Q15 and a tools declaration.
+    reason: >-
+      Today the only way to share standards is to copy YAML or land them in
+      this repository's portal/.
+    suggestion: >-
+      Ship packages from their authors' own repositories (git-first,
+      docs/design/packages.md §4.4).
+summary: >-
+  Missing end to end; it depends on maintainer/release, Q15 and a tools
+  declaration.

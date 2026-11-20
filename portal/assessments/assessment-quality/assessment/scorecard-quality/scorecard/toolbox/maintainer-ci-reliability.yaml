@@ -1,32 +1,36 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: assessment:scorecard-quality/scorecard:toolbox/maintainer-ci-reliability
 rubric: assessment-quality
-subjectHash: "3537863360ac"
+subjectHash: 3537863360ac
 assessor: {kind: agent, name: cursor-grok, model: grok-4.7}
-at: "2026-11-20"
+at: 2026-11-20
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      The rules it names are in portal/toolbox.yaml, and the concern is the one
-      docs/design/github-actions-standards.md states: does green mean good, and does red get fixed.
+      The rules it names are in portal/toolbox.yaml, and the concern is the
+      one docs/design/github-actions-standards.md states: does green mean
+      good, and does red get fixed.
   - criterion: complete
     verdict: pass
     reason: >-
-      The continue-on-error gap is real. portal/toolbox.yaml has no such rule, and
-      crates/toolbox-connector-workspace/src/workflows.rs does not extract that field. A second
-      reading fails no-obvious-gap and passes the other three criteria.
+      The continue-on-error gap is real. portal/toolbox.yaml has no such rule,
+      and crates/toolbox-connector-workspace/src/workflows.rs does not extract
+      that field. A second reading fails no-obvious-gap and passes the other
+      three criteria.
   - criterion: reproducible
     verdict: pass
     reason: >-
       Assessor claude-code's verdicts in
-      portal/assessments/scorecard-quality/scorecard/toolbox/maintainer-ci-reliability.yaml match
-      this reading: pass one-concern, levels-are-a-ladder and actionable; fail no-obvious-gap.
-      The subject hash is unchanged.
+      portal/assessments/scorecard-quality/scorecard/toolbox/maintainer-ci-reliability.yaml
+      match this reading: pass one-concern, levels-are-a-ladder and
+      actionable; fail no-obvious-gap. The subject hash is unchanged.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Adding the suggested continue-on-error rule in portal/toolbox.yaml would close the gap
-      no-obvious-gap failed on. The evidence already names the jobs and the rates.
+      Adding the suggested continue-on-error rule in portal/toolbox.yaml would
+      close the gap no-obvious-gap failed on. The evidence already names the
+      jobs and the rates.
 summary: >-
-  The same verdicts as claude-code. The continue-on-error gap is still missing from the scorecard.
+  The same verdicts as claude-code. The continue-on-error gap is still
+  missing from the scorecard.

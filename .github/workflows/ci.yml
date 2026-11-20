@@ -2,11 +2,9 @@
 # act as contracts. Every job is a check an agent can also run locally (see AGENTS.md).
 name: ci
 on:
-  push:
-    branches: [main]
+  push: {branches: [main]}
   pull_request:
-permissions:
-  contents: read
+permissions: {contents: read}
 jobs:
   rust:
     runs-on: ubuntu-latest
@@ -18,19 +16,26 @@ jobs:
       - run: cargo fmt --all --check
       - run: cargo clippy --all-targets --locked -- -D warnings
       - run: cargo test --locked
-      - uses: actions/setup-python@v5
-        with: {python-version: "3.13"}
+      - {uses: actions/setup-python@v5, with: {python-version: "3.13"}}
       - run: pip install -r examples/reference-portal/tools/requirements.txt
+      - name: YAML is formatted (yamark 0.6.1, D95)
+        run: |
+          python3 -m pip install yamark==0.6.1
+          yamark format --check $(git ls-files '*.yaml' '*.yml')
       - name: M0 parity with tools/validate.py
         run: cargo build --locked && python scripts/validate-parity.py
-      - name: Install OpenFGA and actionlint from their releases, SHA-256-pinned (no compile, D90)
+      - name: >-
+          Install OpenFGA and actionlint from their releases, SHA-256-pinned (no
+          compile, D90)
         run: |
           scripts/ci-tools.sh "$RUNNER_TEMP/tools" openfga actionlint
           echo "TOOLBOX_OPENFGA_BIN=$RUNNER_TEMP/tools/openfga" >> "$GITHUB_ENV"
           echo "$RUNNER_TEMP/tools" >> "$GITHUB_PATH"
       - name: Tests that need OpenFGA (authz, .fga.yaml through the Authorizer)
         run: cargo test --locked -p toolbox-authz -p toolbox-api
-      - name: PostgreSQL 16, the version the acceptance scripts pin (the runner image may carry another)
+      - name: >-
+          PostgreSQL 16, the version the acceptance scripts pin (the runner image
+          may carry another)
         run: |
           if [ ! -x /usr/lib/postgresql/16/bin/initdb ]; then
             sudo apt-get update -q
@@ -41,13 +46,21 @@ jobs:
           /usr/lib/postgresql/16/bin/initdb --version
       - name: M2 acceptance (Postgres, ingest API, read-your-writes, restart)
         run: PGDIR=$RUNNER_TEMP/pg scripts/m2-acceptance.sh
-      - name: M3 acceptance (Postgres + OpenFGA over the tuple view, facets, A10, PATs, revocation)
+      - name: >-
+          M3 acceptance (Postgres + OpenFGA over the tuple view, facets, A10,
+          PATs, revocation)
         run: PGDIR=$RUNNER_TEMP/pg3 scripts/m3-acceptance.sh
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with: {node-version: "22"}
       - name: Playwright for the A11 browser check
-        run: npm install --no-save --prefix "$RUNNER_TEMP/pw" playwright@1.64.1 && "$RUNNER_TEMP/pw/node_modules/.bin/playwright" install --with-deps chromium && echo "NODE_PATH=$RUNNER_TEMP/pw/node_modules" >> "$GITHUB_ENV"
-      - name: M4 acceptance (real connectors only, A1–A5, A11 in a browser, SCIM revocation, conformance kit)
+        run: >-
+          npm install --no-save --prefix "$RUNNER_TEMP/pw" playwright@1.64.1 &&
+          "$RUNNER_TEMP/pw/node_modules/.bin/playwright" install --with-deps
+          chromium && echo "NODE_PATH=$RUNNER_TEMP/pw/node_modules" >>
+          "$GITHUB_ENV"
+      - name: >-
+          M4 acceptance (real connectors only, A1–A5, A11 in a browser, SCIM
+          revocation, conformance kit)
         run: PGDIR=$RUNNER_TEMP/pg4 scripts/m4-acceptance.sh
       - name: toolbox validate, test and derive on the reference portal
         run: |
@@ -69,7 +82,9 @@ jobs:
       # The ratchet, through the same action pilot repos use (D66, D69), with the binaries built above.
       # Fails on any regression, and when portal/results.json is out of date (update it with
       # `toolbox report portal --skip runner --baseline portal/results.json --update`).
-      - name: CI linters for the ratchet, at the versions the committed baseline was made with
+      - name: >-
+          CI linters for the ratchet, at the versions the committed baseline was
+          made with
         run: |
           pip install zizmor==1.32.0
           actionlint -version   # installed with OpenFGA above
@@ -78,7 +93,9 @@ jobs:
         run: |
           target/debug/toolbox assess check portal --skip runner,github-actions
           target/debug/toolbox assess brief rule:toolbox/meta-rule/tested --portal portal --fixtures -o json > /dev/null
-      - name: Toolbox for Toolbox — connector conformance (the protocol checks every connector must pass)
+      - name: >-
+          Toolbox for Toolbox — connector conformance (the protocol checks every
+          connector must pass)
         run: |
           target/debug/toolbox connector test --name workspace --portal portal -- target/debug/toolbox-connector-workspace
           target/debug/toolbox connector test --name surfaces --portal portal -- target/debug/toolbox-connector-runner
@@ -136,15 +153,16 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with: {key: scale-release}
-      - name: Full recompute at 100k entities / 2M relations / 100 rules within 10 s (v1-spec §10.4)
+      - name: >-
+          Full recompute at 100k entities / 2M relations / 100 rules within 10 s
+          (v1-spec §10.4)
         run: cargo run --release --locked -p toolbox-derive --example scale
   reference-portal:
     runs-on: ubuntu-latest
     defaults: {run: {working-directory: examples/reference-portal}}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - uses: actions/setup-python@v5
-        with: {python-version: "3.13"}
+      - {uses: actions/setup-python@v5, with: {python-version: "3.13"}}
       - run: pip install -r tools/requirements.txt
       - name: The fga CLI from its release, SHA-256-pinned
         run: |

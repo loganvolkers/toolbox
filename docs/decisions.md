@@ -123,6 +123,12 @@ minimal architecture adopted with amendments where it conflicted with them.
 | D93 | **The HTML report is a custom element with slots.** `<toolbox-report>` renders the scorecards in a shadow tree. A host page projects light-DOM children into the slots `header`, `nav`, and `footer`. `-o html` is still one file, with the element and the data inlined. `-o web --out DIR` writes `toolbox-report.js`, `report.json`, and that page, so a site can load the element and fill the slots. The host's markup is not concatenated into the report | ✅ | [design/repo-portals.md](./design/repo-portals.md) |
 | D94 | **Every toolbox CLI command has an agent skill that names its invocation.** Toolbox for Toolbox scores commands with `cli-skill`: bronze is a `SKILL.md` whose text mentions `toolbox <command>`, using the same capture the docs already use. `maintainer-skill` still scores the skill file. Loading the skill in a harness is not a gate. A new command must reach bronze | ✅ | [design/cli-skills.md](./design/cli-skills.md) |
 
+## 2026-11-20
+
+| # | Decision | Status | Where |
+|---|---|---|---|
+| D95 | **Tracked YAML is formatted by Yamark 0.6.1.** `compact` keeps a collection that fits in 80 columns in flow style, which is the rule for the JSON Schema objects embedded in manifests; a wider collection is a block. CI runs `yamark format --check` on every tracked `.yaml` and `.yml`. Markdown and `schema/*.json` are not rewritten: the compiler loads those schemas as JSON. Plain timestamps are strings (YAML 1.2); the reference tools drop PyYAML's 1.1 timestamp resolver so they agree | ✅ | [design/yaml-format.md](./design/yaml-format.md) |
+
 ## Open questions (consolidated)
 
 | # | Question | Recommendation | Where |

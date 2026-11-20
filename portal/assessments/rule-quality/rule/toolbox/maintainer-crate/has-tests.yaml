@@ -1,26 +1,33 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/maintainer-crate/has-tests
 rubric: rule-quality
-subjectHash: "18e80bc36662"
+subjectHash: 18e80bc36662
 assessor: {kind: agent, name: claude-code}
-at: "2026-11-20"
+at: 2026-11-20
 verdicts:
   - criterion: measures-intent
     verdict: fail
     reason: >-
-      The fix asks for a test of "the crate's main behaviour"; the check passes on any #[test]
-      anywhere in the crate, so a crate with one trivial test meets it.
+      The fix asks for a test of "the crate's main behaviour"; the check
+      passes on any #[test] anywhere in the crate, so a crate with one trivial
+      test meets it.
     suggestion: >-
-      Keep it as the bronze floor but add a silver rule on tests relative to size (e.g. test code lines
-      per code line, which the workspace connector already reports as testCodeLines).
+      Keep it as the bronze floor but add a silver rule on tests relative to
+      size (e.g. test code lines per code line, which the workspace connector
+      already reports as testCodeLines).
   - criterion: hard-to-game
     verdict: fail
     reason: "`#[test] fn t() {}` passes it."
-    suggestion: Combine with tests-pass and a minimum of test code relative to the crate's size.
+    suggestion: >-
+      Combine with tests-pass and a minimum of test code relative to the
+      crate's size.
   - criterion: fix-leads-to-pass
     verdict: pass
     reason: Adding one #[test] or a tests/ file makes it pass; the fix says exactly that.
   - criterion: threshold-justified
     verdict: pass
-    reason: "\"At least one test\" is a floor, not a tuned number; bronze fits toolbox-for-toolbox.md §4's table."
-summary: A fine bronze floor that over-claims; it needs a size-relative companion rule to mean "tested".
+    reason: |-
+      "At least one test" is a floor, not a tuned number; bronze fits toolbox-for-toolbox.md §4's table.
+summary: >-
+  A fine bronze floor that over-claims; it needs a size-relative companion
+  rule to mean "tested".

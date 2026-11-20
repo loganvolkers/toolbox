@@ -10,7 +10,11 @@ Usage: python scripts/validate-parity.py [path/to/toolbox]   (default target/deb
 Requires: pyyaml, jsonschema.
 """
 import json, os, shutil, subprocess, sys, tempfile
-import yaml
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                 "examples", "reference-portal", "tools"))
+from yamlutil import load as load_yaml  # noqa: E402
+import yaml  # noqa: E402
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PORTAL = os.path.join(REPO, "examples", "reference-portal")
@@ -49,7 +53,7 @@ def main():
         shutil.copytree(PORTAL, portal)
         if "set" in case:
             path = os.path.join(portal, "toolbox.yaml")
-            doc = yaml.safe_load(open(path))
+            doc = load_yaml(path)
             for pointer, value in case["set"].items():
                 set_pointer(doc, pointer, value)
             yaml.safe_dump(doc, open(path, "w"), sort_keys=False)

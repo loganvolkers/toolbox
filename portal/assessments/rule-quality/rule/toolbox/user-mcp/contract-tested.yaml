@@ -1,29 +1,38 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/user-mcp/contract-tested
 rubric: rule-quality
-subjectHash: "dd104d6f4721"
+subjectHash: dd104d6f4721
 assessor: {kind: agent, name: claude-code}
-at: "2026-11-20"
+at: 2026-11-20
 verdicts:
   - criterion: measures-intent
     verdict: pass
     reason: >-
-      With runner data the check counts calls the MCP contract tests actually make (TOOLBOX_MCP_TRACE),
-      which is what "contract-tested" means; this replaced the mention-based proxy found in F9
+      With runner data the check counts calls the MCP contract tests actually
+      make (TOOLBOX_MCP_TRACE), which is what "contract-tested" means; this
+      replaced the mention-based proxy found in F9
       (scorecards-for-scorecards.md L3).
   - criterion: hard-to-game
     verdict: unsure
     reason: >-
-      An observed call proves the tool was invoked, not that its result was asserted: a test that calls
-      a tool and ignores the response passes. The static fallback (a tools/call body naming the tool)
-      is weaker still, as the comment on the rule says.
+      An observed call proves the tool was invoked, not that its result was
+      asserted: a test that calls a tool and ignores the response passes. The
+      static fallback (a tools/call body naming the tool) is weaker still, as
+      the comment on the rule says.
     suggestion: >-
-      Have the trace record whether the call's result was compared (e.g. a helper that both calls and
-      asserts), or count calls with non-error results only.
+      Have the trace record whether the call's result was compared (e.g. a
+      helper that both calls and asserts), or count calls with non-error
+      results only.
   - criterion: fix-leads-to-pass
     verdict: pass
-    reason: The fix names the place (crates/toolbox-api/tests) and the mechanism (tools/call), and says why the CLI path doesn't count.
+    reason: >-
+      The fix names the place (crates/toolbox-api/tests) and the mechanism
+      (tools/call), and says why the CLI path doesn't count.
   - criterion: threshold-justified
     verdict: pass
-    reason: No numeric threshold (one call); gold because it needs the slow runner, consistent with toolbox-for-toolbox.md's level table.
-summary: A good rule since F9; its residual weakness is that a call without an assertion counts.
+    reason: >-
+      No numeric threshold (one call); gold because it needs the slow runner,
+      consistent with toolbox-for-toolbox.md's level table.
+summary: >-
+  A good rule since F9; its residual weakness is that a call without an
+  assertion counts.

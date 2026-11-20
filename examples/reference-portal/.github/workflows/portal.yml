@@ -3,20 +3,19 @@
 name: portal
 on:
   pull_request:
-  push:
-    branches: [main]
+  push: {branches: [main]}
 permissions:
   contents: read
-  id-token: write          # GitHub OIDC for remote plan and Google auth
-  pull-requests: write     # plan comment
+  id-token: write # GitHub OIDC for remote plan and Google auth
+  pull-requests: write # plan comment
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: toolbox-dev/setup-toolbox@v0
-      - run: toolbox validate                          # manifest schema + cross-references
-      - run: toolbox test                              # tests/*.test.yaml, authz/*.fga.yaml, executor cassettes
+      - run: toolbox validate # manifest schema + cross-references
+      - run: toolbox test # tests/*.test.yaml, authz/*.fga.yaml, executor cassettes
   plan:
     if: github.event_name == 'pull_request'
     needs: test
@@ -25,7 +24,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: toolbox-dev/setup-toolbox@v0
       - run: toolbox plan --remote "${{ vars.PORTAL_URL }}" --oidc --format md > plan.md
-      - uses: toolbox-dev/plan-comment@v0              # posts plan.md and enforces gates
+      - uses: toolbox-dev/plan-comment@v0 # posts plan.md and enforces gates
         with: {plan: plan.md}
   deploy:
     if: github.ref == 'refs/heads/main'

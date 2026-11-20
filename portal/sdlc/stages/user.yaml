@@ -5,8 +5,10 @@ records:
     name: discover
     order: 1
     intent: Find entities, owners and scores from a terminal, an agent or the UI.
-    exitCriterion: search, get, owner and score answer over CLI, MCP and the UI with the same authorization.
-    commands: ["toolbox search", "toolbox get", "toolbox owner", "toolbox mcp"]
+    exitCriterion: >-
+      search, get, owner and score answer over CLI, MCP and the UI with the
+      same authorization.
+    commands: [toolbox search, toolbox get, toolbox owner, toolbox mcp]
     checks: [crates/toolbox-api/tests/mcp.rs, scripts/m4-acceptance.sh]
     docs: [docs/design/user-sdlc.md]
     status: built
@@ -17,33 +19,35 @@ records:
     order: 2
     intent: Build an app or agent on stable API and MCP contracts.
     exitCriterion: A typed client generated from the portal's OpenAPI compiles against it.
-    commands: ["toolbox query"]
+    commands: [toolbox query]
     checks: [crates/toolbox-api/tests/mcp.rs]
     docs: [docs/design/user-sdlc.md]
     status: partial
-    gaps: ["no per-portal OpenAPI or typed clients", "no generated user agent plugin"]
+    gaps:
+    - no per-portal OpenAPI or typed clients
+    - no generated user agent plugin
   - id: user/test
     layer: user
     name: test
     order: 3
     intent: Test an app with reproducible reads.
     exitCriterion: Reads pinned with min_snapshot return the same data.
-    commands: ["toolbox get"]
+    commands: [toolbox get]
     checks: [scripts/m2-acceptance.sh]
     docs: [docs/v1-spec.md]
     status: partial
-    gaps: ["no recorded-fixture mode for user apps"]
+    gaps: [no recorded-fixture mode for user apps]
   - id: user/deploy
     layer: user
     name: deploy
     order: 4
     intent: Run an app with its own identity, not a person's token.
     exitCriterion: A service identity with scoped access calls the portal from CI.
-    commands: ["toolbox token create"]
+    commands: [toolbox token create]
     checks: [scripts/m3-acceptance.sh]
     docs: [docs/design/user-sdlc.md]
     status: partial
-    gaps: ["service identities are designed; personal access tokens only today"]
+    gaps: [service identities are designed; personal access tokens only today]
   - id: user/monitor
     layer: user
     name: monitor
@@ -54,4 +58,4 @@ records:
     checks: []
     docs: [docs/design/user-sdlc.md]
     status: designed
-    gaps: ["no stability or deprecation policy enforcement"]
+    gaps: [no stability or deprecation policy enforcement]

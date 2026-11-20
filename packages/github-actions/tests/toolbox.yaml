@@ -1,15 +1,19 @@
 # The package's test portal: includes the package as a consumer would, with its own parameters.
 # Run: toolbox test packages/github-actions/tests
 apiVersion: toolbox.dev/v1alpha1
-portal: {name: github-actions-package, title: GitHub Actions standards (package tests), owner: group:maintainers, toolbox: "0.1"}
-include:
-  - package: ..
-    with: {githubOrg: acme, githubRepo: app}
+portal:
+  name: github-actions-package
+  title: GitHub Actions standards (package tests)
+  owner: group:maintainers
+  toolbox: "0.1"
+include: [{package: .., with: {githubOrg: acme, githubRepo: app}}]
 connectors:
   - name: workspace
     package: builtin:workspace
     runtime: in-image
-    config: {crates: false, workflows: [".github/workflows/*.y*ml", "actions/*/action.y*ml"]}
+    config:
+      crates: false
+      workflows: [.github/workflows/*.y*ml, actions/*/action.y*ml]
     records: [workflow, action-ref]
     refresh: {workflow: [external_ids], action-ref: [external_ids]}
     freshness: {workflow: 5m, action-ref: 5m}
