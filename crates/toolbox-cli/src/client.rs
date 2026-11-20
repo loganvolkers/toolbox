@@ -43,11 +43,15 @@ pub fn tool(target: &Target, name: &str, args: Value, output: &str) -> ExitCode 
             }
         };
         let r = &v["result"];
-        match output {
-            "json" => println!("{}", serde_json::to_string_pretty(&r["structuredContent"]).unwrap()),
-            "yaml" => print!("{}", serde_norway::to_string(&r["structuredContent"]).unwrap_or_default()),
-            _ => println!("{}", r["content"][0]["text"].as_str().unwrap_or_default()),
-        }
+        let text = match output {
+            "json" => format!("{}\n", serde_json::to_string_pretty(&r["structuredContent"]).unwrap_or_default()),
+            "yaml" => serde_norway::to_string(&r["structuredContent"]).unwrap_or_default(),
+            _ => format!("{}\n", r["content"][0]["text"].as_str().unwrap_or_default()),
+        };
+        // A reader that stops early (`| head -1`) is not an error: println! would panic on the
+        // broken pipe, racing the reader, and fail `set -o pipefail` scripts at random.
+        use std::io::Write as _;
+        let _ = std::io::stdout().lock().write_all(text.as_bytes());
         if r["isError"] == true { ExitCode::from(1) } else { ExitCode::SUCCESS }
     })
 }
