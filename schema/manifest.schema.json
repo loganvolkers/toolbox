@@ -179,10 +179,29 @@
     },
     "include": {
       "type": "array",
+      "description": "Source-only (D54, D89): globs of further YAML files, or packages `{package, with}` (a directory or github:owner/repo[/subdir]@version, with typed parameters), merged by `toolbox build`. Never present in the canonical manifest.",
       "items": {
-        "type": "string"
-      },
-      "description": "Source-only (D54): globs of further YAML files merged by `toolbox build`. Never present in the canonical manifest."
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "package"
+            ],
+            "properties": {
+              "package": {
+                "type": "string"
+              },
+              "with": {
+                "type": "object"
+              }
+            }
+          }
+        ]
+      }
     }
   },
   "$defs": {

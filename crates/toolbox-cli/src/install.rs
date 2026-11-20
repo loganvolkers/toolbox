@@ -30,7 +30,7 @@ fn read_lock(root: &Path) -> Value {
     std::fs::read_to_string(root.join(LOCK))
         .ok()
         .and_then(|t| serde_json::from_str(&t).ok())
-        .unwrap_or_else(|| json!({"format": "toolbox-lock/v1", "connectors": {}}))
+        .unwrap_or_else(|| json!({"format": "toolbox-lock/v1", "connectors": {}, "packages": {}}))
 }
 
 fn hex(bytes: &[u8]) -> String {
@@ -120,17 +120,85 @@ async fn install_one(
     Ok(got)
 }
 
-/// `toolbox install`: fetch, verify and unpack every released connector; pin new ones in toolbox.lock.
+/// Clone each git package into the cache at its tag and check or record its content hash.
+fn install_packages(
+    root: &Path,
+    manifest_file: &str,
+    lock: &mut Value,
+    frozen: bool,
+) -> Result<bool, String> {
+    let text = std::fs::read_to_string(root.join(manifest_file)).map_err(|e| e.to_string())?;
+    let doc: Value = serde_norway::from_str(&text).map_err(|e| e.to_string())?;
+    let base = std::env::var("TOOLBOX_GIT_URL").unwrap_or_else(|_| "https://github.com".into());
+    let mut changed = false;
+    for spec in doc["include"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|i| i["package"].as_str())
+    {
+        let Some(g) = toolbox_model::package::parse_git(spec) else {
+            continue; // a directory in this repository: nothing to fetch
+        };
+        let checkout = g.checkout();
+        if !checkout.is_dir() {
+            let url = format!("{}/{}/{}.git", base.trim_end_matches('/'), g.owner, g.repo);
+            let ok = std::process::Command::new("git")
+                .args([
+                    "clone",
+                    "-q",
+                    "--depth",
+                    "1",
+                    "--branch",
+                    &format!("v{}", g.version),
+                    &url,
+                ])
+                .arg(&checkout)
+                .status()
+                .map_err(|e| format!("git: {e}"))?
+                .success();
+            if !ok {
+                return Err(format!("{spec}: could not clone {url} at v{}", g.version));
+            }
+        }
+        let got = toolbox_model::package::content_hash(&toolbox_model::package::locate(root, spec));
+        match lock["packages"][spec].as_str() {
+            Some(p) if p != got => {
+                return Err(format!(
+                    "{spec}: content {got} doesn't match toolbox.lock ({p})"
+                ));
+            }
+            Some(_) => {}
+            None if frozen => return Err(format!("{spec}: not pinned in {LOCK} (--frozen)")),
+            None => {
+                lock["packages"][spec] = json!(got);
+                changed = true;
+            }
+        }
+        println!("package {spec} → {}", checkout.display());
+    }
+    Ok(changed)
+}
+
+/// `toolbox install`: fetch git packages and released connectors, verify them against
+/// toolbox.lock, and pin new ones.
 pub fn install(portal: &Path, frozen: bool) -> ExitCode {
-    let (root, m) = match manifest(portal) {
+    let (root, manifest_file) = match toolbox_model::load::resolve(portal) {
         Ok(x) => x,
         Err(e) => return fail(e),
     };
     let mut lock = read_lock(&root);
+    let mut changed = match install_packages(&root, &manifest_file, &mut lock, frozen) {
+        Ok(c) => c,
+        Err(e) => return fail(e),
+    };
+    let m = match manifest(portal) {
+        Ok((_, m)) => m,
+        Err(e) => return fail(e),
+    };
     let target = artifacts::target();
     let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
     let client = reqwest::Client::new();
-    let mut changed = false;
     for c in &m.connectors {
         let Some(spec) = artifacts::parse(&c.package) else {
             continue;

@@ -3787,10 +3787,9 @@
       },
       "sdlc-stage:package-author/author": {
         "failing": {
-          "automated": 1,
-          "built": 2
+          "built": 1
         },
-        "level": "bronze"
+        "level": "silver"
       },
       "sdlc-stage:package-author/build-connector": {
         "failing": {
@@ -3816,10 +3815,9 @@
       },
       "sdlc-stage:package-author/test": {
         "failing": {
-          "automated": 1,
           "built": 2
         },
-        "level": "bronze"
+        "level": "silver"
       },
       "sdlc-stage:user/build": {
         "failing": {

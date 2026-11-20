@@ -9,6 +9,7 @@ pub mod diagnostics;
 pub mod load;
 pub mod manifest;
 pub mod messages;
+pub mod package;
 pub mod schema;
 pub mod validate;
 

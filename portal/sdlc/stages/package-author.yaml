@@ -9,11 +9,10 @@ records:
     intent: Write standards (kinds, scorecards, rubrics, skills) as a package with typed parameters.
     exitCriterion: A package manifest validates and its fragments validate against the manifest schema.
     commands: ["toolbox validate"]
-    checks: []
-    docs: [docs/design/packages.md]
-    status: designed
+    checks: [packages/github-actions/toolbox-package.yaml]
+    docs: [docs/design/packages.md, packages/github-actions/README.md]
+    status: partial
     gaps:
-      - "no package manifest (toolbox-package.yaml) or parameters: only local `include` of YAML files"
       - "no scaffold (toolbox package new)"
   - id: package-author/build-connector
     layer: package-author
@@ -35,8 +34,8 @@ records:
     order: 3
     intent: Prove the package's rules both ways on its fixtures, on every Toolbox version it claims to support.
     exitCriterion: toolbox test passes for each supported Toolbox release and platform; meta bronze for every exported rule.
-    commands: ["toolbox test", "toolbox connector test"]
-    checks: []
+    commands: ["toolbox test packages/github-actions/tests", "toolbox connector test"]
+    checks: [packages/github-actions/tests/standards.test.yaml, .github/workflows/ci.yml]
     docs: [docs/design/package-author-sdlc.md]
     status: partial
     gaps:
@@ -53,7 +52,7 @@ records:
     docs: [docs/design/packages.md]
     status: missing
     gaps:
-      - "no package format or archive (toolbox.lock pins connectors only)"
+      - "git packages are pinned by content hash; no deterministic archive for OCI mirrors yet"
   - id: package-author/distribute
     layer: package-author
     name: distribute
