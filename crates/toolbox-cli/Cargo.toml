@@ -16,6 +16,9 @@ serde_json.workspace = true
 toolbox-model.workspace = true
 toolbox-derive.workspace = true
 toolbox-store.workspace = true
+toolbox-api.workspace = true
+tokio.workspace = true
+reqwest.workspace = true
 
 [lints]
 workspace = true

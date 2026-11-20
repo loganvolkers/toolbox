@@ -2,6 +2,10 @@
 //! native values, a consistent [`InputSnapshot`] of them, an in-memory store for tests and
 //! `toolbox dev`, and the NDJSON fixture loader. `PgStore` arrives with M2.
 
+pub mod pg;
+
+pub use pg::{PgStore, Publication};
+
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::BTreeMap;
@@ -45,12 +49,48 @@ pub struct InputSnapshot {
 pub enum StoreError {
     #[error("{0}")]
     Io(String),
+    #[error("conflict: {0}")]
+    Conflict(String),
     #[error("{file}:{line}: {message}")]
     Message {
         file: String,
         line: usize,
         message: String,
     },
+}
+
+/// The inputs contract (docs/v1-spec.md §7.1): MemStore for tests and `toolbox dev`, PgStore in
+/// production.
+#[async_trait::async_trait]
+pub trait Store: Send + Sync {
+    /// Apply one batch of connector messages atomically; returns the new input version.
+    async fn ingest(&self, connector: &str, batch: &[Value]) -> Result<u64, StoreError>;
+    /// Write native values; a non-zero `revision` must be the next revision (optimistic locking).
+    async fn put_native(&self, values: Vec<NativeValue>) -> Result<u64, StoreError>;
+    /// The latest committed input version.
+    async fn input_version(&self) -> Result<u64, StoreError>;
+    /// A consistent read of all inputs.
+    async fn snapshot(&self) -> Result<InputSnapshot, StoreError>;
+}
+
+/// `MemStore` behind a lock, as a [`Store`].
+#[derive(Debug, Default)]
+pub struct SharedMem(pub std::sync::Mutex<MemStore>);
+
+#[async_trait::async_trait]
+impl Store for SharedMem {
+    async fn ingest(&self, connector: &str, batch: &[Value]) -> Result<u64, StoreError> {
+        Ok(self.0.lock().unwrap().ingest(connector, batch))
+    }
+    async fn put_native(&self, values: Vec<NativeValue>) -> Result<u64, StoreError> {
+        Ok(self.0.lock().unwrap().put_native(values))
+    }
+    async fn input_version(&self) -> Result<u64, StoreError> {
+        Ok(self.0.lock().unwrap().version)
+    }
+    async fn snapshot(&self) -> Result<InputSnapshot, StoreError> {
+        Ok(self.0.lock().unwrap().snapshot())
+    }
 }
 
 /// In-memory inputs: the test and `toolbox dev` store.

@@ -22,6 +22,8 @@ jobs:
       - run: pip install -r examples/reference-portal/tools/requirements.txt
       - name: M0 parity with tools/validate.py
         run: cargo build --locked && python scripts/validate-parity.py
+      - name: M2 acceptance (Postgres, ingest API, read-your-writes, restart)
+        run: PGDIR=$RUNNER_TEMP/pg scripts/m2-acceptance.sh
       - name: toolbox validate, test and derive on the reference portal
         run: |
           target/debug/toolbox validate examples/reference-portal

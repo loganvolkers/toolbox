@@ -1,6 +1,7 @@
 //! The `toolbox` binary (docs/v1-spec.md §7.7).
 
 mod portal;
+mod server;
 
 use clap::{Parser, Subcommand, ValueEnum};
 use std::path::PathBuf;
@@ -50,6 +51,27 @@ enum Command {
         #[arg(long, value_enum, default_value_t = PlanFormat::Md)]
         format: PlanFormat,
     },
+    /// Run the server: snapshot loop + REST API. Uses Postgres when --database-url (or
+    /// DATABASE_URL) is set, otherwise an in-memory store (optionally preloaded with fixtures).
+    Serve {
+        #[arg(default_value = ".")]
+        path: PathBuf,
+        #[arg(long, env = "TOOLBOX_LISTEN", default_value = "127.0.0.1:8080")]
+        listen: String,
+        #[arg(long, env = "DATABASE_URL")]
+        database_url: Option<String>,
+        /// In-memory mode only: load the portal's fixtures at start.
+        #[arg(long)]
+        fixtures: bool,
+    },
+    /// Send a portal's fixtures to a running server through the ingest API (one batch per
+    /// connector, then native values), and wait for the snapshot that contains them.
+    Push {
+        #[arg(default_value = ".")]
+        path: PathBuf,
+        #[arg(long, default_value = "http://127.0.0.1:8080")]
+        url: String,
+    },
     /// Recompute derived state from fixtures and print a summary, or write the reference-format
     /// files (expected/*.json, authz/tuples.expected.json) to --out.
     Derive {
@@ -80,6 +102,13 @@ fn main() -> ExitCode {
             path, base, format, ..
         } => plan(&path, &base, format),
         Command::Derive { path, out } => derive(&path, out.as_deref()),
+        Command::Serve {
+            path,
+            listen,
+            database_url,
+            fixtures,
+        } => server::serve(&path, &listen, database_url, fixtures),
+        Command::Push { path, url } => server::push(&path, &url),
     }
 }
 
