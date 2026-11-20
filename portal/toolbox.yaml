@@ -35,6 +35,7 @@ policies:
     - maintainer-package
     - maintainer-schema
     - maintainer-example
+    - maintainer-site
     - maintainer-plugin
     - maintainer-supply-chain
 
@@ -79,13 +80,15 @@ connectors:
       examples: ["examples/**/README.md", "experiments/**/README.md", "docs/examples/*.md"]
       # Coding agents' judgements of our standards and crates (`toolbox assess`, D79)
       assessments: ["portal/assessments/**/*.y*ml"]
+      # Starlight content pages (docs/design/site-standards.md)
+      pages: ["site/src/content/docs/**/*.md", "site/src/content/docs/**/*.mdx"]
       # The SDLC layers and their stages, declared as data (D87)
       data:
         - {kind: sdlc-layer, globs: ["portal/sdlc/layers.yaml"], paths: [doc]}
         - {kind: sdlc-stage, globs: ["portal/sdlc/stages/*.yaml"], paths: [docs, checks]}
-    records: [crate, doc, file, repo, workflow, action-ref, skill, connector, dependency, agent-doc, plugin, package-json, json-schema, example, assessment, sdlc-layer, sdlc-stage]
-    refresh: {crate: [external_ids], doc: [external_ids], file: [external_ids], repo: [external_ids], workflow: [external_ids], action-ref: [external_ids], skill: [external_ids], connector: [external_ids], dependency: [external_ids], agent-doc: [external_ids], plugin: [external_ids], package-json: [external_ids], json-schema: [external_ids], example: [external_ids], sdlc-layer: [external_ids], sdlc-stage: [external_ids]}
-    freshness: {crate: 5m, doc: 5m, file: 5m, repo: 5m, workflow: 5m, action-ref: 5m, skill: 5m, connector: 5m, dependency: 5m, agent-doc: 5m, plugin: 5m, package-json: 5m, json-schema: 5m, example: 5m, assessment: 5m, sdlc-layer: 5m, sdlc-stage: 5m}
+    records: [crate, doc, file, repo, workflow, action-ref, skill, connector, dependency, agent-doc, plugin, package-json, json-schema, example, site-page, assessment, sdlc-layer, sdlc-stage]
+    refresh: {crate: [external_ids], doc: [external_ids], file: [external_ids], repo: [external_ids], workflow: [external_ids], action-ref: [external_ids], skill: [external_ids], connector: [external_ids], dependency: [external_ids], agent-doc: [external_ids], plugin: [external_ids], package-json: [external_ids], json-schema: [external_ids], example: [external_ids], site-page: [external_ids], sdlc-layer: [external_ids], sdlc-stage: [external_ids]}
+    freshness: {crate: 5m, doc: 5m, file: 5m, repo: 5m, workflow: 5m, action-ref: 5m, skill: 5m, connector: 5m, dependency: 5m, agent-doc: 5m, plugin: 5m, package-json: 5m, json-schema: 5m, example: 5m, site-page: 5m, assessment: 5m, sdlc-layer: 5m, sdlc-stage: 5m}
   - name: runner
     package: builtin:runner                # executes things; slow, so it's refreshed per entity
     runtime: in-image
@@ -516,6 +519,30 @@ kinds:
            'codeScanning': record.codeScanning, 'codeScanningPinned': record.codeScanningPinned,
            'securityPolicy': record.securityPolicy, 'workflowOwners': record.workflowOwners,
            'watchOverride': has(record.watchOverride) ? record.watchOverride : []}
+
+  # ── Public docs site (docs/design/site-standards.md) ─────────────────────────────────────────
+  - name: SitePage
+    description: "One Starlight content page of the public docs site."
+    identityFrom: [connector:workspace]
+    fields:
+      path: {type: string, description: "Path of the content file from the repository root."}
+      slug: {type: string, description: "Starlight slug. Empty for the home page."}
+      title: {type: string, description: "Frontmatter title. Empty when the page has none."}
+      descriptionChars: {type: integer, description: "Characters in the frontmatter description."}
+      draft: {type: boolean, description: "The page is a draft."}
+      sidebarHidden: {type: boolean, description: "The page sets sidebar.hidden or hidden."}
+      inSidebar: {type: boolean, description: "A reader can reach the page from the sidebar, and it is not a draft."}
+      missingFiles: {type: list, items: string, description: "Link targets that are neither a content page nor a file."}
+      secretHits: {type: list, items: string, description: "Lines matching an AWS access key or a GitHub token shape."}
+    sources: {default: [connector:workspace]}
+    map:
+      - from: workspace/site-page
+        id: "'site-page:' + record.path"
+        set: >-
+          {'path': record.path, 'slug': record.slug, 'title': record.title,
+           'descriptionChars': record.descriptionChars, 'draft': record.draft,
+           'sidebarHidden': record.sidebarHidden, 'inSidebar': record.inSidebar,
+           'missingFiles': record.missingFiles, 'secretHits': record.secretHits}
 
   # ── Layers 2 and 3: what operators and users rely on ─────────────────────────────────────
   - name: Command
@@ -1474,6 +1501,41 @@ scorecards:
         fix: "Pin github/codeql-action to a 40-character commit, the same way other actions are pinned."
     facets: {summary: public, details: public}
 
+  # ── Public docs site (docs/design/site-standards.md) ─────────────────────────────────────
+  # A page is part of the site when it is titled, described, linked, and reachable from the sidebar.
+  - name: maintainer-site
+    kind: SitePage
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    ratchet: {newEntitiesAtLeast: bronze}
+    rules:
+      - name: titled
+        level: bronze
+        check: "entity.title.size() > 0"
+        evidence: "['no title']"
+        fix: "Set the frontmatter title. Starlight uses it as the page heading and the document title."
+      - name: described
+        level: bronze
+        check: "entity.descriptionChars > 0"
+        evidence: "['no description']"
+        fix: "Set the frontmatter description. It is the summary a reader and a search index see."
+      - name: links-resolve
+        level: bronze
+        check: "entity.missingFiles.size() == 0"
+        evidence: "entity.missingFiles"
+        fix: "Fix or remove the links in the evidence. A root-relative link must include the site base and name a content page, a file under site/public, or an Astro page under site/src/pages."
+      - name: reachable
+        level: silver
+        check: "entity.inSidebar"
+        evidence: "['not in the sidebar']"
+        fix: "Add the page's directory to the sidebar autogenerate list, or link its slug. Leave draft unset."
+      - name: no-hardcoded-secrets
+        level: gold
+        check: "entity.secretHits.size() == 0"
+        evidence: "entity.secretHits"
+        fix: "Remove the credential in the evidence. A docs page is published to GitHub Pages."
+    facets: {summary: public, details: public}
+
   # ── Repository level (docs/design/repo-level.md) ─────────────────────────────────────────
   # The level is the lowest constituent. A weighted 0–10 is not the gate. `cards` is bound on a
   # second pass; fixture samples under /demo/ are not constituents, so the ladder fixtures do
@@ -1986,12 +2048,12 @@ rubrics:
 mcp:
   instructions: >-
     Toolbox for Toolbox: the catalogue of Toolbox's own crates, docs, scripts, CLI commands and MCP
-    tools, agent skills, first-party connectors, direct Cargo dependencies, agent instruction files, npm manifests, JSON Schemas, example write-ups, agent plugins and the repository rollup, scored against the maintainer, operator and user SDLC standards. To raise the bar, pick
+    tools, agent skills, first-party connectors, direct Cargo dependencies, agent instruction files, npm manifests, JSON Schemas, example write-ups, agent plugins, public docs pages and the repository rollup, scored against the maintainer, operator and user SDLC standards. To raise the bar, pick
     a failing rule with scorecard_status, read the evidence with explain (rule) or get: Crate
     undocumented, longFunctions, complexFunctions, clippy.messages, tests.output; Doc brokenLinks,
     counts; Command undocumentedArgs, documentedIn, exercisedBy; McpTool undescribedProperties,
     documentedIn, exercisedBy, viaCli; Skill frontmatterErrors, triggerCues, pronouns, missingFiles,
-    secretHits, boundaryCues, evalCases; Connector documentedKinds, transport, tests, conformanceMentions, secretHits; Dependency requirements, versions, sources, usedBy; AgentDoc missingFiles, commandLines, ciMissingCommands, secretHits, hiddenChars; PackageJson wildcardRanges, gitRanges, lockfile, checkScripts, ciUsesInstall; JsonSchema dialect, schemaId, externalRefs; Example missingFiles, commandLines; Plugin misplacedSkills, headerSecrets, pathEscapes, commandToken; Repository dependabotGaps, codeScanning, securityPolicy, workflowOwners. Change the code, refresh_entity, and check the score again.
+    secretHits, boundaryCues, evalCases; Connector documentedKinds, transport, tests, conformanceMentions, secretHits; Dependency requirements, versions, sources, usedBy; AgentDoc missingFiles, commandLines, ciMissingCommands, secretHits, hiddenChars; PackageJson wildcardRanges, gitRanges, lockfile, checkScripts, ciUsesInstall; JsonSchema dialect, schemaId, externalRefs; Example missingFiles, commandLines; Plugin misplacedSkills, headerSecrets, pathEscapes, commandToken; SitePage missingFiles, inSidebar, secretHits; Repository dependabotGaps, codeScanning, securityPolicy, workflowOwners. Change the code, refresh_entity, and check the score again.
     Contract tests count when a test or script contains a tools/call body naming the tool.
 
 tests: [tests/standards.test.yaml]

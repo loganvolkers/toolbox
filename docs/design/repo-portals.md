@@ -26,7 +26,7 @@ portal, these repos are already its children ([federation.md](./federation.md) �
 | Evidence for failing rules | rule `evidence:` CEL, shown by `report`, `scorecard_status`, `explain`, `scorecard_report` | ✅ |
 | Work lists | `toolbox scorecard <name> --rule R` / MCP `scorecard_report` (needs `serve`) | ✅ |
 | Live, agent-driven loop | `toolbox serve` + `toolbox mcp`, with refreshes that report what changed | ✅ |
-| Static publishing | `report -o html`: one self-contained page | ✅ (§4); a multi-page site is a proposal (§5) |
+| Static publishing | `report -o html`: one self-contained page. `report -o web`: the same page plus `<toolbox-report>` and its JSON, so a host fills header, nav, and footer slots | ✅ (§4); a multi-page site is a proposal (§5) |
 | **GitHub Action** | `uses: loganvolkers/toolbox/actions/report@<sha>`: one step, with a starter portal ([examples/repo-portal-starter](../../examples/repo-portal-starter/README.md)) | ✅ (D69, §6) |
 | Readers for existing ratchets | Betterer results files; ESLint, PHPStan and basedpyright baselines | Betterer ✅; others proposed (ratchets.md R2) |
 
@@ -83,6 +83,27 @@ and it never goes stale relative to the commit it describes.
 | CI artifact | `toolbox report … -o html --out report.html` and upload it |
 | GitHub Pages | The same, in a Pages workflow on the default branch |
 | PR | Upload it as an artifact and link it from the ratchet's summary comment |
+
+**Hosting it in another site.** The page is the custom element `<toolbox-report>`. Its scorecards render in a shadow tree. A host page — an Astro page, or any HTML — projects its own chrome into three slots, and that markup is not copied into the report:
+
+| Slot | Where it sits |
+|---|---|
+| `header` | Above the report |
+| `nav` | Below the header, and not the scorecard tabs (those stay inside the element) |
+| `footer` | Below the scorecards |
+
+`-o web --out DIR` writes three files: `toolbox-report.js` (the element), `report.json` (the data), and `index.html` (the one-file page, data inlined, so an artifact still opens on its own). A host loads the first two:
+
+```html
+<script src="toolbox-report.js"></script>
+<toolbox-report src="report.json">
+  <a slot="header" href="/docs">Docs</a>
+  <nav slot="nav"><a href="/standards">Standards</a></nav>
+  <p slot="footer">Published from CI.</p>
+</toolbox-report>
+```
+
+This site does that in `site/src/pages/report-hosted.astro` (D93). The data script inside the one-file page is the only interpolation, and a `</` in the JSON is escaped so it cannot close the script.
 
 **Visibility caveat.** The page shows *everything*, because `report` has no caller and applies no
 facets. That is right for a repo portal, whose readers can read the repo anyway. It is wrong for a

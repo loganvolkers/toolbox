@@ -91,7 +91,9 @@ enum Command {
         /// Connectors not to run (comma-separated), e.g. a slow runner.
         #[arg(long, value_delimiter = ',')]
         skip: Vec<String>,
-        /// Output: md (default), json, or html (one self-contained page to publish).
+        /// Output: md (default), json, html (one self-contained page), or web (a directory:
+        /// the `<toolbox-report>` element, its JSON, and that page). A host fills the
+        /// element's header, nav, and footer slots; pass --out DIR for web.
         #[arg(short = 'o', long, default_value = "md")]
         output: String,
         /// Write the output to this file instead of stdout.

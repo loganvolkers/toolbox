@@ -30,6 +30,7 @@ no Postgres, no OpenFGA, no network.
 | `maintainer-schema` | 1. Maintainer | JsonSchema | Draft 2020-12, an absolute id, a description; then a title and the compiler loads it; then local `$ref`s only. New schemas must reach bronze |
 | `maintainer-example` | 1. Maintainer | Example | A heading and resolving links; then a command that checks the example; then a pointer at the design. New write-ups must reach bronze |
 | `maintainer-plugin` | 1. Maintainer | Plugin | The 1.0.0 plugin schema and legal skill paths; then `mcp.json` and a one-token stdio command; then no secret header, path escape or hardcoded secret. New packages must reach bronze |
+| `maintainer-site` | 1. Maintainer | SitePage | A title, a description and resolving links; then in the sidebar and not a draft; then no secret shape. New pages must reach bronze |
 | `maintainer-supply-chain` | 1. Maintainer | Repository | Dependabot, code scanning and a security policy; then CODEOWNERS covers CI; then the code-scanning action is pinned. New repositories must reach bronze |
 | `maintainer-repo` | 1. Maintainer | Repository | The lowest counted scorecard, with unknown rules excluded. New repositories must reach bronze |
 
@@ -41,6 +42,7 @@ toolbox report portal                               # ~2 min: also cargo test, c
 toolbox report portal --skip runner,github-actions --baseline portal/results.json          # the ratchet (CI adds --ci)
 toolbox report portal --skip runner,github-actions --baseline portal/results.json --update # record an improvement; commit it
 toolbox report portal --skip runner,github-actions -o html --out report.html            # one page to publish
+toolbox report portal --skip runner,github-actions -o web --out report                  # element, JSON, and that page; a host fills the slots
 scripts/self-portal.sh serve                        # live portal on :8090 (API, MCP, UI)
 toolbox test portal                                 # the standards' own tests, over the curated fixtures
 toolbox assess brief rule:toolbox/user-mcp/contract-tested --portal portal --skip runner,github-actions   # brief your agent

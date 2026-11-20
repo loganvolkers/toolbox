@@ -633,8 +633,8 @@ These designs close the gaps found in the [red-team review](./red-team.md). Each
 | **Verification** | *v1:* the reference model as oracle, differential tests (Rust ≡ reference ≡ SQL; OpenFGA ≡ SQL), property tests P1–P13, schema and transcript contract tests. Deterministic simulation deferred (D44) | [verification.md](./design/verification.md) |
 | **Repo portals** | Toolbox without a server: `toolbox report` in CI, rule evidence, ratchet baselines (Betterer-style), one-file HTML publishing (D66); the `actions/report` GitHub Action and a starter portal for one-step adoption (D69) | [repo-portals.md](./design/repo-portals.md), [ratchets.md](./design/ratchets.md) |
 | **Federation** | Standards down as versioned packages, results up as report files, graduation team → org → company with stages and waivers; design only (D68) | [federation.md](./design/federation.md) |
-| **Packages** | Shareable standards as data packages (fragments, fixtures, tests, rubrics, skills, typed parameters); git-first with an OCI mirror, pinned by digest (recommended, Q15 open); T4T split with `include`; `oss-package` scorecard for what we publish; shareability signals; fleet rollout with `actions/report` and gh-aw | [packages.md](./design/packages.md) |
-| **Package author SDLC** | The fourth SDLC layer (D87); binary distribution for Toolbox (`dist`, installers, image), connectors outside core (executable, WASM, remote), upstream tools via mise/aqua (Q16); SDLC stages catalogued and scored in T4T | [package-author-sdlc.md](./design/package-author-sdlc.md) |
+| **Packages** | Shareable standards as data packages (fragments, fixtures, tests, rubrics, skills, typed parameters); git-first with an OCI mirror, pinned by digest (D89); T4T split with `include`; `oss-package` scorecard for what we publish; shareability signals; fleet rollout with `actions/report` and gh-aw | [packages.md](./design/packages.md) |
+| **Package author SDLC** | The fourth SDLC layer (D87); binary distribution for Toolbox (`dist`, installers, image), connectors outside core (executable, WASM, remote), upstream tools via mise/aqua (D90); SDLC stages catalogued and scored in T4T | [package-author-sdlc.md](./design/package-author-sdlc.md) |
 | **Scorecards for scorecards** | What makes a standard good (12 lessons); `meta-rule` and `meta-scorecard` over every portal's rules, self-applied at one level; kinds, fields and connectors scored (`meta-kind`/`-field`/`-connector`); judgement pushed by coding agents as assessments against manifest rubrics, scored (`meta-assessment`, `meta-rubric`) and reviewed once (D79, D80); CEL analysis; undeclared functions rejected; new-entity floors; LLM assessment and agent trials proposed (D71) | [scorecards-for-scorecards.md](./design/scorecards-for-scorecards.md) |
 | **GitHub Actions standards** | Workflows and third-party actions as entities; security (zizmor, actionlint, pinning, token scope), reliability (fail rate, red streak, re-runs, timeouts, p90) and supply-chain scorecards; unknown-not-fail for missing tools (D70) | [github-actions-standards.md](./design/github-actions-standards.md) |
 | **Toolbox for Toolbox** | Toolbox scores its own repo: a local portal over crates, docs, CLI commands, MCP tools, agent skills and first-party connectors with a scorecard set per SDLC layer; generic `workspace` and `runner` connectors; findings on rule evidence, multi-hop derivation, ratchets and a local report mode (D65, D72, D73) | [toolbox-for-toolbox.md](./design/toolbox-for-toolbox.md) |
@@ -650,6 +650,7 @@ These designs close the gaps found in the [red-team review](./red-team.md). Each
 | **Decision citations** | A `D` number in a document must be a row of the decision log (D84) | [decision-citations.md](./design/decision-citations.md) |
 | **Supply-chain standards** | The repository record gates Dependabot, code scanning, a security policy, and a CODEOWNERS rule for CI. Alert counts stay ungated (D85) | [supply-chain-standards.md](./design/supply-chain-standards.md) |
 | **Repository level** | `maintainer-repo` is the lowest counted scorecard. Unknown rules and runner-backed cards are excluded (D86) | [repo-level.md](./design/repo-level.md) |
+| **Public docs site** | A Starlight site in `site/`, published to GitHub Pages. Each content page is a catalog entity. `maintainer-site` gates a title, a description, resolving links, sidebar reach, and no secret shape (D91). The site also publishes this repo's `toolbox report` HTML, checked byte for byte in CI (D92). The report is a custom element; a host page fills its header, nav, and footer slots (D93) | [site-standards.md](./design/site-standards.md) |
 | **Maintainer SDLC** (layer 1) | How Toolbox itself is built and verified: AGENTS.md harness, check pyramid (unit, contract, parity, reference-model differential, `.fga.yaml`, acceptance per milestone, scale budget), measured loop, CI | [maintainer-sdlc.md](./design/maintainer-sdlc.md) |
 | **User SDLC** (layer 3) | Building apps and agents on a portal: discover via MCP/REST/CLI, develop against fixture or preview portals, deterministic tests with snapshot ids, PATs and service identities, stability and deprecation contract | [user-sdlc.md](./design/user-sdlc.md) |
 | **Developer velocity** | *v1:* small workspace, no per-portal codegen, `toolbox dev` as watch + full recompute, measured dev-loop SLOs; heavy tooling deferred (D44, D46) | [developer-velocity.md](./design/developer-velocity.md) |
@@ -1130,11 +1131,11 @@ DBOS-model workflows, UI extension contract with React as default, in-image exec
 builder, GraphQL deferred, sprawl budget (D33–D47). These supersede the 2026-11-19 lines above where they
 conflict (DBSP, embedded c-archive, Python SDK, GraphQL).
 
-**Still open:** see [decisions.md](./decisions.md) for the current list (Q1, Q3–Q8, Q10–Q13). Items 1 and 4
+**Still open:** see [decisions.md](./decisions.md) for the current list (Q3–Q8, Q10–Q13). Items 1 and 4
 below are updated there (Q2 resolved by D42; Q4 is now behind the `Durable` contract).
 1. **TCP governance:** publish it as a separate spec repo under a neutral name from day one
    (recommended), or keep it inside Toolbox until it stabilises?
-2. **Licence:** Apache-2.0 (recommended) vs. MPL-2.0 vs. AGPL.
+2. **Licence:** resolved by D88: MIT.
 3. **Scope of first-release connectors:** GitHub-first, or GitHub and GitLab together?
 4. **Durable runtime:** adopt the DBOS Rust SDK as-is once production-ready, or own a minimal
    schema-compatible runtime (decided after the Phase 0 spike)?

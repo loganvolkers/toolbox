@@ -13,19 +13,16 @@
         "level": "bronze"
       },
       "action:actions/checkout": {
-        "failing": {
-          "pinned-everywhere": 1
-        },
-        "level": "none"
+        "level": "bronze"
+      },
+      "action:actions/deploy-pages": {
+        "level": "bronze"
       },
       "action:actions/download-artifact": {
         "level": "bronze"
       },
       "action:actions/setup-node": {
-        "failing": {
-          "pinned-everywhere": 1
-        },
-        "level": "none"
+        "level": "bronze"
       },
       "action:actions/setup-python": {
         "failing": {
@@ -34,6 +31,9 @@
         "level": "none"
       },
       "action:actions/upload-artifact": {
+        "level": "bronze"
+      },
+      "action:actions/upload-pages-artifact": {
         "level": "bronze"
       },
       "action:docker/build-push-action": {
@@ -82,6 +82,17 @@
         },
         "level": "none"
       },
+      "workflow:.github/workflows/pages.yml": {
+        "failing": {
+          "fail-rate-under-10": 1,
+          "fail-rate-under-20": 1,
+          "fail-rate-under-5": 1,
+          "fast-feedback": 1,
+          "few-reruns": 1,
+          "main-not-stuck-red": 1
+        },
+        "level": "none"
+      },
       "workflow:.github/workflows/release.yml": {
         "failing": {
           "cancels-superseded-runs": 1,
@@ -103,12 +114,15 @@
       "workflow:.github/workflows/ci.yml": {
         "failing": {
           "no-medium-findings": 6,
-          "pinned-to-sha": 3,
-          "zizmor-clean": 25
+          "pinned-to-sha": 1,
+          "zizmor-clean": 16
         },
         "level": "none"
       },
       "workflow:.github/workflows/image.yml": {
+        "level": "gold"
+      },
+      "workflow:.github/workflows/pages.yml": {
         "level": "gold"
       },
       "workflow:.github/workflows/release.yml": {
@@ -479,6 +493,9 @@
       "doc:docs/design/sdlc.md": {
         "level": "silver"
       },
+      "doc:docs/design/site-standards.md": {
+        "level": "silver"
+      },
       "doc:docs/design/skill-standards.md": {
         "level": "silver"
       },
@@ -617,6 +634,9 @@
         },
         "level": "silver"
       },
+      "package-json:site/package.json": {
+        "level": "gold"
+      },
       "package-json:ui/package.json": {
         "failing": {
           "ci-installs-from-the-lockfile": 1,
@@ -652,6 +672,32 @@
         "level": "gold"
       },
       "json-schema:schema/manifest.schema.json": {
+        "level": "gold"
+      }
+    },
+    "maintainer-site": {
+      "site-page:site/src/content/docs/agents/reads.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/concepts/catalog.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/concepts/layers.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/concepts/scorecards.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/demo/report.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/index.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/operators/portal.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/start/run.md": {
         "level": "gold"
       }
     },
@@ -2293,6 +2339,33 @@
       "field:toolbox/SdlcStage.status": {
         "level": "gold"
       },
+      "field:toolbox/SitePage.descriptionChars": {
+        "level": "gold"
+      },
+      "field:toolbox/SitePage.draft": {
+        "level": "gold"
+      },
+      "field:toolbox/SitePage.inSidebar": {
+        "level": "gold"
+      },
+      "field:toolbox/SitePage.missingFiles": {
+        "level": "gold"
+      },
+      "field:toolbox/SitePage.path": {
+        "level": "gold"
+      },
+      "field:toolbox/SitePage.secretHits": {
+        "level": "gold"
+      },
+      "field:toolbox/SitePage.sidebarHidden": {
+        "level": "gold"
+      },
+      "field:toolbox/SitePage.slug": {
+        "level": "gold"
+      },
+      "field:toolbox/SitePage.title": {
+        "level": "gold"
+      },
       "field:toolbox/Skill.bodyLines": {
         "failing": {
           "described": 1
@@ -2687,6 +2760,9 @@
         "level": "gold"
       },
       "kind:toolbox/SdlcStage": {
+        "level": "gold"
+      },
+      "kind:toolbox/SitePage": {
         "level": "gold"
       },
       "kind:toolbox/Skill": {
@@ -3125,6 +3201,21 @@
       "rule:toolbox/maintainer-schema/wired-in": {
         "level": "gold"
       },
+      "rule:toolbox/maintainer-site/described": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-site/links-resolve": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-site/no-hardcoded-secrets": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-site/reachable": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-site/titled": {
+        "level": "gold"
+      },
       "rule:toolbox/maintainer-skill/description-says-when": {
         "level": "gold"
       },
@@ -3510,6 +3601,9 @@
         "level": "gold"
       },
       "scorecard:toolbox/maintainer-schema": {
+        "level": "gold"
+      },
+      "scorecard:toolbox/maintainer-site": {
         "level": "gold"
       },
       "scorecard:toolbox/maintainer-skill": {
