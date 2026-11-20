@@ -1,6 +1,6 @@
 # Supply-Chain Standards: The Files That Turn GitHub Advanced Security On
 
-*Status: deterministic catalog and scorecard built, 2026-11-20 (D84). Toolbox for Toolbox scores the
+*Status: deterministic catalog and scorecard built, 2026-11-20 (D85). Toolbox for Toolbox scores the
 repository record with `maintainer-supply-chain`. Alert counts are not a gate. Related:
 [github-actions-standards.md](./github-actions-standards.md),
 [repo-level.md](./repo-level.md),

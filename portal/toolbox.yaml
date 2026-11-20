@@ -22,7 +22,7 @@ policies:
     - docs/technology-critique.md
     - docs/research.md
     - docs/ocean.md
-  # Scorecards whose lowest level is the repository level (D85). Unknown constituents drop out.
+  # Scorecards whose lowest level is the repository level (D86). Unknown constituents drop out.
   # Runner-backed cards are omitted: a skipped clippy run would make the repo `none` on absent data.
   repoRollup:
     - maintainer-docs
@@ -69,7 +69,7 @@ connectors:
       agentDocs: ["**/AGENTS.md", "**/CLAUDE.md", "**/GEMINI.md", "**/.cursorrules", "**/.github/copilot-instructions.md", "**/.github/instructions/*.instructions.md", "**/.cursor/rules/**/*.md", "**/.cursor/rules/**/*.mdc", "**/.claude/rules/**/*.md"]
       # Agent plugin packages (docs/design/plugin-standards.md).
       plugins: ["plugins/*/plugin.json"]
-      # The checkout itself: supply-chain config and the repository rollup (D84, D85).
+      # The checkout itself: supply-chain config and the repository rollup (D85, D86).
       repo: true
       # npm manifests (docs/design/package-standards.md). One record per package.json.
       packages: ["**/package.json"]
@@ -113,10 +113,10 @@ connectors:
         - name: portals
           command: [target/debug/toolbox, describe, portal, portal, examples/repo-portal-starter, examples/reference-portal, --results, portal=portal/results.json]
           parse: ndjson
-          kinds: [scorecard, rule, kind, field, connector]
-    records: [command, mcp-tool, scorecard, rule, kind, field, connector]
-    refresh: {command: [external_ids], mcp-tool: [external_ids], scorecard: [external_ids], rule: [external_ids], kind: [external_ids], field: [external_ids], connector: [external_ids]}
-    freshness: {command: 5m, mcp-tool: 5m, scorecard: 5m, rule: 5m, kind: 5m, field: 5m, connector: 5m}
+          kinds: [scorecard, rule, kind, field, connector, rubric]
+    records: [command, mcp-tool, scorecard, rule, kind, field, connector, rubric]
+    refresh: {command: [external_ids], mcp-tool: [external_ids], scorecard: [external_ids], rule: [external_ids], kind: [external_ids], field: [external_ids], connector: [external_ids], rubric: [external_ids]}
+    freshness: {command: 5m, mcp-tool: 5m, scorecard: 5m, rule: 5m, kind: 5m, field: 5m, connector: 5m, rubric: 5m}
   - name: ci-lint
     package: builtin:runner                # zizmor and actionlint: fast, offline, deterministic at pinned versions
     runtime: in-image
@@ -805,6 +805,29 @@ kinds:
            'records': record.records, 'unmapped': record.unmapped, 'withoutFreshness': record.withoutFreshness,
            'refreshable': record.refreshable, 'fixtureRecords': record.fixtureRecords, 'hash': record.hash}
 
+  - name: Rubric
+    description: A rubric one of the described portals declares, with how it has been used.
+    identityFrom: [connector:surfaces]
+    fields:
+      portal: {type: string, description: Portal that declares it.}
+      name: {type: string, description: The rubric's name.}
+      rubricKind: {type: string, description: The kind it assesses.}
+      subject: {type: string, description: The field assessments are versioned by.}
+      described: {type: boolean, description: The rubric has a description.}
+      criteria: {type: list, items: string, description: Its criteria.}
+      unguided: {type: list, items: string, description: Criteria without guidance.}
+      assessments: {type: integer, description: "Assessments made with it (the portal's assessments/ files)."}
+      alwaysPass: {type: list, items: string, description: "With three or more assessments: criteria every one passed."}
+      hash: {type: string, description: Content hash of the rubric.}
+    sources: {default: [connector:surfaces]}
+    map:
+      - from: surfaces/rubric
+        id: "'rubric:' + record.portal + '/' + record.name"
+        set: >-
+          {'portal': record.portal, 'name': record.name, 'rubricKind': record.kind, 'subject': record.subject,
+           'described': record.described, 'criteria': record.criteria, 'unguided': record.unguided,
+           'assessments': record.assessments, 'alwaysPass': record.alwaysPass, 'hash': record.hash}
+
   # ── Judgement, pushed by coding agents (D79) ─────────────────────────────────────────────
   - name: Assessment
     description: "One coding agent's (or person's) judgement of one entity against a rubric: a file in portal/assessments/, written after `toolbox assess brief`."
@@ -822,7 +845,14 @@ kinds:
       reasons: {type: list, items: string, description: "One line per criterion: verdict, name and reason."}
       summary: {type: string, description: The assessor's summary.}
       path: {type: string, description: The file it was read from.}
+      unsuggested: {type: list, items: string, description: "Criteria judged fail or unsure without a suggestion."}
+      uncited: {type: list, items: string, description: "Criteria whose reason cites nothing checkable (a path, a decision id, a section, a number)."}
+      hash: {type: string, description: "Content hash of the assessment: what an assessment-quality review of it is versioned by."}
+      reviewState: {type: string, description: "assessment-quality review: fresh, stale or missing.", computed: "inbound.assessesAssessment.size() == 0 ? 'missing' : (inbound.assessesAssessment[0].subjectHash == entity.hash ? 'fresh' : 'stale')"}
+      reviewFailing: {type: list, items: string, description: "Criteria the assessment-quality review failed.", computed: "inbound.assessesAssessment.size() == 0 ? [] : inbound.assessesAssessment[0].failing"}
+      reviewUnsure: {type: list, items: string, description: "Criteria the reviewer was unsure of.", computed: "inbound.assessesAssessment.size() == 0 ? [] : inbound.assessesAssessment[0].unsure"}
     relations:
+      assessesAssessment: {to: Assessment, many: false, unresolved: ignore}
       assessesRule: {to: Rule, many: false, unresolved: ignore}
       assessesScorecard: {to: Scorecard, many: false, unresolved: ignore}
       assessesCrate: {to: Crate, many: false, unresolved: ignore}
@@ -835,8 +865,10 @@ kinds:
            'assessorName': has(record.assessor.name) ? record.assessor.name : null, 'assessorKind': record.assessor.kind,
            'at': string(record.at), 'verdict': record.verdict, 'failing': record.failing, 'unsure': record.unsure,
            'reasons': record.verdicts.map(v, v.verdict + ' ' + v.criterion + ': ' + v.reason),
-           'summary': record.summary, 'path': record.path}
+           'summary': record.summary, 'path': record.path, 'unsuggested': record.unsuggested,
+           'uncited': record.uncited, 'hash': record.hash}
         relations:
+          assessesAssessment: "record.entity.startsWith('assessment:') ? [record.entity] : []"
           assessesRule: "record.entity.startsWith('rule:') ? [record.entity] : []"
           assessesScorecard: "record.entity.startsWith('scorecard:') ? [record.entity] : []"
           assessesCrate: "record.entity.startsWith('crate:') ? [record.entity] : []"
@@ -1841,10 +1873,109 @@ scorecards:
         fix: "Resolve what the assessor was unsure of, or record the open question in docs/decisions.md and link it."
     facets: {summary: public, details: public}
 
+  # ── Assessments and rubrics are standards too (D80) ──────────────────────────────────────
+  # Deterministic, so ratcheted: what any assessment must contain to be worth reading.
+  - name: meta-assessment
+    kind: Assessment
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    ratchet: {newEntitiesAtLeast: bronze}   # a new assessment must name its assessor and suggest fixes
+    rules:
+      - name: suggests-fixes
+        level: bronze
+        check: "entity.unsuggested.size() == 0"
+        evidence: "entity.unsuggested"
+        fix: "Add a `suggestion:` to each listed fail or unsure verdict: the change that would make it pass."
+      - name: assessor-named
+        level: bronze
+        check: "has(entity.assessorName) && entity.assessorName.size() > 0"
+        evidence: "['assessor.name is empty']"
+        fix: "Set `assessor.name` to the agent harness or person who made the assessment."
+      - name: cites-for-findings
+        level: silver
+        check: "entity.uncited.filter(c, c in entity.failing || c in entity.unsure).size() == 0"
+        evidence: "entity.uncited.filter(c, c in entity.failing || c in entity.unsure)"
+        fix: "Cite what each listed fail or unsure reason rests on: a file path, a decision id (D71), a section (§4) or a number."
+      - name: cites-everything
+        level: gold
+        check: "entity.uncited.size() == 0"
+        evidence: "entity.uncited"
+        fix: "Cite a source in every reason, passes included, so a reviewer can check the verdict."
+    facets: {summary: public, details: public}
+
+  - name: meta-rubric
+    kind: Rubric
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    ratchet: {newEntitiesAtLeast: bronze}   # a new rubric must be described and used once
+    rules:
+      - name: described
+        level: bronze
+        check: "entity.described"
+        evidence: "['rubric ' + entity.name + ' has no description']"
+        fix: "Describe what the rubric judges and which sources the assessor should read."
+      - name: in-use
+        level: bronze
+        check: "entity.assessments > 0"
+        evidence: "['no assessment uses ' + entity.name]"
+        fix: "Assess one entity with it (`toolbox assess brief <id> --rubric <name>`), or remove the rubric."
+      - name: guided
+        level: silver
+        check: "entity.unguided.size() == 0"
+        evidence: "entity.unguided"
+        fix: "Give each listed criterion `guidance:` saying what counts as fail, so assessors agree."
+      - name: discriminates
+        level: gold
+        check: "entity.assessments >= 3 && entity.alwaysPass.size() == 0"
+        evidence: "entity.assessments < 3 ? ['only ' + string(entity.assessments) + ' assessment(s); 3 show whether criteria discriminate'] : entity.alwaysPass.map(c, c + ' passed in every assessment')"
+        fix: "Sharpen or drop a criterion that everything passes; a question nothing fails asks nothing."
+    facets: {summary: public, details: public}
+
+  # Judgement of judgement. Stops here: reviews made with assessment-quality are not reviewed.
+  - name: review-assessment
+    kind: Assessment
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    ratchet: {advisory: true}
+    appliesTo: "entity.rubric != 'assessment-quality'"
+    rules:
+      - name: assessed
+        level: bronze
+        check: "entity.reviewState == 'fresh'"
+        evidence: "[entity.reviewState == 'stale' ? 'the assessment changed since it was reviewed' : 'not reviewed against assessment-quality']"
+        fix: "Run `toolbox assess brief <assessment id> --portal portal`; a different agent or person should review it."
+      - name: passes-review
+        level: silver
+        check: "entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0"
+        evidence: "entity.reviewState == 'fresh' ? entity.reviewFailing : ['no current review']"
+        fix: "Revise the assessment where the review found it unsupported or incomplete, then have it reviewed again."
+      - name: no-doubts
+        level: gold
+        check: "entity.reviewState == 'fresh' && entity.reviewUnsure.size() == 0"
+        evidence: "entity.reviewState == 'fresh' ? entity.reviewUnsure : ['no current review']"
+        fix: "Resolve what the reviewer was unsure of, usually by citing the source a verdict rests on."
+    facets: {summary: public, details: public}
+
 rubrics:
   # What a coding agent judges, given `toolbox assess brief` (or the assessment_brief MCP tool).
   # Criteria are questions a deterministic check can't answer; anything a check can answer belongs
   # in a scorecard rule instead (docs/design/scorecards-for-scorecards.md §6).
+  - name: assessment-quality
+    kind: Assessment
+    description: "Is this assessment trustworthy? Read the assessment, then the sources its reasons cite, and the entity it judges (toolbox get <entity>). Review someone else's assessment, not your own."
+    criteria:
+      - name: supported
+        question: Is every verdict supported by the sources its reason cites?
+        guidance: Open each cited file, decision or number. Fail when a cited source doesn't say what the reason claims.
+      - name: complete
+        question: Did the assessment get every criterion right, missing no failure the sources show?
+        guidance: Fail and name the criterion that should have failed or been unsure, with the evidence.
+      - name: reproducible
+        question: Would a second assessor, reading the same sources, reach the same verdicts?
+        guidance: Unsure when a verdict rests on taste rather than on something the sources state.
+      - name: actionable
+        question: Would following the suggestions change the verdicts they are attached to?
+        guidance: Fail when a suggestion improves something else (another rule, the scorecard) but leaves this entity's verdict as it is.
   - name: rule-quality
     kind: Rule
     description: Is this rule a good standard? Read its check, evidence and fix in the portal's toolbox.yaml, its tests, and the design doc its scorecard cites.
@@ -1867,6 +1998,7 @@ rubrics:
     criteria:
       - name: one-concern
         question: Does it measure one concern for one audience (one SDLC layer), so its level means one thing?
+        guidance: Fail when its rules serve two audiences or layers (e.g. security and speed); name the split.
       - name: levels-are-a-ladder
         question: Does each level build on the one below, with bronze reachable now and gold worth reaching?
         guidance: Fail when a level mixes unrelated rules or a gold rule is cheaper than a bronze one.
@@ -1875,19 +2007,23 @@ rubrics:
         guidance: Fail and name the missing rule; compare with the research its design doc cites.
       - name: actionable
         question: Can an agent raise an entity one level using only the scorecard's fixes, evidence and the portal's tools?
+        guidance: Fail when a rule's fix names no place to change, or it has no evidence; try raising one entity yourself.
   - name: crate-design
     kind: Crate
     description: Is this crate well designed for its place in Toolbox? Read its crate docs, public API and tests, and docs/v1-spec.md §4.
     criteria:
       - name: one-responsibility
         question: Does the crate do one thing, stated in its crate docs, that matches its role in docs/v1-spec.md §4?
+        guidance: Fail when the crate docs are missing, stale, or describe several unrelated jobs.
       - name: small-contract
         question: Do other crates use it through a small, documented public API rather than its internals?
+        guidance: Search other crates for `use <crate>::`; fail when they reach internals or receive third-party types.
       - name: replaceable-defaults
         question: If it wraps a default (cel-rust, OpenFGA, DBOS, Postgres, React), could that default be swapped behind a Toolbox-owned contract (charter goal 3)?
         guidance: Pass when it wraps no third-party default.
       - name: tests-match-risk
         question: Are its riskiest paths (parsing, authorization, persistence, protocol handling) tested, not only the easy ones?
+        guidance: List the riskiest paths first, then find a test for each; unsure when coverage is only indirect.
 
 mcp:
   instructions: >-

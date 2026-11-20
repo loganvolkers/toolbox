@@ -1,0 +1,32 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/maintainer-crate/has-tests
+rubric: assessment-quality
+subjectHash: "84b2aae0dbca"
+assessor: {kind: agent, name: claude-code}
+at: "2026-11-20"
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The check in portal/toolbox.yaml is `entity.unitTests + entity.integrationTests > 0`, so one
+      #[test] of any kind passes it, as the measures-intent and hard-to-game reasons claim.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The two passes hold: the fix text in portal/toolbox.yaml makes it pass, and a floor of one test
+      needs no sourced number (toolbox-for-toolbox.md §4 puts it at bronze).
+  - criterion: reproducible
+    verdict: unsure
+    reason: >-
+      This is a self-review: the same session wrote the assessment (assessor claude-code in both
+      files), so it can't show that a second assessor would agree.
+    suggestion: Have a different agent or person review it and replace this file.
+  - criterion: actionable
+    verdict: fail
+    reason: >-
+      Both suggestions add a companion rule (testCodeLines per code line); has-tests itself would
+      still pass on `#[test] fn t() {}`, so its two fail verdicts would not change.
+    suggestion: >-
+      Suggest changing has-tests itself, e.g. narrowing its fix text to "has at least one test" and
+      moving "tests the crate's main behaviour" to the new silver rule.
+summary: Supported and complete, but its suggestions fix the scorecard rather than the rule it judged.

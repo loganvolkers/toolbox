@@ -1,7 +1,7 @@
 # AGENTS.md Standards: Cataloguing the Instructions Agents Load
 
 *Status: deterministic catalog and scorecard built, 2026-11-20 (D75). Alias globs widened and check
-commands joined to workflows, 2026-11-20 (D81, D82). Toolbox for Toolbox catalogues `AGENTS.md` and
+commands joined to workflows, 2026-11-20 (D82, D83). Toolbox for Toolbox catalogues `AGENTS.md` and
 the aliases harnesses still read, and scores them with `maintainer-agent-doc`. Related:
 [agent-plugins.md](./agent-plugins.md), [plugin-standards.md](./plugin-standards.md),
 [toolbox-for-toolbox.md](./toolbox-for-toolbox.md).*
@@ -40,7 +40,7 @@ of problem as an LLM assessment: useful, and not a gate.
 
 `agentDocs` globs: `**/AGENTS.md`, `**/CLAUDE.md`, `**/GEMINI.md`, `**/.cursorrules`,
 `**/.github/copilot-instructions.md`, `**/.github/instructions/*.instructions.md`,
-`**/.cursor/rules/**/*.md`, `**/.cursor/rules/**/*.mdc`, `**/.claude/rules/**/*.md` (D81). Id
+`**/.cursor/rules/**/*.md`, `**/.cursor/rules/**/*.mdc`, `**/.claude/rules/**/*.md` (D82). Id
 `agent-doc:<path>`. The same
 file is also a `doc` when the docs glob matches it. The doc scorecard checks links and which SDLC
 layer a document names. This scorecard checks the instruction-file contract.
@@ -52,7 +52,7 @@ layer a document names. This scorecard checks the instruction-file contract.
 | `commandLines` | Lines containing `cargo`, `npm`, `pnpm`, `yarn`, `pytest` or `toolbox` |
 | `lines` | Line count |
 | `mentionsDecisions` | The body contains `decisions.md` |
-| `ciMissingCommands` | Backtick invocations (`cargo test`, `toolbox validate`, `python scripts/…`) whose tool and subcommand do not appear in a workflow. Lines that are markdown table rows are the track index, not the check procedure (D82) |
+| `ciMissingCommands` | Backtick invocations (`cargo test`, `toolbox validate`, `python scripts/…`) whose tool and subcommand do not appear in a workflow. Lines that are markdown table rows are the track index, not the check procedure (D83) |
 | `missingFiles` | Relative link targets that are not files |
 | `hiddenChars`, `secretHits` | The same hidden-character and high-precision secret checks as skills, on this file only |
 

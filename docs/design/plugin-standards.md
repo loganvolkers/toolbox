@@ -1,6 +1,6 @@
 # Plugin Standards: Cataloguing Agent Plugin Packages
 
-*Status: deterministic catalog and scorecard built, 2026-11-20 (D80). Toolbox for Toolbox catalogues
+*Status: deterministic catalog and scorecard built, 2026-11-20 (D81). Toolbox for Toolbox catalogues
 each `plugin.json` and scores it with `maintainer-plugin`. Loading the package in a harness is not
 a gate. Related: [agent-plugins.md](./agent-plugins.md),
 [agents-md-standards.md](./agents-md-standards.md),

@@ -1,6 +1,6 @@
 # Decision Citations: A Cited Id Must Be a Row
 
-*Status: rule built, 2026-11-20 (D83). `maintainer-docs` gains `cited-decisions-exist`. The decision
+*Status: rule built, 2026-11-20 (D84). `maintainer-docs` gains `cited-decisions-exist`. The decision
 log stays the index and stays skipped. Related:
 [toolbox-for-toolbox.md](./toolbox-for-toolbox.md),
 [scorecards-for-scorecards.md](./scorecards-for-scorecards.md).*

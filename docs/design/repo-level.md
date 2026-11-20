@@ -1,6 +1,6 @@
 # Repository Level: The Lowest Constituent Scorecard
 
-*Status: scorecard built, 2026-11-20 (D85). `maintainer-repo` reads the other scorecards on a second
+*Status: scorecard built, 2026-11-20 (D86). `maintainer-repo` reads the other scorecards on a second
 derive pass and takes the lowest level. A weighted 0–10 is not the gate. Related:
 [scorecards-for-scorecards.md](./scorecards-for-scorecards.md),
 [supply-chain-standards.md](./supply-chain-standards.md),
@@ -52,7 +52,7 @@ level.
 
 ## 4. Where this repository lands
 
-The live supply-chain entity is none (D84), and `maintainer-action-deps` stops at bronze. The
+The live supply-chain entity is none (D85), and `maintainer-action-deps` stops at bronze. The
 repository level is therefore none until those constituents rise. Fixtures watch one card each:
 `repo:acme/focused` watches the gold plugin and is gold, `repo:acme/partial` watches a bronze
 connector and is bronze, `repo:acme/unsafe` watches supply-chain and is none (D71).

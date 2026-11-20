@@ -1,6 +1,6 @@
 # Scorecards for Scorecards: What Makes a Standard Good, and Where the Recursion Stops
 
-*Status: built, 2026-11-20 (D71, D79). Toolbox for Toolbox ([portal/](../../portal/README.md))
+*Status: built, 2026-11-20 (D71, D79, D80). Toolbox for Toolbox ([portal/](../../portal/README.md))
 catalogues every part of three portals: itself, the
 [repo-portal starter](../../examples/repo-portal-starter/README.md) and the
 [reference portal](../../examples/reference-portal/README.md). Deterministic meta scorecards cover
@@ -54,8 +54,9 @@ There is no T4T4T. Two things keep L2 a fixed point:
 - **Determinism.** Meta rules read only the manifest, the CEL, the tests and the fixtures. Live
   outcomes on real data are attached for information but never scored, so describing scorecards
   never depends on its own previous output, and the ratchet converges after one `--update`.
-- **Assessments don't recurse.** The rubrics are in the same manifest. An assessment of
-  `review-rule` is possible, but nothing scores the assessments themselves beyond schema validation.
+- **Assessments recurse once.** Assessments are scored deterministically (`meta-assessment`) and
+  reviewed by an agent against `assessment-quality` (`review-assessment`). Reviews made with
+  `assessment-quality` are excluded from that card, so there is no review of reviews (§6.1).
 
 **What our own standards scored on the first run:**
 
@@ -274,6 +275,52 @@ gating.
 Four of the six found something no deterministic rule could. The crate assessment went stale within
 the hour, when this change made lazy lists indexable, and was re-assessed. That is the staleness
 mechanism working as intended.
+
+### 6.1 Assessments and rubrics are standards too (D80)
+
+An assessment is configuration someone wrote that others will act on, so it gets the same treatment
+as a rule: deterministic checks that gate, and judgement that advises. The recursion stops after
+one level, the same way §1's does.
+
+| Layer | Scored by | Kind | Gates? |
+|---|---|---|---|
+| Rules, scorecards, crates | `review-rule`, `review-scorecard`, `review-crate` (rubrics `rule-quality`, `scorecard-quality`, `crate-design`) | — | No (advisory) |
+| Every assessment | **`meta-assessment`** (deterministic): bronze, every fail or unsure has a `suggestion` and the assessor is named; silver, findings cite something checkable (a path, `D71`, `§4`, a number); gold, every reason does | `Assessment` | Yes (ratchet; new assessments must reach bronze) |
+| Every rubric | **`meta-rubric`** (deterministic, from `rubric` records in `describe portal`): bronze, described and used; silver, every criterion has guidance; gold, three or more assessments and no criterion that all of them passed | `Rubric` | Yes |
+| Assessments made with other rubrics | **`review-assessment`**, from an agent's assessment against **`assessment-quality`**: supported by its citations, complete, reproducible by a second assessor, suggestions that would change the verdict | `Assessment` | No (advisory) |
+| Assessments made with `assessment-quality` | Only `meta-assessment` | — | **The stop:** `review-assessment` skips them (`appliesTo`) |
+
+The assessment record carries what the deterministic card needs (`toolbox_connect::assessment`):
+- `unsuggested`;
+- `uncited`, from a citation pattern;
+- a content `hash`, which is what a review of the assessment is versioned by, so editing an
+  assessment makes its review stale.
+
+**First run:**
+- **`meta-rubric` found that `rule-quality`'s `fix-leads-to-pass` passed in all four rule
+  assessments.** A question nothing fails isn't discriminating; it is either sharpened or answered by
+  `meta-rule`'s `explains-fix`. It also found five unguided criteria in `scorecard-quality` and
+  `crate-design`; they now have guidance.
+- **`meta-assessment` put 6 of 9 assessments below silver.** My own reasons often name a rule or a
+  behaviour without a path or a number (e.g. "`continue-on-error` lowers the fail rate"). The check
+  is a proxy, since a path is not proof, but it is the cheap half; `assessment-quality`'s `supported`
+  is the expensive half.
+- **Three `assessment-quality` reviews, of the `has-tests`, `toolbox-expr` and
+  `maintainer-ci-reliability` assessments:**
+  - **`has-tests`, fail on `actionable`:** its suggestions add a companion rule but leave `has-tests`
+    itself failing.
+  - **`toolbox-expr`, fail on `complete`:** it passed `one-responsibility` although the crate docs
+    describe only M0, which its own suggestion admits.
+  - **`reproducible` is `unsure` in all three,** because the same session wrote the assessments and
+    the reviews. The rubric says to review someone else's assessment. Independence can't be checked
+    deterministically yet: comparing the assessor with the author of the subject's last change needs
+    commit authorship per entity.
+
+**Not built:**
+- disagreement between assessors (assessment history keyed by assessor; today a newer file replaces
+  the older one);
+- independence of the reviewer;
+- detecting a rubric criterion that a deterministic rule already answers.
 
 ## 7. Predictions
 
