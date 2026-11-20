@@ -5,6 +5,7 @@
 //! `xs.map(i, i.app)`) are not top-level references and are ignored. Type checking is out of scope
 //! (cel-rust has no checker; see Q10).
 
+pub mod analysis;
 pub mod eval;
 pub mod lazy;
 
@@ -59,6 +60,8 @@ pub enum CelIssue {
         found: Vec<String>,
         allowed: Vec<String>,
     },
+    /// The expression calls functions the runtime doesn't declare (it would fail when evaluated).
+    UndeclaredFunctions(Vec<String>),
 }
 
 impl fmt::Display for CelIssue {
@@ -77,6 +80,15 @@ impl fmt::Display for CelIssue {
                     .join(", "),
                 allowed.join(", ")
             ),
+            CelIssue::UndeclaredFunctions(names) => write!(
+                f,
+                "CEL calls {} which the runtime doesn't provide",
+                names
+                    .iter()
+                    .map(|v| format!("`{v}()`"))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ),
         }
     }
 }
@@ -84,6 +96,18 @@ impl fmt::Display for CelIssue {
 /// Parse `expr` and check its top-level variables against `site`.
 pub fn check(expr: &str, site: Site) -> Result<(), CelIssue> {
     let program = cel::Program::compile(expr).map_err(|e| CelIssue::Syntax(e.to_string()))?;
+    let mut undeclared: Vec<String> = program
+        .references()
+        .functions()
+        .into_iter()
+        .filter(|f| f.chars().next().is_some_and(|c| c.is_ascii_alphabetic()))
+        .filter(|f| !analysis::declared(f))
+        .map(str::to_owned)
+        .collect();
+    if !undeclared.is_empty() {
+        undeclared.sort();
+        return Err(CelIssue::UndeclaredFunctions(undeclared));
+    }
     let Some(allowed) = site.variables() else {
         return Ok(());
     };

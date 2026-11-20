@@ -17,6 +17,8 @@ no Postgres, no OpenFGA, no network.
 | `maintainer-ci-security` | 1. Maintainer | Workflow | actionlint clean; no high zizmor findings; least-privilege token; actions pinned to SHAs; then no medium findings and no write tokens on risky triggers; then zizmor-clean |
 | `maintainer-ci-reliability` | 1. Maintainer | Workflow | Main not stuck red; fail rate ≤ 20/10/5%; job timeouts; few re-runs; superseded runs cancelled; p90 ≤ 15 min |
 | `maintainer-action-deps` | 1. Maintainer | ActionDependency | Each third-party action is SHA-pinned in every workflow that uses it |
+| `meta-rule` | all (our standards) | Rule | Fix text; tested; decided and both outcomes on fixtures; evidence; no nested loops; readable. New rules must reach bronze |
+| `meta-scorecard` | all (our standards) | Scorecard | Tested; no empty level; fixtures reach two levels; every rule tested. New scorecards must reach bronze |
 
 ## Run it
 

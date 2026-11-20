@@ -558,6 +558,7 @@ impl Checker {
             let code = match issue {
                 toolbox_expr::CelIssue::Syntax(_) => "cel.syntax",
                 toolbox_expr::CelIssue::UnknownVariables { .. } => "cel.variable",
+                toolbox_expr::CelIssue::UndeclaredFunctions(_) => "cel.function",
             };
             self.push(code, ptr, issue.to_string());
         }

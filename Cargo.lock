@@ -2982,6 +2982,7 @@ version = "0.0.0"
 dependencies = [
  "async-trait",
  "clap",
+ "regex",
  "reqwest",
  "serde_json",
  "serde_norway",
@@ -2990,6 +2991,7 @@ dependencies = [
  "toolbox-authz",
  "toolbox-connect",
  "toolbox-derive",
+ "toolbox-expr",
  "toolbox-model",
  "toolbox-store",
 ]

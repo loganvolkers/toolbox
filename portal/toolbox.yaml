@@ -70,9 +70,16 @@ connectors:
       root: "."
       jobs:
         - {name: describe, command: [target/debug/toolbox, describe], parse: ndjson, kinds: [command, mcp-tool]}
-    records: [command, mcp-tool]
-    refresh: {command: [external_ids], mcp-tool: [external_ids]}   # any id reruns `toolbox describe` (every surface)
-    freshness: {command: 5m, mcp-tool: 5m}
+        # Our standards as entities (docs/design/scorecards-for-scorecards.md): this portal, the
+        # starter pilots copy, and the reference portal. Live outcomes come from the committed
+        # results and are information only, so the meta scorecards never depend on their own output.
+        - name: scorecards
+          command: [target/debug/toolbox, describe, scorecards, portal, examples/repo-portal-starter, examples/reference-portal, --results, portal=portal/results.json]
+          parse: ndjson
+          kinds: [scorecard, rule]
+    records: [command, mcp-tool, scorecard, rule]
+    refresh: {command: [external_ids], mcp-tool: [external_ids], scorecard: [external_ids], rule: [external_ids]}
+    freshness: {command: 5m, mcp-tool: 5m, scorecard: 5m, rule: 5m}
   - name: ci-lint
     package: builtin:runner                # zizmor and actionlint: fast, offline, deterministic at pinned versions
     runtime: in-image
@@ -340,6 +347,60 @@ kinds:
       - from: workspace/action-ref
         id: "'action:' + record.name"
         set: "{'name': record.name, 'owner': record.owner, 'refs': record.refs, 'pins': record.pins, 'usedBy': record.usedBy}"
+
+  # ── Our standards themselves (scorecards for scorecards) ──────────────────────────────────
+  - name: Scorecard
+    identityFrom: [connector:surfaces]
+    fields:
+      portal: {type: string}
+      name: {type: string}
+      kind: {type: string}
+      owner: {type: string}
+      levels: {type: list, items: string}
+      rulesPerLevel: {type: object}
+      rules: {type: integer}
+      tested: {type: boolean}
+      meta: {type: boolean}
+      fixtureLevels: {type: object}        # levels the portal's own fixtures reach
+      liveEntities: {type: integer}        # information only (from the committed results)
+      untestedRules: {type: list, items: string, computed: "inbound.ruleOf.filter(r, !r.tested).map(r, r.name)"}
+    sources: {default: [connector:surfaces]}
+    map:
+      - from: surfaces/scorecard
+        id: "'scorecard:' + record.portal + '/' + record.name"
+        set: >-
+          {'portal': record.portal, 'name': record.name, 'kind': record.kind, 'owner': record.owner,
+           'levels': record.levels, 'rulesPerLevel': record.rulesPerLevel, 'rules': record.rules,
+           'tested': record.tested, 'meta': record.meta, 'fixtureLevels': record.fixtureLevels,
+           'liveEntities': has(record.liveEntities) ? record.liveEntities : null}
+
+  - name: Rule
+    identityFrom: [connector:surfaces]
+    fields:
+      portal: {type: string}
+      scorecard: {type: string}
+      name: {type: string}
+      level: {type: string}
+      fixWords: {type: integer}
+      hasEvidence: {type: boolean}
+      check: {type: object}                # CEL: nodes, depth, loops (comprehension nesting), fields, functions
+      evidence: {type: object}
+      tested: {type: boolean}              # a test expectation names it
+      fixture: {type: object}              # {pass, fail, unknown} over the portal's fixtures
+      live: {type: object}                 # information only: {entities, pass, fail, unknown} on real data
+    relations:
+      ruleOf: {to: Scorecard, many: false}
+    sources: {default: [connector:surfaces]}
+    map:
+      - from: surfaces/rule
+        id: "'rule:' + record.card + '/' + record.name"
+        set: >-
+          {'portal': record.portal, 'scorecard': record.scorecard, 'name': record.name, 'level': record.level,
+           'fixWords': record.fixWords, 'hasEvidence': record.hasEvidence, 'check': record.check,
+           'evidence': record.evidence, 'tested': record.tested, 'fixture': record.fixture,
+           'live': has(record.live) ? record.live : null}
+        relations:
+          ruleOf: "['scorecard:' + record.card]"
 
 scorecards:
   # ── Layer 1: maintainer SDLC ─────────────────────────────────────────────────────────────
@@ -623,6 +684,86 @@ scorecards:
         check: "entity.pins.all(p, p == 'sha')"
         evidence: "entity.refs.filter(r, !r.matches('@[0-9a-f]{40}$')) + entity.usedBy.map(u, 'used by ' + u)"
         fix: "Pin this action to a full commit SHA in every workflow that uses it."
+    facets: {summary: public, details: public}
+
+  # ── Scorecards for scorecards (docs/design/scorecards-for-scorecards.md) ─────────────────
+  # They score every rule and scorecard of this portal, the starter and the reference portal —
+  # themselves included, so there is no further level. Only deterministic facts (manifest, CEL,
+  # tests, fixtures) are scored; live outcomes are shown, not scored.
+  - name: meta-rule
+    kind: Rule
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    ratchet: {newEntitiesAtLeast: bronze}   # a new rule or scorecard must be tested and explained from day one
+    rules:
+      - name: explains-fix
+        level: bronze
+        check: "entity.fixWords >= 5"
+        evidence: "['fix has ' + string(entity.fixWords) + ' words']"
+        fix: "Write a fix an agent can act on: what to change, and where."
+      - name: tested
+        level: bronze
+        check: "entity.tested"
+        evidence: "['no expectation in the portal tests names ' + entity.scorecard + '/' + entity.name]"
+        fix: "Add an expectation that pins the rule: score('<card>', '<entity>').rules['<rule>'] == 'fail' (and one that passes)."
+      - name: decided-on-fixtures
+        level: bronze
+        check: "entity.fixture.pass + entity.fixture.fail > 0"
+        evidence: "[string(entity.fixture.unknown) + ' unknown, no pass or fail on the fixtures']"
+        fix: "Add fixture records the rule applies to, so it evaluates in tests."
+      - name: both-outcomes-on-fixtures
+        level: silver
+        check: "entity.fixture.pass > 0 && entity.fixture.fail > 0"
+        evidence: "['fixtures: ' + string(entity.fixture.pass) + ' pass, ' + string(entity.fixture.fail) + ' fail']"
+        fix: "Give the fixtures one entity that passes and one that fails, so both paths (and the evidence) are exercised."
+      - name: shows-evidence
+        level: silver
+        check: "entity.hasEvidence || entity.check.nodes <= 4"
+        evidence: "['the check has ' + string(entity.check.nodes) + ' CEL nodes and no evidence expression']"
+        fix: "Add `evidence:` naming the items that fail, so agents and people know what to change."
+      - name: no-nested-loops
+        level: silver
+        check: "entity.check.loops <= 1 && (!has(entity.evidence) || entity.evidence.loops <= 1)"
+        evidence: "['check loops ' + string(entity.check.loops) + (has(entity.evidence) ? ', evidence loops ' + string(entity.evidence.loops) : '')]"
+        fix: "Avoid a comprehension inside a comprehension: compute the inner list in the connector or a computed field."
+      - name: readable
+        level: gold
+        check: "entity.check.nodes <= 30"
+        evidence: "['the check has ' + string(entity.check.nodes) + ' CEL nodes (30 or fewer reads at a glance)']"
+        fix: "Move logic into a computed field or the connector, and keep the rule a short comparison."
+      - name: always-explains
+        level: gold
+        check: "entity.hasEvidence"
+        evidence: "['no evidence expression']"
+        fix: "Add `evidence:` even for simple checks: it is what an agent reads first."
+    facets: {summary: public, details: public}
+
+  - name: meta-scorecard
+    kind: Scorecard
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    ratchet: {newEntitiesAtLeast: bronze}   # a new rule or scorecard must be tested and explained from day one
+    rules:
+      - name: tested
+        level: bronze
+        check: "entity.tested"
+        evidence: "['no expectation names score(' + entity.name + ', …)']"
+        fix: "Add at least one expectation for the scorecard in the portal's tests."
+      - name: every-level-has-rules
+        level: bronze
+        check: "entity.levels.all(l, l in entity.rulesPerLevel && entity.rulesPerLevel[l] > 0)"
+        evidence: "entity.levels.filter(l, !(l in entity.rulesPerLevel) || entity.rulesPerLevel[l] == 0)"
+        fix: "Give every level at least one rule, or drop the level."
+      - name: fixtures-show-the-ladder
+        level: silver
+        check: "entity.fixtureLevels.size() >= 2"
+        evidence: "entity.fixtureLevels.map(l, 'fixtures reach only ' + l)"
+        fix: "Make the fixtures reach at least two levels (e.g. one entity at none, one at bronze or above)."
+      - name: every-rule-tested
+        level: gold
+        check: "entity.untestedRules.size() == 0"
+        evidence: "entity.untestedRules"
+        fix: "Add an expectation for each untested rule."
     facets: {summary: public, details: public}
 
 mcp:

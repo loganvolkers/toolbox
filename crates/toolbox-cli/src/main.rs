@@ -1,6 +1,7 @@
 //! The `toolbox` binary (docs/v1-spec.md §7.7).
 
 mod client;
+mod meta;
 mod portal;
 mod report;
 mod server;
@@ -241,8 +242,26 @@ enum Command {
         out: Option<PathBuf>,
     },
     /// Print Toolbox's own interfaces (CLI commands and built-in MCP tools) as connector record
-    /// messages (NDJSON), for contract snapshots and the Toolbox-for-Toolbox portal.
-    Describe,
+    /// messages (NDJSON), for contract snapshots and the Toolbox-for-Toolbox portal; or, with
+    /// `scorecards`, a portal's scorecards and rules.
+    Describe {
+        #[command(subcommand)]
+        what: Option<DescribeWhat>,
+    },
+}
+
+#[derive(Subcommand)]
+enum DescribeWhat {
+    /// Scorecards and rules of portals as `scorecard` and `rule` records: manifest facts, CEL size
+    /// and loops, test coverage, outcomes over fixtures and (with --results) on real data.
+    Scorecards {
+        /// Portal directories to describe.
+        #[arg(required = true)]
+        portals: Vec<PathBuf>,
+        /// A portal's results file for live outcomes, as PORTAL=FILE (repeatable).
+        #[arg(long)]
+        results: Vec<String>,
+    },
 }
 
 /// CLI read commands and the MCP tool each one calls (they share one authorization path, D61).
@@ -341,7 +360,13 @@ fn main() -> ExitCode {
             path, base, format, ..
         } => plan(&path, &base, format),
         Command::Derive { path, out } => derive(&path, out.as_deref()),
-        Command::Describe => describe(),
+        Command::Describe { what: None } => describe(),
+        Command::Describe {
+            what: Some(DescribeWhat::Scorecards { portals, results }),
+        } => match meta::describe(&portals, &results) {
+            Ok(()) => ExitCode::SUCCESS,
+            Err(e) => fail(e),
+        },
         Command::Serve {
             path,
             listen,

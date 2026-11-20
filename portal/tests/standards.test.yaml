@@ -73,3 +73,23 @@ assert:
   # Supply chain
   - name: an action pinned by SHA in one workflow and by tag in another fails, naming both
     expect: "score('maintainer-action-deps', 'action:actions/checkout').evidence['pinned-everywhere'] == ['actions/checkout@v4', 'used by .github/workflows/ci.yml', 'used by .github/workflows/release.yml'] && score('maintainer-action-deps', 'action:actions/cache').level == 'bronze'"
+  # Scorecards for scorecards (fixtures: real records from `toolbox describe scorecards` for a few of
+  # our rules, plus a synthetic "sprawling" scorecard). They also score themselves.
+  - name: a well-made rule reaches gold
+    expect: "score('meta-rule', 'rule:toolbox/maintainer-ci-security/no-medium-findings').level == 'gold'"
+  - name: an untested rule that never fails on the fixtures stops below bronze
+    expect: "score('meta-rule', 'rule:toolbox/maintainer-ci-security/least-privilege-token').rules['tested'] == 'fail' && score('meta-rule', 'rule:toolbox/maintainer-ci-security/least-privilege-token').rules['both-outcomes-on-fixtures'] == 'fail'"
+  - name: a rule that never evaluates on fixtures, with a two-word fix, fails every bronze rule
+    expect: "score('meta-rule', 'rule:demo/sprawling/everything').rules['explains-fix'] == 'fail' && score('meta-rule', 'rule:demo/sprawling/everything').rules['decided-on-fixtures'] == 'fail' && score('meta-rule', 'rule:demo/sprawling/everything').evidence['explains-fix'] == ['fix has 2 words']"
+  - name: nested loops and a large check are named
+    expect: "score('meta-rule', 'rule:demo/sprawling/everything').evidence['no-nested-loops'] == ['check loops 2'] && score('meta-rule', 'rule:demo/sprawling/everything').rules['readable'] == 'fail'"
+  - name: a non-trivial check without evidence fails shows-evidence; a trivial one is exempt until gold
+    expect: "score('meta-rule', 'rule:acme/github-app-hygiene/only-approved-apps').rules['shows-evidence'] == 'fail' && score('meta-rule', 'rule:toolbox/user-cli/has-help').rules['always-explains'] == 'fail'"
+  - name: the meta scorecard scores its own rules (no further level)
+    expect: "score('meta-rule', 'rule:toolbox/meta-rule/tested').rules['tested'] == 'pass' && score('meta-scorecard', 'scorecard:toolbox/meta-rule').rules['tested'] == 'pass'"
+  - name: a scorecard with an empty level and fixtures at one level fails bronze, naming them
+    expect: "score('meta-scorecard', 'scorecard:demo/sprawling').evidence['every-level-has-rules'] == ['gold'] && score('meta-scorecard', 'scorecard:demo/sprawling').rules['fixtures-show-the-ladder'] == 'fail'"
+  - name: an untested scorecard fails bronze, and untested rules roll up to their scorecard
+    expect: "score('meta-scorecard', 'scorecard:toolbox/user-cli').rules['tested'] == 'fail' && entity('scorecard:toolbox/maintainer-ci-security').untestedRules == ['least-privilege-token']"
+  - name: always-explains, every-rule-tested and the rest of the meta rules are pinned here too
+    expect: "'always-explains' in score('meta-rule', 'rule:toolbox/meta-rule/tested').rules && score('meta-scorecard', 'scorecard:toolbox/maintainer-ci-security').rules['every-rule-tested'] == 'fail' && score('meta-scorecard', 'scorecard:toolbox/maintainer-ci-security').rules['every-level-has-rules'] == 'pass'"

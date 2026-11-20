@@ -135,6 +135,8 @@ pub struct Scorecard {
     pub levels: Vec<String>,
     pub applies_to: Option<String>,
     pub rules: Vec<Rule>,
+    /// `{newEntitiesAtLeast: <level>}`: ratchet policy for entities new since the baseline.
+    pub ratchet: Option<Value>,
     pub facets: Option<Value>,
 }
 

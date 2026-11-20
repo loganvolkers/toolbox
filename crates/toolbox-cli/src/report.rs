@@ -189,10 +189,30 @@ struct Comparison {
     other: Vec<String>,
 }
 
-fn compare(before: &Value, after: &Value) -> Comparison {
+/// Per scorecard: its levels, and the level new entities must reach (`ratchet.newEntitiesAtLeast`).
+type NewPolicy = BTreeMap<String, (Vec<String>, String)>;
+
+fn new_policy(m: &toolbox_model::Manifest) -> NewPolicy {
+    m.scorecards
+        .iter()
+        .filter_map(|sc| {
+            let min = sc.ratchet.as_ref()?.get("newEntitiesAtLeast")?.as_str()?;
+            Some((sc.name.clone(), (sc.levels.clone(), min.to_owned())))
+        })
+        .collect()
+}
+
+/// `none` is 0, then the scorecard's levels in order; `skipped` never falls short.
+fn rank(levels: &[String], level: &str) -> Option<usize> {
+    if level == "none" {
+        return Some(0);
+    }
+    levels.iter().position(|l| l == level).map(|i| i + 1)
+}
+
+fn compare(before: &Value, after: &Value, policy: &NewPolicy) -> Comparison {
     let mut c = Comparison::default();
     let empty = Map::new();
-    let obj = |v: &Value| v.as_object().cloned().unwrap_or_default();
     let cards: std::collections::BTreeSet<&String> = before
         .as_object()
         .unwrap_or(&empty)
@@ -202,63 +222,19 @@ fn compare(before: &Value, after: &Value) -> Comparison {
     for card in cards {
         let (b, a) = (obj(&before[card]), obj(&after[card]));
         for (id, now) in &a {
-            let Some(was) = b.get(id) else {
-                c.other.push(format!(
-                    "{card} · {id}: new ({})",
-                    now["level"].as_str().unwrap_or("?")
-                ));
-                continue;
-            };
-            let (wf, nf) = (obj(&was["failing"]), obj(&now["failing"]));
-            let list = |v: &Value| -> Vec<String> {
-                v.as_array()
-                    .into_iter()
-                    .flatten()
-                    .filter_map(|x| x.as_str().map(str::to_owned))
-                    .collect()
-            };
-            let (wu, nu) = (list(&was["unknown"]), list(&now["unknown"]));
-            for rule in nu.iter().filter(|r| !wu.contains(r)) {
-                c.other.push(format!(
-                    "{card} · {id}: {rule} unknown now (its data is missing)"
-                ));
-            }
-            for (rule, n) in &nf {
-                if wu.contains(rule) {
-                    c.other
-                        .push(format!("{card} · {id}: {rule} known again: fails"));
-                    continue;
-                }
-                match wf.get(rule) {
-                    None if was["level"] != "skipped" => c
-                        .regressions
-                        .push(format!("{card} · {id}: {rule} now fails")),
-                    None => c
-                        .other
-                        .push(format!("{card} · {id}: no longer skipped; {rule} fails")),
-                    Some(m) => match (m.as_u64(), n.as_u64()) {
-                        (Some(m), Some(n)) if n > m => c
-                            .regressions
-                            .push(format!("{card} · {id}: {rule} evidence grew {m} → {n}")),
-                        (Some(m), Some(n)) if n < m => c
-                            .improvements
-                            .push(format!("{card} · {id}: {rule} evidence shrank {m} → {n}")),
-                        _ => {}
-                    },
-                }
-            }
-            for rule in wf
-                .keys()
-                .filter(|r| !nf.contains_key(*r) && !nu.contains(r))
-            {
-                c.improvements
-                    .push(format!("{card} · {id}: {rule} now passes"));
-            }
-            if was["level"] != now["level"] && wf.keys().eq(nf.keys()) {
-                c.other.push(format!(
-                    "{card} · {id}: level {} → {}",
-                    was["level"], now["level"]
-                ));
+            let at = format!("{card} · {id}");
+            match b.get(id) {
+                // A scorecard new to the baseline baselines everything first (as Betterer's first
+                // run does); the floor applies to entities that appear after that.
+                None => new_entity(
+                    &mut c,
+                    &at,
+                    now,
+                    policy
+                        .get(card.as_str())
+                        .filter(|_| before.get(card).is_some()),
+                ),
+                Some(was) => compare_entity(&mut c, &at, was, now),
             }
         }
         for id in b.keys().filter(|id| !a.contains_key(*id)) {
@@ -266,6 +242,79 @@ fn compare(before: &Value, after: &Value) -> Comparison {
         }
     }
     c
+}
+
+fn obj(v: &Value) -> Map<String, Value> {
+    v.as_object().cloned().unwrap_or_default()
+}
+
+fn strings(v: &Value) -> Vec<String> {
+    v.as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|x| x.as_str().map(str::to_owned))
+        .collect()
+}
+
+/// An entity the baseline doesn't have: a regression when it starts below the scorecard's floor.
+fn new_entity(c: &mut Comparison, at: &str, now: &Value, floor: Option<&(Vec<String>, String)>) {
+    let level = now["level"].as_str().unwrap_or("?");
+    let short = floor.and_then(|(levels, min)| {
+        let (have, need) = (rank(levels, level)?, rank(levels, min)?);
+        (have < need).then_some(min)
+    });
+    match short {
+        Some(min) => c.regressions.push(format!(
+            "{at}: new, at {level}; new entities must reach {min}"
+        )),
+        None => c.other.push(format!("{at}: new ({level})")),
+    }
+}
+
+/// One entity in both: rules that started failing or whose evidence grew are worse; unknown
+/// outcomes on either side are reported but not compared.
+fn compare_entity(c: &mut Comparison, at: &str, was: &Value, now: &Value) {
+    let (wf, nf) = (obj(&was["failing"]), obj(&now["failing"]));
+    let (wu, nu) = (strings(&was["unknown"]), strings(&now["unknown"]));
+    for rule in nu.iter().filter(|r| !wu.contains(r)) {
+        c.other
+            .push(format!("{at}: {rule} unknown now (its data is missing)"));
+    }
+    for (rule, n) in &nf {
+        if wu.contains(rule) {
+            c.other.push(format!("{at}: {rule} known again: fails"));
+        } else if let Some(m) = wf.get(rule) {
+            evidence_change(c, at, rule, m, n);
+        } else if was["level"] == "skipped" {
+            c.other
+                .push(format!("{at}: no longer skipped; {rule} fails"));
+        } else {
+            c.regressions.push(format!("{at}: {rule} now fails"));
+        }
+    }
+    for rule in wf
+        .keys()
+        .filter(|r| !nf.contains_key(*r) && !nu.contains(r))
+    {
+        c.improvements.push(format!("{at}: {rule} now passes"));
+    }
+    if was["level"] != now["level"] && wf.keys().eq(nf.keys()) {
+        c.other
+            .push(format!("{at}: level {} → {}", was["level"], now["level"]));
+    }
+}
+
+/// A rule failing on both sides: its evidence count may have grown (worse) or shrunk (better).
+fn evidence_change(c: &mut Comparison, at: &str, rule: &str, was: &Value, now: &Value) {
+    match (was.as_u64(), now.as_u64()) {
+        (Some(m), Some(n)) if n > m => c
+            .regressions
+            .push(format!("{at}: {rule} evidence grew {m} → {n}")),
+        (Some(m), Some(n)) if n < m => c
+            .improvements
+            .push(format!("{at}: {rule} evidence shrank {m} → {n}")),
+        _ => {}
+    }
 }
 
 fn markdown(m: &toolbox_model::Manifest, d: &Derived) -> String {
@@ -410,7 +459,7 @@ pub fn run(o: &Options) -> ExitCode {
                 }
             }
             Some(b) => {
-                let c = compare(&b["results"], &now);
+                let c = compare(&b["results"], &now, &new_policy(&m));
                 let mut lines = Vec::new();
                 for r in &c.regressions {
                     lines.push(format!("✗ worse   {r}"));
@@ -501,7 +550,7 @@ mod tests {
         let after = r(
             json!({"a": {"level": "bronze", "failing": {"docs": 4}}, "b": {"level": "silver", "failing": {"tests": null}}}),
         );
-        let c = compare(&before, &after);
+        let c = compare(&before, &after, &NewPolicy::new());
         assert_eq!(
             c.regressions,
             [
@@ -513,13 +562,37 @@ mod tests {
     }
 
     #[test]
+    fn new_entities_below_the_scorecards_floor_are_regressions() {
+        let before = r(json!({"a": {"level": "gold"}}));
+        let after = r(
+            json!({"a": {"level": "gold"}, "b": {"level": "none", "failing": {"tested": null}}, "c": {"level": "bronze"}}),
+        );
+        let policy: NewPolicy = [(
+            "card".to_owned(),
+            (vec!["bronze".into(), "silver".into()], "bronze".into()),
+        )]
+        .into();
+        let c = compare(&before, &after, &policy);
+        assert_eq!(
+            c.regressions,
+            ["card · b: new, at none; new entities must reach bronze"]
+        );
+        assert_eq!(c.other, ["card · c: new (bronze)"]);
+        assert!(
+            compare(&before, &after, &NewPolicy::new())
+                .regressions
+                .is_empty()
+        );
+    }
+
+    #[test]
     fn unknown_outcomes_are_neither_worse_nor_better() {
         let before =
             r(json!({"a": {"level": "none", "failing": {"lint": 2}}, "b": {"level": "gold"}}));
         let after = r(
             json!({"a": {"level": "none", "unknown": ["lint"]}, "b": {"level": "none", "unknown": ["lint"]}}),
         );
-        let c = compare(&before, &after);
+        let c = compare(&before, &after, &NewPolicy::new());
         assert!(
             c.regressions.is_empty() && c.improvements.is_empty(),
             "{:?} {:?}",
@@ -536,7 +609,7 @@ mod tests {
         );
         assert_eq!(unknown_count(&after), 2);
         // and back: a rule known again that fails is reported, not counted as a regression
-        let c = compare(&after, &before);
+        let c = compare(&after, &before, &NewPolicy::new());
         assert!(c.regressions.is_empty());
         assert_eq!(c.other[0], "card · a: lint known again: fails");
     }
@@ -547,7 +620,7 @@ mod tests {
         let after = r(
             json!({"a": {"level": "none", "failing": {"docs": 1}}, "c": {"level": "none", "failing": {"x": null}}}),
         );
-        let c = compare(&before, &after);
+        let c = compare(&before, &after, &NewPolicy::new());
         assert!(c.regressions.is_empty());
         assert_eq!(
             c.improvements,

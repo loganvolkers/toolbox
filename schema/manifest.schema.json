@@ -480,6 +480,17 @@
             }
           }
         },
+        "ratchet": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "How `toolbox report --baseline` treats this scorecard.",
+          "properties": {
+            "newEntitiesAtLeast": {
+              "type": "string",
+              "description": "A level (or `none`) every entity new since the baseline must reach; below it is a regression, as new issues are in Betterer."
+            }
+          }
+        },
         "facets": {
           "type": "object",
           "additionalProperties": false,
