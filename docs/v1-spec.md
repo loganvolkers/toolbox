@@ -379,7 +379,7 @@ to `result`; previews come from the Toolbox layer only.
 | `toolbox serve [--role all|api|worker]` | Run the server |
 | `toolbox push [--url URL]` | Send a portal's fixtures through the ingest API and wait for the snapshot (dev and tests) |
 | `toolbox derive [--out DIR]` | Recompute from fixtures; print a summary or write the reference-format outputs |
-| `toolbox report [--skip C] [-o md\|json\|html] [--baseline F [--update\|--ci]]` | Score a repository without a server: connectors once, recompute, scorecards with evidence; a ratchet against a committed baseline (D66, [repo-portals.md](./design/repo-portals.md)) |
+| `toolbox report [--skip C] [-o md\|json\|html] [--baseline F [--update\|--ci]] [--verdict F]` | Score a repository without a server: connectors once, recompute, scorecards with evidence; a ratchet against a committed baseline (D66, [repo-portals.md](./design/repo-portals.md)); `--verdict` writes the outcome as JSON for any CI system (D96) |
 | `toolbox scorecard [NAME] [--rule R]` | One scorecard across entities: a work list (MCP `scorecard_report`) |
 | `toolbox assess brief ID` / `assess check` / `assess submit FILE` | Brief a coding agent on an entity (MCP `assessment_brief`), validate a portal's `assessments/`, or push an assessment to a server (D79) |
 | `toolbox install [PORTAL] [--frozen]` | Download released executable connectors (`package: github:owner/repo[/app]@version`) for this platform, verify them against `toolbox.lock` (pinning new ones), and unpack them into the cache (D90) |

@@ -26,6 +26,7 @@ pub struct Options {
     pub baseline: Option<PathBuf>,
     pub update: bool,
     pub ci: bool,
+    pub verdict: Option<PathBuf>,
 }
 
 const FORMAT: &str = "toolbox-report/v1";
@@ -185,9 +186,45 @@ fn unknown_count(results: &Value) -> usize {
 
 #[derive(Default)]
 struct Comparison {
-    regressions: Vec<String>,
-    improvements: Vec<String>,
-    other: Vec<String>,
+    regressions: Vec<Change>,
+    improvements: Vec<Change>,
+    other: Vec<Change>,
+}
+
+/// One difference from the baseline, on one entity of one scorecard.
+#[derive(Debug)]
+struct Change {
+    scorecard: String,
+    entity: String,
+    message: String,
+}
+
+impl std::fmt::Display for Change {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} · {}: {}", self.scorecard, self.entity, self.message)
+    }
+}
+
+impl Change {
+    fn to_json(&self) -> Value {
+        json!({"scorecard": self.scorecard, "entity": self.entity, "message": self.message})
+    }
+}
+
+/// Where a change is: a scorecard and an entity.
+struct At<'a> {
+    card: &'a str,
+    id: &'a str,
+}
+
+impl At<'_> {
+    fn say(&self, message: String) -> Change {
+        Change {
+            scorecard: self.card.to_owned(),
+            entity: self.id.to_owned(),
+            message,
+        }
+    }
 }
 
 /// Per scorecard: its levels, and the level new entities must reach (`ratchet.newEntitiesAtLeast`).
@@ -233,7 +270,7 @@ fn compare(before: &Value, after: &Value, policy: &NewPolicy) -> Comparison {
     for card in cards {
         let (b, a) = (obj(&before[card]), obj(&after[card]));
         for (id, now) in &a {
-            let at = format!("{card} · {id}");
+            let at = At { card, id };
             match b.get(id) {
                 // A scorecard new to the baseline baselines everything first (as Betterer's first
                 // run does); the floor applies to entities that appear after that.
@@ -249,7 +286,7 @@ fn compare(before: &Value, after: &Value, policy: &NewPolicy) -> Comparison {
             }
         }
         for id in b.keys().filter(|id| !a.contains_key(*id)) {
-            c.other.push(format!("{card} · {id}: removed"));
+            c.other.push(At { card, id }.say("removed".into()));
         }
     }
     c
@@ -268,62 +305,62 @@ fn strings(v: &Value) -> Vec<String> {
 }
 
 /// An entity the baseline doesn't have: a regression when it starts below the scorecard's floor.
-fn new_entity(c: &mut Comparison, at: &str, now: &Value, floor: Option<&(Vec<String>, String)>) {
+fn new_entity(c: &mut Comparison, at: &At, now: &Value, floor: Option<&(Vec<String>, String)>) {
     let level = now["level"].as_str().unwrap_or("?");
     let short = floor.and_then(|(levels, min)| {
         let (have, need) = (rank(levels, level)?, rank(levels, min)?);
         (have < need).then_some(min)
     });
     match short {
-        Some(min) => c.regressions.push(format!(
-            "{at}: new, at {level}; new entities must reach {min}"
-        )),
-        None => c.other.push(format!("{at}: new ({level})")),
+        Some(min) => c
+            .regressions
+            .push(at.say(format!("new, at {level}; new entities must reach {min}"))),
+        None => c.other.push(at.say(format!("new ({level})"))),
     }
 }
 
 /// One entity in both: rules that started failing or whose evidence grew are worse; unknown
 /// outcomes on either side are reported but not compared.
-fn compare_entity(c: &mut Comparison, at: &str, was: &Value, now: &Value) {
+fn compare_entity(c: &mut Comparison, at: &At, was: &Value, now: &Value) {
     let (wf, nf) = (obj(&was["failing"]), obj(&now["failing"]));
     let (wu, nu) = (strings(&was["unknown"]), strings(&now["unknown"]));
     for rule in nu.iter().filter(|r| !wu.contains(r)) {
         c.other
-            .push(format!("{at}: {rule} unknown now (its data is missing)"));
+            .push(at.say(format!("{rule} unknown now (its data is missing)")));
     }
     for (rule, n) in &nf {
         if wu.contains(rule) {
-            c.other.push(format!("{at}: {rule} known again: fails"));
+            c.other.push(at.say(format!("{rule} known again: fails")));
         } else if let Some(m) = wf.get(rule) {
             evidence_change(c, at, rule, m, n);
         } else if was["level"] == "skipped" {
             c.other
-                .push(format!("{at}: no longer skipped; {rule} fails"));
+                .push(at.say(format!("no longer skipped; {rule} fails")));
         } else {
-            c.regressions.push(format!("{at}: {rule} now fails"));
+            c.regressions.push(at.say(format!("{rule} now fails")));
         }
     }
     for rule in wf
         .keys()
         .filter(|r| !nf.contains_key(*r) && !nu.contains(r))
     {
-        c.improvements.push(format!("{at}: {rule} now passes"));
+        c.improvements.push(at.say(format!("{rule} now passes")));
     }
     if was["level"] != now["level"] && wf.keys().eq(nf.keys()) {
         c.other
-            .push(format!("{at}: level {} → {}", was["level"], now["level"]));
+            .push(at.say(format!("level {} → {}", was["level"], now["level"])));
     }
 }
 
 /// A rule failing on both sides: its evidence count may have grown (worse) or shrunk (better).
-fn evidence_change(c: &mut Comparison, at: &str, rule: &str, was: &Value, now: &Value) {
+fn evidence_change(c: &mut Comparison, at: &At, rule: &str, was: &Value, now: &Value) {
     match (was.as_u64(), now.as_u64()) {
         (Some(m), Some(n)) if n > m => c
             .regressions
-            .push(format!("{at}: {rule} evidence grew {m} → {n}")),
+            .push(at.say(format!("{rule} evidence grew {m} → {n}"))),
         (Some(m), Some(n)) if n < m => c
             .improvements
-            .push(format!("{at}: {rule} evidence shrank {m} → {n}")),
+            .push(at.say(format!("{rule} evidence shrank {m} → {n}"))),
         _ => {}
     }
 }
@@ -473,9 +510,140 @@ pub fn live(
     Ok((src.root, m, d))
 }
 
+/// The ratchet's outcome: for people (`summary`) and for pipelines (`--verdict`, D96).
+struct Verdict {
+    /// `pass`, `regressed`, `stale`, `missing-baseline`, `unknown` (or `error`, written by `fail`).
+    result: &'static str,
+    code: u8,
+    summary: String,
+    written: bool,
+    comparison: Comparison,
+    unknown: usize,
+}
+
+/// Compare `now` with the baseline at `path`; write it when `--update` allows.
+fn ratchet(
+    o: &Options,
+    path: &std::path::Path,
+    portal: &str,
+    now: &Value,
+    policy: &NewPolicy,
+) -> Result<Verdict, String> {
+    let before = std::fs::read_to_string(path)
+        .ok()
+        .and_then(|t| serde_json::from_str::<Value>(&t).ok());
+    let doc = json!({"format": FORMAT, "portal": portal, "results": now});
+    let write = || {
+        std::fs::write(path, toolbox_derive::pyjson::pretty(&doc))
+            .map_err(|e| format!("{}: {e}", path.display()))
+    };
+    let mut v = Verdict {
+        result: "pass",
+        code: 0,
+        summary: String::new(),
+        written: false,
+        comparison: Comparison::default(),
+        unknown: unknown_count(now),
+    };
+    let Some(b) = before else {
+        if o.update {
+            write()?;
+            v.written = true;
+            v.summary = format!("baseline: created {}\n", path.display());
+        } else {
+            v.result = "missing-baseline";
+            v.code = u8::from(o.ci);
+            v.summary = format!(
+                "baseline: {} doesn't exist; create it with --update\n",
+                path.display()
+            );
+        }
+        return Ok(v);
+    };
+    v.comparison = compare(&b["results"], now, policy);
+    let c = &v.comparison;
+    let mut lines = Vec::new();
+    for (mark, changes) in [
+        ("✗ worse  ", &c.regressions),
+        ("✓ better ", &c.improvements),
+        ("· changed", &c.other),
+    ] {
+        lines.extend(changes.iter().map(|r| format!("{mark} {r}")));
+    }
+    let differs = b["results"] != *now;
+    let unknown = v.unknown;
+    let text = if !c.regressions.is_empty() {
+        (v.result, v.code) = ("regressed", 1);
+        format!(
+            "{} regression(s) against {}",
+            c.regressions.len(),
+            path.display()
+        )
+    } else if unknown > 0 && (o.ci || o.update) {
+        // Writing unknowns would silently drop those rules from the ratchet.
+        (v.result, v.code) = ("unknown", 1);
+        format!(
+            "{unknown} rule outcome(s) unknown (missing tools or data); {} needs every rule evaluated",
+            if o.ci { "--ci" } else { "--update" }
+        )
+    } else if unknown > 0 {
+        format!(
+            "no regressions; {unknown} rule outcome(s) unknown (missing tools or data), not compared"
+        )
+    } else if differs && o.update {
+        write()?;
+        v.written = true;
+        format!("no regressions; updated {}", path.display())
+    } else if differs {
+        (v.result, v.code) = ("stale", u8::from(o.ci));
+        format!(
+            "no regressions, but {} is out of date{}: run with --update and commit it",
+            path.display(),
+            if o.ci { " (--ci)" } else { "" }
+        )
+    } else {
+        format!("matches {}", path.display())
+    };
+    v.summary = format!("{}\nbaseline: {text}\n", lines.join("\n"));
+    Ok(v)
+}
+
+/// The `--verdict` document: what a pipeline needs to decide, annotate and comment.
+fn verdict_json(o: &Options, v: &Verdict) -> Value {
+    let list = |c: &[Change]| c.iter().map(Change::to_json).collect::<Vec<_>>();
+    let mode = match (&o.baseline, o.ci, o.update) {
+        (None, ..) => "report",
+        (_, true, _) => "ci",
+        (_, _, true) => "update",
+        _ => "check",
+    };
+    json!({
+        "format": "toolbox-verdict/v1",
+        "result": v.result,
+        "exitCode": v.code,
+        "mode": mode,
+        "baseline": o.baseline.as_ref().map(|p| p.display().to_string()),
+        "written": v.written,
+        "unknownRules": v.unknown,
+        "regressions": list(&v.comparison.regressions),
+        "improvements": list(&v.comparison.improvements),
+        "changes": list(&v.comparison.other),
+    })
+}
+
 pub fn run(o: &Options) -> ExitCode {
+    let save = |doc: &Value| {
+        if let Some(p) = &o.verdict
+            && let Err(e) = std::fs::write(p, toolbox_derive::pyjson::pretty(doc))
+        {
+            eprintln!("error: {}: {e}", p.display());
+        }
+    };
     let fail = |m: String| {
         eprintln!("error: {m}");
+        save(
+            &json!({"format": "toolbox-verdict/v1", "result": "error", "exitCode": 2, "message": m}),
+        );
         ExitCode::from(2)
     };
     let (_, m, d) = match live(&o.path, o.fixtures, &o.skip) {
@@ -483,84 +651,22 @@ pub fn run(o: &Options) -> ExitCode {
         Err(e) => return fail(e),
     };
     let now = results(&d, &advisory(&m));
-    let mut code = ExitCode::SUCCESS;
-    let mut summary = String::new();
-    if let Some(path) = &o.baseline {
-        let before = std::fs::read_to_string(path)
-            .ok()
-            .and_then(|t| serde_json::from_str::<Value>(&t).ok());
-        let doc = json!({"format": FORMAT, "portal": m.portal.name, "results": now});
-        let write = || std::fs::write(path, toolbox_derive::pyjson::pretty(&doc));
-        match before {
-            None => {
-                if o.update {
-                    if let Err(e) = write() {
-                        return fail(format!("{}: {e}", path.display()));
-                    }
-                    summary = format!("baseline: created {}\n", path.display());
-                } else {
-                    summary = format!(
-                        "baseline: {} doesn't exist; create it with --update\n",
-                        path.display()
-                    );
-                    if o.ci {
-                        code = ExitCode::FAILURE;
-                    }
-                }
-            }
-            Some(b) => {
-                let c = compare(&b["results"], &now, &new_policy(&m));
-                let mut lines = Vec::new();
-                for r in &c.regressions {
-                    lines.push(format!("✗ worse   {r}"));
-                }
-                for r in &c.improvements {
-                    lines.push(format!("✓ better  {r}"));
-                }
-                for r in &c.other {
-                    lines.push(format!("· changed {r}"));
-                }
-                let differs = b["results"] != now;
-                let unknown = unknown_count(&now);
-                let verdict = if !c.regressions.is_empty() {
-                    code = ExitCode::FAILURE;
-                    format!(
-                        "{} regression(s) against {}",
-                        c.regressions.len(),
-                        path.display()
-                    )
-                } else if unknown > 0 && (o.ci || o.update) {
-                    // Writing unknowns would silently drop those rules from the ratchet.
-                    code = ExitCode::FAILURE;
-                    format!(
-                        "{unknown} rule outcome(s) unknown (missing tools or data); {} needs every rule evaluated",
-                        if o.ci { "--ci" } else { "--update" }
-                    )
-                } else if unknown > 0 {
-                    format!(
-                        "no regressions; {unknown} rule outcome(s) unknown (missing tools or data), not compared"
-                    )
-                } else if differs && o.update {
-                    if let Err(e) = write() {
-                        return fail(format!("{}: {e}", path.display()));
-                    }
-                    format!("no regressions; updated {}", path.display())
-                } else if differs {
-                    if o.ci {
-                        code = ExitCode::FAILURE;
-                    }
-                    format!(
-                        "no regressions, but {} is out of date{}: run with --update and commit it",
-                        path.display(),
-                        if o.ci { " (--ci)" } else { "" }
-                    )
-                } else {
-                    format!("matches {}", path.display())
-                };
-                summary = format!("{}\nbaseline: {verdict}\n", lines.join("\n"));
-            }
-        }
-    }
+    let v = match &o.baseline {
+        Some(path) => match ratchet(o, path, &m.portal.name, &now, &new_policy(&m)) {
+            Ok(v) => v,
+            Err(e) => return fail(e),
+        },
+        None => Verdict {
+            result: "pass",
+            code: 0,
+            summary: String::new(),
+            written: false,
+            comparison: Comparison::default(),
+            unknown: unknown_count(&now),
+        },
+    };
+    save(&verdict_json(o, &v));
+    let (code, summary) = (ExitCode::from(v.code), v.summary);
     if o.output == "web" {
         let Some(dir) = &o.out else {
             return fail("-o web writes a directory; pass --out DIR".into());
@@ -604,6 +710,10 @@ pub fn run(o: &Options) -> ExitCode {
 mod tests {
     use super::*;
 
+    fn s(v: &[Change]) -> Vec<String> {
+        v.iter().map(ToString::to_string).collect()
+    }
+
     fn r(rows: Value) -> Value {
         json!({"card": rows})
     }
@@ -617,7 +727,7 @@ mod tests {
         );
         let c = compare(&before, &after, &NewPolicy::new());
         assert_eq!(
-            c.regressions,
+            s(&c.regressions),
             [
                 "card · a: docs evidence grew 3 → 4",
                 "card · b: tests now fails"
@@ -639,10 +749,10 @@ mod tests {
         .into();
         let c = compare(&before, &after, &policy);
         assert_eq!(
-            c.regressions,
+            s(&c.regressions),
             ["card · b: new, at none; new entities must reach bronze"]
         );
-        assert_eq!(c.other, ["card · c: new (bronze)"]);
+        assert_eq!(s(&c.other), ["card · c: new (bronze)"]);
         assert!(
             compare(&before, &after, &NewPolicy::new())
                 .regressions
@@ -665,7 +775,7 @@ mod tests {
             c.improvements
         );
         assert_eq!(
-            c.other,
+            s(&c.other),
             [
                 "card · a: lint unknown now (its data is missing)",
                 "card · b: lint unknown now (its data is missing)",
@@ -676,7 +786,7 @@ mod tests {
         // and back: a rule known again that fails is reported, not counted as a regression
         let c = compare(&after, &before, &NewPolicy::new());
         assert!(c.regressions.is_empty());
-        assert_eq!(c.other[0], "card · a: lint known again: fails");
+        assert_eq!(c.other[0].to_string(), "card · a: lint known again: fails");
     }
 
     #[test]
@@ -688,13 +798,13 @@ mod tests {
         let c = compare(&before, &after, &NewPolicy::new());
         assert!(c.regressions.is_empty());
         assert_eq!(
-            c.improvements,
+            s(&c.improvements),
             [
                 "card · a: docs evidence shrank 3 → 1",
                 "card · a: tests now passes"
             ]
         );
-        assert_eq!(c.other, ["card · c: new (none)"]);
+        assert_eq!(s(&c.other), ["card · c: new (none)"]);
     }
 
     #[test]

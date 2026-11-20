@@ -16,7 +16,9 @@ outputs=${GITHUB_OUTPUT:-/dev/null}
 mkdir -p "$out"
 
 [[ -z "$baseline" ]] && baseline="$portal/results.json"
-args=(report "$portal" -o md --out "$out/report.md")
+verdict="$out/verdict.json"
+rm -f "$verdict"
+args=(report "$portal" -o md --out "$out/report.md" --verdict "$verdict")
 [[ -n "${INPUT_SKIP:-}" ]] && args+=(--skip "$INPUT_SKIP")
 [[ "${INPUT_HTML:-true}" == "true" ]] && args+=(--html "$out/report.html")
 case "$mode" in
@@ -38,11 +40,12 @@ TOOLBOX_CONNECTORS_DIR="$bin" "$bin/toolbox" "${args[@]}" 2> "$out/ratchet.txt"
 code=$?
 cat "$out/ratchet.txt" >&2
 
-if [[ $code -eq 0 ]]; then result=pass
-elif grep -q "regression(s) against" "$out/ratchet.txt"; then result=regressed
-elif grep -q "out of date" "$out/ratchet.txt"; then result=stale
-elif grep -q "doesn't exist" "$out/ratchet.txt"; then result=missing-baseline
-else result=error
+# The verdict file is the contract (D96): result, exit code, and each change as data.
+result=$(sed -n 's/^ *"result": "\([a-z-]*\)".*/\1/p' "$verdict" 2>/dev/null | head -1)
+[[ -z "$result" ]] && result=error
+# One annotation per regression, on the run and the pull request (needs jq, as GitHub's runners have).
+if [[ "$result" == regressed ]] && command -v jq >/dev/null; then
+  jq -r '.regressions[] | "::error title=Ratchet: \(.scorecard)::\(.entity): \(.message | gsub("%"; "%25") | gsub("\n"; "%0A"))"' "$verdict"
 fi
 
 {
@@ -50,6 +53,7 @@ fi
   echo "exit-code=$code"
   [[ -f "$out/report.md" ]] && echo "report=$out/report.md"
   [[ -f "$out/report.html" ]] && echo "html=$out/report.html"
+  [[ -f "$verdict" ]] && echo "verdict=$verdict"
   echo "baseline=$(realpath -m "$baseline")"
 } >> "$outputs"
 
@@ -59,6 +63,7 @@ fi
   case "$result" in
     pass) echo "Nothing got worse than \`$baseline\`." ;;
     regressed) echo "Something got worse than \`$baseline\`. Fix it, or (if the change is intended) update the baseline in this PR: \`toolbox report $portal --baseline $baseline --update\`." ;;
+    unknown) echo "Some rules couldn't be evaluated (a tool or its data is missing), so the ratchet can't compare them; install the tools the portal declares (\`toolbox doctor $portal\`)." ;;
     stale) echo "Nothing got worse, but \`$baseline\` doesn't record the improvements yet: update it in this PR (\`toolbox report $portal --baseline $baseline --update\`, or run this action with \`mode: update\` and commit the uploaded file)." ;;
     missing-baseline) echo "There is no \`$baseline\` yet: run this action once with \`mode: update\` and commit the \`results.json\` it uploads, or run \`toolbox report $portal --baseline $baseline --update\` locally." ;;
     error) echo "\`toolbox report\` failed (exit $code); its output is below." ;;

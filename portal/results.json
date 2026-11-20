@@ -195,7 +195,7 @@
         "failing": {
           "no-medium-findings": 6,
           "pinned-to-sha": 1,
-          "zizmor-clean": 16
+          "zizmor-clean": 15
         },
         "level": "none"
       },

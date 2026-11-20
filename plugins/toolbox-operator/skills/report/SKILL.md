@@ -14,4 +14,6 @@ description: >-
 toolbox report portal --skip runner,github-actions --baseline portal/results.json
 ```
 
+In a pipeline, add `--verdict verdict.json`: it lists each regression as `{scorecard, entity, message}`, so the job can annotate or comment without parsing the text.
+
 Do not pass --update to hide a regression that has not been reviewed. If it fails, read the evidence first.
