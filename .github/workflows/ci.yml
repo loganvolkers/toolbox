@@ -28,6 +28,15 @@ jobs:
         run: go install github.com/openfga/openfga/cmd/openfga@v1.22.1 && echo "TOOLBOX_OPENFGA_BIN=$(go env GOPATH)/bin/openfga" >> "$GITHUB_ENV"
       - name: Tests that need OpenFGA (authz, .fga.yaml through the Authorizer)
         run: cargo test --locked -p toolbox-authz -p toolbox-api
+      - name: PostgreSQL 16, the version the acceptance scripts pin (the runner image may carry another)
+        run: |
+          if [ ! -x /usr/lib/postgresql/16/bin/initdb ]; then
+            sudo apt-get update -q
+            sudo apt-get install -y -q postgresql-common
+            sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+            sudo apt-get install -y -q postgresql-16
+          fi
+          /usr/lib/postgresql/16/bin/initdb --version
       - name: M2 acceptance (Postgres, ingest API, read-your-writes, restart)
         run: PGDIR=$RUNNER_TEMP/pg scripts/m2-acceptance.sh
       - name: M3 acceptance (Postgres + OpenFGA over the tuple view, facets, A10, PATs, revocation)

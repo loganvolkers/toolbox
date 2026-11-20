@@ -90,7 +90,7 @@ closes.
 |---|---|
 | Workspace, pinned toolchain, fmt/clippy gates | ✅ |
 | Reference-model differential tests, parity, conformance kit | ✅ |
-| Acceptance scripts M2–M4, scale budget, UI freshness in CI | ✅ (CI configured; not yet observed running on GitHub) |
+| Acceptance scripts M2–M4, scale budget, UI freshness in CI | ⚠️ First observed 2026-11-20: acceptance had never run (no Postgres 16 on the runner; fixed); the scale budget fails on 2-vCPU runners (24.4 s vs 10 s; open decision). See [research-log.md](../research-log.md) |
 | Acceptance for M5–M6 | Planned with those milestones |
 | Property tests over generated portals (P1–P13 beyond the reference portal) | Planned ([verification.md](./verification.md)) |
 | Deterministic simulation | Deferred (D44) |

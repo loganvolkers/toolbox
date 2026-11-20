@@ -7,6 +7,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 PGBIN=${PGBIN:-/usr/lib/postgresql/16/bin}; PGDIR=${PGDIR:-/var/lib/postgresql/toolbox-m4}; PORT=${PGPORT:-54342}
+[ -x "$PGBIN/initdb" ] || { echo "no initdb in $PGBIN: install PostgreSQL 16 (e.g. the PGDG apt repository) or set PGBIN" >&2; exit 2; }
 T=${T:-target/debug}; PORTAL=examples/reference-portal; WORK=$(mktemp -d); RUNAS=""
 [ "$(id -u)" = 0 ] && RUNAS="runuser -u postgres --"
 API=127.0.0.1:${API_PORT:-18085}; URL=http://$API; GH=${GH_PORT:-18996}; SCIM=127.0.0.1:${SCIM_PORT:-19101}
