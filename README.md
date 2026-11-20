@@ -31,6 +31,7 @@ cargo build && target/debug/toolbox validate examples/reference-portal
   - [design/extensibility.md](docs/design/extensibility.md): code-first extensibility and the right language for each job
   - [design/repo-portals.md](docs/design/repo-portals.md): Toolbox without a server — `toolbox report`, evidence, ratchets, one-file HTML; adopt it with the [report action](actions/report/README.md) and the [starter](examples/repo-portal-starter/README.md)
   - [design/ratchets.md](docs/design/ratchets.md): what we learned from Betterer and other baselines (ESLint, PHPStan, basedpyright, OpenSSF Scorecard)
+  - [design/github-actions-standards.md](docs/design/github-actions-standards.md): CI security, reliability and supply-chain scorecards (zizmor, actionlint, run history)
   - [design/federation.md](docs/design/federation.md): standards that graduate from one repo to the company (design only)
   - [design/toolbox-for-toolbox.md](docs/design/toolbox-for-toolbox.md): Toolbox scoring its own repository
   - [design/maintainer-sdlc.md](docs/design/maintainer-sdlc.md): **SDLC layer 1**, how Toolbox itself is built and verified (check pyramid, measured loop)

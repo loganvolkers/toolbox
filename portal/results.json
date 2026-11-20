@@ -2,6 +2,79 @@
   "format": "toolbox-report/v1",
   "portal": "toolbox",
   "results": {
+    "maintainer-action-deps": {
+      "action:actions/cache": {
+        "failing": {
+          "pinned-everywhere": 2
+        },
+        "level": "none"
+      },
+      "action:actions/checkout": {
+        "failing": {
+          "pinned-everywhere": 2
+        },
+        "level": "none"
+      },
+      "action:actions/setup-go": {
+        "failing": {
+          "pinned-everywhere": 2
+        },
+        "level": "none"
+      },
+      "action:actions/setup-node": {
+        "failing": {
+          "pinned-everywhere": 2
+        },
+        "level": "none"
+      },
+      "action:actions/setup-python": {
+        "failing": {
+          "pinned-everywhere": 2
+        },
+        "level": "none"
+      },
+      "action:actions/upload-artifact": {
+        "failing": {
+          "pinned-everywhere": 2
+        },
+        "level": "none"
+      }
+    },
+    "maintainer-ci-reliability": {
+      "workflow:.github/workflows/ci.yml": {
+        "failing": {
+          "cancels-superseded-runs": 1,
+          "every-job-has-timeout": 6,
+          "fail-rate-under-10": 1,
+          "fail-rate-under-20": 1,
+          "fail-rate-under-5": 1,
+          "fast-feedback": 1,
+          "few-reruns": 1,
+          "main-not-stuck-red": 1
+        },
+        "level": "none"
+      },
+      "workflow:actions/report/action.yml": {
+        "level": "skipped"
+      }
+    },
+    "maintainer-ci-security": {
+      "workflow:.github/workflows/ci.yml": {
+        "failing": {
+          "no-medium-findings": 6,
+          "pinned-to-sha": 4,
+          "zizmor-clean": 27
+        },
+        "level": "none"
+      },
+      "workflow:actions/report/action.yml": {
+        "failing": {
+          "pinned-to-sha": 2,
+          "zizmor-clean": 3
+        },
+        "level": "none"
+      }
+    },
     "maintainer-crate": {
       "crate:toolbox-api": {
         "failing": {
@@ -190,6 +263,9 @@
         "level": "silver"
       },
       "doc:docs/design/frontend.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/github-actions-standards.md": {
         "level": "silver"
       },
       "doc:docs/design/graphql.md": {

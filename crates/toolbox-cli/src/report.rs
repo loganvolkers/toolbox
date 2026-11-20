@@ -31,7 +31,12 @@ pub struct Options {
 const FORMAT: &str = "toolbox-report/v1";
 
 /// Run one in-image connector's resync and return its record and delete messages.
-fn resync(name: &str, program: &str, config: &Value) -> Result<Vec<Value>, String> {
+fn resync(
+    name: &str,
+    program: &str,
+    config: &Value,
+    kinds: &[String],
+) -> Result<Vec<Value>, String> {
     let mut child = Command::new(program)
         .env("TOOLBOX_CONNECTOR_CONFIG", config.to_string())
         .stdin(Stdio::piped())
@@ -39,7 +44,9 @@ fn resync(name: &str, program: &str, config: &Value) -> Result<Vec<Value>, Strin
         .stderr(Stdio::inherit())
         .spawn()
         .map_err(|e| format!("connector {name}: cannot start {program}: {e}"))?;
-    let cmd = json!({"type": "command", "command": "resync", "command_id": "report"});
+    // The kinds the manifest declares: some connectors (github) resync only the kinds named.
+    let cmd =
+        json!({"type": "command", "command": "resync", "command_id": "report", "kinds": kinds});
     child
         .stdin
         .take()
@@ -104,7 +111,7 @@ fn inputs(
                         &c.name,
                         c.config.as_ref().unwrap_or(&Value::Null),
                     );
-                    resync(&c.name, &program, &config).map(|r| (c.name.clone(), r))
+                    resync(&c.name, &program, &config, &c.records).map(|r| (c.name.clone(), r))
                 })
             })
             .collect();
@@ -135,21 +142,44 @@ fn results(d: &Derived) -> Value {
                 .rules
                 .iter()
                 .flatten()
-                .filter(|(_, o)| *o != "pass")
+                .filter(|(_, o)| *o == "fail")
                 .map(|(r, _)| {
                     let n = s.evidence.get(r).and_then(Value::as_array).map(Vec::len);
                     (r.clone(), json!(n))
                 })
                 .collect();
+            // `unknown`: the rule couldn't be evaluated (its data is missing, e.g. a linter that
+            // isn't installed). Never a regression or an improvement; `--ci` refuses it.
+            let unknown: Vec<&String> = s
+                .rules
+                .iter()
+                .flatten()
+                .filter(|(_, o)| *o == "unknown")
+                .map(|(r, _)| r)
+                .collect();
             let mut row = json!({"level": s.level});
             if !failing.is_empty() {
                 row["failing"] = Value::Object(failing);
+            }
+            if !unknown.is_empty() {
+                row["unknown"] = json!(unknown);
             }
             rows.insert(id.clone(), row);
         }
         cards.insert(card.clone(), Value::Object(rows));
     }
     Value::Object(cards)
+}
+
+/// How many rule outcomes in `results` are `unknown`.
+fn unknown_count(results: &Value) -> usize {
+    results
+        .as_object()
+        .into_iter()
+        .flatten()
+        .flat_map(|(_, rows)| rows.as_object().into_iter().flatten())
+        .map(|(_, row)| row["unknown"].as_array().map_or(0, Vec::len))
+        .sum()
 }
 
 #[derive(Default)]
@@ -180,7 +210,25 @@ fn compare(before: &Value, after: &Value) -> Comparison {
                 continue;
             };
             let (wf, nf) = (obj(&was["failing"]), obj(&now["failing"]));
+            let list = |v: &Value| -> Vec<String> {
+                v.as_array()
+                    .into_iter()
+                    .flatten()
+                    .filter_map(|x| x.as_str().map(str::to_owned))
+                    .collect()
+            };
+            let (wu, nu) = (list(&was["unknown"]), list(&now["unknown"]));
+            for rule in nu.iter().filter(|r| !wu.contains(r)) {
+                c.other.push(format!(
+                    "{card} · {id}: {rule} unknown now (its data is missing)"
+                ));
+            }
             for (rule, n) in &nf {
+                if wu.contains(rule) {
+                    c.other
+                        .push(format!("{card} · {id}: {rule} known again: fails"));
+                    continue;
+                }
                 match wf.get(rule) {
                     None if was["level"] != "skipped" => c
                         .regressions
@@ -199,7 +247,10 @@ fn compare(before: &Value, after: &Value) -> Comparison {
                     },
                 }
             }
-            for rule in wf.keys().filter(|r| !nf.contains_key(*r)) {
+            for rule in wf
+                .keys()
+                .filter(|r| !nf.contains_key(*r) && !nu.contains(r))
+            {
                 c.improvements
                     .push(format!("{card} · {id}: {rule} now passes"));
             }
@@ -371,12 +422,24 @@ pub fn run(o: &Options) -> ExitCode {
                     lines.push(format!("· changed {r}"));
                 }
                 let differs = b["results"] != now;
+                let unknown = unknown_count(&now);
                 let verdict = if !c.regressions.is_empty() {
                     code = ExitCode::FAILURE;
                     format!(
                         "{} regression(s) against {}",
                         c.regressions.len(),
                         path.display()
+                    )
+                } else if unknown > 0 && (o.ci || o.update) {
+                    // Writing unknowns would silently drop those rules from the ratchet.
+                    code = ExitCode::FAILURE;
+                    format!(
+                        "{unknown} rule outcome(s) unknown (missing tools or data); {} needs every rule evaluated",
+                        if o.ci { "--ci" } else { "--update" }
+                    )
+                } else if unknown > 0 {
+                    format!(
+                        "no regressions; {unknown} rule outcome(s) unknown (missing tools or data), not compared"
                     )
                 } else if differs && o.update {
                     if let Err(e) = write() {
@@ -447,6 +510,35 @@ mod tests {
             ]
         );
         assert!(c.improvements.is_empty());
+    }
+
+    #[test]
+    fn unknown_outcomes_are_neither_worse_nor_better() {
+        let before =
+            r(json!({"a": {"level": "none", "failing": {"lint": 2}}, "b": {"level": "gold"}}));
+        let after = r(
+            json!({"a": {"level": "none", "unknown": ["lint"]}, "b": {"level": "none", "unknown": ["lint"]}}),
+        );
+        let c = compare(&before, &after);
+        assert!(
+            c.regressions.is_empty() && c.improvements.is_empty(),
+            "{:?} {:?}",
+            c.regressions,
+            c.improvements
+        );
+        assert_eq!(
+            c.other,
+            [
+                "card · a: lint unknown now (its data is missing)",
+                "card · b: lint unknown now (its data is missing)",
+                "card · b: level \"gold\" → \"none\""
+            ]
+        );
+        assert_eq!(unknown_count(&after), 2);
+        // and back: a rule known again that fails is reported, not counted as a regression
+        let c = compare(&after, &before);
+        assert!(c.regressions.is_empty());
+        assert_eq!(c.other[0], "card · a: lint known again: fails");
     }
 
     #[test]

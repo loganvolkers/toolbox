@@ -52,7 +52,8 @@ toolbox report portal --baseline portal/results.json --ci
 | Slow connectors (tests, builds) | Split them into their own connector and `--skip` them in the ratchet step. Toolbox for Toolbox runs `workspace` + `surfaces` (about 1 s), and its `runner` (tests, clippy, MCP trace) only in full runs |
 | Deterministic baselines | Results are pure functions of the files. Keep time-dependent data (`lastChange`, durations) out of rules that the baseline records |
 | Merge conflicts in the baseline | Rerun `--update` on the merged tree; never hand-merge |
-| Pre-commit | A hook running `toolbox report --skip runner --baseline … --update` (documented; packaging is ratchets.md R4) |
+| Pre-commit | A hook running `toolbox report --skip runner,github-actions --baseline … --update` (documented; packaging is ratchets.md R4) |
+| Tools a rule needs (zizmor, actionlint) | Install the pinned versions in CI; where they're missing, their rules are `unknown`, reported but not compared, and `--ci`/`--update` refuse ([github-actions-standards.md](./github-actions-standards.md) §4) |
 
 ## 4. One page to publish: `report -o html`
 

@@ -6,7 +6,8 @@ these responses back into exactly the records in fixtures/github.ndjson.
 Usage: python tools/mock_github.py PORT    (org: acme)
 Endpoints: /orgs/acme/repos, /repositories/{id}, /repos/acme/{repo}/branches/{b},
 /repos/acme/{repo}/collaborators, /repos/acme/{repo}/contents/{path}, /orgs/acme/installations,
-/user/installations/{id}/repositories, /apps/{slug}. Pages beyond 1 are empty.
+/user/installations/{id}/repositories, /apps/{slug}, /repos/acme/{repo}/actions/workflows and
+/repos/acme/{repo}/actions/workflows/7/runs. Pages beyond 1 are empty.
 State can be changed with POST /_mock/repos/{name} {"admins": [...], ...} (used by refresh tests).
 """
 import base64, json, os, sys, threading
@@ -67,6 +68,17 @@ class H(BaseHTTPRequestHandler):
                     return self.send(200, {"name": p[4], "protected": r["default_branch_protected"]})
                 if p[3] == "collaborators":
                     return self.send(200, [{"login": a, "permissions": {"admin": True}} for a in r["admins"]] if page == 1 else [])
+                if p[3:5] == ["actions", "workflows"] and len(p) == 5:
+                    return self.send(200, {"total_count": 1, "workflows": [
+                        {"id": 7, "name": "ci", "path": ".github/workflows/ci.yml", "state": "active"}]})
+                if p[3:5] == ["actions", "workflows"] and len(p) == 7 and p[5] == "7" and p[6] == "runs":
+                    # Newest first, filtered by ?branch=; two failures after a success, one rerun.
+                    runs = [{"status": "completed", "conclusion": c, "run_attempt": a, "head_branch": "main",
+                             "created_at": f"2026-11-0{d}T10:00:00Z", "run_started_at": f"2026-11-0{d}T10:00:00Z",
+                             "updated_at": f"2026-11-0{d}T10:0{m}:00Z"}
+                            for c, a, d, m in [("failure", 1, 4, 5), ("failure", 2, 3, 7), ("success", 1, 2, 4)]]
+                    runs = [r for r in runs if r["head_branch"] == q.get("branch", ["main"])[0]]
+                    return self.send(200, {"total_count": len(runs), "workflow_runs": runs[: int(q.get("per_page", ["30"])[0])]})
                 if p[3] == "contents":
                     path = "/".join(p[4:])
                     if path == ".github/CODEOWNERS" and p[2] in codeowners:

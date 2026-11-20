@@ -1,0 +1,221 @@
+//! GitHub Actions workflows and action metadata, read statically (docs/design/github-actions-standards.md
+//! §4): triggers, permissions, timeouts, concurrency, and every `uses:` with how it is pinned.
+//! Security findings come from zizmor and actionlint (the `runner`); these are the structural facts
+//! scorecards need besides them, and the inventory behind "which workflows use action X?".
+
+use serde_json::{Map, Value, json};
+use std::collections::{BTreeMap, BTreeSet};
+
+/// Triggers that run with the base repository's secrets and a write token on behalf of code or
+/// input from outside the repository (GitHub "secure use"; OpenSSF Scorecard Dangerous-Workflow).
+const RISKY_TRIGGERS: &[&str] = &["pull_request_target", "workflow_run", "issue_comment"];
+
+/// How a `uses:` reference is pinned: `sha` (a full 40-hex commit), `tag`, `branch`, `local`
+/// (`./…`), `docker-digest` or `docker-tag`.
+pub fn pin(reference: &str) -> &'static str {
+    if reference.starts_with("./") {
+        return "local";
+    }
+    if let Some(image) = reference.strip_prefix("docker://") {
+        return if image.contains("@sha256:") {
+            "docker-digest"
+        } else {
+            "docker-tag"
+        };
+    }
+    let version = reference.rsplit_once('@').map_or("", |(_, v)| v);
+    if version.len() == 40 && version.chars().all(|c| c.is_ascii_hexdigit()) {
+        "sha"
+    } else if version.starts_with('v') && version[1..].starts_with(|c: char| c.is_ascii_digit())
+        || version.starts_with(|c: char| c.is_ascii_digit())
+    {
+        "tag"
+    } else {
+        "branch"
+    }
+}
+
+/// `owner/repo` of an external action or reusable workflow (`owner/repo/path@ref` → `owner/repo`).
+fn action_name(reference: &str) -> Option<String> {
+    if reference.starts_with("./") || reference.starts_with("docker://") {
+        return None;
+    }
+    let path = reference.split('@').next()?;
+    let mut parts = path.split('/');
+    Some(format!("{}/{}", parts.next()?, parts.next()?))
+}
+
+fn triggers(on: &Value) -> Vec<String> {
+    match on {
+        Value::String(s) => vec![s.clone()],
+        Value::Array(a) => a
+            .iter()
+            .filter_map(|v| v.as_str().map(str::to_owned))
+            .collect(),
+        Value::Object(m) => m.keys().cloned().collect(),
+        _ => vec![],
+    }
+}
+
+/// `write-all`, or the scopes granted `write` in a permissions block.
+fn write_scopes(p: &Value) -> Vec<String> {
+    match p {
+        Value::String(s) if s == "write-all" => vec!["*".into()],
+        Value::Object(m) => m
+            .iter()
+            .filter(|(_, v)| v.as_str() == Some("write"))
+            .map(|(k, _)| k.clone())
+            .collect(),
+        _ => vec![],
+    }
+}
+
+/// One `uses:` occurrence: `{ref, action, pin, at}`.
+fn uses(reference: &str, at: String) -> Value {
+    json!({"ref": reference, "action": action_name(reference), "pin": pin(reference), "at": at})
+}
+
+/// The `workflow` record for a workflow file or action metadata file, from its YAML text.
+pub fn record(path: &str, text: &str) -> Value {
+    let doc: Value = match serde_norway::from_str(text) {
+        Ok(v) => v,
+        Err(e) => return json!({"path": path, "error": e.to_string()}),
+    };
+    let is_action = path.ends_with("action.yml") || path.ends_with("action.yaml");
+    let mut refs = Vec::new();
+    let mut jobs = Vec::new();
+    if is_action {
+        for (i, step) in doc["runs"]["steps"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .enumerate()
+        {
+            if let Some(r) = step["uses"].as_str() {
+                refs.push(uses(r, format!("runs.steps[{i}]")));
+            }
+        }
+    } else {
+        for (id, job) in doc["jobs"].as_object().into_iter().flatten() {
+            if let Some(r) = job["uses"].as_str() {
+                refs.push(uses(r, format!("jobs.{id}")));
+            }
+            for (i, step) in job["steps"].as_array().into_iter().flatten().enumerate() {
+                if let Some(r) = step["uses"].as_str() {
+                    refs.push(uses(r, format!("jobs.{id}.steps[{i}]")));
+                }
+            }
+            jobs.push(json!({
+                "id": id,
+                "timeout": job.get("timeout-minutes").is_some() || job.get("uses").is_some(),
+                "permissions": job.get("permissions").is_some(),
+                "writeScopes": write_scopes(&job["permissions"]),
+                "concurrency": job.get("concurrency").is_some(),
+            }));
+        }
+    }
+    // YAML 1.1 readers turn the `on` key into `true`; accept both.
+    let on = doc
+        .get("on")
+        .or_else(|| doc.get("true"))
+        .cloned()
+        .unwrap_or(Value::Null);
+    let trig = triggers(&on);
+    let names = |pred: &dyn Fn(&Value) -> bool| -> Vec<Value> {
+        jobs.iter()
+            .filter(|j| pred(j))
+            .map(|j| j["id"].clone())
+            .collect()
+    };
+    let has_top_permissions = doc.get("permissions").is_some();
+    let actions: BTreeSet<String> = refs
+        .iter()
+        .filter_map(|r| r["action"].as_str().map(str::to_owned))
+        .collect();
+    json!({
+        "path": path,
+        "type": if is_action { "action" } else { "workflow" },
+        "name": doc["name"].as_str().unwrap_or(path),
+        "triggers": trig,
+        "riskyTriggers": trig.iter().filter(|t| RISKY_TRIGGERS.contains(&t.as_str())).collect::<Vec<_>>(),
+        "topPermissions": has_top_permissions,
+        "topWriteScopes": write_scopes(&doc["permissions"]),
+        "jobs": jobs.len(),
+        "jobsWithoutTimeout": names(&|j| j["timeout"] == false),
+        "jobsWithoutPermissions": if has_top_permissions { vec![] } else { names(&|j| j["permissions"] == false) },
+        "jobsWithWrite": names(&|j| j["writeScopes"].as_array().is_some_and(|a| !a.is_empty())),
+        "concurrency": doc.get("concurrency").is_some() || (!jobs.is_empty() && jobs.iter().all(|j| j["concurrency"] == true)),
+        "uses": refs,
+        "unpinned": refs.iter().filter(|r| !matches!(r["pin"].as_str(), Some("sha" | "local" | "docker-digest"))).filter_map(|r| r["ref"].as_str()).collect::<BTreeSet<_>>(),
+        "actions": actions,
+    })
+}
+
+/// For one external action: the refs used, the files using them, and how they're pinned.
+type Usage = (BTreeSet<String>, BTreeSet<String>, BTreeSet<String>);
+
+/// `action-ref` records: one per external action, with every ref used and the files using it.
+pub fn action_refs(workflows: &[Value]) -> Vec<(String, Value)> {
+    let mut by: BTreeMap<String, Usage> = BTreeMap::new();
+    for w in workflows {
+        for u in w["uses"].as_array().into_iter().flatten() {
+            let Some(name) = u["action"].as_str() else {
+                continue;
+            };
+            let e = by.entry(name.to_owned()).or_default();
+            e.0.insert(u["ref"].as_str().unwrap_or("").to_owned());
+            e.1.insert(w["path"].as_str().unwrap_or("").to_owned());
+            e.2.insert(u["pin"].as_str().unwrap_or("").to_owned());
+        }
+    }
+    by.into_iter()
+        .map(|(name, (refs, used_by, pins))| {
+            let mut data = Map::new();
+            data.insert("name".into(), json!(name));
+            data.insert("owner".into(), json!(name.split('/').next()));
+            data.insert("refs".into(), json!(refs));
+            data.insert("usedBy".into(), json!(used_by));
+            data.insert("pins".into(), json!(pins));
+            (name, Value::Object(data))
+        })
+        .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn classifies_pins() {
+        assert_eq!(pin("actions/checkout@v4"), "tag");
+        assert_eq!(
+            pin("actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683"),
+            "sha"
+        );
+        assert_eq!(pin("org/repo/.github/workflows/x.yml@main"), "branch");
+        assert_eq!(pin("./actions/report"), "local");
+        assert_eq!(pin("docker://alpine:3"), "docker-tag");
+        assert_eq!(pin("docker://alpine@sha256:abc"), "docker-digest");
+    }
+
+    #[test]
+    fn reads_a_workflow() {
+        let w = record(
+            ".github/workflows/ci.yml",
+            "name: ci\non:\n  pull_request_target:\n  push:\njobs:\n  a:\n    runs-on: ubuntu-latest\n    timeout-minutes: 5\n    permissions: {contents: write}\n    steps:\n      - uses: actions/checkout@v4\n      - uses: ./actions/report\n  b:\n    uses: org/shared/.github/workflows/w.yml@0123456789012345678901234567890123456789\n",
+        );
+        assert_eq!(w["riskyTriggers"], json!(["pull_request_target"]));
+        assert_eq!(w["topPermissions"], false);
+        assert_eq!(w["jobsWithoutPermissions"], json!(["b"]));
+        assert_eq!(w["jobsWithWrite"], json!(["a"]));
+        assert_eq!(
+            w["jobsWithoutTimeout"],
+            json!([]),
+            "reusable-workflow jobs can't set a timeout"
+        );
+        assert_eq!(w["unpinned"], json!(["actions/checkout@v4"]));
+        assert_eq!(w["actions"], json!(["actions/checkout", "org/shared"]));
+        let refs = action_refs(&[w]);
+        assert_eq!(refs[0].1["usedBy"], json!([".github/workflows/ci.yml"]));
+    }
+}

@@ -14,20 +14,27 @@ no Postgres, no OpenFGA, no network.
 | `operator-cli` | 2. Operator | Command | Operator commands have help, are documented and are run by a script or test |
 | `user-cli` | 3. User | Command | Read commands have help, structured output (`-o json`) and are exercised |
 | `user-mcp` | 3. User | McpTool | Tools are described and annotated, inputs described, documented, and contract-tested over MCP |
+| `maintainer-ci-security` | 1. Maintainer | Workflow | actionlint clean; no high zizmor findings; least-privilege token; actions pinned to SHAs; then no medium findings and no write tokens on risky triggers; then zizmor-clean |
+| `maintainer-ci-reliability` | 1. Maintainer | Workflow | Main not stuck red; fail rate ≤ 20/10/5%; job timeouts; few re-runs; superseded runs cancelled; p90 ≤ 15 min |
+| `maintainer-action-deps` | 1. Maintainer | ActionDependency | Each third-party action is SHA-pinned in every workflow that uses it |
 
 ## Run it
 
 ```bash
-toolbox report portal --skip runner                 # ~1 s: every scorecard, with evidence for failing rules
+toolbox report portal --skip runner,github-actions               # ~1 s: every scorecard, with evidence for failing rules
 toolbox report portal                               # ~2 min: also cargo test, clippy and the MCP trace per crate
-toolbox report portal --skip runner --baseline portal/results.json          # the ratchet (CI adds --ci)
-toolbox report portal --skip runner --baseline portal/results.json --update # record an improvement; commit it
-toolbox report portal --skip runner -o html --out report.html              # one page to publish
+toolbox report portal --skip runner,github-actions --baseline portal/results.json          # the ratchet (CI adds --ci)
+toolbox report portal --skip runner,github-actions --baseline portal/results.json --update # record an improvement; commit it
+toolbox report portal --skip runner,github-actions -o html --out report.html            # one page to publish
 scripts/self-portal.sh serve                        # live portal on :8090 (API, MCP, UI)
 toolbox test portal                                 # the standards' own tests, over the curated fixtures
 ```
 
-`toolbox` here is `target/debug/toolbox` (connectors are found next to it). CI fails when anything
+`toolbox` here is `target/debug/toolbox` (connectors are found next to it). The ratchet needs
+`zizmor` 1.32.0 (`pip install zizmor==1.32.0`) and `actionlint` 1.7.12 (`go install
+github.com/rhysd/actionlint/cmd/actionlint@v1.7.12`) on the `PATH`; without them their rules are
+`unknown` (reported, not compared) and `--ci`/`--update` refuse to run. `github-actions` needs
+`GITHUB_TOKEN` and changes over time, so it is skipped in the ratchet. CI fails when anything
 gets worse than `portal/results.json`, and when an improvement hasn't been recorded in it.
 
 With `serve` running, any agent can use it:
@@ -48,6 +55,8 @@ To register it in an MCP client (for example Claude Code's `.mcp.json`), use the
 |---|---|---|---|
 | `workspace` ([crate](../crates/toolbox-connector-workspace)) | `crate`, `doc`, `file` | `cargo metadata`, a `syn` parse of each crate, markdown and file scans with configurable regex captures and counts | Re-reads one crate, doc or file |
 | `surfaces` (the runner binary) | `command`, `mcp-tool` | Runs `toolbox describe` | Reruns it |
+| `ci-lint` (the runner binary) | `zizmor`, `actionlint` | Runs both linters over `.github/workflows` and `actions/`; one record per file, clean ones included | Reruns them |
+| `github-actions` (the github binary) | `workflow-runs` | Run history per workflow on `main` from the GitHub API: fail rate, re-runs, failing streak, p90 time | Re-reads it |
 | `runner` ([crate](../crates/toolbox-connector-runner)) | `test`, `clippy`, `mcp-calls` | Runs `cargo test -p`, `cargo clippy -p` per crate, and the MCP contract tests with `TOOLBOX_MCP_TRACE` (observed calls per tool) | Reruns one crate's jobs |
 
 Connectors report raw facts (every function with its length and complexity, every undocumented

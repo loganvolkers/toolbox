@@ -9,6 +9,7 @@ Shared vocabulary across the design documents. Keep entries short and link to th
 | **Maintainer** | Someone (or an agent) who builds Toolbox itself | [design/maintainer-sdlc.md](./design/maintainer-sdlc.md) |
 | **User** | Someone (or an agent, bot or app) who builds on a running portal's context and actions | [design/user-sdlc.md](./design/user-sdlc.md) |
 | **Report action** | `actions/report`: the GitHub Action that runs `toolbox report` with a ratchet in one workflow step (D69) | [actions/report/README.md](../actions/report/README.md) |
+| **Unknown outcome** | A rule whose data is missing (e.g. a linter not installed): reported, never a regression or an improvement; `--ci` and `--update` refuse it (D70) | [design/github-actions-standards.md](./design/github-actions-standards.md) |
 | **Repo portal** | A portal run by `toolbox report` in one repository, without a server (D66) | [design/repo-portals.md](./design/repo-portals.md) |
 | **Ratchet / baseline** | A committed results file (`toolbox-report/v1`); a newly failing rule or growing evidence is a regression (D66, Betterer-style) | [design/ratchets.md](./design/ratchets.md) |
 | **Evidence** | A rule's `evidence:` CEL value when it fails: the items that make it fail | [design/ratchets.md](./design/ratchets.md) |

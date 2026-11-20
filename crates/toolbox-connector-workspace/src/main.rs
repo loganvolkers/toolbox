@@ -8,6 +8,9 @@
 //! - `file`: one per file matching `files` globs (scripts, integration tests);
 //! - `repo` (opt-in, `"repo": true`): the checkout itself — README, LICENSE, `.github` files and
 //!   CODEOWNERS parsed into rules — for repository-level standards;
+//! - `workflow` and `action-ref` (`workflows` globs): GitHub Actions workflows and action metadata
+//!   (triggers, permissions, timeouts, `uses:` and how each is pinned), and one record per external
+//!   action with every ref used and the files using it;
 //! - `betterer`: one per test in each Betterer results file matching `betterer` globs (issue counts
 //!   per file for file tests), so existing Betterer ratchets roll up into scorecards.
 //!
@@ -22,50 +25,27 @@
 mod betterer;
 mod repo;
 mod rust;
+mod workflows;
 
 use regex::Regex;
 use serde_json::{Map, Value, json};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
+use toolbox_connect::files::{self, glob};
 use toolbox_connect::sdk::{Out, Source, run_stdio};
-
-/// Directories never walked.
-const SKIP_DIRS: &[&str] = &["target", "node_modules", ".git", "dist", ".venv"];
 
 struct Workspace {
     root: PathBuf,
     docs: Vec<Regex>,
     files: Vec<Regex>,
     betterer: Vec<Regex>,
+    /// GitHub Actions workflow and action metadata files (`workflow` and `action-ref` records).
+    workflows: Vec<Regex>,
     captures: Vec<(String, Regex)>,
     counts: Vec<(String, Regex)>,
     crates: bool,
     /// Emit one `repo` record for the checkout (opt-in: `"repo": true`).
     repo: bool,
-}
-
-/// A glob over `/`-separated relative paths: `**` spans directories, `*` and `?` don't.
-fn glob(pattern: &str) -> Result<Regex, String> {
-    let mut re = String::from("^");
-    let mut chars = pattern.chars().peekable();
-    while let Some(c) = chars.next() {
-        match c {
-            '*' if chars.peek() == Some(&'*') => {
-                chars.next();
-                if chars.peek() == Some(&'/') {
-                    chars.next();
-                    re.push_str("(?:.*/)?");
-                } else {
-                    re.push_str(".*");
-                }
-            }
-            '*' => re.push_str("[^/]*"),
-            '?' => re.push_str("[^/]"),
-            c => re.push_str(&regex::escape(&c.to_string())),
-        }
-    }
-    re.push('$');
-    Regex::new(&re).map_err(|e| format!("glob {pattern}: {e}"))
 }
 
 fn named_regexes(cfg: &Value, key: &str) -> Result<Vec<(String, Regex)>, String> {
@@ -111,6 +91,7 @@ impl Workspace {
             docs: globs(&cfg, "docs")?,
             files: globs(&cfg, "files")?,
             betterer: globs(&cfg, "betterer")?,
+            workflows: globs(&cfg, "workflows")?,
             captures: named_regexes(&cfg, "captures")?,
             counts: named_regexes(&cfg, "counts")?,
             crates: cfg["crates"].as_bool().unwrap_or(true),
@@ -120,23 +101,7 @@ impl Workspace {
 
     /// Relative paths of every file under the root (skipping build and VCS directories).
     fn walk(&self) -> Vec<String> {
-        let mut out: Vec<String> = walkdir::WalkDir::new(&self.root)
-            .into_iter()
-            .filter_entry(|e| {
-                !(e.file_type().is_dir()
-                    && SKIP_DIRS.contains(&e.file_name().to_string_lossy().as_ref()))
-            })
-            .flatten()
-            .filter(|e| e.file_type().is_file())
-            .filter_map(|e| {
-                e.path()
-                    .strip_prefix(&self.root)
-                    .ok()
-                    .map(|p| p.to_string_lossy().replace('\\', "/"))
-            })
-            .collect();
-        out.sort();
-        out
+        files::walk(&self.root)
     }
 
     fn matches(set: &[Regex], path: &str) -> bool {
@@ -343,7 +308,17 @@ impl Workspace {
         let kinds: Vec<&str> = cmd["kinds"]
             .as_array()
             .map(|k| k.iter().filter_map(Value::as_str).collect())
-            .unwrap_or_else(|| vec!["repo", "crate", "doc", "file", "betterer"]);
+            .unwrap_or_else(|| {
+                vec![
+                    "repo",
+                    "crate",
+                    "doc",
+                    "file",
+                    "betterer",
+                    "workflow",
+                    "action-ref",
+                ]
+            });
         if self.crates && kinds.contains(&"crate") {
             self.emit_crates(None, out)?;
             out.snapshot_complete("crate");
@@ -370,6 +345,9 @@ impl Workspace {
             }
             out.snapshot_complete(kind);
         }
+        if !self.workflows.is_empty() {
+            self.emit_workflows(&paths, &kinds, out);
+        }
         if kinds.contains(&"betterer") && !self.betterer.is_empty() {
             for rel in paths.iter().filter(|p| Self::matches(&self.betterer, p)) {
                 let text = std::fs::read_to_string(self.root.join(rel)).unwrap_or_default();
@@ -384,6 +362,31 @@ impl Workspace {
     }
 
     /// Re-read the records named by `external_ids`; `not_found` for those that are gone.
+    /// `workflow` records for files matching `workflows`, and `action-ref` records derived from them.
+    fn emit_workflows(&self, paths: &[String], kinds: &[&str], out: &mut Out) {
+        let records: Vec<Value> = paths
+            .iter()
+            .filter(|p| Self::matches(&self.workflows, p))
+            .filter_map(|rel| {
+                let text = std::fs::read_to_string(self.root.join(rel)).ok()?;
+                Some(workflows::record(rel, &text))
+            })
+            .collect();
+        if kinds.contains(&"workflow") {
+            for r in &records {
+                let path = r["path"].as_str().unwrap_or_default();
+                out.record("workflow", &format!("workflow:{path}"), r.clone());
+            }
+            out.snapshot_complete("workflow");
+        }
+        if kinds.contains(&"action-ref") {
+            for (name, data) in workflows::action_refs(&records) {
+                out.record("action-ref", &format!("action-ref:{name}"), data);
+            }
+            out.snapshot_complete("action-ref");
+        }
+    }
+
     fn refresh(&self, cmd: &Value, out: &mut Out) -> Result<(), String> {
         let mut crates = BTreeSet::new();
         for id in cmd["external_ids"]
@@ -406,6 +409,14 @@ impl Workspace {
                     Some(r) => out.record("doc", id, r),
                     None => out.not_found("doc", id),
                 }
+            } else if let Some(rel) = id.strip_prefix("workflow:") {
+                match std::fs::read_to_string(self.root.join(rel)) {
+                    Ok(text) => out.record("workflow", id, workflows::record(rel, &text)),
+                    Err(_) => out.not_found("workflow", id),
+                }
+            } else if id.starts_with("action-ref:") {
+                // Usage spans files, so re-derive every action ref from the workflows.
+                self.emit_workflows(&self.walk(), &["action-ref"], out);
             } else if let Some(rel) = id.strip_prefix("file:") {
                 match self.file_record(rel) {
                     Some(r) => out.record("file", id, r),
@@ -426,8 +437,8 @@ impl Source for Workspace {
     }
 
     fn capabilities(&self) -> Value {
-        json!({"refresh": {"repo": ["external_ids"], "crate": ["external_ids"], "doc": ["external_ids"], "file": ["external_ids"]},
-               "resync": ["repo", "crate", "doc", "file", "betterer"], "max_concurrency": 1})
+        json!({"refresh": {"repo": ["external_ids"], "workflow": ["external_ids"], "action-ref": ["external_ids"], "crate": ["external_ids"], "doc": ["external_ids"], "file": ["external_ids"]},
+               "resync": ["repo", "crate", "doc", "file", "betterer", "workflow", "action-ref"], "max_concurrency": 1})
     }
 
     async fn handle(&mut self, cmd: &Value, out: &mut Out) -> Result<(), String> {
@@ -447,23 +458,5 @@ async fn main() {
             eprintln!("toolbox-connector-workspace: {e}");
             std::process::exit(2);
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::glob;
-
-    #[test]
-    fn globs_match_segments() {
-        let g = glob("docs/*.md").unwrap();
-        assert!(g.is_match("docs/plan.md"));
-        assert!(!g.is_match("docs/design/sdlc.md"));
-        let g = glob("docs/**/*.md").unwrap();
-        assert!(g.is_match("docs/plan.md"));
-        assert!(g.is_match("docs/design/sdlc.md"));
-        let g = glob("crates/*/tests/*.rs").unwrap();
-        assert!(g.is_match("crates/toolbox-api/tests/api.rs"));
-        assert!(!g.is_match("crates/toolbox-api/src/lib.rs"));
     }
 }

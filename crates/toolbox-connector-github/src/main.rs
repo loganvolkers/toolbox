@@ -7,9 +7,14 @@
 //! - `codeowners` `github:codeowners/<repo id>`: repo, rules [{pattern, owners}]
 //! - `installation` `github:installation/<id>`: id, app_slug, repository_selection, repositories
 //! - `app` `github:app/<slug>`: slug, owner, permissions
+//! - `workflow-runs` `github:workflow-runs/<repo>/<path>` (with `actions: {repos, branch?, runs?}`):
+//!   per workflow, failure rate, reruns, failing streak and run times over its recent runs on one
+//!   branch (`runs::stats`)
 //!
 //! Endpoints are from GitHub's REST description (github/rest-api-description). Listing another
 //! app's installation repositories needs a suitable user token (Q14).
+
+mod runs;
 
 use serde_json::{Value, json};
 use toolbox_connect::sdk::{Out, Source, run_stdio};
@@ -21,6 +26,8 @@ struct GitHub {
     version: String,
     token: Option<String>,
     app: Option<(String, String, String)>, // (app id, private key PEM, installation id)
+    /// `actions`: repositories whose workflow runs to summarise, the branch, and how many runs.
+    actions: Option<(Vec<String>, String, u64)>,
 }
 
 impl GitHub {
@@ -38,6 +45,20 @@ impl GitHub {
             org: s("org").ok_or("config needs `org`")?,
             version: s("apiVersion").unwrap_or_else(|| "2022-11-28".into()),
             token: s("token").or_else(|| std::env::var("GITHUB_TOKEN").ok()),
+            actions: cfg.get("actions").map(|a| {
+                let repos = a["repos"]
+                    .as_array()
+                    .into_iter()
+                    .flatten()
+                    .filter_map(|r| r.as_str().map(str::to_owned))
+                    .collect();
+                let branch = a["branch"].as_str().unwrap_or("main").to_owned();
+                (
+                    repos,
+                    branch,
+                    a["runs"].as_u64().unwrap_or(50).clamp(1, 100),
+                )
+            }),
             app: match (s("appId"), s("privateKey"), s("installationId")) {
                 (Some(a), Some(k), Some(i)) => Some((a, k, i)),
                 _ => None,
@@ -201,6 +222,41 @@ impl GitHub {
         Ok(self.get(&format!("/apps/{slug}")).await?.map(|a| json!({"slug": a["slug"], "owner": a["owner"]["login"], "permissions": a["permissions"]})))
     }
 
+    /// Per workflow of each configured repository: run statistics on the configured branch.
+    async fn workflow_runs(&self) -> Result<Vec<(String, Value)>, String> {
+        let Some((repos, branch, n)) = &self.actions else {
+            return Ok(vec![]);
+        };
+        let mut out = Vec::new();
+        for repo in repos {
+            let base = format!("/repos/{}/{repo}/actions", self.org);
+            let workflows = self
+                .get(&format!("{base}/workflows?per_page=100"))
+                .await?
+                .map(|v| v["workflows"].as_array().cloned().unwrap_or_default())
+                .unwrap_or_default();
+            for w in workflows {
+                let path = w["path"].as_str().unwrap_or_default().to_owned();
+                let runs = self
+                    .get(&format!(
+                        "{base}/workflows/{}/runs?branch={branch}&per_page={n}",
+                        w["id"]
+                    ))
+                    .await?
+                    .map(|v| v["workflow_runs"].as_array().cloned().unwrap_or_default())
+                    .unwrap_or_default();
+                let mut data = runs::stats(&runs);
+                data["repo"] = json!(repo);
+                data["path"] = json!(path);
+                data["name"] = w["name"].clone();
+                data["state"] = w["state"].clone();
+                data["branch"] = json!(branch);
+                out.push((format!("github:workflow-runs/{repo}/{path}"), data));
+            }
+        }
+        Ok(out)
+    }
+
     async fn emit_kind(
         &self,
         kind: &str,
@@ -290,6 +346,14 @@ impl GitHub {
                     }
                 }
             }
+            "workflow-runs" => {
+                for (ext, data) in self.workflow_runs().await? {
+                    if want(&ext) {
+                        out.record("workflow-runs", &ext, data);
+                        seen.push(ext);
+                    }
+                }
+            }
             other => return Err(format!("unknown record kind {other}")),
         }
         if let Some(ids) = ids {
@@ -339,8 +403,9 @@ impl Source for GitHub {
 
     fn capabilities(&self) -> Value {
         json!({"refresh": {"repository": ["external_ids"], "codeowners": ["external_ids"],
-                           "installation": ["external_ids", "selector"], "app": ["external_ids"]},
-               "resync": ["repository", "codeowners", "installation", "app"], "max_concurrency": 1})
+                           "installation": ["external_ids", "selector"], "app": ["external_ids"],
+                           "workflow-runs": ["external_ids"]},
+               "resync": ["repository", "codeowners", "installation", "app", "workflow-runs"], "max_concurrency": 1})
     }
 
     async fn handle(&mut self, cmd: &Value, out: &mut Out) -> Result<(), String> {

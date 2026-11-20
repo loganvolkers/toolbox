@@ -2998,11 +2998,13 @@ dependencies = [
 name = "toolbox-connect"
 version = "0.0.0"
 dependencies = [
+ "regex",
  "reqwest",
  "serde",
  "serde_json",
  "tokio",
  "toolbox-model",
+ "walkdir",
 ]
 
 [[package]]
@@ -3054,6 +3056,7 @@ dependencies = [
  "proc-macro2",
  "regex",
  "serde_json",
+ "serde_norway",
  "syn 2.0.119",
  "tokio",
  "toolbox-connect",

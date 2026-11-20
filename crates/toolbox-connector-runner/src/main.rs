@@ -8,10 +8,14 @@
 //! In `per: crate` jobs, `{crate}` in the command is replaced by each workspace member's name and
 //! the job emits one record of kind `<name>` with external id `<name>:<crate>`. `ndjson` jobs print
 //! connector `record` messages themselves (e.g. `toolbox describe`); they are passed through, and
-//! the job declares their `kinds`. `tally` jobs run their command, then count the lines of the NDJSON
+//! the job declares their `kinds`. `zizmor` and `actionlint` jobs run that linter and report one
+//! record per file matching their `files` globs (findings with severity and line, and counts);
+//! `optional: true` skips a job whose program isn't installed. `tally` jobs run their command, then count the lines of the NDJSON
 //! `file` it wrote by the value of `key` (one record per value: `{<key>, calls, errors}`, where a
 //! line with `"error": true` is an error, and a line with `"declared": true` only declares the key,
 //! so keys nothing used are reported with zero calls); the file is removed before each run.
+
+mod lint;
 
 use regex::Regex;
 use serde_json::{Value, json};
@@ -31,6 +35,18 @@ struct Job {
     /// `tally` jobs: the NDJSON file the command writes, and the field to count by.
     file: Option<String>,
     key: Option<String>,
+    /// `zizmor` / `actionlint` jobs: the files they cover (globs); each gets a record.
+    files: Vec<Regex>,
+    /// A missing program is skipped with a log line instead of failing the command; its records
+    /// are then absent, so rules over them evaluate to `unknown`, not `fail`.
+    optional: bool,
+}
+
+impl Job {
+    /// Jobs whose record ids carry the job name (`<job>:<…>`), as opposed to `ndjson` jobs.
+    fn prefixed(&self) -> bool {
+        self.per_crate || self.parse != "ndjson"
+    }
 }
 
 struct Runner {
@@ -154,7 +170,10 @@ impl Runner {
                 return Err(format!("job {name}: empty command"));
             }
             let parse = j["parse"].as_str().unwrap_or("ndjson").to_owned();
-            if !matches!(parse.as_str(), "cargo-test" | "clippy" | "ndjson" | "tally") {
+            if !matches!(
+                parse.as_str(),
+                "cargo-test" | "clippy" | "ndjson" | "tally" | "zizmor" | "actionlint"
+            ) {
                 return Err(format!("job {name}: unknown parser {parse}"));
             }
             let kinds = j["kinds"]
@@ -167,8 +186,16 @@ impl Runner {
             if parse == "tally" && (s("file").is_none() || s("key").is_none()) {
                 return Err(format!("job {name}: tally needs `file` and `key`"));
             }
+            let files = j["files"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .map(|g| toolbox_connect::files::glob(g.as_str().unwrap_or("")))
+                .collect::<Result<Vec<_>, _>>()?;
             jobs.push(Job {
                 per_crate: j["per"] == "crate",
+                files,
+                optional: j["optional"].as_bool().unwrap_or(false),
                 file: s("file"),
                 key: s("key"),
                 name,
@@ -243,6 +270,53 @@ impl Runner {
         };
         data["crate"] = json!(name);
         out.record(&job.name, &format!("{}:{name}", job.name), data);
+    }
+
+    /// Run a linter over the repository and emit one record per covered file (`<job>:<path>`),
+    /// clean files included. A missing optional program emits nothing (its rules become unknown).
+    async fn run_lint(&self, job: &Job, out: &mut Out) -> Result<(), String> {
+        let run = self.run(&job.command).await;
+        if run.stderr.starts_with("cannot run ") {
+            if job.optional {
+                out.log(
+                    "warn",
+                    &format!("job {}: {}; skipped (optional)", job.name, run.stderr),
+                );
+                return Ok(());
+            }
+            return Err(format!("job {}: {}", job.name, run.stderr));
+        }
+        let parsed = match job.parse.as_str() {
+            "zizmor" => lint::zizmor(&run.stdout),
+            _ => lint::actionlint(&run.stdout),
+        }
+        .map_err(|e| {
+            format!(
+                "job {}: {e}; stderr: {}",
+                job.name,
+                tail(&run.stderr, 500).trim()
+            )
+        })?;
+        let mut by_file = parsed;
+        for path in toolbox_connect::files::matching(&self.root, &job.files) {
+            let findings = by_file.remove(&path).unwrap_or_default();
+            out.record(
+                &job.name,
+                &format!("{}:{path}", job.name),
+                lint::record(&path, findings),
+            );
+        }
+        for (path, findings) in by_file {
+            // Findings in a file outside `files` (e.g. an action used by a workflow): still report.
+            if !path.is_empty() {
+                out.record(
+                    &job.name,
+                    &format!("{}:{path}", job.name),
+                    lint::record(&path, findings),
+                );
+            }
+        }
+        Ok(())
     }
 
     /// Run the command, then count the lines of its NDJSON `file` by `key`.
@@ -322,6 +396,8 @@ impl Runner {
             } else if self.selected(job, ids) {
                 if job.parse == "tally" {
                     self.run_tally(job, out).await?;
+                } else if matches!(job.parse.as_str(), "zizmor" | "actionlint") {
+                    self.run_lint(job, out).await?;
                 } else {
                     self.run_ndjson(job, out).await?;
                 }
@@ -363,7 +439,7 @@ impl Runner {
     /// ids carry the job name; ndjson ids are whatever the command printed).
     fn selected(&self, job: &Job, ids: Option<&[String]>) -> bool {
         let Some(ids) = ids else { return true };
-        if job.parse == "tally" {
+        if job.prefixed() {
             ids.iter().any(|i| i.starts_with(&format!("{}:", job.name)))
         } else {
             self.owns_any(ids)
@@ -372,7 +448,7 @@ impl Runner {
 
     /// The record kinds a job produces.
     fn kinds_of<'a>(&self, job: &'a Job) -> Vec<&'a str> {
-        if job.per_crate || job.parse == "tally" {
+        if job.prefixed() {
             vec![job.name.as_str()]
         } else {
             job.kinds.iter().map(String::as_str).collect()
@@ -383,9 +459,10 @@ impl Runner {
     /// so any id without a `<per-crate job>:` prefix belongs to the ndjson jobs).
     fn owns_any(&self, ids: &[String]) -> bool {
         ids.iter().any(|id| {
-            !self.jobs.iter().any(|j| {
-                (j.per_crate || j.parse == "tally") && id.starts_with(&format!("{}:", j.name))
-            })
+            !self
+                .jobs
+                .iter()
+                .any(|j| j.prefixed() && id.starts_with(&format!("{}:", j.name)))
         })
     }
 }

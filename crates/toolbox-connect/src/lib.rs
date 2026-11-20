@@ -2,6 +2,7 @@
 //! [`sdk`] connectors use, and the [`conformance`] kit.
 
 pub mod conformance;
+pub mod files;
 pub mod hub;
 pub mod sdk;
 
