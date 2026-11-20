@@ -683,7 +683,7 @@ fn plan(path: &std::path::Path, base: &std::path::Path, format: PlanFormat) -> E
         Ok(s) => s,
         Err(e) => return fail(e),
     };
-    let before_m = match portal::manifest_from(&base_src.document, &base_src.manifest_file) {
+    let before_m = match portal::manifest_from(&base_src) {
         Ok(m) => m,
         Err(e) => return fail(format!("base manifest is invalid:\n{e}")),
     };
@@ -788,7 +788,7 @@ fn connector_test(
         Ok(s) => s,
         Err(e) => return fail(e),
     };
-    let manifest = match portal::manifest_from(&src.document, &src.manifest_file) {
+    let manifest = match portal::manifest_from(&src) {
         Ok(m) => m,
         Err(e) => return fail(e),
     };

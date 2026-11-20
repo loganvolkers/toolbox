@@ -80,6 +80,9 @@ The full loop, check pyramid and measured timings are in
 - **Branching:** during the design phase, commit directly to `main` (decision D32). Pull with rebase
   before you start and again before you push. Keep commits small and scoped to one topic, so parallel
   agents rarely conflict.
+- **Generated files:** never hand-merge `portal/results.json`. On a conflict, take upstream's copy
+  and rerun `--update` ([portal/README.md](./portal/README.md#layout), D95). New T4T standards go in
+  `portal/standards/<topic>.yaml`.
 - **When you change a decision:** add an entry to `docs/decisions.md` (never rewrite past entries),
   update the owning design doc, and update `plan.md` §4.7/§8/§10 if affected.
 - **Sources:**

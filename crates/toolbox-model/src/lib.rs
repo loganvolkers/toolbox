@@ -16,4 +16,4 @@ pub mod validate;
 pub use diagnostics::{Diagnostic, Report};
 pub use load::{LoadError, Source};
 pub use manifest::Manifest;
-pub use validate::{validate_manifest, validate_portal};
+pub use validate::{validate_manifest, validate_portal, validate_source};

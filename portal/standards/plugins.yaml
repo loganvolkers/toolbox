@@ -1,0 +1,77 @@
+# Agent plugins (docs/design/plugin-standards.md).
+# Included by portal/toolbox.yaml; see portal/README.md for the layout.
+
+kinds:
+  # Agent plugin packages (docs/design/plugin-standards.md). Skills inside them stay Skill entities.
+  - name: Plugin
+    description: "An Agent Plugins 1.0.0 package: plugin.json, mcp.json, and skills at the spec path."
+    identityFrom: [connector:workspace]
+    fields:
+      path: {type: string, description: "Path of plugin.json."}
+      dir: {type: string, description: "Plugin directory. The entity id uses this path."}
+      name: {type: string, description: "The name field."}
+      nameOk: {type: boolean, description: "Name matches the 1.0.0 rule: 1-64 chars, a-z, digits, dot and hyphen, alphanumeric ends, no double hyphen or double dot."}
+      descriptionChars: {type: integer, description: "Length of the description."}
+      schemaOk: {type: boolean, description: "$schema is the Agent Plugins 1.0.0 plugin schema."}
+      hasMcp: {type: boolean, description: "mcp.json sits beside plugin.json."}
+      mcpSchemaOk: {type: boolean, description: "$schema is the Agent Plugins 1.0.0 mcp schema."}
+      commandToken: {type: boolean, description: "Every stdio command is one token (bare, ./, or a plugin variable). True when there is no stdio server."}
+      headerSecrets: {type: list, items: string, description: "MCP headers whose values match a high-precision secret shape."}
+      pathEscapes: {type: list, items: string, description: "Commands or args that contain a parent-directory segment."}
+      misplacedSkills: {type: list, items: string, description: "SKILL.md files that are not skills/<name>/SKILL.md."}
+      secretHits: {type: list, items: string, description: "Secret shapes in plugin.json or mcp.json."}
+    sources: {default: [connector:workspace]}
+    map:
+      - from: workspace/plugin
+        id: "'plugin:' + record.dir"
+        set: >-
+          {'path': record.path, 'dir': record.dir, 'name': record.name, 'nameOk': record.nameOk,
+           'descriptionChars': record.descriptionChars, 'schemaOk': record.schemaOk,
+           'hasMcp': record.hasMcp, 'mcpSchemaOk': record.mcpSchemaOk, 'commandToken': record.commandToken,
+           'headerSecrets': record.headerSecrets, 'pathEscapes': record.pathEscapes,
+           'misplacedSkills': record.misplacedSkills, 'secretHits': record.secretHits}
+
+scorecards:
+  # The marketplace installs the package. Skills inside it are scored by maintainer-skill.
+  - name: maintainer-plugin
+    kind: Plugin
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    ratchet: {newEntitiesAtLeast: bronze}
+    rules:
+      - name: manifest-valid
+        level: bronze
+        check: "entity.schemaOk && entity.nameOk && entity.descriptionChars > 0"
+        evidence: "[!entity.schemaOk ? 'schema is not Agent Plugins 1.0.0' : (!entity.nameOk ? 'name ' + entity.name : 'description is empty')]"
+        fix: "Point $schema at the 1.0.0 plugin schema, use a name of 1–64 lowercase letters, digits, dots and hyphens, and write a description."
+      - name: portable-components
+        level: bronze
+        check: "entity.misplacedSkills.size() == 0"
+        evidence: "entity.misplacedSkills"
+        fix: "Move each skill to skills/<name>/SKILL.md. Client-specific files go under a reverse-domain directory, not beside the manifest."
+      - name: mcp-declared
+        level: silver
+        check: "entity.hasMcp && entity.mcpSchemaOk"
+        evidence: "[!entity.hasMcp ? 'no mcp.json' : 'mcp.json schema is not Agent Plugins 1.0.0']"
+        fix: "Add mcp.json next to plugin.json with the 1.0.0 mcp schema. A tool that exists only in a vendor config is a harness lock-in."
+      - name: stdio-command
+        level: silver
+        check: "entity.commandToken"
+        evidence: "['stdio command is not a single token']"
+        fix: "Set command to one token (./bin/toolbox-mcp or ${PLUGIN_ROOT}/bin/tool). Do not use a shell string."
+      - name: no-secret-headers
+        level: gold
+        check: "entity.headerSecrets.size() == 0"
+        evidence: "entity.headerSecrets"
+        fix: "Remove the secret in the evidence. MCP authorization is client-managed. Headers must not carry credentials."
+      - name: paths-stay-inside
+        level: gold
+        check: "entity.pathEscapes.size() == 0"
+        evidence: "entity.pathEscapes"
+        fix: "Drop the .. segments in the evidence. Plugin paths stay inside the plugin root."
+      - name: no-hardcoded-secrets
+        level: gold
+        check: "entity.secretHits.size() == 0"
+        evidence: "entity.secretHits"
+        fix: "Remove the credential in the evidence from plugin.json or mcp.json."
+    facets: {summary: public, details: public}

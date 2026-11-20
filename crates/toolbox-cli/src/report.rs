@@ -464,7 +464,7 @@ pub fn live(
     skip: &[String],
 ) -> Result<(PathBuf, toolbox_model::Manifest, Derived), String> {
     let src = toolbox_model::load::load(path).map_err(|e| e.to_string())?;
-    let m = crate::portal::manifest_from(&src.document, &src.manifest_file)?;
+    let m = crate::portal::manifest_from(&src)?;
     let store = inputs(fixtures, skip, &src.root, &m)?;
     let d = FullRecompute.recompute(&m, &store.snapshot());
     for diag in &d.diagnostics {

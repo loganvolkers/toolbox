@@ -123,6 +123,8 @@ joined by a top-level `include` list (globs; sources only), or a TypeScript prog
 [builder](./design/typescript-builder.md). `toolbox build` turns any of them into **one canonical,
 key-sorted `manifest.json`**, which is what the server loads, `plan` diffs and the image hash covers.
 Neither the builder nor `build` resolves `${env:…}` or `${secret:…}`; the server does at start-up.
+Diagnostics on a value from an included file or package fragment name that file and the JSON
+pointer inside it, not the merged document (D95).
 
 **Action inputs (D58)** use the form-renderable JSON Schema subset in
 [minimal-ui.md](./design/minimal-ui.md) §4, so every action has a generated form.

@@ -245,6 +245,23 @@ portal/meta/{rules,model,assessments}.yaml   # meta-*, review-*, rubrics
 Then let the second user of a pattern trigger a package with parameters (§3.3). The review-*
 scorecards and their computed fields are the first candidate.
 
+**Done (D95), with two changes from the layout above.**
+- **Files are by topic, not by layer.** `portal/standards/<topic>.yaml` holds a topic's kind, its
+  scorecards and its rubrics together: for example `cli.yaml` holds `Command`, `operator-cli` and
+  `user-cli`. A topic often spans layers, and a reviewer reads a kind next to the standards that
+  score it.
+- **Connectors stay in `toolbox.yaml`.** The workspace connector has one source per topic, but
+  arrays concatenate, so a connector can't be split across files.
+
+Before the split, `validate` labelled every problem `toolbox.yaml` with the merged document's
+pointer. Now problems name the included file and the pointer inside it.
+
+`portal/results.json` is the busier file: 22 of 50 recent commits touched it along with
+`toolbox.yaml`. It is not split. Its keys are sorted, so a new scorecard or entity is inserted, not
+appended, and splitting it by scorecard wouldn't change which hunks touch. Its conflicts come from
+one entity changing on both sides, which needs regenerating anyway. It is treated like a lockfile:
+on a conflict, take upstream's copy and rerun `--update`.
+
 ## 6. Cataloguing what we publish
 
 What Toolbox publishes, or will publish:

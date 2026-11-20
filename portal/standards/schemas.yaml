@@ -1,0 +1,73 @@
+# JSON Schema documents (docs/design/schema-standards.md).
+# Included by portal/toolbox.yaml; see portal/README.md for the layout.
+
+kinds:
+  # JSON Schema documents (docs/design/schema-standards.md).
+  - name: JsonSchema
+    identityFrom: [connector:workspace]
+    fields:
+      path: {type: string}
+      name: {type: string}
+      dialect: {type: string}
+      schemaId: {type: string}
+      titleChars: {type: integer}
+      descriptionChars: {type: integer}
+      externalRefs: {type: list, items: string}
+      wired: {type: boolean}
+      draft202012: {type: boolean}
+      secretHits: {type: list, items: string}
+    sources: {default: [connector:workspace]}
+    map:
+      - from: workspace/json-schema
+        id: "'json-schema:' + record.path"
+        set: >-
+          {'path': record.path, 'name': record.name, 'dialect': record.dialect, 'schemaId': record.schemaId,
+           'titleChars': record.titleChars, 'descriptionChars': record.descriptionChars,
+           'externalRefs': record.externalRefs, 'wired': record.wired,
+           'draft202012': record.draft202012, 'secretHits': record.secretHits}
+
+scorecards:
+  # The binary compiles these with Draft 2020-12 and does not fetch `$ref`s, so a schema that
+  # names another dialect or a remote schema is not the contract the server runs.
+  - name: maintainer-schema
+    kind: JsonSchema
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    ratchet: {newEntitiesAtLeast: bronze}
+    rules:
+      - name: draft-2020-12
+        level: bronze
+        check: "entity.draft202012"
+        evidence: "entity.dialect != '' ? [entity.dialect] : ['no $schema']"
+        fix: "Set $schema to https://json-schema.org/draft/2020-12/schema. The binary compiles schemas as that draft and no other."
+      - name: has-id
+        level: bronze
+        check: "entity.schemaId.startsWith('https://')"
+        evidence: "entity.schemaId != '' ? [entity.schemaId] : ['no $id']"
+        fix: "Set $id to an absolute https URI. That is the schema's canonical identity in JSON Schema 2020-12."
+      - name: described
+        level: bronze
+        check: "entity.descriptionChars > 0"
+        evidence: "['no description']"
+        fix: "Add a root description saying which contract this document is. Readers and agents meet the schema before the code."
+      - name: titled
+        level: silver
+        check: "entity.titleChars > 0"
+        evidence: "['no title']"
+        fix: "Add a title. JSON Schema defines title as the short name of the document."
+      - name: wired-in
+        level: silver
+        check: "entity.wired"
+        evidence: "['not compiled by schema.rs or applied by the reference validator']"
+        fix: "Compile the document from crates/toolbox-model/src/schema.rs, or apply it from the reference portal validator. A schema file nothing loads is not a contract."
+      - name: local-refs
+        level: gold
+        check: "entity.externalRefs.size() == 0"
+        evidence: "entity.externalRefs"
+        fix: "Point $ref at a fragment in this file. The compiler embeds the document and does not fetch a remote schema."
+      - name: no-hardcoded-secrets
+        level: gold
+        check: "entity.secretHits.size() == 0"
+        evidence: "entity.secretHits"
+        fix: "Remove the credential in the evidence. A schema is compiled into the binary and published with the repository."
+    facets: {summary: public, details: public}

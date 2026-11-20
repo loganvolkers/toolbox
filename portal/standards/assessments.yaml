@@ -1,0 +1,125 @@
+# Judgement pushed by coding agents, and its standards (D79, D80).
+# Included by portal/toolbox.yaml; see portal/README.md for the layout.
+
+kinds:
+  - name: Assessment
+    description: "One coding agent's (or person's) judgement of one entity against a rubric: a file in portal/assessments/, written after `toolbox assess brief`."
+    identityFrom: [connector:workspace]
+    fields:
+      entity: {type: string, description: The entity assessed.}
+      rubric: {type: string, description: The rubric it was assessed against.}
+      subjectHash: {type: string, description: "The entity's hash when assessed; a different hash now means stale."}
+      assessorName: {type: string, description: "The agent harness or person (assessor.name)."}
+      assessorKind: {type: string, description: "agent or person."}
+      at: {type: string, description: When it was assessed.}
+      verdict: {type: string, description: "fail if any criterion failed, else unsure if any was unsure, else pass."}
+      failing: {type: list, items: string, description: Criteria that failed.}
+      unsure: {type: list, items: string, description: Criteria the assessor could not decide.}
+      reasons: {type: list, items: string, description: "One line per criterion: verdict, name and reason."}
+      summary: {type: string, description: The assessor's summary.}
+      path: {type: string, description: The file it was read from.}
+      unsuggested: {type: list, items: string, description: "Criteria judged fail or unsure without a suggestion."}
+      uncited: {type: list, items: string, description: "Criteria whose reason cites nothing checkable (a path, a decision id, a section, a number)."}
+      hash: {type: string, description: "Content hash of the assessment: what an assessment-quality review of it is versioned by."}
+      reviewState: {type: string, description: "assessment-quality review: fresh, stale or missing.", computed: "inbound.assessesAssessment.size() == 0 ? 'missing' : (inbound.assessesAssessment[0].subjectHash == entity.hash ? 'fresh' : 'stale')"}
+      reviewFailing: {type: list, items: string, description: "Criteria the assessment-quality review failed.", computed: "inbound.assessesAssessment.size() == 0 ? [] : inbound.assessesAssessment[0].failing"}
+      reviewUnsure: {type: list, items: string, description: "Criteria the reviewer was unsure of.", computed: "inbound.assessesAssessment.size() == 0 ? [] : inbound.assessesAssessment[0].unsure"}
+    relations:
+      assessesAssessment: {to: Assessment, many: false, unresolved: ignore}
+      assessesSdlcStage: {to: SdlcStage, many: false, unresolved: ignore}
+      assessesRule: {to: Rule, many: false, unresolved: ignore}
+      assessesScorecard: {to: Scorecard, many: false, unresolved: ignore}
+      assessesCrate: {to: Crate, many: false, unresolved: ignore}
+    sources: {default: [connector:workspace]}
+    map:
+      - from: workspace/assessment
+        id: "'assessment:' + record.rubric + '/' + record.entity"
+        set: >-
+          {'entity': record.entity, 'rubric': record.rubric, 'subjectHash': record.subjectHash,
+           'assessorName': has(record.assessor.name) ? record.assessor.name : null, 'assessorKind': record.assessor.kind,
+           'at': string(record.at), 'verdict': record.verdict, 'failing': record.failing, 'unsure': record.unsure,
+           'reasons': record.verdicts.map(v, v.verdict + ' ' + v.criterion + ': ' + v.reason),
+           'summary': record.summary, 'path': record.path, 'unsuggested': record.unsuggested,
+           'uncited': record.uncited, 'hash': record.hash}
+        relations:
+          assessesAssessment: "record.entity.startsWith('assessment:') ? [record.entity] : []"
+          assessesSdlcStage: "record.entity.startsWith('sdlc-stage:') ? [record.entity] : []"
+          assessesRule: "record.entity.startsWith('rule:') ? [record.entity] : []"
+          assessesScorecard: "record.entity.startsWith('scorecard:') ? [record.entity] : []"
+          assessesCrate: "record.entity.startsWith('crate:') ? [record.entity] : []"
+
+scorecards:
+  # Deterministic, so ratcheted: what any assessment must contain to be worth reading.
+  - name: meta-assessment
+    kind: Assessment
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    ratchet: {newEntitiesAtLeast: bronze}   # a new assessment must name its assessor and suggest fixes
+    rules:
+      - name: suggests-fixes
+        level: bronze
+        check: "entity.unsuggested.size() == 0"
+        evidence: "entity.unsuggested"
+        fix: "Add a `suggestion:` to each listed fail or unsure verdict: the change that would make it pass."
+      - name: assessor-named
+        level: bronze
+        check: "has(entity.assessorName) && entity.assessorName.size() > 0"
+        evidence: "['assessor.name is empty']"
+        fix: "Set `assessor.name` to the agent harness or person who made the assessment."
+      - name: cites-for-findings
+        level: silver
+        check: "entity.uncited.filter(c, c in entity.failing || c in entity.unsure).size() == 0"
+        evidence: "entity.uncited.filter(c, c in entity.failing || c in entity.unsure)"
+        fix: "Cite what each listed fail or unsure reason rests on: a file path, a decision id (D71), a section (§4) or a number."
+      - name: cites-everything
+        level: gold
+        check: "entity.uncited.size() == 0"
+        evidence: "entity.uncited"
+        fix: "Cite a source in every reason, passes included, so a reviewer can check the verdict."
+    facets: {summary: public, details: public}
+
+  # Judgement of judgement. Stops here: reviews made with assessment-quality are not reviewed.
+  - name: review-assessment
+    kind: Assessment
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    ratchet: {advisory: true}
+    appliesTo: "entity.rubric != 'assessment-quality'"
+    rules:
+      - name: assessed
+        level: bronze
+        check: "entity.reviewState == 'fresh'"
+        evidence: "[entity.reviewState == 'stale' ? 'the assessment changed since it was reviewed' : 'not reviewed against assessment-quality']"
+        fix: "Run `toolbox assess brief <assessment id> --portal portal`; a different agent or person should review it."
+      - name: passes-review
+        level: silver
+        check: "entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0"
+        evidence: "entity.reviewState == 'fresh' ? entity.reviewFailing : ['no current review']"
+        fix: "Revise the assessment where the review found it unsupported or incomplete, then have it reviewed again."
+      - name: no-doubts
+        level: gold
+        check: "entity.reviewState == 'fresh' && entity.reviewUnsure.size() == 0"
+        evidence: "entity.reviewState == 'fresh' ? entity.reviewUnsure : ['no current review']"
+        fix: "Resolve what the reviewer was unsure of, usually by citing the source a verdict rests on."
+    facets: {summary: public, details: public}
+
+rubrics:
+  # What a coding agent judges, given `toolbox assess brief` (or the assessment_brief MCP tool).
+  # Criteria are questions a deterministic check can't answer; anything a check can answer belongs
+  # in a scorecard rule instead (docs/design/scorecards-for-scorecards.md §6).
+  - name: assessment-quality
+    kind: Assessment
+    description: "Is this assessment trustworthy? Read the assessment, then the sources its reasons cite, and the entity it judges (toolbox get <entity>). Review someone else's assessment, not your own."
+    criteria:
+      - name: supported
+        question: Is every verdict supported by the sources its reason cites?
+        guidance: Open each cited file, decision or number. Fail when a cited source doesn't say what the reason claims.
+      - name: complete
+        question: Did the assessment get every criterion right, missing no failure the sources show?
+        guidance: Fail and name the criterion that should have failed or been unsure, with the evidence.
+      - name: reproducible
+        question: Would a second assessor, reading the same sources, reach the same verdicts?
+        guidance: Unsure when a verdict rests on taste rather than on something the sources state.
+      - name: actionable
+        question: Would following the suggestions change the verdicts they are attached to?
+        guidance: Fail when a suggestion improves something else (another rule, the scorecard) but leaves this entity's verdict as it is.
