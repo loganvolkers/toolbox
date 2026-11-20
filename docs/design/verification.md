@@ -1,6 +1,36 @@
 # Verification: Test-Driven, Simulation-Tested, Differentially Checked
 
-> **Status 2026-11-20 (D44):** v1 verification is the **full recompute as the reference model**, differential tests (Rust vs SQL, OpenFGA vs SQL) and property tests. Deterministic simulation (turmoil), Antithesis and configuration-space campaigns are **deferred** until multi-replica concurrency exists (workflows, Phase 3). The `Env` seam is kept so they stay possible.
+*Status: v1 design updated 2026-11-20 (D14, D44). Properties P1–P13: [v1-spec.md](../v1-spec.md) §11.3.*
+
+## v1 design
+
+**The full recompute is its own reference model, so v1 verification is mostly differential.** The
+same manifest and fixtures go through a small executable model and through the Rust implementation,
+and the outputs must match byte for byte.
+
+| Layer | What | Where |
+|---|---|---|
+| Reference model | `tools/reference.py`: map → merge → authority → relations → computed → scorecards → tuples → options | [examples/reference-portal](../../examples/reference-portal/README.md) |
+| Hand-written expectations | CEL assertions stating intended behaviour, independent of any implementation | `tests/*.test.yaml` |
+| Differential tests | Rust pipeline ≡ reference model (P2); Rust ≡ Postgres SQL views; OpenFGA over the tuple view ≡ the SQL permission view (P13) | Reference portal; [experiments/derived-state-scale](../../experiments/derived-state-scale/README.md) |
+| Property tests | Generated portals and worlds (proptest) for P1, P3–P6; run-lifecycle properties P9–P12 with simulated executors and connectors, including crash injection between steps | Rust test suite |
+| Authorization tests | OpenFGA `.fga.yaml` over the *derived* tuples | `authz/*.fga.yaml` |
+| Contract tests | JSON Schemas for the manifest and the connector/executor messages; golden transcripts | `schema/`, `protocol/` |
+| Integration | Sandbox GitHub org; Postgres; Cloud Run deploy smoke test (`toolbox verify`) | CI |
+
+Keep the `Env` seam (clock, randomness, network, store, process spawning behind one crate) from day one,
+so the deferred deterministic simulation stays possible without a rewrite.
+
+**When the deferred stack comes back:** multi-instance concurrency beyond workflow recovery appears
+(Phase 3 automations, leases), or a concurrency bug escapes the property tests. Then `toolbox-sim`,
+turmoil and the campaigns in the appendix apply.
+
+---
+
+## Appendix: deferred verification stack
+
+*The original design, kept for when its trigger is met. Where it conflicts with the v1 design above, v1 wins.*
+
 
 *Status: research + recommendation. Research date 2026-11-18. Related: every design doc, since each
 contributes properties to check. The WarpStream post could not be fetched directly from this
@@ -16,7 +46,7 @@ secondary coverage.*
 
 ---
 
-## 1. State of the art (what the best teams do)
+### 1. State of the art (what the best teams do)
 
 | Practice | Who | What it is | Evidence |
 |---|---|---|---|
@@ -46,7 +76,7 @@ secondary coverage.*
 5. Configuration spaces are tamed by **generation** (random valid portals) plus **covering arrays**
    (deployment knobs) plus **corpora** (real portals), not by hand-picked matrices.
 
-## 2. What must be true: Toolbox's properties
+### 2. What must be true: Toolbox's properties
 
 Every property gets an id and lives in `spec/properties.md`. Each one maps to checks: `always`
 assertions in code, simulation checkers, property tests, differential tests.
@@ -96,7 +126,7 @@ liveness phase):**
 - Adding an unrelated entity changes no other entity's outcomes.
 - Time-shift invariance of everything except time-based rules.
 
-## 3. Architecture requirements (decide in Phase 0, enforce by lint)
+### 3. Architecture requirements (decide in Phase 0, enforce by lint)
 
 1. **Functional core, imperative shell.** Merge, mapping, identity matching, derivation, scoring,
    authorization, response shaping, plan computation and view query evaluation are **pure functions**
@@ -142,7 +172,7 @@ liveness phase):**
 12. **Structured history log** (`cfg(sim)` and opt-in in production) of every client operation and
    result, for history checkers (Elle-style) and trace validation against models.
 
-## 4. The verification stack
+### 4. The verification stack
 
 | Layer | Technique | Targets | Oracle | Runs |
 |---|---|---|---|---|
@@ -163,7 +193,7 @@ liveness phase):**
 | L14 | **Lightweight formal models** | Distributed protocols: changefeed → replica readiness, leases, run state machine + approvals + idempotency, native-store concurrency, plan/apply | **Stateright** (Rust) or TLA+/P model checking at small scope, plus **trace validation**: simulation histories replayed against the model | Per change to a protocol; trace checks per PR |
 | L15 | **Production verification** | Background "auditors": recompute a sample of scores from scratch (E1), compare cached permission results vs Check (E2), checksum replica indexes vs the database (E3), validate revision chains (S5) | The same oracles, online | Continuous; exported as metrics and alerts |
 
-## 5. `toolbox-sim`: the deterministic world
+### 5. `toolbox-sim`: the deterministic world
 
 **Actors in a simulation run** (all driven by one seed):
 - **Toolbox:** 1–5 API replicas, 1–4 workers, a scheduler leader, and optionally a plan worker, all
@@ -210,7 +240,7 @@ exploring that state.
 **Reproduction:** `toolbox-sim --seed <n> --commit <sha>` replays exactly. Failing seeds are minimised
 (shrinking the workload and fault schedule) and committed to `sim/regressions/`.
 
-## 6. Testing across configurations
+### 6. Testing across configurations
 
 The configuration space has four axes, and each gets its own technique:
 
@@ -233,7 +263,7 @@ fixtures, `toolbox-synth` data and simulated sources. It reports:
 This turns "simulation-tested" into a property of each customer's portal, not just of the engine. It
 runs in their CI through the `toolbox-dev/test` Action.
 
-## 7. Test-driven development workflow
+### 7. Test-driven development workflow
 
 1. **Spec first.** A feature PR starts by adding or adjusting the property ids it affects
    (`spec/properties.md`) and the **reference model** change (`toolbox-ref`).
@@ -252,7 +282,7 @@ runs in their CI through the `toolbox-dev/test` Action.
    differential tests and simulation make "the agent says it works" checkable. Agents get
    `toolbox-sim --seed` as a debugging tool.
 
-## 7b. Tiers for speed
+### 7b. Tiers for speed
 
 Every layer runs at three intensities:
 - **Inner loop:** affected components, tiny case counts, tens of seeds, cached results.
@@ -262,7 +292,7 @@ Every layer runs at three intensities:
 The tiers use the same harnesses, so a failure found at any tier replays locally from its seed
 ([developer-velocity.md](./developer-velocity.md)).
 
-## 8. Release gates and confidence metrics
+### 8. Release gates and confidence metrics
 
 A release ships only if (Cedar-style gate):
 
@@ -283,7 +313,7 @@ A release ships only if (Cedar-style gate):
 **Published per release:** the property list, simulated hours, seeds run, mutation score and conformance
 status. This makes the assurance claim auditable rather than rhetorical.
 
-## 9. Tooling choices
+### 9. Tooling choices
 
 | Need | Choice | Why / alternative |
 |---|---|---|
@@ -297,7 +327,7 @@ status. This makes the assurance claim auditable rather than rhetorical.
 | Mutation testing | **cargo-mutants** | Rust-native |
 | Combinatorial | NIST **ACTS** (or a Rust covering-array generator) to emit the CI matrix | Free, supports constraints |
 
-## 10. Phasing (verification is Phase 0 work, not Phase 6)
+### 10. Phasing (verification is Phase 0 work, not Phase 6)
 
 | Phase | Verification scope |
 |---|---|
@@ -308,7 +338,7 @@ status. This makes the assurance claim auditable rather than rhetorical.
 | 4 | Knowledge/search E3 + S9; operator views S1; Antithesis whole-system runs |
 | 5–6 | Corpus "crater" runs; 4-way arrays; upgrade simulations; published assurance report per release |
 
-## 11. Honest limits
+### 11. Honest limits
 
 - **Simulated dependencies are only as faithful as their models.** E5 conformance keeps `MemStore`
   honest against Postgres, and recorded cassettes keep simulated GitHub honest. But a commentator

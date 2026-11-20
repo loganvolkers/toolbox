@@ -1,6 +1,6 @@
 # Toolbox Authorization — Relationship-Based Access Control on the Catalog Graph
 
-> **Status 2026-11-20 (D38):** OpenFGA runs **inside the Toolbox container**, unmodified, reading derived tuples through a Postgres view, behind an `Authorizer` contract. Whether it is a supervised co-process or linked via the c-archive described in §4.3 is open (Q11, co-process recommended). The model, facets, declassification, CODEOWNERS authority and IAP sections are unchanged. See [decisions.md](./decisions.md).
+> **Status 2026-11-20:** §4.3 updated for D38 (OpenFGA inside the container, co-process by default, reading derived tuples through a Postgres view). The rest of the design stands; the reference model and tests are in [examples/reference-portal](../examples/reference-portal/README.md).
 
 *Research date 2026-11-18, updated 2026-11-19 (embedded OpenFGA, information flow, CODEOWNERS
 authority, proxy authentication). Primary sources:*
@@ -195,7 +195,22 @@ details to everyone, while the security scorecard restricts them.
    ```
    Portals that must hide even the *existence* of a facet can switch markers off per facet.
 
-### 4.3 The evaluator: OpenFGA embedded as a Go module
+### 4.3 The evaluator: unmodified OpenFGA inside the container (v1)
+
+**v1 (D38, Q11 default):** the Toolbox image contains the pinned, unmodified OpenFGA server binary,
+started and supervised by `toolbox serve` as a co-process on localhost, using its Postgres datastore.
+OpenFGA's `tuple` table is replaced by a **view over `toolbox.derived_tuples`**, which the derive loop
+publishes as deltas. OpenFGA never receives writes, so tuples exist once, as derived data.
+
+| Property | v1 |
+|---|---|
+| Semantics | Exactly OpenFGA's (it *is* OpenFGA); the reference portal's `.fga.yaml` tests run against the derived tuples |
+| Measured | 2,000/2,000 checks agree with a SQL permission view; Check p50 2.4 ms over HTTP; an ownership change visible after a 2.6 s refresh ([technology-critique.md](./technology-critique.md) §7.2) |
+| Consistency | Decisions use the latest *published* tuples. A response computed at snapshot N may be authorised against N+1 tuples, never older than the snapshot being served (newer only tightens revocation) |
+| Contract | `Authorizer` (v1-spec §7.1): an external OpenFGA, or the linked variant below, can replace the co-process |
+| Not yet tested over the view | Conditions, wildcards beyond `user:*`, `ListUsers` at scale (Phase 0 spike) |
+
+#### Alternative kept for Q11: OpenFGA linked in-process as a Go module
 
 OpenFGA is designed to be embeddable:
 - `server.NewServerWithOpts(server.WithDatastore(ds))` builds an in-process server.
@@ -206,8 +221,8 @@ OpenFGA is designed to be embeddable:
 
 **Integration:**
 1. **`toolbox-fga` (Go)** wraps the OpenFGA server and implements a **read-only `OpenFGADatastore`**.
-   - Tuple reads call back into Rust through exported C functions, which read the circuit's
-     tuple index at the request's log position.
+   - Tuple reads call back into Rust through exported C functions, which read the derived tuple
+     index at the request's snapshot.
    - Model reads return the compiled model from the manifest.
    - All write methods return "unsupported".
    - The optional typed `Querier` surface returns `nil`, which the interface permits.
@@ -225,13 +240,13 @@ OpenFGA is designed to be embeddable:
   datastore adapter*, not a re-implementation. `fga model test` in portal CI uses the same engine as
   production.
 - **No duplicate writes.** OpenFGA never stores tuples. They exist once, as a derived view.
-- **Consistency.** Every decision is evaluated at a log position, returned as `X-Toolbox-Log-Position`.
-  "At least position N" gives read-your-writes across replicas.
+- **Consistency.** Every decision is evaluated at a snapshot, returned as `X-Toolbox-Snapshot`;
+  `min_snapshot` gives read-your-writes across instances.
 - **List filtering.** ListObjects and ListUsers limits are configured for in-process use. Toolbox
-  caches *results* per (principal, permission, log position), with LRU bounds. Unconditional hot
-  permissions can also be maintained *in the circuit* as `principal → objects` views; that path doesn't
+  caches *results* per (principal, permission, snapshot), with LRU bounds. Unconditional hot
+  permissions can also be maintained in the derived state as `principal → objects` views; that path doesn't
   apply to conditional or contextual tuples.
-- **Explain** uses OpenFGA `Expand` plus circuit provenance: which source fact produced each tuple.
+- **Explain** uses OpenFGA `Expand` plus derivation provenance: which source fact produced each tuple.
 
 **Risks and mitigations:**
 

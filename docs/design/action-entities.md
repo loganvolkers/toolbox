@@ -94,7 +94,7 @@ per owning repo when the owners differ. Grouping is configurable.
 
 ## 5b. Entity-dependent inputs and user identity (from the GitHub Apps example)
 
-- **`tb.schema.enumFrom(query)`:** an input's allowed values are computed by the circuit for the
+- **`enumFrom` (CEL):** an input's allowed values are computed in the recompute pipeline for the
   target entity, e.g. "approved apps eligible for this repo". They appear in dry-run, the MCP input
   schema and the UI. They are re-validated at execution.
 - **Executor identity `user`:** the executor acts with the requesting user's own token in the

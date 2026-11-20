@@ -1,6 +1,6 @@
 # Frontend: Delightful Self-Service UIs Defined in Code
 
-> **Status 2026-11-20 (D40, G3):** custom UIs ship **inside the Toolbox image** through a **framework-agnostic UI extension contract** (static bundles built by `toolbox build`, mounted as ES modules or Web Components, calling the public API through a generated typed client). React + `@toolbox/ui` + Storybook below is the **default kit**, not a requirement; this amends the "not framework-agnostic" conclusion. See [decisions.md](../decisions.md).
+> **Status 2026-11-20 (D40, G3):** custom UIs ship **inside the Toolbox image** through a **framework-agnostic UI extension contract** (static bundles built by `toolbox build`, mounted as ES modules or Web Components, calling the public API through a generated typed client). React + `@toolbox/ui` + Storybook below is the **default kit**, not a requirement; this amends the "not framework-agnostic" conclusion. See [decisions.md](../decisions.md). The built-in pages are specified in [minimal-ui.md](./minimal-ui.md).
 
 *Status: research + decisions, 2026-11-19. Worked example:
 [approved-github-apps.md](../examples/approved-github-apps.md). Related: [dashboards.md](./dashboards.md),
@@ -120,7 +120,7 @@
   - `options()` calls the **option-search API** (§3.3) with debouncing and caching.
   - `dryRun` re-runs automatically on input change (debounced, cancellable).
   - `run` streams the run timeline over SSE.
-- Read context for richer layouts uses GraphQL trusted documents ([graphql.md](./graphql.md)).
+- Read context for richer layouts uses the composite view endpoints ([minimal-ui.md](./minimal-ui.md) §6); GraphQL is deferred (D43).
 
 ```tsx
 // portal repo: ui/install-approved-app.tsx (tier 3, operator-owned, reviewed like any code)
@@ -159,14 +159,14 @@ export default function InstallApprovedApp({ entity }: { entity?: string }) {
 
 | Capability | Status | Detail |
 |---|---|---|
-| Entity-dependent options (`enumFrom`) | Planned ([action-entities.md](./action-entities.md) §5b) | **Add rich option metadata in code:** `label`, `description`, `icon`, `badges`, `group`, `searchOn`, `disabledWhen: { expr, reason }`, all computed by the circuit, so options update incrementally |
+| Entity-dependent options (`enumFrom`) | Planned ([action-entities.md](./action-entities.md) §5b) | **Add rich option metadata in code:** `label`, `description`, `icon`, `badges`, `group`, `searchOn`, `disabledWhen: { expr, reason }`, all computed in the recompute pipeline, so options stay current |
 | **Option-search API** | **New** | `GET /v1/actions/{id}/options/{field}?entity=…&q=…&cursor=…` returns ranked, permission-shaped options with disabled reasons. The same data is exposed to agents via an MCP `action_options` tool, so agents and humans see identical labels and reasons |
-| Dry-run | Planned (§4.3 of plan) | **Add a latency SLO** (p95 ≤ 150 ms) and caching by `(inputs hash, log position)`, so live preview is viable |
+| Dry-run | Planned (§4.3 of plan) | **Add a latency SLO** (p95 ≤ 150 ms) and caching by `(inputs hash, snapshot id)`, so live preview is viable |
 | Run timeline | Planned (SSE, durable workflows) | Step events map to timeline states |
-| Read context | Planned (GraphQL trusted documents) | View and action UIs declare their documents, which are costed at build |
+| Read context | Composite view endpoints (D56) | View and action UIs use the typed client generated from the portal's OpenAPI |
 
 **Validated against the current architecture: nothing here conflicts.** Dry-run, `enumFrom`, durable
-runs with SSE, GraphQL trusted documents, operator-only code-defined UI and no per-portal native
+runs with SSE, composite view endpoints, operator-only code-defined UI and no per-portal native
 codegen all already exist in the design. The additions are the option-search API with rich option
 metadata, a dry-run latency SLO, the `ui` field on actions, and committing to React (§4).
 
@@ -211,7 +211,7 @@ metadata, a dry-run latency SLO, the `ui` field on actions, and committing to Re
 - `toolbox ui fixtures` runs the **real engine** in process over the portal's fixtures and
   `toolbox-synth` data:
   - per persona
-  - for every registered GraphQL document, action option search and dry-run
+  - for every view endpoint, action option search and preview
   - recording the JSON responses
 - Stories serve those recordings through generated request handlers (MSW-style).
 - **Effect:** stories render **real permission shaping and REDACTED markers** with zero backend at
@@ -250,7 +250,7 @@ export const NeedsSecurityApproval = {
 | Loop | Maintainers (Toolbox repo) | Operators (portal repo) |
 |---|---|---|
 | Edit → see | Vite HMR with React Fast Refresh in Storybook and the app | `toolbox dev` runs Vite as a child of the daemon; API calls go to the in-process engine; HMR for `ui/` |
-| Type check | TypeScript 7 native `tsc` (8–12× faster) in the background | Same, against **generated portal types** (kinds, actions, GraphQL documents) |
+| Type check | TypeScript 7 native `tsc` (8–12× faster) in the background | Same, against **generated portal types** (kinds, actions, view endpoints) |
 | Tests | Vitest browser mode, **affected stories only** (Vitest's module graph + changed files), in parallel | `toolbox test --affected` includes affected stories and generated action-form stories |
 | Visual and a11y | Affected stories on PR; all on the merge queue | Same, via the `toolbox-dev/test` Action |
 | Fixtures | `toolbox ui fixtures` incremental regeneration | Same, from portal fixtures |

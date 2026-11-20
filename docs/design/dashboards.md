@@ -27,7 +27,7 @@ A2 (dashboards, reports, trends).*
 
 ## 2. What Toolbox provides so external dashboards are good
 
-- **A history store, so trends exist.** It is an append-only archive of circuit output deltas
+- **A history store, so trends exist** *(Phase 2; v1 keeps per-snapshot summary counts)*. It is an append-only archive of derived-output deltas
   ([incremental-computation.md](./incremental-computation.md) §3):
   - scores per (rule, entity) on change
   - daily roll-ups per (scorecard, group, level)

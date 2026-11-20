@@ -1,6 +1,33 @@
 # Incremental Computation and Durable Execution
 
-> **Status 2026-11-20 (D37, D39):** v1 derives state by **full recompute from a consistent Postgres snapshot** behind a `DerivedState` contract; the DBSP circuit, logical-decoding change log, epochs and checkpoints below are the **deferred** incremental path, brought back only if a real portal's recompute exceeds 30 s or freshness misses 60 s p95. Durable workflows (§4) stay: DBOS model, in-process on Postgres, behind a `Durable` contract (Q4 open). See [decisions.md](../decisions.md).
+*Status: v1 design updated 2026-11-20 (D37, D39). Implementation detail: [v1-spec.md](../v1-spec.md) §6 and §8.1.*
+
+## v1 design
+
+**Derived state is recomputed in full from a consistent snapshot whenever inputs change.** Side effects
+run as durable workflows on Postgres. Both sit behind Toolbox-owned contracts (`DerivedState`,
+`Durable`) so an incremental engine or a different workflow runtime can replace them (G3).
+
+| Concern | v1 | Evidence |
+|---|---|---|
+| Derived values (merge, ownership, scores, aggregates, closures, tuples, options) | One pipeline over a `REPEATABLE READ` snapshot, debounced after changes; result swapped atomically in memory | ~3 s at 100k entities / 2M relations ([technology-critique.md](../technology-critique.md) §7.1) |
+| Consistency token | Snapshot id `<input version>.<manifest hash>`; reads accept `min_snapshot` | [v1-spec.md](../v1-spec.md) §6.1 |
+| No duplicate writes | Inputs written once; derived tuples published as deltas to one table that OpenFGA reads through a view | critique §7.2 |
+| Multiple instances | Each recomputes the same snapshot; one advisory-lock holder publishes snapshots and tuple deltas | v1-spec §8 |
+| Durable execution | DBOS-model tables (column subset of DBOS's schema), step replay, idempotency keys, signals, cross-instance recovery | [experiments/durable-schema](../../experiments/durable-schema/README.md), v1-spec §8.1 |
+| No batch or nightly jobs | Recompute is event-driven; freshness policies trigger connector refreshes, not recomputes | D21, [connector-control.md](./connector-control.md) |
+
+**When the deferred incremental design comes back:** a real portal's full recompute exceeds 30 s on the
+reference node, or webhook-to-visible misses 60 s at p95 after parallelising CEL. Then DBSP (or another
+engine) implements `DerivedState`, and the reference model in
+[examples/reference-portal](../../examples/reference-portal/README.md) stays the oracle (P2).
+
+---
+
+## Appendix: deferred incremental design (DBSP)
+
+*The original design, kept for when its trigger is met. Where it conflicts with the v1 design above, v1 wins.*
+
 
 *Status: research + decision. Research date 2026-11-19. Supersedes the hand-rolled incremental
 evaluation in [plan.md](../plan.md) §4.1–4.2 and the "periodic full recomputation" suggestion in
@@ -10,7 +37,7 @@ effect runs as a durable workflow.***
 
 ---
 
-## 1. Two different problems
+### 1. Two different problems
 
 They are easy to conflate, so we name them separately:
 
@@ -25,7 +52,7 @@ Port's strength (calculation, aggregation and mirror properties, scorecards that
 changes) is IVM. DBOS (which the user leaned towards) is durable execution. **Toolbox needs both, and
 must not use either for the other's job.**
 
-## 2. Incremental view maintenance: options
+### 2. Incremental view maintenance: options
 
 | Candidate | Model | Language / licence | Recursion (graph closures) | Embeddable? | Determinism | Verdict |
 |---|---|---|---|---|---|---|
@@ -54,7 +81,7 @@ must not use either for the other's job.**
 - Memory for large state. Mitigation: DBSP supports spilling to storage; use single-node state sizes
   per the scale targets.
 
-## 3. The design: one change log, one circuit, no duplicate writes
+### 3. The design: one change log, one circuit, no duplicate writes
 
 ```
  WRITES (each fact written exactly once)            DERIVED (never written back as source data)
@@ -102,7 +129,7 @@ must not use either for the other's job.**
 facet label. Operators propagate the *join* of input labels, and only explicit `declassify` operators,
 declared in code and listed by `plan`, lower a label.
 
-## 4. Durable execution: options
+### 4. Durable execution: options
 
 | Candidate | Model | Rust support (Nov 2026) | Infrastructure | Verdict |
 |---|---|---|---|---|
@@ -137,7 +164,7 @@ TTL becoming due, an ownership gap) enqueue workflows idempotently. The key is
 action-created fragment, a write-back confirmation) are written once to the input tables and flow
 back through the log.
 
-## 5. What this removes from the plan
+### 5. What this removes from the plan
 
 - Hand-rolled incremental scoring, `reads`-based invalidation, bitmap maintenance and per-subsystem
   incremental indexes. **The circuit is the single incremental mechanism.**
@@ -145,7 +172,7 @@ back through the log.
 - Separate history mechanisms, replaced by the log plus the delta archive.
 - Any batch, nightly or periodic recomputation.
 
-## 6. Verification hooks
+### 6. Verification hooks
 
 - **E1 (incremental ≡ batch)** is checked by running the same circuit in batch mode over a full
   snapshot and comparing. It's cheap, and runs continuously in simulation.

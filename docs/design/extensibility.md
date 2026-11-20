@@ -1,6 +1,34 @@
 # Extensibility and Languages: The Right Tool for Each Job
 
-> **Status 2026-11-20 (D41, D42):** v1 authoring is a **YAML/JSON manifest + JSON Schema, plus one TypeScript typed builder** that prints it. Pulumi-style language hosts, the Python SDK and WASM functions are **deferred**; in-image executors over stdio cover custom action logic (D40). CEL stays. Ingestion is an OpenAPI endpoint, not a governed protocol. See [decisions.md](../decisions.md).
+*Status: v1 design updated 2026-11-20 (D23, D24, D40, D41, D42, D53–D58).*
+
+## v1 design
+
+**Each job gets one language, and v1 keeps the list short:**
+
+| Job | v1 language | Notes |
+|---|---|---|
+| Configuration | **YAML/JSON manifest**, or a **TypeScript program** using the builder | Both produce the same canonical `manifest.json` (D53); YAML can be split with `include` (D54); [typescript-builder.md](./typescript-builder.md) |
+| Mappings, computed fields, rules, conditions, options, postconditions | **CEL** | One expression language with object construction; checked by `toolbox validate` |
+| Authorization model | **OpenFGA DSL** + `.fga.yaml` tests | Unmodified OpenFGA evaluates it |
+| Connectors | **Any language** over the connector API (stdio or HTTP) | [connector-control.md](./connector-control.md) |
+| Action logic | **Any language** as an in-image or HTTP executor | [action-runs.md](./action-runs.md) |
+| Custom UI | **Any framework** through the UI extension contract; React + `@toolbox/ui` is the default kit | [minimal-ui.md](./minimal-ui.md), v1-spec §7.6 |
+
+**Deferred:** the Python SDK and Pulumi-style language hosts (D41), WASM functions for in-engine
+logic (D41), a governed connector standard (D42), and Toolbox's own CEL type checker. Logic that CEL
+can't express goes to a connector (compute the fact at the source) or an executor (side effects), not
+into the engine.
+
+The appendix keeps the research on how Backstage, Port, Salesforce and Shopify are extended, and the
+CEL vs WASM analysis, which still motivates these choices.
+
+---
+
+## Appendix: extensibility research and the full language map
+
+*The original design, kept for when its trigger is met. Where it conflicts with the v1 design above, v1 wins.*
+
 
 *Status: research + decision. Research date 2026-11-19. Revisits [plan.md](../plan.md) §2 (the Pulumi
 model) and §4.6, and [principal-review.md](../principal-review.md) §4.1–4.3. The goal is the **agent
@@ -10,7 +38,7 @@ machine-readable diagnostics with fixes, tests, examples and Agent Skills).*
 
 ---
 
-## 1. How others are extended
+### 1. How others are extended
 
 | Platform | Extension model | Lesson |
 |---|---|---|
@@ -28,7 +56,7 @@ where it runs best:
 - **UI:** a single, widely known web stack (React + TypeScript on the `@toolbox/ui` design system), for
   operators only ([frontend.md](./frontend.md), [dashboards.md](./dashboards.md)).
 
-## 2. The language map
+### 2. The language map
 
 | Job | Language | Why it's the right tool | Tooling shipped |
 |---|---|---|---|
@@ -58,7 +86,7 @@ function with the original JQ in a comment for review.
 fixes upstream, and fall back to running cel-go through the same Go FFI boundary used for OpenFGA if
 gaps block us.
 
-## 2b. Where CEL and WASM fit: the four tiers
+### 2b. Where CEL and WASM fit: the four tiers
 
 Custom behaviour uses the **first tier that can express it**:
 
@@ -99,7 +127,7 @@ Custom behaviour uses the **first tier that can express it**:
 **Rule of thumb:** CEL by default; WASM only when a real programming language is needed; never either
 for I/O.
 
-## 3. What changed from the previous plan
+### 3. What changed from the previous plan
 
 - **Kept:** the Pulumi model (code-first config), TypeScript first and Python second, a
   YAML/JSON manifest as the stable contract, and WASM for in-engine logic.

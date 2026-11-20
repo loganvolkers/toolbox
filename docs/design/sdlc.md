@@ -21,7 +21,7 @@ Related: [plan.md](../plan.md) §2 and §6, [authorization.md](../authorization.
 
 | Env | Purpose | Data | Identity |
 |---|---|---|---|
-| **local** (`toolbox dev`) | Author and iterate | Fixtures and/or `toolbox-synth` synthetic org (SQLite) | Dev user, or the developer's real IdP login |
+| **local** (`toolbox dev`) | Author and iterate | Fixtures and/or a synthetic org (in-memory store) | Dev user, or the developer's real IdP login |
 | **CI** | Test everything without a cluster | Fixtures + synthetic | Fixture principals |
 | **PR preview** (ephemeral) | Humans and agents click around the change | Fixtures / synthetic / **redacted prod sample** (§5) | Real IdP login; ReBAC applies |
 | **staging** (long-lived, optional) | Integration with real connectors in read-only mode | Real sources, read-only credentials | Real IdP |
@@ -35,24 +35,23 @@ with SBOM and provenance), and promotion is by digest.
 The inner loop is designed for speed; see [developer-velocity.md](./developer-velocity.md).
 
 ```bash
-toolbox dev                      # daemon: watch → warm language host → manifest diff → circuit reconfig → affected tests; UI at :7000
+toolbox dev                      # watch → TS builder (if any) → validate → full recompute over fixtures → tests; API/MCP/UI at :7000
 toolbox check                    # changed definitions only: manifest, CEL types, authz model (≤ 300 ms target)
 toolbox test --affected          # tests whose inputs changed, in parallel, with a content-addressed result cache
 toolbox test --all               # everything, no cache (what CI runs on merge)
-toolbox simulate --quick         # tens of seeds on affected modules
 toolbox plan --local             # full plan sections against fixtures/synthetic data
 toolbox plan --remote prod       # remote plan (§4) using *your* identity; details redacted to your permissions
-toolbox preview up               # docker compose: the built image + SQLite + fixtures
+toolbox preview up               # docker compose: the built image + Postgres + fixtures
 ```
 
 ## 4. Remote plan: Git is the access boundary
 
 **Never pull production data into CI.** CI uploads the **manifest bundle** (config only: no data and
 no secrets) to the production portal. The portal computes the plan **server-side**:
-- It compiles the new manifest into a candidate circuit epoch, using the same incremental engine
+- It recomputes derived state under the candidate manifest over the same snapshot as the current one (two full recomputes and a diff, D37), using the same engine
   ([incremental-computation.md](./incremental-computation.md)).
 - It evaluates against current state.
-- WASM rules run in their usual sandbox. Plan jobs run as durable workflows with resource limits.
+- Plan jobs run as durable workflows with resource limits.
 
 **Plan sections:**
 
@@ -130,7 +129,7 @@ new tb.PlanGates("default", {
 ## 7. Build, deploy, verify, roll back
 
 - `toolbox build`:
-  - Produces an OCI image with the manifest bundle, WASM components, UI assets and generated OpenAPI.
+  - Produces one OCI image with the canonical `manifest.json`, UI bundles, in-image executors and connectors, and the generated OpenAPI (D33, D53).
   - Adds an SBOM, a **build provenance attestation** (`actions/attest-build-provenance`) and a
     cosign/sigstore signature.
 - **Deploy** uses the customer's tooling (Helm, Argo CD, Terraform, ECS…). Toolbox provides the chart

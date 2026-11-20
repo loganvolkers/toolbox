@@ -1,6 +1,38 @@
 # Developer Velocity: Fast Inner Loops for Maintainers and Operators
 
-> **Status 2026-11-20 (D44, D46, G2):** maintainer velocity tooling (hakari, `xtask affected`, result cache, sub-circuits, Salsa pipeline) is **deferred** until workspace size needs it; `toolbox dev` is a watcher plus full recompute over fixtures. Operator SDLC speed (G2) remains a measured requirement. A dependency pinning a newer Rust toolchain than the workspace is isolated or rejected ([technology-critique.md](../technology-critique.md) §7.3).
+*Status: v1 design updated 2026-11-20 (D29, D44, D46, G2).*
+
+## v1 design
+
+**Fast loops come from a small system, not from tooling.** v1 has a small workspace, one store, no
+per-portal code generation and a full recompute measured in seconds, so the heavy velocity machinery
+in the appendix isn't needed yet.
+
+| Loop | v1 | Budget |
+|---|---|---|
+| Maintainer edit → test | Small, shallow Cargo workspace (≈10 crates, [v1-spec.md](../v1-spec.md) §4); heavy dependencies in leaf crates; `cargo nextest`; Bacon in watch mode | Incremental rebuild of a leaf edit ≈ 1.2 s ([technology-critique.md](../technology-critique.md) §7.3) |
+| Maintainer correctness | Differential test against the reference model on every PR | Reference portal check < 5 s |
+| Operator edit → result | `toolbox dev`: watch → re-run the TS builder if present (≈0.3 s) → validate → full recompute over fixtures (milliseconds at fixture scale) → re-run `toolbox test` → local API/MCP/UI | ≤ 2 s from save to updated results |
+| Operator type feedback | `tsc` (TypeScript 7) on the builder program | 0.38 s on the reference portal ([experiments/typescript-builder](../../experiments/typescript-builder/README.md)) |
+| Operator plan | `toolbox plan --local` (two recomputes + diff) | ≤ 5 s at fixture scale |
+| CI | Same commands; sccache for Rust; cache keyed on the canonical manifest | — |
+
+Rules:
+- **No per-portal code generation, ever** (the Feldera lesson): the pipeline is built at runtime
+  from the manifest.
+- **Toolchain risk (D46):** a dependency that needs a newer Rust toolchain than the workspace is
+  isolated or rejected (`dbsp` crashed rustc 1.97 under the proposed profile).
+- **Dev-loop SLOs are measured in CI** with the reference portal, and a regression fails the build.
+
+**When the deferred tooling comes back:** the workspace exceeds ~15 crates, or the dev-loop SLOs regress.
+Then hakari, `xtask affected` selection and the result cache from the appendix apply.
+
+---
+
+## Appendix: deferred velocity tooling
+
+*The original design, kept for when its trigger is met. Where it conflicts with the v1 design above, v1 wins.*
+
 
 *Status: research + decisions, 2026-11-19. Applies to [plan.md](../plan.md),
 [sdlc.md](./sdlc.md), [verification.md](./verification.md) and
@@ -10,7 +42,7 @@ re-architecture later.*
 
 ---
 
-## 1. Evidence
+### 1. Evidence
 
 | Source | Finding | Implication |
 |---|---|---|
@@ -29,7 +61,7 @@ re-architecture later.*
 | **sqlx `#[sqlx::test]`** | A **separate database per test**, with fixtures, for isolation under parallelism | Pattern for Postgres-backed tests (maintainers). Operators use the in-memory store |
 | **Test selection at scale** (Google TAP; Meta *Predictive Test Selection*, 2019) | Large orgs don't run everything on every change. They select by dependency (and history), with full runs as a safety net | Dependency-based selection in the inner loop, full suites in CI and the merge queue |
 
-## 2. The naive designs that would force a re-architecture (and what we do instead)
+### 2. The naive designs that would force a re-architecture (and what we do instead)
 
 | # | Naive design | Why it fails | Decision |
 |---|---|---|---|
@@ -44,9 +76,9 @@ re-architecture later.*
 | T9 | A few large crates, generic-heavy APIs, proc macros everywhere | Every edit recompiles a lot; monomorphisation bloat | A **wide, shallow workspace**; interface crates separate from implementations; `dyn` at boundaries; heavy dependencies in leaf crates; hakari |
 | T10 | Remote plan inside the inner loop, or a remote plan that recomputes all production state | Network and full-scale recompute per check | `toolbox plan --local` (fixtures/synthetic) in the loop; `--remote` before PRs. Remote plans build **only the affected sub-circuits** of the candidate epoch (§5) |
 
-## 3. Maintainers: building Toolbox itself
+### 3. Maintainers: building Toolbox itself
 
-### 3.1 Workspace shape (decided before the first crate)
+#### 3.1 Workspace shape (decided before the first crate)
 - **Wide and shallow.** Most crates depend only on `toolbox-model` and small **interface crates**
   (`*-api`: traits and types).
   - Implementations depend on interfaces, never on each other.
@@ -68,7 +100,7 @@ re-architecture later.*
 - **`cargo hakari`** manages a workspace-hack crate; CI runs `hakari generate --diff` and
   `manage-deps --dry-run`.
 
-### 3.2 Profiles and toolchain
+#### 3.2 Profiles and toolchain
 
 ```toml
 # Cargo.toml (workspace)
@@ -100,7 +132,7 @@ codegen-units = 16
 
   Stable remains the supported baseline. Each nightly feature is adopted on stable as it stabilises.
 
-### 3.3 Tools in the inner loop
+#### 3.3 Tools in the inner loop
 
 | Need | Tool |
 |---|---|
@@ -112,7 +144,7 @@ codegen-units = 16
 | Simulation | `toolbox-sim --component <crate> --seeds 50` locally; replay any seed; failing seeds become regression tests |
 | Build profiling | `cargo build --timings`; tracked in CI |
 
-### 3.4 Selective testing for maintainers
+#### 3.4 Selective testing for maintainers
 - **`xtask affected`** uses **guppy** (the package-graph library behind hakari and nextest):
   1. map changed files to packages
   2. take their reverse dependencies
@@ -120,7 +152,7 @@ codegen-units = 16
   4. run the matching property and simulation suites (by the property ids those crates declare)
 - `bacon` and the PR pipeline both use it. **The merge queue always runs everything.**
 
-### 3.5 CI for maintainers
+#### 3.5 CI for maintainers
 1. **Build once:** `cargo nextest archive` with sccache (`CARGO_INCREMENTAL=0`) and a shared cache.
 2. **Run sharded:** `--partition slice:k/n` across runners.
 3. **Gate long campaigns on changed components** (simulation seeds, differential fuzzing, mutation
@@ -131,9 +163,9 @@ codegen-units = 16
    the workspace outgrows Cargo with sccache and nextest. Their cost to contributors and agents is
    real.
 
-## 4. Operators: building portals
+### 4. Operators: building portals
 
-### 4.1 `toolbox dev`: an incremental pipeline, not a rebuild
+#### 4.1 `toolbox dev`: an incremental pipeline, not a rebuild
 
 ```
  file save (watchexec lib)
@@ -153,7 +185,7 @@ codegen-units = 16
   --dev` attaches to the running daemon) all read the same incremental state. An agent's `validate` or
   `test` call returns in milliseconds when nothing relevant changed.
 
-### 4.2 Fast feedback layers (cheapest first)
+#### 4.2 Fast feedback layers (cheapest first)
 
 | Layer | Trigger | What runs |
 |---|---|---|
@@ -164,7 +196,7 @@ codegen-units = 16
 | `plan --local` | On demand | Full plan sections against fixtures or synthetic data |
 | `plan --remote` | Before the PR | Against production state (§5) |
 
-### 4.3 Selective, parallel, cached operator tests
+#### 4.3 Selective, parallel, cached operator tests
 - **The dependency graph already exists:** the meta catalog's edges
   ([meta-catalog.md](./meta-catalog.md)) such as `Rule.reads`, `View.reads`, `Action.scopedTo`,
   `AuthzModule.governs` and fixture references.
@@ -180,7 +212,7 @@ codegen-units = 16
   cache.
 - **`toolbox test --all`** ignores selection and the cache; CI runs it on merge.
 
-### 4.4 Language and toolchain choices for operator speed
+#### 4.4 Language and toolchain choices for operator speed
 - **TypeScript:**
   - Evaluation uses a warm Node process with transpile-only loading.
   - Type checking uses the native TypeScript 7 compiler. Watch mode is used when available (reported
@@ -191,7 +223,7 @@ codegen-units = 16
   wasmtime precompile cache keyed by module hash + engine config + wasmtime version.
 - **Connectors:** cassette record and replay for development; `toolbox connector test --watch`.
 
-## 5. Making remote `plan` and epochs fast at production scale
+### 5. Making remote `plan` and epochs fast at production scale
 
 - **Content-addressed sub-circuits.** This applies Feldera's Merkle-naming idea to state, rather than
   to compiled code:
@@ -204,7 +236,7 @@ codegen-units = 16
 - **Phase 0 spike:** verify how much DBSP state reuse across circuit rebuilds is possible through the
   `dbsp` API. Where it isn't, fall back to replaying only the inputs of the changed subgraphs.
 
-## 6. Dev-loop SLOs (measured, enforced)
+### 6. Dev-loop SLOs (measured, enforced)
 
 These are performance targets, measured by a benchmark harness that edits a reference portal and the
 Toolbox workspace and times time-to-feedback. They run on every PR, and regressions block release.
@@ -221,7 +253,7 @@ Toolbox workspace and times time-to-feedback. They run on every PR, and regressi
 | UI edit → HMR update (maintainers and operators) | ≤ 200 ms |
 | Affected story tests after editing one component | ≤ 10 s |
 
-## 7. Changes to the plan
+### 7. Changes to the plan
 
 1. **Architecture rules** added to plan §3:
    - no per-portal code generation
