@@ -80,9 +80,10 @@ jobs:
           target/debug/toolbox connector test --name ci-lint --portal portal -- target/debug/toolbox-connector-runner
       - name: The docs site publishes this commit's portal report
         run: |
-          mkdir -p "$RUNNER_TEMP/site-report"
-          target/debug/toolbox report portal --skip runner,github-actions -o html --out "$RUNNER_TEMP/site-report/index.html"
+          target/debug/toolbox report portal --skip runner,github-actions -o web --out "$RUNNER_TEMP/site-report"
           cmp "$RUNNER_TEMP/site-report/index.html" site/public/report/index.html
+          cmp "$RUNNER_TEMP/site-report/report.json" site/public/report/report.json
+          cmp "$RUNNER_TEMP/site-report/toolbox-report.js" site/public/report/toolbox-report.js
       - name: Toolbox for Toolbox — ratchet against portal/results.json
         uses: ./actions/report
         with:

@@ -1660,7 +1660,7 @@ scorecards:
         level: bronze
         check: "entity.missingFiles.size() == 0"
         evidence: "entity.missingFiles"
-        fix: "Fix or remove the links in the evidence. A root-relative link must name another content page, or a file under site/public, and must include the site base."
+        fix: "Fix or remove the links in the evidence. A root-relative link must include the site base and name a content page, a file under site/public, or an Astro page under site/src/pages."
       - name: reachable
         level: silver
         check: "entity.inSidebar"

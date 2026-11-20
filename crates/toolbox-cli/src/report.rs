@@ -1,7 +1,7 @@
 //! `toolbox report`: score a repository locally, without a server (docs/design/toolbox-for-toolbox.md
 //! F1, F4; docs/design/scorecard-ratchet.md). Runs the portal's in-image connectors once (a resync
 //! each), recomputes, and prints every scorecard with the evidence for failing rules — as Markdown,
-//! JSON, or one self-contained HTML page.
+//! JSON, one self-contained HTML page, or a directory a host page can slot into.
 //!
 //! With `--baseline FILE` it is a ratchet in the manner of Betterer's `.betterer.results`: the file
 //! records each entity's level and failing rules with their evidence counts. A rule that starts
@@ -389,8 +389,8 @@ fn markdown(m: &toolbox_model::Manifest, d: &Derived) -> String {
     s
 }
 
-/// One self-contained HTML page: the report as embedded JSON, rendered by a small inline script.
-fn html(m: &toolbox_model::Manifest, d: &Derived) -> String {
+/// The report document the element renders: portal, snapshot, scorecard definitions, scores.
+fn report_json(m: &toolbox_model::Manifest, d: &Derived) -> String {
     let fixes: Map<String, Value> = m
         .scorecards
         .iter()
@@ -411,15 +411,49 @@ fn html(m: &toolbox_model::Manifest, d: &Derived) -> String {
             )
         })
         .collect();
-    let data = json!({
+    json!({
         "portal": m.portal.title.as_deref().unwrap_or(&m.portal.name),
         "snapshot": d.snapshot,
         "scorecards": fixes,
         "scores": d.scores,
-    });
+    })
+    .to_string()
+}
+
+/// One self-contained page: `<toolbox-report>` with the JSON inlined and the element script
+/// inlined. Host chrome is not concatenated in; a host fills the element's slots instead.
+fn html_page(data_json: &str) -> String {
     // `</` can't appear inside the script element.
-    let embedded = data.to_string().replace("</", "<\\/");
-    include_str!("report.html").replace("/*DATA*/null", &embedded)
+    let embedded = data_json.replace("</", "<\\/");
+    include_str!("report.html")
+        .replace("/*ELEMENT*/", include_str!("toolbox-report.js"))
+        .replace("/*DATA*/", &embedded)
+}
+
+fn html(m: &toolbox_model::Manifest, d: &Derived) -> String {
+    html_page(&report_json(m, d))
+}
+
+/// `toolbox-report.js`, `report.json`, and the one-file `index.html`. A host page loads the
+/// first two and projects its own header, nav, and footer into the element's slots.
+fn write_web_parts(dir: &std::path::Path, data_json: &str) -> Result<(), String> {
+    std::fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
+    let write = |name: &str, body: &str| {
+        let path = dir.join(name);
+        std::fs::write(&path, body).map_err(|e| format!("{}: {e}", path.display()))
+    };
+    write("toolbox-report.js", include_str!("toolbox-report.js"))?;
+    write("report.json", data_json)?;
+    write("index.html", &html_page(data_json))?;
+    Ok(())
+}
+
+fn write_web(
+    dir: &std::path::Path,
+    m: &toolbox_model::Manifest,
+    d: &Derived,
+) -> Result<(), String> {
+    write_web_parts(dir, &report_json(m, d))
 }
 
 /// A portal's manifest and derived state from one run of its in-image connectors (or its fixtures),
@@ -526,6 +560,21 @@ pub fn run(o: &Options) -> ExitCode {
                 summary = format!("{}\nbaseline: {verdict}\n", lines.join("\n"));
             }
         }
+    }
+    if o.output == "web" {
+        let Some(dir) = &o.out else {
+            return fail("-o web writes a directory; pass --out DIR".into());
+        };
+        if let Err(e) = write_web(dir, &m, &d) {
+            return fail(e);
+        }
+        if let Some(p) = &o.html
+            && let Err(e) = std::fs::write(p, html(&m, &d))
+        {
+            return fail(format!("{}: {e}", p.display()));
+        }
+        eprint!("{summary}");
+        return code;
     }
     let body = match o.output.as_str() {
         "json" => toolbox_derive::pyjson::pretty(
@@ -646,5 +695,49 @@ mod tests {
             ]
         );
         assert_eq!(c.other, ["card · c: new (none)"]);
+    }
+
+    #[test]
+    fn the_html_page_is_the_element_with_slots_and_inlined_data() {
+        let page = html_page(r#"{"portal":"Demo","snapshot":"s","scorecards":{},"scores":{}}"#);
+        assert!(page.contains("<toolbox-report>"));
+        assert!(page.contains(r#"<script type="application/json">{"portal":"Demo""#));
+        assert!(page.contains(r#"<slot name="header">"#));
+        assert!(page.contains(r#"<slot name="nav">"#));
+        assert!(page.contains(r#"<slot name="footer">"#));
+        assert!(!page.contains("{{"));
+    }
+
+    #[test]
+    fn a_closing_script_tag_in_the_data_cannot_break_out_of_the_json_script() {
+        let page = html_page(r#"{"portal":"</script>"}"#);
+        let json = page
+            .split(r#"<script type="application/json">"#)
+            .nth(1)
+            .unwrap()
+            .split("</script>")
+            .next()
+            .unwrap();
+        assert_eq!(json, r#"{"portal":"<\/script>"}"#);
+    }
+
+    #[test]
+    fn web_output_writes_the_element_the_json_and_the_page() {
+        let dir = std::env::temp_dir().join(format!("toolbox-report-web-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let data = r#"{"portal":"Demo"}"#;
+        write_web_parts(&dir, data).unwrap();
+        assert_eq!(
+            std::fs::read_to_string(dir.join("toolbox-report.js")).unwrap(),
+            include_str!("toolbox-report.js")
+        );
+        assert_eq!(
+            std::fs::read_to_string(dir.join("report.json")).unwrap(),
+            data
+        );
+        let page = std::fs::read_to_string(dir.join("index.html")).unwrap();
+        assert!(page.contains("<toolbox-report>"));
+        assert!(page.contains(data));
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }

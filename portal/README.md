@@ -42,6 +42,7 @@ toolbox report portal                               # ~2 min: also cargo test, c
 toolbox report portal --skip runner,github-actions --baseline portal/results.json          # the ratchet (CI adds --ci)
 toolbox report portal --skip runner,github-actions --baseline portal/results.json --update # record an improvement; commit it
 toolbox report portal --skip runner,github-actions -o html --out report.html            # one page to publish
+toolbox report portal --skip runner,github-actions -o web --out report                  # element, JSON, and that page; a host fills the slots
 scripts/self-portal.sh serve                        # live portal on :8090 (API, MCP, UI)
 toolbox test portal                                 # the standards' own tests, over the curated fixtures
 toolbox assess brief rule:toolbox/user-mcp/contract-tested --portal portal --skip runner,github-actions   # brief your agent
