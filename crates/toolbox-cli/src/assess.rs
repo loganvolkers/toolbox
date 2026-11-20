@@ -203,7 +203,7 @@ pub fn submit(o: &Submit) -> ExitCode {
         Ok(s) => s,
         Err(e) => return fail(e),
     };
-    let m = match crate::portal::manifest_from(&src.document, &src.manifest_file) {
+    let m = match crate::portal::manifest_from(&src) {
         Ok(m) => m,
         Err(e) => return fail(e),
     };

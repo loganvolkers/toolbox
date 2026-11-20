@@ -22,7 +22,7 @@ fn fail(m: impl std::fmt::Display) -> ExitCode {
 
 fn manifest(portal: &Path) -> Result<(PathBuf, toolbox_model::Manifest), String> {
     let src = toolbox_model::load::load(portal).map_err(|e| e.to_string())?;
-    let m = crate::portal::manifest_from(&src.document, &src.manifest_file)?;
+    let m = crate::portal::manifest_from(&src)?;
     Ok((src.root, m))
 }
 

@@ -14,26 +14,31 @@ use toolbox_expr::Site;
 
 /// Load and validate the portal at `path` (a manifest file or a portal directory).
 pub fn validate_portal(path: &Path) -> Result<Report, LoadError> {
-    let Source {
-        root,
-        manifest_file,
-        included,
-        document,
-    } = load::load(path)?;
+    let src = load::load(path)?;
     let mut report = Report {
-        manifest: manifest_file.clone(),
-        included,
+        manifest: src.manifest_file.clone(),
+        included: src.included.clone(),
         ..Report::default()
     };
-    let (manifest, mut errors) = validate_manifest(&document, &manifest_file);
+    let (manifest, mut errors) = validate_source(&src);
     if let Some(m) = &manifest {
-        errors.extend(check_files(&root, &manifest_file, m));
+        let mut file_errors = check_files(&src.root, &src.manifest_file, m);
+        src.relocate(&mut file_errors);
+        errors.extend(file_errors);
     }
-    let (count, fixture_errors) = messages::validate_fixtures(&root, manifest.as_ref());
+    let (count, fixture_errors) = messages::validate_fixtures(&src.root, manifest.as_ref());
     report.messages = count;
     errors.extend(fixture_errors);
     report.errors = errors;
     Ok(report)
+}
+
+/// [`validate_manifest`] on a loaded source, with each diagnostic pointing at the file (and the
+/// pointer in it) its value came from, not the merged document.
+pub fn validate_source(src: &Source) -> (Option<Manifest>, Vec<Diagnostic>) {
+    let (m, mut errors) = validate_manifest(&src.document, &src.manifest_file);
+    src.relocate(&mut errors);
+    (m, errors)
 }
 
 /// Validate a manifest document. Returns the typed manifest when the schema passed, plus every

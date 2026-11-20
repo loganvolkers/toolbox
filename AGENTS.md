@@ -35,7 +35,7 @@ MCP, CLI, data model, properties) and test against
 **Building:** `cargo build` (toolchain pinned in `rust-toolchain.toml`), `cargo test`, `cargo clippy
 --all-targets -- -D warnings`, then `target/debug/toolbox validate examples/reference-portal`.
 `python scripts/validate-parity.py` checks `toolbox validate` against `tools/validate.py`.
-`yamark format --check` (yamark 0.6.1, D95) checks every tracked `.yaml` and `.yml` except `.github/workflows/release.yml`, which `dist plan` owns (D96).
+`yamark format --check` (yamark 0.6.1, D96) checks every tracked `.yaml` and `.yml` except `.github/workflows/release.yml`, which `dist plan` owns (D97).
 `.github/workflows/ci.yml` runs all of this. **M0–M4 are done.** Commands: `validate`, `test`,
 `plan --local --base <manifest>`, `derive`, `serve [--database-url]`, `push`, `token create`, the reads
 (`get`, `query`, `search`, `graph`, `owner`, `explain`, `score`, `scorecard`, `refresh`, `actions`), `mcp` (stdio
@@ -63,7 +63,7 @@ docs/examples/*.md           worked examples (e.g. approved GitHub Apps)
 docs/glossary.md, docs/research-log.md
 docs/v1-spec.md              the implementation contract for v1
 Cargo.toml, crates/          Rust workspace (v1-spec §4); `toolbox-cli` builds the `toolbox` binary
-yamark.toml                  YAML formatting (Yamark 0.6.1, D95)
+yamark.toml                  YAML formatting (Yamark 0.6.1, D96)
 schema/                      JSON Schemas (manifest, connector and executor messages), compiled into the binary
 scripts/                     repo checks and acceptance scripts (validate-parity.py, m2–m4-acceptance.sh)
 ui/                          the minimal UI (React + Vite; dist/ is embedded in the binary)
@@ -82,6 +82,9 @@ The full loop, check pyramid and measured timings are in
 - **Branching:** during the design phase, commit directly to `main` (decision D32). Pull with rebase
   before you start and again before you push. Keep commits small and scoped to one topic, so parallel
   agents rarely conflict.
+- **Generated files:** never hand-merge `portal/results.json`. On a conflict, take upstream's copy
+  and rerun `--update` ([portal/README.md](./portal/README.md#layout), D95). New T4T standards go in
+  `portal/standards/<topic>.yaml`.
 - **When you change a decision:** add an entry to `docs/decisions.md` (never rewrite past entries),
   update the owning design doc, and update `plan.md` §4.7/§8/§10 if affected.
 - **Sources:**

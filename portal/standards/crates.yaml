@@ -1,0 +1,253 @@
+# Rust crates: maintainer SDLC (docs/design/maintainer-sdlc.md).
+# Included by portal/toolbox.yaml; see portal/README.md for the layout.
+
+kinds:
+  - name: Crate
+    description: >-
+      A Rust crate in the Cargo workspace: its docs, size, functions, tests
+      and lint results.
+    identityFrom: [connector:workspace]
+    fields:
+      path: {type: string}
+      description: {type: string}
+      targets: {type: list, items: string}
+      externalDeps: {type: integer}
+      readme: {type: boolean}
+      lastChange: {type: string}
+      crateDoc: {type: boolean}
+      codeLines: {type: integer}
+      testCodeLines: {type: integer}
+      pubItems: {type: integer}
+      pubDocumented: {type: integer}
+      undocumented: {type: list, items: string}
+      functions: {type: list, items: object}
+      maxFnLines: {type: integer}
+      maxComplexity: {type: integer}
+      unitTests: {type: integer}
+      integrationTests: {type: integer}
+      unwraps: {type: integer}
+      tests: {type: object} # from the runner: status, passed, failed, output
+      clippy: {type: object} # from the runner: status, warnings, messages
+      hash:
+        type: string
+        description: >-
+          SHA-256 (12 hex) of the crate's src/ files: an assessment is stale when
+          it changes.
+      reviewState:
+        type: string
+        description: "crate-design assessment: fresh, stale or missing."
+        computed: >-
+          inbound.assessesCrate.size() == 0 ? 'missing' :
+          (inbound.assessesCrate[0].subjectHash == entity.hash ? 'fresh' :
+          'stale')
+      reviewFailing:
+        type: list
+        items: string
+        description: Criteria the crate-design assessment failed.
+        computed: >-
+          inbound.assessesCrate.size() == 0 ? [] :
+          inbound.assessesCrate[0].failing
+      reviewUnsure:
+        type: list
+        items: string
+        description: Criteria the assessor was unsure of.
+        computed: "inbound.assessesCrate.size() == 0 ? [] : inbound.assessesCrate[0].unsure"
+      docCoverage:
+        type: integer
+        computed: >-
+          entity.pubItems == 0 ? 100 : entity.pubDocumented * 100 /
+          entity.pubItems
+      longFunctions:
+        type: list
+        items: string
+        computed: >-
+          entity.functions.filter(f, f.lines > 80).map(f, f.name + ' at ' + f.at +
+          ': ' + string(f.lines) + ' lines')
+      complexFunctions:
+        type: list
+        items: string
+        computed: >-
+          entity.functions.filter(f, f.complexity > 15).map(f, f.name + ' at ' +
+          f.at + ': complexity ' + string(f.complexity))
+      dependents:
+        type: list
+        items: string
+        computed: inbound.dependsOn.map(c, c.path)
+    relations: {dependsOn: {to: Crate, many: true}}
+    sources:
+      default: [connector:workspace]
+      fields: {tests: [connector:runner], clippy: [connector:runner]}
+    map:
+    - from: workspace/crate
+      id: "'crate:' + record.name"
+      set: >-
+        {'path': record.path, 'description': record.description, 'targets': record.targets,
+         'externalDeps': record.externalDeps, 'readme': record.readme, 'lastChange': record.lastChange,
+         'crateDoc': record.crateDoc, 'codeLines': record.codeLines, 'testCodeLines': record.testCodeLines,
+         'pubItems': record.pubItems, 'pubDocumented': record.pubDocumented,
+         'undocumented': record.undocumented, 'functions': record.functions,
+         'maxFnLines': record.maxFnLines, 'maxComplexity': record.maxComplexity,
+         'unitTests': record.unitTests, 'integrationTests': record.integrationTests,
+         'unwraps': record.unwraps, 'hash': has(record.hash) ? record.hash : null}
+      relations: {dependsOn: "record.dependsOn.map(d, 'crate:' + d)"}
+    - from: runner/test
+      id: "'crate:' + record.crate"
+      set: "{'tests': record}"
+    - from: runner/clippy
+      id: "'crate:' + record.crate"
+      set: "{'clippy': record}"
+
+scorecards:
+  - name: maintainer-crate
+    kind: Crate
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    appliesTo: entity.codeLines >= 50 # placeholder crates (toolbox-durable, toolbox-exec) are skipped
+    rules:
+    - name: crate-docs
+      level: bronze
+      check: entity.crateDoc
+      fix: >-
+        Start the crate's lib.rs or main.rs with //! docs: what it is and which
+        spec section it implements.
+    - name: has-tests
+      level: bronze
+      check: entity.unitTests + entity.integrationTests > 0
+      fix: >-
+        Add a #[test] for the crate's main behaviour, or an integration test in
+        tests/.
+    - name: tests-pass
+      level: bronze
+      check: has(entity.tests) && entity.tests.status == 'pass'
+      evidence: >-
+        has(entity.tests) ? [entity.tests.status + ': ' +
+        string(entity.tests.failed) + ' failed'] + (has(entity.tests.output) ?
+        [entity.tests.output] : []) : ['no test run yet (refresh the crate)']
+      fix: Run `cargo test -p <crate>` and fix the failures in the evidence.
+    - name: clippy-clean
+      level: bronze
+      check: has(entity.clippy) && entity.clippy.status == 'pass'
+      evidence: >-
+        has(entity.clippy) ? entity.clippy.messages : ['no clippy run yet
+        (refresh the crate)']
+      fix: >-
+        Fix the clippy warnings in the evidence (`cargo clippy -p <crate>
+        --all-targets`).
+    - name: public-api-documented
+      level: silver
+      check: entity.docCoverage >= 80
+      evidence: entity.undocumented
+      fix: Add /// docs to the public items in the evidence.
+    - name: no-huge-functions
+      level: silver
+      check: entity.maxFnLines <= 150
+      evidence: >-
+        entity.functions.filter(f, f.lines > 150).map(f, f.name + ' at ' + f.at
+        + ': ' + string(f.lines) + ' lines')
+      fix: Split the functions in the evidence into named steps.
+    - name: bounded-complexity
+      level: silver
+      check: entity.maxComplexity <= 30
+      evidence: >-
+        entity.functions.filter(f, f.complexity > 30).map(f, f.name + ' at ' +
+        f.at + ': complexity ' + string(f.complexity))
+      fix: >-
+        Simplify the functions in the evidence (extract match arms, early
+        returns).
+    - name: fully-documented
+      level: gold
+      check: entity.docCoverage == 100
+      evidence: entity.undocumented
+      fix: Document every item in the evidence.
+    - name: short-functions
+      level: gold
+      check: entity.longFunctions.size() == 0
+      evidence: entity.longFunctions
+      fix: Keep functions at 80 lines or fewer; split those in the evidence.
+    - name: simple-functions
+      level: gold
+      check: entity.complexFunctions.size() == 0
+      evidence: entity.complexFunctions
+      fix: >-
+        Keep cyclomatic complexity at 15 or lower; simplify those in the
+        evidence.
+    - name: few-unwraps
+      level: gold
+      check: entity.unwraps * 100 <= entity.codeLines
+      evidence: >-
+        [string(entity.unwraps) + ' unwrap/expect calls in ' +
+        string(entity.codeLines) + ' lines']
+      fix: >-
+        At most one unwrap/expect per 100 lines outside tests: return errors or
+        document the invariant.
+    facets: {summary: public, details: public}
+
+  - name: review-crate
+    kind: Crate
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    ratchet: {advisory: true}
+    appliesTo: entity.codeLines >= 50
+    rules:
+    - name: assessed
+      level: bronze
+      check: entity.reviewState == 'fresh'
+      evidence: |-
+        [entity.reviewState == 'stale' ? 'the crate\'s sources changed since it was assessed' : 'not assessed against crate-design']
+      fix: >-
+        Run `toolbox assess brief crate:<name> --portal portal`, have your agent
+        write the assessment file it names, then `toolbox assess check portal`.
+    - name: passes-review
+      level: silver
+      check: entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0
+      evidence: >-
+        entity.reviewState == 'fresh' ? entity.reviewFailing : ['no current
+        assessment']
+      fix: >-
+        Act on the failing criteria's suggestions in the assessment
+        (portal/assessments/), then re-assess.
+    - name: no-doubts
+      level: gold
+      check: entity.reviewState == 'fresh' && entity.reviewUnsure.size() == 0
+      evidence: >-
+        entity.reviewState == 'fresh' ? entity.reviewUnsure : ['no current
+        assessment']
+      fix: >-
+        Resolve what the assessor was unsure of, or record the open question in
+        docs/decisions.md and link it.
+    facets: {summary: public, details: public}
+
+rubrics:
+  - name: crate-design
+    kind: Crate
+    description: >-
+      Is this crate well designed for its place in Toolbox? Read its crate
+      docs, public API and tests, and docs/v1-spec.md §4.
+    criteria:
+    - name: one-responsibility
+      question: >-
+        Does the crate do one thing, stated in its crate docs, that matches its
+        role in docs/v1-spec.md §4?
+      guidance: >-
+        Fail when the crate docs are missing, stale, or describe several
+        unrelated jobs.
+    - name: small-contract
+      question: >-
+        Do other crates use it through a small, documented public API rather
+        than its internals?
+      guidance: >-
+        Search other crates for `use <crate>::`; fail when they reach internals
+        or receive third-party types.
+    - name: replaceable-defaults
+      question: >-
+        If it wraps a default (cel-rust, OpenFGA, DBOS, Postgres, React), could
+        that default be swapped behind a Toolbox-owned contract (charter goal
+        3)?
+      guidance: Pass when it wraps no third-party default.
+    - name: tests-match-risk
+      question: >-
+        Are its riskiest paths (parsing, authorization, persistence, protocol
+        handling) tested, not only the easy ones?
+      guidance: >-
+        List the riskiest paths first, then find a test for each; unsure when
+        coverage is only indirect.

@@ -87,8 +87,7 @@ pub fn serve(path: &Path, listen: &str, database_url: Option<String>, fixtures: 
         return ExitCode::from(1);
     }
     let src = toolbox_model::load::load(path).expect("validated above");
-    let manifest =
-        crate::portal::manifest_from(&src.document, &src.manifest_file).expect("validated above");
+    let manifest = crate::portal::manifest_from(&src).expect("validated above");
     let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
     let database_url_for_fga = database_url.clone();
     rt.block_on(async move {

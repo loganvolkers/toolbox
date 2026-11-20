@@ -21,7 +21,7 @@ pub fn load(path: &Path) -> Result<Local, String> {
         ));
     }
     let src = toolbox_model::load::load(path).map_err(|e| e.to_string())?;
-    let manifest = manifest_from(&src.document, &src.manifest_file)?;
+    let manifest = manifest_from(&src)?;
     let store = toolbox_store::load_fixtures(&src.root).map_err(|e| e.to_string())?;
     let derived = FullRecompute.recompute(&manifest, &store.snapshot());
     Ok(Local {
@@ -31,8 +31,9 @@ pub fn load(path: &Path) -> Result<Local, String> {
     })
 }
 
-pub fn manifest_from(doc: &serde_json::Value, file: &str) -> Result<Manifest, String> {
-    let (m, errors) = toolbox_model::validate_manifest(doc, file);
+/// The typed manifest of a loaded source, or its diagnostics (each naming the file it is in).
+pub fn manifest_from(src: &toolbox_model::Source) -> Result<Manifest, String> {
+    let (m, errors) = toolbox_model::validate_source(src);
     match m {
         Some(m) if errors.is_empty() => Ok(m),
         _ => Err(errors

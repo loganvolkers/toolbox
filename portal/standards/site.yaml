@@ -1,0 +1,90 @@
+# Public docs site (docs/design/site-standards.md).
+# Included by portal/toolbox.yaml; see portal/README.md for the layout.
+
+kinds:
+  - name: SitePage
+    description: One Starlight content page of the public docs site.
+    identityFrom: [connector:workspace]
+    fields:
+      path:
+        type: string
+        description: Path of the content file from the repository root.
+      slug:
+        type: string
+        description: Starlight slug. Empty for the home page.
+      title:
+        type: string
+        description: Frontmatter title. Empty when the page has none.
+      descriptionChars:
+        type: integer
+        description: Characters in the frontmatter description.
+      draft: {type: boolean, description: The page is a draft.}
+      sidebarHidden:
+        type: boolean
+        description: The page sets sidebar.hidden or hidden.
+      inSidebar:
+        type: boolean
+        description: A reader can reach the page from the sidebar, and it is not a draft.
+      missingFiles:
+        type: list
+        items: string
+        description: Link targets that are neither a content page nor a file.
+      secretHits:
+        type: list
+        items: string
+        description: Lines matching an AWS access key or a GitHub token shape.
+    sources: {default: [connector:workspace]}
+    map:
+    - from: workspace/site-page
+      id: "'site-page:' + record.path"
+      set: >-
+        {'path': record.path, 'slug': record.slug, 'title': record.title,
+         'descriptionChars': record.descriptionChars, 'draft': record.draft,
+         'sidebarHidden': record.sidebarHidden, 'inSidebar': record.inSidebar,
+         'missingFiles': record.missingFiles, 'secretHits': record.secretHits}
+
+scorecards:
+  # A page is part of the site when it is titled, described, linked, and reachable from the sidebar.
+  - name: maintainer-site
+    kind: SitePage
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    ratchet: {newEntitiesAtLeast: bronze}
+    rules:
+    - name: titled
+      level: bronze
+      check: entity.title.size() > 0
+      evidence: "['no title']"
+      fix: >-
+        Set the frontmatter title. Starlight uses it as the page heading and the
+        document title.
+    - name: described
+      level: bronze
+      check: entity.descriptionChars > 0
+      evidence: "['no description']"
+      fix: >-
+        Set the frontmatter description. It is the summary a reader and a search
+        index see.
+    - name: links-resolve
+      level: bronze
+      check: entity.missingFiles.size() == 0
+      evidence: entity.missingFiles
+      fix: >-
+        Fix or remove the links in the evidence. A root-relative link must
+        include the site base and name a content page, a file under site/public,
+        or an Astro page under site/src/pages.
+    - name: reachable
+      level: silver
+      check: entity.inSidebar
+      evidence: "['not in the sidebar']"
+      fix: >-
+        Add the page's directory to the sidebar autogenerate list, or link its
+        slug. Leave draft unset.
+    - name: no-hardcoded-secrets
+      level: gold
+      check: entity.secretHits.size() == 0
+      evidence: entity.secretHits
+      fix: >-
+        Remove the credential in the evidence. A docs page is published to
+        GitHub Pages.
+    facets: {summary: public, details: public}

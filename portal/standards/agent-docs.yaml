@@ -1,0 +1,105 @@
+# Agent instruction files (docs/design/agents-md-standards.md).
+# Included by portal/toolbox.yaml; see portal/README.md for the layout.
+
+kinds:
+  # Agent instruction files (docs/design/agents-md-standards.md).
+  - name: AgentDoc
+    identityFrom: [connector:workspace]
+    fields:
+      path: {type: string}
+      name: {type: string}
+      canonical: {type: boolean}
+      lines: {type: integer}
+      commandLines: {type: integer}
+      pointsAtAgents: {type: boolean}
+      mentionsDecisions: {type: boolean}
+      ciMissingCommands:
+        type: list
+        items: string
+        description: >-
+          Backtick check commands (tool and subcommand) that no workflow runs.
+          Table rows are excluded.
+      missingFiles: {type: list, items: string}
+      hiddenChars: {type: integer}
+      secretHits: {type: list, items: string}
+    sources: {default: [connector:workspace]}
+    map:
+    - from: workspace/agent-doc
+      id: "'agent-doc:' + record.path"
+      set: >-
+        {'path': record.path, 'name': record.name, 'canonical': record.canonical,
+         'lines': record.lines, 'commandLines': record.commandLines,
+         'pointsAtAgents': record.pointsAtAgents, 'mentionsDecisions': record.mentionsDecisions,
+         'ciMissingCommands': record.ciMissingCommands,
+         'missingFiles': record.missingFiles, 'hiddenChars': record.hiddenChars,
+         'secretHits': record.secretHits}
+
+scorecards:
+  # AGENTS.md is the canonical file. CLAUDE.md and GEMINI.md are aliases: they should point at
+  # AGENTS.md rather than become a second copy. The 500-line ceiling is the v1.1 proposal's
+  # guideline, not a field the current spec requires. Frontmatter is optional and not required.
+  - name: maintainer-agent-doc
+    kind: AgentDoc
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    ratchet: {newEntitiesAtLeast: bronze}
+    rules:
+    - name: single-source
+      level: bronze
+      check: entity.canonical || entity.pointsAtAgents
+      evidence: >-
+        entity.canonical || entity.pointsAtAgents ? ['points at AGENTS.md'] :
+        ['alias does not point at AGENTS.md']
+      fix: >-
+        Keep instructions in AGENTS.md. An alias such as CLAUDE.md should link
+        to it, not restate a second set of rules.
+    - name: links-resolve
+      level: bronze
+      check: entity.missingFiles.size() == 0
+      evidence: entity.missingFiles
+      fix: Fix or remove the relative links in the evidence. An agent follows them.
+    - name: has-commands
+      level: silver
+      check: "!entity.canonical || entity.commandLines > 0"
+      evidence: "[string(entity.commandLines) + ' command lines']"
+      fix: >-
+        Name the build or test command in AGENTS.md (cargo, npm, pnpm, yarn,
+        pytest, or toolbox). An alias inherits the canonical file's commands.
+    - name: within-budget
+      level: silver
+      check: entity.lines <= 500
+      evidence: "[string(entity.lines) + ' lines']"
+      fix: >-
+        Keep the file under 500 lines. Move detail into a linked document. The
+        agents.md v1.1 proposal uses 500 lines as the point where a file should
+        be split.
+    - name: names-the-decision-log
+      level: gold
+      check: "!entity.canonical || entity.mentionsDecisions"
+      evidence: "['does not link to decisions.md']"
+      fix: >-
+        Link the canonical AGENTS.md at the decision log, so an agent edits the
+        log instead of treating this file as the only source of truth.
+    - name: checks-run-in-ci
+      level: gold
+      check: "!entity.canonical || entity.ciMissingCommands.size() == 0"
+      evidence: entity.ciMissingCommands
+      fix: >-
+        Run each command in the evidence from a GitHub Actions workflow, or
+        remove it from the check procedure. Commands that appear only in a
+        markdown table are the track index and are not required.
+    - name: no-hardcoded-secrets
+      level: gold
+      check: entity.secretHits.size() == 0
+      evidence: entity.secretHits
+      fix: >-
+        Remove the credential in the evidence. An instruction file is loaded
+        into the agent's prompt.
+    - name: no-hidden-instructions
+      level: gold
+      check: entity.hiddenChars == 0
+      evidence: "[string(entity.hiddenChars) + ' hidden characters']"
+      fix: >-
+        Remove zero-width and bidi characters. They are invisible to a reviewer
+        and visible to a model.
+    facets: {summary: public, details: public}

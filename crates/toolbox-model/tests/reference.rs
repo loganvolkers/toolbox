@@ -119,3 +119,34 @@ fn include_merges_policy_files() {
     );
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn errors_in_included_files_name_the_file() {
+    let dir = scratch_copy();
+    let path = dir.join("toolbox.yaml");
+    let mut doc: Value = serde_norway::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+    let mut cards = doc.as_object_mut().unwrap().remove("scorecards").unwrap();
+    // Keep the first scorecard in the root file, so the included ones land at shifted indices.
+    let first = cards.as_array_mut().unwrap().remove(0);
+    doc["scorecards"] = serde_json::json!([first]);
+    doc["include"] = serde_json::json!(["cards/*.yaml"]);
+    cards[0]["rules"][0]["check"] = serde_json::json!("entity.x >");
+    std::fs::write(&path, serde_norway::to_string(&doc).unwrap()).unwrap();
+    std::fs::create_dir_all(dir.join("cards")).unwrap();
+    std::fs::write(
+        dir.join("cards/more.yaml"),
+        serde_norway::to_string(&serde_json::json!({ "scorecards": cards })).unwrap(),
+    )
+    .unwrap();
+    let report = toolbox_model::validate_portal(&dir).unwrap();
+    let e = report
+        .errors
+        .iter()
+        .find(|d| d.code == "cel.syntax")
+        .expect("a CEL error");
+    assert_eq!(
+        (e.file.as_str(), e.path.as_str()),
+        ("cards/more.yaml", "/scorecards/0/rules/0/check")
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}

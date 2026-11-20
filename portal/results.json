@@ -270,8 +270,8 @@
       "crate:toolbox-cli": {
         "failing": {
           "clippy-clean": 1,
-          "fully-documented": 9,
-          "public-api-documented": 9,
+          "fully-documented": 8,
+          "public-api-documented": 8,
           "short-functions": 4,
           "simple-functions": 2,
           "tests-pass": 1

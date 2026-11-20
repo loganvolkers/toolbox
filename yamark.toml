@@ -1,4 +1,4 @@
-# YAML formatting for this repository (D95). Yamark 0.6.1.
+# YAML formatting for this repository (D96). Yamark 0.6.1.
 # Small collections that fit in 80 columns are flow style; wider ones are block.
 # Folded prose wraps at the tool's default of 72. Markdown and JSON are not selected.
 [format]
