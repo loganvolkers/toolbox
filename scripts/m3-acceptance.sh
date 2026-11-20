@@ -56,7 +56,13 @@ as alice "$URL/v1/entities/repository:payments-api/scorecards" | json '"  before
 START=$(date +%s.%N)
 curl -fs -X POST -H 'x-toolbox-connector: idp' --data '[{"type":"record","kind":"group","externalId":"idp:group/payments","data":{"slug":"payments","displayName":"Payments","parent":"engineering","githubTeam":"acme/payments","members":[]}}]' "$URL/v1/ingest" >/dev/null
 while :; do
-  R=$(as alice "$URL/v1/entities/repository:payments-api/scorecards" | json 'd["scorecards"]["ownership"]["rules"].get("redacted", False)')
+  # A response without scorecards (a transient problem while the new snapshot publishes) is "not
+  # yet"; its body is shown so a real failure isn't hidden by the timeout.
+  R=$(as alice "$URL/v1/entities/repository:payments-api/scorecards" | python3 -c 'import json,sys
+d=json.load(sys.stdin)
+rules=d.get("scorecards",{}).get("ownership",{}).get("rules")
+if rules is None: print("pending: " + json.dumps(d)[:200], file=sys.stderr); print("pending")
+else: print(rules.get("redacted", False))' || echo pending)
   [ "$R" = True ] && break
   python3 -c "import sys,time; sys.exit(time.time()-$START > 60)" || { echo "  revocation took longer than 60 s"; exit 1; }
   sleep 0.05
