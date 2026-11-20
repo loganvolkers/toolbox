@@ -3,14 +3,14 @@
   "portal": "toolbox",
   "results": {
     "maintainer-action-deps": {
+      "action:Swatinem/rust-cache": {
+        "level": "bronze"
+      },
       "action:actions/attest": {
         "level": "bronze"
       },
       "action:actions/cache": {
-        "failing": {
-          "pinned-everywhere": 1
-        },
-        "level": "none"
+        "level": "bronze"
       },
       "action:actions/checkout": {
         "failing": {
@@ -20,12 +20,6 @@
       },
       "action:actions/download-artifact": {
         "level": "bronze"
-      },
-      "action:actions/setup-go": {
-        "failing": {
-          "pinned-everywhere": 1
-        },
-        "level": "none"
       },
       "action:actions/setup-node": {
         "failing": {
@@ -40,10 +34,7 @@
         "level": "none"
       },
       "action:actions/upload-artifact": {
-        "failing": {
-          "pinned-everywhere": 1
-        },
-        "level": "none"
+        "level": "bronze"
       },
       "action:docker/build-push-action": {
         "level": "bronze"
@@ -112,8 +103,8 @@
       "workflow:.github/workflows/ci.yml": {
         "failing": {
           "no-medium-findings": 6,
-          "pinned-to-sha": 4,
-          "zizmor-clean": 27
+          "pinned-to-sha": 3,
+          "zizmor-clean": 25
         },
         "level": "none"
       },
@@ -130,10 +121,9 @@
       },
       "workflow:actions/report/action.yml": {
         "failing": {
-          "pinned-to-sha": 2,
-          "zizmor-clean": 3
+          "zizmor-clean": 1
         },
-        "level": "none"
+        "level": "silver"
       }
     },
     "maintainer-connector": {

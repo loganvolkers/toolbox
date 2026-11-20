@@ -14,6 +14,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Toolchain from rust-toolchain.toml
         run: rustup show active-toolchain
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3 (cargo registry and target/, keyed by Cargo.lock and toolchain)
       - run: cargo fmt --all --check
       - run: cargo clippy --all-targets --locked -- -D warnings
       - run: cargo test --locked
@@ -22,10 +23,11 @@ jobs:
       - run: pip install -r examples/reference-portal/tools/requirements.txt
       - name: M0 parity with tools/validate.py
         run: cargo build --locked && python scripts/validate-parity.py
-      - uses: actions/setup-go@v5
-        with: {go-version: "1.26"}
-      - name: Install OpenFGA (the co-process Toolbox supervises, D38)
-        run: go install github.com/openfga/openfga/cmd/openfga@v1.22.1 && echo "TOOLBOX_OPENFGA_BIN=$(go env GOPATH)/bin/openfga" >> "$GITHUB_ENV"
+      - name: Install OpenFGA and actionlint from their releases, SHA-256-pinned (no compile, D90)
+        run: |
+          scripts/ci-tools.sh "$RUNNER_TEMP/tools" openfga actionlint
+          echo "TOOLBOX_OPENFGA_BIN=$RUNNER_TEMP/tools/openfga" >> "$GITHUB_ENV"
+          echo "$RUNNER_TEMP/tools" >> "$GITHUB_PATH"
       - name: Tests that need OpenFGA (authz, .fga.yaml through the Authorizer)
         run: cargo test --locked -p toolbox-authz -p toolbox-api
       - name: PostgreSQL 16, the version the acceptance scripts pin (the runner image may carry another)
@@ -67,8 +69,7 @@ jobs:
       - name: CI linters for the ratchet, at the versions the committed baseline was made with
         run: |
           pip install zizmor==1.32.0
-          go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
-          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+          actionlint -version   # installed with OpenFGA above
       - name: Toolbox for Toolbox — agent assessments are valid and briefs build (D79)
         run: |
           target/debug/toolbox assess check portal --skip runner,github-actions
@@ -123,6 +124,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with: {key: scale-release}
       - name: Full recompute at 100k entities / 2M relations / 100 rules within 10 s (v1-spec §10.4)
         run: cargo run --release --locked -p toolbox-derive --example scale
   reference-portal:
@@ -132,10 +135,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: "3.13"}
-      - uses: actions/setup-go@v5
-        with: {go-version: "1.26"}
       - run: pip install -r tools/requirements.txt
-      - run: go install github.com/openfga/cli/cmd/fga@v0.8.2
+      - name: The fga CLI from its release, SHA-256-pinned
+        run: |
+          ../../scripts/ci-tools.sh "$RUNNER_TEMP/tools" fga
+          echo "$RUNNER_TEMP/tools" >> "$GITHUB_PATH"
       - run: python tools/validate.py
       - run: python tools/reference.py --check
       - run: fga model test --tests authz/model.fga.yaml
