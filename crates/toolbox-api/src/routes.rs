@@ -55,6 +55,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         )
         .route("/v1/views/ops", get(crate::reads::view_ops))
         .route("/mcp", post(crate::mcp::handle))
+        .fallback(crate::ui::asset)
         .route("/v1/actions", get(crate::actions::list))
         .route("/v1/actions/{name}/previews", post(crate::actions::preview))
         .with_state(state)

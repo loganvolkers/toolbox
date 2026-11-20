@@ -2984,6 +2984,7 @@ dependencies = [
  "clap",
  "reqwest",
  "serde_json",
+ "serde_norway",
  "tokio",
  "toolbox-api",
  "toolbox-authz",

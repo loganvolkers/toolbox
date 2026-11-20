@@ -8,6 +8,7 @@ pub mod mcp;
 pub mod reads;
 pub mod routes;
 pub mod state;
+pub mod ui;
 
 pub use state::{AppState, Config, Published};
 

@@ -1,5 +1,6 @@
 //! The `toolbox` binary (docs/v1-spec.md §7.7).
 
+mod client;
 mod portal;
 mod server;
 
@@ -72,6 +73,74 @@ enum Command {
         #[arg(long, default_value = "http://127.0.0.1:8080")]
         url: String,
     },
+    /// Read one entity (fields and where each came from).
+    Get {
+        id: String,
+        #[command(flatten)]
+        remote: Remote,
+    },
+    /// Entities of a kind matching a CEL filter over `entity`.
+    Query {
+        #[arg(long)]
+        kind: String,
+        #[arg(long)]
+        filter: Option<String>,
+        #[command(flatten)]
+        remote: Remote,
+    },
+    /// Find entities by name or title.
+    Search {
+        query: String,
+        #[command(flatten)]
+        remote: Remote,
+    },
+    /// Neighbours of an entity.
+    Graph {
+        id: String,
+        #[arg(long, default_value_t = 1)]
+        depth: u64,
+        #[command(flatten)]
+        remote: Remote,
+    },
+    /// Who owns an entity and why (CODEOWNERS evidence).
+    Owner {
+        id: String,
+        #[command(flatten)]
+        remote: Remote,
+    },
+    /// Why a field has its value (--field) or why a rule passes or fails (--rule scorecard/rule).
+    Explain {
+        id: String,
+        #[arg(long)]
+        field: Option<String>,
+        #[arg(long)]
+        rule: Option<String>,
+        #[command(flatten)]
+        remote: Remote,
+    },
+    /// Scorecard levels and rule outcomes.
+    Score {
+        id: String,
+        #[command(flatten)]
+        remote: Remote,
+    },
+    /// Ask the connectors behind an entity to re-read it, and wait for the fresh snapshot.
+    Refresh {
+        id: String,
+        #[command(flatten)]
+        remote: Remote,
+    },
+    /// Actions available on an entity.
+    Actions {
+        id: String,
+        #[command(flatten)]
+        remote: Remote,
+    },
+    /// A stdio MCP server bridging to the portal's /mcp endpoint.
+    Mcp {
+        #[command(flatten)]
+        remote: Remote,
+    },
     /// Connector tools.
     Connector {
         #[command(subcommand)]
@@ -90,6 +159,32 @@ enum Command {
         #[arg(long)]
         out: Option<PathBuf>,
     },
+}
+
+#[derive(clap::Args, Clone)]
+struct Remote {
+    /// Portal URL.
+    #[arg(long, env = "TOOLBOX_URL", default_value = "http://127.0.0.1:8080")]
+    url: String,
+    /// Personal access token.
+    #[arg(long, env = "TOOLBOX_TOKEN")]
+    token: Option<String>,
+    /// Dev servers only: act as this user.
+    #[arg(long = "as", env = "TOOLBOX_AS")]
+    as_user: Option<String>,
+    /// Output: md (default), json or yaml.
+    #[arg(short = 'o', long, default_value = "md")]
+    output: String,
+}
+
+impl Remote {
+    fn target(&self) -> client::Target {
+        client::Target {
+            url: self.url.trim_end_matches('/').to_owned(),
+            token: self.token.clone(),
+            as_user: self.as_user.clone(),
+        }
+    }
 }
 
 #[derive(Subcommand)]
@@ -152,6 +247,70 @@ fn main() -> ExitCode {
             fixtures,
         } => server::serve(&path, &listen, database_url, fixtures),
         Command::Push { path, url } => server::push(&path, &url),
+        Command::Get { id, remote } => client::tool(
+            &remote.target(),
+            "get",
+            serde_json::json!({"id": id}),
+            &remote.output,
+        ),
+        Command::Query {
+            kind,
+            filter,
+            remote,
+        } => client::tool(
+            &remote.target(),
+            "query",
+            serde_json::json!({"kind": kind, "filter": filter}),
+            &remote.output,
+        ),
+        Command::Search { query, remote } => client::tool(
+            &remote.target(),
+            "search",
+            serde_json::json!({"query": query}),
+            &remote.output,
+        ),
+        Command::Graph { id, depth, remote } => client::tool(
+            &remote.target(),
+            "graph",
+            serde_json::json!({"id": id, "depth": depth}),
+            &remote.output,
+        ),
+        Command::Owner { id, remote } => client::tool(
+            &remote.target(),
+            "owner_of",
+            serde_json::json!({"id": id}),
+            &remote.output,
+        ),
+        Command::Explain {
+            id,
+            field,
+            rule,
+            remote,
+        } => client::tool(
+            &remote.target(),
+            "explain",
+            serde_json::json!({"id": id, "field": field, "rule": rule}),
+            &remote.output,
+        ),
+        Command::Score { id, remote } => client::tool(
+            &remote.target(),
+            "scorecard_status",
+            serde_json::json!({"id": id}),
+            &remote.output,
+        ),
+        Command::Refresh { id, remote } => client::tool(
+            &remote.target(),
+            "refresh_entity",
+            serde_json::json!({"id": id}),
+            &remote.output,
+        ),
+        Command::Actions { id, remote } => client::tool(
+            &remote.target(),
+            "list_actions",
+            serde_json::json!({"id": id}),
+            &remote.output,
+        ),
+        Command::Mcp { remote } => client::bridge(&remote.target()),
         Command::Connector {
             command:
                 ConnectorCommand::Test {

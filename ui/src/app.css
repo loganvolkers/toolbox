@@ -1,0 +1,41 @@
+:root {
+  --bg: #ffffff; --fg: #1b1f24; --muted: #5b6570; --line: #d9dee3; --card: #f6f8fa; --accent: #2457c5;
+  --ok: #1a7f37; --bad: #c62828; --warn: #9a6700; --lock: #6f42c1;
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #0d1117; --fg: #e6edf3; --muted: #8d96a0; --line: #30363d; --card: #161b22; --accent: #6ea8fe;
+    --ok: #3fb950; --bad: #f85149; --warn: #d29922; --lock: #b392f0; }
+}
+body { margin: 0; background: var(--bg); color: var(--fg); }
+a { color: var(--accent); text-decoration: none; } a:hover { text-decoration: underline; }
+nav.top { display: flex; gap: 16px; align-items: center; padding: 10px 24px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+nav.top form { flex: 1; min-width: 160px; }
+input { font: inherit; padding: 6px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); width: 100%; box-sizing: border-box; }
+button { font: inherit; padding: 6px 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--card); color: var(--fg); cursor: pointer; }
+button:disabled { opacity: .6; cursor: progress; }
+main { max-width: 1100px; margin: 0 auto; padding: 16px 24px 48px; }
+h1 { margin: 8px 0 4px; } h2 { font-size: 1.05rem; margin: 20px 0 8px; } h3 { font-size: 1rem; margin: 8px 0; }
+table { width: 100%; border-collapse: collapse; } th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.muted, .source { color: var(--muted); } .source { font-size: .8rem; margin-left: 6px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 8px 14px; margin-bottom: 12px; }
+.level { font-weight: 600; text-transform: capitalize; } .level-none { color: var(--bad); } .level-skipped { color: var(--muted); }
+.level-bronze { color: #a0522d; } .level-silver { color: #6b7b8c; } .level-gold { color: #b8860b; }
+.chip { margin-right: 10px; white-space: nowrap; }
+.status { font-size: .8rem; margin-left: 6px; } .status-verified { color: var(--ok); } .status-unverified, .status-none { color: var(--bad); } .status-inferred { color: var(--warn); }
+.callout { border-left: 4px solid var(--line); background: var(--card); padding: 8px 12px; border-radius: 4px; margin: 12px 0; }
+.callout.status-verified { border-color: var(--ok); } .callout.status-unverified, .callout.status-none { border-color: var(--bad); } .callout.status-inferred { border-color: var(--warn); }
+.redacted { color: var(--lock); font-size: .9rem; }
+.rules { list-style: none; padding: 0; } .rules li { margin: 4px 0; } .outcome { display: inline-block; min-width: 64px; font-weight: 600; }
+.rule-pass .outcome { color: var(--ok); } .rule-fail .outcome { color: var(--bad); } .rule-unknown .outcome { color: var(--warn); }
+.fix { color: var(--muted); font-size: .9rem; margin-left: 68px; }
+dl.fields div { display: grid; grid-template-columns: 180px 1fr; gap: 8px; padding: 3px 0; border-bottom: 1px solid var(--line); } dt { color: var(--muted); }
+.entity-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+.refresh { display: flex; gap: 10px; align-items: center; } .refresh .done { color: var(--ok); } .refresh .error { color: var(--bad); }
+.filter { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; margin: 12px 0; } .filter label { grid-column: 1 / -1; color: var(--muted); }
+.problem { border: 1px solid var(--bad); border-radius: 6px; padding: 10px 14px; }
+.skeleton { height: 120px; border-radius: 8px; background: linear-gradient(90deg, var(--card), var(--line), var(--card)); background-size: 200% 100%; animation: shimmer 1.2s infinite; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+.ok { color: var(--ok); } .newer { border-color: var(--accent); }
+@media (max-width: 600px) { main { padding: 12px 16px; } dl.fields div { grid-template-columns: 1fr; } }
