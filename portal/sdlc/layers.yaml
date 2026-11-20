@@ -1,0 +1,27 @@
+# The SDLC layers (docs/sdlc.md, D63, D87). Each layer lists the stages it needs; the stages are
+# declared in stages/<layer>.yaml and scored by sdlc-stage, the layers by sdlc-layer.
+records:
+  - id: maintainer
+    title: Maintainer SDLC
+    who: People and agents working on this repository
+    builds: Toolbox itself and its first-party connectors, packages and actions
+    doc: docs/design/maintainer-sdlc.md
+    stages: [plan, build, test, verify, release, monitor]
+  - id: package-author
+    title: Package author SDLC
+    who: Anyone publishing Toolbox packages, connectors or standards for others to consume
+    builds: Packages (standards as data), connector binaries, and the tool requirements they bring
+    doc: docs/design/package-author-sdlc.md
+    stages: [author, build-connector, test, package, distribute, adopt]
+  - id: operator
+    title: Operator SDLC
+    who: Platform teams and their agents running a portal
+    builds: A portal (manifest, authorization, connectors, actions, UI bundles) deployed as one image
+    doc: docs/design/sdlc.md
+    stages: [author, build-connector, validate, test, plan, preview, deploy, verify, monitor]
+  - id: user
+    title: User SDLC
+    who: Developers and agents building apps on a portal
+    builds: Apps, agents, scripts and CI checks on the portal's API, MCP and CLI
+    doc: docs/design/user-sdlc.md
+    stages: [discover, build, test, deploy, monitor]

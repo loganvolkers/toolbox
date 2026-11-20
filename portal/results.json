@@ -409,6 +409,9 @@
       "doc:docs/design/notifications.md": {
         "level": "silver"
       },
+      "doc:docs/design/package-author-sdlc.md": {
+        "level": "silver"
+      },
       "doc:docs/design/package-standards.md": {
         "level": "silver"
       },
@@ -716,6 +719,18 @@
           "cites-everything": 1
         },
         "level": "silver"
+      },
+      "assessment:sdlc-stage-quality/sdlc-stage:maintainer/build": {
+        "level": "gold"
+      },
+      "assessment:sdlc-stage-quality/sdlc-stage:maintainer/release": {
+        "level": "gold"
+      },
+      "assessment:sdlc-stage-quality/sdlc-stage:operator/build-connector": {
+        "level": "gold"
+      },
+      "assessment:sdlc-stage-quality/sdlc-stage:package-author/distribute": {
+        "level": "gold"
       }
     },
     "meta-connector": {
@@ -2166,6 +2181,78 @@
         },
         "level": "bronze"
       },
+      "field:toolbox/SdlcLayer.builds": {
+        "level": "gold"
+      },
+      "field:toolbox/SdlcLayer.definedStages": {
+        "level": "gold"
+      },
+      "field:toolbox/SdlcLayer.doc": {
+        "level": "gold"
+      },
+      "field:toolbox/SdlcLayer.missingPaths": {
+        "level": "gold"
+      },
+      "field:toolbox/SdlcLayer.stages": {
+        "level": "gold"
+      },
+      "field:toolbox/SdlcLayer.stagesMissing": {
+        "level": "gold"
+      },
+      "field:toolbox/SdlcLayer.stagesNotBuilt": {
+        "level": "gold"
+      },
+      "field:toolbox/SdlcLayer.title": {
+        "level": "gold"
+      },
+      "field:toolbox/SdlcLayer.who": {
+        "level": "gold"
+      },
+      "field:toolbox/SdlcStage.checks": {
+        "level": "gold"
+      },
+      "field:toolbox/SdlcStage.commands": {
+        "level": "gold"
+      },
+      "field:toolbox/SdlcStage.docs": {
+        "level": "gold"
+      },
+      "field:toolbox/SdlcStage.exitCriterion": {
+        "level": "gold"
+      },
+      "field:toolbox/SdlcStage.gaps": {
+        "level": "gold"
+      },
+      "field:toolbox/SdlcStage.hash": {
+        "level": "gold"
+      },
+      "field:toolbox/SdlcStage.intent": {
+        "level": "gold"
+      },
+      "field:toolbox/SdlcStage.layer": {
+        "level": "gold"
+      },
+      "field:toolbox/SdlcStage.missingPaths": {
+        "level": "gold"
+      },
+      "field:toolbox/SdlcStage.name": {
+        "level": "gold"
+      },
+      "field:toolbox/SdlcStage.order": {
+        "level": "gold"
+      },
+      "field:toolbox/SdlcStage.reviewFailing": {
+        "level": "gold"
+      },
+      "field:toolbox/SdlcStage.reviewState": {
+        "level": "gold"
+      },
+      "field:toolbox/SdlcStage.reviewUnsure": {
+        "level": "gold"
+      },
+      "field:toolbox/SdlcStage.status": {
+        "level": "gold"
+      },
       "field:toolbox/Skill.bodyLines": {
         "failing": {
           "described": 1
@@ -2556,6 +2643,12 @@
         },
         "level": "silver"
       },
+      "kind:toolbox/SdlcLayer": {
+        "level": "gold"
+      },
+      "kind:toolbox/SdlcStage": {
+        "level": "gold"
+      },
       "kind:toolbox/Skill": {
         "failing": {
           "described": 1,
@@ -2594,6 +2687,9 @@
           "discriminates": 1
         },
         "level": "silver"
+      },
+      "rubric:toolbox/sdlc-stage-quality": {
+        "level": "gold"
       }
     },
     "meta-rule": {
@@ -3201,6 +3297,39 @@
       "rule:toolbox/review-scorecard/passes-review": {
         "level": "gold"
       },
+      "rule:toolbox/review-sdlc-stage/assessed": {
+        "level": "gold"
+      },
+      "rule:toolbox/review-sdlc-stage/no-doubts": {
+        "level": "gold"
+      },
+      "rule:toolbox/review-sdlc-stage/passes-review": {
+        "level": "gold"
+      },
+      "rule:toolbox/sdlc-layer/every-stage-built": {
+        "level": "gold"
+      },
+      "rule:toolbox/sdlc-layer/nothing-missing": {
+        "level": "gold"
+      },
+      "rule:toolbox/sdlc-layer/stages-declared": {
+        "level": "gold"
+      },
+      "rule:toolbox/sdlc-stage/agent-operable": {
+        "level": "gold"
+      },
+      "rule:toolbox/sdlc-stage/automated": {
+        "level": "gold"
+      },
+      "rule:toolbox/sdlc-stage/built": {
+        "level": "gold"
+      },
+      "rule:toolbox/sdlc-stage/documented": {
+        "level": "gold"
+      },
+      "rule:toolbox/sdlc-stage/has-exit-criterion": {
+        "level": "gold"
+      },
       "rule:toolbox/user-cli/args-described": {
         "failing": {
           "tested": 1
@@ -3388,6 +3517,15 @@
       "scorecard:toolbox/review-scorecard": {
         "level": "gold"
       },
+      "scorecard:toolbox/review-sdlc-stage": {
+        "level": "gold"
+      },
+      "scorecard:toolbox/sdlc-layer": {
+        "level": "gold"
+      },
+      "scorecard:toolbox/sdlc-stage": {
+        "level": "gold"
+      },
       "scorecard:toolbox/user-cli": {
         "failing": {
           "every-rule-tested": 4,
@@ -3482,6 +3620,191 @@
         "level": "bronze"
       },
       "command:validate": {
+        "level": "silver"
+      }
+    },
+    "sdlc-layer": {
+      "sdlc:maintainer": {
+        "failing": {
+          "every-stage-built": 1,
+          "nothing-missing": 1
+        },
+        "level": "bronze"
+      },
+      "sdlc:operator": {
+        "failing": {
+          "every-stage-built": 7
+        },
+        "level": "silver"
+      },
+      "sdlc:package-author": {
+        "failing": {
+          "every-stage-built": 6,
+          "nothing-missing": 2
+        },
+        "level": "bronze"
+      },
+      "sdlc:user": {
+        "failing": {
+          "every-stage-built": 4
+        },
+        "level": "silver"
+      }
+    },
+    "sdlc-stage": {
+      "sdlc-stage:maintainer/build": {
+        "level": "gold"
+      },
+      "sdlc-stage:maintainer/monitor": {
+        "level": "gold"
+      },
+      "sdlc-stage:maintainer/plan": {
+        "failing": {
+          "agent-operable": 1,
+          "automated": 1
+        },
+        "level": "bronze"
+      },
+      "sdlc-stage:maintainer/release": {
+        "failing": {
+          "agent-operable": 1,
+          "automated": 1,
+          "built": 5
+        },
+        "level": "bronze"
+      },
+      "sdlc-stage:maintainer/test": {
+        "level": "gold"
+      },
+      "sdlc-stage:maintainer/verify": {
+        "failing": {
+          "built": 1
+        },
+        "level": "silver"
+      },
+      "sdlc-stage:operator/author": {
+        "failing": {
+          "built": 1
+        },
+        "level": "silver"
+      },
+      "sdlc-stage:operator/build-connector": {
+        "failing": {
+          "built": 2
+        },
+        "level": "silver"
+      },
+      "sdlc-stage:operator/deploy": {
+        "failing": {
+          "automated": 1,
+          "built": 1
+        },
+        "level": "bronze"
+      },
+      "sdlc-stage:operator/monitor": {
+        "failing": {
+          "built": 1
+        },
+        "level": "silver"
+      },
+      "sdlc-stage:operator/plan": {
+        "failing": {
+          "automated": 1,
+          "built": 1
+        },
+        "level": "bronze"
+      },
+      "sdlc-stage:operator/preview": {
+        "failing": {
+          "agent-operable": 1,
+          "automated": 1,
+          "built": 1
+        },
+        "level": "bronze"
+      },
+      "sdlc-stage:operator/test": {
+        "level": "gold"
+      },
+      "sdlc-stage:operator/validate": {
+        "level": "gold"
+      },
+      "sdlc-stage:operator/verify": {
+        "failing": {
+          "agent-operable": 1,
+          "automated": 1,
+          "built": 1
+        },
+        "level": "bronze"
+      },
+      "sdlc-stage:package-author/adopt": {
+        "failing": {
+          "built": 2
+        },
+        "level": "silver"
+      },
+      "sdlc-stage:package-author/author": {
+        "failing": {
+          "automated": 1,
+          "built": 2
+        },
+        "level": "bronze"
+      },
+      "sdlc-stage:package-author/build-connector": {
+        "failing": {
+          "built": 4
+        },
+        "level": "silver"
+      },
+      "sdlc-stage:package-author/distribute": {
+        "failing": {
+          "agent-operable": 1,
+          "automated": 1,
+          "built": 2
+        },
+        "level": "bronze"
+      },
+      "sdlc-stage:package-author/package": {
+        "failing": {
+          "agent-operable": 1,
+          "automated": 1,
+          "built": 2
+        },
+        "level": "bronze"
+      },
+      "sdlc-stage:package-author/test": {
+        "failing": {
+          "automated": 1,
+          "built": 2
+        },
+        "level": "bronze"
+      },
+      "sdlc-stage:user/build": {
+        "failing": {
+          "built": 2
+        },
+        "level": "silver"
+      },
+      "sdlc-stage:user/deploy": {
+        "failing": {
+          "built": 1
+        },
+        "level": "silver"
+      },
+      "sdlc-stage:user/discover": {
+        "level": "gold"
+      },
+      "sdlc-stage:user/monitor": {
+        "failing": {
+          "agent-operable": 1,
+          "automated": 1,
+          "built": 1
+        },
+        "level": "bronze"
+      },
+      "sdlc-stage:user/test": {
+        "failing": {
+          "built": 1
+        },
         "level": "silver"
       }
     },

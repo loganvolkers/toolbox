@@ -1,0 +1,25 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: sdlc-stage:maintainer/release
+rubric: sdlc-stage-quality
+subjectHash: "6d7a093280de"
+assessor: {kind: agent, name: claude-code}
+at: "2026-11-20"
+verdicts:
+  - criterion: executable-exit
+    verdict: fail
+    reason: No workflow in .github/workflows/ produces a release, so nothing checks the exit criterion (attested binaries, installers, an image).
+    suggestion: Generate a release workflow with dist (github-attestations = true) and add an image job; make CI verify the latest release with `gh attestation verify`.
+  - criterion: agent-can-complete
+    verdict: fail
+    reason: The stage lists no commands; an agent can't cut a release today because there is no release process to follow (docs/design/package-author-sdlc.md §3.1).
+    suggestion: Document `git tag vX.Y.Z && git push --tags` as the only manual step once the dist workflow exists.
+  - criterion: reuses-artifacts
+    verdict: fail
+    reason: >-
+      Without releases every consumer rebuilds: actions/report/action.yml runs `cargo build --locked`
+      at its own ref, cached by a source hash, so each new runner pays the Rust build.
+    suggestion: Publish per-platform binaries and have actions/report download the pinned release, building from source only when no release matches.
+  - criterion: decoupled-from-core
+    verdict: pass
+    reason: Releasing Toolbox is the maintainer's responsibility by definition (docs/sdlc.md layer 1).
+summary: Missing, and its absence is what forces every other layer to rebuild Toolbox.

@@ -55,7 +55,7 @@ connectors:
       counts:
         sdlc: '\bSDLC\b'
         # A named layer (`maintainer SDLC`, `*operator* SDLC`), the layer model itself, or a quoted mention
-        layeredSdlc: '(?i:maintainer|operator|user|agent|three|portal)[*_ ’''-]*s?[*_]*\s+SDLC\b|\bSDLC\s+(?:layers?\b|has\b|in Toolbox)|"SDLC"'
+        layeredSdlc: '(?i:maintainer|operator|user|agent|three|four|author|portal)[*_ ’''-]*s?[*_]*\s+SDLC\b|\bSDLC\s+(?:layers?\b|stages?\b|has\b|in Toolbox)|"SDLC"'
       # GitHub Actions workflows and action metadata (docs/design/github-actions-standards.md)
       workflows: [".github/workflows/*.y*ml", "actions/*/action.y*ml"]
       # Agent skills (docs/design/skill-standards.md). The directory is the skill; SKILL.md is its manifest.
@@ -79,9 +79,13 @@ connectors:
       examples: ["examples/**/README.md", "experiments/**/README.md", "docs/examples/*.md"]
       # Coding agents' judgements of our standards and crates (`toolbox assess`, D79)
       assessments: ["portal/assessments/**/*.y*ml"]
-    records: [crate, doc, file, repo, workflow, action-ref, skill, connector, dependency, agent-doc, plugin, package-json, json-schema, example, assessment]
-    refresh: {crate: [external_ids], doc: [external_ids], file: [external_ids], repo: [external_ids], workflow: [external_ids], action-ref: [external_ids], skill: [external_ids], connector: [external_ids], dependency: [external_ids], agent-doc: [external_ids], plugin: [external_ids], package-json: [external_ids], json-schema: [external_ids], example: [external_ids]}
-    freshness: {crate: 5m, doc: 5m, file: 5m, repo: 5m, workflow: 5m, action-ref: 5m, skill: 5m, connector: 5m, dependency: 5m, agent-doc: 5m, plugin: 5m, package-json: 5m, json-schema: 5m, example: 5m, assessment: 5m}
+      # The SDLC layers and their stages, declared as data (D87)
+      data:
+        - {kind: sdlc-layer, globs: ["portal/sdlc/layers.yaml"], paths: [doc]}
+        - {kind: sdlc-stage, globs: ["portal/sdlc/stages/*.yaml"], paths: [docs, checks]}
+    records: [crate, doc, file, repo, workflow, action-ref, skill, connector, dependency, agent-doc, plugin, package-json, json-schema, example, assessment, sdlc-layer, sdlc-stage]
+    refresh: {crate: [external_ids], doc: [external_ids], file: [external_ids], repo: [external_ids], workflow: [external_ids], action-ref: [external_ids], skill: [external_ids], connector: [external_ids], dependency: [external_ids], agent-doc: [external_ids], plugin: [external_ids], package-json: [external_ids], json-schema: [external_ids], example: [external_ids], sdlc-layer: [external_ids], sdlc-stage: [external_ids]}
+    freshness: {crate: 5m, doc: 5m, file: 5m, repo: 5m, workflow: 5m, action-ref: 5m, skill: 5m, connector: 5m, dependency: 5m, agent-doc: 5m, plugin: 5m, package-json: 5m, json-schema: 5m, example: 5m, assessment: 5m, sdlc-layer: 5m, sdlc-stage: 5m}
   - name: runner
     package: builtin:runner                # executes things; slow, so it's refreshed per entity
     runtime: in-image
@@ -828,6 +832,61 @@ kinds:
            'described': record.described, 'criteria': record.criteria, 'unguided': record.unguided,
            'assessments': record.assessments, 'alwaysPass': record.alwaysPass, 'hash': record.hash}
 
+  # ── The SDLC layers and their stages (docs/sdlc.md, D87) ─────────────────────────────────
+  - name: SdlcLayer
+    description: "One SDLC layer: maintainer, package author, operator or user, with the stages it needs."
+    identityFrom: [connector:workspace]
+    fields:
+      title: {type: string, description: The layer's name.}
+      who: {type: string, description: Who works in this layer.}
+      builds: {type: string, description: What they build.}
+      doc: {type: string, description: The layer's design doc.}
+      stages: {type: list, items: string, description: "The stages this layer needs, in order."}
+      missingPaths: {type: list, items: string, description: Declared paths that don't exist.}
+      definedStages: {type: list, items: string, description: Stages declared for this layer., computed: "inbound.stageOf.map(s, s.name)"}
+      stagesMissing: {type: list, items: string, description: "Stages with status missing.", computed: "inbound.stageOf.filter(s, s.status == 'missing').map(s, s.name)"}
+      stagesNotBuilt: {type: list, items: string, description: "Stages not yet built (partial, designed or missing).", computed: "inbound.stageOf.filter(s, s.status != 'built').map(s, s.name + ' (' + s.status + ')')"}
+    sources: {default: [connector:workspace]}
+    map:
+      - from: workspace/sdlc-layer
+        id: "'sdlc:' + record.id"
+        set: >-
+          {'title': record.title, 'who': record.who, 'builds': record.builds, 'doc': record.doc,
+           'stages': record.stages, 'missingPaths': record.missingPaths}
+
+  - name: SdlcStage
+    description: "One stage of an SDLC layer: what it is for, its exit criterion, the commands and checks that carry it out, and its open gaps."
+    identityFrom: [connector:workspace]
+    fields:
+      layer: {type: string, description: The layer it belongs to.}
+      name: {type: string, description: The stage's name.}
+      order: {type: integer, description: Position in the layer.}
+      intent: {type: string, description: What the stage is for.}
+      exitCriterion: {type: string, description: What must be true to leave the stage.}
+      commands: {type: list, items: string, description: Commands a person or agent runs in this stage.}
+      checks: {type: list, items: string, description: "Files that verify the stage (CI workflows, scripts, tests)."}
+      docs: {type: list, items: string, description: Docs that describe the stage.}
+      status: {type: string, description: "built, partial, designed or missing."}
+      gaps: {type: list, items: string, description: What is missing for the stage to be built.}
+      missingPaths: {type: list, items: string, description: Declared docs or checks that don't exist.}
+      hash: {type: string, description: Content hash of the declaration; assessments of it go stale when it changes.}
+      reviewState: {type: string, description: "sdlc-stage-quality assessment: fresh, stale or missing.", computed: "inbound.assessesSdlcStage.size() == 0 ? 'missing' : (inbound.assessesSdlcStage[0].subjectHash == entity.hash ? 'fresh' : 'stale')"}
+      reviewFailing: {type: list, items: string, description: "Criteria the sdlc-stage-quality assessment failed.", computed: "inbound.assessesSdlcStage.size() == 0 ? [] : inbound.assessesSdlcStage[0].failing"}
+      reviewUnsure: {type: list, items: string, description: "Criteria the assessor was unsure of.", computed: "inbound.assessesSdlcStage.size() == 0 ? [] : inbound.assessesSdlcStage[0].unsure"}
+    relations:
+      stageOf: {to: SdlcLayer, many: false}
+    sources: {default: [connector:workspace]}
+    map:
+      - from: workspace/sdlc-stage
+        id: "'sdlc-stage:' + record.id"
+        set: >-
+          {'layer': record.layer, 'name': record.name, 'order': record.order, 'intent': record.intent,
+           'exitCriterion': record.exitCriterion, 'commands': record.commands, 'checks': record.checks,
+           'docs': record.docs, 'status': record.status, 'gaps': record.gaps,
+           'missingPaths': record.missingPaths, 'hash': record.hash}
+        relations:
+          stageOf: "['sdlc:' + record.layer]"
+
   # ── Judgement, pushed by coding agents (D79) ─────────────────────────────────────────────
   - name: Assessment
     description: "One coding agent's (or person's) judgement of one entity against a rubric: a file in portal/assessments/, written after `toolbox assess brief`."
@@ -853,6 +912,7 @@ kinds:
       reviewUnsure: {type: list, items: string, description: "Criteria the reviewer was unsure of.", computed: "inbound.assessesAssessment.size() == 0 ? [] : inbound.assessesAssessment[0].unsure"}
     relations:
       assessesAssessment: {to: Assessment, many: false, unresolved: ignore}
+      assessesSdlcStage: {to: SdlcStage, many: false, unresolved: ignore}
       assessesRule: {to: Rule, many: false, unresolved: ignore}
       assessesScorecard: {to: Scorecard, many: false, unresolved: ignore}
       assessesCrate: {to: Crate, many: false, unresolved: ignore}
@@ -869,6 +929,7 @@ kinds:
            'uncited': record.uncited, 'hash': record.hash}
         relations:
           assessesAssessment: "record.entity.startsWith('assessment:') ? [record.entity] : []"
+          assessesSdlcStage: "record.entity.startsWith('sdlc-stage:') ? [record.entity] : []"
           assessesRule: "record.entity.startsWith('rule:') ? [record.entity] : []"
           assessesScorecard: "record.entity.startsWith('scorecard:') ? [record.entity] : []"
           assessesCrate: "record.entity.startsWith('crate:') ? [record.entity] : []"
@@ -1956,6 +2017,85 @@ scorecards:
         fix: "Resolve what the reviewer was unsure of, usually by citing the source a verdict rests on."
     facets: {summary: public, details: public}
 
+  # ── The SDLCs themselves (D87): can each layer's stages be carried out, and by an agent? ──
+  - name: sdlc-stage
+    kind: SdlcStage
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    ratchet: {newEntitiesAtLeast: none}      # a newly identified stage may start missing; that is the point
+    rules:
+      - name: has-exit-criterion
+        level: bronze
+        check: "entity.exitCriterion.size() >= 20"
+        evidence: "['exit criterion: ' + entity.exitCriterion]"
+        fix: "Write the exit criterion as something checkable: the command that passes, or the artifact that exists."
+      - name: documented
+        level: bronze
+        check: "entity.docs.size() > 0 && entity.missingPaths.size() == 0"
+        evidence: "entity.docs.size() == 0 ? ['no doc describes the stage'] : entity.missingPaths.map(p, p + ' does not exist')"
+        fix: "Point `docs:` (and `checks:`) in portal/sdlc/stages/<layer>.yaml at files that exist; write the doc if it doesn't."
+      - name: agent-operable
+        level: silver
+        check: "entity.commands.size() > 0"
+        evidence: "['no command an agent can run carries out ' + entity.layer + '/' + entity.name]"
+        fix: "Give the stage a command (a toolbox subcommand, script or make target) and list it under `commands:`."
+      - name: automated
+        level: silver
+        check: "entity.checks.size() > 0"
+        evidence: "['nothing in CI or a script verifies ' + entity.layer + '/' + entity.name]"
+        fix: "Add a CI step, acceptance script or test that proves the exit criterion, and list it under `checks:`."
+      - name: built
+        level: gold
+        check: "entity.status == 'built' && entity.gaps.size() == 0"
+        evidence: "entity.gaps.size() > 0 ? entity.gaps : ['status is ' + entity.status]"
+        fix: "Close the listed gaps, then set `status: built` and empty `gaps:`."
+    facets: {summary: public, details: public}
+
+  - name: sdlc-layer
+    kind: SdlcLayer
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    rules:
+      - name: stages-declared
+        level: bronze
+        check: "entity.stages.all(s, s in entity.definedStages)"
+        evidence: "entity.stages.filter(s, !(s in entity.definedStages))"
+        fix: "Declare each listed stage in portal/sdlc/stages/<layer>.yaml, even if its status is missing."
+      - name: nothing-missing
+        level: silver
+        check: "entity.stagesMissing.size() == 0"
+        evidence: "entity.stagesMissing"
+        fix: "Give each missing stage at least a design and a command; see the stage's gaps."
+      - name: every-stage-built
+        level: gold
+        check: "entity.stagesNotBuilt.size() == 0"
+        evidence: "entity.stagesNotBuilt"
+        fix: "Raise each listed stage to built (see sdlc-stage for what each lacks)."
+    facets: {summary: public, details: public}
+
+  - name: review-sdlc-stage
+    kind: SdlcStage
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    ratchet: {advisory: true}
+    rules:
+      - name: assessed
+        level: bronze
+        check: "entity.reviewState == 'fresh'"
+        evidence: "[entity.reviewState == 'stale' ? 'the stage changed since it was assessed' : 'not assessed against sdlc-stage-quality']"
+        fix: "Run `toolbox assess brief sdlc-stage:<layer>/<stage> --portal portal`, have your agent write the assessment, then `toolbox assess check portal`."
+      - name: passes-review
+        level: silver
+        check: "entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0"
+        evidence: "entity.reviewState == 'fresh' ? entity.reviewFailing : ['no current assessment']"
+        fix: "Act on the failing criteria's suggestions in the assessment (portal/assessments/), then re-assess."
+      - name: no-doubts
+        level: gold
+        check: "entity.reviewState == 'fresh' && entity.reviewUnsure.size() == 0"
+        evidence: "entity.reviewState == 'fresh' ? entity.reviewUnsure : ['no current assessment']"
+        fix: "Resolve what the assessor was unsure of, usually a missing measurement or an unstated exit criterion."
+    facets: {summary: public, details: public}
+
 rubrics:
   # What a coding agent judges, given `toolbox assess brief` (or the assessment_brief MCP tool).
   # Criteria are questions a deterministic check can't answer; anything a check can answer belongs
@@ -1976,6 +2116,22 @@ rubrics:
       - name: actionable
         question: Would following the suggestions change the verdicts they are attached to?
         guidance: Fail when a suggestion improves something else (another rule, the scorecard) but leaves this entity's verdict as it is.
+  - name: sdlc-stage-quality
+    kind: SdlcStage
+    description: "Can this SDLC stage be carried out well, by an agent? Read the stage in portal/sdlc/stages/, its docs and checks, and try its commands."
+    criteria:
+      - name: executable-exit
+        question: Is the exit criterion checked by a command or CI step, not by judgement?
+        guidance: Fail when nothing in `checks:` would fail if the exit criterion were not met.
+      - name: agent-can-complete
+        question: Could an agent complete the stage using only the listed commands, Toolbox's CLI or MCP, and the docs?
+        guidance: Fail and name the step that needs a person, a secret or tribal knowledge.
+      - name: reuses-artifacts
+        question: Does the stage reuse released, pinned artifacts instead of rebuilding or reinstalling everything from source?
+        guidance: Fail when consumers compile Toolbox or install tools by hand; pass when nothing is built or installed in the stage.
+      - name: decoupled-from-core
+        question: Can someone outside this repository's maintainers carry out the stage (an operator or package author), or does it need a change to Toolbox's own crates?
+        guidance: Fail when the stage requires adding a crate, a builtin or a schema change to this repository.
   - name: rule-quality
     kind: Rule
     description: Is this rule a good standard? Read its check, evidence and fix in the portal's toolbox.yaml, its tests, and the design doc its scorecard cites.

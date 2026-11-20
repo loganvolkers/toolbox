@@ -1,0 +1,26 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: sdlc-stage:maintainer/build
+rubric: sdlc-stage-quality
+subjectHash: "f09419482056"
+assessor: {kind: agent, name: claude-code}
+at: "2026-11-20"
+verdicts:
+  - criterion: executable-exit
+    verdict: pass
+    reason: .github/workflows/ci.yml runs `cargo build --locked` and the UI job checks that ui/dist matches the source; both fail CI when the build breaks.
+  - criterion: agent-can-complete
+    verdict: pass
+    reason: The commands are in AGENTS.md and rust-toolchain.toml pins the toolchain; no secret or manual step is needed.
+  - criterion: reuses-artifacts
+    verdict: fail
+    reason: >-
+      .github/workflows/ci.yml has no Rust build cache, compiles OpenFGA (`go install …openfga@v1.22.1`,
+      2m51s on run 44743153154), actionlint and the fga CLI from source, and the report-action job
+      compiles toolbox again (2m49s on its first run); the scale-budget job builds a third time in release.
+    suggestion: >-
+      Cache cargo builds (Swatinem/rust-cache), download OpenFGA, actionlint and fga release binaries
+      through mise or aqua with checksums, and have report-action use the binary the rust job built.
+  - criterion: decoupled-from-core
+    verdict: pass
+    reason: Building Toolbox is the maintainer's own job (docs/design/maintainer-sdlc.md); nothing outside this repository is needed.
+summary: Correct and agent-runnable, but it rebuilds everything, including third-party tools, on every run.

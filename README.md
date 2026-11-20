@@ -6,7 +6,7 @@ exposed identically over API, MCP, CLI and UI.
 
 **Status:** v1 implementation in progress: M0–M4 are done (validate, derived state, Postgres store and REST reads, authentication and OpenFGA facets, MCP, CLI, minimal UI and connectors); M5 (actions) is paused for a review of self-service coordination (D64) ([docs/v1-spec.md](docs/v1-spec.md) §3). Toolbox also runs on itself: [portal/](portal/README.md) scores this repo's crates, docs, CLI and MCP tools against the three SDLC layers (D65).
 
-**SDLC has three layers** ([docs/sdlc.md](docs/sdlc.md)): the *maintainer* SDLC for building Toolbox, the *operator* SDLC for building a portal, and the *user* SDLC for building apps on a portal.
+**SDLC has four layers** ([docs/sdlc.md](docs/sdlc.md)): the *maintainer* SDLC for building Toolbox, the *package author* SDLC for publishing packages and connectors others consume, the *operator* SDLC for building a portal, and the *user* SDLC for building apps on a portal.
 
 ```bash
 cargo build && target/debug/toolbox validate examples/reference-portal
@@ -32,6 +32,7 @@ cargo build && target/debug/toolbox validate examples/reference-portal
   - [design/repo-portals.md](docs/design/repo-portals.md): Toolbox without a server — `toolbox report`, evidence, ratchets, one-file HTML; adopt it with the [report action](actions/report/README.md) and the [starter](examples/repo-portal-starter/README.md)
   - [design/ratchets.md](docs/design/ratchets.md): what we learned from Betterer and other baselines (ESLint, PHPStan, basedpyright, OpenSSF Scorecard)
   - [design/scorecards-for-scorecards.md](docs/design/scorecards-for-scorecards.md): what makes a standard good, and the meta scorecards that score ours (and themselves)
+  - [design/package-author-sdlc.md](docs/design/package-author-sdlc.md): the fourth SDLC layer, binary distribution (Toolbox, connectors, upstream tools) and decoupling connectors from core
   - [design/packages.md](docs/design/packages.md): sharing standards as packages, where they live (Q15), the T4T monolith, what we publish, and fleet rollout
   - [design/github-actions-standards.md](docs/design/github-actions-standards.md): CI security, reliability and supply-chain scorecards (zizmor, actionlint, run history)
   - [design/federation.md](docs/design/federation.md): standards that graduate from one repo to the company (design only)
