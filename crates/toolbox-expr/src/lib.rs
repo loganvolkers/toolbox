@@ -42,7 +42,10 @@ impl Site {
         match self {
             Site::Map => Some(&["record"]),
             Site::Computed => Some(&["entity", "inbound", "policy"]),
-            Site::Scorecard | Site::Tuples | Site::Options => Some(&["entity", "policy"]),
+            // `cards` is bound only for scorecards that read other scorecards' levels (a second
+            // pass). Other sites never see it.
+            Site::Scorecard => Some(&["entity", "policy", "cards"]),
+            Site::Tuples | Site::Options => Some(&["entity", "policy"]),
             Site::Action => Some(&["entity", "inputs", "policy"]),
             Site::ContextLookup => Some(&["candidate", "entity", "inputs", "policy"]),
             Site::RefreshScope => None,
@@ -155,7 +158,7 @@ mod tests {
             err,
             CelIssue::UnknownVariables {
                 found: vec!["inputs".into()],
-                allowed: vec!["entity".into(), "policy".into()]
+                allowed: vec!["entity".into(), "policy".into(), "cards".into()]
             }
         );
     }

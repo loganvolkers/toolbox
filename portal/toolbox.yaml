@@ -22,6 +22,21 @@ policies:
     - docs/technology-critique.md
     - docs/research.md
     - docs/ocean.md
+  # Scorecards whose lowest level is the repository level (D86). Unknown constituents drop out.
+  # Runner-backed cards are omitted: a skipped clippy run would make the repo `none` on absent data.
+  repoRollup:
+    - maintainer-docs
+    - maintainer-ci-security
+    - maintainer-action-deps
+    - maintainer-skill
+    - maintainer-connector
+    - maintainer-dependency
+    - maintainer-agent-doc
+    - maintainer-package
+    - maintainer-schema
+    - maintainer-example
+    - maintainer-plugin
+    - maintainer-supply-chain
 
 connectors:
   - name: workspace
@@ -49,8 +64,13 @@ connectors:
       connectors: ["crates/toolbox-connector-*/Cargo.toml"]
       # Direct Cargo dependencies (docs/design/dependency-standards.md).
       dependencies: true
-      # Agent instruction files (docs/design/agents-md-standards.md).
-      agentDocs: ["**/AGENTS.md", "**/CLAUDE.md", "**/GEMINI.md"]
+      # Agent instruction files (docs/design/agents-md-standards.md). AGENTS.md is canonical.
+      # The other names are harness aliases and must point at it.
+      agentDocs: ["**/AGENTS.md", "**/CLAUDE.md", "**/GEMINI.md", "**/.cursorrules", "**/.github/copilot-instructions.md", "**/.github/instructions/*.instructions.md", "**/.cursor/rules/**/*.md", "**/.cursor/rules/**/*.mdc", "**/.claude/rules/**/*.md"]
+      # Agent plugin packages (docs/design/plugin-standards.md).
+      plugins: ["plugins/*/plugin.json"]
+      # The checkout itself: supply-chain config and the repository rollup (D85, D86).
+      repo: true
       # npm manifests (docs/design/package-standards.md). One record per package.json.
       packages: ["**/package.json"]
       # JSON Schema documents (docs/design/schema-standards.md). The contracts compiled into the binary.
@@ -59,9 +79,9 @@ connectors:
       examples: ["examples/**/README.md", "experiments/**/README.md", "docs/examples/*.md"]
       # Coding agents' judgements of our standards and crates (`toolbox assess`, D79)
       assessments: ["portal/assessments/**/*.y*ml"]
-    records: [crate, doc, file, workflow, action-ref, skill, connector, dependency, agent-doc, package-json, json-schema, example, assessment]
-    refresh: {crate: [external_ids], doc: [external_ids], file: [external_ids], workflow: [external_ids], action-ref: [external_ids], skill: [external_ids], connector: [external_ids], dependency: [external_ids], agent-doc: [external_ids], package-json: [external_ids], json-schema: [external_ids], example: [external_ids]}
-    freshness: {crate: 5m, doc: 5m, file: 5m, workflow: 5m, action-ref: 5m, skill: 5m, connector: 5m, dependency: 5m, agent-doc: 5m, package-json: 5m, json-schema: 5m, example: 5m, assessment: 5m}
+    records: [crate, doc, file, repo, workflow, action-ref, skill, connector, dependency, agent-doc, plugin, package-json, json-schema, example, assessment]
+    refresh: {crate: [external_ids], doc: [external_ids], file: [external_ids], repo: [external_ids], workflow: [external_ids], action-ref: [external_ids], skill: [external_ids], connector: [external_ids], dependency: [external_ids], agent-doc: [external_ids], plugin: [external_ids], package-json: [external_ids], json-schema: [external_ids], example: [external_ids]}
+    freshness: {crate: 5m, doc: 5m, file: 5m, repo: 5m, workflow: 5m, action-ref: 5m, skill: 5m, connector: 5m, dependency: 5m, agent-doc: 5m, plugin: 5m, package-json: 5m, json-schema: 5m, example: 5m, assessment: 5m}
   - name: runner
     package: builtin:runner                # executes things; slow, so it's refreshed per entity
     runtime: in-image
@@ -213,6 +233,7 @@ kinds:
       brokenLinks: {type: list, items: string}
       counts: {type: object}
       lastChange: {type: string}
+      missingDecisions: {type: list, items: string, description: "Decision ids cited in the doc that are not rows of docs/decisions.md."}
       area:
         type: string
         computed: >-
@@ -231,7 +252,8 @@ kinds:
         set: >-
           {'path': record.path, 'title': record.title, 'words': record.words,
            'hasStatus': record.hasStatus, 'hasSources': record.hasSources,
-           'brokenLinks': record.brokenLinks, 'counts': record.counts, 'lastChange': record.lastChange}
+           'brokenLinks': record.brokenLinks, 'counts': record.counts, 'lastChange': record.lastChange,
+           'missingDecisions': record.missingDecisions}
         relations:
           mentionsCommand: "record.captures.commands.map(c, 'command:' + c)"
           mentionsTool: "record.codeSpans.map(s, 'mcp-tool:' + s)"
@@ -371,6 +393,7 @@ kinds:
       commandLines: {type: integer}
       pointsAtAgents: {type: boolean}
       mentionsDecisions: {type: boolean}
+      ciMissingCommands: {type: list, items: string, description: "Backtick check commands (tool and subcommand) that no workflow runs. Table rows are excluded."}
       missingFiles: {type: list, items: string}
       hiddenChars: {type: integer}
       secretHits: {type: list, items: string}
@@ -382,6 +405,7 @@ kinds:
           {'path': record.path, 'name': record.name, 'canonical': record.canonical,
            'lines': record.lines, 'commandLines': record.commandLines,
            'pointsAtAgents': record.pointsAtAgents, 'mentionsDecisions': record.mentionsDecisions,
+           'ciMissingCommands': record.ciMissingCommands,
            'missingFiles': record.missingFiles, 'hiddenChars': record.hiddenChars,
            'secretHits': record.secretHits}
 
@@ -457,6 +481,62 @@ kinds:
           {'path': record.path, 'title': record.title, 'lines': record.lines,
            'commandLines': record.commandLines, 'missingFiles': record.missingFiles,
            'citesDesign': record.citesDesign, 'secretHits': record.secretHits}
+
+  # Agent plugin packages (docs/design/plugin-standards.md). Skills inside them stay Skill entities.
+  - name: Plugin
+    description: "An Agent Plugins 1.0.0 package: plugin.json, mcp.json, and skills at the spec path."
+    identityFrom: [connector:workspace]
+    fields:
+      path: {type: string, description: "Path of plugin.json."}
+      dir: {type: string, description: "Plugin directory. The entity id uses this path."}
+      name: {type: string, description: "The name field."}
+      nameOk: {type: boolean, description: "Name matches the 1.0.0 rule: 1-64 chars, a-z, digits, dot and hyphen, alphanumeric ends, no double hyphen or double dot."}
+      descriptionChars: {type: integer, description: "Length of the description."}
+      schemaOk: {type: boolean, description: "$schema is the Agent Plugins 1.0.0 plugin schema."}
+      hasMcp: {type: boolean, description: "mcp.json sits beside plugin.json."}
+      mcpSchemaOk: {type: boolean, description: "$schema is the Agent Plugins 1.0.0 mcp schema."}
+      commandToken: {type: boolean, description: "Every stdio command is one token (bare, ./, or a plugin variable). True when there is no stdio server."}
+      headerSecrets: {type: list, items: string, description: "MCP headers whose values match a high-precision secret shape."}
+      pathEscapes: {type: list, items: string, description: "Commands or args that contain a parent-directory segment."}
+      misplacedSkills: {type: list, items: string, description: "SKILL.md files that are not skills/<name>/SKILL.md."}
+      secretHits: {type: list, items: string, description: "Secret shapes in plugin.json or mcp.json."}
+    sources: {default: [connector:workspace]}
+    map:
+      - from: workspace/plugin
+        id: "'plugin:' + record.dir"
+        set: >-
+          {'path': record.path, 'dir': record.dir, 'name': record.name, 'nameOk': record.nameOk,
+           'descriptionChars': record.descriptionChars, 'schemaOk': record.schemaOk,
+           'hasMcp': record.hasMcp, 'mcpSchemaOk': record.mcpSchemaOk, 'commandToken': record.commandToken,
+           'headerSecrets': record.headerSecrets, 'pathEscapes': record.pathEscapes,
+           'misplacedSkills': record.misplacedSkills, 'secretHits': record.secretHits}
+
+  # The checkout (docs/design/supply-chain-standards.md, docs/design/repo-level.md).
+  - name: Repository
+    description: "This checkout: the files that turn on supply-chain tools, and the scorecards it rolls up."
+    identityFrom: [connector:workspace]
+    fields:
+      name: {type: string, description: "owner/name from the origin remote, or the directory name."}
+      dependabotGaps: {type: list, items: string, description: "Of cargo, npm and github-actions, the ecosystems dependabot.yml does not update."}
+      codeScanning: {type: boolean, description: "A workflow uses github/codeql-action."}
+      codeScanningPinned: {type: boolean, description: "That use is pinned to a 40-character commit."}
+      securityPolicy: {type: boolean, description: "SECURITY.md exists at the root, under .github, or under docs."}
+      workflowOwners: {type: boolean, description: "A CODEOWNERS rule covers .github/workflows/ci.yml."}
+      watchOverride: {type: list, items: string, description: "Constituents a fixture watches. Empty on a live checkout, which then uses policy.repoRollup."}
+      watch:
+        type: list
+        items: string
+        description: "Constituent scorecards whose lowest level is this repository's level."
+        computed: "entity.watchOverride.size() > 0 ? entity.watchOverride : policy.repoRollup"
+    sources: {default: [connector:workspace]}
+    map:
+      - from: workspace/repo
+        id: "'repo:' + record.name"
+        set: >-
+          {'name': record.name, 'dependabotGaps': record.dependabotGaps,
+           'codeScanning': record.codeScanning, 'codeScanningPinned': record.codeScanningPinned,
+           'securityPolicy': record.securityPolicy, 'workflowOwners': record.workflowOwners,
+           'watchOverride': has(record.watchOverride) ? record.watchOverride : []}
 
   # ── Layers 2 and 3: what operators and users rely on ─────────────────────────────────────
   - name: Command
@@ -872,6 +952,11 @@ scorecards:
         check: "entity.counts.sdlc <= entity.counts.layeredSdlc"
         evidence: "[string(entity.counts.sdlc - entity.counts.layeredSdlc) + ' mention(s) of SDLC without a layer']"
         fix: "Say which SDLC you mean: maintainer, operator or user (docs/sdlc.md, D63)."
+      - name: cited-decisions-exist
+        level: bronze
+        check: "entity.missingDecisions.size() == 0"
+        evidence: "entity.missingDecisions"
+        fix: "The decision ids in the evidence are not rows of docs/decisions.md. Cite a decision that exists, or add the row."
       - name: status-banner
         level: silver
         check: "entity.area != 'design' || entity.hasStatus"
@@ -1285,6 +1370,11 @@ scorecards:
         check: "!entity.canonical || entity.mentionsDecisions"
         evidence: "['does not link to decisions.md']"
         fix: "Link the canonical AGENTS.md at the decision log, so an agent edits the log instead of treating this file as the only source of truth."
+      - name: checks-run-in-ci
+        level: gold
+        check: "!entity.canonical || entity.ciMissingCommands.size() == 0"
+        evidence: "entity.ciMissingCommands"
+        fix: "Run each command in the evidence from a GitHub Actions workflow, or remove it from the check procedure. Commands that appear only in a markdown table are the track index and are not required."
       - name: no-hardcoded-secrets
         level: gold
         check: "entity.secretHits.size() == 0"
@@ -1438,6 +1528,114 @@ scorecards:
         check: "entity.secretHits.size() == 0"
         evidence: "entity.secretHits"
         fix: "Remove the credential in the evidence. An example is copied and read by agents."
+    facets: {summary: public, details: public}
+
+  # ── Agent plugins (docs/design/plugin-standards.md) ──────────────────────────────────────
+  # The marketplace installs the package. Skills inside it are scored by maintainer-skill.
+  - name: maintainer-plugin
+    kind: Plugin
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    ratchet: {newEntitiesAtLeast: bronze}
+    rules:
+      - name: manifest-valid
+        level: bronze
+        check: "entity.schemaOk && entity.nameOk && entity.descriptionChars > 0"
+        evidence: "[!entity.schemaOk ? 'schema is not Agent Plugins 1.0.0' : (!entity.nameOk ? 'name ' + entity.name : 'description is empty')]"
+        fix: "Point $schema at the 1.0.0 plugin schema, use a name of 1–64 lowercase letters, digits, dots and hyphens, and write a description."
+      - name: portable-components
+        level: bronze
+        check: "entity.misplacedSkills.size() == 0"
+        evidence: "entity.misplacedSkills"
+        fix: "Move each skill to skills/<name>/SKILL.md. Client-specific files go under a reverse-domain directory, not beside the manifest."
+      - name: mcp-declared
+        level: silver
+        check: "entity.hasMcp && entity.mcpSchemaOk"
+        evidence: "[!entity.hasMcp ? 'no mcp.json' : 'mcp.json schema is not Agent Plugins 1.0.0']"
+        fix: "Add mcp.json next to plugin.json with the 1.0.0 mcp schema. A tool that exists only in a vendor config is a harness lock-in."
+      - name: stdio-command
+        level: silver
+        check: "entity.commandToken"
+        evidence: "['stdio command is not a single token']"
+        fix: "Set command to one token (./bin/toolbox-mcp or ${PLUGIN_ROOT}/bin/tool). Do not use a shell string."
+      - name: no-secret-headers
+        level: gold
+        check: "entity.headerSecrets.size() == 0"
+        evidence: "entity.headerSecrets"
+        fix: "Remove the secret in the evidence. MCP authorization is client-managed. Headers must not carry credentials."
+      - name: paths-stay-inside
+        level: gold
+        check: "entity.pathEscapes.size() == 0"
+        evidence: "entity.pathEscapes"
+        fix: "Drop the .. segments in the evidence. Plugin paths stay inside the plugin root."
+      - name: no-hardcoded-secrets
+        level: gold
+        check: "entity.secretHits.size() == 0"
+        evidence: "entity.secretHits"
+        fix: "Remove the credential in the evidence from plugin.json or mcp.json."
+    facets: {summary: public, details: public}
+
+  # ── Supply chain config (docs/design/supply-chain-standards.md) ──────────────────────────
+  # The files that turn GitHub Advanced Security on. Alert counts need the API and are not gated.
+  # This repository has none of the three bronze files, so the live entity is none until they exist.
+  - name: maintainer-supply-chain
+    kind: Repository
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    ratchet: {newEntitiesAtLeast: bronze}
+    rules:
+      - name: dependabot
+        level: bronze
+        check: "entity.dependabotGaps.size() == 0"
+        evidence: "entity.dependabotGaps"
+        fix: "Add .github/dependabot.yml updates for the ecosystems in the evidence (cargo, npm, github-actions)."
+      - name: code-scanning
+        level: bronze
+        check: "entity.codeScanning"
+        evidence: "['no workflow uses github/codeql-action']"
+        fix: "Add a code scanning workflow that uses github/codeql-action. Alert counts stay a report, not a gate."
+      - name: security-policy
+        level: bronze
+        check: "entity.securityPolicy"
+        evidence: "['no SECURITY.md']"
+        fix: "Add SECURITY.md at the repository root, under .github/, or under docs/, with how to report a vulnerability."
+      - name: workflows-have-owners
+        level: silver
+        check: "entity.workflowOwners"
+        evidence: "['no CODEOWNERS rule covers .github/workflows/ci.yml']"
+        fix: "Add a CODEOWNERS rule that covers .github/workflows (a catch-all * does). Workflow changes should have an owner."
+      - name: code-scanning-pinned
+        level: gold
+        check: "entity.codeScanningPinned"
+        evidence: "['code scanning action is missing or not pinned to a commit']"
+        fix: "Pin github/codeql-action to a 40-character commit, the same way other actions are pinned."
+    facets: {summary: public, details: public}
+
+  # ── Repository level (docs/design/repo-level.md) ─────────────────────────────────────────
+  # The level is the lowest constituent. A weighted 0–10 is not the gate. `cards` is bound on a
+  # second pass; fixture samples under /demo/ are not constituents, so the ladder fixtures do
+  # not drag this score to none.
+  - name: maintainer-repo
+    kind: Repository
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    ratchet: {newEntitiesAtLeast: bronze}
+    rules:
+      - name: constituents-at-least-bronze
+        level: bronze
+        check: "cards.all(c, c.rank >= 1)"
+        evidence: "cards.filter(c, c.rank < 1).map(c, c.name + ' is ' + c.level)"
+        fix: "The repository level is the lowest constituent scorecard. Raise each one in the evidence to bronze."
+      - name: constituents-at-least-silver
+        level: silver
+        check: "cards.all(c, c.rank >= 2)"
+        evidence: "cards.filter(c, c.rank < 2).map(c, c.name + ' is ' + c.level)"
+        fix: "Raise each constituent in the evidence to silver. A card whose highest level is bronze caps the repository at bronze."
+      - name: constituents-at-least-gold
+        level: gold
+        check: "cards.all(c, c.rank >= 3)"
+        evidence: "cards.filter(c, c.rank < 3).map(c, c.name + ' is ' + c.level)"
+        fix: "Raise each constituent in the evidence to gold."
     facets: {summary: public, details: public}
 
   # ── Scorecards for scorecards (docs/design/scorecards-for-scorecards.md) ─────────────────
@@ -1830,12 +2028,12 @@ rubrics:
 mcp:
   instructions: >-
     Toolbox for Toolbox: the catalogue of Toolbox's own crates, docs, scripts, CLI commands and MCP
-    tools, agent skills, first-party connectors, direct Cargo dependencies, agent instruction files, npm manifests, JSON Schemas and example write-ups, scored against the maintainer, operator and user SDLC standards. To raise the bar, pick
+    tools, agent skills, first-party connectors, direct Cargo dependencies, agent instruction files, npm manifests, JSON Schemas, example write-ups, agent plugins and the repository rollup, scored against the maintainer, operator and user SDLC standards. To raise the bar, pick
     a failing rule with scorecard_status, read the evidence with explain (rule) or get: Crate
     undocumented, longFunctions, complexFunctions, clippy.messages, tests.output; Doc brokenLinks,
     counts; Command undocumentedArgs, documentedIn, exercisedBy; McpTool undescribedProperties,
     documentedIn, exercisedBy, viaCli; Skill frontmatterErrors, triggerCues, pronouns, missingFiles,
-    secretHits, boundaryCues, evalCases; Connector documentedKinds, transport, tests, conformanceMentions, secretHits; Dependency requirements, versions, sources, usedBy; AgentDoc missingFiles, commandLines, secretHits, hiddenChars; PackageJson wildcardRanges, gitRanges, lockfile, checkScripts, ciUsesInstall; JsonSchema dialect, schemaId, externalRefs; Example missingFiles, commandLines. Change the code, refresh_entity, and check the score again.
+    secretHits, boundaryCues, evalCases; Connector documentedKinds, transport, tests, conformanceMentions, secretHits; Dependency requirements, versions, sources, usedBy; AgentDoc missingFiles, commandLines, ciMissingCommands, secretHits, hiddenChars; PackageJson wildcardRanges, gitRanges, lockfile, checkScripts, ciUsesInstall; JsonSchema dialect, schemaId, externalRefs; Example missingFiles, commandLines; Plugin misplacedSkills, headerSecrets, pathEscapes, commandToken; Repository dependabotGaps, codeScanning, securityPolicy, workflowOwners. Change the code, refresh_entity, and check the score again.
     Contract tests count when a test or script contains a tools/call body naming the tool.
 
 tests: [tests/standards.test.yaml]

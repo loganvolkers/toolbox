@@ -562,6 +562,10 @@ impl<'m> Pipeline<'m> {
                             diagnostics: vec![],
                         };
                         for sc in &p.scorecards {
+                            // A scorecard that reads `cards` runs after every other score exists.
+                            if reads_cards(sc) {
+                                continue;
+                            }
                             out.scores.push((sc.name.clone(), self.score(sc, ctx)));
                         }
                         for emit in &p.emits {
@@ -630,6 +634,7 @@ impl<'m> Pipeline<'m> {
             }
             d.diagnostics.extend(o.diagnostics);
         }
+        self.score_aggregates(&mut d);
         d.tuples = tuples.into_values().collect();
         lap("scores+tuples+options");
         d.orphans.sort();
@@ -692,6 +697,62 @@ impl<'m> Pipeline<'m> {
         }
     }
 
+    /// Scorecards whose checks read `cards` (other scorecards' levels). They run after the first
+    /// pass, so a repository level can be the lowest constituent without a cycle.
+    fn score_aggregates(&self, d: &mut Derived) {
+        let deferred: Vec<&toolbox_model::manifest::Scorecard> = self
+            .m
+            .scorecards
+            .iter()
+            .filter(|sc| reads_cards(sc))
+            .collect();
+        if deferred.is_empty() {
+            return;
+        }
+        let summaries = constituent_summaries(self.m, &d.scores);
+        let ids: Vec<String> = d
+            .entities
+            .iter()
+            .filter(|(_, e)| deferred.iter().any(|sc| sc.kind == e.kind))
+            .map(|(id, _)| id.clone())
+            .collect();
+        for id in ids {
+            let kind = d.entities[&id].kind.clone();
+            let watch: Vec<String> = d.entities[&id]
+                .fields
+                .get("watch")
+                .and_then(Value::as_array)
+                .into_iter()
+                .flatten()
+                .filter_map(|v| v.as_str().map(str::to_owned))
+                .collect();
+            let selected: Vec<Value> = summaries
+                .iter()
+                .filter(|c| watch.iter().any(|w| Some(w.as_str()) == c["name"].as_str()))
+                .cloned()
+                .collect();
+            let entity = to_cel(&d.entity_json(&id).unwrap());
+            let cards = to_cel(&Value::Array(selected));
+            let scores: Vec<(String, Score)> = with_vars(
+                &[
+                    ("entity", &entity),
+                    ("policy", &self.policy),
+                    ("cards", &cards),
+                ],
+                |ctx| {
+                    deferred
+                        .iter()
+                        .filter(|sc| sc.kind == kind)
+                        .map(|sc| (sc.name.clone(), self.score(sc, ctx)))
+                        .collect()
+                },
+            );
+            for (name, score) in scores {
+                d.scores.entry(name).or_default().insert(id.clone(), score);
+            }
+        }
+    }
+
     fn authority(&self, d: &mut Derived, kinds: &BTreeMap<&str, &Kind>) {
         let mut updates: Vec<(String, String, Value)> = Vec::new();
         let mut team_maps: HashMap<&str, HashMap<String, &str>> = HashMap::new();
@@ -732,6 +793,105 @@ impl<'m> Pipeline<'m> {
             e.fields.insert(field.clone(), value);
             e.provenance.insert(field, "authority:codeowners".into());
         }
+    }
+}
+
+/// The check or its evidence names the `cards` variable (a list of constituent scorecards).
+fn reads_cards(sc: &toolbox_model::manifest::Scorecard) -> bool {
+    fn token(s: &str) -> bool {
+        s.split(|c: char| !c.is_ascii_alphanumeric() && c != '_')
+            .any(|t| t == "cards")
+    }
+    sc.applies_to.as_deref().is_some_and(token)
+        || sc
+            .rules
+            .iter()
+            .any(|r| token(&r.check) || r.evidence.as_deref().is_some_and(token))
+}
+
+/// One entry per scorecard that has at least one counted entity: the lowest level, with unknown
+/// rules dropped out of that level. Fixture samples under `/demo/` are not counted, so a ladder
+/// of bad fixtures does not set the repository level.
+fn constituent_summaries(
+    m: &Manifest,
+    scores: &BTreeMap<String, BTreeMap<String, Score>>,
+) -> Vec<Value> {
+    let mut out = Vec::new();
+    for sc in &m.scorecards {
+        if reads_cards(sc) {
+            continue;
+        }
+        let Some(rows) = scores.get(&sc.name) else {
+            continue;
+        };
+        let Some((level, rank)) = constituent_level(sc, rows) else {
+            continue;
+        };
+        out.push(json!({"name": sc.name, "level": level, "rank": rank}));
+    }
+    out
+}
+
+fn constituent_level(
+    sc: &toolbox_model::manifest::Scorecard,
+    rows: &BTreeMap<String, Score>,
+) -> Option<(String, i64)> {
+    let mut best: Option<(usize, String)> = None;
+    for (id, score) in rows {
+        if id.contains("/demo/") || score.level == "skipped" {
+            continue;
+        }
+        let Some(rules) = &score.rules else {
+            continue;
+        };
+        let Some(level) = level_ignoring_unknown(sc, rules) else {
+            continue;
+        };
+        let rank = level_rank(sc, &level);
+        if best.as_ref().is_none_or(|(r, _)| rank < *r) {
+            best = Some((rank, level));
+        }
+    }
+    best.map(|(rank, level)| (level, rank as i64))
+}
+
+/// Highest level whose non-unknown rules all pass. `None` when every rule is unknown.
+fn level_ignoring_unknown(
+    sc: &toolbox_model::manifest::Scorecard,
+    outcomes: &BTreeMap<String, String>,
+) -> Option<String> {
+    let known: Vec<&toolbox_model::manifest::Rule> = sc
+        .rules
+        .iter()
+        .filter(|r| outcomes.get(&r.name).is_some_and(|o| o != "unknown"))
+        .collect();
+    if known.is_empty() {
+        return None;
+    }
+    let mut level = "none".to_string();
+    for (i, lvl) in sc.levels.iter().enumerate() {
+        let upto = &sc.levels[..=i];
+        let ok = known
+            .iter()
+            .filter(|r| upto.contains(&r.level))
+            .all(|r| outcomes[&r.name] == "pass");
+        if ok {
+            level = lvl.clone();
+        } else {
+            break;
+        }
+    }
+    Some(level)
+}
+
+fn level_rank(sc: &toolbox_model::manifest::Scorecard, level: &str) -> usize {
+    if level == "none" {
+        0
+    } else {
+        sc.levels
+            .iter()
+            .position(|l| l == level)
+            .map_or(0, |i| i + 1)
     }
 }
 

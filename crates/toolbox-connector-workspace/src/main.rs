@@ -21,8 +21,11 @@
 //! - `dependency` (`"dependencies": true`): one per direct external Cargo dependency, with the
 //!   requirement, the `Cargo.lock` versions and whether `[workspace.dependencies]` declares it
 //!   (docs/design/dependency-standards.md);
-//! - `agent-doc` (`agentDocs` globs): one per `AGENTS.md` and its aliases (`CLAUDE.md`, `GEMINI.md`),
+//! - `agent-doc` (`agentDocs` globs): one per `AGENTS.md` and the aliases harnesses still read
+//!   (`CLAUDE.md`, `GEMINI.md`, `.cursorrules`, Copilot instructions, Cursor and Claude rule files),
 //!   with link, command and size facts (docs/design/agents-md-standards.md);
+//! - `plugin` (`plugins` globs): one per Agent Plugins `plugin.json`, with the 1.0.0 manifest and
+//!   `mcp.json` facts `maintainer-plugin` thresholds (docs/design/plugin-standards.md);
 //! - `package-json` (`packages` globs): one per npm manifest, with its ranges, lockfile and the
 //!   script CI can run (docs/design/package-standards.md);
 //! - `json-schema` (`schemas` globs): one per JSON Schema document, with its dialect, id and
@@ -40,8 +43,8 @@
 //! `TOOLBOX_CONNECTOR_CONFIG`: `{"root"?: ".", "docs"?: [glob], "files"?: [glob],
 //! "captures"?: {name: regex}, "counts"?: {name: regex}, "crates"?: true, "repo"?: false,
 //! "betterer"?: [glob], "skills"?: [glob], "connectors"?: [glob], "dependencies"?: false,
-//! "agentDocs"?: [glob], "packages"?: [glob], "schemas"?: [glob], "examples"?: [glob],
-//! "assessments"?: [glob]}`.
+//! "agentDocs"?: [glob], "plugins"?: [glob], "packages"?: [glob], "schemas"?: [glob],
+//! "examples"?: [glob], "assessments"?: [glob]}`.
 
 mod agentsmd;
 mod betterer;
@@ -49,6 +52,7 @@ mod connectors;
 mod deps;
 mod examples;
 mod npm;
+mod plugins;
 mod repo;
 mod rust;
 mod skills;
@@ -77,8 +81,10 @@ struct Workspace {
     connectors: Vec<Regex>,
     /// Emit one `dependency` record per direct external Cargo dependency.
     dependencies: bool,
-    /// Agent instruction files (`agent-doc` records): `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`.
+    /// Agent instruction files (`agent-doc` records): `AGENTS.md` and harness aliases.
     agent_docs: Vec<Regex>,
+    /// Agent plugin manifests (`plugin` records), usually `plugins/*/plugin.json`.
+    plugins: Vec<Regex>,
     /// npm manifests (`package-json` records), usually `**/package.json`.
     packages: Vec<Regex>,
     /// JSON Schema documents (`json-schema` records), usually `schema/*.json`.
@@ -124,6 +130,40 @@ fn last_change(root: &Path, path: &str) -> Option<String> {
     (!s.is_empty()).then_some(s)
 }
 
+fn workflow_text(root: &Path, paths: &[String], globs: &[Regex]) -> String {
+    paths
+        .iter()
+        .filter(|p| globs.iter().any(|r| r.is_match(p)))
+        .filter_map(|p| std::fs::read_to_string(root.join(p)).ok())
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+/// Decision ids that are rows of `docs/decisions.md` (`| D78 |`).
+fn known_decisions(root: &Path) -> BTreeSet<String> {
+    let text = std::fs::read_to_string(root.join("docs/decisions.md")).unwrap_or_default();
+    let re = Regex::new(r"(?m)^\|\s*(D\d+)\s*\|").unwrap();
+    re.captures_iter(&text)
+        .filter_map(|c| c.get(1).map(|m| m.as_str().to_owned()))
+        .collect()
+}
+
+/// `Dnn` citations that are not rows of the decision log. The log itself is the index.
+fn missing_decisions(text: &str, known: &BTreeSet<String>, rel: &str) -> Vec<String> {
+    if rel == "docs/decisions.md" {
+        return Vec::new();
+    }
+    let re = Regex::new(r"\b(D\d+)\b").unwrap();
+    let mut missing: Vec<String> = re
+        .captures_iter(text)
+        .filter_map(|c| c.get(1).map(|m| m.as_str().to_owned()))
+        .filter(|id| !known.contains(id))
+        .collect();
+    missing.sort();
+    missing.dedup();
+    missing
+}
+
 impl Workspace {
     fn from_env() -> Result<Self, String> {
         let cfg: Value = serde_json::from_str(
@@ -141,6 +181,7 @@ impl Workspace {
             connectors: globs(&cfg, "connectors")?,
             dependencies: cfg["dependencies"].as_bool().unwrap_or(false),
             agent_docs: globs(&cfg, "agentDocs")?,
+            plugins: globs(&cfg, "plugins")?,
             packages: globs(&cfg, "packages")?,
             schemas: globs(&cfg, "schemas")?,
             examples: globs(&cfg, "examples")?,
@@ -231,6 +272,7 @@ impl Workspace {
             "captures": captures,
             "counts": counts,
             "lastChange": last_change(&self.root, rel),
+            "missingDecisions": missing_decisions(&text, &known_decisions(&self.root), rel),
         }))
     }
 
@@ -373,6 +415,7 @@ impl Workspace {
                     "connector",
                     "dependency",
                     "agent-doc",
+                    "plugin",
                     "package-json",
                     "json-schema",
                     "example",
@@ -393,6 +436,7 @@ impl Workspace {
         self.emit_connectors(&paths, &kinds, out);
         self.emit_dependencies(&kinds, out);
         self.emit_agent_docs(&paths, &kinds, out);
+        self.emit_plugins(&paths, &kinds, out);
         self.emit_packages(&paths, &kinds, out);
         self.emit_schemas(&paths, &kinds, out);
         self.emit_examples(&paths, &kinds, out);
@@ -553,14 +597,27 @@ impl Workspace {
         if self.agent_docs.is_empty() || !kinds.contains(&"agent-doc") {
             return;
         }
+        let workflows = workflow_text(&self.root, paths, &self.workflows);
         for rel in paths.iter().filter(|p| Self::matches(&self.agent_docs, p)) {
             out.record(
                 "agent-doc",
                 &format!("agent-doc:{rel}"),
-                agentsmd::analyse(&self.root, rel),
+                agentsmd::analyse(&self.root, rel, &workflows),
             );
         }
         out.snapshot_complete("agent-doc");
+    }
+
+    fn emit_plugins(&self, paths: &[String], kinds: &[&str], out: &mut Out) {
+        if self.plugins.is_empty() || !kinds.contains(&"plugin") {
+            return;
+        }
+        for rel in paths.iter().filter(|p| Self::matches(&self.plugins, p)) {
+            let rec = plugins::analyse(&self.root, rel);
+            let dir = rec["dir"].as_str().unwrap_or(rel).to_owned();
+            out.record("plugin", &format!("plugin:{dir}"), rec);
+        }
+        out.snapshot_complete("plugin");
     }
 
     fn emit_skills(&self, paths: &[String], kinds: &[&str], out: &mut Out) {
@@ -643,6 +700,9 @@ impl Workspace {
 
     fn refresh_id(&self, id: &str, crates: &mut BTreeSet<String>, out: &mut Out) {
         let kind = id.split(':').next().unwrap_or("record");
+        if self.refresh_catalog(kind, id, out) {
+            return;
+        }
         match kind {
             "crate" => {
                 if let Some(name) = id.strip_prefix("crate:") {
@@ -650,19 +710,27 @@ impl Workspace {
                 }
             }
             "repo" => self.refresh_repo(id, out),
-            "doc" => self.refresh_text(id, "doc", out),
-            "file" => self.refresh_text(id, "file", out),
+            "doc" | "file" => self.refresh_text(id, kind, out),
             "workflow" => self.refresh_workflow(id, out),
             "action-ref" => self.refresh_named_action(id, out),
+            "dependency" => self.refresh_dependency(id, out),
+            _ => out.not_found(kind, id),
+        }
+    }
+
+    /// File-shaped records. Returns whether `kind` was one of them.
+    fn refresh_catalog(&self, kind: &str, id: &str, out: &mut Out) -> bool {
+        match kind {
             "skill" => self.refresh_skill(id, out),
             "connector" => self.refresh_connector(id, out),
-            "dependency" => self.refresh_dependency(id, out),
             "agent-doc" => self.refresh_agent_doc(id, out),
+            "plugin" => self.refresh_plugin(id, out),
             "package-json" => self.refresh_package(id, out),
             "json-schema" => self.refresh_schema(id, out),
             "example" => self.refresh_example(id, out),
-            _ => out.not_found(kind, id),
+            _ => return false,
         }
+        true
     }
 
     fn refresh_repo(&self, id: &str, out: &mut Out) {
@@ -730,9 +798,25 @@ impl Workspace {
     fn refresh_agent_doc(&self, id: &str, out: &mut Out) {
         let rel = id.strip_prefix("agent-doc:").unwrap_or("");
         if Self::matches(&self.agent_docs, rel) && self.root.join(rel).is_file() {
-            out.record("agent-doc", id, agentsmd::analyse(&self.root, rel));
+            let paths = self.walk();
+            let workflows = workflow_text(&self.root, &paths, &self.workflows);
+            out.record(
+                "agent-doc",
+                id,
+                agentsmd::analyse(&self.root, rel, &workflows),
+            );
         } else {
             out.not_found("agent-doc", id);
+        }
+    }
+
+    fn refresh_plugin(&self, id: &str, out: &mut Out) {
+        let dir = id.strip_prefix("plugin:").unwrap_or("");
+        let rel = format!("{dir}/plugin.json");
+        if Self::matches(&self.plugins, &rel) && self.root.join(&rel).is_file() {
+            out.record("plugin", id, plugins::analyse(&self.root, &rel));
+        } else {
+            out.not_found("plugin", id);
         }
     }
 
@@ -789,6 +873,7 @@ impl Source for Workspace {
             ("connector", !self.connectors.is_empty()),
             ("dependency", self.dependencies),
             ("agent-doc", !self.agent_docs.is_empty()),
+            ("plugin", !self.plugins.is_empty()),
             ("package-json", !self.packages.is_empty()),
             ("json-schema", !self.schemas.is_empty()),
             ("example", !self.examples.is_empty()),
