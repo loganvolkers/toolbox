@@ -1070,25 +1070,13 @@
     },
     "meta-assessment": {
       "assessment:assessment-quality/assessment:crate-design/crate:toolbox-expr": {
-        "failing": {
-          "cites-everything": 1,
-          "cites-for-findings": 1
-        },
-        "level": "bronze"
+        "level": "gold"
       },
       "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-crate/has-tests": {
-        "failing": {
-          "cites-everything": 2,
-          "cites-for-findings": 2
-        },
-        "level": "bronze"
+        "level": "gold"
       },
       "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-ci-reliability": {
-        "failing": {
-          "cites-everything": 2,
-          "cites-for-findings": 1
-        },
-        "level": "bronze"
+        "level": "gold"
       },
       "assessment:crate-design/crate:toolbox-expr": {
         "level": "gold"
@@ -3099,7 +3087,7 @@
     "meta-rubric": {
       "rubric:toolbox/assessment-quality": {
         "failing": {
-          "discriminates": 1
+          "discriminates": 2
         },
         "level": "silver"
       },
