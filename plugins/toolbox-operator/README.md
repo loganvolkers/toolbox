@@ -7,8 +7,8 @@ operators and their coding agents. It contains:
 - a local stdio MCP server (`toolbox mcp --dev`), started through `bin/toolbox-mcp`
 
 **Status:** pre-release skeleton. The `toolbox` binary does not exist yet, so the MCP launcher exits
-with an explanatory error, and skills describe the planned CLI. The plugin's licence follows the
-project licence once that is decided.
+with an explanatory error, and skills describe the planned CLI. The plugin is MIT-licensed, like
+the project (D88).
 
 Design: [docs/design/agent-plugins.md](../../docs/design/agent-plugins.md).
 

@@ -1,5 +1,6 @@
 {
   "name": "toolbox-manifest-builder-prototype",
+  "license": "MIT",
   "private": true,
   "type": "module",
   "scripts": {

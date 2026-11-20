@@ -3,6 +3,7 @@ name = "toolbox-exec"
 description = "Toolbox: Executor protocol clients (M5). Placeholder until its milestone."
 version.workspace = true
 edition.workspace = true
+license.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 

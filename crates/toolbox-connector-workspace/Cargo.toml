@@ -3,6 +3,7 @@ name = "toolbox-connector-workspace"
 description = "Toolbox connector: a local Rust workspace (crates and code metrics), its markdown docs and other files, read statically (docs/design/toolbox-for-toolbox.md)."
 version.workspace = true
 edition.workspace = true
+license.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 

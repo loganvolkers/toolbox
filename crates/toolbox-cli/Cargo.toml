@@ -3,6 +3,7 @@ name = "toolbox-cli"
 description = "Toolbox: the `toolbox` binary (docs/v1-spec.md §7.7)."
 version.workspace = true
 edition.workspace = true
+license.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 

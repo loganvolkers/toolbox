@@ -1,5 +1,6 @@
 {
   "name": "toolbox-site",
+  "license": "MIT",
   "private": true,
   "description": "Public documentation for Toolbox, built with Astro Starlight and published to GitHub Pages.",
   "type": "module",

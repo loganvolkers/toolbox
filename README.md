@@ -4,7 +4,7 @@ An open-source, agent-first internal developer portal (IDP) framework: Rust core
 code, deployed by you. Catalog, scorecards, self-service actions, knowledge/context lake and search —
 exposed identically over API, MCP, CLI and UI.
 
-The public docs are a Starlight site in [site/](site/src/content/docs/index.md), published to GitHub Pages (D88).
+The public docs are a Starlight site in [site/](site/src/content/docs/index.md), published to GitHub Pages (D91).
 
 **Status:** v1 implementation in progress: M0–M4 are done (validate, derived state, Postgres store and REST reads, authentication and OpenFGA facets, MCP, CLI, minimal UI and connectors); M5 (actions) is paused for a review of self-service coordination (D64) ([docs/v1-spec.md](docs/v1-spec.md) §3). Toolbox also runs on itself: [portal/](portal/README.md) scores this repo's crates, docs, CLI and MCP tools against the three SDLC layers (D65).
 

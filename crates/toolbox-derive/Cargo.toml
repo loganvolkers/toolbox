@@ -3,6 +3,7 @@ name = "toolbox-derive"
 description = "Toolbox: the derived-state pipeline behind DerivedState, plan diffs and the test runner (docs/v1-spec.md §6)."
 version.workspace = true
 edition.workspace = true
+license.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 

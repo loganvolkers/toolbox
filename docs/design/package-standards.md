@@ -1,7 +1,7 @@
 # Package Standards: Cataloguing npm Manifests
 
 *Status: deterministic catalog and scorecard built, 2026-11-20 (D76). Toolbox for Toolbox catalogues
-each `package.json` and scores it with `maintainer-package`. A licence field is not required (Q1).
+each `package.json` and scores it with `maintainer-package`. A licence field is not required by the scorecard (D76); manifests use MIT (D88).
 Advisory databases are not a gate. Related: [dependency-standards.md](./dependency-standards.md),
 [toolbox-for-toolbox.md](./toolbox-for-toolbox.md).*
 

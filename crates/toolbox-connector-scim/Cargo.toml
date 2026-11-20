@@ -3,6 +3,7 @@ name = "toolbox-connector-scim"
 description = "Toolbox connector: a SCIM 2.0 receiver that pushes users and groups to Toolbox (docs/v1-spec.md §7.4)."
 version.workspace = true
 edition.workspace = true
+license.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 
