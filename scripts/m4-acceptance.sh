@@ -19,6 +19,7 @@ $RUNAS "$PGBIN/initdb" -A trust -U postgres -D "$PGDIR/data" >/dev/null
 $RUNAS "$PGBIN/pg_ctl" -D "$PGDIR/data" -o "-p $PORT -k $PGDIR -c listen_addresses=127.0.0.1" -l "$PGDIR/pg.log" -w start >/dev/null
 export DATABASE_URL="postgres://postgres@127.0.0.1:$PORT/postgres"
 python3 "$PORTAL/tools/mock_github.py" "$GH" & PIDS+=($!)
+for _ in $(seq 50); do curl -sf "http://127.0.0.1:$GH/orgs/acme/repos" >/dev/null && break; sleep 0.05; done
 python3 - "$PORTAL" "$WORK/catalog" <<'PY'
 import json, os, sys
 for l in open(f"{sys.argv[1]}/fixtures/git-files.ndjson"):
