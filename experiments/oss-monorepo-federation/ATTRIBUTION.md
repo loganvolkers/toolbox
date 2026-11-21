@@ -15,3 +15,7 @@ Large configs are replaced by `*.evidence.json` stubs (presence + SHA-256 + head
 experiment stays small; scorecards assert presence, not full-file contents.
 
 This experiment does **not** redistribute those projects' source trees.
+
+Agent instruction files (`AGENTS.md` / `CLAUDE.md`) are stored as
+`*.evidence.json` stubs (not the literal filenames) so Toolbox-for-Toolbox does
+not discover fixture copies as maintainer agent-docs.

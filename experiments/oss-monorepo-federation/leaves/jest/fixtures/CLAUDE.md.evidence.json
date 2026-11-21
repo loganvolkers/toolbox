@@ -1,0 +1,9 @@
+{
+  "path": "CLAUDE.md",
+  "present": true,
+  "bytes": 46,
+  "sha256": "42f07735bc82c71528738693fd023a72727f13b8cfb32458ff8440219d6fd559",
+  "upstream": "main@2026-11-21",
+  "note": "Full agent-doc omitted so T4T does not discover fixture AGENTS.md/CLAUDE.md; scorecards check presence via evidence stub only.",
+  "head": "# CLAUDE.md\n\n@.github/copilot-instructions.md\n"
+}

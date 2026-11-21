@@ -3,32 +3,100 @@
   "portal": "babel",
   "upstream": "https://github.com/babel/babel",
   "packages": [
-    {"name": "oss-fleet", "version": "0.1.0", "digest": "sha256:oss-fleet-demo"},
-    {"name": "babel-standards", "version": "0.1.0", "digest": "sha256:babel-demo"}
+    {
+      "name": "oss-fleet",
+      "version": "0.1.0",
+      "digest": "sha256:oss-fleet-demo"
+    },
+    {
+      "name": "babel-standards",
+      "version": "0.1.0",
+      "digest": "sha256:babel-demo"
+    }
   ],
   "scorecards": {
-    "package-manager-pin": {"level": "bronze", "rules": {"pinned": "pass"}},
-    "js-workspace": {"level": "bronze", "rules": {"has-workspace": "pass"}},
-    "eslint-flat": {"level": "bronze", "rules": {"flat-config": "pass"}},
-    "typescript-present": {"level": "bronze", "rules": {"has-ts": "pass"}},
-    "agents-instruction": {"level": "bronze", "rules": {"has-agents-doc": "pass"}},
-    "prettier": {"level": "bronze", "rules": {"uses-prettier": "pass", "print-width": "pass"}},
-    "husky-lint-staged": {"level": "bronze", "rules": {"husky-present": "pass", "lint-staged-present": "pass"}},
-    "jest-runner": {"level": "bronze", "rules": {"uses-jest": "pass"}},
-    "yarn-berry": {"level": "bronze", "rules": {"yarn4": "pass"}},
-    "renovate": {"level": "bronze", "rules": {"renovate-json": "pass"}}
+    "package-manager-pin": {
+      "level": "bronze",
+      "rules": {
+        "pinned": "pass"
+      }
+    },
+    "js-workspace": {
+      "level": "bronze",
+      "rules": {
+        "has-workspace": "pass"
+      }
+    },
+    "eslint-flat": {
+      "level": "bronze",
+      "rules": {
+        "flat-config": "pass"
+      }
+    },
+    "typescript-present": {
+      "level": "bronze",
+      "rules": {
+        "has-ts": "pass"
+      }
+    },
+    "agents-instruction": {
+      "level": "bronze",
+      "rules": {
+        "has-agents-doc": "pass"
+      }
+    },
+    "prettier": {
+      "level": "bronze",
+      "rules": {
+        "uses-prettier": "pass",
+        "print-width": "pass"
+      }
+    },
+    "husky-lint-staged": {
+      "level": "bronze",
+      "rules": {
+        "husky-present": "pass",
+        "lint-staged-present": "pass"
+      }
+    },
+    "jest-runner": {
+      "level": "bronze",
+      "rules": {
+        "uses-jest": "pass"
+      }
+    },
+    "yarn-berry": {
+      "level": "bronze",
+      "rules": {
+        "yarn4": "pass"
+      }
+    },
+    "renovate": {
+      "level": "bronze",
+      "rules": {
+        "renovate-json": "pass"
+      }
+    }
   },
   "campaigns": {
-    "deps-automation": {"inScope": 1, "meeting": 1, "measure": 1.0}
+    "deps-automation": {
+      "inScope": 1,
+      "meeting": 1,
+      "measure": 1.0
+    }
   },
   "grassRootsPackages": [
-    {"name": "babel-standards", "version": "0.1.0", "stage": "experimental"}
+    {
+      "name": "babel-standards",
+      "version": "0.1.0",
+      "stage": "experimental"
+    }
   ],
   "evidence": {
     "packageManager": "leaves/babel/fixtures/package.json#packageManager",
     "prettierPrintWidth": "leaves/babel/fixtures/.prettierrc#printWidth",
     "husky": "leaves/babel/fixtures/husky-hooks.list",
-    "agentsMd": "leaves/babel/fixtures/AGENTS.md",
+    "agentsMd": "leaves/babel/fixtures/AGENTS.md.evidence.json",
     "renovate": "leaves/babel/fixtures/renovate.json"
   }
 }

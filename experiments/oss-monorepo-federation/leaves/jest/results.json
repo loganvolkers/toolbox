@@ -3,31 +3,94 @@
   "portal": "jest",
   "upstream": "https://github.com/jestjs/jest",
   "packages": [
-    {"name": "oss-fleet", "version": "0.1.0", "digest": "sha256:oss-fleet-demo"},
-    {"name": "jest-standards", "version": "0.1.0", "digest": "sha256:jest-demo"}
+    {
+      "name": "oss-fleet",
+      "version": "0.1.0",
+      "digest": "sha256:oss-fleet-demo"
+    },
+    {
+      "name": "jest-standards",
+      "version": "0.1.0",
+      "digest": "sha256:jest-demo"
+    }
   ],
   "scorecards": {
-    "package-manager-pin": {"level": "bronze", "rules": {"pinned": "pass"}},
-    "js-workspace": {"level": "bronze", "rules": {"has-workspace": "pass"}},
-    "eslint-flat": {"level": "bronze", "rules": {"flat-config": "pass"}},
-    "typescript-present": {"level": "bronze", "rules": {"has-ts": "pass"}},
-    "agents-instruction": {"level": "bronze", "rules": {"has-agents-doc": "pass"}},
-    "prettier": {"level": "bronze", "rules": {"uses-prettier": "pass", "print-width": "pass"}},
-    "lerna-lite": {"level": "bronze", "rules": {"lerna-json": "pass"}},
-    "jest-ci-config": {"level": "bronze", "rules": {"ci-config": "pass"}},
-    "prettier-jest-style": {"level": "bronze", "rules": {"single-quote": "pass", "no-bracket-spacing": "pass"}}
+    "package-manager-pin": {
+      "level": "bronze",
+      "rules": {
+        "pinned": "pass"
+      }
+    },
+    "js-workspace": {
+      "level": "bronze",
+      "rules": {
+        "has-workspace": "pass"
+      }
+    },
+    "eslint-flat": {
+      "level": "bronze",
+      "rules": {
+        "flat-config": "pass"
+      }
+    },
+    "typescript-present": {
+      "level": "bronze",
+      "rules": {
+        "has-ts": "pass"
+      }
+    },
+    "agents-instruction": {
+      "level": "bronze",
+      "rules": {
+        "has-agents-doc": "pass"
+      }
+    },
+    "prettier": {
+      "level": "bronze",
+      "rules": {
+        "uses-prettier": "pass",
+        "print-width": "pass"
+      }
+    },
+    "lerna-lite": {
+      "level": "bronze",
+      "rules": {
+        "lerna-json": "pass"
+      }
+    },
+    "jest-ci-config": {
+      "level": "bronze",
+      "rules": {
+        "ci-config": "pass"
+      }
+    },
+    "prettier-jest-style": {
+      "level": "bronze",
+      "rules": {
+        "single-quote": "pass",
+        "no-bracket-spacing": "pass"
+      }
+    }
   },
   "campaigns": {
-    "deps-automation": {"inScope": 1, "meeting": 0, "measure": 0.0}
+    "deps-automation": {
+      "inScope": 1,
+      "meeting": 0,
+      "measure": 0.0
+    }
   },
   "grassRootsPackages": [
-    {"name": "jest-standards", "version": "0.1.0", "stage": "experimental"}
+    {
+      "name": "jest-standards",
+      "version": "0.1.0",
+      "stage": "experimental"
+    }
   ],
   "evidence": {
     "packageManager": "leaves/jest/fixtures/package.json#packageManager",
     "prettier": "leaves/jest/fixtures/package.json#prettier",
     "lerna": "leaves/jest/fixtures/lerna.json",
-    "agents": "leaves/jest/fixtures/CLAUDE.md",
+    "agents": "leaves/jest/fixtures/CLAUDE.md.evidence.json",
     "eslint": "leaves/jest/fixtures/eslint.config.mjs.evidence.json"
   }
 }
