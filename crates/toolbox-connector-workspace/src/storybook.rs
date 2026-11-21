@@ -31,7 +31,8 @@ pub fn analyse(root: &Path, config_rel: &str, paths: &[String]) -> Value {
 
     let main_text = std::fs::read_to_string(root.join(&config_path)).unwrap_or_default();
     let stories_glob_declared = main_text.contains("stories:");
-    let a11y_in_main = main_text.contains("@storybook/addon-a11y") || main_text.contains("addon-a11y");
+    let a11y_in_main =
+        main_text.contains("@storybook/addon-a11y") || main_text.contains("addon-a11y");
     let has_a11y_addon = a11y_in_deps || a11y_in_main;
     let telemetry_disabled = main_text.contains("disableTelemetry")
         && (main_text.contains("disableTelemetry: true")
@@ -135,9 +136,7 @@ fn a11y_fails_on_violation(root: &Path, storybook_dir: &str) -> bool {
         }
         // Storybook 8+/9+/10: parameters.a11y.test = 'error' (or "error").
         if text.contains("test:")
-            && (text.contains("'error'")
-                || text.contains("\"error\"")
-                || text.contains("`error`"))
+            && (text.contains("'error'") || text.contains("\"error\"") || text.contains("`error`"))
         {
             return true;
         }
