@@ -1,1 +1,7 @@
-{name: demo, version: 0.1.0, description: fixture package}
+# Fixture package for apply-changesets package/action path.
+apiVersion: toolbox.dev/package/v0
+name: demo
+version: 0.1.0
+description: >-
+  Fixture package used by scripts/test-apply-changesets.py (package-yaml).
+fragments: [fragments/*.yaml]
