@@ -701,11 +701,17 @@ impl<'m> Pipeline<'m> {
             return;
         }
         let as_of = utc_ymd_today();
-        let cards: BTreeMap<&str, &toolbox_model::manifest::Scorecard> =
-            self.m.scorecards.iter().map(|s| (s.name.as_str(), s)).collect();
+        let cards: BTreeMap<&str, &toolbox_model::manifest::Scorecard> = self
+            .m
+            .scorecards
+            .iter()
+            .map(|s| (s.name.as_str(), s))
+            .collect();
         for c in &self.m.campaigns {
-            d.campaigns
-                .insert(c.name.clone(), score_one_campaign(c, &d.scores, &cards, &as_of));
+            d.campaigns.insert(
+                c.name.clone(),
+                score_one_campaign(c, &d.scores, &cards, &as_of),
+            );
         }
     }
 

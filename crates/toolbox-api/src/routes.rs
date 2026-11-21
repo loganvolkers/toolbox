@@ -65,10 +65,7 @@ pub fn router(state: Arc<AppState>) -> Router {
             get(crate::reads::scorecard_results),
         )
         .route("/v1/campaigns", get(crate::reads::campaigns))
-        .route(
-            "/v1/campaigns/{name}",
-            get(crate::reads::campaign_results),
-        )
+        .route("/v1/campaigns/{name}", get(crate::reads::campaign_results))
         .route("/mcp", post(crate::mcp::handle))
         .fallback(crate::ui::asset)
         .route("/v1/actions", get(crate::actions::list))

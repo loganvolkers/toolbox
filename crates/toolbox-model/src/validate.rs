@@ -378,10 +378,7 @@ impl Checker {
                     self.push(
                         "xref.scorecard",
                         format!("/campaigns/{ci}/includes/{ii}/scorecard"),
-                        format!(
-                            "campaign {}: unknown scorecard {}",
-                            c.name, inc.scorecard
-                        ),
+                        format!("campaign {}: unknown scorecard {}", c.name, inc.scorecard),
                     );
                     continue;
                 };
