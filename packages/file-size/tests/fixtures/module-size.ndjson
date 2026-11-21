@@ -1,0 +1,3 @@
+{"type":"record","kind":"file","externalId":"file:src/big.rs","data":{"path":"src/big.rs","lines":1070}}
+{"type":"record","kind":"file","externalId":"file:src/ok.rs","data":{"path":"src/ok.rs","lines":800}}
+{"type":"record","kind":"file","externalId":"file:src/generated.rs","data":{"path":"src/generated.rs","lines":5000}}

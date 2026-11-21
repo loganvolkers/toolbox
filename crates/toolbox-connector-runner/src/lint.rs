@@ -1,6 +1,7 @@
-//! Parsers for CI linters whose findings are reported per file: zizmor (`--format json`, v1) and
-//! actionlint (`-format '{{json .}}'`). Every file the job covers gets a record, so a clean file is
-//! distinguishable from one that wasn't scanned (docs/design/github-actions-standards.md §4).
+//! Parsers for linters whose findings are reported per file: zizmor (`--format json`, v1),
+//! actionlint (`-format '{{json .}}'`) and semgrep (`--json`). Every file the job covers gets a
+//! record, so a clean file is distinguishable from one that wasn't scanned
+//! (docs/design/github-actions-standards.md §4).
 
 use serde_json::{Map, Value, json};
 use std::collections::BTreeMap;
@@ -71,11 +72,68 @@ pub fn actionlint(stdout: &str) -> Result<BTreeMap<String, Vec<Value>>, String> 
     Ok(by_file)
 }
 
-/// The record for one file: its findings (sorted by line) and counts per severity.
+/// semgrep `--json`: `{results: [{check_id, path, start: {line}, extra: {message, severity}}],
+/// paths: {scanned}}`. Every scanned file is a key (clean ones with no findings). Run it with
+/// `--disable-nosem` to count suppressed findings too: semgrep's JSON doesn't mark them, so a
+/// finding is `suppressed` when its line, or the line above, has a `nosemgrep` comment (read from
+/// the file under `root`). The suppressions are then a standard's baseline, and a campaign can pay
+/// them down.
+pub fn semgrep(
+    stdout: &str,
+    root: &std::path::Path,
+) -> Result<BTreeMap<String, Vec<Value>>, String> {
+    let doc: Value = serde_json::from_str(stdout).map_err(|e| format!("semgrep JSON: {e}"))?;
+    let mut by_file: BTreeMap<String, Vec<Value>> = BTreeMap::new();
+    for p in doc["paths"]["scanned"].as_array().into_iter().flatten() {
+        if let Some(p) = p.as_str() {
+            by_file.entry(normalise(p)).or_default();
+        }
+    }
+    let mut sources: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    for r in doc["results"].as_array().into_iter().flatten() {
+        let path = normalise(r["path"].as_str().unwrap_or(""));
+        let line = r["start"]["line"].as_u64().unwrap_or(0);
+        let text = sources.entry(path.clone()).or_insert_with(|| {
+            std::fs::read_to_string(root.join(&path))
+                .map(|t| t.lines().map(str::to_owned).collect())
+                .unwrap_or_default()
+        });
+        let at = |n: u64| {
+            n.checked_sub(1)
+                .and_then(|i| text.get(i as usize))
+                .is_some_and(|l| l.contains("nosemgrep"))
+        };
+        let id = r["check_id"].as_str().unwrap_or("?");
+        let mut f = finding(
+            id.rsplit('.').next().unwrap_or(id),
+            &r["extra"]["severity"]
+                .as_str()
+                .unwrap_or("unknown")
+                .to_lowercase(),
+            line,
+            r["extra"]["message"].as_str().unwrap_or(""),
+        );
+        f["suppressed"] = json!(at(line) || at(line.saturating_sub(1)));
+        by_file.entry(path).or_default().push(f);
+    }
+    Ok(by_file)
+}
+
+/// The record for one file: its findings (sorted by line), counts per severity, and how many are
+/// suppressed inline (`suppressed`) and how many not (`active`).
 pub fn record(path: &str, mut findings: Vec<Value>) -> Value {
     findings.sort_by_key(|f| (f["line"].as_u64(), f["rule"].as_str().map(str::to_owned)));
     let mut counts = Map::new();
-    for sev in ["high", "medium", "low", "informational", "unknown", "error"] {
+    for sev in [
+        "high",
+        "medium",
+        "low",
+        "informational",
+        "unknown",
+        "error",
+        "warning",
+        "info",
+    ] {
         counts.insert(sev.into(), json!(0));
     }
     for f in &findings {
@@ -83,7 +141,15 @@ pub fn record(path: &str, mut findings: Vec<Value>) -> Value {
         let n = counts.get(&s).and_then(Value::as_u64).unwrap_or(0) + 1;
         counts.insert(s, json!(n));
     }
-    json!({"path": path, "total": findings.len(), "counts": counts, "findings": findings})
+    let suppressed = findings.iter().filter(|f| f["suppressed"] == true).count();
+    json!({
+        "path": path,
+        "total": findings.len(),
+        "suppressed": suppressed,
+        "active": findings.len() - suppressed,
+        "counts": counts,
+        "findings": findings
+    })
 }
 
 #[cfg(test)]
@@ -112,6 +178,36 @@ mod tests {
             (rec["counts"]["high"].as_u64(), rec["total"].as_u64()),
             (Some(1), Some(1))
         );
+    }
+
+    #[test]
+    fn semgrep_findings_with_suppressions_and_clean_files() {
+        // The shape semgrep 1.163.0 prints with `--json --disable-nosem` (trimmed).
+        let dir = std::env::temp_dir().join(format!("semgrep-parse-{}", std::process::id()));
+        std::fs::create_dir_all(dir.join("app")).unwrap();
+        std::fs::write(
+            dir.join("app/a.py"),
+            "x = Person.objects.get(pk=1)  # nosemgrep: no-orm\n# nosemgrep: no-orm\ny = Person.objects.all()\nz = Person.objects.none()\n",
+        )
+        .unwrap();
+        let out = r#"{"results": [
+            {"check_id": "semgrep.rules.no-orm", "path": "app/a.py", "start": {"line": 1, "col": 5},
+             "extra": {"message": "use the helpers", "severity": "WARNING"}},
+            {"check_id": "semgrep.rules.no-orm", "path": "app/a.py", "start": {"line": 3, "col": 5},
+             "extra": {"message": "use the helpers", "severity": "WARNING"}},
+            {"check_id": "semgrep.rules.no-orm", "path": "app/a.py", "start": {"line": 4, "col": 5},
+             "extra": {"message": "use the helpers", "severity": "WARNING"}}],
+          "errors": [], "paths": {"scanned": ["app/a.py", "app/clean.py"]}}"#;
+        let r = semgrep(out, &dir).unwrap();
+        assert!(r["app/clean.py"].is_empty());
+        let rec = record("app/a.py", r["app/a.py"].clone());
+        assert_eq!(rec["findings"][0]["rule"], "no-orm");
+        assert_eq!(rec["counts"]["warning"], 3);
+        assert_eq!(
+            (rec["suppressed"].as_u64(), rec["active"].as_u64()),
+            (Some(2), Some(1))
+        );
+        let _ = std::fs::remove_dir_all(dir);
     }
 
     #[test]

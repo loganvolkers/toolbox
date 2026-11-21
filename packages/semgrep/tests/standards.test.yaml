@@ -1,0 +1,14 @@
+# Package expectations over fixtures (package author SDLC: test).
+name: semgrep
+assert:
+  - name: suppressed findings count, and are marked
+    expect: >-
+      score('no-orm', 'no-orm:app/a.py').measures['no-findings'] == 3.0 &&
+      score('no-orm', 'no-orm:app/a.py').evidence['no-findings'] == ['line 1:
+      no-orm (suppressed)', 'line 3: no-orm (suppressed)', 'line 4: no-orm']
+  - name: a clean file is clean
+    expect: score('no-orm', 'no-orm:app/clean.py').level == 'clean'
+  - name: the campaign pays down findings
+    expect: >-
+      campaign('no-orm-zero').measure == 3.0 &&
+      campaign('no-orm-zero').meeting == 1

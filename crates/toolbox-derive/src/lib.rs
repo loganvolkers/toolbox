@@ -58,6 +58,9 @@ pub struct Score {
     /// For failing rules with an `evidence` expression: what makes them fail.
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
     pub evidence: BTreeMap<String, Value>,
+    /// For failing rules with a `measure` expression: the number the ratchet compares.
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub measures: BTreeMap<String, f64>,
 }
 
 /// A problem found while deriving (never fatal: the pipeline always produces a result).
@@ -97,6 +100,11 @@ pub struct CampaignProgress {
     pub meeting: usize,
     pub percent: u8,
     pub on_target: bool,
+    /// Sum of the included rules' measures over in-scope entities (rules with a `measure`).
+    /// Campaigns over counted standards pay this down; `toolbox report` compares it with the
+    /// value its baseline recorded when the campaign started.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub measure: Option<f64>,
     pub milestones: Vec<CampaignMilestoneResult>,
     pub entities: BTreeMap<String, CampaignEntity>,
 }
@@ -190,6 +198,7 @@ impl<'m> Pipeline<'m> {
             sources.extend(s.applies_to.as_deref());
             sources.extend(s.rules.iter().map(|r| r.check.as_str()));
             sources.extend(s.rules.iter().filter_map(|r| r.evidence.as_deref()));
+            sources.extend(s.rules.iter().filter_map(|r| r.measure.as_deref()));
         }
         for t in m.authz.iter().flat_map(|a| &a.tuples) {
             if let TupleDerivation::Kind { emit, .. } = t {
@@ -731,10 +740,12 @@ impl<'m> Pipeline<'m> {
                 level: "skipped".into(),
                 rules: None,
                 evidence: BTreeMap::new(),
+                measures: BTreeMap::new(),
             };
         }
         let mut outcomes = BTreeMap::new();
         let mut evidence = BTreeMap::new();
+        let mut measures = BTreeMap::new();
         for r in &sc.rules {
             let mut outcome = match applies
                 .clone()
@@ -753,22 +764,11 @@ impl<'m> Pipeline<'m> {
             {
                 outcome = "waived";
             }
-            if (outcome == "fail" || outcome == "waived")
-                && let Some(e) = &r.evidence
-            {
-                // Evidence is best-effort: an error is shown as such, never fails the rule twice.
-                let v = self
-                    .json_in(e, ctx)
-                    .unwrap_or_else(|m| serde_json::json!({"error": m}));
+            if let Some(v) = self.evidence(r, outcome, ctx) {
                 evidence.insert(r.name.clone(), v);
             }
-            if outcome == "unknown"
-                && let Some(src) = &r.data_from
-            {
-                evidence.insert(
-                    r.name.clone(),
-                    serde_json::json!([format!("no data from connector {src}")]),
-                );
+            if let Some(n) = self.measure(r, outcome, ctx) {
+                measures.insert(r.name.clone(), n);
             }
             outcomes.insert(r.name.clone(), outcome.to_string());
         }
@@ -777,7 +777,40 @@ impl<'m> Pipeline<'m> {
             level,
             rules: Some(outcomes),
             evidence,
+            measures,
         }
+    }
+
+    /// What makes a failing (or waived) rule fail, or why an unknown one has no data. Evidence is
+    /// best-effort: an error is shown as such, never fails the rule twice.
+    fn evidence(
+        &self,
+        r: &toolbox_model::manifest::Rule,
+        outcome: &str,
+        ctx: &cel::Context<'_, '_>,
+    ) -> Option<Value> {
+        match (outcome, &r.evidence, &r.data_from) {
+            ("fail" | "waived", Some(e), _) => Some(
+                self.json_in(e, ctx)
+                    .unwrap_or_else(|m| serde_json::json!({"error": m})),
+            ),
+            ("unknown", _, Some(src)) => {
+                Some(serde_json::json!([format!("no data from connector {src}")]))
+            }
+            _ => None,
+        }
+    }
+
+    /// A failing rule's `measure`. Best-effort like evidence: a non-number is left out, and the
+    /// ratchet falls back to the evidence count.
+    fn measure(
+        &self,
+        r: &toolbox_model::manifest::Rule,
+        outcome: &str,
+        ctx: &cel::Context<'_, '_>,
+    ) -> Option<f64> {
+        let e = r.measure.as_deref().filter(|_| outcome == "fail")?;
+        self.json_in(e, ctx).ok()?.as_f64()
     }
 
     /// Scorecards whose checks read `cards` (other scorecards' levels). They run after the first
@@ -934,10 +967,21 @@ fn score_one_campaign(
     let mut entities = BTreeMap::new();
     let mut in_scope = 0usize;
     let mut meeting = 0usize;
+    let mut measure: Option<f64> = None;
     for id in candidates {
         let Some(ent) = campaign_entity(&id, &c.includes, scores, cards) else {
             continue;
         };
+        for inc in &c.includes {
+            let Some(s) = scores.get(&inc.scorecard).and_then(|m| m.get(&id)) else {
+                continue;
+            };
+            for (rule, n) in &s.measures {
+                if inc.rules.is_empty() || inc.rules.contains(rule) {
+                    *measure.get_or_insert(0.0) += n;
+                }
+            }
+        }
         in_scope += 1;
         if ent.meeting {
             meeting += 1;
@@ -945,7 +989,12 @@ fn score_one_campaign(
         entities.insert(id, ent);
     }
     let target = c.target_percent();
-    let percent = (meeting * 100).checked_div(in_scope).unwrap_or(0) as u8;
+    // Rounded to the nearest percent for display; targets compare exact counts, so 199 of 200
+    // (99.5%, shown as 100) is not on a 100% target.
+    let percent = (meeting * 100 + in_scope / 2)
+        .checked_div(in_scope)
+        .unwrap_or(0) as u8;
+    let reached = |goal: u8| in_scope > 0 && meeting * 100 >= usize::from(goal) * in_scope;
     CampaignProgress {
         status: campaign_status(c, as_of),
         track: c.track.clone(),
@@ -953,18 +1002,33 @@ fn score_one_campaign(
         in_scope,
         meeting,
         percent,
-        on_target: percent >= target,
+        on_target: reached(target),
+        measure: measure.or_else(|| campaign_measured(c, cards).then_some(0.0)),
         milestones: c
             .milestones
             .iter()
             .map(|m| CampaignMilestoneResult {
                 name: m.name.clone(),
                 target_percent: m.target_percent,
-                met: percent >= m.target_percent,
+                met: reached(m.target_percent),
             })
             .collect(),
         entities,
     }
+}
+
+/// Whether any rule the campaign includes declares a `measure` (so a sum of zero means done).
+fn campaign_measured(
+    c: &toolbox_model::manifest::Campaign,
+    cards: &BTreeMap<&str, &toolbox_model::manifest::Scorecard>,
+) -> bool {
+    c.includes.iter().any(|inc| {
+        cards.get(inc.scorecard.as_str()).is_some_and(|sc| {
+            sc.rules.iter().any(|r| {
+                r.measure.is_some() && (inc.rules.is_empty() || inc.rules.contains(&r.name))
+            })
+        })
+    })
 }
 
 /// Campaign lifecycle from draft / override / dates vs `as_of` (`YYYY-MM-DD`).
@@ -985,7 +1049,7 @@ fn campaign_status(c: &toolbox_model::manifest::Campaign, as_of: &str) -> String
 }
 
 /// Today's UTC date as `YYYY-MM-DD` (Howard Hinnant civil_from_days).
-fn utc_ymd_today() -> String {
+pub fn utc_ymd_today() -> String {
     let days = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map(|d| d.as_secs() / 86_400)
@@ -1010,10 +1074,11 @@ fn reads_cards(sc: &toolbox_model::manifest::Scorecard) -> bool {
             .any(|t| t == "cards")
     }
     sc.applies_to.as_deref().is_some_and(token)
-        || sc
-            .rules
-            .iter()
-            .any(|r| token(&r.check) || r.evidence.as_deref().is_some_and(token))
+        || sc.rules.iter().any(|r| {
+            token(&r.check)
+                || r.evidence.as_deref().is_some_and(token)
+                || r.measure.as_deref().is_some_and(token)
+        })
 }
 
 /// One entry per scorecard that has at least one counted entity: the lowest level, with unknown

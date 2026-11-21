@@ -563,6 +563,14 @@
         "name": {
           "$ref": "#/$defs/name"
         },
+        "title": {
+          "type": "string",
+          "description": "A heading for people and agents; reports show it next to the name."
+        },
+        "description": {
+          "type": "string",
+          "description": "What the standard is and why: shown by reports and `toolbox describe`."
+        },
         "kind": {
           "$ref": "#/$defs/kindName"
         },
@@ -607,6 +615,10 @@
               "evidence": {
                 "$ref": "#/$defs/cel",
                 "description": "CEL evaluated when the rule fails: the items that make it fail (usually a list), shown with the fix and counted by `toolbox report` baselines."
+              },
+              "measure": {
+                "$ref": "#/$defs/cel",
+                "description": "CEL evaluated when the rule fails: a number (lines in a file, occurrences of a pattern) that `toolbox report` baselines compare instead of the evidence count. Larger is worse; campaigns sum it to measure paydown."
               },
               "fix": {
                 "type": "string"

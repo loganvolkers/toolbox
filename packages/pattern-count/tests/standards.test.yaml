@@ -1,0 +1,19 @@
+# Package expectations over fixtures (package author SDLC: test).
+name: pattern-count
+assert:
+  - name: each match is a violation, counted and located
+    expect: >-
+      score('person-orm', 'person-orm:app/api/team.py').rules['no-matches'] ==
+      'fail' && score('person-orm',
+      'person-orm:app/api/team.py').measures['no-matches'] == 2.0 &&
+      score('person-orm', 'person-orm:app/api/team.py').evidence['no-matches']
+      == ['line 10', 'line 42']
+  - name: a file without matches is clean
+    expect: score('person-orm', 'person-orm:app/api/clean.py').level == 'clean'
+  - name: an exempt file is skipped
+    expect: score('person-orm', 'person-orm:app/models/util.py').level == 'skipped'
+  - name: the campaign counts files with matches and matches
+    expect: >-
+      campaign('person-orm-zero').inScope == 2 &&
+      campaign('person-orm-zero').meeting == 1 &&
+      campaign('person-orm-zero').measure == 2.0

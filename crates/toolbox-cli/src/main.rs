@@ -86,41 +86,7 @@ enum Command {
     /// recompute, and print every scorecard with the evidence for failing rules. With --baseline,
     /// compare against a committed results file (a ratchet): regressions exit 1, --update records
     /// improvements, --ci also fails when the file is out of date.
-    Report {
-        /// A portal directory (containing toolbox.yaml) or a manifest file.
-        #[arg(default_value = ".")]
-        path: PathBuf,
-        /// Use the portal's fixtures instead of running its connectors.
-        #[arg(long)]
-        fixtures: bool,
-        /// Connectors not to run (comma-separated), e.g. a slow runner.
-        #[arg(long, value_delimiter = ',')]
-        skip: Vec<String>,
-        /// Output: md (default), json, html (one self-contained page), or web (a directory:
-        /// the `<toolbox-report>` element, its JSON, and that page). A host fills the
-        /// element's header, nav, and footer slots; pass --out DIR for web.
-        #[arg(short = 'o', long, default_value = "md")]
-        output: String,
-        /// Write the output to this file instead of stdout.
-        #[arg(long)]
-        out: Option<PathBuf>,
-        /// Also write the one-page HTML report to this file (from the same run).
-        #[arg(long)]
-        html: Option<PathBuf>,
-        /// Results file to compare against (the ratchet).
-        #[arg(long)]
-        baseline: Option<PathBuf>,
-        /// With --baseline: write the new results when nothing regressed (creates a missing file).
-        #[arg(long)]
-        update: bool,
-        /// With --baseline: fail when the results differ from the file in any way.
-        #[arg(long)]
-        ci: bool,
-        /// Write the ratchet's verdict as JSON to this file (result, exit code, regressions,
-        /// improvements), for any CI system to read.
-        #[arg(long)]
-        verdict: Option<PathBuf>,
-    },
+    Report(report::Options),
     /// Send a portal's fixtures to a running server through the ingest API (one batch per
     /// connector, then native values), and wait for the snapshot that contains them.
     Push {
@@ -464,7 +430,26 @@ enum Format {
     Json,
 }
 
+/// A reader that closed the pipe (`toolbox describe portal . | head`) ends the command quietly,
+/// with the status a process killed by SIGPIPE has, instead of a panic and a backtrace.
+fn quiet_on_closed_pipe() {
+    let default = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |info| {
+        let msg = info
+            .payload()
+            .downcast_ref::<String>()
+            .map(String::as_str)
+            .or_else(|| info.payload().downcast_ref::<&str>().copied())
+            .unwrap_or("");
+        if msg.starts_with("failed printing to stdout") && msg.contains("Broken pipe") {
+            std::process::exit(141);
+        }
+        default(info);
+    }));
+}
+
 fn main() -> ExitCode {
+    quiet_on_closed_pipe();
     match Cli::parse().command {
         Command::Validate { path, format } => validate(&path, format),
         Command::Test { path, format } => test(&path, format),
@@ -559,29 +544,7 @@ fn main() -> ExitCode {
             serde_json::json!({"campaign": name}),
             &remote.output,
         ),
-        Command::Report {
-            path,
-            fixtures,
-            skip,
-            output,
-            out,
-            html,
-            baseline,
-            update,
-            ci,
-            verdict,
-        } => report::run(&report::Options {
-            path,
-            fixtures,
-            skip,
-            output,
-            out,
-            html,
-            baseline,
-            update,
-            ci,
-            verdict,
-        }),
+        Command::Report(o) => report::run(&o),
         Command::Refresh { id, remote } => client::tool(
             &remote.target(),
             "refresh_entity",

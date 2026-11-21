@@ -1,0 +1,3 @@
+{"type":"record","kind":"file","externalId":"file:app/api/team.py","data":{"path":"app/api/team.py","counts":{"match":2},"matchLines":{"match":[10,42]}}}
+{"type":"record","kind":"file","externalId":"file:app/api/clean.py","data":{"path":"app/api/clean.py","counts":{"match":0},"matchLines":{"match":[]}}}
+{"type":"record","kind":"file","externalId":"file:app/models/util.py","data":{"path":"app/models/util.py","counts":{"match":7},"matchLines":{"match":[1,2,3,4,5,6,7]}}}

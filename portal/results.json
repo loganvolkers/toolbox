@@ -1,4 +1,18 @@
 {
+  "campaigns": {
+    "cli-skill-coverage": {
+      "inScope": 27,
+      "recorded": "2026-11-21",
+      "short": 0,
+      "start": "2026-11-01"
+    },
+    "skill-silver": {
+      "inScope": 33,
+      "recorded": "2026-11-21",
+      "short": 5,
+      "start": "2026-11-01"
+    }
+  },
   "format": "toolbox-report/v1",
   "portal": "toolbox",
   "results": {
@@ -875,6 +889,9 @@
       "doc:docs/decisions/D01M7YNZFP68W0DR24PEA6T3FVM.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M7Z2ZZ97VZQNTDT4QQHM3HQD.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/README.md": {
         "level": "skipped"
       },
@@ -1042,6 +1059,9 @@
       },
       "doc:docs/red-team.md": {
         "level": "skipped"
+      },
+      "doc:docs/reference/workspace-connector.md": {
+        "level": "silver"
       },
       "doc:docs/research-log.md": {
         "level": "skipped"
@@ -1226,10 +1246,7 @@
         "level": "gold"
       },
       "example:experiments/standards-ab/README.md": {
-        "failing": {
-          "says-how-to-check": 1
-        },
-        "level": "bronze"
+        "level": "gold"
       },
       "example:experiments/typescript-builder/README.md": {
         "level": "gold"

@@ -1,0 +1,63 @@
+# Pattern count: matches of `pattern` per file. One connector, kind, scorecard and campaign, all
+# named from the parameters, so a portal can include the package more than once.
+connectors:
+  - name: ${param:name}
+    package: builtin:workspace # reads files only: no build, no network, no history walk
+    runtime: in-image
+    config:
+      root: ${param:root}
+      crates: false
+      lastChange: false
+      files: ${param:files}
+      exclude: ${param:exclude}
+      counts: {match: "${param:pattern}"}
+    records: [file]
+    refresh: {file: [external_ids]}
+    freshness: {file: 5m}
+
+kinds:
+  - name: ${param:kind}
+    description: A file scanned by the ${param:name} standard (matches of its pattern).
+    identityFrom: ["connector:${param:name}"]
+    fields:
+      path: {type: string}
+      matches: {type: integer}
+      matchLines: {type: list, items: integer}
+    sources: {default: ["connector:${param:name}"]}
+    map:
+    - from: ${param:name}/file
+      id: "'${param:name}:' + record.path"
+      set: >-
+        {'path': record.path, 'matches': record.counts.match, 'matchLines':
+        record.matchLines.match}
+
+scorecards:
+  - name: ${param:name}
+    title: ${param:title}
+    description: >-
+      Each match of the pattern is a violation. The measure is the number of
+      matches, so a file that gains one is a regression and one that loses one
+      is an improvement.
+    kind: ${param:kind}
+    owner: ${param:owner}
+    levels: [clean]
+    # A file new since the baseline (or renamed) must arrive without matches.
+    ratchet: {newEntitiesAtLeast: clean}
+    appliesTo: "!(entity.path in ${param:exempt})"
+    rules:
+    - name: no-matches
+      level: clean
+      check: entity.matches == 0
+      measure: entity.matches
+      evidence: entity.matchLines.map(n, 'line ' + string(n))
+      fix: ${param:fix}
+    facets: {summary: public, details: public}
+
+campaigns:
+  - name: ${param:name}-zero
+    title: "${param:title}: to zero"
+    owner: ${param:owner}
+    description: >-
+      No matches in any scanned file. Progress is counted from the start the
+      baseline records: files with matches, and matches.
+    includes: [{scorecard: '${param:name}', rules: [no-matches]}]

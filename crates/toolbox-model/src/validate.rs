@@ -688,6 +688,13 @@ impl Checker {
                         Site::Scorecard,
                     ));
                 }
+                if let Some(e) = &r.measure {
+                    exprs.push((
+                        format!("/scorecards/{si}/rules/{ri}/measure"),
+                        e,
+                        Site::Scorecard,
+                    ));
+                }
             }
         }
         if let Some(authz) = &m.authz {

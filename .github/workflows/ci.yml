@@ -54,8 +54,10 @@ jobs:
           target/debug/toolbox validate examples/repo-portal-starter
           target/debug/toolbox test examples/repo-portal-starter
           # Packages test themselves, in their own portal with their own parameters (D89)
-          target/debug/toolbox validate packages/github-actions/tests
-          target/debug/toolbox test packages/github-actions/tests
+          for t in packages/*/tests; do
+            target/debug/toolbox validate "$t"
+            target/debug/toolbox test "$t"
+          done
       # The ratchet, through the same action pilot repos use (D66, D69), with the binaries built above.
       # Fails on any regression, and when portal/results.json is out of date (update it with
       # `toolbox report portal --skip runner --baseline portal/results.json --update`).

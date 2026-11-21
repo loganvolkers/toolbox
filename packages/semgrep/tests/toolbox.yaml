@@ -1,0 +1,12 @@
+# The package's test portal: includes the package as a consumer would, with its own parameters.
+# Run: toolbox test packages/semgrep/tests
+apiVersion: toolbox.dev/v1alpha1
+portal:
+  name: semgrep-package
+  title: semgrep standard (package tests)
+  owner: group:maintainers
+  toolbox: "0.1"
+include:
+  - package: ..
+    with: {name: no-orm, kind: PythonFile, config: .semgrep/rules/no-orm.yaml}
+tests: [standards.test.yaml]

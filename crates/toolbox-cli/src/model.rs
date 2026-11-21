@@ -64,6 +64,15 @@ fn readers(m: &Manifest) -> Readers {
                     format!("evidence {}/{}", sc.name, r.name),
                 );
             }
+            if let Some(e) = &r.measure {
+                add(
+                    &mut out,
+                    m,
+                    &sc.kind,
+                    e,
+                    format!("measure {}/{}", sc.name, r.name),
+                );
+            }
         }
         if let Some(a) = &sc.applies_to {
             add(&mut out, m, &sc.kind, a, format!("appliesTo {}", sc.name));

@@ -87,11 +87,30 @@ An entity **meets** the campaign only if it satisfies **every** include (AND).
 1. **In scope:** entities that are **not** `skipped` on **every** scorecard named in `includes`
    (intersection). Per-scorecard `appliesTo` still decides skip via normal scoring.
 2. **Meeting:** in-scope entities that satisfy every include.
-3. **Percent:** `round(100 * meeting / inScope)` when `inScope > 0`, else `0`.
-4. **On target:** `percent >= targetPercent` (default `targetPercent` is `100`).
-5. **Milestone met:** `percent >= milestone.targetPercent`.
+3. **Percent:** `round(100 * meeting / inScope)` when `inScope > 0`, else `0` (to the nearest
+   percent, for display).
+4. **On target:** `100 * meeting >= targetPercent * inScope` (default `targetPercent` is `100`):
+   exact counts, so 199 of 200 is shown as 100 but is not on a 100% target.
+5. **Milestone met:** the same comparison with `milestone.targetPercent`.
+6. **Measure:** when the included rules declare a `measure` (lines over a limit, matches of a
+   pattern), its sum over in-scope entities. A campaign over counted standards pays this down.
 
 Raw `inScope` and `meeting` counts are always emitted (deterministic for tests and ratchets).
+
+### 3.4 Progress from a recorded start
+
+A percentage of entities meeting the goal hides paydown inside entities that still fail: 120
+violations in 40 files going to 114 in 39 files is 2.5% fewer files and 5.0% fewer violations.
+So `toolbox report --baseline` records each campaign's starting point in the baseline file the
+first time the campaign is active (`campaigns.<name>: {start, recorded, inScope, short,
+measure?}`) and keeps it while the campaign's `start` is unchanged. The summary and `-o json`
+then show `sinceStart`: entities short of the goal, and the measure, from the recorded start to
+now, with the percentage of the way to zero (negative when it went backwards).
+
+| To | Do |
+|---|---|
+| Restart a campaign (a new scope, a new standard) | Change its `start`, or run `--update --accept <scorecard>` for an intended change to a scorecard it includes, then commit the baseline |
+| Keep its history across a change | Leave `start` alone and don't `--accept` its scorecards; the paydown then counts from the original start |
 
 ### 3.3 Status
 
@@ -120,6 +139,7 @@ Progress fields are independent of status: an `ended` campaign still reports its
   "meeting": 28,
   "percent": 88,
   "onTarget": false,
+  "measure": 120,
   "milestones": [{"name": "half", "targetPercent": 50, "met": true}],
   "entities": {
     "skill:plugins/…/scorecard": {"meeting": true},
@@ -136,7 +156,8 @@ Progress fields are independent of status: an `ended` campaign still reports its
 |---|---|
 | `toolbox validate` | Unique track/campaign names; track refs; scorecard/level/rule refs; dates `YYYY-MM-DD`; each include has `atLeast` and/or `rules` |
 | `toolbox derive` / serve snapshot | Fills `Derived.campaigns` after scorecards |
-| `toolbox report` JSON/HTML/web | `tracks`, `campaigns` (defs + progress); Campaigns mode in `<toolbox-report>`; Overview lists active campaigns |
+| `toolbox report` JSON/HTML/web | `tracks`, `campaigns` (defs + progress, and `sinceStart` with `--baseline`, §3.4), without a server; Campaigns mode in `<toolbox-report>`; Overview lists active campaigns |
+| `toolbox report --baseline` summary | One line per campaign with a recorded start: entities short and measure, from the start to now |
 | `toolbox campaign [name]` | List or one campaign's progress and non-meeting entities (MCP `campaign_report`) |
 | `GET /v1/campaigns` · `/v1/campaigns/{name}` | Same data, facet-visible entities only |
 | `GET /v1/views/campaign/{name}` | Composite for the minimal UI |
