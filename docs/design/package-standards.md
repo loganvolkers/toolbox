@@ -1,6 +1,7 @@
 # Package Standards: Cataloguing npm Manifests
 
-*Status: deterministic catalog and scorecard built, 2026-11-20 (D76). Toolbox for Toolbox catalogues
+*Status: deterministic catalog and scorecard built, 2026-11-20 (D76); pnpm workspace lockfiles and
+frozen installs recognised 2026-11-21 (D01M7Y57FVX0XYNGMX0A0XJ4GK9). Toolbox for Toolbox catalogues
 each `package.json` and scores it with `maintainer-package`. A licence field is not required by the scorecard (D76); manifests use MIT (D88).
 Advisory databases are not a gate. Related: [dependency-standards.md](./dependency-standards.md),
 [toolbox-for-toolbox.md](./toolbox-for-toolbox.md).*
@@ -18,8 +19,8 @@ repository. The checks that do not need a registry or a vulnerability database:
 | Question | What answers it | In this repo |
 |---|---|---|
 | Is the package named, and is a publish either refused or versioned? Are its ranges bounded registry versions? | `name`, `private` or `version`, the dependency ranges | bronze |
-| Is there a lockfile beside it, and a script CI can run? | `package-lock.json` (or shrinkwrap, pnpm, yarn) and `test` / `build` / `check` / `typecheck` | silver |
-| Does it say what it is, which Node it needs, and does CI install from the lockfile? | `description`, `engines.node`, `npm ci` rather than `npm install` | gold |
+| Is there a lockfile beside it or at the workspace root, and a script CI can run? | `package-lock.json` (or shrinkwrap, pnpm, yarn) and `test` / `build` / `check` / `typecheck` | silver |
+| Does it say what it is, which Node it needs, and does CI install from the lockfile? | `description`, `engines.node`, `npm ci` or `pnpm install --frozen-lockfile` rather than an unlocked install | gold |
 
 Caret and tilde ranges stay bounded. A `*`, `x`, `latest` or `>=` range does not. `workspace:`,
 `file:` and `link:` are local and are not treated as wildcards. A git URL or an `https` tarball is
@@ -32,7 +33,7 @@ so they do not gate.
 |---|---|---|
 | **npm `package.json`** | `name` and `version` are required to publish and optional otherwise. "Put a description in it." `private: true` makes npm refuse to publish. `engines` records the Node version and is advisory unless `engine-strict` is set | The name, the private-or-version rule, the description, `engines.node` |
 | **npm developers** | Have a smoke test as `scripts.test`. Use `engines` to say which Node the program needs | A `test`, `build`, `check` or `typecheck` script counts. This repository's CI runs `build` and `check` |
-| **OpenSSF npm best practices** | A lockfile hash-pins every installed package via `integrity`. For an application, commit the lockfile and in CI run only commands that treat it as read-only. `npm ci` does. `npm install` may update it | A sibling lockfile at silver. `npm ci` in that package's CI job at gold |
+| **OpenSSF npm best practices** | A lockfile hash-pins every installed package via `integrity`. For an application, commit the lockfile and in CI run only commands that treat it as read-only. `npm ci` and `pnpm install --frozen-lockfile` do. `npm install` / unlocked `pnpm install` may update it | A sibling or workspace-root lockfile at silver. Lockfile-faithful CI (`npm ci` or frozen pnpm) in that package's job at gold |
 | **This repository** | `ui/` and `experiments/typescript-builder/` are private, exact-version, and each has a `package-lock.json`. CI runs `npm install` in both jobs | Both are silver. The gold gaps are a description, `engines.node`, and `npm ci`. The workflows are not changed here |
 
 ## 3. The catalog
@@ -47,9 +48,9 @@ covers the libraries the Rust build links. This catalog is the manifest.
 | `descriptionChars` | Length of `description` |
 | `engines` | `engines.node` is a non-empty string |
 | `requirements`, `wildcardRanges`, `gitRanges` | Direct ranges from dependencies, devDependencies, optionalDependencies and peerDependencies |
-| `lockfile` | `package-lock.json`, `npm-shrinkwrap.json`, `pnpm-lock.yaml` or `yarn.lock` beside the manifest |
+| `lockfile` | `package-lock.json`, `npm-shrinkwrap.json`, `pnpm-lock.yaml` or `yarn.lock` beside the manifest, or the same names walked up to the checkout root (pnpm/yarn workspaces) |
 | `checkScripts` | How many of `test`, `build`, `check`, `typecheck` exist |
-| `ciUsesInstall` | A workflow job whose `working-directory` is this package runs `npm install` |
+| `ciUsesInstall` | A workflow job whose `working-directory` is this package runs `npm install`, or `pnpm install` / `pnpm i` without `--frozen-lockfile` |
 | `secretHits` | High-precision secret shapes in the manifest |
 
 ## 4. The scorecard
@@ -63,11 +64,11 @@ this repository.
 | bronze | `publish-intent` | `private` is true, or `version` is set |
 | bronze | `version-bounded` | No `*`, `x`, `latest` or `>=` range |
 | bronze | `from-a-registry` | No git URL and no tarball URL |
-| silver | `locked` | A lockfile sits beside the manifest |
+| silver | `locked` | A lockfile sits beside the manifest or at a workspace root above it |
 | silver | `has-a-check` | At least one of `test`, `build`, `check`, `typecheck` |
 | gold | `described` | `description` is non-empty |
 | gold | `engines-declared` | `engines.node` is set |
-| gold | `ci-installs-from-the-lockfile` | CI does not run `npm install` for this package |
+| gold | `ci-installs-from-the-lockfile` | CI does not run an unlocked install (`npm install`, or pnpm without `--frozen-lockfile`) for this package |
 | gold | `no-hardcoded-secrets` | No secret shape |
 
 ## 5. This repository

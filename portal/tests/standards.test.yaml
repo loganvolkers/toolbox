@@ -475,7 +475,8 @@ assert:
       'package-json:packages/demo/partial/package.json').level == 'bronze' &&
       score('maintainer-package',
       'package-json:packages/demo/partial/package.json').evidence['locked'] ==
-      ['no lockfile beside package.json'] && score('maintainer-package',
+      ['no lockfile beside package.json or at the workspace root'] &&
+      score('maintainer-package',
       'package-json:packages/demo/partial/package.json').evidence['has-a-check']
       == ['0 check scripts'] && score('maintainer-package',
       'package-json:packages/demo/partial/package.json').evidence['described']
@@ -497,8 +498,8 @@ assert:
       == ['leftpad@git+https://example.invalid/leftpad'] &&
       score('maintainer-package',
       'package-json:packages/demo/unsafe/package.json').evidence['ci-installs-from-the-lockfile']
-      == ['CI runs npm install, which can update the lockfile'] &&
-      score('maintainer-package',
+      == ['CI runs npm install or pnpm install without --frozen-lockfile,
+      which can update the lockfile'] && score('maintainer-package',
       'package-json:packages/demo/unsafe/package.json').evidence['no-hardcoded-secrets']
       == ['package.json:4 aws-access-key']
   # JSON Schema documents

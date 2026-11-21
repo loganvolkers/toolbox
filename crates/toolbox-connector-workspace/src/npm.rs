@@ -1,8 +1,9 @@
 //! npm manifests (`package.json`), read statically (docs/design/package-standards.md).
 //!
 //! One record per manifest. Facts only: the name, whether npm will refuse to publish it, the
-//! dependency ranges, a sibling lockfile, the scripts a check can run, and whether CI installs
-//! with `npm install` (which may rewrite the lockfile). Thresholds live in the manifest.
+//! dependency ranges, a lockfile beside the manifest or at a workspace root, the scripts a check
+//! can run, and whether CI runs an install that may rewrite the lockfile (`npm install`, or
+//! `pnpm install` without `--frozen-lockfile`). Thresholds live in the manifest.
 
 use regex::Regex;
 use serde_json::{Map, Value, json};
@@ -23,7 +24,7 @@ pub(crate) fn analyse(root: &Path, rel: &str) -> Value {
         "requirements": requirements,
         "wildcardRanges": wildcard_ranges,
         "gitRanges": git_ranges,
-        "lockfile": lockfile(&root.join(&dir)),
+        "lockfile": lockfile(root, Path::new(&dir)),
         "checkScripts": check_scripts(pkg["scripts"].as_object()),
         "ciUsesInstall": ci_uses_install(root, &dir),
         "secretHits": secrets(rel, &text),
@@ -109,15 +110,28 @@ fn is_remote(spec: &str) -> bool {
         || s.contains("git+")
 }
 
-fn lockfile(dir: &Path) -> String {
-    for name in [
+/// Lockfile beside the manifest, or at an ancestor up to the checkout root (pnpm/yarn workspaces).
+fn lockfile(root: &Path, dir: &Path) -> String {
+    let names = [
         "package-lock.json",
         "npm-shrinkwrap.json",
         "pnpm-lock.yaml",
         "yarn.lock",
-    ] {
-        if dir.join(name).is_file() {
-            return name.to_owned();
+    ];
+    let abs = root.join(dir);
+    let mut cur = abs.as_path();
+    loop {
+        for name in names {
+            if cur.join(name).is_file() {
+                return name.to_owned();
+            }
+        }
+        if cur == root {
+            break;
+        }
+        match cur.parent() {
+            Some(parent) => cur = parent,
+            None => break,
         }
     }
     String::new()
@@ -171,11 +185,22 @@ fn blocks_install(text: &str, dir: &str) -> bool {
             capture = false;
             continue;
         }
-        if capture && compile(r"\bnpm install\b").is_match(line) {
+        if capture && unlocked_install(line) {
             install = true;
         }
     }
     install
+}
+
+/// An install that may rewrite the lockfile (`npm install`, or pnpm without `--frozen-lockfile`).
+fn unlocked_install(line: &str) -> bool {
+    if compile(r"\bnpm install\b").is_match(line) {
+        return true;
+    }
+    if compile(r"\bpnpm\s+i(nstall)?\b").is_match(line) {
+        return !compile(r"(^|[\s])--frozen-lockfile\b").is_match(line);
+    }
+    false
 }
 
 fn working_directory(line: &str) -> Option<String> {
@@ -314,6 +339,56 @@ mod tests {
         assert!(!is_remote("file:../ui"));
         assert!(is_remote("github:left/pad"));
         assert!(is_remote("https://example.invalid/pkg.tgz"));
+    }
+
+    #[test]
+    fn a_nested_package_uses_the_workspace_root_pnpm_lockfile() {
+        let tmp = scratch(
+            "pnpm-ws",
+            &[
+                (
+                    "package.json",
+                    r#"{"name":"root","private":true,"packageManager":"pnpm@10.0.0"}"#,
+                ),
+                ("pnpm-lock.yaml", "lockfileVersion: '9.0'\n"),
+                (
+                    "apps/web/package.json",
+                    r#"{"name":"web","private":true,"scripts":{"build":"vite build"}}"#,
+                ),
+                (
+                    ".github/workflows/ci.yml",
+                    "jobs:\n  web:\n    defaults: {run: {working-directory: apps/web}}\n    steps:\n      - run: pnpm install --frozen-lockfile\n",
+                ),
+            ],
+        );
+        let rec = analyse(&tmp.0, "apps/web/package.json");
+        assert_eq!(rec["lockfile"], "pnpm-lock.yaml");
+        assert_eq!(rec["ciUsesInstall"], false);
+    }
+
+    #[test]
+    fn pnpm_install_without_frozen_lockfile_is_unlocked() {
+        let tmp = scratch(
+            "pnpm-unlocked",
+            &[
+                ("apps/web/package.json", r#"{"name":"web","private":true}"#),
+                ("pnpm-lock.yaml", "lockfileVersion: '9.0'\n"),
+                (
+                    ".github/workflows/ci.yml",
+                    "jobs:\n  web:\n    defaults: {run: {working-directory: apps/web}}\n    steps:\n      - run: pnpm i\n",
+                ),
+            ],
+        );
+        let rec = analyse(&tmp.0, "apps/web/package.json");
+        assert_eq!(rec["lockfile"], "pnpm-lock.yaml");
+        assert_eq!(rec["ciUsesInstall"], true);
+        assert!(unlocked_install("      - run: pnpm install"));
+        assert!(unlocked_install("      - run: pnpm i"));
+        assert!(!unlocked_install(
+            "      - run: pnpm install --frozen-lockfile"
+        ));
+        assert!(!unlocked_install("      - run: pnpm i --frozen-lockfile"));
+        assert!(!unlocked_install("      - run: npm ci"));
     }
 
     #[test]

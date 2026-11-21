@@ -815,6 +815,9 @@
       "doc:docs/decisions/D01M7Y46VDDBK2SW6H96ZSG89MP.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M7Y57FVX0XYNGMX0A0XJ4GK9.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/README.md": {
         "level": "skipped"
       },
@@ -1731,6 +1734,9 @@
           "described": 1
         },
         "level": "bronze"
+      },
+      "field:repo/Repository.ownersOk": {
+        "level": "gold"
       },
       "field:repo/Repository.readme": {
         "failing": {

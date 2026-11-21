@@ -137,7 +137,7 @@ which, and how to update the baseline. The Markdown and HTML reports are uploade
 | Composite action + `run.sh` | Testable locally with the same environment variables. This repo tested `run.sh` through every result: missing baseline, update, pass, regression, unrecorded improvement, unknown mode, missing portal |
 | Build from the action's own source at the pinned commit, cached by a hash of `Cargo.lock`, the toolchain file, `crates/` and `schema/` | No releases exist yet (licence Q1). Pinning a commit pins both the action and the toolbox it runs |
 | `toolbox-dir` input | Repos that already build toolbox (this one) skip the build |
-| Starter: `repo-hygiene` + `docs` | Useful on day one in any repository, with no build and no network. It is also stage 1 of the federation graduation example |
+| Starter: `repo-hygiene` + `docs` | Useful on day one in any repository, with no build and no network. Silver accepts team CODEOWNERS or personal-only handles (D01M7Y57FVX0XYNGMX0A0XJ4GK9). It is also stage 1 of the federation graduation example |
 | `pull_request`, never `pull_request_target` | Connectors run the manifest's commands; fork code must not get write tokens |
 
 **Dogfooding.** This repository's CI:

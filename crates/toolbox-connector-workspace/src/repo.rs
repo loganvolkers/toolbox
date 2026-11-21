@@ -82,12 +82,14 @@ pub fn record(root: &Path, paths: &[String]) -> (String, Value) {
         .collect();
     owners.sort();
     owners.dedup();
+    let owners_ok = owners_ok(&owners);
     let name = name(root);
     let supply = supply_chain(root, paths, codeowners.as_ref());
     (
         name.clone(),
         json!({
             "owners": owners,
+            "ownersOk": owners_ok,
             "name": name,
             "files": top,
             "readme": readme,
@@ -101,6 +103,16 @@ pub fn record(root: &Path, paths: &[String]) -> (String, Value) {
             "workflowOwners": supply.workflow_owners,
         }),
     )
+}
+
+/// True when every owner is `@org/team`, or every owner is a personal `@user` (D01M7Y57FVX0XYNGMX0A0XJ4GK9).
+fn owners_ok(owners: &[String]) -> bool {
+    if owners.is_empty() || !owners.iter().all(|o| o.starts_with('@')) {
+        return false;
+    }
+    let all_teams = owners.iter().all(|o| o.contains('/'));
+    let all_personal = owners.iter().all(|o| !o.contains('/'));
+    all_teams || all_personal
 }
 
 struct Supply {
@@ -222,6 +234,16 @@ mod tests {
                 json!({"pattern": "/docs/", "owners": ["@acme/docs", "@alice"], "line": 4}),
             ]
         );
+    }
+
+    #[test]
+    fn owners_ok_allows_teams_or_only_personal_handles() {
+        assert!(owners_ok(&["@acme/platform".into()]));
+        assert!(owners_ok(&["@logan".into()]));
+        assert!(owners_ok(&["@alice".into(), "@bob".into()]));
+        assert!(!owners_ok(&[]));
+        assert!(!owners_ok(&["@acme/platform".into(), "@alice".into()]));
+        assert!(!owners_ok(&["alice@acme.com".into()]));
     }
 
     #[test]

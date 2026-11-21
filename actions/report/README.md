@@ -8,8 +8,10 @@ secrets ([docs/design/repo-portals.md](../../docs/design/repo-portals.md)).
 ## Adopt it in a repository
 
 1. Copy [`examples/repo-portal-starter/toolbox.yaml`](../../examples/repo-portal-starter/toolbox.yaml)
-   to `.toolbox/toolbox.yaml`. It scores README, CODEOWNERS (a catch-all rule, teams not people) and
-   LICENSE, and checks the docs' relative links. Edit or add scorecards as the team likes.
+   to `.toolbox/toolbox.yaml`. It scores README, CODEOWNERS (a catch-all rule; teams **or** only
+   personal handles), and LICENSE, and checks the docs' relative links. Edit or add scorecards as
+   the team likes. In JS/TS repos, ignore `.toolbox/**` in ESLint so fixture YAML is not parsed as
+   code (see the [starter README](../../examples/repo-portal-starter/README.md)).
 2. Add the workflow:
 
    ```yaml
@@ -40,7 +42,7 @@ secrets ([docs/design/repo-portals.md](../../docs/design/repo-portals.md)).
 
 From then on:
 - every pull request fails if a rule starts failing, or a failing rule's evidence grows (e.g. a new
-  individual in CODEOWNERS);
+  individual mixed into a team CODEOWNERS);
 - it also fails if an improvement isn't recorded in `results.json`, so the committed file always
   matches the code.
 
