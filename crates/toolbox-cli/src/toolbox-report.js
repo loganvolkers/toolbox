@@ -20,10 +20,15 @@
     "main{max-width:1100px;margin:0 auto;padding:24px 16px 64px}",
     "h1{font-size:22px;margin:0 0 4px}h2{font-size:17px;margin:0}h3{font-size:14px;margin:16px 0 8px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}",
     ".meta{color:var(--muted);font-size:13px;margin-bottom:16px}",
+    ".verdict{font-size:16px;line-height:1.45;margin:0 0 12px}",
     ".modes{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}",
-    ".modes button,.filters button,nav.cards button{border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:6px;padding:5px 12px;font:inherit;font-size:13px;cursor:pointer}",
-    ".modes button[aria-pressed=true],.filters button[aria-pressed=true],nav.cards button[aria-pressed=true]{border-color:var(--accent);color:var(--accent);font-weight:600}",
+    ".modes button,.filters button,nav.cards button,nav.rank button{border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:6px;padding:5px 12px;font:inherit;font-size:13px;cursor:pointer}",
+    ".modes button[aria-selected=true],.filters button[aria-pressed=true],nav.cards button[aria-pressed=true],nav.rank button[aria-pressed=true]{border-color:var(--accent);color:var(--accent);font-weight:600}",
     "nav.cards{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}",
+    "nav.rank{display:flex;flex-direction:column;gap:4px;margin:0 0 12px;max-height:280px;overflow:auto}",
+    "nav.rank button{display:flex;align-items:baseline;justify-content:space-between;gap:12px;width:100%;text-align:left}",
+    "nav.rank .debt{color:var(--muted);font-size:12px;white-space:nowrap}",
+    "nav.rank .debt.has-none{color:var(--none);font-weight:600}",
     "section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}",
     ".head{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline;justify-content:space-between}",
     ".sub{color:var(--muted);font-size:13px}",
@@ -38,13 +43,17 @@
     "table.fleet{width:100%;border-collapse:collapse;font-size:13px}",
     "table.fleet th{text-align:left;font-weight:600;color:var(--muted);padding:6px 8px 6px 0;border-bottom:1px solid var(--line)}",
     "table.fleet td{padding:8px 8px 8px 0;border-bottom:1px solid var(--line);vertical-align:middle}",
-    "table.fleet tr{cursor:pointer}table.fleet tr:hover td{background:var(--bg)}",
+    "table.fleet tr[tabindex]{cursor:pointer}table.fleet tr[tabindex]:hover td{background:var(--bg)}",
+    "table.fleet tr[tabindex]:focus{outline:2px solid var(--accent);outline-offset:2px}",
     "a.link,button.link{background:none;border:0;padding:0;color:var(--accent);font:inherit;cursor:pointer;text-decoration:underline;text-underline-offset:2px}",
     "details{border-top:1px solid var(--line);padding:6px 0}",
     "summary{cursor:pointer;display:flex;gap:10px;align-items:baseline;list-style:none}",
     "summary::-webkit-details-marker{display:none}",
     ".lvl{font-size:12px;font-weight:600;min-width:58px}",
+    ".lvl::before{content:attr(data-label) ': ';font-weight:500;color:var(--muted)}",
     "code{font:13px ui-monospace,SFMono-Regular,Menlo,monospace;overflow-wrap:anywhere}",
+    ".id-short{font:13px ui-monospace,SFMono-Regular,Menlo,monospace}",
+    ".id-full{color:var(--muted);font-size:12px;margin-left:6px;overflow-wrap:anywhere}",
     ".fails{color:var(--muted);font-size:13px;overflow-wrap:anywhere}",
     ".rule{margin:8px 0 0 68px}.rule b{font-weight:600}",
     ".rule ul{margin:4px 0 0;padding-left:18px}.rule li{overflow-wrap:anywhere}",
@@ -57,8 +66,9 @@
     ".kind-grid strong{display:block;font-size:14px}.kind-grid span{color:var(--muted);font-size:12px}",
     ".crumb{font-size:13px;color:var(--muted);margin-bottom:8px}",
     ".empty{color:var(--muted);font-size:13px;padding:8px 0}",
+    ".empty-actions{margin-top:8px}",
     "::slotted(*){display:block;max-width:1100px;margin:0 auto;padding:12px 16px 0;box-sizing:border-box}",
-    "@media (max-width:600px){.rule{margin-left:0}summary{flex-wrap:wrap}.fails{flex-basis:100%}table.fleet .hide-sm{display:none}}",
+    "@media (max-width:600px){.rule{margin-left:0}summary{flex-wrap:wrap}.fails{flex-basis:100%}table.fleet .hide-sm{display:none}.id-full{display:block;margin-left:0}}",
     "</style>",
     '<slot name="header"></slot>',
     '<slot name="nav"></slot>',
@@ -130,8 +140,176 @@
     );
   }
 
+  function shortId(id) {
+    var s = String(id || "");
+    var slash = s.lastIndexOf("/");
+    var colon = s.lastIndexOf(":");
+    var i = Math.max(slash, colon);
+    return i >= 0 && i < s.length - 1 ? s.slice(i + 1) : s;
+  }
+
+  function idLabel(id) {
+    var short = shortId(id);
+    if (short === id) return el("code", { textContent: id, title: id });
+    return el(
+      "span",
+      { title: id },
+      el("span", { className: "id-short", textContent: short }),
+      el("span", { className: "id-full", textContent: id }),
+    );
+  }
+
+  function makeLevelBadge(level) {
+    var span = el("span", {
+      className: "lvl",
+      textContent: level,
+      style: "color:" + color(level),
+    });
+    span.setAttribute("data-label", "level");
+    return span;
+  }
+
+  function clickableRow(path, go) {
+    var kids = Array.prototype.slice.call(arguments, 2);
+    return el(
+      "tr",
+      {
+        tabIndex: 0,
+        role: "link",
+        title: "Open",
+        onclick: function () {
+          go(path);
+        },
+        onkeydown: function (ev) {
+          if (ev.key === "Enter" || ev.key === " ") {
+            ev.preventDefault();
+            go(path);
+          }
+        },
+      },
+      ...kids,
+    );
+  }
+
+  function scorecardRows(D) {
+    var cards = Object.keys(D.scorecards || {});
+    return cards
+      .map(function (name) {
+        var sc = D.scorecards[name];
+        var ents = Object.entries(D.scores[name] || {});
+        var order = levelOrder(sc.levels);
+        var parts = tallyLevels(ents, order);
+        var none = parts.find(function (p) {
+          return p.level === "none";
+        });
+        var bronze = parts.find(function (p) {
+          return p.level === "bronze";
+        });
+        return {
+          name: name,
+          sc: sc,
+          parts: parts,
+          none: none ? none.n : 0,
+          bronze: bronze ? bronze.n : 0,
+          scored: ents.filter(function (p) {
+            return p[1].level !== "skipped";
+          }).length,
+          weight: (none ? none.n : 0) * 1000 + (bronze ? bronze.n : 0),
+        };
+      })
+      .sort(function (a, b) {
+        return b.weight - a.weight || a.name.localeCompare(b.name);
+      });
+  }
+
+  function campaignNamesSorted(D) {
+    var campaigns = D.campaigns || {};
+    return Object.keys(campaigns)
+      .filter(function (n) {
+        var st = campaigns[n].status;
+        return st === "active" || st === "scheduled" || st === "ended";
+      })
+      .sort(function (a, b) {
+        return (campaigns[a].percent || 0) - (campaigns[b].percent || 0) || a.localeCompare(b);
+      });
+  }
+
+  function scoredKinds(D) {
+    var set = {};
+    Object.keys(D.scorecards || {}).forEach(function (name) {
+      var k = D.scorecards[name].kind;
+      if (k) set[k] = true;
+    });
+    return set;
+  }
+
+  function catalogKindsSorted(D) {
+    var catalog = D.catalog || {};
+    var scored = scoredKinds(D);
+    return Object.keys(catalog).sort(function (a, b) {
+      var as = scored[a] ? 0 : 1;
+      var bs = scored[b] ? 0 : 1;
+      if (as !== bs) return as - bs;
+      return catalog[b].length - catalog[a].length || a.localeCompare(b);
+    });
+  }
+
+  function healthVerdict(D, campaignNames, rows) {
+    var campaigns = D.campaigns || {};
+    var off = campaignNames.filter(function (n) {
+      return !campaigns[n].onTarget;
+    });
+    var debt = rows.filter(function (r) {
+      return r.none > 0;
+    });
+    if (!campaignNames.length && !rows.length) {
+      return "No campaigns or scorecards in this snapshot.";
+    }
+    if (!off.length && !debt.length) {
+      return "On track: every active campaign meets its target, and no scorecard has entities at none.";
+    }
+    var bits = [];
+    if (off.length) {
+      bits.push(
+        off.length +
+          " campaign" +
+          (off.length === 1 ? "" : "s") +
+          " below target (" +
+          off
+            .slice(0, 3)
+            .map(function (n) {
+              return campaigns[n].title || n;
+            })
+            .join(", ") +
+          (off.length > 3 ? "…" : "") +
+          ")",
+      );
+    } else if (campaignNames.length) {
+      bits.push("campaigns on target");
+    }
+    if (debt.length) {
+      bits.push(
+        debt.length +
+          " scorecard" +
+          (debt.length === 1 ? "" : "s") +
+          " with entities at none (worst: " +
+          debt
+            .slice(0, 3)
+            .map(function (r) {
+              return r.name + " ×" + r.none;
+            })
+            .join(", ") +
+          (debt.length > 3 ? "…" : "") +
+          ")",
+      );
+    } else {
+      bits.push("no scorecard debt at none");
+    }
+    return "Needs attention: " + bits.join("; ") + ".";
+  }
+
   function parseHash() {
-    var h = (location.hash || "#").slice(1);
+    var h = (location.hash || "").replace(/^#/, "");
     if (!h || h === "overview") return { mode: "overview" };
     if (h === "catalog") return { mode: "catalog" };
     if (h.indexOf("catalog/") === 0) return { mode: "catalog", kind: decodeURIComponent(h.slice(8)) };
@@ -139,54 +317,49 @@
     if (h === "campaigns") return { mode: "campaigns" };
     if (h.indexOf("campaign/") === 0) return { mode: "campaign", name: decodeURIComponent(h.slice(9)) };
     if (h.indexOf("scorecard/") === 0) return { mode: "scorecard", name: decodeURIComponent(h.slice(10)) };
-    // Legacy: bare scorecard name from older pages.
+    if (h === "scorecards") return { mode: "scorecard" };
     return { mode: "scorecard", name: decodeURIComponent(h) };
   }
 
   function setHash(path) {
-    var next = "#" + path;
-    if (location.hash !== next) location.hash = path;
+    location.hash = path;
   }
 
   class ToolboxReport extends HTMLElement {
     connectedCallback() {
-      if (this.shadowRoot) return;
+      if (this._booted) return;
+      this._booted = true;
       var root = this.attachShadow({ mode: "open" });
       root.append(template.content.cloneNode(true));
-      var inline = this.querySelector('script[type="application/json"]');
-      if (inline) {
-        this.boot(root, JSON.parse(inline.textContent), true);
-        return;
-      }
-      var src = this.getAttribute("src");
-      if (!src) return;
       var self = this;
-      fetch(src)
-        .then(function (r) {
-          if (!r.ok) throw new Error("report " + src + ": " + r.status);
-          return r.json();
-        })
+      var inline = this.querySelector('script[type="application/json"]');
+      var ownPage = !this.hasAttribute("src");
+      var load = inline
+        ? Promise.resolve(JSON.parse(inline.textContent))
+        : fetch(this.getAttribute("src"))
+            .then(function (r) {
+              if (!r.ok) throw new Error("report JSON HTTP " + r.status);
+              return r.json();
+            });
+      load
         .then(function (data) {
-          self.boot(root, data, false);
+          self.mount(root, data, ownPage);
         })
         .catch(function (e) {
-          root.getElementById("meta").textContent = String(e);
+          root.getElementById("body").replaceChildren(
+            el("section", {}, el("div", { className: "empty", textContent: "Failed to load report: " + e.message })),
+          );
         });
     }
 
-    boot(root, D, ownPage) {
+    mount(root, D, ownPage) {
       var self = this;
-      this._D = D;
-      this._root = root;
-      this._ownPage = ownPage;
-      if (ownPage) document.title = D.portal + " — report";
-      root.getElementById("title").textContent = D.portal;
-      var entityCount = 0;
       var catalog = D.catalog || {};
-      Object.keys(catalog).forEach(function (k) {
-        entityCount += (catalog[k] || []).length;
-      });
+      var entityCount = Object.keys(catalog).reduce(function (n, k) {
+        return n + catalog[k].length;
+      }, 0);
       var cardCount = Object.keys(D.scorecards || {}).length;
+      root.getElementById("title").textContent = D.portal || "Toolbox report";
       root.getElementById("meta").textContent =
         entityCount +
         " entities · " +
@@ -219,37 +392,51 @@
         return r.mode === "scorecard" ? "scorecards" : r.mode;
       };
       var activeMode = modeOf(route);
+      var tabs = [
+        { label: "Overview", path: "overview", id: "overview" },
+        { label: "Catalog", path: "catalog", id: "catalog" },
+        { label: "Campaigns", path: "campaigns", id: "campaigns" },
+        {
+          label: "Scorecards",
+          id: "scorecards",
+          path: (function () {
+            var worst = scorecardRows(D)[0];
+            return worst ? "scorecard/" + encodeURIComponent(worst.name) : "overview";
+          })(),
+        },
+      ];
       modes.replaceChildren(
-        el("button", {
-          textContent: "Overview",
-          ariaPressed: String(activeMode === "overview"),
-          onclick: function () {
-            go("overview");
-          },
-        }),
-        el("button", {
-          textContent: "Catalog",
-          ariaPressed: String(activeMode === "catalog"),
-          onclick: function () {
-            go("catalog");
-          },
-        }),
-        el("button", {
-          textContent: "Campaigns",
-          ariaPressed: String(activeMode === "campaigns"),
-          onclick: function () {
-            go("campaigns");
-          },
-        }),
-        el("button", {
-          textContent: "Scorecards",
-          ariaPressed: String(activeMode === "scorecards"),
-          onclick: function () {
-            var first = Object.keys(D.scorecards || {})[0] || "";
-            go(first ? "scorecard/" + encodeURIComponent(first) : "overview");
-          },
+        ...tabs.map(function (t) {
+          var selected = activeMode === t.id;
+          return el("button", {
+            role: "tab",
+            id: "tab-" + t.id,
+            textContent: t.label,
+            ariaSelected: String(selected),
+            tabIndex: selected ? 0 : -1,
+            onclick: function () {
+              go(t.path);
+            },
+          });
         }),
       );
+      modes.onkeydown = function (ev) {
+        var keys = { ArrowLeft: -1, ArrowRight: 1, Home: "home", End: "end" };
+        var dir = keys[ev.key];
+        if (dir == null) return;
+        ev.preventDefault();
+        var buttons = Array.prototype.slice.call(modes.querySelectorAll('[role="tab"]'));
+        var i = buttons.indexOf(root.activeElement);
+        if (i < 0) i = buttons.findIndex(function (b) {
+          return b.getAttribute("aria-selected") === "true";
+        });
+        var next = 0;
+        if (dir === "home") next = 0;
+        else if (dir === "end") next = buttons.length - 1;
+        else next = (i + dir + buttons.length) % buttons.length;
+        buttons[next].focus();
+        buttons[next].click();
+      };
       if (route.mode === "overview") body.replaceChildren(this.overview(D, go));
       else if (route.mode === "catalog") body.replaceChildren(this.catalog(D, route.kind, go));
       else if (route.mode === "entity") body.replaceChildren(this.entity(D, route.id, go));
@@ -265,13 +452,14 @@
         return n + catalog[k].length;
       }, 0);
       var campaigns = D.campaigns || {};
-      var campaignNames = Object.keys(campaigns).filter(function (n) {
-        var st = campaigns[n].status;
-        return st === "active" || st === "scheduled" || st === "ended";
-      });
-      campaignNames.sort(function (a, b) {
-        return (campaigns[a].percent || 0) - (campaigns[b].percent || 0) || a.localeCompare(b);
-      });
+      var campaignNames = campaignNamesSorted(D);
+      var rows = scorecardRows(D);
+      var offTarget = campaignNames.filter(function (n) {
+        return !campaigns[n].onTarget;
+      }).length;
+      var noneCards = rows.filter(function (r) {
+        return r.none > 0;
+      }).length;
       var campaignTable = null;
       if (campaignNames.length) {
         campaignTable = el("table", { className: "fleet" });
@@ -295,69 +483,31 @@
           var label = c.title || name;
           var pct = c.percent == null ? 0 : c.percent;
           var target = c.targetPercent == null ? 100 : c.targetPercent;
-          var tr = el(
-            "tr",
-            {
-              onclick: function () {
-                go("campaign/" + encodeURIComponent(name));
-              },
-            },
-            el("td", {}, el("code", { textContent: label })),
-            el(
-              "td",
-              {},
-              el("div", { className: "bar sm" }, el("span", { style: "flex:" + pct + ";background:" + (c.onTarget ? "var(--pass)" : "var(--accent)") }), el("span", { style: "flex:" + Math.max(0, 100 - pct) + ";background:transparent" })),
-              el("span", { className: "sub", textContent: pct + "% of " + target + "% target" }),
+          cbody.append(
+            clickableRow(
+              "campaign/" + encodeURIComponent(name),
+              go,
+              el("td", {}, el("code", { textContent: label })),
+              el(
+                "td",
+                {},
+                el(
+                  "div",
+                  { className: "bar sm" },
+                  el("span", {
+                    style: "flex:" + pct + ";background:" + (c.onTarget ? "var(--pass)" : "var(--accent)"),
+                  }),
+                  el("span", { style: "flex:" + Math.max(0, 100 - pct) + ";background:transparent" }),
+                ),
+                el("span", { className: "sub", textContent: pct + "% of " + target + "% target" }),
+              ),
+              el("td", { className: "hide-sm", textContent: c.status || "" }),
+              el("td", { textContent: (c.meeting || 0) + " / " + (c.inScope || 0) }),
             ),
-            el("td", { className: "hide-sm", textContent: c.status || "" }),
-            el("td", { textContent: (c.meeting || 0) + " / " + (c.inScope || 0) }),
           );
-          cbody.append(tr);
         });
         campaignTable.append(cbody);
       }
-      var cards = Object.keys(D.scorecards || {});
-      var rows = cards.map(function (name) {
-        var sc = D.scorecards[name];
-        var ents = Object.entries(D.scores[name] || {});
-        var order = levelOrder(sc.levels);
-        var parts = tallyLevels(ents, order);
-        var none = parts.find(function (p) {
-          return p.level === "none";
-        });
-        var bronze = parts.find(function (p) {
-          return p.level === "bronze";
-        });
-        return {
-          name: name,
-          sc: sc,
-          parts: parts,
-          scored: ents.filter(function (p) {
-            return p[1].level !== "skipped";
-          }).length,
-          weight: (none ? none.n : 0) * 1000 + (bronze ? bronze.n : 0),
-        };
-      });
-      rows.sort(function (a, b) {
-        return b.weight - a.weight || a.name.localeCompare(b.name);
-      });
-      var kindButtons = kinds
-        .slice()
-        .sort(function (a, b) {
-          return catalog[b].length - catalog[a].length || a.localeCompare(b);
-        })
-        .map(function (k) {
-          return el(
-            "button",
-            {
-              onclick: function () {
-                go("catalog/" + encodeURIComponent(k));
-              },
-            },
-            el("strong", { textContent: k }),
-            el("span", { textContent: catalog[k].length + " entities" }),
-          );
-        });
       var table = el("table", { className: "fleet" });
       table.append(
         el(
@@ -369,25 +519,24 @@
             el("th", { textContent: "Scorecard" }),
             el("th", { className: "hide-sm", textContent: "Kind" }),
             el("th", { textContent: "Distribution" }),
+            el("th", { textContent: "At none" }),
             el("th", { textContent: "Scored" }),
           ),
         ),
       );
       var tbody = el("tbody");
       rows.forEach(function (r) {
-        var tr = el(
-          "tr",
-          {
-            onclick: function () {
-              go("scorecard/" + encodeURIComponent(r.name));
-            },
-          },
-          el("td", {}, el("code", { textContent: r.name })),
-          el("td", { className: "hide-sm", textContent: r.sc.kind }),
-          el("td", {}, barEl(r.parts, "sm"), legendEl(r.parts)),
-          el("td", { textContent: String(r.scored) }),
+        tbody.append(
+          clickableRow(
+            "scorecard/" + encodeURIComponent(r.name),
+            go,
+            el("td", {}, el("code", { textContent: r.name })),
+            el("td", { className: "hide-sm", textContent: r.sc.kind }),
+            el("td", {}, barEl(r.parts, "sm"), legendEl(r.parts)),
+            el("td", { textContent: String(r.none) }),
+            el("td", { textContent: String(r.scored) }),
+          ),
         );
-        tbody.append(tr);
       });
       table.append(tbody);
       return el(
@@ -397,37 +546,103 @@
           "section",
           {},
           el("div", { className: "head" }, el("h2", { textContent: "Fleet health" })),
+          el("p", { className: "verdict", textContent: healthVerdict(D, campaignNames, rows) }),
           el(
             "div",
             { className: "stats" },
-            el("div", { className: "stat" }, el("strong", { textContent: String(entityCount) }), el("span", { textContent: "entities in catalog" })),
-            el("div", { className: "stat" }, el("strong", { textContent: String(kinds.length) }), el("span", { textContent: "kinds" })),
-            el("div", { className: "stat" }, el("strong", { textContent: String(cards.length) }), el("span", { textContent: "scorecards" })),
-            el("div", { className: "stat" }, el("strong", { textContent: String(campaignNames.length) }), el("span", { textContent: "campaigns" })),
+            el(
+              "div",
+              { className: "stat" },
+              el("strong", { textContent: String(offTarget) }),
+              el("span", { textContent: "campaigns below target" }),
+            ),
+            el(
+              "div",
+              { className: "stat" },
+              el("strong", { textContent: String(noneCards) }),
+              el("span", { textContent: "scorecards with none" }),
+            ),
+            el(
+              "div",
+              { className: "stat" },
+              el("strong", { textContent: String(rows.length) }),
+              el("span", { textContent: "scorecards" }),
+            ),
+            el(
+              "div",
+              { className: "stat" },
+              el("strong", { textContent: String(campaignNames.length) }),
+              el("span", { textContent: "campaigns" }),
+            ),
           ),
-          el("p", { className: "sub", textContent: "Campaigns are time-bound focus; scorecards are the continuous bar. Click a row to open it." }),
+          el("p", {
+            className: "sub",
+            textContent:
+              "Campaigns are time-bound focus; scorecards are the continuous bar. " +
+              entityCount +
+              " entities across " +
+              kinds.length +
+              " kinds — browse them in Catalog. Activate a row with Enter or Space.",
+          }),
         ),
         campaignTable
           ? el(
               "section",
               {},
-              el("div", { className: "head" }, el("h2", { textContent: "Campaigns" }), el("span", { className: "sub", textContent: "Lowest progress first" })),
+              el(
+                "div",
+                { className: "head" },
+                el("h2", { textContent: "Campaigns" }),
+                el("span", { className: "sub", textContent: "Lowest progress first" }),
+              ),
               campaignTable,
             )
           : null,
-        el("section", {}, el("h2", { textContent: "Catalog by kind" }), el("div", { className: "kind-grid" }, ...kindButtons)),
         el(
           "section",
           {},
-          el("div", { className: "head" }, el("h2", { textContent: "Scorecards" }), el("span", { className: "sub", textContent: "Needs attention first" })),
+          el(
+            "div",
+            { className: "head" },
+            el("h2", { textContent: "Scorecards" }),
+            el("span", { className: "sub", textContent: "Needs attention first" }),
+          ),
           table,
+        ),
+        el(
+          "section",
+          {},
+          el(
+            "div",
+            { className: "head" },
+            el("h2", { textContent: "Catalog" }),
+            el(
+              "button",
+              {
+                className: "link",
+                textContent: "Open catalog by kind",
+                onclick: function () {
+                  go("catalog");
+                },
+              },
+            ),
+          ),
+          el("p", {
+            className: "sub",
+            textContent: "Inventory browse lives in Catalog so Overview stays a health judgement.",
+          }),
         ),
       );
     }
 
     campaigns(D, name, go) {
       var all = D.campaigns || {};
-      var names = Object.keys(all).sort();
+      var names = campaignNamesSorted(D);
+      if (!names.length) {
+        names = Object.keys(all).sort(function (a, b) {
+          return (all[a].percent || 0) - (all[b].percent || 0) || a.localeCompare(b);
+        });
+      }
       if (!names.length) {
         return el("section", {}, el("div", { className: "empty", textContent: "No campaigns in this portal." }));
       }
@@ -457,7 +672,7 @@
         .join("; ");
       var milestones = (c.milestones || [])
         .map(function (m) {
-          return m.name + " @" + m.targetPercent + "%" + (m.met ? " ✓" : "");
+          return m.name + " @" + m.targetPercent + "%" + (m.met ? " (met)" : " (open)");
         })
         .join(", ");
       var gaps = Object.entries(c.entities || {}).filter(function (pair) {
@@ -473,22 +688,24 @@
         gaps.forEach(function (pair) {
           gapList.append(
             el(
-              "details",
-              {},
+              "div",
+              { className: "rule", style: "margin-left:0" },
               el(
-                "summary",
+                "div",
                 {},
-                el("button", {
+                el("a", {
                   className: "link",
-                  textContent: pair[0],
+                  href: "#entity/" + encodeURIComponent(pair[0]),
+                  textContent: shortId(pair[0]),
+                  title: pair[0],
                   onclick: function (ev) {
                     ev.preventDefault();
-                    ev.stopPropagation();
                     go("entity/" + encodeURIComponent(pair[0]));
                   },
                 }),
-                el("span", { className: "fails", textContent: (pair[1].gaps || []).join("; ") }),
+                el("span", { className: "id-full", textContent: pair[0] }),
               ),
+              el("div", { className: "fails", textContent: (pair[1].gaps || []).join("; ") }),
             ),
           );
         });
@@ -496,7 +713,17 @@
       return el(
         "div",
         {},
-        el("section", {}, el("h2", { textContent: "Campaigns" }), nav),
+        el(
+          "section",
+          {},
+          el(
+            "div",
+            { className: "head" },
+            el("h2", { textContent: "Campaigns" }),
+            el("span", { className: "sub", textContent: "Lowest progress first" }),
+          ),
+          nav,
+        ),
         el(
           "section",
           {},
@@ -514,7 +741,12 @@
             el("div", { className: "stat" }, el("strong", { textContent: String(c.meeting || 0) }), el("span", { textContent: "meeting" })),
             el("div", { className: "stat" }, el("strong", { textContent: String(c.inScope || 0) }), el("span", { textContent: "in scope" })),
           ),
-          el("div", { className: "bar" }, el("span", { style: "flex:" + pct + ";background:" + (c.onTarget ? "var(--pass)" : "var(--accent)") }), el("span", { style: "flex:" + Math.max(0, 100 - pct) + ";background:transparent" })),
+          el(
+            "div",
+            { className: "bar" },
+            el("span", { style: "flex:" + pct + ";background:" + (c.onTarget ? "var(--pass)" : "var(--accent)") }),
+            el("span", { style: "flex:" + Math.max(0, 100 - pct) + ";background:transparent" }),
+          ),
           el("p", { className: "sub", textContent: "Includes: " + (includes || "—") }),
           milestones ? el("p", { className: "sub", textContent: "Milestones: " + milestones }) : null,
           el("h3", { textContent: "Not meeting" }),
@@ -525,9 +757,7 @@
 
     catalog(D, kind, go) {
       var catalog = D.catalog || {};
-      var kinds = Object.keys(catalog).sort(function (a, b) {
-        return catalog[b].length - catalog[a].length || a.localeCompare(b);
-      });
+      var kinds = catalogKindsSorted(D);
       var selected = kind && catalog[kind] ? kind : kinds[0];
       var search = el("input", {
         type: "search",
@@ -538,10 +768,24 @@
       var drawList = function () {
         var q = search.value.toLowerCase();
         var ids = (catalog[selected] || []).filter(function (id) {
-          return !q || id.toLowerCase().indexOf(q) >= 0;
+          return !q || id.toLowerCase().indexOf(q) >= 0 || shortId(id).toLowerCase().indexOf(q) >= 0;
         });
         if (!ids.length) {
-          list.replaceChildren(el("div", { className: "empty", textContent: "No entities match." }));
+          list.replaceChildren(
+            el("div", { className: "empty", textContent: "No entities match." }),
+            el(
+              "div",
+              { className: "empty-actions" },
+              el("button", {
+                className: "link",
+                textContent: "Clear filter",
+                onclick: function () {
+                  search.value = "";
+                  drawList();
+                },
+              }),
+            ),
+          );
           return;
         }
         list.replaceChildren.apply(
@@ -553,9 +797,10 @@
               el(
                 "summary",
                 {},
-                el("code", { textContent: id }),
-                el("button", {
+                idLabel(id),
+                el("a", {
                   className: "link",
+                  href: "#entity/" + encodeURIComponent(id),
                   textContent: "Open",
                   onclick: function (ev) {
                     ev.preventDefault();
@@ -583,7 +828,9 @@
               },
             },
             el("strong", { textContent: k }),
-            el("span", { textContent: catalog[k].length + " entities" }),
+            el("span", {
+              textContent: catalog[k].length + " entities" + (scoredKinds(D)[k] ? " · scored" : ""),
+            }),
           );
         }),
       );
@@ -594,7 +841,12 @@
         el(
           "section",
           {},
-          el("div", { className: "head" }, el("h2", { textContent: "Catalog" }), el("span", { className: "sub", textContent: "Every derived entity, by kind" })),
+          el(
+            "div",
+            { className: "head" },
+            el("h2", { textContent: "Catalog" }),
+            el("span", { className: "sub", textContent: "Scored kinds first, then by size" }),
+          ),
           grid,
         ),
         selected
@@ -641,11 +893,7 @@
                 },
               }),
               " · ",
-              el("span", {
-                className: "lvl",
-                textContent: score.level,
-                style: "color:" + color(score.level),
-              }),
+              makeLevelBadge(score.level),
               " · ",
               el("span", { className: "sub", textContent: sc.kind }),
             ),
@@ -698,7 +946,12 @@
               : "",
             " / entity",
           ),
-          el("div", { className: "head" }, el("h2", {}, el("code", { textContent: id })), el("span", { className: "sub", textContent: kind || "unknown kind" })),
+          el(
+            "div",
+            { className: "head" },
+            el("h2", {}, idLabel(id)),
+            el("span", { className: "sub", textContent: kind || "unknown kind" }),
+          ),
           this.entityScores(D, id, go),
         ),
       );
@@ -764,7 +1017,10 @@
     }
 
     scorecard(D, name, go) {
-      var cards = Object.keys(D.scorecards || {});
+      var ranked = scorecardRows(D);
+      var cards = ranked.map(function (r) {
+        return r.name;
+      });
       var active = name && D.scorecards[name] ? name : cards[0];
       if (!active) {
         return el("section", {}, el("div", { className: "empty", textContent: "No scorecards in this report." }));
@@ -778,22 +1034,55 @@
         placeholder: "Find a scorecard…",
         ariaLabel: "Find a scorecard",
       });
-      var cardNav = el("nav", { className: "cards", ariaLabel: "Scorecards" });
+      var cardNav = el("nav", { className: "rank", ariaLabel: "Scorecards ranked by debt" });
       var drawCards = function () {
         var q = cardSearch.value.toLowerCase();
-        var shown = cards.filter(function (c) {
-          return !q || c.toLowerCase().indexOf(q) >= 0 || (D.scorecards[c].kind || "").toLowerCase().indexOf(q) >= 0;
+        var shown = ranked.filter(function (r) {
+          return (
+            !q ||
+            r.name.toLowerCase().indexOf(q) >= 0 ||
+            (r.sc.kind || "").toLowerCase().indexOf(q) >= 0
+          );
         });
+        if (!shown.length) {
+          cardNav.replaceChildren(
+            el("div", { className: "empty", textContent: "No scorecards match." }),
+            el(
+              "div",
+              { className: "empty-actions" },
+              el("button", {
+                className: "link",
+                textContent: "Clear search",
+                onclick: function () {
+                  cardSearch.value = "";
+                  drawCards();
+                },
+              }),
+            ),
+          );
+          return;
+        }
         cardNav.replaceChildren.apply(
           cardNav,
-          shown.map(function (c) {
-            return el("button", {
-              textContent: c,
-              ariaPressed: String(c === active),
-              onclick: function () {
-                go("scorecard/" + encodeURIComponent(c));
+          shown.map(function (r) {
+            var debt =
+              r.none > 0
+                ? r.none + " at none"
+                : r.bronze > 0
+                  ? r.bronze + " at bronze"
+                  : "clear";
+            var btn = el(
+              "button",
+              {
+                ariaPressed: String(r.name === active),
+                onclick: function () {
+                  go("scorecard/" + encodeURIComponent(r.name));
+                },
               },
-            });
+              el("span", {}, el("code", { textContent: r.name }), el("span", { className: "sub", textContent: " · " + r.sc.kind })),
+              el("span", { className: "debt" + (r.none > 0 ? " has-none" : ""), textContent: debt }),
+            );
+            return btn;
           }),
         );
       };
@@ -811,16 +1100,26 @@
       var list = el("div");
       var self = this;
 
+      var clearFilters = function () {
+        levelFilter = "all";
+        outcomeFilter = "all";
+        search.value = "";
+        redrawFilters();
+        draw();
+      };
+
       var redrawFilters = function () {
-        var levelBtns = ["all"].concat(order.filter(function (l) {
-          return parts.some(function (p) {
-            return p.level === l;
-          });
-        }));
+        var levelBtns = ["all"].concat(
+          order.filter(function (l) {
+            return parts.some(function (p) {
+              return p.level === l;
+            });
+          }),
+        );
         filters.replaceChildren(
           ...levelBtns.map(function (l) {
             return el("button", {
-              textContent: l === "all" ? "All levels" : l,
+              textContent: l === "all" ? "All levels" : "level: " + l,
               ariaPressed: String(levelFilter === l),
               onclick: function () {
                 levelFilter = l;
@@ -874,6 +1173,7 @@
           .filter(function (pair) {
             if (!q) return true;
             if (pair[0].toLowerCase().indexOf(q) >= 0) return true;
+            if (shortId(pair[0]).toLowerCase().indexOf(q) >= 0) return true;
             return Object.keys(pair[1].rules || {}).some(function (rn) {
               return rn.toLowerCase().indexOf(q) >= 0;
             });
@@ -891,7 +1191,18 @@
             });
           });
         if (!shown.length) {
-          list.replaceChildren(el("div", { className: "empty", textContent: "No entities match these filters." }));
+          list.replaceChildren(
+            el("div", { className: "empty", textContent: "No entities match these filters." }),
+            el(
+              "div",
+              { className: "empty-actions" },
+              el("button", {
+                className: "link",
+                textContent: "Clear filters",
+                onclick: clearFilters,
+              }),
+            ),
+          );
           return;
         }
         list.replaceChildren.apply(
@@ -908,36 +1219,41 @@
             var summaryBits = [];
             if (failing.length) summaryBits.push(failing.length + " failing");
             if (passing.length) summaryBits.push(passing.length + " passing");
-            var details = el(
+            return el(
               "details",
               {},
               el(
                 "summary",
                 {},
-                el("span", {
-                  className: "lvl",
-                  textContent: r.level,
-                  style: "color:" + color(r.level),
-                }),
-                el("button", {
+                makeLevelBadge(r.level),
+                el("a", {
                   className: "link",
-                  textContent: id,
+                  href: "#entity/" + encodeURIComponent(id),
+                  title: id,
+                  textContent: shortId(id),
                   onclick: function (ev) {
                     ev.preventDefault();
                     ev.stopPropagation();
                     go("entity/" + encodeURIComponent(id));
                   },
                 }),
+                el("span", { className: "id-full", textContent: id }),
                 el("span", {
                   className: "fails",
-                  textContent: summaryBits.join(" · ") + (failing.length ? ": " + failing.map(function (ro) {
-                    return ro[0];
-                  }).join(", ") : ""),
+                  textContent:
+                    summaryBits.join(" · ") +
+                    (failing.length
+                      ? ": " +
+                        failing
+                          .map(function (ro) {
+                            return ro[0];
+                          })
+                          .join(", ")
+                      : ""),
                 }),
               ),
               self.rulesBlock(sc, r, outcomeFilter === "all" ? "all" : outcomeFilter),
             );
-            return details;
           }),
         );
       };
@@ -947,7 +1263,18 @@
       return el(
         "div",
         {},
-        el("section", {}, el("h2", { textContent: "Scorecards" }), cardSearch, cardNav),
+        el(
+          "section",
+          {},
+          el(
+            "div",
+            { className: "head" },
+            el("h2", { textContent: "Scorecards" }),
+            el("span", { className: "sub", textContent: "Highest none debt first" }),
+          ),
+          cardSearch,
+          cardNav,
+        ),
         el(
           "section",
           {},

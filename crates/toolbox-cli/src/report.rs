@@ -890,6 +890,10 @@ mod tests {
         assert!(page.contains("Overview"));
         assert!(page.contains("Catalog"));
         assert!(page.contains("Campaigns"));
+        assert!(page.contains("Fleet health"));
+        assert!(page.contains("Needs attention first"));
+        assert!(page.contains("Highest none debt first"));
+        assert!(page.contains("role: \"tab\""));
         assert!(!page.contains("{{"));
     }
 
