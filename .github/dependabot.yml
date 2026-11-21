@@ -1,0 +1,18 @@
+# Keep the three ecosystems maintainer-supply-chain scores (cargo, npm, github-actions).
+version: 2
+updates:
+  - {package-ecosystem: cargo, directory: /, schedule: {interval: weekly}}
+  - package-ecosystem: cargo
+    directory: /experiments/build-cost
+    schedule: {interval: weekly}
+  - package-ecosystem: cargo
+    directory: /experiments/derived-state-scale
+    schedule: {interval: weekly}
+  - {package-ecosystem: npm, directory: /ui, schedule: {interval: weekly}}
+  - {package-ecosystem: npm, directory: /site, schedule: {interval: weekly}}
+  - package-ecosystem: npm
+    directory: /experiments/typescript-builder
+    schedule: {interval: weekly}
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: {interval: weekly}
