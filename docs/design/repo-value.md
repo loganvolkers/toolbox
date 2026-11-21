@@ -47,12 +47,16 @@ The bet has five parts. Each has an experiment and a result that would stop us (
 
 ## 4. Pilots
 
+*Revised 2026-11-21 (D01M7YE8W0Y9EZ5Z1ZF3HFPD767): the account's forks are the testbed.*
+
 | Kind | Repositories | Proves | What it changes |
 |---|---|---|---|
-| **Out-of-box, read-only** | Public projects in several languages, for example the account's forks of OpenFGA (Go), Codex (Rust and TypeScript), PostHog (Python and TypeScript) and gh-aw (Go) | R2, language coverage | Nothing: runs happen in this session, and results go to the research log |
-| **Installed** | Active repositories with maintainers, for example `json-editor/json-editor` (a public JavaScript library) and the account's private projects | R1, R3, R4, R5 | A pull request adding `.toolbox/` and one workflow; needs each owner's agreement |
+| **Installed** | `loganvolkers/rt-buddy` (a pnpm and Expo monorepo; the first customer, installed with `actions/report` at `v0.1.x`) | R1, R4 live, R5 | A pull request adding `.toolbox/` and one workflow |
+| **Fork testbeds** | The account's forks of OpenFGA (Go), Codex (Rust and TypeScript, pnpm), gh-aw (Go, mostly generated workflows) and PostHog (Python and TypeScript, pnpm) | R2 by out-of-box runs, R3 by the A/B, R4 by replaying upstream history ([experiments/out-of-box](../../experiments/out-of-box/README.md)), R5 | Nothing upstream: runs happen locally, and results go to the research log |
 
-At least one installed pilot must have maintainers other than us.
+Replaying history measures R4 on real changes by other people: each upstream commit goes through the
+ratchet against its parent, as CI would have run it. What forks can't show is a maintainer other
+than us choosing to keep the step on. That stays open, and it is the first thing federation tests.
 
 ## 5. Gaps to close before the pilots
 
@@ -66,11 +70,24 @@ At least one installed pilot must have maintainers other than us.
 
 ## 6. Exit
 
-**Repo-level value is proven when R1 to R5 all continue on at least three installed pilots, one of
-them maintained by people other than us.** Federation (D68) then resumes, starting from the packages
-that R5 showed travel.
+*Revised 2026-11-21 (D01M7YE8W0Y9EZ5Z1ZF3HFPD767).*
 
-## 7. Order of work
+**Repo-level value is proven when R1, R2, R4 and R5 continue on rt-buddy and on at least three of the
+four fork testbeds, and R3 is either met or replaced by evidence that the ratchet keeps the gains
+agents make (R4).** Federation (D68) then resumes, starting from the packages that R5 showed
+travel. Its first step is a pilot with maintainers other than us, the one thing forks can't prove.
+
+## 8. Results so far
+
+| # | State | Evidence |
+|---|---|---|
+| R1 | **Partly met** | Adopting is one portal file and one CI step. On the forks, runs take 0.4–36.4 s. The first out-of-box run failed on all four forks until the runner and the `github-actions` package stopped assuming a Rust repository with an `actions/` directory. rt-buddy is being installed by another session |
+| R2 | **Continue** | After this round's fixes, and once PR #24 scores missing run data as `unknown`: 939 of 940 failing (entity, rule) pairs on the four forks are true, and 70% of the true ones are worth fixing. An agent did the triage, sampling the evidence |
+| R3 | **Not met on this sample: rethink** | Fixed: OpenFGA 86% with the checklist, 83% with Toolbox; Codex 100% and 82%. The Toolbox arm made no regressions and no suppressions; the checklist arm made one regression and suppressed 31 findings. Most rules wrap zizmor and actionlint, which the checklist named. Next: rules with no linter behind them, and more runs ([experiments/out-of-box/ab](../../experiments/out-of-box/ab/README.md)) |
+| R4 | **Early: continue** | 141 replayed upstream commits: 3 flagged, of which 1 real (a new action not pinned to a SHA, gh-aw `b5694a414`), 1 probably real (actionlint, an output of a job not in `needs`) and 1 noise (low-severity zizmor notes under gold `zizmor-clean`). 5 commits (3.5%) improved a score and would have had to commit the baseline under `--ci` |
+| R5 | **Continue** | The same packages, unedited, ran on all four forks after the fixes, with parameters only (`githubOrg`, `githubRepo`) |
+
+## 9. Order of work
 
 1. Missing data as `unknown` (§5).
 2. Out-of-box runs and their triage (R2).

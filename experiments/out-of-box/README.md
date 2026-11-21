@@ -36,6 +36,15 @@ PATH=/path/to/zizmor-and-actionlint:$PATH \
 experiments/out-of-box/portal-pnpm` check the portals themselves. Both need zizmor 1.32.0 and
 actionlint 1.7.12 on the `PATH` (`toolbox doctor` lists them), or their rules are `unknown`.
 
+## Replaying history (R4)
+
+`replay.sh <checkout> <portal> <commits> <out.tsv>` runs each of a repository's last commits
+through the ratchet against its parent, as CI would have, and writes one row per commit. The
+results for the four forks are the `replay-*.tsv` files here: 141 commits, 3 regressions (one a
+real unpinned action), and 5 improvements that would have needed a baseline update.
+
+The agent A/B (R3) is in [ab/](ab/README.md).
+
 ## Repositories
 
 | Repository | Language | Entities scored | Run time |

@@ -1,0 +1,40 @@
+commit	date	result	regressions	improvements	subject	first regression
+9d9bdac39	2026-06-03	pass	0	0	Revise security policy language in xpia.md	
+bb1fdb363	2026-06-04	pass	0	0	feat: support multi-repo wildcard target-repo in safe_outputs job (#36657)	
+da7935729	2026-06-03	stale	0	1	Add multi-language Copilot SDK driver samples and wire daily workflows to exerci	
+318e58a2e	2026-06-03	pass	0	0	Remove `disable-model-invocation` from workflow schema and include-frontmatter c	
+4757ec037	2026-06-03	pass	0	0	fix: resolve Copilot SDK custom provider in standalone driver main() (#36769)	
+04ef6cc98	2026-06-03	pass	0	0	Replace MCP CLI system-block prompt with slim version (no feature flag) (#36778)	
+9d1f5c9b9	2026-06-03	pass	0	0	Remove agentic-workflows guide from prompt and move reference to .github/aw (#36	
+d3b46704d	2026-06-03	pass	0	0	Trim ambient prompt surface for smoke workflows and failure investigator (#36788	
+b5694a414	2026-06-03	regressed	3	0	Clarify daily ambient optimizer MCP and proxy usage (#36805)	maintainer-action-deps · action:actions/github-script: pinned-everywhere now fails
+65f1e8213	2026-06-04	stale	0	3	update mcp-clis	
+417ff781a	2026-06-04	pass	0	0	complex args	
+e13328653	2026-06-04	pass	0	0	format	
+06559c123	2026-06-03	pass	0	0	[community] Update community attribution workflow prompt for README output (#368	
+cba060375	2026-06-03	pass	0	0	fix: Safe-outputs file-protection bypass via patch-parser differential (#36752)	
+272bddfe3	2026-06-03	pass	0	0	Add portable `agentic-workflow-designer` skill, route workflow-design requests t	
+7dd0a7394	2026-06-04	pass	0	0	format	
+eacfb517b	2026-06-03	pass	0	0	fix: Prevent patch/bundle desynchronization in safe-outputs (#36762)	
+709937436	2026-06-03	pass	0	0	Count changed files (not total wiki files) in push-wiki-memory limit enforcement	
+60ee90c0f	2026-06-03	stale	0	0	feat: Add designer-drift-audit workflow (#36820)	
+0a8ff057c	2026-06-03	pass	0	0	Fix stale reflect API usage in copilot harness test (#36823)	
+2efbfd691	2026-06-03	stale	0	2	Reduce ambient context overhead in sampled workflows by enabling gh-proxy and tr	
+be710efe7	2026-06-03	regressed	1	0	Restore digest pinning for default MCP GHCR images on compile (#36822)	maintainer-ci-security · workflow:.github/workflows/designer-drift-audit.lock.yml: zizmor-clean now fails
+f9e6933c5	2026-06-03	pass	0	0	refactor: replace manual dedup/merge loops with sliceutil helpers (#36824)	
+66c165eeb	2026-06-03	pass	0	0	Reduce Smoke Codex first-request prompt surface by enabling GitHub gh-proxy mode	
+9d99880db	2026-06-03	pass	0	0	Prefer `gh-proxy`/`gh` and `cli-proxy`/`mcp-clis` in workflow-generation instruc	
+c63ec95d9	2026-06-03	pass	0	0	[aw] jsweep: enforce safe-output fallback when no tool output is emitted (#36836	
+6bf5c2523	2026-06-03	pass	0	0	Preserve declared `imports:` order in compiled prompt assembly (#36825)	
+9d16cd834	2026-06-03	pass	0	0	Harden Ubuntu Image Analyzer against blocked command loops and token-budget exha	
+f4404c3d5	2026-06-04	regressed	1	0	Reduce ambient context cost in daily workflows (go-logger, sergo, smoke-copilot)	maintainer-ci-security · workflow:.github/workflows/go-logger.lock.yml: actionlint-clean now fails
+515498560	2026-06-04	pass	0	0	Require explicit terminal safe-output in Daily Agent of the Day Blog Writer (#36	
+f4a715e8d	2026-06-04	pass	0	0	Compat-based Copilot CLI install: single remote fetch, jq-only resolution, TTL-a	
+3139708fe	2026-06-04	pass	0	0	tolowerequalfold: avoid false positives on `ToLower(x) == x` / `!= x` case-detec	
+b2b814358	2026-06-04	pass	0	0	[aw] Enforce safe-output emission in Daily Syntax Error Quality workflow (#36901	
+95d6fa5f3	2026-06-04	pass	0	0	Align max limit frontmatter fields to `templatable_integer` (#36905)	
+c84a2ec7f	2026-06-04	pass	0	0	Generalize blocked-command loop hardening across high-token workflows (#36902)	
+a9a0dd138	2026-06-04	pass	0	0	Stream Copilot SDK driver events to stderr as JSONL (#36908)	
+e10b9ce45	2026-06-04	pass	0	0	rename: processFileOpenAssign → trackFileOpenAssignment, getCloseCallObj → getCl	
+9853536bb	2026-06-04	pass	0	0	Accept REST comment IDs in `hide_comment` by resolving to GraphQL node IDs (#369	
+f9c40ded5	2026-06-04	pass	0	0	fix: sync fallback AW file list and add drift-detection test (#36913)	

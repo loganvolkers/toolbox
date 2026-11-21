@@ -1,0 +1,25 @@
+commit	date	result	regressions	improvements	subject	first regression
+28c87fb80	2026-06-01	pass	0	0	feat: seed deterministic project token for demo data (#61016)	
+ac94ece8e	2026-06-01	pass	0	0	chore(deps): Update posthog-js to 1.378.1 (#61010)	
+559353a69	2026-06-01	pass	0	0	fix(sites): validate site preview URL before rendering (#61019)	
+a2e7ef014	2026-06-01	pass	0	0	feat(property-vals): bump kafka_num_consumers to 8 on property_values (#59955)	
+d3dea22e3	2026-06-01	pass	0	0	feat(data-warehouse): log view deletions and name views in activity feed (#61023	
+a043d20ca	2026-06-02	pass	0	0	fix(bing-ads): surface tailored error for tenant missing service principal (#608	
+9e4a7eb52	2026-06-01	pass	0	0	feat(oauth): server-side scope assignment + /authorize enforcement (#60477)	
+dd92b1c66	2026-06-01	pass	0	0	chore(sandbox): unblock claude and add --full-clone option (#59161)	
+c32c1d74d	2026-06-01	pass	0	0	fix(replay-vision): link observation breadcrumb to its scanner (#61033)	
+550ea3fae	2026-06-01	pass	0	0	feat(dashboards): add WidgetCard shell and dashboard widget UI glue (7/11) (#605	
+ca854377d	2026-06-02	pass	0	0	fix(clickhouse): writable_events doesn't exist on DATA (#61036)	
+d17134996	2026-06-01	pass	0	0	fix(cohorts): pg fallback read email not supported (#60999)	
+4a4c3e56c	2026-06-01	pass	0	0	chore: test ENCRYPTION_SALT_KEYS multi-key and two-step rotation (#61038)	
+83a113222	2026-06-01	pass	0	0	feat(replay-vision): add version column to scanner observations table (#61031)	
+0e623c298	2026-06-01	pass	0	0	revert(dmat): revert dmat_string column wiring (#59681, #61036) (#61041)	
+a06806562	2026-06-01	pass	0	0	chore(flags): remove billing aggregator shadow mode (#59548)	
+afe1c995d	2026-06-01	pass	0	0	chore: Add path and secret status to Hogli info screen (#60993)	
+d5be1620c	2026-06-01	pass	0	0	feat(data-stack): add shared duckling backfill concurrency tag (#61027)	
+49558178e	2026-06-02	pass	0	0	fix(web-analytics): hide editor filter bar on dashboard tiles (#60904)	
+52663cbf0	2026-06-02	pass	0	0	fix(web-analytics): propagate dashboard filters to view recordings button (#6093	
+ee1d1843b	2026-06-01	pass	0	0	fix(replay-vision): make scanner and observation order_by a string param (#61037	
+222ef9771	2026-06-01	pass	0	0	chore(replay-vision): rename "Ask Max" to "Ask PostHog AI" in summarizer chat (#	
+12403b624	2026-06-01	pass	0	0	feat(team): add updated_at to Project model (#60550)	
+153f1b8d3	2026-06-01	pass	0	0	feat(replay-vision): chart scorer scores as a distribution bar histogram (#61039	

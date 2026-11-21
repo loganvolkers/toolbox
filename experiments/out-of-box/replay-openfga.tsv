@@ -1,0 +1,40 @@
+commit	date	result	regressions	improvements	subject	first regression
+75f503d42	2026-04-23	pass	0	0	fix: v2Check correctly uses query cache even when cache controller is disabled (	
+b3090314a	2026-04-24	pass	0	0	chore(deps): bump the dependencies group across 1 directory with 4 updates (#308	
+83b2b469d	2026-04-27	pass	0	0	release: update changelog for release `v1.15.0` (#3090)	
+c9e5428ff	2026-04-27	pass	0	0	fix: error handler panic (#3091)	
+04e7311be	2026-04-28	pass	0	0	chore(deps): bump the dependencies group with 4 updates (#3092)	
+5ec1c4d60	2026-04-28	pass	0	0	fix: move subproblem cache lookup from ResolveUnionEdges into ResolveUnion (#309	
+554084a3b	2026-04-29	pass	0	0	chore(deps): bump the dependencies group across 1 directory with 2 updates (#309	
+ffdcf600c	2026-04-29	pass	0	0	fix: expose context errors when they can be the potential cause of an underlying	
+f282b6a5e	2026-04-30	pass	0	0	fix: v2Check EdgeCacheKey collisions (#3097)	
+90af2105a	2026-05-04	pass	0	0	fix: replace golang.org/x/exp/maps with stdlib maps to resolve govet inline erro	
+67e14c904	2026-05-04	pass	0	0	fix: cancel context before waiting on worker pool in ResolveUnionEdges (#3105)	
+0f6db0aca	2026-05-04	pass	0	0	fix: ensure acquired limiter token is released on throttle context cancelation (	
+cb380a1df	2026-05-04	pass	0	0	chore: Add more spans/attributes to v2Check (#3102)	
+bb9b7c4c2	2026-05-06	pass	0	0	fix: close all channels opened thus far, before return on error (#3111)	
+f3f1765f4	2026-05-06	pass	0	0	feat: reuse MySQL container across tests (#3042)	
+1db35fb8b	2026-05-06	pass	0	0	release: update changelog for release `v1.15.1` (#3112)	
+f7ea5db2f	2026-05-06	pass	0	0	fix: use the same `request_id` for shadow traces in v2Check (#3110)	
+babcf2da2	2026-05-07	pass	0	0	fix: add matches attribute to shadowv2Check and Check spans (#3114)	
+9dcdf78c2	2026-05-07	pass	0	0	chore: add more spans/attributes to v1 and v2 Check (#3116)	
+744448e33	2026-05-08	pass	0	0	fix: bump go toolchain version to 1.26.3 (#3115)	
+f4f31348a	2026-05-11	pass	0	0	fix: shadow v2check and check use the same trace (#3118)	
+39113898d	2026-05-11	pass	0	0	make union cache key unique by including the node input's label (#3117)	
+c30681262	2026-05-12	pass	0	0	fix: don't cache false results from cancelled-context goroutines in v2Check (#31	
+8c9e0bf35	2026-05-13	pass	0	0	fix: v2Check falls back to v1 on errors (#3126)	
+857e432cc	2026-05-14	pass	0	0	fix(authn/oidc): refresh JWKS on unknown kid to handle key rotation (#3101)	
+e669ac8b7	2026-05-14	pass	0	0	fix: prevent v2Check strategies returning spurious false on context cancellation	
+b6d0028e0	2026-05-14	pass	0	0	feat: add datastore ping and ping retry configurations (#3113)	
+5b39f175c	2026-05-18	pass	0	0	increase the check v2 trace information fidelity (#3134)	
+ece3b9ef9	2026-05-19	pass	0	0	fix: unintentional zeroing of slice values by setting slice to nil (#3135)	
+d42f9f3de	2026-05-20	pass	0	0	Merge commit from fork	
+165291872	2026-05-20	pass	0	0	release: update changelog for release `v1.16.0` (#3139)	
+fef186b82	2026-05-20	pass	0	0	fix: when v2Check is primary algorithm, fix fallback condition and emit metrics 	
+9c0800576	2026-05-21	pass	0	0	docs: move OIDC JWKS refresh entry from v1.15.1 to v1.16.0 (#3142)	
+c0f5c1388	2026-05-21	stale	0	4	chore: add concurrency-group to PR-related CI steps (#3140)	
+37cb2a97e	2026-05-27	pass	0	0	fix: skip v2Check weight2 pruning if iterator is unordered (#3145)	
+14996b15c	2026-05-28	pass	0	0	chore: update grpc-health-probe to latest to addres std lib CVEs (#3146)	
+94cb130ab	2026-05-28	pass	0	0	release: update changelog for release `v1.16.1` (#3147)	
+38c702614	2026-06-01	pass	0	0	feat: add configurable trace sampler with ParentBased support (#3072)	
+7d89a5660	2026-06-02	pass	0	0	refactor: redesign cache key generation, making it more secure and consistent (#	
