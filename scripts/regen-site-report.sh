@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Regenerate site/public/report the same way .github/workflows/pages.yml does.
 #
-# Pages CI installs actionlint 1.7.12 (scripts/ci-tools.sh) and zizmor==1.32.0,
+# Pages CI installs actionlint 1.7.12 (scripts/ci-tools.sh), zizmor==1.32.0 and ruff==0.14.0,
 # runs toolbox doctor, then:
 #   toolbox report portal --skip runner,github-actions -o web --out site/public/report
 # Without those pins, ci-lint rules become `unknown` and the preview diverges from CI
@@ -31,8 +31,18 @@ if [[ "$need_zizmor" -eq 1 ]]; then
   fi
 fi
 
+if ! ruff --version 2>/dev/null | grep -q '0.14.0'; then
+  if command -v pipx >/dev/null 2>&1; then
+    pipx install --force "ruff==0.14.0"
+  else
+    python3 -m pip install --user "ruff==0.14.0"
+    export PATH="${HOME}/.local/bin:$PATH"
+  fi
+fi
+
 actionlint -version
 zizmor --version
+ruff --version
 
 cargo build --locked
 target/debug/toolbox doctor portal

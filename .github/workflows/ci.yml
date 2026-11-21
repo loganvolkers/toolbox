@@ -65,7 +65,7 @@ jobs:
           CI linters for the ratchet, at the versions the committed baseline was
           made with
         run: |
-          pip install zizmor==1.32.0
+          pip install zizmor==1.32.0 ruff==0.14.0
           actionlint -version   # installed with OpenFGA above
           target/debug/toolbox doctor portal   # every connector resolves, every tool at its pinned version (D90)
       - name: >-
@@ -79,7 +79,7 @@ jobs:
           box give the same findings alone
         run: >-
           TOOLBOX=target/debug/toolbox python3 scripts/take-it-out.py portal
-          ci-lint
+          ci-lint maintainer-python
       - name: Toolbox for Toolbox — agent assessments are valid and briefs build (D79)
         run: |
           target/debug/toolbox assess check portal --skip runner,github-actions

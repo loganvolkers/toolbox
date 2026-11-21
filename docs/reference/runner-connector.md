@@ -6,7 +6,9 @@ records.** This page is about the box ([toolbox-and-tools.md](../design/toolbox-
 - **Fittings** read one tool's own format.
 - Every lint record carries the command that reproduces it with the tool alone.
 
-To add a tool, prefer the SARIF slot: most linters and security scanners can print SARIF.
+To add a tool, prefer the SARIF slot: most linters and security scanners can print SARIF. The
+[`sarif` package](../../packages/sarif/README.md) does it in one `include`: connector, tool pin,
+scorecard and campaign.
 
 ```yaml
 connectors:

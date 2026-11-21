@@ -1,0 +1,17 @@
+# Package expectations over fixtures (package author SDLC: test).
+name: sarif
+assert:
+  - name: a clean file is clean
+    expect: score('py-lint', 'py-lint:app/clean.py').level == 'clean'
+  - name: an active finding fails, counted and located
+    expect: >-
+      score('py-lint', 'py-lint:app/messy.py').rules['no-findings'] == 'fail'
+      && score('py-lint', 'py-lint:app/messy.py').measures['no-findings'] ==
+      1.0 && score('py-lint', 'py-lint:app/messy.py').evidence['no-findings']
+      == ['line 3: F401 `os` imported but unused']
+  - name: a suppressed finding doesn't count unless countSuppressed is on
+    expect: score('py-lint', 'py-lint:app/quiet.py').level == 'clean'
+  - name: the campaign counts active findings
+    expect: >-
+      campaign('py-lint-zero').measure == 1.0 &&
+      campaign('py-lint-zero').meeting == 2

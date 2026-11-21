@@ -9,7 +9,12 @@ says `python: true` (Rust-only checks are stricter by design).
 Usage: python scripts/validate-parity.py [path/to/toolbox]   (default target/debug/toolbox)
 Requires: pyyaml, jsonschema.
 """
-import json, os, shutil, subprocess, sys, tempfile
+import json
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                                  "examples", "reference-portal", "tools"))

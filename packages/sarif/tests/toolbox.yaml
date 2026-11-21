@@ -1,0 +1,25 @@
+# The package's test portal: includes the package as a consumer would, with its own parameters.
+# Run: toolbox test packages/sarif/tests
+apiVersion: toolbox.dev/v1alpha1
+portal:
+  name: sarif-package
+  title: SARIF standard (package tests)
+  owner: group:maintainers
+  toolbox: "0.1"
+include:
+  - package: ..
+    with:
+      name: py-lint
+      kind: PythonFile
+      tool: ruff
+      version: 0.14.0
+      command:
+        - ruff
+        - check
+        - --no-cache
+        - --output-format
+        - sarif
+        - --exit-zero
+        - "{files}"
+      files: ["**/*.py"]
+tests: [standards.test.yaml]

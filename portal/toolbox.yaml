@@ -280,6 +280,30 @@ include:
   # Our GitHub Actions standards, as the package pilots will use (D89): connectors, tools, kinds, scorecards.
   - package: ../packages/github-actions
     with: {githubOrg: loganvolkers, githubRepo: toolbox}
+  # The Python we maintain, checked by ruff (an existing tool) through the SARIF slot. ruff reads
+  # its own ruff.toml; the box passes it nothing else (docs/design/toolbox-and-tools.md).
+  # experiments/ are archived harnesses, not maintained code.
+  - package: ../packages/sarif
+    with:
+      name: maintainer-python
+      kind: PythonScript
+      tool: ruff
+      version: 0.14.0
+      mise: pipx:ruff
+      command:
+        - ruff
+        - check
+        - --no-cache
+        - --output-format
+        - sarif
+        - --exit-zero
+        - "{files}"
+      files: [scripts/*.py, examples/reference-portal/tools/*.py]
+      title: Python we maintain passes ruff
+      fix: >-
+        Fix ruff's findings (the record's command reruns them), or, for a
+        deliberate style, ignore the rule for those files in ruff.toml with a
+        comment saying why.
 
 mcp:
   instructions: >-

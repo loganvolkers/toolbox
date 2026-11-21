@@ -1,0 +1,77 @@
+# One tool through the runner's SARIF slot. The box passes it nothing it can't read itself: each
+# record's `command` reruns that file's check with the tool alone (scripts/take-it-out.py).
+connectors:
+  - name: ${param:name}
+    package: builtin:runner
+    runtime: in-image
+    config:
+      name: ${param:name}
+      root: ${param:root}
+      jobs:
+        - name: ${param:name}
+          command: ${param:command}
+          parse: sarif
+          files: ${param:files}
+          optional: true # not installed → the rule is unknown, not failing
+    records: ["${param:name}"]
+    refresh: {"${param:name}": [external_ids]}
+    freshness: {"${param:name}": 5m}
+
+tools:
+  ${param:tool}:
+    version: ${param:version}
+    mise: ${param:mise}
+    versionArgs: ${param:versionArgs}
+
+kinds:
+  - name: ${param:kind}
+    description: A file checked by ${param:tool}, with its SARIF findings.
+    identityFrom: ["connector:${param:name}"]
+    fields:
+      path: {type: string}
+      total: {type: integer, description: "Findings, suppressed ones included."}
+      active: {type: integer, description: Findings not suppressed inline.}
+      findings: {type: list, items: object}
+      command:
+        type: string
+        description: The command that reproduces this file's findings with the tool alone.
+    sources: {default: ["connector:${param:name}"]}
+    map:
+    - from: ${param:name}/${param:name}
+      id: "'${param:name}:' + record.path"
+      set: >-
+        {'path': record.path, 'total': record.total, 'active': record.active,
+        'findings': record.findings, 'command': record.command}
+
+scorecards:
+  - name: ${param:name}
+    title: ${param:title}
+    description: >-
+      Every file ${param:tool} checks is clean. The measure is its findings,
+      so a new finding is a regression and a fixed one an improvement; a new
+      file must arrive clean.
+    kind: ${param:kind}
+    owner: ${param:owner}
+    levels: [clean]
+    ratchet: {newEntitiesAtLeast: clean}
+    rules:
+    - name: no-findings
+      level: clean
+      check: "(${param:countSuppressed} ? entity.total : entity.active) == 0"
+      measure: "${param:countSuppressed} ? entity.total : entity.active"
+      dataFrom: ${param:name}
+      evidence: >-
+        entity.findings.filter(f, ${param:countSuppressed} ||
+        !f.suppressed).map(f, 'line ' + string(f.line) + ': ' + f.rule + ' ' +
+        f.message + (f.suppressed ? ' (suppressed)' : ''))
+      fix: ${param:fix}
+    facets: {summary: public, details: public}
+
+campaigns:
+  - name: ${param:name}-zero
+    title: "${param:title}: to zero"
+    owner: ${param:owner}
+    description: >-
+      No ${param:tool} findings in any file. Progress is counted from the
+      start the baseline records.
+    includes: [{scorecard: '${param:name}', rules: [no-findings]}]

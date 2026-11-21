@@ -41,6 +41,7 @@ campaign in one `include`, with no script to maintain:
 
 | Written standard | Package | Example |
 |---|---|---|
+| Already checked by a linter with SARIF output (ruff, semgrep, zizmor, gitleaks) | [`sarif`](../../packages/sarif/README.md): the tool in the box, its config in its own file | No ruff findings in `scripts/` |
 | "Keep files under N lines" | [`file-size`](../../packages/file-size/README.md) | No component over 400 lines |
 | "Never use X; use Y instead" | [`pattern-count`](../../packages/pattern-count/README.md) | No `console.log` outside the logger |
 | Already a semgrep rule, with `nosemgrep` suppressions | [`semgrep`](../../packages/semgrep/README.md) | Pay the suppressions down to zero |

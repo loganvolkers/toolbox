@@ -417,6 +417,16 @@ Scorecard `maintainer-action-deps` over `ActionDependency` entities, owned by gr
 |---|---|---|---|
 | `pinned-everywhere` | bronze | `entity.pins.all(p, p == 'sha')` | Pin this action to a full commit SHA in every workflow that uses it. Resolve the tag with `git ls-remote https://github.com/<owner>/<repo> refs/tags/<tag>` and peel an annotated tag (`^{}`) so the SHA is the commit. |
 
+## Python we maintain passes ruff
+
+Every file ruff checks is clean. The measure is its findings, so a new finding is a regression and a fixed one an improvement; a new file must arrive clean.
+
+Scorecard `maintainer-python` over `PythonScript` entities, owned by group:maintainers. `toolbox report` lists what fails now.
+
+| Rule | Level | Passes when | Fix |
+|---|---|---|---|
+| `no-findings` | clean | `(false ? entity.total : entity.active) == 0` | Fix ruff's findings (the record's command reruns them), or, for a deliberate style, ignore the rule for those files in ruff.toml with a comment saying why. |
+
 ## Packages and their settings
 
 Change a standard by changing these parameters in the portal's `toolbox.yaml`.
@@ -424,11 +434,22 @@ Change a standard by changing these parameters in the portal's `toolbox.yaml`.
 - `../packages/github-actions`
   - `githubOrg`: `"loganvolkers"`
   - `githubRepo`: `"toolbox"`
+- `../packages/sarif`
+  - `command`: `["ruff","check","--no-cache","--output-format","sarif","--exit-zero","{files}"]`
+  - `files`: `["scripts/*.py","examples/reference-portal/tools/*.py"]`
+  - `fix`: `"Fix ruff's findings (the record's command reruns them), or, for a deliberate style, ignore the rule for those files in ruff.toml with a comment saying why."`
+  - `kind`: `"PythonScript"`
+  - `mise`: `"pipx:ruff"`
+  - `name`: `"maintainer-python"`
+  - `title`: `"Python we maintain passes ruff"`
+  - `tool`: `"ruff"`
+  - `version`: `"0.14.0"`
 
 ## Campaigns
 
 - **Skills to silver** (`skill-silver`): Every shipped agent skill reaches silver on maintainer-skill.
 - **CLI skills present** (`cli-skill-coverage`): Every CLI command that needs a skill has one (cli-skill bronze).
+- **Python we maintain passes ruff: to zero** (`maintainer-python-zero`): No ruff findings in any file. Progress is counted from the start the baseline records.
 
 ## Commands
 

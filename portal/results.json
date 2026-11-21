@@ -6,6 +6,13 @@
       "short": 0,
       "start": "2026-11-01"
     },
+    "maintainer-python-zero": {
+      "inScope": 11,
+      "measure": 0,
+      "recorded": "2026-11-21",
+      "short": 0,
+      "start": null
+    },
     "skill-silver": {
       "inScope": 33,
       "recorded": "2026-11-21",
@@ -1232,6 +1239,7 @@
         "level": "gold"
       }
     },
+    "maintainer-python": {},
     "maintainer-repo": {
       "repo:loganvolkers/toolbox": {
         "failing": {
@@ -1602,6 +1610,9 @@
         "level": "gold"
       },
       "connector:toolbox/github-actions": {
+        "level": "gold"
+      },
+      "connector:toolbox/maintainer-python": {
         "level": "gold"
       },
       "connector:toolbox/runner": {
@@ -2793,6 +2804,28 @@
       "field:toolbox/PortalConnector.withoutFreshness": {
         "level": "gold"
       },
+      "field:toolbox/PythonScript.active": {
+        "level": "gold"
+      },
+      "field:toolbox/PythonScript.command": {
+        "level": "gold"
+      },
+      "field:toolbox/PythonScript.findings": {
+        "failing": {
+          "described": 1,
+          "has-shape": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/PythonScript.path": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/PythonScript.total": {
+        "level": "gold"
+      },
       "field:toolbox/Repository.codeScanning": {
         "level": "gold"
       },
@@ -3497,6 +3530,12 @@
       "kind:toolbox/PortalConnector": {
         "level": "gold"
       },
+      "kind:toolbox/PythonScript": {
+        "failing": {
+          "fields-described": 2
+        },
+        "level": "silver"
+      },
       "kind:toolbox/Repository": {
         "level": "gold"
       },
@@ -3925,6 +3964,9 @@
       "rule:toolbox/maintainer-plugin/stdio-command": {
         "level": "gold"
       },
+      "rule:toolbox/maintainer-python/no-findings": {
+        "level": "gold"
+      },
       "rule:toolbox/maintainer-repo/constituents-at-least-bronze": {
         "level": "gold"
       },
@@ -4351,6 +4393,9 @@
         "level": "gold"
       },
       "scorecard:toolbox/maintainer-plugin": {
+        "level": "gold"
+      },
+      "scorecard:toolbox/maintainer-python": {
         "level": "gold"
       },
       "scorecard:toolbox/maintainer-repo": {

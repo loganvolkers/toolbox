@@ -20,7 +20,14 @@ Usage: python3 scripts/scale-gate.py [--update | --ci] [--binary target/release/
 Needs valgrind (Callgrind and callgrind_annotate) and a release build of the scale example.
 """
 
-import argparse, glob, json, os, re, subprocess, sys, tempfile
+import argparse
+import glob
+import json
+import os
+import re
+import subprocess
+import sys
+import tempfile
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASELINE = os.path.join(REPO, "crates/toolbox-derive/examples/scale-gate.json")
@@ -49,7 +56,7 @@ def measure(binary, services, threads):
     main = files[0]  # thread 1
     annotate = subprocess.run(["callgrind_annotate", "--inclusive=yes", "--threshold=100", main],
                               capture_output=True, text=True, check=True).stdout
-    serial = next((int(l.split()[0].replace(",", "")) for l in annotate.splitlines() if RECOMPUTE in l), None)
+    serial = next((int(row.split()[0].replace(",", "")) for row in annotate.splitlines() if RECOMPUTE in row), None)
     if serial is None:
         sys.exit(f"no {RECOMPUTE} in the main thread's profile")
     return serial, sum(v for f, v in totals.items() if f != main)
@@ -84,10 +91,10 @@ def main():
             better.append(line)
         else:
             print(f"· same    {line}")
-    for l in worse:
-        print(f"✗ worse   {l}")
-    for l in better:
-        print(f"✓ better  {l}")
+    for change in worse:
+        print(f"✗ worse   {change}")
+    for change in better:
+        print(f"✓ better  {change}")
 
     def write():
         doc = {"format": FORMAT, "services": services, "threads": threads,

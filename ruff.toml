@@ -1,0 +1,9 @@
+# ruff's own configuration: read by ruff whether Toolbox runs it or you do
+# (docs/design/toolbox-and-tools.md, take-it-out). Toolbox for Toolbox carries ruff in its box
+# (portal/standards/python.yaml) and passes it no settings of its own.
+target-version = "py311"
+
+[lint.per-file-ignores]
+# The reference portal's oracle is kept terse on purpose: one statement per line would double it,
+# and its behaviour is pinned by its own checks (tools/validate.py, tools/reference.py --check).
+"examples/reference-portal/tools/*.py" = ["E401", "E701", "E702", "E741"]

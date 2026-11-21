@@ -62,7 +62,7 @@ Each promise is testable, and each has a check to add (§7).
 | B3 | **Standard slots first.** A tool that emits SARIF, NDJSON or JUnit fits without new Toolbox code | **SARIF and NDJSON, yes; JUnit, not yet.** `parse: sarif` on the runner. The zizmor and semgrep kits moved onto it with identical results: T4T's ratchet unchanged, and PostHog's 104 suppressed findings in 33 files ([runner-connector.md](../reference/runner-connector.md)) |
 | B4 | **Pinned and checkable.** Every tool's version is declared, and the box can tell when one is missing or wrong | Yes: `tools:`, `toolbox doctor`, mise (D90) |
 | B5 | **Kits travel whole.** A package carries tools, their configuration, and the rules for using them | **Mostly.** `toolbox vendor` copies a kit in for offline use. `-o standard` generates its STANDARD.md, ending in a copy-paste CI workflow (T4T commits `portal/STANDARD.md`, and CI checks it is current). A kit can ship a tool's config as a starting point (`github-actions/actionlint.yaml`), but the consumer still copies it |
-| B6 | **Any tool, any version.** Swapping a tool for a better one changes a slot's contents, not the box | Partly: rules name a tool's record fields (`entity.counts.high`), so a new tool means new rules |
+| B6 | **Any tool, any version.** Swapping a tool for a better one changes a slot's contents, not the box | **For SARIF tools, yes:** the [`sarif` package](../../packages/sarif/README.md) puts any SARIF tool in the box with one `include`, and its rules read the slot's record shape, not the tool's. Toolbox for Toolbox carries ruff this way. Tools with fittings (actionlint) still have tool-specific rules |
 
 ## 4. Building tools
 

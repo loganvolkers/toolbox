@@ -989,3 +989,17 @@ assert:
       'sdlc-stage:demo-done/plan').rules['no-doubts'] == 'pass' &&
       score('review-sdlc-stage',
       'sdlc-stage:demo-gap/plan').rules['no-doubts'] == 'fail'
+  # Python we maintain: ruff through the SARIF slot
+  - name: a clean script passes ruff
+    expect: >-
+      score('maintainer-python', 'maintainer-python:scripts/clean.py').level
+      == 'clean'
+  - name: an unsuppressed ruff finding fails, a noqa'd one doesn't count
+    expect: >-
+      score('maintainer-python',
+      'maintainer-python:scripts/messy.py').rules['no-findings'] == 'fail' &&
+      score('maintainer-python',
+      'maintainer-python:scripts/messy.py').measures['no-findings'] == 1.0 &&
+      score('maintainer-python',
+      'maintainer-python:scripts/messy.py').evidence['no-findings'] == ['line
+      3: F401 `os` imported but unused']
