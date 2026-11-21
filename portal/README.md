@@ -55,12 +55,12 @@ conflict, take upstream's copy, then regenerate it:
 ```bash
 git checkout --ours portal/results.json   # during a rebase, "ours" is upstream
 toolbox report portal --skip runner,github-actions --baseline portal/results.json --update
-toolbox report portal --skip runner,github-actions -o web --out site/public/report   # the site's copy (D92)
-git add portal/results.json site/public/report
+git add portal/results.json
 ```
 
-The site's copy is generated too, and CI checks it against this commit's report, so regenerate it
-whenever scores change.
+The site's copy of the report isn't committed: the pages workflow generates it for each commit
+(D01M7YAXH89ZJQ7Q4HP77NMHBX8). To preview it locally, run `toolbox report portal --skip runner,github-actions -o web
+--out site/public/report`.
 
 ## Run it
 

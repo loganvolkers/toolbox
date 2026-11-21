@@ -20,7 +20,7 @@ The standalone page is one file. A host that wants its own chrome uses the direc
 </toolbox-report>
 ```
 
-`toolbox report -o web` writes `toolbox-report.js`, `report.json`, and `index.html`. CI checks those three files against a fresh run, byte for byte:
+`toolbox report -o web` writes `toolbox-report.js`, `report.json`, and `index.html`. The site's build generates them for each commit, with the pinned zizmor and actionlint, so the page always shows the commit it was built from:
 
 ```bash
 target/debug/toolbox report portal --skip runner,github-actions -o web --out site/public/report

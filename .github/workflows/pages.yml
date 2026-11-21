@@ -13,11 +13,25 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - name: checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: {persist-credentials: false}
+      - name: Toolchain from rust-toolchain.toml
+        run: rustup show active-toolchain
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with: {key: pages}
+      # The portal report is generated for this commit, not committed (D92, D01M7YAXH89ZJQ7Q4HP77NMHBX8).
+      # `toolbox doctor` fails the build if a pinned tool is missing, so no rule turns `unknown`.
+      - name: This repository's portal report
+        run: |
+          cargo build --locked
+          scripts/ci-tools.sh "$RUNNER_TEMP/tools" actionlint
+          pipx install zizmor==1.32.0
+          export PATH="$RUNNER_TEMP/tools:$PATH"
+          target/debug/toolbox doctor portal
+          target/debug/toolbox report portal --skip runner,github-actions -o web --out site/public/report
       - name: setup node
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
