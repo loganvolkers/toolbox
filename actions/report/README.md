@@ -28,8 +28,9 @@ secrets ([docs/design/repo-portals.md](../../docs/design/repo-portals.md)).
        runs-on: ubuntu-latest
        steps:
          - uses: actions/checkout@v4
-         - uses: loganvolkers/toolbox/actions/report@<commit sha>   # pin a commit
+         - uses: loganvolkers/toolbox/actions/report@v0.1.0
            with:
+             toolbox-version: "0.1.0"   # download attested binaries (D90)
              mode: ${{ inputs.mode || 'ci' }}
    ```
 
@@ -98,9 +99,9 @@ system's format (for example a GitLab Code Quality report, or a comment).
 
 ## Notes
 
-- **Linux runners only** for now; it builds with the toolchain pinned in the toolbox repository.
-  Prebuilt release binaries (`toolbox-version`, D90) will replace the build once Toolbox publishes
-  releases; there are none yet.
+- Prefer `toolbox-version: "0.1.0"` (or later) so the action downloads attested binaries (D90).
+  When that input is empty it still builds from the action's source (Linux runners; cold start is
+  slow). If the Toolbox repository is private, the job token needs `contents: read` on it.
 - **Security:**
   - Connectors run on the runner with the job's permissions. The `workspace` connector only reads
     files.

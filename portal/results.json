@@ -482,6 +482,9 @@
       "doc:AGENTS.md": {
         "level": "silver"
       },
+      "doc:CHANGELOG.md": {
+        "level": "silver"
+      },
       "doc:CLAUDE.md": {
         "level": "silver"
       },
@@ -492,6 +495,9 @@
         "level": "silver"
       },
       "doc:actions/report/README.md": {
+        "level": "silver"
+      },
+      "doc:docs/RELEASING.md": {
         "level": "silver"
       },
       "doc:docs/adversarial-critique.md": {
@@ -1226,6 +1232,9 @@
         "level": "gold"
       },
       "site-page:site/src/content/docs/operators/portal.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/start/install.md": {
         "level": "gold"
       },
       "site-page:site/src/content/docs/start/run.md": {
@@ -4498,7 +4507,7 @@
       },
       "sdlc-stage:maintainer/release": {
         "failing": {
-          "built": 4
+          "built": 3
         },
         "level": "silver"
       },

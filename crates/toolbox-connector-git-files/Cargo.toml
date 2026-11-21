@@ -20,3 +20,11 @@ workspace = true
 
 [package.metadata.dist]
 dist = true
+
+[package.metadata.binstall]
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-{ target-triple }{ archive-suffix }"
+bin-dir = "{ name }-{ target-triple }/{ bin }{ binary-ext }"
+pkg-fmt = "txz"
+
+[package.metadata.binstall.overrides.x86_64-pc-windows-msvc]
+pkg-fmt = "zip"
