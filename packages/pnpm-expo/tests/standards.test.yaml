@@ -1,0 +1,63 @@
+# Package expectations over fixtures (package author SDLC: test).
+name: pnpm-expo
+assert:
+  - name: a healthy workspace reaches gold
+    expect: >-
+      score('pnpm-workspace', 'js-workspace:.').level == 'gold' &&
+      score('pnpm-workspace', 'js-workspace:.').rules['has-workspace-file'] ==
+      'pass' && score('pnpm-workspace',
+      'js-workspace:.').rules['package-manager-pinned'] == 'pass' &&
+      score('pnpm-workspace', 'js-workspace:.').rules['root-lockfile'] ==
+      'pass' && score('pnpm-workspace',
+      'js-workspace:.').rules['ci-frozen-install'] == 'pass' &&
+      score('pnpm-workspace',
+      'js-workspace:.').rules['linker-policy-declared'] == 'pass' &&
+      score('pnpm-workspace', 'js-workspace:.').rules['toolchain-aligned'] ==
+      'pass' && score('pnpm-workspace',
+      'js-workspace:.').rules['no-unbounded-root-deps'] == 'pass'
+  - name: a drifting workspace fails bronze and names the gaps
+    expect: >-
+      score('pnpm-workspace', 'js-workspace:drift').level == 'none' &&
+      score('pnpm-workspace',
+      'js-workspace:drift').rules['has-workspace-file'] == 'fail' &&
+      score('pnpm-workspace',
+      'js-workspace:drift').rules['package-manager-pinned'] == 'fail' &&
+      score('pnpm-workspace', 'js-workspace:drift').rules['root-lockfile'] ==
+      'fail' && score('pnpm-workspace',
+      'js-workspace:drift').rules['ci-frozen-install'] == 'fail' &&
+      score('pnpm-workspace',
+      'js-workspace:drift').rules['linker-policy-declared'] == 'fail' &&
+      score('pnpm-workspace', 'js-workspace:drift').rules['toolchain-aligned']
+      == 'fail' && score('pnpm-workspace',
+      'js-workspace:drift').evidence['no-unbounded-root-deps'] ==
+      ['leftpad@*', 'other@git+https://example.invalid/x']
+  - name: a healthy expo app reaches gold
+    expect: >-
+      score('expo-app', 'expo-app:apps/mobile').level == 'gold' &&
+      score('expo-app', 'expo-app:apps/mobile').rules['has-expo-dep'] ==
+      'pass' && score('expo-app',
+      'expo-app:apps/mobile').rules['has-app-config'] == 'pass' &&
+      score('expo-app', 'expo-app:apps/mobile').rules['single-canonical-eas']
+      == 'pass' && score('expo-app',
+      'expo-app:apps/mobile').rules['sdk-packages-present'] == 'pass' &&
+      score('expo-app',
+      'expo-app:apps/mobile').rules['metro-uses-expo-default'] == 'pass' &&
+      score('expo-app', 'expo-app:apps/mobile').rules['doctor-pinned-in-ci']
+      == 'pass' && score('expo-app',
+      'expo-app:apps/mobile').rules['eas-profiles'] == 'pass'
+  - name: a legacy expo app fails bronze and silver
+    expect: >-
+      score('expo-app', 'expo-app:apps/legacy').level == 'none' &&
+      score('expo-app', 'expo-app:apps/legacy').rules['has-expo-dep'] ==
+      'fail' && score('expo-app',
+      'expo-app:apps/legacy').rules['has-app-config'] == 'fail' &&
+      score('expo-app', 'expo-app:apps/legacy').rules['single-canonical-eas']
+      == 'fail' && score('expo-app',
+      'expo-app:apps/legacy').evidence['single-canonical-eas'] == ['eas.json
+      at the repository root conflicts with apps/legacy/eas.json'] &&
+      score('expo-app', 'expo-app:apps/legacy').rules['sdk-packages-present']
+      == 'fail' && score('expo-app',
+      'expo-app:apps/legacy').rules['metro-uses-expo-default'] == 'fail' &&
+      score('expo-app', 'expo-app:apps/legacy').rules['doctor-pinned-in-ci']
+      == 'fail' && score('expo-app',
+      'expo-app:apps/legacy').rules['eas-profiles'] == 'fail'
