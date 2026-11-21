@@ -1,0 +1,420 @@
+diff --git a/.github/workflows/go-file-size.yaml b/.github/workflows/go-file-size.yaml
+new file mode 100644
+index 0000000..8004cd0
+--- /dev/null
++++ b/.github/workflows/go-file-size.yaml
+@@ -0,0 +1,52 @@
++# Ratchet for the "small Go files" standard. See .toolbox/STANDARD.md.
++# Fails when a non-test .go file that is already over 1,000 lines grows, or when a file
++# crosses 1,000 lines. Shrinking files pass and are listed so the baseline can be tightened.
++---
++name: go-file-size
++
++on:
++  pull_request:
++    branches: [main]
++
++permissions:
++  contents: read
++
++env:
++  TOOLBOX_VERSION: "0.1.1"
++  TOOLBOX_REPO: loganvolkers/toolbox
++  TOOLBOX_TARGET: x86_64-unknown-linux-gnu
++
++jobs:
++  gate:
++    name: Go file size ratchet
++    runs-on: ubuntu-latest
++    steps:
++      - name: Checkout
++        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
++        with:
++          ref: ${{ github.event.pull_request.head.sha }}
++          persist-credentials: false
++
++      - name: Install toolbox
++        shell: bash
++        run: |
++          set -euo pipefail
++          dir="$RUNNER_TEMP/toolbox-bin"
++          mkdir -p "$dir" "$RUNNER_TEMP/toolbox-dl"
++          cd "$RUNNER_TEMP/toolbox-dl"
++          base="https://github.com/${TOOLBOX_REPO}/releases/download/v${TOOLBOX_VERSION}"
++          for app in toolbox-cli toolbox-connector-workspace; do
++            archive="${app}-${TOOLBOX_TARGET}.tar.xz"
++            curl -fsSLO "${base}/${archive}"
++            curl -fsSLO "${base}/${archive}.sha256"
++            sha256sum -c "${archive}.sha256"
++            tar -xJf "${archive}"
++            cp "${app}-${TOOLBOX_TARGET}"/* "$dir"/
++          done
++          echo "$dir" >> "$GITHUB_PATH"
++
++      - name: Gate (ratchet against .toolbox/results.json)
++        shell: bash
++        run: |
++          toolbox --version
++          toolbox report .toolbox --baseline .toolbox/results.json --out /dev/null
+diff --git a/.toolbox/STANDARD.md b/.toolbox/STANDARD.md
+new file mode 100644
+index 0000000..ffd111b
+--- /dev/null
++++ b/.toolbox/STANDARD.md
+@@ -0,0 +1,93 @@
++# Standard S1: small Go files
++
++**Rule.** Target Go files under 600 lines, excluding tests. A non-test `.go` file over 1,000 lines
++is a violation: add new functionality in a new file instead of extending it.
++
++What is enforced:
++
++| | |
++|---|---|
++| Measured | Every `.go` file in the repository (`**/*.go`) |
++| Violation | More than **1,000 lines** (every line of the file counts, like `wc -l`, plus a last line without a newline). 600 is the target, not a violation |
++| Exempt (never measured) | Test files: anything ending in `_test.go` |
++| Ratchet | A file already over 1,000 lines (recorded in the baseline) may not grow. A file at or under 1,000 (or a new or renamed file) may not cross 1,000 |
++| Campaign | `go-file-size-zero`: progress from the baseline's count of violating files (15 at 1,000 lines, 2026-11-21) to zero |
++
++Generated files are measured too (for example `internal/mocks/mock_storage.go`, 1,045 lines). To
++stop measuring one, see [Changing the standard](#changing-the-standard).
++
++It is scored by [Toolbox](https://github.com/loganvolkers/toolbox) (`toolbox` 0.1.1 and its
++`toolbox-connector-workspace` binary on `PATH`, plus `jq`). Files:
++
++| File | What it is |
++|---|---|
++| `.toolbox/toolbox.yaml` | The repo portal: includes the `file-size` package with this standard's globs and limit |
++| `.toolbox/packages/file-size/` | A vendored copy of Toolbox's `file-size` package (so no network is needed) |
++| `.toolbox/results.json` | The committed baseline (generated; never hand-edit or hand-merge it) |
++| `.github/workflows/go-file-size.yaml` | Runs the Gate on every pull request |
++
++## Commands (run from the repository root)
++
++**Report:** every violating file as JSON, largest first.
++
++```bash
++toolbox report .toolbox -o failures | jq '[.[] | select(.scorecard == "go-file-size") | {file: .fields.path, lines: .fields.lines}] | sort_by(-.lines)'
++```
++
++**Gate:** exits 1 when a violating file grew or a file newly crossed 1,000 lines, 0 otherwise.
++
++```bash
++toolbox report .toolbox --baseline .toolbox/results.json --out /dev/null
++```
++
++It prints one line per change (on stderr):
++
++- `✗ worse … within-limit evidence grew 270 → 271`: a violating file grew (exit 1).
++- `✗ worse … within-limit now fails` or `… new, at none; new entities must reach within-limit`: a
++  file crossed 1,000, or a new file arrived over 1,000 (exit 1).
++- `✓ better … within-limit evidence shrank 270 → 269` or `… within-limit now passes`: a file shrank
++  or dropped to 1,000 or below (exit 0), followed by `results.json is out of date: run with
++  --update and commit it`. Tighten the baseline then (below).
++- `baseline: matches .toolbox/results.json`: nothing changed (unrelated edits, test files).
++
++**Campaign:** progress toward zero violating files.
++
++```bash
++toolbox report .toolbox --baseline .toolbox/results.json -o json 2>/dev/null | jq '.campaigns["go-file-size-zero"].sinceStart.entitiesShort | {baseline: .from, current: .now, percentDone}'
++```
++
++`baseline` is the number of violating files when the campaign started (recorded in
++`results.json`), `current` is the number now, `percentDone` is the share of them fixed. The Gate also
++prints a one-line summary, e.g. `campaign go-file-size-zero since 2026-11-21: entities short
++15 → 15 (0.0% of the way); measure 6907 → 6907 …` (the measure is total lines over the limit).
++
++## Updating the baseline
++
++When the Gate reports `✓ better`, lock the improvement in so it cannot be lost again:
++
++```bash
++toolbox report .toolbox --baseline .toolbox/results.json --update --out /dev/null
++git add .toolbox/results.json
++```
++
++`--update` refuses to write when anything regressed. The campaign's starting count is kept across
++updates, so progress keeps counting from the original baseline. On a merge conflict in
++`results.json`, take the upstream copy and rerun `--update`.
++
++## Changing the standard
++
++All settings are in the `include` of `.toolbox/toolbox.yaml`; commit the manifest and the updated
++`results.json` together.
++
++- **Exempt a file** (measured, but never a violation): add it to `exempt` with a reason, e.g.
++  `exempt: {internal/mocks/mock_storage.go: "generated by mockgen"}`, then run `--update`.
++- **Exclude more paths** (never measured, like tests): add a glob to `exclude` (`**` spans
++  directories, `*` doesn't), then `--update`.
++- **Lower the threshold** (e.g. 1,000 → 600): change `limit`, then record the newly violating files
++  on purpose with
++  `toolbox report .toolbox --baseline .toolbox/results.json --update --accept go-file-size --out /dev/null`.
++  `--accept` restarts the campaign from the new state, counted against the new limit.
++- **Raise the threshold:** change `limit` and run `--update`. `toolbox` 0.1.1 does not block this,
++  so treat it as a deliberate decision and say so in the commit.
++
++Check the manifest after any edit with `toolbox validate .toolbox`.
+diff --git a/.toolbox/packages/file-size/README.md b/.toolbox/packages/file-size/README.md
+new file mode 100644
+index 0000000..e256240
+--- /dev/null
++++ b/.toolbox/packages/file-size/README.md
+@@ -0,0 +1,90 @@
++# file-size: a Toolbox package
++
++**Files over a line limit are violations.** One `include` gives a repository the standard, a
++ratchet and a campaign:
++
++- `toolbox report` lists every file over the limit, with its line count and the fix;
++- the ratchet fails a pull request that grows a violating file, or brings a new or renamed file
++  over the limit, and reports the files that shrank;
++- the campaign `<name>-zero` counts files over the limit, and lines over it, from the day the
++  baseline first records it.
++
++It needs nothing but the `toolbox` binaries: the files are read by `builtin:workspace`, without a
++build or the network. Include it once per standard, with that standard's files and limit.
++
++| Brings | Named |
++|---|---|
++| Connector | `<name>` (`builtin:workspace`, `file` records) |
++| Kind | `<kind>` (default `SizedFile`): `path`, `lines` |
++| Scorecard | `<name>`, one level `within-limit`, rule `within-limit` |
++| Campaign | `<name>-zero` |
++
++## Use it
++
++`.toolbox/toolbox.yaml`, for TypeScript components of at most 400 lines, tests excluded:
++
++```yaml
++apiVersion: toolbox.dev/v1alpha1
++portal: {name: my-repo, owner: group:maintainers, toolbox: "0.1"}
++include:
++  - package: github:loganvolkers/toolbox/packages/file-size@<tag>   # or a relative path
++    with:
++      name: component-size
++      kind: Component
++      files: ["web/src/**/*.tsx"]
++      exclude: ["**/__tests__/**", "**/*.test.tsx"]
++      exempt: {web/src/icons.tsx: generated from the icon set}
++      limit: 400
++```
++
++Then, from the repository root:
++
++```bash
++toolbox report .toolbox -o failures                                     # every violation, as JSON
++toolbox report .toolbox --baseline .toolbox/results.json --update      # record the baseline; commit it
++toolbox report .toolbox --baseline .toolbox/results.json               # the gate: exit 1 on a regression
++toolbox report .toolbox --baseline .toolbox/results.json -o json | jq '.campaigns'   # campaign progress
++```
++
++In CI, run the gate with `--ci` (it also fails when `results.json` is out of date), or use the
++[report action](../../actions/report/README.md).
++
++## Parameters
++
++| Parameter | Default | Meaning |
++|---|---|---|
++| `files` | required | Globs of the files measured. `**` spans directories, `*` doesn't |
++| `limit` | required | More lines than this is a violation. It may only be lowered (`tighten: lower`) |
++| `exclude` | `[]` | Globs never measured: tests, generated or vendored code |
++| `exempt` | `{}` | Files measured but exempt, path → reason. The reason stays in the manifest, next to the path |
++| `name` | `file-size` | Names the connector, scorecard and campaign |
++| `kind` | `SizedFile` | The kind (PascalCase). Include the package twice with different `name` and `kind` for two standards |
++| `title`, `owner`, `fix` | | The scorecard's heading, owner and fix text |
++| `root` | `.` | The checkout, relative to where `toolbox report` runs |
++
++## What a pull request sees
++
++| Change | Gate |
++|---|---|
++| A violating file grows by one line | `✗ worse … within-limit evidence grew 270 → 271` (exit 1) |
++| A new file over the limit, or one that crosses it | `✗ worse … new, at none; new entities must reach within-limit` or `… within-limit now fails` (exit 1) |
++| A violating file shrinks, or drops under the limit | `✓ better …` (exit 0); `--update` records it |
++| An unrelated edit | `matches` (exit 0) |
++
++The rule's `measure` is the lines **over** the limit, so the campaign's measure is how much code
++has to move.
++
++## Changing the standard
++
++- **Tighten the limit** (400 → 300): change `limit`, then
++  `toolbox report .toolbox --baseline .toolbox/results.json --update --accept component-size`. The
++  newly failing files are recorded and listed, regressions in other scorecards still fail, and
++  the campaign restarts from the new state. Review the list, then commit the manifest and
++  `results.json` together.
++- **Exempt a file**: add it to `exempt` with its reason, then `--update` (it now passes).
++- **Exclude a directory**: add a glob to `exclude`, then `--update`.
++
++## Sources
++
++- [docs/design/ratchets.md](../../docs/design/ratchets.md): the ratchet, measures and campaign starts
++- [docs/reference/workspace-connector.md](../../docs/reference/workspace-connector.md): `files`, `exclude` and `file` records
+diff --git a/.toolbox/packages/file-size/fragments/file-size.yaml b/.toolbox/packages/file-size/fragments/file-size.yaml
+new file mode 100644
+index 0000000..248f68c
+--- /dev/null
++++ b/.toolbox/packages/file-size/fragments/file-size.yaml
+@@ -0,0 +1,60 @@
++# File size: lines per file against `limit`. One connector, kind, scorecard and campaign, all
++# named from the parameters, so a portal can include the package more than once.
++connectors:
++  - name: ${param:name}
++    package: builtin:workspace # reads files only: no build, no network, no history walk
++    runtime: in-image
++    config:
++      root: ${param:root}
++      crates: false
++      lastChange: false
++      files: ${param:files}
++      exclude: ${param:exclude}
++    records: [file]
++    refresh: {file: [external_ids]}
++    freshness: {file: 5m}
++
++kinds:
++  - name: ${param:kind}
++    description: A file measured by the ${param:name} standard (lines per file).
++    identityFrom: ["connector:${param:name}"]
++    fields: {path: {type: string}, lines: {type: integer}}
++    sources: {default: ["connector:${param:name}"]}
++    map:
++    - from: ${param:name}/file
++      id: "'${param:name}:' + record.path"
++      set: "{'path': record.path, 'lines': record.lines}"
++
++scorecards:
++  - name: ${param:name}
++    title: ${param:title}
++    description: >-
++      Files with more than ${param:limit} lines violate. The measure is the
++      lines over the limit, so a violating file that grows is a regression and
++      one that shrinks is an improvement.
++    kind: ${param:kind}
++    owner: ${param:owner}
++    levels: [within-limit]
++    # A file new since the baseline (or renamed) must arrive within the limit.
++    ratchet: {newEntitiesAtLeast: within-limit}
++    appliesTo: "!(entity.path in ${param:exempt})"
++    rules:
++    - name: within-limit
++      level: within-limit
++      check: entity.lines <= ${param:limit}
++      measure: entity.lines - ${param:limit}
++      evidence: >-
++        [string(entity.lines) + ' lines, ' + string(entity.lines -
++        ${param:limit}) + ' over the limit of ${param:limit}']
++      fix: ${param:fix}
++    facets: {summary: public, details: public}
++
++campaigns:
++  - name: ${param:name}-zero
++    title: "${param:title}: no file over ${param:limit} lines"
++    owner: ${param:owner}
++    description: >-
++      Every measured file within ${param:limit} lines. Progress is counted
++      from the start the baseline records: files over the limit, and lines
++      over it.
++    includes: [{scorecard: '${param:name}', rules: [within-limit]}]
+diff --git a/.toolbox/packages/file-size/toolbox-package.yaml b/.toolbox/packages/file-size/toolbox-package.yaml
+new file mode 100644
+index 0000000..b3796dd
+--- /dev/null
++++ b/.toolbox/packages/file-size/toolbox-package.yaml
+@@ -0,0 +1,64 @@
++# A Toolbox package (D89): a size limit on files, ratcheted per file, with a campaign to zero
++# (D01M7Z2ZZ97VZQNTDT4QQHM3HQD).
++apiVersion: toolbox.dev/package/v0
++name: file-size
++version: 0.1.0
++description: >-
++  Files over a line limit are violations. The ratchet fails a pull request
++  that grows a violating file or brings a new one over the limit, and a
++  campaign pays the excess down.
++parameters:
++  name:
++    type: string
++    default: file-size
++    description: >-
++      Names this standard's connector, scorecard, rule prefix and campaign.
++      Include the package again with another name (and kind) for a second size
++      standard.
++  kind:
++    type: string
++    default: SizedFile
++    description: The entity kind for measured files (PascalCase; unique per include).
++  title:
++    type: string
++    default: Files within the size limit
++    description: The scorecard's heading.
++  owner:
++    type: string
++    default: group:maintainers
++    description: Who owns the standard.
++  root:
++    type: string
++    default: .
++    description: >-
++      The checkout the files are read from, relative to where `toolbox report`
++      runs.
++  files:
++    type: array
++    description: >-
++      Globs of the files measured, e.g. ["src/**/*.rs"]. `**` spans
++      directories.
++  exclude:
++    type: array
++    default: []
++    description: >-
++      Globs never measured: tests, generated or vendored code, e.g.
++      ["**/tests/**", "**/*_test.go"].
++  exempt:
++    type: object
++    default: {}
++    description: >-
++      Files measured but exempt, path → reason, e.g. {"src/generated.rs":
++      "generated by build.rs"}. They are skipped by the scorecard and listed
++      here with why.
++  limit:
++    type: integer
++    tighten: lower
++    description: A file with more lines than this is a violation.
++  fix:
++    type: string
++    default: >-
++      Move code out of this file into new modules until it is within the
++      limit. Do not add new functionality to it.
++    description: What to do about a violation (shown with each one).
++fragments: [fragments/*.yaml]
+diff --git a/.toolbox/toolbox.yaml b/.toolbox/toolbox.yaml
+new file mode 100644
+index 0000000..cbf10bc
+--- /dev/null
++++ b/.toolbox/toolbox.yaml
+@@ -0,0 +1,25 @@
++# Toolbox repo portal for this repository: enforces the standard "small Go files" (S1).
++# See .toolbox/STANDARD.md.
++apiVersion: toolbox.dev/v1alpha1
++portal:
++  name: openfga
++  title: OpenFGA repository standards
++  owner: group:maintainers
++  toolbox: "0.1"
++include:
++  # Vendored copy of Toolbox's file-size package (no network needed).
++  - package: packages/file-size
++    with:
++      name: go-file-size
++      kind: GoFile
++      title: Go files within 1,000 lines
++      files: ["**/*.go"]
++      # Test files are exempt from the standard.
++      exclude: ["**/*_test.go"]
++      # Files measured but exempt from the limit: path -> reason.
++      exempt: {}
++      limit: 1000
++      fix: >-
++        Target Go files under 600 lines, excluding tests. Do not add new
++        functionality to this file; add it in a new file, and move code out
++        until the file is at most 1,000 lines.

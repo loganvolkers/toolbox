@@ -5,29 +5,41 @@ standard (writing it, enforcing it with a ratchet, running a campaign on it, cha
 in another repository, and letting another agent read its state), does Toolbox cost an agent fewer
 tokens and less time than bespoke scripts, with at least the same correctness?
 
-**Answer (2026-11-21, one run per phase and arm): no. R3 fails as pre-registered, but the round
-did not test sharing, which is the mechanism Toolbox claims.**
+**Answer (2026-11-21, one run per phase and arm): no, and R3 is closed as failed
+([D01M7Z2ZZ97VZQNTDT4QQHM3HQD](../../docs/decisions/D01M7Z2ZZ97VZQNTDT4QQHM3HQD.md)). After the
+measured friction was fixed and the Toolbox arm rerun (B′), Toolbox cost 15% more tokens than
+bespoke scripts over the whole lifecycle (510k against 445k), at equal correctness. The bar
+set before the rerun was "fewer tokens".**
 
-- **Correctness was equal.** Both arms were exact in every phase: every violating file, every
-  count, every one of 18 scripted gate cases, and all five reading questions.
-- **Toolbox cost more in every phase, not only while it was being learnt.** Over the five phases
-  it took 582k tokens against 445k (+31%), 125 tool calls against 57, and 41 minutes against 10.
-  After phase 1 the gap narrows but stays: +13% tokens and 2.7 times the wall time.
-- **Reuse (phase 4) was copy-and-edit in both arms.** Toolbox has no parameterised package for a
-  file-size or regex-count standard, so arm B copied the Codex files and substituted about a dozen
-  literals, just as arm A did. The ecosystem effect, where one standard is written once and read
-  by many consumers, was not available to measure.
-- **Most of arm B's extra cost is friction with a named fix:** wrapper scripts, `jq` pipelines over
-  internal JSON, hand-frozen campaign lists, deleting the baseline to apply an intended change, and
-  40-second runs on PostHog. The table under *Developer experience* classifies 18 such items.
-- **A design error:** PostHog already enforces S1 in CI. It runs a semgrep rule with `--error`,
-  and inline `nosemgrep` comments act as the baseline (65 of the 80 occurrences). Neither arm found
-  this, and neither did the design. Both rebuilt an existing gate. What PostHog lacks is the
-  campaign: a count of those suppressions going to zero.
+| | Arm A: bespoke scripts | Arm B: Toolbox, round 2 | Arm B′: Toolbox after the fixes |
+|---|---|---|---|
+| Correct (reports, 18 gate cases, 5 questions) | All | All | All |
+| Tokens, all phases | **445k** | 582k | 510k |
+| Tool calls | **57** | 125 | 96 |
+| Wall time | **10 min** | 41 min | 17 min |
+| Tokens, phases 3 to 5 (after writing) | **275k** | 310k | 284k |
+| Code and configuration the team maintains, per repository | 204 to 250 lines | 130 to 237 lines | **77 to 92 lines**, plus a vendored package |
 
-The stop condition says that if R3 fails, Toolbox's single-repository value is its packaged
-standards, and the plan ships standards as text. **Whether to accept that, or to fix the friction
-and rerun arm B, is open** (see *Next*).
+- **The fixes closed most of the gap:** 12% fewer tokens than round 2, 23% fewer tool calls, and
+  59% less time. After the standard is written, Toolbox is within 3% of the scripts on tokens.
+  In the reuse phase, where B′ included the same package with OpenFGA's parameters, it used
+  fewer calls (11 against 12) and less time (98 s against 105 s) than arm A copying its script.
+- **What remains is learning the format.** Writing the first standard cost B′ 55k tokens more
+  than writing a script (226k against 171k), with three times the tool calls. A frontier agent
+  writes a 200-line counting script cheaply, and there is no later phase where a script costs much
+  more.
+- **Tokens are a blunt measure here.** Every agent starts with about 85k tokens of fixed context,
+  so the phases after the first differ by a few thousand tokens. Calls and time separate the arms
+  more clearly, and on those B′ is close to the scripts after phase 1, not ahead.
+- **Two things Toolbox did better are outside the bar:** about a third as much code to maintain,
+  and reuse by `include` instead of copying a script. The first A/B's guardrail finding (no
+  regressions, no suppressions) also stands. None of them was the pre-registered question.
+- **A design error in round 2:** PostHog already enforces S1 in CI, with a semgrep rule and inline
+  `nosemgrep` suppressions (65 of the 80 occurrences). Neither arm found it. The new
+  [`semgrep` package](../../packages/semgrep/README.md) reads that rule: 104 suppressed findings in
+  33 files, a campaign PostHog doesn't have.
+
+The round 2 results and their friction table follow; the rerun is under *Rerun (B′)*.
 
 ## Why these standards
 
@@ -171,25 +183,93 @@ The friction arm B's agents reported, classified by what would fix it. "P" is th
   runner parser for semgrep JSON would make PostHog's existing rule the source, and its 34 files of
   suppressions the campaign.
 
-## Next
+## Rerun (B′)
 
-**For decision:**
+**What changed between the rounds** ([D01M7Z2ZZ97VZQNTDT4QQHM3HQD](../../docs/decisions/D01M7Z2ZZ97VZQNTDT4QQHM3HQD.md)):
+round 2's friction items 1 to 9, 11, 12, 14 to 16 and 18 were fixed in Toolbox. That includes a
+rule's `measure`, `-o failures`, campaign paydown from a recorded start, `--accept`, and the
+`file-size`, `pattern-count` and `semgrep` packages, with a connector reference and starter docs.
+Before the rerun, the package and starter examples were made generic, because they had been
+written after seeing these standards.
 
-1. **Accept the stop.** Ship standards as text, keep `toolbox report` as a convenience, and
-   take repo-level value as not shown.
-2. **Fix and rerun arm B (B′), with the bar set now.** Fix friction items 1 to 7, 11 and 12, add
-   semgrep JSON to the runner connector, and rerun arm B's phases 1, 3 and 4 against the same
-   truth and gate harness. Then add one phase that applies a shared package to all three
-   repositories. **B′ passes only if its total tokens are lower than arm A's at equal correctness.
-   If not, take option 1.**
+**How it ran:** the same prompts as arm B ([rerun/prompts/](rerun/prompts/)), on fresh copies at
+the same commits, with the same truth, gate harness and phase 5 setup, which was checked byte for
+byte. Two changes:
+- The agents could read only Toolbox's `README.md`, `docs/v1-spec.md`, `docs/design/`,
+  `docs/reference/`, `examples/`, `packages/`, `crates/`, `schema/` and `plugins/`. This repository
+  now holds the ground truth and the answer key, under `experiments/` and in the research log.
+- The first phase 1 launch was cut off by an account usage limit partway through. Its partial
+  work was discarded, and phase 1 was relaunched on clean copies.
 
-Option 2 is recommended. Phase 4 did not test the mechanism Toolbox claims, and most of the
-measured cost is listed friction rather than the format. Committing to the bar before building
-keeps the rerun honest.
+The diffs are in [rerun/patches/](rerun/patches/) (`results.json` left out), and usage in
+[rerun/usage.tsv](rerun/usage.tsv).
+
+| Phase | Arm A | Arm B | Arm B′ |
+|---|---|---|---|
+| 1. Write S1 and S2 | 171k, 18 calls, 252 s | 272k, 74, 1,526 s | 226k, 51, 568 s |
+| 3. Change | 99k, 17, 161 s | 112k, 22, 644 s | 103k, 23, 239 s |
+| 4. Reuse on OpenFGA | 90k, 12, 105 s | 106k, 17, 133 s | 92k, 11, 98 s |
+| 5. Read | 85k, 10, 72 s | 93k, 12, 152 s | 89k, 11, 102 s |
+| **Total** | **445k, 57, 590 s** | 582k, 125, 2,455 s | 510k, 96, 1,007 s |
+
+**Correctness:** B′ was exact everywhere:
+- S1: 28 of 28 files, 37 of 37 after the change;
+- S2: 191 of 191, 229 of 229 at 700 lines;
+- S3: 15 of 15;
+- all 18 gate cases;
+- 5 of 5 answers.
+
+Its reader also caught the synthetic fake fix, and said the campaign's 2.9% wasn't real.
+
+**How B′ worked:**
+- Both phase 1 agents included a package (`pattern-count`, `file-size`) and wrote 25 to 30 lines
+  of `toolbox.yaml`.
+- Phase 3 changed one parameter in each repository and ran `--update --accept <scorecard>`, which
+  restarted the campaigns.
+- Phase 4 copied Codex's portal, changed 13 lines of `toolbox.yaml`, and reused the package
+  unchanged.
+
+**Friction B′ still reported:**
+
+| Friction | Phases | Kind |
+|---|---|---|
+| Including a package offline means copying it into the repository. `toolbox install` fetches `github:` packages over the network, and there is no vendoring command | P1, P4 | Missing feature |
+| The default Markdown lists every passing entity (6,331 files on PostHog), which overflows an agent's tool output. A quiet gate needs `--out /dev/null` | P1 | Design |
+| `-o failures` needs a `jq` reshape for a given output shape | P1, P4 | Missing feature (field selection) |
+| Campaign progress is under `.campaigns[…].sinceStart` in `-o json`; `toolbox campaign` needs a server. The top-level `percent` read 100 while 28 files failed (6,331 of 6,359, rounded) | P1 | Missing feature, and a bug this change introduced: rounding must not reach 100 before every entity meets the goal |
+| No copy-paste CI workflow that installs Toolbox. The report action's README is under `actions/`, which the rerun's read list left out | P1, P4 | Experiment's read list, and docs |
+| `--ci` fails on an unrecorded improvement, while the task said improvements pass | P1 | Docs (two modes, two uses) |
+| The baseline records every clean file, so a pull request that adds a clean file makes it stale | P1 | Design (round 2's item 10) |
+| `tighten: lower` isn't enforced for a parameter without a default, so raising a required limit passes | P1 | Bug |
+| An exempted file is reported as `✓ better … now passes`, and the campaign counts it as fixed | P1 | Design |
+| Whether `**/` matches zero directories wasn't documented | P1 | Docs |
+| Guidance on keeping or restarting a campaign is in `campaigns.md`, not in the package README | P3 | Docs |
+| `--accept` lists 229 changes without separating newly failing files from files the new limit shifted | P3 | Missing feature |
+| STANDARD.md and the workflow were hand-copied between repositories | P4 | Starter |
+
+**Friction neither arm escaped:**
+- `AGENTS.md` doesn't point to the tooling.
+- The gate compares against the baseline, not the previous commit.
+- A textual pattern can be gamed by renaming.
+
+## Outcome
+
+R3 is closed as failed. With its friction fixed, Toolbox matched bespoke scripts after a standard
+was written, and on reuse, but didn't beat them, and learning the format costs more than writing
+a script. For a single agent applying simple textual standards to one repository, Toolbox saves
+no tokens. The stop condition's consequence: the single-repository value claim rests on the
+packaged standards, not on agent efficiency.
+
+**What the evidence still supports**, none of it R3's question:
+- packages that turn a written standard into a ratchet and a campaign in about 30 lines;
+- about a third as much code to maintain;
+- reuse by `include`;
+- the guardrail from the first A/B (R4 tests that on real pull requests).
 
 ## Limits
 
-- One run per phase and arm, on three standards: indicative, not significant.
+- One run per phase and arm, on three standards: indicative, not significant. Per-phase token
+  differences of a few thousand are within what one rerun of the same agent would vary by.
 - The standards are textual (a regex, a line count), the kind a bespoke script handles well. A
   standard that joins several sources, such as CODEOWNERS with file size, wasn't tested.
 - The S3 truth first left out `tests/` directories, copying Codex's rule; the S3 prompt exempts
@@ -205,5 +285,6 @@ keeps the rerun honest.
 - The forks' `AGENTS.md` files: PostHog (person data access), Codex (module size)
 - PostHog's `.semgrep/rules/no-direct-persons-db-orm.yaml`, `.github/workflows/ci-security.yaml`,
   `.github/scripts/check-idor-model-coverage.py` and `tools/hogli-commands/hogli_commands/workflow_lint/`
-- [prompts/](prompts/), [patches/](patches/), [harness/](harness/), [usage.tsv](usage.tsv): this round
+- [prompts/](prompts/), [patches/](patches/), [harness/](harness/), [usage.tsv](usage.tsv): round 2
+- [rerun/prompts/](rerun/prompts/), [rerun/patches/](rerun/patches/), [rerun/usage.tsv](rerun/usage.tsv): the rerun (B′)
 - [../out-of-box/ab](../out-of-box/ab/README.md): the first A/B, with its token and time costs

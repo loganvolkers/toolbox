@@ -1,0 +1,435 @@
+diff --git a/.github/workflows/ci-toolbox-standards.yml b/.github/workflows/ci-toolbox-standards.yml
+new file mode 100644
+index 00000000..154420e5
+--- /dev/null
++++ b/.github/workflows/ci-toolbox-standards.yml
+@@ -0,0 +1,62 @@
++name: Toolbox standards (S1 person ORM ratchet)
++
++# Gate for .toolbox/STANDARD.md (S1: no direct ORM queries on person tables). Fails a pull request that
++# adds a direct `Person.objects` / `PersonDistinctId.objects` / `CohortPeople.objects` / `Group.objects` /
++# `GroupTypeMapping.objects` query outside the routed helpers, the person model module and tests, against the committed baseline .toolbox/results.json. Fewer violations pass
++# and are listed as "better", so the baseline can be tightened with --update.
++
++on:
++    pull_request:
++        paths:
++            - '**/*.py'
++            - .toolbox/**
++            - .github/workflows/ci-toolbox-standards.yml
++
++concurrency:
++    group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
++    cancel-in-progress: true
++
++permissions:
++    contents: read
++
++env:
++    TOOLBOX_GIT: https://github.com/loganvolkers/toolbox
++    TOOLBOX_TAG: v0.1.1
++
++jobs:
++    person-orm-ratchet:
++        runs-on: ubuntu-latest
++        timeout-minutes: 30
++        steps:
++            - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
++              with:
++                  persist-credentials: false
++
++            - name: Install Rust
++              uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9
++              with:
++                  toolchain: stable
++
++            - name: Install toolbox (pinned tag, built from source)
++              run: |
++                  set -euo pipefail
++                  cargo install --locked --git "$TOOLBOX_GIT" --tag "$TOOLBOX_TAG" --root "$RUNNER_TEMP/toolbox" toolbox-cli toolbox-connector-workspace
++                  echo "$RUNNER_TEMP/toolbox/bin" >> "$GITHUB_PATH"
++
++            - name: Gate (ratchet against .toolbox/results.json)
++              run: |
++                  set -uo pipefail
++                  toolbox --version
++                  toolbox report .toolbox --baseline .toolbox/results.json -o failures --out /dev/null --verdict "$RUNNER_TEMP/verdict.json" 2> "$RUNNER_TEMP/gate.txt"
++                  rc=$?
++                  cat "$RUNNER_TEMP/gate.txt"
++                  {
++                      echo "## S1: no direct ORM queries on person tables"
++                      echo
++                      echo '```'
++                      grep -v '^· changed' "$RUNNER_TEMP/gate.txt" || true
++                      echo '```'
++                      echo
++                      echo "See .toolbox/STANDARD.md for how to fix a regression or tighten the baseline."
++                  } >> "$GITHUB_STEP_SUMMARY"
++                  exit $rc
+diff --git a/.toolbox/STANDARD.md b/.toolbox/STANDARD.md
+new file mode 100644
+index 00000000..533bafc7
+--- /dev/null
++++ b/.toolbox/STANDARD.md
+@@ -0,0 +1,102 @@
++# S1: no direct ORM queries on person tables
++
++**The standard.** From `AGENTS.md`: "Never add new direct ORM queries like `Person.objects.filter(...)`
++or `PersonDistinctId.objects.filter(...)`; use the existing routed helpers or create new ones
++following the established pattern."
++
++| | |
++|---|---|
++| Violation | Each occurrence of `Person.objects`, `PersonDistinctId.objects`, `CohortPeople.objects`, `Group.objects` or `GroupTypeMapping.objects` in a `.py` file (regex `\b(Person\|PersonDistinctId\|CohortPeople\|Group\|GroupTypeMapping)\.objects\b`) |
++| Exempt: tests | Any file under a `test/` or `tests/` directory, `test_*.py`, `*_test.py`, `conftest.py` |
++| Exempt: routed helpers | `posthog/models/person/util.py` (the routed person helpers), `posthog/models/group_type_mapping.py` (a routed helper), `posthog/models/person/person.py` (the model module; its managers back the routed helpers) |
++| Fix | Use (or add) a routed helper in `posthog/models/person/util.py` |
++| Enforcement | A ratchet: the counts per file recorded in `.toolbox/results.json` may only go down. A new file must arrive with none. CI: `.github/workflows/ci-toolbox-standards.yml` |
++| Campaign | `person-orm-zero`: matches and files with matches, from the recorded start (102 matches in 37 files, 2026-11-21) to zero. See [Campaign history](#campaign-history) |
++
++It is scored by [Toolbox](https://github.com/loganvolkers/toolbox) (`toolbox report`), from
++`.toolbox/toolbox.yaml`, which includes a vendored copy of Toolbox's `pattern-count` package
++(`.toolbox/packages/pattern-count`, v0.1.0). Install `toolbox` and `toolbox-connector-workspace` (0.1.1)
++on your `PATH`, plus `jq`.
++
++## Commands (run from the repository root)
++
++**Report**: every violation, by file, as JSON (`[{"file": ..., "count": ...}]`):
++
++```bash
++toolbox report .toolbox -o failures | jq '[.[] | select(.scorecard == "person-orm") | {file: .path, count: .measure}] | sort_by(.file)'
++```
++
++For the line numbers too, drop the `jq` (each failure's `evidence` is `line N`, one per match).
++
++**Gate**: exit 1 when a file has more violations than recorded, or a new file has any; exit 0
++otherwise. Files that went down are listed as `✓ better`, followed by "out of date: run with
++--update", which means the baseline can be tightened:
++
++```bash
++toolbox report .toolbox --baseline .toolbox/results.json -o failures --out /dev/null
++```
++
++`✗ worse` lines name each regression (`evidence grew 2 → 3`, or `new, at none`). `· changed ... new
++(clean)` lines are new Python files without violations: harmless, recorded on the next `--update`.
++
++**Campaign**: progress toward zero (matches and files with matches, baseline vs now, percent done):
++
++```bash
++toolbox report .toolbox --baseline .toolbox/results.json -o json 2>/dev/null | jq '.campaigns["person-orm-zero"].sinceStart | {baseline: .measure.from, current: .measure.now, percentDone: .measure.percentDone, files: {baseline: .entitiesShort.from, current: .entitiesShort.now, percentDone: .entitiesShort.percentDone}}'
++```
++
++The gate also prints it as one line: `campaign person-orm-zero since <date>: ... measure 102 → 101 (1.0% of the way)`.
++The baseline is the count recorded when the campaign was first recorded, not today's baseline: it
++does not move when you tighten.
++
++## After fixing violations: tighten the baseline
++
++```bash
++toolbox report .toolbox --baseline .toolbox/results.json --update -o failures --out /dev/null
++git add .toolbox/results.json && git commit -m "chore(toolbox): tighten S1 baseline"
++```
++
++`--update` refuses to write while anything regressed. Never hand-merge `.toolbox/results.json`: on a
++conflict, take the target branch's copy and rerun `--update`.
++
++## Changing the standard
++
++All of it lives in the `with:` block of `.toolbox/toolbox.yaml`.
++
++- **Add a model** (for example `GroupPerson`): add it to `pattern`, e.g.
++  `'\b(Person|PersonDistinctId|CohortPeople|Group|GroupTypeMapping|GroupPerson)\.objects\b'`. Then record its existing
++  violations as intended, not as regressions, and commit both files:
++
++  ```bash
++  toolbox report .toolbox --baseline .toolbox/results.json --update --accept person-orm -o failures --out /dev/null
++  ```
++
++  `--accept person-orm` lists the newly recorded violations; review them. The campaign restarts from
++  the new state.
++- **Exempt a routed helper**: add `path: reason` under `exempt`, then run the `--update` command
++  above (plain `--update` is enough: an exemption only removes violations). When the same change also
++  adds a model, run the `--accept` command once for both.
++- **Exempt a whole kind of file** (for example migrations): add a glob under `exclude`, e.g.
++  `"**/migrations/**"`, then `--update`. In globs `**` spans directories (including none, so
++  `"**/test_*.py"` also matches a root-level `test_x.py`) and `*` does not.
++- After any change: `toolbox validate .toolbox`, then check the Report output.
++
++## Campaign history
++
++The campaign's starting point is recorded in `.toolbox/results.json` (`campaigns.person-orm-zero`).
++
++| Date | Change | Start (matches / files) | Why |
++|---|---|---|---|
++| 2026-11-21 | Standard first enforced (`Person`, `PersonDistinctId`, `CohortPeople`) | 80 / 28 | First recording |
++| 2026-11-21 | Added `Group` and `GroupTypeMapping`; exempted `posthog/models/person/person.py` | 102 / 37 | Restarted on purpose (`--update --accept person-orm`) |
++
++Why the restart: the scope changed in both directions. The new models add matches in 10 new files
++and 4 files that already had some; they are the campaign's new work. The exemption removes
++`person.py`'s matches, which were never fixed, only ruled out. Keeping the old start (80 / 28) would
++have shown the campaign going backwards (-27.5%) for work that was just added, and would have
++counted the exemption as progress. No progress was lost: the old campaign was still at 0% (80 → 80)
++when it was restarted. Restart again only for a deliberate change to the standard, and add a row
++here.
++
++A textual pattern can be gamed (an alias such as `P = Person; P.objects`); reviewers still apply the
++standard's intent.
+diff --git a/.toolbox/packages/pattern-count/README.md b/.toolbox/packages/pattern-count/README.md
+new file mode 100644
+index 00000000..d2f1f81b
+--- /dev/null
++++ b/.toolbox/packages/pattern-count/README.md
+@@ -0,0 +1,82 @@
++# pattern-count: a Toolbox package
++
++**Every match of a regular expression is a violation.** One `include` gives a repository the
++standard, a ratchet and a campaign:
++
++- `toolbox report` lists every file with matches, with the line of each and the fix;
++- the ratchet fails a pull request that adds a match to any file (including a new file), and
++  reports the files that lost matches;
++- the campaign `<name>-zero` counts files with matches, and matches, from the day the baseline
++  first records it.
++
++It needs nothing but the `toolbox` binaries: files are read by `builtin:workspace`. If the pattern is
++already a semgrep rule, use [`packages/semgrep`](../semgrep/README.md) instead: it keeps the rule
++in one place and counts its `nosemgrep` suppressions.
++
++| Brings | Named |
++|---|---|
++| Connector | `<name>` (`builtin:workspace`, `file` records with `counts` and `matchLines`) |
++| Kind | `<kind>` (default `PatternFile`): `path`, `matches`, `matchLines` |
++| Scorecard | `<name>`, one level `clean`, rule `no-matches` |
++| Campaign | `<name>-zero` |
++
++## Use it
++
++`.toolbox/toolbox.yaml`:
++
++```yaml
++apiVersion: toolbox.dev/v1alpha1
++portal: {name: my-repo, owner: group:maintainers, toolbox: "0.1"}
++include:
++  - package: github:loganvolkers/toolbox/packages/pattern-count@<tag>   # or a relative path
++    with:
++      name: no-console
++      kind: SourceFile
++      files: ["web/src/**/*.ts", "web/src/**/*.tsx"]
++      exclude: ["**/*.test.ts"]
++      exempt:
++        web/src/logger.ts: the logger itself writes to the console
++      pattern: '\bconsole\.(log|debug)\('
++      fix: Use the logger from web/src/logger.ts.
++```
++
++Then, from the repository root:
++
++```bash
++toolbox report .toolbox -o failures                                     # every file with matches, as JSON
++toolbox report .toolbox --baseline .toolbox/results.json --update      # record the baseline; commit it
++toolbox report .toolbox --baseline .toolbox/results.json               # the gate: exit 1 on a regression
++toolbox report .toolbox --baseline .toolbox/results.json -o json | jq '.campaigns'   # campaign progress
++```
++
++Each failure in `-o failures` has `path`, `measure` (its matches), `evidence` (`line 55`, one per
++match) and `fix`.
++
++## Parameters
++
++| Parameter | Default | Meaning |
++|---|---|---|
++| `files` | required | Globs of the files scanned. `**` spans directories, `*` doesn't |
++| `pattern` | required | The regular expression ([Rust regex syntax](https://docs.rs/regex/latest/regex/#syntax)); each match is one violation. In YAML, single-quote it so `\b` stays a backslash |
++| `exclude` | `[]` | Globs never scanned: tests, migrations, vendored code |
++| `exempt` | `{}` | Files scanned but exempt, path → reason |
++| `name` | `pattern-count` | Names the connector, scorecard and campaign |
++| `kind` | `PatternFile` | The kind (PascalCase). Include the package twice with different `name` and `kind` for two patterns |
++| `title`, `owner`, `fix` | | The scorecard's heading, owner and fix text |
++| `root` | `.` | The checkout, relative to where `toolbox report` runs |
++
++## Changing the standard
++
++- **Widen the pattern** (another call): edit `pattern`, then
++  `toolbox report .toolbox --baseline .toolbox/results.json --update --accept no-console`. The new
++  matches are recorded and listed, regressions in other scorecards still fail, and the campaign
++  restarts from the new state. Review the list, then commit the manifest and `results.json`.
++- **Exempt a file**: add it to `exempt` with its reason, then `--update`.
++
++A textual pattern can be gamed: renaming a call so it no longer matches passes the gate. Review
++fixes, or use a semgrep rule that matches the code's structure.
++
++## Sources
++
++- [docs/design/ratchets.md](../../docs/design/ratchets.md): the ratchet, measures and campaign starts
++- [docs/reference/workspace-connector.md](../../docs/reference/workspace-connector.md): `counts` and `matchLines`
+diff --git a/.toolbox/packages/pattern-count/fragments/pattern-count.yaml b/.toolbox/packages/pattern-count/fragments/pattern-count.yaml
+new file mode 100644
+index 00000000..8ab6f80a
+--- /dev/null
++++ b/.toolbox/packages/pattern-count/fragments/pattern-count.yaml
+@@ -0,0 +1,63 @@
++# Pattern count: matches of `pattern` per file. One connector, kind, scorecard and campaign, all
++# named from the parameters, so a portal can include the package more than once.
++connectors:
++  - name: ${param:name}
++    package: builtin:workspace # reads files only: no build, no network, no history walk
++    runtime: in-image
++    config:
++      root: ${param:root}
++      crates: false
++      lastChange: false
++      files: ${param:files}
++      exclude: ${param:exclude}
++      counts: {match: "${param:pattern}"}
++    records: [file]
++    refresh: {file: [external_ids]}
++    freshness: {file: 5m}
++
++kinds:
++  - name: ${param:kind}
++    description: A file scanned by the ${param:name} standard (matches of its pattern).
++    identityFrom: ["connector:${param:name}"]
++    fields:
++      path: {type: string}
++      matches: {type: integer}
++      matchLines: {type: list, items: integer}
++    sources: {default: ["connector:${param:name}"]}
++    map:
++    - from: ${param:name}/file
++      id: "'${param:name}:' + record.path"
++      set: >-
++        {'path': record.path, 'matches': record.counts.match, 'matchLines':
++        record.matchLines.match}
++
++scorecards:
++  - name: ${param:name}
++    title: ${param:title}
++    description: >-
++      Each match of the pattern is a violation. The measure is the number of
++      matches, so a file that gains one is a regression and one that loses one
++      is an improvement.
++    kind: ${param:kind}
++    owner: ${param:owner}
++    levels: [clean]
++    # A file new since the baseline (or renamed) must arrive without matches.
++    ratchet: {newEntitiesAtLeast: clean}
++    appliesTo: "!(entity.path in ${param:exempt})"
++    rules:
++    - name: no-matches
++      level: clean
++      check: entity.matches == 0
++      measure: entity.matches
++      evidence: entity.matchLines.map(n, 'line ' + string(n))
++      fix: ${param:fix}
++    facets: {summary: public, details: public}
++
++campaigns:
++  - name: ${param:name}-zero
++    title: "${param:title}: to zero"
++    owner: ${param:owner}
++    description: >-
++      No matches in any scanned file. Progress is counted from the start the
++      baseline records: files with matches, and matches.
++    includes: [{scorecard: '${param:name}', rules: [no-matches]}]
+diff --git a/.toolbox/packages/pattern-count/toolbox-package.yaml b/.toolbox/packages/pattern-count/toolbox-package.yaml
+new file mode 100644
+index 00000000..5ac367e0
+--- /dev/null
++++ b/.toolbox/packages/pattern-count/toolbox-package.yaml
+@@ -0,0 +1,60 @@
++# A Toolbox package (D89): occurrences of a pattern, ratcheted per file, with a campaign to zero
++# (D01M7Z2ZZ97VZQNTDT4QQHM3HQD).
++apiVersion: toolbox.dev/package/v0
++name: pattern-count
++version: 0.1.0
++description: >-
++  Every match of a regular expression is a violation. The ratchet fails a
++  pull request that adds a match to any file, and a campaign pays the
++  matches down to zero.
++parameters:
++  name:
++    type: string
++    default: pattern-count
++    description: >-
++      Names this standard's connector, scorecard and campaign. Include the
++      package again with another name (and kind) for a second pattern.
++  kind:
++    type: string
++    default: PatternFile
++    description: The entity kind for scanned files (PascalCase; unique per include).
++  title:
++    type: string
++    default: No matches of the pattern
++    description: The scorecard's heading.
++  owner:
++    type: string
++    default: group:maintainers
++    description: Who owns the standard.
++  root:
++    type: string
++    default: .
++    description: >-
++      The checkout the files are read from, relative to where `toolbox report`
++      runs.
++  files:
++    type: array
++    description: Globs of the files scanned, e.g. ["**/*.py"]. `**` spans directories.
++  exclude:
++    type: array
++    default: []
++    description: >-
++      Globs never scanned: tests, migrations, vendored code, e.g.
++      ["**/tests/**", "**/test_*.py"].
++  exempt:
++    type: object
++    default: {}
++    description: >-
++      Files scanned but exempt, path → reason, e.g. {"app/models/util.py":
++      "the routed helpers themselves"}. They are skipped by the scorecard and
++      listed here with why.
++  pattern:
++    type: string
++    description: >-
++      The regular expression (Rust regex syntax), e.g.
++      '\bconsole\.(log|debug)\('. Each match is one violation.
++  fix:
++    type: string
++    default: Remove the match, using the alternative the standard names.
++    description: What to do about a violation (shown with each one).
++fragments: [fragments/*.yaml]
+diff --git a/.toolbox/toolbox.yaml b/.toolbox/toolbox.yaml
+new file mode 100644
+index 00000000..4562958b
+--- /dev/null
++++ b/.toolbox/toolbox.yaml
+@@ -0,0 +1,30 @@
++# PostHog repo portal (Toolbox). Enforces S1 from AGENTS.md: no new direct ORM queries on the person
++# tables. See .toolbox/STANDARD.md for the commands. Run every command from the repository root.
++apiVersion: toolbox.dev/v1alpha1
++portal:
++  name: posthog
++  title: PostHog repository standards
++  owner: group:maintainers
++  toolbox: "0.1"
++include:
++  # Vendored copy of Toolbox's packages/pattern-count (v0.1.0), so CI needs no network.
++  - package: ./packages/pattern-count
++    with:
++      name: person-orm
++      kind: PythonFile
++      title: No direct ORM queries on person tables (S1)
++      files: ["**/*.py"]
++      exclude:
++        - "**/test/**"
++        - "**/tests/**"
++        - "**/test_*.py"
++        - "**/*_test.py"
++        - "**/conftest.py"
++      exempt:
++        posthog/models/person/util.py: the routed person helpers themselves
++        posthog/models/group_type_mapping.py: routed helper allowed to query these tables
++        posthog/models/person/person.py: the model module; its managers back the routed helpers
++      pattern: '\b(Person|PersonDistinctId|CohortPeople|Group|GroupTypeMapping)\.objects\b'
++      fix: >-
++        Use the routed helpers in posthog/models/person/util.py (or add a new one
++        there following the established pattern) instead of a direct ORM query.
