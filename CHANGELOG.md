@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `packages/pnpm-expo` (0.1.0): `pnpm-workspace` and `expo-app` scorecards for pnpm monorepos and Expo apps (D01M7Y6X38AERPBT0YH1AG5TBRD).
+- Workspace connector facts: `jsWorkspace` → `js-workspace` records; `expoApps` globs → `expo-app` records (`packageManager`, linker, mise, frozen CI, EAS, doctor-in-CI).
+
 ## 0.1.0 - 2026-11-21
 
 First installable release (D90).

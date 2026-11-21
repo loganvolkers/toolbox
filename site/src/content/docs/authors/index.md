@@ -22,7 +22,7 @@ A parameter can declare a direction, `tighten: lower` or `tighten: higher`. `too
 
 ## Hand a team a scorecard
 
-`packages/github-actions` is the package in this repository. It scores GitHub Actions workflows and the third-party actions they use. The rules need zizmor 1.32.0 and actionlint 1.7.12, and a `workspace` connector that reads workflow files.
+`packages/github-actions` is the first package in this repository. It scores GitHub Actions workflows and the third-party actions they use. The rules need zizmor 1.32.0 and actionlint 1.7.12, and a `workspace` connector that reads workflow files. `packages/pnpm-expo` is the second: pnpm workspace and Expo app hygiene on `js-workspace` / `expo-app` workspace facts (enable `jsWorkspace: true` and `expoApps` globs).
 
 Inside one checkout, include it by path:
 

@@ -194,7 +194,8 @@ digest, data packages with typed parameters) stands. A package now has three par
   - `include: [{package, with}]` with typed parameters that may only tighten;
   - git packages cloned and pinned by content hash in `toolbox.lock`, verified on every load;
   - the first package, `packages/github-actions/` (D70's standards, with connectors and tools), extracted from T4T with an identical ratchet;
-  - the package tests itself in `packages/github-actions/tests`.
+  - the package tests itself in `packages/github-actions/tests`;
+  - the second package, `packages/pnpm-expo/` (pnpm workspace + Expo app scorecards on new workspace facts, D01M7Y6X38AERPBT0YH1AG5TBRD).
 - **Step 1, first release cut:** tag `v0.1.0` publishes attested archives and installers. Consumers set `toolbox-version: "0.1.0"` on `actions/report` or run `scripts/install-release.sh`. Homebrew, npm and aqua channels remain deferred; cargo-binstall metadata is on each distable crate.
 - **Not built:** WASM connectors (step 5), deterministic archives and the OCI mirror, Homebrew, npm and aqua registry entries.
 

@@ -1,0 +1,224 @@
+# pnpm workspace + Expo app standards (D01M7Y6X38AERPBT0YH1AG5TBRD).
+# Requires a `workspace` connector with `jsWorkspace: true` and `expoApps` globs.
+kinds:
+  - name: JsWorkspace
+    description: >-
+      The JavaScript package-manager workspace at the repository root:
+      workspace file, packageManager pin, lockfile, linker and toolchain pins.
+    identityFrom: [connector:workspace]
+    fields:
+      path: {type: string}
+      hasWorkspaceFile: {type: boolean}
+      workspaceFile: {type: string}
+      packageManager: {type: string}
+      packageManagerPinned: {type: boolean}
+      rootLockfile: {type: string}
+      ciFrozenInstall: {type: boolean}
+      linker: {type: string}
+      linkerDeclared: {type: boolean}
+      linkerHoisted: {type: boolean}
+      miseNode: {type: string}
+      misePnpm: {type: string}
+      miseConcrete: {type: boolean}
+      miseMatchesPackageManager: {type: boolean}
+      ciNodeVersions: {type: list, items: string}
+      enginesNode: {type: string}
+      ciNodeSatisfiesEngines: {type: boolean}
+      toolchainAligned: {type: boolean}
+      wildcardRanges: {type: list, items: string}
+      gitRanges: {type: list, items: string}
+      hasExpoApps: {type: boolean}
+    sources: {default: [connector:workspace]}
+    map:
+    - from: workspace/js-workspace
+      id: "'js-workspace:' + record.path"
+      set: >-
+        {'path': record.path, 'hasWorkspaceFile': record.hasWorkspaceFile,
+         'workspaceFile': record.workspaceFile, 'packageManager': record.packageManager,
+         'packageManagerPinned': record.packageManagerPinned, 'rootLockfile': record.rootLockfile,
+         'ciFrozenInstall': record.ciFrozenInstall, 'linker': record.linker,
+         'linkerDeclared': record.linkerDeclared, 'linkerHoisted': record.linkerHoisted,
+         'miseNode': record.miseNode, 'misePnpm': record.misePnpm,
+         'miseConcrete': record.miseConcrete,
+         'miseMatchesPackageManager': record.miseMatchesPackageManager,
+         'ciNodeVersions': record.ciNodeVersions, 'enginesNode': record.enginesNode,
+         'ciNodeSatisfiesEngines': record.ciNodeSatisfiesEngines,
+         'toolchainAligned': record.toolchainAligned, 'wildcardRanges': record.wildcardRanges,
+         'gitRanges': record.gitRanges, 'hasExpoApps': record.hasExpoApps}
+
+  - name: ExpoApp
+    description: >-
+      An Expo application directory: app config, expo/react-native deps, EAS
+      profiles, Metro default config and expo-doctor pin in CI.
+    identityFrom: [connector:workspace]
+    fields:
+      path: {type: string}
+      name: {type: string}
+      hasExpoDep: {type: boolean}
+      expoVersion: {type: string}
+      hasAppConfig: {type: boolean}
+      appConfig: {type: string}
+      easPath: {type: string}
+      hasEas: {type: boolean}
+      conflictingRootEas: {type: boolean}
+      singleCanonicalEas: {type: boolean}
+      hasReact: {type: boolean}
+      hasReactNative: {type: boolean}
+      metroUsesExpoDefault: {type: boolean}
+      easProfiles: {type: list, items: string}
+      doctorPinnedInCi: {type: boolean}
+      doctorPin: {type: string}
+    sources: {default: [connector:workspace]}
+    map:
+    - from: workspace/expo-app
+      id: "'expo-app:' + record.path"
+      set: >-
+        {'path': record.path, 'name': record.name, 'hasExpoDep': record.hasExpoDep,
+         'expoVersion': record.expoVersion, 'hasAppConfig': record.hasAppConfig,
+         'appConfig': record.appConfig, 'easPath': record.easPath, 'hasEas': record.hasEas,
+         'conflictingRootEas': record.conflictingRootEas,
+         'singleCanonicalEas': record.singleCanonicalEas, 'hasReact': record.hasReact,
+         'hasReactNative': record.hasReactNative,
+         'metroUsesExpoDefault': record.metroUsesExpoDefault,
+         'easProfiles': record.easProfiles, 'doctorPinnedInCi': record.doctorPinnedInCi,
+         'doctorPin': record.doctorPin}
+
+scorecards:
+  - name: pnpm-workspace
+    kind: JsWorkspace
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    ratchet: {newEntitiesAtLeast: bronze}
+    rules:
+    - name: has-workspace-file
+      level: bronze
+      check: entity.hasWorkspaceFile
+      evidence: >-
+        entity.hasWorkspaceFile ? [entity.workspaceFile] : ['no
+        pnpm-workspace.yaml or package.json workspaces']
+      fix: >-
+        Add pnpm-workspace.yaml (or npm/yarn workspaces in the root
+        package.json) so install tools and Expo monorepo detection see a
+        workspace.
+    - name: package-manager-pinned
+      level: bronze
+      check: entity.packageManagerPinned
+      evidence: >-
+        entity.packageManager != '' ? [entity.packageManager] : ['packageManager
+        is not set']
+      fix: >-
+        Set packageManager to pnpm@x.y.z in the root package.json (Corepack /
+        pnpm/action-setup read this field).
+    - name: root-lockfile
+      level: bronze
+      check: entity.rootLockfile != ''
+      evidence: >-
+        entity.rootLockfile != '' ? [entity.rootLockfile] : ['no pnpm-lock.yaml,
+        package-lock.json or yarn.lock at the repository root']
+      fix: Commit the workspace lockfile at the repository root.
+    - name: ci-frozen-install
+      level: silver
+      check: entity.ciFrozenInstall
+      evidence: >-
+        ['CI must run pnpm install --frozen-lockfile, pnpm ci, or npm ci, and
+        must not pass --no-frozen-lockfile']
+      fix: >-
+        Use pnpm install --frozen-lockfile (or pnpm ci) in GitHub Actions so CI
+        cannot rewrite the lockfile.
+    - name: linker-policy-declared
+      level: silver
+      check: >-
+        !(${param:requireHoisted} || entity.hasExpoApps) ||
+        (entity.linkerDeclared && (!${param:requireHoisted} ||
+        entity.linkerHoisted))
+      evidence: >-
+        entity.linkerDeclared ? [entity.linker] : ['no node-linker in .npmrc and
+        no nodeLinker in pnpm-workspace.yaml']
+      fix: >-
+        Declare an explicit pnpm linker (node-linker in .npmrc or nodeLinker in
+        pnpm-workspace.yaml). When requireHoisted is true, set it to hoisted.
+    - name: toolchain-aligned
+      level: gold
+      check: entity.toolchainAligned
+      evidence: >-
+        ['packageManager=' + entity.packageManager, 'mise node=' +
+        entity.miseNode + ' pnpm=' + entity.misePnpm, 'engines.node=' +
+        entity.enginesNode] + entity.ciNodeVersions.map(v, 'ci node-version=' +
+        v)
+      fix: >-
+        Pin mise.toml node and pnpm to concrete versions (not latest) that match
+        packageManager and CI node-version / engines.node.
+    - name: no-unbounded-root-deps
+      level: gold
+      check: entity.wildcardRanges.size() == 0 && entity.gitRanges.size() == 0
+      evidence: entity.wildcardRanges + entity.gitRanges
+      fix: >-
+        Replace root-manifest wildcards (*, latest, x) and git/tarball URLs with
+        registry versions. workspace: protocol deps are exempt.
+    facets: {summary: public, details: public}
+
+  - name: expo-app
+    kind: ExpoApp
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    ratchet: {newEntitiesAtLeast: bronze}
+    rules:
+    - name: has-expo-dep
+      level: bronze
+      check: entity.hasExpoDep
+      evidence: >-
+        entity.hasExpoDep ? ['expo@' + entity.expoVersion] : ['no expo
+        dependency in package.json']
+      fix: Add expo to the app's dependencies (use npx expo install).
+    - name: has-app-config
+      level: bronze
+      check: entity.hasAppConfig
+      evidence: >-
+        entity.hasAppConfig ? [entity.appConfig] : ['no app.json or app.config.*
+        beside the app']
+      fix: Add app.json or app.config.js/ts next to the Expo package.json.
+    - name: single-canonical-eas
+      level: bronze
+      check: entity.singleCanonicalEas
+      evidence: >-
+        entity.conflictingRootEas ? ['eas.json at the repository root conflicts
+        with ' + entity.easPath] : ['ok']
+      fix: >-
+        Keep a single authoritative eas.json for the app (usually under
+        apps/<name>/). Remove or reconcile a divergent root eas.json.
+    - name: sdk-packages-present
+      level: silver
+      check: entity.hasReact && entity.hasReactNative && entity.expoVersion != ''
+      evidence: >-
+        [entity.hasReact ? 'react' : 'missing react', entity.hasReactNative ?
+        'react-native' : 'missing react-native', entity.expoVersion != '' ?
+        'expo@' + entity.expoVersion : 'missing expo version']
+      fix: >-
+        Declare react, react-native and expo in the app package.json; keep them
+        aligned with `npx expo install`.
+    - name: metro-uses-expo-default
+      level: silver
+      check: entity.metroUsesExpoDefault
+      evidence: "['metro.config does not use expo/metro-config']"
+      fix: >-
+        Use Expo's default Metro config (`expo/metro-config`); avoid hand-rolled
+        watchFolders on SDK 52+.
+    - name: doctor-pinned-in-ci
+      level: silver
+      check: entity.doctorPinnedInCi
+      evidence: >-
+        entity.doctorPinnedInCi ? ['expo-doctor@' + entity.doctorPin] : ['no
+        pinned expo-doctor in .github/workflows']
+      fix: >-
+        Run a pinned expo-doctor in CI (e.g. npx -y expo-doctor@1.21.5) in the
+        app directory.
+    - name: eas-profiles
+      level: gold
+      check: >-
+        'development' in entity.easProfiles && 'preview' in entity.easProfiles
+        && 'production' in entity.easProfiles
+      evidence: entity.easProfiles
+      fix: >-
+        Define development, preview and production profiles under build in
+        eas.json.
+    facets: {summary: public, details: public}

@@ -28,6 +28,11 @@
 //!   `mcp.json` facts `maintainer-plugin` thresholds (docs/design/plugin-standards.md);
 //! - `package-json` (`packages` globs): one per npm manifest, with its ranges, lockfile and the
 //!   script CI can run (docs/design/package-standards.md);
+//! - `js-workspace` (`"jsWorkspace": true`): one record for the checkout root — pnpm/npm workspace
+//!   file, `packageManager` pin, root lockfile, linker, mise pins and frozen CI
+//!   (packages/pnpm-expo);
+//! - `expo-app` (`expoApps` globs): one per Expo `app.json` / `app.config.*`, with SDK deps, EAS,
+//!   Metro and doctor-in-CI facts (packages/pnpm-expo);
 //! - `json-schema` (`schemas` globs): one per JSON Schema document, with its dialect, id and
 //!   whether the binary compiles it (docs/design/schema-standards.md);
 //! - `site-page` (`pages` globs): one per Starlight content page, with its title, sidebar reach,
@@ -46,7 +51,8 @@
 //! "captures"?: {name: regex}, "counts"?: {name: regex}, "crates"?: true, "repo"?: false,
 //! "betterer"?: [glob], "skills"?: [glob], "connectors"?: [glob], "dependencies"?: false,
 //! "agentDocs"?: [glob], "plugins"?: [glob], "packages"?: [glob], "schemas"?: [glob],
-//! "examples"?: [glob], "pages"?: [glob], "assessments"?: [glob]}`.
+//! "examples"?: [glob], "pages"?: [glob], "assessments"?: [glob], "jsWorkspace"?: false,
+//! "expoApps"?: [glob]}`.
 
 mod agentsmd;
 mod betterer;
@@ -54,6 +60,8 @@ mod connectors;
 mod data;
 mod deps;
 mod examples;
+mod expo;
+mod js_workspace;
 mod npm;
 mod plugins;
 mod repo;
@@ -97,11 +105,15 @@ struct Workspace {
     examples: Vec<Regex>,
     /// Starlight content pages (`site-page` records).
     pages: Vec<Regex>,
+    /// Expo app configs (`expo-app` records), e.g. `apps/*/app.json`.
+    expo_apps: Vec<Regex>,
     captures: Vec<(String, Regex)>,
     counts: Vec<(String, Regex)>,
     crates: bool,
     /// Emit one `repo` record for the checkout (opt-in: `"repo": true`).
     repo: bool,
+    /// Emit one `js-workspace` record for the checkout root (opt-in: `"jsWorkspace": true`).
+    js_workspace: bool,
     /// Declared records (`data`): YAML or JSON files read into a configured record kind.
     data: Vec<data::Source>,
 }
@@ -236,10 +248,12 @@ impl Workspace {
             schemas: globs(&cfg, "schemas")?,
             examples: globs(&cfg, "examples")?,
             pages: globs(&cfg, "pages")?,
+            expo_apps: globs(&cfg, "expoApps")?,
             captures: named_regexes(&cfg, "captures")?,
             counts: named_regexes(&cfg, "counts")?,
             crates: cfg["crates"].as_bool().unwrap_or(true),
             repo: cfg["repo"].as_bool().unwrap_or(false),
+            js_workspace: cfg["jsWorkspace"].as_bool().unwrap_or(false),
             data: data::sources(&cfg)?,
         })
     }
@@ -473,6 +487,8 @@ impl Workspace {
                     "example",
                     "site-page",
                     "assessment",
+                    "js-workspace",
+                    "expo-app",
                 ]
             });
         if cmd["kinds"].as_array().is_none() {
@@ -498,6 +514,8 @@ impl Workspace {
         self.emit_schemas(&paths, &kinds, out);
         self.emit_examples(&paths, &kinds, out);
         self.emit_pages(&paths, &kinds, out);
+        self.emit_expo_apps(&paths, &kinds, out);
+        self.emit_js_workspace(&paths, &kinds, out);
         Ok(())
     }
 
@@ -686,6 +704,35 @@ impl Workspace {
         out.snapshot_complete("package-json");
     }
 
+    fn expo_app_paths<'a>(&self, paths: &'a [String]) -> Vec<&'a String> {
+        paths
+            .iter()
+            .filter(|p| Self::matches(&self.expo_apps, p))
+            .collect()
+    }
+
+    fn emit_expo_apps(&self, paths: &[String], kinds: &[&str], out: &mut Out) {
+        if self.expo_apps.is_empty() || !kinds.contains(&"expo-app") {
+            return;
+        }
+        for rel in self.expo_app_paths(paths) {
+            let rec = expo::analyse(&self.root, rel, paths);
+            let dir = rec["path"].as_str().unwrap_or(rel).to_owned();
+            out.record("expo-app", &format!("expo-app:{dir}"), rec);
+        }
+        out.snapshot_complete("expo-app");
+    }
+
+    fn emit_js_workspace(&self, paths: &[String], kinds: &[&str], out: &mut Out) {
+        if !self.js_workspace || !kinds.contains(&"js-workspace") {
+            return;
+        }
+        let has_expo = !self.expo_apps.is_empty() && !self.expo_app_paths(paths).is_empty();
+        let rec = js_workspace::record(&self.root, paths, has_expo);
+        out.record("js-workspace", "js-workspace:.", rec);
+        out.snapshot_complete("js-workspace");
+    }
+
     fn emit_agent_docs(&self, paths: &[String], kinds: &[&str], out: &mut Out) {
         if self.agent_docs.is_empty() || !kinds.contains(&"agent-doc") {
             return;
@@ -826,6 +873,8 @@ impl Workspace {
             "json-schema" => self.refresh_schema(id, out),
             "example" => self.refresh_example(id, out),
             "site-page" => self.refresh_page(id, out),
+            "expo-app" => self.refresh_expo_app(id, out),
+            "js-workspace" => self.refresh_js_workspace(id, out),
             _ => return false,
         }
         true
@@ -917,6 +966,33 @@ impl Workspace {
         }
     }
 
+    fn refresh_expo_app(&self, id: &str, out: &mut Out) {
+        let dir = id.strip_prefix("expo-app:").unwrap_or("");
+        let paths = self.walk();
+        let found = self.expo_app_paths(&paths).into_iter().find(|rel| {
+            let rec = expo::analyse(&self.root, rel, &paths);
+            rec["path"].as_str() == Some(dir)
+        });
+        match found {
+            Some(rel) => out.record("expo-app", id, expo::analyse(&self.root, rel, &paths)),
+            None => out.not_found("expo-app", id),
+        }
+    }
+
+    fn refresh_js_workspace(&self, id: &str, out: &mut Out) {
+        if id != "js-workspace:." || !self.js_workspace {
+            out.not_found("js-workspace", id);
+            return;
+        }
+        let paths = self.walk();
+        let has_expo = !self.expo_apps.is_empty() && !self.expo_app_paths(&paths).is_empty();
+        out.record(
+            "js-workspace",
+            id,
+            js_workspace::record(&self.root, &paths, has_expo),
+        );
+    }
+
     fn refresh_agent_doc(&self, id: &str, out: &mut Out) {
         let rel = id.strip_prefix("agent-doc:").unwrap_or("");
         if Self::matches(&self.agent_docs, rel) && self.root.join(rel).is_file() {
@@ -1001,6 +1077,8 @@ impl Source for Workspace {
             ("example", !self.examples.is_empty()),
             ("site-page", !self.pages.is_empty()),
             ("assessment", !self.assessments.is_empty()),
+            ("js-workspace", self.js_workspace),
+            ("expo-app", !self.expo_apps.is_empty()),
         ];
         let mut kinds: Vec<&str> = on.iter().filter(|(_, b)| *b).map(|(k, _)| *k).collect();
         let declared: Vec<&str> = self.data.iter().map(|d| d.kind.as_str()).collect();
