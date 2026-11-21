@@ -989,11 +989,13 @@ fn score_one_campaign(
         entities.insert(id, ent);
     }
     let target = c.target_percent();
-    // Rounded to the nearest percent for display; targets compare exact counts, so 199 of 200
-    // (99.5%, shown as 100) is not on a 100% target.
+    // Rounded to the nearest percent for display, but never 100 while an entity falls short;
+    // targets compare exact counts.
     let percent = (meeting * 100 + in_scope / 2)
         .checked_div(in_scope)
-        .unwrap_or(0) as u8;
+        .unwrap_or(0)
+        // 6,331 of 6,359 rounds to 100; show 99 until every entity meets the goal.
+        .min(if meeting < in_scope { 99 } else { 100 }) as u8;
     let reached = |goal: u8| in_scope > 0 && meeting * 100 >= usize::from(goal) * in_scope;
     CampaignProgress {
         status: campaign_status(c, as_of),

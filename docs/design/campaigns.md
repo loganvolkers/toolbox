@@ -88,9 +88,9 @@ An entity **meets** the campaign only if it satisfies **every** include (AND).
    (intersection). Per-scorecard `appliesTo` still decides skip via normal scoring.
 2. **Meeting:** in-scope entities that satisfy every include.
 3. **Percent:** `round(100 * meeting / inScope)` when `inScope > 0`, else `0` (to the nearest
-   percent, for display).
+   percent, for display), and at most 99 while any in-scope entity isn't meeting.
 4. **On target:** `100 * meeting >= targetPercent * inScope` (default `targetPercent` is `100`):
-   exact counts, so 199 of 200 is shown as 100 but is not on a 100% target.
+   exact counts, not the rounded percent.
 5. **Milestone met:** the same comparison with `milestone.targetPercent`.
 6. **Measure:** when the included rules declare a `measure` (lines over a limit, matches of a
    pattern), its sum over in-scope entities. A campaign over counted standards pays this down.
