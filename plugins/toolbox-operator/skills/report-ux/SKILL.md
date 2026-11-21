@@ -24,12 +24,13 @@ evidence and fix. Never hide the bar the portal already clears.
 ## Procedure
 
 1. Name the primary reader for the change (VP, platform owner, entity owner, agent).
-2. Check the first viewport answers one decision: overall health, with counts.
-3. Confirm three modes exist and deep-link: Overview, Catalog, Scorecards.
-4. Confirm an expanded entity lists pass, fail, unknown, and skipped outcomes.
-5. Confirm failing rules still lead with fix text and evidence; passing rules stay compact.
-6. Confirm filters cover level and outcome, and search matches entity id or any rule name.
-7. Reject a layout that is only scorecard pills plus fail-only rows.
+2. Check the first viewport answers one decision: overall health (verdict sentence + debt stats), not inventory vanity.
+3. Confirm modes exist and deep-link: Overview, Catalog, Campaigns, Scorecards.
+4. Confirm Scorecards opens ranked by `none` debt (not an equal pill wall) and Campaigns by lowest progress.
+5. Confirm an expanded entity lists pass, fail, unknown, and skipped outcomes.
+6. Confirm failing rules still lead with fix text and evidence; passing rules stay compact.
+7. Confirm filters cover level and outcome, empty states offer Clear, and search matches short or full entity id or any rule name.
+8. Reject a layout that is only scorecard pills plus fail-only rows, or Overview that leads with Catalog-by-kind.
 
 ```
 toolbox report portal --skip runner,github-actions -o web --out site/public/report

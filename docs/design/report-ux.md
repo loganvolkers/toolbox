@@ -15,10 +15,10 @@ not a quality judgement.
 
 | Mode | Job | Primary content |
 |---|---|---|
-| **Overview** (default) | Fleet health | Entity and kind counts; active campaigns; per-scorecard level bars; "needs attention" ordered by `none` then bronze |
-| **Catalog** | What exists | Kinds → entity ids → that entity's scores across every scorecard |
-| **Campaigns** | Time-bound focus | Progress vs target; milestones; entities not meeting includes ([campaigns.md](./campaigns.md), D01M7Y11G0YZT23W26Z9D3XW68Y) |
-| **Scorecards** | Standards debt and proof | One scorecard; level and outcome filters; every rule outcome on expand |
+| **Overview** (default) | Fleet health verdict | One-sentence judgement; campaigns below target + scorecards with `none`; ranked campaigns and scorecards; catalog browse is a link, not a kind wall |
+| **Catalog** | What exists | Scored kinds first → entity ids (short name primary) → that entity's scores across every scorecard |
+| **Campaigns** | Time-bound focus | Lowest progress first; progress vs target; milestones; entities not meeting includes ([campaigns.md](./campaigns.md), D01M7Y11G0YZT23W26Z9D3XW68Y) |
+| **Scorecards** | Standards debt and proof | Ranked debt list (not equal pills); defaults to highest `none`; level and outcome filters; every rule outcome on expand |
 
 ## 2. Why the previous page failed the VP test
 
@@ -66,10 +66,16 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 ## 6. Interaction rules
 
 - Default hash is Overview (`#` / `#overview`).
-- Deep links: `#catalog`, `#catalog/<Kind>`, `#entity/<id>`, `#scorecard/<name>`.
+- Deep links: `#catalog`, `#catalog/<Kind>`, `#entity/<id>`, `#campaign/<name>`, `#scorecard/<name>`.
+- Mode chrome uses `role="tab"` / `aria-selected` with arrow-key movement.
+- Fleet tables are keyboard-activatable (`tabindex=0`, Enter/Space).
+- Scorecards mode opens the highest-`none` card; Campaigns opens lowest progress; Catalog prefers scored kinds.
+- Scorecard picker is a ranked debt list, not an equal-weight pill wall.
 - Scorecard entity rows sort worst-first (`none` → bronze → … → gold).
-- Outcome filter defaults to **all**; "Failing" is one click for a work list.
+- Outcome filter defaults to **all**; "Failing" is one click for a work list; empty filters offer Clear.
+- Entity ids show a short label first; the full id stays muted beside it.
 - Passing rules render as a compact pass line; failing rules keep fix + evidence.
+- Level labels include a text `level:` prefix so severity is not color-only.
 
 ## Sources
 
