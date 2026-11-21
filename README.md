@@ -12,10 +12,10 @@ The public docs are a Starlight site in [site/](site/src/content/docs/index.md),
 
 **SDLC has four layers** ([docs/sdlc.md](docs/sdlc.md)): the *maintainer* SDLC for building Toolbox, the *package author* SDLC for publishing packages and connectors others consume, the *operator* SDLC for building a portal, and the *user* SDLC for building apps on a portal.
 
-**Install (v0.1.0):** see [docs/RELEASING.md](docs/RELEASING.md) and [Install a release](site/src/content/docs/start/install.md). For a repo portal without compiling:
+**Install (v0.1.1):** see [docs/RELEASING.md](docs/RELEASING.md) and [Install a release](site/src/content/docs/start/install.md). For a repo portal without compiling:
 
 ```bash
-TOOLBOX_VERSION=0.1.0 ./scripts/install-release.sh
+TOOLBOX_VERSION=0.1.1 ./scripts/install-release.sh
 toolbox report examples/repo-portal-starter
 ```
 

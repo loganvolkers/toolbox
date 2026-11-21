@@ -43,7 +43,7 @@ toolbox report . --baseline .toolbox/results.json
 | Step | Required? |
 |---|---|
 | Merge this package + connector facts to `loganvolkers/toolbox` `main` | **Yes** — consumers that `include` a git path need the commit |
-| Tag / GitHub Release that includes a Toolbox build with the new workspace facts | **Yes for external CI** — `actions/report` downloads release binaries; an older `0.1.0` binary will not emit `js-workspace` / `expo-app`. Until a release that contains these facts ships, local/dev use is `cargo build` from a checkout that includes this change, or a path include against that checkout |
+| Tag / GitHub Release that includes a Toolbox build with the new workspace facts | **Yes for external CI** — pin `toolbox-version: "0.1.1"` (or later). An older `0.1.0` binary will not emit `js-workspace` / `expo-app` |
 | Separate npm/OCI publish of the package YAML | **No** — packages are git-first (`github:…/packages/pnpm-expo@<tag-or-semver>`) per D89 |
 
 Same pattern as `packages/github-actions`: `toolbox install` pins the package in `toolbox.lock`.

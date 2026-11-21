@@ -1,11 +1,11 @@
 ---
 title: Install a release
-description: Install Toolbox v0.1.0 binaries for a repo portal without compiling from source.
+description: Install Toolbox v0.1.1 binaries for a repo portal without compiling from source.
 sidebar:
   order: 1
 ---
 
-From **v0.1.0** onward, consumers install attested binaries from GitHub Releases instead of building the Rust workspace (D90).
+From **v0.1.0** onward, consumers install attested binaries from GitHub Releases instead of building the Rust workspace (D90). Current release: **v0.1.1**.
 
 ## What you need for a repo portal
 
@@ -22,20 +22,20 @@ Each is a separate cargo-dist app on the release. One script installs the set us
 ```bash
 git clone https://github.com/loganvolkers/toolbox.git
 cd toolbox
-TOOLBOX_VERSION=0.1.0 ./scripts/install-release.sh
+TOOLBOX_VERSION=0.1.1 ./scripts/install-release.sh
 toolbox --version
 toolbox doctor examples/repo-portal-starter
 toolbox report examples/repo-portal-starter
 ```
 
-Or install each app's shell installer from the [v0.1.0 release](https://github.com/loganvolkers/toolbox/releases/tag/v0.1.0) into the same `bin` directory (connectors must sit next to `toolbox`, or on `PATH` / `TOOLBOX_CONNECTORS_DIR`).
+Or install each app's shell installer from the [v0.1.1 release](https://github.com/loganvolkers/toolbox/releases/tag/v0.1.1) into the same `bin` directory (connectors must sit next to `toolbox`, or on `PATH` / `TOOLBOX_CONNECTORS_DIR`).
 
 ## In GitHub Actions
 
 ```yaml
-- uses: loganvolkers/toolbox/actions/report@v0.1.0   # or a commit SHA
+- uses: loganvolkers/toolbox/actions/report@v0.1.1   # or a commit SHA
   with:
-    toolbox-version: "0.1.0"
+    toolbox-version: "0.1.1"
     mode: ci
 ```
 

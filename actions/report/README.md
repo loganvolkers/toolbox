@@ -30,9 +30,9 @@ secrets ([docs/design/repo-portals.md](../../docs/design/repo-portals.md)).
        runs-on: ubuntu-latest
        steps:
          - uses: actions/checkout@v4
-         - uses: loganvolkers/toolbox/actions/report@v0.1.0
+         - uses: loganvolkers/toolbox/actions/report@v0.1.1
            with:
-             toolbox-version: "0.1.0"   # download attested binaries (D90)
+             toolbox-version: "0.1.1"   # download attested binaries (D90)
              mode: ${{ inputs.mode || 'ci' }}
    ```
 
@@ -60,7 +60,7 @@ The job summary says which, and how to update the baseline.
 | `html` | `true` | Also produce the one-page HTML report |
 | `artifact-name` | `toolbox-report` | Name of the uploaded artifact (Markdown and HTML reports; the baseline in `update` mode) |
 | `toolbox-dir` | | A directory with prebuilt `toolbox` and `toolbox-connector-*` binaries. When empty, the action builds them from its own source at the pinned commit and caches them, so the first run per commit compiles and later runs restore |
-| `toolbox-version` | — | A released Toolbox version (e.g. `0.1.0`): download its binaries, SHA-256-verified, instead of building from source (D90) |
+| `toolbox-version` | — | A released Toolbox version (e.g. `0.1.1`): download its binaries, SHA-256-verified, instead of building from source (D90) |
 
 **Outputs:**
 - `result`: `pass`, `regressed`, `stale`, `missing-baseline`, `unknown` or `error`;
@@ -101,7 +101,7 @@ system's format (for example a GitLab Code Quality report, or a comment).
 
 ## Notes
 
-- Prefer `toolbox-version: "0.1.0"` (or later) so the action downloads attested binaries (D90).
+- Prefer `toolbox-version: "0.1.1"` (or later) so the action downloads attested binaries (D90).
   When that input is empty it still builds from the action's source (Linux runners; cold start is
   slow). If the Toolbox repository is private, the job token needs `contents: read` on it.
 - **Security:**
