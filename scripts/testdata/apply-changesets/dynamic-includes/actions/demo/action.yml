@@ -1,7 +1,3 @@
 name: Demo fixture action
 description: Fixture action for apply-changesets dynamic includes.
-runs:
-  using: composite
-  steps:
-    - run: echo demo
-      shell: bash
+runs: {using: composite, steps: [{run: echo demo, shell: bash}]}
