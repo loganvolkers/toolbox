@@ -4,25 +4,19 @@
 name: Version Packages
 
 on:
-  push:
-    branches: [main]
+  push: {branches: [main]}
   workflow_dispatch:
 
-permissions:
-  contents: write
-  pull-requests: write
+permissions: {contents: write, pull-requests: write}
 
-concurrency:
-  group: version-packages
-  cancel-in-progress: true
+concurrency: {group: version-packages, cancel-in-progress: true}
 
 jobs:
   version:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        with:
-          fetch-depth: 0
+        with: {fetch-depth: 0}
 
       - name: Detect pending changesets
         id: pending
