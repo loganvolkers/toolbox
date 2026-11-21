@@ -21,9 +21,9 @@ so any portal can apply the same standards to a fleet. Related: [toolbox-for-too
 
 | Card | Level | Why |
 |---|---|---|
-| Security | none | All 13 third-party `uses:` are tag-pinned (bronze). `artipacked` (persisted checkout credentials) appears 6 times (silver). 30 zizmor findings in total. actionlint is clean |
-| Reliability | none | **11 of the last 12 runs on main failed**, and main has been red for 11 runs. No job has `timeout-minutes`. There is no concurrency group |
-| Supply chain | none for 6 of 6 actions | All `actions/*` are tag-pinned |
+| Security | silver | `ci.yml` pins every third-party `uses:` and sets `persist-credentials: false`. What remains is low or informational (`self-repository` on `./actions/report`, which actionlint 1.7.12 rejects as `$/…`, plus `adhoc-packages` and template injection). `release.yml` is dist's bytes (D98); its template findings are ignored in `.github/zizmor.yml` for that file only. The first measurement, 30 findings, is in the research log |
+| Reliability | none | **11 of the last 12 runs on main failed**, and main has been red for 11 runs. No job has `timeout-minutes`. There is no concurrency group. Run history is skipped in the fast ratchet |
+| Supply chain | bronze | Every third-party action is pinned to a commit in every workflow. Bronze is this card's only level |
 
 The reliability numbers are not hypothetical. They are why CI was examined at all: acceptance had
 never run on GitHub, and the scale budget fails on 2-vCPU runners ([research-log.md](../research-log.md)).

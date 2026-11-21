@@ -105,10 +105,7 @@
         "level": "bronze"
       },
       "action:actions/setup-python": {
-        "failing": {
-          "pinned-everywhere": 1
-        },
-        "level": "none"
+        "level": "bronze"
       },
       "action:actions/upload-artifact": {
         "level": "bronze"
@@ -127,6 +124,9 @@
       },
       "action:docker/setup-qemu-action": {
         "level": "bronze"
+      },
+      "action:github/codeql-action": {
+        "level": "bronze"
       }
     },
     "maintainer-agent-doc": {
@@ -142,6 +142,18 @@
         "failing": {
           "cancels-superseded-runs": 1,
           "every-job-has-timeout": 5,
+          "fail-rate-under-10": 1,
+          "fail-rate-under-20": 1,
+          "fail-rate-under-5": 1,
+          "fast-feedback": 1,
+          "few-reruns": 1,
+          "main-not-stuck-red": 1
+        },
+        "level": "none"
+      },
+      "workflow:.github/workflows/codeql.yml": {
+        "failing": {
+          "cancels-superseded-runs": 1,
           "fail-rate-under-10": 1,
           "fail-rate-under-20": 1,
           "fail-rate-under-5": 1,
@@ -204,11 +216,12 @@
     "maintainer-ci-security": {
       "workflow:.github/workflows/ci.yml": {
         "failing": {
-          "no-medium-findings": 5,
-          "pinned-to-sha": 1,
-          "zizmor-clean": 14
+          "zizmor-clean": 7
         },
-        "level": "none"
+        "level": "silver"
+      },
+      "workflow:.github/workflows/codeql.yml": {
+        "level": "gold"
       },
       "workflow:.github/workflows/image.yml": {
         "level": "gold"
@@ -217,12 +230,7 @@
         "level": "gold"
       },
       "workflow:.github/workflows/release.yml": {
-        "failing": {
-          "no-high-findings": 4,
-          "no-medium-findings": 3,
-          "zizmor-clean": 11
-        },
-        "level": "none"
+        "level": "gold"
       },
       "workflow:.github/workflows/scale-slo.yml": {
         "level": "gold"
@@ -477,6 +485,9 @@
         "level": "silver"
       },
       "doc:README.md": {
+        "level": "silver"
+      },
+      "doc:SECURITY.md": {
         "level": "silver"
       },
       "doc:actions/report/README.md": {
@@ -1150,11 +1161,10 @@
     "maintainer-repo": {
       "repo:loganvolkers/toolbox": {
         "failing": {
-          "constituents-at-least-bronze": 3,
-          "constituents-at-least-gold": 9,
-          "constituents-at-least-silver": 7
+          "constituents-at-least-gold": 8,
+          "constituents-at-least-silver": 5
         },
-        "level": "none"
+        "level": "bronze"
       }
     },
     "maintainer-schema": {
@@ -1411,14 +1421,7 @@
     },
     "maintainer-supply-chain": {
       "repo:loganvolkers/toolbox": {
-        "failing": {
-          "code-scanning": 1,
-          "code-scanning-pinned": 1,
-          "dependabot": 3,
-          "security-policy": 1,
-          "workflows-have-owners": 1
-        },
-        "level": "none"
+        "level": "gold"
       }
     },
     "meta-assessment": {
