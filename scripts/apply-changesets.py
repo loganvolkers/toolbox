@@ -2,8 +2,11 @@
 """Apply Changesets-compatible files to Toolbox native manifests (Option B).
 
 Reads pending ``.changeset/*.md``, bumps Cargo workspace version, root
-CHANGELOG.md, and ``packages/*/toolbox-package.yaml`` under lockstep policy.
-Does not publish or tag — after apply, tag ``vX.Y.Z`` so cargo-dist runs.
+CHANGELOG.md, and discovered ``packages/*/toolbox-package.yaml`` under
+lockstep policy. Dynamic ``includes`` globs in ``.changeset/config.json``
+expand the registry so new packages/actions are picked up without listing
+each name. Does not publish or tag — after apply, tag ``vX.Y.Z`` so
+cargo-dist runs.
 
 Stdlib only (tomllib + json + regex line edits).
 """
@@ -17,12 +20,14 @@ import sys
 import tomllib
 from datetime import date
 from pathlib import Path
+from typing import Any
 
 BUMP_RANK = {"patch": 1, "minor": 2, "major": 3}
 SKIP_NAMES = {"readme.md", "config.json", "config.schema.json"}
 FRONTMATTER_RE = re.compile(r"\A---\s*\n(.*?)\n---\s*\n?(.*)\Z", re.S)
 VERSION_LINE_RE = re.compile(r'^(\s*version\s*=\s*")([^"]+)("\s*)$', re.M)
 YAML_VERSION_RE = re.compile(r"^(\s*version:\s*)(\S+)(\s*)$", re.M)
+YAML_NAME_RE = re.compile(r"^name:\s*[\"']?([^\"'#\s]+)[\"']?\s*(?:#.*)?$")
 SEMVER_RE = re.compile(r"^(\d+)\.(\d+)\.(\d+)$")
 
 
@@ -115,6 +120,116 @@ def write_yaml_version(path: Path, new_version: str) -> None:
     )
 
 
+def read_yaml_name(path: Path) -> str:
+    """Return the top-level ``name:`` from a toolbox-package.yaml (line scan)."""
+    for line in path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        m = YAML_NAME_RE.match(stripped)
+        if m:
+            return m.group(1)
+    raise ValueError(f"no name: in {path}")
+
+
+def expand_globs(root: Path, patterns: list[str]) -> list[Path]:
+    """Expand include globs relative to *root*; return sorted unique files."""
+    found: set[Path] = set()
+    for pattern in patterns:
+        for match in root.glob(pattern):
+            if match.is_file():
+                found.add(match.resolve())
+    return sorted(found)
+
+
+def logical_name_for_include(root: Path, kind: str, path: Path) -> str:
+    """Map a discovered manifest path to the Changeset frontmatter name."""
+    if kind == "toolbox-package":
+        name = read_yaml_name(path)
+        # Prefer YAML name; dirname should match for live packages.
+        return name
+    if kind == "action":
+        rel = path.parent.resolve().relative_to(root.resolve())
+        return str(rel).replace("\\", "/")
+    raise ValueError(f"includes cannot discover kind {kind!r}")
+
+
+def resolve_registry(root: Path, config: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """Merge explicit ``registry`` entries with entries from ``includes`` globs.
+
+    Explicit names win when both an include and ``registry`` define the same
+    logical name (path must agree or we error). Discovered package names come
+    from YAML ``name:``; actions are ``actions/<dirname>``.
+    """
+    registry: dict[str, dict[str, Any]] = {}
+    for name, meta in (config.get("registry") or {}).items():
+        if not isinstance(meta, dict):
+            raise ValueError(f"registry[{name!r}] must be an object")
+        entry = dict(meta)
+        entry.setdefault("source", "explicit")
+        registry[name] = entry
+
+    for idx, spec in enumerate(config.get("includes") or []):
+        if not isinstance(spec, dict):
+            raise ValueError(f"includes[{idx}] must be an object")
+        kind = spec.get("kind")
+        globs = spec.get("globs")
+        if not kind or not isinstance(globs, list) or not globs:
+            raise ValueError(
+                f"includes[{idx}] requires kind and non-empty globs list"
+            )
+        if kind not in {"toolbox-package", "action"}:
+            raise ValueError(
+                f"includes[{idx}]: kind must be toolbox-package or action, got {kind!r}"
+            )
+        for path in expand_globs(root, [str(g) for g in globs]):
+            try:
+                rel = str(path.resolve().relative_to(root.resolve())).replace("\\", "/")
+            except ValueError as exc:
+                raise ValueError(
+                    f"include match {path} is outside repo root {root}"
+                ) from exc
+            name = logical_name_for_include(root, kind, path)
+            entry: dict[str, Any] = {
+                "kind": kind,
+                "path": rel,
+                "source": "include",
+            }
+            if "lockstepWith" in spec:
+                entry["lockstepWith"] = spec["lockstepWith"]
+            if name in registry:
+                existing = registry[name]
+                existing_path = str(existing.get("path", "")).replace("\\", "/")
+                if existing_path and existing_path != rel:
+                    raise ValueError(
+                        f"registry name {name!r} conflict: explicit {existing_path!r} "
+                        f"vs include {rel!r}"
+                    )
+                # Explicit wins; keep include path fill-in only if missing.
+                if not existing_path:
+                    existing["path"] = rel
+                if "kind" not in existing:
+                    existing["kind"] = kind
+                continue
+            registry[name] = entry
+    return registry
+
+
+def package_paths_to_version(
+    root: Path, registry: dict[str, dict[str, Any]]
+) -> list[Path]:
+    """Paths of toolbox-package manifests to bump under lockstep."""
+    paths: list[Path] = []
+    for meta in registry.values():
+        if meta.get("kind") != "toolbox-package":
+            continue
+        rel = meta.get("path")
+        if not rel:
+            continue
+        paths.append(root / rel)
+    return paths
+
+
 def update_changelog(path: Path, new_version: str, entries: list[str]) -> None:
     today = date.today().isoformat()
     text = path.read_text(encoding="utf-8") if path.exists() else "# Changelog\n\n"
@@ -146,7 +261,9 @@ def update_changelog(path: Path, new_version: str, entries: list[str]) -> None:
     path.write_text(text, encoding="utf-8")
 
 
-def collect_pending(root: Path) -> tuple[str, list[str], list[Path]]:
+def collect_pending(
+    root: Path, registry: dict[str, dict[str, Any]]
+) -> tuple[str, list[str], list[Path]]:
     """Return (bump_kind, summaries, files) aggregating all pending changesets."""
     files = list_changeset_files(root / ".changeset")
     if not files:
@@ -157,6 +274,12 @@ def collect_pending(root: Path) -> tuple[str, list[str], list[Path]]:
         bumps, body = parse_frontmatter(path.read_text(encoding="utf-8"))
         if not bumps:
             raise ValueError(f"{path.name}: empty frontmatter")
+        unknown = sorted(set(bumps) - set(registry))
+        if unknown:
+            raise ValueError(
+                f"{path.name}: unknown package(s) {unknown}; "
+                f"known: {sorted(registry)}"
+            )
         kinds.extend(bumps.values())
         if body:
             # one summary line per changeset file
@@ -167,16 +290,17 @@ def collect_pending(root: Path) -> tuple[str, list[str], list[Path]]:
 
 def apply(root: Path, *, dry_run: bool = False) -> str:
     config = load_config(root)
-    bump_kind, summaries, files = collect_pending(root)
-    cargo_path = root / config["registry"]["toolbox"]["path"]
+    registry = resolve_registry(root, config)
+    if "toolbox" not in registry:
+        raise ValueError("registry must define toolbox (cargo-workspace)")
+    bump_kind, summaries, files = collect_pending(root, registry)
+    cargo_meta = registry["toolbox"]
+    cargo_path = root / cargo_meta["path"]
     old = read_cargo_workspace_version(cargo_path)
     new = bump_semver(old, bump_kind)
     changelog = root / config.get("changelog", "CHANGELOG.md")
 
-    package_paths: list[Path] = []
-    for name, meta in config.get("registry", {}).items():
-        if meta.get("kind") == "toolbox-package":
-            package_paths.append(root / meta["path"])
+    package_paths = package_paths_to_version(root, registry)
 
     if dry_run:
         print(f"would bump {old} -> {new} ({bump_kind})")
@@ -194,16 +318,33 @@ def apply(root: Path, *, dry_run: bool = False) -> str:
     for path in files:
         path.unlink()
     print(f"applied {old} -> {new}; removed {len(files)} changeset(s)")
-    print(f"next: git commit, merge Version PR if any, then: git tag v{new} && git push origin v{new}")
+    print(
+        f"next: git commit, merge Version PR if any, then: "
+        f"git tag v{new} && git push origin v{new}"
+    )
     return new
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, default=None, help="repo root (default: parent of scripts/)")
+    parser.add_argument(
+        "--root", type=Path, default=None, help="repo root (default: parent of scripts/)"
+    )
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument(
+        "--list-registry",
+        action="store_true",
+        help="print resolved registry (name -> kind path) and exit",
+    )
     args = parser.parse_args(argv)
     root = args.root.resolve() if args.root else repo_root()
+    if args.list_registry:
+        config = load_config(root)
+        registry = resolve_registry(root, config)
+        for name in sorted(registry):
+            meta = registry[name]
+            print(f"{name}\t{meta.get('kind')}\t{meta.get('path')}\t{meta.get('source')}")
+        return 0
     apply(root, dry_run=args.dry_run)
     return 0
 

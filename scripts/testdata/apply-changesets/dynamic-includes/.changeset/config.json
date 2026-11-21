@@ -1,0 +1,24 @@
+{
+  "changelog": "CHANGELOG.md",
+  "includes": [
+    {
+      "kind": "toolbox-package",
+      "globs": ["packages/*/toolbox-package.yaml"]
+    },
+    {
+      "kind": "action",
+      "globs": ["actions/*/action.yml"],
+      "lockstepWith": "toolbox"
+    }
+  ],
+  "registry": {
+    "toolbox": {
+      "kind": "cargo-workspace",
+      "path": "Cargo.toml",
+      "changelog": "CHANGELOG.md"
+    }
+  },
+  "policy": {
+    "versioning": "lockstep"
+  }
+}

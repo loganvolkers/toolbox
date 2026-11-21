@@ -16,7 +16,7 @@ Releasable paths include:
 
 - Rust crates / connectors (`crates/`, root `Cargo.toml`)
 - Toolbox packages (`packages/*/`)
-- `actions/report/`
+- `actions/*/`
 - Root changelog-worthy behaviour consumers depend on
 
 ## File format
@@ -25,25 +25,41 @@ Releasable paths include:
 ---
 "toolbox": minor
 "pnpm-expo": minor
+"actions/report": minor
 ---
 
 Short summary for consumers — becomes a changelog bullet.
 ```
 
-Logical names are defined in `config.json` → `registry`:
+### How names map
 
-| Name | Kind | Version source |
+| Frontmatter name | How it is resolved | Version source |
 |---|---|---|
-| `toolbox` | cargo-workspace | `Cargo.toml` `[workspace.package].version` |
-| `github-actions`, `pnpm-expo`, `storybook` | toolbox-package | `packages/<name>/toolbox-package.yaml` |
-| `actions/report` | action | same git tag as `toolbox` (lockstep) |
-| `toolbox-operator` | plugin | Phase 3 |
+| `toolbox` | Explicit in `config.json` → `registry` | `Cargo.toml` `[workspace.package].version` |
+| `<package>` (e.g. `pnpm-expo`, `file-size`) | Discovered by `includes` glob `packages/*/toolbox-package.yaml`; name = YAML `name:` | that package's `toolbox-package.yaml` `version:` |
+| `actions/<dir>` (e.g. `actions/report`) | Discovered by `includes` glob `actions/*/action.yml` | same git tag as `toolbox` (lockstep; no separate Action semver file yet) |
+| `toolbox-operator` | Explicit `registry` entry | Phase 3 plugin versioning |
+
+New packages under `packages/<name>/toolbox-package.yaml` and new Actions under
+`actions/<name>/action.yml` are picked up automatically — you do **not** need to edit
+`config.json` for each one. List only special cases (Cargo workspace, plugins) under
+`registry`.
+
+**Fixtures:** keep test packages under `pkg-fixture/` (or outside `packages/`), never as
+`packages/**/toolbox-package.yaml`, so Toolbox-for-Toolbox discovery and the ratchet stay
+clean.
+
+Inspect the resolved set:
+
+```bash
+python3 scripts/apply-changesets.py --list-registry
+```
 
 ## Lockstep policy (default)
 
-One release version ships binaries, in-repo packages, and `actions/report`.
+One release version ships binaries, in-repo packages, and Actions.
 Package YAML `version:` **must match** the git tag (`vX.Y.Z` ↔ `X.Y.Z`).
-The applicator sets every package YAML to that version when applying.
+The applicator sets every discovered package YAML to that version when applying.
 
 ## Workflow
 
@@ -63,5 +79,5 @@ python3 scripts/apply-changesets.py
 Self-test (also run in CI):
 
 ```bash
-python3 scripts/apply-changesets.py --self-test
+python3 scripts/test-apply-changesets.py
 ```

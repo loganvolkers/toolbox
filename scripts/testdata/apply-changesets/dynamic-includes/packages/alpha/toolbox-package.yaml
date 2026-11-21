@@ -1,0 +1,7 @@
+# Discovered package (named in changeset).
+apiVersion: toolbox.dev/package/v0
+name: alpha
+version: 0.3.0
+description: >-
+  Fixture package alpha for dynamic include discovery.
+fragments: []

@@ -1,0 +1,7 @@
+# Must NOT be versioned: outside packages/*/ include glob (T4T-safe fixture path).
+apiVersion: toolbox.dev/package/v0
+name: decoy
+version: 9.9.9
+description: >-
+  Decoy under pkg-fixture/; live includes must not touch this.
+fragments: []

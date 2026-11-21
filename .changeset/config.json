@@ -7,31 +7,26 @@
   "updateInternalDependencies": "patch",
   "fixed": [["toolbox", "actions/report"]],
   "ignore": [],
-  "___comment": "Portable registry (Option B). Logical names map to native manifests; @changesets/cli is not required.",
+  "___comment": "Portable registry (Option B). Explicit registry entries plus includes globs; @changesets/cli is not required.",
+  "includes": [
+    {
+      "kind": "toolbox-package",
+      "globs": ["packages/*/toolbox-package.yaml"],
+      "description": "Logical changeset name = YAML name: (usually packages/<name>/)"
+    },
+    {
+      "kind": "action",
+      "globs": ["actions/*/action.yml"],
+      "lockstepWith": "toolbox",
+      "description": "Logical changeset name = actions/<dirname>; ships on the same git tag as toolbox"
+    }
+  ],
   "registry": {
     "toolbox": {
       "kind": "cargo-workspace",
       "path": "Cargo.toml",
       "changelog": "CHANGELOG.md",
       "description": "All distable binaries (workspace.package.version); cargo-dist publishes on tag"
-    },
-    "github-actions": {
-      "kind": "toolbox-package",
-      "path": "packages/github-actions/toolbox-package.yaml"
-    },
-    "pnpm-expo": {
-      "kind": "toolbox-package",
-      "path": "packages/pnpm-expo/toolbox-package.yaml"
-    },
-    "storybook": {
-      "kind": "toolbox-package",
-      "path": "packages/storybook/toolbox-package.yaml"
-    },
-    "actions/report": {
-      "kind": "action",
-      "path": "actions/report/action.yml",
-      "lockstepWith": "toolbox",
-      "description": "Ships on the same git tag as toolbox; consumers pin @vX.Y.Z"
     },
     "toolbox-operator": {
       "kind": "plugin",
