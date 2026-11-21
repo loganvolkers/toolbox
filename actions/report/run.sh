@@ -36,6 +36,17 @@ if [[ ! -f "$portal/toolbox.yaml" ]]; then
 fi
 
 # Connectors are found next to the toolbox binary (TOOLBOX_CONNECTORS_DIR for good measure).
+# When toolbox.lock pins git packages (or executable connectors), populate the cache first.
+# Otherwise a clean runner hashes an empty package dir (SHA-256 e3b0c442…) and fails the pin.
+if [[ -f "$portal/toolbox.lock" ]]; then
+  if ! TOOLBOX_CONNECTORS_DIR="$bin" "$bin/toolbox" install "$portal" --frozen >"$out/install.txt" 2>&1; then
+    cat "$out/install.txt" >&2
+    echo "::error title=Toolbox report::toolbox install --frozen failed; fix the lock or package refs, then re-run"
+    echo "result=error" >> "$outputs"; echo "exit-code=2" >> "$outputs"; exit 0
+  fi
+  cat "$out/install.txt" >&2
+fi
+
 TOOLBOX_CONNECTORS_DIR="$bin" "$bin/toolbox" "${args[@]}" 2> "$out/ratchet.txt"
 code=$?
 cat "$out/ratchet.txt" >&2

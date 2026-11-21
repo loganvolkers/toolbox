@@ -1,9 +1,10 @@
 //! Toolbox packages (D89): standards as data, included by a portal with typed parameters.
 //!
 //! An `include` entry may be `{package: <spec>, with: {param: value}}`. The spec is a directory
-//! relative to the portal (`../packages/sdlc`) or `github:owner/repo[/subdir]@version`, which
-//! `toolbox install` clones into the cache at tag `v<version>` and pins in `toolbox.lock` by content
-//! hash. Loading never touches the network: it reads the cached copy and checks the pin.
+//! relative to the portal (`../packages/sdlc`) or `github:owner/repo[/subdir]@ref`, which
+//! `toolbox install` clones into the cache (tag `v<semver>`, branch name, or commit SHA) and pins
+//! in `toolbox.lock` by content hash. Loading never touches the network: it reads the cached copy
+//! and checks the pin.
 //!
 //! A package directory holds `toolbox-package.yaml`:
 //! `{apiVersion: toolbox.dev/package/v0, name, version, description?, parameters?: {name: {type,
@@ -23,7 +24,28 @@ pub struct GitSpec {
     pub owner: String,
     pub repo: String,
     pub subdir: Option<String>,
+    /// Cache key and include pin: leading `v` stripped (so `@v0.1.1` and `@0.1.1` share a checkout).
     pub version: String,
+}
+
+/// How `toolbox install` should fetch [`GitSpec::version`].
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum GitRef {
+    /// `git clone --branch <name>` (a tag such as `v0.1.1`, or a branch such as `main`).
+    Named(String),
+    /// Fetch and check out this commit (full or abbreviated SHA).
+    Commit(String),
+}
+
+/// Classify a parsed include version for clone: semver → `v…` tag, hex SHA → commit, else branch.
+pub fn git_ref(version: &str) -> GitRef {
+    if (7..=40).contains(&version.len()) && version.bytes().all(|b| b.is_ascii_hexdigit()) {
+        return GitRef::Commit(version.to_owned());
+    }
+    if version.starts_with(|c: char| c.is_ascii_digit()) {
+        return GitRef::Named(format!("v{version}"));
+    }
+    GitRef::Named(version.to_owned())
 }
 
 /// Parse `github:owner/repo[/subdir…]@version`.
@@ -255,5 +277,16 @@ mod tests {
         );
         assert_eq!(parse_git("github:acme/standards@1").unwrap().subdir, None);
         assert_eq!(parse_git("../packages/x"), None);
+    }
+
+    #[test]
+    fn git_ref_tag_branch_or_commit() {
+        assert_eq!(git_ref("1.2.0"), GitRef::Named("v1.2.0".into()));
+        assert_eq!(git_ref("0.1.1"), GitRef::Named("v0.1.1".into()));
+        assert_eq!(git_ref("main"), GitRef::Named("main".into()));
+        assert_eq!(git_ref("develop"), GitRef::Named("develop".into()));
+        let sha = "e213947a1b2c3d4e5f678901234567890abcdef0";
+        assert_eq!(git_ref(sha), GitRef::Commit(sha.into()));
+        assert_eq!(git_ref("e213947"), GitRef::Commit("e213947".into()));
     }
 }

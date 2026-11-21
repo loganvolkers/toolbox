@@ -39,7 +39,7 @@ include:
 
 `githubOrg` and `githubRepo` are required. `branch` defaults to `main`. The fail-rate and duration parameters may only be lowered.
 
-A package that lives in another repository is pinned by git, not by a floating branch:
+A package that lives in another repository is pinned by git:
 
 ```yaml
 include:
@@ -47,9 +47,9 @@ include:
     with: {githubOrg: acme, githubRepo: payments, failRateBronze: 15}
 ```
 
-The version is a git tag: `@1.2.0` fetches `v1.2.0`. That tag must **contain** the package directory — package `toolbox-package.yaml` `version:` can lag the Toolbox release tag that first ships the package; consumer pins follow the **git tag**. Toolbox itself ships installable binaries from [v0.1.0](https://github.com/loganvolkers/toolbox/releases/tag/v0.1.0) (use ≥ `0.1.1` when the package needs `js-workspace` / `expo-app`); packages still pin by git tag or local path until an OCI mirror exists.
+The `@ref` may be a semver tag (`@1.2.0` / `@v1.2.0` → clone `v1.2.0`), a branch (`@main`), or a commit SHA. Prefer a release tag for consumers; use a SHA or `main` only while dogfooding before a tag exists. That tag must **contain** the package directory — package `toolbox-package.yaml` `version:` can lag the Toolbox release tag that first ships the package; consumer pins follow the **git tag**. Toolbox itself ships installable binaries from [v0.1.1](https://github.com/loganvolkers/toolbox/releases/tag/v0.1.1) (use ≥ `0.1.1` when the package needs `js-workspace` / `expo-app`); packages still pin by git ref or local path until an OCI mirror exists.
 
-`toolbox install` clones that tag into the cache and records the package's content hash in `toolbox.lock`. Later loads read the lock and do not touch the network. Commit the lock file.
+`toolbox install` clones that ref into the cache and records the package's content hash in `toolbox.lock`. Later loads read the lock and do not touch the network. Commit the lock file. The [report action](https://github.com/loganvolkers/toolbox/tree/main/actions/report) runs `toolbox install --frozen` whenever the lock is present so clean CI runners do not see an empty package hash.
 
 ```bash
 toolbox install path/to/portal
@@ -74,7 +74,7 @@ The fixtures include a workflow that passes the scorecard and a workflow that fa
 | Author the package | `toolbox-package.yaml` and fragments | Built for a package in a directory. There is no `toolbox package new` scaffold |
 | Build a connector | `toolbox connector test` against the conformance kit | Built for a binary you already have. The Rust SDK is not published as a release, and there is no scaffold |
 | Test | `toolbox test` on the package's tests | Built. A matrix of released Toolbox versions waits on a Toolbox release |
-| Install and pin | `toolbox install`, `toolbox.lock` | Built for a git tag or a local path |
+| Install and pin | `toolbox install`, `toolbox.lock` | Built for a git tag, branch, commit SHA, or a local path |
 | Publish an archive, attest it, roll it across a fleet | | Specified. No release archive is produced, and the package registry is still an open question |
 
 Operators adopt a package by [including it in a portal](/toolbox/operators/). Users never see the package. They see the levels it computes, on [Use a portal](/toolbox/users/).

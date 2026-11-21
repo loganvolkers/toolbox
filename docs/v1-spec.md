@@ -390,7 +390,7 @@ to `result`; previews come from the Toolbox layer only.
 | `toolbox assess brief ID` / `assess check` / `assess submit FILE` | Brief a coding agent on an entity (MCP `assessment_brief`), validate a portal's `assessments/`, or push an assessment to a server (D79) |
 | `toolbox install [PORTAL] [--frozen]` | Download released executable connectors (`package: github:owner/repo[/app]@version`) for this platform, verify them against `toolbox.lock` (pinning new ones), and unpack them into the cache (D90) |
 | `toolbox doctor [PORTAL] [--mise]` | Check every in-image connector resolves and every declared `tools:` entry is at its pinned version; `--mise` prints the mise config that installs them (D90) |
-| `include: [{package: <dir or github:owner/repo[/subdir]@version>, with: {...}}]` | A package (D89): fragments merged with typed parameters (`${param:name}`; parameters with `tighten` may only move that way); git packages are cloned by `toolbox install` and pinned in `toolbox.lock` by content hash, checked on every load |
+| `include: [{package: <dir or github:owner/repo[/subdir]@ref>, with: {...}}]` | A package (D89): fragments merged with typed parameters (`${param:name}`; parameters with `tighten` may only move that way); git packages are cloned by `toolbox install` (semver tag `v…`, branch, or commit SHA) and pinned in `toolbox.lock` by content hash, checked on every load |
 | `toolbox describe` | Print Toolbox's own CLI commands and MCP tools as connector records (contract snapshots; Toolbox for Toolbox, D65) |
 | `toolbox token create --user U` | Create a personal access token (printed once) |
 | `toolbox get|query|search|graph|owner|explain|score|refresh|actions` | Read commands, each calling the MCP tool of the same purpose (`-o md|json|yaml`) |
