@@ -96,6 +96,7 @@ async fn tools_list_describes_every_input() {
             "owner_of",
             "scorecard_status",
             "scorecard_report",
+            "campaign_report",
             "assessment_brief",
             "explain",
             "refresh_entity",

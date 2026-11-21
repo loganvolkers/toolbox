@@ -426,10 +426,8 @@ fn markdown(m: &toolbox_model::Manifest, d: &Derived) -> String {
     s
 }
 
-/// The report document the element renders: portal, snapshot, catalog, scorecard definitions, scores.
-fn report_json(m: &toolbox_model::Manifest, d: &Derived) -> String {
-    let fixes: Map<String, Value> = m
-        .scorecards
+fn scorecard_defs(m: &toolbox_model::Manifest) -> Map<String, Value> {
+    m.scorecards
         .iter()
         .map(|sc| {
             let rules: Map<String, Value> = sc
@@ -444,11 +442,75 @@ fn report_json(m: &toolbox_model::Manifest, d: &Derived) -> String {
                 .collect();
             (
                 sc.name.clone(),
-                json!({"kind": sc.kind, "levels": sc.levels, "owner": sc.owner, "rules": rules}),
+                json!({
+                    "kind": sc.kind,
+                    "levels": sc.levels,
+                    "owner": sc.owner,
+                    "track": sc.track,
+                    "rules": rules
+                }),
+            )
+        })
+        .collect()
+}
+
+fn campaign_defs(m: &toolbox_model::Manifest, d: &Derived) -> Map<String, Value> {
+    m.campaigns
+        .iter()
+        .map(|c| {
+            let progress = d.campaigns.get(&c.name);
+            let includes: Vec<Value> = c
+                .includes
+                .iter()
+                .map(|i| {
+                    json!({
+                        "scorecard": i.scorecard,
+                        "atLeast": i.at_least,
+                        "rules": i.rules
+                    })
+                })
+                .collect();
+            (
+                c.name.clone(),
+                json!({
+                    "title": c.title,
+                    "track": c.track,
+                    "owner": c.owner,
+                    "description": c.description,
+                    "start": c.start,
+                    "end": c.end,
+                    "targetPercent": c.target_percent(),
+                    "draft": c.draft,
+                    "includes": includes,
+                    "status": progress.map(|p| &p.status),
+                    "inScope": progress.map(|p| p.in_scope),
+                    "meeting": progress.map(|p| p.meeting),
+                    "percent": progress.map(|p| p.percent),
+                    "onTarget": progress.map(|p| p.on_target),
+                    "milestones": progress.map(|p| &p.milestones),
+                    "entities": progress.map(|p| &p.entities),
+                }),
+            )
+        })
+        .collect()
+}
+
+/// The report document the element renders: portal, snapshot, catalog, scorecards, campaigns, scores.
+fn report_json(m: &toolbox_model::Manifest, d: &Derived) -> String {
+    let tracks: Map<String, Value> = m
+        .tracks
+        .iter()
+        .map(|t| {
+            (
+                t.name.clone(),
+                json!({
+                    "title": t.title,
+                    "owner": t.owner,
+                    "description": t.description
+                }),
             )
         })
         .collect();
-    // Slim catalog: kind → sorted entity ids. Full fields stay out of the static page.
     let mut catalog: BTreeMap<String, Vec<String>> = BTreeMap::new();
     for (id, e) in &d.entities {
         catalog.entry(e.kind.clone()).or_default().push(id.clone());
@@ -457,7 +519,9 @@ fn report_json(m: &toolbox_model::Manifest, d: &Derived) -> String {
         "portal": m.portal.title.as_deref().unwrap_or(&m.portal.name),
         "snapshot": d.snapshot,
         "catalog": catalog,
-        "scorecards": fixes,
+        "tracks": tracks,
+        "campaigns": campaign_defs(m, d),
+        "scorecards": scorecard_defs(m),
         "scores": d.scores,
     })
     .to_string()
@@ -825,6 +889,7 @@ mod tests {
         assert!(page.contains(r#"<slot name="footer">"#));
         assert!(page.contains("Overview"));
         assert!(page.contains("Catalog"));
+        assert!(page.contains("Campaigns"));
         assert!(!page.contains("{{"));
     }
 

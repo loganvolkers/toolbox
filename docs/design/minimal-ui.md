@@ -4,7 +4,7 @@
 Builds on [frontend.md](./frontend.md) (UX bar, design system, Storybook) and the UI extension
 contract in [v1-spec.md](../v1-spec.md) §7.6. Planned here because it changes the API.*
 
-> **Implementation status (M4 done):** the read pages (home, entity, scorecard, ops) over the
+> **Implementation status (M4 done; campaigns D01M7Y11G0YZT23W26Z9D3XW68Y):** the read pages (home, entity, scorecard, campaign, ops) over the
 > `/v1/views/*` endpoints, embedded in the binary with a strict CSP, with refresh and redaction
 > markers. **Not yet:** the `/v1/events` SSE stream (the UI polls `/v1/snapshot`), generated action
 > forms and approvals (M5), `@toolbox/ui` and Storybook stories.
@@ -38,6 +38,7 @@ Planning it exposed four API needs that v1-spec lacked:
 | `/e/:id` | **Entity page** | Everyone | `GET /v1/views/entity/{id}`: fields with provenance, ownership evidence, relations (both directions, capped), scorecard summaries and details (facet-shaped), available actions, snapshot and per-connector freshness | **Refresh** (command → progress → new snapshot); edit **native** fields inline (revision, reason); open an action |
 | `/e/:id/scorecards/:name` | **Rule details** | Owners (details facet) | Included in the entity view | Fix text, observed values, `explain` link |
 | `/s/:name` | **Scorecard** | Everyone (summaries) | `GET /v1/views/scorecard/{name}`: level distribution, entities by level, worst rules | Filter by team |
+| `/cgn/:name` | **Campaign** | Everyone | `GET /v1/views/campaign/{name}`: progress vs target, entities not meeting includes | Open included scorecards |
 | `/e/:id/actions/:action` | **Action** | Permitted users | `GET /v1/actions/{name}?entity=` + options + previews | Generated form (or an operator bundle in the `action:` slot), live preview, confirm, approval notice |
 | `/runs/:id` | **Run** | Requester, approvers, owners | `GET /v1/runs/{id}` + SSE events | Timeline including "checking the result"; cancel; final state with snapshot |
 | `/runs` | **My runs** | Everyone | `GET /v1/runs?mine=true` | — |
@@ -96,6 +97,7 @@ objects. Actions that need more use an operator UI bundle (tier 3).
 | `GET /v1/views/home` | Home composite for the caller |
 | `GET /v1/views/entity/{id}` | Entity page composite (facet-shaped; relations capped with cursors) |
 | `GET /v1/views/scorecard/{name}` | Scorecard composite |
+| `GET /v1/views/campaign/{name}` | Campaign composite |
 | `GET /v1/views/ops` | Operations composite (`operator` facet) |
 | `GET /v1/runs?mine=true` | The caller's runs |
 | `GET /v1/approvals?mine=true` · `POST /v1/approvals/{id}/decision` | Approvals waiting for the caller; approve or reject with a comment (human sessions only, D57) |

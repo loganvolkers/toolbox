@@ -271,6 +271,8 @@ connectors:
 include:
   # One file per topic: its kinds, scorecards and rubrics (portal/README.md).
   - standards/*.yaml
+  # Time-bound focus over those scorecards (docs/design/campaigns.md).
+  - campaigns.yaml
   # Our GitHub Actions standards, as the package pilots will use (D89): connectors, tools, kinds, scorecards.
   - package: ../packages/github-actions
     with: {githubOrg: loganvolkers, githubRepo: toolbox}

@@ -571,8 +571,27 @@ pub async fn view_home(State(s): S, headers: HeaderMap) -> Response {
     }
     Json(json!({"snapshot": p.snapshot_id, "viewer": viewer(&caller), "portal": s.manifest.portal,
                 "teams": teams, "owned": items, "kinds": kinds,
-                "scorecards": s.manifest.scorecards.iter().map(|sc| json!({"name": sc.name, "kind": sc.kind})).collect::<Vec<_>>()}))
+                "scorecards": s.manifest.scorecards.iter().map(|sc| json!({"name": sc.name, "kind": sc.kind})).collect::<Vec<_>>(),
+                "campaigns": home_campaigns(&s, &p)}))
     .into_response()
+}
+
+fn home_campaigns(s: &AppState, p: &Published) -> Vec<Value> {
+    s.manifest
+        .campaigns
+        .iter()
+        .filter_map(|c| {
+            let pr = p.derived.campaigns.get(&c.name)?;
+            Some(json!({
+                "name": c.name,
+                "title": c.title,
+                "status": pr.status,
+                "percent": pr.percent,
+                "targetPercent": pr.target_percent,
+                "onTarget": pr.on_target,
+            }))
+        })
+        .collect()
 }
 
 /// `GET /v1/views/scorecard/{name}` — level distribution and worst rules over visible entities.
@@ -734,6 +753,121 @@ pub async fn scorecard_results(
                 "filter": {"rule": q.rule, "outcome": q.rule.as_ref().map(|_| want), "level": q.level},
                 "count": out.len(), "by_level": by_level, "entities": out}))
     .into_response()
+}
+
+/// `GET /v1/campaigns` — every campaign with progress over entities the caller may see.
+pub async fn campaigns(State(s): S, headers: HeaderMap) -> Response {
+    let caller = match s.caller(&headers).await {
+        Ok(c) => c,
+        Err(r) => return r,
+    };
+    let Some(p) = s.snapshot() else {
+        return problem(
+            StatusCode::SERVICE_UNAVAILABLE,
+            "starting",
+            "no snapshot yet",
+        );
+    };
+    let mut out = Vec::new();
+    for c in &s.manifest.campaigns {
+        let row = match campaign_row(&s, &p, &caller, c).await {
+            Ok(r) => r,
+            Err(r) => return r,
+        };
+        out.push(row);
+    }
+    Json(json!({"snapshot": p.snapshot_id, "campaigns": out})).into_response()
+}
+
+/// `GET /v1/campaigns/{name}` — one campaign's progress and per-entity gaps the caller may see.
+pub async fn campaign_results(
+    State(s): S,
+    headers: HeaderMap,
+    Path(name): Path<String>,
+) -> Response {
+    let caller = match s.caller(&headers).await {
+        Ok(c) => c,
+        Err(r) => return r,
+    };
+    let Some(p) = s.snapshot() else {
+        return problem(
+            StatusCode::SERVICE_UNAVAILABLE,
+            "starting",
+            "no snapshot yet",
+        );
+    };
+    let Some(c) = s.manifest.campaigns.iter().find(|x| x.name == name) else {
+        return problem(
+            StatusCode::NOT_FOUND,
+            "not-found",
+            format!("no campaign {name}"),
+        );
+    };
+    match campaign_row(&s, &p, &caller, c).await {
+        Ok(row) => Json(json!({"snapshot": p.snapshot_id, "campaign": row})).into_response(),
+        Err(r) => r,
+    }
+}
+
+/// `GET /v1/views/campaign/{name}` — composite campaign page for the minimal UI.
+pub async fn view_campaign(State(s): S, headers: HeaderMap, Path(name): Path<String>) -> Response {
+    campaign_results(State(s), headers, Path(name)).await
+}
+
+async fn campaign_row(
+    s: &AppState,
+    p: &Published,
+    caller: &Caller,
+    c: &toolbox_model::manifest::Campaign,
+) -> Result<Value, Response> {
+    let progress = p.derived.campaigns.get(&c.name);
+    let ids: Vec<&str> = progress
+        .map(|pr| pr.entities.keys().map(String::as_str).collect())
+        .unwrap_or_default();
+    let vis = s.visibility(caller, &ids).await?;
+    let mut meeting = 0usize;
+    let mut in_scope = 0usize;
+    let mut entities = Vec::new();
+    for (id, v) in ids.iter().zip(vis) {
+        if !v.view {
+            continue;
+        }
+        in_scope += 1;
+        let ent = progress.and_then(|pr| pr.entities.get(*id));
+        let ok = ent.is_some_and(|e| e.meeting);
+        if ok {
+            meeting += 1;
+        }
+        entities.push(json!({
+            "id": id,
+            "meeting": ok,
+            "gaps": ent.map(|e| &e.gaps).cloned().unwrap_or_default(),
+        }));
+    }
+    let target = c.target_percent();
+    let percent = (meeting * 100).checked_div(in_scope).unwrap_or(0) as u8;
+    Ok(json!({
+        "name": c.name,
+        "title": c.title,
+        "track": c.track,
+        "owner": c.owner,
+        "description": c.description,
+        "start": c.start,
+        "end": c.end,
+        "targetPercent": target,
+        "includes": c.includes.iter().map(|i| json!({
+            "scorecard": i.scorecard,
+            "atLeast": i.at_least,
+            "rules": i.rules,
+        })).collect::<Vec<_>>(),
+        "status": progress.map(|pr| pr.status.as_str()).unwrap_or("active"),
+        "inScope": in_scope,
+        "meeting": meeting,
+        "percent": percent,
+        "onTarget": percent >= target,
+        "milestones": progress.map(|pr| &pr.milestones),
+        "entities": entities,
+    }))
 }
 
 /// The visible entities scored by `name`, with their shaped (facet-checked) scorecard.

@@ -110,7 +110,9 @@ The schema is [`schema/manifest.schema.json`](../schema/manifest.schema.json)
 | `policies` | Named values, readable in CEL as `policy.<name>` |
 | `connectors` | Package, runtime (`in-image` or `remote`), config with `${env:…}` and `${secret:…}`, record kinds, required refresh scopes, freshness per record kind |
 | `kinds` | Fields (types, facets, computed, authority), relations, identity sources, per-field source precedence, write-back, mapping rules |
-| `scorecards` | Kind, owner, ordered levels, `appliesTo`, rules (`check`, `fix`), facets |
+| `scorecards` | Kind, owner, ordered levels, `appliesTo`, rules (`check`, `fix`), facets; optional `track` |
+| `tracks` | Long-term programs: name, owner, optional title/description (D01M7Y11G0YZT23W26Z9D3XW68Y) |
+| `campaigns` | Time-bound goals: owner, `includes` (`scorecard` + `atLeast` and/or `rules`), dates, `targetPercent`, milestones, optional `track` / `draft` / `status` |
 | `authz` | OpenFGA model and tests; tuple derivations (static or CEL per kind) |
 | `actions` | Inputs (JSON Schema + `enumFrom`), permission, approval, preconditions, context lookups, executor, `expect` (postcondition, refresh, within) or `unverified: true`, annotations, MCP promotion, UI bundle |
 | `ui.bundles` | Operator UI bundles and their mount slots |
@@ -167,6 +169,7 @@ prose and the model disagree, fix one of them in the same commit.
 | 6. Relations | Edges | `inbound.<relation>` lists (empty list when declared but absent) | — |
 | 7. Computed | Entities | Computed fields | `entity`, `inbound`, `policy` |
 | 8. Scorecards | Entities | Per rule `pass | fail | unknown`; level or `skipped` | `entity`, `policy` |
+| 8b. Campaigns | Scorecard results | Per campaign: status, `inScope` / `meeting` / `percent`, per-entity gaps | (from scores) |
 | 9. Tuples | Entities | Sorted, de-duplicated OpenFGA tuples | `entity`, `policy` |
 | 10. Options | Entities | Sorted `enumFrom` options per action input and entity | `entity`, `policy` |
 
@@ -293,6 +296,7 @@ pub struct Derived { pub snapshot: SnapshotId, pub entities: Entities, pub score
 | `GET /v1/runs/{id}` · `GET /v1/runs/{id}/events` (SSE) · `POST /v1/runs/{id}/cancel` · `GET /v1/runs?mine=true` | Run status, events, the caller's runs |
 | `GET /v1/approvals?mine=true` · `POST /v1/approvals/{id}/decision` | Approvals for the caller; decisions need a human session (D57) |
 | `GET /v1/scorecards` · `/v1/scorecards/{name}?rule=&outcome=&level=` | Scorecards with level counts; one scorecard's per-entity results with failing rules and evidence (D66). `GET /v1/entities?filter=` may read `scores['<card>']` |
+| `GET /v1/campaigns` · `/v1/campaigns/{name}` · `/v1/views/campaign/{name}` | Campaign progress over visible entities (D01M7Y11G0YZT23W26Z9D3XW68Y) |
 | `GET /v1/views/home` · `/v1/views/entity/{id}` · `/v1/views/scorecard/{name}` · `/v1/views/ops` | Composite, facet-shaped page views for the UI and operator bundles (D56) |
 | `GET /v1/events` (SSE) | Snapshot published, command completed and run transition events visible to the caller |
 | `POST /v1/ingest` | Connector ingest (connector token) |
@@ -314,6 +318,7 @@ Errors use RFC 9457 problem details with `code`, and for authorization failures 
 | `owner_of` | `id` | Owner, ownership status, evidence (claim, CODEOWNERS) |
 | `scorecard_status` | `id`, `scorecard?` | Levels, rule outcomes, fix text and evidence for failing rules (facet-shaped) |
 | `scorecard_report` | `scorecard?`, `rule?`, `outcome?`, `level?` | One scorecard across visible entities: level counts and failing rules with evidence; without `scorecard`, every scorecard (D66) |
+| `campaign_report` | `campaign?` | One campaign's progress and non-meeting entities; without `campaign`, every campaign (D01M7Y11G0YZT23W26Z9D3XW68Y) |
 | `assessment_brief` | `id`, `rubric?` | What a coding agent judges the entity on: the portal's rubric for its kind, the entity's facts, its subject hash, the assessment file path and a template. Read-only; the agent writes the assessment (D79) |
 | `explain` | `id`, `field` or `rule` | Why: sources, precedence, CEL, observed values |
 | `refresh_entity` | `id` | Waits for completion (MCP task if long); returns the new snapshot and what changed (fields, entities over the snapshot range) |
@@ -381,6 +386,7 @@ to `result`; previews come from the Toolbox layer only.
 | `toolbox derive [--out DIR]` | Recompute from fixtures; print a summary or write the reference-format outputs |
 | `toolbox report [--skip C] [-o md\|json\|html] [--baseline F [--update\|--ci]] [--verdict F]` | Score a repository without a server: connectors once, recompute, scorecards with evidence; a ratchet against a committed baseline (D66, [repo-portals.md](./design/repo-portals.md)); `--verdict` writes the outcome as JSON for any CI system (D96) |
 | `toolbox scorecard [NAME] [--rule R]` | One scorecard across entities: a work list (MCP `scorecard_report`) |
+| `toolbox campaign [NAME]` | One campaign's progress and gaps (MCP `campaign_report`) |
 | `toolbox assess brief ID` / `assess check` / `assess submit FILE` | Brief a coding agent on an entity (MCP `assessment_brief`), validate a portal's `assessments/`, or push an assessment to a server (D79) |
 | `toolbox install [PORTAL] [--frozen]` | Download released executable connectors (`package: github:owner/repo[/app]@version`) for this platform, verify them against `toolbox.lock` (pinning new ones), and unpack them into the cache (D90) |
 | `toolbox doctor [PORTAL] [--mise]` | Check every in-image connector resolves and every declared `tools:` entry is at its pinned version; `--mise` prints the mise config that installs them (D90) |

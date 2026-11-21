@@ -15,6 +15,9 @@
       "command:assess-submit": {
         "level": "bronze"
       },
+      "command:campaign": {
+        "level": "bronze"
+      },
       "command:connector-test": {
         "level": "bronze"
       },
@@ -264,7 +267,6 @@
           "clippy-clean": 1,
           "fully-documented": 14,
           "no-huge-functions": 4,
-          "public-api-documented": 14,
           "short-functions": 9,
           "simple-functions": 3,
           "tests-pass": 1
@@ -351,7 +353,6 @@
           "clippy-clean": 1,
           "fully-documented": 5,
           "no-huge-functions": 1,
-          "public-api-documented": 5,
           "short-functions": 3,
           "simple-functions": 1,
           "tests-pass": 1
@@ -791,6 +792,9 @@
       "doc:docs/decisions/D01M7Y0PQVZQXK8JKPM5584AF3F.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M7Y11G0YZT23W26Z9D3XW68Y.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/README.md": {
         "level": "skipped"
       },
@@ -804,6 +808,9 @@
         "level": "silver"
       },
       "doc:docs/design/agents-md-standards.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/campaigns.md": {
         "level": "silver"
       },
       "doc:docs/design/cli-skills.md": {
@@ -1005,6 +1012,9 @@
         "level": "silver"
       },
       "doc:plugins/toolbox-operator/skills/assess-submit/SKILL.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/skills/campaign/SKILL.md": {
         "level": "silver"
       },
       "doc:plugins/toolbox-operator/skills/connector-test/SKILL.md": {
@@ -1251,6 +1261,12 @@
         "level": "bronze"
       },
       "skill:plugins/toolbox-operator/skills/assess-submit": {
+        "failing": {
+          "has-evals": 1
+        },
+        "level": "silver"
+      },
+      "skill:plugins/toolbox-operator/skills/campaign": {
         "failing": {
           "has-evals": 1
         },
@@ -4351,6 +4367,9 @@
       "command:assess-submit": {
         "level": "silver"
       },
+      "command:campaign": {
+        "level": "skipped"
+      },
       "command:connector-test": {
         "level": "silver"
       },
@@ -4623,6 +4642,12 @@
       "command:assess-submit": {
         "level": "skipped"
       },
+      "command:campaign": {
+        "failing": {
+          "exercised": null
+        },
+        "level": "bronze"
+      },
       "command:connector-test": {
         "level": "skipped"
       },
@@ -4717,6 +4742,12 @@
       },
       "mcp-tool:assessment_brief": {
         "level": "gold"
+      },
+      "mcp-tool:campaign_report": {
+        "failing": {
+          "contract-tested": 1
+        },
+        "level": "silver"
       },
       "mcp-tool:explain": {
         "level": "gold"

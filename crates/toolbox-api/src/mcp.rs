@@ -50,6 +50,10 @@ pub fn builtin_tools() -> Value {
              "rule": {"type": "string", "description": "Only entities where this rule has `outcome`"},
              "outcome": {"enum": ["fail", "pass", "unknown"], "description": "Outcome to match for `rule` (default fail)"},
              "level": {"type": "string", "description": "Only entities at this level, e.g. none, bronze, skipped"}}), &[])},
+        {"name": "campaign_report", "description": "Progress of a time-bound campaign over existing scorecards: percent meeting the goal, milestones, and entities that still have gaps. Without `campaign`, lists every campaign.",
+         "annotations": {"readOnlyHint": true},
+         "inputSchema": s(json!({
+             "campaign": {"type": "string", "description": "Campaign name (omit to list every campaign with its progress)"}}), &[])},
         {"name": "assessment_brief", "description": "What to judge an entity on, as a coding agent: the portal's rubric for its kind (criteria with questions and guidance), the entity's facts, its subject hash and a template to fill in. Write the result as an assessment file (or `toolbox assess submit`); scorecards read assessments as data.",
          "annotations": {"readOnlyHint": true},
          "inputSchema": s(json!({"id": id,
@@ -213,6 +217,49 @@ fn trace_line(v: &Value) {
     }
 }
 
+async fn scorecard_report_call(
+    state: &Arc<AppState>,
+    h: &HeaderMap,
+    a: &Value,
+) -> (StatusCode, Value) {
+    let card = arg(a, "scorecard");
+    if card.is_empty() {
+        return call_rest(state, h, Method::GET, "/v1/scorecards".into(), None).await;
+    }
+    let q: Vec<String> = ["rule", "outcome", "level"]
+        .iter()
+        .filter(|k| !arg(a, k).is_empty())
+        .map(|k| format!("{k}={}", enc(arg(a, k))))
+        .collect();
+    call_rest(
+        state,
+        h,
+        Method::GET,
+        format!("/v1/scorecards/{}?{}", enc(card), q.join("&")),
+        None,
+    )
+    .await
+}
+
+async fn campaign_report_call(
+    state: &Arc<AppState>,
+    h: &HeaderMap,
+    a: &Value,
+) -> (StatusCode, Value) {
+    let name = arg(a, "campaign");
+    if name.is_empty() {
+        return call_rest(state, h, Method::GET, "/v1/campaigns".into(), None).await;
+    }
+    call_rest(
+        state,
+        h,
+        Method::GET,
+        format!("/v1/campaigns/{}", enc(name)),
+        None,
+    )
+    .await
+}
+
 /// Run one tool; returns (markdown, structured JSON, is_error).
 async fn run_tool(
     state: &Arc<AppState>,
@@ -240,20 +287,8 @@ async fn run_tool(
             }
             call_rest(state, h, Method::GET, uri, None).await
         }
-        "scorecard_report" => {
-            let card = arg(a, "scorecard");
-            if card.is_empty() {
-                call_rest(state, h, Method::GET, "/v1/scorecards".into(), None).await
-            } else {
-                let q: Vec<String> = ["rule", "outcome", "level"]
-                    .iter()
-                    .filter(|k| !arg(a, k).is_empty())
-                    .map(|k| format!("{k}={}", enc(arg(a, k))))
-                    .collect();
-                let uri = format!("/v1/scorecards/{}?{}", enc(card), q.join("&"));
-                call_rest(state, h, Method::GET, uri, None).await
-            }
-        }
+        "scorecard_report" => scorecard_report_call(state, h, a).await,
+        "campaign_report" => campaign_report_call(state, h, a).await,
         "query" => {
             let mut uri = format!("/v1/entities?kind={}&limit=200", enc(arg(a, "kind")));
             for k in ["filter", "fields"] {
@@ -418,6 +453,49 @@ async fn run_tool(
     (markdown(name, a, &v), v, false)
 }
 
+fn write_campaign_report(s: &mut String, v: &Value) {
+    use std::fmt::Write as _;
+    if let Some(list) = v.get("campaigns").and_then(Value::as_array) {
+        for c in list {
+            let _ = writeln!(
+                s,
+                "- **{}**: {}% of {}% target ({}/{} meeting; {})",
+                c["name"].as_str().unwrap_or(""),
+                c["percent"],
+                c["targetPercent"],
+                c["meeting"],
+                c["inScope"],
+                c["status"].as_str().unwrap_or("")
+            );
+        }
+        return;
+    }
+    let c = v.get("campaign").unwrap_or(v);
+    let _ = writeln!(
+        s,
+        "**{}**: {}% of {}% target ({}/{} meeting; {})",
+        c["name"].as_str().unwrap_or(""),
+        c["percent"],
+        c["targetPercent"],
+        c["meeting"],
+        c["inScope"],
+        c["status"].as_str().unwrap_or("")
+    );
+    for e in c["entities"].as_array().into_iter().flatten() {
+        if e["meeting"] == true {
+            continue;
+        }
+        let gaps = e["gaps"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(Value::as_str)
+            .collect::<Vec<_>>()
+            .join("; ");
+        let _ = writeln!(s, "- `{}`: {gaps}", e["id"].as_str().unwrap_or(""));
+    }
+}
+
 /// A failing rule's evidence under its bullet: list items one per line (at most 20), other values inline.
 fn write_evidence(s: &mut String, evidence: Option<&Value>) {
     use std::fmt::Write as _;
@@ -551,6 +629,7 @@ fn markdown(name: &str, a: &Value, v: &Value) -> String {
                 }
             }
         }
+        "campaign_report" => write_campaign_report(&mut s, v),
         "scorecard_report" if v.get("scorecards").is_some() => {
             for c in v["scorecards"].as_array().into_iter().flatten() {
                 let counts: Vec<String> = c["by_level"]

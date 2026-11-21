@@ -216,6 +216,14 @@ enum Command {
         #[command(flatten)]
         remote: Remote,
     },
+    /// One campaign's progress over existing scorecards (entities still missing the goal).
+    /// Without a name, lists the campaigns.
+    Campaign {
+        /// Campaign name.
+        name: Option<String>,
+        #[command(flatten)]
+        remote: Remote,
+    },
     /// Ask the connectors behind an entity to re-read it, and wait for the fresh snapshot.
     Refresh {
         /// Entity id.
@@ -377,6 +385,7 @@ const CLI_MCP_TOOLS: &[(&str, &str)] = &[
     ("explain", "explain"),
     ("score", "scorecard_status"),
     ("scorecard", "scorecard_report"),
+    ("campaign", "campaign_report"),
     ("refresh", "refresh_entity"),
     ("actions", "list_actions"),
 ];
@@ -542,6 +551,12 @@ fn main() -> ExitCode {
             &remote.target(),
             "scorecard_report",
             serde_json::json!({"scorecard": name, "rule": rule, "outcome": outcome, "level": level}),
+            &remote.output,
+        ),
+        Command::Campaign { name, remote } => client::tool(
+            &remote.target(),
+            "campaign_report",
+            serde_json::json!({"campaign": name}),
             &remote.output,
         ),
         Command::Report {

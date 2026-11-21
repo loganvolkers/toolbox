@@ -1,0 +1,33 @@
+# Time-bound focus over continuous scorecards (docs/design/campaigns.md, D01M7Y11G0YZT23W26Z9D3XW68Y).
+# Included by portal/toolbox.yaml.
+
+tracks:
+  - name: maintainer
+    title: Maintainer quality
+    owner: group:maintainers
+    description: Long-term standards for building Toolbox itself.
+  - name: operator
+    title: Operator experience
+    owner: group:maintainers
+    description: Portal author and agent operator surfaces.
+
+campaigns:
+  - name: skill-silver
+    title: Skills to silver
+    track: maintainer
+    owner: group:maintainers
+    description: Every shipped agent skill reaches silver on maintainer-skill.
+    start: 2026-11-01
+    end: 2026-12-31
+    targetPercent: 100
+    milestones: [{name: half, targetPercent: 50}]
+    includes: [{scorecard: maintainer-skill, atLeast: silver}]
+  - name: cli-skill-coverage
+    title: CLI skills present
+    track: operator
+    owner: group:maintainers
+    description: Every CLI command that needs a skill has one (cli-skill bronze).
+    start: 2026-11-01
+    end: 2027-03-31
+    targetPercent: 100
+    includes: [{scorecard: cli-skill, atLeast: bronze}]

@@ -10,7 +10,8 @@ description: >-
 # Hosted report UX
 
 Judgement first. A visitor who opens the report must answer "is this portal healthy?"
-before they pick a scorecard. Catalogue what exists, then score it. Show every
+before they pick a scorecard. Catalogue what exists, show time-bound campaigns,
+then score continuous standards. Show every
 rule outcome, not only failures. Drill from fleet → area → entity → check →
 evidence and fix. Never hide the bar the portal already clears.
 

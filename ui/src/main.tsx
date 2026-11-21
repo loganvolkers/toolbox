@@ -120,6 +120,12 @@ function Home() {
         <div>
           <h2>Scorecards</h2>
           <ul>{h.scorecards.map((s: Json) => <li key={s.name}><Link to={`/s/${s.name}`}>{s.name}</Link> <span className="muted">on {s.kind}</span></li>)}</ul>
+          {(h.campaigns?.length ?? 0) > 0 && (
+            <>
+              <h2>Campaigns</h2>
+              <ul>{h.campaigns.map((c: Json) => <li key={c.name}><Link to={`/cgn/${c.name}`}>{c.title ?? c.name}</Link> <span className="muted">{c.percent}% / {c.targetPercent}%</span></li>)}</ul>
+            </>
+          )}
         </div>
       </section>
     </>
@@ -303,6 +309,28 @@ function Scorecard({ name }: { name: string }) {
   );
 }
 
+function Campaign({ name }: { name: string }) {
+  const [res] = useApi(`/v1/views/campaign/${enc(name)}`);
+  if (!res) return <Loading />;
+  if (res.status !== 200) return <Problem res={res} />;
+  const c = res.body.campaign ?? res.body;
+  const gaps = (c.entities as Json[]).filter((e) => !e.meeting);
+  return (
+    <>
+      <h1>{c.title ?? c.name}</h1>
+      <p className="muted">{c.status} · {c.percent}% of {c.targetPercent}% target ({c.meeting}/{c.inScope}). <AsOf snapshot={res.snapshot} /></p>
+      {c.description && <p>{c.description}</p>}
+      <h2>Not meeting ({gaps.length})</h2>
+      <ul>
+        {gaps.map((e: Json) => (
+          <li key={e.id}>{entityLink(e.id)} <span className="muted">{(e.gaps as string[]).join("; ")}</span></li>
+        ))}
+        {!gaps.length && <li className="muted">Every visible in-scope entity meets the goal.</li>}
+      </ul>
+    </>
+  );
+}
+
 function Ops() {
   const [res] = useApi("/v1/views/ops");
   if (!res) return <Loading />;
@@ -354,6 +382,7 @@ function App() {
   else if (parts[0] === "c" && parts[1]) page = <Catalog kind={parts[1]} filter={url.searchParams.get("filter") ?? ""} />;
   else if (parts[0] === "e" && parts[1]) page = <Entity key={parts[1]} id={parts[1]} />;
   else if (parts[0] === "s" && parts[1]) page = <Scorecard name={parts[1]} />;
+  else if (parts[0] === "cgn" && parts[1]) page = <Campaign name={parts[1]} />;
   else if (parts[0] === "ops") page = <Ops />;
   else page = <p>Not found. <Link to="/">Home</Link></p>;
   const user = devUser();

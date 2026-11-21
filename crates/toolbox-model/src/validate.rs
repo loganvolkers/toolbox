@@ -151,6 +151,12 @@ impl Checker {
             "/scorecards",
             m.scorecards.iter().map(|s| s.name.as_str()),
         );
+        self.duplicates("track", "/tracks", m.tracks.iter().map(|t| t.name.as_str()));
+        self.duplicates(
+            "campaign",
+            "/campaigns",
+            m.campaigns.iter().map(|c| c.name.as_str()),
+        );
         self.duplicates(
             "action",
             "/actions",
@@ -295,12 +301,24 @@ impl Checker {
         }
 
         self.rubrics(m, &kinds);
+        let tracks: BTreeSet<&str> = m.tracks.iter().map(|t| t.name.as_str()).collect();
+        let scorecards: BTreeMap<&str, &crate::manifest::Scorecard> =
+            m.scorecards.iter().map(|s| (s.name.as_str(), s)).collect();
         for (si, s) in m.scorecards.iter().enumerate() {
             if !kinds.contains_key(s.kind.as_str()) {
                 self.push(
                     "xref.kind",
                     format!("/scorecards/{si}/kind"),
                     format!("scorecard {}: unknown kind {}", s.name, s.kind),
+                );
+            }
+            if let Some(t) = &s.track
+                && !tracks.contains(t.as_str())
+            {
+                self.push(
+                    "xref.track",
+                    format!("/scorecards/{si}/track"),
+                    format!("scorecard {}: unknown track {t}", s.name),
                 );
             }
             for (ri, r) in s.rules.iter().enumerate() {
@@ -310,6 +328,97 @@ impl Checker {
                         format!("/scorecards/{si}/rules/{ri}/level"),
                         format!("scorecard {}: rule {} has unknown level", s.name, r.name),
                     );
+                }
+            }
+        }
+        for (ci, c) in m.campaigns.iter().enumerate() {
+            if let Some(t) = &c.track
+                && !tracks.contains(t.as_str())
+            {
+                self.push(
+                    "xref.track",
+                    format!("/campaigns/{ci}/track"),
+                    format!("campaign {}: unknown track {t}", c.name),
+                );
+            }
+            for date in [&c.start, &c.end] {
+                if let Some(d) = date
+                    && !is_ymd(d)
+                {
+                    self.push(
+                        "campaign.date",
+                        format!("/campaigns/{ci}"),
+                        format!("campaign {}: date {d} is not YYYY-MM-DD", c.name),
+                    );
+                }
+            }
+            if let (Some(start), Some(end)) = (&c.start, &c.end)
+                && start > end
+            {
+                self.push(
+                    "campaign.date",
+                    format!("/campaigns/{ci}"),
+                    format!("campaign {}: start {start} is after end {end}", c.name),
+                );
+            }
+            if c.includes.is_empty() {
+                self.push(
+                    "campaign.includes",
+                    format!("/campaigns/{ci}/includes"),
+                    format!("campaign {}: needs at least one include", c.name),
+                );
+            }
+            self.duplicates(
+                "milestone",
+                &format!("/campaigns/{ci}/milestones"),
+                c.milestones.iter().map(|m| m.name.as_str()),
+            );
+            for (ii, inc) in c.includes.iter().enumerate() {
+                let Some(sc) = scorecards.get(inc.scorecard.as_str()) else {
+                    self.push(
+                        "xref.scorecard",
+                        format!("/campaigns/{ci}/includes/{ii}/scorecard"),
+                        format!(
+                            "campaign {}: unknown scorecard {}",
+                            c.name, inc.scorecard
+                        ),
+                    );
+                    continue;
+                };
+                if inc.at_least.is_none() && inc.rules.is_empty() {
+                    self.push(
+                        "campaign.include",
+                        format!("/campaigns/{ci}/includes/{ii}"),
+                        format!(
+                            "campaign {}: include of {} needs atLeast and/or rules",
+                            c.name, inc.scorecard
+                        ),
+                    );
+                }
+                if let Some(lvl) = &inc.at_least
+                    && lvl != "none"
+                    && !sc.levels.iter().any(|l| l == lvl)
+                {
+                    self.push(
+                        "xref.level",
+                        format!("/campaigns/{ci}/includes/{ii}/atLeast"),
+                        format!(
+                            "campaign {}: atLeast {lvl} is not a level of {}",
+                            c.name, inc.scorecard
+                        ),
+                    );
+                }
+                for (ri, rule) in inc.rules.iter().enumerate() {
+                    if !sc.rules.iter().any(|r| &r.name == rule) {
+                        self.push(
+                            "xref.rule",
+                            format!("/campaigns/{ci}/includes/{ii}/rules/{ri}"),
+                            format!(
+                                "campaign {}: rule {rule} is not on scorecard {}",
+                                c.name, inc.scorecard
+                            ),
+                        );
+                    }
                 }
             }
         }
@@ -621,6 +730,17 @@ fn collect_enum_from(node: &Value, ptr: &str, out: &mut Vec<(String, String)>) {
             collect_enum_from(items, &format!("{ptr}/items"), out);
         }
     }
+}
+
+/// UTC calendar date `YYYY-MM-DD` (schema pattern; month/day digits only, not calendar validity).
+fn is_ymd(s: &str) -> bool {
+    let b = s.as_bytes();
+    b.len() == 10
+        && b[4] == b'-'
+        && b[7] == b'-'
+        && b[..4].iter().all(u8::is_ascii_digit)
+        && b[5..7].iter().all(u8::is_ascii_digit)
+        && b[8..].iter().all(u8::is_ascii_digit)
 }
 
 /// Files the manifest names must exist (relative to the portal root).

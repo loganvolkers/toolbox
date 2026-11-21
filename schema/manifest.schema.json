@@ -62,6 +62,20 @@
         "$ref": "#/$defs/scorecard"
       }
     },
+    "tracks": {
+      "type": "array",
+      "description": "Long-term focus programs that group scorecards and campaigns (D01M7Y11G0YZT23W26Z9D3XW68Y).",
+      "items": {
+        "$ref": "#/$defs/track"
+      }
+    },
+    "campaigns": {
+      "type": "array",
+      "description": "Time-bound goals over existing scorecards (D01M7Y11G0YZT23W26Z9D3XW68Y).",
+      "items": {
+        "$ref": "#/$defs/campaign"
+      }
+    },
     "rubrics": {
       "type": "array",
       "description": "Rubrics coding agents use to assess entities (docs/design/scorecards-for-scorecards.md §6). Assessments are data: committed files or ingested records, read by scorecards.",
@@ -548,6 +562,10 @@
         "owner": {
           "$ref": "#/$defs/entityRef"
         },
+        "track": {
+          "$ref": "#/$defs/name",
+          "description": "Optional long-term program this scorecard belongs to (`tracks[].name`)."
+        },
         "levels": {
           "type": "array",
           "minItems": 1,
@@ -623,6 +641,136 @@
               ]
             }
           }
+        }
+      }
+    },
+    "track": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "owner"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/name"
+        },
+        "title": {
+          "type": "string"
+        },
+        "owner": {
+          "$ref": "#/$defs/entityRef"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "campaign": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "owner",
+        "includes"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/name"
+        },
+        "title": {
+          "type": "string"
+        },
+        "track": {
+          "$ref": "#/$defs/name",
+          "description": "Optional track this campaign belongs to (`tracks[].name`)."
+        },
+        "owner": {
+          "$ref": "#/$defs/entityRef"
+        },
+        "description": {
+          "type": "string"
+        },
+        "start": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "description": "Inclusive start date (UTC, YYYY-MM-DD)."
+        },
+        "end": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "description": "Inclusive end date (UTC, YYYY-MM-DD)."
+        },
+        "targetPercent": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Fleet goal: percent of in-scope entities that must meet every include (default 100)."
+        },
+        "draft": {
+          "type": "boolean",
+          "description": "When true, status is draft regardless of dates."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "scheduled",
+            "active",
+            "ended"
+          ],
+          "description": "Optional lifecycle override for fixtures and frozen reports."
+        },
+        "milestones": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "targetPercent"
+            ],
+            "properties": {
+              "name": {
+                "$ref": "#/$defs/name"
+              },
+              "targetPercent": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              }
+            }
+          }
+        },
+        "includes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/campaignInclude"
+          }
+        }
+      }
+    },
+    "campaignInclude": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scorecard"
+      ],
+      "properties": {
+        "scorecard": {
+          "$ref": "#/$defs/name"
+        },
+        "atLeast": {
+          "$ref": "#/$defs/name",
+          "description": "Entity level on this scorecard must be at least this level."
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/name"
+          },
+          "description": "Named rules that must pass on this scorecard."
         }
       }
     },
