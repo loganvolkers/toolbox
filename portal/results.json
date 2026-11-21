@@ -841,6 +841,9 @@
       "doc:docs/decisions/D01M7ZRAJT47W11X5X3FEJ6QTX8.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M7ZWEGMAHBGSCH79V2MK787X.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/README.md": {
         "level": "skipped"
       },
@@ -1048,6 +1051,9 @@
       "doc:experiments/durable-schema/README.md": {
         "level": "silver"
       },
+      "doc:experiments/federation-prototype/README.md": {
+        "level": "silver"
+      },
       "doc:experiments/out-of-box/README.md": {
         "level": "silver"
       },
@@ -1200,6 +1206,9 @@
       "example:experiments/durable-schema/README.md": {
         "level": "gold"
       },
+      "example:experiments/federation-prototype/README.md": {
+        "level": "gold"
+      },
       "example:experiments/out-of-box/README.md": {
         "level": "gold"
       },
@@ -1239,7 +1248,6 @@
         "level": "gold"
       }
     },
-    "maintainer-python": {},
     "maintainer-repo": {
       "repo:loganvolkers/toolbox": {
         "failing": {
