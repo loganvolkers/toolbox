@@ -133,6 +133,9 @@
       }
     },
     "maintainer-agent-doc": {
+      "agent-doc:.cursor/rules/toolbox-operator.mdc": {
+        "level": "gold"
+      },
       "agent-doc:AGENTS.md": {
         "level": "gold"
       },
@@ -144,73 +147,79 @@
       "workflow:.github/workflows/ci.yml": {
         "failing": {
           "cancels-superseded-runs": 1,
-          "every-job-has-timeout": 5,
-          "fail-rate-under-10": 1,
-          "fail-rate-under-20": 1,
-          "fail-rate-under-5": 1,
-          "fast-feedback": 1,
-          "few-reruns": 1,
-          "main-not-stuck-red": 1
+          "every-job-has-timeout": 5
         },
-        "level": "none"
+        "level": "none",
+        "unknown": [
+          "fail-rate-under-10",
+          "fail-rate-under-20",
+          "fail-rate-under-5",
+          "fast-feedback",
+          "few-reruns",
+          "main-not-stuck-red"
+        ]
       },
       "workflow:.github/workflows/codeql.yml": {
         "failing": {
-          "cancels-superseded-runs": 1,
-          "fail-rate-under-10": 1,
-          "fail-rate-under-20": 1,
-          "fail-rate-under-5": 1,
-          "fast-feedback": 1,
-          "few-reruns": 1,
-          "main-not-stuck-red": 1
+          "cancels-superseded-runs": 1
         },
-        "level": "none"
+        "level": "bronze",
+        "unknown": [
+          "fail-rate-under-10",
+          "fail-rate-under-20",
+          "fail-rate-under-5",
+          "fast-feedback",
+          "few-reruns",
+          "main-not-stuck-red"
+        ]
       },
       "workflow:.github/workflows/image.yml": {
-        "failing": {
-          "fail-rate-under-10": 1,
-          "fail-rate-under-20": 1,
-          "fail-rate-under-5": 1,
-          "fast-feedback": 1,
-          "few-reruns": 1,
-          "main-not-stuck-red": 1
-        },
-        "level": "none"
+        "level": "silver",
+        "unknown": [
+          "fail-rate-under-10",
+          "fail-rate-under-20",
+          "fail-rate-under-5",
+          "fast-feedback",
+          "few-reruns",
+          "main-not-stuck-red"
+        ]
       },
       "workflow:.github/workflows/pages.yml": {
-        "failing": {
-          "fail-rate-under-10": 1,
-          "fail-rate-under-20": 1,
-          "fail-rate-under-5": 1,
-          "fast-feedback": 1,
-          "few-reruns": 1,
-          "main-not-stuck-red": 1
-        },
-        "level": "none"
+        "level": "silver",
+        "unknown": [
+          "fail-rate-under-10",
+          "fail-rate-under-20",
+          "fail-rate-under-5",
+          "fast-feedback",
+          "few-reruns",
+          "main-not-stuck-red"
+        ]
       },
       "workflow:.github/workflows/release.yml": {
         "failing": {
           "cancels-superseded-runs": 1,
-          "every-job-has-timeout": 5,
-          "fail-rate-under-10": 1,
-          "fail-rate-under-20": 1,
-          "fail-rate-under-5": 1,
-          "fast-feedback": 1,
-          "few-reruns": 1,
-          "main-not-stuck-red": 1
+          "every-job-has-timeout": 5
         },
-        "level": "none"
+        "level": "none",
+        "unknown": [
+          "fail-rate-under-10",
+          "fail-rate-under-20",
+          "fail-rate-under-5",
+          "fast-feedback",
+          "few-reruns",
+          "main-not-stuck-red"
+        ]
       },
       "workflow:.github/workflows/scale-slo.yml": {
-        "failing": {
-          "fail-rate-under-10": 1,
-          "fail-rate-under-20": 1,
-          "fail-rate-under-5": 1,
-          "fast-feedback": 1,
-          "few-reruns": 1,
-          "main-not-stuck-red": 1
-        },
-        "level": "none"
+        "level": "silver",
+        "unknown": [
+          "fail-rate-under-10",
+          "fail-rate-under-20",
+          "fail-rate-under-5",
+          "fast-feedback",
+          "few-reruns",
+          "main-not-stuck-red"
+        ]
       },
       "workflow:actions/report/action.yml": {
         "level": "skipped"
@@ -233,7 +242,12 @@
         "level": "gold"
       },
       "workflow:.github/workflows/release.yml": {
-        "level": "gold"
+        "level": "gold",
+        "waived": [
+          "no-high-findings",
+          "no-medium-findings",
+          "zizmor-clean"
+        ]
       },
       "workflow:.github/workflows/scale-slo.yml": {
         "level": "gold"
@@ -272,100 +286,116 @@
       "crate:toolbox-api": {
         "failing": {
           "bounded-complexity": 2,
-          "clippy-clean": 1,
           "fully-documented": 14,
           "no-huge-functions": 4,
           "short-functions": 9,
-          "simple-functions": 3,
-          "tests-pass": 1
+          "simple-functions": 3
         },
-        "level": "none"
+        "level": "bronze",
+        "unknown": [
+          "clippy-clean",
+          "tests-pass"
+        ]
       },
       "crate:toolbox-authz": {
         "failing": {
-          "clippy-clean": 1,
           "fully-documented": 12,
           "public-api-documented": 12,
-          "simple-functions": 1,
-          "tests-pass": 1
+          "simple-functions": 1
         },
-        "level": "none"
+        "level": "bronze",
+        "unknown": [
+          "clippy-clean",
+          "tests-pass"
+        ]
       },
       "crate:toolbox-cli": {
         "failing": {
-          "clippy-clean": 1,
           "fully-documented": 8,
           "public-api-documented": 8,
           "short-functions": 4,
-          "simple-functions": 2,
-          "tests-pass": 1
+          "simple-functions": 2
         },
-        "level": "none"
+        "level": "bronze",
+        "unknown": [
+          "clippy-clean",
+          "tests-pass"
+        ]
       },
       "crate:toolbox-connect": {
         "failing": {
-          "clippy-clean": 1,
           "few-unwraps": 1,
           "fully-documented": 18,
           "no-huge-functions": 1,
           "public-api-documented": 18,
           "short-functions": 1,
-          "simple-functions": 1,
-          "tests-pass": 1
+          "simple-functions": 1
         },
-        "level": "none"
+        "level": "bronze",
+        "unknown": [
+          "clippy-clean",
+          "tests-pass"
+        ]
       },
       "crate:toolbox-connector-git-files": {
         "failing": {
-          "clippy-clean": 1,
-          "has-tests": null,
-          "tests-pass": 1
+          "has-tests": null
         },
-        "level": "none"
+        "level": "none",
+        "unknown": [
+          "clippy-clean",
+          "tests-pass"
+        ]
       },
       "crate:toolbox-connector-github": {
         "failing": {
-          "clippy-clean": 1,
           "short-functions": 1,
-          "simple-functions": 1,
-          "tests-pass": 1
+          "simple-functions": 1
         },
-        "level": "none"
+        "level": "silver",
+        "unknown": [
+          "clippy-clean",
+          "tests-pass"
+        ]
       },
       "crate:toolbox-connector-runner": {
-        "failing": {
-          "clippy-clean": 1,
-          "tests-pass": 1
-        },
-        "level": "none"
+        "level": "gold",
+        "unknown": [
+          "clippy-clean",
+          "tests-pass"
+        ]
       },
       "crate:toolbox-connector-scim": {
         "failing": {
-          "clippy-clean": 1,
           "few-unwraps": 1,
-          "has-tests": null,
-          "tests-pass": 1
+          "has-tests": null
         },
-        "level": "none"
+        "level": "none",
+        "unknown": [
+          "clippy-clean",
+          "tests-pass"
+        ]
       },
       "crate:toolbox-connector-workspace": {
-        "failing": {
-          "clippy-clean": 1,
-          "tests-pass": 1
-        },
-        "level": "none"
+        "level": "gold",
+        "unknown": [
+          "clippy-clean",
+          "tests-pass"
+        ]
       },
       "crate:toolbox-derive": {
         "failing": {
           "bounded-complexity": 1,
-          "clippy-clean": 1,
           "fully-documented": 5,
           "no-huge-functions": 1,
           "short-functions": 3,
-          "simple-functions": 1,
-          "tests-pass": 1
+          "simple-functions": 1
         },
-        "level": "none"
+        "level": "bronze",
+        "unknown": [
+          "clippy-clean",
+          "tests-pass"
+        ]
       },
       "crate:toolbox-durable": {
         "level": "skipped"
@@ -375,33 +405,39 @@
       },
       "crate:toolbox-expr": {
         "failing": {
-          "clippy-clean": 1,
-          "fully-documented": 3,
-          "tests-pass": 1
+          "fully-documented": 3
         },
-        "level": "none"
+        "level": "silver",
+        "unknown": [
+          "clippy-clean",
+          "tests-pass"
+        ]
       },
       "crate:toolbox-model": {
         "failing": {
           "bounded-complexity": 1,
-          "clippy-clean": 1,
           "fully-documented": 22,
           "no-huge-functions": 1,
           "public-api-documented": 22,
           "short-functions": 3,
-          "simple-functions": 2,
-          "tests-pass": 1
+          "simple-functions": 2
         },
-        "level": "none"
+        "level": "bronze",
+        "unknown": [
+          "clippy-clean",
+          "tests-pass"
+        ]
       },
       "crate:toolbox-store": {
         "failing": {
-          "clippy-clean": 1,
           "fully-documented": 5,
-          "public-api-documented": 5,
-          "tests-pass": 1
+          "public-api-documented": 5
         },
-        "level": "none"
+        "level": "bronze",
+        "unknown": [
+          "clippy-clean",
+          "tests-pass"
+        ]
       }
     },
     "maintainer-dependency": {
@@ -818,6 +854,12 @@
       "doc:docs/decisions/D01M7Y57FVX0XYNGMX0A0XJ4GK9.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M7Y5VWKW5TDS0VQWZFPRQ27N.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7Y5VWNAWB8K1DNMY31KQPQ0.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/D01M7Y6X38AERPBT0YH1AG5TBRD.md": {
         "level": "skipped"
       },
@@ -969,6 +1011,9 @@
         "level": "silver"
       },
       "doc:docs/design/verification.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/waivers.md": {
         "level": "silver"
       },
       "doc:docs/design/yaml-format.md": {
@@ -3643,20 +3688,15 @@
       },
       "rule:toolbox/maintainer-ci-reliability/fail-rate-under-10": {
         "failing": {
-          "both-outcomes-on-fixtures": 1,
           "tested": 1
         },
         "level": "none"
       },
       "rule:toolbox/maintainer-ci-reliability/fail-rate-under-20": {
-        "failing": {
-          "both-outcomes-on-fixtures": 1
-        },
-        "level": "bronze"
+        "level": "gold"
       },
       "rule:toolbox/maintainer-ci-reliability/fail-rate-under-5": {
         "failing": {
-          "both-outcomes-on-fixtures": 1,
           "tested": 1
         },
         "level": "none"
@@ -3674,10 +3714,7 @@
         "level": "none"
       },
       "rule:toolbox/maintainer-ci-reliability/main-not-stuck-red": {
-        "failing": {
-          "both-outcomes-on-fixtures": 1
-        },
-        "level": "bronze"
+        "level": "gold"
       },
       "rule:toolbox/maintainer-ci-security/actionlint-clean": {
         "failing": {
@@ -4299,10 +4336,9 @@
       },
       "scorecard:toolbox/maintainer-ci-security": {
         "failing": {
-          "every-rule-tested": 2,
-          "fixtures-show-the-ladder": 1
+          "every-rule-tested": 2
         },
-        "level": "bronze"
+        "level": "silver"
       },
       "scorecard:toolbox/maintainer-connector": {
         "level": "gold"
