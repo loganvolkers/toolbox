@@ -8,6 +8,12 @@ Toolbox uses **portable Changesets** (Option B): contributors add `.changeset/*.
 files; `scripts/apply-changesets.py` bumps Cargo, `CHANGELOG.md`, and package YAML
 under **lockstep** (versions match the git tag). `@changesets/cli` is not required.
 
+The registry in `.changeset/config.json` lists special cases (`toolbox`, plugins) and
+**`includes` globs** for `packages/*/toolbox-package.yaml` and `actions/*/action.yml`,
+so new packages/Actions are versioned without editing every name into the config.
+Changeset frontmatter still uses logical names: package YAML `name:` for packages,
+`actions/<dirname>` for Actions (see `.changeset/README.md`).
+
 1. Merge feature PRs that include changeset files (soft guidance — see `.changeset/README.md`).
 2. On `main`, `.github/workflows/version-packages.yml` opens or updates a **Version Packages**
    PR that runs the applicator and deletes consumed changesets.
@@ -26,11 +32,12 @@ under **lockstep** (versions match the git tag). `@changesets/cli` is not requir
 Maintainer-run apply (without the Version PR):
 
 ```bash
+python3 scripts/apply-changesets.py --list-registry
 python3 scripts/apply-changesets.py --dry-run
 python3 scripts/apply-changesets.py
 ```
 
-Fixture check:
+Fixture check (fixtures live under `pkg-fixture/`, not `packages/**`):
 
 ```bash
 python3 scripts/test-apply-changesets.py
