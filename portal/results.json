@@ -1168,6 +1168,9 @@
       "example:experiments/out-of-box/README.md": {
         "level": "gold"
       },
+      "example:experiments/out-of-box/ab/README.md": {
+        "level": "gold"
+      },
       "example:experiments/typescript-builder/README.md": {
         "level": "gold"
       }

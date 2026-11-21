@@ -1,0 +1,533 @@
+diff --git a/.github/workflows/claude-code-review.yaml b/.github/workflows/claude-code-review.yaml
+index 138b976..2638881 100644
+--- a/.github/workflows/claude-code-review.yaml
++++ b/.github/workflows/claude-code-review.yaml
+@@ -1,5 +1,6 @@
+ name: Claude Code PR Review
+ on:
++  # zizmor: ignore[dangerous-triggers] -- only trusted commenters (OWNER/MEMBER/COLLABORATOR) can start the job, see the `if:` below
+   issue_comment:
+     types: [ created ]
+   pull_request_review_comment:
+@@ -10,6 +11,9 @@ permissions:
+ 
+ jobs:
+   claude-review:
++    # issue_comment and pull_request_review_comment run with write permissions, so only
++    # repository owners, members and collaborators may trigger a review.
++    if: contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)
+     permissions:
+       contents: write
+       issues: write
+diff --git a/.github/workflows/codeql.yml b/.github/workflows/codeql.yml
+index d79a638..cb9bd1a 100644
+--- a/.github/workflows/codeql.yml
++++ b/.github/workflows/codeql.yml
+@@ -23,8 +23,9 @@ permissions:
+   contents: read
+ 
+ concurrency:
+-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
++  # The event name keeps scheduled runs from being cancelled by pushes to main.
++  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
++  cancel-in-progress: true
+ 
+ jobs:
+   analyze:
+@@ -34,7 +35,8 @@ jobs:
+     #   - https://gh.io/supported-runners-and-hardware-resources
+     #   - https://gh.io/using-larger-runners (GitHub.com only)
+     # Consider using larger runners or machines with greater resources for possible analysis time improvements.
+-    runs-on: ${{ 'ubuntu-latest' }}
++    runs-on: ubuntu-latest
++    timeout-minutes: 60
+     permissions:
+       # required for all workflows
+       security-events: write
+@@ -65,6 +67,8 @@ jobs:
+     steps:
+     - name: Checkout repository
+       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
++      with:
++        persist-credentials: false
+ 
+     # Add any setup steps before running the `github/codeql-action/init` action.
+     # This includes steps like installing compilers or runtimes (`actions/setup-node`
+@@ -74,7 +78,7 @@ jobs:
+ 
+     # Initializes the CodeQL tools for scanning.
+     - name: Initialize CodeQL
+-      uses: github/codeql-action/init@95e58e9a2cdfd71adc6e0353d5c52f41a045d225
++      uses: github/codeql-action/init@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4.35.2
+       with:
+         languages: ${{ matrix.language }}
+         build-mode: ${{ matrix.build-mode }}
+@@ -102,6 +106,6 @@ jobs:
+         exit 1
+ 
+     - name: Perform CodeQL Analysis
+-      uses: github/codeql-action/analyze@95e58e9a2cdfd71adc6e0353d5c52f41a045d225
++      uses: github/codeql-action/analyze@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4.35.2
+       with:
+         category: "/language:${{matrix.language}}"
+diff --git a/.github/workflows/create-helm-release-pr.yaml b/.github/workflows/create-helm-release-pr.yaml
+index aa2dd4e..0f5f7ca 100644
+--- a/.github/workflows/create-helm-release-pr.yaml
++++ b/.github/workflows/create-helm-release-pr.yaml
+@@ -12,6 +12,10 @@ on:
+ permissions:
+   contents: read
+ 
++concurrency:
++  group: ${{ github.workflow }}-${{ github.ref }}
++  cancel-in-progress: true
++
+ jobs:
+   create-helm-pr:
+     if: >
+@@ -19,14 +23,18 @@ jobs:
+       contains(github.event.pull_request.labels.*.name, 'release') &&
+       startsWith(github.event.pull_request.title, 'release: update changelog for release')
+     runs-on: ubuntu-latest
++    timeout-minutes: 10
+     permissions:
+       contents: read
+     steps:
+       - name: Check if PR author is a maintainer
++        env:
++          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
++          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+         run: |
+-          pr_author="${{ github.event.pull_request.user.login }}"
+-          permission=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+-            "https://api.github.com/repos/${{ github.repository }}/collaborators/$pr_author/permission" | jq -r .permission)
++          pr_author="$PR_AUTHOR"
++          permission=$(curl -s -H "Authorization: token ${GH_TOKEN}" \
++            "https://api.github.com/repos/${GITHUB_REPOSITORY}/collaborators/${pr_author}/permission" | jq -r .permission)
+ 
+           if [[ "$permission" == "admin" || "$permission" == "write" ]]; then
+             echo "$pr_author is a maintainer. Continue with helm-charts PR creation."
+@@ -37,6 +45,8 @@ jobs:
+ 
+       - name: Checkout openfga
+         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
++        with:
++          persist-credentials: false
+ 
+       - name: Extract version from CHANGELOG
+         id: version
+@@ -61,6 +71,7 @@ jobs:
+       - name: Checkout helm-charts
+         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+         with:
++          persist-credentials: false
+           repository: openfga/helm-charts
+           token: ${{ secrets.GORELEASER_GITHUB_TOKEN }}
+           path: helm-charts
+@@ -77,6 +88,8 @@ jobs:
+ 
+           git config user.name "github-actions[bot]"
+           git config user.email "github-actions[bot]@users.noreply.github.com"
++          # checkout does not persist credentials; let git push authenticate through gh with GH_TOKEN
++          gh auth setup-git
+ 
+           git checkout -b "$helm_branch_name"
+ 
+diff --git a/.github/workflows/create-release-tag.yaml b/.github/workflows/create-release-tag.yaml
+index 469fa1a..f2a3628 100644
+--- a/.github/workflows/create-release-tag.yaml
++++ b/.github/workflows/create-release-tag.yaml
+@@ -12,6 +12,10 @@ on:
+ permissions:
+   contents: read
+ 
++concurrency:
++  group: ${{ github.workflow }}-${{ github.ref }}
++  cancel-in-progress: true
++
+ jobs:
+   create-tag:
+     if: >
+@@ -19,14 +23,18 @@ jobs:
+       contains(github.event.pull_request.labels.*.name, 'release') &&
+       startsWith(github.event.pull_request.title, 'release: update changelog for release')
+     runs-on: ubuntu-latest
++    timeout-minutes: 10
+     permissions:
+       contents: read
+     steps:
+       - name: Check if PR author is a maintainer
++        env:
++          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
++          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+         run: |
+-          pr_author="${{ github.event.pull_request.user.login }}"
+-          permission=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+-            "https://api.github.com/repos/${{ github.repository }}/collaborators/$pr_author/permission" | jq -r .permission)
++          pr_author="$PR_AUTHOR"
++          permission=$(curl -s -H "Authorization: token ${GH_TOKEN}" \
++            "https://api.github.com/repos/${GITHUB_REPOSITORY}/collaborators/${pr_author}/permission" | jq -r .permission)
+ 
+           if [[ "$permission" == "admin" || "$permission" == "write" ]]; then
+             echo "$pr_author is a maintainer. Continue with tag creation."
+@@ -36,8 +44,13 @@ jobs:
+           fi
+       - name: Checkout code
+         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
++        with:
++          persist-credentials: false
+       - name: Create new tag
+         id: create_tag
++        env:
++          MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
++          RELEASE_TOKEN: ${{ secrets.GORELEASER_GITHUB_TOKEN }}
+         run: |
+           echo "Getting the latest version from CHANGELOG..."
+           tag_name=$(awk '
+@@ -59,10 +72,10 @@ jobs:
+             tag_name="v$tag_name"
+           fi
+           echo "Creating a new tag $tag_name..."
+-          SHA=${{ github.event.pull_request.merge_commit_sha }}
+-          response=$(curl -s -o response.json -w "%{http_code}" -X POST -H "Authorization: token ${{ secrets.GORELEASER_GITHUB_TOKEN }}" \
++          SHA="$MERGE_SHA"
++          response=$(curl -s -o response.json -w "%{http_code}" -X POST -H "Authorization: token ${RELEASE_TOKEN}" \
+             -d "{\"ref\":\"refs/tags/$tag_name\", \"sha\":\"$SHA\"}" \
+-            https://api.github.com/repos/${{ github.repository }}/git/refs)
++            "https://api.github.com/repos/${GITHUB_REPOSITORY}/git/refs")
+           if [ "$response" -ne 201 ]; then
+             echo "Failed to create tag"
+             cat response.json
+diff --git a/.github/workflows/enforce-changelog-entry.yaml b/.github/workflows/enforce-changelog-entry.yaml
+index 3f89d91..e884f85 100644
+--- a/.github/workflows/enforce-changelog-entry.yaml
++++ b/.github/workflows/enforce-changelog-entry.yaml
+@@ -14,11 +14,14 @@ concurrency:
+ jobs:
+   changelog:
+     runs-on: ubuntu-latest
++    timeout-minutes: 10
+     steps:
+       - uses: dangoslen/changelog-enforcer@8b5e9dc3121363bb7c0115f8533404d92af382de # v3.7.0
+         with:
+           skipLabels: 'Skip-Changelog,dependencies,tests'
+       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
++        with:
++          persist-credentials: false
+       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # pin@v4
+       - run: npx keep-a-changelog@2.5.3
+       - run: |
+diff --git a/.github/workflows/main.yaml b/.github/workflows/main.yaml
+index 4f8c074..b323699 100644
+--- a/.github/workflows/main.yaml
++++ b/.github/workflows/main.yaml
+@@ -13,6 +13,8 @@ jobs:
+     timeout-minutes: 10
+     steps:
+       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
++        with:
++          persist-credentials: false
+ 
+       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+         with:
+@@ -50,6 +52,8 @@ jobs:
+     timeout-minutes: 15
+     steps:
+       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
++        with:
++          persist-credentials: false
+ 
+       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+         with:
+@@ -87,6 +91,8 @@ jobs:
+     timeout-minutes: 15
+     steps:
+       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
++        with:
++          persist-credentials: false
+ 
+       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+         with:
+@@ -122,6 +128,7 @@ jobs:
+   # Aggregate job to satisfy branch protection rules that require "tests" status
+   tests:
+     runs-on: ubuntu-latest
++    timeout-minutes: 5
+     needs: [tests-unit, tests-storage, tests-matrix]
+     if: always()
+     steps:
+@@ -139,6 +146,8 @@ jobs:
+     timeout-minutes: 15
+     steps:
+       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
++        with:
++          persist-credentials: false
+ 
+       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+         with:
+diff --git a/.github/workflows/markdown-links.yaml b/.github/workflows/markdown-links.yaml
+index b35fd48..65e18b7 100644
+--- a/.github/workflows/markdown-links.yaml
++++ b/.github/workflows/markdown-links.yaml
+@@ -11,14 +11,18 @@ permissions:
+   contents: read
+ 
+ concurrency:
+-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
++  # The event name keeps the scheduled run from sharing a group with pull requests.
++  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
++  cancel-in-progress: true
+ 
+ jobs:
+   markdown-link-check:
+     runs-on: ubuntu-latest
++    timeout-minutes: 15
+     steps:
+       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
++        with:
++          persist-credentials: false
+       - uses: gaurav-nelson/github-action-markdown-link-check@3c3b66f1f7d0900e37b71eca45b63ea9eedfce31 # v1.0.17
+         with:
+           use-verbose-mode: 'yes'
+diff --git a/.github/workflows/pull_request.yaml b/.github/workflows/pull_request.yaml
+index a145c07..db11840 100644
+--- a/.github/workflows/pull_request.yaml
++++ b/.github/workflows/pull_request.yaml
+@@ -13,9 +13,12 @@ concurrency:
+ jobs:
+   lint:
+     runs-on: ubuntu-latest
++    timeout-minutes: 15
+     steps:
+       - name: Checkout code
+         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
++        with:
++          persist-credentials: false
+       - name: Set up Go
+         uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+         with:
+@@ -35,6 +38,8 @@ jobs:
+     steps:
+       - name: Checkout code
+         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
++        with:
++          persist-credentials: false
+       - name: Set up Go
+         uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+         with:
+@@ -74,6 +79,8 @@ jobs:
+     steps:
+       - name: Checkout code
+         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
++        with:
++          persist-credentials: false
+       - name: Set up Go
+         uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+         with:
+@@ -113,6 +120,8 @@ jobs:
+     steps:
+       - name: Checkout code
+         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
++        with:
++          persist-credentials: false
+       - name: Set up Go
+         uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+         with:
+@@ -148,6 +157,7 @@ jobs:
+   # Aggregate job to satisfy branch protection rules that require "tests" status
+   tests:
+     runs-on: ubuntu-latest
++    timeout-minutes: 5
+     needs: [tests-unit, tests-storage, tests-matrix]
+     if: always()
+     steps:
+@@ -163,9 +173,12 @@ jobs:
+   goreleaser-dryrun:
+     name: Dry Run GoReleaser
+     runs-on: ubuntu-latest
++    timeout-minutes: 30
+     steps:
+       - name: Checkout code
+         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
++        with:
++          persist-credentials: false
+ 
+       - name: Check for release-related changes
+         id: changes
+@@ -185,6 +198,7 @@ jobs:
+           go-version-file: './go.mod'
+           cache-dependency-path: './go.sum'
+           check-latest: true
++          cache: false # the release dry run must not restore a potentially poisoned cache
+ 
+       - uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
+         if: steps.changes.outputs.release == 'true' || github.event_name == 'merge_group'
+@@ -206,6 +220,8 @@ jobs:
+     steps:
+       - name: Checkout code
+         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
++        with:
++          persist-credentials: false
+       - name: Run govulncheck
+         uses: golang/govulncheck-action@b625fbe08f3bccbe446d94fbf87fcc875a4f50ee # v1.0.4
+         with:
+@@ -218,6 +234,8 @@ jobs:
+     steps:
+       - name: Checkout code
+         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
++        with:
++          persist-credentials: false
+       - name: Set up Go
+         uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+         with:
+@@ -247,6 +265,7 @@ jobs:
+       - name: Checkout code
+         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+         with:
++          persist-credentials: false
+           fetch-depth: 0 # to be able to retrieve the last commit in main
+ 
+       - name: Check for performance-sensitive changes
+diff --git a/.github/workflows/release-nightly.yaml b/.github/workflows/release-nightly.yaml
+index 419f5d0..67f639f 100644
+--- a/.github/workflows/release-nightly.yaml
++++ b/.github/workflows/release-nightly.yaml
+@@ -10,12 +10,14 @@ permissions:
+ jobs:
+   goreleaser:
+     runs-on: ubuntu-latest
++    timeout-minutes: 60
+     permissions:
+       contents: write
+     steps:
+       - name: Checkout
+         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+         with:
++          persist-credentials: false
+           fetch-depth: 0
+ 
+       - name: Set up Go
+@@ -24,6 +26,7 @@ jobs:
+           go-version-file: "./go.mod"
+           cache-dependency-path: './go.sum'
+           check-latest: true
++          cache: false # release builds must not restore a potentially poisoned cache
+ 
+       - name: Login to Docker Hub
+         uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+diff --git a/.github/workflows/release.yaml b/.github/workflows/release.yaml
+index 29a2f7a..8238361 100644
+--- a/.github/workflows/release.yaml
++++ b/.github/workflows/release.yaml
+@@ -12,6 +12,7 @@ permissions:
+ jobs:
+   goreleaser:
+     runs-on: ubuntu-latest
++    timeout-minutes: 60
+     permissions:
+       contents: write
+       packages: write # publish a new github release and container image
+@@ -29,6 +30,7 @@ jobs:
+       - name: Checkout
+         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+         with:
++          persist-credentials: false
+           fetch-depth: 0
+ 
+       - name: Set up Go
+@@ -37,6 +39,7 @@ jobs:
+           go-version-file: './go.mod'
+           cache-dependency-path: './go.sum'
+           check-latest: true
++          cache: false # release builds must not restore a potentially poisoned cache
+ 
+       - name: Login to Docker Hub
+         uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+@@ -103,6 +106,7 @@ jobs:
+   snyk:
+     needs: [ goreleaser ]
+     runs-on: ubuntu-latest
++    timeout-minutes: 20
+     permissions:
+       contents: read
+       security-events: write # needed for uploading results to GitHub Code Scanning
+@@ -110,6 +114,8 @@ jobs:
+     steps:
+       - name: Checkout code
+         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
++        with:
++          persist-credentials: false
+ 
+       - name: Run Snyk to check Docker image for vulnerabilities
+         continue-on-error: true
+@@ -133,7 +139,7 @@ jobs:
+           mv snyk.categorized.sarif snyk.sarif
+ 
+       - name: Upload result to GitHub Code Scanning
+-        uses: github/codeql-action/upload-sarif@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # pin@v2
++        uses: github/codeql-action/upload-sarif@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4.35.2
+         with:
+           sarif_file: snyk.sarif
+ 
+@@ -145,7 +151,7 @@ jobs:
+       contents: write # To add assets to a release.
+ 
+     # Note: this _must_ be referenced by tag. See: https://github.com/slsa-framework/slsa-verifier/issues/12
+-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.1.0
++    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.1.0 # zizmor: ignore[unpinned-uses] -- SLSA generator must be referenced by tag (slsa-verifier#12)
+     with:
+       base64-subjects-as-file: "${{ needs.goreleaser.outputs.subjects-as-file }}"
+       provenance-name: "openfga.intoto.jsonl"
+@@ -159,7 +165,7 @@ jobs:
+       packages: write
+ 
+     # Note: this _must_ be referenced by tag. See: https://github.com/slsa-framework/slsa-verifier/issues/12
+-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.1.0
++    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.1.0 # zizmor: ignore[unpinned-uses] -- SLSA generator must be referenced by tag (slsa-verifier#12)
+     with:
+       image: openfga/openfga
+       digest: ${{ needs.goreleaser.outputs.digest }}
+@@ -170,7 +176,9 @@ jobs:
+   verification-with-slsa-verifier:
+     needs: [ goreleaser, binary-provenance ]
+     runs-on: ubuntu-latest
+-    permissions: read-all
++    timeout-minutes: 15
++    permissions:
++      contents: read # download release assets for verification
+     steps:
+       - name: Install the verifier
+         uses: slsa-framework/slsa-verifier/actions/installer@ea584f4502babc6f60d9bc799dbbb13c1caa9ee6 # pin@v2.7.1
+@@ -197,7 +205,9 @@ jobs:
+   verification-with-cosign:
+     needs: [ goreleaser, image-provenance ]
+     runs-on: ubuntu-latest
+-    permissions: read-all
++    timeout-minutes: 15
++    permissions:
++      contents: read # download release assets for verification
+     steps:
+       - name: Login to Docker Hub
+         uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+diff --git a/.github/workflows/scorecard.yml b/.github/workflows/scorecard.yml
+index 6f427a5..e61dbb7 100644
+--- a/.github/workflows/scorecard.yml
++++ b/.github/workflows/scorecard.yml
+@@ -15,12 +15,14 @@ on:
+     branches: [ "main" ]
+ 
+ # Declare default permissions as read only.
+-permissions: read-all
++permissions:
++  contents: read
+ 
+ jobs:
+   analysis:
+     name: Scorecard analysis
+     runs-on: ubuntu-latest
++    timeout-minutes: 15
+     permissions:
+       # Needed to upload the results to code-scanning dashboard.
+       security-events: write

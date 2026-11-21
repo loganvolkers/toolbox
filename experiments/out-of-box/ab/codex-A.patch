@@ -1,0 +1,862 @@
+diff --git a/.github/CODEOWNERS b/.github/CODEOWNERS
+index 668897c..90e0a63 100644
+--- a/.github/CODEOWNERS
++++ b/.github/CODEOWNERS
+@@ -1,3 +1,6 @@
++# Default owner for every path; more specific rules below take precedence.
++* @openai/codex-core-agent-team
++
+ # Core crate ownership.
+ /codex-rs/core/ @openai/codex-core-agent-team
+ /codex-rs/ext/extension-api/ @openai/codex-core-agent-team
+diff --git a/.github/actionlint.yaml b/.github/actionlint.yaml
+new file mode 100644
+index 0000000..a4941d6
+--- /dev/null
++++ b/.github/actionlint.yaml
+@@ -0,0 +1,8 @@
++# Labels of the self-hosted runner groups used by these workflows.
++self-hosted-runner:
++  labels:
++    - codex-linux-x64
++    - codex-linux-x64-xl
++    - codex-linux-arm64
++    - codex-windows-x64
++    - codex-windows-arm64
+diff --git a/.github/workflows/bazel.yml b/.github/workflows/bazel.yml
+index 153ace0..c4f9339 100644
+--- a/.github/workflows/bazel.yml
++++ b/.github/workflows/bazel.yml
+@@ -15,6 +15,9 @@ concurrency:
+   # See https://docs.github.com/en/actions/using-jobs/using-concurrency and https://docs.github.com/en/actions/learn-github-actions/contexts for more info.
+   group: concurrency-group::${{ github.workflow }}::${{ github.event.pull_request.number > 0 && format('pr-{0}', github.event.pull_request.number) || github.ref_name }}${{ github.ref_name == 'main' && format('::{0}', github.run_id) || ''}}
+   cancel-in-progress: ${{ github.ref_name != 'main' }}
++permissions:
++  contents: read
++
+ jobs:
+   test:
+     # PRs use the sharded Windows cross-compiled test jobs below. Post-merge
+@@ -226,6 +229,7 @@ jobs:
+           if-no-files-found: ignore
+ 
+   test-windows:
++    timeout-minutes: 10
+     # Preserve the existing required-check surface while the real work happens
+     # in the sharded Windows jobs above.
+     if: always()
+diff --git a/.github/workflows/blob-size-policy.yml b/.github/workflows/blob-size-policy.yml
+index 779198e..1cdf1d5 100644
+--- a/.github/workflows/blob-size-policy.yml
++++ b/.github/workflows/blob-size-policy.yml
+@@ -3,8 +3,16 @@ name: blob-size-policy
+ on:
+   pull_request: {}
+ 
++concurrency:
++  group: ${{ github.workflow }}-${{ github.ref }}
++  cancel-in-progress: true
++
++permissions:
++  contents: read
++
+ jobs:
+   check:
++    timeout-minutes: 10
+     name: Blob size policy
+     runs-on: ubuntu-24.04
+     steps:
+diff --git a/.github/workflows/cargo-deny.yml b/.github/workflows/cargo-deny.yml
+index bbadb57..3f23c09 100644
+--- a/.github/workflows/cargo-deny.yml
++++ b/.github/workflows/cargo-deny.yml
+@@ -11,8 +11,16 @@ on:
+ env:
+   CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+ 
++concurrency:
++  group: ${{ github.workflow }}-${{ github.ref }}
++  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
++
++permissions:
++  contents: read
++
+ jobs:
+   cargo-deny:
++    timeout-minutes: 20
+     runs-on: ubuntu-latest
+     defaults:
+       run:
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index 63c6ffe..730c239 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -4,8 +4,18 @@ on:
+   pull_request: {}
+   push: { branches: [main] }
+ 
++concurrency:
++  group: ${{ github.workflow }}-${{ github.ref }}
++  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
++
++permissions:
++  contents: read
++
+ jobs:
+   build-test:
++    permissions:
++      contents: read
++      actions: read
+     runs-on: ubuntu-latest
+     timeout-minutes: 10
+     env:
+diff --git a/.github/workflows/cla.yml b/.github/workflows/cla.yml
+index b48fd36..1f37196 100644
+--- a/.github/workflows/cla.yml
++++ b/.github/workflows/cla.yml
+@@ -1,24 +1,32 @@
+ name: CLA Assistant
++# The CLA assistant must comment on and set statuses for pull requests from forks,
++# which requires pull_request_target/issue_comment with a write token. The job never
++# checks out or runs pull request code; it only calls the pinned CLA action.
+ on:
+-  issue_comment:
++  issue_comment: # zizmor: ignore[dangerous-triggers]
+     types: [created]
+-  pull_request_target:
++  pull_request_target: # zizmor: ignore[dangerous-triggers]
+     types: [opened, closed, synchronize]
+ 
+ permissions:
+-  actions: write
+-  contents: write
+-  pull-requests: write
+-  statuses: write
++  contents: read
+ 
+ jobs:
+   cla:
++    permissions:
++      actions: write
++      contents: write
++      pull-requests: write
++      statuses: write
++    timeout-minutes: 10
+     # Only run the CLA assistant for the canonical openai repo so forks are not blocked
+     # and contributors who signed previously do not receive duplicate CLA notifications.
+     if: ${{ github.repository_owner == 'openai' }}
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: contributor-assistant/github-action@ca4a40a7d1004f18d9960b404b97e5f30a505a08 # v2.6.1
++      # The upstream repository is archived; this pinned release is still the
++      # supported CLA bot until a maintained replacement is adopted.
++      - uses: contributor-assistant/github-action@ca4a40a7d1004f18d9960b404b97e5f30a505a08 # v2.6.1 # zizmor: ignore[archived-uses]
+         # Run on close only if the PR was merged. This will lock the PR to preserve
+         # the CLA agreement. We don't want to lock PRs that have been closed without
+         # merging because the contributor may want to respond with additional comments.
+diff --git a/.github/workflows/close-stale-contributor-prs.yml b/.github/workflows/close-stale-contributor-prs.yml
+index e8cea82..fa047f4 100644
+--- a/.github/workflows/close-stale-contributor-prs.yml
++++ b/.github/workflows/close-stale-contributor-prs.yml
+@@ -7,11 +7,14 @@ on:
+ 
+ permissions:
+   contents: read
+-  issues: write
+-  pull-requests: write
+ 
+ jobs:
+   close-stale-contributor-prs:
++    permissions:
++      contents: read
++      issues: write
++      pull-requests: write
++    timeout-minutes: 15
+     # Prevent scheduled runs on forks
+     if: github.repository == 'openai/codex'
+     runs-on: ubuntu-latest
+diff --git a/.github/workflows/codespell.yml b/.github/workflows/codespell.yml
+index aaa15cf..b18126c 100644
+--- a/.github/workflows/codespell.yml
++++ b/.github/workflows/codespell.yml
+@@ -11,8 +11,13 @@ on:
+ permissions:
+   contents: read
+ 
++concurrency:
++  group: ${{ github.workflow }}-${{ github.ref }}
++  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
++
+ jobs:
+   codespell:
++    timeout-minutes: 10
+     name: Check for spelling errors
+     runs-on: ubuntu-latest
+ 
+diff --git a/.github/workflows/issue-deduplicator.yml b/.github/workflows/issue-deduplicator.yml
+index fea6348..82d4639 100644
+--- a/.github/workflows/issue-deduplicator.yml
++++ b/.github/workflows/issue-deduplicator.yml
+@@ -6,8 +6,12 @@ on:
+       - opened
+       - labeled
+ 
++permissions:
++  contents: read
++
+ jobs:
+   gather-duplicates-all:
++    timeout-minutes: 30
+     name: Identify potential duplicates (all issues)
+     # Prevent runs on forks (requires OpenAI API key, wastes Actions minutes)
+     if: github.repository == 'openai/codex' && (github.event.action == 'opened' || (github.event.action == 'labeled' && github.event.label.name == 'codex-deduplicate'))
+@@ -98,6 +102,7 @@ jobs:
+             }
+ 
+   normalize-duplicates-all:
++    timeout-minutes: 10
+     name: Normalize pass 1 output
+     needs: gather-duplicates-all
+     if: ${{ needs.gather-duplicates-all.result == 'success' }}
+@@ -153,6 +158,7 @@ jobs:
+           } >> "$GITHUB_OUTPUT"
+ 
+   gather-duplicates-open:
++    timeout-minutes: 30
+     name: Identify potential duplicates (open issues fallback)
+     # Pass 1 Codex execution drops sudo on its runner, so run the fallback in a fresh job.
+     needs: normalize-duplicates-all
+@@ -242,6 +248,7 @@ jobs:
+             }
+ 
+   normalize-duplicates-open:
++    timeout-minutes: 10
+     name: Normalize pass 2 output
+     needs: gather-duplicates-open
+     if: ${{ needs.gather-duplicates-open.result == 'success' }}
+@@ -297,6 +304,7 @@ jobs:
+           } >> "$GITHUB_OUTPUT"
+ 
+   select-final:
++    timeout-minutes: 10
+     name: Select final duplicate set
+     needs:
+       - normalize-duplicates-all
+@@ -353,6 +361,7 @@ jobs:
+           } >> "$GITHUB_OUTPUT"
+ 
+   comment-on-issue:
++    timeout-minutes: 10
+     name: Comment with potential duplicates
+     needs: select-final
+     if: ${{ always() && needs.select-final.result == 'success' }}
+diff --git a/.github/workflows/issue-labeler.yml b/.github/workflows/issue-labeler.yml
+index 2c4eb6a..10b5443 100644
+--- a/.github/workflows/issue-labeler.yml
++++ b/.github/workflows/issue-labeler.yml
+@@ -6,8 +6,12 @@ on:
+       - opened
+       - labeled
+ 
++permissions:
++  contents: read
++
+ jobs:
+   gather-labels:
++    timeout-minutes: 30
+     name: Generate label suggestions
+     # Prevent runs on forks (requires OpenAI API key, wastes Actions minutes)
+     if: github.repository == 'openai/codex' && (github.event.action == 'opened' || (github.event.action == 'labeled' && github.event.label.name == 'codex-label'))
+@@ -106,6 +110,7 @@ jobs:
+             }
+ 
+   apply-labels:
++    timeout-minutes: 10
+     name: Apply labels from Codex output
+     needs: gather-labels
+     if: ${{ needs.gather-labels.result != 'skipped' }}
+diff --git a/.github/workflows/python-sdk-release.yml b/.github/workflows/python-sdk-release.yml
+index 654dd8d..ccef1b2 100644
+--- a/.github/workflows/python-sdk-release.yml
++++ b/.github/workflows/python-sdk-release.yml
+@@ -9,8 +9,12 @@ concurrency:
+   group: ${{ github.workflow }}
+   cancel-in-progress: false
+ 
++permissions:
++  contents: read
++
+ jobs:
+   build-python-sdk:
++    timeout-minutes: 60
+     if: github.repository == 'openai/codex'
+     name: build-python-sdk
+     runs-on: ubuntu-latest
+@@ -70,6 +74,7 @@ jobs:
+           if-no-files-found: error
+ 
+   publish-python-sdk:
++    timeout-minutes: 30
+     name: publish-python-sdk
+     needs: build-python-sdk
+     runs-on: ubuntu-latest
+diff --git a/.github/workflows/rust-ci-full-nextest-platform.yml b/.github/workflows/rust-ci-full-nextest-platform.yml
+index 3fdf7b5..8a2184b 100644
+--- a/.github/workflows/rust-ci-full-nextest-platform.yml
++++ b/.github/workflows/rust-ci-full-nextest-platform.yml
+@@ -52,6 +52,12 @@ on:
+ # Cargo git transport hardening on the archive and shard jobs directly here.
+ env:
+   CARGO_NET_GIT_FETCH_WITH_CLI: "true"
++  # Pass inputs to shell steps through the environment, not template expansion.
++  CODEX_CI_TARGET: ${{ inputs.target }}
++  CODEX_CI_CARGO_PROFILE: ${{ inputs.profile }}
++
++permissions:
++  contents: read
+ 
+ jobs:
+   archive:
+@@ -193,8 +199,8 @@ jobs:
+           archive_dir="${RUNNER_TEMP}/nextest-archive"
+           mkdir -p "${archive_dir}"
+           cargo nextest archive \
+-            --target ${{ inputs.target }} \
+-            --cargo-profile ${{ inputs.profile }} \
++            --target ${CODEX_CI_TARGET} \
++            --cargo-profile ${CODEX_CI_CARGO_PROFILE} \
+             --timings \
+             --archive-file "${archive_dir}/${NEXTEST_ARCHIVE_FILE}"
+ 
+@@ -208,20 +214,20 @@ jobs:
+ 
+           if [[ "${RUNNER_OS}" == "Linux" ]]; then
+             cargo build \
+-              --target ${{ inputs.target }} \
+-              --profile ${{ inputs.profile }} \
++              --target ${CODEX_CI_TARGET} \
++              --profile ${CODEX_CI_CARGO_PROFILE} \
+               -p codex-linux-sandbox \
+               --bin codex-linux-sandbox
+-            cp "target/${{ inputs.target }}/${{ inputs.profile }}/codex-linux-sandbox" "${helper_dir}/"
++            cp "target/${CODEX_CI_TARGET}/${CODEX_CI_CARGO_PROFILE}/codex-linux-sandbox" "${helper_dir}/"
+           else
+             cargo build \
+-              --target ${{ inputs.target }} \
+-              --profile ${{ inputs.profile }} \
++              --target ${CODEX_CI_TARGET} \
++              --profile ${CODEX_CI_CARGO_PROFILE} \
+               -p codex-windows-sandbox \
+               --bin codex-windows-sandbox-setup \
+               --bin codex-command-runner
+-            cp "target/${{ inputs.target }}/${{ inputs.profile }}/codex-windows-sandbox-setup.exe" "${helper_dir}/"
+-            cp "target/${{ inputs.target }}/${{ inputs.profile }}/codex-command-runner.exe" "${helper_dir}/"
++            cp "target/${CODEX_CI_TARGET}/${CODEX_CI_CARGO_PROFILE}/codex-windows-sandbox-setup.exe" "${helper_dir}/"
++            cp "target/${CODEX_CI_TARGET}/${CODEX_CI_CARGO_PROFILE}/codex-command-runner.exe" "${helper_dir}/"
+           fi
+ 
+       - name: Upload Cargo timings (nextest)
+@@ -279,7 +285,7 @@ jobs:
+         shell: bash
+         run: |
+           {
+-            echo "### sccache stats — ${{ inputs.target }} (tests)";
++            echo "### sccache stats — ${CODEX_CI_TARGET} (tests)";
+             echo;
+             echo '```';
+             sccache --show-stats || true;
+@@ -374,13 +380,13 @@ jobs:
+ 
+           if [[ "${RUNNER_OS}" == "Linux" ]]; then
+             helper_dir="${RUNNER_TEMP}/${TEST_HELPERS_ARTIFACT}"
+-            helper_target_dir="$(pwd)/target/${{ inputs.target }}/${{ inputs.profile }}"
++            helper_target_dir="$(pwd)/target/${CODEX_CI_TARGET}/${CODEX_CI_CARGO_PROFILE}"
+             mkdir -p "${helper_target_dir}"
+             cp "${helper_dir}/codex-linux-sandbox" "${helper_target_dir}/"
+             chmod +x "${helper_target_dir}/codex-linux-sandbox"
+           elif [[ "${RUNNER_OS}" == "Windows" ]]; then
+             helper_dir="${RUNNER_TEMP}/${TEST_HELPERS_ARTIFACT}"
+-            helper_target_dir="$(pwd)/target/${{ inputs.target }}/${{ inputs.profile }}"
++            helper_target_dir="$(pwd)/target/${CODEX_CI_TARGET}/${CODEX_CI_CARGO_PROFILE}"
+             mkdir -p "${helper_target_dir}"
+             cp "${helper_dir}/codex-windows-sandbox-setup.exe" "${helper_target_dir}/"
+             cp "${helper_dir}/codex-command-runner.exe" "${helper_target_dir}/"
+@@ -450,6 +456,7 @@ jobs:
+           exit 1
+ 
+   result:
++    timeout-minutes: 10
+     name: Platform result
+     needs: shard
+     if: always()
+diff --git a/.github/workflows/rust-ci-full.yml b/.github/workflows/rust-ci-full.yml
+index 60d508b..89cbb6e 100644
+--- a/.github/workflows/rust-ci-full.yml
++++ b/.github/workflows/rust-ci-full.yml
+@@ -13,9 +13,13 @@ env:
+   # better network/proxy behavior and matches Cargo's own suggested fallback.
+   CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+ 
++permissions:
++  contents: read
++
+ jobs:
+   # --- CI that doesn't need specific targets ---------------------------------
+   general:
++    timeout-minutes: 30
+     name: Format / etc
+     runs-on: ubuntu-24.04
+     defaults:
+@@ -37,6 +41,7 @@ jobs:
+         run: just bench-smoke
+ 
+   cargo_shear:
++    timeout-minutes: 30
+     name: cargo shear
+     runs-on: ubuntu-24.04
+     defaults:
+@@ -54,6 +59,7 @@ jobs:
+         run: cargo shear --deny-warnings
+ 
+   argument_comment_lint_package:
++    timeout-minutes: 60
+     name: Argument comment lint package
+     runs-on: ubuntu-24.04
+     env:
+@@ -471,7 +477,6 @@ jobs:
+       profile: ci-test
+       artifact_id: macos-aarch64
+       use_sccache: true
+-    secrets: inherit
+ 
+   tests_linux_x64_remote:
+     name: Tests — ubuntu-24.04 - x86_64-unknown-linux-gnu (remote)
+@@ -485,7 +490,6 @@ jobs:
+       artifact_id: linux-x64-remote
+       remote_env: true
+       use_sccache: true
+-    secrets: inherit
+ 
+   tests_linux_arm64:
+     name: Tests — ubuntu-24.04-arm - aarch64-unknown-linux-gnu
+@@ -498,7 +502,6 @@ jobs:
+       profile: ci-test
+       artifact_id: linux-arm64
+       use_sccache: true
+-    secrets: inherit
+ 
+   tests_windows_x64:
+     name: Tests — windows-x64 - x86_64-pc-windows-msvc
+@@ -511,7 +514,6 @@ jobs:
+       profile: ci-test
+       artifact_id: windows-x64
+       test_threads: 8
+-    secrets: inherit
+ 
+   tests_windows_arm64:
+     name: Tests — windows-arm64 - aarch64-pc-windows-msvc
+@@ -528,10 +530,10 @@ jobs:
+       artifact_id: windows-arm64
+       test_threads: 8
+       use_sccache: true
+-    secrets: inherit
+ 
+   # --- Gatherer job for the full post-merge workflow --------------------------
+   results:
++    timeout-minutes: 10
+     name: Full CI results
+     needs:
+       [
+diff --git a/.github/workflows/rust-ci.yml b/.github/workflows/rust-ci.yml
+index 9b50ae4..c2f9c46 100644
+--- a/.github/workflows/rust-ci.yml
++++ b/.github/workflows/rust-ci.yml
+@@ -8,9 +8,17 @@ on:
+ env:
+   CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+ 
++concurrency:
++  group: ${{ github.workflow }}-${{ github.ref }}
++  cancel-in-progress: true
++
++permissions:
++  contents: read
++
+ jobs:
+   # --- Detect what changed so the fast PR workflow only runs relevant jobs ----
+   changed:
++    timeout-minutes: 10
+     name: Detect changed areas
+     runs-on: ubuntu-24.04
+     outputs:
+@@ -60,6 +68,7 @@ jobs:
+ 
+   # --- Fast Cargo-native PR checks -------------------------------------------
+   general:
++    timeout-minutes: 30
+     name: Format / etc
+     runs-on: ubuntu-24.04
+     needs: changed
+@@ -84,6 +93,7 @@ jobs:
+         run: just bench-smoke
+ 
+   cargo_shear:
++    timeout-minutes: 30
+     name: cargo shear
+     runs-on: ubuntu-24.04
+     needs: changed
+@@ -104,6 +114,7 @@ jobs:
+         run: cargo shear --deny-warnings
+ 
+   argument_comment_lint_package:
++    timeout-minutes: 60
+     name: Argument comment lint package
+     runs-on: ubuntu-24.04
+     needs: changed
+@@ -204,6 +215,7 @@ jobs:
+ 
+   # --- Gatherer job that you mark as the ONLY required status -----------------
+   results:
++    timeout-minutes: 10
+     name: CI results (required)
+     needs:
+       [
+diff --git a/.github/workflows/rust-release-argument-comment-lint.yml b/.github/workflows/rust-release-argument-comment-lint.yml
+index 7f5ad01..cb07d08 100644
+--- a/.github/workflows/rust-release-argument-comment-lint.yml
++++ b/.github/workflows/rust-release-argument-comment-lint.yml
+@@ -12,8 +12,12 @@ on:
+ env:
+   CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+ 
++permissions:
++  contents: read
++
+ jobs:
+   skip:
++    timeout-minutes: 10
+     if: ${{ !inputs.publish }}
+     runs-on: ubuntu-latest
+     steps:
+diff --git a/.github/workflows/rust-release-prepare.yml b/.github/workflows/rust-release-prepare.yml
+index 67e542e..de5f809 100644
+--- a/.github/workflows/rust-release-prepare.yml
++++ b/.github/workflows/rust-release-prepare.yml
+@@ -9,11 +9,14 @@ concurrency:
+   cancel-in-progress: false
+ 
+ permissions:
+-  contents: write
+-  pull-requests: write
++  contents: read
+ 
+ jobs:
+   prepare:
++    permissions:
++      contents: write
++      pull-requests: write
++    timeout-minutes: 30
+     # Prevent scheduled runs on forks (no secrets, wastes Actions minutes)
+     if: github.repository == 'openai/codex'
+     environment:
+diff --git a/.github/workflows/rust-release-windows.yml b/.github/workflows/rust-release-windows.yml
+index f0fd6b9..e0162c2 100644
+--- a/.github/workflows/rust-release-windows.yml
++++ b/.github/workflows/rust-release-windows.yml
+@@ -25,10 +25,15 @@ on:
+ env:
+   CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+ 
++permissions:
++  contents: read
++
+ jobs:
+   build-windows-binaries:
+     name: Build Windows binaries - ${{ matrix.runner }} - ${{ matrix.target }} - ${{ matrix.bundle }}
+-    runs-on: ${{ matrix.runs_on }}
++    runs-on:
++      group: ${{ matrix.runs_on.group }}
++      labels: ${{ matrix.runs_on.labels }}
+     # Windows release builds can exceed an hour on fat-LTO mainline releases,
+     # so keep the timeout aligned with the top-level release build headroom.
+     timeout-minutes: 90
+@@ -152,7 +157,9 @@ jobs:
+     needs:
+       - build-windows-binaries
+     name: Build - ${{ matrix.runner }} - ${{ matrix.target }}
+-    runs-on: ${{ matrix.runs_on }}
++    runs-on:
++      group: ${{ matrix.runs_on.group }}
++      labels: ${{ matrix.runs_on.labels }}
+     timeout-minutes: 90
+     permissions:
+       contents: read
+diff --git a/.github/workflows/rust-release-zsh.yml b/.github/workflows/rust-release-zsh.yml
+index b55d2e7..b470a8a 100644
+--- a/.github/workflows/rust-release-zsh.yml
++++ b/.github/workflows/rust-release-zsh.yml
+@@ -7,6 +7,9 @@ env:
+   ZSH_COMMIT: 77045ef899e53b9598bebc5a41db93a548a40ca6
+   ZSH_PATCH: codex-rs/shell-escalation/patches/zsh-exec-wrapper.patch
+ 
++permissions:
++  contents: read
++
+ jobs:
+   linux:
+     name: Build zsh (Linux) - ${{ matrix.variant }} - ${{ matrix.target }}
+diff --git a/.github/workflows/rust-release.yml b/.github/workflows/rust-release.yml
+index 364fe78..424ebc9 100644
+--- a/.github/workflows/rust-release.yml
++++ b/.github/workflows/rust-release.yml
+@@ -49,8 +49,12 @@ concurrency:
+   group: ${{ github.workflow }}
+   cancel-in-progress: true
+ 
++permissions:
++  contents: read
++
+ jobs:
+   tag-check:
++    timeout-minutes: 10
+     runs-on: ubuntu-latest
+     steps:
+       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+@@ -135,7 +139,7 @@ jobs:
+     if: ${{ github.event_name != 'workflow_dispatch' || inputs.release_mode != 'promote_signed' }}
+     needs: tag-check
+     name: Build - ${{ matrix.runner }} - ${{ matrix.target }} - ${{ matrix.bundle }}
+-    runs-on: ${{ matrix.runs_on || matrix.runner }}
++    runs-on: ${{ matrix.runner }}
+     # Release builds can take a long time, so leave some headroom to avoid
+     # having to restart the full workflow due to a timeout.
+     timeout-minutes: 90
+@@ -860,12 +864,21 @@ jobs:
+             codex-rs/dist/${{ matrix.target }}/*
+ 
+   build-windows:
++    permissions:
++      contents: read
++      id-token: write
+     if: ${{ github.event_name != 'workflow_dispatch' || inputs.release_mode != 'promote_signed' }}
+     needs: tag-check
+     uses: ./.github/workflows/rust-release-windows.yml
+     with:
+       release-lto: ${{ contains(github.ref_name, '-alpha') && 'thin' || 'fat' }}
+-    secrets: inherit
++    secrets:
++      AZURE_TRUSTED_SIGNING_CLIENT_ID: ${{ secrets.AZURE_TRUSTED_SIGNING_CLIENT_ID }}
++      AZURE_TRUSTED_SIGNING_TENANT_ID: ${{ secrets.AZURE_TRUSTED_SIGNING_TENANT_ID }}
++      AZURE_TRUSTED_SIGNING_SUBSCRIPTION_ID: ${{ secrets.AZURE_TRUSTED_SIGNING_SUBSCRIPTION_ID }}
++      AZURE_TRUSTED_SIGNING_ENDPOINT: ${{ secrets.AZURE_TRUSTED_SIGNING_ENDPOINT }}
++      AZURE_TRUSTED_SIGNING_ACCOUNT_NAME: ${{ secrets.AZURE_TRUSTED_SIGNING_ACCOUNT_NAME }}
++      AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE_NAME: ${{ secrets.AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE_NAME }}
+ 
+   argument-comment-lint-release-assets:
+     if: ${{ github.event_name != 'workflow_dispatch' || inputs.release_mode != 'promote_signed' }}
+@@ -882,6 +895,7 @@ jobs:
+     uses: ./.github/workflows/rust-release-zsh.yml
+ 
+   release:
++    timeout-minutes: 60
+     needs:
+       - tag-check
+       - build
+@@ -1186,6 +1200,8 @@ jobs:
+         uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+         with:
+           node-version: 22
++          # Release builds must not restore package-manager caches.
++          package-manager-cache: false
+ 
+       - name: Install dependencies
+         if: ${{ env.SIGN_MACOS == 'true' }}
+@@ -1278,6 +1294,7 @@ jobs:
+   # July 31, 2025: https://github.blog/changelog/2025-07-31-npm-trusted-publishing-with-oidc-is-generally-available/
+   # npm docs: https://docs.npmjs.com/trusted-publishers
+   publish-npm:
++    timeout-minutes: 30
+     # Publish to npm for stable releases and alpha pre-releases with numeric suffixes.
+     # promote_signed intentionally skips build jobs that are ancestors of release;
+     # include the !cancelled() status function so Actions does not apply its implicit
+@@ -1301,6 +1318,8 @@ jobs:
+         with:
+           # Node 24 bundles npm >= 11.5.1, which trusted publishing requires.
+           node-version: 24
++          # Release builds must not restore package-manager caches.
++          package-manager-cache: false
+           registry-url: "https://registry.npmjs.org"
+           scope: "@openai"
+ 
+@@ -1444,6 +1463,7 @@ jobs:
+   # non-blocking while the Python runtime publishing path is new; failures still
+   # need release follow-up, but should not invalidate the Rust release itself.
+   publish-python-runtime:
++    timeout-minutes: 30
+     # Publish to PyPI for stable releases and alpha pre-releases with numeric suffixes.
+     if: >-
+       ${{
+@@ -1487,6 +1507,7 @@ jobs:
+           skip-existing: true
+ 
+   deploy-dev-website:
++    timeout-minutes: 15
+     name: Trigger developers.openai.com deploy
+     needs: release
+     # Only trigger the deploy for a stable signed release.
+@@ -1517,6 +1538,7 @@ jobs:
+           fi
+ 
+   winget:
++    timeout-minutes: 20
+     name: winget
+     needs: release
+     # Only publish stable/mainline releases to WinGet; pre-releases include a
+@@ -1546,6 +1568,7 @@ jobs:
+           token: ${{ secrets.WINGET_PUBLISH_PAT }}
+ 
+   update-branch:
++    timeout-minutes: 10
+     name: Update latest-alpha-cli branch
+     if: >-
+       ${{
+diff --git a/.github/workflows/rusty-v8-release.yml b/.github/workflows/rusty-v8-release.yml
+index 4b5320d..931e0b0 100644
+--- a/.github/workflows/rusty-v8-release.yml
++++ b/.github/workflows/rusty-v8-release.yml
+@@ -14,8 +14,12 @@ concurrency:
+   group: ${{ github.workflow }}::${{ github.ref_name }}
+   cancel-in-progress: false
+ 
++permissions:
++  contents: read
++
+ jobs:
+   metadata:
++    timeout-minutes: 10
+     runs-on: ubuntu-latest
+     outputs:
+       release_tag: ${{ steps.release_tag.outputs.release_tag }}
+@@ -58,6 +62,7 @@ jobs:
+           echo "release_tag=${release_tag}" >> "$GITHUB_OUTPUT"
+ 
+   build:
++    timeout-minutes: 300
+     name: Build ${{ matrix.variant }} ${{ matrix.target }}
+     needs: metadata
+     runs-on: ${{ matrix.runner }}
+@@ -268,6 +273,7 @@ jobs:
+           path: dist/${{ matrix.target }}/*
+ 
+   publish-release:
++    timeout-minutes: 30
+     needs:
+       - metadata
+       - build
+diff --git a/.github/workflows/sdk.yml b/.github/workflows/sdk.yml
+index 54ed8dc..cb7bac9 100644
+--- a/.github/workflows/sdk.yml
++++ b/.github/workflows/sdk.yml
+@@ -5,6 +5,13 @@ on:
+     branches: [main]
+   pull_request: {}
+ 
++concurrency:
++  group: ${{ github.workflow }}-${{ github.ref }}
++  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
++
++permissions:
++  contents: read
++
+ jobs:
+   python-sdk:
+     runs-on:
+@@ -151,7 +158,7 @@ jobs:
+         run: pnpm -r --filter ./sdk/typescript run test
+ 
+       - name: Save bazel repository cache
+-        if: always() && !cancelled() && steps.setup_bazel.outputs.cache-hit != 'true'
++        if: always() && !cancelled()
+         continue-on-error: true
+         uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+         with:
+diff --git a/.github/workflows/v8-canary.yml b/.github/workflows/v8-canary.yml
+index 71ce5d7..1f34d29 100644
+--- a/.github/workflows/v8-canary.yml
++++ b/.github/workflows/v8-canary.yml
+@@ -46,8 +46,12 @@ concurrency:
+   group: ${{ github.workflow }}::${{ github.event.pull_request.number > 0 && format('pr-{0}', github.event.pull_request.number) || github.ref_name }}
+   cancel-in-progress: ${{ github.ref_name != 'main' }}
+ 
++permissions:
++  contents: read
++
+ jobs:
+   metadata:
++    timeout-minutes: 10
+     runs-on: ubuntu-latest
+     outputs:
+       v8_version: ${{ steps.v8_version.outputs.version }}
+@@ -72,6 +76,7 @@ jobs:
+           echo "version=${version}" >> "$GITHUB_OUTPUT"
+ 
+   build:
++    timeout-minutes: 300
+     name: Build ${{ matrix.variant }} ${{ matrix.target }}
+     needs: metadata
+     runs-on: ${{ matrix.runner }}
+@@ -279,6 +284,7 @@ jobs:
+           path: dist/${{ matrix.target }}/*
+ 
+   build-windows-source:
++    timeout-minutes: 300
+     name: Build ptrcomp-sandbox ${{ matrix.target }} from source
+     needs: metadata
+     runs-on: ${{ matrix.runner }}
+@@ -295,6 +301,8 @@ jobs:
+ 
+     steps:
+       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
++        with:
++          persist-credentials: false
+ 
+       - name: Configure git for upstream checkout
+         shell: bash
+@@ -304,6 +312,7 @@ jobs:
+         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+         with:
+           repository: denoland/rusty_v8
++          persist-credentials: false
+           ref: v${{ needs.metadata.outputs.v8_version }}
+           path: upstream-rusty-v8
+           submodules: recursive
+diff --git a/.github/zizmor.yml b/.github/zizmor.yml
+new file mode 100644
+index 0000000..23a7d31
+--- /dev/null
++++ b/.github/zizmor.yml
+@@ -0,0 +1,24 @@
++# zizmor configuration. Each ignore below is deliberate; keep the reason current.
++rules:
++  # Local composite actions are referenced as `./.github/actions/<name>` so they run
++  # from the same checkout as the workflow (including PR heads). Switching to the
++  # self-repository syntax would change which revision of the action is used, so
++  # keep the relative form until that migration is planned.
++  self-repository:
++    ignore:
++      - bazel.yml
++      - rust-ci-full-nextest-platform.yml
++      - rust-ci-full.yml
++      - rust-ci.yml
++      - rust-release-windows.yml
++      - rust-release.yml
++      - rusty-v8-release.yml
++      - sdk.yml
++      - v8-canary.yml
++  # Release publishing uses the SHA-pinned softprops/action-gh-release for its
++  # asset globbing, prerelease and overwrite handling; replacing it with raw
++  # `gh release` calls is a separate change to the release process.
++  superfluous-actions:
++    ignore:
++      - rust-release.yml
++      - rusty-v8-release.yml
