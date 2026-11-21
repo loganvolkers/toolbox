@@ -1,3 +1,0 @@
-version=0.1.2
-yaml_version=0.1.2
-changelog_contains=Package and action note.

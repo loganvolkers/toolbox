@@ -1,3 +1,0 @@
-version=0.2.0
-changelog_contains=## 0.2.0
-changelog_contains=Core bump for fixture.
