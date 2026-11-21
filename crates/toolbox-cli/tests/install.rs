@@ -350,10 +350,7 @@ fn install_git_package_tag_branch_and_commit() {
 
     // Full commit SHA (must not become --branch v<sha>)
     let portal_sha = base.join("portal-sha");
-    write_portal_with_package(
-        &portal_sha,
-        &format!("github:acme/pkg/packages/demo@{sha}"),
-    );
+    write_portal_with_package(&portal_sha, &format!("github:acme/pkg/packages/demo@{sha}"));
     let cache_sha = base.join("cache-sha");
     let env_sha = [
         ("TOOLBOX_GIT_URL", git_url.as_str()),
@@ -370,10 +367,9 @@ fn install_git_package_tag_branch_and_commit() {
         "{}",
         text(&o)
     );
-    let lock: serde_json::Value = serde_json::from_str(
-        &std::fs::read_to_string(portal_sha.join("toolbox.lock")).unwrap(),
-    )
-    .unwrap();
+    let lock: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(portal_sha.join("toolbox.lock")).unwrap())
+            .unwrap();
     let pin = lock["packages"][&format!("github:acme/pkg/packages/demo@{sha}")]
         .as_str()
         .unwrap();
@@ -381,7 +377,10 @@ fn install_git_package_tag_branch_and_commit() {
         pin,
         "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     );
-    let o = toolbox(&["install", portal_sha.to_str().unwrap(), "--frozen"], &env_sha);
+    let o = toolbox(
+        &["install", portal_sha.to_str().unwrap(), "--frozen"],
+        &env_sha,
+    );
     assert!(o.status.success(), "{}", text(&o));
 
     let _ = std::fs::remove_dir_all(&base);
