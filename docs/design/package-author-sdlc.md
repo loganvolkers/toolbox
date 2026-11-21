@@ -225,11 +225,11 @@ a *second* package author who has already read [packages.md](./packages.md) §3.
 
 ### 6.2 When you must extend `toolbox-connector-workspace`
 
-| Need | SDLC | What to do |
+| Need | SDLC layer | What to do |
 |---|---|---|
-| New record kinds / fields from files in the checkout (e.g. `js-workspace`, `expo-app`) | **Maintainer** | Change `crates/toolbox-connector-workspace`, ship in a Toolbox release, then write package YAML against those facts |
-| New scorecards / CEL over **existing** record shapes | **Package author** | Fragments + fixtures + `toolbox test` only |
-| Remote / executable connector | Package author (after executable connectors land) | Outside the in-image path; see §3.2 |
+| New record kinds / fields from files in the checkout (e.g. `js-workspace`, `expo-app`) | **maintainer SDLC** | Change `crates/toolbox-connector-workspace`, ship in a Toolbox release, then write package YAML against those facts |
+| New scorecards / CEL over **existing** record shapes | **package author SDLC** | Fragments + fixtures + `toolbox test` only |
+| Remote / executable connector | **package author SDLC** (after executable connectors land) | Outside the in-image path; see §3.2 |
 
 **Sequencing trap:** high-value Expo/pnpm rules needed workspace facts first. A YAML-only author
 cannot invent `js-workspace` fields; empty scorecards on an old binary look like a broken include.
