@@ -1,6 +1,7 @@
 # AGENTS.md: Working on Toolbox
 
-Toolbox is an open-source, agent-first internal developer portal (IDP) framework. It has a Rust core,
+Toolbox is an open-source, agent-first internal developer portal (IDP) framework: first of all a
+box for tools, not a wrapper around them ([toolbox-and-tools.md](./docs/design/toolbox-and-tools.md)). It has a Rust core,
 is configured entirely in code, and exposes API, MCP, CLI and UI. **Status:** v1 is being implemented
 milestone by milestone from [docs/v1-spec.md](./docs/v1-spec.md); M0–M4 are done (see *Building*
 below). **Focus (D01M7Y46VDDBK2SW6H96ZSG89MP):** prove repo-level value first
@@ -119,6 +120,15 @@ The full loop, check pyramid and measured timings are in
   skill with `skills-ref validate`. Use `"license": "MIT"` (D88).
 - **Writing style:** state conclusions first, then evidence. Prefer tables for comparisons. Keep docs
   self-contained, with relative links that resolve.
+- **The box and the tools** ([toolbox-and-tools.md](./docs/design/toolbox-and-tools.md),
+  D01M7ZRAJT47W11X5X3FEJ6QTX8). Toolbox is a box for tools, not a wrapper or a factory:
+  - Every design doc and package README says whether it is about the box (carrying, pinning,
+    running, remembering, reporting, distributing) or a tool (an existing tool, a fitting, a jig,
+    or a standalone tool).
+  - A tool in the box must still work when taken out: the same command, its own config file, the
+    same findings.
+  - Before adding an extractor to a Toolbox connector, say why no existing tool, framework plugin
+    or standard slot (SARIF, NDJSON, JUnit) covers the fact.
 
 ## Charter goals (D33–D35)
 

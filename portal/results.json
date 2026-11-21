@@ -913,6 +913,9 @@
       "doc:docs/decisions/D01M7ZD07SE4ADHZP2QKA3XG67E.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M7ZRAJT47W11X5X3FEJ6QTX8.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/README.md": {
         "level": "skipped"
       },
@@ -1040,6 +1043,9 @@
         "level": "silver"
       },
       "doc:docs/design/supply-chain-standards.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/toolbox-and-tools.md": {
         "level": "silver"
       },
       "doc:docs/design/toolbox-for-toolbox.md": {

@@ -13,6 +13,12 @@ On PostHog, `.semgrep/rules/no-direct-persons-db-orm.yaml` reports 104 findings 
 the commit the A/B used, all suppressed: a campaign the repository doesn't have yet
 ([experiments/standards-ab](../../experiments/standards-ab/README.md)).
 
+**Box or tool:** this package is a **kit**: it carries semgrep, an existing tool, with the rule
+the repository already has ([toolbox-and-tools.md](../../docs/design/toolbox-and-tools.md)).
+semgrep runs as it would without Toolbox, and its findings come in through a **fitting**
+(`parse: semgrep`). semgrep's SARIF output already marks suppressed findings, so the fitting is
+to be replaced by a standard SARIF slot.
+
 | Brings | Named |
 |---|---|
 | Connector | `<name>` (`builtin:runner`, one semgrep run, `parse: semgrep`) |

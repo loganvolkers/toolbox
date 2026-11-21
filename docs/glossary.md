@@ -24,6 +24,12 @@ Shared vocabulary across the design documents. Keep entries short and link to th
 | **Ratchet / baseline** | A committed results file (`toolbox-report/v1`); a newly failing rule or growing evidence is a regression (D66, Betterer-style) | [design/ratchets.md](./design/ratchets.md) |
 | **Evidence** | A rule's `evidence:` CEL value when it fails: the items that make it fail | [design/ratchets.md](./design/ratchets.md) |
 | **Federation / standard package / stage** | Portals in a tree: standards down as versioned packages, results up as report files; a rule's stage is `experimental`, `advisory` or `mandatory` (D68, design only) | [design/federation.md](./design/federation.md) |
+| **Box (the toolbox)** | What Toolbox is for: a home for tools, a standard way to carry, pin, run and read them together, and the memory of what they found (baselines, campaigns, reports). Not coupled to any tool | [design/toolbox-and-tools.md](./design/toolbox-and-tools.md) |
+| **Tool** | A program that checks or changes code, with its own CLI, configuration and output, useful without the box: zizmor, semgrep, clippy, an ESLint plugin | [design/toolbox-and-tools.md](./design/toolbox-and-tools.md) |
+| **Slot** | A standard output shape the box reads without tool-specific code: SARIF for findings, NDJSON for records, JUnit for tests | [design/toolbox-and-tools.md](./design/toolbox-and-tools.md) |
+| **Fitting** | A per-tool adapter (`parse: zizmor`) for a tool without standard output; a stopgap until it has one | [design/toolbox-and-tools.md](./design/toolbox-and-tools.md) |
+| **Jig** | A quick tool made from Toolbox's own primitives (workspace `counts`, CEL) for one job; it graduates to a framework rule or a standalone tool when reused | [design/toolbox-and-tools.md](./design/toolbox-and-tools.md) |
+| **Kit** | A package (D89) seen as a set of tools with their settings and rules, which another repository takes as it is | [design/toolbox-and-tools.md](./design/toolbox-and-tools.md) |
 | **Toolbox for Toolbox** | The local portal in `portal/` that scores Toolbox's own crates, docs and interfaces per SDLC layer (D65) | [design/toolbox-for-toolbox.md](./design/toolbox-for-toolbox.md) |
 | **SDLC layers** | Maintainer SDLC (building Toolbox), operator SDLC (building a portal), user SDLC (building apps on a portal); documents always say which (D63) | [sdlc.md](./sdlc.md) |
 | **Portal program** | The TypeScript/Python/YAML code in a portal repo that declares kinds, connectors, scorecards, actions, views and policies | [plan.md](./plan.md) §2 |

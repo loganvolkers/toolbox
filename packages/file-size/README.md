@@ -12,6 +12,10 @@ ratchet and a campaign:
 It needs nothing but the `toolbox` binaries: the files are read by `builtin:workspace`, without a
 build or the network. Include it once per standard, with that standard's files and limit.
 
+**Box or tool:** this package is a **jig**, a quick tool made from Toolbox's own primitives
+([toolbox-and-tools.md](../../docs/design/toolbox-and-tools.md) §4). It suits a proof of concept in
+one repository. For a standard many repositories share, prefer a tool that counts lines on its own (`wc -l`, tokei, scc) in the box.
+
 | Brings | Named |
 |---|---|
 | Connector | `<name>` (`builtin:workspace`, `file` records) |

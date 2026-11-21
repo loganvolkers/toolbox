@@ -13,6 +13,10 @@ It needs nothing but the `toolbox` binaries: files are read by `builtin:workspac
 already a semgrep rule, use [`packages/semgrep`](../semgrep/README.md) instead: it keeps the rule
 in one place and counts its `nosemgrep` suppressions.
 
+**Box or tool:** this package is a **jig**, a quick tool made from Toolbox's own primitives
+([toolbox-and-tools.md](../../docs/design/toolbox-and-tools.md) §4). It suits a proof of concept in
+one repository. A regex matches text, so a rename can fool it. For a standard that lasts, write the pattern as a semgrep or ast-grep rule, which runs without Toolbox, and carry it with [`semgrep`](../semgrep/README.md).
+
 | Brings | Named |
 |---|---|
 | Connector | `<name>` (`builtin:workspace`, `file` records with `counts` and `matchLines`) |
