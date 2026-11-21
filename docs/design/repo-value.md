@@ -94,8 +94,12 @@ travel. Its first step is a pilot with maintainers other than us, the one thing 
 3. Package the generic standards (§5, R5).
 4. Pre-release binaries for pilots, if agreed.
 5. Install the pilots (R1, R4).
-6. The A/B (R3).
-7. Review the pilot period (R4, R5) and decide on federation.
+6. The A/B (R3). Done: failed (D01M7ZD07SE4ADHZP2QKA3XG67E).
+7. Make the box a box: the SARIF slot, take-it-out, and the box's friction, used on Toolbox for
+   Toolbox first ([toolbox-and-tools.md](./toolbox-and-tools.md) §7). Done for items 1, 2 and 4.
+8. The box A/B ([experiments/box-ab](../../experiments/box-ab/README.md)): several tools in a box
+   against hand-written glue. Designed; its hypothesis is to be decided before it runs.
+9. Review the pilot period (R4, R5) and decide on federation.
 
 ## Sources
 

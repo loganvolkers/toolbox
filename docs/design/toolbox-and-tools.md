@@ -174,7 +174,8 @@ able to run each tool behind a T4T score directly and get the same finding.
 - the box's open friction: vendoring, quiet Markdown, compact baselines, a local `toolbox campaign`,
   a generated STANDARD.md with a CI workflow, `--against`, and the `tighten` and exempt fixes.
 
-Using them in Toolbox for Toolbox is the input to the box A/B, planned next.
+Using them in Toolbox for Toolbox is the input to the box A/B
+([experiments/box-ab](../../experiments/box-ab/README.md)), which T4T's internal use shaped.
 
 **Make the box a box before building more tools.** In order:
 
