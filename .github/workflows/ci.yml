@@ -68,6 +68,18 @@ jobs:
           pip install zizmor==1.32.0
           actionlint -version   # installed with OpenFGA above
           target/debug/toolbox doctor portal   # every connector resolves, every tool at its pinned version (D90)
+      - name: >-
+          The portal's STANDARD.md is current (generated from the manifest, like
+          the baseline)
+        run: |
+          target/debug/toolbox report portal --skip runner,github-actions -o standard > /tmp/STANDARD.md
+          diff -u portal/STANDARD.md /tmp/STANDARD.md
+      - name: >-
+          Take-it-out (docs/design/toolbox-and-tools.md, B1) — the tools in the
+          box give the same findings alone
+        run: >-
+          TOOLBOX=target/debug/toolbox python3 scripts/take-it-out.py portal
+          ci-lint
       - name: Toolbox for Toolbox — agent assessments are valid and briefs build (D79)
         run: |
           target/debug/toolbox assess check portal --skip runner,github-actions

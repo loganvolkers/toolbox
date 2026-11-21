@@ -1,5 +1,6 @@
-# One semgrep run (with --disable-nosem, so suppressed findings are reported too); one record per
-# scanned file, with `total`, `suppressed` and `active` findings.
+# One semgrep run through the box's SARIF slot: semgrep's SARIF marks nosemgrep findings as
+# suppressed (`suppressions: [{kind: inSource}]`), so they are counted too. One record per file
+# with findings, with `total`, `suppressed`, `active` and `command` (the run, to repeat it alone).
 connectors:
   - name: ${param:name}
     package: builtin:runner
@@ -14,11 +15,10 @@ connectors:
           - --config
           - ${param:config}
           - --metrics=off
-          - --disable-nosem
-          - --json
+          - --sarif
           - --quiet
           - ${param:target}
-          parse: semgrep
+          parse: sarif
           optional: true # not installed → the rule is unknown, not failing
     records: ["${param:name}"]
     refresh: {"${param:name}": [external_ids]}

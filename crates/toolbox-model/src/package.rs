@@ -133,6 +133,30 @@ pub fn content_hash(dir: &Path) -> String {
     h.finalize().iter().map(|b| format!("{b:02x}")).collect()
 }
 
+/// A parameter with `tighten` may only move that way from its default; without a numeric default
+/// there is nothing to tighten from, so the declaration is refused rather than ignored.
+fn tightened(name: &str, p: &Value, v: &Value, default: &Value) -> Result<(), String> {
+    let Some(dir) = p["tighten"].as_str() else {
+        return Ok(());
+    };
+    let Some(b) = default.as_f64() else {
+        return Err(format!(
+            "parameter `{name}` has `tighten` but no numeric default to tighten from"
+        ));
+    };
+    let weaker = match (dir, v.as_f64()) {
+        ("lower", Some(a)) => a > b,
+        ("higher", Some(a)) => a < b,
+        _ => false,
+    };
+    if weaker {
+        return Err(format!(
+            "parameter `{name}` = {v} weakens the package's default {default} (it may only go {dir})"
+        ));
+    }
+    Ok(())
+}
+
 /// Check `with` against the declared parameters and return every parameter's value.
 fn values(
     params: &Map<String, Value>,
@@ -156,19 +180,7 @@ fn values(
         if !ok {
             return Err(format!("parameter `{name}` must be {}", p["type"]));
         }
-        if let (Some(dir), Some(a), Some(b)) = (p["tighten"].as_str(), v.as_f64(), default.as_f64())
-        {
-            let weaker = match dir {
-                "lower" => a > b,
-                "higher" => a < b,
-                _ => false,
-            };
-            if weaker {
-                return Err(format!(
-                    "parameter `{name}` = {v} weakens the package's default {default} (it may only go {dir})"
-                ));
-            }
-        }
+        tightened(name, p, &v, &default)?;
         out.insert(name.clone(), v);
     }
     Ok(out)
@@ -294,6 +306,15 @@ mod tests {
         assert!(
             values(p, json!({}).as_object().unwrap()).is_err(),
             "a parameter without a default is required"
+        );
+        let bad = json!({"limit": {"type": "integer", "tighten": "lower"}});
+        assert!(
+            values(
+                bad.as_object().unwrap(),
+                json!({"limit": 900}).as_object().unwrap()
+            )
+            .unwrap_err()
+            .contains("no numeric default")
         );
     }
 

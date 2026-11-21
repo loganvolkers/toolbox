@@ -16,89 +16,7 @@
   "format": "toolbox-report/v1",
   "portal": "toolbox",
   "results": {
-    "cli-skill": {
-      "command:actions": {
-        "level": "bronze"
-      },
-      "command:assess-brief": {
-        "level": "bronze"
-      },
-      "command:assess-check": {
-        "level": "bronze"
-      },
-      "command:assess-submit": {
-        "level": "bronze"
-      },
-      "command:campaign": {
-        "level": "bronze"
-      },
-      "command:connector-test": {
-        "level": "bronze"
-      },
-      "command:derive": {
-        "level": "bronze"
-      },
-      "command:describe-portal": {
-        "level": "bronze"
-      },
-      "command:doctor": {
-        "level": "bronze"
-      },
-      "command:explain": {
-        "level": "bronze"
-      },
-      "command:get": {
-        "level": "bronze"
-      },
-      "command:graph": {
-        "level": "bronze"
-      },
-      "command:install": {
-        "level": "bronze"
-      },
-      "command:mcp": {
-        "level": "bronze"
-      },
-      "command:owner": {
-        "level": "bronze"
-      },
-      "command:plan": {
-        "level": "bronze"
-      },
-      "command:push": {
-        "level": "bronze"
-      },
-      "command:query": {
-        "level": "bronze"
-      },
-      "command:refresh": {
-        "level": "bronze"
-      },
-      "command:report": {
-        "level": "bronze"
-      },
-      "command:score": {
-        "level": "bronze"
-      },
-      "command:scorecard": {
-        "level": "bronze"
-      },
-      "command:search": {
-        "level": "bronze"
-      },
-      "command:serve": {
-        "level": "bronze"
-      },
-      "command:test": {
-        "level": "bronze"
-      },
-      "command:token-create": {
-        "level": "bronze"
-      },
-      "command:validate": {
-        "level": "bronze"
-      }
-    },
+    "cli-skill": {},
     "maintainer-action-deps": {
       "action:Swatinem/rust-cache": {
         "level": "bronze"
@@ -1087,6 +1005,9 @@
       "doc:docs/red-team.md": {
         "level": "skipped"
       },
+      "doc:docs/reference/runner-connector.md": {
+        "level": "silver"
+      },
       "doc:docs/reference/workspace-connector.md": {
         "level": "silver"
       },
@@ -1154,6 +1075,9 @@
         "level": "silver"
       },
       "doc:plugins/toolbox-operator/skills/campaign/SKILL.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/skills/connector-records/SKILL.md": {
         "level": "silver"
       },
       "doc:plugins/toolbox-operator/skills/connector-test/SKILL.md": {
@@ -1229,6 +1153,9 @@
         "level": "silver"
       },
       "doc:plugins/toolbox-operator/skills/validate/SKILL.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/skills/vendor/SKILL.md": {
         "level": "silver"
       },
       "doc:portal/README.md": {
@@ -1422,6 +1349,12 @@
         },
         "level": "silver"
       },
+      "skill:plugins/toolbox-operator/skills/connector-records": {
+        "failing": {
+          "has-evals": 1
+        },
+        "level": "silver"
+      },
       "skill:plugins/toolbox-operator/skills/connector-test": {
         "failing": {
           "has-evals": 1
@@ -1569,6 +1502,12 @@
         "level": "bronze"
       },
       "skill:plugins/toolbox-operator/skills/validate": {
+        "failing": {
+          "has-evals": 1
+        },
+        "level": "silver"
+      },
+      "skill:plugins/toolbox-operator/skills/vendor": {
         "failing": {
           "has-evals": 1
         },
@@ -4507,6 +4446,12 @@
       "command:campaign": {
         "level": "skipped"
       },
+      "command:connector-records": {
+        "failing": {
+          "exercised": null
+        },
+        "level": "bronze"
+      },
       "command:connector-test": {
         "level": "silver"
       },
@@ -4581,6 +4526,12 @@
       },
       "command:validate": {
         "level": "silver"
+      },
+      "command:vendor": {
+        "failing": {
+          "exercised": null
+        },
+        "level": "bronze"
       }
     },
     "sdlc-layer": {
@@ -4785,6 +4736,9 @@
         },
         "level": "bronze"
       },
+      "command:connector-records": {
+        "level": "skipped"
+      },
       "command:connector-test": {
         "level": "skipped"
       },
@@ -4870,6 +4824,9 @@
         "level": "skipped"
       },
       "command:validate": {
+        "level": "skipped"
+      },
+      "command:vendor": {
         "level": "skipped"
       }
     },

@@ -53,8 +53,10 @@ parameters:
       here with why.
   limit:
     type: integer
-    tighten: lower
-    description: A file with more lines than this is a violation.
+    description: >-
+      A file with more lines than this is a violation. Required, so there is
+      no default to tighten from: a raised limit shows up in review, and as
+      improvements in the ratchet.
   fix:
     type: string
     default: >-

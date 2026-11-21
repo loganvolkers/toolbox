@@ -59,6 +59,14 @@ pub struct Options {
     /// improvements), for any CI system to read.
     #[arg(long)]
     pub verdict: Option<PathBuf>,
+    /// Markdown: list every entity, not only those with a failing or unknown rule.
+    #[arg(long)]
+    pub all: bool,
+    /// Compare with the portal's results at this git commit (e.g. HEAD~1, or a pull request's
+    /// base), scored in a temporary worktree, instead of with a baseline file: what this change
+    /// made worse or better. Exit 1 on a regression; nothing is written.
+    #[arg(long, conflicts_with_all = ["baseline", "update", "ci", "accept"])]
+    pub against: Option<String>,
 }
 
 const FORMAT: &str = "toolbox-report/v1";
@@ -295,6 +303,39 @@ fn new_policy(m: &toolbox_model::Manifest) -> NewPolicy {
         .collect()
 }
 
+/// Scorecards whose new-entity floor is their top level: every entity must pass every rule, so
+/// the baseline records only those that don't. A file that is clean, new or not, adds nothing to
+/// it, so adding clean files never makes the baseline stale.
+fn compact_cards(m: &toolbox_model::Manifest) -> BTreeSet<String> {
+    m.scorecards
+        .iter()
+        .filter(|sc| {
+            let floor = sc
+                .ratchet
+                .as_ref()
+                .and_then(|r| r["newEntitiesAtLeast"].as_str());
+            floor.is_some() && floor == sc.levels.last().map(String::as_str)
+        })
+        .map(|sc| sc.name.clone())
+        .collect()
+}
+
+/// The results as the baseline stores them: compact scorecards keep only entities with a
+/// failing, unknown or waived rule.
+fn compacted(now: &Value, compact: &BTreeSet<String>) -> Value {
+    let mut out = now.clone();
+    for card in compact {
+        if let Some(rows) = out.get_mut(card).and_then(Value::as_object_mut) {
+            rows.retain(|_, row| {
+                row.get("failing").is_some()
+                    || row.get("unknown").is_some()
+                    || row.get("waived").is_some()
+            });
+        }
+    }
+    out
+}
+
 /// Scorecards with `ratchet: {advisory: true}`: reported, never in the baseline or the comparison
 /// (judgement-based cards, whose assessments go stale when their subject changes).
 fn advisory(m: &toolbox_model::Manifest) -> BTreeSet<String> {
@@ -313,7 +354,19 @@ fn rank(levels: &[String], level: &str) -> Option<usize> {
     levels.iter().position(|l| l == level).map(|i| i + 1)
 }
 
+#[cfg(test)]
 fn compare(before: &Value, after: &Value, policy: &NewPolicy) -> Comparison {
+    compare_with(before, after, policy, &BTreeSet::new())
+}
+
+/// `compare`, where `compact` scorecards' baselines omit passing entities: an entity missing
+/// from the baseline that passes now is no change, and one that fails is held to the floor.
+fn compare_with(
+    before: &Value,
+    after: &Value,
+    policy: &NewPolicy,
+    compact: &BTreeSet<String>,
+) -> Comparison {
     let mut c = Comparison::default();
     let empty = Map::new();
     let cards: std::collections::BTreeSet<&String> = before
@@ -324,8 +377,21 @@ fn compare(before: &Value, after: &Value, policy: &NewPolicy) -> Comparison {
         .collect();
     for card in cards {
         let (b, a) = (obj(&before[card]), obj(&after[card]));
+        let is_compact = compact.contains(card.as_str());
         for (id, now) in &a {
             let at = At { card, id };
+            let clean = now.get("failing").is_none() && now.get("unknown").is_none();
+            if is_compact && !b.contains_key(id) {
+                // Compact baselines omit clean entities, so this one was clean or didn't exist.
+                if !clean {
+                    let rules: Vec<String> = obj(&now["failing"]).keys().cloned().collect();
+                    c.regressions.push(at.say(format!(
+                        "{} now fails (it was clean, or is new)",
+                        rules.join(", ")
+                    )));
+                }
+                continue;
+            }
             match b.get(id) {
                 // A scorecard new to the baseline baselines everything first (as Betterer's first
                 // run does); the floor applies to entities that appear after that.
@@ -341,7 +407,15 @@ fn compare(before: &Value, after: &Value, policy: &NewPolicy) -> Comparison {
             }
         }
         for id in b.keys().filter(|id| !a.contains_key(*id)) {
-            c.other.push(At { card, id }.say("removed".into()));
+            let at = At { card, id };
+            if is_compact {
+                // A tool reports only files with findings (SARIF without `artifacts`): gone means
+                // its last finding was fixed, or the file was removed.
+                c.improvements
+                    .push(at.say("no longer reported (fixed, or the file is gone)".into()));
+            } else {
+                c.other.push(at.say("removed".into()));
+            }
         }
     }
     c
@@ -377,6 +451,12 @@ fn new_entity(c: &mut Comparison, at: &At, now: &Value, floor: Option<&(Vec<Stri
 /// One entity in both: rules that started failing or whose evidence grew are worse; unknown
 /// outcomes on either side are reported but not compared.
 fn compare_entity(c: &mut Comparison, at: &At, was: &Value, now: &Value) {
+    if now["level"] == "skipped" && was["level"] != "skipped" {
+        // Exempted or out of scope: not fixed, so neither better nor worse.
+        c.other
+            .push(at.say("now skipped (exempt or out of scope)".into()));
+        return;
+    }
     let (wf, nf) = (obj(&was["failing"]), obj(&now["failing"]));
     let (wu, nu) = (strings(&was["unknown"]), strings(&now["unknown"]));
     for rule in nu.iter().filter(|r| !wu.contains(r)) {
@@ -512,7 +592,7 @@ fn paydown_lines(starts: &Map<String, Value>, d: &Derived) -> Vec<String> {
         .collect()
 }
 
-fn markdown(m: &toolbox_model::Manifest, d: &Derived) -> String {
+fn markdown(m: &toolbox_model::Manifest, d: &Derived, all: bool) -> String {
     use std::fmt::Write as _;
     let mut s = String::new();
     let _ = writeln!(
@@ -528,7 +608,20 @@ fn markdown(m: &toolbox_model::Manifest, d: &Derived) -> String {
         }
         let counts: Vec<String> = tally.iter().map(|(l, n)| format!("{l}: {n}")).collect();
         let _ = writeln!(s, "\n## {}  ({})\n", sc.name, counts.join(", "));
-        for (id, r) in rows.iter().filter(|(_, r)| r.level != "skipped") {
+        let shown = |r: &&toolbox_derive::Score| {
+            r.level != "skipped" && (all || r.rules.iter().flatten().any(|(_, o)| o != "pass"))
+        };
+        let quiet = rows
+            .values()
+            .filter(|r| r.level != "skipped" && !shown(r))
+            .count();
+        if quiet > 0 {
+            let _ = writeln!(
+                s,
+                "{quiet} pass every rule (not listed; `--all` lists them).\n"
+            );
+        }
+        for (id, r) in rows.iter().filter(|(_, r)| shown(r)) {
             let failing: Vec<&String> = r
                 .rules
                 .iter()
@@ -570,6 +663,179 @@ fn markdown(m: &toolbox_model::Manifest, d: &Derived) -> String {
             }
         }
     }
+    s
+}
+
+/// The `include` entries of the portal's own manifest file (packages and their parameters).
+fn includes(path: &std::path::Path) -> Vec<Value> {
+    let file = if path.is_dir() {
+        path.join("toolbox.yaml")
+    } else {
+        path.to_path_buf()
+    };
+    let doc: Value = std::fs::read_to_string(file)
+        .ok()
+        .and_then(|t| serde_norway::from_str(&t).ok())
+        .unwrap_or(Value::Null);
+    doc["include"].as_array().cloned().unwrap_or_default()
+}
+
+/// One scorecard's section of STANDARD.md: what it is and its rules. No counts: the file is a
+/// function of the manifest, so it can be committed and checked like the baseline.
+fn standard_scorecard(s: &mut String, sc: &toolbox_model::manifest::Scorecard) {
+    use std::fmt::Write as _;
+    let _ = writeln!(s, "## {}\n", sc.title.as_deref().unwrap_or(&sc.name));
+    if let Some(desc) = &sc.description {
+        let _ = writeln!(s, "{}\n", desc.trim());
+    }
+    let _ = writeln!(
+        s,
+        "Scorecard `{}` over `{}` entities, owned by {}. `toolbox report` lists what fails now.\n",
+        sc.name, sc.kind, sc.owner
+    );
+    let _ = writeln!(s, "| Rule | Level | Passes when | Fix |\n|---|---|---|---|");
+    let cell = |t: &str| {
+        t.split_whitespace()
+            .collect::<Vec<_>>()
+            .join(" ")
+            .replace('|', "\\|")
+    };
+    for r in &sc.rules {
+        let _ = writeln!(
+            s,
+            "| `{}` | {} | `{}` | {} |",
+            r.name,
+            r.level,
+            cell(&r.check),
+            cell(r.fix.as_deref().unwrap_or(""))
+        );
+    }
+    let _ = writeln!(s);
+}
+
+/// The packages the portal includes, with the parameters it gives them.
+fn standard_packages(s: &mut String, incs: &[Value]) {
+    use std::fmt::Write as _;
+    if incs.is_empty() {
+        return;
+    }
+    let _ = writeln!(s, "## Packages and their settings\n");
+    let _ = writeln!(
+        s,
+        "Change a standard by changing these parameters in the portal's `toolbox.yaml`.\n"
+    );
+    for i in incs {
+        let _ = writeln!(s, "- `{}`", i["package"].as_str().unwrap_or("?"));
+        for (k, v) in i["with"].as_object().into_iter().flatten() {
+            let _ = writeln!(s, "  - `{k}`: `{v}`");
+        }
+    }
+    let _ = writeln!(s);
+}
+
+/// The campaigns; `toolbox campaign --portal` shows their progress.
+fn standard_campaigns(s: &mut String, m: &toolbox_model::Manifest) {
+    use std::fmt::Write as _;
+    if m.campaigns.is_empty() {
+        return;
+    }
+    let _ = writeln!(s, "## Campaigns\n");
+    for c in &m.campaigns {
+        let _ = writeln!(
+            s,
+            "- **{}** (`{}`): {}",
+            c.title.as_deref().unwrap_or(&c.name),
+            c.name,
+            c.description.as_deref().unwrap_or("").trim(),
+        );
+    }
+    let _ = writeln!(s);
+}
+
+/// The commands to report, gate, update and change the standard, and a CI workflow.
+fn standard_commands(s: &mut String, portal: &str, baseline: &str, accept: &str) {
+    use std::fmt::Write as _;
+    let rows = [
+        (
+            "List every failure, with path, fields, measure, evidence and fix (JSON)",
+            format!("toolbox report {portal} -o failures"),
+        ),
+        (
+            "Gate: exit 1 when anything got worse than the baseline",
+            format!("toolbox report {portal} --baseline {baseline}"),
+        ),
+        (
+            "What this branch changed, against its base",
+            format!("toolbox report {portal} --against origin/main"),
+        ),
+        (
+            "Record improvements (commit the file)",
+            format!("toolbox report {portal} --baseline {baseline} --update"),
+        ),
+        (
+            "Change a standard on purpose (new pattern, lower limit)",
+            format!("toolbox report {portal} --baseline {baseline} --update --accept {accept}"),
+        ),
+        (
+            "Campaign progress since its start",
+            format!("toolbox campaign --portal {portal} --baseline {baseline}"),
+        ),
+        (
+            "See exactly what a tool ran, to run it alone",
+            format!("toolbox connector records --portal {portal} --name <connector>"),
+        ),
+    ];
+    let _ = writeln!(
+        s,
+        "## Commands\n\nRun from the repository root.\n\n| To | Run |\n|---|---|"
+    );
+    for (to, run) in rows {
+        let _ = writeln!(s, "| {to} | `{run}` |");
+    }
+    let _ = writeln!(
+        s,
+        "\n`--baseline` alone fails only on regressions. `--ci` also fails when the baseline is out of \
+         date (an improvement not yet recorded), so the committed file always matches the code.\n"
+    );
+    let _ = writeln!(
+        s,
+        "## CI\n\n```yaml\n# .github/workflows/toolbox.yml\nname: toolbox\non:\n  pull_request:\n  push: {{branches: [main]}}\npermissions: {{contents: read}}\njobs:\n  report:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: loganvolkers/toolbox/actions/report@<version>\n        with:\n          toolbox-version: \"<version>\"\n          portal: {portal}\n          baseline: {baseline}\n          mode: ci    # or check: fail on regressions only\n```"
+    );
+}
+
+/// `-o standard`: the portal's STANDARD.md, generated from the manifest so it can't drift: each
+/// scorecard with its rules and fixes, the packages and their parameters, the campaigns, the
+/// commands, and a CI workflow.
+fn standard(o: &Options, m: &toolbox_model::Manifest) -> String {
+    use std::fmt::Write as _;
+    let portal = o.path.display().to_string();
+    let baseline = o.baseline.as_ref().map_or_else(
+        || format!("{portal}/results.json"),
+        |b| b.display().to_string(),
+    );
+    let mut s = String::new();
+    let title = m.portal.title.as_deref().unwrap_or(&m.portal.name);
+    let _ = writeln!(s, "# {title}: standards\n");
+    let _ = writeln!(
+        s,
+        "Generated by `toolbox report {portal} -o standard` from the portal's manifest; regenerate it, \
+         don't edit it. Toolbox is the box these standards are carried in; the tools that check them \
+         run on their own too (each record's `command`).\n"
+    );
+    for sc in &m.scorecards {
+        standard_scorecard(&mut s, sc);
+    }
+    let incs: Vec<Value> = includes(&o.path)
+        .into_iter()
+        .filter(|i| i.get("package").is_some())
+        .collect();
+    standard_packages(&mut s, &incs);
+    standard_campaigns(&mut s, m);
+    let accept = m
+        .scorecards
+        .first()
+        .map_or("<scorecard>", |sc| sc.name.as_str());
+    standard_commands(&mut s, &portal, &baseline, accept);
     s
 }
 
@@ -720,6 +986,99 @@ fn write_web(
     starts: &Map<String, Value>,
 ) -> Result<(), String> {
     write_web_parts(dir, &report_json(m, d, starts))
+}
+
+/// `toolbox connector records`: one resync of a portal's connector, its records printed as NDJSON.
+/// What a tool reported, before any rule reads it; lint records carry the `command` that
+/// reproduces them with the tool alone.
+pub fn connector_records(portal: &std::path::Path, name: &str) -> ExitCode {
+    let run = || -> Result<Vec<Value>, String> {
+        let src = toolbox_model::load::load(portal).map_err(|e| e.to_string())?;
+        let m = crate::portal::manifest_from(&src)?;
+        let c = m
+            .connectors
+            .iter()
+            .find(|c| c.name == name)
+            .ok_or(format!("no connector {name} in {}", portal.display()))?;
+        let program = toolbox_api::connectors::binary_for(&c.package);
+        let config = toolbox_api::connectors::resolve_config(
+            &c.name,
+            c.config.as_ref().unwrap_or(&Value::Null),
+        );
+        resync(&c.name, &program, &config, &c.records)
+    };
+    match run() {
+        Ok(records) => {
+            for r in records {
+                println!("{r}");
+            }
+            ExitCode::SUCCESS
+        }
+        Err(e) => {
+            eprintln!("error: {e}");
+            ExitCode::from(2)
+        }
+    }
+}
+
+/// `toolbox campaign --portal`: campaign progress from one local run, without a server; with a
+/// baseline, the paydown since its recorded start.
+pub fn campaign_local(
+    portal: &std::path::Path,
+    name: Option<&str>,
+    baseline: Option<&std::path::Path>,
+    skip: &[String],
+    output: &str,
+) -> ExitCode {
+    let (_, m, d) = match live(portal, false, skip) {
+        Ok(x) => x,
+        Err(e) => {
+            eprintln!("error: {e}");
+            return ExitCode::from(2);
+        }
+    };
+    let recorded = baseline
+        .and_then(|b| std::fs::read_to_string(b).ok())
+        .and_then(|t| serde_json::from_str::<Value>(&t).ok())
+        .map(|b| b["campaigns"].clone());
+    let starts = campaign_starts(&m, &d, recorded.as_ref(), &[]);
+    let mut defs = campaign_defs(&m, &d, &starts);
+    if let Some(n) = name {
+        defs.retain(|k, _| k == n);
+        if defs.is_empty() {
+            eprintln!("error: no campaign {n}");
+            return ExitCode::from(2);
+        }
+    }
+    if output == "json" {
+        println!("{}", toolbox_derive::pyjson::pretty(&Value::Object(defs)));
+        return ExitCode::SUCCESS;
+    }
+    for (n, c) in &defs {
+        println!(
+            "{} ({n}): {} of {} meet it ({}%)",
+            c["title"].as_str().unwrap_or(n),
+            c["meeting"],
+            c["inScope"],
+            c["percent"]
+        );
+        let since = &c["sinceStart"];
+        for (label, key) in [("entities short", "entitiesShort"), ("measure", "measure")] {
+            if let Some(x) = since.get(key) {
+                println!(
+                    "  {label}: {} → {} since {} ({}% of the way)",
+                    x["from"],
+                    x["now"],
+                    since["recorded"].as_str().unwrap_or("?"),
+                    x["percentDone"]
+                );
+            }
+        }
+        if since.is_null() {
+            println!("  no recorded start: pass --baseline (written by report --update)");
+        }
+    }
+    ExitCode::SUCCESS
 }
 
 /// A portal's manifest and derived state from one run of its in-image connectors (or its fixtures),
@@ -896,7 +1255,9 @@ fn ratchet(
         .ok()
         .and_then(|t| serde_json::from_str::<Value>(&t).ok());
     let starts = campaign_starts(m, d, before.as_ref().map(|b| &b["campaigns"]), &o.accept);
-    let mut doc = json!({"format": FORMAT, "portal": m.portal.name, "results": now});
+    let compact = compact_cards(m);
+    let stored = compacted(now, &compact);
+    let mut doc = json!({"format": FORMAT, "portal": m.portal.name, "results": stored});
     if !starts.is_empty() {
         doc["campaigns"] = Value::Object(starts.clone());
     }
@@ -928,15 +1289,97 @@ fn ratchet(
         }
         return Ok(v);
     };
-    v.comparison = compare(&b["results"], now, policy);
+    v.comparison = compare_with(&b["results"], now, policy, &compact);
     (v.accepted, v.comparison.regressions) = std::mem::take(&mut v.comparison.regressions)
         .into_iter()
         .partition(|r| o.accept.contains(&r.scorecard));
     let recorded = b["campaigns"].as_object().cloned().unwrap_or_default();
-    let differs = b["results"] != *now || recorded != v.starts;
+    let differs = b["results"] != doc["results"] || recorded != v.starts;
     let unexpected = unexpected_unknowns(m, &o.skip, now);
     let text = decide(o, &mut v, path, differs, unexpected, &write)?;
     v.summary = format!("{}\nbaseline: {text}\n", change_lines(&v, d).join("\n"));
+    Ok(v)
+}
+
+fn git(dir: &std::path::Path, args: &[&str]) -> Result<String, String> {
+    let out = Command::new("git")
+        .args(args)
+        .current_dir(dir)
+        .output()
+        .map_err(|e| format!("git: {e}"))?;
+    if !out.status.success() {
+        return Err(format!(
+            "git {}: {}",
+            args.join(" "),
+            String::from_utf8_lossy(&out.stderr).trim()
+        ));
+    }
+    Ok(String::from_utf8_lossy(&out.stdout).trim().to_owned())
+}
+
+/// The portal's ratchet results at another commit: the repository checked out at `rev` in a
+/// temporary worktree, and the portal run there from the same relative directory.
+fn results_at(o: &Options, rev: &str) -> Result<Value, String> {
+    let here = std::env::current_dir().map_err(|e| e.to_string())?;
+    let prefix = git(&here, &["rev-parse", "--show-prefix"])?;
+    let top = PathBuf::from(git(&here, &["rev-parse", "--show-toplevel"])?);
+    let tree = std::env::temp_dir().join(format!("toolbox-against-{}", std::process::id()));
+    git(
+        &top,
+        &[
+            "worktree",
+            "add",
+            "--detach",
+            "--quiet",
+            &tree.to_string_lossy(),
+            rev,
+        ],
+    )?;
+    let portal = match o.path.strip_prefix(&top) {
+        Ok(rel) => tree.join(rel),
+        Err(_) if o.path.is_absolute() => o.path.clone(),
+        Err(_) => o.path.clone(),
+    };
+    let result = std::env::set_current_dir(tree.join(&prefix))
+        .map_err(|e| format!("{}: {e}", tree.display()))
+        .and_then(|()| live(&portal, o.fixtures, &o.skip))
+        .map(|(_, m, d)| results(&d, &advisory(&m)));
+    let _ = std::env::set_current_dir(&here);
+    let _ = git(
+        &top,
+        &["worktree", "remove", "--force", &tree.to_string_lossy()],
+    );
+    result
+}
+
+/// `--against REV`: what changed since that commit. Regressions exit 1; nothing is written.
+fn against(
+    o: &Options,
+    rev: &str,
+    m: &toolbox_model::Manifest,
+    d: &Derived,
+    now: &Value,
+) -> Result<Verdict, String> {
+    let before = results_at(o, rev)?;
+    let mut v = Verdict {
+        result: "pass",
+        code: 0,
+        summary: String::new(),
+        written: false,
+        comparison: compare_with(&before, now, &new_policy(m), &BTreeSet::new()),
+        accepted: Vec::new(),
+        unknown: unknown_count(now),
+        starts: Map::new(),
+    };
+    let n = v.comparison.regressions.len();
+    if n > 0 {
+        (v.result, v.code) = ("regressed", 1);
+    }
+    let text = match n {
+        0 => format!("no regressions against {rev}"),
+        n => format!("{n} regression(s) against {rev}"),
+    };
+    v.summary = format!("{}\nagainst: {text}\n", change_lines(&v, d).join("\n"));
     Ok(v)
 }
 
@@ -1000,6 +1443,9 @@ fn failures(m: &toolbox_model::Manifest, d: &Derived) -> Value {
                         "entity": id,
                         "path": d.entities.get(id).and_then(|e| e.fields.get("path")),
                         "fields": scalars(d.entities.get(id)),
+                        "sources": d.entities.get(id).map(|e| e.records.iter().map(|(conn, kind, ext)| {
+                            json!({"connector": conn, "record": kind, "id": ext})
+                        }).collect::<Vec<_>>()),
                         "measure": s.measures.get(rule).map(|x| number(*x)),
                         "evidence": ev,
                         "fix": def.and_then(|r| r.fix.as_deref()),
@@ -1036,15 +1482,19 @@ pub fn run(o: &Options) -> ExitCode {
         Err(e) => return fail(e),
     };
     let now = results(&d, &advisory(&m));
-    let v = match &o.baseline {
-        Some(path) => match ratchet(o, path, &m, &d, &now, &new_policy(&m)) {
+    let v = match (&o.baseline, &o.against) {
+        (_, Some(rev)) => match against(o, rev, &m, &d, &now) {
             Ok(v) => v,
             Err(e) => return fail(e),
         },
-        None if !o.accept.is_empty() => {
+        (Some(path), None) => match ratchet(o, path, &m, &d, &now, &new_policy(&m)) {
+            Ok(v) => v,
+            Err(e) => return fail(e),
+        },
+        (None, None) if !o.accept.is_empty() => {
             return fail("--accept needs --baseline and --update".into());
         }
-        None => Verdict {
+        (None, None) => Verdict {
             result: "pass",
             code: 0,
             summary: String::new(),
@@ -1081,11 +1531,12 @@ pub fn run(o: &Options) -> ExitCode {
             "campaigns": campaign_defs(&m, &d, &v.starts),
         })),
         "failures" => toolbox_derive::pyjson::pretty(&failures(&m, &d)),
+        "standard" => standard(o, &m),
         "html" => html(&m, &d, &v.starts),
-        "md" => markdown(&m, &d),
+        "md" => markdown(&m, &d, o.all),
         other => {
             return fail(format!(
-                "-o {other}: expected md, json, failures, html or web"
+                "-o {other}: expected md, json, failures, standard, html or web"
             ));
         }
     };
@@ -1187,6 +1638,50 @@ mod tests {
         let c = compare(&after, &before, &NewPolicy::new());
         assert!(c.regressions.is_empty());
         assert_eq!(c.other[0].to_string(), "card · a: lint known again: fails");
+    }
+
+    #[test]
+    fn compact_scorecards_omit_clean_entities_and_still_catch_regressions() {
+        let compact: BTreeSet<String> = ["card".to_owned()].into();
+        let policy: NewPolicy =
+            [("card".to_owned(), (vec!["clean".into()], "clean".into()))].into();
+        let now = r(
+            json!({"a": {"level": "none", "failing": {"no-matches": 2}}, "b": {"level": "clean"},
+                           "c": {"level": "skipped"}}),
+        );
+        let stored = compacted(&now, &compact);
+        assert_eq!(
+            stored,
+            r(json!({"a": {"level": "none", "failing": {"no-matches": 2}}}))
+        );
+        // Against that baseline: a new clean file is no change; a clean file that gains a match,
+        // or a new file with one, is a regression; a fixed file is better; an exempted one is neither.
+        let after = r(
+            json!({"a": {"level": "clean"}, "b": {"level": "none", "failing": {"no-matches": 1}},
+                             "d": {"level": "clean"}, "e": {"level": "none", "failing": {"no-matches": 1}}}),
+        );
+        let c = compare_with(&stored, &after, &policy, &compact);
+        assert_eq!(
+            s(&c.regressions),
+            [
+                "card · b: no-matches now fails (it was clean, or is new)",
+                "card · e: no-matches now fails (it was clean, or is new)"
+            ]
+        );
+        assert_eq!(s(&c.improvements), ["card · a: no-matches now passes"]);
+        assert!(c.other.is_empty(), "{:?}", c.other);
+        let skipped = r(json!({"a": {"level": "skipped"}}));
+        let c = compare_with(&stored, &skipped, &policy, &compact);
+        assert_eq!(
+            s(&c.other),
+            ["card · a: now skipped (exempt or out of scope)"]
+        );
+        let gone = r(json!({}));
+        let c = compare_with(&stored, &gone, &policy, &compact);
+        assert_eq!(
+            s(&c.improvements),
+            ["card · a: no longer reported (fixed, or the file is gone)"]
+        );
     }
 
     #[test]

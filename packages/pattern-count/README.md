@@ -47,11 +47,19 @@ include:
 Then, from the repository root:
 
 ```bash
-toolbox report .toolbox -o failures                                     # every file with matches, as JSON
+toolbox vendor <toolbox checkout>/packages/pattern-count --portal .toolbox    # offline: copy the package in (or include github:…@tag)
+toolbox report .toolbox -o failures                                     # every violation, as JSON
 toolbox report .toolbox --baseline .toolbox/results.json --update      # record the baseline; commit it
 toolbox report .toolbox --baseline .toolbox/results.json               # the gate: exit 1 on a regression
-toolbox report .toolbox --baseline .toolbox/results.json -o json | jq '.campaigns'   # campaign progress
+toolbox report .toolbox --against origin/main                          # what this branch changed, no baseline needed
+toolbox campaign --portal .toolbox --baseline .toolbox/results.json    # campaign progress since its start
+toolbox report .toolbox -o standard --out .toolbox/STANDARD.md         # the standard's docs, from the manifest
 ```
+
+The baseline records only files that violate, so adding clean files never makes it stale. In CI,
+`--baseline` alone fails on regressions; `--ci` also fails when an improvement isn't recorded yet.
+`STANDARD.md` ends with a copy-paste GitHub Actions workflow for the
+[report action](../../actions/report/README.md).
 
 Each failure in `-o failures` has `path`, `measure` (its matches), `evidence` (`line 55`, one per
 match) and `fix`.

@@ -57,11 +57,11 @@ Each promise is testable, and each has a check to add (§7).
 
 | # | Promise | Holds today? |
 |---|---|---|
-| B1 | **Take it out.** The command the box runs is a command you can run, and the tool's configuration lives in the tool's own file | No: the `github-actions` package passes actionlint three `-ignore` flags and a runner-label ignore in `toolbox.yaml`. actionlint 1.7.12's own `.github/actionlint.yaml` (`self-hosted-runner.labels`, `paths.<glob>.ignore`) holds the same settings; checked, exit 0 |
-| B2 | **The box doesn't change the findings.** It may decide what they mean (levels, owners, waivers), not what they are | Partly: rules read the tool's findings, but per-tool fittings decide what counts as "suppressed" (the semgrep fitting reads comments) |
-| B3 | **Standard slots first.** A tool that emits SARIF, NDJSON or JUnit fits without new Toolbox code | No: there is no SARIF slot. zizmor 1.32.0 emits SARIF 2.1.0, and semgrep 1.163.0's SARIF marks inline suppressions as `suppressions: [{kind: inSource}]` (both checked). The semgrep fitting built this round infers the same from comments |
+| B1 | **Take it out.** The command the box runs is a command you can run, and the tool's configuration lives in the tool's own file | **Yes for T4T's tools** (since D01M7ZRAJT47W11X5X3FEJ6QTX8's follow-up). Every lint record carries `command`. `scripts/take-it-out.py` reruns each one alone, counts its findings independently, and runs in CI: 15 T4T records and 33 from the semgrep kit on PostHog, no mismatches. The `github-actions` kit (0.2.0) no longer passes actionlint `-ignore` flags; they belong in `.github/actionlint.yaml`, which actionlint 1.7.12 reads itself |
+| B2 | **The box doesn't change the findings.** It may decide what they mean (levels, owners, waivers), not what they are | **Yes where checked**: suppression comes from the tool (SARIF `suppressions`), not from parsing comments, and take-it-out compares counts |
+| B3 | **Standard slots first.** A tool that emits SARIF, NDJSON or JUnit fits without new Toolbox code | **SARIF and NDJSON, yes; JUnit, not yet.** `parse: sarif` on the runner. The zizmor and semgrep kits moved onto it with identical results: T4T's ratchet unchanged, and PostHog's 104 suppressed findings in 33 files ([runner-connector.md](../reference/runner-connector.md)) |
 | B4 | **Pinned and checkable.** Every tool's version is declared, and the box can tell when one is missing or wrong | Yes: `tools:`, `toolbox doctor`, mise (D90) |
-| B5 | **Kits travel whole.** A package carries tools, their configuration, and the rules for using them | Partly: packages carry rules and parameters, but not the tool's own config file, a CI snippet or a STANDARD.md (the rerun's phase 4 hand-copied all three) |
+| B5 | **Kits travel whole.** A package carries tools, their configuration, and the rules for using them | **Mostly.** `toolbox vendor` copies a kit in for offline use. `-o standard` generates its STANDARD.md, ending in a copy-paste CI workflow (T4T commits `portal/STANDARD.md`, and CI checks it is current). A kit can ship a tool's config as a starting point (`github-actions/actionlint.yaml`), but the consumer still copies it |
 | B6 | **Any tool, any version.** Swapping a tool for a better one changes a slot's contents, not the box | Partly: rules name a tool's record fields (`entity.counts.high`), so a new tool means new rules |
 
 ## 4. Building tools
@@ -167,6 +167,14 @@ T4T should be the box's best example, so its own standards should pass B1: an ag
 able to run each tool behind a T4T score directly and get the same finding.
 
 ## 7. Recommendation: what to improve next
+
+**Status:** items 1, 2 and 4 below are built. The rest of this list is still the plan:
+- the SARIF slot, and the kits moved onto it;
+- take-it-out, as a CI check;
+- the box's open friction: vendoring, quiet Markdown, compact baselines, a local `toolbox campaign`,
+  a generated STANDARD.md with a CI workflow, `--against`, and the `tighten` and exempt fixes.
+
+Using them in Toolbox for Toolbox is the input to the box A/B, planned next.
 
 **Make the box a box before building more tools.** In order:
 

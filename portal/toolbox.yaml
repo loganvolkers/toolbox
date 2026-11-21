@@ -48,6 +48,8 @@ connectors:
     runtime: in-image
     config:
       root: .
+      # Generated files are the box's output, not hand-written docs or scripts: not scored.
+      exclude: [portal/STANDARD.md]
       docs:
         - "*.md"
         - docs/**/*.md

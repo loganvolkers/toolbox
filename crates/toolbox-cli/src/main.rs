@@ -187,6 +187,15 @@ enum Command {
     Campaign {
         /// Campaign name.
         name: Option<String>,
+        /// Run this portal locally instead of asking a server (a repo portal: no server needed).
+        #[arg(long)]
+        portal: Option<PathBuf>,
+        /// With --portal: the baseline whose recorded campaign starts the paydown is counted from.
+        #[arg(long, requires = "portal")]
+        baseline: Option<PathBuf>,
+        /// With --portal: connectors not to run (comma-separated).
+        #[arg(long, value_delimiter = ',', requires = "portal")]
+        skip: Vec<String>,
         #[command(flatten)]
         remote: Remote,
     },
@@ -252,6 +261,15 @@ enum Command {
         /// Fail instead of pinning connectors that toolbox.lock doesn't list yet (for CI).
         #[arg(long)]
         frozen: bool,
+    },
+    /// Copy a package into the portal (`<portal>/packages/<name>`, without its tests) so the portal
+    /// needs no network: from a directory, or a `github:` package `toolbox install` cached.
+    Vendor {
+        /// A package directory, or `github:owner/repo[/subdir]@version`.
+        spec: String,
+        /// The portal to vendor it into (a directory containing toolbox.yaml).
+        #[arg(long, default_value = ".")]
+        portal: PathBuf,
     },
     /// Check that every in-image connector resolves and every declared tool is at its pinned
     /// version; exit 1 when something is missing.
@@ -400,6 +418,17 @@ enum ConnectorCommand {
         #[arg(required = true, last = true)]
         program: Vec<String>,
     },
+    /// Run one resync of a portal's connector and print its records (NDJSON): what a tool
+    /// reported before any rule reads it. Lint records carry `command`, which reproduces their
+    /// findings with the tool alone.
+    Records {
+        /// The connector's name in the manifest.
+        #[arg(long)]
+        name: String,
+        /// Portal directory or manifest.
+        #[arg(long, default_value = ".")]
+        portal: PathBuf,
+    },
 }
 
 #[derive(Subcommand)]
@@ -467,6 +496,7 @@ fn main() -> ExitCode {
         Command::Assess { what } => assess_command(what),
         Command::Install { path, frozen } => install::install(&path, frozen),
         Command::Doctor { path, mise } => install::doctor(&path, mise),
+        Command::Vendor { spec, portal } => install::vendor(&spec, &portal),
         Command::Serve {
             path,
             listen,
@@ -538,7 +568,20 @@ fn main() -> ExitCode {
             serde_json::json!({"scorecard": name, "rule": rule, "outcome": outcome, "level": level}),
             &remote.output,
         ),
-        Command::Campaign { name, remote } => client::tool(
+        Command::Campaign {
+            name,
+            portal: Some(portal),
+            baseline,
+            skip,
+            remote,
+        } => report::campaign_local(
+            &portal,
+            name.as_deref(),
+            baseline.as_deref(),
+            &skip,
+            &remote.output,
+        ),
+        Command::Campaign { name, remote, .. } => client::tool(
             &remote.target(),
             "campaign_report",
             serde_json::json!({"campaign": name}),
@@ -567,6 +610,9 @@ fn main() -> ExitCode {
                     program,
                 },
         } => connector_test(&name, &portal, config.as_deref(), &program),
+        Command::Connector {
+            command: ConnectorCommand::Records { name, portal },
+        } => report::connector_records(&portal, &name),
         Command::Token {
             command:
                 TokenCommand::Create {

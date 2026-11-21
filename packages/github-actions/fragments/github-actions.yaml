@@ -1,5 +1,10 @@
 # GitHub Actions standards (docs/design/github-actions-standards.md, D70), packaged (D89, D90).
 # Requires a `workspace` connector with `workflows` globs (workflow and action-ref records).
+# Box and tools (docs/design/toolbox-and-tools.md): a kit carrying two existing tools. zizmor fits
+# the box's SARIF slot; actionlint, which has no SARIF output, comes in through a fitting. Neither
+# gets settings the tool can't read itself: actionlint's ignores belong in the repository's
+# `.github/actionlint.yaml` (this package's actionlint.yaml is a starting point), so running the
+# tool directly, with the `command` each record carries, gives the same findings.
 connectors:
   - name: ci-lint
     package: builtin:runner # zizmor and actionlint: fast, offline, deterministic at pinned versions
@@ -14,25 +19,18 @@ connectors:
           - --offline
           - --no-exit-codes
           - --format
-          - json
+          - sarif
           - "{files}" # the files below that exist: a repository needn't have actions/
-          parse: zizmor
+          parse: sarif # the standard slot; zizmor's severity comes from its zizmor/severity property
           files: [.github/workflows/*.y*ml, actions/*/action.y*ml]
           optional: true # not installed → its rules are unknown, not failing
         - name: actionlint # workflow syntax, expressions, types; shellcheck off so local = CI
-          # GitHub ships permission scopes and workflow keys before actionlint knows them, and
-          # larger or self-hosted runner labels are per organisation: those three "unknown name"
-          # findings are ignored (out-of-box runs, docs/research-log.md *Out-of-box R2*)
+          # Ignores and runner labels are read from the repository's .github/actionlint.yaml, as
+          # when actionlint runs alone (see this package's actionlint.yaml).
           command:
           - actionlint
           - -shellcheck=
           - -pyflakes=
-          - -ignore
-          - unknown permission scope
-          - -ignore
-          - unexpected key "[^"]+" for "concurrency" section
-          - -ignore
-          - label "[^"]+" is unknown
           - -format
           - "{{json .}}"
           - "{files}"

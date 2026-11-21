@@ -158,7 +158,7 @@ Progress fields are independent of status: an `ended` campaign still reports its
 | `toolbox derive` / serve snapshot | Fills `Derived.campaigns` after scorecards |
 | `toolbox report` JSON/HTML/web | `tracks`, `campaigns` (defs + progress, and `sinceStart` with `--baseline`, §3.4), without a server; Campaigns mode in `<toolbox-report>`; Overview lists active campaigns |
 | `toolbox report --baseline` summary | One line per campaign with a recorded start: entities short and measure, from the start to now |
-| `toolbox campaign [name]` | List or one campaign's progress and non-meeting entities (MCP `campaign_report`) |
+| `toolbox campaign [name]` | List or one campaign's progress and non-meeting entities (MCP `campaign_report`). With `--portal DIR [--baseline FILE]`, from one local run without a server, with the paydown since the recorded start |
 | `GET /v1/campaigns` · `/v1/campaigns/{name}` | Same data, facet-visible entities only |
 | `GET /v1/views/campaign/{name}` | Composite for the minimal UI |
 | Minimal UI | `/cgn` list via home; `/cgn/{name}` detail |

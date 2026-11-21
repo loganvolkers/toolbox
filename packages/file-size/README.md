@@ -44,13 +44,18 @@ include:
 Then, from the repository root:
 
 ```bash
+toolbox vendor <toolbox checkout>/packages/file-size --portal .toolbox    # offline: copy the package in (or include github:…@tag)
 toolbox report .toolbox -o failures                                     # every violation, as JSON
 toolbox report .toolbox --baseline .toolbox/results.json --update      # record the baseline; commit it
 toolbox report .toolbox --baseline .toolbox/results.json               # the gate: exit 1 on a regression
-toolbox report .toolbox --baseline .toolbox/results.json -o json | jq '.campaigns'   # campaign progress
+toolbox report .toolbox --against origin/main                          # what this branch changed, no baseline needed
+toolbox campaign --portal .toolbox --baseline .toolbox/results.json    # campaign progress since its start
+toolbox report .toolbox -o standard --out .toolbox/STANDARD.md         # the standard's docs, from the manifest
 ```
 
-In CI, run the gate with `--ci` (it also fails when `results.json` is out of date), or use the
+The baseline records only files that violate, so adding clean files never makes it stale. In CI,
+`--baseline` alone fails on regressions; `--ci` also fails when an improvement isn't recorded yet.
+`STANDARD.md` ends with a copy-paste GitHub Actions workflow for the
 [report action](../../actions/report/README.md).
 
 ## Parameters
@@ -58,7 +63,7 @@ In CI, run the gate with `--ci` (it also fails when `results.json` is out of dat
 | Parameter | Default | Meaning |
 |---|---|---|
 | `files` | required | Globs of the files measured. `**` spans directories, `*` doesn't |
-| `limit` | required | More lines than this is a violation. It may only be lowered (`tighten: lower`) |
+| `limit` | required | More lines than this is a violation. Raising it shows in review, and the ratchet reports the files it lets pass as improvements |
 | `exclude` | `[]` | Globs never measured: tests, generated or vendored code |
 | `exempt` | `{}` | Files measured but exempt, path → reason. The reason stays in the manifest, next to the path |
 | `name` | `file-size` | Names the connector, scorecard and campaign |

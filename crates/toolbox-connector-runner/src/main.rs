@@ -4,11 +4,14 @@
 //! only that crate's jobs (docs/design/toolbox-for-toolbox.md §3).
 //!
 //! `TOOLBOX_CONNECTOR_CONFIG`: `{"name"?: "runner", "root"?: ".", "jobs": [job]}` where a job is
-//! `{"name", "command": [argv], "per"?: "crate" | "once", "parse": "cargo-test" | "clippy" | "ndjson" | "tally" | "zizmor" | "actionlint" | "semgrep"}`.
+//! `{"name", "command": [argv], "per"?: "crate" | "once", "parse": "cargo-test" | "clippy" | "ndjson" | "tally" | "sarif" | "zizmor" | "actionlint" | "semgrep"}`.
 //! In `per: crate` jobs, `{crate}` in the command is replaced by each workspace member's name and
 //! the job emits one record of kind `<name>` with external id `<name>:<crate>`. `ndjson` jobs print
 //! connector `record` messages themselves (e.g. `toolbox describe`); they are passed through, and
-//! the job declares their `kinds`. `zizmor`, `actionlint` and `semgrep` jobs run that linter and
+//! the job declares their `kinds`. `sarif` jobs run any tool that prints SARIF 2.1.0 (or writes it
+//! to `output`), the standard slot (docs/design/toolbox-and-tools.md); `zizmor`, `actionlint` and
+//! `semgrep` are fittings for those tools' own JSON. Every lint record carries `command`, the
+//! command that reproduces its findings with the tool alone. These jobs run that linter and
 //! report one record per file matching their `files` globs, and for semgrep per file it scanned
 //! (findings with severity and line, counts, and `suppressed`/`active`: findings marked
 //! `nosemgrep` inline, when semgrep runs with `--disable-nosem`). An
@@ -43,6 +46,8 @@ struct Job {
     /// A missing program is skipped with a log line instead of failing the command; its records
     /// are then absent, so rules over them evaluate to `unknown`, not `fail`.
     optional: bool,
+    /// Lint jobs: the file the tool writes its report to (relative to the root), instead of stdout.
+    output: Option<String>,
 }
 
 impl Job {
@@ -232,7 +237,14 @@ impl Runner {
             let parse = j["parse"].as_str().unwrap_or("ndjson").to_owned();
             if !matches!(
                 parse.as_str(),
-                "cargo-test" | "clippy" | "ndjson" | "tally" | "zizmor" | "actionlint" | "semgrep"
+                "cargo-test"
+                    | "clippy"
+                    | "ndjson"
+                    | "tally"
+                    | "sarif"
+                    | "zizmor"
+                    | "actionlint"
+                    | "semgrep"
             ) {
                 return Err(format!("job {name}: unknown parser {parse}"));
             }
@@ -256,6 +268,7 @@ impl Runner {
                 per_crate: j["per"] == "crate",
                 files,
                 optional: j["optional"].as_bool().unwrap_or(false),
+                output: s("output"),
                 file: s("file"),
                 key: s("key"),
                 name,
@@ -350,10 +363,17 @@ impl Runner {
             }
             return Err(format!("job {}: {}", job.name, run.stderr));
         }
+        // A tool that writes its report to a file (`output`) is read from there, else stdout.
+        let text = match &job.output {
+            Some(f) => std::fs::read_to_string(self.root.join(f))
+                .map_err(|e| format!("job {}: {f}: {e}", job.name))?,
+            None => run.stdout.clone(),
+        };
         let parsed = match job.parse.as_str() {
-            "zizmor" => lint::zizmor(&run.stdout),
-            "semgrep" => lint::semgrep(&run.stdout, &self.root),
-            _ => lint::actionlint(&run.stdout),
+            "sarif" => lint::sarif(&text, &self.root),
+            "zizmor" => lint::zizmor(&text),
+            "semgrep" => lint::semgrep(&text, &self.root),
+            _ => lint::actionlint(&text),
         }
         .map_err(|e| {
             format!(
@@ -363,12 +383,17 @@ impl Runner {
             )
         })?;
         let mut by_file = parsed;
+        // Take-it-out: each record names the command that gives its file's findings with the tool
+        // alone (`{files}` as that one file; a whole-tree run as it was run).
+        let command = |path: &str| {
+            shell_words(&with_files(&job.command, &[path.to_owned()]).unwrap_or_default())
+        };
         for path in files {
             let findings = by_file.remove(&path).unwrap_or_default();
             out.record(
                 &job.name,
                 &format!("{}:{path}", job.name),
-                lint::record(&path, findings),
+                lint::record(&path, &command(&path), &job.parse, findings),
             );
         }
         for (path, findings) in by_file {
@@ -377,7 +402,7 @@ impl Runner {
                 out.record(
                     &job.name,
                     &format!("{}:{path}", job.name),
-                    lint::record(&path, findings),
+                    lint::record(&path, &command(&path), &job.parse, findings),
                 );
             }
         }
@@ -469,7 +494,10 @@ impl Runner {
             } else if self.selected(job, ids) {
                 if job.parse == "tally" {
                     self.run_tally(job, out).await?;
-                } else if matches!(job.parse.as_str(), "zizmor" | "actionlint" | "semgrep") {
+                } else if matches!(
+                    job.parse.as_str(),
+                    "sarif" | "zizmor" | "actionlint" | "semgrep"
+                ) {
                     self.run_lint(job, out).await?;
                 } else {
                     self.run_ndjson(job, out).await?;
@@ -593,6 +621,23 @@ impl Source for Runner {
 
 /// `command` with an argument that is exactly `{files}` replaced by `files`; `None` when it asks for
 /// files and there are none.
+/// An argv as one shell command line: words that need it are single-quoted.
+fn shell_words(argv: &[String]) -> String {
+    argv.iter()
+        .map(|a| {
+            if !a.is_empty()
+                && a.chars()
+                    .all(|c| c.is_ascii_alphanumeric() || "-_./=:,+@%".contains(c))
+            {
+                a.clone()
+            } else {
+                format!("'{}'", a.replace('\'', "'\\''"))
+            }
+        })
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
 fn with_files(command: &[String], files: &[String]) -> Option<Vec<String>> {
     if !command.iter().any(|a| a == "{files}") {
         return Some(command.to_vec());

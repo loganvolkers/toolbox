@@ -18,7 +18,11 @@ scripts/regen-site-report.sh
 
 In a pipeline, add `--verdict verdict.json`: it lists each regression as `{scorecard, entity, message}`, so the job can annotate or comment without parsing the text.
 
-To work the failures, `-o failures` prints each one as JSON with its path, fields, measure, evidence and fix. `-o json` adds `campaigns`, and with --baseline each one's paydown since its recorded start.
+To work the failures, `-o failures` prints each one as JSON with its path, fields, measure, evidence, fix and the connector records it came from. `-o json` adds `campaigns`, and with --baseline each one's paydown since its recorded start. The default Markdown lists only entities with a failing or unknown rule; `--all` lists every one.
+
+To see what one change did, use `--against <commit>` (for example `HEAD~1`, or a pull request's base). It scores the portal at that commit in a temporary worktree and compares, without a baseline file.
+
+`-o standard` prints the portal's STANDARD.md from its manifest: rules, fixes, package parameters, campaigns, commands and a CI workflow. Regenerate it rather than editing it.
 
 For an intended change to a standard (a lower limit, a wider pattern), use `--update --accept <scorecard>`. It records and lists that scorecard's regressions and restarts its campaigns. Regressions elsewhere still fail.
 

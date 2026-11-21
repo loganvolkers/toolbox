@@ -15,13 +15,13 @@ the commit the A/B used, all suppressed: a campaign the repository doesn't have 
 
 **Box or tool:** this package is a **kit**: it carries semgrep, an existing tool, with the rule
 the repository already has ([toolbox-and-tools.md](../../docs/design/toolbox-and-tools.md)).
-semgrep runs as it would without Toolbox, and its findings come in through a **fitting**
-(`parse: semgrep`). semgrep's SARIF output already marks suppressed findings, so the fitting is
-to be replaced by a standard SARIF slot.
+semgrep runs as it would without Toolbox (`semgrep --config <rule> --sarif`), and its findings come
+in through the box's standard **SARIF slot**, which reads semgrep's own suppression marks. Each
+record's `command` repeats the run with semgrep alone.
 
 | Brings | Named |
 |---|---|
-| Connector | `<name>` (`builtin:runner`, one semgrep run, `parse: semgrep`) |
+| Connector | `<name>` (`builtin:runner`, one semgrep run, `parse: sarif`) |
 | Kind | `<kind>` (default `SemgrepFile`): `path`, `total`, `suppressed`, `active`, `findings` |
 | Scorecard | `<name>`, one level `clean`, rule `no-findings` |
 | Campaign | `<name>-zero` |
@@ -46,9 +46,10 @@ toolbox report .toolbox --baseline .toolbox/results.json --update    # record th
 toolbox report .toolbox --baseline .toolbox/results.json             # the gate
 ```
 
-The rule's own `paths` (include and exclude) decide what is scanned. semgrep runs with
-`--disable-nosem`, so suppressed findings are reported. semgrep's JSON doesn't mark them, so a
-finding counts as suppressed when its line, or the line above, has a `nosemgrep` comment. A
+The rule's own `paths` (include and exclude) decide what is scanned. semgrep's SARIF reports
+`nosemgrep` findings with `suppressions: [{kind: inSource}]`, so they count without any parsing of
+comments. SARIF lists only files with findings, so a file that loses its last finding drops out,
+and the ratchet counts that as fixed. A
 whole-repository run takes as long as semgrep does (minutes on PostHog), so run it where the
 rule's semgrep job already runs.
 
@@ -65,5 +66,5 @@ rule's semgrep job already runs.
 
 ## Sources
 
-- [crates/toolbox-connector-runner/src/lint.rs](../../crates/toolbox-connector-runner/src/lint.rs): the `semgrep` parser, checked against semgrep 1.163.0's JSON (docs/research-log.md)
+- [crates/toolbox-connector-runner/src/lint.rs](../../crates/toolbox-connector-runner/src/lint.rs): the SARIF slot, checked against semgrep 1.163.0's and zizmor 1.32.0's SARIF (docs/research-log.md)
 - [docs/design/ratchets.md](../../docs/design/ratchets.md): the ratchet, measures and campaign starts

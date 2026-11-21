@@ -13,6 +13,17 @@ it like any consumer.
 
 It needs a `workspace` connector with `workflows` globs.
 
+**Box or tool:** a kit carrying two existing tools
+([toolbox-and-tools.md](../../docs/design/toolbox-and-tools.md)). zizmor fits the box's SARIF slot.
+actionlint has no SARIF output, so it comes in through a fitting (`parse: actionlint`). The box
+passes neither tool a setting the tool can't read itself. Each record's `command` field reruns
+that file's check with the tool alone.
+
+**From 0.2.0, actionlint's ignores live in your repository's `.github/actionlint.yaml`**, not in
+the package. [actionlint.yaml](./actionlint.yaml) is a starting point: unknown permission scopes
+and `concurrency` keys that GitHub shipped before actionlint knew them, and your runner labels.
+Without it, 0.1.0's three ignored findings can appear as new failures on upgrade.
+
 ```yaml
 include:
   - package: github:<owner>/toolbox/packages/github-actions@<version>   # or a path in your repo

@@ -61,12 +61,21 @@ include:
 The loop is the same for every standard:
 
 ```bash
+toolbox vendor <toolbox checkout>/packages/pattern-count --portal .toolbox   # offline: copy the package in
 toolbox report .toolbox -o failures                                      # what violates, where, and the fix (JSON)
 toolbox report .toolbox --baseline .toolbox/results.json --update       # record today's state; commit it
 toolbox report .toolbox --baseline .toolbox/results.json                # the gate: exit 1 when anything got worse
-toolbox report .toolbox --baseline .toolbox/results.json -o json | jq '.campaigns'   # progress since the start
+toolbox report .toolbox --against origin/main                           # what this branch changed
+toolbox campaign --portal .toolbox --baseline .toolbox/results.json     # progress since the start
 toolbox report .toolbox --baseline .toolbox/results.json --update --accept no-console   # after tightening the standard
+toolbox report .toolbox -o standard --out .toolbox/STANDARD.md          # the docs and a CI workflow, from the manifest
+toolbox connector records --portal .toolbox --name no-console           # what the tool reported, and the command to rerun it
 ```
+
+**Box or tool:** the starter and these commands are the box. The tools are what the box carries:
+an existing linter through the SARIF slot (`parse: sarif` on the runner connector) whenever there
+is one, and a jig from the packages above only when there isn't
+([toolbox-and-tools.md](../../docs/design/toolbox-and-tools.md)).
 
 For a standard none of them fits, write the kind and scorecard yourself: the workspace connector's
 records are listed in [docs/reference/workspace-connector.md](../../docs/reference/workspace-connector.md),

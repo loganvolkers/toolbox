@@ -20,6 +20,6 @@ toolbox campaign skill-silver -o json
 
 Campaigns are declared in the manifest (`tracks` / `campaigns`). They compose
 scorecards; they do not define new checks. If it fails, the campaign name is
-wrong or the server is down. Without a server, `toolbox report <portal>
---baseline <file> -o json` has the same progress under `campaigns`, with the
-paydown since the baseline recorded each campaign's start.
+wrong or the server is down. Without a server, pass `--portal <dir>` (and
+`--baseline <file>` for the paydown since each campaign's recorded start):
+`toolbox campaign --portal .toolbox --baseline .toolbox/results.json`.

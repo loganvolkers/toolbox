@@ -1,0 +1,10 @@
+# A starting point for a repository's .github/actionlint.yaml, read by actionlint itself, with or
+# without Toolbox. GitHub ships permission scopes and workflow keys before actionlint knows them,
+# and larger or self-hosted runner labels are per organisation; these were the three "unknown name"
+# findings on the out-of-box forks (docs/research-log.md, *Out-of-box R2*). Copy what applies.
+self-hosted-runner: {labels: []}
+paths:
+  .github/workflows/**/*.{yml,yaml}:
+    ignore:
+      - unknown permission scope
+      - unexpected key "[^"]+" for "concurrency" section

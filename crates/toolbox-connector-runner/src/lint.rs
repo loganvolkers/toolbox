@@ -1,6 +1,7 @@
-//! Parsers for linters whose findings are reported per file: zizmor (`--format json`, v1),
-//! actionlint (`-format '{{json .}}'`) and semgrep (`--json`). Every file the job covers gets a
-//! record, so a clean file is distinguishable from one that wasn't scanned
+//! Findings per file, for the box (docs/design/toolbox-and-tools.md): the SARIF 2.1.0 slot, which
+//! any tool with SARIF output fits without code here, and fittings for tools without it: zizmor
+//! (`--format json`, v1), actionlint (`-format '{{json .}}'`) and semgrep (`--json`). Every file
+//! the job covers gets a record, so a clean file is distinguishable from one that wasn't scanned
 //! (docs/design/github-actions-standards.md §4).
 
 use serde_json::{Map, Value, json};
@@ -119,9 +120,76 @@ pub fn semgrep(
     Ok(by_file)
 }
 
-/// The record for one file: its findings (sorted by line), counts per severity, and how many are
-/// suppressed inline (`suppressed`) and how many not (`active`).
-pub fn record(path: &str, mut findings: Vec<Value>) -> Value {
+/// A SARIF artifact URI as a path relative to the checkout: `file://` and the root stripped.
+fn sarif_path(uri: &str, root: &std::path::Path) -> String {
+    let uri = uri.strip_prefix("file://").unwrap_or(uri);
+    let abs = std::fs::canonicalize(root).ok();
+    let rel = abs
+        .as_ref()
+        .and_then(|a| uri.strip_prefix(a.to_string_lossy().as_ref()))
+        .map(|r| r.trim_start_matches('/'))
+        .unwrap_or(uri);
+    normalise(rel)
+}
+
+/// SARIF 2.1.0, the standard slot: every run's results by file. A finding has the rule's short
+/// name (`rule`, after the last `/` or `.` of `ruleId`) and its `ruleId`, SARIF's `level`, a
+/// `severity` (the tool's own `…severity` result property when it has one, as zizmor's
+/// `zizmor/severity`; else the level), the first location's line, the message, `suppressed`
+/// (SARIF `suppressions` not rejected, e.g. semgrep's `nosemgrep`) and the result's
+/// `properties`. Files listed in `artifacts` are keys even with no results.
+pub fn sarif(text: &str, root: &std::path::Path) -> Result<BTreeMap<String, Vec<Value>>, String> {
+    let doc: Value = serde_json::from_str(text).map_err(|e| format!("SARIF: {e}"))?;
+    let mut by_file: BTreeMap<String, Vec<Value>> = BTreeMap::new();
+    for run in doc["runs"].as_array().into_iter().flatten() {
+        for a in run["artifacts"].as_array().into_iter().flatten() {
+            if let Some(uri) = a["location"]["uri"].as_str() {
+                by_file.entry(sarif_path(uri, root)).or_default();
+            }
+        }
+        for r in run["results"].as_array().into_iter().flatten() {
+            let loc = &r["locations"][0]["physicalLocation"];
+            let path = sarif_path(loc["artifactLocation"]["uri"].as_str().unwrap_or(""), root);
+            let id = r["ruleId"].as_str().unwrap_or("?");
+            let short = id.rsplit('/').next().unwrap_or(id);
+            let short = short.rsplit('.').next().unwrap_or(short);
+            let level = r["level"].as_str().unwrap_or("warning");
+            let props = r["properties"].clone();
+            let severity = props
+                .as_object()
+                .and_then(|o| {
+                    o.iter()
+                        .find(|(k, v)| k.ends_with("severity") && v.is_string())
+                })
+                .and_then(|(_, v)| v.as_str())
+                .unwrap_or(level)
+                .to_lowercase();
+            let suppressed = r["suppressions"]
+                .as_array()
+                .is_some_and(|s| s.iter().any(|x| x["status"] != "rejected"));
+            let mut f = finding(
+                short,
+                &severity,
+                loc["region"]["startLine"].as_u64().unwrap_or(0),
+                r["message"]["text"].as_str().unwrap_or(""),
+            );
+            f["ruleId"] = json!(id);
+            f["level"] = json!(level);
+            f["suppressed"] = json!(suppressed);
+            if !props.is_null() {
+                f["properties"] = props;
+            }
+            by_file.entry(path).or_default().push(f);
+        }
+    }
+    Ok(by_file)
+}
+
+/// The record for one file: its findings (sorted by line), counts per severity, how many are
+/// suppressed inline (`suppressed`) and how many not (`active`), `command`: the command that
+/// reproduces this file's findings with the tool alone (take-it-out), and `via`: the slot or
+/// fitting that read its output (`sarif`, `zizmor`, …).
+pub fn record(path: &str, command: &str, via: &str, mut findings: Vec<Value>) -> Value {
     findings.sort_by_key(|f| (f["line"].as_u64(), f["rule"].as_str().map(str::to_owned)));
     let mut counts = Map::new();
     for sev in [
@@ -133,6 +201,8 @@ pub fn record(path: &str, mut findings: Vec<Value>) -> Value {
         "error",
         "warning",
         "info",
+        "note",
+        "none",
     ] {
         counts.insert(sev.into(), json!(0));
     }
@@ -148,7 +218,9 @@ pub fn record(path: &str, mut findings: Vec<Value>) -> Value {
         "suppressed": suppressed,
         "active": findings.len() - suppressed,
         "counts": counts,
-        "findings": findings
+        "findings": findings,
+        "command": command,
+        "via": via
     })
 }
 
@@ -173,7 +245,12 @@ mod tests {
             (f[0]["severity"].as_str(), f[0]["line"].as_u64()),
             (Some("high"), Some(8))
         );
-        let rec = record(".github/workflows/ci.yml", f.clone());
+        let rec = record(
+            ".github/workflows/ci.yml",
+            "zizmor ci.yml",
+            "zizmor",
+            f.clone(),
+        );
         assert_eq!(
             (rec["counts"]["high"].as_u64(), rec["total"].as_u64()),
             (Some(1), Some(1))
@@ -200,7 +277,7 @@ mod tests {
           "errors": [], "paths": {"scanned": ["app/a.py", "app/clean.py"]}}"#;
         let r = semgrep(out, &dir).unwrap();
         assert!(r["app/clean.py"].is_empty());
-        let rec = record("app/a.py", r["app/a.py"].clone());
+        let rec = record("app/a.py", "semgrep", "semgrep", r["app/a.py"].clone());
         assert_eq!(rec["findings"][0]["rule"], "no-orm");
         assert_eq!(rec["counts"]["warning"], 3);
         assert_eq!(
@@ -211,12 +288,60 @@ mod tests {
     }
 
     #[test]
+    fn sarif_results_by_file_with_tool_severity_and_suppressions() {
+        // The shapes zizmor 1.32.0 (`--format sarif`) and semgrep 1.163.0 (`--sarif`) print, trimmed.
+        let zizmor = r#"{"version": "2.1.0", "runs": [{"tool": {"driver": {"name": "zizmor"}}, "results": [
+            {"ruleId": "zizmor/self-repository", "level": "note", "message": {"text": "self"},
+             "properties": {"zizmor/severity": "Low", "zizmor/confidence": "High"},
+             "locations": [{"physicalLocation": {"artifactLocation": {"uri": ".github/workflows/ci.yml"},
+               "region": {"startLine": 12}}}]}]}]}"#;
+        let root = std::path::Path::new(".");
+        let r = sarif(zizmor, root).unwrap();
+        let f = &r[".github/workflows/ci.yml"][0];
+        assert_eq!(
+            (
+                f["rule"].as_str(),
+                f["severity"].as_str(),
+                f["line"].as_u64()
+            ),
+            (Some("self-repository"), Some("low"), Some(12))
+        );
+        assert_eq!(f["suppressed"], false);
+        let semgrep = r#"{"version": "2.1.0", "runs": [{"tool": {"driver": {"name": "Semgrep OSS"}},
+            "artifacts": [{"location": {"uri": "app/clean.py"}}], "results": [
+            {"ruleId": "semgrep.rules.no-orm", "level": "warning", "message": {"text": "use the helpers"},
+             "suppressions": [{"kind": "inSource"}],
+             "locations": [{"physicalLocation": {"artifactLocation": {"uri": "app/a.py"}, "region": {"startLine": 3}}}]},
+            {"ruleId": "semgrep.rules.no-orm", "level": "warning", "message": {"text": "use the helpers"},
+             "suppressions": [{"kind": "inSource", "status": "rejected"}],
+             "locations": [{"physicalLocation": {"artifactLocation": {"uri": "app/a.py"}, "region": {"startLine": 9}}}]}]}]}"#;
+        let r = sarif(semgrep, root).unwrap();
+        assert!(r["app/clean.py"].is_empty());
+        let rec = record(
+            "app/a.py",
+            "semgrep --sarif app/a.py",
+            "sarif",
+            r["app/a.py"].clone(),
+        );
+        assert_eq!(rec["findings"][0]["rule"], "no-orm");
+        assert_eq!(
+            (rec["suppressed"].as_u64(), rec["active"].as_u64()),
+            (Some(1), Some(1))
+        );
+        assert_eq!(rec["counts"]["warning"], 2);
+        assert_eq!(rec["command"], "semgrep --sarif app/a.py");
+    }
+
+    #[test]
     fn actionlint_errors_and_clean_output() {
         let out = r#"[{"message":"unexpected key \"branch\"","filepath":".github/workflows/a.yml","line":3,"column":5,"kind":"syntax-check"}]"#;
         let r = actionlint(out).unwrap();
         assert_eq!(r[".github/workflows/a.yml"][0]["rule"], "syntax-check");
         assert!(actionlint("null\n").unwrap().is_empty());
         assert!(actionlint("").unwrap().is_empty());
-        assert_eq!(record("x.yml", vec![])["total"], 0);
+        assert_eq!(
+            record("x.yml", "actionlint x.yml", "actionlint", vec![])["total"],
+            0
+        );
     }
 }

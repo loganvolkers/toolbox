@@ -358,3 +358,76 @@ fn which(bin: &str) -> bool {
         .map(|p| std::env::split_paths(&p).any(|d| d.join(bin).is_file()))
         .unwrap_or(false)
 }
+
+/// Copy a directory tree, leaving out `skip` names (`.git`, `tests`) at any depth.
+fn copy_tree(from: &Path, to: &Path, skip: &[&str]) -> Result<(), String> {
+    std::fs::create_dir_all(to).map_err(|e| format!("{}: {e}", to.display()))?;
+    for e in std::fs::read_dir(from).map_err(|e| format!("{}: {e}", from.display()))? {
+        let e = e.map_err(|e| e.to_string())?;
+        let name = e.file_name();
+        if skip.iter().any(|s| name == *s) {
+            continue;
+        }
+        let (src, dst) = (e.path(), to.join(&name));
+        if src.is_dir() {
+            copy_tree(&src, &dst, skip)?;
+        } else {
+            std::fs::copy(&src, &dst).map_err(|e| format!("{}: {e}", src.display()))?;
+        }
+    }
+    Ok(())
+}
+
+/// `toolbox vendor`: copy a package (a directory, or a `github:` spec already in the cache from
+/// `toolbox install`) into `<portal>/packages/<name>`, without its tests, so the portal needs no
+/// network. Writes `VENDORED.json` (where it came from, its version and content hash) and prints
+/// the `include` entry to use.
+pub fn vendor(spec: &str, portal: &Path) -> ExitCode {
+    let run = || -> Result<String, String> {
+        let here = std::env::current_dir().map_err(|e| e.to_string())?;
+        let dir = toolbox_model::package::locate(&here, spec);
+        let meta: Value = std::fs::read_to_string(dir.join("toolbox-package.yaml"))
+            .map_err(|e| {
+                format!(
+                    "{}: {e} (for a github: package, run `toolbox install` first)",
+                    dir.join("toolbox-package.yaml").display()
+                )
+            })
+            .and_then(|t| serde_norway::from_str(&t).map_err(|e| e.to_string()))?;
+        let name = meta["name"]
+            .as_str()
+            .ok_or("toolbox-package.yaml has no name")?;
+        let root = if portal.is_dir() {
+            portal.to_path_buf()
+        } else {
+            portal.parent().unwrap_or(Path::new(".")).to_path_buf()
+        };
+        let to = root.join("packages").join(name);
+        if to.exists() {
+            std::fs::remove_dir_all(&to).map_err(|e| format!("{}: {e}", to.display()))?;
+        }
+        copy_tree(&dir, &to, &[".git", "tests"])?;
+        let record = serde_json::json!({
+            "source": spec,
+            "version": meta["version"],
+            "contentHash": toolbox_model::package::content_hash(&to),
+        });
+        std::fs::write(
+            to.join("VENDORED.json"),
+            toolbox_derive::pyjson::pretty(&record),
+        )
+        .map_err(|e| e.to_string())?;
+        Ok(format!(
+            "vendored {name} {} into {}\ninclude:\n  - package: packages/{name}\n    with: {{}}   # the package's parameters (see its README)",
+            meta["version"].as_str().unwrap_or("?"),
+            to.display()
+        ))
+    };
+    match run() {
+        Ok(msg) => {
+            println!("{msg}");
+            ExitCode::SUCCESS
+        }
+        Err(e) => fail(e),
+    }
+}

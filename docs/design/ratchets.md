@@ -56,7 +56,10 @@ registry; repository metadata from the GitHub search API, 2026-11-20.*
 | `bigger` / `smaller` constraints on a number | A rule's `measure` (CEL, a number) is recorded and compared instead of the evidence count: lines in a file, matches of a pattern. One line more is worse, one less better, without one evidence item per unit | ✅ (D01M7Z2ZZ97VZQNTDT4QQHM3HQD) |
 | `--update` accepts worse | `--update --accept <scorecard>` records that scorecard's regressions, lists them, and still fails on regressions elsewhere: for an intended change to a standard (a tighter threshold, a wider pattern). It also restarts the campaigns that include the scorecard | ✅ (D01M7Z2ZZ97VZQNTDT4QQHM3HQD) |
 | Goals with progress | A campaign's starting point is recorded in the baseline the first time it is active: entities short of the goal and the included rules' summed measure. `-o json` and the summary show the paydown from there; changing the campaign's `start` restarts it | ✅ (D01M7Z2ZZ97VZQNTDT4QQHM3HQD) |
-| Issues as a list | `-o failures` prints every failing rule as JSON: scorecard, rule, entity, path, the entity's scalar fields, measure, evidence and fix | ✅ |
+| Issues as a list | `-o failures` prints every failing rule as JSON: scorecard, rule, entity, path, the entity's scalar fields, measure, evidence, fix, and the connector records it came from | ✅ |
+| A results file that only holds issues | A scorecard whose new-entity floor is its top level (every entity must pass) records only the entities that don't. A clean file, new or not, adds nothing, so adding clean files never makes the baseline stale (Codex's dropped from 174 KB to 30 KB). An entity absent from such a baseline that now fails is a regression | ✅ (D01M7ZRAJT47W11X5X3FEJ6QTX8) |
+| Compare with a commit | `--against <rev>` scores the portal at that commit in a temporary git worktree and compares, without a baseline file: what one commit or branch changed | ✅ |
+| Exemptions aren't fixes | An entity that becomes `skipped` (exempted, out of scope) is reported as a change, not an improvement | ✅ |
 
 **First catch.** The first time CI's ratchet ran locally, it caught the author of this document:
 - a change had raised a runner function's cyclomatic complexity to 16;
