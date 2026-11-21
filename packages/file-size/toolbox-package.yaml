@@ -1,6 +1,5 @@
-# A Toolbox package (D89): a size limit on files, ratcheted per file, with a campaign to zero.
-# Codex's AGENTS.md standard ("past roughly 800 LoC, add new functionality in a new module") is
-# the first consumer; OpenFGA's Go files the second (experiments/standards-ab).
+# A Toolbox package (D89): a size limit on files, ratcheted per file, with a campaign to zero
+# (D01M7Z2ZZ97VZQNTDT4QQHM3HQD).
 apiVersion: toolbox.dev/package/v0
 name: file-size
 version: 0.1.0

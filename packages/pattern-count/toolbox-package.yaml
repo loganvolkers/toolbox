@@ -1,6 +1,5 @@
-# A Toolbox package (D89): occurrences of a pattern, ratcheted per file, with a campaign to zero.
-# PostHog's AGENTS.md standard ("never add new direct ORM queries like Person.objects.filter(...)")
-# is the first consumer (experiments/standards-ab).
+# A Toolbox package (D89): occurrences of a pattern, ratcheted per file, with a campaign to zero
+# (D01M7Z2ZZ97VZQNTDT4QQHM3HQD).
 apiVersion: toolbox.dev/package/v0
 name: pattern-count
 version: 0.1.0
@@ -53,7 +52,7 @@ parameters:
     type: string
     description: >-
       The regular expression (Rust regex syntax), e.g.
-      '\b(Person|Group)\.objects\b'. Each match is one violation.
+      '\bconsole\.(log|debug)\('. Each match is one violation.
   fix:
     type: string
     default: Remove the match, using the alternative the standard names.

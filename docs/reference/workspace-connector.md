@@ -15,9 +15,9 @@ connectors:
     config:
       root: .
       crates: false
-      files: ["src/**/*.py"]
+      files: ["web/src/**/*.ts"]
       exclude: ["**/tests/**"]
-      counts: {orm: '\bPerson\.objects\b'}
+      counts: {debug: '\bconsole\.log\('}
     records: [file]
 ```
 

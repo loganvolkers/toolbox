@@ -99,8 +99,8 @@ Raw `inScope` and `meeting` counts are always emitted (deterministic for tests a
 
 ### 3.4 Progress from a recorded start
 
-A percentage of entities meeting the goal hides paydown inside entities that still fail: 102
-violations in 37 files going to 99 in 35 files is 5.4% fewer files and 2.9% fewer violations.
+A percentage of entities meeting the goal hides paydown inside entities that still fail: 120
+violations in 40 files going to 114 in 39 files is 2.5% fewer files and 5.0% fewer violations.
 So `toolbox report --baseline` records each campaign's starting point in the baseline file the
 first time the campaign is active (`campaigns.<name>: {start, recorded, inScope, short,
 measure?}`) and keeps it while the campaign's `start` is unchanged. The summary and `-o json`
@@ -139,7 +139,7 @@ Progress fields are independent of status: an `ended` campaign still reports its
   "meeting": 28,
   "percent": 88,
   "onTarget": false,
-  "measure": 102,
+  "measure": 120,
   "milestones": [{"name": "half", "targetPercent": 50, "met": true}],
   "entities": {
     "skill:plugins/…/scorecard": {"meeting": true},

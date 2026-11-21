@@ -1230,18 +1230,18 @@ mod tests {
 
     #[test]
     fn paydown_is_measured_from_the_recorded_start() {
-        let start = json!({"start": "2026-11-21", "recorded": "2026-11-21", "inScope": 400, "short": 37, "measure": 102});
-        let p = paydown(&start, &progress(400, 365, Some(99.0)));
+        let start = json!({"start": "2026-11-21", "recorded": "2026-11-21", "inScope": 400, "short": 40, "measure": 120});
+        let p = paydown(&start, &progress(400, 361, Some(114.0)));
         assert_eq!(
             p,
             json!({"start": "2026-11-21", "recorded": "2026-11-21",
-                   "entitiesShort": {"from": 37, "now": 35, "percentDone": 5.4},
-                   "measure": {"from": 102, "now": 99, "percentDone": 2.9}})
+                   "entitiesShort": {"from": 40, "now": 39, "percentDone": 2.5},
+                   "measure": {"from": 120, "now": 114, "percentDone": 5.0}})
         );
         // Backwards is negative, not hidden.
         assert_eq!(
-            paydown(&start, &progress(400, 360, Some(105.0)))["measure"]["percentDone"],
-            json!(-2.9)
+            paydown(&start, &progress(400, 359, Some(126.0)))["measure"]["percentDone"],
+            json!(-5.0)
         );
         // Without a measure, only entities short of the goal.
         let start = json!({"start": null, "inScope": 10, "short": 4});

@@ -9,9 +9,7 @@ standard, a ratchet and a campaign:
 - the campaign `<name>-zero` counts files with matches, and matches, from the day the baseline
   first records it.
 
-It needs nothing but the `toolbox` binaries: files are read by `builtin:workspace`. First used for
-PostHog's "never add new direct ORM queries like `Person.objects.filter(...)` … use the routed
-helpers" ([experiments/standards-ab](../../experiments/standards-ab/README.md)). If the pattern is
+It needs nothing but the `toolbox` binaries: files are read by `builtin:workspace`. If the pattern is
 already a semgrep rule, use [`packages/semgrep`](../semgrep/README.md) instead: it keeps the rule
 in one place and counts its `nosemgrep` suppressions.
 
@@ -32,14 +30,14 @@ portal: {name: my-repo, owner: group:maintainers, toolbox: "0.1"}
 include:
   - package: github:loganvolkers/toolbox/packages/pattern-count@<tag>   # or a relative path
     with:
-      name: person-orm
-      kind: PythonFile
-      files: ["**/*.py"]
-      exclude: ["**/tests/**", "**/test_*.py", "**/*_test.py", "**/conftest.py"]
+      name: no-console
+      kind: SourceFile
+      files: ["web/src/**/*.ts", "web/src/**/*.tsx"]
+      exclude: ["**/*.test.ts"]
       exempt:
-        app/models/person/util.py: the routed helpers themselves
-      pattern: '\b(Person|PersonDistinctId)\.objects\b'
-      fix: Use a routed helper from app/models/person/util.py (or add one there).
+        web/src/logger.ts: the logger itself writes to the console
+      pattern: '\bconsole\.(log|debug)\('
+      fix: Use the logger from web/src/logger.ts.
 ```
 
 Then, from the repository root:
@@ -69,8 +67,8 @@ match) and `fix`.
 
 ## Changing the standard
 
-- **Widen the pattern** (add a model): edit `pattern`, then
-  `toolbox report .toolbox --baseline .toolbox/results.json --update --accept person-orm`. The new
+- **Widen the pattern** (another call): edit `pattern`, then
+  `toolbox report .toolbox --baseline .toolbox/results.json --update --accept no-console`. The new
   matches are recorded and listed, regressions in other scorecards still fail, and the campaign
   restarts from the new state. Review the list, then commit the manifest and `results.json`.
 - **Exempt a file**: add it to `exempt` with its reason, then `--update`.
