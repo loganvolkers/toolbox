@@ -39,6 +39,13 @@ secrets ([docs/design/repo-portals.md](../../docs/design/repo-portals.md)).
 3. **First run:** start the workflow by hand with `mode: update`. It uploads `results.json` in the
    `toolbox-report` artifact; commit it as `.toolbox/results.json`. Or, with Toolbox built locally,
    run `toolbox report .toolbox --baseline .toolbox/results.json --update`.
+4. **Git packages:** if `.toolbox/toolbox.yaml` includes a `github:…@…` package, run
+   `toolbox install .toolbox` locally, commit `.toolbox/toolbox.lock`, and keep the action's
+   `toolbox-version` new enough to understand the package's facts. The action runs
+   `toolbox install --frozen` whenever that lock file is present, so a clean CI runner populates
+   `~/.cache/toolbox/packages` before `report` (without this, the lock check sees the empty-hash
+   `e3b0c442…`). Package refs may be a semver tag (`@0.1.1` → `v0.1.1`), a branch (`@main`), or a
+   commit SHA.
 
 From then on:
 - every pull request fails if a rule starts failing, or a failing rule's evidence grows (e.g. a new
@@ -104,6 +111,9 @@ system's format (for example a GitLab Code Quality report, or a comment).
 - Prefer `toolbox-version: "0.1.1"` (or later) so the action downloads attested binaries (D90).
   When that input is empty it still builds from the action's source (Linux runners; cold start is
   slow). If the Toolbox repository is private, the job token needs `contents: read` on it.
+- **`toolbox.lock`:** when the file exists, the action runs `toolbox install --frozen` before
+  `toolbox report`. That installs git packages and released connectors pinned in the lock. A
+  pre-seeded cache directory still skips the clone (install leaves an existing checkout alone).
 - **Security:**
   - Connectors run on the runner with the job's permissions. The `workspace` connector only reads
     files.

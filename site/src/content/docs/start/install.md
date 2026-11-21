@@ -39,7 +39,7 @@ Or install each app's shell installer from the [v0.1.1 release](https://github.c
     mode: ci
 ```
 
-Pin the action ref and the binary version. With `toolbox-version` set, the action downloads checksum-verified archives instead of compiling.
+Pin the action ref and the binary version. With `toolbox-version` set, the action downloads checksum-verified archives instead of compiling. When `.toolbox/toolbox.lock` is present (git packages or executable connectors), the action runs `toolbox install --frozen` before `report` so the runner cache matches the lock.
 
 ## Adopt a portal in another repository
 

@@ -120,7 +120,60 @@ async fn install_one(
     Ok(got)
 }
 
-/// Clone each git package into the cache at its tag and check or record its content hash.
+/// `git clone --branch` for a tag or branch name.
+fn clone_named(url: &str, checkout: &Path, name: &str) -> Result<(), String> {
+    let ok = std::process::Command::new("git")
+        .args(["clone", "-q", "--depth", "1", "--branch", name, url])
+        .arg(checkout)
+        .status()
+        .map_err(|e| format!("git: {e}"))?
+        .success();
+    if ok {
+        Ok(())
+    } else {
+        Err(format!("could not clone {url} at {name}"))
+    }
+}
+
+/// Shallow-fetch a commit SHA into a new checkout (no `--branch v<sha>` mistake).
+fn clone_commit(url: &str, checkout: &Path, sha: &str) -> Result<(), String> {
+    let path = checkout.to_str().ok_or("checkout path is not UTF-8")?;
+    let run = |args: &[&str]| -> Result<(), String> {
+        let st = std::process::Command::new("git")
+            .args(args)
+            .status()
+            .map_err(|e| format!("git: {e}"))?;
+        if st.success() {
+            Ok(())
+        } else {
+            Err(format!("git {} failed", args.join(" ")))
+        }
+    };
+    run(&["init", "-q", path])?;
+    run(&["-C", path, "remote", "add", "origin", url])?;
+    let shallow = std::process::Command::new("git")
+        .args(["-C", path, "fetch", "-q", "--depth", "1", "origin", sha])
+        .status()
+        .map_err(|e| format!("git: {e}"))?
+        .success();
+    if !shallow {
+        run(&["-C", path, "fetch", "-q", "origin", sha])
+            .map_err(|_| format!("could not fetch {sha} from {url}"))?;
+    }
+    run(&["-C", path, "checkout", "-q", "FETCH_HEAD"])
+        .map_err(|_| format!("could not check out {sha} from {url}"))?;
+    Ok(())
+}
+
+fn clone_package(url: &str, checkout: &Path, version: &str) -> Result<(), String> {
+    use toolbox_model::package::GitRef;
+    match toolbox_model::package::git_ref(version) {
+        GitRef::Named(name) => clone_named(url, checkout, &name),
+        GitRef::Commit(sha) => clone_commit(url, checkout, &sha),
+    }
+}
+
+/// Clone each git package into the cache at its ref and check or record its content hash.
 fn install_packages(
     root: &Path,
     manifest_file: &str,
@@ -143,22 +196,12 @@ fn install_packages(
         let checkout = g.checkout();
         if !checkout.is_dir() {
             let url = format!("{}/{}/{}.git", base.trim_end_matches('/'), g.owner, g.repo);
-            let ok = std::process::Command::new("git")
-                .args([
-                    "clone",
-                    "-q",
-                    "--depth",
-                    "1",
-                    "--branch",
-                    &format!("v{}", g.version),
-                    &url,
-                ])
-                .arg(&checkout)
-                .status()
-                .map_err(|e| format!("git: {e}"))?
-                .success();
-            if !ok {
-                return Err(format!("{spec}: could not clone {url} at v{}", g.version));
+            if let Some(parent) = checkout.parent() {
+                std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+            }
+            if let Err(e) = clone_package(&url, &checkout, &g.version) {
+                let _ = std::fs::remove_dir_all(&checkout);
+                return Err(format!("{spec}: {e}"));
             }
         }
         let got = toolbox_model::package::content_hash(&toolbox_model::package::locate(root, spec));
