@@ -134,7 +134,8 @@ struct Pipeline<'m> {
 }
 
 /// A mapped record: (entity id, field values, relation edges as (relation, target)).
-type Mapped = (String, Map<String, Value>, Vec<(String, String)>);
+/// A mapped record: its entity id, its field values, and its relation edges as (name, target).
+type Mapped<'a> = (String, Map<String, Value>, Vec<(&'a str, String)>);
 
 type Fragments = BTreeMap<String, BTreeMap<String, Map<String, Value>>>;
 
@@ -206,7 +207,9 @@ impl<'m> Pipeline<'m> {
         let mut fragments: Fragments = BTreeMap::new();
         let mut kind_of: HashMap<String, String> = HashMap::new();
         let mut records_of: HashMap<String, Vec<(String, String, String)>> = HashMap::new();
-        let mut edges: Vec<(String, String, String)> = Vec::new();
+        // Relation edges grouped by source: (source id, [(relation, target id)]). Relation names
+        // borrow the manifest, so an edge allocates only its target.
+        let mut edges: Vec<(String, Vec<(&str, String)>)> = Vec::new();
         for kind in &self.m.kinds {
             for (ri, rule) in kind.map.iter().enumerate() {
                 let (conn, rkind) = rule.from_parts();
@@ -243,8 +246,9 @@ impl<'m> Pipeline<'m> {
                             for (rel, e) in &rule.relations {
                                 match self.json_in(e, ctx)? {
                                     Value::Array(ts) => {
-                                        rels.extend(ts.into_iter().filter_map(|t| {
-                                            t.as_str().map(|t| (rel.clone(), t.to_owned()))
+                                        rels.extend(ts.into_iter().filter_map(|t| match t {
+                                            Value::String(t) => Some((rel.as_str(), t)),
+                                            _ => None,
                                         }))
                                     }
                                     other => {
@@ -273,7 +277,9 @@ impl<'m> Pipeline<'m> {
                                 .entry(source.clone())
                                 .or_default();
                             frag.extend(values.into_iter().filter(|(_, v)| !v.is_null()));
-                            edges.extend(rels.into_iter().map(|(rel, t)| (rel, id.clone(), t)));
+                            if !rels.is_empty() {
+                                edges.push((id, rels));
+                            }
                         }
                         Err(e) => d.diagnostics.push(Diagnostic {
                             code: "map.error",
@@ -296,47 +302,61 @@ impl<'m> Pipeline<'m> {
                 .insert(n.field.clone(), n.value.clone());
         }
 
-        // 3–4. Existence (identity sources only) and merge by per-field precedence.
-        for (id, by_source) in &fragments {
-            let Some(kind) = kind_of.get(id).and_then(|k| kinds.get(k.as_str())) else {
-                d.orphans.push(id.clone());
+        // 3–4. Existence (identity sources only) and merge by per-field precedence. Entities merge
+        //      independently, in parallel, moving each chosen value out of its fragment.
+        type Merged<'k> = Option<(&'k Kind, Map<String, Value>, BTreeMap<String, String>)>;
+        let merged: Vec<(String, Merged)> = fragments
+            .into_par_iter()
+            .map(|(id, mut by_source)| {
+                let Some(kind) = kind_of
+                    .get(&id)
+                    .and_then(|k| kinds.get(k.as_str()))
+                    .copied()
+                else {
+                    return (id, None);
+                };
+                if !kind.identity_from.iter().any(|s| by_source.contains_key(s)) {
+                    return (id, None);
+                }
+                let mut fields = Map::new();
+                let mut provenance = BTreeMap::new();
+                for (name, spec) in &kind.fields {
+                    if spec.computed.is_some() || spec.authority.is_some() {
+                        continue;
+                    }
+                    let order = kind
+                        .sources
+                        .fields
+                        .get(name)
+                        .unwrap_or(&kind.sources.default);
+                    if let Some((src, v)) = order.iter().find_map(|s| {
+                        by_source
+                            .get_mut(s)
+                            .and_then(|f| f.remove(name))
+                            .map(|v| (s, v))
+                    }) {
+                        fields.insert(name.clone(), v);
+                        provenance.insert(name.clone(), src.clone());
+                    }
+                }
+                (id, Some((kind, fields, provenance)))
+            })
+            .collect();
+        for (id, m) in merged {
+            let Some((kind, fields, provenance)) = m else {
+                d.orphans.push(id);
                 continue;
             };
-            if !kind.identity_from.iter().any(|s| by_source.contains_key(s)) {
-                d.orphans.push(id.clone());
-                continue;
-            }
-            let mut fields = Map::new();
-            let mut provenance = BTreeMap::new();
-            for (name, spec) in &kind.fields {
-                if spec.computed.is_some() || spec.authority.is_some() {
-                    continue;
-                }
-                let order = kind
-                    .sources
-                    .fields
-                    .get(name)
-                    .unwrap_or(&kind.sources.default);
-                if let Some((src, v)) = order
-                    .iter()
-                    .find_map(|s| by_source.get(s).and_then(|f| f.get(name)).map(|v| (s, v)))
-                {
-                    fields.insert(name.clone(), v.clone());
-                    provenance.insert(name.clone(), src.clone());
-                }
-            }
+            let mut records = records_of.remove(&id).unwrap_or_default();
+            records.sort();
             d.entities.insert(
-                id.clone(),
+                id,
                 Entity {
                     kind: kind.name.clone(),
                     fields,
                     provenance,
                     inbound: BTreeMap::new(),
-                    records: {
-                        let mut r = records_of.remove(id).unwrap_or_default();
-                        r.sort();
-                        r
-                    },
+                    records,
                 },
             );
         }
@@ -355,16 +375,13 @@ impl<'m> Pipeline<'m> {
             .map(|(i, id)| (id.as_str(), i as u32))
             .collect();
         let ids: Vec<String> = d.entities.keys().cloned().collect();
-        let mut inbound: HashMap<u32, BTreeMap<String, Vec<u32>>> = HashMap::new();
+        // Inbound lists by entity number, keyed by relation names borrowed from the manifest.
+        let mut inbound: Vec<BTreeMap<&str, Vec<u32>>> = vec![BTreeMap::new(); ids.len()];
         for k in &self.m.kinds {
             for (rel, spec) in &k.relations {
-                for (id, e) in &d.entities {
+                for (i, e) in d.entities.values().enumerate() {
                     if e.kind == spec.to {
-                        inbound
-                            .entry(index[id.as_str()])
-                            .or_default()
-                            .entry(rel.clone())
-                            .or_default();
+                        inbound[i].entry(rel.as_str()).or_default();
                     }
                 }
             }
@@ -372,20 +389,19 @@ impl<'m> Pipeline<'m> {
         // Edges whose target isn't an entity are dropped, and reported per relation (a count and a
         // sample), so a mistyped reference doesn't vanish silently.
         let mut dropped: BTreeMap<&str, (usize, usize, Vec<&str>)> = BTreeMap::new();
-        for (rel, src, target) in &edges {
-            let d = dropped.entry(rel.as_str()).or_default();
-            d.1 += 1;
-            if let (Some(&s), Some(&t)) = (index.get(src.as_str()), index.get(target.as_str())) {
-                inbound
-                    .entry(t)
-                    .or_default()
-                    .entry(rel.clone())
-                    .or_default()
-                    .push(s);
-            } else {
-                d.0 += 1;
-                if d.2.len() < 3 {
-                    d.2.push(target.as_str());
+        for (src, rels) in &edges {
+            let s = index.get(src.as_str()).copied();
+            for (rel, target) in rels {
+                let d = dropped.entry(rel).or_default();
+                d.1 += 1;
+                match (s, index.get(target.as_str())) {
+                    (Some(s), Some(&t)) => inbound[t as usize].entry(rel).or_default().push(s),
+                    _ => {
+                        d.0 += 1;
+                        if d.2.len() < 3 {
+                            d.2.push(target.as_str());
+                        }
+                    }
                 }
             }
         }
@@ -411,7 +427,7 @@ impl<'m> Pipeline<'m> {
             });
         }
         drop(edges);
-        inbound.par_iter_mut().for_each(|(_, rels)| {
+        inbound.par_iter_mut().for_each(|rels| {
             for v in rels.values_mut() {
                 v.sort_unstable();
                 v.dedup();
@@ -426,7 +442,6 @@ impl<'m> Pipeline<'m> {
             .par_iter()
             .map(|id| to_cel(&d.entity_json(id).unwrap()))
             .collect();
-        let empty = BTreeMap::new();
         let computed: Vec<(usize, String, Result<Value, String>)> = ids
             .par_iter()
             .enumerate()
@@ -440,10 +455,9 @@ impl<'m> Pipeline<'m> {
                 if fields.is_empty() {
                     return Vec::new();
                 }
-                let rels = inbound.get(&(i as u32)).unwrap_or(&empty);
-                let lists = rels.iter().map(|(rel, srcs)| {
+                let lists = inbound[i].iter().map(|(rel, srcs)| {
                     (
-                        rel.clone(),
+                        (*rel).to_owned(),
                         std::sync::Arc::new(
                             srcs.iter()
                                 .map(|&s| base[s as usize].clone())
@@ -478,17 +492,20 @@ impl<'m> Pipeline<'m> {
                 }),
             }
         }
-        for (i, rels) in inbound {
-            let e = d.entities.get_mut(&ids[i as usize]).unwrap();
-            e.inbound = rels
-                .into_iter()
-                .map(|(rel, srcs)| {
-                    (
-                        rel,
-                        srcs.into_iter().map(|s| ids[s as usize].clone()).collect(),
-                    )
-                })
-                .collect();
+        // Back to ids, in parallel; `inbound` is in entity order, as `d.entities` iterates.
+        let named: Vec<BTreeMap<String, Vec<String>>> = inbound
+            .into_par_iter()
+            .map(|rels| {
+                rels.into_iter()
+                    .map(|(rel, srcs)| {
+                        let srcs = srcs.into_iter().map(|s| ids[s as usize].clone());
+                        (rel.to_owned(), srcs.collect())
+                    })
+                    .collect()
+            })
+            .collect();
+        for (e, rels) in d.entities.values_mut().zip(named) {
+            e.inbound = rels;
         }
         lap("computed");
 
