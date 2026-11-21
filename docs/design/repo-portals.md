@@ -58,13 +58,15 @@ toolbox report portal --baseline portal/results.json --ci
 ## 4. One page to publish: `report -o html`
 
 **What it is.** A single self-contained HTML file. It embeds:
-- the report as JSON;
-- an inline script (about 60 lines) that renders scorecard tabs, level bars, a filter, and the
-  failing rules per entity with their fixes and evidence;
+- the report as JSON (portal, snapshot, scorecard definitions, scores, and a slim `catalog` of
+  entity ids by kind);
+- the `<toolbox-report>` element: three modes — **Overview** (fleet health), **Catalog** (kinds →
+  entities → scores), and **Scorecards** (level bars, filters, and every rule outcome with fix and
+  evidence on failures) — see [report-ux.md](./report-ux.md) (D01M7XY1QYKW2D0HMSG50R0XTQH);
 - light and dark themes;
 - a layout that works at phone width.
 
-There are no external requests. Toolbox for Toolbox's page is about 38 KB.
+There are no external requests. The page is large because it inlines the full score evidence.
 
 **Why one file.** Storybook's `storybook build` emits a static directory that teams host on GitHub
 Pages or Chromatic (secondary). A repo portal wants the same "build once, host anywhere" property

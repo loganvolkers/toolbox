@@ -771,6 +771,9 @@
       "doc:docs/decisions/D01M7XKEXQH4HG5371629M50E2G.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M7XY1QYKW2D0HMSG50R0XTQH.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/README.md": {
         "level": "skipped"
       },
@@ -868,6 +871,9 @@
         "level": "silver"
       },
       "doc:docs/design/repo-portals.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/report-ux.md": {
         "level": "silver"
       },
       "doc:docs/design/schema-standards.md": {
@@ -1024,6 +1030,9 @@
         "level": "silver"
       },
       "doc:plugins/toolbox-operator/skills/refresh/SKILL.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/skills/report-ux/SKILL.md": {
         "level": "silver"
       },
       "doc:plugins/toolbox-operator/skills/report/SKILL.md": {
@@ -1303,6 +1312,12 @@
         "level": "silver"
       },
       "skill:plugins/toolbox-operator/skills/report": {
+        "failing": {
+          "has-evals": 1
+        },
+        "level": "silver"
+      },
+      "skill:plugins/toolbox-operator/skills/report-ux": {
         "failing": {
           "has-evals": 1
         },

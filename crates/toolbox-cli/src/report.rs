@@ -426,7 +426,7 @@ fn markdown(m: &toolbox_model::Manifest, d: &Derived) -> String {
     s
 }
 
-/// The report document the element renders: portal, snapshot, scorecard definitions, scores.
+/// The report document the element renders: portal, snapshot, catalog, scorecard definitions, scores.
 fn report_json(m: &toolbox_model::Manifest, d: &Derived) -> String {
     let fixes: Map<String, Value> = m
         .scorecards
@@ -448,9 +448,15 @@ fn report_json(m: &toolbox_model::Manifest, d: &Derived) -> String {
             )
         })
         .collect();
+    // Slim catalog: kind → sorted entity ids. Full fields stay out of the static page.
+    let mut catalog: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    for (id, e) in &d.entities {
+        catalog.entry(e.kind.clone()).or_default().push(id.clone());
+    }
     json!({
         "portal": m.portal.title.as_deref().unwrap_or(&m.portal.name),
         "snapshot": d.snapshot,
+        "catalog": catalog,
         "scorecards": fixes,
         "scores": d.scores,
     })
@@ -809,12 +815,16 @@ mod tests {
 
     #[test]
     fn the_html_page_is_the_element_with_slots_and_inlined_data() {
-        let page = html_page(r#"{"portal":"Demo","snapshot":"s","scorecards":{},"scores":{}}"#);
+        let page = html_page(
+            r#"{"portal":"Demo","snapshot":"s","catalog":{},"scorecards":{},"scores":{}}"#,
+        );
         assert!(page.contains("<toolbox-report>"));
         assert!(page.contains(r#"<script type="application/json">{"portal":"Demo""#));
         assert!(page.contains(r#"<slot name="header">"#));
         assert!(page.contains(r#"<slot name="nav">"#));
         assert!(page.contains(r#"<slot name="footer">"#));
+        assert!(page.contains("Overview"));
+        assert!(page.contains("Catalog"));
         assert!(!page.contains("{{"));
     }
 
