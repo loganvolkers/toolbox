@@ -43,7 +43,7 @@ def test_package_yaml() -> None:
         work = Path(tmp) / "repo"
         shutil.copytree(src, work)
         run_apply(work)
-        yaml_text = (work / "packages" / "demo" / "toolbox-package.yaml").read_text(
+        yaml_text = (work / "pkg-fixture" / "demo" / "toolbox-package.yaml").read_text(
             encoding="utf-8"
         )
         assert "version: 0.1.1" in yaml_text

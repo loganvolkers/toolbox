@@ -8,8 +8,10 @@
     },
     "demo": {
       "kind": "toolbox-package",
-      "path": "packages/demo/toolbox-package.yaml"
+      "path": "pkg-fixture/demo/toolbox-package.yaml"
     }
   },
-  "policy": { "versioning": "lockstep" }
+  "policy": {
+    "versioning": "lockstep"
+  }
 }
