@@ -1248,6 +1248,7 @@
         "level": "gold"
       }
     },
+    "maintainer-python": {},
     "maintainer-repo": {
       "repo:loganvolkers/toolbox": {
         "failing": {
