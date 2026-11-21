@@ -1,7 +1,7 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: assessment:rule-quality/rule:toolbox/maintainer-crate/has-tests
 rubric: assessment-quality
-subjectHash: 528862a7939c
+subjectHash: 008ba05c42f2
 assessor: {kind: agent, name: cursor-grok, model: grok-4.7}
 at: 2026-11-20
 verdicts:
