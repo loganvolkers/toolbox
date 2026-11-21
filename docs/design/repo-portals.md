@@ -3,7 +3,8 @@
 *Status: built 2026-11-20 (D66); the static-site extensions in §5 are proposals. A **repo portal**
 is a Toolbox manifest in one repository, run by `toolbox report` locally and in CI. Toolbox for
 Toolbox ([portal/](../../portal/README.md)) is the first one. It is the leaf of
-[federation](./federation.md) and the first step of the go-to-market path.*
+[federation](./federation.md) and the first step of the go-to-market path. Proving its value is the
+current focus: [repo-value.md](./repo-value.md).*
 
 ---
 

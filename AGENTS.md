@@ -3,7 +3,9 @@
 Toolbox is an open-source, agent-first internal developer portal (IDP) framework. It has a Rust core,
 is configured entirely in code, and exposes API, MCP, CLI and UI. **Status:** v1 is being implemented
 milestone by milestone from [docs/v1-spec.md](./docs/v1-spec.md); M0–M4 are done (see *Building*
-below). The design documents remain the source of intent, and an agent plugin skeleton lives in
+below). **Focus (D01M7Y46VDDBK2SW6H96ZSG89MP):** prove repo-level value first
+([docs/design/repo-value.md](./docs/design/repo-value.md)). The central portal (M6), self-service
+actions (M5) and federation are paused; M2–M4 stay green but aren't extended. The design documents remain the source of intent, and an agent plugin skeleton lives in
 `plugins/`.
 
 **Four SDLC layers ([docs/sdlc.md](./docs/sdlc.md), D63, D87).** Say which one you mean:

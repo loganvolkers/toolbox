@@ -1,5 +1,7 @@
 # Federation: Standards That Start in One Repo and Graduate to the Company
 
+*Paused (D01M7Y46VDDBK2SW6H96ZSG89MP): federation resumes once repo-level value is proven ([repo-value.md](./repo-value.md)).*
+
 *Status: design only, 2026-11-20 (D68). **Nothing here is implemented, and no implementation is
 planned until repo portals have been used by a few teams.** Builds on
 [repo-portals.md](./repo-portals.md) (what exists today), [ratchets.md](./ratchets.md),
