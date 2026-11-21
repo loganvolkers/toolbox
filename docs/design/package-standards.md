@@ -84,6 +84,24 @@ Fixtures: `package-json:packages/demo/focused/package.json` at gold,
 range, a git URL, `npm install`, a secret). Every rule passes on one fixture and fails on another
 (D71).
 
+## 6. Monorepo semantics — do not reuse this scorecard blindly
+
+`maintainer-package` scores **each** `package.json` as an application package. Authors building
+pnpm/Expo **workspace** standards must not copy it as the whole story
+([D01M7Y6X38AERPBT0YH1AG5TBRD](../decisions/D01M7Y6X38AERPBT0YH1AG5TBRD.md)): use
+[`packages/pnpm-expo`](../../packages/pnpm-expo/) (`JsWorkspace` / `ExpoApp`) instead.
+
+| Fact | Semantics today (`npm.rs`) | Author pitfall |
+|---|---|---|
+| `lockfile` | Lockfile **beside** the manifest **or** walked up to the checkout root (`package-lock.json`, shrinkwrap, `pnpm-lock.yaml`, `yarn.lock`) | Older mental model was “sibling-only”. Nested app manifests without a local lockfile can still be `locked` via a root `pnpm-lock.yaml` — that does **not** mean workspace hygiene (packageManager pin, linker, frozen CI) is covered |
+| `ciUsesInstall` | True when a workflow job with `working-directory` for **this** package path runs unlocked install: `npm install`, or `pnpm install` / `pnpm i` **without** `--frozen-lockfile` | Root-only CI (`working-directory` omitted or `.`) is not attributed to nested packages. Faithful installs: `npm ci`, `pnpm install --frozen-lockfile`, `pnpm i --frozen-lockfile`, and (for workspace scorecards) `pnpm ci` / plain `pnpm install` in CI as documented by `JsWorkspace` facts — not the same field |
+| Scorecard shape | Per-manifest bronze→gold for name, ranges, sibling/root lockfile, check scripts, description, engines | Does not score `pnpm-workspace.yaml`, linker policy, mise pins, Expo/EAS, or toolchain alignment across the monorepo |
+
+**Rule of thumb:** enable `packages: ["**/package.json"]` on a consumer portal only when you mean
+`maintainer-package`-style per-manifest gates (or after you include pnpm-aware rules such as
+`pnpm-expo`). The starter README says the same
+([repo-portal-starter](../../examples/repo-portal-starter/README.md)).
+
 ## Sources
 
 - npm documentation, `package.json` (name, version, description, private, engines), read 2026-11-20:

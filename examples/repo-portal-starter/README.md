@@ -21,6 +21,18 @@ is enough. Mixing `@org/team` with `@user` still fails silver — keep owners al
 `tests/*.yaml` fixtures are not JavaScript; linting them fails with parse errors such as
 “Invalid character”.
 
+**JS / Expo monorepos.** Do **not** turn on `packages: ["**/package.json"]` (or expect
+`maintainer-package`) until you have **pnpm-aware** rules. That scorecard is per-manifest and
+npm-oriented; a root `pnpm-lock.yaml` alone does not give you workspace / Expo hygiene. Include
+[`packages/pnpm-expo`](../../packages/pnpm-expo/) instead (enable `jsWorkspace: true` and `expoApps`
+globs on `builtin:workspace`). See that package’s README for the consumer diff and minimum Toolbox
+version.
+
+**Fetch before measuring.** If the remote default branch already has `.toolbox/` but your local
+checkout does not (shallow clone, cloud VM, sparse checkout), `toolbox report` scores the wrong
+tree. `git fetch` / pull the portal files (and any committed `results.json` / `toolbox.lock`) before
+you measure or ratchet.
+
 `repo-hygiene` is stage 1 of the CODEOWNERS graduation example in
 [federation.md](../../docs/design/federation.md) §6: a standard that starts in one team's repositories.
 

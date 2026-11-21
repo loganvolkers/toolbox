@@ -12,8 +12,9 @@ actions (M5) and federation are paused; M2–M4 stay green but aren't extended. 
 1. **Maintainer SDLC**: you, building and testing Toolbox itself in this repo
    ([maintainer-sdlc.md](./docs/design/maintainer-sdlc.md)). The working rules below are its rules.
 2. **Package author SDLC**: anyone publishing packages, connectors and standards for others
-   ([package-author-sdlc.md](./docs/design/package-author-sdlc.md)). It forks from the maintainer
-   SDLC at *test*: test against released Toolbox versions, then distribute.
+   ([package-author-sdlc.md](./docs/design/package-author-sdlc.md), second-package checklist §6).
+   It forks from the maintainer SDLC at *test*: test against released Toolbox versions, then
+   distribute.
 3. **Operator SDLC**: platform teams building and changing a *portal*
    ([sdlc.md](./docs/design/sdlc.md)).
 4. **User SDLC**: developers and agents building *apps* on a portal's context and actions
