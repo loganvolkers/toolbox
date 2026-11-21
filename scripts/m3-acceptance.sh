@@ -72,4 +72,18 @@ python3 -c "import time; print(f'  enforced after {time.time()-$START:.2f} s (SL
 echo "8. OpenFGA stored no tuples"
 psql -h 127.0.0.1 -p "$PORT" -U postgres -At -c "SELECT 'view rows: ' || (SELECT count(*) FROM public.tuple) || ', OpenFGA table rows: ' || (SELECT count(*) FROM public.tuple_openfga_unused) || ', derived tuples: ' || (SELECT count(*) FROM toolbox.derived_tuples)"
 [ "$(psql -h 127.0.0.1 -p "$PORT" -U postgres -At -c 'SELECT count(*) FROM public.tuple_openfga_unused')" = 0 ]
+echo "9. each view row's user_type is what OpenFGA's own write would store (usersets and wildcards are 'userset')"
+psql -h 127.0.0.1 -p "$PORT" -U postgres -At -c "SELECT _user || ' ' || user_type FROM public.tuple WHERE _user LIKE '%*%' OR _user LIKE '%#%' ORDER BY 1 LIMIT 3"
+[ "$(psql -h 127.0.0.1 -p "$PORT" -U postgres -At -c "SELECT count(*) FROM public.tuple WHERE (user_type = 'userset') <> (_user LIKE '%#%' OR _user = '*' OR _user ~ '^[^:]+:\\*$')")" = 0 ]
+[ "$(psql -h 127.0.0.1 -p "$PORT" -U postgres -At -c "SELECT user_type FROM public.tuple WHERE _user = 'user:*' LIMIT 1")" = userset ]
+echo "10. SIGTERM stops the server and its OpenFGA co-process"
+FGA_PID=$(pgrep -P "$SERVER_PID" -f "openfga run" | head -1 || true)
+[ -n "$FGA_PID" ]
+kill -TERM "$SERVER_PID"
+for _ in $(seq 50); do kill -0 "$SERVER_PID" 2>/dev/null || break; sleep 0.1; done
+for _ in $(seq 20); do kill -0 "$FGA_PID" 2>/dev/null || break; sleep 0.1; done
+if kill -0 "$SERVER_PID" 2>/dev/null || kill -0 "$FGA_PID" 2>/dev/null; then
+  echo "still running: server $SERVER_PID or OpenFGA $FGA_PID"; exit 1
+fi
+echo "  server and OpenFGA $FGA_PID exited"; SERVER_PID=""
 echo "M3 acceptance: PASS"

@@ -210,7 +210,8 @@ publishes as deltas. OpenFGA never receives writes, so tuples exist once, as der
 | Measured | 2,000/2,000 checks agree with a SQL permission view; Check p50 2.4 ms over HTTP; an ownership change visible after a 2.6 s refresh ([technology-critique.md](./technology-critique.md) §7.2) |
 | Consistency | Decisions use the latest *published* tuples. A response computed at snapshot N may be authorised against N+1 tuples, never older than the snapshot being served (newer only tightens revocation) |
 | Contract | `Authorizer` (v1-spec §7.1): an external OpenFGA, or the linked variant below, can replace the co-process |
-| Not yet tested over the view | Conditions, wildcards beyond `user:*`, `ListUsers` at scale (Phase 0 spike) |
+| The view's contract | Each column holds what OpenFGA's own write would store, because some reads filter on a column and others don't. `user_type` follows `tuple.GetUserTypeFromUser`: usersets and wildcards (`*`, `type:*`) are `userset`. Labelling `user:*` as `user` made `can_view` checks deny intermittently, more often as the run went on (fixed 2026-11-21; [research-log.md](./research-log.md), *OpenFGA wrong denials*). M3 acceptance step 9 checks every row |
+| Not yet tested over the view | Conditions, wildcards other than `user:*`, `ListUsers` at scale (Phase 0 spike) |
 
 #### Alternative kept for Q11: OpenFGA linked in-process as a Go module
 

@@ -322,6 +322,12 @@ impl OpenFga {
 
 /// Replace OpenFGA's `tuple` table with a read-only view over `toolbox.derived_tuples` for `store`.
 /// Idempotent: safe on every start.
+///
+/// Every column must hold what OpenFGA's own writes would. `user_type` in particular follows
+/// `tuple.GetUserTypeFromUser` (OpenFGA v1.22.1, `pkg/tuple/tuple.go`): a userset (`type:id#rel`) or
+/// a wildcard (`*`, `type:*`) is `userset`, anything else `user`. Some of OpenFGA's reads filter on
+/// it and others don't, so a wrong value denies intermittently, whenever the check takes a path that
+/// filters (docs/research-log.md, *OpenFGA wrong denials*).
 pub async fn install_tuple_view(pool: &sqlx::PgPool, store: &str) -> Result<(), String> {
     if !store.chars().all(|c| c.is_ascii_alphanumeric()) {
         return Err(format!("unexpected OpenFGA store id {store}"));
@@ -339,7 +345,8 @@ CREATE OR REPLACE VIEW public.tuple AS
          substr(object, strpos(object, ':') + 1) AS object_id,
          relation,
          subject AS _user,
-         CASE WHEN subject LIKE '%#%' THEN 'userset' ELSE 'user' END AS user_type,
+         CASE WHEN subject LIKE '%#%' OR subject = '*' OR subject ~ '^[^:]+:\*$'
+              THEN 'userset' ELSE 'user' END AS user_type,
          NULL::text AS condition_name,
          NULL::bytea AS condition_context,
          md5(object || '|' || relation || '|' || subject) AS ulid,

@@ -160,10 +160,34 @@ pub fn serve(path: &Path, listen: &str, database_url: Option<String>, fixtures: 
             r = toolbox_api::serve(state, listener) => {
                 if let Err(e) = r { eprintln!("error: {e}"); return ExitCode::from(1); }
             }
-            _ = tokio::signal::ctrl_c() => eprintln!("toolbox: shutting down"),
+            _ = shutdown_signal() => eprintln!("toolbox: shutting down"),
         }
         ExitCode::SUCCESS
     })
+}
+
+/// Ctrl-C, or SIGTERM on Unix (how containers and scripts stop a server). Exiting this way drops
+/// the supervised children, so the OpenFGA co-process is killed rather than left running.
+async fn shutdown_signal() {
+    #[cfg(unix)]
+    {
+        use tokio::signal::unix::{SignalKind, signal};
+        match signal(SignalKind::terminate()) {
+            Ok(mut term) => {
+                tokio::select! {
+                    _ = tokio::signal::ctrl_c() => {}
+                    _ = term.recv() => {}
+                }
+            }
+            Err(_) => {
+                let _ = tokio::signal::ctrl_c().await;
+            }
+        }
+    }
+    #[cfg(not(unix))]
+    {
+        let _ = tokio::signal::ctrl_c().await;
+    }
 }
 
 pub fn push(path: &Path, url: &str) -> ExitCode {
