@@ -23,7 +23,7 @@ scorecards:
     rules:
     - name: yarn4
       level: bronze
-      check: "entity.packageManager startsWith 'yarn@4'"
+      check: entity.packageManager startsWith 'yarn@4'
 
   - name: renovate
     kind: Repository
