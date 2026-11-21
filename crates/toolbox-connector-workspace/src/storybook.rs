@@ -151,27 +151,35 @@ fn a11y_fails_on_violation(root: &Path, storybook_dir: &str) -> bool {
     false
 }
 
+fn is_github_workflow(path: &str) -> bool {
+    path.starts_with(".github/workflows/") && (path.ends_with(".yml") || path.ends_with(".yaml"))
+}
+
+fn workflow_builds_storybook(low: &str) -> bool {
+    low.contains("storybook:build")
+        || low.contains("storybook build")
+        || low.contains("build-storybook")
+}
+
+fn workflow_tests_stories(low: &str) -> bool {
+    if low.contains("test:stories") || low.contains("test-storybook") || low.contains("test-runner")
+    {
+        return true;
+    }
+    low.contains("playwright") && (low.contains("storybook") || low.contains("stories.spec"))
+}
+
 fn ci_storybook_signals(root: &Path, paths: &[String], dir: &str) -> (bool, bool) {
     let mut builds = false;
     let mut tests = false;
-    for rel in paths.iter().filter(|p| {
-        p.starts_with(".github/workflows/") && (p.ends_with(".yml") || p.ends_with(".yaml"))
-    }) {
+    for rel in paths.iter().filter(|p| is_github_workflow(p)) {
         let text = std::fs::read_to_string(root.join(rel)).unwrap_or_default();
         let low = text.to_lowercase();
         let mentions_dir = dir == "." || text.contains(dir);
-        let build_here = low.contains("storybook:build")
-            || low.contains("storybook build")
-            || low.contains("build-storybook");
-        let test_here = low.contains("test:stories")
-            || low.contains("test-storybook")
-            || low.contains("test-runner")
-            || (low.contains("playwright")
-                && (low.contains("storybook") || low.contains("stories.spec")));
-        if build_here && (mentions_dir || !builds) {
+        if workflow_builds_storybook(&low) && (mentions_dir || !builds) {
             builds = true;
         }
-        if test_here && (mentions_dir || !tests) {
+        if workflow_tests_stories(&low) && (mentions_dir || !tests) {
             tests = true;
         }
     }
