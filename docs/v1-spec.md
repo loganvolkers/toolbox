@@ -494,7 +494,7 @@ Webhooks and MCP share the service URL.
 
 | Measure | Budget | Evidence |
 |---|---|---|
-| Full recompute, 100k entities / 2M relations / 100 rules, 4 vCPU | ≤ 10 s (the prototype measured ~3 s; the pipeline measures 4.8–4.9 s, and 8.0 s on 2 vCPU, after the scale fixes, 8.0–8.6 s before; see [research-log.md](./research-log.md), *Scale profile*) | [technology-critique.md](./technology-critique.md) §7.1 |
+| Full recompute, 100k entities / 2M relations / 100 rules, 4 vCPU | ≤ 10 s (the prototype measured ~3 s; the pipeline measures 4.8–4.9 s, and 8.0 s on 2 vCPU, after the scale fixes, 8.0–8.6 s before; see [research-log.md](./research-log.md), *Scale profile*). Each push is gated on instruction counts (`scripts/scale-gate.py`), and the budget is timed weekly on 4 vCPU (`scale-slo.yml`) | [technology-critique.md](./technology-critique.md) §7.1 |
 | Webhook → visible | p95 ≤ 60 s | plan §6.6 |
 | Check latency (OpenFGA over the view) | p95 ≤ 10 ms in-container | critique §7.2 (2.4 ms p50 over HTTP) |
 | Toolbox preview | p95 ≤ 150 ms | [frontend.md](./design/frontend.md) §6 |

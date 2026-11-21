@@ -2,14 +2,16 @@
 //! users, 1k teams and 100 rules must finish within 10 s on 4 vCPU.
 //!
 //! Run: cargo run --release -p toolbox-derive --example scale [-- <services>]
+//! `SCALE_RUNS` (default 3) sets how many recomputes to time; `SCALE_BUDGET_SECS` the budget.
+//! `scripts/scale-gate.sh` counts this program's instructions at a smaller size, for CI.
 
 use serde_json::{Value, json};
 use std::time::Instant;
+use toolbox_derive::{DerivedState, FullRecompute};
 
 /// The allocator the `toolbox` binary uses, so this measures what the server runs.
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
-use toolbox_derive::{DerivedState, FullRecompute};
 
 fn main() {
     let n: usize = std::env::args()
@@ -150,8 +152,12 @@ fn main() {
         .ok()
         .and_then(|v| v.parse().ok())
         .unwrap_or(10.0);
+    let runs: usize = std::env::var("SCALE_RUNS")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(3);
     let mut best = f64::MAX;
-    for run in 1..=3 {
+    for run in 1..=runs {
         let t = Instant::now();
         let d = FullRecompute.recompute(&m, &snap);
         let elapsed = t.elapsed();

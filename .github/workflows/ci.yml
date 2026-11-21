@@ -177,16 +177,25 @@ jobs:
           verdict="$RUNNER_TEMP/toolbox-report/verdict.json"
           jq -e '.result == "regressed" and .exitCode == 1' "$verdict"
           jq -e '.regressions[] | select(.entity == "repository:acme/pilot" and .message == "owners-are-teams now fails")' "$verdict"
-  scale-budget:
+  scale-gate:
+    # Instruction counts of one full recompute (serial path and rayon workers) against the committed
+    # baseline, under Callgrind: repeatable, unlike wall-clock time on a shared runner. The 10 s
+    # budget on 4 vCPU (v1-spec §10.4) is timed weekly by scale-slo.yml.
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: {persist-credentials: false}
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with: {key: scale-release}
-      - name: >-
-          Full recompute at 100k entities / 2M relations / 100 rules within 10 s
-          (v1-spec §10.4)
-        run: cargo run --release --locked -p toolbox-derive --example scale
+      - name: Valgrind (Callgrind)
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q valgrind
+          valgrind --version
+      - run: cargo build --release --locked -p toolbox-derive --example scale
+      - name: Scale gate (scripts/scale-gate.py)
+        run: python3 scripts/scale-gate.py --ci
   reference-portal:
     runs-on: ubuntu-latest
     defaults: {run: {working-directory: examples/reference-portal}}

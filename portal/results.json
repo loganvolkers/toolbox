@@ -141,7 +141,7 @@
       "workflow:.github/workflows/ci.yml": {
         "failing": {
           "cancels-superseded-runs": 1,
-          "every-job-has-timeout": 6,
+          "every-job-has-timeout": 5,
           "fail-rate-under-10": 1,
           "fail-rate-under-20": 1,
           "fail-rate-under-5": 1,
@@ -186,6 +186,17 @@
         },
         "level": "none"
       },
+      "workflow:.github/workflows/scale-slo.yml": {
+        "failing": {
+          "fail-rate-under-10": 1,
+          "fail-rate-under-20": 1,
+          "fail-rate-under-5": 1,
+          "fast-feedback": 1,
+          "few-reruns": 1,
+          "main-not-stuck-red": 1
+        },
+        "level": "none"
+      },
       "workflow:actions/report/action.yml": {
         "level": "skipped"
       }
@@ -193,9 +204,9 @@
     "maintainer-ci-security": {
       "workflow:.github/workflows/ci.yml": {
         "failing": {
-          "no-medium-findings": 6,
+          "no-medium-findings": 5,
           "pinned-to-sha": 1,
-          "zizmor-clean": 15
+          "zizmor-clean": 14
         },
         "level": "none"
       },
@@ -212,6 +223,9 @@
           "zizmor-clean": 11
         },
         "level": "none"
+      },
+      "workflow:.github/workflows/scale-slo.yml": {
+        "level": "gold"
       },
       "workflow:actions/report/action.yml": {
         "failing": {
@@ -772,6 +786,9 @@
         "level": "skipped"
       },
       "doc:docs/decisions/D01M7XY1QYKW2D0HMSG50R0XTQH.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7Y0PQVZQXK8JKPM5584AF3F.md": {
         "level": "skipped"
       },
       "doc:docs/decisions/README.md": {

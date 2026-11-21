@@ -1,0 +1,30 @@
+# The absolute scale budget (docs/v1-spec.md §10.4): a full recompute at 100k entities, 2M
+# relations and 100 rules within 10 s on 4 vCPU, timed weekly and on demand. Each push is gated by
+# instruction counts instead (scripts/scale-gate.py in ci.yml), because wall-clock time on a shared
+# runner varies. Set the repository variable SCALE_RUNNER to a runner label with 4 vCPU or more;
+# with fewer, the job times the run and reports it without judging it against the budget.
+name: scale-slo
+on:
+  schedule: [{cron: 17 6 * * 1}]
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  slo:
+    runs-on: ${{ vars.SCALE_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: {persist-credentials: false}
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with: {key: scale-release}
+      - run: cargo build --release --locked -p toolbox-derive --example scale
+      - name: Full recompute within 10 s on 4 vCPU
+        run: |
+          cores=$(nproc)
+          echo "vCPU: $cores"
+          if [ "$cores" -ge 4 ]; then
+            target/release/examples/scale
+          else
+            SCALE_BUDGET_SECS=1000000 target/release/examples/scale
+            echo "::notice title=Scale SLO::$cores vCPU: timed, not judged against the 4 vCPU budget (set SCALE_RUNNER)"
+          fi
