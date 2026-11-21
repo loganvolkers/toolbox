@@ -1,7 +1,7 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/maintainer-crate/has-tests
 rubric: rule-quality
-subjectHash: 2a6a86578f80
+subjectHash: cc74450c4e3b
 assessor: {kind: agent, name: claude-code}
 at: 2026-11-20
 verdicts:

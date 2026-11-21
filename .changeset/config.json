@@ -1,0 +1,48 @@
+{
+  "$schema": "./config.schema.json",
+  "baseBranch": "main",
+  "changelog": "CHANGELOG.md",
+  "commit": false,
+  "access": "restricted",
+  "updateInternalDependencies": "patch",
+  "fixed": [["toolbox", "actions/report"]],
+  "ignore": [],
+  "___comment": "Portable registry (Option B). Logical names map to native manifests; @changesets/cli is not required.",
+  "registry": {
+    "toolbox": {
+      "kind": "cargo-workspace",
+      "path": "Cargo.toml",
+      "changelog": "CHANGELOG.md",
+      "description": "All distable binaries (workspace.package.version); cargo-dist publishes on tag"
+    },
+    "github-actions": {
+      "kind": "toolbox-package",
+      "path": "packages/github-actions/toolbox-package.yaml"
+    },
+    "pnpm-expo": {
+      "kind": "toolbox-package",
+      "path": "packages/pnpm-expo/toolbox-package.yaml"
+    },
+    "storybook": {
+      "kind": "toolbox-package",
+      "path": "packages/storybook/toolbox-package.yaml"
+    },
+    "actions/report": {
+      "kind": "action",
+      "path": "actions/report/action.yml",
+      "lockstepWith": "toolbox",
+      "description": "Ships on the same git tag as toolbox; consumers pin @vX.Y.Z"
+    },
+    "toolbox-operator": {
+      "kind": "plugin",
+      "path": "plugins/toolbox-operator/plugin.json",
+      "description": "Phase 3: plugin/skills versioning; ignored by the Phase 1 applicator unless named"
+    }
+  },
+  "policy": {
+    "versioning": "lockstep",
+    "changesetGuidance": "soft",
+    "tagAfterApply": "human",
+    "lockstepNote": "On apply, Cargo workspace version and every packages/*/toolbox-package.yaml version become the release version (matches git tag vX.Y.Z)."
+  }
+}

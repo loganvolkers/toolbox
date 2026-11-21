@@ -1,7 +1,7 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: assessment:scorecard-quality/scorecard:toolbox/maintainer-ci-reliability
 rubric: assessment-quality
-subjectHash: e052f9b26467
+subjectHash: 131dc6882902
 assessor: {kind: agent, name: cursor-grok, model: grok-4.7}
 at: 2026-11-20
 verdicts:

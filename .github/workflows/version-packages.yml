@@ -1,0 +1,86 @@
+# Continuous Version Packages PR (Changesets Option B — portable applicator).
+# On push to main: if .changeset/*.md pending, open/update a PR that applies bumps.
+# After merge: human tags vX.Y.Z → existing cargo-dist release.yml builds assets.
+name: Version Packages
+
+on:
+  push: {branches: [main]}
+  workflow_dispatch:
+
+permissions: {contents: write, pull-requests: write}
+
+concurrency: {group: version-packages, cancel-in-progress: true}
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: {fetch-depth: 0}
+
+      - name: Detect pending changesets
+        id: pending
+        run: |
+          set -euo pipefail
+          count=0
+          if [ -d .changeset ]; then
+            for f in .changeset/*.md; do
+              [ -f "$f" ] || continue
+              base=$(basename "$f")
+              case "$base" in
+                README.md|readme.md) continue ;;
+              esac
+              count=$((count + 1))
+            done
+          fi
+          echo "count=$count" >> "$GITHUB_OUTPUT"
+          echo "Pending changesets: $count"
+
+      - name: Apply changesets on release branch
+        if: steps.pending.outputs.count != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          BRANCH=changeset-release/version-packages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+          python3 scripts/apply-changesets.py
+          if git diff --quiet && git diff --cached --quiet; then
+            echo "No file changes after apply"
+            exit 0
+          fi
+          git add -A
+          git commit -m "Version packages"
+          git push -f origin "HEAD:$BRANCH"
+          if gh pr view "$BRANCH" --json number >/dev/null 2>&1; then
+            echo "Version Packages PR already open"
+          else
+            gh pr create --base main --head "$BRANCH" \
+              --title "Version Packages" \
+              --body "$(cat <<'EOF'
+          This PR was opened by `.github/workflows/version-packages.yml`.
+
+          It runs `scripts/apply-changesets.py` (portable Changesets applicator) to bump:
+          - Cargo workspace version
+          - root CHANGELOG.md
+          - packages/*/toolbox-package.yaml (lockstep)
+
+          **After merge:** tag and push (do not replace cargo-dist):
+
+          ```bash
+          VERSION=$(python3 -c 'import tomllib,pathlib; print(tomllib.loads(pathlib.Path("Cargo.toml").read_text())["workspace"]["package"]["version"])')
+          git tag "v$VERSION"
+          git push origin "v$VERSION"
+          ```
+
+          That triggers `.github/workflows/release.yml` (cargo-dist).
+          EOF
+          )"
+          fi
+
+      - name: No pending changesets
+        if: steps.pending.outputs.count == '0'
+        run: echo "No pending changesets; nothing to do."

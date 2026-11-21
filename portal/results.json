@@ -235,6 +235,17 @@
           "main-not-stuck-red"
         ]
       },
+      "workflow:.github/workflows/version-packages.yml": {
+        "level": "silver",
+        "unknown": [
+          "fail-rate-under-10",
+          "fail-rate-under-20",
+          "fail-rate-under-5",
+          "fast-feedback",
+          "few-reruns",
+          "main-not-stuck-red"
+        ]
+      },
       "workflow:actions/report/action.yml": {
         "level": "skipped"
       }
@@ -265,6 +276,13 @@
       },
       "workflow:.github/workflows/scale-slo.yml": {
         "level": "gold"
+      },
+      "workflow:.github/workflows/version-packages.yml": {
+        "failing": {
+          "no-medium-findings": 1,
+          "zizmor-clean": 1
+        },
+        "level": "bronze"
       },
       "workflow:actions/report/action.yml": {
         "failing": {
@@ -1282,7 +1300,7 @@
       "repo:loganvolkers/toolbox": {
         "failing": {
           "constituents-at-least-gold": 8,
-          "constituents-at-least-silver": 5
+          "constituents-at-least-silver": 6
         },
         "level": "bronze"
       }

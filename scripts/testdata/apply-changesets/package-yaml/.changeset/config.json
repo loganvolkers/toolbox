@@ -1,0 +1,17 @@
+{
+  "changelog": "CHANGELOG.md",
+  "registry": {
+    "toolbox": {
+      "kind": "cargo-workspace",
+      "path": "Cargo.toml",
+      "changelog": "CHANGELOG.md"
+    },
+    "demo": {
+      "kind": "toolbox-package",
+      "path": "pkg-fixture/demo/toolbox-package.yaml"
+    }
+  },
+  "policy": {
+    "versioning": "lockstep"
+  }
+}
