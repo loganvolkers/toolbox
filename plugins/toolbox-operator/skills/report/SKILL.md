@@ -9,11 +9,14 @@ description: >-
 1. Skip connectors that need a network or a long run when the baseline was built that way.
 2. Compare with --baseline. A new failure or larger evidence is a regression and the exit code is 1.
 3. Write the baseline with --update only after reading the diff. --ci fails when the file is stale.
+4. Refresh the hosted page with `-o web --out DIR`. The page has Overview, Catalog, and Scorecards; follow the `report-ux` skill when changing that UI.
 
 ```
 toolbox report portal --skip runner,github-actions --baseline portal/results.json
+toolbox report portal --skip runner,github-actions -o web --out site/public/report
 ```
 
 In a pipeline, add `--verdict verdict.json`: it lists each regression as `{scorecard, entity, message}`, so the job can annotate or comment without parsing the text.
 
 Do not pass --update to hide a regression that has not been reviewed. If it fails, read the evidence first.
+Never edit `site/public/report/` by hand; regenerate it from `toolbox report`.

@@ -3,7 +3,7 @@ title: This repository, scored
 description: The Toolbox-for-Toolbox report, produced by toolbox report and hosted in this site's own navigation.
 ---
 
-This is the report Toolbox writes about itself. It is the maintainer SDLC applied to this repository: the same scorecards CI ratchets, with the evidence and the fix on each failing rule. The scorecards are the custom element `<toolbox-report>`. This site fills its `header`, `nav`, and `footer` slots; the element renders the scorecards in its own shadow tree and does not concatenate the site's markup into the report.
+This is the report Toolbox writes about itself. It is the maintainer SDLC applied to this repository: fleet health (Overview), every derived entity (Catalog), and every scorecard with pass and fail outcomes, evidence, and fixes. The page is the custom element `<toolbox-report>`. This site fills its `header`, `nav`, and `footer` slots; the element renders those modes in its own shadow tree and does not concatenate the site's markup into the report.
 
 [Open the report in the site's navigation](/toolbox/report-hosted/)
 
