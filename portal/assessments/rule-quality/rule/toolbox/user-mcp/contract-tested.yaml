@@ -1,7 +1,7 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/user-mcp/contract-tested
 rubric: rule-quality
-subjectHash: dd104d6f4721
+subjectHash: c0300f1f2a1f
 assessor: {kind: agent, name: claude-code}
 at: 2026-11-20
 verdicts:

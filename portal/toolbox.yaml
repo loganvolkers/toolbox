@@ -273,6 +273,8 @@ include:
   - standards/*.yaml
   # Time-bound focus over those scorecards (docs/design/campaigns.md).
   - campaigns.yaml
+  # Accepted failures. Each one cites a decision (docs/design/waivers.md).
+  - waivers.yaml
   # Our GitHub Actions standards, as the package pilots will use (D89): connectors, tools, kinds, scorecards.
   - package: ../packages/github-actions
     with: {githubOrg: loganvolkers, githubRepo: toolbox}

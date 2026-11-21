@@ -150,8 +150,8 @@ fn results(d: &Derived, advisory: &BTreeSet<String>) -> Value {
                     (r.clone(), json!(n))
                 })
                 .collect();
-            // `unknown`: the rule couldn't be evaluated (its data is missing, e.g. a linter that
-            // isn't installed). Never a regression or an improvement; `--ci` refuses it.
+            // `unknown`: the rule couldn't be evaluated (its data is missing). Never a regression
+            // or an improvement. `--ci` refuses it unless the rule's `dataFrom` connector was skipped.
             let unknown: Vec<&String> = s
                 .rules
                 .iter()
@@ -165,6 +165,16 @@ fn results(d: &Derived, advisory: &BTreeSet<String>) -> Value {
             }
             if !unknown.is_empty() {
                 row["unknown"] = json!(unknown);
+            }
+            let waived: Vec<&String> = s
+                .rules
+                .iter()
+                .flatten()
+                .filter(|(_, o)| *o == "waived")
+                .map(|(r, _)| r)
+                .collect();
+            if !waived.is_empty() {
+                row["waived"] = json!(waived);
             }
             rows.insert(id.clone(), row);
         }
@@ -523,6 +533,7 @@ fn report_json(m: &toolbox_model::Manifest, d: &Derived) -> String {
         "campaigns": campaign_defs(m, d),
         "scorecards": scorecard_defs(m),
         "scores": d.scores,
+        "repoRollup": m.policies.get("repoRollup").cloned().unwrap_or(Value::Null),
     })
     .to_string()
 }
@@ -591,18 +602,61 @@ struct Verdict {
     unknown: usize,
 }
 
+/// Rules whose `dataFrom` connector is in `--skip`. Their `unknown` is expected: the connector
+/// was not run, so the rule has nothing to read. An unknown whose connector ran is not excused.
+fn excused_rules(m: &toolbox_model::Manifest, skip: &[String]) -> BTreeSet<(String, String)> {
+    let skip: BTreeSet<&str> = skip.iter().map(String::as_str).collect();
+    let mut out = BTreeSet::new();
+    for sc in &m.scorecards {
+        for r in &sc.rules {
+            if r.data_from.as_deref().is_some_and(|src| skip.contains(src)) {
+                out.insert((sc.name.clone(), r.name.clone()));
+            }
+        }
+    }
+    out
+}
+
+/// Unknown outcomes that `--ci` and `--update` still refuse: the rule names no skipped connector.
+fn unexpected_unknowns(m: &toolbox_model::Manifest, skip: &[String], now: &Value) -> usize {
+    let excused = excused_rules(m, skip);
+    let mut n = 0;
+    let Some(cards) = now.as_object() else {
+        return 0;
+    };
+    for (card, rows) in cards {
+        let Some(rows) = rows.as_object() else {
+            continue;
+        };
+        for row in rows.values() {
+            let Some(rules) = row.get("unknown").and_then(Value::as_array) else {
+                continue;
+            };
+            for rule in rules {
+                let Some(name) = rule.as_str() else {
+                    continue;
+                };
+                if !excused.contains(&(card.clone(), name.to_string())) {
+                    n += 1;
+                }
+            }
+        }
+    }
+    n
+}
+
 /// Compare `now` with the baseline at `path`; write it when `--update` allows.
 fn ratchet(
     o: &Options,
     path: &std::path::Path,
-    portal: &str,
+    m: &toolbox_model::Manifest,
     now: &Value,
     policy: &NewPolicy,
 ) -> Result<Verdict, String> {
     let before = std::fs::read_to_string(path)
         .ok()
         .and_then(|t| serde_json::from_str::<Value>(&t).ok());
-    let doc = json!({"format": FORMAT, "portal": portal, "results": now});
+    let doc = json!({"format": FORMAT, "portal": m.portal.name, "results": now});
     let write = || {
         std::fs::write(path, toolbox_derive::pyjson::pretty(&doc))
             .map_err(|e| format!("{}: {e}", path.display()))
@@ -642,6 +696,7 @@ fn ratchet(
     }
     let differs = b["results"] != *now;
     let unknown = v.unknown;
+    let unexpected = unexpected_unknowns(m, &o.skip, now);
     let text = if !c.regressions.is_empty() {
         (v.result, v.code) = ("regressed", 1);
         format!(
@@ -649,16 +704,17 @@ fn ratchet(
             c.regressions.len(),
             path.display()
         )
-    } else if unknown > 0 && (o.ci || o.update) {
-        // Writing unknowns would silently drop those rules from the ratchet.
+    } else if unexpected > 0 && (o.ci || o.update) {
+        // A connector that ran and still produced no data must not be written into the baseline.
+        // Unknowns whose `dataFrom` connector was skipped are expected and are recorded.
         (v.result, v.code) = ("unknown", 1);
         format!(
-            "{unknown} rule outcome(s) unknown (missing tools or data); {} needs every rule evaluated",
+            "{unexpected} rule outcome(s) unknown and not excused by --skip; {} needs those rules evaluated",
             if o.ci { "--ci" } else { "--update" }
         )
-    } else if unknown > 0 {
+    } else if unknown > 0 && !differs {
         format!(
-            "no regressions; {unknown} rule outcome(s) unknown (missing tools or data), not compared"
+            "no regressions; {unknown} rule outcome(s) unknown (excused by --skip, or not gating), not compared"
         )
     } else if differs && o.update {
         write()?;
@@ -722,7 +778,7 @@ pub fn run(o: &Options) -> ExitCode {
     };
     let now = results(&d, &advisory(&m));
     let v = match &o.baseline {
-        Some(path) => match ratchet(o, path, &m.portal.name, &now, &new_policy(&m)) {
+        Some(path) => match ratchet(o, path, &m, &now, &new_policy(&m)) {
             Ok(v) => v,
             Err(e) => return fail(e),
         },

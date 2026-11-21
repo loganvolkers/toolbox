@@ -76,6 +76,13 @@
         "$ref": "#/$defs/campaign"
       }
     },
+    "waivers": {
+      "type": "array",
+      "description": "Accepted failures. Each cites a decision and names one rule on one entity (D01M7Y5VWNAWB8K1DNMY31KQPQ0).",
+      "items": {
+        "$ref": "#/$defs/waiver"
+      }
+    },
     "rubrics": {
       "type": "array",
       "description": "Rubrics coding agents use to assess entities (docs/design/scorecards-for-scorecards.md §6). Assessments are data: committed files or ingested records, read by scorecards.",
@@ -603,6 +610,10 @@
               },
               "fix": {
                 "type": "string"
+              },
+              "dataFrom": {
+                "type": "string",
+                "description": "Connector this rule reads. Skipped, its missing data is an expected unknown and is not compared."
               }
             }
           }
@@ -771,6 +782,38 @@
             "$ref": "#/$defs/name"
           },
           "description": "Named rules that must pass on this scorecard."
+        }
+      }
+    },
+    "waiver": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entity",
+        "scorecard",
+        "rule",
+        "decision",
+        "reason"
+      ],
+      "properties": {
+        "entity": {
+          "type": "string",
+          "description": "Entity id the waiver applies to."
+        },
+        "scorecard": {
+          "$ref": "#/$defs/name"
+        },
+        "rule": {
+          "$ref": "#/$defs/name"
+        },
+        "decision": {
+          "type": "string",
+          "pattern": "^D[0-9A-HJKMNP-TV-Z]{26}$",
+          "description": "Decision file id. docs/decisions/<id>.md must exist."
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
         }
       }
     },

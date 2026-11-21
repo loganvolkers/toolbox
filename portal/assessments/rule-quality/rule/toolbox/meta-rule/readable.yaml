@@ -1,7 +1,7 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/meta-rule/readable
 rubric: rule-quality
-subjectHash: f754b2e5b152
+subjectHash: fd1d6065e547
 assessor: {kind: agent, name: claude-code}
 at: 2026-11-20
 verdicts:

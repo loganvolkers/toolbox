@@ -118,7 +118,8 @@ scorecards:
         tests/.
     - name: tests-pass
       level: bronze
-      check: has(entity.tests) && entity.tests.status == 'pass'
+      dataFrom: runner
+      check: entity.tests.status == 'pass'
       evidence: >-
         has(entity.tests) ? [entity.tests.status + ': ' +
         string(entity.tests.failed) + ' failed'] + (has(entity.tests.output) ?
@@ -126,7 +127,8 @@ scorecards:
       fix: Run `cargo test -p <crate>` and fix the failures in the evidence.
     - name: clippy-clean
       level: bronze
-      check: has(entity.clippy) && entity.clippy.status == 'pass'
+      dataFrom: runner
+      check: entity.clippy.status == 'pass'
       evidence: >-
         has(entity.clippy) ? entity.clippy.messages : ['no clippy run yet
         (refresh the crate)']

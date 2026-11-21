@@ -48,7 +48,7 @@ toolbox report portal --skip runner,github-actions --baseline portal/results.jso
 
 `--ci` fails when an entity drops a level, when a failing rule's evidence grows, when a new entity is below the floor (bronze for these standards), and when the baseline is missing an improvement. `--update` rewrites `portal/results.json` after you have looked at the diff. The HTML report published on this site is the same run; CI compares the committed files with a fresh one.
 
-The test runner and the GitHub API are skipped in that fast check. A rule that needed them says it has no run data. The full report, including those connectors, is the slow path.
+The test runner and the GitHub API are skipped in that fast check. A rule that needed them is unknown, and it names the connector that was skipped. The full report, including those connectors, is the slow path.
 
 [This repository, scored](/toolbox/demo/report/) is that report, in the site's navigation.
 

@@ -127,10 +127,12 @@ assert:
       ['actions/checkout@v4', 'actions/setup-go@v5', 'actions/setup-node@v4',
       'actions/setup-python@v5']
   - name: >-
-      a dangerous trigger is a high finding with evidence, and a write token
-      on it fails silver
+      a waived high finding keeps its evidence, and a write token on the same
+      workflow still fails silver
     expect: >-
       score('maintainer-ci-security',
+      'workflow:.github/workflows/release.yml').rules['no-high-findings'] ==
+      'waived' && score('maintainer-ci-security',
       'workflow:.github/workflows/release.yml').evidence['no-high-findings']
       == ['dangerous-triggers at line 3: use of fundamentally insecure
       workflow trigger'] && score('maintainer-ci-security',
@@ -163,11 +165,13 @@ assert:
       == 6 && score('maintainer-ci-reliability',
       'workflow:.github/workflows/ci.yml').rules['cancels-superseded-runs'] ==
       'fail'
-  - name: without run data the run rules fail and say why
+  - name: without run data the run rules are unknown and say which connector
     expect: >-
       score('maintainer-ci-reliability',
+      'workflow:.github/workflows/release.yml').rules['main-not-stuck-red'] ==
+      'unknown' && score('maintainer-ci-reliability',
       'workflow:.github/workflows/release.yml').evidence['main-not-stuck-red']
-      == ['no run data (github-actions connector skipped or no token)']
+      == ['no data from connector github-actions']
   - name: action metadata isn't scored for reliability
     expect: >-
       score('maintainer-ci-reliability',

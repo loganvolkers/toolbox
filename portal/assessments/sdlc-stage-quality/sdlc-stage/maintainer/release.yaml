@@ -1,7 +1,7 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: sdlc-stage:maintainer/release
 rubric: sdlc-stage-quality
-subjectHash: 49fc442fd1af
+subjectHash: 53c5fb5072e9
 assessor: {kind: agent, name: cursor-grok, model: grok-4.7}
 at: 2026-11-20
 verdicts:

@@ -619,7 +619,7 @@ impl<'m> Pipeline<'m> {
                             if reads_cards(sc) {
                                 continue;
                             }
-                            out.scores.push((sc.name.clone(), self.score(sc, ctx)));
+                            out.scores.push((sc.name.clone(), self.score(sc, id, ctx)));
                         }
                         for emit in &p.emits {
                             match self.json_in(emit, ctx) {
@@ -716,7 +716,12 @@ impl<'m> Pipeline<'m> {
     }
 
     /// One scorecard for the entity bound in `ctx`.
-    fn score(&self, sc: &toolbox_model::manifest::Scorecard, ctx: &cel::Context<'_, '_>) -> Score {
+    fn score(
+        &self,
+        sc: &toolbox_model::manifest::Scorecard,
+        entity: &str,
+        ctx: &cel::Context<'_, '_>,
+    ) -> Score {
         let applies = sc
             .applies_to
             .as_deref()
@@ -731,7 +736,7 @@ impl<'m> Pipeline<'m> {
         let mut outcomes = BTreeMap::new();
         let mut evidence = BTreeMap::new();
         for r in &sc.rules {
-            let outcome = match applies
+            let mut outcome = match applies
                 .clone()
                 .and_then(|_| truthy(self.expr(&r.check)?.eval_in(ctx)?))
             {
@@ -740,6 +745,15 @@ impl<'m> Pipeline<'m> {
                 Err(_) => "unknown",
             };
             if outcome == "fail"
+                && self
+                    .m
+                    .waivers
+                    .iter()
+                    .any(|w| w.scorecard == sc.name && w.entity == entity && w.rule == r.name)
+            {
+                outcome = "waived";
+            }
+            if (outcome == "fail" || outcome == "waived")
                 && let Some(e) = &r.evidence
             {
                 // Evidence is best-effort: an error is shown as such, never fails the rule twice.
@@ -748,22 +762,17 @@ impl<'m> Pipeline<'m> {
                     .unwrap_or_else(|m| serde_json::json!({"error": m}));
                 evidence.insert(r.name.clone(), v);
             }
+            if outcome == "unknown"
+                && let Some(src) = &r.data_from
+            {
+                evidence.insert(
+                    r.name.clone(),
+                    serde_json::json!([format!("no data from connector {src}")]),
+                );
+            }
             outcomes.insert(r.name.clone(), outcome.to_string());
         }
-        let mut level = "none".to_string();
-        for (i, lvl) in sc.levels.iter().enumerate() {
-            let upto = &sc.levels[..=i];
-            if sc
-                .rules
-                .iter()
-                .filter(|r| upto.contains(&r.level))
-                .all(|r| outcomes[&r.name] == "pass")
-            {
-                level = lvl.clone();
-            } else {
-                break;
-            }
-        }
+        let level = level_ignoring_unknown(sc, &outcomes).unwrap_or_else(|| "none".into());
         Score {
             level,
             rules: Some(outcomes),
@@ -817,7 +826,7 @@ impl<'m> Pipeline<'m> {
                     deferred
                         .iter()
                         .filter(|sc| sc.kind == kind)
-                        .map(|sc| (sc.name.clone(), self.score(sc, ctx)))
+                        .map(|sc| (sc.name.clone(), self.score(sc, &id, ctx)))
                         .collect()
                 },
             );
@@ -1053,26 +1062,36 @@ fn constituent_level(
     best.map(|(rank, level)| (level, rank as i64))
 }
 
-/// Highest level whose non-unknown rules all pass. `None` when every rule is unknown.
+fn counts_as_pass(outcome: &str) -> bool {
+    outcome == "pass" || outcome == "waived"
+}
+
+/// Highest level whose known rules pass or are waived. An all-unknown level stops the climb,
+/// so a card with no data at that level is not granted it. `None` when every rule is unknown
+/// (the entity is dropped from the repository rollup; the displayed level is `none`).
 fn level_ignoring_unknown(
     sc: &toolbox_model::manifest::Scorecard,
     outcomes: &BTreeMap<String, String>,
 ) -> Option<String> {
-    let known: Vec<&toolbox_model::manifest::Rule> = sc
-        .rules
-        .iter()
-        .filter(|r| outcomes.get(&r.name).is_some_and(|o| o != "unknown"))
-        .collect();
-    if known.is_empty() {
+    if outcomes.values().all(|o| o == "unknown") {
         return None;
     }
     let mut level = "none".to_string();
-    for (i, lvl) in sc.levels.iter().enumerate() {
-        let upto = &sc.levels[..=i];
-        let ok = known
+    for lvl in &sc.levels {
+        let at: Vec<_> = sc.rules.iter().filter(|r| &r.level == lvl).collect();
+        if at.is_empty() {
+            continue;
+        }
+        if at
             .iter()
-            .filter(|r| upto.contains(&r.level))
-            .all(|r| outcomes[&r.name] == "pass");
+            .all(|r| outcomes.get(&r.name).is_some_and(|o| o == "unknown"))
+        {
+            break;
+        }
+        let ok = at
+            .iter()
+            .filter(|r| outcomes.get(&r.name).is_some_and(|o| o != "unknown"))
+            .all(|r| outcomes.get(&r.name).is_some_and(|o| counts_as_pass(o)));
         if ok {
             level = lvl.clone();
         } else {

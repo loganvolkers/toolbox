@@ -1,0 +1,27 @@
+# Accepted failures. Each cites a decision file. Removing a waiver makes a still-failing rule
+# a regression. Closing the gap, so the rule passes without the waiver, is a new decision.
+waivers:
+  - entity: workflow:.github/workflows/release.yml
+    scorecard: maintainer-ci-security
+    rule: no-high-findings
+    decision: D01M7Y5VWNAWB8K1DNMY31KQPQ0
+    reason: >-
+      release.yml is the bytes dist generates (D98). zizmor's high findings
+      there are the template's workflow-level contents:write, template
+      injection, and an unpinned container expression that is null for this
+      repo's targets. The file is not edited by hand.
+  - entity: workflow:.github/workflows/release.yml
+    scorecard: maintainer-ci-security
+    rule: no-medium-findings
+    decision: D01M7Y5VWNAWB8K1DNMY31KQPQ0
+    reason: >-
+      The medium template-injection finding is in the same generated file
+      (D98). It stays visible as waived.
+  - entity: workflow:.github/workflows/release.yml
+    scorecard: maintainer-ci-security
+    rule: zizmor-clean
+    decision: D01M7Y5VWNAWB8K1DNMY31KQPQ0
+    reason: >-
+      Gold requires every zizmor finding gone. The remaining ones are the
+      generated template's (D98), and they stay listed on the waived rules
+      above.
