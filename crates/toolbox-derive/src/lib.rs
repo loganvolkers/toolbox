@@ -10,7 +10,8 @@ pub mod testing;
 use rayon::prelude::*;
 use serde::Serialize;
 use serde_json::{Map, Value, json};
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::time::{SystemTime, UNIX_EPOCH};
 use toolbox_expr::{Expr, from_cel, lazy_map, to_cel, with_vals, with_vars};
 use toolbox_model::Manifest;
 use toolbox_model::manifest::{Kind, TupleDerivation};
@@ -67,6 +68,39 @@ pub struct Diagnostic {
     pub message: String,
 }
 
+/// One entity's standing on a campaign.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct CampaignEntity {
+    pub meeting: bool,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub gaps: Vec<String>,
+}
+
+/// A milestone with whether the campaign has reached it.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CampaignMilestoneResult {
+    pub name: String,
+    pub target_percent: u8,
+    pub met: bool,
+}
+
+/// Progress of one campaign after scorecards are scored (D01M7Y11G0YZT23W26Z9D3XW68Y).
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CampaignProgress {
+    pub status: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub track: Option<String>,
+    pub target_percent: u8,
+    pub in_scope: usize,
+    pub meeting: usize,
+    pub percent: u8,
+    pub on_target: bool,
+    pub milestones: Vec<CampaignMilestoneResult>,
+    pub entities: BTreeMap<String, CampaignEntity>,
+}
+
 /// Everything the pipeline produces for one snapshot.
 #[derive(Debug, Clone, Default, PartialEq, Serialize)]
 pub struct Derived {
@@ -76,6 +110,8 @@ pub struct Derived {
     pub entities: BTreeMap<String, Entity>,
     /// scorecard → entity → score
     pub scores: BTreeMap<String, BTreeMap<String, Score>>,
+    /// campaign → progress
+    pub campaigns: BTreeMap<String, CampaignProgress>,
     /// Sorted, de-duplicated OpenFGA tuples (`{user, relation, object}`).
     pub tuples: Vec<Value>,
     /// action → input → entity → options
@@ -652,10 +688,31 @@ impl<'m> Pipeline<'m> {
             d.diagnostics.extend(o.diagnostics);
         }
         self.score_aggregates(&mut d);
+        self.score_campaigns(&mut d);
         d.tuples = tuples.into_values().collect();
         lap("scores+tuples+options");
         d.orphans.sort();
         d
+    }
+
+    /// Campaign progress from scorecard outcomes (intersection scope, AND includes).
+    fn score_campaigns(&self, d: &mut Derived) {
+        if self.m.campaigns.is_empty() {
+            return;
+        }
+        let as_of = utc_ymd_today();
+        let cards: BTreeMap<&str, &toolbox_model::manifest::Scorecard> = self
+            .m
+            .scorecards
+            .iter()
+            .map(|s| (s.name.as_str(), s))
+            .collect();
+        for c in &self.m.campaigns {
+            d.campaigns.insert(
+                c.name.clone(),
+                score_one_campaign(c, &d.scores, &cards, &as_of),
+            );
+        }
     }
 
     /// One scorecard for the entity bound in `ctx`.
@@ -811,6 +868,130 @@ impl<'m> Pipeline<'m> {
             e.provenance.insert(field, "authority:codeowners".into());
         }
     }
+}
+
+/// Gaps for one entity against every include; `None` if the entity is out of scope (skipped).
+fn campaign_entity(
+    id: &str,
+    includes: &[toolbox_model::manifest::CampaignInclude],
+    scores: &BTreeMap<String, BTreeMap<String, Score>>,
+    cards: &BTreeMap<&str, &toolbox_model::manifest::Scorecard>,
+) -> Option<CampaignEntity> {
+    let mut gaps = Vec::new();
+    for inc in includes {
+        let score = scores.get(&inc.scorecard).and_then(|m| m.get(id))?;
+        if score.level == "skipped" {
+            return None;
+        }
+        if let Some(at) = &inc.at_least {
+            let Some(sc) = cards.get(inc.scorecard.as_str()) else {
+                gaps.push(format!("{}: unknown scorecard", inc.scorecard));
+                continue;
+            };
+            if level_rank(sc, &score.level) < level_rank(sc, at) {
+                gaps.push(format!("{}:atLeast {at} ({})", inc.scorecard, score.level));
+            }
+        }
+        for rule in &inc.rules {
+            let outcome = score
+                .rules
+                .as_ref()
+                .and_then(|m| m.get(rule))
+                .map(String::as_str)
+                .unwrap_or("unknown");
+            if outcome != "pass" {
+                gaps.push(format!("{}:rule {rule} ({outcome})", inc.scorecard));
+            }
+        }
+    }
+    Some(CampaignEntity {
+        meeting: gaps.is_empty(),
+        gaps,
+    })
+}
+
+fn score_one_campaign(
+    c: &toolbox_model::manifest::Campaign,
+    scores: &BTreeMap<String, BTreeMap<String, Score>>,
+    cards: &BTreeMap<&str, &toolbox_model::manifest::Scorecard>,
+    as_of: &str,
+) -> CampaignProgress {
+    let mut candidates: BTreeSet<String> = BTreeSet::new();
+    for inc in &c.includes {
+        if let Some(rows) = scores.get(&inc.scorecard) {
+            candidates.extend(rows.keys().cloned());
+        }
+    }
+    let mut entities = BTreeMap::new();
+    let mut in_scope = 0usize;
+    let mut meeting = 0usize;
+    for id in candidates {
+        let Some(ent) = campaign_entity(&id, &c.includes, scores, cards) else {
+            continue;
+        };
+        in_scope += 1;
+        if ent.meeting {
+            meeting += 1;
+        }
+        entities.insert(id, ent);
+    }
+    let target = c.target_percent();
+    let percent = (meeting * 100).checked_div(in_scope).unwrap_or(0) as u8;
+    CampaignProgress {
+        status: campaign_status(c, as_of),
+        track: c.track.clone(),
+        target_percent: target,
+        in_scope,
+        meeting,
+        percent,
+        on_target: percent >= target,
+        milestones: c
+            .milestones
+            .iter()
+            .map(|m| CampaignMilestoneResult {
+                name: m.name.clone(),
+                target_percent: m.target_percent,
+                met: percent >= m.target_percent,
+            })
+            .collect(),
+        entities,
+    }
+}
+
+/// Campaign lifecycle from draft / override / dates vs `as_of` (`YYYY-MM-DD`).
+fn campaign_status(c: &toolbox_model::manifest::Campaign, as_of: &str) -> String {
+    if c.draft {
+        return "draft".into();
+    }
+    if let Some(s) = &c.status {
+        return s.clone();
+    }
+    if c.start.as_deref().is_some_and(|s| s > as_of) {
+        return "scheduled".into();
+    }
+    if c.end.as_deref().is_some_and(|e| e < as_of) {
+        return "ended".into();
+    }
+    "active".into()
+}
+
+/// Today's UTC date as `YYYY-MM-DD` (Howard Hinnant civil_from_days).
+fn utc_ymd_today() -> String {
+    let days = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_secs() / 86_400)
+        .unwrap_or(0) as i64;
+    let z = days + 719_468;
+    let era = if z >= 0 { z } else { z - 146_096 } / 146_097;
+    let doe = (z - era * 146_097) as u64;
+    let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146_096) / 365;
+    let y = yoe as i64 + era * 400;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let d = doy - (153 * mp + 2) / 5 + 1;
+    let m = if mp < 10 { mp + 3 } else { mp - 9 };
+    let y = if m <= 2 { y + 1 } else { y };
+    format!("{y:04}-{m:02}-{d:02}")
 }
 
 /// The check or its evidence names the `cards` variable (a list of constituent scorecards).

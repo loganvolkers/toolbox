@@ -1,4 +1,4 @@
-// <toolbox-report>: Overview, Catalog, and Scorecards as a custom element.
+// <toolbox-report>: Overview, Catalog, Campaigns, and Scorecards as a custom element.
 //
 // Data is a child <script type="application/json">, or the src attribute (a URL of that JSON).
 // A host page projects its own chrome into the slots header, nav, and footer. Those children
@@ -136,6 +136,8 @@
     if (h === "catalog") return { mode: "catalog" };
     if (h.indexOf("catalog/") === 0) return { mode: "catalog", kind: decodeURIComponent(h.slice(8)) };
     if (h.indexOf("entity/") === 0) return { mode: "entity", id: decodeURIComponent(h.slice(7)) };
+    if (h === "campaigns") return { mode: "campaigns" };
+    if (h.indexOf("campaign/") === 0) return { mode: "campaign", name: decodeURIComponent(h.slice(9)) };
     if (h.indexOf("scorecard/") === 0) return { mode: "scorecard", name: decodeURIComponent(h.slice(10)) };
     // Legacy: bare scorecard name from older pages.
     return { mode: "scorecard", name: decodeURIComponent(h) };
@@ -213,6 +215,7 @@
       };
       var modeOf = function (r) {
         if (r.mode === "entity") return "catalog";
+        if (r.mode === "campaign") return "campaigns";
         return r.mode === "scorecard" ? "scorecards" : r.mode;
       };
       var activeMode = modeOf(route);
@@ -232,6 +235,13 @@
           },
         }),
         el("button", {
+          textContent: "Campaigns",
+          ariaPressed: String(activeMode === "campaigns"),
+          onclick: function () {
+            go("campaigns");
+          },
+        }),
+        el("button", {
           textContent: "Scorecards",
           ariaPressed: String(activeMode === "scorecards"),
           onclick: function () {
@@ -243,6 +253,8 @@
       if (route.mode === "overview") body.replaceChildren(this.overview(D, go));
       else if (route.mode === "catalog") body.replaceChildren(this.catalog(D, route.kind, go));
       else if (route.mode === "entity") body.replaceChildren(this.entity(D, route.id, go));
+      else if (route.mode === "campaigns" || route.mode === "campaign")
+        body.replaceChildren(this.campaigns(D, route.name, go));
       else body.replaceChildren(this.scorecard(D, route.name, go));
     }
 
@@ -252,6 +264,58 @@
       var entityCount = kinds.reduce(function (n, k) {
         return n + catalog[k].length;
       }, 0);
+      var campaigns = D.campaigns || {};
+      var campaignNames = Object.keys(campaigns).filter(function (n) {
+        var st = campaigns[n].status;
+        return st === "active" || st === "scheduled" || st === "ended";
+      });
+      campaignNames.sort(function (a, b) {
+        return (campaigns[a].percent || 0) - (campaigns[b].percent || 0) || a.localeCompare(b);
+      });
+      var campaignTable = null;
+      if (campaignNames.length) {
+        campaignTable = el("table", { className: "fleet" });
+        campaignTable.append(
+          el(
+            "thead",
+            {},
+            el(
+              "tr",
+              {},
+              el("th", { textContent: "Campaign" }),
+              el("th", { textContent: "Progress" }),
+              el("th", { className: "hide-sm", textContent: "Status" }),
+              el("th", { textContent: "Meeting" }),
+            ),
+          ),
+        );
+        var cbody = el("tbody");
+        campaignNames.forEach(function (name) {
+          var c = campaigns[name];
+          var label = c.title || name;
+          var pct = c.percent == null ? 0 : c.percent;
+          var target = c.targetPercent == null ? 100 : c.targetPercent;
+          var tr = el(
+            "tr",
+            {
+              onclick: function () {
+                go("campaign/" + encodeURIComponent(name));
+              },
+            },
+            el("td", {}, el("code", { textContent: label })),
+            el(
+              "td",
+              {},
+              el("div", { className: "bar sm" }, el("span", { style: "flex:" + pct + ";background:" + (c.onTarget ? "var(--pass)" : "var(--accent)") }), el("span", { style: "flex:" + Math.max(0, 100 - pct) + ";background:transparent" })),
+              el("span", { className: "sub", textContent: pct + "% of " + target + "% target" }),
+            ),
+            el("td", { className: "hide-sm", textContent: c.status || "" }),
+            el("td", { textContent: (c.meeting || 0) + " / " + (c.inScope || 0) }),
+          );
+          cbody.append(tr);
+        });
+        campaignTable.append(cbody);
+      }
       var cards = Object.keys(D.scorecards || {});
       var rows = cards.map(function (name) {
         var sc = D.scorecards[name];
@@ -339,15 +403,122 @@
             el("div", { className: "stat" }, el("strong", { textContent: String(entityCount) }), el("span", { textContent: "entities in catalog" })),
             el("div", { className: "stat" }, el("strong", { textContent: String(kinds.length) }), el("span", { textContent: "kinds" })),
             el("div", { className: "stat" }, el("strong", { textContent: String(cards.length) }), el("span", { textContent: "scorecards" })),
+            el("div", { className: "stat" }, el("strong", { textContent: String(campaignNames.length) }), el("span", { textContent: "campaigns" })),
           ),
-          el("p", { className: "sub", textContent: "Scorecards ordered by entities at none, then bronze. Click a row to open that standard." }),
+          el("p", { className: "sub", textContent: "Campaigns are time-bound focus; scorecards are the continuous bar. Click a row to open it." }),
         ),
+        campaignTable
+          ? el(
+              "section",
+              {},
+              el("div", { className: "head" }, el("h2", { textContent: "Campaigns" }), el("span", { className: "sub", textContent: "Lowest progress first" })),
+              campaignTable,
+            )
+          : null,
         el("section", {}, el("h2", { textContent: "Catalog by kind" }), el("div", { className: "kind-grid" }, ...kindButtons)),
         el(
           "section",
           {},
           el("div", { className: "head" }, el("h2", { textContent: "Scorecards" }), el("span", { className: "sub", textContent: "Needs attention first" })),
           table,
+        ),
+      );
+    }
+
+    campaigns(D, name, go) {
+      var all = D.campaigns || {};
+      var names = Object.keys(all).sort();
+      if (!names.length) {
+        return el("section", {}, el("div", { className: "empty", textContent: "No campaigns in this portal." }));
+      }
+      var selected = name && all[name] ? name : names[0];
+      var nav = el("nav", { className: "cards", ariaLabel: "Campaigns" });
+      names.forEach(function (n) {
+        nav.append(
+          el("button", {
+            textContent: (all[n].title || n) + " (" + (all[n].percent || 0) + "%)",
+            ariaPressed: String(n === selected),
+            onclick: function () {
+              go("campaign/" + encodeURIComponent(n));
+            },
+          }),
+        );
+      });
+      var c = all[selected];
+      var pct = c.percent == null ? 0 : c.percent;
+      var target = c.targetPercent == null ? 100 : c.targetPercent;
+      var includes = (c.includes || [])
+        .map(function (i) {
+          var bits = [i.scorecard];
+          if (i.atLeast) bits.push("≥ " + i.atLeast);
+          if (i.rules && i.rules.length) bits.push("rules " + i.rules.join(", "));
+          return bits.join(" · ");
+        })
+        .join("; ");
+      var milestones = (c.milestones || [])
+        .map(function (m) {
+          return m.name + " @" + m.targetPercent + "%" + (m.met ? " ✓" : "");
+        })
+        .join(", ");
+      var gaps = Object.entries(c.entities || {}).filter(function (pair) {
+        return !pair[1].meeting;
+      });
+      gaps.sort(function (a, b) {
+        return a[0].localeCompare(b[0]);
+      });
+      var gapList = el("div");
+      if (!gaps.length) {
+        gapList.append(el("div", { className: "empty", textContent: "Every in-scope entity meets the goal." }));
+      } else {
+        gaps.forEach(function (pair) {
+          gapList.append(
+            el(
+              "details",
+              {},
+              el(
+                "summary",
+                {},
+                el("button", {
+                  className: "link",
+                  textContent: pair[0],
+                  onclick: function (ev) {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    go("entity/" + encodeURIComponent(pair[0]));
+                  },
+                }),
+                el("span", { className: "fails", textContent: (pair[1].gaps || []).join("; ") }),
+              ),
+            ),
+          );
+        });
+      }
+      return el(
+        "div",
+        {},
+        el("section", {}, el("h2", { textContent: "Campaigns" }), nav),
+        el(
+          "section",
+          {},
+          el(
+            "div",
+            { className: "head" },
+            el("h2", { textContent: c.title || selected }),
+            el("span", { className: "sub", textContent: (c.status || "") + (c.track ? " · track " + c.track : "") }),
+          ),
+          el("p", { className: "sub", textContent: c.description || "" }),
+          el(
+            "div",
+            { className: "stats" },
+            el("div", { className: "stat" }, el("strong", { textContent: pct + "%" }), el("span", { textContent: "of " + target + "% target" })),
+            el("div", { className: "stat" }, el("strong", { textContent: String(c.meeting || 0) }), el("span", { textContent: "meeting" })),
+            el("div", { className: "stat" }, el("strong", { textContent: String(c.inScope || 0) }), el("span", { textContent: "in scope" })),
+          ),
+          el("div", { className: "bar" }, el("span", { style: "flex:" + pct + ";background:" + (c.onTarget ? "var(--pass)" : "var(--accent)") }), el("span", { style: "flex:" + Math.max(0, 100 - pct) + ";background:transparent" })),
+          el("p", { className: "sub", textContent: "Includes: " + (includes || "—") }),
+          milestones ? el("p", { className: "sub", textContent: "Milestones: " + milestones }) : null,
+          el("h3", { textContent: "Not meeting" }),
+          gapList,
         ),
       );
     }

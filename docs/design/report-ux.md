@@ -15,8 +15,9 @@ not a quality judgement.
 
 | Mode | Job | Primary content |
 |---|---|---|
-| **Overview** (default) | Fleet health | Entity and kind counts; per-scorecard level bars; "needs attention" ordered by `none` then bronze |
+| **Overview** (default) | Fleet health | Entity and kind counts; active campaigns; per-scorecard level bars; "needs attention" ordered by `none` then bronze |
 | **Catalog** | What exists | Kinds → entity ids → that entity's scores across every scorecard |
+| **Campaigns** | Time-bound focus | Progress vs target; milestones; entities not meeting includes ([campaigns.md](./campaigns.md), D01M7Y11G0YZT23W26Z9D3XW68Y) |
 | **Scorecards** | Standards debt and proof | One scorecard; level and outcome filters; every rule outcome on expand |
 
 ## 2. Why the previous page failed the VP test
@@ -53,7 +54,9 @@ element or `report_json` must follow it. `maintainer-skill` scores the file like
 `report -o json|html|web` keeps `portal`, `snapshot`, `scorecards`, and `scores`, and adds:
 
 ```json
-"catalog": { "Crate": ["crate:toolbox-cli", "..."], "Skill": ["..."] }
+"catalog": { "Crate": ["crate:toolbox-cli", "..."], "Skill": ["..."] },
+"tracks": { "maintainer": { "title": "…", "owner": "…" } },
+"campaigns": { "skill-silver": { "status": "active", "percent": 88, "includes": [], "entities": {} } }
 ```
 
 Ids are sorted. Full entity fields stay out of the static page (size and facet caveats in

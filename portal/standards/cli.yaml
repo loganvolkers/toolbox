@@ -130,6 +130,7 @@ scorecards:
   - name: cli-skill
     kind: Command
     owner: group:maintainers
+    track: operator
     levels: [bronze]
     ratchet: {newEntitiesAtLeast: bronze}
     rules:

@@ -366,8 +366,10 @@ scorecard("production-readiness",
     waivers = [waiver("service:default/legacy-billing", rule = "has-runbook",
                       until = "2027-03-31", reason = "Decommission Q1")],
 )
-initiative("tier1-oncall", scorecard = "production-readiness", rules = ["oncall-configured"],
-           deadline = "2027-01-31", owner = "group:default/sre")  # OpsLevel campaigns / Cortex initiatives
+campaign("tier1-oncall", track = "reliability",
+         includes = [include("production-readiness", at_least = None, rules = ["oncall-configured"])],
+         end = "2027-01-31", owner = "group:default/sre", target_percent = 100)
+# Soundcheck campaigns / Cortex initiatives / OpsLevel campaigns — see design/campaigns.md
 ```
 
 - **Outcomes** are `pass | fail | skip | unknown`, with a remark. `skip` and `unknown` come from
@@ -636,6 +638,7 @@ These designs close the gaps found in the [red-team review](./red-team.md). Each
 | **Packages** | Shareable standards as data packages (fragments, fixtures, tests, rubrics, skills, typed parameters); git-first with an OCI mirror, pinned by digest (D89); T4T split with `include`; `oss-package` scorecard for what we publish; shareability signals; fleet rollout with `actions/report` and gh-aw | [packages.md](./design/packages.md) |
 | **Package author SDLC** | The fourth SDLC layer (D87); binary distribution for Toolbox (`dist`, installers, image), connectors outside core (executable, WASM, remote), upstream tools via mise/aqua (D90); SDLC stages catalogued and scored in T4T | [package-author-sdlc.md](./design/package-author-sdlc.md) |
 | **Scorecards for scorecards** | What makes a standard good (12 lessons); `meta-rule` and `meta-scorecard` over every portal's rules, self-applied at one level; kinds, fields and connectors scored (`meta-kind`/`-field`/`-connector`); judgement pushed by coding agents as assessments against manifest rubrics, scored (`meta-assessment`, `meta-rubric`) and reviewed once (D79, D80); CEL analysis; undeclared functions rejected; new-entity floors; LLM assessment and agent trials proposed (D71) | [scorecards-for-scorecards.md](./design/scorecards-for-scorecards.md) |
+| **Campaigns and tracks** | Time-bound fleet goals over existing scorecards (`includes` with `atLeast` / `rules`); tracks as long-term programs; derived progress on report, CLI, API, MCP and UI (D01M7Y11G0YZT23W26Z9D3XW68Y) | [campaigns.md](./design/campaigns.md) |
 | **GitHub Actions standards** | Workflows and third-party actions as entities; security (zizmor, actionlint, pinning, token scope), reliability (fail rate, red streak, re-runs, timeouts, p90) and supply-chain scorecards; unknown-not-fail for missing tools (D70) | [github-actions-standards.md](./design/github-actions-standards.md) |
 | **Toolbox for Toolbox** | Toolbox scores its own repo: a local portal over crates, docs, CLI commands, MCP tools, agent skills and first-party connectors with a scorecard set per SDLC layer; generic `workspace` and `runner` connectors; findings on rule evidence, multi-hop derivation, ratchets and a local report mode (D65, D72, D73) | [toolbox-for-toolbox.md](./design/toolbox-for-toolbox.md) |
 | **Agent skill standards** | Every `SKILL.md` is a catalog entity. `maintainer-skill` gates spec conformance, a routable description, a short procedure, and (at gold) eval cases plus a few hostile-text checks. Paired agent runs are the efficacy measure and are not a CI gate (D72). Every CLI command has a skill that names its invocation (`cli-skill`, D94) | [skill-standards.md](./design/skill-standards.md), [cli-skills.md](./design/cli-skills.md) |

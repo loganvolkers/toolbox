@@ -17,6 +17,12 @@ pub struct Manifest {
     pub kinds: Vec<Kind>,
     #[serde(default)]
     pub scorecards: Vec<Scorecard>,
+    /// Long-term focus programs that group scorecards and campaigns.
+    #[serde(default)]
+    pub tracks: Vec<Track>,
+    /// Time-bound goals over existing scorecards (D01M7Y11G0YZT23W26Z9D3XW68Y).
+    #[serde(default)]
+    pub campaigns: Vec<Campaign>,
     /// Rubrics coding agents assess entities with (assessments are data, read by scorecards).
     #[serde(default)]
     pub rubrics: Vec<Rubric>,
@@ -142,12 +148,69 @@ pub struct Scorecard {
     pub name: String,
     pub kind: String,
     pub owner: String,
+    /// Optional track this scorecard belongs to (`tracks[].name`).
+    pub track: Option<String>,
     pub levels: Vec<String>,
     pub applies_to: Option<String>,
     pub rules: Vec<Rule>,
     /// `{newEntitiesAtLeast: <level>}`: ratchet policy for entities new since the baseline.
     pub ratchet: Option<Value>,
     pub facets: Option<Value>,
+}
+
+/// A long-term focus program (Soundcheck "track").
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Track {
+    pub name: String,
+    pub title: Option<String>,
+    pub owner: String,
+    pub description: Option<String>,
+}
+
+/// One scorecard goal inside a campaign.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CampaignInclude {
+    pub scorecard: String,
+    pub at_least: Option<String>,
+    #[serde(default)]
+    pub rules: Vec<String>,
+}
+
+/// A checkpoint on the way to a campaign's `targetPercent`.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CampaignMilestone {
+    pub name: String,
+    pub target_percent: u8,
+}
+
+/// A time-bound goal over existing scorecards (Soundcheck "campaign" / Cortex "initiative").
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Campaign {
+    pub name: String,
+    pub title: Option<String>,
+    pub track: Option<String>,
+    pub owner: String,
+    pub description: Option<String>,
+    pub start: Option<String>,
+    pub end: Option<String>,
+    pub target_percent: Option<u8>,
+    #[serde(default)]
+    pub draft: bool,
+    /// Optional lifecycle override (`draft` | `scheduled` | `active` | `ended`).
+    pub status: Option<String>,
+    #[serde(default)]
+    pub milestones: Vec<CampaignMilestone>,
+    pub includes: Vec<CampaignInclude>,
+}
+
+impl Campaign {
+    /// Fleet goal percent (default 100).
+    pub fn target_percent(&self) -> u8 {
+        self.target_percent.unwrap_or(100)
+    }
 }
 
 /// An upstream tool: the version required and how mise installs it.

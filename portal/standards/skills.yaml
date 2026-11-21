@@ -52,6 +52,7 @@ scorecards:
   - name: maintainer-skill
     kind: Skill
     owner: group:maintainers
+    track: maintainer
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze}
     rules:
