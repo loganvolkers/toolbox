@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.1.1 - 2026-11-21
+
 ### Added
 
 - `packages/pnpm-expo` (0.1.0): `pnpm-workspace` and `expo-app` scorecards for pnpm monorepos and Expo apps (D01M7Y6X38AERPBT0YH1AG5TBRD).

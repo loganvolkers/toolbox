@@ -4,17 +4,17 @@ A version tag releases every distable binary (D90). Nothing is built by hand.
 
 ## Cut a release
 
-1. `version` in the root `Cargo.toml` (`[workspace.package]`) matches the tag you will push (today: `0.1.0`).
+1. `version` in the root `Cargo.toml` (`[workspace.package]`) matches the tag you will push (today: `0.1.1`).
 2. `dist plan` (cargo-dist 0.34.0) lists the archives and installers; it also checks that `.github/workflows/release.yml` still matches the generator (D98 — do not format that file by hand).
 3. On a clean `main` with CI green:
 
    ```bash
-   git tag v0.1.0
-   git push origin v0.1.0
+   git tag v0.1.1
+   git push origin v0.1.1
    ```
 
 4. `.github/workflows/release.yml` builds Linux / macOS / Windows archives, shell and PowerShell installers, attestations, and a GitHub Release.
-5. `.github/workflows/image.yml` then builds `ghcr.io/<owner>/toolbox:0.1.0` from the Linux archives.
+5. `.github/workflows/image.yml` then builds `ghcr.io/<owner>/toolbox:0.1.1` from the Linux archives.
 
 Verify an artifact with `gh attestation verify <file> --repo <owner>/toolbox`.
 
@@ -24,13 +24,13 @@ Verify an artifact with `gh attestation verify <file> --repo <owner>/toolbox`.
 
 ```bash
 # From a Toolbox checkout, or copy scripts/install-release.sh
-TOOLBOX_VERSION=0.1.0 ./scripts/install-release.sh
-toolbox --version   # 0.1.0
+TOOLBOX_VERSION=0.1.1 ./scripts/install-release.sh
+toolbox --version   # 0.1.1
 toolbox doctor examples/repo-portal-starter
 toolbox report examples/repo-portal-starter
 ```
 
-In CI, set `toolbox-version: "0.1.0"` on `loganvolkers/toolbox/actions/report` so the action downloads checksum-verified binaries instead of compiling.
+In CI, set `toolbox-version: "0.1.1"` on `loganvolkers/toolbox/actions/report` so the action downloads checksum-verified binaries instead of compiling.
 
 ## Public vs private (required for external consumers)
 
@@ -42,9 +42,9 @@ In CI, set `toolbox-version: "0.1.0"` on `loganvolkers/toolbox/actions/report` s
 
 ```yaml
 - uses: actions/checkout@v4
-- uses: loganvolkers/toolbox/actions/report@v0.1.0
+- uses: loganvolkers/toolbox/actions/report@v0.1.1
   with:
-    toolbox-version: "0.1.0"
+    toolbox-version: "0.1.1"
   env:
     GH_TOKEN: ${{ secrets.TOOLBOX_READ_TOKEN }}   # install.sh / gh release download
 ```
