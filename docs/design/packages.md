@@ -108,7 +108,7 @@ README.md  CHANGELOG.md  LICENSE
 # toolbox-package.yaml
 apiVersion: toolbox.dev/package/v0
 name: github.com/acme/toolbox-standards/ci   # identity = git path (+ subdirectory)
-version: 1.4.0                               # must equal the release tag (as in Pkl)
+version: 1.4.0                               # package semver (may lag the git tag consumers pin)
 toolbox: ">=0.2 <0.4"                         # compatible Toolbox versions
 description: CI security and reliability standards built on zizmor and actionlint.
 parameters:
@@ -123,6 +123,13 @@ requires:                                     # kinds and connector records it r
 dependencies:
   - github.com/acme/toolbox-standards/core@^2
 ```
+
+**Version vs git tag.** Ideal design keeps `version:` equal to the release tag (Pkl-style). In
+practice the package YAML `version:` and the Toolbox **git tag that first contains the package
+directory** can differ (e.g. `version: 0.1.0` while consumers must pin `@0.1.1` / tag `v0.1.1`).
+`toolbox install` resolves `@<ver>` to `git clone --branch v<ver>`. **Consumer pins follow the git
+tag that contains the package**, not only `toolbox-package.yaml` `version:`. Document both in the
+package README (see [package-author-sdlc.md](./package-author-sdlc.md) §6.5).
 
 The consumer side extends D54's `include`:
 ```yaml
@@ -154,6 +161,15 @@ builder.
 `failRateBronze`). `toolbox validate` rejects a `with:` value that weakens the package's default
 when the package is included as `mandatory`. This is federation's monotonic tightening, applied at
 the parameter rather than the rule.
+
+**Parameter types.** Integers with `tighten:` are the pattern in `packages/github-actions`.
+Booleans work too (`requireHoisted` in `packages/pnpm-expo`); use `${param:requireHoisted}` in CEL.
+Enums and strings are also valid.
+
+**CEL in scorecard `evidence:` / `check:`.** There is no `join()`. Build strings with `.map(...)`
+(and `+` / list concat). `toolbox validate` rejects undeclared functions early; copying JS-ish
+`join` fails as `cel.function` if you skip validate. Authoring checklist:
+[package-author-sdlc.md](./package-author-sdlc.md) §6.4.
 
 ## 4. Where packages live
 

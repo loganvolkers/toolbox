@@ -1,6 +1,7 @@
 # Package Author SDLC: Shipping Standards, Connectors and the Binaries They Need
 
-*Status: design, 2026-11-20 (D87); distribution decided (D90, resolving Q16), implementation in progress. Adds a fourth SDLC layer, the **package author SDLC**, to the
+*Status: design, 2026-11-20 (D87); distribution decided (D90, resolving Q16); second-package
+checklist added 2026-11-21 (§6). Adds a fourth SDLC layer, the **package author SDLC**, to the
 maintainer, operator and user SDLCs ([sdlc.md](../sdlc.md)). It revises
 [packages.md](./packages.md), which treated a package as data alone. Every layer's stages are now
 catalogued and scored in Toolbox for Toolbox (`portal/sdlc/`, scorecards `sdlc-stage`, `sdlc-layer`
@@ -205,6 +206,89 @@ digest, data packages with typed parameters) stands. A package now has three par
 3. `tools:` and `toolbox doctor`;
 4. the package format and `include: package:`;
 5. WASM components.
+
+## 6. Authoring a second package (checklist)
+
+There is no `toolbox package new`. Copy `packages/github-actions/` (CI) or `packages/pnpm-expo/`
+(JS/Expo workspace) and trim. Worked examples live there; this checklist is the short path aimed at
+a *second* package author who has already read [packages.md](./packages.md) §3.
+
+### 6.1 Layout
+
+| Path | Role |
+|---|---|
+| `toolbox-package.yaml` | Name, package `version:`, typed `parameters`, fragment globs |
+| `fragments/*.yaml` | Kinds, scorecards, maps (manifest schema) |
+| `tests/fixtures/*.ndjson` | Connector-shaped records that exercise every exported rule **both ways** (meta / D71) |
+| `tests/toolbox.yaml` + `tests/*.test.yaml` | Mini-portal that includes the package and asserts levels |
+| `README.md` | Consumer diff: exact `include`, connector config delta, **minimum Toolbox binary** |
+
+### 6.2 When you must extend `toolbox-connector-workspace`
+
+| Need | SDLC layer | What to do |
+|---|---|---|
+| New record kinds / fields from files in the checkout (e.g. `js-workspace`, `expo-app`) | **maintainer SDLC** | Change `crates/toolbox-connector-workspace`, ship in a Toolbox release, then write package YAML against those facts |
+| New scorecards / CEL over **existing** record shapes | **package author SDLC** | Fragments + fixtures + `toolbox test` only |
+| Remote / executable connector | **package author SDLC** (after executable connectors land) | Outside the in-image path; see §3.2 |
+
+**Sequencing trap:** high-value Expo/pnpm rules needed workspace facts first. A YAML-only author
+cannot invent `js-workspace` fields; empty scorecards on an old binary look like a broken include.
+Document the minimum Toolbox release that emits the required records in the package README.
+
+Do **not** naively reuse T4T's `maintainer-package` / `PackageJson` for a pnpm monorepo or Expo
+app — see [package-standards.md](./package-standards.md) §6. Prefer `packages/pnpm-expo` (or new
+facts + scorecards) instead.
+
+### 6.3 Meta bronze, fixtures, and `toolbox test`
+
+1. Every exported rule must pass on one fixture entity and fail on another (D71).
+2. Run `toolbox test packages/<name>/tests` until green.
+3. Package tests are **fixture NDJSON**, not a live connector run. Keep field shapes honest against
+   the connector that emits them (or drift will only show up in a consumer report). An optional
+   in-image connector-over-tree package-test mode is deferred.
+4. Before calling the package publishable, every exported rule/scorecard must reach **meta bronze**
+   when scored in a portal that includes the package (tested, explained, both outcomes).
+
+### 6.4 CEL next to scorecard examples
+
+`toolbox validate` rejects undeclared CEL functions (they otherwise fail at evaluation as
+`cel.function`). Practical rules for package authors:
+
+| Do | Don't |
+|---|---|
+| Build list evidence with `.map(v, '…' + v)` (see `pnpm-expo` `toolchain-aligned`) | Call `join()` — it is not provided |
+| Use `${param:name}` for typed parameters, including **booleans** | Assume parameters are only integers with `tighten:` (that is what `github-actions` shows; `requireHoisted` in `pnpm-expo` is the boolean example) |
+
+```yaml
+# boolean package param (packages/pnpm-expo)
+parameters:
+  requireHoisted: {type: boolean, default: false, …}
+# in a rule:
+check: "!(${param:requireHoisted} || entity.hasExpoApps) || (entity.linkerDeclared && …)"
+
+# list evidence without join:
+evidence: "entity.ciNodeVersions.map(v, 'ci node-version=' + v)"
+```
+
+### 6.5 Consumer README, pins, and release handoff
+
+Before operators adopt:
+
+1. **README consumer diff** — exact `include:` line, `builtin:workspace` (or other) config delta,
+   and “requires Toolbox ≥ *x* with facts *y*”.
+2. **Consumer pin = git tag that contains the package directory.** `toolbox install` clones
+   `--branch v<version>` after stripping a leading `v`. A package `toolbox-package.yaml`
+   `version: 0.1.0` can lag the Toolbox release tag that first *contains* the package (e.g.
+   consumers pin `@0.1.1` / tag `v0.1.1` while YAML still says `0.1.0`). **Pins follow the git
+   tag**, not only the YAML `version:` field.
+3. **Minimum Toolbox binary** for any new connector facts (separate from the package tag when
+   needed): e.g. `js-workspace` / `expo-app` need Toolbox ≥ `0.1.1`.
+4. **Release-handoff-before-adopt:** cut (or wait for) a release/handoff note that names the safe
+   package tag, `actions/report` ref, and `toolbox-version` together, then flip consumer CI. Do not
+   start fleet adopt on a commit SHA pin alone — install resolves tags, and report CI expects a
+   populated package cache for that tag.
+
+Worked consumer text: [`packages/pnpm-expo/README.md`](../../packages/pnpm-expo/README.md).
 
 ## Sources
 

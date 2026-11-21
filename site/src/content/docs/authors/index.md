@@ -9,6 +9,11 @@ A package author publishes something other portals include. A package is standar
 
 The package author SDLC follows the maintainer SDLC through testing, then forks. A maintainer tests the whole system at one commit. A package author tests one package, then distributes it for other repositories to pin.
 
+**Shipping a second package?** There is no scaffold. Use the checklist in
+[`docs/design/package-author-sdlc.md`](https://github.com/loganvolkers/toolbox/blob/main/docs/design/package-author-sdlc.md) §6
+(layout, when to extend `toolbox-connector-workspace`, meta bronze, CEL without `join()`, consumer
+pins, release handoff). Copy `packages/github-actions/` or `packages/pnpm-expo/` and trim.
+
 ## What a package contains
 
 ```
@@ -42,7 +47,7 @@ include:
     with: {githubOrg: acme, githubRepo: payments, failRateBronze: 15}
 ```
 
-The version is a git tag: `@1.2.0` fetches `v1.2.0`. Toolbox itself ships installable binaries from [v0.1.0](https://github.com/loganvolkers/toolbox/releases/tag/v0.1.0); packages still pin by git tag or local path until an OCI mirror exists.
+The version is a git tag: `@1.2.0` fetches `v1.2.0`. That tag must **contain** the package directory — package `toolbox-package.yaml` `version:` can lag the Toolbox release tag that first ships the package; consumer pins follow the **git tag**. Toolbox itself ships installable binaries from [v0.1.0](https://github.com/loganvolkers/toolbox/releases/tag/v0.1.0) (use ≥ `0.1.1` when the package needs `js-workspace` / `expo-app`); packages still pin by git tag or local path until an OCI mirror exists.
 
 `toolbox install` clones that tag into the cache and records the package's content hash in `toolbox.lock`. Later loads read the lock and do not touch the network. Commit the lock file.
 

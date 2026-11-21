@@ -24,6 +24,11 @@ Then run `toolbox install`, which pins the package in `toolbox.lock`, and `toolb
 Parameters (see `toolbox-package.yaml`):
 - `githubOrg` and `githubRepo` are required;
 - `branch` defaults to `main`;
-- `failRateBronze`, `failRateSilver`, `failRateGold` and `p90Seconds` may only be lowered.
+- `failRateBronze`, `failRateSilver`, `failRateGold` and `p90Seconds` may only be lowered
+  (integers with `tighten: lower`). Boolean parameters are also supported — see
+  `requireHoisted` in [`packages/pnpm-expo`](../pnpm-expo/).
+
+Authoring a further package: [package-author-sdlc.md](../../docs/design/package-author-sdlc.md) §6
+(CEL: no `join()`, use `.map`; consumer pin = git tag that contains the package).
 
 Test the package with `toolbox test packages/github-actions/tests`.
