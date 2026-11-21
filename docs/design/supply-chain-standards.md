@@ -22,8 +22,9 @@ GitHub API. Counts of alerts need that API and stay unknown.
 | Does someone own the CI workflow? | The last CODEOWNERS rule that matches `.github/workflows/ci.yml` | silver |
 | Is the code-scanning action pinned to a commit? | `github/codeql-action/…@` plus 40 hex digits | gold |
 
-This repository has none of the bronze files. The live entity is none. The files are not added in
-order to pass.
+This checkout now has the bronze files, a CODEOWNERS rule for `.github/`, and
+`github/codeql-action` pinned to a commit, so the live entity is gold. They were left out when the
+card was added, and added when the repository ratchet moved off none.
 
 ## 2. What the field says
 
@@ -53,7 +54,7 @@ One `repo` record per checkout, id `repo:<name>`. The facts are `dependabotGaps`
 
 | Repository | Level | Notes |
 |---|---|---|
-| This checkout | none | No `dependabot.yml`, no code-scanning workflow, no `SECURITY.md` |
+| This checkout | gold | Dependabot for cargo, npm and github-actions; `codeql.yml` pins `github/codeql-action`; `SECURITY.md`; CODEOWNERS covers `.github/workflows/ci.yml` |
 
 Fixtures: `repo:acme/focused` at gold, `repo:acme/partial` failing the pin and one ecosystem,
 `repo:acme/unsafe` at none. Every rule passes on one fixture and fails on another (D71).
