@@ -2,6 +2,8 @@
 # Install CI's third-party tools from their releases, SHA-256-pinned, instead of compiling them
 # with `go install` on every run (D90: reuse released artifacts). Linux x86_64 only, like CI.
 # Usage: scripts/ci-tools.sh <bin-dir> <tool>...   (tools: openfga actionlint fga)
+# For the site report preview (pages.yml pins), prefer scripts/regen-site-report.sh, which
+# installs actionlint from here plus zizmor==1.32.0, then runs doctor + report.
 set -euo pipefail
 dir=$1; shift; mkdir -p "$dir"; tmp=$(mktemp -d)
 fetch() { # name url sha256 member

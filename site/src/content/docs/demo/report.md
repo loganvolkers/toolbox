@@ -20,12 +20,12 @@ The standalone page is one file. A host that wants its own chrome uses the direc
 </toolbox-report>
 ```
 
-`toolbox report -o web` writes `toolbox-report.js`, `report.json`, and `index.html`. The site's build generates them for each commit, with the pinned zizmor and actionlint, so the page always shows the commit it was built from:
+`toolbox report -o web` writes `toolbox-report.js`, `report.json`, and `index.html`. The site's build generates them for each commit, with the pinned zizmor and actionlint, so the page always shows the commit it was built from. Locally, use the same pins:
 
 ```bash
-target/debug/toolbox report portal --skip runner,github-actions -o web --out site/public/report
+scripts/regen-site-report.sh
 ```
 
-The test runner and the GitHub API are skipped, the same way the fast ratchet skips them. A rule that needs those runs says that it has no run data.
+That installs actionlint 1.7.12 and zizmor 1.32.0 (matching `.github/workflows/pages.yml`), runs `toolbox doctor`, then `report portal --skip runner,github-actions -o web --out site/public/report`. The test runner and the GitHub API are skipped, the same way the fast ratchet skips them. A rule that needs those runs says that it has no run data.
 
 <iframe src="/toolbox/report-hosted/" title="Toolbox report with this site's header and footer" style="width: 100%; height: 80vh; border: 1px solid var(--sl-color-gray-5); border-radius: 8px;"></iframe>
