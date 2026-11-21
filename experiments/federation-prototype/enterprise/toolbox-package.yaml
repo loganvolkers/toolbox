@@ -1,0 +1,36 @@
+# Enterprise standards package (governance operator). Simulated git-first package for the prototype.
+apiVersion: toolbox.dev/package/v0
+name: enterprise
+version: 0.1.0
+description: >-
+  Acme enterprise standards pushed to every org and repo: CodeQL, agent
+  docs, branch rulesets, Ubuntu preference, and fleet campaigns.
+parameters:
+  codeqlMaxFindings:
+    type: integer
+    default: 0
+    tighten: lower
+    description: Max open CodeQL findings for the mandatory bar (0 = zero findings).
+  prettierPrintWidth:
+    type: integer
+    default: 100
+    tighten: lower
+    description: Max Prettier printWidth; leaves may only lower it.
+exports:
+  kinds: [Repository, Service, Component, Library]
+  scorecards:
+    - codeql
+    - prettier
+    - typescript-ratchet
+    - junit5
+    - actions-lockfile
+    - preferred-os
+    - branch-rulesets
+    - agents-md
+    - lefthook
+  campaigns:
+    - codeql-zero-findings
+    - junit4-to-5
+    - actions-lockfile-60d
+    - husky-to-lefthook
+    - mobile-observe

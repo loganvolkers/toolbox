@@ -1,0 +1,17 @@
+# Org-level package: includes enterprise and tightens Prettier for payments.
+apiVersion: toolbox.dev/package/v0
+name: org-payments
+version: 0.1.0
+description: >-
+  Payments org standards; includes enterprise and tightens JS formatter
+  width.
+parameters:
+  prettierPrintWidth:
+    type: integer
+    default: 90
+    tighten: lower
+    description: Payments org default; leaves may only lower further.
+  idempotencyRequired: {type: boolean, default: true}
+exports:
+  kinds: [Repository, Service, Component, Library]
+  scorecards: [payments-idempotency]

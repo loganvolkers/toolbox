@@ -1,0 +1,169 @@
+# Enterprise fragment: kinds, scorecards, campaigns (federation prototype; not a live portal).
+kinds:
+  - name: Repository
+    fields:
+      name: {type: string}
+      org: {type: string}
+      hasCodeql: {type: boolean}
+      openCodeqlFindings: {type: integer}
+      usesPrettier: {type: boolean}
+      prettierPrintWidth: {type: integer}
+      tsPercent: {type: number}
+      branchProtection: {type: string}
+      agentsMd: {type: boolean}
+      usesNpxSkills: {type: boolean}
+      husky: {type: boolean}
+      lefthook: {type: boolean}
+      lockfileFormat: {type: string}
+      dockerHostOs: {type: string}
+  - name: Service
+    fields:
+      name: {type: string}
+      owner: {type: string}
+      repository: {type: string}
+  - name: Component
+    fields:
+      name: {type: string}
+      owner: {type: string}
+      repository: {type: string}
+      path: {type: string}
+  - name: Library
+    fields:
+      name: {type: string}
+      ecosystem: {type: string}
+      junitMajor: {type: integer}
+      repository: {type: string}
+
+scorecards:
+  - name: codeql
+    kind: Repository
+    owner: group:security
+    stage: mandatory
+    levels: [bronze]
+    rules:
+    - {name: enabled, level: bronze, check: entity.hasCodeql}
+    - name: zero-open
+      level: bronze
+      check: entity.openCodeqlFindings <= ${param:codeqlMaxFindings}
+
+  - name: prettier
+    kind: Repository
+    owner: group:dx
+    stage: advisory
+    levels: [bronze]
+    appliesTo: "true"
+    rules:
+    - {name: uses-prettier, level: bronze, check: entity.usesPrettier}
+    - name: print-width
+      level: bronze
+      check: entity.prettierPrintWidth <= ${param:prettierPrintWidth}
+
+  - name: typescript-ratchet
+    kind: Repository
+    owner: group:dx
+    stage: mandatory
+    levels: [bronze]
+    rules:
+    - {name: mostly-typescript, level: bronze, check: entity.tsPercent >= 80}
+
+  - name: junit5
+    kind: Library
+    owner: group:java-platform
+    stage: advisory
+    levels: [bronze]
+    appliesTo: entity.ecosystem == 'java'
+    rules: [{name: on-junit5, level: bronze, check: entity.junitMajor >= 5}]
+
+  - name: actions-lockfile
+    kind: Repository
+    owner: group:platform
+    stage: advisory
+    levels: [bronze]
+    rules:
+    - name: modern-lockfile
+      level: bronze
+      check: entity.lockfileFormat == 'v3'
+
+  - name: preferred-os
+    kind: Repository
+    owner: group:sre
+    stage: advisory
+    levels: [bronze]
+    rules:
+    - name: ubuntu-hosts
+      level: bronze
+      check: entity.dockerHostOs == 'ubuntu'
+
+  - name: branch-rulesets
+    kind: Repository
+    owner: group:security
+    stage: advisory
+    levels: [bronze]
+    rules:
+    - name: rulesets-not-legacy
+      level: bronze
+      check: entity.branchProtection == 'rulesets'
+
+  - name: agents-md
+    kind: Repository
+    owner: group:dx
+    stage: advisory
+    levels: [bronze]
+    rules:
+    - {name: has-agents-md, level: bronze, check: entity.agentsMd}
+    - {name: no-npx-skills, level: bronze, check: "!entity.usesNpxSkills"}
+
+  - name: lefthook
+    kind: Repository
+    owner: group:dx
+    stage: advisory
+    levels: [bronze]
+    rules:
+    - name: lefthook-not-husky
+      level: bronze
+      check: entity.lefthook && !entity.husky
+
+campaigns:
+  - name: codeql-zero-findings
+    title: CodeQL everywhere; zero open findings
+    track: security
+    owner: group:security
+    stage: mandatory
+    targetPercent: 100
+    includes: [{scorecard: codeql, atLeast: bronze}]
+
+  - name: junit4-to-5
+    title: Java JUnit 4 to 5 via OpenRewrite
+    track: java
+    owner: group:java-platform
+    stage: advisory
+    end: 2026-12-31
+    targetPercent: 100
+    includes: [{scorecard: junit5, atLeast: bronze}]
+
+  - name: actions-lockfile-60d
+    title: Actions lockfile v3; enterprise settings in 60 days
+    track: platform
+    owner: group:platform
+    stage: advisory
+    start: 2026-11-01
+    enforceAt: 2026-12-31
+    milestones: [{name: enforce, targetPercent: 100}]
+    includes: [{scorecard: actions-lockfile, atLeast: bronze}]
+
+  - name: husky-to-lefthook
+    title: Replace husky with Lefthook
+    track: dx
+    owner: group:dx
+    stage: advisory
+    targetPercent: 100
+    includes: [{scorecard: lefthook, atLeast: bronze}]
+
+  - name: mobile-observe
+    title: Mobile stacks (observe only; no standard yet)
+    track: mobile
+    owner: group:dx
+    stage: experimental
+    observeOnly: true
+    targetPercent: 0
+    includes: []

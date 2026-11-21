@@ -1,0 +1,38 @@
+# Multi-entity catalog for payments-api (not repos alone).
+entities:
+  - kind: Repository
+    id: repository:acme/payments-api
+    name: payments-api
+    org: acme
+    hasCodeql: true
+    openCodeqlFindings: 2
+    usesPrettier: true
+    prettierPrintWidth: 80
+    tsPercent: 92
+    branchProtection: rulesets
+    agentsMd: true
+    usesNpxSkills: false
+    husky: false
+    lefthook: true
+    lockfileFormat: v3
+    dockerHostOs: ubuntu
+
+  - kind: Service
+    id: service:acme/payments-api
+    name: payments-api
+    owner: group:payments
+    repository: repository:acme/payments-api
+
+  - kind: Component
+    id: component:acme/payments-api/checkout
+    name: checkout
+    owner: group:checkout
+    repository: repository:acme/payments-api
+    path: packages/checkout
+
+  - kind: Library
+    id: library:acme/payments-api/ledger-core
+    name: ledger-core
+    ecosystem: java
+    junitMajor: 4
+    repository: repository:acme/payments-api

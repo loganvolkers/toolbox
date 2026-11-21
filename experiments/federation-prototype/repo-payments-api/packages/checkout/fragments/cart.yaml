@@ -1,0 +1,7 @@
+scorecards:
+  - name: cart-latency
+    kind: Component
+    owner: group:checkout
+    stage: experimental
+    levels: [bronze]
+    rules: [{name: p99-under-budget, level: bronze, check: true}]

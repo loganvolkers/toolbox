@@ -1,0 +1,7 @@
+entities:
+  - kind: Component
+    id: component:acme/payments-api/checkout
+    name: checkout
+    owner: group:checkout
+    repository: repository:acme/payments-api
+    path: packages/checkout

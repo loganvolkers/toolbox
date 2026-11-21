@@ -1,0 +1,9 @@
+# Org extension: payments-specific scorecard (does not redefine enterprise rules).
+scorecards:
+  - name: payments-idempotency
+    kind: Service
+    owner: group:payments
+    stage: experimental
+    levels: [bronze]
+    rules:
+    - {name: documents-idempotency, level: bronze, check: "entity.name != ''"}

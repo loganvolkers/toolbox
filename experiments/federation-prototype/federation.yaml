@@ -1,0 +1,47 @@
+# Federation tree for the prototype (design §8). Docs-as-code; compose.py is the applicator.
+apiVersion: toolbox.dev/federation-prototype/v0
+root: enterprise
+nodes:
+  - id: enterprise
+    kind: enterprise
+    path: enterprise
+    operator: governance
+    publishes: [enterprise]
+
+  - id: org-payments
+    kind: organization
+    path: org-payments
+    parent: enterprise
+    operator: governance
+    publishes: [org-payments]
+    includes: [{package: enterprise}]
+
+  - id: repo-payments-api
+    kind: repository
+    path: repo-payments-api
+    parent: org-payments
+    operator: leaf
+    includes:
+    - {package: org-payments, with: {prettierPrintWidth: 80}}
+    - package: enterprise
+    report: results.json
+    catalog: catalog/entities.yaml
+
+  - id: checkout
+    kind: subteam
+    path: repo-payments-api/packages/checkout
+    parent: repo-payments-api
+    operator: leaf
+    publishes: [checkout-grassroots]
+    includes: [{package: org-payments, with: {prettierPrintWidth: 80}}]
+    report: results.json
+    catalog: catalog/entities.yaml
+
+  - id: mobile-app
+    kind: observe
+    path: mobile-app
+    parent: enterprise
+    operator: leaf
+    observeOnly: true
+    report: results.json
+    catalog: catalog/entities.yaml

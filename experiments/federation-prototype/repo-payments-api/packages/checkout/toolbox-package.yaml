@@ -1,0 +1,9 @@
+# Grass-roots experimental package from the checkout monorepo subteam.
+apiVersion: toolbox.dev/package/v0
+name: checkout-grassroots
+version: 0.0.1
+description: >-
+  Checkout team's experimental cart-latency scorecard. Reported up as
+  grass-roots; not mandatory at enterprise.
+parameters: {}
+exports: {scorecards: [cart-latency]}

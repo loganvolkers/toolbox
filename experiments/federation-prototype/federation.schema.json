@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://toolbox.dev/schemas/federation-prototype/v0.json",
+  "title": "Toolbox federation prototype tree",
+  "description": "Docs-as-code tree for the federation vertical slice (experiments/federation-prototype). Not the production portal manifest.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["apiVersion", "root", "nodes"],
+  "properties": {
+    "apiVersion": {
+      "const": "toolbox.dev/federation-prototype/v0"
+    },
+    "root": {
+      "type": "string",
+      "description": "Node id of the enterprise root."
+    },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/node"
+      }
+    }
+  },
+  "$defs": {
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "path", "operator"],
+      "properties": {
+        "id": { "type": "string" },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "enterprise",
+            "organization",
+            "team",
+            "repository",
+            "subteam",
+            "observe"
+          ]
+        },
+        "path": {
+          "type": "string",
+          "description": "Directory relative to this experiment root."
+        },
+        "parent": { "type": "string" },
+        "operator": {
+          "type": "string",
+          "enum": ["governance", "leaf"]
+        },
+        "publishes": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "includes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/include" }
+        },
+        "report": { "type": "string" },
+        "catalog": { "type": "string" },
+        "observeOnly": { "type": "boolean" }
+      }
+    },
+    "include": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["package"],
+      "properties": {
+        "package": { "type": "string" },
+        "with": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    }
+  }
+}

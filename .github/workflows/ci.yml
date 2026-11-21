@@ -24,6 +24,8 @@ jobs:
         run: python3 scripts/decision-id.py --self-test
       - name: Portable changeset applicator fixtures
         run: python3 scripts/test-apply-changesets.py
+      - name: Federation prototype (push / extend / weaken / report / catalog)
+        run: python3 experiments/federation-prototype/tests/test_compose.py
       - name: YAML is formatted (yamark 0.6.1, D97)
         run: |
           python3 -m pip install yamark==0.6.1

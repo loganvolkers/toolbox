@@ -1,0 +1,2 @@
+# Deliberately weakens enterprise prettierPrintWidth (default 100) by raising it.
+includes: [{package: enterprise, with: {prettierPrintWidth: 120}}]

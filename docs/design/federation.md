@@ -1,9 +1,11 @@
 # Federation: Standards That Start in One Repo and Graduate to the Company
 
-*Paused (D01M7Y46VDDBK2SW6H96ZSG89MP): federation resumes once repo-level value is proven ([repo-value.md](./repo-value.md)).*
+*Paused for production (D01M7Y46VDDBK2SW6H96ZSG89MP): full federation (F1–F5) resumes once
+repo-level value is proven ([repo-value.md](./repo-value.md)).*
 
-*Status: design only, 2026-11-20 (D68). **Nothing here is implemented, and no implementation is
-planned until repo portals have been used by a few teams.** Builds on
+*Status: design, 2026-11-20 (D68). A **vertical-slice prototype** lives at
+[experiments/federation-prototype/](../../experiments/federation-prototype/) (compose + tests;
+does not lift this pause or change T4T ratchets). Builds on
 [repo-portals.md](./repo-portals.md) (what exists today), [ratchets.md](./ratchets.md),
 [meta-catalog.md](./meta-catalog.md), [source-of-truth.md](./source-of-truth.md) and
 [authorization.md](../authorization.md).*
@@ -155,11 +157,12 @@ and only regressions fail.
 - **A second source of truth.** A child's report is an input (a claim) to the parent. The parent's
   own facts win for fields it owns.
 
-## 8. Phasing (no implementation now)
+## 8. Phasing
 
 | Phase | Scope | Exit |
 |---|---|---|
 | F0 (done) | Repo portals: `toolbox report`, ratchet baselines, static HTML ([repo-portals.md](./repo-portals.md)) | This repo's CI runs its own ratchet |
+| F0.5 (prototype) | Docs-as-code tree + `compose.py` under [experiments/federation-prototype/](../../experiments/federation-prototype/): push, extend, weaken-rejected, results-up, multi-entity catalog, observe-only mobile | `python3 experiments/federation-prototype/tests/test_compose.py` green |
 | F1 | Standard packages: remote `include` by name and digest; namespaced names; monotonic-tightening validation; `plan` over package upgrades | One package used by two repo portals; a weakening attempt fails validation |
 | F2 | Results up (option A): a root portal reads children's committed reports; adoption and burn-down views | A root shows three repos' ratchets and their package versions |
 | F3 | Stages and waivers: `stage:` on scorecards and rules; waivers as owned, expiring native values; enforcement by stage | The CODEOWNERS example (§6) runs end to end on three repos |

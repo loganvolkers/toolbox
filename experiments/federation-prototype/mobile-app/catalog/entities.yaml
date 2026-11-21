@@ -1,0 +1,27 @@
+# Observe-only leaf: stack facts without a pushed mobile standard.
+entities:
+  - kind: Repository
+    id: repository:acme/mobile-shop
+    name: mobile-shop
+    org: acme
+    hasCodeql: true
+    openCodeqlFindings: 0
+    usesPrettier: false
+    prettierPrintWidth: 0
+    tsPercent: 40
+    branchProtection: legacy
+    agentsMd: false
+    usesNpxSkills: true
+    husky: true
+    lefthook: false
+    lockfileFormat: v2
+    dockerHostOs: alpine
+    mobileStack: expo
+    mobileFramework: react-native
+
+  - kind: Component
+    id: component:acme/mobile-shop/app
+    name: app
+    owner: group:mobile
+    repository: repository:acme/mobile-shop
+    path: apps/mobile

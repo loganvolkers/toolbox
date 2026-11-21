@@ -1,0 +1,4 @@
+# Leaf includes: org package (which pulls enterprise) + local tighten.
+includes:
+  - {package: org-payments, with: {prettierPrintWidth: 80}}
+  - {package: enterprise, with: {codeqlMaxFindings: 0, prettierPrintWidth: 80}}

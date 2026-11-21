@@ -1,0 +1,24 @@
+{
+  "apiVersion": "toolbox-report/v1",
+  "portal": "repo-payments-api",
+  "packages": [
+    {"name": "enterprise", "version": "0.1.0", "digest": "sha256:ent-demo"},
+    {"name": "org-payments", "version": "0.1.0", "digest": "sha256:org-demo"}
+  ],
+  "scorecards": {
+    "codeql": {"level": "none", "rules": {"enabled": "pass", "zero-open": "fail"}},
+    "prettier": {"level": "bronze", "rules": {"uses-prettier": "pass", "print-width": "pass"}},
+    "typescript-ratchet": {"level": "bronze", "rules": {"mostly-typescript": "pass"}},
+    "actions-lockfile": {"level": "bronze", "rules": {"modern-lockfile": "pass"}},
+    "preferred-os": {"level": "bronze", "rules": {"ubuntu-hosts": "pass"}},
+    "branch-rulesets": {"level": "bronze", "rules": {"rulesets-not-legacy": "pass"}},
+    "agents-md": {"level": "bronze", "rules": {"has-agents-md": "pass", "no-npx-skills": "pass"}},
+    "lefthook": {"level": "bronze", "rules": {"lefthook-not-husky": "pass"}}
+  },
+  "campaigns": {
+    "codeql-zero-findings": {"inScope": 1, "meeting": 0, "measure": 2.0},
+    "actions-lockfile-60d": {"inScope": 1, "meeting": 1},
+    "husky-to-lefthook": {"inScope": 1, "meeting": 1}
+  },
+  "grassRootsPackages": []
+}

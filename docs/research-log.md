@@ -106,6 +106,7 @@ How the design research was done, so parallel agents can reproduce, extend or ch
 | Unmodified OpenFGA v1.22.1 (Postgres datastore) reading derived tuples through a read-only `tuple` view, same experiment (`openfga/run.sh`) | 2,000/2,000 checks agree with the SQL permission view; ListObjects 667 = 667; Check p50 2.4 ms, p95 3.6 ms over HTTP; an ownership change is visible after a 2.6 s refresh. Writes, `ReadChanges`, conditions not tested |
 | Build cost of dbsp 0.384, wasmtime 50.0.3, tantivy 0.27, async-graphql 7.2.1 vs axum/sqlx/rmcp/cel, [`experiments/build-cost`](../experiments/build-cost) | **rustc 1.97.0 ICE compiling dbsp** at opt-level 2 (Feldera pins 1.99.0). On 1.99.0: clean dev build 496 s vs 96 s, release 363 s vs 64 s, 494 vs 167 crates, release binary 52.9 vs 10.1 MB; edit rebuilds 1.2–1.3 s vs 0.45–0.5 s |
 | OpenFGA v1.22.1 as a Go c-archive (`-buildmode=c-archive`, Go 1.26.11), `experiments/build-cost/fga-carchive` | 45 s cold build, 2.0 s warm, 78 MB archive |
+| **Federation prototype F0.5** (`experiments/federation-prototype`, 2026-11-21) | `compose.py check` / `weaken` / `report` and `tests/test_compose.py` (6 tests): enterprise→org→leaf→checkout push/extend, `prettierPrintWidth` weaken rejected, child reports + grass-roots `checkout-grassroots` roll up, catalog kinds Repository/Service/Component/Library, mobile observe-only leaf. Decision D01M7ZWEGMAHBGSCH79V2MK787X; production pause (D68 / D01M7Y46VDDBK2SW6H96ZSG89MP) unchanged |
 
 ## How to re-run the verifications
 

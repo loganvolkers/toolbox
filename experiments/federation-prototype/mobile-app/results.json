@@ -1,0 +1,15 @@
+{
+  "apiVersion": "toolbox-report/v1",
+  "portal": "mobile-app",
+  "packages": [],
+  "scorecards": {},
+  "campaigns": {
+    "mobile-observe": {"inScope": 1, "meeting": 0, "observed": {"mobileStack": "expo", "mobileFramework": "react-native"}}
+  },
+  "grassRootsPackages": [],
+  "observed": {
+    "mobileStack": "expo",
+    "mobileFramework": "react-native",
+    "note": "No enterprise mobile standard yet; visualize only."
+  }
+}

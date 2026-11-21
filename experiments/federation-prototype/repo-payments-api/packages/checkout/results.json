@@ -1,0 +1,22 @@
+{
+  "apiVersion": "toolbox-report/v1",
+  "portal": "checkout",
+  "packages": [
+    {"name": "org-payments", "version": "0.1.0", "digest": "sha256:org-demo"},
+    {"name": "checkout-grassroots", "version": "0.0.1", "digest": "sha256:cart-demo", "stage": "experimental"}
+  ],
+  "scorecards": {
+    "cart-latency": {"level": "bronze", "rules": {"p99-under-budget": "pass"}},
+    "payments-idempotency": {"level": "bronze", "rules": {"documents-idempotency": "pass"}}
+  },
+  "campaigns": {},
+  "grassRootsPackages": [
+    {
+      "name": "checkout-grassroots",
+      "version": "0.0.1",
+      "stage": "experimental",
+      "scorecards": ["cart-latency"],
+      "owner": "group:checkout"
+    }
+  ]
+}
