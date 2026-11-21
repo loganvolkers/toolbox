@@ -9,8 +9,9 @@
 //! the job emits one record of kind `<name>` with external id `<name>:<crate>`. `ndjson` jobs print
 //! connector `record` messages themselves (e.g. `toolbox describe`); they are passed through, and
 //! the job declares their `kinds`. `zizmor` and `actionlint` jobs run that linter and report one
-//! record per file matching their `files` globs (findings with severity and line, and counts);
-//! `optional: true` skips a job whose program isn't installed. `tally` jobs run their command, then count the lines of the NDJSON
+//! record per file matching their `files` globs (findings with severity and line, and counts). An
+//! argument that is exactly `{files}` expands to those files, so a linter gets only paths that
+//! exist; with none, the job doesn't run. `optional: true` skips a job whose program isn't installed. `tally` jobs run their command, then count the lines of the NDJSON
 //! `file` it wrote by the value of `key` (one record per value: `{<key>, calls, errors}`, where a
 //! line with `"error": true` is an error, and a line with `"declared": true` only declares the key,
 //! so keys nothing used are reported with zero calls); the file is removed before each run.
@@ -332,7 +333,11 @@ impl Runner {
     /// Run a linter over the repository and emit one record per covered file (`<job>:<path>`),
     /// clean files included. A missing optional program emits nothing (its rules become unknown).
     async fn run_lint(&self, job: &Job, out: &mut Sink<'_>) -> Result<(), String> {
-        let run = self.run(&job.command).await;
+        let files = toolbox_connect::files::matching(&self.root, &job.files);
+        let Some(argv) = with_files(&job.command, &files) else {
+            return Ok(()); // `{files}` and nothing to lint: no records, nothing failed
+        };
+        let run = self.run(&argv).await;
         if run.stderr.starts_with("cannot run ") {
             if job.optional {
                 out.log(
@@ -355,7 +360,7 @@ impl Runner {
             )
         })?;
         let mut by_file = parsed;
-        for path in toolbox_connect::files::matching(&self.root, &job.files) {
+        for path in files {
             let findings = by_file.remove(&path).unwrap_or_default();
             out.record(
                 &job.name,
@@ -446,7 +451,12 @@ impl Runner {
         out: &mut Sink<'_>,
         resync: bool,
     ) -> Result<(), String> {
-        let crates = self.crates().await?;
+        // Only per-crate jobs need Cargo: zizmor, actionlint and NDJSON jobs run in any repository.
+        let crates = if self.jobs.iter().any(|j| j.per_crate) {
+            self.crates().await?
+        } else {
+            BTreeMap::new()
+        };
         for job in &self.jobs {
             if !out.wants_any(&self.kinds_of(job)) {
                 continue;
@@ -576,6 +586,29 @@ impl Source for Runner {
             other => Err(format!("unsupported command {other:?}")),
         }
     }
+}
+
+/// `command` with an argument that is exactly `{files}` replaced by `files`; `None` when it asks for
+/// files and there are none.
+fn with_files(command: &[String], files: &[String]) -> Option<Vec<String>> {
+    if !command.iter().any(|a| a == "{files}") {
+        return Some(command.to_vec());
+    }
+    if files.is_empty() {
+        return None;
+    }
+    Some(
+        command
+            .iter()
+            .flat_map(|a| {
+                if a == "{files}" {
+                    files.to_vec()
+                } else {
+                    vec![a.clone()]
+                }
+            })
+            .collect(),
+    )
 }
 
 #[tokio::main]

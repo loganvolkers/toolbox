@@ -15,13 +15,27 @@ connectors:
           - --no-exit-codes
           - --format
           - json
-          - .github/workflows
-          - actions
+          - "{files}" # the files below that exist: a repository needn't have actions/
           parse: zizmor
           files: [.github/workflows/*.y*ml, actions/*/action.y*ml]
           optional: true # not installed → its rules are unknown, not failing
         - name: actionlint # workflow syntax, expressions, types; shellcheck off so local = CI
-          command: [actionlint, -shellcheck=, -pyflakes=, -format, "{{json .}}"]
+          # GitHub ships permission scopes and workflow keys before actionlint knows them, and
+          # larger or self-hosted runner labels are per organisation: those three "unknown name"
+          # findings are ignored (out-of-box runs, docs/research-log.md *Out-of-box R2*)
+          command:
+          - actionlint
+          - -shellcheck=
+          - -pyflakes=
+          - -ignore
+          - unknown permission scope
+          - -ignore
+          - unexpected key "[^"]+" for "concurrency" section
+          - -ignore
+          - label "[^"]+" is unknown
+          - -format
+          - "{{json .}}"
+          - "{files}"
           parse: actionlint
           files: [.github/workflows/*.y*ml]
           optional: true

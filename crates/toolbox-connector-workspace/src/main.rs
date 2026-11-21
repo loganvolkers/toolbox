@@ -226,6 +226,62 @@ fn missing_decisions(text: &str, known: &BTreeSet<String>, rel: &str) -> Vec<Str
     missing
 }
 
+/// Relative Markdown links in `text` (the document at `rel`): how many, and the targets that don't
+/// resolve to a file. A target resolves as a reader would follow it: as written, or as a page
+/// (`x.md`, `x.mdx`, `x/index.md`, `x/README.md`). A link starting with `/` is relative to the
+/// repository root on GitHub, and to a site's content root on a docs site, which is some folder
+/// above the document, possibly behind a base path (`/gh-aw/reference/auth/` for
+/// `docs/src/content/docs/reference/auth.mdx`).
+fn links_in(root: &Path, rel: &str, text: &str) -> (usize, BTreeSet<String>) {
+    let link = Regex::new(r"\]\(([^)\s#]+)(?:#[^)]*)?\)").unwrap();
+    let dir = Path::new(rel).parent().unwrap_or(Path::new(""));
+    let (mut links, mut broken) = (0, BTreeSet::new());
+    // Code is an example, not a link: drop fenced blocks and inline code first.
+    let fenced = Regex::new(r"(?ms)^\s*(```|~~~).*?^\s*(```|~~~)").unwrap();
+    let inline = Regex::new(r"`[^`\n]*`").unwrap();
+    let prose = inline
+        .replace_all(&fenced.replace_all(text, ""), "")
+        .into_owned();
+    for c in link.captures_iter(&prose) {
+        let target = &c[1];
+        if target.contains("://") || target.starts_with("mailto:") {
+            continue;
+        }
+        links += 1;
+        if !resolves(root, dir, target) {
+            broken.insert(target.to_owned());
+        }
+    }
+    (links, broken)
+}
+
+/// Whether `target`, linked from a document in `dir`, names a file (see [`links_in`]).
+fn resolves(root: &Path, dir: &Path, target: &str) -> bool {
+    let page = |p: PathBuf| {
+        let s = p.to_string_lossy().trim_end_matches('/').to_owned();
+        [
+            s.clone(),
+            format!("{s}.md"),
+            format!("{s}.mdx"),
+            format!("{s}/index.md"),
+            format!("{s}/index.mdx"),
+            format!("{s}/README.md"),
+        ]
+        .iter()
+        .any(|c| Path::new(c).exists())
+    };
+    let Some(route) = target.strip_prefix('/') else {
+        return page(root.join(dir).join(target));
+    };
+    let route = route.trim_end_matches('/');
+    let behind_base = route.split_once('/').map_or("", |(_, rest)| rest);
+    dir.ancestors().any(|above| {
+        [route, behind_base]
+            .iter()
+            .any(|r| !r.is_empty() && page(root.join(above).join(r)))
+    })
+}
+
 impl Workspace {
     fn from_env() -> Result<Self, String> {
         let cfg: Value = serde_json::from_str(
@@ -308,19 +364,7 @@ impl Workspace {
                     .trim()
                     .starts_with("Sources")
         });
-        let link = Regex::new(r"\]\(([^)\s#]+)(?:#[^)]*)?\)").unwrap();
-        let dir = Path::new(rel).parent().unwrap_or(Path::new(""));
-        let (mut links, mut broken) = (0, BTreeSet::new());
-        for c in link.captures_iter(&text) {
-            let target = &c[1];
-            if target.contains("://") || target.starts_with("mailto:") {
-                continue;
-            }
-            links += 1;
-            if !self.root.join(dir).join(target).exists() {
-                broken.insert(target.to_owned());
-            }
-        }
+        let (links, broken) = links_in(&self.root, rel, &text);
         let span = Regex::new(r"`([^`\n]{1,80})`").unwrap();
         let spans: BTreeSet<&str> = span
             .captures_iter(&text)
@@ -1122,6 +1166,31 @@ mod decision_ids {
             decision_file_ids(text),
             vec!["D01ARYZ6S410000000000000000".to_string(), "D84".to_string()]
         );
+    }
+
+    #[test]
+    fn root_relative_links_resolve_from_the_repository_root() {
+        let root = std::env::temp_dir().join(format!("toolbox-links-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        std::fs::create_dir_all(root.join("docs/internal")).unwrap();
+        std::fs::create_dir_all(root.join("products")).unwrap();
+        std::fs::write(root.join("products/README.md"), "# Products\n").unwrap();
+        let text = "[a](/products/README.md) [b](../../products/README.md) [c](/missing.md) [d](https://x.dev)";
+        let (links, broken) = crate::links_in(&root, "docs/internal/layout.md", text);
+        assert_eq!(links, 3);
+        assert_eq!(broken.into_iter().collect::<Vec<_>>(), ["/missing.md"]);
+        // A docs site: pages without extensions, and routes behind a base path from the content root.
+        let site = root.join("site/content/docs");
+        std::fs::create_dir_all(site.join("reference")).unwrap();
+        std::fs::write(site.join("reference/auth.mdx"), "# Auth\n").unwrap();
+        std::fs::write(site.join("reference/audit.md"), "# Audit\n").unwrap();
+        let text = "[r](/app/reference/auth/) [s](./audit) [t](../reference/auth) [u](/app/reference/nope/) [v](./nope)\n`[x](run_url)`\n```\n[y](code.md)\n```\n";
+        let (_, broken) = crate::links_in(&root, "site/content/docs/reference/glossary.md", text);
+        assert_eq!(
+            broken.into_iter().collect::<Vec<_>>(),
+            ["./nope", "/app/reference/nope/"]
+        );
+        let _ = std::fs::remove_dir_all(&root);
     }
 
     #[test]

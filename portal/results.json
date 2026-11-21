@@ -821,6 +821,9 @@
       "doc:docs/decisions/D01M7Y6X38AERPBT0YH1AG5TBRD.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M7YAHMGFZ8YH561KPF9CYY9T.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/README.md": {
         "level": "skipped"
       },
@@ -1016,6 +1019,9 @@
       "doc:experiments/durable-schema/README.md": {
         "level": "silver"
       },
+      "doc:experiments/out-of-box/README.md": {
+        "level": "silver"
+      },
       "doc:experiments/typescript-builder/README.md": {
         "level": "silver"
       },
@@ -1154,6 +1160,9 @@
         "level": "gold"
       },
       "example:experiments/durable-schema/README.md": {
+        "level": "gold"
+      },
+      "example:experiments/out-of-box/README.md": {
         "level": "gold"
       },
       "example:experiments/typescript-builder/README.md": {

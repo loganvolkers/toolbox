@@ -149,8 +149,10 @@ fn is_concrete(pin: &str) -> bool {
     )
 }
 
+/// `pnpm@x.y.z`, optionally with corepack's integrity hash (`pnpm@x.y.z+sha512.<hex>`), which pins
+/// more tightly than the version alone.
 fn package_manager_pinned(pm: &str) -> bool {
-    Regex::new(r"^pnpm@\d+\.\d+\.\d+$")
+    Regex::new(r"^pnpm@\d+\.\d+\.\d+(\+sha\d+\.[0-9A-Za-z+/=]+)?$")
         .unwrap()
         .is_match(pm.trim())
 }
@@ -159,6 +161,12 @@ fn mise_matches_package_manager(mise_pnpm: &str, package_manager: &str) -> bool 
     let Some(want) = package_manager.strip_prefix("pnpm@") else {
         return false;
     };
+    let want = want.split('+').next().unwrap_or(want); // drop corepack's `+sha512.…`
+    if mise_pnpm.trim().is_empty() {
+        // No pnpm pin in mise: nothing to drift from (a mise file without one isn't concrete,
+        // which fails alignment on its own).
+        return true;
+    }
     let want_parts: Vec<&str> = want.split('.').collect();
     if want_parts.len() < 2 {
         return false;
@@ -175,8 +183,11 @@ fn mise_matches_package_manager(mise_pnpm: &str, package_manager: &str) -> bool 
     got_parts.len() >= 2 && got_parts[0] == want_parts[0] && got_parts[1] == want_parts[1]
 }
 
+/// Node versions CI sets up: `node-version: X`, or `node-version-file: F` (read from the checkout,
+/// e.g. `.nvmrc`).
 fn ci_node_versions(root: &Path, paths: &[String]) -> Vec<String> {
     let re = Regex::new(r##"node-version:\s*['"]?([^\s'"#]+)"##).unwrap();
+    let file = Regex::new(r##"node-version-file:\s*['"]?([^\s'"#]+)"##).unwrap();
     let mut found = Vec::new();
     for rel in workflows(paths) {
         let text = std::fs::read_to_string(root.join(rel)).unwrap_or_default();
@@ -185,13 +196,22 @@ fn ci_node_versions(root: &Path, paths: &[String]) -> Vec<String> {
                 found.push(m.as_str().to_owned());
             }
         }
+        for c in file.captures_iter(&text) {
+            let pinned = std::fs::read_to_string(root.join(&c[1])).unwrap_or_default();
+            let v = pinned.lines().next().unwrap_or("").trim();
+            if !v.is_empty() {
+                found.push(v.to_owned());
+            }
+        }
     }
     found.sort();
     found.dedup();
     found
 }
 
-/// True when CI uses a lockfile-faithful pnpm/npm install and never `--no-frozen-lockfile`.
+/// True when CI uses a lockfile-faithful pnpm/npm install and never `--no-frozen-lockfile`. In CI,
+/// `pnpm install` fails when the lockfile needs an update (pnpm's `install` docs), so a plain
+/// `pnpm install` in a workflow is frozen; `npm install` is not, and only `npm ci` counts.
 fn ci_frozen_install(root: &Path, paths: &[String]) -> bool {
     let mut saw_good = false;
     let mut saw_bad = false;
@@ -202,8 +222,7 @@ fn ci_frozen_install(root: &Path, paths: &[String]) -> bool {
                 saw_bad = true;
             }
             if compile(r"\bpnpm\s+ci\b").is_match(line)
-                || (compile(r"\bpnpm\s+i(nstall)?\b").is_match(line)
-                    && compile(r"(^|[\s])--frozen-lockfile\b").is_match(line))
+                || compile(r"\bpnpm\s+i(nstall)?\b").is_match(line)
                 || compile(r"\bnpm ci\b").is_match(line)
             {
                 saw_good = true;
@@ -396,6 +415,42 @@ mod tests {
         assert_eq!(rec["miseConcrete"], true);
         assert_eq!(rec["toolchainAligned"], true);
         assert_eq!(rec["wildcardRanges"], json!([]));
+    }
+
+    /// Out-of-box findings on real repositories (docs/design/repo-value.md R2): a corepack hash pin,
+    /// a plain `pnpm install` in CI, Node from `.nvmrc`, and no mise file are all fine.
+    #[test]
+    fn hash_pins_plain_ci_installs_and_nvmrc_align_without_mise() {
+        let tmp = scratch(
+            "nvmrc",
+            &[
+                (
+                    "package.json",
+                    r#"{"packageManager":"pnpm@10.33.0+sha512.1056ab","engines":{"node":">=24 <25"}}"#,
+                ),
+                ("pnpm-workspace.yaml", "packages: [apps/*]\n"),
+                ("pnpm-lock.yaml", "lockfileVersion: '9.0'\n"),
+                (".nvmrc", "24.4.1\n"),
+                (
+                    ".github/workflows/ci.yml",
+                    "jobs:\n  x:\n    steps:\n      - with:\n          node-version-file: .nvmrc\n      - run: |\n          pnpm install\n",
+                ),
+            ],
+        );
+        let paths = vec![
+            "package.json".into(),
+            "pnpm-workspace.yaml".into(),
+            "pnpm-lock.yaml".into(),
+            ".github/workflows/ci.yml".into(),
+        ];
+        let rec = record(&tmp.0, &paths, false);
+        assert_eq!(rec["packageManagerPinned"], true);
+        assert_eq!(rec["ciFrozenInstall"], true);
+        assert_eq!(rec["ciNodeVersions"], json!(["24.4.1"]));
+        assert_eq!(rec["toolchainAligned"], true);
+        // `--no-frozen-lockfile` still fails, and a bare range is still not a pin.
+        assert!(!package_manager_pinned("pnpm@10"));
+        assert!(!package_manager_pinned("pnpm@^10.33.0"));
     }
 
     #[test]
