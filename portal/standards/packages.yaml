@@ -107,8 +107,8 @@ scorecards:
         can update the lockfile']
       fix: >-
         Change this package's CI install to npm ci, or to pnpm install
-        --frozen-lockfile. Those commands install the lockfile as written and
-        do not rewrite it.
+        --frozen-lockfile. Those commands install the lockfile as written and do
+        not rewrite it.
     - name: no-hardcoded-secrets
       level: gold
       check: entity.secretHits.size() == 0

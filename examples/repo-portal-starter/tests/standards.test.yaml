@@ -15,8 +15,8 @@ assert:
     expect: >-
       score('repo-hygiene', 'repository:logan/solo-tool').level == 'silver'
   - name: >-
-      mixing a team with an individual stops at bronze, and the evidence
-      names the individual
+      mixing a team with an individual stops at bronze, and the evidence names
+      the individual
     expect: >-
       score('repo-hygiene', 'repository:acme/payments-api').level == 'bronze'
       && score('repo-hygiene',

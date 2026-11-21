@@ -39,9 +39,9 @@ kinds:
       ownersOk:
         type: boolean
         description: >-
-          True when every CODEOWNERS owner is a GitHub team (@org/team), or
-          every owner is a personal handle (@user). False when empty, mixed, or
-          an email.
+          True when every CODEOWNERS owner is a GitHub team (@org/team), or every
+          owner is a personal handle (@user). False when empty, mixed, or an
+          email.
     sources: {default: [connector:workspace]}
     map:
     - from: workspace/repo
@@ -98,8 +98,8 @@ scorecards:
       check: entity.owners.size() > 0 && entity.ownersOk
       evidence: >-
         entity.owners.filter(o, !o.startsWith('@')).size() > 0 ?
-        entity.owners.filter(o, !o.startsWith('@')) :
-        entity.owners.filter(o, !o.contains('/'))
+        entity.owners.filter(o, !o.startsWith('@')) : entity.owners.filter(o,
+        !o.contains('/'))
       fix: >-
         Name teams (@org/team), or for a single-maintainer repository only
         personal handles (@user). Do not mix teams with individuals, and do not
