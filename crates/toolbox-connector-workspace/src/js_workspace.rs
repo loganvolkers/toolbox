@@ -23,7 +23,7 @@ pub fn record(root: &Path, paths: &[String], has_expo_apps: bool) -> Value {
     let (workspace_file, has_workspace_file) = workspace_file(root, &pkg);
     let (linker, linker_declared, linker_hoisted) = linker_policy(root);
     let (mise_node, mise_pnpm, mise_concrete) = mise_pins(root);
-    let ci_node_versions = ci_node_versions(root, paths);
+    let (ci_node_versions, ci_node_version_sources) = ci_node_versions(root, paths);
     let ci_frozen = ci_frozen_install(root, paths);
     let package_manager_pinned = package_manager_pinned(&package_manager);
     let ci_node_ok = ci_node_satisfies(&ci_node_versions, &engines_node);
@@ -49,6 +49,7 @@ pub fn record(root: &Path, paths: &[String], has_expo_apps: bool) -> Value {
         "miseConcrete": mise_concrete,
         "miseMatchesPackageManager": mise_matches,
         "ciNodeVersions": ci_node_versions,
+        "ciNodeVersionSources": ci_node_version_sources,
         "enginesNode": engines_node,
         "ciNodeSatisfiesEngines": ci_node_ok,
         "toolchainAligned": toolchain_aligned,
@@ -184,29 +185,58 @@ fn mise_matches_package_manager(mise_pnpm: &str, package_manager: &str) -> bool 
 }
 
 /// Node versions CI sets up: `node-version: X`, or `node-version-file: F` (read from the checkout,
-/// e.g. `.nvmrc`).
-fn ci_node_versions(root: &Path, paths: &[String]) -> Vec<String> {
+/// e.g. `.nvmrc`). Skips GitHub Actions expressions (`${{…}}`) and other non-semver tokens so they
+/// do not poison `ciNodeSatisfiesEngines`. Returns `(versions, sources)` where each source names the
+/// workflow path that contributed the version (for scorecard evidence).
+fn ci_node_versions(root: &Path, paths: &[String]) -> (Vec<String>, Vec<String>) {
     let re = Regex::new(r##"node-version:\s*['"]?([^\s'"#]+)"##).unwrap();
     let file = Regex::new(r##"node-version-file:\s*['"]?([^\s'"#]+)"##).unwrap();
     let mut found = Vec::new();
+    let mut sources = Vec::new();
     for rel in workflows(paths) {
         let text = std::fs::read_to_string(root.join(rel)).unwrap_or_default();
         for c in re.captures_iter(&text) {
             if let Some(m) = c.get(1) {
-                found.push(m.as_str().to_owned());
+                let v = m.as_str();
+                if is_concrete_ci_node_version(v) {
+                    found.push(v.to_owned());
+                    sources.push(format!("{rel} node-version={v}"));
+                }
             }
         }
         for c in file.captures_iter(&text) {
-            let pinned = std::fs::read_to_string(root.join(&c[1])).unwrap_or_default();
+            let file_rel = &c[1];
+            let pinned = std::fs::read_to_string(root.join(file_rel)).unwrap_or_default();
             let v = pinned.lines().next().unwrap_or("").trim();
-            if !v.is_empty() {
+            if is_concrete_ci_node_version(v) {
                 found.push(v.to_owned());
+                sources.push(format!("{rel} node-version-file={file_rel} ({v})"));
             }
         }
     }
     found.sort();
     found.dedup();
-    found
+    sources.sort();
+    sources.dedup();
+    (found, sources)
+}
+
+/// True when a captured `node-version` token is a concrete semver major (optionally `v`-prefixed),
+/// e.g. `22`, `22.1.0`, `v24.4.1`. Rejects Actions expressions (`${{…}}`), `latest` / `lts/*`, and
+/// anything whose major component is not an integer.
+fn is_concrete_ci_node_version(token: &str) -> bool {
+    let t = token.trim();
+    if t.is_empty() {
+        return false;
+    }
+    if t.contains("{{") || t.starts_with('$') {
+        return false;
+    }
+    let t = t.trim_start_matches('v');
+    t.split('.')
+        .next()
+        .and_then(|s| s.parse::<u32>().ok())
+        .is_some()
 }
 
 /// True when CI uses a lockfile-faithful pnpm/npm install and never `--no-frozen-lockfile`. In CI,
@@ -447,10 +477,57 @@ mod tests {
         assert_eq!(rec["packageManagerPinned"], true);
         assert_eq!(rec["ciFrozenInstall"], true);
         assert_eq!(rec["ciNodeVersions"], json!(["24.4.1"]));
+        assert_eq!(
+            rec["ciNodeVersionSources"],
+            json!([".github/workflows/ci.yml node-version-file=.nvmrc (24.4.1)"])
+        );
         assert_eq!(rec["toolchainAligned"], true);
         // `--no-frozen-lockfile` still fails, and a bare range is still not a pin.
         assert!(!package_manager_pinned("pnpm@10"));
         assert!(!package_manager_pinned("pnpm@^10.33.0"));
+    }
+
+    /// Matrix / Actions expressions must not enter `ciNodeVersions` (they used to capture as
+    /// `${{` and fail `ciNodeSatisfiesEngines`). A sibling literal `22` still counts.
+    #[test]
+    fn matrix_node_expressions_are_skipped_but_literal_majors_count() {
+        let tmp = scratch(
+            "matrix-node",
+            &[
+                (
+                    "package.json",
+                    r#"{"packageManager":"pnpm@10.28.0","engines":{"node":">=22"}}"#,
+                ),
+                ("pnpm-workspace.yaml", "packages: [apps/*]\n"),
+                ("pnpm-lock.yaml", "lockfileVersion: '9.0'\n"),
+                ("mise.toml", "[tools]\nnode = \"22\"\npnpm = \"10.28.0\"\n"),
+                (
+                    ".github/workflows/nightly.yml",
+                    "jobs:\n  matrix:\n    strategy:\n      matrix:\n        node: [22, 24]\n    steps:\n      - with:\n          node-version: ${{ matrix.node }}\n      - run: pnpm install --frozen-lockfile\n  fixed:\n    steps:\n      - with:\n          node-version: 22\n      - run: pnpm install --frozen-lockfile\n",
+                ),
+            ],
+        );
+        let paths = vec![
+            "package.json".into(),
+            "pnpm-workspace.yaml".into(),
+            "pnpm-lock.yaml".into(),
+            "mise.toml".into(),
+            ".github/workflows/nightly.yml".into(),
+        ];
+        let rec = record(&tmp.0, &paths, false);
+        assert_eq!(rec["ciNodeVersions"], json!(["22"]));
+        assert_eq!(rec["ciNodeSatisfiesEngines"], true);
+        assert_eq!(
+            rec["ciNodeVersionSources"],
+            json!([".github/workflows/nightly.yml node-version=22"])
+        );
+        assert_eq!(rec["toolchainAligned"], true);
+        assert!(!is_concrete_ci_node_version("${{"));
+        assert!(!is_concrete_ci_node_version("${{ matrix.node }}"));
+        assert!(!is_concrete_ci_node_version("latest"));
+        assert!(!is_concrete_ci_node_version("lts/*"));
+        assert!(is_concrete_ci_node_version("22"));
+        assert!(is_concrete_ci_node_version("v24.4.1"));
     }
 
     #[test]
