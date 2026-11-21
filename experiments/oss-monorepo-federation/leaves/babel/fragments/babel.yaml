@@ -1,0 +1,33 @@
+scorecards:
+  - name: husky-lint-staged
+    kind: Repository
+    owner: group:babel
+    stage: mandatory
+    levels: [bronze]
+    rules:
+    - {name: husky-present, level: bronze, check: entity.husky}
+    - {name: lint-staged-present, level: bronze, check: entity.lintStaged}
+
+  - name: jest-runner
+    kind: Repository
+    owner: group:babel
+    stage: advisory
+    levels: [bronze]
+    rules: [{name: uses-jest, level: bronze, check: entity.usesJest}]
+
+  - name: yarn-berry
+    kind: Repository
+    owner: group:babel
+    stage: mandatory
+    levels: [bronze]
+    rules:
+    - name: yarn4
+      level: bronze
+      check: "entity.packageManager startsWith 'yarn@4'"
+
+  - name: renovate
+    kind: Repository
+    owner: group:babel
+    stage: advisory
+    levels: [bronze]
+    rules: [{name: renovate-json, level: bronze, check: entity.depsAutomation}]

@@ -1,0 +1,47 @@
+scorecards:
+  - name: changesets
+    kind: Repository
+    owner: group:pnpm
+    stage: mandatory
+    levels: [bronze]
+    rules: [{name: changeset-dir, level: bronze, check: entity.changesets}]
+
+  - name: custom-githooks
+    kind: Repository
+    owner: group:pnpm
+    stage: advisory
+    levels: [bronze]
+    rules:
+    - {name: githooks-not-husky, level: bronze, check: entity.customGithooks}
+    - {name: not-husky, level: bronze, check: entity.husky == false}
+
+  - name: rustfmt
+    kind: Repository
+    owner: group:pnpm
+    stage: mandatory
+    levels: [bronze]
+    rules: [{name: rustfmt-toml, level: bronze, check: entity.rustfmt}]
+
+  - name: clippy-deny-warnings
+    kind: Repository
+    owner: group:pnpm
+    stage: mandatory
+    levels: [bronze]
+    rules:
+    - name: clippy-d-warnings
+      level: bronze
+      check: entity.clippyDenyWarnings
+
+  - name: cargo-deny
+    kind: Repository
+    owner: group:pnpm
+    stage: advisory
+    levels: [bronze]
+    rules: [{name: cargo-deny-ci, level: bronze, check: entity.cargoDeny}]
+
+  - name: renovate-pnpm
+    kind: Repository
+    owner: group:pnpm
+    stage: advisory
+    levels: [bronze]
+    rules: [{name: renovate-json, level: bronze, check: entity.depsAutomation}]

@@ -1,0 +1,9 @@
+{
+  "path": "eslint.config.ts",
+  "present": true,
+  "bytes": 11783,
+  "sha256": "5ebb59af2be3fabd1fac13c099517828455ce7308b80f5dbbfde7424639bfc06",
+  "upstream": "main@2026-11-21",
+  "note": "Full file omitted from fixture; scorecards check presence only.",
+  "head": "import babelParser from \"@babel/eslint-parser\";\nimport globals from \"globals\";\nimport eslintJS from \"@eslint/js\";\nimport { defineConfig } from \"eslint/config\";\nimport pluginImport from \"eslint-plugin-"
+}

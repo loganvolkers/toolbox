@@ -1,0 +1,33 @@
+entities:
+  - kind: Repository
+    id: repository:pnpm/pnpm
+    name: pnpm
+    org: pnpm
+    packageManager: pnpm@12.22.0
+    packageManagerPinned: true
+    hasWorkspace: true
+    eslintFlat: true
+    typescriptPresent: true
+    agentsInstruction: true
+    usesPrettier: false
+    prettierPrintWidth: 0
+    depsAutomation: true
+    changesets: true
+    customGithooks: true
+    husky: false
+    rustfmt: true
+    clippyDenyWarnings: true
+    cargoDeny: true
+
+  - kind: Library
+    id: library:pnpm/pnpm/pnpm
+    name: pnpm
+    ecosystem: rust
+    repository: repository:pnpm/pnpm
+    path: pnpm
+
+  - kind: Component
+    id: component:pnpm/pnpm/pnpm11
+    name: pnpm11
+    repository: repository:pnpm/pnpm
+    path: pnpm11

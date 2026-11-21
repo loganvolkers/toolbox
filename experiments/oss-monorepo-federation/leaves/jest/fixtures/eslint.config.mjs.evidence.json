@@ -1,0 +1,9 @@
+{
+  "path": "eslint.config.mjs",
+  "present": true,
+  "bytes": 30585,
+  "sha256": "28949b97b1c211f912297e200a3f2dd5fd16d6e856b5d340a3ebc4f08e812e3e",
+  "upstream": "main@2026-11-21",
+  "note": "Full file omitted from fixture; scorecards check presence only.",
+  "head": "/**\n * Copyright (c) Meta Platforms, Inc. and affiliates.\n *\n * This source code is licensed under the MIT license found in the\n * LICENSE file in the root directory of this source tree.\n */\n\n/* eslin"
+}

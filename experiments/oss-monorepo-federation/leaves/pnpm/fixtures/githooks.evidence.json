@@ -1,0 +1,8 @@
+{
+  "path": ".config/githooks/",
+  "present": true,
+  "installScript": "node .config/githooks/install.mjs",
+  "packageJsonPrepare": true,
+  "notHusky": true,
+  "upstream": "pnpm/pnpm package.json prepare script"
+}

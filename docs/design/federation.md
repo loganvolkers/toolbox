@@ -160,6 +160,7 @@ and only regressions fail.
 | Phase | Scope | Exit |
 |---|---|---|
 | F0 (done) | Repo portals: `toolbox report`, ratchet baselines, static HTML ([repo-portals.md](./repo-portals.md)) | This repo's CI runs its own ratchet |
+| F0.6 (experiment) | OSS monorepo federation testbed: Babel, Jest, pnpm conventions as packages under [experiments/oss-monorepo-federation/](../../experiments/oss-monorepo-federation/) (mined standards only; compose + HTML portal) | `python3 experiments/oss-monorepo-federation/tests/test_compose.py` green |
 | F1 | Standard packages: remote `include` by name and digest; namespaced names; monotonic-tightening validation; `plan` over package upgrades | One package used by two repo portals; a weakening attempt fails validation |
 | F2 | Results up (option A): a root portal reads children's committed reports; adoption and burn-down views | A root shows three repos' ratchets and their package versions |
 | F3 | Stages and waivers: `stage:` on scorecards and rules; waivers as owned, expiring native values; enforcement by stage | The CODEOWNERS example (§6) runs end to end on three repos |

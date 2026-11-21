@@ -1,0 +1,8 @@
+# Babel leaf extensions: only conventions present in babel/babel.
+apiVersion: toolbox.dev/package/v0
+name: babel-standards
+version: 0.1.0
+description: >-
+  babel/babel: Yarn Berry, Prettier printWidth 80, Husky + lint-staged,
+  Jest runner, Renovate.
+exports: {scorecards: [husky-lint-staged, jest-runner, yarn-berry, renovate]}

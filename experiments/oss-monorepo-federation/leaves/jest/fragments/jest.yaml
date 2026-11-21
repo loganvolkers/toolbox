@@ -1,0 +1,25 @@
+scorecards:
+  - name: lerna-lite
+    kind: Repository
+    owner: group:jest
+    stage: advisory
+    levels: [bronze]
+    rules: [{name: lerna-json, level: bronze, check: entity.lernaLite}]
+
+  - name: jest-ci-config
+    kind: Repository
+    owner: group:jest
+    stage: advisory
+    levels: [bronze]
+    rules: [{name: ci-config, level: bronze, check: entity.jestCiConfig}]
+
+  - name: prettier-jest-style
+    kind: Repository
+    owner: group:jest
+    stage: advisory
+    levels: [bronze]
+    rules:
+    - {name: single-quote, level: bronze, check: entity.prettierSingleQuote}
+    - name: no-bracket-spacing
+      level: bronze
+      check: entity.prettierBracketSpacing == false

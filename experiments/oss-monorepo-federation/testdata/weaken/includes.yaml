@@ -1,0 +1,2 @@
+# Must fail: raises prettierPrintWidth above oss-fleet default (100) and babel's 80.
+includes: [{package: oss-fleet, with: {prettierPrintWidth: 120}}]

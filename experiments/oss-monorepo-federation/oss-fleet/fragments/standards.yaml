@@ -1,0 +1,84 @@
+# Shared scorecards mined from babel/jest/pnpm — no invented standards.
+kinds:
+  - name: Repository
+    fields:
+      name: {type: string}
+      org: {type: string}
+      packageManager: {type: string}
+      packageManagerPinned: {type: boolean}
+      hasWorkspace: {type: boolean}
+      eslintFlat: {type: boolean}
+      typescriptPresent: {type: boolean}
+      agentsInstruction: {type: boolean}
+      usesPrettier: {type: boolean}
+      prettierPrintWidth: {type: integer}
+      depsAutomation: {type: boolean}
+  - name: Library
+    fields:
+      name: {type: string}
+      ecosystem: {type: string}
+      repository: {type: string}
+      path: {type: string}
+  - name: Component
+    fields:
+      name: {type: string}
+      repository: {type: string}
+      path: {type: string}
+
+scorecards:
+  - name: package-manager-pin
+    kind: Repository
+    owner: group:dx
+    stage: mandatory
+    levels: [bronze]
+    rules: [{name: pinned, level: bronze, check: entity.packageManagerPinned}]
+
+  - name: js-workspace
+    kind: Repository
+    owner: group:dx
+    stage: mandatory
+    levels: [bronze]
+    rules: [{name: has-workspace, level: bronze, check: entity.hasWorkspace}]
+
+  - name: eslint-flat
+    kind: Repository
+    owner: group:dx
+    stage: advisory
+    levels: [bronze]
+    rules: [{name: flat-config, level: bronze, check: entity.eslintFlat}]
+
+  - name: typescript-present
+    kind: Repository
+    owner: group:dx
+    stage: advisory
+    levels: [bronze]
+    rules: [{name: has-ts, level: bronze, check: entity.typescriptPresent}]
+
+  - name: agents-instruction
+    kind: Repository
+    owner: group:dx
+    stage: advisory
+    levels: [bronze]
+    rules:
+    - {name: has-agents-doc, level: bronze, check: entity.agentsInstruction}
+
+  - name: prettier
+    kind: Repository
+    owner: group:dx
+    stage: advisory
+    levels: [bronze]
+    appliesTo: entity.usesPrettier
+    rules:
+    - {name: uses-prettier, level: bronze, check: entity.usesPrettier}
+    - name: print-width
+      level: bronze
+      check: entity.prettierPrintWidth <= ${param:prettierPrintWidth}
+
+campaigns:
+  - name: deps-automation
+    stage: advisory
+    description: >-
+      Repos that already run Renovate (babel, pnpm) or equivalent update
+      automation. Observed only; not invented for Jest.
+    scorecard: package-manager-pin
+    targetPercent: 100

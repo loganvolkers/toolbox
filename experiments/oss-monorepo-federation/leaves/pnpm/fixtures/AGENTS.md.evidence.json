@@ -1,0 +1,9 @@
+{
+  "path": "AGENTS.md",
+  "present": true,
+  "bytes": 35960,
+  "sha256": "d0844dbbc5a273ef42233195884d3acafdfcbcc23013a32865124dc2635c7080",
+  "upstream": "main@2026-11-21",
+  "note": "Full file omitted from fixture; scorecards check presence only.",
+  "head": "# Agent Guide to pnpm Repository\n\nThis document provides context and instructions for AI agents working on the pnpm codebase.\n\nThe repository contains these products:\n\n- The **TypeScript pnpm v11 CLI*"
+}

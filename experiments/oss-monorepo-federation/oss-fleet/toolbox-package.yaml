@@ -1,0 +1,26 @@
+# Shared JS monorepo hygiene mined from babel / jest / pnpm (governance).
+apiVersion: toolbox.dev/package/v0
+name: oss-fleet
+version: 0.1.0
+description: >-
+  Shared conventions observed across babel, jest and pnpm: packageManager
+  pin, workspace layout, ESLint flat config, TypeScript presence, agent
+  instruction files, and advisory dependency automation.
+parameters:
+  prettierPrintWidth:
+    type: integer
+    default: 100
+    tighten: lower
+    description: >-
+      Max Prettier printWidth when a leaf uses Prettier. Babel ships 80;
+      leaves may only lower the shared default.
+exports:
+  kinds: [Repository, Library, Component]
+  scorecards:
+    - package-manager-pin
+    - js-workspace
+    - eslint-flat
+    - typescript-present
+    - agents-instruction
+    - prettier
+  campaigns: [deps-automation]

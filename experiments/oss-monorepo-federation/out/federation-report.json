@@ -1,0 +1,352 @@
+{
+  "adoption": [
+    {
+      "digest": "sha256:oss-fleet-demo",
+      "node": "babel",
+      "package": "oss-fleet",
+      "stage": null,
+      "version": "0.1.0"
+    },
+    {
+      "digest": "sha256:babel-demo",
+      "node": "babel",
+      "package": "babel-standards",
+      "stage": null,
+      "version": "0.1.0"
+    },
+    {
+      "digest": "sha256:oss-fleet-demo",
+      "node": "jest",
+      "package": "oss-fleet",
+      "stage": null,
+      "version": "0.1.0"
+    },
+    {
+      "digest": "sha256:jest-demo",
+      "node": "jest",
+      "package": "jest-standards",
+      "stage": null,
+      "version": "0.1.0"
+    },
+    {
+      "digest": "sha256:oss-fleet-demo",
+      "node": "pnpm",
+      "package": "oss-fleet",
+      "stage": null,
+      "version": "0.1.0"
+    },
+    {
+      "digest": "sha256:pnpm-demo",
+      "node": "pnpm",
+      "package": "pnpm-standards",
+      "stage": null,
+      "version": "0.1.0"
+    }
+  ],
+  "apiVersion": "toolbox.dev/federation-report/v0",
+  "campaigns": {
+    "deps-automation": {
+      "inScope": 3,
+      "measure": 2.0,
+      "meeting": 2,
+      "nodes": [
+        "babel",
+        "jest",
+        "pnpm"
+      ]
+    }
+  },
+  "catalog": {
+    "counts": {
+      "Component": 3,
+      "Library": 3,
+      "Repository": 3
+    },
+    "entities": [
+      {
+        "id": "component:babel/babel/packages",
+        "kind": "Component",
+        "name": "packages",
+        "path": "packages",
+        "repository": "repository:babel/babel"
+      },
+      {
+        "id": "component:jestjs/jest/packages",
+        "kind": "Component",
+        "name": "packages",
+        "path": "packages",
+        "repository": "repository:jestjs/jest"
+      },
+      {
+        "id": "component:pnpm/pnpm/pnpm11",
+        "kind": "Component",
+        "name": "pnpm11",
+        "path": "pnpm11",
+        "repository": "repository:pnpm/pnpm"
+      },
+      {
+        "ecosystem": "js",
+        "id": "library:babel/babel/core",
+        "kind": "Library",
+        "name": "@babel/core",
+        "path": "packages/babel-core",
+        "repository": "repository:babel/babel"
+      },
+      {
+        "ecosystem": "js",
+        "id": "library:jestjs/jest/jest-cli",
+        "kind": "Library",
+        "name": "jest-cli",
+        "path": "packages/jest-cli",
+        "repository": "repository:jestjs/jest"
+      },
+      {
+        "ecosystem": "rust",
+        "id": "library:pnpm/pnpm/pnpm",
+        "kind": "Library",
+        "name": "pnpm",
+        "path": "pnpm",
+        "repository": "repository:pnpm/pnpm"
+      },
+      {
+        "agentsInstruction": true,
+        "depsAutomation": true,
+        "eslintFlat": true,
+        "hasWorkspace": true,
+        "husky": true,
+        "id": "repository:babel/babel",
+        "kind": "Repository",
+        "lintStaged": true,
+        "name": "babel",
+        "org": "babel",
+        "packageManager": "yarn@4.17.0",
+        "packageManagerPinned": true,
+        "prettierPrintWidth": 80,
+        "typescriptPresent": true,
+        "usesJest": true,
+        "usesPrettier": true
+      },
+      {
+        "agentsInstruction": true,
+        "depsAutomation": false,
+        "eslintFlat": true,
+        "hasWorkspace": true,
+        "id": "repository:jestjs/jest",
+        "jestCiConfig": true,
+        "kind": "Repository",
+        "lernaLite": true,
+        "name": "jest",
+        "org": "jestjs",
+        "packageManager": "yarn@4.18.0",
+        "packageManagerPinned": true,
+        "prettierBracketSpacing": false,
+        "prettierPrintWidth": 80,
+        "prettierSingleQuote": true,
+        "typescriptPresent": true,
+        "usesPrettier": true
+      },
+      {
+        "agentsInstruction": true,
+        "cargoDeny": true,
+        "changesets": true,
+        "clippyDenyWarnings": true,
+        "customGithooks": true,
+        "depsAutomation": true,
+        "eslintFlat": true,
+        "hasWorkspace": true,
+        "husky": false,
+        "id": "repository:pnpm/pnpm",
+        "kind": "Repository",
+        "name": "pnpm",
+        "org": "pnpm",
+        "packageManager": "pnpm@12.22.0",
+        "packageManagerPinned": true,
+        "prettierPrintWidth": 0,
+        "rustfmt": true,
+        "typescriptPresent": true,
+        "usesPrettier": false
+      }
+    ],
+    "kinds": [
+      "Component",
+      "Library",
+      "Repository"
+    ]
+  },
+  "extend": {
+    "grassRoots": [
+      {
+        "name": "babel-standards",
+        "reportedBy": "babel",
+        "stage": "experimental",
+        "version": "0.1.0"
+      },
+      {
+        "name": "jest-standards",
+        "reportedBy": "jest",
+        "stage": "experimental",
+        "version": "0.1.0"
+      },
+      {
+        "name": "pnpm-standards",
+        "reportedBy": "pnpm",
+        "stage": "experimental",
+        "version": "0.1.0"
+      }
+    ],
+    "leafScorecards": {
+      "babel": [
+        "husky-lint-staged",
+        "jest-runner",
+        "renovate",
+        "yarn-berry"
+      ],
+      "jest": [
+        "jest-ci-config",
+        "lerna-lite",
+        "prettier-jest-style"
+      ],
+      "pnpm": [
+        "cargo-deny",
+        "changesets",
+        "clippy-deny-warnings",
+        "custom-githooks",
+        "renovate-pnpm",
+        "rustfmt"
+      ]
+    }
+  },
+  "fleet": [
+    "babel",
+    "jest",
+    "pnpm"
+  ],
+  "operators": {
+    "babel": "leaf",
+    "jest": "leaf",
+    "oss-fleet": "governance",
+    "pnpm": "leaf"
+  },
+  "push": {
+    "errors": [],
+    "leaves": {
+      "babel": {
+        "errors": [],
+        "kinds": [
+          "Component",
+          "Library",
+          "Repository"
+        ],
+        "packages": [
+          {
+            "name": "oss-fleet",
+            "params": {
+              "prettierPrintWidth": 80
+            },
+            "path": "oss-fleet",
+            "version": "0.1.0"
+          },
+          {
+            "name": "babel-standards",
+            "params": {},
+            "path": "leaves/babel",
+            "version": "0.1.0"
+          }
+        ],
+        "scorecards": [
+          "agents-instruction",
+          "eslint-flat",
+          "husky-lint-staged",
+          "jest-runner",
+          "js-workspace",
+          "package-manager-pin",
+          "prettier",
+          "renovate",
+          "typescript-present",
+          "yarn-berry"
+        ]
+      },
+      "jest": {
+        "errors": [],
+        "kinds": [
+          "Component",
+          "Library",
+          "Repository"
+        ],
+        "packages": [
+          {
+            "name": "oss-fleet",
+            "params": {
+              "prettierPrintWidth": 100
+            },
+            "path": "oss-fleet",
+            "version": "0.1.0"
+          },
+          {
+            "name": "jest-standards",
+            "params": {},
+            "path": "leaves/jest",
+            "version": "0.1.0"
+          }
+        ],
+        "scorecards": [
+          "agents-instruction",
+          "eslint-flat",
+          "jest-ci-config",
+          "js-workspace",
+          "lerna-lite",
+          "package-manager-pin",
+          "prettier",
+          "prettier-jest-style",
+          "typescript-present"
+        ]
+      },
+      "pnpm": {
+        "errors": [],
+        "kinds": [
+          "Component",
+          "Library",
+          "Repository"
+        ],
+        "packages": [
+          {
+            "name": "oss-fleet",
+            "params": {
+              "prettierPrintWidth": 100
+            },
+            "path": "oss-fleet",
+            "version": "0.1.0"
+          },
+          {
+            "name": "pnpm-standards",
+            "params": {},
+            "path": "leaves/pnpm",
+            "version": "0.1.0"
+          }
+        ],
+        "scorecards": [
+          "agents-instruction",
+          "cargo-deny",
+          "changesets",
+          "clippy-deny-warnings",
+          "custom-githooks",
+          "eslint-flat",
+          "js-workspace",
+          "package-manager-pin",
+          "prettier",
+          "renovate-pnpm",
+          "rustfmt",
+          "typescript-present"
+        ]
+      }
+    },
+    "sharedScorecards": [
+      "package-manager-pin",
+      "js-workspace",
+      "eslint-flat",
+      "typescript-present",
+      "agents-instruction"
+    ]
+  },
+  "root": "oss-fleet"
+}

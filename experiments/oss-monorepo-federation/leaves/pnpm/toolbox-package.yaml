@@ -1,0 +1,15 @@
+# pnpm leaf extensions: only conventions present in pnpm/pnpm.
+apiVersion: toolbox.dev/package/v0
+name: pnpm-standards
+version: 0.1.0
+description: >-
+  pnpm/pnpm: pnpm workspace, Changesets, custom githooks (not Husky), Rust
+  rustfmt/Clippy/deny, Renovate, AGENTS.md.
+exports:
+  scorecards:
+    - changesets
+    - custom-githooks
+    - rustfmt
+    - clippy-deny-warnings
+    - cargo-deny
+    - renovate-pnpm

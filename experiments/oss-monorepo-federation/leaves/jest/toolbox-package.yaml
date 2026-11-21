@@ -1,0 +1,8 @@
+# Jest leaf extensions: only conventions present in jestjs/jest.
+apiVersion: toolbox.dev/package/v0
+name: jest-standards
+version: 0.1.0
+description: >-
+  jestjs/jest: Yarn Berry, Lerna-lite, Prettier
+  singleQuote/bracketSpacing, Jest CI configs, CLAUDE.md agent pointer.
+exports: {scorecards: [lerna-lite, jest-ci-config, prettier-jest-style]}

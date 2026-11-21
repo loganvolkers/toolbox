@@ -1,0 +1,41 @@
+# OSS monorepo federation fleet (real conventions only; see ATTRIBUTION.md).
+apiVersion: toolbox.dev/federation-prototype/v0
+root: oss-fleet
+nodes:
+  - id: oss-fleet
+    kind: enterprise
+    path: oss-fleet
+    operator: governance
+    publishes: [oss-fleet]
+
+  - id: babel
+    kind: repository
+    path: leaves/babel
+    parent: oss-fleet
+    operator: leaf
+    publishes: [babel-standards]
+    includes:
+    - {package: oss-fleet, with: {prettierPrintWidth: 80}}
+    - {package: babel-standards}
+    report: results.json
+    catalog: catalog/entities.yaml
+
+  - id: jest
+    kind: repository
+    path: leaves/jest
+    parent: oss-fleet
+    operator: leaf
+    publishes: [jest-standards]
+    includes: [{package: oss-fleet}, {package: jest-standards}]
+    report: results.json
+    catalog: catalog/entities.yaml
+
+  - id: pnpm
+    kind: repository
+    path: leaves/pnpm
+    parent: oss-fleet
+    operator: leaf
+    publishes: [pnpm-standards]
+    includes: [{package: oss-fleet}, {package: pnpm-standards}]
+    report: results.json
+    catalog: catalog/entities.yaml

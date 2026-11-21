@@ -1,0 +1,30 @@
+entities:
+  - kind: Repository
+    id: repository:babel/babel
+    name: babel
+    org: babel
+    packageManager: yarn@4.17.0
+    packageManagerPinned: true
+    hasWorkspace: true
+    eslintFlat: true
+    typescriptPresent: true
+    agentsInstruction: true
+    usesPrettier: true
+    prettierPrintWidth: 80
+    depsAutomation: true
+    husky: true
+    lintStaged: true
+    usesJest: true
+
+  - kind: Library
+    id: library:babel/babel/core
+    name: "@babel/core"
+    ecosystem: js
+    repository: repository:babel/babel
+    path: packages/babel-core
+
+  - kind: Component
+    id: component:babel/babel/packages
+    name: packages
+    repository: repository:babel/babel
+    path: packages
