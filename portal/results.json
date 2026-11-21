@@ -1028,6 +1028,9 @@
       "doc:experiments/out-of-box/README.md": {
         "level": "silver"
       },
+      "doc:experiments/standards-ab/README.md": {
+        "level": "silver"
+      },
       "doc:experiments/typescript-builder/README.md": {
         "level": "silver"
       },
@@ -1173,6 +1176,12 @@
       },
       "example:experiments/out-of-box/ab/README.md": {
         "level": "gold"
+      },
+      "example:experiments/standards-ab/README.md": {
+        "failing": {
+          "says-how-to-check": 1
+        },
+        "level": "bronze"
       },
       "example:experiments/typescript-builder/README.md": {
         "level": "gold"

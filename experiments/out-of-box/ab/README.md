@@ -26,12 +26,12 @@ here as patches.
 
 ## Results
 
-| Arm | Failing before | After | Fixed | New failures | Ignores added | Tool calls | Tokens |
-|---|---|---|---|---|---|---|---|
-| OpenFGA A | 42 | 6 | 36 (86%) | 0 | 3 inline | 15 | 114k |
-| OpenFGA B | 42 | 7 | 35 (83%) | 0 | 2 inline | 11 | 120k |
-| Codex A | 67 | 1 | 67 (100%) | 1 | 3 inline, `.github/zizmor.yml` (31 findings), an actionlint runner-label config | 24 | 127k |
-| Codex B | 67 | 12 | 55 (82%) | 0 | 0 | 26 | 150k |
+| Arm | Failing before | After | Fixed | New failures | Ignores added | Tool calls | Tokens | Wall time |
+|---|---|---|---|---|---|---|---|---|
+| OpenFGA A | 42 | 6 | 36 (86%) | 0 | 3 inline | 15 | 114k | 180 s |
+| OpenFGA B | 42 | 7 | 35 (83%) | 0 | 2 inline | 11 | 120k | 124 s |
+| Codex A | 67 | 1 | 67 (100%) | 1 | 3 inline, `.github/zizmor.yml` (31 findings), an actionlint runner-label config | 24 | 127k | 292 s |
+| Codex B | 67 | 12 | 55 (82%) | 0 | 0 | 26 | 150k | 361 s |
 
 No arm deleted a workflow or job. Codex A's new failure: moving `cla.yml`'s write permissions from
 the workflow into its job exposed a write token on a risky trigger, which a ratchet in CI would
@@ -48,6 +48,8 @@ have caught. The two OpenFGA arms made nearly the same changes. Arm A also restr
   this test barely exercised them.
 - **What Toolbox did add here was a guardrail, not speed:** no regressions and no suppressions.
   Whether that matters is R4's question, the ratchet on real pull requests, not R3's.
+- **A second A/B tests the rest of the lifecycle:** writing, sharing, changing and reading a
+  standard, not moving one linter's count ([../../standards-ab](../../standards-ab/README.md)).
 - **The sample is small:** two repositories and one run each, scored by the tool one arm used.
 
 ## Sources
