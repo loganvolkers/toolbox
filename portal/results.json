@@ -1158,6 +1158,9 @@
       "site-page:site/src/content/docs/agents/reads.md": {
         "level": "gold"
       },
+      "site-page:site/src/content/docs/authors/index.md": {
+        "level": "gold"
+      },
       "site-page:site/src/content/docs/concepts/catalog.md": {
         "level": "gold"
       },
@@ -1173,10 +1176,19 @@
       "site-page:site/src/content/docs/index.md": {
         "level": "gold"
       },
+      "site-page:site/src/content/docs/maintainers/index.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/operators/index.md": {
+        "level": "gold"
+      },
       "site-page:site/src/content/docs/operators/portal.md": {
         "level": "gold"
       },
       "site-page:site/src/content/docs/start/run.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/users/index.md": {
         "level": "gold"
       }
     },

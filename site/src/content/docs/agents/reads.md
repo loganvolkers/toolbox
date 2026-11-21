@@ -3,7 +3,7 @@ title: Read the catalog from an agent
 description: The same catalog reads are available over MCP, the CLI and the API.
 ---
 
-An agent does not need a special copy of the catalog. The reads are the same on each surface.
+The reads are the same on each surface. The person or agent making the call is a [user of a portal](/toolbox/users/).
 
 | Read | What it answers |
 |---|---|
