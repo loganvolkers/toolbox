@@ -22,6 +22,7 @@ kinds:
       miseConcrete: {type: boolean}
       miseMatchesPackageManager: {type: boolean}
       ciNodeVersions: {type: list, items: string}
+      ciNodeVersionSources: {type: list, items: string}
       enginesNode: {type: string}
       ciNodeSatisfiesEngines: {type: boolean}
       toolchainAligned: {type: boolean}
@@ -41,7 +42,9 @@ kinds:
          'miseNode': record.miseNode, 'misePnpm': record.misePnpm,
          'miseConcrete': record.miseConcrete,
          'miseMatchesPackageManager': record.miseMatchesPackageManager,
-         'ciNodeVersions': record.ciNodeVersions, 'enginesNode': record.enginesNode,
+         'ciNodeVersions': record.ciNodeVersions,
+         'ciNodeVersionSources': record.ciNodeVersionSources,
+         'enginesNode': record.enginesNode,
          'ciNodeSatisfiesEngines': record.ciNodeSatisfiesEngines,
          'toolchainAligned': record.toolchainAligned, 'wildcardRanges': record.wildcardRanges,
          'gitRanges': record.gitRanges, 'hasExpoApps': record.hasExpoApps}
@@ -144,11 +147,11 @@ scorecards:
       evidence: >-
         ['packageManager=' + entity.packageManager, 'mise node=' +
         entity.miseNode + ' pnpm=' + entity.misePnpm, 'engines.node=' +
-        entity.enginesNode] + entity.ciNodeVersions.map(v, 'ci node-version=' +
-        v)
+        entity.enginesNode] + entity.ciNodeVersionSources
       fix: >-
         Pin mise.toml node and pnpm to concrete versions (not latest) that match
-        packageManager and CI node-version / engines.node.
+        packageManager and CI node-version / engines.node. Every node-version
+        must be a concrete number (not ${{ matrix… }} expressions).
     - name: no-unbounded-root-deps
       level: gold
       check: entity.wildcardRanges.size() == 0 && entity.gitRanges.size() == 0
