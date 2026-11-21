@@ -35,7 +35,7 @@ does not list, stops at bronze: it exists, and it is not yet part of the site.
 |---|---|---|
 | **Astro Starlight** | Content is markdown under `src/content/docs`, with `title` and `description` in frontmatter, and a sidebar declared in `astro.config` | The site is `site/`. The sidebar is an autogenerate entry per section, led by the four SDLC layers: the operator SDLC, the package author SDLC, the user SDLC and the maintainer SDLC |
 | **GitHub Pages** | A project site is served at `https://<user>.github.io/<repo>/` | `site` is `https://loganvolkers.github.io` and `base` is `/toolbox`. A workflow builds with `npm ci` and deploys with the Pages actions, pinned to commits |
-| **The one-file HTML report** ([repo-portals.md](./repo-portals.md)) | `toolbox report -o html` is one self-contained page. `-o web` also writes the `<toolbox-report>` element and `report.json` | The site publishes that directory (D92). `src/pages/report-hosted.astro` fills the header, nav, and footer slots (D93). CI checks the three generated files against a fresh run |
+| **The one-file HTML report** ([repo-portals.md](./repo-portals.md)) | `toolbox report -o html` is one self-contained page. `-o web` also writes the `<toolbox-report>` element and `report.json` | The pages workflow generates that directory for each commit and does not commit it (D92, D01M7YAXH89ZJQ7Q4HP77NMHBX8). `src/pages/report-hosted.astro` fills the header, nav, and footer slots (D93). The ratchet verdict is the gate for scores (D01M7Y5VWKW5TDS0VQWZFPRQ27N) |
 | **Packages** ([packages.md](./packages.md)) | Shared standard packages are git-first with an OCI mirror (D89) | The site is documentation. It is not a package registry, and `site/package.json` is `private` |
 
 ## 3. The catalog

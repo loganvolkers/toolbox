@@ -23,6 +23,9 @@ pub struct Manifest {
     /// Time-bound goals over existing scorecards (D01M7Y11G0YZT23W26Z9D3XW68Y).
     #[serde(default)]
     pub campaigns: Vec<Campaign>,
+    /// Accepted failures. Each one cites a decision and names one rule on one entity.
+    #[serde(default)]
+    pub waivers: Vec<Waiver>,
     /// Rubrics coding agents assess entities with (assessments are data, read by scorecards).
     #[serde(default)]
     pub rubrics: Vec<Rubric>,
@@ -257,6 +260,23 @@ pub struct Rule {
     /// CEL evaluated when the rule fails: what makes it fail (usually a list of items).
     pub evidence: Option<String>,
     pub fix: Option<String>,
+    /// Connector whose records this rule reads. When that connector is skipped, a missing
+    /// value is an expected `unknown` and the ratchet does not refuse `--ci` for it.
+    #[serde(default, rename = "dataFrom")]
+    pub data_from: Option<String>,
+}
+
+/// An accepted failure. The rule stays visible as `waived` and counts as a pass for the level.
+/// Removing the waiver makes a still-failing rule a regression. Closing the gap, so the rule
+/// passes without the waiver, is a new decision, not an edit of the one this cites.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Waiver {
+    pub entity: String,
+    pub scorecard: String,
+    pub rule: String,
+    /// A decision file id (`docs/decisions/<id>.md`).
+    pub decision: String,
+    pub reason: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

@@ -136,7 +136,7 @@ scorecards:
   # ── Layer 1: maintainer SDLC — CI (docs/design/github-actions-standards.md) ──────────────
   # Security: what an attacker could do through a workflow or the report action (which pilot repos
   # run, so it is operator-facing too). zizmor and actionlint rules evaluate to `unknown`, not `fail`,
-  # where those tools aren't installed.
+  # where those tools aren't installed (`dataFrom: ci-lint`).
   - name: maintainer-ci-security
     kind: Workflow
     owner: group:maintainers
@@ -144,6 +144,7 @@ scorecards:
     rules:
     - name: actionlint-clean
       level: bronze
+      dataFrom: ci-lint
       check: entity.type == 'action' || entity.actionlint.total == 0
       evidence: >-
         entity.actionlint.findings.map(f, f.rule + ' at line ' + string(f.line)
@@ -151,6 +152,7 @@ scorecards:
       fix: Fix what actionlint reports (`actionlint` in the repository root).
     - name: no-high-findings
       level: bronze
+      dataFrom: ci-lint
       check: >-
         entity.zizmor.findings.filter(f, f.severity == 'high' && f.rule !=
         'unpinned-uses').size() == 0
@@ -175,10 +177,13 @@ scorecards:
       check: entity.unpinned.size() == 0
       evidence: entity.unpinned
       fix: >-
-        Pin every third-party `uses:` to a full commit SHA (with the tag in a
-        comment), or adopt a workflow lockfile; let Dependabot update them.
+        Pin every third-party `uses:` to a full commit SHA. Resolve the tag with
+        `git ls-remote https://github.com/<owner>/<repo> refs/tags/<tag>` and
+        peel an annotated tag (`^{}`) so the SHA is the commit, then put the tag
+        in a comment. Let Dependabot update them.
     - name: no-medium-findings
       level: silver
+      dataFrom: ci-lint
       check: entity.zizmor.counts.medium == 0
       evidence: >-
         entity.zizmor.findings.filter(f, f.severity == 'medium').map(f, f.rule +
@@ -197,6 +202,7 @@ scorecards:
         permissions; split privileged steps into a separate workflow.
     - name: zizmor-clean
       level: gold
+      dataFrom: ci-lint
       check: entity.zizmor.total == 0
       evidence: >-
         entity.zizmor.findings.map(f, f.severity + ' ' + f.rule + ' at line ' +
@@ -207,7 +213,8 @@ scorecards:
     facets: {summary: public, details: public}
 
   # Reliability: whether CI can be trusted to say "green means good". Run history comes from the
-  # GitHub API (github-actions connector); without it those rules fail with "no run data".
+  # GitHub API (github-actions connector). When that connector is skipped, the run rules are
+  # `unknown` (`dataFrom: github-actions`). An all-unknown level is not granted.
   - name: maintainer-ci-reliability
     kind: Workflow
     owner: group:maintainers
@@ -216,19 +223,20 @@ scorecards:
     rules:
       - name: main-not-stuck-red
         level: bronze
-        check: has(entity.runs) && entity.runs.failingStreak < 3
+        dataFrom: github-actions
+        check: entity.runs.failingStreak < 3
         evidence: >-
-          has(entity.runs) ? [string(entity.runs.failingStreak) + ' failures in a
-          row on ' + entity.runs.branch + ', last run ' + entity.runs.lastRunAt] :
-          ['no run data (github-actions connector skipped or no token)']
+          [string(entity.runs.failingStreak) + ' failures in a row on ' +
+          entity.runs.branch + ', last run ' + entity.runs.lastRunAt]
         fix: "Fix main before anything else: a red default branch hides new failures."
       - name: fail-rate-under-20
         level: bronze
-        check: has(entity.runs) && entity.runs.failRate <= ${param:failRateBronze}
+        dataFrom: github-actions
+        check: entity.runs.failRate <= ${param:failRateBronze}
         evidence: >-
-          has(entity.runs) ? [string(entity.runs.failRate) + '% of the last ' +
+          [string(entity.runs.failRate) + '% of the last ' +
           string(entity.runs.decided) + ' decided runs on ' + entity.runs.branch +
-          ' failed'] : ['no run data']
+          ' failed']
         fix: >-
           Find the failing jobs (`toolbox get workflow:<path>` shows run data) and
           fix or quarantine their causes.
@@ -241,19 +249,17 @@ scorecards:
           runner.
       - name: fail-rate-under-10
         level: silver
-        check: has(entity.runs) && entity.runs.failRate <= ${param:failRateSilver}
-        evidence: >-
-          has(entity.runs) ? [string(entity.runs.failRate) + '% failed'] : ['no
-          run data']
+        dataFrom: github-actions
+        check: entity.runs.failRate <= ${param:failRateSilver}
+        evidence: "[string(entity.runs.failRate) + '% failed']"
         fix: >-
           Track failures to their causes: flaky tests, infrastructure, or real
           breakage merged to main.
       - name: few-reruns
         level: silver
-        check: has(entity.runs) && entity.runs.rerunRate <= 5
-        evidence: >-
-          has(entity.runs) ? [string(entity.runs.rerunRate) + '% of runs were
-          re-run'] : ['no run data']
+        dataFrom: github-actions
+        check: entity.runs.rerunRate <= 5
+        evidence: "[string(entity.runs.rerunRate) + '% of runs were re-run']"
         fix: >-
           Re-runs mean flakiness: find the flaky jobs and fix or isolate them
           instead of retrying.
@@ -264,19 +270,17 @@ scorecards:
         fix: "Add `concurrency: {group: ${{ github.workflow }}-${{ github.ref }}, cancel-in-progress: true}` so a new push cancels the old run."
       - name: fail-rate-under-5
         level: gold
-        check: has(entity.runs) && entity.runs.failRate <= ${param:failRateGold}
-        evidence: >-
-          has(entity.runs) ? [string(entity.runs.failRate) + '% failed'] : ['no
-          run data']
+        dataFrom: github-actions
+        check: entity.runs.failRate <= ${param:failRateGold}
+        evidence: "[string(entity.runs.failRate) + '% failed']"
         fix: >-
           Keep main green: failures should be rare enough that each one gets
           looked at.
       - name: fast-feedback
         level: gold
-        check: has(entity.runs) && entity.runs.p90Seconds <= ${param:p90Seconds}
-        evidence: >-
-          has(entity.runs) ? ['p90 run time ' + string(entity.runs.p90Seconds /
-          60) + ' min'] : ['no run data']
+        dataFrom: github-actions
+        check: entity.runs.p90Seconds <= ${param:p90Seconds}
+        evidence: "['p90 run time ' + string(entity.runs.p90Seconds / 60) + ' min']"
         fix: >-
           Keep the p90 run under 15 minutes: split slow jobs, cache builds, move
           long suites off the PR path.
@@ -293,5 +297,9 @@ scorecards:
       level: bronze
       check: entity.pins.all(p, p == 'sha')
       evidence: entity.refs.filter(r, !r.matches('@[0-9a-f]{40}$')) # only what to change: pinned users don't count
-      fix: Pin this action to a full commit SHA in every workflow that uses it.
+      fix: >-
+        Pin this action to a full commit SHA in every workflow that uses it.
+        Resolve the tag with `git ls-remote https://github.com/<owner>/<repo>
+        refs/tags/<tag>` and peel an annotated tag (`^{}`) so the SHA is the
+        commit.
     facets: {summary: public, details: public}

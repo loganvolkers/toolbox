@@ -24,6 +24,6 @@ The pages build also publishes a standalone one-file page at `/toolbox/report/` 
 target/debug/toolbox report portal --skip runner,github-actions -o web --out site/public/report
 ```
 
-The test runner and the GitHub API are skipped, the same way the fast ratchet skips them. A rule that needs those runs says that it has no run data.
+The test runner and the GitHub API are skipped, the same way the fast ratchet skips them. A rule that needs those runs is unknown, and it names the connector that was skipped.
 
 <iframe src="/toolbox/report-hosted/" title="Toolbox report with this site's header and footer" style="width: 100%; height: 80vh; border: 1px solid var(--sl-color-gray-5); border-radius: 8px;"></iframe>

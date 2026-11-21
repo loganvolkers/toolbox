@@ -1,7 +1,7 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: scorecard:toolbox/maintainer-ci-reliability
 rubric: scorecard-quality
-subjectHash: 2543bd4b76d6
+subjectHash: 5842a3a5f7ff
 assessor: {kind: agent, name: claude-code}
 at: 2026-11-20
 verdicts:

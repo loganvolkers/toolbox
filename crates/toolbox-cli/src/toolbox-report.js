@@ -50,7 +50,7 @@
     ".rule ul{margin:4px 0 0;padding-left:18px}.rule li{overflow-wrap:anywhere}",
     ".fix{color:var(--muted);font-size:13px}",
     ".outcome{font-size:12px;font-weight:600}",
-    ".outcome.pass{color:var(--pass)}.outcome.fail{color:var(--none)}.outcome.unknown{color:var(--unknown)}.outcome.skipped{color:var(--skipped)}",
+    ".outcome.pass{color:var(--pass)}.outcome.fail{color:var(--none)}.outcome.unknown{color:var(--unknown)}.outcome.waived{color:var(--bronze)}.outcome.skipped{color:var(--skipped)}",
     ".kind-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}",
     ".kind-grid button{text-align:left;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:10px 12px;font:inherit;cursor:pointer;color:var(--fg)}",
     ".kind-grid button[aria-pressed=true]{border-color:var(--accent)}",
@@ -390,9 +390,78 @@
         tbody.append(tr);
       });
       table.append(tbody);
+      var rollup = Array.isArray(D.repoRollup) ? D.repoRollup : [];
+      var hold = null;
+      if (rollup.length) {
+        var floorRank = function (level) {
+          return level === "none" ? 0 : level === "bronze" ? 1 : level === "silver" ? 2 : level === "gold" ? 3 : 4;
+        };
+        var constituents = rollup.map(function (name) {
+          var sc = (D.scorecards || {})[name] || {};
+          var order = ["none"].concat(sc.levels || []);
+          var rank = {};
+          order.forEach(function (l, i) {
+            rank[l] = i;
+          });
+          var best = null;
+          Object.keys((D.scores || {})[name] || {}).forEach(function (id) {
+            if (id.indexOf("/demo/") >= 0) return;
+            var row = D.scores[name][id];
+            if (!row || row.level === "skipped") return;
+            var rules = row.rules || {};
+            var keys = Object.keys(rules);
+            if (keys.length && keys.every(function (k) { return rules[k] === "unknown"; })) return;
+            var r = rank[row.level] == null ? 99 : rank[row.level];
+            if (best == null || r < best.rank) best = { level: row.level, rank: r };
+          });
+          return { name: name, level: best ? best.level : "none" };
+        });
+        constituents.sort(function (a, b) {
+          return floorRank(a.level) - floorRank(b.level) || a.name.localeCompare(b.name);
+        });
+        var floor = constituents.reduce(function (m, r) {
+          return floorRank(r.level) < floorRank(m) ? r.level : m;
+        }, constituents[0].level);
+        var holdTable = el("table", { className: "fleet" });
+        holdTable.append(
+          el(
+            "thead",
+            {},
+            el("tr", {}, el("th", { textContent: "Constituent" }), el("th", { textContent: "Lowest level" })),
+          ),
+        );
+        var holdBody = el("tbody");
+        constituents.forEach(function (r) {
+          holdBody.append(
+            el(
+              "tr",
+              {
+                onclick: function () {
+                  go("scorecard/" + encodeURIComponent(r.name));
+                },
+              },
+              el("td", {}, el("code", { textContent: r.name })),
+              el("td", {}, el("span", { className: "lvl " + r.level, textContent: r.level })),
+            ),
+          );
+        });
+        holdTable.append(holdBody);
+        hold = el(
+          "section",
+          {},
+          el(
+            "div",
+            { className: "head" },
+            el("h2", { textContent: "What holds the repository" }),
+            el("span", { className: "sub", textContent: "The repository level is the lowest of these: " + floor }),
+          ),
+          holdTable,
+        );
+      }
       return el(
         "div",
         {},
+        hold,
         el(
           "section",
           {},
@@ -717,7 +786,7 @@
       }
       rules.sort(function (a, b) {
         var rank = function (o) {
-          return o === "fail" ? 0 : o === "unknown" ? 1 : o === "skipped" ? 2 : 3;
+          return o === "fail" ? 0 : o === "unknown" ? 1 : o === "waived" ? 2 : o === "skipped" ? 3 : 4;
         };
         return rank(a[1]) - rank(b[1]) || a[0].localeCompare(b[0]);
       });
@@ -742,7 +811,7 @@
               el("b", { textContent: n }),
               " ",
               el("span", {
-                className: "outcome " + (o === "pass" || o === "fail" || o === "unknown" || o === "skipped" ? o : "unknown"),
+                className: "outcome " + (o === "pass" || o === "fail" || o === "unknown" || o === "waived" || o === "skipped" ? o : "unknown"),
                 textContent: o,
               }),
               rule.level ? el("span", { className: "sub", textContent: " · " + rule.level }) : "",

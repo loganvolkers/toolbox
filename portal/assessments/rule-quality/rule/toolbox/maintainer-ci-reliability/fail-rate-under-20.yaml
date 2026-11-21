@@ -1,7 +1,7 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/maintainer-ci-reliability/fail-rate-under-20
 rubric: rule-quality
-subjectHash: ac9683e15641
+subjectHash: badc706a26c9
 assessor: {kind: agent, name: claude-code}
 at: 2026-11-20
 verdicts:

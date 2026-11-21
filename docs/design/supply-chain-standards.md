@@ -23,8 +23,9 @@ GitHub API. Counts of alerts need that API and stay unknown.
 | Is the code-scanning action pinned to a commit? | `github/codeql-action/…@` plus 40 hex digits | gold |
 
 This checkout now has the bronze files, a CODEOWNERS rule for `.github/`, and
-`github/codeql-action` pinned to a commit, so the live entity is gold. They were left out when the
-card was added, and added when the repository ratchet moved off none.
+`github/codeql-action` pinned to a commit, so the live entity is gold.
+D01M7Y5VWNAWB8K1DNMY31KQPQ0 adopts those files as the standard. D85 left the entity at none until
+they existed, and is not rewritten.
 
 ## 2. What the field says
 

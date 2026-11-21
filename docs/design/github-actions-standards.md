@@ -21,8 +21,8 @@ so any portal can apply the same standards to a fleet. Related: [toolbox-for-too
 
 | Card | Level | Why |
 |---|---|---|
-| Security | silver | `ci.yml` pins every third-party `uses:` and sets `persist-credentials: false`. What remains is low or informational (`self-repository` on `./actions/report`, which actionlint 1.7.12 rejects as `$/…`, plus `adhoc-packages` and template injection). `release.yml` is dist's bytes (D98); its template findings are ignored in `.github/zizmor.yml` for that file only. The first measurement, 30 findings, is in the research log |
-| Reliability | none | **11 of the last 12 runs on main failed**, and main has been red for 11 runs. No job has `timeout-minutes`. There is no concurrency group. Run history is skipped in the fast ratchet |
+| Security | silver on `ci.yml`; `release.yml`'s template findings are waived | `ci.yml` pins every third-party `uses:` and sets `persist-credentials: false`. What remains is low or informational (`self-repository` on `./actions/report`, which actionlint 1.7.12 rejects as `$/…`, plus `adhoc-packages` and template injection). `release.yml` is dist's bytes (D98). Its high, medium and remaining zizmor findings are waived in `portal/waivers.yaml` (D01M7Y5VWNAWB8K1DNMY31KQPQ0), with the evidence kept. The first measurement, 30 findings, is in the research log |
+| Reliability | none where timeouts or concurrency fail; silver where they pass and run history is unknown | `ci.yml` and `release.yml` have no `timeout-minutes` and no concurrency group, so they stay none. `codeql.yml` is bronze (no concurrency). `image.yml`, `pages.yml` and `scale-slo.yml` are silver: their structural rules pass, and the six run-history rules are `unknown` in the fast ratchet, which does not grant gold (D01M7Y5VWKW5TDS0VQWZFPRQ27N). When the GitHub API connector runs, 11 of the last 12 runs on main failed |
 | Supply chain | bronze | Every third-party action is pinned to a commit in every workflow. Bronze is this card's only level |
 
 The reliability numbers are not hypothetical. They are why CI was examined at all: acceptance had
@@ -35,10 +35,13 @@ never run on GitHub, and the scale budget fails on 2-vCPU runners ([research-log
      repositories, run history, and a ratchet.
 2. **Missing data is `unknown`, not `fail`.**
    - A machine without zizmor reports those rules as unknown, which is never a regression.
-   - `--ci` and `--update` refuse unknowns, so CI must have the tools.
+   - `--ci` and `--update` refuse an unknown whose `dataFrom` connector was not skipped, so CI
+     must have zizmor and actionlint (`dataFrom: ci-lint`).
+   - An all-unknown level is not granted. A level with a mix of passes and unknowns can be
+     reached (D01M7Y5VWKW5TDS0VQWZFPRQ27N).
 3. **Static facts are ratcheted; run history isn't.**
-   - Fail rates change with every run, so `github-actions` is skipped in the ratchet. Its rules
-     report "no run data" there and real figures in `serve` and full reports.
+   - Fail rates change with every run, so `github-actions` is skipped in the ratchet. Those rules
+     are `dataFrom: github-actions` and score `unknown` there, and real figures in a full report.
    - Security and structure are pure functions of the files, so they are in the ratchet.
 
 ## 2. Market: tools for GitHub Actions security and health
@@ -98,14 +101,16 @@ image has shellcheck and a laptop may not, and enabling it on one side only woul
 Both are pinned (1.32.0, 1.7.12) in CI and in the docs, and `portal/results.json` was made with those
 versions.
 
-**Unknown, not fail.** zizmor and actionlint rules reference the linter's record without a guard.
-When the tool is missing, the reference fails, the rule is `unknown`, and the ratchet treats that as
-"not compared":
+**Unknown, not fail.** zizmor and actionlint rules reference the linter's record without a guard,
+and they set `dataFrom: ci-lint`. When the tool is missing, the reference fails, the rule is
+`unknown`, and the ratchet treats that as "not compared":
 - the default mode reports it;
-- `--ci` and `--update` refuse it.
+- `--ci` and `--update` refuse it, because CI does not skip `ci-lint`.
 
-Reliability rules use `has(entity.runs)`, so in the ratchet, where `github-actions` is always
-skipped, they fail consistently with "no run data".
+Run-history rules set `dataFrom: github-actions` and read `entity.runs` without a `has()` guard.
+In the fast ratchet, where that connector is skipped, they are `unknown` ("no data from connector
+github-actions"). That unknown is excused, so `--ci` can update the baseline. A level whose rules
+are all unknown is not granted.
 
 ## 5. Verification
 

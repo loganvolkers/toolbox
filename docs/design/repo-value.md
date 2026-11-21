@@ -62,7 +62,7 @@ than us choosing to keep the step on. That stays open, and it is the first thing
 
 | Gap | Why it matters | Work |
 |---|---|---|
-| Missing data scored as failure | `maintainer-crate` shows 13 of 15 crates at `none` partly because the ratchet skips the runner, so `tests-pass` and `clippy-clean` read as failures. On pilots this would count as false positives under R2 | Rules with no data are `unknown`, reported and never compared |
+| Missing data scored as failure | `maintainer-crate` showed crates at `none` partly because the ratchet skips the runner, so `tests-pass` and `clippy-clean` read as failures. On pilots this would count as false positives under R2 | Done (D01M7Y5VWKW5TDS0VQWZFPRQ27N). A rule with `dataFrom` is `unknown` when that connector is skipped, and an all-unknown level is not granted |
 | Cold start | The action builds Toolbox from source on a pilot's first run | Prebuilt binaries for pilots ([package-author-sdlc.md](./package-author-sdlc.md) §3); needs a pre-release |
 | A thin starter | It checks a README, CODEOWNERS, a licence and doc links | Package the standards in Toolbox for Toolbox that aren't specific to Toolbox: agent instruction files, supply-chain basics, npm manifests, docs. Each is tested in its own `tests/` portal, as `packages/github-actions` is |
 | Language coverage | The workspace connector knows Rust crates, npm manifests and Markdown | Measured by the out-of-box runs; add what R2's triage shows is missing |
@@ -89,7 +89,7 @@ travel. Its first step is a pilot with maintainers other than us, the one thing 
 
 ## 9. Order of work
 
-1. Missing data as `unknown` (§5).
+1. Missing data as `unknown` (§5). Done (D01M7Y5VWKW5TDS0VQWZFPRQ27N).
 2. Out-of-box runs and their triage (R2).
 3. Package the generic standards (§5, R5).
 4. Pre-release binaries for pilots, if agreed.

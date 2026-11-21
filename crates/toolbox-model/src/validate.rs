@@ -329,6 +329,18 @@ impl Checker {
                         format!("scorecard {}: rule {} has unknown level", s.name, r.name),
                     );
                 }
+                if let Some(src) = &r.data_from
+                    && !connectors.contains_key(src.as_str())
+                {
+                    self.push(
+                        "xref.connector",
+                        format!("/scorecards/{si}/rules/{ri}/dataFrom"),
+                        format!(
+                            "scorecard {}: rule {} reads unknown connector {src}",
+                            s.name, r.name
+                        ),
+                    );
+                }
             }
         }
         for (ci, c) in m.campaigns.iter().enumerate() {
@@ -417,6 +429,38 @@ impl Checker {
                         );
                     }
                 }
+            }
+        }
+
+        let mut seen_waiver = BTreeSet::new();
+        for (wi, w) in m.waivers.iter().enumerate() {
+            if !seen_waiver.insert((w.scorecard.as_str(), w.entity.as_str(), w.rule.as_str())) {
+                self.push(
+                    "waiver.duplicate",
+                    format!("/waivers/{wi}"),
+                    format!(
+                        "waiver for {} {} {} is repeated",
+                        w.scorecard, w.entity, w.rule
+                    ),
+                );
+            }
+            let Some(sc) = scorecards.get(w.scorecard.as_str()) else {
+                self.push(
+                    "xref.scorecard",
+                    format!("/waivers/{wi}/scorecard"),
+                    format!("waiver: unknown scorecard {}", w.scorecard),
+                );
+                continue;
+            };
+            if !sc.rules.iter().any(|r| r.name == w.rule) {
+                self.push(
+                    "xref.rule",
+                    format!("/waivers/{wi}/rule"),
+                    format!(
+                        "waiver: rule {} is not on scorecard {}",
+                        w.rule, w.scorecard
+                    ),
+                );
             }
         }
 
@@ -766,6 +810,12 @@ fn check_files(root: &Path, file: &str, m: &Manifest) -> Vec<Diagnostic> {
                 .map(|(i, b)| (format!("/ui/bundles/{i}/path"), b.path.clone())),
         );
     }
+    wanted.extend(m.waivers.iter().enumerate().map(|(i, w)| {
+        (
+            format!("/waivers/{i}/decision"),
+            format!("../docs/decisions/{}.md", w.decision),
+        )
+    }));
     wanted
         .into_iter()
         .filter(|(_, p)| !root.join(p).exists())

@@ -7,8 +7,8 @@ description: >-
 # toolbox report
 
 1. Skip connectors that need a network or a long run when the baseline was built that way.
-2. Compare with --baseline. A new failure or larger evidence is a regression and the exit code is 1.
-3. Write the baseline with --update only after reading the diff. --ci fails when the file is stale.
+2. Compare with --baseline. A new failure or larger evidence is a regression and the exit code is 1. A rule whose connector was skipped is `unknown` and is not a regression. An unknown whose connector ran still fails `--ci` and `--update`.
+3. Write the baseline with --update only after reading the diff. --ci fails when the file is stale. The ratchet verdict is the gate. The pages workflow generates the HTML and does not commit it.
 4. Refresh the hosted page with `-o web --out DIR`. The page has Overview, Catalog, and Scorecards; follow the `report-ux` skill when changing that UI.
 
 ```

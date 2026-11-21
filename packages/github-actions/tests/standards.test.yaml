@@ -49,11 +49,13 @@ assert:
       == 6 && score('maintainer-ci-reliability',
       'workflow:.github/workflows/ci.yml').rules['cancels-superseded-runs'] ==
       'fail'
-  - name: without run data the run rules fail and say why
+  - name: without run data the run rules are unknown and say which connector
     expect: >-
       score('maintainer-ci-reliability',
+      'workflow:.github/workflows/release.yml').rules['main-not-stuck-red'] ==
+      'unknown' && score('maintainer-ci-reliability',
       'workflow:.github/workflows/release.yml').evidence['main-not-stuck-red']
-      == ['no run data (github-actions connector skipped or no token)']
+      == ['no data from connector github-actions']
   - name: action metadata isn't scored for reliability
     expect: >-
       score('maintainer-ci-reliability',

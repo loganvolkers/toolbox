@@ -1,8 +1,0 @@
-# release.yml is the bytes dist generates (D98). dist plan fails when the file differs, so these
-# findings stay in the template: workflow-level contents: write, github.ref_name interpolated into
-# the plan step, and a container image expression that is null for this repo's targets. The ignore
-# is the file, not the audit, so ci.yml and codeql.yml are still checked.
-rules:
-  excessive-permissions: {ignore: [release.yml]}
-  template-injection: {ignore: [release.yml]}
-  unpinned-images: {ignore: [release.yml]}
