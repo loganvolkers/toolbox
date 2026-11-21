@@ -400,6 +400,9 @@
       "dependency:cargo:jsonwebtoken": {
         "level": "gold"
       },
+      "dependency:cargo:mimalloc": {
+        "level": "gold"
+      },
       "dependency:cargo:proc-macro2": {
         "level": "gold"
       },

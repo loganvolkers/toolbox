@@ -35,35 +35,6 @@ jobs:
           echo "$RUNNER_TEMP/tools" >> "$GITHUB_PATH"
       - name: Tests that need OpenFGA (authz, .fga.yaml through the Authorizer)
         run: cargo test --locked -p toolbox-authz -p toolbox-api
-      - name: >-
-          PostgreSQL 16, the version the acceptance scripts pin (the runner image
-          may carry another)
-        run: |
-          if [ ! -x /usr/lib/postgresql/16/bin/initdb ]; then
-            sudo apt-get update -q
-            sudo apt-get install -y -q postgresql-common
-            sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
-            sudo apt-get install -y -q postgresql-16
-          fi
-          /usr/lib/postgresql/16/bin/initdb --version
-      - name: M2 acceptance (Postgres, ingest API, read-your-writes, restart)
-        run: PGDIR=$RUNNER_TEMP/pg scripts/m2-acceptance.sh
-      - name: >-
-          M3 acceptance (Postgres + OpenFGA over the tuple view, facets, A10,
-          PATs, revocation)
-        run: PGDIR=$RUNNER_TEMP/pg3 scripts/m3-acceptance.sh
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with: {node-version: "22"}
-      - name: Playwright for the A11 browser check
-        run: >-
-          npm install --no-save --prefix "$RUNNER_TEMP/pw" playwright@1.64.1 &&
-          "$RUNNER_TEMP/pw/node_modules/.bin/playwright" install --with-deps
-          chromium && echo "NODE_PATH=$RUNNER_TEMP/pw/node_modules" >>
-          "$GITHUB_ENV"
-      - name: >-
-          M4 acceptance (real connectors only, A1–A5, A11 in a browser, SCIM
-          revocation, conformance kit)
-        run: PGDIR=$RUNNER_TEMP/pg4 scripts/m4-acceptance.sh
       - name: toolbox validate, test and derive on the reference portal
         run: |
           target/debug/toolbox validate examples/reference-portal
@@ -115,6 +86,51 @@ jobs:
           skip: runner,github-actions
           toolbox-dir: target/debug
           artifact-name: toolbox-for-toolbox-report
+  acceptance:
+    # The acceptance scripts (M2–M4: Postgres, OpenFGA, connectors, a browser) in their own job, so a
+    # failure here doesn't hide the checks in `rust` that run after it.
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: {persist-credentials: false}
+      - name: Toolchain from rust-toolchain.toml
+        run: rustup show active-toolchain
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - run: cargo build --locked
+      - name: OpenFGA from its release, SHA-256-pinned (D90)
+        run: |
+          scripts/ci-tools.sh "$RUNNER_TEMP/tools" openfga
+          echo "TOOLBOX_OPENFGA_BIN=$RUNNER_TEMP/tools/openfga" >> "$GITHUB_ENV"
+      - name: >-
+          PostgreSQL 16, the version the acceptance scripts pin (the runner image
+          may carry another)
+        run: |
+          if [ ! -x /usr/lib/postgresql/16/bin/initdb ]; then
+            sudo apt-get update -q
+            sudo apt-get install -y -q postgresql-common
+            sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+            sudo apt-get install -y -q postgresql-16
+          fi
+          /usr/lib/postgresql/16/bin/initdb --version
+      - name: M2 acceptance (Postgres, ingest API, read-your-writes, restart)
+        run: PGDIR=$RUNNER_TEMP/pg scripts/m2-acceptance.sh
+      - name: >-
+          M3 acceptance (Postgres + OpenFGA over the tuple view, facets, A10,
+          PATs, revocation)
+        run: PGDIR=$RUNNER_TEMP/pg3 scripts/m3-acceptance.sh
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: {node-version: "22"}
+      - name: Playwright for the A11 browser check
+        run: >-
+          npm install --no-save --prefix "$RUNNER_TEMP/pw" playwright@1.64.1 &&
+          "$RUNNER_TEMP/pw/node_modules/.bin/playwright" install --with-deps
+          chromium && echo "NODE_PATH=$RUNNER_TEMP/pw/node_modules" >>
+          "$GITHUB_ENV"
+      - name: >-
+          M4 acceptance (real connectors only, A1–A5, A11 in a browser, SCIM
+          revocation, conformance kit)
+        run: PGDIR=$RUNNER_TEMP/pg4 scripts/m4-acceptance.sh
   report-action:
     # The report action as a pilot repo runs it: builds toolbox from the action's own source (cached),
     # then scores a repository set up from the starter portal (D69).
