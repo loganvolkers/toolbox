@@ -33,6 +33,46 @@ checkout does not (shallow clone, cloud VM, sparse checkout), `toolbox report` s
 tree. `git fetch` / pull the portal files (and any committed `results.json` / `toolbox.lock`) before
 you measure or ratchet.
 
+## A standard of your own
+
+Most teams already have standards written down (in `AGENTS.md`, a style guide, a review checklist)
+that nothing enforces. Three packages turn the common shapes into a ratcheted standard with a
+campaign in one `include`, with no script to maintain:
+
+| Written standard | Package | Example |
+|---|---|---|
+| "Keep files under N lines" | [`file-size`](../../packages/file-size/README.md) | Codex: no Rust module over 800 lines |
+| "Never use X; use Y instead" | [`pattern-count`](../../packages/pattern-count/README.md) | PostHog: no `Person.objects` outside the routed helpers |
+| Already a semgrep rule, with `nosemgrep` suppressions | [`semgrep`](../../packages/semgrep/README.md) | PostHog's person-table rule: 104 suppressed findings to pay down |
+
+```yaml
+include:
+  - package: github:loganvolkers/toolbox/packages/pattern-count@<tag>
+    with:
+      name: no-direct-orm
+      kind: PythonFile
+      files: ["**/*.py"]
+      exclude: ["**/tests/**"]
+      exempt: {app/models/util.py: the helpers themselves}
+      pattern: '\bPerson\.objects\b'
+      fix: Use a helper from app/models/util.py.
+```
+
+The loop is the same for every standard:
+
+```bash
+toolbox report .toolbox -o failures                                      # what violates, where, and the fix (JSON)
+toolbox report .toolbox --baseline .toolbox/results.json --update       # record today's state; commit it
+toolbox report .toolbox --baseline .toolbox/results.json                # the gate: exit 1 when anything got worse
+toolbox report .toolbox --baseline .toolbox/results.json -o json | jq '.campaigns'   # progress since the start
+toolbox report .toolbox --baseline .toolbox/results.json --update --accept no-direct-orm   # after tightening the standard
+```
+
+For a standard none of them fits, write the kind and scorecard yourself: the workspace connector's
+records are listed in [docs/reference/workspace-connector.md](../../docs/reference/workspace-connector.md),
+and a rule's `measure` (a number, compared by the ratchet) is described in
+[ratchets.md](../../docs/design/ratchets.md) §3.
+
 `repo-hygiene` is stage 1 of the CODEOWNERS graduation example in
 [federation.md](../../docs/design/federation.md) §6: a standard that starts in one team's repositories.
 

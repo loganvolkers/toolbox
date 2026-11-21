@@ -1,0 +1,77 @@
+# One semgrep run (with --disable-nosem, so suppressed findings are reported too); one record per
+# scanned file, with `total`, `suppressed` and `active` findings.
+connectors:
+  - name: ${param:name}
+    package: builtin:runner
+    runtime: in-image
+    config:
+      name: ${param:name}
+      root: ${param:root}
+      jobs:
+        - name: ${param:name}
+          command:
+          - semgrep
+          - --config
+          - ${param:config}
+          - --metrics=off
+          - --disable-nosem
+          - --json
+          - --quiet
+          - ${param:target}
+          parse: semgrep
+          optional: true # not installed → the rule is unknown, not failing
+    records: ["${param:name}"]
+    refresh: {"${param:name}": [external_ids]}
+    freshness: {"${param:name}": 15m}
+
+kinds:
+  - name: ${param:kind}
+    description: >-
+      A file scanned by the ${param:name} standard (semgrep findings,
+      suppressed or not).
+    identityFrom: ["connector:${param:name}"]
+    fields:
+      path: {type: string}
+      total: {type: integer}
+      suppressed: {type: integer}
+      active: {type: integer}
+      findings: {type: list, items: object}
+    sources: {default: ["connector:${param:name}"]}
+    map:
+    - from: ${param:name}/${param:name}
+      id: "'${param:name}:' + record.path"
+      set: >-
+        {'path': record.path, 'total': record.total, 'suppressed':
+        record.suppressed, 'active': record.active, 'findings': record.findings}
+
+scorecards:
+  - name: ${param:name}
+    title: ${param:title}
+    description: >-
+      Each semgrep finding is a violation, including those suppressed with
+      nosemgrep. The measure is the number of findings, so a new finding or a
+      new suppression is a regression.
+    kind: ${param:kind}
+    owner: ${param:owner}
+    levels: [clean]
+    ratchet: {newEntitiesAtLeast: clean}
+    rules:
+    - name: no-findings
+      level: clean
+      check: entity.total == 0
+      measure: entity.total
+      dataFrom: ${param:name}
+      evidence: >-
+        entity.findings.map(f, 'line ' + string(f.line) + ': ' + f.rule +
+        (f.suppressed ? ' (suppressed)' : ''))
+      fix: ${param:fix}
+    facets: {summary: public, details: public}
+
+campaigns:
+  - name: ${param:name}-zero
+    title: "${param:title}: to zero"
+    owner: ${param:owner}
+    description: >-
+      No findings and no suppressions. Progress is counted from the start the
+      baseline records.
+    includes: [{scorecard: '${param:name}', rules: [no-findings]}]

@@ -1,0 +1,60 @@
+# File size: lines per file against `limit`. One connector, kind, scorecard and campaign, all
+# named from the parameters, so a portal can include the package more than once.
+connectors:
+  - name: ${param:name}
+    package: builtin:workspace # reads files only: no build, no network, no history walk
+    runtime: in-image
+    config:
+      root: ${param:root}
+      crates: false
+      lastChange: false
+      files: ${param:files}
+      exclude: ${param:exclude}
+    records: [file]
+    refresh: {file: [external_ids]}
+    freshness: {file: 5m}
+
+kinds:
+  - name: ${param:kind}
+    description: A file measured by the ${param:name} standard (lines per file).
+    identityFrom: ["connector:${param:name}"]
+    fields: {path: {type: string}, lines: {type: integer}}
+    sources: {default: ["connector:${param:name}"]}
+    map:
+    - from: ${param:name}/file
+      id: "'${param:name}:' + record.path"
+      set: "{'path': record.path, 'lines': record.lines}"
+
+scorecards:
+  - name: ${param:name}
+    title: ${param:title}
+    description: >-
+      Files with more than ${param:limit} lines violate. The measure is the
+      lines over the limit, so a violating file that grows is a regression and
+      one that shrinks is an improvement.
+    kind: ${param:kind}
+    owner: ${param:owner}
+    levels: [within-limit]
+    # A file new since the baseline (or renamed) must arrive within the limit.
+    ratchet: {newEntitiesAtLeast: within-limit}
+    appliesTo: "!(entity.path in ${param:exempt})"
+    rules:
+    - name: within-limit
+      level: within-limit
+      check: entity.lines <= ${param:limit}
+      measure: entity.lines - ${param:limit}
+      evidence: >-
+        [string(entity.lines) + ' lines, ' + string(entity.lines -
+        ${param:limit}) + ' over the limit of ${param:limit}']
+      fix: ${param:fix}
+    facets: {summary: public, details: public}
+
+campaigns:
+  - name: ${param:name}-zero
+    title: "${param:title}: no file over ${param:limit} lines"
+    owner: ${param:owner}
+    description: >-
+      Every measured file within ${param:limit} lines. Progress is counted
+      from the start the baseline records: files over the limit, and lines
+      over it.
+    includes: [{scorecard: '${param:name}', rules: [within-limit]}]

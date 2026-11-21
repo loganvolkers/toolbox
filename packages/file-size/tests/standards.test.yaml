@@ -1,0 +1,17 @@
+# Package expectations over fixtures (package author SDLC: test).
+name: file-size
+assert:
+  - name: a file over the limit fails, with how far over as its measure
+    expect: >-
+      score('module-size', 'module-size:src/big.rs').rules['within-limit'] ==
+      'fail' && score('module-size',
+      'module-size:src/big.rs').measures['within-limit'] == 270.0
+  - name: a file at the limit passes
+    expect: score('module-size', 'module-size:src/ok.rs').level == 'within-limit'
+  - name: an exempt file is skipped
+    expect: score('module-size', 'module-size:src/generated.rs').level == 'skipped'
+  - name: the campaign counts files short and lines over
+    expect: >-
+      campaign('module-size-zero').inScope == 2 &&
+      campaign('module-size-zero').meeting == 1 &&
+      campaign('module-size-zero').measure == 270.0
