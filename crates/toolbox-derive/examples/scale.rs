@@ -5,6 +5,10 @@
 
 use serde_json::{Value, json};
 use std::time::Instant;
+
+/// The allocator the `toolbox` binary uses, so this measures what the server runs.
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 use toolbox_derive::{DerivedState, FullRecompute};
 
 fn main() {

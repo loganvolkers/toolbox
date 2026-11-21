@@ -10,6 +10,11 @@ mod report;
 mod server;
 
 use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
+
+/// mimalloc, not the system allocator: the recompute allocates from every thread, and glibc's
+/// malloc was 38% of its profile (docs/research-log.md, *Scale profile*).
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 use std::path::PathBuf;
 use std::process::ExitCode;
 

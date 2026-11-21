@@ -37,6 +37,8 @@ walkdir = "2"
 sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "postgres", "json"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "sync", "time", "process", "io-util", "io-std", "net", "fs"] }
 toolbox-api = { path = "crates/toolbox-api" }
+# The binaries' global allocator: glibc malloc was 38% of the full-recompute profile (docs/research-log.md, *Scale profile*).
+mimalloc = { version = "0.1.52", default-features = false }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"
