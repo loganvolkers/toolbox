@@ -1,0 +1,634 @@
+diff --git a/.github/workflows/standards-s2.yml b/.github/workflows/standards-s2.yml
+new file mode 100644
+index 0000000..babeddb
+--- /dev/null
++++ b/.github/workflows/standards-s2.yml
+@@ -0,0 +1,34 @@
++name: standards-s2
++
++# S2 small Rust modules ratchet. See .standards/STANDARD.md.
++on:
++  pull_request: {}
++
++permissions:
++  contents: read
++
++jobs:
++  gate:
++    name: S2 module size ratchet
++    runs-on: ubuntu-24.04
++    steps:
++      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
++        with:
++          ref: ${{ github.event.pull_request.head.sha }}
++          fetch-depth: 0
++          persist-credentials: false
++
++      - name: Gate
++        env:
++          BASE_SHA: ${{ github.event.pull_request.base.sha }}
++        run: python3 .standards/s2_module_size.py gate --base-ref "$BASE_SHA"
++
++      - name: Campaign progress
++        if: always()
++        run: |
++          {
++            echo '### S2 small Rust modules'
++            echo '```'
++            python3 .standards/s2_module_size.py campaign
++            echo '```'
++          } >> "$GITHUB_STEP_SUMMARY"
+diff --git a/.standards/STANDARD.md b/.standards/STANDARD.md
+new file mode 100644
+index 0000000..cbbf38b
+--- /dev/null
++++ b/.standards/STANDARD.md
+@@ -0,0 +1,118 @@
++# S2: small Rust modules
++
++**Source:** [`AGENTS.md`](../AGENTS.md), "Avoid large modules": target Rust modules under 500 LoC,
++excluding tests; if a file exceeds roughly 800 LoC, add new functionality in a new module instead of
++extending the existing file.
++
++## The rule as enforced
++
++| Item | Value |
++|---|---|
++| Scope | every `.rs` file under `codex-rs/` in the working tree (tracked, plus untracked files that are not git-ignored) |
++| Measure | every line of the file (newline count, plus an unterminated last line); comments and blanks count |
++| Violation | more than **700** lines (`threshold` in `s2-config.json`; lowered from 800 in the commit after `db82e2f`). 500 is the target, not a violation |
++| Exempt (tests) | any file with a `tests/` directory in its path, files named `tests.rs`, files ending in `_tests.rs` |
++| Exempt (explicit) | paths listed under `exempt` in [`s2-config.json`](./s2-config.json) |
++
++The enforced limit is stricter than the "roughly 800" in AGENTS.md: the team tightened it to 700 so
++files are stopped earlier on the way to the 500 target.
++
++**Ratchet:** a file already over 700 lines may not grow; a file at or under 700 may not cross 700.
++The allowed sizes live in [`s2-baseline.json`](./s2-baseline.json). On pull requests the gate also
++fails if the baseline itself was loosened (a file added, or an allowance raised) relative to the base
++branch, so the baseline can only tighten.
++
++## Commands
++
++Run from the repository root. Only Python 3 and git are needed.
++
++**Report**: every violating file as JSON, largest first:
++
++```sh
++python3 .standards/s2_module_size.py report
++```
++
++Output: `[{"file": "codex-rs/...", "lines": 11183}, ...]`.
++
++**Gate**: exits 1 if a violating file grew or a file newly crossed 700 lines, 0 otherwise. It prints
++`note: SHRANK` / `note: FIXED` when a file shrank or dropped to 700 or below, which means the baseline
++can be tightened:
++
++```sh
++python3 .standards/s2_module_size.py gate
++```
++
++CI ([`.github/workflows/standards-s2.yml`](../.github/workflows/standards-s2.yml)) runs it on every
++pull request with `--base-ref <base sha>`, which adds the baseline-loosening check:
++
++```sh
++python3 .standards/s2_module_size.py gate --base-ref origin/main
++```
++
++**Campaign**: progress toward zero violating files:
++
++```sh
++python3 .standards/s2_module_size.py campaign          # text
++python3 .standards/s2_module_size.py campaign --json   # machine-readable
++```
++
++It prints the campaign's starting number of files (`campaign_start` in the baseline), the current
++number, and the percentage done, `(start - current) / start`. CI writes it to the job summary.
++
++**Current campaign: 229 files over 700 lines, restarted with the threshold change.** The first
++campaign started at 191 files over 800 lines (commit `db82e2f`), and none had been fixed when the
++threshold was lowered (current was still 191). Lowering it to 700 added 38 files (705 to 800 lines)
++to the baseline. Keeping `campaign_start` at 191 would have made the campaign read 0% done with
++229 files to go, and it would only start moving after 38 files were fixed, so `campaign_start` was
++deleted and re-recorded as 229: the campaign measures the standard as it now stands, and no progress
++was lost. If the threshold changes again after files have been fixed, carry the progress over instead:
++set `campaign_start` to the old start plus the number of files the change added, so percent done
++does not jump.
++
++## Updating the baseline
++
++After you shrink or split a file (the gate prints `note:` lines), tighten the baseline in the same
++pull request:
++
++```sh
++python3 .standards/s2_module_size.py update-baseline
++git add .standards/s2-baseline.json
++```
++
++`update-baseline` records every current violation at its current size and keeps `campaign_start`, so
++the campaign percentage is not reset. Never run it to absorb growth: CI rejects a baseline that
++loosened against the base branch.
++
++**Renames:** moving a violating file to a new path shows as `NEW VIOLATION` (and the old path as
++`FIXED`). Split the file while you move it, or add an explicit exemption with a reason (below).
++
++## Changing the standard
++
++Changes to the standard are changes to `.standards/`; review them like code.
++
++- **Change the threshold:** edit `threshold` in `s2-config.json`, then run `update-baseline` and
++  commit both. The gate fails while the config and baseline thresholds differ. Lowering the threshold
++  adds files to the baseline, so CI's loosening check fails on that PR; that is expected and the
++  reviewers should approve it deliberately. If you want the campaign to restart from the new number,
++  delete `campaign_start` from the baseline before running `update-baseline`.
++- **Exempt a file:** add it to `exempt` in `s2-config.json` with the "strong documented reason"
++  AGENTS.md asks for:
++
++  ```json
++  "exempt": {
++    "codex-rs/foo/src/generated.rs": "generated by build tooling; not hand-edited"
++  }
++  ```
++
++  Then run `update-baseline` to drop it from the baseline.
++- **Change the test exemptions or line counting:** edit `is_test_file` or `count_lines` in
++  `s2_module_size.py` and update the table above.
++
++## Files
++
++| File | Purpose |
++|---|---|
++| `.standards/s2_module_size.py` | report, gate, campaign and update-baseline |
++| `.standards/s2-config.json` | threshold, scope root, explicit exemptions |
++| `.standards/s2-baseline.json` | ratchet: allowed size of each existing violation, plus `campaign_start` |
++| `.github/workflows/standards-s2.yml` | runs the gate on pull requests |
+diff --git a/.standards/s2-baseline.json b/.standards/s2-baseline.json
+new file mode 100644
+index 0000000..248ade2
+--- /dev/null
++++ b/.standards/s2-baseline.json
+@@ -0,0 +1,236 @@
++{
++  "standard": "S2 small Rust modules",
++  "threshold": 700,
++  "files": {
++    "codex-rs/agent-identity/src/lib.rs": 737,
++    "codex-rs/analytics/src/events.rs": 1070,
++    "codex-rs/analytics/src/reducer.rs": 2657,
++    "codex-rs/app-server-client/src/lib.rs": 2279,
++    "codex-rs/app-server-client/src/remote.rs": 1035,
++    "codex-rs/app-server-daemon/src/lib.rs": 1024,
++    "codex-rs/app-server-protocol/src/export.rs": 2946,
++    "codex-rs/app-server-protocol/src/protocol/common.rs": 3256,
++    "codex-rs/app-server-protocol/src/protocol/thread_history.rs": 3374,
++    "codex-rs/app-server-protocol/src/protocol/v2/config.rs": 747,
++    "codex-rs/app-server-protocol/src/protocol/v2/item.rs": 1454,
++    "codex-rs/app-server-protocol/src/protocol/v2/mcp.rs": 708,
++    "codex-rs/app-server-protocol/src/protocol/v2/plugin.rs": 841,
++    "codex-rs/app-server-protocol/src/protocol/v2/thread.rs": 1376,
++    "codex-rs/app-server-test-client/src/lib.rs": 2237,
++    "codex-rs/app-server-transport/src/transport/auth.rs": 751,
++    "codex-rs/app-server-transport/src/transport/remote_control/client_tracker.rs": 938,
++    "codex-rs/app-server-transport/src/transport/remote_control/enroll.rs": 804,
++    "codex-rs/app-server-transport/src/transport/remote_control/websocket.rs": 3252,
++    "codex-rs/app-server/src/bespoke_event_handling.rs": 3841,
++    "codex-rs/app-server/src/command_exec.rs": 1060,
++    "codex-rs/app-server/src/config/external_agent_config.rs": 1623,
++    "codex-rs/app-server/src/config_manager_service.rs": 709,
++    "codex-rs/app-server/src/in_process.rs": 897,
++    "codex-rs/app-server/src/lib.rs": 1117,
++    "codex-rs/app-server/src/message_processor.rs": 1378,
++    "codex-rs/app-server/src/outgoing_message.rs": 1334,
++    "codex-rs/app-server/src/request_processors/account_processor.rs": 954,
++    "codex-rs/app-server/src/request_processors/catalog_processor.rs": 711,
++    "codex-rs/app-server/src/request_processors/config_processor.rs": 731,
++    "codex-rs/app-server/src/request_processors/plugins.rs": 2070,
++    "codex-rs/app-server/src/request_processors/process_exec_processor.rs": 723,
++    "codex-rs/app-server/src/request_processors/thread_lifecycle.rs": 793,
++    "codex-rs/app-server/src/request_processors/thread_processor.rs": 4229,
++    "codex-rs/app-server/src/request_processors/turn_processor.rs": 1309,
++    "codex-rs/app-server/src/thread_status.rs": 913,
++    "codex-rs/apply-patch/src/invocation.rs": 926,
++    "codex-rs/apply-patch/src/lib.rs": 1689,
++    "codex-rs/apply-patch/src/parser.rs": 954,
++    "codex-rs/apply-patch/src/streaming_parser.rs": 851,
++    "codex-rs/backend-client/src/client.rs": 936,
++    "codex-rs/cli/src/debug_sandbox.rs": 1161,
++    "codex-rs/cli/src/doctor.rs": 4036,
++    "codex-rs/cli/src/doctor/output.rs": 1693,
++    "codex-rs/cli/src/doctor/output/detail.rs": 772,
++    "codex-rs/cli/src/doctor/thread_inventory.rs": 921,
++    "codex-rs/cli/src/main.rs": 3772,
++    "codex-rs/cli/src/mcp_cmd.rs": 989,
++    "codex-rs/cloud-config/src/lib.rs": 2482,
++    "codex-rs/cloud-tasks-client/src/http.rs": 908,
++    "codex-rs/cloud-tasks/src/lib.rs": 2399,
++    "codex-rs/cloud-tasks/src/ui.rs": 1046,
++    "codex-rs/code-mode/src/description.rs": 1098,
++    "codex-rs/code-mode/src/service.rs": 1837,
++    "codex-rs/codex-api/src/endpoint/realtime_websocket/methods.rs": 2348,
++    "codex-rs/codex-api/src/endpoint/responses_websocket.rs": 996,
++    "codex-rs/codex-api/src/sse/responses.rs": 1344,
++    "codex-rs/codex-client/src/custom_ca.rs": 795,
++    "codex-rs/codex-mcp/src/connection_manager.rs": 880,
++    "codex-rs/codex-mcp/src/rmcp_client.rs": 756,
++    "codex-rs/config/src/config_requirements.rs": 3482,
++    "codex-rs/config/src/config_toml.rs": 1008,
++    "codex-rs/config/src/loader/mod.rs": 1517,
++    "codex-rs/config/src/types.rs": 958,
++    "codex-rs/connectors/src/lib.rs": 809,
++    "codex-rs/core-plugins/src/loader.rs": 1276,
++    "codex-rs/core-plugins/src/manager.rs": 2107,
++    "codex-rs/core-plugins/src/marketplace.rs": 801,
++    "codex-rs/core-plugins/src/remote.rs": 1532,
++    "codex-rs/core-plugins/src/remote_bundle.rs": 976,
++    "codex-rs/core-plugins/src/startup_sync.rs": 938,
++    "codex-rs/core-skills/src/loader.rs": 1080,
++    "codex-rs/core-skills/src/render.rs": 1512,
++    "codex-rs/core/src/agent/control.rs": 1344,
++    "codex-rs/core/src/client.rs": 2253,
++    "codex-rs/core/src/codex_delegate.rs": 869,
++    "codex-rs/core/src/compact_remote_v2.rs": 751,
++    "codex-rs/core/src/config/edit.rs": 990,
++    "codex-rs/core/src/config/mod.rs": 3918,
++    "codex-rs/core/src/config/permissions.rs": 826,
++    "codex-rs/core/src/connectors.rs": 746,
++    "codex-rs/core/src/context_manager/history.rs": 771,
++    "codex-rs/core/src/exec.rs": 1575,
++    "codex-rs/core/src/exec_policy.rs": 1047,
++    "codex-rs/core/src/goals.rs": 1626,
++    "codex-rs/core/src/guardian/review.rs": 828,
++    "codex-rs/core/src/guardian/review_session.rs": 1662,
++    "codex-rs/core/src/hook_runtime.rs": 913,
++    "codex-rs/core/src/mcp_tool_call.rs": 2151,
++    "codex-rs/core/src/realtime_conversation.rs": 1543,
++    "codex-rs/core/src/session/handlers.rs": 957,
++    "codex-rs/core/src/session/mcp.rs": 706,
++    "codex-rs/core/src/session/mod.rs": 3364,
++    "codex-rs/core/src/session/session.rs": 1260,
++    "codex-rs/core/src/session/turn.rs": 2191,
++    "codex-rs/core/src/session/turn_context.rs": 899,
++    "codex-rs/core/src/tasks/mod.rs": 888,
++    "codex-rs/core/src/thread_manager.rs": 1635,
++    "codex-rs/core/src/tools/handlers/agent_jobs.rs": 765,
++    "codex-rs/core/src/tools/handlers/multi_agents_spec.rs": 840,
++    "codex-rs/core/src/tools/network_approval.rs": 767,
++    "codex-rs/core/src/tools/registry.rs": 752,
++    "codex-rs/core/src/tools/runtimes/shell/unix_escalation.rs": 1054,
++    "codex-rs/core/src/tools/spec_plan.rs": 1002,
++    "codex-rs/core/src/unified_exec/process_manager.rs": 1292,
++    "codex-rs/exec-server/src/client.rs": 1674,
++    "codex-rs/exec-server/src/connection.rs": 862,
++    "codex-rs/exec-server/src/environment.rs": 841,
++    "codex-rs/exec-server/src/environment_toml.rs": 880,
++    "codex-rs/exec-server/src/local_process.rs": 980,
++    "codex-rs/exec-server/src/relay.rs": 752,
++    "codex-rs/exec/src/lib.rs": 1932,
++    "codex-rs/external-agent-migration/src/lib.rs": 2141,
++    "codex-rs/features/src/lib.rs": 1285,
++    "codex-rs/feedback/src/lib.rs": 872,
++    "codex-rs/file-search/src/lib.rs": 1187,
++    "codex-rs/file-watcher/src/lib.rs": 899,
++    "codex-rs/git-utils/src/apply.rs": 847,
++    "codex-rs/git-utils/src/baseline.rs": 756,
++    "codex-rs/git-utils/src/info.rs": 889,
++    "codex-rs/hooks/src/engine/discovery.rs": 1090,
++    "codex-rs/hooks/src/events/pre_tool_use.rs": 782,
++    "codex-rs/hooks/src/schema.rs": 1166,
++    "codex-rs/linux-sandbox/src/bwrap.rs": 2707,
++    "codex-rs/linux-sandbox/src/linux_run_main.rs": 1470,
++    "codex-rs/linux-sandbox/src/proxy_routing.rs": 802,
++    "codex-rs/login/src/auth/manager.rs": 1913,
++    "codex-rs/login/src/server.rs": 1530,
++    "codex-rs/memories/write/src/phase1.rs": 800,
++    "codex-rs/network-proxy/src/config.rs": 876,
++    "codex-rs/network-proxy/src/http_proxy.rs": 1414,
++    "codex-rs/network-proxy/src/mitm_hook.rs": 1047,
++    "codex-rs/network-proxy/src/network_policy.rs": 898,
++    "codex-rs/network-proxy/src/proxy.rs": 1295,
++    "codex-rs/network-proxy/src/runtime.rs": 1963,
++    "codex-rs/network-proxy/src/socks5.rs": 737,
++    "codex-rs/otel/src/events/session_telemetry.rs": 1218,
++    "codex-rs/protocol/src/config_types.rs": 868,
++    "codex-rs/protocol/src/models.rs": 3040,
++    "codex-rs/protocol/src/openai_models.rs": 1045,
++    "codex-rs/protocol/src/permissions.rs": 3218,
++    "codex-rs/protocol/src/protocol.rs": 5598,
++    "codex-rs/rmcp-client/src/bin/test_stdio_server.rs": 768,
++    "codex-rs/rmcp-client/src/oauth.rs": 913,
++    "codex-rs/rmcp-client/src/perform_oauth_login.rs": 868,
++    "codex-rs/rmcp-client/src/rmcp_client.rs": 1091,
++    "codex-rs/rollout-trace/src/reducer/code_cell.rs": 738,
++    "codex-rs/rollout-trace/src/reducer/conversation.rs": 705,
++    "codex-rs/rollout/src/compression.rs": 1041,
++    "codex-rs/rollout/src/list.rs": 1471,
++    "codex-rs/rollout/src/recorder.rs": 1821,
++    "codex-rs/sandboxing/src/seatbelt.rs": 745,
++    "codex-rs/shell-command/src/command_safety/is_safe_command.rs": 802,
++    "codex-rs/shell-command/src/command_safety/windows_dangerous_commands.rs": 754,
++    "codex-rs/shell-command/src/parse_command.rs": 2526,
++    "codex-rs/shell-escalation/src/unix/escalate_server.rs": 1064,
++    "codex-rs/state/src/log_db.rs": 777,
++    "codex-rs/state/src/runtime/goals.rs": 1611,
++    "codex-rs/state/src/runtime/logs.rs": 1859,
++    "codex-rs/state/src/runtime/memories.rs": 5264,
++    "codex-rs/state/src/runtime/threads.rs": 2037,
++    "codex-rs/thread-store/src/local/mod.rs": 1057,
++    "codex-rs/thread-store/src/local/read_thread.rs": 1311,
++    "codex-rs/thread-store/src/local/update_thread_metadata.rs": 1636,
++    "codex-rs/thread-store/src/types.rs": 759,
++    "codex-rs/tools/src/json_schema.rs": 743,
++    "codex-rs/tui/src/app.rs": 1363,
++    "codex-rs/tui/src/app/app_server_requests.rs": 847,
++    "codex-rs/tui/src/app/background_requests.rs": 1178,
++    "codex-rs/tui/src/app/config_persistence.rs": 1324,
++    "codex-rs/tui/src/app/event_dispatch.rs": 2230,
++    "codex-rs/tui/src/app/pending_interactive_replay.rs": 942,
++    "codex-rs/tui/src/app/session_lifecycle.rs": 830,
++    "codex-rs/tui/src/app/thread_routing.rs": 1573,
++    "codex-rs/tui/src/app_backtrack.rs": 989,
++    "codex-rs/tui/src/app_event.rs": 1054,
++    "codex-rs/tui/src/app_server_session.rs": 2539,
++    "codex-rs/tui/src/bottom_pane/app_link_view.rs": 1704,
++    "codex-rs/tui/src/bottom_pane/approval_overlay.rs": 2377,
++    "codex-rs/tui/src/bottom_pane/chat_composer.rs": 11183,
++    "codex-rs/tui/src/bottom_pane/chat_composer/history_search.rs": 968,
++    "codex-rs/tui/src/bottom_pane/chat_composer_history.rs": 1505,
++    "codex-rs/tui/src/bottom_pane/feedback_view.rs": 933,
++    "codex-rs/tui/src/bottom_pane/footer.rs": 2082,
++    "codex-rs/tui/src/bottom_pane/hooks_browser_view.rs": 1634,
++    "codex-rs/tui/src/bottom_pane/list_selection_view.rs": 2780,
++    "codex-rs/tui/src/bottom_pane/mcp_server_elicitation.rs": 2732,
++    "codex-rs/tui/src/bottom_pane/mod.rs": 3000,
++    "codex-rs/tui/src/bottom_pane/multi_select_picker.rs": 1095,
++    "codex-rs/tui/src/bottom_pane/request_user_input/mod.rs": 3334,
++    "codex-rs/tui/src/bottom_pane/selection_popup_common.rs": 880,
++    "codex-rs/tui/src/bottom_pane/textarea.rs": 3900,
++    "codex-rs/tui/src/branch_summary.rs": 739,
++    "codex-rs/tui/src/chatwidget.rs": 2044,
++    "codex-rs/tui/src/chatwidget/plugins.rs": 2193,
++    "codex-rs/tui/src/chatwidget/settings.rs": 776,
++    "codex-rs/tui/src/chatwidget/slash_dispatch.rs": 1067,
++    "codex-rs/tui/src/chatwidget/status_surfaces.rs": 1057,
++    "codex-rs/tui/src/clipboard_copy.rs": 1008,
++    "codex-rs/tui/src/custom_terminal.rs": 964,
++    "codex-rs/tui/src/debug_config.rs": 1064,
++    "codex-rs/tui/src/diff_render.rs": 2481,
++    "codex-rs/tui/src/exec_cell/render.rs": 1095,
++    "codex-rs/tui/src/external_agent_config_migration.rs": 1052,
++    "codex-rs/tui/src/get_git_diff.rs": 738,
++    "codex-rs/tui/src/history_cell/hook_cell.rs": 901,
++    "codex-rs/tui/src/ide_context/ipc.rs": 1009,
++    "codex-rs/tui/src/insert_history.rs": 1066,
++    "codex-rs/tui/src/keymap.rs": 2840,
++    "codex-rs/tui/src/keymap_setup.rs": 1932,
++    "codex-rs/tui/src/lib.rs": 2961,
++    "codex-rs/tui/src/markdown_render.rs": 2770,
++    "codex-rs/tui/src/markdown_stream.rs": 889,
++    "codex-rs/tui/src/multi_agents.rs": 891,
++    "codex-rs/tui/src/onboarding/auth.rs": 1305,
++    "codex-rs/tui/src/onboarding/onboarding_screen.rs": 722,
++    "codex-rs/tui/src/pager_overlay.rs": 1570,
++    "codex-rs/tui/src/pets/model.rs": 1036,
++    "codex-rs/tui/src/render/highlight.rs": 1562,
++    "codex-rs/tui/src/resume_picker.rs": 6338,
++    "codex-rs/tui/src/status/card.rs": 947,
++    "codex-rs/tui/src/streaming/controller.rs": 1922,
++    "codex-rs/tui/src/tui.rs": 1099,
++    "codex-rs/tui/src/wrapping.rs": 1657,
++    "codex-rs/windows-sandbox-rs/src/acl.rs": 712,
++    "codex-rs/windows-sandbox-rs/src/bin/setup_main/win.rs": 1178,
++    "codex-rs/windows-sandbox-rs/src/lib.rs": 810,
++    "codex-rs/windows-sandbox-rs/src/setup.rs": 1775,
++    "codex-rs/windows-sandbox-rs/src/spawn_prep.rs": 715
++  },
++  "campaign_start": 229
++}
+diff --git a/.standards/s2-config.json b/.standards/s2-config.json
+new file mode 100644
+index 0000000..9405ba7
+--- /dev/null
++++ b/.standards/s2-config.json
+@@ -0,0 +1,6 @@
++{
++  "standard": "S2 small Rust modules (AGENTS.md: Avoid large modules)",
++  "threshold": 700,
++  "root": "codex-rs",
++  "exempt": {}
++}
+diff --git a/.standards/s2_module_size.py b/.standards/s2_module_size.py
+new file mode 100644
+index 0000000..679adf1
+--- /dev/null
++++ b/.standards/s2_module_size.py
+@@ -0,0 +1,210 @@
++#!/usr/bin/env python3
++"""S2 (small Rust modules) report, ratchet gate and campaign tracker.
++
++Run from the repository root:
++
++    python3 .standards/s2_module_size.py report            # violating files as JSON
++    python3 .standards/s2_module_size.py gate              # ratchet check (exit 1 on regression)
++    python3 .standards/s2_module_size.py campaign          # progress toward zero violations
++    python3 .standards/s2_module_size.py update-baseline   # rewrite the baseline from the tree
++
++See .standards/STANDARD.md for the rules and how to change them.
++"""
++
++from __future__ import annotations
++
++import argparse
++import json
++import subprocess
++import sys
++from pathlib import Path, PurePosixPath
++
++HERE = Path(__file__).resolve().parent
++REPO_ROOT = HERE.parent
++CONFIG_PATH = HERE / "s2-config.json"
++BASELINE_PATH = HERE / "s2-baseline.json"
++
++
++def load_json(path: Path) -> dict:
++    with path.open(encoding="utf-8") as f:
++        return json.load(f)
++
++
++def load_config() -> dict:
++    cfg = load_json(CONFIG_PATH)
++    cfg.setdefault("threshold", 800)
++    cfg.setdefault("root", "codex-rs")
++    cfg.setdefault("exempt", {})
++    return cfg
++
++
++def count_lines(data: bytes) -> int:
++    """Every line of the file: newline count, plus an unterminated last line."""
++    n = data.count(b"\n")
++    if data and not data.endswith(b"\n"):
++        n += 1
++    return n
++
++
++def is_test_file(path: str) -> bool:
++    p = PurePosixPath(path)
++    return "tests" in p.parts[:-1] or p.name == "tests.rs" or p.name.endswith("_tests.rs")
++
++
++def list_rs_files(root: str) -> list[str]:
++    """Tracked plus untracked-but-not-ignored .rs files under root, in the working tree."""
++    out = subprocess.run(
++        ["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard", "--", root],
++        cwd=REPO_ROOT, check=True, capture_output=True,
++    ).stdout
++    files = {f for f in out.decode("utf-8").split("\0") if f.endswith(".rs")}
++    return sorted(f for f in files if (REPO_ROOT / f).is_file())
++
++
++def violations(cfg: dict) -> dict[str, int]:
++    """Map of violating file -> line count for the current working tree."""
++    result = {}
++    exempt = cfg["exempt"]
++    for f in list_rs_files(cfg["root"]):
++        if is_test_file(f) or f in exempt:
++            continue
++        n = count_lines((REPO_ROOT / f).read_bytes())
++        if n > cfg["threshold"]:
++            result[f] = n
++    return result
++
++
++def load_baseline() -> dict:
++    if not BASELINE_PATH.exists():
++        sys.exit(f"error: no baseline at {BASELINE_PATH.relative_to(REPO_ROOT)}; "
++                 "run `python3 .standards/s2_module_size.py update-baseline`")
++    return load_json(BASELINE_PATH)
++
++
++def baseline_at_ref(ref: str) -> dict | None:
++    rel = BASELINE_PATH.relative_to(REPO_ROOT).as_posix()
++    r = subprocess.run(["git", "show", f"{ref}:{rel}"], cwd=REPO_ROOT, capture_output=True)
++    if r.returncode != 0:
++        return None
++    return json.loads(r.stdout)
++
++
++def cmd_report(args, cfg) -> int:
++    v = violations(cfg)
++    rows = [{"file": f, "lines": n} for f, n in sorted(v.items(), key=lambda kv: (-kv[1], kv[0]))]
++    print(json.dumps(rows, indent=2))
++    return 0
++
++
++def cmd_gate(args, cfg) -> int:
++    base = load_baseline()
++    threshold = cfg["threshold"]
++    failures, notes = [], []
++
++    if base.get("threshold") != threshold:
++        failures.append(f"baseline was recorded at threshold {base.get('threshold')} but the config "
++                        f"says {threshold}; run update-baseline and commit it with the config change")
++
++    allowed: dict[str, int] = base.get("files", {})
++    current = violations(cfg)
++
++    for f, n in sorted(current.items()):
++        if f not in allowed:
++            failures.append(f"NEW VIOLATION {f}: {n} lines (limit {threshold}); split it into modules")
++        elif n > allowed[f]:
++            failures.append(f"GREW {f}: {allowed[f]} -> {n} lines (+{n - allowed[f]}); "
++                            "add new functionality in a new module instead")
++        elif n < allowed[f]:
++            notes.append(f"SHRANK {f}: {allowed[f]} -> {n} lines")
++    for f, n in sorted(allowed.items()):
++        if f not in current:
++            path = REPO_ROOT / f
++            if not path.is_file():
++                notes.append(f"FIXED {f}: removed or renamed (was {n} lines)")
++            elif f in cfg["exempt"]:
++                notes.append(f"FIXED {f}: now exempt in s2-config.json (was {n} lines)")
++            else:
++                now = count_lines(path.read_bytes())
++                notes.append(f"FIXED {f}: {n} -> {now} lines, at or under {threshold}")
++
++    # The baseline itself must only tighten relative to the base branch.
++    if args.base_ref:
++        old = baseline_at_ref(args.base_ref)
++        if old is not None:
++            old_files = old.get("files", {})
++            for f, n in sorted(allowed.items()):
++                if f not in old_files:
++                    failures.append(f"BASELINE LOOSENED: {f} added to the baseline ({n} lines)")
++                elif n > old_files[f]:
++                    failures.append(f"BASELINE LOOSENED: {f} raised {old_files[f]} -> {n}")
++
++    tightenable = bool(notes)
++    if args.base_ref and baseline_at_ref(args.base_ref) is None:
++        notes.append(f"no baseline at {args.base_ref}; skipped the baseline-loosening check")
++    for line in notes:
++        print(f"note: {line}")
++    if tightenable:
++        print("note: the baseline can be tightened: "
++              "python3 .standards/s2_module_size.py update-baseline")
++    for line in failures:
++        print(f"FAIL: {line}")
++    if failures:
++        print(f"S2 gate failed: {len(failures)} problem(s). See .standards/STANDARD.md.")
++        return 1
++    print(f"S2 gate passed: {len(current)} violating file(s), none grew, none new "
++          f"(baseline {len(allowed)}).")
++    return 0
++
++
++def cmd_campaign(args, cfg) -> int:
++    base = load_baseline()
++    # Measure against the campaign start so that tightening the baseline keeps the progress.
++    base_n = base.get("campaign_start", len(base.get("files", {})))
++    cur = violations(cfg)
++    cur_n = len(cur)
++    pct = 100.0 if base_n == 0 else max(0.0, (base_n - cur_n) / base_n * 100)
++    excess = sum(n - cfg["threshold"] for n in cur.values())
++    data = {"baseline_files": base_n, "current_files": cur_n, "fixed": base_n - cur_n,
++            "percent_done": round(pct, 1), "lines_over_threshold": excess,
++            "threshold": cfg["threshold"]}
++    if args.json:
++        print(json.dumps(data, indent=2))
++    else:
++        print(f"S2 small Rust modules (>{cfg['threshold']} lines)")
++        print(f"baseline: {base_n} files")
++        print(f"current:  {cur_n} files")
++        print(f"done:     {data['percent_done']}% ({data['fixed']} fixed, {cur_n} to go)")
++        print(f"excess:   {excess} lines over the threshold in violating files")
++    return 0
++
++
++def cmd_update_baseline(args, cfg) -> int:
++    cur = violations(cfg)
++    data = {"standard": "S2 small Rust modules", "threshold": cfg["threshold"],
++            "files": dict(sorted(cur.items()))}
++    if BASELINE_PATH.exists() and "campaign_start" in (old := load_json(BASELINE_PATH)):
++        data["campaign_start"] = old["campaign_start"]
++    else:
++        data["campaign_start"] = len(cur)
++    BASELINE_PATH.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
++    print(f"wrote {BASELINE_PATH.relative_to(REPO_ROOT)}: {len(cur)} file(s)")
++    return 0
++
++
++def main() -> int:
++    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
++    sub = ap.add_subparsers(dest="cmd", required=True)
++    sub.add_parser("report", help="print violating files as JSON")
++    g = sub.add_parser("gate", help="fail if the ratchet is broken")
++    g.add_argument("--base-ref", help="also fail if the baseline loosened relative to this git ref")
++    c = sub.add_parser("campaign", help="print progress toward zero violations")
++    c.add_argument("--json", action="store_true", help="machine-readable output")
++    sub.add_parser("update-baseline", help="rewrite the baseline from the working tree")
++    args = ap.parse_args()
++    cfg = load_config()
++    return {"report": cmd_report, "gate": cmd_gate, "campaign": cmd_campaign,
++            "update-baseline": cmd_update_baseline}[args.cmd](args, cfg)
++
++
++if __name__ == "__main__":
++    sys.exit(main())

@@ -1,0 +1,320 @@
+diff --git a/.github/workflows/toolbox-standards.yml b/.github/workflows/toolbox-standards.yml
+new file mode 100644
+index 0000000..5fcab4a
+--- /dev/null
++++ b/.github/workflows/toolbox-standards.yml
+@@ -0,0 +1,35 @@
++# Coding-standard ratchet (small Go files). See .toolbox/STANDARD.md.
++# Fails a pull request when a non-test Go file over 1,000 lines grows, or a file crosses 1,000 lines (including a
++# new file). Shrinking files pass and are listed in the job summary, so the baseline can be tightened.
++name: toolbox-standards
++
++on:
++  pull_request:
++  push:
++    branches: [main]
++  workflow_dispatch:
++    inputs:
++      mode:
++        description: "check (regressions only), ci (also fail when results.json is stale), update or report"
++        default: update
++
++permissions:
++  contents: read
++
++jobs:
++  ratchet:
++    runs-on: ubuntu-latest
++    timeout-minutes: 10
++    steps:
++      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
++        with:
++          persist-credentials: false
++      # Toolbox's report action (D69). Pin it to a commit SHA once the release is mirrored internally.
++      - uses: loganvolkers/toolbox/actions/report@v0.1.1
++        with:
++          toolbox-version: "0.1.1"
++          portal: .toolbox
++          baseline: .toolbox/results.json
++          # check: fail on regressions only. New compliant files and shrinking files don't need a
++          # results.json update in the same PR (run `--update` to tighten the baseline).
++          mode: ${{ inputs.mode || 'check' }}
+diff --git a/.toolbox/STANDARD.md b/.toolbox/STANDARD.md
+new file mode 100644
+index 0000000..235194e
+--- /dev/null
++++ b/.toolbox/STANDARD.md
+@@ -0,0 +1,116 @@
++# Small Go files
++
++**The standard.** Target Go files under 600 lines. A *violation* is a non-test `.go` file anywhere
++in the repository with more than **1,000 lines** (every line of the file counts, blank and comment
++lines included). 600 is the target and is not enforced. Test files (`*_test.go`) are exempt.
++Test helpers that are not `_test.go` files (for example `tests/check/*.go`,
++`pkg/storage/test/*.go`) and generated code (`internal/mocks/`) are measured.
++
++**The ratchet.** Existing violations are recorded in `.toolbox/results.json`. A pull request fails when:
++- a file already over 1,000 lines grows, by even one line;
++- a file at or under 1,000 lines crosses 1,000;
++- a new (or renamed) file arrives with more than 1,000 lines.
++
++Shrinking a violating file, or bringing it to 1,000 or below, passes and is reported as an
++improvement, so the baseline can be tightened. Edits to files under the limit, and to non-Go
++files, pass unchanged.
++
++All commands run from the repository root and need [Toolbox](https://github.com/loganvolkers/toolbox)
++0.1.1 (`toolbox` and `toolbox-connector-runner` on `PATH`), `python3`, `git` and `jq`.
++
++## Report: every violating file, as JSON
++
++```bash
++toolbox report .toolbox -o json | jq '[.scores["small-go-files"] | to_entries[] | select(.value.rules["at-most-1000-lines"] == "fail") | {file: (.key | ltrimstr("go-file:")), lines: (.value.evidence["at-most-1000-lines"][0] | split(" ")[0] | tonumber)}]'
++```
++
++Prints `[{"file": "cmd/run/run.go", "lines": 1270}, …]`: 15 files on 2026-11-21. For the
++human-readable version (every file with its line count and the fix), run `toolbox report .toolbox`.
++
++## Gate: fail when the ratchet breaks
++
++```bash
++toolbox report .toolbox --baseline .toolbox/results.json --out /dev/null
++```
++
++Exit 0 when nothing got worse, 1 on a regression, 2 when Toolbox can't run. It prints one line per
++change, for example:
++
++```
++✗ worse   small-go-files · go-file:cmd/run/run.go: at-most-1000-lines evidence grew 271 → 272
++✗ worse   small-go-files · go-file:pkg/server/check.go: at-most-1000-lines now fails
++✗ worse   small-go-files · go-file:pkg/server/huge.go: new, at none; new entities must reach bronze
++✓ better  small-go-files · go-file:cmd/run/run.go: at-most-1000-lines evidence shrank 271 → 270
++```
++
++The evidence count is the number of lines over 1,000, plus one. Add `--verdict verdict.json` for a
++machine-readable verdict (`regressions`, `improvements`, `changes`). Add `--ci` to also fail when
++`results.json` is out of date (unrecorded improvements or new files).
++
++CI: [`.github/workflows/toolbox-standards.yml`](../.github/workflows/toolbox-standards.yml) runs
++the same gate (`mode: check`) on every pull request, through Toolbox's `actions/report` action. The
++job summary lists regressions and improvements.
++
++## Campaign: progress toward zero violating files
++
++```bash
++toolbox report .toolbox -o web --out "${TMPDIR:-/tmp}/openfga-standards" > /dev/null && jq '.campaigns["small-go-files-zero"] | {campaign: .title, status, baseline: .inScope, current: (.inScope - .meeting), percentDone: .percent, percentExact: (if .inScope > 0 then (.meeting * 1000 / .inScope | floor) / 10 else 0 end), targetPercent}' "${TMPDIR:-/tmp}/openfga-standards/report.json"
++```
++
++`baseline` is the number of files that violated when the campaign started (15 on 2026-11-21),
++`current` how many of them still do, and `percentDone` the share fixed (Toolbox rounds down;
++`percentExact` has one decimal). The campaign's scope is frozen in
++[`campaign.yaml`](./campaign.yaml), so it measures paying down the old violations; the ratchet stops
++new ones. The HTML report (`${TMPDIR:-/tmp}/openfga-standards/index.html`) shows the same progress
++in its Campaigns tab.
++
++If a file in the campaign is deleted or renamed, it leaves the campaign's scope (the baseline count
++drops by one) instead of counting as done. When you split a file, keep the original file and move
++code into new files in the same package, so the path stays in the campaign.
++
++## Update the baseline
++
++After a change that shrinks or fixes files (the gate printed `✓ better`), or adds new files:
++
++```bash
++toolbox report .toolbox --baseline .toolbox/results.json --update --out /dev/null
++git add .toolbox/results.json
++```
++
++`--update` refuses to write while anything regressed, so it can only tighten the bar. Never hand-edit
++or hand-merge `results.json`: on a merge conflict, take either side and rerun `--update` on the merged
++tree.
++
++Renaming or moving a file over 1,000 lines is a regression: to the ratchet it is a new file over the
++limit. Split it below 1,000 in the same PR, or, if a maintainer approves, reset the baseline: delete
++`.toolbox/results.json`, rerun `--update`, and review the diff (it must show only the renamed
++path). Toolbox has no way to accept one named regression.
++
++`internal/mocks/mock_storage.go` is generated by `make generate-mocks`: growing the
++`OpenFGADatastore` interface grows it and fails the gate. If that happens, exempt it (below)
++rather than hand-editing the mock.
++
++## Change the standard
++
++Everything lives in [`toolbox.yaml`](./toolbox.yaml) (the `small-go-files` scorecard) and
++[`campaign.yaml`](./campaign.yaml). Check your change with `toolbox validate .toolbox`, then run the
++Gate and update the baseline.
++
++| Change | Where |
++|---|---|
++| **Threshold** (e.g. 1000 → 800) | In `toolbox.yaml`, replace `1000` in the rule's name (`at-most-1000-lines`), `check`, `evidence` and `fix`; the same in `campaign.yaml`, and in the Report command above. A lower threshold makes passing files fail (and `--update` refuses), so reset the baseline (delete `.toolbox/results.json`, rerun `--update`, review the diff), then decide the campaign's scope |
++| **Exempt a file** | Add its path to the list at the end of `appliesTo` in `toolbox.yaml`: `entity.path in ['internal/mocks/mock_storage.go']`. The gate then reports it as `✓ better … now passes`; run `--update` |
++| **Exempt a pattern** | Add a condition to `appliesTo`, e.g. `entity.path.startsWith('internal/mocks/')` |
++| **Which files are measured** | `.toolbox/go-file-lines.py` (every tracked or untracked, non-ignored `**/*.go`). It only measures; the rule and exemptions stay in the manifest |
++| **Campaign scope or dates** | `campaign.yaml`: the frozen file list, `start`, optional `end`, `targetPercent` and `milestones` |
++
++## How it works
++
++| File | Role |
++|---|---|
++| `toolbox.yaml` | The repo portal: a `runner` connector, the `GoFile` kind, the `small-go-files` scorecard and its ratchet floor (`newEntitiesAtLeast: bronze`) |
++| `go-file-lines.py` | Emits one record per Go file: path, line count, and line numbers (so each line over 1,000 is one evidence item, and the ratchet sees growth of one line) |
++| `campaign.yaml` | The campaign and its scorecard over the 15 files that violated the 1,000-line limit on 2026-11-21 |
++| `results.json` | The committed baseline (generated; do not edit) |
++
++Adapted from the Codex team's Rust module-size standard (`.toolbox/` in that repository).
+diff --git a/.toolbox/campaign.yaml b/.toolbox/campaign.yaml
+new file mode 100644
+index 0000000..52647a0
+--- /dev/null
++++ b/.toolbox/campaign.yaml
+@@ -0,0 +1,46 @@
++# The campaign toward zero Go files over 1,000 lines (docs: .toolbox/STANDARD.md). Included by
++# .toolbox/toolbox.yaml.
++#
++# Campaign scope is frozen: the 15 files that broke the standard when the campaign started
++# (2026-11-21). The ratchet in toolbox.yaml stops new violations; this measures paying down the old
++# ones. A file leaves the list only when it is deleted or renamed: then delete its line here too.
++scorecards:
++  - name: small-go-files-campaign
++    kind: GoFile
++    owner: group:maintainers
++    levels: [bronze]
++    appliesTo: >-
++      entity.path in [
++        'cmd/run/run.go',
++        'internal/check/check.go',
++        'internal/graph/check.go',
++        'internal/mocks/mock_storage.go',
++        'pkg/server/server.go',
++        'pkg/server/test/reverse_expand.go',
++        'pkg/storage/postgres/postgres.go',
++        'pkg/storage/sqlcommon/sqlcommon.go',
++        'pkg/storage/sqlite/sqlite.go',
++        'pkg/storage/test/tuples.go',
++        'pkg/typesystem/typesystem.go',
++        'tests/check/check.go',
++        'tests/check/check_ttu.go',
++        'tests/check/check_userset.go',
++        'tests/listobjects/matrix_usersets.go',
++      ]
++    rules:
++    - name: at-most-1000-lines
++      level: bronze
++      check: entity.lines <= 1000
++      evidence: "[string(entity.lines) + ' lines (limit 1000)']"
++      fix: Split this file until it is at most 1,000 lines (target 600).
++    facets: {summary: public, details: public}
++
++campaigns:
++  - name: small-go-files-zero
++    title: Zero Go files over 1,000 lines
++    owner: group:maintainers
++    description: Every Go file that was over 1,000 lines on 2026-11-21 gets to 1,000 or fewer.
++    start: "2026-11-21"
++    targetPercent: 100
++    milestones: [{name: half, targetPercent: 50}]
++    includes: [{scorecard: small-go-files-campaign, atLeast: bronze}]
+diff --git a/.toolbox/go-file-lines.py b/.toolbox/go-file-lines.py
+new file mode 100644
+index 0000000..b6892df
+--- /dev/null
++++ b/.toolbox/go-file-lines.py
+@@ -0,0 +1,25 @@
++#!/usr/bin/env python3
++"""Emit one Toolbox connector record per Go file (tracked or untracked, not ignored).
++
++Used by the `sizes` runner job in .toolbox/toolbox.yaml. It only measures; the standard (threshold,
++exemptions) lives in the manifest. `lineNumbers` lets a rule's evidence hold one item per line over
++the limit, so the ratchet sees a violating file grow or shrink by a single line.
++"""
++import json
++import subprocess
++import sys
++
++paths = subprocess.run(
++    ["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z", "--", "*.go"],
++    check=True, capture_output=True,
++).stdout.decode().split("\0")
++
++for path in sorted(p for p in paths if p.endswith(".go")):
++    try:
++        with open(path, "rb") as f:
++            lines = len(f.read().splitlines())
++    except FileNotFoundError:  # deleted in the working tree but still in the index
++        continue
++    record = {"type": "record", "kind": "go-file", "externalId": path,
++              "data": {"path": path, "lines": lines, "lineNumbers": list(range(1, lines + 1))}}
++    sys.stdout.write(json.dumps(record, separators=(",", ":")) + "\n")
+diff --git a/.toolbox/toolbox.yaml b/.toolbox/toolbox.yaml
+new file mode 100644
+index 0000000..057c7d6
+--- /dev/null
++++ b/.toolbox/toolbox.yaml
+@@ -0,0 +1,68 @@
++# OpenFGA coding standards, enforced (small Go files). See .toolbox/STANDARD.md.
++# Run from the repository root: toolbox report .toolbox --baseline .toolbox/results.json
++apiVersion: toolbox.dev/v1alpha1
++
++portal:
++  name: openfga
++  title: OpenFGA coding standards
++  owner: group:maintainers
++  toolbox: "0.1"
++
++connectors:
++  - name: sizes
++    package: builtin:runner
++    runtime: in-image
++    config:
++      name: sizes
++      root: .
++      jobs:
++        - name: go-files # one record per **/*.go: path, lines, lineNumbers
++          command: [python3, .toolbox/go-file-lines.py]
++          parse: ndjson
++          kinds: [go-file]
++    records: [go-file]
++    refresh: {go-file: [external_ids]}
++    freshness: {go-file: 5m}
++
++kinds:
++  - name: GoFile
++    identityFrom: [connector:sizes]
++    fields:
++      path: {type: string}
++      lines: {type: integer}
++      lineNumbers: {type: list, items: integer}
++    sources: {default: [connector:sizes]}
++    map:
++    - from: sizes/go-file
++      id: "'go-file:' + record.path"
++      set: "{'path': record.path, 'lines': record.lines, 'lineNumbers': record.lineNumbers}"
++
++scorecards:
++  - name: small-go-files
++    kind: GoFile
++    owner: group:maintainers
++    # Target Go files under 600 lines. Enforced at 1,000: a violation is a non-test .go file with
++    # more than 1,000 lines.
++    levels: [bronze]
++    # A new file (or a renamed one) must arrive at or under 1,000 lines: otherwise it is a regression.
++    ratchet: {newEntitiesAtLeast: bronze}
++    # Exempt: Go test files (*_test.go) and the explicit list below.
++    appliesTo: >-
++      !(entity.path.endsWith('_test.go') || entity.path in [])
++    rules:
++    - name: at-most-1000-lines
++      level: bronze
++      check: entity.lines <= 1000
++      # The line count first, then one item per line over 1,000: the ratchet compares evidence
++      # counts, so growing by one line is a regression and shrinking by one an improvement.
++      evidence: >-
++        [string(entity.lines) + ' lines (limit 1000)'] + entity.lineNumbers.filter(n, n > 1000).map(n,
++        'line ' + string(n))
++      fix: >-
++        Move code out of this file into a new file in the same package until it is at most 1,000
++        lines (target 600). Do not add new functionality to it.
++    facets: {summary: public, details: public}
++
++include:
++  # The campaign toward zero violating files, over the files that violated when it started.
++  - campaign.yaml

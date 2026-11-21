@@ -1,0 +1,415 @@
+diff --git a/.github/workflows/standards-module-size.yaml b/.github/workflows/standards-module-size.yaml
+new file mode 100644
+index 0000000..e01481b
+--- /dev/null
++++ b/.github/workflows/standards-module-size.yaml
+@@ -0,0 +1,35 @@
++name: standards-module-size
++
++# Go module-size ratchet. See .standards/STANDARD.md.
++on:
++  merge_group:
++  pull_request:
++
++permissions:
++  contents: read
++
++jobs:
++  gate:
++    name: Go module size ratchet
++    runs-on: ubuntu-latest
++    steps:
++      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
++        with:
++          ref: ${{ github.event.pull_request.head.sha || github.sha }}
++          fetch-depth: 0
++          persist-credentials: false
++
++      - name: Gate
++        env:
++          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
++        run: python3 .standards/module_size.py gate --base-ref "$BASE_SHA"
++
++      - name: Campaign progress
++        if: always()
++        run: |
++          {
++            echo '### Go module size'
++            echo '```'
++            python3 .standards/module_size.py campaign
++            echo '```'
++          } >> "$GITHUB_STEP_SUMMARY"
+diff --git a/.standards/STANDARD.md b/.standards/STANDARD.md
+new file mode 100644
+index 0000000..4b22b77
+--- /dev/null
++++ b/.standards/STANDARD.md
+@@ -0,0 +1,113 @@
++# Go module size
++
++**Rule:** keep Go files under **600** lines (the target). A non-test `.go` file over **1,000** lines
++is a violation. `_test.go` files are exempt. Adapted from the Codex repository's S2 "small Rust
++modules" standard; the script, ratchet and campaign logic are theirs, retargeted to Go.
++
++## The rule as enforced
++
++| Item | Value |
++|---|---|
++| Scope | every `.go` file in the working tree (tracked, plus untracked files that are not git-ignored), from the repository root (`root` in `module-size-config.json`) |
++| Measure | every line of the file (newline count, plus an unterminated last line); comments, blanks and generated code count |
++| Violation | more than **1000** lines (`threshold` in [`module-size-config.json`](./module-size-config.json)). 600 is the target, not a violation |
++| Exempt (tests) | files whose name ends in `_test.go`. Test helpers without that suffix (for example `tests/check/*.go`, `pkg/storage/test/*.go`) are **not** exempt |
++| Exempt (explicit) | paths listed under `exempt` in `module-size-config.json`, each with a reason |
++
++Generated files count too: `internal/mocks/mock_storage.go` (mockgen) is in the baseline. If an
++interface change regenerates it larger, the gate fails; exempt it explicitly (below) or split the
++interface rather than absorb the growth.
++
++**Ratchet:** a file already over 1,000 lines may not grow; a file at or under 1,000 may not cross
++1,000. The allowed sizes live in [`module-size-baseline.json`](./module-size-baseline.json). In CI the
++gate also fails if the baseline itself was loosened (a file added, or an allowance raised) relative to
++the base commit, so the baseline can only tighten.
++
++## Commands
++
++Run from the repository root. Only Python 3 and git are needed (no Go toolchain).
++
++**Report**: every violating file as JSON, largest first:
++
++```sh
++python3 .standards/module_size.py report
++```
++
++Output: `[{"file": "pkg/storage/test/tuples.go", "lines": 2551}, ...]`.
++
++**Gate**: exits 1 if a violating file grew or a file newly crossed 1,000 lines, 0 otherwise. It
++prints `note: SHRANK` / `note: FIXED` when a file shrank or dropped to 1,000 or below, which means the
++baseline can be tightened:
++
++```sh
++python3 .standards/module_size.py gate
++```
++
++CI ([`.github/workflows/standards-module-size.yaml`](../.github/workflows/standards-module-size.yaml))
++runs it on every pull request and merge-group run with `--base-ref <base sha>`, which adds the
++baseline-loosening check:
++
++```sh
++python3 .standards/module_size.py gate --base-ref origin/main
++```
++
++**Campaign**: progress toward zero violating files:
++
++```sh
++python3 .standards/module_size.py campaign          # text
++python3 .standards/module_size.py campaign --json   # machine-readable
++```
++
++It prints the campaign's starting number of files (`campaign_start` in the baseline), the current
++number, and the percentage done, `(start - current) / start`. CI writes it to the job summary.
++
++**Current campaign: 15 files over 1,000 lines** (`campaign_start: 15`), 0% done, 6,907 lines over
++the threshold in total.
++
++## Updating the baseline
++
++After you shrink or split a file (the gate prints `note:` lines), tighten the baseline in the same
++pull request:
++
++```sh
++python3 .standards/module_size.py update-baseline
++git add .standards/module-size-baseline.json
++```
++
++`update-baseline` records every current violation at its current size and keeps `campaign_start`, so
++the campaign percentage is not reset. Never run it to absorb growth: CI rejects a baseline that
++loosened against the base commit.
++
++**Renames:** moving a violating file to a new path shows as `NEW VIOLATION` (and the old path as
++`FIXED`). Split the file while you move it, or add an explicit exemption with a reason.
++
++## Changing the standard
++
++Changes to the standard are changes to `.standards/`; review them like code.
++
++- **Change the threshold:** edit `threshold` in `module-size-config.json`, then run
++  `update-baseline` and commit both. The gate fails while the config and baseline thresholds differ.
++  Lowering the threshold adds files to the baseline, so CI's loosening check fails on that PR; that
++  is expected and reviewers should approve it deliberately. To restart the campaign from the new
++  number, delete `campaign_start` from the baseline before `update-baseline`; to keep progress, set it
++  to the old start plus the number of files the change added.
++- **Exempt a file:** add it to `exempt` in `module-size-config.json` with a reason, then run
++  `update-baseline`:
++
++  ```json
++  "exempt": {
++    "internal/mocks/mock_storage.go": "generated by mockgen (make generate-mocks); not hand-edited"
++  }
++  ```
++
++- **Change the test exemption or line counting:** edit `is_test_file` or `count_lines` in
++  `module_size.py` and update the table above.
++
++## Files
++
++| File | Purpose |
++|---|---|
++| `.standards/module_size.py` | report, gate, campaign and update-baseline |
++| `.standards/module-size-config.json` | threshold, scope root, explicit exemptions |
++| `.standards/module-size-baseline.json` | ratchet: allowed size of each existing violation, plus `campaign_start` |
++| `.github/workflows/standards-module-size.yaml` | runs the gate on pull requests and merge groups |
+diff --git a/.standards/module-size-baseline.json b/.standards/module-size-baseline.json
+new file mode 100644
+index 0000000..7839a92
+--- /dev/null
++++ b/.standards/module-size-baseline.json
+@@ -0,0 +1,22 @@
++{
++  "standard": "Go module size",
++  "threshold": 1000,
++  "files": {
++    "cmd/run/run.go": 1270,
++    "internal/check/check.go": 1142,
++    "internal/graph/check.go": 1112,
++    "internal/mocks/mock_storage.go": 1045,
++    "pkg/server/server.go": 1219,
++    "pkg/server/test/reverse_expand.go": 1366,
++    "pkg/storage/postgres/postgres.go": 1429,
++    "pkg/storage/sqlcommon/sqlcommon.go": 1198,
++    "pkg/storage/sqlite/sqlite.go": 1390,
++    "pkg/storage/test/tuples.go": 2551,
++    "pkg/typesystem/typesystem.go": 1669,
++    "tests/check/check.go": 1410,
++    "tests/check/check_ttu.go": 1217,
++    "tests/check/check_userset.go": 2033,
++    "tests/listobjects/matrix_usersets.go": 1856
++  },
++  "campaign_start": 15
++}
+diff --git a/.standards/module-size-config.json b/.standards/module-size-config.json
+new file mode 100644
+index 0000000..dd1d871
+--- /dev/null
++++ b/.standards/module-size-config.json
+@@ -0,0 +1,6 @@
++{
++  "standard": "Go module size: target under 600 lines; non-test .go files over 1,000 lines violate",
++  "threshold": 1000,
++  "root": ".",
++  "exempt": {}
++}
+diff --git a/.standards/module_size.py b/.standards/module_size.py
+new file mode 100644
+index 0000000..4ba5a39
+--- /dev/null
++++ b/.standards/module_size.py
+@@ -0,0 +1,209 @@
++#!/usr/bin/env python3
++"""Go module-size standard: report, ratchet gate and campaign tracker.
++
++Run from the repository root:
++
++    python3 .standards/module_size.py report            # violating files as JSON
++    python3 .standards/module_size.py gate              # ratchet check (exit 1 on regression)
++    python3 .standards/module_size.py campaign          # progress toward zero violations
++    python3 .standards/module_size.py update-baseline   # rewrite the baseline from the tree
++
++See .standards/STANDARD.md for the rules and how to change them.
++"""
++
++from __future__ import annotations
++
++import argparse
++import json
++import subprocess
++import sys
++from pathlib import Path, PurePosixPath
++
++HERE = Path(__file__).resolve().parent
++REPO_ROOT = HERE.parent
++CONFIG_PATH = HERE / "module-size-config.json"
++BASELINE_PATH = HERE / "module-size-baseline.json"
++
++
++def load_json(path: Path) -> dict:
++    with path.open(encoding="utf-8") as f:
++        return json.load(f)
++
++
++def load_config() -> dict:
++    cfg = load_json(CONFIG_PATH)
++    cfg.setdefault("threshold", 1000)
++    cfg.setdefault("root", ".")
++    cfg.setdefault("exempt", {})
++    return cfg
++
++
++def count_lines(data: bytes) -> int:
++    """Every line of the file: newline count, plus an unterminated last line."""
++    n = data.count(b"\n")
++    if data and not data.endswith(b"\n"):
++        n += 1
++    return n
++
++
++def is_test_file(path: str) -> bool:
++    return PurePosixPath(path).name.endswith("_test.go")
++
++
++def list_go_files(root: str) -> list[str]:
++    """Tracked plus untracked-but-not-ignored .go files under root, in the working tree."""
++    out = subprocess.run(
++        ["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard", "--", root],
++        cwd=REPO_ROOT, check=True, capture_output=True,
++    ).stdout
++    files = {f for f in out.decode("utf-8").split("\0") if f.endswith(".go")}
++    return sorted(f for f in files if (REPO_ROOT / f).is_file())
++
++
++def violations(cfg: dict) -> dict[str, int]:
++    """Map of violating file -> line count for the current working tree."""
++    result = {}
++    exempt = cfg["exempt"]
++    for f in list_go_files(cfg["root"]):
++        if is_test_file(f) or f in exempt:
++            continue
++        n = count_lines((REPO_ROOT / f).read_bytes())
++        if n > cfg["threshold"]:
++            result[f] = n
++    return result
++
++
++def load_baseline() -> dict:
++    if not BASELINE_PATH.exists():
++        sys.exit(f"error: no baseline at {BASELINE_PATH.relative_to(REPO_ROOT)}; "
++                 "run `python3 .standards/module_size.py update-baseline`")
++    return load_json(BASELINE_PATH)
++
++
++def baseline_at_ref(ref: str) -> dict | None:
++    rel = BASELINE_PATH.relative_to(REPO_ROOT).as_posix()
++    r = subprocess.run(["git", "show", f"{ref}:{rel}"], cwd=REPO_ROOT, capture_output=True)
++    if r.returncode != 0:
++        return None
++    return json.loads(r.stdout)
++
++
++def cmd_report(args, cfg) -> int:
++    v = violations(cfg)
++    rows = [{"file": f, "lines": n} for f, n in sorted(v.items(), key=lambda kv: (-kv[1], kv[0]))]
++    print(json.dumps(rows, indent=2))
++    return 0
++
++
++def cmd_gate(args, cfg) -> int:
++    base = load_baseline()
++    threshold = cfg["threshold"]
++    failures, notes = [], []
++
++    if base.get("threshold") != threshold:
++        failures.append(f"baseline was recorded at threshold {base.get('threshold')} but the config "
++                        f"says {threshold}; run update-baseline and commit it with the config change")
++
++    allowed: dict[str, int] = base.get("files", {})
++    current = violations(cfg)
++
++    for f, n in sorted(current.items()):
++        if f not in allowed:
++            failures.append(f"NEW VIOLATION {f}: {n} lines (limit {threshold}); split it into modules")
++        elif n > allowed[f]:
++            failures.append(f"GREW {f}: {allowed[f]} -> {n} lines (+{n - allowed[f]}); "
++                            "add new functionality in a new module instead")
++        elif n < allowed[f]:
++            notes.append(f"SHRANK {f}: {allowed[f]} -> {n} lines")
++    for f, n in sorted(allowed.items()):
++        if f not in current:
++            path = REPO_ROOT / f
++            if not path.is_file():
++                notes.append(f"FIXED {f}: removed or renamed (was {n} lines)")
++            elif f in cfg["exempt"]:
++                notes.append(f"FIXED {f}: now exempt in module-size-config.json (was {n} lines)")
++            else:
++                now = count_lines(path.read_bytes())
++                notes.append(f"FIXED {f}: {n} -> {now} lines, at or under {threshold}")
++
++    # The baseline itself must only tighten relative to the base branch.
++    if args.base_ref:
++        old = baseline_at_ref(args.base_ref)
++        if old is not None:
++            old_files = old.get("files", {})
++            for f, n in sorted(allowed.items()):
++                if f not in old_files:
++                    failures.append(f"BASELINE LOOSENED: {f} added to the baseline ({n} lines)")
++                elif n > old_files[f]:
++                    failures.append(f"BASELINE LOOSENED: {f} raised {old_files[f]} -> {n}")
++
++    tightenable = bool(notes)
++    if args.base_ref and baseline_at_ref(args.base_ref) is None:
++        notes.append(f"no baseline at {args.base_ref}; skipped the baseline-loosening check")
++    for line in notes:
++        print(f"note: {line}")
++    if tightenable:
++        print("note: the baseline can be tightened: "
++              "python3 .standards/module_size.py update-baseline")
++    for line in failures:
++        print(f"FAIL: {line}")
++    if failures:
++        print(f"Module-size gate failed: {len(failures)} problem(s). See .standards/STANDARD.md.")
++        return 1
++    print(f"Module-size gate passed: {len(current)} violating file(s), none grew, none new "
++          f"(baseline {len(allowed)}).")
++    return 0
++
++
++def cmd_campaign(args, cfg) -> int:
++    base = load_baseline()
++    # Measure against the campaign start so that tightening the baseline keeps the progress.
++    base_n = base.get("campaign_start", len(base.get("files", {})))
++    cur = violations(cfg)
++    cur_n = len(cur)
++    pct = 100.0 if base_n == 0 else max(0.0, (base_n - cur_n) / base_n * 100)
++    excess = sum(n - cfg["threshold"] for n in cur.values())
++    data = {"baseline_files": base_n, "current_files": cur_n, "fixed": base_n - cur_n,
++            "percent_done": round(pct, 1), "lines_over_threshold": excess,
++            "threshold": cfg["threshold"]}
++    if args.json:
++        print(json.dumps(data, indent=2))
++    else:
++        print(f"Go module size (>{cfg['threshold']} lines)")
++        print(f"baseline: {base_n} files")
++        print(f"current:  {cur_n} files")
++        print(f"done:     {data['percent_done']}% ({data['fixed']} fixed, {cur_n} to go)")
++        print(f"excess:   {excess} lines over the threshold in violating files")
++    return 0
++
++
++def cmd_update_baseline(args, cfg) -> int:
++    cur = violations(cfg)
++    data = {"standard": "Go module size", "threshold": cfg["threshold"],
++            "files": dict(sorted(cur.items()))}
++    if BASELINE_PATH.exists() and "campaign_start" in (old := load_json(BASELINE_PATH)):
++        data["campaign_start"] = old["campaign_start"]
++    else:
++        data["campaign_start"] = len(cur)
++    BASELINE_PATH.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
++    print(f"wrote {BASELINE_PATH.relative_to(REPO_ROOT)}: {len(cur)} file(s)")
++    return 0
++
++
++def main() -> int:
++    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
++    sub = ap.add_subparsers(dest="cmd", required=True)
++    sub.add_parser("report", help="print violating files as JSON")
++    g = sub.add_parser("gate", help="fail if the ratchet is broken")
++    g.add_argument("--base-ref", help="also fail if the baseline loosened relative to this git ref")
++    c = sub.add_parser("campaign", help="print progress toward zero violations")
++    c.add_argument("--json", action="store_true", help="machine-readable output")
++    sub.add_parser("update-baseline", help="rewrite the baseline from the working tree")
++    args = ap.parse_args()
++    cfg = load_config()
++    return {"report": cmd_report, "gate": cmd_gate, "campaign": cmd_campaign,
++            "update-baseline": cmd_update_baseline}[args.cmd](args, cfg)
++
++
++if __name__ == "__main__":
++    sys.exit(main())

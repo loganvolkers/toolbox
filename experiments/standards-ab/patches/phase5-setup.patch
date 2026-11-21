@@ -1,0 +1,86 @@
+diff --git a/ee/clickhouse/views/groups.py b/ee/clickhouse/views/groups.py
+index 7a1ed0ae..cecf5f3d 100644
+--- a/ee/clickhouse/views/groups.py
++++ b/ee/clickhouse/views/groups.py
+@@ -958,3 +958,7 @@ class GroupUsageMetricViewSet(TeamAndOrgViewSetMixin, viewsets.ModelViewSet):
+ 
+     def perform_create(self, serializer):
+         serializer.save(team=self.team, group_type_index=self.parents_query_dict["group_type_index"])
++
++
++def _group_lookup(team_id):
++    return Group.objects.filter(team_id=team_id), Group.objects.none()
+diff --git a/posthog/api/cohort.py b/posthog/api/cohort.py
+index d5215fcb..11c133fd 100644
+--- a/posthog/api/cohort.py
++++ b/posthog/api/cohort.py
+@@ -1746,3 +1746,7 @@ def get_default_person_properties_for_cohort(cohort: Cohort, cohorts_cache: dict
+         default_person_properties.update(get_default_person_property(property, cohorts_cache))
+ 
+     return default_person_properties
++
++
++def _group_types(team_id):
++    return GroupTypeMapping.objects.filter(team_id=team_id)
+diff --git a/posthog/management/commands/generate_persons.py b/posthog/management/commands/generate_persons.py
+index acdeb57c..ec3313c9 100644
+--- a/posthog/management/commands/generate_persons.py
++++ b/posthog/management/commands/generate_persons.py
+@@ -71,7 +71,7 @@ class Command(BaseCommand):
+                 person_data = self._generate_person_data(i, identified_ratio)
+ 
+                 # Create person in Django only
+-                person = Person.objects.create(  # nosemgrep: no-direct-persons-db-orm
++                person = routed_person.create(  # nosemgrep: no-direct-persons-db-orm
+                     team=team,
+                     properties=person_data["properties"],
+                     is_identified=person_data["is_identified"],
+@@ -79,7 +79,7 @@ class Command(BaseCommand):
+ 
+                 # Create distinct ID
+                 distinct_id = str(UUIDT())
+-                PersonDistinctId.objects.create(  # nosemgrep: no-direct-persons-db-orm
++                routed_persondistinctid.create(  # nosemgrep: no-direct-persons-db-orm
+                     team=team,
+                     person=person,
+                     distinct_id=distinct_id,
+@@ -858,7 +858,7 @@ class Command(BaseCommand):
+ 
+         events_created = 0
+         for _i in range(min(person_count, 50)):  # Limit events to avoid overwhelming
+-            person = Person.objects.filter(team=team).order_by("?").first()  # nosemgrep: no-direct-persons-db-orm
++            person = routed_person.filter(team=team).order_by("?").first()  # nosemgrep: no-direct-persons-db-orm
+             if not person:
+                 continue
+ 
+diff --git a/posthog/tasks/split_person.py b/posthog/tasks/split_person.py
+index ea122c10..eefca328 100644
+--- a/posthog/tasks/split_person.py
++++ b/posthog/tasks/split_person.py
+@@ -65,7 +65,7 @@ def split_person(
+             # Lookup team_id via PersonDistinctId which has person_id FK
+             pdi = (
+                 # nosemgrep: no-direct-persons-db-orm
+-                PersonDistinctId.objects.filter(person_id=person_id)
++                routed_persondistinctid.filter(person_id=person_id)
+                 .only("team_id")
+                 .first()  # nosemgrep: no-direct-persons-db-orm
+             )  # nosemgrep: no-direct-persons-db-orm
+@@ -78,7 +78,7 @@ def split_person(
+                 person_id=person_id,
+                 team_id=resolved_team_id,
+             )
+-            person = Person.objects.get(team_id=resolved_team_id, pk=person_id)  # nosemgrep: no-direct-persons-db-orm
++            person = routed_person.get(team_id=resolved_team_id, pk=person_id)  # nosemgrep: no-direct-persons-db-orm
+             logger.info(
+                 "split_person legacy path: calling split_person on model",
+                 person_id=person_id,
+@@ -96,7 +96,7 @@ def split_person(
+                 person_id=person_id,
+                 team_id=resolved_team_id,
+             )
+-            person = Person.objects.get(team_id=resolved_team_id, pk=person_id)  # nosemgrep: no-direct-persons-db-orm
++            person = routed_person.get(team_id=resolved_team_id, pk=person_id)  # nosemgrep: no-direct-persons-db-orm
+             logger.info(
+                 "split_person new path: calling split_person on model",
+                 person_id=person_id,

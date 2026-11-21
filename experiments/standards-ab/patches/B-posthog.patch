@@ -1,0 +1,514 @@
+diff --git a/.github/workflows/toolbox-standards.yml b/.github/workflows/toolbox-standards.yml
+new file mode 100644
+index 00000000..aeb76aa5
+--- /dev/null
++++ b/.github/workflows/toolbox-standards.yml
+@@ -0,0 +1,53 @@
++# Enforces coding standards recorded in .toolbox/ (see .toolbox/STANDARD.md).
++# S1: no new direct ORM queries on person tables; existing ones are ratcheted down.
++name: Toolbox standards
++
++on:
++  pull_request:
++  push:
++    branches: [master]
++  workflow_dispatch:
++
++permissions:
++  contents: read
++
++concurrency:
++  group: toolbox-standards-${{ github.ref }}
++  cancel-in-progress: true
++
++jobs:
++  s1-person-orm:
++    name: S1 person-table ORM ratchet
++    runs-on: ubuntu-latest
++    timeout-minutes: 10
++    steps:
++      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
++        with:
++          persist-credentials: false
++
++      # Installs released, checksum-verified toolbox binaries and runs Toolbox's own ratchet
++      # (`check` mode: fail on regressions only; a stale baseline is reported, not failed).
++      # It annotates the PR with each file whose violation count grew and uploads the HTML report.
++      - name: Toolbox report (ratchet)
++        # TODO(platform): pin to the commit SHA of v0.1.1, as the other workflows here pin actions.
++        uses: loganvolkers/toolbox/actions/report@v0.1.1
++        with:
++          toolbox-version: "0.1.1"
++          portal: .toolbox
++          baseline: .toolbox/results.json
++          mode: check
++
++      # The S1 gate: the ratchet above plus new files with violations (which Toolbox reports
++      # as a change, not a regression). Also says when the baseline can be tightened.
++      - name: S1 gate
++        if: always()
++        run: |
++          export PATH="$RUNNER_TEMP/toolbox-bin:$PATH"
++          .toolbox/s1.sh gate
++
++      - name: S1 campaign progress
++        if: always()
++        run: |
++          export PATH="$RUNNER_TEMP/toolbox-bin:$PATH"
++          { echo '### S1 campaign: person-table ORM queries to zero'; echo '```json'
++            .toolbox/s1.sh campaign; echo '```'; } | tee -a "$GITHUB_STEP_SUMMARY"
+diff --git a/.toolbox/STANDARD.md b/.toolbox/STANDARD.md
+new file mode 100644
+index 00000000..070084ab
+--- /dev/null
++++ b/.toolbox/STANDARD.md
+@@ -0,0 +1,94 @@
++# S1: no direct ORM queries on person tables
++
++**The standard.** From [AGENTS.md](../AGENTS.md): never add new direct ORM queries like
++`Person.objects.filter(...)` or `PersonDistinctId.objects.filter(...)`. The team extends this to the
++group tables (`Group`, `GroupTypeMapping`), see *History*. Use the existing routed helpers
++in `posthog/models/person/util.py`, or add a new one there following the established pattern.
++
++| | |
++|---|---|
++| **Violation** | Each occurrence of `Person.objects`, `PersonDistinctId.objects`, `CohortPeople.objects`, `Group.objects` or `GroupTypeMapping.objects` in a Python file (comments and strings included: the check is textual) |
++| **Exempt** | Test files: anything under a `test/` or `tests/` directory, `test_*.py`, `*_test.py`, `conftest.py`. The routed helpers: `posthog/models/person/util.py`, `posthog/models/group_type_mapping.py`. The model module `posthog/models/person/person.py`: its managers back the routed helpers |
++| **Enforced by** | A ratchet: the violations recorded in `.toolbox/results.json` may only go down. A new file with violations, or more violations in a file than recorded, fails CI (`.github/workflows/toolbox-standards.yml`) |
++| **Goal** | Zero. Progress is the `person-orm-zero` campaign |
++
++It is a [Toolbox](https://github.com/loganvolkers/toolbox) repo portal: `toolbox report` scores every
++Python file against the `person-orm` scorecard in `.toolbox/toolbox.yaml`, and `.toolbox/s1.sh` shapes
++that into the commands below.
++
++## Commands
++
++Run from the repository root, with `toolbox` (0.1.1) and `jq` on `PATH`. Each takes about 40 s
++(it reads every Python file).
++
++| What | Command | Output / exit code |
++|---|---|---|
++| **Report** | `.toolbox/s1.sh report` | JSON `[{"file": "<path>", "count": <n>}, ...]`, most violations first |
++| **Gate** | `.toolbox/s1.sh gate` | Exit 1 on a new file with violations or a file with more than recorded; exit 0 otherwise. Says when violations went down |
++| **Campaign** | `.toolbox/s1.sh campaign` | JSON: `baseline` (count when the campaign started), `current`, `percentDone`, and the same per file |
++| Update the baseline | `.toolbox/s1.sh update` | Rewrites `.toolbox/results.json`; refuses if anything regressed |
++| Full scorecard (Markdown or HTML) | `toolbox report .toolbox` / `toolbox report .toolbox -o html --out s1.html` | Every file's level with evidence for failing ones; the HTML page also shows the campaign |
++
++## After fixing violations
++
++1. Run `.toolbox/s1.sh gate`. It prints `✓ better … evidence shrank 10 → 9` for each improved file and
++   `S1 violations went down. Tighten the baseline`.
++2. Run `.toolbox/s1.sh update` and commit `.toolbox/results.json` with the fix.
++
++`results.json` is generated: never hand-edit or hand-merge it. On a merge conflict, take the target
++branch's copy and rerun `.toolbox/s1.sh update`. Review its diff: `update` also records any new file's
++violations as allowed (Toolbox treats a new file as a change, not a regression), so run `gate` first
++and only update on a tree that passes it.
++
++The campaign's starting point is `.toolbox/s1-campaign-start.json` (102 violations in 37 files on
++2026-11-21, recorded after the Group/GroupTypeMapping change, see *History*). Don't change it during
++the campaign. To start a new campaign, run
++`.toolbox/s1.sh campaign-start` and update the `start` date of `person-orm-zero` in `toolbox.yaml`.
++
++## Changing the standard
++
++All of it lives in `.toolbox/toolbox.yaml`; after any change run `toolbox validate .toolbox`, then
++`.toolbox/s1.sh update`, and commit both files (plus this one) in one change that the owning team reviews.
++
++- **Add a model** (e.g. `PersonOverride`): add it to the alternation in the connector's `counts.personOrm`
++  regex, `'\b(?:Person|PersonDistinctId|CohortPeople|Group|GroupTypeMapping|PersonOverride)\.objects\b'`,
++  to the rule's `evidence` label and `fix`, the campaign `description`, the gate message in `s1.sh`,
++  and the *Violation* row above. Existing uses then count as regressions (a file that passed now
++  fails, a violating file's count grows), so `s1.sh update` refuses. To record them, reset the
++  baseline: `rm .toolbox/results.json && .toolbox/s1.sh update`, run `gate` (it must pass) and review
++  the diff: it must change only files that use the new model, or that you exempted. Then decide the
++  campaign's starting point (see *History*). New uses after the change fail the gate.
++- **Add an exempt file** (a new routed helper): add its path to the `entity.path in [...]` list in the
++  `File` kind's `s1Exempt` field (put the reason in the field's `description`: a `#` line inside the
++  `computed` block would become part of the CEL expression), and to the *Exempt* row above. The gate
++  reports the file as `✓ better … now passes`; `s1.sh update` records it.
++- **Add an exempt pattern** (e.g. a directory): add a `|| entity.path.matches('<regex>')` clause to
++  `s1Exempt`. Exempt files are `skipped` by the scorecard, so they are neither gated nor counted.
++- **Scope**: the connector reads `files: ["**/*.py"]` (8,947 files here, the same as `git ls-files '*.py'`).
++
++## Limits
++
++- One evidence item is generated per occurrence, up to 200 per file (a CEL list literal, because
++  Toolbox captures are de-duplicated). A file with more than 200 occurrences would be counted as 200.
++- The baseline records every Python file (about 9,000 entries, ~1 MB), because Toolbox records every
++  scored entity. A new file without violations does not fail the gate, but makes `results.json`
++  out of date; refresh it with `.toolbox/s1.sh update` whenever convenient.
++
++## History
++
++**2026-11-21: group tables added, the person model module exempted.** `Group.objects` and
++`GroupTypeMapping.objects` became violations, and `posthog/models/person/person.py` was exempted (the
++model module; its managers back the routed helpers). Because the update refuses to record the new
++models' existing uses, the baseline was reset (deleted and regenerated). Net effect on the Report:
++80 violations in 28 files became 102 in 37: +32 new-model uses (10 newly violating files, 4 files
++with more), and -10 from exempting `person.py`.
++
++The campaign was restarted from this state (`.toolbox/s1-campaign-start.json` rewritten with
++`s1.sh campaign-start`; the `start` date in `toolbox.yaml` stays 2026-11-21). Why: the campaign had
++started the same day and nothing was fixed yet (80 of 80 left), so nothing was lost. Keeping the old
++starting point would have mixed two definitions: `campaign` compares today's total (new models
++included, `person.py` excluded) with the old start total, so it would have shown -27.5 % done, and
++later fixes to group queries would have counted against a baseline that never included them. The
++old starting point was 80 violations in 28 files. Note that `posthog/models/group/util.py` (5) and
++`posthog/models/group/group.py` (1) now count as violations: if they are the routed helpers for
++groups, exempt them like `person/util.py` (a decision for the owning team).
+diff --git a/.toolbox/s1-campaign-start.json b/.toolbox/s1-campaign-start.json
+new file mode 100644
+index 00000000..0ec55a5b
+--- /dev/null
++++ b/.toolbox/s1-campaign-start.json
+@@ -0,0 +1,153 @@
++{
++  "started": "2026-11-21",
++  "files": [
++    {
++      "file": "posthog/demo/matrix/manager.py",
++      "count": 9
++    },
++    {
++      "file": "ee/clickhouse/views/groups.py",
++      "count": 5
++    },
++    {
++      "file": "posthog/api/cohort.py",
++      "count": 5
++    },
++    {
++      "file": "posthog/management/commands/setup_orphan_test_data.py",
++      "count": 5
++    },
++    {
++      "file": "posthog/models/cohort/cohort.py",
++      "count": 5
++    },
++    {
++      "file": "posthog/models/cohort/util.py",
++      "count": 5
++    },
++    {
++      "file": "posthog/models/group/util.py",
++      "count": 5
++    },
++    {
++      "file": "posthog/management/commands/export_distinct_ids.py",
++      "count": 4
++    },
++    {
++      "file": "posthog/models/team/util.py",
++      "count": 4
++    },
++    {
++      "file": "posthog/tasks/verify_persons_data_in_sync.py",
++      "count": 4
++    },
++    {
++      "file": "ee/hogai/eval/data_setup.py",
++      "count": 3
++    },
++    {
++      "file": "posthog/management/commands/generate_persons.py",
++      "count": 3
++    },
++    {
++      "file": "posthog/management/commands/sync_persons_to_clickhouse.py",
++      "count": 3
++    },
++    {
++      "file": "posthog/models/person/bulk_delete.py",
++      "count": 3
++    },
++    {
++      "file": "posthog/queries/actor_base_query.py",
++      "count": 3
++    },
++    {
++      "file": "posthog/tasks/split_person.py",
++      "count": 3
++    },
++    {
++      "file": "products/feature_flags/backend/flag_matching.py",
++      "count": 3
++    },
++    {
++      "file": "posthog/api/person.py",
++      "count": 2
++    },
++    {
++      "file": "posthog/async_migrations/migrations/0005_person_replacing_by_version.py",
++      "count": 2
++    },
++    {
++      "file": "posthog/demo/legacy/data_generator.py",
++      "count": 2
++    },
++    {
++      "file": "posthog/management/commands/fix_future_person_created_at.py",
++      "count": 2
++    },
++    {
++      "file": "posthog/management/commands/generate_random_product_tours.py",
++      "count": 2
++    },
++    {
++      "file": "posthog/management/commands/generate_random_surveys.py",
++      "count": 2
++    },
++    {
++      "file": "posthog/migrations/0501_create_group_billing_team.py",
++      "count": 2
++    },
++    {
++      "file": "posthog/migrations/1095_create_group_clickhouse_team.py",
++      "count": 2
++    },
++    {
++      "file": "posthog/models/person/deletion.py",
++      "count": 2
++    },
++    {
++      "file": "products/mcp_analytics/backend/management/commands/seed_mcp_sessions.py",
++      "count": 2
++    },
++    {
++      "file": "ee/hogai/eval/offline/snapshot_loader.py",
++      "count": 1
++    },
++    {
++      "file": "posthog/admin/admins/organization_admin.py",
++      "count": 1
++    },
++    {
++      "file": "posthog/management/commands/split_person.py",
++      "count": 1
++    },
++    {
++      "file": "posthog/models/event/util.py",
++      "count": 1
++    },
++    {
++      "file": "posthog/models/group/group.py",
++      "count": 1
++    },
++    {
++      "file": "posthog/personhog_client/converters.py",
++      "count": 1
++    },
++    {
++      "file": "posthog/queries/base.py",
++      "count": 1
++    },
++    {
++      "file": "posthog/session_recordings/models/session_recording.py",
++      "count": 1
++    },
++    {
++      "file": "posthog/tasks/usage_report.py",
++      "count": 1
++    },
++    {
++      "file": "posthog/temporal/usage_report/queries.py",
++      "count": 1
++    }
++  ]
++}
+diff --git a/.toolbox/s1.sh b/.toolbox/s1.sh
+new file mode 100755
+index 00000000..361c6de4
+--- /dev/null
++++ b/.toolbox/s1.sh
+@@ -0,0 +1,98 @@
++#!/usr/bin/env bash
++# S1 (no direct ORM queries on person tables): report, gate, campaign and baseline update.
++# The rule itself lives in .toolbox/toolbox.yaml and is scored by `toolbox report`; this script
++# only runs it and shapes the output. Run from the repository root. See .toolbox/STANDARD.md.
++#
++#   .toolbox/s1.sh report     every violation by file, as JSON [{"file", "count"}]
++#   .toolbox/s1.sh gate       exit 1 on a violation the baseline doesn't allow; says what went down
++#   .toolbox/s1.sh campaign   baseline (campaign start) count, current count, percent done
++#   .toolbox/s1.sh update     record improvements in .toolbox/results.json (refuses on regressions)
++#   .toolbox/s1.sh campaign-start   once per campaign: record its starting point
++set -euo pipefail
++
++PORTAL=.toolbox
++BASELINE=.toolbox/results.json
++CARD=person-orm
++RULE=no-direct-person-orm
++START=.toolbox/s1-campaign-start.json
++
++command -v toolbox >/dev/null || { echo "toolbox not on PATH" >&2; exit 2; }
++command -v jq >/dev/null || { echo "jq not on PATH" >&2; exit 2; }
++[ -f "$PORTAL/toolbox.yaml" ] || { echo "run from the repository root ($PORTAL/toolbox.yaml not found)" >&2; exit 2; }
++
++tmp=$(mktemp -d)
++trap 'rm -rf "$tmp"' EXIT
++
++# {"file": count} for a toolbox-report/v1 document (a report or the baseline).
++by_file='(.results[$card] // {}) | to_entries
++  | map(select(.value.failing[$rule] != null)
++        | {file: (.key | ltrimstr("file:")), count: .value.failing[$rule]})
++  | sort_by(-.count, .file)'
++
++case "${1:-}" in
++  report)
++    toolbox report "$PORTAL" -o json --out "$tmp/current.json" >/dev/null
++    jq --arg card "$CARD" --arg rule "$RULE" "$by_file" "$tmp/current.json"
++    ;;
++
++  gate)
++    rc=0
++    # Toolbox's ratchet: more violations in a file than recorded is a regression (exit 1).
++    toolbox report "$PORTAL" --baseline "$BASELINE" --verdict "$tmp/verdict.json" \
++      -o json --out "$tmp/current.json" >"$tmp/ratchet.log" 2>&1 || rc=$?
++    grep -E '^(✗|✓|·|baseline:)' "$tmp/ratchet.log" || true
++    [ -f "$tmp/verdict.json" ] || { cat "$tmp/ratchet.log" >&2; exit 2; }
++    # Toolbox reports a new failing entity as a change, not a regression, so files the baseline
++    # does not record as violating (new files, files that were passing or exempt) are checked here.
++    jq -n --arg card "$CARD" --arg rule "$RULE" \
++      --slurpfile b "$BASELINE" --slurpfile c "$tmp/current.json" '
++      ($b[0].results[$card] // {}) as $base
++      | ($c[0].results[$card] // {}) | to_entries
++      | map(select(.value.failing[$rule] != null and ($base[.key].failing[$rule] == null)))
++      | .[] | "✗ new     \(.key | ltrimstr("file:")): \(.value.failing[$rule]) violation(s), none allowed"
++      ' -r >"$tmp/new.txt"
++    if [ -s "$tmp/new.txt" ]; then cat "$tmp/new.txt"; rc=1; fi
++    if [ "$(jq '.improvements | length' "$tmp/verdict.json")" -gt 0 ]; then
++      echo "S1 violations went down. Tighten the baseline: .toolbox/s1.sh update, then commit $BASELINE"
++    fi
++    if [ "$rc" -ne 0 ]; then
++      echo "S1 gate FAILED: direct Person/PersonDistinctId/CohortPeople/Group/GroupTypeMapping .objects queries added." \
++        "Use the routed helpers in posthog/models/person/util.py (see .toolbox/STANDARD.md)."
++    else
++      echo "S1 gate passed."
++    fi
++    exit "$rc"
++    ;;
++
++  campaign)
++    # Progress is measured from the campaign's start (.toolbox/s1-campaign-start.json, written once
++    # when the campaign began), not from results.json, which tightens with every fix.
++    toolbox report "$PORTAL" -o json --out "$tmp/current.json" >/dev/null
++    jq -n --arg card "$CARD" --arg rule "$RULE" \
++      --slurpfile s "$START" --slurpfile c "$tmp/current.json" "
++      (\$c[0] | $by_file) as \$cf
++      | (\$s[0].files | map(.count) | add // 0) as \$base
++      | (\$cf | map(.count) | add // 0) as \$cur
++      | {campaign: \"person-orm-zero\", started: \$s[0].started,
++         baseline: \$base, current: \$cur,
++         baselineFiles: (\$s[0].files | length), currentFiles: (\$cf | length),
++         percentDone: (if \$base == 0 then 100 else (((\$base - \$cur) * 1000 / \$base) | round) / 10 end)}"
++    ;;
++
++  campaign-start)
++    # Once, when a campaign begins: record today's violations as its starting point.
++    toolbox report "$PORTAL" -o json --out "$tmp/current.json" >/dev/null
++    jq --arg card "$CARD" --arg rule "$RULE" --arg today "$(date -u +%F)" \
++      "{started: \$today, files: ($by_file)}" "$tmp/current.json" >"$START"
++    echo "wrote $START"
++    ;;
++
++  update)
++    toolbox report "$PORTAL" --baseline "$BASELINE" --update -o json --out "$tmp/current.json"
++    ;;
++
++  *)
++    sed -n '2,10p' "$0" >&2
++    exit 2
++    ;;
++esac
+diff --git a/.toolbox/toolbox.yaml b/.toolbox/toolbox.yaml
+new file mode 100644
+index 00000000..ec69a1ca
+--- /dev/null
++++ b/.toolbox/toolbox.yaml
+@@ -0,0 +1,86 @@
++# S1: no direct ORM queries on person tables (see STANDARD.md).
++# Scored by `toolbox report .toolbox`; ratcheted against .toolbox/results.json.
++apiVersion: toolbox.dev/v1alpha1
++
++portal:
++  name: posthog-standards
++  title: PostHog coding standards
++  owner: group:maintainers
++  toolbox: "0.1"
++
++connectors:
++  - name: workspace
++    package: builtin:workspace # reads the checkout; no network, no build
++    runtime: in-image
++    config:
++      root: .
++      files: ["**/*.py"]
++      counts:
++        # S1 models. To add a model, add it to the alternation here (and in STANDARD.md).
++        personOrm: '\b(?:Person|PersonDistinctId|CohortPeople|Group|GroupTypeMapping)\.objects\b'
++    records: [file]
++    refresh: {file: [external_ids]}
++    freshness: {file: 5m}
++
++kinds:
++  - name: File
++    description: A Python file in the checkout, with S1 violation counts.
++    identityFrom: [connector:workspace]
++    fields:
++      path: {type: string}
++      counts: {type: object}
++      s1Exempt:
++        type: boolean
++        description: >-
++          Exempt from S1: test files, the routed helpers allowed to query
++          person tables, and posthog/models/person/person.py (the model module;
++          its managers back the routed helpers).
++        computed: >-
++          entity.path.matches('(^|/)tests?/') ||
++          entity.path.matches('(^|/)test_[^/]*\\.py$') ||
++          entity.path.endsWith('_test.py') ||
++          entity.path.matches('(^|/)conftest\\.py$') ||
++          entity.path in ['posthog/models/person/util.py',
++                          'posthog/models/group_type_mapping.py',
++                          'posthog/models/person/person.py']
++    sources: {default: [connector:workspace]}
++    map:
++    - from: workspace/file
++      id: "'file:' + record.path"
++      set: "{'path': record.path, 'counts': record.counts}"
++
++scorecards:
++  - name: person-orm
++    kind: File
++    owner: group:maintainers
++    appliesTo: "!entity.s1Exempt"
++    levels: [bronze]
++    rules:
++    - name: no-direct-person-orm
++      level: bronze
++      check: entity.counts.personOrm == 0
++      # One evidence item per occurrence, so the ratchet compares counts per file
++      # (captures are de-duplicated, so they can't be used for this).
++      evidence: >-
++        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200].filter(i, i <= entity.counts.personOrm).map(i,
++        'direct Person/PersonDistinctId/CohortPeople/Group/GroupTypeMapping .objects query ' +
++        string(i) + ' of ' + string(entity.counts.personOrm))
++      fix: >-
++        Replace Person.objects / PersonDistinctId.objects / CohortPeople.objects /
++        Group.objects / GroupTypeMapping.objects with a routed helper from
++        posthog/models/person/util.py or posthog/models/group_type_mapping.py (or
++        add one there following the established pattern).
++    facets: {summary: public, details: public}
++
++campaigns:
++  - name: person-orm-zero
++    title: "S1: direct person-table ORM queries to zero"
++    owner: group:maintainers
++    description: >-
++      Every non-test Python file uses the routed helpers instead of direct
++      Person/PersonDistinctId/CohortPeople/Group/GroupTypeMapping ORM queries.
++    start: "2026-11-21"
++    targetPercent: 100
++    includes:
++      - scorecard: person-orm
++        rules: [no-direct-person-orm]

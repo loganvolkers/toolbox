@@ -1,0 +1,549 @@
+diff --git a/.github/workflows/toolbox-standards.yml b/.github/workflows/toolbox-standards.yml
+new file mode 100644
+index 0000000..8703936
+--- /dev/null
++++ b/.github/workflows/toolbox-standards.yml
+@@ -0,0 +1,35 @@
++# Coding-standard ratchet (S2: small Rust modules). See .toolbox/STANDARD.md.
++# Fails a pull request when a Rust file over 700 lines grows, or a file crosses 700 lines (including a
++# new file). Shrinking files pass and are listed in the job summary, so the baseline can be tightened.
++name: toolbox-standards
++
++on:
++  pull_request:
++  push:
++    branches: [main]
++  workflow_dispatch:
++    inputs:
++      mode:
++        description: "check (regressions only), ci (also fail when results.json is stale), update or report"
++        default: update
++
++permissions:
++  contents: read
++
++jobs:
++  ratchet:
++    runs-on: ubuntu-latest
++    timeout-minutes: 10
++    steps:
++      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
++        with:
++          persist-credentials: false
++      # Toolbox's report action (D69). Pin it to a commit SHA once the release is mirrored internally.
++      - uses: loganvolkers/toolbox/actions/report@v0.1.1
++        with:
++          toolbox-version: "0.1.1"
++          portal: .toolbox
++          baseline: .toolbox/results.json
++          # check: fail on regressions only. New compliant files and shrinking files don't need a
++          # results.json update in the same PR (run `--update` to tighten the baseline).
++          mode: ${{ inputs.mode || 'check' }}
+diff --git a/.toolbox/STANDARD.md b/.toolbox/STANDARD.md
+new file mode 100644
+index 0000000..398e022
+--- /dev/null
++++ b/.toolbox/STANDARD.md
+@@ -0,0 +1,128 @@
++# S2: small Rust modules
++
++**The standard.** From [AGENTS.md](../AGENTS.md): "Target Rust modules under 500 LoC, excluding
++tests. If a file exceeds roughly 800 LoC, add new functionality in a new module instead of extending
++the existing file."
++
++**What is enforced.** A *violation* is a `.rs` file under `codex-rs/` with more than **700 lines**
++(stricter than AGENTS.md's "roughly 800": the team tightened it on 2026-11-21, see *History*)
++(every line of the file counts, blank and comment lines included). 500 is the target and is not
++enforced. Test files are exempt: any file in a `tests/` directory, files named `tests.rs`, and files
++ending in `_tests.rs`.
++
++**The ratchet.** Existing violations are recorded in `.toolbox/results.json`. A pull request fails when:
++- a file already over 700 lines grows, by even one line;
++- a file at or under 700 lines crosses 700;
++- a new (or renamed) file arrives with more than 700 lines.
++
++Shrinking a violating file, or bringing it to 700 or below, passes and is reported as an
++improvement, so the baseline can be tightened.
++
++All commands run from the repository root and need [Toolbox](https://github.com/loganvolkers/toolbox)
++0.1.1 (`toolbox` and `toolbox-connector-runner` on `PATH`), `python3`, `git` and `jq`.
++
++## Report: every violating file, as JSON
++
++```bash
++toolbox report .toolbox -o json | jq '[.scores["small-rust-modules"] | to_entries[] | select(.value.rules["at-most-700-lines"] == "fail") | {file: (.key | ltrimstr("rust-file:")), lines: (.value.evidence["at-most-700-lines"][0] | split(" ")[0] | tonumber)}]'
++```
++
++Prints `[{"file": "codex-rs/…", "lines": 1070}, …]`. For the human-readable version (every file
++with its line count and the fix), run `toolbox report .toolbox`.
++
++## Gate: fail when the ratchet breaks
++
++```bash
++toolbox report .toolbox --baseline .toolbox/results.json --out /dev/null
++```
++
++Exit 0 when nothing got worse, 1 on a regression, 2 when Toolbox can't run. It prints one line per
++change, for example:
++
++```
++✗ worse   small-rust-modules · rust-file:codex-rs/analytics/src/events.rs: at-most-700-lines evidence grew 371 → 372
++✗ worse   small-rust-modules · rust-file:codex-rs/analytics/src/facts.rs: at-most-700-lines now fails
++✗ worse   small-rust-modules · rust-file:codex-rs/analytics/src/huge.rs: new, at none; new entities must reach bronze
++✓ better  small-rust-modules · rust-file:codex-rs/analytics/src/reducer.rs: at-most-700-lines evidence shrank 1958 → 1957
++✓ better  small-rust-modules · rust-file:codex-rs/windows-sandbox-rs/src/lib.rs: at-most-700-lines now passes
++```
++
++The evidence count is the number of lines over 700, plus one. Add `--verdict verdict.json` for a
++machine-readable verdict (`regressions`, `improvements`, `changes`). Add `--ci` to also fail when
++`results.json` is out of date (unrecorded improvements or new files).
++
++CI: [`.github/workflows/toolbox-standards.yml`](../.github/workflows/toolbox-standards.yml) runs
++the same gate (`mode: check`) on every pull request, through Toolbox's `actions/report` action. The
++job summary lists regressions and improvements.
++
++## Campaign: progress toward zero violating files
++
++```bash
++toolbox report .toolbox -o web --out "${TMPDIR:-/tmp}/codex-standards" > /dev/null && jq '.campaigns["small-rust-modules-zero"] | {campaign: .title, status, baseline: .inScope, current: (.inScope - .meeting), percentDone: .percent, percentExact: (if .inScope > 0 then (.meeting * 1000 / .inScope | floor) / 10 else 0 end), targetPercent}' "${TMPDIR:-/tmp}/codex-standards/report.json"
++```
++
++`baseline` is the number of files that violated when the campaign started (2026-11-21), `current`
++how many of them still do, and `percentDone` the share fixed (Toolbox rounds down; `percentExact` has
++one decimal). The campaign's scope is frozen in [`campaign.yaml`](./campaign.yaml), so it measures
++paying down the old violations; the ratchet stops new ones. The HTML report
++(`${TMPDIR:-/tmp}/codex-standards/index.html`) shows the same progress in its Campaigns tab.
++
++If a file in the campaign is deleted or renamed, it leaves the campaign's scope (the baseline count
++drops by one) instead of counting as done. When you split a file, keep the original path as the
++module root (`mod a; mod b;`) where you can.
++
++## Update the baseline
++
++After a change that shrinks or fixes files (the gate printed `✓ better`), or adds new files:
++
++```bash
++toolbox report .toolbox --baseline .toolbox/results.json --update --out /dev/null
++git add .toolbox/results.json
++```
++
++`--update` refuses to write while anything regressed, so it can only tighten the bar. Never hand-edit
++or hand-merge `results.json`: on a merge conflict, take either side and rerun `--update` on the merged
++tree.
++
++Renaming or moving a file over 700 lines is a regression: to the ratchet it is a new file over the
++limit. Split it below 700 in the same PR, or, if a maintainer approves, reset the baseline: delete
++`.toolbox/results.json`, rerun `--update`, and review the diff (it must show only the renamed
++path). Toolbox has no way to accept one named regression.
++
++## Change the standard
++
++Everything lives in [`toolbox.yaml`](./toolbox.yaml) (the `small-rust-modules` scorecard) and
++[`campaign.yaml`](./campaign.yaml). Check your change with `toolbox validate .toolbox`, then run the
++Gate and update the baseline.
++
++| Change | Where |
++|---|---|
++| **Threshold** (e.g. 700 → 600) | In `toolbox.yaml`, replace `700` in the rule's name (`at-most-700-lines`), `check` (`entity.lines <= 700`), `evidence` (`n > 700` and the `limit 700` label) and `fix`; the same in `campaign.yaml`, and in the Report command above and the workflow's header comment. A lower threshold makes passing files fail (and the `update` refuses), so reset the baseline: delete `.toolbox/results.json`, rerun `--update`, and review the diff (only evidence counts, the rule name and newly failing files should change). Then decide the campaign's scope (see *History*)
++| **Exempt a file** | Add its path to the list at the end of `appliesTo` in `toolbox.yaml`: `entity.path in ['codex-rs/foo/src/generated.rs']`. The file is then skipped; the gate reports it as `✓ better … now passes`; run `--update` |
++| **Exempt a pattern** | Add a condition to `appliesTo`, e.g. `entity.path.startsWith('codex-rs/protocol/src/generated/')` |
++| **Which files are measured** | `.toolbox/rust-file-lines.py` (every tracked or untracked, non-ignored `codex-rs/**/*.rs`). It only measures; the rule and exemptions stay in the manifest |
++| **Campaign scope or dates** | `campaign.yaml`: the frozen file list, `start`, optional `end`, `targetPercent` and `milestones` |
++
++## How it works
++
++| File | Role |
++|---|---|
++| `toolbox.yaml` | The repo portal: a `runner` connector, the `RustFile` kind, the `small-rust-modules` scorecard and its ratchet floor (`newEntitiesAtLeast: bronze`) |
++| `rust-file-lines.py` | Emits one record per Rust file: path, line count, and line numbers (so each line over 700 is one evidence item, and the ratchet sees growth of one line) |
++| `campaign.yaml` | The campaign and its scorecard over the 229 files that violated the 700-line limit on 2026-11-21 |
++| `results.json` | The committed baseline (generated; do not edit) |
++
++## History
++
++**2026-11-21: threshold 800 → 700 lines.** The rule was renamed `at-most-800-lines` →
++`at-most-700-lines` and the baseline reset (deleted and regenerated with `--update`): it now records
++229 files over 700 lines (191 were over 800; 38 are between 701 and 800). The ratchet applies at the
++new limit from then on: a recorded file may not grow, an unrecorded file may not cross 700.
++
++The campaign's scope was re-frozen to those 229 files, keeping `start: 2026-11-21`. Why: the campaign
++had started the same day and no file had been fixed (0 of 191), so nothing was lost; keeping the
++old 191-file scope would have left the 38 newly violating files out of the paydown, and measuring
++the old scope against the new limit would have made the goal ("zero files over 700") differ from
++what the campaign counts. A later threshold change mid-campaign should instead either keep the
++scope and say so here, or end the campaign (`end`) and start a new one, so that progress already
++made stays visible.
+diff --git a/.toolbox/campaign.yaml b/.toolbox/campaign.yaml
+new file mode 100644
+index 0000000..e6d4816
+--- /dev/null
++++ b/.toolbox/campaign.yaml
+@@ -0,0 +1,261 @@
++# The campaign toward zero Rust files over 700 lines (docs: .toolbox/STANDARD.md). Included by
++# .toolbox/toolbox.yaml.
++#
++# Campaign scope is frozen: the 229 files that broke the standard when the campaign started
++# (2026-11-21; re-frozen the same day when the threshold went from 800 to 700 lines, see
++# STANDARD.md). The ratchet in toolbox.yaml stops new violations; this measures paying down the
++# old ones. A file leaves the list only when it is deleted or renamed: then delete its line here too.
++scorecards:
++  - name: small-rust-modules-campaign
++    kind: RustFile
++    owner: group:maintainers
++    levels: [bronze]
++    appliesTo: >-
++      entity.path in [
++        'codex-rs/agent-identity/src/lib.rs',
++        'codex-rs/analytics/src/events.rs',
++        'codex-rs/analytics/src/reducer.rs',
++        'codex-rs/app-server-client/src/lib.rs',
++        'codex-rs/app-server-client/src/remote.rs',
++        'codex-rs/app-server-daemon/src/lib.rs',
++        'codex-rs/app-server-protocol/src/export.rs',
++        'codex-rs/app-server-protocol/src/protocol/common.rs',
++        'codex-rs/app-server-protocol/src/protocol/thread_history.rs',
++        'codex-rs/app-server-protocol/src/protocol/v2/config.rs',
++        'codex-rs/app-server-protocol/src/protocol/v2/item.rs',
++        'codex-rs/app-server-protocol/src/protocol/v2/mcp.rs',
++        'codex-rs/app-server-protocol/src/protocol/v2/plugin.rs',
++        'codex-rs/app-server-protocol/src/protocol/v2/thread.rs',
++        'codex-rs/app-server-test-client/src/lib.rs',
++        'codex-rs/app-server-transport/src/transport/auth.rs',
++        'codex-rs/app-server-transport/src/transport/remote_control/client_tracker.rs',
++        'codex-rs/app-server-transport/src/transport/remote_control/enroll.rs',
++        'codex-rs/app-server-transport/src/transport/remote_control/websocket.rs',
++        'codex-rs/app-server/src/bespoke_event_handling.rs',
++        'codex-rs/app-server/src/command_exec.rs',
++        'codex-rs/app-server/src/config/external_agent_config.rs',
++        'codex-rs/app-server/src/config_manager_service.rs',
++        'codex-rs/app-server/src/in_process.rs',
++        'codex-rs/app-server/src/lib.rs',
++        'codex-rs/app-server/src/message_processor.rs',
++        'codex-rs/app-server/src/outgoing_message.rs',
++        'codex-rs/app-server/src/request_processors/account_processor.rs',
++        'codex-rs/app-server/src/request_processors/catalog_processor.rs',
++        'codex-rs/app-server/src/request_processors/config_processor.rs',
++        'codex-rs/app-server/src/request_processors/plugins.rs',
++        'codex-rs/app-server/src/request_processors/process_exec_processor.rs',
++        'codex-rs/app-server/src/request_processors/thread_lifecycle.rs',
++        'codex-rs/app-server/src/request_processors/thread_processor.rs',
++        'codex-rs/app-server/src/request_processors/turn_processor.rs',
++        'codex-rs/app-server/src/thread_status.rs',
++        'codex-rs/apply-patch/src/invocation.rs',
++        'codex-rs/apply-patch/src/lib.rs',
++        'codex-rs/apply-patch/src/parser.rs',
++        'codex-rs/apply-patch/src/streaming_parser.rs',
++        'codex-rs/backend-client/src/client.rs',
++        'codex-rs/cli/src/debug_sandbox.rs',
++        'codex-rs/cli/src/doctor.rs',
++        'codex-rs/cli/src/doctor/output.rs',
++        'codex-rs/cli/src/doctor/output/detail.rs',
++        'codex-rs/cli/src/doctor/thread_inventory.rs',
++        'codex-rs/cli/src/main.rs',
++        'codex-rs/cli/src/mcp_cmd.rs',
++        'codex-rs/cloud-config/src/lib.rs',
++        'codex-rs/cloud-tasks-client/src/http.rs',
++        'codex-rs/cloud-tasks/src/lib.rs',
++        'codex-rs/cloud-tasks/src/ui.rs',
++        'codex-rs/code-mode/src/description.rs',
++        'codex-rs/code-mode/src/service.rs',
++        'codex-rs/codex-api/src/endpoint/realtime_websocket/methods.rs',
++        'codex-rs/codex-api/src/endpoint/responses_websocket.rs',
++        'codex-rs/codex-api/src/sse/responses.rs',
++        'codex-rs/codex-client/src/custom_ca.rs',
++        'codex-rs/codex-mcp/src/connection_manager.rs',
++        'codex-rs/codex-mcp/src/rmcp_client.rs',
++        'codex-rs/config/src/config_requirements.rs',
++        'codex-rs/config/src/config_toml.rs',
++        'codex-rs/config/src/loader/mod.rs',
++        'codex-rs/config/src/types.rs',
++        'codex-rs/connectors/src/lib.rs',
++        'codex-rs/core-plugins/src/loader.rs',
++        'codex-rs/core-plugins/src/manager.rs',
++        'codex-rs/core-plugins/src/marketplace.rs',
++        'codex-rs/core-plugins/src/remote.rs',
++        'codex-rs/core-plugins/src/remote_bundle.rs',
++        'codex-rs/core-plugins/src/startup_sync.rs',
++        'codex-rs/core-skills/src/loader.rs',
++        'codex-rs/core-skills/src/render.rs',
++        'codex-rs/core/src/agent/control.rs',
++        'codex-rs/core/src/client.rs',
++        'codex-rs/core/src/codex_delegate.rs',
++        'codex-rs/core/src/compact_remote_v2.rs',
++        'codex-rs/core/src/config/edit.rs',
++        'codex-rs/core/src/config/mod.rs',
++        'codex-rs/core/src/config/permissions.rs',
++        'codex-rs/core/src/connectors.rs',
++        'codex-rs/core/src/context_manager/history.rs',
++        'codex-rs/core/src/exec.rs',
++        'codex-rs/core/src/exec_policy.rs',
++        'codex-rs/core/src/goals.rs',
++        'codex-rs/core/src/guardian/review.rs',
++        'codex-rs/core/src/guardian/review_session.rs',
++        'codex-rs/core/src/hook_runtime.rs',
++        'codex-rs/core/src/mcp_tool_call.rs',
++        'codex-rs/core/src/realtime_conversation.rs',
++        'codex-rs/core/src/session/handlers.rs',
++        'codex-rs/core/src/session/mcp.rs',
++        'codex-rs/core/src/session/mod.rs',
++        'codex-rs/core/src/session/session.rs',
++        'codex-rs/core/src/session/turn.rs',
++        'codex-rs/core/src/session/turn_context.rs',
++        'codex-rs/core/src/tasks/mod.rs',
++        'codex-rs/core/src/thread_manager.rs',
++        'codex-rs/core/src/tools/handlers/agent_jobs.rs',
++        'codex-rs/core/src/tools/handlers/multi_agents_spec.rs',
++        'codex-rs/core/src/tools/network_approval.rs',
++        'codex-rs/core/src/tools/registry.rs',
++        'codex-rs/core/src/tools/runtimes/shell/unix_escalation.rs',
++        'codex-rs/core/src/tools/spec_plan.rs',
++        'codex-rs/core/src/unified_exec/process_manager.rs',
++        'codex-rs/exec-server/src/client.rs',
++        'codex-rs/exec-server/src/connection.rs',
++        'codex-rs/exec-server/src/environment.rs',
++        'codex-rs/exec-server/src/environment_toml.rs',
++        'codex-rs/exec-server/src/local_process.rs',
++        'codex-rs/exec-server/src/relay.rs',
++        'codex-rs/exec/src/lib.rs',
++        'codex-rs/external-agent-migration/src/lib.rs',
++        'codex-rs/features/src/lib.rs',
++        'codex-rs/feedback/src/lib.rs',
++        'codex-rs/file-search/src/lib.rs',
++        'codex-rs/file-watcher/src/lib.rs',
++        'codex-rs/git-utils/src/apply.rs',
++        'codex-rs/git-utils/src/baseline.rs',
++        'codex-rs/git-utils/src/info.rs',
++        'codex-rs/hooks/src/engine/discovery.rs',
++        'codex-rs/hooks/src/events/pre_tool_use.rs',
++        'codex-rs/hooks/src/schema.rs',
++        'codex-rs/linux-sandbox/src/bwrap.rs',
++        'codex-rs/linux-sandbox/src/linux_run_main.rs',
++        'codex-rs/linux-sandbox/src/proxy_routing.rs',
++        'codex-rs/login/src/auth/manager.rs',
++        'codex-rs/login/src/server.rs',
++        'codex-rs/memories/write/src/phase1.rs',
++        'codex-rs/network-proxy/src/config.rs',
++        'codex-rs/network-proxy/src/http_proxy.rs',
++        'codex-rs/network-proxy/src/mitm_hook.rs',
++        'codex-rs/network-proxy/src/network_policy.rs',
++        'codex-rs/network-proxy/src/proxy.rs',
++        'codex-rs/network-proxy/src/runtime.rs',
++        'codex-rs/network-proxy/src/socks5.rs',
++        'codex-rs/otel/src/events/session_telemetry.rs',
++        'codex-rs/protocol/src/config_types.rs',
++        'codex-rs/protocol/src/models.rs',
++        'codex-rs/protocol/src/openai_models.rs',
++        'codex-rs/protocol/src/permissions.rs',
++        'codex-rs/protocol/src/protocol.rs',
++        'codex-rs/rmcp-client/src/bin/test_stdio_server.rs',
++        'codex-rs/rmcp-client/src/oauth.rs',
++        'codex-rs/rmcp-client/src/perform_oauth_login.rs',
++        'codex-rs/rmcp-client/src/rmcp_client.rs',
++        'codex-rs/rollout-trace/src/reducer/code_cell.rs',
++        'codex-rs/rollout-trace/src/reducer/conversation.rs',
++        'codex-rs/rollout/src/compression.rs',
++        'codex-rs/rollout/src/list.rs',
++        'codex-rs/rollout/src/recorder.rs',
++        'codex-rs/sandboxing/src/seatbelt.rs',
++        'codex-rs/shell-command/src/command_safety/is_safe_command.rs',
++        'codex-rs/shell-command/src/command_safety/windows_dangerous_commands.rs',
++        'codex-rs/shell-command/src/parse_command.rs',
++        'codex-rs/shell-escalation/src/unix/escalate_server.rs',
++        'codex-rs/state/src/log_db.rs',
++        'codex-rs/state/src/runtime/goals.rs',
++        'codex-rs/state/src/runtime/logs.rs',
++        'codex-rs/state/src/runtime/memories.rs',
++        'codex-rs/state/src/runtime/threads.rs',
++        'codex-rs/thread-store/src/local/mod.rs',
++        'codex-rs/thread-store/src/local/read_thread.rs',
++        'codex-rs/thread-store/src/local/update_thread_metadata.rs',
++        'codex-rs/thread-store/src/types.rs',
++        'codex-rs/tools/src/json_schema.rs',
++        'codex-rs/tui/src/app.rs',
++        'codex-rs/tui/src/app/app_server_requests.rs',
++        'codex-rs/tui/src/app/background_requests.rs',
++        'codex-rs/tui/src/app/config_persistence.rs',
++        'codex-rs/tui/src/app/event_dispatch.rs',
++        'codex-rs/tui/src/app/pending_interactive_replay.rs',
++        'codex-rs/tui/src/app/session_lifecycle.rs',
++        'codex-rs/tui/src/app/thread_routing.rs',
++        'codex-rs/tui/src/app_backtrack.rs',
++        'codex-rs/tui/src/app_event.rs',
++        'codex-rs/tui/src/app_server_session.rs',
++        'codex-rs/tui/src/bottom_pane/app_link_view.rs',
++        'codex-rs/tui/src/bottom_pane/approval_overlay.rs',
++        'codex-rs/tui/src/bottom_pane/chat_composer.rs',
++        'codex-rs/tui/src/bottom_pane/chat_composer/history_search.rs',
++        'codex-rs/tui/src/bottom_pane/chat_composer_history.rs',
++        'codex-rs/tui/src/bottom_pane/feedback_view.rs',
++        'codex-rs/tui/src/bottom_pane/footer.rs',
++        'codex-rs/tui/src/bottom_pane/hooks_browser_view.rs',
++        'codex-rs/tui/src/bottom_pane/list_selection_view.rs',
++        'codex-rs/tui/src/bottom_pane/mcp_server_elicitation.rs',
++        'codex-rs/tui/src/bottom_pane/mod.rs',
++        'codex-rs/tui/src/bottom_pane/multi_select_picker.rs',
++        'codex-rs/tui/src/bottom_pane/request_user_input/mod.rs',
++        'codex-rs/tui/src/bottom_pane/selection_popup_common.rs',
++        'codex-rs/tui/src/bottom_pane/textarea.rs',
++        'codex-rs/tui/src/branch_summary.rs',
++        'codex-rs/tui/src/chatwidget.rs',
++        'codex-rs/tui/src/chatwidget/plugins.rs',
++        'codex-rs/tui/src/chatwidget/settings.rs',
++        'codex-rs/tui/src/chatwidget/slash_dispatch.rs',
++        'codex-rs/tui/src/chatwidget/status_surfaces.rs',
++        'codex-rs/tui/src/clipboard_copy.rs',
++        'codex-rs/tui/src/custom_terminal.rs',
++        'codex-rs/tui/src/debug_config.rs',
++        'codex-rs/tui/src/diff_render.rs',
++        'codex-rs/tui/src/exec_cell/render.rs',
++        'codex-rs/tui/src/external_agent_config_migration.rs',
++        'codex-rs/tui/src/get_git_diff.rs',
++        'codex-rs/tui/src/history_cell/hook_cell.rs',
++        'codex-rs/tui/src/ide_context/ipc.rs',
++        'codex-rs/tui/src/insert_history.rs',
++        'codex-rs/tui/src/keymap.rs',
++        'codex-rs/tui/src/keymap_setup.rs',
++        'codex-rs/tui/src/lib.rs',
++        'codex-rs/tui/src/markdown_render.rs',
++        'codex-rs/tui/src/markdown_stream.rs',
++        'codex-rs/tui/src/multi_agents.rs',
++        'codex-rs/tui/src/onboarding/auth.rs',
++        'codex-rs/tui/src/onboarding/onboarding_screen.rs',
++        'codex-rs/tui/src/pager_overlay.rs',
++        'codex-rs/tui/src/pets/model.rs',
++        'codex-rs/tui/src/render/highlight.rs',
++        'codex-rs/tui/src/resume_picker.rs',
++        'codex-rs/tui/src/status/card.rs',
++        'codex-rs/tui/src/streaming/controller.rs',
++        'codex-rs/tui/src/tui.rs',
++        'codex-rs/tui/src/wrapping.rs',
++        'codex-rs/windows-sandbox-rs/src/acl.rs',
++        'codex-rs/windows-sandbox-rs/src/bin/setup_main/win.rs',
++        'codex-rs/windows-sandbox-rs/src/lib.rs',
++        'codex-rs/windows-sandbox-rs/src/setup.rs',
++        'codex-rs/windows-sandbox-rs/src/spawn_prep.rs',
++      ]
++    rules:
++    - name: at-most-700-lines
++      level: bronze
++      check: entity.lines <= 700
++      evidence: "[string(entity.lines) + ' lines (limit 700)']"
++      fix: Split this file into modules until it is at most 700 lines (target 500).
++    facets: {summary: public, details: public}
++
++campaigns:
++  - name: small-rust-modules-zero
++    title: Zero Rust files over 700 lines
++    owner: group:maintainers
++    description: Every Rust file that was over 700 lines on 2026-11-21 gets to 700 or fewer.
++    start: "2026-11-21"
++    targetPercent: 100
++    milestones: [{name: half, targetPercent: 50}]
++    includes: [{scorecard: small-rust-modules-campaign, atLeast: bronze}]
+diff --git a/.toolbox/rust-file-lines.py b/.toolbox/rust-file-lines.py
+new file mode 100644
+index 0000000..ae99052
+--- /dev/null
++++ b/.toolbox/rust-file-lines.py
+@@ -0,0 +1,25 @@
++#!/usr/bin/env python3
++"""Emit one Toolbox connector record per Rust file under codex-rs/ (tracked or untracked, not ignored).
++
++Used by the `sizes` runner job in .toolbox/toolbox.yaml. It only measures; the standard (threshold,
++exemptions) lives in the manifest. `lineNumbers` lets a rule's evidence hold one item per line over
++the limit, so the ratchet sees a violating file grow or shrink by a single line.
++"""
++import json
++import subprocess
++import sys
++
++paths = subprocess.run(
++    ["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z", "--", "codex-rs/*.rs"],
++    check=True, capture_output=True,
++).stdout.decode().split("\0")
++
++for path in sorted(p for p in paths if p.endswith(".rs")):
++    try:
++        with open(path, "rb") as f:
++            lines = len(f.read().splitlines())
++    except FileNotFoundError:  # deleted in the working tree but still in the index
++        continue
++    record = {"type": "record", "kind": "rust-file", "externalId": path,
++              "data": {"path": path, "lines": lines, "lineNumbers": list(range(1, lines + 1))}}
++    sys.stdout.write(json.dumps(record, separators=(",", ":")) + "\n")
+diff --git a/.toolbox/toolbox.yaml b/.toolbox/toolbox.yaml
+new file mode 100644
+index 0000000..90fe997
+--- /dev/null
++++ b/.toolbox/toolbox.yaml
+@@ -0,0 +1,70 @@
++# Codex coding standards, enforced (S2: small Rust modules). See .toolbox/STANDARD.md.
++# Run from the repository root: toolbox report .toolbox --baseline .toolbox/results.json
++apiVersion: toolbox.dev/v1alpha1
++
++portal:
++  name: codex
++  title: Codex coding standards
++  owner: group:maintainers
++  toolbox: "0.1"
++
++connectors:
++  - name: sizes
++    package: builtin:runner
++    runtime: in-image
++    config:
++      name: sizes
++      root: .
++      jobs:
++        - name: rust-files # one record per codex-rs/**/*.rs: path, lines, lineNumbers
++          command: [python3, .toolbox/rust-file-lines.py]
++          parse: ndjson
++          kinds: [rust-file]
++    records: [rust-file]
++    refresh: {rust-file: [external_ids]}
++    freshness: {rust-file: 5m}
++
++kinds:
++  - name: RustFile
++    identityFrom: [connector:sizes]
++    fields:
++      path: {type: string}
++      lines: {type: integer}
++      lineNumbers: {type: list, items: integer}
++    sources: {default: [connector:sizes]}
++    map:
++    - from: sizes/rust-file
++      id: "'rust-file:' + record.path"
++      set: "{'path': record.path, 'lines': record.lines, 'lineNumbers': record.lineNumbers}"
++
++scorecards:
++  - name: small-rust-modules
++    kind: RustFile
++    owner: group:maintainers
++    # AGENTS.md: target Rust modules under 500 LoC; past roughly 800 LoC, add new functionality in
++    # a new module. Enforced stricter, at 700 (team decision, 2026-11-21): a violation is a non-test
++    # .rs file under codex-rs/ with more than 700 lines.
++    levels: [bronze]
++    # A new file (or a renamed one) must arrive at or under 700 lines: otherwise it is a regression.
++    ratchet: {newEntitiesAtLeast: bronze}
++    # Exempt: test files (a tests/ directory, tests.rs, *_tests.rs) and the explicit list below.
++    appliesTo: >-
++      !(entity.path.contains('/tests/') || entity.path.endsWith('/tests.rs') ||
++      entity.path.endsWith('_tests.rs') || entity.path in [])
++    rules:
++    - name: at-most-700-lines
++      level: bronze
++      check: entity.lines <= 700
++      # The line count first, then one item per line over 700: the ratchet compares evidence counts,
++      # so growing by one line is a regression and shrinking by one an improvement.
++      evidence: >-
++        [string(entity.lines) + ' lines (limit 700)'] + entity.lineNumbers.filter(n, n > 700).map(n,
++        'line ' + string(n))
++      fix: >-
++        Move code out of this file into a new module until it is at most 700 lines (target 500). Do
++        not add new functionality to it.
++    facets: {summary: public, details: public}
++
++include:
++  # The campaign toward zero violating files, over the files that violated when it started.
++  - campaign.yaml

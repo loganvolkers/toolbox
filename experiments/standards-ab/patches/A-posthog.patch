@@ -1,0 +1,483 @@
+diff --git a/.github/workflows/ci-standards-s1.yml b/.github/workflows/ci-standards-s1.yml
+new file mode 100644
+index 00000000..5db13c84
+--- /dev/null
++++ b/.github/workflows/ci-standards-s1.yml
+@@ -0,0 +1,24 @@
++name: Standards (S1 person ORM ratchet)
++
++on:
++    pull_request:
++
++permissions:
++    contents: read
++
++jobs:
++    s1-person-orm-gate:
++        name: S1 no new direct ORM queries on person tables
++        runs-on: ubuntu-24.04
++        timeout-minutes: 5
++        steps:
++            - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
++              with:
++                  persist-credentials: false
++
++            - name: Gate
++              run: python3 .standards/s1_person_orm.py gate
++
++            - name: Campaign progress
++              if: always()
++              run: python3 .standards/s1_person_orm.py campaign | tee -a "$GITHUB_STEP_SUMMARY"
+diff --git a/.standards/STANDARD.md b/.standards/STANDARD.md
+new file mode 100644
+index 00000000..43bedaff
+--- /dev/null
++++ b/.standards/STANDARD.md
+@@ -0,0 +1,85 @@
++# S1: no direct ORM queries on person tables
++
++**Rule.** Do not add direct Django ORM queries on the person tables. Use the routed helpers in
++`posthog/models/person/util.py` and `posthog/models/group_type_mapping.py`, or add a new helper that
++follows the `_personhog_routed()` pattern (a `personhog_fn` using `get_personhog_client()` plus an
++`orm_fn` fallback). Source: `AGENTS.md` ("Use personhog client for all person/group data access").
++
++**What counts as a violation.** Each occurrence of `Person.objects`, `PersonDistinctId.objects`,
++`CohortPeople.objects`, `Group.objects` or `GroupTypeMapping.objects` (whole words, so
++`FooPerson.objects` does not count) in a `.py` file that git tracks or that is untracked but not
++ignored. Occurrences in comments and strings count too: the check is textual. `Group.objects` and
++`GroupTypeMapping.objects` were added in the commit after `ab63936e`; their existing occurrences are in the
++baseline.
++
++**Known false positives.** Because the check is textual, `Group.objects` also matches Django's
++`django.contrib.auth` `Group` model. Today that is the two data migrations
++`posthog/migrations/0501_create_group_billing_team.py` and
++`posthog/migrations/1095_create_group_clickhouse_team.py` (4 occurrences). They are recorded in the
++baseline, so they do not fail CI, but they are not person-table queries; exempting them is an open
++decision for the standard's owners.
++
++**Exempt.**
++
++- Test files: any file under a `test/` or `tests/` directory, `test_*.py`, `*_test.py`, `conftest.py`.
++- The routed helpers: `posthog/models/person/util.py`, `posthog/models/group_type_mapping.py`.
++- `posthog/models/person/person.py`: the model module; its managers back the routed helpers.
++
++Each exemption and its reason is in `EXEMPT_FILES` in `.standards/s1_person_orm.py`.
++
++**Enforcement.** A ratchet. `.standards/s1-baseline.json` records the allowed count per file. CI
++(`.github/workflows/ci-standards-s1.yml`) runs the gate on every pull request: a new file with
++violations, or more violations in a file than recorded, fails. Counts may only go down.
++
++## Commands
++
++Run from the repository root. Python 3.9+ standard library only; no install needed.
++
++| What | Command |
++|---|---|
++| Report: every violation by file, as JSON `[{"file", "count"}]` | `python3 .standards/s1_person_orm.py report` |
++| Gate: exit 1 if worse than the baseline, 0 otherwise; lists files that improved | `python3 .standards/s1_person_orm.py gate` |
++| Campaign: start count, baseline, current count, percent done | `python3 .standards/s1_person_orm.py campaign` (add `--json` for machine output) |
++
++## After fixing violations: tighten the baseline
++
++When the gate prints `IMPROVED ...`, record the lower counts in the same PR:
++
++```sh
++python3 .standards/s1_person_orm.py update-baseline
++git add .standards/s1-baseline.json
++```
++
++`update-baseline` refuses to raise any count. Files that reach zero drop out of the baseline, and then
++any new occurrence in them fails the gate.
++
++`.standards/s1-campaign-start.json` is the fixed starting point (102 violations in 37 files, measured on
++`ab63936e`) that the campaign's percent done is measured against. Do not change it when tightening the
++baseline.
++
++**Why the campaign start is 102.** The first campaign started at 80 violations in 28 files
++(commit `153f1b8d`, three models) and nothing had been fixed when the standard changed (current was
++still 80). Adding `Group` and `GroupTypeMapping` added 32 occurrences in 14 files (10 of them new to the baseline), and exempting
++`posthog/models/person/person.py` removed its 10. Re-basing the start on the new `report` totals
++(80 + 32 - 10 = 102) loses no progress, counts the new models as campaign work, and stops the exempted
++file from counting as work that can never be done. The old numbers are kept under `previous` in the
++file. If a future change happens after fixes have landed, carry them over instead: new start = old
++start + occurrences added - occurrences exempted, so percent done does not jump.
++
++## Changing the standard
++
++Edit the block marked `The standard` at the top of `.standards/s1_person_orm.py`, then re-record:
++
++- **Add a model**: append it to `MODELS`. The new model adds existing
++  violations, so run `python3 .standards/s1_person_orm.py update-baseline --allow-increase`, and update
++  `total` and `files` in `.standards/s1-campaign-start.json` to the new `report` totals (or start a
++  new campaign).
++- **Add an exemption**: a new file goes in `EXEMPT_FILES` (path from the repo root, mapped to its
++  reason); list it under **Exempt** above too; a
++  new test directory name goes in `TEST_DIRS`; filename patterns are in `is_exempt()`. Then run
++  `python3 .standards/s1_person_orm.py update-baseline` (exemptions only lower counts) and lower the
++  campaign start if you want percent done to ignore the exempted occurrences.
++- Update this file and the `AGENTS.md` rule in the same PR, and say why in the PR description.
++
++The checker never spells a violation literally in its own source, so it does not flag itself; keep it
++that way if you edit it.
+diff --git a/.standards/s1-baseline.json b/.standards/s1-baseline.json
+new file mode 100644
+index 00000000..82e1d01d
+--- /dev/null
++++ b/.standards/s1-baseline.json
+@@ -0,0 +1,150 @@
++[
++  {
++    "file": "ee/clickhouse/views/groups.py",
++    "count": 5
++  },
++  {
++    "file": "ee/hogai/eval/data_setup.py",
++    "count": 3
++  },
++  {
++    "file": "ee/hogai/eval/offline/snapshot_loader.py",
++    "count": 1
++  },
++  {
++    "file": "posthog/admin/admins/organization_admin.py",
++    "count": 1
++  },
++  {
++    "file": "posthog/api/cohort.py",
++    "count": 5
++  },
++  {
++    "file": "posthog/api/person.py",
++    "count": 2
++  },
++  {
++    "file": "posthog/async_migrations/migrations/0005_person_replacing_by_version.py",
++    "count": 2
++  },
++  {
++    "file": "posthog/demo/legacy/data_generator.py",
++    "count": 2
++  },
++  {
++    "file": "posthog/demo/matrix/manager.py",
++    "count": 9
++  },
++  {
++    "file": "posthog/management/commands/export_distinct_ids.py",
++    "count": 4
++  },
++  {
++    "file": "posthog/management/commands/fix_future_person_created_at.py",
++    "count": 2
++  },
++  {
++    "file": "posthog/management/commands/generate_persons.py",
++    "count": 3
++  },
++  {
++    "file": "posthog/management/commands/generate_random_product_tours.py",
++    "count": 2
++  },
++  {
++    "file": "posthog/management/commands/generate_random_surveys.py",
++    "count": 2
++  },
++  {
++    "file": "posthog/management/commands/setup_orphan_test_data.py",
++    "count": 5
++  },
++  {
++    "file": "posthog/management/commands/split_person.py",
++    "count": 1
++  },
++  {
++    "file": "posthog/management/commands/sync_persons_to_clickhouse.py",
++    "count": 3
++  },
++  {
++    "file": "posthog/migrations/0501_create_group_billing_team.py",
++    "count": 2
++  },
++  {
++    "file": "posthog/migrations/1095_create_group_clickhouse_team.py",
++    "count": 2
++  },
++  {
++    "file": "posthog/models/cohort/cohort.py",
++    "count": 5
++  },
++  {
++    "file": "posthog/models/cohort/util.py",
++    "count": 5
++  },
++  {
++    "file": "posthog/models/event/util.py",
++    "count": 1
++  },
++  {
++    "file": "posthog/models/group/group.py",
++    "count": 1
++  },
++  {
++    "file": "posthog/models/group/util.py",
++    "count": 5
++  },
++  {
++    "file": "posthog/models/person/bulk_delete.py",
++    "count": 3
++  },
++  {
++    "file": "posthog/models/person/deletion.py",
++    "count": 2
++  },
++  {
++    "file": "posthog/models/team/util.py",
++    "count": 4
++  },
++  {
++    "file": "posthog/personhog_client/converters.py",
++    "count": 1
++  },
++  {
++    "file": "posthog/queries/actor_base_query.py",
++    "count": 3
++  },
++  {
++    "file": "posthog/queries/base.py",
++    "count": 1
++  },
++  {
++    "file": "posthog/session_recordings/models/session_recording.py",
++    "count": 1
++  },
++  {
++    "file": "posthog/tasks/split_person.py",
++    "count": 3
++  },
++  {
++    "file": "posthog/tasks/usage_report.py",
++    "count": 1
++  },
++  {
++    "file": "posthog/tasks/verify_persons_data_in_sync.py",
++    "count": 4
++  },
++  {
++    "file": "posthog/temporal/usage_report/queries.py",
++    "count": 1
++  },
++  {
++    "file": "products/feature_flags/backend/flag_matching.py",
++    "count": 3
++  },
++  {
++    "file": "products/mcp_analytics/backend/management/commands/seed_mcp_sessions.py",
++    "count": 2
++  }
++]
+diff --git a/.standards/s1-campaign-start.json b/.standards/s1-campaign-start.json
+new file mode 100644
+index 00000000..d62ccd05
+--- /dev/null
++++ b/.standards/s1-campaign-start.json
+@@ -0,0 +1,14 @@
++{
++  "standard": "S1",
++  "recorded_at_commit": "ab63936e",
++  "models": ["Person", "PersonDistinctId", "CohortPeople", "Group", "GroupTypeMapping"],
++  "total": 102,
++  "files": 37,
++  "previous": {
++    "recorded_at_commit": "153f1b8d",
++    "models": ["Person", "PersonDistinctId", "CohortPeople"],
++    "total": 80,
++    "files": 28,
++    "fixed_before_reset": 0
++  }
++}
+diff --git a/.standards/s1_person_orm.py b/.standards/s1_person_orm.py
+new file mode 100644
+index 00000000..bd819cc9
+--- /dev/null
++++ b/.standards/s1_person_orm.py
+@@ -0,0 +1,180 @@
++#!/usr/bin/env python3
++"""S1: no direct ORM queries on person tables.
++
++Ratchet for the AGENTS.md rule that forbids new direct Django ORM queries
++(`<Model>.objects...`) on the person tables; use the routed helpers instead.
++(This file deliberately never spells out a violation literally, so it does not
++flag itself.)
++
++Usage (run from the repository root):
++    python3 .standards/s1_person_orm.py report             # JSON list of violations per file
++    python3 .standards/s1_person_orm.py gate               # exit 1 if worse than the baseline
++    python3 .standards/s1_person_orm.py campaign           # progress toward zero
++    python3 .standards/s1_person_orm.py update-baseline    # rewrite the baseline (only allowed to go down)
++
++Standard library only, so it runs on a bare CI runner.
++"""
++
++from __future__ import annotations
++
++import argparse
++import json
++import re
++import subprocess
++import sys
++from pathlib import Path, PurePosixPath
++
++# --- The standard -----------------------------------------------------------
++# Models whose `<Model>.objects` manager must not be used directly.
++MODELS = ["Person", "PersonDistinctId", "CohortPeople", "Group", "GroupTypeMapping"]
++
++# Files that are allowed to query these tables (paths from repo root), with the reason.
++EXEMPT_FILES = {
++    "posthog/models/person/util.py": "routed helper",
++    "posthog/models/group_type_mapping.py": "routed helper",
++    "posthog/models/person/person.py": "the model module; its managers back the routed helpers",
++}
++
++# Directory names that mark test code anywhere in a path.
++TEST_DIRS = {"test", "tests"}
++# ----------------------------------------------------------------------------
++
++PATTERN = re.compile(r"\b(?:" + "|".join(re.escape(m) for m in MODELS) + r")\.objects\b")
++
++ROOT = Path(__file__).resolve().parent.parent
++BASELINE = ROOT / ".standards" / "s1-baseline.json"
++# Fixed starting point of the campaign. The ratchet baseline shrinks as it is
++# tightened; this does not, so percent done measures the whole campaign.
++CAMPAIGN_START = ROOT / ".standards" / "s1-campaign-start.json"
++
++
++def is_exempt(path: str) -> bool:
++    p = PurePosixPath(path)
++    if path in EXEMPT_FILES:
++        return True
++    if any(part in TEST_DIRS for part in p.parts[:-1]):
++        return True
++    name = p.name
++    return name == "conftest.py" or name.startswith("test_") or name.endswith("_test.py")
++
++
++def python_files() -> list[str]:
++    """Tracked plus untracked-but-not-ignored .py files in the working tree."""
++    out = subprocess.run(
++        ["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z", "--", "*.py"],
++        cwd=ROOT,
++        check=True,
++        capture_output=True,
++    ).stdout.decode()
++    return sorted({f for f in out.split("\0") if f and (ROOT / f).is_file()})
++
++
++def scan() -> dict[str, int]:
++    counts: dict[str, int] = {}
++    for f in python_files():
++        if is_exempt(f):
++            continue
++        text = (ROOT / f).read_text(encoding="utf-8", errors="replace")
++        n = len(PATTERN.findall(text))
++        if n:
++            counts[f] = n
++    return counts
++
++
++def as_list(counts: dict[str, int]) -> list[dict]:
++    return [{"file": f, "count": n} for f, n in sorted(counts.items())]
++
++
++def load_baseline() -> dict[str, int]:
++    if not BASELINE.exists():
++        return {}
++    return {e["file"]: e["count"] for e in json.loads(BASELINE.read_text())}
++
++
++def write_baseline(counts: dict[str, int]) -> None:
++    BASELINE.write_text(json.dumps(as_list(counts), indent=2) + "\n")
++
++
++def cmd_report(_: argparse.Namespace) -> int:
++    print(json.dumps(as_list(scan()), indent=2))
++    return 0
++
++
++def cmd_gate(_: argparse.Namespace) -> int:
++    base, cur = load_baseline(), scan()
++    worse = [(f, base.get(f, 0), n) for f, n in sorted(cur.items()) if n > base.get(f, 0)]
++    better = [(f, b, cur.get(f, 0)) for f, b in sorted(base.items()) if cur.get(f, 0) < b]
++    for f, b, n in worse:
++        kind = "new file with violations" if b == 0 else "more violations than recorded"
++        print(f"FAIL {f}: {n} (baseline {b}) - {kind}")
++    for f, b, n in better:
++        print(f"IMPROVED {f}: {n} (baseline {b})")
++    if worse:
++        print(
++            "\nS1 gate failed: new direct ORM queries on person tables "
++            f"({'/'.join(m + '.objects' for m in MODELS)}).\n"
++            "Use the routed helpers in posthog/models/person/util.py or posthog/models/group_type_mapping.py\n"
++            "(the _personhog_routed() pattern) instead.\n"
++            "See .standards/STANDARD.md."
++        )
++        return 1
++    if better:
++        print(
++            "\nViolations went down. Tighten the baseline and commit it:\n"
++            "    python3 .standards/s1_person_orm.py update-baseline"
++        )
++    print(f"S1 gate passed: {sum(cur.values())} violations (baseline {sum(base.values())}).")
++    return 0
++
++
++def cmd_campaign(args: argparse.Namespace) -> int:
++    base, cur = load_baseline(), scan()
++    b, c = sum(base.values()), sum(cur.values())
++    start = json.loads(CAMPAIGN_START.read_text())["total"] if CAMPAIGN_START.exists() else b
++    done = 100.0 if start == 0 else max(0.0, (start - c) / start * 100)
++    data = {
++        "campaign_start": start,
++        "baseline": b,
++        "current": c,
++        "fixed": start - c,
++        "percent_done": round(done, 1),
++        "baseline_files": len(base),
++        "current_files": len(cur),
++    }
++    if args.json:
++        print(json.dumps(data, indent=2))
++    else:
++        print(f"S1 campaign: start {start}, baseline {b}, current {c}, {data['percent_done']}% done "
++              f"({len(cur)} files still have violations)")
++    return 0
++
++
++def cmd_update_baseline(args: argparse.Namespace) -> int:
++    base, cur = load_baseline(), scan()
++    worse = [f for f, n in cur.items() if n > base.get(f, 0)]
++    if worse and BASELINE.exists() and not args.allow_increase:
++        print("Refusing to raise the baseline for: " + ", ".join(sorted(worse)))
++        print("Fix them, or pass --allow-increase if the standard itself changed (and say why in the PR).")
++        return 1
++    write_baseline(cur)
++    print(f"Wrote {BASELINE.relative_to(ROOT)}: {sum(cur.values())} violations in {len(cur)} files.")
++    return 0
++
++
++def main() -> int:
++    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
++    sub = ap.add_subparsers(dest="cmd", required=True)
++    sub.add_parser("report").set_defaults(fn=cmd_report)
++    sub.add_parser("gate").set_defaults(fn=cmd_gate)
++    c = sub.add_parser("campaign")
++    c.add_argument("--json", action="store_true")
++    c.set_defaults(fn=cmd_campaign)
++    u = sub.add_parser("update-baseline")
++    u.add_argument("--allow-increase", action="store_true")
++    u.set_defaults(fn=cmd_update_baseline)
++    args = ap.parse_args()
++    return args.fn(args)
++
++
++if __name__ == "__main__":
++    sys.exit(main())
