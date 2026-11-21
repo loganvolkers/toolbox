@@ -14,8 +14,11 @@ export default defineConfig({
       ],
       sidebar: [
         { label: 'Start', items: [{ autogenerate: { directory: 'start' } }] },
-        { label: 'Concepts', items: [{ autogenerate: { directory: 'concepts' } }] },
         { label: 'Operators', items: [{ autogenerate: { directory: 'operators' } }] },
+        { label: 'Package authors', items: [{ autogenerate: { directory: 'authors' } }] },
+        { label: 'Users', items: [{ autogenerate: { directory: 'users' } }] },
+        { label: 'Maintainers', items: [{ autogenerate: { directory: 'maintainers' } }] },
+        { label: 'Concepts', items: [{ autogenerate: { directory: 'concepts' } }] },
         { label: 'Agents', items: [{ autogenerate: { directory: 'agents' } }] },
         { label: 'Demo', items: [{ autogenerate: { directory: 'demo' } }] },
       ],

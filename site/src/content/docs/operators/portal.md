@@ -1,9 +1,11 @@
 ---
 title: Change a portal
 description: Validate the manifest, test it against fixtures, and plan the diff before you deploy.
+sidebar:
+  order: 2
 ---
 
-An operator changes a portal in the repository that holds its manifest. The loop is the same shape as any other change: check it, test it, look at the diff, then deploy.
+An operator changes a portal in the repository that holds its manifest. The wider job, scoring a repository and serving the catalog, is [Build a portal](/toolbox/operators/). The loop is the same shape as any other change: check it, test it, look at the diff, then deploy.
 
 ```bash
 target/debug/toolbox validate path/to/portal
