@@ -1,5 +1,6 @@
-# What each starter rule means, over three made-up repositories (fixtures/workspace.ndjson): one fully
-# set up, one with an individual in CODEOWNERS and no licence, one with almost nothing.
+# What each starter rule means, over four made-up repositories (fixtures/workspace.ndjson): one
+# team-owned at silver, one personal-maintainer at silver, one with a mixed CODEOWNERS and no
+# licence, one with almost nothing.
 name: standards
 assert:
   - name: >-
@@ -9,8 +10,13 @@ assert:
       score('repo-hygiene', 'repository:acme/platform-infra').level ==
       'silver'
   - name: >-
-      an individual owner and no licence stop at bronze, and the evidence
-      names them
+      a personal handle alone with a catch-all and a licence also reaches
+      silver
+    expect: >-
+      score('repo-hygiene', 'repository:logan/solo-tool').level == 'silver'
+  - name: >-
+      mixing a team with an individual stops at bronze, and the evidence
+      names the individual
     expect: >-
       score('repo-hygiene', 'repository:acme/payments-api').level == 'bronze'
       && score('repo-hygiene',

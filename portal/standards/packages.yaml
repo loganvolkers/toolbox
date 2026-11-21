@@ -73,10 +73,11 @@ scorecards:
       check: entity.lockfile != ''
       evidence: >-
         entity.lockfile != '' ? [entity.lockfile] : ['no lockfile beside
-        package.json']
+        package.json or at the workspace root']
       fix: >-
-        Commit a lockfile beside package.json. package-lock.json records an
-        integrity hash for every installed package.
+        Commit a lockfile beside package.json, or a workspace-root
+        pnpm-lock.yaml / yarn.lock that covers this package. package-lock.json
+        records an integrity hash for every installed package.
     - name: has-a-check
       level: silver
       check: entity.checkScripts > 0
@@ -101,10 +102,13 @@ scorecards:
     - name: ci-installs-from-the-lockfile
       level: gold
       check: "!entity.ciUsesInstall"
-      evidence: "['CI runs npm install, which can update the lockfile']"
+      evidence: >-
+        ['CI runs npm install or pnpm install without --frozen-lockfile, which
+        can update the lockfile']
       fix: >-
-        Change this package's CI install from npm install to npm ci. npm ci
-        installs the lockfile as written and does not rewrite it.
+        Change this package's CI install to npm ci, or to pnpm install
+        --frozen-lockfile. Those commands install the lockfile as written and
+        do not rewrite it.
     - name: no-hardcoded-secrets
       level: gold
       check: entity.secretHits.size() == 0

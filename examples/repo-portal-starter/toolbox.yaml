@@ -36,6 +36,12 @@ kinds:
       license: {type: string}
       codeowners: {type: object} # {path, rules: [{pattern, owners, line}]}
       owners: {type: list, items: string} # every owner CODEOWNERS names (sorted, unique)
+      ownersOk:
+        type: boolean
+        description: >-
+          True when every CODEOWNERS owner is a GitHub team (@org/team), or
+          every owner is a personal handle (@user). False when empty, mixed, or
+          an email.
     sources: {default: [connector:workspace]}
     map:
     - from: workspace/repo
@@ -43,7 +49,8 @@ kinds:
       set: >-
         {'name': record.name, 'files': record.files, 'readme': record.readme,
          'readmeWords': record.readmeWords, 'license': record.license,
-         'codeowners': record.codeowners, 'owners': record.owners}
+         'codeowners': record.codeowners, 'owners': record.owners, 'ownersOk':
+         record.ownersOk}
 
   - name: Doc
     identityFrom: [connector:workspace]
@@ -88,13 +95,15 @@ scorecards:
       fix: Start CODEOWNERS with a `*` rule so every path has an owner.
     - name: owners-are-teams
       level: silver
-      check: >-
-        entity.owners.size() > 0 && entity.owners.all(o, o.startsWith('@') &&
-        o.contains('/'))
-      evidence: entity.owners.filter(o, !(o.startsWith('@') && o.contains('/')))
+      check: entity.owners.size() > 0 && entity.ownersOk
+      evidence: >-
+        entity.owners.filter(o, !o.startsWith('@')).size() > 0 ?
+        entity.owners.filter(o, !o.startsWith('@')) :
+        entity.owners.filter(o, !o.contains('/'))
       fix: >-
-        Name teams (@org/team), not individuals or emails, so ownership survives
-        people moving.
+        Name teams (@org/team), or for a single-maintainer repository only
+        personal handles (@user). Do not mix teams with individuals, and do not
+        use emails.
     - name: has-license
       level: silver
       check: has(entity.license)
