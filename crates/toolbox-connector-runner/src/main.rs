@@ -4,12 +4,14 @@
 //! only that crate's jobs (docs/design/toolbox-for-toolbox.md §3).
 //!
 //! `TOOLBOX_CONNECTOR_CONFIG`: `{"name"?: "runner", "root"?: ".", "jobs": [job]}` where a job is
-//! `{"name", "command": [argv], "per"?: "crate" | "once", "parse": "cargo-test" | "clippy" | "ndjson"}`.
+//! `{"name", "command": [argv], "per"?: "crate" | "once", "parse": "cargo-test" | "clippy" | "ndjson" | "tally" | "zizmor" | "actionlint" | "semgrep"}`.
 //! In `per: crate` jobs, `{crate}` in the command is replaced by each workspace member's name and
 //! the job emits one record of kind `<name>` with external id `<name>:<crate>`. `ndjson` jobs print
 //! connector `record` messages themselves (e.g. `toolbox describe`); they are passed through, and
-//! the job declares their `kinds`. `zizmor` and `actionlint` jobs run that linter and report one
-//! record per file matching their `files` globs (findings with severity and line, and counts). An
+//! the job declares their `kinds`. `zizmor`, `actionlint` and `semgrep` jobs run that linter and
+//! report one record per file matching their `files` globs, and for semgrep per file it scanned
+//! (findings with severity and line, counts, and `suppressed`/`active`: findings marked
+//! `nosemgrep` inline, when semgrep runs with `--disable-nosem`). An
 //! argument that is exactly `{files}` expands to those files, so a linter gets only paths that
 //! exist; with none, the job doesn't run. `optional: true` skips a job whose program isn't installed. `tally` jobs run their command, then count the lines of the NDJSON
 //! `file` it wrote by the value of `key` (one record per value: `{<key>, calls, errors}`, where a
@@ -230,7 +232,7 @@ impl Runner {
             let parse = j["parse"].as_str().unwrap_or("ndjson").to_owned();
             if !matches!(
                 parse.as_str(),
-                "cargo-test" | "clippy" | "ndjson" | "tally" | "zizmor" | "actionlint"
+                "cargo-test" | "clippy" | "ndjson" | "tally" | "zizmor" | "actionlint" | "semgrep"
             ) {
                 return Err(format!("job {name}: unknown parser {parse}"));
             }
@@ -350,6 +352,7 @@ impl Runner {
         }
         let parsed = match job.parse.as_str() {
             "zizmor" => lint::zizmor(&run.stdout),
+            "semgrep" => lint::semgrep(&run.stdout, &self.root),
             _ => lint::actionlint(&run.stdout),
         }
         .map_err(|e| {
@@ -466,7 +469,7 @@ impl Runner {
             } else if self.selected(job, ids) {
                 if job.parse == "tally" {
                     self.run_tally(job, out).await?;
-                } else if matches!(job.parse.as_str(), "zizmor" | "actionlint") {
+                } else if matches!(job.parse.as_str(), "zizmor" | "actionlint" | "semgrep") {
                     self.run_lint(job, out).await?;
                 } else {
                     self.run_ndjson(job, out).await?;

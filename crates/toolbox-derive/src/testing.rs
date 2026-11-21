@@ -1,6 +1,7 @@
 //! `toolbox test` for CEL expectation files (`tests/*.test.yaml`, docs/v1-spec.md §11.2): each
-//! `expect` is CEL with `entity(id)`, `score(scorecard, id)`, `options(action, id)` and `orphans()`,
-//! and passes when it evaluates to `true`.
+//! `expect` is CEL with `entity(id)`, `score(scorecard, id)`, `campaign(name)` (its progress:
+//! `inScope`, `meeting`, `percent`, `measure`, …), `options(action, id)` and `orphans()`, and
+//! passes when it evaluates to `true`.
 
 use crate::Derived;
 use cel::{Context, ExecutionError, ResolveResult};
@@ -56,6 +57,16 @@ fn context(d: Arc<Derived>) -> Context<'static, 'static> {
         },
     )
     .expect("score is not a stdlib function");
+    let c = d.clone();
+    ctx.add_function("campaign", move |name: Arc<String>| -> ResolveResult {
+        c.campaigns
+            .get(name.as_str())
+            .map(|p| to_cel(&serde_json::to_value(p).unwrap()))
+            .ok_or_else(|| {
+                ExecutionError::function_error("campaign", format!("no campaign {name}"))
+            })
+    })
+    .expect("campaign is not a stdlib function");
     let o = d.clone();
     ctx.add_function(
         "options",

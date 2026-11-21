@@ -149,6 +149,10 @@ impl MapRule {
 #[serde(rename_all = "camelCase")]
 pub struct Scorecard {
     pub name: String,
+    /// A heading for people and agents (reports show it next to the name).
+    pub title: Option<String>,
+    /// What the standard is and why: shown by reports and `describe`.
+    pub description: Option<String>,
     pub kind: String,
     pub owner: String,
     /// Optional track this scorecard belongs to (`tracks[].name`).
@@ -259,6 +263,9 @@ pub struct Rule {
     pub check: String,
     /// CEL evaluated when the rule fails: what makes it fail (usually a list of items).
     pub evidence: Option<String>,
+    /// CEL evaluated when the rule fails: a number the ratchet compares instead of the evidence
+    /// count (lines in a file, occurrences of a pattern). Larger is worse.
+    pub measure: Option<String>,
     pub fix: Option<String>,
     /// Connector whose records this rule reads. When that connector is skipped, a missing
     /// value is an expected `unknown` and the ratchet does not refuse `--ci` for it.

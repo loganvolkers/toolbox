@@ -53,6 +53,10 @@ registry; repository metadata from the GitHub search API, 2026-11-20.*
 | Per-issue tracking with content hashes (survives moved lines) | Evidence is compared by count, not identity, so moved code doesn't churn. Identity would catch "fixed one, broke another" (Betterer treats that as worse) | Proposed: optional evidence fingerprints, see §7 |
 | Goals | Scorecard levels are the goals; the ratchet is the path to them | ✅ (existing) |
 | `precommit` mode | A pre-commit hook running `toolbox report --skip <slow connectors> --baseline … --update` | Documented, not packaged |
+| `bigger` / `smaller` constraints on a number | A rule's `measure` (CEL, a number) is recorded and compared instead of the evidence count: lines in a file, matches of a pattern. One line more is worse, one less better, without one evidence item per unit | ✅ (D01M7Z2ZZ97VZQNTDT4QQHM3HQD) |
+| `--update` accepts worse | `--update --accept <scorecard>` records that scorecard's regressions, lists them, and still fails on regressions elsewhere: for an intended change to a standard (a tighter threshold, a wider pattern). It also restarts the campaigns that include the scorecard | ✅ (D01M7Z2ZZ97VZQNTDT4QQHM3HQD) |
+| Goals with progress | A campaign's starting point is recorded in the baseline the first time it is active: entities short of the goal and the included rules' summed measure. `-o json` and the summary show the paydown from there; changing the campaign's `start` restarts it | ✅ (D01M7Z2ZZ97VZQNTDT4QQHM3HQD) |
+| Issues as a list | `-o failures` prints every failing rule as JSON: scorecard, rule, entity, path, the entity's scalar fields, measure, evidence and fix | ✅ |
 
 **First catch.** The first time CI's ratchet ran locally, it caught the author of this document:
 - a change had raised a runner function's cyclomatic complexity to 16;

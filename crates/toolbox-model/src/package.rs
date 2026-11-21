@@ -9,8 +9,10 @@
 //! A package directory holds `toolbox-package.yaml`:
 //! `{apiVersion: toolbox.dev/package/v0, name, version, description?, parameters?: {name: {type,
 //! default, description?, tighten?: lower|higher}}, fragments?: [glob]}` (default
-//! `fragments/*.yaml`). Fragments are manifest YAML. Every string `${param:name}` is replaced by
-//! the parameter's value (keeping its type when it is the whole string). A parameter with `tighten`
+//! `fragments/*.yaml`). Types are `string` (default), `integer`, `number`, `boolean`, `array` and
+//! `object`. Fragments are manifest YAML. Every string `${param:name}` is replaced by the
+//! parameter's value (keeping its type when it is the whole string; inside a longer string a
+//! non-string value is written as JSON, which is also a CEL list or map literal). A parameter with `tighten`
 //! may only move in that direction from its default: a portal can make a package stricter, never
 //! weaker.
 
@@ -147,6 +149,8 @@ fn values(
             "integer" => v.is_i64() || v.is_u64(),
             "number" => v.is_number(),
             "boolean" => v.is_boolean(),
+            "array" => v.is_array(),
+            "object" => v.is_object(),
             _ => v.is_string(),
         };
         if !ok {
@@ -170,7 +174,25 @@ fn values(
     Ok(out)
 }
 
-/// Replace `${param:name}` in every string; a string that is exactly one reference takes the value's type.
+/// Replace `${param:name}` in a string as text (non-string values written as JSON).
+fn substitute_text(v: &mut Value, vals: &Map<String, Value>) -> Result<(), String> {
+    let Value::String(s) = v else {
+        return Ok(());
+    };
+    while let Some(i) = s.find("${param:") {
+        let end = s[i..].find('}').ok_or("unterminated ${param:…}")? + i;
+        let name = &s[i + 8..end];
+        let val = vals
+            .get(name)
+            .ok_or(format!("unknown parameter `{name}` in a fragment"))?;
+        let text = val.as_str().map_or_else(|| val.to_string(), str::to_owned);
+        s.replace_range(i..=end, &text);
+    }
+    Ok(())
+}
+
+/// Replace `${param:name}` in every string and mapping key; a string that is exactly one
+/// reference takes the value's type.
 fn substitute(v: &mut Value, vals: &Map<String, Value>) -> Result<(), String> {
     match v {
         Value::String(s) => {
@@ -183,19 +205,21 @@ fn substitute(v: &mut Value, vals: &Map<String, Value>) -> Result<(), String> {
                     .ok_or(format!("unknown parameter `{name}` in a fragment"))?;
                 return Ok(());
             }
-            while let Some(i) = s.find("${param:") {
-                let end = s[i..].find('}').ok_or("unterminated ${param:…}")? + i;
-                let name = &s[i + 8..end];
-                let val = vals
-                    .get(name)
-                    .ok_or(format!("unknown parameter `{name}` in a fragment"))?;
-                let text = val.as_str().map_or_else(|| val.to_string(), str::to_owned);
-                s.replace_range(i..=end, &text);
-            }
-            Ok(())
+            substitute_text(v, vals)
         }
         Value::Array(a) => a.iter_mut().try_for_each(|x| substitute(x, vals)),
-        Value::Object(o) => o.values_mut().try_for_each(|x| substitute(x, vals)),
+        Value::Object(o) => {
+            // Keys too (a record kind named from a parameter), always as text.
+            let mut out = Map::new();
+            for (k, mut x) in std::mem::take(o) {
+                let mut key = Value::String(k);
+                substitute_text(&mut key, vals)?;
+                substitute(&mut x, vals)?;
+                out.insert(key.as_str().unwrap_or_default().to_owned(), x);
+            }
+            *o = out;
+            Ok(())
+        }
         _ => Ok(()),
     }
 }
@@ -242,6 +266,36 @@ pub fn fragments(dir: &Path, with: &Map<String, Value>) -> Result<Vec<(String, V
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[test]
+    fn list_and_map_parameters_substitute_as_cel_literals() {
+        let params =
+            json!({"files": {"type": "array"}, "exempt": {"type": "object", "default": {}}});
+        let p = params.as_object().unwrap();
+        let vals = values(
+            p,
+            json!({"files": ["src/**/*.rs"], "exempt": {"a.rs": "generated"}})
+                .as_object()
+                .unwrap(),
+        )
+        .unwrap();
+        let mut doc =
+            json!({"files": "${param:files}", "appliesTo": "!(entity.path in ${param:exempt})"});
+        substitute(&mut doc, &vals).unwrap();
+        assert_eq!(
+            doc,
+            json!({"files": ["src/**/*.rs"], "appliesTo": "!(entity.path in {\"a.rs\":\"generated\"})"})
+        );
+        assert!(
+            values(p, json!({"files": "src"}).as_object().unwrap())
+                .unwrap_err()
+                .contains("array")
+        );
+        assert!(
+            values(p, json!({}).as_object().unwrap()).is_err(),
+            "a parameter without a default is required"
+        );
+    }
 
     #[test]
     fn parameters_type_check_and_only_tighten() {

@@ -1,5 +1,5 @@
 //! `toolbox report`: score a repository locally, without a server (docs/design/toolbox-for-toolbox.md
-//! F1, F4; docs/design/scorecard-ratchet.md). Runs the portal's in-image connectors once (a resync
+//! F1, F4; docs/design/ratchets.md). Runs the portal's in-image connectors once (a resync
 //! each), recomputes, and prints every scorecard with the evidence for failing rules — as Markdown,
 //! JSON, one self-contained HTML page, or a directory a host page can slot into.
 //!
@@ -16,16 +16,48 @@ use std::path::PathBuf;
 use std::process::{Command, ExitCode, Stdio};
 use toolbox_derive::{Derived, DerivedState, FullRecompute};
 
+#[derive(clap::Args)]
 pub struct Options {
+    /// A portal directory (containing toolbox.yaml) or a manifest file.
+    #[arg(default_value = ".")]
     pub path: PathBuf,
+    /// Use the portal's fixtures instead of running its connectors.
+    #[arg(long)]
     pub fixtures: bool,
+    /// Connectors not to run (comma-separated), e.g. a slow runner.
+    #[arg(long, value_delimiter = ',')]
     pub skip: Vec<String>,
+    /// Output: md (default), json (scores, ratchet results and campaigns), failures (a JSON
+    /// list of every failing rule: scorecard, rule, entity, path, the entity's scalar fields,
+    /// measure, evidence, fix),
+    /// html (one self-contained page), or web (a directory: the `<toolbox-report>` element,
+    /// its JSON, and that page). A host fills the element's header, nav, and footer slots;
+    /// pass --out DIR for web.
+    #[arg(short = 'o', long, default_value = "md")]
     pub output: String,
+    /// Write the output to this file instead of stdout.
+    #[arg(long)]
     pub out: Option<PathBuf>,
+    /// Also write the one-page HTML report to this file (from the same run).
+    #[arg(long)]
     pub html: Option<PathBuf>,
+    /// Results file to compare against (the ratchet).
+    #[arg(long)]
     pub baseline: Option<PathBuf>,
+    /// With --baseline: write the new results when nothing regressed (creates a missing file).
+    #[arg(long)]
     pub update: bool,
+    /// With --baseline: fail when the results differ from the file in any way.
+    #[arg(long)]
     pub ci: bool,
+    /// With --update: record regressions in these scorecards (comma-separated) instead of
+    /// failing, for an intended change to a standard (a tighter threshold, a new pattern).
+    /// They are listed; regressions in other scorecards still fail.
+    #[arg(long, value_delimiter = ',')]
+    pub accept: Vec<String>,
+    /// Write the ratchet's verdict as JSON to this file (result, exit code, regressions,
+    /// improvements), for any CI system to read.
+    #[arg(long)]
     pub verdict: Option<PathBuf>,
 }
 
@@ -146,8 +178,12 @@ fn results(d: &Derived, advisory: &BTreeSet<String>) -> Value {
                 .flatten()
                 .filter(|(_, o)| *o == "fail")
                 .map(|(r, _)| {
-                    let n = s.evidence.get(r).and_then(Value::as_array).map(Vec::len);
-                    (r.clone(), json!(n))
+                    // The rule's measure when it has one; otherwise how many evidence items.
+                    let n = match s.measures.get(r) {
+                        Some(x) => number(*x),
+                        None => json!(s.evidence.get(r).and_then(Value::as_array).map(Vec::len)),
+                    };
+                    (r.clone(), n)
                 })
                 .collect();
             // `unknown`: the rule couldn't be evaluated (its data is missing). Never a regression
@@ -181,6 +217,15 @@ fn results(d: &Derived, advisory: &BTreeSet<String>) -> Value {
         cards.insert(card.clone(), Value::Object(rows));
     }
     Value::Object(cards)
+}
+
+/// A JSON number, integral when it can be (line counts stay `1070`, not `1070.0`).
+fn number(x: f64) -> Value {
+    if x.fract() == 0.0 && x.abs() < 9.0e15 {
+        json!(x as i64)
+    } else {
+        json!(x)
+    }
 }
 
 /// How many rule outcomes in `results` are `unknown`.
@@ -364,15 +409,107 @@ fn compare_entity(c: &mut Comparison, at: &At, was: &Value, now: &Value) {
 
 /// A rule failing on both sides: its evidence count may have grown (worse) or shrunk (better).
 fn evidence_change(c: &mut Comparison, at: &At, rule: &str, was: &Value, now: &Value) {
-    match (was.as_u64(), now.as_u64()) {
+    match (was.as_f64(), now.as_f64()) {
         (Some(m), Some(n)) if n > m => c
             .regressions
-            .push(at.say(format!("{rule} evidence grew {m} → {n}"))),
+            .push(at.say(format!("{rule} evidence grew {was} → {now}"))),
         (Some(m), Some(n)) if n < m => c
             .improvements
-            .push(at.say(format!("{rule} evidence shrank {m} → {n}"))),
+            .push(at.say(format!("{rule} evidence shrank {was} → {now}"))),
         _ => {}
     }
+}
+
+/// Each campaign's starting point, as the baseline records it: kept while the campaign's `start`
+/// is unchanged, recorded from this run the first time the campaign is active. Changing `start`
+/// restarts the campaign from the current state, and so does `--accept` on a scorecard the
+/// campaign includes: an intended change to a standard changes what the campaign pays down.
+fn campaign_starts(
+    m: &toolbox_model::Manifest,
+    d: &Derived,
+    before: Option<&Value>,
+    accept: &[String],
+) -> Map<String, Value> {
+    let mut out = Map::new();
+    for c in &m.campaigns {
+        let start = json!(c.start);
+        let restarted = c.includes.iter().any(|i| accept.contains(&i.scorecard));
+        if let Some(was) = before.and_then(|b| b.get(&c.name))
+            && was["start"] == start
+            && !restarted
+        {
+            out.insert(c.name.clone(), was.clone());
+            continue;
+        }
+        let Some(p) = d.campaigns.get(&c.name).filter(|p| p.status == "active") else {
+            continue;
+        };
+        let mut rec = json!({
+            "start": start,
+            "recorded": toolbox_derive::utc_ymd_today(),
+            "inScope": p.in_scope,
+            "short": p.in_scope - p.meeting
+        });
+        if let Some(x) = p.measure {
+            rec["measure"] = number(x);
+        }
+        out.insert(c.name.clone(), rec);
+    }
+    out
+}
+
+/// `from` → `now`, and how far that is towards zero. Negative is backwards.
+fn progress_towards_zero(from: f64, now: f64) -> Value {
+    let percent = if from > 0.0 {
+        ((from - now) / from * 1000.0).round() / 10.0
+    } else if now > 0.0 {
+        0.0
+    } else {
+        100.0
+    };
+    json!({"from": number(from), "now": number(now), "percentDone": percent})
+}
+
+/// How far a campaign has come since its recorded start: in entities short of the goal, and in
+/// its rules' measure when they have one (occurrences, lines over a limit).
+fn paydown(start: &Value, p: &toolbox_derive::CampaignProgress) -> Value {
+    let mut out = json!({
+        "start": start["start"],
+        "recorded": start["recorded"],
+        "entitiesShort": progress_towards_zero(
+            start["short"].as_f64().unwrap_or(0.0),
+            (p.in_scope - p.meeting) as f64
+        ),
+    });
+    if let (Some(a), Some(b)) = (start["measure"].as_f64(), p.measure) {
+        out["measure"] = progress_towards_zero(a, b);
+    }
+    out
+}
+
+/// One line per campaign with a recorded start, for the ratchet's summary.
+fn paydown_lines(starts: &Map<String, Value>, d: &Derived) -> Vec<String> {
+    let part = |label: &str, x: &Value| {
+        format!(
+            "{label} {} → {} ({}% of the way)",
+            x["from"], x["now"], x["percentDone"]
+        )
+    };
+    starts
+        .iter()
+        .filter_map(|(name, start)| {
+            let p = paydown(start, d.campaigns.get(name)?);
+            let mut parts = vec![part("entities short", &p["entitiesShort"])];
+            if p.get("measure").is_some() {
+                parts.push(part("measure", &p["measure"]));
+            }
+            Some(format!(
+                "campaign {name} since {}: {}",
+                p["recorded"].as_str().unwrap_or("?"),
+                parts.join("; ")
+            ))
+        })
+        .collect()
 }
 
 fn markdown(m: &toolbox_model::Manifest, d: &Derived) -> String {
@@ -464,11 +601,19 @@ fn scorecard_defs(m: &toolbox_model::Manifest) -> Map<String, Value> {
         .collect()
 }
 
-fn campaign_defs(m: &toolbox_model::Manifest, d: &Derived) -> Map<String, Value> {
+fn campaign_defs(
+    m: &toolbox_model::Manifest,
+    d: &Derived,
+    starts: &Map<String, Value>,
+) -> Map<String, Value> {
     m.campaigns
         .iter()
         .map(|c| {
             let progress = d.campaigns.get(&c.name);
+            let since = starts
+                .get(&c.name)
+                .zip(progress)
+                .map(|(s, p)| paydown(s, p));
             let includes: Vec<Value> = c
                 .includes
                 .iter()
@@ -497,6 +642,8 @@ fn campaign_defs(m: &toolbox_model::Manifest, d: &Derived) -> Map<String, Value>
                     "meeting": progress.map(|p| p.meeting),
                     "percent": progress.map(|p| p.percent),
                     "onTarget": progress.map(|p| p.on_target),
+                    "measure": progress.and_then(|p| p.measure).map(number),
+                    "sinceStart": since,
                     "milestones": progress.map(|p| &p.milestones),
                     "entities": progress.map(|p| &p.entities),
                 }),
@@ -506,7 +653,7 @@ fn campaign_defs(m: &toolbox_model::Manifest, d: &Derived) -> Map<String, Value>
 }
 
 /// The report document the element renders: portal, snapshot, catalog, scorecards, campaigns, scores.
-fn report_json(m: &toolbox_model::Manifest, d: &Derived) -> String {
+fn report_json(m: &toolbox_model::Manifest, d: &Derived, starts: &Map<String, Value>) -> String {
     let tracks: Map<String, Value> = m
         .tracks
         .iter()
@@ -530,7 +677,7 @@ fn report_json(m: &toolbox_model::Manifest, d: &Derived) -> String {
         "snapshot": d.snapshot,
         "catalog": catalog,
         "tracks": tracks,
-        "campaigns": campaign_defs(m, d),
+        "campaigns": campaign_defs(m, d, starts),
         "scorecards": scorecard_defs(m),
         "scores": d.scores,
         "repoRollup": m.policies.get("repoRollup").cloned().unwrap_or(Value::Null),
@@ -548,8 +695,8 @@ fn html_page(data_json: &str) -> String {
         .replace("/*DATA*/", &embedded)
 }
 
-fn html(m: &toolbox_model::Manifest, d: &Derived) -> String {
-    html_page(&report_json(m, d))
+fn html(m: &toolbox_model::Manifest, d: &Derived, starts: &Map<String, Value>) -> String {
+    html_page(&report_json(m, d, starts))
 }
 
 /// `toolbox-report.js`, `report.json`, and the one-file `index.html`. A host page loads the
@@ -570,8 +717,9 @@ fn write_web(
     dir: &std::path::Path,
     m: &toolbox_model::Manifest,
     d: &Derived,
+    starts: &Map<String, Value>,
 ) -> Result<(), String> {
-    write_web_parts(dir, &report_json(m, d))
+    write_web_parts(dir, &report_json(m, d, starts))
 }
 
 /// A portal's manifest and derived state from one run of its in-image connectors (or its fixtures),
@@ -599,7 +747,11 @@ struct Verdict {
     summary: String,
     written: bool,
     comparison: Comparison,
+    /// Regressions `--accept` recorded (an intended change to those scorecards).
+    accepted: Vec<Change>,
     unknown: usize,
+    /// Each campaign's recorded starting point (from the baseline, or this run's when new).
+    starts: Map<String, Value>,
 }
 
 /// Rules whose `dataFrom` connector is in `--skip`. Their `unknown` is expected: the connector
@@ -645,18 +797,109 @@ fn unexpected_unknowns(m: &toolbox_model::Manifest, skip: &[String], now: &Value
     n
 }
 
+/// `--accept` needs `--update` and names scorecards that exist.
+fn check_accept(o: &Options, m: &toolbox_model::Manifest) -> Result<(), String> {
+    if !o.accept.is_empty() && !o.update {
+        return Err("--accept records regressions, so it needs --update".into());
+    }
+    match o
+        .accept
+        .iter()
+        .find(|a| !m.scorecards.iter().any(|sc| &sc.name == *a))
+    {
+        Some(card) => Err(format!("--accept {card}: no such scorecard")),
+        None => Ok(()),
+    }
+}
+
+/// One line per change, then one per campaign with a recorded start.
+fn change_lines(v: &Verdict, d: &Derived) -> Vec<String> {
+    let c = &v.comparison;
+    let mut lines = Vec::new();
+    for (mark, changes) in [
+        ("✗ worse  ", &c.regressions),
+        ("✓ accept ", &v.accepted),
+        ("✓ better ", &c.improvements),
+        ("· changed", &c.other),
+    ] {
+        lines.extend(changes.iter().map(|r| format!("{mark} {r}")));
+    }
+    lines.extend(paydown_lines(&v.starts, d));
+    lines
+}
+
+/// The verdict against an existing baseline: sets `v.result` and `v.code`, writes the file when
+/// `--update` may, and returns the summary's last line.
+fn decide(
+    o: &Options,
+    v: &mut Verdict,
+    path: &std::path::Path,
+    differs: bool,
+    unexpected: usize,
+    write: &dyn Fn() -> Result<(), String>,
+) -> Result<String, String> {
+    let shown = path.display();
+    if !v.comparison.regressions.is_empty() {
+        (v.result, v.code) = ("regressed", 1);
+        return Ok(format!(
+            "{} regression(s) against {shown}",
+            v.comparison.regressions.len()
+        ));
+    }
+    if unexpected > 0 && (o.ci || o.update) {
+        // A connector that ran and still produced no data must not be written into the baseline.
+        // Unknowns whose `dataFrom` connector was skipped are expected and are recorded.
+        (v.result, v.code) = ("unknown", 1);
+        let flag = if o.ci { "--ci" } else { "--update" };
+        return Ok(format!(
+            "{unexpected} rule outcome(s) unknown and not excused by --skip; {flag} needs those rules evaluated"
+        ));
+    }
+    Ok(match (differs, o.update) {
+        (false, _) if v.unknown > 0 => format!(
+            "no regressions; {} rule outcome(s) unknown (excused by --skip, or not gating), not compared",
+            v.unknown
+        ),
+        (false, _) => format!("matches {shown}"),
+        (true, true) => {
+            write()?;
+            v.written = true;
+            match v.accepted.len() {
+                0 => format!("no regressions; updated {shown}"),
+                n => format!(
+                    "accepted {n} regression(s) in {}; updated {shown}",
+                    o.accept.join(", ")
+                ),
+            }
+        }
+        (true, false) => {
+            (v.result, v.code) = ("stale", u8::from(o.ci));
+            let ci = if o.ci { " (--ci)" } else { "" };
+            format!(
+                "no regressions, but {shown} is out of date{ci}: run with --update and commit it"
+            )
+        }
+    })
+}
+
 /// Compare `now` with the baseline at `path`; write it when `--update` allows.
 fn ratchet(
     o: &Options,
     path: &std::path::Path,
     m: &toolbox_model::Manifest,
+    d: &Derived,
     now: &Value,
     policy: &NewPolicy,
 ) -> Result<Verdict, String> {
+    check_accept(o, m)?;
     let before = std::fs::read_to_string(path)
         .ok()
         .and_then(|t| serde_json::from_str::<Value>(&t).ok());
-    let doc = json!({"format": FORMAT, "portal": m.portal.name, "results": now});
+    let starts = campaign_starts(m, d, before.as_ref().map(|b| &b["campaigns"]), &o.accept);
+    let mut doc = json!({"format": FORMAT, "portal": m.portal.name, "results": now});
+    if !starts.is_empty() {
+        doc["campaigns"] = Value::Object(starts.clone());
+    }
     let write = || {
         std::fs::write(path, toolbox_derive::pyjson::pretty(&doc))
             .map_err(|e| format!("{}: {e}", path.display()))
@@ -667,7 +910,9 @@ fn ratchet(
         summary: String::new(),
         written: false,
         comparison: Comparison::default(),
+        accepted: Vec::new(),
         unknown: unknown_count(now),
+        starts,
     };
     let Some(b) = before else {
         if o.update {
@@ -675,8 +920,7 @@ fn ratchet(
             v.written = true;
             v.summary = format!("baseline: created {}\n", path.display());
         } else {
-            v.result = "missing-baseline";
-            v.code = u8::from(o.ci);
+            (v.result, v.code) = ("missing-baseline", u8::from(o.ci));
             v.summary = format!(
                 "baseline: {} doesn't exist; create it with --update\n",
                 path.display()
@@ -685,52 +929,14 @@ fn ratchet(
         return Ok(v);
     };
     v.comparison = compare(&b["results"], now, policy);
-    let c = &v.comparison;
-    let mut lines = Vec::new();
-    for (mark, changes) in [
-        ("✗ worse  ", &c.regressions),
-        ("✓ better ", &c.improvements),
-        ("· changed", &c.other),
-    ] {
-        lines.extend(changes.iter().map(|r| format!("{mark} {r}")));
-    }
-    let differs = b["results"] != *now;
-    let unknown = v.unknown;
+    (v.accepted, v.comparison.regressions) = std::mem::take(&mut v.comparison.regressions)
+        .into_iter()
+        .partition(|r| o.accept.contains(&r.scorecard));
+    let recorded = b["campaigns"].as_object().cloned().unwrap_or_default();
+    let differs = b["results"] != *now || recorded != v.starts;
     let unexpected = unexpected_unknowns(m, &o.skip, now);
-    let text = if !c.regressions.is_empty() {
-        (v.result, v.code) = ("regressed", 1);
-        format!(
-            "{} regression(s) against {}",
-            c.regressions.len(),
-            path.display()
-        )
-    } else if unexpected > 0 && (o.ci || o.update) {
-        // A connector that ran and still produced no data must not be written into the baseline.
-        // Unknowns whose `dataFrom` connector was skipped are expected and are recorded.
-        (v.result, v.code) = ("unknown", 1);
-        format!(
-            "{unexpected} rule outcome(s) unknown and not excused by --skip; {} needs those rules evaluated",
-            if o.ci { "--ci" } else { "--update" }
-        )
-    } else if unknown > 0 && !differs {
-        format!(
-            "no regressions; {unknown} rule outcome(s) unknown (excused by --skip, or not gating), not compared"
-        )
-    } else if differs && o.update {
-        write()?;
-        v.written = true;
-        format!("no regressions; updated {}", path.display())
-    } else if differs {
-        (v.result, v.code) = ("stale", u8::from(o.ci));
-        format!(
-            "no regressions, but {} is out of date{}: run with --update and commit it",
-            path.display(),
-            if o.ci { " (--ci)" } else { "" }
-        )
-    } else {
-        format!("matches {}", path.display())
-    };
-    v.summary = format!("{}\nbaseline: {text}\n", lines.join("\n"));
+    let text = decide(o, &mut v, path, differs, unexpected, &write)?;
+    v.summary = format!("{}\nbaseline: {text}\n", change_lines(&v, d).join("\n"));
     Ok(v)
 }
 
@@ -753,8 +959,61 @@ fn verdict_json(o: &Options, v: &Verdict) -> Value {
         "unknownRules": v.unknown,
         "regressions": list(&v.comparison.regressions),
         "improvements": list(&v.comparison.improvements),
+        "accepted": list(&v.accepted),
         "changes": list(&v.comparison.other),
     })
+}
+
+/// An entity's string, number and boolean fields.
+fn scalars(e: Option<&toolbox_derive::Entity>) -> Map<String, Value> {
+    e.into_iter()
+        .flat_map(|e| &e.fields)
+        .filter(|(_, v)| v.is_string() || v.is_number() || v.is_boolean())
+        .map(|(k, v)| (k.clone(), v.clone()))
+        .collect()
+}
+
+/// Every failing rule, flat: what an agent fixes, sorted by scorecard, then largest measure (or
+/// most evidence) first. `path` is the entity's `path` field when it has one; `fields` are its
+/// scalar fields (strings, numbers, booleans), such as a file's `lines`.
+fn failures(m: &toolbox_model::Manifest, d: &Derived) -> Value {
+    let mut rows = Vec::new();
+    for sc in &m.scorecards {
+        for (id, s) in d.scores.get(&sc.name).into_iter().flatten() {
+            for (rule, outcome) in s.rules.iter().flatten() {
+                if outcome != "fail" {
+                    continue;
+                }
+                let def = sc.rules.iter().find(|r| &r.name == rule);
+                let ev = s.evidence.get(rule).cloned().unwrap_or(Value::Null);
+                let size = s
+                    .measures
+                    .get(rule)
+                    .copied()
+                    .or_else(|| ev.as_array().map(|a| a.len() as f64));
+                rows.push((
+                    sc.name.clone(),
+                    -size.unwrap_or(0.0),
+                    json!({
+                        "scorecard": sc.name,
+                        "rule": rule,
+                        "entity": id,
+                        "path": d.entities.get(id).and_then(|e| e.fields.get("path")),
+                        "fields": scalars(d.entities.get(id)),
+                        "measure": s.measures.get(rule).map(|x| number(*x)),
+                        "evidence": ev,
+                        "fix": def.and_then(|r| r.fix.as_deref()),
+                    }),
+                ));
+            }
+        }
+    }
+    rows.sort_by(|a, b| {
+        a.0.cmp(&b.0)
+            .then(a.1.total_cmp(&b.1))
+            .then(a.2["entity"].as_str().cmp(&b.2["entity"].as_str()))
+    });
+    Value::Array(rows.into_iter().map(|r| r.2).collect())
 }
 
 pub fn run(o: &Options) -> ExitCode {
@@ -778,17 +1037,22 @@ pub fn run(o: &Options) -> ExitCode {
     };
     let now = results(&d, &advisory(&m));
     let v = match &o.baseline {
-        Some(path) => match ratchet(o, path, &m, &now, &new_policy(&m)) {
+        Some(path) => match ratchet(o, path, &m, &d, &now, &new_policy(&m)) {
             Ok(v) => v,
             Err(e) => return fail(e),
         },
+        None if !o.accept.is_empty() => {
+            return fail("--accept needs --baseline and --update".into());
+        }
         None => Verdict {
             result: "pass",
             code: 0,
             summary: String::new(),
             written: false,
             comparison: Comparison::default(),
+            accepted: Vec::new(),
             unknown: unknown_count(&now),
+            starts: Map::new(),
         },
     };
     save(&verdict_json(o, &v));
@@ -797,11 +1061,11 @@ pub fn run(o: &Options) -> ExitCode {
         let Some(dir) = &o.out else {
             return fail("-o web writes a directory; pass --out DIR".into());
         };
-        if let Err(e) = write_web(dir, &m, &d) {
+        if let Err(e) = write_web(dir, &m, &d, &v.starts) {
             return fail(e);
         }
         if let Some(p) = &o.html
-            && let Err(e) = std::fs::write(p, html(&m, &d))
+            && let Err(e) = std::fs::write(p, html(&m, &d, &v.starts))
         {
             return fail(format!("{}: {e}", p.display()));
         }
@@ -809,14 +1073,24 @@ pub fn run(o: &Options) -> ExitCode {
         return code;
     }
     let body = match o.output.as_str() {
-        "json" => toolbox_derive::pyjson::pretty(
-            &json!({"format": FORMAT, "snapshot": d.snapshot, "scores": d.scores, "results": now}),
-        ),
-        "html" => html(&m, &d),
-        _ => markdown(&m, &d),
+        "json" => toolbox_derive::pyjson::pretty(&json!({
+            "format": FORMAT,
+            "snapshot": d.snapshot,
+            "scores": d.scores,
+            "results": now,
+            "campaigns": campaign_defs(&m, &d, &v.starts),
+        })),
+        "failures" => toolbox_derive::pyjson::pretty(&failures(&m, &d)),
+        "html" => html(&m, &d, &v.starts),
+        "md" => markdown(&m, &d),
+        other => {
+            return fail(format!(
+                "-o {other}: expected md, json, failures, html or web"
+            ));
+        }
     };
     if let Some(p) = &o.html
-        && let Err(e) = std::fs::write(p, html(&m, &d))
+        && let Err(e) = std::fs::write(p, html(&m, &d, &v.starts))
     {
         return fail(format!("{}: {e}", p.display()));
     }
@@ -913,6 +1187,72 @@ mod tests {
         let c = compare(&after, &before, &NewPolicy::new());
         assert!(c.regressions.is_empty());
         assert_eq!(c.other[0].to_string(), "card · a: lint known again: fails");
+    }
+
+    #[test]
+    fn measures_are_compared_as_numbers() {
+        // A rule with a `measure` records it (1070 lines), so one more line is a regression.
+        let before = r(json!({"f": {"level": "none", "failing": {"size": 1070}}}));
+        let grew = r(json!({"f": {"level": "none", "failing": {"size": 1071}}}));
+        let shrank = r(json!({"f": {"level": "none", "failing": {"size": 1069.5}}}));
+        let c = compare(&before, &grew, &NewPolicy::new());
+        assert_eq!(
+            s(&c.regressions),
+            ["card · f: size evidence grew 1070 → 1071"]
+        );
+        let c = compare(&before, &shrank, &NewPolicy::new());
+        assert_eq!(
+            s(&c.improvements),
+            ["card · f: size evidence shrank 1070 → 1069.5"]
+        );
+        assert_eq!(number(1070.0), json!(1070));
+        assert_eq!(number(2.5), json!(2.5));
+    }
+
+    fn progress(
+        in_scope: usize,
+        meeting: usize,
+        measure: Option<f64>,
+    ) -> toolbox_derive::CampaignProgress {
+        toolbox_derive::CampaignProgress {
+            status: "active".into(),
+            track: None,
+            target_percent: 100,
+            in_scope,
+            meeting,
+            percent: 0,
+            on_target: false,
+            measure,
+            milestones: vec![],
+            entities: BTreeMap::new(),
+        }
+    }
+
+    #[test]
+    fn paydown_is_measured_from_the_recorded_start() {
+        let start = json!({"start": "2026-11-21", "recorded": "2026-11-21", "inScope": 400, "short": 37, "measure": 102});
+        let p = paydown(&start, &progress(400, 365, Some(99.0)));
+        assert_eq!(
+            p,
+            json!({"start": "2026-11-21", "recorded": "2026-11-21",
+                   "entitiesShort": {"from": 37, "now": 35, "percentDone": 5.4},
+                   "measure": {"from": 102, "now": 99, "percentDone": 2.9}})
+        );
+        // Backwards is negative, not hidden.
+        assert_eq!(
+            paydown(&start, &progress(400, 360, Some(105.0)))["measure"]["percentDone"],
+            json!(-2.9)
+        );
+        // Without a measure, only entities short of the goal.
+        let start = json!({"start": null, "inScope": 10, "short": 4});
+        let p = paydown(&start, &progress(10, 7, None));
+        assert!(p.get("measure").is_none());
+        assert_eq!(p["entitiesShort"]["percentDone"], json!(25.0));
+        // Nothing to pay down: done.
+        assert_eq!(
+            paydown(&json!({"short": 0}), &progress(3, 3, None))["entitiesShort"]["percentDone"],
+            json!(100.0)
+        );
     }
 
     #[test]

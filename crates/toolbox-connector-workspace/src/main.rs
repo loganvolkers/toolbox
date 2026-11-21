@@ -47,9 +47,14 @@
 //! `docs` and `file` records also carry `captures` (each configured regex's first group, unique,
 //! sorted, with runs of whitespace replaced by `-`) and `counts` (matches per configured regex),
 //! so a portal can relate files to the
-//! commands and tools they mention without the connector knowing about them.
+//! commands and tools they mention without the connector knowing about them. `file` records also
+//! carry `matchLines` (for each `counts` regex, the line of every match).
 //!
-//! `TOOLBOX_CONNECTOR_CONFIG`: `{"root"?: ".", "docs"?: [glob], "files"?: [glob],
+//! `exclude` globs remove paths from every walk; `"lastChange": false` leaves `lastChange` null
+//! and skips the history walk. The full reference is docs/reference/workspace-connector.md.
+//!
+//! `TOOLBOX_CONNECTOR_CONFIG`: `{"root"?: ".", "exclude"?: [glob], "lastChange"?: true,
+//! "docs"?: [glob], "files"?: [glob],
 //! "captures"?: {name: regex}, "counts"?: {name: regex}, "crates"?: true, "repo"?: false,
 //! "betterer"?: [glob], "skills"?: [glob], "connectors"?: [glob], "dependencies"?: false,
 //! "agentDocs"?: [glob], "plugins"?: [glob], "packages"?: [glob], "schemas"?: [glob],
@@ -83,6 +88,8 @@ use toolbox_connect::sdk::{Out, Source, run_stdio};
 
 struct Workspace {
     root: PathBuf,
+    /// Paths never read, whatever globs match them (generated code, vendored trees, tests).
+    exclude: Vec<Regex>,
     docs: Vec<Regex>,
     files: Vec<Regex>,
     betterer: Vec<Regex>,
@@ -145,14 +152,53 @@ fn globs(cfg: &Value, key: &str) -> Result<Vec<Regex>, String> {
 }
 
 /// The date (YYYY-MM-DD) of the last commit touching `path`, if it is tracked.
+/// `"lastChange": false` turns the field off (it is `null`): the history walk is the slowest part
+/// of a large checkout, and only standards about staleness read it.
+static LAST_CHANGE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+
+/// Per checkout root: each path's last commit date, from one `git log` over the history (instead
+/// of one process per file, which took 36 s on PostHog's 22,000 files).
+type Dates = std::sync::Arc<BTreeMap<String, String>>;
+static LAST_CHANGES: std::sync::OnceLock<std::sync::Mutex<BTreeMap<PathBuf, Dates>>> =
+    std::sync::OnceLock::new();
+
+fn last_changes(root: &Path) -> Dates {
+    let cache = LAST_CHANGES.get_or_init(Default::default);
+    let mut cache = cache.lock().unwrap_or_else(|e| e.into_inner());
+    cache
+        .entry(root.to_path_buf())
+        .or_insert_with(|| {
+            let mut map = BTreeMap::new();
+            let out = std::process::Command::new("git")
+                .args([
+                    "log",
+                    "--format=%x01%cs",
+                    "--name-only",
+                    "--relative",
+                    "--no-renames",
+                ])
+                .current_dir(root)
+                .output();
+            let text = out.map(|o| o.stdout).unwrap_or_default();
+            let mut date = String::new();
+            for line in String::from_utf8_lossy(&text).lines() {
+                if let Some(d) = line.strip_prefix('\u{1}') {
+                    date = d.to_owned();
+                } else if !line.is_empty() {
+                    // Newest first: the first date seen for a path is its last change.
+                    map.entry(line.to_owned()).or_insert_with(|| date.clone());
+                }
+            }
+            std::sync::Arc::new(map)
+        })
+        .clone()
+}
+
 fn last_change(root: &Path, path: &str) -> Option<String> {
-    let out = std::process::Command::new("git")
-        .args(["log", "-1", "--format=%cs", "--", path])
-        .current_dir(root)
-        .output()
-        .ok()?;
-    let s = String::from_utf8_lossy(&out.stdout).trim().to_owned();
-    (!s.is_empty()).then_some(s)
+    if !LAST_CHANGE.load(std::sync::atomic::Ordering::Relaxed) {
+        return None;
+    }
+    last_changes(root).get(path).cloned()
 }
 
 fn workflow_text(root: &Path, paths: &[String], globs: &[Regex]) -> String {
@@ -293,8 +339,13 @@ impl Workspace {
             &std::env::var("TOOLBOX_CONNECTOR_CONFIG").unwrap_or_else(|_| "{}".into()),
         )
         .map_err(|e| format!("TOOLBOX_CONNECTOR_CONFIG: {e}"))?;
+        LAST_CHANGE.store(
+            cfg["lastChange"].as_bool().unwrap_or(true),
+            std::sync::atomic::Ordering::Relaxed,
+        );
         Ok(Workspace {
             root: PathBuf::from(cfg["root"].as_str().unwrap_or(".")),
+            exclude: globs(&cfg, "exclude")?,
             docs: globs(&cfg, "docs")?,
             files: globs(&cfg, "files")?,
             betterer: globs(&cfg, "betterer")?,
@@ -320,9 +371,12 @@ impl Workspace {
         })
     }
 
-    /// Relative paths of every file under the root (skipping build and VCS directories).
+    /// Relative paths of every file under the root (skipping build and VCS directories and
+    /// `exclude` globs).
     fn walk(&self) -> Vec<String> {
-        files::walk(&self.root)
+        let mut paths = files::walk(&self.root);
+        paths.retain(|p| !Self::matches(&self.exclude, p));
+        paths
     }
 
     fn matches(set: &[Regex], path: &str) -> bool {
@@ -392,6 +446,23 @@ impl Workspace {
         }))
     }
 
+    /// For each `counts` regex, the 1-based line of every match (so evidence can say where).
+    fn match_lines(&self, text: &str) -> Value {
+        let starts: Vec<usize> = std::iter::once(0)
+            .chain(text.match_indices('\n').map(|(i, _)| i + 1))
+            .collect();
+        let line = |at: usize| starts.partition_point(|&s| s <= at);
+        let out: Map<String, Value> = self
+            .counts
+            .iter()
+            .map(|(name, re)| {
+                let lines: Vec<usize> = re.find_iter(text).map(|m| line(m.start())).collect();
+                (name.clone(), json!(lines))
+            })
+            .collect();
+        Value::Object(out)
+    }
+
     fn file_record(&self, rel: &str) -> Option<Value> {
         let text = std::fs::read_to_string(self.root.join(rel)).ok()?;
         let (captures, counts) = self.scan(&text);
@@ -401,6 +472,7 @@ impl Workspace {
             "lines": text.lines().count(),
             "captures": captures,
             "counts": counts,
+            "matchLines": self.match_lines(&text),
             "lastChange": last_change(&self.root, rel),
         }))
     }
