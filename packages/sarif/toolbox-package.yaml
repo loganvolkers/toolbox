@@ -28,12 +28,13 @@ parameters:
     type: array
     default: [--version]
     description: How `toolbox doctor` asks the tool its version.
-  mise:
-    type: string
-    default: ""
+  install:
+    type: object
+    default: {}
     description: >-
-      How mise installs the tool (e.g. pipx:ruff); `toolbox doctor --mise`
-      prints it.
+      The tool's id for each installer `toolbox tools install` can run, e.g.
+      {pypi: ruff, mise: "pipx:ruff", aqua: astral-sh/ruff}. Any subset; none
+      is required.
   command:
     type: array
     description: >-

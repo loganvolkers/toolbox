@@ -67,7 +67,7 @@ connectors:
         # `toolbox get …`, `"$T/toolbox" serve …`, the acceptance scripts' `ask owner …`, and
         # subcommands (`toolbox assess check`)
         commands: >-
-          (?:\btoolbox"?|\bask)\s+((?:connector|token)\s+[a-z]+|assess[
+          (?:\btoolbox"?|\bask)\s+((?:connector|token|tools)\s+[a-z]+|assess[
           \t]+(?:brief|check|submit)|describe[
           \t]+(?:portal|scorecards)|[a-z][a-z-]*)
         # MCP tools/call bodies: {"name": "owner_of", …}
@@ -289,7 +289,7 @@ include:
       kind: PythonScript
       tool: ruff
       version: 0.14.0
-      mise: pipx:ruff
+      install: {pypi: ruff, mise: pipx:ruff, aqua: astral-sh/ruff}
       command:
         - ruff
         - check

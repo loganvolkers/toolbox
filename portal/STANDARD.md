@@ -438,8 +438,8 @@ Change a standard by changing these parameters in the portal's `toolbox.yaml`.
   - `command`: `["ruff","check","--no-cache","--output-format","sarif","--exit-zero","{files}"]`
   - `files`: `["scripts/*.py","examples/reference-portal/tools/*.py"]`
   - `fix`: `"Fix ruff's findings (the record's command reruns them), or, for a deliberate style, ignore the rule for those files in ruff.toml with a comment saying why."`
+  - `install`: `{"aqua":"astral-sh/ruff","mise":"pipx:ruff","pypi":"ruff"}`
   - `kind`: `"PythonScript"`
-  - `mise`: `"pipx:ruff"`
   - `name`: `"maintainer-python"`
   - `title`: `"Python we maintain passes ruff"`
   - `tool`: `"ruff"`

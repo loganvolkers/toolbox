@@ -15,12 +15,12 @@ use toolbox_api::artifacts::{self, Spec};
 
 const LOCK: &str = "toolbox.lock";
 
-fn fail(m: impl std::fmt::Display) -> ExitCode {
+pub(crate) fn fail(m: impl std::fmt::Display) -> ExitCode {
     eprintln!("error: {m}");
     ExitCode::from(2)
 }
 
-fn manifest(portal: &Path) -> Result<(PathBuf, toolbox_model::Manifest), String> {
+pub(crate) fn manifest(portal: &Path) -> Result<(PathBuf, toolbox_model::Manifest), String> {
     let src = toolbox_model::load::load(portal).map_err(|e| e.to_string())?;
     let m = crate::portal::manifest_from(&src)?;
     Ok((src.root, m))
@@ -277,7 +277,7 @@ pub fn install(portal: &Path, frozen: bool) -> ExitCode {
 }
 
 /// The first line a tool prints for its version arguments, if it runs.
-fn tool_version(name: &str, args: &[String]) -> Option<String> {
+pub(crate) fn tool_version(name: &str, args: &[String]) -> Option<String> {
     let out = std::process::Command::new(name).args(args).output().ok()?;
     let text = format!(
         "{}{}",
@@ -296,7 +296,7 @@ pub fn doctor(portal: &Path, mise: bool) -> ExitCode {
     if mise {
         println!("[tools]");
         for (name, t) in &m.tools {
-            let id = t.mise.clone().unwrap_or_else(|| name.clone());
+            let id = crate::tools::id_for(t, "mise").unwrap_or_else(|| name.clone());
             println!("\"{id}\" = \"{}\"", t.version);
         }
         return ExitCode::SUCCESS;
@@ -339,7 +339,7 @@ pub fn doctor(portal: &Path, mise: bool) -> ExitCode {
             None => {
                 problems += 1;
                 format!(
-                    "MISSING tool {name} {}: install it (toolbox doctor --mise prints the mise config)",
+                    "MISSING tool {name} {}: install it (toolbox tools install, or toolbox tools config --for mise)",
                     t.version
                 )
             }

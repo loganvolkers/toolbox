@@ -9,6 +9,7 @@ mod model;
 mod portal;
 mod report;
 mod server;
+mod tools;
 
 use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
 
@@ -272,6 +273,12 @@ enum Command {
         #[arg(long, default_value = ".")]
         portal: PathBuf,
     },
+    /// The portal's tools: install them at their pinned versions with an installer you choose,
+    /// or print an installer's input. Toolbox doesn't download tools itself.
+    Tools {
+        #[command(subcommand)]
+        command: ToolsCommand,
+    },
     /// Check that every in-image connector resolves and every declared tool is at its pinned
     /// version; exit 1 when something is missing.
     Doctor {
@@ -433,6 +440,34 @@ enum ConnectorCommand {
 }
 
 #[derive(Subcommand)]
+enum ToolsCommand {
+    /// Install every tool the portal pins that isn't already on the PATH at its version, by
+    /// running an installer: mise, uv, pipx or pip (auto: the first available that the tool
+    /// declares an id for). Then run `toolbox doctor`.
+    Install {
+        /// A portal directory (containing toolbox.yaml) or a manifest file.
+        #[arg(default_value = ".")]
+        path: PathBuf,
+        /// The installer: auto, mise, uv, pipx or pip (aqua installs from `tools config --for aqua`).
+        #[arg(long, default_value = "auto")]
+        via: String,
+        /// Print the install commands without running them.
+        #[arg(long)]
+        dry_run: bool,
+    },
+    /// Print an installer's input from the portal's pins: a mise `[tools]` table, an aqua.yaml
+    /// package list, or PyPI requirements (for uv, pipx or pip).
+    Config {
+        /// A portal directory (containing toolbox.yaml) or a manifest file.
+        #[arg(default_value = ".")]
+        path: PathBuf,
+        /// mise, aqua or pypi.
+        #[arg(long = "for")]
+        installer: String,
+    },
+}
+
+#[derive(Subcommand)]
 enum TokenCommand {
     /// Create a token for a user (the subject: a login or an email) and print it once.
     Create {
@@ -478,9 +513,67 @@ fn quiet_on_closed_pipe() {
     }));
 }
 
+/// The read commands: each is one MCP tool call against a server or a local portal.
+fn read_call(c: &Command) -> Option<(&Remote, &'static str, serde_json::Value)> {
+    use serde_json::json;
+    Some(match c {
+        Command::Get { id, fields, remote } => (remote, "get", json!({"id": id, "fields": fields})),
+        Command::Query {
+            kind,
+            filter,
+            fields,
+            remote,
+        } => (
+            remote,
+            "query",
+            json!({"kind": kind, "filter": filter, "fields": fields}),
+        ),
+        Command::Search { query, remote } => (remote, "search", json!({"query": query})),
+        Command::Graph { id, depth, remote } => {
+            (remote, "graph", json!({"id": id, "depth": depth}))
+        }
+        Command::Owner { id, remote } => (remote, "owner_of", json!({"id": id})),
+        Command::Explain {
+            id,
+            field,
+            rule,
+            remote,
+        } => (
+            remote,
+            "explain",
+            json!({"id": id, "field": field, "rule": rule}),
+        ),
+        Command::Score { id, remote } => (remote, "scorecard_status", json!({"id": id})),
+        Command::Scorecard {
+            name,
+            rule,
+            outcome,
+            level,
+            remote,
+        } => (
+            remote,
+            "scorecard_report",
+            json!({"scorecard": name, "rule": rule, "outcome": outcome, "level": level}),
+        ),
+        Command::Campaign {
+            name,
+            portal: None,
+            remote,
+            ..
+        } => (remote, "campaign_report", json!({"campaign": name})),
+        Command::Refresh { id, remote } => (remote, "refresh_entity", json!({"id": id})),
+        Command::Actions { id, remote } => (remote, "list_actions", json!({"id": id})),
+        _ => return None,
+    })
+}
+
 fn main() -> ExitCode {
     quiet_on_closed_pipe();
-    match Cli::parse().command {
+    let command = Cli::parse().command;
+    if let Some((remote, tool, args)) = read_call(&command) {
+        return client::tool(&remote.target(), tool, args, &remote.output);
+    }
+    match command {
         Command::Validate { path, format } => validate(&path, format),
         Command::Test { path, format } => test(&path, format),
         Command::Plan {
@@ -497,6 +590,12 @@ fn main() -> ExitCode {
         Command::Assess { what } => assess_command(what),
         Command::Install { path, frozen } => install::install(&path, frozen),
         Command::Doctor { path, mise } => install::doctor(&path, mise),
+        Command::Tools {
+            command: ToolsCommand::Install { path, via, dry_run },
+        } => tools::install(&path, &via, dry_run),
+        Command::Tools {
+            command: ToolsCommand::Config { path, installer },
+        } => tools::config(&path, &installer),
         Command::Vendor { spec, portal } => install::vendor(&spec, &portal),
         Command::Serve {
             path,
@@ -505,70 +604,6 @@ fn main() -> ExitCode {
             fixtures,
         } => server::serve(&path, &listen, database_url, fixtures),
         Command::Push { path, url } => server::push(&path, &url),
-        Command::Get { id, fields, remote } => client::tool(
-            &remote.target(),
-            "get",
-            serde_json::json!({"id": id, "fields": fields}),
-            &remote.output,
-        ),
-        Command::Query {
-            kind,
-            filter,
-            fields,
-            remote,
-        } => client::tool(
-            &remote.target(),
-            "query",
-            serde_json::json!({"kind": kind, "filter": filter, "fields": fields}),
-            &remote.output,
-        ),
-        Command::Search { query, remote } => client::tool(
-            &remote.target(),
-            "search",
-            serde_json::json!({"query": query}),
-            &remote.output,
-        ),
-        Command::Graph { id, depth, remote } => client::tool(
-            &remote.target(),
-            "graph",
-            serde_json::json!({"id": id, "depth": depth}),
-            &remote.output,
-        ),
-        Command::Owner { id, remote } => client::tool(
-            &remote.target(),
-            "owner_of",
-            serde_json::json!({"id": id}),
-            &remote.output,
-        ),
-        Command::Explain {
-            id,
-            field,
-            rule,
-            remote,
-        } => client::tool(
-            &remote.target(),
-            "explain",
-            serde_json::json!({"id": id, "field": field, "rule": rule}),
-            &remote.output,
-        ),
-        Command::Score { id, remote } => client::tool(
-            &remote.target(),
-            "scorecard_status",
-            serde_json::json!({"id": id}),
-            &remote.output,
-        ),
-        Command::Scorecard {
-            name,
-            rule,
-            outcome,
-            level,
-            remote,
-        } => client::tool(
-            &remote.target(),
-            "scorecard_report",
-            serde_json::json!({"scorecard": name, "rule": rule, "outcome": outcome, "level": level}),
-            &remote.output,
-        ),
         Command::Campaign {
             name,
             portal: Some(portal),
@@ -582,25 +617,7 @@ fn main() -> ExitCode {
             &skip,
             &remote.output,
         ),
-        Command::Campaign { name, remote, .. } => client::tool(
-            &remote.target(),
-            "campaign_report",
-            serde_json::json!({"campaign": name}),
-            &remote.output,
-        ),
         Command::Report(o) => report::run(&o),
-        Command::Refresh { id, remote } => client::tool(
-            &remote.target(),
-            "refresh_entity",
-            serde_json::json!({"id": id}),
-            &remote.output,
-        ),
-        Command::Actions { id, remote } => client::tool(
-            &remote.target(),
-            "list_actions",
-            serde_json::json!({"id": id}),
-            &remote.output,
-        ),
         Command::Mcp { remote } => client::bridge(&remote.target()),
         Command::Connector {
             command:
@@ -622,6 +639,7 @@ fn main() -> ExitCode {
                     database_url,
                 },
         } => server::create_token(&user, label.as_deref(), &database_url),
+        _ => unreachable!("read commands are handled by read_call"),
     }
 }
 

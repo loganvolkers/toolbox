@@ -136,7 +136,7 @@
     },
     "tools": {
       "type": "object",
-      "description": "Upstream tools the portal's connectors and rules need (D90). Toolbox never installs them: `toolbox doctor` checks them and `toolbox doctor --mise` prints the mise configuration that installs them.",
+      "description": "Upstream tools the portal's connectors and rules need (D90, D01M800DHD0Z1RTPH7CM46GZS3B). Toolbox doesn't download them: `toolbox doctor` checks each pin, `toolbox tools config --for mise|aqua|pypi` prints an installer's input, and `toolbox tools install --via` runs the installer.",
       "additionalProperties": {
         "type": "object",
         "additionalProperties": false,
@@ -150,7 +150,7 @@
           },
           "mise": {
             "type": "string",
-            "description": "The mise tool id, e.g. aqua:rhysd/actionlint or pipx:zizmor."
+            "description": "The mise tool id, e.g. aqua:rhysd/actionlint or pipx:zizmor (the same as install.mise)."
           },
           "versionArgs": {
             "type": "array",
@@ -158,6 +158,25 @@
               "type": "string"
             },
             "description": "Arguments that print the version (default [\"--version\"])."
+          },
+          "install": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "The tool's id for each installer: Toolbox derives the installer's input from `version` and runs it. Declare any you support; none is required.",
+            "properties": {
+              "mise": {
+                "type": "string",
+                "description": "mise tool id (any backend), e.g. aqua:rhysd/actionlint."
+              },
+              "aqua": {
+                "type": "string",
+                "description": "aqua registry package, e.g. rhysd/actionlint."
+              },
+              "pypi": {
+                "type": "string",
+                "description": "PyPI package, installed by uv, pipx or pip, e.g. zizmor."
+              }
+            }
           }
         }
       }

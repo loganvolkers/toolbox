@@ -20,7 +20,7 @@ connectors:
 tools:
   ${param:tool}:
     version: ${param:version}
-    mise: ${param:mise}
+    install: ${param:install}
     versionArgs: ${param:versionArgs}
 
 kinds:

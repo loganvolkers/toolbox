@@ -14,7 +14,7 @@ that the counts match.
 | Brings | Named |
 |---|---|
 | Connector | `<name>` (`builtin:runner`, `parse: sarif`) |
-| Tool pin | `<tool>` at `<version>` (`toolbox doctor`, `toolbox doctor --mise`) |
+| Tool pin | `<tool>` at `<version>` (`toolbox doctor`; `toolbox tools install` runs mise, uv, pipx or pip) |
 | Kind | `<kind>`: `path`, `total`, `active`, `findings`, `command` |
 | Scorecard | `<name>`, one level `clean`, rule `no-findings` |
 | Campaign | `<name>-zero` |
@@ -31,7 +31,7 @@ include:
       kind: PythonScript
       tool: ruff
       version: 0.14.0
-      mise: pipx:ruff
+      install: {pypi: ruff, mise: "pipx:ruff", aqua: astral-sh/ruff}
       command: [ruff, check, --no-cache, --output-format, sarif, --exit-zero, "{files}"]
       files: [scripts/*.py]
 ```
@@ -55,7 +55,7 @@ package again with another `name` and `kind` for a second tool.
 | `command` | required | The tool's command printing SARIF to stdout. `{files}` becomes the files matching `files` |
 | `files` | `[]` | Globs of the files covered; each gets a record, clean ones included. Without it, only files with findings have records |
 | `countSuppressed` | `false` | Count inline suppressions (`noqa`, `nosemgrep`) as violations, so the campaign pays them down too |
-| `mise`, `versionArgs` | `""`, `[--version]` | How mise installs the tool, and how `toolbox doctor` asks its version |
+| `install`, `versionArgs` | `{}`, `[--version]` | The tool's id per installer (`mise`, `aqua`, `pypi`) for `toolbox tools install`, and how `toolbox doctor` asks its version |
 | `title`, `owner`, `fix`, `root` | | The scorecard's heading, owner and fix text; where the tool runs |
 
 ## Sources

@@ -54,11 +54,15 @@ connectors:
     refresh: {workflow-runs: [external_ids]}
     freshness: {workflow-runs: 15m}
 
+# One pin per tool; `toolbox tools install --via <installer>` (or `tools config --for …`) uses any
+# of these ids (D01M800DHD0Z1RTPH7CM46GZS3B). Toolbox downloads nothing itself.
 tools:
-  zizmor: {version: 1.32.0, mise: pipx:zizmor}
+  zizmor:
+    version: 1.32.0
+    install: {pypi: zizmor, mise: pipx:zizmor, aqua: zizmorcore/zizmor}
   actionlint:
     version: 1.7.12
-    mise: aqua:rhysd/actionlint
+    install: {mise: aqua:rhysd/actionlint, aqua: rhysd/actionlint}
     versionArgs: [-version]
 
 

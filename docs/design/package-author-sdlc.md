@@ -44,7 +44,9 @@ Three couplings make the gap structural:
    - **remote** (works today).
 
    The conformance kit is the gate for all four.
-4. **Packages declare their tools; mise and aqua install them** (§3.3). Toolbox never installs zizmor
+4. **Packages declare their tools; installers install them** (§3.3; refined by
+   D01M800DHD0Z1RTPH7CM46GZS3B, [tool-installation.md](./tool-installation.md): one pin, an id per
+   installer, and `toolbox tools install --via mise|uv|pipx|pip`). Toolbox never downloads zizmor
    itself. It checks versions and reports missing ones (`toolbox doctor`). A package emits a
    `mise.toml` fragment with pinned, checksummed tools, and CI uses the same file.
 5. **Score the SDLCs** (§4). `portal/sdlc/` declares each layer's stages, with their exit criteria,

@@ -65,7 +65,8 @@ jobs:
           CI linters for the ratchet, at the versions the committed baseline was
           made with
         run: |
-          pip install zizmor==1.32.0 ruff==0.14.0
+          # The pins live in the portal's tools: (one place); pip installs the PyPI ones (D01M800DHD0Z1RTPH7CM46GZS3B)
+          target/debug/toolbox tools install portal --via pip
           actionlint -version   # installed with OpenFGA above
           target/debug/toolbox doctor portal   # every connector resolves, every tool at its pinned version (D90)
       - name: >-

@@ -270,7 +270,7 @@
         "failing": {
           "fully-documented": 8,
           "public-api-documented": 8,
-          "short-functions": 4,
+          "short-functions": 3,
           "simple-functions": 2
         },
         "level": "bronze",
@@ -844,6 +844,9 @@
       "doc:docs/decisions/D01M7ZZYZ1SXSTHDZQK8A1CZMMN.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M800DHD0Z1RTPH7CM46GZS3B.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/README.md": {
         "level": "skipped"
       },
@@ -974,6 +977,9 @@
         "level": "silver"
       },
       "doc:docs/design/supply-chain-standards.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/tool-installation.md": {
         "level": "silver"
       },
       "doc:docs/design/toolbox-and-tools.md": {
@@ -1166,6 +1172,12 @@
         "level": "silver"
       },
       "doc:plugins/toolbox-operator/skills/toolbox-authoring/SKILL.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/skills/tools-config/SKILL.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/skills/tools-install/SKILL.md": {
         "level": "silver"
       },
       "doc:plugins/toolbox-operator/skills/validate/SKILL.md": {
@@ -1520,6 +1532,20 @@
           "has-example": 1
         },
         "level": "bronze"
+      },
+      "skill:plugins/toolbox-operator/skills/tools-config": {
+        "failing": {
+          "has-evals": 1,
+          "states-boundaries": 1
+        },
+        "level": "silver"
+      },
+      "skill:plugins/toolbox-operator/skills/tools-install": {
+        "failing": {
+          "has-evals": 1,
+          "states-boundaries": 1
+        },
+        "level": "silver"
       },
       "skill:plugins/toolbox-operator/skills/validate": {
         "failing": {
@@ -4581,6 +4607,15 @@
         },
         "level": "bronze"
       },
+      "command:tools-config": {
+        "failing": {
+          "exercised": null
+        },
+        "level": "bronze"
+      },
+      "command:tools-install": {
+        "level": "silver"
+      },
       "command:validate": {
         "level": "silver"
       },
@@ -4878,6 +4913,12 @@
         "level": "skipped"
       },
       "command:token-create": {
+        "level": "skipped"
+      },
+      "command:tools-config": {
+        "level": "skipped"
+      },
+      "command:tools-install": {
         "level": "skipped"
       },
       "command:validate": {

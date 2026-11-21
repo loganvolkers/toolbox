@@ -225,8 +225,11 @@ impl Campaign {
 #[serde(rename_all = "camelCase")]
 pub struct Tool {
     pub version: String,
+    /// The mise tool id (kept; `install.mise` is the same).
     pub mise: Option<String>,
     pub version_args: Option<Vec<String>>,
+    /// The tool's id for each installer `toolbox tools install` can run: `mise`, `aqua`, `pypi`.
+    pub install: Option<serde_json::Map<String, Value>>,
 }
 
 /// A rubric: the questions an agent answers when it assesses an entity of `kind`.

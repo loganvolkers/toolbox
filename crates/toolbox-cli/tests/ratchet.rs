@@ -174,7 +174,10 @@ fn a_repository_level_regression_names_its_root_cause() {
     let _ = std::fs::remove_dir_all(&dir);
     let manifest = MANIFEST
         .replace("records: [thing]", "records: [thing, repo]")
-        .replace("scorecards:\n", &format!("{}scorecards:\n", AGGREGATE.trim_start_matches('\n')))
+        .replace(
+            "scorecards:\n",
+            &format!("{}scorecards:\n", AGGREGATE.trim_start_matches('\n')),
+        )
         + r#"  - name: repo-level
     kind: Repo
     owner: group:maintainers
@@ -186,9 +189,11 @@ fn a_repository_level_regression_names_its_root_cause() {
     let write = |things: &[(&str, bool)]| {
         std::fs::create_dir_all(dir.join("fixtures")).unwrap();
         std::fs::write(dir.join("toolbox.yaml"), &manifest).unwrap();
-        let mut lines = vec![serde_json::json!({"type": "record", "kind": "repo", "externalId": "repo:r",
+        let mut lines = vec![
+            serde_json::json!({"type": "record", "kind": "repo", "externalId": "repo:r",
             "data": {"name": "r", "watch": ["quality"]}})
-        .to_string()];
+            .to_string(),
+        ];
         lines.extend(things.iter().map(|(name, tested)| {
             serde_json::json!({"type": "record", "kind": "thing", "externalId": format!("thing:{name}"),
                 "data": {"name": name, "tested": tested, "undocumented": []}})
@@ -219,6 +224,9 @@ fn a_repository_level_regression_names_its_root_cause() {
         (cause["entity"].as_str(), cause["message"].as_str()),
         (Some("thing:a"), Some("tested now fails"))
     );
-    assert_eq!(cause["detail"][0], "from: connector things, record thing thing:a");
+    assert_eq!(
+        cause["detail"][0],
+        "from: connector things, record thing thing:a"
+    );
     let _ = std::fs::remove_dir_all(&dir);
 }
