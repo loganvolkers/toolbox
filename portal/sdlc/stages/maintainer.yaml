@@ -5,10 +5,10 @@ records:
     name: plan
     order: 1
     intent: Decide what to build and record it before building it.
-    exitCriterion: A decision row in docs/decisions.md and the owning design doc updated.
+    exitCriterion: A decision file in docs/decisions/ and the owning design doc updated.
     commands: []
     checks: []
-    docs: [docs/decisions.md, docs/v1-spec.md, AGENTS.md]
+    docs: [docs/decisions/README.md, docs/v1-spec.md, AGENTS.md]
     status: built
     gaps: []
   - id: maintainer/build

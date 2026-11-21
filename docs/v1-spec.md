@@ -1,11 +1,11 @@
 # Toolbox v1: Implementation Specification
 
 *Status: implementation contract, 2026-11-20 (decision D50). This is the document an implementing
-agent builds from. [decisions.md](./decisions.md) says what was decided and why; the design docs
+agent builds from. [decisions.md](./decisions/README.md) says what was decided and why; the design docs
 explain the reasoning; this spec says **exactly what v1 must do**, in what order, and how to tell when
 it's done. The [reference portal](../examples/reference-portal/README.md) is the executable anchor.*
 
-**Precedence when documents disagree:** [decisions.md](./decisions.md) → this spec → design-doc status
+**Precedence when documents disagree:** [decisions.md](./decisions/README.md) → this spec → design-doc status
 banners → design-doc bodies → [plan.md](./plan.md). Anything a design doc describes but this spec
 doesn't list is **not in v1**.
 
@@ -556,7 +556,7 @@ plus every milestone exit in §3.
 
 ## Sources
 
-All decisions: [decisions.md](./decisions.md). Measurements: [technology-critique.md](./technology-critique.md)
+All decisions: [decisions.md](./decisions/README.md). Measurements: [technology-critique.md](./technology-critique.md)
 §7 and [experiments/](../experiments/README.md). Reference portal and its validation:
 [examples/reference-portal](../examples/reference-portal/README.md),
 [research-log.md](./research-log.md). GitHub endpoints: `github/rest-api-description` at `c9c95fe`

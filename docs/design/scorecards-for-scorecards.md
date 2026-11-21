@@ -371,7 +371,7 @@ The assessment record carries what the deterministic card needs (`toolbox_connec
 
 - Lessons: [toolbox-for-toolbox.md](./toolbox-for-toolbox.md) §5–7 (F1–F14 and the fresh-agent run),
   [ratchets.md](./ratchets.md), [github-actions-standards.md](./github-actions-standards.md),
-  [research-log.md](../research-log.md), [decisions.md](../decisions.md) D65–D70.
+  [research-log.md](../research-log.md), [decisions.md](../decisions/README.md) D65–D70.
 - Prior art for self-application: a compiler compiling itself; the
   [meta-catalog](./meta-catalog.md) design (a portal catalogues its own configuration, "including the
   scorecards that score scorecards").

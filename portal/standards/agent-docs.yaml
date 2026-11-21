@@ -76,7 +76,7 @@ scorecards:
     - name: names-the-decision-log
       level: gold
       check: "!entity.canonical || entity.mentionsDecisions"
-      evidence: "['does not link to decisions.md']"
+      evidence: "['does not link to docs/decisions']"
       fix: >-
         Link the canonical AGENTS.md at the decision log, so an agent edits the
         log instead of treating this file as the only source of truth.

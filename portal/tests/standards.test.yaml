@@ -425,7 +425,7 @@ assert:
       'agent-doc:agents/demo/partial/AGENTS.md').evidence['within-budget'] ==
       ['600 lines'] && score('maintainer-agent-doc',
       'agent-doc:agents/demo/partial/AGENTS.md').evidence['names-the-decision-log']
-      == ['does not link to decisions.md']
+      == ['does not link to docs/decisions']
   - name: >-
       an alias that does not point at AGENTS.md fails bronze and names the
       secret

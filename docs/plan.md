@@ -24,7 +24,7 @@ the same truth through a fast, mostly read-only UI.
 ### Charter goals (added 2026-11-20, D33–D35)
 
 These three goals constrain every other design choice. Where an older section of this plan conflicts
-with them, they win, and [decisions.md](./decisions.md) records the change.
+with them, they win, and [decisions.md](./decisions/README.md) records the change.
 
 - **G1. Simple deployment.** The default deployment is **one container image plus Postgres**, runnable
   on Google Cloud Run or an equivalent. Custom UIs and self-service action code ship *inside* that
@@ -647,7 +647,8 @@ These designs close the gaps found in the [red-team review](./red-team.md). Each
 | **Example standards** | Example and experiment write-ups are catalog entities. `maintainer-example` gates resolving links, a check command, and a pointer at the design (D78) | [example-standards.md](./design/example-standards.md) |
 | **Plugin standards** | Each `plugin.json` is a catalog entity. `maintainer-plugin` gates the Agent Plugins 1.0.0 schema, an `mcp.json`, and a one-token stdio command (D81) | [plugin-standards.md](./design/plugin-standards.md) |
 | **AGENTS.md aliases and CI commands** | Harness instruction filenames are the same catalog. A canonical file's check commands must appear in a workflow (D82, D83) | [agents-md-standards.md](./design/agents-md-standards.md) |
-| **Decision citations** | A `D` number in a document must be a row of the decision log (D84) | [decision-citations.md](./design/decision-citations.md) |
+| **Decision citations** | A decision id in a document must be a file in the log: a legacy `D` number or a `D` plus ULID (D84, D01M7XKEXQH4HG5371629M50E2G) | [decision-citations.md](./design/decision-citations.md), [decision-files.md](./design/decision-files.md) |
+| **Decision files** | One file per decision. The id is a ULID, so two agents mint ids without sharing a counter. D1–D98 keep their numbers as `legacy` (D01M7XKEXQH4HG5371629M50E2G) | [decision-files.md](./design/decision-files.md) |
 | **Supply-chain standards** | The repository record gates Dependabot, code scanning, a security policy, and a CODEOWNERS rule for CI. Alert counts stay ungated (D85) | [supply-chain-standards.md](./design/supply-chain-standards.md) |
 | **Repository level** | `maintainer-repo` is the lowest counted scorecard. Unknown rules and runner-backed cards are excluded (D86) | [repo-level.md](./design/repo-level.md) |
 | **Public docs site** | A Starlight site in `site/`, published to GitHub Pages. Each content page is a catalog entity. `maintainer-site` gates a title, a description, resolving links, sidebar reach, and no secret shape (D91). The site also publishes this repo's `toolbox report` HTML, checked byte for byte in CI (D92). The report is a custom element; a host page fills its header, nav, and footer slots (D93) | [site-standards.md](./design/site-standards.md) |
@@ -935,7 +936,7 @@ This is a stated product goal, so it is a **tested requirement**:
 > **For implementers:** v1 (Phases 0–1 plus the action runtime) is specified milestone by milestone in
 > [v1-spec.md](./v1-spec.md) §3, anchored on the [reference portal](../examples/reference-portal/README.md).
 > Where a phase below still names a deferred technology (GraphQL, sub-circuits, epochs, simulation),
-> the spec and [decisions.md](./decisions.md) win.
+> the spec and [decisions.md](./decisions/README.md) win.
 
 There are no time estimates: the project is built with agents, and phases are defined by **exit
 criteria**, not dates. Phase 1 is deliberately a focused first release, *ownership and standards for
@@ -1113,7 +1114,7 @@ D37).
 
 ## 10. Decisions
 
-The full, chronological log is in [decisions.md](./decisions.md). This section summarises it.
+The full, chronological log is in [decisions.md](./decisions/README.md). This section summarises it.
 
 **Decided (2026-11-19):**
 - Launch languages: TypeScript, Python, YAML.
@@ -1132,7 +1133,7 @@ DBOS-model workflows, UI extension contract with React as default, in-image exec
 builder, GraphQL deferred, sprawl budget (D33–D47). These supersede the 2026-11-19 lines above where they
 conflict (DBSP, embedded c-archive, Python SDK, GraphQL).
 
-**Still open:** see [decisions.md](./decisions.md) for the current list (Q3–Q8, Q10–Q13). Items 1 and 4
+**Still open:** see [questions.md](./questions.md) for the current list (Q3–Q8, Q10–Q13). Items 1 and 4
 below are updated there (Q2 resolved by D42; Q4 is now behind the `Durable` contract).
 1. **TCP governance:** publish it as a separate spec repo under a neutral name from day one
    (recommended), or keep it inside Toolbox until it stabilises?

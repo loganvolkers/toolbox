@@ -471,7 +471,304 @@
       "doc:docs/authorization.md": {
         "level": "silver"
       },
-      "doc:docs/decisions.md": {
+      "doc:docs/decisions/D01M7TCJ31R0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7TCJ31S0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7TCJ31T0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7TCJ31V0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7TCJ31W0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7TCJ31X0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7TCJ31Y0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7TCJ31Z0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7TCJ3200000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7TCJ3210000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7TCJ3220000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7TCJ3230000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7TCJ3240000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7TCJ3250000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7TCJ3260000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7TCJ3270000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7TCJ3280000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7TCJ3290000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7TCJ32A0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7TCJ32B0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7TCJ32C0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7TCJ32D0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7TCJ32E0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7TCJ32F0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7TCJ32G0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7TCJ32H0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7TCJ32J0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7TCJ32K0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7TCJ32M0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7TCJ32N0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7TCJ32P0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7TCJ32Q0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7V8P2VG0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7V8P2VH0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7V8P2VJ0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7V8P2VK0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7V8P2VM0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7V8P2VN0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7V8P2VP0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7V8P2VQ0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7V8P2VR0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7V8P2VS0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7V8P2VT0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7V8P2VV0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7V8P2VW0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7V8P2VX0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7V8P2VY0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7V9MT880000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7V9MT890000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7VC4MY80000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7VC4MY90000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7VC4MYA0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7VDD2WG0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7VDD2WH0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7VDD2WJ0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7VDD2WK0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7VDD2WM0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7VDD2WN0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7VJ4TBG0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7VJ4TBH0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7VQJXMR0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7VQJXMS0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7VRXEZ80000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7VTP0HG0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7VTP0HH0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7VWS4ZG0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7VWS4ZH0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7VWS4ZJ0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7VXK0480000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7VZ2DPR0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7W0J8YR0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7W3PWP00000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7W4FRJR0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7W4P0S00000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7W4Y2K00000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7W56B7R0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7W5BEAG0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7W5G0T00000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7WHQA9G0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7WJVW700000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7WMSMS00000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7WMSMS10000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7WMSMS20000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7WMSMS30000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7WMSMS40000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7WMSMS50000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7WQBZHG0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7WVNEYR0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7WVNEYS0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7WVNEYT0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7X0RYD00000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7X0RYD10000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7X0RYD20000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7X1Y5T00000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7XEHJ0G0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7XJA1FG0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7XJYYDR0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7XJYYDS0000000000000000.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M7XKEXQH4HG5371629M50E2G.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/README.md": {
         "level": "skipped"
       },
       "doc:docs/design/action-entities.md": {
@@ -502,6 +799,9 @@
         "level": "silver"
       },
       "doc:docs/design/decision-citations.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/decision-files.md": {
         "level": "silver"
       },
       "doc:docs/design/dependency-standards.md": {
@@ -616,6 +916,9 @@
         "level": "silver"
       },
       "doc:docs/principal-review.md": {
+        "level": "skipped"
+      },
+      "doc:docs/questions.md": {
         "level": "skipped"
       },
       "doc:docs/red-team.md": {

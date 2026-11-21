@@ -214,7 +214,7 @@ scorecards:
         assessment']
       fix: >-
         Resolve what the assessor was unsure of, or record the open question in
-        docs/decisions.md and link it.
+        docs/questions.md and link it.
     facets: {summary: public, details: public}
 
 rubrics:

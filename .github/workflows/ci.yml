@@ -18,6 +18,8 @@ jobs:
       - run: cargo test --locked
       - {uses: actions/setup-python@v5, with: {python-version: "3.13"}}
       - run: pip install -r examples/reference-portal/tools/requirements.txt
+      - name: Decision ids encode as ULIDs (D01M7XKEXQH4HG5371629M50E2G)
+        run: python3 scripts/decision-id.py --self-test
       - name: YAML is formatted (yamark 0.6.1, D97)
         run: |
           python3 -m pip install yamark==0.6.1

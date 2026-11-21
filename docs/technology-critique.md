@@ -472,7 +472,7 @@ incrementally. The UI is a client of the public API.**
 
 ---
 
-## 9. Proposed decision changes (candidates for [decisions.md](./decisions.md))
+## 9. Proposed decision changes (candidates for [decisions.md](./decisions/README.md))
 
 Not recorded here; each needs the maintainer's call.
 

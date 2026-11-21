@@ -20,7 +20,7 @@ by one agent and ignored by another. The checks that do not need a model:
 |---|---|---|
 | Is there one source of instructions, and do its links resolve? | The filename, a mention of `AGENTS.md`, relative links | bronze |
 | Does the canonical file say how to test, and is it short enough to load? | Command words, a 500-line ceiling | silver |
-| Does it point at the decision log, and do its check commands run in CI? | A `decisions.md` link; backtick invocations whose tool and subcommand appear in a workflow | gold |
+| Does it point at the decision log, and do its check commands run in CI? | A `docs/decisions` link; backtick invocations whose tool and subcommand appear in a workflow | gold |
 
 The 500-line ceiling is the agents.md v1.1 proposal's guideline ("aim for under 500 lines"), not a
 field the current format requires. The format has no required headings. Frontmatter is optional, so
@@ -34,7 +34,7 @@ of problem as an LLM assessment: useful, and not a gate.
 | **agents.md** (agentsmd/agents.md README) | A Markdown file named `AGENTS.md`. The example has dev-environment tips, testing instructions and PR instructions. No required schema | The filename, and that a canonical file names a command |
 | **v1.1 proposal** (agentsmd/agents.md issue 135) | Jurisdiction by directory, nearest file wins, optional frontmatter (`description`, `tags`), aim for under 500 lines. Not ratified | The line ceiling, labelled as a proposal. Frontmatter stays optional |
 | **Alias practice** | Harnesses read `CLAUDE.md` and `GEMINI.md`. The common fix is a symlink or a pointer at `AGENTS.md` | An alias must mention `AGENTS.md` and is not required to repeat the commands |
-| **This repository** | `AGENTS.md` is the maintainer working rules and points at `docs/decisions.md`. `CLAUDE.md` is five lines that link there | The decision-log link is the gold rule, because the file is not the decision log |
+| **This repository** | `AGENTS.md` is the maintainer working rules and points at `docs/decisions/`. `CLAUDE.md` is five lines that link there | The decision-log link is the gold rule, because the file is not the decision log |
 
 ## 3. The catalog
 
@@ -51,7 +51,7 @@ layer a document names. This scorecard checks the instruction-file contract.
 | `pointsAtAgents` | The body contains `AGENTS.md` |
 | `commandLines` | Lines containing `cargo`, `npm`, `pnpm`, `yarn`, `pytest` or `toolbox` |
 | `lines` | Line count |
-| `mentionsDecisions` | The body contains `decisions.md` |
+| `mentionsDecisions` | The body contains `docs/decisions` (the directory, which also matches the old `docs/decisions.md` path) |
 | `ciMissingCommands` | Backtick invocations (`cargo test`, `toolbox validate`, `python scripts/…`) whose tool and subcommand do not appear in a workflow. Lines that are markdown table rows are the track index, not the check procedure (D83) |
 | `missingFiles` | Relative link targets that are not files |
 | `hiddenChars`, `secretHits` | The same hidden-character and high-precision secret checks as skills, on this file only |
@@ -67,7 +67,7 @@ this repository.
 | bronze | `links-resolve` | No missing relative target |
 | silver | `has-commands` | A canonical file names a build or test command. An alias does not have to repeat it |
 | silver | `within-budget` | At most 500 lines |
-| gold | `names-the-decision-log` | A canonical file mentions `decisions.md`. An alias does not have to |
+| gold | `names-the-decision-log` | A canonical file mentions `docs/decisions`. An alias does not have to |
 | gold | `checks-run-in-ci` | A canonical file's backtick check commands appear in a workflow. An alias does not have to repeat them |
 | gold | `no-hardcoded-secrets` | No secret shape |
 | gold | `no-hidden-instructions` | No hidden or bidi character |
@@ -76,7 +76,7 @@ this repository.
 
 | File | Level | Notes |
 |---|---|---|
-| `AGENTS.md` | gold | 134 lines, names `cargo test`, links to `docs/decisions.md` |
+| `AGENTS.md` | gold | names `cargo test`, links to `docs/decisions/` |
 | `CLAUDE.md` | gold | Five lines. It links to `AGENTS.md` and does not restate the rules |
 
 Fixtures: `agent-doc:agents/demo/focused/AGENTS.md` at gold, `agent-doc:agents/demo/partial/AGENTS.md`

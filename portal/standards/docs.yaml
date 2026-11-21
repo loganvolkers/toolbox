@@ -19,7 +19,9 @@ kinds:
       missingDecisions:
         type: list
         items: string
-        description: Decision ids cited in the doc that are not rows of docs/decisions.md.
+        description: >-
+          Decision ids cited in the doc that are not a file in docs/decisions/. A
+          legacy D number and a D plus ULID both count.
       area:
         type: string
         computed: >-
@@ -74,7 +76,9 @@ scorecards:
     kind: Doc
     owner: group:maintainers
     levels: [bronze, silver]
-    appliesTo: "!(entity.path in policy.historicalDocs)"
+    appliesTo: >-
+      !(entity.path in policy.historicalDocs) &&
+      !entity.path.startsWith('docs/decisions/')
     rules:
     - name: links-resolve
       level: bronze
@@ -95,8 +99,9 @@ scorecards:
       check: entity.missingDecisions.size() == 0
       evidence: entity.missingDecisions
       fix: >-
-        The decision ids in the evidence are not rows of docs/decisions.md. Cite
-        a decision that exists, or add the row.
+        The decision ids in the evidence are not files in docs/decisions/. Cite
+        one that exists, or add the file. Mint the id with python3
+        scripts/decision-id.py.
     - name: status-banner
       level: silver
       check: entity.area != 'design' || entity.hasStatus

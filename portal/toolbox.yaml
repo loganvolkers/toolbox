@@ -14,7 +14,10 @@ policies:
   # Logs and reviews whose past entries are never rewritten (AGENTS.md), so wording rules
   # introduced later don't apply to them.
   historicalDocs:
+    # The old single file, so the fixture that still uses that path stays skipped, and the
+    # question list, which is appended to rather than rewritten.
     - docs/decisions.md
+    - docs/questions.md
     - docs/research-log.md
     - docs/red-team.md
     - docs/principal-review.md

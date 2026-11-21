@@ -61,7 +61,7 @@ Backstage should switch on its MCP actions backend instead.
 ## 2. Method
 
 1. I extracted Toolbox's claims from [plan.md](./plan.md) §1, §6.6, §8 and §9, from
-   [decisions.md](./decisions.md) and from [research.md](./research.md) §7.
+   [decisions.md](./decisions/README.md) and from [research.md](./research.md) §7.
 2. For each claim I wrote down the evidence that would falsify it *before* searching.
 3. Research:
    - Primary sources: shallow clones of `backstage/backstage`, `feldera/feldera`,
@@ -526,7 +526,7 @@ If 1 and 2 hold, a narrowed Toolbox is defensible. If 1 fails, nothing else in t
 | [research.md](./research.md) §5 | The Rust agent-first niche "is beginning to fill … validates both the language choice and the timing" | Frontkeep has 3 stars and OpsCat 2 [P]. This is not validation |
 | [research.md](./research.md) §3 | Compass "offers `compass.yml` config as code" | Compass reached **end of sale on 13 May 2026** and is being folded into DX [S] |
 | [design/incremental-computation.md](./design/incremental-computation.md) §2 | DBSP is "embeddable" with checkpoints and spill as mitigations | True of the MIT crate, but Feldera ships checkpoints, fault tolerance and state-preserving pipeline changes **only in Enterprise**. Toolbox must build that orchestration itself [P] |
-| [decisions.md](./decisions.md) Q10 | "cel-rust conformance level: measure in Phase 0" | Measured: 688 of ~2,771 cel-spec conformance tests skipped; no type checker (commit `004a4b8`) [P] |
+| [decisions.md](./decisions/README.md) Q10 | "cel-rust conformance level: measure in Phase 0" | Measured: 688 of ~2,771 cel-spec conformance tests skipped; no type checker (commit `004a4b8`) [P] |
 
 ---
 

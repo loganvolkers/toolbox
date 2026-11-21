@@ -1,6 +1,6 @@
 # Frontend: Delightful Self-Service UIs Defined in Code
 
-> **Status 2026-11-20 (D40, G3):** custom UIs ship **inside the Toolbox image** through a **framework-agnostic UI extension contract** (static bundles built by `toolbox build`, mounted as ES modules or Web Components, calling the public API through a generated typed client). React + `@toolbox/ui` + Storybook below is the **default kit**, not a requirement; this amends the "not framework-agnostic" conclusion. See [decisions.md](../decisions.md). The built-in pages are specified in [minimal-ui.md](./minimal-ui.md).
+> **Status 2026-11-20 (D40, G3):** custom UIs ship **inside the Toolbox image** through a **framework-agnostic UI extension contract** (static bundles built by `toolbox build`, mounted as ES modules or Web Components, calling the public API through a generated typed client). React + `@toolbox/ui` + Storybook below is the **default kit**, not a requirement; this amends the "not framework-agnostic" conclusion. See [decisions.md](../decisions/README.md). The built-in pages are specified in [minimal-ui.md](./minimal-ui.md).
 
 *Status: research + decisions, 2026-11-19. Worked example:
 [approved-github-apps.md](../examples/approved-github-apps.md). Related: [dashboards.md](./dashboards.md),

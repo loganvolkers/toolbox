@@ -36,7 +36,9 @@ fn command_lines(text: &str) -> i64 {
 }
 
 fn cites_design(text: &str) -> bool {
-    text.contains("docs/") || text.contains("decisions.md") || compile(r"\bD\d+\b").is_match(text)
+    text.contains("docs/")
+        || text.contains("docs/decisions")
+        || compile(r"(?i)\b(D\d+|D[0-9A-HJKMNP-TV-Z]{26})\b").is_match(text)
 }
 
 fn missing_links(root: &Path, rel: &str, text: &str) -> Vec<String> {
