@@ -3,6 +3,7 @@
 mod assess;
 mod causes;
 mod client;
+mod find;
 mod install;
 mod meta;
 mod model;
@@ -465,6 +466,20 @@ enum ToolsCommand {
         #[arg(long = "for")]
         installer: String,
     },
+    /// List the tools a repository already uses (config files, CI and hook commands, package
+    /// manifests), whether each is in the portal's box, and the slot that would carry it. Evidence
+    /// for an agent to check (skill find-tools), not a verdict.
+    Find {
+        /// The repository root.
+        #[arg(default_value = ".")]
+        path: PathBuf,
+        /// The portal to compare with (default: the root's toolbox.yaml, else portal/toolbox.yaml).
+        #[arg(long)]
+        portal: Option<PathBuf>,
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = Format::Text)]
+        format: Format,
+    },
 }
 
 #[derive(Subcommand)]
@@ -567,6 +582,19 @@ fn read_call(c: &Command) -> Option<(&Remote, &'static str, serde_json::Value)> 
     })
 }
 
+/// `toolbox tools …`: find, pin and install the box's tools.
+fn tools_command(command: ToolsCommand) -> ExitCode {
+    match command {
+        ToolsCommand::Install { path, via, dry_run } => tools::install(&path, &via, dry_run),
+        ToolsCommand::Config { path, installer } => tools::config(&path, &installer),
+        ToolsCommand::Find {
+            path,
+            portal,
+            format,
+        } => find::find(&path, portal.as_deref(), matches!(format, Format::Json)),
+    }
+}
+
 fn main() -> ExitCode {
     quiet_on_closed_pipe();
     let command = Cli::parse().command;
@@ -590,12 +618,7 @@ fn main() -> ExitCode {
         Command::Assess { what } => assess_command(what),
         Command::Install { path, frozen } => install::install(&path, frozen),
         Command::Doctor { path, mise } => install::doctor(&path, mise),
-        Command::Tools {
-            command: ToolsCommand::Install { path, via, dry_run },
-        } => tools::install(&path, &via, dry_run),
-        Command::Tools {
-            command: ToolsCommand::Config { path, installer },
-        } => tools::config(&path, &installer),
+        Command::Tools { command } => tools_command(command),
         Command::Vendor { spec, portal } => install::vendor(&spec, &portal),
         Command::Serve {
             path,

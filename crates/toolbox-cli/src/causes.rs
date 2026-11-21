@@ -17,6 +17,8 @@ use toolbox_model::manifest::Scorecard;
 
 /// How many evidence items a cause shows per rule.
 const SHOWN: usize = 3;
+/// How many it shows when the evidence grew: enough that the new item is usually among them.
+const WHOLE: usize = 10;
 
 /// `none` is 0, then the scorecard's levels in order.
 fn rank(sc: &Scorecard, level: &str) -> Option<usize> {
@@ -46,7 +48,9 @@ fn rollup(sc: &Scorecard, rows: &Value) -> Option<(usize, String)> {
 }
 
 /// What a rule found on an entity now, and how to see it without the box.
-pub(crate) fn detail(d: &Derived, card: &str, entity: &str, rules: &[String]) -> Vec<String> {
+pub(crate) fn detail(d: &Derived, c: &Change) -> Vec<String> {
+    let (card, entity, rules) = (c.scorecard.as_str(), c.entity.as_str(), c.rules.as_slice());
+    let shown = if c.whole_evidence { WHOLE } else { SHOWN };
     let Some(s) = d.scores.get(card).and_then(|rows| rows.get(entity)) else {
         return Vec::new();
     };
@@ -64,14 +68,14 @@ pub(crate) fn detail(d: &Derived, card: &str, entity: &str, rules: &[String]) ->
     for rule in &failing {
         match s.evidence.get(rule) {
             Some(Value::Array(items)) => {
-                for item in items.iter().take(SHOWN) {
+                for item in items.iter().take(shown) {
                     let text = item
                         .as_str()
                         .map_or_else(|| item.to_string(), str::to_owned);
                     out.push(format!("{rule}: {}", text.lines().next().unwrap_or("")));
                 }
-                if items.len() > SHOWN {
-                    out.push(format!("{rule}: … {} more", items.len() - SHOWN));
+                if items.len() > shown {
+                    out.push(format!("{rule}: … {} more", items.len() - shown));
                 }
             }
             Some(other) => out.push(format!("{rule}: {other}")),
@@ -126,7 +130,7 @@ fn aggregate_causes(
                 level.and_then(|l| rank(sc, l)).is_some_and(|r| r <= n.0)
             })
             .map(|c| Change {
-                detail: detail(d, &c.scorecard, &c.entity, &c.rules),
+                detail: detail(d, c),
                 ..c.clone()
             })
             .collect();
@@ -161,7 +165,7 @@ pub(crate) fn explain(
         now.as_object().unwrap_or(&empty),
     );
     for r in regressions.iter_mut() {
-        r.detail = detail(d, &r.scorecard, &r.entity, &r.rules);
+        r.detail = detail(d, r);
         let aggregate = m
             .scorecards
             .iter()

@@ -42,7 +42,7 @@ appeared among the changes, as "· changed … new (none)", with nothing linking
 | Aggregate | The repository-level rule that failed, and its evidence | A scorecard that reads `cards` (D86) |
 | Constituent | Which scorecard's level fell, from what to what | The lowest counted entity of that scorecard, before and now (fixture samples under `/demo/` and skipped entities don't count) |
 | Change | The entity changes now at that lower level: a rule that started failing, evidence that grew, a new entity below the floor | The same comparison's changes, filtered to that scorecard and level |
-| Evidence | What the rule found now (up to three items, then a count) | The rule's `evidence` |
+| Evidence | What the rule found now: up to three items, then a count. When the evidence grew, up to ten: the baseline keeps counts, so the new item can be anywhere in the list. Using this repository's own ratchet, the new long function was hidden behind "… 1 more" until this changed | The rule's `evidence` |
 | Reproduce | The command that gives the same finding with the tool alone, or the record the fact came from | The entity's `command` field (lint records, take-it-out), else its source record |
 
 When a scorecard fell but no change at the new level explains it, for example because a better

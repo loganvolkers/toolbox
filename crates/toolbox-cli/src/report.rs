@@ -269,6 +269,9 @@ pub(crate) struct Change {
     pub(crate) detail: Vec<String>,
     /// For an aggregate: the changes below it that caused it.
     pub(crate) causes: Vec<Change>,
+    /// Show every evidence item, not the first few: the evidence grew, and the baseline keeps
+    /// only counts, so the new item can be anywhere in the list.
+    pub(crate) whole_evidence: bool,
 }
 
 impl std::fmt::Display for Change {
@@ -536,9 +539,10 @@ fn compare_entity(c: &mut Comparison, at: &At, was: &Value, now: &Value) {
 /// A rule failing on both sides: its evidence count may have grown (worse) or shrunk (better).
 fn evidence_change(c: &mut Comparison, at: &At, rule: &str, was: &Value, now: &Value) {
     match (was.as_f64(), now.as_f64()) {
-        (Some(m), Some(n)) if n > m => c
-            .regressions
-            .push(at.about(rule, format!("{rule} evidence grew {was} → {now}"))),
+        (Some(m), Some(n)) if n > m => c.regressions.push(Change {
+            whole_evidence: true,
+            ..at.about(rule, format!("{rule} evidence grew {was} → {now}"))
+        }),
         (Some(m), Some(n)) if n < m => c
             .improvements
             .push(at.about(rule, format!("{rule} evidence shrank {was} → {now}"))),
@@ -1645,6 +1649,8 @@ mod tests {
                 "card · b: tests now fails"
             ]
         );
+        // The baseline keeps counts, so a grown list's new item can be anywhere: show it whole.
+        assert!(c.regressions[0].whole_evidence && !c.regressions[1].whole_evidence);
         assert!(c.improvements.is_empty());
     }
 
