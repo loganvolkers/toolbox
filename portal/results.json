@@ -1051,6 +1051,9 @@
       "doc:experiments/durable-schema/README.md": {
         "level": "silver"
       },
+      "doc:experiments/oss-monorepo-federation/README.md": {
+        "level": "silver"
+      },
       "doc:experiments/out-of-box/README.md": {
         "level": "silver"
       },
@@ -1206,6 +1209,9 @@
       "example:experiments/durable-schema/README.md": {
         "level": "gold"
       },
+      "example:experiments/oss-monorepo-federation/README.md": {
+        "level": "gold"
+      },
       "example:experiments/out-of-box/README.md": {
         "level": "gold"
       },
@@ -1220,6 +1226,30 @@
       }
     },
     "maintainer-package": {
+      "package-json:experiments/oss-monorepo-federation/leaves/babel/fixtures/package.json": {
+        "failing": {
+          "described": 1,
+          "engines-declared": 1,
+          "locked": 1
+        },
+        "level": "bronze"
+      },
+      "package-json:experiments/oss-monorepo-federation/leaves/jest/fixtures/package.json": {
+        "failing": {
+          "described": 1,
+          "locked": 1
+        },
+        "level": "bronze"
+      },
+      "package-json:experiments/oss-monorepo-federation/leaves/pnpm/fixtures/package.json": {
+        "failing": {
+          "described": 1,
+          "engines-declared": 1,
+          "has-a-check": 1,
+          "locked": 1
+        },
+        "level": "bronze"
+      },
       "package-json:experiments/typescript-builder/package.json": {
         "failing": {
           "ci-installs-from-the-lockfile": 1,
@@ -1250,7 +1280,7 @@
       "repo:loganvolkers/toolbox": {
         "failing": {
           "constituents-at-least-gold": 8,
-          "constituents-at-least-silver": 6
+          "constituents-at-least-silver": 7
         },
         "level": "bronze"
       }
