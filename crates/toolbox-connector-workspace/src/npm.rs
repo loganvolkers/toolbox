@@ -371,10 +371,7 @@ mod tests {
         let tmp = scratch(
             "pnpm-unlocked",
             &[
-                (
-                    "apps/web/package.json",
-                    r#"{"name":"web","private":true}"#,
-                ),
+                ("apps/web/package.json", r#"{"name":"web","private":true}"#),
                 ("pnpm-lock.yaml", "lockfileVersion: '9.0'\n"),
                 (
                     ".github/workflows/ci.yml",
