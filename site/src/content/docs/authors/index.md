@@ -42,7 +42,7 @@ include:
     with: {githubOrg: acme, githubRepo: payments, failRateBronze: 15}
 ```
 
-The version is a git tag: `@1.2.0` fetches `v1.2.0`. This repository has not cut a release tag yet, so the path form above is the one that runs here today.
+The version is a git tag: `@1.2.0` fetches `v1.2.0`. Toolbox itself ships installable binaries from [v0.1.0](https://github.com/loganvolkers/toolbox/releases/tag/v0.1.0); packages still pin by git tag or local path until an OCI mirror exists.
 
 `toolbox install` clones that tag into the cache and records the package's content hash in `toolbox.lock`. Later loads read the lock and do not touch the network. Commit the lock file.
 

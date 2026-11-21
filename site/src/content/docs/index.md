@@ -20,6 +20,7 @@ Four groups build with Toolbox. Each group has its own loop, and a command belon
 
 ## Start
 
+- [Install a release](/toolbox/start/install/)
 - [Run Toolbox locally](/toolbox/start/run/)
 - [The catalog](/toolbox/concepts/catalog/)
 - [Scorecards](/toolbox/concepts/scorecards/)

@@ -37,3 +37,12 @@ workspace = true
 
 [package.metadata.dist]
 dist = true
+
+# cargo-binstall: same asset names cargo-dist publishes (D90).
+[package.metadata.binstall]
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-{ target-triple }{ archive-suffix }"
+bin-dir = "{ name }-{ target-triple }/{ bin }{ binary-ext }"
+pkg-fmt = "txz"
+
+[package.metadata.binstall.overrides.x86_64-pc-windows-msvc]
+pkg-fmt = "zip"

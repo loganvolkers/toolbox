@@ -1,9 +1,11 @@
 ---
 title: Run Toolbox locally
 description: Build the toolbox binary and validate the reference portal.
+sidebar:
+  order: 2
 ---
 
-Toolbox is a Rust workspace. The binary is `target/debug/toolbox`.
+Prefer a [released install](/toolbox/start/install/) for another repository. Build from source when you are changing Toolbox itself. The binary is `target/debug/toolbox`.
 
 ```bash
 cargo build

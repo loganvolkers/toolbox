@@ -66,7 +66,7 @@ The v1 spec says what the binary must do. The design docs say why. When they dis
 | Build | `cargo build`, `npm --prefix ui run build`, `npm --prefix site run build` | Built |
 | Test | `cargo test`, clippy, `toolbox test`, the parity script | Built |
 | Verify a milestone | `scripts/m2-acceptance.sh`, `m3-acceptance.sh`, `m4-acceptance.sh` | Built through M4. M5 (actions) is paused |
-| Release | `dist plan`, the release and image workflows | The workflows exist. No tag has been cut, so there is no installable release yet |
+| Release | `dist plan`, tag `v0.1.0`, the release and image workflows | First installable release: [v0.1.0](https://github.com/loganvolkers/toolbox/releases/tag/v0.1.0). See [docs/RELEASING.md](https://github.com/loganvolkers/toolbox/blob/main/docs/RELEASING.md) |
 | Watch this repository | `toolbox report portal` and the ratchet | Built |
 
 [Run Toolbox locally](/toolbox/start/run/) is the short form of the build. [The four SDLC layers](/toolbox/concepts/layers/) says which loop a sentence is about.
