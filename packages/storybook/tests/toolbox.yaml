@@ -1,0 +1,18 @@
+# The package's test portal: includes the package as a consumer would.
+# Run: toolbox test packages/storybook/tests
+apiVersion: toolbox.dev/v1alpha1
+portal:
+  name: storybook-package
+  title: Storybook catalog standards (package tests)
+  owner: group:maintainers
+  toolbox: "0.1"
+include: [{package: .., with: {requireA11yAddon: true}}]
+connectors:
+  - name: workspace
+    package: builtin:workspace
+    runtime: in-image
+    config: {crates: false, storybooks: ["**/.storybook/main.*"]}
+    records: [storybook]
+    refresh: {storybook: [external_ids]}
+    freshness: {storybook: 5m}
+tests: [standards.test.yaml]

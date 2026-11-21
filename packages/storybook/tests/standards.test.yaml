@@ -1,0 +1,37 @@
+# Package expectations over fixtures (package author SDLC: test).
+name: storybook
+assert:
+  - name: a healthy storybook reaches gold
+    expect: >-
+      score('storybook-catalog', 'storybook:apps/mobile').level == 'gold' &&
+      score('storybook-catalog', 'storybook:apps/mobile').rules['has-config']
+      == 'pass' && score('storybook-catalog',
+      'storybook:apps/mobile').rules['has-storybook-dep'] == 'pass' &&
+      score('storybook-catalog', 'storybook:apps/mobile').rules['has-stories']
+      == 'pass' && score('storybook-catalog',
+      'storybook:apps/mobile').rules['a11y-addon'] == 'pass' &&
+      score('storybook-catalog',
+      'storybook:apps/mobile').rules['telemetry-disabled'] == 'pass' &&
+      score('storybook-catalog',
+      'storybook:apps/mobile').rules['ci-builds-storybook'] == 'pass' &&
+      score('storybook-catalog',
+      'storybook:apps/mobile').rules['ci-tests-stories'] == 'pass' &&
+      score('storybook-catalog',
+      'storybook:apps/mobile').rules['a11y-fails-on-violation'] == 'pass'
+  - name: a bare storybook fails bronze and names the gaps
+    expect: >-
+      score('storybook-catalog', 'storybook:apps/legacy').level == 'none' &&
+      score('storybook-catalog', 'storybook:apps/legacy').rules['has-config']
+      == 'fail' && score('storybook-catalog',
+      'storybook:apps/legacy').rules['has-storybook-dep'] == 'fail' &&
+      score('storybook-catalog', 'storybook:apps/legacy').rules['has-stories']
+      == 'fail' && score('storybook-catalog',
+      'storybook:apps/legacy').rules['a11y-addon'] == 'fail' &&
+      score('storybook-catalog',
+      'storybook:apps/legacy').rules['telemetry-disabled'] == 'fail' &&
+      score('storybook-catalog',
+      'storybook:apps/legacy').rules['ci-builds-storybook'] == 'fail' &&
+      score('storybook-catalog',
+      'storybook:apps/legacy').rules['ci-tests-stories'] == 'fail' &&
+      score('storybook-catalog',
+      'storybook:apps/legacy').rules['a11y-fails-on-violation'] == 'fail'

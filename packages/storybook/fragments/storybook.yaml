@@ -1,0 +1,111 @@
+# Storybook catalog standards (D01M7YNZFP68W0DR24PEA6T3FVM).
+# Requires a `workspace` connector with `storybooks` globs.
+kinds:
+  - name: Storybook
+    description: >-
+      A Storybook project: main config, storybook dependency, story files,
+      a11y addon, telemetry policy and CI build/test signals.
+    identityFrom: [connector:workspace]
+    fields:
+      path: {type: string}
+      name: {type: string}
+      configPath: {type: string}
+      hasConfig: {type: boolean}
+      storiesGlobDeclared: {type: boolean}
+      storyFileCount: {type: integer}
+      hasStories: {type: boolean}
+      hasStorybookDep: {type: boolean}
+      storybookVersion: {type: string}
+      hasA11yAddon: {type: boolean}
+      telemetryDisabled: {type: boolean}
+      a11yFailsOnViolation: {type: boolean}
+      ciBuildsStorybook: {type: boolean}
+      ciTestsStories: {type: boolean}
+      framework: {type: string}
+    sources: {default: [connector:workspace]}
+    map:
+    - from: workspace/storybook
+      id: "'storybook:' + record.path"
+      set: >-
+        {'path': record.path, 'name': record.name, 'configPath': record.configPath,
+         'hasConfig': record.hasConfig, 'storiesGlobDeclared': record.storiesGlobDeclared,
+         'storyFileCount': record.storyFileCount, 'hasStories': record.hasStories,
+         'hasStorybookDep': record.hasStorybookDep, 'storybookVersion': record.storybookVersion,
+         'hasA11yAddon': record.hasA11yAddon, 'telemetryDisabled': record.telemetryDisabled,
+         'a11yFailsOnViolation': record.a11yFailsOnViolation,
+         'ciBuildsStorybook': record.ciBuildsStorybook, 'ciTestsStories': record.ciTestsStories,
+         'framework': record.framework}
+
+scorecards:
+  - name: storybook-catalog
+    kind: Storybook
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    ratchet: {newEntitiesAtLeast: bronze}
+    rules:
+    - name: has-config
+      level: bronze
+      check: entity.hasConfig
+      evidence: >-
+        entity.hasConfig ? [entity.configPath] : ['no .storybook/main.* config']
+      fix: >-
+        Add a Storybook main config (e.g. .storybook/main.ts) next to the app
+        package.
+    - name: has-storybook-dep
+      level: bronze
+      check: entity.hasStorybookDep
+      evidence: >-
+        entity.hasStorybookDep ? ['storybook@' + entity.storybookVersion] : ['no
+        storybook dependency in package.json']
+      fix: Add storybook to the package's dependencies or devDependencies.
+    - name: has-stories
+      level: bronze
+      check: entity.hasStories
+      evidence: >-
+        entity.hasStories ? [string(entity.storyFileCount) + ' *.stories.*
+        files'] : ['no *.stories.* files under the package']
+      fix: Add at least one CSF story file (*.stories.ts or *.stories.tsx).
+    - name: a11y-addon
+      level: silver
+      check: "!${param:requireA11yAddon} || entity.hasA11yAddon"
+      evidence: >-
+        entity.hasA11yAddon ? ['@storybook/addon-a11y present'] : ['no
+        @storybook/addon-a11y in deps or main addons']
+      fix: >-
+        Install @storybook/addon-a11y and list it under addons in
+        .storybook/main.
+    - name: telemetry-disabled
+      level: silver
+      check: entity.telemetryDisabled
+      evidence: >-
+        entity.telemetryDisabled ? ['core.disableTelemetry: true'] : ['Storybook
+        telemetry is not disabled in main']
+      fix: Set core.disableTelemetry to true in .storybook/main.
+    - name: ci-builds-storybook
+      level: silver
+      check: entity.ciBuildsStorybook
+      evidence: >-
+        entity.ciBuildsStorybook ? ['CI runs storybook build'] : ['no
+        storybook:build / storybook build in .github/workflows']
+      fix: >-
+        Add a CI step that builds Storybook (e.g. pnpm storybook:build) so
+        stories compile on every PR.
+    - name: ci-tests-stories
+      level: gold
+      check: entity.ciTestsStories
+      evidence: >-
+        entity.ciTestsStories ? ['CI runs story tests'] : ['no test:stories /
+        test-storybook / Playwright story checks in workflows']
+      fix: >-
+        Run story tests in CI (Playwright against the static build, test-runner,
+        or test:stories) so render and a11y regressions fail the gate.
+    - name: a11y-fails-on-violation
+      level: gold
+      check: entity.a11yFailsOnViolation
+      evidence: >-
+        entity.a11yFailsOnViolation ? ['preview a11y.test is error'] : ['preview
+        does not set a11y.test to error']
+      fix: >-
+        In .storybook/preview, set parameters.a11y.test to 'error' so axe
+        violations fail the Storybook test run.
+    facets: {summary: public, details: public}
