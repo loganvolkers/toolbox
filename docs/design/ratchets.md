@@ -59,6 +59,7 @@ registry; repository metadata from the GitHub search API, 2026-11-20.*
 | Issues as a list | `-o failures` prints every failing rule as JSON: scorecard, rule, entity, path, the entity's scalar fields, measure, evidence, fix, and the connector records it came from | ✅ |
 | A results file that only holds issues | A scorecard whose new-entity floor is its top level (every entity must pass) records only the entities that don't. A clean file, new or not, adds nothing, so adding clean files never makes the baseline stale (Codex's dropped from 174 KB to 30 KB). An entity absent from such a baseline that now fails is a regression | ✅ (D01M7ZRAJT47W11X5X3FEJ6QTX8) |
 | Compare with a commit | `--against <rev>` scores the portal at that commit in a temporary git worktree and compares, without a baseline file: what one commit or branch changed | ✅ |
+| Why it got worse | Every regression carries its root cause: the rule's evidence, the command that reproduces it, and for a repository level the constituent scorecard that fell and the change below it ([root-causes.md](./root-causes.md)) | ✅ (D01M7ZZYZ1SXSTHDZQK8A1CZMMN) |
 | Exemptions aren't fixes | An entity that becomes `skipped` (exempted, out of scope) is reported as a change, not an improvement | ✅ |
 
 **First catch.** The first time CI's ratchet ran locally, it caught the author of this document:

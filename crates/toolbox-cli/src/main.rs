@@ -1,6 +1,7 @@
 //! The `toolbox` binary (docs/v1-spec.md §7.7).
 
 mod assess;
+mod causes;
 mod client;
 mod install;
 mod meta;

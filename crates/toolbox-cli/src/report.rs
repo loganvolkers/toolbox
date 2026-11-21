@@ -254,12 +254,21 @@ struct Comparison {
     other: Vec<Change>,
 }
 
-/// One difference from the baseline, on one entity of one scorecard.
-#[derive(Debug)]
-struct Change {
-    scorecard: String,
-    entity: String,
-    message: String,
+/// One difference from the baseline, on one entity of one scorecard. A regression also carries
+/// its root cause (crate::causes): the rule's evidence and how to reproduce it, and for an
+/// aggregate (a repository level) the constituent scorecards that fell and the entities that
+/// made them fall.
+#[derive(Debug, Clone, Default)]
+pub(crate) struct Change {
+    pub(crate) scorecard: String,
+    pub(crate) entity: String,
+    pub(crate) message: String,
+    /// The rules this change is about (empty: every failing rule of the entity).
+    pub(crate) rules: Vec<String>,
+    /// What the rule found and how to see it with the tool alone.
+    pub(crate) detail: Vec<String>,
+    /// For an aggregate: the changes below it that caused it.
+    pub(crate) causes: Vec<Change>,
 }
 
 impl std::fmt::Display for Change {
@@ -269,8 +278,34 @@ impl std::fmt::Display for Change {
 }
 
 impl Change {
-    fn to_json(&self) -> Value {
-        json!({"scorecard": self.scorecard, "entity": self.entity, "message": self.message})
+    pub(crate) fn to_json(&self) -> Value {
+        let mut v =
+            json!({"scorecard": self.scorecard, "entity": self.entity, "message": self.message});
+        if !self.detail.is_empty() {
+            v["detail"] = json!(self.detail);
+        }
+        if !self.causes.is_empty() {
+            v["causes"] = Value::Array(self.causes.iter().map(Change::to_json).collect());
+        }
+        v
+    }
+
+    /// The change, then its detail and causes, indented under it.
+    pub(crate) fn lines(&self, mark: &str, depth: usize) -> Vec<String> {
+        let pad = "  ".repeat(depth);
+        let head = if depth == 0 {
+            format!("{mark} {self}")
+        } else {
+            format!("{pad}↳ {self}")
+        };
+        let mut out = vec![head];
+        for d in &self.detail {
+            out.push(format!("{pad}    {d}"));
+        }
+        for c in &self.causes {
+            out.extend(c.lines(mark, depth + 1));
+        }
+        out
     }
 }
 
@@ -286,6 +321,15 @@ impl At<'_> {
             scorecard: self.card.to_owned(),
             entity: self.id.to_owned(),
             message,
+            ..Change::default()
+        }
+    }
+
+    /// A change about one rule.
+    fn about(&self, rule: &str, message: String) -> Change {
+        Change {
+            rules: vec![rule.to_owned()],
+            ..self.say(message)
         }
     }
 }
@@ -465,14 +509,16 @@ fn compare_entity(c: &mut Comparison, at: &At, was: &Value, now: &Value) {
     }
     for (rule, n) in &nf {
         if wu.contains(rule) {
-            c.other.push(at.say(format!("{rule} known again: fails")));
+            c.other
+                .push(at.about(rule, format!("{rule} known again: fails")));
         } else if let Some(m) = wf.get(rule) {
             evidence_change(c, at, rule, m, n);
         } else if was["level"] == "skipped" {
             c.other
-                .push(at.say(format!("no longer skipped; {rule} fails")));
+                .push(at.about(rule, format!("no longer skipped; {rule} fails")));
         } else {
-            c.regressions.push(at.say(format!("{rule} now fails")));
+            c.regressions
+                .push(at.about(rule, format!("{rule} now fails")));
         }
     }
     for rule in wf
@@ -492,10 +538,10 @@ fn evidence_change(c: &mut Comparison, at: &At, rule: &str, was: &Value, now: &V
     match (was.as_f64(), now.as_f64()) {
         (Some(m), Some(n)) if n > m => c
             .regressions
-            .push(at.say(format!("{rule} evidence grew {was} → {now}"))),
+            .push(at.about(rule, format!("{rule} evidence grew {was} → {now}"))),
         (Some(m), Some(n)) if n < m => c
             .improvements
-            .push(at.say(format!("{rule} evidence shrank {was} → {now}"))),
+            .push(at.about(rule, format!("{rule} evidence shrank {was} → {now}"))),
         _ => {}
     }
 }
@@ -1181,7 +1227,7 @@ fn change_lines(v: &Verdict, d: &Derived) -> Vec<String> {
         ("✓ better ", &c.improvements),
         ("· changed", &c.other),
     ] {
-        lines.extend(changes.iter().map(|r| format!("{mark} {r}")));
+        lines.extend(changes.iter().flat_map(|r| r.lines(mark, 0)));
     }
     lines.extend(paydown_lines(&v.starts, d));
     lines
@@ -1293,12 +1339,26 @@ fn ratchet(
     (v.accepted, v.comparison.regressions) = std::mem::take(&mut v.comparison.regressions)
         .into_iter()
         .partition(|r| o.accept.contains(&r.scorecard));
+    explain_regressions(&mut v.comparison, &b["results"], now, m, d);
     let recorded = b["campaigns"].as_object().cloned().unwrap_or_default();
     let differs = b["results"] != doc["results"] || recorded != v.starts;
     let unexpected = unexpected_unknowns(m, &o.skip, now);
     let text = decide(o, &mut v, path, differs, unexpected, &write)?;
     v.summary = format!("{}\nbaseline: {text}\n", change_lines(&v, d).join("\n"));
     Ok(v)
+}
+
+/// Every regression gets its root cause (crate::causes): evidence, how to reproduce it, and for
+/// an aggregate the constituent scorecards that fell and the changes that made them fall.
+fn explain_regressions(
+    c: &mut Comparison,
+    before: &Value,
+    now: &Value,
+    m: &toolbox_model::Manifest,
+    d: &Derived,
+) {
+    let candidates: Vec<Change> = c.regressions.iter().chain(&c.other).cloned().collect();
+    crate::causes::explain(&mut c.regressions, &candidates, before, now, m, d);
 }
 
 fn git(dir: &std::path::Path, args: &[&str]) -> Result<String, String> {
@@ -1371,6 +1431,7 @@ fn against(
         unknown: unknown_count(now),
         starts: Map::new(),
     };
+    explain_regressions(&mut v.comparison, &before, now, m, d);
     let n = v.comparison.regressions.len();
     if n > 0 {
         (v.result, v.code) = ("regressed", 1);

@@ -90,7 +90,7 @@ scorecards:
       check: entity.counts.sdlc <= entity.counts.layeredSdlc
       evidence: >-
         [string(entity.counts.sdlc - entity.counts.layeredSdlc) + ' mention(s)
-        of SDLC without a layer']
+        of "SDLC" without a layer']
       fix: >-
         Say which SDLC you mean: maintainer, operator or user (docs/sdlc.md,
         D63).

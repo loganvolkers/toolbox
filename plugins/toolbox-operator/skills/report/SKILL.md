@@ -16,7 +16,9 @@ toolbox report portal --skip runner,github-actions --baseline portal/results.jso
 scripts/regen-site-report.sh
 ```
 
-In a pipeline, add `--verdict verdict.json`: it lists each regression as `{scorecard, entity, message}`, so the job can annotate or comment without parsing the text.
+In a pipeline, add `--verdict verdict.json`: it lists each regression as `{scorecard, entity, message, detail, causes}`, so the job can annotate or comment without parsing the text.
+
+Read the root cause under each `✗ worse` line before changing anything: the evidence, the `reproduce:` command (run it to see the finding with the tool alone), and for a repository level the scorecard that fell and the change that made it fall. Fix that change; don't update the baseline to hide it.
 
 To work the failures, `-o failures` prints each one as JSON with its path, fields, measure, evidence, fix and the connector records it came from. `-o json` adds `campaigns`, and with --baseline each one's paydown since its recorded start. The default Markdown lists only entities with a failing or unknown rule; `--all` lists every one.
 

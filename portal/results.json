@@ -841,6 +841,9 @@
       "doc:docs/decisions/D01M7ZRAJT47W11X5X3FEJ6QTX8.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M7ZZYZ1SXSTHDZQK8A1CZMMN.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/README.md": {
         "level": "skipped"
       },
@@ -947,6 +950,9 @@
         "level": "silver"
       },
       "doc:docs/design/report-ux.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/root-causes.md": {
         "level": "silver"
       },
       "doc:docs/design/schema-standards.md": {

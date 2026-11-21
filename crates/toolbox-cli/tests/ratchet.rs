@@ -116,6 +116,15 @@ fn a_falling_ratchet_fails_the_pipeline_and_says_why() {
             ("quality", "thing:a", "tested now fails")
         ]
     );
+    // Each regression carries its root cause: the rule's evidence now, and where it came from.
+    assert_eq!(
+        v["regressions"][0]["detail"],
+        serde_json::json!([
+            "documented: intro",
+            "documented: usage",
+            "from: connector things, record thing thing:a"
+        ])
+    );
     // --update refuses to record a regression.
     let (code, v) = report(&dir, &["--update"]);
     assert_eq!((code, &v["written"]), (1, &false.into()));
@@ -143,5 +152,73 @@ fn a_falling_ratchet_fails_the_pipeline_and_says_why() {
     let (code, v) = report(&dir, &["--ci"]);
     assert_eq!((code, v["result"].as_str()), (2, Some("error")));
     assert!(v["message"].as_str().is_some_and(|m| !m.is_empty()));
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// A repository level over `quality`: its regression names the scorecard that fell and the
+/// entity that made it fall, with that entity's evidence (docs/design/root-causes.md).
+const AGGREGATE: &str = r#"
+  - name: Repo
+    description: The repository, rolling up its scorecards.
+    identityFrom: [connector:things]
+    fields:
+      watch: {type: list, items: string, description: The scorecards it rolls up.}
+    sources: {default: [connector:things]}
+    map:
+      - {from: things/repo, id: "'repo:' + record.name", set: "{'watch': record.watch}"}
+"#;
+
+#[test]
+fn a_repository_level_regression_names_its_root_cause() {
+    let dir = std::env::temp_dir().join(format!("toolbox-causes-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let manifest = MANIFEST
+        .replace("records: [thing]", "records: [thing, repo]")
+        .replace("scorecards:\n", &format!("{}scorecards:\n", AGGREGATE.trim_start_matches('\n')))
+        + r#"  - name: repo-level
+    kind: Repo
+    owner: group:maintainers
+    levels: [bronze]
+    rules:
+      - {name: constituents-at-least-bronze, level: bronze, check: "cards.all(c, c.rank >= 1)",
+         evidence: "cards.filter(c, c.rank < 1).map(c, c.name + ' is ' + c.level)", fix: "Raise each one to bronze."}
+"#;
+    let write = |things: &[(&str, bool)]| {
+        std::fs::create_dir_all(dir.join("fixtures")).unwrap();
+        std::fs::write(dir.join("toolbox.yaml"), &manifest).unwrap();
+        let mut lines = vec![serde_json::json!({"type": "record", "kind": "repo", "externalId": "repo:r",
+            "data": {"name": "r", "watch": ["quality"]}})
+        .to_string()];
+        lines.extend(things.iter().map(|(name, tested)| {
+            serde_json::json!({"type": "record", "kind": "thing", "externalId": format!("thing:{name}"),
+                "data": {"name": name, "tested": tested, "undocumented": []}})
+            .to_string()
+        }));
+        std::fs::write(dir.join("fixtures/things.ndjson"), lines.join("\n")).unwrap();
+    };
+    write(&[("a", true)]);
+    let (code, _) = report(&dir, &["--update"]);
+    assert_eq!(code, 0);
+    // `a` loses its test: quality falls to none, so the repository level fails.
+    write(&[("a", false)]);
+    let (code, v) = report(&dir, &[]);
+    assert_eq!(code, 1);
+    let level = v["regressions"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|r| r["scorecard"] == "repo-level")
+        .expect("the repository level regressed");
+    let fell = &level["causes"][0];
+    assert_eq!(
+        (fell["scorecard"].as_str(), fell["message"].as_str()),
+        (Some("quality"), Some("fell silver → none"))
+    );
+    let cause = &fell["causes"][0];
+    assert_eq!(
+        (cause["entity"].as_str(), cause["message"].as_str()),
+        (Some("thing:a"), Some("tested now fails"))
+    );
+    assert_eq!(cause["detail"][0], "from: connector things, record thing thing:a");
     let _ = std::fs::remove_dir_all(&dir);
 }

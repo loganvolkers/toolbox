@@ -1070,7 +1070,7 @@ pub fn utc_ymd_today() -> String {
 }
 
 /// The check or its evidence names the `cards` variable (a list of constituent scorecards).
-fn reads_cards(sc: &toolbox_model::manifest::Scorecard) -> bool {
+pub fn reads_cards(sc: &toolbox_model::manifest::Scorecard) -> bool {
     fn token(s: &str) -> bool {
         s.split(|c: char| !c.is_ascii_alphanumeric() && c != '_')
             .any(|t| t == "cards")

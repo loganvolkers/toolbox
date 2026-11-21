@@ -54,9 +54,12 @@ cat "$out/ratchet.txt" >&2
 # The verdict file is the contract (D96): result, exit code, and each change as data.
 result=$(sed -n 's/^ *"result": "\([a-z-]*\)".*/\1/p' "$verdict" 2>/dev/null | head -1)
 [[ -z "$result" ]] && result=error
-# One annotation per regression, on the run and the pull request (needs jq, as GitHub's runners have).
+# One annotation per regression, on the run and the pull request (needs jq, as GitHub's runners have),
+# with its root cause: the evidence, how to reproduce it, and for a repository level the scorecard
+# that fell and the change below it (docs/design/root-causes.md).
 if [[ "$result" == regressed ]] && command -v jq >/dev/null; then
-  jq -r '.regressions[] | "::error title=Ratchet: \(.scorecard)::\(.entity): \(.message | gsub("%"; "%25") | gsub("\n"; "%0A"))"' "$verdict"
+  jq -r 'def lines: "\(.scorecard) · \(.entity): \(.message)", ((.detail // [])[] | "  " + .), ((.causes // [])[] | lines | "  " + .);
+    .regressions[] | "::error title=Ratchet: \(.scorecard)::" + ([lines] | join("\n") | gsub("%"; "%25") | gsub("\n"; "%0A"))' "$verdict"
 fi
 
 {
