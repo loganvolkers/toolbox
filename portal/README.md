@@ -59,8 +59,10 @@ git add portal/results.json
 ```
 
 The site's copy of the report isn't committed: the pages workflow generates it for each commit
-(D01M7YAXH89ZJQ7Q4HP77NMHBX8). To preview it locally, run `toolbox report portal --skip runner,github-actions -o web
---out site/public/report`.
+(D01M7YAXH89ZJQ7Q4HP77NMHBX8). To preview it locally with the same pinned linters CI uses, run
+`scripts/regen-site-report.sh` (actionlint 1.7.12 via `scripts/ci-tools.sh`, `zizmor==1.32.0`, then
+`doctor` and `report … -o web --out site/public/report`). A bare `toolbox report … -o web` without
+those tools on `PATH` writes `unknown` for ci-lint rules and diverges from the pages build.
 
 ## Run it
 
@@ -78,11 +80,13 @@ toolbox assess check portal --skip runner,github-actions                       #
 ```
 
 `toolbox` here is `target/debug/toolbox` (connectors are found next to it). The ratchet needs
-`zizmor` 1.32.0 (`pip install zizmor==1.32.0`) and `actionlint` 1.7.12 (`go install
-github.com/rhysd/actionlint/cmd/actionlint@v1.7.12`) on the `PATH`; without them their rules are
-`unknown` (reported, not compared) and `--ci`/`--update` refuse to run. `github-actions` needs
-`GITHUB_TOKEN` and changes over time, so it is skipped in the ratchet. CI fails when anything
-gets worse than `portal/results.json`, and when an improvement hasn't been recorded in it.
+`zizmor` 1.32.0 (`pip install zizmor==1.32.0` or `pipx install zizmor==1.32.0`) and
+`actionlint` 1.7.12 (`scripts/ci-tools.sh <bin-dir> actionlint`, the same pin as CI) on the
+`PATH`; without them their rules are `unknown` (reported, not compared) and `--ci`/`--update`
+refuse to run. For the site report preview, prefer `scripts/regen-site-report.sh`, which installs
+both. `github-actions` needs `GITHUB_TOKEN` and changes over time, so it is skipped in the ratchet.
+CI fails when anything gets worse than `portal/results.json`, and when an improvement hasn't been
+recorded in it.
 
 With `serve` running, any agent can use it:
 
