@@ -881,6 +881,10 @@ pub async fn handle(
             let args = msg["params"]["arguments"].clone();
             let (text, structured, is_error) = run_tool(&state, &headers, &name, &args).await;
             trace_call(&name, is_error);
+            toolbox_telemetry::catalog::record_mcp_tool(
+                &name,
+                if is_error { "error" } else { "ok" },
+            );
             Ok(
                 json!({"content": [{"type": "text", "text": text}], "structuredContent": structured, "isError": is_error}),
             )

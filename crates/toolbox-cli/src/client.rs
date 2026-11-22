@@ -61,6 +61,18 @@ pub fn tool(target: &Target, name: &str, args: Value, output: &str) -> ExitCode 
 pub fn bridge(target: &Target) -> ExitCode {
     use std::io::{BufRead, Write};
     let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
+    let _telemetry = match toolbox_telemetry::init(toolbox_telemetry::TelemetryOptions {
+        mode: None,
+        service_name: None,
+        prometheus: Some(false),
+        log_format: None,
+    }) {
+        Ok(g) => g,
+        Err(e) => {
+            eprintln!("error: telemetry: {e}");
+            return ExitCode::from(2);
+        }
+    };
     let client = reqwest::Client::new();
     let stdin = std::io::stdin();
     let mut stdout = std::io::stdout();

@@ -1,0 +1,40 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: sdlc-stage:operator/monitor
+rubric: sdlc-stage-quality
+subjectHash: 76be24e691d9
+assessor: {kind: agent, name: cursor-composer, model: composer}
+at: 2026-11-22
+verdicts:
+  - criterion: executable-exit
+    verdict: pass
+    reason: >-
+      scripts/m4-acceptance.sh exercises serve health, readiness and the
+      metrics endpoint; the exit criterion's freshness/lag signals are the
+      catalog series toolbox_snapshot_lag_seconds and related gauges on
+      /metrics (docs/design/observability.md, v1-spec §10.5).
+  - criterion: agent-can-complete
+    verdict: unsure
+    reason: >-
+      toolbox serve plus the catalog and alert stubs under ops/alerts/ are
+      documented in docs/design/observability.md, but the stage gaps still
+      list a local OTel collector testbed and a Grafana pack. An agent can
+      scrape /metrics; full OTLP completeness scoring is step 5.
+    suggestion: >-
+      Land experiments/otel-testbed and a CI score script so the exit
+      criterion's OTLP half is checked without a human Grafana login.
+  - criterion: reuses-artifacts
+    verdict: pass
+    reason: >-
+      Monitoring uses the released toolbox binary's /metrics and optional OTLP
+      export; operators point scrapers or a Collector at the running image and
+      do not rebuild Toolbox to observe lag.
+  - criterion: decoupled-from-core
+    verdict: pass
+    reason: >-
+      An operator configures OTEL_* and scrape targets against a deployed
+      portal; they do not add crates or builtins to this repository to monitor
+      freshness.
+summary: >-
+  Snapshot lag and catalog metrics are observable via /metrics and OTLP
+  when configured. The remaining gap is the local collector testbed (step
+  5) and Grafana pack, not the bootstrap itself.

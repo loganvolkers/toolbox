@@ -72,6 +72,19 @@ fn config_from_env() -> toolbox_api::Config {
     c
 }
 
+fn init_serve_telemetry() -> Result<toolbox_telemetry::TelemetryGuard, ExitCode> {
+    toolbox_telemetry::init(toolbox_telemetry::TelemetryOptions {
+        mode: None,
+        service_name: None,
+        prometheus: Some(true),
+        log_format: None,
+    })
+    .map_err(|e| {
+        eprintln!("error: telemetry: {e}");
+        ExitCode::from(2)
+    })
+}
+
 pub fn serve(path: &Path, listen: &str, database_url: Option<String>, fixtures: bool) -> ExitCode {
     let report = match toolbox_model::validate_portal(path) {
         Ok(r) => r,
@@ -91,6 +104,11 @@ pub fn serve(path: &Path, listen: &str, database_url: Option<String>, fixtures: 
     let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
     let database_url_for_fga = database_url.clone();
     rt.block_on(async move {
+        // Init after the runtime exists (OTLP batch exporters need it) and before listen.
+        let _telemetry = match init_serve_telemetry() {
+            Ok(g) => g,
+            Err(code) => return code,
+        };
         let (store, pg): (Arc<dyn Store>, _) = match database_url {
             Some(url) => match toolbox_store::PgStore::connect(&url).await {
                 Ok(pg) => (Arc::new(pg.clone()), Some(pg)),
@@ -137,7 +155,9 @@ pub fn serve(path: &Path, listen: &str, database_url: Option<String>, fixtures: 
                 }
             }
         } else if auth_mode == Mode::Dev {
-            eprintln!("toolbox: warning: no `openfga` binary (TOOLBOX_OPENFGA_BIN); running WITHOUT authorization (dev mode only)");
+            tracing::warn!(
+                "no `openfga` binary (TOOLBOX_OPENFGA_BIN); running WITHOUT authorization (dev mode only)"
+            );
             None
         } else {
             eprintln!("error: authorization needs the `openfga` binary (TOOLBOX_OPENFGA_BIN); refusing to start in {} mode without it", config.auth_mode);
@@ -152,15 +172,20 @@ pub fn serve(path: &Path, listen: &str, database_url: Option<String>, fixtures: 
                 return ExitCode::from(2);
             }
         };
-        eprintln!(
-            "toolbox: serving {} on http://{listen} ({mode} store, {auth_mode:?} auth, authorization: {authz_label}, manifest {})",
-            src.manifest_file, state.manifest_hash
+        tracing::info!(
+            listen = %listen,
+            store = %mode,
+            auth = ?auth_mode,
+            authorization = %authz_label,
+            manifest = %state.manifest_hash,
+            file = %src.manifest_file,
+            "serving portal"
         );
         tokio::select! {
             r = toolbox_api::serve(state, listener) => {
                 if let Err(e) = r { eprintln!("error: {e}"); return ExitCode::from(1); }
             }
-            _ = shutdown_signal() => eprintln!("toolbox: shutting down"),
+            _ = shutdown_signal() => tracing::info!("shutting down"),
         }
         ExitCode::SUCCESS
     })

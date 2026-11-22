@@ -1,0 +1,13 @@
+# Alert stub: snapshot lag (Prometheus / Mimir). Wired when a Grafana pack lands.
+groups:
+  - name: toolbox.snapshot
+    rules:
+    - alert: ToolboxSnapshotLagHigh
+      expr: toolbox_snapshot_lag_seconds > 60
+      for: 5m
+      labels: {severity: warning}
+      annotations:
+        summary: Toolbox published snapshot is lagging
+        description: >-
+          toolbox_snapshot_lag_seconds has been above 60s for 5m. Check derive and
+          connector freshness.

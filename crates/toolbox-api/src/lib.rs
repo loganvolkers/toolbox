@@ -54,7 +54,6 @@ pub fn app_state_with(
         pg,
         current,
         changed: tokio::sync::Notify::new(),
-        metrics: Default::default(),
         config,
     })
 }

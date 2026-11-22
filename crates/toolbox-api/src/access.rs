@@ -156,10 +156,13 @@ impl AppState {
         if !fga_dsl::has_relation(authz.model(), ty, relation) {
             return Ok(false);
         }
-        authz
-            .check(&caller.user, relation, object)
-            .await
-            .map_err(|e| problem(StatusCode::BAD_GATEWAY, "authz-unavailable", e))
+        match authz.check(&caller.user, relation, object).await {
+            Ok(ok) => {
+                toolbox_telemetry::catalog::record_authz(if ok { "allow" } else { "deny" });
+                Ok(ok)
+            }
+            Err(e) => Err(problem(StatusCode::BAD_GATEWAY, "authz-unavailable", e)),
+        }
     }
 }
 

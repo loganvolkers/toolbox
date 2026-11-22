@@ -122,6 +122,17 @@ connectors:
         - kind: sdlc-stage
           globs: [portal/sdlc/stages/*.yaml]
           paths: [docs, checks]
+        - kind: observability
+          globs: [portal/observability/*.yaml]
+          paths:
+          - crate
+          - catalog
+          - serviceNameDoc
+          - promTest
+          - structuredLogTest
+          - alerts
+          - monitorAssessment
+          - otlpTestbed
     records:
     - crate
     - doc
@@ -141,6 +152,7 @@ connectors:
     - assessment
     - sdlc-layer
     - sdlc-stage
+    - observability
     refresh:
       crate: [external_ids]
       doc: [external_ids]
@@ -159,6 +171,7 @@ connectors:
       site-page: [external_ids]
       sdlc-layer: [external_ids]
       sdlc-stage: [external_ids]
+      observability: [external_ids]
     freshness:
       crate: 5m
       doc: 5m
@@ -178,6 +191,7 @@ connectors:
       assessment: 5m
       sdlc-layer: 5m
       sdlc-stage: 5m
+      observability: 5m
   - name: runner
     package: builtin:runner # executes things; slow, so it's refreshed per entity
     runtime: in-image

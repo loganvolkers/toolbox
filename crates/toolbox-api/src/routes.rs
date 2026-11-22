@@ -12,7 +12,6 @@ use serde::Deserialize;
 use serde_json::{Map, Value, json};
 use std::collections::BTreeMap;
 use std::sync::Arc;
-use std::sync::atomic::Ordering;
 use std::time::Duration;
 use toolbox_expr::{Expr, to_cel, with_vars};
 use toolbox_store::NativeValue;
@@ -142,27 +141,16 @@ async fn readyz(State(s): S) -> Response {
 }
 
 async fn metrics(State(s): S) -> impl IntoResponse {
-    let m = &s.metrics;
-    let (lag, last) = match s.snapshot() {
-        Some(p) => (
-            p.published_at
-                .elapsed()
-                .map(|d| d.as_secs_f64())
-                .unwrap_or(0.0),
-            p.recompute.as_secs_f64(),
-        ),
-        None => (0.0, 0.0),
+    let lag = match s.snapshot() {
+        Some(p) => p
+            .published_at
+            .elapsed()
+            .map(|d| d.as_secs_f64())
+            .unwrap_or(0.0),
+        None => 0.0,
     };
-    let text = format!(
-        "# TYPE toolbox_ingest_records_total counter\ntoolbox_ingest_records_total {}\n\
-         # TYPE toolbox_ingest_batches_total counter\ntoolbox_ingest_batches_total {}\n\
-         # TYPE toolbox_recomputes_total counter\ntoolbox_recomputes_total {}\n\
-         # TYPE toolbox_recompute_seconds gauge\ntoolbox_recompute_seconds {last}\n\
-         # TYPE toolbox_snapshot_age_seconds gauge\ntoolbox_snapshot_age_seconds {lag}\n",
-        m.ingest_records.load(Ordering::Relaxed),
-        m.ingest_batches.load(Ordering::Relaxed),
-        m.recomputes.load(Ordering::Relaxed),
-    );
+    toolbox_telemetry::catalog::set_snapshot_lag(lag);
+    let text = toolbox_telemetry::metrics_text();
     ([(header::CONTENT_TYPE, "text/plain; version=0.0.4")], text)
 }
 

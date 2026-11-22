@@ -598,6 +598,8 @@ fn tools_command(command: ToolsCommand) -> ExitCode {
 fn main() -> ExitCode {
     quiet_on_closed_pipe();
     let command = Cli::parse().command;
+    // Telemetry for serve/mcp is installed in those entrypoints (Tokio runtime first).
+    // Other subcommands stay quiet so stdout JSON (describe, report) stays clean.
     if let Some((remote, tool, args)) = read_call(&command) {
         return client::tool(&remote.target(), tool, args, &remote.output);
     }

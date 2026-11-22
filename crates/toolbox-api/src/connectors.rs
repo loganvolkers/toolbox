@@ -14,7 +14,6 @@ use serde_json::{Value, json};
 use std::collections::BTreeSet;
 use std::process::Stdio;
 use std::sync::Arc;
-use std::sync::atomic::Ordering;
 use std::time::Duration;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use toolbox_connect::Request;
@@ -84,10 +83,7 @@ pub async fn ingest_messages(
             .await
             .map_err(|e| problem(StatusCode::INTERNAL_SERVER_ERROR, "store", e.to_string()))?
     };
-    s.metrics
-        .ingest_records
-        .fetch_add(records as u64, Ordering::Relaxed);
-    s.metrics.ingest_batches.fetch_add(1, Ordering::Relaxed);
+    toolbox_telemetry::catalog::record_ingest(records as u64);
     let registered = messages.iter().any(|m| m["type"] == "register");
     for (kind, seen) in s.hub.on_messages(connector, &messages, version) {
         reconcile(s, connector, &kind, &seen).await;
@@ -286,7 +282,7 @@ pub fn binary_for(package: &str) -> String {
 /// Start a supervisor for every in-image connector (unless `TOOLBOX_CONNECTORS=off`).
 pub fn spawn_in_image(s: &Arc<AppState>) {
     if std::env::var("TOOLBOX_CONNECTORS").is_ok_and(|v| v == "off") {
-        eprintln!("toolbox: in-image connectors disabled (TOOLBOX_CONNECTORS=off)");
+        tracing::info!("in-image connectors disabled (TOOLBOX_CONNECTORS=off)");
         return;
     }
     for c in s
@@ -315,7 +311,7 @@ async fn supervise(s: Arc<AppState>, name: String, program: String, config: Valu
         let mut child = match child {
             Ok(c) => c,
             Err(e) => {
-                eprintln!("toolbox: connector {name}: cannot start {program}: {e}");
+                tracing::error!(connector = %name, error = %e, program = %program, "cannot start connector");
                 tokio::time::sleep(backoff).await;
                 backoff = (backoff * 2).min(Duration::from_secs(30));
                 continue;
@@ -355,10 +351,7 @@ async fn supervise(s: Arc<AppState>, name: String, program: String, config: Valu
                         Some("register" | "complete" | "snapshot_complete")
                     );
                     if m["type"] == "log" {
-                        eprintln!(
-                            "toolbox: connector {name}: {}",
-                            m["message"].as_str().unwrap_or_default()
-                        );
+                        tracing::info!(connector = %name, msg = m["message"].as_str().unwrap_or(""));
                         continue;
                     }
                     batch.push(m);
@@ -377,7 +370,7 @@ async fn supervise(s: Arc<AppState>, name: String, program: String, config: Valu
             .await
             .map(|st| st.to_string())
             .unwrap_or_default();
-        eprintln!("toolbox: connector {name} exited ({status}); restarting in {backoff:?}");
+        tracing::warn!(connector = %name, %status, ?backoff, "connector exited; restarting");
         tokio::time::sleep(backoff).await;
         backoff = (backoff * 2).min(Duration::from_secs(30));
     }
@@ -389,7 +382,7 @@ async fn flush(s: &Arc<AppState>, name: &str, batch: &mut Vec<Value>) {
     }
     let msgs = std::mem::take(batch);
     if let Err(r) = ingest_messages(s, name, msgs).await {
-        eprintln!("toolbox: connector {name}: batch rejected ({})", r.status());
+        tracing::error!(connector = %name, status = %r.status(), "connector batch rejected");
     }
 }
 
