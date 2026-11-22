@@ -5,3 +5,4 @@ A	2	97004	20	433772	final tokens from its last notification; its 2157896 ms tota
 B	2	112714	21	576861	
 B	3	113473	23	428794	
 A	3	98081	20	1060841	includes a semgrep run that stalled 14 min under CPU contention (both arms scanning)
+B	4	101168	18	250684	
