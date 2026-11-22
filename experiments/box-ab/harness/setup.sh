@@ -35,8 +35,17 @@ SEMGREP_ENABLE_VERSION_CHECK=0 exec "$AB_HOME/venv/semgrep/bin/semgrep" "\$@"
 WRAP
 chmod +x "$AB_HOME/bin/semgrep"
 
-pin() { # pin <name> <version> <dir>: pip --target, then link the console script
-  [ -x "$3/bin/$1" ] || python3 -m pip install -q --target "$3" "$1==$2"
+pin() { # pin <name> <version> <dir>: pip --target with --require-hashes (OpenSSF)
+  [ -x "$3/bin/$1" ] && return 0
+  req=$(mktemp)
+  case "$1==$2" in
+    ruff==0.14.11) echo 'ruff==0.14.11 --hash=sha256:a35c9da08562f1598ded8470fcfef2afb5cf881996e6c0a502ceb61f4bc9c8a3' >"$req" ;;
+    ruff==0.15.0) echo 'ruff==0.15.0 --hash=sha256:bcbca3d40558789126da91d7ef9a7c87772ee107033db7191edefa34e2c7f1b4' >"$req" ;;
+    zizmor==1.32.0) echo 'zizmor==1.32.0 --hash=sha256:84a6acb975accc13408786a2bd274b572537ca19c933ebbc13e78f3988562071' >"$req" ;;
+    *) echo "no hash pin for $1==$2" >&2; rm -f "$req"; return 1 ;;
+  esac
+  python3 -m pip install -q --target "$3" --require-hashes -r "$req"
+  rm -f "$req"
 }
 pin ruff "$RUFF" "$AB_HOME/venv/ruff-$RUFF" && ln -sf "$AB_HOME/venv/ruff-$RUFF/bin/ruff" "$AB_HOME/bin/ruff"
 pin ruff "$RUFF_UP" "$AB_HOME/upgrade/ruff-$RUFF_UP"

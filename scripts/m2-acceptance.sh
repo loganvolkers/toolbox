@@ -38,26 +38,28 @@ PY
 echo "1. fixtures through the ingest API"
 start
 "$TOOLBOX" push "$PORTAL" --url "$URL" | tail -1
-V=$(curl -fs -H x-toolbox-user:dave "$URL/v1/snapshot" | python3 -c 'import json,sys; print(json.load(sys.stdin)["input_version"])')
+V=$(f=$(mktemp); curl -fs -H x-toolbox-user:dave "$URL/v1/snapshot" -o "$f"; python3 -c 'import json,sys; print(json.load(sys.stdin)["input_version"])' < "$f"; rm -f "$f")
 compare "$V"
-SNAP1=$(curl -fs -H x-toolbox-user:dave "$URL/v1/snapshot" | python3 -c 'import json,sys; print(json.load(sys.stdin)["snapshot"])')
+SNAP1=$(f=$(mktemp); curl -fs -H x-toolbox-user:dave "$URL/v1/snapshot" -o "$f"; python3 -c 'import json,sys; print(json.load(sys.stdin)["snapshot"])' < "$f"; rm -f "$f")
 
 echo "2. read-your-writes"
 # user:erin has a single source (the IdP), so deleting its record removes the entity.
 REC=$(grep '"login":"erin"' "$PORTAL/fixtures/idp.ndjson")
 DEL=$(python3 -c 'import json,sys; r=json.loads(sys.argv[1]); print(json.dumps({"type":"delete","kind":r["kind"],"externalId":r["externalId"]}))' "$REC")
-N=$(curl -fs -H x-toolbox-user:dave -X POST "$URL/v1/ingest" -H 'x-toolbox-connector: idp' --data-binary "$DEL" | python3 -c 'import json,sys; print(json.load(sys.stdin)["input_version"])')
+N=$(f=$(mktemp); curl -fs -H x-toolbox-user:dave -X POST "$URL/v1/ingest" -H 'x-toolbox-connector: idp' --data-binary "$DEL" -o "$f"; python3 -c 'import json,sys; print(json.load(sys.stdin)["input_version"])' < "$f"; rm -f "$f")
 CODE=$(curl -s -H x-toolbox-user:dave -o /dev/null -w '%{http_code}' "$URL/v1/entities/user:erin?min_snapshot=$N")
 [ "$CODE" = 404 ] && echo "  deleted user:erin is gone at min_snapshot=$N" || { echo "  expected 404, got $CODE"; exit 1; }
-N=$(curl -fs -H x-toolbox-user:dave -X POST "$URL/v1/ingest" -H 'x-toolbox-connector: idp' --data-binary "$REC" | python3 -c 'import json,sys; print(json.load(sys.stdin)["input_version"])')
-curl -fs -H x-toolbox-user:dave "$URL/v1/entities/user:erin?min_snapshot=$N" | python3 -c 'import json,sys; e=json.load(sys.stdin); assert e["fields"]["displayName"]=="Erin Park"; print("  restored user:erin visible at min_snapshot='"$N"'")'
+N=$(f=$(mktemp); curl -fs -H x-toolbox-user:dave -X POST "$URL/v1/ingest" -H 'x-toolbox-connector: idp' --data-binary "$REC" -o "$f"; python3 -c 'import json,sys; print(json.load(sys.stdin)["input_version"])' < "$f"; rm -f "$f")
+f=$(mktemp); curl -fs -H x-toolbox-user:dave "$URL/v1/entities/user:erin?min_snapshot=$N" -o "$f"
+python3 -c 'import json,sys; e=json.load(sys.stdin); assert e["fields"]["displayName"]=="Erin Park"; print("  restored user:erin visible at min_snapshot='"$N"'")' < "$f"
+rm -f "$f"
 compare "$N" >/dev/null && echo "  outputs identical again after delete + restore"
-SNAP2=$(curl -fs -H x-toolbox-user:dave "$URL/v1/snapshot" | python3 -c 'import json,sys; print(json.load(sys.stdin)["snapshot"])')
+SNAP2=$(f=$(mktemp); curl -fs -H x-toolbox-user:dave "$URL/v1/snapshot" -o "$f"; python3 -c 'import json,sys; print(json.load(sys.stdin)["snapshot"])' < "$f"; rm -f "$f")
 
 echo "3. restart"
 kill "$SERVER_PID"; wait "$SERVER_PID" 2>/dev/null || true; SERVER_PID=""
 start
-SNAP3=$(curl -fs -H x-toolbox-user:dave "$URL/v1/snapshot" | python3 -c 'import json,sys; print(json.load(sys.stdin)["snapshot"])')
+SNAP3=$(f=$(mktemp); curl -fs -H x-toolbox-user:dave "$URL/v1/snapshot" -o "$f"; python3 -c 'import json,sys; print(json.load(sys.stdin)["snapshot"])' < "$f"; rm -f "$f")
 [ "$SNAP3" = "$SNAP2" ] && echo "  same snapshot after restart: $SNAP3" || { echo "  snapshot changed: $SNAP2 → $SNAP3"; exit 1; }
 compare "${SNAP3%%.*}"
 

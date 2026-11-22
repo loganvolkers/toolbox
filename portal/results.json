@@ -185,7 +185,7 @@
     "maintainer-ci-security": {
       "workflow:.github/workflows/ci.yml": {
         "failing": {
-          "zizmor-clean": 7
+          "zizmor-clean": 6
         },
         "level": "silver"
       },
@@ -217,10 +217,7 @@
         "level": "bronze"
       },
       "workflow:actions/report/action.yml": {
-        "failing": {
-          "zizmor-clean": 1
-        },
-        "level": "silver"
+        "level": "gold"
       }
     },
     "maintainer-connector": {
@@ -255,11 +252,7 @@
           "short-functions": 9,
           "simple-functions": 3
         },
-        "level": "bronze",
-        "unknown": [
-          "clippy-clean",
-          "tests-pass"
-        ]
+        "level": "bronze"
       },
       "crate:toolbox-authz": {
         "failing": {
@@ -267,11 +260,7 @@
           "public-api-documented": 12,
           "simple-functions": 1
         },
-        "level": "bronze",
-        "unknown": [
-          "clippy-clean",
-          "tests-pass"
-        ]
+        "level": "bronze"
       },
       "crate:toolbox-cli": {
         "failing": {
@@ -280,11 +269,7 @@
           "short-functions": 3,
           "simple-functions": 3
         },
-        "level": "bronze",
-        "unknown": [
-          "clippy-clean",
-          "tests-pass"
-        ]
+        "level": "bronze"
       },
       "crate:toolbox-connect": {
         "failing": {
@@ -295,57 +280,33 @@
           "short-functions": 1,
           "simple-functions": 1
         },
-        "level": "bronze",
-        "unknown": [
-          "clippy-clean",
-          "tests-pass"
-        ]
+        "level": "bronze"
       },
       "crate:toolbox-connector-git-files": {
         "failing": {
           "has-tests": null
         },
-        "level": "none",
-        "unknown": [
-          "clippy-clean",
-          "tests-pass"
-        ]
+        "level": "none"
       },
       "crate:toolbox-connector-github": {
         "failing": {
           "short-functions": 1,
           "simple-functions": 1
         },
-        "level": "silver",
-        "unknown": [
-          "clippy-clean",
-          "tests-pass"
-        ]
+        "level": "silver"
       },
       "crate:toolbox-connector-runner": {
-        "level": "gold",
-        "unknown": [
-          "clippy-clean",
-          "tests-pass"
-        ]
+        "level": "gold"
       },
       "crate:toolbox-connector-scim": {
         "failing": {
           "few-unwraps": 1,
           "has-tests": null
         },
-        "level": "none",
-        "unknown": [
-          "clippy-clean",
-          "tests-pass"
-        ]
+        "level": "none"
       },
       "crate:toolbox-connector-workspace": {
-        "level": "gold",
-        "unknown": [
-          "clippy-clean",
-          "tests-pass"
-        ]
+        "level": "gold"
       },
       "crate:toolbox-derive": {
         "failing": {
@@ -355,11 +316,7 @@
           "short-functions": 3,
           "simple-functions": 1
         },
-        "level": "bronze",
-        "unknown": [
-          "clippy-clean",
-          "tests-pass"
-        ]
+        "level": "bronze"
       },
       "crate:toolbox-durable": {
         "level": "skipped"
@@ -371,11 +328,7 @@
         "failing": {
           "fully-documented": 3
         },
-        "level": "silver",
-        "unknown": [
-          "clippy-clean",
-          "tests-pass"
-        ]
+        "level": "silver"
       },
       "crate:toolbox-model": {
         "failing": {
@@ -386,11 +339,7 @@
           "short-functions": 3,
           "simple-functions": 2
         },
-        "level": "bronze",
-        "unknown": [
-          "clippy-clean",
-          "tests-pass"
-        ]
+        "level": "bronze"
       },
       "crate:toolbox-secrets": {
         "failing": {
@@ -398,22 +347,14 @@
           "public-api-documented": 21,
           "short-functions": 1
         },
-        "level": "bronze",
-        "unknown": [
-          "clippy-clean",
-          "tests-pass"
-        ]
+        "level": "bronze"
       },
       "crate:toolbox-store": {
         "failing": {
           "fully-documented": 5,
           "public-api-documented": 5
         },
-        "level": "bronze",
-        "unknown": [
-          "clippy-clean",
-          "tests-pass"
-        ]
+        "level": "bronze"
       },
       "crate:toolbox-telemetry": {
         "failing": {
@@ -421,11 +362,7 @@
           "public-api-documented": 30,
           "short-functions": 2
         },
-        "level": "bronze",
-        "unknown": [
-          "clippy-clean",
-          "tests-pass"
-        ]
+        "level": "bronze"
       }
     },
     "maintainer-dependency": {
@@ -1371,57 +1308,43 @@
         "level": "ten"
       },
       "maintainer-openssf:Fuzzing": {
-        "failing": {
-          "ten": 10
-        },
-        "level": "none"
+        "level": "ten"
       },
       "maintainer-openssf:License": {
-        "failing": {
-          "ten": 1
-        },
-        "level": "none"
+        "level": "ten"
       },
       "maintainer-openssf:Packaging": {
         "level": "ten"
       },
       "maintainer-openssf:Pinned-Dependencies": {
-        "failing": {
-          "ten": 6
-        },
-        "level": "none"
+        "level": "ten"
       },
       "maintainer-openssf:SAST": {
         "level": "ten"
       },
       "maintainer-openssf:Security-Policy": {
-        "failing": {
-          "ten": 6
-        },
-        "level": "none"
+        "level": "ten"
       },
       "maintainer-openssf:Token-Permissions": {
-        "failing": {
-          "ten": 10
-        },
-        "level": "none"
+        "level": "ten"
       }
     },
     "maintainer-package": {
       "package-json:experiments/typescript-builder/package.json": {
         "failing": {
-          "ci-installs-from-the-lockfile": 1,
           "described": 1,
           "engines-declared": 1
         },
         "level": "silver"
+      },
+      "package-json:scripts/playwright-ci/package.json": {
+        "level": "gold"
       },
       "package-json:site/package.json": {
         "level": "gold"
       },
       "package-json:ui/package.json": {
         "failing": {
-          "ci-installs-from-the-lockfile": 1,
           "described": 1,
           "engines-declared": 1
         },

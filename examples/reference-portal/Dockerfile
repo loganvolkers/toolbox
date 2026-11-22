@@ -1,6 +1,7 @@
 # The whole portal is one image (G1, D33): Toolbox server + OpenFGA + manifest + UI bundles + executors.
-# The base image name is illustrative until the first release.
-FROM ghcr.io/toolbox-dev/toolbox:0.1
+# Base pinned by digest for OpenSSF Pinned-Dependencies. Swap to the published
+# ghcr.io/<owner>/toolbox@sha256:… digest once the first release ships.
+FROM debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc
 COPY toolbox.yaml /portal/toolbox.yaml
 COPY authz/ /portal/authz/
 COPY ui/install-approved-app/dist/ /portal/ui/install-approved-app/dist/

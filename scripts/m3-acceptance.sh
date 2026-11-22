@@ -48,7 +48,7 @@ echo "  bob (GitHub admin of checkout-web): HTTP $CODE"; [ "$CODE" = 200 ]
 
 echo "6. personal access token"
 TOKEN=$("$TOOLBOX" token create --user alice --label m3 2>"$WORK/token.err") || { cat "$WORK/token.err"; exit 1; }
-curl -fs -H "authorization: Bearer $TOKEN" "$URL/v1/me" | json '(d["user"], d["method"])'
+f=$(mktemp); curl -fs -H "authorization: Bearer $TOKEN" "$URL/v1/me" -o "$f"; json '(d["user"], d["method"])' < "$f"; rm -f "$f"
 CODE=$(curl -s -o /dev/null -w '%{http_code}' -H "authorization: Bearer tbx_not_a_token" "$URL/v1/me"); [ "$CODE" = 401 ] && echo "  unknown token: 401"
 
 echo "7. revocation: remove alice from payments"
