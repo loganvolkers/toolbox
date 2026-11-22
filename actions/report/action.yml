@@ -154,6 +154,8 @@ runs:
     - name: Fail on the ratchet's verdict
       if: steps.run.outputs.exit-code != '0'
       shell: bash
+      env:
+        REPORT_RESULT: ${{ steps.run.outputs.result }}
       run: |
-        echo "::error title=Toolbox report::${{ steps.run.outputs.result }} (see the job summary)"
+        echo "::error title=Toolbox report::${REPORT_RESULT} (see the job summary)"
         exit 1

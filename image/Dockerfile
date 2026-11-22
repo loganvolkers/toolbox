@@ -2,7 +2,8 @@
 # connectors, plus OpenFGA, which `toolbox serve` supervises. Built by .github/workflows/image.yml
 # from a release's own archives (nothing is compiled here). Operators build FROM it and add their
 # portal:  FROM ghcr.io/<owner>/toolbox:<version>  then  COPY portal/ /portal/
-FROM debian:bookworm-slim
+# Digest for debian:bookworm-slim (multi-arch index); OpenSSF Pinned-Dependencies.
+FROM debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc
 ARG TARGETARCH
 ARG OPENFGA_VERSION=1.22.1
 ARG OPENFGA_SHA256_amd64=80d2d4b582762c02dc86b1246f7f6f54d6854259727b36e5b5c43ba90792814a
