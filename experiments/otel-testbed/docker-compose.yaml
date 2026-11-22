@@ -1,0 +1,12 @@
+# Optional local stack (design §13). CI uses scripts/score.sh with a pinned
+# otelcol-contrib binary so the job does not require Docker for the Toolbox
+# binary; this compose file is for humans with Docker.
+services:
+  otelcol:
+    image: otel/opentelemetry-collector-contrib:0.142.0
+    command: [--config=/etc/otelcol/config.yaml]
+    volumes:
+      - ./otelcol.compose.yaml:/etc/otelcol/config.yaml:ro
+      - ./out:/var/otel-out
+    ports: [4317:4317, 4318:4318]
+    extra_hosts: [host.docker.internal:host-gateway]

@@ -1,0 +1,37 @@
+# Collector config for docker-compose.yaml (host Toolbox on :18180).
+# CI prefers scripts/score.sh + the host binary path in otelcol.yaml.
+
+receivers:
+  otlp:
+    protocols: {grpc: {endpoint: 0.0.0.0:4317}, http: {endpoint: 0.0.0.0:4318}}
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: toolbox
+          scrape_interval: 1s
+          scrape_timeout: 1s
+          static_configs: [{targets: [host.docker.internal:18180]}]
+
+processors: {batch: {timeout: 200ms, send_batch_size: 32}}
+
+exporters:
+  file/traces: {path: /var/otel-out/traces.json, format: json}
+  file/metrics: {path: /var/otel-out/metrics.json, format: json}
+  file/logs: {path: /var/otel-out/logs.json, format: json}
+  debug: {verbosity: basic}
+
+service:
+  telemetry: {logs: {level: warn}}
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [file/traces, debug]
+    metrics:
+      receivers: [otlp, prometheus]
+      processors: [batch]
+      exporters: [file/metrics, debug]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [file/logs, debug]

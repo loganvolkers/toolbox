@@ -69,6 +69,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .fallback(crate::ui::asset)
         .route("/v1/actions", get(crate::actions::list))
         .route("/v1/actions/{name}/previews", post(crate::actions::preview))
+        .layer(axum::middleware::from_fn(crate::http_trace::layer))
         .with_state(state)
 }
 

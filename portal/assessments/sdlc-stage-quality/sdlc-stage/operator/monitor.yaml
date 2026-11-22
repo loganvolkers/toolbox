@@ -1,7 +1,7 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: sdlc-stage:operator/monitor
 rubric: sdlc-stage-quality
-subjectHash: 76be24e691d9
+subjectHash: b7ece568fc20
 assessor: {kind: agent, name: cursor-composer, model: composer}
 at: 2026-11-22
 verdicts:
@@ -9,25 +9,25 @@ verdicts:
     verdict: pass
     reason: >-
       scripts/m4-acceptance.sh exercises serve health, readiness and the
-      metrics endpoint; the exit criterion's freshness/lag signals are the
-      catalog series toolbox_snapshot_lag_seconds and related gauges on
-      /metrics (docs/design/observability.md, v1-spec §10.5).
+      metrics endpoint; experiments/otel-testbed/scripts/score.sh (CI job
+      otel-testbed) asserts OTLP export of http.server.request spans, catalog
+      metric names, service.name and log/trace_id correlation against a pinned
+      otelcol-contrib file exporter. Exit criterion's lag/catalog signals are
+      toolbox_snapshot_lag_seconds and related series on /metrics and OTLP.
   - criterion: agent-can-complete
-    verdict: unsure
+    verdict: pass
     reason: >-
-      toolbox serve plus the catalog and alert stubs under ops/alerts/ are
-      documented in docs/design/observability.md, but the stage gaps still
-      list a local OTel collector testbed and a Grafana pack. An agent can
-      scrape /metrics; full OTLP completeness scoring is step 5.
-    suggestion: >-
-      Land experiments/otel-testbed and a CI score script so the exit
-      criterion's OTLP half is checked without a human Grafana login.
+      An agent runs toolbox serve with OTEL_EXPORTER_OTLP_ENDPOINT and
+      experiments/otel-testbed/scripts/score.sh (or docker compose + the same
+      rubric) using only docs/design/observability.md and the testbed README.
+      Remaining gap is the Grafana / toolbox-ops pack, not the observability
+      contract itself.
   - criterion: reuses-artifacts
     verdict: pass
     reason: >-
-      Monitoring uses the released toolbox binary's /metrics and optional OTLP
-      export; operators point scrapers or a Collector at the running image and
-      do not rebuild Toolbox to observe lag.
+      Monitoring uses the released toolbox binary's /metrics and OTLP export;
+      the testbed pins otelcol-contrib from its GitHub release (SHA-256 in
+      pin.env). Operators do not rebuild Toolbox to observe lag.
   - criterion: decoupled-from-core
     verdict: pass
     reason: >-
@@ -35,6 +35,6 @@ verdicts:
       portal; they do not add crates or builtins to this repository to monitor
       freshness.
 summary: >-
-  Snapshot lag and catalog metrics are observable via /metrics and OTLP
-  when configured. The remaining gap is the local collector testbed (step
-  5) and Grafana pack, not the bootstrap itself.
+  Snapshot lag and catalog metrics are observable via /metrics and OTLP.
+  The local collector testbed and CI score gate prove export completeness;
+  Grafana pack remains deferred.

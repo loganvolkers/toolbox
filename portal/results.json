@@ -1114,6 +1114,9 @@
       "doc:experiments/durable-schema/README.md": {
         "level": "silver"
       },
+      "doc:experiments/otel-testbed/README.md": {
+        "level": "silver"
+      },
       "doc:experiments/out-of-box/README.md": {
         "level": "silver"
       },
@@ -1278,6 +1281,9 @@
       "example:experiments/durable-schema/README.md": {
         "level": "gold"
       },
+      "example:experiments/otel-testbed/README.md": {
+        "level": "gold"
+      },
       "example:experiments/out-of-box/README.md": {
         "level": "gold"
       },
@@ -1293,10 +1299,7 @@
     },
     "maintainer-observability": {
       "observability:toolbox-runtime": {
-        "failing": {
-          "otlp-export-tested": 1
-        },
-        "level": "silver"
+        "level": "gold"
       }
     },
     "maintainer-package": {
@@ -1687,7 +1690,7 @@
       },
       "assessment:sdlc-stage-quality/sdlc-stage:operator/monitor": {
         "failing": {
-          "cites-everything": 2
+          "cites-everything": 1
         },
         "level": "silver"
       },

@@ -6,6 +6,7 @@ pub mod actions;
 pub mod artifacts;
 pub mod assess;
 pub mod connectors;
+pub mod http_trace;
 pub mod mcp;
 pub mod reads;
 pub mod routes;

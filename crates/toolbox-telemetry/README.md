@@ -24,11 +24,14 @@ standard `OTEL_*` env vars; does not override operator-set samplers.
 | `OTEL_RESOURCE_ATTRIBUTES` | Merged into the resource (operator keys win) |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | Enables OTLP traces/metrics/logs |
 | `OTEL_EXPORTER_OTLP_PROTOCOL` | `grpc` (default) or `http/protobuf` |
+| `OTEL_METRIC_EXPORT_INTERVAL` | Periodic OTLP metric flush, milliseconds (default 1000) |
 | `OTEL_TRACES_SAMPLER` (+ `_ARG`) | Honoured when set |
 | `TOOLBOX_TELEMETRY` | `local` \| `ci` \| `prod` |
 | `TOOLBOX_METRICS_PROMETHEUS` | Keep catalog scrapeable (default true for serve) |
 | `TOOLBOX_LOG_FORMAT` | `json` \| `pretty` |
 | `TELEMETRY_PROM_ALIASES` | Dual-export `toolbox_snapshot_age_seconds` (default on) |
+
+Local/CI completeness: [`experiments/otel-testbed`](../../experiments/otel-testbed/).
 
 Scrape: `GET /metrics` → `toolbox_telemetry::metrics_text()`.
 

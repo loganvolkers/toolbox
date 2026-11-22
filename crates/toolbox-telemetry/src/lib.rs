@@ -15,6 +15,7 @@ pub mod analytics;
 pub mod catalog;
 mod init;
 mod metrics_prom;
+mod otlp_meters;
 mod resource;
 mod scrub;
 mod trace;
@@ -24,3 +25,21 @@ pub use init::{TelemetryError, TelemetryGuard, TelemetryMode, TelemetryOptions, 
 pub use metrics_prom::metrics_text;
 pub use resource::service_name;
 pub use scrub::scrub_value;
+
+/// Hex `trace_id` for the current tracing span when an OTel context is attached.
+///
+/// Used so JSON stderr lines (and tests) can assert correlation without depending on
+/// collector-side log export alone.
+pub fn current_trace_id() -> Option<String> {
+    use opentelemetry::trace::TraceContextExt;
+    use tracing_opentelemetry::OpenTelemetrySpanExt;
+
+    let cx = tracing::Span::current().context();
+    let span = cx.span();
+    let sc = span.span_context();
+    if sc.is_valid() {
+        Some(format!("{:032x}", sc.trace_id()))
+    } else {
+        None
+    }
+}
