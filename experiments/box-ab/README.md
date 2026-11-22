@@ -4,16 +4,104 @@
 a coding agent less than the CI glue teams write by hand? The tasks are adding, upgrading, swapping,
 ratcheting and reading tools, and both arms must keep each tool usable on its own.
 
-**Status: running (2026-11-22).** The setup, harness, prompts and answer key were built and
-dry-run first (§8). The hypothesis is R6 in [repo-value.md](../../docs/design/repo-value.md), and
-the budget is 40 tool calls per phase, with one run of each phase per arm. Every prompt also asks
-for developer-experience feedback, the same way for both arms.
+**Status: run, 2026-11-22. The box failed the bar: equal correctness and less glue, but 11% more
+tokens.** The hypothesis is R6 in [repo-value.md](../../docs/design/repo-value.md). The budget was
+40 tool calls per phase, with one run of each phase per arm. Every prompt also asked for
+developer-experience feedback, the same way for both arms. The results are in §0, the feedback and
+what was fixed in §0.3.
 
 This tests the box, not tool building ([toolbox-and-tools.md](../../docs/design/toolbox-and-tools.md)).
 The standards A/B ([../standards-ab](../standards-ab/README.md)) compared building a tool with
 Toolbox's primitives against writing a Python script, and Toolbox lost. That was the wrong half.
 Teams rarely lack a linter. What they lack is one place that holds all of them: each tool's pinned
 version, one baseline, whether a pull request made anything worse, and the jobs left.
+
+## 0. Results
+
+### 0.1 Against the bar (§5)
+
+| | Arm A: glue | Arm B: the box | Bar |
+|---|---|---|---|
+| Tokens, phases 1–6 | **610k** | 679k (+11%) | Box must use fewer: **missed** |
+| Tool calls | **108** | 134 | Not in the bar |
+| Glue added, lines (net after removals) | 341 (215) | **306 (188)** | Box must leave less: **met** |
+| Correctness | All cases, parity, swap, paydown and the read key | The same | Equal: **met** |
+| Take-it-out parity | Every tool, every phase | The same | Both pass: **met** |
+
+**By the rule set before the run, the box fails:** one measure is worse. So, as §5 says, the box's
+value here is the format it standardises, not the work it saves. Both arms reached the same
+correct state; the box arm read more to get there.
+
+### 0.2 Per phase
+
+| Phase | A tokens / calls | B tokens / calls | A glue (cumulative) | B glue (cumulative) | Both arms correct |
+|---|---|---|---|---|---|
+| 1. Gather | **98k** / 17 | 128k / 30 | 258 | **189** | Yes |
+| 2. Campaign | **97k** / 20 | 113k / 21 | 285 | **242** | Yes; both `progress` said 209 → 199, paid 10 |
+| 3. Add zizmor | **98k** / 20 | 113k / 23 | 310 | **267** | Yes |
+| 4. Upgrade ruff | **99k** / 17 | 101k / 18 | 316 | **267** | Yes |
+| 5. Swap WF001 | **124k** / 26 | 136k / 35 | 341 | **306** | Yes; both matched hogli on all four states |
+| 6. Read | 94k / 8 | **87k** / 7 | — | — | Yes; both answers matched the key |
+
+**What the numbers say:**
+- **Phase 1 is the box's cost:** learning Toolbox took 30k more tokens and 13 more calls. After that
+  the gap narrows to 2k–16k per phase, and phase 6 (read), which favours the box by design (§1),
+  went to the box.
+- **The box arm's glue includes a workaround.** Its 53-line `accept.py` exists only because
+  `--accept` restarted campaigns. It also includes the portal manifest, which counts as glue. Arm
+  A's gate script grew from 197 to about 280 lines.
+- **Both arms caught things the other didn't.** Arm A closed the zizmor-ignore hole with
+  `--no-ignores`, which arm B only documented. In phase 6, arm A saw that the harness's scripted
+  "fixes" dodge the semgrep rule rather than fix the code (below). Arm B found a Toolbox bug (two
+  includes of one tool ran `semgrep --version --version`).
+
+**Run conditions that affect the numbers:**
+- **Wall-clock time isn't comparable.** Scoring and the other arm ran on the same 4 vCPUs (load up
+  to 11). Orphaned `semgrep-core` processes, left by timed-out runs, stalled semgrep for 9 to 15
+  minutes at a time until the harness killed process groups.
+- **The harness was fixed four times during the run**, always on the scoring side, never in what an
+  agent saw. Each fix was followed by a rescore, and superseded results are in
+  [results/superseded/](results/superseded/):
+  - arm B's gate needed `toolbox` on the harness's PATH;
+  - zizmor's own JSON uses `verbatim_path`;
+  - WF001's truth must come from the base checkout, because the arms delete WF001;
+  - a stalled tool is now retried.
+- **The scripted paydown is weak.** It renamed `X.objects` to `X._default_manager`, which the rule no
+  longer matches but is the same ORM access. Both arms got the same commit, so the comparison holds,
+  but a real paydown would fix the call site.
+- **The arms' final trees were not kept.** I deleted the copies to free disk before exporting their
+  diffs. The scores, glue counts and replies are committed in [results/](results/); the code isn't.
+
+### 0.3 Developer-experience feedback, prioritised
+
+The agents' replies, verbatim in substance, are `results/<phase>-<arm>-reply.md`. Feedback about the
+box, most important first:
+
+| # | Feedback (arm, phase) | Status |
+|---|---|---|
+| 1 | `--accept` restarts every campaign over the scorecard: accepting new findings and changing the standard look the same (B2, B3, B4) | **Fixed:** `--keep-campaigns`; a restart keeps the old start under `restartedFrom`; an upgrade procedure in the report skill |
+| 2 | A missing tool passes the gate silently: a kit's `optional: true` makes its rules unknown (B1) | **Fixed:** `--fail-on-unknown`. A plain check still passes, because `optional` means that by design |
+| 3 | Two includes of one tool concatenate `versionArgs`, so `toolbox doctor` reports the tool missing (B5) | **Fixed:** nested lists must be equal, or validate names the field |
+| 4 | The gate's regression lists every finding in the file and doesn't mark the new ones; the baseline keeps only counts (B6, A6) | **Open:** needs a fingerprint per finding in the baseline (C1 in [root-causes.md](../../docs/design/root-causes.md)) |
+| 5 | Progress needs one `toolbox campaign` per campaign, each rerunning connectors (B2, B3, B4) | **Partly fixed:** one run already prints every campaign, and the skill now says so; it prints the absolute paydown. Reading progress from the baseline without a rerun is open |
+| 6 | zizmor drops `# zizmor: ignore` findings from its SARIF, so `countSuppressed` can't see a new ignore (B3; arm A used `--no-ignores`) | **Fixed in docs:** the sarif kit's zizmor command uses `--no-ignores` over `.github/` |
+| 7 | No kit for actionlint alone; the sarif kit hard-codes `parse: sarif`, so arm B wrote about 50 lines (B1) | **Open:** a `parse` parameter on the sarif kit or an actionlint kit; a kit design choice |
+| 8 | The semgrep kit takes one `config` and one `target` (B1) | **Fixed in docs**: use the sarif kit for several; rule ids follow the rule file's path |
+| 9 | `toolbox vendor` writes the machine's absolute path in VENDORED.json (B1) | **Fixed:** relative to the portal |
+| 10 | Kit campaigns can't be turned off or given a start (B2) | **Open:** a kit parameter; fragments can't emit a campaign conditionally yet |
+| 11 | "no-findings evidence grew 4 → 6" reads as if there were no findings; `reproduce:` reruns the whole tool (B6) | **Open:** renaming the kits' rule changes every baseline that uses them |
+| 12 | The version is pinned in three or four places (portal, workflow, pyproject, lockfile) and only one is checked (A4, B4) | **Open:** `toolbox doctor` could read a workflow's install pins |
+| 13 | STANDARD.md breaks backticks in parameter values; empty scorecards print `()`; its CI snippet uses unpinned actions and doesn't say tools must be installed (B1, B3) | **Fixed** |
+| 14 | The runner has no per-job timeout, so a stalled tool blocks the gate (A3, and this run's semgrep stalls) | **Open:** an opt-in `timeout` per runner job that kills the process group |
+
+Feedback about the tools themselves, from both arms, and the box's answer to each:
+
+| Tool feedback | The box |
+|---|---|
+| semgrep's JSON with `--disable-nosem` doesn't mark suppressed findings (A1) | Its SARIF does; the box reads SARIF |
+| semgrep stalls about 190 s on a closed network without `--disable-version-check` | The semgrep kit passes it |
+| Exit codes differ per tool, and zizmor's aren't in its `--help` (A1, A3) | The runner reads output, not exit codes |
+| actionlint's results depend on whether shellcheck is installed (A1) | Open; a pin can't cover an optional dependency |
 
 ## 1. What using the box on Toolbox for Toolbox showed
 
@@ -204,6 +292,7 @@ each tool's increase.
   format would cost the box a fitting, and isn't tested here.
 - Two of PostHog's 26 semgrep rules, and actionlint without shellcheck (§2).
 - Phase 6 favours the box by design (§1).
+- The arms ran on the same machine in parallel, and wall-clock times include contention (§0.2).
 
 ## Sources
 
