@@ -11,8 +11,7 @@ on:
         required: true
 
 # Explicit least privilege at the top level; the image job elevates only what it needs.
-permissions:
-  contents: read
+permissions: {contents: read}
 
 concurrency:
   group: image-${{ github.event.release.tag_name || inputs.tag }}

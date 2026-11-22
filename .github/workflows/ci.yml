@@ -19,7 +19,9 @@ jobs:
       - run: cargo test --locked
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with: {python-version: "3.13"}
-      - run: python3 -m pip install --require-hashes -r examples/reference-portal/tools/requirements.txt
+      - run: >-
+          python3 -m pip install --require-hashes -r
+          examples/reference-portal/tools/requirements.txt
       - name: Decision ids encode as ULIDs (D01M7XKEXQH4HG5371629M50E2G)
         run: python3 scripts/decision-id.py --self-test
       - name: Portable changeset applicator fixtures
