@@ -6,3 +6,4 @@ B	2	112714	21	576861
 B	3	113473	23	428794	
 A	3	98081	20	1060841	includes a semgrep run that stalled 14 min under CPU contention (both arms scanning)
 B	4	101168	18	250684	
+A	4	98931	17	220840	
