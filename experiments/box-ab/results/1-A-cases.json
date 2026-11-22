@@ -1,0 +1,80 @@
+[
+ {
+  "case": "the committed state",
+  "worse": [],
+  "want": "pass",
+  "got": "pass",
+  "ok": true,
+  "tail": [
+   "semgrep 1.163.0: 209 findings (baseline 209) ok",
+   "ruff 0.14.11: 0 findings (baseline 0) ok",
+   "actionlint 1.7.12: 3 findings (baseline 3) ok"
+  ]
+ },
+ {
+  "case": "semgrep: a new suppressed finding",
+  "worse": [
+   "semgrep"
+  ],
+  "want": "fail",
+  "got": "fail",
+  "ok": true,
+  "tail": [
+   "  worse: posthog/api/person.py: 2 -> 3  [semgrep.rules.no-direct-persons-db-orm x3]",
+   "ruff 0.14.11: 0 findings (baseline 0) ok",
+   "actionlint 1.7.12: 3 findings (baseline 3) ok"
+  ]
+ },
+ {
+  "case": "ruff: a new finding",
+  "worse": [
+   "ruff"
+  ],
+  "want": "fail",
+  "got": "fail",
+  "ok": true,
+  "tail": [
+   "ruff 0.14.11: 1 findings (baseline 0) FAIL",
+   "  worse: posthog/models/person/util.py: 0 -> 1  [E711 x1]",
+   "actionlint 1.7.12: 3 findings (baseline 3) ok"
+  ]
+ },
+ {
+  "case": "actionlint: a new finding",
+  "worse": [
+   "actionlint"
+  ],
+  "want": "fail",
+  "got": "fail",
+  "ok": true,
+  "tail": [
+   "ruff 0.14.11: 0 findings (baseline 0) ok",
+   "actionlint 1.7.12: 5 findings (baseline 3) FAIL",
+   "  worse: .github/workflows/ci-python.yml: 0 -> 2  [expression x2]"
+  ]
+ },
+ {
+  "case": "an unrelated edit",
+  "worse": [],
+  "want": "pass",
+  "got": "pass",
+  "ok": true,
+  "tail": [
+   "semgrep 1.163.0: 209 findings (baseline 209) ok",
+   "ruff 0.14.11: 0 findings (baseline 0) ok",
+   "actionlint 1.7.12: 3 findings (baseline 3) ok"
+  ]
+ },
+ {
+  "case": "semgrep: one fixed",
+  "worse": [],
+  "want": "pass",
+  "got": "pass",
+  "ok": true,
+  "tail": [
+   "  improved in 1 file(s); run accept to lock the gain in",
+   "ruff 0.14.11: 0 findings (baseline 0) ok",
+   "actionlint 1.7.12: 3 findings (baseline 3) ok"
+  ]
+ }
+]
