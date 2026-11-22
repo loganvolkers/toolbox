@@ -1,0 +1,28 @@
+{
+  "format": "toolbox-report/v1",
+  "portal": "port-factory-demo",
+  "results": {
+    "agent-governance": {
+      "agent:deploy-assistant": {
+        "failing": {
+          "gold-gate": 1,
+          "published-skills": 1
+        },
+        "level": "bronze"
+      },
+      "agent:incident-triage": {
+        "failing": {
+          "under-budget": 1
+        },
+        "level": "silver"
+      },
+      "agent:release-notes-drafter": {
+        "failing": {
+          "gold-gate": 1,
+          "monitoring-configured": 1
+        },
+        "level": "silver"
+      }
+    }
+  }
+}

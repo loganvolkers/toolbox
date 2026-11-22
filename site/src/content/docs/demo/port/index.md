@@ -3,7 +3,7 @@ title: Software factory demo
 description: A Port-inspired AI Software Factory demo rebuilt on Toolbox concepts, hosted in this docs site with honest gaps called out.
 ---
 
-This is a **Toolbox** rebuild of the public [Port demo](https://demo.getport.io/) (no login). It is not affiliated with Port. The goal is recognizable parity for the surfaces Port shows publicly, expressed with Toolbox catalog, scorecards, and static fixtures.
+This is a **Toolbox** rebuild of the public [Port demo](https://demo.getport.io/) (no login). It is not affiliated with Port. Factory lines, HITL tasks, and agents are real catalog entities in [`examples/port-factory-demo/`](https://github.com/loganvolkers/toolbox/tree/cursor/port-factory-catalog-bc64/examples/port-factory-demo); Agent Governance is a real Bronze→Gold scorecard. Home KPI numbers and some persona cards remain fixtures — see [gaps](/toolbox/demo/port/gaps/).
 
 ## Open the interactive demo
 
@@ -25,8 +25,9 @@ Project research and live screenshots live in Context: Port demo research (store
 
 | Port surface | Here |
 |---|---|
-| Factory Lines catalog | Fixture entities + table UI |
-| Entity scorecards (Bronze→Gold) | Same ratchet shape as Toolbox scorecards |
-| Home / persona dashboards | Static demo HTML over fixtures |
+| Factory Lines catalog | `FactoryLine` entities + table UI; IDs in [report](/toolbox/demo/port/report/) |
+| HITL / My work | `HitlTask` entities |
+| Agent Governance (Bronze→Gold) | `agent-governance` scorecard via `toolbox report` |
+| Home / persona dashboards | Partial: KPI strip still fixture numbers |
 | Self-service actions | Documented gap (M5 paused) |
 | Live SaaS integrations | Out of scope for docs demo |

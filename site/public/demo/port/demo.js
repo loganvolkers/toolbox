@@ -2,12 +2,19 @@
   const app = document.getElementById("app");
   const tabs = document.querySelectorAll("#tabs a");
   let data;
+  let report;
   try {
     const res = await fetch("../fixtures.json");
     data = await res.json();
   } catch (e) {
     app.innerHTML = "<p>Could not load fixtures.json</p>";
     return;
+  }
+  try {
+    const res = await fetch("../report/report.json");
+    if (res.ok) report = await res.json();
+  } catch (e) {
+    report = null;
   }
 
   function setActive(hash) {
@@ -16,6 +23,12 @@
 
   function home() {
     const k = data.kpis;
+    const catalogNote =
+      report && report.catalog
+        ? `<p class="muted">Catalog from Toolbox report: ${Object.entries(report.catalog)
+            .map(([k, ids]) => `${ids.length} ${k}`)
+            .join(", ")}.</p>`
+        : "";
     return `
       <h1>Good day</h1>
       <div class="grid">
@@ -24,6 +37,7 @@
         <div class="card bad"><div class="n">${k.stuck}</div><div class="l">Stuck — needs attention</div></div>
         <div class="card ok"><div class="n">${k.shipped}</div><div class="l">Shipped — reached production</div></div>
       </div>
+      ${catalogNote}
       <h2>Main features line</h2>
       <div class="stages">
         ${data.stages.map((s) => `<div class="stage"><h3>${s.label}</h3><div class="n">${s.count}</div></div>`).join("")}
@@ -44,7 +58,12 @@
       </tr>`
       )
       .join("");
+    const real =
+      report && report.catalog && report.catalog.FactoryLine
+        ? `<p class="muted">Backed by Toolbox catalog (${report.catalog.FactoryLine.length} FactoryLine entities in <a href="../report/">report</a>).</p>`
+        : "";
     return `<h1>Factory lines</h1>
+      ${real}
       <table><thead><tr>
         <th>Title</th><th>Lifecycle</th><th>Owning team</th><th>Started by</th>
         <th>Open</th><th>Stages</th><th>Cost / shipped</th>
@@ -75,18 +94,70 @@
       </tr>`
       )
       .join("");
+    const real =
+      report && report.catalog && report.catalog.HitlTask
+        ? `<p class="muted">${report.catalog.HitlTask.length} HitlTask entities in the Toolbox report.</p>`
+        : "";
     return `<h1>My work (engineer)</h1>
       <p class="muted">What the factory is waiting on you for.</p>
+      ${real}
       <table><thead><tr>
         <th>Task</th><th>Why</th><th>Line</th><th>Stage</th><th>Risk</th><th>Days</th>
       </tr></thead><tbody>${rows}</tbody></table>`;
   }
 
+  function tierCounts(score, def) {
+    const levels = (def && def.levels) || ["bronze", "silver", "gold"];
+    const rules = (def && def.rules) || {};
+    const out = {};
+    for (const level of levels) {
+      const names = Object.keys(rules).filter((n) => rules[n].level === level);
+      const passed = names.filter((n) => score.rules && score.rules[n] === "pass").length;
+      out[level] = { passed, total: names.length };
+    }
+    return out;
+  }
+
+  function governanceFromReport() {
+    const card = "agent-governance";
+    const scores = report.scores && report.scores[card];
+    const def = report.scorecards && report.scorecards[card];
+    if (!scores || !def) return null;
+    const id = "agent:release-notes-drafter";
+    const score = scores[id];
+    if (!score) return null;
+    const agent = (data.agents || []).find((a) => a.id === "release-notes-drafter") || data.agents[0];
+    const tiers = tierCounts(score, def);
+    const level = score.level || "none";
+    const filled = level === "gold" ? 100 : level === "silver" ? 75 : level === "bronze" ? 40 : 10;
+    const overBudget = Object.values(scores).filter(
+      (s) => s.rules && s.rules["under-budget"] === "fail"
+    ).length;
+    return `<h1>Governance</h1>
+      <p class="muted">Scorecard levels from <code>toolbox report</code> (<a href="../report/">report.json</a>), not hand-edited fixtures.</p>
+      <div class="grid">
+        <div class="card warn"><div class="n">${overBudget}</div><div class="l">Agents over budget (under-budget rule)</div></div>
+        <div class="card"><div class="n">${Object.keys(scores).length}</div><div class="l">Agents scored</div></div>
+        <div class="card"><div class="n">${(report.catalog && report.catalog.Agent && report.catalog.Agent.length) || 0}</div><div class="l">Agent catalog entities</div></div>
+      </div>
+      <h2>${(agent && agent.title) || id} — Agent Governance | ${level[0].toUpperCase() + level.slice(1)}</h2>
+      <p class="muted">${(agent && (agent.kind || agent.kindLabel)) || "External AI Agent"} · evaluated by Toolbox</p>
+      <div class="bar"><span style="width:${filled}%"></span></div>
+      ${Object.entries(tiers)
+        .map(
+          ([name, t]) =>
+            `<div class="tier"><strong>${name[0].toUpperCase() + name.slice(1)}</strong>${t.passed}/${t.total} rules</div>`
+        )
+        .join("")}`;
+  }
+
   function governance() {
+    const fromReport = report && governanceFromReport();
+    if (fromReport) return fromReport;
     const g = data.governance;
     const a = data.agents[0];
     const sc = a.scorecard;
-    const filled = 75; // Silver achieved ~75% of Basic→Gold bar
+    const filled = 75;
     return `<h1>Governance</h1>
       <div class="grid">
         <div class="card warn"><div class="n">${g.agents_over_budget}</div><div class="l">Agents over budget</div></div>

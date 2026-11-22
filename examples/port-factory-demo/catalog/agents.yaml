@@ -1,0 +1,53 @@
+- id: release-notes-drafter
+  title: Release Notes Drafter
+  kindLabel: External AI Agent
+  runtime: Cursor Cloud
+  owningTeam: DevOps Team
+  lifecycle: development
+  approval: approved
+  riskTier: medium
+  monthlyCostUsd: 20
+  monitoring: not_configured
+  budgetUsedPct: 67
+  purpose: Draft release notes from merged PRs
+  dataClassification: internal
+  approvedMcp: true
+  approvedTools: true
+  publishedSkills: true
+  goldComplete: false
+
+- id: incident-triage
+  title: Incident Triage Agent
+  kindLabel: External AI Agent
+  runtime: GCP Vertex AI
+  owningTeam: SRE Team
+  lifecycle: production
+  approval: approved
+  riskTier: high
+  monthlyCostUsd: 45
+  monitoring: configured
+  budgetUsedPct: 110
+  purpose: Triage production incidents
+  dataClassification: confidential
+  approvedMcp: true
+  approvedTools: true
+  publishedSkills: true
+  goldComplete: true
+
+- id: deploy-assistant
+  title: Deploy Assistant
+  kindLabel: External AI Agent
+  runtime: AWS Bedrock
+  owningTeam: Platform Team
+  lifecycle: production
+  approval: approved
+  riskTier: medium
+  monthlyCostUsd: 80
+  monitoring: configured
+  budgetUsedPct: 95
+  purpose: Assist with deploy runbooks
+  dataClassification: internal
+  approvedMcp: true
+  approvedTools: true
+  publishedSkills: false
+  goldComplete: false

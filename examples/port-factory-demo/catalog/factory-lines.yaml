@@ -1,0 +1,54 @@
+- id: feature-delivery
+  title: Feature Delivery Line
+  lifecycle: production
+  owningTeam: Backend Team
+  startedBy: Jira ticket
+  openItems: 20
+  stages: 6
+  costPerShipped: 77
+  cycleTimeDays: 3
+  done30d: 2
+
+- id: security-vuln-fix
+  title: Security Vulnerability Fix Line
+  lifecycle: pilot
+  owningTeam: Security Team
+  startedBy: GitHub event
+  openItems: 4
+  stages: 5
+  costPerShipped: 23
+  cycleTimeDays: 2
+  done30d: 5
+
+- id: incident-remediation
+  title: Incident Remediation Line
+  lifecycle: pilot
+  owningTeam: SRE Team
+  startedBy: Alert
+  openItems: 4
+  stages: 5
+  costPerShipped: 2000
+  cycleTimeDays: 1
+  done30d: 3
+
+- id: resource-provisioning
+  title: Resource Provisioning Line
+  lifecycle: beta
+  owningTeam: Platform Team
+  startedBy: Slack message
+  openItems: 4
+  stages: 5
+  costPerShipped: 23
+  cycleTimeDays: 1
+  done30d: 8
+
+- id: agent-provisioning
+  title: Agent Provisioning Line
+  lifecycle: beta
+  owningTeam: Platform Team
+  startedBy: Slack message
+  openItems: 4
+  stages: 5
+  costPerShipped: 30
+  cycleTimeDays: 3
+  done30d: 6

@@ -1,0 +1,23 @@
+- id: restrict-checkout-refunds
+  title: Restrict checkout refunds
+  why: "Approve the change: it alters who can issue refunds."
+  factoryLine: Feature Delivery Line
+  stage: Review
+  riskScore: 85
+  daysWaiting: 5
+
+- id: step-up-3ds
+  title: Step up to 3D Secure on high-risk payments
+  why: "Approve the plan: critical change to a mission-critical payment service."
+  factoryLine: Feature Delivery Line
+  stage: Plan
+  riskScore: 86
+  daysWaiting: 3
+
+- id: audit-trail-permissions
+  title: Record an audit trail for permission changes
+  why: "Approve the plan: the audit trail is a compliance control."
+  factoryLine: Maintenance Line
+  stage: Plan
+  riskScore: 57
+  daysWaiting: 2

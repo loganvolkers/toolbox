@@ -1,26 +1,26 @@
 ---
 title: Governance and scorecards
-description: Platform-engineer governance cards and Agent Governance Bronze→Gold scorecard, rebuilt as a Toolbox-shaped demo.
+description: Platform-engineer governance cards and Agent Governance Bronze→Gold scorecard, evaluated by Toolbox.
 ---
 
-### Platform governance cards
+### Real scorecard feed
 
-| Agents over budget | Risky agents | Risky skills |
-|---:|---:|---:|
-| 4 | 7 | 7 |
+The interactive app’s governance view loads [`report.json`](/toolbox/demo/port/report/report.json) from `toolbox report examples/port-factory-demo`. Open the full [`<toolbox-report>` page](/toolbox/demo/port/report/) for catalog + scorecards with evidence.
 
 ### Agent: Release Notes Drafter
 
-External AI Agent · lifecycle **development** · scorecard pass **91%**
+External AI Agent · evaluated level **Silver** (Bronze → Silver → Gold)
 
-**Agent Governance | Silver** (Basic → Bronze → Silver → Gold)
-
-| Tier | Progress | Notes |
+| Tier | Typical rules | Notes |
 |---|---|---|
-| Bronze | 3/3 | Owning team, purpose, data classification |
-| Silver | 4/4 | Approved MCP servers, tools, published skills, agent approved |
-| Gold | 3/4 | One rule short of Gold (as in Port demo) |
+| Bronze | Owning team, purpose, data classification | Pass |
+| Silver | Approved MCP, tools, published skills, agent approved | Pass |
+| Gold | Monitoring configured, under budget, gold gate | Short of Gold (monitoring not configured) |
 
-This is the closest Port surface to native Toolbox scorecards. Prefer linking a real `<toolbox-report>` for live repos; this page uses fixtures.
+Portal source: [`examples/port-factory-demo/`](https://github.com/loganvolkers/toolbox/tree/cursor/port-factory-catalog-bc64/examples/port-factory-demo). Regenerate with:
+
+```bash
+toolbox report examples/port-factory-demo -o web --out site/public/demo/port/report
+```
 
 [Interactive governance](/toolbox/demo/port/app/#governance) · [Demo index](/toolbox/demo/port/)

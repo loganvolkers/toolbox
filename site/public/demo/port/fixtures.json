@@ -160,8 +160,12 @@
   },
   "gaps_vs_port": [
     "No live self-service action execution (Toolbox M5 paused)",
-    "No Jira/PagerDuty/Slack live integrations in docs demo",
-    "Fixtures are static JSON, not federated import",
-    "Persona dashboards are illustrative MDX/HTML, not Port widget builder"
-  ]
+    "No Jira/PagerDuty/Slack live integrations — catalog YAML under examples/port-factory-demo/",
+    "Home KPI strip and stage counts are still fixture numbers (not report aggregates)",
+    "Risky skills / ROI cards remain fixtures (no Skill/ROI kinds yet)",
+    "Persona dashboards are illustrative MDX/HTML, not Port widget builder",
+    "No federated multi-portal import"
+  ],
+  "toolbox_report": "../report/report.json",
+  "portal": "examples/port-factory-demo"
 }

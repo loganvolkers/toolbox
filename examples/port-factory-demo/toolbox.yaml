@@ -1,0 +1,168 @@
+# Port factory demo portal — real catalog + Agent Governance scorecard.
+# Copy to examples/port-factory-demo/ in the toolbox repo (branch from PR #40 tip).
+apiVersion: toolbox.dev/v1alpha1
+
+portal:
+  name: port-factory-demo
+  title: Software factory demo (Toolbox)
+  owner: group:platform
+  toolbox: "0.1"
+
+connectors:
+  - name: workspace
+    package: builtin:workspace
+    runtime: in-image
+    config:
+      # Relative to the repository root (run `toolbox report` from there).
+      root: examples/port-factory-demo
+      crates: false
+      repo: false
+      data:
+        - kind: factory-line
+          globs: ["catalog/factory-lines.yaml"]
+        - kind: hitl-task
+          globs: ["catalog/hitl-tasks.yaml"]
+        - kind: agent
+          globs: ["catalog/agents.yaml"]
+    records: [factory-line, hitl-task, agent]
+    refresh: {factory-line: [external_ids], hitl-task: [external_ids], agent: [external_ids]}
+    freshness: {factory-line: 5m, hitl-task: 5m, agent: 5m}
+
+kinds:
+  - name: FactoryLine
+    identityFrom: [connector:workspace]
+    fields:
+      title: {type: string}
+      lifecycle: {type: string}
+      owningTeam: {type: string}
+      startedBy: {type: string}
+      openItems: {type: integer}
+      stages: {type: integer}
+      costPerShipped: {type: integer}
+      cycleTimeDays: {type: integer}
+      done30d: {type: integer}
+    sources: {default: [connector:workspace]}
+    map:
+    - from: workspace/factory-line
+      id: "'factory-line:' + record.id"
+      set: >-
+        {'title': record.title, 'lifecycle': record.lifecycle,
+         'owningTeam': record.owningTeam, 'startedBy': record.startedBy,
+         'openItems': record.openItems, 'stages': record.stages,
+         'costPerShipped': record.costPerShipped,
+         'cycleTimeDays': record.cycleTimeDays, 'done30d': record.done30d}
+
+  - name: HitlTask
+    identityFrom: [connector:workspace]
+    fields:
+      title: {type: string}
+      why: {type: string}
+      factoryLine: {type: string}
+      stage: {type: string}
+      riskScore: {type: integer}
+      daysWaiting: {type: integer}
+    sources: {default: [connector:workspace]}
+    map:
+    - from: workspace/hitl-task
+      id: "'hitl-task:' + record.id"
+      set: >-
+        {'title': record.title, 'why': record.why,
+         'factoryLine': record.factoryLine, 'stage': record.stage,
+         'riskScore': record.riskScore, 'daysWaiting': record.daysWaiting}
+
+  - name: Agent
+    identityFrom: [connector:workspace]
+    fields:
+      title: {type: string}
+      kindLabel: {type: string}
+      runtime: {type: string}
+      owningTeam: {type: string}
+      lifecycle: {type: string}
+      approval: {type: string}
+      riskTier: {type: string}
+      monthlyCostUsd: {type: integer}
+      monitoring: {type: string}
+      budgetUsedPct: {type: integer}
+      purpose: {type: string}
+      dataClassification: {type: string}
+      approvedMcp: {type: boolean}
+      approvedTools: {type: boolean}
+      publishedSkills: {type: boolean}
+      goldComplete: {type: boolean}
+    sources: {default: [connector:workspace]}
+    map:
+    - from: workspace/agent
+      id: "'agent:' + record.id"
+      set: >-
+        {'title': record.title, 'kindLabel': record.kindLabel,
+         'runtime': record.runtime, 'owningTeam': record.owningTeam,
+         'lifecycle': record.lifecycle, 'approval': record.approval,
+         'riskTier': record.riskTier, 'monthlyCostUsd': record.monthlyCostUsd,
+         'monitoring': record.monitoring, 'budgetUsedPct': record.budgetUsedPct,
+         'purpose': record.purpose, 'dataClassification': record.dataClassification,
+         'approvedMcp': record.approvedMcp, 'approvedTools': record.approvedTools,
+         'publishedSkills': record.publishedSkills, 'goldComplete': record.goldComplete}
+
+scorecards:
+  - name: agent-governance
+    kind: Agent
+    owner: group:platform
+    levels: [bronze, silver, gold]
+    ratchet: {newEntitiesAtLeast: bronze}
+    rules:
+    - name: owning-team
+      level: bronze
+      check: entity.owningTeam != ''
+      evidence: "entity.owningTeam != '' ? [entity.owningTeam] : ['no owning team']"
+      fix: Set owningTeam on the agent catalog record.
+    - name: purpose
+      level: bronze
+      check: entity.purpose != ''
+      evidence: "entity.purpose != '' ? [entity.purpose] : ['no purpose']"
+      fix: Document the agent's purpose in the catalog record.
+    - name: data-classification
+      level: bronze
+      check: entity.dataClassification != ''
+      evidence: >-
+        entity.dataClassification != '' ? [entity.dataClassification] :
+        ['no data classification']
+      fix: Set dataClassification (e.g. internal, confidential).
+    - name: approved-mcp
+      level: silver
+      check: entity.approvedMcp
+      evidence: "entity.approvedMcp ? ['approved MCP'] : ['MCP not approved']"
+      fix: Approve the MCP servers this agent may use.
+    - name: approved-tools
+      level: silver
+      check: entity.approvedTools
+      evidence: "entity.approvedTools ? ['approved tools'] : ['tools not approved']"
+      fix: Approve the tool allowlist for this agent.
+    - name: published-skills
+      level: silver
+      check: entity.publishedSkills
+      evidence: >-
+        entity.publishedSkills ? ['published skills'] : ['skills not published']
+      fix: Publish the skills this agent exposes.
+    - name: agent-approved
+      level: silver
+      check: entity.approval == 'approved'
+      evidence: "[entity.approval]"
+      fix: Set approval to approved after review.
+    - name: monitoring-configured
+      level: gold
+      check: entity.monitoring != '' && entity.monitoring != 'not_configured'
+      evidence: "[entity.monitoring]"
+      fix: Configure monitoring for this agent.
+    - name: under-budget
+      level: gold
+      check: entity.budgetUsedPct <= 100
+      evidence: "[string(entity.budgetUsedPct) + '% budget used']"
+      fix: Reduce spend or raise the approved budget.
+    - name: gold-gate
+      level: gold
+      check: entity.goldComplete
+      evidence: "entity.goldComplete ? ['gold complete'] : ['one gold rule short']"
+      fix: Mark goldComplete true when remaining gold criteria pass (Port demo shape).
+    facets: {summary: public, details: public}
+
+tests: [tests/standards.test.yaml]
