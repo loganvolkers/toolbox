@@ -45,7 +45,10 @@ Everything else is your choice: where baselines live, scripts, workflow steps. C
 
 {task}
 
-When you finish, reply with what you built or changed, the gate's result on the current state, and anything you couldn't do."""
+When you finish, reply with:
+1. What you built or changed, and the gate's result on the current state.
+2. Anything you couldn't do.
+3. **Developer-experience feedback**, most important first: anything that was confusing, missing, slow, wrong in the docs or help, or that you had to work around, with the command or file it concerned. Say "none" if there was none."""
 
 ARM = {
     "A": """## Your setup

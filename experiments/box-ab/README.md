@@ -4,9 +4,10 @@
 a coding agent less than the CI glue teams write by hand? The tasks are adding, upgrading, swapping,
 ratcheting and reading tools, and both arms must keep each tool usable on its own.
 
-**Status: ready to run, not run.** The setup, harness, prompts and answer key are built and
-dry-run (§8). Still open: whether to add the hypothesis to
-[repo-value.md](../../docs/design/repo-value.md) (§5), and the budget (§7).
+**Status: running (2026-11-22).** The setup, harness, prompts and answer key were built and
+dry-run first (§8). The hypothesis is R6 in [repo-value.md](../../docs/design/repo-value.md), and
+the budget is 40 tool calls per phase, with one run of each phase per arm. Every prompt also asks
+for developer-experience feedback, the same way for both arms.
 
 This tests the box, not tool building ([toolbox-and-tools.md](../../docs/design/toolbox-and-tools.md)).
 The standards A/B ([../standards-ab](../standards-ab/README.md)) compared building a tool with
@@ -109,8 +110,7 @@ The hypothesis is about the box: **several tools in a box cost less to maintain 
 - **It fails** if either measure is worse. Then the box's value is the format it standardises,
   not the work it saves, and the plan should say so.
 
-**Open:** adding this hypothesis to [repo-value.md](../../docs/design/repo-value.md) is a decision
-to make before the run.
+Recorded before the run as R6 in [repo-value.md](../../docs/design/repo-value.md).
 
 ## 6. Harness
 

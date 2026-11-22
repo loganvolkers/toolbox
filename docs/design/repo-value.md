@@ -25,6 +25,7 @@ The bet has five parts. Each has an experiment and a result that would stop us (
 | R3 | Coding agents raise a repository's standards further with Toolbox's evidence and ratchet than with the same standards written down |
 | R4 | The ratchet catches real regressions on real pull requests without becoming a chore |
 | R5 | Standards travel between repositories as packages, with parameters and no edits |
+| R6 | The box A/B ([experiments/box-ab](../../experiments/box-ab/README.md)): on the PostHog fork, several existing tools gathered under one gate, with a campaign, a new tool, an upgrade, a swap and a read. Arm A writes CI glue; arm B uses the box | Tokens per phase; lines of glue left to maintain; correctness (planted pull requests, take-it-out parity, the swap, the read key) | Over the six phases, the box uses fewer tokens and leaves less glue, with equal correctness, and both arms pass take-it-out | Either measure is worse: the box's value is the format it standardises, not the work it saves, and this plan says so |
 
 ## 2. What is paused and what continues
 
