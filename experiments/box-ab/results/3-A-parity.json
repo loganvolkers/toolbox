@@ -22,7 +22,9 @@
  },
  {
   "tool": "zizmor",
-  "ok": false,
-  "error": "unparsed: 'given_path'"
+  "ok": true,
+  "findings": 335,
+  "truth": 335,
+  "differences": {}
  }
 ]

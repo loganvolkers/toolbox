@@ -93,9 +93,10 @@ def findings(text, root):
                 out.append((rel(x["filename"]), x["location"]["row"], x["code"]))
             elif "filepath" in x:  # actionlint
                 out.append((rel(x["filepath"]), x["line"], x["kind"]))
-            elif "ident" in x:  # zizmor
-                loc = x["locations"][0]
-                path = loc["symbolic"]["key"]["Local"]["given_path"]
+            elif "ident" in x:  # zizmor: the Primary location; 1.32.0 names the path verbatim_path
+                loc = next((l for l in x["locations"] if l["symbolic"].get("kind") == "Primary"), x["locations"][0])
+                local = loc["symbolic"]["key"]["Local"]
+                path = local.get("given_path") or local["verbatim_path"]
                 out.append((rel(path), loc["concrete"]["location"]["start_point"]["row"] + 1, x["ident"]))
             else:
                 raise ValueError(f"unknown JSON finding: {list(x)[:5]}")
