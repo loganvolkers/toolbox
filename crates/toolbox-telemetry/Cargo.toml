@@ -1,0 +1,25 @@
+[package]
+name = "toolbox-telemetry"
+description = "Toolbox: OpenTelemetry/Prometheus bootstrap, metric catalog and log bridge (docs/v1-spec.md §10.5, plan §6.3)."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+opentelemetry.workspace = true
+opentelemetry_sdk.workspace = true
+opentelemetry-otlp.workspace = true
+opentelemetry-appender-tracing.workspace = true
+prometheus.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+tracing-opentelemetry.workspace = true
+
+[dev-dependencies]
+tempfile = "3"
+
+[lints]
+workspace = true

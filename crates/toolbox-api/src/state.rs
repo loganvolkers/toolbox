@@ -6,7 +6,6 @@ use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::collections::BTreeSet;
 use std::sync::Arc;
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, Instant};
 use tokio::sync::{Notify, watch};
 use toolbox_derive::{Derived, DerivedState, FullRecompute};
@@ -23,14 +22,6 @@ pub struct Published {
     pub published_at: std::time::SystemTime,
 }
 
-#[derive(Debug, Default)]
-pub struct Metrics {
-    pub ingest_records: AtomicU64,
-    pub ingest_batches: AtomicU64,
-    pub recomputes: AtomicU64,
-    pub recompute_micros_total: AtomicU64,
-}
-
 pub struct AppState {
     pub hub: toolbox_connect::Hub,
     pub authn: toolbox_authz::authn::Authenticator,
@@ -42,7 +33,6 @@ pub struct AppState {
     pub pg: Option<PgStore>,
     pub current: watch::Sender<Option<Arc<Published>>>,
     pub changed: Notify,
-    pub metrics: Metrics,
     pub config: Config,
 }
 
@@ -114,7 +104,7 @@ impl AppState {
         let inputs = match self.store.snapshot().await {
             Ok(s) => s,
             Err(e) => {
-                eprintln!("toolbox: snapshot failed: {e}");
+                tracing::error!(error = %e, "snapshot failed");
                 return;
             }
         };
@@ -126,10 +116,7 @@ impl AppState {
         let input_version: u64 = derived.snapshot.parse().unwrap_or(0);
         let snapshot_id = format!("{input_version}.{}", self.manifest_hash);
         let elapsed = started.elapsed();
-        self.metrics.recomputes.fetch_add(1, Ordering::Relaxed);
-        self.metrics
-            .recompute_micros_total
-            .fetch_add(elapsed.as_micros() as u64, Ordering::Relaxed);
+        toolbox_telemetry::catalog::record_recompute(elapsed.as_secs_f64());
         if let Some(pg) = pg {
             let tuples: BTreeSet<(String, String, String)> = derived
                 .tuples
@@ -170,7 +157,7 @@ impl AppState {
             };
             match pg.publish(&publication).await {
                 Ok(()) => *previous_tuples = Some(tuples),
-                Err(e) => eprintln!("toolbox: publish failed: {e}"),
+                Err(e) => tracing::error!(error = %e, "publish failed"),
             }
         }
         // In-memory OpenFGA holds tuples itself: apply the delta before publishing the snapshot,
@@ -193,7 +180,7 @@ impl AppState {
             let removed: Vec<_> = synced.difference(&now).cloned().collect();
             match authz.sync_tuples(&added, &removed).await {
                 Ok(()) => *synced = now,
-                Err(e) => eprintln!("toolbox: authorization tuple sync failed: {e}"),
+                Err(e) => tracing::error!(error = %e, "authorization tuple sync failed"),
             }
         }
         let published = Arc::new(Published {

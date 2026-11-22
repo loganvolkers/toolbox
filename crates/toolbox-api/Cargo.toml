@@ -20,6 +20,8 @@ toolbox-model.workspace = true
 toolbox-store.workspace = true
 toolbox-authz.workspace = true
 toolbox-connect = { path = "../toolbox-connect" }
+toolbox-telemetry.workspace = true
+tracing.workspace = true
 
 [dev-dependencies]
 reqwest.workspace = true

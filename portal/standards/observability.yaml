@@ -1,0 +1,152 @@
+# Runtime observability for Toolbox (OTel design / D6). Maintainer SDLC.
+# Included by portal/toolbox.yaml; see portal/README.md for the layout.
+
+kinds:
+  - name: Observability
+    description: >-
+      A declared runtime-telemetry checklist: required crate paths, metric
+      catalog, alert stubs and assessment evidence for OTel/Prometheus
+      instrumentation.
+    identityFrom: [connector:workspace]
+    fields:
+      title: {type: string, description: Human title for the checklist.}
+      intent: {type: string, description: What the checklist is for.}
+      crate: {type: string, description: Path to the telemetry crate.}
+      catalog: {type: string, description: Path to the SemVer metric catalog.}
+      serviceNameDoc:
+        type: string
+        description: Docs that cite OTEL_SERVICE_NAME.
+      promTest:
+        type: string
+        description: Test that asserts /metrics catalog names.
+      structuredLogTest:
+        type: string
+        description: Test that structured JSON logs work.
+      alerts: {type: list, items: string, description: Alert rule stub files.}
+      monitorAssessment:
+        type: string
+        description: Assessment of operator/monitor.
+      otlpTestbed:
+        type: string
+        description: Local OTel collector testbed (step 5).
+      missingPaths:
+        type: list
+        items: string
+        description: Declared paths that do not exist under the repository root.
+      hash: {type: string, description: Content hash of the declaration.}
+      missingCrate:
+        type: list
+        items: string
+        description: Crate path when missing.
+        computed: "entity.crate in entity.missingPaths ? [entity.crate] : []"
+      missingCatalog:
+        type: list
+        items: string
+        computed: "entity.catalog in entity.missingPaths ? [entity.catalog] : []"
+      missingServiceNameDoc:
+        type: list
+        items: string
+        computed: >-
+          entity.serviceNameDoc in entity.missingPaths ? [entity.serviceNameDoc] :
+          []
+      missingPromTest:
+        type: list
+        items: string
+        computed: "entity.promTest in entity.missingPaths ? [entity.promTest] : []"
+      missingStructuredLogTest:
+        type: list
+        items: string
+        computed: >-
+          entity.structuredLogTest in entity.missingPaths ?
+          [entity.structuredLogTest] : []
+      missingAlerts:
+        type: list
+        items: string
+        computed: entity.alerts.filter(a, a in entity.missingPaths)
+      missingAssessment:
+        type: list
+        items: string
+        computed: >-
+          entity.monitorAssessment in entity.missingPaths ?
+          [entity.monitorAssessment] : []
+      missingOtlpTestbed:
+        type: list
+        items: string
+        computed: >-
+          entity.otlpTestbed in entity.missingPaths ? [entity.otlpTestbed] : []
+    sources: {default: [connector:workspace]}
+    map:
+    - from: workspace/observability
+      id: "'observability:' + record.id"
+      set: >-
+        {'title': record.title, 'intent': record.intent, 'crate': record.crate,
+         'catalog': record.catalog, 'serviceNameDoc': record.serviceNameDoc,
+         'promTest': record.promTest, 'structuredLogTest': record.structuredLogTest,
+         'alerts': record.alerts, 'monitorAssessment': record.monitorAssessment,
+         'otlpTestbed': record.otlpTestbed, 'missingPaths': record.missingPaths,
+         'hash': record.hash}
+
+scorecards:
+  - name: maintainer-observability
+    kind: Observability
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    ratchet: {newEntitiesAtLeast: bronze}
+    rules:
+    - name: otel-crate-present
+      level: bronze
+      check: entity.missingCrate.size() == 0
+      evidence: entity.missingCrate
+      fix: >-
+        Add crates/toolbox-telemetry to the workspace with opentelemetry
+        dependencies (plan §4, D6).
+    - name: service-name-documented
+      level: bronze
+      check: entity.missingServiceNameDoc.size() == 0
+      evidence: entity.missingServiceNameDoc
+      fix: >-
+        Document OTEL_SERVICE_NAME / service.name in the telemetry crate
+        README.
+    - name: metric-catalog-complete
+      level: bronze
+      check: entity.missingCatalog.size() == 0
+      evidence: entity.missingCatalog
+      fix: >-
+        Add METRIC_CATALOG.md listing the v1 required metric names (v1-spec
+        §10.5).
+    - name: prom-endpoint
+      level: bronze
+      check: entity.missingPromTest.size() == 0
+      evidence: entity.missingPromTest
+      fix: >-
+        Add a unit/integration test that asserts metrics_text() contains the
+        catalog names (including toolbox_snapshot_lag_seconds).
+    - name: structured-logs
+      level: silver
+      check: entity.missingStructuredLogTest.size() == 0
+      evidence: entity.missingStructuredLogTest
+      fix: >-
+        Add a test that init with JSON log format succeeds, and route
+        connector/snapshot failures through tracing instead of eprintln.
+    - name: operator-monitor-alerts
+      level: silver
+      check: entity.missingAlerts.size() == 0
+      evidence: entity.missingAlerts
+      fix: >-
+        Add alert rule stubs under ops/alerts/ for snapshot lag and index
+        freshness (Grafana pack may come later).
+    - name: assessed-monitor
+      level: silver
+      check: entity.missingAssessment.size() == 0
+      evidence: entity.missingAssessment
+      fix: >-
+        Write portal/assessments/.../operator/monitor.yaml via toolbox assess
+        (sdlc-stage-quality).
+    - name: otlp-export-tested
+      level: gold
+      check: entity.missingOtlpTestbed.size() == 0
+      evidence: entity.missingOtlpTestbed
+      fix: >-
+        Add experiments/otel-testbed with otelcol-contrib and a scoring script
+        (implementation step 5).
+    facets: {summary: public, details: public}

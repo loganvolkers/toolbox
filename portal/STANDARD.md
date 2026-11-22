@@ -249,6 +249,21 @@ Scorecard `meta-rubric` over `Rubric` entities, owned by group:maintainers. `too
 | `guided` | silver | `entity.unguided.size() == 0` | Give each listed criterion `guidance:` saying what counts as fail, so assessors agree. |
 | `discriminates` | gold | `entity.assessments >= 3 && entity.alwaysPass.size() == 0` | Sharpen or drop a criterion that everything passes; a question nothing fails asks nothing. |
 
+## maintainer-observability
+
+Scorecard `maintainer-observability` over `Observability` entities, owned by group:maintainers. `toolbox report` lists what fails now.
+
+| Rule | Level | Passes when | Fix |
+|---|---|---|---|
+| `otel-crate-present` | bronze | `entity.missingCrate.size() == 0` | Add crates/toolbox-telemetry to the workspace with opentelemetry dependencies (plan §4, D6). |
+| `service-name-documented` | bronze | `entity.missingServiceNameDoc.size() == 0` | Document OTEL_SERVICE_NAME / service.name in the telemetry crate README. |
+| `metric-catalog-complete` | bronze | `entity.missingCatalog.size() == 0` | Add METRIC_CATALOG.md listing the v1 required metric names (v1-spec §10.5). |
+| `prom-endpoint` | bronze | `entity.missingPromTest.size() == 0` | Add a unit/integration test that asserts metrics_text() contains the catalog names (including toolbox_snapshot_lag_seconds). |
+| `structured-logs` | silver | `entity.missingStructuredLogTest.size() == 0` | Add a test that init with JSON log format succeeds, and route connector/snapshot failures through tracing instead of eprintln. |
+| `operator-monitor-alerts` | silver | `entity.missingAlerts.size() == 0` | Add alert rule stubs under ops/alerts/ for snapshot lag and index freshness (Grafana pack may come later). |
+| `assessed-monitor` | silver | `entity.missingAssessment.size() == 0` | Write portal/assessments/.../operator/monitor.yaml via toolbox assess (sdlc-stage-quality). |
+| `otlp-export-tested` | gold | `entity.missingOtlpTestbed.size() == 0` | Add experiments/otel-testbed with otelcol-contrib and a scoring script (implementation step 5). |
+
 ## maintainer-package
 
 Scorecard `maintainer-package` over `PackageJson` entities, owned by group:maintainers. `toolbox report` lists what fails now.

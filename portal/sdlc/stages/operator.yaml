@@ -109,9 +109,14 @@ records:
     intent: >-
       Watch connector freshness, derivation diagnostics and adoption in
       production.
-    exitCriterion: The ops view and metrics show freshness, diagnostics and snapshot lag.
+    exitCriterion: >-
+      The ops view and metrics show freshness, diagnostics and snapshot lag;
+      OTLP export and Prometheus /metrics both carry the catalog.
     commands: [toolbox serve]
     checks: [scripts/m4-acceptance.sh]
-    docs: [docs/design/minimal-ui.md]
+    docs: [docs/design/minimal-ui.md, docs/design/observability.md]
     status: partial
-    gaps: [no alerting; metrics endpoint only]
+    gaps:
+    - >-
+      local OTel collector testbed pending (step 5); Grafana / toolbox-ops
+      pack deferred

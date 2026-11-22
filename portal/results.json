@@ -243,7 +243,7 @@
       "crate:toolbox-api": {
         "failing": {
           "bounded-complexity": 2,
-          "fully-documented": 14,
+          "fully-documented": 13,
           "no-huge-functions": 4,
           "short-functions": 9,
           "simple-functions": 3
@@ -271,7 +271,7 @@
           "fully-documented": 8,
           "public-api-documented": 8,
           "short-functions": 3,
-          "simple-functions": 2
+          "simple-functions": 3
         },
         "level": "bronze",
         "unknown": [
@@ -395,6 +395,18 @@
           "clippy-clean",
           "tests-pass"
         ]
+      },
+      "crate:toolbox-telemetry": {
+        "failing": {
+          "fully-documented": 30,
+          "public-api-documented": 30,
+          "short-functions": 2
+        },
+        "level": "bronze",
+        "unknown": [
+          "clippy-clean",
+          "tests-pass"
+        ]
       }
     },
     "maintainer-dependency": {
@@ -419,7 +431,22 @@
       "dependency:cargo:mimalloc": {
         "level": "gold"
       },
+      "dependency:cargo:opentelemetry": {
+        "level": "gold"
+      },
+      "dependency:cargo:opentelemetry-appender-tracing": {
+        "level": "gold"
+      },
+      "dependency:cargo:opentelemetry-otlp": {
+        "level": "gold"
+      },
+      "dependency:cargo:opentelemetry_sdk": {
+        "level": "gold"
+      },
       "dependency:cargo:proc-macro2": {
+        "level": "gold"
+      },
+      "dependency:cargo:prometheus": {
         "level": "gold"
       },
       "dependency:cargo:rayon": {
@@ -465,6 +492,15 @@
         "level": "gold"
       },
       "dependency:cargo:tower": {
+        "level": "gold"
+      },
+      "dependency:cargo:tracing": {
+        "level": "gold"
+      },
+      "dependency:cargo:tracing-opentelemetry": {
+        "level": "gold"
+      },
+      "dependency:cargo:tracing-subscriber": {
         "level": "gold"
       },
       "dependency:cargo:walkdir": {
@@ -853,6 +889,9 @@
       "doc:docs/decisions/D01M80Y0XEK069GD08VCCNF0WB8.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M81ADN8C10EA1Z1VNRY3A5JZ.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/README.md": {
         "level": "skipped"
       },
@@ -935,6 +974,9 @@
         "level": "silver"
       },
       "doc:docs/design/notifications.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/observability.md": {
         "level": "silver"
       },
       "doc:docs/design/package-author-sdlc.md": {
@@ -1247,6 +1289,14 @@
       },
       "example:experiments/typescript-builder/README.md": {
         "level": "gold"
+      }
+    },
+    "maintainer-observability": {
+      "observability:toolbox-runtime": {
+        "failing": {
+          "otlp-export-tested": 1
+        },
+        "level": "silver"
       }
     },
     "maintainer-package": {
@@ -1634,6 +1684,12 @@
       },
       "assessment:sdlc-stage-quality/sdlc-stage:operator/build-connector": {
         "level": "gold"
+      },
+      "assessment:sdlc-stage-quality/sdlc-stage:operator/monitor": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
       },
       "assessment:sdlc-stage-quality/sdlc-stage:package-author/distribute": {
         "level": "gold"
@@ -2713,6 +2769,87 @@
         },
         "level": "bronze"
       },
+      "field:toolbox/Observability.alerts": {
+        "level": "gold"
+      },
+      "field:toolbox/Observability.catalog": {
+        "level": "gold"
+      },
+      "field:toolbox/Observability.crate": {
+        "level": "gold"
+      },
+      "field:toolbox/Observability.hash": {
+        "level": "gold"
+      },
+      "field:toolbox/Observability.intent": {
+        "level": "gold"
+      },
+      "field:toolbox/Observability.missingAlerts": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Observability.missingAssessment": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Observability.missingCatalog": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Observability.missingCrate": {
+        "level": "gold"
+      },
+      "field:toolbox/Observability.missingOtlpTestbed": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Observability.missingPaths": {
+        "level": "gold"
+      },
+      "field:toolbox/Observability.missingPromTest": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Observability.missingServiceNameDoc": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Observability.missingStructuredLogTest": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Observability.monitorAssessment": {
+        "level": "gold"
+      },
+      "field:toolbox/Observability.otlpTestbed": {
+        "level": "gold"
+      },
+      "field:toolbox/Observability.promTest": {
+        "level": "gold"
+      },
+      "field:toolbox/Observability.serviceNameDoc": {
+        "level": "gold"
+      },
+      "field:toolbox/Observability.structuredLogTest": {
+        "level": "gold"
+      },
+      "field:toolbox/Observability.title": {
+        "level": "gold"
+      },
       "field:toolbox/PackageJson.checkScripts": {
         "failing": {
           "described": 1
@@ -3573,6 +3710,12 @@
         },
         "level": "silver"
       },
+      "kind:toolbox/Observability": {
+        "failing": {
+          "fields-described": 7
+        },
+        "level": "silver"
+      },
       "kind:toolbox/PackageJson": {
         "failing": {
           "described": 1,
@@ -3967,6 +4110,30 @@
         "level": "gold"
       },
       "rule:toolbox/maintainer-example/says-how-to-check": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-observability/assessed-monitor": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-observability/metric-catalog-complete": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-observability/operator-monitor-alerts": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-observability/otel-crate-present": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-observability/otlp-export-tested": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-observability/prom-endpoint": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-observability/service-name-documented": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-observability/structured-logs": {
         "level": "gold"
       },
       "rule:toolbox/maintainer-package/ci-installs-from-the-lockfile": {
@@ -4443,6 +4610,9 @@
         "level": "silver"
       },
       "scorecard:toolbox/maintainer-example": {
+        "level": "gold"
+      },
+      "scorecard:toolbox/maintainer-observability": {
         "level": "gold"
       },
       "scorecard:toolbox/maintainer-package": {

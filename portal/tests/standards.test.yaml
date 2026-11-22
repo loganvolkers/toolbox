@@ -1003,3 +1003,47 @@ assert:
       score('maintainer-python',
       'maintainer-python:scripts/messy.py').evidence['no-findings'] == ['line
       3: F401 `os` imported but unused']
+  # Runtime observability (toolbox-telemetry / OTel catalog)
+  - name: a complete observability checklist reaches gold
+    expect: >-
+      score('maintainer-observability', 'observability:demo-focused').level ==
+      'gold' && score('maintainer-observability',
+      'observability:demo-focused').rules['otel-crate-present'] == 'pass' &&
+      score('maintainer-observability',
+      'observability:demo-focused').rules['service-name-documented'] == 'pass'
+      && score('maintainer-observability',
+      'observability:demo-focused').rules['metric-catalog-complete'] == 'pass'
+      && score('maintainer-observability',
+      'observability:demo-focused').rules['prom-endpoint'] == 'pass' &&
+      score('maintainer-observability',
+      'observability:demo-focused').rules['structured-logs'] == 'pass' &&
+      score('maintainer-observability',
+      'observability:demo-focused').rules['operator-monitor-alerts'] == 'pass'
+      && score('maintainer-observability',
+      'observability:demo-focused').rules['assessed-monitor'] == 'pass' &&
+      score('maintainer-observability',
+      'observability:demo-focused').rules['otlp-export-tested'] == 'pass'
+  - name: >-
+      an observability checklist missing silver paths stops at bronze and
+      names the gaps
+    expect: >-
+      score('maintainer-observability', 'observability:demo-partial').level ==
+      'bronze' && score('maintainer-observability',
+      'observability:demo-partial').rules['structured-logs'] == 'fail' &&
+      score('maintainer-observability',
+      'observability:demo-partial').rules['operator-monitor-alerts'] == 'fail'
+      && score('maintainer-observability',
+      'observability:demo-partial').rules['assessed-monitor'] == 'fail' &&
+      score('maintainer-observability',
+      'observability:demo-partial').rules['otlp-export-tested'] == 'fail'
+  - name: an empty observability checklist fails bronze
+    expect: >-
+      score('maintainer-observability', 'observability:demo-unsafe').level ==
+      'none' && score('maintainer-observability',
+      'observability:demo-unsafe').rules['otel-crate-present'] == 'fail' &&
+      score('maintainer-observability',
+      'observability:demo-unsafe').rules['service-name-documented'] == 'fail'
+      && score('maintainer-observability',
+      'observability:demo-unsafe').rules['metric-catalog-complete'] == 'fail'
+      && score('maintainer-observability',
+      'observability:demo-unsafe').rules['prom-endpoint'] == 'fail'

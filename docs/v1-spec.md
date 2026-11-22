@@ -508,11 +508,13 @@ Webhooks and MCP share the service URL.
 
 ### 10.5 Observability
 
-OTel traces and logs; Prometheus metrics: `toolbox_recompute_seconds`, `toolbox_snapshot_lag_seconds`,
-`toolbox_ingest_records_total`, `toolbox_command_duration_seconds{status}`,
-`toolbox_run_transitions_total{state}`, `toolbox_authz_checks_total{decision}`,
-`toolbox_mcp_tool_calls_total{tool}`. Analytics sinks are deferred beyond `none`/`otlp` (D6 keeps
-PostHog as a later reference sink).
+OTel traces and logs via `toolbox-telemetry` (init before listeners; honour `OTEL_*`); Prometheus
+`/metrics` from the same catalog: `toolbox_recompute_seconds`, `toolbox_snapshot_lag_seconds`
+(canonical; temporary alias `toolbox_snapshot_age_seconds`), `toolbox_ingest_records_total`,
+`toolbox_command_duration_seconds{status}`, `toolbox_run_transitions_total{state}`,
+`toolbox_authz_checks_total{decision}`, `toolbox_mcp_tool_calls_total{tool}`. Analytics sinks are
+deferred beyond `none`/`otlp` (D6 keeps PostHog as a later reference sink). See
+[observability.md](./design/observability.md).
 
 ## 11. Acceptance and testing
 
