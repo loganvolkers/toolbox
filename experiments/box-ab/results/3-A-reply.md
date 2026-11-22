@@ -1,0 +1,9 @@
+# Phase 3, arm A: the agent's reply (DX feedback in §3)
+
+1. zizmor added to the phase 1–2 ratchet: TOOLS.md entry `zizmor --offline --no-config --no-ignores --format json .github/` (zizmor's JSON; logs on stderr) and a note with the adoption baseline (335 findings in 87 files: artipacked 152, github-app 61, self-repository 38, template-injection 28, …), no zizmor campaign. quality_gate.py: a zizmor parser (one finding per entry, keyed by its Primary location, rule from ident), exit codes {0, 10–14} (zizmor exits 10 + highest severity), a version check. baseline.json: zizmor's per-file counts via `accept --tool zizmor`; other tools and the campaign untouched. Workflow: ZIZMOR_VERSION pin and pip install. Gate exit 0 (semgrep 199/209, ruff 0/0, actionlint 3/3, zizmor 335/335). Planted template-injection fails it. A planted `# zizmor: ignore[artipacked]` dropped plain zizmor to 334 but the gate still counted 335 (because of --no-ignores): a suppression can't fake a paydown, as with semgrep --disable-nosem.
+2. Couldn't: test the workflow's pip install (no network). Didn't accept semgrep's paydown (209 → 199) in the baseline: outside the task.
+3. DX feedback:
+   1. The gate is slow under load: a full run hung over 14 min inside semgrep-core while other semgrep processes ran (load ~7 on 4 cores); killed it; a rerun took 21 s. No timeout on tool calls, so a stalled semgrep blocks the gate with no output.
+   2. zizmor's exit codes aren't explained in --help (only --no-exit-codes); found 11–14 by running it.
+   3. Placing a `zizmor: ignore` comment is easy to get wrong: on the last row of a `run: |` block it's script text, not a YAML comment, and is silently ignored.
+   4. The gate's output is block-buffered when redirected, so a backgrounded run shows nothing until it exits (flush=True would fix it).
