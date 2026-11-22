@@ -17,28 +17,29 @@ their 0–10 scores, reasons, details and documentation are OpenSSF's. The box a
 
 ## Use it
 
+**Minimum Toolbox:** post-**0.1.1** (needs `parse: scorecard` and array `with:` params). Prefer
+`toolbox vendor` (or a path include) over `github:…@main` — v0.1.1 prefixes `v` on the ref
+(`@main` → `vmain`). `vendor` itself is also post-0.1.1.
+
 ```yaml
 include:
-  - package: github:loganvolkers/toolbox/packages/openssf-scorecard@<tag>   # or a path, or `toolbox vendor`
+  - package: github:loganvolkers/toolbox/packages/openssf-scorecard@<tag>   # or path / toolbox vendor
     with: {}
 ```
 
 It runs `scorecard --local . --format json --show-details` in an export of the git-tracked files,
 with their uncommitted edits, so `node_modules` or `__pycache__` aren't read as binary artifacts.
-Results then match a fresh CI checkout. `--local` needs no GitHub token. It runs the checks
-Scorecard supports on a directory: Binary-Artifacts, Dangerous-Workflow, Dependency-Update-Tool,
-Fuzzing, License, Packaging, Pinned-Dependencies, SAST, Security-Policy, Token-Permissions and
-Vulnerabilities. Choose checks with Scorecard's own flag in `command`, e.g. `--checks=SAST,License`.
+Results then match a fresh CI checkout. `--local` needs no GitHub token.
 
-**Vulnerabilities and the ratchet:** Scorecard's Vulnerabilities check asks `api.osv.dev` at run
-time. Its score changes when a new advisory is published, with no change to the repository, so a
-baseline made one day can fail the next. When OSV is unreachable, 5.7.0 reports 10 ("0 existing
-vulnerabilities detected"), exits 0 and prints nothing on stderr: an error that reads as a pass. A
-portal that ratchets should leave it out with `--checks` and carry vulnerabilities through a tool
-pinned to an advisory database snapshot. Toolbox for Toolbox does this.
+**Ratchet-safe `--local` checks:** Binary-Artifacts, Dangerous-Workflow, Dependency-Update-Tool,
+Fuzzing, License, Pinned-Dependencies, SAST, Security-Policy, Token-Permissions. **Omit**
+Packaging (often `-1` / inconclusive offline — blocks `--update` / `--ci`) and **Vulnerabilities**
+(OSV at runtime; not reproducible). T4T “green” means those nine (or ten when Packaging scores) at
+level `ten` — not Scorecard’s default aggregate including Vulnerabilities.
 
-**Installing Scorecard:** `scripts/ci-tools.sh <dir> scorecard` downloads the v5.7.0 release and
-checks its SHA-256 against Scorecard's published checksums.
+**Consumer CI:** pin `uses: loganvolkers/toolbox/actions/report@<sha>`, **omit** `toolbox-version`
+so the action builds from that SHA; install Scorecard with `scripts/ci-tools.sh <dir> scorecard`
+from the same SHA.
 
 **Why a fitting, not a slot:** Scorecard's SARIF output needs a policy file and `ENABLE_SARIF`
 (experimental in 5.7.0), and a check scored 0–10 isn't a SARIF concept. Its probe format has no
