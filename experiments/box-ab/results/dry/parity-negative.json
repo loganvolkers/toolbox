@@ -1,0 +1,58 @@
+[
+ {
+  "tool": "semgrep",
+  "ok": true,
+  "findings": 209,
+  "truth": 209,
+  "differences": {}
+ },
+ {
+  "tool": "ruff",
+  "ok": false,
+  "findings": 13,
+  "truth": 31,
+  "differences": {
+   "products/experiments/backend/experiment_service.py": [
+    1,
+    0
+   ],
+   "ee/hogai/session_summaries/session_group/patterns.py": [
+    1,
+    0
+   ],
+   "ee/hogai/session_summaries/session/output_data.py": [
+    2,
+    0
+   ],
+   "products/notifications/backend/facade/enums.py": [
+    5,
+    0
+   ],
+   "ee/hogai/chat_agent/taxonomy/types.py": [
+    1,
+    0
+   ]
+  }
+ },
+ {
+  "tool": "actionlint",
+  "ok": true,
+  "findings": 3,
+  "truth": 3,
+  "differences": {}
+ },
+ {
+  "tool": "zizmor",
+  "ok": true,
+  "findings": 335,
+  "truth": 335,
+  "differences": {}
+ },
+ {
+  "tool": "job-timeouts",
+  "ok": true,
+  "findings": 0,
+  "truth": 0,
+  "differences": {}
+ }
+]

@@ -1,7 +1,7 @@
 # A Toolbox package (D89): an existing semgrep rule as a ratcheted standard, with its inline
 # `nosemgrep` suppressions as the baseline a campaign pays down. semgrep's own `--error` gate stops
-# unsuppressed findings; this one also stops new suppressions (experiments/standards-ab: PostHog
-# enforces its person-table rule with semgrep, and 65 of 80 findings are suppressed inline).
+# unsuppressed findings; this one also stops new suppressions (experiments/standards-ab: the
+# repository there enforced a rule with semgrep, and most of its findings were suppressed inline).
 apiVersion: toolbox.dev/package/v0
 name: semgrep
 version: 0.2.0
@@ -32,7 +32,7 @@ parameters:
     description: The checkout semgrep runs in, relative to where `toolbox report` runs.
   config:
     type: string
-    description: semgrep's `--config`, e.g. .semgrep/rules/no-direct-persons-db-orm.yaml.
+    description: semgrep's `--config`, e.g. .semgrep/rules/no-raw-sql.yaml.
   target:
     type: string
     default: .

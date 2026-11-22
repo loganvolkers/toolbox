@@ -15,6 +15,7 @@ connectors:
           - --config
           - ${param:config}
           - --metrics=off
+          - --disable-version-check # its startup check stalls ~190 s on a closed network
           - --sarif
           - --quiet
           - ${param:target}

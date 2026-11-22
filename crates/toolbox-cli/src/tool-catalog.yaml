@@ -44,8 +44,8 @@
   configs: [.semgrep.yml, .semgrep.yaml, .semgrepignore]
   pypi: [semgrep]
   ci: \bsemgrep\b
-  sarif: semgrep --config <rules> --metrics=off --sarif --quiet .
-  checked: the semgrep kit on PostHog
+  sarif: semgrep --config <rules> --metrics=off --disable-version-check --sarif --quiet .
+  checked: the semgrep kit on a fork (experiments/standards-ab)
   kit: semgrep
   install: {pypi: semgrep, mise: pipx:semgrep}
 - name: golangci-lint

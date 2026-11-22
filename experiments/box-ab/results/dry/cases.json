@@ -1,0 +1,106 @@
+[
+ {
+  "case": "the committed state",
+  "worse": [],
+  "want": "pass",
+  "got": "pass",
+  "ok": true,
+  "tail": []
+ },
+ {
+  "case": "semgrep: a new suppressed finding",
+  "worse": [
+   "semgrep"
+  ],
+  "want": "fail",
+  "got": "fail",
+  "ok": true,
+  "tail": [
+   "worse: semgrep posthog/api/person.py: 2 -> 3"
+  ]
+ },
+ {
+  "case": "ruff: a new finding",
+  "worse": [
+   "ruff"
+  ],
+  "want": "fail",
+  "got": "fail",
+  "ok": true,
+  "tail": [
+   "worse: ruff posthog/models/person/util.py: 0 -> 1"
+  ]
+ },
+ {
+  "case": "actionlint: a new finding",
+  "worse": [
+   "actionlint"
+  ],
+  "want": "fail",
+  "got": "fail",
+  "ok": true,
+  "tail": [
+   "worse: actionlint .github/workflows/ci-python.yml: 0 -> 2"
+  ]
+ },
+ {
+  "case": "an unrelated edit",
+  "worse": [],
+  "want": "pass",
+  "got": "pass",
+  "ok": true,
+  "tail": []
+ },
+ {
+  "case": "semgrep: one fixed",
+  "worse": [],
+  "want": "pass",
+  "got": "pass",
+  "ok": true,
+  "tail": []
+ },
+ {
+  "case": "zizmor: a new finding",
+  "worse": [
+   "zizmor"
+  ],
+  "want": "fail",
+  "got": "fail",
+  "ok": true,
+  "tail": [
+   "worse: zizmor .github/workflows/ci-python.yml: 4 -> 6"
+  ]
+ },
+ {
+  "case": "ruff 0.15.0: a new UP042",
+  "worse": [
+   "ruff"
+  ],
+  "want": "fail",
+  "got": "fail",
+  "ok": true,
+  "tail": [
+   "worse: ruff posthog/helpers/email_utils.py: 1 -> 2"
+  ]
+ },
+ {
+  "case": "a job without timeout-minutes",
+  "worse": [
+   "job-timeouts"
+  ],
+  "want": "fail",
+  "got": "fail",
+  "ok": true,
+  "tail": [
+   "worse: job-timeouts .github/workflows/ci-python.yml: 0 -> 1"
+  ]
+ },
+ {
+  "case": "a new job with timeout-minutes",
+  "worse": [],
+  "want": "pass",
+  "got": "pass",
+  "ok": true,
+  "tail": []
+ }
+]

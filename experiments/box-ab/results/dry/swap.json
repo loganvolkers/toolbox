@@ -1,0 +1,26 @@
+[
+ {
+  "state": "committed",
+  "hogli": 0,
+  "arm": 0,
+  "ok": true
+ },
+ {
+  "state": "job without timeout",
+  "hogli": 1,
+  "arm": 1,
+  "ok": true
+ },
+ {
+  "state": "reusable call without timeout",
+  "hogli": 0,
+  "arm": 0,
+  "ok": true
+ },
+ {
+  "state": "job with timeout",
+  "hogli": 0,
+  "arm": 0,
+  "ok": true
+ }
+]

@@ -9,8 +9,8 @@ findings too, so:
 - the campaign `<name>-zero` pays the findings (suppressions included) down to zero;
 - `toolbox report` lists each finding with its line, its rule, and whether it is suppressed.
 
-On PostHog, `.semgrep/rules/no-direct-persons-db-orm.yaml` reports 104 findings in 33 files at
-the commit the A/B used, all suppressed: a campaign the repository doesn't have yet
+On the repository the standards A/B used, the rule's findings were all suppressed inline: a
+campaign the repository didn't have yet
 ([experiments/standards-ab](../../experiments/standards-ab/README.md)).
 
 **Box or tool:** this package is a **kit**: it carries semgrep, an existing tool, with the rule
@@ -35,9 +35,9 @@ portal: {name: my-repo, owner: group:maintainers, toolbox: "0.1"}
 include:
   - package: github:loganvolkers/toolbox/packages/semgrep@<tag>   # or a relative path
     with:
-      name: persons-orm
+      name: raw-sql
       kind: PythonFile
-      config: .semgrep/rules/no-direct-persons-db-orm.yaml
+      config: .semgrep/rules/no-raw-sql.yaml
 ```
 
 ```bash
@@ -50,8 +50,9 @@ The rule's own `paths` (include and exclude) decide what is scanned. semgrep's S
 `nosemgrep` findings with `suppressions: [{kind: inSource}]`, so they count without any parsing of
 comments. SARIF lists only files with findings, so a file that loses its last finding drops out,
 and the ratchet counts that as fixed. A
-whole-repository run takes as long as semgrep does (minutes on PostHog), so run it where the
-rule's semgrep job already runs.
+whole-repository run takes as long as semgrep does. On a closed network semgrep's startup version
+check stalls for minutes; the kit passes `--disable-version-check`, and so should any command you
+run alone (on one large Python and TypeScript repository: 13 s with it, about 200 s without).
 
 ## Parameters
 

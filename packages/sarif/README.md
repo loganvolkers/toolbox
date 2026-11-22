@@ -42,7 +42,7 @@ package again with another `name` and `kind` for a second tool.
 | Tool | `command` | Checked here |
 |---|---|---|
 | ruff | `[ruff, check, --no-cache, --output-format, sarif, --exit-zero, "{files}"]` | Yes (0.14.0) |
-| semgrep | `[semgrep, --config, <rules>, --metrics=off, --sarif, --quiet, .]` | Yes (1.163.0); see also [`semgrep`](../semgrep/README.md) |
+| semgrep | `[semgrep, --config, <rules>, --metrics=off, --disable-version-check, --sarif, --quiet, .]` | Yes (1.163.0); see also [`semgrep`](../semgrep/README.md) |
 | zizmor | `[zizmor, --offline, --no-exit-codes, --format, sarif, "{files}"]` | Yes (1.32.0); see also [`github-actions`](../github-actions/README.md) |
 | gitleaks, ESLint with a SARIF formatter, Checkov, trivy | Their SARIF options | Not yet |
 
