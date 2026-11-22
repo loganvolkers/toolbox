@@ -80,7 +80,8 @@ fn normalize_resource(s: &str) -> String {
 }
 
 fn access_token(http: &SharedHttp) -> Result<Option<String>, SecretError> {
-    if let Ok(t) = std::env::var("GOOGLE_ACCESS_TOKEN").or_else(|_| std::env::var("CLOUDSDK_AUTH_ACCESS_TOKEN"))
+    if let Ok(t) = std::env::var("GOOGLE_ACCESS_TOKEN")
+        .or_else(|_| std::env::var("CLOUDSDK_AUTH_ACCESS_TOKEN"))
         && !t.is_empty()
     {
         return Ok(Some(t));
@@ -128,8 +129,9 @@ impl SecretBackend for GcpSecretManager {
                     .and_then(|x| x.as_str())
                     .ok_or_else(|| SecretError::backend("gcp", "missing payload.data"))?;
                 let bytes = crate::b64::decode(b64)?;
-                let text = String::from_utf8(bytes)
-                    .map_err(|e| SecretError::backend("gcp", format!("secret is not utf-8: {e}")))?;
+                let text = String::from_utf8(bytes).map_err(|e| {
+                    SecretError::backend("gcp", format!("secret is not utf-8: {e}"))
+                })?;
                 Ok(Some(SecretBytes::new(text)))
             }
             404 => Ok(None),
@@ -215,7 +217,10 @@ mod tests {
         let b = GcpSecretManager::new(
             "p",
             Some("https://sm.test".into()),
-            BTreeMap::from([("github-app-private-key".into(), "toolbox-github-app-pem".into())]),
+            BTreeMap::from([(
+                "github-app-private-key".into(),
+                "toolbox-github-app-pem".into(),
+            )]),
             http,
             Arc::new(|| Ok(Some("ya29.test".into()))),
         );

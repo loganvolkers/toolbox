@@ -65,7 +65,10 @@ mod tests {
             "github-app-private-key".into(),
             "pem-bytes".into(),
         )]));
-        assert_eq!(b.get("github-app-private-key").unwrap().unwrap().expose(), "pem-bytes");
+        assert_eq!(
+            b.get("github-app-private-key").unwrap().unwrap().expose(),
+            "pem-bytes"
+        );
         assert!(b.get("missing").unwrap().is_none());
     }
 }

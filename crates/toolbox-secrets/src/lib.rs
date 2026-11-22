@@ -18,5 +18,5 @@ pub use bytes::SecretBytes;
 pub use config::{BackendConfig, SecretsConfig};
 pub use error::SecretError;
 pub use resolver::{
-    global, resolve_config, resolve_value, resolver_from_env, set_global, SecretResolver,
+    SecretResolver, global, resolve_config, resolve_value, resolver_from_env, set_global,
 };

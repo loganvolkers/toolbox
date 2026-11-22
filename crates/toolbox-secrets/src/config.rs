@@ -147,7 +147,10 @@ impl SecretsConfig {
         })?;
         if path.extension().is_some_and(|e| e == "yaml" || e == "yml") {
             serde_norway::from_str(&text).map_err(|e| {
-                SecretError::Config(format!("TOOLBOX_SECRETS_CONFIG YAML {}: {e}", path.display()))
+                SecretError::Config(format!(
+                    "TOOLBOX_SECRETS_CONFIG YAML {}: {e}",
+                    path.display()
+                ))
             })
         } else {
             serde_json::from_str(&text)
@@ -210,8 +213,9 @@ impl SecretsConfig {
 
 fn load_map_env(name: &str) -> Result<BTreeMap<String, String>, SecretError> {
     match std::env::var(name) {
-        Ok(raw) if !raw.is_empty() => serde_json::from_str(&raw)
-            .map_err(|e| SecretError::Config(format!("{name}: {e}"))),
+        Ok(raw) if !raw.is_empty() => {
+            serde_json::from_str(&raw).map_err(|e| SecretError::Config(format!("{name}: {e}")))
+        }
         _ => Ok(BTreeMap::new()),
     }
 }

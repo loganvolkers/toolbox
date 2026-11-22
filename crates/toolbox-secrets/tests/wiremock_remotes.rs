@@ -16,7 +16,11 @@ use wiremock::{Mock, MockServer, ResponseTemplate};
 struct LiveHttp;
 
 impl HttpTransport for LiveHttp {
-    fn get(&self, url: &str, headers: &[(&str, &str)]) -> Result<HttpResponse, toolbox_secrets::SecretError> {
+    fn get(
+        &self,
+        url: &str,
+        headers: &[(&str, &str)],
+    ) -> Result<HttpResponse, toolbox_secrets::SecretError> {
         toolbox_secrets::http::ReqwestTransport::new()?.get(url, headers)
     }
 
@@ -51,7 +55,10 @@ async fn gcp_wiremock_access() {
     let b = GcpSecretManager::new(
         "demo",
         Some(server.uri()),
-        BTreeMap::from([("github-app-private-key".into(), "toolbox-github-app-pem".into())]),
+        BTreeMap::from([(
+            "github-app-private-key".into(),
+            "toolbox-github-app-pem".into(),
+        )]),
         live(),
         Arc::new(|| Ok(Some("tok".into()))),
     );

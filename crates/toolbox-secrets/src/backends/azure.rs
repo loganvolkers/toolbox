@@ -78,10 +78,7 @@ impl SecretBackend for AzureKeyVault {
             ));
         };
         let name = self.secret_name(logical);
-        let url = format!(
-            "{}/secrets/{}?api-version=7.4",
-            self.vault_url, name
-        );
+        let url = format!("{}/secrets/{}?api-version=7.4", self.vault_url, name);
         let auth = format!("Bearer {token}");
         let resp = self.http.get(&url, &[("Authorization", &auth)])?;
         match resp.status {

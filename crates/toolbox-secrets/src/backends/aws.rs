@@ -29,9 +29,8 @@ impl AwsSecretsManager {
         auth_headers: AuthHeaders,
     ) -> Self {
         let region = region.into();
-        let endpoint = endpoint.unwrap_or_else(|| {
-            format!("https://secretsmanager.{region}.amazonaws.com")
-        });
+        let endpoint =
+            endpoint.unwrap_or_else(|| format!("https://secretsmanager.{region}.amazonaws.com"));
         Self {
             region,
             endpoint,
@@ -69,9 +68,7 @@ impl AwsSecretsManager {
 
     fn secret_id(&self, logical: &str) -> String {
         let id = mapped(&self.map, logical);
-        id.strip_prefix("aws-sm:")
-            .unwrap_or(id)
-            .to_owned()
+        id.strip_prefix("aws-sm:").unwrap_or(id).to_owned()
     }
 }
 
@@ -126,7 +123,11 @@ impl SecretBackend for AwsSecretsManager {
                 } else {
                     Err(SecretError::backend(
                         "aws",
-                        format!("unexpected status {}: {}", resp.status, &resp.body[..resp.body.len().min(80)]),
+                        format!(
+                            "unexpected status {}: {}",
+                            resp.status,
+                            &resp.body[..resp.body.len().min(80)]
+                        ),
                     ))
                 }
             }
@@ -166,7 +167,10 @@ mod tests {
             http,
             Arc::new(|| Ok(vec![])),
         );
-        assert_eq!(b.get("github-app-private-key").unwrap().unwrap().expose(), "aws-secret");
+        assert_eq!(
+            b.get("github-app-private-key").unwrap().unwrap().expose(),
+            "aws-secret"
+        );
     }
 
     #[test]

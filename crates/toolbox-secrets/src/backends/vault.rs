@@ -92,7 +92,10 @@ impl SecretBackend for VaultBackend {
                 let v: serde_json::Value = serde_json::from_str(&resp.body)
                     .map_err(|e| SecretError::backend("vault", e.to_string()))?;
                 // Prefer data.data.value, then data.data[logical], then single-string field.
-                let data = v.pointer("/data/data").cloned().unwrap_or(serde_json::Value::Null);
+                let data = v
+                    .pointer("/data/data")
+                    .cloned()
+                    .unwrap_or(serde_json::Value::Null);
                 let text = data
                     .get("value")
                     .and_then(|x| x.as_str())
@@ -148,6 +151,9 @@ mod tests {
             http,
             Arc::new(|| Ok(Some("s.token".into()))),
         );
-        assert_eq!(b.get("jira-app-token").unwrap().unwrap().expose(), "jira-tok");
+        assert_eq!(
+            b.get("jira-app-token").unwrap().unwrap().expose(),
+            "jira-tok"
+        );
     }
 }

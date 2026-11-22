@@ -135,12 +135,14 @@ impl SecretResolver {
                     endpoint,
                     map,
                 } => {
-                    backends.push(Arc::new(crate::backends::azure::AzureKeyVault::from_config(
-                        vault_url.clone(),
-                        endpoint.clone(),
-                        map.clone(),
-                        http.clone(),
-                    )));
+                    backends.push(Arc::new(
+                        crate::backends::azure::AzureKeyVault::from_config(
+                            vault_url.clone(),
+                            endpoint.clone(),
+                            map.clone(),
+                            http.clone(),
+                        ),
+                    ));
                 }
             }
         }

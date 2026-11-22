@@ -533,14 +533,15 @@ mod tests {
     use std::collections::BTreeMap;
     use std::sync::Arc;
     use toolbox_secrets::backends::EnvBackend;
-    use toolbox_secrets::{resolve_config as resolve_with, SecretResolver};
+    use toolbox_secrets::{SecretResolver, resolve_config as resolve_with};
 
     #[test]
     fn resolve_config_uses_secret_chain() {
-        let resolver = SecretResolver::new(vec![Arc::new(EnvBackend::from_map(BTreeMap::from([(
-            "github-app-private-key".into(),
-            "pem".into(),
-        )])))]);
+        let resolver =
+            SecretResolver::new(vec![Arc::new(EnvBackend::from_map(BTreeMap::from([(
+                "github-app-private-key".into(),
+                "pem".into(),
+            )])))]);
         let cfg = json!({
             "org": "acme",
             "privateKey": "${secret:github-app-private-key}",
