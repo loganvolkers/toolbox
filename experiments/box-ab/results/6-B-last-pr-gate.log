@@ -1,0 +1,688 @@
+ok      connector actionlint (builtin:runner)
+ok      connector semgrep (builtin:runner)
+ok      connector ruff (builtin:runner)
+ok      connector zizmor (builtin:runner)
+ok      connector job-timeouts (builtin:runner)
+ok      tool actionlint 1.7.12
+ok      tool ruff 0.15.0
+ok      tool semgrep 1.163.0
+ok      tool zizmor 1.32.0
+# PostHog lint ratchet — scorecards
+
+## actionlint  (clean: 84, none: 2)
+
+84 pass every rule (not listed; `--all` lists them).
+
+- **none** `actionlint:.github/workflows/ci-backend.yml`: no-findings
+  - no-findings: line 674: expression property "persons-SQL" is not defined in object type {backend: string; backend_files: string; legacy: string; migrations: string; migrations_files: string; openapi_types: string; persons-sql: string; product_yamls: string; product_yamls_files: string; schema: string; tasks_temporal: string; timing_scripts: string}
+- **none** `actionlint:.github/workflows/ci-rust.yml`: no-findings
+  - no-findings: line 202: expression property "is_shadow" is not defined in object type {}
+  - no-findings: line 382: expression property "is_shadow" is not defined in object type {}
+
+## semgrep  (none: 59)
+
+- **none** `semgrep:posthog/api/cohort.py`: no-findings
+  - no-findings: line 1414: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 1626: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 1641: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 1650: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+- **none** `semgrep:posthog/api/person.py`: no-findings
+  - no-findings: line 414: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 453: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 1566: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+- **none** `semgrep:posthog/demo/legacy/data_generator.py`: no-findings
+  - no-findings: line 33: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 39: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+- **none** `semgrep:posthog/demo/matrix/manager.py`: no-findings
+  - no-findings: line 190: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 226: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 244: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 247: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 250: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: … 4 more
+- **none** `semgrep:posthog/management/commands/export_distinct_ids.py`: no-findings
+  - no-findings: line 68: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 129: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 130: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 133: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+- **none** `semgrep:posthog/management/commands/fix_future_person_created_at.py`: no-findings
+  - no-findings: line 44: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 54: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+- **none** `semgrep:posthog/management/commands/generate_persons.py`: no-findings
+  - no-findings: line 74: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 82: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 861: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+- **none** `semgrep:posthog/management/commands/generate_random_product_tours.py`: no-findings
+  - no-findings: line 150: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 156: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+- **none** `semgrep:posthog/management/commands/generate_random_surveys.py`: no-findings
+  - no-findings: line 280: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 286: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+- **none** `semgrep:posthog/management/commands/setup_orphan_test_data.py`: no-findings
+  - no-findings: line 108: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 113: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 133: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 171: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 179: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+- **none** `semgrep:posthog/management/commands/split_person.py`: no-findings
+  - no-findings: line 55: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+- **none** `semgrep:posthog/management/commands/sync_persons_to_clickhouse.py`: no-findings
+  - no-findings: line 72: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 128: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 183: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+- **none** `semgrep:posthog/models/cohort/cohort.py`: no-findings
+  - no-findings: line 445: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 453: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 628: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 639: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 642: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+- **none** `semgrep:posthog/models/cohort/util.py`: no-findings
+  - no-findings: line 1171: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 1236: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 1348: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 1407: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 1454: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+- **none** `semgrep:posthog/models/event/util.py`: no-findings
+  - no-findings: line 184: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+- **none** `semgrep:posthog/models/group/util.py`: no-findings
+  - no-findings: line 114: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 208: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 261: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 317: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 400: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+- **none** `semgrep:posthog/models/person/bulk_delete.py`: no-findings
+  - no-findings: line 72: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 78: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 90: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+- **none** `semgrep:posthog/models/person/deletion.py`: no-findings
+  - no-findings: line 100: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 142: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+- **none** `semgrep:posthog/models/person/person.py`: no-findings
+  - no-findings: line 217: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 253: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 269: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 298: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 378: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: … 4 more
+- **none** `semgrep:posthog/models/team/util.py`: no-findings
+  - no-findings: line 56: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 145: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 146: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 181: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 216: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+- **none** `semgrep:posthog/queries/actor_base_query.py`: no-findings
+  - no-findings: line 304: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 309: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 316: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+- **none** `semgrep:posthog/queries/base.py`: no-findings
+  - no-findings: line 374: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+- **none** `semgrep:posthog/session_recordings/models/session_recording.py`: no-findings
+  - no-findings: line 182: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+- **none** `semgrep:posthog/tasks/split_person.py`: no-findings
+  - no-findings: line 68: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 81: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 99: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+- **none** `semgrep:posthog/tasks/usage_report.py`: no-findings
+  - no-findings: line 2012: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+- **none** `semgrep:posthog/tasks/verify_persons_data_in_sync.py`: no-findings
+  - no-findings: line 58: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 63: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 99: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 105: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+- **none** `semgrep:posthog/temporal/usage_report/queries.py`: no-findings
+  - no-findings: line 100: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+- **none** `semgrep:products/actions/frontend/logics/actionEditLogic.tsx`: no-findings
+  - no-findings: line 217: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+- **none** `semgrep:products/actions/frontend/utils/deleteAction.tsx`: no-findings
+  - no-findings: line 17: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+- **none** `semgrep:products/ai_observability/frontend/aiObservabilitySessionDataLogic.ts`: no-findings
+  - no-findings: line 307: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+- **none** `semgrep:products/ai_observability/frontend/clusters/clusteringConfigLogic.ts`: no-findings
+  - no-findings: line 39: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 46: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+- **none** `semgrep:products/ai_observability/frontend/clusters/clusteringJobsLogic.ts`: no-findings
+  - no-findings: line 29: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 36: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 43: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 51: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 57: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: … 1 more
+- **none** `semgrep:products/ai_observability/frontend/clusters/clustersAdminLogic.ts`: no-findings
+  - no-findings: line 96: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+- **none** `semgrep:products/ai_observability/frontend/evaluations/evaluationReportLogic.ts`: no-findings
+  - no-findings: line 167: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 181: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 278: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 313: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 321: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: … 3 more
+- **none** `semgrep:products/ai_observability/frontend/evaluations/llmEvaluationLogic.ts`: no-findings
+  - no-findings: line 142: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 194: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 385: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 546: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 548: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+- **none** `semgrep:products/ai_observability/frontend/evaluations/llmEvaluationsLogic.ts`: no-findings
+  - no-findings: line 128: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 144: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 166: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 180: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 211: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: … 1 more
+- **none** `semgrep:products/ai_observability/frontend/llmGenerationSentimentLazyLoaderLogic.ts`: no-findings
+  - no-findings: line 185: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+- **none** `semgrep:products/ai_observability/frontend/llmPersonsLazyLoaderLogic.ts`: no-findings
+  - no-findings: line 142: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+- **none** `semgrep:products/ai_observability/frontend/llmSentimentLazyLoaderLogic.ts`: no-findings
+  - no-findings: line 200: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+- **none** `semgrep:products/ai_observability/frontend/modelPickerLogic.ts`: no-findings
+  - no-findings: line 84: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 118: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+- **none** `semgrep:products/ai_observability/frontend/playground/llmPlaygroundModelLogic.ts`: no-findings
+  - no-findings: line 141: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+- **none** `semgrep:products/ai_observability/frontend/playground/llmPlaygroundPromptsLogic.ts`: no-findings
+  - no-findings: line 951: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 1142: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 1222: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+- **none** `semgrep:products/ai_observability/frontend/settings/llmProviderKeysLogic.ts`: no-findings
+  - no-findings: line 261: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 281: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 314: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 343: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 356: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: … 5 more
+- **none** `semgrep:products/ai_observability/frontend/summary-view/summaryViewLogic.ts`: no-findings
+  - no-findings: line 148: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+- **none** `semgrep:products/ai_observability/frontend/tags/llmTaggerLogic.ts`: no-findings
+  - no-findings: line 271: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 275: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 295: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 369: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 390: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+- **none** `semgrep:products/ai_observability/frontend/tags/llmTaggersLogic.ts`: no-findings
+  - no-findings: line 256: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 260: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 269: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 285: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+- **none** `semgrep:products/ai_observability/frontend/text-view/textViewLogic.ts`: no-findings
+  - no-findings: line 139: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+- **none** `semgrep:products/ai_observability/frontend/traceReviews/traceReviewsApi.ts`: no-findings
+  - no-findings: line 85: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 100: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 111: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 121: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+- **none** `semgrep:products/conversations/frontend/components/ComposeTicket/composeTicketLogic.ts`: no-findings
+  - no-findings: line 84: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+- **none** `semgrep:products/conversations/frontend/components/SavedViews/ticketViewsLogic.ts`: no-findings
+  - no-findings: line 46: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 51: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 106: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+- **none** `semgrep:products/conversations/frontend/scenes/settings/supportSettingsLogic.ts`: no-findings
+  - no-findings: line 285: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 300: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 315: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 330: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 415: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: … 14 more
+- **none** `semgrep:products/conversations/frontend/scenes/tickets/supportTicketsSceneLogic.ts`: no-findings
+  - no-findings: line 327: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+- **none** `semgrep:products/feature_flags/backend/flag_matching.py`: no-findings
+  - no-findings: line 383: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 390: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 688: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 699: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+- **none** `semgrep:products/live_debugger/frontend/liveDebuggerLogic.ts`: no-findings
+  - no-findings: line 74: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 92: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 167: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 172: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 192: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: … 2 more
+- **none** `semgrep:products/logs/frontend/components/LogsViewer/Filters/serviceFilterLogic.ts`: no-findings
+  - no-findings: line 46: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+- **none** `semgrep:products/logs/frontend/components/LogsViews/logsViewsLogic.ts`: no-findings
+  - no-findings: line 49: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 54: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 75: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+- **none** `semgrep:products/logs/frontend/logsConfigLogic.ts`: no-findings
+  - no-findings: line 28: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+- **none** `semgrep:products/managed_migrations/frontend/managedMigrationLogic.ts`: no-findings
+  - no-findings: line 78: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 185: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 212: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+  - no-findings: line 223: prefer-codegen-api Manual `api.<verb>(...)` call in product frontend code. Prefer the generated client in `products/<product>/frontend/generated/api.ts`.
+- **none** `semgrep:products/mcp_analytics/backend/management/commands/seed_mcp_sessions.py`: no-findings
+  - no-findings: line 152: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+  - no-findings: line 155: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+
+## ruff  (none: 19)
+
+- **none** `ruff:ee/hogai/chat_agent/taxonomy/types.py`: no-findings
+  - no-findings: line 61: UP042 Class EntityType inherits from both `str` and `enum.Enum`
+- **none** `ruff:ee/hogai/session_summaries/session/output_data.py`: no-findings
+  - no-findings: line 20: UP042 Class SessionSummaryIssueTypes inherits from both `str` and `enum.Enum`
+  - no-findings: line 26: UP042 Class SessionSummaryExceptionTypes inherits from both `str` and `enum.Enum`
+- **none** `ruff:ee/hogai/session_summaries/session_group/patterns.py`: no-findings
+  - no-findings: line 24: UP042 Class _SeverityLevel inherits from both `str` and `enum.Enum`
+- **none** `ruff:posthog/dags/common/owners.py`: no-findings
+  - no-findings: line 4: UP042 Class JobOwners inherits from both `str` and `enum.Enum`
+- **none** `ruff:posthog/helpers/email_utils.py`: no-findings
+  - no-findings: line 326: UP042 Class ESPSuppressionReason inherits from both `str` and `enum.Enum`
+- **none** `ruff:posthog/models/batch_imports.py`: no-findings
+  - no-findings: line 12: UP042 Class DateRangeExportSource inherits from both `str` and `enum.Enum`
+  - no-findings: line 17: UP042 Class ContentType inherits from both `str` and `enum.Enum`
+- **none** `ruff:posthog/session_recordings/ai_data/ai_regex_schema.py`: no-findings
+  - no-findings: line 6: UP042 Class ResultEnum inherits from both `str` and `enum.Enum`
+- **none** `ruff:posthog/temporal/data_imports/signals/registry.py`: no-findings
+  - no-findings: line 14: UP042 Class InternalSourceType inherits from both `str` and `enum.Enum`
+- **none** `ruff:posthog/temporal/data_imports/sources/bing_ads/schemas.py`: no-findings
+  - no-findings: line 6: UP042 Class BingAdsResource inherits from both `str` and `enum.Enum`
+- **none** `ruff:posthog/temporal/data_imports/sources/pinterest_ads/settings.py`: no-findings
+  - no-findings: line 69: UP042 Class EndpointType inherits from both `str` and `enum.Enum`
+- **none** `ruff:posthog/temporal/data_imports/sources/snapchat_ads/settings.py`: no-findings
+  - no-findings: line 118: UP042 Class EndpointType inherits from both `str` and `enum.Enum`
+- **none** `ruff:posthog/temporal/data_imports/sources/tiktok_ads/settings.py`: no-findings
+  - no-findings: line 77: UP042 Class EndpointType inherits from both `str` and `enum.Enum`
+- **none** `ruff:posthog/temporal/data_imports/sources/tiktok_ads/test/test_tiktok_ads_utils.py`: no-findings
+  - no-findings: line 439: UP042 Class MockEndpointType inherits from both `str` and `enum.Enum`
+- **none** `ruff:posthog/temporal/proxy_service/cloudflare.py`: no-findings
+  - no-findings: line 32: UP042 Class CustomHostnameSSLStatus inherits from both `str` and `enum.Enum`
+  - no-findings: line 44: UP042 Class CustomHostnameStatus inherits from both `str` and `enum.Enum`
+- **none** `ruff:products/access_control/backend/facade/contracts.py`: no-findings
+  - no-findings: line 14: UP042 Class PropertyAccessLevel inherits from both `str` and `enum.Enum`
+- **none** `ruff:products/experiments/backend/experiment_service.py`: no-findings
+  - no-findings: line 95: UP042 Class ExperimentQueryStatus inherits from both `str` and `enum.Enum`
+- **none** `ruff:products/notifications/backend/facade/enums.py`: no-findings
+  - no-findings: line 8: UP042 Class NotificationType inherits from both `str` and `enum.Enum`
+  - no-findings: line 18: UP042 Class Priority inherits from both `str` and `enum.Enum`
+  - no-findings: line 23: UP042 Class TargetType inherits from both `str` and `enum.Enum`
+  - no-findings: line 30: UP042 Class SourceType inherits from both `str` and `enum.Enum`
+  - no-findings: line 41: UP042 Class NotificationOnlyResourceType inherits from both `str` and `enum.Enum`
+- **none** `ruff:products/signals/backend/report_generation/research.py`: no-findings
+  - no-findings: line 14: UP042 Class ActionabilityChoice inherits from both `str` and `enum.Enum`
+  - no-findings: line 20: UP042 Class Priority inherits from both `str` and `enum.Enum`
+- **none** `ruff:products/tasks/backend/services/sandbox.py`: no-findings
+  - no-findings: line 43: UP042 Class SandboxStatus inherits from both `str` and `enum.Enum`
+  - no-findings: line 48: UP042 Class SandboxTemplate inherits from both `str` and `enum.Enum`
+
+## zizmor  (none: 88)
+
+- **none** `zizmor:.github/actions/build-n-cache-image/action.yml`: no-findings
+  - no-findings: line 51: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+- **none** `zizmor:.github/actions/setup-emsdk/action.yml`: no-findings
+  - no-findings: line 56: github-env dangerous use of environment file: write to GITHUB_ENV may allow code execution
+  - no-findings: line 56: github-env dangerous use of environment file: write to GITHUB_PATH may allow code execution
+  - no-findings: line 56: github-env dangerous use of environment file: write to GITHUB_PATH may allow code execution
+  - no-findings: line 56: github-env dangerous use of environment file: write to GITHUB_ENV may allow code execution
+- **none** `zizmor:.github/actions/setup-protoc/action.yml`: no-findings
+  - no-findings: line 65: github-env dangerous use of environment file: write to GITHUB_PATH may allow code execution
+- **none** `zizmor:.github/actions/setup-sccache/action.yml`: no-findings
+  - no-findings: line 70: github-env dangerous use of environment file: write to GITHUB_PATH may allow code execution
+- **none** `zizmor:.github/actions/setup-sqlx-cli/action.yml`: no-findings
+  - no-findings: line 50: github-env dangerous use of environment file: write to GITHUB_PATH may allow code execution
+- **none** `zizmor:.github/workflows/_rust-build-images.yml`: no-findings
+  - no-findings: line 50: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 92: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+- **none** `zizmor:.github/workflows/auto-assign-reviewers.yml`: no-findings
+  - no-findings: line 14: dangerous-triggers use of fundamentally insecure workflow trigger: pull_request_target is almost always used insecurely
+  - no-findings: line 31: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+  - no-findings: line 36: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+- **none** `zizmor:.github/workflows/browserslist.yml`: no-findings
+  - no-findings: line 20: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+  - no-findings: line 25: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+- **none** `zizmor:.github/workflows/build-hobby-installer.yml`: no-findings
+  - no-findings: line 30: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+- **none** `zizmor:.github/workflows/build-hogql-parser-npm.yml`: no-findings
+  - no-findings: line 11: excessive-permissions overly broad permissions: pull-requests: write is overly broad at the workflow level
+  - no-findings: line 27: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 75: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 78: self-repository use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'
+  - no-findings: line 102: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: … 3 more
+- **none** `zizmor:.github/workflows/build-hogql-parser-rs.yml`: no-findings
+  - no-findings: line 11: excessive-permissions overly broad permissions: pull-requests: write is overly broad at the workflow level
+  - no-findings: line 26: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 123: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 193: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+  - no-findings: line 198: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: … 1 more
+- **none** `zizmor:.github/workflows/build-hogql-parser.yml`: no-findings
+  - no-findings: line 11: excessive-permissions overly broad permissions: pull-requests: write is overly broad at the workflow level
+  - no-findings: line 25: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 106: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 179: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+  - no-findings: line 184: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: … 1 more
+- **none** `zizmor:.github/workflows/build-livestream-tui.yml`: no-findings
+  - no-findings: line 29: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+- **none** `zizmor:.github/workflows/build-phrocs.yml`: no-findings
+  - no-findings: line 38: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 94: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+  - no-findings: line 120: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+- **none** `zizmor:.github/workflows/call-flags-project-board.yml`: no-findings
+  - no-findings: line 15: secrets-inherit secrets unconditionally inherited by called workflow: this reusable workflow
+- **none** `zizmor:.github/workflows/canary-flags-enable.yml`: no-findings
+  - no-findings: line 22: dangerous-triggers use of fundamentally insecure workflow trigger: issue_comment is almost always used insecurely
+  - no-findings: line 83: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+  - no-findings: line 313: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+  - no-findings: line 491: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+  - no-findings: line 702: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: … 1 more
+- **none** `zizmor:.github/workflows/cd-llm-analytics-image.yml`: no-findings
+  - no-findings: line 45: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 84: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+  - no-findings: line 94: self-repository use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'
+- **none** `zizmor:.github/workflows/cd-mcp-image.yml`: no-findings
+  - no-findings: line 40: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 47: self-repository use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'
+  - no-findings: line 83: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+- **none** `zizmor:.github/workflows/cd-sandbox-base-image.yml`: no-findings
+  - no-findings: line 22: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 24: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+  - no-findings: line 56: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 92: self-repository use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'
+  - no-findings: line 171: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+- **none** `zizmor:.github/workflows/ci-actionlint.yml`: no-findings
+  - no-findings: line 27: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+- **none** `zizmor:.github/workflows/ci-agent-skills.yml`: no-findings
+  - no-findings: line 28: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 30: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+  - no-findings: line 58: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 96: self-repository use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'
+  - no-findings: line 142: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: … 1 more
+- **none** `zizmor:.github/workflows/ci-ai.yml`: no-findings
+  - no-findings: line 59: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 115: self-repository use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'
+  - no-findings: line 155: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+- **none** `zizmor:.github/workflows/ci-alerts-devex.yml`: no-findings
+  - no-findings: line 31: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+- **none** `zizmor:.github/workflows/ci-backend-shadow-drift.yml`: no-findings
+  - no-findings: line 33: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+- **none** `zizmor:.github/workflows/ci-backend-update-test-timing.yml`: no-findings
+  - no-findings: line 31: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+  - no-findings: line 36: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+- **none** `zizmor:.github/workflows/ci-backend.yml`: no-findings
+  - no-findings: line 64: excessive-permissions overly broad permissions: pull-requests: write is overly broad at the workflow level
+  - no-findings: line 90: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 99: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+  - no-findings: line 312: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 395: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: … 24 more
+- **none** `zizmor:.github/workflows/ci-cli.yml`: no-findings
+  - no-findings: line 23: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 46: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 65: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+- **none** `zizmor:.github/workflows/ci-clickhouse-multinode-migrations.yml`: no-findings
+  - no-findings: line 56: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+- **none** `zizmor:.github/workflows/ci-dagster.yml`: no-findings
+  - no-findings: line 47: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 73: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 79: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+  - no-findings: line 230: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 298: self-repository use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'
+- **none** `zizmor:.github/workflows/ci-dev-setup.yml`: no-findings
+  - no-findings: line 27: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+- **none** `zizmor:.github/workflows/ci-docs-check.yml`: no-findings
+  - no-findings: line 47: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+- **none** `zizmor:.github/workflows/ci-e2e-playwright.yml`: no-findings
+  - no-findings: line 87: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 95: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+  - no-findings: line 204: template-injection code injection via template expansion: may expand into attacker-controllable code
+  - no-findings: line 397: self-repository use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'
+  - no-findings: line 647: template-injection code injection via template expansion: may expand into attacker-controllable code
+  - no-findings: … 3 more
+- **none** `zizmor:.github/workflows/ci-frontend.yml`: no-findings
+  - no-findings: line 15: excessive-permissions overly broad permissions: pull-requests: write is overly broad at the workflow level
+  - no-findings: line 33: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 35: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+  - no-findings: line 110: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 168: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: … 3 more
+- **none** `zizmor:.github/workflows/ci-hobby-installer.yml`: no-findings
+  - no-findings: line 22: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 52: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+- **none** `zizmor:.github/workflows/ci-hobby.yml`: no-findings
+  - no-findings: line 23: excessive-permissions overly broad permissions: pull-requests: write is overly broad at the workflow level
+  - no-findings: line 24: excessive-permissions overly broad permissions: deployments: write is overly broad at the workflow level
+  - no-findings: line 39: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 41: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+  - no-findings: line 335: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: … 6 more
+- **none** `zizmor:.github/workflows/ci-hog.yml`: no-findings
+  - no-findings: line 5: excessive-permissions overly broad permissions: default permissions used due to no permissions: block
+  - no-findings: line 35: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 37: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+  - no-findings: line 60: excessive-permissions overly broad permissions: default permissions used due to no permissions: block
+  - no-findings: line 72: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: … 1 more
+- **none** `zizmor:.github/workflows/ci-lint-ratchet.yml`: no-findings
+  - no-findings: line 58: unpinned-uses unpinned action reference: action is not pinned to a hash (required by blanket policy)
+- **none** `zizmor:.github/workflows/ci-lint-workflows.yml`: no-findings
+  - no-findings: line 23: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+- **none** `zizmor:.github/workflows/ci-livestream-tui.yml`: no-findings
+  - no-findings: line 22: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 52: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+- **none** `zizmor:.github/workflows/ci-livestream.yml`: no-findings
+  - no-findings: line 25: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+- **none** `zizmor:.github/workflows/ci-llm-gateway.yml`: no-findings
+  - no-findings: line 34: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 36: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+  - no-findings: line 63: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+- **none** `zizmor:.github/workflows/ci-master-status.yml`: no-findings
+  - no-findings: line 4: dangerous-triggers use of fundamentally insecure workflow trigger: workflow_run is almost always used insecurely
+  - no-findings: line 33: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 67: template-injection code injection via template expansion: may expand into attacker-controllable code
+- **none** `zizmor:.github/workflows/ci-mcp-ui-apps.yml`: no-findings
+  - no-findings: line 14: excessive-permissions overly broad permissions: pull-requests: write is overly broad at the workflow level
+  - no-findings: line 24: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 26: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+  - no-findings: line 57: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 189: template-injection code injection via template expansion: may expand into attacker-controllable code
+- **none** `zizmor:.github/workflows/ci-mcp.yml`: no-findings
+  - no-findings: line 24: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 29: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+  - no-findings: line 94: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 166: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 265: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: … 5 more
+- **none** `zizmor:.github/workflows/ci-migrations-service-separation-check.yml`: no-findings
+  - no-findings: line 17: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 53: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+- **none** `zizmor:.github/workflows/ci-nodejs-container.yml`: no-findings
+  - no-findings: line 27: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 30: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+  - no-findings: line 71: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 85: self-repository use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'
+  - no-findings: line 143: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+  - no-findings: … 1 more
+- **none** `zizmor:.github/workflows/ci-nodejs.yml`: no-findings
+  - no-findings: line 1: excessive-permissions overly broad permissions: default permissions used due to no permissions: block
+  - no-findings: line 38: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 42: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+  - no-findings: line 65: excessive-permissions overly broad permissions: default permissions used due to no permissions: block
+  - no-findings: line 72: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: … 5 more
+- **none** `zizmor:.github/workflows/ci-oauth-proxy.yml`: no-findings
+  - no-findings: line 24: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 26: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+  - no-findings: line 49: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 88: template-injection code injection via template expansion: may expand into attacker-controllable code
+- **none** `zizmor:.github/workflows/ci-openapi-codegen.yml`: no-findings
+  - no-findings: line 25: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+- **none** `zizmor:.github/workflows/ci-phrocs.yml`: no-findings
+  - no-findings: line 25: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+- **none** `zizmor:.github/workflows/ci-proto.yml`: no-findings
+  - no-findings: line 26: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 29: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+  - no-findings: line 55: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 76: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 97: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: … 1 more
+- **none** `zizmor:.github/workflows/ci-python.yml`: no-findings
+  - no-findings: line 29: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 29: unpinned-uses unpinned action reference: action is not pinned to a hash (required by blanket policy)
+  - no-findings: line 32: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 34: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+  - no-findings: line 85: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: … 1 more
+- **none** `zizmor:.github/workflows/ci-recording-rasterizer-container.yml`: no-findings
+  - no-findings: line 27: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 30: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+  - no-findings: line 79: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 93: self-repository use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'
+  - no-findings: line 158: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: … 2 more
+- **none** `zizmor:.github/workflows/ci-rust-flags-integration.yml`: no-findings
+  - no-findings: line 73: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 109: self-repository use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'
+- **none** `zizmor:.github/workflows/ci-rust.yml`: no-findings
+  - no-findings: line 35: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 38: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+  - no-findings: line 171: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 187: self-repository use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'
+  - no-findings: line 195: self-repository use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'
+  - no-findings: … 9 more
+- **none** `zizmor:.github/workflows/ci-scripts.yml`: no-findings
+  - no-findings: line 25: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+- **none** `zizmor:.github/workflows/ci-security.yaml`: no-findings
+  - no-findings: line 24: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 50: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 74: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 100: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 123: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: … 3 more
+- **none** `zizmor:.github/workflows/ci-storybook.yml`: no-findings
+  - no-findings: line 47: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+  - no-findings: line 108: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 177: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 243: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 342: template-injection code injection via template expansion: may expand into attacker-controllable code
+  - no-findings: … 8 more
+- **none** `zizmor:.github/workflows/ci-survey-sdk-check.yml`: no-findings
+  - no-findings: line 16: excessive-permissions overly broad permissions: pull-requests: write is overly broad at the workflow level
+  - no-findings: line 60: self-repository use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'
+- **none** `zizmor:.github/workflows/ci-turbo.yml`: no-findings
+  - no-findings: line 22: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+- **none** `zizmor:.github/workflows/clickhouse-udfs.yml`: no-findings
+  - no-findings: line 24: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+- **none** `zizmor:.github/workflows/codeql.yml`: no-findings
+  - no-findings: line 59: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+- **none** `zizmor:.github/workflows/container-images-cd.yml`: no-findings
+  - no-findings: line 33: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 49: self-repository use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'
+  - no-findings: line 92: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+  - no-findings: line 101: self-repository use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'
+- **none** `zizmor:.github/workflows/container-images-ci.yml`: no-findings
+  - no-findings: line 1: excessive-permissions overly broad permissions: default permissions used due to no permissions: block
+  - no-findings: line 36: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+  - no-findings: line 98: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 103: self-repository use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'
+  - no-findings: line 128: excessive-permissions overly broad permissions: default permissions used due to no permissions: block
+  - no-findings: … 1 more
+- **none** `zizmor:.github/workflows/docs-preview-trigger.yml`: no-findings
+  - no-findings: line 22: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+- **none** `zizmor:.github/workflows/foss-sync.yml`: no-findings
+  - no-findings: line 24: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+- **none** `zizmor:.github/workflows/inkeep-agent.yml`: no-findings
+  - no-findings: line 5: dangerous-triggers use of fundamentally insecure workflow trigger: issue_comment is almost always used insecurely
+- **none** `zizmor:.github/workflows/livestream-docker-image.yml`: no-findings
+  - no-findings: line 1: excessive-permissions overly broad permissions: default permissions used due to no permissions: block
+  - no-findings: line 35: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 45: self-repository use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'
+  - no-findings: line 72: excessive-permissions overly broad permissions: default permissions used due to no permissions: block
+  - no-findings: line 80: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+- **none** `zizmor:.github/workflows/llm-gateway-cd.yml`: no-findings
+  - no-findings: line 26: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 36: self-repository use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'
+  - no-findings: line 70: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+- **none** `zizmor:.github/workflows/monitor-github-rate-limit.yml`: no-findings
+  - no-findings: line 35: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+- **none** `zizmor:.github/workflows/pr-approval-agent.yml`: no-findings
+  - no-findings: line 9: excessive-permissions overly broad permissions: pull-requests: write is overly broad at the workflow level
+  - no-findings: line 38: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+  - no-findings: line 45: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 162: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+  - no-findings: line 167: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+- **none** `zizmor:.github/workflows/pr-cleanup.yml`: no-findings
+  - no-findings: line 29: excessive-permissions overly broad permissions: deployments: write is overly broad at the workflow level
+  - no-findings: line 37: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+- **none** `zizmor:.github/workflows/pr-closed.yml`: no-findings
+  - no-findings: line 16: secrets-inherit secrets unconditionally inherited by called workflow: this reusable workflow
+  - no-findings: line 16: self-repository use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'
+  - no-findings: line 32: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+- **none** `zizmor:.github/workflows/pr-opened.yml`: no-findings
+  - no-findings: line 8: excessive-permissions overly broad permissions: pull-requests: write is overly broad at the workflow level
+  - no-findings: line 36: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 72: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+- **none** `zizmor:.github/workflows/pr-posthog-js-reviewer.yml`: no-findings
+  - no-findings: line 9: dangerous-triggers use of fundamentally insecure workflow trigger: pull_request_target is almost always used insecurely
+  - no-findings: line 97: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+- **none** `zizmor:.github/workflows/pr-resolve-outdated-bot-comments.yml`: no-findings
+  - no-findings: line 20: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+- **none** `zizmor:.github/workflows/private-sync.yml`: no-findings
+  - no-findings: line 23: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+- **none** `zizmor:.github/workflows/publish-hogli.yml`: no-findings
+  - no-findings: line 32: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 38: cache-poisoning runtime artifacts potentially vulnerable to a cache poisoning attack: omitting `enable-cache` enables caching for this action version
+  - no-findings: line 79: superfluous-actions action functionality is already included by the runner: use `gh release` in a script step
+- **none** `zizmor:.github/workflows/publish-quill-npm.yml`: no-findings
+  - no-findings: line 32: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 45: adhoc-packages ad-hoc installation of packages: installs a package outside of a lockfile
+- **none** `zizmor:.github/workflows/publish-symbol-data-crate.yml`: no-findings
+  - no-findings: line 27: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+- **none** `zizmor:.github/workflows/release.yml`: no-findings
+  - no-findings: line 60: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 114: unpinned-images unpinned image references: container image may be unpinned
+  - no-findings: line 114: unpinned-images unpinned image references: container image may be unpinned
+  - no-findings: line 123: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 134: template-injection code injection via template expansion: may expand into attacker-controllable code
+  - no-findings: … 12 more
+- **none** `zizmor:.github/workflows/rust-docker-build.yml`: no-findings
+  - no-findings: line 1: excessive-permissions overly broad permissions: default permissions used due to no permissions: block
+  - no-findings: line 34: secrets-inherit secrets unconditionally inherited by called workflow: this reusable workflow
+  - no-findings: line 34: self-repository use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'
+  - no-findings: line 49: excessive-permissions overly broad permissions: default permissions used due to no permissions: block
+  - no-findings: line 127: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+- **none** `zizmor:.github/workflows/rust-smoke-test-build.yml`: no-findings
+  - no-findings: line 82: secrets-inherit secrets unconditionally inherited by called workflow: this reusable workflow
+  - no-findings: line 82: self-repository use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'
+- **none** `zizmor:.github/workflows/shellcheck.yml`: no-findings
+  - no-findings: line 16: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+- **none** `zizmor:.github/workflows/stale.yaml`: no-findings
+  - no-findings: line 35: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+- **none** `zizmor:.github/workflows/terragrunt-posthog.yaml`: no-findings
+  - no-findings: line 4: excessive-permissions overly broad permissions: id-token: write is overly broad at the workflow level
+  - no-findings: line 6: excessive-permissions overly broad permissions: pull-requests: write is overly broad at the workflow level
+  - no-findings: line 31: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+  - no-findings: line 90: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+- **none** `zizmor:.github/workflows/update-ai-costs.yml`: no-findings
+  - no-findings: line 25: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+  - no-findings: line 30: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+- **none** `zizmor:.github/workflows/update-bot-ips.yml`: no-findings
+  - no-findings: line 20: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+  - no-findings: line 25: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+
+## job-timeouts  (clean: 86)
+
+86 pass every rule (not listed; `--all` lists them).
+
+✗ worse   semgrep · semgrep:posthog/api/person.py: no-findings evidence grew 2 → 3
+    no-findings: line 414: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+    no-findings: line 453: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+    no-findings: line 1566: no-direct-persons-db-orm Do not query persons DB models via the Django ORM. Use the personhog client helpers in `posthog/models/person/util.py` (e.g. `get_person_by_uuid`, `get_persons_by_distinct_ids`) and `posthog/models/group_type_mapping.py` (`get_group_types_for_project`). These route through the personhog gRPC service with ORM fallback. When adding new access patterns, follow the `_personhog_routed()` pattern in `posthog/models/person/util.py`. See `posthog/personhog_client/README.md` for client details or reach out to #team-ingestion for more information. (suppressed)
+    reproduce: semgrep --config .semgrep/rules/no-direct-persons-db-orm.yaml --config .semgrep/rules/prefer-codegen-api.yaml --metrics=off --disable-version-check --sarif --quiet bin/ common/ ee/ frontend/ posthog/ products/ services/llm-gateway/ services/stripe-mock/
+✗ worse   zizmor · zizmor:.github/workflows/ci-python.yml: no-findings evidence grew 4 → 6
+    no-findings: line 29: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+    no-findings: line 29: unpinned-uses unpinned action reference: action is not pinned to a hash (required by blanket policy)
+    no-findings: line 32: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+    no-findings: line 34: github-app dangerous use of GitHub App tokens: app token inherits blanket installation permissions
+    no-findings: line 85: artipacked credential persistence through GitHub Actions artifacts: does not set persist-credentials: false
+    no-findings: line 245: template-injection code injection via template expansion: may expand into attacker-controllable code
+    reproduce: zizmor --offline --no-exit-codes --quiet --format sarif .github/
+campaign actionlint-zero since 2026-11-22: entities short 2 → 2 (0.0% of the way); measure 3 → 3 (0.0% of the way)
+campaign job-timeouts-zero since 2026-11-22: entities short 0 → 0 (100.0% of the way); measure 0 → 0 (100.0% of the way)
+campaign ruff-zero since 2026-11-22: entities short 19 → 19 (0.0% of the way); measure 28 → 28 (0.0% of the way)
+campaign semgrep-zero since 2026-11-22: entities short 63 → 59 (6.3% of the way); measure 209 → 200 (4.3% of the way)
+campaign zizmor-zero since 2026-11-22: entities short 88 → 88 (0.0% of the way); measure 336 → 338 (-0.6% of the way)
+baseline: 2 regression(s) against .toolbox/results.json
