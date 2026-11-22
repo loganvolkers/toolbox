@@ -490,7 +490,10 @@ impl Runner {
         }
         let mut command = shell_words(&job.command);
         if job.tracked {
-            command = format!("git archive HEAD | tar -x -C <dir>, then in <dir>: {command}");
+            // The same export as `export_tracked`, as one shell command a person can paste.
+            command = format!(
+                "d=$(mktemp -d); rev=$(git stash create); git archive \"${{rev:-HEAD}}\" | tar -x -C \"$d\" && cd \"$d\" && {command}"
+            );
         }
         for (check, mut data) in
             scorecard::checks(&run.stdout).map_err(|e| format!("job {}: {e}", job.name))?

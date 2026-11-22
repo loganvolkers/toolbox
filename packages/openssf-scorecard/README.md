@@ -30,6 +30,13 @@ Scorecard supports on a directory: Binary-Artifacts, Dangerous-Workflow, Depende
 Fuzzing, License, Packaging, Pinned-Dependencies, SAST, Security-Policy, Token-Permissions and
 Vulnerabilities. Choose checks with Scorecard's own flag in `command`, e.g. `--checks=SAST,License`.
 
+**Vulnerabilities and the ratchet:** Scorecard's Vulnerabilities check asks `api.osv.dev` at run
+time. Its score changes when a new advisory is published, with no change to the repository, so a
+baseline made one day can fail the next. When OSV is unreachable, 5.7.0 reports 10 ("0 existing
+vulnerabilities detected"), exits 0 and prints nothing on stderr: an error that reads as a pass. A
+portal that ratchets should leave it out with `--checks` and carry vulnerabilities through a tool
+pinned to an advisory database snapshot. Toolbox for Toolbox does this.
+
 **Installing Scorecard:** `scripts/ci-tools.sh <dir> scorecard` downloads the v5.7.0 release and
 checks its SHA-256 against Scorecard's published checksums.
 

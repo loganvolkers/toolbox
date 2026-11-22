@@ -458,6 +458,7 @@ Change a standard by changing these parameters in the portal's `toolbox.yaml`.
   - `githubOrg`: `"loganvolkers"`
   - `githubRepo`: `"toolbox"`
 - `../packages/openssf-scorecard`
+  - `command`: `["scorecard","--local",".","--format","json","--show-details","--checks=Binary-Artifacts,Dangerous-Workflow,Dependency-Update-Tool,Fuzzing,License,Packaging,Pinned-Dependencies,SAST,Security-Policy,Token-Permissions"]`
   - `kind`: `"OpenSSFCheck"`
   - `name`: `"maintainer-openssf"`
 - `../packages/sarif`

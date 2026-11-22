@@ -38,7 +38,7 @@ connectors:
 | `output` | Lint jobs: read the report from this file (relative to `root`) instead of stdout, for tools that write one |
 | `optional` | A missing program skips the job with a log line; rules over its records are `unknown`, not failing |
 | `per` | `crate` (one run per workspace member) or `once` (default) |
-| `tracked` | `true`: run in an export of the git-tracked files, with their uncommitted edits (`git stash create`, `git archive`), as a fresh CI checkout would be; for tools that walk the directory |
+| `tracked` | `true`: run in an export of the git-tracked files, with their uncommitted edits (`git stash create`, `git archive`), as a fresh CI checkout would be; for tools that walk the directory. The record's `command` includes the export, so it runs as written |
 | `kinds` | `ndjson` jobs: the record kinds the command prints |
 
 ## Slots and fittings

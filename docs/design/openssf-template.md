@@ -76,9 +76,16 @@ discipline for free.
 | `github-actions` kit / `pinned-to-sha`, zizmor | Pinned-Dependencies, Token-Permissions, Dangerous-Workflow | Kept in the kit, which pilots use for per-workflow evidence; noted as overlapping |
 
 **This repository on Scorecard 5.7.0 (`--local`, tracked files):** aggregate 7.2. Binary-Artifacts,
-Dangerous-Workflow, Dependency-Update-Tool, Packaging, SAST and Vulnerabilities are at 10, License
+Dangerous-Workflow, Dependency-Update-Tool, Packaging and SAST are at 10 (Vulnerabilities read 10 too, wrongly: see below), License
 at 9, Pinned-Dependencies and Security-Policy at 4, Fuzzing and Token-Permissions at 0. The
 campaign `maintainer-openssf-ten` starts there.
+
+**Vulnerabilities is carried, but not ratcheted here.** On CI, with network access, it found 23
+advisories against `Cargo.lock`. Here `api.osv.dev` is blocked, and Scorecard scored it 10, exited
+0 and printed nothing: a tool error that reads as a pass. Its score also changes whenever an
+advisory is published, with no change to the repository. A ratchet needs a result that reproduces
+in every environment, so Toolbox for Toolbox runs the other ten checks with Scorecard's own
+`--checks` flag. The kit's README warns other portals. The 23 advisories are real and open (O5).
 
 ## 5. Next
 
@@ -88,6 +95,7 @@ campaign `maintainer-openssf-ten` starts there.
 | O2 | Scorecard's conformance mode (OSPS Baseline) through the same kit: a catalog, not a score |
 | O3 | Scorecard's probe format as facts, so a rule can name a probe and not only a check |
 | O4 | A second domain standard, such as observability, published as a package by the template in §3, ideally by someone other than us (R5) |
+| O5 | Vulnerabilities that reproduce: a scanner pinned to an advisory-database snapshot (osv-scanner offline, or cargo-audit with a pinned database), so a new advisory changes the result only when the snapshot moves; then pay down the 23 advisories CI found |
 
 ## Sources
 

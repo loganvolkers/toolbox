@@ -4,7 +4,7 @@ the same findings when it is run on its own.
 
 For each record a portal's connector reports with a `command` (lint records from the runner), run
 that command alone, count the findings for the record's file from the tool's own output, and
-compare with the record's `total`. The counting here is independent of Toolbox's parsers, so a
+compare with the record's `total`. For OpenSSF Scorecard records, compare the check's score. The counting here is independent of Toolbox's parsers, so a
 box that dropped, added or filtered findings fails the check.
 
     python3 scripts/take-it-out.py portal ci-lint      # run from the repository root
@@ -49,6 +49,14 @@ def count(via, text, path):
     raise ValueError(f"no independent counter for via={via}")
 
 
+def score(text, check):
+    """A Scorecard check's score from Scorecard's own JSON (-1, inconclusive, is None)."""
+    for c in json.loads(text)["checks"]:
+        if c["name"] == check:
+            return c["score"] if c["score"] >= 0 else None
+    return "missing"
+
+
 def main(portal, connectors):
     toolbox = os.environ.get("TOOLBOX", "toolbox")
     outputs = {}  # a whole-tree command runs once
@@ -69,11 +77,14 @@ def main(portal, connectors):
                 continue
             if cmd not in outputs:
                 outputs[cmd] = subprocess.run(cmd, shell=True, capture_output=True, text=True).stdout
-            got = count(data["via"], outputs[cmd], data["path"])
+            if data["via"] == "scorecard":  # one record per check, scored 0-10, not per file
+                got, said = score(outputs[cmd], data["check"]), data["score"]
+            else:
+                got, said = count(data["via"], outputs[cmd], data["path"]), data["total"]
             checked += 1
-            if got != data["total"]:
+            if got != said:
                 mismatched += 1
-                print(f"MISMATCH {rec['externalId']}: the box says {data['total']}, `{cmd}` gives {got}")
+                print(f"MISMATCH {rec['externalId']}: the box says {said}, `{cmd}` gives {got}")
     print(f"take-it-out: {checked} record(s) checked, {mismatched} mismatch(es)")
     return 1 if mismatched else 0
 

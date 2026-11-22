@@ -1369,9 +1369,6 @@
           "ten": 10
         },
         "level": "none"
-      },
-      "maintainer-openssf:Vulnerabilities": {
-        "level": "ten"
       }
     },
     "maintainer-package": {

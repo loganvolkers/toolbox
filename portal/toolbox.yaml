@@ -296,9 +296,21 @@ include:
     with: {githubOrg: loganvolkers, githubRepo: toolbox}
   # OpenSSF Scorecard, an existing standard and its tool, carried as it is: its checks and scores
   # are OpenSSF's; the box adds the ratchet and a campaign (docs/design/openssf-template.md).
-  # It replaces this portal's own versions of SAST, Security-Policy and Pinned-Dependencies.
+  # It replaces this portal's own versions of SAST and Security-Policy.
+  # Every --local check but Vulnerabilities: that one asks api.osv.dev at run time, so its score
+  # moves with each new advisory and reads 10 when OSV is unreachable (openssf-template.md §4).
   - package: ../packages/openssf-scorecard
-    with: {name: maintainer-openssf, kind: OpenSSFCheck}
+    with:
+      name: maintainer-openssf
+      kind: OpenSSFCheck
+      command:
+        - scorecard
+        - --local
+        - .
+        - --format
+        - json
+        - --show-details
+        - --checks=Binary-Artifacts,Dangerous-Workflow,Dependency-Update-Tool,Fuzzing,License,Packaging,Pinned-Dependencies,SAST,Security-Policy,Token-Permissions
   # The Python we maintain, checked by ruff (an existing tool) through the SARIF slot. ruff reads
   # its own ruff.toml; the box passes it nothing else (docs/design/toolbox-and-tools.md).
   # experiments/ are archived harnesses, not maintained code.

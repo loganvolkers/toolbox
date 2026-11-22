@@ -80,7 +80,7 @@ jobs:
           box give the same findings alone
         run: >-
           TOOLBOX=target/debug/toolbox python3 scripts/take-it-out.py portal
-          ci-lint maintainer-python
+          ci-lint maintainer-python maintainer-openssf
       - name: Toolbox for Toolbox — agent assessments are valid and briefs build (D79)
         run: |
           target/debug/toolbox assess check portal --skip runner,github-actions
