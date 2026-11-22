@@ -252,7 +252,11 @@
           "short-functions": 9,
           "simple-functions": 3
         },
-        "level": "bronze"
+        "level": "bronze",
+        "unknown": [
+          "clippy-clean",
+          "tests-pass"
+        ]
       },
       "crate:toolbox-authz": {
         "failing": {
@@ -260,7 +264,11 @@
           "public-api-documented": 12,
           "simple-functions": 1
         },
-        "level": "bronze"
+        "level": "bronze",
+        "unknown": [
+          "clippy-clean",
+          "tests-pass"
+        ]
       },
       "crate:toolbox-cli": {
         "failing": {
@@ -269,7 +277,11 @@
           "short-functions": 3,
           "simple-functions": 3
         },
-        "level": "bronze"
+        "level": "bronze",
+        "unknown": [
+          "clippy-clean",
+          "tests-pass"
+        ]
       },
       "crate:toolbox-connect": {
         "failing": {
@@ -280,33 +292,57 @@
           "short-functions": 1,
           "simple-functions": 1
         },
-        "level": "bronze"
+        "level": "bronze",
+        "unknown": [
+          "clippy-clean",
+          "tests-pass"
+        ]
       },
       "crate:toolbox-connector-git-files": {
         "failing": {
           "has-tests": null
         },
-        "level": "none"
+        "level": "none",
+        "unknown": [
+          "clippy-clean",
+          "tests-pass"
+        ]
       },
       "crate:toolbox-connector-github": {
         "failing": {
           "short-functions": 1,
           "simple-functions": 1
         },
-        "level": "silver"
+        "level": "silver",
+        "unknown": [
+          "clippy-clean",
+          "tests-pass"
+        ]
       },
       "crate:toolbox-connector-runner": {
-        "level": "gold"
+        "level": "gold",
+        "unknown": [
+          "clippy-clean",
+          "tests-pass"
+        ]
       },
       "crate:toolbox-connector-scim": {
         "failing": {
           "few-unwraps": 1,
           "has-tests": null
         },
-        "level": "none"
+        "level": "none",
+        "unknown": [
+          "clippy-clean",
+          "tests-pass"
+        ]
       },
       "crate:toolbox-connector-workspace": {
-        "level": "gold"
+        "level": "gold",
+        "unknown": [
+          "clippy-clean",
+          "tests-pass"
+        ]
       },
       "crate:toolbox-derive": {
         "failing": {
@@ -316,7 +352,11 @@
           "short-functions": 3,
           "simple-functions": 1
         },
-        "level": "bronze"
+        "level": "bronze",
+        "unknown": [
+          "clippy-clean",
+          "tests-pass"
+        ]
       },
       "crate:toolbox-durable": {
         "level": "skipped"
@@ -328,7 +368,11 @@
         "failing": {
           "fully-documented": 3
         },
-        "level": "silver"
+        "level": "silver",
+        "unknown": [
+          "clippy-clean",
+          "tests-pass"
+        ]
       },
       "crate:toolbox-model": {
         "failing": {
@@ -339,7 +383,11 @@
           "short-functions": 3,
           "simple-functions": 2
         },
-        "level": "bronze"
+        "level": "bronze",
+        "unknown": [
+          "clippy-clean",
+          "tests-pass"
+        ]
       },
       "crate:toolbox-secrets": {
         "failing": {
@@ -347,14 +395,22 @@
           "public-api-documented": 21,
           "short-functions": 1
         },
-        "level": "bronze"
+        "level": "bronze",
+        "unknown": [
+          "clippy-clean",
+          "tests-pass"
+        ]
       },
       "crate:toolbox-store": {
         "failing": {
           "fully-documented": 5,
           "public-api-documented": 5
         },
-        "level": "bronze"
+        "level": "bronze",
+        "unknown": [
+          "clippy-clean",
+          "tests-pass"
+        ]
       },
       "crate:toolbox-telemetry": {
         "failing": {
@@ -362,7 +418,11 @@
           "public-api-documented": 30,
           "short-functions": 2
         },
-        "level": "bronze"
+        "level": "bronze",
+        "unknown": [
+          "clippy-clean",
+          "tests-pass"
+        ]
       }
     },
     "maintainer-dependency": {
