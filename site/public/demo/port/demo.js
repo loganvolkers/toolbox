@@ -119,15 +119,32 @@
   function render() {
     const hash = location.hash || "#home";
     setActive(hash);
-    const views = {
-      "#home": home,
-      "#catalog": catalog,
-      "#entity": entity,
-      "#my-work": myWork,
-      "#governance": governance,
-      "#self-serve": selfServe,
-    };
-    app.innerHTML = (views[hash] || home)();
+    // Explicit allowlist — never call a function looked up from a user-controlled key.
+    let html;
+    switch (hash) {
+      case "#home":
+        html = home();
+        break;
+      case "#catalog":
+        html = catalog();
+        break;
+      case "#entity":
+        html = entity();
+        break;
+      case "#my-work":
+        html = myWork();
+        break;
+      case "#governance":
+        html = governance();
+        break;
+      case "#self-serve":
+        html = selfServe();
+        break;
+      default:
+        html = home();
+        break;
+    }
+    app.innerHTML = html;
   }
 
   window.addEventListener("hashchange", render);
