@@ -7,6 +7,8 @@ This is the report Toolbox writes about itself. It is the maintainer SDLC applie
 
 [Open the report in the site's navigation](/toolbox/report-hosted/)
 
+Related: the [Software factory demo](/toolbox/demo/port/) rebuilds Port’s public demo shapes (catalog, entity, governance) with fixtures and honest gaps.
+
 The pages build also publishes a standalone one-file page at `/toolbox/report/` (generated into `site/public/report`, not committed). A host that wants its own chrome uses the directory form, then writes a page around the element:
 
 ```html

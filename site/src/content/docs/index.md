@@ -25,5 +25,6 @@ Four groups build with Toolbox. Each group has its own loop, and a command belon
 - [The catalog](/toolbox/concepts/catalog/)
 - [Scorecards](/toolbox/concepts/scorecards/)
 - [This repository, scored](/toolbox/demo/report/)
+- [Software factory demo (Port-inspired)](/toolbox/demo/port/)
 
 The source of this site is in the [Toolbox repository](https://github.com/loganvolkers/toolbox). The pages you are reading are catalogued and scored with the rest of the repository.

@@ -1,0 +1,167 @@
+{
+  "title": "AI Software Factory (Toolbox demo fixtures)",
+  "source": "Modeled on https://demo.getport.io/ public demo — not affiliated with Port",
+  "kpis": {
+    "in_progress": 20,
+    "waiting_on_person": 5,
+    "stuck": 13,
+    "shipped": 4
+  },
+  "stages": [
+    { "id": "triage", "label": "Triage", "count": 36 },
+    { "id": "plan", "label": "Plan", "count": 12 },
+    { "id": "build", "label": "Build", "count": 10 },
+    { "id": "review", "label": "Review", "count": 12 },
+    { "id": "ship", "label": "Ship", "count": 14 }
+  ],
+  "factory_lines": [
+    {
+      "id": "feature-delivery",
+      "title": "Feature Delivery Line",
+      "lifecycle": "production",
+      "owning_team": "Backend Team",
+      "started_by": "Jira ticket",
+      "open_items": 20,
+      "stages": 6,
+      "cost_per_shipped": 77,
+      "cycle_time_days": 3,
+      "done_30d": 2
+    },
+    {
+      "id": "security-vuln-fix",
+      "title": "Security Vulnerability Fix Line",
+      "lifecycle": "pilot",
+      "owning_team": "Security Team",
+      "started_by": "GitHub event",
+      "open_items": 4,
+      "stages": 5,
+      "cost_per_shipped": 23,
+      "cycle_time_days": 2.1,
+      "done_30d": 5
+    },
+    {
+      "id": "incident-remediation",
+      "title": "Incident Remediation Line",
+      "lifecycle": "pilot",
+      "owning_team": "SRE Team",
+      "started_by": "Alert",
+      "open_items": 4,
+      "stages": 5,
+      "cost_per_shipped": 2000,
+      "cycle_time_days": 1.2,
+      "done_30d": 3
+    },
+    {
+      "id": "resource-provisioning",
+      "title": "Resource Provisioning Line",
+      "lifecycle": "beta",
+      "owning_team": "Platform Team",
+      "started_by": "Slack message",
+      "open_items": 4,
+      "stages": 5,
+      "cost_per_shipped": 23,
+      "cycle_time_days": 0.8,
+      "done_30d": 8
+    },
+    {
+      "id": "agent-provisioning",
+      "title": "Agent Provisioning Line",
+      "lifecycle": "beta",
+      "owning_team": "Platform Team",
+      "started_by": "Slack message",
+      "open_items": 4,
+      "stages": 5,
+      "cost_per_shipped": 30,
+      "cycle_time_days": 3.1,
+      "done_30d": 6
+    }
+  ],
+  "hitl_tasks": [
+    {
+      "title": "Restrict checkout refunds",
+      "why": "Approve the change: it alters who can issue refunds.",
+      "factory_line": "Feature Delivery Line",
+      "work_type": "feature",
+      "stage": "Review",
+      "risk_score": 85,
+      "days_waiting": 5
+    },
+    {
+      "title": "Step up to 3D Secure on high-risk payments",
+      "why": "Approve the plan: critical change to a mission-critical payment service.",
+      "factory_line": "Feature Delivery Line",
+      "work_type": "feature",
+      "stage": "Plan",
+      "risk_score": 86,
+      "days_waiting": 3
+    },
+    {
+      "title": "Record an audit trail for permission changes",
+      "why": "Approve the plan: the audit trail is a compliance control.",
+      "factory_line": "Maintenance Line",
+      "work_type": "task",
+      "stage": "Plan",
+      "risk_score": 57,
+      "days_waiting": 2
+    }
+  ],
+  "agents": [
+    {
+      "id": "release-notes-drafter",
+      "title": "Release Notes Drafter",
+      "kind": "External AI Agent",
+      "runtime": "Cursor Cloud",
+      "owning_team": "DevOps Team",
+      "lifecycle": "development",
+      "approval": "approved",
+      "risk_tier": "medium",
+      "monthly_cost_usd": 20,
+      "monitoring": "not_configured",
+      "budget_used_pct": 67,
+      "scorecard_pass_pct": 91,
+      "scorecard": {
+        "id": "agent_governance",
+        "title": "Agent Governance",
+        "level": "Silver",
+        "tiers": {
+          "bronze": { "passed": 3, "total": 3 },
+          "silver": { "passed": 4, "total": 4 },
+          "gold": { "passed": 3, "total": 4 }
+        }
+      }
+    },
+    {
+      "id": "incident-triage",
+      "title": "Incident Triage Agent",
+      "runtime": "GCP Vertex AI",
+      "owning_team": "SRE Team",
+      "lifecycle": "production",
+      "monthly_cost_usd": 45
+    },
+    {
+      "id": "deploy-assistant",
+      "title": "Deploy Assistant",
+      "runtime": "AWS Bedrock",
+      "owning_team": "Platform Team",
+      "lifecycle": "production",
+      "monthly_cost_usd": 80
+    }
+  ],
+  "governance": {
+    "agents_over_budget": 4,
+    "risky_agents": 7,
+    "risky_skills": 7
+  },
+  "roi": {
+    "avg_lead_time_hours": 128,
+    "autonomy_pct": 75,
+    "change_failure_rate_pct": 13,
+    "eng_satisfaction": 4
+  },
+  "gaps_vs_port": [
+    "No live self-service action execution (Toolbox M5 paused)",
+    "No Jira/PagerDuty/Slack live integrations in docs demo",
+    "Fixtures are static JSON, not federated import",
+    "Persona dashboards are illustrative MDX/HTML, not Port widget builder"
+  ]
+}

@@ -1312,6 +1312,24 @@
       "site-page:site/src/content/docs/concepts/scorecards.md": {
         "level": "gold"
       },
+      "site-page:site/src/content/docs/demo/port/catalog.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/demo/port/entity.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/demo/port/gaps.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/demo/port/governance.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/demo/port/index.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/demo/port/my-work.md": {
+        "level": "gold"
+      },
       "site-page:site/src/content/docs/demo/report.md": {
         "level": "gold"
       },
