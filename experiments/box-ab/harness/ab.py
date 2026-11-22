@@ -65,7 +65,17 @@ def env(phase):
 
 
 def run(cmd, cwd, phase, shell=False, timeout=900):
-    return subprocess.run(cmd, cwd=cwd, env=env(phase), shell=shell, capture_output=True, text=True, timeout=timeout)
+    """Run in its own process group, and kill the whole group on a timeout: killing only the child
+    left semgrep-core running, orphaned, and its CPU use stalled every later semgrep run."""
+    p = subprocess.Popen(cmd, cwd=cwd, env=env(phase), shell=shell, stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE, text=True, start_new_session=True)
+    try:
+        out, err = p.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        os.killpg(p.pid, 9)
+        p.communicate()
+        raise
+    return subprocess.CompletedProcess(cmd, p.returncode, out, err)
 
 
 # --- findings, from any tool's SARIF or its own JSON -------------------------------------------

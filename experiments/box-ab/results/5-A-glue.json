@@ -1,0 +1,12 @@
+{
+ "baseline or generated +": 229,
+ "baseline or generated -": 0,
+ "glue +": 341,
+ "glue -": 126,
+ "tool rules +": 118,
+ "tool rules -": 0,
+ "docs +": 92,
+ "docs -": 0,
+ "tool config +": 1,
+ "tool config -": 1
+}
