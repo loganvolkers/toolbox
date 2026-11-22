@@ -490,10 +490,7 @@
         "level": "gold"
       },
       "dependency:cargo:sha2": {
-        "failing": {
-          "one-version": 2
-        },
-        "level": "bronze"
+        "level": "gold"
       },
       "dependency:cargo:sqlx": {
         "level": "gold"
