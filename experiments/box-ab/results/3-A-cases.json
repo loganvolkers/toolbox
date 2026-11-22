@@ -1,0 +1,94 @@
+[
+ {
+  "case": "the committed state",
+  "worse": [],
+  "want": "pass",
+  "got": "pass",
+  "ok": true,
+  "tail": [
+   "ruff 0.14.11: 0 findings (baseline 0) ok",
+   "actionlint 1.7.12: 3 findings (baseline 3) ok",
+   "zizmor 1.32.0: 335 findings (baseline 335) ok"
+  ]
+ },
+ {
+  "case": "semgrep: a new suppressed finding",
+  "worse": [
+   "semgrep"
+  ],
+  "want": "fail",
+  "got": "fail",
+  "ok": true,
+  "tail": [
+   "ruff 0.14.11: 0 findings (baseline 0) ok",
+   "actionlint 1.7.12: 3 findings (baseline 3) ok",
+   "zizmor 1.32.0: 335 findings (baseline 335) ok"
+  ]
+ },
+ {
+  "case": "ruff: a new finding",
+  "worse": [
+   "ruff"
+  ],
+  "want": "fail",
+  "got": "fail",
+  "ok": true,
+  "tail": [
+   "  worse: posthog/models/person/util.py: 0 -> 1  [E711 x1]",
+   "actionlint 1.7.12: 3 findings (baseline 3) ok",
+   "zizmor 1.32.0: 335 findings (baseline 335) ok"
+  ]
+ },
+ {
+  "case": "actionlint: a new finding",
+  "worse": [
+   "actionlint"
+  ],
+  "want": "fail",
+  "got": "fail",
+  "ok": true,
+  "tail": [
+   "actionlint 1.7.12: 5 findings (baseline 3) FAIL",
+   "  worse: .github/workflows/ci-python.yml: 0 -> 2  [expression x2]",
+   "zizmor 1.32.0: 335 findings (baseline 335) ok"
+  ]
+ },
+ {
+  "case": "an unrelated edit",
+  "worse": [],
+  "want": "pass",
+  "got": "pass",
+  "ok": true,
+  "tail": [
+   "ruff 0.14.11: 0 findings (baseline 0) ok",
+   "actionlint 1.7.12: 3 findings (baseline 3) ok",
+   "zizmor 1.32.0: 335 findings (baseline 335) ok"
+  ]
+ },
+ {
+  "case": "semgrep: one fixed",
+  "worse": [],
+  "want": "pass",
+  "got": "pass",
+  "ok": true,
+  "tail": [
+   "ruff 0.14.11: 0 findings (baseline 0) ok",
+   "actionlint 1.7.12: 3 findings (baseline 3) ok",
+   "zizmor 1.32.0: 335 findings (baseline 335) ok"
+  ]
+ },
+ {
+  "case": "zizmor: a new finding",
+  "worse": [
+   "zizmor"
+  ],
+  "want": "fail",
+  "got": "fail",
+  "ok": true,
+  "tail": [
+   "actionlint 1.7.12: 3 findings (baseline 3) ok",
+   "zizmor 1.32.0: 337 findings (baseline 335) FAIL",
+   "  worse: .github/workflows/ci-python.yml: 4 -> 6  [artipacked x3, template-injection x1, unpinned-uses x1, github-app x1]"
+  ]
+ }
+]
