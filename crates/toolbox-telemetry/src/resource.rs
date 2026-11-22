@@ -91,10 +91,7 @@ pub fn build_resource(
     Ok((Resource::builder_empty().with_attributes(kvs).build(), name))
 }
 
-fn resolve_or_fail(
-    mode: TelemetryMode,
-    explicit: Option<&str>,
-) -> Result<String, TelemetryError> {
+fn resolve_or_fail(mode: TelemetryMode, explicit: Option<&str>) -> Result<String, TelemetryError> {
     let name = service_name(explicit);
     if name.trim().is_empty() {
         return match mode {

@@ -222,10 +222,7 @@ fn sampler_for(mode: TelemetryMode) -> Sampler {
             "always_on" => Sampler::AlwaysOn,
             "always_off" => Sampler::AlwaysOff,
             "traceidratio" => {
-                let ratio = arg
-                    .as_deref()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(1.0);
+                let ratio = arg.as_deref().and_then(|s| s.parse().ok()).unwrap_or(1.0);
                 Sampler::TraceIdRatioBased(ratio)
             }
             "parentbased_always_on" => Sampler::ParentBased(Box::new(Sampler::AlwaysOn)),

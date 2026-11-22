@@ -28,10 +28,12 @@ pub(crate) fn install_subscriber(
     let json = match opts.log_format.as_deref() {
         Some("pretty") => false,
         Some("json") => true,
-        _ => matches!(mode, TelemetryMode::Ci | TelemetryMode::Prod)
-            || std::env::var("TOOLBOX_LOG_FORMAT")
-                .map(|v| v.eq_ignore_ascii_case("json"))
-                .unwrap_or(false),
+        _ => {
+            matches!(mode, TelemetryMode::Ci | TelemetryMode::Prod)
+                || std::env::var("TOOLBOX_LOG_FORMAT")
+                    .map(|v| v.eq_ignore_ascii_case("json"))
+                    .unwrap_or(false)
+        }
     };
 
     // Always stderr so structured CLI stdout (describe, report -o json, MCP) stays pure JSON.

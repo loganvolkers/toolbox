@@ -172,14 +172,15 @@ pub fn serve(path: &Path, listen: &str, database_url: Option<String>, fixtures: 
                 return ExitCode::from(2);
             }
         };
+        // Keep the literal `authorization: …` in the message: m3-acceptance greps server.log for it.
         tracing::info!(
-            listen = %listen,
-            store = %mode,
-            auth = ?auth_mode,
-            authorization = %authz_label,
-            manifest = %state.manifest_hash,
-            file = %src.manifest_file,
-            "serving portal"
+            "toolbox: serving {} on http://{listen} ({mode} store, {auth:?} auth, authorization: {authorization}, manifest {manifest})",
+            src.manifest_file,
+            listen = listen,
+            mode = mode,
+            auth = format!("{auth_mode:?}"),
+            authorization = authz_label,
+            manifest = state.manifest_hash.as_str(),
         );
         tokio::select! {
             r = toolbox_api::serve(state, listener) => {
