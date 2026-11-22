@@ -1006,6 +1006,9 @@
       "doc:docs/design/report-ux.md": {
         "level": "silver"
       },
+      "doc:docs/design/results-spec.md": {
+        "level": "silver"
+      },
       "doc:docs/design/root-causes.md": {
         "level": "silver"
       },
@@ -1118,6 +1121,9 @@
         "level": "silver"
       },
       "doc:experiments/out-of-box/README.md": {
+        "level": "silver"
+      },
+      "doc:experiments/spec-ab/README.md": {
         "level": "silver"
       },
       "doc:experiments/standards-ab/README.md": {
@@ -1288,6 +1294,9 @@
         "level": "gold"
       },
       "example:experiments/out-of-box/ab/README.md": {
+        "level": "gold"
+      },
+      "example:experiments/spec-ab/README.md": {
         "level": "gold"
       },
       "example:experiments/standards-ab/README.md": {

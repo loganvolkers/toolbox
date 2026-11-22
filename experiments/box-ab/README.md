@@ -10,6 +10,8 @@ tokens.** The hypothesis is R6 in [repo-value.md](../../docs/design/repo-value.m
 developer-experience feedback, the same way for both arms. The results are in §0, the feedback and
 what was fixed in §0.3.
 
+**Next:** the [spec A/B](../spec-ab/README.md) tests a results spec three ways: by hand from the spec, with Toolbox, and building on Backstage.
+
 This tests the box, not tool building ([toolbox-and-tools.md](../../docs/design/toolbox-and-tools.md)).
 The standards A/B ([../standards-ab](../standards-ab/README.md)) compared building a tool with
 Toolbox's primitives against writing a Python script, and Toolbox lost. That was the wrong half.

@@ -26,6 +26,7 @@ The bet has five parts. Each has an experiment and a result that would stop us (
 | R4 | The ratchet catches real regressions on real pull requests without becoming a chore |
 | R5 | Standards travel between repositories as packages, with parameters and no edits |
 | R6 | The box A/B ([experiments/box-ab](../../experiments/box-ab/README.md)): on the PostHog fork, several existing tools gathered under one gate, with a campaign, a new tool, an upgrade, a swap and a read. Arm A writes CI glue; arm B uses the box | Tokens per phase; lines of glue left to maintain; correctness (planted pull requests, take-it-out parity, the swap, the read key) | Over the six phases, the box uses fewer tokens and leaves less glue, with equal correctness, and both arms pass take-it-out | Either measure is worse: the box's value is the format it standardises, not the work it saves, and this plan says so |
+| R7 | The spec A/B ([experiments/spec-ab](../../experiments/spec-ab/README.md)): results documents produced and consumed three ways, by hand from the spec alone, with Toolbox, and building on Backstage, scored by the spec's conformance suite | Conformance per requirement; tokens; glue; correctness against the box A/B's truth | S1: the spec stands alone (arm A conforms within budget); S2: Toolbox costs fewer tokens than the spec alone; S3: Backstage costs more at the repository | S1 fails: shrink the spec first. S2 fails: Toolbox's value is the reference implementation. S3 fails: repository work builds on Backstage |
 
 ## 2. What is paused and what continues
 
