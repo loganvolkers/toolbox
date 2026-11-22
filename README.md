@@ -66,8 +66,10 @@ cargo build && target/debug/toolbox validate examples/reference-portal
   - [design/minimal-ui.md](docs/design/minimal-ui.md): the built-in pages, view endpoints and generated forms
   - [design/action-runs.md](docs/design/action-runs.md): preview, confirm and verified completion for self-service actions
   - [design/connector-control.md](docs/design/connector-control.md): commands to connectors (scoped refresh, resync) and read-your-writes
+  - [design/secret-vault.md](docs/design/secret-vault.md): connector `${secret:…}` backends (env, file, Vault, AWS/GCP/Azure)
   - [design/context-lake.md](docs/design/context-lake.md): context lakes, and how the catalog, knowledge and security graphs overlap
   - [design/source-of-truth.md](docs/design/source-of-truth.md): field-level source of truth, and when Toolbox owns the data
   - [design/verification.md](docs/design/verification.md): TDD, deterministic simulation, reference models, differential and configuration-space testing
 - Worked examples:
   - [examples/approved-github-apps.md](docs/examples/approved-github-apps.md): self-service installation of approved GitHub Apps, and how an operator has an agent build, test and ship it
+  - [examples/secret-vault-gcp](examples/secret-vault-gcp/README.md): GCP Secret Manager holds GitHub App, Jira and GCP SA connector secrets

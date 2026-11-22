@@ -392,6 +392,18 @@
           "tests-pass"
         ]
       },
+      "crate:toolbox-secrets": {
+        "failing": {
+          "fully-documented": 21,
+          "public-api-documented": 21,
+          "short-functions": 1
+        },
+        "level": "bronze",
+        "unknown": [
+          "clippy-clean",
+          "tests-pass"
+        ]
+      },
       "crate:toolbox-store": {
         "failing": {
           "fully-documented": 5,
@@ -511,6 +523,9 @@
         "level": "gold"
       },
       "dependency:cargo:walkdir": {
+        "level": "gold"
+      },
+      "dependency:cargo:zeroize": {
         "level": "gold"
       }
     },
@@ -896,6 +911,9 @@
       "doc:docs/decisions/D01M80Y0XEK069GD08VCCNF0WB8.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M8174KFJCBKKG37B9SS8P9RF.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/D01M81ADN8C10EA1Z1VNRY3A5JZ.md": {
         "level": "skipped"
       },
@@ -1034,6 +1052,9 @@
       "doc:docs/design/sdlc.md": {
         "level": "silver"
       },
+      "doc:docs/design/secret-vault.md": {
+        "level": "silver"
+      },
       "doc:docs/design/site-standards.md": {
         "level": "silver"
       },
@@ -1071,6 +1092,9 @@
         "level": "silver"
       },
       "doc:docs/examples/approved-github-apps.md": {
+        "level": "silver"
+      },
+      "doc:docs/examples/secret-vault-gcp.md": {
         "level": "silver"
       },
       "doc:docs/glossary.md": {
@@ -1116,6 +1140,9 @@
         "level": "silver"
       },
       "doc:examples/repo-portal-starter/README.md": {
+        "level": "silver"
+      },
+      "doc:examples/secret-vault-gcp/README.md": {
         "level": "silver"
       },
       "doc:experiments/box-ab/README.md": {
@@ -1270,6 +1297,12 @@
       "example:docs/examples/approved-github-apps.md": {
         "level": "gold"
       },
+      "example:docs/examples/secret-vault-gcp.md": {
+        "failing": {
+          "says-how-to-check": 1
+        },
+        "level": "bronze"
+      },
       "example:examples/reference-portal/README.md": {
         "level": "gold"
       },
@@ -1283,6 +1316,9 @@
         "level": "gold"
       },
       "example:examples/repo-portal-starter/README.md": {
+        "level": "gold"
+      },
+      "example:examples/secret-vault-gcp/README.md": {
         "level": "gold"
       },
       "example:experiments/README.md": {
@@ -1428,6 +1464,9 @@
       "site-page:site/src/content/docs/authors/index.md": {
         "level": "gold"
       },
+      "site-page:site/src/content/docs/authors/secrets.md": {
+        "level": "gold"
+      },
       "site-page:site/src/content/docs/concepts/catalog.md": {
         "level": "gold"
       },
@@ -1450,6 +1489,9 @@
         "level": "gold"
       },
       "site-page:site/src/content/docs/operators/portal.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/operators/secrets.md": {
         "level": "gold"
       },
       "site-page:site/src/content/docs/start/install.md": {

@@ -487,7 +487,10 @@ The base image contains `toolbox` and the pinned OpenFGA binary.
 | `TOOLBOX_MANIFEST` | Manifest path (default `/portal/toolbox.yaml`) |
 | `TOOLBOX_PUBLIC_URL` | External URL (OAuth, links) |
 | `TOOLBOX_AUTH_MODE` | `iap-google`, `cloudflare-access`, `oidc`, `dev` |
-| `TOOLBOX_SECRET_<NAME>` or a mounted secrets directory | Values for `${secret:…}` |
+| `TOOLBOX_SECRET_<NAME>` | Env backend for `${secret:…}` (uppercase, `-` → `_`) |
+| `TOOLBOX_SECRETS_DIR` | Mounted secrets directory (files named by logical secret); first hit after env |
+| `TOOLBOX_SECRETS_CONFIG` | JSON/YAML path (or inline JSON) listing backends: env, file, Vault KV, AWS/GCP/Azure secret managers, plus logical→provider maps ([secret-vault.md](./design/secret-vault.md)) |
+| `TOOLBOX_SECRETS_REQUIRED` | When `1`/`true`, fail if a `${secret:…}` cannot be resolved (default: omit key + warn) |
 | `TOOLBOX_ROLE` | `all` (default), `api`, `worker` |
 
 ### 10.3 Cloud Run reference settings
