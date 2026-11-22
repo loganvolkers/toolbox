@@ -1,0 +1,191 @@
+# Local semgrep rules for the security scorecard. No registry rules are used.
+# Severity: ERROR = likely exploitable, WARNING = risky pattern needing review, INFO = hygiene.
+rules:
+  # ---------- TLS / certificate verification ----------
+  - id: rust-tls-verification-disabled
+    languages: [rust]
+    severity: ERROR
+    message: >-
+      TLS certificate or hostname verification is disabled; traffic can be
+      intercepted.
+    pattern-either:
+    - pattern: $B.danger_accept_invalid_certs(true)
+    - pattern: $B.danger_accept_invalid_hostnames(true)
+  - id: go-tls-insecure-skip-verify
+    languages: [go]
+    severity: ERROR
+    message: InsecureSkipVerify disables TLS certificate verification.
+    pattern: "tls.Config{..., InsecureSkipVerify: true, ...}"
+  - id: js-tls-reject-unauthorized-false
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: rejectUnauthorized=false disables TLS certificate verification.
+    pattern-either:
+    - pattern: "{..., rejectUnauthorized: false, ...}"
+    - pattern: process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"
+    - pattern: process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0"
+
+  # ---------- Code / command injection ----------
+  - id: js-eval-dynamic
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: eval / new Function on a non-literal value executes arbitrary code.
+    patterns:
+    - pattern-either:
+      - pattern: eval($X)
+      - pattern: new Function(..., $X)
+    - pattern-not: eval("...")
+    - pattern-not: new Function(..., "...")
+  - id: js-child-process-shell-dynamic
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: >-
+      Shell command built from a dynamic string; use execFile/spawn with an
+      argument array.
+    patterns:
+    - pattern-either:
+      - pattern: $CP.exec(`...${$X}...`, ...)
+      - pattern: $CP.execSync(`...${$X}...`, ...)
+      - pattern: exec(`...${$X}...`, ...)
+      - pattern: execSync(`...${$X}...`, ...)
+      - pattern: $CP.exec("..." + $X, ...)
+      - pattern: $CP.execSync("..." + $X, ...)
+      - pattern: execSync("..." + $X, ...)
+  - id: js-spawn-shell-true
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: >-
+      spawn/execFile with shell:true re-introduces shell interpretation of
+      arguments.
+    pattern-either:
+    - pattern: "$CP.spawn($C, $ARGS, {..., shell: true, ...})"
+    - pattern: "spawn($C, $ARGS, {..., shell: true, ...})"
+    - pattern: "$CP.spawnSync($C, $ARGS, {..., shell: true, ...})"
+  - id: rust-shell-command-dynamic
+    languages: [rust]
+    severity: WARNING
+    message: >-
+      A shell is invoked with a formatted command string; prefer passing
+      arguments directly.
+    pattern-either:
+    - pattern: Command::new("sh").arg("-c").arg(format!(...))
+    - pattern: Command::new("bash").arg("-c").arg(format!(...))
+    - pattern: Command::new("sh").args(["-c", format!(...)])
+    - pattern: Command::new("bash").args(["-c", format!(...)])
+    - pattern: Command::new("cmd").args(["/C", format!(...)])
+  - id: go-shell-command-dynamic
+    languages: [go]
+    severity: WARNING
+    message: exec.Command runs a shell with a non-literal command string.
+    patterns:
+    - pattern-either:
+      - pattern: exec.Command("sh", "-c", $X)
+      - pattern: exec.Command("bash", "-c", $X)
+      - pattern: exec.CommandContext($CTX, "sh", "-c", $X)
+      - pattern: exec.CommandContext($CTX, "bash", "-c", $X)
+    - pattern-not: exec.Command($S, "-c", "...")
+    - pattern-not: exec.CommandContext($CTX, $S, "-c", "...")
+  - id: go-sql-string-format
+    languages: [go]
+    severity: WARNING
+    message: SQL query built with fmt.Sprintf; use parameterised queries.
+    pattern-either:
+    - pattern: $DB.Query(fmt.Sprintf(...), ...)
+    - pattern: $DB.Exec(fmt.Sprintf(...), ...)
+    - pattern: $DB.QueryRow(fmt.Sprintf(...), ...)
+  - id: rust-sql-string-format
+    languages: [rust]
+    severity: WARNING
+    message: SQL query built with format!; use bound parameters.
+    pattern-either:
+    - pattern: sqlx::query(&format!(...))
+    - pattern: sqlx::query(format!(...).as_str())
+    - pattern: $C.execute(&format!(...), ...)
+  - id: js-xss-sinks
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: Raw HTML sink; make sure the value is sanitised.
+    pattern-either:
+    - pattern: $E.innerHTML = $X
+    - pattern: $E.outerHTML = $X
+    - pattern: document.write($X)
+  - id: jsx-dangerously-set-inner-html
+    languages: [typescript, javascript]
+    severity: WARNING
+    message: dangerouslySetInnerHTML renders raw HTML; make sure it is sanitised.
+    pattern-regex: dangerouslySetInnerHTML\s*=
+
+  # ---------- Weak crypto / randomness ----------
+  - id: go-weak-hash
+    languages: [go]
+    severity: INFO
+    message: MD5/SHA-1 are broken for security purposes.
+    pattern-either:
+    - pattern: md5.New()
+    - pattern: md5.Sum(...)
+    - pattern: sha1.New()
+    - pattern: sha1.Sum(...)
+  - id: js-weak-hash
+    languages: [javascript, typescript]
+    severity: INFO
+    message: MD5/SHA-1 are broken for security purposes.
+    pattern-either:
+    - pattern: $C.createHash("md5")
+    - pattern: $C.createHash("sha1")
+  - id: js-math-random-secret
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: >-
+      Math.random is not cryptographically secure; do not use it for tokens or
+      secrets.
+    patterns:
+    - pattern: |
+        $V = <... Math.random() ...>
+    - metavariable-regex:
+        metavariable: $V
+        regex: (?i).*(token|secret|password|nonce|key|salt).*
+
+  # ---------- Shell scripts and Dockerfiles ----------
+  - id: shell-pipe-to-interpreter
+    languages: [regex]
+    severity: WARNING
+    message: >-
+      Remote content piped straight into a shell; download, verify a checksum,
+      then run.
+    paths:
+      include:
+        - "*.sh"
+        - "*.bash"
+        - Dockerfile*
+        - "*.dockerfile"
+        - justfile
+        - Makefile
+    pattern-regex: (curl|wget)\b[^\n|]*\|\s*(sudo\s+)?(ba|z)?sh\b
+  - id: shell-world-writable
+    languages: [regex]
+    severity: WARNING
+    message: chmod 777 / a+w makes files world-writable.
+    paths:
+      include:
+        - "*.sh"
+        - "*.bash"
+        - Dockerfile*
+        - "*.dockerfile"
+        - justfile
+        - Makefile
+    pattern-regex: chmod\s+(-R\s+)?(0?777|a\+w|o\+w)\b
+  - id: shell-tls-disabled
+    languages: [regex]
+    severity: ERROR
+    message: TLS verification disabled in a download command.
+    paths:
+      include:
+        - "*.sh"
+        - "*.bash"
+        - Dockerfile*
+        - "*.dockerfile"
+        - justfile
+        - Makefile
+        - "*.yml"
+        - "*.yaml"
+    pattern-regex: (curl\b[^\n]*\s(-k|--insecure)\b|wget\b[^\n]*--no-check-certificate)

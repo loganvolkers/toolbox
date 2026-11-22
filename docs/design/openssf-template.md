@@ -87,7 +87,25 @@ advisory is published, with no change to the repository. A ratchet needs a resul
 in every environment, so Toolbox for Toolbox runs the other ten checks with Scorecard's own
 `--checks` flag. The kit's README warns other portals. The 23 advisories are real and open (O5).
 
-## 5. Next
+## 5. Is the template better than building from scratch?
+
+[experiments/security-ab](../../experiments/security-ab/RESULTS.md) asked an agent to build a
+security scorecard from scratch on two repositories, and compared it with Scorecard. The agent
+found more:
+- 6 to 7 confirmed problems per repository that Scorecard can't see;
+- the right verdict in 4 places where Scorecard's checks stop at the presence of a tool or
+  pattern.
+
+Scorecard won on everything a standard is for:
+- it costs nothing to run again (each build took about 160k tokens);
+- it runs unchanged on a new repository (reusing the agent's build cost as much as building it);
+- it gives one definition, so scores compare (two builds differed by up to 4.4 points in an area).
+
+So the template's value is cost and comparability, not detection. A domain standard Toolbox
+carries should be judged on the same six measures (that experiment's §5). The way to keep the
+agent's extra findings is local rules beside the standard, the A + S arm that comes next.
+
+## 6. Next
 
 | # | Item |
 |---|---|
@@ -96,6 +114,7 @@ in every environment, so Toolbox for Toolbox runs the other ten checks with Scor
 | O3 | Scorecard's probe format as facts, so a rule can name a probe and not only a check |
 | O4 | A second domain standard, such as observability, published as a package by the template in §3, ideally by someone other than us (R5) |
 | O5 | Vulnerabilities that reproduce: a scanner pinned to an advisory-database snapshot (osv-scanner offline, or cargo-audit with a pinned database), so a new advisory changes the result only when the snapshot moves; then pay down the 23 advisories CI found |
+| O6 | The A + S arm of the security A/B: Scorecard as the floor plus an agent's extra checks as local rules, ratcheted together; then native Scorecard against the kit |
 
 ## Sources
 

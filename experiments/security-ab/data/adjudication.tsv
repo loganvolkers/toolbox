@@ -1,0 +1,24 @@
+repo	area	truth	evidence	B_verdict	B_right	A_build_verdict	A_build_right	A1_on_R2_verdict	A1_on_R2_right
+R1	binary-artifacts	pass	`file` over the export finds no ELF, PE, Mach-O or JAR	10	yes	not checked	-	-	-
+R1	dangerous-workflow	fail	claude-code-review.yaml: issue_comment and pull_request_review_comment (any commenter) call auth0/auth0-ai-pr-analyzer-gh-action@main with contents, issues and pull-requests write and id-token write	10	no (by Scorecard's narrower definition, untrusted checkout or script injection, it is right)	ci-workflow-audit 4.2, names this workflow	yes	-	-
+R1	dependency-update	pass, one dead entry	dependabot.yaml has gomod /tools; there is no tools/ directory	10	yes	dependency-management 8.4, names the dead entry	yes	-	-
+R1	fuzzing	pass	Go native fuzz targets in pkg/tuple/tuple_test.go	10	yes	not checked	-	-	-
+R1	license	pass	LICENSE is Apache-2.0, which is OSI-approved	9, "not an FSF or OSI license"	no	not checked	-	-	-
+R1	packaging	pass	goreleaser release workflows	10	yes	not checked (release-integrity 10 is related)	-	-	-
+R1	pinned-dependencies	fail	auth0 reusable workflow at @main; slsa-github-generator at @v2.1.0 is a documented must-use-tag	9, names all three	yes (two of three warnings are by-design tags)	dependency-pinning 9.9, names auth0 and exempts slsa	yes	-	-
+R1	sast-in-ci	pass	codeql.yml, Snyk in release.yaml	10	yes	security-tooling-in-ci 8.0 (no secret scanning)	yes	-	-
+R1	security-policy	fail (in-repo)	no SECURITY.md; .github/SECURITY-INSIGHTS.yml only	0	yes	5.0	yes	-	-
+R1	token-permissions	fail	claude-code-review job grants contents, issues, pull-requests and id-token write on a comment trigger	10 (warns but does not deduct)	no	workflow-permissions 7.1	yes	-	-
+R1	vulnerabilities	unknown	no advisory database offline	10, "0 existing vulnerabilities" (api.osv.dev refused)	unsupported	known-vulnerabilities null	honest	-	-
+R2	binary-artifacts	pass	`file` over the export finds no binaries	10	yes	not checked	-	not checked	-
+R2	dangerous-workflow	fail	issue-labeler.yml: on issues, interpolates github.event.issue.title and .body into an openai/codex-action prompt with allow-users "*"; output feeds a job with issues write (read-only sandbox mitigates)	10	no (by Scorecard's definition, right: it reads run:, not with:)	ci-workflow-audit 0.0 and ai-agent-workflows 2.0, names lines 85, 88 and 25	yes	ci-workflow-audit 1.1; flags the labeler only for write permissions	partly
+R2	dependency-update	fail (coverage)	bun entry .github/actions/codex does not exist; docker entry codex-cli has no Dockerfile; no npm or pip entries for pnpm and pyproject manifests	10, "update tool detected"	no	dependency-updates 3.0, names all four gaps	yes	dependency-management 8.9, names bun and pip	yes
+R2	fuzzing	fail	no fuzz targets (only fuzzy-match code)	0	yes	not checked	-	not checked	-
+R2	license	pass	LICENSE is Apache-2.0	9, "not an FSF or OSI license"	no	not checked	-	not checked	-
+R2	packaging	pass	python-sdk-release.yml publishes	10	yes	not checked	-	not checked	-
+R2	pinned-dependencies	fail	3 base images by tag, curl-pipe-sh in .devcontainer, pip install unpinned in python-sdk-release.yml:42 and sdk.yml:31	8, names all of them	yes	action-pinning 10; container-hardening and sast name images and curl-sh; misses pip	partly	dependency-pinning 9.8 and container-hardening name images and curl-sh; misses pip	partly
+R2	sast-in-ci	fail	no CodeQL, semgrep or similar in workflow files	0	yes	security-tooling-in-ci 3.2	yes	security-tooling-in-ci 2.0	yes
+R2	security-policy	pass	SECURITY.md with a disclosure channel	10	yes	policy-and-ownership 7.0 (deduction is CODEOWNERS, true)	yes	security-policy 10	yes
+R2	token-permissions	fail	13 of 21 workflows set no permissions; write scopes on untrusted triggers	0	yes	workflow-permissions 3.8	yes	workflow-permissions 1.0	yes
+R2	vulnerabilities	unknown	no advisory database offline	10 (api.osv.dev refused)	unsupported	not checked	-	known-vulnerabilities null	honest
+R2	secrets (beyond B)	pass	every sampled hit is a test fixture in a Rust #[cfg(test)] module (agent-identity/src/lib.rs:660, cli/src/doctor.rs:3222, windows-sandbox-rs/src/setup.rs:1168)	not checked	-	secrets 9.0, hits labelled test code	yes	secrets 4.4, 20 hits read as real	no

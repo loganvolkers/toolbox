@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Repository security scorecard: run <repo-path>  -> JSON on stdout
+set -euo pipefail
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+exec python3 -I "$here/scorecard.py" "$@"

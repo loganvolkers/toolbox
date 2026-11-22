@@ -1,0 +1,6 @@
+phase	repo	tokens	tool_calls	seconds	note
+A3	codex	162582	31	765	REPORT.md written by the adjudicator from the agent's hand-back (the harness blocked the agent's write)
+B	openfga	0	0	24	scorecard --local, no agent
+B	codex	0	0	82	scorecard --local, no agent
+A1	openfga	161017	26	780	REPORT.md written by the adjudicator from the agent hand-back
+A2	codex	162519	29	519	reuse of A1 on R2; REUSE.md from the hand-back; +161/-34 lines in scorecard.py (922 to 1066)

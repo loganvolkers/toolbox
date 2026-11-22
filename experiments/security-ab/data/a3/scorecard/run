@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Security scorecard: run <repo-path>  -> JSON on stdout.
+# Tools used if present on PATH: zizmor, actionlint, semgrep, ruff (checks needing a missing tool score null).
+set -euo pipefail
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export SEMGREP_SEND_METRICS=off
+exec python3 -I "$here/scorecard.py" "$@"

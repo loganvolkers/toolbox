@@ -1,0 +1,1342 @@
+{
+  "repo": "/tmp/claude-0/-home-user/7bfb4c6a-a466-55d2-9252-3eb201a6d27e/scratchpad/sec-ab/exports/codex",
+  "checks": [
+    {
+      "id": "ci-workflow-audit",
+      "title": "CI workflow security audit",
+      "score": 1.1,
+      "why": "Audits CI/CD workflows with zizmor (template/script injection, dangerous triggers such as pull_request_target, cache poisoning, credential persistence, obfuscation) and actionlint (invalid workflows, untrusted expressions). CI holds release credentials and write tokens, so a workflow bug is a direct path to a supply-chain compromise.",
+      "findings": [
+        {
+          "message": "[zizmor github-env, high severity] dangerous use of environment file: write to GITHUB_ENV may allow code execution",
+          "path": ".github/actions/macos-code-sign/action.yml",
+          "line": 42
+        },
+        {
+          "message": "[zizmor github-env, high severity] dangerous use of environment file: write to GITHUB_ENV may allow code execution",
+          "path": ".github/actions/macos-code-sign/action.yml",
+          "line": 42
+        },
+        {
+          "message": "[zizmor github-env, high severity] dangerous use of environment file: write to GITHUB_ENV may allow code execution",
+          "path": ".github/actions/prepare-bazel-ci/action.yml",
+          "line": 62
+        },
+        {
+          "message": "[zizmor self-repository, low severity] use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'",
+          "path": ".github/actions/prepare-bazel-ci/action.yml",
+          "line": 30
+        },
+        {
+          "message": "[zizmor self-repository, low severity] use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'",
+          "path": ".github/actions/run-argument-comment-lint/action.yml",
+          "line": 16
+        },
+        {
+          "message": "[zizmor github-env, high severity] dangerous use of environment file: write to $env:GITHUB_ENV may allow code execution",
+          "path": ".github/actions/setup-bazel-ci/action.yml",
+          "line": 41
+        },
+        {
+          "message": "[zizmor github-env, high severity] dangerous use of environment file: write to $env:GITHUB_ENV may allow code execution",
+          "path": ".github/actions/setup-bazel-ci/action.yml",
+          "line": 52
+        },
+        {
+          "message": "[zizmor github-env, high severity] dangerous use of environment file: write to $env:GITHUB_ENV may allow code execution",
+          "path": ".github/actions/setup-bazel-ci/action.yml",
+          "line": 52
+        },
+        {
+          "message": "[zizmor github-env, high severity] dangerous use of environment file: write to $env:GITHUB_ENV may allow code execution",
+          "path": ".github/actions/setup-bazel-ci/action.yml",
+          "line": 65
+        },
+        {
+          "message": "[zizmor template-injection, high severity] code injection via template expansion: may expand into attacker-controllable code",
+          "path": ".github/actions/setup-msvc-env/action.yml",
+          "line": 17
+        },
+        {
+          "message": "[zizmor template-injection, high severity] code injection via template expansion: may expand into attacker-controllable code",
+          "path": ".github/actions/setup-msvc-env/action.yml",
+          "line": 17
+        },
+        {
+          "message": "[zizmor github-env, high severity] dangerous use of environment file: write to GITHUB_ENV may allow code execution",
+          "path": ".github/actions/setup-rusty-v8/action.yml",
+          "line": 15
+        },
+        {
+          "message": "[zizmor github-env, high severity] dangerous use of environment file: write to GITHUB_ENV may allow code execution",
+          "path": ".github/actions/setup-rusty-v8/action.yml",
+          "line": 15
+        },
+        {
+          "message": "[zizmor self-repository, low severity] use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'",
+          "path": ".github/workflows/bazel.yml",
+          "line": 67
+        },
+        {
+          "message": "[zizmor self-repository, low severity] use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'",
+          "path": ".github/workflows/bazel.yml",
+          "line": 157
+        },
+        {
+          "message": "[zizmor self-repository, low severity] use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'",
+          "path": ".github/workflows/bazel.yml",
+          "line": 264
+        },
+        {
+          "message": "[zizmor self-repository, low severity] use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'",
+          "path": ".github/workflows/bazel.yml",
+          "line": 353
+        },
+        {
+          "message": "[zizmor self-repository, low severity] use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'",
+          "path": ".github/workflows/bazel.yml",
+          "line": 446
+        },
+        {
+          "message": "[zizmor dangerous-triggers, high severity] use of fundamentally insecure workflow trigger: pull_request_target is almost always used insecurely",
+          "path": ".github/workflows/cla.yml",
+          "line": 5
+        },
+        {
+          "message": "[zizmor dangerous-triggers, high severity] use of fundamentally insecure workflow trigger: issue_comment is almost always used insecurely",
+          "path": ".github/workflows/cla.yml",
+          "line": 3
+        },
+        {
+          "message": "[zizmor archived-uses, medium severity] action or reusable workflow from archived repository: repository is archived",
+          "path": ".github/workflows/cla.yml",
+          "line": 21
+        },
+        {
+          "message": "[zizmor template-injection, high severity] code injection via template expansion: may expand into attacker-controllable code",
+          "path": ".github/workflows/rust-ci-full-nextest-platform.yml",
+          "line": 196
+        },
+        {
+          "message": "[zizmor template-injection, high severity] code injection via template expansion: may expand into attacker-controllable code",
+          "path": ".github/workflows/rust-ci-full-nextest-platform.yml",
+          "line": 197
+        },
+        {
+          "message": "[zizmor template-injection, high severity] code injection via template expansion: may expand into attacker-controllable code",
+          "path": ".github/workflows/rust-ci-full-nextest-platform.yml",
+          "line": 211
+        },
+        {
+          "message": "[zizmor template-injection, high severity] code injection via template expansion: may expand into attacker-controllable code",
+          "path": ".github/workflows/rust-ci-full-nextest-platform.yml",
+          "line": 212
+        },
+        {
+          "message": "[zizmor template-injection, high severity] code injection via template expansion: may expand into attacker-controllable code",
+          "path": ".github/workflows/rust-ci-full-nextest-platform.yml",
+          "line": 215
+        },
+        {
+          "message": "[zizmor template-injection, high severity] code injection via template expansion: may expand into attacker-controllable code",
+          "path": ".github/workflows/rust-ci-full-nextest-platform.yml",
+          "line": 215
+        },
+        {
+          "message": "[zizmor template-injection, high severity] code injection via template expansion: may expand into attacker-controllable code",
+          "path": ".github/workflows/rust-ci-full-nextest-platform.yml",
+          "line": 218
+        },
+        {
+          "message": "[zizmor template-injection, high severity] code injection via template expansion: may expand into attacker-controllable code",
+          "path": ".github/workflows/rust-ci-full-nextest-platform.yml",
+          "line": 219
+        },
+        {
+          "message": "[zizmor template-injection, high severity] code injection via template expansion: may expand into attacker-controllable code",
+          "path": ".github/workflows/rust-ci-full-nextest-platform.yml",
+          "line": 223
+        },
+        {
+          "message": "[zizmor template-injection, high severity] code injection via template expansion: may expand into attacker-controllable code",
+          "path": ".github/workflows/rust-ci-full-nextest-platform.yml",
+          "line": 223
+        },
+        {
+          "message": "[zizmor template-injection, high severity] code injection via template expansion: may expand into attacker-controllable code",
+          "path": ".github/workflows/rust-ci-full-nextest-platform.yml",
+          "line": 223
+        },
+        {
+          "message": "[zizmor template-injection, high severity] code injection via template expansion: may expand into attacker-controllable code",
+          "path": ".github/workflows/rust-ci-full-nextest-platform.yml",
+          "line": 223
+        },
+        {
+          "message": "[zizmor template-injection, high severity] code injection via template expansion: may expand into attacker-controllable code",
+          "path": ".github/workflows/rust-ci-full-nextest-platform.yml",
+          "line": 282
+        },
+        {
+          "message": "[zizmor template-injection, high severity] code injection via template expansion: may expand into attacker-controllable code",
+          "path": ".github/workflows/rust-ci-full-nextest-platform.yml",
+          "line": 377
+        },
+        {
+          "message": "[zizmor template-injection, high severity] code injection via template expansion: may expand into attacker-controllable code",
+          "path": ".github/workflows/rust-ci-full-nextest-platform.yml",
+          "line": 377
+        },
+        {
+          "message": "[zizmor template-injection, high severity] code injection via template expansion: may expand into attacker-controllable code",
+          "path": ".github/workflows/rust-ci-full-nextest-platform.yml",
+          "line": 383
+        },
+        {
+          "message": "[zizmor template-injection, high severity] code injection via template expansion: may expand into attacker-controllable code",
+          "path": ".github/workflows/rust-ci-full-nextest-platform.yml",
+          "line": 383
+        },
+        {
+          "message": "[zizmor self-repository, low severity] use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'",
+          "path": ".github/workflows/rust-ci-full-nextest-platform.yml",
+          "line": 103
+        },
+        {
+          "message": "[zizmor secrets-inherit, medium severity] secrets unconditionally inherited by called workflow: this reusable workflow",
+          "path": ".github/workflows/rust-ci-full.yml",
+          "line": 467
+        },
+        {
+          "message": "[zizmor secrets-inherit, medium severity] secrets unconditionally inherited by called workflow: this reusable workflow",
+          "path": ".github/workflows/rust-ci-full.yml",
+          "line": 478
+        },
+        {
+          "message": "[zizmor secrets-inherit, medium severity] secrets unconditionally inherited by called workflow: this reusable workflow",
+          "path": ".github/workflows/rust-ci-full.yml",
+          "line": 492
+        },
+        {
+          "message": "[zizmor secrets-inherit, medium severity] secrets unconditionally inherited by called workflow: this reusable workflow",
+          "path": ".github/workflows/rust-ci-full.yml",
+          "line": 505
+        },
+        {
+          "message": "[zizmor secrets-inherit, medium severity] secrets unconditionally inherited by called workflow: this reusable workflow",
+          "path": ".github/workflows/rust-ci-full.yml",
+          "line": 518
+        },
+        {
+          "message": "[zizmor self-repository, low severity] use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'",
+          "path": ".github/workflows/rust-ci-full.yml",
+          "line": 118
+        },
+        {
+          "message": "[zizmor self-repository, low severity] use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'",
+          "path": ".github/workflows/rust-ci-full.yml",
+          "line": 382
+        },
+        {
+          "message": "[zizmor self-repository, low severity] use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'",
+          "path": ".github/workflows/rust-ci-full.yml",
+          "line": 467
+        },
+        {
+          "message": "[zizmor self-repository, low severity] use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'",
+          "path": ".github/workflows/rust-ci-full.yml",
+          "line": 478
+        },
+        {
+          "message": "[zizmor self-repository, low severity] use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'",
+          "path": ".github/workflows/rust-ci-full.yml",
+          "line": 492
+        },
+        {
+          "message": "[zizmor self-repository, low severity] use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'",
+          "path": ".github/workflows/rust-ci-full.yml",
+          "line": 505
+        },
+        {
+          "message": "[zizmor self-repository, low severity] use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'",
+          "path": ".github/workflows/rust-ci-full.yml",
+          "line": 518
+        },
+        {
+          "message": "[zizmor self-repository, low severity] use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'",
+          "path": ".github/workflows/rust-ci.yml",
+          "line": 200
+        },
+        {
+          "message": "[zizmor self-repository, low severity] use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'",
+          "path": ".github/workflows/rust-release-windows.yml",
+          "line": 213
+        },
+        {
+          "message": "[zizmor cache-poisoning, high severity] runtime artifacts potentially vulnerable to a cache poisoning attack: omitting `package-manager-cache` enables caching",
+          "path": ".github/workflows/rust-release.yml",
+          "line": 1186
+        },
+        {
+          "message": "[zizmor cache-poisoning, high severity] runtime artifacts potentially vulnerable to a cache poisoning attack: omitting `package-manager-cache` enables caching",
+          "path": ".github/workflows/rust-release.yml",
+          "line": 1300
+        },
+        {
+          "message": "[zizmor secrets-inherit, medium severity] secrets unconditionally inherited by called workflow: this reusable workflow",
+          "path": ".github/workflows/rust-release.yml",
+          "line": 865
+        },
+        {
+          "message": "[zizmor superfluous-actions, informational severity] action functionality is already included by the runner: use `gh release` in a script step",
+          "path": ".github/workflows/rust-release.yml",
+          "line": 1215
+        },
+        {
+          "message": "[zizmor self-repository, low severity] use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'",
+          "path": ".github/workflows/rust-release.yml",
+          "line": 296
+        },
+        {
+          "message": "[zizmor self-repository, low severity] use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'",
+          "path": ".github/workflows/rust-release.yml",
+          "line": 409
+        },
+        {
+          "message": "[zizmor self-repository, low severity] use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'",
+          "path": ".github/workflows/rust-release.yml",
+          "line": 417
+        },
+        {
+          "message": "[zizmor self-repository, low severity] use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'",
+          "path": ".github/workflows/rust-release.yml",
+          "line": 471
+        },
+        {
+          "message": "[zizmor self-repository, low severity] use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'",
+          "path": ".github/workflows/rust-release.yml",
+          "line": 865
+        },
+        {
+          "message": "[zizmor self-repository, low severity] use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'",
+          "path": ".github/workflows/rust-release.yml",
+          "line": 874
+        },
+        {
+          "message": "[zizmor self-repository, low severity] use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'",
+          "path": ".github/workflows/rust-release.yml",
+          "line": 882
+        },
+        {
+          "message": "[zizmor superfluous-actions, informational severity] action functionality is already included by the runner: use `gh release` in a script step",
+          "path": ".github/workflows/rusty-v8-release.yml",
+          "line": 301
+        },
+        {
+          "message": "[zizmor superfluous-actions, informational severity] action functionality is already included by the runner: use `gh release` in a script step",
+          "path": ".github/workflows/rusty-v8-release.yml",
+          "line": 311
+        },
+        {
+          "message": "[zizmor self-repository, low severity] use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'",
+          "path": ".github/workflows/rusty-v8-release.yml",
+          "line": 150
+        },
+        {
+          "message": "[zizmor self-repository, low severity] use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'",
+          "path": ".github/workflows/sdk.yml",
+          "line": 76
+        },
+        {
+          "message": "[zizmor artipacked, medium severity] credential persistence through GitHub Actions artifacts: does not set persist-credentials: false",
+          "path": ".github/workflows/v8-canary.yml",
+          "line": 297
+        },
+        {
+          "message": "[zizmor artipacked, medium severity] credential persistence through GitHub Actions artifacts: does not set persist-credentials: false",
+          "path": ".github/workflows/v8-canary.yml",
+          "line": 303
+        },
+        {
+          "message": "[zizmor self-repository, low severity] use GitHub's dedicated self-repository syntax: use '$/...' instead of './...'",
+          "path": ".github/workflows/v8-canary.yml",
+          "line": 164
+        },
+        {
+          "message": "[zizmor artipacked, medium severity] credential persistence through GitHub Actions artifacts: does not set persist-credentials: false",
+          "path": "codex-rs/.github/workflows/cargo-audit.yml",
+          "line": 19
+        },
+        {
+          "message": "[zizmor artipacked, medium severity] credential persistence through GitHub Actions artifacts: does not set persist-credentials: false",
+          "path": "codex-rs/vendor/bubblewrap/.github/workflows/check.yml",
+          "line": 16
+        },
+        {
+          "message": "[zizmor artipacked, medium severity] credential persistence through GitHub Actions artifacts: does not set persist-credentials: false",
+          "path": "codex-rs/vendor/bubblewrap/.github/workflows/check.yml",
+          "line": 93
+        },
+        {
+          "message": "[actionlint runner-label] label \"codex-windows-x64\" is unknown. available labels are \"windows-latest\", \"windows-latest-8-cores\", \"windows-2025\", \"windows-2025-vs2026\", \"windows-2022\", \"windows-11-arm\", \"ubuntu-slim\", \"ubuntu-latest\", \"ubuntu-latest-4-cores\", \"ubuntu-latest-8-cores\", \"ubuntu-latest-16-cores\", \"ubuntu-24.04\", \"ubuntu-24.04-arm\", \"ubuntu-22.04\", \"ubuntu-22.04-arm\", \"macos-latest\", \"macos-latest-xlarge\", \"macos-latest-large\", \"macos-26-intel\", \"macos-26-xlarge\", \"macos-26-large\", \"macos-26\", \"macos-15-intel\", \"macos-15-xlarge\", \"macos-15-large\", \"macos-15\", \"macos-14-xlarge\", \"macos-14-large\", \"macos-14\", \"self-hosted\", \"x64\", \"arm\", \"arm64\", \"linux\", \"macos\", \"windows\". if it is a custom label for self-hosted runner, set list of labels in actionlint.yaml config file",
+          "path": ".github/workflows/bazel.yml",
+          "line": 146
+        },
+        {
+          "message": "[actionlint runner-label] label \"codex-windows-x64\" is unknown. available labels are \"windows-latest\", \"windows-latest-8-cores\", \"windows-2025\", \"windows-2025-vs2026\", \"windows-2022\", \"windows-11-arm\", \"ubuntu-slim\", \"ubuntu-latest\", \"ubuntu-latest-4-cores\", \"ubuntu-latest-8-cores\", \"ubuntu-latest-16-cores\", \"ubuntu-24.04\", \"ubuntu-24.04-arm\", \"ubuntu-22.04\", \"ubuntu-22.04-arm\", \"macos-latest\", \"macos-latest-xlarge\", \"macos-latest-large\", \"macos-26-intel\", \"macos-26-xlarge\", \"macos-26-large\", \"macos-26\", \"macos-15-intel\", \"macos-15-xlarge\", \"macos-15-large\", \"macos-15\", \"macos-14-xlarge\", \"macos-14-large\", \"macos-14\", \"self-hosted\", \"x64\", \"arm\", \"arm64\", \"linux\", \"macos\", \"windows\". if it is a custom label for self-hosted runner, set list of labels in actionlint.yaml config file",
+          "path": ".github/workflows/bazel.yml",
+          "line": 253
+        },
+        {
+          "message": "[actionlint expression] type of expression at \"runs-on\" must be string or array but found type \"{group: string; labels: string}\"",
+          "path": ".github/workflows/rust-release-windows.yml",
+          "line": 31
+        },
+        {
+          "message": "[actionlint expression] type of expression at \"runs-on\" must be string or array but found type \"{group: string; labels: string}\"",
+          "path": ".github/workflows/rust-release-windows.yml",
+          "line": 155
+        },
+        {
+          "message": "[actionlint expression] property \"runs_on\" is not defined in object type {artifact_name: string; binaries: string; build_dmg: bool; bundle: string; runner: string; target: string}",
+          "path": ".github/workflows/rust-release.yml",
+          "line": 138
+        },
+        {
+          "message": "[actionlint runner-label] label \"codex-linux-x64\" is unknown. available labels are \"windows-latest\", \"windows-latest-8-cores\", \"windows-2025\", \"windows-2025-vs2026\", \"windows-2022\", \"windows-11-arm\", \"ubuntu-slim\", \"ubuntu-latest\", \"ubuntu-latest-4-cores\", \"ubuntu-latest-8-cores\", \"ubuntu-latest-16-cores\", \"ubuntu-24.04\", \"ubuntu-24.04-arm\", \"ubuntu-22.04\", \"ubuntu-22.04-arm\", \"macos-latest\", \"macos-latest-xlarge\", \"macos-latest-large\", \"macos-26-intel\", \"macos-26-xlarge\", \"macos-26-large\", \"macos-26\", \"macos-15-intel\", \"macos-15-xlarge\", \"macos-15-large\", \"macos-15\", \"macos-14-xlarge\", \"macos-14-large\", \"macos-14\", \"self-hosted\", \"x64\", \"arm\", \"arm64\", \"linux\", \"macos\", \"windows\". if it is a custom label for self-hosted runner, set list of labels in actionlint.yaml config file",
+          "path": ".github/workflows/sdk.yml",
+          "line": 12
+        },
+        {
+          "message": "[actionlint runner-label] label \"codex-linux-x64\" is unknown. available labels are \"windows-latest\", \"windows-latest-8-cores\", \"windows-2025\", \"windows-2025-vs2026\", \"windows-2022\", \"windows-11-arm\", \"ubuntu-slim\", \"ubuntu-latest\", \"ubuntu-latest-4-cores\", \"ubuntu-latest-8-cores\", \"ubuntu-latest-16-cores\", \"ubuntu-24.04\", \"ubuntu-24.04-arm\", \"ubuntu-22.04\", \"ubuntu-22.04-arm\", \"macos-latest\", \"macos-latest-xlarge\", \"macos-latest-large\", \"macos-26-intel\", \"macos-26-xlarge\", \"macos-26-large\", \"macos-26\", \"macos-15-intel\", \"macos-15-xlarge\", \"macos-15-large\", \"macos-15\", \"macos-14-xlarge\", \"macos-14-large\", \"macos-14\", \"self-hosted\", \"x64\", \"arm\", \"arm64\", \"linux\", \"macos\", \"windows\". if it is a custom label for self-hosted runner, set list of labels in actionlint.yaml config file",
+          "path": ".github/workflows/sdk.yml",
+          "line": 47
+        }
+      ]
+    },
+    {
+      "id": "workflow-permissions",
+      "title": "Least-privilege CI token permissions",
+      "score": 1.0,
+      "why": "Every workflow should declare a top-level `permissions:` block (ideally read-only) and grant write scopes only to the jobs that need them. Without it, GITHUB_TOKEN inherits the repository default, which is often read-write. Write scopes in workflows that untrusted users can trigger (issue_comment, pull_request_target, workflow_run...) turn any injection into repository takeover.",
+      "findings": [
+        {
+          "message": "Workflow has no top-level `permissions:` block; GITHUB_TOKEN gets the repository default scopes.",
+          "path": ".github/workflows/bazel.yml",
+          "line": 1
+        },
+        {
+          "message": "Workflow has no top-level `permissions:` block; GITHUB_TOKEN gets the repository default scopes.",
+          "path": ".github/workflows/blob-size-policy.yml",
+          "line": 1
+        },
+        {
+          "message": "Workflow has no top-level `permissions:` block; GITHUB_TOKEN gets the repository default scopes.",
+          "path": ".github/workflows/cargo-deny.yml",
+          "line": 1
+        },
+        {
+          "message": "Workflow has no top-level `permissions:` block; GITHUB_TOKEN gets the repository default scopes.",
+          "path": ".github/workflows/ci.yml",
+          "line": 1
+        },
+        {
+          "message": "Workflow triggered by untrusted event(s) issue_comment, pull_request_target grants write scopes (actions, contents, pull-requests, statuses).",
+          "path": ".github/workflows/cla.yml",
+          "line": 9
+        },
+        {
+          "message": "Workflow has no top-level `permissions:` block; GITHUB_TOKEN gets the repository default scopes.",
+          "path": ".github/workflows/issue-deduplicator.yml",
+          "line": 1
+        },
+        {
+          "message": "Workflow triggered by untrusted event(s) issues grants write scopes (issues).",
+          "path": ".github/workflows/issue-deduplicator.yml",
+          "line": 362
+        },
+        {
+          "message": "Workflow has no top-level `permissions:` block; GITHUB_TOKEN gets the repository default scopes.",
+          "path": ".github/workflows/issue-labeler.yml",
+          "line": 1
+        },
+        {
+          "message": "Workflow triggered by untrusted event(s) issues grants write scopes (issues).",
+          "path": ".github/workflows/issue-labeler.yml",
+          "line": 115
+        },
+        {
+          "message": "Workflow has no top-level `permissions:` block; GITHUB_TOKEN gets the repository default scopes.",
+          "path": ".github/workflows/python-sdk-release.yml",
+          "line": 1
+        },
+        {
+          "message": "Workflow has no top-level `permissions:` block; GITHUB_TOKEN gets the repository default scopes.",
+          "path": ".github/workflows/rust-ci-full-nextest-platform.yml",
+          "line": 1
+        },
+        {
+          "message": "Workflow has no top-level `permissions:` block; GITHUB_TOKEN gets the repository default scopes.",
+          "path": ".github/workflows/rust-ci-full.yml",
+          "line": 1
+        },
+        {
+          "message": "Workflow has no top-level `permissions:` block; GITHUB_TOKEN gets the repository default scopes.",
+          "path": ".github/workflows/rust-ci.yml",
+          "line": 1
+        },
+        {
+          "message": "Workflow has no top-level `permissions:` block; GITHUB_TOKEN gets the repository default scopes.",
+          "path": ".github/workflows/rust-release-argument-comment-lint.yml",
+          "line": 1
+        },
+        {
+          "message": "Workflow has no top-level `permissions:` block; GITHUB_TOKEN gets the repository default scopes.",
+          "path": ".github/workflows/rust-release-windows.yml",
+          "line": 1
+        },
+        {
+          "message": "Workflow has no top-level `permissions:` block; GITHUB_TOKEN gets the repository default scopes.",
+          "path": ".github/workflows/rust-release-zsh.yml",
+          "line": 1
+        },
+        {
+          "message": "Workflow has no top-level `permissions:` block; GITHUB_TOKEN gets the repository default scopes.",
+          "path": ".github/workflows/rust-release.yml",
+          "line": 1
+        },
+        {
+          "message": "Workflow has no top-level `permissions:` block; GITHUB_TOKEN gets the repository default scopes.",
+          "path": ".github/workflows/rusty-v8-release.yml",
+          "line": 1
+        },
+        {
+          "message": "Workflow has no top-level `permissions:` block; GITHUB_TOKEN gets the repository default scopes.",
+          "path": ".github/workflows/sdk.yml",
+          "line": 1
+        },
+        {
+          "message": "Workflow has no top-level `permissions:` block; GITHUB_TOKEN gets the repository default scopes.",
+          "path": ".github/workflows/v8-canary.yml",
+          "line": 1
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/bazel.yml",
+          "line": 1
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/bazel.yml",
+          "line": 19
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/bazel.yml",
+          "line": 131
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/bazel.yml",
+          "line": 228
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/bazel.yml",
+          "line": 245
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/bazel.yml",
+          "line": 323
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/bazel.yml",
+          "line": 420
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/blob-size-policy.yml",
+          "line": 7
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/cargo-deny.yml",
+          "line": 15
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/ci.yml",
+          "line": 8
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/rust-ci-full.yml",
+          "line": 1
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/rust-ci-full.yml",
+          "line": 18
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/rust-ci-full.yml",
+          "line": 39
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/rust-ci-full.yml",
+          "line": 56
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/rust-ci-full.yml",
+          "line": 97
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/rust-ci-full.yml",
+          "line": 156
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/rust-ci-full.yml",
+          "line": 465
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/rust-ci-full.yml",
+          "line": 476
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/rust-ci-full.yml",
+          "line": 490
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/rust-ci-full.yml",
+          "line": 503
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/rust-ci-full.yml",
+          "line": 516
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/rust-ci-full.yml",
+          "line": 534
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/rust-ci.yml",
+          "line": 1
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/rust-ci.yml",
+          "line": 13
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/rust-ci.yml",
+          "line": 62
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/rust-ci.yml",
+          "line": 86
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/rust-ci.yml",
+          "line": 106
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/rust-ci.yml",
+          "line": 157
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/rust-ci.yml",
+          "line": 206
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/rust-release.yml",
+          "line": 15
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/rust-release.yml",
+          "line": 53
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/rust-release.yml",
+          "line": 862
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/rust-release.yml",
+          "line": 870
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/rust-release.yml",
+          "line": 878
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/rusty-v8-release.yml",
+          "line": 1
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/rusty-v8-release.yml",
+          "line": 18
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/sdk.yml",
+          "line": 1
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/sdk.yml",
+          "line": 9
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/sdk.yml",
+          "line": 44
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/v8-canary.yml",
+          "line": 1
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": ".github/workflows/v8-canary.yml",
+          "line": 50
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": "codex-rs/vendor/bubblewrap/.github/workflows/check.yml",
+          "line": 1
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": "codex-rs/vendor/bubblewrap/.github/workflows/check.yml",
+          "line": 12
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: default permissions used due to no permissions: block",
+          "path": "codex-rs/vendor/bubblewrap/.github/workflows/check.yml",
+          "line": 80
+        }
+      ]
+    },
+    {
+      "id": "dependency-pinning",
+      "title": "Actions and images pinned to immutable refs",
+      "score": 9.8,
+      "why": "Third-party GitHub Actions, reusable workflows and container base images should be pinned to an immutable commit SHA or image digest. Tags and branches can be moved by whoever controls the upstream, so an unpinned reference runs whatever code is there today (e.g. the tj-actions/changed-files compromise).",
+      "findings": [
+        {
+          "message": "Base image ubuntu:24.04 is not pinned by digest (@sha256:...).",
+          "path": ".devcontainer/Dockerfile",
+          "line": 1
+        },
+        {
+          "message": "Base image mcr.microsoft.com/devcontainers/base:ubuntu-24.04 is not pinned by digest (@sha256:...).",
+          "path": ".devcontainer/Dockerfile.secure",
+          "line": 1
+        },
+        {
+          "message": "Base image ubuntu:24.04 is not pinned by digest (@sha256:...).",
+          "path": ".github/workflows/Dockerfile.bazel",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "secrets",
+      "title": "No secrets committed to the repository",
+      "score": 4.4,
+      "why": "Scans every text file for credentials (cloud keys, VCS/package-registry tokens, private keys, high-entropy password assignments, credentials embedded in URLs) and for committed credential files (.env, key stores, Terraform state). A secret in the tree is exposed to everyone with read access and lives on in history, so it must be rotated, not just deleted. Findings in test/fixture paths weigh less.",
+      "findings": [
+        {
+          "message": "Possible Private key.",
+          "path": "codex-rs/agent-identity/src/lib.rs",
+          "line": 660
+        },
+        {
+          "message": "High-entropy value assigned to 'access_token' (test/fixture path).",
+          "path": "codex-rs/app-server/tests/suite/v2/account.rs",
+          "line": 185
+        },
+        {
+          "message": "Credentials embedded in a URL (user 'user'); looks like a local/dev default.",
+          "path": "codex-rs/cli/src/doctor.rs",
+          "line": 3222
+        },
+        {
+          "message": "Credentials embedded in a URL (user 'user'); looks like a local/dev default.",
+          "path": "codex-rs/cli/src/doctor.rs",
+          "line": 3231
+        },
+        {
+          "message": "Credentials embedded in a URL (user 'user'); looks like a local/dev default.",
+          "path": "codex-rs/cli/src/doctor.rs",
+          "line": 3233
+        },
+        {
+          "message": "Credentials embedded in a URL (user 'user'); looks like a local/dev default.",
+          "path": "codex-rs/cli/src/doctor.rs",
+          "line": 3235
+        },
+        {
+          "message": "Credentials embedded in a URL (user 'user'); looks like a local/dev default.",
+          "path": "codex-rs/cli/src/doctor.rs",
+          "line": 3238
+        },
+        {
+          "message": "Credentials embedded in a URL (user 'user'); looks like a local/dev default.",
+          "path": "codex-rs/cli/src/doctor/output.rs",
+          "line": 1641
+        },
+        {
+          "message": "Credentials embedded in a URL (user 'user'); looks like a local/dev default.",
+          "path": "codex-rs/feedback/src/feedback_diagnostics.rs",
+          "line": 103
+        },
+        {
+          "message": "Credentials embedded in a URL (user 'user'); looks like a local/dev default.",
+          "path": "codex-rs/feedback/src/feedback_diagnostics.rs",
+          "line": 117
+        },
+        {
+          "message": "Credentials embedded in a URL (user 'user'); looks like a local/dev default.",
+          "path": "codex-rs/feedback/src/feedback_diagnostics.rs",
+          "line": 132
+        },
+        {
+          "message": "Credentials embedded in a URL (user 'user'); looks like a local/dev default.",
+          "path": "codex-rs/login/src/server.rs",
+          "line": 1436
+        },
+        {
+          "message": "Credentials embedded in a URL (user 'user'); looks like a local/dev default.",
+          "path": "codex-rs/login/src/server.rs",
+          "line": 1451
+        },
+        {
+          "message": "Possible Private key.",
+          "path": "codex-rs/login/src/auth/auth_tests.rs",
+          "line": 1094
+        },
+        {
+          "message": "High-entropy value assigned to 'access_token' (test/fixture path).",
+          "path": "codex-rs/login/tests/suite/device_code_login.rs",
+          "line": 96
+        },
+        {
+          "message": "Credentials embedded in a URL (user 'user'); looks like a local/dev default.",
+          "path": "codex-rs/network-proxy/src/config.rs",
+          "line": 707
+        },
+        {
+          "message": "Credentials embedded in a URL (user 'user'); looks like a local/dev default.",
+          "path": "codex-rs/tui/src/bottom_pane/app_link_view.rs",
+          "line": 960
+        },
+        {
+          "message": "Credentials embedded in a URL (user 'user'); looks like a local/dev default.",
+          "path": "codex-rs/tui/src/bottom_pane/app_link_view.rs",
+          "line": 980
+        },
+        {
+          "message": "Credentials embedded in a URL (user 'user'); looks like a local/dev default.",
+          "path": "codex-rs/tui/src/status/remote_connection.rs",
+          "line": 59
+        },
+        {
+          "message": "Credentials embedded in a URL (user 'user'); looks like a local/dev default.",
+          "path": "codex-rs/windows-sandbox-rs/src/setup.rs",
+          "line": 1168
+        }
+      ]
+    },
+    {
+      "id": "static-analysis",
+      "title": "Static analysis for vulnerable code patterns",
+      "score": 4.5,
+      "why": "Static analysis of non-test source code for injection and crypto/transport mistakes: semgrep with bundled local rules (Go, JS/TS, Rust, shell: disabled TLS verification, SQL built from strings, shell command injection, servers without timeouts, unescaped HTML, weak randomness) and ruff's flake8-bandit (S) rules for Python. These are the bug classes that most often become exploitable vulnerabilities.",
+      "findings": [
+        {
+          "message": "[semgrep rust-shell-command, warning] Command run through a shell with a non-constant argument (command injection risk).",
+          "path": "codex-rs/core/src/shell_snapshot_tests.rs",
+          "line": 129
+        },
+        {
+          "message": "[semgrep rust-shell-command, warning] Command run through a shell with a non-constant argument (command injection risk).",
+          "path": "codex-rs/core/src/shell_snapshot_tests.rs",
+          "line": 154
+        },
+        {
+          "message": "[ruff S603] `subprocess` call: check for execution of untrusted input",
+          "path": ".codex/skills/babysit-pr/scripts/gh_pr_watch.py",
+          "line": 116
+        },
+        {
+          "message": "[ruff S108] Probable insecure usage of temporary file or directory: \"/tmp/codex-babysit-pr-\"",
+          "path": ".codex/skills/babysit-pr/scripts/gh_pr_watch.py",
+          "line": 261
+        },
+        {
+          "message": "[ruff S603] `subprocess` call: check for execution of untrusted input",
+          "path": ".codex/skills/codex-issue-digest/scripts/collect_issue_digest.py",
+          "line": 230
+        },
+        {
+          "message": "[ruff S603] `subprocess` call: check for execution of untrusted input",
+          "path": ".codex/skills/codex-issue-digest/scripts/collect_issue_digest.py",
+          "line": 249
+        },
+        {
+          "message": "[ruff S607] Starting a process with a partial executable path",
+          "path": ".codex/skills/codex-issue-digest/scripts/collect_issue_digest.py",
+          "line": 258
+        },
+        {
+          "message": "[ruff S603] `subprocess` call: check for execution of untrusted input",
+          "path": ".devcontainer/post_install.py",
+          "line": 41
+        },
+        {
+          "message": "[ruff S607] Starting a process with a partial executable path",
+          "path": ".devcontainer/post_install.py",
+          "line": 42
+        },
+        {
+          "message": "[ruff S607] Starting a process with a partial executable path",
+          "path": ".github/scripts/rusty_v8_bazel.py",
+          "line": 41
+        },
+        {
+          "message": "[ruff S607] Starting a process with a partial executable path",
+          "path": ".github/scripts/rusty_v8_bazel.py",
+          "line": 52
+        },
+        {
+          "message": "[ruff S603] `subprocess` call: check for execution of untrusted input",
+          "path": ".github/scripts/rusty_v8_bazel.py",
+          "line": 75
+        },
+        {
+          "message": "[ruff S607] Starting a process with a partial executable path",
+          "path": ".github/scripts/rusty_v8_bazel.py",
+          "line": 76
+        },
+        {
+          "message": "[ruff S603] `subprocess` call: check for execution of untrusted input",
+          "path": ".github/scripts/rusty_v8_bazel.py",
+          "line": 104
+        },
+        {
+          "message": "[ruff S607] Starting a process with a partial executable path",
+          "path": ".github/scripts/rusty_v8_bazel.py",
+          "line": 105
+        },
+        {
+          "message": "[ruff S603] `subprocess` call: check for execution of untrusted input",
+          "path": "codex-cli/scripts/build_npm_package.py",
+          "line": 329
+        },
+        {
+          "message": "[ruff S603] `subprocess` call: check for execution of untrusted input",
+          "path": "codex-cli/scripts/build_npm_package.py",
+          "line": 423
+        },
+        {
+          "message": "[ruff S607] Starting a process with a partial executable path",
+          "path": "codex-cli/scripts/build_npm_package.py",
+          "line": 424
+        },
+        {
+          "message": "[ruff S603] `subprocess` call: check for execution of untrusted input",
+          "path": "codex-rs/windows-sandbox-rs/sandbox_smoketests.py",
+          "line": 95
+        },
+        {
+          "message": "[ruff S110] `try`-`except`-`pass` detected, consider logging the exception",
+          "path": "codex-rs/windows-sandbox-rs/sandbox_smoketests.py",
+          "line": 116
+        },
+        {
+          "message": "[ruff S603] `subprocess` call: check for execution of untrusted input",
+          "path": "codex-rs/windows-sandbox-rs/sandbox_smoketests.py",
+          "line": 130
+        },
+        {
+          "message": "[ruff S603] `subprocess` call: check for execution of untrusted input",
+          "path": "codex-rs/windows-sandbox-rs/sandbox_smoketests.py",
+          "line": 142
+        },
+        {
+          "message": "[ruff S603] `subprocess` call: check for execution of untrusted input",
+          "path": "codex-rs/windows-sandbox-rs/sandbox_smoketests.py",
+          "line": 556
+        },
+        {
+          "message": "[ruff S603] `subprocess` call: check for execution of untrusted input",
+          "path": "codex-rs/windows-sandbox-rs/sandbox_smoketests.py",
+          "line": 565
+        },
+        {
+          "message": "[ruff S607] Starting a process with a partial executable path",
+          "path": "codex-rs/windows-sandbox-rs/sandbox_smoketests.py",
+          "line": 565
+        },
+        {
+          "message": "[ruff S110] `try`-`except`-`pass` detected, consider logging the exception",
+          "path": "codex-rs/windows-sandbox-rs/sandbox_smoketests.py",
+          "line": 600
+        },
+        {
+          "message": "[ruff S603] `subprocess` call: check for execution of untrusted input",
+          "path": "scripts/check_blob_size.py",
+          "line": 25
+        },
+        {
+          "message": "[ruff S607] Starting a process with a partial executable path",
+          "path": "scripts/check_blob_size.py",
+          "line": 26
+        },
+        {
+          "message": "[ruff S603] `subprocess` call: check for execution of untrusted input",
+          "path": "scripts/codex_package/archive.py",
+          "line": 77
+        },
+        {
+          "message": "[ruff S603] `subprocess` call: check for execution of untrusted input",
+          "path": "scripts/codex_package/cargo.py",
+          "line": 70
+        },
+        {
+          "message": "[ruff S310] Audit URL open for permitted schemes. Allowing use of `file:` or custom schemes is often unexpected.",
+          "path": "scripts/codex_package/dotslash.py",
+          "line": 170
+        },
+        {
+          "message": "[ruff S310] Audit URL open for permitted schemes. Allowing use of `file:` or custom schemes is often unexpected.",
+          "path": "scripts/codex_package/v8.py",
+          "line": 175
+        },
+        {
+          "message": "[ruff S603] `subprocess` call: check for execution of untrusted input",
+          "path": "scripts/format.py",
+          "line": 124
+        },
+        {
+          "message": "[ruff S105] Possible hardcoded password assigned to: \"ARGS_TOKEN\"",
+          "path": "scripts/just-shell.py",
+          "line": 16
+        },
+        {
+          "message": "[ruff S105] Possible hardcoded password assigned to: \"STDERR_NULL_TOKEN\"",
+          "path": "scripts/just-shell.py",
+          "line": 17
+        },
+        {
+          "message": "[ruff S606] Starting a process without a shell",
+          "path": "scripts/just-shell.py",
+          "line": 42
+        },
+        {
+          "message": "[ruff S607] Starting a process with a partial executable path",
+          "path": "scripts/just-shell.py",
+          "line": 42
+        },
+        {
+          "message": "[ruff S603] `subprocess` call: check for execution of untrusted input",
+          "path": "scripts/just-shell.py",
+          "line": 57
+        },
+        {
+          "message": "[ruff S603] `subprocess` call: check for execution of untrusted input",
+          "path": "scripts/stage_npm_packages.py",
+          "line": 145
+        },
+        {
+          "message": "[ruff S607] Starting a process with a partial executable path",
+          "path": "scripts/stage_npm_packages.py",
+          "line": 146
+        },
+        {
+          "message": "[ruff S603] `subprocess` call: check for execution of untrusted input",
+          "path": "scripts/stage_npm_packages.py",
+          "line": 249
+        },
+        {
+          "message": "[ruff S607] Starting a process with a partial executable path",
+          "path": "scripts/stage_npm_packages.py",
+          "line": 250
+        },
+        {
+          "message": "[ruff S603] `subprocess` call: check for execution of untrusted input",
+          "path": "scripts/stage_npm_packages.py",
+          "line": 291
+        },
+        {
+          "message": "[ruff S607] Starting a process with a partial executable path",
+          "path": "scripts/stage_npm_packages.py",
+          "line": 292
+        },
+        {
+          "message": "[ruff S603] `subprocess` call: check for execution of untrusted input",
+          "path": "scripts/stage_npm_packages.py",
+          "line": 449
+        },
+        {
+          "message": "[ruff S607] Starting a process with a partial executable path",
+          "path": "scripts/stage_npm_packages.py",
+          "line": 450
+        },
+        {
+          "message": "[ruff S603] `subprocess` call: check for execution of untrusted input",
+          "path": "scripts/stage_npm_packages.py",
+          "line": 466
+        },
+        {
+          "message": "[ruff S603] `subprocess` call: check for execution of untrusted input",
+          "path": "sdk/python/_runtime_setup.py",
+          "line": 126
+        },
+        {
+          "message": "[ruff S310] Audit URL open for permitted schemes. Allowing use of `file:` or custom schemes is often unexpected.",
+          "path": "sdk/python/_runtime_setup.py",
+          "line": 152
+        },
+        {
+          "message": "[ruff S310] Audit URL open for permitted schemes. Allowing use of `file:` or custom schemes is often unexpected.",
+          "path": "sdk/python/_runtime_setup.py",
+          "line": 154
+        },
+        {
+          "message": "[ruff S310] Audit URL open for permitted schemes. Allowing use of `file:` or custom schemes is often unexpected.",
+          "path": "sdk/python/_runtime_setup.py",
+          "line": 177
+        },
+        {
+          "message": "[ruff S310] Audit URL open for permitted schemes. Allowing use of `file:` or custom schemes is often unexpected.",
+          "path": "sdk/python/_runtime_setup.py",
+          "line": 182
+        },
+        {
+          "message": "[ruff S310] Audit URL open for permitted schemes. Allowing use of `file:` or custom schemes is often unexpected.",
+          "path": "sdk/python/_runtime_setup.py",
+          "line": 208
+        },
+        {
+          "message": "[ruff S310] Audit URL open for permitted schemes. Allowing use of `file:` or custom schemes is often unexpected.",
+          "path": "sdk/python/_runtime_setup.py",
+          "line": 214
+        },
+        {
+          "message": "[ruff S603] `subprocess` call: check for execution of untrusted input",
+          "path": "sdk/python/_runtime_setup.py",
+          "line": 229
+        },
+        {
+          "message": "[ruff S607] Starting a process with a partial executable path",
+          "path": "sdk/python/_runtime_setup.py",
+          "line": 230
+        },
+        {
+          "message": "[ruff S603] `subprocess` call: check for execution of untrusted input",
+          "path": "sdk/python/_runtime_setup.py",
+          "line": 286
+        },
+        {
+          "message": "[ruff S603] `subprocess` call: check for execution of untrusted input",
+          "path": "sdk/python/scripts/update_sdk_artifacts.py",
+          "line": 61
+        },
+        {
+          "message": "[ruff S202] Uses of `tarfile.extractall()`",
+          "path": "sdk/python/scripts/update_sdk_artifacts.py",
+          "line": 264
+        },
+        {
+          "message": "[ruff S603] `subprocess` call: check for execution of untrusted input",
+          "path": "sdk/python/src/openai_codex/client.py",
+          "line": 237
+        },
+        {
+          "message": "[ruff S105] Possible hardcoded password assigned to: \"bearer_token\"",
+          "path": "sdk/python/src/openai_codex/generated/v2_all.py",
+          "line": 1825
+        },
+        {
+          "message": "[ruff S311] Standard pseudo-random generators are not suitable for cryptographic purposes",
+          "path": "sdk/python/src/openai_codex/retry.py",
+          "line": 38
+        },
+        {
+          "message": "[ruff S603] `subprocess` call: check for execution of untrusted input",
+          "path": "tools/argument-comment-lint/wrapper_common.py",
+          "line": 158
+        },
+        {
+          "message": "[ruff S603] `subprocess` call: check for execution of untrusted input",
+          "path": "tools/argument-comment-lint/wrapper_common.py",
+          "line": 275
+        }
+      ]
+    },
+    {
+      "id": "dependency-management",
+      "title": "Locked and automatically updated dependencies",
+      "score": 8.9,
+      "why": "Dependencies should be locked (go.sum, package-lock, Cargo.lock, poetry/uv locks, pinned requirements) so builds are reproducible and cannot silently pull a newly published malicious version, and kept current by automation (Dependabot or Renovate) covering every ecosystem in the repo, so security fixes actually land. Stale update config fails silently.",
+      "findings": [
+        {
+          "message": "Ecosystem 'pip' (e.g. scripts/pyproject.toml) is not covered by Dependabot.",
+          "path": ".github/dependabot.yaml",
+          "line": null
+        },
+        {
+          "message": "Dependabot 'bun' entry points at directory '.github/actions/codex', which does not exist; it updates nothing.",
+          "path": ".github/dependabot.yaml",
+          "line": 6
+        }
+      ]
+    },
+    {
+      "id": "known-vulnerabilities",
+      "title": "Dependencies free of known vulnerabilities",
+      "score": null,
+      "why": "Whether locked dependency versions have published advisories (OSV/GHSA/RustSec/Go vulndb). This needs a vulnerability database; none of the allowed tools carries one offline, so the check reports null rather than guessing. Run govulncheck/osv-scanner in CI to cover it (see security-tooling-in-ci).",
+      "findings": [
+        {
+          "message": "Not evaluated: no offline vulnerability database is available to this scorecard.",
+          "path": null,
+          "line": null
+        }
+      ]
+    },
+    {
+      "id": "security-tooling-in-ci",
+      "title": "Security scanning runs continuously in CI",
+      "score": 2.0,
+      "why": "Point-in-time scans decay; the repo should run security tools on every change. Looks in CI and pre-commit config for four categories: SAST, dependency vulnerability scanning, secret scanning, and CI/supply-chain linting, plus container image scanning when the repo builds images.",
+      "findings": [
+        {
+          "message": "No SAST found in CI configuration.",
+          "path": null,
+          "line": null
+        },
+        {
+          "message": "No secret scanning found in CI configuration.",
+          "path": null,
+          "line": null
+        },
+        {
+          "message": "No CI/supply-chain linting found in CI configuration.",
+          "path": null,
+          "line": null
+        },
+        {
+          "message": "No container image scanning found in CI configuration.",
+          "path": null,
+          "line": null
+        }
+      ]
+    },
+    {
+      "id": "container-hardening",
+      "title": "Hardened container builds",
+      "score": 5.3,
+      "why": "Container images should run as a non-root user, avoid fetching unverified remote code at build time (ADD <url>, curl | sh), never bake secrets into ENV/ARG layers, and ship a .dockerignore so .git and .env files stay out of the build context. Compose files should not run privileged or mount the Docker socket. These limit what an attacker gets from a compromised process.",
+      "findings": [
+        {
+          "message": "RUN pipes a download straight into a shell.",
+          "path": ".devcontainer/Dockerfile",
+          "line": 21
+        },
+        {
+          "message": "No .dockerignore; .git, .env and local files may be copied into the image.",
+          "path": ".devcontainer/Dockerfile",
+          "line": null
+        },
+        {
+          "message": "RUN pipes a download straight into a shell.",
+          "path": ".devcontainer/Dockerfile.secure",
+          "line": 53
+        },
+        {
+          "message": "RUN pipes a download straight into a shell.",
+          "path": ".devcontainer/Dockerfile.secure",
+          "line": 80
+        },
+        {
+          "message": "No .dockerignore; .git, .env and local files may be copied into the image.",
+          "path": ".devcontainer/Dockerfile.secure",
+          "line": null
+        },
+        {
+          "message": "No .dockerignore; .git, .env and local files may be copied into the image.",
+          "path": ".github/workflows/Dockerfile.bazel",
+          "line": null
+        }
+      ]
+    },
+    {
+      "id": "security-policy",
+      "title": "Vulnerability disclosure policy and code ownership",
+      "score": 10.0,
+      "why": "A SECURITY.md tells researchers how to report a vulnerability privately; without one, reports land in public issues or nowhere. CODEOWNERS makes review by the right people mandatory (with branch protection), and covering CI config and itself stops a contributor from quietly changing release workflows. Score: SECURITY.md with a reporting channel 5, CODEOWNERS 3, CODEOWNERS covers .github/ 2.",
+      "findings": []
+    },
+    {
+      "id": "release-integrity",
+      "title": "Signed releases with provenance and SBOM",
+      "score": 4.0,
+      "why": "Published artifacts should be verifiable: build provenance (SLSA / GitHub attestations) proves which source and workflow produced them, signatures (Sigstore/cosign, GPG) prove who released them, and an SBOM lets consumers find vulnerable components. Without these, a tampered release is indistinguishable from a real one. Score: provenance 4, signing 4, SBOM 2.",
+      "findings": [
+        {
+          "message": "Release automation has no build provenance (slsa-github-generator, actions/attest-build-provenance, --provenance).",
+          "path": null,
+          "line": null
+        },
+        {
+          "message": "Release automation has no SBOM generation (syft, CycloneDX, SPDX, goreleaser sboms).",
+          "path": null,
+          "line": null
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "score": 5.1,
+    "method": "mean of evaluated checks (null checks excluded)",
+    "evaluated": 10,
+    "not_evaluated": [
+      "known-vulnerabilities"
+    ],
+    "files_scanned": 4720
+  },
+  "tools": {
+    "zizmor": "zizmor 1.32.0",
+    "actionlint": "1.7.12",
+    "semgrep": "1.163.0",
+    "ruff": "ruff 0.14.11"
+  }
+}

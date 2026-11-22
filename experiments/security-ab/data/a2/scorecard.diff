@@ -1,0 +1,418 @@
+--- /tmp/claude-0/-home-user/7bfb4c6a-a466-55d2-9252-3eb201a6d27e/scratchpad/sec-ab/a1-scorecard-orig/scorecard.py	2026-11-22 23:22:43.859510494 +0000
++++ /tmp/claude-0/-home-user/7bfb4c6a-a466-55d2-9252-3eb201a6d27e/scratchpad/sec-ab/a2/scorecard/scorecard.py	2026-11-22 23:30:20.579957100 +0000
+@@ -26,7 +26,11 @@
+ TEST_RE = re.compile(
+     r"(^|/)(tests?|testdata|testutils?|testing|test_?helpers?|fixtures?|mocks?|__tests__|"
+     r"__mocks__|e2e|spec|examples?|samples?)(/|$)|_test\.(go|py)$|(^|/)test_[^/]*\.py$|"
+-    r"(^|/)conftest\.py$|\.(test|spec)\.[cm]?[jt]sx?$|(^|/)mock_[^/]*$", re.I)
++    r"(^|/)conftest\.py$|\.(test|spec)\.[cm]?[jt]sx?$|(^|/)mock_[^/]*$|_tests?\.rs$|(^|/)tests?\.rs$", re.I)
++# Inline Rust unit-test module: `#[cfg(test)]` (plus attributes) then `mod name {`. By convention it closes the
++# file, so every line from there on is treated as test code.
++RUST_TEST_MOD = re.compile(r"^[ \t]*#\[cfg\(test\)\][ \t]*\n(?:[ \t]*#\[[^\n]*\][ \t]*\n)*[ \t]*"
++                           r"(?:pub(?:\([^)]*\))?\s+)?mod\s+\w+\s*\{", re.M)
+ MAX_FILE = 2 * 1024 * 1024
+ 
+ 
+@@ -61,6 +65,20 @@
+             self._text[rel] = t
+         return self._text[rel]
+ 
++    def test_from(self, rel):
++        """First line of an inline Rust test module in `rel`, or None."""
++        if not rel or not rel.endswith(".rs"):
++            return None
++        t = self.text(rel) or ""
++        m = RUST_TEST_MOD.search(t)
++        return line_of(t, m.start()) if m else None
++
++    def in_test(self, rel, line=None):
++        if is_test(rel):
++            return True
++        tf = self.test_from(rel)
++        return bool(tf and isinstance(line, int) and line >= tf)
++
+     def match(self, regex):
+         r = re.compile(regex)
+         return [f for f in self.files if r.search(f)]
+@@ -154,6 +172,8 @@
+         _ZIZ = []
+         return _ZIZ
+     res = []
++    audited = set(repo.workflows()) | set(repo.actions()) | \
++        {f for f in (".github/dependabot.yml", ".github/dependabot.yaml") if f in repo.fileset}
+     for d in data:
+         if d.get("ignored"):
+             continue
+@@ -166,6 +186,8 @@
+             path = path[2:]
+         if path and path.startswith("/"):
+             path = os.path.relpath(path, repo.root)
++        if path and path not in audited:
++            continue  # vendored/nested workflows (e.g. vendor/x/.github/workflows) never run in this repo
+         row = prim.get("concrete", {}).get("location", {}).get("start_point", {}).get("row")
+         ann = prim.get("symbolic", {}).get("annotation", "")
+         msg = "[zizmor %s, %s severity] %s%s" % (d["ident"], det.get("severity", "?").lower(), d.get("desc", ""),
+@@ -186,6 +208,11 @@
+ DEP_IDENTS = {"dependabot-cooldown", "dependabot-execution"}
+ 
+ 
++# actionlint kinds that are not security problems: unknown runner labels (larger or self-hosted runners
++# actionlint cannot know about without an actionlint.yaml).
++ACTIONLINT_BENIGN = {"runner-label"}
++
++
+ # ---------------------------------------------------------------- 1. workflow audit
+ def check_ci_audit(repo):
+     why = ("Audits CI/CD workflows with zizmor (template/script injection, dangerous triggers such as "
+@@ -229,7 +256,8 @@
+                 fp = os.path.relpath(fp if os.path.isabs(fp) else os.path.join(repo.root, fp), repo.root) if fp else None
+                 dup = (fp, e.get("line")) in zlines
+                 untrusted = "untrusted" in e.get("message", "")
+-                al.append((e.get("kind", ""), 0.0 if dup else .10 if untrusted else .03,
++                benign = e.get("kind") in ACTIONLINT_BENIGN
++                al.append((e.get("kind", ""), 0.0 if dup or benign else .10 if untrusted else .03,
+                            F("[actionlint %s] %s" % (e.get("kind"), e.get("message")), fp, e.get("line"))))
+             weights += [w for _, w, _ in capped(al, lambda x: x[0], 10)]
+             findings += [f for _, _, f in al]
+@@ -337,6 +365,34 @@
+     return names
+ 
+ 
++LOW_IMPACT_SCOPES = {"issues", "pull-requests", "statuses", "checks", "discussions"}
++
++
++def jobs_without_permissions(text):
++    """Names of jobs that declare no job-level `permissions:` (None if no `jobs:` block was parsed)."""
++    m = re.search(r"^jobs\s*:\s*$", text, re.M)
++    if not m:
++        return None
++    jobs, cur, ind = [], None, None
++    for ln in text[m.end():].splitlines():
++        if not ln.strip() or ln.lstrip().startswith("#"):
++            continue
++        i = len(ln) - len(ln.lstrip())
++        if i == 0:
++            break
++        if ind is None:
++            ind = i
++        if i == ind:
++            cur = [ln.strip().split(":")[0].strip("'\""), False, None]
++            jobs.append(cur)
++        elif cur is not None and i > ind:
++            if cur[2] is None:
++                cur[2] = i
++            if i == cur[2] and re.match(r"\s*permissions\s*:", ln):
++                cur[1] = True
++    return [j[0] for j in jobs if not j[1]] if jobs else None
++
++
+ def check_permissions(repo):
+     why = ("Every workflow should declare a top-level `permissions:` block (ideally read-only) and grant write "
+            "scopes only to the jobs that need them. Without it, GITHUB_TOKEN inherits the repository default, "
+@@ -346,13 +402,19 @@
+     if not wfs:
+         return check("workflow-permissions", "Least-privilege CI token permissions", why, None,
+                      [F("No GitHub Actions workflows found.")])
+-    findings, weights = [], []
++    findings, weights, flagged = [], [], set()
+     for wf in wfs:
+         t = repo.text(wf) or ""
+-        if not re.search(r"^permissions\s*:", t, re.M):
+-            weights.append(.08)
+-            findings.append(F("Workflow has no top-level `permissions:` block; GITHUB_TOKEN gets the repository "
+-                              "default scopes.", wf, 1))
++        bare = jobs_without_permissions(t)
++        # A reusable (workflow_call-only) workflow gets its token from the caller; jobs may scope their own.
++        if not re.search(r"^permissions\s*:", t, re.M) and triggers(t) != {"workflow_call"} and bare != []:
++            if len(flagged) < 5:  # same pattern repeated: count at most 5, like the other rules
++                weights.append(.08)
++            flagged.add(wf)
++            findings.append(F("Workflow has no top-level `permissions:` block and %s; GITHUB_TOKEN gets the "
++                              "repository default scopes." %
++                              ("no job sets its own" if bare is None else "%d job(s) set none (%s)" %
++                               (len(bare), ", ".join(bare[:5]) + (", ..." if len(bare) > 5 else ""))), wf, 1))
+         m = re.search(r"^permissions\s*:\s*write-all", t, re.M)
+         if m:
+             weights.append(.15)
+@@ -362,11 +424,14 @@
+         writes = list(WRITE_RE.finditer(t))
+         if trig and writes:
+             scopes = sorted({(w.group(1) or "write-all") for w in writes})
+-            weights.append(.20)
++            # contents/actions/packages/id-token/... let an injection push code, change CI or publish;
++            # issues/pull-requests/statuses/checks only let it edit metadata.
++            weights.append(.08 if set(scopes) <= LOW_IMPACT_SCOPES else .20)
+             findings.append(F("Workflow triggered by untrusted event(s) %s grants write scopes (%s)." %
+                               (", ".join(sorted(trig)), ", ".join(scopes)), wf, line_of(t, writes[0].start())))
+     z = zizmor(repo) or []
+-    extra = [x for x in z if x[0] in PERM_IDENTS]
++    extra = [x for x in z if x[0] in PERM_IDENTS
++             and not (x[3]["path"] in flagged and "no permissions: block" in x[3]["message"])]  # counted above
+     weights += ziz_weights(extra)
+     findings += [x[3] for x in extra]
+     return check("workflow-permissions", "Least-privilege CI token permissions", why, decay(weights), findings)
+@@ -430,21 +495,26 @@
+         t = repo.text(rel)
+         if not t:
+             continue
+-        test = is_test(rel)
+-        scale = .3 if test else 1.0
+-        suffix = " (test/fixture path)" if test else ""
++        tfrom = repo.test_from(rel) if rel.endswith(".rs") else None
++
++        def ctx(pos):
++            ln = line_of(t, pos)
++            tst = is_test(rel) or bool(tfrom and ln >= tfrom)
++            return ln, tst, (.3 if tst else 1.0), (" (test code)" if tst else "")
+         hits = 0
+         for name, rx, w in SECRET_RES:
+             for m in rx.finditer(t):
+                 hits += 1
+                 if hits > 20:
+                     break
++                _, test, scale, suffix = ctx(m.start())
+                 weights.append((name, w * scale))
+                 findings.append(F("Possible %s%s." % (name, suffix), rel, line_of(t, m.start())))
+         for m in GENERIC_RE.finditer(t):
+             val = m.group(2)
+             if PLACEHOLDER_RE.search(val) or entropy(val) < 3.5 or re.fullmatch(r"[A-Za-z_.]+(\(\))?", val):
+                 continue
++            _, test, scale, suffix = ctx(m.start())
+             weights.append(("generic", .08 * scale))
+             findings.append(F("High-entropy value assigned to '%s'%s." % (m.group(1), suffix), rel,
+                               line_of(t, m.start())))
+@@ -452,6 +522,7 @@
+             pw = m.group(2)
+             if pw.startswith(("$", "{", "<", "%")) or pw == "***":
+                 continue
++            _, test, scale, suffix = ctx(m.start())
+             weak = bool(PLACEHOLDER_RE.search(pw)) or entropy(pw) < 3.0
+             if weak and test:
+                 continue  # dev defaults like postgres:password@localhost in tests are expected
+@@ -466,9 +537,12 @@
+ # ---------------------------------------------------------------- 5. SAST
+ SEM_W = {"ERROR": .12, "WARNING": .05, "INFO": .01}
+ RUFF_HIGH = {"S102", "S301", "S307", "S501", "S502", "S503", "S506", "S602", "S605", "S608", "S701", "S702"}
+-RUFF_LOW = {"S110", "S112", "S311", "S603", "S607", "S404", "S403"}
++# Audit-only bandit rules (fire on any subprocess/urlopen/temp path/`*_TOKEN = "..."` constant) and those the
++# secrets check already covers (S105-S107) carry little signal on their own.
++RUFF_LOW = {"S105", "S106", "S107", "S108", "S110", "S112", "S310", "S311", "S403", "S404", "S603", "S606",
++            "S607"}
+ TEST_GLOBS = ["*_test.go", "test_*.py", "*_test.py", "conftest.py", "*.test.js", "*.test.ts", "*.spec.js",
+-              "*.spec.ts", "*.test.tsx", "*.spec.tsx", "tests", "test", "testdata", "testutils", "mocks",
++              "*.spec.ts", "*.test.tsx", "*.spec.tsx", "*_test.rs", "*_tests.rs", "test.rs", "tests.rs", "tests", "test", "testdata", "testutils", "mocks",
+               "__tests__", "__mocks__", "fixtures", "e2e", "node_modules", "vendor", "target"]
+ SRC_RE = r"\.(go|py|js|jsx|mjs|cjs|ts|tsx|rs|sh|bash)$"
+ 
+@@ -505,7 +579,7 @@
+             sev = r.get("extra", {}).get("severity", "INFO")
+             path = r.get("path", "")
+             path = path[2:] if path.startswith("./") else path
+-            if is_test(path):
++            if repo.in_test(path, r.get("start", {}).get("line")):
+                 continue
+             weighted.append((rid, SEM_W.get(sev, .01),
+                              F("[semgrep %s, %s] %s" % (rid, sev.lower(), r.get("extra", {}).get("message", "")),
+@@ -557,24 +631,53 @@
+ 
+ 
+ def parse_dependabot(text):
+-    entries, cur = [], None
++    entries, cur, in_dirs = [], None, False
+     for ln in text.splitlines():
+         m = re.match(r"""^\s*-?\s*package-ecosystem\s*:\s*["']?([\w-]+)""", ln)
+         if m:
+             cur = {"eco": m.group(1), "dirs": [], "line": None}
+             entries.append(cur)
++            in_dirs = False
+             continue
+-        if cur is None:
++        if cur is None or not ln.strip() or ln.lstrip().startswith("#"):
+             continue
+         m = re.match(r"""^\s*directory\s*:\s*["']?([^"'#\s]+)""", ln)
+         if m:
+             cur["dirs"].append(m.group(1))
+-        m = re.match(r"""^\s*-\s*["']?(/[^"'#\s]*)["']?\s*$""", ln)
++        m = re.match(r"""^\s*directories\s*:\s*(\[.*\])?\s*(#.*)?$""", ln)
+         if m:
++            in_dirs = not m.group(1)
++            cur["dirs"] += re.findall(r"""["']?([^"',\[\]\s]+)["']?""", m.group(1) or "")
++            continue
++        m = re.match(r"""^\s*-\s*["']?([^"'#\s:]+)["']?\s*(#.*)?$""", ln)
++        if m and in_dirs:
+             cur["dirs"].append(m.group(1))
++        else:
++            in_dirs = False
+     return entries
+ 
+ 
++# Files Dependabot looks for in an entry's directory; an entry whose directories hold none updates nothing.
++ECO_FILES = {
++    "npm": r"package\.json", "yarn": r"package\.json", "pnpm": r"package\.json", "bun": r"package\.json",
++    "cargo": r"Cargo\.toml", "gomod": r"go\.mod", "pip": r"pyproject\.toml|setup\.py|Pipfile|requirements[^/]*\.txt",
++    "uv": r"pyproject\.toml|uv\.lock", "pipenv": r"Pipfile", "poetry": r"pyproject\.toml",
++    "docker": r"(Dockerfile|Containerfile)(\.[^/]*)?|[^/]+\.[Dd]ockerfile", "bundler": r"Gemfile",
++    "composer": r"composer\.json", "maven": r"pom\.xml", "gradle": r"build\.gradle(\.kts)?",
++}
++
++
++def dependabot_dir_state(repo, eco, d):
++    """'missing', 'empty' (no manifest for eco there) or 'ok'. Globs and unknown ecosystems count as ok."""
++    if "*" in d or eco not in ECO_FILES:
++        return "ok"
++    p = d.strip("/")
++    if p and not any(f == p or f.startswith(p + "/") for f in repo.files):
++        return "missing"
++    rx = re.compile(r"^%s(%s)$" % (re.escape(p + "/") if p else "", ECO_FILES[eco]))
++    return "ok" if any(rx.match(f) for f in repo.files) else "empty"
++
++
+ def check_dependencies(repo):
+     why = ("Dependencies should be locked (go.sum, package-lock, Cargo.lock, poetry/uv locks, pinned "
+            "requirements) so builds are reproducible and cannot silently pull a newly published malicious "
+@@ -656,7 +759,13 @@
+         auto = 1.0
+         t = repo.text(dbot) or ""
+         entries = parse_dependabot(t)
+-        configured = {e["eco"] for e in entries}
++        live = []
++        for e in entries:
++            states = [dependabot_dir_state(repo, e["eco"], d) for d in e["dirs"]]
++            e["states"] = states
++            if not states or "ok" in states:
++                live.append(e)
++        configured = {e["eco"] for e in live}  # entries that update nothing do not cover anything
+         covered = 0
+         for eco, example in sorted(ecos.items()):
+             if configured & ECO_ALIASES.get(eco, {eco}):
+@@ -665,15 +774,14 @@
+                 findings.append(F("Ecosystem '%s' (e.g. %s) is not covered by Dependabot." % (eco, example), dbot, None))
+         coverage = covered / len(ecos)
+         for e in entries:
+-            for d in e["dirs"]:
+-                if "*" in d or e["eco"] == "github-actions":
++            for d, st in zip(e["dirs"], e["states"]):
++                if st == "ok":
+                     continue
+-                p = d.strip("/")
+-                if p and not any(f == p or f.startswith(p + "/") for f in repo.files):
+-                    extra_w.append(.05)
+-                    m = re.search(r"""directory\s*:\s*["']?%s""" % re.escape(d), t)
+-                    findings.append(F("Dependabot '%s' entry points at directory '%s', which does not exist; "
+-                                      "it updates nothing." % (e["eco"], d), dbot, line_of(t, m.start()) if m else None))
++                extra_w.append(.05)
++                m = re.search(r"""(directory\s*:\s*|-\s*)["']?%s""" % re.escape(d), t)
++                why_dead = "which does not exist" if st == "missing" else "which has no %s manifest" % e["eco"]
++                findings.append(F("Dependabot '%s' entry points at directory '%s', %s; it updates nothing." %
++                                  (e["eco"], d, why_dead), dbot, line_of(t, m.start()) if m else None))
+     else:
+         findings.append(F("No Dependabot or Renovate configuration; dependency updates (and security fixes) "
+                           "depend on someone remembering.", None, None))
+@@ -712,11 +820,19 @@
+            r"azure-pipelines\.yml|bitbucket-pipelines\.yml|\.pre-commit-config\.yaml|\.buildkite/.*\.ya?ml)$"
+ 
+ 
++IMAGE_BUILD = r"docker(/|\s+)build|docker\s+buildx|build-push-action|bake-action|docker\s+push|podman\s+build|" \
++              r"\bbuildah\b|\bkaniko\b|\bko\s+(build|publish)|\bjib\b|^\s*dockers\s*:|^\s*kos\s*:"
++
++
++def is_devcontainer(path):
++    return bool(re.search(r"(^|/)\.devcontainer/", path or ""))
++
++
+ def check_ci_tooling(repo):
+     why = ("Point-in-time scans decay; the repo should run security tools on every change. Looks in CI and "
+            "pre-commit config for four categories: SAST, dependency vulnerability scanning, secret scanning, and "
+            "CI/supply-chain linting, plus container image scanning when the repo builds images.")
+-    ci = repo.match(CI_FILES)
++    ci = repo.match(CI_FILES) + repo.actions()
+     if not ci:
+         return check("security-tooling-in-ci", "Security scanning runs continuously in CI", why, 0.0,
+                      [F("No CI configuration found; nothing runs security checks on changes.")])
+@@ -725,7 +841,7 @@
+         if re.search(r"\bgosec\b", repo.text(cfg) or "") and re.search(r"golangci", blob):
+             blob += "\ngosec"
+     cats = dict(TOOLING)
+-    if repo.dockerfiles():
++    if [d for d in repo.dockerfiles() if not is_devcontainer(d)] and re.search(IMAGE_BUILD, blob, re.I | re.M):
+         cats["container image scanning"] = CONTAINER_SCAN
+     findings, have = [], 0
+     for cat, pats in cats.items():
+@@ -771,6 +887,7 @@
+                      [F("No Dockerfiles or compose files found.")])
+     findings, weights = [], []
+     for df in dfs:
++        w0, f0 = len(weights), len(findings)
+         t = repo.text(df) or ""
+         ins = docker_instructions(t)
+         last_from = max((i for i, (_, s) in enumerate(ins) if s.upper().startswith("FROM ")), default=-1)
+@@ -809,6 +926,10 @@
+         if not ((d + "/.dockerignore") if d else ".dockerignore") in repo.fileset and ".dockerignore" not in repo.fileset:
+             weights.append(.05)
+             findings.append(F("No .dockerignore; .git, .env and local files may be copied into the image.", df, None))
++        if is_devcontainer(df):  # developer environment, not a shipped image
++            weights[w0:] = [w * .3 for w in weights[w0:]]
++            for f in findings[f0:]:
++                f["message"] += " (dev container; weighted lower)"
+     for c in composes:
+         t = repo.text(c) or ""
+         for rx, w, msg in [(r"privileged\s*:\s*true", .10, "Service runs privileged."),
+@@ -843,10 +964,14 @@
+     if co:
+         score += 3
+         rules = [l.split() for l in (repo.text(co) or "").splitlines() if l.strip() and not l.startswith("#")]
+-        if any(r[0] in ("*", "/*", "/**", "**") or r[0].lstrip("/").startswith(".github") for r in rules if len(r) > 1):
+-            score += 2
+-        else:
+-            findings.append(F("CODEOWNERS has no rule covering .github/ (workflows and CODEOWNERS itself).", co, None))
++        pats = [re.sub(r"^(\*\*/)+", "", r[0].lstrip("/")) for r in rules if len(r) > 1]
++        wf_cov = any(p in ("*", "**") or re.fullmatch(r"\.github(/|/\*\*)?|\.github/workflows(/|/\*\*?|/\*\.ya?ml)?", p)
++                     for p in pats)
++        self_cov = wf_cov or any(p.rstrip("/") in (co, co.rsplit("/", 1)[-1]) for p in pats)
++        score += (1 if wf_cov else 0) + (1 if self_cov else 0)
++        if not wf_cov:
++            findings.append(F("CODEOWNERS has no rule covering .github/workflows%s." %
++                              ("" if self_cov else " or CODEOWNERS itself"), co, None))
+     else:
+         findings.append(F("No CODEOWNERS file; no required reviewers for sensitive paths."))
+     return check("security-policy", "Vulnerability disclosure policy and code ownership", why, score, findings)
+@@ -863,12 +988,23 @@
+            "source and workflow produced them, signatures (Sigstore/cosign, GPG) prove who released them, and an "
+            "SBOM lets consumers find vulnerable components. Without these, a tampered release is "
+            "indistinguishable from a real one. Score: provenance 4, signing 4, SBOM 2.")
+-    files = repo.match(CI_FILES) + repo.match(r"^\.goreleaser[^/]*\.ya?ml$|^goreleaser[^/]*\.ya?ml$")
++    files = repo.match(CI_FILES) + repo.actions() + repo.match(r"^\.goreleaser[^/]*\.ya?ml$|^goreleaser[^/]*\.ya?ml$")
+     blob = "\n".join((repo.text(f) or "") for f in files)
+     if not re.search(RELEASE_HINTS, blob, re.I):
+         return check("release-integrity", "Signed releases with provenance and SBOM", why, None,
+                      [F("No release/publish automation detected.")])
+     findings, score = [], 0.0
++    # Trusted publishing from a workflow with an OIDC token: pypa/gh-action-pypi-publish (>= v1.11) uploads
++    # PEP 740 attestations and npm (>= 11.5) generates provenance automatically.
++    registry_prov = []
++    for f in files:
++        t = repo.text(f) or ""
++        if not re.search(r"id-token\s*:\s*write", t):
++            continue
++        if "pypa/gh-action-pypi-publish" in t and not re.search(r"attestations\s*:\s*false", t):
++            registry_prov.append("PyPI")
++        if re.search(r"\bnpm\s+publish\b|\bnpm\b.*\bpublish\b", t) and not re.search(r"--provenance\s*=?\s*false", t):
++            registry_prov.append("npm")
+     for label, pts, rx in [
+         ("build provenance (slsa-github-generator, actions/attest-build-provenance, --provenance)", 4,
+          r"slsa-github-generator|attest-build-provenance|actions/attest@|--provenance|provenance:\s*true"),
+@@ -878,6 +1014,14 @@
+          r"\bsyft\b|cyclonedx|\bspdx\b|^\s*sboms\s*:|sbom-action|sbom:\s*true")]:
+         if re.search(rx, blob, re.I | re.M):
+             score += pts
++        elif pts == 4 and label.startswith("build provenance") and registry_prov:
++            names = "/".join(sorted(set(registry_prov)))
++            if re.search(r"softprops/action-gh-release|gh release create|goreleaser", blob, re.I):
++                score += 2
++                findings.append(F("Provenance only for %s packages (trusted publishing); other release assets "
++                                  "(e.g. GitHub release binaries) have no build attestation." % names))
++            else:
++                score += pts
+         else:
+             findings.append(F("Release automation has no %s." % label))
+     return check("release-integrity", "Signed releases with provenance and SBOM", why, score, findings)

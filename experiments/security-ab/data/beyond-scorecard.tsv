@@ -1,0 +1,14 @@
+repo	arm	area	finding	judgement	evidence
+R1	A1	code: DoS hardening	4 http.Server in cmd/run/run.go (784, 898, 1012, 1033) set no ReadHeaderTimeout	true	no ReadHeaderTimeout or ReadTimeout anywhere in cmd, pkg or internal (gosec G112)
+R1	A1	code: TLS	InsecureSkipVerify for the unix-socket gRPC dial (run.go:699)	true, accepted	the code comment justifies it (socket filesystem permissions); A1 itself rates it as needing a nosemgrep with a reason
+R1	A1	ci: credentials	21 actions/checkout without persist-credentials: false (artipacked)	true, hygiene	zizmor artipacked
+R1	A1	ci: cache poisoning	setup-go cache in release workflows	plausible, unverified	zizmor, low confidence; depends on cache scope
+R1	A1	ci: secret scanning	no secret scanner in CI	true	no gitleaks, trufflehog or similar in workflows; GitHub's own secret scanning can't be seen from files
+R2	A3	ci: AI agents	issue title and body interpolated into an agent prompt, any user may trigger	true	issue-labeler.yml:25, 85, 88 (also counted under dangerous-workflow)
+R2	A3	ci: dead security workflow	codex-rs/.github/workflows/cargo-audit.yml never runs	true	GitHub only reads the root .github/workflows; no root workflow runs cargo audit (cargo-deny does)
+R2	A3	dependencies: sources	12 Cargo.lock entries from git (7 repositories: crossterm, ratatui, tokio-tungstenite forks and others)	true	grep 'source = "git+' codex-rs/Cargo.lock
+R2	A3	code: unsafe	501 of 548 non-test unsafe sites without a SAFETY comment	true by count; severity is a judgement	A3's own count, not recounted
+R2	A3	ownership	CODEOWNERS does not cover .github/workflows	true	.github/CODEOWNERS lists codex-rs paths and itself only
+R2	A3	ci: secret scanning	no secret scanner in CI	true	as R1
+R2	A3	ci: third-party action	cla.yml runs an archived action on pull_request_target with write scopes	partly verifiable	the trigger and scopes are true (cla.yml:1-12); "archived" needs the network; it checks out no PR code and is pinned by SHA
+R2	A1 on R2	code: python	64 static-analysis findings, 45 of them ruff S603/S607 subprocess notes in helper scripts	mostly noise	ruff bandit rules on .codex/skills and scripts; no exploitable path shown

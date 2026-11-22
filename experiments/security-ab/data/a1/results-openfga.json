@@ -1,0 +1,376 @@
+{
+  "repo": "/tmp/claude-0/-home-user/7bfb4c6a-a466-55d2-9252-3eb201a6d27e/scratchpad/sec-ab/a1/repo",
+  "checks": [
+    {
+      "id": "ci-workflow-audit",
+      "title": "CI workflow security audit",
+      "score": 4.2,
+      "why": "Audits CI/CD workflows with zizmor (template/script injection, dangerous triggers such as pull_request_target, cache poisoning, credential persistence, obfuscation) and actionlint (invalid workflows, untrusted expressions). CI holds release credentials and write tokens, so a workflow bug is a direct path to a supply-chain compromise.",
+      "findings": [
+        {
+          "message": "[zizmor dangerous-triggers, high severity] use of fundamentally insecure workflow trigger: issue_comment is almost always used insecurely",
+          "path": ".github/workflows/claude-code-review.yaml",
+          "line": 3
+        },
+        {
+          "message": "[zizmor artipacked, medium severity] credential persistence through GitHub Actions artifacts: does not set persist-credentials: false",
+          "path": ".github/workflows/codeql.yml",
+          "line": 66
+        },
+        {
+          "message": "[zizmor obfuscation, low severity] obfuscated usage of GitHub Actions features: can be replaced by its static evaluation",
+          "path": ".github/workflows/codeql.yml",
+          "line": 37
+        },
+        {
+          "message": "[zizmor artipacked, medium severity] credential persistence through GitHub Actions artifacts: does not set persist-credentials: false",
+          "path": ".github/workflows/create-helm-release-pr.yaml",
+          "line": 38
+        },
+        {
+          "message": "[zizmor artipacked, medium severity] credential persistence through GitHub Actions artifacts: does not set persist-credentials: false",
+          "path": ".github/workflows/create-helm-release-pr.yaml",
+          "line": 61
+        },
+        {
+          "message": "[zizmor template-injection, high severity] code injection via template expansion: may expand into attacker-controllable code",
+          "path": ".github/workflows/create-helm-release-pr.yaml",
+          "line": 27
+        },
+        {
+          "message": "[zizmor artipacked, medium severity] credential persistence through GitHub Actions artifacts: does not set persist-credentials: false",
+          "path": ".github/workflows/create-release-tag.yaml",
+          "line": 37
+        },
+        {
+          "message": "[zizmor template-injection, high severity] code injection via template expansion: may expand into attacker-controllable code",
+          "path": ".github/workflows/create-release-tag.yaml",
+          "line": 27
+        },
+        {
+          "message": "[zizmor template-injection, high severity] code injection via template expansion: may expand into attacker-controllable code",
+          "path": ".github/workflows/create-release-tag.yaml",
+          "line": 62
+        },
+        {
+          "message": "[zizmor artipacked, medium severity] credential persistence through GitHub Actions artifacts: does not set persist-credentials: false",
+          "path": ".github/workflows/enforce-changelog-entry.yaml",
+          "line": 21
+        },
+        {
+          "message": "[zizmor artipacked, medium severity] credential persistence through GitHub Actions artifacts: does not set persist-credentials: false",
+          "path": ".github/workflows/main.yaml",
+          "line": 15
+        },
+        {
+          "message": "[zizmor artipacked, medium severity] credential persistence through GitHub Actions artifacts: does not set persist-credentials: false",
+          "path": ".github/workflows/main.yaml",
+          "line": 52
+        },
+        {
+          "message": "[zizmor artipacked, medium severity] credential persistence through GitHub Actions artifacts: does not set persist-credentials: false",
+          "path": ".github/workflows/main.yaml",
+          "line": 89
+        },
+        {
+          "message": "[zizmor artipacked, medium severity] credential persistence through GitHub Actions artifacts: does not set persist-credentials: false",
+          "path": ".github/workflows/main.yaml",
+          "line": 141
+        },
+        {
+          "message": "[zizmor artipacked, medium severity] credential persistence through GitHub Actions artifacts: does not set persist-credentials: false",
+          "path": ".github/workflows/markdown-links.yaml",
+          "line": 21
+        },
+        {
+          "message": "[zizmor artipacked, medium severity] credential persistence through GitHub Actions artifacts: does not set persist-credentials: false",
+          "path": ".github/workflows/pull_request.yaml",
+          "line": 17
+        },
+        {
+          "message": "[zizmor artipacked, medium severity] credential persistence through GitHub Actions artifacts: does not set persist-credentials: false",
+          "path": ".github/workflows/pull_request.yaml",
+          "line": 36
+        },
+        {
+          "message": "[zizmor artipacked, medium severity] credential persistence through GitHub Actions artifacts: does not set persist-credentials: false",
+          "path": ".github/workflows/pull_request.yaml",
+          "line": 75
+        },
+        {
+          "message": "[zizmor artipacked, medium severity] credential persistence through GitHub Actions artifacts: does not set persist-credentials: false",
+          "path": ".github/workflows/pull_request.yaml",
+          "line": 114
+        },
+        {
+          "message": "[zizmor artipacked, medium severity] credential persistence through GitHub Actions artifacts: does not set persist-credentials: false",
+          "path": ".github/workflows/pull_request.yaml",
+          "line": 167
+        },
+        {
+          "message": "[zizmor artipacked, medium severity] credential persistence through GitHub Actions artifacts: does not set persist-credentials: false",
+          "path": ".github/workflows/pull_request.yaml",
+          "line": 207
+        },
+        {
+          "message": "[zizmor artipacked, medium severity] credential persistence through GitHub Actions artifacts: does not set persist-credentials: false",
+          "path": ".github/workflows/pull_request.yaml",
+          "line": 219
+        },
+        {
+          "message": "[zizmor artipacked, medium severity] credential persistence through GitHub Actions artifacts: does not set persist-credentials: false",
+          "path": ".github/workflows/pull_request.yaml",
+          "line": 247
+        },
+        {
+          "message": "[zizmor cache-poisoning, high severity] runtime artifacts potentially vulnerable to a cache poisoning attack: omitting `cache` enables caching",
+          "path": ".github/workflows/pull_request.yaml",
+          "line": 183
+        },
+        {
+          "message": "[zizmor artipacked, medium severity] credential persistence through GitHub Actions artifacts: does not set persist-credentials: false",
+          "path": ".github/workflows/release-nightly.yaml",
+          "line": 16
+        },
+        {
+          "message": "[zizmor cache-poisoning, high severity] runtime artifacts potentially vulnerable to a cache poisoning attack: omitting `cache` enables caching",
+          "path": ".github/workflows/release-nightly.yaml",
+          "line": 22
+        },
+        {
+          "message": "[zizmor artipacked, medium severity] credential persistence through GitHub Actions artifacts: does not set persist-credentials: false",
+          "path": ".github/workflows/release.yaml",
+          "line": 29
+        },
+        {
+          "message": "[zizmor artipacked, medium severity] credential persistence through GitHub Actions artifacts: does not set persist-credentials: false",
+          "path": ".github/workflows/release.yaml",
+          "line": 111
+        },
+        {
+          "message": "[zizmor cache-poisoning, high severity] runtime artifacts potentially vulnerable to a cache poisoning attack: omitting `cache` enables caching",
+          "path": ".github/workflows/release.yaml",
+          "line": 35
+        }
+      ]
+    },
+    {
+      "id": "workflow-permissions",
+      "title": "Least-privilege CI token permissions",
+      "score": 7.1,
+      "why": "Every workflow should declare a top-level `permissions:` block (ideally read-only) and grant write scopes only to the jobs that need them. Without it, GITHUB_TOKEN inherits the repository default, which is often read-write. Write scopes in workflows that untrusted users can trigger (issue_comment, pull_request_target, workflow_run...) turn any injection into repository takeover.",
+      "findings": [
+        {
+          "message": "Workflow triggered by untrusted event(s) issue_comment, pull_request_review_comment grants write scopes (contents, id-token, issues, pull-requests).",
+          "path": ".github/workflows/claude-code-review.yaml",
+          "line": 14
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: uses read-all permissions",
+          "path": ".github/workflows/release.yaml",
+          "line": 173
+        },
+        {
+          "message": "[zizmor excessive-permissions, medium severity] overly broad permissions: uses read-all permissions",
+          "path": ".github/workflows/release.yaml",
+          "line": 200
+        }
+      ]
+    },
+    {
+      "id": "dependency-pinning",
+      "title": "Actions and images pinned to immutable refs",
+      "score": 9.9,
+      "why": "Third-party GitHub Actions, reusable workflows and container base images should be pinned to an immutable commit SHA or image digest. Tags and branches can be moved by whoever controls the upstream, so an unpinned reference runs whatever code is there today (e.g. the tj-actions/changed-files compromise).",
+      "findings": [
+        {
+          "message": "Reusable workflow auth0/auth0-ai-pr-analyzer-gh-action/.github/workflows/claude-code-review.yml is referenced by mutable ref 'main', not a commit SHA.",
+          "path": ".github/workflows/claude-code-review.yaml",
+          "line": 18
+        }
+      ]
+    },
+    {
+      "id": "secrets",
+      "title": "No secrets committed to the repository",
+      "score": 9.6,
+      "why": "Scans every text file for credentials (cloud keys, VCS/package-registry tokens, private keys, high-entropy password assignments, credentials embedded in URLs) and for committed credential files (.env, key stores, Terraform state). A secret in the tree is exposed to everyone with read access and lives on in history, so it must be rotated, not just deleted. Findings in test/fixture paths weigh less.",
+      "findings": [
+        {
+          "message": "Credentials embedded in a URL (user 'user'); looks like a local/dev default.",
+          "path": ".config-schema.json",
+          "line": 246
+        },
+        {
+          "message": "Credentials embedded in a URL (user 'user'); looks like a local/dev default.",
+          "path": ".config-schema.json",
+          "line": 256
+        },
+        {
+          "message": "Credentials embedded in a URL (user 'postgres'); looks like a local/dev default.",
+          "path": "CHANGELOG.md",
+          "line": 1587
+        },
+        {
+          "message": "Credentials embedded in a URL (user 'postgres'); looks like a local/dev default.",
+          "path": "Makefile",
+          "line": 178
+        },
+        {
+          "message": "Credentials embedded in a URL (user 'postgres'); looks like a local/dev default.",
+          "path": "Makefile",
+          "line": 179
+        },
+        {
+          "message": "Credentials embedded in a URL (user 'postgres'); looks like a local/dev default.",
+          "path": "docker-compose.yaml",
+          "line": 27
+        },
+        {
+          "message": "Credentials embedded in a URL (user 'postgres'); looks like a local/dev default.",
+          "path": "docker-compose.yaml",
+          "line": 41
+        },
+        {
+          "message": "Credentials embedded in a URL (user 'postgres'); looks like a local/dev default.",
+          "path": "cmd/migrate/migrate.go",
+          "line": 40
+        }
+      ]
+    },
+    {
+      "id": "static-analysis",
+      "title": "Static analysis for vulnerable code patterns",
+      "score": 7.2,
+      "why": "Static analysis of non-test source code for injection and crypto/transport mistakes: semgrep with bundled local rules (Go, JS/TS, Rust, shell: disabled TLS verification, SQL built from strings, shell command injection, servers without timeouts, unescaped HTML, weak randomness) and ruff's flake8-bandit (S) rules for Python. These are the bug classes that most often become exploitable vulnerabilities.",
+      "findings": [
+        {
+          "message": "[semgrep go-tls-insecure-skip-verify, error] TLS certificate verification is disabled (InsecureSkipVerify), which allows man-in-the-middle attacks.",
+          "path": "cmd/run/run.go",
+          "line": 699
+        },
+        {
+          "message": "[semgrep go-http-server-no-read-header-timeout, warning] http.Server without ReadHeaderTimeout (or ReadTimeout) is exposed to Slowloris-style resource exhaustion.",
+          "path": "cmd/run/run.go",
+          "line": 784
+        },
+        {
+          "message": "[semgrep go-http-server-no-read-header-timeout, warning] http.Server without ReadHeaderTimeout (or ReadTimeout) is exposed to Slowloris-style resource exhaustion.",
+          "path": "cmd/run/run.go",
+          "line": 898
+        },
+        {
+          "message": "[semgrep go-http-server-no-read-header-timeout, warning] http.Server without ReadHeaderTimeout (or ReadTimeout) is exposed to Slowloris-style resource exhaustion.",
+          "path": "cmd/run/run.go",
+          "line": 1012
+        },
+        {
+          "message": "[semgrep go-http-server-no-read-header-timeout, warning] http.Server without ReadHeaderTimeout (or ReadTimeout) is exposed to Slowloris-style resource exhaustion.",
+          "path": "cmd/run/run.go",
+          "line": 1033
+        }
+      ]
+    },
+    {
+      "id": "dependency-management",
+      "title": "Locked and automatically updated dependencies",
+      "score": 8.4,
+      "why": "Dependencies should be locked (go.sum, package-lock, Cargo.lock, poetry/uv locks, pinned requirements) so builds are reproducible and cannot silently pull a newly published malicious version, and kept current by automation (Dependabot or Renovate) covering every ecosystem in the repo, so security fixes actually land. Stale update config fails silently.",
+      "findings": [
+        {
+          "message": "Dependabot 'gomod' entry points at directory '/tools', which does not exist; it updates nothing.",
+          "path": ".github/dependabot.yaml",
+          "line": 15
+        },
+        {
+          "message": "[zizmor dependabot-cooldown, medium severity] insufficient cooldown in Dependabot updates: insufficient implicit default-days (less than 7)",
+          "path": ".github/dependabot.yaml",
+          "line": 5
+        },
+        {
+          "message": "[zizmor dependabot-cooldown, medium severity] insufficient cooldown in Dependabot updates: insufficient implicit default-days (less than 7)",
+          "path": ".github/dependabot.yaml",
+          "line": 14
+        },
+        {
+          "message": "[zizmor dependabot-cooldown, medium severity] insufficient cooldown in Dependabot updates: insufficient implicit default-days (less than 7)",
+          "path": ".github/dependabot.yaml",
+          "line": 23
+        },
+        {
+          "message": "[zizmor dependabot-cooldown, medium severity] insufficient cooldown in Dependabot updates: insufficient implicit default-days (less than 7)",
+          "path": ".github/dependabot.yaml",
+          "line": 32
+        }
+      ]
+    },
+    {
+      "id": "known-vulnerabilities",
+      "title": "Dependencies free of known vulnerabilities",
+      "score": null,
+      "why": "Whether locked dependency versions have published advisories (OSV/GHSA/RustSec/Go vulndb). This needs a vulnerability database; none of the allowed tools carries one offline, so the check reports null rather than guessing. Run govulncheck/osv-scanner in CI to cover it (see security-tooling-in-ci).",
+      "findings": [
+        {
+          "message": "Not evaluated: no offline vulnerability database is available to this scorecard.",
+          "path": null,
+          "line": null
+        }
+      ]
+    },
+    {
+      "id": "security-tooling-in-ci",
+      "title": "Security scanning runs continuously in CI",
+      "score": 8.0,
+      "why": "Point-in-time scans decay; the repo should run security tools on every change. Looks in CI and pre-commit config for four categories: SAST, dependency vulnerability scanning, secret scanning, and CI/supply-chain linting, plus container image scanning when the repo builds images.",
+      "findings": [
+        {
+          "message": "No secret scanning found in CI configuration.",
+          "path": null,
+          "line": null
+        }
+      ]
+    },
+    {
+      "id": "container-hardening",
+      "title": "Hardened container builds",
+      "score": 10.0,
+      "why": "Container images should run as a non-root user, avoid fetching unverified remote code at build time (ADD <url>, curl | sh), never bake secrets into ENV/ARG layers, and ship a .dockerignore so .git and .env files stay out of the build context. Compose files should not run privileged or mount the Docker socket. These limit what an attacker gets from a compromised process.",
+      "findings": []
+    },
+    {
+      "id": "security-policy",
+      "title": "Vulnerability disclosure policy and code ownership",
+      "score": 5.0,
+      "why": "A SECURITY.md tells researchers how to report a vulnerability privately; without one, reports land in public issues or nowhere. CODEOWNERS makes review by the right people mandatory (with branch protection), and covering CI config and itself stops a contributor from quietly changing release workflows. Score: SECURITY.md with a reporting channel 5, CODEOWNERS 3, CODEOWNERS covers .github/ 2.",
+      "findings": [
+        {
+          "message": "No SECURITY.md (root, .github/ or docs/). GitHub may fall back to an org-level policy, which this scorecard cannot see.",
+          "path": null,
+          "line": null
+        }
+      ]
+    },
+    {
+      "id": "release-integrity",
+      "title": "Signed releases with provenance and SBOM",
+      "score": 10.0,
+      "why": "Published artifacts should be verifiable: build provenance (SLSA / GitHub attestations) proves which source and workflow produced them, signatures (Sigstore/cosign, GPG) prove who released them, and an SBOM lets consumers find vulnerable components. Without these, a tampered release is indistinguishable from a real one. Score: provenance 4, signing 4, SBOM 2.",
+      "findings": []
+    }
+  ],
+  "summary": {
+    "score": 7.9,
+    "method": "mean of evaluated checks (null checks excluded)",
+    "evaluated": 10,
+    "not_evaluated": [
+      "known-vulnerabilities"
+    ],
+    "files_scanned": 559
+  },
+  "tools": {
+    "zizmor": "zizmor 1.32.0",
+    "actionlint": "1.7.12",
+    "semgrep": "1.163.0",
+    "ruff": "ruff 0.14.11"
+  }
+}

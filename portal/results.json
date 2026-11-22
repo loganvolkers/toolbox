@@ -1163,6 +1163,9 @@
       "doc:experiments/out-of-box/README.md": {
         "level": "silver"
       },
+      "doc:experiments/security-ab/README.md": {
+        "level": "silver"
+      },
       "doc:experiments/spec-ab/README.md": {
         "level": "silver"
       },
@@ -1343,6 +1346,9 @@
         "level": "gold"
       },
       "example:experiments/out-of-box/ab/README.md": {
+        "level": "gold"
+      },
+      "example:experiments/security-ab/README.md": {
         "level": "gold"
       },
       "example:experiments/spec-ab/README.md": {
