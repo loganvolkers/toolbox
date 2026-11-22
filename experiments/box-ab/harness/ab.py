@@ -106,7 +106,8 @@ def findings(text, root):
 
 
 def hogli_job_timeouts(root):
-    """hogli's WF001 through a shim for its two imports (click and hogli.manifest)."""
+    """hogli's WF001 through a shim for its two imports (click and hogli.manifest). The code comes
+    from the base checkout, since phase 5 asks the arms to delete WF001; the workflows are the arm's."""
     shim = AB_HOME / "hogli-shim"
     (shim / "hogli").mkdir(parents=True, exist_ok=True)
     (shim / "hogli" / "__init__.py").write_text("")
@@ -120,7 +121,7 @@ def hogli_job_timeouts(root):
         "print(json.dumps([[str(Path(i.file).relative_to(sys.argv[3])), 0, 'WF001'] for i in JobTimeoutsCheck().run(w).issues]))\n"
     )
     py = AB_HOME / "venv" / "semgrep" / "bin" / "python"
-    r = subprocess.run([str(py), "-I", "-c", code, str(shim), str(Path(root) / "tools/hogli-commands"), str(root)], capture_output=True, text=True)
+    r = subprocess.run([str(py), "-I", "-c", code, str(shim), str(BASE / "tools/hogli-commands"), str(root)], capture_output=True, text=True)
     if r.returncode:
         raise RuntimeError(r.stderr[-800:])
     return [tuple(x) for x in json.loads(r.stdout)]
