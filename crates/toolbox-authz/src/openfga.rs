@@ -354,7 +354,8 @@ CREATE OR REPLACE VIEW public.tuple AS
   FROM toolbox.derived_tuples;
 "#
     );
-    sqlx::raw_sql(&sql)
+    // store was validated as ASCII alphanumeric above; AssertSqlSafe is sqlx 0.9's audited bypass.
+    sqlx::raw_sql(sqlx::AssertSqlSafe(sql))
         .execute(pool)
         .await
         .map_err(|e| format!("installing the tuple view: {e}"))?;

@@ -221,8 +221,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
         let meta: Value = serde_json::from_slice(&out.stdout).unwrap();
         let recs = records(&root, &meta);
         assert!(recs.len() >= 15, "{}", recs.len());
-        let sha2 = recs.iter().find(|r| r["name"] == "sha2").unwrap();
-        assert!(sha2["versions"].as_array().unwrap().len() > 1);
+        // sqlx 0.9 collapsed duplicate sha2 lines; syn 2+3 remain after the connector's syn 3 bump.
+        let syn = recs.iter().find(|r| r["name"] == "syn").unwrap();
+        assert!(syn["versions"].as_array().unwrap().len() > 1);
         let regex = recs.iter().find(|r| r["name"] == "regex").unwrap();
         assert_eq!(regex["inherited"], false);
         assert!(regex["usedBy"].as_array().unwrap().len() > 1);
