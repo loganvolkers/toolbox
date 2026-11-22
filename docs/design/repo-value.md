@@ -1,6 +1,8 @@
 # Proving Repo-Level Value
 
-*Status: plan, 2026-11-21 (D01M7Y46VDDBK2SW6H96ZSG89MP). All effort goes here until the exit in §6 is met. This is the
+*Status: plan, 2026-11-21 (D01M7Y46VDDBK2SW6H96ZSG89MP; refined by D01M80Y0XEK069GD08VCCNF0WB8). This is the bottom-up end: value
+proven at a single repository. The top-down end, the central portal, proceeds in its own sessions, and
+federation is unpaused. This is the
 operator SDLC applied to one repository (a [repo portal](./repo-portals.md)), built under the
 maintainer SDLC, with packages from the package author SDLC ([sdlc.md](../sdlc.md)).*
 
@@ -28,10 +30,10 @@ The bet has five parts. Each has an experiment and a result that would stop us (
 
 | Area | State |
 |---|---|
-| Central portal: Cloud Run deployment, `plan --remote`, preview, `verify` (M6) | **Paused** |
+| Central portal: Cloud Run deployment, `plan --remote`, preview, `verify` (M6) | **Top-down sessions** (D01M80Y0XEK069GD08VCCNF0WB8) |
 | Self-service actions (M5, already paused by D64) | **Paused** |
-| Federation, including static federation ([federation.md](./federation.md), [repo-portals.md](./repo-portals.md) §5) | **Paused** until §6 |
-| Apps built on a portal's API (user SDLC beyond reading a report) | **Paused** |
+| Federation, including static federation ([federation.md](./federation.md), [repo-portals.md](./repo-portals.md) §5) | **Unpaused** (D01M80Y0XEK069GD08VCCNF0WB8); how the two ends meet is decided once both are proven |
+| Apps built on a portal's API (user SDLC beyond reading a report) | **Top-down sessions** (D01M80Y0XEK069GD08VCCNF0WB8) |
 | `serve`, REST, MCP, UI, OpenFGA, Postgres (M2–M4) | **Kept green, not extended.** CI still runs their tests and acceptance scripts; bugs are fixed. `serve` and `mcp` on a laptop remain part of the repo-level agent loop |
 | `toolbox report`, the ratchet and verdict, `actions/report`, the starter, packages, assessments, campaigns | **Focus** |
 

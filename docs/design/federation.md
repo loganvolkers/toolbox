@@ -1,6 +1,6 @@
 # Federation: Standards That Start in One Repo and Graduate to the Company
 
-*Paused (D01M7Y46VDDBK2SW6H96ZSG89MP): federation resumes once repo-level value is proven ([repo-value.md](./repo-value.md)).*
+*Unpaused (D01M80Y0XEK069GD08VCCNF0WB8): federation is the likely middle where bottom-up repo portals ([repo-value.md](./repo-value.md)) and the top-down central portal meet, decided once both are proven.*
 
 *Status: design only, 2026-11-20 (D68). **Nothing here is implemented, and no implementation is
 planned until repo portals have been used by a few teams.** Builds on

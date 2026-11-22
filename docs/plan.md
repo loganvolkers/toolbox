@@ -942,8 +942,9 @@ This is a stated product goal, so it is a **tested requirement**:
 
 ## 8. Delivery roadmap
 
-> **Focus (D01M7Y46VDDBK2SW6H96ZSG89MP):** repo-level value is proven first ([repo-value.md](./design/repo-value.md)).
-> Phases 2–6 beyond repo portals, M5 and M6 are paused until its exit is met.
+> **Focus (D01M80Y0XEK069GD08VCCNF0WB8, refining D01M7Y46VDDBK2SW6H96ZSG89MP):** value is proven from both ends: bottom-up at a
+> single repository ([repo-value.md](./design/repo-value.md)) and top-down at the central portal, in separate
+> sessions. Federation is unpaused; M5 stays paused (D64).
 >
 > **For implementers:** v1 (Phases 0–1 plus the action runtime) is specified milestone by milestone in
 > [v1-spec.md](./v1-spec.md) §3, anchored on the [reference portal](../examples/reference-portal/README.md).
