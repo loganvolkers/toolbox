@@ -1,0 +1,3 @@
+semgrep-to-zero	semgrep	all	started 2026-11-22	start 209	current 199	paydown 10
+  semgrep.rules.no-direct-persons-db-orm	start 104	current 94	paydown 10
+  semgrep.rules.prefer-codegen-api	start 105	current 105	paydown 0
