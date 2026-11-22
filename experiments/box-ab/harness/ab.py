@@ -54,7 +54,9 @@ SCOPE[6] = SCOPE[5]
 
 def env(phase):
     e = dict(os.environ)
-    path = [str(BIN)]
+    # box-bin too: arm B's gate calls `toolbox` (arm A's never does). The dry run's reference gate
+    # didn't need it, so this was first found scoring arm B's phase 1.
+    path = [str(AB_HOME / "box-bin"), str(BIN)]
     if phase >= 4:
         path.insert(0, str(UPGRADE))  # from phase 4, CI's ruff is 0.15.0
     e["PATH"] = ":".join(path + [e.get("PATH", "")])
