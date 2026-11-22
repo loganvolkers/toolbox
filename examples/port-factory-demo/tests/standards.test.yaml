@@ -3,8 +3,8 @@ name: standards
 assert:
   - name: factory lines are catalogued
     expect: >-
-      entity('factory-line:feature-delivery').title == 'Feature Delivery Line' &&
-      entity('factory-line:feature-delivery').openItems == 20
+      entity('factory-line:feature-delivery').title == 'Feature Delivery Line'
+      && entity('factory-line:feature-delivery').openItems == 20
 
   - name: hitl tasks are catalogued
     expect: >-
@@ -12,12 +12,14 @@ assert:
 
   - name: release notes drafter reaches silver not gold
     expect: >-
-      score('agent-governance', 'agent:release-notes-drafter').level == 'silver'
+      score('agent-governance', 'agent:release-notes-drafter').level ==
+      'silver'
 
   - name: bronze rules pass for release notes drafter
     expect: >-
-      score('agent-governance', 'agent:release-notes-drafter').rules['owning-team']
-      == 'pass' && score('agent-governance',
+      score('agent-governance',
+      'agent:release-notes-drafter').rules['owning-team'] == 'pass' &&
+      score('agent-governance',
       'agent:release-notes-drafter').rules['purpose'] == 'pass'
 
   - name: gold monitoring fails when not configured

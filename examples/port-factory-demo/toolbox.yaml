@@ -18,14 +18,14 @@ connectors:
       crates: false
       repo: false
       data:
-        - kind: factory-line
-          globs: ["catalog/factory-lines.yaml"]
-        - kind: hitl-task
-          globs: ["catalog/hitl-tasks.yaml"]
-        - kind: agent
-          globs: ["catalog/agents.yaml"]
+        - {kind: factory-line, globs: [catalog/factory-lines.yaml]}
+        - {kind: hitl-task, globs: [catalog/hitl-tasks.yaml]}
+        - {kind: agent, globs: [catalog/agents.yaml]}
     records: [factory-line, hitl-task, agent]
-    refresh: {factory-line: [external_ids], hitl-task: [external_ids], agent: [external_ids]}
+    refresh:
+      factory-line: [external_ids]
+      hitl-task: [external_ids]
+      agent: [external_ids]
     freshness: {factory-line: 5m, hitl-task: 5m, agent: 5m}
 
 kinds:
@@ -124,8 +124,8 @@ scorecards:
       level: bronze
       check: entity.dataClassification != ''
       evidence: >-
-        entity.dataClassification != '' ? [entity.dataClassification] :
-        ['no data classification']
+        entity.dataClassification != '' ? [entity.dataClassification] : ['no
+        data classification']
       fix: Set dataClassification (e.g. internal, confidential).
     - name: approved-mcp
       level: silver
@@ -162,7 +162,9 @@ scorecards:
       level: gold
       check: entity.goldComplete
       evidence: "entity.goldComplete ? ['gold complete'] : ['one gold rule short']"
-      fix: Mark goldComplete true when remaining gold criteria pass (Port demo shape).
+      fix: >-
+        Mark goldComplete true when remaining gold criteria pass (Port demo
+        shape).
     facets: {summary: public, details: public}
 
 tests: [tests/standards.test.yaml]
