@@ -14,7 +14,7 @@ regex = "1"
 serde_json.workspace = true
 serde_norway.workspace = true
 sha2.workspace = true
-syn = { version = "2", default-features = false, features = ["full", "parsing", "visit", "printing"] }
+syn = { version = "3", default-features = false, features = ["full", "parsing", "visit", "printing"] }
 tokio.workspace = true
 toolbox-connect = { path = "../toolbox-connect" }
 walkdir.workspace = true
