@@ -276,7 +276,7 @@ pub fn install(portal: &Path, frozen: bool) -> ExitCode {
     ExitCode::SUCCESS
 }
 
-/// The first line a tool prints for its version arguments, if it runs.
+/// The version line a tool prints for its version arguments, if it runs (see `version_line`).
 pub(crate) fn tool_version(name: &str, args: &[String]) -> Option<String> {
     let out = std::process::Command::new(name).args(args).output().ok()?;
     let text = format!(
@@ -284,7 +284,18 @@ pub(crate) fn tool_version(name: &str, args: &[String]) -> Option<String> {
         String::from_utf8_lossy(&out.stdout),
         String::from_utf8_lossy(&out.stderr)
     );
-    Some(text.lines().next().unwrap_or_default().trim().to_owned())
+    Some(version_line(&text))
+}
+
+/// The first line with a digit in it, else the first line. Some tools print a banner or their
+/// name before the version (`scorecard version` opens with ASCII art, then `GitVersion: v5.7.0`).
+fn version_line(text: &str) -> String {
+    text.lines()
+        .find(|l| l.bytes().any(|b| b.is_ascii_digit()))
+        .or_else(|| text.lines().next())
+        .unwrap_or_default()
+        .trim()
+        .to_owned()
 }
 
 /// `toolbox doctor`: report connectors and tools (exit 1 on problems), or print the mise config.
@@ -463,6 +474,15 @@ pub fn vendor(spec: &str, portal: &Path) -> ExitCode {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn version_line_skips_a_banner() {
+        let scorecard = "  __  ____\n / / / ___|\n./scorecard: OpenSSF Scorecard\n\nGitVersion:    v5.7.0\nGitCommit: d7552fb";
+        assert_eq!(super::version_line(scorecard), "GitVersion:    v5.7.0");
+        assert_eq!(super::version_line("ruff 0.14.0\n"), "ruff 0.14.0");
+        assert_eq!(super::version_line("no version here\n"), "no version here");
+        assert_eq!(super::version_line(""), "");
+    }
+
     use super::*;
 
     #[test]
