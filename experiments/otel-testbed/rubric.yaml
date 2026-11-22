@@ -1,0 +1,46 @@
+# Machine-checkable expectations for experiments/otel-testbed (design §13.2).
+# scripts/score.sh reads these names; keep in sync with the baseline 100-point seed.
+version: 1
+service_name: toolbox
+points:
+  traces_otlp: 25
+  metrics_catalog: 25
+  structured_logs_correlation: 15
+  resource_service_name: 10
+  t4t_scorecard: 15
+  local_collector_testbed: 10
+checks:
+  - id: service_name
+    points: 10
+    description: Resource includes service.name=toolbox (or OTEL_SERVICE_NAME override).
+    require:
+    - traces_or_logs_contain: service.name
+    - traces_or_logs_contain: toolbox
+  - id: http_or_derive_span
+    points: 25
+    description: At least one HTTP or derive span exported after the exercise script.
+    require: [{traces_contain: http.server.request}]
+  - id: catalog_metrics_in_file
+    points: 15
+    description: File metrics include catalog lag + ingest counters.
+    require:
+    - metrics_contain: toolbox_snapshot_lag_seconds
+    - metrics_contain: toolbox_ingest_records_total
+  - id: log_trace_correlation
+    points: 15
+    description: Log record or stdout JSON line contains a matching trace_id.
+    require:
+    - server_log_contains: trace_id
+    - server_log_trace_id_matches_span: true
+  - id: prom_scrape_catalog
+    points: 10
+    description: /metrics scrape still returns catalog types.
+    require:
+    - metrics_text_contains: '# TYPE toolbox_snapshot_lag_seconds'
+    - metrics_text_contains: toolbox_ingest_records_total
+  - id: testbed_present
+    points: 10
+    description: Local collector testbed files exist (this experiment).
+    require:
+    - path_exists: experiments/otel-testbed/README.md
+    - path_exists: experiments/otel-testbed/scripts/score.sh

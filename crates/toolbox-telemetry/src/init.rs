@@ -58,6 +58,7 @@ pub enum TelemetryError {
 pub struct TelemetryGuard {
     _catalog: Arc<Catalog>,
     trace: TraceStack,
+    meter_provider: Option<opentelemetry_sdk::metrics::SdkMeterProvider>,
     service_name: String,
     mode: TelemetryMode,
     otlp: bool,
@@ -83,6 +84,11 @@ impl Drop for TelemetryGuard {
             && let Err(e) = provider.shutdown()
         {
             eprintln!("toolbox-telemetry: tracer shutdown: {e}");
+        }
+        if let Some(provider) = self.meter_provider.take()
+            && let Err(e) = provider.shutdown()
+        {
+            eprintln!("toolbox-telemetry: meter shutdown: {e}");
         }
         if let Some(provider) = self.trace.logger_provider.take()
             && let Err(e) = provider.shutdown()
@@ -137,17 +143,24 @@ pub fn init(opts: TelemetryOptions) -> Result<TelemetryGuard, TelemetryError> {
         None => None,
     };
 
-    // Optional OTLP metrics exporter (mirrors catalog via SDK meters later; scrape stays Prom).
-    if let Some(endpoint) = &otlp_endpoint
-        && let Err(e) = install_otlp_metrics(mode, resource.clone(), endpoint)
-    {
-        match mode {
-            TelemetryMode::Ci => return Err(e),
-            TelemetryMode::Local | TelemetryMode::Prod => {
-                eprintln!("toolbox-telemetry: OTLP metrics init failed: {e}");
+    // OTLP metrics: catalog helpers dual-write to SDK meters; scrape stays Prom.
+    let meter_provider = match &otlp_endpoint {
+        Some(endpoint) => match install_otlp_metrics(mode, resource.clone(), endpoint) {
+            Ok(p) => {
+                crate::otlp_meters::install();
+                crate::otlp_meters::touch_required();
+                Some(p)
             }
-        }
-    }
+            Err(e) => match mode {
+                TelemetryMode::Ci => return Err(e),
+                TelemetryMode::Local | TelemetryMode::Prod => {
+                    eprintln!("toolbox-telemetry: OTLP metrics init failed: {e}");
+                    None
+                }
+            },
+        },
+        None => None,
+    };
 
     let log_provider = if otlp {
         match build_logger_provider(resource) {
@@ -176,6 +189,7 @@ pub fn init(opts: TelemetryOptions) -> Result<TelemetryGuard, TelemetryError> {
     Ok(TelemetryGuard {
         _catalog: catalog,
         trace,
+        meter_provider,
         service_name,
         mode,
         otlp,
@@ -255,9 +269,10 @@ fn install_otlp_metrics(
     _mode: TelemetryMode,
     resource: opentelemetry_sdk::Resource,
     endpoint: &str,
-) -> Result<(), TelemetryError> {
+) -> Result<opentelemetry_sdk::metrics::SdkMeterProvider, TelemetryError> {
     use opentelemetry_otlp::WithExportConfig;
     use opentelemetry_sdk::metrics::SdkMeterProvider;
+    use std::time::Duration;
 
     let protocol = std::env::var("OTEL_EXPORTER_OTLP_PROTOCOL").unwrap_or_default();
     let exporter = if protocol.eq_ignore_ascii_case("http/protobuf")
@@ -276,13 +291,21 @@ fn install_otlp_metrics(
             .map_err(|e| TelemetryError::OpenTelemetry(e.to_string()))?
     };
 
-    let reader = opentelemetry_sdk::metrics::PeriodicReader::builder(exporter).build();
+    // Short interval so CI/testbed can assert without waiting a minute.
+    let interval = std::env::var("OTEL_METRIC_EXPORT_INTERVAL")
+        .ok()
+        .and_then(|s| s.parse::<u64>().ok())
+        .map(Duration::from_millis)
+        .unwrap_or(Duration::from_secs(1));
+    let reader = opentelemetry_sdk::metrics::PeriodicReader::builder(exporter)
+        .with_interval(interval)
+        .build();
     let provider = SdkMeterProvider::builder()
         .with_reader(reader)
         .with_resource(resource)
         .build();
-    global::set_meter_provider(provider);
-    Ok(())
+    global::set_meter_provider(provider.clone());
+    Ok(provider)
 }
 
 fn build_logger_provider(

@@ -118,5 +118,5 @@ records:
     status: partial
     gaps:
     - >-
-      local OTel collector testbed pending (step 5); Grafana / toolbox-ops
-      pack deferred
+      Grafana / toolbox-ops pack deferred (alert stubs + local OTel testbed
+      exist)

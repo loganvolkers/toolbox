@@ -1,6 +1,6 @@
 # Observability (OTel + Prometheus)
 
-*Status: built for bootstrap + catalog (step 4); local collector testbed is step 5.
+*Status: built — bootstrap + catalog (step 4) and local collector testbed (step 5).
 Maintainer SDLC.*
 
 ## Conclusion
@@ -14,9 +14,9 @@ Operators own the Collector and backends (Grafana LGTM as the D6 reference).
 
 | Signal | Contract |
 |---|---|
-| Traces | `tracing` spans; OTLP when `OTEL_EXPORTER_OTLP_ENDPOINT` is set |
-| Metrics | Catalog instruments; scrape via `/metrics`; OTLP metrics when endpoint set |
-| Logs | JSON (CI/prod) or pretty (local); correlated when a span is active |
+| Traces | `tracing` spans (`http.server.request`); OTLP when `OTEL_EXPORTER_OTLP_ENDPOINT` is set |
+| Metrics | Catalog instruments; scrape via `/metrics`; OTLP meters dual-write catalog names |
+| Logs | JSON (CI/prod) or pretty (local); `trace_id` when a span is active |
 
 `TOOLBOX_MCP_TRACE` NDJSON stays a contract-coverage artifact (F9), not distributed tracing.
 
@@ -26,17 +26,23 @@ See [`METRIC_CATALOG.md`](../../crates/toolbox-telemetry/METRIC_CATALOG.md). Can
 snapshot lag is `toolbox_snapshot_lag_seconds`; `toolbox_snapshot_age_seconds` is a
 deprecated alias while `TELEMETRY_PROM_ALIASES` is on (default).
 
+## Local testbed
+
+[`experiments/otel-testbed`](../../experiments/otel-testbed/) runs a pinned
+`otelcol-contrib` with a file exporter and [`scripts/score.sh`](../../experiments/otel-testbed/scripts/score.sh)
+applies the design §13 rubric. CI job `otel-testbed` must pass.
+
 ## T4T
 
 Scorecard `maintainer-observability` over kind `Observability` (declared in
-`portal/observability/`). Rules fail when the crate, catalog, scrape test, alert stubs or
-operator/monitor assessment are missing. Gold `otlp-export-tested` waits on the step-5
-testbed.
+`portal/observability/`). Rules fail when the crate, catalog, scrape test, alert stubs,
+operator/monitor assessment or OTLP testbed are missing. Gold includes
+`otlp-export-tested`.
 
 ## Env
 
 Documented in the crate README: `OTEL_*`, `TOOLBOX_TELEMETRY`, `TOOLBOX_METRICS_PROMETHEUS`,
-`TOOLBOX_LOG_FORMAT`, `TELEMETRY_PROM_ALIASES`.
+`TOOLBOX_LOG_FORMAT`, `TELEMETRY_PROM_ALIASES`, `OTEL_METRIC_EXPORT_INTERVAL`.
 
 ## Sources
 
@@ -44,3 +50,4 @@ Documented in the crate README: `OTEL_*`, `TOOLBOX_TELEMETRY`, `TOOLBOX_METRICS_
 - D01M81ADN8C10EA1Z1VNRY3A5JZ
 - plan.md §6.3–6.5
 - v1-spec.md §10.5
+- experiments/otel-testbed

@@ -36,6 +36,7 @@ How the design research was done, so parallel agents can reproduce, extend or ch
 
 | What | Result |
 |---|---|
+| **OTel local testbed** (`experiments/otel-testbed`, otelcol-contrib 0.142.0, 2026-11-22) | `scripts/score.sh` against `toolbox serve --fixtures` with `OTEL_EXPORTER_OTLP_ENDPOINT`: resource `service.name=toolbox`, `http.server.request` spans, OTLP file metrics `toolbox_snapshot_lag_seconds` + `toolbox_ingest_records_total`, JSON stderr `trace_id` matching an exported span, `/metrics` catalog types. CI job `otel-testbed`. No SaaS backends. |
 | The authorization doc's OpenFGA model + `.fga.yaml` test, run with the real `fga` CLI (`go install github.com/openfga/cli/cmd/fga`) | 6/6 checks, 2/2 ListObjects, 1/1 ListUsers pass; flipping one expectation fails as expected. Found that `fga model test` refuses `../` model paths, so tests sit beside `fga.mod` |
 | `plugins/toolbox-operator/plugin.json` and `mcp.json` against the official Agent Plugins 1.0.0 JSON schemas (`jsonschema`, Draft 2020-12) | Valid |
 | All operator-plugin skills with `skills-ref validate` | Valid |

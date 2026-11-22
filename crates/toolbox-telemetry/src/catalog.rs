@@ -118,6 +118,7 @@ pub fn record_ingest(records: u64) {
         c.ingest_records.inc_by(records);
         c.ingest_batches.inc();
     }
+    crate::otlp_meters::record_ingest(records);
 }
 
 /// Record a finished recompute: count + last duration seconds.
@@ -136,6 +137,7 @@ pub fn set_snapshot_lag(seconds: f64) {
             age.set(seconds);
         }
     }
+    crate::otlp_meters::set_snapshot_lag(seconds);
 }
 
 /// Count an authz decision (`allow` | `deny`).

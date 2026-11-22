@@ -1,0 +1,38 @@
+# Local / CI collector: OTLP + Prometheus scrape → file exporters (no SaaS).
+# Placeholders __TOOLBOX_SCRAPE_TARGET__ and __OTEL_OUT__ are filled by scripts/score.sh.
+# Pin: otel/opentelemetry-collector-contrib:0.142.0 (see pin.env / README).
+
+receivers:
+  otlp:
+    protocols: {grpc: {endpoint: 0.0.0.0:4317}, http: {endpoint: 0.0.0.0:4318}}
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: toolbox
+          scrape_interval: 1s
+          scrape_timeout: 1s
+          static_configs: [{targets: [__TOOLBOX_SCRAPE_TARGET__]}]
+
+processors: {batch: {timeout: 200ms, send_batch_size: 32}}
+
+exporters:
+  file/traces: {path: __OTEL_OUT__/traces.json, format: json}
+  file/metrics: {path: __OTEL_OUT__/metrics.json, format: json}
+  file/logs: {path: __OTEL_OUT__/logs.json, format: json}
+  debug: {verbosity: basic}
+
+service:
+  telemetry: {logs: {level: warn}}
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [file/traces, debug]
+    metrics:
+      receivers: [otlp, prometheus]
+      processors: [batch]
+      exporters: [file/metrics, debug]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [file/logs, debug]
