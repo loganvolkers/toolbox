@@ -13,7 +13,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 TOOLS="${TOOLBOX_CI_TOOLS:-${TMPDIR:-/tmp}/toolbox-ci-tools}"
-scripts/ci-tools.sh "$TOOLS" actionlint
+scripts/ci-tools.sh "$TOOLS" actionlint scorecard
 export PATH="$TOOLS:$PATH"
 
 cargo build --locked

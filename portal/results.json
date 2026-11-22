@@ -6,6 +6,13 @@
       "short": 0,
       "start": "2026-11-01"
     },
+    "maintainer-openssf-ten": {
+      "inScope": 11,
+      "measure": 33,
+      "recorded": "2026-11-22",
+      "short": 5,
+      "start": null
+    },
     "maintainer-python-zero": {
       "inScope": 11,
       "measure": 0,
@@ -892,6 +899,9 @@
       "doc:docs/decisions/D01M81ADN8C10EA1Z1VNRY3A5JZ.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M82E93XAPNE0WFXEPJZ59WG4.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/README.md": {
         "level": "skipped"
       },
@@ -977,6 +987,9 @@
         "level": "silver"
       },
       "doc:docs/design/observability.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/openssf-template.md": {
         "level": "silver"
       },
       "doc:docs/design/package-author-sdlc.md": {
@@ -1309,6 +1322,56 @@
     "maintainer-observability": {
       "observability:toolbox-runtime": {
         "level": "gold"
+      }
+    },
+    "maintainer-openssf": {
+      "maintainer-openssf:Binary-Artifacts": {
+        "level": "ten"
+      },
+      "maintainer-openssf:Dangerous-Workflow": {
+        "level": "ten"
+      },
+      "maintainer-openssf:Dependency-Update-Tool": {
+        "level": "ten"
+      },
+      "maintainer-openssf:Fuzzing": {
+        "failing": {
+          "ten": 10
+        },
+        "level": "none"
+      },
+      "maintainer-openssf:License": {
+        "failing": {
+          "ten": 1
+        },
+        "level": "none"
+      },
+      "maintainer-openssf:Packaging": {
+        "level": "ten"
+      },
+      "maintainer-openssf:Pinned-Dependencies": {
+        "failing": {
+          "ten": 6
+        },
+        "level": "none"
+      },
+      "maintainer-openssf:SAST": {
+        "level": "ten"
+      },
+      "maintainer-openssf:Security-Policy": {
+        "failing": {
+          "ten": 6
+        },
+        "level": "none"
+      },
+      "maintainer-openssf:Token-Permissions": {
+        "failing": {
+          "ten": 10
+        },
+        "level": "none"
+      },
+      "maintainer-openssf:Vulnerabilities": {
+        "level": "ten"
       }
     },
     "maintainer-package": {
@@ -1734,6 +1797,9 @@
         "level": "gold"
       },
       "connector:toolbox/github-actions": {
+        "level": "gold"
+      },
+      "connector:toolbox/maintainer-openssf": {
         "level": "gold"
       },
       "connector:toolbox/maintainer-python": {
@@ -2862,6 +2928,30 @@
       "field:toolbox/Observability.title": {
         "level": "gold"
       },
+      "field:toolbox/OpenSSFCheck.aggregate": {
+        "level": "gold"
+      },
+      "field:toolbox/OpenSSFCheck.check": {
+        "level": "gold"
+      },
+      "field:toolbox/OpenSSFCheck.command": {
+        "level": "gold"
+      },
+      "field:toolbox/OpenSSFCheck.details": {
+        "level": "gold"
+      },
+      "field:toolbox/OpenSSFCheck.documentation": {
+        "level": "gold"
+      },
+      "field:toolbox/OpenSSFCheck.inconclusive": {
+        "level": "gold"
+      },
+      "field:toolbox/OpenSSFCheck.reason": {
+        "level": "gold"
+      },
+      "field:toolbox/OpenSSFCheck.score": {
+        "level": "gold"
+      },
       "field:toolbox/PackageJson.checkScripts": {
         "failing": {
           "described": 1
@@ -3728,6 +3818,9 @@
         },
         "level": "silver"
       },
+      "kind:toolbox/OpenSSFCheck": {
+        "level": "gold"
+      },
       "kind:toolbox/PackageJson": {
         "failing": {
           "described": 1,
@@ -4148,6 +4241,9 @@
       "rule:toolbox/maintainer-observability/structured-logs": {
         "level": "gold"
       },
+      "rule:toolbox/maintainer-openssf/ten": {
+        "level": "gold"
+      },
       "rule:toolbox/maintainer-package/ci-installs-from-the-lockfile": {
         "level": "gold"
       },
@@ -4286,16 +4382,10 @@
       "rule:toolbox/maintainer-skill/within-body-budget": {
         "level": "gold"
       },
-      "rule:toolbox/maintainer-supply-chain/code-scanning": {
-        "level": "gold"
-      },
       "rule:toolbox/maintainer-supply-chain/code-scanning-pinned": {
         "level": "gold"
       },
       "rule:toolbox/maintainer-supply-chain/dependabot": {
-        "level": "gold"
-      },
-      "rule:toolbox/maintainer-supply-chain/security-policy": {
         "level": "gold"
       },
       "rule:toolbox/maintainer-supply-chain/workflows-have-owners": {
@@ -4625,6 +4715,9 @@
         "level": "gold"
       },
       "scorecard:toolbox/maintainer-observability": {
+        "level": "gold"
+      },
+      "scorecard:toolbox/maintainer-openssf": {
         "level": "gold"
       },
       "scorecard:toolbox/maintainer-package": {

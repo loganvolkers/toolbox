@@ -4,7 +4,7 @@
 //! only that crate's jobs (docs/design/toolbox-for-toolbox.md §3).
 //!
 //! `TOOLBOX_CONNECTOR_CONFIG`: `{"name"?: "runner", "root"?: ".", "jobs": [job]}` where a job is
-//! `{"name", "command": [argv], "per"?: "crate" | "once", "parse": "cargo-test" | "clippy" | "ndjson" | "tally" | "sarif" | "zizmor" | "actionlint" | "semgrep"}`.
+//! `{"name", "command": [argv], "per"?: "crate" | "once", "parse": "cargo-test" | "clippy" | "ndjson" | "tally" | "sarif" | "zizmor" | "actionlint" | "semgrep" | "scorecard"}`, and `"tracked": true` to run in an export of the git-tracked files.
 //! In `per: crate` jobs, `{crate}` in the command is replaced by each workspace member's name and
 //! the job emits one record of kind `<name>` with external id `<name>:<crate>`. `ndjson` jobs print
 //! connector `record` messages themselves (e.g. `toolbox describe`); they are passed through, and
@@ -22,6 +22,7 @@
 //! so keys nothing used are reported with zero calls); the file is removed before each run.
 
 mod lint;
+mod scorecard;
 
 use regex::Regex;
 use serde_json::{Value, json};
@@ -48,6 +49,9 @@ struct Job {
     optional: bool,
     /// Lint jobs: the file the tool writes its report to (relative to the root), instead of stdout.
     output: Option<String>,
+    /// Run in an export of the git-tracked files (with their uncommitted edits), as a fresh CI
+    /// checkout would be, for tools that walk the whole directory (Scorecard's `--local`).
+    tracked: bool,
 }
 
 impl Job {
@@ -245,6 +249,7 @@ impl Runner {
                     | "zizmor"
                     | "actionlint"
                     | "semgrep"
+                    | "scorecard"
             ) {
                 return Err(format!("job {name}: unknown parser {parse}"));
             }
@@ -269,6 +274,7 @@ impl Runner {
                 files,
                 optional: j["optional"].as_bool().unwrap_or(false),
                 output: s("output"),
+                tracked: j["tracked"].as_bool().unwrap_or(false),
                 file: s("file"),
                 key: s("key"),
                 name,
@@ -285,10 +291,14 @@ impl Runner {
     }
 
     async fn run(&self, argv: &[String]) -> Run {
+        self.run_in(argv, &self.root).await
+    }
+
+    async fn run_in(&self, argv: &[String], dir: &std::path::Path) -> Run {
         let start = Instant::now();
         let out = tokio::process::Command::new(&argv[0])
             .args(&argv[1..])
-            .current_dir(&self.root)
+            .current_dir(dir)
             .output()
             .await;
         let millis = start.elapsed().as_millis() as u64;
@@ -450,6 +460,47 @@ impl Runner {
         Ok(())
     }
 
+    /// OpenSSF Scorecard: one record per check (`<job>:<check>`). With `tracked`, it runs in an
+    /// export of the tracked files, so untracked build output doesn't count as binaries.
+    async fn run_scorecard(&self, job: &Job, out: &mut Sink<'_>) -> Result<(), String> {
+        let export = if job.tracked {
+            Some(export_tracked(&self.root)?)
+        } else {
+            None
+        };
+        let run = self
+            .run_in(&job.command, export.as_deref().unwrap_or(&self.root))
+            .await;
+        if let Some(dir) = &export {
+            let _ = std::fs::remove_dir_all(dir);
+        }
+        if !run.ok {
+            if job.optional && run.stderr.starts_with("cannot run ") {
+                out.log(
+                    "warning",
+                    &format!("job {}: {}; skipped (optional)", job.name, run.stderr),
+                );
+                return Ok(());
+            }
+            return Err(format!(
+                "job {}: {}",
+                job.name,
+                tail(&run.stderr, 500).trim()
+            ));
+        }
+        let mut command = shell_words(&job.command);
+        if job.tracked {
+            command = format!("git archive HEAD | tar -x -C <dir>, then in <dir>: {command}");
+        }
+        for (check, mut data) in
+            scorecard::checks(&run.stdout).map_err(|e| format!("job {}: {e}", job.name))?
+        {
+            data["command"] = json!(command);
+            out.record(&job.name, &format!("{}:{check}", job.name), data);
+        }
+        Ok(())
+    }
+
     async fn run_ndjson(&self, job: &Job, out: &mut Sink<'_>) -> Result<(), String> {
         let run = self.run(&job.command).await;
         if !run.ok {
@@ -494,6 +545,8 @@ impl Runner {
             } else if self.selected(job, ids) {
                 if job.parse == "tally" {
                     self.run_tally(job, out).await?;
+                } else if job.parse == "scorecard" {
+                    self.run_scorecard(job, out).await?;
                 } else if matches!(
                     job.parse.as_str(),
                     "sarif" | "zizmor" | "actionlint" | "semgrep"
@@ -622,6 +675,57 @@ impl Source for Runner {
 /// `command` with an argument that is exactly `{files}` replaced by `files`; `None` when it asks for
 /// files and there are none.
 /// An argv as one shell command line: words that need it are single-quoted.
+/// The git-tracked files under `root`, with their uncommitted edits (`git stash create`), exported
+/// to a new temporary directory: the tree a fresh CI checkout sees, without untracked build output.
+fn export_tracked(root: &std::path::Path) -> Result<PathBuf, String> {
+    let git = |args: &[&str]| {
+        std::process::Command::new("git")
+            .arg("-C")
+            .arg(root)
+            .args(args)
+            .output()
+            .map_err(|e| format!("git: {e}"))
+    };
+    let stash = git(&["stash", "create"])?;
+    let rev = String::from_utf8_lossy(&stash.stdout).trim().to_owned();
+    let rev = if rev.is_empty() {
+        "HEAD".to_owned()
+    } else {
+        rev
+    };
+    let nanos = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| d.as_nanos());
+    let dir = std::env::temp_dir().join(format!("toolbox-tracked-{}-{nanos}", std::process::id()));
+    std::fs::create_dir_all(&dir).map_err(|e| format!("{}: {e}", dir.display()))?;
+    let tar = dir.join(".tracked.tar");
+    let archive = git(&[
+        "archive",
+        "--format=tar",
+        "-o",
+        &tar.to_string_lossy(),
+        &rev,
+    ])?;
+    if !archive.status.success() {
+        return Err(format!(
+            "git archive: {}",
+            String::from_utf8_lossy(&archive.stderr).trim()
+        ));
+    }
+    let untar = std::process::Command::new("tar")
+        .arg("-xf")
+        .arg(&tar)
+        .arg("-C")
+        .arg(&dir)
+        .status()
+        .map_err(|e| format!("tar: {e}"))?;
+    let _ = std::fs::remove_file(&tar);
+    if !untar.success() {
+        return Err("tar: could not unpack the tracked files".into());
+    }
+    Ok(dir)
+}
+
 fn shell_words(argv: &[String]) -> String {
     argv.iter()
         .map(|a| {

@@ -1,0 +1,97 @@
+# OpenSSF Scorecard through the runner's `scorecard` fitting: one record per check, read from
+# Scorecard's own JSON with nothing added or reinterpreted. `tracked: true` runs it on an export of
+# the git-tracked files, so untracked build output (node_modules, __pycache__) isn't read as
+# binary artifacts, and local results match a fresh CI checkout.
+connectors:
+  - name: ${param:name}
+    package: builtin:runner
+    runtime: in-image
+    config:
+      name: ${param:name}
+      jobs:
+        - name: ${param:name}
+          command: ${param:command}
+          parse: scorecard
+          tracked: true
+          optional: true # not installed → the rules are unknown, not failing
+    records: ["${param:name}"]
+    refresh: {"${param:name}": [external_ids]}
+    freshness: {"${param:name}": 1h}
+
+tools: {scorecard: {version: '${param:version}', versionArgs: [version]}}
+
+kinds:
+  - name: ${param:kind}
+    description: >-
+      One OpenSSF Scorecard check on this repository, with Scorecard's own
+      score (0-10, or null when it was inconclusive), reason and details.
+    identityFrom: ["connector:${param:name}"]
+    fields:
+      check:
+        type: string
+        description: The check's name, e.g. Pinned-Dependencies.
+      score:
+        type: integer
+        description: Scorecard's score, 0-10; null when inconclusive.
+      inconclusive: {type: boolean, description: Scorecard reported -1.}
+      reason:
+        type: string
+        description: Scorecard's one-line reason for the score.
+      details:
+        type: list
+        items: string
+        description: Scorecard's Warn and Info lines.
+      documentation:
+        type: string
+        description: The check's documentation (what to fix).
+      aggregate:
+        type: number
+        description: The run's overall score, Scorecard's weighting.
+      command:
+        type: string
+        description: The command that reproduces this check with Scorecard alone.
+    sources: {default: ["connector:${param:name}"]}
+    map:
+    - from: ${param:name}/${param:name}
+      id: "'${param:name}:' + record.check"
+      set: >-
+        {'check': record.check, 'score': record.score, 'inconclusive':
+        record.inconclusive, 'reason': record.reason, 'details': record.details,
+        'documentation': record.documentation, 'aggregate': record.aggregate,
+        'command': record.command}
+
+scorecards:
+  - name: ${param:name}
+    title: ${param:title}
+    description: >-
+      OpenSSF Scorecard's checks, as Scorecard scores them. The box adds only
+      the ratchet: a check's gap to 10 is the measure, so a score that drops
+      fails a pull request and one that rises is an improvement. A check
+      Scorecard adds in a new release doesn't fail the gate.
+    kind: ${param:kind}
+    owner: ${param:owner}
+    levels: [ten]
+    ratchet: {newEntitiesAtLeast: none}
+    rules:
+    - name: ten
+      level: ten
+      # int() of a null score fails, so an inconclusive check is unknown, not failing.
+      check: int(entity.score) == 10
+      measure: 10 - int(entity.score)
+      dataFrom: ${param:name}
+      evidence: >-
+        entity.details.filter(d, d.startsWith('Warn')) + ['see ' +
+        entity.documentation]
+      fix: >-
+        Follow the check's documentation (in the evidence). The check, its
+        scoring and its remediation are OpenSSF's.
+    facets: {summary: public, details: public}
+
+campaigns:
+  - name: ${param:name}-ten
+    title: "${param:title}: every check at 10"
+    owner: ${param:owner}
+    description: >-
+      Every Scorecard check at its maximum. Progress is counted from the start
+      the baseline records, in checks below 10 and in points short.
+    includes: [{scorecard: '${param:name}', rules: [ten]}]

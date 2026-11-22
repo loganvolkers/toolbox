@@ -69,20 +69,10 @@ scorecards:
       fix: >-
         Add .github/dependabot.yml updates for the ecosystems in the evidence
         (cargo, npm, github-actions).
-    - name: code-scanning
-      level: bronze
-      check: entity.codeScanning
-      evidence: "['no workflow uses github/codeql-action']"
-      fix: >-
-        Add a code scanning workflow that uses github/codeql-action. Alert
-        counts stay a report, not a gate.
-    - name: security-policy
-      level: bronze
-      check: entity.securityPolicy
-      evidence: "['no SECURITY.md']"
-      fix: >-
-        Add SECURITY.md at the repository root, under .github/, or under docs/,
-        with how to report a vulnerability.
+    # Code scanning and the security policy are OpenSSF Scorecard's SAST and Security-Policy checks,
+    # which this portal carries (maintainer-openssf) instead of its own versions
+    # (D01M82E93XAPNE0WFXEPJZ59WG4). Pinned code scanning stays until Scorecard's
+    # Pinned-Dependencies reaches 10 here.
     - name: workflows-have-owners
       level: silver
       check: entity.workflowOwners

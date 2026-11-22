@@ -1,0 +1,41 @@
+# A Toolbox package (D89): OpenSSF Scorecard, an existing standard and its tool, in the box
+# (docs/design/openssf-template.md). The standard stays OpenSSF's: its checks, its 0-10 scores
+# and its documentation. The box adds a ratchet (a check's score must not drop) and a campaign.
+apiVersion: toolbox.dev/package/v0
+name: openssf-scorecard
+version: 0.1.0
+description: >-
+  Carry OpenSSF Scorecard's checks as they are: one entity per check with
+  Scorecard's own score, reason and details, a ratchet so no score drops,
+  and a campaign to bring every check to 10. Runs Scorecard's --local mode
+  on the tracked files, so it needs no GitHub token.
+parameters:
+  name:
+    type: string
+    default: openssf
+    description: Names the connector, record kind, scorecard and campaign.
+  kind:
+    type: string
+    default: OpenSSFCheck
+    description: The entity kind for the checks (PascalCase, unique per include).
+  version:
+    type: string
+    default: 5.7.0
+    description: >-
+      The Scorecard version, pinned under `tools:` and checked by `toolbox
+      doctor`.
+  command:
+    type: array
+    default: [scorecard, --local, ., --format, json, --show-details]
+    description: >-
+      Scorecard's own command, printing its JSON. Choose checks with its own
+      flag, e.g. add --checks=SAST,Pinned-Dependencies.
+  title:
+    type: string
+    default: OpenSSF Scorecard
+    description: The scorecard's heading.
+  owner:
+    type: string
+    default: group:maintainers
+    description: Who owns the standard in this portal (the checks are OpenSSF's).
+fragments: [fragments/*.yaml]

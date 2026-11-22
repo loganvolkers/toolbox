@@ -302,8 +302,6 @@ Scorecard `maintainer-supply-chain` over `Repository` entities, owned by group:m
 | Rule | Level | Passes when | Fix |
 |---|---|---|---|
 | `dependabot` | bronze | `entity.dependabotGaps.size() == 0` | Add .github/dependabot.yml updates for the ecosystems in the evidence (cargo, npm, github-actions). |
-| `code-scanning` | bronze | `entity.codeScanning` | Add a code scanning workflow that uses github/codeql-action. Alert counts stay a report, not a gate. |
-| `security-policy` | bronze | `entity.securityPolicy` | Add SECURITY.md at the repository root, under .github/, or under docs/, with how to report a vulnerability. |
 | `workflows-have-owners` | silver | `entity.workflowOwners` | Add a CODEOWNERS rule that covers .github/workflows (a catch-all * does). Workflow changes should have an owner. |
 | `code-scanning-pinned` | gold | `entity.codeScanningPinned` | Pin github/codeql-action to a 40-character commit, the same way other actions are pinned. |
 
@@ -432,6 +430,16 @@ Scorecard `maintainer-action-deps` over `ActionDependency` entities, owned by gr
 |---|---|---|---|
 | `pinned-everywhere` | bronze | `entity.pins.all(p, p == 'sha')` | Pin this action to a full commit SHA in every workflow that uses it. Resolve the tag with `git ls-remote https://github.com/<owner>/<repo> refs/tags/<tag>` and peel an annotated tag (`^{}`) so the SHA is the commit. |
 
+## OpenSSF Scorecard
+
+OpenSSF Scorecard's checks, as Scorecard scores them. The box adds only the ratchet: a check's gap to 10 is the measure, so a score that drops fails a pull request and one that rises is an improvement. A check Scorecard adds in a new release doesn't fail the gate.
+
+Scorecard `maintainer-openssf` over `OpenSSFCheck` entities, owned by group:maintainers. `toolbox report` lists what fails now.
+
+| Rule | Level | Passes when | Fix |
+|---|---|---|---|
+| `ten` | ten | `int(entity.score) == 10` | Follow the check's documentation (in the evidence). The check, its scoring and its remediation are OpenSSF's. |
+
 ## Python we maintain passes ruff
 
 Every file ruff checks is clean. The measure is its findings, so a new finding is a regression and a fixed one an improvement; a new file must arrive clean.
@@ -449,6 +457,9 @@ Change a standard by changing these parameters in the portal's `toolbox.yaml`.
 - `../packages/github-actions`
   - `githubOrg`: `"loganvolkers"`
   - `githubRepo`: `"toolbox"`
+- `../packages/openssf-scorecard`
+  - `kind`: `"OpenSSFCheck"`
+  - `name`: `"maintainer-openssf"`
 - `../packages/sarif`
   - `command`: `["ruff","check","--no-cache","--output-format","sarif","--exit-zero","{files}"]`
   - `files`: `["scripts/*.py","examples/reference-portal/tools/*.py"]`
@@ -464,6 +475,7 @@ Change a standard by changing these parameters in the portal's `toolbox.yaml`.
 
 - **Skills to silver** (`skill-silver`): Every shipped agent skill reaches silver on maintainer-skill.
 - **CLI skills present** (`cli-skill-coverage`): Every CLI command that needs a skill has one (cli-skill bronze).
+- **OpenSSF Scorecard: every check at 10** (`maintainer-openssf-ten`): Every Scorecard check at its maximum. Progress is counted from the start the baseline records, in checks below 10 and in points short.
 - **Python we maintain passes ruff: to zero** (`maintainer-python-zero`): No ruff findings in any file. Progress is counted from the start the baseline records.
 
 ## Commands

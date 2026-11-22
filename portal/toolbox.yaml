@@ -294,6 +294,11 @@ include:
   # Our GitHub Actions standards, as the package pilots will use (D89): connectors, tools, kinds, scorecards.
   - package: ../packages/github-actions
     with: {githubOrg: loganvolkers, githubRepo: toolbox}
+  # OpenSSF Scorecard, an existing standard and its tool, carried as it is: its checks and scores
+  # are OpenSSF's; the box adds the ratchet and a campaign (docs/design/openssf-template.md).
+  # It replaces this portal's own versions of SAST, Security-Policy and Pinned-Dependencies.
+  - package: ../packages/openssf-scorecard
+    with: {name: maintainer-openssf, kind: OpenSSFCheck}
   # The Python we maintain, checked by ruff (an existing tool) through the SARIF slot. ruff reads
   # its own ruff.toml; the box passes it nothing else (docs/design/toolbox-and-tools.md).
   # experiments/ are archived harnesses, not maintained code.

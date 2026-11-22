@@ -658,24 +658,18 @@ assert:
       score('maintainer-supply-chain',
       'repo:acme/focused').rules['dependabot'] == 'pass' &&
       score('maintainer-supply-chain',
-      'repo:acme/focused').rules['code-scanning'] == 'pass' &&
-      score('maintainer-supply-chain',
-      'repo:acme/focused').rules['security-policy'] == 'pass' &&
-      score('maintainer-supply-chain',
       'repo:acme/focused').rules['workflows-have-owners'] == 'pass' &&
       score('maintainer-supply-chain',
       'repo:acme/focused').rules['code-scanning-pinned'] == 'pass'
   - name: >-
-      a repository missing dependabot, code scanning and a security policy
-      fails bronze
+      a repository missing dependabot fails bronze (code scanning and the
+      security policy are OpenSSF Scorecard's checks)
     expect: >-
       score('maintainer-supply-chain', 'repo:acme/unsafe').level == 'none' &&
       score('maintainer-supply-chain',
       'repo:acme/unsafe').evidence['dependabot'] == ['cargo', 'npm',
-      'github-actions'] && score('maintainer-supply-chain',
-      'repo:acme/unsafe').evidence['code-scanning'] == ['no workflow uses
-      github/codeql-action'] && score('maintainer-supply-chain',
-      'repo:acme/unsafe').evidence['security-policy'] == ['no SECURITY.md'] &&
+      'github-actions'] && !('code-scanning' in
+      score('maintainer-supply-chain', 'repo:acme/unsafe').rules) &&
       score('maintainer-supply-chain',
       'repo:acme/partial').rules['code-scanning-pinned'] == 'fail'
   - name: a titled described page in the sidebar reaches gold
@@ -1047,3 +1041,14 @@ assert:
       'observability:demo-unsafe').rules['metric-catalog-complete'] == 'fail'
       && score('maintainer-observability',
       'observability:demo-unsafe').rules['prom-endpoint'] == 'fail'
+  - name: >-
+      OpenSSF Scorecard is carried as it is: a check at 10 passes, one below
+      fails with its gap, and an inconclusive one is unknown
+    expect: >-
+      score('maintainer-openssf', 'maintainer-openssf:SAST').rules['ten'] ==
+      'pass' && score('maintainer-openssf',
+      'maintainer-openssf:Pinned-Dependencies').rules['ten'] == 'fail' &&
+      score('maintainer-openssf',
+      'maintainer-openssf:Pinned-Dependencies').measures['ten'] == 6.0 &&
+      score('maintainer-openssf', 'maintainer-openssf:Fuzzing').rules['ten']
+      == 'unknown'

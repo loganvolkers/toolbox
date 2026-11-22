@@ -1,0 +1,20 @@
+# Package expectations over fixtures (package author SDLC: test). SAST and Pinned-Dependencies are
+# from Scorecard 5.7.0 run on this repository; the inconclusive Fuzzing record is constructed.
+name: openssf-scorecard
+assert:
+  - name: a check at 10 meets the standard
+    expect: score('openssf', 'openssf:SAST').level == 'ten'
+  - name: >-
+      a check below 10 fails, with its gap as the measure and Scorecard's
+      details as evidence
+    expect: >-
+      score('openssf', 'openssf:Pinned-Dependencies').rules['ten'] == 'fail'
+      && score('openssf', 'openssf:Pinned-Dependencies').measures['ten'] ==
+      6.0 && score('openssf',
+      'openssf:Pinned-Dependencies').evidence['ten'].size() == 3
+  - name: an inconclusive check is unknown, not failing
+    expect: score('openssf', 'openssf:Fuzzing').rules['ten'] == 'unknown'
+  - name: the campaign counts checks below 10 and points short
+    expect: >-
+      campaign('openssf-ten').measure == 6.0 &&
+      campaign('openssf-ten').meeting == 1

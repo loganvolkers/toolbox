@@ -27,7 +27,7 @@ jobs:
       - name: This repository's portal report
         run: |
           cargo build --locked
-          scripts/ci-tools.sh "$RUNNER_TEMP/tools" actionlint
+          scripts/ci-tools.sh "$RUNNER_TEMP/tools" actionlint scorecard
           export PATH="$RUNNER_TEMP/tools:$PATH"
           target/debug/toolbox tools install portal --via pipx   # the pins in the portal's tools:
           target/debug/toolbox doctor portal

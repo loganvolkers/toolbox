@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Install CI's third-party tools from their releases, SHA-256-pinned, instead of compiling them
 # with `go install` on every run (D90: reuse released artifacts). Linux x86_64 only, like CI.
-# Usage: scripts/ci-tools.sh <bin-dir> <tool>...   (tools: openfga actionlint fga)
+# Usage: scripts/ci-tools.sh <bin-dir> <tool>...   (tools: openfga actionlint fga scorecard)
 # For the site report preview (pages.yml pins), prefer scripts/regen-site-report.sh, which
 # installs actionlint from here plus zizmor==1.32.0, then runs doctor + report.
 set -euo pipefail
@@ -20,6 +20,8 @@ for tool in "$@"; do
       8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8 actionlint ;;
     fga) fetch fga https://github.com/openfga/cli/releases/download/v0.8.2/fga_0.8.2_linux_amd64.tar.gz \
       e48c4a73cf68031fe9fc0827f1462a9b2d6981e3d2e9b82f1e1c2e120c293443 fga ;;
+    scorecard) fetch scorecard https://github.com/ossf/scorecard/releases/download/v5.7.0/scorecard_5.7.0_linux_amd64.tar.gz \
+      3b08ec0a8681806c3e744ec9210742a502c7d66f06f25523b70f7128738235d3 scorecard ;;
     *) echo "unknown tool $tool" >&2; exit 2 ;;
   esac
 done

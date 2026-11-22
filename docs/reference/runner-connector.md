@@ -38,6 +38,7 @@ connectors:
 | `output` | Lint jobs: read the report from this file (relative to `root`) instead of stdout, for tools that write one |
 | `optional` | A missing program skips the job with a log line; rules over its records are `unknown`, not failing |
 | `per` | `crate` (one run per workspace member) or `once` (default) |
+| `tracked` | `true`: run in an export of the git-tracked files, with their uncommitted edits (`git stash create`, `git archive`), as a fresh CI checkout would be; for tools that walk the directory |
 | `kinds` | `ndjson` jobs: the record kinds the command prints |
 
 ## Slots and fittings
@@ -49,6 +50,7 @@ connectors:
 | `zizmor`, `actionlint`, `semgrep` | Fitting | Those tools' own JSON. Prefer `sarif` where the tool has it; actionlint has no SARIF output |
 | `cargo-test`, `clippy` | Fitting | `cargo test` and `cargo clippy` output, per crate |
 | `tally` | Fitting | An NDJSON file the command writes, counted by a key |
+| `scorecard` | Fitting | OpenSSF Scorecard's `--format json --show-details`: one record per check (`check`, `score`, `reason`, `details`, `documentation`). Its SARIF needs a policy and an experimental flag, and its scores aren't SARIF results (packages/openssf-scorecard) |
 
 **What a lint record holds**, for every file (the shape is the same whichever slot or fitting read
 it):
