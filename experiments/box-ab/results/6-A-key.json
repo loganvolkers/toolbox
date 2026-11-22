@@ -1,0 +1,35 @@
+{
+ "gate_exit": 1,
+ "worse": [
+  "semgrep",
+  "zizmor"
+ ],
+ "new_findings": {
+  "semgrep": [
+   [
+    "posthog/api/person.py",
+    1566,
+    "semgrep.rules.no-direct-persons-db-orm"
+   ]
+  ],
+  "zizmor": [
+   [
+    ".github/workflows/ci-python.yml",
+    29,
+    "zizmor/artipacked"
+   ],
+   [
+    ".github/workflows/ci-python.yml",
+    29,
+    "zizmor/unpinned-uses"
+   ]
+  ]
+ },
+ "campaign": {
+  "semgrep": {
+   "start": 209,
+   "now": 200,
+   "paid": 9
+  }
+ }
+}
