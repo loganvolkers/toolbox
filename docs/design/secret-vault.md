@@ -1,6 +1,6 @@
 # Secret vault for connector auth
 
-**Layer:** operator SDLC (runtime binding) and connector-author SDLC (local env/file).  
+**Layer:** operator SDLC (runtime binding) and package author SDLC (local env/file for connector authors).  
 **Box vs tools:** this is the **box** — carrying and resolving secret *references* into connector
 config. Cloud secret managers and Vault remain external **tools**; Toolbox fits them behind one
 trait.  
@@ -60,11 +60,11 @@ See [examples/secret-vault-gcp](../../examples/secret-vault-gcp/README.md):
 Toolbox’s own access to SM should use ADC / Workload Identity. The GCP connector’s SA JSON is a
 *payload* secret stored in SM, not the resolver’s credentials when avoidable.
 
-## 5. SDLC
+## 5. Operator and package author SDLC modes
 
 | Mode | Typical backends |
 |---|---|
-| Connector-author local | Env + file under gitignored `.secrets/` |
+| Package author local | Env + file under gitignored `.secrets/` |
 | CI | Env / file from the CI secret store; fakes in unit tests |
 | Operator prod | GCP/AWS/Azure/Vault (+ optional CSI file mount) |
 
