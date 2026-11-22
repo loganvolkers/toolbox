@@ -133,7 +133,14 @@ def truth(root, phase):
         if TRUTH[tool] == ["@hogli"]:
             out[tool] = hogli_job_timeouts(root)
             continue
-        r = run(TRUTH[tool], root, phase)
+        # semgrep sometimes stalls (once 9 and once 15 minutes, against a normal 20 s); retry it.
+        for attempt in range(3):
+            try:
+                r = run(TRUTH[tool], root, phase, timeout=300)
+                break
+            except subprocess.TimeoutExpired:
+                if attempt == 2:
+                    raise
         # A tool that errors must never read as "no findings" (actionlint exits 1 on findings).
         if r.returncode not in OK_EXIT.get(tool, (0,)) or not r.stdout.strip():
             raise RuntimeError(f"{tool} failed ({r.returncode}): {(r.stderr or r.stdout)[-600:]}")
