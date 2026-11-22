@@ -19,6 +19,9 @@ hosting = "github"
 install-updater = false
 # Signed build provenance for every artifact (verify with `gh attestation verify`, D90)
 github-attestations = true
+# Keep hand-patched release.yml Token-Permissions (top-level contents: read; job-level
+# write on host/announce). Without this, `dist generate` refuses the dirty CI file (cargo-dist#2320).
+allow-dirty = ["ci"]
 
 # Actions pinned to commit SHAs (zizmor `unpinned-uses`; maintainer-ci-security). Update with the
 # tag's commit when upgrading: git ls-remote --tags https://github.com/actions/<name>
