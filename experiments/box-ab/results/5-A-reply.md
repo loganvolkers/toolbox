@@ -1,0 +1,10 @@
+# Phase 5, arm A: the agent's reply (DX feedback in §3)
+
+1. WF001 is a semgrep rule, `.semgrep/workflow-rules/job-timeouts.yaml`, with fixtures (`job-timeouts.test.yaml`), in its own folder because ci-security.yaml runs all of .semgrep/rules over app code. It flags any job directly under top-level `jobs:` without a job-level `timeout-minutes`, unless the job has `uses`. TOOLS.md tool `job-timeouts`: `semgrep scan ... --config .semgrep/workflow-rules/job-timeouts.yaml .github/workflows/*.y*ml` (the same files WF001 read). quality_gate.py: a KIND map so job-timeouts uses semgrep's version check, exit codes and JSON. The workflow runs the rule's fixture tests before the gate. Checked against WF001: 0 = 0 on the real tree; with every timeout-minutes deleted from copies of all 86 workflows both flag the same 200 jobs; semgrep --test passes. hogli: job_timeouts.py deleted with its registration, import, tests and the model fields only it used; `lint:workflows --check WF001` says where it moved; 27 tests pass. History: restarted (WF001 had no baseline; job-timeouts starts at 0 via accept --tool job-timeouts). Gate exit 0; removing one timeout-minutes fails it.
+2. Couldn't: run two other hogli test files (missing `parameterized`, also without its changes). Didn't accept the 10 earlier semgrep fixes.
+3. DX feedback:
+   1. semgrep YAML patterns don't behave as expected: `'{...}'` and `{$K: $V, ...}` silently matched nothing; only `$K: $V` worked; `$JOB: ...` matches nested keys at any depth with no way to anchor to the top of the file; found what works by trial, still needed pattern-not-inside.
+   2. A rule's id depends on its file path (`semgrep.workflow-rules.job-timeouts`): moving the file renames every finding.
+   3. hogli doesn't run standalone: needs PYTHONPATH=.:../hogli/src, and the root pytest.ini needs pytest-django's --reuse-db, so `-c /dev/null`.
+   4. Gate tools are keyed by name: a second semgrep-based tool needed a name-to-kind map; a `kind` field in the TOOLS.md schema would fit better.
+   5. progress raises BrokenPipeError when piped into head (cosmetic).
