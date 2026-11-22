@@ -638,7 +638,7 @@ These designs close the gaps found in the [red-team review](./red-team.md). Each
 | **Root causes** | Every ratchet regression carries its cause: evidence, the command that reproduces it, and for a repository level the scorecard that fell and the change below it (D01M7ZZYZ1SXSTHDZQK8A1CZMMN) | [root-causes.md](./design/root-causes.md) |
 | **The box and the tools** | What Toolbox is (a box for tools, not a wrapper or a factory), the box's promises (take-it-out, standard slots, pinned tools, kits that travel), when to build a tool, and a review of the A/B friction and of Toolbox for Toolbox's own extractors in that light (D01M7ZRAJT47W11X5X3FEJ6QTX8) | [toolbox-and-tools.md](./design/toolbox-and-tools.md) |
 | **Repo portals** | Toolbox without a server: `toolbox report` in CI, rule evidence, ratchet baselines (Betterer-style), one-file HTML publishing (D66); the hosted page's Overview / Catalog / Scorecards explorer (D01M7XY1QYKW2D0HMSG50R0XTQH); a waiver that cites a decision (D01M7Y5VWNAWB8K1DNMY31KQPQ0); missing connector data as `unknown` (D01M7Y5VWKW5TDS0VQWZFPRQ27N); the `actions/report` GitHub Action and a starter portal for one-step adoption (D69) | [repo-portals.md](./design/repo-portals.md), [report-ux.md](./design/report-ux.md), [ratchets.md](./design/ratchets.md), [waivers.md](./design/waivers.md), [repo-value.md](./design/repo-value.md) (the current focus) |
-| **Federation** | Standards down as versioned packages, results up as report files, graduation team → org → company with stages and waivers; design only (D68) | [federation.md](./design/federation.md) |
+| **Federation** | Unpaused (D01M80TPRDCAYMG627A0HNM7E46): operator-first federal API load/score, standards-down packages, optional results-up, graduation with stages/waivers (D68) | [federation.md](./design/federation.md) |
 | **Packages** | Shareable standards as data packages (fragments, fixtures, tests, rubrics, skills, typed parameters); git-first with an OCI mirror, pinned by digest (D89); T4T split with `include`; `oss-package` scorecard for what we publish; shareability signals; fleet rollout with `actions/report` and gh-aw | [packages.md](./design/packages.md) |
 | **Package author SDLC** | The fourth SDLC layer (D87); binary distribution for Toolbox (`dist`, installers, image), connectors outside core (executable, WASM, remote), upstream tools via mise/aqua (D90); SDLC stages catalogued and scored in T4T | [package-author-sdlc.md](./design/package-author-sdlc.md) |
 | **Scorecards for scorecards** | What makes a standard good (12 lessons); `meta-rule` and `meta-scorecard` over every portal's rules, self-applied at one level; kinds, fields and connectors scored (`meta-kind`/`-field`/`-connector`); judgement pushed by coding agents as assessments against manifest rubrics, scored (`meta-assessment`, `meta-rubric`) and reviewed once (D79, D80); CEL analysis; undeclared functions rejected; new-entity floors; LLM assessment and agent trials proposed (D71) | [scorecards-for-scorecards.md](./design/scorecards-for-scorecards.md) |
@@ -942,8 +942,9 @@ This is a stated product goal, so it is a **tested requirement**:
 
 ## 8. Delivery roadmap
 
-> **Focus (D01M7Y46VDDBK2SW6H96ZSG89MP):** repo-level value is proven first ([repo-value.md](./design/repo-value.md)).
-> Phases 2–6 beyond repo portals, M5 and M6 are paused until its exit is met.
+> **Focus (D01M7Y46VDDBK2SW6H96ZSG89MP):** repo-level value continues ([repo-value.md](./design/repo-value.md)).
+> M5 and M6 remain paused. **Federation is unpaused** (D01M80TPRDCAYMG627A0HNM7E46) on an
+> operator-first / API-first path ([federation.md](./design/federation.md)).
 >
 > **For implementers:** v1 (Phases 0–1 plus the action runtime) is specified milestone by milestone in
 > [v1-spec.md](./v1-spec.md) §3, anchored on the [reference portal](../examples/reference-portal/README.md).

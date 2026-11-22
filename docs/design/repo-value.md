@@ -30,7 +30,7 @@ The bet has five parts. Each has an experiment and a result that would stop us (
 |---|---|
 | Central portal: Cloud Run deployment, `plan --remote`, preview, `verify` (M6) | **Paused** |
 | Self-service actions (M5, already paused by D64) | **Paused** |
-| Federation, including static federation ([federation.md](./federation.md), [repo-portals.md](./repo-portals.md) §5) | **Paused** until §6 |
+| Federation, including static federation ([federation.md](./federation.md), [repo-portals.md](./repo-portals.md) §5) | **Unpaused** (D01M80TPRDCAYMG627A0HNM7E46): operator-first / API-first federal path; does not wait on every leaf install. M5/M6 still paused |
 | Apps built on a portal's API (user SDLC beyond reading a report) | **Paused** |
 | `serve`, REST, MCP, UI, OpenFGA, Postgres (M2–M4) | **Kept green, not extended.** CI still runs their tests and acceptance scripts; bugs are fixed. `serve` and `mcp` on a laptop remain part of the repo-level agent loop |
 | `toolbox report`, the ratchet and verdict, `actions/report`, the starter, packages, assessments, campaigns | **Focus** |
@@ -74,8 +74,10 @@ than us choosing to keep the step on. That stays open, and it is the first thing
 
 **Repo-level value is proven when R1, R2, R4 and R5 continue on rt-buddy and on at least three of the
 four fork testbeds, and R3 is either met or replaced by evidence that the ratchet keeps the gains
-agents make (R4).** Federation (D68) then resumes, starting from the packages that R5 showed
-travel. Its first step is a pilot with maintainers other than us, the one thing forks can't prove.
+agents make (R4).** Federation (D68) is **already unpaused** for operator-first federal work
+(D01M80TPRDCAYMG627A0HNM7E46): org-level API score/load without per-repo install. Leaf-portal
+pilots with maintainers other than us remain the proof for *optional* leaf depth and package
+travel (R5), not a gate on federal design.
 
 ## 8. Results so far
 

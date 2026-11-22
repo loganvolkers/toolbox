@@ -6,7 +6,7 @@ exposed identically over API, MCP, CLI and UI.
 
 The public docs are a Starlight site in [site/](site/src/content/docs/index.md), published to GitHub Pages (D91).
 
-**Focus:** proving repo-level value ([docs/design/repo-value.md](docs/design/repo-value.md)); the central portal, self-service actions and federation are paused until it is proven.
+**Focus:** proving repo-level value ([docs/design/repo-value.md](docs/design/repo-value.md)); the central portal (M6) and self-service actions (M5) remain paused. **Federation is unpaused** on an operator-first path ([docs/design/federation.md](docs/design/federation.md)).
 
 **Status:** v1 implementation in progress: M0–M4 are done (validate, derived state, Postgres store and REST reads, authentication and OpenFGA facets, MCP, CLI, minimal UI and connectors); M5 (actions) is paused for a review of self-service coordination (D64) ([docs/v1-spec.md](docs/v1-spec.md) §3). Toolbox also runs on itself: [portal/](portal/README.md) scores this repo's crates, docs, CLI and MCP tools against the three SDLC layers (D65).
 

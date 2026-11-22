@@ -1,27 +1,35 @@
 # Federation: Standards That Start in One Repo and Graduate to the Company
 
-*Paused (D01M7Y46VDDBK2SW6H96ZSG89MP): federation resumes once repo-level value is proven ([repo-value.md](./repo-value.md)).*
+*Unpaused (D01M80TPRDCAYMG627A0HNM7E46): federation resumes with an **operator-first** charter.
+Federal/org rollout prefers **GitHub and GCP APIs** (and similar) to **score and load** without
+per-repo install; leaf toolboxes are optional depth, not the primary path. M5 and M6 stay paused
+([repo-value.md](./repo-value.md)). Operator charters and supporting research live in the Toolbox
+for RTBuddy Project store (`docs/federation-operator-charter.md`, namespace/scale and catalog
+persistence notes).*
 
-*Status: design only, 2026-11-20 (D68). **Nothing here is implemented, and no implementation is
-planned until repo portals have been used by a few teams.** Builds on
-[repo-portals.md](./repo-portals.md) (what exists today), [ratchets.md](./ratchets.md),
-[meta-catalog.md](./meta-catalog.md), [source-of-truth.md](./source-of-truth.md) and
-[authorization.md](../authorization.md).*
+*Status: design (D68), amended 2026-11-22. Implementation may start on F1′ / F1 under the
+operator-first bias below. Builds on [repo-portals.md](./repo-portals.md),
+[ratchets.md](./ratchets.md), [meta-catalog.md](./meta-catalog.md),
+[source-of-truth.md](./source-of-truth.md) and [authorization.md](../authorization.md).*
 
 ---
 
 ## 1. Conclusion
 
-**Federate configuration down and results up, with no runtime coupling between portals.**
+**Federate configuration down and results up, with no runtime coupling between portals — and load
+the fleet from platform APIs first.**
 
 A Toolbox deployment becomes a tree (or DAG) of portals:
 - **company → division → org → team → repo**, where every level is optional;
-- each portal is an ordinary Toolbox portal: a manifest, its connectors, its data.
+- each portal is an ordinary Toolbox portal: a manifest, its connectors, its data;
+- an **org operator** can cover the fleet **without sub-team portals** and **without** every leaf
+  installing Toolbox.
 
 | Flow | What moves | How (proposed) |
 |---|---|---|
-| **Standards down** | Kinds, fields, scorecards, policies and checks published by a parent | Versioned **standard packages** a child `include`s by name and digest. The parent's rules arrive read-only, so a child can add and tighten but never weaken them |
-| **Results up** | Each child's scorecard results, evidence counts and its own entities | The parent **reads children's committed report files** (or their ingest pushes, later) as ordinary connector records. No portal calls another at runtime |
+| **Federal load & score (primary)** | Repo inventory, file facts, static tool findings (zizmor, …) | Org App + **GitHub Contents/Trees** (and GCP analogues); central workers in an org-operator repo (CentralRepoOps-shaped). No leaf workflow required |
+| **Standards down** | Kinds, fields, scorecards, policies and checks published by a parent | Versioned **standard packages** a child `include`s by name and digest when a leaf portal exists. The parent's rules arrive read-only, so a child can add and tighten but never weaken them |
+| **Results up (secondary)** | Each child's scorecard results, evidence counts and its own entities | The parent **reads children's committed report files** (or their ingest pushes, later) as ordinary connector records. No portal calls another at runtime |
 | **Graduation** | A standard moves from one team to the company | Each move is the same rule changing home: team package → org package → company package. A stage tag (`experimental → advisory → mandatory`) controls enforcement, and `toolbox plan` shows the fleet impact first |
 
 Why this shape:
@@ -29,21 +37,27 @@ Why this shape:
    The platform org measures it everywhere. Then the company mandates it with a ratchet, so nobody
    gets worse and a burn-down lets everyone get better. Betterer stopped at the copying step, because
    it has no fleet view and no promotion path ([ratchets.md](./ratchets.md) §2).
-2. It answers the go-to-market critique ([adversarial-critique.md](../adversarial-critique.md)).
-   Toolbox can start in a handful of repos with zero infrastructure (`toolbox report` in CI) and grow
-   into central governance without a migration. Every repo portal is already a future child.
+2. It answers the go-to-market critique ([adversarial-critique.md](../adversarial-critique.md))
+   **without** forcing a leaf install tax: federal API scan covers the org on day one; repo portals
+   add depth (local ratchet, build-dependent evidence) when teams opt in.
 3. It keeps charter goal G1. A child portal is a file in a repo plus CI, and only the root needs a
    server. G3 holds too: packages and report files are plain, documented formats.
+
+**Operator-first open work (pointers):** org-operator starter; fleet-wide zizmor via central
+workflows; local-workspace vs org Files/Contents API precedence; light Backstage/DX/Port migration
+via docs/skills/CLIs — Project `docs/federation-operator-charter.md`.
 
 ## 2. Vocabulary
 
 | Term | Meaning |
 |---|---|
 | **Portal node** | One portal in the tree: root (company), intermediate (division, org, team) or leaf (repo). Leaves usually run only `toolbox report`; inner nodes may run `serve` |
+| **Org operator / governance operator** | Runs the federal portal and central fleet workers; can roll out without sub-teams |
 | **Standard package** | A versioned bundle of manifest fragments (kinds, fields, scorecards, policies, connector configs) published by a node, e.g. `@acme/standards-company@3.2.0`. The unit of graduation |
 | **Subgraph** | The entities and fields a node owns. Borrowed from Apollo Federation (secondary source): subgraphs own types and fields, and the gateway composes them. Here a child may *extend* a parent's kind with its own fields but not redefine the parent's |
 | **Stage** | A scorecard's or rule's enforcement level: `experimental` (visible only in its own node), `advisory` (reported up, never fails CI), `mandatory` (ratcheted in CI where it applies) |
 | **Waiver** | An owned, expiring exception to a mandatory rule for one entity, recorded as data (a native value with author, reason and expiry), never as a manifest edit in the child |
+| **Federal API load** | Inventory and file facts fetched via platform APIs (GitHub Contents/Trees, GCP inventory/source) into the parent portal |
 
 ## 3. Standards down: packages and composition
 
@@ -62,7 +76,9 @@ scorecards:
 **Composition rules**
 
 1. **Namespaces.** Each package owns its scorecard and kind names, e.g. `company/ownership`. A child
-   refers to a parent's names but can't redefine them.
+   refers to a parent's names but can't redefine them. At the federation catalog boundary, **child
+   entities are namespaced by default**; shared/flattened lists are explicit opt-in (Project
+   namespace recommendation; decide FQ2/FQ4 below).
 2. **Monotonic tightening.** A child may:
    - add rules to its own scorecards;
    - add stricter `appliesTo` exclusions only through waivers (§6);
@@ -84,13 +100,16 @@ and pinning packages from a registry: an OCI artifact, a git ref, or npm, alongs
 
 | Option | Mechanism | Pros | Cons |
 |---|---|---|---|
-| **A. Pull committed reports** (recommended first) | Children commit `toolbox report` baselines (`toolbox-report/v1`, already built). The parent's `git-files` connector reads them across the org's repos | No new protocol; works with leaf CI only; history is git history; the parent can't be "down" for children | Coarse: levels and evidence counts, not entity details; as fresh as the default branch |
+| **A. Pull committed reports** (secondary depth) | Children commit `toolbox report` baselines (`toolbox-report/v1`, already built). The parent's `git-files` connector reads them across the org's repos | No new protocol; works with leaf CI only; history is git history; the parent can't be "down" for children | Requires leaf install for those repos; as fresh as the default branch |
 | **B. Push to the parent's ingest API** | Child CI runs `toolbox report -o json` and posts records to the parent as connector `child:<repo>` | Fresher; richer (child entities and fields) | Needs credentials per child; the parent must be up; the trust boundary is subtle (a child asserting facts about itself) |
-| **C. Parent runs the child's checks** | The parent clones repos and runs their `toolbox report` itself (Scorecard-style fleet scan) | Uniform; doesn't trust child CI | Compute cost; needs build environments for every ecosystem |
+| **C. Parent runs the child's checks** (**primary for static federal score**) | The parent lists repos via API, loads files via Contents/Trees (or checks out in a **central** worker), and runs checks itself (Scorecard-style / central zizmor) | Uniform; doesn't trust child CI; **no per-repo install** | Compute cost; needs build environments for ecosystem-specific checks |
 
-**Recommendation.** Start with A. Use C for checks that don't need a build: the static
-`workspace`-type facts that OpenSSF Scorecard proves can run fleet-wide. Use B only for children
-that run their own `serve`.
+**Recommendation.** Prefer **C for federal bootstrap and static tools** (zizmor, actionlint, OpenSSF Scorecard-class). Use **A** when leaves opt into repo portals for ratchet UX and build-dependent evidence. Use **B** only for children that run their own `serve`.
+
+**Local files vs org Files/Contents API.** The same logical path may be read from a workspace
+checkout or from the GitHub Contents API (and GCP equivalents). For parent-owned and verified
+fields, **API / central-worker facts win** over child self-reports. Merge by
+`(repo, ref, path, blob_sha)` with provenance tags — full rules in the Project operator charter.
 
 **Trust.**
 - Results a child reports about itself are claims. A parent scorecard can require them to be
@@ -98,8 +117,8 @@ that run their own `serve`.
 - This mirrors CODEOWNERS-verified ownership (D17).
 
 **Identity.**
-- Entity ids are global (`repository:acme/payments-api`), so a child's report merges onto the
-  parent's entity.
+- Entity ids are global at the wire (`repository:acme/payments-api`), with **namespaced defaults**
+  for ambiguous kinds (`component:acme.payments-api/checkout`) and opt-in flatten into shared lists.
 - Precedence follows the source-of-truth rules: the parent's own connector facts outrank
   child-reported claims for parent-owned fields.
 
@@ -115,7 +134,8 @@ company (root; serve; owns company/*)
 └── org: platform               (serve; owns platform/*)
 ```
 
-- **Any node may be skipped.** A repo can include the company package directly.
+- **Any node may be skipped.** A repo can include the company package directly. An **org-operator
+  starter** uses `org → repo` only — no sub-teams required.
 - **Where the hierarchy comes from.** Group membership comes from the IdP (SCIM, as today). The node
   tree is configuration: each package declares its owning group. The root's meta catalog
   ([meta-catalog.md](./meta-catalog.md)) shows the tree, which package versions each child runs, and
@@ -135,33 +155,41 @@ company (root; serve; owns company/*)
 |---|---|---|---|
 | 1. **Experiment** | `checkout` team's repo portal: `codeowners-quality` with rules `has-codeowners`, `owners-are-teams`, `covers-catalog-info`; `stage: experimental` | Only in that repo's CI (ratchet) | Its own report |
 | 2. **Adopted** | Moved into `@acme/standards-payments`; 6 repos include it | Each including repo's ratchet | The payments org's view: 6 repos, levels, burn-down |
-| 3. **Proposed** | Copied into `@acme/standards-company` as `stage: advisory` | None; results roll up | `toolbox plan` on the company package: "1,240 repos in scope; 410 would fail bronze". The owner, now platform, reviews fixes and false positives |
-| 4. **Mandated** | `stage: mandatory` in the company package; old copies removed from the payments package | Every repo's ratchet: **no regressions from today**, so existing failures are baselined, not blocking. Waivers for justified exceptions, with expiry | Burn-down per org; waivers expiring; repos still below bronze |
+| 3. **Proposed** | Copied into `@acme/standards-company` as `stage: advisory` | None; results roll up **and/or** federal API workers score the fleet | `toolbox plan` on the company package: "1,240 repos in scope; 410 would fail bronze". The owner, now platform, reviews fixes and false positives |
+| 4. **Mandated** | `stage: mandatory` in the company package; old copies removed from the payments package | Every **opting-in** repo's ratchet: **no regressions from today**, so existing failures are baselined, not blocking. Federal score remains visible for non-installing repos. Waivers for justified exceptions, with expiry | Burn-down per org; waivers expiring; repos still below bronze |
 | 5. **Target** | A level date: "bronze everywhere by Q3" is the goal, the ratchet is the path | Optional hard gate once burn-down is done | — |
 | 6. **Retired** | Removed or replaced; `plan` shows nobody depends on it | — | — |
 
-The ratchet is what makes mandating safe. Mandating a standard never breaks a build on day one: every
-repo is baselined at its current state (as ESLint's bulk suppressions do for one repo, [ratchets.md](./ratchets.md) §6),
-and only regressions fail.
+The ratchet is what makes mandating safe for installing leaves. Mandating a standard never breaks a
+build on day one: every repo is baselined at its current state (as ESLint's bulk suppressions do for
+one repo, [ratchets.md](./ratchets.md) §6), and only regressions fail. Federal advisory coverage can
+precede leaf ratchets.
 
 ## 7. What federation must not become
 
 - **Runtime coupling.** No portal calls another to answer a query. Parents read artifacts and records
   on their own schedule.
+- **Leaf-install tax.** Federal score/load must not require every repo to adopt Toolbox first.
+- **Absorbing leaf toolboxes as the primary path.** Team portals are optional overlays, not the
+  org's source of inventory.
 - **Configuration drift by copy.** Standards travel as versioned packages, never copy-pasted YAML. A
   copied rule is a fork with a new owner.
 - **Silent weakening.** A child that excludes itself from a mandatory rule must do it with a visible,
   owned, expiring waiver.
 - **A second source of truth.** A child's report is an input (a claim) to the parent. The parent's
   own facts win for fields it owns.
+- **Heavy IDP importers.** Migration from Backstage, DX, Port and peers is docs/prompts/skills/thin
+  CLIs — agent-assisted, not a sync product.
 
-## 8. Phasing (no implementation now)
+## 8. Phasing
 
 | Phase | Scope | Exit |
 |---|---|---|
 | F0 (done) | Repo portals: `toolbox report`, ratchet baselines, static HTML ([repo-portals.md](./repo-portals.md)) | This repo's CI runs its own ratchet |
-| F1 | Standard packages: remote `include` by name and digest; namespaced names; monotonic-tightening validation; `plan` over package upgrades | One package used by two repo portals; a weakening attempt fails validation |
-| F2 | Results up (option A): a root portal reads children's committed reports; adoption and burn-down views | A root shows three repos' ratchets and their package versions |
+| **F1′ (next)** | Org-operator starter; federal GitHub Contents load path; central zizmor (or peer) fleet worker experiment; namespace-policy schema stub | Org portal scores N repos with **zero** leaf installs; docs point at operator charter |
+| F1 | Standard packages: remote `include` by name and digest; namespaced names; monotonic-tightening validation; `plan` over package upgrades | One package used by the org portal and (optionally) two repo portals; a weakening attempt fails validation |
+| F1b | Fleet runners: CentralRepoOps-shaped workflows for static tools across the org | SARIF → federal report artifact for scheduled waves |
+| F2 | Results up: root imports central worker digests **and** optional children's committed reports; adoption and burn-down views | A root shows three repos' outcomes and their package versions |
 | F3 | Stages and waivers: `stage:` on scorecards and rules; waivers as owned, expiring native values; enforcement by stage | The CODEOWNERS example (§6) runs end to end on three repos |
 | F4 | Hierarchies: node tree in the meta catalog; OpenFGA relations by subtree; roll-up scorecards (needs multi-hop derivation, F3 of toolbox-for-toolbox) | A two-level org rolls up correctly with per-subtree visibility |
 | F5 | Push (option B) and verified results (signed CI artifacts or parent-run checks) | A parent rejects an unsigned child claim for a verified rule |
@@ -171,10 +199,12 @@ and only regressions fail.
 | # | Question |
 |---|---|
 | FQ1 | **Decided (D89):** ([packages.md](./packages.md) §4: git-first with an OCI mirror, pinned by digest).** The package registry: OCI artifacts (fits "one image"), git refs (fits portal repos), or npm (fits the TS builder)? Possibly all three behind one resolver. Phase F1 can't start until this is researched |
-| FQ2 | Should a child be able to *extend* a parent kind with fields, Apollo-style, or only add its own kinds? Extension is powerful but makes the parent's schema depend on children |
-| FQ3 | How are waivers approved? This is the approvals design from M5, which is paused (D64), so revisit after the self-service review |
-| FQ4 | Do repo portals need entity identity beyond the repo (e.g. services inside a monorepo) to merge cleanly at the parent? This is [identity-resolution.md](./identity-resolution.md) at the federation boundary |
-| FQ5 | What is the minimal parent: does a root need `serve`, or can a static site aggregate children's reports ([repo-portals.md](./repo-portals.md) §5)? |
+| FQ2 | **Lean (operator charter / namespace recommendation):** children **extend own fields / kinds**; shared kind registry and flatten lists are **opt-in**. Confirm when F1′ schema lands |
+| FQ3 | How are waivers approved? This is the approvals design from M5, which is paused (D64), so revisit after the self-service review. Until then, record waivers as data with a human process |
+| FQ4 | **Lean:** monorepo entities are **namespaced** under the leaf by default; export manifests declare `federate` vs `local` and optional flatten — identity-resolution at the federation boundary |
+| FQ5 | What is the minimal parent: does a root need `serve`, or can a static site / central Actions artifacts aggregate children's and federal reports ([repo-portals.md](./repo-portals.md) §5)? Operator-first bias: **central artifacts first**, `serve` when interactive fleet UX needs it |
+| FQ6 | **New:** exact Contents API vs shallow-checkout tradeoffs for large monorepos (sparse checkout, rate limits, blob size caps) for federal zizmor |
+| FQ7 | **New:** how far to copy GitHub Agentic Workflows (CentralRepoOps / OrchestratorOps) versus plain Actions for deterministic fleet tools |
 
 ## Sources
 
@@ -186,8 +216,11 @@ and only regressions fail.
   - OpenSSF Scorecard's per-repo CLI and fleet-wide scan (primary: `ossf/scorecard` README, read
     2026-11-20);
   - ESLint bulk suppressions as a one-repo baseline (primary: `eslint/eslint`
-    `docs/src/use/suppressions.md`).
+    `docs/src/use/suppressions.md`);
+  - GitHub Agentic Workflows CentralRepoOps / MultiRepoOps / OrchestratorOps and org sharing guides
+    (primary: `github.github.com/gh-aw`, read 2026-11-22);
+  - GitHub Actions org workflow templates and reusable workflows (primary: docs.github.com).
 - Toolbox: [ratchets.md](./ratchets.md), [repo-portals.md](./repo-portals.md),
   [toolbox-for-toolbox.md](./toolbox-for-toolbox.md), [meta-catalog.md](./meta-catalog.md),
   [source-of-truth.md](./source-of-truth.md), [adversarial-critique.md](../adversarial-critique.md),
-  [decisions.md](../decisions/README.md) D17, D53, D54.
+  [decisions.md](../decisions/README.md) D17, D53, D54, D68, D01M80TPRDCAYMG627A0HNM7E46.
