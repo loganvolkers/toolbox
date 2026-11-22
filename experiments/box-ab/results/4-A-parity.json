@@ -1,0 +1,30 @@
+[
+ {
+  "tool": "semgrep",
+  "ok": true,
+  "findings": 199,
+  "truth": 199,
+  "differences": {}
+ },
+ {
+  "tool": "ruff",
+  "ok": true,
+  "findings": 28,
+  "truth": 28,
+  "differences": {}
+ },
+ {
+  "tool": "actionlint",
+  "ok": true,
+  "findings": 3,
+  "truth": 3,
+  "differences": {}
+ },
+ {
+  "tool": "zizmor",
+  "ok": true,
+  "findings": 335,
+  "truth": 335,
+  "differences": {}
+ }
+]
