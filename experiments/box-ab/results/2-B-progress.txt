@@ -1,0 +1,6 @@
+semgrep (persons-db ORM, codegen API): to zero (semgrep-zero): 0 of 59 meet it (0%)
+  entities short: 63 → 59 since 2026-11-22 (6.3% of the way)
+  measure: 209 → 199 since 2026-11-22 (4.8% of the way)
+actionlint: to zero (actionlint-zero): 84 of 86 meet it (98%)
+  entities short: 2 → 2 since 2026-11-22 (0.0% of the way)
+  measure: 3 → 3 since 2026-11-22 (0.0% of the way)

@@ -1,0 +1,80 @@
+[
+ {
+  "case": "the committed state",
+  "worse": [],
+  "want": "pass",
+  "got": "pass",
+  "ok": true,
+  "tail": [
+   "campaign ruff-zero since 2026-11-22: entities short 0 \u2192 0 (100.0% of the way); measure 0 \u2192 0 (100.0% of the way)",
+   "campaign semgrep-zero since 2026-11-22: entities short 63 \u2192 63 (0.0% of the way); measure 209 \u2192 209 (0.0% of the way)",
+   "baseline: matches .toolbox/results.json"
+  ]
+ },
+ {
+  "case": "semgrep: a new suppressed finding",
+  "worse": [
+   "semgrep"
+  ],
+  "want": "fail",
+  "got": "fail",
+  "ok": true,
+  "tail": [
+   "campaign ruff-zero since 2026-11-22: entities short 0 \u2192 0 (100.0% of the way); measure 0 \u2192 0 (100.0% of the way)",
+   "campaign semgrep-zero since 2026-11-22: entities short 63 \u2192 63 (0.0% of the way); measure 209 \u2192 210 (-0.5% of the way)",
+   "baseline: 1 regression(s) against .toolbox/results.json"
+  ]
+ },
+ {
+  "case": "ruff: a new finding",
+  "worse": [
+   "ruff"
+  ],
+  "want": "fail",
+  "got": "fail",
+  "ok": true,
+  "tail": [
+   "campaign ruff-zero since 2026-11-22: entities short 0 \u2192 1 (0.0% of the way); measure 0 \u2192 1 (0.0% of the way)",
+   "campaign semgrep-zero since 2026-11-22: entities short 63 \u2192 63 (0.0% of the way); measure 209 \u2192 209 (0.0% of the way)",
+   "baseline: 1 regression(s) against .toolbox/results.json"
+  ]
+ },
+ {
+  "case": "actionlint: a new finding",
+  "worse": [
+   "actionlint"
+  ],
+  "want": "fail",
+  "got": "fail",
+  "ok": true,
+  "tail": [
+   "campaign ruff-zero since 2026-11-22: entities short 0 \u2192 0 (100.0% of the way); measure 0 \u2192 0 (100.0% of the way)",
+   "campaign semgrep-zero since 2026-11-22: entities short 63 \u2192 63 (0.0% of the way); measure 209 \u2192 209 (0.0% of the way)",
+   "baseline: 1 regression(s) against .toolbox/results.json"
+  ]
+ },
+ {
+  "case": "an unrelated edit",
+  "worse": [],
+  "want": "pass",
+  "got": "pass",
+  "ok": true,
+  "tail": [
+   "campaign ruff-zero since 2026-11-22: entities short 0 \u2192 0 (100.0% of the way); measure 0 \u2192 0 (100.0% of the way)",
+   "campaign semgrep-zero since 2026-11-22: entities short 63 \u2192 63 (0.0% of the way); measure 209 \u2192 209 (0.0% of the way)",
+   "baseline: matches .toolbox/results.json"
+  ]
+ },
+ {
+  "case": "semgrep: one fixed",
+  "worse": [],
+  "want": "pass",
+  "got": "pass",
+  "ok": true,
+  "tail": [
+   "campaign ruff-zero since 2026-11-22: entities short 0 \u2192 0 (100.0% of the way); measure 0 \u2192 0 (100.0% of the way)",
+   "campaign semgrep-zero since 2026-11-22: entities short 63 \u2192 63 (0.0% of the way); measure 209 \u2192 208 (0.5% of the way)",
+   "baseline: no regressions, but .toolbox/results.json is out of date: run with --update and commit it"
+  ]
+ }
+]
