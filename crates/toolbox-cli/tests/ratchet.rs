@@ -230,3 +230,79 @@ fn a_repository_level_regression_names_its_root_cause() {
     );
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+/// A rule whose data is missing although its connector ran (a kit's `optional: true` tool that
+/// isn't installed) is unknown. A plain check passes then; `--fail-on-unknown` fails it.
+#[test]
+fn fail_on_unknown_catches_a_missing_tool() {
+    let dir = std::env::temp_dir().join(format!("toolbox-unknown-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    portal(&dir, &[("a", true, &[])]);
+    assert_eq!(report(&dir, &["--update"]).0, 0);
+    // The record arrives with no value for `tested`: the rule reading it can't be evaluated.
+    std::fs::write(
+        dir.join("fixtures/things.ndjson"),
+        serde_json::json!({"type": "record", "kind": "thing", "externalId": "thing:a",
+            "data": {"name": "a", "tested": null, "undocumented": []}})
+        .to_string(),
+    )
+    .unwrap();
+    let (code, v) = report(&dir, &[]);
+    assert_eq!((code, v["unknownRules"].as_u64()), (0, Some(1)), "{v}");
+    let (code, v) = report(&dir, &["--fail-on-unknown"]);
+    assert_eq!((code, v["result"].as_str()), (1, Some("unknown")), "{v}");
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// `--accept` restarts a campaign over the accepted scorecard, keeping the start it replaced
+/// under `restartedFrom`; with `--keep-campaigns` the start stays, and the campaign goes backwards.
+#[test]
+fn accept_restarts_campaigns_unless_kept() {
+    let dir = std::env::temp_dir().join(format!("toolbox-keep-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    portal(&dir, &[("a", false, &[]), ("b", true, &[])]);
+    let manifest = MANIFEST.to_owned()
+        + "campaigns:\n  - name: tested\n    owner: group:maintainers\n    title: Every thing tested\n    includes: [{scorecard: quality, rules: [tested]}]\n";
+    std::fs::write(dir.join("toolbox.yaml"), manifest).unwrap();
+    let campaign = |dir: &Path| {
+        let b: Value =
+            serde_json::from_str(&std::fs::read_to_string(dir.join("results.json")).unwrap())
+                .unwrap();
+        b["campaigns"]["tested"].clone()
+    };
+    assert_eq!(report(&dir, &["--update"]).0, 0);
+    assert_eq!(campaign(&dir)["short"], 1);
+    // A second thing stops being tested: a regression, accepted for the quality scorecard.
+    let reset = |dir: &Path, tested_b: bool| {
+        let lines: Vec<String> = [("a", false), ("b", tested_b)]
+            .iter()
+            .map(|(n, t)| serde_json::json!({"type": "record", "kind": "thing", "externalId": format!("thing:{n}"),
+                "data": {"name": n, "tested": t, "undocumented": []}}).to_string())
+            .collect();
+        std::fs::write(dir.join("fixtures/things.ndjson"), lines.join("\n")).unwrap();
+    };
+    reset(&dir, false);
+    let before = std::fs::read_to_string(dir.join("results.json")).unwrap();
+    assert_eq!(
+        report(
+            &dir,
+            &["--update", "--accept", "quality", "--keep-campaigns"]
+        )
+        .0,
+        0
+    );
+    assert_eq!(
+        campaign(&dir)["short"],
+        1,
+        "kept: the start stays at 1 short"
+    );
+    std::fs::write(dir.join("results.json"), before).unwrap();
+    assert_eq!(report(&dir, &["--update", "--accept", "quality"]).0, 0);
+    let c = campaign(&dir);
+    assert_eq!(
+        (c["short"].as_u64(), c["restartedFrom"]["short"].as_u64()),
+        (Some(2), Some(1)),
+        "{c}"
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}

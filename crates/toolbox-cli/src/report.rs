@@ -50,11 +50,21 @@ pub struct Options {
     /// With --baseline: fail when the results differ from the file in any way.
     #[arg(long)]
     pub ci: bool,
+    /// With --baseline: fail (exit 1) when a rule's outcome is unknown although its connector ran
+    /// (not excused by --skip), such as a kit whose `optional: true` tool isn't installed. A plain
+    /// check passes then, so a gate that must not run without its tools should pass this.
+    #[arg(long)]
+    pub fail_on_unknown: bool,
     /// With --update: record regressions in these scorecards (comma-separated) instead of
     /// failing, for an intended change to a standard (a tighter threshold, a new pattern).
     /// They are listed; regressions in other scorecards still fail.
     #[arg(long, value_delimiter = ',')]
     pub accept: Vec<String>,
+    /// With --accept: keep each campaign's recorded start, so the accepted findings show as the
+    /// campaign going backwards (a tool upgrade or a new tool that reports more). Without it,
+    /// --accept restarts the campaigns over those scorecards (a changed standard).
+    #[arg(long, requires = "accept")]
+    pub keep_campaigns: bool,
     /// Write the ratchet's verdict as JSON to this file (result, exit code, regressions,
     /// improvements), for any CI system to read.
     #[arg(long)]
@@ -553,7 +563,8 @@ fn evidence_change(c: &mut Comparison, at: &At, rule: &str, was: &Value, now: &V
 /// Each campaign's starting point, as the baseline records it: kept while the campaign's `start`
 /// is unchanged, recorded from this run the first time the campaign is active. Changing `start`
 /// restarts the campaign from the current state, and so does `--accept` on a scorecard the
-/// campaign includes: an intended change to a standard changes what the campaign pays down.
+/// campaign includes: an intended change to a standard changes what the campaign pays down. A
+/// restarted campaign keeps the start it replaced under `restartedFrom`, so its history isn't lost.
 fn campaign_starts(
     m: &toolbox_model::Manifest,
     d: &Derived,
@@ -582,6 +593,13 @@ fn campaign_starts(
         });
         if let Some(x) = p.measure {
             rec["measure"] = number(x);
+        }
+        if let Some(was) = before.and_then(|b| b.get(&c.name)) {
+            let mut from = was.clone();
+            if let Some(o) = from.as_object_mut() {
+                o.remove("restartedFrom"); // one level of history is enough to read a restart
+            }
+            rec["restartedFrom"] = from;
         }
         out.insert(c.name.clone(), rec);
     }
@@ -642,6 +660,19 @@ fn paydown_lines(starts: &Map<String, Value>, d: &Derived) -> Vec<String> {
         .collect()
 }
 
+/// Markdown inline code that survives backticks in the text: a fence one longer than the longest
+/// run inside, padded with spaces when the text starts or ends with a backtick (CommonMark 6.1).
+fn inline_code(text: &str) -> String {
+    let longest = text.split(|c| c != '`').map(str::len).max().unwrap_or(0);
+    let fence = "`".repeat(longest + 1);
+    let pad = if text.starts_with('`') || text.ends_with('`') {
+        " "
+    } else {
+        ""
+    };
+    format!("{fence}{pad}{text}{pad}{fence}")
+}
+
 fn markdown(m: &toolbox_model::Manifest, d: &Derived, all: bool) -> String {
     use std::fmt::Write as _;
     let mut s = String::new();
@@ -657,7 +688,14 @@ fn markdown(m: &toolbox_model::Manifest, d: &Derived, all: bool) -> String {
             *tally.entry(r.level.as_str()).or_default() += 1;
         }
         let counts: Vec<String> = tally.iter().map(|(l, n)| format!("{l}: {n}")).collect();
-        let _ = writeln!(s, "\n## {}  ({})\n", sc.name, counts.join(", "));
+        // A scorecard with no entities (a tool with no findings, whose kit records only files with
+        // findings) says so, instead of printing an empty "()".
+        let counts = if counts.is_empty() {
+            "no entities".to_owned()
+        } else {
+            counts.join(", ")
+        };
+        let _ = writeln!(s, "\n## {}  ({counts})\n", sc.name);
         let shown = |r: &&toolbox_derive::Score| {
             r.level != "skipped" && (all || r.rules.iter().flatten().any(|(_, o)| o != "pass"))
         };
@@ -777,7 +815,7 @@ fn standard_packages(s: &mut String, incs: &[Value]) {
     for i in incs {
         let _ = writeln!(s, "- `{}`", i["package"].as_str().unwrap_or("?"));
         for (k, v) in i["with"].as_object().into_iter().flatten() {
-            let _ = writeln!(s, "  - `{k}`: `{v}`");
+            let _ = writeln!(s, "  - `{k}`: {}", inline_code(&v.to_string()));
         }
     }
     let _ = writeln!(s);
@@ -849,7 +887,7 @@ fn standard_commands(s: &mut String, portal: &str, baseline: &str, accept: &str)
     );
     let _ = writeln!(
         s,
-        "## CI\n\n```yaml\n# .github/workflows/toolbox.yml\nname: toolbox\non:\n  pull_request:\n  push: {{branches: [main]}}\npermissions: {{contents: read}}\njobs:\n  report:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: loganvolkers/toolbox/actions/report@<version>\n        with:\n          toolbox-version: \"<version>\"\n          portal: {portal}\n          baseline: {baseline}\n          mode: ci    # or check: fail on regressions only\n```"
+        "## CI\n\n```yaml\n# .github/workflows/toolbox.yml\nname: toolbox\non:\n  pull_request:\n  push: {{branches: [main]}}\npermissions: {{contents: read}}\njobs:\n  report:\n    runs-on: ubuntu-latest\n    steps:\n      # Pin both to a full commit SHA, with the tag in a comment (zizmor's unpinned-uses).\n      - uses: actions/checkout@<sha> # v6\n        with: {{persist-credentials: false}}\n      # The tools the portal pins must be installed first: `toolbox tools install` or your\n      # installer, from the versions under `tools:`; the action runs `toolbox doctor`.\n      - uses: loganvolkers/toolbox/actions/report@<sha> # <version>\n        with:\n          toolbox-version: \"<version>\"\n          portal: {portal}\n          baseline: {baseline}\n          mode: ci    # or check: fail on regressions only\n```"
     );
 }
 
@@ -1105,30 +1143,40 @@ pub fn campaign_local(
         return ExitCode::SUCCESS;
     }
     for (n, c) in &defs {
-        println!(
-            "{} ({n}): {} of {} meet it ({}%)",
-            c["title"].as_str().unwrap_or(n),
-            c["meeting"],
-            c["inScope"],
-            c["percent"]
-        );
-        let since = &c["sinceStart"];
-        for (label, key) in [("entities short", "entitiesShort"), ("measure", "measure")] {
-            if let Some(x) = since.get(key) {
-                println!(
-                    "  {label}: {} → {} since {} ({}% of the way)",
-                    x["from"],
-                    x["now"],
-                    since["recorded"].as_str().unwrap_or("?"),
-                    x["percentDone"]
-                );
-            }
-        }
-        if since.is_null() {
-            println!("  no recorded start: pass --baseline (written by report --update)");
-        }
+        campaign_lines(n, c);
     }
     ExitCode::SUCCESS
+}
+
+/// One campaign's progress as text: who meets it, and its paydown since the recorded start, in
+/// entities and in its measure, as an absolute count and as a share of the way to zero.
+fn campaign_lines(n: &str, c: &Value) {
+    let title = c["title"].as_str().unwrap_or(n);
+    if c["inScope"].as_u64() == Some(0) {
+        println!("{title} ({n}): nothing in scope (no entities yet)");
+    } else {
+        println!(
+            "{title} ({n}): {} of {} meet it ({}%)",
+            c["meeting"], c["inScope"], c["percent"]
+        );
+    }
+    let since = &c["sinceStart"];
+    for (label, key) in [("entities short", "entitiesShort"), ("measure", "measure")] {
+        if let Some(x) = since.get(key) {
+            let paid = x["from"].as_f64().unwrap_or(0.0) - x["now"].as_f64().unwrap_or(0.0);
+            println!(
+                "  {label}: {} → {} since {} (paid {}, {}% of the way)",
+                x["from"],
+                x["now"],
+                since["recorded"].as_str().unwrap_or("?"),
+                number(paid),
+                x["percentDone"]
+            );
+        }
+    }
+    if since.is_null() {
+        println!("  no recorded start: pass --baseline (written by report --update)");
+    }
 }
 
 /// A portal's manifest and derived state from one run of its in-image connectors (or its fixtures),
@@ -1255,11 +1303,15 @@ fn decide(
             v.comparison.regressions.len()
         ));
     }
-    if unexpected > 0 && (o.ci || o.update) {
+    if unexpected > 0 && (o.ci || o.update || o.fail_on_unknown) {
         // A connector that ran and still produced no data must not be written into the baseline.
         // Unknowns whose `dataFrom` connector was skipped are expected and are recorded.
         (v.result, v.code) = ("unknown", 1);
-        let flag = if o.ci { "--ci" } else { "--update" };
+        let flag = match (o.ci, o.update) {
+            (true, _) => "--ci",
+            (_, true) => "--update",
+            _ => "--fail-on-unknown",
+        };
         return Ok(format!(
             "{unexpected} rule outcome(s) unknown and not excused by --skip; {flag} needs those rules evaluated"
         ));
@@ -1304,7 +1356,8 @@ fn ratchet(
     let before = std::fs::read_to_string(path)
         .ok()
         .and_then(|t| serde_json::from_str::<Value>(&t).ok());
-    let starts = campaign_starts(m, d, before.as_ref().map(|b| &b["campaigns"]), &o.accept);
+    let restart: &[String] = if o.keep_campaigns { &[] } else { &o.accept };
+    let starts = campaign_starts(m, d, before.as_ref().map(|b| &b["campaigns"]), restart);
     let compact = compact_cards(m);
     let stored = compacted(now, &compact);
     let mut doc = json!({"format": FORMAT, "portal": m.portal.name, "results": stored});
@@ -1632,6 +1685,13 @@ mod tests {
 
     fn r(rows: Value) -> Value {
         json!({"card": rows})
+    }
+
+    #[test]
+    fn inline_code_survives_backticks() {
+        assert_eq!(inline_code("plain"), "`plain`");
+        assert_eq!(inline_code("run `ruff` alone"), "``run `ruff` alone``");
+        assert_eq!(inline_code("`x`"), "`` `x` ``");
     }
 
     #[test]

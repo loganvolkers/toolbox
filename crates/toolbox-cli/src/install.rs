@@ -378,6 +378,35 @@ fn copy_tree(from: &Path, to: &Path, skip: &[&str]) -> Result<(), String> {
     Ok(())
 }
 
+/// Where a vendored package came from, without the machine's layout: a `github:` spec as given,
+/// a local path relative to the portal (`../toolbox/packages/sarif`), else the package directory's
+/// name. `VENDORED.json` is committed, and an absolute `/home/<user>/...` doesn't belong there.
+fn portable_source(spec: &str, dir: &Path, portal: &Path) -> String {
+    if spec.contains(':') && !Path::new(spec).exists() {
+        return spec.to_owned();
+    }
+    let (Ok(to), Ok(from)) = (dir.canonicalize(), portal.canonicalize()) else {
+        return spec.to_owned();
+    };
+    let common = to
+        .components()
+        .zip(from.components())
+        .take_while(|(a, b)| a == b)
+        .count();
+    if common <= 1 {
+        // Nothing shared but the root: a relative path would only restate the absolute one.
+        return to
+            .file_name()
+            .map_or_else(|| spec.to_owned(), |n| n.to_string_lossy().into());
+    }
+    let ups = from.components().count() - common;
+    let rest: PathBuf = to.components().skip(common).collect();
+    let rel: PathBuf = std::iter::repeat_n(Path::new(".."), ups)
+        .collect::<PathBuf>()
+        .join(rest);
+    rel.to_string_lossy().replace('\\', "/")
+}
+
 /// `toolbox vendor`: copy a package (a directory, or a `github:` spec already in the cache from
 /// `toolbox install`) into `<portal>/packages/<name>`, without its tests, so the portal needs no
 /// network. Writes `VENDORED.json` (where it came from, its version and content hash) and prints
@@ -408,7 +437,7 @@ pub fn vendor(spec: &str, portal: &Path) -> ExitCode {
         }
         copy_tree(&dir, &to, &[".git", "tests"])?;
         let record = serde_json::json!({
-            "source": spec,
+            "source": portable_source(spec, &dir, &root),
             "version": meta["version"],
             "contentHash": toolbox_model::package::content_hash(&to),
         });
@@ -429,5 +458,29 @@ pub fn vendor(spec: &str, portal: &Path) -> ExitCode {
             ExitCode::SUCCESS
         }
         Err(e) => fail(e),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn vendored_sources_carry_no_machine_layout() {
+        let base = std::env::temp_dir().join(format!("toolbox-vendor-src-{}", std::process::id()));
+        let (kit, portal) = (
+            base.join("toolbox/packages/sarif"),
+            base.join("repo/.toolbox"),
+        );
+        std::fs::create_dir_all(&kit).unwrap();
+        std::fs::create_dir_all(&portal).unwrap();
+        let abs = kit.to_string_lossy().into_owned();
+        assert_eq!(
+            portable_source(&abs, &kit, &portal),
+            "../../toolbox/packages/sarif"
+        );
+        let gh = "github:acme/kits/packages/sarif@v1";
+        assert_eq!(portable_source(gh, &kit, &portal), gh);
+        let _ = std::fs::remove_dir_all(&base);
     }
 }

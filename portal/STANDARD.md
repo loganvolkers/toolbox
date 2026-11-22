@@ -495,8 +495,12 @@ jobs:
   report:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: loganvolkers/toolbox/actions/report@<version>
+      # Pin both to a full commit SHA, with the tag in a comment (zizmor's unpinned-uses).
+      - uses: actions/checkout@<sha> # v6
+        with: {persist-credentials: false}
+      # The tools the portal pins must be installed first: `toolbox tools install` or your
+      # installer, from the versions under `tools:`; the action runs `toolbox doctor`.
+      - uses: loganvolkers/toolbox/actions/report@<sha> # <version>
         with:
           toolbox-version: "<version>"
           portal: portal

@@ -54,6 +54,12 @@ whole-repository run takes as long as semgrep does. On a closed network semgrep'
 check stalls for minutes; the kit passes `--disable-version-check`, and so should any command you
 run alone (on one large Python and TypeScript repository: 13 s with it, about 200 s without).
 
+**One rule set, one target.** `config` and `target` are single values. For several rule files or
+several paths, as CI often runs semgrep, use the [`sarif`](../sarif/README.md) kit with semgrep's
+full command and `countSuppressed: true`. semgrep names a finding after its rule file's path
+(`.semgrep/rules/x.yaml` gives `semgrep.rules.x`), so moving the file renames every finding the
+baseline holds: move rule files with an `--update`.
+
 ## Parameters
 
 | Parameter | Default | Meaning |

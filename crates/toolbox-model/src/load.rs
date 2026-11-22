@@ -257,7 +257,10 @@ fn merge(
             src.local = base;
             Ok(())
         }
-        (Value::Array(x), Value::Array(y)) => {
+        // Top-level lists (connectors, kinds, scorecards, ...) concatenate. A list nested inside a
+        // merged object, such as tools.<name>.versionArgs from two includes of one kit, must be
+        // equal: concatenating it ran `semgrep --version --version`.
+        (Value::Array(x), Value::Array(y)) if pointer.matches('/').count() <= 1 => {
             for (j, v) in y.into_iter().enumerate() {
                 src.record(
                     format!("{pointer}/{}", x.len()),
@@ -461,5 +464,22 @@ mod tests {
             ("a".into(), "/kinds/0/name".into())
         );
         assert_eq!(src.locate("/kinds/10"), ("a".into(), "/kinds/10".into()));
+    }
+
+    #[test]
+    fn nested_lists_from_two_includes_are_equal_or_conflict() {
+        // Two includes of one kit that both declare the tool (a second semgrep rule set).
+        let tool =
+            || json!({"tools": {"semgrep": {"version": "1.163.0", "versionArgs": ["--version"]}}});
+        let mut a = tool();
+        let mut origins = Vec::new();
+        merge_file(&mut a, tool(), "a", "b", &mut origins).unwrap();
+        assert_eq!(a, tool());
+        let other = json!({"tools": {"semgrep": {"versionArgs": ["-V"]}}});
+        let err = merge_file(&mut a, other, "a", "c", &mut origins).unwrap_err();
+        assert!(
+            err.to_string().contains("/tools/semgrep/versionArgs"),
+            "{err}"
+        );
     }
 }
