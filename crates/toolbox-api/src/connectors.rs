@@ -203,45 +203,11 @@ pub async fn freshness_loop(s: Arc<AppState>) {
 /// Resolve `${env:X}` and `${secret:Y}` in connector config. Unresolvable keys are dropped (with a
 /// warning) so connectors can tell "not configured" from "configured". `TOOLBOX_CONNECTOR_CONFIG_OVERRIDES`
 /// (JSON: connector → object) is merged on top, for local runs and tests.
-/// A connector's manifest config with `${env:…}` and `${secret:…}` placeholders resolved.
+///
+/// `${secret:…}` walks the [`toolbox_secrets::SecretResolver`] chain (env → file mount → configured
+/// remotes). See `docs/design/secret-vault.md`. Placeholders stay unresolved until this call (D55).
 pub fn resolve_config(connector: &str, cfg: &Value) -> Value {
-    let mut out = serde_json::Map::new();
-    for (k, v) in cfg.as_object().into_iter().flatten() {
-        match v.as_str() {
-            Some(s) if s.starts_with("${") && s.ends_with('}') => {
-                let inner = &s[2..s.len() - 1];
-                let value = if let Some(name) = inner.strip_prefix("env:") {
-                    std::env::var(name).ok()
-                } else if let Some(name) = inner.strip_prefix("secret:") {
-                    std::env::var(format!(
-                        "TOOLBOX_SECRET_{}",
-                        name.to_uppercase().replace('-', "_")
-                    ))
-                    .ok()
-                } else {
-                    None
-                };
-                match value {
-                    Some(v) => {
-                        out.insert(k.clone(), json!(v));
-                    }
-                    None => eprintln!(
-                        "toolbox: connector {connector}: {s} is not set; leaving `{k}` out"
-                    ),
-                }
-            }
-            _ => {
-                out.insert(k.clone(), v.clone());
-            }
-        }
-    }
-    if let Ok(overrides) = std::env::var("TOOLBOX_CONNECTOR_CONFIG_OVERRIDES")
-        && let Ok(Value::Object(all)) = serde_json::from_str::<Value>(&overrides)
-        && let Some(Value::Object(mine)) = all.get(connector)
-    {
-        out.extend(mine.clone());
-    }
-    Value::Object(out)
+    toolbox_secrets::resolve_config(connector, cfg, toolbox_secrets::global())
 }
 
 /// The binary for a connector package: `builtin:<name>` → `toolbox-connector-<name>`, found in
@@ -559,4 +525,32 @@ pub async fn command_status(
     let mut body = serde_json::to_value(&c).unwrap();
     body["snapshot"] = json!(snapshot);
     Json(body).into_response()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::BTreeMap;
+    use std::sync::Arc;
+    use toolbox_secrets::backends::EnvBackend;
+    use toolbox_secrets::{resolve_config as resolve_with, SecretResolver};
+
+    #[test]
+    fn resolve_config_uses_secret_chain() {
+        let resolver = SecretResolver::new(vec![Arc::new(EnvBackend::from_map(BTreeMap::from([(
+            "github-app-private-key".into(),
+            "pem".into(),
+        )])))]);
+        let cfg = json!({
+            "org": "acme",
+            "privateKey": "${secret:github-app-private-key}",
+            "missing": "${secret:no-such}",
+            "nested": { "token": "${secret:github-app-private-key}" }
+        });
+        let out = resolve_with("github", &cfg, &resolver);
+        assert_eq!(out["org"], "acme");
+        assert_eq!(out["privateKey"], "pem");
+        assert!(out.get("missing").is_none());
+        assert_eq!(out["nested"]["token"], "pem");
+    }
 }

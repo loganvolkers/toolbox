@@ -37,6 +37,7 @@ walkdir = "2"
 sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "postgres", "json"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "sync", "time", "process", "io-util", "io-std", "net", "fs"] }
 toolbox-api = { path = "crates/toolbox-api" }
+toolbox-secrets = { path = "crates/toolbox-secrets" }
 toolbox-telemetry = { path = "crates/toolbox-telemetry" }
 # Operational telemetry (D6, plan §6.3): OTel contract + Prometheus /metrics.
 opentelemetry = { version = "0.33.1", default-features = false, features = ["trace", "metrics", "logs"] }
