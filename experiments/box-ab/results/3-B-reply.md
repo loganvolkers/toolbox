@@ -1,0 +1,10 @@
+# Phase 3, arm B: the agent's reply (DX feedback in §3)
+
+1. zizmor added as a second include of the vendored sarif kit (name zizmor, kind ZizmorFile), pinned 1.32.0 with install ids; command `zizmor --offline --no-exit-codes --quiet --format sarif .github/`. accept.py accepted only the zizmor scorecard: 88 files, 336 findings (its own workflow adds 1), the new zizmor-zero campaign; other campaigns kept their starts, and the same run recorded phase 2's semgrep paydown. Workflow installs zizmor==1.32.0. TOOLS.md: tool entry, campaign row, what the gate can't see; progress prints zizmor-zero with --skip per campaign. STANDARD.md regenerated. Gate exit 0 (~34 s; zizmor 0.3 s); planted template-injection and a new workflow with artipacked both fail it.
+2. Couldn't: catch new zizmor ignores: zizmor removes `# zizmor: ignore[...]` findings from its SARIF instead of marking them suppressed, so countSuppressed can't apply and a new ignore reads as an improvement (noted in TOOLS.md for code review). Couldn't run or pin actions/report.
+3. DX feedback:
+   1. sarif README, countSuppressed: says inline suppressions count and its zizmor row implies so; zizmor drops ignored findings from SARIF. A hole in the ratchet the README should name.
+   2. The sarif README's zizmor row uses "{files}", which needs a files glob; zizmor is usually run over .github/ (composite actions, dependabot.yml); a glob list easily misses .github/actions/**/action.yml. Show the directory form.
+   3. `toolbox report -o standard`: a fix text with backticks renders as broken nested inline code in STANDARD.md's parameter list. Removed the backticks.
+   4. One workflow file is two entities in two kinds (Workflow for actionlint, ZizmorFile for zizmor); nothing in the docs says how to give one file several tools' findings.
+   5. `toolbox campaign` takes one campaign name, so progress chains one call per campaign, each rerunning connectors unless the others are listed in --skip (lists to update whenever a tool is added). Wants all campaigns in one run, or --only <connector>.

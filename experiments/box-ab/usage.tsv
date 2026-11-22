@@ -1,5 +1,6 @@
 arm	phase	tokens	tool_calls	ms	note
 A	1	98292	17	365290	
 B	1	128323	30	513760	
-A	2	95890	20	433772	
+A	2	97004	20	433772	final tokens from its last notification; its 2157896 ms total includes idle waiting on its own background shell
 B	2	112714	21	576861	
+B	3	113473	23	428794	
