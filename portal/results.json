@@ -1051,6 +1051,9 @@
       "doc:docs/v1-spec.md": {
         "level": "silver"
       },
+      "doc:examples/port-factory-demo/README.md": {
+        "level": "silver"
+      },
       "doc:examples/reference-portal/README.md": {
         "level": "silver"
       },
@@ -1201,6 +1204,9 @@
     },
     "maintainer-example": {
       "example:docs/examples/approved-github-apps.md": {
+        "level": "gold"
+      },
+      "example:examples/port-factory-demo/README.md": {
         "level": "gold"
       },
       "example:examples/reference-portal/README.md": {
