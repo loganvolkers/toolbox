@@ -8,13 +8,8 @@ backend:
     prefix: backstage_plugin_
   auth:
     externalAccess:
-      - type: static
-        options:
-          token: ${BENCH_TOKEN}
-          subject: bench
+      - {type: static, options: {token: '${BENCH_TOKEN}', subject: bench}}
 catalog:
   rules:
     - allow: [Component, System, API, Resource, Location, Group, User, Template]
-  locations:
-    - type: file
-      target: ${BENCH_CATALOG}
+  locations: [{type: file, target: '${BENCH_CATALOG}'}]

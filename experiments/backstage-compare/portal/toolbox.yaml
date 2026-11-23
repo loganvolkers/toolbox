@@ -53,8 +53,7 @@ kinds:
 authz:
   model: authz/model.fga
   tuples:
-    - static:
-      - {user: user:*, relation: viewer, object: portal:bench}
+    - {static: [{user: user:*, relation: viewer, object: portal:bench}]}
     - kind: Component
       emit: >-
         [{'user': 'portal:bench', 'relation': 'portal', 'object': entity.id},
