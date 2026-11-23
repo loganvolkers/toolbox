@@ -191,8 +191,16 @@ scorecards:
     ratchet: {advisory: true}
     appliesTo: entity.codeLines >= 50
     rules:
-    - name: assessed
+    - name: no-open-findings
       level: bronze
+      check: entity.reviewState != 'fresh' || entity.reviewFailing.size() == 0
+      evidence: "entity.reviewState == 'fresh' ? entity.reviewFailing : []"
+      fix: >-
+        A current crate-design assessment failed the listed criteria: act on its
+        suggestions (portal/assessments/), then re-assess. If the finding is
+        wrong, say why in a new assessment by another assessor.
+    - name: assessed
+      level: silver
       check: entity.reviewState == 'fresh'
       evidence: |-
         [entity.reviewState == 'stale' ? 'the crate\'s sources changed since it was assessed' : 'not assessed against crate-design']
@@ -200,7 +208,7 @@ scorecards:
         Run `toolbox assess brief crate:<name> --portal portal`, have your agent
         write the assessment file it names, then `toolbox assess check portal`.
     - name: passes-review
-      level: silver
+      level: gold
       check: entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0
       evidence: >-
         entity.reviewState == 'fresh' ? entity.reviewFailing : ['no current

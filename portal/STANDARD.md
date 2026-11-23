@@ -34,8 +34,9 @@ Scorecard `review-assessment` over `Assessment` entities, owned by group:maintai
 
 | Rule | Level | Passes when | Fix |
 |---|---|---|---|
-| `assessed` | bronze | `entity.reviewState == 'fresh'` | Run `toolbox assess brief <assessment id> --portal portal`; a different agent or person should review it. |
-| `passes-review` | silver | `entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0` | Revise the assessment where the review found it unsupported or incomplete, then have it reviewed again. |
+| `no-open-findings` | bronze | `entity.reviewState != 'fresh' \|\| entity.reviewFailing.size() == 0` | A current assessment-quality assessment failed the listed criteria: act on its suggestions (portal/assessments/), then re-assess. If the finding is wrong, say why in a new assessment by another assessor. |
+| `assessed` | silver | `entity.reviewState == 'fresh' && !entity.selfReviewed` | Run `toolbox assess brief <assessment id> --portal portal`; a different agent or person should review it. |
+| `passes-review` | gold | `entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0` | Revise the assessment where the review found it unsupported or incomplete, then have it reviewed again. |
 | `no-doubts` | gold | `entity.reviewState == 'fresh' && entity.reviewUnsure.size() == 0` | Resolve what the reviewer was unsure of, usually by citing the source a verdict rests on. |
 
 ## maintainer-benchmark
@@ -135,8 +136,9 @@ Scorecard `review-crate` over `Crate` entities, owned by group:maintainers. `too
 
 | Rule | Level | Passes when | Fix |
 |---|---|---|---|
-| `assessed` | bronze | `entity.reviewState == 'fresh'` | Run `toolbox assess brief crate:<name> --portal portal`, have your agent write the assessment file it names, then `toolbox assess check portal`. |
-| `passes-review` | silver | `entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0` | Act on the failing criteria's suggestions in the assessment (portal/assessments/), then re-assess. |
+| `no-open-findings` | bronze | `entity.reviewState != 'fresh' \|\| entity.reviewFailing.size() == 0` | A current crate-design assessment failed the listed criteria: act on its suggestions (portal/assessments/), then re-assess. If the finding is wrong, say why in a new assessment by another assessor. |
+| `assessed` | silver | `entity.reviewState == 'fresh'` | Run `toolbox assess brief crate:<name> --portal portal`, have your agent write the assessment file it names, then `toolbox assess check portal`. |
+| `passes-review` | gold | `entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0` | Act on the failing criteria's suggestions in the assessment (portal/assessments/), then re-assess. |
 | `no-doubts` | gold | `entity.reviewState == 'fresh' && entity.reviewUnsure.size() == 0` | Resolve what the assessor was unsure of, or record the open question in docs/questions.md and link it. |
 
 ## maintainer-dependency
@@ -198,7 +200,7 @@ Scorecard `meta-scorecard` over `Scorecard` entities, owned by group:maintainers
 |---|---|---|---|
 | `tested` | bronze | `entity.tested` | Add at least one expectation for the scorecard in the portal's tests. |
 | `every-level-has-rules` | bronze | `entity.levels.all(l, l in entity.rulesPerLevel && entity.rulesPerLevel[l] > 0)` | Give every level at least one rule, or drop the level. |
-| `fixtures-show-the-ladder` | silver | `entity.fixtureLevels.size() >= 2` | Make the fixtures reach at least two levels (e.g. one entity at none, one at bronze or above). |
+| `fixtures-show-the-ladder` | silver | `entity.fixtureRealLevels.size() >= 1 && entity.fixtureLevels.size() >= 2` | Make the fixtures reach at least two outcomes, one of them a real level (e.g. one entity at none, one at bronze or above); none and skipped alone show no ladder. |
 | `every-rule-tested` | gold | `entity.untestedRules.size() == 0` | Add an expectation for each untested rule. |
 
 ## meta-kind
@@ -239,8 +241,9 @@ Scorecard `review-rule` over `Rule` entities, owned by group:maintainers. `toolb
 
 | Rule | Level | Passes when | Fix |
 |---|---|---|---|
-| `assessed` | bronze | `entity.reviewState == 'fresh'` | Run `toolbox assess brief <rule id> --portal portal`, have your agent write the assessment file it names, then `toolbox assess check portal`. |
-| `passes-review` | silver | `entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0` | Act on the failing criteria's suggestions in the assessment (portal/assessments/), then re-assess. |
+| `no-open-findings` | bronze | `entity.reviewState != 'fresh' \|\| entity.reviewFailing.size() == 0` | A current rule-quality assessment failed the listed criteria: act on its suggestions (portal/assessments/), then re-assess. If the finding is wrong, say why in a new assessment by another assessor. |
+| `assessed` | silver | `entity.reviewState == 'fresh'` | Run `toolbox assess brief <rule id> --portal portal`, have your agent write the assessment file it names, then `toolbox assess check portal`. |
+| `passes-review` | gold | `entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0` | Act on the failing criteria's suggestions in the assessment (portal/assessments/), then re-assess. |
 | `no-doubts` | gold | `entity.reviewState == 'fresh' && entity.reviewUnsure.size() == 0` | Resolve what the assessor was unsure of: usually a missing source for a threshold or an unstated intent. |
 
 ## review-scorecard
@@ -249,8 +252,9 @@ Scorecard `review-scorecard` over `Scorecard` entities, owned by group:maintaine
 
 | Rule | Level | Passes when | Fix |
 |---|---|---|---|
-| `assessed` | bronze | `entity.reviewState == 'fresh'` | Run `toolbox assess brief <scorecard id> --portal portal`, have your agent write the assessment file it names, then `toolbox assess check portal`. |
-| `passes-review` | silver | `entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0` | Act on the failing criteria's suggestions in the assessment (portal/assessments/), then re-assess. |
+| `no-open-findings` | bronze | `entity.reviewState != 'fresh' \|\| entity.reviewFailing.size() == 0` | A current scorecard-quality assessment failed the listed criteria: act on its suggestions (portal/assessments/), then re-assess. If the finding is wrong, say why in a new assessment by another assessor. |
+| `assessed` | silver | `entity.reviewState == 'fresh'` | Run `toolbox assess brief <scorecard id> --portal portal`, have your agent write the assessment file it names, then `toolbox assess check portal`. |
+| `passes-review` | gold | `entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0` | Act on the failing criteria's suggestions in the assessment (portal/assessments/), then re-assess. |
 | `no-doubts` | gold | `entity.reviewState == 'fresh' && entity.reviewUnsure.size() == 0` | Resolve what the assessor was unsure of: usually a level whose purpose isn't written down. |
 
 ## meta-rubric
@@ -372,8 +376,9 @@ Scorecard `review-sdlc-stage` over `SdlcStage` entities, owned by group:maintain
 
 | Rule | Level | Passes when | Fix |
 |---|---|---|---|
-| `assessed` | bronze | `entity.reviewState == 'fresh'` | Run `toolbox assess brief sdlc-stage:<layer>/<stage> --portal portal`, have your agent write the assessment, then `toolbox assess check portal`. |
-| `passes-review` | silver | `entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0` | Act on the failing criteria's suggestions in the assessment (portal/assessments/), then re-assess. |
+| `no-open-findings` | bronze | `entity.reviewState != 'fresh' \|\| entity.reviewFailing.size() == 0` | A current sdlc-stage-quality assessment failed the listed criteria: act on its suggestions (portal/assessments/), then re-assess. If the finding is wrong, say why in a new assessment by another assessor. |
+| `assessed` | silver | `entity.reviewState == 'fresh'` | Run `toolbox assess brief sdlc-stage:<layer>/<stage> --portal portal`, have your agent write the assessment, then `toolbox assess check portal`. |
+| `passes-review` | gold | `entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0` | Act on the failing criteria's suggestions in the assessment (portal/assessments/), then re-assess. |
 | `no-doubts` | gold | `entity.reviewState == 'fresh' && entity.reviewUnsure.size() == 0` | Resolve what the assessor was unsure of, usually a missing measurement or an unstated exit criterion. |
 
 ## maintainer-site
@@ -491,6 +496,7 @@ Change a standard by changing these parameters in the portal's `toolbox.yaml`.
 
 - **Skills to silver** (`skill-silver`): Every shipped agent skill reaches silver on maintainer-skill.
 - **CLI skills present** (`cli-skill-coverage`): Every CLI command that needs a skill has one (cli-skill bronze).
+- **Close the open review findings** (`close-review-findings`): Act on every current rule-quality and scorecard-quality finding: fix the standard, or answer the finding in a new, independent assessment (docs/design/meta-standards-review.md).
 - **OpenSSF Scorecard: every check at 10** (`maintainer-openssf-ten`): Every Scorecard check at its maximum. Progress is counted from the start the baseline records, in checks below 10 and in points short.
 - **Python we maintain passes ruff: to zero** (`maintainer-python-zero`): No ruff findings in any file. Progress is counted from the start the baseline records.
 

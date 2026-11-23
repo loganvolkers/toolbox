@@ -6,6 +6,12 @@
       "short": 0,
       "start": "2026-11-01"
     },
+    "close-review-findings": {
+      "inScope": 0,
+      "recorded": "2026-11-23",
+      "short": 0,
+      "start": "2026-11-23"
+    },
     "maintainer-openssf-ten": {
       "inScope": 11,
       "measure": 33,
@@ -954,6 +960,9 @@
       "doc:docs/decisions/D01M82X2K0DYWTCA23MQJ4CKR0Z.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M831P5QWJQ4A2FT85N5MXJQF.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/README.md": {
         "level": "skipped"
       },
@@ -1033,6 +1042,9 @@
         "level": "silver"
       },
       "doc:docs/design/meta-catalog.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/meta-standards-review.md": {
         "level": "silver"
       },
       "doc:docs/design/minimal-ui.md": {
@@ -1819,12 +1831,18 @@
       "assessment:crate-design/crate:toolbox-expr": {
         "level": "gold"
       },
+      "assessment:rule-quality/rule:toolbox/maintainer-ci-reliability/cancels-superseded-runs": {
+        "level": "gold"
+      },
       "assessment:rule-quality/rule:toolbox/maintainer-ci-reliability/fail-rate-under-20": {
         "failing": {
           "cites-everything": 2,
           "cites-for-findings": 1
         },
         "level": "bronze"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-connector/no-hardcoded-secrets": {
+        "level": "gold"
       },
       "assessment:rule-quality/rule:toolbox/maintainer-crate/has-tests": {
         "failing": {
@@ -1833,12 +1851,42 @@
         },
         "level": "bronze"
       },
+      "assessment:rule-quality/rule:toolbox/maintainer-crate/tests-pass": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-python/no-findings": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-site/titled": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-skill/no-hidden-instructions": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/meta-assessment/cites-for-findings": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/meta-connector/records-mapped": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/meta-rubric/guided": {
+        "level": "gold"
+      },
       "assessment:rule-quality/rule:toolbox/meta-rule/readable": {
         "failing": {
           "cites-everything": 2,
           "cites-for-findings": 1
         },
         "level": "bronze"
+      },
+      "assessment:rule-quality/rule:toolbox/review-assessment/passes-review": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/review-crate/passes-review": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/sdlc-layer/nothing-missing": {
+        "level": "gold"
       },
       "assessment:rule-quality/rule:toolbox/user-mcp/contract-tested": {
         "level": "gold"
@@ -1848,6 +1896,18 @@
           "cites-everything": 1
         },
         "level": "silver"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/meta-rule": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/meta-scorecard": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/review-crate": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/sdlc-stage": {
+        "level": "gold"
       },
       "assessment:sdlc-stage-quality/sdlc-stage:maintainer/build": {
         "level": "gold"
@@ -2237,6 +2297,9 @@
         "level": "gold"
       },
       "field:toolbox/Assessment.rubric": {
+        "level": "gold"
+      },
+      "field:toolbox/Assessment.selfReviewed": {
         "level": "gold"
       },
       "field:toolbox/Assessment.subjectHash": {
@@ -3444,6 +3507,9 @@
         },
         "level": "bronze"
       },
+      "field:toolbox/Scorecard.fixtureRealLevels": {
+        "level": "gold"
+      },
       "field:toolbox/Scorecard.hash": {
         "level": "gold"
       },
@@ -4068,10 +4134,7 @@
         "level": "silver"
       },
       "rubric:toolbox/rule-quality": {
-        "failing": {
-          "discriminates": 1
-        },
-        "level": "silver"
+        "level": "gold"
       },
       "rubric:toolbox/scorecard-quality": {
         "failing": {
@@ -4716,6 +4779,9 @@
       "rule:toolbox/review-assessment/no-doubts": {
         "level": "gold"
       },
+      "rule:toolbox/review-assessment/no-open-findings": {
+        "level": "gold"
+      },
       "rule:toolbox/review-assessment/passes-review": {
         "level": "gold"
       },
@@ -4723,6 +4789,9 @@
         "level": "gold"
       },
       "rule:toolbox/review-crate/no-doubts": {
+        "level": "gold"
+      },
+      "rule:toolbox/review-crate/no-open-findings": {
         "level": "gold"
       },
       "rule:toolbox/review-crate/passes-review": {
@@ -4734,6 +4803,9 @@
       "rule:toolbox/review-rule/no-doubts": {
         "level": "gold"
       },
+      "rule:toolbox/review-rule/no-open-findings": {
+        "level": "gold"
+      },
       "rule:toolbox/review-rule/passes-review": {
         "level": "gold"
       },
@@ -4743,6 +4815,9 @@
       "rule:toolbox/review-scorecard/no-doubts": {
         "level": "gold"
       },
+      "rule:toolbox/review-scorecard/no-open-findings": {
+        "level": "gold"
+      },
       "rule:toolbox/review-scorecard/passes-review": {
         "level": "gold"
       },
@@ -4750,6 +4825,9 @@
         "level": "gold"
       },
       "rule:toolbox/review-sdlc-stage/no-doubts": {
+        "level": "gold"
+      },
+      "rule:toolbox/review-sdlc-stage/no-open-findings": {
         "level": "gold"
       },
       "rule:toolbox/review-sdlc-stage/passes-review": {

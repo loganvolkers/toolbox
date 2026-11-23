@@ -1,0 +1,43 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/meta-assessment/cites-for-findings
+rubric: rule-quality
+subjectHash: 00aedff54aed
+assessor: {kind: agent, name: blind-review-2026-11-23}
+at: 2026-11-23
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The cites() regex (crates/toolbox-connect/src/assessment.rs:12-22)
+      accepts any `word/word` and any number of two or more digits. "good
+      and/or bad", "yes/no" and "in 2026" all count as citations, and so does
+      a path that doesn't exist. The design doc admits "a path is not proof"
+      (docs/design/scorecards-for-scorecards.md:304-307), but `and/or`
+      matching is not even a path.
+    suggestion: >-
+      Count a path only if it resolves in the portal's repository and a
+      decision id only if docs/decisions has it. Drop bare numbers and slash
+      words, or require a `/` together with a file extension or a known top
+      directory.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Cheapest attempt: "Unclear whether this is good and/or bad." I tested
+      the same regex in Python; it matches, so the reason is cited and the
+      check at portal/standards/assessments.yaml:121 passes.
+    suggestion: >-
+      Resolve citations as above. The workspace connector already knows which
+      files exist.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence lists the criteria, and the fix says what counts (a path,
+      D71, §4, a number). Adding one passes.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      Silver ("findings cite something checkable") is stated in
+      docs/design/scorecards-for-scorecards.md:288.
+summary: >-
+  The citation detector is looser than its doc says: "and/or" and a year
+  are citations.

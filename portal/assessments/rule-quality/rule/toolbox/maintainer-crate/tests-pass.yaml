@@ -1,0 +1,44 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/maintainer-crate/tests-pass
+rubric: rule-quality
+subjectHash: 8c572c397e32
+assessor: {kind: agent, name: blind-review-2026-11-23}
+at: 2026-11-23
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      parse_cargo_test (crates/toolbox-connector-runner/src/main.rs:93-113)
+      reports `pass` whenever cargo exits 0. Tests that skip by returning
+      early count as passed: crates/toolbox-authz/tests/fga.rs:59-64, the M3
+      exit-criterion test, returns with "skipping: openfga binary not found".
+      `ignored` is recorded (main.rs:101) but no rule reads it. A crate whose
+      riskiest test never ran still passes.
+    suggestion: >-
+      Fail or flag when `entity.tests.ignored > 0`. Have env-gated tests panic
+      instead of returning when a CI variable (e.g. TOOLBOX_REQUIRE_OPENFGA)
+      is set, and set that variable in the runner job.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Cheapest attempt: add `#[ignore]` to the failing test. cargo exits 0,
+      status is `pass` (main.rs:103-107), and the check at
+      portal/standards/crates.yaml:122 passes.
+    suggestion: >-
+      Add `entity.tests.ignored == 0` to the check, or make ignored tests the
+      evidence of a separate rule that the ratchet tracks.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The fix's `cargo test -p <crate>` matches the runner job (`cargo test -q
+      -p {crate}`, portal/toolbox.yaml runner jobs), and the evidence carries
+      the last 2000 characters of output (main.rs:110).
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      Bronze is stated in docs/design/toolbox-for-toolbox.md:103 ("tests
+      pass"). There is no number.
+summary: >-
+  "Tests pass" means "cargo exited 0": ignored and self-skipping tests
+  count as passing, and the rule is unknown in CI anyway (15 of 15 live,
+  runner skipped).

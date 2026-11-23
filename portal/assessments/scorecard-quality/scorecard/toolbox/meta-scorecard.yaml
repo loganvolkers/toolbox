@@ -1,0 +1,60 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: scorecard:toolbox/meta-scorecard
+rubric: scorecard-quality
+subjectHash: e588242ffebe
+assessor: {kind: agent, name: blind-review-2026-11-23}
+at: 2026-11-23
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: >-
+      Its four rules (portal/standards/meta.yaml:374-405) all ask whether a
+      scorecard is tested and its ladder exercised, for standard authors;
+      D01M831P5QWJQ4A2FT85N5MXJQF names that concern "well-formed, not good".
+  - criterion: levels-are-a-ladder
+    verdict: fail
+    reason: >-
+      Half fixed. A ladder of `none` and `skipped` alone now fails silver
+      (`fixtureRealLevels`, meta.yaml:31-37 and 388-392). But one real level
+      plus `skipped` still passes: scorecard:toolbox/user-cli has fixture
+      levels {bronze: 2, skipped: 2} (`toolbox describe scorecards portal`),
+      so no fixture entity fails bronze, yet a test in a scratch copy of
+      portal/ showed fixtures-show-the-ladder `pass`. Gold `every-rule-tested`
+      (meta.yaml:401-405) is meta-rule's bronze `tested` rolled up. Since
+      meta-rule's ratchet makes every new rule bronze (meta.yaml:300), a new
+      scorecard gets gold without effort, and gold repeats bronze's concern
+      rather than building on silver.
+    suggestion: >-
+      Exclude `skipped` from the second count: require `fixtureRealLevels`
+      plus `none`, or two real levels, to make up at least two outcomes. Make
+      gold "the fixtures reach every declared level"
+      (`entity.fixtureRealLevels.size() == entity.levels.size()`).
+  - criterion: no-obvious-gap
+    verdict: fail
+    reason: >-
+      Still missing: `described`. A scorecard may carry `description` ("What
+      the standard is and why", crates/toolbox-model/src/manifest.rs:154-155),
+      and meta-kind and meta-rubric check theirs (meta.yaml:430-436 and
+      612-616). But the scorecard record has no such fact
+      (crates/toolbox-cli/src/meta.rs:213-223), and meta-scorecard itself
+      carries only a YAML comment (meta.yaml:368-372). review-scorecard's
+      no-doubts fix says doubts are "usually a level whose purpose isn't
+      written down".
+    suggestion: >-
+      Emit `described` (using the new `filled` helper,
+      crates/toolbox-cli/src/model.rs) in the scorecard record and add a
+      `described` rule at bronze or silver.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      I tried scorecard:toolbox/user-cli, which fails bronze `tested`
+      (portal/tests/standards.test.yaml:243-245). The evidence "no expectation
+      names score(user-cli, …)" and the fix say what to add. Silver then
+      passes as above, and `every-rule-tested` lists untested rules by name
+      (standards.test.yaml:250-256). The new fixtures-show-the-ladder evidence
+      separates "no fixture entity reaches one of 3 levels" from "fixtures
+      reach only <level>" (meta.yaml:393-396).
+summary: >-
+  The none-plus-skipped hole is closed, but one level plus skipped still
+  earns silver, gold is free for new scorecards, and nothing asks a
+  scorecard to say what it is for.

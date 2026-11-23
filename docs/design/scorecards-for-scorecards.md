@@ -5,7 +5,10 @@ catalogues every part of three portals: itself, the
 [repo-portal starter](../../examples/repo-portal-starter/README.md) and the
 [reference portal](../../examples/reference-portal/README.md). Deterministic meta scorecards cover
 rules, scorecards, kinds, fields and connectors, and score themselves too. Judgement comes from
-coding agents' assessments, pushed as data (§6). Agent trials (§3.4) remain proposed.*
+coding agents' assessments, pushed as data (§6). Agent trials (§3.4) remain proposed.
+**Re-evaluated 2026-11-23 ([meta-standards-review.md](./meta-standards-review.md),
+D01M831P5QWJQ4A2FT85N5MXJQF): meta gold means well-formed, not good. Reviews now put open findings
+first and must be independent.***
 
 ---
 
@@ -240,10 +243,10 @@ exercised by fixtures. **First run, over 20 kinds, 190 fields and 9 connectors:*
    Both paths produce the same record (`toolbox_connect::assessment`), so a portal maps it once.
 6. The portal maps `assessment` records to an `Assessment` kind related to what it assesses. Computed
    fields compare `subjectHash` with the entity's hash (`reviewState`: fresh, stale or missing).
-   Advisory `review-*` scorecards turn that into levels:
-   - bronze: assessed, current;
-   - silver: no failing criterion;
-   - gold: no doubts.
+   Advisory `review-*` scorecards turn that into levels (since D01M831P5QWJQ4A2FT85N5MXJQF):
+   - bronze: no open finding (no current review with a failing criterion);
+   - silver: assessed and current, and for assessments, by another assessor;
+   - gold: no failing criterion and no doubts.
 
 **Why push:**
 
@@ -328,7 +331,7 @@ The assessment record carries what the deterministic card needs (`toolbox_connec
 |---|---|
 | **Fleets accumulate hundreds of rules across team packages** ([federation.md](./federation.md)) | Redundancy across packages, an owner per rule, and retirement: a rule passing on every entity for a long time becomes a guardrail (ratchet-only) or is removed |
 | **Agents write rules** (they already write fixes) | `ratchet.newEntitiesAtLeast` on `meta-rule` as the merge gate: an agent-authored rule must arrive tested, explained and decided on fixtures, and a `rule-quality` assessment flags gameable ones |
-| **Graduation needs a quality bar** | A standard moves to `mandatory` only when its scorecard is at meta gold, and promotion is a meta check, not a meeting |
+| **Graduation needs a quality bar** | ~~A standard moves to `mandatory` only when its scorecard is at meta gold~~ Withdrawn (D01M831P5QWJQ4A2FT85N5MXJQF): meta gold is form. Promotion needs a current, independent, passing review and, where there is one, an agent trial |
 | **Rules read more volatile data** (run history, incidents, costs) | First-class volatility, so ratcheted and observed standards are told apart automatically (§3.2 `ratchetable`) |
 | **Evaluation cost becomes visible** at 100k+ entities and many packages | Per-rule cost budgets and the CEL analysis in `plan`: "this change adds a nested loop over 2M relations" |
 | **Teams copy the starter** | The starter's own meta level matters most. It is gold on 4 of 6 rules today; `codeowners-catch-all` is untested and `docs/links-resolve` never passes on its fixtures |

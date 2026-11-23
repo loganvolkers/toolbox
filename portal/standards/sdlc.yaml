@@ -177,8 +177,16 @@ scorecards:
     levels: [bronze, silver, gold]
     ratchet: {advisory: true}
     rules:
-    - name: assessed
+    - name: no-open-findings
       level: bronze
+      check: entity.reviewState != 'fresh' || entity.reviewFailing.size() == 0
+      evidence: "entity.reviewState == 'fresh' ? entity.reviewFailing : []"
+      fix: >-
+        A current sdlc-stage-quality assessment failed the listed criteria: act
+        on its suggestions (portal/assessments/), then re-assess. If the finding
+        is wrong, say why in a new assessment by another assessor.
+    - name: assessed
+      level: silver
       check: entity.reviewState == 'fresh'
       evidence: >-
         [entity.reviewState == 'stale' ? 'the stage changed since it was
@@ -188,7 +196,7 @@ scorecards:
         have your agent write the assessment, then `toolbox assess check
         portal`.
     - name: passes-review
-      level: silver
+      level: gold
       check: entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0
       evidence: >-
         entity.reviewState == 'fresh' ? entity.reviewFailing : ['no current

@@ -1,0 +1,64 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/review-crate/passes-review
+rubric: rule-quality
+subjectHash: 0cf901a348cb
+assessor: {kind: agent, name: blind-review-2026-11-23}
+at: 2026-11-23
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      Unchanged since the last review: only the level moved (silver to gold,
+      portal/standards/crates.yaml:210-211). Freshness still compares with the
+      SHA-256 of src/ only (source_hash,
+      crates/toolbox-connector-workspace/src/rust.rs:227-245;
+      crates.yaml:31-35). But tests-match-risk is about tests/,
+      replaceable-defaults about Cargo.toml dependencies and small-contract
+      about other crates' imports (crates.yaml:231-263). Deleting tests/ or
+      adding a third-party default leaves a passing review fresh, so "passes
+      review" outlives what was reviewed.
+    suggestion: >-
+      Hash src/, tests/ and Cargo.toml into the crate hash, so a change to
+      what the criteria judge makes the assessment stale.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Cheapest attempt: write
+      portal/assessments/crate-design/crate/<name>.yaml with four `pass`
+      verdicts reading "Looks fine to me." (schema minimum 10 characters,
+      schema/assessment.schema.json:36). No rule of review-crate reads the
+      assessor or the assessment's `uncited` (crates.yaml:194-229), and
+      D01M831P5QWJQ4A2FT85N5MXJQF's independence applies to assessment reviews
+      only. In a scratch copy of portal/ I replaced every reason of the
+      crate:toolbox-derive fixture assessment (fixtures/workspace.ndjson:46)
+      with that text: `toolbox test` still put review-crate at `gold`.
+    suggestion: >-
+      Count a crate-design assessment only when it is cited (`uncited` empty,
+      as meta-assessment gold checks) and has a current independent review
+      (review-assessment silver), via the assessesCrate relation.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The fix names portal/assessments/ and re-assessment, and the evidence
+      lists the failing criteria, e.g. ['replaceable-defaults'] for
+      toolbox-expr (portal/tests/standards.test.yaml:841-846). For a missing
+      assessment the evidence says 'no current assessment' and the silver
+      `assessed` fix (crates.yaml:207-209) gives the brief command.
+  - criterion: threshold-justified
+    verdict: fail
+    reason: >-
+      Gold is stated in D01M831P5QWJQ4A2FT85N5MXJQF (point 1) and
+      docs/design/meta-standards-review.md §4 C1, but bronze
+      `no-open-findings` (crates.yaml:194-196) and silver `assessed`
+      (`reviewState == 'fresh'`, line 203) together imply this check, so at
+      gold it never changes a crate's level. The owning design doc still says
+      "silver: no failing criterion"
+      (docs/design/scorecards-for-scorecards.md:247-249).
+    suggestion: >-
+      Give gold a condition the lower levels lack (the cited, independently
+      reviewed assessment above), or drop the rule and leave gold to
+      `no-doubts`; update scorecards-for-scorecards.md §6 to the C1 ladder.
+summary: >-
+  Only the level changed, so the earlier findings stand: the subject hash
+  misses tests and dependencies, an uncited all-pass assessment earns
+  gold, and at gold the rule is now implied by bronze and silver.

@@ -69,6 +69,14 @@ kinds:
         computed: >-
           inbound.assessesAssessment.size() == 0 ? [] :
           inbound.assessesAssessment[0].unsure
+      selfReviewed:
+        type: boolean
+        description: >-
+          The assessment-quality review was written by the same assessor as the
+          assessment, so it is no independent check.
+        computed: >-
+          inbound.assessesAssessment.size() > 0 && has(entity.assessorName) &&
+          inbound.assessesAssessment[0].assessorName == entity.assessorName
     relations:
       assessesAssessment: {to: Assessment, many: false, unresolved: ignore}
       assessesSdlcStage: {to: SdlcStage, many: false, unresolved: ignore}
@@ -141,17 +149,27 @@ scorecards:
     ratchet: {advisory: true}
     appliesTo: entity.rubric != 'assessment-quality'
     rules:
-    - name: assessed
+    - name: no-open-findings
       level: bronze
-      check: entity.reviewState == 'fresh'
+      check: entity.reviewState != 'fresh' || entity.reviewFailing.size() == 0
+      evidence: "entity.reviewState == 'fresh' ? entity.reviewFailing : []"
+      fix: >-
+        A current assessment-quality assessment failed the listed criteria: act
+        on its suggestions (portal/assessments/), then re-assess. If the finding
+        is wrong, say why in a new assessment by another assessor.
+    - name: assessed
+      level: silver
+      check: entity.reviewState == 'fresh' && !entity.selfReviewed
       evidence: >-
-        [entity.reviewState == 'stale' ? 'the assessment changed since it was
-        reviewed' : 'not reviewed against assessment-quality']
+        [entity.selfReviewed ? 'reviewed by its own assessor, ' +
+        entity.assessorName : (entity.reviewState == 'stale' ? 'the assessment
+        changed since it was reviewed' : 'not reviewed against
+        assessment-quality')]
       fix: >-
         Run `toolbox assess brief <assessment id> --portal portal`; a different
         agent or person should review it.
     - name: passes-review
-      level: silver
+      level: gold
       check: entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0
       evidence: >-
         entity.reviewState == 'fresh' ? entity.reviewFailing : ['no current

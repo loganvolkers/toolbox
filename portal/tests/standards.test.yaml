@@ -784,9 +784,17 @@ assert:
       entity('rule:toolbox/maintainer-ci-security/least-privilege-token').reviewFailing
       == ['hard-to-game']
   - name: >-
-      a fresh, all-pass assessment is gold; failing criteria stop at bronze;
-      doubts at silver
+      a fresh, all-pass assessment is gold; an open finding is none; doubts
+      stop at silver; a rule with no current review is bronze
     expect: >-
+      score('review-rule',
+      'rule:toolbox/maintainer-ci-security/least-privilege-token').level ==
+      'none' && score('review-rule',
+      'rule:toolbox/maintainer-ci-security/least-privilege-token').evidence['no-open-findings']
+      == ['hard-to-game'] && score('review-rule',
+      'rule:toolbox/meta-rule/tested').level == 'bronze' &&
+      score('review-rule',
+      'rule:toolbox/meta-rule/tested').rules['no-open-findings'] == 'pass' &&
       score('review-rule',
       'rule:toolbox/maintainer-ci-security/no-medium-findings').level ==
       'gold' && score('review-rule',
@@ -813,6 +821,8 @@ assert:
       score('review-scorecard',
       'scorecard:toolbox/maintainer-ci-security').level == 'gold' &&
       score('review-scorecard',
+      'scorecard:toolbox/meta-rule').rules['no-open-findings'] == 'fail' &&
+      score('review-scorecard',
       'scorecard:toolbox/meta-rule').evidence['passes-review'] ==
       ['no-obvious-gap'] && score('review-scorecard',
       'scorecard:toolbox/user-cli').rules['assessed'] == 'fail' &&
@@ -828,8 +838,10 @@ assert:
       crates are reviewed against crate-design, and go stale when their
       sources change
     expect: >-
-      score('review-crate', 'crate:toolbox-expr').level == 'bronze' &&
-      score('review-crate', 'crate:toolbox-expr').evidence['passes-review'] ==
+      score('review-crate', 'crate:toolbox-expr').level == 'none' &&
+      score('review-crate', 'crate:toolbox-expr').evidence['no-open-findings']
+      == ['replaceable-defaults'] && score('review-crate',
+      'crate:toolbox-expr').evidence['passes-review'] ==
       ['replaceable-defaults'] && score('review-crate',
       'crate:toolbox-expr').rules['no-doubts'] == 'fail' &&
       score('review-crate', 'crate:toolbox-derive').rules['no-doubts'] ==
@@ -905,6 +917,8 @@ assert:
       score('review-assessment',
       'assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-medium-findings').level
       == 'gold' && score('review-assessment',
+      'assessment:rule-quality/rule:toolbox/user-cli/has-help').rules['no-open-findings']
+      == 'fail' && score('review-assessment',
       'assessment:rule-quality/rule:toolbox/user-cli/has-help').evidence['passes-review']
       == ['complete'] && score('review-assessment',
       'assessment:assessment-quality/assessment:rule-quality/rule:toolbox/user-cli/has-help').level
@@ -970,6 +984,8 @@ assert:
     expect: >-
       score('review-sdlc-stage', 'sdlc-stage:demo-done/plan').level == 'gold'
       && score('review-sdlc-stage',
+      'sdlc-stage:demo-partial/ship').rules['no-open-findings'] == 'fail' &&
+      score('review-sdlc-stage',
       'sdlc-stage:demo-partial/ship').evidence['passes-review'] ==
       ['reuses-artifacts'] &&
       entity('sdlc-stage:demo-gap/release').reviewState == 'stale' &&
@@ -1100,3 +1116,14 @@ assert:
       'benchmark:demo-bare').evidence['results-recorded'] == ['no outcome',
       'no results path'] && score('maintainer-benchmark',
       'benchmark:demo-bare').rules['closes-the-loop'] == 'fail'
+  - name: >-
+      a review written by the assessment's own assessor is no independent
+      check
+    expect: >-
+      entity('assessment:crate-design/crate:toolbox-connector-git-files').selfReviewed
+      && score('review-assessment',
+      'assessment:crate-design/crate:toolbox-connector-git-files').rules['assessed']
+      == 'fail' && score('review-assessment',
+      'assessment:crate-design/crate:toolbox-connector-git-files').evidence['assessed']
+      == ['reviewed by its own assessor, fixture-agent'] &&
+      !entity('assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-medium-findings').selfReviewed

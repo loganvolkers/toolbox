@@ -31,3 +31,18 @@ campaigns:
     end: 2027-03-31
     targetPercent: 100
     includes: [{scorecard: cli-skill, atLeast: bronze}]
+  - name: close-review-findings
+    title: Close the open review findings
+    track: maintainer
+    owner: group:maintainers
+    description: >-
+      Act on every current rule-quality and scorecard-quality finding: fix the
+      standard, or answer the finding in a new, independent assessment
+      (docs/design/meta-standards-review.md).
+    start: 2026-11-23
+    end: 2027-02-28
+    targetPercent: 100
+    milestones: [{name: half, targetPercent: 50}]
+    includes:
+    - {scorecard: review-rule, atLeast: bronze}
+    - {scorecard: review-scorecard, atLeast: bronze}

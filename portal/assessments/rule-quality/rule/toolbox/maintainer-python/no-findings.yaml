@@ -1,0 +1,46 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/maintainer-python/no-findings
+rubric: rule-quality
+subjectHash: 08a4eb27c85a
+assessor: {kind: agent, name: blind-review-2026-11-23}
+at: 2026-11-23
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      The check is ruff's own active-finding count from its SARIF
+      (packages/sarif/fragments/sarif.yaml:58-67), over scripts/*.py and
+      examples/reference-portal/tools/*.py (portal/toolbox.yaml, the sarif
+      include). A live `toolbox report portal --skip runner,github-actions`
+      scored 11 files, all clean. One caveat: the globs don't follow new
+      Python into subdirectories such as scripts/lib/ or packages/.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      A bare `# noqa` (no code, no reason) silences any finding on its line,
+      and ruff leaves it out of the SARIF entirely. Checked with ruff 0.14.0:
+      `import os  # noqa` produced no result, only the unsuppressed F401 on
+      line 2. So `total` doesn't count it either, and even countSuppressed
+      (sarif.yaml:60) can't see it. A `"scripts/*.py" = ["ALL"]` per-file
+      ignore in ruff.toml also passes. The fix asks for "a comment saying
+      why", but nothing checks that.
+    suggestion: >-
+      Select PGH004 (blanket-noqa) and RUF100 (unused-noqa) in ruff.toml, so
+      ruff itself reports a code-less noqa, or have the connector count `#
+      noqa` lines as suppressed findings.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence gives `line N: RULE message` per finding
+      (sarif.yaml:63-66), the record's command reruns ruff alone
+      (scripts/take-it-out.py), and the fix names ruff.toml for deliberate
+      ignores.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no tuned number. One level, `clean`, means zero findings, and
+      the ratchet `newEntitiesAtLeast: clean` (sarif.yaml:55-56) matches the
+      description's "a new file must arrive clean".
+summary: >-
+  A faithful carrier for ruff, but the cheapest way to pass is a bare `#
+  noqa`, which ruff can be told to forbid.

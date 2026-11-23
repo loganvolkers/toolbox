@@ -151,7 +151,7 @@ fn field_record(
         .map(|(ids, f)| (ids.len() as u64, f.get(name).copied().unwrap_or(0)))
         .unwrap_or((0, 0));
     json!({
-        "portal": portal, "kind": kind, "name": name, "type": f.ty, "described": f.description.is_some(),
+        "portal": portal, "kind": kind, "name": name, "type": f.ty, "described": filled(&f.description),
         "computed": f.computed.is_some(), "sources": if f.computed.is_some() { vec![] } else { sources },
         "opaque": f.ty == "object" || (f.ty == "list" && f.items.as_deref() == Some("object")),
         "readBy": read, "fixture": {"entities": entities, "withValue": with}, "hash": hash(f),
@@ -190,8 +190,8 @@ fn kind_record(portal: &str, k: &toolbox_model::manifest::Kind, ctx: &Ctx, expec
         })
         .collect();
     json!({
-        "portal": portal, "name": k.name, "described": k.description.is_some(),
-        "fields": k.fields.len(), "fieldsDescribed": k.fields.values().filter(|f| f.description.is_some()).count(),
+        "portal": portal, "name": k.name, "described": filled(&k.description),
+        "fields": k.fields.len(), "fieldsDescribed": k.fields.values().filter(|f| filled(&f.description)).count(),
         "identityFrom": k.identity_from, "scorecards": scorecards, "relationsOut": k.relations.keys().collect::<Vec<_>>(),
         "relationsIn": related_in, "fixtureEntities": ids.len(), "tested": tested, "hash": hash(k),
     })
@@ -264,11 +264,17 @@ fn rubric_record(portal: &str, r: &toolbox_model::manifest::Rubric, docs: &[Valu
     };
     json!({
         "portal": portal, "name": r.name, "kind": r.kind, "subject": r.subject(),
-        "described": r.description.is_some(),
+        "described": filled(&r.description),
         "criteria": r.criteria.iter().map(|c| &c.name).collect::<Vec<_>>(),
-        "unguided": r.criteria.iter().filter(|c| c.guidance.is_none()).map(|c| &c.name).collect::<Vec<_>>(),
+        "unguided": r.criteria.iter().filter(|c| !filled(&c.guidance)).map(|c| &c.name).collect::<Vec<_>>(),
         "assessments": used.len(), "alwaysPass": always_pass, "hash": hash(r),
     })
+}
+
+/// A description or guidance counts only when it has text: `description: ""` or `guidance: " "`
+/// is the cheapest way to game a `described` or `guided` rule.
+fn filled(text: &Option<String>) -> bool {
+    text.as_deref().is_some_and(|t| !t.trim().is_empty())
 }
 
 /// `kind`, `field`, `rubric` and `connector` records for a loaded portal; `expects` is the text of its test
@@ -312,4 +318,15 @@ pub fn records(local: &Local, expects: &str) -> Vec<(String, String, Value)> {
         ));
     }
     out
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn blank_text_is_not_a_description() {
+        assert!(super::filled(&Some("What it is.".into())));
+        assert!(!super::filled(&Some(String::new())));
+        assert!(!super::filled(&Some("  \n".into())));
+        assert!(!super::filled(&None));
+    }
 }

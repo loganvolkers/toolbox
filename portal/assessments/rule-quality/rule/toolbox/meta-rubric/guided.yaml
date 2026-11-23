@@ -1,0 +1,42 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/meta-rubric/guided
+rubric: rule-quality
+subjectHash: 3b825aeb5ae4
+assessor: {kind: agent, name: blind-review-2026-11-23}
+at: 2026-11-23
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      `unguided` lists criteria whose `guidance` is absent
+      (crates/toolbox-cli/src/model.rs:269, `c.guidance.is_none()`), and
+      schema/manifest.schema.json types guidance as a bare string. An empty
+      string, or guidance that repeats the question, counts as guided, but the
+      fix promises guidance "saying what counts as fail".
+    suggestion: >-
+      Treat guidance as missing when it is blank or under 5 words (as
+      explains-fix does for fixes), and when it names no outcome (fail, unsure
+      or pass).
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Cheapest attempt: `guidance: ""`. I checked it on a scratch copy of
+      examples/repo-portal-starter with a one-criterion rubric: `toolbox
+      validate` reported 0 errors, and `describe portal` emitted
+      `"unguided":[]`.
+    suggestion: >-
+      Add `minLength` to guidance in schema/manifest.schema.json, and use the
+      word and outcome test above in model.rs.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence lists criterion names, and the fix names the `guidance:`
+      key. Adding it passes portal/standards/meta.yaml:599.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      "Silver, every criterion has guidance" is stated in
+      docs/design/scorecards-for-scorecards.md:289 and D80.
+summary: >-
+  It checks that a key exists, not that it says what fails: an empty
+  string passes.

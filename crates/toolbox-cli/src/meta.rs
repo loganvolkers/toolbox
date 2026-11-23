@@ -38,19 +38,42 @@ fn test_mentions(root: &Path, m: &Manifest) -> (BTreeSet<(String, String)>, BTre
         };
         for a in doc["assert"].as_array().into_iter().flatten() {
             let expect = a["expect"].as_str().unwrap_or_default();
-            let named: Vec<String> = score
-                .captures_iter(expect)
-                .map(|c| c[1].to_owned())
-                .collect();
-            for c in &named {
-                cards.insert(c.clone());
-                for r in rule.captures_iter(expect) {
-                    rules.insert((c.clone(), r[1].to_owned()));
+            for (card, rules_named) in score_segments(&score, &rule, expect) {
+                for r in rules_named {
+                    rules.insert((card.clone(), r));
                 }
+                cards.insert(card);
             }
         }
     }
     (rules, cards)
+}
+
+/// Each `score('<card>', …)` call in an expectation with the rules named after it, up to the next
+/// `score(`: a rule counts as tested only by an expectation on its own scorecard, not by any card
+/// that happens to share the expectation.
+fn score_segments(
+    score: &regex::Regex,
+    rule: &regex::Regex,
+    expect: &str,
+) -> Vec<(String, Vec<String>)> {
+    let starts: Vec<_> = score.captures_iter(expect).collect();
+    starts
+        .iter()
+        .enumerate()
+        .map(|(i, c)| {
+            let from = c.get(0).map_or(0, |m| m.end());
+            let to = starts
+                .get(i + 1)
+                .and_then(|n| n.get(0))
+                .map_or(expect.len(), |m| m.start());
+            let named = rule
+                .captures_iter(&expect[from..to])
+                .map(|r| r[1].to_owned())
+                .collect();
+            (c[1].to_owned(), named)
+        })
+        .collect()
 }
 
 /// Kinds that describe portals themselves (fed by `describe portal` records).
@@ -245,4 +268,22 @@ pub fn describe(portals: &[PathBuf], results: &[String]) -> Result<(), String> {
         }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn a_rule_is_tested_only_by_its_own_scorecards_expectation() {
+        let score = regex::Regex::new(r"score\('([^']+)'").unwrap();
+        let rule = regex::Regex::new(r"(?:rules|evidence)\['([^']+)'\]").unwrap();
+        let e = "score('a', 'x:1').rules['r1'] == 'pass' && score('b', 'x:1').level == 'gold'";
+        let got = super::score_segments(&score, &rule, e);
+        assert_eq!(
+            got,
+            vec![
+                ("a".to_owned(), vec!["r1".to_owned()]),
+                ("b".to_owned(), vec![])
+            ]
+        );
+    }
 }

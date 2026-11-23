@@ -1,0 +1,42 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/meta-connector/records-mapped
+rubric: rule-quality
+subjectHash: 99f8b35a753b
+assessor: {kind: agent, name: blind-review-2026-11-23}
+at: 2026-11-23
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      crates/toolbox-cli/src/model.rs:199-224 lists a connector's declared
+      records that no map rule names as `<connector>/<record>`, over the
+      resolved manifest. Included packages count:
+      connector:toolbox/maintainer-python is gold in a live report. "Stop
+      declaring it" is safe, because ingest rejects undeclared records
+      (crates/toolbox-model/src/messages.rs:66) and validate checks fixtures.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Cheapest attempt: a map rule on an existing kind that maps nothing. On a
+      scratch copy of examples/repo-portal-starter I declared `skill` and
+      added `- {from: workspace/skill, id: "'repository:' + record.dir", set:
+      "{}"}` under Repository. `toolbox validate` reported 0 errors, and
+      `describe portal` gave `"unmapped":[]`. No new kind is created, so
+      meta-kind's ratchet doesn't catch it.
+    suggestion: >-
+      Count a record as mapped only when its map rule's `set` reads `record.`
+      at least once, or when a fixture record of that kind populates at least
+      one field (meta-field's populated-in-fixtures, per record).
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence lists the record kinds, and the fix
+      (portal/standards/meta.yaml:476-478) gives the exact `map: - from:
+      <connector>/<record>` shape and the alternative.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      Bronze is stated in docs/design/scorecards-for-scorecards.md:202. There
+      is no number.
+summary: >-
+  A sound structural check that an empty `set` satisfies.

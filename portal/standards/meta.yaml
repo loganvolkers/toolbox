@@ -28,6 +28,13 @@ kinds:
         description: >-
           Content hash of the scorecard's definition: assessments of it go stale
           when it changes.
+      fixtureRealLevels:
+        type: list
+        items: string
+        description: >-
+          The scorecard's own levels that some fixture entity reaches (none and
+          skipped don't count).
+        computed: entity.levels.filter(l, l in entity.fixtureLevels)
       reviewState:
         type: string
         description: "scorecard-quality assessment: fresh, stale or missing."
@@ -380,11 +387,17 @@ scorecards:
       fix: Give every level at least one rule, or drop the level.
     - name: fixtures-show-the-ladder
       level: silver
-      check: entity.fixtureLevels.size() >= 2
-      evidence: entity.fixtureLevels.map(l, 'fixtures reach only ' + l)
+      check: >-
+        entity.fixtureRealLevels.size() >= 1 && entity.fixtureLevels.size() >=
+        2
+      evidence: >-
+        entity.fixtureRealLevels.size() == 0 ? ['no fixture entity reaches one
+        of ' + string(entity.levels.size()) + ' levels'] :
+        entity.fixtureLevels.map(l, 'fixtures reach only ' + l)
       fix: >-
-        Make the fixtures reach at least two levels (e.g. one entity at none,
-        one at bronze or above).
+        Make the fixtures reach at least two outcomes, one of them a real level
+        (e.g. one entity at none, one at bronze or above); none and skipped
+        alone show no ladder.
     - name: every-rule-tested
       level: gold
       check: entity.untestedRules.size() == 0
@@ -508,8 +521,16 @@ scorecards:
     ratchet: {advisory: true}
     appliesTo: entity.portal == 'toolbox' # our own rules; the starter and reference are examples
     rules:
-    - name: assessed
+    - name: no-open-findings
       level: bronze
+      check: entity.reviewState != 'fresh' || entity.reviewFailing.size() == 0
+      evidence: "entity.reviewState == 'fresh' ? entity.reviewFailing : []"
+      fix: >-
+        A current rule-quality assessment failed the listed criteria: act on its
+        suggestions (portal/assessments/), then re-assess. If the finding is
+        wrong, say why in a new assessment by another assessor.
+    - name: assessed
+      level: silver
       check: entity.reviewState == 'fresh'
       evidence: >-
         [entity.reviewState == 'stale' ? 'the rule changed since it was
@@ -518,7 +539,7 @@ scorecards:
         Run `toolbox assess brief <rule id> --portal portal`, have your agent
         write the assessment file it names, then `toolbox assess check portal`.
     - name: passes-review
-      level: silver
+      level: gold
       check: entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0
       evidence: >-
         entity.reviewState == 'fresh' ? entity.reviewFailing : ['no current
@@ -544,8 +565,16 @@ scorecards:
     ratchet: {advisory: true}
     appliesTo: entity.portal == 'toolbox'
     rules:
-    - name: assessed
+    - name: no-open-findings
       level: bronze
+      check: entity.reviewState != 'fresh' || entity.reviewFailing.size() == 0
+      evidence: "entity.reviewState == 'fresh' ? entity.reviewFailing : []"
+      fix: >-
+        A current scorecard-quality assessment failed the listed criteria: act
+        on its suggestions (portal/assessments/), then re-assess. If the finding
+        is wrong, say why in a new assessment by another assessor.
+    - name: assessed
+      level: silver
       check: entity.reviewState == 'fresh'
       evidence: >-
         [entity.reviewState == 'stale' ? 'the scorecard changed since it was
@@ -555,7 +584,7 @@ scorecards:
         agent write the assessment file it names, then `toolbox assess check
         portal`.
     - name: passes-review
-      level: silver
+      level: gold
       check: entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0
       evidence: >-
         entity.reviewState == 'fresh' ? entity.reviewFailing : ['no current
