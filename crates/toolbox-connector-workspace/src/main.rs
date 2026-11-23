@@ -676,11 +676,16 @@ impl Workspace {
         if !kinds.contains(&"assessment") || self.assessments.is_empty() {
             return;
         }
+        let mut records = Vec::new();
         for rel in paths.iter().filter(|p| Self::matches(&self.assessments, p)) {
             match self.assessment(rel) {
-                Ok((id, data)) => out.record("assessment", &id, data),
+                Ok(r) => records.push(r),
                 Err(e) => out.log("warn", &format!("{rel}: {e}")),
             }
+        }
+        toolbox_connect::assessment::link_reviews(&mut records);
+        for (id, data) in records {
+            out.record("assessment", &id, data);
         }
         out.snapshot_complete("assessment");
     }

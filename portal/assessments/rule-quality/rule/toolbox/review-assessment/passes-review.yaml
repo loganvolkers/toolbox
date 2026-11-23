@@ -1,66 +1,57 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/review-assessment/passes-review
 rubric: rule-quality
-subjectHash: 99a441ac8154
-assessor: {kind: agent, name: blind-review-2026-11-23}
+subjectHash: 7a94e79ab59d
+assessor: {kind: agent, name: campaign-review-rules}
 at: 2026-11-23
 verdicts:
   - criterion: measures-intent
     verdict: pass
     reason: >-
-      The two earlier findings are closed at the card level. Self-review now
-      fails silver `assessed` (`!entity.selfReviewed`,
-      portal/standards/assessments.yaml:72-79 and 160-162), and levels are
-      cumulative (level_ignoring_unknown,
-      crates/toolbox-derive/src/lib.rs:1139-1168), so a self-reviewed
-      assessment cannot reach this rule's gold. An all-unsure review is held
-      back by `no-doubts` at the same level (assessments.yaml:180). The check
-      reads exactly what the fix names: the findings of a current review.
+      The check reads a current review with no failing criterion and no
+      uncited reason (portal/standards/assessments.yaml:190-197, with
+      reviewUncited at :72-79). Self-review is held back by silver `assessed`
+      (`!entity.selfReviewed`, assessments.yaml:179-189), and doubts by
+      `no-doubts`, so the card's gold means what docs/design/thresholds.md §3
+      says.
   - criterion: hard-to-game
     verdict: fail
     reason: >-
-      Cheapest attempt: the assessment's own author writes the review under
-      another `assessor.name` with four `pass` verdicts reading "Looks fine to
-      me." (17 characters; the schema minimum is 10,
-      schema/assessment.schema.json:36). `selfReviewed` compares only the
-      self-declared name strings (assessments.yaml:77-79), and no rule reads
-      the review's own `uncited`. In a scratch copy of portal/ I made that
-      change to the self-review fixture of
-      assessment:crate-design/crate:toolbox-connector-git-files
-      (fixtures/workspace.ndjson:84, renamed fixture-agent-2): `toolbox test`
-      showed passes-review `pass` and review-assessment level `gold`.
+      Cheapest attempt: the assessment's own author writes the review under a
+      different `assessor.name`, with every verdict `pass` and a reason such
+      as "Fine; see README.md." selfReviewed compares only the self-declared
+      names (assessments.yaml:81-87), and any existing file name resolves in
+      cites() (crates/toolbox-connect/src/assessment.rs:41-47), so the review
+      is cited and the rule passes. thresholds.md §3 accepts the rename as "a
+      false statement in a committed file", but writing a fake review is still
+      far cheaper than getting a real one.
     suggestion: >-
-      Count a review only when it is itself well-formed: add a computed
-      `reviewCited` (`inbound.assessesAssessment[0].uncited.size() == 0`) and
-      require it here, so a content-free review earns nothing; record
-      `assessor.model` and treat the same name or the same model run as
-      self-review.
+      Have the workspace connector record the git author of each assessment
+      file (`git log -1 --format=%ae`), and treat a review whose author
+      matches the assessment's as self-review; tighten cites() as suggested
+      for cites-for-findings.
   - criterion: fix-leads-to-pass
-    verdict: pass
-    reason: >-
-      "Revise the assessment ... then have it reviewed again" is the loop of
-      docs/design/scorecards-for-scorecards.md §6: editing changes the
-      assessment's content hash, the old review goes stale, and a new review
-      with no failing criterion passes the check (assessments.yaml:171-179).
-      The evidence names the failing criteria, e.g. ['complete'] for user-cli
-      has-help (portal/tests/standards.test.yaml:921-923).
-  - criterion: threshold-justified
     verdict: fail
     reason: >-
-      Gold is stated in D01M831P5QWJQ4A2FT85N5MXJQF (point 1) and
-      docs/design/meta-standards-review.md §4 C1, but at gold the rule decides
-      nothing. Bronze `no-open-findings` (`reviewState != 'fresh' ||
-      reviewFailing.size() == 0`, assessments.yaml:152-154) and silver
-      `assessed` (`reviewState == 'fresh'`, line 162) together imply this
-      check, so it can never be the rule that keeps an entity at silver. The
-      owning design doc still gives the old ladder, "silver: no failing
-      criterion" (scorecards-for-scorecards.md:247-249).
+      The evidence has two kinds of entry: failing criteria, and "<criterion>
+      cites nothing that resolves" (assessments.yaml:193-197). The second is a
+      defect in the review's reasons, not in the assessment, yet the fix says
+      "Revise the assessment where the review found it unsupported"
+      (assessments.yaml:199-201). An agent following it edits the wrong file.
+      The edit only helps by accident, because it makes the review stale.
     suggestion: >-
-      Give gold something the lower levels don't already require (the
-      `reviewCited` condition above is a natural fit), or drop the rule and
-      leave gold to `no-doubts`; then update scorecards-for-scorecards.md §6
-      to the C1 ladder.
+      Add to the fix: "If the evidence says a criterion cites nothing, the
+      review is at fault: have it redone with reasons that cite a file,
+      decision or URL."
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      Gold is stated in D01M831P5QWJQ4A2FT85N5MXJQF and in the ladder in
+      docs/design/thresholds.md §3 ("a current review that passes, cites what
+      resolves"). It now asks for something the lower levels don't
+      (reviewUncited empty), so the earlier "implied by bronze and silver"
+      fail is fixed.
 summary: >-
-  Independence and doubts are now handled by its siblings, but a renamed
-  reviewer with uncited all-pass verdicts still earns gold, and at gold
-  the rule is implied by bronze and silver.
+  Gold now adds something, but a renamed self-review citing any existing
+  file still passes, and the fix sends an agent to the wrong file when the
+  review is the one that is uncited.

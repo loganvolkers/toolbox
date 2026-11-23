@@ -1,60 +1,62 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: scorecard:toolbox/meta-scorecard
 rubric: scorecard-quality
-subjectHash: e588242ffebe
-assessor: {kind: agent, name: blind-review-2026-11-23}
+subjectHash: f4db6141399a
+assessor: {kind: agent, name: campaign-review-cards}
 at: 2026-11-23
 verdicts:
   - criterion: one-concern
     verdict: pass
     reason: >-
-      Its four rules (portal/standards/meta.yaml:374-405) all ask whether a
-      scorecard is tested and its ladder exercised, for standard authors;
-      D01M831P5QWJQ4A2FT85N5MXJQF names that concern "well-formed, not good".
+      Its six rules (portal/standards/meta.yaml:457-504) all ask whether a
+      scorecard is well-formed: tested, no empty level, described, and a
+      fixture ladder that is exercised. One audience, standard authors; the
+      description limits gold to "well-formed, not good"
+      (D01M831P5QWJQ4A2FT85N5MXJQF).
   - criterion: levels-are-a-ladder
-    verdict: fail
+    verdict: pass
     reason: >-
-      Half fixed. A ladder of `none` and `skipped` alone now fails silver
-      (`fixtureRealLevels`, meta.yaml:31-37 and 388-392). But one real level
-      plus `skipped` still passes: scorecard:toolbox/user-cli has fixture
-      levels {bronze: 2, skipped: 2} (`toolbox describe scorecards portal`),
-      so no fixture entity fails bronze, yet a test in a scratch copy of
-      portal/ showed fixtures-show-the-ladder `pass`. Gold `every-rule-tested`
-      (meta.yaml:401-405) is meta-rule's bronze `tested` rolled up. Since
-      meta-rule's ratchet makes every new rule bronze (meta.yaml:300), a new
-      scorecard gets gold without effort, and gold repeats bronze's concern
-      rather than building on silver.
-    suggestion: >-
-      Exclude `skipped` from the second count: require `fixtureRealLevels`
-      plus `none`, or two real levels, to make up at least two outcomes. Make
-      gold "the fixtures reach every declared level"
-      (`entity.fixtureRealLevels.size() == entity.levels.size()`).
+      Both earlier faults are fixed. A ladder of one real level plus `skipped`
+      now fails silver, because fixtures-show-the-ladder counts
+      `fixtureRealLevels` and `none` only (meta.yaml:478-490), and gold is
+      fixtures-reach-every-level rather than a roll-up of meta-rule's bronze
+      (meta.yaml:496-504; docs/design/thresholds.md:45, 55). Bronze (tested,
+      no empty level), silver (described, two outcomes, every rule tested) and
+      gold (every rung reached) build on each other. In portal/results.json,
+      12 cards are bronze, 22 silver and 9 gold, so each level separates
+      cards.
   - criterion: no-obvious-gap
     verdict: fail
     reason: >-
-      Still missing: `described`. A scorecard may carry `description` ("What
-      the standard is and why", crates/toolbox-model/src/manifest.rs:154-155),
-      and meta-kind and meta-rubric check theirs (meta.yaml:430-436 and
-      612-616). But the scorecard record has no such fact
-      (crates/toolbox-cli/src/meta.rs:213-223), and meta-scorecard itself
-      carries only a YAML comment (meta.yaml:368-372). review-scorecard's
-      no-doubts fix says doubts are "usually a level whose purpose isn't
-      written down".
+      The `described` gap is closed (meta.yaml:471-477, using `filled` in
+      crates/toolbox-cli/src/model.rs:283). Still missing is lesson L12,
+      "achievable in context" (docs/design/scorecards-for-scorecards.md:92,
+      proposed as `ratchetable` at line 138). A level whose rules all read a
+      connector the ratchet skips can never be granted where it gates, since
+      an all-unknown level stops the climb
+      (crates/toolbox-derive/src/lib.rs:1136-1137). maintainer-ci-reliability
+      gold is exactly that (fail-rate-under-5 and fast-feedback are both
+      `dataFrom: github-actions`,
+      packages/github-actions/fragments/github-actions.yaml:313-328), and no
+      meta-scorecard rule flags it.
     suggestion: >-
-      Emit `described` (using the new `filled` helper,
-      crates/toolbox-cli/src/model.rs) in the scorecard record and add a
-      `described` rule at bronze or silver.
+      Emit, per scorecard level, whether every rule in it has `dataFrom` (or
+      reads a field sourced only from) a volatile or skipped connector, and
+      add a silver `levels-decidable` rule that fails on such a level, with
+      evidence naming the level and the connector.
   - criterion: actionable
     verdict: pass
     reason: >-
-      I tried scorecard:toolbox/user-cli, which fails bronze `tested`
-      (portal/tests/standards.test.yaml:243-245). The evidence "no expectation
-      names score(user-cli, …)" and the fix say what to add. Silver then
-      passes as above, and `every-rule-tested` lists untested rules by name
-      (standards.test.yaml:250-256). The new fixtures-show-the-ladder evidence
-      separates "no fixture entity reaches one of 3 levels" from "fixtures
-      reach only <level>" (meta.yaml:393-396).
+      I tried scorecard:toolbox/maintainer-ci-reliability, which is bronze and
+      fails every-rule-tested in portal/results.json. The evidence lists the
+      four untested rules, and the fixtures in
+      portal/fixtures/github-actions.ndjson already decide them, so four
+      expectations in the shape meta-rule's `tested` fix gives raise it to
+      silver. The gold fix names portal/fixtures/. The bronze `tested` and
+      silver every-rule-tested fixes name no file ("the portal's tests"), but
+      the manifest's `tests:` list gives it.
 summary: >-
-  The none-plus-skipped hole is closed, but one level plus skipped still
-  earns silver, gold is free for new scorecards, and nothing asks a
-  scorecard to say what it is for.
+  The last review's findings are fixed: a skipped-only ladder fails
+  silver, `described` exists, and gold now asks for every rung. What is
+  missing is a check that each level can be decided where the ratchet
+  runs.

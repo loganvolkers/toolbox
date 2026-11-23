@@ -1,58 +1,64 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: scorecard:toolbox/meta-rule
 rubric: scorecard-quality
-subjectHash: ffb22b77dfe1
-assessor: {kind: agent, name: blind-review-2026-11-23}
+subjectHash: d69091ac6f55
+assessor: {kind: agent, name: campaign-review-cards}
 at: 2026-11-23
 verdicts:
   - criterion: one-concern
     verdict: pass
     reason: >-
-      All eight rules (portal/standards/meta.yaml:289-357) judge one thing,
-      the deterministic authoring quality of a rule: explained, tested,
-      decided on fixtures, evidence, readable CEL. They serve one audience,
-      standard authors, as docs/design/scorecards-for-scorecards.md:97-104
-      lays out.
+      All ten rules (portal/standards/meta.yaml:361-444) judge one thing, a
+      rule's form (explained, tested, decided on fixtures, evidence, readable
+      CEL), for one audience, standard authors. The description says gold is
+      "well-formed, not good" and leaves quality to review-rule
+      (D01M831P5QWJQ4A2FT85N5MXJQF).
   - criterion: levels-are-a-ladder
     verdict: fail
     reason: >-
-      Gold `always-explains` (meta.yaml:351-355) passes with a constant
-      `evidence: "['x']"`, which is cheaper than bronze `tested` (writing an
-      expectation). Live rules already reach it that way: maintainer-site
-      titled uses `['no title']` (portal/standards/site.yaml:57), and
-      cancels-superseded-runs uses a constant string. Gold `readable` is met
-      by moving logic into a computed field, as
-      portal/assessments/rule-quality/rule/toolbox/meta-rule/readable.yaml
-      already found.
+      The earlier fault is fixed (always-explains moved to silver; gold now
+      has evidence-tracks-check and fix-names-a-place), but gold is now free
+      once silver is met. In portal/results.json, 188 of 219 rules are gold, 6
+      bronze, 25 none and none silver. Gold `readable` is met by every rule
+      (max 25 nodes against a limit of 30, docs/design/thresholds.md:40), and
+      gold fix-names-a-place passes on any backtick in the fix
+      (`fixNamesPlace`, meta.yaml:116-127), which is cheaper than bronze
+      `tested`. A level nothing sits at doesn't separate anything.
     suggestion: >-
-      Make gold "evidence reads the entity" (the rule record's
-      `evidence.fields` is already in the brief's facts: non-empty), and move
-      always-explains to silver next to shows-evidence.
+      Move `readable` to silver beside no-nested-loops, and give gold
+      something silver doesn't nearly imply: a test that pins both outcomes
+      (see no-obvious-gap), or a fix that names a field the check reads or a
+      path that exists, rather than any code span.
   - criterion: no-obvious-gap
     verdict: fail
     reason: >-
-      Two rules are missing. (1) A fix that names a place: explains-fix counts
-      5 words (meta.yaml:296), while the design's own lesson L1
-      (scorecards-for-scorecards.md:78) is that fixes naming the file and
-      field worked. (2) A test that asserts an outcome: test_mentions
-      (crates/toolbox-cli/src/meta.rs:28-54) credits any expectation that
-      names the card and the rule, including a tautology (`rules['r'] ==
-      rules['r']`). It also crosses every card and rule named in one
-      expectation, so naming card A next to card B's rule counts as testing
-      A's rule too.
+      Two properties the design names are unchecked. (1) Tests that pin both
+      outcomes (lesson L4, docs/design/scorecards-for-scorecards.md:84):
+      `tested` credits one expectation that compares one outcome, or that
+      merely indexes `evidence['<rule>']` with no comparison
+      (crates/toolbox-cli/src/meta.rs:32-35), and both-outcomes-on-fixtures
+      checks the fixtures, not the tests. (2) Non-redundancy (L11,
+      scorecards-for-scorecards.md:91): meta-rule shows the problem itself.
+      shows-evidence (`hasEvidence || nodes <= 4`) is implied by
+      always-explains (`hasEvidence`) at the same level (meta.yaml:391-424),
+      so it never changes a rule's level.
     suggestion: >-
-      Add `fix-names-place` (the fix mentions a path, a field the check reads,
-      or a command) and `evidence-reads-entity`. Make `tested` require one
-      expectation comparing the rule's outcome with 'fail' and one with
-      'pass', within the same score() call.
+      Add `tested-both-ways`: the rule's own score() segment compares it once
+      with 'pass' and once with 'fail', and an evidence mention counts only
+      when compared with a literal. Drop shows-evidence, or add the proposed
+      `not-redundant` check from scorecards-for-scorecards.md §3.2.
   - criterion: actionable
     verdict: pass
     reason: >-
-      I tried rule:repo/repo-hygiene/codeowners-catch-all (level none, failing
-      `tested` in portal/results.json). The evidence names the card and rule,
-      and the fix gives the expectation's shape. One expectation in
-      examples/repo-portal-starter/tests raises it to bronze, with no other
-      source needed.
+      I tried rule:acme/ownership/has-tier, which is at none (failing `tested`
+      in portal/results.json). The evidence names the card and rule, and the
+      fix gives the expectation's exact shape. One expectation in the
+      reference portal's tests file raises it to bronze. The weakest fix,
+      decided-on-fixtures ("Add fixture records the rule applies to"), names
+      no file, but the meta-kind and meta-connector fixes point to
+      fixtures/<connector>.ndjson (meta.yaml:616-619).
 summary: >-
-  One concern and actionable, but its gold is cheaper than its bronze, and
-  `tested` can be satisfied by a tautology.
+  One concern and actionable. Since the last review the redundant gold
+  moved down, but gold is now met by every silver rule (none sit at
+  silver), `tested` still accepts a one-sided or comparison-free
+  expectation, and shows-evidence is dead weight under always-explains.

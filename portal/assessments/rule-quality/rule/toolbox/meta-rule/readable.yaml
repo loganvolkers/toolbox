@@ -2,38 +2,35 @@ apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/meta-rule/readable
 rubric: rule-quality
 subjectHash: a78ef1565ec9
-assessor: {kind: agent, name: claude-code}
-at: 2026-11-20
+assessor: {kind: agent, name: campaign-review-rules}
+at: 2026-11-23
 verdicts:
   - criterion: measures-intent
     verdict: pass
     reason: >-
-      Node count of the parsed CEL tracks how much a reader must hold at once;
-      the analysis counts AST nodes, so formatting and long identifiers don't
-      change it.
+      The count comes from the parsed CEL AST
+      (crates/toolbox-cli/src/meta.rs:165-171, via toolbox_expr::analysis), so
+      formatting and identifier length don't change it, and the number of
+      nodes is a fair stand-in for how much a reader must hold at once.
   - criterion: hard-to-game
-    verdict: unsure
+    verdict: pass
     reason: >-
-      Moving logic into a computed field passes it, which is the intended fix,
-      but so does moving it into an equally unreadable computed field; the
-      rule doesn't follow the logic there.
-    suggestion: >-
-      Add computed fields to the describe output and score their CEL with the
-      same limits.
+      The earlier unsure is resolved: moving logic into a computed field is
+      the intended fix, and such fields are now scored by meta-field's
+      `computed-readable` (at most 60 nodes, no nested loops,
+      portal/standards/meta.yaml:584-592). Splitting a check into two rules or
+      moving logic into the connector are also the right thing.
   - criterion: fix-leads-to-pass
     verdict: pass
     reason: >-
-      The fix says where to move logic (computed field or connector) and the
-      evidence gives the current node count against 30.
+      The fix names where to move the logic (a computed field or the
+      connector, portal/standards/meta.yaml:417-419), and the evidence gives
+      the node count against 30.
   - criterion: threshold-justified
-    verdict: unsure
+    verdict: pass
     reason: >-
-      30 nodes is stated in scorecards-for-scorecards.md §3 without a
-      derivation; it passes 20 of our rules and fails the synthetic
-      demo/sprawling one, which suggests it is reasonable but not why 30.
-    suggestion: >-
-      Record the node-count distribution of our rules in the design doc as the
-      rationale.
+      docs/design/thresholds.md §2 states 30 as measured: over 219 rules on
+      2026-11-23, median 5, 95th percentile 16, maximum 25.
 summary: >-
-  Measures the right thing cheaply; the number and the computed-field
-  loophole want a sentence each.
+  Both earlier unsures are resolved: computed fields are scored, and the
+  30 is measured.

@@ -56,6 +56,13 @@ pub fn stats(runs: &[Value]) -> Value {
         .iter()
         .filter(|r| r["run_attempt"].as_u64().unwrap_or(1) > 1)
         .count();
+    // A run that passed on a later attempt failed on its first: counting it keeps a re-run from
+    // hiding a failure from the fail rate.
+    let passed_on_retry = decided
+        .iter()
+        .filter(|r| !FAILED.contains(&conclusion(r).as_str()))
+        .filter(|r| r["run_attempt"].as_u64().unwrap_or(1) > 1)
+        .count();
     let streak = decided
         .iter()
         .take_while(|r| FAILED.contains(&conclusion(r).as_str()))
@@ -72,6 +79,14 @@ pub fn stats(runs: &[Value]) -> Value {
         // would otherwise lower the rate unnoticed.
         "cancelled": completed.iter().filter(|r| conclusion(r) == "cancelled").count(),
         "failRate": pct(failed, decided.len()),
+        "firstTryFailRate": pct(failed + passed_on_retry, decided.len()),
+        // Where to start: the newest failed runs, so the evidence names runs a reader can open.
+        "failedRuns": decided
+            .iter()
+            .filter(|r| FAILED.contains(&conclusion(r).as_str()))
+            .filter_map(|r| r["html_url"].as_str())
+            .take(5)
+            .collect::<Vec<_>>(),
         "rerunRate": pct(reruns, completed.len()),
         "failingStreak": streak,
         "lastConclusion": decided.first().map(conclusion),
@@ -128,6 +143,17 @@ mod tests {
         assert_eq!(s["lastConclusion"], "failure");
         assert_eq!(s["medianSeconds"], 600);
         assert_eq!(s["rerunRate"], 0);
+        assert_eq!(
+            s["failedRuns"],
+            json!([]),
+            "these fixtures carry no html_url"
+        );
+        let mut failed = run("failure", 1, "2026-01-01T00:00:00Z", "2026-01-01T00:01:00Z");
+        failed["html_url"] = json!("https://github.com/o/r/actions/runs/1");
+        assert_eq!(
+            stats(&[failed])["failedRuns"],
+            json!(["https://github.com/o/r/actions/runs/1"])
+        );
     }
 
     #[test]
@@ -152,6 +178,10 @@ mod tests {
             (Some(0), Some(1), Some(50))
         );
         assert_eq!(s["failingStreak"], 0);
+        assert_eq!(
+            s["firstTryFailRate"], 100,
+            "the only decided run passed on its second attempt"
+        );
         assert!(stats(&[])["failRate"].is_null());
     }
 }

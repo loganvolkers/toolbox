@@ -1,33 +1,82 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: scorecard:toolbox/maintainer-ci-reliability
 rubric: scorecard-quality
-subjectHash: 3b07819925bf
-assessor: {kind: agent, name: claude-code}
-at: 2026-11-20
+subjectHash: 9011aa867250
+assessor: {kind: agent, name: campaign-review-cards}
+at: 2026-11-23
 verdicts:
   - criterion: one-concern
-    verdict: pass
+    verdict: fail
     reason: >-
-      Every rule answers "does green mean good, and does red get fixed?" for
-      maintainers (github-actions-standards.md).
+      Two concerns share one ladder. Most rules ask whether green means good
+      (fail-rate tiers, main-not-stuck-red, failures-visible, few-reruns), but
+      cancels-superseded-runs and fast-feedback measure CI speed and cost
+      (packages/github-actions/fragments/github-actions.yaml:299-328), and
+      docs/design/thresholds.md:33 says cancellation "isn't a correctness or
+      security property". A workflow with a 0% fail rate on main is held at
+      bronze by a missing concurrency group, so silver does not mean "more
+      trustworthy".
+    suggestion: >-
+      Move cancels-superseded-runs and fast-feedback into a separate
+      `maintainer-ci-speed` scorecard (queue and run time, superseded runs),
+      and keep this card to whether a red or green run can be believed.
   - criterion: levels-are-a-ladder
-    verdict: pass
+    verdict: fail
     reason: >-
-      Fail rate tightens 20 → 10 → 5%; bronze adds timeouts and a
-      not-stuck-red main, silver re-runs and cancellation, gold speed. Each
-      level is reachable from the one below.
+      A prerequisite sits above what depends on it, against the principle in
+      docs/design/thresholds.md:22-23. GitHub lists each run once with its
+      latest attempt's conclusion, so a failed run that is re-run to green
+      counts as a success in failRate
+      (crates/toolbox-connector-github/src/runs.rs:46-57). Re-runs hide
+      failures from bronze fail-rate-under-20 just as continue-on-error does,
+      yet few-reruns sits at silver
+      (packages/github-actions/fragments/github-actions.yaml:291-298), and the
+      5% re-run bound has no rationale in thresholds.md. The portal's own
+      fixture shows it: .github/workflows/demo/slow.yml has a 40% re-run rate
+      and a 0% fail rate (portal/fixtures/github-actions.ndjson), so it passes
+      every fail-rate tier. failures-visible was put at bronze for exactly
+      this reason.
+    suggestion: >-
+      Move few-reruns to bronze beside failures-visible (and justify 5% in
+      docs/design/thresholds.md), or compute failRate over first attempts
+      (`run_attempt == 1` conclusions) so a re-run cannot lower it.
   - criterion: no-obvious-gap
     verdict: fail
     reason: >-
-      Flakiness is only seen through re-runs. Nothing checks continue-on-error
-      or quarantined jobs, which hide failures from every fail-rate rule (see
-      the fail-rate-under-20 assessment).
+      The earlier gap (continue-on-error) is closed by failures-visible and
+      its connector code
+      (crates/toolbox-connector-workspace/src/workflows.rs:102-124). Two
+      remain. (1) A workflow that stopped running: the connector records the
+      workflow's `state` (disabled_inactivity, disabled_manually) and
+      `lastRunAt` (crates/toolbox-connector-github/src/main.rs:252,
+      runs.rs:78) but no rule reads them, so a scheduled workflow GitHub
+      disabled keeps the green statistics of its last 50 runs. (2) Sample
+      size: failRate over one decided run is 0% or 100% (runs.rs:65-74), so a
+      rarely run workflow passes fail-rate-under-5 at gold on a single
+      success.
     suggestion: >-
-      Add a bronze rule that jobs on main don't use continue-on-error without
-      a comment naming the issue.
+      Add a bronze `still-running` rule (`entity.runs.state == 'active'` and a
+      last run within a stated window) and require a minimum
+      `entity.runs.decided` (e.g. 10, justified in thresholds.md) before the
+      fail-rate rules can pass; below it they should be unknown.
   - criterion: actionable
-    verdict: pass
+    verdict: fail
     reason: >-
-      Each rule's evidence names the number or the job, and fixes say where
-      (workflow file, run data via toolbox get).
-summary: A coherent ladder with one gap that undermines its fail-rate rules.
+      The static rules are actionable (timeouts, failures-visible and
+      cancels-superseded-runs name the file and the YAML to add). The run
+      rules are not. fail-rate-under-5's fix ("Keep main green ... each one
+      gets looked at") and fail-rate-under-10's fix name no place to change
+      (github-actions.yaml:283-320), and their evidence is a bare percentage.
+      fail-rate-under-20's fix points to `toolbox get workflow:<path>`, but
+      the record holds only aggregates (runs.rs:66-82): no failing run, job or
+      URL. An agent cannot find what to fix from the portal's tools.
+    suggestion: >-
+      Have the github connector keep the ids, URLs and failing job names of
+      the last failed runs, list them in the fail-rate rules' evidence, and
+      rewrite the silver and gold fixes to name them ("open each listed run
+      and fix or quarantine the failing job in .github/workflows/<file>").
+summary: >-
+  The continue-on-error gap is closed, but the card mixes trust with
+  speed, leaves re-runs (which hide failures) above the fail rate they
+  distort, ignores disabled or barely-run workflows, and gives the run
+  rules no place to act.

@@ -82,32 +82,75 @@ fn cancels_superseded(c: &Value) -> bool {
         "github.event.pull_request",
     ];
     let group = c["group"].as_str().unwrap_or_default();
-    let cancels = match &c["cancel-in-progress"] {
-        Value::Bool(b) => *b,
-        Value::String(s) => !s.trim().is_empty() && s.trim() != "false",
-        _ => false,
-    };
+    let cancels = continues_on_error(&c["cancel-in-progress"]);
     cancels && BY_REF.iter().any(|r| group.contains(r))
 }
 
-/// Truthy `continue-on-error`: `true`, or an expression (which may be true at run time).
+/// A truthy flag: `true`, or an expression that isn't literally false (it may be true at run
+/// time). `${{ false }}` is false.
 fn continues_on_error(v: &Value) -> bool {
     match v {
         Value::Bool(b) => *b,
-        Value::String(s) => s.trim() != "false" && !s.trim().is_empty(),
+        Value::String(s) => {
+            let e = s
+                .trim()
+                .trim_start_matches("${{")
+                .trim_end_matches("}}")
+                .trim();
+            !e.is_empty() && e != "false"
+        }
         _ => false,
     }
 }
 
-/// Where a failure is hidden: every job with `continue-on-error`, and every step with it whose
-/// outcome no later step of the job reads (`steps.<id>.outcome` or `.conclusion`).
+/// A `run:` script that swallows its own exit status: `|| true`, `|| :`, `|| exit 0` or `set +e`.
+fn masks_exit(run: &str) -> bool {
+    let squashed: String = run.split_whitespace().collect::<Vec<_>>().join(" ");
+    ["|| true", "|| :", "|| exit 0", "set +e"]
+        .iter()
+        .any(|m| squashed.contains(m))
+}
+
+/// An `if:` that never runs on the default branch: literally false, or a test that the ref is not
+/// `main`/`master`.
+fn skipped_on_default(cond: &Value) -> bool {
+    let c = match cond {
+        Value::Bool(b) => return !*b,
+        Value::String(s) => s.replace(' ', ""),
+        _ => return false,
+    };
+    let e = c.trim_start_matches("${{").trim_end_matches("}}");
+    e == "false"
+        || ["main", "master"].iter().any(|b| {
+            e.contains(&format!("github.ref!='refs/heads/{b}'"))
+                || e.contains(&format!("github.ref_name!='{b}'"))
+        })
+}
+
+/// Where a failure is hidden from the fail rate: a job with `continue-on-error` or skipped on the
+/// default branch; a step with `continue-on-error` whose outcome no later step of the job reads
+/// (`steps.<id>.outcome` or `.conclusion`), a step skipped on the default branch, and a step whose
+/// script swallows its exit status.
 fn hidden_failures(id: &str, job: &Value) -> Vec<String> {
     let mut out = Vec::new();
     if continues_on_error(&job["continue-on-error"]) {
         out.push(format!("jobs.{id}"));
     }
+    if skipped_on_default(&job["if"]) {
+        out.push(format!("jobs.{id} (skipped on the default branch)"));
+    }
     let steps = job["steps"].as_array().cloned().unwrap_or_default();
     for (i, step) in steps.iter().enumerate() {
+        if skipped_on_default(&step["if"]) {
+            out.push(format!(
+                "jobs.{id}.steps[{i}] (skipped on the default branch)"
+            ));
+        }
+        if step["run"].as_str().is_some_and(masks_exit) {
+            out.push(format!(
+                "jobs.{id}.steps[{i}] (the script swallows its exit status)"
+            ));
+        }
         if !continues_on_error(&step["continue-on-error"]) {
             continue;
         }
@@ -314,5 +357,25 @@ mod tests {
         assert_eq!(w["actions"], json!(["actions/checkout", "org/shared"]));
         let refs = action_refs(&[w]);
         assert_eq!(refs[0].1["usedBy"], json!([".github/workflows/ci.yml"]));
+    }
+
+    #[test]
+    fn masked_exits_and_default_branch_skips_hide_failures() {
+        let job = json!({"if": "${{ github.ref != 'refs/heads/main' }}", "steps": [
+            {"run": "cargo test ||   true"},
+            {"run": "set -e\ncargo test"},
+            {"if": false, "run": "x"},
+            {"if": "github.event_name == 'push'", "run": "y"}
+        ]});
+        assert_eq!(
+            hidden_failures("t", &job),
+            vec![
+                "jobs.t (skipped on the default branch)",
+                "jobs.t.steps[0] (the script swallows its exit status)",
+                "jobs.t.steps[2] (skipped on the default branch)",
+            ]
+        );
+        assert!(!continues_on_error(&json!("${{ false }}")));
+        assert!(continues_on_error(&json!("${{ matrix.experimental }}")));
     }
 }

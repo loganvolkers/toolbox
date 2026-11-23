@@ -1,50 +1,67 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: crate:toolbox-expr
 rubric: crate-design
-subjectHash: ba7cc118973e
-assessor: {kind: agent, name: cursor-grok, model: grok-4.7}
-at: 2026-11-20
+subjectHash: 7bfabd4985d0
+assessor: {kind: agent, name: campaign-review-cards}
+at: 2026-11-23
 verdicts:
   - criterion: one-responsibility
-    verdict: fail
+    verdict: pass
     reason: >-
-      The crate does one job, CEL, and docs/v1-spec.md §4 says "CEL compile
-      and evaluate", but crates/toolbox-expr/src/lib.rs still documents only
-      the M0 static checks. eval.rs, lazy.rs and analysis.rs are part of the
-      crate and are not in those docs, so the crate docs are stale.
-    suggestion: >-
-      Rewrite the crate docs in lib.rs so they state compile, evaluate, lazy
-      lists and analysis, matching the v1-spec.md §4 row.
+      The crate owns one thing, the expression language, and its crate docs
+      now say so and list all four parts: static checks, compile and evaluate,
+      lazy lists, analysis (crates/toolbox-expr/src/lib.rs:1-16). That matches
+      its docs/v1-spec.md §4 row (line 89, "CEL compile and evaluate
+      (cel-rust), custom functions"). The earlier stale-docs finding is fixed.
+      Static analysis for the meta standards goes beyond the spec row, but it
+      is CEL analysis, not a second job. Mapping errors to `unknown` happens
+      in the caller (crates/toolbox-derive/src/lib.rs:756), not here, which
+      the spec row doesn't reflect.
   - criterion: small-contract
-    verdict: fail
+    verdict: pass
     reason: >-
-      Callers use the re-exports (toolbox-derive/src/lib.rs imports Expr,
-      from_cel, to_cel, with_vars), not private modules, but eval.rs returns
-      and takes cel::Value (to_cel, from_cel, with_vars, Expr::eval), so other
-      crates receive a third-party type.
-    suggestion: >-
-      Keep serde_json::Value at the boundary in eval.rs so callers never name
-      cel::Value.
+      Callers use only re-exported, documented items: toolbox-derive
+      (src/lib.rs:15, src/testing.rs:10) and toolbox-api (src/routes.rs:16,
+      src/actions.rs:15) use Expr, ExprValue, Env, Scope, with_vars, with_vals
+      and lazy_map. toolbox-model uses check, Site and CelIssue, and
+      toolbox-cli uses analysis::analyse. No signature carries a `cel` type
+      any more: ExprValue, Lazy and Scope wrap theirs in private or pub(crate)
+      fields (crates/toolbox-expr/src/eval.rs:13, 107, 111). Documentation
+      covers 26 of 27 public items; only Expr::compile is undocumented.
   - criterion: replaceable-defaults
-    verdict: fail
+    verdict: pass
     reason: >-
-      Swapping cel-rust (Q10) would change every caller: eval.rs puts
-      cel::Value in the public signatures, and toolbox-derive/Cargo.toml
-      depends on cel directly. That breaks charter goal 3.
-    suggestion: >-
-      Wrap cel::Value inside toolbox-expr and drop the cel dependency from
-      toolbox-derive/Cargo.toml.
+      cel-rust is now a dependency of toolbox-expr alone
+      (crates/toolbox-expr/Cargo.toml:11; no other crate's Cargo.toml names
+      `cel`), and the crate docs state the contract: "swapping it changes this
+      crate only" (lib.rs:15-16). The earlier failure (cel::Value in public
+      signatures, and cel in toolbox-derive) is fixed. One small leak is left:
+      Scope carries cel Context's two lifetime parameters (eval.rs:107), which
+      toolbox-derive spells out as `Scope<'_, '_, '_>` in four signatures
+      (crates/toolbox-derive/src/lib.rs:231, 732, 790, 810). A swap would
+      touch those lines, not the callers' logic.
   - criterion: tests-match-risk
     verdict: unsure
     reason: >-
-      The risky paths have direct tests: lib.rs covers parse and unknown
-      variables (4 tests), analysis.rs has 2, and eval.rs covers JSON
-      round-trip and lazy indexing. CEL conformance (Q10) has not been run, so
-      how much of the spec eval.rs covers is unknown.
+      The riskiest paths are the JSON-CEL conversion that every score goes
+      through, lazy lists, the declared-function probe and CEL semantics.
+      There are 9 unit tests: static checks (lib.rs), `declared` and analysis
+      (analysis.rs), lazy size, iteration, indexing and out-of-bounds, a round
+      trip for int, string, list, map and `has`, and Env functions (eval.rs).
+      With no direct test are the UInt and Float branches, non-finite floats,
+      the "no JSON form" error (eval.rs:46-101), and int-versus-float
+      comparison. Floats are covered only indirectly, through
+      portal/fixtures/maintainer-openssf.ndjson in the portal tests. The crate
+      has no integration tests, and CEL conformance (Q10) is unmeasured.
     suggestion: >-
-      Run a subset of the CEL conformance suite against eval.rs and record the
-      result.
+      Add unit tests for u64 above i64::MAX, a float field compared with an
+      int literal, a NaN or infinite float, and an expression returning a
+      duration or timestamp (expect the "no JSON form" error), plus a lazy
+      list indexed with a negative or string index. Then run a slice of the
+      cel-spec conformance suite (Q10) and record the result in
+      docs/research-log.md.
 summary: >-
-  One CEL crate whose docs still say M0, and whose public API and
-  toolbox-derive both depend on cel::Value, so cel-rust is not
-  replaceable. Conformance is unmeasured.
+  The three earlier failures are fixed. The crate docs describe the whole
+  crate, no `cel` type crosses the boundary, and cel-rust is a dependency
+  of this crate only. Testing of the conversion edges and CEL conformance
+  is still indirect or missing.

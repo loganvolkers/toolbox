@@ -2,42 +2,51 @@ apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/meta-assessment/cites-for-findings
 rubric: rule-quality
 subjectHash: 00aedff54aed
-assessor: {kind: agent, name: blind-review-2026-11-23}
+assessor: {kind: agent, name: campaign-review-rules}
 at: 2026-11-23
 verdicts:
   - criterion: measures-intent
-    verdict: fail
+    verdict: pass
     reason: >-
-      The cites() regex (crates/toolbox-connect/src/assessment.rs:12-22)
-      accepts any `word/word` and any number of two or more digits. "good
-      and/or bad", "yes/no" and "in 2026" all count as citations, and so does
-      a path that doesn't exist. The design doc admits "a path is not proof"
-      (docs/design/scorecards-for-scorecards.md:304-307), but `and/or`
-      matching is not even a path.
-    suggestion: >-
-      Count a path only if it resolves in the portal's repository and a
-      decision id only if docs/decisions has it. Drop bare numbers and slash
-      words, or require a `/` together with a file extension or a known top
-      directory.
+      The earlier finding is fixed: with the repository at hand, cites()
+      (crates/toolbox-connect/src/assessment.rs:15-48) counts a path only if
+      it exists, a file name only if one exists, and a D/Q id only if the
+      repository has it; "and/or" and "in 2026" no longer count
+      (assessment.rs:198-215). "Cites something checkable" is what passing now
+      means; whether the cited thing supports the reason is left to
+      review-assessment, as docs/design/scorecards-for-scorecards.md §6 says.
   - criterion: hard-to-game
     verdict: fail
     reason: >-
-      Cheapest attempt: "Unclear whether this is good and/or bad." I tested
-      the same regex in Python; it matches, so the reason is cited and the
-      check at portal/standards/assessments.yaml:121 passes.
+      Cheapest attempts: append "(see README.md)", which resolves because any
+      existing file name counts, or any string containing `https://`, which
+      returns true before resolution is tried (assessment.rs:29-31), even
+      `https://` alone. Either makes an uncited fail reason pass the check at
+      portal/standards/assessments.yaml:139-144 without saying what it rests
+      on.
     suggestion: >-
-      Resolve citations as above. The workspace connector already knows which
-      files exist.
+      Require a URL to have a host with a dot, and count a bare file name only
+      when it is unique in the repository or has a directory;
+      review-assessment then judges relevance.
   - criterion: fix-leads-to-pass
-    verdict: pass
+    verdict: fail
     reason: >-
-      The evidence lists the criteria, and the fix says what counts (a path,
-      D71, §4, a number). Adding one passes.
+      The fix says to cite "a file path, a decision id (D71), a section (§4)
+      or a number" (portal/standards/assessments.yaml:145-147), and
+      docs/design/scorecards-for-scorecards.md:291 says the same. But cites()
+      accepts neither a section nor a number: its test asserts "20% failed" is
+      not a citation (assessment.rs:206-212). An assessor who adds "§4" or "32
+      of 100 runs" as told still fails.
+    suggestion: >-
+      Change the fix (and scorecards-for-scorecards.md:291) to "a file path
+      that exists, a decision id the repository has, or a URL", or make
+      cites() accept `§N` together with a path.
   - criterion: threshold-justified
     verdict: pass
     reason: >-
-      Silver ("findings cite something checkable") is stated in
-      docs/design/scorecards-for-scorecards.md:288.
+      No number. Silver ("findings cite something checkable") is stated in
+      docs/design/scorecards-for-scorecards.md:291 and D80.
 summary: >-
-  The citation detector is looser than its doc says: "and/or" and a year
-  are citations.
+  Citations now have to resolve, but any existing file name or `https://`
+  string passes, and the fix still offers sections and numbers that the
+  code rejects.

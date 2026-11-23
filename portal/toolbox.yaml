@@ -73,8 +73,9 @@ connectors:
           (?:\btoolbox"?|\bask)\s+((?:connector|token|tools)\s+[a-z]+|assess[
           \t]+(?:brief|check|submit)|describe[
           \t]+(?:portal|scorecards)|[a-z][a-z-]*)
-        # MCP tools/call bodies: {"name": "owner_of", …}
-        tools: '"name"\s*:\s*"([a-z][a-z_]*)"'
+        # MCP tools/call bodies, {"name": "owner_of", "arguments": …}, on lines that aren't
+        # comments: a quoted name alone, or in a comment, calls nothing.
+        tools: (?m)^[^/#\n]*?"name"\s*:\s*"([a-z][a-z_]*)"\s*,\s*"arguments"
       counts:
         sdlc: \bSDLC\b
         # A named layer (`maintainer SDLC`, `*operator* SDLC`), the layer model itself, or a quoted mention
@@ -127,6 +128,7 @@ connectors:
           paths: [docs, checks]
           commands: [commands]
           ci: [checks]
+          naming: [docs]
         # DX Benchmarks, one entry per benchmark (docs/design/dx-benchmarks.md)
         - kind: benchmark
           globs: [portal/benchmarks/*.yaml]
@@ -212,7 +214,15 @@ connectors:
       jobs:
         - name: test
           per: crate
-          command: [cargo, test, -q, -p, "{crate}"]
+          # Tests that need OpenFGA fail without it instead of returning early as passed.
+          command:
+          - env
+          - TOOLBOX_REQUIRE_OPENFGA=1
+          - cargo
+          - test
+          - -q
+          - -p
+          - "{crate}"
           parse: cargo-test
         - name: clippy
           per: crate
@@ -340,13 +350,20 @@ include:
         - --output-format
         - sarif
         - --exit-zero
+        # A `# noqa` would make a finding vanish from the SARIF; the only
+        # suppression is a per-file ignore in ruff.toml, reviewed with a reason.
+        - --ignore-noqa
         - "{files}"
-      files: [scripts/*.py, examples/reference-portal/tools/*.py]
+      files:
+        - scripts/*.py
+        - examples/reference-portal/tools/*.py
+        - examples/acme-live/deploy/*.py
       title: Python we maintain passes ruff
       fix: >-
         Fix ruff's findings (the record's command reruns them), or, for a
-        deliberate style, ignore the rule for those files in ruff.toml with a
-        comment saying why.
+        deliberate style, ignore the rule for those files under
+        `[lint.per-file-ignores]` in ruff.toml with a comment saying why. A `#
+        noqa` comment doesn't help: the check runs with --ignore-noqa.
 
 mcp:
   instructions: >-
@@ -371,7 +388,7 @@ mcp:
     pathEscapes, commandToken; SitePage missingFiles, inSidebar, secretHits;
     Repository dependabotGaps, codeScanning, securityPolicy, workflowOwners.
     Change the code, refresh_entity, and check the score again. Contract
-    tests count when a test or script contains a tools/call body naming the
-    tool.
+    tests count when a test or script contains a tools/call body (name and
+    arguments) naming the tool, outside a comment.
 
 tests: [tests/standards.test.yaml]

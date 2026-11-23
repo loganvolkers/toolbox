@@ -1,42 +1,56 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/maintainer-ci-reliability/fail-rate-under-20
 rubric: rule-quality
-subjectHash: 67b76ccd46da
-assessor: {kind: agent, name: claude-code}
-at: 2026-11-20
+subjectHash: 5e1d6383aba3
+assessor: {kind: agent, name: campaign-review-rules}
+at: 2026-11-23
 verdicts:
   - criterion: measures-intent
     verdict: pass
     reason: >-
-      The scorecard asks "does green mean good, and does red get fixed?"
-      (github-actions-standards.md); the share of decided runs on main that
-      failed is a direct measure of the first half.
+      The check reads the share of decided runs on the configured branch that
+      failed (crates/toolbox-connector-github/src/runs.rs:43-82: failure,
+      timed_out and startup_failure over success plus those), which is what
+      "main rarely fails" means. Cancelled runs are left out of the rate but
+      now counted beside it (runs.rs:70-73), and an empty history yields null,
+      so the rule is unknown rather than passing.
   - criterion: hard-to-game
     verdict: fail
     reason: >-
-      Marking a job continue-on-error, or deleting a flaky test, lowers the
-      fail rate without making CI more trustworthy; the rule can't tell those
-      from real fixes. Excluding cancelled runs (decided runs only) also
-      rewards cancelling a run that is about to fail.
+      Cheapest attempt: append `|| true` to the failing step's `run:` (or add
+      `if: github.ref != 'refs/heads/main'` to the flaky job). Runs on main
+      then succeed, so failRate drops, and failures-visible
+      (github-actions.yaml:268-275) doesn't notice, because hidden_failures
+      (crates/toolbox-connector-workspace/src/workflows.rs:104-124) only looks
+      for continue-on-error. That is far cheaper than fixing the failing
+      tests.
     suggestion: >-
-      Pair it with a rule on continue-on-error in the workflow parse
-      (maintainer-ci-security already parses jobs), and report cancelled runs
-      next to the rate.
+      Widen hidden_failures to flag `|| true`, `|| exit 0`, `set +e` and job-
+      or step-level `if:` conditions that exclude the default branch, so
+      failures-visible covers the cheap routes as well as continue-on-error.
   - criterion: fix-leads-to-pass
+    verdict: fail
+    reason: >-
+      The fix says to find the failing jobs with `toolbox get
+      workflow:<path>`, but that record carries only aggregates (failRate,
+      decided, cancelled, lastConclusion: runs.rs:66-81, set by
+      crates/toolbox-connector-github/src/main.rs:226-257), with no job names
+      or run URLs. It also doesn't say that the rate is over the last N runs,
+      so after a real fix the rule stays red until enough green runs replace
+      the red ones.
+    suggestion: >-
+      Point the fix at `gh run list --workflow <file> --branch main --status
+      failure` (or record the failing runs' URLs and job names in runs.rs and
+      show them as evidence), and say the rate is over the last N decided
+      runs.
+  - criterion: threshold-justified
     verdict: pass
     reason: >-
-      The fix points at the run data (toolbox get workflow:<path>) and the
-      action (fix or quarantine causes); the evidence gives rate, window and
-      branch.
-  - criterion: threshold-justified
-    verdict: unsure
-    reason: >-
-      scorecards-for-scorecards.md L9 says the 20/10/5% tiers have no
-      published source; the design states that openly but doesn't derive the
-      numbers.
-    suggestion: >-
-      Record a rationale (e.g. our own history on main) or cite a source, in
-      github-actions-standards.md.
+      docs/design/thresholds.md §2 now states the 20% bronze as "Chosen,
+      anchored to a measurement": `ci` on main failed 32 of its last 100 runs
+      (2026-11-20 to 2026-11-23), so bronze is the next step; each level then
+      halves it. The earlier unsure is resolved.
 summary: >-
-  Measures the right thing but is gameable through continue-on-error and
-  its threshold is unsourced.
+  Measures the right number with a stated rationale, but `|| true` lowers
+  it without a fix, and the place the fix points to doesn't show which
+  jobs fail.

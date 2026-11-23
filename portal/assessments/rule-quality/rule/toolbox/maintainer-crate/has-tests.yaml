@@ -1,33 +1,52 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/maintainer-crate/has-tests
 rubric: rule-quality
-subjectHash: cc74450c4e3b
-assessor: {kind: agent, name: claude-code}
-at: 2026-11-20
+subjectHash: 2ec4a8963d60
+assessor: {kind: agent, name: campaign-review-rules}
+at: 2026-11-23
 verdicts:
   - criterion: measures-intent
     verdict: fail
     reason: >-
-      The fix asks for a test of "the crate's main behaviour"; the check
-      passes on any #[test] anywhere in the crate, so a crate with one trivial
-      test meets it.
+      The Asserts visitor
+      (crates/toolbox-connector-workspace/src/rust.rs:143-166) looks only
+      inside the test's own block, so a crate can fail while it is well
+      tested. The common table-driven form, `#[test] fn a() { check("x", "y")
+      }` with the assert in a `check` helper, is listed as "asserts nothing".
+      So is a `-> Result` test that checks with `?` or `anyhow::ensure!`,
+      since only `assert*`, `panic`, `unreachable`, `unwrap` and `expect`
+      count. The fix then asks for a redundant assert in each such test.
     suggestion: >-
-      Keep it as the bronze floor but add a silver rule on tests relative to
-      size (e.g. test code lines per code line, which the workspace connector
-      already reports as testCodeLines).
+      Treat a call to a same-crate function that itself asserts as asserting
+      (one level of call resolution in the walker), and count `?` in a test
+      returning Result, and `ensure!`/`prop_assert*`, as checks.
   - criterion: hard-to-game
     verdict: fail
-    reason: "`#[test] fn t() {}` passes it."
+    reason: >-
+      Cheapest attempt: `#[test] fn t() { assert!(true); }`, or a test whose
+      only check is `"1".parse::<i32>().unwrap()`. Asserts (rust.rs:146-152)
+      accepts any assert macro or unwrap, so has-tests passes
+      (portal/standards/crates.yaml:140-151) without exercising the crate. The
+      silver tests-scale-with-code (crates.yaml:152-161) counts the same
+      tests, so padding passes it too.
     suggestion: >-
-      Combine with tests-pass and a minimum of test code relative to the
-      crate's size.
+      Count a test as asserting only when an assert or unwrap mentions an item
+      the crate defines (a path into the crate or a call on its types), and
+      flag `assert!(true)`-style constant asserts.
   - criterion: fix-leads-to-pass
     verdict: pass
-    reason: Adding one #[test] or a tests/ file makes it pass; the fix says exactly that.
+    reason: >-
+      The evidence names each test as `path (file:line) asserts nothing`
+      (rust.rs:119-126), and the fix says to add a test or give each listed
+      test an assert (crates.yaml:148-151). Doing so passes.
   - criterion: threshold-justified
     verdict: pass
-    reason: |-
-      "At least one test" is a floor, not a tuned number; bronze fits toolbox-for-toolbox.md §4's table.
+    reason: >-
+      docs/design/thresholds.md §2 justifies bronze, "at least one test, and
+      every test asserts", as a principle with a measurement (two
+      non-asserting tests on 2026-11-23); the size-relative part sits in
+      tests-scale-with-code at silver.
 summary: >-
-  A fine bronze floor that over-claims; it needs a size-relative companion
-  rule to mean "tested".
+  A real floor now, with an assert check and a silver companion, but the
+  assert check is block-local: helper-assert tests fail and
+  `assert!(true)` passes.

@@ -4,6 +4,7 @@
 
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
+use std::collections::HashSet;
 use std::path::Path;
 use syn::spanned::Spanned;
 use syn::visit::{self, Visit};
@@ -24,9 +25,14 @@ struct Metrics {
     undocumented: Vec<String>,
     functions: Vec<Function>,
     unit_tests: usize,
-    /// Tests whose body asserts nothing: no `assert*!`/`panic!`, no `.unwrap()`/`.expect()`,
-    /// and no `#[should_panic]`. `#[test] fn t() {}` passes `cargo test` and proves nothing.
+    /// Tests whose body asserts nothing: no `assert*!`/`panic!` other than a trivial one
+    /// (`assert!(true)`, `assert_eq!(x, x)`), no `.unwrap()`/`.expect()`, no `?`, no call to a
+    /// helper in the same file that asserts, and no `#[should_panic]`. `#[test] fn t() {}` passes
+    /// `cargo test` and proves nothing.
     tests_without_asserts: Vec<String>,
+    /// Tests compiled out by an always-false `#[cfg(any())]` or `#[cfg(not(all()))]`, on the test
+    /// or a module around it: neither run nor reported as ignored.
+    disabled_tests: Vec<String>,
     unwraps: usize,
     parse_errors: Vec<String>,
 }
@@ -39,6 +45,17 @@ fn is_test_fn(attrs: &[syn::Attribute]) -> bool {
     attrs
         .iter()
         .any(|a| a.path().segments.last().is_some_and(|s| s.ident == "test"))
+}
+
+/// An always-false `cfg`: the item is compiled out.
+fn is_cfg_disabled(attrs: &[syn::Attribute]) -> bool {
+    attrs.iter().any(|a| {
+        a.path().is_ident("cfg")
+            && a.meta.require_list().is_ok_and(|l| {
+                let t: String = l.tokens.to_string().split_whitespace().collect();
+                t == "any()" || t == "not(all())"
+            })
+    })
 }
 
 fn is_cfg_test(attrs: &[syn::Attribute]) -> bool {
@@ -78,7 +95,10 @@ struct Walker<'a> {
     file: &'a str,
     m: &'a mut Metrics,
     in_test: bool,
+    disabled: bool,
     scope: Vec<String>,
+    /// Functions in this file that assert (see [`helpers`]).
+    helpers: &'a HashSet<String>,
 }
 
 impl Walker<'_> {
@@ -113,10 +133,16 @@ impl Walker<'_> {
     ) {
         if is_test_fn(attrs) {
             self.m.unit_tests += 1;
-            let mut a = Asserts(false);
+            if self.disabled || is_cfg_disabled(attrs) {
+                let q = self.qualified(name);
+                self.m
+                    .disabled_tests
+                    .push(format!("{q} ({}:{})", self.file, span.start().line));
+            }
+            let mut a = Asserts::new(self.helpers);
             a.visit_block(block);
             let should_panic = attrs.iter().any(|x| x.path().is_ident("should_panic"));
-            if !a.0 && !should_panic {
+            if !a.found && !should_panic {
                 let q = self.qualified(name);
                 self.m.tests_without_asserts.push(format!(
                     "{q} ({}:{})",
@@ -141,14 +167,56 @@ impl Walker<'_> {
 }
 
 /// Whether a block asserts anything (see `Metrics::tests_without_asserts`).
-struct Asserts(bool);
+struct Asserts<'h> {
+    found: bool,
+    helpers: &'h HashSet<String>,
+}
 
-impl<'ast> Visit<'ast> for Asserts {
+impl<'h> Asserts<'h> {
+    fn new(helpers: &'h HashSet<String>) -> Self {
+        Asserts {
+            found: false,
+            helpers,
+        }
+    }
+}
+
+/// An assertion that can't fail: `assert!(true)`, or `assert_eq!`/`assert_ne!` whose two sides are
+/// the same tokens.
+fn trivial(name: &str, tokens: &proc_macro2::TokenStream) -> bool {
+    let text = tokens.to_string();
+    let mut parts = Vec::new();
+    let (mut depth, mut cur) = (0i32, String::new());
+    for c in text.chars() {
+        match c {
+            '(' | '[' | '{' => depth += 1,
+            ')' | ']' | '}' => depth -= 1,
+            ',' if depth == 0 => {
+                parts.push(cur.trim().to_owned());
+                cur.clear();
+                continue;
+            }
+            _ => {}
+        }
+        cur.push(c);
+    }
+    parts.push(cur.trim().to_owned());
+    match name {
+        "assert" | "debug_assert" => matches!(parts[0].as_str(), "true" | "! false"),
+        "assert_eq" | "assert_ne" | "debug_assert_eq" | "debug_assert_ne" => {
+            parts.len() >= 2 && parts[0] == parts[1]
+        }
+        _ => false,
+    }
+}
+
+impl<'ast> Visit<'ast> for Asserts<'_> {
     fn visit_macro(&mut self, m: &'ast syn::Macro) {
         if let Some(seg) = m.path.segments.last() {
             let n = seg.ident.to_string();
-            if n.starts_with("assert") || n == "panic" || n == "unreachable" {
-                self.0 = true;
+            let asserts = n.starts_with("assert") || n.starts_with("debug_assert");
+            if (asserts && !trivial(&n, &m.tokens)) || n == "panic" || n == "unreachable" {
+                self.found = true;
             }
         }
         visit::visit_macro(self, m);
@@ -159,10 +227,65 @@ impl<'ast> Visit<'ast> for Asserts {
         if matches!(
             n.as_str(),
             "unwrap" | "expect" | "unwrap_err" | "expect_err"
-        ) {
-            self.0 = true;
+        ) || self.helpers.contains(&n)
+        {
+            self.found = true;
         }
         visit::visit_expr_method_call(self, c);
+    }
+
+    fn visit_expr_call(&mut self, c: &'ast syn::ExprCall) {
+        if let syn::Expr::Path(p) = &*c.func
+            && p.path
+                .segments
+                .last()
+                .is_some_and(|s| self.helpers.contains(&s.ident.to_string()))
+        {
+            self.found = true;
+        }
+        visit::visit_expr_call(self, c);
+    }
+
+    // `?` in a test that returns `Result` fails the test on an error.
+    fn visit_expr_try(&mut self, t: &'ast syn::ExprTry) {
+        self.found = true;
+        visit::visit_expr_try(self, t);
+    }
+}
+
+/// Non-test functions in a file whose bodies assert (directly or through another such function):
+/// table-driven tests put their assertions in a helper like these.
+fn helpers(file: &syn::File) -> HashSet<String> {
+    struct Fns<'ast>(Vec<(String, &'ast syn::Block)>);
+    impl<'ast> Visit<'ast> for Fns<'ast> {
+        fn visit_item_fn(&mut self, f: &'ast syn::ItemFn) {
+            if !is_test_fn(&f.attrs) {
+                self.0.push((f.sig.ident.to_string(), &f.block));
+            }
+            visit::visit_item_fn(self, f);
+        }
+        fn visit_impl_item_fn(&mut self, f: &'ast syn::ImplItemFn) {
+            self.0.push((f.sig.ident.to_string(), &f.block));
+            visit::visit_impl_item_fn(self, f);
+        }
+    }
+    let mut fns = Fns(Vec::new());
+    fns.visit_file(file);
+    let mut found = HashSet::new();
+    loop {
+        let before = found.len();
+        for (name, block) in &fns.0 {
+            if !found.contains(name) {
+                let mut a = Asserts::new(&found);
+                a.visit_block(block);
+                if a.found {
+                    found.insert(name.clone());
+                }
+            }
+        }
+        if found.len() == before {
+            return found;
+        }
     }
 }
 
@@ -183,12 +306,14 @@ impl<'ast> Visit<'ast> for Walker<'_> {
     }
 
     fn visit_item_mod(&mut self, m: &'ast syn::ItemMod) {
-        let was = self.in_test;
+        let (was, was_disabled) = (self.in_test, self.disabled);
         self.in_test |= is_cfg_test(&m.attrs);
+        self.disabled |= is_cfg_disabled(&m.attrs);
         self.scope.push(m.ident.to_string());
         visit::visit_item_mod(self, m);
         self.scope.pop();
         self.in_test = was;
+        self.disabled = was_disabled;
     }
 
     fn visit_item_impl(&mut self, i: &'ast syn::ItemImpl) {
@@ -264,10 +389,9 @@ fn parse(path: &Path, m: &mut Metrics, rel: &str) -> Option<syn::File> {
     }
 }
 
-/// The first 12 hex digits of the SHA-256 over the crate's `src/` files (paths and contents): an
-/// assessment of the crate is stale when it changes.
-/// What a crate-design assessment judges: its sources, its tests and its manifest (the
-/// dependencies behind `replaceable-defaults`), so a change to any of them makes the review stale.
+/// The first 12 hex digits of the SHA-256 over what a crate-design assessment judges: the crate's
+/// `src/` and `tests/` files and its `Cargo.toml` (the dependencies behind
+/// `replaceable-defaults`), paths and contents, so a change to any of them makes the review stale.
 fn source_hash(dir: &Path) -> String {
     let mut h = Sha256::new();
     let files = rust_files(&dir.join("src"))
@@ -306,11 +430,14 @@ pub fn analyse(dir: &Path, entry: Option<&Path>) -> Value {
         if entry.is_some_and(|e| e == path) {
             crate_doc = has_doc(&file.attrs);
         }
+        let helpers = helpers(&file);
         let mut w = Walker {
             file: &rel,
             m: &mut m,
             in_test: false,
+            disabled: false,
             scope: vec![],
+            helpers: &helpers,
         };
         w.visit_file(&file);
     }
@@ -323,11 +450,14 @@ pub fn analyse(dir: &Path, entry: Option<&Path>) -> Value {
             .to_string_lossy()
             .into_owned();
         if let Some(file) = parse(&path, &mut it, &rel) {
+            let helpers = helpers(&file);
             let mut w = Walker {
                 file: &rel,
                 m: &mut it,
                 in_test: true,
+                disabled: false,
                 scope: vec![],
+                helpers: &helpers,
             };
             w.visit_file(&file);
         }
@@ -350,9 +480,56 @@ pub fn analyse(dir: &Path, entry: Option<&Path>) -> Value {
         "maxComplexity": m.functions.iter().map(|f| f.complexity).max().unwrap_or(0),
         "unitTests": m.unit_tests,
         "testsWithoutAsserts": m.tests_without_asserts.iter().chain(&it.tests_without_asserts).collect::<Vec<_>>(),
+        "disabledTests": m.disabled_tests.iter().chain(&it.disabled_tests).collect::<Vec<_>>(),
         "integrationTests": integration_tests,
         "unwraps": m.unwraps,
         "parseErrors": m.parse_errors,
         "hash": source_hash(dir),
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn tests_must_assert_something_that_can_fail_and_disabled_tests_are_found() {
+        let dir = std::env::temp_dir().join(format!("toolbox-rust-{}", std::process::id()));
+        std::fs::create_dir_all(dir.join("src")).unwrap();
+        std::fs::write(
+            dir.join("src/lib.rs"),
+            r#"
+pub fn add(a: i32, b: i32) -> i32 { a + b }
+#[cfg(test)]
+mod tests {
+    use super::*;
+    fn check(a: i32, b: i32, want: i32) { assert_eq!(add(a, b), want); }
+    #[test] fn table() { for (a, b, w) in [(1, 2, 3)] { check(a, b, w); } }
+    #[test] fn fallible() -> Result<(), String> { "1".parse::<i32>().map_err(|e| e.to_string())?; Ok(()) }
+    #[test] fn real() { assert_eq!(add(1, 1), 2); }
+    #[test] fn vacuous() { assert!(true); }
+    #[test] fn same_sides() { let x = add(1, 1); assert_eq!(x, x); }
+    #[test] fn empty() {}
+    #[cfg(any())] #[test] fn off() { assert_eq!(add(1, 1), 3); }
+}
+#[cfg(not(all()))]
+mod gone { #[test] fn also_off() { assert_eq!(super::add(0, 0), 1); } }
+"#,
+        )
+        .unwrap();
+        let m = analyse(&dir, Some(&dir.join("src/lib.rs")));
+        let names = |k: &str| -> Vec<String> {
+            m[k].as_array()
+                .unwrap()
+                .iter()
+                .map(|v| v.as_str().unwrap().split(' ').next().unwrap().to_owned())
+                .collect()
+        };
+        assert_eq!(
+            names("testsWithoutAsserts"),
+            ["tests::vacuous", "tests::same_sides", "tests::empty"]
+        );
+        assert_eq!(names("disabledTests"), ["tests::off", "gone::also_off"]);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
 }

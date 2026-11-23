@@ -21,7 +21,9 @@ parameters:
     type: integer
     default: 20
     tighten: lower
-    description: Max % failed runs on the branch for bronze.
+    description: >-
+      Max % of decided runs on the branch that failed on their first attempt,
+      for bronze.
   failRateSilver:
     type: integer
     default: 10
@@ -32,9 +34,15 @@ parameters:
     default: 5
     tighten: lower
     description: Max % failed runs for gold.
+  minDecidedRuns:
+    type: integer
+    default: 10
+    tighten: higher
+    description: >-
+      Fewest decided runs before the silver and gold fail-rate tiers can pass.
   p90Seconds:
     type: integer
     default: 900
     tighten: lower
-    description: Max p90 run time in seconds for gold.
+    description: Max p90 run time in seconds for maintainer-ci-speed silver.
 fragments: [fragments/*.yaml]

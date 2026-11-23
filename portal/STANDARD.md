@@ -29,8 +29,8 @@ Scorecard `meta-assessment` over `Assessment` entities, owned by group:maintaine
 |---|---|---|---|
 | `suggests-fixes` | bronze | `entity.unsuggested.size() == 0` | Add a `suggestion:` to each listed fail or unsure verdict: the change that would make it pass. |
 | `assessor-named` | bronze | `has(entity.assessorName) && entity.assessorName.size() > 0` | Set `assessor.name` to the agent harness or person who made the assessment. |
-| `cites-for-findings` | silver | `entity.uncited.filter(c, c in entity.failing \|\| c in entity.unsure).size() == 0` | Cite what each listed fail or unsure reason rests on: a file path, a decision id (D71), a section (§4) or a number. |
-| `cites-everything` | gold | `entity.uncited.size() == 0` | Cite a source in every reason, passes included, so a reviewer can check the verdict. |
+| `cites-for-findings` | silver | `entity.uncited.filter(c, c in entity.failing \|\| c in entity.unsure).size() == 0` | In the assessment file under portal/assessments/, cite what each listed fail or unsure reason rests on, in a form a reader can open: a repository path (`crates/x/src/lib.rs:40`), a file name only one file has, a decision or question id that exists (D71, Q10), or a full URL. A section sign or a bare number alone isn't checkable. |
+| `cites-everything` | gold | `entity.uncited.size() == 0` | Cite a source in every listed reason, passes included, in the same forms as cites-for-findings (a path, a unique file name, an existing decision or question id, a URL), so a reviewer can check the verdict. |
 
 ## review-assessment
 
@@ -42,7 +42,7 @@ Scorecard `review-assessment` over `Assessment` entities, owned by group:maintai
 |---|---|---|---|
 | `no-open-findings` | bronze | `entity.reviewFailing.size() == 0` | A current assessment-quality assessment failed the listed criteria: act on its suggestions (portal/assessments/), then re-assess. If the finding is wrong, say why in a new assessment by another assessor. |
 | `assessed` | silver | `entity.reviewState == 'fresh' && !entity.selfReviewed` | Run `toolbox assess brief <assessment id> --portal portal`; a different agent or person should review it. |
-| `passes-review` | gold | `entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0 && entity.reviewUncited.size() == 0` | Revise the assessment where the review found it unsupported or incomplete, then have it reviewed again. |
+| `passes-review` | gold | `entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0 && entity.reviewUncited.size() == 0 && entity.reviewGrounded` | For a listed criterion, revise the assessment file in portal/assessments/ where the review found it unsupported or incomplete, then have it reviewed again. For an item marked "fix the review", the review file is at fault: its reasons must cite what they rest on, including this assessment's file or the sources it cites. |
 | `no-doubts` | gold | `entity.reviewState == 'fresh' && entity.reviewUnsure.size() == 0` | Resolve what the reviewer was unsure of, usually by citing the source a verdict rests on. |
 
 ## maintainer-benchmark
@@ -141,7 +141,7 @@ Scorecard `maintainer-crate` over `Crate` entities, owned by group:maintainers. 
 | `crate-docs` | bronze | `entity.crateDoc` | Start the crate's `src/lib.rs` or `src/main.rs` with `//!` docs: what it is and which spec section it implements. |
 | `has-tests` | bronze | `entity.unitTests + entity.integrationTests > 0 && entity.testsWithoutAsserts.size() == 0` | Add a #[test] for the crate's main behaviour (or an integration test in tests/), and give each listed test an assert: a test that checks nothing passes whatever the code does. |
 | `tests-scale-with-code` | silver | `entity.testsPerKloc >= 2` | Add tests for the crate's untested behaviour until it has at least 2 per 1,000 code lines (docs/design/thresholds.md says why 2). |
-| `tests-pass` | bronze | `entity.tests.status == 'pass' && entity.tests.ignored == 0` | Run `cargo test -p <crate>` and fix the failures in the evidence. Remove `#[ignore]` from ignored tests and make them pass: an ignored test never runs. |
+| `tests-pass` | bronze | `entity.tests.status == 'pass' && entity.tests.ignored == 0 && entity.disabledTests.size() == 0` | Run `cargo test -p <crate>` and fix the failures in the evidence. Remove `#[ignore]` from ignored tests, and the always-false `#[cfg(...)]` from listed tests, and make them pass: a test that doesn't run checks nothing. Tests that need OpenFGA run with TOOLBOX_REQUIRE_OPENFGA set, so install it (TOOLBOX_OPENFGA_BIN) rather than letting them skip. |
 | `clippy-clean` | bronze | `entity.clippy.status == 'pass'` | Fix the clippy warnings in the evidence (`cargo clippy -p <crate> --all-targets`). |
 | `public-api-documented` | silver | `entity.docCoverage >= 80` | Add /// docs to the public items in the evidence. |
 | `no-huge-functions` | silver | `entity.maxFnLines <= 150` | Split the functions in the evidence into named steps. |
@@ -153,7 +153,7 @@ Scorecard `maintainer-crate` over `Crate` entities, owned by group:maintainers. 
 
 ## review-crate
 
-Agents' judgement of each crate against crate-design, advisory, with the same ladder as review-rule; a change to src/, tests/ or Cargo.toml makes a review stale (D79, D01M831P5QWJQ4A2FT85N5MXJQF).
+Agents' judgement of each crate against crate-design, advisory, with the same ladder as review-rule plus, at gold, a second assessor's review of that judgement; a change to src/, tests/ or Cargo.toml makes a review stale (D79, D01M831P5QWJQ4A2FT85N5MXJQF).
 
 Scorecard `review-crate` over `Crate` entities, owned by group:maintainers. `toolbox report` lists what fails now.
 
@@ -163,6 +163,7 @@ Scorecard `review-crate` over `Crate` entities, owned by group:maintainers. `too
 | `assessed` | silver | `entity.reviewState == 'fresh'` | Run `toolbox assess brief crate:<name> --portal portal`, have your agent write the assessment file it names, then `toolbox assess check portal`. |
 | `passes-review` | gold | `entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0 && entity.reviewUncited.size() == 0` | Act on the failing criteria's suggestions in the assessment (portal/assessments/), then re-assess. |
 | `no-doubts` | gold | `entity.reviewState == 'fresh' && entity.reviewUnsure.size() == 0` | Resolve what the assessor was unsure of (cite the source the verdict needs, in portal/assessments/), then re-assess with `toolbox assess brief crate:<name> --portal portal`. An open question in docs/questions.md doesn't pass this rule by itself. |
+| `independently-reviewed` | gold | `entity.reviewState == 'fresh' && entity.reviewIndependent == 'pass'` | Have another agent or person review the crate-design assessment: `toolbox assess brief assessment:crate-design/crate:<name> --portal portal`, with reasons that cite the assessment file or the sources it cites; act on what that review fails. |
 
 ## maintainer-dependency
 
@@ -215,14 +216,14 @@ Scorecard `meta-rule` over `Rule` entities, owned by group:maintainers. `toolbox
 | Rule | Level | Passes when | Fix |
 |---|---|---|---|
 | `explains-fix` | bronze | `entity.fixWords >= 5` | Write a fix an agent can act on: what to change, and where. |
-| `tested` | bronze | `entity.tested` | Add an expectation that pins the rule: score('<card>', '<entity>').rules['<rule>'] == 'fail' (and one that passes). |
+| `tested` | bronze | `entity.tested` | In the portal's tests (tests/*.test.yaml), add an expectation that pins the rule: `score('<card>', '<entity>').rules['<rule>'] == 'fail'`, or its evidence compared (`.evidence['<rule>'] == [...]`). A bare mention doesn't count. |
 | `decided-on-fixtures` | bronze | `entity.fixture.pass + entity.fixture.fail > 0` | Add fixture records the rule applies to, so it evaluates in tests. |
 | `both-outcomes-on-fixtures` | silver | `entity.fixture.pass > 0 && entity.fixture.fail > 0` | Give the fixtures one entity that passes and one that fails, so both paths (and the evidence) are exercised. |
-| `shows-evidence` | silver | `entity.hasEvidence \|\| entity.check.nodes <= 4` | Add `evidence:` naming the items that fail, so agents and people know what to change. |
 | `no-nested-loops` | silver | `entity.check.loops <= 1 && (!has(entity.evidence) \|\| entity.evidence.loops <= 1)` | Avoid a comprehension inside a comprehension: compute the inner list in the connector or a computed field. |
-| `readable` | gold | `entity.check.nodes <= 30` | Move logic into a computed field or the connector, and keep the rule a short comparison. |
+| `readable` | silver | `entity.check.nodes <= 30` | Move logic into a computed field or the connector, and keep the rule a short comparison. |
 | `always-explains` | silver | `entity.hasEvidence` | Add `evidence:` even for simple checks: it is what an agent reads first. |
 | `evidence-tracks-check` | gold | `entity.evidenceTracksCheck` | Write `evidence:` from what the check reads (the failing list itself, or the value compared), so it names what failed on this entity. |
+| `pins-both-outcomes` | gold | `'pass' in entity.testedOutcomes && 'fail' in entity.testedOutcomes` | In the portal's tests (tests/*.test.yaml), add an expectation that the rule passes for one fixture entity (`score('<card>', '<entity>').rules['<rule>'] == 'pass'`) and one that it fails for another (`== 'fail'`, or its evidence compared), so a change that flips either outcome is caught (lesson L4). |
 | `fix-names-a-place` | gold | `entity.fixNamesPlace` | Say in `fix:` where to act: the file or directory (a path), the field the check reads, a `toolbox` command, or "the listed …" items of an evidence that names them (scorecards-for-scorecards.md, lesson L1). |
 
 ## meta-scorecard
@@ -434,7 +435,7 @@ Scorecard `sdlc-layer` over `SdlcLayer` entities, owned by group:maintainers. `t
 | Rule | Level | Passes when | Fix |
 |---|---|---|---|
 | `stages-declared` | bronze | `entity.stages.all(s, s in entity.definedStages)` | Declare each listed stage in portal/sdlc/stages/<layer>.yaml, even if its status is missing. |
-| `nothing-missing` | silver | `entity.stagesMissing.size() == 0` | For each listed stage in portal/sdlc/stages/<layer>.yaml, write the design doc and point `docs:` at it, then set `status:` to designed, partial or built. A status alone doesn't count; a doc that exists does. |
+| `nothing-missing` | silver | `entity.stagesMissing.size() == 0` | For each listed stage in portal/sdlc/stages/<layer>.yaml, write the design (a doc, or a section of one, that names the stage), point `docs:` at it, then set `status:` to designed, partial or built. A status alone doesn't count, nor does a listed doc that is missing or never names the stage. |
 | `every-stage-built` | gold | `entity.stagesNotBuilt.size() == 0` | Raise each listed stage to built (see sdlc-stage for what each lacks). |
 
 ## review-sdlc-stage
@@ -483,7 +484,7 @@ Scorecard `maintainer-skill` over `Skill` entities, owned by group:maintainers. 
 | `portable-paths` | silver | `entity.windowsPaths.size() == 0` | Replace the Windows paths in the evidence with forward-slash paths relative to the skill directory. |
 | `states-boundaries` | gold | `entity.boundaryCues.size() > 0` | Name a limit, an error path, or a prerequisite in the body of `SKILL.md` (never, do not, limitation, prerequisite, troubleshooting, or on error). |
 | `has-evals` | gold | `entity.evalCases >= 3` | Add at least three eval cases to evals/evals.json (a JSON array, or an object with an evals array). One element is one prompt. Running them is a separate, non-gating step. |
-| `no-hidden-instructions` | bronze | `entity.hiddenChars == 0` | Remove from the skill's files what a reader can't see and a model can: zero-width and other default-ignorable characters, bidi controls, variation selectors outside emoji, Unicode tags and HTML comments (`<!-- -->`); save any non-UTF-8 file as UTF-8 or remove it. |
+| `no-hidden-instructions` | bronze | `entity.hiddenChars == 0` | Remove from the skill's files what a reader can't see and a model can: zero-width and other default-ignorable characters, bidi controls, variation selectors outside emoji, Unicode tags, HTML comments (`<!-- -->`) and Markdown link-reference comments (`[//]: # (...)`); save any non-UTF-8 text file as UTF-8 or remove it. Images, fonts and archives are not scanned. |
 | `no-hardcoded-secrets` | bronze | `entity.secretHits.size() == 0` | Remove the hardcoded credentials in the evidence. Refer to a secret by name instead of pasting it into the skill. |
 | `one-level-deep` | gold | `entity.linkDepth <= 1 && entity.supportFiles <= 3` | Keep references one hop from SKILL.md and the skill to at most three supporting files. Focused skills outperform large bundles. |
 
@@ -505,21 +506,30 @@ Scorecard `maintainer-ci-security` over `Workflow` entities, owned by group:main
 
 ## maintainer-ci-reliability
 
-Whether CI can be trusted to say green means good: failures visible, timeouts, superseded runs cancelled, and a main branch that rarely fails or waits (D70, docs/design/thresholds.md for the fail-rate tiers).
+Whether green CI means good on the default branch: failures visible and counted, including those a re-run hid, every job bounded by a timeout, and a branch that rarely fails (D70; docs/design/thresholds.md for the tiers). Speed is maintainer-ci-speed.
 
 Scorecard `maintainer-ci-reliability` over `Workflow` entities, owned by group:maintainers. `toolbox report` lists what fails now.
 
 | Rule | Level | Passes when | Fix |
 |---|---|---|---|
-| `main-not-stuck-red` | bronze | `entity.runs.failingStreak < 3` | Fix main before anything else: a red default branch hides new failures. |
-| `fail-rate-under-20` | bronze | `entity.runs.failRate <= 20` | Find the failing jobs (`toolbox get workflow:<path>` shows run data) and fix their causes. Don't hide them: continue-on-error is caught by failures-visible, and cancelled runs are shown here. |
-| `failures-visible` | bronze | `entity.hiddenFailures.size() == 0` | Remove `continue-on-error` from each listed job or step. If a step is expected to fail, give it an `id:` and check `steps.<id>.outcome` in a later step, so the failure is still asserted. |
+| `main-not-stuck-red` | bronze | `entity.runs.failingStreak < 3` | Fix the default branch before anything else: open the failed runs in the evidence, find the failing job, and fix its cause in the code or in the workflow file under .github/workflows/. |
+| `still-running` | bronze | `!has(entity.runs.state) \|\| entity.runs.state == 'active'` | Re-enable the workflow (`gh workflow enable <file>`, or the Actions tab), or delete its file from .github/workflows/ if it is retired. |
+| `fail-rate-under-20` | bronze | `entity.runs.firstTryFailRate <= 20` | Open the failed runs in the evidence, find the failing jobs, and fix their causes in the code or the workflow file. The rate is over the last runs on the branch, so it falls as passing runs replace failed ones. Re-running a failure doesn't help: a run that passed on a later attempt counts as failed, continue-on-error, `\|\| true` and skips on the default branch are caught by failures-visible, and cancelled runs are shown here. |
+| `failures-visible` | bronze | `entity.hiddenFailures.size() == 0` | For each listed job or step in the workflow file: remove `continue-on-error`, `\|\| true` (or `set +e`), or the `if:` that skips it on the default branch. If a step is expected to fail, give it an `id:` and check `steps.<id>.outcome` in a later step, so the failure is still asserted. |
 | `every-job-has-timeout` | bronze | `entity.jobsWithoutTimeout.size() == 0` | Set `timeout-minutes` on every job; the default is 360 minutes of a hung runner. |
-| `fail-rate-under-10` | silver | `entity.runs.failRate <= 10` | Track failures to their causes: flaky tests, infrastructure, or real breakage merged to main. |
-| `few-reruns` | silver | `entity.runs.rerunRate <= 5` | Re-runs mean flakiness: find the flaky jobs and fix or isolate them instead of retrying. |
-| `cancels-superseded-runs` | silver | `entity.cancelsSuperseded \|\| !('pull_request' in entity.triggers)` | Add, at the top of the workflow file: concurrency: group: "${{ github.workflow }}-${{ github.ref }}" cancel-in-progress: ${{ github.event_name == 'pull_request' }} A new push to a pull request then cancels its old run, while every run on main still finishes. |
-| `fail-rate-under-5` | gold | `entity.runs.failRate <= 5` | Keep main green: failures should be rare enough that each one gets looked at. |
-| `fast-feedback` | gold | `entity.runs.p90Seconds <= 900` | Keep the p90 run under 15 minutes: split slow jobs, cache builds, move long suites off the PR path. |
+| `fail-rate-under-10` | silver | `entity.runs.decided >= 10 && entity.runs.firstTryFailRate <= 10` | Open the failed runs in the evidence and classify each cause: a flaky test (fix or quarantine it in its test file), infrastructure (pin or retry the step in the workflow file), or real breakage merged to the branch (add the missing check to the pull request workflow). |
+| `fail-rate-under-5` | gold | `entity.runs.decided >= 10 && entity.runs.firstTryFailRate <= 5` | Open each failed run in the evidence and fix its cause where it lives (the test, the workflow file, or the check the pull request lacked), so that every failure on the branch is rare enough to be looked at. |
+
+## maintainer-ci-speed
+
+Whether CI answers quickly and spends no runner time on superseded commits: a cost and feedback-time concern, separate from whether CI can be trusted (maintainer-ci-reliability; docs/design/thresholds.md).
+
+Scorecard `maintainer-ci-speed` over `Workflow` entities, owned by group:maintainers. `toolbox report` lists what fails now.
+
+| Rule | Level | Passes when | Fix |
+|---|---|---|---|
+| `cancels-superseded-runs` | bronze | `entity.cancelsSuperseded \|\| !('pull_request' in entity.triggers)` | Add, at the top of the workflow file: concurrency: group: "${{ github.workflow }}-${{ github.ref }}" cancel-in-progress: ${{ github.event_name == 'pull_request' }} A new push to a pull request then cancels its old run, while every run on main still finishes. |
+| `fast-feedback` | silver | `entity.runs.p90Seconds <= 900` | Keep the p90 run under 15 minutes: split slow jobs, cache builds, move long suites off the PR path. |
 
 ## maintainer-action-deps
 
@@ -549,7 +559,7 @@ Scorecard `maintainer-python` over `PythonScript` entities, owned by group:maint
 
 | Rule | Level | Passes when | Fix |
 |---|---|---|---|
-| `no-findings` | clean | `(false ? entity.total : entity.active) == 0` | Fix ruff's findings (the record's command reruns them), or, for a deliberate style, ignore the rule for those files in ruff.toml with a comment saying why. |
+| `no-findings` | clean | `(false ? entity.total : entity.active) == 0` | Fix ruff's findings (the record's command reruns them), or, for a deliberate style, ignore the rule for those files under `[lint.per-file-ignores]` in ruff.toml with a comment saying why. A `# noqa` comment doesn't help: the check runs with --ignore-noqa. |
 
 ## Packages and their settings
 
@@ -563,9 +573,9 @@ Change a standard by changing these parameters in the portal's `toolbox.yaml`.
   - `kind`: `"OpenSSFCheck"`
   - `name`: `"maintainer-openssf"`
 - `../packages/sarif`
-  - `command`: `["ruff","check","--no-cache","--output-format","sarif","--exit-zero","{files}"]`
-  - `files`: `["scripts/*.py","examples/reference-portal/tools/*.py"]`
-  - `fix`: `"Fix ruff's findings (the record's command reruns them), or, for a deliberate style, ignore the rule for those files in ruff.toml with a comment saying why."`
+  - `command`: `["ruff","check","--no-cache","--output-format","sarif","--exit-zero","--ignore-noqa","{files}"]`
+  - `files`: `["scripts/*.py","examples/reference-portal/tools/*.py","examples/acme-live/deploy/*.py"]`
+  - `fix`: ``"Fix ruff's findings (the record's command reruns them), or, for a deliberate style, ignore the rule for those files under `[lint.per-file-ignores]` in ruff.toml with a comment saying why. A `# noqa` comment doesn't help: the check runs with --ignore-noqa."``
   - `install`: `{"aqua":"astral-sh/ruff","mise":"pipx:ruff","pypi":"ruff"}`
   - `kind`: `"PythonScript"`
   - `name`: `"maintainer-python"`

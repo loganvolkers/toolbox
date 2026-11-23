@@ -98,17 +98,21 @@ everyone else is held to wasn't itself held to anything.
 | Scorecard | Level | Rule | Lesson | Check (over `toolbox describe scorecards` facts) |
 |---|---|---|---|---|
 | `meta-rule` | bronze | `explains-fix` | L1 | fix ≥ 5 words |
-| | bronze | `tested` | L4 | a test expectation names `score('<card>', …).rules/evidence['<rule>']` |
+| | bronze | `tested` | L4 | a test expectation pins `score('<card>', …).rules['<rule>']` to a literal outcome, or compares its evidence |
 | | bronze | `decided-on-fixtures` | L4 | it passes or fails on at least one fixture entity |
 | | silver | `both-outcomes-on-fixtures` | L4 | it passes on one fixture entity and fails on another |
-| | silver | `shows-evidence` | L2 | `evidence:` present, unless the check is trivial (≤ 4 CEL nodes) |
+| | silver | `always-explains` | L2 | `evidence:` present (`shows-evidence`, which exempted trivial checks, was dropped as implied by it) |
 | | silver | `no-nested-loops` | L8 | comprehension nesting ≤ 1 in check and evidence |
-| | gold | `readable` | L8 | ≤ 30 CEL nodes |
-| | gold | `always-explains` | L2 | `evidence:` present |
+| | silver | `readable` | L8 | ≤ 30 CEL nodes (every rule meets it, so it guards rather than ranks) |
+| | gold | `pins-both-outcomes` | L4 | the tests pin the rule both passing and failing |
+| | gold | `evidence-tracks-check` | L1 | the evidence names what failed ([thresholds.md](./thresholds.md)) |
+| | gold | `fix-names-a-place` | L1, L2 | the fix names where to act |
 | `meta-scorecard` | bronze | `tested` | L4 | an expectation names the scorecard |
 | | bronze | `every-level-has-rules` | — | no empty level |
-| | silver | `fixtures-show-the-ladder` | L4 | the fixtures reach at least two levels |
-| | gold | `every-rule-tested` | L4 | no untested rule (rolled up from Rule entities) |
+| | silver | `described` | L2 | a description saying what the standard is for |
+| | silver | `fixtures-show-the-ladder` | L4 | the fixtures reach two outcomes, one a real level |
+| | silver | `every-rule-tested` | L4 | no untested rule (rolled up from Rule entities) |
+| | gold | `fixtures-reach-every-level` | L4, L12 | a fixture entity reaches each level, so every rung is exercised in tests |
 
 Both use `ratchet: {newEntitiesAtLeast: bronze}`. Existing rules were baselined as they are, but
 every *new* rule or scorecard must be tested, explained and decided on fixtures from its first

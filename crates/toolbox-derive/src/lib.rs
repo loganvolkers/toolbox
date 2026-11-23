@@ -228,7 +228,7 @@ impl<'m> Pipeline<'m> {
         }
     }
 
-    fn json_in(&self, src: &str, ctx: &Scope<'_, '_, '_>) -> Result<Value, String> {
+    fn json_in(&self, src: &str, ctx: &Scope<'_>) -> Result<Value, String> {
         self.expr(src)?.json_in(ctx)
     }
 
@@ -729,7 +729,7 @@ impl<'m> Pipeline<'m> {
         &self,
         sc: &toolbox_model::manifest::Scorecard,
         entity: &str,
-        ctx: &Scope<'_, '_, '_>,
+        ctx: &Scope<'_>,
     ) -> Score {
         let applies = sc
             .applies_to
@@ -787,7 +787,7 @@ impl<'m> Pipeline<'m> {
         &self,
         r: &toolbox_model::manifest::Rule,
         outcome: &str,
-        ctx: &Scope<'_, '_, '_>,
+        ctx: &Scope<'_>,
     ) -> Option<Value> {
         match (outcome, &r.evidence, &r.data_from) {
             ("fail" | "waived", Some(e), _) => Some(
@@ -807,7 +807,7 @@ impl<'m> Pipeline<'m> {
         &self,
         r: &toolbox_model::manifest::Rule,
         outcome: &str,
-        ctx: &Scope<'_, '_, '_>,
+        ctx: &Scope<'_>,
     ) -> Option<f64> {
         let e = r.measure.as_deref().filter(|_| outcome == "fail")?;
         self.json_in(e, ctx).ok()?.as_f64()

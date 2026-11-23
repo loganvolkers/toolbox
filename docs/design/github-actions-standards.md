@@ -14,7 +14,8 @@ so any portal can apply the same standards to a fleet. Related: [toolbox-for-too
 | Card | Kind | What it answers | Built on |
 |---|---|---|---|
 | `maintainer-ci-security` | Workflow (workflows and action metadata) | Can an attacker or a compromised dependency abuse this workflow? | **zizmor** (security audits), **actionlint** (correctness), and Toolbox's own parse (permissions, pinning, risky triggers) |
-| `maintainer-ci-reliability` | Workflow | Does green mean good, and does red get fixed? | The **GitHub API**'s run history (fail rate, re-runs, failing streak, p90 time) and the parse (timeouts, concurrency) |
+| `maintainer-ci-reliability` | Workflow | Does green mean good, and does red get fixed? | The **GitHub API**'s run history (first-try fail rate, failing streak, workflow state, failed runs) and the parse (timeouts, hidden failures) |
+| `maintainer-ci-speed` | Workflow | Does CI answer quickly, without spending runners on superseded commits? | The parse (concurrency) and the run history (p90 time) |
 | `maintainer-action-deps` | ActionDependency | Which third-party actions do we run, where, and are they pinned everywhere? | The parse, joined across workflows |
 
 **What this repository's CI scores:**
@@ -83,10 +84,10 @@ the latest tags.*
 | No script injection from untrusted inputs | GitHub secure use; zizmor `template-injection`; actionlint script injection check | `no-high-findings` / `actionlint-clean` |
 | Don't persist checkout credentials | zizmor `artipacked`; ghalint `checkout_persist_credentials_should_be_false` | `no-medium-findings` (silver) |
 | Set `timeout-minutes` on every job (the default is 360) | ghalint `job_timeout_minutes_is_required` | `every-job-has-timeout` (bronze, reliability) |
-| Cancel superseded runs | GitHub `concurrency` (secondary: common practice) | `cancels-superseded-runs` (silver) |
+| Cancel superseded runs | GitHub `concurrency` (secondary: common practice) | `cancels-superseded-runs` (bronze, speed) |
 | Keep the default branch green; fix failures before features | GitHub performance metrics expose failure rate per workflow; thresholds are **Toolbox's proposal** (20 / 10 / 5%, 3 failures in a row), not a published standard | `main-not-stuck-red`, `fail-rate-under-*` |
-| Treat re-runs as flakiness | Proxy chosen here (secondary: flaky-test vendors measure retries) | `few-reruns` ≤ 5% |
-| Fast feedback | Toolbox's proposal: p90 ≤ 15 minutes | `fast-feedback` (gold) |
+| Treat re-runs as flakiness | Proxy chosen here (secondary: flaky-test vendors measure retries): a run that passed only on a re-run counts as failed in the fail rate | `fail-rate-under-*` (first-try rate) |
+| Fast feedback | Toolbox's proposal: p90 ≤ 15 minutes | `fast-feedback` (silver, speed) |
 
 ## 4. How it works
 

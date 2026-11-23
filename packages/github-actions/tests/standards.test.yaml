@@ -38,15 +38,18 @@ assert:
     expect: >-
       score('maintainer-ci-reliability',
       'workflow:.github/workflows/ci.yml').evidence['fail-rate-under-20'] ==
-      ['92% of the last 12 decided runs on main failed (0 cancelled runs not
-      counted)'] && score('maintainer-ci-reliability',
+      ['92% of the last 12 decided runs on main failed on their first attempt
+      (92% still failed after re-runs; 0 cancelled runs not counted)',
+      'https://github.com/loganvolkers/toolbox/actions/runs/12',
+      'https://github.com/loganvolkers/toolbox/actions/runs/11'] &&
+      score('maintainer-ci-reliability',
       'workflow:.github/workflows/ci.yml').rules['main-not-stuck-red'] ==
       'fail'
   - name: no job timeouts and no concurrency group are named
     expect: >-
       score('maintainer-ci-reliability',
       'workflow:.github/workflows/ci.yml').evidence['every-job-has-timeout'].size()
-      == 6 && score('maintainer-ci-reliability',
+      == 6 && score('maintainer-ci-speed',
       'workflow:.github/workflows/ci.yml').rules['cancels-superseded-runs'] ==
       'fail'
   - name: without run data the run rules are unknown and say which connector
@@ -76,6 +79,6 @@ assert:
       'workflow:.github/workflows/release.yml').evidence['failures-visible']
       == ['jobs.release.steps[2]'] && score('maintainer-ci-reliability',
       'workflow:.github/workflows/ci.yml').rules['failures-visible'] == 'pass'
-      && score('maintainer-ci-reliability',
+      && score('maintainer-ci-speed',
       'workflow:.github/workflows/ci.yml').evidence['cancels-superseded-runs']
       == ['no concurrency group on a workflow triggered by pull_request']

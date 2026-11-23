@@ -1,38 +1,53 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/user-mcp/contract-tested
 rubric: rule-quality
-subjectHash: 4364fd50ef0d
-assessor: {kind: agent, name: claude-code}
-at: 2026-11-20
+subjectHash: 79da9807758c
+assessor: {kind: agent, name: campaign-review-rules}
+at: 2026-11-23
 verdicts:
   - criterion: measures-intent
-    verdict: pass
+    verdict: fail
     reason: >-
-      With runner data the check counts calls the MCP contract tests actually
-      make (TOOLBOX_MCP_TRACE), which is what "contract-tested" means; this
-      replaced the mention-based proxy found in F9
-      (scorecards-for-scorecards.md L3).
-  - criterion: hard-to-game
-    verdict: unsure
-    reason: >-
-      An observed call proves the tool was invoked, not that its result was
-      asserted: a test that calls a tool and ignores the response passes. The
-      static fallback (a tools/call body naming the tool) is weaker still, as
-      the comment on the rule says.
+      CI and the committed baseline always score this card with the runner
+      skipped (.github/workflows/ci.yml:85 and :95, `--skip
+      runner,github-actions`), so the check takes its static branch,
+      `exercisedBy.size() > 0` (portal/standards/cli.yaml:224-227).
+      exercisedBy comes from the capture `"name"\s*:\s*"([a-z][a-z_]*)"` over
+      crates/*/tests/*.rs, scripts/* and workflows
+      (portal/toolbox.yaml:64-77). That matches any JSON `"name": "get"`, not
+      a tools/call. Even in runner mode, the `call` helper only asserts that
+      the result is text (crates/toolbox-api/tests/mcp.rs:66-71), so
+      docs/design/thresholds.md §2 overstates it as asserting on every result.
     suggestion: >-
-      Have the trace record whether the call's result was compared (e.g. a
-      helper that both calls and asserts), or count calls with non-error
-      results only.
+      Narrow the static capture to a `"method": "tools/call"` (or
+      `call(`/`ok(` helper) body, and record in the trace
+      (crates/toolbox-api/src/mcp.rs:192-196) whether the test compared the
+      structured result, e.g. by routing contract tests through a helper that
+      takes an expected value.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Cheapest attempt in the mode CI uses: add a comment such as `// "name":
+      "explain"` to any file in crates/*/tests/, and the capture creates the
+      exercisesTool relation. With the runner, a loop that calls `ok(&url,
+      json!({"name": t, "arguments": {}}))` for every tool and ignores the
+      result marks each non-erroring tool contract-tested (mcp.rs:73-77).
+    suggestion: >-
+      Apply the narrower capture above, and count an observed call only when
+      the test also asserts on its structured content.
   - criterion: fix-leads-to-pass
     verdict: pass
     reason: >-
       The fix names the place (crates/toolbox-api/tests) and the mechanism
-      (tools/call), and says why the CLI path doesn't count.
+      (tools/call), and says why `viaCli` doesn't count
+      (portal/standards/cli.yaml:233-236). Following it passes in both modes.
   - criterion: threshold-justified
     verdict: pass
     reason: >-
-      No numeric threshold (one call); gold because it needs the slow runner,
-      consistent with toolbox-for-toolbox.md's level table.
+      Gold with one successful observed call is stated as a principle in
+      docs/design/thresholds.md §2 (the `contract-tested` row). Its premise
+      about the helper is weaker than stated (see measures-intent), but the
+      level itself is justified.
 summary: >-
-  A good rule since F9; its residual weakness is that a call without an
-  assertion counts.
+  In the mode CI actually runs, any `"name": "<tool>"` string in a test
+  file counts, and observed calls aren't checked beyond their shape.

@@ -29,7 +29,7 @@ rubrics:
     criteria:
       - {name: empty, question: Is it useful?, guidance: ""}
       - {name: restated, question: Is it good?, guidance: Is the thing good enough overall?}
-      - {name: real, question: Is it named?, guidance: Fail when the thing has no title at all.}
+      - {name: real, question: Is it named?, guidance: Fail when the thing has no title at all in its file.}
 "#;
 
 fn describe(dir: &std::path::Path) -> Vec<Value> {

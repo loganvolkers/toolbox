@@ -25,15 +25,25 @@ fn expectations(root: &Path, m: &Manifest) -> String {
         .join("\n")
 }
 
-fn test_mentions(root: &Path, m: &Manifest) -> (BTreeSet<(String, String)>, BTreeSet<String>) {
-    let score = regex::Regex::new(r"score\('([^']+)'").expect("regex");
-    // A rule's outcome compared with a literal (`rules['r'] == 'fail'`), or its evidence: an
-    // expectation like `rules['r'] == rules['r']` pins nothing.
-    let rule = regex::Regex::new(
-        r"rules\['([^']+)'\]\s*(?:==|!=)\s*'(?:pass|fail|unknown|skipped)'|evidence\['([^']+)'\]",
+/// What a rule's expectation can match: its outcome compared with a literal (`rules['r'] ==
+/// 'fail'`), or its evidence compared or indexed (`evidence['r'] == [...]`, `.size()`, `[0]`).
+/// A bare mention, or `rules['r'] == rules['r']`, pins nothing.
+fn rule_regex() -> regex::Regex {
+    regex::Regex::new(
+        r"rules\['([^']+)'\]\s*(==|!=)\s*'(pass|fail|unknown|skipped)'|evidence\['([^']+)'\]\s*(?:==|!=|\[|\.)",
     )
-    .expect("regex");
-    let (mut rules, mut cards) = (BTreeSet::new(), BTreeSet::new());
+    .expect("regex")
+}
+
+/// For each `(scorecard, rule)` the portal's expectations test, the outcomes they pin (`pass`,
+/// `fail`, …; evidence exists only for a failing rule, so comparing it pins `fail`), and the
+/// scorecards they name.
+type Pinned = BTreeMap<(String, String), BTreeSet<String>>;
+
+fn test_mentions(root: &Path, m: &Manifest) -> (Pinned, BTreeSet<String>) {
+    let score = regex::Regex::new(r"score\('([^']+)'").expect("regex");
+    let rule = rule_regex();
+    let (mut rules, mut cards) = (Pinned::new(), BTreeSet::new());
     for t in &m.tests {
         let Ok(text) = std::fs::read_to_string(root.join(t)) else {
             continue;
@@ -43,9 +53,10 @@ fn test_mentions(root: &Path, m: &Manifest) -> (BTreeSet<(String, String)>, BTre
         };
         for a in doc["assert"].as_array().into_iter().flatten() {
             let expect = a["expect"].as_str().unwrap_or_default();
-            for (card, rules_named) in score_segments(&score, &rule, expect) {
-                for r in rules_named {
-                    rules.insert((card.clone(), r));
+            for (card, named) in score_segments(&score, &rule, expect) {
+                for (r, outcome) in named {
+                    let pinned = rules.entry((card.clone(), r)).or_default();
+                    pinned.extend(outcome);
                 }
                 cards.insert(card);
             }
@@ -55,13 +66,11 @@ fn test_mentions(root: &Path, m: &Manifest) -> (BTreeSet<(String, String)>, BTre
 }
 
 /// Each `score('<card>', …)` call in an expectation with the rules named after it, up to the next
-/// `score(`: a rule counts as tested only by an expectation on its own scorecard, not by any card
-/// that happens to share the expectation.
-fn score_segments(
-    score: &regex::Regex,
-    rule: &regex::Regex,
-    expect: &str,
-) -> Vec<(String, Vec<String>)> {
+/// `score(`, and the outcome each pins (`None` for `!=`): a rule counts as tested only by an
+/// expectation on its own scorecard, not by any card that happens to share the expectation.
+type Named = Vec<(String, Option<String>)>;
+
+fn score_segments(score: &regex::Regex, rule: &regex::Regex, expect: &str) -> Vec<(String, Named)> {
     let starts: Vec<_> = score.captures_iter(expect).collect();
     starts
         .iter()
@@ -74,7 +83,14 @@ fn score_segments(
                 .map_or(expect.len(), |m| m.start());
             let named = rule
                 .captures_iter(&expect[from..to])
-                .filter_map(|r| r.get(1).or_else(|| r.get(2)).map(|m| m.as_str().to_owned()))
+                .filter_map(|r| match (r.get(1), r.get(4)) {
+                    (Some(name), _) => Some((
+                        name.as_str().to_owned(),
+                        (&r[2] == "==").then(|| r[3].to_owned()),
+                    )),
+                    (None, Some(name)) => Some((name.as_str().to_owned(), Some("fail".into()))),
+                    _ => None,
+                })
                 .collect();
             (c[1].to_owned(), named)
         })
@@ -237,7 +253,8 @@ fn describe_portal(
                 "definition": {"check": r.check, "evidence": r.evidence, "fix": r.fix},
                 "check": cel(&r.check),
                 "evidence": r.evidence.as_deref().map(cel),
-                "tested": tested_rules.contains(&key),
+                "tested": tested_rules.contains_key(&key),
+                "testedOutcomes": tested_rules.get(&key).cloned().unwrap_or_default(),
                 "fixture": {"pass": f[0], "fail": f[1], "unknown": f[2]},
             });
             if let (Some(l), Some(n)) = (&live, live_entities) {
@@ -281,20 +298,23 @@ mod tests {
     #[test]
     fn a_rule_is_tested_only_by_its_own_scorecards_expectation() {
         let score = regex::Regex::new(r"score\('([^']+)'").unwrap();
-        let rule = regex::Regex::new(
-            r"rules\['([^']+)'\]\s*(?:==|!=)\s*'(?:pass|fail|unknown|skipped)'|evidence\['([^']+)'\]",
-        )
-        .unwrap();
+        let rule = super::rule_regex();
         let e = "score('a', 'x:1').rules['r1'] == 'pass' && score('b', 'x:1').level == 'gold' \
-                 && score('a', 'x:1').rules['r2'] == score('a', 'x:1').rules['r2']";
+                 && score('a', 'x:1').rules['r2'] == score('a', 'x:1').rules['r2'] \
+                 && score('a', 'x:2').evidence['r3'] == ['y'] && score('a', 'x:3').evidence['r4'] \
+                 && score('a', 'x:4').rules['r5'] != 'fail'";
         let got = super::score_segments(&score, &rule, e);
+        let s = |n: &str, o: Option<&str>| (n.to_owned(), o.map(str::to_owned));
         assert_eq!(
             got,
             vec![
-                ("a".to_owned(), vec!["r1".to_owned()]),
+                ("a".to_owned(), vec![s("r1", Some("pass"))]),
                 ("b".to_owned(), vec![]),
                 ("a".to_owned(), vec![]),
-                ("a".to_owned(), vec![])
+                ("a".to_owned(), vec![]),
+                ("a".to_owned(), vec![s("r3", Some("fail"))]),
+                ("a".to_owned(), vec![]),
+                ("a".to_owned(), vec![s("r5", None)]),
             ]
         );
     }

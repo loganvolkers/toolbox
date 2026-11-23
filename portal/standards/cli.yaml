@@ -228,8 +228,8 @@ scorecards:
       evidence: >-
         has(entity.observed) ? ['observed ' + string(entity.observed.calls) + '
         call(s) in the MCP contract tests, ' + string(entity.observed.errors) +
-        ' of them errors'] : ['no tools/call naming this tool in tests or
-        scripts (static mode)']
+        ' of them errors'] : ['no tools/call body ({"name": …, "arguments": …})
+        naming this tool outside a comment in tests or scripts (static mode)']
       fix: >-
         Call the tool directly (tools/call) in a test, e.g.
         crates/toolbox-api/tests; the CLI path in `viaCli` doesn't pin the MCP

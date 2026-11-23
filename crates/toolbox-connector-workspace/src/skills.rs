@@ -356,9 +356,22 @@ fn is_boundary_word(w: &str) -> bool {
 }
 
 /// The skill's files as text, and how many couldn't be read as UTF-8.
+/// Images, fonts and archives a skill may ship. An agent doesn't read them as instructions, so they
+/// are neither scanned nor counted as unreadable.
+const BINARY: [&str; 12] = [
+    "png", "jpg", "jpeg", "gif", "webp", "ico", "pdf", "woff", "woff2", "ttf", "zip", "gz",
+];
+
 fn files_under(root: &Path, dir: &str) -> (Vec<(String, String)>, i64) {
     let (mut out, mut unreadable) = (Vec::new(), 0);
     for path in walk_files(&root.join(dir)) {
+        let binary = path
+            .extension()
+            .and_then(|e| e.to_str())
+            .is_some_and(|e| BINARY.contains(&e.to_ascii_lowercase().as_str()));
+        if binary {
+            continue;
+        }
         let rel = rel_of(root, &path);
         match std::fs::read_to_string(&path) {
             Ok(text) => out.push((rel, text)),

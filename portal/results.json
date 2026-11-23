@@ -151,50 +151,42 @@
           "fail-rate-under-10",
           "fail-rate-under-20",
           "fail-rate-under-5",
-          "fast-feedback",
-          "few-reruns",
-          "main-not-stuck-red"
+          "main-not-stuck-red",
+          "still-running"
         ]
       },
       "workflow:.github/workflows/codeql.yml": {
-        "failing": {
-          "cancels-superseded-runs": 1
-        },
         "level": "bronze",
         "unknown": [
           "fail-rate-under-10",
           "fail-rate-under-20",
           "fail-rate-under-5",
-          "fast-feedback",
-          "few-reruns",
-          "main-not-stuck-red"
+          "main-not-stuck-red",
+          "still-running"
         ]
       },
       "workflow:.github/workflows/image.yml": {
-        "level": "silver",
+        "level": "bronze",
         "unknown": [
           "fail-rate-under-10",
           "fail-rate-under-20",
           "fail-rate-under-5",
-          "fast-feedback",
-          "few-reruns",
-          "main-not-stuck-red"
+          "main-not-stuck-red",
+          "still-running"
         ]
       },
       "workflow:.github/workflows/pages.yml": {
-        "level": "silver",
+        "level": "bronze",
         "unknown": [
           "fail-rate-under-10",
           "fail-rate-under-20",
           "fail-rate-under-5",
-          "fast-feedback",
-          "few-reruns",
-          "main-not-stuck-red"
+          "main-not-stuck-red",
+          "still-running"
         ]
       },
       "workflow:.github/workflows/release.yml": {
         "failing": {
-          "cancels-superseded-runs": 1,
           "every-job-has-timeout": 5
         },
         "level": "none",
@@ -202,31 +194,28 @@
           "fail-rate-under-10",
           "fail-rate-under-20",
           "fail-rate-under-5",
-          "fast-feedback",
-          "few-reruns",
-          "main-not-stuck-red"
+          "main-not-stuck-red",
+          "still-running"
         ]
       },
       "workflow:.github/workflows/scale-slo.yml": {
-        "level": "silver",
+        "level": "bronze",
         "unknown": [
           "fail-rate-under-10",
           "fail-rate-under-20",
           "fail-rate-under-5",
-          "fast-feedback",
-          "few-reruns",
-          "main-not-stuck-red"
+          "main-not-stuck-red",
+          "still-running"
         ]
       },
       "workflow:.github/workflows/version-packages.yml": {
-        "level": "silver",
+        "level": "bronze",
         "unknown": [
           "fail-rate-under-10",
           "fail-rate-under-20",
           "fail-rate-under-5",
-          "fast-feedback",
-          "few-reruns",
-          "main-not-stuck-red"
+          "main-not-stuck-red",
+          "still-running"
         ]
       },
       "workflow:actions/report/action.yml": {
@@ -269,6 +258,59 @@
       },
       "workflow:actions/report/action.yml": {
         "level": "gold"
+      }
+    },
+    "maintainer-ci-speed": {
+      "workflow:.github/workflows/ci.yml": {
+        "level": "bronze",
+        "unknown": [
+          "fast-feedback"
+        ]
+      },
+      "workflow:.github/workflows/codeql.yml": {
+        "failing": {
+          "cancels-superseded-runs": 1
+        },
+        "level": "none",
+        "unknown": [
+          "fast-feedback"
+        ]
+      },
+      "workflow:.github/workflows/image.yml": {
+        "level": "bronze",
+        "unknown": [
+          "fast-feedback"
+        ]
+      },
+      "workflow:.github/workflows/pages.yml": {
+        "level": "bronze",
+        "unknown": [
+          "fast-feedback"
+        ]
+      },
+      "workflow:.github/workflows/release.yml": {
+        "failing": {
+          "cancels-superseded-runs": 1
+        },
+        "level": "none",
+        "unknown": [
+          "fast-feedback"
+        ]
+      },
+      "workflow:.github/workflows/scale-slo.yml": {
+        "level": "bronze",
+        "unknown": [
+          "fast-feedback"
+        ]
+      },
+      "workflow:.github/workflows/version-packages.yml": {
+        "level": "bronze",
+        "unknown": [
+          "fast-feedback"
+        ]
+      },
+      "workflow:actions/report/action.yml": {
+        "level": "skipped"
       }
     },
     "maintainer-connector": {
@@ -406,10 +448,7 @@
         "level": "skipped"
       },
       "crate:toolbox-expr": {
-        "failing": {
-          "fully-documented": 1
-        },
-        "level": "silver",
+        "level": "gold",
         "unknown": [
           "clippy-clean",
           "tests-pass"
@@ -1937,25 +1976,14 @@
       "assessment:crate-design/crate:toolbox-expr": {
         "level": "gold"
       },
-      "assessment:rule-quality/rule:toolbox/maintainer-ci-reliability/cancels-superseded-runs": {
-        "level": "gold"
-      },
       "assessment:rule-quality/rule:toolbox/maintainer-ci-reliability/fail-rate-under-20": {
-        "failing": {
-          "cites-everything": 2,
-          "cites-for-findings": 1
-        },
-        "level": "bronze"
+        "level": "gold"
       },
       "assessment:rule-quality/rule:toolbox/maintainer-connector/no-hardcoded-secrets": {
         "level": "gold"
       },
       "assessment:rule-quality/rule:toolbox/maintainer-crate/has-tests": {
-        "failing": {
-          "cites-everything": 3,
-          "cites-for-findings": 2
-        },
-        "level": "bronze"
+        "level": "gold"
       },
       "assessment:rule-quality/rule:toolbox/maintainer-crate/tests-pass": {
         "level": "gold"
@@ -1979,11 +2007,7 @@
         "level": "gold"
       },
       "assessment:rule-quality/rule:toolbox/meta-rule/readable": {
-        "failing": {
-          "cites-everything": 3,
-          "cites-for-findings": 1
-        },
-        "level": "bronze"
+        "level": "gold"
       },
       "assessment:rule-quality/rule:toolbox/review-assessment/passes-review": {
         "level": "gold"
@@ -2002,11 +2026,7 @@
         "level": "bronze"
       },
       "assessment:scorecard-quality/scorecard:toolbox/maintainer-ci-reliability": {
-        "failing": {
-          "cites-everything": 3,
-          "cites-for-findings": 1
-        },
-        "level": "bronze"
+        "level": "gold"
       },
       "assessment:scorecard-quality/scorecard:toolbox/meta-rule": {
         "level": "gold"
@@ -2018,10 +2038,7 @@
         "level": "gold"
       },
       "assessment:scorecard-quality/scorecard:toolbox/sdlc-stage": {
-        "failing": {
-          "cites-everything": 1
-        },
-        "level": "silver"
+        "level": "gold"
       },
       "assessment:sdlc-stage-quality/sdlc-stage:maintainer/build": {
         "level": "gold"
@@ -2386,13 +2403,22 @@
       "field:toolbox/Assessment.at": {
         "level": "gold"
       },
+      "field:toolbox/Assessment.cited": {
+        "level": "gold"
+      },
       "field:toolbox/Assessment.entity": {
         "level": "gold"
       },
       "field:toolbox/Assessment.failing": {
         "level": "gold"
       },
+      "field:toolbox/Assessment.groundedIn": {
+        "level": "gold"
+      },
       "field:toolbox/Assessment.hash": {
+        "level": "gold"
+      },
+      "field:toolbox/Assessment.independentReview": {
         "level": "gold"
       },
       "field:toolbox/Assessment.path": {
@@ -2402,6 +2428,9 @@
         "level": "gold"
       },
       "field:toolbox/Assessment.reviewFailing": {
+        "level": "gold"
+      },
+      "field:toolbox/Assessment.reviewGrounded": {
         "level": "gold"
       },
       "field:toolbox/Assessment.reviewState": {
@@ -2712,6 +2741,9 @@
         },
         "level": "bronze"
       },
+      "field:toolbox/Crate.disabledTests": {
+        "level": "gold"
+      },
       "field:toolbox/Crate.docCoverage": {
         "failing": {
           "described": 1
@@ -2789,6 +2821,9 @@
         "level": "bronze"
       },
       "field:toolbox/Crate.reviewFailing": {
+        "level": "gold"
+      },
+      "field:toolbox/Crate.reviewIndependent": {
         "level": "gold"
       },
       "field:toolbox/Crate.reviewState": {
@@ -3644,6 +3679,9 @@
         },
         "level": "bronze"
       },
+      "field:toolbox/Rule.testedOutcomes": {
+        "level": "gold"
+      },
       "field:toolbox/Scorecard.described": {
         "level": "gold"
       },
@@ -3797,7 +3835,13 @@
       "field:toolbox/SdlcStage.name": {
         "level": "gold"
       },
+      "field:toolbox/SdlcStage.namedIn": {
+        "level": "gold"
+      },
       "field:toolbox/SdlcStage.notInCi": {
+        "level": "gold"
+      },
+      "field:toolbox/SdlcStage.notNaming": {
         "level": "gold"
       },
       "field:toolbox/SdlcStage.order": {
@@ -4302,13 +4346,13 @@
         "level": "silver"
       },
       "rubric:toolbox/rule-quality": {
-        "level": "gold"
-      },
-      "rubric:toolbox/scorecard-quality": {
         "failing": {
           "discriminates": 1
         },
         "level": "silver"
+      },
+      "rubric:toolbox/scorecard-quality": {
+        "level": "gold"
       },
       "rubric:toolbox/sdlc-stage-quality": {
         "level": "gold"
@@ -4319,7 +4363,7 @@
         "failing": {
           "always-explains": 1,
           "evidence-tracks-check": 1,
-          "shows-evidence": 1,
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
@@ -4329,7 +4373,7 @@
           "always-explains": 1,
           "evidence-tracks-check": 1,
           "fix-names-a-place": 1,
-          "shows-evidence": 1,
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
@@ -4338,7 +4382,8 @@
         "failing": {
           "always-explains": 1,
           "evidence-tracks-check": 1,
-          "fix-names-a-place": 1
+          "fix-names-a-place": 1,
+          "pins-both-outcomes": 1
         },
         "level": "bronze"
       },
@@ -4346,7 +4391,7 @@
         "failing": {
           "always-explains": 1,
           "evidence-tracks-check": 1,
-          "shows-evidence": 1
+          "pins-both-outcomes": 1
         },
         "level": "bronze"
       },
@@ -4354,7 +4399,7 @@
         "failing": {
           "always-explains": 1,
           "evidence-tracks-check": 1,
-          "shows-evidence": 1
+          "pins-both-outcomes": 1
         },
         "level": "bronze"
       },
@@ -4363,39 +4408,57 @@
           "always-explains": 1,
           "both-outcomes-on-fixtures": 1,
           "evidence-tracks-check": 1,
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
       },
       "rule:repo/docs/links-resolve": {
         "failing": {
-          "both-outcomes-on-fixtures": 1
+          "both-outcomes-on-fixtures": 1,
+          "pins-both-outcomes": 1
         },
         "level": "bronze"
       },
       "rule:repo/repo-hygiene/codeowners-catch-all": {
         "failing": {
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
       },
       "rule:repo/repo-hygiene/has-codeowners": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:repo/repo-hygiene/has-license": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:repo/repo-hygiene/has-readme": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:repo/repo-hygiene/owners-are-teams": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/cli-skill/has-skill": {
         "level": "gold"
       },
       "rule:toolbox/maintainer-action-deps/pinned-everywhere": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/maintainer-agent-doc/checks-run-in-ci": {
         "level": "gold"
@@ -4445,54 +4508,47 @@
       "rule:toolbox/maintainer-benchmark/says-why": {
         "level": "gold"
       },
-      "rule:toolbox/maintainer-ci-reliability/cancels-superseded-runs": {
-        "level": "gold"
-      },
       "rule:toolbox/maintainer-ci-reliability/every-job-has-timeout": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/maintainer-ci-reliability/fail-rate-under-10": {
-        "failing": {
-          "tested": 1
-        },
-        "level": "none"
+        "level": "gold"
       },
       "rule:toolbox/maintainer-ci-reliability/fail-rate-under-20": {
         "level": "gold"
       },
       "rule:toolbox/maintainer-ci-reliability/fail-rate-under-5": {
         "failing": {
-          "tested": 1
+          "pins-both-outcomes": 1
         },
-        "level": "none"
+        "level": "silver"
       },
       "rule:toolbox/maintainer-ci-reliability/failures-visible": {
         "level": "gold"
       },
-      "rule:toolbox/maintainer-ci-reliability/fast-feedback": {
-        "failing": {
-          "tested": 1
-        },
-        "level": "none"
-      },
-      "rule:toolbox/maintainer-ci-reliability/few-reruns": {
-        "failing": {
-          "tested": 1
-        },
-        "level": "none"
-      },
       "rule:toolbox/maintainer-ci-reliability/main-not-stuck-red": {
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
+      },
+      "rule:toolbox/maintainer-ci-reliability/still-running": {
         "level": "gold"
       },
       "rule:toolbox/maintainer-ci-security/actionlint-clean": {
         "failing": {
-          "both-outcomes-on-fixtures": 1
+          "both-outcomes-on-fixtures": 1,
+          "pins-both-outcomes": 2
         },
         "level": "bronze"
       },
       "rule:toolbox/maintainer-ci-security/least-privilege-token": {
         "failing": {
           "both-outcomes-on-fixtures": 1,
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
@@ -4501,20 +4557,39 @@
         "level": "gold"
       },
       "rule:toolbox/maintainer-ci-security/no-medium-findings": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/maintainer-ci-security/no-write-tokens-on-risky-triggers": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/maintainer-ci-security/pinned-to-sha": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/maintainer-ci-security/zizmor-clean": {
         "failing": {
           "both-outcomes-on-fixtures": 1,
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
+      },
+      "rule:toolbox/maintainer-ci-speed/cancels-superseded-runs": {
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
+      },
+      "rule:toolbox/maintainer-ci-speed/fast-feedback": {
+        "level": "gold"
       },
       "rule:toolbox/maintainer-connector/closes-snapshots": {
         "level": "gold"
@@ -4545,34 +4620,44 @@
       },
       "rule:toolbox/maintainer-crate/bounded-complexity": {
         "failing": {
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
       },
       "rule:toolbox/maintainer-crate/clippy-clean": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/maintainer-crate/crate-docs": {
         "failing": {
           "both-outcomes-on-fixtures": 1,
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
       },
       "rule:toolbox/maintainer-crate/few-unwraps": {
         "failing": {
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
       },
       "rule:toolbox/maintainer-crate/fully-documented": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/maintainer-crate/has-tests": {
         "level": "gold"
       },
       "rule:toolbox/maintainer-crate/no-huge-functions": {
         "failing": {
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
@@ -4580,21 +4665,29 @@
       "rule:toolbox/maintainer-crate/public-api-documented": {
         "failing": {
           "both-outcomes-on-fixtures": 1,
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
       },
       "rule:toolbox/maintainer-crate/short-functions": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/maintainer-crate/simple-functions": {
         "failing": {
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
       },
       "rule:toolbox/maintainer-crate/tests-pass": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/maintainer-crate/tests-scale-with-code": {
         "level": "gold"
@@ -4618,17 +4711,27 @@
         "level": "gold"
       },
       "rule:toolbox/maintainer-docs/cites-sources": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/maintainer-docs/links-resolve": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/maintainer-docs/names-sdlc-layer": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/maintainer-docs/status-banner": {
         "failing": {
           "both-outcomes-on-fixtures": 1,
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
@@ -4727,16 +4830,28 @@
         "level": "gold"
       },
       "rule:toolbox/maintainer-python/no-findings": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/maintainer-repo/constituents-at-least-bronze": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/maintainer-repo/constituents-at-least-gold": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/maintainer-repo/constituents-at-least-silver": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/maintainer-schema/described": {
         "level": "gold"
@@ -4823,7 +4938,10 @@
         "level": "gold"
       },
       "rule:toolbox/maintainer-supply-chain/workflows-have-owners": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/meta-assessment/assessor-named": {
         "level": "gold"
@@ -4853,7 +4971,10 @@
         "level": "gold"
       },
       "rule:toolbox/meta-field/described": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/meta-field/has-shape": {
         "level": "gold"
@@ -4862,16 +4983,25 @@
         "level": "gold"
       },
       "rule:toolbox/meta-kind/described": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/meta-kind/fields-described": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/meta-kind/in-fixtures": {
         "level": "gold"
       },
       "rule:toolbox/meta-kind/tested": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/meta-rubric/described": {
         "level": "gold"
@@ -4886,31 +5016,52 @@
         "level": "gold"
       },
       "rule:toolbox/meta-rule/always-explains": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/meta-rule/both-outcomes-on-fixtures": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/meta-rule/decided-on-fixtures": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/meta-rule/evidence-tracks-check": {
         "level": "gold"
       },
       "rule:toolbox/meta-rule/explains-fix": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/meta-rule/fix-names-a-place": {
         "level": "gold"
       },
       "rule:toolbox/meta-rule/no-nested-loops": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
+      },
+      "rule:toolbox/meta-rule/pins-both-outcomes": {
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/meta-rule/readable": {
-        "level": "gold"
-      },
-      "rule:toolbox/meta-rule/shows-evidence": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/meta-rule/tested": {
         "level": "gold"
@@ -4922,7 +5073,10 @@
         "level": "gold"
       },
       "rule:toolbox/meta-scorecard/every-rule-tested": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/meta-scorecard/fixtures-reach-every-level": {
         "level": "gold"
@@ -4935,25 +5089,29 @@
       },
       "rule:toolbox/operator-cli/args-described": {
         "failing": {
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
       },
       "rule:toolbox/operator-cli/documented": {
         "failing": {
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
       },
       "rule:toolbox/operator-cli/exercised": {
         "failing": {
-          "both-outcomes-on-fixtures": 1
+          "both-outcomes-on-fixtures": 1,
+          "pins-both-outcomes": 1
         },
         "level": "bronze"
       },
       "rule:toolbox/operator-cli/has-help": {
         "failing": {
           "both-outcomes-on-fixtures": 1,
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
@@ -4965,7 +5123,10 @@
         "level": "gold"
       },
       "rule:toolbox/review-assessment/no-open-findings": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/review-assessment/passes-review": {
         "level": "gold"
@@ -4973,11 +5134,17 @@
       "rule:toolbox/review-crate/assessed": {
         "level": "gold"
       },
+      "rule:toolbox/review-crate/independently-reviewed": {
+        "level": "gold"
+      },
       "rule:toolbox/review-crate/no-doubts": {
         "level": "gold"
       },
       "rule:toolbox/review-crate/no-open-findings": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/review-crate/passes-review": {
         "level": "gold"
@@ -5001,10 +5168,16 @@
         "level": "gold"
       },
       "rule:toolbox/review-scorecard/no-open-findings": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/review-scorecard/passes-review": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/review-sdlc-stage/assessed": {
         "level": "gold"
@@ -5013,7 +5186,10 @@
         "level": "gold"
       },
       "rule:toolbox/review-sdlc-stage/no-open-findings": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/review-sdlc-stage/passes-review": {
         "level": "gold"
@@ -5047,12 +5223,14 @@
       },
       "rule:toolbox/user-cli/args-described": {
         "failing": {
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
       },
       "rule:toolbox/user-cli/exercised": {
         "failing": {
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
@@ -5060,16 +5238,21 @@
       "rule:toolbox/user-cli/has-help": {
         "failing": {
           "both-outcomes-on-fixtures": 1,
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
       },
       "rule:toolbox/user-cli/structured-output": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/user-mcp/annotated": {
         "failing": {
           "both-outcomes-on-fixtures": 1,
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
@@ -5080,15 +5263,22 @@
       "rule:toolbox/user-mcp/described": {
         "failing": {
           "both-outcomes-on-fixtures": 1,
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
       },
       "rule:toolbox/user-mcp/documented": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/user-mcp/inputs-described": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       }
     },
     "meta-scorecard": {
@@ -5146,10 +5336,9 @@
       },
       "scorecard:toolbox/maintainer-ci-reliability": {
         "failing": {
-          "every-rule-tested": 4,
           "fixtures-reach-every-level": 1
         },
-        "level": "bronze"
+        "level": "silver"
       },
       "scorecard:toolbox/maintainer-ci-security": {
         "failing": {
@@ -5157,6 +5346,9 @@
           "fixtures-reach-every-level": 1
         },
         "level": "bronze"
+      },
+      "scorecard:toolbox/maintainer-ci-speed": {
+        "level": "gold"
       },
       "scorecard:toolbox/maintainer-connector": {
         "failing": {

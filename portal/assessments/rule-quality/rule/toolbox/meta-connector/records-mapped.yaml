@@ -2,41 +2,38 @@ apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/meta-connector/records-mapped
 rubric: rule-quality
 subjectHash: 99f8b35a753b
-assessor: {kind: agent, name: blind-review-2026-11-23}
+assessor: {kind: agent, name: campaign-review-rules}
 at: 2026-11-23
 verdicts:
   - criterion: measures-intent
     verdict: pass
     reason: >-
-      crates/toolbox-cli/src/model.rs:199-224 lists a connector's declared
-      records that no map rule names as `<connector>/<record>`, over the
-      resolved manifest. Included packages count:
-      connector:toolbox/maintainer-python is gold in a live report. "Stop
-      declaring it" is safe, because ingest rejects undeclared records
-      (crates/toolbox-model/src/messages.rs:66) and validate checks fixtures.
+      connector_record (crates/toolbox-cli/src/model.rs:204-234) lists
+      declared records that no map rule names as `<connector>/<record>`, over
+      the resolved manifest, and now counts a rule only if its `set` or a
+      relation reads `record`, so the empty-set mapping the last review found
+      no longer counts. That is what "records mapped" means.
   - criterion: hard-to-game
-    verdict: fail
+    verdict: pass
     reason: >-
-      Cheapest attempt: a map rule on an existing kind that maps nothing. On a
-      scratch copy of examples/repo-portal-starter I declared `skill` and
-      added `- {from: workspace/skill, id: "'repository:' + record.dir", set:
-      "{}"}` under Repository. `toolbox validate` reported 0 errors, and
-      `describe portal` gave `"unmapped":[]`. No new kind is created, so
-      meta-kind's ratchet doesn't catch it.
-    suggestion: >-
-      Count a record as mapped only when its map rule's `set` reads `record.`
-      at least once, or when a fixture record of that kind populates at least
-      one field (meta-field's populated-in-fixtures, per record).
+      The cheapest pass is a map rule whose `set` copies one field, e.g.
+      `{'path': record.path}`, which is a real, if minimal, mapping. The test
+      is a substring match (model.rs:211-212), so `set: "{'note': 'record'}"`
+      would also pass, but that costs the same as mapping a field and only
+      fools the check on purpose. MapRule has no filter to switch a rule off
+      (crates/toolbox-model/src/manifest.rs:124-131).
   - criterion: fix-leads-to-pass
     verdict: pass
     reason: >-
       The evidence lists the record kinds, and the fix
-      (portal/standards/meta.yaml:476-478) gives the exact `map: - from:
-      <connector>/<record>` shape and the alternative.
+      (portal/standards/meta.yaml:606-612) gives the exact `map: - from:
+      <connector>/<record>` shape and the alternative of not declaring it.
   - criterion: threshold-justified
     verdict: pass
     reason: >-
-      Bronze is stated in docs/design/scorecards-for-scorecards.md:202. There
-      is no number.
+      No number. Bronze is stated in
+      docs/design/scorecards-for-scorecards.md:205 (meta-connector:
+      records-mapped and has-fixtures at bronze).
 summary: >-
-  A sound structural check that an empty `set` satisfies.
+  The empty-set loophole is closed; what remains takes deliberate
+  deception at the cost of a real mapping.
