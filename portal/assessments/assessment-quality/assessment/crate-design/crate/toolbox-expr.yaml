@@ -1,42 +1,66 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: assessment:crate-design/crate:toolbox-expr
 rubric: assessment-quality
-subjectHash: 77d1bcf778ea
-assessor: {kind: agent, name: cursor-grok, model: grok-4.7}
-at: 2026-11-20
+subjectHash: 5c618d3e815c
+assessor: {kind: agent, name: cursor-review-agent, model: claude-opus-5.5}
+at: 2026-11-23
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      crates/toolbox-expr/src/lib.rs documents only the M0 static checks,
-      docs/v1-spec.md §4 says compile and evaluate, eval.rs returns
-      cel::Value, and toolbox-derive/Cargo.toml lists cel.workspace = true.
-      Those are the sources the three fail reasons cite.
+      Every source portal/assessments/crate-design/crate/toolbox-expr.yaml
+      cites says what its reason claims. crates/toolbox-expr/src/lib.rs:1-16
+      lists the four parts. docs/v1-spec.md:89 is the crate's row.
+      crates/toolbox-derive/src/lib.rs:756 maps an error to "unknown". The
+      callers import at the cited lines, and crates/toolbox-expr/Cargo.toml:11
+      is the only `cel` dependency. The 27 public items match the workspace
+      connector's count
+      (crates/toolbox-connector-workspace/src/rust.rs:296-302, 344), and the
+      crate's test binary runs 10 tests, all passing. One omission changes
+      nothing: toolbox-cli also calls analysis::analyse
+      (crates/toolbox-cli/src/model.rs:28, 160).
   - criterion: complete
     verdict: pass
     reason: >-
-      The four criteria match the sources in crates/toolbox-expr/src/lib.rs,
-      eval.rs and toolbox-derive/Cargo.toml. one-responsibility fails because
-      the crate docs are stale, which is the miss in the previous assessment
-      that passed it.
+      Each criterion holds against the rubric
+      (portal/standards/crates.yaml:331-357). No public signature names a cel
+      type: Scope wraps Context privately
+      (crates/toolbox-expr/src/eval.rs:107), and ExprValue and Lazy hold cel
+      values in pub(crate) fields (eval.rs:13, 111). So replaceable-defaults
+      passes as its guidance defines it. The sources show one behavioural tie,
+      rules relying on cel-rust comparing int with double (eval.rs:330-331).
+      It falls outside that guidance, and the assessment names it under
+      tests-match-risk.
   - criterion: reproducible
     verdict: unsure
     reason: >-
-      This session wrote the assessment and this review, so a further
-      assessor's verdicts are unknown. tests-match-risk in particular rests on
-      judging 8 unit tests short of Q10.
+      Three verdicts follow from what the sources state. tests-match-risk
+      passes while admitting that check()'s undeclared-function branch
+      (crates/toolbox-expr/src/lib.rs:112-123) is tested only through
+      analysis. The rubric's guidance says "unsure when coverage is only
+      indirect" (portal/standards/crates.yaml:353-357), and no test in
+      toolbox-model or toolbox-cli covers the branch directly. Calling the
+      remaining gaps "small" is a judgement a second assessor could make the
+      other way.
     suggestion: >-
-      Have a different agent or person review the assessment and replace this
-      file.
+      In portal/assessments/crate-design/crate/toolbox-expr.yaml, do one of
+      two things. Either say in the tests-match-risk reason why the indirect
+      coverage doesn't trigger the guidance: check() only filters with
+      declared(), which crates/toolbox-expr/src/analysis.rs:168-186 tests
+      directly. Or mark the criterion unsure until the check() test named in
+      its own suggestion lands (`entity.xs.join(',')` expecting
+      UndeclaredFunctions).
   - criterion: actionable
     verdict: pass
     reason: >-
-      Updating the crate docs in lib.rs would pass one-responsibility. Keeping
-      serde_json::Value at the eval.rs boundary, and dropping cel from
-      toolbox-derive/Cargo.toml, would pass small-contract and
-      replaceable-defaults. A CEL conformance run (Q10) would settle
-      tests-match-risk.
+      The one suggestion in
+      portal/assessments/crate-design/crate/toolbox-expr.yaml gives a concrete
+      input for each gap it lists. `'a'` and `-1` reach the lazy index
+      branches (crates/toolbox-expr/src/lazy.rs:80-90). `{1: 'x'}` reaches the
+      non-string key arms (eval.rs:93-95). The join case reaches
+      lib.rs:120-122. A Q10 conformance slice (docs/questions.md:18) covers
+      the rest. Following it removes the gaps that qualify the pass.
 summary: >-
-  The citations hold, and the stale-docs miss in the previous assessment
-  is now a fail. This review is not independent of the assessment it
-  reviews.
+  The citations hold, and the replaceable-defaults pass is earned. The one
+  soft spot is tests-match-risk: it passes with a branch it admits is
+  covered only indirectly, which the rubric's guidance would call unsure.

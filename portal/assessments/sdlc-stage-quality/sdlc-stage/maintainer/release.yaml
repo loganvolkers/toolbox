@@ -1,46 +1,72 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: sdlc-stage:maintainer/release
 rubric: sdlc-stage-quality
-subjectHash: 53c5fb5072e9
-assessor: {kind: agent, name: cursor-grok, model: grok-4.7}
-at: 2026-11-20
+subjectHash: fb47594ddd3f
+assessor: {kind: agent, name: cursor-cloud-agent, model: claude-opus-5.5}
+at: 2026-11-23
 verdicts:
   - criterion: executable-exit
     verdict: fail
     reason: >-
-      .github/workflows/release.yml and image.yml, generated from
-      dist-workspace.toml (github-attestations = true), fail a tag whose
-      binaries, shell installer or image do not build. Nothing in those checks
-      fails when consumers still compile: actions/report/action.yml runs cargo
-      build unless toolbox-version is set, which the stage lists as a gap.
+      .github/workflows/release.yml fails a tag whose archives, installers or
+      attestations don't build (attest step at release.yml:170), and its plan
+      job runs `dist plan` on every pull request (release.yml:44-48). But the
+      image half of the exit criterion is checked by nothing that runs:
+      image.yml triggers on `release: published`
+      (.github/workflows/image.yml:5-6), and the release is created with
+      GITHUB_TOKEN (release.yml:249, :307), whose events start no workflow
+      (https://docs.github.com/en/actions/security-for-github-actions/security-guides/automatic-token-authentication).
+      image.yml has no runs for v0.1.0 or v0.1.1
+      (https://github.com/loganvolkers/toolbox/actions/workflows/image.yml),
+      yet both release runs passed. Nothing checks that consumers pin either:
+      ci.yml calls ./actions/report without toolbox-version
+      (.github/workflows/ci.yml:189).
     suggestion: >-
-      Add a CI check that fails while actions/report's default path is still
-      cargo build, or require toolbox-version on the pilot job.
+      Add `workflow_call` to image.yml and run it from the release with dist's
+      `post-announce-jobs = ["./image"]` in dist-workspace.toml, so a tag that
+      produces no image fails its release run; and add a CI job that runs
+      actions/report with toolbox-version set to the latest release.
   - criterion: agent-can-complete
     verdict: fail
     reason: >-
-      docs/design/maintainer-sdlc.md "Releasing (D90)" lists dist plan and git
-      tag && git push, which matches the stage commands. The stage gaps (no
-      release cut, no Homebrew, npm, cargo-binstall or aqua) have no command,
-      and pushing the tag needs a maintainer credential.
+      The documented steps are commands an agent with push access can run: set
+      the version, `dist plan`, tag and push
+      (docs/design/maintainer-sdlc.md:115-117, docs/RELEASING.md:47-57), using
+      only GITHUB_TOKEN (release.yml:62). But step 4 says image.yml "then
+      builds" the image (maintainer-sdlc.md:125-126, RELEASING.md:61), which
+      it never does (see executable-exit). Finishing the stage needs knowing
+      to dispatch it by hand for the tag (image.yml:7-11), which no doc says,
+      and the stage lists no such gap
+      (portal/sdlc/stages/maintainer.yaml:78-88).
     suggestion: >-
-      Document the remaining installer steps as commands, and name the
-      credential the tag push uses.
+      Wire image.yml into the release run (see executable-exit); until then,
+      add `gh workflow run image.yml -f tag=v<version>` as a step in
+      docs/design/maintainer-sdlc.md and docs/RELEASING.md and to the stage's
+      commands and gaps in portal/sdlc/stages/maintainer.yaml.
   - criterion: reuses-artifacts
-    verdict: fail
+    verdict: pass
     reason: >-
-      No release has been cut (the stage says so), and
-      actions/report/action.yml still runs cargo build --locked when
-      toolbox-version is empty, so consumers compile Toolbox.
-    suggestion: >-
-      Cut the first tag and set toolbox-version on actions/report so the
-      default path downloads the attested binaries.
+      Releases v0.1.0 and v0.1.1 are published with per-platform archives,
+      checksums and installers
+      (https://github.com/loganvolkers/toolbox/releases/tag/v0.1.1). The image
+      is built from the release's checksum-verified Linux archives, not from
+      source (.github/workflows/image.yml:31-48). Consumers are told to pin a
+      version and download it (actions/report/README.md:35,
+      docs/RELEASING.md:90-91), which action.yml does through install.sh
+      (actions/report/action.yml:84-90). The from-source fallback when
+      toolbox-version is empty (action.yml:51-56) remains, and the stage lists
+      it as a gap.
   - criterion: decoupled-from-core
     verdict: pass
     reason: >-
-      Releasing this repository is the maintainer stage in
-      docs/design/maintainer-sdlc.md. It does not require adding a crate, a
-      builtin or a schema change.
+      Cutting a release is a version bump and a tag
+      (docs/design/maintainer-sdlc.md:111-128); it adds no crate, builtin or
+      schema. The pipeline is driven by dist-workspace.toml and resolves its
+      own repository (image.yml:50, actions/report/action.yml:88), so a fork
+      can release the same way.
 summary: >-
-  The release workflows exist and would attest a tag, but nothing is
-  published yet and the default consumer still builds from source.
+  Binaries, installers and attestations are released and pinned by the
+  documented consumer path, but the image the exit criterion promises is
+  never built: image.yml listens for a release event GITHUB_TOKEN can't
+  raise, nothing fails when it doesn't run, and no doc says to dispatch
+  it.

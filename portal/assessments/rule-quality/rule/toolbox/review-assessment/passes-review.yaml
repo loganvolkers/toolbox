@@ -1,57 +1,53 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/review-assessment/passes-review
 rubric: rule-quality
-subjectHash: 7a94e79ab59d
-assessor: {kind: agent, name: campaign-review-rules}
+subjectHash: 9b9e5cd0b480
+assessor: {kind: agent, name: cursor-cloud-agent, model: claude-opus-5.5}
 at: 2026-11-23
 verdicts:
   - criterion: measures-intent
     verdict: pass
     reason: >-
-      The check reads a current review with no failing criterion and no
-      uncited reason (portal/standards/assessments.yaml:190-197, with
-      reviewUncited at :72-79). Self-review is held back by silver `assessed`
-      (`!entity.selfReviewed`, assessments.yaml:179-189), and doubts by
-      `no-doubts`, so the card's gold means what docs/design/thresholds.md §3
-      says.
+      The check needs a current review with no failing criterion, no uncited
+      reason, and grounding in the assessment it reviews
+      (portal/standards/assessments.yaml:221-231, with reviewUncited and
+      reviewGrounded at :88-104). Self-review is held back by silver
+      `assessed` (assessments.yaml:210-217) and doubts by `no-doubts`, so the
+      card's gold matches the ladder in docs/design/thresholds.md:55.
   - criterion: hard-to-game
     verdict: fail
     reason: >-
-      Cheapest attempt: the assessment's own author writes the review under a
-      different `assessor.name`, with every verdict `pass` and a reason such
-      as "Fine; see README.md." selfReviewed compares only the self-declared
-      names (assessments.yaml:81-87), and any existing file name resolves in
-      cites() (crates/toolbox-connect/src/assessment.rs:41-47), so the review
-      is cited and the rule passes. thresholds.md §3 accepts the rename as "a
-      false statement in a committed file", but writing a fake review is still
-      far cheaper than getting a real one.
+      The "cite any file" route is closed by reviewGrounded, but grounding
+      also accepts the subject's own file
+      (crates/toolbox-connect/src/assessment.rs:253-270), and that path is
+      repo-relative (crates/toolbox-connector-workspace/src/main.rs:703). So a
+      rubber stamp by a second assessor, every verdict `pass` with the reason
+      "Looks right; see portal/assessments/<the file>.yaml", is cited and
+      grounded and passes gold without opening anything the assessment rests
+      on. The renamed self-review remains an accepted, documented limit
+      (docs/design/thresholds.md:62-70).
     suggestion: >-
-      Have the workspace connector record the git author of each assessment
-      file (`git log -1 --format=%ae`), and treat a review whose author
-      matches the assessment's as self-review; tighten cites() as suggested
-      for cites-for-findings.
+      In link_reviews (crates/toolbox-connect/src/assessment.rs:262-270),
+      ground a review in its subject's own file only for fail or unsure
+      verdicts; for passes, require each reason to cite at least one source
+      the subject itself cites, and add a fixture review that cites only the
+      subject's file and stays below gold.
   - criterion: fix-leads-to-pass
-    verdict: fail
+    verdict: pass
     reason: >-
-      The evidence has two kinds of entry: failing criteria, and "<criterion>
-      cites nothing that resolves" (assessments.yaml:193-197). The second is a
-      defect in the review's reasons, not in the assessment, yet the fix says
-      "Revise the assessment where the review found it unsupported"
-      (assessments.yaml:199-201). An agent following it edits the wrong file.
-      The edit only helps by accident, because it makes the review stale.
-    suggestion: >-
-      Add to the fix: "If the evidence says a criterion cites nothing, the
-      review is at fault: have it redone with reasons that cite a file,
-      decision or URL."
+      The earlier finding is fixed: the fix now separates criteria the review
+      failed (revise the assessment) from items marked "fix the review" (the
+      review's reasons must cite what they rest on, including this
+      assessment's file or its sources), matching the evidence's labels
+      (portal/standards/assessments.yaml:226-237).
   - criterion: threshold-justified
     verdict: pass
     reason: >-
       Gold is stated in D01M831P5QWJQ4A2FT85N5MXJQF and in the ladder in
-      docs/design/thresholds.md §3 ("a current review that passes, cites what
-      resolves"). It now asks for something the lower levels don't
-      (reviewUncited empty), so the earlier "implied by bronze and silver"
-      fail is fixed.
+      docs/design/thresholds.md:55 ("a current review that passes, cites what
+      resolves", and for an assessment `groundedIn`). It asks for more than
+      bronze and silver do.
 summary: >-
-  Gold now adds something, but a renamed self-review citing any existing
-  file still passes, and the fix sends an agent to the wrong file when the
-  review is the one that is uncited.
+  The fix now points at the right file and grounding closes the "cite any
+  file" route, but citing only the reviewed assessment's own path still
+  grounds an all-pass rubber stamp.

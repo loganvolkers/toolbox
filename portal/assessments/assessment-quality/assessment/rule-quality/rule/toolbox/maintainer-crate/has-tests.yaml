@@ -1,40 +1,77 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: assessment:rule-quality/rule:toolbox/maintainer-crate/has-tests
 rubric: assessment-quality
-subjectHash: 008ba05c42f2
-assessor: {kind: agent, name: cursor-grok, model: grok-4.7}
-at: 2026-11-20
+subjectHash: a20dae8d894c
+assessor: {kind: agent, name: cursor-review-agent, model: claude-opus-5.5}
+at: 2026-11-23
 verdicts:
   - criterion: supported
-    verdict: pass
-    reason: >-
-      portal/toolbox.yaml checks `entity.unitTests + entity.integrationTests >
-      0`, so one #[test] of any kind passes, which is what the measures-intent
-      and hard-to-game reasons claim.
-  - criterion: complete
-    verdict: pass
-    reason: >-
-      A second reading of the same rule reaches the same four verdicts. The
-      fix text in portal/toolbox.yaml makes the check pass, and a floor of one
-      test needs no sourced number (bronze in
-      docs/design/toolbox-for-toolbox.md).
-  - criterion: reproducible
-    verdict: pass
-    reason: >-
-      Assessor claude-code's four verdicts in
-      portal/assessments/rule-quality/rule/toolbox/maintainer-crate/has-tests.yaml
-      match this reading: fail measures-intent and hard-to-game, pass
-      fix-leads-to-pass and threshold-justified. The subject hash is
-      unchanged.
-  - criterion: actionable
     verdict: fail
     reason: >-
-      Both suggestions add a companion rule on testCodeLines. The check in
-      portal/toolbox.yaml would still pass on one empty #[test], so the two
-      fail verdicts would not change.
+      portal/assessments/rule-quality/rule/toolbox/maintainer-crate/has-tests.yaml
+      describes the Asserts visitor as it was before commit 781adf9, not the
+      code it now cites. crates/toolbox-connector-workspace/src/rust.rs now
+      counts calls to asserting helpers in the same file (rust.rs:236-246,
+      255-290) and `?` (rust.rs:249-253). It treats `assert!(true)` and
+      `assert_eq!(x, x)` as trivial (rust.rs:183-211), and its own test pins
+      those cases (rust.rs:506-531). docs/design/thresholds.md:36 says the
+      same. The line references have drifted too: rust.rs:119-126 is now
+      public(), and portal/standards/crates.yaml:140-151 is the scorecard
+      header and crate-docs. has-tests is at 158-169 and tests-scale-with-code
+      at 170-179.
     suggestion: >-
-      Change the has-tests fix in portal/toolbox.yaml to "has at least one
-      test", and move "the crate's main behaviour" onto the new silver rule.
+      Re-brief and re-assess the rule against the current rust.rs. Drop the
+      claims that helper asserts and `?` don't count and that `assert!(true)`
+      passes. Re-point the citations to rust.rs:170-290 and
+      crates.yaml:158-179.
+  - criterion: complete
+    verdict: fail
+    reason: >-
+      measures-intent fails on false negatives that the cited code no longer
+      has. What remains is narrower. Helpers are collected per file
+      (crates/toolbox-connector-workspace/src/rust.rs:433, 453), so an assert
+      helper in another module or in tests/common doesn't count, and
+      `prop_assert!` and `ensure!` aren't matched (rust.rs:217). Conversely,
+      any non-test function in the file that unwraps counts as a helper
+      (rust.rs:257-270). Whether that is still a fail needs a fresh judgement.
+      hard-to-game's fail stands, but its first example is wrong.
+      `assert!(true)` is now rejected (rust.rs:205), while
+      `"1".parse::<i32>().unwrap()` and `assert!(1 == 1)` still count
+      (rust.rs:226-232). The connector's own `fallible` test passes on a parse
+      with `?` (rust.rs:508).
+    suggestion: >-
+      In the re-assessment, judge measures-intent on the cases that remain:
+      helpers in other files, prop_assert!/ensure!, and production unwraps
+      counted as helpers. Make the hard-to-game reason use a route that still
+      works, e.g. `#[test] fn t() { "1".parse::<i32>().unwrap(); }`.
+  - criterion: reproducible
+    verdict: unsure
+    reason: >-
+      fix-leads-to-pass and threshold-justified follow from
+      portal/standards/crates.yaml:158-169 and docs/design/thresholds.md:36.
+      hard-to-game would fail again on the routes still open. measures-intent
+      would not reproduce. A second assessor reading today's
+      crates/toolbox-connector-workspace/src/rust.rs finds the helper and `?`
+      cases that its reason rests on already handled, and the rule's brief
+      reports all 15 live crates passing. So that verdict could go either way.
+    suggestion: >-
+      As for complete: re-assess measures-intent against the current rust.rs
+      and cite the case that decides it, so the verdict rests on code that
+      exists.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The suggestions in
+      portal/assessments/rule-quality/rule/toolbox/maintainer-crate/has-tests.yaml
+      have already moved the rule. Resolving same-file helpers and counting
+      `?` (measures-intent), and flagging constant asserts (hard-to-game), are
+      now in crates/toolbox-connector-workspace/src/rust.rs:183-290. The parts
+      still open would close the remaining routes named above: counting
+      `ensure!` and `prop_assert*`, and requiring an assert to touch a crate
+      item.
 summary: >-
-  The same verdicts as claude-code, reached independently. The suggestions
-  still fix a different rule than the one that failed.
+  The verdicts may still be roughly right, but the reasons judge code that
+  commit 781adf9 replaced: helper asserts and `?` now count, and
+  `assert!(true)` no longer passes. The rule's hash didn't change, because
+  the connector isn't part of it. So the assessment reads as fresh while
+  it describes old code. Re-assess it against today's rust.rs.

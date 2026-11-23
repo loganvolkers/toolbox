@@ -1,56 +1,73 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/maintainer-ci-reliability/fail-rate-under-20
 rubric: rule-quality
-subjectHash: 5e1d6383aba3
-assessor: {kind: agent, name: campaign-review-rules}
+subjectHash: 8c8919c8ba7e
+assessor: {kind: agent, name: cursor-cloud-agent, model: claude-opus-5.5}
 at: 2026-11-23
 verdicts:
   - criterion: measures-intent
     verdict: pass
     reason: >-
-      The check reads the share of decided runs on the configured branch that
-      failed (crates/toolbox-connector-github/src/runs.rs:43-82: failure,
-      timed_out and startup_failure over success plus those), which is what
-      "main rarely fails" means. Cancelled runs are left out of the rate but
-      now counted beside it (runs.rs:70-73), and an empty history yields null,
-      so the rule is unknown rather than passing.
+      The check now reads firstTryFailRate
+      (packages/github-actions/fragments/github-actions.yaml:270-273), which
+      counts a run that passed only on a later attempt as failed
+      (crates/toolbox-connector-github/src/runs.rs:59-65 and :82), so it is
+      the share of runs on the branch that went red, not the share left red
+      after re-runs. Cancelled runs are left out but shown beside it
+      (runs.rs:78-80), and an empty history is null, so the rule is unknown
+      rather than passing. One edge remains: a successful run re-run for
+      another reason also counts as a failure, which errs toward red.
   - criterion: hard-to-game
     verdict: fail
     reason: >-
-      Cheapest attempt: append `|| true` to the failing step's `run:` (or add
-      `if: github.ref != 'refs/heads/main'` to the flaky job). Runs on main
-      then succeed, so failRate drops, and failures-visible
-      (github-actions.yaml:268-275) doesn't notice, because hidden_failures
-      (crates/toolbox-connector-workspace/src/workflows.rs:104-124) only looks
-      for continue-on-error. That is far cheaper than fixing the failing
-      tests.
+      The routes the last review named are closed: `|| true`, `|| :`, `|| exit
+      0` and `set +e`, and an `if:` that tests `github.ref !=
+      'refs/heads/main'`, are now hidden failures
+      (crates/toolbox-connector-workspace/src/workflows.rs:106-128). But the
+      detector is a list of literal strings, so their siblings still pass:
+      `cargo test || echo flaky` swallows the exit status and isn't in the
+      list (workflows.rs:109), and `if: github.event_name == 'pull_request'`
+      on the flaky job skips it on every push to main without matching
+      skipped_on_default (workflows.rs:116-128). Either is cheaper than fixing
+      the test, and the fix text tells the reader failures-visible catches
+      skips on the default branch.
     suggestion: >-
-      Widen hidden_failures to flag `|| true`, `|| exit 0`, `set +e` and job-
-      or step-level `if:` conditions that exclude the default branch, so
-      failures-visible covers the cheap routes as well as continue-on-error.
+      In masks_exit, treat any `||` whose right-hand side is not `exit
+      <non-zero>` or `false` as swallowing the status. In skipped_on_default,
+      evaluate the `if:` with github.ref = refs/heads/<default>, ref_name =
+      <default> and event_name = push (unknown names left true), and flag it
+      when the result is false. Add fixtures for both to
+      crates/toolbox-connector-workspace/src/workflows.rs tests.
   - criterion: fix-leads-to-pass
     verdict: fail
     reason: >-
-      The fix says to find the failing jobs with `toolbox get
-      workflow:<path>`, but that record carries only aggregates (failRate,
-      decided, cancelled, lastConclusion: runs.rs:66-81, set by
-      crates/toolbox-connector-github/src/main.rs:226-257), with no job names
-      or run URLs. It also doesn't say that the rate is over the last N runs,
-      so after a real fix the rule stays red until enough green runs replace
-      the red ones.
+      The fix says to open the failed runs in the evidence, but the evidence
+      lists only runs whose final conclusion failed
+      (crates/toolbox-connector-github/src/runs.rs:83-89), while the rate also
+      counts runs that passed on a re-run. The portal's own fixture shows the
+      gap: demo/slow.yml has firstTryFailRate 40 and failedRuns []
+      (portal/fixtures/github-actions.ndjson:2), so it fails the rule
+      (portal/tests/standards.test.yaml:182-186) and the evidence names no run
+      to open. Flaky jobs, which a re-run hides, are exactly the case the rate
+      was changed to catch. The window and the cancelled runs are now
+      explained, which closes the rest of the last review's finding.
     suggestion: >-
-      Point the fix at `gh run list --workflow <file> --branch main --status
-      failure` (or record the failing runs' URLs and job names in runs.rs and
-      show them as evidence), and say the rate is over the last N decided
-      runs.
+      In runs.rs, add the runs that passed on a later attempt to failedRuns
+      (with their first attempt's URL, `<html_url>/attempts/1`), or to a
+      separate `retriedRuns` list the evidence appends, and pin it with a
+      fixture for demo/slow.yml in portal/tests/standards.test.yaml.
   - criterion: threshold-justified
     verdict: pass
     reason: >-
-      docs/design/thresholds.md §2 now states the 20% bronze as "Chosen,
-      anchored to a measurement": `ci` on main failed 32 of its last 100 runs
-      (2026-11-20 to 2026-11-23), so bronze is the next step; each level then
-      halves it. The earlier unsure is resolved.
+      docs/design/thresholds.md:31 states the 20% bronze as chosen, anchored
+      to a measurement (`ci` on main failed 32 of its last 100 runs,
+      2026-11-20 to 2026-11-23), says each level halves it, and explains why
+      the rate counts first attempts and why only silver and gold need 10
+      runs. The number is a package parameter
+      (packages/github-actions/toolbox-package.yaml:20-26).
 summary: >-
-  Measures the right number with a stated rationale, but `|| true` lowers
-  it without a fix, and the place the fix points to doesn't show which
-  jobs fail.
+  Measures the right thing now that re-runs count as failures, with a
+  stated threshold. Two gaps remain: `|| echo` or an event-name `if:`
+  still hides a failure from failures-visible, and runs that passed on a
+  re-run raise the rate without appearing in the evidence the fix points
+  to.

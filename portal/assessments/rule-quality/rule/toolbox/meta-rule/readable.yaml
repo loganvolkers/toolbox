@@ -1,25 +1,26 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/meta-rule/readable
 rubric: rule-quality
-subjectHash: a78ef1565ec9
-assessor: {kind: agent, name: campaign-review-rules}
+subjectHash: b175d260833a
+assessor: {kind: agent, name: cursor-cloud-agent, model: claude-opus-5.5}
 at: 2026-11-23
 verdicts:
   - criterion: measures-intent
     verdict: pass
     reason: >-
       The count comes from the parsed CEL AST
-      (crates/toolbox-cli/src/meta.rs:165-171, via toolbox_expr::analysis), so
+      (crates/toolbox-cli/src/meta.rs:182-188, via toolbox_expr::analysis), so
       formatting and identifier length don't change it, and the number of
-      nodes is a fair stand-in for how much a reader must hold at once.
+      nodes is a fair stand-in for how much a reader must hold at once. The
+      check is at portal/standards/meta.yaml:411-413.
   - criterion: hard-to-game
     verdict: pass
     reason: >-
-      The earlier unsure is resolved: moving logic into a computed field is
-      the intended fix, and such fields are now scored by meta-field's
-      `computed-readable` (at most 60 nodes, no nested loops,
-      portal/standards/meta.yaml:584-592). Splitting a check into two rules or
-      moving logic into the connector are also the right thing.
+      Moving logic into a computed field is the intended fix, and such fields
+      are scored by meta-field's `computed-readable` (at most 60 nodes, no
+      nested loops, portal/standards/meta.yaml:597-606). Splitting a check
+      into two rules or moving logic into the connector is also the right
+      thing.
   - criterion: fix-leads-to-pass
     verdict: pass
     reason: >-
@@ -29,8 +30,12 @@ verdicts:
   - criterion: threshold-justified
     verdict: pass
     reason: >-
-      docs/design/thresholds.md §2 states 30 as measured: over 219 rules on
-      2026-11-23, median 5, 95th percentile 16, maximum 25.
+      docs/design/thresholds.md:41 states 30 as measured (over 219 rules,
+      median 5, 95th percentile 16, maximum 25) and justifies the move from
+      gold to silver: every rule meets it, so it is a guard, not what makes
+      gold.
 summary: >-
-  Both earlier unsures are resolved: computed fields are scored, and the
-  30 is measured.
+  The only change since the last assessment is the level, gold to silver,
+  and docs/design/thresholds.md:41 justifies it. The portal tests pin only
+  its fail outcome (portal/tests/standards.test.yaml:251-256), which
+  meta-rule's pins-both-outcomes reports separately.
