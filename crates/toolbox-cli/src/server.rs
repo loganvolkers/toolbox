@@ -14,6 +14,23 @@ pub fn listen_addr(explicit: Option<&str>, port: Option<&str>) -> String {
     }
     "127.0.0.1:8080".to_owned()
 }
+
+/// Whether `listen` (`host:port`) binds only the loopback interface.
+pub fn is_loopback(listen: &str) -> bool {
+    if let Ok(a) = listen.parse::<std::net::SocketAddr>() {
+        return a.ip().is_loopback();
+    }
+    listen
+        .rsplit_once(':')
+        .is_some_and(|(host, _)| host.eq_ignore_ascii_case("localhost"))
+}
+
+/// The auth mode when `TOOLBOX_AUTH_MODE` is unset: `dev` (the `x-toolbox-user` header is
+/// trusted) only on loopback, where the caller is on the same machine. Anywhere else a spoofable
+/// header would let any client claim any identity, so the default is `token` (PATs only).
+pub fn default_auth_mode(listen: &str) -> &'static str {
+    if is_loopback(listen) { "dev" } else { "token" }
+}
 use std::process::ExitCode;
 use std::sync::Arc;
 use toolbox_authz::authn::{AuthConfig, Authenticator, Mode, PatLookup};
@@ -68,9 +85,19 @@ async fn start_authz(
     Ok(Some(Arc::new(fga)))
 }
 
-fn config_from_env() -> toolbox_api::Config {
-    let mut c = toolbox_api::Config::default();
-    if let Ok(mode) = std::env::var("TOOLBOX_AUTH_MODE") {
+fn config_from_env(listen: &str) -> toolbox_api::Config {
+    let mut c = toolbox_api::Config {
+        auth_mode: default_auth_mode(listen).into(),
+        ..Default::default()
+    };
+    if let Ok(mode) = std::env::var("TOOLBOX_AUTH_MODE").map(|m| m.trim().to_owned())
+        && !mode.is_empty()
+    {
+        if mode == "dev" && !is_loopback(listen) {
+            tracing::warn!(
+                "TOOLBOX_AUTH_MODE=dev on {listen}: every client that can reach this address can claim any identity with x-toolbox-user"
+            );
+        }
         c.auth_mode = mode;
     }
     if let Ok(tokens) = std::env::var("TOOLBOX_CONNECTOR_TOKENS") {
@@ -146,7 +173,7 @@ pub fn serve(path: &Path, listen: &str, database_url: Option<String>, fixtures: 
             }
         };
         let mode = if pg.is_some() { "postgres" } else { "in-memory" };
-        let config = config_from_env();
+        let config = config_from_env(listen);
         let auth_mode = match Mode::parse(&config.auth_mode) {
             Ok(m) => m,
             Err(e) => {
@@ -173,7 +200,7 @@ pub fn serve(path: &Path, listen: &str, database_url: Option<String>, fixtures: 
             );
             None
         } else {
-            eprintln!("error: authorization needs the `openfga` binary (TOOLBOX_OPENFGA_BIN); refusing to start in {} mode without it", config.auth_mode);
+            eprintln!("error: authorization needs the `openfga` binary (TOOLBOX_OPENFGA_BIN); refusing to start in {} mode without it (on {listen}; set TOOLBOX_AUTH_MODE=dev to serve without authorization)", config.auth_mode);
             return ExitCode::from(2);
         };
         let authz_label = if authz.is_some() { "OpenFGA" } else { "none" };
@@ -385,7 +412,27 @@ pub fn create_token(user: &str, label: Option<&str>, database_url: &str) -> Exit
 
 #[cfg(test)]
 mod tests {
-    use super::listen_addr;
+    use super::{default_auth_mode, listen_addr};
+
+    #[test]
+    fn header_auth_is_the_default_only_on_loopback() {
+        for a in [
+            "127.0.0.1:8080",
+            "[::1]:8080",
+            "localhost:8080",
+            "127.0.0.2:1",
+        ] {
+            assert_eq!(default_auth_mode(a), "dev", "{a}");
+        }
+        for a in [
+            "0.0.0.0:8080",
+            "[::]:8080",
+            "10.0.0.5:8080",
+            "example.com:80",
+        ] {
+            assert_eq!(default_auth_mode(a), "token", "{a}");
+        }
+    }
 
     #[test]
     fn port_binds_every_interface_unless_listen_is_set() {

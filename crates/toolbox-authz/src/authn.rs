@@ -6,6 +6,9 @@
 //!    configured issuer.
 //! 3. **Dev mode** only: the `x-toolbox-user` header is trusted.
 //!
+//! **Token mode** accepts only personal access tokens: what a server that binds a non-loopback
+//! address runs when no mode is configured.
+//!
 //! The result is a subject (an email or a login); mapping it to a `user:` entity happens in the
 //! API layer, where the catalog is.
 
@@ -20,6 +23,7 @@ use std::time::{Duration, Instant};
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Mode {
     Dev,
+    Token,
     IapGoogle,
     CloudflareAccess,
     Oidc,
@@ -29,11 +33,12 @@ impl Mode {
     pub fn parse(s: &str) -> Result<Mode, String> {
         match s {
             "dev" => Ok(Mode::Dev),
+            "token" => Ok(Mode::Token),
             "iap-google" => Ok(Mode::IapGoogle),
             "cloudflare-access" => Ok(Mode::CloudflareAccess),
             "oidc" => Ok(Mode::Oidc),
             other => Err(format!(
-                "unknown auth mode {other} (dev, iap-google, cloudflare-access, oidc)"
+                "unknown auth mode {other} (dev, token, iap-google, cloudflare-access, oidc)"
             )),
         }
     }

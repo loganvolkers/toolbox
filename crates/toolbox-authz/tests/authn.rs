@@ -136,3 +136,26 @@ async fn pats_and_dev_headers() {
     assert_eq!(id.method, "dev");
     assert_eq!(a.authenticate(headers(&[])).await, Err(AuthError::Missing));
 }
+
+#[tokio::test]
+async fn token_mode_accepts_pats_and_ignores_the_dev_header() {
+    let a = Authenticator::new(config(Mode::Token), None);
+    let id = a
+        .authenticate(headers(&[("authorization", "Bearer tbx_alice".into())]))
+        .await
+        .unwrap();
+    assert_eq!((id.subject.as_str(), id.method), ("alice", "pat"));
+    assert_eq!(
+        a.authenticate(headers(&[("x-toolbox-user", "mallory".into())]))
+            .await,
+        Err(AuthError::Missing)
+    );
+    assert!(matches!(
+        a.authenticate(headers(&[(
+            "authorization",
+            "Bearer eyJhbGciOi.x.y".into()
+        )]))
+        .await,
+        Err(AuthError::Invalid(_))
+    ));
+}
