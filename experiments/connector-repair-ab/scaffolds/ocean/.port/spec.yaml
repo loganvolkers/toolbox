@@ -1,0 +1,19 @@
+description: Forge (mock Jira Cloud) integration for Port Ocean A/B arm B
+icon: atlassian
+features:
+  - type: exporter
+    section: Project management
+    resources:
+      - kind: project
+      - kind: issue
+      - kind: component
+configurations:
+  - name: baseUrl
+    required: true
+    type: url
+    description: Forge base URL (tenant A default http://127.0.0.1:9743)
+  - name: token
+    required: true
+    type: string
+    sensitive: true
+    description: Bearer token (tenant A default tenant-a-token)

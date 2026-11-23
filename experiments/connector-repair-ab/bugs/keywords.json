@@ -1,0 +1,28 @@
+{
+  "BUG-ID": [
+    "component id",
+    "catalog id",
+    "project:name",
+    "ALPHA:api",
+    "name-only",
+    "bare name",
+    "missing project",
+    "wrong id",
+    "{project}:{name}",
+    "without project"
+  ],
+  "BUG-EXTRA": [
+    "description",
+    "extra field",
+    "additional field",
+    "unexpected field",
+    "surplus field"
+  ],
+  "BUG-ASSIGNEE": [
+    "assignee",
+    "accountId",
+    "always null",
+    "missing assignee",
+    "assignee null"
+  ]
+}
