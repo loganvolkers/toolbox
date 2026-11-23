@@ -25,14 +25,16 @@ Work in this order. Do not invent a second protocol.
    cargo build
    toolbox connector test --name <name> --portal portal -- target/debug/<bin>
    ```
-5. **Dump records without hand-built stdio JSON**:
+5. **Dump a catalog without hand-built stdio JSON or a map script**:
    ```
-   toolbox connector drive --kinds project,issue \
+   toolbox connector drive --kinds project,issue --format catalog \
+     --out OUT/entities.ndjson \
      --config '{"baseUrl":"http://127.0.0.1:9743","token":"…"}' \
      -- target/debug/<bin>
    ```
-   Each line is `{"kind","externalId","data"}`. Map those into whatever catalog
-   shape you need (for example `OUT/entities.ndjson`).
+   `--format catalog` writes sorted `{"kind","id","data"}` lines (`id` =
+   `externalId` with a leading `{kind}:` stripped). Use default `--format
+   records` only when debugging the protocol itself.
 6. **Tenant / config switches:** for a dump-only resync, pass `--config` to
    `toolbox connector drive` and leave the portal alone. Update
    `portal/toolbox.yaml` connector `config:` only when you also run
@@ -40,7 +42,8 @@ Work in this order. Do not invent a second protocol.
 
 ```
 toolbox connector test --name forge --portal portal -- target/debug/forge-connector
-toolbox connector drive --kinds project,issue --config '{"baseUrl":"http://127.0.0.1:9743","token":"t"}' -- target/debug/forge-connector
+toolbox connector drive --kinds project,issue --format catalog --out OUT/entities.ndjson \
+  --config '{"baseUrl":"http://127.0.0.1:9743","token":"t"}' -- target/debug/forge-connector
 ```
 
 Do not skip `version()`. Do not drive stdin with a home-grown command JSON when
