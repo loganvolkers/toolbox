@@ -102,6 +102,9 @@ In characters, the measure's unit, they are 1,800 and 3,688. The 96 characters o
 reviewdog's failure line, not zizmor's summary. §4 estimates a wrapper of about 400 characters a
 call: it is 313. No label changes.
 
+**After both rounds,** `cargo fmt` rewrapped three long lines of `workflows.rs`, two of them in its
+tests. It changed whitespace only, so both rounds ran the code that `8a76f24` committed.
+
 **Measured against round 1.** Round 1's labels stand, and the rounds are not pooled. Round 2's arm
 A was tighter than round 1's: no run grepped to check the hints, as toolbox-2 did in round 1.
 With the same replay, round 1 would have shown the same win on read by a narrower margin (§0.1).

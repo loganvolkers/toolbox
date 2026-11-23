@@ -313,7 +313,11 @@ struct Usage {
 /// ref's tag (`v5` → `v5.0.5`), then one on the same path, then one with a comment.
 fn pin_for(reference: &str, pinned: &BTreeSet<(String, String, Option<String>)>) -> Option<String> {
     let (path, tag) = reference.rsplit_once('@')?;
-    let within = |c: &str| c == tag || c.strip_prefix(tag).is_some_and(|rest| rest.starts_with('.'));
+    let within = |c: &str| {
+        c == tag
+            || c.strip_prefix(tag)
+                .is_some_and(|rest| rest.starts_with('.'))
+    };
     let (_, sha, comment) = pinned.iter().max_by_key(|(p, _, c)| {
         (
             c.as_deref().is_some_and(within),
@@ -482,7 +486,9 @@ mod tests {
         );
         assert_eq!(
             refs[0].1["pinHints"],
-            json!([format!("actions/checkout@v6, pinned elsewhere as actions/checkout@{sha} # v6.0.2")])
+            json!([format!(
+                "actions/checkout@v6, pinned elsewhere as actions/checkout@{sha} # v6.0.2"
+            )])
         );
     }
 
@@ -497,7 +503,9 @@ mod tests {
         assert_eq!(
             refs[0].1["pinHints"],
             json!([
-                format!("actions/cache/save@v4, pinned elsewhere as actions/cache/save@{v4} # v4.2.0"),
+                format!(
+                    "actions/cache/save@v4, pinned elsewhere as actions/cache/save@{v4} # v4.2.0"
+                ),
                 format!("actions/cache@main, pinned elsewhere as actions/cache@{v4} # v4.2.0"),
                 format!("actions/cache@v5, pinned elsewhere as actions/cache@{sha} # v5.0.5"),
             ])
