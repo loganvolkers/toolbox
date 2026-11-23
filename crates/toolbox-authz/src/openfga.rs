@@ -386,6 +386,12 @@ CREATE OR REPLACE VIEW {schema}.tuple AS
          md5(object || '|' || relation || '|' || subject) AS ulid,
          now() AS inserted_at
   FROM toolbox.derived_tuples;
+-- OpenFGA filters on the view's computed columns; these let Postgres use an index for them
+-- instead of scanning every tuple on every read of a check.
+CREATE INDEX IF NOT EXISTS derived_tuples_by_object ON toolbox.derived_tuples
+  (split_part(object, ':', 1), substr(object, strpos(object, ':') + 1), relation);
+CREATE INDEX IF NOT EXISTS derived_tuples_by_user ON toolbox.derived_tuples
+  (split_part(object, ':', 1), relation, subject);
 "#
     );
     // store was validated as ASCII alphanumeric above; AssertSqlSafe is sqlx 0.9's audited bypass.
