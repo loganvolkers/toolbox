@@ -3,12 +3,49 @@
 **About:** a tool ([toolbox-and-tools.md](../../docs/design/toolbox-and-tools.md)). Graphify is a
 candidate for the box; this benchmark decides whether Toolbox for Toolbox carries it.
 
-**Status:** pre-registered. §0 is filled in after the run; nothing above §0's results changes after
-the first launch.
+**Status:** complete (round 1). §0 was filled in after the run; nothing else changed after the first
+launch.
 
 ## 0. Results
 
-Not run yet.
+**Toolbox for Toolbox does not adopt Graphify.** Round 1 (20 runs, 2026-11-23) showed neither
+"helps" nor "hurts" on either repository: K1 to K6 are inconclusive and K7 holds, which is the
+designer's prediction on every point. Two fresh agents graded the answers blind, one per repository,
+and one of them applied §5 ([ADJUDICATION.md](ADJUDICATION.md)). No run was void and no run was
+rerun.
+
+| Id | Measure | Arm A median (range) | Arm B median (range) | *W* | Verdict |
+|---|---|---|---|---|---|
+| K1 | OpenFGA coverage | 0.955 (0.955–0.955) | 0.955 (0.955–0.955) | 0 | Inconclusive |
+| K2 | OpenFGA read, chars | 319,746 (261,220–411,348) | 465,815 (230,665–804,822) | 574,157 | Inconclusive |
+| K3 | OpenFGA calls | 62 (52–73) | 44 (40–79) | 39 | Inconclusive |
+| K4 | Toolbox coverage | 1.000 (1.000–1.000) | 1.000 (1.000–1.000) | 0 | Inconclusive |
+| K5 | Toolbox read, chars | 343,316 (327,662–400,058) | 244,970 (199,070–321,355) | 122,285 | Inconclusive |
+| K6 | Toolbox calls | 73 (70–75) | 55 (42–69) | 27 | Inconclusive |
+| K7 | B runs calling `graphify` | | 10 of 10 (3 to 8 calls each) | | Holds |
+
+What the numbers say, beyond the bar:
+
+- **Coverage hit the ceiling.** Every answer on a repository scored the same, in both arms: the ten
+  Toolbox answers found all 21 key facts, and the ten OpenFGA answers found all but O4d, which every
+  run missed. Without a turn cap, the questions didn't separate the arms. The vendor's 11-point gain came
+  under a 14-turn cap.
+- **Arm B made fewer calls in both repositories** (median 18 fewer) and finished sooner (wall-time
+  medians 185 s against 274 s on OpenFGA, 191 s against 201 s on Toolbox; not in the bar). Neither
+  difference clears *W*: on calls, one B run on each repository made as many calls as arm A.
+- **Read went both ways.** B read less on Toolbox and more on OpenFGA. The largest single result in
+  the round, 580,577 characters in openfga-3, was a plain `grep -rn` that matched
+  `graphify-out/graph.json`: the graph sits in the workspace, so unscoped searches read it.
+- **Building the graph costs more than a run saves.** The AST pass takes seconds, but the document
+  layer needed 17 agents for Toolbox (413 calls, 4.27M characters read, the slowest chunk 905 s) and
+  3 for OpenFGA (38 calls, 0.62M characters), measured from their transcripts
+  ([results/build-semantic.tsv](results/build-semantic.tsv)). Taking arm B's median saving on Toolbox
+  at face value (98k characters a session), one document build costs as much as about 43 sessions
+  save, and 141 of the last 200 commits before `a8f7e03` changed a Markdown file.
+
+Files: [results/r1.tsv](results/r1.tsv) (measures), `results/r1/` (each run's measures, answers and
+the blind grades), [results/r1.key.tsv](results/r1.key.tsv) (blind labels), [gold/](gold/) (hashes
+as in §4).
 
 ## 1. Why
 
