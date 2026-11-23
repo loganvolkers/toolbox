@@ -26,6 +26,12 @@ records:
     - G15
     - G16
     - G17
+    - G18
+    - G19
+    - G20
+    - G21
+    - G22
+    - G23
     rival: >-
       reviewdog 0.21.0 with -filter-mode=added over the same zizmor and
       actionlint, failing only on findings the branch added
@@ -47,7 +53,13 @@ records:
       3 and W 1, half from how the agents edited and half from arm A's extra
       exploration. G14 (read) and G15 (gate read) were inconclusive, and arm
       A's read is undercounted by missing read_file results. G12 and G16 held:
-      gate read fell from 3,952 to 2,527 characters (ADJUDICATION.md)
+      gate read fell from 3,952 to 2,527 characters. Round 5, after a third
+      change, asked again. Toolbox doesn't beat reviewdog, and no longer
+      loses: G18 held, and G19 to G23 were inconclusive (calls 3 vs 4, read
+      10,859 vs 13,960, gate read 3,102 vs 5,918, each inside W). Round 4's
+      unchanged Toolbox also tied reviewdog, so the tie is not the change's
+      doing. Every run in every arm printed the workflows before editing,
+      which sets a floor the gate's output can't remove (ADJUDICATION.md)
     changed:
     - D01M841J2SN4V3AVZZ5D91YAR51
     - >-
@@ -61,6 +73,17 @@ records:
       an action is already pinned to
     - >-
       3f1b225 (rival fix, P4): reviewdog's gate prints a line when it passes
+    - D01M84EPMMR9740K4N25G7A6FAY
+    - >-
+      c1f9b22: a failing gate quotes the lines its new findings name;
+      github-actions names each unpinned uses: with its line, and the SHA hint
+      carries the existing pin as written, version comment included
+    - >-
+      eb45c5d (rival fix, P4): reviewdog's gate reads zizmor's plain and
+      actionlint's default formats, which quote the source
+    - >-
+      295b0d3 (measure, every arm): a read_file without a recorded result
+      counts as that file on pr
     servedValue: ''
     blockedOn: ''
     readme: experiments/gate-repair-ab/README.md
@@ -69,14 +92,16 @@ records:
     prompts: experiments/gate-repair-ab/prompts
     runsPerArm: 5
     measure: >-
-      tool calls, characters of tool results, and (rounds 3 and 4) characters
+      tool calls, characters of tool results, and (rounds 3 to 5) characters
       of gate runs' results, from each run's runtime transcript
-      (harness/count.py); the transcript keeps stdout only, and some read_file
-      results are missing from it
+      (harness/count.py); the transcript keeps stdout only, and some results
+      are missing from it; from round 5 a missing read_file result counts as
+      the file
     frozenAt: >-
       round 1 60723d6 (Rust 703b53a), round 2 3762524 (Rust dc42499), round 3
       d53569d (arm A Rust dc42499, arm A⁻ Rust 703b53a), round 4 02f9de5 (arm
-      A 76a1140, arm A⁻ d163449)
+      A 76a1140, arm A⁻ d163449), round 5 0249ecb (arm A c1f9b22, arm A⁻
+      76a1140)
     designer: the agent that wrote the README and runs the rounds
     adjudicator: >-
       a fresh agent that designed no part of it and changed nothing,
@@ -87,8 +112,12 @@ records:
       actions/report passes --out, so only the evidence marking reaches it. No
       rival friction blocked arm B (P4). 76a1140 fits too: no harness file,
       and its summary reaches the actions/report CI log. 3f1b225 is a
-      harness-only fix of round 3's silent reviewdog pass (ADJUDICATION.md)
+      harness-only fix of round 3's silent reviewdog pass. c1f9b22 fits, with
+      one caution: its five-line gap fill is what quotes the planted typo.
+      eb45c5d gives the rival the same quoting, harness-only, and is not shown
+      to make it stronger; 295b0d3 is harness-only and works against arm A
+      (ADJUDICATION.md)
     spread: >-
-      three runs per arm in rounds 1 and 2, five in rounds 3 and 4; every
-      run's measures are in results/r1.tsv to r4.tsv, and minimum, median and
-      range per arm are in README §0 and ADJUDICATION.md
+      three runs per arm in rounds 1 and 2, five in rounds 3 to 5; every run's
+      measures are in results/r1.tsv to r5.tsv, and minimum, median and range
+      per arm are in README §0 and ADJUDICATION.md
