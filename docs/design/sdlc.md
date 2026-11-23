@@ -29,7 +29,7 @@ Related: [plan.md](../plan.md) §2 and §6, [authorization.md](../authorization.
 | **Terraform Cloud** speculative plans | A plan runs **server-side** on every PR; the PR gets a status and a *link* to the run. Fork PRs can't trigger plans by default | The status reflects the plan only, not the later apply |
 | **Atlantis** | Plan output as a PR comment; apply from the PR | Plan output in comments can leak values |
 | **Pulumi** (`pulumi/actions`) | `comment-on-pr` + `edit-pr-comment` (one sticky comment); **Review Stacks**: an ephemeral environment per PR, destroyed on close | Self-managed per-PR stacks leave orphans when cleanup fails |
-| **Tilt** | Fast local inner loop with live reload | — |
+| **Tilt** | Fast local inner loop with live reload | A Kubernetes-shaped loop for many services. The reference local deploy is one container ([local-simulation.md](./local-simulation.md)) |
 
 ## 2. Environments
 
@@ -57,6 +57,11 @@ toolbox plan --local             # full plan sections against fixtures/synthetic
 toolbox plan --remote prod       # remote plan (§4) using *your* identity; details redacted to your permissions
 toolbox preview up               # docker compose: the built image + Postgres + fixtures
 ```
+
+That block is the authoring loop: fixtures in, a recompute, a local API. The deploy loop, which
+runs the image against a GitHub API and a SCIM feed instead of `--fixtures`, is
+[local-simulation.md](./local-simulation.md) (Q19). `toolbox dev` stays the inner loop. Tilt is an
+optional adapter for customers who already use it, not the simulator.
 
 ## 4. Remote plan: Git is the access boundary
 
