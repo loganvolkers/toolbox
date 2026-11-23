@@ -2,6 +2,7 @@
 """Push Acme's directory into the SCIM connector. Users, then groups.
 
 The connector is push-only: this is the identity provider, not a fixture load into Postgres.
+The same users and groups are in scim_seed.sh, which the portal image runs.
 """
 
 import json

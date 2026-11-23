@@ -157,7 +157,7 @@ if [[ "$portal" -eq 1 ]]; then
     "$stage/bin/"
   cp ../toolbox.yaml "$stage/portal/toolbox.yaml"
   cp -a ../authz/. "$stage/portal/authz/"
-  cp Dockerfile entrypoint.sh "$stage/"
+  cp Dockerfile entrypoint.sh scim_seed.sh "$stage/"
   docker build -t toolbox-acme:local "$stage"
   rm -rf "$stage"
   docker compose --env-file "$pass_file" --profile portal up -d portal
@@ -169,7 +169,21 @@ if [[ "$portal" -eq 1 ]]; then
     sleep 2
   done
   curl -sf "http://127.0.0.1:8080/readyz" >/dev/null
-  TOOLBOX_SCIM_TOKEN=scim-token python3 scim_seed.py "http://127.0.0.1:9100/scim/v2"
+  echo "waiting for the directory the image pushes"
+  seeded=0
+  for _ in $(seq 1 40); do
+    code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 2 \
+      -H "Authorization: Bearer scim-token" \
+      "http://127.0.0.1:9100/scim/v2/Groups/g-platform" || true)"
+    if [[ "$code" == "200" ]]; then
+      seeded=1
+      break
+    fi
+    sleep 1
+  done
+  if [[ "$seeded" -ne 1 ]]; then
+    TOOLBOX_SCIM_TOKEN=scim-token ./scim_seed.sh "http://127.0.0.1:9100/scim/v2"
+  fi
 fi
 
 install -d -m 700 /tmp/deploy-ab

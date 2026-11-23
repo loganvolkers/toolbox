@@ -21,7 +21,10 @@ that same database: `serve` adds `sslmode=disable` when the URL has none, and re
 OpenFGA's tuple table with a view of `toolbox.derived_tuples`. `GITHUB_TOKEN` is a bearer
 token for the GitHub API.
 `GITHUB_API_URL` is the API root the connectors call (`/orgs/acme/repos`, contents, and the
-other reads). The SCIM connector listens on port 9100 inside the same container.
+other reads). The SCIM connector listens on port 9100 inside the same container. Once it is
+listening, the image pushes the directory: `bob` in `group:platform`, `alice` and `dave` in
+`group:payments`, and `carol` in no group. That push is
+[deploy/scim_seed.sh](deploy/scim_seed.sh). It is not a fixture load.
 
 `deploy/up.sh --portal` builds the image from the binaries in `target/debug` and starts the
 whole stack, including a local Git server and a GitHub-shaped façade. That script is how this

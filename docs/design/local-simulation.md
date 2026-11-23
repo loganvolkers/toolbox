@@ -331,6 +331,7 @@ is the bar.
 | Repos | `backstage/backstage@feeadd4d4efcbda9f1573b95e356e0f3fc0b5d17`, `openfga/openfga@d67ba7b1d2eaf945cffab3a9129ca1a4c7ad5251` |
 | Bar | **Holds** if the Toolbox arm passes S1–S3 and T1–T4, the Backstage arm passes S1–S3, and Toolbox's token count is lower at that equal shared-probe result. **Fails** if Toolbox misses a shared probe Backstage hits, or if Toolbox passes them with at least as many tokens. **Void** if either arm's only success is `/readyz` |
 | First run | 2026-11-23. deploy-usable does not hold: Toolbox passed S1–S3 and T1–T4, Backstage failed S2, and the agent runtime returned no token counts. create-app 0.9.4 ran; it rejected the Node 22.23.5 pin |
+| Rerun | 2026-11-23. The portal image pushes the directory. Toolbox passed again. Backstage failed S2 again, and there were still no token counts. Defeat is recorded in [RESULTS-v2.md](../../experiments/deploy-ab/RESULTS-v2.md). The bar above is unchanged |
 
 The harness starts Forgejo, the façade, the registry and Postgres before the agent. It does not
 start the portal. The agent is told the façade URL, the org, and the Postgres URL, and must leave a
