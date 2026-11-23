@@ -97,46 +97,78 @@
     },
     "maintainer-benchmark": {
       "benchmark:box-ab": {
-        "level": "gold"
-      },
-      "benchmark:checklist-ab": {
-        "level": "gold"
-      },
-      "benchmark:connector-ab": {
-        "level": "gold"
-      },
-      "benchmark:connector-repair-ab": {
-        "level": "gold"
-      },
-      "benchmark:deploy-ab": {
-        "level": "gold"
-      },
-      "benchmark:out-of-box": {
-        "level": "gold"
-      },
-      "benchmark:ratchet-replay": {
-        "level": "gold"
-      },
-      "benchmark:security-ab": {
-        "level": "gold"
-      },
-      "benchmark:spec-ab": {
         "failing": {
-          "results-recorded": 1
+          "sound-method": 1
         },
         "level": "silver"
       },
+      "benchmark:checklist-ab": {
+        "failing": {
+          "sound-method": 1
+        },
+        "level": "silver"
+      },
+      "benchmark:connector-ab": {
+        "failing": {
+          "sound-method": 1
+        },
+        "level": "silver"
+      },
+      "benchmark:connector-repair-ab": {
+        "failing": {
+          "sound-method": 1
+        },
+        "level": "silver"
+      },
+      "benchmark:deploy-ab": {
+        "failing": {
+          "sound-method": 1
+        },
+        "level": "silver"
+      },
+      "benchmark:out-of-box": {
+        "failing": {
+          "sound-method": 1
+        },
+        "level": "silver"
+      },
+      "benchmark:ratchet-replay": {
+        "failing": {
+          "sound-method": 1
+        },
+        "level": "silver"
+      },
+      "benchmark:security-ab": {
+        "failing": {
+          "sound-method": 1
+        },
+        "level": "silver"
+      },
+      "benchmark:spec-ab": {
+        "failing": {
+          "method-registered": 1,
+          "results-recorded": 1
+        },
+        "level": "bronze"
+      },
       "benchmark:standards-ab": {
-        "level": "gold"
+        "failing": {
+          "sound-method": 1
+        },
+        "level": "silver"
       },
       "benchmark:standards-ab-rerun": {
-        "level": "gold"
+        "failing": {
+          "sound-method": 1
+        },
+        "level": "silver"
       },
       "benchmark:t4t-fresh-agent": {
         "failing": {
           "has-a-rival": 1,
           "open-source-pinned": 1,
-          "pre-registered": 1
+          "pre-registered": 1,
+          "sound-method": 1
         },
         "level": "bronze"
       }
@@ -981,6 +1013,12 @@
       "doc:docs/decisions/D01M83NX8BXH45GQA7WMN4ACEH9.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M83RDWQ5EVKY5SFHDWAD5HFH.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M83RDWR52WVNER0MV5T84NSX.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/README.md": {
         "level": "skipped"
       },
@@ -1458,6 +1496,9 @@
         "level": "gold"
       },
       "example:experiments/deploy-ab/README.md": {
+        "level": "gold"
+      },
+      "example:experiments/deploy-ab/prompts/README.md": {
         "level": "gold"
       },
       "example:experiments/derived-state-scale/README.md": {
@@ -2425,6 +2466,9 @@
       "field:toolbox/Assessment.verdict": {
         "level": "gold"
       },
+      "field:toolbox/Benchmark.adjudicator": {
+        "level": "gold"
+      },
       "field:toolbox/Benchmark.blockedOn": {
         "level": "gold"
       },
@@ -2435,6 +2479,18 @@
         "level": "gold"
       },
       "field:toolbox/Benchmark.declarationGaps": {
+        "level": "gold"
+      },
+      "field:toolbox/Benchmark.designer": {
+        "level": "gold"
+      },
+      "field:toolbox/Benchmark.deterministic": {
+        "level": "gold"
+      },
+      "field:toolbox/Benchmark.fitAudit": {
+        "level": "gold"
+      },
+      "field:toolbox/Benchmark.frozenAt": {
         "level": "gold"
       },
       "field:toolbox/Benchmark.hash": {
@@ -2449,10 +2505,19 @@
       "field:toolbox/Benchmark.layers": {
         "level": "gold"
       },
+      "field:toolbox/Benchmark.measure": {
+        "level": "gold"
+      },
       "field:toolbox/Benchmark.missingPaths": {
         "level": "gold"
       },
       "field:toolbox/Benchmark.outcome": {
+        "level": "gold"
+      },
+      "field:toolbox/Benchmark.prompts": {
+        "level": "gold"
+      },
+      "field:toolbox/Benchmark.protocol": {
         "level": "gold"
       },
       "field:toolbox/Benchmark.question": {
@@ -2465,6 +2530,9 @@
         "level": "gold"
       },
       "field:toolbox/Benchmark.reasonGaps": {
+        "level": "gold"
+      },
+      "field:toolbox/Benchmark.registrationGaps": {
         "level": "gold"
       },
       "field:toolbox/Benchmark.repoGaps": {
@@ -2485,7 +2553,16 @@
       "field:toolbox/Benchmark.rivalGaps": {
         "level": "gold"
       },
+      "field:toolbox/Benchmark.runGaps": {
+        "level": "gold"
+      },
+      "field:toolbox/Benchmark.runsPerArm": {
+        "level": "gold"
+      },
       "field:toolbox/Benchmark.servedValue": {
+        "level": "gold"
+      },
+      "field:toolbox/Benchmark.spread": {
         "level": "gold"
       },
       "field:toolbox/Benchmark.stages": {
@@ -4359,6 +4436,9 @@
       "rule:toolbox/maintainer-benchmark/has-a-rival": {
         "level": "gold"
       },
+      "rule:toolbox/maintainer-benchmark/method-registered": {
+        "level": "gold"
+      },
       "rule:toolbox/maintainer-benchmark/open-source-pinned": {
         "level": "gold"
       },
@@ -4372,6 +4452,9 @@
         "level": "gold"
       },
       "rule:toolbox/maintainer-benchmark/says-why": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-benchmark/sound-method": {
         "level": "gold"
       },
       "rule:toolbox/maintainer-ci-reliability/cancels-superseded-runs": {
