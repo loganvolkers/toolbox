@@ -29,7 +29,10 @@ kept code intelligence out of the context lake. Two limits of that result motiva
   scored by F1, so a missed or extra item moves the score, and the dry run checks that arm A doesn't
   saturate before round 1 is frozen. The first dry run did saturate, and the questions were hardened
   (§8): trait dispatch, a second ring of callers and a cross-crate trace replace lookups that `rg`
-  and `cargo metadata` answer exactly.
+  and `cargo metadata` answer exactly. The second dry run saturated too (arm A 0.994), so, per L21,
+  the score is not frozen as a measure that can show a gain: it is a guard that can only show harm,
+  and a gain has to come from cost (§5). That is also the claim Graphify makes for large corpora:
+  fewer tokens for the same answers (vendor claim).
 
 graphify-ab dropped a Toolbox arm because its questions were about code, which a catalog doesn't
 hold. Here one of the four questions (Q1) is about crate structure, which a repo portal over a Cargo
@@ -102,7 +105,7 @@ run's **score** is their mean:
 |---|---|---|---|
 | Q1 | Direct and indirect dependents of `codex-tools` | Mean of the two sets' F1 | 7 direct, 22 indirect |
 | Q2 | Non-test functions that call the trait method `ThreadStore::read_thread`, not same-named inherent methods | F1 | 12 functions in 3 crates |
-| Q3 | Non-test functions that call `get_git_repo_root` through exactly one intermediate function | F1 | 19 functions in 10 crates |
+| Q3 | Non-test functions that call `get_git_repo_root` through exactly one intermediate function | F1 | 20 functions in 10 crates |
 | Q4 | An `exec_command` tool call on Linux, from the completed response item to the process spawn | Key-fact coverage (covered 1, partial ½) | 8 facts |
 
 Q1 is about crate structure (the **structure subscore**); Q2 to Q4 are about code (the **code
@@ -114,7 +117,7 @@ Its hash, recorded now:
 
 | File | sha256 |
 |---|---|
-| `gold/codex.md` | `66b9afb0aaa4a6b8cca5f21b43fd6931f563534b864caef0a12b6655a69462c2` |
+| `gold/codex.md` | `d597a2fb17109f6a92981fa936eaf9981b3c9694e7ba6f5a80d40e1c687823a2` |
 
 Answers are graded blind: [harness/blind.py](harness/blind.py) shuffles them under random labels and
 replaces "graphify" and "toolbox" with "[tool]" and drops the portal's `crate:` id prefix. The
@@ -133,10 +136,10 @@ inconclusive (P2).
 
 | Id | Hypothesis | Holds | Fails |
 |---|---|---|---|
-| M1 | With Graphify, answers score higher than with nothing | med(B) − med(A) > *W*, on score | med(A) − med(B) > *W* |
+| M1 | With Graphify, answers score no lower than with nothing (a guard) | Not tested: the score has no headroom (§8) | med(A) − med(B) > *W*, on score |
 | M2 | With Graphify, the agent reads less | med(A) − med(B) > *W*, on read | med(B) − med(A) > *W* |
 | M3 | With Graphify, the agent makes fewer calls | As M2, on calls | As M2, on calls |
-| M4 | With Toolbox, answers score higher than with nothing | As M1, C for B | As M1, C for B |
+| M4 | With Toolbox, answers score no lower than with nothing (a guard) | Not tested (§8) | As M1, C for B |
 | M5 | With Toolbox, the agent reads less | As M2, C for B | As M2, C for B |
 | M6 | With Toolbox, the agent makes fewer calls | As M3, C for B | As M3, C for B |
 | M7 | Graphify scores higher than Toolbox | med(B) − med(C) > *W*, on score | med(C) − med(B) > *W* |
@@ -144,29 +147,31 @@ inconclusive (P2).
 | M9 | Graphify makes fewer calls than Toolbox | As M8, on calls | As M8, on calls |
 | M10 | Arm B's agents use the graph | Every B run calls `graphify` | Any B run doesn't |
 | M11 | Arm C's agents use the portal | Every C run calls `toolbox` | Any C run doesn't |
-| M12 | Graphify helps where it is supposed to: code | As M1, on the code subscore | As M1, on the code subscore |
-| M13 | Toolbox helps where it is supposed to: crate structure | As M4, on the structure subscore | As M4, on the structure subscore |
+| M12 | Graphify doesn't hurt where it is supposed to be strong: code | Not tested (§8) | As M1, on the code subscore |
+| M13 | Toolbox doesn't hurt where it is supposed to be strong: crate structure | Not tested (§8) | As M4, on the structure subscore |
 
-**Graphify helps** if none of M1 to M3 fails, and one of them holds. **Graphify hurts** if M1 fails,
+M1, M4, M12 and M13 were written as gains and became guards before round 1 was frozen, because two
+dry runs saturated the score (§8, L21). They can fail or be inconclusive. M7 compares two tool arms
+and stays two-sided, but at saturation it can only show that one tool arm lost points.
+
+**Graphify helps** if none of M1 to M3 fails, and one of them holds (so M2 or M3). **Graphify hurts** if M1 fails,
 or both M2 and M3 fail. **Toolbox helps** and **hurts** are the same over M4 to M6.
 **Graphify beats Toolbox** if none of M7 to M9 fails and one holds; **Toolbox beats Graphify** if
 none holds and one fails. If M10 (M11) fails, the runs without a call are reported, and the verdict
 for Graphify (Toolbox) is "not shown", whatever the others say.
 
-**The designer's prediction, before the run** (revised with the questions after the first dry run, §8):
+**The designer's prediction, before the run** (revised after both dry runs, §8):
 
-- **M1 and M4 are inconclusive.** Without a turn cap, arm A reads every call site `rg` finds, and the
-  first dry run showed it computing crate dependents exactly with `cargo metadata`. Its errors are in
-  telling the trait method from same-named inherent methods, in test-function boundaries at the
-  second hop, and in the trace's middle (the registry and the orchestrator), which are a few items
-  out of many.
-- **M13 is inconclusive:** Q1 is now the only structure question, and arm A answered it exactly in
-  the dry run. **M12 is inconclusive, leaning to fail on Q2:** Graphify's `calls` edges are resolved
-  by name, so they mix the trait method with `LiveThread::read_thread` and `CodexThread::read_thread`;
-  its edges help on Q3's second ring and on Q4's path.
-- **M2 and M5 are inconclusive.** Graphify's answers are node and edge lists, and Toolbox's search and
-  get return whole entities with every function, so both still read a lot.
-- **M3 and M6 are inconclusive; M7 to M9 are inconclusive; M10 and M11 hold.**
+- **M1, M4, M7, M12 and M13 are inconclusive.** Every arm scored 0.99 or more in the second dry run;
+  the misses are single items (Q3's `display_description`, which sits next to a nested function that
+  also calls the intermediate).
+- **M2 and M3 are inconclusive, leaning to fail.** In the second dry run arm B made 4 `graphify`
+  calls and then read the code as A did; it made more calls and read more than A (62 and 290k
+  characters, against 56 and 240k). The graph's answers orient the agent but don't replace reading
+  each call site, which these questions need.
+- **M5 and M6 are inconclusive.** Arm C read the least in the second dry run (184k) but also ran
+  `cargo metadata` for Q1, and the code questions, three of four, cost every arm about the same.
+- **M8 and M9 are inconclusive; M10 and M11 hold.**
 
 ## 6. Protocol
 
@@ -239,8 +244,35 @@ count above is with the fix; it was 5).
 path through a task spawn, a trait object and a generic trait into two other crates. The gold was
 checked at every call site by hand, and Q2's and Q3's sets were checked against the references in a
 SCIP index from rust-analyzer 1.95.0 (`rust-analyzer scip`, build scripts and proc macros off),
-which gives the same 12 and 19 functions. The new gold hash is in §4. The second dry run is
+which gives the same 12 and 19 functions (gold hash `66b9afb0…462c2`). The second dry run is
 `prompts/rendered/rdry2/`.
+
+**Second dry run** (four questions):
+
+| Arm | Run | Score | Q3 F1 | Calls | Read (chars) | Tool calls | Wall (s) |
+|---|---|---|---|---|---|---|---|
+| A | codex-1 | 0.994 | 0.974 | 56 | 240,433 | — | 250 |
+| B | codex-3 | 0.994 | 0.974 | 62 | 290,304 | `graphify` 4 (`query` 3, `explain`, `path`) | 339 |
+| C | codex-2 | 1.000 | 1.000 | 57 | 183,587 | `toolbox` 3 (`search`, `query`, `get`) | 312 |
+
+Q1, Q2 and Q4 scored 1.0 in every arm. Every arm told the trait method from the inherent
+`read_thread`s and named all eight trace facts. **The gold had an error, and arm C found it:**
+`ExternalAgentConfigMigrationScreen::display_description` calls `display_path_for` itself (in its
+"Migrate enabled plugins from" branch), as well as containing the nested `reformat_description` that
+also calls it. The call-site helper had attributed that call to the nested function, and the SCIP
+cross-check reused the helper to find enclosing functions. Recomputing Q3 from the SCIP index's own
+function extents gives 20 functions, so the gold now has 20, and the scores above are against it
+(A and B missed `display_description`). No run read outside its workspace and scratch directory.
+
+**Decision before round 1.** Arm A scored 0.994, so the score still has no headroom. A third
+hardening was tried and dropped: a blast-radius question (every non-test function that reaches a
+function at any depth) has a 40 to 90 item gold for many targets, but its gold depends on rules that
+agents would contest (a call through `dyn Trait` reaching an impl, nested functions, test helpers,
+binaries that share a `main` name). A turn cap would make headroom, but then the cap is part of the
+claim (L21), and D01M84ZW6K2V9CV2SD644DE5M0S's reopen trigger asks for a gain with no turn cap. So
+the question set is frozen as it is, and the score hypotheses become guards (§5): round 1 asks
+whether either tool cuts the cost of answers this hard on Graphify's home ground without lowering
+them, which is the claim Graphify makes for large corpora. The new gold hash is in §4.
 
 ## Sources
 
