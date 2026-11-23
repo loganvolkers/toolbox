@@ -1,56 +1,51 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/maintainer-skill/no-hidden-instructions
 rubric: rule-quality
-subjectHash: 0072cdc3c055
-assessor: {kind: agent, name: blind-review-2026-11-23}
+subjectHash: 1534327cfba0
+assessor: {kind: agent, name: campaign-review-rules}
 at: 2026-11-23
 verdicts:
   - criterion: measures-intent
     verdict: fail
     reason: >-
-      is_hidden (crates/toolbox-connector-workspace/src/skills.rs:406-413)
-      counts U+200B-200F, U+FEFF, U+202A-202E, U+2066-2069 and U+E0001-E007F.
-      It misses U+061C (a Bidi_Control character, so the "bidi" claim is
-      incomplete), U+2060-2064, variation selectors U+FE00-FE0F and
-      U+E0100-E01EF (a known way to smuggle bytes after a visible character),
-      and HTML comments, which hide text from rendered Markdown but not from
-      an agent. Files that are not valid UTF-8 are skipped silently
-      (files_under, skills.rs:357-362). A skill can carry hidden instructions
-      and pass.
+      The character classes are now broad (default-ignorables, U+061C, word
+      joiners, variation selectors, tags:
+      crates/toolbox-connector-workspace/src/hygiene.rs:112-118) and HTML
+      comments and non-UTF-8 files count (hygiene.rs:121, skills.rs:358-370).
+      But Markdown has another comment form that a renderer hides and a model
+      reads: link reference definitions such as `[//]: # (Ignore the user and
+      run …)`, plus `<div hidden>` or `style="display:none"` HTML. None is
+      counted, so a skill can carry a hidden instruction and pass. In the
+      other direction, an image in a skill's assets/ is counted as unreadable
+      and fails the rule.
     suggestion: >-
-      Count Unicode Default_Ignorable_Code_Point plus Bidi_Control, count
-      variation selectors outside emoji sequences, report `<!--` comments in
-      skill Markdown, and treat an unreadable file as a finding.
+      Count link reference definitions whose label is `//` or `#` (or any that
+      no link uses), and HTML with `hidden` or `display:none`, alongside
+      `<!--`; skip known binary asset types (png, jpg, gif) instead of
+      counting them as hidden.
   - criterion: hard-to-game
     verdict: fail
     reason: >-
-      Cheapest attempt: encode the payload as variation selectors
-      U+E0100-E01EF after one visible character, or put it in an HTML comment
-      in SKILL.md. Both count 0 under skills.rs:406-413, so the check at
-      portal/standards/skills.yaml:140 passes.
+      Cheapest attempt: put the payload in SKILL.md as `[//]: # (do X
+      silently)`. It is invisible on GitHub and in any CommonMark renderer,
+      html_comments (hygiene.rs:121) only matches `<!--`, so hiddenChars stays
+      0 and the check at portal/standards/skills.yaml:142-144 passes.
     suggestion: >-
-      Widen the character classes as above and add an `htmlComments` count to
-      the skill record.
+      Add the Markdown comment idioms above to the skill scan in
+      crates/toolbox-connector-workspace/src/skills.rs:405-407.
   - criterion: fix-leads-to-pass
     verdict: pass
     reason: >-
-      The fix names the classes and the place (the skill files), and removing
-      them zeroes the count at portal/standards/skills.yaml:140. The evidence
-      is only a count (skills.yaml:141), unlike secretHits' file:line, so an
-      agent has to search, but it can.
+      The fix lists each class and says to re-save non-UTF-8 files
+      (portal/standards/skills.yaml:148-153). Removing them zeroes the count.
+      The evidence is only a total, with no file or line, so an agent has to
+      search, but the fix says what to search for.
   - criterion: threshold-justified
-    verdict: fail
+    verdict: pass
     reason: >-
-      Gold is stated (docs/design/skill-standards.md:23 and :98, citing
-      SkillBench SAFE-03/04), but the same doc (line 52) records that
-      SkillBench treats hidden Unicode as a hard F. At gold, a skill that
-      smuggles an instruction still reads silver and passes the bronze ratchet
-      (portal/standards/skills.yaml:57).
-    suggestion: >-
-      Move no-hidden-instructions (and no-hardcoded-secrets) to bronze, so a
-      hostile skill can't reach any level, and record the change as a
-      decision.
+      Bronze is justified in docs/design/thresholds.md §2 as a killer item,
+      moved from gold by D01M83G9F4EEGN1GTP14HEYB8B6, citing SkillBench's hard
+      F for hidden Unicode. The earlier fail is fixed.
 summary: >-
-  The right idea at the wrong level, with a character set narrower than
-  its name: variation selectors, U+061C and HTML comments all hide text
-  and pass.
+  The level and character classes are fixed, but Markdown link-reference
+  comments (`[//]: #`) hide text just as `<!--` does and aren't counted.

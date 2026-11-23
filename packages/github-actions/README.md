@@ -9,7 +9,7 @@ it like any consumer.
 | Connectors | `ci-lint` (zizmor and actionlint through the runner), `github-actions` (run history) |
 | Tools | zizmor 1.32.0, actionlint 1.7.12 (`toolbox doctor --mise` prints the mise config) |
 | Kinds | `Workflow`, `ActionDependency` |
-| Scorecards | `maintainer-ci-security`, `maintainer-ci-reliability`, `maintainer-action-deps` |
+| Scorecards | `maintainer-ci-security`, `maintainer-ci-reliability`, `maintainer-ci-speed`, `maintainer-action-deps` |
 
 It needs a `workspace` connector with `workflows` globs.
 
@@ -36,7 +36,7 @@ Parameters (see `toolbox-package.yaml`):
 - `githubOrg` and `githubRepo` are required;
 - `branch` defaults to `main`;
 - `failRateBronze`, `failRateSilver`, `failRateGold` and `p90Seconds` may only be lowered
-  (integers with `tighten: lower`). Boolean parameters are also supported — see
+  (integers with `tighten: lower`), and `minDecidedRuns` only raised (`tighten: higher`). Boolean parameters are also supported — see
   `requireHoisted` in [`packages/pnpm-expo`](../pnpm-expo/).
 
 Authoring a further package: [package-author-sdlc.md](../../docs/design/package-author-sdlc.md) §6

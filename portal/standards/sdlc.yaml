@@ -23,10 +23,11 @@ kinds:
         items: string
         description: >-
           Stages that are missing in fact: declared missing, or with no doc that
-          describes them, whatever their status says.
+          exists and names the stage, whatever their status says.
         computed: >-
-          inbound.stageOf.filter(s, s.status == 'missing' || s.docs.size() ==
-          0).map(s, s.name + (s.docs.size() == 0 ? ' (no doc)' : ''))
+          inbound.stageOf.filter(s, s.status == 'missing' || s.namedIn.size() ==
+          0).map(s, s.name + (s.status == 'missing' ? '' : ' (no doc that exists
+          and names it)'))
       stagesNotBuilt: {type: list, items: string, description: "Stages not yet built (partial, designed or missing).", computed: "inbound.stageOf.filter(s, s.status != 'built').map(s, s.name + ' (' + s.status + ')')"}
     sources: {default: [connector:workspace]}
     map:
@@ -77,6 +78,16 @@ kinds:
         type: list
         items: string
         description: Declared checks that no GitHub Actions workflow runs.
+      notNaming:
+        type: list
+        items: string
+        description: >-
+          Declared docs that exist but never mention the stage's name, so they
+          don't describe it.
+      namedIn:
+        type: list
+        items: string
+        description: Declared docs that exist and mention the stage's name.
       hash:
         type: string
         description: >-
@@ -123,7 +134,9 @@ kinds:
          'docs': record.docs, 'status': record.status, 'gaps': record.gaps,
          'missingPaths': record.missingPaths, 'hash': record.hash,
          'unresolvedCommands': has(record.unresolvedCommands) ? record.unresolvedCommands : [],
-         'notInCi': has(record.notInCi) ? record.notInCi : []}
+         'notInCi': has(record.notInCi) ? record.notInCi : [],
+         'notNaming': has(record.notNaming) ? record.notNaming : [],
+         'namedIn': has(record.namedIn) ? record.namedIn : record.docs}
       relations: {stageOf: "['sdlc:' + record.layer]"}
 
 scorecards:
@@ -211,8 +224,10 @@ scorecards:
       evidence: entity.stagesMissing
       fix: >-
         For each listed stage in portal/sdlc/stages/<layer>.yaml, write the
-        design doc and point `docs:` at it, then set `status:` to designed,
-        partial or built. A status alone doesn't count; a doc that exists does.
+        design (a doc, or a section of one, that names the stage), point `docs:`
+        at it, then set `status:` to designed, partial or built. A status alone
+        doesn't count, nor does a listed doc that is missing or never names the
+        stage.
     - name: every-stage-built
       level: gold
       check: entity.stagesNotBuilt.size() == 0

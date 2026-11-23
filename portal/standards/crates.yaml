@@ -29,8 +29,16 @@ kinds:
         type: list
         items: string
         description: >-
-          Tests whose body has no assert or panic macro, no unwrap or expect, and
-          no #[should_panic]: they pass without checking anything.
+          Tests that check nothing: no assert or panic macro other than a trivial
+          one (assert!(true), assert_eq!(x, x)), no unwrap, expect or ?, no call
+          to an asserting helper in the same file, and no #[should_panic].
+      disabledTests:
+        type: list
+        items: string
+        description: >-
+          Tests compiled out by an always-false #[cfg(any())] or
+          #[cfg(not(all()))] on the test or its module: cargo neither runs nor
+          reports them.
       testsPerKloc:
         type: integer
         description: Tests (unit and integration) per 1,000 code lines, rounded down.
@@ -43,8 +51,8 @@ kinds:
       hash:
         type: string
         description: >-
-          SHA-256 (12 hex) of the crate's src/ files: an assessment is stale when
-          it changes.
+          SHA-256 (12 hex) of the crate's src/ and tests/ files and Cargo.toml: an
+          assessment is stale when any of them changes.
       reviewState:
         type: string
         description: "crate-design assessment: fresh, stale or missing."
@@ -73,6 +81,15 @@ kinds:
         computed: >-
           inbound.assessesCrate.size() == 0 ? [] :
           inbound.assessesCrate[0].uncited
+      reviewIndependent:
+        type: string
+        description: >-
+          Verdict of a current, grounded assessment-quality review of the
+          crate-design assessment by another assessor: pass, fail, unsure, or
+          empty when there is none.
+        computed: >-
+          inbound.assessesCrate.size() == 0 ? '' :
+          inbound.assessesCrate[0].independentReview
       docCoverage:
         type: integer
         computed: >-
@@ -110,6 +127,7 @@ kinds:
          'maxFnLines': record.maxFnLines, 'maxComplexity': record.maxComplexity,
          'unitTests': record.unitTests, 'integrationTests': record.integrationTests,
          'testsWithoutAsserts': record.testsWithoutAsserts,
+         'disabledTests': has(record.disabledTests) ? record.disabledTests : [],
          'unwraps': record.unwraps, 'hash': has(record.hash) ? record.hash : null}
       relations: {dependsOn: "record.dependsOn.map(d, 'crate:' + d)"}
     - from: runner/test
@@ -162,16 +180,21 @@ scorecards:
     - name: tests-pass
       level: bronze
       dataFrom: runner
-      check: entity.tests.status == 'pass' && entity.tests.ignored == 0
+      check: >-
+        entity.tests.status == 'pass' && entity.tests.ignored == 0 &&
+        entity.disabledTests.size() == 0
       evidence: >-
-        has(entity.tests) ? [entity.tests.status + ': ' +
+        (has(entity.tests) ? [entity.tests.status + ': ' +
         string(entity.tests.failed) + ' failed, ' + string(entity.tests.ignored)
         + ' ignored'] + (has(entity.tests.output) ? [entity.tests.output] : [])
-        : ['no test run yet (refresh the crate)']
+        : ['no test run yet (refresh the crate)']) + entity.disabledTests.map(t,
+        t + ' is compiled out')
       fix: >-
         Run `cargo test -p <crate>` and fix the failures in the evidence. Remove
-        `#[ignore]` from ignored tests and make them pass: an ignored test never
-        runs.
+        `#[ignore]` from ignored tests, and the always-false `#[cfg(...)]` from
+        listed tests, and make them pass: a test that doesn't run checks
+        nothing. Tests that need OpenFGA run with TOOLBOX_REQUIRE_OPENFGA set,
+        so install it (TOOLBOX_OPENFGA_BIN) rather than letting them skip.
     - name: clippy-clean
       level: bronze
       dataFrom: runner
@@ -235,8 +258,9 @@ scorecards:
     kind: Crate
     description: >-
       Agents' judgement of each crate against crate-design, advisory, with the
-      same ladder as review-rule; a change to src/, tests/ or Cargo.toml makes
-      a review stale (D79, D01M831P5QWJQ4A2FT85N5MXJQF).
+      same ladder as review-rule plus, at gold, a second assessor's review of
+      that judgement; a change to src/, tests/ or Cargo.toml makes a review
+      stale (D79, D01M831P5QWJQ4A2FT85N5MXJQF).
     owner: group:maintainers
     levels: [bronze, silver, gold]
     ratchet: {advisory: true}
@@ -283,6 +307,19 @@ scorecards:
         needs, in portal/assessments/), then re-assess with `toolbox assess
         brief crate:<name> --portal portal`. An open question in
         docs/questions.md doesn't pass this rule by itself.
+    - name: independently-reviewed
+      level: gold
+      check: entity.reviewState == 'fresh' && entity.reviewIndependent == 'pass'
+      evidence: >-
+        [entity.reviewIndependent == '' ? 'no current assessment-quality review
+        of the crate-design assessment by another assessor that cites it or its
+        sources' : 'the review of the crate-design assessment found it ' +
+        entity.reviewIndependent]
+      fix: >-
+        Have another agent or person review the crate-design assessment:
+        `toolbox assess brief assessment:crate-design/crate:<name> --portal
+        portal`, with reasons that cite the assessment file or the sources it
+        cites; act on what that review fails.
     facets: {summary: public, details: public}
 
 rubrics:
@@ -311,7 +348,10 @@ rubrics:
         If it wraps a default (cel-rust, OpenFGA, DBOS, Postgres, React), could
         that default be swapped behind a Toolbox-owned contract (charter goal
         3)?
-      guidance: Pass when it wraps no third-party default.
+      guidance: >-
+        Pass when it wraps no third-party default. Fail when a public signature
+        names the default's types, or a caller depends on the default directly
+        (its Cargo.toml), so swapping it would change other crates.
     - name: tests-match-risk
       question: >-
         Are its riskiest paths (parsing, authorization, persistence, protocol

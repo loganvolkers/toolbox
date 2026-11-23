@@ -1,41 +1,39 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/maintainer-site/titled
 rubric: rule-quality
-subjectHash: 691d2b1adf7e
-assessor: {kind: agent, name: blind-review-2026-11-23}
+subjectHash: 9cf02a221000
+assessor: {kind: agent, name: campaign-review-rules}
 at: 2026-11-23
 verdicts:
   - criterion: measures-intent
-    verdict: fail
+    verdict: pass
     reason: >-
-      fm_string (crates/toolbox-connector-workspace/src/site.rs:40-52) trims
-      each frontmatter line before it matches `title:`. A nested key such as
-      Starlight's `hero:` / `  title: X` therefore counts as the page title
-      when there is no top-level one, and a folded `title: >-` yields the
-      literal ">-". The rule can pass for a page that has no title.
-    suggestion: >-
-      Parse the frontmatter with a YAML parser and read the top-level `title`
-      string only.
+      The earlier finding is fixed: the frontmatter is parsed as YAML and only
+      the top-level `title` string is read, trimmed after unquoting
+      (crates/toolbox-connector-workspace/src/site.rs:41-53), so a nested
+      `hero: {title: …}`, a folded `>-` or `"  "` no longer counts. Passing
+      means the page has a title Starlight can show.
   - criterion: hard-to-game
-    verdict: fail
+    verdict: pass
     reason: >-
-      Cheapest attempts: `title: x` passes, and so does `title: "  "`.
-      site.rs:46-49 trims and then strips the quotes, which leaves two spaces,
-      and `size() > 0` (portal/standards/site.yaml:56) is true, so a blank
-      heading passes.
-    suggestion: >-
-      Trim after stripping quotes, require a minimum length (e.g. 2 words or 8
-      characters), and flag titles that are duplicated across pages.
+      A placeholder such as `title: TODO` passes, but writing a real title
+      costs the same as a placeholder, so the cheapest way to pass is
+      effectively the right one. The cheap evasions the earlier review found
+      (blank, nested) now fail (site.rs:46-53; test at site.rs:373). Duplicate
+      placeholders are caught by unique-title at gold
+      (portal/standards/site.yaml:105-112).
   - criterion: fix-leads-to-pass
     verdict: pass
     reason: >-
-      "Set the frontmatter title" names the exact place, and setting one
-      passes site.yaml:56.
+      The fix names the top-level `title:` key, the minimum length and the
+      page's frontmatter (portal/standards/site.yaml:72-75), and the evidence
+      says whether it is missing or too short.
   - criterion: threshold-justified
     verdict: pass
     reason: >-
-      Bronze is stated in docs/design/site-standards.md:23 and :47 ("Empty
-      title ... fail bronze"). There is no number.
+      docs/design/thresholds.md §2 states 3 characters as a labelled choice:
+      the shortest real titles are words such as "Run", and two characters is
+      a placeholder.
 summary: >-
-  A floor that is meant to be trivial, but a line-based parser lets nested
-  keys and whitespace through.
+  Fixed since the last review: a real YAML read, a stated minimum, and no
+  cheap evasion that beats writing a title.

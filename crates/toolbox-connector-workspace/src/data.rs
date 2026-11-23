@@ -8,7 +8,9 @@
 //! (values of the configured `paths` fields that name no file or directory under the root).
 //! Optionally, `unresolvedCommands` (values of the `commands` fields whose program is neither a
 //! known tool nor a file under the root) and `notInCi` (values of the `ci` fields that no GitHub
-//! Actions workflow or action file names), so a declaration can't claim what isn't there.
+//! Actions workflow or action file executes) and `notNaming` (documents in the `naming` fields that
+//! never mention the entry's `name`, and `namedIn`, those that exist and do), so a declaration
+//! can't claim what isn't there.
 
 use regex::Regex;
 use serde_json::{Value, json};
@@ -24,6 +26,8 @@ pub struct Source {
     pub commands: Vec<String>,
     /// Fields holding paths that a CI workflow must run (or be).
     pub ci: Vec<String>,
+    /// Fields holding documents that must mention the entry's `name`.
+    pub naming: Vec<String>,
 }
 
 /// `data: [{kind, globs: [glob], paths?: [field]}]`.
@@ -53,6 +57,7 @@ pub fn sources(cfg: &Value) -> Result<Vec<Source>, String> {
             paths: list("paths"),
             commands: list("commands"),
             ci: list("ci"),
+            naming: list("naming"),
         });
     }
     Ok(out)
@@ -140,8 +145,8 @@ fn unresolved(root: &Path, entry: &Value, fields: &[String]) -> Vec<String> {
         .collect()
 }
 
-/// Paths that no workflow under `.github/workflows` or action under `actions/` names (a workflow
-/// file itself counts as run by CI).
+/// Paths that no workflow under `.github/workflows` or action under `actions/` executes (a
+/// workflow file itself counts as run by CI).
 fn not_in_ci(root: &Path, entry: &Value, fields: &[String]) -> Vec<String> {
     let mut ci = String::new();
     for dir in [".github/workflows", "actions"] {
@@ -151,7 +156,10 @@ fn not_in_ci(root: &Path, entry: &Value, fields: &[String]) -> Vec<String> {
                 .extension()
                 .is_some_and(|x| x == "yml" || x == "yaml");
             if e.file_type().is_file() && yml {
-                ci.push_str(&std::fs::read_to_string(e.path()).unwrap_or_default());
+                let text = std::fs::read_to_string(e.path()).unwrap_or_default();
+                if let Ok(doc) = serde_norway::from_str::<Value>(&text) {
+                    executed(&doc, false, &mut ci);
+                }
             }
         }
     }
@@ -162,7 +170,34 @@ fn not_in_ci(root: &Path, entry: &Value, fields: &[String]) -> Vec<String> {
         .collect()
 }
 
-/// Whether CI text runs `path`: it is a workflow, names it, names a directory holding it (an
+/// The strings a workflow or action executes: `run:` and `uses:` values and everything under
+/// `with:`, one per line. Step names, comments and other keys don't run anything, so a path named
+/// only there is not run by CI.
+fn executed(v: &Value, inside_with: bool, out: &mut String) {
+    match v {
+        Value::String(s) if inside_with => {
+            out.push(' ');
+            out.push_str(s);
+            out.push('\n');
+        }
+        Value::Object(m) => {
+            for (k, x) in m {
+                match (k.as_str(), x) {
+                    ("run" | "uses", Value::String(s)) => {
+                        out.push(' ');
+                        out.push_str(s);
+                        out.push('\n');
+                    }
+                    _ => executed(x, inside_with || k == "with", out),
+                }
+            }
+        }
+        Value::Array(a) => a.iter().for_each(|x| executed(x, inside_with, out)),
+        _ => {}
+    }
+}
+
+/// Whether CI text (see [`executed`]) runs `path`: it is a workflow, names it, names a directory holding it (an
 /// action used as `./actions/report`, a portal run as `toolbox test portal`), or it is Rust under
 /// `crates/` and CI runs `cargo test`.
 fn run_by_ci(ci: &str, path: &str) -> bool {
@@ -180,6 +215,21 @@ fn run_by_ci(ci: &str, path: &str) -> bool {
                 || ci.contains(&format!(" {d} "))
                 || ci.contains(&format!(" {d}/*")))
     })
+}
+
+/// Documents in `fields` that exist but never mention the entry's `name` (case-insensitive): a
+/// shared design doc listed for a stage it doesn't describe.
+fn not_naming(root: &Path, entry: &Value, fields: &[String]) -> Vec<String> {
+    let name = entry["name"].as_str().unwrap_or_default().to_lowercase();
+    values(entry, fields)
+        .into_iter()
+        .filter(|v| {
+            let path = v.split('#').next().unwrap_or(v);
+            std::fs::read_to_string(root.join(path))
+                .is_ok_and(|text| name.is_empty() || !text.to_lowercase().contains(&name))
+        })
+        .map(str::to_owned)
+        .collect()
 }
 
 /// The records declared in one file: `(external id, data)`, or why the file was skipped.
@@ -204,6 +254,17 @@ pub fn records(root: &Path, rel: &str, src: &Source) -> Result<Vec<(String, Valu
         }
         if !src.ci.is_empty() {
             data["notInCi"] = json!(not_in_ci(root, &e, &src.ci));
+        }
+        if !src.naming.is_empty() {
+            let silent = not_naming(root, &e, &src.naming);
+            let missing = missing(root, &e, &src.naming);
+            // Documents that exist and name the entry: what describes it.
+            let named: Vec<&str> = values(&e, &src.naming)
+                .into_iter()
+                .filter(|v| !silent.iter().any(|s| s == v) && !missing.iter().any(|m| m == v))
+                .collect();
+            data["namedIn"] = json!(named);
+            data["notNaming"] = json!(silent);
         }
         out.push((format!("{}:{id}", src.kind), data));
     }
@@ -230,6 +291,7 @@ mod tests {
             paths: vec!["docs".into(), "check".into()],
             commands: vec!["commands".into()],
             ci: vec![],
+            naming: vec![],
         };
         let r = records(&dir, "stages.yaml", &src).unwrap();
         assert_eq!(r[0].0, "stage:m/build");
@@ -248,8 +310,35 @@ mod tests {
             r[0].1["unresolvedCommands"],
             json!(["echo hi", "scripts/gone.sh"])
         );
+        std::fs::create_dir_all(dir.join(".github/workflows")).unwrap();
+        std::fs::write(
+            dir.join(".github/workflows/ci.yml"),
+            "jobs:\n  t:\n    steps:\n      - name: uses rust-toolchain.toml\n        run: scripts/ok.sh --fast\n      - uses: ./actions/report\n        with: {portal: portal}\n",
+        )
+        .unwrap();
+        let ci_src = Source {
+            ci: vec!["checks".into()],
+            naming: vec!["docs".into()],
+            ..src
+        };
+        std::fs::write(
+            dir.join("ci.yaml"),
+            "- {id: y, checks: [scripts/ok.sh, rust-toolchain.toml, actions/report/action.yml, portal/tests/a.yaml]}\n",
+        )
+        .unwrap();
+        let r = records(&dir, "ci.yaml", &ci_src).unwrap();
+        assert_eq!(r[0].1["notInCi"], json!(["rust-toolchain.toml"]));
+        std::fs::write(
+            dir.join("named.yaml"),
+            "- {id: z, name: Pack, docs: [docs/a.md, docs/pack.md, docs/gone.md]}\n",
+        )
+        .unwrap();
+        std::fs::write(dir.join("docs/pack.md"), "# How we pack\n").unwrap();
+        let r = records(&dir, "named.yaml", &ci_src).unwrap();
+        assert_eq!(r[0].1["notNaming"], json!(["docs/a.md"]));
+        assert_eq!(r[0].1["namedIn"], json!(["docs/pack.md"]));
         std::fs::write(dir.join("bad.yaml"), "- {name: no-id}\n").unwrap();
-        assert!(records(&dir, "bad.yaml", &src).is_err());
+        assert!(records(&dir, "bad.yaml", &ci_src).is_err());
         let _ = std::fs::remove_dir_all(&dir);
     }
 }

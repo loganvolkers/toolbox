@@ -1,58 +1,50 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/sdlc-layer/nothing-missing
 rubric: rule-quality
-subjectHash: 28c0065482df
-assessor: {kind: agent, name: blind-review-2026-11-23}
+subjectHash: 4ac985d3d1ff
+assessor: {kind: agent, name: campaign-review-rules}
 at: 2026-11-23
 verdicts:
   - criterion: measures-intent
     verdict: fail
     reason: >-
-      The check reads only the self-declared `status` string
-      (portal/standards/sdlc.yaml:21 filters `s.status == 'missing'`). Nothing
-      compares it with the stage's docs or commands, so package-author/package
-      (portal/sdlc/stages/package-author.yaml:65-78) has a design doc
-      (docs/design/packages.md) yet counts as missing, while a stage with no
-      doc and no command passes once its status reads anything else.
+      stagesMissing (portal/standards/sdlc.yaml:21-28) now also counts a stage
+      with no doc, but it tests only `s.docs.size() == 0`. It never reads the
+      stage's missingPaths, so a `docs:` entry naming a file that doesn't
+      exist counts as a doc. The fix says the opposite: "A status alone
+      doesn't count; a doc that exists does" (sdlc.yaml:212-215). Only the
+      stage's own `documented` rule (sdlc.yaml:154) checks existence.
     suggestion: >-
-      Derive "missing" from facts instead of the declaration, e.g. a computed
-      field that lists stages with `docs.size() == 0 || commands.size() == 0`,
-      or have the data source reject a status that contradicts them.
+      Compute stagesMissing as `s.status == 'missing' || s.docs.size() == 0 ||
+      s.missingPaths.exists(p, p in s.docs)` (or have the connector give a
+      stage a `docsExisting` list), so a declared but absent doc counts as
+      missing.
   - criterion: hard-to-game
     verdict: fail
     reason: >-
-      Cheapest attempt: change `status: missing` to `status: designed` at
-      portal/sdlc/stages/package-author.yaml:78 and :96. `status` is an
-      unconstrained string (portal/standards/sdlc.yaml:54-56), so even
-      `status: tbd` works. The package-author layer moves from bronze to
-      silver with no design or command added.
+      Cheapest attempt: the two live failures, package-author/package and
+      package-author/distribute, already list docs/design/packages.md
+      (portal/sdlc/stages/package-author.yaml:82-83 and 100-101). Changing
+      `status: missing` to `status: designed` on those two lines takes the
+      layer to silver with no new design. A stage with no doc can point
+      `docs:` at README.md, or at a path that doesn't exist.
     suggestion: >-
-      Constrain `status` to built, partial, designed or missing in the data
-      schema, and compute the missing set from docs and commands so editing
-      the label alone changes nothing.
+      Use the existence check above, and require each stage's doc to mention
+      the stage (its name or id), as sdlc-stage's review rubric would judge;
+      or tie silver to review-sdlc-stage having no open findings.
   - criterion: fix-leads-to-pass
-    verdict: fail
+    verdict: pass
     reason: >-
-      The fix says "give each missing stage at least a design and a command".
-      Doing exactly that for package-author/package (it already has
-      docs/design/packages.md, so add one command) leaves `status: missing` in
-      portal/sdlc/stages/package-author.yaml:78, and the rule still fails. The
-      fix never names the `status:` field or the file.
-    suggestion: >-
-      Either derive the rule from docs and commands (then the fix is right as
-      written), or say "then set `status:` to designed or partial in
-      portal/sdlc/stages/<layer>.yaml".
+      The earlier fail is fixed: the fix now names
+      portal/sdlc/stages/<layer>.yaml, the `docs:` key and the `status:`
+      values (sdlc.yaml:212-215), and doing all three empties stagesMissing.
   - criterion: threshold-justified
-    verdict: unsure
+    verdict: pass
     reason: >-
-      There is no number, but the silver level has no stated reason. D87
-      (docs/decisions/D01M7WQBZHG0000000000000000.md) and docs/sdlc.md:51-52
-      name sdlc-layer but not its ladder, and no design doc says why "no stage
-      missing" is silver rather than bronze.
-    suggestion: >-
-      State the sdlc-layer ladder (declared, none missing, all built) and why
-      in docs/sdlc.md or docs/design/package-author-sdlc.md.
+      No number. docs/design/thresholds.md §3 now states the sdlc-layer ladder
+      (every stage declared, no stage missing in fact, every stage built) on
+      the principle that a prerequisite sits below what depends on it, which
+      resolves the earlier unsure.
 summary: >-
-  The rule trusts a free-text status the author writes, so it measures the
-  label, not the stage. Editing one word passes it, and the fix's own
-  advice doesn't.
+  The fix and the ladder are fixed, but the check still trusts a status
+  flip when any doc path is listed, even one that doesn't exist.

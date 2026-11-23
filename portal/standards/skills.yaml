@@ -143,13 +143,15 @@ scorecards:
       level: bronze
       check: entity.hiddenChars == 0
       evidence: >-
-        [string(entity.hiddenChars) + ' hidden characters, HTML comments or
-        unreadable files']
+        [string(entity.hiddenChars) + ' hidden characters, Markdown comments or
+        unreadable text files']
       fix: >-
         Remove from the skill's files what a reader can't see and a model can:
         zero-width and other default-ignorable characters, bidi controls,
-        variation selectors outside emoji, Unicode tags and HTML comments (`<!--
-        -->`); save any non-UTF-8 file as UTF-8 or remove it.
+        variation selectors outside emoji, Unicode tags, HTML comments (`<!--
+        -->`) and Markdown link-reference comments (`[//]: # (...)`); save any
+        non-UTF-8 text file as UTF-8 or remove it. Images, fonts and archives
+        are not scanned.
     - name: no-hardcoded-secrets
       level: bronze
       check: entity.secretHits.size() == 0

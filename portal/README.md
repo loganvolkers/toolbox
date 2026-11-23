@@ -15,9 +15,10 @@ no Postgres, no OpenFGA, no network.
 | `user-cli` | 3. User | Command | Read commands have help, structured output (`-o json`) and are exercised |
 | `user-mcp` | 3. User | McpTool | Tools are described and annotated, inputs described, documented, and contract-tested over MCP |
 | `maintainer-ci-security` | 1. Maintainer | Workflow | actionlint clean; no high zizmor findings; least-privilege token; actions pinned to SHAs; then no medium findings and no write tokens on risky triggers; then zizmor-clean |
-| `maintainer-ci-reliability` | 1. Maintainer | Workflow | Main not stuck red; fail rate ≤ 20/10/5%; job timeouts; few re-runs; superseded runs cancelled; p90 ≤ 15 min |
+| `maintainer-ci-reliability` | 1. Maintainer | Workflow | Main not stuck red; workflow still enabled; first-try fail rate ≤ 20/10/5% (silver and gold over at least 10 runs); failures visible; job timeouts |
+| `maintainer-ci-speed` | 1. Maintainer | Workflow | Superseded runs cancelled; p90 ≤ 15 min |
 | `maintainer-action-deps` | 1. Maintainer | ActionDependency | Each third-party action is SHA-pinned in every workflow that uses it |
-| `meta-rule` | all (our standards) | Rule | Fix text; tested; decided and both outcomes on fixtures; evidence; no nested loops; readable. New rules must reach bronze |
+| `meta-rule` | all (our standards) | Rule | Fix text; tested; decided and both outcomes on fixtures; evidence; no nested loops; readable; at gold, tests pin both outcomes, evidence names what failed and the fix names a place. New rules must reach bronze |
 | `meta-scorecard` | all (our standards) | Scorecard | Tested; no empty level; fixtures reach two levels; every rule tested. New scorecards must reach bronze |
 | `meta-kind`, `meta-field`, `meta-connector` (`PortalConnector`) | all (our model) | Kind, Field, PortalConnector | In fixtures and tested, described, fields described; populated, described, has a shape; records mapped, fixtures, freshness, refreshable (D79) |
 | `meta-assessment`, `meta-rubric` | all (our judgement) | Assessment, Rubric | Suggestions and a named assessor, then cited findings, then cited reasons; rubrics described, used, guided, discriminating (D80) |

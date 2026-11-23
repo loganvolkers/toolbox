@@ -237,67 +237,119 @@ scorecards:
   - name: maintainer-ci-reliability
     kind: Workflow
     description: >-
-      Whether CI can be trusted to say green means good: failures visible,
-      timeouts, superseded runs cancelled, and a main branch that rarely fails
-      or waits (D70, docs/design/thresholds.md for the fail-rate tiers).
+      Whether green CI means good on the default branch: failures visible and
+      counted, including those a re-run hid, every job bounded by a timeout,
+      and a branch that rarely fails (D70; docs/design/thresholds.md for the
+      tiers). Speed is maintainer-ci-speed.
     owner: group:maintainers
     levels: [bronze, silver, gold]
     appliesTo: entity.type == 'workflow'
     rules:
-      - name: main-not-stuck-red
-        level: bronze
-        dataFrom: github-actions
-        check: entity.runs.failingStreak < 3
-        evidence: >-
-          [string(entity.runs.failingStreak) + ' failures in a row on ' +
-          entity.runs.branch + ', last run ' + entity.runs.lastRunAt]
-        fix: "Fix main before anything else: a red default branch hides new failures."
-      - name: fail-rate-under-20
-        level: bronze
-        dataFrom: github-actions
-        check: entity.runs.failRate <= ${param:failRateBronze}
-        evidence: >-
-          [string(entity.runs.failRate) + '% of the last ' +
-          string(entity.runs.decided) + ' decided runs on ' + entity.runs.branch +
-          ' failed (' + string(entity.runs.cancelled) + ' cancelled runs not
-          counted)']
-        fix: >-
-          Find the failing jobs (`toolbox get workflow:<path>` shows run data) and
-          fix their causes. Don't hide them: continue-on-error is caught by
-          failures-visible, and cancelled runs are shown here.
-      - name: failures-visible
-        level: bronze
-        check: entity.hiddenFailures.size() == 0
-        evidence: entity.hiddenFailures
-        fix: >-
-          Remove `continue-on-error` from each listed job or step. If a step is
-          expected to fail, give it an `id:` and check `steps.<id>.outcome` in a
-          later step, so the failure is still asserted.
-      - name: every-job-has-timeout
-        level: bronze
-        check: entity.jobsWithoutTimeout.size() == 0
-        evidence: entity.jobsWithoutTimeout
-        fix: >-
-          Set `timeout-minutes` on every job; the default is 360 minutes of a hung
-          runner.
-      - name: fail-rate-under-10
-        level: silver
-        dataFrom: github-actions
-        check: entity.runs.failRate <= ${param:failRateSilver}
-        evidence: "[string(entity.runs.failRate) + '% failed']"
-        fix: >-
-          Track failures to their causes: flaky tests, infrastructure, or real
-          breakage merged to main.
-      - name: few-reruns
-        level: silver
-        dataFrom: github-actions
-        check: entity.runs.rerunRate <= 5
-        evidence: "[string(entity.runs.rerunRate) + '% of runs were re-run']"
-        fix: >-
-          Re-runs mean flakiness: find the flaky jobs and fix or isolate them
-          instead of retrying.
+    - name: main-not-stuck-red
+      level: bronze
+      dataFrom: github-actions
+      check: entity.runs.failingStreak < 3
+      evidence: >-
+        [string(entity.runs.failingStreak) + ' failures in a row on ' +
+        entity.runs.branch + ', last run ' + entity.runs.lastRunAt] +
+        (has(entity.runs.failedRuns) ? entity.runs.failedRuns : [])
+      fix: >-
+        Fix the default branch before anything else: open the failed runs in the
+        evidence, find the failing job, and fix its cause in the code or in the
+        workflow file under .github/workflows/.
+    - name: still-running
+      level: bronze
+      dataFrom: github-actions
+      check: "!has(entity.runs.state) || entity.runs.state == 'active'"
+      evidence: >-
+        ['GitHub reports the workflow as ' + entity.runs.state + ', so its run
+        history is old']
+      fix: >-
+        Re-enable the workflow (`gh workflow enable <file>`, or the Actions
+        tab), or delete its file from .github/workflows/ if it is retired.
+    - name: fail-rate-under-20
+      level: bronze
+      dataFrom: github-actions
+      check: entity.runs.firstTryFailRate <= ${param:failRateBronze}
+      evidence: >-
+        [string(entity.runs.firstTryFailRate) + '% of the last ' +
+        string(entity.runs.decided) + ' decided runs on ' + entity.runs.branch +
+        ' failed on their first attempt (' + string(entity.runs.failRate) + '%
+        still failed after re-runs; ' + string(entity.runs.cancelled) + '
+        cancelled runs not counted)'] + (has(entity.runs.failedRuns) ?
+        entity.runs.failedRuns : [])
+      fix: >-
+        Open the failed runs in the evidence, find the failing jobs, and fix
+        their causes in the code or the workflow file. The rate is over the last
+        runs on the branch, so it falls as passing runs replace failed ones.
+        Re-running a failure doesn't help: a run that passed on a later attempt
+        counts as failed, continue-on-error, `|| true` and skips on the default
+        branch are caught by failures-visible, and cancelled runs are shown
+        here.
+    - name: failures-visible
+      level: bronze
+      check: entity.hiddenFailures.size() == 0
+      evidence: entity.hiddenFailures
+      fix: >-
+        For each listed job or step in the workflow file: remove
+        `continue-on-error`, `|| true` (or `set +e`), or the `if:` that skips it
+        on the default branch. If a step is expected to fail, give it an `id:`
+        and check `steps.<id>.outcome` in a later step, so the failure is still
+        asserted.
+    - name: every-job-has-timeout
+      level: bronze
+      check: entity.jobsWithoutTimeout.size() == 0
+      evidence: entity.jobsWithoutTimeout
+      fix: >-
+        Set `timeout-minutes` on every job; the default is 360 minutes of a hung
+        runner.
+    - name: fail-rate-under-10
+      level: silver
+      dataFrom: github-actions
+      check: >-
+        entity.runs.decided >= ${param:minDecidedRuns} &&
+        entity.runs.firstTryFailRate <= ${param:failRateSilver}
+      evidence: >-
+        (entity.runs.decided < ${param:minDecidedRuns} ? ['only ' +
+        string(entity.runs.decided) + ' decided runs: at least
+        ${param:minDecidedRuns} are needed to tell the tiers apart'] :
+        [string(entity.runs.firstTryFailRate) + '% failed on the first
+        attempt']) + (has(entity.runs.failedRuns) ? entity.runs.failedRuns : [])
+      fix: >-
+        Open the failed runs in the evidence and classify each cause: a flaky
+        test (fix or quarantine it in its test file), infrastructure (pin or
+        retry the step in the workflow file), or real breakage merged to the
+        branch (add the missing check to the pull request workflow).
+    - name: fail-rate-under-5
+      level: gold
+      dataFrom: github-actions
+      check: >-
+        entity.runs.decided >= ${param:minDecidedRuns} &&
+        entity.runs.firstTryFailRate <= ${param:failRateGold}
+      evidence: >-
+        (entity.runs.decided < ${param:minDecidedRuns} ? ['only ' +
+        string(entity.runs.decided) + ' decided runs: at least
+        ${param:minDecidedRuns} are needed to tell the tiers apart'] :
+        [string(entity.runs.firstTryFailRate) + '% failed on the first
+        attempt']) + (has(entity.runs.failedRuns) ? entity.runs.failedRuns : [])
+      fix: >-
+        Open each failed run in the evidence and fix its cause where it lives
+        (the test, the workflow file, or the check the pull request lacked), so
+        that every failure on the branch is rare enough to be looked at.
+    facets: {summary: public, details: public}
+
+  - name: maintainer-ci-speed
+    kind: Workflow
+    description: >-
+      Whether CI answers quickly and spends no runner time on superseded
+      commits: a cost and feedback-time concern, separate from whether CI can
+      be trusted (maintainer-ci-reliability; docs/design/thresholds.md).
+    owner: group:maintainers
+    levels: [bronze, silver]
+    appliesTo: entity.type == 'workflow'
+    rules:
       - name: cancels-superseded-runs
-        level: silver
+        level: bronze
         check: entity.cancelsSuperseded || !('pull_request' in entity.triggers)
         evidence: >-
           [entity.concurrency ? 'the concurrency group does not vary by ref, or
@@ -310,16 +362,8 @@ scorecards:
               cancel-in-progress: ${{ github.event_name == 'pull_request' }}
           A new push to a pull request then cancels its old run, while every
           run on main still finishes.
-      - name: fail-rate-under-5
-        level: gold
-        dataFrom: github-actions
-        check: entity.runs.failRate <= ${param:failRateGold}
-        evidence: "[string(entity.runs.failRate) + '% failed']"
-        fix: >-
-          Keep main green: failures should be rare enough that each one gets
-          looked at.
       - name: fast-feedback
-        level: gold
+        level: silver
         dataFrom: github-actions
         check: entity.runs.p90Seconds <= ${param:p90Seconds}
         evidence: "['p90 run time ' + string(entity.runs.p90Seconds / 60) + ' min']"

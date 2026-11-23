@@ -1,50 +1,55 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: scorecard:toolbox/sdlc-stage
 rubric: scorecard-quality
-subjectHash: b8f585301ec6
-assessor: {kind: agent, name: blind-review-2026-11-23}
+subjectHash: d7ae5a093637
+assessor: {kind: agent, name: campaign-review-cards}
 at: 2026-11-23
 verdicts:
   - criterion: one-concern
     verdict: pass
     reason: >-
-      All five rules (portal/standards/sdlc.yaml:101-146) ask one question,
-      whether a stage of the SDLC catalogue is defined, operable and built,
-      for the maintainers who curate the catalogue (D87,
-      docs/decisions/D01M7WQBZHG0000000000000000.md). The stages belong to
-      four layers, but the scorecard's audience is one.
+      All six rules (portal/standards/sdlc.yaml:140-190) ask whether one stage
+      of the SDLC catalogue is defined, operable and built, for the
+      maintainers who curate the catalogue (D87). The stages belong to four
+      layers, but the question and the audience are one.
   - criterion: levels-are-a-ladder
-    verdict: fail
+    verdict: pass
     reason: >-
-      Gold `built` (sdlc.yaml:141-145) is self-declared: setting `status:
-      built` and `gaps: []` in portal/sdlc/stages/<layer>.yaml is a two-line
-      edit, cheaper than bronze `documented` (writing a doc that exists) or
-      silver `automated`. Nothing ties `built` to the listed checks running or
-      passing.
-    suggestion: >-
-      Derive gold from facts: every `checks:` path is run by a CI workflow,
-      every command resolves, and a fresh sdlc-stage-quality review passes
-      executable-exit. Then `status` becomes a description, not a gate.
+      Bronze is a defined stage (status, exit criterion, a doc that exists),
+      silver an operable one (commands that resolve, checks a workflow runs),
+      gold a built one. Gold `built` still reads the declared status, but it
+      now needs the silver facts first, and docs/design/thresholds.md:63-65
+      explains why it isn't tied to a review (D01M831P5QWJQ4A2FT85N5MXJQF).
+      The live levels spread (portal/results.json: 8 bronze, 12 silver, 6
+      gold), so each rung separates stages.
   - criterion: no-obvious-gap
     verdict: fail
     reason: >-
-      Missing `commands-resolve`: commands are free strings, and only docs and
-      checks are path-checked (portal/toolbox.yaml data source, `paths: [docs,
-      checks]`), so `commands: [echo]` passes agent-operable. Also missing
-      `checks-run-in-ci`: maintainer-agent-doc already checks that the
-      commands AGENTS.md names run in CI (D82, D83), but a stage's checks can
-      list a script no workflow runs.
+      The commands-resolve and checks-in-CI gaps are closed (agent-operable
+      and automated). The bound thresholds.md relies on for gold is weaker
+      than it says, though. Nothing asks that a stage's checks pass, or even
+      run. `notInCi` matches any mention of the path in workflow text
+      (crates/toolbox-connector-workspace/src/data.rs:168-183), and a workflow
+      path counts unconditionally (data.rs:169). maintainer/build is gold with
+      `rust-toolchain.toml` as a check (portal/sdlc/stages/maintainer.yaml),
+      which CI only names in a step title (.github/workflows/ci.yml:19). No
+      rule ties the exit criterion to a listed command or check.
     suggestion: >-
-      Resolve each command against the Command entities from `toolbox
-      describe` or against scripts/ paths, and add `checks-run-in-ci` using
-      the workflow records the workspace connector already reads.
+      Count a check as run only when a workflow `run:` or `uses:` line names
+      it, and add a gold `checks-green` rule. It should read the workflow-runs
+      record of each workflow that runs a check (failingStreak 0, from the
+      github-actions connector), and be unknown when that connector is
+      skipped.
   - criterion: actionable
     verdict: pass
     reason: >-
-      I tried sdlc-stage:operator/verify (bronze, failing agent-operable and
-      automated in a live report). The evidence names layer and stage, and
-      documented's fix names portal/sdlc/stages/<layer>.yaml. Listing a
-      command and a check raises it to silver, though, as above, too easily.
+      I tried sdlc-stage:maintainer/plan, at bronze and failing agent-operable
+      and automated (portal/results.json). The evidence names the stage, and
+      the fixes name `commands:`, `checks:`, portal/sdlc/stages/<layer>.yaml
+      and .github/workflows, so listing a resolvable command and a check CI
+      runs raises it to silver. Only has-exit-criterion's fix names no file or
+      field (sdlc.yaml:147-153).
 summary: >-
-  Readable and actionable, but every rung above bronze can be claimed by
-  editing the declaration it scores.
+  The last review's gaps are fixed, and the ladder now has fact-based
+  silver under a declared gold. A stage can still be gold when its checks
+  are only mentioned in CI, never shown to run or pass.

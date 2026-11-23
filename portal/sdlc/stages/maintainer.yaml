@@ -69,11 +69,11 @@ records:
       A tag produces attested binaries for each platform, installers and an
       image, and consumers pin them.
     commands: [git tag v0.1.0 && git push origin v0.1.0, dist plan]
-    checks:
-    - .github/workflows/release.yml
-    - .github/workflows/image.yml
+    checks: [.github/workflows/release.yml, .github/workflows/image.yml]
+    docs:
+    - docs/design/maintainer-sdlc.md
+    - docs/design/package-author-sdlc.md
     - dist-workspace.toml
-    docs: [docs/design/maintainer-sdlc.md, docs/design/package-author-sdlc.md]
     status: partial
     gaps:
     - >-
@@ -101,6 +101,6 @@ records:
       toolbox report portal --skip runner,github-actions --baseline
       portal/results.json --ci
     checks: [.github/workflows/ci.yml, portal/results.json]
-    docs: [docs/design/toolbox-for-toolbox.md]
+    docs: [docs/design/maintainer-sdlc.md, docs/design/toolbox-for-toolbox.md]
     status: built
     gaps: []

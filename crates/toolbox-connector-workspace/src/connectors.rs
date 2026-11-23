@@ -42,7 +42,7 @@ pub(crate) fn analyse(root: &Path, rel: &str) -> Value {
         "tests": test_count(&source),
         "conformanceMentions": conformance,
         "ciMentions": ci_files,
-        "secretHits": secrets(&sources),
+        "secretHits": secrets(root, &dir, &sources),
     })
 }
 
@@ -207,10 +207,25 @@ fn is_ci_script(rel: &str) -> bool {
             && (rel.ends_with(".yml") || rel.ends_with(".yaml")))
 }
 
-fn secrets(sources: &[(String, String)]) -> Vec<String> {
+/// Credentials in the connector's Rust sources (outside test modules) and in its other text files,
+/// which `include_str!` can compile in. Binary files are skipped.
+fn secrets(root: &Path, dir: &str, sources: &[(String, String)]) -> Vec<String> {
+    let prefix = format!("{dir}/");
+    let data = toolbox_connect::files::walk(root)
+        .into_iter()
+        .filter(|rel| {
+            rel.starts_with(&prefix) && !rel.ends_with(".rs") && !rel.contains("/target/")
+        })
+        .filter_map(|rel| {
+            std::fs::read_to_string(root.join(&rel))
+                .ok()
+                .map(|text| crate::hygiene::secrets(&rel, &text))
+        })
+        .flatten();
     let mut hits: Vec<String> = sources
         .iter()
         .flat_map(|(rel, text)| crate::hygiene::secrets_in_lines(rel, production_lines(text), true))
+        .chain(data)
         .collect();
     hits.sort();
     hits

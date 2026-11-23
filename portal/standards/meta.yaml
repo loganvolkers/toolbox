@@ -93,7 +93,13 @@ kinds:
       hasEvidence: {type: boolean}
       check: {type: object} # CEL: nodes, depth, loops (comprehension nesting), fields, functions
       evidence: {type: object}
-      tested: {type: boolean} # a test expectation names it
+      tested: {type: boolean} # a test expectation pins it (outcome compared with a literal, or evidence)
+      testedOutcomes:
+        type: list
+        items: string
+        description: >-
+          The outcomes the portal's expectations pin for this rule (pass, fail,
+          unknown, skipped); comparing its evidence pins fail.
       fixture: {type: object} # {pass, fail, unknown} over the portal's fixtures
       live: {type: object} # information only: {entities, pass, fail, unknown} on real data
       checkCel: {type: string, description: "The rule's check, as written."}
@@ -163,6 +169,7 @@ kinds:
         {'portal': record.portal, 'scorecard': record.scorecard, 'name': record.name, 'level': record.level,
          'fixWords': record.fixWords, 'hasEvidence': record.hasEvidence, 'check': record.check,
          'evidence': record.evidence, 'tested': record.tested, 'fixture': record.fixture,
+         'testedOutcomes': has(record.testedOutcomes) ? record.testedOutcomes : [],
          'live': has(record.live) ? record.live : null, 'hash': record.hash,
          'checkCel': record.definition.check, 'evidenceCel': record.definition.evidence, 'fixText': record.definition.fix}
       relations: {ruleOf: "['scorecard:' + record.card]"}
@@ -370,8 +377,10 @@ scorecards:
         ['no expectation in the portal tests names ' + entity.scorecard + '/' +
         entity.name]
       fix: >-
-        Add an expectation that pins the rule: score('<card>',
-        '<entity>').rules['<rule>'] == 'fail' (and one that passes).
+        In the portal's tests (tests/*.test.yaml), add an expectation that pins
+        the rule: `score('<card>', '<entity>').rules['<rule>'] == 'fail'`, or
+        its evidence compared (`.evidence['<rule>'] == [...]`). A bare mention
+        doesn't count.
     - name: decided-on-fixtures
       level: bronze
       check: entity.fixture.pass + entity.fixture.fail > 0
@@ -388,15 +397,6 @@ scorecards:
       fix: >-
         Give the fixtures one entity that passes and one that fails, so both
         paths (and the evidence) are exercised.
-    - name: shows-evidence
-      level: silver
-      check: entity.hasEvidence || entity.check.nodes <= 4
-      evidence: >-
-        ['the check has ' + string(entity.check.nodes) + ' CEL nodes and no
-        evidence expression']
-      fix: >-
-        Add `evidence:` naming the items that fail, so agents and people know
-        what to change.
     - name: no-nested-loops
       level: silver
       check: >-
@@ -409,7 +409,7 @@ scorecards:
         Avoid a comprehension inside a comprehension: compute the inner list in
         the connector or a computed field.
     - name: readable
-      level: gold
+      level: silver
       check: entity.check.nodes <= 30
       evidence: >-
         ['the check has ' + string(entity.check.nodes) + ' CEL nodes (30 or
@@ -432,6 +432,19 @@ scorecards:
       fix: >-
         Write `evidence:` from what the check reads (the failing list itself, or
         the value compared), so it names what failed on this entity.
+    - name: pins-both-outcomes
+      level: gold
+      check: "'pass' in entity.testedOutcomes && 'fail' in entity.testedOutcomes"
+      evidence: >-
+        ['pass', 'fail'].filter(o, !(o in entity.testedOutcomes)).map(o, 'no
+        expectation pins ' + entity.scorecard + '/' + entity.name + ' == \'' + o
+        + '\'')
+      fix: >-
+        In the portal's tests (tests/*.test.yaml), add an expectation that the
+        rule passes for one fixture entity (`score('<card>',
+        '<entity>').rules['<rule>'] == 'pass'`) and one that it fails for
+        another (`== 'fail'`, or its evidence compared), so a change that flips
+        either outcome is caught (lesson L4).
     - name: fix-names-a-place
       level: gold
       check: entity.fixNamesPlace

@@ -104,7 +104,7 @@ fn from_cel(v: &Value) -> Result<serde_json::Value, String> {
 
 /// Variables bound for evaluation, from [`with_vars`], [`with_vals`] or [`Env::scope`].
 #[derive(Clone, Copy)]
-pub struct Scope<'r, 'a, 'b>(&'r Context<'a, 'b>);
+pub struct Scope<'s>(&'s Context<'s, 's>);
 
 /// A variable whose elements are converted only when an expression visits them (see
 /// [`crate::lazy_map`]).
@@ -116,7 +116,7 @@ thread_local! {
 
 /// Bind `vars` once (each is converted into CEL's runtime form here) in a child of a per-thread
 /// root scope with the standard library, and run `f` with it.
-pub fn with_vars<R>(vars: &[(&str, &ExprValue)], f: impl FnOnce(&Scope<'_, '_, '_>) -> R) -> R {
+pub fn with_vars<R>(vars: &[(&str, &ExprValue)], f: impl FnOnce(&Scope<'_>) -> R) -> R {
     with_vals(vars, Vec::new(), f)
 }
 
@@ -124,7 +124,7 @@ pub fn with_vars<R>(vars: &[(&str, &ExprValue)], f: impl FnOnce(&Scope<'_, '_, '
 pub fn with_vals<R>(
     vars: &[(&str, &ExprValue)],
     vals: Vec<(&str, Lazy)>,
-    f: impl FnOnce(&Scope<'_, '_, '_>) -> R,
+    f: impl FnOnce(&Scope<'_>) -> R,
 ) -> R {
     ROOT.with(|root| {
         let mut ctx = root.new_inner_scope();
@@ -192,7 +192,7 @@ impl Env {
     }
 
     /// The scope to evaluate in.
-    pub fn scope(&self) -> Scope<'_, 'static, 'static> {
+    pub fn scope(&self) -> Scope<'_> {
         Scope(&self.0)
     }
 }
@@ -211,6 +211,7 @@ impl std::fmt::Debug for Expr {
 }
 
 impl Expr {
+    /// Parse `source` once; the error is the parser's first line, for a diagnostic.
     pub fn compile(source: &str) -> Result<Expr, String> {
         Program::compile(source)
             .map(|p| Expr {
@@ -227,7 +228,7 @@ impl Expr {
     }
 
     /// Evaluate in a caller-provided scope (e.g. one with test functions registered).
-    pub fn eval_in(&self, scope: &Scope<'_, '_, '_>) -> Result<ExprValue, String> {
+    pub fn eval_in(&self, scope: &Scope<'_>) -> Result<ExprValue, String> {
         self.program
             .execute(scope.0)
             .map(ExprValue)
@@ -235,7 +236,7 @@ impl Expr {
     }
 
     /// Evaluate and convert the result to JSON.
-    pub fn json_in(&self, scope: &Scope<'_, '_, '_>) -> Result<serde_json::Value, String> {
+    pub fn json_in(&self, scope: &Scope<'_>) -> Result<serde_json::Value, String> {
         self.eval_in(scope)?.to_json()
     }
 }
@@ -313,5 +314,29 @@ mod tests {
             .eval_in(&env.scope())
             .unwrap_err();
         assert!(err.contains("no q"), "{err}");
+    }
+
+    #[test]
+    fn numbers_keep_their_kind_and_values_without_json_fail() {
+        let big = json!(u64::MAX);
+        assert_eq!(ExprValue::from_json(&big).to_json(), Ok(big.clone()));
+        let e = Expr::compile("x == 18446744073709551615u && type(x) == uint").unwrap();
+        let x = ExprValue::from_json(&big);
+        assert_eq!(e.eval(&[("x", &x)]).unwrap().as_bool(), Some(true));
+        let half = ExprValue::from_json(&json!(0.5));
+        assert_eq!(half.to_json(), Ok(json!(0.5)));
+        let e = Expr::compile("h + h == 1.0").unwrap();
+        assert_eq!(e.eval(&[("h", &half)]).unwrap().as_bool(), Some(true));
+        // cel-rust compares int and double by value, where the CEL spec has no such overload
+        // (Q10). JSON numbers rely on it: a rule compares an integer field with `0.5`.
+        let one = ExprValue::from_json(&json!(1));
+        let e = Expr::compile("i == 1.0 && i < 1.5").unwrap();
+        assert_eq!(e.eval(&[("i", &one)]).unwrap().as_bool(), Some(true));
+        let inf = Expr::compile("1.0 / 0.0").unwrap().eval(&[]).unwrap();
+        assert_eq!(inf.to_json(), Err("non-finite float".into()));
+        let ty = Expr::compile("duration('1s')").unwrap().eval(&[]).unwrap();
+        assert!(ty.to_json().unwrap_err().contains("has no JSON form"));
+        let bad = Expr::compile("1 +").unwrap_err();
+        assert!(!bad.is_empty() && !bad.contains('\n'), "{bad}");
     }
 }

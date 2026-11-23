@@ -107,7 +107,8 @@ assert:
       and says so
     expect: >-
       score('user-mcp', 'mcp-tool:owner_of').evidence['contract-tested'] ==
-      ['no tools/call naming this tool in tests or scripts (static mode)']
+      ['no tools/call body ({"name": …, "arguments": …}) naming this tool
+      outside a comment in tests or scripts (static mode)']
   - name: observed calls from the runner decide contract-tested when present
     expect: >-
       entity('mcp-tool:get').observed.calls == 2 && score('user-mcp',
@@ -156,15 +157,18 @@ assert:
     expect: >-
       score('maintainer-ci-reliability',
       'workflow:.github/workflows/ci.yml').evidence['fail-rate-under-20'] ==
-      ['92% of the last 12 decided runs on main failed (0 cancelled runs not
-      counted)'] && score('maintainer-ci-reliability',
+      ['92% of the last 12 decided runs on main failed on their first attempt
+      (92% still failed after re-runs; 0 cancelled runs not counted)',
+      'https://github.com/loganvolkers/toolbox/actions/runs/12',
+      'https://github.com/loganvolkers/toolbox/actions/runs/11'] &&
+      score('maintainer-ci-reliability',
       'workflow:.github/workflows/ci.yml').rules['main-not-stuck-red'] ==
       'fail'
   - name: no job timeouts and no concurrency group are named
     expect: >-
       score('maintainer-ci-reliability',
       'workflow:.github/workflows/ci.yml').evidence['every-job-has-timeout'].size()
-      == 6 && score('maintainer-ci-reliability',
+      == 6 && score('maintainer-ci-speed',
       'workflow:.github/workflows/ci.yml').rules['cancels-superseded-runs'] ==
       'fail'
   - name: without run data the run rules are unknown and say which connector
@@ -174,6 +178,34 @@ assert:
       'unknown' && score('maintainer-ci-reliability',
       'workflow:.github/workflows/release.yml').evidence['main-not-stuck-red']
       == ['no data from connector github-actions']
+  - name: >-
+      runs that passed only on a re-run count as failed, and a disabled
+      workflow or too few runs can't claim a tier
+    expect: >-
+      score('maintainer-ci-reliability',
+      'workflow:.github/workflows/demo/slow.yml').rules['fail-rate-under-20']
+      == 'fail' && score('maintainer-ci-reliability',
+      'workflow:.github/workflows/demo/unsafe.yml').rules['still-running'] ==
+      'fail' && score('maintainer-ci-reliability',
+      'workflow:.github/workflows/ci.yml').rules['still-running'] == 'pass' &&
+      score('maintainer-ci-reliability',
+      'workflow:.github/workflows/demo/unsafe.yml').evidence['fail-rate-under-10']
+      == ['only 3 decided runs: at least 10 are needed to tell the tiers
+      apart'] && score('maintainer-ci-reliability',
+      'workflow:.github/workflows/demo/unsafe.yml').rules['fail-rate-under-20']
+      == 'pass' && score('maintainer-ci-reliability',
+      'workflow:.github/workflows/demo/steady.yml').rules['fail-rate-under-10']
+      == 'pass' && score('maintainer-ci-reliability',
+      'workflow:.github/workflows/demo/steady.yml').rules['fail-rate-under-5']
+      == 'pass'
+  - name: speed is its own card
+    expect: >-
+      score('maintainer-ci-speed',
+      'workflow:.github/workflows/demo/slow.yml').rules['fast-feedback'] ==
+      'fail' && score('maintainer-ci-speed',
+      'workflow:.github/workflows/ci.yml').rules['fast-feedback'] == 'pass' &&
+      score('maintainer-ci-speed', 'workflow:actions/report/action.yml').level
+      == 'skipped'
   - name: action metadata isn't scored for reliability
     expect: >-
       score('maintainer-ci-reliability',
@@ -189,11 +221,15 @@ assert:
       'action:actions/cache').level == 'bronze'
   # Scorecards for scorecards (fixtures: real records from `toolbox describe scorecards` for a few of
   # our rules, plus a synthetic "sprawling" scorecard). They also score themselves.
-  - name: a well-made rule reaches gold
+  - name: >-
+      a well-made rule whose tests pin both outcomes reaches gold; one pinned
+      only failing doesn't
     expect: >-
       score('meta-rule',
       'rule:toolbox/maintainer-ci-security/no-medium-findings').level ==
-      'gold'
+      'gold' && score('meta-rule',
+      'rule:toolbox/meta-rule/tested').evidence['pins-both-outcomes'] == ['no
+      expectation pins meta-rule/tested == \'pass\'']
   - name: an untested rule that never fails on the fixtures stops below bronze
     expect: >-
       score('meta-rule',
@@ -218,12 +254,10 @@ assert:
       'rule:demo/sprawling/everything').evidence['no-nested-loops'] == ['check
       loops 2'] && score('meta-rule',
       'rule:demo/sprawling/everything').rules['readable'] == 'fail'
-  - name: >-
-      a non-trivial check without evidence fails shows-evidence; a trivial one
-      is exempt until gold
+  - name: a check without evidence fails always-explains
     expect: >-
       score('meta-rule',
-      'rule:acme/github-app-hygiene/only-approved-apps').rules['shows-evidence']
+      'rule:acme/github-app-hygiene/only-approved-apps').rules['always-explains']
       == 'fail' && score('meta-rule',
       'rule:toolbox/user-cli/has-help').rules['always-explains'] == 'fail'
   - name: the meta scorecard scores its own rules (no further level)
@@ -311,7 +345,7 @@ assert:
       an invalid skill fails bronze and names the frontmatter, pronoun and
       secret
     expect: |-
-      score('maintainer-skill', 'skill:plugins/demo/unsafe').level == 'none' && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['valid-frontmatter'] == ["Directory name 'unsafe' must match skill name 'Unsafe'"] && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['description-says-when'] == ['12 characters'] && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['third-person'] == ['pronoun: you'] && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['no-hidden-instructions'] == ['3 hidden characters, HTML comments or unreadable files'] && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['no-hardcoded-secrets'] == ['SKILL.md:9 github-token'] && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['portable-paths'] == ['SKILL.md:4'] && score('maintainer-skill', 'skill:plugins/demo/unsafe').rules['has-procedure'] == 'fail'
+      score('maintainer-skill', 'skill:plugins/demo/unsafe').level == 'none' && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['valid-frontmatter'] == ["Directory name 'unsafe' must match skill name 'Unsafe'"] && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['description-says-when'] == ['12 characters'] && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['third-person'] == ['pronoun: you'] && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['no-hidden-instructions'] == ['3 hidden characters, Markdown comments or unreadable text files'] && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['no-hardcoded-secrets'] == ['SKILL.md:9 github-token'] && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['portable-paths'] == ['SKILL.md:4'] && score('maintainer-skill', 'skill:plugins/demo/unsafe').rules['has-procedure'] == 'fail'
   # Connectors (synthetic fixtures: one gold, one bronze, one below bronze)
   - name: a documented connector that CI conformance-tests reaches gold
     expect: >-
@@ -834,9 +868,9 @@ assert:
       == 'pass'
   - name: a user command without structured output is at none
     expect: >-
-      score('user-cli', 'command:search').level == 'none' &&
-      score('user-cli', 'command:search').evidence['structured-output'] ==
-      ['toolbox search has no -o json output']
+      score('user-cli', 'command:search').level == 'none' && score('user-cli',
+      'command:search').evidence['structured-output'] == ['toolbox search has
+      no -o json output']
   - name: scorecards are reviewed against scorecard-quality
     expect: >-
       score('review-scorecard',
@@ -874,6 +908,16 @@ assert:
       'crate:toolbox-connector-git-files').rules['assessed'] == 'fail' &&
       score('review-crate', 'crate:toolbox-derive').rules['assessed'] ==
       'pass'
+  - name: >-
+      crate gold needs a second assessor's grounded review of the crate-design
+      assessment
+    expect: >-
+      score('review-crate',
+      'crate:toolbox-derive').rules['independently-reviewed'] == 'pass' &&
+      score('review-crate',
+      'crate:toolbox-expr').evidence['independently-reviewed'] == ['no current
+      assessment-quality review of the crate-design assessment by another
+      assessor that cites it or its sources']
   - name: review rules pass where the assessment is current and clean
     expect: >-
       score('review-rule',
@@ -943,7 +987,8 @@ assert:
       'assessment:rule-quality/rule:toolbox/user-cli/has-help').rules['no-open-findings']
       == 'fail' && score('review-assessment',
       'assessment:rule-quality/rule:toolbox/user-cli/has-help').evidence['passes-review']
-      == ['complete'] && score('review-assessment',
+      == ['complete', 'the review cites neither this assessment nor anything
+      it cites (fix the review)'] && score('review-assessment',
       'assessment:assessment-quality/assessment:rule-quality/rule:toolbox/user-cli/has-help').level
       == 'skipped'
   - name: a review of an older version of an assessment is stale
@@ -1204,7 +1249,8 @@ assert:
       'crate:toolbox-derive').rules['tests-scale-with-code'] == 'pass' &&
       score('maintainer-crate',
       'crate:toolbox-derive').evidence['tests-pass'][0] == 'fail: 1 failed, 1
-      ignored'
+      ignored' && 'tests::off (src/lib.rs:40) is compiled out' in
+      score('maintainer-crate', 'crate:toolbox-derive').evidence['tests-pass']
   - name: >-
       a stage's claims are checked against facts: an unknown status, a command
       that runs nothing and a check no workflow runs, and a layer stage with
@@ -1217,7 +1263,9 @@ assert:
       'sdlc-stage:demo-gap/plan').evidence['agent-operable'] == ['echo done
       runs no known tool or repository file'] && score('sdlc-stage',
       'sdlc-stage:demo-gap/plan').evidence['automated'] == ['scripts/never.sh
-      is not run by any workflow'] && 'plan (no doc)' in score('sdlc-layer',
+      is not run by any workflow'] && 'plan (no doc that exists and names it)'
+      in score('sdlc-layer', 'sdlc:demo-gap').evidence['nothing-missing'] &&
+      'pack (no doc that exists and names it)' in score('sdlc-layer',
       'sdlc:demo-gap').evidence['nothing-missing']
   - name: >-
       a scorecard is described, its fixture ladder needs a real level beside

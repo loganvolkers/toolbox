@@ -1,63 +1,55 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: scorecard:toolbox/review-crate
 rubric: scorecard-quality
-subjectHash: 57ba5c7cf1dc
-assessor: {kind: agent, name: blind-review-2026-11-23}
+subjectHash: cdaf7219a194
+assessor: {kind: agent, name: campaign-review-cards}
 at: 2026-11-23
 verdicts:
   - criterion: one-concern
     verdict: pass
     reason: >-
-      All four rules (portal/standards/crates.yaml:194-229) read one
-      crate-design assessment for one audience (maintainers), and the card is
-      advisory (`ratchet: {advisory: true}`, line 191).
+      All four rules (portal/standards/crates.yaml:245-286) read one
+      crate-design assessment for one audience, maintainers, and the card is
+      advisory (`ratchet: {advisory: true}`), as D79 and
+      D01M831P5QWJQ4A2FT85N5MXJQF set out.
   - criterion: levels-are-a-ladder
     verdict: pass
     reason: >-
-      Bronze is "no current failing review", silver "a current review", gold
-      "clean and without doubts", as docs/design/meta-standards-review.md §4
-      C1 sets out. Levels are cumulative
-      (crates/toolbox-derive/src/lib.rs:1139-1168), so a crate with open
-      findings is `none` whatever else it has. One rung is hollow, though:
-      gold `passes-review` is implied by bronze plus silver (crates.yaml:195
-      and 203), so gold in practice is `no-doubts` alone.
+      Bronze is "no open finding", and a stale review's failures still count
+      and are labelled as stale (crates.yaml:247-250), so a one-byte edit no
+      longer hides a finding. Silver is a current review, and gold a current
+      review that is clean, cited and without doubts
+      (docs/design/thresholds.md:52). Gold passes-review is no longer
+      redundant: it adds `reviewUncited`, which bronze and silver don't read.
+      The fixtures reach none, bronze and gold (facts in the brief).
   - criterion: no-obvious-gap
     verdict: fail
     reason: >-
-      Still three gaps. (1) Subject coverage: the hash covers src/ only
-      (crates/toolbox-connector-workspace/src/rust.rs:227-245), so a change to
-      tests/ or Cargo.toml never makes a review stale, although
-      tests-match-risk and replaceable-defaults are about them. (2)
-      Independence: D01M831P5QWJQ4A2FT85N5MXJQF checks it for assessment
-      reviews only. No review-crate rule reads the assessor, and
-      meta-standards-review.md §2.2 records toolbox-expr as assessed and
-      reviewed by the same agent. (3) The assessment's own quality: an
-      all-pass assessment whose reasons read "Looks fine to me." put
-      crate:toolbox-derive at gold in a scratch copy of portal/. A fourth,
-      smaller gap: any one-byte edit in src/ makes a failing review stale, and
-      bronze then passes with the findings out of sight (crates.yaml:195).
+      Two earlier gaps are closed: the hash now covers src/, tests/ and
+      Cargo.toml (crates/toolbox-connector-workspace/src/rust.rs:271-276), and
+      an uncited review can't reach gold. Independence is still missing.
+      Nothing stops the agent that wrote a crate from assessing it and taking
+      it to gold. thresholds.md:58-62 says independence is checked "on the
+      assessment, by review-assessment", but review-crate's gold doesn't
+      depend on that review, and docs/design/meta-standards-review.md (M8)
+      still lists "give crate assessments the same check" as open. The kind's
+      `hash` description in crates.yaml still says "src/ files", and so does
+      the first doc comment on source_hash.
     suggestion: >-
-      Hash tests/ and Cargo.toml into the crate hash. Count an assessment only
-      when its `uncited` is empty and review-assessment `assessed`
-      (independent) passes for it. Show a stale review's failing criteria in
-      silver's evidence.
+      Let the assessment connector emit, on each assessment record, whether a
+      current review-assessment by another assessor exists, and make gold
+      passes-review require it for the crate's assessment. Fix the two stale
+      descriptions of the hash.
   - criterion: actionable
-    verdict: fail
+    verdict: pass
     reason: >-
-      Bronze and silver work: for crate:toolbox-api (unassessed) the
-      `assessed` fix gives the exact brief command and file
-      (crates.yaml:207-209), and for toolbox-expr the evidence names
-      ['replaceable-defaults'] (portal/tests/standards.test.yaml:841-846).
-      Gold does not. `no-doubts` checks only `reviewUnsure`, which a new
-      assessment alone changes (crates.yaml:220), but its fix offers "record
-      the open question in docs/questions.md and link it" (lines 225-227).
-      That leaves the verdict `unsure` and the rule failing, and neither route
-      says to re-assess.
-    suggestion: >-
-      Reword the no-doubts fix: "Resolve what the assessor was unsure of (cite
-      the source it needs), then re-assess." Track an open question in
-      docs/questions.md without implying that it passes the rule.
+      I tried crate:toolbox-expr, at none from the earlier failing review
+      (portal/tests/standards.test.yaml:864-868). The bronze evidence lists
+      the failing criteria and the fix sends the agent to their suggestions in
+      portal/assessments/. Silver's fix gives the exact `toolbox assess brief`
+      command, and the no-doubts fix now says to cite the missing source and
+      re-assess (crates.yaml:275-286), which can actually pass the rule.
 summary: >-
-  A clear advisory ladder with open findings first, but the gaps the
-  earlier review named are all still open, and the gold fix offers a route
-  that cannot pass.
+  The ladder and fixes are sound now, and staleness no longer hides a
+  finding. The remaining gap is independence: a crate's author can still
+  assess it to gold.
