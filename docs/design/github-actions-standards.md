@@ -78,7 +78,7 @@ the latest tags.*
 
 | Practice | Source | Rule |
 |---|---|---|
-| Pin actions to a full-length commit SHA (or lock workflow dependencies) | GitHub secure use, "Using third-party actions"; Scorecard Pinned-Dependencies; zizmor `unpinned-uses` | `pinned-to-sha` (bronze), `pinned-everywhere` (deps) |
+| Pin actions to a full-length commit SHA (or lock workflow dependencies) | GitHub secure use, "Using third-party actions"; Scorecard Pinned-Dependencies; zizmor `unpinned-uses` | `pinned-to-sha` (bronze), `pinned-everywhere` (deps), which names the SHA the repository already pins the action to elsewhere. `zizmor-clean` skips `unpinned-uses`, so the defect fails one rule (D01M84CCDH1ZWF9726SVDDM1JDX) |
 | Least-privilege `GITHUB_TOKEN`: read-only at the top, writes per job | Scorecard Token-Permissions; zizmor `excessive-permissions`; ghalint deny write-all | `least-privilege-token` (bronze) |
 | No untrusted checkout or write tokens under `pull_request_target`, `workflow_run` or `issue_comment` | Scorecard Dangerous-Workflow; GitHub secure use, "untrusted code checkout"; zizmor `dangerous-triggers` | `no-high-findings` (bronze), `no-write-tokens-on-risky-triggers` (silver) |
 | No script injection from untrusted inputs | GitHub secure use; zizmor `template-injection`; actionlint script injection check | `no-high-findings` / `actionlint-clean` |

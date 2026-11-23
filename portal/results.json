@@ -131,20 +131,20 @@
     "maintainer-ci-security": {
       "workflow:.github/workflows/ci.yml": {
         "zizmor-clean": [
-          "dbcd551e",
-          "dbcd551e",
-          "dbcd551e",
-          "e8b2a860",
-          "e8b2a860",
-          "e8b2a860"
+          "264319f1",
+          "264319f1",
+          "264319f1",
+          "4b088cf6",
+          "4b088cf6",
+          "4b088cf6"
         ]
       },
       "workflow:.github/workflows/version-packages.yml": {
         "no-medium-findings": [
-          "0fcdedc3"
+          "7e61491c"
         ],
         "zizmor-clean": [
-          "d7a123a6"
+          "7e61491c"
         ]
       }
     },
@@ -4560,6 +4560,9 @@
       "doc:docs/decisions/D01M841J2SN4V3AVZZ5D91YAR51.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M84CCDH1ZWF9726SVDDM1JDX.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/README.md": {
         "level": "skipped"
       },
@@ -5871,6 +5874,9 @@
           "described": 1
         },
         "level": "bronze"
+      },
+      "field:toolbox/ActionDependency.shaRefs": {
+        "level": "gold"
       },
       "field:toolbox/ActionDependency.usedBy": {
         "failing": {

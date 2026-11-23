@@ -22,13 +22,17 @@ regression it reports now carries a root-cause chain:
         from: connector workspace, record doc doc:docs/design/zz-probe.md
 ```
 
-A tool's finding ends at the command that reproduces it:
+A rule that reports new findings lists each one once, under its entity. A tool's finding ends at
+the command that reproduces it (D01M84CCDH1ZWF9726SVDDM1JDX):
 
 ```
-✗ worse   maintainer-python · maintainer-python:scripts/take-it-out.py: no-findings now fails
-    no-findings: line 87: F811 Redefinition of unused `os` from line 16
+✗ worse   maintainer-python:scripts/take-it-out.py · maintainer-python
+    no-findings: + line 87: F811 Redefinition of unused `os` from line 16
     reproduce: ruff check --no-cache --output-format sarif --exit-zero scripts/take-it-out.py
 ```
+
+When several rules report the same text, the line names them all, for example
+`no-high-findings, zizmor-clean: + high template-injection at line 40: …`.
 
 The first example is this repository's own gate, on a probe doc. Before this, it printed only
 its first line. The cause, a new doc below the floor,
@@ -52,8 +56,8 @@ entity was removed, the chain says so instead of guessing.
 
 | Surface | Form |
 |---|---|
-| `toolbox report --baseline` and `--against` | Indented under each `✗ worse` line. Without `-o` or `--out`, the verdict is the whole output, on stdout (D01M841J2SN4V3AVZZ5D91YAR51) |
-| `--verdict FILE` | Each regression has `detail` (strings) and `causes` (nested regressions of the same shape) |
+| `toolbox report --baseline` and `--against` | New findings, each once, under their entity, with the rules that report them; the chain indented under every other `✗ worse` line (D01M84CCDH1ZWF9726SVDDM1JDX). Without `-o` or `--out`, the verdict is the whole output, on stdout (D01M841J2SN4V3AVZZ5D91YAR51) |
+| `--verdict FILE` | Each regression has `detail` (strings, including the source record) and `causes` (nested regressions of the same shape) |
 | The `actions/report` action | One annotation per regression, with the whole chain |
 
 ## 4. Why it is core

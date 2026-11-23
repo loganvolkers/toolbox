@@ -195,16 +195,21 @@ fn a_gate_prints_what_changed() {
     portal(&dir, &[("a", true, &["intro", "setup 2", "usage"])]);
     let (code, out, err) = run(&[]);
     assert_eq!((code, err.as_str()), (1, ""), "{out}");
-    assert!(out.contains("documented: + usage\n"), "{out}");
+    assert!(out.starts_with("✗ worse   thing:a · quality\n"), "{out}");
+    assert!(out.contains("    documented: + usage\n"), "{out}");
     assert!(
-        out.contains("documented: and 2 already in the baseline\n"),
+        out.contains("and 2 finding(s) already in the baseline\n"),
         "{out}"
     );
+    assert!(!out.contains("from: connector"), "{out}");
     assert!(out.contains("every scorecard: add -o md"), "{out}");
     assert!(!out.contains("# "), "no report body: {out}");
     // Asked for, the report is on stdout and the verdict on stderr, as before.
     let (_, out, err) = run(&["-o", "md"]);
-    assert!(out.contains("quality") && err.contains("✗ worse"), "{out}");
+    assert!(
+        out.contains("quality") && err.contains("✗ worse   thing:a"),
+        "{out}"
+    );
 
     // An old baseline, without keys: the whole grown list, and not stale once fixed.
     let mut old = doc.clone();
@@ -230,6 +235,59 @@ fn a_gate_prints_what_changed() {
             .map(Vec::len),
         Some(2)
     );
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// One finding, one line: when several rules, or several entities, report the same new item, the
+/// summary shows it once, after every rule (and other entity) that reports it. The verdict
+/// document keeps each regression's own detail.
+#[test]
+fn a_finding_several_rules_report_is_one_line() {
+    let dir = std::env::temp_dir().join(format!("toolbox-fold-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let both = format!(
+        "{MANIFEST}  - name: docs\n    kind: Thing\n    owner: group:maintainers\n    levels: [gold]\n    rules:\n      - {{name: all-documented, level: gold, check: \"entity.undocumented.size() == 0\", evidence: \"entity.undocumented\"}}\n"
+    );
+    let write = |things: &[(&str, &[&str])]| {
+        portal(
+            &dir,
+            &things
+                .iter()
+                .map(|(n, u)| (*n, true, *u))
+                .collect::<Vec<_>>(),
+        );
+        std::fs::write(dir.join("toolbox.yaml"), &both).unwrap();
+    };
+    let run = |extra: &[&str]| {
+        let o = Command::new(env!("CARGO_BIN_EXE_toolbox"))
+            .arg("report")
+            .arg(&dir)
+            .args(["--fixtures", "--baseline"])
+            .arg(dir.join("results.json"))
+            .args(extra)
+            .output()
+            .expect("toolbox runs");
+        (
+            o.status.code().unwrap_or(-1),
+            String::from_utf8_lossy(&o.stdout).into_owned(),
+        )
+    };
+    write(&[("a", &[]), ("b", &[])]);
+    assert_eq!(run(&["--update"]).0, 0);
+    write(&[("a", &["usage"]), ("b", &["usage"])]);
+    let (code, out) = run(&[]);
+    assert_eq!(code, 1, "{out}");
+    assert!(
+        out.starts_with("✗ worse   thing:a · docs, quality\n"),
+        "{out}"
+    );
+    assert!(
+        out.contains("    all-documented, all-documented (thing:b), documented, documented (thing:b): + usage\n"),
+        "{out}"
+    );
+    assert_eq!(out.matches("usage").count(), 1, "{out}");
+    assert!(!out.contains("thing:b ·"), "{out}");
+    assert!(out.contains("baseline: 4 regression(s)"), "{out}");
     let _ = std::fs::remove_dir_all(&dir);
 }
 

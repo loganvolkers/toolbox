@@ -18,7 +18,7 @@ scripts/regen-site-report.sh
 
 In a pipeline, add `--verdict verdict.json`: it lists each regression as `{scorecard, entity, message, detail, causes}`, so the job can annotate or comment without parsing the text.
 
-With --baseline (or --against) and neither `-o` nor `--out`, the output is the verdict alone, on stdout. When a rule's evidence grew, only the new items are listed, marked `+`, and the items already in the baseline are counted ("and 9 already in the baseline"). Fix the `+` items. Add `-o md` to see every scorecard as well.
+With --baseline (or --against) and neither `-o` nor `--out`, the output is the verdict alone, on stdout. New findings are listed once each, marked `+`, under the entity they are on, after the rules that report them (`no-high-findings, zizmor-clean: + high template-injection at line 40: …`). Findings already in the baseline are only counted ("and 9 finding(s) already in the baseline"). Fix the `+` items. Add `-o md` to see every scorecard as well.
 
 Read the root cause under each `✗ worse` line before changing anything: the evidence, the `reproduce:` command (run it to see the finding with the tool alone), and for a repository level the scorecard that fell and the change that made it fall. Fix that change; don't update the baseline to hide it.
 

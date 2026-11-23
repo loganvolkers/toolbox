@@ -137,7 +137,7 @@ assert:
       'workflow:.github/workflows/release.yml').rules['no-high-findings'] ==
       'waived' && score('maintainer-ci-security',
       'workflow:.github/workflows/release.yml').evidence['no-high-findings']
-      == ['dangerous-triggers at line 3: use of fundamentally insecure
+      == ['high dangerous-triggers at line 3: use of fundamentally insecure
       workflow trigger'] && score('maintainer-ci-security',
       'workflow:.github/workflows/release.yml').rules['no-write-tokens-on-risky-triggers']
       == 'fail'
@@ -150,8 +150,8 @@ assert:
     expect: >-
       score('maintainer-ci-security',
       'workflow:.github/workflows/ci.yml').evidence['no-medium-findings'] ==
-      ['artipacked at line 14: credential persistence through GitHub Actions
-      artifacts']
+      ['medium artipacked at line 14: credential persistence through GitHub
+      Actions artifacts']
   # CI reliability (fixture: this repo's real run history on main, 2026-11-20)
   - name: a 92% fail rate and 11 red runs in a row fail bronze
     expect: >-
@@ -213,12 +213,14 @@ assert:
   # Supply chain
   - name: >-
       an action pinned by SHA in one workflow and by tag in another fails,
-      naming both
+      naming the tag and the SHA
     expect: >-
       score('maintainer-action-deps',
       'action:actions/checkout').evidence['pinned-everywhere'] ==
-      ['actions/checkout@v4'] && score('maintainer-action-deps',
-      'action:actions/cache').level == 'bronze'
+      ['actions/checkout@v4, pinned elsewhere as
+      actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683'] &&
+      score('maintainer-action-deps', 'action:actions/cache').level ==
+      'bronze'
   # Scorecards for scorecards (fixtures: real records from `toolbox describe scorecards` for a few of
   # our rules, plus a synthetic "sprawling" scorecard). They also score themselves.
   - name: >-

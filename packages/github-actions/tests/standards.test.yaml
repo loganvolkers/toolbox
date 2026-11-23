@@ -19,10 +19,19 @@ assert:
     expect: >-
       score('maintainer-ci-security',
       'workflow:.github/workflows/release.yml').evidence['no-high-findings']
-      == ['dangerous-triggers at line 3: use of fundamentally insecure
+      == ['high dangerous-triggers at line 3: use of fundamentally insecure
       workflow trigger'] && score('maintainer-ci-security',
       'workflow:.github/workflows/release.yml').rules['no-write-tokens-on-risky-triggers']
       == 'fail'
+  - name: >-
+      zizmor-clean names every other finding with its message, and leaves
+      unpinned-uses to pinned-to-sha
+    expect: >-
+      score('maintainer-ci-security',
+      'workflow:.github/workflows/ci.yml').evidence['zizmor-clean'] ==
+      ['medium artipacked at line 14: credential persistence through GitHub
+      Actions artifacts', 'low self-repository at line 120: action uses itself
+      from the same repository']
   - name: without actionlint's output its rule is unknown, not failing
     expect: >-
       score('maintainer-ci-security',
@@ -32,8 +41,8 @@ assert:
     expect: >-
       score('maintainer-ci-security',
       'workflow:.github/workflows/ci.yml').evidence['no-medium-findings'] ==
-      ['artipacked at line 14: credential persistence through GitHub Actions
-      artifacts']
+      ['medium artipacked at line 14: credential persistence through GitHub
+      Actions artifacts']
   - name: a 92% fail rate and 11 red runs in a row fail bronze
     expect: >-
       score('maintainer-ci-reliability',
@@ -65,12 +74,14 @@ assert:
       'workflow:actions/report/action.yml').level == 'skipped'
   - name: >-
       an action pinned by SHA in one workflow and by tag in another fails,
-      naming both
+      naming the tag and the SHA it is pinned to elsewhere
     expect: >-
       score('maintainer-action-deps',
       'action:actions/checkout').evidence['pinned-everywhere'] ==
-      ['actions/checkout@v4'] && score('maintainer-action-deps',
-      'action:actions/cache').level == 'bronze'
+      ['actions/checkout@v4, pinned elsewhere as
+      actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683'] &&
+      score('maintainer-action-deps', 'action:actions/cache').level ==
+      'bronze'
   - name: >-
       a step whose failure nothing reads fails bronze, and one with a
       cancelling group passes

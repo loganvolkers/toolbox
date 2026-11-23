@@ -1323,9 +1323,8 @@ fn check_accept(o: &Options, m: &toolbox_model::Manifest) -> Result<(), String> 
 /// One line per change, then one per campaign with a recorded start.
 fn change_lines(v: &Verdict, d: &Derived) -> Vec<String> {
     let c = &v.comparison;
-    let mut lines = Vec::new();
+    let mut lines = crate::causes::gate(d, &c.regressions);
     for (mark, changes) in [
-        ("✗ worse  ", &c.regressions),
         ("✓ accept ", &v.accepted),
         ("✓ better ", &c.improvements),
         ("· changed", &c.other),

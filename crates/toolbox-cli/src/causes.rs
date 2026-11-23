@@ -73,10 +73,40 @@ pub(crate) fn evidence_key(item: &Value) -> String {
     format!("{h:08x}")
 }
 
+/// One rule's evidence on a regression: the items to show, how many more there are, and how
+/// many the baseline already had.
+pub(crate) struct Shown {
+    pub(crate) rule: String,
+    /// The baseline had this rule's keys, so `items` are only what is new.
+    pub(crate) marked: bool,
+    pub(crate) items: Vec<String>,
+    pub(crate) more: usize,
+    pub(crate) old: usize,
+}
+
+impl Shown {
+    fn lines(&self) -> Vec<String> {
+        let (rule, plus) = (&self.rule, if self.marked { "+ " } else { "" });
+        let mut out: Vec<String> = self
+            .items
+            .iter()
+            .map(|t| format!("{rule}: {plus}{t}"))
+            .collect();
+        if self.more > 0 {
+            let new = if self.marked { " new" } else { "" };
+            out.push(format!("{rule}: … {} more{new}", self.more));
+        }
+        if self.old > 0 {
+            out.push(format!("{rule}: and {} already in the baseline", self.old));
+        }
+        out
+    }
+}
+
 /// A grown list of evidence, against the keys the baseline recorded: the items that are new,
-/// marked `+`, then how many were there before. A key that is both (one more of a finding that
-/// was already there, at another line) is one line for all of its items.
-fn grown(rule: &str, items: &[Value], known: &[String]) -> Vec<String> {
+/// then how many were there before. A key that is both (one more of a finding that was already
+/// there, at another line) is one item for all of its findings.
+fn grown(items: &[Value], known: &[String]) -> (Vec<String>, usize) {
     let mut before: BTreeMap<&str, usize> = BTreeMap::new();
     for k in known {
         *before.entry(k.as_str()).or_default() += 1;
@@ -97,33 +127,24 @@ fn grown(rule: &str, items: &[Value], known: &[String]) -> Vec<String> {
         let had = before.get(k.as_str()).copied().unwrap_or(0);
         match all.len().saturating_sub(had) {
             0 => old += all.len(),
-            n if n == all.len() => {
-                new.extend(all.iter().map(|v| format!("{rule}: + {}", first(v))))
-            }
+            n if n == all.len() => new.extend(all.iter().map(|v| first(v))),
             n => {
                 old += all.len() - n;
                 new.push(format!(
-                    "{rule}: + {n} more like: {} ({} alike in all)",
+                    "{n} more like: {} ({} alike in all)",
                     first(all[0]),
                     all.len()
                 ));
             }
         }
     }
-    let mut out: Vec<String> = new.iter().take(WHOLE).cloned().collect();
-    if new.len() > WHOLE {
-        out.push(format!("{rule}: … {} more new", new.len() - WHOLE));
-    }
-    if old > 0 {
-        out.push(format!("{rule}: and {old} already in the baseline"));
-    }
-    out
+    (new, old)
 }
 
-/// What a rule found on an entity now, and how to see it without the box.
-pub(crate) fn detail(d: &Derived, c: &Change) -> Vec<String> {
+/// What each rule of a change found on its entity now: at most `cap` items per rule, the new
+/// ones when the baseline recorded the rule's keys.
+pub(crate) fn shown(d: &Derived, c: &Change, cap: usize) -> Vec<Shown> {
     let (card, entity, rules) = (c.scorecard.as_str(), c.entity.as_str(), c.rules.as_slice());
-    let shown = if c.whole_evidence { WHOLE } else { SHOWN };
     let Some(s) = d.scores.get(card).and_then(|rows| rows.get(entity)) else {
         return Vec::new();
     };
@@ -138,35 +159,169 @@ pub(crate) fn detail(d: &Derived, c: &Change) -> Vec<String> {
         given => given.to_vec(),
     };
     let mut out = Vec::new();
-    for rule in &failing {
-        match s.evidence.get(rule) {
+    for rule in failing {
+        let (marked, mut items, old) = match s.evidence.get(&rule) {
             Some(Value::Array(items)) if c.known.is_some() => {
-                out.extend(grown(rule, items, c.known.as_deref().unwrap_or_default()));
+                let (new, old) = grown(items, c.known.as_deref().unwrap_or_default());
+                (true, new, old)
             }
             Some(Value::Array(items)) => {
-                for item in items.iter().take(shown) {
-                    let text = evidence_text(item);
-                    out.push(format!("{rule}: {}", text.lines().next().unwrap_or("")));
-                }
-                if items.len() > shown {
-                    out.push(format!("{rule}: … {} more", items.len() - shown));
-                }
+                let first = |v: &Value| evidence_text(v).lines().next().unwrap_or("").to_owned();
+                (false, items.iter().map(first).collect(), 0)
             }
-            Some(other) => out.push(format!("{rule}: {other}")),
-            None => {}
-        }
-    }
-    if let Some(e) = d.entities.get(entity) {
-        match e.fields.get("command").and_then(Value::as_str) {
-            Some(cmd) => out.push(format!("reproduce: {cmd}")),
-            None => {
-                if let Some((conn, kind, id)) = e.records.first() {
-                    out.push(format!("from: connector {conn}, record {kind} {id}"));
-                }
-            }
-        }
+            Some(other) => (false, vec![other.to_string()], 0),
+            None => continue,
+        };
+        let more = items.len().saturating_sub(cap);
+        items.truncate(cap);
+        out.push(Shown {
+            rule,
+            marked,
+            items,
+            more,
+            old,
+        });
     }
     out
+}
+
+/// How to see an entity's findings without the box: its `command` field when its source records
+/// have one (lint records do, take-it-out), else the record it came from.
+fn source(d: &Derived, entity: &str) -> Option<String> {
+    let e = d.entities.get(entity)?;
+    match e.fields.get("command").and_then(Value::as_str) {
+        Some(cmd) => Some(format!("reproduce: {cmd}")),
+        None => e
+            .records
+            .first()
+            .map(|(conn, kind, id)| format!("from: connector {conn}, record {kind} {id}")),
+    }
+}
+
+/// What a rule found on an entity now, and how to see it without the box.
+pub(crate) fn detail(d: &Derived, c: &Change) -> Vec<String> {
+    let cap = if c.whole_evidence { WHOLE } else { SHOWN };
+    let mut out: Vec<String> = shown(d, c, cap).iter().flat_map(Shown::lines).collect();
+    out.extend(source(d, &c.entity));
+    out
+}
+
+/// The ratchet's regressions as its summary lists them: each new finding once, under the entity
+/// it is on, after every rule that reports it there or on another entity (zizmor and a pin rule
+/// both see an unpinned action; a gold rule's evidence repeats a bronze one's). What the baseline
+/// already had is one count at the end. A regression without items of its own (an aggregate, a
+/// level, a measure) keeps its full lines. The `--verdict` document keeps every rule's detail.
+pub(crate) fn gate(d: &Derived, regressions: &[Change]) -> Vec<String> {
+    let mut list = Findings::default();
+    let mut rest = Vec::new();
+    for c in regressions {
+        match new_items(d, c) {
+            Some(shown) => list.add(d, c, shown),
+            None => rest.extend(c.lines("✗ worse  ", 0)),
+        }
+    }
+    let mut out = list.lines();
+    out.extend(rest);
+    if list.old > 0 {
+        out.push(format!(
+            "and {} finding(s) already in the baseline",
+            list.old
+        ));
+    }
+    out
+}
+
+/// A regression's evidence when it is a list of items that are all new: a rule that now fails,
+/// or a grown list the baseline recorded keys for. `None` for anything else.
+fn new_items(d: &Derived, c: &Change) -> Option<Vec<Shown>> {
+    // A grown list without the baseline's keys can't tell its new items from its old ones.
+    let unmarked = c.whole_evidence && c.known.is_none();
+    if !c.causes.is_empty() || c.rules.is_empty() || unmarked {
+        return None;
+    }
+    let shown = shown(d, c, WHOLE);
+    shown
+        .iter()
+        .any(|s| !s.items.is_empty() || s.more > 0)
+        .then_some(shown)
+}
+
+/// The new findings of an entity, for the gate: each with the rules that report it.
+struct Group {
+    entity: String,
+    cards: Vec<String>,
+    items: Vec<(Vec<String>, String)>,
+    reproduce: Option<String>,
+}
+
+/// Every regression's new findings, each text once: where it was first seen, by group and item.
+#[derive(Default)]
+struct Findings {
+    groups: Vec<Group>,
+    seen: BTreeMap<String, (usize, usize)>,
+    old: usize,
+}
+
+impl Findings {
+    fn group(&mut self, d: &Derived, c: &Change) -> usize {
+        if let Some(g) = self.groups.iter().position(|g| g.entity == c.entity) {
+            return g;
+        }
+        self.groups.push(Group {
+            entity: c.entity.clone(),
+            cards: Vec::new(),
+            items: Vec::new(),
+            reproduce: source(d, &c.entity).filter(|s| s.starts_with("reproduce: ")),
+        });
+        self.groups.len() - 1
+    }
+
+    fn add(&mut self, d: &Derived, c: &Change, shown: Vec<Shown>) {
+        let g = self.group(d, c);
+        if !self.groups[g].cards.contains(&c.scorecard) {
+            self.groups[g].cards.push(c.scorecard.clone());
+        }
+        for s in shown {
+            self.old += s.old;
+            for text in s.items {
+                self.item(g, &c.entity, &s.rule, text);
+            }
+            if s.more > 0 {
+                let more = format!("… {} more", s.more);
+                self.groups[g].items.push((vec![s.rule.clone()], more));
+            }
+        }
+    }
+
+    /// One finding: a new line, or one more rule on the line that already has its text.
+    fn item(&mut self, g: usize, entity: &str, rule: &str, text: String) {
+        let Some(&(at, i)) = self.seen.get(&text) else {
+            self.seen
+                .insert(text.clone(), (g, self.groups[g].items.len()));
+            self.groups[g].items.push((vec![rule.to_owned()], text));
+            return;
+        };
+        let rule = match at == g {
+            true => rule.to_owned(),
+            false => format!("{rule} ({entity})"),
+        };
+        let rules = &mut self.groups[at].items[i].0;
+        if !rules.contains(&rule) {
+            rules.push(rule);
+        }
+    }
+
+    fn lines(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        for g in self.groups.iter().filter(|g| !g.items.is_empty()) {
+            out.push(format!("✗ worse   {} · {}", g.entity, g.cards.join(", ")));
+            for (rules, text) in &g.items {
+                out.push(format!("    {}: + {text}", rules.join(", ")));
+            }
+            out.extend(g.reproduce.as_ref().map(|r| format!("    {r}")));
+        }
+        out
+    }
 }
 
 /// For an aggregate's regression: each constituent scorecard whose level fell between `before`
@@ -317,19 +472,30 @@ mod tests {
         .iter()
         .map(|s| evidence_key(&json!(s)))
         .collect();
+        let (new, old) = grown(&items, &known);
         assert_eq!(
-            grown("zizmor", &items, &known),
+            new,
+            [
+                "1 more like: medium artipacked at line 17 (3 alike in all)",
+                "high template-injection at line 230",
+            ]
+        );
+        assert_eq!(old, 3);
+        let shown = Shown {
+            rule: "zizmor".into(),
+            marked: true,
+            items: new,
+            more: 2,
+            old,
+        };
+        assert_eq!(
+            shown.lines(),
             [
                 "zizmor: + 1 more like: medium artipacked at line 17 (3 alike in all)",
                 "zizmor: + high template-injection at line 230",
+                "zizmor: … 2 more new",
                 "zizmor: and 3 already in the baseline",
             ]
         );
-        let many: Vec<Value> = (0..12)
-            .map(|i| json!(format!("finding {}", "x".repeat(i))))
-            .collect();
-        let out = grown("r", &many, &[]);
-        assert_eq!(out.len(), WHOLE + 1);
-        assert_eq!(out[WHOLE], "r: … 2 more new");
     }
 }

@@ -504,7 +504,7 @@ Scorecard `maintainer-ci-security` over `Workflow` entities, owned by group:main
 | `pinned-to-sha` | bronze | `entity.unpinned.size() == 0` | Pin every third-party `uses:` to a full commit SHA. Resolve the tag with `git ls-remote https://github.com/<owner>/<repo> refs/tags/<tag>` and peel an annotated tag (`^{}`) so the SHA is the commit, then put the tag in a comment. Let Dependabot update them. |
 | `no-medium-findings` | silver | `entity.zizmor.counts.medium == 0` | Fix zizmor's medium findings (e.g. `artipacked`: set `persist-credentials: false` on checkout). |
 | `no-write-tokens-on-risky-triggers` | silver | `entity.riskyTriggers.size() == 0 \|\| entity.jobsWithWrite.size() == 0` | Don't combine pull_request_target/workflow_run/issue_comment with write permissions; split privileged steps into a separate workflow. |
-| `zizmor-clean` | gold | `entity.zizmor.total == 0` | Resolve or explicitly ignore (with a reason) zizmor's low and informational findings. |
+| `zizmor-clean` | gold | `entity.zizmor.findings.filter(f, f.rule != 'unpinned-uses').size() == 0` | Resolve or explicitly ignore (with a reason) zizmor's low and informational findings. |
 
 ## maintainer-ci-reliability
 
