@@ -18,3 +18,4 @@ Small, reproducible experiments cited by the design docs. Each one records its r
 | [standards-ab](./standards-ab) | DX Benchmark (R3, archived): over a standard's lifecycle, does Toolbox cost an agent less than bespoke scripts? Round 2 and the rerun B′ | [design/repo-value.md](../docs/design/repo-value.md) |
 | [box-ab](./box-ab) | DX Benchmark (R6): several tools in one box, or hand-written CI glue? | [design/repo-value.md](../docs/design/repo-value.md) |
 | [spec-ab](./spec-ab) | DX Benchmark (R7, blocked): results by hand from a spec, with Toolbox, or on Backstage | [design/results-spec.md](../docs/design/results-spec.md) |
+| [connector-ab](./connector-ab) | DX Benchmark (C1–C3): authoring a cloud/SaaS connector in Toolbox vs Port Ocean vs Backstage | [design/package-author-sdlc.md](../docs/design/package-author-sdlc.md), [design/dx-benchmarks.md](../docs/design/dx-benchmarks.md) §7 B4 |

@@ -1,0 +1,9 @@
+{
+  "ALPHA": [
+    {"id": "1", "name": "api", "description": "HTTP API"},
+    {"id": "2", "name": "web", "description": "Frontend"}
+  ],
+  "BETA": [
+    {"id": "3", "name": "billing", "description": "Billing jobs"}
+  ]
+}

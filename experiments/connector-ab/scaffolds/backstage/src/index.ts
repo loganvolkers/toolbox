@@ -1,0 +1,1 @@
+export { ForgeEntityProvider } from './ForgeEntityProvider';

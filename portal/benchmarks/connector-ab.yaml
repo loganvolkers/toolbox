@@ -1,0 +1,29 @@
+# DX Benchmark catalog entry (docs/design/dx-benchmarks.md §6), scored by maintainer-benchmark.
+records:
+  - id: connector-ab
+    title: 'Cloud/SaaS connector authoring: Toolbox vs Ocean vs Backstage'
+    question: >-
+      When an agent authors a cloud/SaaS connector that syncs projects and
+      issues from an HTTP API, does Toolbox cost less than Port Ocean or a
+      Backstage entity provider across the package-author lifecycle?
+    layers: [package-author]
+    stages:
+    - package-author/author
+    - package-author/build-connector
+    - package-author/test
+    - package-author/adopt
+    hypotheses: [C1, C2, C3]
+    rival: >-
+      Port Ocean (@ocean.on_resync) and a Backstage EntityProvider — the
+      strongest alternatives for SaaS catalog connectors
+    repos:
+    - port-labs/ocean@f9f3948e83a20769f32fd3ca9fe0581cc8755926
+    - backstage/backstage@feeadd4d4efcbda9f1573b95e356e0f3fc0b5d17
+    status: designed
+    ran: ''
+    outcome: ''
+    changed: []
+    servedValue: ''
+    blockedOn: ''
+    readme: experiments/connector-ab/README.md
+    results: ''
