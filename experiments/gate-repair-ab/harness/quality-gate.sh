@@ -12,4 +12,5 @@ zizmor --offline --no-exit-codes --format github .github/workflows/ 2>/dev/null 
 actionlint -shellcheck= -pyflakes= -oneline \
   | reviewdog -efm='%f:%l:%c: %m' -name=actionlint -reporter=local -filter-mode=added -fail-level=any \
       -diff="git diff --no-ext-diff $base" || status=1
+[ "$status" -eq 0 ] && echo "quality gate: passed"
 exit $status
