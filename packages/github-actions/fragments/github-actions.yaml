@@ -149,13 +149,22 @@ kinds:
         description: >-
           Its SHA refs as the workflows write them, with the version comment
           (`actions/checkout@<sha> # v6.0.2`).
+      pinHints:
+        type: list
+        items: string
+        description: >-
+          Each ref that isn't a SHA, with the pin to write instead when the
+          repository pins the action anywhere: one of its SHA pins, on the ref's
+          own path, preferring the version the tag names (`actions/cache@v5,
+          pinned elsewhere as actions/cache@<sha> # v5.0.5`).
     sources: {default: [connector:workspace]}
     map:
     - from: workspace/action-ref
       id: "'action:' + record.name"
       set: >-
         {'name': record.name, 'owner': record.owner, 'refs': record.refs,
-        'pins': record.pins, 'usedBy': record.usedBy, 'shaPins': record.shaPins}
+        'pins': record.pins, 'usedBy': record.usedBy, 'shaPins': record.shaPins,
+        'pinHints': record.pinHints}
 
 scorecards:
   # ── Layer 1: maintainer SDLC — CI (docs/design/github-actions-standards.md) ──────────────
@@ -399,9 +408,7 @@ scorecards:
       level: bronze
       check: entity.pins.all(p, p == 'sha')
       evidence: >- # only what to change, and the pin the repository already writes for it
-        entity.refs.filter(r, !r.matches('@[0-9a-f]{40}$')).map(r,
-        entity.shaPins.size() > 0 ? r + ', pinned elsewhere as ' +
-        entity.shaPins[0] : r)
+        entity.pinHints
       fix: >-
         Pin this action to a full commit SHA in every workflow that uses it.
         Resolve the tag with `git ls-remote https://github.com/<owner>/<repo>

@@ -303,12 +303,35 @@ struct Usage {
     used_by: BTreeSet<String>,
     pins: BTreeSet<String>,
     sha_pins: BTreeSet<String>,
+    /// Each SHA pin as (path, sha, version comment).
+    pinned: BTreeSet<(String, String, Option<String>)>,
+}
+
+/// The pin to suggest for an unpinned `ref`: one of the action's SHAs, written on the ref's own
+/// path (`actions/cache@v5` gets `actions/cache@<sha>`, never `actions/cache/restore@<sha>`, which
+/// is another action in the same repository). Prefers a pin whose version comment is within the
+/// ref's tag (`v5` → `v5.0.5`), then one on the same path, then one with a comment.
+fn pin_for(reference: &str, pinned: &BTreeSet<(String, String, Option<String>)>) -> Option<String> {
+    let (path, tag) = reference.rsplit_once('@')?;
+    let within = |c: &str| c == tag || c.strip_prefix(tag).is_some_and(|rest| rest.starts_with('.'));
+    let (_, sha, comment) = pinned.iter().max_by_key(|(p, _, c)| {
+        (
+            c.as_deref().is_some_and(within),
+            p == path,
+            c.is_some(),
+            std::cmp::Reverse((p.clone(), c.clone())),
+        )
+    })?;
+    Some(match comment {
+        Some(c) => format!("{path}@{sha} # {c}"),
+        None => format!("{path}@{sha}"),
+    })
 }
 
 /// `action-ref` records: one per external action, with every ref used and the files using it.
 /// `shaPins` are its SHA refs as the workflows write them, with the version comment when there is
-/// one (`actions/checkout@<sha> # v6.0.2`), so a hint to pin can be copied as it stands; the
-/// commented ones come first.
+/// one (`actions/checkout@<sha> # v6.0.2`); the commented ones come first. `pinHints` names each ref
+/// that isn't a SHA with the pin to write instead (`pin_for`), so a hint can be copied as it stands.
 pub fn action_refs(workflows: &[Value]) -> Vec<(String, Value)> {
     let mut by: BTreeMap<String, Usage> = BTreeMap::new();
     for w in workflows {
@@ -323,10 +346,15 @@ pub fn action_refs(workflows: &[Value]) -> Vec<(String, Value)> {
                 .insert(w["path"].as_str().unwrap_or("").to_owned());
             e.pins.insert(u["pin"].as_str().unwrap_or("").to_owned());
             if u["pin"] == "sha" {
-                e.sha_pins.insert(match u["comment"].as_str() {
+                let comment = u["comment"].as_str();
+                e.sha_pins.insert(match comment {
                     Some(c) => format!("{reference} # {c}"),
                     None => reference.to_owned(),
                 });
+                if let Some((path, sha)) = reference.rsplit_once('@') {
+                    e.pinned
+                        .insert((path.to_owned(), sha.to_owned(), comment.map(str::to_owned)));
+                }
             }
         }
     }
@@ -341,6 +369,16 @@ pub fn action_refs(workflows: &[Value]) -> Vec<(String, Value)> {
             let mut sha_pins: Vec<String> = u.sha_pins.into_iter().collect();
             sha_pins.sort_by_key(|p| !p.contains(" # "));
             data.insert("shaPins".into(), json!(sha_pins));
+            let hints: Vec<String> = u
+                .refs
+                .iter()
+                .filter(|r| pin(r) != "sha")
+                .map(|r| match pin_for(r, &u.pinned) {
+                    Some(p) => format!("{r}, pinned elsewhere as {p}"),
+                    None => r.clone(),
+                })
+                .collect();
+            data.insert("pinHints".into(), json!(hints));
             (name, Value::Object(data))
         })
         .collect()
@@ -440,6 +478,28 @@ mod tests {
             json!([
                 format!("actions/checkout@{sha} # v6.0.2"),
                 format!("actions/checkout@{old}")
+            ])
+        );
+        assert_eq!(
+            refs[0].1["pinHints"],
+            json!([format!("actions/checkout@v6, pinned elsewhere as actions/checkout@{sha} # v6.0.2")])
+        );
+    }
+
+    #[test]
+    fn a_pin_hint_keeps_the_refs_own_path_and_prefers_its_version() {
+        let sha = "27d5ce7f107fe9357f9df03efb73ab90386fccae";
+        let v4 = "0057852bfaa89a56745cba8c7296529d2fc39830";
+        let yml = format!(
+            "on: push\njobs:\n  a:\n    runs-on: x\n    steps:\n      - uses: actions/cache/restore@{sha} # v5.0.5\n      - uses: actions/cache/save@{sha} # v5.0.5\n      - uses: actions/cache@{v4} # v4.2.0\n      - uses: actions/cache@v5\n      - uses: actions/cache/save@v4\n      - uses: actions/cache@main\n"
+        );
+        let refs = action_refs(&[record(".github/workflows/w.yml", &yml)]);
+        assert_eq!(
+            refs[0].1["pinHints"],
+            json!([
+                format!("actions/cache/save@v4, pinned elsewhere as actions/cache/save@{v4} # v4.2.0"),
+                format!("actions/cache@main, pinned elsewhere as actions/cache@{v4} # v4.2.0"),
+                format!("actions/cache@v5, pinned elsewhere as actions/cache@{sha} # v5.0.5"),
             ])
         );
     }

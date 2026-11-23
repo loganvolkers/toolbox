@@ -4569,6 +4569,9 @@
       "doc:docs/decisions/D01M84EPMMR9740K4N25G7A6FAY.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M84X4JDHXS98K89KN4AB0RCD.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/README.md": {
         "level": "skipped"
       },
@@ -5868,6 +5871,9 @@
           "described": 1
         },
         "level": "bronze"
+      },
+      "field:toolbox/ActionDependency.pinHints": {
+        "level": "gold"
       },
       "field:toolbox/ActionDependency.pins": {
         "failing": {
