@@ -237,7 +237,9 @@ count above is with the fix; it was 5).
 `cargo metadata` script or one `rg`. The new Q2 to Q4 (§4) need what `rg` doesn't give: which
 `read_thread` a call resolves to, callers of callers with test functions excluded at both hops, and a
 path through a task spawn, a trait object and a generic trait into two other crates. The gold was
-checked at every call site by hand. The new gold hash is in §4. The second dry run is
+checked at every call site by hand, and Q2's and Q3's sets were checked against the references in a
+SCIP index from rust-analyzer 1.95.0 (`rust-analyzer scip`, build scripts and proc macros off),
+which gives the same 12 and 19 functions. The new gold hash is in §4. The second dry run is
 `prompts/rendered/rdry2/`.
 
 ## Sources
