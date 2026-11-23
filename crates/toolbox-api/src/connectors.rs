@@ -289,6 +289,7 @@ const CONNECTOR_ENV: &[&str] = &[
     "GITHUB_API_URL",
 ];
 
+/// The variables of `CONNECTOR_ENV` this process has, for a supervised connector's environment.
 pub fn connector_env() -> Vec<(String, String)> {
     CONNECTOR_ENV
         .iter()
@@ -386,6 +387,7 @@ async fn flush(s: &Arc<AppState>, name: &str, batch: &mut Vec<Value>) {
     }
 }
 
+/// Query of the long-poll command stream: how long to wait, in seconds.
 #[derive(Deserialize)]
 pub struct WaitQuery {
     wait: Option<u64>,

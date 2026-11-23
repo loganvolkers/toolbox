@@ -31,6 +31,7 @@ pub struct Published {
 #[derive(Debug, Default)]
 pub struct FieldIndex(Mutex<HashMap<(String, String), Arc<IdsByValue>>>);
 
+/// Entity ids, in id order, by a field's string value.
 pub type IdsByValue = HashMap<String, Vec<String>>;
 
 impl FieldIndex {
@@ -67,10 +68,12 @@ impl Decisions {
     /// Bounds memory per snapshot; past it, decisions are still made, just not kept.
     const MAX: usize = 200_000;
 
+    /// The decision made on `t` in this snapshot, if one was kept.
     pub fn get(&self, t: &toolbox_authz::Tuple) -> Option<bool> {
         self.0.lock().unwrap().get(t).copied()
     }
 
+    /// Keep the decision on `t`, unless the snapshot already holds `MAX`.
     pub fn put(&self, t: toolbox_authz::Tuple, allowed: bool) {
         let mut m = self.0.lock().unwrap();
         if m.len() < Self::MAX {
@@ -79,6 +82,7 @@ impl Decisions {
     }
 }
 
+/// What every request handler shares: the manifest, the store, authorization and the published snapshot.
 pub struct AppState {
     pub hub: toolbox_connect::Hub,
     pub authn: toolbox_authz::authn::Authenticator,
@@ -93,6 +97,7 @@ pub struct AppState {
     pub config: Config,
 }
 
+/// Server settings from the command line and the environment.
 #[derive(Debug, Clone)]
 pub struct Config {
     /// `dev` trusts `X-Toolbox-User` / `X-Toolbox-Connector`; production modes arrive in M3.
@@ -128,6 +133,7 @@ pub fn parse_min_snapshot(s: &str) -> Option<u64> {
 }
 
 impl AppState {
+    /// The snapshot published last, if any.
     pub fn snapshot(&self) -> Option<Arc<Published>> {
         self.current.borrow().clone()
     }

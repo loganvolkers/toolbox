@@ -14,6 +14,7 @@ use serde_json::{Value, json};
 use std::sync::Arc;
 use toolbox_expr::{Expr, ExprValue, with_vars};
 
+/// Query of `GET /v1/actions`.
 #[derive(Deserialize)]
 pub struct ListQuery {
     entity: Option<String>,
@@ -70,6 +71,7 @@ pub async fn list(
     Json(json!({"snapshot": p.snapshot_id, "actions": out})).into_response()
 }
 
+/// Body of an action preview: the entity and the inputs to check.
 #[derive(Deserialize)]
 pub struct PreviewBody {
     entity: String,

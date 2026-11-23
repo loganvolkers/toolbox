@@ -10,6 +10,7 @@ const APP_CSS: &str = include_str!("../../../ui/dist/assets/app.css");
 
 pub(crate) const CSP: &str = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'";
 
+/// The embedded UI: its assets by path, and the app shell for any other page.
 pub async fn asset(uri: Uri) -> Response {
     let path = uri.path();
     let (ctype, body) = match path {

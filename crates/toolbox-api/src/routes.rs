@@ -19,6 +19,7 @@ use toolbox_store::NativeValue;
 
 type S = State<Arc<AppState>>;
 
+/// Every HTTP route the server answers: health, the REST API, `/mcp` and the UI.
 pub fn router(state: Arc<AppState>) -> Router {
     Router::new()
         .route("/healthz", get(|| async { "ok" }))
@@ -185,34 +186,11 @@ struct ListQuery {
     min_snapshot: Option<String>,
 }
 
-async fn list_entities(State(s): S, headers: HeaderMap, Query(q): Query<ListQuery>) -> Response {
-    let caller = match s.caller(&headers).await {
-        Ok(c) => c,
-        Err(r) => return r,
-    };
-    let p = match snapshot_for(&s, q.min_snapshot.as_deref()).await {
-        Ok(p) => p,
-        Err(r) => return r,
-    };
-    let filter = match q.filter.as_deref().map(Expr::compile).transpose() {
-        Ok(f) => f,
-        Err(e) => {
-            return problem(
-                StatusCode::BAD_REQUEST,
-                "bad-filter",
-                format!("filter is not valid CEL: {e}"),
-            );
-        }
-    };
-    let fields: Option<Vec<&str>> = q
-        .fields
-        .as_deref()
-        .map(|f| f.split(',').map(str::trim).collect());
-    let limit = q.limit.unwrap_or(100).clamp(1, 1000);
-    let policy = ExprValue::from_json(&Value::Object(s.manifest.policies.clone()));
+/// Candidates for a list in id order from the cursor, of the kind and matching `q`. Visibility is
+/// checked later in batches; filters see only what the caller may see, so a filter can't probe
+/// hidden facets.
+fn list_candidates<'a>(s: &AppState, p: &'a Published, q: &ListQuery) -> Vec<&'a String> {
     let needle = q.q.as_deref().map(str::to_lowercase);
-    // Candidates in id order from the cursor; visibility is checked in batches; filters see only
-    // what the caller may see, so a filter can't probe hidden facets.
     let lower = q
         .cursor
         .as_ref()
@@ -254,7 +232,7 @@ async fn list_entities(State(s): S, headers: HeaderMap, Query(q): Query<ListQuer
                 .range::<String, _>((lower, std::ops::Bound::Unbounded)),
         ),
     };
-    let candidates: Vec<&String> = start
+    start
         .filter(|(_, e)| {
             q.kind
                 .as_deref()
@@ -272,7 +250,35 @@ async fn list_entities(State(s): S, headers: HeaderMap, Query(q): Query<ListQuer
             })
         })
         .map(|(id, _)| id)
-        .collect();
+        .collect()
+}
+
+async fn list_entities(State(s): S, headers: HeaderMap, Query(q): Query<ListQuery>) -> Response {
+    let caller = match s.caller(&headers).await {
+        Ok(c) => c,
+        Err(r) => return r,
+    };
+    let p = match snapshot_for(&s, q.min_snapshot.as_deref()).await {
+        Ok(p) => p,
+        Err(r) => return r,
+    };
+    let filter = match q.filter.as_deref().map(Expr::compile).transpose() {
+        Ok(f) => f,
+        Err(e) => {
+            return problem(
+                StatusCode::BAD_REQUEST,
+                "bad-filter",
+                format!("filter is not valid CEL: {e}"),
+            );
+        }
+    };
+    let fields: Option<Vec<&str>> = q
+        .fields
+        .as_deref()
+        .map(|f| f.split(',').map(str::trim).collect());
+    let limit = q.limit.unwrap_or(100).clamp(1, 1000);
+    let policy = ExprValue::from_json(&Value::Object(s.manifest.policies.clone()));
+    let candidates = list_candidates(&s, &p, &q);
     let truthy = ExprValue::from_json(&Value::Bool(true));
     let wants_scores = q.filter.as_deref().is_some_and(|f| f.contains("scores"));
     let matches = |f: &Expr, id: &str, v: Visibility| {

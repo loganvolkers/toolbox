@@ -788,48 +788,55 @@ fn markdown(m: &toolbox_model::Manifest, d: &Derived, all: bool) -> String {
             );
         }
         for (id, r) in rows.iter().filter(|(_, r)| shown(r)) {
-            let failing: Vec<&String> = r
-                .rules
-                .iter()
-                .flatten()
-                .filter(|(_, o)| *o != "pass")
-                .map(|(n, _)| n)
-                .collect();
-            let _ = writeln!(
-                s,
-                "- **{}** `{id}`{}",
-                r.level,
-                if failing.is_empty() {
-                    String::new()
-                } else {
-                    format!(
-                        ": {}",
-                        failing
-                            .iter()
-                            .map(|f| f.as_str())
-                            .collect::<Vec<_>>()
-                            .join(", ")
-                    )
-                }
-            );
-            for (rule, ev) in &r.evidence {
-                let items: Vec<String> = match ev {
-                    Value::Array(xs) => xs
-                        .iter()
-                        .map(|x| x.as_str().map_or_else(|| x.to_string(), str::to_owned))
-                        .collect(),
-                    other => vec![other.to_string()],
-                };
-                for item in items.iter().take(5) {
-                    let _ = writeln!(s, "  - {rule}: {}", item.lines().next().unwrap_or(""));
-                }
-                if items.len() > 5 {
-                    let _ = writeln!(s, "  - {rule}: … {} more", items.len() - 5);
-                }
-            }
+            entity_md(&mut s, id, r);
         }
     }
     s
+}
+
+/// One entity's line in the markdown report: its level, the rules it fails and up to five items
+/// of each rule's evidence.
+fn entity_md(s: &mut String, id: &str, r: &toolbox_derive::Score) {
+    use std::fmt::Write as _;
+    let failing: Vec<&String> = r
+        .rules
+        .iter()
+        .flatten()
+        .filter(|(_, o)| *o != "pass")
+        .map(|(n, _)| n)
+        .collect();
+    let _ = writeln!(
+        s,
+        "- **{}** `{id}`{}",
+        r.level,
+        if failing.is_empty() {
+            String::new()
+        } else {
+            format!(
+                ": {}",
+                failing
+                    .iter()
+                    .map(|f| f.as_str())
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            )
+        }
+    );
+    for (rule, ev) in &r.evidence {
+        let items: Vec<String> = match ev {
+            Value::Array(xs) => xs
+                .iter()
+                .map(|x| x.as_str().map_or_else(|| x.to_string(), str::to_owned))
+                .collect(),
+            other => vec![other.to_string()],
+        };
+        for item in items.iter().take(5) {
+            let _ = writeln!(s, "  - {rule}: {}", item.lines().next().unwrap_or(""));
+        }
+        if items.len() > 5 {
+            let _ = writeln!(s, "  - {rule}: … {} more", items.len() - 5);
+        }
+    }
 }
 
 /// Comparisons as the web report reads them: each with its entities' display names.

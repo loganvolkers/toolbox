@@ -74,6 +74,7 @@ impl AppState {
         format!("user:{}", subject.split('@').next().unwrap_or(subject))
     }
 
+    /// The OpenFGA object for this portal, `portal:<name>`.
     pub fn portal_object(&self) -> String {
         format!("portal:{}", self.manifest.portal.name)
     }

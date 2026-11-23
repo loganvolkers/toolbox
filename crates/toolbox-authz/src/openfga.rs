@@ -338,6 +338,19 @@ pub async fn install_tuple_view(pool: &sqlx::PgPool, store: &str) -> Result<(), 
     if !store.chars().all(|c| c.is_ascii_alphanumeric()) {
         return Err(format!("unexpected OpenFGA store id {store}"));
     }
+    let schema = tuple_schema(pool).await?;
+    let sql = tuple_view_sql(&schema, store);
+    // store was validated as ASCII alphanumeric above; AssertSqlSafe is sqlx 0.9's audited bypass.
+    sqlx::raw_sql(sqlx::AssertSqlSafe(sql))
+        .execute(pool)
+        .await
+        .map_err(|e| format!("installing the tuple view: {e}"))?;
+    Ok(())
+}
+
+/// The schema of the `tuple` relation OpenFGA reads on this connection (see
+/// [`install_tuple_view`]), validated as a plain identifier.
+async fn tuple_schema(pool: &sqlx::PgPool) -> Result<String, String> {
     let found: Option<String> = sqlx::query_scalar(
         r#"SELECT n.nspname::text
            FROM pg_class c
@@ -361,7 +374,12 @@ pub async fn install_tuple_view(pool: &sqlx::PgPool, store: &str) -> Result<(), 
             "unexpected schema for OpenFGA's tuple relation: {schema}"
         ));
     }
-    let sql = format!(
+    Ok(schema)
+}
+
+/// The statements that move OpenFGA's table aside and put the view and its indexes in its place.
+fn tuple_view_sql(schema: &str, store: &str) -> String {
+    format!(
         r#"
 DO $$ BEGIN
   IF EXISTS (
@@ -393,13 +411,7 @@ CREATE INDEX IF NOT EXISTS derived_tuples_by_object ON toolbox.derived_tuples
 CREATE INDEX IF NOT EXISTS derived_tuples_by_user ON toolbox.derived_tuples
   (split_part(object, ':', 1), relation, subject);
 "#
-    );
-    // store was validated as ASCII alphanumeric above; AssertSqlSafe is sqlx 0.9's audited bypass.
-    sqlx::raw_sql(sqlx::AssertSqlSafe(sql))
-        .execute(pool)
-        .await
-        .map_err(|e| format!("installing the tuple view: {e}"))?;
-    Ok(())
+    )
 }
 
 #[cfg(test)]
