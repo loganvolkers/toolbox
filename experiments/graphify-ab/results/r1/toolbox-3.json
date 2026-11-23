@@ -1,0 +1,25 @@
+{
+  "run": "toolbox-3",
+  "arm": "A",
+  "bcId": "bc-93b3b3b1-2556-5d89-9d00-97e1d4b54a03",
+  "answered": true,
+  "toolCalls": 75,
+  "byTool": {
+    "read_file": 41,
+    "grep": 26,
+    "run_terminal_cmd": 7,
+    "search_replace": 1
+  },
+  "resultChars": 355513,
+  "missingResults": [
+    "read_file",
+    "read_file"
+  ],
+  "readImputed": 44545,
+  "resultCharsImputed": 400058,
+  "graphifyCalls": 0,
+  "graphifyCommands": {},
+  "graphifyChars": 0,
+  "outsidePaths": [],
+  "wallSeconds": 195
+}
