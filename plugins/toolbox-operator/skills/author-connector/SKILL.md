@@ -33,9 +33,10 @@ Work in this order. Do not invent a second protocol.
    ```
    Each line is `{"kind","externalId","data"}`. Map those into whatever catalog
    shape you need (for example `OUT/entities.ndjson`).
-6. **Tenant / config switches** change `TOOLBOX_CONNECTOR_CONFIG` (or
-   `--config`) and the portal connector `config:` together when you also run
-   `connector test`.
+6. **Tenant / config switches:** for a dump-only resync, pass `--config` to
+   `toolbox connector drive` and leave the portal alone. Update
+   `portal/toolbox.yaml` connector `config:` only when you also run
+   `connector test` against that tenant.
 
 ```
 toolbox connector test --name forge --portal portal -- target/debug/forge-connector

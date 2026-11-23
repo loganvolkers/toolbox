@@ -6,7 +6,8 @@
    ```
 2. **Config** is JSON in `TOOLBOX_CONNECTOR_CONFIG`, e.g.
    `{"baseUrl":"http://127.0.0.1:9743","token":"tenant-a-token"}`.
-   Keep `portal/toolbox.yaml` connector `config:` in sync when you also run
+   For a dump-only tenant switch, pass `--config` to `connector drive` and leave
+   the portal alone; update `portal/toolbox.yaml` only when also running
    `connector test`.
 3. **Conformance** (portal stub is included):
    ```bash

@@ -114,3 +114,8 @@ Product fixes on branch `cursor/connector-learning-dx-530d` (D01M83FFM2K6XS4EAVH
 | C | 15 | pass |
 
 **C2 fails** — A not strictly fewer than both (tied with C at 15). v1 was A15/B15/C16.
+
+### Phase 5 v2 agent ids
+- A: bc-64d1c90b-5e24-5195-bd14-7e0ef3170379
+- B: bc-42ec6c3c-6771-5d29-a0f0-ebefed66e14f
+- C: bc-f991c026-2f19-508b-9b52-480f3e9b9cb7
