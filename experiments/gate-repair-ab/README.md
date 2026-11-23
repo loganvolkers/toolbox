@@ -5,8 +5,10 @@ ratchet get it to a correct pass for less effort than reviewdog, which runs the 
 reports only the findings the branch added?
 
 **Status: registered under protocol 2 (D01M83RDWQ5EVKY5SFHDWAD5HFH); round 1 run (§0.1), Toolbox
-changed (§0.2), round 2 next.** The bar is in §5 and was committed before the first scored launch.
-Labels are the adjudicator's, in `ADJUDICATION.md` once both rounds are in.
+changed (§0.2), round 2 run (§0.3), round 3 registered (§5.1) and next.** The bar for rounds 1 and 2
+is in §5 and was committed before the first scored launch; round 3's is in §5.1 and was committed
+before its workspaces were built. Labels are the adjudicator's, in `ADJUDICATION.md` once every
+round is in.
 
 This is about the box ([toolbox-and-tools.md](../../docs/design/toolbox-and-tools.md)): both arms
 carry the same tools, zizmor and actionlint, at the same pins, with the same flags and the same
@@ -59,6 +61,35 @@ makes G4 and G5 harder to pass. Arm B's gate prints everything on stdout.
 Uses outside this harness (P5): every repository's pull request gate (`actions/report` and CI logs),
 `--against` in local loops, box-ab friction #4, and root-causes C1, all of them recorded before this
 benchmark. On the planted branch, the new binary's whole first gate output is 2,892 characters.
+
+### 0.3 Round 2 (frozen at `3762524`; Toolbox's Rust as at `dc42499`)
+
+Every run in both arms was correct. Per run: [results/r2.tsv](results/r2.tsv) and
+[results/r2/](results/r2/).
+
+| Arm | Calls (runs) | Median, range | Read, chars (runs) | Median, range |
+|---|---|---|---|---|
+| A: Toolbox | 7, 4, 6 | 6, 3 | 13,249; 31,901; 11,021 | 13,249; 20,880 |
+| B: reviewdog | 6, 3, 4 | 4, 3 | 20,354; 25,416; 26,915 | 25,416; 6,561 |
+
+By the designer's reading of §5 (the adjudicator's labels decide), round 2 does not show the
+improvement. Arm A's median read fell by 16,518 characters, which is less than *W* (20,880), and arm
+B's median read moved by 14,256 with nothing changed, more than its range allows. So G4 and G5 are
+inconclusive.
+
+**Why, from the transcripts.** The two parts of *read* moved differently. Characters of gate output
+(`gateRead`, added to the TSVs after round 2 and descriptive only for rounds 1 and 2) per run:
+
+| Arm | Round 1 | Round 2 |
+|---|---|---|
+| A: Toolbox | 18,596; 18,264; 27,518 | 3,801; 3,952; 3,876 |
+| B: reviewdog | 5,073; 5,077; 3,708 | 5,077; 4,632; 4,632 |
+
+The rest of *read* is the agent's own exploration of the workflows. That doesn't depend on the gate,
+and it swung in both arms. In round 2, four of six agents ran one broad `cat`/`grep` over
+`.github/workflows/` that returned between 11,714 and 20,746 characters. In round 1 no agent did.
+With three runs, that noise is wider than the effect *read* was meant to detect. A between-round
+control can't separate it either, because it moves arm B too.
 
 ## 1. Why this benchmark
 
@@ -149,12 +180,49 @@ In the dry run, Toolbox's first gate run printed the whole repository's report b
 regressions, about 16k characters, and listed old and new findings together, so the agent reasoned
 about which were new.
 
+### 5.1 Round 3 (pre-registered after round 2, before round 3's workspaces were built)
+
+Round 3 asks round 2's question again, with an answer that round 2's noise can't hide. The designer
+had seen rounds 1 and 2 when writing this, and chose round 3's primary measure from them (§0.3).
+Round 3 is a replication of what they suggest, and the adjudicator should read it that way.
+
+**What changes from rounds 1 and 2:**
+
+- **Both Toolboxes in one round.** A third arm, A⁻ (`toolbox-prev`), runs the Toolbox from before the
+  change (the Rust at `703b53a`, built in a worktree of that commit). It runs alongside arm A, which
+  runs the changed Toolbox at the frozen commit, and arm B. They run on the same harness, at the same
+  time, with the same prompt as arm A. That removes drift between rounds, which in round 2 was larger
+  than the effect. `packages/github-actions` is the same at both commits, so A⁻'s portal is A's.
+  Workspaces are named `toolbox-1…5` (A) and `toolbox-6…10` (A⁻), so a path doesn't say which
+  Toolbox it holds; `prompts/rendered/r3/arms.tsv` maps runs to arms.
+- **Five runs per arm** (P2 asks for at least three); fifteen runs in all, launched together.
+- **A third measure, gate read**: characters of tool results from the agent's gate runs, as
+  `count.py` matches them (`gateChars`). It is what the change altered. *Calls* and *read* stay,
+  as guards.
+
+The transcript's stdout-only gap (§0.1) still applies. A⁻ prints its verdict on stderr, so A⁻'s gate
+read and read are undercounted. That makes G8 and G10 harder to pass, not easier.
+
+| Id | Hypothesis | Holds | Fails |
+|---|---|---|---|
+| G7 | Arm A is correct in every run | 5 of 5 correct | Any run incorrect |
+| G8 | The change cut what the agent reads from the gate | med(A⁻) − med(A) > *W*, on gate read | med(A) − med(A⁻) > *W*, on gate read |
+| G9 | The change cut calls | med(A⁻) − med(A) > *W*, on calls | med(A) − med(A⁻) > *W*, on calls |
+| G10 | The change cut what the agent reads in all | med(A⁻) − med(A) > *W*, on read | med(A) − med(A⁻) > *W*, on read |
+| G11 | With the change, Toolbox's gate output costs less to read than reviewdog's | med(B) − med(A) > *W*, on gate read | med(A) − med(B) > *W*, on gate read |
+
+*W* is as in §5, over the two arms compared, now of five runs each. G2 and G3 are applied again to
+arms A and B, as G2″ and G3″. **The improvement is shown** if G7 holds, G8 holds, and neither G9 nor
+G10 fails. Arm A⁻ or B being incorrect in a run is reported; it changes no label.
+
+**The designer's prediction:** G7 and G8 hold; G9 and G10 are inconclusive; G11 is inconclusive.
+
 ## 6. Protocol
 
 - **Rounds (P3).** Each round freezes one commit of this repository (`frozenAt`) for Toolbox, the
   harness and both arms. The Toolbox binaries are built from it. A Toolbox change made after round 1
   starts round 2, in which both arms rerun.
-- **Runs (P2).** Three fresh runs per arm per round, each in its own workspace
+- **Runs (P2).** Three fresh runs per arm per round (five in round 3), each in its own workspace
   (`/tmp/gate-repair-ab/r<round>/<arm>-<n>`) with its own copies of the tools. Each run is a fresh
   local subagent with the inherited model and only the rendered prompt. No run is dropped for its
   result.
@@ -177,9 +245,9 @@ about which were new.
 export PATH=<dir with zizmor 1.32.0, actionlint 1.7.12 and reviewdog 0.21.0>:$PATH
 cargo build                                       # at the round's frozen commit
 experiments/gate-repair-ab/harness/round.sh 1 <openfga export at 7d89a566> "$PWD" "$PWD/target/debug"
-# launch the six rendered prompts as fresh subagents; then, per run:
-experiments/gate-repair-ab/harness/score.py <arm> /tmp/gate-repair-ab/r1/<arm>-<n>
-experiments/gate-repair-ab/harness/count.py <arm> <transcript.json>
+# round 3: RUNS=5 PREV_TARGET=<worktree of 703b53a>/target/debug round.sh 3 …
+# launch the rendered prompts as fresh subagents; fetch their transcripts; then:
+experiments/gate-repair-ab/harness/collect.py <round> <transcripts dir> <run>=<bcId> …
 ```
 
 ## 8. Dry run (unscored)
