@@ -60,11 +60,6 @@
           "9a88adff"
         ]
       },
-      "benchmark:gate-repair-ab": {
-        "results-recorded": [
-          "dcc0d7a5"
-        ]
-      },
       "benchmark:out-of-box": {
         "sound-method": [
           "9a88adff"
@@ -3221,10 +3216,7 @@
         "level": "silver"
       },
       "benchmark:gate-repair-ab": {
-        "failing": {
-          "results-recorded": 1
-        },
-        "level": "silver"
+        "level": "gold"
       },
       "benchmark:out-of-box": {
         "failing": {

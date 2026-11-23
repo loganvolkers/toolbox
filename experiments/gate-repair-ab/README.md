@@ -4,11 +4,17 @@
 ratchet get it to a correct pass for less effort than reviewdog, which runs the same tools and
 reports only the findings the branch added?
 
-**Status: registered under protocol 2 (D01M83RDWQ5EVKY5SFHDWAD5HFH); round 1 run (§0.1), Toolbox
-changed (§0.2), round 2 run (§0.3), round 3 registered (§5.1) and next.** The bar for rounds 1 and 2
-is in §5 and was committed before the first scored launch; round 3's is in §5.1 and was committed
-before its workspaces were built. Labels are the adjudicator's, in `ADJUDICATION.md` once every
-round is in.
+**Status: complete under protocol 2 (D01M83RDWQ5EVKY5SFHDWAD5HFH). The labels are the independent
+adjudicator's, in [ADJUDICATION.md](ADJUDICATION.md):**
+
+- **Round 1:** Toolbox lost to reviewdog (G2 and G3 fail).
+- **Round 2:** after the Toolbox change (§0.2), the round showed nothing (G4 and G5 inconclusive).
+- **Round 3:** the round showed the improvement under its pre-registered rule (§5.1).
+  - G8 holds: with the change, the median gate read fell from 18,751 characters to 3,876.
+  - G9 and G10, on calls and total read, are inconclusive, not failed.
+
+Toolbox is not shown to beat reviewdog on any measure. The bar for rounds 1 and 2 is in §5; round
+3's is in §5.1, committed before its workspaces were built.
 
 This is about the box ([toolbox-and-tools.md](../../docs/design/toolbox-and-tools.md)): both arms
 carry the same tools, zizmor and actionlint, at the same pins, with the same flags and the same
@@ -31,7 +37,8 @@ score and diff in [results/r1/](results/r1/).
 | B: reviewdog | 4, 4, 4 | 4, 0 | 11,160; 11,178; 8,755 | 11,160; 2,423 |
 
 **Friction, from the transcripts.** The rival arm showed none worth fixing (P4). Each B run read its
-gate's five new findings, fixed them in one or two edits, and reran it. In arm A:
+gate's six new findings (four from zizmor, two from actionlint), fixed them in one or two edits,
+and reran it. In arm A:
 
 1. **The first gate run was mostly report.** About 15.5k characters of every scorecard on stdout
    came first, old debt included. Then the verdict followed, on stderr.
@@ -58,9 +65,12 @@ makes G4 and G5 harder to pass. Arm B's gate prints everything on stdout.
 - **New evidence is marked.** The baseline records a key per evidence item, and a grown list shows
   only the new items, marked `+`, then "and 9 already in the baseline".
 
-Uses outside this harness (P5): every repository's pull request gate (`actions/report` and CI logs),
-`--against` in local loops, box-ab friction #4, and root-causes C1, all of them recorded before this
-benchmark. On the planted branch, the new binary's whole first gate output is 2,892 characters.
+Uses outside this harness (P5): the bare `--baseline` check that `AGENTS.md` tells maintainers to
+run, `--against` in local loops, the `+` marking in `actions/report`'s verdict and annotations,
+box-ab friction #4, and root-causes C1. Box-ab friction #4 and root-causes C1 were recorded before
+this benchmark. (This paragraph first listed `actions/report` for the stdout verdict too. The
+action passes `--out`, so only the marking reaches it; ADJUDICATION.md fit audit. The decision's
+"five new findings" should read six.) On the planted branch, the new binary's whole first gate output is 2,892 characters.
 
 ### 0.3 Round 2 (frozen at `3762524`; Toolbox's Rust as at `dc42499`)
 
@@ -90,6 +100,43 @@ and it swung in both arms. In round 2, four of six agents ran one broad `cat`/`g
 `.github/workflows/` that returned between 11,714 and 20,746 characters. In round 1 no agent did.
 With three runs, that noise is wider than the effect *read* was meant to detect. A between-round
 control can't separate it either, because it moves arm B too.
+
+### 0.4 Round 3 (frozen at `d53569d`; arm A's Rust as at `dc42499`, arm A⁻'s as at `703b53a`)
+
+All fifteen runs were correct. Per run: [results/r3.tsv](results/r3.tsv) and
+[results/r3/](results/r3/).
+
+| Arm | Calls: median, range | Read, chars: median, range | Gate read, chars (runs) | Median, range |
+|---|---|---|---|---|
+| A: changed Toolbox | 5, 3 | 24,517; 22,816 | 4,242; 3,801; 3,952; 3,876; 3,876 | 3,876; 441 |
+| A⁻: previous Toolbox | 7, 2 | 28,614; 4,957 | 19,884; 19,137; 18,751; 16,714; 16,695 | 18,751; 3,189 |
+| B: reviewdog | 4, 3 | 17,883; 14,903 | 3,263; 4,632; 3,112; 3,557; 3,263 | 3,263; 1,520 |
+
+The adjudicator's labels:
+
+- G7 and G8 hold.
+- G9, G10, G11, G2″ and G3″ are inconclusive.
+
+So **the improvement is shown** under §5.1, and only in the sense §5.1 defines. The change cut what
+an agent reads from the gate by a factor of about 4.8, with no measured cost moved elsewhere. No
+round shows that a repair takes fewer calls, or less reading overall. ADJUDICATION.md lists ten
+threats, none of which changes a label. Two are worth reading first. G8 is close to a manipulation
+check (threat 5). And on the gates' own output, reviewdog's 1,222 characters are still fewer than
+Toolbox's 2,867 (threat 3).
+
+**Friction still open, for the next round or benchmark:**
+
+- **Toolbox's failing gate still says more than reviewdog's.** It reports eight regressions where
+  reviewdog reports six findings. One defect appears under up to three rules. The unpinned
+  checkout, for example, shows up under `pinned-everywhere`, `pinned-to-sha` and zizmor's
+  `unpinned-uses`, and the title injection under actionlint, `no-high-findings` and `zizmor-clean`.
+  Every regression also ends with a `from: connector …` line.
+- **The agent still explores on its own.** In every arm, the spread in *read* comes from whether
+  the agent ran one broad `cat`/`grep` over the workflows. Both gates name the file and, for most
+  findings, the line. A check that also names the pinned SHA already in the repository might remove
+  the reason to look.
+- **A pass says nothing.** In round 3, two reviewdog agents ran zizmor directly after their gate
+  passed, to confirm.
 
 ## 1. Why this benchmark
 

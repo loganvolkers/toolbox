@@ -8,24 +8,54 @@ records:
       reviewdog over the same tools?
     layers: [operator]
     stages: [operator/monitor]
-    hypotheses: [G1, G2, G3, G4, G5, G6]
+    hypotheses: [G1, G2, G3, G4, G5, G6, G7, G8, G9, G10, G11]
     rival: >-
       reviewdog 0.21.0 with -filter-mode=added over the same zizmor and
       actionlint, failing only on findings the branch added
     repos: [loganvolkers/openfga@7d89a566]
-    status: designed
-    ran: ''
-    outcome: ''
-    changed: []
+    status: complete
+    ran: 2026-11-23
+    outcome: >-
+      Round 1: Toolbox lost to reviewdog. G1 held, and G2 (calls 7 vs 4) and
+      G3 (read 29,767 vs 11,160 characters) failed. Round 2, after the change,
+      showed nothing: G4 and G5 were inconclusive, because exploration noise
+      moved both arms. Round 3 ran the previous and the changed Toolbox side
+      by side, five runs each, and showed the improvement under its
+      pre-registered rule. G7 held, and G8 held: gate read fell from a median
+      of 18,751 to 3,876 characters, with W 3,189. G9 and G10 were
+      inconclusive, not failed. Toolbox is not shown to beat reviewdog on any
+      measure (G11, G2″ and G3″ inconclusive). Round 3's measure was chosen
+      after rounds 1 and 2 (ADJUDICATION.md)
+    changed:
+    - D01M841J2SN4V3AVZZ5D91YAR51
+    - >-
+      dc42499: a ratchet check without -o or --out prints only its verdict, on
+      stdout, and the baseline records evidence keys so a grown list marks new
+      items with +
     servedValue: ''
     blockedOn: ''
     readme: experiments/gate-repair-ab/README.md
-    results: ''
+    results: experiments/gate-repair-ab/ADJUDICATION.md
     protocol: 2
     prompts: experiments/gate-repair-ab/prompts
     runsPerArm: 3
     measure: >-
-      tool calls and characters of tool results, from each run's runtime
-      transcript (harness/count.py)
+      tool calls, characters of tool results, and (round 3) characters of gate
+      runs' results, from each run's runtime transcript (harness/count.py);
+      the transcript keeps stdout only
+    frozenAt: >-
+      round 1 60723d6 (Rust 703b53a), round 2 3762524 (Rust dc42499), round 3
+      d53569d (arm A Rust dc42499, arm A⁻ Rust 703b53a)
     designer: the agent that wrote the README and runs the rounds
-    adjudicator: a fresh agent that designed no part of it and changed nothing
+    adjudicator: >-
+      a fresh agent that designed no part of it and changed nothing,
+      2026-11-23 (ADJUDICATION.md)
+    fitAudit: >-
+      dc42499 fits (P5): it touches no harness file, and box-ab friction #4
+      and root-causes C1 predate the registration. It overstated one use:
+      actions/report passes --out, so only the evidence marking reaches it. No
+      rival friction blocked arm B (P4) (ADJUDICATION.md)
+    spread: >-
+      three runs per arm in rounds 1 and 2, five in round 3; every run's
+      measures are in results/r1.tsv, r2.tsv and r3.tsv, and minimum, median
+      and range per arm are in README §0 and ADJUDICATION.md

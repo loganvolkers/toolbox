@@ -94,6 +94,9 @@ lessons that cut across them:
 | L12 | **The noise is larger than it looks.** Backstage's phase 1 had the same prompt and scaffold in every round, and took 29, 38 and 29 calls. A 1-call margin from one run is no margin | connector-ab |
 | L13 | **An unequal start is not a result.** deploy-ab authenticated only Toolbox in S2, its Toolbox arm restarted a container built before the run, and its Backstage prompt suggested a provider the facade can't serve | deploy-ab ([ADJUDICATION.md](../../experiments/deploy-ab/ADJUDICATION.md)) |
 | L14 | **See the measure before the bar uses it.** Two bars were written in tokens that the runtime never reported. One then swapped in calls after the run. A dry run would have shown it | connector-ab, deploy-ab |
+| L15 | **Run before and after in one round.** In gate-repair-ab's round 2, reviewdog's median read doubled with nothing changed, because agents chose to explore more. A third arm running the previous Toolbox in the same round removed that drift | gate-repair-ab ([ADJUDICATION.md](../../experiments/gate-repair-ab/ADJUDICATION.md)) |
+| L16 | **Measure what the change touches, and guard the rest.** A total that includes the agent's own exploration hid a 4.8× cut in gate output. Make the touched part the primary measure, and require that the totals don't fail. Register it before the round, and say if earlier rounds suggested it | gate-repair-ab |
+| L17 | **The transcript is not the screen.** The runtime keeps a command's stdout only, so a verdict on stderr was read but not counted | gate-repair-ab §0.1 |
 
 ## 4. How to run one
 
@@ -224,6 +227,7 @@ because its harness and its truth are reused.
 | B7 | `deploy-ab`: a laptop deploy of Toolbox against Backstage, scored by catalog probes rather than `/readyz` ([local-simulation.md](./local-simulation.md), Q19). Run twice, inconclusive. Rerun under protocol 2 after the fixes in its [ADJUDICATION.md](../../experiments/deploy-ab/ADJUDICATION.md) |
 | B8 | Review `connector drive --format catalog` under P5: keep it if it has a use outside connector-ab's harness, or drop it (D01M83RDWR52WVNER0MV5T84NSX) |
 | B9 | Rerun connector-ab under protocol 2, with every arm's recipe written to the same level and Ocean's and Backstage's deferred friction fixed first |
+| B10 | gate-repair-ab showed that the ratchet's gate output is cheaper to read (G8). It did not show that Toolbox beats reviewdog. Toolbox's gate still says more, because one defect is reported under up to three rules. Next round: fold those duplicates, then test against reviewdog again ([README](../../experiments/gate-repair-ab/README.md) §0.4) |
 
 ## Sources
 
