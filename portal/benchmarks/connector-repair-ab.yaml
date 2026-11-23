@@ -16,11 +16,17 @@ records:
     repos:
     - port-labs/ocean@f9f3948e83a20769f32fd3ca9fe0581cc8755926
     - backstage/backstage@feeadd4d4efcbda9f1573b95e356e0f3fc0b5d17
-    status: running
+    status: complete
     ran: 2026-11-23
-    outcome: ''
+    outcome: >-
+      D1 fail (A 31 vs B/C 25 on phases 1+2). D2 fail (all 3/3 recall). D3
+      hold (all arms exact on repair, reuse, read 5/5). Authoring wins from
+      connector-ab v3 did not transfer to the repair loop.
     changed: [D01M83NX8BXH45GQA7WMN4ACEH9]
-    servedValue: ''
+    servedValue: >-
+      Showed diagnose→repair is a distinct claim from author→change; Toolbox
+      matched rivals on correctness but lost on cost and tied on diagnosis
+      recall under the pre-registered bar
     blockedOn: ''
     readme: experiments/connector-repair-ab/README.md
     results: experiments/connector-repair-ab/RESULTS.md

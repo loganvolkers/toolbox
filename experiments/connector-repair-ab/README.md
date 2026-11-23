@@ -5,8 +5,8 @@ conformance and catalog truth, does Toolbox's test/drive/skills feedback loop co
 calls and recover more bugs than Port Ocean or a Backstage entity provider, at equal final
 correctness?
 
-**Status: designed, then run.** Full write-up: [RESULTS.md](./RESULTS.md). Hypotheses D1–D3 and
-the bar in §6 were not edited after the first arm started.
+**Status: complete.** Full write-up: [RESULTS.md](./RESULTS.md). Hypotheses D1–D3 and the bar in
+§6 were not edited after the first arm started. **D1 and D2 failed; D3 held.**
 
 This measures the **package-author** layer's `build-connector` / `test` stages, focused on
 **feedback loops** ([dx-benchmarks.md](../../docs/design/dx-benchmarks.md), DevEx). It is about a
@@ -15,7 +15,17 @@ author→change→reuse→read but scored repair only as discarded C3 rematches.
 
 Decision: [D01M83NX8BXH45GQA7WMN4ACEH9](../../docs/decisions/D01M83NX8BXH45GQA7WMN4ACEH9.md).
 
-## 0. Why this benchmark (what connector-ab missed)
+## 0. Results
+
+| Hypothesis | Result |
+|---|---|
+| **D1** Toolbox cheaper on diagnose+repair (calls 1+2) | **Fail** — A 31, B 25, C 25 |
+| **D2** Toolbox higher diagnosis recall | **Fail** — all 3/3 |
+| **D3** Correctness after repair | **Hold** — all arms exact; read 5/5 |
+
+Details: [RESULTS.md](./RESULTS.md).
+
+## Why this benchmark (what connector-ab missed)
 
 | Measured in connector-ab | Not measured (this A/B) |
 |---|---|

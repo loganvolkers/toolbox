@@ -1,0 +1,15 @@
+{
+  "arm": "/tmp/connector-repair-ab/arms/C",
+  "tenant": "b",
+  "phase": 3,
+  "truth": {
+    "ok": true,
+    "detail": "exact match (4 entities)",
+    "got": 4,
+    "want": 4
+  },
+  "shape": {
+    "ok": true,
+    "detail": "EntityProvider present"
+  }
+}

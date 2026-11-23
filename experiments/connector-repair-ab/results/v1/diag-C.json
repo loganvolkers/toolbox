@@ -1,0 +1,14 @@
+{
+  "arm": "/tmp/connector-repair-ab/arms/C",
+  "letter": "C",
+  "path": "/tmp/connector-repair-ab/arms/C/OUT/diagnosis.md",
+  "found": {
+    "BUG-ID": true,
+    "BUG-EXTRA": true,
+    "BUG-ASSIGNEE": true
+  },
+  "recall": 1.0,
+  "named": 3,
+  "total": 3,
+  "ok": true
+}

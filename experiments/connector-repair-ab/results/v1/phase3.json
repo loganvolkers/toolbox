@@ -1,0 +1,20 @@
+{
+  "B": {
+    "calls": 12,
+    "agent": "bc-5d8a4e62-ada0-59ae-9833-8de281405b9a",
+    "truth": true,
+    "shape": true
+  },
+  "C": {
+    "calls": 13,
+    "agent": "bc-0045ebf0-fff6-514a-9b98-5621cd9c045e",
+    "truth": true,
+    "shape": true
+  },
+  "A": {
+    "calls": 11,
+    "agent": "bc-4b0c9cf8-6adc-5347-8380-a02b2a88f46c",
+    "truth": true,
+    "shape": true
+  }
+}
