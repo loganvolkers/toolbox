@@ -89,6 +89,11 @@ kinds:
 scorecards:
   - name: pnpm-workspace
     kind: JsWorkspace
+    description: >-
+      A pnpm workspace's hygiene: a workspace file, a pinned package manager
+      and one root lockfile; a frozen install in CI and a declared linker
+      policy; aligned toolchains and bounded root dependencies (packages/pnpm-
+      expo).
     owner: group:maintainers
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze}
@@ -163,6 +168,10 @@ scorecards:
 
   - name: expo-app
     kind: ExpoApp
+    description: >-
+      An Expo app's setup: the Expo dependency, an app config and one EAS
+      config; the SDK's own packages, Metro's Expo default and expo doctor
+      pinned in CI; and EAS build profiles (packages/pnpm-expo).
     owner: group:maintainers
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze}

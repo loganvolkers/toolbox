@@ -144,7 +144,6 @@
     "maintainer-ci-reliability": {
       "workflow:.github/workflows/ci.yml": {
         "failing": {
-          "cancels-superseded-runs": 1,
           "every-job-has-timeout": 5
         },
         "level": "none",
@@ -283,10 +282,7 @@
         "level": "gold"
       },
       "connector:crates/toolbox-connector-scim": {
-        "failing": {
-          "has-tests": 1
-        },
-        "level": "bronze"
+        "level": "gold"
       },
       "connector:crates/toolbox-connector-workspace": {
         "level": "gold"
@@ -374,10 +370,9 @@
       },
       "crate:toolbox-connector-scim": {
         "failing": {
-          "few-unwraps": 1,
-          "has-tests": null
+          "few-unwraps": 1
         },
-        "level": "none",
+        "level": "silver",
         "unknown": [
           "clippy-clean",
           "tests-pass"
@@ -412,7 +407,7 @@
       },
       "crate:toolbox-expr": {
         "failing": {
-          "fully-documented": 3
+          "fully-documented": 1
         },
         "level": "silver",
         "unknown": [
@@ -972,6 +967,9 @@
       "doc:docs/decisions/D01M83FFM2K6XS4EAVHVP92TBDZ.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M83G9F4EEGN1GTP14HEYB8B6.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/D01M83GQ1KP8A0WR3P2S7AG54WQ.md": {
         "level": "skipped"
       },
@@ -1135,6 +1133,9 @@
         "level": "silver"
       },
       "doc:docs/design/supply-chain-standards.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/thresholds.md": {
         "level": "silver"
       },
       "doc:docs/design/tool-installation.md": {
@@ -1556,8 +1557,8 @@
     "maintainer-repo": {
       "repo:loganvolkers/toolbox": {
         "failing": {
-          "constituents-at-least-gold": 8,
-          "constituents-at-least-silver": 6
+          "constituents-at-least-gold": 7,
+          "constituents-at-least-silver": 5
         },
         "level": "bronze"
       }
@@ -1979,7 +1980,7 @@
       },
       "assessment:rule-quality/rule:toolbox/meta-rule/readable": {
         "failing": {
-          "cites-everything": 2,
+          "cites-everything": 3,
           "cites-for-findings": 1
         },
         "level": "bronze"
@@ -1994,13 +1995,18 @@
         "level": "gold"
       },
       "assessment:rule-quality/rule:toolbox/user-mcp/contract-tested": {
-        "level": "gold"
+        "failing": {
+          "cites-everything": 1,
+          "cites-for-findings": 1
+        },
+        "level": "bronze"
       },
       "assessment:scorecard-quality/scorecard:toolbox/maintainer-ci-reliability": {
         "failing": {
-          "cites-everything": 1
+          "cites-everything": 3,
+          "cites-for-findings": 1
         },
-        "level": "silver"
+        "level": "bronze"
       },
       "assessment:scorecard-quality/scorecard:toolbox/meta-rule": {
         "level": "gold"
@@ -2012,7 +2018,10 @@
         "level": "gold"
       },
       "assessment:scorecard-quality/scorecard:toolbox/sdlc-stage": {
-        "level": "gold"
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
       },
       "assessment:sdlc-stage-quality/sdlc-stage:maintainer/build": {
         "level": "gold"
@@ -2025,7 +2034,7 @@
       },
       "assessment:sdlc-stage-quality/sdlc-stage:operator/monitor": {
         "failing": {
-          "cites-everything": 1
+          "cites-everything": 2
         },
         "level": "silver"
       },
@@ -2398,6 +2407,9 @@
       "field:toolbox/Assessment.reviewState": {
         "level": "gold"
       },
+      "field:toolbox/Assessment.reviewUncited": {
+        "level": "gold"
+      },
       "field:toolbox/Assessment.reviewUnsure": {
         "level": "gold"
       },
@@ -2495,6 +2507,9 @@
         "level": "gold"
       },
       "field:toolbox/Benchmark.title": {
+        "level": "gold"
+      },
+      "field:toolbox/Benchmark.unknownLayers": {
         "level": "gold"
       },
       "field:toolbox/Command.about": {
@@ -2779,6 +2794,9 @@
       "field:toolbox/Crate.reviewState": {
         "level": "gold"
       },
+      "field:toolbox/Crate.reviewUncited": {
+        "level": "gold"
+      },
       "field:toolbox/Crate.reviewUnsure": {
         "level": "gold"
       },
@@ -2800,6 +2818,12 @@
           "has-shape": 1
         },
         "level": "bronze"
+      },
+      "field:toolbox/Crate.testsPerKloc": {
+        "level": "gold"
+      },
+      "field:toolbox/Crate.testsWithoutAsserts": {
+        "level": "gold"
       },
       "field:toolbox/Crate.undocumented": {
         "failing": {
@@ -2974,6 +2998,12 @@
         "level": "bronze"
       },
       "field:toolbox/Field.computed": {
+        "level": "gold"
+      },
+      "field:toolbox/Field.computedLoops": {
+        "level": "gold"
+      },
+      "field:toolbox/Field.computedNodes": {
         "level": "gold"
       },
       "field:toolbox/Field.described": {
@@ -3533,6 +3563,12 @@
       "field:toolbox/Rule.evidenceCel": {
         "level": "gold"
       },
+      "field:toolbox/Rule.evidenceTracksCheck": {
+        "level": "gold"
+      },
+      "field:toolbox/Rule.fixNamesPlace": {
+        "level": "gold"
+      },
       "field:toolbox/Rule.fixText": {
         "level": "gold"
       },
@@ -3590,6 +3626,9 @@
       "field:toolbox/Rule.reviewState": {
         "level": "gold"
       },
+      "field:toolbox/Rule.reviewUncited": {
+        "level": "gold"
+      },
       "field:toolbox/Rule.reviewUnsure": {
         "level": "gold"
       },
@@ -3604,6 +3643,9 @@
           "described": 1
         },
         "level": "bronze"
+      },
+      "field:toolbox/Scorecard.described": {
+        "level": "gold"
       },
       "field:toolbox/Scorecard.fixtureLevels": {
         "failing": {
@@ -3665,6 +3707,9 @@
         "level": "gold"
       },
       "field:toolbox/Scorecard.reviewState": {
+        "level": "gold"
+      },
+      "field:toolbox/Scorecard.reviewUncited": {
         "level": "gold"
       },
       "field:toolbox/Scorecard.reviewUnsure": {
@@ -3752,6 +3797,9 @@
       "field:toolbox/SdlcStage.name": {
         "level": "gold"
       },
+      "field:toolbox/SdlcStage.notInCi": {
+        "level": "gold"
+      },
       "field:toolbox/SdlcStage.order": {
         "level": "gold"
       },
@@ -3761,16 +3809,25 @@
       "field:toolbox/SdlcStage.reviewState": {
         "level": "gold"
       },
+      "field:toolbox/SdlcStage.reviewUncited": {
+        "level": "gold"
+      },
       "field:toolbox/SdlcStage.reviewUnsure": {
         "level": "gold"
       },
       "field:toolbox/SdlcStage.status": {
         "level": "gold"
       },
+      "field:toolbox/SdlcStage.unresolvedCommands": {
+        "level": "gold"
+      },
       "field:toolbox/SitePage.descriptionChars": {
         "level": "gold"
       },
       "field:toolbox/SitePage.draft": {
+        "level": "gold"
+      },
+      "field:toolbox/SitePage.duplicateTitle": {
         "level": "gold"
       },
       "field:toolbox/SitePage.inSidebar": {
@@ -3933,11 +3990,17 @@
         },
         "level": "bronze"
       },
+      "field:toolbox/Workflow.cancelsSuperseded": {
+        "level": "gold"
+      },
       "field:toolbox/Workflow.concurrency": {
         "failing": {
           "described": 1
         },
         "level": "bronze"
+      },
+      "field:toolbox/Workflow.hiddenFailures": {
+        "level": "gold"
       },
       "field:toolbox/Workflow.jobs": {
         "failing": {
@@ -4255,6 +4318,7 @@
       "rule:acme/app-approval/permissions-match-snapshot": {
         "failing": {
           "always-explains": 1,
+          "evidence-tracks-check": 1,
           "shows-evidence": 1,
           "tested": 1
         },
@@ -4263,6 +4327,8 @@
       "rule:acme/github-app-hygiene/only-approved-apps": {
         "failing": {
           "always-explains": 1,
+          "evidence-tracks-check": 1,
+          "fix-names-a-place": 1,
           "shows-evidence": 1,
           "tested": 1
         },
@@ -4270,13 +4336,16 @@
       },
       "rule:acme/ownership/branch-protected": {
         "failing": {
-          "always-explains": 1
+          "always-explains": 1,
+          "evidence-tracks-check": 1,
+          "fix-names-a-place": 1
         },
-        "level": "silver"
+        "level": "bronze"
       },
       "rule:acme/ownership/claim-verified": {
         "failing": {
           "always-explains": 1,
+          "evidence-tracks-check": 1,
           "shows-evidence": 1
         },
         "level": "bronze"
@@ -4284,6 +4353,7 @@
       "rule:acme/ownership/has-owner": {
         "failing": {
           "always-explains": 1,
+          "evidence-tracks-check": 1,
           "shows-evidence": 1
         },
         "level": "bronze"
@@ -4292,6 +4362,7 @@
         "failing": {
           "always-explains": 1,
           "both-outcomes-on-fixtures": 1,
+          "evidence-tracks-check": 1,
           "tested": 1
         },
         "level": "none"
@@ -4395,6 +4466,9 @@
         },
         "level": "none"
       },
+      "rule:toolbox/maintainer-ci-reliability/failures-visible": {
+        "level": "gold"
+      },
       "rule:toolbox/maintainer-ci-reliability/fast-feedback": {
         "failing": {
           "tested": 1
@@ -4480,7 +4554,6 @@
       },
       "rule:toolbox/maintainer-crate/crate-docs": {
         "failing": {
-          "always-explains": 1,
           "both-outcomes-on-fixtures": 1,
           "tested": 1
         },
@@ -4496,11 +4569,7 @@
         "level": "gold"
       },
       "rule:toolbox/maintainer-crate/has-tests": {
-        "failing": {
-          "always-explains": 1,
-          "shows-evidence": 1
-        },
-        "level": "bronze"
+        "level": "gold"
       },
       "rule:toolbox/maintainer-crate/no-huge-functions": {
         "failing": {
@@ -4527,6 +4596,9 @@
       "rule:toolbox/maintainer-crate/tests-pass": {
         "level": "gold"
       },
+      "rule:toolbox/maintainer-crate/tests-scale-with-code": {
+        "level": "gold"
+      },
       "rule:toolbox/maintainer-dependency/from-a-registry": {
         "level": "gold"
       },
@@ -4546,11 +4618,7 @@
         "level": "gold"
       },
       "rule:toolbox/maintainer-docs/cites-sources": {
-        "failing": {
-          "always-explains": 1,
-          "shows-evidence": 1
-        },
-        "level": "bronze"
+        "level": "gold"
       },
       "rule:toolbox/maintainer-docs/links-resolve": {
         "level": "gold"
@@ -4560,9 +4628,7 @@
       },
       "rule:toolbox/maintainer-docs/status-banner": {
         "failing": {
-          "always-explains": 1,
           "both-outcomes-on-fixtures": 1,
-          "shows-evidence": 1,
           "tested": 1
         },
         "level": "none"
@@ -4708,6 +4774,9 @@
       "rule:toolbox/maintainer-site/titled": {
         "level": "gold"
       },
+      "rule:toolbox/maintainer-site/unique-title": {
+        "level": "gold"
+      },
       "rule:toolbox/maintainer-skill/description-says-when": {
         "level": "gold"
       },
@@ -4780,6 +4849,9 @@
       "rule:toolbox/meta-connector/refreshable": {
         "level": "gold"
       },
+      "rule:toolbox/meta-field/computed-readable": {
+        "level": "gold"
+      },
       "rule:toolbox/meta-field/described": {
         "level": "gold"
       },
@@ -4822,7 +4894,13 @@
       "rule:toolbox/meta-rule/decided-on-fixtures": {
         "level": "gold"
       },
+      "rule:toolbox/meta-rule/evidence-tracks-check": {
+        "level": "gold"
+      },
       "rule:toolbox/meta-rule/explains-fix": {
+        "level": "gold"
+      },
+      "rule:toolbox/meta-rule/fix-names-a-place": {
         "level": "gold"
       },
       "rule:toolbox/meta-rule/no-nested-loops": {
@@ -4837,10 +4915,16 @@
       "rule:toolbox/meta-rule/tested": {
         "level": "gold"
       },
+      "rule:toolbox/meta-scorecard/described": {
+        "level": "gold"
+      },
       "rule:toolbox/meta-scorecard/every-level-has-rules": {
         "level": "gold"
       },
       "rule:toolbox/meta-scorecard/every-rule-tested": {
+        "level": "gold"
+      },
+      "rule:toolbox/meta-scorecard/fixtures-reach-every-level": {
         "level": "gold"
       },
       "rule:toolbox/meta-scorecard/fixtures-show-the-ladder": {
@@ -4863,17 +4947,13 @@
       },
       "rule:toolbox/operator-cli/exercised": {
         "failing": {
-          "always-explains": 1,
-          "both-outcomes-on-fixtures": 1,
-          "shows-evidence": 1
+          "both-outcomes-on-fixtures": 1
         },
         "level": "bronze"
       },
       "rule:toolbox/operator-cli/has-help": {
         "failing": {
-          "always-explains": 1,
           "both-outcomes-on-fixtures": 1,
-          "shows-evidence": 1,
           "tested": 1
         },
         "level": "none"
@@ -4962,6 +5042,9 @@
       "rule:toolbox/sdlc-stage/has-exit-criterion": {
         "level": "gold"
       },
+      "rule:toolbox/sdlc-stage/status-known": {
+        "level": "gold"
+      },
       "rule:toolbox/user-cli/args-described": {
         "failing": {
           "tested": 1
@@ -4970,33 +5053,22 @@
       },
       "rule:toolbox/user-cli/exercised": {
         "failing": {
-          "always-explains": 1,
-          "shows-evidence": 1,
           "tested": 1
         },
         "level": "none"
       },
       "rule:toolbox/user-cli/has-help": {
         "failing": {
-          "always-explains": 1,
           "both-outcomes-on-fixtures": 1,
-          "shows-evidence": 1,
           "tested": 1
         },
         "level": "none"
       },
       "rule:toolbox/user-cli/structured-output": {
-        "failing": {
-          "always-explains": 1,
-          "both-outcomes-on-fixtures": 1,
-          "shows-evidence": 1,
-          "tested": 1
-        },
-        "level": "none"
+        "level": "gold"
       },
       "rule:toolbox/user-mcp/annotated": {
         "failing": {
-          "always-explains": 1,
           "both-outcomes-on-fixtures": 1,
           "tested": 1
         },
@@ -5007,9 +5079,7 @@
       },
       "rule:toolbox/user-mcp/described": {
         "failing": {
-          "always-explains": 1,
           "both-outcomes-on-fixtures": 1,
-          "shows-evidence": 1,
           "tested": 1
         },
         "level": "none"
@@ -5024,24 +5094,28 @@
     "meta-scorecard": {
       "scorecard:acme/app-approval": {
         "failing": {
+          "described": 1,
           "every-rule-tested": 1
         },
-        "level": "silver"
+        "level": "bronze"
       },
       "scorecard:acme/github-app-hygiene": {
         "failing": {
+          "described": 1,
           "every-rule-tested": 1
         },
-        "level": "silver"
+        "level": "bronze"
       },
       "scorecard:acme/ownership": {
         "failing": {
+          "described": 1,
           "every-rule-tested": 1
         },
-        "level": "silver"
+        "level": "bronze"
       },
       "scorecard:repo/docs": {
         "failing": {
+          "fixtures-reach-every-level": 1,
           "fixtures-show-the-ladder": 1
         },
         "level": "bronze"
@@ -5050,7 +5124,7 @@
         "failing": {
           "every-rule-tested": 1
         },
-        "level": "silver"
+        "level": "bronze"
       },
       "scorecard:toolbox/cli-skill": {
         "level": "gold"
@@ -5059,73 +5133,115 @@
         "level": "gold"
       },
       "scorecard:toolbox/maintainer-agent-doc": {
-        "level": "gold"
+        "failing": {
+          "fixtures-reach-every-level": 1
+        },
+        "level": "silver"
       },
       "scorecard:toolbox/maintainer-benchmark": {
-        "level": "gold"
+        "failing": {
+          "fixtures-reach-every-level": 1
+        },
+        "level": "silver"
       },
       "scorecard:toolbox/maintainer-ci-reliability": {
         "failing": {
-          "every-rule-tested": 4
+          "every-rule-tested": 4,
+          "fixtures-reach-every-level": 1
         },
-        "level": "silver"
+        "level": "bronze"
       },
       "scorecard:toolbox/maintainer-ci-security": {
         "failing": {
-          "every-rule-tested": 2
+          "every-rule-tested": 2,
+          "fixtures-reach-every-level": 1
         },
-        "level": "silver"
+        "level": "bronze"
       },
       "scorecard:toolbox/maintainer-connector": {
-        "level": "gold"
+        "failing": {
+          "fixtures-reach-every-level": 1
+        },
+        "level": "silver"
       },
       "scorecard:toolbox/maintainer-crate": {
         "failing": {
-          "every-rule-tested": 6
+          "every-rule-tested": 6,
+          "fixtures-reach-every-level": 2
         },
-        "level": "silver"
+        "level": "bronze"
       },
       "scorecard:toolbox/maintainer-dependency": {
-        "level": "gold"
+        "failing": {
+          "fixtures-reach-every-level": 1
+        },
+        "level": "silver"
       },
       "scorecard:toolbox/maintainer-docs": {
         "failing": {
           "every-rule-tested": 1
         },
-        "level": "silver"
+        "level": "bronze"
       },
       "scorecard:toolbox/maintainer-example": {
-        "level": "gold"
+        "failing": {
+          "fixtures-reach-every-level": 1
+        },
+        "level": "silver"
       },
       "scorecard:toolbox/maintainer-observability": {
-        "level": "gold"
+        "failing": {
+          "fixtures-reach-every-level": 1
+        },
+        "level": "silver"
       },
       "scorecard:toolbox/maintainer-openssf": {
         "level": "gold"
       },
       "scorecard:toolbox/maintainer-package": {
-        "level": "gold"
+        "failing": {
+          "fixtures-reach-every-level": 1
+        },
+        "level": "silver"
       },
       "scorecard:toolbox/maintainer-plugin": {
-        "level": "gold"
+        "failing": {
+          "fixtures-reach-every-level": 1
+        },
+        "level": "silver"
       },
       "scorecard:toolbox/maintainer-python": {
         "level": "gold"
       },
       "scorecard:toolbox/maintainer-repo": {
-        "level": "gold"
+        "failing": {
+          "fixtures-reach-every-level": 1
+        },
+        "level": "silver"
       },
       "scorecard:toolbox/maintainer-schema": {
-        "level": "gold"
+        "failing": {
+          "fixtures-reach-every-level": 1
+        },
+        "level": "silver"
       },
       "scorecard:toolbox/maintainer-site": {
-        "level": "gold"
+        "failing": {
+          "fixtures-reach-every-level": 1
+        },
+        "level": "silver"
       },
       "scorecard:toolbox/maintainer-skill": {
-        "level": "gold"
+        "failing": {
+          "fixtures-reach-every-level": 1
+        },
+        "level": "silver"
       },
       "scorecard:toolbox/maintainer-supply-chain": {
-        "level": "gold"
+        "failing": {
+          "fixtures-reach-every-level": 2
+        },
+        "level": "silver"
       },
       "scorecard:toolbox/meta-assessment": {
         "level": "gold"
@@ -5137,56 +5253,85 @@
         "level": "gold"
       },
       "scorecard:toolbox/meta-kind": {
-        "level": "gold"
+        "failing": {
+          "fixtures-reach-every-level": 1
+        },
+        "level": "silver"
       },
       "scorecard:toolbox/meta-rubric": {
         "level": "gold"
       },
       "scorecard:toolbox/meta-rule": {
-        "level": "gold"
-      },
-      "scorecard:toolbox/meta-scorecard": {
-        "level": "gold"
-      },
-      "scorecard:toolbox/operator-cli": {
         "failing": {
-          "every-rule-tested": 3
+          "fixtures-reach-every-level": 2
         },
         "level": "silver"
       },
+      "scorecard:toolbox/meta-scorecard": {
+        "failing": {
+          "fixtures-reach-every-level": 2
+        },
+        "level": "silver"
+      },
+      "scorecard:toolbox/operator-cli": {
+        "failing": {
+          "every-rule-tested": 3,
+          "fixtures-reach-every-level": 1
+        },
+        "level": "bronze"
+      },
       "scorecard:toolbox/review-assessment": {
-        "level": "gold"
+        "failing": {
+          "fixtures-reach-every-level": 1
+        },
+        "level": "silver"
       },
       "scorecard:toolbox/review-crate": {
-        "level": "gold"
+        "failing": {
+          "fixtures-reach-every-level": 1
+        },
+        "level": "silver"
       },
       "scorecard:toolbox/review-rule": {
-        "level": "gold"
+        "failing": {
+          "fixtures-reach-every-level": 1
+        },
+        "level": "silver"
       },
       "scorecard:toolbox/review-scorecard": {
         "level": "gold"
       },
       "scorecard:toolbox/review-sdlc-stage": {
-        "level": "gold"
+        "failing": {
+          "fixtures-reach-every-level": 1
+        },
+        "level": "silver"
       },
       "scorecard:toolbox/sdlc-layer": {
-        "level": "gold"
+        "failing": {
+          "fixtures-reach-every-level": 1
+        },
+        "level": "silver"
       },
       "scorecard:toolbox/sdlc-stage": {
-        "level": "gold"
+        "failing": {
+          "fixtures-reach-every-level": 1
+        },
+        "level": "silver"
       },
       "scorecard:toolbox/user-cli": {
         "failing": {
-          "every-rule-tested": 4,
-          "tested": 1
+          "every-rule-tested": 3,
+          "fixtures-reach-every-level": 1
         },
-        "level": "none"
+        "level": "bronze"
       },
       "scorecard:toolbox/user-mcp": {
         "failing": {
-          "every-rule-tested": 2
+          "every-rule-tested": 2,
+          "fixtures-reach-every-level": 1
         },
-        "level": "silver"
+        "level": "bronze"
       }
     },
     "operator-cli": {
@@ -5207,13 +5352,13 @@
       },
       "command:connector-drive": {
         "failing": {
-          "exercised": null
+          "exercised": 1
         },
         "level": "bronze"
       },
       "command:connector-records": {
         "failing": {
-          "exercised": null
+          "exercised": 1
         },
         "level": "bronze"
       },
@@ -5249,13 +5394,13 @@
       },
       "command:plan": {
         "failing": {
-          "exercised": null
+          "exercised": 1
         },
         "level": "bronze"
       },
       "command:push": {
         "failing": {
-          "exercised": null
+          "exercised": 1
         },
         "level": "bronze"
       },
@@ -5285,7 +5430,7 @@
       },
       "command:token-create": {
         "failing": {
-          "exercised": null
+          "exercised": 1
         },
         "level": "bronze"
       },
@@ -5303,7 +5448,7 @@
       },
       "command:vendor": {
         "failing": {
-          "exercised": null
+          "exercised": 1
         },
         "level": "bronze"
       }
@@ -5432,7 +5577,7 @@
       },
       "sdlc-stage:package-author/build-connector": {
         "failing": {
-          "built": 3
+          "built": 4
         },
         "level": "silver"
       },
@@ -5491,7 +5636,7 @@
     "user-cli": {
       "command:actions": {
         "failing": {
-          "exercised": null
+          "exercised": 1
         },
         "level": "bronze"
       },
@@ -5506,7 +5651,7 @@
       },
       "command:campaign": {
         "failing": {
-          "exercised": null
+          "exercised": 1
         },
         "level": "bronze"
       },
@@ -5530,19 +5675,19 @@
       },
       "command:explain": {
         "failing": {
-          "exercised": null
+          "exercised": 1
         },
         "level": "bronze"
       },
       "command:get": {
         "failing": {
-          "exercised": null
+          "exercised": 1
         },
         "level": "bronze"
       },
       "command:graph": {
         "failing": {
-          "exercised": null
+          "exercised": 1
         },
         "level": "bronze"
       },
@@ -5563,13 +5708,13 @@
       },
       "command:query": {
         "failing": {
-          "exercised": null
+          "exercised": 1
         },
         "level": "bronze"
       },
       "command:refresh": {
         "failing": {
-          "exercised": null
+          "exercised": 1
         },
         "level": "bronze"
       },
@@ -5581,13 +5726,13 @@
       },
       "command:scorecard": {
         "failing": {
-          "exercised": null
+          "exercised": 1
         },
         "level": "bronze"
       },
       "command:search": {
         "failing": {
-          "exercised": null
+          "exercised": 1
         },
         "level": "bronze"
       },

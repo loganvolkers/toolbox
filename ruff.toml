@@ -3,6 +3,11 @@
 # (portal/standards/python.yaml) and passes it no settings of its own.
 target-version = "py311"
 
+[lint]
+# A bare `# noqa` hides a finding from ruff's own output, so these two make suppressions visible:
+# PGH004 flags a noqa without a code, RUF100 a noqa that suppresses nothing.
+extend-select = ["PGH004", "RUF100"]
+
 [lint.per-file-ignores]
 # The reference portal's oracle is kept terse on purpose: one statement per line would double it,
 # and its behaviour is pinned by its own checks (tools/validate.py, tools/reference.py --check).

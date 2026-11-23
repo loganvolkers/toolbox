@@ -69,6 +69,10 @@ kinds:
 scorecards:
   - name: repo-hygiene
     kind: Repository
+    description: >-
+      A pilot repository's basics: a README and CODEOWNERS, then a catch-all
+      owner, owners that are teams and a licence (examples/repo-portal-
+      starter).
     owner: group:maintainers
     levels: [bronze, silver]
     rules:
@@ -115,6 +119,9 @@ scorecards:
 
   - name: docs
     kind: Doc
+    description: >-
+      Each Markdown document in a pilot repository: links that resolve
+      (examples/repo-portal-starter).
     owner: group:maintainers
     levels: [bronze]
     rules:

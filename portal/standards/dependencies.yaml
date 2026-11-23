@@ -32,6 +32,10 @@ scorecards:
   # a policy; they are not gated.
   - name: maintainer-dependency
     kind: Dependency
+    description: >-
+      Each direct Cargo dependency: a bounded requirement from a registry,
+      locked to one version across the workspace, and shared ones inherited
+      from the workspace (D74).
     owner: group:maintainers
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze}
@@ -55,8 +59,8 @@ scorecards:
       check: entity.versions.size() > 0
       evidence: "['not in Cargo.lock']"
       fix: >-
-        Run cargo generate-lockfile so Cargo.lock records this dependency. The
-        lockfile is what makes the build reproducible.
+        Run `cargo generate-lockfile` so `Cargo.lock` records this dependency.
+        The lockfile is what makes the build reproducible.
     - name: one-version
       level: silver
       check: entity.versions.size() == 1

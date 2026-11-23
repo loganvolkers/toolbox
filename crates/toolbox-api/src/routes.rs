@@ -13,7 +13,7 @@ use serde_json::{Map, Value, json};
 use std::collections::BTreeMap;
 use std::sync::Arc;
 use std::time::Duration;
-use toolbox_expr::{Expr, to_cel, with_vars};
+use toolbox_expr::{Expr, ExprValue, with_vars};
 use toolbox_store::NativeValue;
 
 type S = State<Arc<AppState>>;
@@ -208,7 +208,7 @@ async fn list_entities(State(s): S, headers: HeaderMap, Query(q): Query<ListQuer
         .as_deref()
         .map(|f| f.split(',').map(str::trim).collect());
     let limit = q.limit.unwrap_or(100).clamp(1, 1000);
-    let policy = to_cel(&Value::Object(s.manifest.policies.clone()));
+    let policy = ExprValue::from_json(&Value::Object(s.manifest.policies.clone()));
     let needle = q.q.as_deref().map(str::to_lowercase);
     // Candidates in id order from the cursor; visibility is checked in batches; filters see only
     // what the caller may see, so a filter can't probe hidden facets.
@@ -238,7 +238,7 @@ async fn list_entities(State(s): S, headers: HeaderMap, Query(q): Query<ListQuer
         })
         .map(|(id, _)| id)
         .collect();
-    let truthy = to_cel(&Value::Bool(true));
+    let truthy = ExprValue::from_json(&Value::Bool(true));
     let wants_scores = q.filter.as_deref().is_some_and(|f| f.contains("scores"));
     let mut items: Vec<Value> = Vec::new();
     let mut next = None;
@@ -256,12 +256,12 @@ async fn list_entities(State(s): S, headers: HeaderMap, Query(q): Query<ListQuer
                 let shaped = s.shape_entity(&p, &caller, id, v, None).unwrap();
                 let mut visible = shaped["fields"].clone();
                 visible["id"] = json!(id);
-                let entity = to_cel(&visible);
+                let entity = ExprValue::from_json(&visible);
                 // `scores['<scorecard>']` = {level, rules: {rule: outcome}}, as the caller may see it.
                 let scores = if wants_scores {
-                    to_cel(&score_outcomes(s.shape_scores(&p, &caller, id, v)))
+                    ExprValue::from_json(&score_outcomes(s.shape_scores(&p, &caller, id, v)))
                 } else {
-                    to_cel(&json!({}))
+                    ExprValue::from_json(&json!({}))
                 };
                 match with_vars(
                     &[

@@ -223,19 +223,7 @@ fn job_boundary(line: &str) -> bool {
 }
 
 fn secrets(rel: &str, text: &str) -> Vec<String> {
-    let patterns = [
-        ("aws-access-key", r"AKIA[0-9A-Z]{16}"),
-        ("github-token", r"ghp_[A-Za-z0-9]{36}"),
-    ];
-    let mut hits = Vec::new();
-    for (n, line) in text.lines().enumerate() {
-        for (kind, pat) in patterns {
-            if compile(pat).is_match(line) {
-                hits.push(format!("{}:{} {kind}", rel, n + 1));
-            }
-        }
-    }
-    hits
+    crate::hygiene::secrets(rel, text)
 }
 
 fn compile(pat: &str) -> Regex {

@@ -253,4 +253,44 @@ mod tests {
         assert_eq!(ids, vec![("a", "1"), ("b", "2")]);
         assert_eq!(snap.version, 2);
     }
+
+    fn native(field: &str, value: i64, revision: u64) -> NativeValue {
+        serde_json::from_value(
+            json!({"entity": "e", "field": field, "value": value, "revision": revision}),
+        )
+        .expect("a native value")
+    }
+
+    #[test]
+    fn the_highest_native_revision_wins_and_ties_go_to_the_later_write() {
+        let mut s = MemStore::new();
+        s.put_native([native("a", 1, 2), native("b", 1, 1)]);
+        s.put_native([native("a", 9, 1), native("b", 2, 1)]);
+        let snap = s.snapshot();
+        let got: Vec<_> = snap
+            .native
+            .iter()
+            .map(|v| (v.field.as_str(), v.value.clone()))
+            .collect();
+        assert_eq!(got, vec![("a", json!(1)), ("b", json!(2))]);
+    }
+
+    #[test]
+    fn fixtures_load_per_connector_and_bad_lines_name_their_place() {
+        let root = std::env::temp_dir().join(format!("toolbox-store-{}", std::process::id()));
+        let dir = root.join("fixtures");
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(
+            dir.join("git.ndjson"),
+            "{\"type\": \"record\", \"kind\": \"k\", \"externalId\": \"1\", \"data\": {}}\n\n",
+        )
+        .unwrap();
+        let store = load_fixtures(&root).unwrap();
+        assert_eq!(store.snapshot().records[0].connector, "git");
+        std::fs::write(dir.join("bad.ndjson"), "{}\nnot json\n").unwrap();
+        let err = read_fixtures(&root).unwrap_err().to_string();
+        assert!(err.starts_with("fixtures/bad.ndjson:2:"), "{err}");
+        let _ = std::fs::remove_dir_all(&root);
+        assert!(read_fixtures(&root).unwrap().0.is_empty());
+    }
 }

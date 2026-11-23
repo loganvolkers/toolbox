@@ -6,8 +6,8 @@
 //! that element). `in` is not (it fails with a no-overload error, which the pipeline reports as a
 //! diagnostic).
 
+use crate::eval::{ExprValue, Lazy};
 use cel::ExecutionError;
-use cel::Value;
 use cel::common::traits::{Indexer, Iterable, Iterator as CelIterator, Sizer};
 use cel::common::types::{CelInt, CelMap, CelMapKey, CelString, LIST_TYPE, Type};
 use cel::common::value::{CowVal, Val};
@@ -15,13 +15,13 @@ use std::collections::HashMap;
 use std::sync::{Arc, OnceLock};
 
 #[derive(Debug)]
-pub struct LazyList {
-    items: Arc<Vec<Value>>,
+pub(crate) struct LazyList {
+    items: Arc<Vec<ExprValue>>,
     cache: Vec<OnceLock<Box<dyn Val>>>,
 }
 
 impl LazyList {
-    pub fn new(items: Arc<Vec<Value>>) -> Self {
+    fn new(items: Arc<Vec<ExprValue>>) -> Self {
         let cache = (0..items.len()).map(|_| OnceLock::new()).collect();
         LazyList { items, cache }
     }
@@ -30,6 +30,7 @@ impl LazyList {
         self.cache[i]
             .get_or_init(|| {
                 self.items[i]
+                    .0
                     .clone()
                     .try_into()
                     .expect("JSON-derived values convert")
@@ -130,8 +131,8 @@ impl Val for LazyList {
     }
 }
 
-/// A CEL map from names to lazy lists.
-pub fn lazy_map(entries: impl IntoIterator<Item = (String, Arc<Vec<Value>>)>) -> Box<dyn Val> {
+/// A map from names to lazy lists, bound with [`crate::with_vals`].
+pub fn lazy_map(entries: impl IntoIterator<Item = (String, Arc<Vec<ExprValue>>)>) -> Lazy {
     let map: HashMap<CelMapKey<'static>, Box<dyn Val>> = entries
         .into_iter()
         .map(|(k, items)| {
@@ -141,5 +142,5 @@ pub fn lazy_map(entries: impl IntoIterator<Item = (String, Arc<Vec<Value>>)>) ->
             )
         })
         .collect();
-    Box::new(CelMap::from(map))
+    Lazy(Box::new(CelMap::from(map)))
 }

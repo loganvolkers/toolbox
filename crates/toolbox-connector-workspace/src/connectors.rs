@@ -208,17 +208,10 @@ fn is_ci_script(rel: &str) -> bool {
 }
 
 fn secrets(sources: &[(String, String)]) -> Vec<String> {
-    let patterns = secret_patterns();
-    let mut hits = Vec::new();
-    for (rel, text) in sources {
-        for (n, line) in production_lines(text) {
-            for (kind, re) in &patterns {
-                if re.is_match(line) {
-                    hits.push(format!("{}:{} {kind}", rel, n + 1));
-                }
-            }
-        }
-    }
+    let mut hits: Vec<String> = sources
+        .iter()
+        .flat_map(|(rel, text)| crate::hygiene::secrets_in_lines(rel, production_lines(text), true))
+        .collect();
     hits.sort();
     hits
 }
@@ -244,15 +237,15 @@ fn take_test_module(line: &str, skip: &mut i32, arming: &mut bool) -> bool {
         return true;
     }
     if *arming {
-        if trimmed.starts_with("mod ") || trimmed.starts_with("pub mod ") {
-            *arming = false;
-            let opened = brace_delta(line);
-            *skip = if opened > 0 { opened } else { 0 };
-            if opened == 0 {
-                *skip = 0;
-                *arming = true; // `mod tests` and the brace on the next line
-            }
+        if trimmed.is_empty() || trimmed.starts_with("#[") || trimmed.starts_with("//") {
+            return true; // more attributes or comments before the item
         }
+        // `#[cfg(test)]` covers exactly the next item: a module, or a single `use`, `fn` or
+        // `const`. Skip that item's braces, then scan again (a `use` line alone hides nothing).
+        let opened = brace_delta(line);
+        let is_mod = trimmed.starts_with("mod ") || trimmed.starts_with("pub mod ");
+        *arming = is_mod && opened == 0 && !trimmed.ends_with(';'); // `mod tests` with `{` below
+        *skip = opened.max(0);
         return true;
     }
     if *skip > 0 {
@@ -272,19 +265,6 @@ fn brace_delta(line: &str) -> i32 {
     open - close
 }
 
-fn secret_patterns() -> Vec<(&'static str, Regex)> {
-    [
-        ("aws-access-key", r"AKIA[0-9A-Z]{16}"),
-        ("github-token", r"ghp_[A-Za-z0-9]{36}"),
-        ("github-token", r"github_pat_[A-Za-z0-9_]{22,}"),
-        ("api-key", r"sk-(?:ant|proj|live)-[A-Za-z0-9_-]{20,}"),
-        ("slack-token", r"xox[baprs]-[A-Za-z0-9-]{10,}"),
-    ]
-    .into_iter()
-    .map(|(kind, pat)| (kind, compile(pat)))
-    .collect()
-}
-
 fn compile(pat: &str) -> Regex {
     Regex::new(pat).unwrap_or_else(|_| panic!("static regex {pat}"))
 }
@@ -292,6 +272,20 @@ fn compile(pat: &str) -> Regex {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_test_only_use_line_hides_only_itself() {
+        let key = format!("AKIA{}", "A".repeat(16));
+        let text = format!(
+            "#[cfg(test)]\nuse std::collections::HashMap;\nconst K: &str = \"{key}\";\n#[cfg(test)]\nmod tests {{\n    const T: &str = \"{key}\";\n}}\n"
+        );
+        let lines: Vec<usize> = production_lines(&text).iter().map(|(n, _)| *n).collect();
+        assert_eq!(
+            lines,
+            vec![2],
+            "only the constant outside the test items is scanned"
+        );
+    }
     use serde_json::json;
 
     struct Tmp(std::path::PathBuf);
@@ -443,7 +437,7 @@ mod tests {
         let scim = analyse(&root, "crates/toolbox-connector-scim/Cargo.toml");
         assert_eq!(scim["pushOnly"], true);
         assert_eq!(scim["transport"], "remote");
-        assert_eq!(scim["tests"], 0);
+        assert!(scim["tests"].as_i64().unwrap() >= 3);
         assert!(scim["ciMentions"].as_i64().unwrap() >= 1);
         assert_eq!(scim["conformanceMentions"], 0);
 

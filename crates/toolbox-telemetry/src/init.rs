@@ -345,8 +345,15 @@ mod tests {
 
     #[test]
     fn detect_local_by_default() {
-        // CI may be set in the agent environment; only assert the enum is well-formed.
-        let _ = TelemetryMode::detect();
+        // The environment decides (CI may be set where tests run), so assert what it implies.
+        let explicit = std::env::var("TOOLBOX_TELEMETRY").unwrap_or_default();
+        let ci = std::env::var("CI").ok().as_deref() == Some("true");
+        let mode = TelemetryMode::detect();
+        match explicit.to_ascii_lowercase().as_str() {
+            "" if ci => assert!(matches!(mode, TelemetryMode::Ci)),
+            "" => assert!(matches!(mode, TelemetryMode::Local)),
+            _ => {}
+        }
     }
 
     #[test]

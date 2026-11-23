@@ -12,7 +12,7 @@ use axum::response::{IntoResponse, Response};
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::sync::Arc;
-use toolbox_expr::{Expr, from_cel, to_cel, with_vars};
+use toolbox_expr::{Expr, ExprValue, with_vars};
 
 #[derive(Deserialize)]
 pub struct ListQuery {
@@ -215,9 +215,9 @@ pub async fn preview(
     }
 
     // Preconditions, approval path and context lookups, all over the same snapshot.
-    let entity_cel = to_cel(&p.derived.entity_json(&body.entity).unwrap());
-    let inputs_cel = to_cel(&Value::Object(body.inputs.clone()));
-    let policy = to_cel(&Value::Object(s.manifest.policies.clone()));
+    let entity_cel = ExprValue::from_json(&p.derived.entity_json(&body.entity).unwrap());
+    let inputs_cel = ExprValue::from_json(&Value::Object(body.inputs.clone()));
+    let policy = ExprValue::from_json(&Value::Object(s.manifest.policies.clone()));
     let eval = |src: &str| -> Result<Value, String> {
         let e = Expr::compile(src)?;
         with_vars(
@@ -226,7 +226,7 @@ pub async fn preview(
                 ("inputs", &inputs_cel),
                 ("policy", &policy),
             ],
-            |ctx| from_cel(&e.eval_in(ctx)?),
+            |ctx| e.json_in(ctx),
         )
     };
     let mut blockers = Vec::new();
@@ -257,10 +257,16 @@ pub async fn preview(
             .iter()
             .filter(|(_, e)| e.kind == lk.kind)
             .filter(|(cid, _)| {
-                let cand = to_cel(&p.derived.entity_json(cid).unwrap());
-                with_vars(&[("candidate", &cand), ("entity", &entity_cel), ("inputs", &inputs_cel), ("policy", &policy)], |ctx| {
-                    matches!(where_.eval_in(ctx), Ok(cel_v) if from_cel(&cel_v) == Ok(Value::Bool(true)))
-                })
+                let cand = ExprValue::from_json(&p.derived.entity_json(cid).unwrap());
+                with_vars(
+                    &[
+                        ("candidate", &cand),
+                        ("entity", &entity_cel),
+                        ("inputs", &inputs_cel),
+                        ("policy", &policy),
+                    ],
+                    |ctx| matches!(where_.eval_in(ctx), Ok(v) if v.as_bool() == Some(true)),
+                )
             })
             .map(|(cid, _)| p.derived.entity_json(cid).unwrap())
             .collect();

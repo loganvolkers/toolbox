@@ -28,10 +28,11 @@ pub(crate) fn analyse(root: &Path, rel: &str) -> Value {
     let raw = std::fs::read_to_string(root.join(rel)).unwrap_or_default();
     let text = strip_bom(&raw).replace("\r\n", "\n").replace('\r', "\n");
     let (frontmatter_errors, name, description, body) = split_and_check(&text, &dir_name);
-    let files = files_under(root, &dir);
-    let patterns = secret_patterns();
+    let (files, unreadable) = files_under(root, &dir);
     let windows_re = compile(r"[A-Za-z]:\\[^\s]+|\\\\[^\s]+");
-    let (hidden, secrets, windows) = scan_files(&files, &patterns, &windows_re);
+    let (hidden, secrets, windows) = scan_files(&files, &windows_re);
+    // A file that isn't UTF-8 can't be inspected, so it counts as hidden content.
+    let hidden = hidden + unreadable;
     let description_chars = description.chars().count() as i64;
     json!({
         "path": rel,
@@ -354,16 +355,18 @@ fn is_boundary_word(w: &str) -> bool {
     )
 }
 
-fn files_under(root: &Path, dir: &str) -> Vec<(String, String)> {
-    let mut out = Vec::new();
+/// The skill's files as text, and how many couldn't be read as UTF-8.
+fn files_under(root: &Path, dir: &str) -> (Vec<(String, String)>, i64) {
+    let (mut out, mut unreadable) = (Vec::new(), 0);
     for path in walk_files(&root.join(dir)) {
         let rel = rel_of(root, &path);
-        if let Ok(text) = std::fs::read_to_string(&path) {
-            out.push((rel, text));
+        match std::fs::read_to_string(&path) {
+            Ok(text) => out.push((rel, text)),
+            Err(_) => unreadable += 1,
         }
     }
     out.sort();
-    out
+    (out, unreadable)
 }
 
 fn walk_files(dir: &Path) -> Vec<PathBuf> {
@@ -386,59 +389,21 @@ fn support_files(files: &[(String, String)], skill_md: &str) -> i64 {
     files.iter().filter(|(p, _)| p != skill_md).count() as i64
 }
 
-fn scan_files(
-    files: &[(String, String)],
-    patterns: &[(&str, Regex)],
-    windows_re: &Regex,
-) -> (i64, Vec<String>, Vec<String>) {
+fn scan_files(files: &[(String, String)], windows_re: &Regex) -> (i64, Vec<String>, Vec<String>) {
     let mut hidden = 0i64;
     let mut secrets = Vec::new();
     let mut windows = Vec::new();
     for (path, content) in files {
         let content = strip_bom(content);
         hidden += hidden_count(content);
-        secrets.extend(secrets_in(path, content, patterns));
+        secrets.extend(crate::hygiene::secrets(path, content));
         windows.extend(windows_in(path, content, windows_re));
     }
     (hidden, secrets, windows)
 }
 
-fn is_hidden(c: char) -> bool {
-    let u = c as u32;
-    (0x200B..=0x200F).contains(&u)
-        || u == 0xFEFF
-        || (0x202A..=0x202E).contains(&u)
-        || (0x2066..=0x2069).contains(&u)
-        || (0xE0001..=0xE007F).contains(&u)
-}
-
 fn hidden_count(text: &str) -> i64 {
-    text.chars().filter(|c| is_hidden(*c)).count() as i64
-}
-
-fn secret_patterns() -> Vec<(&'static str, Regex)> {
-    [
-        ("aws-access-key", r"AKIA[0-9A-Z]{16}"),
-        ("github-token", r"ghp_[A-Za-z0-9]{36}"),
-        ("github-token", r"github_pat_[A-Za-z0-9_]{22,}"),
-        ("api-key", r"sk-(?:ant|proj|live)-[A-Za-z0-9_-]{20,}"),
-        ("slack-token", r"xox[baprs]-[A-Za-z0-9-]{10,}"),
-    ]
-    .into_iter()
-    .map(|(kind, pat)| (kind, compile(pat)))
-    .collect()
-}
-
-fn secrets_in(rel: &str, text: &str, patterns: &[(&str, Regex)]) -> Vec<String> {
-    let mut hits = Vec::new();
-    for (n, line) in text.lines().enumerate() {
-        for (kind, re) in patterns {
-            if re.is_match(line) {
-                hits.push(format!("{}:{} {kind}", rel, n + 1));
-            }
-        }
-    }
-    hits
+    crate::hygiene::hidden_count(text) + crate::hygiene::html_comments(text)
 }
 
 fn windows_in(rel: &str, text: &str, re: &Regex) -> Vec<String> {

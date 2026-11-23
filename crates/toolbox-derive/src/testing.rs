@@ -4,11 +4,10 @@
 //! passes when it evaluates to `true`.
 
 use crate::Derived;
-use cel::{Context, ExecutionError, ResolveResult};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 use std::sync::Arc;
-use toolbox_expr::{Expr, to_cel};
+use toolbox_expr::{Env, Expr};
 
 #[derive(Debug, Deserialize)]
 struct Suite {
@@ -34,63 +33,49 @@ pub struct TestResult {
     pub error: Option<String>,
 }
 
-fn context(d: Arc<Derived>) -> Context<'static, 'static> {
-    let mut ctx = Context::default();
+/// Serialize a derived value for an expectation.
+fn json(v: impl Serialize) -> Result<serde_json::Value, String> {
+    serde_json::to_value(v).map_err(|e| e.to_string())
+}
+
+fn env(d: Arc<Derived>) -> Env {
+    let mut env = Env::default();
     let e = d.clone();
-    ctx.add_function("entity", move |id: Arc<String>| -> ResolveResult {
-        e.entity_json(&id)
-            .map(|v| to_cel(&v))
-            .ok_or_else(|| ExecutionError::function_error("entity", format!("no entity {id}")))
+    env.function1("entity", move |id| {
+        e.entity_json(id).ok_or_else(|| format!("no entity {id}"))
     })
     .expect("entity is not a stdlib function");
     let s = d.clone();
-    ctx.add_function(
-        "score",
-        move |card: Arc<String>, id: Arc<String>| -> ResolveResult {
-            s.scores
-                .get(card.as_str())
-                .and_then(|m| m.get(id.as_str()))
-                .map(|score| to_cel(&serde_json::to_value(score).unwrap()))
-                .ok_or_else(|| {
-                    ExecutionError::function_error("score", format!("no score {card} for {id}"))
-                })
-        },
-    )
+    env.function2("score", move |card, id| {
+        s.scores
+            .get(card)
+            .and_then(|m| m.get(id))
+            .ok_or_else(|| format!("no score {card} for {id}"))
+            .and_then(json)
+    })
     .expect("score is not a stdlib function");
     let c = d.clone();
-    ctx.add_function("campaign", move |name: Arc<String>| -> ResolveResult {
+    env.function1("campaign", move |name| {
         c.campaigns
-            .get(name.as_str())
-            .map(|p| to_cel(&serde_json::to_value(p).unwrap()))
-            .ok_or_else(|| {
-                ExecutionError::function_error("campaign", format!("no campaign {name}"))
-            })
+            .get(name)
+            .ok_or_else(|| format!("no campaign {name}"))
+            .and_then(json)
     })
     .expect("campaign is not a stdlib function");
     let o = d.clone();
-    ctx.add_function(
-        "options",
-        move |action: Arc<String>, id: Arc<String>| -> ResolveResult {
-            o.options
-                .get(action.as_str())
-                .and_then(|inputs| inputs.values().next())
-                .and_then(|by_entity| by_entity.get(id.as_str()))
-                .map(|opts| to_cel(&serde_json::to_value(opts).unwrap()))
-                .ok_or_else(|| {
-                    ExecutionError::function_error(
-                        "options",
-                        format!("no options for {action} on {id}"),
-                    )
-                })
-        },
-    )
+    env.function2("options", move |action, id| {
+        o.options
+            .get(action)
+            .and_then(|inputs| inputs.values().next())
+            .and_then(|by_entity| by_entity.get(id))
+            .ok_or_else(|| format!("no options for {action} on {id}"))
+            .and_then(json)
+    })
     .expect("options is not a stdlib function");
     let r = d;
-    ctx.add_function("orphans", move || -> ResolveResult {
-        Ok(to_cel(&serde_json::to_value(&r.orphans).unwrap()))
-    })
-    .expect("orphans is not a stdlib function");
-    ctx
+    env.function0("orphans", move || json(&r.orphans))
+        .expect("orphans is not a stdlib function");
+    env
 }
 
 /// Run the expectation files listed in the manifest's `tests` (paths relative to `root`).
@@ -99,15 +84,15 @@ pub fn run(
     files: &[String],
     derived: Arc<Derived>,
 ) -> Result<Vec<TestResult>, String> {
-    let ctx = context(derived);
+    let env = env(derived);
     let mut out = Vec::new();
     for file in files {
         let text = std::fs::read_to_string(root.join(file)).map_err(|e| format!("{file}: {e}"))?;
         let suite: Suite = serde_norway::from_str(&text).map_err(|e| format!("{file}: {e}"))?;
         for case in suite.cases {
-            let outcome = Expr::compile(&case.expect).and_then(|e| e.eval_in(&ctx));
+            let outcome = Expr::compile(&case.expect).and_then(|e| e.eval_in(&env.scope()));
             let (passed, error) = match outcome {
-                Ok(cel::Value::Bool(true)) => (true, None),
+                Ok(v) if v.as_bool() == Some(true) => (true, None),
                 Ok(other) => (false, Some(format!("evaluated to {other:?}"))),
                 Err(e) => (false, Some(e)),
             };

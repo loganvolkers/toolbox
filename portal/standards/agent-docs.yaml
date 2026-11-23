@@ -40,6 +40,10 @@ scorecards:
   # guideline, not a field the current spec requires. Frontmatter is optional and not required.
   - name: maintainer-agent-doc
     kind: AgentDoc
+    description: >-
+      Each agent instruction file: one canonical AGENTS.md with aliases
+      pointing at it, links and commands that work in CI, and no hidden text
+      or credentials (D75, D82, D83).
     owner: group:maintainers
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze}
@@ -89,17 +93,18 @@ scorecards:
         remove it from the check procedure. Commands that appear only in a
         markdown table are the track index and are not required.
     - name: no-hardcoded-secrets
-      level: gold
+      level: bronze
       check: entity.secretHits.size() == 0
       evidence: entity.secretHits
       fix: >-
         Remove the credential in the evidence. An instruction file is loaded
         into the agent's prompt.
     - name: no-hidden-instructions
-      level: gold
+      level: bronze
       check: entity.hiddenChars == 0
       evidence: "[string(entity.hiddenChars) + ' hidden characters']"
       fix: >-
-        Remove zero-width and bidi characters. They are invisible to a reviewer
-        and visible to a model.
+        Remove zero-width and other default-ignorable characters, bidi controls
+        and variation selectors outside emoji from the file. They are invisible
+        to a reviewer and visible to a model.
     facets: {summary: public, details: public}

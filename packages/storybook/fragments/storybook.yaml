@@ -39,6 +39,10 @@ kinds:
 scorecards:
   - name: storybook-catalog
     kind: Storybook
+    description: >-
+      A Storybook catalog: config, the dependency and stories; the a11y addon,
+      telemetry off and CI building it; and CI testing the stories with a11y
+      violations failing (packages/storybook).
     owner: group:maintainers
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze}

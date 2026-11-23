@@ -70,6 +70,59 @@ fn write_scopes(p: &Value) -> Vec<String> {
     }
 }
 
+/// Whether a `concurrency:` value cancels a superseded run of the same branch or pull request: its
+/// group must vary by ref (otherwise every branch shares one queue) and `cancel-in-progress` must
+/// not be false, which is GitHub's default (so `concurrency: ci` cancels nothing).
+fn cancels_superseded(c: &Value) -> bool {
+    const BY_REF: [&str; 5] = [
+        "github.ref",
+        "github.head_ref",
+        "pull_request.number",
+        "event.number",
+        "github.event.pull_request",
+    ];
+    let group = c["group"].as_str().unwrap_or_default();
+    let cancels = match &c["cancel-in-progress"] {
+        Value::Bool(b) => *b,
+        Value::String(s) => !s.trim().is_empty() && s.trim() != "false",
+        _ => false,
+    };
+    cancels && BY_REF.iter().any(|r| group.contains(r))
+}
+
+/// Truthy `continue-on-error`: `true`, or an expression (which may be true at run time).
+fn continues_on_error(v: &Value) -> bool {
+    match v {
+        Value::Bool(b) => *b,
+        Value::String(s) => s.trim() != "false" && !s.trim().is_empty(),
+        _ => false,
+    }
+}
+
+/// Where a failure is hidden: every job with `continue-on-error`, and every step with it whose
+/// outcome no later step of the job reads (`steps.<id>.outcome` or `.conclusion`).
+fn hidden_failures(id: &str, job: &Value) -> Vec<String> {
+    let mut out = Vec::new();
+    if continues_on_error(&job["continue-on-error"]) {
+        out.push(format!("jobs.{id}"));
+    }
+    let steps = job["steps"].as_array().cloned().unwrap_or_default();
+    for (i, step) in steps.iter().enumerate() {
+        if !continues_on_error(&step["continue-on-error"]) {
+            continue;
+        }
+        let checked = step["id"].as_str().is_some_and(|sid| {
+            let later = Value::Array(steps[i + 1..].to_vec()).to_string();
+            later.contains(&format!("steps.{sid}.outcome"))
+                || later.contains(&format!("steps.{sid}.conclusion"))
+        });
+        if !checked {
+            out.push(format!("jobs.{id}.steps[{i}]"));
+        }
+    }
+    out
+}
+
 /// One `uses:` occurrence: `{ref, action, pin, at}`.
 fn uses(reference: &str, at: String) -> Value {
     json!({"ref": reference, "action": action_name(reference), "pin": pin(reference), "at": at})
@@ -111,6 +164,8 @@ pub fn record(path: &str, text: &str) -> Value {
                 "permissions": job.get("permissions").is_some(),
                 "writeScopes": write_scopes(&job["permissions"]),
                 "concurrency": job.get("concurrency").is_some(),
+                "cancelsSuperseded": cancels_superseded(&job["concurrency"]),
+                "hiddenFailures": hidden_failures(id, job),
             }));
         }
     }
@@ -145,6 +200,8 @@ pub fn record(path: &str, text: &str) -> Value {
         "jobsWithoutPermissions": if has_top_permissions { vec![] } else { names(&|j| j["permissions"] == false) },
         "jobsWithWrite": names(&|j| j["writeScopes"].as_array().is_some_and(|a| !a.is_empty())),
         "concurrency": doc.get("concurrency").is_some() || (!jobs.is_empty() && jobs.iter().all(|j| j["concurrency"] == true)),
+        "cancelsSuperseded": cancels_superseded(&doc["concurrency"]) || (!jobs.is_empty() && jobs.iter().all(|j| j["cancelsSuperseded"] == true)),
+        "hiddenFailures": jobs.iter().flat_map(|j| j["hiddenFailures"].as_array().cloned().unwrap_or_default()).collect::<Vec<_>>(),
         "uses": refs,
         "unpinned": refs.iter().filter(|r| !matches!(r["pin"].as_str(), Some("sha" | "local" | "docker-digest"))).filter_map(|r| r["ref"].as_str()).collect::<BTreeSet<_>>(),
         "actions": actions,
@@ -183,6 +240,46 @@ pub fn action_refs(workflows: &[Value]) -> Vec<(String, Value)> {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn a_static_or_non_cancelling_group_does_not_cancel_superseded_runs() {
+        let rec = |c: &str| {
+            super::record(
+                ".github/workflows/w.yml",
+                &format!("on: {{pull_request: {{}}}}\n{c}\njobs:\n  a:\n    runs-on: x\n    steps: [{{run: echo}}]\n"),
+            )["cancelsSuperseded"]
+                .clone()
+        };
+        assert_eq!(rec("concurrency: ci"), false);
+        assert_eq!(
+            rec("concurrency: {group: ci, cancel-in-progress: true}"),
+            false
+        );
+        assert_eq!(
+            rec("concurrency: {group: 'w-${{ github.ref }}', cancel-in-progress: false}"),
+            false
+        );
+        assert_eq!(
+            rec("concurrency: {group: 'w-${{ github.ref }}', cancel-in-progress: true}"),
+            true
+        );
+        assert_eq!(
+            rec(
+                "concurrency:\n  group: w-${{ github.ref }}\n  cancel-in-progress: ${{ github.event_name == 'pull_request' }}"
+            ),
+            true
+        );
+    }
+
+    #[test]
+    fn continue_on_error_hides_a_failure_unless_a_later_step_reads_its_outcome() {
+        let yml = "on: push\njobs:\n  a:\n    runs-on: x\n    steps:\n      - {id: t, run: false, continue-on-error: true}\n      - {run: 'test ${{ steps.t.outcome }} = failure'}\n      - {run: flaky, continue-on-error: true}\n  b:\n    runs-on: x\n    continue-on-error: true\n    steps: [{run: echo}]\n";
+        let r = super::record(".github/workflows/w.yml", yml);
+        assert_eq!(
+            r["hiddenFailures"],
+            serde_json::json!(["jobs.a.steps[2]", "jobs.b"])
+        );
+    }
+
     use super::*;
 
     #[test]

@@ -18,8 +18,8 @@ import tempfile
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                                  "examples", "reference-portal", "tools"))
-from yamlutil import load as load_yaml  # noqa: E402
-import yaml  # noqa: E402
+from yamlutil import load as load_yaml
+import yaml
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PORTAL = os.path.join(REPO, "examples", "reference-portal")

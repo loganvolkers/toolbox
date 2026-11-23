@@ -58,6 +58,10 @@ scorecards:
   # This repository has none of the three bronze files, so the live entity is none until they exist.
   - name: maintainer-supply-chain
     kind: Repository
+    description: >-
+      The repository files that turn on GitHub Advanced Security and
+      dependency updates, beside what OpenSSF Scorecard carries (D85,
+      D01M82E93XAPNE0WFXEPJZ59WG4).
     owner: group:maintainers
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze}
@@ -94,6 +98,10 @@ scorecards:
   # not drag this score to none.
   - name: maintainer-repo
     kind: Repository
+    description: >-
+      The repository's level: the lowest level among its constituent
+      scorecards, so one weak area holds the whole repository back (D86,
+      docs/design/repo-level.md).
     owner: group:maintainers
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze}

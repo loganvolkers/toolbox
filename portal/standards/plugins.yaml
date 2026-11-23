@@ -63,6 +63,10 @@ scorecards:
   # The marketplace installs the package. Skills inside it are scored by maintainer-skill.
   - name: maintainer-plugin
     kind: Plugin
+    description: >-
+      Each agent plugin package we ship: a valid Agent Plugins 1.0.0 manifest
+      an agent harness can install, with its skills scored by maintainer-skill
+      (docs/design/plugin-standards.md).
     owner: group:maintainers
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze}
@@ -114,7 +118,7 @@ scorecards:
         Drop the .. segments in the evidence. Plugin paths stay inside the
         plugin root.
     - name: no-hardcoded-secrets
-      level: gold
+      level: bronze
       check: entity.secretHits.size() == 0
       evidence: entity.secretHits
       fix: Remove the credential in the evidence from plugin.json or mcp.json.
