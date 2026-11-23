@@ -1574,6 +1574,9 @@
       "site-page:site/src/content/docs/concepts/dx-benchmarks.md": {
         "level": "gold"
       },
+      "site-page:site/src/content/docs/concepts/glossary.md": {
+        "level": "gold"
+      },
       "site-page:site/src/content/docs/concepts/layers.md": {
         "level": "gold"
       },
@@ -1598,7 +1601,13 @@
       "site-page:site/src/content/docs/operators/secrets.md": {
         "level": "gold"
       },
+      "site-page:site/src/content/docs/start/cli.md": {
+        "level": "gold"
+      },
       "site-page:site/src/content/docs/start/install.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/start/quickstart.md": {
         "level": "gold"
       },
       "site-page:site/src/content/docs/start/run.md": {

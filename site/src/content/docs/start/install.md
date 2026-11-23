@@ -2,10 +2,10 @@
 title: Install a release
 description: Install Toolbox v0.1.1 binaries for a repo portal without compiling from source.
 sidebar:
-  order: 1
+  order: 2
 ---
 
-From **v0.1.0** onward, consumers install attested binaries from GitHub Releases instead of building the Rust workspace (D90). Current release: **v0.1.1**.
+From **v0.1.0** onward, consumers install attested binaries from GitHub Releases instead of building the Rust workspace (D90). Current release: **v0.1.1**. New to Toolbox? Start at [Quickstart](/toolbox/start/quickstart/).
 
 ## What you need for a repo portal
 

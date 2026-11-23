@@ -1010,7 +1010,10 @@ mod drive_catalog_tests {
 
     #[test]
     fn strips_kind_prefix() {
-        assert_eq!(catalog_id_from_external("project", "project:ALPHA"), "ALPHA");
+        assert_eq!(
+            catalog_id_from_external("project", "project:ALPHA"),
+            "ALPHA"
+        );
         assert_eq!(
             catalog_id_from_external("issue", "issue:ALPHA-1"),
             "ALPHA-1"
@@ -1029,10 +1032,7 @@ mod drive_catalog_tests {
     #[test]
     fn prefers_project_name_when_external_id_is_numeric() {
         let data = json!({"id": "1", "name": "api", "project": "ALPHA"});
-        assert_eq!(
-            catalog_id("component", "component:1", &data),
-            "ALPHA:api"
-        );
+        assert_eq!(catalog_id("component", "component:1", &data), "ALPHA:api");
         assert_eq!(
             catalog_id("component", "component:ALPHA:api", &data),
             "ALPHA:api"
