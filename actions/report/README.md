@@ -37,8 +37,9 @@ secrets ([docs/design/repo-portals.md](../../docs/design/repo-portals.md)).
    ```
 
 3. **First run:** start the workflow by hand with `mode: update`. It uploads `results.json` in the
-   `toolbox-report` artifact; commit it as `.toolbox/results.json`. Or, with Toolbox built locally,
-   run `toolbox report .toolbox --baseline .toolbox/results.json --update`.
+   `toolbox-report` artifact; commit it as `.toolbox/results.json`. Or, with the release
+   installed ([Install a release](../../site/src/content/docs/start/install.md)), run
+   `toolbox report .toolbox --baseline .toolbox/results.json --update`.
 4. **Git packages:** if `.toolbox/toolbox.yaml` includes a `github:…@…` package, run
    `toolbox install .toolbox` locally, commit `.toolbox/toolbox.lock`, and keep the action's
    `toolbox-version` new enough to understand the package's facts. The action runs

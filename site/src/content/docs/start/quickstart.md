@@ -9,20 +9,20 @@ Fifteen minutes to a scored repository. No Postgres and no portal server — onl
 
 ## 1. Install the binaries
 
-Current release: **v0.1.1**. You need `toolbox` and `toolbox-connector-workspace` on `PATH` (the runner connector is optional for the starter).
+Current release: **v0.1.1**. You need `toolbox` and `toolbox-connector-workspace` on `PATH` (the runner connector is optional for the starter). These are the shell installers on the [v0.1.1 release](https://github.com/loganvolkers/toolbox/releases/tag/v0.1.1).
 
 ```bash
-git clone https://github.com/loganvolkers/toolbox.git
-cd toolbox
-TOOLBOX_VERSION=0.1.1 ./scripts/install-release.sh
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/loganvolkers/toolbox/releases/download/v0.1.1/toolbox-cli-installer.sh | sh
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/loganvolkers/toolbox/releases/download/v0.1.1/toolbox-connector-workspace-installer.sh | sh
+export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
 toolbox --version
 ```
 
-Details and GitHub Actions pins: [Install a release](/toolbox/start/install/). Building from source: [Run Toolbox locally](/toolbox/start/run/).
+Windows, the runner connector, and the other connector apps: [Install a release](/toolbox/start/install/). Building from source: [Run Toolbox locally](/toolbox/start/run/).
 
 ## 2. Copy the starter portal
 
-In the repository you want to score (not only this clone):
+In the repository you want to score:
 
 ```bash
 mkdir -p .toolbox

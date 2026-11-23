@@ -200,7 +200,7 @@ digest, data packages with typed parameters) stands. A package now has three par
   - the package tests itself in `packages/github-actions/tests`;
   - the second package, `packages/pnpm-expo/` (pnpm workspace + Expo app scorecards on new workspace facts, D01M7Y6X38AERPBT0YH1AG5TBRD);
   - the third package, `packages/storybook/` (Storybook catalog scorecard on `storybook` workspace facts, D01M7YNZFP68W0DR24PEA6T3FVM).
-- **Step 1, first release cut:** tag `v0.1.0` publishes attested archives and installers. Consumers set `toolbox-version: "0.1.0"` on `actions/report` or run `scripts/install-release.sh`. Homebrew, npm and aqua channels remain deferred; cargo-binstall metadata is on each distable crate.
+- **Step 1, first release cut:** tag `v0.1.0` publishes attested archives and installers. Consumers run the release's shell or PowerShell installer (`<app>-installer.sh` / `.ps1`, one per dist app) or set `toolbox-version` on `actions/report`. Homebrew, npm and aqua channels remain deferred. cargo-binstall metadata is on each distable crate; the crates are not on crates.io yet (sparse index 404 for `toolbox-cli`, 2026-11-23), so `cargo binstall` does not resolve them.
 - **Not built:** WASM connectors (step 5), deterministic archives and the OCI mirror, Homebrew, npm and aqua registry entries.
 
 **Build order**, because each step unblocks the next stage in the catalogue:
