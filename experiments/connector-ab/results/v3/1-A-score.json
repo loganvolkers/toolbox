@@ -1,0 +1,15 @@
+{
+  "arm": "/tmp/connector-ab/arms/A",
+  "tenant": "a",
+  "phase": 1,
+  "truth": {
+    "ok": true,
+    "detail": "exact match (5 entities)",
+    "got": 5,
+    "want": 5
+  },
+  "shape": {
+    "ok": true,
+    "detail": "protocol refs in ['src/main.rs']"
+  }
+}
