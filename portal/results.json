@@ -1532,6 +1532,9 @@
       "site-page:site/src/content/docs/compare/cortex.md": {
         "level": "gold"
       },
+      "site-page:site/src/content/docs/compare/dx-fabric.md": {
+        "level": "gold"
+      },
       "site-page:site/src/content/docs/compare/index.md": {
         "level": "gold"
       },
