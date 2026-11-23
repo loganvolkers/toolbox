@@ -44,6 +44,7 @@ impl Source for Example {
     async fn handle(&mut self, cmd: &Value, out: &mut Out) -> Result<(), String> {
         match cmd["command"].as_str() {
             Some("resync") => {
+                // externalId must match ^[a-z0-9-]+:.+$ (kind-ish prefix + id).
                 let id = format!("example:{}", self.seed);
                 out.record(
                     "example-item",

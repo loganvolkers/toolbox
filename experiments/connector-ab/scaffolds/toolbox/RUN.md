@@ -19,6 +19,8 @@
      -- target/debug/forge-connector
    ```
    Map those lines into `OUT/entities.ndjson` for the harness schema.
+   Record `externalId`s must look like `project:ALPHA` / `issue:ALPHA-1`
+   (`^[a-z0-9-]+:.+$`); catalog entity `id`s in OUT may still be bare keys.
 5. Agents: read `plugins/toolbox-operator/skills/author-connector/SKILL.md` and
    `examples/connector-scaffold/` before inventing a second protocol.
 
