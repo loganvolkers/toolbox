@@ -17,9 +17,15 @@ adjudicator's, in [ADJUDICATION.md](ADJUDICATION.md):**
     agents edited, half from arm A's extra exploration.
   - G14 and G15, on read and gate read, are inconclusive.
   - G16 holds: the second change cut gate read again.
+- **Round 5:** Toolbox does not beat reviewdog under its pre-registered rule (§5.3, §0.6), and no
+  longer loses to it.
+  - G18 holds: Toolbox was correct in every run.
+  - G19, G20 and G21, on calls, read and gate read, are inconclusive. Arm A's medians are lower on
+    all three, inside the noise.
 
 Toolbox is not shown to beat reviewdog on any measure. The bar for rounds 1 and 2 is in §5, round
-3's is in §5.1 and round 4's in §5.2, each committed before its workspaces were built.
+3's is in §5.1, round 4's in §5.2 and round 5's in §5.3, each committed before its workspaces were
+built.
 
 This is about the box ([toolbox-and-tools.md](../../docs/design/toolbox-and-tools.md)): both arms
 carry the same tools, zizmor and actionlint, at the same pins, with the same flags and the same
@@ -218,6 +224,70 @@ output, reviewdog's is shorter, 1,243 characters in all against 1,632.
 
 The designer predicted G12 and G16 would hold and G13, G14 and G17 would be inconclusive, with G15
 about even. G13 failing was not predicted. As registered, this round is not rerun.
+
+### 0.6 Round 5 (frozen at `0249ecb`; arm A as at `c1f9b22`, arm A⁻ as at `76a1140`)
+
+The question was round 4's again: does Toolbox now beat reviewdog? It doesn't, but it no longer
+loses. All fifteen runs were correct, and every comparison is inconclusive. Arm A's medians are
+lower than reviewdog's on all three measures, and each gap is inside the noise. The prompts were
+committed in `9ca1605` before launch, and the results in `eb2c1af`. Per run:
+[results/r5.tsv](results/r5.tsv) and [results/r5/](results/r5/).
+
+| Arm | Calls (runs) | Median, range | Read, chars: median, range | Gate read, chars (runs) | Median, range |
+|---|---|---|---|---|---|
+| A: changed Toolbox | 6, 3, 3, 6, 3 | 3, 3 | 10,859; 11,068 | 3,102; 3,102; 3,178; 3,102; 3,320 | 3,102; 218 |
+| A⁻: previous Toolbox | 6, 3, 3, 4, 7 | 4, 4 | 9,238; 13,886 | 2,486; 2,603; 3,972; 2,603; 2,527 | 2,603; 1,486 |
+| B: reviewdog | 3, 4, 4, 4, 4 | 4, 1 | 13,960; 9,197 | 5,918; 5,918; 338; 8,740; 4,398 | 5,918; 8,402 |
+
+By the designer's reading of §5.3 (the adjudicator's labels decide):
+
+| Id | Reading |
+|---|---|
+| G18 | Holds: 5 of 5 correct |
+| G19 | Inconclusive: med(B) − med(A) = 1 call, *W* = 3 |
+| G20 | Inconclusive: arm A read 3,101 characters less, *W* = 11,068 |
+| G21 | Inconclusive: arm A read 2,816 characters less gate output, *W* = 8,402 |
+| G22 | Inconclusive: med(A⁻) − med(A) = 1 call, *W* = 4 |
+| G23 | Inconclusive: arm A read 1,621 characters *more* than A⁻, *W* = 13,886 |
+
+So **Toolbox does not beat reviewdog** under §5.3: G18 holds, but none of G19, G20 and G21 holds.
+None fails either; in round 4, G13 failed. The designer predicted that G20, G22 and G23 would
+hold, and none did.
+
+**Missing results.** Two A runs (`toolbox-1`, `toolbox-10`) read `pull_request.yaml` with no
+recorded result, and the measure fix counts each as the file, 13,515 characters. One B run
+(`reviewdog-3`) chained `git diff main` onto its first gate run, and that command has no recorded
+result. `count.py` imputes only `read_file`, so that run's read and gate read are low by about
+4,300 characters (the diff and the gate's output on `pr`). Corrected, B's read range is about
+4,900 and its gate-read range about 4,300. Arm A's read range of 11,068 is still the wider one,
+and gate read's gap of 2,816 is still under *W*. No label changes.
+
+**Every run printed the branch's files or diff (15 of 15).** In every arm, every run printed the
+workflows before editing, with `git show HEAD`, `git diff main`, `sed -n`, `cat` or `read_file`,
+even when the gate had quoted the lines. That reading is the floor of the read measure: from about
+3,500 to more than 15,000 characters a run, against a first gate output of 2,091. The quote did not
+replace it. One thing
+the gate leaves out is the fix for `needs: lnt`. actionlint's message says that the job "does not
+exist in this workflow" and doesn't name the jobs that do, so the agent has to look for `lint`.
+
+**Editing style moved.** Three A runs (round 4: none) made both edits in one `python3` heredoc
+with the gate rerun in the same command, and each took 3 calls, as few as any B run. The two that
+used search-and-replace took 6. All five B runs used a heredoc, and four made a separate SHA lookup
+(4 calls). No A heredoc run made a separate lookup: they copied the pin from the gate's hint.
+
+**Friction still open:**
+
+- **The `needs` finding doesn't name the jobs that exist.** A hint listing them (`lint`, `test`, …)
+  would cover the one fix the quote can't show.
+- **Agents print the branch before they fix it.** Every run in every arm did. A gate output can't
+  remove that, so the read measure can't separate the arms by much more than the gate outputs
+  differ.
+- **`count.py` imputes only `read_file`.** A terminal command without a recorded result still
+  counts as 0 (`reviewdog-3`).
+- **Calls still turn on how the agent edits.** The heredoc runs tie reviewdog's best; the
+  search-and-replace runs take two calls more.
+
+As registered, this round is not rerun.
 
 ## 1. Why this benchmark
 
