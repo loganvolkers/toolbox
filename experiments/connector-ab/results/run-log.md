@@ -50,3 +50,16 @@ Discarded: [Connector A/B phase3 Toolbox](bc-1f45cf68-6549-53fc-980d-bee57bdba06
 | C | pass (4) | pass | 483 |
 
 Agents still finishing replies: bc-c9a3934b, bc-7898db12, bc-cad824e0.
+
+## Phase 5 scores
+
+All arms 5/5 on read-key via score_read.py.
+
+## Final bar
+
+| Hypothesis | Result |
+|---|---|
+| C1 | Fail (A65 B63 C46) |
+| C2 | Fail (A15 B15 C16) |
+| C3 | Hold |
+

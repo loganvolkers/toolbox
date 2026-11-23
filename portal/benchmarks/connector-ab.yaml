@@ -19,11 +19,21 @@ records:
     repos:
     - port-labs/ocean@f9f3948e83a20769f32fd3ca9fe0581cc8755926
     - backstage/backstage@feeadd4d4efcbda9f1573b95e356e0f3fc0b5d17
-    status: designed
-    ran: ''
-    outcome: ''
-    changed: []
+    status: complete
+    ran: 2026-11-23
+    outcome: >-
+      C3 held (all arms exact). C1 failed (calls 1+3: Toolbox 65, Ocean 63,
+      Backstage 46). C2 failed (reuse calls: 15 / 15 / 16). Backstage cheapest
+      to author; Ocean least glue; Toolbox competitive after phase 1
+    changed:
+    - >-
+      Scaffold ships rust-toolchain.toml so toolbox-connect edition2024 builds
+      (phase-1 friction)
+    - >-
+      FORGE.md notes components as a bare array (not paginated like
+      project/search)
+    - D01M833YAH8MT4VY2W4K1PYAEHB
     servedValue: ''
     blockedOn: ''
     readme: experiments/connector-ab/README.md
-    results: ''
+    results: experiments/connector-ab/RESULTS.md

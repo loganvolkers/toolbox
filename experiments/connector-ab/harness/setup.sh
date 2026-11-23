@@ -62,9 +62,9 @@ Tenant A: http://127.0.0.1:9743  token tenant-a-token
 Tenant B: http://127.0.0.1:9744  token tenant-b-token
 
 Endpoints:
-- GET /rest/api/3/project?startAt=&maxResults=
-- GET /rest/api/3/search?startAt=&maxResults=
-- GET /rest/api/3/project/{key}/components   (required from phase 3)
+- GET /rest/api/3/project?startAt=&maxResults=   (paged object: values, startAt, isLast)
+- GET /rest/api/3/search?startAt=&maxResults=      (paged object: issues, startAt, total)
+- GET /rest/api/3/project/{key}/components         (required from phase 3; bare JSON array, not paged)
 
 Header: Authorization: Bearer <token>
 EOF

@@ -5,8 +5,8 @@ from an HTTP API into a catalog, does Toolbox's connector protocol cost fewer to
 less glue than Port Ocean or a Backstage entity provider, at equal correctness, across the
 package-author lifecycle (author → test → change → reuse → read)?
 
-**Status: designed, not run.** Hypotheses C1–C3 and the bar below are pre-registered and must not
-be edited after the first arm starts, except for this status line and §0 results.
+**Status: run, 2026-11-23. C1 and C2 failed; C3 held.** Full write-up: [RESULTS.md](./RESULTS.md).
+Hypotheses C1–C3 and the bar in §6 were not edited after the first arm started.
 
 This measures the **package-author** layer's `build-connector` stage and neighbouring stages
 ([package-author-sdlc.md](../../docs/design/package-author-sdlc.md),
@@ -19,7 +19,13 @@ Decision: [D01M833YAH8MT4VY2W4K1PYAEHB](../../docs/decisions/D01M833YAH8MT4VY2W4
 
 ## 0. Results
 
-*Filled after the run.*
+| Hypothesis | Result |
+|---|---|
+| **C1** Toolbox cheaper on author+change (calls 1+3) | **Fail** — A 65, B 63, C **46** |
+| **C2** Toolbox cheaper on reuse (phase 4) | **Fail** — A 15, B 15, C 16 |
+| **C3** Correctness | **Hold** — all arms exact on phases 1–5 |
+
+Details, friction triage and deviations: [RESULTS.md](./RESULTS.md).
 
 ## 1. Why Forge, not live Jira / GitHub / GCP
 
