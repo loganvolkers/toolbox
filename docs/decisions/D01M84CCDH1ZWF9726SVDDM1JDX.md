@@ -1,6 +1,6 @@
 ---
 id: D01M84CCDH1ZWF9726SVDDM1JDX
-decided: 2026-11-23T15:20:00Z
+decided: 2026-11-23T14:15:00Z
 ---
 
 # A gate lists each new finding once, under its entity, and a lint rule's finding says what to change to
@@ -16,8 +16,8 @@ amends the summary that [D01M841J2SN4V3AVZZ5D91YAR51](./D01M841J2SN4V3AVZZ5D91YA
 annotations don't change.
 
 1. **Why.** In round 3 of [gate-repair-ab](../../experiments/gate-repair-ab/README.md), the
-   Toolbox gate's first output was 2,892 characters long for 7 regressions. The reviewdog gate
-   needed about 1,100 characters for the same defects. Three things made up the difference:
+   Toolbox gate's first output was 2,867 characters long for 7 regressions. The reviewdog gate
+   needed 1,222 characters on stdout for the same defects. Three things made up the difference:
    - one zizmor finding appeared under two or three rules, each with its own block;
    - every block ended with a `from: connector …` line naming the entity's first source record,
      which was not always the record that the rule read;
@@ -45,8 +45,8 @@ annotations don't change.
      all of its findings are already listed.
    - **What stays:** the `reproduce:` command stays under its entity. The source record moves to
      the `--verdict` document, which keeps every regression's full `detail`.
-   - **The output:** on the gate-repair-ab planted pull request the summary is 1,541 characters, down
-     from 2,892. Two of the removed blocks repeated a finding, and the source lines named the wrong
+   - **The output:** on the gate-repair-ab planted pull request the summary is 1,529 characters, down
+     from 2,860. Two of the removed blocks repeated a finding, and the source lines named the wrong
      record.
 3. **The package's text.** The `github-actions` rules that list zizmor findings (`no-high-findings`,
    `no-medium-findings` and `zizmor-clean`) write each one as

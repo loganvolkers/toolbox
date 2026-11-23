@@ -13,7 +13,8 @@ adjudicator's, in [ADJUDICATION.md](ADJUDICATION.md):**
   - G8 holds: with the change, the median gate read fell from 18,751 characters to 3,876.
   - G9 and G10, on calls and total read, are inconclusive, not failed.
 - **Round 4:** Toolbox does not beat reviewdog under its pre-registered rule (§5.2, §0.5).
-  - G13 fails: the repair took more calls with Toolbox's gate, because of how the agents edited.
+  - G13 fails: the repair took more calls with Toolbox's gate. Half the gap came from how the
+    agents edited, half from arm A's extra exploration.
   - G14 and G15, on read and gate read, are inconclusive.
   - G16 holds: the second change cut gate read again.
 
@@ -164,36 +165,56 @@ By the designer's reading of §5.2 (the adjudicator's labels decide):
 | G16 | Holds: med(A⁻) − med(A) = 1,425 > *W* = 142 |
 | G17 | Inconclusive: 13,901 < *W* = 14,656 |
 
-So **Toolbox does not beat reviewdog**. The change did what it was for: G16 holds, and arm A's read
-fell to reviewdog's level, from 24,198 for A⁻ to 10,297 against reviewdog's 10,374. But the repair
-took more calls.
+So **Toolbox does not beat reviewdog**. The change did what it was for: G16 holds, so the agent read
+less from the gate. But the repair took more calls, and the read measures can't separate the arms.
+ADJUDICATION.md confirms these labels. It also corrected four of the designer's first explanations,
+and the paragraphs below follow its corrections.
 
-**Why the calls differ, from the transcripts.** The gap comes from how the agents edited, not from
-what the gate told them:
+**Why the calls differ (ADJUDICATION.md threat 12).** Half of the 4-call gap came from editing and
+half from exploring. Either half alone fails G13.
 
-- **Arm A.** Every run made its two edits with the editor's search-and-replace tool. Four of five
-  first read a file, which that tool requires.
-- **Arm B.** Every run made both edits in one `python3` heredoc, with the gate rerun in the same
-  command.
-- **Arm A⁻.** Two runs edited the second way and three the first, with the same gate output as
-  round 3's arm A. So this is agent style, not a property of either gate.
+| Arm | Calls on gate runs and edits: median | Exploration calls: median |
+|---|---|---|
+| A: changed Toolbox | 4 | 3 |
+| A⁻: previous Toolbox | 4 | 2 |
+| B: reviewdog | 2 | 1 |
 
-Under the decision rule, a style that clusters within an arm still counts. With both arms' calls
-this tight (*W* = 1), it decides G13.
+- **Editing.** Every A run made its two edits with the editor's search-and-replace tool and reran
+  the gate in its own call. Every B run made both edits in one `python3` heredoc, with the gate
+  rerun in the same command. Heredoc editing was 0 of 5 runs in A, 2 of 5 in A⁻ and 5 of 5 in B. The
+  round doesn't show what caused that split; the arms differ in more than the gate's output.
+- **Exploring.** Four A runs read a file before editing, which the tool does not require. Three
+  made a separate lookup for the version comment that the existing pins carry (`# v6.0.2`,
+  `# v7.0.1`). Their notes say so ("I'll search for that comment to match it"). Every run's diff, in
+  every arm, copies those comments, and the gate's SHA hint doesn't print them.
+
+**Read is undercounted for arm A (threat 13).** In three A runs, the `read_file` of
+`pull_request.yaml` has no recorded result, so `count.py` counts it as 0. Corrected, arm A's median
+read is about 23,100 characters, more than twice reviewdog's. G14 stays inconclusive either way. So
+this round does not show that arm A reads less overall.
+
+**Gate read counts whole commands (threat 14).** Arm A's lower gate read comes from what B's agents
+chained onto their gate runs: four printed the gate script with the first one. On the gates' own
+output, reviewdog's is shorter, 1,243 characters in all against 1,632.
+
+**Corrections to the record.**
+- The 2,892 and 1,541 that §5.2 and §0.2 give as characters are bytes. In characters, which the
+  measure counts, they are 2,860 and 1,529.
+- `d163449` is not just round 3's arm A plus unrelated commits: those commits change 41 product
+  files. On this task its gate output is byte-identical to round 3's arm A.
+- reviewdog prints 192 characters to stderr on the planted branch, and no round counts them.
 
 **Friction still open:**
 
-- **The agent still looks up the version comment.**
-  - Every A run looked up `upload-artifact` in the workflows after the gate had named its SHA.
-  - Three of them did it in a separate call. A fourth used the grep tool, whose pattern the
-    transcript doesn't record.
-  - Every run's diff, in every arm, copies the version comment that the existing pins carry
-    (`# v6.0.2`, `# v7.0.1`), and the hint doesn't print it.
-- **Gate read depends on what the agent chains.** reviewdog-5's 5,099 characters came from
-  `git diff main` in its first gate command and an edit in its second. The measure counts whole
-  commands, as registered.
-- **reviewdog's pass line worked.** No B run checked a pass by running a tool by hand (round 3: two
-  of five).
+- **The SHA hint leaves out the version comment.** A hint that carried the existing pin as written
+  (`actions/upload-artifact@043fb46d… # v7.0.1`) would remove the lookup that three A runs made.
+- **Calls depend on how the agent edits.** Through its output, Toolbox's gate could at most offer a
+  fix the agent applies in one command. Even then, by threat 12's counterfactuals, arm A's median
+  would be 5 calls, and G13 would still fail against reviewdog's 3.
+- **The read measure misses some `read_file` results** (threat 13). A future round needs
+  `count.py` to flag a call whose result is missing, so the measure doesn't count it as zero
+  without saying so.
+- **reviewdog's pass line worked.** No B run checked a pass by hand (round 3: two of five).
 
 The designer predicted G12 and G16 would hold and G13, G14 and G17 would be inconclusive, with G15
 about even. G13 failing was not predicted. As registered, this round is not rerun.
