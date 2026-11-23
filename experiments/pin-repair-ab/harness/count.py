@@ -2,7 +2,7 @@
 """The measure, from the runtime's transcript of one run (P6): tool calls, characters read, gate runs
 and the characters of their results, wall time.
 
-    count.py <arm: toolbox|reviewdog> <transcript.json> [<repo>]
+    count.py <arm: toolbox|reviewdog> <transcript.json> [<repo> [<replay.json>]]
 
 The transcript is what `batch-fetch-details` with `includeTranscripts` writes for a subagent's bcId:
 `{"messages": [...]}`, with one `role: tool` message per tool call carrying `tool_name`,
@@ -10,8 +10,10 @@ The transcript is what `batch-fetch-details` with `includeTranscripts` writes fo
 
 `missingResults` names each call whose result the transcript doesn't have. With <repo>, the run's
 checkout, a `read_file` among them is counted as the runtime's result for that file on branch `pr`
-(`readImputed`, `resultCharsImputed`), built the way a recorded `read_file` result is (round 4,
-threat 13). Nothing else is imputed.
+(`readImputed`, `resultCharsImputed`), built the way a recorded `read_file` result is
+(gate-repair-ab round 4, threat 13). With <replay.json>, what `replay.py` printed for the run, a
+`run_terminal_cmd` among them counts as its rebuilt result (`replayedChars`), in
+`resultCharsImputed` and, for a gate run, in `gateChars` (from round 2). Nothing else is imputed.
 """
 import collections
 import json
@@ -47,11 +49,14 @@ def read_file_result(repo: str, args: dict) -> str | None:
 def main() -> None:
     arm, path = sys.argv[1], sys.argv[2]
     repo = sys.argv[3] if len(sys.argv) > 3 else None
+    replay = json.load(open(sys.argv[4]))["replayed"] if len(sys.argv) > 4 else {}
     calls = [m for m in json.load(open(path))["messages"] if m.get("role") == "tool"]
     starts = [int(m["started_at_ms"]) for m in calls if m.get("started_at_ms")]
     ends = [int(m["completed_at_ms"]) for m in calls if m.get("completed_at_ms")]
-    gate = [m for m in calls if m.get("tool_name") == "run_terminal_cmd"
-            and GATE[arm].search(str(m.get("tool_args", "")))]
+    is_gate = [m.get("tool_name") == "run_terminal_cmd" and bool(GATE[arm].search(str(m.get("tool_args", ""))))
+               for m in calls]
+    gate = [m for m, g in zip(calls, is_gate) if g]
+    replayed = {int(i): n for i, n in replay.items()}
     missing = [m for m in calls if m.get("tool_result") in (None, "", {})]
     imputed = 0
     for m in missing:
@@ -65,8 +70,10 @@ def main() -> None:
         "resultChars": recorded,
         "missingResults": [m.get("tool_name", "?") for m in missing],
         "readImputed": imputed,
-        "resultCharsImputed": recorded + imputed,
-        "gateChars": sum(len(str(m.get("tool_result", ""))) for m in gate),
+        "replayedChars": sum(replayed.values()),
+        "resultCharsImputed": recorded + imputed + sum(replayed.values()),
+        "gateChars": sum(len(str(m.get("tool_result", ""))) for m in gate)
+        + sum(n for i, n in replayed.items() if is_gate[i]),
         "wallSeconds": round((max(ends) - min(starts)) / 1000) if starts and ends else None,
     }))
 

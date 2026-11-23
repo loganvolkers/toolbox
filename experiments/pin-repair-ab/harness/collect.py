@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
 """Score and measure a round's runs; write results/r<round>.tsv and one JSON per run.
 
-    collect.py <round> <transcripts-dir> <run>=<bcId> ...
+    [REPLAY=<openfga-src>:<toolbox-checkout>:<toolbox-target-dir>] collect.py <round> <transcripts-dir> <run>=<bcId> ...
 
 <transcripts-dir> is the directory `batch-fetch-details` wrote, with <bcId>/transcript.json. A run's
 arm is read from prompts/rendered/r<round>/arms.tsv when `round.sh` wrote one, and is otherwise the
 run's name without its number. Arms named `toolbox…` are scored and counted as Toolbox.
 
 *read* is `resultCharsImputed`: a `read_file` whose result the transcript lacks counts as that file
-on `pr` (count.py). `readRecorded` is the read as recorded, and `missing` names the calls without a
-result. Rounds 1 to 4 were written before these columns, with *read* as recorded.
+on `pr` (count.py). With REPLAY, set from round 2, a `run_terminal_cmd` without a result counts as
+its result rebuilt by `replay.py`, which is kept only if it reproduces the run's recorded results;
+`results/r<round>/<run>.replay.json` is its report and `replayed` its characters. `readRecorded`
+is the read as recorded, and `missing` names the calls without a result.
 """
 import json
+import os
 import pathlib
 import statistics
 import subprocess
@@ -41,20 +44,28 @@ def main() -> None:
         dest = f"/tmp/pin-repair-ab/r{rnd}/{run}"
         score = json.loads(subprocess.run([sys.executable, HERE / "score.py", kind, dest],
                                           capture_output=True, text=True, check=True).stdout)
-        count = json.loads(subprocess.run([sys.executable, HERE / "count.py", kind, transcripts / bc / "transcript.json",
-                                           f"{dest}/openfga"],
-                                          capture_output=True, text=True, check=True).stdout)
         diff = subprocess.run(["git", "diff", "main", "--", ".github"], cwd=f"{dest}/openfga",
                               capture_output=True, text=True, check=True).stdout
+        transcript = transcripts / bc / "transcript.json"
+        replay = []
+        if os.environ.get("REPLAY"):
+            report = subprocess.run([sys.executable, HERE / "replay.py", kind, dest, transcript,
+                                     *os.environ["REPLAY"].split(":")],
+                                    capture_output=True, text=True, check=True).stdout
+            (out / f"{run}.replay.json").write_text(report)
+            replay = [out / f"{run}.replay.json"]
+        count = json.loads(subprocess.run([sys.executable, HERE / "count.py", kind, transcript, f"{dest}/openfga",
+                                           *replay],
+                                          capture_output=True, text=True, check=True).stdout)
         (out / f"{run}.json").write_text(json.dumps({"run": run, "arm": arm, "bcId": bc, **count, "score": score},
                                                     indent=2) + "\n")
         (out / f"{run}.diff").write_text(diff)
         rows.append((run, arm, bc, score["correct"], count))
-    lines = ["run\tarm\tbcId\tcorrect\tcalls\tread\treadRecorded\tmissing\tgateRuns\tgateRead\twallSeconds"]
+    lines = ["run\tarm\tbcId\tcorrect\tcalls\tread\treadRecorded\tmissing\treplayed\tgateRuns\tgateRead\twallSeconds"]
     for run, arm, bc, correct, c in rows:
         missing = ",".join(c["missingResults"]) or "-"
         lines.append(f"{run}\t{arm}\t{bc}\t{correct}\t{c['toolCalls']}\t{c['resultCharsImputed']}\t{c['resultChars']}"
-                     f"\t{missing}\t{c['gateRuns']}\t{c['gateChars']}\t{c['wallSeconds']}")
+                     f"\t{missing}\t{c.get('replayedChars', 0)}\t{c['gateRuns']}\t{c['gateChars']}\t{c['wallSeconds']}")
     (HERE.parent / "results" / f"r{rnd}.tsv").write_text("\n".join(lines) + "\n")
     print("\n".join(lines))
     for arm in sorted({r[1] for r in rows}):

@@ -1,8 +1,9 @@
 # pin-repair-ab: repairing pins the repository already knows, Toolbox vs reviewdog
 
 **Status: round 1 run (frozen at `25079a6`); Toolbox does not beat reviewdog under the registered
-rule.** Toolbox was correct in every run, and every cost comparison was inconclusive (§0). This
-README was the bar; after the run only this status line and §0 changed.
+rule.** Toolbox was correct in every run, and every cost comparison was inconclusive (§0). Round 2,
+with a measure that rebuilds results the transcript drops, is registered in §4.1 and not run.
+After round 1, only this status line, §0 and §4.1 changed.
 
 This benchmark is about the box: a ratchet gate that reports what the repository already knows.
 Its tools are zizmor and actionlint, the same in both arms.
@@ -216,6 +217,47 @@ transcripts: each call's result carries about 400 characters of wrapper.
   B's range on this measure was 1,913 in round 4 and 4,342 in round 5.
 - **The designer's prediction:** N1 holds; N2 is inconclusive; N3 holds; N4 is inconclusive.
 
+### 4.1 Round 2 (registered after round 1, before its runs)
+
+Round 2 asks round 1's question again, with one change: the measure. Everything else is as
+registered for round 1: the arms, the fork, the planted pull request, the prompts template, the
+scorer, the Toolbox binaries (no Rust changed after `8a76f24`), five fresh runs per arm, P2 and
+*W*.
+
+**The measure change (P6).** `collect.py` runs with `REPLAY` set. A `run_terminal_cmd` whose result
+the transcript lacks counts as its result rebuilt by [harness/replay.py](harness/replay.py). The
+replay runs the run's commands in order in a fresh workspace at the same path. It stops at the
+first call it can't redo, such as a `search_replace`, whose arguments the transcript doesn't keep.
+It is kept only if every recorded command result it reaches has the same length when rebuilt.
+A rebuilt gate run counts in gate read too. On round 1 it rebuilt reviewdog-3's and reviewdog-5's
+missing results, matching all five recorded results it checked. It applies to every arm; in round
+1 all three missing results were in arm B.
+
+| Id | Hypothesis | Holds | Fails |
+|---|---|---|---|
+| N5 | Arm A is correct in every run | 5 of 5 correct | Any run incorrect |
+| N6 | As N2 (calls) | med(B) − med(A) > *W* | med(A) − med(B) > *W* |
+| N7 | As N3 (read) | As N6, on read | As N6, on read |
+| N8 | As N4 (gate read) | As N6, on gate read | As N6, on gate read |
+
+**Toolbox beats reviewdog on this task** if, in round 2, N5 holds, at least one of N6 to N8 holds,
+and none of them fails. Round 1's labels stand as they are, and round 2 is not pooled with it. If
+round 2 shows no win, the result is published as it is, and the task is not run a third time.
+
+**The designer's odds, after round 1.**
+
+- N5 is likely to hold: all ten round 1 runs were correct.
+- N6 is likely inconclusive: both arms' runs took two to four calls.
+- N7 is about even. With the replay, round 1's read gap cleared *W* by 332 characters out of
+  9,101, and one arm A run that greps anyway sets arm A's range.
+- N8 is likely inconclusive: round 1's gap was 2,082 against a *W* of 4,283 even with the replay.
+- The designer's prediction: N5 holds, N7 holds, N6 and N8 are inconclusive. That is a win, at
+  odds the designer puts a little under even.
+
+**Disclosed.** The measure change was prompted by round 1's data. Round 1 showed it helps arm A
+there, because the missing results were arm B's. Round 2 is registered and frozen before its runs
+are launched, and its missing results may fall in either arm.
+
 ## 5. Known limits, before the run
 
 1. **No network.** With network, reviewdog's agents could resolve tags with `git ls-remote`, or a
@@ -258,6 +300,8 @@ cargo build                                       # at the frozen commit
 RUNS=5 experiments/pin-repair-ab/harness/round.sh 1 <openfga export at 7d89a566> "$PWD" "$PWD/target/debug"
 # commit prompts/rendered/r1/; launch each rendered prompt as a fresh subagent; fetch transcripts; then:
 experiments/pin-repair-ab/harness/collect.py 1 <transcripts dir> <run>=<bcId> …
+# from round 2, rebuild dropped command results (§4.1):
+REPLAY=<openfga export>:"$PWD":"$PWD/target/debug" experiments/pin-repair-ab/harness/collect.py 2 <transcripts dir> <run>=<bcId> …
 ```
 
 ## Sources
