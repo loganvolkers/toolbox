@@ -2,10 +2,7 @@
 description: Forge integration scaffold for the connector A/B
 icon: atlassian
 configurations:
-  - name: baseUrl
-    required: true
-    type: url
-    description: Forge base URL
+  - {name: baseUrl, required: true, type: url, description: Forge base URL}
   - name: token
     required: true
     type: string
