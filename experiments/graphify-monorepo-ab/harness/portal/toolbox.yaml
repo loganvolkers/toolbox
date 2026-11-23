@@ -26,11 +26,7 @@ connectors:
   - name: cargo
     package: builtin:workspace
     runtime: in-image
-    config:
-      root: codex-rs
-      crates: true
-      repo: false
-      lastChange: false
+    config: {root: codex-rs, crates: true, repo: false, lastChange: false}
     records: [crate]
     refresh: {crate: [external_ids]}
     freshness: {crate: 1h}
@@ -56,9 +52,7 @@ kinds:
 
   - name: Doc
     identityFrom: [connector:workspace]
-    fields:
-      path: {type: string}
-      title: {type: string}
+    fields: {path: {type: string}, title: {type: string}}
     sources: {default: [connector:workspace]}
     map:
     - from: workspace/doc
@@ -89,9 +83,7 @@ kinds:
         items: string
         description: Workspace crates that depend on this one directly (normal dependencies).
         computed: inbound.dependsOn.map(c, c.id)
-      dependentCount:
-        type: integer
-        computed: inbound.dependsOn.size()
+      dependentCount: {type: integer, computed: inbound.dependsOn.size()}
     relations: {dependsOn: {to: Crate, many: true}}
     sources: {default: [connector:cargo]}
     map:
