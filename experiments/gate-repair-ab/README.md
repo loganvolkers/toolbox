@@ -12,9 +12,13 @@ adjudicator's, in [ADJUDICATION.md](ADJUDICATION.md):**
 - **Round 3:** the round showed the improvement under its pre-registered rule (§5.1).
   - G8 holds: with the change, the median gate read fell from 18,751 characters to 3,876.
   - G9 and G10, on calls and total read, are inconclusive, not failed.
+- **Round 4:** Toolbox does not beat reviewdog under its pre-registered rule (§5.2, §0.5).
+  - G13 fails: the repair took more calls with Toolbox's gate, because of how the agents edited.
+  - G14 and G15, on read and gate read, are inconclusive.
+  - G16 holds: the second change cut gate read again.
 
-Toolbox is not shown to beat reviewdog on any measure. The bar for rounds 1 and 2 is in §5; round
-3's is in §5.1, committed before its workspaces were built.
+Toolbox is not shown to beat reviewdog on any measure. The bar for rounds 1 and 2 is in §5, round
+3's is in §5.1 and round 4's in §5.2, each committed before its workspaces were built.
 
 This is about the box ([toolbox-and-tools.md](../../docs/design/toolbox-and-tools.md)): both arms
 carry the same tools, zizmor and actionlint, at the same pins, with the same flags and the same
@@ -137,6 +141,62 @@ Toolbox's 2,867 (threat 3).
   the reason to look.
 - **A pass says nothing.** In round 3, two reviewdog agents ran zizmor directly after their gate
   passed, to confirm.
+
+### 0.5 Round 4 (frozen at `02f9de5`; arm A as at `76a1140`, arm A⁻ as at `d163449`)
+
+The question was whether Toolbox now beats reviewdog. It doesn't. All fifteen runs were correct.
+Per run: [results/r4.tsv](results/r4.tsv) and [results/r4/](results/r4/).
+
+| Arm | Calls (runs) | Median, range | Read, chars: median, range | Gate read, chars (runs) | Median, range |
+|---|---|---|---|---|---|
+| A: changed Toolbox | 7, 6, 7, 7, 6 | 7, 1 | 10,297; 10,922 | 2,527; 2,527; 2,527; 2,527; 2,669 | 2,527; 142 |
+| A⁻: previous Toolbox | 6, 4, 3, 6, 6 | 6, 3 | 24,198; 14,656 | 4,018; 4,018; 3,952; 3,876; 3,943 | 3,952; 142 |
+| B: reviewdog | 4, 3, 3, 3, 4 | 3, 1 | 10,374; 2,990 | 3,186; 3,371; 3,337; 3,337; 5,099 | 3,337; 1,913 |
+
+By the designer's reading of §5.2 (the adjudicator's labels decide):
+
+| Id | Reading |
+|---|---|
+| G12 | Holds: 5 of 5 correct |
+| G13 | **Fails**: med(A) − med(B) = 4 calls, more than *W* = 1 |
+| G14 | Inconclusive: medians 77 characters apart, *W* = 10,922 |
+| G15 | Inconclusive: arm A read 810 characters less gate output, but *W* = 1,913 |
+| G16 | Holds: med(A⁻) − med(A) = 1,425 > *W* = 142 |
+| G17 | Inconclusive: 13,901 < *W* = 14,656 |
+
+So **Toolbox does not beat reviewdog**. The change did what it was for: G16 holds, and arm A's read
+fell to reviewdog's level, from 24,198 for A⁻ to 10,297 against reviewdog's 10,374. But the repair
+took more calls.
+
+**Why the calls differ, from the transcripts.** The gap comes from how the agents edited, not from
+what the gate told them:
+
+- **Arm A.** Every run made its two edits with the editor's search-and-replace tool. Four of five
+  first read a file, which that tool requires.
+- **Arm B.** Every run made both edits in one `python3` heredoc, with the gate rerun in the same
+  command.
+- **Arm A⁻.** Two runs edited the second way and three the first, with the same gate output as
+  round 3's arm A. So this is agent style, not a property of either gate.
+
+Under the decision rule, a style that clusters within an arm still counts. With both arms' calls
+this tight (*W* = 1), it decides G13.
+
+**Friction still open:**
+
+- **The agent still looks up the version comment.**
+  - Every A run looked up `upload-artifact` in the workflows after the gate had named its SHA.
+  - Three of them did it in a separate call. A fourth used the grep tool, whose pattern the
+    transcript doesn't record.
+  - Every run's diff, in every arm, copies the version comment that the existing pins carry
+    (`# v6.0.2`, `# v7.0.1`), and the hint doesn't print it.
+- **Gate read depends on what the agent chains.** reviewdog-5's 5,099 characters came from
+  `git diff main` in its first gate command and an edit in its second. The measure counts whole
+  commands, as registered.
+- **reviewdog's pass line worked.** No B run checked a pass by running a tool by hand (round 3: two
+  of five).
+
+The designer predicted G12 and G16 would hold and G13, G14 and G17 would be inconclusive, with G15
+about even. G13 failing was not predicted. As registered, this round is not rerun.
 
 ## 1. Why this benchmark
 
