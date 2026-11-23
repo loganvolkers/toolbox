@@ -27,7 +27,7 @@ Changeset frontmatter still uses logical names: package YAML `name:` for package
    ```
 
 5. `.github/workflows/release.yml` (cargo-dist) builds archives, installers, attestations,
-   and a GitHub Release. `.github/workflows/image.yml` builds the GHCR image.
+   and a GitHub Release. Its last job calls `.github/workflows/image.yml`, which builds the GHCR image.
 
 Maintainer-run apply (without the Version PR):
 
@@ -47,8 +47,9 @@ python3 scripts/test-apply-changesets.py
 
 1. `version` in the root `Cargo.toml` (`[workspace.package]`) matches the tag you will push.
    Package YAML `version:` fields match that same version (lockstep).
-2. `dist plan` (cargo-dist 0.34.0) lists the archives and installers; it also checks that
-   `.github/workflows/release.yml` still matches the generator (D98 — do not format that file by hand).
+2. `dist plan` (cargo-dist 0.34.0) lists the archives and installers. `.github/workflows/release.yml`
+   is dist's output plus hand patches kept by `allow-dirty = ["ci"]` (D98 — do not format it, and
+   reapply the patches if you run `dist generate`).
 3. On a clean `main` with CI green:
 
    ```bash
@@ -58,7 +59,11 @@ python3 scripts/test-apply-changesets.py
 
 4. `.github/workflows/release.yml` builds Linux / macOS / Windows archives, shell and PowerShell
    installers, attestations, and a GitHub Release.
-5. `.github/workflows/image.yml` then builds `ghcr.io/<owner>/toolbox:X.Y.Z` from the Linux archives.
+5. In the same run, after the release is announced, the `custom-image` job calls
+   `.github/workflows/image.yml`, which builds `ghcr.io/<owner>/toolbox:X.Y.Z` from the Linux
+   archives. A release made with `GITHUB_TOKEN` starts no other workflow, so the image is not
+   built on a `release` event. For a tag released before this job existed, run
+   `gh workflow run image.yml -f tag=vX.Y.Z`.
 
 Verify an artifact with `gh attestation verify <file> --repo <owner>/toolbox`.
 
