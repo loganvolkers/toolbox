@@ -5,7 +5,9 @@ read.** Toolbox was correct in every run and read a median of 5,794 characters a
 reviewdog's 18,300 (N7). Calls and gate read were inconclusive. Round 1 (frozen at `25079a6`)
 showed no win under its rule, with a measure that dropped some of reviewdog's results. Round 2
 was registered with a measure that rebuilds them (§4.1). After round 1, only this status line,
-§0 and §4.1 changed. The independent adjudication is in [ADJUDICATION.md](ADJUDICATION.md).
+§0, §4.1 and two lines of §7 (the `REPLAY` command) changed. The win is narrow: N7 holds by
+1,073 characters over *W*, and it depends on the replay. The independent adjudication is in
+[ADJUDICATION.md](ADJUDICATION.md).
 
 This benchmark is about the box: a ratchet gate that reports what the repository already knows.
 Its tools are zizmor and actionlint, the same in both arms.
@@ -45,8 +47,9 @@ run's diff, score and replay report are in `results/r2/`.
 | Gate read | 5,794, 123 | 8,299, 4,849 | 4,849 | N8 inconclusive |
 
 **Toolbox beats reviewdog on this task in round 2, under the registered rule**: N5 and N7 hold,
-and none of N6 to N8 fails. The designer predicted that outcome. In this task, an agent with
-Toolbox's gate reads about a third of what an agent with reviewdog's reads. Every arm A run took
+and none of N6 to N8 fails. The designer predicted that outcome. In this task, on the registered
+measure, an agent with Toolbox's gate reads about a third of what an agent with reviewdog's reads
+(0.32). On the recorded data alone, without the replay, it is 0.40. Every arm A run took
 two calls and read 5,705 to 5,828 characters.
 
 **What the runs did.**
@@ -55,7 +58,7 @@ two calls and read 5,705 to 5,828 characters.
   command. Then it rewrote the ten `uses:` lines from the hints, with one `sed` or a short Python
   script, and reran the gate in the same command. No run looked a pin up.
 - **Arm B.** Every run printed the gate script and `weekly.yaml`, ran the gate, and then looked up
-  the pins in one or two greps. Grep output ranged from 919 to 13,522 characters. Then it made
+  the pins in one or two greps. Grep output ranged from 521 to 13,522 characters. Then it made
   the edit and checked the result. reviewdog-2 made the edit as seven `search_replace` calls,
   which is most of its eleven (L18). No arm B run picked a wrong pin.
 
@@ -66,12 +69,38 @@ gate run.
 - **What the replay did.** It rebuilt all four. Every recorded command result it checked matched
   its rebuilt length: 9 checks over three runs. It stopped at reviewdog-2's first
   `search_replace`, after its missing result.
-- **The agents did receive these results.** reviewdog-3 wrote all seven correct SHAs right after
-  a lookup whose result the transcript lacks.
+- **The agents did receive these results.** Three runs over the two rounds (round 1's
+  reviewdog-3 and -5, round 2's reviewdog-3) wrote all seven correct SHAs right after a lookup
+  whose result the transcript lacks. No recorded result before it held any of them.
+- **Why they went missing.** Every dropped result came from a command that exited non-zero: 7 of
+  7, against 55 of 55 recorded results from commands that exited 0 (ADJUDICATION.md). Four ended
+  in a `cat` of a zizmor config that doesn't exist, and three in a direct `zizmor --format plain`
+  with findings. Every arm A command ended in one that exits 0, so arm A was never at risk. The
+  mechanism is inferred from these 62 calls, not from the runtime's code.
 - **Without the replay,** arm B's read would be a median of 14,638 with a range of 13,614. N7
   would then be inconclusive.
 - **In both rounds,** all seven missing results were in arm B: four gate runs, three of them
   chained with zizmor's plain output, and three greps over the workflows' `uses:` lines.
+
+**How narrow it is.** N7 holds by 1,073 characters against *W* = 11,433, and *W* is all arm B's
+spread. reviewdog-2's editing style sets arm B's median: had it edited with one `sed` instead of
+seven `search_replace` calls, N7 would be inconclusive and N6 would hold instead. Without
+reviewdog-3, no hypothesis holds. Read with the adjudication's threats 1 to 5: this is the
+seventh round, over two benchmarks, to ask whether Toolbox beats reviewdog, and the first to show
+it, on a task built where the hint should help.
+
+**Friction, triaged (§6).** None changes a label.
+
+| Arm | Friction | Triage |
+|---|---|---|
+| B | Three round 2 runs (reviewdog-2, -3, -4) ran zizmor or actionlint by hand after their gate passed. reviewdog-4 noted that "the efm parsing might have dropped a finding". Two runs per round also ran `zizmor --format plain` beside their first gate run, about 3,650 characters each | Rival friction, unfixed: reviewdog's pass line doesn't say how many raw findings it parsed. A next round's gate should print that count (P4) |
+| A | On a pass, the gate prints "baseline: no regressions, but .toolbox/results.json is out of date: run with --update and commit it", which the prompt forbids. Five runs over the two rounds deliberated over it | Product friction, unfixed: a passing ratchet should not tell a pull request's author to rewrite the baseline. Candidate for a decision |
+| A | toolbox-3, in both rounds, paused over `maintainer-ci-security · …weekly.yaml: new (none)` | Product friction, unfixed: a `new (none)` line on a pass reads like a failure |
+
+**§2's figures, corrected.** §2 says the gates print 1,827 and 3,728 characters. Those are bytes.
+In characters, the measure's unit, they are 1,800 and 3,688. The 96 characters on stderr are
+reviewdog's failure line, not zizmor's summary. §4 estimates a wrapper of about 400 characters a
+call: it is 313. No label changes.
 
 **Measured against round 1.** Round 1's labels stand, and the rounds are not pooled. Round 2's arm
 A was tighter than round 1's: no run grepped to check the hints, as toolbox-2 did in round 1.
@@ -95,7 +124,8 @@ but none holds either. The designer predicted that N3 would hold.
 
 **What the runs did.** Both arms took the same path. In one or two calls they printed
 `weekly.yaml` and ran the gate. Arm B also grepped the other workflows for SHA pins. Then they
-rewrote the ten `uses:` lines with one `sed`, and the same command reran the gate.
+rewrote the ten `uses:` lines with one `sed` (two for toolbox-3, whose first `sed` failed on its
+`#` delimiter), and the same command reran the gate.
 
 - Every arm B run found the pins with that one grep and picked no wrong pin. reviewdog-1 and -4
   chained it onto the gate run; reviewdog-2, -3 and -5 made it its own call.

@@ -45,9 +45,9 @@ standard: a claim that Toolbox makes something easier needs a benchmark behind i
   Every result before it is one sample.
 - **The first protocol-2 win over a rival is narrow by design.** In pin-repair-ab's round 2, agents
   with Toolbox's gate read a median of 5,794 characters against 18,300 with reviewdog's, because
-  the gate names the pins the repository already uses. Calls and gate read were inconclusive. It
-  is one repository and one planted pull request, chosen where Toolbox's hints should help, and
-  it took a measure fix (L20) to see it.
+  the gate names the pins the repository already uses. Calls and gate read were inconclusive,
+  and read held by only 1,073 characters over *W*. It is one repository and one planted pull
+  request, chosen where Toolbox's hints should help, and it took a measure fix (L20) to see it.
 - **The pattern they found:** Toolbox rarely beats a capable agent on a single run. Agents are
   trained on programming languages and their tools, not on Toolbox. Toolbox's value appears with
   repetition: on the second repository, the tenth run, the next upgrade, the comparison across
@@ -104,7 +104,7 @@ lessons that cut across them:
 | L17 | **The transcript is not the screen.** The runtime keeps a command's stdout only, so a verdict on stderr was read but not counted | gate-repair-ab §0.1 |
 | L18 | **Calls measure how an agent edits, not only what it was told.** In gate-repair-ab's round 4, every reviewdog run edited and reran its gate in one shell command, and every Toolbox run used two editor calls and a separate rerun. With both arms' ranges at 1 call, that alone decided the calls hypothesis. Report calls by kind (edits, gate runs, exploration) beside the total | gate-repair-ab ([ADJUDICATION.md](../../experiments/gate-repair-ab/ADJUDICATION.md) threat 12) |
 | L19 | **Check that the measure can move before asking again.** In gate-repair-ab's round 5, every run in every arm printed the branch's workflows before editing, even when the gate had quoted the lines. That reading, 3,500 to more than 15,000 characters a run, set the floor and the noise of the read measure, so a better gate output could not separate the arms. The same unchanged Toolbox also moved by 3 calls between rounds. A second try at the same win needs a measure, task or run count under which the change could exceed *W* | gate-repair-ab ([ADJUDICATION.md](../../experiments/gate-repair-ab/ADJUDICATION.md) threats 21–25) |
-| L20 | **Count what the transcript dropped, per arm, before a label.** In pin-repair-ab, the runtime recorded no result for seven terminal commands over two rounds, all in reviewdog's arm: gate runs chained with zizmor's plain output, and greps over every `uses:` line. The agents had read them, so the measure undercounted one arm, and round 1's read comparison came out inconclusive. Replaying the run's commands in a fresh workspace rebuilds them, kept only when the replay reproduces the run's recorded results | pin-repair-ab ([ADJUDICATION.md](../../experiments/pin-repair-ab/ADJUDICATION.md)) |
+| L20 | **Count what the transcript dropped, per arm, before a label.** In pin-repair-ab, the runtime recorded no result for seven terminal commands over two rounds, all in reviewdog's arm: four gate runs and three greps over every `uses:` line. Each came from a command that exited non-zero, and every arm A command ended in one that exits 0. The agents had read them, so the measure undercounted one arm, and round 1's read comparison came out inconclusive. Replaying the run's commands in a fresh workspace rebuilds them, kept only when the replay reproduces the run's recorded results | pin-repair-ab ([ADJUDICATION.md](../../experiments/pin-repair-ab/ADJUDICATION.md)) |
 
 ## 4. How to run one
 
@@ -235,7 +235,7 @@ because its harness and its truth are reused.
 | B7 | `deploy-ab`: a laptop deploy of Toolbox against Backstage, scored by catalog probes rather than `/readyz` ([local-simulation.md](./local-simulation.md), Q19). Run twice, inconclusive. Rerun under protocol 2 after the fixes in its [ADJUDICATION.md](../../experiments/deploy-ab/ADJUDICATION.md) |
 | B8 | Review `connector drive --format catalog` under P5: keep it if it has a use outside connector-ab's harness, or drop it (D01M83RDWR52WVNER0MV5T84NSX) |
 | B9 | Rerun connector-ab under protocol 2, with every arm's recipe written to the same level and Ocean's and Backstage's deferred friction fixed first |
-| B10 | gate-repair-ab showed that the ratchet's gate output is cheaper to read (G8, and again G16 in round 4). It did not show that Toolbox beats reviewdog: round 4 lost on calls (G13), and round 5 tied. By L19, the question changed: [pin-repair-ab](../../experiments/pin-repair-ab/README.md) asked it on a task whose fixes need pins from other files. There, in round 2, Toolbox beat reviewdog on read (N7: median 5,794 vs 18,300 characters), with calls and gate read inconclusive, after D01M84X4JDHXS98K89KN4AB0RCD and a replay measure (L20). Still to do: the same question on a second repository and on a real pull request, and a hint naming the jobs a mistyped `needs:` could mean ([gate-repair-ab README](../../experiments/gate-repair-ab/README.md) §0.6) |
+| B10 | gate-repair-ab showed that the ratchet's gate output is cheaper to read (G8, and again G16 in round 4). It did not show that Toolbox beats reviewdog: round 4 lost on calls (G13), and round 5 tied. By L19, the question changed: [pin-repair-ab](../../experiments/pin-repair-ab/README.md) asked it on a task whose fixes need pins from other files. There, in round 2, Toolbox beat reviewdog on read (N7: median 5,794 vs 18,300 characters), with calls and gate read inconclusive, after D01M84X4JDHXS98K89KN4AB0RCD and a replay measure (L20). It is narrow: N7 holds by 1,073 characters over *W*, and it depends on the replay. Still to do: the same question on a second repository and on a real pull request, and a hint naming the jobs a mistyped `needs:` could mean ([gate-repair-ab README](../../experiments/gate-repair-ab/README.md) §0.6) |
 
 ## Sources
 
