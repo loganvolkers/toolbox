@@ -264,12 +264,83 @@ G10 fails. Arm A⁻ or B being incorrect in a run is reported; it changes no lab
 
 **The designer's prediction:** G7 and G8 hold; G9 and G10 are inconclusive; G11 is inconclusive.
 
+### 5.2 Round 4 (pre-registered after round 3, before round 4's workspaces were built)
+
+Round 4 asks whether Toolbox now beats reviewdog. It uses the same task, fork, planted pull request,
+prompt templates and decision rule (P2) as rounds 1–3. The designer had seen round 3, and made two
+changes from its open friction (§0.4):
+
+- **The Toolbox change**
+  ([D01M84CCDH1ZWF9726SVDDM1JDX](../../docs/decisions/D01M84CCDH1ZWF9726SVDDM1JDX.md), commit
+  `76a1140`; no harness file).
+  - A failing gate lists each new finding once, under its entity, with the rules that report it.
+  - The `github-actions` package gives a finding the same text across rules and stops counting
+    zizmor's `unpinned-uses` under `zizmor-clean`.
+  - `pinned-everywhere` names the SHA the repository already pins the action to.
+  - On the planted branch, the first gate output fell from 2,892 characters to 1,541. A pass prints
+    103.
+- **The rival fix (P4).** reviewdog's gate printed nothing on a pass, and in round 3 two agents ran
+  zizmor by hand to confirm. `quality-gate.sh` now prints `quality gate: passed` (20 characters),
+  in a harness-only commit.
+
+**Arms.** Five runs each, fifteen in all, launched together:
+
+- A, the changed Toolbox;
+- B, reviewdog with the P4 fix;
+- A⁻, the Toolbox before the change: the Rust and `packages/github-actions` as at `d163449`, which
+  was round 3's arm A plus unrelated commits. `round.sh` now vendors A⁻'s package from
+  `PREV_CHECKOUT`, because the package changed. Workspaces and `arms.tsv` are as in round 3.
+
+**Measures:** calls, read and gate read, as in §5.1, with `count.py` unchanged.
+
+| Id | Hypothesis | Holds | Fails |
+|---|---|---|---|
+| G12 | Arm A is correct in every run | 5 of 5 correct | Any run incorrect |
+| G13 | With Toolbox's gate, a repair takes fewer calls than with reviewdog's | med(B) − med(A) > *W*, on calls | med(A) − med(B) > *W*, on calls |
+| G14 | With Toolbox's gate, the agent reads less than with reviewdog's | As G13, on read | As G13, on read |
+| G15 | With Toolbox's gate, the agent reads less gate output than with reviewdog's | As G13, on gate read | As G13, on gate read |
+| G16 | The change cut what the agent reads from the gate (attribution) | med(A⁻) − med(A) > *W*, on gate read | med(A) − med(A⁻) > *W*, on gate read |
+| G17 | The change cut what the agent reads in all (attribution) | As G16, on read | As G16, on read |
+
+*W* is as in §5, over the two arms compared. **Toolbox beats reviewdog** only if all of these hold:
+
+- G12 holds;
+- at least one of G13, G14 and G15 holds;
+- none of G13, G14 and G15 fails.
+
+G16 and G17 say whether a win is due to this change; they don't decide it. A run of arm B or A⁻ that
+is incorrect is reported and changes no label. This is the only round under this registration: if
+it doesn't show a win, the result is published as it is, not rerun.
+
+**Before the run, the designer reads the odds as follows.**
+
+- **Calls (G13) can't realistically hold.** Arm B's calls ranged 0, 3 and 3 in rounds 1–3, around
+  a median of 4. With *W* = 3, arm A would need a median under 1.
+- **Read (G14) holds only if arm B's runs bunch high.** In round 3, B's read was bimodal (10k to
+  25k), depending on whether the agent ran one broad `cat` or `grep`. The SHA hint should remove arm
+  A's reason to search, but not B's.
+- **Gate read (G15) is about even odds.** Gate read counts the whole result of any command that runs
+  the gate:
+  - In round 3, four of five B runs put `cat scripts/quality-gate.sh` (about 1,000 characters) in
+    the same command as their first gate run. That first command's result was 2,791 characters.
+  - Both arms' agents chained `git status`, `git log`, edits or `git diff` onto their gate runs.
+  - From round 3's commands, the new first output gives arm A about 2,050 characters on its first
+    gate run, and about 2,550 in all. Arm B's median was 3,263, with second gate runs from 321 to
+    1,841 characters.
+  - So the gap is about 700. G15 holds only if neither arm's range is wider than that. B's range
+    was 1,520 in round 3, because one run put an edit and its diff into the second gate run.
+  - Two things favour arm A. B's pass line adds about 20 characters to its gate read. And reading B's
+    script in the same command counts as gate read: the script is the gate's whole configuration,
+    and arm A has nothing like it to read.
+- **The designer's prediction:** G12 holds; G13 and G14 are inconclusive; G15 holds or is
+  inconclusive, about equally likely; G16 holds; G17 is inconclusive.
+
 ## 6. Protocol
 
 - **Rounds (P3).** Each round freezes one commit of this repository (`frozenAt`) for Toolbox, the
   harness and both arms. The Toolbox binaries are built from it. A Toolbox change made after round 1
   starts round 2, in which both arms rerun.
-- **Runs (P2).** Three fresh runs per arm per round (five in round 3), each in its own workspace
+- **Runs (P2).** Three fresh runs per arm per round (five in rounds 3 and 4), each in its own workspace
   (`/tmp/gate-repair-ab/r<round>/<arm>-<n>`) with its own copies of the tools. Each run is a fresh
   local subagent with the inherited model and only the rendered prompt. No run is dropped for its
   result.
@@ -293,6 +364,7 @@ export PATH=<dir with zizmor 1.32.0, actionlint 1.7.12 and reviewdog 0.21.0>:$PA
 cargo build                                       # at the round's frozen commit
 experiments/gate-repair-ab/harness/round.sh 1 <openfga export at 7d89a566> "$PWD" "$PWD/target/debug"
 # round 3: RUNS=5 PREV_TARGET=<worktree of 703b53a>/target/debug round.sh 3 …
+# round 4: RUNS=5 PREV_TARGET=<worktree of d163449>/target/debug PREV_CHECKOUT=<that worktree> round.sh 4 …
 # launch the rendered prompts as fresh subagents; fetch their transcripts; then:
 experiments/gate-repair-ab/harness/collect.py <round> <transcripts dir> <run>=<bcId> …
 ```
