@@ -1,0 +1,28 @@
+{
+  "run": "openfga-1",
+  "arm": "B",
+  "bcId": "bc-c4ab59c3-349f-5de3-abcb-2056667dd3a3",
+  "answered": true,
+  "toolCalls": 45,
+  "byTool": {
+    "run_terminal_cmd": 33,
+    "read_file": 11,
+    "search_replace": 1
+  },
+  "resultChars": 194842,
+  "missingResults": [
+    "read_file",
+    "read_file",
+    "run_terminal_cmd"
+  ],
+  "readImputed": 35823,
+  "resultCharsImputed": 230665,
+  "graphifyCalls": 8,
+  "graphifyCommands": {
+    "query": 7,
+    "explain": 2
+  },
+  "graphifyChars": 66642,
+  "outsidePaths": [],
+  "wallSeconds": 196
+}

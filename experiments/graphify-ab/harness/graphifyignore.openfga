@@ -1,0 +1,5 @@
+# Illustrations of the worked examples, the logo and the playground page; the architecture diagrams stay.
+docs/list_objects/**/*.svg
+docs/check/*.svg
+openfga-logo.png
+assets/playground/
