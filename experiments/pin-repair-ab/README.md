@@ -1,7 +1,8 @@
 # pin-repair-ab: repairing pins the repository already knows, Toolbox vs reviewdog
 
-**Status: pre-registered, not run.** This README is the bar. After the run only this status line
-and §0 change.
+**Status: round 1 run (frozen at `25079a6`); Toolbox does not beat reviewdog under the registered
+rule.** Toolbox was correct in every run, and every cost comparison was inconclusive (§0). This
+README was the bar; after the run only this status line and §0 changed.
 
 This benchmark is about the box: a ratchet gate that reports what the repository already knows.
 Its tools are zizmor and actionlint, the same in both arms.
@@ -26,7 +27,58 @@ measured saving, and B10's next step moves to another question.
 
 ## 0. Results
 
-Not run.
+### 0.1 Round 1: no win under the registered rule
+
+Ten fresh runs, five per arm, launched together at `25079a6` with the prompts committed in
+`2fd3b8e`. Every run said DONE, and the scorer marked all ten correct. Per-run numbers are in
+[results/r1.tsv](results/r1.tsv), and each run's diff and score are in `results/r1/`.
+
+| Measure | Arm A (Toolbox): median, range | Arm B (reviewdog): median, range | *W* | Label |
+|---|---|---|---|---|
+| Correct | 5 of 5 | 5 of 5 | | **N1 holds** |
+| Calls | 3, 2 | 4, 1 | 2 | N2 inconclusive |
+| Read | 6,054, 5,614 | 11,605, 10,091 | 10,091 | N3 inconclusive |
+| Gate read | 5,794, 2,358 | 7,850, 6,547 | 6,547 | N4 inconclusive |
+
+**Toolbox does not beat reviewdog on this task in round 1.** N1 holds and none of N2 to N4 fails,
+but none holds either. The designer predicted that N3 would hold.
+
+**What the runs did.** Both arms took the same path. In one or two calls they printed
+`weekly.yaml` and ran the gate. Arm B also grepped the other workflows for SHA pins. Then they
+rewrote the ten `uses:` lines with one `sed`, and the same command reran the gate.
+
+- Every arm B run found the pins with that one grep and picked no wrong pin. reviewdog-1 and -4
+  chained it onto the gate run; reviewdog-2, -3 and -5 made it its own call.
+- Four of five arm A runs copied the hints without looking anything up. toolbox-2 grepped every
+  `uses:` line anyway (5,214 characters), which makes arm A's range.
+- Arm A's gate read is higher than the designer estimated, because three runs printed
+  `weekly.yaml` in the same command as the gate (L17: a chained command's whole result counts).
+
+**The measure undercounts arm B.** The runtime recorded no result for three terminal commands, all
+in arm B: reviewdog-5's gate run (chained with zizmor) and its pin lookup, and reviewdog-3's pin
+lookup. The registered measure imputes only `read_file` results, so these count as nothing.
+reviewdog-5's read, 5,064, is the lowest of all ten runs, and it alone makes arm B's range.
+
+**A sensitivity check, not the label.** Every missing command ran before any edit, so its output
+can be rebuilt by rerunning it in a fresh planted workspace at the same path. Done that way, the
+five recorded results of the same calls in reviewdog-1, -2, -3 and -5 come out byte for byte the
+same length as recorded.
+
+| Run | Missing result, rebuilt | Read: recorded, rebuilt | Gate read: recorded, rebuilt |
+|---|---|---|---|
+| reviewdog-3 | pin lookup, 8,795 | 11,579, 20,374 | 7,850, 7,850 |
+| reviewdog-5 | gate run 7,840; pin lookup 5,592 | 5,064, 18,496 | 1,335, 9,175 |
+
+With the rebuilt results, arm B's read is a median of 15,155 with a range of 8,769. N3 would then
+hold by 332 characters (9,101 against *W* 8,769), and gate read would stay inconclusive (7,876,
+range 4,283, against 5,794, range 2,358). The rebuild was not registered, so it doesn't change
+round 1's labels. It does show that the result turns on the measure dropping results, not only
+on the agents.
+
+**What follows (L3, close known friction before running).** The measure replays a missing
+command's result for every arm, and keeps the replay only when it reproduces each recorded result
+of the same run. Round 2 is registered with that measure, at a new frozen commit, with fresh runs
+and nothing else changed.
 
 ## 1. Arms
 
