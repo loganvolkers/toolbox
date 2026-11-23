@@ -119,3 +119,9 @@ Product fixes on branch `cursor/connector-learning-dx-530d` (D01M83FFM2K6XS4EAVH
 - A: bc-64d1c90b-5e24-5195-bd14-7e0ef3170379
 - B: bc-42ec6c3c-6771-5d29-a0f0-ebefed66e14f
 - C: bc-f991c026-2f19-508b-9b52-480f3e9b9cb7
+
+### Phase 5 v2 scores
+All arms read 5/5. Calls A14 B12 C13. **C3 holds.**
+
+### Phase 4 v2b rematch (C2) — dump-only tenant-switch guidance shipped
+Starting from restored tenant-A entity trees.

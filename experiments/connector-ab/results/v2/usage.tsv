@@ -8,3 +8,6 @@ phase	arm	tokens	calls	seconds	notes
 4	A		15		truth+shape pass (4 tenant B); was 15 in v1
 4	B		17		truth+shape pass; was 15 in v1
 4	C		15		truth+shape pass; was 16 in v1
+5	A		14		read 5/5; was ~10-13 in v1
+5	B		12		read 5/5; was ~10-13 in v1
+5	C		13		read 5/5; was ~10-13 in v1
