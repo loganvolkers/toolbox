@@ -22,10 +22,9 @@ records:
     status: complete
     ran: 2026-11-23
     outcome: >-
-      v2 (learning-tax product fixes, same bar): C1–C3 all hold. C1 calls 1+3:
-      Toolbox 59 < Ocean 63 < Backstage 61 (v1: 65/63/46). C2 phase-4 rematch:
-      12 / 18 / 14 after dump-only --config guidance (first pass tied C at
-      15). C3: all arms exact + read 5/5. Baseline v1: RESULTS.md
+      v3 (catalog-drive + composite ids, same bar): C1–C3 hold. C1 39/57/40;
+      C2 9/12/16. Large-lead target (≥10 under both rivals on C1 and C2)
+      missed (C1 vs C only −1). v2: RESULTS-v2.md; v1: RESULTS.md
     changed:
     - >-
       Scaffold ships rust-toolchain.toml so toolbox-connect edition2024 builds
@@ -35,12 +34,15 @@ records:
       project/search)
     - D01M833YAH8MT4VY2W4K1PYAEHB
     - D01M83FFM2K6XS4EAVHVP92TBDZ
+    - D01M83GQ1KP8A0WR3P2S7AG54WQ
+    - D01M83H3HBH2SC205MX3ANRZYWN
     - >-
-      Portal stub, connector drive, author-connector skill, Astro connectors
-      page, required Source::version(); dump-only tenant switch via --config
+      connector drive --format catalog --out; composite catalog-id guidance
+      and numeric-externalId fallback
     servedValue: >-
-      Closed the package-author learning tax enough for Toolbox to win the
-      pre-registered C1–C3 bar against Ocean and Backstage
+      Toolbox wins the pre-registered C1–C3 bar; further cutting change-phase
+      cost enough for a ≥10-call lead on C1 was not achieved without bar
+      changes
     blockedOn: ''
     readme: experiments/connector-ab/README.md
-    results: experiments/connector-ab/RESULTS-v2.md
+    results: experiments/connector-ab/RESULTS-v3.md

@@ -1,7 +1,10 @@
 phase	arm	tokens	calls	seconds	notes
-1	A		22		truth+shape pass; catalog drive; was 36 in v2
-1	B		43		truth+shape pass; was 37 in v2
-1	C		29		truth+shape pass; was 38 in v2
-3b	A		17		C3 rematch truth+shape pass
-3b	B		14		C3 rematch truth+shape pass
-3b	C		11		C3 rematch truth+shape pass
+1	A		22		truth+shape pass
+1	B		43		truth+shape pass
+1	C		29		truth+shape pass
+3b	A		17		C3 rematch
+3b	B		14		C3 rematch
+3b	C		11		C3 rematch
+4	A		9		truth+shape pass tenant B
+4	B		12		truth+shape pass
+4	C		16		truth+shape pass
