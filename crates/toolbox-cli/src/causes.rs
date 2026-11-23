@@ -246,12 +246,79 @@ fn new_items(d: &Derived, c: &Change) -> Option<Vec<Shown>> {
         .then_some(shown)
 }
 
+/// How many source lines the gate quotes per entity, and how wide each one is.
+const QUOTED: usize = 16;
+const QUOTE_WIDTH: usize = 120;
+/// Lines between two quoted lines that are shown rather than elided.
+const QUOTE_GAP: usize = 5;
+
 /// The new findings of an entity, for the gate: each with the rules that report it.
 struct Group {
     entity: String,
     cards: Vec<String>,
     items: Vec<(Vec<String>, String)>,
     reproduce: Option<String>,
+    /// The entity's `path` field: the file its `at line N` findings point into.
+    path: Option<String>,
+}
+
+/// Every `at line N` an item names.
+fn lines_named(text: &str) -> Vec<usize> {
+    text.match_indices("at line ")
+        .filter_map(|(i, m)| {
+            let rest = &text[i + m.len()..];
+            let end = rest
+                .find(|c: char| !c.is_ascii_digit())
+                .unwrap_or(rest.len());
+            rest[..end].parse().ok()
+        })
+        .filter(|n| *n > 0)
+        .collect()
+}
+
+/// The lines of `path` (relative to the working directory, where the workspace connector read
+/// it) that the findings name, with short gaps filled and long ones elided, so the change can be
+/// made without opening the file. Nothing when the file isn't there.
+fn quote(path: &str, wanted: &[usize]) -> Vec<String> {
+    let Ok(text) = std::fs::read_to_string(path) else {
+        return Vec::new();
+    };
+    let lines: Vec<&str> = text.lines().collect();
+    let mut wanted: Vec<usize> = wanted
+        .iter()
+        .copied()
+        .filter(|n| *n <= lines.len())
+        .collect();
+    wanted.sort_unstable();
+    wanted.dedup();
+    let mut shown: Vec<usize> = Vec::new();
+    for n in wanted {
+        if let Some(&last) = shown.last()
+            && n > last + 1
+            && n - last - 1 <= QUOTE_GAP
+        {
+            shown.extend(last + 1..n);
+        }
+        shown.push(n);
+    }
+    if shown.is_empty() {
+        return Vec::new();
+    }
+    let width = shown.last().map_or(1, |n| n.to_string().len());
+    let mut out = vec![format!("    {path}:")];
+    let mut prev = None;
+    for &n in shown.iter().take(QUOTED) {
+        if prev.is_some_and(|p| n > p + 1) {
+            out.push(format!("      {:>width$} |", "⋮"));
+        }
+        let line: String = lines[n - 1].chars().take(QUOTE_WIDTH).collect();
+        out.push(format!("      {n:>width$} | {line}"));
+        prev = Some(n);
+    }
+    if shown.len() > QUOTED {
+        out.push(format!("      … {} more line(s)", shown.len() - QUOTED));
+    }
+    out
 }
 
 /// Every regression's new findings, each text once: where it was first seen, by group and item.
@@ -272,6 +339,12 @@ impl Findings {
             cards: Vec::new(),
             items: Vec::new(),
             reproduce: source(d, &c.entity).filter(|s| s.starts_with("reproduce: ")),
+            path: d
+                .entities
+                .get(&c.entity)
+                .and_then(|e| e.fields.get("path"))
+                .and_then(Value::as_str)
+                .map(str::to_owned),
         });
         self.groups.len() - 1
     }
@@ -319,6 +392,12 @@ impl Findings {
                 out.push(format!("    {}: + {text}", rules.join(", ")));
             }
             out.extend(g.reproduce.as_ref().map(|r| format!("    {r}")));
+            if let Some(path) = &g.path {
+                let wanted: Vec<usize> = g.items.iter().flat_map(|(_, t)| lines_named(t)).collect();
+                if !wanted.is_empty() {
+                    out.extend(quote(path, &wanted));
+                }
+            }
         }
         out
     }
@@ -449,6 +528,33 @@ mod tests {
             evidence_key(&json!({"line": 40}))
         );
         assert_eq!(at("").len(), 8);
+    }
+
+    #[test]
+    fn quotes_the_named_lines_with_short_gaps_filled() {
+        assert_eq!(lines_named("high x at line 12: y, and at line 3"), [12, 3]);
+        assert!(lines_named("actions/checkout@v4").is_empty());
+        let dir = std::env::temp_dir().join(format!("toolbox-quote-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let file = dir.join("w.yml");
+        let text: String = (1..=30).map(|n| format!("line {n}\n")).collect();
+        std::fs::write(&file, text).unwrap();
+        let path = file.to_str().unwrap();
+        assert_eq!(
+            quote(path, &[12, 9, 25, 99]),
+            [
+                format!("    {path}:"),
+                "       9 | line 9".into(),
+                "      10 | line 10".into(),
+                "      11 | line 11".into(),
+                "      12 | line 12".into(),
+                "       ⋮ |".into(),
+                "      25 | line 25".into(),
+            ]
+        );
+        assert!(quote(path, &[99]).is_empty());
+        assert!(quote(&format!("{path}.missing"), &[1]).is_empty());
+        std::fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]

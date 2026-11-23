@@ -4566,6 +4566,9 @@
       "doc:docs/decisions/D01M84CCDH1ZWF9726SVDDM1JDX.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M84EPMMR9740K4N25G7A6FAY.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/README.md": {
         "level": "skipped"
       },
@@ -5878,7 +5881,7 @@
         },
         "level": "bronze"
       },
-      "field:toolbox/ActionDependency.shaRefs": {
+      "field:toolbox/ActionDependency.shaPins": {
         "level": "gold"
       },
       "field:toolbox/ActionDependency.usedBy": {
@@ -7710,6 +7713,9 @@
           "described": 1
         },
         "level": "bronze"
+      },
+      "field:toolbox/Workflow.unpinnedAt": {
+        "level": "gold"
       },
       "field:toolbox/Workflow.zizmor": {
         "failing": {

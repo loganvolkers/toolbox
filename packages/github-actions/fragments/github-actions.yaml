@@ -97,6 +97,10 @@ kinds:
           Jobs with continue-on-error, and steps with it whose outcome no later
           step reads (steps.<id>.outcome or .conclusion).
       unpinned: {type: list, items: string}
+      unpinnedAt:
+        type: list
+        items: string
+        description: Each unpinned `uses:` as `<ref> at line <n>`.
       zizmor: {type: object} # {total, counts: {high, medium, low, informational}, findings}
       actionlint: {type: object} # {total, findings}
       runs: {type: object} # from the GitHub API: failRate, rerunRate, failingStreak, p90Seconds …
@@ -116,7 +120,7 @@ kinds:
          'jobsWithoutTimeout': record.jobsWithoutTimeout, 'jobsWithoutPermissions': record.jobsWithoutPermissions,
          'jobsWithWrite': record.jobsWithWrite, 'concurrency': record.concurrency,
          'cancelsSuperseded': record.cancelsSuperseded, 'hiddenFailures': record.hiddenFailures,
-         'unpinned': record.unpinned}
+         'unpinned': record.unpinned, 'unpinnedAt': record.unpinnedAt}
       relations: {usesAction: "record.actions.map(a, 'action:' + a)"}
     - from: ci-lint/zizmor
       id: "'workflow:' + record.path"
@@ -139,18 +143,19 @@ kinds:
       refs: {type: list, items: string}
       pins: {type: list, items: string}
       usedBy: {type: list, items: string}
-      shaRefs:
+      shaPins:
         type: list
         items: string
-        description: The refs that already pin it to a commit SHA.
-        computed: entity.refs.filter(r, r.matches('@[0-9a-f]{40}$'))
+        description: >-
+          Its SHA refs as the workflows write them, with the version comment
+          (`actions/checkout@<sha> # v6.0.2`).
     sources: {default: [connector:workspace]}
     map:
     - from: workspace/action-ref
       id: "'action:' + record.name"
       set: >-
         {'name': record.name, 'owner': record.owner, 'refs': record.refs,
-        'pins': record.pins, 'usedBy': record.usedBy}
+        'pins': record.pins, 'usedBy': record.usedBy, 'shaPins': record.shaPins}
 
 scorecards:
   # ── Layer 1: maintainer SDLC — CI (docs/design/github-actions-standards.md) ──────────────
@@ -199,7 +204,7 @@ scorecards:
     - name: pinned-to-sha
       level: bronze
       check: entity.unpinned.size() == 0
-      evidence: entity.unpinned
+      evidence: entity.unpinnedAt
       fix: >-
         Pin every third-party `uses:` to a full commit SHA. Resolve the tag with
         `git ls-remote https://github.com/<owner>/<repo> refs/tags/<tag>` and
@@ -393,10 +398,10 @@ scorecards:
     - name: pinned-everywhere
       level: bronze
       check: entity.pins.all(p, p == 'sha')
-      evidence: >- # only what to change, and the SHA the repository already pins it to
+      evidence: >- # only what to change, and the pin the repository already writes for it
         entity.refs.filter(r, !r.matches('@[0-9a-f]{40}$')).map(r,
-        entity.shaRefs.size() > 0 ? r + ', pinned elsewhere as ' +
-        entity.shaRefs[0] : r)
+        entity.shaPins.size() > 0 ? r + ', pinned elsewhere as ' +
+        entity.shaPins[0] : r)
       fix: >-
         Pin this action to a full commit SHA in every workflow that uses it.
         Resolve the tag with `git ls-remote https://github.com/<owner>/<repo>

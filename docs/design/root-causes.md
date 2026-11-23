@@ -34,6 +34,16 @@ the command that reproduces it (D01M84CCDH1ZWF9726SVDDM1JDX):
 When several rules report the same text, the line names them all, for example
 `no-high-findings, zizmor-clean: + high template-injection at line 40: …`.
 
+An entity with a `path` field ends with the lines its new findings name, read from the working
+tree, so the change can be made without opening the file (D01M84EPMMR9740K4N25G7A6FAY):
+
+```
+✗ worse   workflow:.github/workflows/release.yaml · maintainer-ci-security
+    pinned-to-sha: + actions/upload-artifact@v7 at line 88
+    .github/workflows/release.yaml:
+      88 |         uses: actions/upload-artifact@v7
+```
+
 The first example is this repository's own gate, on a probe doc. Before this, it printed only
 its first line. The cause, a new doc below the floor,
 appeared among the changes, as "· changed … new (none)", with nothing linking the two
@@ -56,7 +66,7 @@ entity was removed, the chain says so instead of guessing.
 
 | Surface | Form |
 |---|---|
-| `toolbox report --baseline` and `--against` | New findings, each once, under their entity, with the rules that report them; the chain indented under every other `✗ worse` line (D01M84CCDH1ZWF9726SVDDM1JDX). Without `-o` or `--out`, the verdict is the whole output, on stdout (D01M841J2SN4V3AVZZ5D91YAR51) |
+| `toolbox report --baseline` and `--against` | New findings, each once, under their entity, with the rules that report them; the chain indented under every other `✗ worse` line (D01M84CCDH1ZWF9726SVDDM1JDX). The lines of the entity's file those findings name, quoted (D01M84EPMMR9740K4N25G7A6FAY). Without `-o` or `--out`, the verdict is the whole output, on stdout (D01M841J2SN4V3AVZZ5D91YAR51) |
 | `--verdict FILE` | Each regression has `detail` (strings, including the source record) and `causes` (nested regressions of the same shape) |
 | The `actions/report` action | One annotation per regression, with the whole chain |
 

@@ -166,9 +166,57 @@ fn hidden_failures(id: &str, job: &Value) -> Vec<String> {
     out
 }
 
+/// What only the text as written says: each ref's version comment (set on `refs`), and every
+/// unpinned `uses:` as `<ref> at line <n>`.
+fn as_written(text: &str, refs: &mut [Value]) -> Vec<String> {
+    let written = uses_lines(text);
+    for r in refs.iter_mut() {
+        let comment = written
+            .iter()
+            .find(|(_, w, c)| Some(w.as_str()) == r["ref"].as_str() && c.is_some())
+            .and_then(|(_, _, c)| c.clone());
+        if let Some(c) = comment {
+            r["comment"] = json!(c);
+        }
+    }
+    written
+        .iter()
+        .filter(|(_, w, _)| !matches!(pin(w), "sha" | "local" | "docker-digest"))
+        .map(|(n, w, _)| format!("{w} at line {n}"))
+        .collect()
+}
+
 /// One `uses:` occurrence: `{ref, action, pin, at}`.
 fn uses(reference: &str, at: String) -> Value {
     json!({"ref": reference, "action": action_name(reference), "pin": pin(reference), "at": at})
+}
+
+/// Every `uses:` line of the text as written: its 1-based line, the reference, and the comment
+/// after it (`v6.0.2` in `uses: actions/checkout@<sha> # v6.0.2`). The YAML reader drops both.
+fn uses_lines(text: &str) -> Vec<(usize, String, Option<String>)> {
+    let mut out = Vec::new();
+    for (i, line) in text.lines().enumerate() {
+        let item = line.trim_start().trim_start_matches("- ").trim_start();
+        let Some(rest) = item.strip_prefix("uses:") else {
+            continue;
+        };
+        let (value, comment) = match rest.split_once(" #") {
+            Some((v, c)) => (v, Some(c.trim().to_owned()).filter(|c| !c.is_empty())),
+            None => (rest, None),
+        };
+        let value = value.trim().trim_matches(|c| c == '"' || c == '\'');
+        if !value.is_empty() {
+            out.push((i + 1, value.to_owned(), comment));
+        }
+    }
+    out
+}
+
+/// A workflow's `on:`. YAML 1.1 readers turn the key into `true`; accept both.
+fn on(doc: &Value) -> &Value {
+    doc.get("on")
+        .or_else(|| doc.get("true"))
+        .unwrap_or(&Value::Null)
 }
 
 /// The `workflow` record for a workflow file or action metadata file, from its YAML text.
@@ -212,19 +260,14 @@ pub fn record(path: &str, text: &str) -> Value {
             }));
         }
     }
-    // YAML 1.1 readers turn the `on` key into `true`; accept both.
-    let on = doc
-        .get("on")
-        .or_else(|| doc.get("true"))
-        .cloned()
-        .unwrap_or(Value::Null);
-    let trig = triggers(&on);
+    let trig = triggers(on(&doc));
     let names = |pred: &dyn Fn(&Value) -> bool| -> Vec<Value> {
         jobs.iter()
             .filter(|j| pred(j))
             .map(|j| j["id"].clone())
             .collect()
     };
+    let unpinned_at = as_written(text, &mut refs);
     let has_top_permissions = doc.get("permissions").is_some();
     let actions: BTreeSet<String> = refs
         .iter()
@@ -247,14 +290,25 @@ pub fn record(path: &str, text: &str) -> Value {
         "hiddenFailures": jobs.iter().flat_map(|j| j["hiddenFailures"].as_array().cloned().unwrap_or_default()).collect::<Vec<_>>(),
         "uses": refs,
         "unpinned": refs.iter().filter(|r| !matches!(r["pin"].as_str(), Some("sha" | "local" | "docker-digest"))).filter_map(|r| r["ref"].as_str()).collect::<BTreeSet<_>>(),
+        "unpinnedAt": unpinned_at,
         "actions": actions,
     })
 }
 
-/// For one external action: the refs used, the files using them, and how they're pinned.
-type Usage = (BTreeSet<String>, BTreeSet<String>, BTreeSet<String>);
+/// For one external action: the refs used, the files using them, how they're pinned, and its
+/// SHA pins as written.
+#[derive(Default)]
+struct Usage {
+    refs: BTreeSet<String>,
+    used_by: BTreeSet<String>,
+    pins: BTreeSet<String>,
+    sha_pins: BTreeSet<String>,
+}
 
 /// `action-ref` records: one per external action, with every ref used and the files using it.
+/// `shaPins` are its SHA refs as the workflows write them, with the version comment when there is
+/// one (`actions/checkout@<sha> # v6.0.2`), so a hint to pin can be copied as it stands; the
+/// commented ones come first.
 pub fn action_refs(workflows: &[Value]) -> Vec<(String, Value)> {
     let mut by: BTreeMap<String, Usage> = BTreeMap::new();
     for w in workflows {
@@ -263,19 +317,30 @@ pub fn action_refs(workflows: &[Value]) -> Vec<(String, Value)> {
                 continue;
             };
             let e = by.entry(name.to_owned()).or_default();
-            e.0.insert(u["ref"].as_str().unwrap_or("").to_owned());
-            e.1.insert(w["path"].as_str().unwrap_or("").to_owned());
-            e.2.insert(u["pin"].as_str().unwrap_or("").to_owned());
+            let reference = u["ref"].as_str().unwrap_or("");
+            e.refs.insert(reference.to_owned());
+            e.used_by
+                .insert(w["path"].as_str().unwrap_or("").to_owned());
+            e.pins.insert(u["pin"].as_str().unwrap_or("").to_owned());
+            if u["pin"] == "sha" {
+                e.sha_pins.insert(match u["comment"].as_str() {
+                    Some(c) => format!("{reference} # {c}"),
+                    None => reference.to_owned(),
+                });
+            }
         }
     }
     by.into_iter()
-        .map(|(name, (refs, used_by, pins))| {
+        .map(|(name, u)| {
             let mut data = Map::new();
             data.insert("name".into(), json!(name));
             data.insert("owner".into(), json!(name.split('/').next()));
-            data.insert("refs".into(), json!(refs));
-            data.insert("usedBy".into(), json!(used_by));
-            data.insert("pins".into(), json!(pins));
+            data.insert("refs".into(), json!(u.refs));
+            data.insert("usedBy".into(), json!(u.used_by));
+            data.insert("pins".into(), json!(u.pins));
+            let mut sha_pins: Vec<String> = u.sha_pins.into_iter().collect();
+            sha_pins.sort_by_key(|p| !p.contains(" # "));
+            data.insert("shaPins".into(), json!(sha_pins));
             (name, Value::Object(data))
         })
         .collect()
@@ -354,9 +419,29 @@ mod tests {
             "reusable-workflow jobs can't set a timeout"
         );
         assert_eq!(w["unpinned"], json!(["actions/checkout@v4"]));
+        assert_eq!(w["unpinnedAt"], json!(["actions/checkout@v4 at line 11"]));
         assert_eq!(w["actions"], json!(["actions/checkout", "org/shared"]));
         let refs = action_refs(&[w]);
         assert_eq!(refs[0].1["usedBy"], json!([".github/workflows/ci.yml"]));
+    }
+
+    #[test]
+    fn sha_pins_keep_their_version_comment_and_unpinned_refs_their_line() {
+        let sha = "de0fac2e4500dabe0009e67214ff5f5447ce83dd";
+        let old = "11bd71901bbe5b1630ceea73d27597364c9af683";
+        let yml = format!(
+            "on: push\njobs:\n  a:\n    runs-on: x\n    steps:\n      - name: Checkout\n        uses: actions/checkout@{sha} # v6.0.2\n  b:\n    runs-on: x\n    steps:\n      - uses: \"actions/checkout@v6\"\n      - uses: actions/checkout@{sha}\n      - uses: actions/checkout@{old}\n"
+        );
+        let w = record(".github/workflows/w.yml", &yml);
+        assert_eq!(w["unpinnedAt"], json!(["actions/checkout@v6 at line 11"]));
+        let refs = action_refs(&[w]);
+        assert_eq!(
+            refs[0].1["shaPins"],
+            json!([
+                format!("actions/checkout@{sha} # v6.0.2"),
+                format!("actions/checkout@{old}")
+            ])
+        );
     }
 
     #[test]

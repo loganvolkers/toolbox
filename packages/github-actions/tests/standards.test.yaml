@@ -11,8 +11,8 @@ assert:
       'workflow:.github/workflows/ci.yml').rules['no-high-findings'] == 'pass'
       && score('maintainer-ci-security',
       'workflow:.github/workflows/ci.yml').evidence['pinned-to-sha'] ==
-      ['actions/checkout@v4', 'actions/setup-go@v5', 'actions/setup-node@v4',
-      'actions/setup-python@v5']
+      ['actions/checkout@v4 at line 12', 'actions/setup-python@v5 at line 18',
+      'actions/setup-go@v5 at line 24', 'actions/setup-node@v4 at line 72']
   - name: >-
       a dangerous trigger is a high finding with evidence, and a write token
       on it fails silver
@@ -79,7 +79,7 @@ assert:
       score('maintainer-action-deps',
       'action:actions/checkout').evidence['pinned-everywhere'] ==
       ['actions/checkout@v4, pinned elsewhere as
-      actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683'] &&
+      actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2'] &&
       score('maintainer-action-deps', 'action:actions/cache').level ==
       'bronze'
   - name: >-
