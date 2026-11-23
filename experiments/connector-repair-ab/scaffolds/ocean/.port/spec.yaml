@@ -3,10 +3,7 @@ icon: atlassian
 features:
   - type: exporter
     section: Project management
-    resources:
-      - kind: project
-      - kind: issue
-      - kind: component
+    resources: [{kind: project}, {kind: issue}, {kind: component}]
 configurations:
   - name: baseUrl
     required: true

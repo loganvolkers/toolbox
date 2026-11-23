@@ -37,5 +37,5 @@ kinds:
     sources: {default: [connector:forge]}
     map:
     - from: forge/component
-      id: "record.project + ':' + record.name"
+      id: record.project + ':' + record.name
       set: "{'title': record.name}"
