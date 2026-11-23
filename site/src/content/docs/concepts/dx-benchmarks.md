@@ -23,6 +23,8 @@ verified absence.
 | Ratchet replay | Upstream's own merges | OpenFGA, Codex, gh-aw, PostHog | 141 commits: one real supply-chain regression caught, and one false alarm |
 | Several tools, one box | Hand-written CI glue | PostHog | Equal correctness and less glue, but 11% more tokens. Toolbox lost on cost |
 | Security scorecards | An agent's home-built scorecard, against OpenSSF Scorecard | OpenFGA, Codex | The home builds found more. The standard won on reuse cost and consistency |
+| Connector authoring | Port Ocean and a Backstage entity provider | Ocean, Backstage | The first run lost on cost. The reruns changed only Toolbox's arm and are within noise, so they are not a win |
+| Laptop deploy | Backstage from create-app | Backstage, OpenFGA | Inconclusive: no token counts, and the two arms did not start from equal conditions |
 
 ## What it has taught us
 
@@ -49,6 +51,13 @@ Every benchmark has changed Toolbox. Among the changes:
   evidence.
 - Tokens, tool calls, time and lines of glue are measured.
 - Both arms are asked for developer-experience feedback the same way, and it is triaged into fixes.
+- The prompts are committed before the first run, and each arm runs at least three times. A
+  difference smaller than the spread between runs is reported as inconclusive.
+- Every arm gets the same level of help, and nothing in Toolbox is changed to fit the harness.
+- The verdict is written by someone who did not design the experiment.
+
+Two early results, a connector "win" and a deploy "defeat", were run before these rules. Both
+have been corrected in the repository, and the rules now apply to every run.
 
 The method, the prior art it builds on (SWE-bench, Terminal-Bench, METR's study, the Agentic
 Benchmark Checklist, BetterBench, Next.js Evals and others) and the catalog are in the

@@ -4,7 +4,8 @@
 ([toolbox-and-tools.md](./toolbox-and-tools.md)): how we measure whether the box helps the agents
 that use it. Maintainer SDLC ([maintainer-sdlc.md](./maintainer-sdlc.md)); each benchmark measures
 one or more of the four SDLC layers ([../sdlc.md](../sdlc.md)). The catalog is in
-[portal/benchmarks/](../../portal/benchmarks), scored by `maintainer-benchmark`.*
+[portal/benchmarks/](../../portal/benchmarks), scored by `maintainer-benchmark`. Runs follow
+protocol 2 (§4.1, D01M83RDWQ5EVKY5SFHDWAD5HFH).*
 
 ---
 
@@ -21,7 +22,7 @@ standard: a claim that Toolbox makes something easier needs a benchmark behind i
   the developer platform around it: the box against hand-written glue, a portal against a
   checklist, a reusable standard against a home build. Each benchmark names the SDLC layers and
   stages it exercises (§2).
-- **They have changed Toolbox more than any review.** Nine benchmarks so far (§3).
+- **They have changed Toolbox more than any review.** Twelve benchmarks so far (§3).
   - R3 failed its bar three times: the checklist A/B, the standards A/B and its rerun.
   - R6, the box A/B, failed on tokens.
   - R2 met its bar only after fixes, because the first run failed on all four forks.
@@ -33,6 +34,15 @@ standard: a claim that Toolbox makes something easier needs a benchmark behind i
   - root causes;
   - scoring missing data as `unknown`;
   - a dozen CLI fixes.
+- **Two results were wrong, and have been corrected** (D01M83RDWR52WVNER0MV5T84NSX).
+  - connector-ab's third round reported a Toolbox win. Only Toolbox's arm had changed, one change
+    was a product format shaped to the harness, and the 1-call margin was smaller than an unchanged
+    rival's run-to-run swing.
+  - deploy-ab reported a defeat. The probes authenticated only Toolbox, and its container was
+    built before the run.
+
+  Both were run by the agents that designed them, one run per arm. Protocol 2 (§4.1) is the fix.
+  Every result before it is one sample.
 - **The pattern they found:** Toolbox rarely beats a capable agent on a single run. Agents are
   trained on programming languages and their tools, not on Toolbox. Toolbox's value appears with
   repetition: on the second repository, the tenth run, the next upgrade, the comparison across
@@ -50,9 +60,10 @@ standard: a claim that Toolbox makes something easier needs a benchmark behind i
 | **The SDLC layers and stages** | The layers it measures (maintainer, package author, operator, user) and the stages within them, from [portal/sdlc/](../../portal/sdlc) | The benchmarks are how we know each layer's stages work for agents |
 | **A rival arm** | The strongest alternative a team would really use: an agent from scratch, a written checklist, hand-written CI glue, an existing standard (OpenSSF Scorecard), or another platform (Backstage) | Beating a straw man proves nothing |
 | **Open-source repositories at pinned commits** | Forks we didn't write (OpenFGA, Codex, gh-aw, PostHog so far), exported at a commit | Real code, reproducible, and not tuned to Toolbox |
-| **A bar set before running** | The README states the hypotheses, what "holds" and "fails" mean, and the known limits, and is not edited after the run except for its status line | It stops us explaining away a loss |
-| **Fresh agents, equal conditions** | One fresh agent per phase. The same model, budget, tools and prompt template in each arm; no network; isolated copies | Differences come from the arm, not the setup |
-| **Independent truth** | Correctness is judged by a script or a recorded adjudication with evidence, not by the arm's own report | Agents' self-reports overstate success |
+| **A bar set before running** | The README states the hypotheses, what "holds" and "fails" mean, and the known limits, and is not edited after the run except for its status line. The bar uses a measure a dry run showed the runtime reports (P6) | It stops us explaining away a loss |
+| **Fresh agents, equal conditions** | At least three fresh runs per arm per phase (P2). The same model, budget and tools in each arm, the prompts committed before the first run (P1), no network, isolated copies, one launch per workspace at a time | Differences come from the arm, not the setup or the noise |
+| **Symmetric arms** | One frozen commit per round (P3). Every arm gets the same level of help, and rival friction is fixed as carefully as Toolbox's (P4). No product change is shaped to the harness (P5) | A rival that never changed can't lose to a Toolbox tuned to the test |
+| **Independent truth** | Correctness is judged by a script or a recorded adjudication with evidence, not by the arm's own report. The adjudicator did not design the experiment or change the product (P7) | Agents' self-reports overstate success, and so do designers |
 | **Cost** | Tokens, tool calls, wall time, and lines of glue per phase | Equal correctness at higher cost is a loss |
 | **Friction** | Each arm is asked for developer-experience feedback the same way. It is triaged into fixed, deferred or rejected, with a reason | Friction is the most useful output |
 | **A result, published** | `RESULTS.md` or the README's results section, a row in [research-log.md](../research-log.md), and the catalog entry | A loss we hide is a loss we repeat |
@@ -78,7 +89,11 @@ lessons that cut across them:
 | L7 | **Remove answer leaks, and keep a read allowlist.** The truth lives in the experiment's own files and the research log; the arms must not read them | box A/B prep, standards A/B rerun |
 | L8 | **Results files are the arm's output, and the harness may refuse them.** Subagents may be blocked from writing report files. Plan for the report to come back as text, and record the deviation | security A/B |
 | L9 | **Export each arm's diff before deleting its copy.** Disk fills; a deleted arm can't be scored again | box A/B |
-| L10 | **One run is one sample.** Every result so far is one run per phase. State it, and prefer two independent builds (convergence) when runs are expensive | all |
+| L10 | **One run is one sample.** Every result so far is one run per phase. State it, and prefer two independent builds (convergence) when runs are expensive. Protocol 2 now requires three (P2) | all |
+| L11 | **A rerun that changes one arm measures the change, not the platform.** connector-ab's v2 and v3 changed only Toolbox's prompts and recipe, and added `--format catalog`, which emits the harness's own NDJSON shape. The "win" that followed tells us the tuning worked on this harness, nothing more | connector-ab ([ADJUDICATION.md](../../experiments/connector-ab/ADJUDICATION.md)) |
+| L12 | **The noise is larger than it looks.** Backstage's phase 1 had the same prompt and scaffold in every round, and took 29, 38 and 29 calls. A 1-call margin from one run is no margin | connector-ab |
+| L13 | **An unequal start is not a result.** deploy-ab authenticated only Toolbox in S2, its Toolbox arm restarted a container built before the run, and its Backstage prompt suggested a provider the facade can't serve | deploy-ab ([ADJUDICATION.md](../../experiments/deploy-ab/ADJUDICATION.md)) |
+| L14 | **See the measure before the bar uses it.** Two bars were written in tokens that the runtime never reported. One then swapped in calls after the run. A dry run would have shown it | connector-ab, deploy-ab |
 
 ## 4. How to run one
 
@@ -95,7 +110,8 @@ lessons that cut across them:
    measures, a hypothesis table with holds and fails, the known limits, and what the result will
    produce. Commit it, or keep it unchanged until the results land.
 6. **Build the harness for isolation.**
-   - Fresh agents per phase, and prompts rendered from one template.
+   - Fresh agents per phase, prompts rendered from one template and committed before the first
+     run (P1), and one launch per workspace at a time.
    - The same tool budget in each arm.
    - No network, a read allowlist, and no answer leaks.
    - Kill timed-out process groups, and treat a tool error as an error, never as zero findings.
@@ -103,18 +119,42 @@ lessons that cut across them:
    glue or lines changed; and friction. Add reuse cost and convergence when the claim is about
    reuse.
 8. **Adjudicate with evidence.** Each judgement goes in a table, with the file, the command or the
-   quote that decides it. Judge claims pooled, without regard to which arm made them. Say who
-   adjudicated, and whether that person designed the experiment.
+   quote that decides it. Judge claims pooled, without regard to which arm made them. The
+   adjudicator did not design the experiment, build an arm, or change the product between rounds
+   (P7), and writes the fit audit (P5).
 9. **Publish everything.** The results and the per-phase costs, against the bar as written. Note
    every deviation from the protocol. Add a row to the research log and a catalog entry.
 10. **Triage the friction into fixes**, each fixed, deferred or rejected with its reason, and link
     the fixes from the benchmark's catalog entry (`changed`).
 11. **Decide** in `docs/decisions/` when the result changes the plan. A failed hypothesis is a
-    result: record it as failed, then rerun after the fixes or close it.
+    result: record it as failed, then rerun after the fixes or close it. A rerun is a new round,
+    in which every arm reruns every scored phase (P3).
 12. **Retire it** when it has served its value (§6).
 
 **Budget:** a phase has typically cost 90k–230k tokens and 10–60 tool calls. A full two-arm
-benchmark has cost 0.5M–1.3M tokens. Spend that on questions whose answer changes the plan.
+benchmark has cost 0.5M–1.3M tokens per run, and protocol 2 needs three. Spend that on questions
+whose answer changes the plan. Cut phases rather than runs.
+
+### 4.1 Protocol 2
+
+Every benchmark with an agent in its scored path follows these rules
+(D01M83RDWQ5EVKY5SFHDWAD5HFH). Benchmarks run before them are protocol 1. Their results stay on
+the record as single samples: evidence of friction, not of a claim.
+
+| Rule | Requirement | Catalog field | Why |
+|---|---|---|---|
+| **P1. Committed prompts** | Every rendered prompt, for every arm and phase, is committed under the experiment's `prompts/` before the first arm starts. A launch whose prompt differs is void | `prompts` | deploy-ab's prompts had to be recovered from agent records |
+| **P2. Repeated runs** | At least three fresh runs per arm per phase. Publish every run and the minimum, median and maximum. A cost hypothesis holds or fails only when the medians differ by more than the wider arm's range; otherwise it is inconclusive. A run is dropped only for a harness fault named before the rerun, never for its result | `runsPerArm`, `spread`, `deterministic` | L10, L12 |
+| **P3. Frozen rounds** | One commit fixes Toolbox, the harness, and every arm's scaffold, prompts and docs for the round. A fix starts a new round, and every arm reruns every scored phase | `frozenAt` | connector-ab replaced a failing phase with a rerun after an A-only tip |
+| **P4. Symmetric arms** | Every arm's scaffold gives the same level of help: a recipe for all, or for none. Rival friction is fixed before the next round as carefully as Toolbox's. Deferring it means the round is not run. Probes treat the arms alike: if one gets an identity, all do | `fitAudit` | L11, L13 |
+| **P5. No harness-shaped product** | A product change made after a benchmark names a use outside the harness and no harness file, schema or convention. The harness adapts to the product, not the reverse | `fitAudit` | L11 |
+| **P6. A reported measure** | The bar is written in a measure that a dry run showed the runtime reports for every arm, and it is never swapped after the run. If it goes missing, its cost hypotheses are void | `measure` | L14 |
+| **P7. Independent adjudication** | The adjudicator applies the bar and writes the outcome. They did not design the experiment, build an arm, or change the product between rounds. Each hypothesis gets one of four labels: holds, fails, inconclusive or void | `designer`, `adjudicator` | Both corrected results were judged by their designers |
+
+`protocol: 2` in the catalog entry declares all of this. `maintainer-benchmark` checks the fields:
+a benchmark not yet run must be registered (silver), and a run one must have recorded them
+(gold). Benchmarks with no agent in the scored path, like ratchet-replay, set
+`deterministic: true` and skip P2.
 
 ## 5. Prior art
 
@@ -127,7 +167,7 @@ What the industry does, what we take from it, and where DX Benchmarks differ:
 | **METR's RCT on experienced open-source developers** (2025, arXiv 2507.09089) | 16 developers, 246 tasks on their own mature repositories, randomised to allow or disallow AI. They were 19% slower with AI, while believing they were 20% faster | **Measure; don't ask.** Self-reported speed-ups are unreliable, so we measure tokens, calls and time, and ask for feedback separately | We randomise the platform, not the use of AI, and our subjects are agents |
 | **AI Agents That Matter; HAL** (Kapoor, Narayanan et al., 2024; ICLR 2026) | Agent evaluations must be cost-controlled: simple baselines often beat complex agents at a fraction of the cost. HAL runs cost-aware evaluations at scale | **Cost is a first-class result.** Our bars compare tokens at equal correctness | — |
 | **ABC: Agentic Benchmark Checklist** (Zhu, Kang et al., NeurIPS 2025) | A checklist for *outcome validity* (does the grader reflect success?) and *task validity* (does the task measure the capability?). Flaws in 7 of 10 popular benchmarks could shift scores by up to 100% relative | The two validities. Every DX Benchmark states how its truth is computed and what each task measures | — |
-| **BetterBench** (Reuel et al., Stanford, NeurIPS 2024) | 46 criteria over a benchmark's life cycle (design, implementation, documentation, maintenance). Most benchmarks don't report statistical significance or support replication | Documenting and maintaining benchmarks, and retiring them. Our catalog and its scorecard enforce the documentation | We don't claim significance from one run per phase (L10) |
+| **BetterBench** (Reuel et al., Stanford, NeurIPS 2024) | 46 criteria over a benchmark's life cycle (design, implementation, documentation, maintenance). Most benchmarks don't report statistical significance or support replication | Documenting and maintaining benchmarks, and retiring them. Our catalog and its scorecard enforce the documentation | Protocol 2 reports the spread of at least three runs (P2). We still don't claim significance from that |
 | **"Demystifying evals for AI agents"** (Anthropic Engineering, 2026) | Code, model and human graders; grade outcomes, not paths. Capability evals start low and graduate into regression suites. pass@k against pass^k. Read the transcripts. Isolate each trial. Start with 20–50 tasks from real failures | Grade the final state, isolate trials, read transcripts, and graduate a passing benchmark into a regression check | — |
 | **Inspect** (UK AI Security Institute, MIT, 2024) | Task = dataset + solver + scorer, with sandboxed tool execution | A vocabulary for harness parts: our phases are the dataset, the arms are solvers, and the truth scripts are scorers | — |
 | **Next.js Evals and `@vercel/agent-eval`** (Vercel, 2025–2026) | A framework vendor benchmarks coding agents on its own framework: ~50 scenarios with hidden assertions, success, time and cost per agent. It found a bundled AGENTS.md docs index passing 100% against 79% for skills | **The closest precedent:** a platform measuring its agent experience, and changing its product on the result (AGENTS.md now ships in `create-next-app`) | They compare agents on one framework. We compare our platform with the alternatives a team would use instead |
@@ -168,20 +208,22 @@ because its harness and its truth are reused.
 | Level | Rules |
 |---|---|
 | Bronze | The question, the SDLC layers and the status are declared, and every declared path exists |
-| Silver | It names a rival arm, its hypotheses and open-source repositories at pinned commits; an archived benchmark says why |
-| Gold | A run benchmark records its outcome and results, and what it changed in Toolbox |
+| Silver | It names a rival arm, its hypotheses and open-source repositories at pinned commits; an archived benchmark says why; a benchmark not yet run is registered under protocol 2 (prompts, runs, measure, an independent adjudicator) |
+| Gold | A run benchmark records its outcome and results, and what it changed in Toolbox, and it ran under protocol 2: the frozen commit, the spread, and the fit audit. A protocol-1 run stops at silver |
 
 ## 7. Next
 
 | # | Item |
 |---|---|
 | B1 | A shared harness (`experiments/harness/`) built from the box and security A/B harnesses: setup, tool pins, isolation, cost capture, take-it-out, export before delete |
-| B2 | More than one run per phase where the budget allows, and pass^k for anything we claim is reliable |
-| B3 | Blinded adjudication: a second agent judges pooled, arm-anonymised claims, and the two are compared |
-| B4 | Benchmarks for the user and package-author layers. Package-author `build-connector` is measured by [connector-ab](../../experiments/connector-ab/README.md) (C1–C3); diagnose→repair feedback by [connector-repair-ab](../../experiments/connector-repair-ab/README.md) (D1–D3). The user layer still has none of its own |
+| B2 | Three runs per arm is now a rule (P2). Still to do: pass^k for anything we claim is reliable |
+| B3 | Independent adjudication is now a rule (P7). Still to do: blinding, where a second agent judges pooled, arm-anonymised claims and the two judgements are compared |
+| B4 | Benchmarks for the user and package-author layers. Package-author `build-connector` is measured by [connector-ab](../../experiments/connector-ab/README.md): v1 failed C1 and C2, and the reruns are inconclusive. Diagnose→repair feedback is measured by [connector-repair-ab](../../experiments/connector-repair-ab/README.md) (D1–D3), a protocol-1 run. The user layer still has none of its own |
 | B5 | Rerun the box A/B after the rt-buddy friction fixes (L3), then the A + S arm of the security A/B, and native Scorecard against the kit |
 | B6 | Publish the catalog on the docs site, with each benchmark's bar and result side by side |
-| B7 | `deploy-ab`: a laptop deploy of Toolbox against Backstage, scored by catalog probes rather than `/readyz` ([local-simulation.md](./local-simulation.md), Q19). Blocked on the stack |
+| B7 | `deploy-ab`: a laptop deploy of Toolbox against Backstage, scored by catalog probes rather than `/readyz` ([local-simulation.md](./local-simulation.md), Q19). Run twice, inconclusive. Rerun under protocol 2 after the fixes in its [ADJUDICATION.md](../../experiments/deploy-ab/ADJUDICATION.md) |
+| B8 | Review `connector drive --format catalog` under P5: keep it if it has a use outside connector-ab's harness, or drop it (D01M83RDWR52WVNER0MV5T84NSX) |
+| B9 | Rerun connector-ab under protocol 2, with every arm's recipe written to the same level and Ocean's and Backstage's deferred friction fixed first |
 
 ## Sources
 

@@ -1087,7 +1087,11 @@ assert:
       == 'pass' && score('maintainer-benchmark',
       'benchmark:demo-gold').rules['results-recorded'] == 'pass' &&
       score('maintainer-benchmark',
-      'benchmark:demo-gold').rules['closes-the-loop'] == 'pass'
+      'benchmark:demo-gold').rules['closes-the-loop'] == 'pass' &&
+      score('maintainer-benchmark',
+      'benchmark:demo-gold').rules['method-registered'] == 'pass' &&
+      score('maintainer-benchmark',
+      'benchmark:demo-gold').rules['sound-method'] == 'pass'
   - name: a blocked DX Benchmark stops at silver because it hasn't run
     expect: >-
       score('maintainer-benchmark', 'benchmark:demo-blocked').level ==
@@ -1096,7 +1100,41 @@ assert:
       score('maintainer-benchmark',
       'benchmark:demo-blocked').evidence['results-recorded'] == ['not run
       yet'] && score('maintainer-benchmark',
-      'benchmark:demo-blocked').rules['says-why'] == 'pass'
+      'benchmark:demo-blocked').rules['says-why'] == 'pass' &&
+      score('maintainer-benchmark',
+      'benchmark:demo-blocked').rules['method-registered'] == 'pass'
+  - name: >-
+      a DX Benchmark run under protocol 1 stops at silver: its result is one
+      sample
+    expect: >-
+      score('maintainer-benchmark', 'benchmark:demo-legacy').level == 'silver'
+      && score('maintainer-benchmark',
+      'benchmark:demo-legacy').rules['results-recorded'] == 'pass' &&
+      score('maintainer-benchmark',
+      'benchmark:demo-legacy').rules['sound-method'] == 'fail' &&
+      score('maintainer-benchmark',
+      'benchmark:demo-legacy').evidence['sound-method'] == ['protocol 1:
+      re-register under protocol 2 (D01M83RDWQ5EVKY5SFHDWAD5HFH)']
+  - name: >-
+      a protocol-2 DX Benchmark with one run, judged by its own designer and
+      without a fit audit, stops at silver and names each gap
+    expect: >-
+      score('maintainer-benchmark', 'benchmark:demo-self-judged').level ==
+      'silver' && score('maintainer-benchmark',
+      'benchmark:demo-self-judged').evidence['sound-method'] == ['fewer than
+      three runs per arm', 'no adjudicator independent of the designer', 'no
+      fit audit of the changes between rounds']
+  - name: >-
+      a DX Benchmark designed under protocol 1 stops at bronze until it is
+      re-registered
+    expect: >-
+      score('maintainer-benchmark', 'benchmark:demo-unregistered').level ==
+      'bronze' && score('maintainer-benchmark',
+      'benchmark:demo-unregistered').rules['method-registered'] == 'fail' &&
+      score('maintainer-benchmark',
+      'benchmark:demo-unregistered').evidence['method-registered'] ==
+      ['protocol 1: re-register under protocol 2
+      (D01M83RDWQ5EVKY5SFHDWAD5HFH)']
   - name: an undeclared DX Benchmark fails every level and names each gap
     expect: >-
       score('maintainer-benchmark', 'benchmark:demo-bare').level == 'none' &&

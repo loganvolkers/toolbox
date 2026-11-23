@@ -66,6 +66,80 @@ kinds:
         items: string
         description: Declared paths that don't exist under the repository root.
       hash: {type: string, description: Content hash of the catalog entry.}
+      protocol:
+        type: integer
+        description: >-
+          The DX Benchmark protocol it is registered under: 1 for runs before
+          D01M83RDWQ5EVKY5SFHDWAD5HFH, 2 after. An entry without one is 1.
+      prompts:
+        type: string
+        description: >-
+          Where every rendered prompt for every arm and phase is committed, as a
+          repository path (P1).
+      runsPerArm:
+        type: integer
+        description: Fresh runs per arm per phase (P2; at least three under protocol 2).
+      deterministic:
+        type: boolean
+        description: >-
+          True when no agent is in the scored path, so repeated runs give the same
+          answer and P2 does not apply.
+      measure:
+        type: string
+        description: >-
+          The measure the bar is written in, which a dry run showed the runtime
+          reports for every arm (P6).
+      frozenAt:
+        type: string
+        description: >-
+          The commit at which Toolbox, the harness and every arm were frozen for
+          the scored round (P3).
+      designer:
+        type: string
+        description: Who designed the experiment and built its arms.
+      adjudicator:
+        type: string
+        description: >-
+          Who applied the bar and wrote the outcome; not the designer and not
+          whoever changed the product between rounds (P7).
+      fitAudit:
+        type: string
+        description: >-
+          The adjudicator's audit of every change between rounds: rival friction
+          fixed as carefully as Toolbox's, and no product change shaped to the
+          harness (P4, P5).
+      spread:
+        type: string
+        description: >-
+          Minimum, median and maximum of the measure per arm, or where they are
+          published (P2).
+      registrationGaps:
+        type: list
+        items: string
+        description: >-
+          What the entry has not registered under protocol 2: prompts, runs,
+          measure, and an independent adjudicator.
+        computed: >-
+          entity.protocol != 2 ? ['protocol 1: re-register under protocol 2
+          (D01M83RDWQ5EVKY5SFHDWAD5HFH)'] : (entity.prompts == '' &&
+          !entity.deterministic ? ['no committed prompts'] : []) +
+          (entity.runsPerArm < 3 && !entity.deterministic ? ['fewer than three
+          runs per arm'] : []) + (entity.measure == '' ? ['no measure the runtime
+          reports'] : []) + (entity.designer == '' ? ['no designer'] : []) +
+          (entity.adjudicator == '' || entity.adjudicator == entity.designer ?
+          ['no adjudicator independent of the designer'] : [])
+      runGaps:
+        type: list
+        items: string
+        description: >-
+          What a protocol-2 benchmark that has run has not recorded: the frozen
+          commit, the spread and the fit audit.
+        computed: >-
+          entity.protocol == 2 && entity.status in ['complete', 'archived'] ?
+          (entity.frozenAt == '' ? ['no frozen commit for the round'] : []) +
+          (entity.spread == '' && !entity.deterministic ? ['no spread across
+          runs'] : []) + (entity.fitAudit == '' ? ['no fit audit of the changes
+          between rounds'] : []) : []
       declarationGaps:
         type: list
         items: string
@@ -138,7 +212,17 @@ kinds:
         'ran': record.ran, 'outcome': record.outcome, 'changed': record.changed,
         'servedValue': record.servedValue, 'blockedOn': record.blockedOn,
         'readme': record.readme, 'results': record.results, 'missingPaths':
-        record.missingPaths, 'hash': record.hash}
+        record.missingPaths, 'hash': record.hash, 'protocol':
+        has(record.protocol) ? record.protocol : 1, 'prompts':
+        has(record.prompts) ? record.prompts : '', 'runsPerArm':
+        has(record.runsPerArm) ? record.runsPerArm : 1, 'deterministic':
+        has(record.deterministic) ? record.deterministic : false, 'measure':
+        has(record.measure) ? record.measure : '', 'frozenAt':
+        has(record.frozenAt) ? record.frozenAt : '', 'designer':
+        has(record.designer) ? record.designer : '', 'adjudicator':
+        has(record.adjudicator) ? record.adjudicator : '', 'fitAudit':
+        has(record.fitAudit) ? record.fitAudit : '', 'spread':
+        has(record.spread) ? record.spread : ''}
 
 scorecards:
   - name: maintainer-benchmark
@@ -191,6 +275,17 @@ scorecards:
       fix: >-
         Say why an archived benchmark has served its value (servedValue), or
         what a blocked one waits on (blockedOn).
+    - name: method-registered
+      level: silver
+      check: >-
+        !(entity.status in ['designed', 'blocked']) ||
+        entity.registrationGaps.size() == 0
+      evidence: "entity.status in ['designed', 'blocked'] ? entity.registrationGaps : []"
+      fix: >-
+        Before it runs, register it under protocol 2: set protocol 2, commit the
+        prompts, plan at least three runs per arm, name the measure a dry run
+        showed the runtime reports, and name a designer and a different
+        adjudicator (dx-benchmarks.md §4.1).
     - name: results-recorded
       level: gold
       check: entity.resultGaps.size() == 0
@@ -205,3 +300,16 @@ scorecards:
       fix: >-
         List what the benchmark changed in Toolbox: the friction fixes and the
         decisions it produced (dx-benchmarks.md §4, step 10).
+    - name: sound-method
+      level: gold
+      check: >-
+        !(entity.status in ['complete', 'archived']) ||
+        entity.registrationGaps.size() + entity.runGaps.size() == 0
+      evidence: >-
+        entity.status in ['complete', 'archived'] ? entity.registrationGaps +
+        entity.runGaps : []
+      fix: >-
+        Rerun it under protocol 2 and record the frozen commit, the spread
+        across at least three runs per arm, and the independent adjudicator's
+        fit audit (dx-benchmarks.md §4.1). A protocol-1 result stays on the
+        record as one sample.

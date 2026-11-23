@@ -128,7 +128,7 @@ connectors:
         # DX Benchmarks, one entry per benchmark (docs/design/dx-benchmarks.md)
         - kind: benchmark
           globs: [portal/benchmarks/*.yaml]
-          paths: [readme, results]
+          paths: [readme, results, prompts]
         - kind: observability
           globs: [portal/observability/*.yaml]
           paths:
