@@ -1,0 +1,5 @@
+image: toolbox-acme:local
+databaseUrl: postgres://toolbox:toolbox@postgres:5432/toolbox
+githubApiUrl: http://facade:8091
+githubToken: acme-reader
+service: {port: 8080}

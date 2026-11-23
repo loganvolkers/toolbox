@@ -448,7 +448,7 @@ mod tests {
         assert_eq!(scim["conformanceMentions"], 0);
 
         let files = analyse(&root, "crates/toolbox-connector-git-files/Cargo.toml");
-        assert_eq!(files["tests"], 0);
+        assert!(files["tests"].as_i64().unwrap() >= 1);
         assert!(files["conformanceMentions"].as_i64().unwrap() >= 1);
         assert!(files["snapshotComplete"].as_bool().unwrap());
 

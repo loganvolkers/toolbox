@@ -19,7 +19,10 @@ RUN set -eu; \
     rm /tmp/openfga.tgz
 COPY bin/${TARGETARCH}/ /usr/local/bin/
 ENV TOOLBOX_OPENFGA_BIN=/usr/local/bin/openfga
+# Cloud Run injects PORT and does not pass --listen. The default matches the image's
+# published port; `docker run -e PORT=9090` overrides it. TOOLBOX_LISTEN still wins.
+ENV PORT=8080
 USER 65532:65532
 EXPOSE 8080
 ENTRYPOINT ["toolbox"]
-CMD ["serve", "/portal", "--listen", "0.0.0.0:8080"]
+CMD ["serve", "/portal"]

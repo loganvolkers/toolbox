@@ -19,3 +19,4 @@ Small, reproducible experiments cited by the design docs. Each one records its r
 | [box-ab](./box-ab) | DX Benchmark (R6): several tools in one box, or hand-written CI glue? | [design/repo-value.md](../docs/design/repo-value.md) |
 | [spec-ab](./spec-ab) | DX Benchmark (R7, blocked): results by hand from a spec, with Toolbox, or on Backstage | [design/results-spec.md](../docs/design/results-spec.md) |
 | [connector-ab](./connector-ab) | DX Benchmark (C1–C3): authoring a cloud/SaaS connector in Toolbox vs Port Ocean vs Backstage | [design/package-author-sdlc.md](../docs/design/package-author-sdlc.md), [design/dx-benchmarks.md](../docs/design/dx-benchmarks.md) §7 B4 |
+| [deploy-ab](./deploy-ab) | DX Benchmark, run 2026-11-23: deploy a usable portal on a laptop, Toolbox against Backstage. deploy-usable does not hold ([results](./deploy-ab/RESULTS.md)) | [design/local-simulation.md](../docs/design/local-simulation.md) |

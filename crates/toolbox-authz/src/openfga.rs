@@ -323,6 +323,12 @@ impl OpenFga {
 /// Replace OpenFGA's `tuple` table with a read-only view over `toolbox.derived_tuples` for `store`.
 /// Idempotent: safe on every start.
 ///
+/// The relation replaced is the `tuple` OpenFGA actually reads: the first base table of that name
+/// on this connection's `search_path`, else the view already installed there. A role named
+/// `toolbox` resolves unqualified names into the `toolbox` schema (Postgres puts `$user` ahead of
+/// `public`), and that is where `openfga migrate` creates its tables. Replacing only `public.tuple`
+/// leaves those checks reading an empty table, so every `can_view` denies.
+///
 /// Every column must hold what OpenFGA's own writes would. `user_type` in particular follows
 /// `tuple.GetUserTypeFromUser` (OpenFGA v1.22.1, `pkg/tuple/tuple.go`): a userset (`type:id#rel`) or
 /// a wildcard (`*`, `type:*`) is `userset`, anything else `user`. Some of OpenFGA's reads filter on
@@ -332,14 +338,42 @@ pub async fn install_tuple_view(pool: &sqlx::PgPool, store: &str) -> Result<(), 
     if !store.chars().all(|c| c.is_ascii_alphanumeric()) {
         return Err(format!("unexpected OpenFGA store id {store}"));
     }
+    let found: Option<String> = sqlx::query_scalar(
+        r#"SELECT n.nspname::text
+           FROM pg_class c
+           JOIN pg_namespace n ON n.oid = c.relnamespace
+           WHERE c.relname = 'tuple'
+             AND c.relkind IN ('r', 'v')
+             AND n.nspname = ANY (current_schemas(false))
+           ORDER BY CASE c.relkind WHEN 'r' THEN 0 ELSE 1 END,
+                    array_position(current_schemas(false), n.nspname)
+           LIMIT 1"#,
+    )
+    .fetch_optional(pool)
+    .await
+    .map_err(|e| format!("finding OpenFGA's tuple relation: {e}"))?;
+    let schema = found.unwrap_or_else(|| "public".to_owned());
+    if !schema
+        .chars()
+        .all(|c| c.is_ascii_alphanumeric() || c == '_')
+    {
+        return Err(format!(
+            "unexpected schema for OpenFGA's tuple relation: {schema}"
+        ));
+    }
     let sql = format!(
         r#"
 DO $$ BEGIN
-  IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'tuple') THEN
-    ALTER TABLE public.tuple RENAME TO tuple_openfga_unused;
+  IF EXISTS (
+    SELECT 1 FROM pg_class c
+    JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE n.nspname = '{schema}' AND c.relname = 'tuple' AND c.relkind = 'r'
+  ) THEN
+    DROP TABLE IF EXISTS {schema}.tuple_openfga_unused;
+    ALTER TABLE {schema}.tuple RENAME TO tuple_openfga_unused;
   END IF;
 END $$;
-CREATE OR REPLACE VIEW public.tuple AS
+CREATE OR REPLACE VIEW {schema}.tuple AS
   SELECT '{store}'::text AS store,
          split_part(object, ':', 1) AS object_type,
          substr(object, strpos(object, ':') + 1) AS object_id,

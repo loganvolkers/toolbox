@@ -75,9 +75,11 @@ enum Command {
         /// A portal directory (containing toolbox.yaml) or a manifest file.
         #[arg(default_value = ".")]
         path: PathBuf,
-        /// Address to listen on.
-        #[arg(long, env = "TOOLBOX_LISTEN", default_value = "127.0.0.1:8080")]
-        listen: String,
+        /// Address to listen on. `TOOLBOX_LISTEN` and `--listen` win. Otherwise, when
+        /// `PORT` is set, the server binds `0.0.0.0:$PORT` (the Cloud Run contract).
+        /// With neither, it binds `127.0.0.1:8080`.
+        #[arg(long, env = "TOOLBOX_LISTEN")]
+        listen: Option<String>,
         /// Postgres URL; without it the store is in memory and lost on exit.
         #[arg(long, env = "DATABASE_URL")]
         database_url: Option<String>,
@@ -617,6 +619,32 @@ fn tools_command(command: ToolsCommand) -> ExitCode {
     }
 }
 
+fn campaign_command(
+    portal: &std::path::Path,
+    name: Option<String>,
+    baseline: Option<std::path::PathBuf>,
+    skip: &[String],
+    remote: &Remote,
+) -> ExitCode {
+    report::campaign_local(
+        portal,
+        name.as_deref(),
+        baseline.as_deref(),
+        skip,
+        &remote.output,
+    )
+}
+
+fn serve_command(
+    path: &std::path::Path,
+    listen: Option<&str>,
+    database_url: Option<String>,
+    fixtures: bool,
+) -> ExitCode {
+    let listen = server::listen_addr(listen, std::env::var("PORT").ok().as_deref());
+    server::serve(path, &listen, database_url, fixtures)
+}
+
 fn main() -> ExitCode {
     quiet_on_closed_pipe();
     let command = Cli::parse().command;
@@ -649,7 +677,7 @@ fn main() -> ExitCode {
             listen,
             database_url,
             fixtures,
-        } => server::serve(&path, &listen, database_url, fixtures),
+        } => serve_command(&path, listen.as_deref(), database_url, fixtures),
         Command::Push { path, url } => server::push(&path, &url),
         Command::Campaign {
             name,
@@ -657,13 +685,7 @@ fn main() -> ExitCode {
             baseline,
             skip,
             remote,
-        } => report::campaign_local(
-            &portal,
-            name.as_deref(),
-            baseline.as_deref(),
-            &skip,
-            &remote.output,
-        ),
+        } => campaign_command(&portal, name, baseline, &skip, &remote),
         Command::Report(o) => report::run(&o),
         Command::Mcp { remote } => client::bridge(&remote.target()),
         Command::Connector {
@@ -903,14 +925,58 @@ fn catalog_id_from_external(kind: &str, external_id: &str) -> String {
 fn catalog_id(kind: &str, external_id: &str, data: &serde_json::Value) -> String {
     let stripped = catalog_id_from_external(kind, external_id);
     let bare_numeric = !stripped.is_empty() && stripped.bytes().all(|b| b.is_ascii_digit());
-    if bare_numeric {
-        if let (Some(project), Some(name)) = (data["project"].as_str(), data["name"].as_str()) {
-            if !project.is_empty() && !name.is_empty() {
-                return format!("{project}:{name}");
-            }
-        }
+    if bare_numeric
+        && let (Some(project), Some(name)) = (data["project"].as_str(), data["name"].as_str())
+        && !project.is_empty()
+        && !name.is_empty()
+    {
+        return format!("{project}:{name}");
     }
     stripped
+}
+
+fn drive_output_lines(format: &str, msgs: &[serde_json::Value]) -> Result<Vec<String>, String> {
+    match format {
+        "records" => Ok(msgs
+            .iter()
+            .filter(|m| m["type"] == "record")
+            .map(|m| {
+                serde_json::json!({
+                    "kind": m["kind"],
+                    "externalId": m["externalId"],
+                    "data": m["data"],
+                })
+                .to_string()
+            })
+            .collect()),
+        "catalog" => {
+            let mut ents: Vec<serde_json::Value> = msgs
+                .iter()
+                .filter(|m| m["type"] == "record")
+                .map(|m| {
+                    let kind = m["kind"].as_str().unwrap_or("");
+                    let ext = m["externalId"].as_str().unwrap_or("");
+                    serde_json::json!({
+                        "kind": kind,
+                        "id": catalog_id(kind, ext, &m["data"]),
+                        "data": m["data"].clone(),
+                    })
+                })
+                .collect();
+            ents.sort_by(|a, b| {
+                (
+                    a["kind"].as_str().unwrap_or(""),
+                    a["id"].as_str().unwrap_or(""),
+                )
+                    .cmp(&(
+                        b["kind"].as_str().unwrap_or(""),
+                        b["id"].as_str().unwrap_or(""),
+                    ))
+            });
+            Ok(ents.into_iter().map(|e| e.to_string()).collect())
+        }
+        other => Err(format!("unknown --format {other}")),
+    }
 }
 
 fn connector_drive(
@@ -941,46 +1007,9 @@ fn connector_drive(
         kinds,
     )) {
         Ok(msgs) => {
-            let lines: Vec<String> = match format {
-                "records" => msgs
-                    .iter()
-                    .filter(|m| m["type"] == "record")
-                    .map(|m| {
-                        serde_json::json!({
-                            "kind": m["kind"],
-                            "externalId": m["externalId"],
-                            "data": m["data"],
-                        })
-                        .to_string()
-                    })
-                    .collect(),
-                "catalog" => {
-                    let mut ents: Vec<serde_json::Value> = msgs
-                        .iter()
-                        .filter(|m| m["type"] == "record")
-                        .map(|m| {
-                            let kind = m["kind"].as_str().unwrap_or("");
-                            let ext = m["externalId"].as_str().unwrap_or("");
-                            serde_json::json!({
-                                "kind": kind,
-                                "id": catalog_id(kind, ext, &m["data"]),
-                                "data": m["data"].clone(),
-                            })
-                        })
-                        .collect();
-                    ents.sort_by(|a, b| {
-                        (
-                            a["kind"].as_str().unwrap_or(""),
-                            a["id"].as_str().unwrap_or(""),
-                        )
-                            .cmp(&(
-                                b["kind"].as_str().unwrap_or(""),
-                                b["id"].as_str().unwrap_or(""),
-                            ))
-                    });
-                    ents.into_iter().map(|e| e.to_string()).collect()
-                }
-                other => return fail(format!("unknown --format {other}")),
+            let lines = match drive_output_lines(format, &msgs) {
+                Ok(lines) => lines,
+                Err(e) => return fail(e),
             };
             let body = lines.join("\n") + if lines.is_empty() { "" } else { "\n" };
             if let Some(path) = out {
@@ -1000,43 +1029,6 @@ fn connector_drive(
             }
         }
         Err(e) => fail(e),
-    }
-}
-
-#[cfg(test)]
-mod drive_catalog_tests {
-    use super::{catalog_id, catalog_id_from_external};
-    use serde_json::json;
-
-    #[test]
-    fn strips_kind_prefix() {
-        assert_eq!(catalog_id_from_external("project", "project:ALPHA"), "ALPHA");
-        assert_eq!(
-            catalog_id_from_external("issue", "issue:ALPHA-1"),
-            "ALPHA-1"
-        );
-        assert_eq!(
-            catalog_id_from_external("component", "component:ALPHA:api"),
-            "ALPHA:api"
-        );
-    }
-
-    #[test]
-    fn leaves_bare_external_id() {
-        assert_eq!(catalog_id_from_external("project", "ALPHA"), "ALPHA");
-    }
-
-    #[test]
-    fn prefers_project_name_when_external_id_is_numeric() {
-        let data = json!({"id": "1", "name": "api", "project": "ALPHA"});
-        assert_eq!(
-            catalog_id("component", "component:1", &data),
-            "ALPHA:api"
-        );
-        assert_eq!(
-            catalog_id("component", "component:ALPHA:api", &data),
-            "ALPHA:api"
-        );
     }
 }
 
@@ -1200,4 +1192,41 @@ fn describe() -> ExitCode {
         println!("{line}");
     }
     ExitCode::SUCCESS
+}
+
+#[cfg(test)]
+mod drive_catalog_tests {
+    use super::{catalog_id, catalog_id_from_external};
+    use serde_json::json;
+
+    #[test]
+    fn strips_kind_prefix() {
+        assert_eq!(
+            catalog_id_from_external("project", "project:ALPHA"),
+            "ALPHA"
+        );
+        assert_eq!(
+            catalog_id_from_external("issue", "issue:ALPHA-1"),
+            "ALPHA-1"
+        );
+        assert_eq!(
+            catalog_id_from_external("component", "component:ALPHA:api"),
+            "ALPHA:api"
+        );
+    }
+
+    #[test]
+    fn leaves_bare_external_id() {
+        assert_eq!(catalog_id_from_external("project", "ALPHA"), "ALPHA");
+    }
+
+    #[test]
+    fn prefers_project_name_when_external_id_is_numeric() {
+        let data = json!({"id": "1", "name": "api", "project": "ALPHA"});
+        assert_eq!(catalog_id("component", "component:1", &data), "ALPHA:api");
+        assert_eq!(
+            catalog_id("component", "component:ALPHA:api", &data),
+            "ALPHA:api"
+        );
+    }
 }

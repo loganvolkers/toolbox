@@ -8,7 +8,7 @@ const INDEX: &str = include_str!("../../../ui/dist/index.html");
 const APP_JS: &str = include_str!("../../../ui/dist/assets/app.js");
 const APP_CSS: &str = include_str!("../../../ui/dist/assets/app.css");
 
-const CSP: &str = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'";
+pub(crate) const CSP: &str = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'";
 
 pub async fn asset(uri: Uri) -> Response {
     let path = uri.path();

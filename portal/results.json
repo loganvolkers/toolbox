@@ -105,6 +105,9 @@
       "benchmark:connector-ab": {
         "level": "gold"
       },
+      "benchmark:deploy-ab": {
+        "level": "gold"
+      },
       "benchmark:out-of-box": {
         "level": "gold"
       },
@@ -268,10 +271,7 @@
     },
     "maintainer-connector": {
       "connector:crates/toolbox-connector-git-files": {
-        "failing": {
-          "has-tests": 1
-        },
-        "level": "bronze"
+        "level": "gold"
       },
       "connector:crates/toolbox-connector-github": {
         "level": "gold"
@@ -345,10 +345,7 @@
         ]
       },
       "crate:toolbox-connector-git-files": {
-        "failing": {
-          "has-tests": null
-        },
-        "level": "none",
+        "level": "gold",
         "unknown": [
           "clippy-clean",
           "tests-pass"
@@ -972,6 +969,12 @@
       "doc:docs/decisions/D01M83FFM2K6XS4EAVHVP92TBDZ.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M83GQ1KP8A0WR3P2S7AG54WQ.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M83H3HBH2SC205MX3ANRZYWN.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/README.md": {
         "level": "skipped"
       },
@@ -1045,6 +1048,9 @@
         "level": "silver"
       },
       "doc:docs/design/incremental-computation.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/local-simulation.md": {
         "level": "silver"
       },
       "doc:docs/design/maintainer-sdlc.md": {
@@ -1194,6 +1200,9 @@
       "doc:docs/v1-spec.md": {
         "level": "silver"
       },
+      "doc:examples/acme-live/README.md": {
+        "level": "silver"
+      },
       "doc:examples/connector-scaffold/README.md": {
         "level": "silver"
       },
@@ -1213,6 +1222,9 @@
         "level": "silver"
       },
       "doc:experiments/connector-ab/README.md": {
+        "level": "silver"
+      },
+      "doc:experiments/deploy-ab/README.md": {
         "level": "silver"
       },
       "doc:experiments/derived-state-scale/README.md": {
@@ -1376,6 +1388,30 @@
         },
         "level": "bronze"
       },
+      "example:examples/acme-live/README.md": {
+        "level": "gold"
+      },
+      "example:examples/acme-live/seed/checkout-web/README.md": {
+        "failing": {
+          "cites-the-design": 1,
+          "says-how-to-check": 1
+        },
+        "level": "bronze"
+      },
+      "example:examples/acme-live/seed/payments-api/README.md": {
+        "failing": {
+          "cites-the-design": 1,
+          "says-how-to-check": 1
+        },
+        "level": "bronze"
+      },
+      "example:examples/acme-live/seed/systems/README.md": {
+        "failing": {
+          "cites-the-design": 1,
+          "says-how-to-check": 1
+        },
+        "level": "bronze"
+      },
       "example:examples/connector-scaffold/README.md": {
         "level": "gold"
       },
@@ -1407,6 +1443,9 @@
         "level": "gold"
       },
       "example:experiments/connector-ab/README.md": {
+        "level": "gold"
+      },
+      "example:experiments/deploy-ab/README.md": {
         "level": "gold"
       },
       "example:experiments/derived-state-scale/README.md": {
