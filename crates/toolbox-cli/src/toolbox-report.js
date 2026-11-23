@@ -1,4 +1,4 @@
-// <toolbox-report>: Overview, Catalog, Campaigns, and Scorecards as a custom element.
+// <toolbox-report>: Overview, Catalog, Campaigns, Scorecards, and Compare as a custom element.
 //
 // Data is a child <script type="application/json">, or the src attribute (a URL of that JSON).
 // A host page projects its own chrome into the slots header, nav, and footer. Those children
@@ -61,6 +61,8 @@
     ".outcome{font-size:12px;font-weight:600}",
     ".outcome.pass{color:var(--pass)}.outcome.fail{color:var(--none)}.outcome.unknown{color:var(--unknown)}.outcome.waived{color:var(--bronze)}.outcome.skipped{color:var(--skipped)}",
     ".kind-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}",
+    ".standing{font-size:12px;font-weight:600}.standing.ahead{color:var(--pass)}.standing.behind{color:var(--none)}.standing.unknown{color:var(--unknown)}.standing.parity{color:var(--accent)}",
+    ".value{display:block;font-size:12px;color:var(--muted)}",
     ".kind-grid button{text-align:left;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:10px 12px;font:inherit;cursor:pointer;color:var(--fg)}",
     ".kind-grid button[aria-pressed=true]{border-color:var(--accent)}",
     ".kind-grid strong{display:block;font-size:14px}.kind-grid span{color:var(--muted);font-size:12px}",
@@ -316,6 +318,8 @@
     if (h.indexOf("entity/") === 0) return { mode: "entity", id: decodeURIComponent(h.slice(7)) };
     if (h === "campaigns") return { mode: "campaigns" };
     if (h.indexOf("campaign/") === 0) return { mode: "campaign", name: decodeURIComponent(h.slice(9)) };
+    if (h === "compare") return { mode: "compare" };
+    if (h.indexOf("compare/") === 0) return { mode: "compare", name: decodeURIComponent(h.slice(8)) };
     if (h.indexOf("scorecard/") === 0) return { mode: "scorecard", name: decodeURIComponent(h.slice(10)) };
     if (h === "scorecards") return { mode: "scorecard" };
     return { mode: "scorecard", name: decodeURIComponent(h) };
@@ -405,6 +409,7 @@
           })(),
         },
       ];
+      if (Object.keys(D.comparisons || {}).length) tabs.push({ label: "Compare", path: "compare", id: "compare" });
       modes.replaceChildren(
         ...tabs.map(function (t) {
           var selected = activeMode === t.id;
@@ -442,6 +447,7 @@
       else if (route.mode === "entity") body.replaceChildren(this.entity(D, route.id, go));
       else if (route.mode === "campaigns" || route.mode === "campaign")
         body.replaceChildren(this.campaigns(D, route.name, go));
+      else if (route.mode === "compare") body.replaceChildren(this.compare(D, route.name, go));
       else body.replaceChildren(this.scorecard(D, route.name, go));
     }
 
@@ -1083,6 +1089,165 @@
         );
       });
       return frag;
+    }
+
+    compare(D, name, go) {
+      var all = D.comparisons || {};
+      var names = Object.keys(all).sort();
+      if (!names.length) {
+        return el("section", {}, el("div", { className: "empty", textContent: "No comparative scorecards in this portal." }));
+      }
+      var title = function (c, id) {
+        return (c.titles || {})[id] || shortId(id);
+      };
+      var standingEl = function (s) {
+        return el("span", { className: "standing " + s, textContent: s });
+      };
+      var count = function (c, peer, s) {
+        return Object.keys(c.rules || {}).filter(function (r) {
+          return c.rules[r][peer] === s;
+        }).length;
+      };
+      var standings = ["ahead", "parity", "behind", "unknown"];
+      var summary = el("table", { className: "fleet" });
+      summary.append(
+        el(
+          "thead",
+          {},
+          el(
+            "tr",
+            {},
+            el("th", { textContent: "Factor" }),
+            el("th", { textContent: "Against" }),
+            el("th", { textContent: "Standing" }),
+            ...standings.map(function (s) {
+              return el("th", { className: "hide-sm", textContent: s });
+            }),
+          ),
+        ),
+      );
+      var tbody = el("tbody");
+      names.forEach(function (n) {
+        var c = all[n];
+        var def = (D.scorecards || {})[n] || {};
+        c.peers.forEach(function (peer) {
+          tbody.append(
+            clickableRow(
+              "compare/" + encodeURIComponent(n),
+              go,
+              el("td", {}, el("strong", { textContent: def.title || n }), el("span", { className: "id-full", textContent: n })),
+              el("td", { textContent: title(c, peer) }),
+              el("td", {}, standingEl(c.verdict[peer])),
+              ...standings.map(function (s) {
+                return el("td", { className: "hide-sm", textContent: String(count(c, peer, s)) });
+              }),
+            ),
+          );
+        });
+      });
+      summary.append(tbody);
+      var first = all[names[0]];
+      var head = el(
+        "section",
+        {},
+        el(
+          "div",
+          { className: "head" },
+          el("h2", { textContent: "Compare" }),
+          el("span", { className: "sub", textContent: "Where " + title(first, first.subject) + " stands, factor by factor" }),
+        ),
+        el("p", {
+          className: "sub",
+          textContent:
+            "Each factor is a comparative scorecard: the same rules score every product, and a rule's measured value decides when both sides have one. Behind on any rule is behind on the factor.",
+        }),
+        summary,
+      );
+      if (!name || !all[name]) return el("div", {}, head);
+      var c = all[name];
+      var def = (D.scorecards || {})[name] || {};
+      var ids = [c.subject].concat(c.peers);
+      var table = el("table", { className: "fleet" });
+      table.append(
+        el(
+          "thead",
+          {},
+          el(
+            "tr",
+            {},
+            el("th", { textContent: "Rule" }),
+            ...ids.map(function (id) {
+              return el("th", { textContent: title(c, id) });
+            }),
+            ...c.peers.map(function (p) {
+              return el("th", { textContent: "vs " + title(c, p) });
+            }),
+          ),
+        ),
+      );
+      var rows = el("tbody");
+      Object.keys(def.rules || {}).forEach(function (r) {
+        var rd = def.rules[r];
+        var cell = function (id) {
+          var s = (c.scores || {})[id];
+          var outcome = s && s.rules ? s.rules[r] || "unknown" : "unknown";
+          var v = s && s.values ? s.values[r] : undefined;
+          return el(
+            "td",
+            {},
+            el("span", { className: "outcome " + outcome, textContent: outcome }),
+            v == null
+              ? ""
+              : el("span", {
+                  className: "value",
+                  textContent: v.toLocaleString(undefined, { maximumFractionDigits: 2 }) + (rd.unit ? " " + rd.unit : ""),
+                }),
+          );
+        };
+        rows.append(
+          el(
+            "tr",
+            {},
+            el(
+              "td",
+              {},
+              el("strong", { textContent: r }),
+              el("span", {
+                className: "value",
+                textContent: rd.check + (rd.better ? " · " + rd.better + " is better" : ""),
+              }),
+            ),
+            ...ids.map(cell),
+            ...c.peers.map(function (p) {
+              return el("td", {}, standingEl((c.rules[r] || {})[p] || "unknown"));
+            }),
+          ),
+        );
+      });
+      table.append(rows);
+      return el(
+        "div",
+        {},
+        head,
+        el(
+          "section",
+          {},
+          el(
+            "div",
+            { className: "head" },
+            el("h2", { textContent: def.title || name }),
+            el(
+              "span",
+              { className: "sub" },
+              ...c.peers.map(function (p) {
+                return el("span", {}, "vs " + title(c, p) + ": ", standingEl(c.verdict[p]), " ");
+              }),
+            ),
+          ),
+          el("p", { className: "sub", textContent: def.description || "" }),
+          table,
+        ),
+      );
     }
 
     scorecard(D, name, go) {

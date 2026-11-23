@@ -190,7 +190,7 @@ fn results(d: &Derived, advisory: &BTreeSet<String>) -> Value {
     let mut cards = Map::new();
     for (card, entities) in d.scores.iter().filter(|(c, _)| !advisory.contains(*c)) {
         let mut rows = Map::new();
-        for (id, s) in entities {
+        for (id, s) in entities.iter().filter(|(id, _)| !is_peer(d, card, id)) {
             let failing: Map<String, Value> = s
                 .rules
                 .iter()
@@ -238,6 +238,29 @@ fn results(d: &Derived, advisory: &BTreeSet<String>) -> Value {
     Value::Object(cards)
 }
 
+/// A peer in a comparative scorecard: another product's facts, shown beside the subject's but
+/// never this portal's debt, so never in the baseline, the ratchet or the health views.
+fn is_peer(d: &Derived, card: &str, id: &str) -> bool {
+    d.comparisons
+        .get(card)
+        .is_some_and(|c| c.peers.iter().any(|p| p == id))
+}
+
+/// Scores without the peers of comparative scorecards (see `is_peer`).
+fn own_scores(d: &Derived) -> Map<String, Value> {
+    d.scores
+        .iter()
+        .map(|(card, rows)| {
+            let rows: Map<String, Value> = rows
+                .iter()
+                .filter(|(id, _)| !is_peer(d, card, id))
+                .map(|(id, s)| (id.clone(), json!(s)))
+                .collect();
+            (card.clone(), Value::Object(rows))
+        })
+        .collect()
+}
+
 /// Per scorecard, entity and failing rule counted by its evidence: each item's key
 /// (crate::causes::evidence_key), sorted. The baseline keeps them beside `results`, so a list
 /// that grew can say which items are new. Not compared: a key-only difference is never a
@@ -246,7 +269,7 @@ fn evidence_keys(d: &Derived, advisory: &BTreeSet<String>) -> Value {
     let mut cards = Map::new();
     for (card, entities) in d.scores.iter().filter(|(c, _)| !advisory.contains(*c)) {
         let mut rows = Map::new();
-        for (id, s) in entities {
+        for (id, s) in entities.iter().filter(|(id, _)| !is_peer(d, card, id)) {
             let rules: Map<String, Value> = s
                 .rules
                 .iter()
@@ -746,6 +769,10 @@ fn markdown(m: &toolbox_model::Manifest, d: &Derived, all: bool) -> String {
         } else {
             counts.join(", ")
         };
+        if let Some(c) = d.comparisons.get(&sc.name) {
+            comparison_md(&mut s, sc, c, &rows, d);
+            continue;
+        }
         let _ = writeln!(s, "\n## {}  ({counts})\n", sc.name);
         let shown = |r: &&toolbox_derive::Score| {
             r.level != "skipped" && (all || r.rules.iter().flatten().any(|(_, o)| o != "pass"))
@@ -803,6 +830,105 @@ fn markdown(m: &toolbox_model::Manifest, d: &Derived, all: bool) -> String {
         }
     }
     s
+}
+
+/// Comparisons as the web report reads them: each with its entities' display names.
+fn comparison_defs(d: &Derived) -> Map<String, Value> {
+    d.comparisons
+        .iter()
+        .map(|(name, c)| {
+            let mut v = json!(c);
+            let ids = || std::iter::once(&c.subject).chain(&c.peers);
+            v["titles"] = ids()
+                .map(|id| (id.clone(), json!(title_of(d, id))))
+                .collect::<Map<String, Value>>()
+                .into();
+            let scores = d.scores.get(name);
+            v["scores"] = ids()
+                .filter_map(|id| Some((id.clone(), json!(scores?.get(id)?))))
+                .collect::<Map<String, Value>>()
+                .into();
+            (name.clone(), v)
+        })
+        .collect()
+}
+
+/// An entity's display name: its `title` field, else its id.
+fn title_of<'a>(d: &'a Derived, id: &'a str) -> &'a str {
+    d.entities
+        .get(id)
+        .and_then(|e| e.fields.get("title"))
+        .and_then(Value::as_str)
+        .unwrap_or(id)
+}
+
+/// A comparative scorecard as one table: a row per rule, a column per entity (outcome and
+/// value), and the subject's standing against each peer.
+fn comparison_md(
+    s: &mut String,
+    sc: &toolbox_model::manifest::Scorecard,
+    c: &toolbox_derive::Comparison,
+    rows: &BTreeMap<String, toolbox_derive::Score>,
+    d: &Derived,
+) {
+    use std::fmt::Write as _;
+    let subject = title_of(d, &c.subject);
+    let verdicts: Vec<String> = c
+        .peers
+        .iter()
+        .map(|p| format!("{} against {}", c.verdict[p], title_of(d, p)))
+        .collect();
+    let _ = writeln!(
+        s,
+        "\n## {}  ({subject}: {})\n",
+        sc.name,
+        verdicts.join("; ")
+    );
+    if let Some(t) = &sc.title {
+        let _ = writeln!(s, "{t}\n");
+    }
+    let ids: Vec<&String> = std::iter::once(&c.subject).chain(&c.peers).collect();
+    let mut head = String::from("| Rule |");
+    let mut rule_line = String::from("|---|");
+    for id in &ids {
+        let _ = write!(head, " {} |", title_of(d, id));
+        rule_line.push_str("---|");
+    }
+    for p in &c.peers {
+        let _ = write!(head, " vs {} |", title_of(d, p));
+        rule_line.push_str("---|");
+    }
+    let _ = writeln!(s, "{head}\n{rule_line}");
+    for r in &sc.rules {
+        let mut line = format!("| {} |", r.name);
+        for id in &ids {
+            let score = rows.get(*id);
+            let outcome = score
+                .and_then(|x| x.rules.as_ref()?.get(&r.name))
+                .map_or("—", String::as_str);
+            let cell = match score.and_then(|x| x.values.get(&r.name)) {
+                Some(v) => format!(
+                    "{outcome}, {}{}",
+                    number(*v),
+                    r.unit
+                        .as_deref()
+                        .map(|u| format!(" {u}"))
+                        .unwrap_or_default()
+                ),
+                None => outcome.to_owned(),
+            };
+            let _ = write!(line, " {cell} |");
+        }
+        for p in &c.peers {
+            let standing = c
+                .rules
+                .get(&r.name)
+                .and_then(|m| m.get(p))
+                .map_or("unknown", String::as_str);
+            let _ = write!(line, " {standing} |");
+        }
+        let _ = writeln!(s, "{line}");
+    }
 }
 
 /// The `include` entries of the portal's own manifest file (packages and their parameters).
@@ -986,22 +1112,27 @@ fn scorecard_defs(m: &toolbox_model::Manifest) -> Map<String, Value> {
                 .rules
                 .iter()
                 .map(|r| {
-                    (
-                        r.name.clone(),
-                        json!({"level": r.level, "fix": r.fix, "check": r.check}),
-                    )
+                    let mut def = json!({"level": r.level, "fix": r.fix, "check": r.check});
+                    if r.value.is_some() {
+                        def["better"] = json!(r.better);
+                        def["unit"] = json!(r.unit);
+                    }
+                    (r.name.clone(), def)
                 })
                 .collect();
-            (
-                sc.name.clone(),
-                json!({
-                    "kind": sc.kind,
-                    "levels": sc.levels,
-                    "owner": sc.owner,
-                    "track": sc.track,
-                    "rules": rules
-                }),
-            )
+            let mut def = json!({
+                "kind": sc.kind,
+                "levels": sc.levels,
+                "owner": sc.owner,
+                "track": sc.track,
+                "rules": rules
+            });
+            if let Some(c) = &sc.compare {
+                def["compare"] = json!(c);
+                def["title"] = json!(sc.title);
+                def["description"] = json!(sc.description);
+            }
+            (sc.name.clone(), def)
         })
         .collect()
 }
@@ -1084,7 +1215,8 @@ fn report_json(m: &toolbox_model::Manifest, d: &Derived, starts: &Map<String, Va
         "tracks": tracks,
         "campaigns": campaign_defs(m, d, starts),
         "scorecards": scorecard_defs(m),
-        "scores": d.scores,
+        "scores": own_scores(d),
+        "comparisons": comparison_defs(d),
         "repoRollup": m.policies.get("repoRollup").cloned().unwrap_or(Value::Null),
     })
     .to_string()
@@ -1713,13 +1845,19 @@ pub fn run(o: &Options) -> ExitCode {
         return code;
     }
     let body = match output {
-        "json" => toolbox_derive::pyjson::pretty(&json!({
-            "format": FORMAT,
-            "snapshot": d.snapshot,
-            "scores": d.scores,
-            "results": now,
-            "campaigns": campaign_defs(&m, &d, &v.starts),
-        })),
+        "json" => {
+            let mut doc = json!({
+                "format": FORMAT,
+                "snapshot": d.snapshot,
+                "scores": d.scores,
+                "results": now,
+                "campaigns": campaign_defs(&m, &d, &v.starts),
+            });
+            if !d.comparisons.is_empty() {
+                doc["comparisons"] = json!(d.comparisons);
+            }
+            toolbox_derive::pyjson::pretty(&doc)
+        }
         "failures" => toolbox_derive::pyjson::pretty(&failures(&m, &d)),
         "standard" => standard(o, &m),
         "html" => html(&m, &d, &v.starts),

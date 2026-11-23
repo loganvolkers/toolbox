@@ -159,10 +159,19 @@ pub struct Scorecard {
     pub track: Option<String>,
     pub levels: Vec<String>,
     pub applies_to: Option<String>,
+    /// A comparative scorecard: the subject against its peers, rule by rule.
+    pub compare: Option<Compare>,
     pub rules: Vec<Rule>,
     /// `{newEntitiesAtLeast: <level>}`: ratchet policy for entities new since the baseline.
     pub ratchet: Option<Value>,
     pub facets: Option<Value>,
+}
+
+/// Who a comparative scorecard compares: one subject, scored beside each peer.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Compare {
+    pub subject: String,
+    pub peers: Vec<String>,
 }
 
 /// A long-term focus program (Soundcheck "track").
@@ -269,6 +278,14 @@ pub struct Rule {
     /// CEL evaluated when the rule fails: a number the ratchet compares instead of the evidence
     /// count (lines in a file, occurrences of a pattern). Larger is worse.
     pub measure: Option<String>,
+    /// CEL evaluated for every in-scope entity: the number a comparison compares.
+    pub value: Option<String>,
+    /// `lower` or `higher`: which way `value` improves.
+    pub better: Option<String>,
+    /// The unit of `value`, for reports.
+    pub unit: Option<String>,
+    /// Relative difference within which two values are at parity.
+    pub tolerance: Option<f64>,
     pub fix: Option<String>,
     /// Connector whose records this rule reads. When that connector is skipped, a missing
     /// value is an expected `unknown` and the ratchet does not refuse `--ci` for it.

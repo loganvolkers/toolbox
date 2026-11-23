@@ -342,6 +342,18 @@ impl Checker {
                     );
                 }
             }
+            if let Some(c) = &s.compare {
+                let mut seen = BTreeSet::new();
+                for (pi, id) in c.peers.iter().enumerate() {
+                    if *id == c.subject || !seen.insert(id.as_str()) {
+                        self.push(
+                            "xref.compare",
+                            format!("/scorecards/{si}/compare/peers/{pi}"),
+                            format!("scorecard {}: compares {id} twice", s.name),
+                        );
+                    }
+                }
+            }
         }
         for (ci, c) in m.campaigns.iter().enumerate() {
             if let Some(t) = &c.track
@@ -691,6 +703,13 @@ impl Checker {
                 if let Some(e) = &r.measure {
                     exprs.push((
                         format!("/scorecards/{si}/rules/{ri}/measure"),
+                        e,
+                        Site::Scorecard,
+                    ));
+                }
+                if let Some(e) = &r.value {
+                    exprs.push((
+                        format!("/scorecards/{si}/rules/{ri}/value"),
                         e,
                         Site::Scorecard,
                     ));

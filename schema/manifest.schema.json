@@ -610,6 +610,29 @@
         "appliesTo": {
           "$ref": "#/$defs/cel"
         },
+        "compare": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "subject",
+            "peers"
+          ],
+          "description": "Make this a comparative scorecard: score the subject and its peers on the same rules and report, per rule, whether the subject is ahead of, at parity with or behind each peer. Reports show the entities side by side.",
+          "properties": {
+            "subject": {
+              "$ref": "#/$defs/entityRef",
+              "description": "The entity the comparison is about (`product:toolbox`)."
+            },
+            "peers": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/entityRef"
+              },
+              "description": "The entities it is compared with (`product:backstage`)."
+            }
+          }
+        },
         "rules": {
           "type": "array",
           "minItems": 1,
@@ -639,6 +662,26 @@
                 "$ref": "#/$defs/cel",
                 "description": "CEL evaluated when the rule fails: a number (lines in a file, occurrences of a pattern) that `toolbox report` baselines compare instead of the evidence count. Larger is worse; campaigns sum it to measure paydown."
               },
+              "value": {
+                "$ref": "#/$defs/cel",
+                "description": "CEL evaluated for every in-scope entity, pass or fail: the number a comparative scorecard compares (seconds, megabytes, a count). Reports show it beside the outcome. Requires `better`."
+              },
+              "better": {
+                "enum": [
+                  "lower",
+                  "higher"
+                ],
+                "description": "Which way `value` improves."
+              },
+              "unit": {
+                "type": "string",
+                "description": "The unit `value` is in, for reports (`s`, `MB`, `ms`, `packages`)."
+              },
+              "tolerance": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Relative difference within which two values are at parity (0.1 = 10% of the larger magnitude). Default 0: only equal values are at parity."
+              },
               "fix": {
                 "type": "string"
               },
@@ -646,6 +689,20 @@
                 "type": "string",
                 "description": "Connector this rule reads. Skipped, its missing data is an expected unknown and is not compared."
               }
+            },
+            "dependentRequired": {
+              "value": [
+                "better"
+              ],
+              "better": [
+                "value"
+              ],
+              "tolerance": [
+                "value"
+              ],
+              "unit": [
+                "value"
+              ]
             }
           }
         },

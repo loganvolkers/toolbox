@@ -61,6 +61,21 @@ pub struct Score {
     /// For failing rules with a `measure` expression: the number the ratchet compares.
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
     pub measures: BTreeMap<String, f64>,
+    /// For rules with a `value` expression: the number a comparison compares, pass or fail.
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub values: BTreeMap<String, f64>,
+}
+
+/// A comparative scorecard's result: the subject against each peer, rule by rule.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct Comparison {
+    pub subject: String,
+    pub peers: Vec<String>,
+    /// rule → peer → `ahead`, `parity`, `behind` or `unknown` (the subject's standing).
+    pub rules: BTreeMap<String, BTreeMap<String, String>>,
+    /// peer → the subject's standing over every rule: `behind` if any rule is, then `unknown`,
+    /// then `ahead` if any rule is, else `parity`.
+    pub verdict: BTreeMap<String, String>,
 }
 
 /// A problem found while deriving (never fatal: the pipeline always produces a result).
@@ -120,6 +135,9 @@ pub struct Derived {
     pub scores: BTreeMap<String, BTreeMap<String, Score>>,
     /// campaign → progress
     pub campaigns: BTreeMap<String, CampaignProgress>,
+    /// comparative scorecard → comparison
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub comparisons: BTreeMap<String, Comparison>,
     /// Sorted, de-duplicated OpenFGA tuples (`{user, relation, object}`).
     pub tuples: Vec<Value>,
     /// action → input → entity → options
@@ -199,6 +217,7 @@ impl<'m> Pipeline<'m> {
             sources.extend(s.rules.iter().map(|r| r.check.as_str()));
             sources.extend(s.rules.iter().filter_map(|r| r.evidence.as_deref()));
             sources.extend(s.rules.iter().filter_map(|r| r.measure.as_deref()));
+            sources.extend(s.rules.iter().filter_map(|r| r.value.as_deref()));
         }
         for t in m.authz.iter().flat_map(|a| &a.tuples) {
             if let TupleDerivation::Kind { emit, .. } = t {
@@ -697,11 +716,66 @@ impl<'m> Pipeline<'m> {
             d.diagnostics.extend(o.diagnostics);
         }
         self.score_aggregates(&mut d);
+        self.score_comparisons(&mut d);
         self.score_campaigns(&mut d);
         d.tuples = tuples.into_values().collect();
         lap("scores+tuples+options");
         d.orphans.sort();
         d
+    }
+
+    /// Comparative scorecards: the subject against each peer (D01M857ZB468ZM2YS6GNSEG6YB9).
+    fn score_comparisons(&self, d: &mut Derived) {
+        for sc in &self.m.scorecards {
+            let Some(c) = &sc.compare else { continue };
+            let scores = d.scores.get(&sc.name);
+            for id in std::iter::once(&c.subject).chain(&c.peers) {
+                if !d.entities.contains_key(id) {
+                    d.diagnostics.push(Diagnostic {
+                        code: "compare.missing",
+                        location: format!("scorecard {}", sc.name),
+                        message: format!("compares {id}, which is not in the catalog"),
+                    });
+                }
+            }
+            let score = |id: &str| {
+                scores
+                    .and_then(|s| s.get(id))
+                    .filter(|s| s.level != "skipped")
+            };
+            let subject = score(&c.subject);
+            let mut rules: BTreeMap<String, BTreeMap<String, String>> = BTreeMap::new();
+            let mut verdict = BTreeMap::new();
+            for peer in &c.peers {
+                let other = score(peer);
+                let standings: Vec<&str> = sc
+                    .rules
+                    .iter()
+                    .map(|r| {
+                        let v = rule_standing(r, subject, other);
+                        rules
+                            .entry(r.name.clone())
+                            .or_default()
+                            .insert(peer.clone(), v.into());
+                        v
+                    })
+                    .collect();
+                let overall = ["behind", "unknown", "ahead"]
+                    .into_iter()
+                    .find(|v| standings.contains(v))
+                    .unwrap_or("parity");
+                verdict.insert(peer.clone(), overall.to_owned());
+            }
+            d.comparisons.insert(
+                sc.name.clone(),
+                Comparison {
+                    subject: c.subject.clone(),
+                    peers: c.peers.clone(),
+                    rules,
+                    verdict,
+                },
+            );
+        }
     }
 
     /// Campaign progress from scorecard outcomes (intersection scope, AND includes).
@@ -741,11 +815,13 @@ impl<'m> Pipeline<'m> {
                 rules: None,
                 evidence: BTreeMap::new(),
                 measures: BTreeMap::new(),
+                values: BTreeMap::new(),
             };
         }
         let mut outcomes = BTreeMap::new();
         let mut evidence = BTreeMap::new();
         let mut measures = BTreeMap::new();
+        let mut values = BTreeMap::new();
         for r in &sc.rules {
             let mut outcome = match applies
                 .clone()
@@ -770,6 +846,14 @@ impl<'m> Pipeline<'m> {
             if let Some(n) = self.measure(r, outcome, ctx) {
                 measures.insert(r.name.clone(), n);
             }
+            if let Some(n) = r
+                .value
+                .as_deref()
+                .filter(|_| applies.is_ok())
+                .and_then(|e| self.json_in(e, ctx).ok()?.as_f64())
+            {
+                values.insert(r.name.clone(), n);
+            }
             outcomes.insert(r.name.clone(), outcome.to_string());
         }
         let level = level_ignoring_unknown(sc, &outcomes).unwrap_or_else(|| "none".into());
@@ -778,6 +862,7 @@ impl<'m> Pipeline<'m> {
             rules: Some(outcomes),
             evidence,
             measures,
+            values,
         }
     }
 
@@ -1136,6 +1221,46 @@ fn counts_as_pass(outcome: &str) -> bool {
 /// Highest level whose known rules pass or are waived. An all-unknown level stops the climb,
 /// so a card with no data at that level is not granted it. `None` when every rule is unknown
 /// (the entity is dropped from the repository rollup; the displayed level is `none`).
+/// The subject's standing against one peer on one rule. Values decide when both sides have one
+/// (within `tolerance` is parity); otherwise outcomes do (pass over waived over fail). An entity
+/// with no score, or an `unknown` outcome, makes the standing `unknown`.
+fn rule_standing(
+    r: &toolbox_model::manifest::Rule,
+    subject: Option<&Score>,
+    peer: Option<&Score>,
+) -> &'static str {
+    let (Some(s), Some(p)) = (subject, peer) else {
+        return "unknown";
+    };
+    let order = |o: std::cmp::Ordering| match o {
+        std::cmp::Ordering::Greater => "ahead",
+        std::cmp::Ordering::Equal => "parity",
+        std::cmp::Ordering::Less => "behind",
+    };
+    if let (Some(a), Some(b)) = (s.values.get(&r.name), p.values.get(&r.name)) {
+        let tol = r.tolerance.unwrap_or(0.0) * a.abs().max(b.abs());
+        if (a - b).abs() <= tol {
+            return "parity";
+        }
+        let o = a.total_cmp(b);
+        return order(if r.better.as_deref() == Some("lower") {
+            o.reverse()
+        } else {
+            o
+        });
+    }
+    let rank = |sc: &Score| match sc.rules.as_ref()?.get(&r.name)?.as_str() {
+        "pass" => Some(2),
+        "waived" => Some(1),
+        "fail" => Some(0),
+        _ => None,
+    };
+    match (rank(s), rank(p)) {
+        (Some(a), Some(b)) => order(a.cmp(&b)),
+        _ => "unknown",
+    }
+}
+
 fn level_ignoring_unknown(
     sc: &toolbox_model::manifest::Scorecard,
     outcomes: &BTreeMap<String, String>,
