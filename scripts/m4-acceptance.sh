@@ -42,10 +42,16 @@ for _ in $(seq 200); do curl -fs "$URL/readyz" >/dev/null 2>&1 && break; sleep 0
 for _ in $(seq 50); do curl -s "http://$SCIM/scim/v2/Users/x" >/dev/null 2>&1 && break; sleep 0.1; done
 echo "  SCIM (push-only connector): $(python3 "$PORTAL/tools/scim_feed.py" "http://$SCIM/scim/v2")"
 for _ in $(seq 300); do
-  N=$(curl -fs -H x-toolbox-user:dave "$URL/v1/views/ops" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(sum(1 for c in d["connectors"] for v in c["last_read"].values() if v))' 2>/dev/null || echo 0)
+  f=$(mktemp)
+  if curl -fs -H x-toolbox-user:dave "$URL/v1/views/ops" -o "$f" 2>/dev/null; then
+    N=$(python3 -c 'import json,sys; d=json.load(sys.stdin); print(sum(1 for c in d["connectors"] for v in c["last_read"].values() if v))' < "$f")
+  else
+    N=0
+  fi
+  rm -f "$f"
   [ "$N" -ge 5 ] && break; sleep 0.1
 done
-curl -fs -H x-toolbox-user:dave "$URL/v1/views/ops" | python3 -c 'import json,sys; d=json.load(sys.stdin); print("  registered:", ", ".join(c["name"] for c in d["connectors"] if c["registered"]))'
+f=$(mktemp); curl -fs -H x-toolbox-user:dave "$URL/v1/views/ops" -o "$f"; python3 -c 'import json,sys; d=json.load(sys.stdin); print("  registered:", ", ".join(c["name"] for c in d["connectors"] if c["registered"]))' < "$f"; rm -f "$f"
 curl -fs -X PUT -H x-toolbox-user:dave -H content-type:application/json --data '{"value":"1","reason":"Runs shared CI and DNS; tier agreed in the platform review"}' "$URL/v1/entities/repository:platform-infra/native/tier" >/dev/null
 sleep 1.5
 curl -fs -H x-toolbox-user:dave "$URL/v1/ops/derived" > "$WORK/derived.json"
@@ -63,8 +69,13 @@ echo "4. A2 (explain ledger)"; ask owner repository:ledger --as alice | sed -n '
 echo "5. A3 (erin: levels only)"; ask score repository:checkout-web --as erin | grep -E 'ownership|rule details' | sed -n 1,2p   # sed reads all input: no broken-pipe race under pipefail
 echo "6. A4 (bob: details)"; ask score repository:checkout-web --as bob | grep -E 'branch-protected'
 echo "7. A5 (API filter)"
-curl -fs -G -H x-toolbox-user:erin "$URL/v1/entities" --data-urlencode "kind=Repository" --data-urlencode "filter=entity.ownership.status != 'verified'" \
-  | python3 -c 'import json,sys; ids=[e["id"] for e in json.load(sys.stdin)["items"]]; print(" ", ids); assert ids==["repository:ledger","repository:legacy-tool","repository:platform-infra"]'
+f=$(mktemp)
+curl -fs -G -H x-toolbox-user:erin "$URL/v1/entities" \
+  --data-urlencode "kind=Repository" \
+  --data-urlencode "filter=entity.ownership.status != 'verified'" \
+  -o "$f"
+python3 -c 'import json,sys; ids=[e["id"] for e in json.load(sys.stdin)["items"]]; print(" ", ids); assert ids==["repository:ledger","repository:legacy-tool","repository:platform-infra"]' < "$f"
+rm -f "$f"
 echo "8. A11 (UI refresh in a browser)"
 SCREENSHOT="${SCREENSHOT:-$WORK/a11.png}" node scripts/ui-a11.cjs "$URL" "http://127.0.0.1:$GH"
 echo "9. SCIM revocation through the connector"

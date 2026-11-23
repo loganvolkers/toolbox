@@ -14,8 +14,11 @@
 # title/body based on your changelogs.
 
 name: Release
+# Top-level read-only for OpenSSF Token-Permissions (cargo-dist#2320). Jobs that
+# create/upload GitHub Releases declare contents: write below. Kept via
+# allow-dirty = ["ci"] in dist-workspace.toml so `dist generate` won't wipe it.
 permissions:
-  "contents": "write"
+  "contents": "read"
 
 # This task will run whenever you push a git tag that looks like a version
 # like "1.0.0", "v0.1.0-prerelease.1", "my-app/0.1.0", "releases/v1.0.0", etc.
@@ -48,6 +51,8 @@ jobs:
   # Run 'dist plan' (or host) to determine what tasks we need to do
   plan:
     runs-on: "ubuntu-22.04"
+    permissions:
+      "contents": "write"
     outputs:
       val: ${{ steps.plan.outputs.manifest }}
       tag: ${{ !github.event.pull_request && github.ref_name || '' }}
@@ -61,10 +66,18 @@ jobs:
           persist-credentials: false
           submodules: recursive
       - name: Install dist
-        # we specify bash to get pipefail; it guards against the `curl` command
-        # failing. otherwise `sh` won't catch that `curl` returned non-0
+        # SHA-256-pinned binary (OpenSSF Pinned-Dependencies); allow-dirty keeps this patch.
         shell: bash
-        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.34.0/cargo-dist-installer.sh | sh"
+        run: |
+          set -euo pipefail
+          curl -fsSL -o /tmp/cargo-dist.tar.xz \
+            https://github.com/axodotdev/cargo-dist/releases/download/v0.34.0/cargo-dist-x86_64-unknown-linux-gnu.tar.xz
+          echo "7fee44ff3ff71ed0064b32d4ec62fee6b58bd37c5887b12a86aedddc5af0c7b5  /tmp/cargo-dist.tar.xz" | sha256sum -c -
+          mkdir -p "$HOME/.cargo/bin"
+          tar -xJf /tmp/cargo-dist.tar.xz -C /tmp
+          cp /tmp/cargo-dist-x86_64-unknown-linux-gnu/dist "$HOME/.cargo/bin/dist"
+          chmod +x "$HOME/.cargo/bin/dist"
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
       - name: Cache dist
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
@@ -127,9 +140,14 @@ jobs:
       - name: Install Rust non-interactively if not already installed
         if: ${{ matrix.container }}
         run: |
+          set -euo pipefail
           if ! command -v cargo > /dev/null 2>&1; then
-            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-            echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+            curl -fsSL -o /tmp/rustup-init \
+              https://static.rust-lang.org/rustup/archive/1.29.3/x86_64-unknown-linux-gnu/rustup-init
+            echo "b1c8cb14e30889e7e2999e6b69e62d9e9b9ffc0f4df8180564d306d9680e6c55  /tmp/rustup-init" | sha256sum -c -
+            chmod +x /tmp/rustup-init
+            /tmp/rustup-init -y
+            echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
           fi
       - name: Install dist
         run: ${{ matrix.install_dist.run }}
@@ -230,6 +248,8 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     runs-on: "ubuntu-22.04"
+    permissions:
+      "contents": "write"
     outputs:
       val: ${{ steps.host.outputs.manifest }}
     steps:
@@ -295,6 +315,8 @@ jobs:
     # "host" however must run to completion, no skipping allowed!
     if: ${{ always() && needs.host.result == 'success' }}
     runs-on: "ubuntu-22.04"
+    permissions:
+      "contents": "write"
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:

@@ -392,7 +392,7 @@ mod tests {
     }
 
     #[test]
-    fn the_packages_in_this_repo_are_private_locked_and_installed_with_npm_install() {
+    fn the_packages_in_this_repo_are_private_locked_and_installed_with_npm_ci() {
         let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
         let ui = analyse(&root, "ui/package.json");
         assert_eq!(ui["name"], "toolbox-minimal-ui");
@@ -403,13 +403,14 @@ mod tests {
         assert_eq!(ui["engines"], false);
         assert_eq!(ui["wildcardRanges"], json!([]));
         assert_eq!(ui["gitRanges"], json!([]));
-        assert_eq!(ui["ciUsesInstall"], true);
+        // npm ci installs the lockfile as written (OpenSSF Pinned-Dependencies + maintainer-package).
+        assert_eq!(ui["ciUsesInstall"], false);
         let builder = analyse(&root, "experiments/typescript-builder/package.json");
         assert_eq!(builder["name"], "toolbox-manifest-builder-prototype");
         assert_eq!(builder["private"], true);
         assert_eq!(builder["lockfile"], "package-lock.json");
         assert!(builder["checkScripts"].as_i64().unwrap() >= 1);
-        assert_eq!(builder["ciUsesInstall"], true);
+        assert_eq!(builder["ciUsesInstall"], false);
         assert_eq!(builder["descriptionChars"], 0);
     }
 }

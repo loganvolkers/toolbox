@@ -1,4 +1,34 @@
-pyyaml
-cel-python==0.5.0
-jsonschema
-rfc3339-validator
+# Hashed deps for CI Python 3.13 / linux x86_64 (OpenSSF Pinned-Dependencies).
+# Install: python3 -m pip install --require-hashes -r requirements.txt
+attrs==26.1.0 \
+    --hash=sha256:c647aa4a12dfbad9333ca4e71fe62ddc36f4e63b2d260a37a8b83d2f043ac309
+cel-python==0.5.0 \
+    --hash=sha256:d0f85008b89655c2bb18d797d2fa3f96f2ed80f4a3b43b0e8138c6646581e5f6
+google-re2==1.1.20251105 \
+    --hash=sha256:a52cb204e49d20cdbb66faf394d57f476e96c39c23a328442ab0194fc6bd1a2b
+jmespath==1.1.0 \
+    --hash=sha256:a5663118de4908c91729bea0acadca56526eb2698e83de10cd116ae0f4e97c64
+jsonschema==4.26.0 \
+    --hash=sha256:d489f15263b8d200f8387e64b4c3a75f06629559fb73deb8fdfb525f2dab50ce
+jsonschema-specifications==2025.9.1 \
+    --hash=sha256:98802fee3a11ee76ecaca44429fda8a41bff98b00a0f2838151b113f210cc6fe
+lark==1.3.1 \
+    --hash=sha256:c629b661023a014c37da873b4ff58a817398d12635d3bbb2c5a03be7fe5d1e12
+pendulum==3.3.0 \
+    --hash=sha256:cb37111ead5f13cedf61f27bdbb8edb108b8754005d8c2e1887890047f848b0d
+python-dateutil==4.0.0 \
+    --hash=sha256:a5e246f79eb80475e691bf93862cead98decd8a498cf53ba0516fcdc0f50dc1c
+pyyaml==6.0.4 \
+    --hash=sha256:50588147ab2c6a59b5f990a4905db80899a6c2bd197e046a6201f1e67587e794
+referencing==0.37.0 \
+    --hash=sha256:381329a9f99628c9069361716891d34ad94af76e461dcb0335825aecc7692231
+rfc3339-validator==0.1.4 \
+    --hash=sha256:24f6ec1eda14ef823da9e36ec7113124b39c04d50a4d3d3a3c2859577e7791fa
+rpds-py==2026.9.1 \
+    --hash=sha256:7868b85224291c6cb6759f9b5adb9745f486d226f62b16a614dd5a2a5ab2b35b
+six==1.17.0 \
+    --hash=sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274
+typing-extensions==4.16.0 \
+    --hash=sha256:481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8
+tzdata==2026.6 \
+    --hash=sha256:0a10eec6e13ef16b627fabed9a5f2ba61a62b1c67f327305f4e7e412a70b4aec

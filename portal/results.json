@@ -185,7 +185,7 @@
     "maintainer-ci-security": {
       "workflow:.github/workflows/ci.yml": {
         "failing": {
-          "zizmor-clean": 7
+          "zizmor-clean": 6
         },
         "level": "silver"
       },
@@ -217,10 +217,7 @@
         "level": "bronze"
       },
       "workflow:actions/report/action.yml": {
-        "failing": {
-          "zizmor-clean": 1
-        },
-        "level": "silver"
+        "level": "gold"
       }
     },
     "maintainer-connector": {
@@ -1377,57 +1374,43 @@
         "level": "ten"
       },
       "maintainer-openssf:Fuzzing": {
-        "failing": {
-          "ten": 10
-        },
-        "level": "none"
+        "level": "ten"
       },
       "maintainer-openssf:License": {
-        "failing": {
-          "ten": 1
-        },
-        "level": "none"
+        "level": "ten"
       },
       "maintainer-openssf:Packaging": {
         "level": "ten"
       },
       "maintainer-openssf:Pinned-Dependencies": {
-        "failing": {
-          "ten": 6
-        },
-        "level": "none"
+        "level": "ten"
       },
       "maintainer-openssf:SAST": {
         "level": "ten"
       },
       "maintainer-openssf:Security-Policy": {
-        "failing": {
-          "ten": 6
-        },
-        "level": "none"
+        "level": "ten"
       },
       "maintainer-openssf:Token-Permissions": {
-        "failing": {
-          "ten": 10
-        },
-        "level": "none"
+        "level": "ten"
       }
     },
     "maintainer-package": {
       "package-json:experiments/typescript-builder/package.json": {
         "failing": {
-          "ci-installs-from-the-lockfile": 1,
           "described": 1,
           "engines-declared": 1
         },
         "level": "silver"
+      },
+      "package-json:scripts/playwright-ci/package.json": {
+        "level": "gold"
       },
       "package-json:site/package.json": {
         "level": "gold"
       },
       "package-json:ui/package.json": {
         "failing": {
-          "ci-installs-from-the-lockfile": 1,
           "described": 1,
           "engines-declared": 1
         },
