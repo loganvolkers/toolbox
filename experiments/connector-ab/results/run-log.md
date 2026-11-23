@@ -9,3 +9,24 @@ Phase 1 agents launched 2026-11-23 (fresh general-purpose, inherit model):
 | 1 | C Backstage | bc-9fe61657-8a07-5349-885f-709eaed6fe09 |
 
 Discards and reruns are appended here.
+
+## Phase 1 scores (2026-11-23)
+
+| Arm | Truth | Shape | Glue lines |
+|---|---|---|---|
+| A Toolbox | pass (5) | pass | 440 |
+| B Ocean | pass (5) | pass | 295 |
+| C Backstage | pass (5) | pass | 427 |
+
+Harness fix during phase 1: copy `rust-toolchain.toml` into arm A (edition2024). Recorded as harness friction, not counted against C1.
+
+### Phase 1 agent ids and deviations
+- A: bc-62446a50 (53 calls > 50 budget)
+- B: bc-803dd0c6 (41 calls)
+- C: bc-9fe61657 (29 calls)
+- Harness fix mid-run: rust-toolchain.toml into arm A / scaffold (edition2024). Does not change phase-1 correctness.
+
+### Phase 3 launch
+- Discarded truncated prompt launch bc-1f45cf68 (incomplete brief); relaunched A as bc-3da53731
+- B: bc-eb6a791a
+- C: bc-6a3bfcc2

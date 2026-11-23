@@ -42,6 +42,9 @@ for arm in A B C; do
       cp -a "$ROOT/experiments/connector-ab/scaffolds/toolbox/." "$dest/"
       # Point the path dependency at this checkout
       sed -i "s|__TOOLBOX_ROOT__|$ROOT|g" "$dest/Cargo.toml"
+      # Arm A must use the repo toolchain (edition2024); without this, cargo 1.83 fails.
+      cp "$ROOT/rust-toolchain.toml" "$dest/rust-toolchain.toml"
+      echo "export PATH=/usr/local/cargo/bin:\$PATH" > "$dest/env.sh"
       ;;
     B)
       cp -a "$ROOT/experiments/connector-ab/scaffolds/ocean/." "$dest/"

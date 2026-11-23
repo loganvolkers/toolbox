@@ -1,0 +1,4 @@
+# Add what you need. Ocean itself lives at the path in OCEAN_ROOT.txt;
+# you may vendor a thin copy of patterns without installing the full framework
+# if packaging blocks you — still keep @ocean.on_resync handlers in integration.py.
+httpx>=0.27

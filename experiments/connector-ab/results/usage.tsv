@@ -1,1 +1,4 @@
 phase	arm	tokens	calls	seconds	notes
+1	A		53		truth+shape pass; over 50-call budget; tokens unknown
+1	B		41		truth+shape pass; tokens unknown
+1	C		29		truth+shape pass; tokens unknown
