@@ -28,5 +28,7 @@ toolbox connector drive --kinds project,issue --format catalog --out OUT/entitie
 ```
 
 Do not omit the `--` before the program. Do not hand-write a map script from
-records to catalog when `--format catalog` covers the id rule. If it fails, the
-binary did not register, the kinds are wrong, or the resync did not succeed.
+records to catalog when `--format catalog` covers the id rule. Catalog `id` is
+only as good as `externalId`: for composite ids use
+`component:ALPHA:api` (not `component:1`). If it fails, the binary did not
+register, the kinds are wrong, or the resync did not succeed.
