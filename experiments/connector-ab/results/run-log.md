@@ -84,3 +84,10 @@ Product fixes on branch `cursor/connector-learning-dx-530d` (D01M83FFM2K6XS4EAVH
 - A: bc-a2dd38c6-ec52-59ec-bd76-7b3bd57611a8
 - B: bc-4b572909-11d8-5971-8b55-c918a5b57b0d
 - C: bc-b25d4935-630a-54c9-8423-45c9d59e8804
+
+### Phase 3 v2 scores (partial)
+| Arm | Truth | Shape | Calls | Agent |
+|---|---|---|---|---|
+| A | pass (8) | pass | *pending wrap-up* | bc-a2dd38c6 |
+| B | pass (8) | pass | *pending wrap-up* | bc-4b572909 |
+| C | pass (8) | pass | 23 | bc-b25d4935 |
