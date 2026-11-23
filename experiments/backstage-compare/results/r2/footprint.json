@@ -1,0 +1,22 @@
+{
+  "toolbox": {
+    "installMb": 121.1,
+    "downloadMb": 79.6,
+    "thirdPartyPackages": 388,
+    "adopterFiles": 2,
+    "adopterLines": 230,
+    "knownVulns": 2,
+    "highVulns": 0,
+    "provenancePercent": 100
+  },
+  "backstage": {
+    "installMb": 709.9,
+    "downloadMb": null,
+    "thirdPartyPackages": 2791,
+    "adopterFiles": 44,
+    "adopterLines": 1357,
+    "knownVulns": 34,
+    "highVulns": 16,
+    "provenancePercent": 0
+  }
+}

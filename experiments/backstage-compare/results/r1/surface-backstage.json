@@ -1,0 +1,36 @@
+{
+  "arm": "backstage",
+  "probes": {
+    "anonymousRead": 401,
+    "forgedIdentityRead": 401,
+    "anonymousMcp": 401,
+    "clientDelete": 204,
+    "entityAfterDelete": 404
+  },
+  "guestSignIn": 403,
+  "anonymousReadRefused": true,
+  "forgedIdentityRefused": true,
+  "anonymousMcpRefused": true,
+  "clientCannotDelete": false,
+  "mcpTools": 13,
+  "mcpReadOnlyTools": 9,
+  "mcpToolNames": [
+    "auth.who-am-i",
+    "catalog.get-catalog-entity",
+    "catalog.get-catalog-model-description",
+    "catalog.query-catalog-entities",
+    "catalog.refresh-catalog-entity",
+    "catalog.register-entity",
+    "catalog.unregister-entity",
+    "catalog.validate-entity",
+    "scaffolder.dry-run-template",
+    "scaffolder.execute-template",
+    "scaffolder.get-scaffolder-task-logs",
+    "scaffolder.list-scaffolder-actions",
+    "scaffolder.list-scaffolder-tasks"
+  ],
+  "mcpToolsListBytes": 20500,
+  "mcpGetEntityTool": "catalog.get-catalog-entity",
+  "mcpGetEntityOk": true,
+  "mcpGetEntityBytes": 580
+}

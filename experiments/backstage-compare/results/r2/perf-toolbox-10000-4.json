@@ -1,0 +1,40 @@
+{
+  "arm": "toolbox",
+  "components": 10000,
+  "readyS": 0.92,
+  "catalogReadableS": 2.18,
+  "rssIdleMb": 88.4,
+  "rssLoadedMb": 164.6,
+  "rssAfterLoadMb": 218.2,
+  "recoveredS": 1.13,
+  "reads": [
+    {
+      "url": "http://127.0.0.1:18090/v1/entities/component:c5000",
+      "rps": 59698.3,
+      "p50ms": 0.23,
+      "p95ms": 0.45,
+      "p99ms": 1.48,
+      "ok": 1.0,
+      "codes": {
+        "200": 597118
+      },
+      "errors": {
+        "aborted due to deadline": 15
+      }
+    },
+    {
+      "url": "http://127.0.0.1:18090/v1/entities?kind=Component&limit=100&filter=entity.owner%3D%3D%27group%3Ag3%27",
+      "rps": 3960.3,
+      "p50ms": 3.79,
+      "p95ms": 5.89,
+      "p99ms": 6.75,
+      "ok": 1.0,
+      "codes": {
+        "200": 39599
+      },
+      "errors": {
+        "aborted due to deadline": 16
+      }
+    }
+  ]
+}
