@@ -879,14 +879,6 @@
       }
     },
     "meta-assessment": {
-      "assessment:rule-quality/rule:toolbox/user-mcp/contract-tested": {
-        "cites-everything": [
-          "ef6cc8b3"
-        ],
-        "cites-for-findings": [
-          "ef6cc8b3"
-        ]
-      },
       "assessment:sdlc-stage-quality/sdlc-stage:operator/monitor": {
         "cites-everything": [
           "46cbaf23",
@@ -2510,8 +2502,7 @@
     "meta-rubric": {
       "rubric:toolbox/assessment-quality": {
         "discriminates": [
-          "bf0c9e31",
-          "c7a2000c"
+          "25fda6a7"
         ]
       },
       "rubric:toolbox/crate-design": {
@@ -2522,6 +2513,12 @@
       "rubric:toolbox/rule-quality": {
         "discriminates": [
           "68a7c956"
+        ]
+      },
+      "rubric:toolbox/scorecard-quality": {
+        "discriminates": [
+          "90ab6dbc",
+          "f0086dcc"
         ]
       }
     },
@@ -5573,11 +5570,7 @@
         "level": "gold"
       },
       "assessment:rule-quality/rule:toolbox/user-mcp/contract-tested": {
-        "failing": {
-          "cites-everything": 1,
-          "cites-for-findings": 1
-        },
-        "level": "bronze"
+        "level": "gold"
       },
       "assessment:scorecard-quality/scorecard:toolbox/maintainer-ci-reliability": {
         "level": "gold"
@@ -7925,7 +7918,7 @@
     "meta-rubric": {
       "rubric:toolbox/assessment-quality": {
         "failing": {
-          "discriminates": 2
+          "discriminates": 1
         },
         "level": "silver"
       },
@@ -7942,7 +7935,10 @@
         "level": "silver"
       },
       "rubric:toolbox/scorecard-quality": {
-        "level": "gold"
+        "failing": {
+          "discriminates": 2
+        },
+        "level": "silver"
       },
       "rubric:toolbox/sdlc-stage-quality": {
         "level": "gold"
