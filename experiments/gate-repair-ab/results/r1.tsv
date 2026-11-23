@@ -1,7 +1,7 @@
-run	arm	bcId	correct	calls	read	gateRuns	wallSeconds
-toolbox-1	toolbox	bc-ce86c86f-8469-5780-bb46-e7f0a04fde80	True	7	29767	2	14
-toolbox-2	toolbox	bc-840d8a31-13eb-53bf-b012-44ce3cda2cbf	True	7	28023	2	18
-toolbox-3	toolbox	bc-9b4259e0-2f3b-569e-b91c-9748a3f5d8c9	True	6	36248	2	15
-reviewdog-1	reviewdog	bc-fe1a6a2a-1c60-554f-bcdc-e916e18e76bc	True	4	11160	2	10
-reviewdog-2	reviewdog	bc-358080a7-5584-5150-9316-a14ca2d185f2	True	4	11178	2	13
-reviewdog-3	reviewdog	bc-285704a9-d28e-5337-a04c-bbf4cc75d986	True	4	8755	2	14
+run	arm	bcId	correct	calls	read	gateRuns	gateRead	wallSeconds
+toolbox-1	toolbox	bc-ce86c86f-8469-5780-bb46-e7f0a04fde80	True	7	29767	2	18596	14
+toolbox-2	toolbox	bc-840d8a31-13eb-53bf-b012-44ce3cda2cbf	True	7	28023	2	18264	18
+toolbox-3	toolbox	bc-9b4259e0-2f3b-569e-b91c-9748a3f5d8c9	True	6	36248	2	27518	15
+reviewdog-1	reviewdog	bc-fe1a6a2a-1c60-554f-bcdc-e916e18e76bc	True	4	11160	2	5073	10
+reviewdog-2	reviewdog	bc-358080a7-5584-5150-9316-a14ca2d185f2	True	4	11178	2	5077	13
+reviewdog-3	reviewdog	bc-285704a9-d28e-5337-a04c-bbf4cc75d986	True	4	8755	2	3708	14

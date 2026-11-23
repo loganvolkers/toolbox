@@ -1,5 +1,6 @@
 {
   "run": "toolbox-3",
+  "arm": "toolbox",
   "bcId": "bc-9b4259e0-2f3b-569e-b91c-9748a3f5d8c9",
   "toolCalls": 6,
   "byTool": {
@@ -9,6 +10,7 @@
   },
   "gateRuns": 2,
   "resultChars": 36248,
+  "gateChars": 27518,
   "wallSeconds": 15,
   "score": {
     "arm": "toolbox",

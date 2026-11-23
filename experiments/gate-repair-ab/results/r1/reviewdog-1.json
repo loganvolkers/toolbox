@@ -1,5 +1,6 @@
 {
   "run": "reviewdog-1",
+  "arm": "reviewdog",
   "bcId": "bc-fe1a6a2a-1c60-554f-bcdc-e916e18e76bc",
   "toolCalls": 4,
   "byTool": {
@@ -7,6 +8,7 @@
   },
   "gateRuns": 2,
   "resultChars": 11160,
+  "gateChars": 5073,
   "wallSeconds": 10,
   "score": {
     "arm": "reviewdog",
