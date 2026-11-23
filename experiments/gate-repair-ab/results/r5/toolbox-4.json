@@ -1,0 +1,52 @@
+{
+  "run": "toolbox-4",
+  "arm": "toolbox",
+  "bcId": "bc-e16d52f7-ae69-59ac-89e2-f28a216f2da1",
+  "toolCalls": 6,
+  "byTool": {
+    "run_terminal_cmd": 4,
+    "search_replace": 2
+  },
+  "gateRuns": 2,
+  "resultChars": 10859,
+  "missingResults": [],
+  "readImputed": 0,
+  "resultCharsImputed": 10859,
+  "gateChars": 3102,
+  "wallSeconds": 14,
+  "score": {
+    "arm": "toolbox",
+    "dest": "/tmp/gate-repair-ab/r5/toolbox-4",
+    "correct": true,
+    "checks": {
+      "no-new-findings": {
+        "ok": true,
+        "grew": {}
+      },
+      "intent-pr-summary": {
+        "ok": true,
+        "needs": [
+          "lint"
+        ]
+      },
+      "intent-release-digests": {
+        "ok": true,
+        "uses": [
+          "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a"
+        ]
+      },
+      "gate-untouched": {
+        "ok": true,
+        "changed": []
+      },
+      "no-suppressions": {
+        "ok": true,
+        "added": []
+      },
+      "gate-passes": {
+        "ok": true,
+        "exit": 0
+      }
+    }
+  }
+}
