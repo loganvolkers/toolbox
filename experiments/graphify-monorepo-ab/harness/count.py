@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """The measures, from the runtime's transcript of one run (P6): tool calls, characters read,
 Graphify and Toolbox calls and the characters of their results, wall time, and the paths outside
-the workspace that the run touched (the contamination check, README §6). Adapted from graphify-ab.
+the workspace and the run's scratch directory (/tmp/graphify-monorepo-ab/scratch/r<round>/codex-<n>)
+that the run touched (the contamination check, README §6). Adapted from graphify-ab.
 
     count.py <transcript.json> <workspace>
 
@@ -20,7 +21,8 @@ import re
 import sys
 
 GRAPHIFY = re.compile(r"(^|[\s;&|(])graphify\s+(query|path|explain|affected|god-nodes|section|update|stats|[a-z][\w-]*)")
-TOOLBOX = re.compile(r"(^|[\s;&|(])toolbox\s+(search|query|get|graph|owner|explain|describe|[a-z][\w-]*)")
+TOOLBOX = re.compile(r"(^|[\s;&|(])toolbox\s+(search|query|get|graph|owner|explain|describe|score|scorecard"
+                     r"|refresh|actions|validate|test|plan|derive|serve|report|doctor|assess|connector|mcp)\b")
 ABSOLUTE = re.compile(r"(?<![\w.])/(?:tmp|agent|home|root|opt|cursor|workspace|usr/local/src)/[^\s'\"`)\]}:,]*")
 
 
@@ -47,9 +49,10 @@ def read_file_result(dest: pathlib.Path, args: dict) -> str | None:
         "totalLines": len(lines) + 1, "matchingCursorRules": []}})
 
 
-def outside(calls: list, dest: str) -> list[str]:
-    """Absolute paths in tool arguments that are not in the workspace or the tools' own install."""
-    allowed = (dest, "/home/ubuntu/.local/bin/graphify", "/home/ubuntu/.local/share/uv/tools/graphifyy",
+def outside(calls: list, dest: str, scratch: str) -> list[str]:
+    """Absolute paths in tool arguments that are not in the workspace, the run's scratch directory
+    or the tools' own install."""
+    allowed = (dest, scratch, "/home/ubuntu/.local/bin/graphify", "/home/ubuntu/.local/share/uv/tools/graphifyy",
                "/usr/local/bin/graphify", "/usr/local/bin/toolbox")
     seen = []
     for m in calls:
@@ -62,6 +65,8 @@ def outside(calls: list, dest: str) -> list[str]:
 
 def main() -> None:
     path, dest = sys.argv[1], sys.argv[2].rstrip("/")
+    ws = pathlib.Path(dest)
+    scratch = str(ws.parent.parent / "scratch" / ws.parent.name / ws.name)
     calls = [m for m in json.load(open(path))["messages"] if m.get("role") == "tool"]
     starts = [int(m["started_at_ms"]) for m in calls if m.get("started_at_ms")]
     ends = [int(m["completed_at_ms"]) for m in calls if m.get("completed_at_ms")]
@@ -86,7 +91,7 @@ def main() -> None:
         "toolboxCalls": len(toolbox),
         "toolboxCommands": dict(tsub.most_common()),
         "toolboxChars": sum(len(str(m.get("tool_result", ""))) for m in toolbox),
-        "outsidePaths": outside(calls, dest),
+        "outsidePaths": outside(calls, dest, scratch),
         "wallSeconds": round((max(ends) - min(starts)) / 1000) if starts and ends else None,
     }))
 

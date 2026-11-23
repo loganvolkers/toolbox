@@ -25,14 +25,16 @@ kept code intelligence out of the context lake. Two limits of that result motiva
   crate dependencies and an execution path, which its `query`, `path`, `explain` and `affected`
   commands and its Cargo pass are built for.
 - **No headroom.** Every answer scored the same key-fact coverage (L21 in
-  [dx-benchmarks.md](../../docs/design/dx-benchmarks.md)). Here four of the five questions are sets
+  [dx-benchmarks.md](../../docs/design/dx-benchmarks.md)). Here three of the four questions are sets
   scored by F1, so a missed or extra item moves the score, and the dry run checks that arm A doesn't
-  saturate before round 1 is frozen.
+  saturate before round 1 is frozen. The first dry run did saturate, and the questions were hardened
+  (§8): trait dispatch, a second ring of callers and a cross-crate trace replace lookups that `rg`
+  and `cargo metadata` answer exactly.
 
 graphify-ab dropped a Toolbox arm because its questions were about code, which a catalog doesn't
-hold. Here two of the five questions (Q1, Q2) are about crate structure, which a repo portal over a
-Cargo workspace does hold, and three (Q3 to Q5) are about code, which it doesn't. So the third arm is
-the box as a repository would adopt it, asked the questions Graphify is built for and some it shares.
+hold. Here one of the four questions (Q1) is about crate structure, which a repo portal over a Cargo
+workspace does hold, and three (Q2 to Q4) are about code, which it doesn't. So the third arm is the
+box as a repository would adopt it, asked the questions Graphify is built for and one it shares.
 
 | If | Then |
 |---|---|
@@ -93,24 +95,26 @@ builds both arms' additions from it:
 
 ## 4. Scoring
 
-Five questions ([prompts/questions-codex.md](prompts/questions-codex.md)), each scored 0 to 1; a
+Four questions ([prompts/questions-codex.md](prompts/questions-codex.md)), each scored 0 to 1; a
 run's **score** is their mean:
 
 | Q | Asks | Scored by | Gold size |
 |---|---|---|---|
 | Q1 | Direct and indirect dependents of `codex-tools` | Mean of the two sets' F1 | 7 direct, 22 indirect |
-| Q2 | The five crates with the most direct dependents, with counts | ½ names, ½ exact counts | 5 |
-| Q3 | Functions that call `get_git_repo_root` | F1 | 15 functions in 10 crates |
-| Q4 | Crates whose code refers to `ModelProviderInfo` | F1 | 11 crates |
-| Q5 | `codex sandbox` on Linux, entry point to exec | Key-fact coverage (covered 1, partial ½) | 6 facts |
+| Q2 | Non-test functions that call the trait method `ThreadStore::read_thread`, not same-named inherent methods | F1 | 12 functions in 3 crates |
+| Q3 | Non-test functions that call `get_git_repo_root` through exactly one intermediate function | F1 | 19 functions in 10 crates |
+| Q4 | An `exec_command` tool call on Linux, from the completed response item to the process spawn | Key-fact coverage (covered 1, partial ½) | 8 facts |
 
-Q1 and Q2 are about crate structure (the **structure subscore** is their mean); Q3 to Q5 are about
-code (the **code subscore**). The gold and its rubric are kept outside the repository until the runs
-finish and then committed as `gold/codex.md`. Its hash, recorded now:
+Q1 is about crate structure (the **structure subscore**); Q2 to Q4 are about code (the **code
+subscore** is their mean). Q2 needs dispatch through `dyn ThreadStore` told apart from two inherent
+methods of the same name; Q3 needs the callers of 15 callers, with test functions excluded at both
+hops; Q4 crosses five crates, a spawned task, a trait object and a generic trait. The gold and its
+rubric are kept outside the repository until the runs finish and then committed as `gold/codex.md`.
+Its hash, recorded now:
 
 | File | sha256 |
 |---|---|
-| `gold/codex.md` | `1eec308cfd9c55a4afb88ea91b0ff78c2aa14f1b4e076d6a908c1cea598ae878` |
+| `gold/codex.md` | `66b9afb0aaa4a6b8cca5f21b43fd6931f563534b864caef0a12b6655a69462c2` |
 
 Answers are graded blind: [harness/blind.py](harness/blind.py) shuffles them under random labels and
 replaces "graphify" and "toolbox" with "[tool]" and drops the portal's `crate:` id prefix. The
@@ -149,15 +153,17 @@ or both M2 and M3 fail. **Toolbox helps** and **hurts** are the same over M4 to 
 none holds and one fails. If M10 (M11) fails, the runs without a call are reported, and the verdict
 for Graphify (Toolbox) is "not shown", whatever the others say.
 
-**The designer's prediction, before the run:**
+**The designer's prediction, before the run** (revised with the questions after the first dry run, §8):
 
-- **M1 and M4 are inconclusive.** Without a turn cap, arm A finds callers and references with `rg`
-  and dependents with `cargo metadata` or the Cargo.toml files. Its errors are in mapping
-  directories to package names and in separating direct from indirect dependents, which are a few
-  items out of many.
-- **M13 holds:** the portal's `dependentCount` and `dependents` make Q2 exact and Q1's direct set a
-  single read. **M12 is inconclusive:** Graphify's `calls` edges list Q3's callers, but A's `rg`
-  does too.
+- **M1 and M4 are inconclusive.** Without a turn cap, arm A reads every call site `rg` finds, and the
+  first dry run showed it computing crate dependents exactly with `cargo metadata`. Its errors are in
+  telling the trait method from same-named inherent methods, in test-function boundaries at the
+  second hop, and in the trace's middle (the registry and the orchestrator), which are a few items
+  out of many.
+- **M13 is inconclusive:** Q1 is now the only structure question, and arm A answered it exactly in
+  the dry run. **M12 is inconclusive, leaning to fail on Q2:** Graphify's `calls` edges are resolved
+  by name, so they mix the trait method with `LiveThread::read_thread` and `CodexThread::read_thread`;
+  its edges help on Q3's second ring and on Q4's path.
 - **M2 and M5 are inconclusive.** Graphify's answers are node and edge lists, and Toolbox's search and
   get return whole entities with every function, so both still read a lot.
 - **M3 and M6 are inconclusive; M7 to M9 are inconclusive; M10 and M11 hold.**
@@ -207,6 +213,32 @@ that the transcript reports calls and read for every arm, that `graphify` and `t
 their workspaces, and that arm A leaves headroom (L21): if arm A scores 0.9 or more, the questions are
 hardened, the change and the new gold hash are recorded here, and the dry run is repeated. Its
 outcome is recorded here before round 1 launches.
+
+**First dry run** (`prompts/rendered/rdry/`, five questions, gold hash `1eec308c…ae878`): every arm
+scored 1.0 on every question, so there was no headroom.
+
+| Arm | Run | Score | Calls | Read (chars) | Tool calls | Wall (s) |
+|---|---|---|---|---|---|---|
+| A | codex-2 | 1.0 | 36 | 140,066 | — | 199 |
+| B | codex-3 | 1.0 | 32 | 139,699 | `graphify` 4 (`query`, `path`, `explain`) | 172 |
+| C | codex-1 | 1.0 | 28 | 123,081 | `toolbox` 4 (`search`, `query`, `get`) | 168 |
+
+Every arm, including B and C, computed the crate questions with `cargo metadata` and a script, and
+answered the caller and reference questions with `rg`. The trace (old Q5) followed one binary's
+`main` in two crates. The harness worked: calls and read came out for every arm, and `graphify` and
+`toolbox` answered in their workspaces. Two harness changes followed. Every arm wrote scratch
+files to the shared `/tmp`, where concurrent runs could collide, so each run now gets its own
+scratch directory, named in the prompt and allowed by `count.py`. And `count.py` counted a Python
+line that contained "toolbox d" as a Toolbox call, so it now matches only Toolbox's own commands (C's
+count above is with the fix; it was 5).
+
+**Hardening.** Q1 is kept. Old Q2 (top five crates by dependents), Q3 (direct callers of
+`get_git_repo_root`) and Q4 (crates referring to `ModelProviderInfo`) are dropped: each is one
+`cargo metadata` script or one `rg`. The new Q2 to Q4 (§4) need what `rg` doesn't give: which
+`read_thread` a call resolves to, callers of callers with test functions excluded at both hops, and a
+path through a task spawn, a trait object and a generic trait into two other crates. The gold was
+checked at every call site by hand. The new gold hash is in §4. The second dry run is
+`prompts/rendered/rdry2/`.
 
 ## Sources
 

@@ -6,7 +6,9 @@
 Arms A (nothing), B (Graphify) and C (Toolbox) get <runs-per-arm> runs each, numbered in a
 shuffled order so a workspace's name doesn't say its arm: `codex-<n>`. Prompts go to
 prompts/rendered/r<round>/codex-<n>.md and the run-to-arm map to arms.tsv (run, arm, port). With
---workspaces, each run gets a copy of the frozen export at /tmp/graphify-monorepo-ab/r<round>/codex-<n>.
+--workspaces, each run gets a copy of the frozen export at /tmp/graphify-monorepo-ab/r<round>/codex-<n>
+and an empty scratch directory at /tmp/graphify-monorepo-ab/scratch/r<round>/codex-<n>, so concurrent
+runs don't share scratch files in /tmp.
 Arm B's copy also gets the graphify-out/ the build left and the `.cursor/rules/graphify.mdc` that
 `graphify cursor install` writes. Arm C's gets the portal at `.toolbox/toolbox.yaml` and its rule at
 `.cursor/rules/toolbox.mdc`, naming the port that `serve.sh` starts its server on.
@@ -42,21 +44,26 @@ def main() -> None:
     rng = random.Random(f"graphify-monorepo-ab-r{rnd}")
     order = ["A"] * runs + ["B"] * runs + ["C"] * runs
     rng.shuffle(order)
-    base = 8390 if rnd == "dry" else 8300
+    base = 8390 if rnd.startswith("dry") else 8300
     arms = []
     for n, arm in enumerate(order, 1):
         run = f"codex-{n}"
         dest = WORK / f"r{rnd}" / run
         port = base + n if arm == "C" else None
         rule = {"A": "", "B": rule_block("graphify.mdc", None), "C": rule_block("toolbox.mdc", port)}[arm]
+        scratch = WORK / "scratch" / f"r{rnd}" / run
         prompt = (template.replace("{RULE}", rule).replace("{QUESTIONS}", questions)
-                  .replace("{REPO}", "Codex").replace("{DEST}", str(dest)))
+                  .replace("{REPO}", "Codex").replace("{DEST}", str(dest))
+                  .replace("{SCRATCH}", str(scratch)))
         (out / f"{run}.md").write_text(prompt)
         arms.append(f"{run}\t{arm}\t{port or '-'}")
         if not build:
             continue
         if dest.exists():
             shutil.rmtree(dest)
+        if scratch.exists():
+            shutil.rmtree(scratch)
+        scratch.mkdir(parents=True)
         shutil.copytree(WORK / "src" / "codex", dest, symlinks=True)
         rules = dest / ".cursor" / "rules"
         if arm == "B":
