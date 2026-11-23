@@ -4,12 +4,76 @@
 standalone tool a portal may carry, and arm C is the box's own read path (a repo portal and its CLI
 reads). This benchmark asks what each gives a coding agent on Graphify's home ground.
 
-**Status:** pre-registered. §0 is filled in after the run; nothing else changes after the first
-launch of round 1, except the dry run's outcome in §8.
+**Status:** complete (round 1). §0 was filled in after the run. Nothing else changed after the first
+launch, except a `yamark format` of `harness/portal/toolbox.yaml` that parses to the same data.
 
 ## 0. Results
 
-To be filled in after round 1.
+**Neither Graphify nor a Toolbox repo portal helped or hurt on Codex, and neither beat the other.**
+In round 1 (15 runs, 2026-11-23), M1 to M9, M12 and M13 are inconclusive, and M10 and M11 hold. That
+matches the designer's prediction on every outcome, though not on M2 and M3's lean: arm B read and
+called less than arm A, not more, within *W*. §1's "Otherwise" row applies:
+[D01M84ZW6K2V9CV2SD644DE5M0S](../../docs/decisions/D01M84ZW6K2V9CV2SD644DE5M0S.md) stands for large
+monorepos too, and the friction is triaged below. A fresh agent graded the answers blind and applied
+§5 ([ADJUDICATION.md](ADJUDICATION.md)). No run was void and no run was rerun.
+
+| Id | Measure | A median (range) | B median (range) | C median (range) | *W* | Verdict |
+|---|---|---|---|---|---|---|
+| M1 | Score, A vs B (guard) | 0.994 (0.988–1) | 0.988 (0.981–1) | | 0.019 | Inconclusive |
+| M2 | Read, chars, A vs B | 255,863 (203,379–261,195) | 204,870 (198,160–256,203) | | 58,043 | Inconclusive |
+| M3 | Calls, A vs B | 56 (51–77) | 54 (49–59) | | 26 | Inconclusive |
+| M4 | Score, A vs C (guard) | 0.994 | | 0.994 (0.981–1) | 0.019 | Inconclusive |
+| M5 | Read, chars, A vs C | 255,863 | | 206,872 (183,831–275,061) | 91,230 | Inconclusive |
+| M6 | Calls, A vs C | 56 | | 54 (45–73) | 28 | Inconclusive |
+| M7 | Score, B vs C | | 0.988 | 0.994 | 0.019 | Inconclusive |
+| M8 | Read, C vs B | | 204,870 | 206,872 | 91,230 | Inconclusive |
+| M9 | Calls, C vs B | | 54 | 54 | 28 | Inconclusive |
+| M10 | B runs calling `graphify` | | 5 of 5 (3 to 5 calls) | | | Holds |
+| M11 | C runs calling `toolbox` | | | 5 of 5 (1 to 4 calls) | | Holds |
+| M12 | Code subscore, A vs B (guard) | 1 (0.991–1) | 0.991 (0.991–1) | | 0.0085 | Inconclusive, exactly at *W* |
+| M13 | Structure subscore, A vs C (guard) | 1 (0.95–1) | | 1 (0.95–1) | 0.05 | Inconclusive |
+
+What the numbers say, beyond the bar:
+
+- **The questions saturated again.** Two hardenings (§8) took Q2 to trait dispatch, Q3 to two hops
+  with test functions excluded at both, and Q4 across five crates, a spawned task, a trait object and
+  a generic trait. Every answer still scored 0.981 or more, Q2 and Q4 were perfect in every run, and
+  no answer listed a false positive. Only two boundary conventions separated answers: four workspace
+  packages outside the explicit `members` list (Q1, missed by 7 runs) and a call made beside a nested
+  function (Q3, missed by 8). Both splits fell across all three arms. On a 950k-line Rust monorepo,
+  without a turn cap, agents with only `rg` and file reads answered as completely as with either tool.
+- **Both tool arms read about a fifth less than the baseline, inside *W*.** That is the nearest any
+  cost hypothesis came to holding: M2's difference is 88% of *W*. Calls barely moved (56, 54, 54). One
+  run in each tool arm read as much as arm A's typical run.
+- **Graphify oriented but didn't answer.** Every B run queried the graph and then read the code as
+  arm A did. Graphify results were 4–15% of each B run's read, and no B answer cites the graph as
+  evidence. The graph has no crate or Cargo nodes, so `graphify query "which crates depend on
+  codex-tools"` returned nodes unrelated to dependents; `explain read_thread` was ambiguous across
+  6 nodes; and `path` found no directed path from `handle_output_item_done` to `spawn_pty_process`.
+- **The portal answered Q1's direct set and nothing more.** Every C run began with `toolbox get
+  crate:codex-tools`, and four of five answers cite its `dependents` field for the 7 direct
+  dependents. That field is direct only, and the CLI's `graph` couldn't follow one relation in one
+  direction, so each run computed the 22 indirect ones another way. The three C runs that ran `cargo
+  metadata` listed all 22; the two that didn't listed 18. Toolbox results were 1–10% of each C run's
+  read.
+
+**Friction, triaged.**
+
+| Friction | Where | Triage |
+|---|---|---|
+| `toolbox graph` had only `--depth`, though the REST and MCP reads already filter by relation and direction | Toolbox CLI | **Fixed** (`--relation`, `--direction`, and the `graph` skill). On a frozen arm C workspace, `toolbox graph crate:codex-tools --relation dependsOn --direction in --depth 3` returns all 29 dependents in one call |
+| The graph read clamps depth to 3 | Toolbox API | **Open** ([Q20](../../docs/questions.md)). Codex's deepest dependent is 3 hops away; a deeper workspace would need a transitive read |
+| `search` matches ids and titles only, so `search read_thread` found nothing, though the portal lists each crate's functions | Toolbox API | **Open** (Q20). Recommendation: don't widen it; a portal that indexes code becomes the code index `rg` already is |
+| `get` returned about 16k characters per crate, and agents cut it with `head -c` | Harness rule | The `get` and `query` skills already name `--fields`; this benchmark's `toolbox.mdc` didn't. A next round's rule names it |
+| No crate or Cargo nodes; ambiguous names; no directed call paths | Graphify | A tool's own gaps; published here, not worked around |
+| `blind.py` redacts tool names but not "portal" or entity field names, so four C answers were recognisable | Harness | Didn't affect these mechanical grades. A benchmark with judged rubrics redacts each arm's vocabulary |
+| `count.py`'s contamination check sees absolute paths only | Harness | The adjudicator scanned every transcript for relative escapes and found none. A next harness resolves paths against each call's working directory |
+| `serve.sh` prints each server's crate count to the terminal only | Harness | Readiness was ruled from poll timing. A next harness logs the count |
+| Q1 leaves open whether implicit workspace members count | Question | The gold follows `cargo metadata`, and the adjudicator upheld it. A next question names its source |
+
+Files: [results/r1.tsv](results/r1.tsv) (measures), `results/r1/` (each run's measures and answers,
+and the [blind grades](results/r1/grades-r1.md)), [results/r1/blind-key.tsv](results/r1/blind-key.tsv)
+(blind labels), [gold/](gold/) (hash as in §4).
 
 ## 1. Why
 
