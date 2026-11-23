@@ -67,3 +67,8 @@ All arms 5/5 on read-key via score_read.py.
 ## Rerun v2 (learning-tax fixes, 2026-11-23)
 
 Product fixes on branch `cursor/connector-learning-dx-530d` (D01M83FFM2K6XS4EAVHVP92TBDZ). Same bar C1–C3. Fresh agents for phase 1.
+
+### Phase 1 v2 agent ids
+- A Toolbox: bc-5133c227-6bc1-5efa-b07f-9c22a1bb6e30
+- B Ocean: bc-0c51db1a-e909-51c7-9492-4a8c35124dd9
+- C Backstage: bc-22217758-3292-54f0-b08c-b3f6e652cce4
