@@ -1,9 +1,15 @@
 #!/usr/bin/env bash
-# Install a released Toolbox for repo portals: toolbox + the connectors
-# actions/report uses (workspace, runner). Same layout as actions/report/install.sh.
-# Usage:
-#   TOOLBOX_VERSION=0.1.0 ./scripts/install-release.sh
-#   TOOLBOX_VERSION=0.1.0 TOOLBOX_BIN=~/.local/bin ./scripts/install-release.sh
+# Unpack the repo-portal binaries (toolbox, workspace, runner) into one directory
+# after checking each release archive's SHA-256. Same layout as actions/report/install.sh.
+#
+# The consumer install is the installer on the GitHub release.
+# See site/src/content/docs/start/install.md. For v0.1.1:
+#   curl --proto '=https' --tlsv1.2 -LsSf \
+#     https://github.com/loganvolkers/toolbox/releases/download/v0.1.1/toolbox-cli-installer.sh | sh
+#
+# This script is for a checkout that already exists:
+#   TOOLBOX_VERSION=0.1.1 ./scripts/install-release.sh
+#   TOOLBOX_VERSION=0.1.1 TOOLBOX_BIN=~/.local/bin ./scripts/install-release.sh
 # Private repos: set GH_TOKEN or GITHUB_TOKEN (contents:read on the Toolbox repo).
 set -euo pipefail
 TOOLBOX_REPO="${TOOLBOX_REPO:-loganvolkers/toolbox}"

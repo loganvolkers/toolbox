@@ -15,7 +15,7 @@ The operator SDLC is that loop: author the manifest, validate it, test the rules
 |---|---|
 | `toolbox.yaml` | Kinds, fields, the map from connector records, and the scorecard rules. Thresholds live here |
 | Fixtures and `tests/*.test.yaml` | The cases that pin what each rule means |
-| Connectors | The programs that read GitHub, a checkout, a directory, or a system you connect yourself |
+| Connectors | Optional. A portal names a shipped `builtin:` or a package someone else published. Writing a new connector is [Write a connector](/toolbox/authors/connectors/) |
 | A running service | `toolbox serve`, with Postgres when the catalog has to survive a restart |
 
 A change to a standard is a change to this repository's manifest. The plan prints who would drop a level before the change merges.

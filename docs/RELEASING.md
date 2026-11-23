@@ -62,20 +62,30 @@ python3 scripts/test-apply-changesets.py
 
 Verify an artifact with `gh attestation verify <file> --repo <owner>/toolbox`.
 
-## Install what a repo portal needs
+## Install what a consumer needs
 
-`toolbox report` needs the `toolbox` binary plus sibling connector binaries
-(`toolbox-connector-workspace`, and `toolbox-connector-runner` when the portal uses the runner).
-Release installers are one app each; for a single install that unpacks the set used by
-`actions/report`, run:
+cargo-dist publishes one installer per app. The public page is
+`site/src/content/docs/start/install.md`.
+
+An operator installs the CLI. A portal whose manifest names `builtin:<name>`
+also installs `toolbox-connector-<name>`. A repo portal names `builtin:workspace`.
+`builtin:runner` is a second installer when that connector is enabled. A
+connector author installs the CLI and builds the scaffold with Rust
+(`site/src/content/docs/authors/connectors.md`).
 
 ```bash
-# From a Toolbox checkout, or copy scripts/install-release.sh
-TOOLBOX_VERSION=0.1.1 ./scripts/install-release.sh
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/loganvolkers/toolbox/releases/download/v0.1.1/toolbox-cli-installer.sh | sh
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/loganvolkers/toolbox/releases/download/v0.1.1/toolbox-connector-workspace-installer.sh | sh
+export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
 toolbox --version   # 0.1.1
-toolbox doctor examples/repo-portal-starter
-toolbox report examples/repo-portal-starter
 ```
+
+Windows uses the matching `*-installer.ps1` (`irm … | iex`).
+
+`scripts/install-release.sh` unpacks `toolbox`, `toolbox-connector-workspace`
+and `toolbox-connector-runner` into one directory after checking each
+`.sha256`, for a checkout that already exists (the same layout as
+`actions/report/install.sh`).
 
 In CI, set `toolbox-version: "0.1.1"` on `loganvolkers/toolbox/actions/report` so the action
 downloads checksum-verified binaries instead of compiling.
