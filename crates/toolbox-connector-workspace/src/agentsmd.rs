@@ -114,31 +114,11 @@ fn resolve(file: &str, target: &str) -> String {
 }
 
 fn hidden_count(text: &str) -> i64 {
-    text.chars()
-        .filter(|c| {
-            let u = *c as u32;
-            (0x200B..=0x200F).contains(&u)
-                || u == 0xFEFF
-                || (0x202A..=0x202E).contains(&u)
-                || (0x2066..=0x2069).contains(&u)
-        })
-        .count() as i64
+    crate::hygiene::hidden_count(text)
 }
 
 fn secrets(rel: &str, text: &str) -> Vec<String> {
-    let patterns = [
-        ("aws-access-key", r"AKIA[0-9A-Z]{16}"),
-        ("github-token", r"ghp_[A-Za-z0-9]{36}"),
-    ];
-    let mut hits = Vec::new();
-    for (n, line) in text.lines().enumerate() {
-        for (kind, pat) in patterns {
-            if compile(pat).is_match(line) {
-                hits.push(format!("{}:{} {kind}", rel, n + 1));
-            }
-        }
-    }
-    hits
+    crate::hygiene::secrets(rel, text)
 }
 
 fn compile(pat: &str) -> Regex {

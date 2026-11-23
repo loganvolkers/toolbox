@@ -146,10 +146,16 @@ kinds:
         description: What the entry fails to declare (question, layers, status).
         computed: >-
           (entity.question == '' ? ['no question'] : []) + (entity.layers.size()
-          == 0 ? ['no SDLC layer'] : []) + entity.layers.filter(l, !(l in
-          ['maintainer', 'package-author', 'operator', 'user'])).map(l, 'unknown
-          layer ' + l) + (entity.status in ['designed', 'blocked', 'complete',
-          'archived'] ? [] : ['unknown status ' + entity.status])
+          == 0 ? ['no SDLC layer'] : []) + (entity.status in ['designed',
+          'blocked', 'complete', 'archived'] ? [] : ['unknown status ' +
+          entity.status])
+      unknownLayers:
+        type: list
+        items: string
+        description: Declared layers that are not one of the four SDLC layers.
+        computed: >-
+          entity.layers.filter(l, !(l in ['maintainer', 'package-author',
+          'operator', 'user'])).map(l, 'unknown layer ' + l)
       rivalGaps:
         type: list
         items: string
@@ -227,14 +233,18 @@ kinds:
 scorecards:
   - name: maintainer-benchmark
     kind: Benchmark
+    description: >-
+      Each DX Benchmark: declared, pre-registered against a rival on pinned
+      open-source repositories, and run with results and the fixes it produced
+      (D01M82X2K0DYWTCA23MQJ4CKR0Z).
     owner: group:maintainers
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze}
     rules:
     - name: declared
       level: bronze
-      check: entity.declarationGaps.size() == 0
-      evidence: entity.declarationGaps
+      check: entity.declarationGaps.size() + entity.unknownLayers.size() == 0
+      evidence: entity.declarationGaps + entity.unknownLayers
       fix: >-
         Give the entry a one-sentence question, the SDLC layers it measures
         (maintainer, package-author, operator, user) and a status (designed,

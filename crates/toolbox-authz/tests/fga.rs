@@ -59,6 +59,11 @@ fn openfga_available() -> bool {
 #[tokio::test]
 async fn reference_fga_tests_pass_through_the_authorizer() {
     if !openfga_available() {
+        // CI sets TOOLBOX_REQUIRE_OPENFGA, so a missing binary fails there instead of passing.
+        assert!(
+            std::env::var_os("TOOLBOX_REQUIRE_OPENFGA").is_none(),
+            "openfga binary not found and TOOLBOX_REQUIRE_OPENFGA is set (set TOOLBOX_OPENFGA_BIN)"
+        );
         eprintln!("skipping: openfga binary not found (set TOOLBOX_OPENFGA_BIN)");
         return;
     }

@@ -125,6 +125,8 @@ connectors:
         - kind: sdlc-stage
           globs: [portal/sdlc/stages/*.yaml]
           paths: [docs, checks]
+          commands: [commands]
+          ci: [checks]
         # DX Benchmarks, one entry per benchmark (docs/design/dx-benchmarks.md)
         - kind: benchmark
           globs: [portal/benchmarks/*.yaml]

@@ -79,8 +79,10 @@ fn is_action_path(path: &str) -> bool {
 mod tests {
     #[test]
     fn embedded_schemas_compile() {
-        super::manifest();
-        super::connector_messages();
-        super::executor_messages();
+        // Each compiles (a bad schema panics) and rejects a value that is no document at all.
+        let not_a_document = serde_json::json!(42);
+        assert!(!super::manifest().is_valid(&not_a_document));
+        assert!(!super::connector_messages().is_valid(&not_a_document));
+        assert!(!super::executor_messages().is_valid(&not_a_document));
     }
 }

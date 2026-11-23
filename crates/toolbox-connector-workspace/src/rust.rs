@@ -24,6 +24,9 @@ struct Metrics {
     undocumented: Vec<String>,
     functions: Vec<Function>,
     unit_tests: usize,
+    /// Tests whose body asserts nothing: no `assert*!`/`panic!`, no `.unwrap()`/`.expect()`,
+    /// and no `#[should_panic]`. `#[test] fn t() {}` passes `cargo test` and proves nothing.
+    tests_without_asserts: Vec<String>,
     unwraps: usize,
     parse_errors: Vec<String>,
 }
@@ -110,6 +113,17 @@ impl Walker<'_> {
     ) {
         if is_test_fn(attrs) {
             self.m.unit_tests += 1;
+            let mut a = Asserts(false);
+            a.visit_block(block);
+            let should_panic = attrs.iter().any(|x| x.path().is_ident("should_panic"));
+            if !a.0 && !should_panic {
+                let q = self.qualified(name);
+                self.m.tests_without_asserts.push(format!(
+                    "{q} ({}:{})",
+                    self.file,
+                    span.start().line
+                ));
+            }
             return;
         }
         if self.in_test {
@@ -123,6 +137,32 @@ impl Walker<'_> {
             lines: lines_of(span),
             complexity: c.0,
         });
+    }
+}
+
+/// Whether a block asserts anything (see `Metrics::tests_without_asserts`).
+struct Asserts(bool);
+
+impl<'ast> Visit<'ast> for Asserts {
+    fn visit_macro(&mut self, m: &'ast syn::Macro) {
+        if let Some(seg) = m.path.segments.last() {
+            let n = seg.ident.to_string();
+            if n.starts_with("assert") || n == "panic" || n == "unreachable" {
+                self.0 = true;
+            }
+        }
+        visit::visit_macro(self, m);
+    }
+
+    fn visit_expr_method_call(&mut self, c: &'ast syn::ExprMethodCall) {
+        let n = c.method.to_string();
+        if matches!(
+            n.as_str(),
+            "unwrap" | "expect" | "unwrap_err" | "expect_err"
+        ) {
+            self.0 = true;
+        }
+        visit::visit_expr_method_call(self, c);
     }
 }
 
@@ -226,9 +266,15 @@ fn parse(path: &Path, m: &mut Metrics, rel: &str) -> Option<syn::File> {
 
 /// The first 12 hex digits of the SHA-256 over the crate's `src/` files (paths and contents): an
 /// assessment of the crate is stale when it changes.
+/// What a crate-design assessment judges: its sources, its tests and its manifest (the
+/// dependencies behind `replaceable-defaults`), so a change to any of them makes the review stale.
 fn source_hash(dir: &Path) -> String {
     let mut h = Sha256::new();
-    for path in rust_files(&dir.join("src")) {
+    let files = rust_files(&dir.join("src"))
+        .into_iter()
+        .chain(rust_files(&dir.join("tests")))
+        .chain(Some(dir.join("Cargo.toml")).filter(|p| p.exists()));
+    for path in files {
         h.update(
             path.strip_prefix(dir)
                 .unwrap_or(&path)
@@ -303,6 +349,7 @@ pub fn analyse(dir: &Path, entry: Option<&Path>) -> Value {
         "maxFnLines": m.functions.iter().map(|f| f.lines).max().unwrap_or(0),
         "maxComplexity": m.functions.iter().map(|f| f.complexity).max().unwrap_or(0),
         "unitTests": m.unit_tests,
+        "testsWithoutAsserts": m.tests_without_asserts.iter().chain(&it.tests_without_asserts).collect::<Vec<_>>(),
         "integrationTests": integration_tests,
         "unwraps": m.unwraps,
         "parseErrors": m.parse_errors,

@@ -74,6 +74,9 @@ kinds:
 scorecards:
   - name: maintainer-docs
     kind: Doc
+    description: >-
+      Each design and reference doc: links that resolve, its SDLC layer named,
+      cited decisions that exist, a status banner and its sources (D84).
     owner: group:maintainers
     levels: [bronze, silver]
     appliesTo: >-
@@ -105,11 +108,15 @@ scorecards:
     - name: status-banner
       level: silver
       check: entity.area != 'design' || entity.hasStatus
+      evidence: "['design doc with no *Status:* line']"
       fix: >-
-        Start the design doc with a *Status:* line saying what is decided and
-        what is built.
+        Start the design doc under `docs/design/` with a `*Status:*` line saying
+        what is decided and what is built.
     - name: cites-sources
       level: silver
       check: entity.area != 'design' || entity.hasSources
-      fix: "End the design doc with a ## Sources section (AGENTS.md working rules)."
+      evidence: "['design doc with no ## Sources section']"
+      fix: >-
+        End the design doc with a `## Sources` section (AGENTS.md working
+        rules).
     facets: {summary: public, details: public}

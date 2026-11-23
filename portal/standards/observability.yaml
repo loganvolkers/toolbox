@@ -89,6 +89,10 @@ kinds:
 scorecards:
   - name: maintainer-observability
     kind: Observability
+    description: >-
+      Toolbox's runtime telemetry checklist: the OTel crate, metric catalog,
+      structured logs, alert stubs and an exported trace, each a file that
+      exists (docs/design/observability.md).
     owner: group:maintainers
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze}

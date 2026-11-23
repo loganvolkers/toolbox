@@ -68,6 +68,9 @@ pub fn stats(runs: &[Value]) -> Value {
         "completed": completed.len(),
         "decided": decided.len(),
         "failed": failed,
+        // Shown beside the fail rate, which leaves them out: cancelling a run that is about to fail
+        // would otherwise lower the rate unnoticed.
+        "cancelled": completed.iter().filter(|r| conclusion(r) == "cancelled").count(),
         "failRate": pct(failed, decided.len()),
         "rerunRate": pct(reruns, completed.len()),
         "failingStreak": streak,

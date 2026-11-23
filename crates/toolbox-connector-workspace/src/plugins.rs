@@ -176,26 +176,11 @@ fn secret_shape(text: &str) -> bool {
 }
 
 fn secrets(rel: &str, text: &str) -> Vec<String> {
-    let patterns = [
-        ("aws-access-key", compile(r"AKIA[0-9A-Z]{16}")),
-        ("github-token", compile(r"ghp_[A-Za-z0-9]{36}")),
-    ];
-    let mut hits = Vec::new();
-    for (i, line) in text.lines().enumerate() {
-        for (kind, re) in &patterns {
-            if re.is_match(line) {
-                hits.push(format!(
-                    "{}:{} {kind}",
-                    PathBuf::from(rel)
-                        .file_name()
-                        .map(|n| n.to_string_lossy().into_owned())
-                        .unwrap_or_else(|| rel.to_owned()),
-                    i + 1
-                ));
-            }
-        }
-    }
-    hits
+    let name = PathBuf::from(rel)
+        .file_name()
+        .map(|n| n.to_string_lossy().into_owned())
+        .unwrap_or_else(|| rel.to_owned());
+    crate::hygiene::secrets(&name, text)
 }
 
 fn compile(src: &str) -> Regex {

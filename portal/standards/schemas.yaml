@@ -31,6 +31,10 @@ scorecards:
   # names another dialect or a remote schema is not the contract the server runs.
   - name: maintainer-schema
     kind: JsonSchema
+    description: >-
+      Each JSON Schema compiled into the binary: Draft 2020-12 with an $id,
+      titled and described, wired into the binary, with local $refs only and
+      no credentials (D77).
     owner: group:maintainers
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze}
@@ -54,14 +58,14 @@ scorecards:
       check: entity.descriptionChars > 0
       evidence: "['no description']"
       fix: >-
-        Add a root description saying which contract this document is. Readers
+        Add a root `description` saying which contract this document is. Readers
         and agents meet the schema before the code.
     - name: titled
       level: silver
       check: entity.titleChars > 0
       evidence: "['no title']"
       fix: >-
-        Add a title. JSON Schema defines title as the short name of the
+        Add a root `title`. JSON Schema defines it as the short name of the
         document.
     - name: wired-in
       level: silver
@@ -79,7 +83,7 @@ scorecards:
         Point $ref at a fragment in this file. The compiler embeds the document
         and does not fetch a remote schema.
     - name: no-hardcoded-secrets
-      level: gold
+      level: bronze
       check: entity.secretHits.size() == 0
       evidence: entity.secretHits
       fix: >-

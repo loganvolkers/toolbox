@@ -68,6 +68,7 @@ mod data;
 mod deps;
 mod examples;
 mod expo;
+mod hygiene;
 mod js_workspace;
 mod npm;
 mod plugins;
@@ -692,7 +693,10 @@ impl Workspace {
             return Err("not an assessment (needs entity and rubric)".into());
         }
         let id = toolbox_connect::assessment::external_id(&doc);
-        Ok((id, toolbox_connect::assessment::record(&doc, Some(rel))))
+        Ok((
+            id,
+            toolbox_connect::assessment::record_in(&doc, Some(rel), Some(&self.root)),
+        ))
     }
 
     fn emit_betterer(&self, paths: &[String], kinds: &[&str], out: &mut Out) {

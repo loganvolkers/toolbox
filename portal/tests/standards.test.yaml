@@ -96,11 +96,12 @@ assert:
       score('user-mcp', 'mcp-tool:search').evidence['inputs-described'] ==
       ['kind', 'limit', 'query'] && score('user-mcp',
       'mcp-tool:search').evidence['documented'] == ['documented in: nothing']
-  - name: a failing rule without an evidence expression has none
+  - name: an unexercised command's evidence names it and where a run would be
     expect: >-
       score('operator-cli', 'command:validate').rules['exercised'] == 'fail'
-      && (!has(score('operator-cli', 'command:validate').evidence) ||
-      !('exercised' in score('operator-cli', 'command:validate').evidence))
+      && score('operator-cli', 'command:validate').evidence['exercised'] ==
+      ['no script under scripts/ and no test under crates/*/tests runs toolbox
+      validate']
   - name: >-
       without a runner run, contract-tested falls back to tools/call bodies
       and says so
@@ -109,8 +110,9 @@ assert:
       ['no tools/call naming this tool in tests or scripts (static mode)']
   - name: observed calls from the runner decide contract-tested when present
     expect: >-
-      entity('mcp-tool:get').observed.calls == 0 && score('user-mcp',
-      'mcp-tool:get').rules['contract-tested'] == 'fail' &&
+      entity('mcp-tool:get').observed.calls == 2 && score('user-mcp',
+      'mcp-tool:get').evidence['contract-tested'] == ['observed 2 call(s) in
+      the MCP contract tests, 2 of them errors'] &&
       entity('mcp-tool:search').observed.calls == 4 && score('user-mcp',
       'mcp-tool:search').rules['contract-tested'] == 'pass'
   # CI security (fixtures: this repo's ci.yml and report action, trimmed; a synthetic release.yml)
@@ -154,8 +156,8 @@ assert:
     expect: >-
       score('maintainer-ci-reliability',
       'workflow:.github/workflows/ci.yml').evidence['fail-rate-under-20'] ==
-      ['92% of the last 12 decided runs on main failed'] &&
-      score('maintainer-ci-reliability',
+      ['92% of the last 12 decided runs on main failed (0 cancelled runs not
+      counted)'] && score('maintainer-ci-reliability',
       'workflow:.github/workflows/ci.yml').rules['main-not-stuck-red'] ==
       'fail'
   - name: no job timeouts and no concurrency group are named
@@ -309,7 +311,7 @@ assert:
       an invalid skill fails bronze and names the frontmatter, pronoun and
       secret
     expect: |-
-      score('maintainer-skill', 'skill:plugins/demo/unsafe').level == 'none' && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['valid-frontmatter'] == ["Directory name 'unsafe' must match skill name 'Unsafe'"] && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['description-says-when'] == ['12 characters'] && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['third-person'] == ['pronoun: you'] && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['no-hidden-instructions'] == ['3 hidden or bidi characters'] && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['no-hardcoded-secrets'] == ['SKILL.md:9 github-token'] && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['portable-paths'] == ['SKILL.md:4'] && score('maintainer-skill', 'skill:plugins/demo/unsafe').rules['has-procedure'] == 'fail'
+      score('maintainer-skill', 'skill:plugins/demo/unsafe').level == 'none' && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['valid-frontmatter'] == ["Directory name 'unsafe' must match skill name 'Unsafe'"] && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['description-says-when'] == ['12 characters'] && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['third-person'] == ['pronoun: you'] && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['no-hidden-instructions'] == ['3 hidden characters, HTML comments or unreadable files'] && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['no-hardcoded-secrets'] == ['SKILL.md:9 github-token'] && score('maintainer-skill', 'skill:plugins/demo/unsafe').evidence['portable-paths'] == ['SKILL.md:4'] && score('maintainer-skill', 'skill:plugins/demo/unsafe').rules['has-procedure'] == 'fail'
   # Connectors (synthetic fixtures: one gold, one bronze, one below bronze)
   - name: a documented connector that CI conformance-tests reaches gold
     expect: >-
@@ -672,6 +674,18 @@ assert:
       score('maintainer-supply-chain', 'repo:acme/unsafe').rules) &&
       score('maintainer-supply-chain',
       'repo:acme/partial').rules['code-scanning-pinned'] == 'fail'
+  - name: >-
+      a page whose title another page uses misses gold, and a CI step that
+      hides its failure fails bronze
+    expect: >-
+      score('maintainer-site',
+      'site-page:site/src/content/docs/draft.md').rules['unique-title'] ==
+      'fail' && score('maintainer-site',
+      'site-page:site/src/content/docs/index.md').rules['unique-title'] ==
+      'pass' && score('maintainer-ci-reliability',
+      'workflow:.github/workflows/demo/unsafe.yml').evidence['failures-visible']
+      == ['jobs.deploy'] && score('maintainer-ci-reliability',
+      'workflow:.github/workflows/ci.yml').rules['failures-visible'] == 'pass'
   - name: a titled described page in the sidebar reaches gold
     expect: >-
       score('maintainer-site',
@@ -785,16 +799,18 @@ assert:
       == ['hard-to-game']
   - name: >-
       a fresh, all-pass assessment is gold; an open finding is none; doubts
-      stop at silver; a rule with no current review is bronze
+      stop at silver; a stale review's failing criteria stay open
     expect: >-
       score('review-rule',
       'rule:toolbox/maintainer-ci-security/least-privilege-token').level ==
       'none' && score('review-rule',
       'rule:toolbox/maintainer-ci-security/least-privilege-token').evidence['no-open-findings']
       == ['hard-to-game'] && score('review-rule',
-      'rule:toolbox/meta-rule/tested').level == 'bronze' &&
+      'rule:toolbox/meta-rule/tested').level == 'none' && score('review-rule',
+      'rule:toolbox/meta-rule/tested').evidence['no-open-findings'] ==
+      ['hard-to-game (from a stale review: re-assess to close it)'] &&
       score('review-rule',
-      'rule:toolbox/meta-rule/tested').rules['no-open-findings'] == 'pass' &&
+      'rule:toolbox/user-cli/has-help').rules['no-open-findings'] == 'pass' &&
       score('review-rule',
       'rule:toolbox/maintainer-ci-security/no-medium-findings').level ==
       'gold' && score('review-rule',
@@ -816,11 +832,18 @@ assert:
       'skipped' && score('review-rule',
       'rule:toolbox/maintainer-ci-security/no-medium-findings').rules['assessed']
       == 'pass'
+  - name: a user command without structured output is at none
+    expect: >-
+      score('user-cli', 'command:search').level == 'none' &&
+      score('user-cli', 'command:search').evidence['structured-output'] ==
+      ['toolbox search has no -o json output']
   - name: scorecards are reviewed against scorecard-quality
     expect: >-
       score('review-scorecard',
-      'scorecard:toolbox/maintainer-ci-security').level == 'gold' &&
+      'scorecard:toolbox/maintainer-ci-security').level == 'silver' &&
       score('review-scorecard',
+      'scorecard:toolbox/maintainer-ci-security').evidence['passes-review'] ==
+      ['actionable cites nothing that resolves'] && score('review-scorecard',
       'scorecard:toolbox/meta-rule').rules['no-open-findings'] == 'fail' &&
       score('review-scorecard',
       'scorecard:toolbox/meta-rule').evidence['passes-review'] ==
@@ -829,11 +852,11 @@ assert:
       score('review-scorecard',
       'scorecard:toolbox/meta-rule').rules['assessed'] == 'pass' &&
       score('review-scorecard',
-      'scorecard:toolbox/maintainer-ci-security').rules['passes-review'] ==
-      'pass' && score('review-scorecard',
       'scorecard:toolbox/maintainer-ci-security').rules['no-doubts'] == 'pass'
       && score('review-scorecard',
-      'scorecard:toolbox/user-cli').rules['no-doubts'] == 'fail'
+      'scorecard:toolbox/user-cli').rules['no-doubts'] == 'fail' &&
+      score('review-scorecard', 'scorecard:toolbox/operator-cli').level ==
+      'gold'
   - name: >-
       crates are reviewed against crate-design, and go stale when their
       sources change
@@ -1165,3 +1188,79 @@ assert:
       'assessment:crate-design/crate:toolbox-connector-git-files').evidence['assessed']
       == ['reviewed by its own assessor, fixture-agent'] &&
       !entity('assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-medium-findings').selfReviewed
+  - name: >-
+      a test that asserts nothing fails has-tests, an ignored test fails
+      tests-pass, and too few tests for the code fail silver
+    expect: >-
+      score('maintainer-crate', 'crate:toolbox-derive').evidence['has-tests']
+      == ['tests::smoke (src/lib.rs:10) asserts nothing'] &&
+      score('maintainer-crate', 'crate:toolbox-expr').rules['has-tests'] ==
+      'pass' && score('maintainer-crate',
+      'crate:toolbox-expr').rules['tests-scale-with-code'] == 'pass' &&
+      score('maintainer-crate',
+      'crate:toolbox-connector-git-files').evidence['tests-scale-with-code']
+      == ['0 tests per 1,000 lines (0 tests, 182 lines)'] &&
+      score('maintainer-crate',
+      'crate:toolbox-derive').rules['tests-scale-with-code'] == 'pass' &&
+      score('maintainer-crate',
+      'crate:toolbox-derive').evidence['tests-pass'][0] == 'fail: 1 failed, 1
+      ignored'
+  - name: >-
+      a stage's claims are checked against facts: an unknown status, a command
+      that runs nothing and a check no workflow runs, and a layer stage with
+      no doc counts as missing
+    expect: >-
+      score('sdlc-stage', 'sdlc-stage:demo-gap/plan').evidence['status-known']
+      == ['status is shipped'] && score('sdlc-stage',
+      'sdlc-stage:demo-done/plan').rules['status-known'] == 'pass' &&
+      score('sdlc-stage',
+      'sdlc-stage:demo-gap/plan').evidence['agent-operable'] == ['echo done
+      runs no known tool or repository file'] && score('sdlc-stage',
+      'sdlc-stage:demo-gap/plan').evidence['automated'] == ['scripts/never.sh
+      is not run by any workflow'] && 'plan (no doc)' in score('sdlc-layer',
+      'sdlc:demo-gap').evidence['nothing-missing']
+  - name: >-
+      a scorecard is described, its fixture ladder needs a real level beside
+      none, and gold needs a fixture at every level
+    expect: >-
+      score('meta-scorecard',
+      'scorecard:toolbox/maintainer-ci-security').evidence['described'] ==
+      ['scorecard maintainer-ci-security has no description'] &&
+      score('meta-scorecard', 'scorecard:toolbox/user-cli').rules['described']
+      == 'pass' && score('meta-scorecard',
+      'scorecard:toolbox/user-cli').rules['fixtures-show-the-ladder'] ==
+      'fail' && score('meta-scorecard',
+      'scorecard:acme/github-app-hygiene').rules['fixtures-show-the-ladder']
+      == 'pass' && score('meta-scorecard',
+      'scorecard:acme/github-app-hygiene').rules['fixtures-reach-every-level']
+      == 'pass' && score('meta-scorecard',
+      'scorecard:toolbox/user-cli').evidence['fixtures-reach-every-level'] ==
+      ['no fixture entity reaches silver']
+  - name: >-
+      gold rules name where to act: evidence that reads what failed, and a fix
+      that names a place
+    expect: >-
+      score('meta-rule',
+      'rule:toolbox/maintainer-ci-security/no-medium-findings').rules['evidence-tracks-check']
+      == 'pass' && score('meta-rule',
+      'rule:demo/sprawling/present').rules['evidence-tracks-check'] == 'pass'
+      && score('meta-rule',
+      'rule:demo/sprawling/hides-the-list').rules['evidence-tracks-check'] ==
+      'fail' && score('meta-rule',
+      'rule:demo/sprawling/hides-the-list').rules['fix-names-a-place'] ==
+      'fail' && score('meta-rule',
+      'rule:demo/sprawling/everything').rules['evidence-tracks-check'] ==
+      'fail' && score('meta-rule',
+      'rule:acme/github-app-hygiene/only-approved-apps').rules['evidence-tracks-check']
+      == 'fail' && score('meta-rule',
+      'rule:toolbox/maintainer-ci-security/least-privilege-token').rules['fix-names-a-place']
+      == 'pass' && score('meta-rule',
+      'rule:toolbox/user-cli/has-help').evidence['fix-names-a-place'][0].startsWith('the
+      fix names no path')
+  - name: a computed field with too much CEL misses meta-field gold
+    expect: >-
+      score('meta-field',
+      'field:demo/Tiny.size').evidence['computed-readable'] == ['computed: 80
+      CEL nodes, loop depth 2 (60 nodes and no nested loops at most;
+      docs/design/thresholds.md)'] && score('meta-field',
+      'field:toolbox/Crate.codeLines').rules['computed-readable'] == 'pass'

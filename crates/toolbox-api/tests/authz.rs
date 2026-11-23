@@ -18,6 +18,11 @@ async fn start() -> Option<String> {
         .output()
         .is_err()
     {
+        // CI sets TOOLBOX_REQUIRE_OPENFGA, so a missing binary fails there instead of passing.
+        assert!(
+            std::env::var_os("TOOLBOX_REQUIRE_OPENFGA").is_none(),
+            "openfga binary not found and TOOLBOX_REQUIRE_OPENFGA is set"
+        );
         eprintln!("skipping: openfga binary not found");
         return None;
     }

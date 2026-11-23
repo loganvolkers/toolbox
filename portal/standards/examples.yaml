@@ -27,6 +27,10 @@ scorecards:
   # The reference portal's expected/ outputs stay the oracle; this scorecard does not regenerate them.
   - name: maintainer-example
     kind: Example
+    description: >-
+      Each example and experiment write-up agents copy: links that resolve,
+      the check it names, and no credentials (D78, docs/design/example-
+      standards.md).
     owner: group:maintainers
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze}
@@ -35,7 +39,9 @@ scorecards:
       level: bronze
       check: entity.title != ''
       evidence: "['no heading']"
-      fix: Start the write-up with a level-1 heading that names the example.
+      fix: >-
+        Start the write-up with a level-1 heading (`# Name`) that names the
+        example.
     - name: links-resolve
       level: bronze
       check: entity.missingFiles.size() == 0
@@ -55,10 +61,11 @@ scorecards:
       check: entity.citesDesign
       evidence: "['does not point at a design doc or a decision']"
       fix: >-
-        Link the write-up at the design doc or the decision it demonstrates, so
-        the example is not a second source of truth.
+        Link the write-up at the design doc (`docs/design/<topic>.md`) or the
+        decision (`docs/decisions/<id>.md`) it demonstrates, so the example is
+        not a second source of truth.
     - name: no-hardcoded-secrets
-      level: gold
+      level: bronze
       check: entity.secretHits.size() == 0
       evidence: entity.secretHits
       fix: >-

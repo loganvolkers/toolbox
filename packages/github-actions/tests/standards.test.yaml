@@ -38,8 +38,8 @@ assert:
     expect: >-
       score('maintainer-ci-reliability',
       'workflow:.github/workflows/ci.yml').evidence['fail-rate-under-20'] ==
-      ['92% of the last 12 decided runs on main failed'] &&
-      score('maintainer-ci-reliability',
+      ['92% of the last 12 decided runs on main failed (0 cancelled runs not
+      counted)'] && score('maintainer-ci-reliability',
       'workflow:.github/workflows/ci.yml').rules['main-not-stuck-red'] ==
       'fail'
   - name: no job timeouts and no concurrency group are named
@@ -68,3 +68,14 @@ assert:
       'action:actions/checkout').evidence['pinned-everywhere'] ==
       ['actions/checkout@v4'] && score('maintainer-action-deps',
       'action:actions/cache').level == 'bronze'
+  - name: >-
+      a step whose failure nothing reads fails bronze, and one with a
+      cancelling group passes
+    expect: >-
+      score('maintainer-ci-reliability',
+      'workflow:.github/workflows/release.yml').evidence['failures-visible']
+      == ['jobs.release.steps[2]'] && score('maintainer-ci-reliability',
+      'workflow:.github/workflows/ci.yml').rules['failures-visible'] == 'pass'
+      && score('maintainer-ci-reliability',
+      'workflow:.github/workflows/ci.yml').evidence['cancels-superseded-runs']
+      == ['no concurrency group on a workflow triggered by pull_request']

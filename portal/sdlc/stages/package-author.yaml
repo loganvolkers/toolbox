@@ -31,8 +31,8 @@ records:
     checks:
     - crates/toolbox-connect/src/conformance.rs
     - crates/toolbox-cli/tests/install.rs
-    - examples/connector-scaffold/README.md
     docs:
+    - examples/connector-scaffold/README.md
     - docs/design/connector-control.md
     - docs/design/package-author-sdlc.md
     - site/src/content/docs/authors/connectors.md
@@ -42,6 +42,7 @@ records:
       the Rust SDK (toolbox-connect) is not published; no SDK for other
       languages
     - no `toolbox connector new` generator (directory scaffold exists)
+    - no workflow builds or tests examples/connector-scaffold
     - no WASM component connectors yet
   - id: package-author/test
     layer: package-author

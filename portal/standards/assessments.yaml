@@ -69,6 +69,15 @@ kinds:
         computed: >-
           inbound.assessesAssessment.size() == 0 ? [] :
           inbound.assessesAssessment[0].unsure
+      reviewUncited:
+        type: list
+        items: string
+        description: >-
+          Criteria whose reasons in the current review cite nothing that resolves
+          in the repository: a review that can't be checked.
+        computed: >-
+          inbound.assessesAssessment.size() == 0 ? [] :
+          inbound.assessesAssessment[0].uncited
       selfReviewed:
         type: boolean
         description: >-
@@ -105,6 +114,10 @@ scorecards:
   # Deterministic, so ratcheted: what any assessment must contain to be worth reading.
   - name: meta-assessment
     kind: Assessment
+    description: >-
+      What every assessment must contain to be worth reading: a named
+      assessor, suggestions for findings and citations that resolve in the
+      repository (D80).
     owner: group:maintainers
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze} # a new assessment must name its assessor and suggest fixes
@@ -144,6 +157,10 @@ scorecards:
   # Judgement of judgement. Stops here: reviews made with assessment-quality are not reviewed.
   - name: review-assessment
     kind: Assessment
+    description: >-
+      Each assessment reviewed against assessment-quality by another assessor,
+      advisory; reviews of reviews are not made (D80,
+      D01M831P5QWJQ4A2FT85N5MXJQF).
     owner: group:maintainers
     levels: [bronze, silver, gold]
     ratchet: {advisory: true}
@@ -151,8 +168,10 @@ scorecards:
     rules:
     - name: no-open-findings
       level: bronze
-      check: entity.reviewState != 'fresh' || entity.reviewFailing.size() == 0
-      evidence: "entity.reviewState == 'fresh' ? entity.reviewFailing : []"
+      check: entity.reviewFailing.size() == 0
+      evidence: >-
+        entity.reviewState == 'stale' ? entity.reviewFailing.map(c, c + ' (from
+        a stale review: re-assess to close it)') : entity.reviewFailing
       fix: >-
         A current assessment-quality assessment failed the listed criteria: act
         on its suggestions (portal/assessments/), then re-assess. If the finding
@@ -170,10 +189,13 @@ scorecards:
         agent or person should review it.
     - name: passes-review
       level: gold
-      check: entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0
+      check: >-
+        entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0 &&
+        entity.reviewUncited.size() == 0
       evidence: >-
-        entity.reviewState == 'fresh' ? entity.reviewFailing : ['no current
-        review']
+        entity.reviewState != 'fresh' ? ['no current review'] :
+        entity.reviewFailing + entity.reviewUncited.map(c, c + ' cites nothing
+        that resolves')
       fix: >-
         Revise the assessment where the review found it unsupported or
         incomplete, then have it reviewed again.

@@ -5,6 +5,11 @@ on:
   push: {branches: [main]}
   pull_request:
 permissions: {contents: read}
+# A new push to a pull request cancels its superseded run; every run on main finishes
+# (maintainer-ci-reliability, cancels-superseded-runs).
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   rust:
     runs-on: ubuntu-latest
@@ -40,6 +45,8 @@ jobs:
           echo "TOOLBOX_OPENFGA_BIN=$RUNNER_TEMP/tools/openfga" >> "$GITHUB_ENV"
           echo "$RUNNER_TEMP/tools" >> "$GITHUB_PATH"
       - name: Tests that need OpenFGA (authz, .fga.yaml through the Authorizer)
+        # A missing binary fails these tests here instead of skipping them (tests-pass).
+        env: {TOOLBOX_REQUIRE_OPENFGA: "1"}
         run: cargo test --locked -p toolbox-authz -p toolbox-api
       - name: toolbox validate, test and derive on the reference portal
         run: |

@@ -74,6 +74,10 @@ kinds:
 scorecards:
   - name: operator-cli
     kind: Command
+    description: >-
+      Each CLI command an operator runs on a portal: documented, with help for
+      every argument and exercised by a test, so an agent can use it without
+      reading the source (operator SDLC).
     owner: group:maintainers
     levels: [bronze, silver]
     appliesTo: entity.layer == 'operator'
@@ -81,7 +85,12 @@ scorecards:
     - name: has-help
       level: bronze
       check: has(entity.about) && entity.about.size() >= 10
-      fix: Give the command a /// doc comment; clap shows it as the command's help.
+      evidence: >-
+        [has(entity.about) ? 'help "' + entity.about + '" is under 10
+        characters' : 'toolbox ' + entity.name + ' has no help text']
+      fix: >-
+        Give the command's variant in `crates/toolbox-cli/src/main.rs` a `///`
+        doc comment; clap shows it as the command's help.
     - name: documented
       level: bronze
       check: entity.documentedIn.size() > 0
@@ -97,11 +106,20 @@ scorecards:
     - name: exercised
       level: silver
       check: entity.exercisedBy.size() > 0
-      fix: Run the command in an acceptance script or an integration test.
+      evidence: >-
+        ['no script under scripts/ and no test under crates/*/tests runs toolbox
+        ' + entity.name]
+      fix: >-
+        Run the command in an acceptance script (`scripts/m*-acceptance.sh`) or
+        an integration test under `crates/toolbox-cli/tests/`.
     facets: {summary: public, details: public}
 
   - name: user-cli
     kind: Command
+    description: >-
+      Each CLI command a portal's users and their agents call: help,
+      structured output and a test that runs it, so scripts can depend on it
+      (user SDLC).
     owner: group:maintainers
     levels: [bronze, silver]
     appliesTo: entity.layer == 'user'
@@ -109,11 +127,19 @@ scorecards:
     - name: has-help
       level: bronze
       check: has(entity.about) && entity.about.size() >= 10
-      fix: Give the command a /// doc comment; clap shows it as the command's help.
+      evidence: >-
+        [has(entity.about) ? 'help "' + entity.about + '" is under 10
+        characters' : 'toolbox ' + entity.name + ' has no help text']
+      fix: >-
+        Give the command's variant in `crates/toolbox-cli/src/main.rs` a `///`
+        doc comment; clap shows it as the command's help.
     - name: structured-output
       level: bronze
       check: entity.name == 'mcp' || entity.structuredOutput
-      fix: Support -o json so scripts and apps can parse the output.
+      evidence: "['toolbox ' + entity.name + ' has no -o json output']"
+      fix: >-
+        Support `-o json` (or `--format json`) so scripts and apps can parse the
+        output.
     - name: args-described
       level: silver
       check: entity.undocumentedArgs.size() == 0
@@ -122,13 +148,21 @@ scorecards:
     - name: exercised
       level: silver
       check: entity.exercisedBy.size() > 0
-      fix: Run the command in an acceptance script or an integration test.
+      evidence: >-
+        ['no script under scripts/ and no test under crates/*/tests runs toolbox
+        ' + entity.name]
+      fix: >-
+        Run the command in an acceptance script (`scripts/m*-acceptance.sh`) or
+        an integration test under `crates/toolbox-cli/tests/`.
     facets: {summary: public, details: public}
 
   # Every CLI command has a skill that names its invocation (D94). The doc capture already
   # turns `toolbox <command>` in a SKILL.md into documentedIn.
   - name: cli-skill
     kind: Command
+    description: >-
+      Every CLI command has an agent skill that names its invocation (D94), so
+      a coding agent finds the command when it needs it.
     owner: group:maintainers
     track: operator
     levels: [bronze]
@@ -145,16 +179,25 @@ scorecards:
 
   - name: user-mcp
     kind: McpTool
+    description: >-
+      Each built-in MCP tool: described inputs and a contract test that calls
+      it successfully, so agents can rely on its schema (user SDLC).
     owner: group:maintainers
     levels: [bronze, silver, gold]
     rules:
     - name: described
       level: bronze
       check: entity.description.size() >= 20
-      fix: Describe what the tool returns and when an agent should call it.
+      evidence: >-
+        ['description is ' + string(entity.description.size()) + ' characters:
+        "' + entity.description + '"']
+      fix: >-
+        Write the tool's `description` (at least 20 characters): what it returns
+        and when an agent should call it.
     - name: annotated
       level: bronze
       check: has(entity.annotations.readOnlyHint)
+      evidence: "['tool ' + entity.name + ' sets no annotations.readOnlyHint']"
       fix: >-
         Set annotations.readOnlyHint (and idempotent/openWorld hints for
         writes).
@@ -177,13 +220,16 @@ scorecards:
       level: gold
         # Observed calls when the runner has run the contract tests; otherwise a tools/call body that
         # names the tool (static mode, weaker: it can't see whether the call happens).
+      # Only successful calls count: the contract tests' helper asserts on each result
+      # (crates/toolbox-api/tests/mcp.rs, `call`), so a call that errors proves nothing.
       check: >-
-        has(entity.observed) ? entity.observed.calls > 0 :
-        entity.exercisedBy.size() > 0
+        has(entity.observed) ? entity.observed.calls - entity.observed.errors >
+        0 : entity.exercisedBy.size() > 0
       evidence: >-
         has(entity.observed) ? ['observed ' + string(entity.observed.calls) + '
-        call(s) in the MCP contract tests'] : ['no tools/call naming this tool
-        in tests or scripts (static mode)']
+        call(s) in the MCP contract tests, ' + string(entity.observed.errors) +
+        ' of them errors'] : ['no tools/call naming this tool in tests or
+        scripts (static mode)']
       fix: >-
         Call the tool directly (tools/call) in a test, e.g.
         crates/toolbox-api/tests; the CLI path in `viaCli` doesn't pin the MCP

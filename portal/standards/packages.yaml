@@ -36,6 +36,10 @@ scorecards:
   # A licence field is not required (Q1). Advisory databases are not a gate.
   - name: maintainer-package
     kind: PackageJson
+    description: >-
+      Each npm manifest we keep: private when it is an application, locked,
+      and free of credentials, so installs are reproducible
+      (docs/design/package-standards.md).
     owner: group:maintainers
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze}
@@ -106,11 +110,11 @@ scorecards:
         ['CI runs npm install or pnpm install without --frozen-lockfile, which
         can update the lockfile']
       fix: >-
-        Change this package's CI install to npm ci, or to pnpm install
-        --frozen-lockfile. Those commands install the lockfile as written and do
-        not rewrite it.
+        Change this package's CI install in `.github/workflows/` to `npm ci`, or
+        to `pnpm install --frozen-lockfile`. Those commands install the lockfile
+        as written and do not rewrite it.
     - name: no-hardcoded-secrets
-      level: gold
+      level: bronze
       check: entity.secretHits.size() == 0
       evidence: entity.secretHits
       fix: >-

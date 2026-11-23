@@ -28,6 +28,9 @@ kinds:
         description: >-
           Content hash of the scorecard's definition: assessments of it go stale
           when it changes.
+      described:
+        type: boolean
+        description: The scorecard has a non-blank `description:` saying what it is and why.
       fixtureRealLevels:
         type: list
         items: string
@@ -56,6 +59,15 @@ kinds:
         computed: >-
           inbound.assessesScorecard.size() == 0 ? [] :
           inbound.assessesScorecard[0].unsure
+      reviewUncited:
+        type: list
+        items: string
+        description: >-
+          Criteria whose reasons in the current review cite nothing that resolves
+          in the repository: a review that can't be checked.
+        computed: >-
+          inbound.assessesScorecard.size() == 0 ? [] :
+          inbound.assessesScorecard[0].uncited
     sources: {default: [connector:surfaces]}
     map:
     - from: surfaces/scorecard
@@ -64,6 +76,7 @@ kinds:
         {'portal': record.portal, 'name': record.name, 'kind': record.kind, 'owner': record.owner,
          'levels': record.levels, 'rulesPerLevel': record.rulesPerLevel, 'rules': record.rules,
          'tested': record.tested, 'meta': record.meta, 'fixtureLevels': record.fixtureLevels,
+         'described': has(record.described) ? record.described : false,
          'liveEntities': has(record.liveEntities) ? record.liveEntities : null, 'hash': record.hash}
 
   - name: Rule
@@ -88,6 +101,30 @@ kinds:
         type: string
         description: The rule's evidence expression, as written.
       fixText: {type: string, description: "The rule's fix text."}
+      evidenceTracksCheck:
+        type: boolean
+        description: >-
+          The evidence names what failed on this entity: it reads an entity field
+          or loops over values. A fixed sentence counts only for a small yes/no
+          check (at most 8 CEL nodes, no loop, no list that must be empty), where
+          the sentence is the whole answer.
+        computed: >-
+          entity.hasEvidence && (entity.evidence.fields.size() > 0 ||
+          entity.evidence.loops > 0 || (entity.check.loops == 0 &&
+          entity.check.nodes <= 8 && !entity.checkCel.matches('size[(][)] *==
+          *0')))
+      fixNamesPlace:
+        type: boolean
+        description: >-
+          The fix tells an agent where to act: a path, a code span, a file name or
+          extension, LICENSE or CODEOWNERS, a toolbox command, a field the check
+          reads, or an evidence that reads this entity's fields and so lists the
+          places.
+        computed: >-
+          entity.fixText.matches('`|[A-Za-z0-9_.-]+/[A-Za-z0-9_./<>*-]+|[A-Za-z0-9][.](md|rs|ya?ml|json|toml|sh|py)([^A-Za-z]|$)|LICENSE|CODEOWNERS|toolbox
+          [a-z]') || entity.check.fields.exists(f, f.size() > 3 &&
+          entity.fixText.contains(f)) || (entity.hasEvidence &&
+          (entity.evidence.fields.size() > 0 || entity.evidence.loops > 0))
       hash:
         type: string
         description: >-
@@ -109,6 +146,14 @@ kinds:
         items: string
         description: Criteria the assessor was unsure of.
         computed: "inbound.assessesRule.size() == 0 ? [] : inbound.assessesRule[0].unsure"
+      reviewUncited:
+        type: list
+        items: string
+        description: >-
+          Criteria whose reasons in the current review cite nothing that resolves
+          in the repository: a review that can't be checked.
+        computed: >-
+          inbound.assessesRule.size() == 0 ? [] : inbound.assessesRule[0].uncited
     relations: {ruleOf: {to: Scorecard, many: false}}
     sources: {default: [connector:surfaces]}
     map:
@@ -201,6 +246,14 @@ kinds:
         type: integer
         description: Fixture entities with a value for it.
       hash: {type: string, description: Content hash of the field's definition.}
+      computedNodes:
+        type: integer
+        description: >-
+          CEL nodes in the field's `computed:` expression (0 when it is not
+          computed).
+      computedLoops:
+        type: integer
+        description: Comprehension nesting in the field's `computed:` expression.
     relations: {fieldOf: {to: Kind, many: false}}
     sources: {default: [connector:surfaces]}
     map:
@@ -210,7 +263,9 @@ kinds:
         {'portal': record.portal, 'kind': record.kind, 'name': record.name, 'fieldType': record.type,
          'described': record.described, 'computed': record.computed, 'opaque': record.opaque,
          'sources': record.sources, 'readBy': record.readBy, 'fixtureEntities': record.fixture.entities,
-         'fixtureWithValue': record.fixture.withValue, 'hash': record.hash}
+         'fixtureWithValue': record.fixture.withValue, 'hash': record.hash,
+         'computedNodes': has(record.computedCel) && record.computedCel != null ? record.computedCel.nodes : 0,
+         'computedLoops': has(record.computedCel) && record.computedCel != null ? record.computedCel.loops : 0}
       relations: {fieldOf: "['kind:' + record.portal + '/' + record.kind]"}
 
   - name: PortalConnector
@@ -295,6 +350,10 @@ scorecards:
   # tests, fixtures) are scored; live outcomes are shown, not scored.
   - name: meta-rule
     kind: Rule
+    description: >-
+      Each rule's form: explained, tested, decided both ways on fixtures, with
+      evidence, readable CEL. Gold means well-formed, not good: quality is
+      judged by review-rule (D71, D01M831P5QWJQ4A2FT85N5MXJQF).
     owner: group:maintainers
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze} # a new rule or scorecard must be tested and explained from day one
@@ -359,14 +418,38 @@ scorecards:
         Move logic into a computed field or the connector, and keep the rule a
         short comparison.
     - name: always-explains
-      level: gold
+      level: silver
       check: entity.hasEvidence
       evidence: "['no evidence expression']"
       fix: "Add `evidence:` even for simple checks: it is what an agent reads first."
+    - name: evidence-tracks-check
+      level: gold
+      check: entity.evidenceTracksCheck
+      evidence: >-
+        ['the evidence is a fixed sentence, but the check has ' +
+        string(entity.check.nodes) + ' CEL nodes and ' +
+        string(entity.check.loops) + ' loops: ' + entity.checkCel]
+      fix: >-
+        Write `evidence:` from what the check reads (the failing list itself, or
+        the value compared), so it names what failed on this entity.
+    - name: fix-names-a-place
+      level: gold
+      check: entity.fixNamesPlace
+      evidence: >-
+        ['the fix names no path, code span, file, command, checked field or
+        listing evidence: ' + entity.fixText]
+      fix: >-
+        Say in `fix:` where to act: the file or directory (a path), the field
+        the check reads, a `toolbox` command, or "the listed …" items of an
+        evidence that names them (scorecards-for-scorecards.md, lesson L1).
     facets: {summary: public, details: public}
 
   - name: meta-scorecard
     kind: Scorecard
+    description: >-
+      Each scorecard's form: described, tested, no empty level, fixtures that
+      climb the ladder to every level. Gold means well-formed, not good (D71,
+      D01M831P5QWJQ4A2FT85N5MXJQF).
     owner: group:maintainers
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze} # a new rule or scorecard must be tested and explained from day one
@@ -385,28 +468,48 @@ scorecards:
         entity.levels.filter(l, !(l in entity.rulesPerLevel) ||
         entity.rulesPerLevel[l] == 0)
       fix: Give every level at least one rule, or drop the level.
+    - name: described
+      level: silver
+      check: entity.described
+      evidence: "['scorecard ' + entity.name + ' has no description']"
+      fix: >-
+        Give the scorecard a `description:` saying what the standard is for and
+        why its levels are where they are; agents read it before any rule.
     - name: fixtures-show-the-ladder
       level: silver
       check: >-
-        entity.fixtureRealLevels.size() >= 1 && entity.fixtureLevels.size() >=
-        2
+        entity.fixtureRealLevels.size() >= 2 || (entity.fixtureRealLevels.size()
+        == 1 && 'none' in entity.fixtureLevels)
       evidence: >-
-        entity.fixtureRealLevels.size() == 0 ? ['no fixture entity reaches one
-        of ' + string(entity.levels.size()) + ' levels'] :
-        entity.fixtureLevels.map(l, 'fixtures reach only ' + l)
+        ['fixtures reach ' + string(entity.fixtureRealLevels.size()) + ' of the
+        levels, and ' + ('none' in entity.fixtureLevels ? 'some' : 'no') + '
+        fixture entity is at none']
       fix: >-
-        Make the fixtures reach at least two outcomes, one of them a real level
-        (e.g. one entity at none, one at bronze or above); none and skipped
-        alone show no ladder.
+        Give the scorecard fixtures at two outcomes, one of them a real level:
+        one entity at none and one at bronze or above, or two at different
+        levels. Skipped entities show no ladder.
     - name: every-rule-tested
-      level: gold
+      level: silver
       check: entity.untestedRules.size() == 0
       evidence: entity.untestedRules
       fix: Add an expectation for each untested rule.
+    - name: fixtures-reach-every-level
+      level: gold
+      check: entity.fixtureRealLevels.size() == entity.levels.size()
+      evidence: >-
+        entity.levels.filter(l, !(l in entity.fixtureRealLevels)).map(l, 'no
+        fixture entity reaches ' + l)
+      fix: >-
+        Add fixture entities that reach each listed level, so every rung of the
+        ladder is exercised in tests (portal/fixtures/).
     facets: {summary: public, details: public}
 
   - name: meta-kind
     kind: Kind
+    description: >-
+      Each kind of entity: in the fixtures, tested and described with every
+      field, since every rule reads it (docs/design/scorecards-for-
+      scorecards.md §5).
     owner: group:maintainers
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze} # a new kind must be in the fixtures and the tests
@@ -445,6 +548,10 @@ scorecards:
 
   - name: meta-field
     kind: Field
+    description: >-
+      Each field: populated in the fixtures, described and given a shape, so
+      CEL, validation and agents know what it holds (docs/design/scorecards-
+      for-scorecards.md §5).
     owner: group:maintainers
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze} # a new field must have a value somewhere in the fixtures
@@ -474,10 +581,24 @@ scorecards:
       fix: >-
         Replace the object with typed fields (or a list of strings), so CEL,
         validation and agents know its shape.
+    - name: computed-readable
+      level: gold
+      check: entity.computedNodes <= 60 && entity.computedLoops <= 1
+      evidence: >-
+        ['computed: ' + string(entity.computedNodes) + ' CEL nodes, loop depth '
+        + string(entity.computedLoops) + ' (60 nodes and no nested loops at
+        most; docs/design/thresholds.md)']
+      fix: >-
+        Split the field's `computed:` expression into simpler fields and rules,
+        or move the logic into the connector, so it reads at a glance.
     facets: {summary: public, details: public}
 
   - name: meta-connector
     kind: PortalConnector
+    description: >-
+      Each connector a portal configures: every record mapped, fixtures for
+      tests, freshness declared and refresh by id (docs/design/scorecards-for-
+      scorecards.md §5).
     owner: group:maintainers
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze} # a new connector needs fixtures and a mapping for every record
@@ -516,6 +637,10 @@ scorecards:
   # agent that changed it should re-assess — but a stale review must not block the change.
   - name: review-rule
     kind: Rule
+    description: >-
+      Agents' judgement of each rule against rule-quality, advisory: an open
+      finding is none, a current review is silver, a clean, cited one with no
+      doubts is gold (D79, D01M831P5QWJQ4A2FT85N5MXJQF).
     owner: group:maintainers
     levels: [bronze, silver, gold]
     ratchet: {advisory: true}
@@ -523,8 +648,10 @@ scorecards:
     rules:
     - name: no-open-findings
       level: bronze
-      check: entity.reviewState != 'fresh' || entity.reviewFailing.size() == 0
-      evidence: "entity.reviewState == 'fresh' ? entity.reviewFailing : []"
+      check: entity.reviewFailing.size() == 0
+      evidence: >-
+        entity.reviewState == 'stale' ? entity.reviewFailing.map(c, c + ' (from
+        a stale review: re-assess to close it)') : entity.reviewFailing
       fix: >-
         A current rule-quality assessment failed the listed criteria: act on its
         suggestions (portal/assessments/), then re-assess. If the finding is
@@ -540,10 +667,13 @@ scorecards:
         write the assessment file it names, then `toolbox assess check portal`.
     - name: passes-review
       level: gold
-      check: entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0
+      check: >-
+        entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0 &&
+        entity.reviewUncited.size() == 0
       evidence: >-
-        entity.reviewState == 'fresh' ? entity.reviewFailing : ['no current
-        assessment']
+        entity.reviewState != 'fresh' ? ['no current assessment'] :
+        entity.reviewFailing + entity.reviewUncited.map(c, c + ' cites nothing
+        that resolves')
       fix: >-
         Act on the failing criteria's suggestions in the assessment
         (portal/assessments/), then re-assess.
@@ -560,6 +690,9 @@ scorecards:
 
   - name: review-scorecard
     kind: Scorecard
+    description: >-
+      Agents' judgement of each scorecard against scorecard-quality, advisory,
+      with the same ladder as review-rule (D79, D01M831P5QWJQ4A2FT85N5MXJQF).
     owner: group:maintainers
     levels: [bronze, silver, gold]
     ratchet: {advisory: true}
@@ -567,8 +700,10 @@ scorecards:
     rules:
     - name: no-open-findings
       level: bronze
-      check: entity.reviewState != 'fresh' || entity.reviewFailing.size() == 0
-      evidence: "entity.reviewState == 'fresh' ? entity.reviewFailing : []"
+      check: entity.reviewFailing.size() == 0
+      evidence: >-
+        entity.reviewState == 'stale' ? entity.reviewFailing.map(c, c + ' (from
+        a stale review: re-assess to close it)') : entity.reviewFailing
       fix: >-
         A current scorecard-quality assessment failed the listed criteria: act
         on its suggestions (portal/assessments/), then re-assess. If the finding
@@ -585,10 +720,13 @@ scorecards:
         portal`.
     - name: passes-review
       level: gold
-      check: entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0
+      check: >-
+        entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0 &&
+        entity.reviewUncited.size() == 0
       evidence: >-
-        entity.reviewState == 'fresh' ? entity.reviewFailing : ['no current
-        assessment']
+        entity.reviewState != 'fresh' ? ['no current assessment'] :
+        entity.reviewFailing + entity.reviewUncited.map(c, c + ' cites nothing
+        that resolves')
       fix: >-
         Act on the failing criteria's suggestions in the assessment
         (portal/assessments/), then re-assess.
@@ -605,6 +743,9 @@ scorecards:
 
   - name: meta-rubric
     kind: Rubric
+    description: >-
+      Each rubric agents judge with: described, used, guided with what counts
+      as fail, and shown to discriminate on real assessments (D80).
     owner: group:maintainers
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze} # a new rubric must be described and used once

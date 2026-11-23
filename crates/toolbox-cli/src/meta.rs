@@ -27,7 +27,12 @@ fn expectations(root: &Path, m: &Manifest) -> String {
 
 fn test_mentions(root: &Path, m: &Manifest) -> (BTreeSet<(String, String)>, BTreeSet<String>) {
     let score = regex::Regex::new(r"score\('([^']+)'").expect("regex");
-    let rule = regex::Regex::new(r"(?:rules|evidence)\['([^']+)'\]").expect("regex");
+    // A rule's outcome compared with a literal (`rules['r'] == 'fail'`), or its evidence: an
+    // expectation like `rules['r'] == rules['r']` pins nothing.
+    let rule = regex::Regex::new(
+        r"rules\['([^']+)'\]\s*(?:==|!=)\s*'(?:pass|fail|unknown|skipped)'|evidence\['([^']+)'\]",
+    )
+    .expect("regex");
     let (mut rules, mut cards) = (BTreeSet::new(), BTreeSet::new());
     for t in &m.tests {
         let Ok(text) = std::fs::read_to_string(root.join(t)) else {
@@ -69,7 +74,7 @@ fn score_segments(
                 .map_or(expect.len(), |m| m.start());
             let named = rule
                 .captures_iter(&expect[from..to])
-                .map(|r| r[1].to_owned())
+                .filter_map(|r| r.get(1).or_else(|| r.get(2)).map(|m| m.as_str().to_owned()))
                 .collect();
             (c[1].to_owned(), named)
         })
@@ -215,6 +220,7 @@ fn describe_portal(
             "levels": sc.levels, "rulesPerLevel": per_level, "rules": sc.rules.len(),
             "appliesTo": sc.applies_to.is_some(), "tested": tested_cards.contains(&sc.name),
             "meta": meta_cards.contains(&sc.name),
+            "described": crate::model::filled(&sc.description),
             "fixtureLevels": fixture_levels.get(&sc.name).cloned().unwrap_or_default(),
         });
         if let Some(n) = live_entities {
@@ -275,14 +281,20 @@ mod tests {
     #[test]
     fn a_rule_is_tested_only_by_its_own_scorecards_expectation() {
         let score = regex::Regex::new(r"score\('([^']+)'").unwrap();
-        let rule = regex::Regex::new(r"(?:rules|evidence)\['([^']+)'\]").unwrap();
-        let e = "score('a', 'x:1').rules['r1'] == 'pass' && score('b', 'x:1').level == 'gold'";
+        let rule = regex::Regex::new(
+            r"rules\['([^']+)'\]\s*(?:==|!=)\s*'(?:pass|fail|unknown|skipped)'|evidence\['([^']+)'\]",
+        )
+        .unwrap();
+        let e = "score('a', 'x:1').rules['r1'] == 'pass' && score('b', 'x:1').level == 'gold' \
+                 && score('a', 'x:1').rules['r2'] == score('a', 'x:1').rules['r2']";
         let got = super::score_segments(&score, &rule, e);
         assert_eq!(
             got,
             vec![
                 ("a".to_owned(), vec!["r1".to_owned()]),
-                ("b".to_owned(), vec![])
+                ("b".to_owned(), vec![]),
+                ("a".to_owned(), vec![]),
+                ("a".to_owned(), vec![])
             ]
         );
     }

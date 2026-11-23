@@ -155,6 +155,10 @@ fn field_record(
         "computed": f.computed.is_some(), "sources": if f.computed.is_some() { vec![] } else { sources },
         "opaque": f.ty == "object" || (f.ty == "list" && f.items.as_deref() == Some("object")),
         "readBy": read, "fixture": {"entities": entities, "withValue": with}, "hash": hash(f),
+        // Size and loops of a computed field's CEL, scored like a rule's check (meta-field), so
+        // moving logic out of a rule into a computed field doesn't hide it.
+        "computedCel": f.computed.as_deref().and_then(|c| toolbox_expr::analysis::analyse(c).ok())
+            .map(|a| json!({"nodes": a.nodes, "loops": a.comprehension_depth})),
     })
 }
 
@@ -203,6 +207,9 @@ fn connector_record(portal: &str, c: &toolbox_model::manifest::Connector, local:
         .kinds
         .iter()
         .flat_map(|k| &k.map)
+        // A map rule maps a record only if it reads it: `set: "{}"` with no relation from the
+        // record keeps the record unused, whatever `from` says.
+        .filter(|r| r.set.contains("record") || r.relations.values().any(|v| v.contains("record")))
         .filter_map(|r| {
             r.from
                 .split_once('/')
@@ -266,15 +273,25 @@ fn rubric_record(portal: &str, r: &toolbox_model::manifest::Rubric, docs: &[Valu
         "portal": portal, "name": r.name, "kind": r.kind, "subject": r.subject(),
         "described": filled(&r.description),
         "criteria": r.criteria.iter().map(|c| &c.name).collect::<Vec<_>>(),
-        "unguided": r.criteria.iter().filter(|c| !filled(&c.guidance)).map(|c| &c.name).collect::<Vec<_>>(),
+        "unguided": r.criteria.iter().filter(|c| !guides(&c.guidance)).map(|c| &c.name).collect::<Vec<_>>(),
         "assessments": used.len(), "alwaysPass": always_pass, "hash": hash(r),
     })
 }
 
 /// A description or guidance counts only when it has text: `description: ""` or `guidance: " "`
 /// is the cheapest way to game a `described` or `guided` rule.
-fn filled(text: &Option<String>) -> bool {
+pub(crate) fn filled(text: &Option<String>) -> bool {
     text.as_deref().is_some_and(|t| !t.trim().is_empty())
+}
+
+/// Guidance that tells assessors when to fail: at least five words, naming an outcome (fail,
+/// pass or unsure), so a blank line or a restated question doesn't count as guided.
+fn guides(text: &Option<String>) -> bool {
+    text.as_deref().is_some_and(|t| {
+        let lower = t.to_ascii_lowercase();
+        t.split_whitespace().count() >= 5
+            && ["fail", "pass", "unsure"].iter().any(|w| lower.contains(w))
+    })
 }
 
 /// `kind`, `field`, `rubric` and `connector` records for a loaded portal; `expects` is the text of its test
@@ -328,5 +345,17 @@ mod tests {
         assert!(!super::filled(&Some(String::new())));
         assert!(!super::filled(&Some("  \n".into())));
         assert!(!super::filled(&None));
+    }
+
+    #[test]
+    fn guidance_must_say_what_fails() {
+        assert!(super::guides(&Some(
+            "Fail when an empty doc comment would pass it.".into()
+        )));
+        assert!(!super::guides(&Some(String::new())));
+        assert!(!super::guides(&Some("Is the rule good?".into())));
+        assert!(!super::guides(&Some(
+            "Consider the rule and its intent carefully.".into()
+        )));
     }
 }

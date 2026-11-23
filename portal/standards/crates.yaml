@@ -25,6 +25,18 @@ kinds:
       maxComplexity: {type: integer}
       unitTests: {type: integer}
       integrationTests: {type: integer}
+      testsWithoutAsserts:
+        type: list
+        items: string
+        description: >-
+          Tests whose body has no assert or panic macro, no unwrap or expect, and
+          no #[should_panic]: they pass without checking anything.
+      testsPerKloc:
+        type: integer
+        description: Tests (unit and integration) per 1,000 code lines, rounded down.
+        computed: >-
+          entity.codeLines == 0 ? 0 : (entity.unitTests + entity.integrationTests)
+          * 1000 / entity.codeLines
       unwraps: {type: integer}
       tests: {type: object} # from the runner: status, passed, failed, output
       clippy: {type: object} # from the runner: status, warnings, messages
@@ -52,6 +64,15 @@ kinds:
         items: string
         description: Criteria the assessor was unsure of.
         computed: "inbound.assessesCrate.size() == 0 ? [] : inbound.assessesCrate[0].unsure"
+      reviewUncited:
+        type: list
+        items: string
+        description: >-
+          Criteria whose reasons in the current review cite nothing that resolves
+          in the repository: a review that can't be checked.
+        computed: >-
+          inbound.assessesCrate.size() == 0 ? [] :
+          inbound.assessesCrate[0].uncited
       docCoverage:
         type: integer
         computed: >-
@@ -88,6 +109,7 @@ kinds:
          'undocumented': record.undocumented, 'functions': record.functions,
          'maxFnLines': record.maxFnLines, 'maxComplexity': record.maxComplexity,
          'unitTests': record.unitTests, 'integrationTests': record.integrationTests,
+         'testsWithoutAsserts': record.testsWithoutAsserts,
          'unwraps': record.unwraps, 'hash': has(record.hash) ? record.hash : null}
       relations: {dependsOn: "record.dependsOn.map(d, 'crate:' + d)"}
     - from: runner/test
@@ -100,6 +122,10 @@ kinds:
 scorecards:
   - name: maintainer-crate
     kind: Crate
+    description: >-
+      Each Rust crate: documented, tested with assertions and enough tests for
+      its size, passing, clippy-clean, and kept small and simple (D65,
+      docs/design/toolbox-for-toolbox.md).
     owner: group:maintainers
     levels: [bronze, silver, gold]
     appliesTo: entity.codeLines >= 50 # placeholder crates (toolbox-durable, toolbox-exec) are skipped
@@ -107,24 +133,45 @@ scorecards:
     - name: crate-docs
       level: bronze
       check: entity.crateDoc
+      evidence: "['crate ' + entity.name + ' has no //! crate doc']"
       fix: >-
-        Start the crate's lib.rs or main.rs with //! docs: what it is and which
-        spec section it implements.
+        Start the crate's `src/lib.rs` or `src/main.rs` with `//!` docs: what it
+        is and which spec section it implements.
     - name: has-tests
       level: bronze
-      check: entity.unitTests + entity.integrationTests > 0
+      check: >-
+        entity.unitTests + entity.integrationTests > 0 &&
+        entity.testsWithoutAsserts.size() == 0
+      evidence: >-
+        entity.unitTests + entity.integrationTests == 0 ? ['no #[test] in src/
+        or tests/'] : entity.testsWithoutAsserts.map(t, t + ' asserts nothing')
       fix: >-
-        Add a #[test] for the crate's main behaviour, or an integration test in
-        tests/.
+        Add a #[test] for the crate's main behaviour (or an integration test in
+        tests/), and give each listed test an assert: a test that checks nothing
+        passes whatever the code does.
+    - name: tests-scale-with-code
+      level: silver
+      check: entity.testsPerKloc >= 2
+      evidence: >-
+        [string(entity.testsPerKloc) + ' tests per 1,000 lines (' +
+        string(entity.unitTests + entity.integrationTests) + ' tests, ' +
+        string(entity.codeLines) + ' lines)']
+      fix: >-
+        Add tests for the crate's untested behaviour until it has at least 2 per
+        1,000 code lines (docs/design/thresholds.md says why 2).
     - name: tests-pass
       level: bronze
       dataFrom: runner
-      check: entity.tests.status == 'pass'
+      check: entity.tests.status == 'pass' && entity.tests.ignored == 0
       evidence: >-
         has(entity.tests) ? [entity.tests.status + ': ' +
-        string(entity.tests.failed) + ' failed'] + (has(entity.tests.output) ?
-        [entity.tests.output] : []) : ['no test run yet (refresh the crate)']
-      fix: Run `cargo test -p <crate>` and fix the failures in the evidence.
+        string(entity.tests.failed) + ' failed, ' + string(entity.tests.ignored)
+        + ' ignored'] + (has(entity.tests.output) ? [entity.tests.output] : [])
+        : ['no test run yet (refresh the crate)']
+      fix: >-
+        Run `cargo test -p <crate>` and fix the failures in the evidence. Remove
+        `#[ignore]` from ignored tests and make them pass: an ignored test never
+        runs.
     - name: clippy-clean
       level: bronze
       dataFrom: runner
@@ -186,6 +233,10 @@ scorecards:
 
   - name: review-crate
     kind: Crate
+    description: >-
+      Agents' judgement of each crate against crate-design, advisory, with the
+      same ladder as review-rule; a change to src/, tests/ or Cargo.toml makes
+      a review stale (D79, D01M831P5QWJQ4A2FT85N5MXJQF).
     owner: group:maintainers
     levels: [bronze, silver, gold]
     ratchet: {advisory: true}
@@ -193,8 +244,10 @@ scorecards:
     rules:
     - name: no-open-findings
       level: bronze
-      check: entity.reviewState != 'fresh' || entity.reviewFailing.size() == 0
-      evidence: "entity.reviewState == 'fresh' ? entity.reviewFailing : []"
+      check: entity.reviewFailing.size() == 0
+      evidence: >-
+        entity.reviewState == 'stale' ? entity.reviewFailing.map(c, c + ' (from
+        a stale review: re-assess to close it)') : entity.reviewFailing
       fix: >-
         A current crate-design assessment failed the listed criteria: act on its
         suggestions (portal/assessments/), then re-assess. If the finding is
@@ -209,10 +262,13 @@ scorecards:
         write the assessment file it names, then `toolbox assess check portal`.
     - name: passes-review
       level: gold
-      check: entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0
+      check: >-
+        entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0 &&
+        entity.reviewUncited.size() == 0
       evidence: >-
-        entity.reviewState == 'fresh' ? entity.reviewFailing : ['no current
-        assessment']
+        entity.reviewState != 'fresh' ? ['no current assessment'] :
+        entity.reviewFailing + entity.reviewUncited.map(c, c + ' cites nothing
+        that resolves')
       fix: >-
         Act on the failing criteria's suggestions in the assessment
         (portal/assessments/), then re-assess.
@@ -223,8 +279,10 @@ scorecards:
         entity.reviewState == 'fresh' ? entity.reviewUnsure : ['no current
         assessment']
       fix: >-
-        Resolve what the assessor was unsure of, or record the open question in
-        docs/questions.md and link it.
+        Resolve what the assessor was unsure of (cite the source the verdict
+        needs, in portal/assessments/), then re-assess with `toolbox assess
+        brief crate:<name> --portal portal`. An open question in
+        docs/questions.md doesn't pass this rule by itself.
     facets: {summary: public, details: public}
 
 rubrics:

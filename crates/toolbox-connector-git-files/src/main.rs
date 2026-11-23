@@ -388,7 +388,7 @@ async fn main() {
 
 #[cfg(test)]
 mod tests {
-    use super::{catalog_kind, yaml_documents};
+    use super::*;
 
     #[test]
     fn multi_document_catalog_keeps_each_kind() {
@@ -413,5 +413,21 @@ spec:
         assert_eq!(catalog_kind(&docs[0]).as_deref(), Some("component"));
         assert_eq!(catalog_kind(&docs[1]).as_deref(), Some("api"));
         assert_eq!(docs[0]["metadata"]["name"], "payments-api");
+    }
+
+    #[test]
+    fn external_ids_name_org_repo_and_path() {
+        assert_eq!(
+            ext("acme", "web", "catalog-info.yaml"),
+            "git:acme/web/catalog-info.yaml"
+        );
+    }
+
+    #[test]
+    fn contents_api_base64_decodes_across_line_breaks_and_padding() {
+        // GitHub wraps base64 content at 60 characters and pads with `=`.
+        assert_eq!(decode_base64("b3duZXI6\nIHRlYW0tYQ=="), "owner: team-a");
+        assert_eq!(decode_base64(""), "");
+        assert_eq!(decode_base64("YQ"), "a");
     }
 }

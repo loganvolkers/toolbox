@@ -12,7 +12,7 @@ use serde::Serialize;
 use serde_json::{Map, Value, json};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::time::{SystemTime, UNIX_EPOCH};
-use toolbox_expr::{Expr, from_cel, lazy_map, to_cel, with_vals, with_vars};
+use toolbox_expr::{Expr, ExprValue, Scope, lazy_map, with_vals, with_vars};
 use toolbox_model::Manifest;
 use toolbox_model::manifest::{Kind, TupleDerivation};
 use toolbox_store::InputSnapshot;
@@ -174,7 +174,7 @@ impl Derived {
 struct Pipeline<'m> {
     m: &'m Manifest,
     exprs: HashMap<String, Result<Expr, String>>,
-    policy: cel::Value,
+    policy: ExprValue,
 }
 
 /// A mapped record: (entity id, field values, relation edges as (relation, target)).
@@ -216,7 +216,7 @@ impl<'m> Pipeline<'m> {
             .into_iter()
             .map(|s| (s.to_owned(), Expr::compile(s)))
             .collect();
-        let policy = to_cel(&Value::Object(m.policies.clone()));
+        let policy = ExprValue::from_json(&Value::Object(m.policies.clone()));
         Pipeline { m, exprs, policy }
     }
 
@@ -228,8 +228,8 @@ impl<'m> Pipeline<'m> {
         }
     }
 
-    fn json_in(&self, src: &str, ctx: &cel::Context<'_, '_>) -> Result<Value, String> {
-        from_cel(&self.expr(src)?.eval_in(ctx)?)
+    fn json_in(&self, src: &str, ctx: &Scope<'_, '_, '_>) -> Result<Value, String> {
+        self.expr(src)?.json_in(ctx)
     }
 
     fn run(&self, inputs: &InputSnapshot) -> Derived {
@@ -267,7 +267,7 @@ impl<'m> Pipeline<'m> {
                 let mapped: Vec<Result<Mapped, String>> = recs
                     .par_iter()
                     .map(|r| {
-                        let record = to_cel(&r.data);
+                        let record = ExprValue::from_json(&r.data);
                         with_vars(&[("record", &record)], |ctx| {
                             let id = match self.json_in(&rule.id, ctx)? {
                                 Value::String(s) => s,
@@ -483,9 +483,9 @@ impl<'m> Pipeline<'m> {
 
         // 7. Computed fields: CEL over the entity (without computed fields), inbound (lazy lists)
         //    and policy.
-        let base: Vec<cel::Value> = ids
+        let base: Vec<ExprValue> = ids
             .par_iter()
-            .map(|id| to_cel(&d.entity_json(id).unwrap()))
+            .map(|id| ExprValue::from_json(&d.entity_json(id).unwrap()))
             .collect();
         let computed: Vec<(usize, String, Result<Value, String>)> = ids
             .par_iter()
@@ -612,7 +612,7 @@ impl<'m> Pipeline<'m> {
                 if p.scorecards.is_empty() && p.emits.is_empty() && p.options.is_empty() {
                     return None;
                 }
-                let entity = to_cel(&d.entity_json(id).unwrap());
+                let entity = ExprValue::from_json(&d.entity_json(id).unwrap());
                 Some(with_vars(
                     &[("entity", &entity), ("policy", &self.policy)],
                     |ctx| {
@@ -729,7 +729,7 @@ impl<'m> Pipeline<'m> {
         &self,
         sc: &toolbox_model::manifest::Scorecard,
         entity: &str,
-        ctx: &cel::Context<'_, '_>,
+        ctx: &Scope<'_, '_, '_>,
     ) -> Score {
         let applies = sc
             .applies_to
@@ -787,7 +787,7 @@ impl<'m> Pipeline<'m> {
         &self,
         r: &toolbox_model::manifest::Rule,
         outcome: &str,
-        ctx: &cel::Context<'_, '_>,
+        ctx: &Scope<'_, '_, '_>,
     ) -> Option<Value> {
         match (outcome, &r.evidence, &r.data_from) {
             ("fail" | "waived", Some(e), _) => Some(
@@ -807,7 +807,7 @@ impl<'m> Pipeline<'m> {
         &self,
         r: &toolbox_model::manifest::Rule,
         outcome: &str,
-        ctx: &cel::Context<'_, '_>,
+        ctx: &Scope<'_, '_, '_>,
     ) -> Option<f64> {
         let e = r.measure.as_deref().filter(|_| outcome == "fail")?;
         self.json_in(e, ctx).ok()?.as_f64()
@@ -847,8 +847,8 @@ impl<'m> Pipeline<'m> {
                 .filter(|c| watch.iter().any(|w| Some(w.as_str()) == c["name"].as_str()))
                 .cloned()
                 .collect();
-            let entity = to_cel(&d.entity_json(&id).unwrap());
-            let cards = to_cel(&Value::Array(selected));
+            let entity = ExprValue::from_json(&d.entity_json(&id).unwrap());
+            let cards = ExprValue::from_json(&Value::Array(selected));
             let scores: Vec<(String, Score)> = with_vars(
                 &[
                     ("entity", &entity),
@@ -1179,11 +1179,9 @@ fn level_rank(sc: &toolbox_model::manifest::Scorecard, level: &str) -> usize {
     }
 }
 
-fn truthy(v: cel::Value) -> Result<bool, String> {
-    match v {
-        cel::Value::Bool(b) => Ok(b),
-        other => Err(format!("expected a bool, got {other:?}")),
-    }
+fn truthy(v: ExprValue) -> Result<bool, String> {
+    v.as_bool()
+        .ok_or_else(|| format!("expected a bool, got {v:?}"))
 }
 
 /// Owners of `path`: the last matching CODEOWNERS rule wins (`*`, `/exact`, or a glob).

@@ -51,6 +51,10 @@ scorecards:
   # Live with/without-skill runs are not a rule: they need a model and they vary (D71).
   - name: maintainer-skill
     kind: Skill
+    description: >-
+      Each agent skill we ship: loadable, followable, honest about its limits
+      and free of hidden instructions or credentials (D72, docs/design/skill-
+      standards.md).
     owner: group:maintainers
     track: maintainer
     levels: [bronze, silver, gold]
@@ -123,8 +127,8 @@ scorecards:
       check: entity.boundaryCues.size() > 0
       evidence: "['no error, limit, or prerequisite cue in the body']"
       fix: >-
-        Name a limit, an error path, or a prerequisite in the body (never, do
-        not, limitation, prerequisite, troubleshooting, or on error).
+        Name a limit, an error path, or a prerequisite in the body of `SKILL.md`
+        (never, do not, limitation, prerequisite, troubleshooting, or on error).
     - name: has-evals
       level: gold
       check: entity.evalCases >= 3
@@ -136,14 +140,18 @@ scorecards:
         object with an evals array). One element is one prompt. Running them is
         a separate, non-gating step.
     - name: no-hidden-instructions
-      level: gold
+      level: bronze
       check: entity.hiddenChars == 0
-      evidence: "[string(entity.hiddenChars) + ' hidden or bidi characters']"
+      evidence: >-
+        [string(entity.hiddenChars) + ' hidden characters, HTML comments or
+        unreadable files']
       fix: >-
-        Remove hidden Unicode from the skill files: zero-width characters, bidi
-        overrides, and Unicode tags.
+        Remove from the skill's files what a reader can't see and a model can:
+        zero-width and other default-ignorable characters, bidi controls,
+        variation selectors outside emoji, Unicode tags and HTML comments (`<!--
+        -->`); save any non-UTF-8 file as UTF-8 or remove it.
     - name: no-hardcoded-secrets
-      level: gold
+      level: bronze
       check: entity.secretHits.size() == 0
       evidence: entity.secretHits
       fix: >-

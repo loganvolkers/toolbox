@@ -85,6 +85,17 @@ kinds:
       jobsWithoutPermissions: {type: list, items: string}
       jobsWithWrite: {type: list, items: string}
       concurrency: {type: boolean}
+      cancelsSuperseded:
+        type: boolean
+        description: >-
+          A concurrency group that varies by ref with cancel-in-progress not
+          false, at the top or on every job, so a new push cancels the old run.
+      hiddenFailures:
+        type: list
+        items: string
+        description: >-
+          Jobs with continue-on-error, and steps with it whose outcome no later
+          step reads (steps.<id>.outcome or .conclusion).
       unpinned: {type: list, items: string}
       zizmor: {type: object} # {total, counts: {high, medium, low, informational}, findings}
       actionlint: {type: object} # {total, findings}
@@ -103,7 +114,9 @@ kinds:
         {'path': record.path, 'type': record.type, 'name': record.name, 'triggers': record.triggers,
          'riskyTriggers': record.riskyTriggers, 'topPermissions': record.topPermissions, 'jobs': record.jobs,
          'jobsWithoutTimeout': record.jobsWithoutTimeout, 'jobsWithoutPermissions': record.jobsWithoutPermissions,
-         'jobsWithWrite': record.jobsWithWrite, 'concurrency': record.concurrency, 'unpinned': record.unpinned}
+         'jobsWithWrite': record.jobsWithWrite, 'concurrency': record.concurrency,
+         'cancelsSuperseded': record.cancelsSuperseded, 'hiddenFailures': record.hiddenFailures,
+         'unpinned': record.unpinned}
       relations: {usesAction: "record.actions.map(a, 'action:' + a)"}
     - from: ci-lint/zizmor
       id: "'workflow:' + record.path"
@@ -141,6 +154,10 @@ scorecards:
   # where those tools aren't installed (`dataFrom: ci-lint`).
   - name: maintainer-ci-security
     kind: Workflow
+    description: >-
+      What an attacker could do through a workflow: pinned actions, least-
+      privilege tokens, no risky triggers with write access, and zizmor and
+      actionlint clean (D70, docs/design/github-actions-standards.md).
     owner: group:maintainers
     levels: [bronze, silver, gold]
     rules:
@@ -219,6 +236,10 @@ scorecards:
   # `unknown` (`dataFrom: github-actions`). An all-unknown level is not granted.
   - name: maintainer-ci-reliability
     kind: Workflow
+    description: >-
+      Whether CI can be trusted to say green means good: failures visible,
+      timeouts, superseded runs cancelled, and a main branch that rarely fails
+      or waits (D70, docs/design/thresholds.md for the fail-rate tiers).
     owner: group:maintainers
     levels: [bronze, silver, gold]
     appliesTo: entity.type == 'workflow'
@@ -238,10 +259,20 @@ scorecards:
         evidence: >-
           [string(entity.runs.failRate) + '% of the last ' +
           string(entity.runs.decided) + ' decided runs on ' + entity.runs.branch +
-          ' failed']
+          ' failed (' + string(entity.runs.cancelled) + ' cancelled runs not
+          counted)']
         fix: >-
           Find the failing jobs (`toolbox get workflow:<path>` shows run data) and
-          fix or quarantine their causes.
+          fix their causes. Don't hide them: continue-on-error is caught by
+          failures-visible, and cancelled runs are shown here.
+      - name: failures-visible
+        level: bronze
+        check: entity.hiddenFailures.size() == 0
+        evidence: entity.hiddenFailures
+        fix: >-
+          Remove `continue-on-error` from each listed job or step. If a step is
+          expected to fail, give it an `id:` and check `steps.<id>.outcome` in a
+          later step, so the failure is still asserted.
       - name: every-job-has-timeout
         level: bronze
         check: entity.jobsWithoutTimeout.size() == 0
@@ -267,9 +298,18 @@ scorecards:
           instead of retrying.
       - name: cancels-superseded-runs
         level: silver
-        check: entity.concurrency || !('pull_request' in entity.triggers)
-        evidence: "['no concurrency group on a workflow triggered by pull_request']"
-        fix: "Add `concurrency: {group: ${{ github.workflow }}-${{ github.ref }}, cancel-in-progress: true}` so a new push cancels the old run."
+        check: entity.cancelsSuperseded || !('pull_request' in entity.triggers)
+        evidence: >-
+          [entity.concurrency ? 'the concurrency group does not vary by ref, or
+          cancel-in-progress is false (the default)' : 'no concurrency group on a
+          workflow triggered by pull_request']
+        fix: |-
+          Add, at the top of the workflow file:
+            concurrency:
+              group: "${{ github.workflow }}-${{ github.ref }}"
+              cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+          A new push to a pull request then cancels its old run, while every
+          run on main still finishes.
       - name: fail-rate-under-5
         level: gold
         dataFrom: github-actions
@@ -292,6 +332,9 @@ scorecards:
   # tj-actions/changed-files?" question).
   - name: maintainer-action-deps
     kind: ActionDependency
+    description: >-
+      Each third-party action across every workflow that uses it: pinned to a
+      commit SHA everywhere (D70, docs/design/github-actions-standards.md).
     owner: group:maintainers
     levels: [bronze]
     rules:

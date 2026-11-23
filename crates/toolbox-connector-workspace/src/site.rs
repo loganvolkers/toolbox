@@ -8,16 +8,17 @@ use std::path::Path;
 /// One content page: frontmatter, whether the sidebar reaches it, and links that do not resolve.
 pub fn analyse(root: &Path, rel: &str) -> Value {
     let text = std::fs::read_to_string(root.join(rel)).unwrap_or_default();
-    let fm = frontmatter(&text);
-    let title = fm_string(fm, "title");
-    let description = fm_string(fm, "description");
-    let draft = fm_bool(fm, "draft");
-    let sidebar_hidden = fm_bool(fm, "sidebar.hidden") || fm_bool(fm, "hidden");
+    let fm = parsed(frontmatter(&text));
+    let title = fm_string(&fm, "title");
+    let description = fm_string(&fm, "description");
+    let draft = fm["draft"] == true;
+    let sidebar_hidden = fm["sidebar"]["hidden"] == true || fm["hidden"] == true;
     let slug = slug(rel);
     json!({
         "path": rel,
         "slug": slug,
         "title": title,
+        "duplicateTitle": !title.is_empty() && title_elsewhere(root, rel, &title),
         "descriptionChars": description.chars().count(),
         "draft": draft,
         "sidebarHidden": sidebar_hidden,
@@ -37,22 +38,39 @@ fn frontmatter(text: &str) -> &str {
     rest.find("\n---").map(|i| &rest[..i]).unwrap_or("")
 }
 
-fn fm_string(fm: &str, key: &str) -> String {
-    let prefix = format!("{key}:");
-    for line in fm.lines() {
-        let Some(rest) = line.trim().strip_prefix(&prefix) else {
-            continue;
-        };
-        return rest
-            .trim()
-            .trim_matches(|c| c == '"' || c == '\'')
-            .to_string();
-    }
-    String::new()
+/// The frontmatter as YAML (Starlight reads it that way), or null when it doesn't parse.
+fn parsed(fm: &str) -> Value {
+    serde_norway::from_str(fm).unwrap_or(Value::Null)
 }
 
-fn fm_bool(fm: &str, key: &str) -> bool {
-    fm_string(fm, key) == "true"
+/// A top-level string key, trimmed: a nested `hero: {title: …}` or a blank `title: " "` is no
+/// title.
+fn fm_string(fm: &Value, key: &str) -> String {
+    fm[key]
+        .as_str()
+        .map(|t| t.trim().to_owned())
+        .unwrap_or_default()
+}
+
+/// Whether another content page has the same title (a reader can't tell them apart in search or
+/// the sidebar).
+fn title_elsewhere(root: &Path, rel: &str, title: &str) -> bool {
+    let dir = root.join("site/src/content/docs");
+    walkdir::WalkDir::new(&dir)
+        .into_iter()
+        .flatten()
+        .filter(|e| e.file_type().is_file())
+        .filter(|e| {
+            matches!(
+                e.path().extension().and_then(|x| x.to_str()),
+                Some("md" | "mdx")
+            )
+        })
+        .filter(|e| !e.path().ends_with(rel) && root.join(rel) != e.path())
+        .any(|e| {
+            let text = std::fs::read_to_string(e.path()).unwrap_or_default();
+            fm_string(&parsed(frontmatter(&text)), "title").eq_ignore_ascii_case(title)
+        })
 }
 
 /// Slug under `src/content/docs`. The root `index` page is empty, which Starlight serves at `/`.
@@ -202,19 +220,7 @@ fn file_exists(root: &Path, rel: &str, target: &str) -> bool {
 }
 
 fn secrets(rel: &str, text: &str) -> Vec<String> {
-    let patterns = [
-        ("aws-access-key", r"AKIA[0-9A-Z]{16}"),
-        ("github-token", r"ghp_[A-Za-z0-9]{36}"),
-    ];
-    let mut hits = Vec::new();
-    for (n, line) in text.lines().enumerate() {
-        for (kind, pat) in patterns {
-            if compile(pat).is_match(line) {
-                hits.push(format!("{rel}:{} {kind}", n + 1));
-            }
-        }
-    }
-    hits
+    crate::hygiene::secrets(rel, text)
 }
 
 fn compile(pat: &str) -> Regex {
@@ -223,6 +229,15 @@ fn compile(pat: &str) -> Regex {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn only_a_top_level_non_blank_title_counts() {
+        let title = |fm: &str| super::fm_string(&super::parsed(fm), "title");
+        assert_eq!(title("hero:\n  title: Nested\n"), "");
+        assert_eq!(title("title: \"  \"\n"), "");
+        assert_eq!(title("title: >-\n  Folded\n  title\n"), "Folded title");
+        assert_eq!(title("title: DX Benchmarks\n"), "DX Benchmarks");
+    }
+
     use super::*;
     use serde_json::json;
 

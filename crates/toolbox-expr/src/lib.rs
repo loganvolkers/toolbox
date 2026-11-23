@@ -1,15 +1,25 @@
-//! CEL support for Toolbox (docs/v1-spec.md §4, §6.2).
+//! CEL for Toolbox (docs/v1-spec.md §4 "CEL compile and evaluate", §6.2): one crate owns the
+//! expression language, so the rest of the workspace never names a `cel` type.
 //!
-//! M0 provides static checks used by `toolbox validate`: an expression must parse, and the top-level
-//! variables it reads must be among those available at its site. Macro-bound variables (`i` in
-//! `xs.map(i, i.app)`) are not top-level references and are ignored. Type checking is out of scope
-//! (cel-rust has no checker; see Q10).
+//! - **Static checks** ([`check`]), used by `toolbox validate`: an expression must parse, read only
+//!   the top-level variables its manifest site provides ([`Site`]), and call only declared
+//!   functions. Macro-bound variables (`i` in `xs.map(i, i.app)`) are not top-level references.
+//!   Type checking is out of scope (cel-rust has no checker; see Q10).
+//! - **Compile and evaluate** ([`Expr`], [`eval`]): JSON in and out through [`ExprValue`], variables
+//!   bound once per entity with [`with_vars`], and extra functions through [`Env`].
+//! - **Lazy lists** ([`lazy`]): `inbound.<relation>` converts only the elements an expression
+//!   visits.
+//! - **Analysis** ([`analysis`]): node count, depth, loop nesting and the fields an expression
+//!   reads, for the meta standards' readability rules.
+//!
+//! The implementation is cel-rust (a default behind this contract, charter goal 3): swapping it
+//! changes this crate only.
 
 pub mod analysis;
 pub mod eval;
 pub mod lazy;
 
-pub use eval::{Expr, from_cel, map_value, to_cel, with_vals, with_vars};
+pub use eval::{Env, Expr, ExprValue, Lazy, Scope, with_vals, with_vars};
 pub use lazy::lazy_map;
 
 use std::fmt;

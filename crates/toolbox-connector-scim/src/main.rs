@@ -240,3 +240,63 @@ async fn main() {
     eprintln!("toolbox-connector-scim: SCIM on http://{listen}/scim/v2");
     axum::serve(listener, router).await.expect("serve");
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn app(scim_token: Option<&str>) -> App {
+        App {
+            toolbox: String::new(),
+            connector: "idp".into(),
+            token: None,
+            scim_token: scim_token.map(str::to_owned),
+            users: Mutex::new(HashMap::new()),
+            groups: Mutex::new(HashMap::new()),
+        }
+    }
+
+    #[test]
+    fn only_the_configured_bearer_token_is_authorized() {
+        let mut h = HeaderMap::new();
+        assert!(authorized(&app(None), &h));
+        assert!(!authorized(&app(Some("s3")), &h));
+        h.insert("authorization", "Bearer s3".parse().unwrap());
+        assert!(authorized(&app(Some("s3")), &h));
+        h.insert("authorization", "Bearer other".parse().unwrap());
+        assert!(!authorized(&app(Some("s3")), &h));
+    }
+
+    #[test]
+    fn user_records_fall_back_from_formatted_name_to_display_name_to_login() {
+        let r = user_record(&json!({"userName": "ada", "emails": [{"value": "ada@example.com"}]}));
+        assert_eq!(r["externalId"], "idp:user/ada");
+        assert_eq!(
+            r["data"],
+            json!({"login": "ada", "name": "ada", "email": "ada@example.com"})
+        );
+        let r = user_record(&json!({"userName": "ada", "displayName": "Ada L"}));
+        assert_eq!(r["data"]["name"], "Ada L");
+    }
+
+    #[test]
+    fn group_records_resolve_members_to_logins_and_read_the_extension() {
+        let a = app(None);
+        a.users
+            .lock()
+            .unwrap()
+            .insert("u1".into(), json!({"userName": "ada"}));
+        let g = json!({
+            "displayName": "Platform Team",
+            "members": [{"value": "u1"}, {"value": "gone"}],
+            EXT: {"parent": "eng", "githubTeam": "acme/platform"}
+        });
+        let r = group_record(&a, &g);
+        assert_eq!(r["externalId"], "idp:group/platform-team");
+        assert_eq!(r["data"]["members"], json!(["ada"]));
+        assert_eq!(r["data"]["parent"], "eng");
+        assert_eq!(r["data"]["githubTeam"], "acme/platform");
+        let r = group_record(&a, &json!({"displayName": "X", EXT: {"slug": "core"}}));
+        assert_eq!(r["externalId"], "idp:group/core");
+    }
+}

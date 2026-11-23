@@ -1,12 +1,49 @@
-//! CEL evaluation: JSON ↔ CEL value conversion and execution with named variables.
+//! CEL evaluation behind Toolbox-owned types: [`ExprValue`] (converted from and to JSON),
+//! [`Scope`] (bound variables), [`Env`] (extra functions) and [`Expr`]. Callers never name a
+//! `cel` type, so the CEL implementation (cel-rust today, Q10) can be swapped inside this crate.
 
 use cel::objects::{Key, Map};
-use cel::{Context, Program, Value};
+use cel::{Context, ExecutionError, Program, ResolveResult, Value};
 use std::collections::HashMap;
 use std::sync::Arc;
 
-/// Convert JSON to a CEL value. Integers become `int`, as in cel-python's `json_to_cel`.
-pub fn to_cel(v: &serde_json::Value) -> Value {
+/// A value an expression reads or returns. Built from JSON; integers become CEL `int`, as in
+/// cel-python's `json_to_cel`.
+#[derive(Clone, PartialEq)]
+pub struct ExprValue(pub(crate) Value);
+
+impl std::fmt::Debug for ExprValue {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl ExprValue {
+    /// Convert JSON into an expression value.
+    pub fn from_json(v: &serde_json::Value) -> Self {
+        ExprValue(to_cel(v))
+    }
+
+    /// Convert back to JSON; values with no JSON form (durations, types) are an error.
+    pub fn to_json(&self) -> Result<serde_json::Value, String> {
+        from_cel(&self.0)
+    }
+
+    /// A map from string keys.
+    pub fn map(entries: impl IntoIterator<Item = (String, ExprValue)>) -> Self {
+        ExprValue(map_value(entries.into_iter().map(|(k, v)| (k, v.0))))
+    }
+
+    /// The boolean, if this is one.
+    pub fn as_bool(&self) -> Option<bool> {
+        match self.0 {
+            Value::Bool(b) => Some(b),
+            _ => None,
+        }
+    }
+}
+
+fn to_cel(v: &serde_json::Value) -> Value {
     match v {
         serde_json::Value::Null => Value::Null,
         serde_json::Value::Bool(b) => Value::Bool(*b),
@@ -25,8 +62,7 @@ pub fn to_cel(v: &serde_json::Value) -> Value {
     }
 }
 
-/// Build a CEL map from string-keyed entries.
-pub fn map_value(entries: impl IntoIterator<Item = (String, Value)>) -> Value {
+fn map_value(entries: impl IntoIterator<Item = (String, Value)>) -> Value {
     let map: HashMap<Key, Value> = entries
         .into_iter()
         .map(|(k, v)| (Key::String(Arc::new(k)), v))
@@ -34,8 +70,7 @@ pub fn map_value(entries: impl IntoIterator<Item = (String, Value)>) -> Value {
     Value::Map(Map { map: Arc::new(map) })
 }
 
-/// Convert a CEL result back to JSON.
-pub fn from_cel(v: &Value) -> Result<serde_json::Value, String> {
+fn from_cel(v: &Value) -> Result<serde_json::Value, String> {
     Ok(match v {
         Value::Null => serde_json::Value::Null,
         Value::Bool(b) => (*b).into(),
@@ -67,38 +102,99 @@ pub fn from_cel(v: &Value) -> Result<serde_json::Value, String> {
     })
 }
 
+/// Variables bound for evaluation, from [`with_vars`], [`with_vals`] or [`Env::scope`].
+#[derive(Clone, Copy)]
+pub struct Scope<'r, 'a, 'b>(&'r Context<'a, 'b>);
+
+/// A variable whose elements are converted only when an expression visits them (see
+/// [`crate::lazy_map`]).
+pub struct Lazy(pub(crate) Box<dyn cel::common::value::Val>);
+
 thread_local! {
     static ROOT: Context<'static, 'static> = Context::default();
 }
 
 /// Bind `vars` once (each is converted into CEL's runtime form here) in a child of a per-thread
-/// root context with the standard library, and run `f` with it.
-pub fn with_vars<R>(vars: &[(&str, &Value)], f: impl FnOnce(&Context<'_, '_>) -> R) -> R {
-    ROOT.with(|root| {
-        let mut ctx = root.new_inner_scope();
-        for (name, value) in vars {
-            ctx.add_variable_from_value(*name, (*value).clone());
-        }
-        f(&ctx)
-    })
+/// root scope with the standard library, and run `f` with it.
+pub fn with_vars<R>(vars: &[(&str, &ExprValue)], f: impl FnOnce(&Scope<'_, '_, '_>) -> R) -> R {
+    with_vals(vars, Vec::new(), f)
 }
 
-/// Like [`with_vars`], plus variables that are already CEL runtime values (e.g. [`crate::lazy_map`]).
+/// Like [`with_vars`], plus lazy variables (e.g. [`crate::lazy_map`]).
 pub fn with_vals<R>(
-    vars: &[(&str, &Value)],
-    vals: Vec<(&str, Box<dyn cel::common::value::Val>)>,
-    f: impl FnOnce(&Context<'_, '_>) -> R,
+    vars: &[(&str, &ExprValue)],
+    vals: Vec<(&str, Lazy)>,
+    f: impl FnOnce(&Scope<'_, '_, '_>) -> R,
 ) -> R {
     ROOT.with(|root| {
         let mut ctx = root.new_inner_scope();
         for (name, value) in vars {
-            ctx.add_variable_from_value(*name, (*value).clone());
+            ctx.add_variable_from_value(*name, value.0.clone());
         }
         for (name, val) in vals {
-            ctx.add_variable_as_val(name, val);
+            ctx.add_variable_as_val(name, val.0);
         }
-        f(&ctx)
+        f(&Scope(&ctx))
     })
+}
+
+/// A standard library plus caller functions over strings that return JSON, such as
+/// `toolbox test`'s `entity(id)` and `score(card, id)`.
+#[derive(Default)]
+pub struct Env(Context<'static, 'static>);
+
+type Fallible = Result<serde_json::Value, String>;
+
+impl Env {
+    fn result(name: &'static str, r: Fallible) -> ResolveResult {
+        r.map(|v| to_cel(&v))
+            .map_err(|m| ExecutionError::function_error(name, m))
+    }
+
+    /// Register `name()`. Fails if it would shadow a standard function.
+    pub fn function0(
+        &mut self,
+        name: &'static str,
+        f: impl Fn() -> Fallible + Send + Sync + 'static,
+    ) -> Result<(), String> {
+        self.0
+            .add_function(name, move || -> ResolveResult { Self::result(name, f()) })
+            .map_err(|e| e.to_string())
+    }
+
+    /// Register `name(a)` over a string argument.
+    pub fn function1(
+        &mut self,
+        name: &'static str,
+        f: impl Fn(&str) -> Fallible + Send + Sync + 'static,
+    ) -> Result<(), String> {
+        self.0
+            .add_function(name, move |a: Arc<String>| -> ResolveResult {
+                Self::result(name, f(&a))
+            })
+            .map_err(|e| e.to_string())
+    }
+
+    /// Register `name(a, b)` over two string arguments.
+    pub fn function2(
+        &mut self,
+        name: &'static str,
+        f: impl Fn(&str, &str) -> Fallible + Send + Sync + 'static,
+    ) -> Result<(), String> {
+        self.0
+            .add_function(
+                name,
+                move |a: Arc<String>, b: Arc<String>| -> ResolveResult {
+                    Self::result(name, f(&a, &b))
+                },
+            )
+            .map_err(|e| e.to_string())
+    }
+
+    /// The scope to evaluate in.
+    pub fn scope(&self) -> Scope<'_, 'static, 'static> {
+        Scope(&self.0)
+    }
 }
 
 /// A compiled expression, shareable across threads.
@@ -126,13 +222,21 @@ impl Expr {
 
     /// Evaluate with the given variables. Binding converts values into CEL's runtime form, so when
     /// several expressions share variables, bind once with [`with_vars`] and call [`Expr::eval_in`].
-    pub fn eval(&self, vars: &[(&str, &Value)]) -> Result<Value, String> {
+    pub fn eval(&self, vars: &[(&str, &ExprValue)]) -> Result<ExprValue, String> {
         with_vars(vars, |ctx| self.eval_in(ctx))
     }
 
-    /// Evaluate in a caller-provided context (e.g. one with test functions registered).
-    pub fn eval_in(&self, ctx: &Context<'_, '_>) -> Result<Value, String> {
-        self.program.execute(ctx).map_err(|e| e.to_string())
+    /// Evaluate in a caller-provided scope (e.g. one with test functions registered).
+    pub fn eval_in(&self, scope: &Scope<'_, '_, '_>) -> Result<ExprValue, String> {
+        self.program
+            .execute(scope.0)
+            .map(ExprValue)
+            .map_err(|e| e.to_string())
+    }
+
+    /// Evaluate and convert the result to JSON.
+    pub fn json_in(&self, scope: &Scope<'_, '_, '_>) -> Result<serde_json::Value, String> {
+        self.eval_in(scope)?.to_json()
     }
 }
 
@@ -143,9 +247,9 @@ mod tests {
 
     #[test]
     fn lazy_lists_size_and_iterate() {
-        let items = std::sync::Arc::new(vec![
-            to_cel(&json!({"app": "a"})),
-            to_cel(&json!({"app": "b"})),
+        let items = Arc::new(vec![
+            ExprValue::from_json(&json!({"app": "a"})),
+            ExprValue::from_json(&json!({"app": "b"})),
         ]);
         let e = Expr::compile("inbound.r.size() == 2 && inbound.r.map(i, i.app) == ['a', 'b'] && inbound.r.exists(i, i.app == 'b') && inbound.r[1].app == 'b'").unwrap();
         let out = with_vals(
@@ -153,7 +257,7 @@ mod tests {
             vec![("inbound", crate::lazy_map([("r".to_string(), items)]))],
             |ctx| e.eval_in(ctx),
         );
-        assert_eq!(out, Ok(Value::Bool(true)));
+        assert_eq!(out.map(|v| v.as_bool()), Ok(Some(true)));
         let e = Expr::compile("inbound.r[2]").unwrap();
         let out = with_vals(
             &[],
@@ -168,14 +272,46 @@ mod tests {
 
     #[test]
     fn round_trip_and_eval() {
-        let record = to_cel(&json!({"id": 1001, "name": "x", "tags": ["a"], "m": {"k": true}}));
+        let record = ExprValue::from_json(
+            &json!({"id": 1001, "name": "x", "tags": ["a"], "m": {"k": true}}),
+        );
         let e = Expr::compile(
             "{'id': string(record.id), 'n': record.name, 'missing': has(record.z) ? 1 : null}",
         )
         .unwrap();
-        let out = from_cel(&e.eval(&[("record", &record)]).unwrap()).unwrap();
+        let out = e.eval(&[("record", &record)]).unwrap().to_json().unwrap();
         assert_eq!(out, json!({"id": "1001", "n": "x", "missing": null}));
         let e = Expr::compile("record.m == {'k': true} && 'a' in record.tags").unwrap();
-        assert_eq!(e.eval(&[("record", &record)]).unwrap(), Value::Bool(true));
+        assert_eq!(
+            e.eval(&[("record", &record)]).unwrap().as_bool(),
+            Some(true)
+        );
+        let m = ExprValue::map([("k".to_string(), ExprValue::from_json(&json!(1)))]);
+        assert_eq!(m.to_json(), Ok(json!({"k": 1})));
+        assert!(ExprValue::from_json(&json!(1)).as_bool().is_none());
+    }
+
+    #[test]
+    fn env_functions_return_json_and_name_their_errors() {
+        let mut env = Env::default();
+        env.function1("twice", |s| Ok(json!(format!("{s}{s}"))))
+            .unwrap();
+        env.function2("pick", |a, b| {
+            if a == "x" {
+                Ok(json!(b))
+            } else {
+                Err(format!("no {a}"))
+            }
+        })
+        .unwrap();
+        env.function0("zero", || Ok(json!(0))).unwrap();
+        let e =
+            Expr::compile("twice('a') == 'aa' && pick('x', 'y') == 'y' && zero() == 0").unwrap();
+        assert_eq!(e.eval_in(&env.scope()).unwrap().as_bool(), Some(true));
+        let err = Expr::compile("pick('q', 'y')")
+            .unwrap()
+            .eval_in(&env.scope())
+            .unwrap_err();
+        assert!(err.contains("no q"), "{err}");
     }
 }
