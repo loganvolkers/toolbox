@@ -1,0 +1,15 @@
+{
+  "arm": "/tmp/connector-ab/arms/B",
+  "tenant": "a",
+  "phase": 3,
+  "truth": {
+    "ok": false,
+    "detail": "missing=[('component', 'ALPHA:api'), ('component', 'ALPHA:web'), ('component', 'BETA:billing')] extra=[('component', '1'), ('component', '2'), ('component', '3')] mismatched=[]",
+    "got": 8,
+    "want": 8
+  },
+  "shape": {
+    "ok": true,
+    "detail": "on_resync kinds=['component', 'issue', 'project']"
+  }
+}
