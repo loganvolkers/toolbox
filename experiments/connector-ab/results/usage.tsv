@@ -1,4 +1,7 @@
 phase	arm	tokens	calls	seconds	notes
-1	A		53		truth+shape pass; over 50-call budget; tokens unknown
-1	B		41		truth+shape pass; tokens unknown
-1	C		29		truth+shape pass; tokens unknown
+1	A		53		truth+shape pass; over 50-call budget
+1	B		41		truth+shape pass
+1	C		29		truth+shape pass
+3	A		12		truth+shape pass (8 entities); v2 after discarded truncated launch
+3	B		22		truth+shape pass
+3	C		17		truth+shape pass

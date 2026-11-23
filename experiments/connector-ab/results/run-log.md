@@ -30,3 +30,13 @@ Harness fix during phase 1: copy `rust-toolchain.toml` into arm A (edition2024).
 - Discarded truncated prompt launch bc-1f45cf68 (incomplete brief); relaunched A as bc-3da53731
 - B: bc-eb6a791a
 - C: bc-6a3bfcc2
+
+## Phase 3 scores (2026-11-23)
+
+| Arm | Truth | Shape | Glue | Calls | Agent |
+|---|---|---|---|---|---|
+| A | pass (8) | pass | see 3-A-glue | 12 | [Connector A/B phase3 Toolbox v2](bc-3da53731-56c4-5a88-99d0-d41f8f7a041e) |
+| B | pass (8) | pass | see 3-B-glue | 22 | [Connector A/B phase3 Ocean](bc-eb6a791a-d811-5717-8ff3-4387ffdf261c) |
+| C | pass (8) | pass | see 3-C-glue | 17 | [Connector A/B phase3 Backstage](bc-6a3bfcc2-5b23-5ef0-a18c-29395631e296) |
+
+Discarded: [Connector A/B phase3 Toolbox](bc-1f45cf68-6549-53fc-980d-bee57bdba06c) (truncated prompt); work overlapped with v2, scored from final tree.
