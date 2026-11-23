@@ -72,3 +72,10 @@ Product fixes on branch `cursor/connector-learning-dx-530d` (D01M83FFM2K6XS4EAVH
 - A Toolbox: bc-5133c227-6bc1-5efa-b07f-9c22a1bb6e30
 - B Ocean: bc-0c51db1a-e909-51c7-9492-4a8c35124dd9
 - C Backstage: bc-22217758-3292-54f0-b08c-b3f6e652cce4
+
+### Phase 1 v2 scores (partial; A agent may still be wrapping up)
+| Arm | Truth | Shape | Glue | Calls (transcript) | Agent |
+|---|---|---|---|---|---|
+| B Ocean | pass (5) | pass | 302 | 37 | bc-0c51db1a |
+| C Backstage | pass (5) | pass | 358 | 38 | bc-22217758 |
+| A Toolbox | pass (5) | pass | 342 | 36 | bc-5133c227 |
