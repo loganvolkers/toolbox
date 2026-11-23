@@ -73,6 +73,7 @@ records:
     docs:
     - docs/design/maintainer-sdlc.md
     - docs/design/package-author-sdlc.md
+    - docs/RELEASING.md
     - dist-workspace.toml
     status: partial
     gaps:
@@ -86,6 +87,10 @@ records:
     - >-
       This repository's CI still builds actions/report from source; external
       callers should set toolbox-version to a release (e.g. 0.1.0)
+    - >-
+      The release run builds the image (custom-image calls image.yml), but no
+      tag has gone through it yet; v0.1.0 and v0.1.1 have no image until
+      someone runs `gh workflow run image.yml -f tag=<tag>`
   - id: maintainer/monitor
     layer: maintainer
     name: monitor

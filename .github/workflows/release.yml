@@ -324,3 +324,18 @@ jobs:
         with:
           persist-credentials: false
           submodules: recursive
+
+  # dist's post-announce-jobs = ["./image"] (dist-workspace.toml), patched under allow-dirty:
+  # no `secrets: inherit`, because image.yml needs only github.token (zizmor secrets-inherit).
+  custom-image:
+    needs:
+      - plan
+      - announce
+    uses: ./.github/workflows/image.yml
+    with:
+      plan: ${{ needs.plan.outputs.val }}
+    permissions:
+      "attestations": "write"
+      "contents": "read"
+      "id-token": "write"
+      "packages": "write"

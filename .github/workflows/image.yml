@@ -1,9 +1,18 @@
 # The server image (D90): built from a published release's Linux archives, not from source, pushed
-# to GHCR and attested. Runs when dist publishes a release, or by hand for an existing tag.
+# to GHCR and attested. release.yml calls it after dist announces a release (post-announce-jobs);
+# a `release: published` trigger would never fire, because dist creates the release with
+# GITHUB_TOKEN and events from that token start no workflows. Run it by hand for an existing tag.
 name: image
 
 on:
-  release: {types: [published]}
+  workflow_call:
+    inputs:
+      plan:
+        description: >-
+          dist's plan manifest, which dist passes to every post-announce job. The
+          tag is the caller's ref (the pushed release tag), so this is not read.
+        type: string
+        required: true
   workflow_dispatch:
     inputs:
       tag:
@@ -13,14 +22,13 @@ on:
 # Explicit least privilege at the top level; the image job elevates only what it needs.
 permissions: {contents: read}
 
-concurrency:
-  group: image-${{ github.event.release.tag_name || inputs.tag }}
-  cancel-in-progress: false
-
 jobs:
   image:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    concurrency:
+      group: image-${{ inputs.tag || github.ref_name }}
+      cancel-in-progress: false
     permissions:
       contents: read
       packages: write
@@ -32,7 +40,7 @@ jobs:
       - name: The release's Linux binaries, checksum-verified
         id: meta
         env:
-          TAG: ${{ github.event.release.tag_name || inputs.tag }}
+          TAG: ${{ inputs.tag || github.ref_name }}
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
