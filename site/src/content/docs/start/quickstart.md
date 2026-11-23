@@ -9,7 +9,7 @@ Fifteen minutes to a scored repository. No Postgres and no portal server — onl
 
 ## 1. Install the binaries
 
-Current release: **v0.1.1**. You need `toolbox` and `toolbox-connector-workspace` on `PATH` (the runner connector is optional for the starter). These are the shell installers on the [v0.1.1 release](https://github.com/loganvolkers/toolbox/releases/tag/v0.1.1).
+Current release: **v0.1.1**. This path runs a repo portal, so it installs the `toolbox` CLI and `toolbox-connector-workspace` (the starter's manifest names `builtin:workspace`). These are the shell installers on the [v0.1.1 release](https://github.com/loganvolkers/toolbox/releases/tag/v0.1.1).
 
 ```bash
 curl --proto '=https' --tlsv1.2 -LsSf https://github.com/loganvolkers/toolbox/releases/download/v0.1.1/toolbox-cli-installer.sh | sh
@@ -18,7 +18,7 @@ export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
 toolbox --version
 ```
 
-Windows, the runner connector, and the other connector apps: [Install a release](/toolbox/start/install/). Building from source: [Run Toolbox locally](/toolbox/start/run/).
+Windows, and any other `builtin:` your manifest names: [Install a release](/toolbox/start/install/). Writing a connector: [Write a connector](/toolbox/authors/connectors/). Building Toolbox itself: [Run Toolbox locally](/toolbox/start/run/).
 
 ## 2. Copy the starter portal
 
@@ -75,7 +75,8 @@ Use `mode: update` once when you intentionally tighten the baseline. Pin the act
 
 | If you are… | Go to |
 |---|---|
-| Extending standards, connectors, or a served catalog | [Build a portal](/toolbox/operators/) |
+| Changing the portal or serving the catalog | [Build a portal](/toolbox/operators/) |
+| Writing a connector other portals run | [Write a connector](/toolbox/authors/connectors/) |
 | Reading owners and scores from scripts or agents | [Use a portal](/toolbox/users/) · [Agents](/toolbox/agents/reads/) |
 | Publishing a package other portals include | [Publish a standard](/toolbox/authors/) |
 | Changing Toolbox itself | [Build Toolbox](/toolbox/maintainers/) |

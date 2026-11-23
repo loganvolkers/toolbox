@@ -14,7 +14,7 @@ The public docs are a Starlight site in [site/](site/src/content/docs/index.md),
 
 **SDLC has four layers** ([docs/sdlc.md](docs/sdlc.md)): the *maintainer* SDLC for building Toolbox, the *package author* SDLC for publishing packages and connectors others consume, the *operator* SDLC for building a portal, and the *user* SDLC for building apps on a portal.
 
-**Install (v0.1.1):** the shell and PowerShell installers on the GitHub release ([Install a release](site/src/content/docs/start/install.md), [docs/RELEASING.md](docs/RELEASING.md)). For a repo portal:
+**Install (v0.1.1):** the shell and PowerShell installers on the GitHub release ([Install a release](site/src/content/docs/start/install.md), [docs/RELEASING.md](docs/RELEASING.md)). An operator running a repo portal installs the CLI and the workspace connector. Writing a connector is the CLI plus the scaffold in [examples/connector-scaffold](examples/connector-scaffold/README.md). For a repo portal:
 
 ```bash
 curl --proto '=https' --tlsv1.2 -LsSf https://github.com/loganvolkers/toolbox/releases/download/v0.1.1/toolbox-cli-installer.sh | sh

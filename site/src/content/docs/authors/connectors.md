@@ -5,10 +5,25 @@ sidebar:
   order: 2
 ---
 
-A connector is a process that speaks Toolbox's control channel and emits records of named kinds. Package authors ship connectors that other portals include. Operators wire them into a running portal. This page is the package-author path.
+A connector is a process that speaks Toolbox's control channel and emits records of named kinds. Package authors ship connectors that other portals include. Operators wire a shipped or published connector into a running portal. This page is the package-author path. An operator who runs builtins and included packages follows [Install a release](/toolbox/start/install/) and [Build a portal](/toolbox/operators/).
 
-The public docs used to say there was no scaffold. There is one now: copy
-[`examples/connector-scaffold/`](https://github.com/loganvolkers/toolbox/tree/main/examples/connector-scaffold).
+## Install
+
+1. Install the `toolbox` CLI from the [v0.1.1 release](/toolbox/start/install/#run-a-portal). The first-party connector installers on that page are for a portal that runs those connectors.
+2. Copy the scaffold. Its `rust-toolchain.toml` pins Rust 1.97 (edition 2024), which the SDK needs.
+
+```bash
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/loganvolkers/toolbox/releases/download/v0.1.1/toolbox-cli-installer.sh | sh
+export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
+git clone --depth 1 https://github.com/loganvolkers/toolbox.git
+cd toolbox/examples/connector-scaffold
+cargo build
+```
+
+The clone is the scaffold source
+([`examples/connector-scaffold/`](https://github.com/loganvolkers/toolbox/tree/main/examples/connector-scaffold)).
+`cargo build` produces your connector. A test portal that names a `builtin:` still needs that released connector binary, the same as any other portal.
+
 Agents should follow the `author-connector` skill in
 [`plugins/toolbox-operator/skills/author-connector/`](https://github.com/loganvolkers/toolbox/tree/main/plugins/toolbox-operator/skills/author-connector).
 
