@@ -266,27 +266,27 @@ async fn list_entities(State(s): S, headers: HeaderMap, Query(q): Query<ListQuer
     };
     // What a viewer sees is the summary or the whole entity, so an entity the filter rejects in
     // both shapes can't match: drop it before asking the authorizer. The result is the same.
-    let candidates: Vec<&String> = match &filter {
-        Some(f) => candidates
-            .into_iter()
-            .filter(|id| {
-                let summary = Visibility {
-                    view: true,
-                    details: false,
-                };
-                let whole = Visibility {
-                    view: true,
-                    details: true,
-                };
-                matches(f, id, summary) || matches(f, id, whole)
-            })
-            .collect(),
-        None => candidates,
+    // Lazily, so a page stops reading candidates once it is full.
+    let summary = Visibility {
+        view: true,
+        details: false,
     };
+    let whole = Visibility {
+        view: true,
+        details: true,
+    };
+    let mut pending = candidates.into_iter().filter(|id| {
+        filter
+            .as_ref()
+            .is_none_or(|f| matches(f, id, summary) || matches(f, id, whole))
+    });
     let mut items: Vec<Value> = Vec::new();
     let mut next = None;
-    'outer: for chunk in candidates.chunks(200) {
-        let ids: Vec<&str> = chunk.iter().map(|s| s.as_str()).collect();
+    'outer: loop {
+        let ids: Vec<&str> = pending.by_ref().take(200).map(String::as_str).collect();
+        if ids.is_empty() {
+            break;
+        }
         let vis = match s.visibility(&caller, &ids).await {
             Ok(v) => v,
             Err(r) => return r,
