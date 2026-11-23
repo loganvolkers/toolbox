@@ -29,6 +29,7 @@ Toolbox benchmarks its own developer experience. Coding agents do real work on o
 - [The catalog](/toolbox/concepts/catalog/)
 - [Scorecards](/toolbox/concepts/scorecards/)
 - [DX Benchmarks](/toolbox/concepts/dx-benchmarks/)
+- [Toolbox vs others](/toolbox/compare/)
 - [This repository, scored](/toolbox/demo/report/)
 
 The source of this site is in the [Toolbox repository](https://github.com/loganvolkers/toolbox). The pages you are reading are catalogued and scored with the rest of the repository.
