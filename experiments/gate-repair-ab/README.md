@@ -4,8 +4,9 @@
 ratchet get it to a correct pass for less effort than reviewdog, which runs the same tools and
 reports only the findings the branch added?
 
-**Status: registered under protocol 2 (D01M83RDWQ5EVKY5SFHDWAD5HFH); round 1 not yet run.** The bar
-is in §5 and was committed before the first scored launch. Results go in §0.
+**Status: registered under protocol 2 (D01M83RDWQ5EVKY5SFHDWAD5HFH); round 1 run (§0.1), Toolbox
+changed (§0.2), round 2 next.** The bar is in §5 and was committed before the first scored launch.
+Labels are the adjudicator's, in `ADJUDICATION.md` once both rounds are in.
 
 This is about the box ([toolbox-and-tools.md](../../docs/design/toolbox-and-tools.md)): both arms
 carry the same tools, zizmor and actionlint, at the same pins, with the same flags and the same
@@ -17,7 +18,47 @@ C1 in [root-causes.md](../../docs/design/root-causes.md)).
 
 ## 0. Results
 
-Not run yet.
+### 0.1 Round 1 (frozen at `60723d6`; Toolbox's Rust as at `703b53a`)
+
+Every run in both arms was correct. Per run: [results/r1.tsv](results/r1.tsv), with each run's
+score and diff in [results/r1/](results/r1/).
+
+| Arm | Calls (runs) | Median, range | Read, chars (runs) | Median, range |
+|---|---|---|---|---|
+| A: Toolbox | 7, 7, 6 | 7, 1 | 29,767; 28,023; 36,248 | 29,767; 8,225 |
+| B: reviewdog | 4, 4, 4 | 4, 0 | 11,160; 11,178; 8,755 | 11,160; 2,423 |
+
+**Friction, from the transcripts.** The rival arm showed none worth fixing (P4). Each B run read its
+gate's five new findings, fixed them in one or two edits, and reran it. In arm A:
+
+1. **The first gate run was mostly report.** About 15.5k characters of every scorecard on stdout
+   came first, old debt included. Then the verdict followed, on stderr.
+2. **Old and new evidence were mixed.** `zizmor-clean evidence grew 9 → 12` listed ten of the
+   twelve items. Every A agent worked out by hand which three were new. Two of them wrote about the
+   old cache-poisoning finding, whose line had moved, before leaving it alone.
+3. **Later runs were filtered.** Every A agent piped its later gate runs through `grep` or `rg` to
+   find the verdict in the report.
+
+**A gap in the measure.** The runtime transcript keeps a terminal command's stdout only. The agents
+saw stderr: one cites "the evidence count went from 9 to 12", which appears only in the verdict, and
+the transcript never contains "grew". So round 1's *read* for arm A leaves out the verdict. On the
+planted branch, round 1's binary prints 15,521 characters on stdout and 3,711 on stderr. Arm A's
+real read in round 1 is therefore higher than recorded. That makes G3's gap an underestimate, and
+makes G4 and G5 harder to pass. Arm B's gate prints everything on stdout.
+
+### 0.2 The Toolbox change before round 2
+
+[D01M841J2SN4V3AVZZ5D91YAR51](../../docs/decisions/D01M841J2SN4V3AVZZ5D91YAR51.md), in
+`crates/toolbox-cli` only; no harness file changed:
+
+- **A gate prints its verdict.** `toolbox report --baseline` without `-o` or `--out` prints the verdict
+  alone, on stdout, so the measure now counts it.
+- **New evidence is marked.** The baseline records a key per evidence item, and a grown list shows
+  only the new items, marked `+`, then "and 9 already in the baseline".
+
+Uses outside this harness (P5): every repository's pull request gate (`actions/report` and CI logs),
+`--against` in local loops, box-ab friction #4, and root-causes C1, all of them recorded before this
+benchmark. On the planted branch, the new binary's whole first gate output is 2,892 characters.
 
 ## 1. Why this benchmark
 
