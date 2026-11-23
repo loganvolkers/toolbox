@@ -438,6 +438,21 @@ enum ConnectorCommand {
         #[arg(long, default_value = ".")]
         portal: PathBuf,
     },
+    /// Drive a connector binary over stdio: one `resync` of the named kinds, print each `record`
+    /// as NDJSON (`kind`, `externalId`, `data`). No portal required — for local dumps while
+    /// authoring. Pass config with --config (JSON) or rely on TOOLBOX_CONNECTOR_CONFIG in the
+    /// environment.
+    Drive {
+        /// Record kinds to resync (comma-separated), e.g. project,issue.
+        #[arg(long, value_delimiter = ',')]
+        kinds: Vec<String>,
+        /// JSON object set as TOOLBOX_CONNECTOR_CONFIG for the child.
+        #[arg(long)]
+        config: Option<String>,
+        /// The connector program and its arguments.
+        #[arg(required = true, last = true)]
+        program: Vec<String>,
+    },
 }
 
 #[derive(Subcommand)]
@@ -656,6 +671,14 @@ fn main() -> ExitCode {
         Command::Connector {
             command: ConnectorCommand::Records { name, portal },
         } => report::connector_records(&portal, &name),
+        Command::Connector {
+            command:
+                ConnectorCommand::Drive {
+                    kinds,
+                    config,
+                    program,
+                },
+        } => connector_drive(&kinds, config.as_deref(), &program),
         Command::Token {
             command:
                 TokenCommand::Create {
@@ -854,6 +877,49 @@ fn validate(path: &std::path::Path, format: Format) -> ExitCode {
         ExitCode::SUCCESS
     } else {
         ExitCode::from(1)
+    }
+}
+
+fn connector_drive(kinds: &[String], config: Option<&str>, program: &[String]) -> ExitCode {
+    if kinds.is_empty() {
+        return fail("--kinds needs at least one record kind");
+    }
+    if program.is_empty() {
+        return fail("pass the connector program after --");
+    }
+    let mut envs = Vec::new();
+    if let Some(cfg) = config {
+        if serde_json::from_str::<serde_json::Value>(cfg).is_err() {
+            return fail("--config must be JSON");
+        }
+        envs.push(("TOOLBOX_CONNECTOR_CONFIG".to_owned(), cfg.to_owned()));
+    }
+    let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
+    match rt.block_on(toolbox_connect::conformance::drive_resync(
+        &program[0],
+        &program[1..],
+        &envs,
+        kinds,
+    )) {
+        Ok(msgs) => {
+            for m in msgs.iter().filter(|m| m["type"] == "record") {
+                let line = serde_json::json!({
+                    "kind": m["kind"],
+                    "externalId": m["externalId"],
+                    "data": m["data"],
+                });
+                println!("{}", line);
+            }
+            let ok = msgs
+                .iter()
+                .any(|m| m["type"] == "complete" && m["status"] == "succeeded");
+            if ok {
+                ExitCode::SUCCESS
+            } else {
+                fail("resync did not complete successfully")
+            }
+        }
+        Err(e) => fail(e),
     }
 }
 

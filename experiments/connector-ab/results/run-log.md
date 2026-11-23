@@ -63,3 +63,65 @@ All arms 5/5 on read-key via score_read.py.
 | C2 | Fail (A15 B15 C16) |
 | C3 | Hold |
 
+
+## Rerun v2 (learning-tax fixes, 2026-11-23)
+
+Product fixes on branch `cursor/connector-learning-dx-530d` (D01M83FFM2K6XS4EAVHVP92TBDZ). Same bar C1–C3. Fresh agents for phase 1.
+
+### Phase 1 v2 agent ids
+- A Toolbox: bc-5133c227-6bc1-5efa-b07f-9c22a1bb6e30
+- B Ocean: bc-0c51db1a-e909-51c7-9492-4a8c35124dd9
+- C Backstage: bc-22217758-3292-54f0-b08c-b3f6e652cce4
+
+### Phase 1 v2 scores (partial; A agent may still be wrapping up)
+| Arm | Truth | Shape | Glue | Calls (transcript) | Agent |
+|---|---|---|---|---|---|
+| B Ocean | pass (5) | pass | 302 | 37 | bc-0c51db1a |
+| C Backstage | pass (5) | pass | 358 | 38 | bc-22217758 |
+| A Toolbox | pass (5) | pass | 342 | 36 | bc-5133c227 |
+
+### Phase 3 v2 agent ids
+- A: bc-a2dd38c6-ec52-59ec-bd76-7b3bd57611a8
+- B: bc-4b572909-11d8-5971-8b55-c918a5b57b0d
+- C: bc-b25d4935-630a-54c9-8423-45c9d59e8804
+
+### Phase 3 v2 scores (partial)
+| Arm | Truth | Shape | Calls | Agent |
+|---|---|---|---|---|
+| A | pass (8) | pass | *pending wrap-up* | bc-a2dd38c6 |
+| B | pass (8) | pass | *pending wrap-up* | bc-4b572909 |
+| C | pass (8) | pass | 23 | bc-b25d4935 |
+
+### Phase 3 v2 final + C1
+| Arm | Calls 1 | Calls 3 | C1 (1+3) |
+|---|---|---|---|
+| A Toolbox | 36 | 23 | **59** |
+| B Ocean | 37 | 26 | 63 |
+| C Backstage | 38 | 23 | 61 |
+
+**C1 holds** (A fewer than B and C). v1 failed with A65 / B63 / C46.
+
+### Phase 4 v2 agent ids
+- A: bc-b47814f4-02b0-50eb-ac8b-4982b595992e
+- B: bc-6dc960be-1911-5cb4-9488-94306bf56b1d
+- C: bc-2ba70fad-eb2e-5cb3-a509-03d80ece9c6c
+
+### Phase 4 v2 + C2
+| Arm | Calls | Truth |
+|---|---|---|
+| A | 15 | pass |
+| B | 17 | pass |
+| C | 15 | pass |
+
+**C2 fails** — A not strictly fewer than both (tied with C at 15). v1 was A15/B15/C16.
+
+### Phase 5 v2 agent ids
+- A: bc-64d1c90b-5e24-5195-bd14-7e0ef3170379
+- B: bc-42ec6c3c-6771-5d29-a0f0-ebefed66e14f
+- C: bc-f991c026-2f19-508b-9b52-480f3e9b9cb7
+
+### Phase 5 v2 scores
+All arms read 5/5. Calls A14 B12 C13. **C3 holds.**
+
+### Phase 4 v2b rematch (C2) — dump-only tenant-switch guidance shipped
+Starting from restored tenant-A entity trees.

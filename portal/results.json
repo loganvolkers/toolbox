@@ -969,6 +969,9 @@
       "doc:docs/decisions/D01M833YAH8MT4VY2W4K1PYAEHB.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M83FFM2K6XS4EAVHVP92TBDZ.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/README.md": {
         "level": "skipped"
       },
@@ -1191,6 +1194,9 @@
       "doc:docs/v1-spec.md": {
         "level": "silver"
       },
+      "doc:examples/connector-scaffold/README.md": {
+        "level": "silver"
+      },
       "doc:examples/reference-portal/README.md": {
         "level": "silver"
       },
@@ -1257,7 +1263,13 @@
       "doc:plugins/toolbox-operator/skills/assess-submit/SKILL.md": {
         "level": "silver"
       },
+      "doc:plugins/toolbox-operator/skills/author-connector/SKILL.md": {
+        "level": "silver"
+      },
       "doc:plugins/toolbox-operator/skills/campaign/SKILL.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/skills/connector-drive/SKILL.md": {
         "level": "silver"
       },
       "doc:plugins/toolbox-operator/skills/connector-records/SKILL.md": {
@@ -1363,6 +1375,9 @@
           "says-how-to-check": 1
         },
         "level": "bronze"
+      },
+      "example:examples/connector-scaffold/README.md": {
+        "level": "gold"
       },
       "example:examples/reference-portal/README.md": {
         "level": "gold"
@@ -1514,6 +1529,9 @@
       "site-page:site/src/content/docs/agents/reads.md": {
         "level": "gold"
       },
+      "site-page:site/src/content/docs/authors/connectors.md": {
+        "level": "gold"
+      },
       "site-page:site/src/content/docs/authors/index.md": {
         "level": "gold"
       },
@@ -1634,7 +1652,19 @@
         },
         "level": "silver"
       },
+      "skill:plugins/toolbox-operator/skills/author-connector": {
+        "failing": {
+          "has-evals": 1
+        },
+        "level": "silver"
+      },
       "skill:plugins/toolbox-operator/skills/campaign": {
+        "failing": {
+          "has-evals": 1
+        },
+        "level": "silver"
+      },
+      "skill:plugins/toolbox-operator/skills/connector-drive": {
         "failing": {
           "has-evals": 1
         },
@@ -5112,6 +5142,12 @@
       "command:campaign": {
         "level": "skipped"
       },
+      "command:connector-drive": {
+        "failing": {
+          "exercised": null
+        },
+        "level": "bronze"
+      },
       "command:connector-records": {
         "failing": {
           "exercised": null
@@ -5410,6 +5446,9 @@
           "exercised": null
         },
         "level": "bronze"
+      },
+      "command:connector-drive": {
+        "level": "skipped"
       },
       "command:connector-records": {
         "level": "skipped"

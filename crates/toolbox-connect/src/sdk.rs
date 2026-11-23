@@ -10,9 +10,12 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 #[allow(async_fn_in_trait)]
 pub trait Source {
     fn name(&self) -> &str;
-    fn version(&self) -> &str {
-        env!("CARGO_PKG_VERSION")
-    }
+    /// Connector package version reported on `register`.
+    ///
+    /// Override this. The previous default used `env!("CARGO_PKG_VERSION")` inside
+    /// `toolbox-connect`, so every connector that left the default reported the SDK crate's
+    /// version instead of its own.
+    fn version(&self) -> &str;
     /// `capabilities` for the register message.
     fn capabilities(&self) -> Value;
     /// Handle a `refresh` or `resync` command, writing records to `out`. Return `Ok(())` for

@@ -640,6 +640,10 @@ impl Source for Runner {
         &self.name
     }
 
+    fn version(&self) -> &str {
+        env!("CARGO_PKG_VERSION")
+    }
+
     fn capabilities(&self) -> Value {
         let kinds: Vec<&str> = self.jobs.iter().flat_map(|j| self.kinds_of(j)).collect();
         let refresh: serde_json::Map<String, Value> = kinds

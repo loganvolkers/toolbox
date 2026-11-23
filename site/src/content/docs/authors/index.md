@@ -72,7 +72,7 @@ The fixtures include a workflow that passes the scorecard and a workflow that fa
 | Step | What you run | State |
 |---|---|---|
 | Author the package | `toolbox-package.yaml` and fragments | Built for a package in a directory. There is no `toolbox package new` scaffold |
-| Build a connector | `toolbox connector test` against the conformance kit | Built for a binary you already have. The Rust SDK is not published as a release, and there is no scaffold |
+| Build a connector | Copy [`examples/connector-scaffold/`](https://github.com/loganvolkers/toolbox/tree/main/examples/connector-scaffold), then `toolbox connector test` and `toolbox connector drive` | Scaffold + drive landed (D01M83FFM2K6XS4EAVHVP92TBDZ). Rust SDK still path/git, not crates.io. See [Write a connector](/toolbox/authors/connectors/) |
 | Test | `toolbox test` on the package's tests | Built. A matrix of released Toolbox versions waits on a Toolbox release |
 | Install and pin | `toolbox install`, `toolbox.lock` | Built for a git tag, branch, commit SHA, or a local path |
 | Publish an archive, attest it, roll it across a fleet | | Specified. No release archive is produced, and the package registry is still an open question |

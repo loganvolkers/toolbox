@@ -27,17 +27,21 @@ records:
     exitCriterion: >-
       The connector passes the conformance kit as a standalone executable or
       WASM component.
-    commands: [toolbox connector test, toolbox install]
+    commands: [toolbox connector test, toolbox connector drive, toolbox install]
     checks:
     - crates/toolbox-connect/src/conformance.rs
     - crates/toolbox-cli/tests/install.rs
-    docs: [docs/design/connector-control.md, docs/design/package-author-sdlc.md]
+    - examples/connector-scaffold/README.md
+    docs:
+    - docs/design/connector-control.md
+    - docs/design/package-author-sdlc.md
+    - site/src/content/docs/authors/connectors.md
     status: partial
     gaps:
     - >-
       the Rust SDK (toolbox-connect) is not published; no SDK for other
       languages
-    - no `toolbox connector new` scaffold
+    - no `toolbox connector new` generator (directory scaffold exists)
     - no WASM component connectors yet
   - id: package-author/test
     layer: package-author

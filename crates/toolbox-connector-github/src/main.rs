@@ -401,6 +401,10 @@ impl Source for GitHub {
         "github"
     }
 
+    fn version(&self) -> &str {
+        env!("CARGO_PKG_VERSION")
+    }
+
     fn capabilities(&self) -> Value {
         // `workflow-runs` only when configured (`actions`): capabilities name only kinds this
         // instance can produce, and the conformance kit checks them against the manifest.
