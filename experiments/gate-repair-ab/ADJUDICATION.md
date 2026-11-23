@@ -1,6 +1,6 @@
 # gate-repair-ab: independent adjudication (2026-11-23)
 
-**Outcome against the bar in [README.md](./README.md) §5, §5.1 and §5.2:**
+**Outcome against the bar in [README.md](./README.md) §5, §5.1, §5.2 and §5.3:**
 
 - **Round 1: Toolbox lost to reviewdog.** G1 holds, but G2 (calls) and G3 (read) **fail**.
 - **Round 2: the improvement is not shown under §5.** G1′ and G6 hold, and every other hypothesis
@@ -12,6 +12,10 @@
   **fails**. G14, G15 and G17 are inconclusive. The designer's labels in §0.5 are correct, but
   four of its explanations are wrong or unsupported (see *The designer's reading of round 4,
   checked*).
+- **Round 5: Toolbox does not beat reviewdog under §5.3.** G18 holds. G19 (calls), G20 (read) and
+  G21 (gate read) are inconclusive, and so are G22 and G23 (attribution). None fails. The
+  designer's labels in §0.6 are correct, but two of its factual claims are wrong and one is
+  unsupported (see *The designer's reading of round 5, checked*).
 
 What round 3 shows is narrow. The change cut what an agent reads from the gate, from a median of
 18,751 characters to 3,876. That gap is more than four times the wider range. It does not show
@@ -28,24 +32,37 @@ can't separate the arms. Three of arm A's five runs read `pull_request.yaml` wit
 result, so arm A's recorded read is low by about 13.5k characters in each (threat 13). G16
 confirms that the second change shortened the gate's output, as G8 did for the first.
 
-**The Toolbox changes between rounds (`dc42499` before round 2, `76a1140` before round 4) fit
-(P5). The rival fix before round 4 (`3f1b225`) is harness-only (P4).** No run was excluded or
-rerun, every launched prompt matches its committed file byte for byte, and no label is void.
+Round 5 neither wins nor loses: no comparison separates the arms. Arm A's medians are below reviewdog's on all three measures: 3 calls
+against 4, 10,859 characters read against 13,960, and 3,102 of gate output against 5,918. Every gap
+is inside the wider range, and no correction of the missing results changes that (threat 24). That
+Toolbox no longer loses is not the change's doing. Round 4's Toolbox, run alongside as A⁻, also ties reviewdog on every
+measure. And the same Toolbox that took a median of 7 calls in round 4 took 4 in round 5
+(threat 22). Calls still turn on how the agent edits (threat 23). The gate-read gap is mostly what
+B's agents chained onto their gate runs: on the gates' own output, the arms are 52 characters apart
+(threat 25).
+
+**The Toolbox changes between rounds (`dc42499` before round 2, `76a1140` before round 4,
+`c1f9b22` before round 5) fit (P5). The rival changes (`3f1b225` before round 4, `eb45c5d` before
+round 5) and the measure change `295b0d3` are harness-only (P4).** One caution on `c1f9b22`: its
+five-line gap fill is what quotes the planted typo (fit audit). No run was excluded or rerun, every
+launched prompt matches its committed file byte for byte, and no label is void.
 
 The adjudicator is a cloud agent that did not design the experiment, build an arm, or change the
 product ([D01M83RDWQ5EVKY5SFHDWAD5HFH](../../docs/decisions/D01M83RDWQ5EVKY5SFHDWAD5HFH.md), P7). It
 recomputed every median, range and *W* from [results/r1.tsv](results/r1.tsv),
-[results/r2.tsv](results/r2.tsv), [results/r3.tsv](results/r3.tsv) and
-[results/r4.tsv](results/r4.tsv). It also read all 42 runtime transcripts: 27 for rounds 1–3 and
-15 for round 4. For round 4 it also rescored all 15 workspaces, recounted all 15 transcripts with
-`count.py`, and reproduced both Toolboxes' first gate output from a fresh copy of the planted
-branch. Threats 10 and 20 state the limits of its independence.
+[results/r2.tsv](results/r2.tsv), [results/r3.tsv](results/r3.tsv),
+[results/r4.tsv](results/r4.tsv) and [results/r5.tsv](results/r5.tsv). It also read all 57
+runtime transcripts: 27 for rounds 1–3, 15 for round 4 and 15 for round 5. For rounds 4 and 5 it
+rescored every workspace (from copies, in round 5), recounted every transcript with `count.py`,
+and reproduced each arm's first gate output from a fresh copy of the planted branch. Threats 10,
+20 and 30 state the limits of its independence.
 
 ## Per hypothesis
 
 Medians are over an arm's runs in a round. The range is maximum minus minimum, and *W* is the wider
-of the two ranges compared. A is the changed Toolbox, A⁻ (rounds 3 and 4) the previous one, and B
-is reviewdog. Subscripts in G4–G5 are round numbers.
+of the two ranges compared. A is the changed Toolbox, A⁻ (rounds 3 to 5) the previous one, and B
+is reviewdog. Subscripts in G4–G5 are round numbers. Round 5's *read* is `read` in `r5.tsv`, with a
+missing `read_file` result imputed (§5.3).
 
 | Hypothesis | Label | Numbers |
 |---|---|---|
@@ -71,16 +88,31 @@ is reviewdog. Subscripts in G4–G5 are round numbers.
 | G15 (r4) A reads less gate output than B | **inconclusive** | A 2,527; 2,527; 2,527; 2,527; 2,669 (med 2,527, range 142); B 3,186; 3,337; 3,337; 3,371; 5,099 (med 3,337, range 1,913). B − A = 810 ≤ *W* = 1,913. Threat 14 says why this label flatters A |
 | G16 (r4) the change cut gate read | **holds** | A⁻ 3,876; 3,943; 3,952; 4,018; 4,018 (med 3,952, range 142). A⁻ − A = 1,425 > *W* = 142 |
 | G17 (r4) the change cut read | **inconclusive** | A⁻ 12,576; 22,339; 24,198; 26,651; 27,232 (med 24,198, range 14,656). A⁻ − A = 13,901 ≤ *W* = 14,656. Threat 13: the label rests on incomplete data in both arms |
+| G18 (r5) A correct every run | **holds** | 5 of 5 correct. A⁻ and B were also 5 of 5. All 15 rescore to the committed scores |
+| G19 (r5) A fewer calls than B | **inconclusive** | A 3, 3, 3, 6, 6 (med 3, range 3); B 3, 4, 4, 4, 4 (med 4, range 1). B − A = 1 ≤ *W* = 3 |
+| G20 (r5) A reads less than B | **inconclusive** | A 9,121; 9,372; 10,859; 18,697; 20,189 (med 10,859, range 11,068); B 7,016; 12,869; 13,960; 14,172; 16,213 (med 13,960, range 9,197). B − A = 3,101 ≤ *W* = 11,068. Neither the recorded read nor a corrected `reviewdog-3` changes the label (threat 24) |
+| G21 (r5) A reads less gate output than B | **inconclusive** | A 3,102; 3,102; 3,102; 3,178; 3,320 (med 3,102, range 218); B 338; 4,398; 5,918; 5,918; 8,740 (med 5,918, range 8,402). B − A = 2,816 ≤ *W* = 8,402. With `reviewdog-3` corrected, *W* = 4,342, still above the gap. Threat 25 says why this label flatters A |
+| G22 (r5) the change cut calls | **inconclusive** | A⁻ 3, 3, 4, 6, 7 (med 4, range 4). A⁻ − A = 1 ≤ *W* = 4 |
+| G23 (r5) the change cut read | **inconclusive** | A⁻ 8,338; 9,027; 9,238; 10,741; 22,224 (med 9,238, range 13,886). The median favours A⁻: A − A⁻ = 1,621 ≤ *W* = 13,886 |
 
-Every run in every arm and round was scored correct, and all 42 diffs are byte-identical.
+Every run in every arm and round was scored correct, and all 57 diffs are byte-identical.
 Correctness therefore can't separate the arms (threat 6). The designer's predictions were right in
 rounds 1 and 3. In round 1 the prediction was G1 holds, G2 inconclusive or fails, and G3 fails. In
 round 3 it was G7 and G8 hold, and G9, G10 and G11 are inconclusive. In round 4 one of six was
 wrong: G13 was predicted inconclusive and fails. G12 and G16 hold, G14 and G17 are inconclusive,
-and G15 is inconclusive, one of the two outcomes predicted for it.
+and G15 is inconclusive, one of the two outcomes predicted for it. In round 5 three of six were
+wrong: G20, G22 and G23 were predicted to hold and are inconclusive. G18 holds, and G19 and G21
+are inconclusive, as predicted.
 
-Not registered, and reported only: in round 4 A⁻ against B is inconclusive on every measure. On
-calls the gap is 6 − 3 = 3 ≤ *W* = 3, on read 13,824 ≤ 14,656 and on gate read 615 ≤ 1,913.
+Not registered, and reported only:
+
+- In round 4, A⁻ against B is inconclusive on every measure. On calls the gap is 6 − 3 = 3 ≤
+  *W* = 3, on read 13,824 ≤ 14,656 and on gate read 615 ≤ 1,913.
+- In round 5, A⁻ against B is also inconclusive on every measure. On calls the gap is 4 − 4 = 0 ≤
+  *W* = 4, on read 4,722 ≤ 13,886 and on gate read 3,315 ≤ 8,402 (≤ 4,342 with `reviewdog-3`
+  corrected).
+- In round 5, arm A's gate read is above A⁻'s, as §5.3 expected: 3,102 against 2,603, a gap of
+  499 ≤ *W* = 1,486.
 
 ## Is the improvement shown? Does Toolbox beat reviewdog?
 
@@ -89,6 +121,7 @@ calls the gap is 6 − 3 = 3 ≤ *W* = 3, on read 13,824 ≤ 14,656 and on gate 
 | §5 (round 2) | G6 holds, at least one of G4 and G5 holds, neither fails | **Not shown.** G6 holds. G4 and G5 are both inconclusive |
 | §5.1 (round 3) | G7 holds, G8 holds, neither G9 nor G10 fails | **Shown.** G7 and G8 hold. G9 and G10 are inconclusive |
 | §5.2 (round 4): Toolbox beats reviewdog | G12 holds, at least one of G13, G14 and G15 holds, none of them fails | **Not shown.** G12 holds. G13 fails, and G14 and G15 are inconclusive. The rule fails on both of its last two conditions |
+| §5.3 (round 5): Toolbox beats reviewdog | G18 holds, at least one of G19, G20 and G21 holds, none of them fails | **Not shown.** G18 holds. G19, G20 and G21 are inconclusive. The rule fails on its second condition only |
 
 The §5.1 verdict follows the rule as written, and the rule was committed before round 3's
 workspaces were built. Its scope is that the gate is cheaper to read. The total cost of a repair is
@@ -97,6 +130,19 @@ unproven, and Toolbox is not shown to beat reviewdog on any measure.
 The §5.2 verdict is robust. Correcting the undercounted read can't make G14 or G15 hold (threats 13
 and 14). G13's failure survives removing either cause of the gap (threat 12). §5.2 says the round
 is not rerun.
+
+The §5.3 verdict is robust to every correction this adjudication could make:
+
+| Variant | G20 (read) | G21 (gate read) | G23 (read, A vs A⁻) |
+|---|---|---|---|
+| As registered (`read`) | 3,101 ≤ 11,068 | 2,816 ≤ 8,402 | A − A⁻ = 1,621 ≤ 13,886 |
+| `readRecorded` instead of `read` | A med 9,372, range 12,023: 4,588 ≤ 12,023 | unchanged | A − A⁻ = 9,372 − 9,027 = 345 ≤ 12,023 |
+| `reviewdog-3` corrected (+4,272) | B med 13,960, range 4,925: 3,101 ≤ 11,068 | B med 5,918, range 4,342: 2,816 ≤ 4,342 | unchanged |
+| Both | 4,588 ≤ 12,023 | 2,816 ≤ 4,342 | 345 ≤ 12,023 |
+
+No correction of `reviewdog-3` could make G21 hold: B's other four runs alone span 4,342. G20's
+*W* is arm A's own spread. Even without `toolbox-1`, the one A run with an imputed result, arm A's
+read ranges 9,576. §5.3 says the round is not rerun.
 
 ## Fit audit (P5)
 
@@ -121,6 +167,41 @@ is not rerun.
 | `3f1b225` is harness-only | Yes: two files, `harness/quality-gate.sh` and `harness/round.sh` |
 | `3f1b225` fixes rival friction recorded in round 3 | Yes. README §0.4 records "A pass says nothing" (two of five round 3 B agents ran zizmor by hand after a pass). The fix prints `quality gate: passed` (21 characters with the newline) only when both tools pass, and it worked: every B pass printed it, and no round 4 B run ran a tool by hand. The `round.sh` change vendors A⁻'s package from `PREV_CHECKOUT`, because the package changed, and stops discarding `setup.sh`'s stderr. It affects only how A⁻ is set up |
 | Other changes between rounds 3 and 4 | Nine commits after round 3's results (`94258f7`), up to `d163449`: this adjudication, publication, and review work on other parts of the repository. Then `76a1140`, `3f1b225`, `02f9de5` (the pre-registration), `ac040c8` (prompts), `bb5aa20` (results) and `866caec` (the designer's reading). `git diff 76a1140 HEAD -- crates ui schema packages` and `git diff 02f9de5 HEAD -- experiments/gate-repair-ab/harness` are both empty. See threat 17 for what changed in `dc42499..d163449` |
+
+### Before round 5: `c1f9b22` fits, with one caution; `eb45c5d` and `295b0d3` are harness-only
+
+**`c1f9b22`, the Toolbox change (P5):**
+
+| Check | Finding |
+|---|---|
+| Touches no harness file | `git show --stat c1f9b22` lists 12 files: `crates/toolbox-cli/src/causes.rs`, `crates/toolbox-connector-workspace/src/workflows.rs`, the decision, two design docs, `packages/github-actions` (fragment, fixture and tests), the `report` skill, and `portal/{fixtures,results.json,tests}`. None is under `experiments/gate-repair-ab/`. The code never names openfga, `pr-summary`, reviewdog or the benchmark. Its doc comment and unit test use `# v6.0.2`, the version the planted fork pins, as the example comment. That is text, not behaviour |
+| Names uses outside the harness, and they are real | Yes, verified. (a) This repository's own gate. On an exported copy with one `ci.yml` checkout unpinned, `toolbox report portal --skip runner,github-actions --baseline portal/results.json` quotes `17 \|       - uses: actions/checkout@v6`. Its hint reads `pinned elsewhere as actions/checkout@11d5960a… # v4`, as the decision says. (b) `actions/report/run.sh` passes `--out` and captures stderr in `ratchet.txt`, which it prints to the log and the job summary. So the quote reaches the action. (c) Toolbox for Toolbox includes the package: the same commit updates `portal/results.json`, `portal/fixtures` and `portal/tests` |
+| General, not tailored to the planted branch | **Mostly.** The quote applies to any entity with a `path` field and any finding text with `at line N`, read from the working tree, at most 16 lines of 120 characters. `unpinnedAt` and `shaPins` are computed for every workflow. One caution: gaps of up to five lines are filled. On the planted branch the findings name lines 31, 36, 37, 39 and 40. The four-line gap from 31 to 36 holds `needs: lnt`, which no finding names, because actionlint points at the job key on line 31. So the quote shows the typo only because of the gap fill. Five lines is a plausible default, but a designer who had seen this task chose it. The pin hint still helps only where the repository already pins the action (threat 19) |
+| Other product changes | None. No product file differs between `76a1140` and `39d1114`, and `git diff c1f9b22 HEAD -- crates packages schema ui Cargo.toml Cargo.lock` is empty. So arm A is exactly A⁻ plus `c1f9b22` |
+
+**`eb45c5d`, the rival change (P4):**
+
+| Check | Finding |
+|---|---|
+| Harness-only | Yes: one file, `harness/quality-gate.sh` |
+| Fixes rival friction recorded in round 4 | **Not as framed.** §0.5's friction list records no reviewdog friction ("reviewdog's pass line worked"). The friction §5.3 cites is true of round 4's transcripts: all five B runs printed `git diff main` and `sed -n` output, four after the gate and `reviewdog-5` just before it in the same command. But arm A did the same (D01M84EPMMR9740K4N25G7A6FAY §1), and the friction was first written down in §5.3 itself. The change is better read as P4's first rule, the same level of help in every arm: Toolbox's gate now quotes code, so the rival's does too. That is a legitimate reason |
+| Filtering unchanged | Yes. On the planted branch it reports the same six findings (four from zizmor, two from actionlint), all five B runs passed with it, and all five score correct. actionlint prints no snippet for the expression finding inside a `run:` block, so one finding of six stays unquoted. That is actionlint's own output, passed through |
+| Makes the rival stronger | **Not shown.** It quotes the source, as §5.3 says. But in round 5 every B run still printed the files (5 of 5). The failing output grew by 1,003 characters, against arm A's 562: the quoted source, plus zizmor's notes and documentation links. On the registered measures, that counts against B (threat 26). It changes no label, since no comparison with B holds |
+
+**`295b0d3`, the measure change:**
+
+| Check | Finding |
+|---|---|
+| Harness-only, every arm | Yes: `harness/count.py` and `harness/collect.py`. `collect.py` passes every run's checkout to `count.py`, whatever its arm. Registered in §5.3 before the run, so P6's "never swapped after the run" holds |
+| Correct | Yes. On round 4's `toolbox-5`, the imputed `release.yaml` result equals the recorded one character for character (9,562). Round 4's three missing `pull_request.yaml` reads impute to 13,515 each |
+| For or against arm A | **Against it on G20, both ways on G23.** Only `read_file` is imputed, and only A and A⁻ used it (`toolbox-1`, `toolbox-10`). It raised A's median read from 9,372 to 10,859 and A⁻'s from 9,027 to 9,238. It also widened A⁻'s range from 2,403 to 13,886, which is G23's *W*. The call it doesn't impute is in arm B (`reviewdog-3`). Leaving that at 0 widens B's ranges, which also works against A on G21. No label depends on it (threat 24) |
+
+**Other changes between rounds 4 and 5.** After round 4's results (`bb5aa20`) come `866caec`
+(reading), `1794e9c` (adjudication), `2b1d3a3` (publication) and `39d1114` (a merge of `main`).
+Then `c1f9b22`, `295b0d3`, `eb45c5d`, `0249ecb` (pre-registration), `9ca1605` (prompts), `eb2c1af`
+(results) and `c8efdea` (reading). `git diff 0249ecb HEAD -- experiments/gate-repair-ab/harness` is
+empty. The prompt templates, `setup.sh`, `round.sh` and `harness/toolbox.yaml` are unchanged since
+round 4's prompts (`ac040c8`).
 
 ## Protocol checks
 
@@ -151,6 +232,21 @@ is not rerun.
 The catalog entry `portal/benchmarks/gate-repair-ab.yaml` says `status: complete` but still gives
 `runsPerArm: 3`, and it has nothing on round 4. It needs updating to match this record. This
 adjudication does not edit it.
+
+**Round 5:**
+
+| Rule | Verdict | Evidence |
+|---|---|---|
+| P1 committed prompts | **Pass** | All 15 launched prompts (each transcript's only user message) equal `prompts/rendered/r5/<run>.md` at `9ca1605` exactly, not just modulo trailing whitespace, and the files are unchanged at HEAD. Runs were launched between 15:10:01.202 and 15:10:01.694 (runtime `createdAtMs`), after `9ca1605` (15:08:29). A and A⁻ share one template. A and B differ only in the workspace path (two lines) and the gate line. The templates are unchanged since round 4, and each rendered prompt equals round 4's apart from the round number |
+| P2 repeated runs | **Pass** | 5 runs per arm. Since 14:30 UTC the runtime lists exactly 15 agents named "Repair run r5 …", plus round 4's adjudicator and this one. The three transcript fetches between 15:01 and 15:08 re-read round 4's runs only. None was excluded or rerun. `count.py` on each transcript reproduces every calls, read, `readRecorded`, `missing`, gate runs and gate read figure in `r5.tsv` |
+| P3 frozen round | **Pass** | Order: `c1f9b22` (15:04:07), `295b0d3` and `eb45c5d` (15:05:43), pre-registration `0249ecb` (15:06:32), A⁻'s binary (15:07:25, in a clean worktree of `76a1140`), A's binary (15:07:34), workspaces (15:07:39–15:08:14), prompts `9ca1605` (15:08:29), launches (15:10:01), results `eb2c1af` (15:11:54), reading `c8efdea` (15:13:19). §5.3 is unchanged since `0249ecb`. Every B workspace's `quality-gate.sh` and every Toolbox workspace's `.toolbox/toolbox.yaml` equal `0249ecb`'s harness. A's vendored package equals `packages/github-actions` at `0249ecb` file by file, and A⁻'s equals `76a1140`'s. A's binary is byte-identical to `target/debug/toolbox`. Unlike rounds 1 and 4, it was built after its commit, and no source file is newer. From fresh copies of the planted branch: A prints 2,091 characters (2,103 bytes) on stdout, nothing on stderr, quoting 11 lines. A⁻ prints 1,529, and B prints 2,225 on stdout and 192 on stderr. All three match §5.3. Every recorded first gate result contains that output exactly (14 of 15; `reviewdog-3`'s is missing). A⁻'s output also appears verbatim in all five of round 4's arm A transcripts. Commit times are set by the author, but the runtime's times and file mtimes agree with them |
+| P4 symmetric arms | **Pass, with a note** | `eb45c5d` is harness-only and gives the rival the same kind of help. It is not a fix of friction §0.5 recorded, and it is not shown to make the rival stronger (fit audit). No rival friction from round 4 is left deferred |
+| P5 no harness-shaped product | **Pass, with a caution** | Fit audit above: the gap fill |
+| P6 a reported measure | **Pass, with gaps** | All three measures are reported for every run. Three calls have no recorded result: two `read_file` calls, imputed (`toolbox-1` in A, `toolbox-10` in A⁻), and one terminal command, not imputed (`reviewdog-3` in B). The measure change was registered before the run. No label rests on the missing data (threat 24) |
+| P7 independent adjudication | **Pass, with a caveat** | See threat 30 |
+
+The catalog entry `portal/benchmarks/gate-repair-ab.yaml` has nothing on round 5: `frozenAt`
+lists rounds 1–4, and the measure text names "rounds 3 and 4". This adjudication does not edit it.
 
 ## The designer's reading of round 4 (README §0.5), checked
 
@@ -184,6 +280,37 @@ Smaller errors in the record:
   characters per tool to stderr, 192 on the planted branch, and no round counts them.
 - The README's status list says G13 fails "because of how the agents edited". That is half the
   cause, as the second row of the table above says.
+
+## The designer's reading of round 5 (README §0.6), checked
+
+The table's figures and the six labels are correct. Two factual claims are wrong, and one is
+supported for only one run of three. None changes a label.
+
+| Claim | Finding |
+|---|---|
+| The per-arm table and the six readings | **Correct.** Every figure matches `r5.tsv`, `count.py`'s recount of all 15 transcripts, and this recomputation |
+| "The designer predicted that G20, G22 and G23 would hold, and none did" | **Correct.** The other three predictions were right |
+| "Two A runs (`toolbox-1`, `toolbox-10`) read `pull_request.yaml` with no recorded result" | **Wrong.** `toolbox-10` is arm A⁻ (`arms.tsv`). One A run and one A⁻ run have the missing read. The 13,515 imputed for each is correct |
+| `reviewdog-3` chained `git diff main` onto its first gate run, and its result is missing; about 4,300 characters; corrected ranges about 4,900 and 4,300; no label changes | **Correct.** Rebuilt as a recorded result is (`git diff main` is 1,645 characters, then the gate's 2,225), it is 4,272. The corrected ranges are 4,925 and 4,342 |
+| "Every run printed the branch's files or diff (15 of 15)" before editing, "from about 3,500 to more than 15,000 characters a run" | **Correct.** Every run printed them with `git show`, `git diff`, `sed -n`, `cat` or `read_file`, including all five A runs after a gate that had quoted the lines. The range is right, but those commands also carry chained lookups, so not all of it is reading the branch |
+| The gate leaves out the fix for `needs: lnt`; actionlint doesn't name the jobs that exist | **Correct.** Neither gate names `lint`. Arm A's quote shows lines 31–40, and `needs: lnt` only through the gap fill. Four runs grepped for the job names (`toolbox-6`, `toolbox-10`, `reviewdog-2`, `reviewdog-3`). The rest read them in the files they printed |
+| Three A runs made both edits in one `python3` heredoc, with the gate rerun in the same command, in 3 calls each; the two that used search-and-replace took 6 | **Correct.** `toolbox-2`, `-3` and `-5`; `toolbox-1` and `-4` |
+| "Editing style moved" (round 4: no A heredoc runs) | **Correct as a count, but not caused by the change.** The same Toolbox went from 0 heredoc runs of 5 in round 4 (as arm A) to 3 of 5 in round 5 (as A⁻). The move happened in both Toolbox arms (threat 22) |
+| All five B runs used a heredoc | **Correct** |
+| "four made a separate SHA lookup (4 calls)" | **Wrong in one run.** `reviewdog-2`, `-4` and `-5` looked up the `upload-artifact` pin in a later call of its own. `reviewdog-3` looked up both pins in the same call as its file print, as `reviewdog-1` did. Its extra call is its first: it printed the gate script without running the gate |
+| "No A heredoc run made a separate lookup: they copied the pin from the gate's hint" | **The first half is correct; the second is supported for one run of three.** No A run made a separate SHA lookup. But `toolbox-3` and `toolbox-5` grepped for `actions/checkout` and `upload-artifact` in the same call as their file print. Only `toolbox-2` ran no lookup, so only there is the hint clearly the source of the pin. A⁻'s heredoc runs, whose hint lacks the version comment, took 3, 3 and 4 calls. `toolbox-7` and `-8` chained the lookup into their print, as A's did |
+| The status list: Toolbox "no longer loses" to reviewdog | **Correct as a summary of the labels, but not due to the change.** Round 4's Toolbox (A⁻) also ties reviewdog on every measure in round 5 |
+| §5.3: "This makes the rival stronger" | **Not shown** (fit audit) |
+| §5.3: the first gate output rose from 1,529 characters to 2,091 and quotes 11 lines; reviewdog's from 1,222 to 2,225 on stdout, with 192 on stderr | **Correct, and reproduced.** These are characters now (2,091 is 2,103 bytes) |
+| §5.3: the measure change reproduces round 4's `toolbox-5` (9,562) and the 13,515 | **Correct** |
+
+Smaller errors in the record:
+
+- D01M84EPMMR9740K4N25G7A6FAY §1 says "four of five Toolbox runs read `pull_request.yaml` before
+  editing it" in round 4. Three did (`toolbox-1`, `-3` and `-4`). `toolbox-5` read only
+  `release.yaml`.
+- That decision's `decided: 2026-11-23T15:10:00Z` is later than its commit (15:04:07). It is the
+  minute the round was launched.
 
 ## Threats to validity
 
@@ -329,21 +456,111 @@ Smaller errors in the record:
     checked the brief against `git log` and the runtime's agent list, rescored and recounted every
     run, and reproduced the gate outputs rather than taking §0.5's figures as given.
 
+**Round 5.** None of these changes a label.
+
+21. **The fifth round on one task, and the second try at the same win (disclosed in §5.3).** The
+    designer saw every round 4 transcript before changing the product and the rival's gate, and
+    before writing §5.3. Two tries at "beats reviewdog" raise the chance of a win by chance. No
+    comparison with the rival held, so nothing here needs discounting. A later win on this task
+    should be read against all five rounds.
+22. **The same Toolbox moved by 3 calls between rounds.** Round 4's arm A and round 5's A⁻ run the
+    same product. No product file differs between `76a1140` and `39d1114`, the first gate output is
+    byte-identical, and the prompts and set-up are equal apart from the round number. Yet its calls
+    went from 6, 6, 7, 7, 7 (median 7, range 1) to 3, 3, 4, 6, 7 (median 4, range 4). Its heredoc
+    editing went from 0 runs of 5 to 3. That drift is three times round 4's *W*. It doesn't relabel
+    round 4, because the rule compares arms within a round. But five near-deterministic runs
+    understate how far a round can move. And round 5's tie is not the change's doing: A⁻ also ties
+    reviewdog on every measure. B's gate changed between rounds, so B's own move (median 3 → 4) can't
+    be read the same way.
+23. **Calls still turn on how the agent edits.** Each call is counted in one of two groups:
+
+    | Arm | Calls on gate runs and edits (runs) | Median | Exploration calls (runs) | Median |
+    |---|---|---|---|---|
+    | A | 4, 2, 2, 4, 2 | 2 | 2, 1, 1, 2, 1 | 1 |
+    | A⁻ | 4, 2, 2, 2, 4 | 2 | 2, 1, 1, 2, 3 | 2 |
+    | B | 2, 2, 2, 2, 2 | 2 | 1, 2, 2, 2, 2 | 2 |
+
+    Heredoc runs took 3, 3 and 3 calls in A, 3, 3 and 4 in A⁻, and 3, 4, 4, 4 and 4 in B.
+    Search-and-replace runs took 6 and 6 in A, and 6 and 7 in A⁻. Arm A's lower median comes from
+    exploring one call less than B. If arm A had edited as B did, its calls would be 4, 3, 3, 4, 3
+    (median 3, range 1). B − A = 1 ≤ *W* = 1, so G19 would still be inconclusive. On this task, G19
+    can hold only if arm A also explores less than B in nearly every run.
+24. **Missing results, and an imputation that covers only `read_file`.** Three calls have no
+    recorded result:
+    - the `read_file` of `pull_request.yaml` in `toolbox-1` (A) and `toolbox-10` (A⁻), each imputed
+      as 13,515;
+    - `reviewdog-3`'s first gate command, counted as 0. Rebuilt as a recorded result is, it would be
+      4,272 characters.
+
+    The robustness table under *Does Toolbox beat reviewdog?* shows that no label moves with
+    `readRecorded`, with `reviewdog-3` corrected, or with both. The imputation also assumes the agent
+    received the whole file. Round 4's A⁻ `toolbox-9` shows that a read can come back cut short
+    (threat 13).
+25. **Gate read counts whole commands, and on the gates' own output the arms are 52 characters
+    apart.**
+    - Arm A's gate prints 2,091 characters failing and 103 passing, 2,194 in all.
+    - reviewdog's prints 2,225 and 21, 2,246 in all, plus 192 characters on stderr that no
+      transcript keeps.
+
+    Round 4's order (1,632 against 1,243) reversed because B's failing output grew by 1,003
+    characters with `eb45c5d`, and A's by 562 with `c1f9b22`. G21's gap of 2,816 is mostly what B's
+    agents chained onto their gate runs:
+    - three printed `scripts/quality-gate.sh` in their first gate command;
+    - two printed `git diff` with their rerun;
+    - `reviewdog-4` chained a grep and a 30-line `sed` (8,740 in all).
+
+    The label is inconclusive either way. It would flatter A if it held.
+26. **The rival change is not neutral on the measure.** `eb45c5d` gave B the kind of help
+    `c1f9b22` gave A, which P4 asks for. But in round 5 no B run used the quote in place of printing
+    the files (5 of 5 printed them). So on this task the change raised B's read and gate read without
+    removing any work that can be seen. That favours arm A on G20 and G21, neither of which holds. A
+    more compact rival configuration was not tried.
+27. **The attribution is not shown.** G22 and G23 are inconclusive, and arm A's median read is
+    higher than A⁻'s. This round does not show that `c1f9b22` cut any cost. It shows only that the
+    gate's output now carries the named lines and the pins as written, at 562 characters more.
+28. **Near-determinism and a ceiling on correctness.** All 30 diffs of rounds 4 and 5 are
+    byte-identical, and equal to those of rounds 1–3. Three A runs have a gate read of exactly 3,102,
+    and two B runs 5,918. With so little spread inside an arm, one run's habit sets *W*, as in round
+    4 (threat 16). G21's *W* comes from `reviewdog-3`'s missing result and `reviewdog-4`'s chained
+    print. G20's comes from the two A runs that read the whole of `pull_request.yaml`: `toolbox-1`
+    (imputed) and `toolbox-2` (with `cat`).
+29. **Tuned on this task; external validity.** Each part of `c1f9b22` answers something round 4's
+    agents did on this one planted pull request. Its gap fill is just wide enough to quote the
+    planted typo (fit audit). The decision's example on this repository reproduces, so the change
+    has a use outside the harness, but there it quotes a single line. One fork, one pull request
+    and one model; threats 8 and 19 still apply.
+30. **Limits of this adjudication's independence.** The designer's session launched this
+    adjudicator, with a brief that lists the commits and paraphrases the claims to check. It runs on
+    the same model family as the arms, and it extended the rounds 1–4 adjudication, which may anchor
+    its framing. It checked the brief against `git log` and the runtime's agent list. It rescored
+    copies of all 15 workspaces, recounted all 15 transcripts, and reproduced all three gates'
+    output and the decision's example. It read every round 5 transcript's tool calls and notes rather
+    than taking §0.6 as given.
+
 ## Sources
 
-- [README.md](./README.md) §0, §5, §5.1, §5.2;
+- [README.md](./README.md) §0, §5, §5.1, §5.2, §5.3;
   [D01M83RDWQ5EVKY5SFHDWAD5HFH](../../docs/decisions/D01M83RDWQ5EVKY5SFHDWAD5HFH.md) (P1–P7);
   [D01M841J2SN4V3AVZZ5D91YAR51](../../docs/decisions/D01M841J2SN4V3AVZZ5D91YAR51.md);
-  [D01M84CCDH1ZWF9726SVDDM1JDX](../../docs/decisions/D01M84CCDH1ZWF9726SVDDM1JDX.md).
-- `results/r{1,2,3,4}.tsv` and `results/r{1,2,3,4}/*.json|*.diff`; `harness/count.py`, `score.py`,
-  `collect.py`, `setup.sh`, `round.sh`, `quality-gate.sh`; `prompts/rendered/r{3,4}/arms.tsv`.
-- Runtime transcripts of all 42 scored runs (`batch-fetch-details`, by the bcIds in the TSVs), and
-  the runtime's lists of cloud agents created since 2026-11-23 10:30 UTC (rounds 1–3) and 11:30 UTC
-  (round 4).
+  [D01M84CCDH1ZWF9726SVDDM1JDX](../../docs/decisions/D01M84CCDH1ZWF9726SVDDM1JDX.md);
+  [D01M84EPMMR9740K4N25G7A6FAY](../../docs/decisions/D01M84EPMMR9740K4N25G7A6FAY.md).
+- `results/r{1,2,3,4,5}.tsv` and `results/r{1,2,3,4,5}/*.json|*.diff`; `harness/count.py`,
+  `score.py`, `collect.py`, `setup.sh`, `round.sh`, `quality-gate.sh`;
+  `prompts/rendered/r{3,4,5}/arms.tsv`.
+- Runtime transcripts of all 57 scored runs (`batch-fetch-details`, by the bcIds in the TSVs), and
+  the runtime's lists of cloud agents created since 2026-11-23 10:30 UTC (rounds 1–3), 11:30 UTC
+  (round 4) and 14:30 UTC (round 5).
 - Round 4's workspaces under `/tmp/gate-repair-ab/r4/`: each rescored with `score.py`, their diffs,
   binaries and vendored packages compared, and the planted branch re-gated in a copy with A's, A⁻'s
   and B's gates.
+- Round 5's workspaces under `/tmp/gate-repair-ab/r5/`, read only: copies of all 15 rescored with
+  `score.py`, their diffs, binaries, gate scripts, portals and vendored packages compared with the
+  frozen commits, and the planted branch re-gated in copies with A's, A⁻'s and B's gates. Round 4's
+  transcripts, re-read for §5.3's account of round 4 and for A⁻'s gate output.
+- An exported copy of this repository at `c8efdea`, with one `ci.yml` checkout unpinned, gated with
+  `toolbox report portal` (the decision's example).
 - `git log`/`git show` of `60723d6`, `19d6965`, `dc42499`, `3762524`, `967a508`, `d30dcb2`,
   `d53569d`, `21a2a44`, `94258f7`, `144caf2` (box-ab friction table), `703b53a` (root-causes C1),
-  `d163449`, `76a1140`, `3f1b225`, `02f9de5`, `ac040c8`, `bb5aa20` and `866caec`;
+  `d163449`, `76a1140`, `3f1b225`, `02f9de5`, `ac040c8`, `bb5aa20`, `866caec`, `39d1114`,
+  `c1f9b22`, `295b0d3`, `eb45c5d`, `0249ecb`, `9ca1605`, `eb2c1af` and `c8efdea`;
   `actions/report/run.sh` and `crates/toolbox-cli/src/report.rs` (where the summary goes).
