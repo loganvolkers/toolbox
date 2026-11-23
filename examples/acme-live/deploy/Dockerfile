@@ -14,7 +14,8 @@ RUN curl -fsSL -o /tmp/openfga.tgz "https://github.com/openfga/openfga/releases/
 COPY bin/ /usr/local/bin/
 COPY portal/ /portal/
 COPY entrypoint.sh /entrypoint.sh
-RUN chmod 755 /entrypoint.sh /usr/local/bin/toolbox /usr/local/bin/toolbox-connector-github /usr/local/bin/toolbox-connector-git-files /usr/local/bin/toolbox-connector-scim
+COPY scim_seed.sh /usr/local/bin/scim_seed.sh
+RUN chmod 755 /entrypoint.sh /usr/local/bin/scim_seed.sh /usr/local/bin/toolbox /usr/local/bin/toolbox-connector-github /usr/local/bin/toolbox-connector-git-files /usr/local/bin/toolbox-connector-scim
 ENV TOOLBOX_OPENFGA_BIN=/usr/local/bin/openfga
 ENV PORT=8080
 USER 65532:65532
