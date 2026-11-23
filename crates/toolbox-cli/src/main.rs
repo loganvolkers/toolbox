@@ -140,6 +140,12 @@ enum Command {
         /// How many hops to follow (1 to 3).
         #[arg(long, default_value_t = 1)]
         depth: u64,
+        /// Only follow edges with this relation name, e.g. dependsOn (default: every relation).
+        #[arg(long)]
+        relation: Option<String>,
+        /// Follow outgoing edges, incoming edges or both.
+        #[arg(long, default_value = "both", value_parser = ["in", "out", "both"])]
+        direction: String,
         #[command(flatten)]
         remote: Remote,
     },
@@ -568,9 +574,17 @@ fn read_call(c: &Command) -> Option<(&Remote, &'static str, serde_json::Value)> 
             json!({"kind": kind, "filter": filter, "fields": fields}),
         ),
         Command::Search { query, remote } => (remote, "search", json!({"query": query})),
-        Command::Graph { id, depth, remote } => {
-            (remote, "graph", json!({"id": id, "depth": depth}))
-        }
+        Command::Graph {
+            id,
+            depth,
+            relation,
+            direction,
+            remote,
+        } => (
+            remote,
+            "graph",
+            json!({"id": id, "depth": depth, "relation": relation, "direction": direction}),
+        ),
         Command::Owner { id, remote } => (remote, "owner_of", json!({"id": id})),
         Command::Explain {
             id,
@@ -1228,5 +1242,49 @@ mod drive_catalog_tests {
             catalog_id("component", "component:ALPHA:api", &data),
             "ALPHA:api"
         );
+    }
+}
+
+#[cfg(test)]
+mod read_call_tests {
+    use super::{Cli, read_call};
+    use clap::Parser;
+    use serde_json::json;
+
+    #[test]
+    fn graph_passes_relation_and_direction() {
+        let cli = Cli::try_parse_from([
+            "toolbox",
+            "graph",
+            "crate:codex-tools",
+            "--relation",
+            "dependsOn",
+            "--direction",
+            "in",
+            "--depth",
+            "3",
+        ])
+        .unwrap();
+        let (_, tool, args) = read_call(&cli.command).unwrap();
+        assert_eq!(tool, "graph");
+        assert_eq!(
+            args,
+            json!({"id": "crate:codex-tools", "depth": 3, "relation": "dependsOn", "direction": "in"})
+        );
+    }
+
+    #[test]
+    fn graph_defaults_to_every_relation_both_ways() {
+        let cli = Cli::try_parse_from(["toolbox", "graph", "crate:x"]).unwrap();
+        let (_, _, args) = read_call(&cli.command).unwrap();
+        assert_eq!(
+            args,
+            json!({"id": "crate:x", "depth": 1, "relation": null, "direction": "both"})
+        );
+    }
+
+    #[test]
+    fn graph_rejects_an_unknown_direction() {
+        assert!(Cli::try_parse_from(["toolbox", "graph", "crate:x", "--direction", "up"]).is_err());
     }
 }
