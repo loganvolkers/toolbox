@@ -25,7 +25,7 @@ reasoning are in [knowledge-graphs.md](../design/knowledge-graphs.md).
    optional tool, or under other agents' harnesses. None had tested the vendor's mandatory rule and
    document layer in Cursor on a documentation-heavy repository like this one, and the adoption
    question needed that test. The answer is that it isn't shown. No second round is planned: coverage
-   hit the ceiling (L20 in [dx-benchmarks.md](../design/dx-benchmarks.md)). Arm B's lower call counts
+   hit the ceiling (L21 in [dx-benchmarks.md](../design/dx-benchmarks.md)). Arm B's lower call counts
    (a median of 18 fewer on both repositories) didn't clear the noise. Even at face value, its read
    saving on Toolbox (98k characters a session) repays one document build only after about 43
    sessions.

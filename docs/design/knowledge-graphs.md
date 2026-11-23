@@ -221,7 +221,7 @@ Neither "helps" nor "hurts" is shown on either repository, which is what the des
 Three findings matter beyond the bar:
 
 - **Coverage saturated.** Without a turn cap, every agent found every fact, or the same facts, in
-  both arms. The vendor's gain was measured under a 14-turn cap. This is lesson L20 in
+  both arms. The vendor's gain was measured under a 14-turn cap. This is lesson L21 in
   [dx-benchmarks.md](./dx-benchmarks.md).
 - **The rule changes how agents search, not what they find.** Every B run queried the graph first,
   as the rule requires. B's agents then stopped using the Grep tool (median 0 calls, against 7 on
