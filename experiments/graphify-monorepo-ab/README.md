@@ -47,9 +47,12 @@ What the numbers say, beyond the bar:
   run in each tool arm read as much as arm A's typical run.
 - **Graphify oriented but didn't answer.** Every B run queried the graph and then read the code as
   arm A did. Graphify results were 4–15% of each B run's read, and no B answer cites the graph as
-  evidence. The graph has no crate or Cargo nodes, so `graphify query "which crates depend on
-  codex-tools"` returned nodes unrelated to dependents; `explain read_thread` was ambiguous across
-  6 nodes; and `path` found no directed path from `handle_output_item_done` to `spawn_pty_process`.
+  evidence. The graph holds the Cargo packages and their 597 `depends_on` edges, but every B run
+  asked `graphify query "which crates depend on codex-tools"`, which started from three unrelated
+  symbols and returned 52 of 232 nodes, none of them a package. No run tried `graphify explain
+  codex-tools`, which lists the 7 direct dependents (not the indirect ones). `explain read_thread`
+  was ambiguous across 6 nodes, and `path` found no directed path from `handle_output_item_done` to
+  `spawn_pty_process`.
 - **The portal answered Q1's direct set and nothing more.** Every C run began with `toolbox get
   crate:codex-tools`, and four of five answers cite its `dependents` field for the 7 direct
   dependents. That field is direct only, and the CLI's `graph` couldn't follow one relation in one
@@ -65,7 +68,7 @@ What the numbers say, beyond the bar:
 | The graph read clamps depth to 3 | Toolbox API | **Open** ([Q20](../../docs/questions.md)). Codex's deepest dependent is 3 hops away; a deeper workspace would need a transitive read |
 | `search` matches ids and titles only, so `search read_thread` found nothing, though the portal lists each crate's functions | Toolbox API | **Open** (Q20). Recommendation: don't widen it; a portal that indexes code becomes the code index `rg` already is |
 | `get` returned about 16k characters per crate, and agents cut it with `head -c` | Harness rule | The `get` and `query` skills already name `--fields`; this benchmark's `toolbox.mdc` didn't. A next round's rule names it |
-| No crate or Cargo nodes; ambiguous names; no directed call paths | Graphify | A tool's own gaps; published here, not worked around |
+| `query` matched symbols, not the package node; ambiguous names; no directed call path | Graphify | A tool's own gaps; published here, not worked around |
 | `blind.py` redacts tool names but not "portal" or entity field names, so four C answers were recognisable | Harness | Didn't affect these mechanical grades. A benchmark with judged rubrics redacts each arm's vocabulary |
 | `count.py`'s contamination check sees absolute paths only | Harness | The adjudicator scanned every transcript for relative escapes and found none. A next harness resolves paths against each call's working directory |
 | `serve.sh` prints each server's crate count to the terminal only | Harness | Readiness was ruled from poll timing. A next harness logs the count |
