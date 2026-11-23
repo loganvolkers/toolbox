@@ -19,7 +19,7 @@ import pathlib
 import re
 import sys
 
-GRAPHIFY = re.compile(r"(^|[\s;&|(])graphify\s+(query|path|explain|affected|god-nodes|section|update|stats|\S+)")
+GRAPHIFY = re.compile(r"(^|[\s;&|(])graphify\s+(query|path|explain|affected|god-nodes|section|update|stats|[a-z][\w-]*)")
 ABSOLUTE = re.compile(r"(?<![\w.])/(?:tmp|agent|home|root|opt|cursor|workspace|usr/local/src)/[^\s'\"`)\]}:,]*")
 
 

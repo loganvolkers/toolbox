@@ -185,6 +185,25 @@ One run per arm on OpenFGA (`round.py dry 1 --workspaces`), not scored, to check
 transcript reports calls and read for both arms and that `graphify` answers in arm B's workspace.
 Its outcome is recorded here before round 1 launches.
 
+**Outcome (2026-11-23, not scored).**
+
+| Run | Arm | Calls | Read (imputed) | graphify calls | Wall | Outside paths |
+|---|---|---|---|---|---|---|
+| openfga-1 | B | 67 | 428,226 | 4 (query ×6, explain ×1) | 224 s | none |
+| openfga-2 | A | 49 | 296,981 | 0 | 258 s | none |
+
+- The transcript reports calls and read for both arms. Four results are missing (one
+  `run_terminal_cmd`, three `read_file`); the `read_file` ones are imputed as designed.
+- Both runs answered all five questions in `ANSWERS.md` and read nothing outside their workspace.
+- Arm B followed the rule: its first call was a `graphify query`, before any read or grep.
+- **Harness fault, fixed:** `graphify` was not on the subagents' PATH. Arm B's first query returned
+  nothing, and it found the binary in `~/.local/bin` and prefixed `PATH` itself, which cost it two
+  calls. `graphify` is now linked into `/usr/local/bin`, which both arms' shells search. The
+  change is to the environment only, and it is the same for both arms. No prompt changes.
+- **Measure fix:** `count.py`'s `graphifyCommands` counted shell tokens after `graphify` (`&&`,
+  `2>&1`) as subcommands, and counted `pip show … graphify` as a call. It now takes only a word,
+  so arm B's dry run counts 4 calls, not 5. K7 uses `graphifyCalls`, and arm A never calls graphify.
+
 ## Sources
 
 - Graphify repository, `Graphify-Labs/graphify` at `013a646` (graphifyy 0.9.118): `graphify/skill.md`,
