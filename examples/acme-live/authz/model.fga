@@ -1,0 +1,55 @@
+model
+  schema 1.1
+
+type user
+
+type group
+  relations
+    define member: [user, group#member]
+
+type portal
+  relations
+    define admin: [user, group#member]
+    define viewer: [user:*]
+
+type component
+  relations
+    define portal: [portal]
+    define owner: [group]
+    define can_view: admin from portal or member from owner
+    define can_view_details: admin from portal or member from owner
+    define can_refresh: admin from portal or member from owner
+
+type api
+  relations
+    define portal: [portal]
+    define owner: [group]
+    define can_view: admin from portal or member from owner
+    define can_view_details: admin from portal or member from owner
+
+type system
+  relations
+    define portal: [portal]
+    define owner: [group]
+    define can_view: admin from portal or member from owner
+    define can_view_details: admin from portal or member from owner
+
+type domain
+  relations
+    define portal: [portal]
+    define owner: [group]
+    define can_view: admin from portal or member from owner
+    define can_view_details: admin from portal or member from owner
+
+type resource
+  relations
+    define portal: [portal]
+    define owner: [group]
+    define can_view: admin from portal or member from owner
+    define can_view_details: admin from portal or member from owner
+
+type repository
+  relations
+    define portal: [portal]
+    define can_view: viewer from portal
+    define can_view_details: viewer from portal

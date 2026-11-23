@@ -66,6 +66,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/v1/campaigns", get(crate::reads::campaigns))
         .route("/v1/campaigns/{name}", get(crate::reads::campaign_results))
         .route("/mcp", post(crate::mcp::handle))
+        .route("/e/{id}", get(entity_page))
         .fallback(crate::ui::asset)
         .route("/v1/actions", get(crate::actions::list))
         .route("/v1/actions/{name}/previews", post(crate::actions::preview))
@@ -341,6 +342,80 @@ async fn get_entity(
             format!("no entity {id}"),
         ),
     }
+}
+
+#[derive(Deserialize)]
+struct PageQuery {
+    #[serde(rename = "as")]
+    as_user: Option<String>,
+}
+
+fn html_escape(s: &str) -> String {
+    s.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
+}
+
+/// `GET /e/{id}` — the entity page as HTML, so the document itself names the entity and its
+/// owner. The SPA still hydrates `#root`. A shell with neither is what an empty index is.
+async fn entity_page(
+    State(s): S,
+    mut headers: HeaderMap,
+    Path(id): Path<String>,
+    Query(q): Query<PageQuery>,
+) -> Response {
+    if headers.get("x-toolbox-user").is_none()
+        && let Some(user) = q.as_user.as_deref().filter(|u| !u.is_empty())
+        && let Ok(value) = HeaderValue::from_str(user)
+    {
+        headers.insert("x-toolbox-user", value);
+    }
+    let caller = match s.caller(&headers).await {
+        Ok(c) => c,
+        Err(r) => return r,
+    };
+    let Some(p) = s.snapshot() else {
+        return problem(
+            StatusCode::SERVICE_UNAVAILABLE,
+            "starting",
+            "no snapshot yet",
+        );
+    };
+    let vis = match s.visibility(&caller, &[id.as_str()]).await {
+        Ok(v) => v[0],
+        Err(r) => return r,
+    };
+    let Some(entity) = p.derived.entities.get(&id).filter(|_| vis.view) else {
+        return problem(StatusCode::NOT_FOUND, "not-found", "no entity");
+    };
+    let title = entity
+        .fields
+        .get("title")
+        .and_then(Value::as_str)
+        .unwrap_or(id.as_str());
+    let owner = entity
+        .fields
+        .get("owner")
+        .and_then(Value::as_str)
+        .unwrap_or("");
+    let body = format!(
+        "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>{title}</title>\
+         <script type=\"module\" src=\"/assets/app.js\"></script>\
+         <link rel=\"stylesheet\" href=\"/assets/app.css\"></head><body>\
+         <header><h1>{title}</h1><p>Owner: {owner}</p></header><div id=\"root\"></div></body></html>",
+        title = html_escape(title),
+        owner = html_escape(owner),
+    );
+    (
+        [
+            (header::CONTENT_TYPE, "text/html; charset=utf-8"),
+            (header::CONTENT_SECURITY_POLICY, crate::ui::CSP),
+            (header::X_CONTENT_TYPE_OPTIONS, "nosniff"),
+        ],
+        body,
+    )
+        .into_response()
 }
 
 async fn entity_scorecards(

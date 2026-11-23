@@ -1,0 +1,69 @@
+# Dependencies for a laptop deploy. The portal itself is the `portal` profile, so a benchmark
+# can start Git, the façade, Postgres and the registry without starting the portal.
+name: acme
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: toolbox
+      POSTGRES_PASSWORD: toolbox
+      POSTGRES_DB: toolbox
+    ports: [54329:5432]
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U toolbox -d toolbox]
+      interval: 2s
+      timeout: 5s
+      retries: 40
+
+  forgejo:
+    image: codeberg.org/forgejo/forgejo:11
+    environment:
+      USER_UID: "1000"
+      USER_GID: "1000"
+      FORGEJO__database__DB_TYPE: sqlite3
+      FORGEJO__database__PATH: /data/gitea/gitea.db
+      FORGEJO__server__DOMAIN: forgejo
+      FORGEJO__server__ROOT_URL: http://forgejo:3000/
+      FORGEJO__server__HTTP_PORT: "3000"
+      FORGEJO__server__SSH_PORT: "22"
+      FORGEJO__server__START_SSH_SERVER: "false"
+      FORGEJO__security__INSTALL_LOCK: "true"
+      FORGEJO__service__DISABLE_REGISTRATION: "true"
+      FORGEJO__repository__DEFAULT_BRANCH: main
+    ports: [3030:3000]
+    volumes: [forgejo:/data]
+
+  registry: {image: registry:2, ports: [5000:5000]}
+
+  facade:
+    image: python:3.12-slim
+    command: [python3, /facade.py]
+    environment:
+      FORGEJO_URL: http://forgejo:3000
+      FORGEJO_TOKEN: ${FORGEJO_TOKEN:-}
+      FORGEJO_ORG: acme
+      FACADE_TOKEN: acme-reader
+      FACADE_LISTEN: 0.0.0.0:8091
+    volumes: [./facade.py:/facade.py:ro]
+    ports: [8091:8091]
+    depends_on: [forgejo]
+
+  portal:
+    profiles: [portal]
+    image: toolbox-acme:local
+    environment:
+      PORT: "8080"
+      DATABASE_URL: postgres://toolbox:toolbox@postgres:5432/toolbox
+      GITHUB_API_URL: http://facade:8091
+      GITHUB_TOKEN: acme-reader
+      TOOLBOX_AUTH_MODE: dev
+      TOOLBOX_CONNECTOR_TOKENS: idp=idp-token
+      TOOLBOX_CONNECTOR_TOKEN: idp-token
+      TOOLBOX_SCIM_TOKEN: scim-token
+    ports: [8080:8080, 9100:9100]
+    depends_on:
+      postgres: {condition: service_healthy}
+      facade: {condition: service_started}
+
+volumes: {forgejo: {}}

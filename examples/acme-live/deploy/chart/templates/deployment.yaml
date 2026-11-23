@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: acme}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: acme}}
+  template:
+    metadata: {labels: {app: acme}}
+    spec:
+      containers:
+        - name: portal
+          image: {{ .Values.image }}
+          ports:
+          - {name: http, containerPort: 8080}
+          - {name: scim, containerPort: 9100}
+          env:
+            - {name: PORT, value: "8080"}
+            - name: DATABASE_URL
+              value: {{ .Values.databaseUrl | quote }}
+            - name: GITHUB_API_URL
+              value: {{ .Values.githubApiUrl | quote }}
+            - name: GITHUB_TOKEN
+              value: {{ .Values.githubToken | quote }}
+            - {name: TOOLBOX_AUTH_MODE, value: dev}
+            - {name: TOOLBOX_CONNECTOR_TOKENS, value: idp=idp-token}
+            - {name: TOOLBOX_CONNECTOR_TOKEN, value: idp-token}
+            - {name: TOOLBOX_SCIM_TOKEN, value: scim-token}
+          readinessProbe: {httpGet: {path: /readyz, port: http}}
+          livenessProbe: {httpGet: {path: /healthz, port: http}}

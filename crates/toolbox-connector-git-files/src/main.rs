@@ -3,6 +3,11 @@
 //! `<root>/<repo>/<path>` from a local checkout; without `root` it lists the org's repositories
 //! and reads files through the GitHub contents API (`token`, `apiUrl` as for `github`).
 //! Record: `git:<org>/<repo>/<path>` → `{repo, path, content}` (content parsed from YAML).
+//!
+//! `splitKinds: true` emits one record per Backstage document (`component`, `api`, `system`,
+//! `domain`, `resource`) so a multi-document `catalog-info.yaml` becomes one entity per kind.
+//! `files` (for example `["README.md"]`) emits `file` records `{repo, path, present: true}`.
+//! The external id of a split document is `git:<org>/<repo>/<path>#<kind>:<name>`.
 
 use serde_json::{Value, json};
 use std::path::PathBuf;
@@ -11,6 +16,8 @@ use toolbox_connect::sdk::{Out, Source, run_stdio};
 struct GitFiles {
     org: String,
     paths: Vec<String>,
+    files: Vec<String>,
+    split: bool,
     root: Option<PathBuf>,
     api: String,
     token: Option<String>,
@@ -21,6 +28,37 @@ fn ext(org: &str, repo: &str, path: &str) -> String {
     format!("git:{org}/{repo}/{path}")
 }
 
+/// YAML documents in a catalog file. A leading `---` and a line that is exactly `---` separate
+/// documents, which is how Backstage writes several entities in one `catalog-info.yaml`.
+fn yaml_documents(text: &str) -> Vec<Value> {
+    let mut out = Vec::new();
+    for part in text.split("\n---") {
+        let doc = part.trim().trim_start_matches("---").trim();
+        if doc.is_empty() {
+            continue;
+        }
+        if let Ok(value) = serde_norway::from_str::<Value>(doc)
+            && value.is_object()
+        {
+            out.push(value);
+        }
+    }
+    out
+}
+
+/// The connector record kind for one Backstage entity, when it is one of the five catalog kinds.
+fn catalog_kind(doc: &Value) -> Option<String> {
+    let kind = doc.get("kind")?.as_str()?.to_ascii_lowercase();
+    let name = doc.pointer("/metadata/name")?.as_str()?;
+    if name.is_empty() {
+        return None;
+    }
+    match kind.as_str() {
+        "component" | "api" | "system" | "domain" | "resource" => Some(kind),
+        _ => None,
+    }
+}
+
 impl GitFiles {
     fn from_env() -> Result<Self, String> {
         let cfg: Value = serde_json::from_str(
@@ -28,16 +66,21 @@ impl GitFiles {
         )
         .map_err(|e| format!("TOOLBOX_CONNECTOR_CONFIG: {e}"))?;
         let s = |k: &str| cfg.get(k).and_then(Value::as_str).map(str::to_owned);
+        let list = |k: &str| -> Option<Vec<String>> {
+            cfg[k].as_array().map(|a| {
+                a.iter()
+                    .filter_map(|p| p.as_str().map(str::to_owned))
+                    .collect()
+            })
+        };
         Ok(GitFiles {
             org: s("org").ok_or("config needs `org`")?,
-            paths: cfg["paths"]
-                .as_array()
-                .map(|a| {
-                    a.iter()
-                        .filter_map(|p| p.as_str().map(str::to_owned))
-                        .collect()
-                })
-                .unwrap_or_else(|| vec!["catalog-info.yaml".into()]),
+            paths: list("paths").unwrap_or_else(|| vec!["catalog-info.yaml".into()]),
+            files: list("files").unwrap_or_default(),
+            split: cfg
+                .get("splitKinds")
+                .and_then(Value::as_bool)
+                .unwrap_or(false),
             root: s("root").map(PathBuf::from),
             api: s("apiUrl")
                 .or_else(|| std::env::var("GITHUB_API_URL").ok())
@@ -45,6 +88,23 @@ impl GitFiles {
             token: s("token").or_else(|| std::env::var("GITHUB_TOKEN").ok()),
             http: reqwest::Client::new(),
         })
+    }
+
+    fn kinds(&self) -> Vec<String> {
+        if !self.split {
+            return vec!["catalog-info".into()];
+        }
+        let mut kinds = vec![
+            "component".into(),
+            "api".into(),
+            "system".into(),
+            "domain".into(),
+            "resource".into(),
+        ];
+        if !self.files.is_empty() {
+            kinds.push("file".into());
+        }
+        kinds
     }
 
     async fn get(&self, path: &str) -> Result<Option<Value>, String> {
@@ -123,6 +183,92 @@ impl GitFiles {
         }
         Ok(true)
     }
+
+    async fn emit_docs(
+        &self,
+        repo: &str,
+        path: &str,
+        kinds: &[String],
+        out: &mut Out,
+    ) -> Result<(), String> {
+        let Some(text) = self.read(repo, path).await? else {
+            return Ok(());
+        };
+        for doc in yaml_documents(&text) {
+            let Some(kind) = catalog_kind(&doc) else {
+                continue;
+            };
+            if !kinds.iter().any(|k| k == &kind) {
+                continue;
+            }
+            let name = doc["metadata"]["name"].as_str().unwrap_or_default();
+            out.record(
+                &kind,
+                &format!("git:{}/{repo}/{path}#{kind}:{name}", self.org),
+                json!({"repo": repo, "path": path, "content": doc}),
+            );
+        }
+        Ok(())
+    }
+
+    async fn emit_file(&self, repo: &str, path: &str, out: &mut Out) -> Result<bool, String> {
+        if self.read(repo, path).await?.is_none() {
+            return Ok(false);
+        }
+        out.record(
+            "file",
+            &ext(&self.org, repo, path),
+            json!({"repo": repo, "path": path, "present": true}),
+        );
+        Ok(true)
+    }
+
+    fn file_path(id_path: &str) -> &str {
+        id_path.split('#').next().unwrap_or(id_path)
+    }
+
+    async fn refresh_one(&self, kind: &str, id: &str, out: &mut Out) -> Result<bool, String> {
+        let prefix = format!("git:{}/", self.org);
+        let Some((repo, raw)) = id
+            .strip_prefix(&prefix)
+            .and_then(|rest| rest.split_once('/'))
+        else {
+            return Ok(false);
+        };
+        let path = Self::file_path(raw);
+        if self.split && kind == "file" {
+            return Ok(self.emit_file(repo, path, out).await? && id == ext(&self.org, repo, path));
+        }
+        if self.split {
+            let Some(text) = self.read(repo, path).await? else {
+                return Ok(false);
+            };
+            let mut hit = false;
+            for doc in yaml_documents(&text) {
+                let Some(doc_kind) = catalog_kind(&doc) else {
+                    continue;
+                };
+                if doc_kind != kind {
+                    continue;
+                }
+                let name = doc["metadata"]["name"].as_str().unwrap_or_default();
+                let ext_id = format!("git:{}/{repo}/{path}#{doc_kind}:{name}", self.org);
+                out.record(
+                    &doc_kind,
+                    &ext_id,
+                    json!({"repo": repo, "path": path, "content": doc}),
+                );
+                if ext_id == id {
+                    hit = true;
+                }
+            }
+            return Ok(hit);
+        }
+        if kind == "catalog-info" {
+            return self.emit(repo, path, out).await;
+        }
+        Ok(false)
+    }
 }
 
 fn decode_base64(s: &str) -> String {
@@ -152,37 +298,74 @@ impl Source for GitFiles {
     }
 
     fn capabilities(&self) -> Value {
-        json!({"refresh": {"catalog-info": ["external_ids"]}, "resync": ["catalog-info"], "max_concurrency": 1})
+        if !self.split {
+            return json!({"refresh": {"catalog-info": ["external_ids"]}, "resync": ["catalog-info"], "max_concurrency": 1});
+        }
+        let kinds = self.kinds();
+        let mut refresh = serde_json::Map::new();
+        for kind in &kinds {
+            refresh.insert(kind.clone(), json!(["external_ids"]));
+        }
+        json!({"refresh": refresh, "resync": kinds, "max_concurrency": 1})
     }
 
     async fn handle(&mut self, cmd: &Value, out: &mut Out) -> Result<(), String> {
         match cmd["command"].as_str() {
             Some("resync") => {
-                for repo in self.repos().await? {
-                    for path in self.paths.clone() {
-                        self.emit(&repo, &path, out).await?;
+                let requested: Vec<String> = cmd["kinds"]
+                    .as_array()
+                    .into_iter()
+                    .flatten()
+                    .filter_map(Value::as_str)
+                    .map(str::to_owned)
+                    .collect();
+                let kinds = if requested.is_empty() {
+                    self.kinds()
+                } else {
+                    requested
+                };
+                let repos = self.repos().await?;
+                if self.split {
+                    let catalog: Vec<String> = kinds
+                        .iter()
+                        .filter(|k| k.as_str() != "file")
+                        .cloned()
+                        .collect();
+                    for repo in &repos {
+                        if !catalog.is_empty() {
+                            for path in self.paths.clone() {
+                                self.emit_docs(repo, &path, &catalog, out).await?;
+                            }
+                        }
+                        if kinds.iter().any(|k| k == "file") {
+                            for path in self.files.clone() {
+                                self.emit_file(repo, &path, out).await?;
+                            }
+                        }
                     }
+                    for kind in &kinds {
+                        out.snapshot_complete(kind);
+                    }
+                } else {
+                    for repo in &repos {
+                        for path in self.paths.clone() {
+                            self.emit(repo, &path, out).await?;
+                        }
+                    }
+                    out.snapshot_complete("catalog-info");
                 }
-                out.snapshot_complete("catalog-info");
                 Ok(())
             }
             Some("refresh") => {
-                let prefix = format!("git:{}/", self.org);
+                let kind = cmd["kind"].as_str().unwrap_or("catalog-info");
                 for id in cmd["external_ids"]
                     .as_array()
                     .into_iter()
                     .flatten()
                     .filter_map(Value::as_str)
                 {
-                    let found = match id
-                        .strip_prefix(&prefix)
-                        .and_then(|rest| rest.split_once('/'))
-                    {
-                        Some((repo, path)) => self.emit(repo, path, out).await?,
-                        None => false,
-                    };
-                    if !found {
-                        out.not_found("catalog-info", id);
+                    if !self.refresh_one(kind, id, out).await? {
+                        out.not_found(kind, id);
                     }
                 }
                 Ok(())
@@ -200,5 +383,35 @@ async fn main() {
             eprintln!("toolbox-connector-git-files: {e}");
             std::process::exit(2);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{catalog_kind, yaml_documents};
+
+    #[test]
+    fn multi_document_catalog_keeps_each_kind() {
+        let text = "\
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: payments-api
+spec:
+  owner: group:payments
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: payments
+spec:
+  owner: group:payments
+";
+        let docs = yaml_documents(text);
+        assert_eq!(docs.len(), 2);
+        assert_eq!(catalog_kind(&docs[0]).as_deref(), Some("component"));
+        assert_eq!(catalog_kind(&docs[1]).as_deref(), Some("api"));
+        assert_eq!(docs[0]["metadata"]["name"], "payments-api");
     }
 }

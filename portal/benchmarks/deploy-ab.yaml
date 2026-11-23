@@ -14,13 +14,17 @@ records:
     repos:
     - backstage/backstage@feeadd4d4efcbda9f1573b95e356e0f3fc0b5d17
     - openfga/openfga@d67ba7b1d2eaf945cffab3a9129ca1a4c7ad5251
-    status: blocked
-    ran: ''
-    outcome: ''
-    changed: []
+    status: complete
+    ran: 2026-11-23
+    outcome: >-
+      deploy-usable does not hold: Toolbox passed S1–S3 and T1–T4, Backstage
+      passed S1 and S3 and failed S2, and the agent runtime returned no token
+      counts
+    changed:
+    - >-
+      OpenFGA's tuple view follows the connection search_path, so a role named
+      toolbox is not an empty authorization table
     servedValue: ''
-    blockedOn: >-
-      L2 and L4 of docs/design/local-simulation.md, the PORT bind, a portal
-      image, and Q18 (create-app was refused)
+    blockedOn: ''
     readme: experiments/deploy-ab/README.md
-    results: ''
+    results: experiments/deploy-ab/RESULTS.md

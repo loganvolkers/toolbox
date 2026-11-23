@@ -3,8 +3,8 @@
 **Question:** can a fresh agent deploy a usable portal, with Toolbox and with Backstage, when the
 only services on the machine are a local GitHub and Postgres?
 
-**Status: blocked, not run.** The bar below is the bar. It changes only if the design changes
-before the run, and then the change is recorded. Results are not written yet.
+**Status: run 2026-11-23.** The bar below is the bar. It changes only if the design changes
+before a run, and then the change is recorded. Results are in [RESULTS.md](RESULTS.md).
 
 This tests the box's deploy contract, not a tool
 ([toolbox-and-tools.md](../../docs/design/toolbox-and-tools.md)). The environment is
@@ -41,8 +41,8 @@ The check, once L2 exists:
 python3 experiments/deploy-ab/harness/probes.py
 ```
 
-That file is not in the tree. Adding a script that exits 0 without running S3 would be the failure
-this benchmark exists to catch.
+The scorer is [harness/probes.py](harness/probes.py). A script that exits 0 without running S3
+would be the failure this benchmark exists to catch.
 
 ## 3. The bar, set before running
 

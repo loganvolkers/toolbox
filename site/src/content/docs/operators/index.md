@@ -51,7 +51,9 @@ toolbox plan path/to/portal --local --base path/to/previous/toolbox.yaml
 toolbox serve examples/reference-portal --fixtures
 ```
 
-That listens on `127.0.0.1:8080`. The same process serves the HTTP API, MCP at `/mcp`, and the UI at `/`. `--fixtures` loads the portal's fixtures into memory; the data is gone when the process exits. Pass `--database-url` (or set `DATABASE_URL`) to use Postgres.
+With no address set, that listens on `127.0.0.1:8080`. Set `PORT` and the same binary binds `0.0.0.0:$PORT`, which is the contract a container host injects; `--listen` or `TOOLBOX_LISTEN` still wins when you set one. The same process serves the HTTP API, MCP at `/mcp`, and the UI at `/`. `--fixtures` loads the portal's fixtures into memory; the data is gone when the process exits. Pass `--database-url` (or set `DATABASE_URL`) to use Postgres.
+
+A portal that reads a real Git server instead of fixtures is `examples/acme-live`: one image, Postgres, and connector URLs for the GitHub API and a SCIM feed. `examples/acme-live/deploy/score.yaml` is the workload, and `examples/acme-live/deploy/chart` is the Helm chart.
 
 `toolbox push path/to/portal` sends a portal's fixtures to a server that is already running. People and agents then use the reads on [Use a portal](/toolbox/users/).
 

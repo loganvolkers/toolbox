@@ -319,7 +319,9 @@ cheaper arm the one we wrote the fake for.
 ## 9. The benchmark
 
 Pre-registered in [experiments/deploy-ab/README.md](../../experiments/deploy-ab/README.md), catalogued
-as `deploy-ab` with status `blocked`.
+as `deploy-ab`. The first run is recorded in
+[experiments/deploy-ab/RESULTS.md](../../experiments/deploy-ab/RESULTS.md). The bar in that README
+is the bar.
 
 | | |
 |---|---|
@@ -328,7 +330,7 @@ as `deploy-ab` with status `blocked`.
 | Rival | Backstage, created from `@backstage/create-app` and run as one container plus Postgres, catalog pointed at the same façade. That is the deploy Backstage's own golden path describes for a small install |
 | Repos | `backstage/backstage@feeadd4d4efcbda9f1573b95e356e0f3fc0b5d17`, `openfga/openfga@d67ba7b1d2eaf945cffab3a9129ca1a4c7ad5251` |
 | Bar | **Holds** if the Toolbox arm passes S1–S3 and T1–T4, the Backstage arm passes S1–S3, and Toolbox's token count is lower at that equal shared-probe result. **Fails** if Toolbox misses a shared probe Backstage hits, or if Toolbox passes them with at least as many tokens. **Void** if either arm's only success is `/readyz` |
-| Blocked on | L2 and L4, the `PORT` bind, and a portal image that contains the `toolbox` binary. Q18 still blocks running `npx @backstage/create-app` in this environment |
+| First run | 2026-11-23. deploy-usable does not hold: Toolbox passed S1–S3 and T1–T4, Backstage failed S2, and the agent runtime returned no token counts. create-app 0.9.4 ran; it rejected the Node 22.23.5 pin |
 
 The harness starts Forgejo, the façade, the registry and Postgres before the agent. It does not
 start the portal. The agent is told the façade URL, the org, and the Postgres URL, and must leave a

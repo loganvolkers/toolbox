@@ -1,0 +1,16 @@
+# The portal workload (Score). Postgres below is the database Score provisions when you
+# generate a Compose file. Point GITHUB_API_URL at the GitHub API the connectors should read.
+apiVersion: score.dev/v1b1
+metadata: {name: acme}
+containers:
+  portal:
+    image: toolbox-acme:local
+    variables:
+      PORT: "8080"
+      DATABASE_URL: postgres://${resources.db.username}:${resources.db.password}@${resources.db.host}:${resources.db.port}/${resources.db.name}
+      GITHUB_API_URL: http://facade:8091
+      GITHUB_TOKEN: acme-reader
+      TOOLBOX_AUTH_MODE: dev
+    resources: {limits: {memory: 1Gi}, requests: {memory: 256Mi}}
+service: {ports: {http: {port: 8080, targetPort: 8080}}}
+resources: {db: {type: postgres}}

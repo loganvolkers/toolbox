@@ -1,6 +1,19 @@
 //! `toolbox serve` and `toolbox push`.
 
 use std::path::Path;
+
+/// Resolve the listen address. An explicit `--listen` or `TOOLBOX_LISTEN` wins. Otherwise
+/// `PORT` binds every interface, which is what Cloud Run and `docker run -e PORT` inject.
+/// The laptop default stays loopback so a bare `toolbox serve` is not exposed.
+pub fn listen_addr(explicit: Option<&str>, port: Option<&str>) -> String {
+    if let Some(addr) = explicit.map(str::trim).filter(|s| !s.is_empty()) {
+        return addr.to_owned();
+    }
+    if let Some(port) = port.map(str::trim).filter(|s| !s.is_empty()) {
+        return format!("0.0.0.0:{port}");
+    }
+    "127.0.0.1:8080".to_owned()
+}
 use std::process::ExitCode;
 use std::sync::Arc;
 use toolbox_authz::authn::{AuthConfig, Authenticator, Mode, PatLookup};
@@ -368,4 +381,22 @@ pub fn create_token(user: &str, label: Option<&str>, database_url: &str) -> Exit
             }
         }
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::listen_addr;
+
+    #[test]
+    fn port_binds_every_interface_unless_listen_is_set() {
+        assert_eq!(listen_addr(None, Some("8080")), "0.0.0.0:8080");
+        assert_eq!(listen_addr(None, Some(" 9090 ")), "0.0.0.0:9090");
+        assert_eq!(
+            listen_addr(Some("127.0.0.1:8080"), Some("9090")),
+            "127.0.0.1:8080"
+        );
+        assert_eq!(listen_addr(None, None), "127.0.0.1:8080");
+        assert_eq!(listen_addr(None, Some("")), "127.0.0.1:8080");
+        assert_eq!(listen_addr(Some(""), Some("8080")), "0.0.0.0:8080");
+    }
 }

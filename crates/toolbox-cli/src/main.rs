@@ -75,9 +75,11 @@ enum Command {
         /// A portal directory (containing toolbox.yaml) or a manifest file.
         #[arg(default_value = ".")]
         path: PathBuf,
-        /// Address to listen on.
-        #[arg(long, env = "TOOLBOX_LISTEN", default_value = "127.0.0.1:8080")]
-        listen: String,
+        /// Address to listen on. `TOOLBOX_LISTEN` and `--listen` win. Otherwise, when
+        /// `PORT` is set, the server binds `0.0.0.0:$PORT` (the Cloud Run contract).
+        /// With neither, it binds `127.0.0.1:8080`.
+        #[arg(long, env = "TOOLBOX_LISTEN")]
+        listen: Option<String>,
         /// Postgres URL; without it the store is in memory and lost on exit.
         #[arg(long, env = "DATABASE_URL")]
         database_url: Option<String>,
@@ -649,7 +651,11 @@ fn main() -> ExitCode {
             listen,
             database_url,
             fixtures,
-        } => server::serve(&path, &listen, database_url, fixtures),
+        } => {
+            let listen =
+                server::listen_addr(listen.as_deref(), std::env::var("PORT").ok().as_deref());
+            server::serve(&path, &listen, database_url, fixtures)
+        }
         Command::Push { path, url } => server::push(&path, &url),
         Command::Campaign {
             name,

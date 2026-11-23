@@ -1,0 +1,6 @@
+apiVersion: v2
+name: acme
+description: Acme developer portal. One Toolbox replica and an external Postgres.
+type: application
+version: 0.1.0
+appVersion: 0.1.0
