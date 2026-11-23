@@ -45,3 +45,9 @@ toolbox connector drive --kinds project,issue --config '{"baseUrl":"http://127.0
 Do not skip `version()`. Do not drive stdin with a home-grown command JSON when
 `connector drive` exists. Read `docs/design/connector-control.md` only if a
 conformance check fails.
+
+**externalId shape:** every record's `externalId` must match `^[a-z0-9-]+:.+$`
+(see `schema/connector-messages.schema.json`). Prefer `project:ALPHA` /
+`issue:ALPHA-1`, not bare keys. Catalog entity ids in a portal `map:` can still
+be the bare key — that is a second id space.
+

@@ -79,3 +79,8 @@ Product fixes on branch `cursor/connector-learning-dx-530d` (D01M83FFM2K6XS4EAVH
 | B Ocean | pass (5) | pass | 302 | 37 | bc-0c51db1a |
 | C Backstage | pass (5) | pass | 358 | 38 | bc-22217758 |
 | A Toolbox | pass (5) | pass | 342 | 36 | bc-5133c227 |
+
+### Phase 3 v2 agent ids
+- A: bc-a2dd38c6-ec52-59ec-bd76-7b3bd57611a8
+- B: bc-4b572909-11d8-5971-8b55-c918a5b57b0d
+- C: bc-b25d4935-630a-54c9-8423-45c9d59e8804
