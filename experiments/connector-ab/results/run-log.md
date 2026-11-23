@@ -40,3 +40,13 @@ Harness fix during phase 1: copy `rust-toolchain.toml` into arm A (edition2024).
 | C | pass (8) | pass | see 3-C-glue | 17 | [Connector A/B phase3 Backstage](bc-6a3bfcc2-5b23-5ef0-a18c-29395631e296) |
 
 Discarded: [Connector A/B phase3 Toolbox](bc-1f45cf68-6549-53fc-980d-bee57bdba06c) (truncated prompt); work overlapped with v2, scored from final tree.
+
+## Phase 4 scores (2026-11-23)
+
+| Arm | Truth | Shape | Glue |
+|---|---|---|---|
+| A | pass (4, tenant B) | pass | 550 |
+| B | pass (4) | pass | 342 |
+| C | pass (4) | pass | 483 |
+
+Agents still finishing replies: bc-c9a3934b, bc-7898db12, bc-cad824e0.
