@@ -1,0 +1,21 @@
+model
+  schema 1.1
+
+type user
+
+type group
+  relations
+    define member: [user, group#member]
+
+type portal
+  relations
+    define admin: [user, group#member]
+    define viewer: [user:*]
+
+# Every component read is two checks: summaries for signed-in users, details for its owners.
+type component
+  relations
+    define portal: [portal]
+    define owner: [group]
+    define can_view: viewer from portal
+    define can_view_details: member from owner or admin from portal

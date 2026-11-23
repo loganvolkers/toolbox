@@ -1,0 +1,20 @@
+# The Backstage arm of the comparison (../README.md), layered over the create-app default
+# app-config.yaml: the same Postgres 16 as the Toolbox arm, a static token for the load client, and
+# the generated catalog in place of the examples.
+backend:
+  database:
+    client: pg
+    connection: {host: 127.0.0.1, port: 54350, user: postgres}
+    prefix: backstage_plugin_
+  auth:
+    externalAccess:
+      - type: static
+        options:
+          token: ${BENCH_TOKEN}
+          subject: bench
+catalog:
+  rules:
+    - allow: [Component, System, API, Resource, Location, Group, User, Template]
+  locations:
+    - type: file
+      target: ${BENCH_CATALOG}
