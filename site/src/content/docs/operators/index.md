@@ -22,7 +22,7 @@ A change to a standard is a change to this repository's manifest. The plan print
 
 ## Score a repository on every push
 
-The smallest portal scores one checkout and needs no server. Copy the starter at `examples/repo-portal-starter` to `.toolbox/toolbox.yaml` and add the report action. The starter's `repo-hygiene` scorecard asks for a README, a CODEOWNERS file that starts with a catch-all team rule, and a LICENSE. Its `docs` scorecard checks that relative links in markdown resolve.
+The smallest portal scores one checkout and needs no server. The numbered path is [Quickstart](/toolbox/start/quickstart/). Copy the starter at `examples/repo-portal-starter` to `.toolbox/toolbox.yaml` and add the report action. The starter's `repo-hygiene` scorecard asks for a README, a CODEOWNERS file that starts with a catch-all team rule, and a LICENSE. Its `docs` scorecard checks that relative links in markdown resolve.
 
 ```bash
 toolbox report examples/repo-portal-starter

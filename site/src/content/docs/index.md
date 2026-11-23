@@ -24,8 +24,11 @@ Toolbox benchmarks its own developer experience. Coding agents do real work on o
 
 ## Start
 
+- [Quickstart](/toolbox/start/quickstart/) — install, score a repo, ratchet in CI
 - [Install a release](/toolbox/start/install/)
 - [Run Toolbox locally](/toolbox/start/run/)
+- [CLI reference](/toolbox/start/cli/)
+- [Glossary](/toolbox/concepts/glossary/)
 - [The catalog](/toolbox/concepts/catalog/)
 - [Scorecards](/toolbox/concepts/scorecards/)
 - [DX Benchmarks](/toolbox/concepts/dx-benchmarks/)

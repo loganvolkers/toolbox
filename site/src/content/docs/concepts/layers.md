@@ -20,8 +20,8 @@ A sentence that says "SDLC" and names no layer is ambiguous, and the docs scorec
 
 | Layer | In the binary today | Specified, and not in the binary yet |
 |---|---|---|
-| Maintainer SDLC | Build, test, the reference portal as the oracle, the ratchet on this repository | A tagged release others can install |
-| Package author SDLC | A package directory, `include`, `toolbox test`, `toolbox install` pinning a git tag by content hash | A release archive, attestations, a fleet rollout. The registry is an open question |
+| Maintainer SDLC | Build, test, the reference portal as the oracle, the ratchet on this repository; [installable releases](/toolbox/start/install/) (v0.1.0+) | Broader release automation and image pipelines beyond the first attested binaries |
+| Package author SDLC | A package directory, `include`, `toolbox test`, `toolbox install` pinning a git tag by content hash | A package release archive, attestations, a fleet rollout. The registry is an open question |
 | Operator SDLC | `validate`, `test`, `plan --local`, `serve`, `push`, `connector test`, `report` | A plan against live data, preview environments, `toolbox verify` |
 | User SDLC | The catalog reads on CLI, MCP and HTTP, personal access tokens, snapshot ids | Typed clients, service identities, a deprecation feed. Action runs are paused |
 

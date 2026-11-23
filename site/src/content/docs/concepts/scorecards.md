@@ -15,7 +15,9 @@ An agent reads the evidence and the fix, edits the file, and refreshes that enti
 
 ## The ratchet
 
-CI compares the current report with a committed baseline. A new entity must reach the floor declared for its scorecard, which is bronze for the standards in this repository. An existing entity may not drop a level.
+CI compares the current report with a committed baseline (for example `.toolbox/results.json` or this repository’s `portal/results.json`). The first run with `--update` records today’s failures. Later runs fail when a rule newly fails or a failing rule’s evidence grows; improvements update the file so the bar only moves one way. A new entity must reach the floor declared for its scorecard (bronze for the standards in this repository). An existing entity may not drop a level. Missing tools yield `unknown`, which is neither a pass nor a regression.
+
+That committed-results shape is what we learned from [Betterer](/toolbox/compare/betterer/). Walk through recording a baseline in [Quickstart](/toolbox/start/quickstart/).
 
 ## This site
 
