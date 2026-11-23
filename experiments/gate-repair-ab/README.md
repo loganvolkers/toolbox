@@ -305,6 +305,28 @@ lookup, but `toolbox-3` and `toolbox-5` grepped for the pins while printing the 
 
 As registered, this round is not rerun.
 
+**Can a later round on this task win?** Not with a fair rival, by the designer's arithmetic from
+rounds 4 and 5. The adjudicator has not checked this.
+
+- **Calls (G19).** Every run in every arm printed the branch before editing, so a repair is at
+  least a gate run, a look and an edit with a rerun: 3 calls. reviewdog's runs already take 3 or
+  4, so arm A can't get far enough below them to beat *W*.
+- **Read (G20).** The same printing is 3,500 to more than 15,000 characters a run in every arm.
+  The gates' outputs differ by far less than that spread.
+- **Gate read (G21).** A one-line-per-finding output, with the quote dropped and the pin rules
+  folded, would print about 1,050 characters, half the current 2,091. Against round 5's reviewdog,
+  the gap would be about 3,900, under its range of 4,342. It would also come close only because
+  reviewdog's gate still quotes the source. P4 gave reviewdog that quoting because Toolbox's gate
+  quotes. If Toolbox stops quoting, reviewdog's gate goes back to one line per finding, and the two
+  outputs differ by a few hundred characters. What is left is what agents chain onto their gate
+  commands, which no product change controls.
+
+Toolbox's one advantage on this task is the pin hint, which saves reviewdog's lookup. That
+lookup costs about one call or a few thousand characters, and the agents' own variation is larger
+than either. A fair win needs a different question, as
+[dx-benchmarks.md](../../docs/design/dx-benchmarks.md) L19 and B10 say. One candidate is a task
+where most fixes need knowledge from other files.
+
 ## 1. Why this benchmark
 
 Every repository that adopts Toolbox meets the gate on its pull requests, much more often than
