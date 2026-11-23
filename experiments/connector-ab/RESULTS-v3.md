@@ -1,6 +1,6 @@
 # Connector A/B Results — rerun v3 (catalog-drive)
 
-**Status: C1–C3 adjudicated; phase 5 pending.** Same bar as [README.md](./README.md) §6.
+**Status: complete.** Same bar as [README.md](./README.md) §6.
 Product: [D01M83GQ1KP8A0WR3P2S7AG54WQ](../../docs/decisions/D01M83GQ1KP8A0WR3P2S7AG54WQ.md),
 [D01M83H3HBH2SC205MX3ANRZYWN](../../docs/decisions/D01M83H3HBH2SC205MX3ANRZYWN.md).
 Baseline: [RESULTS-v2.md](./RESULTS-v2.md).
@@ -11,7 +11,7 @@ Baseline: [RESULTS-v2.md](./RESULTS-v2.md).
 |---|---|---|
 | **C1. Toolbox cheaper to author and change** | A fewer calls than B and C over phases 1+3 | **Holds.** A **39**, B 57, C 40 (v2: 59/63/61) |
 | **C2. Toolbox reuses cheaper** | A fewer calls than B and C in phase 4 | **Holds.** A **9**, B 12, C 16 (v2 rematch: 12/18/14) |
-| **C3. Platforms correct within budget** | Finishing arms fully correct | **Holds** on phases 1, 3, 4 (phase-3 after C3 rematch) |
+| **C3. Platforms correct within budget** | Finishing arms fully correct | **Holds.** Phases 1, 3, 4 exact (phase 3 after C3 rematch); read 5/5 |
 
 ## Large-lead target (this loop)
 
@@ -32,7 +32,7 @@ on large lead**, keep the v3 win on record.
 | Calls phase 3 (rematch) | 17 | 14 | **11** |
 | Calls 1+3 (C1) | **39** | 57 | 40 |
 | Calls phase 4 (C2) | **9** | 12 | 16 |
-| Calls phase 5 | *pending* | | |
+| Calls phase 5 | 13 | **10** | 11 |
 
 ## What changed vs v2
 
