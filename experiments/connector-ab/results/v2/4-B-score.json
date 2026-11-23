@@ -1,0 +1,15 @@
+{
+  "arm": "/tmp/connector-ab/arms/B",
+  "tenant": "b",
+  "phase": 4,
+  "truth": {
+    "ok": true,
+    "detail": "exact match (4 entities)",
+    "got": 4,
+    "want": 4
+  },
+  "shape": {
+    "ok": true,
+    "detail": "on_resync kinds=['component', 'issue', 'project']"
+  }
+}
