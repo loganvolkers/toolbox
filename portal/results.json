@@ -96,6 +96,12 @@
       "benchmark:checklist-ab": {
         "level": "gold"
       },
+      "benchmark:deploy-ab": {
+        "failing": {
+          "results-recorded": 1
+        },
+        "level": "silver"
+      },
       "benchmark:out-of-box": {
         "level": "gold"
       },
@@ -1029,6 +1035,9 @@
       "doc:docs/design/incremental-computation.md": {
         "level": "silver"
       },
+      "doc:docs/design/local-simulation.md": {
+        "level": "silver"
+      },
       "doc:docs/design/maintainer-sdlc.md": {
         "level": "silver"
       },
@@ -1186,6 +1195,9 @@
         "level": "silver"
       },
       "doc:experiments/build-cost/README.md": {
+        "level": "silver"
+      },
+      "doc:experiments/deploy-ab/README.md": {
         "level": "silver"
       },
       "doc:experiments/derived-state-scale/README.md": {
@@ -1368,6 +1380,9 @@
         "level": "gold"
       },
       "example:experiments/build-cost/README.md": {
+        "level": "gold"
+      },
+      "example:experiments/deploy-ab/README.md": {
         "level": "gold"
       },
       "example:experiments/derived-state-scale/README.md": {

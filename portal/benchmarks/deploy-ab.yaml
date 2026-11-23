@@ -1,0 +1,26 @@
+# DX Benchmark catalog entry (docs/design/dx-benchmarks.md §6), scored by maintainer-benchmark.
+records:
+  - id: deploy-ab
+    title: 'Deploy a usable portal: Toolbox or Backstage, on a laptop'
+    question: >-
+      Can a fresh agent deploy a usable portal onto a laptop, with Toolbox and
+      with Backstage, when the only services are a local GitHub and Postgres?
+    layers: [operator, user]
+    stages: [operator/deploy, operator/verify, user/discover]
+    hypotheses: [deploy-usable]
+    rival: >-
+      Backstage from create-app, run as one container plus Postgres against
+      the same local GitHub
+    repos:
+    - backstage/backstage@feeadd4d4efcbda9f1573b95e356e0f3fc0b5d17
+    - openfga/openfga@d67ba7b1d2eaf945cffab3a9129ca1a4c7ad5251
+    status: blocked
+    ran: ''
+    outcome: ''
+    changed: []
+    servedValue: ''
+    blockedOn: >-
+      L2 and L4 of docs/design/local-simulation.md, the PORT bind, a portal
+      image, and Q18 (create-app was refused)
+    readme: experiments/deploy-ab/README.md
+    results: ''
