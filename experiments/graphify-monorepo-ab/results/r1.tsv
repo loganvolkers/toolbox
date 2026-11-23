@@ -1,0 +1,16 @@
+run	arm	bcId	answered	calls	read	readRecorded	missing	graphifyCalls	graphifyRead	toolboxCalls	toolboxRead	outside	wallSeconds
+codex-1	C	bc-e1355f4b-89a7-5f71-a1e9-43dec5f47020	True	73	275061	260654	read_file,run_terminal_cmd	0	0	2	3912	0	327
+codex-2	C	bc-de8e9c26-0246-544c-af66-03b74c55e00a	True	63	206872	206872	-	0	0	3	10777	0	277
+codex-3	A	bc-89fedb6e-f343-541c-949f-ca146bda6e12	True	51	208990	172734	read_file,read_file	0	0	0	0	0	238
+codex-4	B	bc-7bc1bc82-73eb-5b1f-af96-4cde4d5afcb3	True	49	198160	198160	run_terminal_cmd	5	30449	0	0	0	290
+codex-5	A	bc-03d43a14-8bb2-510d-bb2a-a650315fbd47	True	55	203379	203379	-	0	0	0	0	0	287
+codex-6	A	bc-810b5083-9403-5ee9-be2c-9a025a9bdb7f	True	77	261195	239346	read_file	0	0	0	0	0	405
+codex-7	A	bc-bb02d4be-4d74-526c-a58a-5ce2f89f213a	True	56	255863	219607	read_file,read_file	0	0	0	0	0	275
+codex-8	A	bc-cef3de9a-7e0c-5323-94f7-5ed1f62e1ba1	True	70	256555	242148	run_terminal_cmd,read_file,run_terminal_cmd	0	0	0	0	0	370
+codex-9	B	bc-e5bc5e4b-e7b2-5676-9c81-1d4f3eaa85f4	True	54	225758	225758	run_terminal_cmd	4	30823	0	0	0	250
+codex-10	C	bc-4f886e54-ae51-5cf9-80f2-cc8925972feb	True	52	230325	174914	read_file,read_file,read_file	0	0	3	9355	0	263
+codex-11	B	bc-5ce9f763-a595-53ac-b313-cc3e17ea899e	True	54	200296	200296	-	3	18156	0	0	0	315
+codex-12	C	bc-b79904e0-38d1-56a5-9d06-85fd1b865ea3	True	45	183831	183831	-	0	0	1	3456	0	250
+codex-13	B	bc-e29ce6af-3c1b-58c4-8d63-af78fa784f81	True	58	204870	204870	-	3	9023	0	0	0	266
+codex-14	C	bc-8cc963d7-aa21-5e8a-8e44-a4ba54c47bd5	True	54	199292	199292	-	0	0	4	19439	0	273
+codex-15	B	bc-38a74b1e-84d5-5ef4-a942-5007c707ec9b	True	59	256203	256203	-	4	19188	0	0	0	287

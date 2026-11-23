@@ -1,0 +1,26 @@
+{
+  "run": "codex-6",
+  "arm": "A",
+  "bcId": "bc-810b5083-9403-5ee9-be2c-9a025a9bdb7f",
+  "answered": true,
+  "toolCalls": 77,
+  "byTool": {
+    "run_terminal_cmd": 61,
+    "read_file": 15,
+    "search_replace": 1
+  },
+  "resultChars": 239346,
+  "missingResults": [
+    "read_file"
+  ],
+  "readImputed": 21849,
+  "resultCharsImputed": 261195,
+  "graphifyCalls": 0,
+  "graphifyCommands": {},
+  "graphifyChars": 0,
+  "toolboxCalls": 0,
+  "toolboxCommands": {},
+  "toolboxChars": 0,
+  "outsidePaths": [],
+  "wallSeconds": 405
+}
