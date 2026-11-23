@@ -20,6 +20,7 @@ export default defineConfig({
         { label: 'Maintainers', items: [{ autogenerate: { directory: 'maintainers' } }] },
         { label: 'Concepts', items: [{ autogenerate: { directory: 'concepts' } }] },
         { label: 'Agents', items: [{ autogenerate: { directory: 'agents' } }] },
+        { label: 'Compare', items: [{ autogenerate: { directory: 'compare' } }] },
         { label: 'Demo', items: [{ autogenerate: { directory: 'demo' } }] },
       ],
     }),
