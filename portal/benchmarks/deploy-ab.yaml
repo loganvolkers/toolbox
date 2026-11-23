@@ -17,14 +17,18 @@ records:
     status: complete
     ran: 2026-11-23
     outcome: >-
-      deploy-usable does not hold: Toolbox passed S1–S3 and T1–T4, Backstage
-      passed S1 and S3 and failed S2, and the agent runtime returned no token
-      counts
+      deploy-usable does not hold, and the rerun admits defeat. Toolbox passed
+      S1–S3 and T1–T4 on both runs. Backstage passed S1 and S3 and failed S2
+      on both runs. The agent runtime returned no token counts on either run
     changed:
     - >-
       OpenFGA's tuple view follows the connection search_path, so a role named
       toolbox is not an empty authorization table
+    - >-
+      The Acme portal image pushes the directory after the SCIM connector is
+      listening. The rerun still failed S2 for Backstage and still had no
+      tokens
     servedValue: ''
     blockedOn: ''
     readme: experiments/deploy-ab/README.md
-    results: experiments/deploy-ab/RESULTS.md
+    results: experiments/deploy-ab/RESULTS-v2.md
