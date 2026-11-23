@@ -434,6 +434,12 @@ boundary.**
 - Group claims in the proxy or OIDC token are used as a **ceiling**: a membership absent from a fresh
   token is treated as revoked even before the connector catches up.
 - Revocation latency is a published metric and alert ([plan.md](./plan.md) §6).
+- `toolbox serve` starts OpenFGA with its check-query and iterator caches on
+  (`OPENFGA_CHECK_QUERY_CACHE_ENABLED`, `OPENFGA_CHECK_ITERATOR_CACHE_ENABLED`; set either to
+  `false` to turn it off). A cached decision lives for OpenFGA's `--check-query-cache-ttl`, 10 s by
+  default, inside this SLO. On the Backstage comparison's 1k catalog the caches raised checked
+  entity reads from about 1,300 to about 7,000 per second
+  ([backstage-comparison.md](./design/backstage-comparison.md)).
 
 ---
 

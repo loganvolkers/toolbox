@@ -70,6 +70,15 @@ fn batch_results(r: &Value, chunk: &[Tuple]) -> Result<Vec<bool>, String> {
         .collect()
 }
 
+/// OpenFGA's check caches, on unless the operator sets the variable. A cached decision lives for
+/// OpenFGA's `--check-query-cache-ttl` (10 s by default), so a revoked tuple can still allow for
+/// that long. That is inside the 60 s revocation SLO (authorization.md §4.9), and it makes a
+/// checked read several times cheaper.
+const CACHE_DEFAULTS: [(&str, &str); 2] = [
+    ("OPENFGA_CHECK_QUERY_CACHE_ENABLED", "true"),
+    ("OPENFGA_CHECK_ITERATOR_CACHE_ENABLED", "true"),
+];
+
 impl OpenFga {
     /// Start OpenFGA, create (or reuse) the store `store_name` and write `model` (JSON).
     pub async fn start(
@@ -117,7 +126,13 @@ impl OpenFga {
             "--log-level".into(),
             "warn".into(),
         ]);
-        let child = Command::new(&bin)
+        let mut cmd = Command::new(&bin);
+        for (k, v) in CACHE_DEFAULTS {
+            if std::env::var_os(k).is_none() {
+                cmd.env(k, v);
+            }
+        }
+        let child = cmd
             .arg("run")
             .args(&args)
             .stdout(Stdio::null())
