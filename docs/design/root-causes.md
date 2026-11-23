@@ -42,7 +42,7 @@ appeared among the changes, as "· changed … new (none)", with nothing linking
 | Aggregate | The repository-level rule that failed, and its evidence | A scorecard that reads `cards` (D86) |
 | Constituent | Which scorecard's level fell, from what to what | The lowest counted entity of that scorecard, before and now (fixture samples under `/demo/` and skipped entities don't count) |
 | Change | The entity changes now at that lower level: a rule that started failing, evidence that grew, a new entity below the floor | The same comparison's changes, filtered to that scorecard and level |
-| Evidence | What the rule found now: up to three items, then a count. When the evidence grew, up to ten: the baseline keeps counts, so the new item can be anywhere in the list. Using this repository's own ratchet, the new long function was hidden behind "… 1 more" until this changed | The rule's `evidence` |
+| Evidence | What the rule found now: up to three items, then a count. When the evidence grew, only the new items, marked `+`, then how many were already in the baseline: the baseline keeps a key per item, its text with digits folded, so a finding that moved keeps its key (D01M841J2SN4V3AVZZ5D91YAR51). A baseline without keys shows up to ten items of the whole list. Using this repository's own ratchet, the new long function was hidden behind "… 1 more" until the ten-item rule | The rule's `evidence`, and the baseline's `evidence` keys |
 | Reproduce | The command that gives the same finding with the tool alone, or the record the fact came from | The entity's `command` field (lint records, take-it-out), else its source record |
 
 When a scorecard fell but no change at the new level explains it, for example because a better
@@ -52,7 +52,7 @@ entity was removed, the chain says so instead of guessing.
 
 | Surface | Form |
 |---|---|
-| `toolbox report --baseline` and `--against` | Indented under each `✗ worse` line |
+| `toolbox report --baseline` and `--against` | Indented under each `✗ worse` line. Without `-o` or `--out`, the verdict is the whole output, on stdout (D01M841J2SN4V3AVZZ5D91YAR51) |
 | `--verdict FILE` | Each regression has `detail` (strings) and `causes` (nested regressions of the same shape) |
 | The `actions/report` action | One annotation per regression, with the whole chain |
 
@@ -72,7 +72,7 @@ not their explanations).
 
 | # | Item |
 |---|---|
-| C1 | Evidence identity: say which evidence items are new, not only list them, by recording items (or their fingerprints) in the baseline ([ratchets.md](./ratchets.md) R1) |
+| C1 | ✅ Evidence identity: the baseline records a key per evidence item, and a grown list marks the new items (D01M841J2SN4V3AVZZ5D91YAR51; measured by [gate-repair-ab](../../experiments/gate-repair-ab/README.md)). Judging by keys, so that "fixed one, broke another" is worse, stays with [ratchets.md](./ratchets.md) R1 |
 | C2 | Causes for campaigns: when a campaign's paydown goes backwards, name the entities that moved it |
 | C3 | Causes in the UI and over MCP (`explain_entity` already explains a score; extend it to a change) |
 

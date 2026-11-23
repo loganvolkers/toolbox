@@ -32,9 +32,10 @@ pub struct Options {
     /// measure, evidence, fix),
     /// html (one self-contained page), or web (a directory: the `<toolbox-report>` element,
     /// its JSON, and that page). A host fills the element's header, nav, and footer slots;
-    /// pass --out DIR for web.
-    #[arg(short = 'o', long, default_value = "md")]
-    pub output: String,
+    /// pass --out DIR for web. With --baseline or --against and neither -o nor --out, the
+    /// verdict is the output, on stdout: a gate says what changed, not every scorecard.
+    #[arg(short = 'o', long)]
+    pub output: Option<String>,
     /// Write the output to this file instead of stdout.
     #[arg(long)]
     pub out: Option<PathBuf>,
@@ -237,6 +238,53 @@ fn results(d: &Derived, advisory: &BTreeSet<String>) -> Value {
     Value::Object(cards)
 }
 
+/// Per scorecard, entity and failing rule counted by its evidence: each item's key
+/// (crate::causes::evidence_key), sorted. The baseline keeps them beside `results`, so a list
+/// that grew can say which items are new. Not compared: a key-only difference is never a
+/// regression and never makes the baseline stale.
+fn evidence_keys(d: &Derived, advisory: &BTreeSet<String>) -> Value {
+    let mut cards = Map::new();
+    for (card, entities) in d.scores.iter().filter(|(c, _)| !advisory.contains(*c)) {
+        let mut rows = Map::new();
+        for (id, s) in entities {
+            let rules: Map<String, Value> = s
+                .rules
+                .iter()
+                .flatten()
+                .filter(|(r, o)| *o == "fail" && !s.measures.contains_key(*r))
+                .filter_map(|(r, _)| {
+                    let items = s.evidence.get(r)?.as_array().filter(|a| !a.is_empty())?;
+                    let mut keys: Vec<String> =
+                        items.iter().map(crate::causes::evidence_key).collect();
+                    keys.sort();
+                    Some((r.clone(), json!(keys)))
+                })
+                .collect();
+            if !rules.is_empty() {
+                rows.insert(id.clone(), Value::Object(rules));
+            }
+        }
+        if !rows.is_empty() {
+            cards.insert(card.clone(), Value::Object(rows));
+        }
+    }
+    Value::Object(cards)
+}
+
+/// Give each regression whose evidence grew the keys `before` recorded for that rule.
+fn mark_known(regressions: &mut [Change], before: &Value) {
+    for r in regressions.iter_mut().filter(|r| r.whole_evidence) {
+        let [rule] = r.rules.as_slice() else { continue };
+        if let Some(keys) = before[&r.scorecard][&r.entity][rule].as_array() {
+            r.known = Some(
+                keys.iter()
+                    .filter_map(|k| k.as_str().map(str::to_owned))
+                    .collect(),
+            );
+        }
+    }
+}
+
 /// A JSON number, integral when it can be (line counts stay `1070`, not `1070.0`).
 fn number(x: f64) -> Value {
     if x.fract() == 0.0 && x.abs() < 9.0e15 {
@@ -282,6 +330,9 @@ pub(crate) struct Change {
     /// Show every evidence item, not the first few: the evidence grew, and the baseline keeps
     /// only counts, so the new item can be anywhere in the list.
     pub(crate) whole_evidence: bool,
+    /// The keys of the rule's evidence in the baseline (crate::causes::evidence_key), when it
+    /// recorded them: the detail then marks the new items instead of showing the whole list.
+    pub(crate) known: Option<Vec<String>>,
 }
 
 impl std::fmt::Display for Change {
@@ -1364,6 +1415,7 @@ fn ratchet(
     if !starts.is_empty() {
         doc["campaigns"] = Value::Object(starts.clone());
     }
+    doc["evidence"] = evidence_keys(d, &advisory(m));
     let write = || {
         std::fs::write(path, toolbox_derive::pyjson::pretty(&doc))
             .map_err(|e| format!("{}: {e}", path.display()))
@@ -1396,11 +1448,18 @@ fn ratchet(
     (v.accepted, v.comparison.regressions) = std::mem::take(&mut v.comparison.regressions)
         .into_iter()
         .partition(|r| o.accept.contains(&r.scorecard));
+    mark_known(&mut v.comparison.regressions, &b["evidence"]);
     explain_regressions(&mut v.comparison, &b["results"], now, m, d);
     let recorded = b["campaigns"].as_object().cloned().unwrap_or_default();
     let differs = b["results"] != doc["results"] || recorded != v.starts;
     let unexpected = unexpected_unknowns(m, &o.skip, now);
-    let text = decide(o, &mut v, path, differs, unexpected, &write)?;
+    let mut text = decide(o, &mut v, path, differs, unexpected, &write)?;
+    // Keys explain; they never fail a check. --update keeps them current when nothing else moved.
+    if o.update && v.code == 0 && !v.written && b["evidence"] != doc["evidence"] {
+        write()?;
+        v.written = true;
+        text.push_str("; updated its evidence keys");
+    }
     v.summary = format!("{}\nbaseline: {text}\n", change_lines(&v, d).join("\n"));
     Ok(v)
 }
@@ -1436,7 +1495,7 @@ fn git(dir: &std::path::Path, args: &[&str]) -> Result<String, String> {
 
 /// The portal's ratchet results at another commit: the repository checked out at `rev` in a
 /// temporary worktree, and the portal run there from the same relative directory.
-fn results_at(o: &Options, rev: &str) -> Result<Value, String> {
+fn results_at(o: &Options, rev: &str) -> Result<(Value, Value), String> {
     let here = std::env::current_dir().map_err(|e| e.to_string())?;
     let prefix = git(&here, &["rev-parse", "--show-prefix"])?;
     let top = PathBuf::from(git(&here, &["rev-parse", "--show-toplevel"])?);
@@ -1460,7 +1519,10 @@ fn results_at(o: &Options, rev: &str) -> Result<Value, String> {
     let result = std::env::set_current_dir(tree.join(&prefix))
         .map_err(|e| format!("{}: {e}", tree.display()))
         .and_then(|()| live(&portal, o.fixtures, &o.skip))
-        .map(|(_, m, d)| results(&d, &advisory(&m)));
+        .map(|(_, m, d)| {
+            let advisory = advisory(&m);
+            (results(&d, &advisory), evidence_keys(&d, &advisory))
+        });
     let _ = std::env::set_current_dir(&here);
     let _ = git(
         &top,
@@ -1477,7 +1539,7 @@ fn against(
     d: &Derived,
     now: &Value,
 ) -> Result<Verdict, String> {
-    let before = results_at(o, rev)?;
+    let (before, keys) = results_at(o, rev)?;
     let mut v = Verdict {
         result: "pass",
         code: 0,
@@ -1488,6 +1550,7 @@ fn against(
         unknown: unknown_count(now),
         starts: Map::new(),
     };
+    mark_known(&mut v.comparison.regressions, &keys);
     explain_regressions(&mut v.comparison, &before, now, m, d);
     let n = v.comparison.regressions.len();
     if n > 0 {
@@ -1625,22 +1688,32 @@ pub fn run(o: &Options) -> ExitCode {
     };
     save(&verdict_json(o, &v));
     let (code, summary) = (ExitCode::from(v.code), v.summary);
-    if o.output == "web" {
+    let output = o.output.as_deref().unwrap_or("md");
+    let gate =
+        o.output.is_none() && o.out.is_none() && (o.baseline.is_some() || o.against.is_some());
+    if let Some(p) = &o.html
+        && let Err(e) = std::fs::write(p, html(&m, &d, &v.starts))
+    {
+        return fail(format!("{}: {e}", p.display()));
+    }
+    if output == "web" {
         let Some(dir) = &o.out else {
             return fail("-o web writes a directory; pass --out DIR".into());
         };
         if let Err(e) = write_web(dir, &m, &d, &v.starts) {
             return fail(e);
         }
-        if let Some(p) = &o.html
-            && let Err(e) = std::fs::write(p, html(&m, &d, &v.starts))
-        {
-            return fail(format!("{}: {e}", p.display()));
-        }
         eprint!("{summary}");
         return code;
     }
-    let body = match o.output.as_str() {
+    if gate {
+        print!("{summary}");
+        if v.code != 0 {
+            println!("every scorecard: add -o md, or --out FILE");
+        }
+        return code;
+    }
+    let body = match output {
         "json" => toolbox_derive::pyjson::pretty(&json!({
             "format": FORMAT,
             "snapshot": d.snapshot,
@@ -1658,11 +1731,6 @@ pub fn run(o: &Options) -> ExitCode {
             ));
         }
     };
-    if let Some(p) = &o.html
-        && let Err(e) = std::fs::write(p, html(&m, &d, &v.starts))
-    {
-        return fail(format!("{}: {e}", p.display()));
-    }
     match &o.out {
         Some(p) => {
             if let Err(e) = std::fs::write(p, body) {

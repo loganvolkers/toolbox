@@ -29,7 +29,7 @@ toolbox report examples/repo-portal-starter
 toolbox test examples/repo-portal-starter
 ```
 
-`report` reads the checkout, recomputes, and prints each scorecard with the evidence for rules that fail. With `--baseline .toolbox/results.json`, a pull request fails when a rule starts failing or a failing rule's evidence grows. `--update` records an improvement so the committed file stays current. `--ci` also fails when that file is stale.
+`report` reads the checkout, recomputes, and prints each scorecard with the evidence for rules that fail. With `--baseline .toolbox/results.json`, a pull request fails when a rule starts failing or a failing rule's evidence grows. The output is then only the verdict: what got worse, with new evidence marked `+` (add `-o md` to see every scorecard). `--update` records an improvement so the committed file stays current. `--ci` also fails when that file is stale.
 
 The first baseline is `toolbox report .toolbox --baseline .toolbox/results.json --update`, or a manual run of the action with `mode: update`. After that, `mode: ci` is the pull-request check.
 

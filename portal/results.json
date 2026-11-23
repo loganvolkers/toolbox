@@ -33,6 +33,3100 @@
       "start": "2026-11-01"
     }
   },
+  "evidence": {
+    "maintainer-benchmark": {
+      "benchmark:box-ab": {
+        "sound-method": [
+          "9a88adff"
+        ]
+      },
+      "benchmark:checklist-ab": {
+        "sound-method": [
+          "9a88adff"
+        ]
+      },
+      "benchmark:connector-ab": {
+        "sound-method": [
+          "9a88adff"
+        ]
+      },
+      "benchmark:connector-repair-ab": {
+        "sound-method": [
+          "9a88adff"
+        ]
+      },
+      "benchmark:deploy-ab": {
+        "sound-method": [
+          "9a88adff"
+        ]
+      },
+      "benchmark:gate-repair-ab": {
+        "results-recorded": [
+          "dcc0d7a5"
+        ]
+      },
+      "benchmark:out-of-box": {
+        "sound-method": [
+          "9a88adff"
+        ]
+      },
+      "benchmark:ratchet-replay": {
+        "sound-method": [
+          "9a88adff"
+        ]
+      },
+      "benchmark:security-ab": {
+        "sound-method": [
+          "9a88adff"
+        ]
+      },
+      "benchmark:spec-ab": {
+        "method-registered": [
+          "9a88adff"
+        ],
+        "results-recorded": [
+          "dcc0d7a5"
+        ]
+      },
+      "benchmark:standards-ab": {
+        "sound-method": [
+          "9a88adff"
+        ]
+      },
+      "benchmark:standards-ab-rerun": {
+        "sound-method": [
+          "9a88adff"
+        ]
+      },
+      "benchmark:t4t-fresh-agent": {
+        "has-a-rival": [
+          "767ca45e"
+        ],
+        "open-source-pinned": [
+          "2043e6b0"
+        ],
+        "pre-registered": [
+          "9191b708"
+        ],
+        "sound-method": [
+          "9a88adff"
+        ]
+      }
+    },
+    "maintainer-ci-reliability": {
+      "workflow:.github/workflows/ci.yml": {
+        "cancels-superseded-runs": [
+          "12d08aa6"
+        ],
+        "every-job-has-timeout": [
+          "1d3fbde7",
+          "5c43327b",
+          "8a357dfb",
+          "c17fdb80",
+          "f94b95c8"
+        ]
+      },
+      "workflow:.github/workflows/codeql.yml": {
+        "cancels-superseded-runs": [
+          "12d08aa6"
+        ]
+      },
+      "workflow:.github/workflows/release.yml": {
+        "cancels-superseded-runs": [
+          "12d08aa6"
+        ],
+        "every-job-has-timeout": [
+          "005a095b",
+          "affea56f",
+          "b7cbc712",
+          "e109826a",
+          "eb9e93a7"
+        ]
+      }
+    },
+    "maintainer-ci-security": {
+      "workflow:.github/workflows/ci.yml": {
+        "zizmor-clean": [
+          "dbcd551e",
+          "dbcd551e",
+          "dbcd551e",
+          "e8b2a860",
+          "e8b2a860",
+          "e8b2a860"
+        ]
+      },
+      "workflow:.github/workflows/version-packages.yml": {
+        "no-medium-findings": [
+          "0fcdedc3"
+        ],
+        "zizmor-clean": [
+          "d7a123a6"
+        ]
+      }
+    },
+    "maintainer-connector": {
+      "connector:crates/toolbox-connector-scim": {
+        "has-tests": [
+          "582fa066"
+        ]
+      }
+    },
+    "maintainer-crate": {
+      "crate:toolbox-api": {
+        "bounded-complexity": [
+          "1706c891",
+          "4ad52923"
+        ],
+        "fully-documented": [
+          "0084cbda",
+          "06decbbe",
+          "57872c96",
+          "5da0ed8c",
+          "86dd1aa9",
+          "9aa9fa0f",
+          "c4926fbc",
+          "ce2b6746",
+          "d3eeb712",
+          "d77f340c",
+          "e0479380",
+          "e3ac2ceb",
+          "f41754be"
+        ],
+        "no-huge-functions": [
+          "0fc05491",
+          "307c1f57",
+          "c3944614",
+          "f1ed5fb6"
+        ],
+        "short-functions": [
+          "04b5ea5e",
+          "0fc05491",
+          "1b87e5fa",
+          "2f5e6208",
+          "307c1f57",
+          "3c25be81",
+          "6ad3e4ac",
+          "c3944614",
+          "f1ed5fb6"
+        ],
+        "simple-functions": [
+          "1706c891",
+          "4ad52923",
+          "634dbbc4"
+        ]
+      },
+      "crate:toolbox-authz": {
+        "fully-documented": [
+          "0a9a332f",
+          "2fd87129",
+          "372d77e1",
+          "373e67b0",
+          "3e1fcef9",
+          "67794a76",
+          "a01a60e0",
+          "a1467568",
+          "c19d833b",
+          "d7c1c170",
+          "dbe202b7",
+          "ebf24366"
+        ],
+        "public-api-documented": [
+          "0a9a332f",
+          "2fd87129",
+          "372d77e1",
+          "373e67b0",
+          "3e1fcef9",
+          "67794a76",
+          "a01a60e0",
+          "a1467568",
+          "c19d833b",
+          "d7c1c170",
+          "dbe202b7",
+          "ebf24366"
+        ],
+        "simple-functions": [
+          "3d5c1d18"
+        ]
+      },
+      "crate:toolbox-cli": {
+        "fully-documented": [
+          "0312f00e",
+          "142ff7b4",
+          "1feaa286",
+          "26869185",
+          "ab23f8b1",
+          "c9c28f18",
+          "dfdeff49",
+          "f282865e"
+        ],
+        "public-api-documented": [
+          "0312f00e",
+          "142ff7b4",
+          "1feaa286",
+          "26869185",
+          "ab23f8b1",
+          "c9c28f18",
+          "dfdeff49",
+          "f282865e"
+        ],
+        "short-functions": [
+          "3b7b9576",
+          "82010ee1",
+          "bc9af17c"
+        ],
+        "simple-functions": [
+          "1af67094",
+          "a2a1dd02",
+          "b8252d51"
+        ]
+      },
+      "crate:toolbox-connect": {
+        "few-unwraps": [
+          "a75cfd43"
+        ],
+        "fully-documented": [
+          "046eb778",
+          "0b55c501",
+          "193cf60a",
+          "2b78e41f",
+          "32ff5745",
+          "3ee3ac68",
+          "44e6a802",
+          "6abe917c",
+          "7964d0bf",
+          "92cb9926",
+          "9d218165",
+          "a236aca3",
+          "afdfa1ad",
+          "c0906b0d",
+          "c998b948",
+          "d245fb47",
+          "dfb3229a",
+          "f54398a5"
+        ],
+        "no-huge-functions": [
+          "39c55bc5"
+        ],
+        "public-api-documented": [
+          "046eb778",
+          "0b55c501",
+          "193cf60a",
+          "2b78e41f",
+          "32ff5745",
+          "3ee3ac68",
+          "44e6a802",
+          "6abe917c",
+          "7964d0bf",
+          "92cb9926",
+          "9d218165",
+          "a236aca3",
+          "afdfa1ad",
+          "c0906b0d",
+          "c998b948",
+          "d245fb47",
+          "dfb3229a",
+          "f54398a5"
+        ],
+        "short-functions": [
+          "39c55bc5"
+        ],
+        "simple-functions": [
+          "abf6f2a2"
+        ]
+      },
+      "crate:toolbox-connector-github": {
+        "short-functions": [
+          "a535c29f"
+        ],
+        "simple-functions": [
+          "bb2e36ae"
+        ]
+      },
+      "crate:toolbox-connector-scim": {
+        "few-unwraps": [
+          "a75cfd43"
+        ]
+      },
+      "crate:toolbox-derive": {
+        "bounded-complexity": [
+          "fb7573c0"
+        ],
+        "fully-documented": [
+          "4cac63fc",
+          "9ecea1f0",
+          "b275cfe5",
+          "f1c122ba",
+          "f76eb716"
+        ],
+        "no-huge-functions": [
+          "5fdacfe5"
+        ],
+        "short-functions": [
+          "45415a5f",
+          "4868829d",
+          "5fdacfe5"
+        ],
+        "simple-functions": [
+          "fb7573c0"
+        ]
+      },
+      "crate:toolbox-expr": {
+        "fully-documented": [
+          "ac0715bf",
+          "b1c8bd1f",
+          "b4ff6487"
+        ]
+      },
+      "crate:toolbox-model": {
+        "bounded-complexity": [
+          "56dae37a"
+        ],
+        "fully-documented": [
+          "0130c390",
+          "01ef9d94",
+          "03ae64ef",
+          "0e6e91f8",
+          "2d804db3",
+          "4149e4c0",
+          "4537a919",
+          "46df0eec",
+          "6839dd0a",
+          "6d8b2fa4",
+          "719aa220",
+          "88873bfa",
+          "96afc524",
+          "9835773b",
+          "ba70ccf8",
+          "bdabbb5b",
+          "c0364cb7",
+          "d8024b86",
+          "dfb9155c",
+          "e171fb65",
+          "f02aa0c7",
+          "fdd7344b"
+        ],
+        "no-huge-functions": [
+          "29b2a3c3"
+        ],
+        "public-api-documented": [
+          "0130c390",
+          "01ef9d94",
+          "03ae64ef",
+          "0e6e91f8",
+          "2d804db3",
+          "4149e4c0",
+          "4537a919",
+          "46df0eec",
+          "6839dd0a",
+          "6d8b2fa4",
+          "719aa220",
+          "88873bfa",
+          "96afc524",
+          "9835773b",
+          "ba70ccf8",
+          "bdabbb5b",
+          "c0364cb7",
+          "d8024b86",
+          "dfb9155c",
+          "e171fb65",
+          "f02aa0c7",
+          "fdd7344b"
+        ],
+        "short-functions": [
+          "0a00b1c3",
+          "29b2a3c3",
+          "a3829b30"
+        ],
+        "simple-functions": [
+          "56dae37a",
+          "910b1dc7"
+        ]
+      },
+      "crate:toolbox-secrets": {
+        "fully-documented": [
+          "0283d9be",
+          "1478419f",
+          "1fefa89a",
+          "3b5d4e97",
+          "3d4a69e9",
+          "3ff4362d",
+          "49714b54",
+          "4f1964b9",
+          "5881f7b6",
+          "67bab723",
+          "74cf81e4",
+          "8c9eea8d",
+          "959b8c72",
+          "a1056839",
+          "a70d0dd6",
+          "aaebef27",
+          "b0bff548",
+          "ec806b2b",
+          "eec623d3",
+          "f1db026d",
+          "f958a1d1"
+        ],
+        "public-api-documented": [
+          "0283d9be",
+          "1478419f",
+          "1fefa89a",
+          "3b5d4e97",
+          "3d4a69e9",
+          "3ff4362d",
+          "49714b54",
+          "4f1964b9",
+          "5881f7b6",
+          "67bab723",
+          "74cf81e4",
+          "8c9eea8d",
+          "959b8c72",
+          "a1056839",
+          "a70d0dd6",
+          "aaebef27",
+          "b0bff548",
+          "ec806b2b",
+          "eec623d3",
+          "f1db026d",
+          "f958a1d1"
+        ],
+        "short-functions": [
+          "9849e3f4"
+        ]
+      },
+      "crate:toolbox-store": {
+        "fully-documented": [
+          "16e7d6ce",
+          "234eb8a2",
+          "55786f43",
+          "9059d9c6",
+          "9fffb106"
+        ],
+        "public-api-documented": [
+          "16e7d6ce",
+          "234eb8a2",
+          "55786f43",
+          "9059d9c6",
+          "9fffb106"
+        ]
+      },
+      "crate:toolbox-telemetry": {
+        "fully-documented": [
+          "01409e7b",
+          "050c29b3",
+          "06d7c481",
+          "116c38b6",
+          "1558efbc",
+          "160a18a8",
+          "1e22171a",
+          "227648c2",
+          "276a3efe",
+          "31825cd6",
+          "37055043",
+          "45cf7a9f",
+          "48b24100",
+          "4d287f92",
+          "51b42722",
+          "652ff4ec",
+          "6afb7d40",
+          "6bb47e4c",
+          "722dee26",
+          "757178f6",
+          "79005477",
+          "9ea3a6fe",
+          "a83ba35c",
+          "aaf48855",
+          "af164238",
+          "b1e70bfe",
+          "cf163079",
+          "d39b3fa9",
+          "e2853d54",
+          "f5b544b1"
+        ],
+        "public-api-documented": [
+          "01409e7b",
+          "050c29b3",
+          "06d7c481",
+          "116c38b6",
+          "1558efbc",
+          "160a18a8",
+          "1e22171a",
+          "227648c2",
+          "276a3efe",
+          "31825cd6",
+          "37055043",
+          "45cf7a9f",
+          "48b24100",
+          "4d287f92",
+          "51b42722",
+          "652ff4ec",
+          "6afb7d40",
+          "6bb47e4c",
+          "722dee26",
+          "757178f6",
+          "79005477",
+          "9ea3a6fe",
+          "a83ba35c",
+          "aaf48855",
+          "af164238",
+          "b1e70bfe",
+          "cf163079",
+          "d39b3fa9",
+          "e2853d54",
+          "f5b544b1"
+        ],
+        "short-functions": [
+          "71db692c",
+          "e70170eb"
+        ]
+      }
+    },
+    "maintainer-dependency": {
+      "dependency:cargo:regex": {
+        "shared-is-inherited": [
+          "75313ff3",
+          "9ebf566e",
+          "c4b13643",
+          "cf7a5563"
+        ]
+      },
+      "dependency:cargo:syn": {
+        "one-version": [
+          "7980dec6",
+          "7980dec6"
+        ]
+      }
+    },
+    "maintainer-example": {
+      "example:docs/examples/secret-vault-gcp.md": {
+        "says-how-to-check": [
+          "825aff0c"
+        ]
+      },
+      "example:examples/acme-live/seed/checkout-web/README.md": {
+        "cites-the-design": [
+          "a1817f31"
+        ],
+        "says-how-to-check": [
+          "825aff0c"
+        ]
+      },
+      "example:examples/acme-live/seed/payments-api/README.md": {
+        "cites-the-design": [
+          "a1817f31"
+        ],
+        "says-how-to-check": [
+          "825aff0c"
+        ]
+      },
+      "example:examples/acme-live/seed/systems/README.md": {
+        "cites-the-design": [
+          "a1817f31"
+        ],
+        "says-how-to-check": [
+          "825aff0c"
+        ]
+      },
+      "example:examples/reference-portal/executors/github-apps/README.md": {
+        "says-how-to-check": [
+          "825aff0c"
+        ]
+      }
+    },
+    "maintainer-package": {
+      "package-json:experiments/typescript-builder/package.json": {
+        "described": [
+          "bc4c2610"
+        ],
+        "engines-declared": [
+          "44bb7873"
+        ]
+      },
+      "package-json:ui/package.json": {
+        "described": [
+          "bc4c2610"
+        ],
+        "engines-declared": [
+          "44bb7873"
+        ]
+      }
+    },
+    "maintainer-repo": {
+      "repo:loganvolkers/toolbox": {
+        "constituents-at-least-gold": [
+          "009fcc7b",
+          "0801db87",
+          "2f6e6c1d",
+          "6bf1d397",
+          "7a96357c",
+          "ca8df7cb",
+          "ce1c86ad",
+          "f2a012ac"
+        ],
+        "constituents-at-least-silver": [
+          "009fcc7b",
+          "0801db87",
+          "2f6e6c1d",
+          "6bf1d397",
+          "7a96357c",
+          "ce1c86ad"
+        ]
+      }
+    },
+    "maintainer-skill": {
+      "skill:plugins/toolbox-operator/skills/actions": {
+        "has-evals": [
+          "6997dad5"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/add-permission": {
+        "has-evals": [
+          "6997dad5"
+        ],
+        "has-example": [
+          "b2c4b1d2"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/add-scorecard": {
+        "has-evals": [
+          "6997dad5"
+        ],
+        "has-example": [
+          "b2c4b1d2"
+        ],
+        "states-boundaries": [
+          "a03f0f37"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/assess-brief": {
+        "has-evals": [
+          "6997dad5"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/assess-check": {
+        "has-evals": [
+          "6997dad5"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/assess-entity": {
+        "has-evals": [
+          "6997dad5"
+        ],
+        "has-example": [
+          "b2c4b1d2"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/assess-submit": {
+        "has-evals": [
+          "6997dad5"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/author-connector": {
+        "has-evals": [
+          "6997dad5"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/campaign": {
+        "has-evals": [
+          "6997dad5"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/connector-drive": {
+        "has-evals": [
+          "6997dad5"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/connector-records": {
+        "has-evals": [
+          "6997dad5"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/connector-test": {
+        "has-evals": [
+          "6997dad5"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/derive": {
+        "has-evals": [
+          "6997dad5"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/describe-portal": {
+        "has-evals": [
+          "6997dad5"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/doctor": {
+        "has-evals": [
+          "6997dad5"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/explain": {
+        "has-evals": [
+          "6997dad5"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/find-tools": {
+        "has-evals": [
+          "6997dad5"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/get": {
+        "has-evals": [
+          "6997dad5"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/graph": {
+        "has-evals": [
+          "6997dad5"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/install": {
+        "has-evals": [
+          "6997dad5"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/mcp": {
+        "has-evals": [
+          "6997dad5"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/owner": {
+        "has-evals": [
+          "6997dad5"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/plan": {
+        "has-evals": [
+          "6997dad5"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/push": {
+        "has-evals": [
+          "6997dad5"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/query": {
+        "has-evals": [
+          "6997dad5"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/refresh": {
+        "has-evals": [
+          "6997dad5"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/report": {
+        "has-evals": [
+          "6997dad5"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/report-ux": {
+        "has-evals": [
+          "6997dad5"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/review-plan": {
+        "has-evals": [
+          "6997dad5"
+        ],
+        "has-example": [
+          "b2c4b1d2"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/score": {
+        "has-evals": [
+          "6997dad5"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/scorecard": {
+        "has-evals": [
+          "6997dad5"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/search": {
+        "has-evals": [
+          "6997dad5"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/serve": {
+        "has-evals": [
+          "6997dad5"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/test": {
+        "has-evals": [
+          "6997dad5"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/token-create": {
+        "has-evals": [
+          "6997dad5"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/toolbox-authoring": {
+        "has-evals": [
+          "6997dad5"
+        ],
+        "has-example": [
+          "b2c4b1d2"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/tools-config": {
+        "has-evals": [
+          "6997dad5"
+        ],
+        "states-boundaries": [
+          "a03f0f37"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/tools-install": {
+        "has-evals": [
+          "6997dad5"
+        ],
+        "states-boundaries": [
+          "a03f0f37"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/validate": {
+        "has-evals": [
+          "6997dad5"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/vendor": {
+        "has-evals": [
+          "6997dad5"
+        ]
+      }
+    },
+    "meta-assessment": {
+      "assessment:rule-quality/rule:toolbox/maintainer-ci-reliability/fail-rate-under-20": {
+        "cites-everything": [
+          "7b8d632a",
+          "ef6cc8b3"
+        ],
+        "cites-for-findings": [
+          "ef6cc8b3"
+        ]
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-crate/has-tests": {
+        "cites-everything": [
+          "4c5a3209",
+          "7b8d632a",
+          "ef6cc8b3"
+        ],
+        "cites-for-findings": [
+          "4c5a3209",
+          "ef6cc8b3"
+        ]
+      },
+      "assessment:rule-quality/rule:toolbox/meta-rule/readable": {
+        "cites-everything": [
+          "4c5a3209",
+          "ef6cc8b3"
+        ],
+        "cites-for-findings": [
+          "ef6cc8b3"
+        ]
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/maintainer-ci-reliability": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:sdlc-stage-quality/sdlc-stage:operator/monitor": {
+        "cites-everything": [
+          "46cbaf23"
+        ]
+      }
+    },
+    "meta-connector": {
+      "connector:acme/git-files": {
+        "refreshable": [
+          "6bcc895b"
+        ]
+      },
+      "connector:acme/github": {
+        "freshness-declared": [
+          "e15503a0"
+        ],
+        "refreshable": [
+          "1f6a832c",
+          "e15503a0"
+        ]
+      },
+      "connector:acme/idp": {
+        "refreshable": [
+          "5fb91e8c",
+          "60785ef2"
+        ]
+      },
+      "connector:toolbox/workspace": {
+        "refreshable": [
+          "eb06bc2f"
+        ]
+      }
+    },
+    "meta-field": {
+      "field:acme/GitHubApp.permissions": {
+        "described": [
+          "ed8c4e30"
+        ],
+        "has-shape": [
+          "7d9a7652"
+        ]
+      },
+      "field:acme/GitHubApp.slug": {
+        "described": [
+          "a050b8cb"
+        ]
+      },
+      "field:acme/GitHubApp.vendor": {
+        "described": [
+          "19f2d700"
+        ]
+      },
+      "field:acme/GitHubAppInstallation.app": {
+        "described": [
+          "98f6e50d"
+        ]
+      },
+      "field:acme/GitHubAppInstallation.selection": {
+        "described": [
+          "0a51f2d6"
+        ]
+      },
+      "field:acme/Group.githubTeam": {
+        "described": [
+          "308c8115"
+        ]
+      },
+      "field:acme/Group.members": {
+        "described": [
+          "eb070352"
+        ]
+      },
+      "field:acme/Group.parent": {
+        "described": [
+          "18c20f9b"
+        ]
+      },
+      "field:acme/Group.title": {
+        "described": [
+          "ede64839"
+        ]
+      },
+      "field:acme/Repository.admins": {
+        "described": [
+          "c5c18cc2"
+        ]
+      },
+      "field:acme/Repository.archived": {
+        "described": [
+          "da68f21c"
+        ]
+      },
+      "field:acme/Repository.codeowners": {
+        "described": [
+          "82fd16cd"
+        ],
+        "has-shape": [
+          "0c6ee576"
+        ]
+      },
+      "field:acme/Repository.defaultBranchProtected": {
+        "described": [
+          "dca669f9"
+        ]
+      },
+      "field:acme/Repository.installedApps": {
+        "described": [
+          "ba96c756"
+        ]
+      },
+      "field:acme/Repository.lifecycle": {
+        "described": [
+          "f4391930"
+        ]
+      },
+      "field:acme/Repository.ownerClaim": {
+        "described": [
+          "729a5f4d"
+        ]
+      },
+      "field:acme/Repository.ownership": {
+        "described": [
+          "b58cc887"
+        ],
+        "has-shape": [
+          "db6b94f9"
+        ]
+      },
+      "field:acme/Repository.tier": {
+        "described": [
+          "4699126e"
+        ]
+      },
+      "field:acme/Repository.title": {
+        "described": [
+          "2d0d3296"
+        ]
+      },
+      "field:acme/User.displayName": {
+        "described": [
+          "70ec1e9a"
+        ]
+      },
+      "field:acme/User.email": {
+        "described": [
+          "4c796835"
+        ]
+      },
+      "field:repo/Doc.brokenLinks": {
+        "described": [
+          "bc8603fe"
+        ]
+      },
+      "field:repo/Doc.path": {
+        "described": [
+          "42507abf"
+        ]
+      },
+      "field:repo/Doc.title": {
+        "described": [
+          "b68aebd6"
+        ]
+      },
+      "field:repo/Repository.codeowners": {
+        "described": [
+          "82fd16cd"
+        ],
+        "has-shape": [
+          "706ef6a3"
+        ]
+      },
+      "field:repo/Repository.files": {
+        "described": [
+          "4776ff05"
+        ]
+      },
+      "field:repo/Repository.license": {
+        "described": [
+          "349add11"
+        ]
+      },
+      "field:repo/Repository.name": {
+        "described": [
+          "8f58be9f"
+        ]
+      },
+      "field:repo/Repository.owners": {
+        "described": [
+          "02e2fcda"
+        ]
+      },
+      "field:repo/Repository.readme": {
+        "described": [
+          "6ebcec78"
+        ]
+      },
+      "field:repo/Repository.readmeWords": {
+        "described": [
+          "4111cd9d"
+        ]
+      },
+      "field:toolbox/ActionDependency.name": {
+        "described": [
+          "e508259c"
+        ]
+      },
+      "field:toolbox/ActionDependency.owner": {
+        "described": [
+          "b6eb8df0"
+        ]
+      },
+      "field:toolbox/ActionDependency.pins": {
+        "described": [
+          "df6c6d21"
+        ]
+      },
+      "field:toolbox/ActionDependency.refs": {
+        "described": [
+          "7690796b"
+        ]
+      },
+      "field:toolbox/ActionDependency.usedBy": {
+        "described": [
+          "97f176e1"
+        ]
+      },
+      "field:toolbox/AgentDoc.canonical": {
+        "described": [
+          "9ffae4dd"
+        ]
+      },
+      "field:toolbox/AgentDoc.commandLines": {
+        "described": [
+          "5a7e2d83"
+        ]
+      },
+      "field:toolbox/AgentDoc.hiddenChars": {
+        "described": [
+          "700327ac"
+        ]
+      },
+      "field:toolbox/AgentDoc.lines": {
+        "described": [
+          "c524d032"
+        ]
+      },
+      "field:toolbox/AgentDoc.mentionsDecisions": {
+        "described": [
+          "e1d30631"
+        ]
+      },
+      "field:toolbox/AgentDoc.missingFiles": {
+        "described": [
+          "4eb9b5d2"
+        ]
+      },
+      "field:toolbox/AgentDoc.name": {
+        "described": [
+          "57edc0c2"
+        ]
+      },
+      "field:toolbox/AgentDoc.path": {
+        "described": [
+          "14a25efa"
+        ]
+      },
+      "field:toolbox/AgentDoc.pointsAtAgents": {
+        "described": [
+          "cbda0b43"
+        ]
+      },
+      "field:toolbox/AgentDoc.secretHits": {
+        "described": [
+          "16c3d2b9"
+        ]
+      },
+      "field:toolbox/Command.about": {
+        "described": [
+          "0bce9e62"
+        ]
+      },
+      "field:toolbox/Command.args": {
+        "described": [
+          "4f6e6e22"
+        ],
+        "has-shape": [
+          "aaa3352d"
+        ]
+      },
+      "field:toolbox/Command.documentedIn": {
+        "described": [
+          "01a9f018"
+        ]
+      },
+      "field:toolbox/Command.exercisedBy": {
+        "described": [
+          "2f43d89c"
+        ]
+      },
+      "field:toolbox/Command.layer": {
+        "described": [
+          "318fbeda"
+        ]
+      },
+      "field:toolbox/Command.mcpTool": {
+        "described": [
+          "c75b1fd7"
+        ]
+      },
+      "field:toolbox/Command.name": {
+        "described": [
+          "4bd126d4"
+        ]
+      },
+      "field:toolbox/Command.structuredOutput": {
+        "described": [
+          "773d898f"
+        ]
+      },
+      "field:toolbox/Command.undocumentedArgs": {
+        "described": [
+          "d191549b"
+        ]
+      },
+      "field:toolbox/Connector.ciMentions": {
+        "described": [
+          "f4bdda4a"
+        ]
+      },
+      "field:toolbox/Connector.configDocumented": {
+        "described": [
+          "64846ea5"
+        ]
+      },
+      "field:toolbox/Connector.conformanceMentions": {
+        "described": [
+          "58f54dd1"
+        ]
+      },
+      "field:toolbox/Connector.crateDoc": {
+        "described": [
+          "8ff95402"
+        ]
+      },
+      "field:toolbox/Connector.description": {
+        "described": [
+          "3ee625e5"
+        ]
+      },
+      "field:toolbox/Connector.descriptionChars": {
+        "described": [
+          "06bc5cea"
+        ]
+      },
+      "field:toolbox/Connector.dir": {
+        "described": [
+          "22d7dafa"
+        ]
+      },
+      "field:toolbox/Connector.documentedKinds": {
+        "described": [
+          "4eb93e3a"
+        ]
+      },
+      "field:toolbox/Connector.genericKinds": {
+        "described": [
+          "54420663"
+        ]
+      },
+      "field:toolbox/Connector.lastChange": {
+        "described": [
+          "5013616f"
+        ]
+      },
+      "field:toolbox/Connector.name": {
+        "described": [
+          "6525d43a"
+        ]
+      },
+      "field:toolbox/Connector.path": {
+        "described": [
+          "3e113c02"
+        ]
+      },
+      "field:toolbox/Connector.pushOnly": {
+        "described": [
+          "7bb60395"
+        ]
+      },
+      "field:toolbox/Connector.reportsNotFound": {
+        "described": [
+          "a0870f3f"
+        ]
+      },
+      "field:toolbox/Connector.secretHits": {
+        "described": [
+          "eb305971"
+        ]
+      },
+      "field:toolbox/Connector.snapshotComplete": {
+        "described": [
+          "44bbb336"
+        ]
+      },
+      "field:toolbox/Connector.tests": {
+        "described": [
+          "c9fd5750"
+        ]
+      },
+      "field:toolbox/Connector.transport": {
+        "described": [
+          "891b7514"
+        ]
+      },
+      "field:toolbox/Crate.clippy": {
+        "described": [
+          "9679eb0c"
+        ],
+        "has-shape": [
+          "988b9f1e"
+        ]
+      },
+      "field:toolbox/Crate.codeLines": {
+        "described": [
+          "a5baf777"
+        ]
+      },
+      "field:toolbox/Crate.complexFunctions": {
+        "described": [
+          "5336a994"
+        ]
+      },
+      "field:toolbox/Crate.crateDoc": {
+        "described": [
+          "4129cf72"
+        ]
+      },
+      "field:toolbox/Crate.dependents": {
+        "described": [
+          "57d47343"
+        ]
+      },
+      "field:toolbox/Crate.description": {
+        "described": [
+          "c9eeeff5"
+        ]
+      },
+      "field:toolbox/Crate.docCoverage": {
+        "described": [
+          "931837fb"
+        ]
+      },
+      "field:toolbox/Crate.externalDeps": {
+        "described": [
+          "aca8cdb0"
+        ]
+      },
+      "field:toolbox/Crate.functions": {
+        "described": [
+          "cd5e2bdc"
+        ],
+        "has-shape": [
+          "d65229d7"
+        ]
+      },
+      "field:toolbox/Crate.integrationTests": {
+        "described": [
+          "2983cb0a"
+        ]
+      },
+      "field:toolbox/Crate.lastChange": {
+        "described": [
+          "f6b993df"
+        ]
+      },
+      "field:toolbox/Crate.longFunctions": {
+        "described": [
+          "740c5316"
+        ]
+      },
+      "field:toolbox/Crate.maxComplexity": {
+        "described": [
+          "9dd14445"
+        ]
+      },
+      "field:toolbox/Crate.maxFnLines": {
+        "described": [
+          "4b187570"
+        ]
+      },
+      "field:toolbox/Crate.path": {
+        "described": [
+          "bacf1d72"
+        ]
+      },
+      "field:toolbox/Crate.pubDocumented": {
+        "described": [
+          "d44ce23a"
+        ]
+      },
+      "field:toolbox/Crate.pubItems": {
+        "described": [
+          "ae4ab358"
+        ]
+      },
+      "field:toolbox/Crate.readme": {
+        "described": [
+          "62db7ee1"
+        ]
+      },
+      "field:toolbox/Crate.targets": {
+        "described": [
+          "033130b1"
+        ]
+      },
+      "field:toolbox/Crate.testCodeLines": {
+        "described": [
+          "53fb7457"
+        ]
+      },
+      "field:toolbox/Crate.tests": {
+        "described": [
+          "bd496260"
+        ],
+        "has-shape": [
+          "d5b78942"
+        ]
+      },
+      "field:toolbox/Crate.undocumented": {
+        "described": [
+          "fb8e399a"
+        ]
+      },
+      "field:toolbox/Crate.unitTests": {
+        "described": [
+          "1fc26f7a"
+        ]
+      },
+      "field:toolbox/Crate.unwraps": {
+        "described": [
+          "ab936c2b"
+        ]
+      },
+      "field:toolbox/Dependency.ecosystem": {
+        "described": [
+          "5a9d4247"
+        ]
+      },
+      "field:toolbox/Dependency.git": {
+        "described": [
+          "8b5e638b"
+        ]
+      },
+      "field:toolbox/Dependency.inherited": {
+        "described": [
+          "10c51745"
+        ]
+      },
+      "field:toolbox/Dependency.name": {
+        "described": [
+          "8d0167d6"
+        ]
+      },
+      "field:toolbox/Dependency.requirements": {
+        "described": [
+          "38a6cf8b"
+        ]
+      },
+      "field:toolbox/Dependency.sources": {
+        "described": [
+          "539e7219"
+        ]
+      },
+      "field:toolbox/Dependency.usedBy": {
+        "described": [
+          "0c8acb67"
+        ]
+      },
+      "field:toolbox/Dependency.versions": {
+        "described": [
+          "aa553fb8"
+        ]
+      },
+      "field:toolbox/Dependency.wildcard": {
+        "described": [
+          "be71f015"
+        ]
+      },
+      "field:toolbox/Doc.area": {
+        "described": [
+          "48dbfde1"
+        ]
+      },
+      "field:toolbox/Doc.brokenLinks": {
+        "described": [
+          "bc8603fe"
+        ]
+      },
+      "field:toolbox/Doc.counts": {
+        "described": [
+          "9a99162a"
+        ],
+        "has-shape": [
+          "23c6ae48"
+        ]
+      },
+      "field:toolbox/Doc.hasSources": {
+        "described": [
+          "3ffedcc8"
+        ]
+      },
+      "field:toolbox/Doc.hasStatus": {
+        "described": [
+          "4bc6ab5a"
+        ]
+      },
+      "field:toolbox/Doc.lastChange": {
+        "described": [
+          "c3716296"
+        ]
+      },
+      "field:toolbox/Doc.path": {
+        "described": [
+          "42507abf"
+        ]
+      },
+      "field:toolbox/Doc.title": {
+        "described": [
+          "b68aebd6"
+        ]
+      },
+      "field:toolbox/Doc.words": {
+        "described": [
+          "984864eb"
+        ]
+      },
+      "field:toolbox/Example.citesDesign": {
+        "described": [
+          "5b2f8e06"
+        ]
+      },
+      "field:toolbox/Example.commandLines": {
+        "described": [
+          "7297b3ea"
+        ]
+      },
+      "field:toolbox/Example.lines": {
+        "described": [
+          "491bc19d"
+        ]
+      },
+      "field:toolbox/Example.missingFiles": {
+        "described": [
+          "fcae0dab"
+        ]
+      },
+      "field:toolbox/Example.path": {
+        "described": [
+          "ca03ce13"
+        ]
+      },
+      "field:toolbox/Example.secretHits": {
+        "described": [
+          "8dcd70ac"
+        ]
+      },
+      "field:toolbox/Example.title": {
+        "described": [
+          "9b0ddc8a"
+        ]
+      },
+      "field:toolbox/File.extension": {
+        "described": [
+          "1668ab89"
+        ]
+      },
+      "field:toolbox/File.lastChange": {
+        "described": [
+          "027bd068"
+        ]
+      },
+      "field:toolbox/File.lines": {
+        "described": [
+          "d22fa607"
+        ]
+      },
+      "field:toolbox/File.path": {
+        "described": [
+          "1eb9c309"
+        ]
+      },
+      "field:toolbox/JsonSchema.descriptionChars": {
+        "described": [
+          "20756cf6"
+        ]
+      },
+      "field:toolbox/JsonSchema.dialect": {
+        "described": [
+          "f8b78279"
+        ]
+      },
+      "field:toolbox/JsonSchema.draft202012": {
+        "described": [
+          "9b5bb5bf"
+        ]
+      },
+      "field:toolbox/JsonSchema.externalRefs": {
+        "described": [
+          "f48e0ae0"
+        ]
+      },
+      "field:toolbox/JsonSchema.name": {
+        "described": [
+          "919ca716"
+        ]
+      },
+      "field:toolbox/JsonSchema.path": {
+        "described": [
+          "afdae9ee"
+        ]
+      },
+      "field:toolbox/JsonSchema.schemaId": {
+        "described": [
+          "06cea6b5"
+        ]
+      },
+      "field:toolbox/JsonSchema.secretHits": {
+        "described": [
+          "7ee8af35"
+        ]
+      },
+      "field:toolbox/JsonSchema.titleChars": {
+        "described": [
+          "740c15ae"
+        ]
+      },
+      "field:toolbox/JsonSchema.wired": {
+        "described": [
+          "9e369f06"
+        ]
+      },
+      "field:toolbox/McpTool.annotations": {
+        "described": [
+          "074c562e"
+        ],
+        "has-shape": [
+          "32465d4c"
+        ]
+      },
+      "field:toolbox/McpTool.description": {
+        "described": [
+          "7bbdb176"
+        ]
+      },
+      "field:toolbox/McpTool.documentedIn": {
+        "described": [
+          "ac0f1e87"
+        ]
+      },
+      "field:toolbox/McpTool.exercisedBy": {
+        "described": [
+          "f65f16d1"
+        ]
+      },
+      "field:toolbox/McpTool.name": {
+        "described": [
+          "1b556197"
+        ]
+      },
+      "field:toolbox/McpTool.observed": {
+        "described": [
+          "0d652e96"
+        ],
+        "has-shape": [
+          "50a2bfd4"
+        ]
+      },
+      "field:toolbox/McpTool.properties": {
+        "described": [
+          "af8af789"
+        ]
+      },
+      "field:toolbox/McpTool.undescribedProperties": {
+        "described": [
+          "2aff09b9"
+        ]
+      },
+      "field:toolbox/McpTool.viaCli": {
+        "described": [
+          "69ea8090"
+        ]
+      },
+      "field:toolbox/Observability.missingAlerts": {
+        "described": [
+          "72a53934"
+        ]
+      },
+      "field:toolbox/Observability.missingAssessment": {
+        "described": [
+          "27a8d7cf"
+        ]
+      },
+      "field:toolbox/Observability.missingCatalog": {
+        "described": [
+          "5223397c"
+        ]
+      },
+      "field:toolbox/Observability.missingOtlpTestbed": {
+        "described": [
+          "614ac517"
+        ]
+      },
+      "field:toolbox/Observability.missingPromTest": {
+        "described": [
+          "ed81ae7f"
+        ]
+      },
+      "field:toolbox/Observability.missingServiceNameDoc": {
+        "described": [
+          "c1f077a3"
+        ]
+      },
+      "field:toolbox/Observability.missingStructuredLogTest": {
+        "described": [
+          "a70c7b84"
+        ]
+      },
+      "field:toolbox/PackageJson.checkScripts": {
+        "described": [
+          "97f29512"
+        ]
+      },
+      "field:toolbox/PackageJson.ciUsesInstall": {
+        "described": [
+          "eff365ed"
+        ]
+      },
+      "field:toolbox/PackageJson.descriptionChars": {
+        "described": [
+          "a0da870b"
+        ]
+      },
+      "field:toolbox/PackageJson.engines": {
+        "described": [
+          "441ef1f1"
+        ]
+      },
+      "field:toolbox/PackageJson.gitRanges": {
+        "described": [
+          "acb18a32"
+        ]
+      },
+      "field:toolbox/PackageJson.lockfile": {
+        "described": [
+          "afe3817d"
+        ]
+      },
+      "field:toolbox/PackageJson.name": {
+        "described": [
+          "bb68108b"
+        ]
+      },
+      "field:toolbox/PackageJson.path": {
+        "described": [
+          "064aec5b"
+        ]
+      },
+      "field:toolbox/PackageJson.private": {
+        "described": [
+          "f9af73c5"
+        ]
+      },
+      "field:toolbox/PackageJson.requirements": {
+        "described": [
+          "e02dc44a"
+        ]
+      },
+      "field:toolbox/PackageJson.secretHits": {
+        "described": [
+          "93ce0ac4"
+        ]
+      },
+      "field:toolbox/PackageJson.version": {
+        "described": [
+          "a511f4ec"
+        ]
+      },
+      "field:toolbox/PackageJson.wildcardRanges": {
+        "described": [
+          "02b3ca8e"
+        ]
+      },
+      "field:toolbox/PythonScript.findings": {
+        "described": [
+          "2b727099"
+        ],
+        "has-shape": [
+          "5cd32f6a"
+        ]
+      },
+      "field:toolbox/PythonScript.path": {
+        "described": [
+          "86267f62"
+        ]
+      },
+      "field:toolbox/Rule.check": {
+        "described": [
+          "9fb3f182"
+        ],
+        "has-shape": [
+          "ff6ff040"
+        ]
+      },
+      "field:toolbox/Rule.evidence": {
+        "described": [
+          "6f978e67"
+        ],
+        "has-shape": [
+          "f67e2dd9"
+        ]
+      },
+      "field:toolbox/Rule.fixWords": {
+        "described": [
+          "55bbc184"
+        ]
+      },
+      "field:toolbox/Rule.fixture": {
+        "described": [
+          "affce7e9"
+        ],
+        "has-shape": [
+          "2103488f"
+        ]
+      },
+      "field:toolbox/Rule.hasEvidence": {
+        "described": [
+          "fd3f2e4d"
+        ]
+      },
+      "field:toolbox/Rule.level": {
+        "described": [
+          "279c0e1c"
+        ]
+      },
+      "field:toolbox/Rule.live": {
+        "described": [
+          "29d1ea16"
+        ],
+        "has-shape": [
+          "3e9a0f54"
+        ],
+        "populated-in-fixtures": [
+          "be039797"
+        ]
+      },
+      "field:toolbox/Rule.name": {
+        "described": [
+          "4279f2ed"
+        ]
+      },
+      "field:toolbox/Rule.portal": {
+        "described": [
+          "9edd8b36"
+        ]
+      },
+      "field:toolbox/Rule.scorecard": {
+        "described": [
+          "928bee16"
+        ]
+      },
+      "field:toolbox/Rule.tested": {
+        "described": [
+          "5d1eaa97"
+        ]
+      },
+      "field:toolbox/Scorecard.fixtureLevels": {
+        "described": [
+          "f102bdc0"
+        ],
+        "has-shape": [
+          "e5c80122"
+        ]
+      },
+      "field:toolbox/Scorecard.kind": {
+        "described": [
+          "bbf89712"
+        ]
+      },
+      "field:toolbox/Scorecard.levels": {
+        "described": [
+          "cf0b94d9"
+        ]
+      },
+      "field:toolbox/Scorecard.liveEntities": {
+        "described": [
+          "b6b07e73"
+        ],
+        "populated-in-fixtures": [
+          "573f0f35"
+        ]
+      },
+      "field:toolbox/Scorecard.meta": {
+        "described": [
+          "510fbda3"
+        ]
+      },
+      "field:toolbox/Scorecard.name": {
+        "described": [
+          "fd6d44c1"
+        ]
+      },
+      "field:toolbox/Scorecard.owner": {
+        "described": [
+          "caccbb1b"
+        ]
+      },
+      "field:toolbox/Scorecard.portal": {
+        "described": [
+          "f86d1f5a"
+        ]
+      },
+      "field:toolbox/Scorecard.rules": {
+        "described": [
+          "90b5cf3f"
+        ]
+      },
+      "field:toolbox/Scorecard.rulesPerLevel": {
+        "described": [
+          "8b54ce9a"
+        ],
+        "has-shape": [
+          "a878b578"
+        ]
+      },
+      "field:toolbox/Scorecard.tested": {
+        "described": [
+          "aee4d07b"
+        ]
+      },
+      "field:toolbox/Scorecard.untestedRules": {
+        "described": [
+          "463a9ee5"
+        ]
+      },
+      "field:toolbox/Skill.bodyLines": {
+        "described": [
+          "51b34b34"
+        ]
+      },
+      "field:toolbox/Skill.boundaryCues": {
+        "described": [
+          "5de4f803"
+        ]
+      },
+      "field:toolbox/Skill.codeFences": {
+        "described": [
+          "ca69b39c"
+        ]
+      },
+      "field:toolbox/Skill.description": {
+        "described": [
+          "1634afc7"
+        ]
+      },
+      "field:toolbox/Skill.descriptionChars": {
+        "described": [
+          "6bfe69c4"
+        ]
+      },
+      "field:toolbox/Skill.dir": {
+        "described": [
+          "69a43c84"
+        ]
+      },
+      "field:toolbox/Skill.estimatedTokens": {
+        "described": [
+          "ccaf11a1"
+        ]
+      },
+      "field:toolbox/Skill.evalCases": {
+        "described": [
+          "855ad558"
+        ]
+      },
+      "field:toolbox/Skill.frontmatterErrors": {
+        "described": [
+          "ed3ea042"
+        ]
+      },
+      "field:toolbox/Skill.hiddenChars": {
+        "described": [
+          "aee61fca"
+        ]
+      },
+      "field:toolbox/Skill.lastChange": {
+        "described": [
+          "22a2a0a9"
+        ]
+      },
+      "field:toolbox/Skill.linkDepth": {
+        "described": [
+          "cc4c1b86"
+        ]
+      },
+      "field:toolbox/Skill.missingFiles": {
+        "described": [
+          "4a75896c"
+        ]
+      },
+      "field:toolbox/Skill.name": {
+        "described": [
+          "16a38270"
+        ]
+      },
+      "field:toolbox/Skill.numberedSteps": {
+        "described": [
+          "fd24d598"
+        ]
+      },
+      "field:toolbox/Skill.path": {
+        "described": [
+          "cd919d84"
+        ]
+      },
+      "field:toolbox/Skill.plugin": {
+        "described": [
+          "b4f4b010"
+        ]
+      },
+      "field:toolbox/Skill.pronouns": {
+        "described": [
+          "b201a841"
+        ]
+      },
+      "field:toolbox/Skill.secretHits": {
+        "described": [
+          "cf63ee83"
+        ]
+      },
+      "field:toolbox/Skill.supportFiles": {
+        "described": [
+          "7fbe612b"
+        ]
+      },
+      "field:toolbox/Skill.triggerCues": {
+        "described": [
+          "13888d1d"
+        ]
+      },
+      "field:toolbox/Skill.windowsPaths": {
+        "described": [
+          "56a4ac04"
+        ]
+      },
+      "field:toolbox/Workflow.actionlint": {
+        "described": [
+          "430d5c86"
+        ],
+        "has-shape": [
+          "4b0d8204"
+        ]
+      },
+      "field:toolbox/Workflow.concurrency": {
+        "described": [
+          "a7892d3e"
+        ]
+      },
+      "field:toolbox/Workflow.jobs": {
+        "described": [
+          "fdacc167"
+        ]
+      },
+      "field:toolbox/Workflow.jobsWithWrite": {
+        "described": [
+          "95f90982"
+        ]
+      },
+      "field:toolbox/Workflow.jobsWithoutPermissions": {
+        "described": [
+          "78d3d967"
+        ]
+      },
+      "field:toolbox/Workflow.jobsWithoutTimeout": {
+        "described": [
+          "c8fdd9ae"
+        ]
+      },
+      "field:toolbox/Workflow.name": {
+        "described": [
+          "b7d028d2"
+        ]
+      },
+      "field:toolbox/Workflow.path": {
+        "described": [
+          "ce0643ca"
+        ]
+      },
+      "field:toolbox/Workflow.riskyTriggers": {
+        "described": [
+          "00070ce6"
+        ]
+      },
+      "field:toolbox/Workflow.runs": {
+        "described": [
+          "c82a8d69"
+        ],
+        "has-shape": [
+          "98bd720f"
+        ]
+      },
+      "field:toolbox/Workflow.topPermissions": {
+        "described": [
+          "0d7dd498"
+        ]
+      },
+      "field:toolbox/Workflow.triggers": {
+        "described": [
+          "87abd838"
+        ]
+      },
+      "field:toolbox/Workflow.type": {
+        "described": [
+          "e0a0cfc7"
+        ]
+      },
+      "field:toolbox/Workflow.unpinned": {
+        "described": [
+          "f7207d20"
+        ]
+      },
+      "field:toolbox/Workflow.zizmor": {
+        "described": [
+          "582c0cc4"
+        ],
+        "has-shape": [
+          "1090d6d6"
+        ]
+      }
+    },
+    "meta-kind": {
+      "kind:acme/GitHubApp": {
+        "described": [
+          "99fa084e"
+        ],
+        "fields-described": [
+          "5dd5d0de",
+          "7a3f08e3",
+          "97b0c453"
+        ]
+      },
+      "kind:acme/GitHubAppInstallation": {
+        "described": [
+          "624abaf6"
+        ],
+        "fields-described": [
+          "1f6a832c",
+          "4364e615"
+        ],
+        "tested": [
+          "6610d79d"
+        ]
+      },
+      "kind:acme/Group": {
+        "described": [
+          "0bd2c5d9"
+        ],
+        "fields-described": [
+          "0fbedb23",
+          "37e24810",
+          "9865b509",
+          "eacdfcfd"
+        ]
+      },
+      "kind:acme/Repository": {
+        "described": [
+          "eae4d832"
+        ],
+        "fields-described": [
+          "47ddd94f",
+          "4e4318fe",
+          "5c51b509",
+          "78dfb673",
+          "7e2da425",
+          "9865b509",
+          "c292c009",
+          "cc2064d8",
+          "e15503a0",
+          "ff779b4c"
+        ]
+      },
+      "kind:acme/User": {
+        "described": [
+          "593b221b"
+        ],
+        "fields-described": [
+          "8a8753c7",
+          "d0016656"
+        ],
+        "tested": [
+          "601090f6"
+        ]
+      },
+      "kind:repo/Doc": {
+        "described": [
+          "57ce80fa"
+        ],
+        "fields-described": [
+          "63372479",
+          "84874d36",
+          "9865b509"
+        ]
+      },
+      "kind:repo/Repository": {
+        "described": [
+          "eae4d832"
+        ],
+        "fields-described": [
+          "083e3344",
+          "3ee74090",
+          "4a07a0a7",
+          "8d39bde6",
+          "aa04db28",
+          "e15503a0",
+          "f89daae5"
+        ]
+      },
+      "kind:toolbox/ActionDependency": {
+        "fields-described": [
+          "0a5ddda5",
+          "7328331d",
+          "8d39bde6",
+          "d7ec7de3",
+          "f5674cd4"
+        ]
+      },
+      "kind:toolbox/AgentDoc": {
+        "described": [
+          "ad5f4c25"
+        ],
+        "fields-described": [
+          "42d1f31e",
+          "43278f89",
+          "6de66485",
+          "84874d36",
+          "8d39bde6",
+          "8eb3c891",
+          "94368ef9",
+          "adc3a6cf",
+          "c5493316",
+          "e1e4263c"
+        ]
+      },
+      "kind:toolbox/Command": {
+        "fields-described": [
+          "0247fd3e",
+          "07a640f6",
+          "1eab1e8d",
+          "29d5998f",
+          "8d39bde6",
+          "955f78ec",
+          "9d0aa73c",
+          "b323923e",
+          "d6f818df"
+        ]
+      },
+      "kind:toolbox/Connector": {
+        "described": [
+          "e8a0a585"
+        ],
+        "fields-described": [
+          "225bdeb0",
+          "346f3b69",
+          "42a82d63",
+          "4da9ecaf",
+          "591933da",
+          "5b22cf22",
+          "67fd726e",
+          "6ce288d3",
+          "830190dd",
+          "84874d36",
+          "8d39bde6",
+          "8d9935a6",
+          "a09ae90e",
+          "adc3a6cf",
+          "d32f6312",
+          "e962b194",
+          "f2184edd",
+          "fb61f9d9"
+        ]
+      },
+      "kind:toolbox/Crate": {
+        "fields-described": [
+          "06377478",
+          "18c8f500",
+          "346f3b69",
+          "454a414e",
+          "4a07a0a7",
+          "51dd1fa5",
+          "5b22cf22",
+          "5fe8b9b7",
+          "61b047cc",
+          "69afc1ba",
+          "6f76ba99",
+          "73e73cef",
+          "7430f8b8",
+          "7d57bc2c",
+          "84874d36",
+          "87b67306",
+          "88f674e1",
+          "a03500ef",
+          "a09ae90e",
+          "be6139cb",
+          "c7408550",
+          "e2101e8c",
+          "ec486b20",
+          "fb61f9d9"
+        ]
+      },
+      "kind:toolbox/Dependency": {
+        "described": [
+          "fa7bee79"
+        ],
+        "fields-described": [
+          "01987941",
+          "542abc6b",
+          "721e9831",
+          "7328331d",
+          "8d39bde6",
+          "af3566e1",
+          "b54fab6f",
+          "c8f650ec",
+          "f5f205cb"
+        ]
+      },
+      "kind:toolbox/Doc": {
+        "fields-described": [
+          "59ffbb85",
+          "5cb7aa8a",
+          "63372479",
+          "84874d36",
+          "9865b509",
+          "9b0f2144",
+          "bf9f299f",
+          "fb61f9d9",
+          "ff875ef5"
+        ]
+      },
+      "kind:toolbox/Example": {
+        "described": [
+          "545ff336"
+        ],
+        "fields-described": [
+          "42d1f31e",
+          "43278f89",
+          "84874d36",
+          "9865b509",
+          "adc3a6cf",
+          "ca0a9d65",
+          "e1e4263c"
+        ]
+      },
+      "kind:toolbox/File": {
+        "fields-described": [
+          "84874d36",
+          "badf029a",
+          "e1e4263c",
+          "fb61f9d9"
+        ],
+        "tested": [
+          "b2f9572f"
+        ]
+      },
+      "kind:toolbox/JsonSchema": {
+        "described": [
+          "58298271"
+        ],
+        "fields-described": [
+          "127ebfb4",
+          "14b92d30",
+          "5894727d",
+          "84874d36",
+          "8d39bde6",
+          "8d9935a6",
+          "adc3a6cf",
+          "cfb93806",
+          "e5ee57ab",
+          "f9f7ac95"
+        ]
+      },
+      "kind:toolbox/McpTool": {
+        "fields-described": [
+          "0247fd3e",
+          "073e8e54",
+          "11de6cdc",
+          "2521d061",
+          "346f3b69",
+          "8d39bde6",
+          "955f78ec",
+          "9d5f6647",
+          "a47b0e81"
+        ]
+      },
+      "kind:toolbox/Observability": {
+        "fields-described": [
+          "135f6aa1",
+          "149b5fb8",
+          "457480d9",
+          "69003e8a",
+          "8f04374b",
+          "943dd61a",
+          "ac46dd7d"
+        ]
+      },
+      "kind:toolbox/PackageJson": {
+        "described": [
+          "a43acc0e"
+        ],
+        "fields-described": [
+          "01987941",
+          "0503fc34",
+          "16fe1f04",
+          "34f61989",
+          "4671ae97",
+          "62cb0d0c",
+          "84874d36",
+          "8d39bde6",
+          "8d9935a6",
+          "8da2ea75",
+          "adc3a6cf",
+          "e4467949",
+          "fb337958"
+        ]
+      },
+      "kind:toolbox/PythonScript": {
+        "fields-described": [
+          "84874d36",
+          "c3eb88cf"
+        ]
+      },
+      "kind:toolbox/Rule": {
+        "fields-described": [
+          "07f017af",
+          "150c5d8b",
+          "49451132",
+          "8d39bde6",
+          "9a8aeeb1",
+          "9b99e7dd",
+          "a6f8190f",
+          "b3711c47",
+          "b5bd282e",
+          "b9962aec",
+          "c21f2024"
+        ]
+      },
+      "kind:toolbox/Scorecard": {
+        "fields-described": [
+          "150c5d8b",
+          "7e428549",
+          "81fe4f58",
+          "8d39bde6",
+          "9ccfbbe0",
+          "a147b6ea",
+          "b9962aec",
+          "c030f9ec",
+          "d913e243",
+          "e8beae97",
+          "f5674cd4",
+          "fc50d1f2"
+        ]
+      },
+      "kind:toolbox/Skill": {
+        "described": [
+          "c20b6d47"
+        ],
+        "fields-described": [
+          "13ba397a",
+          "1a1f15ae",
+          "1b82f340",
+          "3303a408",
+          "346f3b69",
+          "361b0551",
+          "3b193e2e",
+          "42d1f31e",
+          "76ba1617",
+          "76fcdc92",
+          "7f20344b",
+          "84874d36",
+          "8d39bde6",
+          "8d9935a6",
+          "97103a4c",
+          "a88bffbe",
+          "adc3a6cf",
+          "c41b1f37",
+          "c5493316",
+          "d3ce2e37",
+          "e962b194",
+          "fb61f9d9"
+        ]
+      },
+      "kind:toolbox/Workflow": {
+        "fields-described": [
+          "05a26650",
+          "0bd24426",
+          "1a32ed3b",
+          "3abb7608",
+          "45b227f0",
+          "5127f14d",
+          "5fd2a5fa",
+          "60a4802c",
+          "6865942d",
+          "6e9ee418",
+          "84874d36",
+          "8c192864",
+          "8d39bde6",
+          "c2e26874",
+          "e407107d"
+        ]
+      }
+    },
+    "meta-rubric": {
+      "rubric:toolbox/assessment-quality": {
+        "discriminates": [
+          "bf0c9e31",
+          "c7a2000c"
+        ]
+      },
+      "rubric:toolbox/crate-design": {
+        "discriminates": [
+          "e4209cbb"
+        ]
+      },
+      "rubric:toolbox/scorecard-quality": {
+        "discriminates": [
+          "f0086dcc"
+        ]
+      }
+    },
+    "meta-rule": {
+      "rule:acme/app-approval/permissions-match-snapshot": {
+        "always-explains": [
+          "e3f1d173"
+        ],
+        "shows-evidence": [
+          "0e06886d"
+        ],
+        "tested": [
+          "63e27d3e"
+        ]
+      },
+      "rule:acme/github-app-hygiene/only-approved-apps": {
+        "always-explains": [
+          "e3f1d173"
+        ],
+        "shows-evidence": [
+          "0e06886d"
+        ],
+        "tested": [
+          "aecaea92"
+        ]
+      },
+      "rule:acme/ownership/branch-protected": {
+        "always-explains": [
+          "e3f1d173"
+        ]
+      },
+      "rule:acme/ownership/claim-verified": {
+        "always-explains": [
+          "e3f1d173"
+        ],
+        "shows-evidence": [
+          "0e06886d"
+        ]
+      },
+      "rule:acme/ownership/has-owner": {
+        "always-explains": [
+          "e3f1d173"
+        ],
+        "shows-evidence": [
+          "0e06886d"
+        ]
+      },
+      "rule:acme/ownership/has-tier": {
+        "always-explains": [
+          "e3f1d173"
+        ],
+        "both-outcomes-on-fixtures": [
+          "735442e8"
+        ],
+        "tested": [
+          "eb35efc0"
+        ]
+      },
+      "rule:repo/docs/links-resolve": {
+        "both-outcomes-on-fixtures": [
+          "735442e8"
+        ]
+      },
+      "rule:repo/repo-hygiene/codeowners-catch-all": {
+        "tested": [
+          "4ad006f5"
+        ]
+      },
+      "rule:toolbox/maintainer-ci-reliability/fail-rate-under-10": {
+        "tested": [
+          "1017f7ea"
+        ]
+      },
+      "rule:toolbox/maintainer-ci-reliability/fail-rate-under-5": {
+        "tested": [
+          "1017f7ea"
+        ]
+      },
+      "rule:toolbox/maintainer-ci-reliability/fast-feedback": {
+        "tested": [
+          "d932bc56"
+        ]
+      },
+      "rule:toolbox/maintainer-ci-reliability/few-reruns": {
+        "tested": [
+          "e6ed9ea6"
+        ]
+      },
+      "rule:toolbox/maintainer-ci-security/actionlint-clean": {
+        "both-outcomes-on-fixtures": [
+          "735442e8"
+        ]
+      },
+      "rule:toolbox/maintainer-ci-security/least-privilege-token": {
+        "both-outcomes-on-fixtures": [
+          "735442e8"
+        ],
+        "tested": [
+          "63af3a8b"
+        ]
+      },
+      "rule:toolbox/maintainer-ci-security/zizmor-clean": {
+        "both-outcomes-on-fixtures": [
+          "735442e8"
+        ],
+        "tested": [
+          "e5804019"
+        ]
+      },
+      "rule:toolbox/maintainer-crate/bounded-complexity": {
+        "tested": [
+          "d3734f4a"
+        ]
+      },
+      "rule:toolbox/maintainer-crate/crate-docs": {
+        "always-explains": [
+          "e3f1d173"
+        ],
+        "both-outcomes-on-fixtures": [
+          "735442e8"
+        ],
+        "tested": [
+          "55691dcb"
+        ]
+      },
+      "rule:toolbox/maintainer-crate/few-unwraps": {
+        "tested": [
+          "6b666039"
+        ]
+      },
+      "rule:toolbox/maintainer-crate/has-tests": {
+        "always-explains": [
+          "e3f1d173"
+        ],
+        "shows-evidence": [
+          "0e06886d"
+        ]
+      },
+      "rule:toolbox/maintainer-crate/no-huge-functions": {
+        "tested": [
+          "e0ebb877"
+        ]
+      },
+      "rule:toolbox/maintainer-crate/public-api-documented": {
+        "both-outcomes-on-fixtures": [
+          "735442e8"
+        ],
+        "tested": [
+          "70e10331"
+        ]
+      },
+      "rule:toolbox/maintainer-crate/simple-functions": {
+        "tested": [
+          "1424d434"
+        ]
+      },
+      "rule:toolbox/maintainer-docs/cites-sources": {
+        "always-explains": [
+          "e3f1d173"
+        ],
+        "shows-evidence": [
+          "0e06886d"
+        ]
+      },
+      "rule:toolbox/maintainer-docs/status-banner": {
+        "always-explains": [
+          "e3f1d173"
+        ],
+        "both-outcomes-on-fixtures": [
+          "735442e8"
+        ],
+        "shows-evidence": [
+          "0e06886d"
+        ],
+        "tested": [
+          "2dfcba91"
+        ]
+      },
+      "rule:toolbox/operator-cli/args-described": {
+        "tested": [
+          "c271068c"
+        ]
+      },
+      "rule:toolbox/operator-cli/documented": {
+        "tested": [
+          "7fd1fe83"
+        ]
+      },
+      "rule:toolbox/operator-cli/exercised": {
+        "always-explains": [
+          "e3f1d173"
+        ],
+        "both-outcomes-on-fixtures": [
+          "735442e8"
+        ],
+        "shows-evidence": [
+          "0e06886d"
+        ]
+      },
+      "rule:toolbox/operator-cli/has-help": {
+        "always-explains": [
+          "e3f1d173"
+        ],
+        "both-outcomes-on-fixtures": [
+          "735442e8"
+        ],
+        "shows-evidence": [
+          "0e06886d"
+        ],
+        "tested": [
+          "5ee3e9fb"
+        ]
+      },
+      "rule:toolbox/user-cli/args-described": {
+        "tested": [
+          "b8c8c4d5"
+        ]
+      },
+      "rule:toolbox/user-cli/exercised": {
+        "always-explains": [
+          "e3f1d173"
+        ],
+        "shows-evidence": [
+          "0e06886d"
+        ],
+        "tested": [
+          "8fdc9c4c"
+        ]
+      },
+      "rule:toolbox/user-cli/has-help": {
+        "always-explains": [
+          "e3f1d173"
+        ],
+        "both-outcomes-on-fixtures": [
+          "735442e8"
+        ],
+        "shows-evidence": [
+          "0e06886d"
+        ],
+        "tested": [
+          "044d7972"
+        ]
+      },
+      "rule:toolbox/user-cli/structured-output": {
+        "always-explains": [
+          "e3f1d173"
+        ],
+        "both-outcomes-on-fixtures": [
+          "735442e8"
+        ],
+        "shows-evidence": [
+          "0e06886d"
+        ],
+        "tested": [
+          "85fbe335"
+        ]
+      },
+      "rule:toolbox/user-mcp/annotated": {
+        "always-explains": [
+          "e3f1d173"
+        ],
+        "both-outcomes-on-fixtures": [
+          "735442e8"
+        ],
+        "tested": [
+          "8093d0c0"
+        ]
+      },
+      "rule:toolbox/user-mcp/described": {
+        "always-explains": [
+          "e3f1d173"
+        ],
+        "both-outcomes-on-fixtures": [
+          "735442e8"
+        ],
+        "shows-evidence": [
+          "0e06886d"
+        ],
+        "tested": [
+          "fa58d2fb"
+        ]
+      }
+    },
+    "meta-scorecard": {
+      "scorecard:acme/app-approval": {
+        "every-rule-tested": [
+          "6d81850e"
+        ]
+      },
+      "scorecard:acme/github-app-hygiene": {
+        "every-rule-tested": [
+          "277d6614"
+        ]
+      },
+      "scorecard:acme/ownership": {
+        "every-rule-tested": [
+          "fa649642"
+        ]
+      },
+      "scorecard:repo/docs": {
+        "fixtures-show-the-ladder": [
+          "0ef04b22"
+        ]
+      },
+      "scorecard:repo/repo-hygiene": {
+        "every-rule-tested": [
+          "6ab10e6c"
+        ]
+      },
+      "scorecard:toolbox/maintainer-ci-reliability": {
+        "every-rule-tested": [
+          "858dde21",
+          "858dde21",
+          "ae093b43",
+          "d6f1a95d"
+        ]
+      },
+      "scorecard:toolbox/maintainer-ci-security": {
+        "every-rule-tested": [
+          "c39e1938",
+          "d34cf8d4"
+        ]
+      },
+      "scorecard:toolbox/maintainer-crate": {
+        "every-rule-tested": [
+          "069f92b0",
+          "0b71e809",
+          "2cf14c7b",
+          "428c1960",
+          "68b64866",
+          "d836f05c"
+        ]
+      },
+      "scorecard:toolbox/maintainer-docs": {
+        "every-rule-tested": [
+          "992b2084"
+        ]
+      },
+      "scorecard:toolbox/operator-cli": {
+        "every-rule-tested": [
+          "49f17fae",
+          "63d8becd",
+          "67ee9e45"
+        ]
+      },
+      "scorecard:toolbox/user-cli": {
+        "every-rule-tested": [
+          "49f17fae",
+          "63d8becd",
+          "6ed2fc98",
+          "f04d554d"
+        ],
+        "tested": [
+          "b90406f9"
+        ]
+      },
+      "scorecard:toolbox/user-mcp": {
+        "every-rule-tested": [
+          "22bd1887",
+          "322ef764"
+        ]
+      }
+    },
+    "sdlc-layer": {
+      "sdlc:maintainer": {
+        "every-stage-built": [
+          "178a9d22"
+        ]
+      },
+      "sdlc:operator": {
+        "every-stage-built": [
+          "34014e4e",
+          "5678758d",
+          "8d5c366f",
+          "a6f35029",
+          "ac229070",
+          "b23880fa",
+          "cfac16b6"
+        ]
+      },
+      "sdlc:package-author": {
+        "every-stage-built": [
+          "2a5098b0",
+          "350f8839",
+          "3f3fcd39",
+          "a6f35029",
+          "a9242179",
+          "b23880fa"
+        ],
+        "nothing-missing": [
+          "8f4f6b7e",
+          "913b2bfb"
+        ]
+      },
+      "sdlc:user": {
+        "every-stage-built": [
+          "350f8839",
+          "af4c801b",
+          "e57b2a91",
+          "ffe67e22"
+        ]
+      }
+    },
+    "sdlc-stage": {
+      "sdlc-stage:maintainer/plan": {
+        "agent-operable": [
+          "5bcc3f87"
+        ],
+        "automated": [
+          "6de50e93"
+        ]
+      },
+      "sdlc-stage:maintainer/release": {
+        "built": [
+          "6d08d998",
+          "d7d8cbb1",
+          "e13e2416"
+        ]
+      },
+      "sdlc-stage:maintainer/verify": {
+        "built": [
+          "7953cea5"
+        ]
+      },
+      "sdlc-stage:operator/author": {
+        "built": [
+          "6826eb6a"
+        ]
+      },
+      "sdlc-stage:operator/build-connector": {
+        "built": [
+          "0c6f9460"
+        ]
+      },
+      "sdlc-stage:operator/deploy": {
+        "automated": [
+          "70a9d3c9"
+        ],
+        "built": [
+          "5165fa99"
+        ]
+      },
+      "sdlc-stage:operator/monitor": {
+        "built": [
+          "f7f1c95c"
+        ]
+      },
+      "sdlc-stage:operator/plan": {
+        "automated": [
+          "b76d6b11"
+        ],
+        "built": [
+          "e53a33b7"
+        ]
+      },
+      "sdlc-stage:operator/preview": {
+        "agent-operable": [
+          "21cf099a"
+        ],
+        "automated": [
+          "8b5bb6e6"
+        ],
+        "built": [
+          "8e1af0c2"
+        ]
+      },
+      "sdlc-stage:operator/verify": {
+        "agent-operable": [
+          "ec1d4c67"
+        ],
+        "automated": [
+          "86cdfda3"
+        ],
+        "built": [
+          "0bce24c0"
+        ]
+      },
+      "sdlc-stage:package-author/adopt": {
+        "built": [
+          "3b8d48c8",
+          "4b352557"
+        ]
+      },
+      "sdlc-stage:package-author/author": {
+        "built": [
+          "3964f714"
+        ]
+      },
+      "sdlc-stage:package-author/build-connector": {
+        "built": [
+          "4034dd76",
+          "63621c1d",
+          "af92a4d1"
+        ]
+      },
+      "sdlc-stage:package-author/distribute": {
+        "agent-operable": [
+          "8da2540d"
+        ],
+        "automated": [
+          "a7923809"
+        ],
+        "built": [
+          "45fc4d52",
+          "c33f14a2"
+        ]
+      },
+      "sdlc-stage:package-author/package": {
+        "agent-operable": [
+          "28404a3e"
+        ],
+        "automated": [
+          "447c171a"
+        ],
+        "built": [
+          "e4ea3208"
+        ]
+      },
+      "sdlc-stage:package-author/test": {
+        "built": [
+          "ca3d24c0",
+          "e282bc50"
+        ]
+      },
+      "sdlc-stage:user/build": {
+        "built": [
+          "1887a636",
+          "bd354a4b"
+        ]
+      },
+      "sdlc-stage:user/deploy": {
+        "built": [
+          "2b27168f"
+        ]
+      },
+      "sdlc-stage:user/monitor": {
+        "agent-operable": [
+          "8dfbc3a7"
+        ],
+        "automated": [
+          "2fbf326b"
+        ],
+        "built": [
+          "ded8c5ac"
+        ]
+      },
+      "sdlc-stage:user/test": {
+        "built": [
+          "d3f4fd77"
+        ]
+      }
+    },
+    "user-mcp": {
+      "mcp-tool:campaign_report": {
+        "contract-tested": [
+          "52a38cb7"
+        ]
+      }
+    }
+  },
   "format": "toolbox-report/v1",
   "portal": "toolbox",
   "results": {
@@ -1023,6 +4117,9 @@
         "level": "skipped"
       },
       "doc:docs/decisions/D01M83RDWR52WVNER0MV5T84NSX.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M841J2SN4V3AVZZ5D91YAR51.md": {
         "level": "skipped"
       },
       "doc:docs/decisions/README.md": {

@@ -116,12 +116,13 @@ fn a_falling_ratchet_fails_the_pipeline_and_says_why() {
             ("quality", "thing:a", "tested now fails")
         ]
     );
-    // Each regression carries its root cause: the rule's evidence now, and where it came from.
+    // Each regression carries its root cause: the rule's evidence now (the baseline recorded
+    // its items' keys, so only the new one is listed), and where it came from.
     assert_eq!(
         v["regressions"][0]["detail"],
         serde_json::json!([
-            "documented: intro",
-            "documented: usage",
+            "documented: + usage",
+            "documented: and 1 already in the baseline",
             "from: connector things, record thing thing:a"
         ])
     );
@@ -152,6 +153,83 @@ fn a_falling_ratchet_fails_the_pipeline_and_says_why() {
     let (code, v) = report(&dir, &["--ci"]);
     assert_eq!((code, v["result"].as_str()), (2, Some("error")));
     assert!(v["message"].as_str().is_some_and(|m| !m.is_empty()));
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// A gate prints its verdict, not the report: with --baseline and neither -o nor --out, stdout
+/// says what changed, marking new evidence, and nothing else. A baseline written before
+/// evidence keys still works (the whole grown list is shown); it isn't stale for lacking them,
+/// and --update adds them.
+#[test]
+fn a_gate_prints_what_changed() {
+    let dir = std::env::temp_dir().join(format!("toolbox-gate-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let run = |extra: &[&str]| {
+        let o = Command::new(env!("CARGO_BIN_EXE_toolbox"))
+            .arg("report")
+            .arg(&dir)
+            .args(["--fixtures", "--baseline"])
+            .arg(dir.join("results.json"))
+            .args(extra)
+            .output()
+            .expect("toolbox runs");
+        let text = |b: &[u8]| String::from_utf8_lossy(b).into_owned();
+        (
+            o.status.code().unwrap_or(-1),
+            text(&o.stdout),
+            text(&o.stderr),
+        )
+    };
+    portal(&dir, &[("a", true, &["intro", "setup 1"])]);
+    assert_eq!(run(&["--update"]).0, 0);
+    let baseline = dir.join("results.json");
+    let doc: Value = serde_json::from_str(&std::fs::read_to_string(&baseline).unwrap()).unwrap();
+    assert_eq!(
+        doc["evidence"]["quality"]["thing:a"]["documented"]
+            .as_array()
+            .map(Vec::len),
+        Some(2)
+    );
+
+    // `setup 1` moved to `setup 2` (same key); `usage` is new.
+    portal(&dir, &[("a", true, &["intro", "setup 2", "usage"])]);
+    let (code, out, err) = run(&[]);
+    assert_eq!((code, err.as_str()), (1, ""), "{out}");
+    assert!(out.contains("documented: + usage\n"), "{out}");
+    assert!(
+        out.contains("documented: and 2 already in the baseline\n"),
+        "{out}"
+    );
+    assert!(out.contains("every scorecard: add -o md"), "{out}");
+    assert!(!out.contains("# "), "no report body: {out}");
+    // Asked for, the report is on stdout and the verdict on stderr, as before.
+    let (_, out, err) = run(&["-o", "md"]);
+    assert!(out.contains("quality") && err.contains("✗ worse"), "{out}");
+
+    // An old baseline, without keys: the whole grown list, and not stale once fixed.
+    let mut old = doc.clone();
+    old.as_object_mut().unwrap().remove("evidence");
+    std::fs::write(&baseline, serde_json::to_string(&old).unwrap()).unwrap();
+    let (_, out, _) = run(&[]);
+    assert!(
+        out.contains("documented: intro\n") && out.contains("documented: usage\n"),
+        "{out}"
+    );
+    portal(&dir, &[("a", true, &["intro", "setup 3"])]);
+    let (code, out, _) = run(&["--ci"]);
+    assert_eq!(code, 0, "{out}");
+    let (code, out, _) = run(&["--update"]);
+    assert!(
+        code == 0 && out.contains("updated its evidence keys"),
+        "{out}"
+    );
+    let doc: Value = serde_json::from_str(&std::fs::read_to_string(&baseline).unwrap()).unwrap();
+    assert_eq!(
+        doc["evidence"]["quality"]["thing:a"]["documented"]
+            .as_array()
+            .map(Vec::len),
+        Some(2)
+    );
     let _ = std::fs::remove_dir_all(&dir);
 }
 

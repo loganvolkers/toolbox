@@ -50,7 +50,7 @@ registry; repository metadata from the GitHub search API, 2026-11-20.*
 | Machine-readable results for any pipeline | `--verdict FILE` writes `toolbox-verdict/v1`: the result, the exit code, and each regression, improvement and change as `{scorecard, entity, message}`. The GitHub Action reads it for its outputs and annotations; other CI systems read the same file ([actions/report/README.md](../../actions/report/README.md#other-ci-systems)). Tested end to end in `crates/toolbox-cli/tests/ratchet.rs` and in CI's `report-action` job | ✅ (D96) |
 | `start` mode writes improvements | `--update` writes the file when nothing regressed (and creates it) | ✅ |
 | Merge tool for conflicts | Not needed: the file is a pure function of the code, so a conflict is resolved by rerunning `--update` on the merged tree | ✅ by design |
-| Per-issue tracking with content hashes (survives moved lines) | Evidence is compared by count, not identity, so moved code doesn't churn. Identity would catch "fixed one, broke another" (Betterer treats that as worse) | Proposed: optional evidence fingerprints, see §7 |
+| Per-issue tracking with content hashes (survives moved lines) | Evidence is compared by count, not identity, so moved code doesn't churn. The baseline also keeps a key per evidence item (its text with digits folded, hashed), and a grown list marks only the new items (D01M841J2SN4V3AVZZ5D91YAR51). Judging by identity would catch "fixed one, broke another" (Betterer treats that as worse) | Keys ✅, used to explain; judging by them is R1, §7 |
 | Goals | Scorecard levels are the goals; the ratchet is the path to them | ✅ (existing) |
 | `precommit` mode | A pre-commit hook running `toolbox report --skip <slow connectors> --baseline … --update` | Documented, not packaged |
 | `bigger` / `smaller` constraints on a number | A rule's `measure` (CEL, a number) is recorded and compared instead of the evidence count: lines in a file, matches of a pattern. One line more is worse, one less better, without one evidence item per unit | ✅ (D01M7Z2ZZ97VZQNTDT4QQHM3HQD) |
@@ -123,7 +123,7 @@ fleets that already use Betterer. A is rejected.
 
 | # | Item | Proposal |
 |---|---|---|
-| R1 | Evidence identity | Optional `evidenceKey` CEL per rule (e.g. the function name without the line), so "fixed one, broke another" is worse, as in Betterer |
+| R1 | Evidence identity | The baseline records a key per evidence item (D01M841J2SN4V3AVZZ5D91YAR51), and the verdict uses them to mark new items. Open: an optional `evidenceKey` CEL per rule (e.g. the function name without the line) and comparing keys rather than counts, so "fixed one, broke another" is worse, as in Betterer |
 | R2 | Read other baselines | ESLint suppressions, PHPStan baselines and basedpyright baselines are JSON/NEON with counts. One `baselines` reader in the workspace connector would roll them all up the way §5 does for Betterer |
 | R3 | Diff-scoped rules | "No *new* function over 80 lines" via the ratchet already works per entity; per-diff scoping (golangci-lint style) is not needed while entities are files and crates |
 | R4 | Pre-commit packaging | A documented hook, then a `toolbox report --precommit` mode that updates and stages the baseline |
