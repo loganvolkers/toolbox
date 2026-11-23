@@ -110,9 +110,6 @@
     },
     "maintainer-ci-reliability": {
       "workflow:.github/workflows/ci.yml": {
-        "cancels-superseded-runs": [
-          "12d08aa6"
-        ],
         "every-job-has-timeout": [
           "1d3fbde7",
           "5c43327b",
@@ -121,15 +118,7 @@
           "f94b95c8"
         ]
       },
-      "workflow:.github/workflows/codeql.yml": {
-        "cancels-superseded-runs": [
-          "12d08aa6"
-        ]
-      },
       "workflow:.github/workflows/release.yml": {
-        "cancels-superseded-runs": [
-          "12d08aa6"
-        ],
         "every-job-has-timeout": [
           "005a095b",
           "affea56f",
@@ -159,10 +148,15 @@
         ]
       }
     },
-    "maintainer-connector": {
-      "connector:crates/toolbox-connector-scim": {
-        "has-tests": [
-          "582fa066"
+    "maintainer-ci-speed": {
+      "workflow:.github/workflows/codeql.yml": {
+        "cancels-superseded-runs": [
+          "12d08aa6"
+        ]
+      },
+      "workflow:.github/workflows/release.yml": {
+        "cancels-superseded-runs": [
+          "12d08aa6"
         ]
       }
     },
@@ -363,13 +357,6 @@
         ],
         "simple-functions": [
           "fb7573c0"
-        ]
-      },
-      "crate:toolbox-expr": {
-        "fully-documented": [
-          "ac0715bf",
-          "b1c8bd1f",
-          "b4ff6487"
         ]
       },
       "crate:toolbox-model": {
@@ -654,7 +641,6 @@
           "6bf1d397",
           "7a96357c",
           "ca8df7cb",
-          "ce1c86ad",
           "f2a012ac"
         ],
         "constituents-at-least-silver": [
@@ -662,8 +648,7 @@
           "0801db87",
           "2f6e6c1d",
           "6bf1d397",
-          "7a96357c",
-          "ce1c86ad"
+          "7a96357c"
         ]
       }
     },
@@ -894,43 +879,18 @@
       }
     },
     "meta-assessment": {
-      "assessment:rule-quality/rule:toolbox/maintainer-ci-reliability/fail-rate-under-20": {
+      "assessment:rule-quality/rule:toolbox/user-mcp/contract-tested": {
         "cites-everything": [
-          "7b8d632a",
           "ef6cc8b3"
         ],
         "cites-for-findings": [
           "ef6cc8b3"
-        ]
-      },
-      "assessment:rule-quality/rule:toolbox/maintainer-crate/has-tests": {
-        "cites-everything": [
-          "4c5a3209",
-          "7b8d632a",
-          "ef6cc8b3"
-        ],
-        "cites-for-findings": [
-          "4c5a3209",
-          "ef6cc8b3"
-        ]
-      },
-      "assessment:rule-quality/rule:toolbox/meta-rule/readable": {
-        "cites-everything": [
-          "4c5a3209",
-          "ef6cc8b3"
-        ],
-        "cites-for-findings": [
-          "ef6cc8b3"
-        ]
-      },
-      "assessment:scorecard-quality/scorecard:toolbox/maintainer-ci-reliability": {
-        "cites-everything": [
-          "ba345f2b"
         ]
       },
       "assessment:sdlc-stage-quality/sdlc-stage:operator/monitor": {
         "cites-everything": [
-          "46cbaf23"
+          "46cbaf23",
+          "a618985e"
         ]
       }
     },
@@ -2559,9 +2519,9 @@
           "e4209cbb"
         ]
       },
-      "rubric:toolbox/scorecard-quality": {
+      "rubric:toolbox/rule-quality": {
         "discriminates": [
-          "f0086dcc"
+          "68a7c956"
         ]
       }
     },
@@ -2570,8 +2530,12 @@
         "always-explains": [
           "e3f1d173"
         ],
-        "shows-evidence": [
-          "0e06886d"
+        "evidence-tracks-check": [
+          "008967fe"
+        ],
+        "pins-both-outcomes": [
+          "3e353c26",
+          "7ca02b25"
         ],
         "tested": [
           "63e27d3e"
@@ -2581,8 +2545,15 @@
         "always-explains": [
           "e3f1d173"
         ],
-        "shows-evidence": [
-          "0e06886d"
+        "evidence-tracks-check": [
+          "6396b043"
+        ],
+        "fix-names-a-place": [
+          "28240746"
+        ],
+        "pins-both-outcomes": [
+          "d2dd3e81",
+          "ddbcf122"
         ],
         "tested": [
           "aecaea92"
@@ -2591,22 +2562,37 @@
       "rule:acme/ownership/branch-protected": {
         "always-explains": [
           "e3f1d173"
+        ],
+        "evidence-tracks-check": [
+          "23d2f502"
+        ],
+        "fix-names-a-place": [
+          "4d93572f"
+        ],
+        "pins-both-outcomes": [
+          "41598a16"
         ]
       },
       "rule:acme/ownership/claim-verified": {
         "always-explains": [
           "e3f1d173"
         ],
-        "shows-evidence": [
-          "0e06886d"
+        "evidence-tracks-check": [
+          "4bca08ec"
+        ],
+        "pins-both-outcomes": [
+          "a0da8a7a"
         ]
       },
       "rule:acme/ownership/has-owner": {
         "always-explains": [
           "e3f1d173"
         ],
-        "shows-evidence": [
-          "0e06886d"
+        "evidence-tracks-check": [
+          "ae072aa2"
+        ],
+        "pins-both-outcomes": [
+          "19452da3"
         ]
       },
       "rule:acme/ownership/has-tier": {
@@ -2616,6 +2602,13 @@
         "both-outcomes-on-fixtures": [
           "735442e8"
         ],
+        "evidence-tracks-check": [
+          "1b6c58ee"
+        ],
+        "pins-both-outcomes": [
+          "05a899f1",
+          "23e1b2f2"
+        ],
         "tested": [
           "eb35efc0"
         ]
@@ -2623,84 +2616,158 @@
       "rule:repo/docs/links-resolve": {
         "both-outcomes-on-fixtures": [
           "735442e8"
+        ],
+        "pins-both-outcomes": [
+          "7d3bdc6b"
         ]
       },
       "rule:repo/repo-hygiene/codeowners-catch-all": {
+        "pins-both-outcomes": [
+          "549cefa9",
+          "c9308fca"
+        ],
         "tested": [
           "4ad006f5"
         ]
       },
-      "rule:toolbox/maintainer-ci-reliability/fail-rate-under-10": {
-        "tested": [
-          "1017f7ea"
+      "rule:repo/repo-hygiene/has-codeowners": {
+        "pins-both-outcomes": [
+          "5316227e"
+        ]
+      },
+      "rule:repo/repo-hygiene/has-license": {
+        "pins-both-outcomes": [
+          "a8a309ac"
+        ]
+      },
+      "rule:repo/repo-hygiene/has-readme": {
+        "pins-both-outcomes": [
+          "6b1e9ab9"
+        ]
+      },
+      "rule:repo/repo-hygiene/owners-are-teams": {
+        "pins-both-outcomes": [
+          "a3cd7cc4"
+        ]
+      },
+      "rule:toolbox/maintainer-action-deps/pinned-everywhere": {
+        "pins-both-outcomes": [
+          "caa1b0eb"
+        ]
+      },
+      "rule:toolbox/maintainer-ci-reliability/every-job-has-timeout": {
+        "pins-both-outcomes": [
+          "a96f9e3e"
         ]
       },
       "rule:toolbox/maintainer-ci-reliability/fail-rate-under-5": {
-        "tested": [
-          "1017f7ea"
+        "pins-both-outcomes": [
+          "ccc88b19"
         ]
       },
-      "rule:toolbox/maintainer-ci-reliability/fast-feedback": {
-        "tested": [
-          "d932bc56"
-        ]
-      },
-      "rule:toolbox/maintainer-ci-reliability/few-reruns": {
-        "tested": [
-          "e6ed9ea6"
+      "rule:toolbox/maintainer-ci-reliability/main-not-stuck-red": {
+        "pins-both-outcomes": [
+          "15b44828"
         ]
       },
       "rule:toolbox/maintainer-ci-security/actionlint-clean": {
         "both-outcomes-on-fixtures": [
           "735442e8"
+        ],
+        "pins-both-outcomes": [
+          "103d1910",
+          "8b3fde7b"
         ]
       },
       "rule:toolbox/maintainer-ci-security/least-privilege-token": {
         "both-outcomes-on-fixtures": [
           "735442e8"
         ],
+        "pins-both-outcomes": [
+          "557a95b1",
+          "56fc53f2"
+        ],
         "tested": [
           "63af3a8b"
+        ]
+      },
+      "rule:toolbox/maintainer-ci-security/no-medium-findings": {
+        "pins-both-outcomes": [
+          "7ba8adae"
+        ]
+      },
+      "rule:toolbox/maintainer-ci-security/no-write-tokens-on-risky-triggers": {
+        "pins-both-outcomes": [
+          "36bb4505"
+        ]
+      },
+      "rule:toolbox/maintainer-ci-security/pinned-to-sha": {
+        "pins-both-outcomes": [
+          "af4ebe81"
         ]
       },
       "rule:toolbox/maintainer-ci-security/zizmor-clean": {
         "both-outcomes-on-fixtures": [
           "735442e8"
         ],
+        "pins-both-outcomes": [
+          "884da776",
+          "bc0483e5"
+        ],
         "tested": [
           "e5804019"
         ]
       },
+      "rule:toolbox/maintainer-ci-speed/cancels-superseded-runs": {
+        "pins-both-outcomes": [
+          "6555f72c"
+        ]
+      },
       "rule:toolbox/maintainer-crate/bounded-complexity": {
+        "pins-both-outcomes": [
+          "6d39f94e",
+          "e4fb444d"
+        ],
         "tested": [
           "d3734f4a"
         ]
       },
+      "rule:toolbox/maintainer-crate/clippy-clean": {
+        "pins-both-outcomes": [
+          "27173337"
+        ]
+      },
       "rule:toolbox/maintainer-crate/crate-docs": {
-        "always-explains": [
-          "e3f1d173"
-        ],
         "both-outcomes-on-fixtures": [
           "735442e8"
+        ],
+        "pins-both-outcomes": [
+          "00ec5128",
+          "665cb1b3"
         ],
         "tested": [
           "55691dcb"
         ]
       },
       "rule:toolbox/maintainer-crate/few-unwraps": {
+        "pins-both-outcomes": [
+          "2dd73d0c",
+          "53880167"
+        ],
         "tested": [
           "6b666039"
         ]
       },
-      "rule:toolbox/maintainer-crate/has-tests": {
-        "always-explains": [
-          "e3f1d173"
-        ],
-        "shows-evidence": [
-          "0e06886d"
+      "rule:toolbox/maintainer-crate/fully-documented": {
+        "pins-both-outcomes": [
+          "30d715c5"
         ]
       },
       "rule:toolbox/maintainer-crate/no-huge-functions": {
+        "pins-both-outcomes": [
+          "a7156fb2",
+          "d1d2c271"
+        ],
         "tested": [
           "e0ebb877"
         ]
@@ -2709,161 +2776,309 @@
         "both-outcomes-on-fixtures": [
           "735442e8"
         ],
+        "pins-both-outcomes": [
+          "2b286280",
+          "f42a268b"
+        ],
         "tested": [
           "70e10331"
         ]
       },
+      "rule:toolbox/maintainer-crate/short-functions": {
+        "pins-both-outcomes": [
+          "59061d8e"
+        ]
+      },
       "rule:toolbox/maintainer-crate/simple-functions": {
+        "pins-both-outcomes": [
+          "a92a39f3",
+          "fbf47650"
+        ],
         "tested": [
           "1424d434"
         ]
       },
+      "rule:toolbox/maintainer-crate/tests-pass": {
+        "pins-both-outcomes": [
+          "6776ae8b"
+        ]
+      },
       "rule:toolbox/maintainer-docs/cites-sources": {
-        "always-explains": [
-          "e3f1d173"
-        ],
-        "shows-evidence": [
-          "0e06886d"
+        "pins-both-outcomes": [
+          "f301a065"
+        ]
+      },
+      "rule:toolbox/maintainer-docs/links-resolve": {
+        "pins-both-outcomes": [
+          "fd721c16"
+        ]
+      },
+      "rule:toolbox/maintainer-docs/names-sdlc-layer": {
+        "pins-both-outcomes": [
+          "d67ed7d5"
         ]
       },
       "rule:toolbox/maintainer-docs/status-banner": {
-        "always-explains": [
-          "e3f1d173"
-        ],
         "both-outcomes-on-fixtures": [
           "735442e8"
         ],
-        "shows-evidence": [
-          "0e06886d"
+        "pins-both-outcomes": [
+          "c668a096",
+          "d05ad505"
         ],
         "tested": [
           "2dfcba91"
         ]
       },
+      "rule:toolbox/maintainer-python/no-findings": {
+        "pins-both-outcomes": [
+          "258f97a7"
+        ]
+      },
+      "rule:toolbox/maintainer-repo/constituents-at-least-bronze": {
+        "pins-both-outcomes": [
+          "0c34da1f"
+        ]
+      },
+      "rule:toolbox/maintainer-repo/constituents-at-least-gold": {
+        "pins-both-outcomes": [
+          "cd004ece"
+        ]
+      },
+      "rule:toolbox/maintainer-repo/constituents-at-least-silver": {
+        "pins-both-outcomes": [
+          "e28f8742"
+        ]
+      },
+      "rule:toolbox/maintainer-supply-chain/workflows-have-owners": {
+        "pins-both-outcomes": [
+          "d7928223"
+        ]
+      },
+      "rule:toolbox/meta-field/described": {
+        "pins-both-outcomes": [
+          "fa9cfa33"
+        ]
+      },
+      "rule:toolbox/meta-kind/described": {
+        "pins-both-outcomes": [
+          "fc9a5565"
+        ]
+      },
+      "rule:toolbox/meta-kind/fields-described": {
+        "pins-both-outcomes": [
+          "d315a55b"
+        ]
+      },
+      "rule:toolbox/meta-kind/tested": {
+        "pins-both-outcomes": [
+          "d6750aed"
+        ]
+      },
+      "rule:toolbox/meta-rule/always-explains": {
+        "pins-both-outcomes": [
+          "851c1562"
+        ]
+      },
+      "rule:toolbox/meta-rule/both-outcomes-on-fixtures": {
+        "pins-both-outcomes": [
+          "49528796"
+        ]
+      },
+      "rule:toolbox/meta-rule/decided-on-fixtures": {
+        "pins-both-outcomes": [
+          "a5fea94d"
+        ]
+      },
+      "rule:toolbox/meta-rule/explains-fix": {
+        "pins-both-outcomes": [
+          "0abf4812"
+        ]
+      },
+      "rule:toolbox/meta-rule/no-nested-loops": {
+        "pins-both-outcomes": [
+          "c663be49"
+        ]
+      },
+      "rule:toolbox/meta-rule/pins-both-outcomes": {
+        "pins-both-outcomes": [
+          "b891462e"
+        ]
+      },
+      "rule:toolbox/meta-rule/readable": {
+        "pins-both-outcomes": [
+          "7de5aaf8"
+        ]
+      },
+      "rule:toolbox/meta-scorecard/every-rule-tested": {
+        "pins-both-outcomes": [
+          "497c02da"
+        ]
+      },
       "rule:toolbox/operator-cli/args-described": {
+        "pins-both-outcomes": [
+          "becd7900",
+          "cfd4fac3"
+        ],
         "tested": [
           "c271068c"
         ]
       },
       "rule:toolbox/operator-cli/documented": {
+        "pins-both-outcomes": [
+          "02a4c8cf",
+          "30443b54"
+        ],
         "tested": [
           "7fd1fe83"
         ]
       },
       "rule:toolbox/operator-cli/exercised": {
-        "always-explains": [
-          "e3f1d173"
-        ],
         "both-outcomes-on-fixtures": [
           "735442e8"
         ],
-        "shows-evidence": [
-          "0e06886d"
+        "pins-both-outcomes": [
+          "497caa81"
         ]
       },
       "rule:toolbox/operator-cli/has-help": {
-        "always-explains": [
-          "e3f1d173"
-        ],
         "both-outcomes-on-fixtures": [
           "735442e8"
         ],
-        "shows-evidence": [
-          "0e06886d"
+        "pins-both-outcomes": [
+          "34cdf7bb",
+          "e60a4350"
         ],
         "tested": [
           "5ee3e9fb"
         ]
       },
+      "rule:toolbox/review-assessment/no-open-findings": {
+        "pins-both-outcomes": [
+          "3293e4fe"
+        ]
+      },
+      "rule:toolbox/review-crate/no-open-findings": {
+        "pins-both-outcomes": [
+          "8b74bfd7"
+        ]
+      },
+      "rule:toolbox/review-scorecard/no-open-findings": {
+        "pins-both-outcomes": [
+          "799670ee"
+        ]
+      },
+      "rule:toolbox/review-scorecard/passes-review": {
+        "pins-both-outcomes": [
+          "d8f972b5"
+        ]
+      },
+      "rule:toolbox/review-sdlc-stage/no-open-findings": {
+        "pins-both-outcomes": [
+          "03959567"
+        ]
+      },
       "rule:toolbox/user-cli/args-described": {
+        "pins-both-outcomes": [
+          "1e3b2dce",
+          "47c2c41d"
+        ],
         "tested": [
           "b8c8c4d5"
         ]
       },
       "rule:toolbox/user-cli/exercised": {
-        "always-explains": [
-          "e3f1d173"
-        ],
-        "shows-evidence": [
-          "0e06886d"
+        "pins-both-outcomes": [
+          "28b3d536",
+          "5f26d9d5"
         ],
         "tested": [
           "8fdc9c4c"
         ]
       },
       "rule:toolbox/user-cli/has-help": {
-        "always-explains": [
-          "e3f1d173"
-        ],
         "both-outcomes-on-fixtures": [
           "735442e8"
         ],
-        "shows-evidence": [
-          "0e06886d"
+        "pins-both-outcomes": [
+          "c0fd2646",
+          "c4f311c5"
         ],
         "tested": [
           "044d7972"
         ]
       },
       "rule:toolbox/user-cli/structured-output": {
-        "always-explains": [
-          "e3f1d173"
-        ],
-        "both-outcomes-on-fixtures": [
-          "735442e8"
-        ],
-        "shows-evidence": [
-          "0e06886d"
-        ],
-        "tested": [
-          "85fbe335"
+        "pins-both-outcomes": [
+          "4d9834f7"
         ]
       },
       "rule:toolbox/user-mcp/annotated": {
-        "always-explains": [
-          "e3f1d173"
-        ],
         "both-outcomes-on-fixtures": [
           "735442e8"
+        ],
+        "pins-both-outcomes": [
+          "59efca1a",
+          "9de8b299"
         ],
         "tested": [
           "8093d0c0"
         ]
       },
       "rule:toolbox/user-mcp/described": {
-        "always-explains": [
-          "e3f1d173"
-        ],
         "both-outcomes-on-fixtures": [
           "735442e8"
         ],
-        "shows-evidence": [
-          "0e06886d"
+        "pins-both-outcomes": [
+          "35bb5f61",
+          "f7a4a642"
         ],
         "tested": [
           "fa58d2fb"
+        ]
+      },
+      "rule:toolbox/user-mcp/documented": {
+        "pins-both-outcomes": [
+          "cf6813e4"
+        ]
+      },
+      "rule:toolbox/user-mcp/inputs-described": {
+        "pins-both-outcomes": [
+          "9d643673"
         ]
       }
     },
     "meta-scorecard": {
       "scorecard:acme/app-approval": {
+        "described": [
+          "2ab57889"
+        ],
         "every-rule-tested": [
           "6d81850e"
         ]
       },
       "scorecard:acme/github-app-hygiene": {
+        "described": [
+          "f6583f73"
+        ],
         "every-rule-tested": [
           "277d6614"
         ]
       },
       "scorecard:acme/ownership": {
+        "described": [
+          "ff66385b"
+        ],
         "every-rule-tested": [
           "fa649642"
         ]
       },
       "scorecard:repo/docs": {
+        "fixtures-reach-every-level": [
+          "91f7a9f7"
+        ],
         "fixtures-show-the-ladder": [
-          "0ef04b22"
+          "15dbda4e"
         ]
       },
       "scorecard:repo/repo-hygiene": {
@@ -2871,18 +3086,28 @@
           "6ab10e6c"
         ]
       },
+      "scorecard:toolbox/maintainer-agent-doc": {
+        "fixtures-reach-every-level": [
+          "d2da8e5e"
+        ]
+      },
       "scorecard:toolbox/maintainer-ci-reliability": {
-        "every-rule-tested": [
-          "858dde21",
-          "858dde21",
-          "ae093b43",
-          "d6f1a95d"
+        "fixtures-reach-every-level": [
+          "d2da8e5e"
         ]
       },
       "scorecard:toolbox/maintainer-ci-security": {
         "every-rule-tested": [
           "c39e1938",
           "d34cf8d4"
+        ],
+        "fixtures-reach-every-level": [
+          "b2c06f55"
+        ]
+      },
+      "scorecard:toolbox/maintainer-connector": {
+        "fixtures-reach-every-level": [
+          "d2da8e5e"
         ]
       },
       "scorecard:toolbox/maintainer-crate": {
@@ -2893,6 +3118,15 @@
           "428c1960",
           "68b64866",
           "d836f05c"
+        ],
+        "fixtures-reach-every-level": [
+          "91f7a9f7",
+          "b2c06f55"
+        ]
+      },
+      "scorecard:toolbox/maintainer-dependency": {
+        "fixtures-reach-every-level": [
+          "d2da8e5e"
         ]
       },
       "scorecard:toolbox/maintainer-docs": {
@@ -2900,28 +3134,158 @@
           "992b2084"
         ]
       },
+      "scorecard:toolbox/maintainer-example": {
+        "fixtures-reach-every-level": [
+          "d2da8e5e"
+        ]
+      },
+      "scorecard:toolbox/maintainer-observability": {
+        "fixtures-reach-every-level": [
+          "d2da8e5e"
+        ]
+      },
+      "scorecard:toolbox/maintainer-package": {
+        "fixtures-reach-every-level": [
+          "d2da8e5e"
+        ]
+      },
+      "scorecard:toolbox/maintainer-plugin": {
+        "fixtures-reach-every-level": [
+          "d2da8e5e"
+        ]
+      },
+      "scorecard:toolbox/maintainer-repo": {
+        "fixtures-reach-every-level": [
+          "d2da8e5e"
+        ]
+      },
+      "scorecard:toolbox/maintainer-schema": {
+        "fixtures-reach-every-level": [
+          "d2da8e5e"
+        ]
+      },
+      "scorecard:toolbox/maintainer-site": {
+        "fixtures-reach-every-level": [
+          "d2da8e5e"
+        ]
+      },
+      "scorecard:toolbox/maintainer-skill": {
+        "fixtures-reach-every-level": [
+          "d2da8e5e"
+        ]
+      },
+      "scorecard:toolbox/maintainer-supply-chain": {
+        "fixtures-reach-every-level": [
+          "91f7a9f7",
+          "d2da8e5e"
+        ]
+      },
+      "scorecard:toolbox/meta-kind": {
+        "fixtures-reach-every-level": [
+          "91f7a9f7"
+        ]
+      },
+      "scorecard:toolbox/meta-rule": {
+        "fixtures-reach-every-level": [
+          "91f7a9f7",
+          "d2da8e5e"
+        ]
+      },
+      "scorecard:toolbox/meta-scorecard": {
+        "fixtures-reach-every-level": [
+          "b2c06f55",
+          "d2da8e5e"
+        ]
+      },
       "scorecard:toolbox/operator-cli": {
         "every-rule-tested": [
           "49f17fae",
           "63d8becd",
           "67ee9e45"
+        ],
+        "fixtures-reach-every-level": [
+          "d2da8e5e"
+        ]
+      },
+      "scorecard:toolbox/review-assessment": {
+        "fixtures-reach-every-level": [
+          "d2da8e5e"
+        ]
+      },
+      "scorecard:toolbox/review-crate": {
+        "fixtures-reach-every-level": [
+          "d2da8e5e"
+        ]
+      },
+      "scorecard:toolbox/review-rule": {
+        "fixtures-reach-every-level": [
+          "91f7a9f7"
+        ]
+      },
+      "scorecard:toolbox/review-sdlc-stage": {
+        "fixtures-reach-every-level": [
+          "d2da8e5e"
+        ]
+      },
+      "scorecard:toolbox/sdlc-layer": {
+        "fixtures-reach-every-level": [
+          "91f7a9f7"
+        ]
+      },
+      "scorecard:toolbox/sdlc-stage": {
+        "fixtures-reach-every-level": [
+          "d2da8e5e"
         ]
       },
       "scorecard:toolbox/user-cli": {
         "every-rule-tested": [
           "49f17fae",
           "63d8becd",
-          "6ed2fc98",
           "f04d554d"
         ],
-        "tested": [
-          "b90406f9"
+        "fixtures-reach-every-level": [
+          "d2da8e5e"
         ]
       },
       "scorecard:toolbox/user-mcp": {
         "every-rule-tested": [
           "22bd1887",
           "322ef764"
+        ],
+        "fixtures-reach-every-level": [
+          "b2c06f55"
+        ]
+      }
+    },
+    "operator-cli": {
+      "command:connector-drive": {
+        "exercised": [
+          "c7af0d99"
+        ]
+      },
+      "command:connector-records": {
+        "exercised": [
+          "b5ff7e33"
+        ]
+      },
+      "command:plan": {
+        "exercised": [
+          "effea4a5"
+        ]
+      },
+      "command:push": {
+        "exercised": [
+          "acd19096"
+        ]
+      },
+      "command:token-create": {
+        "exercised": [
+          "49191261"
+        ]
+      },
+      "command:vendor": {
+        "exercised": [
+          "42b94f6c"
         ]
       }
     },
@@ -3052,6 +3416,7 @@
       },
       "sdlc-stage:package-author/build-connector": {
         "built": [
+          "0491358c",
           "4034dd76",
           "63621c1d",
           "af92a4d1"
@@ -3114,10 +3479,57 @@
         ]
       }
     },
+    "user-cli": {
+      "command:actions": {
+        "exercised": [
+          "4fe642e5"
+        ]
+      },
+      "command:campaign": {
+        "exercised": [
+          "58235a94"
+        ]
+      },
+      "command:explain": {
+        "exercised": [
+          "3b0fcddd"
+        ]
+      },
+      "command:get": {
+        "exercised": [
+          "203347aa"
+        ]
+      },
+      "command:graph": {
+        "exercised": [
+          "08545926"
+        ]
+      },
+      "command:query": {
+        "exercised": [
+          "edcebbc2"
+        ]
+      },
+      "command:refresh": {
+        "exercised": [
+          "d1f3d0e5"
+        ]
+      },
+      "command:scorecard": {
+        "exercised": [
+          "ac9eace2"
+        ]
+      },
+      "command:search": {
+        "exercised": [
+          "56212e2e"
+        ]
+      }
+    },
     "user-mcp": {
       "mcp-tool:campaign_report": {
         "contract-tested": [
-          "52a38cb7"
+          "0b1171d8"
         ]
       }
     }
@@ -3275,50 +3687,42 @@
           "fail-rate-under-10",
           "fail-rate-under-20",
           "fail-rate-under-5",
-          "fast-feedback",
-          "few-reruns",
-          "main-not-stuck-red"
+          "main-not-stuck-red",
+          "still-running"
         ]
       },
       "workflow:.github/workflows/codeql.yml": {
-        "failing": {
-          "cancels-superseded-runs": 1
-        },
         "level": "bronze",
         "unknown": [
           "fail-rate-under-10",
           "fail-rate-under-20",
           "fail-rate-under-5",
-          "fast-feedback",
-          "few-reruns",
-          "main-not-stuck-red"
+          "main-not-stuck-red",
+          "still-running"
         ]
       },
       "workflow:.github/workflows/image.yml": {
-        "level": "silver",
+        "level": "bronze",
         "unknown": [
           "fail-rate-under-10",
           "fail-rate-under-20",
           "fail-rate-under-5",
-          "fast-feedback",
-          "few-reruns",
-          "main-not-stuck-red"
+          "main-not-stuck-red",
+          "still-running"
         ]
       },
       "workflow:.github/workflows/pages.yml": {
-        "level": "silver",
+        "level": "bronze",
         "unknown": [
           "fail-rate-under-10",
           "fail-rate-under-20",
           "fail-rate-under-5",
-          "fast-feedback",
-          "few-reruns",
-          "main-not-stuck-red"
+          "main-not-stuck-red",
+          "still-running"
         ]
       },
       "workflow:.github/workflows/release.yml": {
         "failing": {
-          "cancels-superseded-runs": 1,
           "every-job-has-timeout": 5
         },
         "level": "none",
@@ -3326,31 +3730,28 @@
           "fail-rate-under-10",
           "fail-rate-under-20",
           "fail-rate-under-5",
-          "fast-feedback",
-          "few-reruns",
-          "main-not-stuck-red"
+          "main-not-stuck-red",
+          "still-running"
         ]
       },
       "workflow:.github/workflows/scale-slo.yml": {
-        "level": "silver",
+        "level": "bronze",
         "unknown": [
           "fail-rate-under-10",
           "fail-rate-under-20",
           "fail-rate-under-5",
-          "fast-feedback",
-          "few-reruns",
-          "main-not-stuck-red"
+          "main-not-stuck-red",
+          "still-running"
         ]
       },
       "workflow:.github/workflows/version-packages.yml": {
-        "level": "silver",
+        "level": "bronze",
         "unknown": [
           "fail-rate-under-10",
           "fail-rate-under-20",
           "fail-rate-under-5",
-          "fast-feedback",
-          "few-reruns",
-          "main-not-stuck-red"
+          "main-not-stuck-red",
+          "still-running"
         ]
       },
       "workflow:actions/report/action.yml": {
@@ -3393,6 +3794,59 @@
       },
       "workflow:actions/report/action.yml": {
         "level": "gold"
+      }
+    },
+    "maintainer-ci-speed": {
+      "workflow:.github/workflows/ci.yml": {
+        "level": "bronze",
+        "unknown": [
+          "fast-feedback"
+        ]
+      },
+      "workflow:.github/workflows/codeql.yml": {
+        "failing": {
+          "cancels-superseded-runs": 1
+        },
+        "level": "none",
+        "unknown": [
+          "fast-feedback"
+        ]
+      },
+      "workflow:.github/workflows/image.yml": {
+        "level": "bronze",
+        "unknown": [
+          "fast-feedback"
+        ]
+      },
+      "workflow:.github/workflows/pages.yml": {
+        "level": "bronze",
+        "unknown": [
+          "fast-feedback"
+        ]
+      },
+      "workflow:.github/workflows/release.yml": {
+        "failing": {
+          "cancels-superseded-runs": 1
+        },
+        "level": "none",
+        "unknown": [
+          "fast-feedback"
+        ]
+      },
+      "workflow:.github/workflows/scale-slo.yml": {
+        "level": "bronze",
+        "unknown": [
+          "fast-feedback"
+        ]
+      },
+      "workflow:.github/workflows/version-packages.yml": {
+        "level": "bronze",
+        "unknown": [
+          "fast-feedback"
+        ]
+      },
+      "workflow:actions/report/action.yml": {
+        "level": "skipped"
       }
     },
     "maintainer-connector": {
@@ -3530,10 +3984,7 @@
         "level": "skipped"
       },
       "crate:toolbox-expr": {
-        "failing": {
-          "fully-documented": 1
-        },
-        "level": "silver",
+        "level": "gold",
         "unknown": [
           "clippy-clean",
           "tests-pass"
@@ -5079,25 +5530,14 @@
       "assessment:crate-design/crate:toolbox-expr": {
         "level": "gold"
       },
-      "assessment:rule-quality/rule:toolbox/maintainer-ci-reliability/cancels-superseded-runs": {
-        "level": "gold"
-      },
       "assessment:rule-quality/rule:toolbox/maintainer-ci-reliability/fail-rate-under-20": {
-        "failing": {
-          "cites-everything": 2,
-          "cites-for-findings": 1
-        },
-        "level": "bronze"
+        "level": "gold"
       },
       "assessment:rule-quality/rule:toolbox/maintainer-connector/no-hardcoded-secrets": {
         "level": "gold"
       },
       "assessment:rule-quality/rule:toolbox/maintainer-crate/has-tests": {
-        "failing": {
-          "cites-everything": 3,
-          "cites-for-findings": 2
-        },
-        "level": "bronze"
+        "level": "gold"
       },
       "assessment:rule-quality/rule:toolbox/maintainer-crate/tests-pass": {
         "level": "gold"
@@ -5121,11 +5561,7 @@
         "level": "gold"
       },
       "assessment:rule-quality/rule:toolbox/meta-rule/readable": {
-        "failing": {
-          "cites-everything": 3,
-          "cites-for-findings": 1
-        },
-        "level": "bronze"
+        "level": "gold"
       },
       "assessment:rule-quality/rule:toolbox/review-assessment/passes-review": {
         "level": "gold"
@@ -5144,11 +5580,7 @@
         "level": "bronze"
       },
       "assessment:scorecard-quality/scorecard:toolbox/maintainer-ci-reliability": {
-        "failing": {
-          "cites-everything": 3,
-          "cites-for-findings": 1
-        },
-        "level": "bronze"
+        "level": "gold"
       },
       "assessment:scorecard-quality/scorecard:toolbox/meta-rule": {
         "level": "gold"
@@ -5160,10 +5592,7 @@
         "level": "gold"
       },
       "assessment:scorecard-quality/scorecard:toolbox/sdlc-stage": {
-        "failing": {
-          "cites-everything": 1
-        },
-        "level": "silver"
+        "level": "gold"
       },
       "assessment:sdlc-stage-quality/sdlc-stage:maintainer/build": {
         "level": "gold"
@@ -5528,13 +5957,22 @@
       "field:toolbox/Assessment.at": {
         "level": "gold"
       },
+      "field:toolbox/Assessment.cited": {
+        "level": "gold"
+      },
       "field:toolbox/Assessment.entity": {
         "level": "gold"
       },
       "field:toolbox/Assessment.failing": {
         "level": "gold"
       },
+      "field:toolbox/Assessment.groundedIn": {
+        "level": "gold"
+      },
       "field:toolbox/Assessment.hash": {
+        "level": "gold"
+      },
+      "field:toolbox/Assessment.independentReview": {
         "level": "gold"
       },
       "field:toolbox/Assessment.path": {
@@ -5544,6 +5982,9 @@
         "level": "gold"
       },
       "field:toolbox/Assessment.reviewFailing": {
+        "level": "gold"
+      },
+      "field:toolbox/Assessment.reviewGrounded": {
         "level": "gold"
       },
       "field:toolbox/Assessment.reviewState": {
@@ -5890,6 +6331,9 @@
         },
         "level": "bronze"
       },
+      "field:toolbox/Crate.disabledTests": {
+        "level": "gold"
+      },
       "field:toolbox/Crate.docCoverage": {
         "failing": {
           "described": 1
@@ -5967,6 +6411,9 @@
         "level": "bronze"
       },
       "field:toolbox/Crate.reviewFailing": {
+        "level": "gold"
+      },
+      "field:toolbox/Crate.reviewIndependent": {
         "level": "gold"
       },
       "field:toolbox/Crate.reviewState": {
@@ -6822,6 +7269,9 @@
         },
         "level": "bronze"
       },
+      "field:toolbox/Rule.testedOutcomes": {
+        "level": "gold"
+      },
       "field:toolbox/Scorecard.described": {
         "level": "gold"
       },
@@ -6975,7 +7425,13 @@
       "field:toolbox/SdlcStage.name": {
         "level": "gold"
       },
+      "field:toolbox/SdlcStage.namedIn": {
+        "level": "gold"
+      },
       "field:toolbox/SdlcStage.notInCi": {
+        "level": "gold"
+      },
+      "field:toolbox/SdlcStage.notNaming": {
         "level": "gold"
       },
       "field:toolbox/SdlcStage.order": {
@@ -7480,13 +7936,13 @@
         "level": "silver"
       },
       "rubric:toolbox/rule-quality": {
-        "level": "gold"
-      },
-      "rubric:toolbox/scorecard-quality": {
         "failing": {
           "discriminates": 1
         },
         "level": "silver"
+      },
+      "rubric:toolbox/scorecard-quality": {
+        "level": "gold"
       },
       "rubric:toolbox/sdlc-stage-quality": {
         "level": "gold"
@@ -7497,7 +7953,7 @@
         "failing": {
           "always-explains": 1,
           "evidence-tracks-check": 1,
-          "shows-evidence": 1,
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
@@ -7507,7 +7963,7 @@
           "always-explains": 1,
           "evidence-tracks-check": 1,
           "fix-names-a-place": 1,
-          "shows-evidence": 1,
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
@@ -7516,7 +7972,8 @@
         "failing": {
           "always-explains": 1,
           "evidence-tracks-check": 1,
-          "fix-names-a-place": 1
+          "fix-names-a-place": 1,
+          "pins-both-outcomes": 1
         },
         "level": "bronze"
       },
@@ -7524,7 +7981,7 @@
         "failing": {
           "always-explains": 1,
           "evidence-tracks-check": 1,
-          "shows-evidence": 1
+          "pins-both-outcomes": 1
         },
         "level": "bronze"
       },
@@ -7532,7 +7989,7 @@
         "failing": {
           "always-explains": 1,
           "evidence-tracks-check": 1,
-          "shows-evidence": 1
+          "pins-both-outcomes": 1
         },
         "level": "bronze"
       },
@@ -7541,39 +7998,57 @@
           "always-explains": 1,
           "both-outcomes-on-fixtures": 1,
           "evidence-tracks-check": 1,
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
       },
       "rule:repo/docs/links-resolve": {
         "failing": {
-          "both-outcomes-on-fixtures": 1
+          "both-outcomes-on-fixtures": 1,
+          "pins-both-outcomes": 1
         },
         "level": "bronze"
       },
       "rule:repo/repo-hygiene/codeowners-catch-all": {
         "failing": {
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
       },
       "rule:repo/repo-hygiene/has-codeowners": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:repo/repo-hygiene/has-license": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:repo/repo-hygiene/has-readme": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:repo/repo-hygiene/owners-are-teams": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/cli-skill/has-skill": {
         "level": "gold"
       },
       "rule:toolbox/maintainer-action-deps/pinned-everywhere": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/maintainer-agent-doc/checks-run-in-ci": {
         "level": "gold"
@@ -7629,54 +8104,47 @@
       "rule:toolbox/maintainer-benchmark/sound-method": {
         "level": "gold"
       },
-      "rule:toolbox/maintainer-ci-reliability/cancels-superseded-runs": {
-        "level": "gold"
-      },
       "rule:toolbox/maintainer-ci-reliability/every-job-has-timeout": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/maintainer-ci-reliability/fail-rate-under-10": {
-        "failing": {
-          "tested": 1
-        },
-        "level": "none"
+        "level": "gold"
       },
       "rule:toolbox/maintainer-ci-reliability/fail-rate-under-20": {
         "level": "gold"
       },
       "rule:toolbox/maintainer-ci-reliability/fail-rate-under-5": {
         "failing": {
-          "tested": 1
+          "pins-both-outcomes": 1
         },
-        "level": "none"
+        "level": "silver"
       },
       "rule:toolbox/maintainer-ci-reliability/failures-visible": {
         "level": "gold"
       },
-      "rule:toolbox/maintainer-ci-reliability/fast-feedback": {
-        "failing": {
-          "tested": 1
-        },
-        "level": "none"
-      },
-      "rule:toolbox/maintainer-ci-reliability/few-reruns": {
-        "failing": {
-          "tested": 1
-        },
-        "level": "none"
-      },
       "rule:toolbox/maintainer-ci-reliability/main-not-stuck-red": {
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
+      },
+      "rule:toolbox/maintainer-ci-reliability/still-running": {
         "level": "gold"
       },
       "rule:toolbox/maintainer-ci-security/actionlint-clean": {
         "failing": {
-          "both-outcomes-on-fixtures": 1
+          "both-outcomes-on-fixtures": 1,
+          "pins-both-outcomes": 2
         },
         "level": "bronze"
       },
       "rule:toolbox/maintainer-ci-security/least-privilege-token": {
         "failing": {
           "both-outcomes-on-fixtures": 1,
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
@@ -7685,20 +8153,39 @@
         "level": "gold"
       },
       "rule:toolbox/maintainer-ci-security/no-medium-findings": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/maintainer-ci-security/no-write-tokens-on-risky-triggers": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/maintainer-ci-security/pinned-to-sha": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/maintainer-ci-security/zizmor-clean": {
         "failing": {
           "both-outcomes-on-fixtures": 1,
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
+      },
+      "rule:toolbox/maintainer-ci-speed/cancels-superseded-runs": {
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
+      },
+      "rule:toolbox/maintainer-ci-speed/fast-feedback": {
+        "level": "gold"
       },
       "rule:toolbox/maintainer-connector/closes-snapshots": {
         "level": "gold"
@@ -7729,34 +8216,44 @@
       },
       "rule:toolbox/maintainer-crate/bounded-complexity": {
         "failing": {
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
       },
       "rule:toolbox/maintainer-crate/clippy-clean": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/maintainer-crate/crate-docs": {
         "failing": {
           "both-outcomes-on-fixtures": 1,
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
       },
       "rule:toolbox/maintainer-crate/few-unwraps": {
         "failing": {
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
       },
       "rule:toolbox/maintainer-crate/fully-documented": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/maintainer-crate/has-tests": {
         "level": "gold"
       },
       "rule:toolbox/maintainer-crate/no-huge-functions": {
         "failing": {
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
@@ -7764,21 +8261,29 @@
       "rule:toolbox/maintainer-crate/public-api-documented": {
         "failing": {
           "both-outcomes-on-fixtures": 1,
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
       },
       "rule:toolbox/maintainer-crate/short-functions": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/maintainer-crate/simple-functions": {
         "failing": {
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
       },
       "rule:toolbox/maintainer-crate/tests-pass": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/maintainer-crate/tests-scale-with-code": {
         "level": "gold"
@@ -7802,17 +8307,27 @@
         "level": "gold"
       },
       "rule:toolbox/maintainer-docs/cites-sources": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/maintainer-docs/links-resolve": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/maintainer-docs/names-sdlc-layer": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/maintainer-docs/status-banner": {
         "failing": {
           "both-outcomes-on-fixtures": 1,
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
@@ -7911,16 +8426,28 @@
         "level": "gold"
       },
       "rule:toolbox/maintainer-python/no-findings": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/maintainer-repo/constituents-at-least-bronze": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/maintainer-repo/constituents-at-least-gold": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/maintainer-repo/constituents-at-least-silver": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/maintainer-schema/described": {
         "level": "gold"
@@ -8007,7 +8534,10 @@
         "level": "gold"
       },
       "rule:toolbox/maintainer-supply-chain/workflows-have-owners": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/meta-assessment/assessor-named": {
         "level": "gold"
@@ -8037,7 +8567,10 @@
         "level": "gold"
       },
       "rule:toolbox/meta-field/described": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/meta-field/has-shape": {
         "level": "gold"
@@ -8046,16 +8579,25 @@
         "level": "gold"
       },
       "rule:toolbox/meta-kind/described": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/meta-kind/fields-described": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/meta-kind/in-fixtures": {
         "level": "gold"
       },
       "rule:toolbox/meta-kind/tested": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/meta-rubric/described": {
         "level": "gold"
@@ -8070,31 +8612,52 @@
         "level": "gold"
       },
       "rule:toolbox/meta-rule/always-explains": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/meta-rule/both-outcomes-on-fixtures": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/meta-rule/decided-on-fixtures": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/meta-rule/evidence-tracks-check": {
         "level": "gold"
       },
       "rule:toolbox/meta-rule/explains-fix": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/meta-rule/fix-names-a-place": {
         "level": "gold"
       },
       "rule:toolbox/meta-rule/no-nested-loops": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
+      },
+      "rule:toolbox/meta-rule/pins-both-outcomes": {
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/meta-rule/readable": {
-        "level": "gold"
-      },
-      "rule:toolbox/meta-rule/shows-evidence": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/meta-rule/tested": {
         "level": "gold"
@@ -8106,7 +8669,10 @@
         "level": "gold"
       },
       "rule:toolbox/meta-scorecard/every-rule-tested": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/meta-scorecard/fixtures-reach-every-level": {
         "level": "gold"
@@ -8119,25 +8685,29 @@
       },
       "rule:toolbox/operator-cli/args-described": {
         "failing": {
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
       },
       "rule:toolbox/operator-cli/documented": {
         "failing": {
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
       },
       "rule:toolbox/operator-cli/exercised": {
         "failing": {
-          "both-outcomes-on-fixtures": 1
+          "both-outcomes-on-fixtures": 1,
+          "pins-both-outcomes": 1
         },
         "level": "bronze"
       },
       "rule:toolbox/operator-cli/has-help": {
         "failing": {
           "both-outcomes-on-fixtures": 1,
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
@@ -8149,7 +8719,10 @@
         "level": "gold"
       },
       "rule:toolbox/review-assessment/no-open-findings": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/review-assessment/passes-review": {
         "level": "gold"
@@ -8157,11 +8730,17 @@
       "rule:toolbox/review-crate/assessed": {
         "level": "gold"
       },
+      "rule:toolbox/review-crate/independently-reviewed": {
+        "level": "gold"
+      },
       "rule:toolbox/review-crate/no-doubts": {
         "level": "gold"
       },
       "rule:toolbox/review-crate/no-open-findings": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/review-crate/passes-review": {
         "level": "gold"
@@ -8185,10 +8764,16 @@
         "level": "gold"
       },
       "rule:toolbox/review-scorecard/no-open-findings": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/review-scorecard/passes-review": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/review-sdlc-stage/assessed": {
         "level": "gold"
@@ -8197,7 +8782,10 @@
         "level": "gold"
       },
       "rule:toolbox/review-sdlc-stage/no-open-findings": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/review-sdlc-stage/passes-review": {
         "level": "gold"
@@ -8231,12 +8819,14 @@
       },
       "rule:toolbox/user-cli/args-described": {
         "failing": {
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
       },
       "rule:toolbox/user-cli/exercised": {
         "failing": {
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
@@ -8244,16 +8834,21 @@
       "rule:toolbox/user-cli/has-help": {
         "failing": {
           "both-outcomes-on-fixtures": 1,
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
       },
       "rule:toolbox/user-cli/structured-output": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/user-mcp/annotated": {
         "failing": {
           "both-outcomes-on-fixtures": 1,
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
@@ -8264,15 +8859,22 @@
       "rule:toolbox/user-mcp/described": {
         "failing": {
           "both-outcomes-on-fixtures": 1,
+          "pins-both-outcomes": 2,
           "tested": 1
         },
         "level": "none"
       },
       "rule:toolbox/user-mcp/documented": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       },
       "rule:toolbox/user-mcp/inputs-described": {
-        "level": "gold"
+        "failing": {
+          "pins-both-outcomes": 1
+        },
+        "level": "silver"
       }
     },
     "meta-scorecard": {
@@ -8323,17 +8925,13 @@
         "level": "silver"
       },
       "scorecard:toolbox/maintainer-benchmark": {
+        "level": "gold"
+      },
+      "scorecard:toolbox/maintainer-ci-reliability": {
         "failing": {
           "fixtures-reach-every-level": 1
         },
         "level": "silver"
-      },
-      "scorecard:toolbox/maintainer-ci-reliability": {
-        "failing": {
-          "every-rule-tested": 4,
-          "fixtures-reach-every-level": 1
-        },
-        "level": "bronze"
       },
       "scorecard:toolbox/maintainer-ci-security": {
         "failing": {
@@ -8341,6 +8939,9 @@
           "fixtures-reach-every-level": 1
         },
         "level": "bronze"
+      },
+      "scorecard:toolbox/maintainer-ci-speed": {
+        "level": "gold"
       },
       "scorecard:toolbox/maintainer-connector": {
         "failing": {
