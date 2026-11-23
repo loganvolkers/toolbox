@@ -242,8 +242,7 @@ async fn list_entities(State(s): S, headers: HeaderMap, Query(q): Query<ListQuer
     let truthy = ExprValue::from_json(&Value::Bool(true));
     let wants_scores = q.filter.as_deref().is_some_and(|f| f.contains("scores"));
     let matches = |f: &Expr, id: &str, v: Visibility| {
-        let shaped = s.shape_entity(&p, &caller, id, v, None).unwrap();
-        let mut visible = shaped["fields"].clone();
+        let mut visible = Value::Object(s.visible_fields(&p, &caller, id, v, None).unwrap());
         visible["id"] = json!(id);
         let entity = ExprValue::from_json(&visible);
         // `scores['<scorecard>']` = {level, rules: {rule: outcome}}, as the caller may see it.
@@ -276,9 +275,11 @@ async fn list_entities(State(s): S, headers: HeaderMap, Query(q): Query<ListQuer
         details: true,
     };
     let mut pending = candidates.into_iter().filter(|id| {
-        filter
-            .as_ref()
-            .is_none_or(|f| matches(f, id, summary) || matches(f, id, whole))
+        filter.as_ref().is_none_or(|f| {
+            // Scores' rule outcomes are owner-only by default, so they can differ by shape too.
+            let differ = wants_scores || s.hides_details(&p.derived.entities[*id].kind);
+            matches(f, id, whole) || (differ && matches(f, id, summary))
+        })
     });
     let mut items: Vec<Value> = Vec::new();
     let mut next = None;

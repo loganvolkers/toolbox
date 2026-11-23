@@ -234,6 +234,33 @@ impl AppState {
         fields: Option<&[&str]>,
     ) -> Option<Value> {
         let e = p.derived.entities.get(id)?;
+        let out = self.visible_fields(p, caller, id, vis, fields)?;
+        Some(json!({"id": id, "kind": e.kind, "fields": out, "provenance": e.provenance}))
+    }
+
+    /// Whether some field of `kind` is owner-only, so the summary and whole shapes can differ.
+    pub fn hides_details(&self, kind: &str) -> bool {
+        self.manifest
+            .kinds
+            .iter()
+            .find(|k| k.name == kind)
+            .is_some_and(|k| {
+                k.fields.values().any(|f| {
+                    facet_needs(f.facet.as_deref()).is_some_and(|n| n == "can_view_details")
+                })
+            })
+    }
+
+    /// An entity's fields as `caller` may see them (hidden facets replaced by markers).
+    pub fn visible_fields(
+        &self,
+        p: &Published,
+        caller: &Caller,
+        id: &str,
+        vis: Visibility,
+        fields: Option<&[&str]>,
+    ) -> Option<serde_json::Map<String, Value>> {
+        let e = p.derived.entities.get(id)?;
         let kind = self.manifest.kinds.iter().find(|k| k.name == e.kind)?;
         let mut out = serde_json::Map::new();
         for (name, value) in &e.fields {
@@ -255,7 +282,7 @@ impl AppState {
                 },
             );
         }
-        Some(json!({"id": id, "kind": e.kind, "fields": out, "provenance": e.provenance}))
+        Some(out)
     }
 
     /// Scorecard results for one entity as `caller` may see them.
