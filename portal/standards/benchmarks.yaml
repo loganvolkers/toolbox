@@ -121,13 +121,13 @@ kinds:
           measure, and an independent adjudicator.
         computed: >-
           entity.protocol != 2 ? ['protocol 1: re-register under protocol 2
-          (D01M83RDWQ5EVKY5SFHDWAD5HFH)'] : (entity.prompts == '' &&
-          !entity.deterministic ? ['no committed prompts'] : []) +
-          (entity.runsPerArm < 3 && !entity.deterministic ? ['fewer than three
-          runs per arm'] : []) + (entity.measure == '' ? ['no measure the runtime
-          reports'] : []) + (entity.designer == '' ? ['no designer'] : []) +
-          (entity.adjudicator == '' || entity.adjudicator == entity.designer ?
-          ['no adjudicator independent of the designer'] : [])
+          (D01M83RDWQ5EVKY5SFHDWAD5HFH)'] : (entity.deterministic ? [] :
+          (entity.prompts == '' ? ['no committed prompts'] : []) +
+          (entity.runsPerArm < 3 ? ['fewer than three runs per arm'] : [])) +
+          (entity.measure == '' ? ['no measure the runtime reports'] : []) +
+          (entity.designer == '' ? ['no designer'] : []) + (entity.adjudicator in
+          ['', entity.designer] ? ['no adjudicator independent of the designer'] :
+          [])
       runGaps:
         type: list
         items: string
