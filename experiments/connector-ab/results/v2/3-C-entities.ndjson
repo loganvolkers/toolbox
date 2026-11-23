@@ -1,0 +1,8 @@
+{"kind":"component","id":"ALPHA:api","data":{"id":"1","name":"api","project":"ALPHA"}}
+{"kind":"component","id":"ALPHA:web","data":{"id":"2","name":"web","project":"ALPHA"}}
+{"kind":"component","id":"BETA:billing","data":{"id":"3","name":"billing","project":"BETA"}}
+{"kind":"issue","id":"ALPHA-1","data":{"key":"ALPHA-1","summary":"Wire login","status":"To Do","project":"ALPHA","assignee":null}}
+{"kind":"issue","id":"ALPHA-2","data":{"key":"ALPHA-2","summary":"Fix redirect","status":"In Progress","project":"ALPHA","assignee":"u-anne"}}
+{"kind":"issue","id":"BETA-1","data":{"key":"BETA-1","summary":"Invoice export","status":"Done","project":"BETA","assignee":"u-bob"}}
+{"kind":"project","id":"ALPHA","data":{"key":"ALPHA","name":"Alpha","type":"software"}}
+{"kind":"project","id":"BETA","data":{"key":"BETA","name":"Beta","type":"business"}}
