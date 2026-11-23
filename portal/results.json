@@ -3636,6 +3636,9 @@
         },
         "level": "silver"
       },
+      "benchmark:pin-repair-ab": {
+        "level": "gold"
+      },
       "benchmark:ratchet-replay": {
         "failing": {
           "sound-method": 1
@@ -4845,6 +4848,9 @@
       "doc:experiments/out-of-box/README.md": {
         "level": "silver"
       },
+      "doc:experiments/pin-repair-ab/README.md": {
+        "level": "silver"
+      },
       "doc:experiments/security-ab/README.md": {
         "level": "silver"
       },
@@ -5076,6 +5082,9 @@
         "level": "gold"
       },
       "example:experiments/out-of-box/ab/README.md": {
+        "level": "gold"
+      },
+      "example:experiments/pin-repair-ab/README.md": {
         "level": "gold"
       },
       "example:experiments/security-ab/README.md": {
