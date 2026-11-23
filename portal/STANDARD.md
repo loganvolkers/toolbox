@@ -51,8 +51,10 @@ Scorecard `maintainer-benchmark` over `Benchmark` entities, owned by group:maint
 | `pre-registered` | silver | `entity.hypothesisGaps.size() == 0` | Name the hypotheses the benchmark tests, each with a bar written in its README before it ran (dx-benchmarks.md §4, step 5). |
 | `open-source-pinned` | silver | `entity.repoGaps.size() == 0` | Run on open-source repositories we didn't write and list each as owner/name@commit, so the run can be reproduced. |
 | `says-why` | silver | `entity.reasonGaps.size() == 0` | Say why an archived benchmark has served its value (servedValue), or what a blocked one waits on (blockedOn). |
+| `method-registered` | silver | `!(entity.status in ['designed', 'blocked']) \|\| entity.registrationGaps.size() == 0` | Before it runs, register it under protocol 2: set protocol 2, commit the prompts, plan at least three runs per arm, name the measure a dry run showed the runtime reports, and name a designer and a different adjudicator (dx-benchmarks.md §4.1). |
 | `results-recorded` | gold | `entity.resultGaps.size() == 0` | Run it, then record the outcome against the bar as written and the path of the published results (dx-benchmarks.md §4, step 9). |
 | `closes-the-loop` | gold | `entity.changeGaps.size() == 0` | List what the benchmark changed in Toolbox: the friction fixes and the decisions it produced (dx-benchmarks.md §4, step 10). |
+| `sound-method` | gold | `!(entity.status in ['complete', 'archived']) \|\| entity.registrationGaps.size() + entity.runGaps.size() == 0` | Rerun it under protocol 2 and record the frozen commit, the spread across at least three runs per arm, and the independent adjudicator's fit audit (dx-benchmarks.md §4.1). A protocol-1 result stays on the record as one sample. |
 
 ## operator-cli
 
