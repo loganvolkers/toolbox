@@ -30,9 +30,10 @@ Tools Toolbox standardizes, extends, or carries — it does not replace them.
 | Peer | Relationship |
 |---|---|
 | [OpenSSF Scorecard](/toolbox/compare/openssf-scorecard/) | Security scoring stays OpenSSF's; Toolbox pins, runs, remembers, and ratchets outcomes |
+| [DX / DX Fabric](/toolbox/compare/dx-fabric/) | Developer intelligence and Fabric context stay DX's; Toolbox may ingest facts, not replace analytics |
 | [Linters and formatters](/toolbox/compare/linters-and-formatters/) | ESLint, ruff, clippy, actionlint, zizmor, and peers stay tools in the box |
 
-Adjacent measurement and observability products (for example GetDX, LinearB, Jellyfish, Datadog) are a different category. Toolbox may ingest their facts; it does not try to replace those products here.
+Other measurement and observability products (for example LinearB, Jellyfish, Datadog) remain a different category. Toolbox may ingest their facts; it does not try to replace those products here.
 
 ## Thanks
 

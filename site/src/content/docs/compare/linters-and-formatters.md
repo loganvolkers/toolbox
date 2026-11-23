@@ -2,7 +2,7 @@
 title: Toolbox and the linter/formatter ecosystem
 description: How Toolbox carries ESLint, ruff, clippy, actionlint, zizmor, and peers — without replacing them.
 sidebar:
-  order: 8
+  order: 9
 relationship: complement
 peer: Linters and formatters
 last_verified: 2026-11-23

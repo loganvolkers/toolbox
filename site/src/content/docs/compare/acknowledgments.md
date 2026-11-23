@@ -2,7 +2,7 @@
 title: Acknowledgments
 description: Projects Toolbox learned from — Betterer, Backstage, OpenSSF Scorecard, Port Ocean, and peers.
 sidebar:
-  order: 9
+  order: 10
 relationship: acknowledgments
 last_verified: 2026-11-23
 claim_sources:
