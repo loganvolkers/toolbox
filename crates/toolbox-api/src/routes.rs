@@ -1,6 +1,7 @@
 //! REST API (docs/v1-spec.md §7.2), M2 subset: entities, scorecards, native writes, ingest,
 //! snapshot info, health, metrics and the operator export used for differential checks.
 
+use crate::access::Visibility;
 use crate::state::{AppState, Published, parse_min_snapshot};
 use axum::body::Bytes;
 use axum::extract::{Path, Query, State};
@@ -240,6 +241,48 @@ async fn list_entities(State(s): S, headers: HeaderMap, Query(q): Query<ListQuer
         .collect();
     let truthy = ExprValue::from_json(&Value::Bool(true));
     let wants_scores = q.filter.as_deref().is_some_and(|f| f.contains("scores"));
+    let matches = |f: &Expr, id: &str, v: Visibility| {
+        let shaped = s.shape_entity(&p, &caller, id, v, None).unwrap();
+        let mut visible = shaped["fields"].clone();
+        visible["id"] = json!(id);
+        let entity = ExprValue::from_json(&visible);
+        // `scores['<scorecard>']` = {level, rules: {rule: outcome}}, as the caller may see it.
+        let scores = if wants_scores {
+            ExprValue::from_json(&score_outcomes(s.shape_scores(&p, &caller, id, v)))
+        } else {
+            ExprValue::from_json(&json!({}))
+        };
+        matches!(
+            with_vars(
+                &[
+                    ("entity", &entity),
+                    ("policy", &policy),
+                    ("scores", &scores),
+                ],
+                |ctx| f.eval_in(ctx),
+            ),
+            Ok(b) if b == truthy
+        )
+    };
+    // What a viewer sees is the summary or the whole entity, so an entity the filter rejects in
+    // both shapes can't match: drop it before asking the authorizer. The result is the same.
+    let candidates: Vec<&String> = match &filter {
+        Some(f) => candidates
+            .into_iter()
+            .filter(|id| {
+                let summary = Visibility {
+                    view: true,
+                    details: false,
+                };
+                let whole = Visibility {
+                    view: true,
+                    details: true,
+                };
+                matches(f, id, summary) || matches(f, id, whole)
+            })
+            .collect(),
+        None => candidates,
+    };
     let mut items: Vec<Value> = Vec::new();
     let mut next = None;
     'outer: for chunk in candidates.chunks(200) {
@@ -252,28 +295,10 @@ async fn list_entities(State(s): S, headers: HeaderMap, Query(q): Query<ListQuer
             if !v.view {
                 continue;
             }
-            if let Some(f) = &filter {
-                let shaped = s.shape_entity(&p, &caller, id, v, None).unwrap();
-                let mut visible = shaped["fields"].clone();
-                visible["id"] = json!(id);
-                let entity = ExprValue::from_json(&visible);
-                // `scores['<scorecard>']` = {level, rules: {rule: outcome}}, as the caller may see it.
-                let scores = if wants_scores {
-                    ExprValue::from_json(&score_outcomes(s.shape_scores(&p, &caller, id, v)))
-                } else {
-                    ExprValue::from_json(&json!({}))
-                };
-                match with_vars(
-                    &[
-                        ("entity", &entity),
-                        ("policy", &policy),
-                        ("scores", &scores),
-                    ],
-                    |ctx| f.eval_in(ctx),
-                ) {
-                    Ok(b) if b == truthy => {}
-                    _ => continue,
-                }
+            if let Some(f) = &filter
+                && !matches(f, id, v)
+            {
+                continue;
             }
             if items.len() == limit {
                 next = items

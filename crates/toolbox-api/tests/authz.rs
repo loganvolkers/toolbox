@@ -243,3 +243,34 @@ async fn facets_actions_and_revocation() {
     }
     eprintln!("revocation enforced after {:?}", started.elapsed());
 }
+
+#[tokio::test]
+async fn a_filter_cannot_probe_a_hidden_facet() {
+    let Some(url) = start().await else { return };
+    let list = |user: &'static str| {
+        let url = url.clone();
+        async move {
+            let r = reqwest::Client::new()
+                .get(format!("{url}/v1/entities"))
+                .query(&[
+                    ("kind", "User"),
+                    ("filter", "entity.email == 'alice@acme.example'"),
+                ])
+                .header("x-toolbox-user", user)
+                .send()
+                .await
+                .unwrap();
+            let v: Value = r.json().await.unwrap();
+            v["items"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|i| i["id"].as_str().unwrap().to_owned())
+                .collect::<Vec<_>>()
+        }
+    };
+    // User.email is owner-only: erin can't see alice's, so her filter on it matches nothing.
+    assert!(list("erin").await.is_empty());
+    // A portal admin sees the facet, so the same filter finds alice.
+    assert_eq!(list("dave").await, vec!["user:alice".to_owned()]);
+}
