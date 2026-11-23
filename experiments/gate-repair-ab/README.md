@@ -416,12 +416,103 @@ it doesn't show a win, the result is published as it is, not rerun.
 - **The designer's prediction:** G12 holds; G13 and G14 are inconclusive; G15 holds or is
   inconclusive, about equally likely; G16 holds; G17 is inconclusive.
 
+### 5.3 Round 5 (pre-registered after round 4, before round 5's workspaces were built)
+
+Round 5 asks round 4's question again: does Toolbox now beat reviewdog? It uses the same task, fork,
+planted pull request, prompt templates and decision rule (P2). §5.2 said round 4 is not rerun, and
+round 5 doesn't rerun it. It follows product changes made from round 4's open friction (§0.5), as
+[dx-benchmarks.md](../../docs/design/dx-benchmarks.md) §11 asks ("rerun after the fixes").
+
+**Disclosure.** This is the fifth round on one task, and the second that asks whether Toolbox
+beats reviewdog. The designer had seen every transcript of round 4 when making the changes and
+writing this section. A second attempt at the same question raises the chance of a win by chance,
+and the adjudicator should weigh that. The rule itself is unchanged.
+
+**What changed since round 4, in three commits:**
+
+- **The Toolbox change**
+  ([D01M84EPMMR9740K4N25G7A6FAY](../../docs/decisions/D01M84EPMMR9740K4N25G7A6FAY.md), commit
+  `c1f9b22`; no harness file).
+  - A failing gate quotes the lines of each entity's file that its new findings name.
+  - `pinned-to-sha` names each unpinned `uses:` with its line.
+  - `pinned-everywhere`'s hint carries the existing pin as written, version comment included.
+  - On the planted branch, the first gate output rose from 1,529 characters to 2,091. It quotes
+    11 lines, and a pass prints 103 characters, as before.
+- **The rival fix (P4, commit `eb45c5d`, harness only).** In round 4, every reviewdog run printed
+  the changed files (`git diff`, `sed -n`) after its gate. Toolbox's gate now quotes the code, and
+  reviewdog's tools can too.
+  - `quality-gate.sh` reads zizmor's `plain` format and actionlint's default format, which quote
+    the source, through multi-line errorformats.
+  - The failing output rose from 1,222 characters to 2,225 on stdout, and stderr is unchanged at
+    192.
+  - Pass, failure and filtering are as before. Both gates pass on `reference_fix.py`, and a fix of
+    the pins alone still fails.
+  - This makes the rival stronger.
+- **The measure fix (commit `295b0d3`, harness only, every arm).** `count.py` names each call
+  without a recorded result (`missing` in the TSV). *Read* now counts a `read_file` without a
+  result as the runtime's result for that file on `pr`, built as a recorded one is.
+  - On round 4's runs this reproduces `toolbox-5`'s recorded read of `release.yaml` exactly
+    (9,562 characters), and the adjudicator's 13,515 for `pull_request.yaml`.
+  - The recorded read stays in the TSV as `readRecorded`. Threat 13's undercount applied only
+    to arm A, so this works against arm A.
+
+**Arms.** Five runs each, fifteen in all, launched together:
+
+- A, the changed Toolbox, at the frozen commit;
+- B, reviewdog with the P4 fix;
+- A⁻, round 4's arm A, with the Rust and `packages/github-actions` as at `76a1140`.
+
+Workspaces and `arms.tsv` are as in rounds 3 and 4.
+
+**Measures:**
+- *calls* and *gate read*, as in §5.2;
+- *read*, with the measure fix.
+
+| Id | Hypothesis | Holds | Fails |
+|---|---|---|---|
+| G18 | Arm A is correct in every run | 5 of 5 correct | Any run incorrect |
+| G19 | With Toolbox's gate, a repair takes fewer calls than with reviewdog's | med(B) − med(A) > *W*, on calls | med(A) − med(B) > *W*, on calls |
+| G20 | With Toolbox's gate, the agent reads less than with reviewdog's | As G19, on read | As G19, on read |
+| G21 | With Toolbox's gate, the agent reads less gate output than with reviewdog's | As G19, on gate read | As G19, on gate read |
+| G22 | The change cut calls (attribution) | med(A⁻) − med(A) > *W*, on calls | med(A) − med(A⁻) > *W*, on calls |
+| G23 | The change cut what the agent reads in all (attribution) | As G22, on read | As G22, on read |
+
+*W* is as in §5, over the two arms compared. **Toolbox beats reviewdog** only if all of these hold:
+
+- G18 holds;
+- at least one of G19, G20 and G21 holds;
+- none of G19, G20 and G21 fails.
+
+G22 and G23 say whether a win is due to this change; they don't decide it. A run of arm B or A⁻
+that is incorrect is reported and changes no label. Arm A's gate read is expected to rise against
+A⁻'s, because the quote is longer. It is reported, not hypothesised. If this round doesn't show a
+win, the result is published as it is, and this round is not rerun.
+
+**Before the run, the designer reads the odds as follows.**
+
+- **Calls (G19) can't realistically hold, and may fail.** Without exploring, arm A's repair is a
+  gate run, one or two edits and a rerun: 4 calls with two search-and-replace edits, or 3 with a
+  heredoc. Arm B still has to look up both SHAs, so it likely stays at 3. With *W* = 1, arm A fails
+  G19 if its median is 5, so one exploration call in most A runs fails it.
+- **Read (G20) is the likeliest to hold.** Arm A's planned path has no `read_file` and no lookup.
+  From round 4's commands, it reads about 2,600 characters on the first gate run, about 2,000 on
+  two edits and about 500 on the rerun: about 5,000 in all. Arm B no longer needs to print the
+  files, but it still greps for the SHAs. Its read is about 3,900 on the first gate command (the
+  script and the gate), 700 to 4,500 on the lookup, and about 500 on the edit and rerun: about
+  5,000 to 9,000. G20 holds only if B keeps a broad lookup and neither arm's range is wide.
+- **Gate read (G21) is likely inconclusive.** Arm A's gate output grew by 562 characters and B's
+  by 1,003. B's agents also tend to print the script with their first gate run. That gives arm A
+  about 3,200 and arm B about 4,200, a gap of about 1,000. A single chained `git diff` widens
+  either range past that.
+- **The designer's prediction:** G18 holds; G19 is inconclusive; G20 holds; G21 is
+  inconclusive; G22 and G23 hold.
+
 ## 6. Protocol
 
 - **Rounds (P3).** Each round freezes one commit of this repository (`frozenAt`) for Toolbox, the
   harness and both arms. The Toolbox binaries are built from it. A Toolbox change made after round 1
   starts round 2, in which both arms rerun.
-- **Runs (P2).** Three fresh runs per arm per round (five in rounds 3 and 4), each in its own workspace
+- **Runs (P2).** Three fresh runs per arm per round (five in rounds 3 to 5), each in its own workspace
   (`/tmp/gate-repair-ab/r<round>/<arm>-<n>`) with its own copies of the tools. Each run is a fresh
   local subagent with the inherited model and only the rendered prompt. No run is dropped for its
   result.
@@ -446,6 +537,7 @@ cargo build                                       # at the round's frozen commit
 experiments/gate-repair-ab/harness/round.sh 1 <openfga export at 7d89a566> "$PWD" "$PWD/target/debug"
 # round 3: RUNS=5 PREV_TARGET=<worktree of 703b53a>/target/debug round.sh 3 …
 # round 4: RUNS=5 PREV_TARGET=<worktree of d163449>/target/debug PREV_CHECKOUT=<that worktree> round.sh 4 …
+# round 5: RUNS=5 PREV_TARGET=<worktree of 76a1140>/target/debug PREV_CHECKOUT=<that worktree> round.sh 5 …
 # launch the rendered prompts as fresh subagents; fetch their transcripts; then:
 experiments/gate-repair-ab/harness/collect.py <round> <transcripts dir> <run>=<bcId> …
 ```
@@ -466,6 +558,7 @@ After the dry run, `count.py` stopped counting `cat scripts/quality-gate.sh` as 
 
 - reviewdog 0.21.0, `-filter-mode=added` and `-efm`: `reviewdog -h` and
   [github.com/reviewdog/reviewdog](https://github.com/reviewdog/reviewdog) (README, filter modes).
-- zizmor 1.32.0 `--format github` and `--format sarif`; actionlint 1.7.12 `-oneline` and
+- zizmor 1.32.0 `--format github`, `--format plain` and `--format sarif`; actionlint 1.7.12's
+  default format, `-oneline` and
   `-format '{{json .}}'`: each tool's `--help`, run in this repository's CI tool pins.
 - Protocol 2: [D01M83RDWQ5EVKY5SFHDWAD5HFH](../../docs/decisions/D01M83RDWQ5EVKY5SFHDWAD5HFH.md).
