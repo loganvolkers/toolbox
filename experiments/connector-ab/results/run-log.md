@@ -125,3 +125,6 @@ All arms read 5/5. Calls A14 B12 C13. **C3 holds.**
 
 ### Phase 4 v2b rematch (C2) — dump-only tenant-switch guidance shipped
 Starting from restored tenant-A entity trees.
+# connector-ab v3 run log
+Started after catalog-drive merge (#55).
+Bar unchanged (README §6).
