@@ -10,9 +10,7 @@ connectors:
   - name: forge
     package: local:forge
     runtime: in-image
-    config:
-      baseUrl: http://127.0.0.1:9743
-      token: tenant-a-token
+    config: {baseUrl: http://127.0.0.1:9743, token: tenant-a-token}
     records: [project, issue]
 
 kinds:
@@ -21,14 +19,14 @@ kinds:
     fields: {title: {type: string}}
     sources: {default: [connector:forge]}
     map:
-      - from: forge/project
-        id: "'project:' + record.key"
-        set: "{'title': record.name}"
+    - from: forge/project
+      id: "'project:' + record.key"
+      set: "{'title': record.name}"
   - name: Issue
     identityFrom: [connector:forge]
     fields: {title: {type: string}}
     sources: {default: [connector:forge]}
     map:
-      - from: forge/issue
-        id: "'issue:' + record.key"
-        set: "{'title': record.summary}"
+    - from: forge/issue
+      id: "'issue:' + record.key"
+      set: "{'title': record.summary}"

@@ -13,6 +13,4 @@ configurations:
 features:
   - type: exporter
     section: Project management
-    resources:
-      - kind: project
-      - kind: issue
+    resources: [{kind: project}, {kind: issue}]
