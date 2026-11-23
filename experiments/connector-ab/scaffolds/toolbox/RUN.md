@@ -13,15 +13,16 @@
    ```bash
    toolbox connector test --name forge --portal portal -- target/debug/forge-connector
    ```
-4. **Dump connector records** (no hand-built stdio JSON):
+4. **Dump the catalog** (no hand-built stdio JSON, no map script):
    ```bash
-   toolbox connector drive --kinds project,issue \
+   toolbox connector drive --kinds project,issue --format catalog \
+     --out OUT/entities.ndjson \
      --config '{"baseUrl":"http://127.0.0.1:9743","token":"tenant-a-token"}' \
      -- target/debug/forge-connector
    ```
-   Map those lines into `OUT/entities.ndjson` for the harness schema.
-   Record `externalId`s must look like `project:ALPHA` / `issue:ALPHA-1`
-   (`^[a-z0-9-]+:.+$`); catalog entity `id`s in OUT may still be bare keys.
+   `--format catalog` writes harness-shaped `{kind,id,data}` NDJSON (`id` =
+   `externalId` with a leading `{kind}:` stripped). Record `externalId`s must
+   look like `project:ALPHA` / `issue:ALPHA-1` (`^[a-z0-9-]+:.+$`).
 5. Agents: read `plugins/toolbox-operator/skills/author-connector/SKILL.md` and
    `examples/connector-scaffold/` before inventing a second protocol.
 

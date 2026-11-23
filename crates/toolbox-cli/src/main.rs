@@ -441,7 +441,8 @@ enum ConnectorCommand {
     /// Drive a connector binary over stdio: one `resync` of the named kinds, print each `record`
     /// as NDJSON (`kind`, `externalId`, `data`). No portal required — for local dumps while
     /// authoring. Pass config with --config (JSON) or rely on TOOLBOX_CONNECTOR_CONFIG in the
-    /// environment.
+    /// environment. Use `--format catalog` to emit harness-shaped `{kind,id,data}` lines (catalog
+    /// `id` = `externalId` with a leading `{kind}:` stripped) and `--out` to write a file.
     Drive {
         /// Record kinds to resync (comma-separated), e.g. project,issue.
         #[arg(long, value_delimiter = ',')]
@@ -449,6 +450,12 @@ enum ConnectorCommand {
         /// JSON object set as TOOLBOX_CONNECTOR_CONFIG for the child.
         #[arg(long)]
         config: Option<String>,
+        /// Output shape: `records` (default) or `catalog` (`kind`/`id`/`data`, sorted).
+        #[arg(long, default_value = "records", value_parser = ["records", "catalog"])]
+        format: String,
+        /// Write NDJSON to this path instead of stdout (parent dirs must exist).
+        #[arg(long)]
+        out: Option<PathBuf>,
         /// The connector program and its arguments.
         #[arg(required = true, last = true)]
         program: Vec<String>,
@@ -676,9 +683,11 @@ fn main() -> ExitCode {
                 ConnectorCommand::Drive {
                     kinds,
                     config,
+                    format,
+                    out,
                     program,
                 },
-        } => connector_drive(&kinds, config.as_deref(), &program),
+        } => connector_drive(&kinds, config.as_deref(), &format, out.as_deref(), &program),
         Command::Token {
             command:
                 TokenCommand::Create {
@@ -880,7 +889,22 @@ fn validate(path: &std::path::Path, format: Format) -> ExitCode {
     }
 }
 
-fn connector_drive(kinds: &[String], config: Option<&str>, program: &[String]) -> ExitCode {
+/// Catalog entity id from a connector `externalId`: strip a leading `{kind}:` when present.
+fn catalog_id_from_external(kind: &str, external_id: &str) -> String {
+    let prefix = format!("{kind}:");
+    external_id
+        .strip_prefix(&prefix)
+        .unwrap_or(external_id)
+        .to_owned()
+}
+
+fn connector_drive(
+    kinds: &[String],
+    config: Option<&str>,
+    format: &str,
+    out: Option<&std::path::Path>,
+    program: &[String],
+) -> ExitCode {
     if kinds.is_empty() {
         return fail("--kinds needs at least one record kind");
     }
@@ -902,13 +926,54 @@ fn connector_drive(kinds: &[String], config: Option<&str>, program: &[String]) -
         kinds,
     )) {
         Ok(msgs) => {
-            for m in msgs.iter().filter(|m| m["type"] == "record") {
-                let line = serde_json::json!({
-                    "kind": m["kind"],
-                    "externalId": m["externalId"],
-                    "data": m["data"],
-                });
-                println!("{}", line);
+            let lines: Vec<String> = match format {
+                "records" => msgs
+                    .iter()
+                    .filter(|m| m["type"] == "record")
+                    .map(|m| {
+                        serde_json::json!({
+                            "kind": m["kind"],
+                            "externalId": m["externalId"],
+                            "data": m["data"],
+                        })
+                        .to_string()
+                    })
+                    .collect(),
+                "catalog" => {
+                    let mut ents: Vec<serde_json::Value> = msgs
+                        .iter()
+                        .filter(|m| m["type"] == "record")
+                        .map(|m| {
+                            let kind = m["kind"].as_str().unwrap_or("");
+                            let ext = m["externalId"].as_str().unwrap_or("");
+                            serde_json::json!({
+                                "kind": kind,
+                                "id": catalog_id_from_external(kind, ext),
+                                "data": m["data"].clone(),
+                            })
+                        })
+                        .collect();
+                    ents.sort_by(|a, b| {
+                        (
+                            a["kind"].as_str().unwrap_or(""),
+                            a["id"].as_str().unwrap_or(""),
+                        )
+                            .cmp(&(
+                                b["kind"].as_str().unwrap_or(""),
+                                b["id"].as_str().unwrap_or(""),
+                            ))
+                    });
+                    ents.into_iter().map(|e| e.to_string()).collect()
+                }
+                other => return fail(format!("unknown --format {other}")),
+            };
+            let body = lines.join("\n") + if lines.is_empty() { "" } else { "\n" };
+            if let Some(path) = out {
+                if let Err(e) = std::fs::write(path, &body) {
+                    return fail(format!("cannot write {}: {e}", path.display()));
+                }
+            } else {
+                print!("{body}");
             }
             let ok = msgs
                 .iter()
@@ -920,6 +985,29 @@ fn connector_drive(kinds: &[String], config: Option<&str>, program: &[String]) -
             }
         }
         Err(e) => fail(e),
+    }
+}
+
+#[cfg(test)]
+mod drive_catalog_tests {
+    use super::catalog_id_from_external;
+
+    #[test]
+    fn strips_kind_prefix() {
+        assert_eq!(catalog_id_from_external("project", "project:ALPHA"), "ALPHA");
+        assert_eq!(
+            catalog_id_from_external("issue", "issue:ALPHA-1"),
+            "ALPHA-1"
+        );
+        assert_eq!(
+            catalog_id_from_external("component", "component:ALPHA:api"),
+            "ALPHA:api"
+        );
+    }
+
+    #[test]
+    fn leaves_bare_external_id() {
+        assert_eq!(catalog_id_from_external("project", "ALPHA"), "ALPHA");
     }
 }
 

@@ -23,12 +23,12 @@ Agents should follow the `author-connector` skill in
 ```bash
 cargo build
 toolbox connector test --name example --portal portal -- target/debug/example-connector
-toolbox connector drive --kinds example-item \
+toolbox connector drive --kinds example-item --format catalog --out OUT/entities.ndjson \
   --config '{"seed":"alpha"}' \
   -- target/debug/example-connector
 ```
 
-`connector test` needs the portal. `connector drive` does not: it starts the binary, sends one `resync`, and prints `{"kind","externalId","data"}` lines.
+`connector test` needs the portal. `connector drive` does not: it starts the binary, sends one `resync`, and with `--format catalog` writes sorted `{"kind","id","data"}` lines (`id` = `externalId` with a leading `{kind}:` stripped). Default `--format records` still prints protocol dumps (`kind`/`externalId`/`data`).
 
 ## Secrets
 
