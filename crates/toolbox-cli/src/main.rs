@@ -672,11 +672,12 @@ fn main() -> ExitCode {
             command: ConnectorCommand::Records { name, portal },
         } => report::connector_records(&portal, &name),
         Command::Connector {
-            command: ConnectorCommand::Drive {
-                kinds,
-                config,
-                program,
-            },
+            command:
+                ConnectorCommand::Drive {
+                    kinds,
+                    config,
+                    program,
+                },
         } => connector_drive(&kinds, config.as_deref(), &program),
         Command::Token {
             command:
@@ -909,9 +910,9 @@ fn connector_drive(kinds: &[String], config: Option<&str>, program: &[String]) -
                 });
                 println!("{}", line);
             }
-            let ok = msgs.iter().any(|m| {
-                m["type"] == "complete" && m["status"] == "succeeded"
-            });
+            let ok = msgs
+                .iter()
+                .any(|m| m["type"] == "complete" && m["status"] == "succeeded");
             if ok {
                 ExitCode::SUCCESS
             } else {

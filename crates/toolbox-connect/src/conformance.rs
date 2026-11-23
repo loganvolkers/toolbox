@@ -300,15 +300,15 @@ pub async fn drive_resync(
         .await
         .ok_or_else(|| "connector did not register".to_owned())?;
     if reg["type"] != "register" {
-        return Err(format!("first message was {}, expected register", reg["type"]));
+        return Err(format!(
+            "first message was {}, expected register",
+            reg["type"]
+        ));
     }
     let id = "drive_resync";
     let msgs = conn
         .exchange(
-            &command(
-                id,
-                json!({"command": "resync", "kinds": kinds}),
-            ),
+            &command(id, json!({"command": "resync", "kinds": kinds})),
             t,
         )
         .await;
