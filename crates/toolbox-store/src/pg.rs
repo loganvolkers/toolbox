@@ -36,7 +36,8 @@ impl PgStore {
             .await
             .map_err(err)?;
         for (_, sql) in MIGRATIONS {
-            sqlx::raw_sql(sql).execute(&mut *tx).await.map_err(err)?;
+            // include_str! is &'static; iterating the slice yields &&str — deref for SqlSafeStr.
+            sqlx::raw_sql(*sql).execute(&mut *tx).await.map_err(err)?;
         }
         tx.commit().await.map_err(err)?;
         Ok(PgStore { pool })
