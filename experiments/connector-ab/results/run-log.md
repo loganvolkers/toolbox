@@ -91,3 +91,12 @@ Product fixes on branch `cursor/connector-learning-dx-530d` (D01M83FFM2K6XS4EAVH
 | A | pass (8) | pass | *pending wrap-up* | bc-a2dd38c6 |
 | B | pass (8) | pass | *pending wrap-up* | bc-4b572909 |
 | C | pass (8) | pass | 23 | bc-b25d4935 |
+
+### Phase 3 v2 final + C1
+| Arm | Calls 1 | Calls 3 | C1 (1+3) |
+|---|---|---|---|
+| A Toolbox | 36 | 23 | **59** |
+| B Ocean | 37 | 26 | 63 |
+| C Backstage | 38 | 23 | 61 |
+
+**C1 holds** (A fewer than B and C). v1 failed with A65 / B63 / C46.

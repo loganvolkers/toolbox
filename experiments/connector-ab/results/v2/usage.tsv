@@ -2,4 +2,6 @@ phase	arm	tokens	calls	seconds	notes
 1	A		36		truth+shape pass; was 53 in v1
 1	B		37		truth+shape pass; was 41 in v1
 1	C		38		truth+shape pass; was 29 in v1
-3	C		23		truth+shape pass (8); was 17 in v1
+3	A		23		truth+shape pass (8); was 12 in v1
+3	B		26		truth+shape pass; was 22 in v1
+3	C		23		truth+shape pass; was 17 in v1
