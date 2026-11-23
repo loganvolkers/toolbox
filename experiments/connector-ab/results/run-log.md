@@ -63,3 +63,7 @@ All arms 5/5 on read-key via score_read.py.
 | C2 | Fail (A15 B15 C16) |
 | C3 | Hold |
 
+
+## Rerun v2 (learning-tax fixes, 2026-11-23)
+
+Product fixes on branch `cursor/connector-learning-dx-530d` (D01M83FFM2K6XS4EAVHVP92TBDZ). Same bar C1–C3. Fresh agents for phase 1.
