@@ -47,4 +47,4 @@ When a compare page leans on a standard slot or stewardship model, credit travel
 
 ## Last verified
 
-**2026-11-23.** Shared paragraphs live under `site/src/content/docs/compare/_snippets/` so hub, peer pages, and this page stay aligned.
+**2026-11-23.** Shared paragraphs live under `site/src/compare-snippets/` (outside the published content tree, so they are not scored as site pages) so hub, peer pages, and this page stay aligned.

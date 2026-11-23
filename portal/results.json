@@ -1496,6 +1496,33 @@
       "site-page:site/src/content/docs/authors/secrets.md": {
         "level": "gold"
       },
+      "site-page:site/src/content/docs/compare/acknowledgments.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/compare/backstage.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/compare/betterer.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/compare/cortex.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/compare/index.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/compare/linters-and-formatters.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/compare/openssf-scorecard.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/compare/opslevel.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/compare/port.md": {
+        "level": "gold"
+      },
       "site-page:site/src/content/docs/concepts/catalog.md": {
         "level": "gold"
       },

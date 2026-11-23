@@ -1,9 +1,1 @@
----
-title: Acknowledgment — Port Ocean
-description: Shared gratitude copy for Port Ocean. Draft snippet; not a public page.
-draft: true
-sidebar:
-  hidden: true
----
-
 [Port Ocean](https://github.com/port-labs/ocean) showed how to sync messy third-party APIs into a catalog with a small integration contract and declarative mappings. We study that connector thinking without adopting a database-held portal config: Toolbox keeps configuration in code and carries tools rather than wrapping them.
