@@ -105,6 +105,9 @@
       "benchmark:connector-ab": {
         "level": "gold"
       },
+      "benchmark:connector-repair-ab": {
+        "level": "gold"
+      },
       "benchmark:deploy-ab": {
         "level": "gold"
       },
@@ -975,6 +978,9 @@
       "doc:docs/decisions/D01M83H3HBH2SC205MX3ANRZYWN.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M83NX8BXH45GQA7WMN4ACEH9.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/README.md": {
         "level": "skipped"
       },
@@ -1224,6 +1230,9 @@
       "doc:experiments/connector-ab/README.md": {
         "level": "silver"
       },
+      "doc:experiments/connector-repair-ab/README.md": {
+        "level": "silver"
+      },
       "doc:experiments/deploy-ab/README.md": {
         "level": "silver"
       },
@@ -1443,6 +1452,9 @@
         "level": "gold"
       },
       "example:experiments/connector-ab/README.md": {
+        "level": "gold"
+      },
+      "example:experiments/connector-repair-ab/README.md": {
         "level": "gold"
       },
       "example:experiments/deploy-ab/README.md": {
