@@ -100,3 +100,8 @@ Product fixes on branch `cursor/connector-learning-dx-530d` (D01M83FFM2K6XS4EAVH
 | C Backstage | 38 | 23 | 61 |
 
 **C1 holds** (A fewer than B and C). v1 failed with A65 / B63 / C46.
+
+### Phase 4 v2 agent ids
+- A: bc-b47814f4-02b0-50eb-ac8b-4982b595992e
+- B: bc-6dc960be-1911-5cb4-9488-94306bf56b1d
+- C: bc-2ba70fad-eb2e-5cb3-a509-03d80ece9c6c
