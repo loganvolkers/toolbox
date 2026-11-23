@@ -1,0 +1,83 @@
+{
+  "B": {
+    "calls": 14,
+    "agent": "bc-69daab87-be0b-53c8-8a17-8989e2d8af8a",
+    "ok": true,
+    "checks": [
+      {
+        "check": "projects",
+        "ok": true
+      },
+      {
+        "check": "issues",
+        "ok": true
+      },
+      {
+        "check": "assignee",
+        "ok": true
+      },
+      {
+        "check": "component",
+        "ok": true
+      },
+      {
+        "check": "config",
+        "ok": true
+      }
+    ]
+  },
+  "C": {
+    "calls": 13,
+    "agent": "bc-c76ca346-117f-5473-bc62-692ae4afa473",
+    "ok": true,
+    "checks": [
+      {
+        "check": "projects",
+        "ok": true
+      },
+      {
+        "check": "issues",
+        "ok": true
+      },
+      {
+        "check": "assignee",
+        "ok": true
+      },
+      {
+        "check": "component",
+        "ok": true
+      },
+      {
+        "check": "config",
+        "ok": true
+      }
+    ]
+  },
+  "A": {
+    "calls": 15,
+    "agent": "bc-70886ce0-b23a-5d18-bfd4-593a279be936",
+    "ok": true,
+    "checks": [
+      {
+        "check": "projects",
+        "ok": true
+      },
+      {
+        "check": "issues",
+        "ok": true
+      },
+      {
+        "check": "assignee",
+        "ok": true
+      },
+      {
+        "check": "component",
+        "ok": true
+      },
+      {
+        "check": "config",
+        "ok": true
+      }
+    ]
+  }
+}

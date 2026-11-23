@@ -1,0 +1,4 @@
+{"data":{"id":"10","name":"core","project":"GAMMA"},"id":"GAMMA:core","kind":"component"}
+{"data":{"assignee":"u-cara","key":"GAMMA-1","project":"GAMMA","status":"To Do","summary":"Onboard tenant"},"id":"GAMMA-1","kind":"issue"}
+{"data":{"assignee":null,"key":"GAMMA-2","project":"GAMMA","status":"In Progress","summary":"Rotate tokens"},"id":"GAMMA-2","kind":"issue"}
+{"data":{"key":"GAMMA","name":"Gamma","type":"software"},"id":"GAMMA","kind":"project"}

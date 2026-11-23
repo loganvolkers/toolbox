@@ -1,0 +1,4 @@
+# D46: dependencies that need a newer toolchain are isolated or rejected.
+[toolchain]
+channel = "1.97.0"
+components = ["clippy", "rustfmt"]

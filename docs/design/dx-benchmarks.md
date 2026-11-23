@@ -178,7 +178,7 @@ because its harness and its truth are reused.
 | B1 | A shared harness (`experiments/harness/`) built from the box and security A/B harnesses: setup, tool pins, isolation, cost capture, take-it-out, export before delete |
 | B2 | More than one run per phase where the budget allows, and pass^k for anything we claim is reliable |
 | B3 | Blinded adjudication: a second agent judges pooled, arm-anonymised claims, and the two are compared |
-| B4 | Benchmarks for the user and package-author layers. Package-author `build-connector` is measured by [connector-ab](../../experiments/connector-ab/README.md) (C1–C3); the user layer still has none of its own |
+| B4 | Benchmarks for the user and package-author layers. Package-author `build-connector` is measured by [connector-ab](../../experiments/connector-ab/README.md) (C1–C3); diagnose→repair feedback by [connector-repair-ab](../../experiments/connector-repair-ab/README.md) (D1–D3). The user layer still has none of its own |
 | B5 | Rerun the box A/B after the rt-buddy friction fixes (L3), then the A + S arm of the security A/B, and native Scorecard against the kit |
 | B6 | Publish the catalog on the docs site, with each benchmark's bar and result side by side |
 | B7 | `deploy-ab`: a laptop deploy of Toolbox against Backstage, scored by catalog probes rather than `/readyz` ([local-simulation.md](./local-simulation.md), Q19). Blocked on the stack |

@@ -49,7 +49,10 @@ connectors:
     config:
       root: .
       # Generated files / harness scaffolds are not scored as maintained packages.
-      exclude: [portal/STANDARD.md, experiments/connector-ab/**/package.json]
+      exclude:
+        - portal/STANDARD.md
+        - experiments/connector-ab/**/package.json
+        - experiments/connector-repair-ab/**/package.json
       docs:
         - "*.md"
         - docs/**/*.md
