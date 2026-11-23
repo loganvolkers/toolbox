@@ -1,20 +1,17 @@
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Component
-metadata:
-  name: payments-api
+metadata: {name: payments-api}
 spec:
   type: service
   lifecycle: production
   owner: group:payments
   system: checkout
-  providesApis:
-    - api:payments
+  providesApis: [api:payments]
 ---
 apiVersion: backstage.io/v1alpha1
 kind: API
-metadata:
-  name: payments
+metadata: {name: payments}
 spec:
   type: openapi
   lifecycle: production

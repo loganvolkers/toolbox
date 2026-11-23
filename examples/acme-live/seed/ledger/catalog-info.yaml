@@ -1,21 +1,15 @@
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Component
-metadata:
-  name: ledger
+metadata: {name: ledger}
 spec:
   type: service
   lifecycle: production
   owner: group:payments
   system: checkout
-  dependsOn:
-    - resource:payments-db
+  dependsOn: [resource:payments-db]
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Resource
-metadata:
-  name: payments-db
-spec:
-  type: database
-  owner: group:payments
-  system: checkout
+metadata: {name: payments-db}
+spec: {type: database, owner: group:payments, system: checkout}

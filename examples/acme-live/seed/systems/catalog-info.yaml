@@ -1,22 +1,15 @@
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Domain
-metadata:
-  name: payments
-spec:
-  owner: group:payments
+metadata: {name: payments}
+spec: {owner: group:payments}
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Domain
-metadata:
-  name: platform
-spec:
-  owner: group:platform
+metadata: {name: platform}
+spec: {owner: group:platform}
 ---
 apiVersion: backstage.io/v1alpha1
 kind: System
-metadata:
-  name: checkout
-spec:
-  owner: group:payments
-  domain: domain:payments
+metadata: {name: checkout}
+spec: {owner: group:payments, domain: domain:payments}
