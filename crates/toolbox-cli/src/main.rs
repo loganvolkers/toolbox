@@ -898,6 +898,21 @@ fn catalog_id_from_external(kind: &str, external_id: &str) -> String {
         .to_owned()
 }
 
+/// Prefer `{project}:{name}` from record data when the stripped externalId is a bare
+/// numeric token (common mistake for SaaS components whose upstream id is numeric).
+fn catalog_id(kind: &str, external_id: &str, data: &serde_json::Value) -> String {
+    let stripped = catalog_id_from_external(kind, external_id);
+    let bare_numeric = !stripped.is_empty() && stripped.bytes().all(|b| b.is_ascii_digit());
+    if bare_numeric {
+        if let (Some(project), Some(name)) = (data["project"].as_str(), data["name"].as_str()) {
+            if !project.is_empty() && !name.is_empty() {
+                return format!("{project}:{name}");
+            }
+        }
+    }
+    stripped
+}
+
 fn connector_drive(
     kinds: &[String],
     config: Option<&str>,
@@ -948,7 +963,7 @@ fn connector_drive(
                             let ext = m["externalId"].as_str().unwrap_or("");
                             serde_json::json!({
                                 "kind": kind,
-                                "id": catalog_id_from_external(kind, ext),
+                                "id": catalog_id(kind, ext, &m["data"]),
                                 "data": m["data"].clone(),
                             })
                         })
@@ -990,7 +1005,8 @@ fn connector_drive(
 
 #[cfg(test)]
 mod drive_catalog_tests {
-    use super::catalog_id_from_external;
+    use super::{catalog_id, catalog_id_from_external};
+    use serde_json::json;
 
     #[test]
     fn strips_kind_prefix() {
@@ -1008,6 +1024,19 @@ mod drive_catalog_tests {
     #[test]
     fn leaves_bare_external_id() {
         assert_eq!(catalog_id_from_external("project", "ALPHA"), "ALPHA");
+    }
+
+    #[test]
+    fn prefers_project_name_when_external_id_is_numeric() {
+        let data = json!({"id": "1", "name": "api", "project": "ALPHA"});
+        assert_eq!(
+            catalog_id("component", "component:1", &data),
+            "ALPHA:api"
+        );
+        assert_eq!(
+            catalog_id("component", "component:ALPHA:api", &data),
+            "ALPHA:api"
+        );
     }
 }
 

@@ -55,3 +55,11 @@ conformance check fails.
 `issue:ALPHA-1`, not bare keys. Catalog entity ids in a portal `map:` can still
 be the bare key — that is a second id space.
 
+**Composite kinds (e.g. components):** when the natural catalog id is
+`{project}:{name}`, set `externalId` to `component:{project}:{name}` so
+`--format catalog` strips only the leading `component:` and keeps
+`ALPHA:api`. Do **not** use the upstream numeric id as `externalId` (that
+yields catalog id `1`). Put the upstream id in `data.id` instead, and emit
+only the fields the catalog schema asks for (no extra keys like
+`description`).
+

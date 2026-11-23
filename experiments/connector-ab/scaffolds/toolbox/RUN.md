@@ -22,7 +22,9 @@
    ```
    `--format catalog` writes harness-shaped `{kind,id,data}` NDJSON (`id` =
    `externalId` with a leading `{kind}:` stripped). Record `externalId`s must
-   look like `project:ALPHA` / `issue:ALPHA-1` (`^[a-z0-9-]+:.+$`).
+   look like `project:ALPHA` / `issue:ALPHA-1` / `component:ALPHA:api`
+   (`^[a-z0-9-]+:.+$`). For components, put the Forge numeric id in `data.id`
+   only — never as the `externalId` suffix (or catalog `id` becomes `1`).
 5. Agents: read `plugins/toolbox-operator/skills/author-connector/SKILL.md` and
    `examples/connector-scaffold/` before inventing a second protocol.
 
