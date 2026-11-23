@@ -17,8 +17,8 @@ adjudicator's, in [ADJUDICATION.md](ADJUDICATION.md):**
     agents edited, half from arm A's extra exploration.
   - G14 and G15, on read and gate read, are inconclusive.
   - G16 holds: the second change cut gate read again.
-- **Round 5:** Toolbox does not beat reviewdog under its pre-registered rule (§5.3, §0.6), and no
-  longer loses to it.
+- **Round 5:** Toolbox does not beat reviewdog under its pre-registered rule (§5.3, §0.6). It no
+  longer loses either, but round 4's unchanged Toolbox ties reviewdog in round 5 too.
   - G18 holds: Toolbox was correct in every run.
   - G19, G20 and G21, on calls, read and gate read, are inconclusive. Arm A's medians are lower on
     all three, inside the noise.
@@ -227,9 +227,11 @@ about even. G13 failing was not predicted. As registered, this round is not reru
 
 ### 0.6 Round 5 (frozen at `0249ecb`; arm A as at `c1f9b22`, arm A⁻ as at `76a1140`)
 
-The question was round 4's again: does Toolbox now beat reviewdog? It doesn't, but it no longer
-loses. All fifteen runs were correct, and every comparison is inconclusive. Arm A's medians are
-lower than reviewdog's on all three measures, and each gap is inside the noise. The prompts were
+The question was round 4's again: does Toolbox now beat reviewdog? It doesn't, and it no longer
+loses, but not because of the change. All fifteen runs were correct, and every comparison is
+inconclusive. Arm A's medians are lower than reviewdog's on all three measures, and each gap is
+inside the noise. Round 4's Toolbox, run alongside as A⁻, also ties reviewdog on every measure,
+though in round 4 it lost on calls (ADJUDICATION.md threat 22). The prompts were
 committed in `9ca1605` before launch, and the results in `eb2c1af`. Per run:
 [results/r5.tsv](results/r5.tsv) and [results/r5/](results/r5/).
 
@@ -252,10 +254,12 @@ By the designer's reading of §5.3 (the adjudicator's labels decide):
 
 So **Toolbox does not beat reviewdog** under §5.3: G18 holds, but none of G19, G20 and G21 holds.
 None fails either; in round 4, G13 failed. The designer predicted that G20, G22 and G23 would
-hold, and none did.
+hold, and none did. ADJUDICATION.md confirms these labels. It also corrected three of the
+designer's first claims, and the paragraphs below follow its corrections.
 
-**Missing results.** Two A runs (`toolbox-1`, `toolbox-10`) read `pull_request.yaml` with no
-recorded result, and the measure fix counts each as the file, 13,515 characters. One B run
+**Missing results.** One A run (`toolbox-1`) and one A⁻ run (`toolbox-10`) read
+`pull_request.yaml` with no recorded result, and the measure fix counts each as the file, 13,515
+characters. One B run
 (`reviewdog-3`) chained `git diff main` onto its first gate run, and that command has no recorded
 result. `count.py` imputes only `read_file`, so that run's read and gate read are low by about
 4,300 characters (the diff and the gate's output on `pr`). Corrected, B's read range is about
@@ -266,14 +270,26 @@ and gate read's gap of 2,816 is still under *W*. No label changes.
 workflows before editing, with `git show HEAD`, `git diff main`, `sed -n`, `cat` or `read_file`,
 even when the gate had quoted the lines. That reading is the floor of the read measure: from about
 3,500 to more than 15,000 characters a run, against a first gate output of 2,091. The quote did not
-replace it. One thing
-the gate leaves out is the fix for `needs: lnt`. actionlint's message says that the job "does not
-exist in this workflow" and doesn't name the jobs that do, so the agent has to look for `lint`.
+replace it. One thing the gate leaves out is the fix for `needs: lnt`. actionlint's message says
+that the job "does not exist in this workflow" and doesn't name the jobs that do, so the agent has
+to look for `lint`. Four runs grepped for the job names; the rest read them in the files they
+printed.
 
-**Editing style moved.** Three A runs (round 4: none) made both edits in one `python3` heredoc
-with the gate rerun in the same command, and each took 3 calls, as few as any B run. The two that
-used search-and-replace took 6. All five B runs used a heredoc, and four made a separate SHA lookup
-(4 calls). No A heredoc run made a separate lookup: they copied the pin from the gate's hint.
+**Editing style moved in both Toolbox arms.** Three A runs (`toolbox-2`, `-3`, `-5`) made both
+edits in one `python3` heredoc with the gate rerun in the same command, and each took 3 calls, as
+few as any B run. The two that used search-and-replace took 6. The move is not the change's
+doing: the same Toolbox went from no heredoc runs as round 4's arm A to three as round 5's A⁻. All
+five B runs used a heredoc. Three of them (`reviewdog-2`, `-4`, `-5`) looked up a pin in a call of
+its own, and the other two did it in the call that printed the files. No A run made a separate
+lookup, but `toolbox-3` and `toolbox-5` grepped for the pins while printing the files. Only
+`toolbox-2` clearly took the pin from the gate's hint alone.
+
+**Corrections to the record.**
+- D01M84EPMMR9740K4N25G7A6FAY says four of round 4's A runs read `pull_request.yaml` before
+  editing it. Three did; `toolbox-5` read only `release.yaml`.
+- Its `decided` time (15:10) is later than its commit (15:04); it is the minute round 5 launched.
+- §5.3 says the rival fix "makes the rival stronger". That is not shown: every B run still printed
+  the files, and the fix lengthened B's gate output more than the change lengthened A's.
 
 **Friction still open:**
 
