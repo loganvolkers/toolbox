@@ -1,0 +1,31 @@
+# DX Benchmark catalog entry (docs/design/dx-benchmarks.md §6), scored by maintainer-benchmark.
+records:
+  - id: gate-repair-ab
+    title: 'Gate repair: Toolbox ratchet vs reviewdog (R4)'
+    question: >-
+      When a coding agent's pull request fails the repository's quality gate,
+      does Toolbox's ratchet get it to a correct pass for less effort than
+      reviewdog over the same tools?
+    layers: [operator]
+    stages: [operator/monitor]
+    hypotheses: [G1, G2, G3, G4, G5, G6]
+    rival: >-
+      reviewdog 0.21.0 with -filter-mode=added over the same zizmor and
+      actionlint, failing only on findings the branch added
+    repos: [loganvolkers/openfga@7d89a566]
+    status: designed
+    ran: ''
+    outcome: ''
+    changed: []
+    servedValue: ''
+    blockedOn: ''
+    readme: experiments/gate-repair-ab/README.md
+    results: ''
+    protocol: 2
+    prompts: experiments/gate-repair-ab/prompts
+    runsPerArm: 3
+    measure: >-
+      tool calls and characters of tool results, from each run's runtime
+      transcript (harness/count.py)
+    designer: the agent that wrote the README and runs the rounds
+    adjudicator: a fresh agent that designed no part of it and changed nothing

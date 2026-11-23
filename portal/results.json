@@ -126,6 +126,12 @@
         },
         "level": "silver"
       },
+      "benchmark:gate-repair-ab": {
+        "failing": {
+          "results-recorded": 1
+        },
+        "level": "silver"
+      },
       "benchmark:out-of-box": {
         "failing": {
           "sound-method": 1
@@ -1280,6 +1286,9 @@
       "doc:experiments/durable-schema/README.md": {
         "level": "silver"
       },
+      "doc:experiments/gate-repair-ab/README.md": {
+        "level": "silver"
+      },
       "doc:experiments/otel-testbed/README.md": {
         "level": "silver"
       },
@@ -1505,6 +1514,9 @@
         "level": "gold"
       },
       "example:experiments/durable-schema/README.md": {
+        "level": "gold"
+      },
+      "example:experiments/gate-repair-ab/README.md": {
         "level": "gold"
       },
       "example:experiments/otel-testbed/README.md": {
