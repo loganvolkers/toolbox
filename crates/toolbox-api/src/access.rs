@@ -85,10 +85,41 @@ impl AppState {
         if !fga_dsl::has_relation(authz.model(), "portal", "admin") {
             return false;
         }
-        authz
-            .check(user, "admin", &self.portal_object())
+        self.decide(&[(user.to_owned(), "admin".to_owned(), self.portal_object())])
             .await
+            .map(|r| r[0])
             .unwrap_or(false)
+    }
+
+    /// Ask the authorizer, through the current snapshot's decisions when it keeps them.
+    async fn decide(&self, checks: &[toolbox_authz::Tuple]) -> Result<Vec<bool>, String> {
+        let Some(authz) = &self.authz else {
+            return Ok(vec![true; checks.len()]);
+        };
+        let p = self.snapshot();
+        let Some(cache) = p.as_ref().and_then(|p| p.decisions.as_ref()) else {
+            return authz.batch_check(checks).await;
+        };
+        let mut out: Vec<Option<bool>> = checks.iter().map(|c| cache.get(c)).collect();
+        let misses: Vec<toolbox_authz::Tuple> = checks
+            .iter()
+            .zip(&out)
+            .filter(|(_, o)| o.is_none())
+            .map(|(c, _)| c.clone())
+            .collect();
+        if !misses.is_empty() {
+            let mut answers = authz.batch_check(&misses).await?.into_iter();
+            for (c, o) in checks.iter().zip(out.iter_mut()) {
+                if o.is_none() {
+                    let a = answers
+                        .next()
+                        .ok_or("authorizer returned too few results")?;
+                    cache.put(c.clone(), a);
+                    *o = Some(a);
+                }
+            }
+        }
+        Ok(out.into_iter().map(|o| o.unwrap_or(false)).collect())
     }
 
     /// Visibility of many entities for one caller (batched OpenFGA checks).
@@ -125,8 +156,8 @@ impl AppState {
             let details = slot("can_view_details", caller.admin);
             plan.push((view, details));
         }
-        let results = authz
-            .batch_check(&checks)
+        let results = self
+            .decide(&checks)
             .await
             .map_err(|e| problem(StatusCode::BAD_GATEWAY, "authz-unavailable", e))?;
         let pick = |s: &Result<usize, bool>| match s {
@@ -156,7 +187,8 @@ impl AppState {
         if !fga_dsl::has_relation(authz.model(), ty, relation) {
             return Ok(false);
         }
-        match authz.check(&caller.user, relation, object).await {
+        let check = (caller.user.clone(), relation.to_owned(), object.to_owned());
+        match self.decide(&[check]).await.map(|r| r[0]) {
             Ok(ok) => {
                 toolbox_telemetry::catalog::record_authz(if ok { "allow" } else { "deny" });
                 Ok(ok)
