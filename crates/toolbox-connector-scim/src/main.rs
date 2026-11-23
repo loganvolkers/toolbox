@@ -187,6 +187,9 @@ impl Source for Registrar {
     fn name(&self) -> &str {
         &self.connector
     }
+    fn version(&self) -> &str {
+        env!("CARGO_PKG_VERSION")
+    }
     fn capabilities(&self) -> Value {
         json!({"max_concurrency": 1})
     }

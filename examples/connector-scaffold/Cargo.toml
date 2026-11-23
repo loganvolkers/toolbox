@@ -1,0 +1,13 @@
+# Standalone package (not a workspace member): copy this directory out or build in place.
+[workspace]
+
+[package]
+name = "example-connector"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+serde_json = "1"
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+toolbox-connect = { path = "../../crates/toolbox-connect" }

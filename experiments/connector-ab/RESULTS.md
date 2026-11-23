@@ -72,10 +72,10 @@ change (12) and tied on reuse (15).
 | # | Feedback | Arm | Status |
 |---|---|---|---|
 | 1 | Default cargo 1.83 vs toolbox-connect edition2024 | A | **Fixed** — scaffold ships `rust-toolchain.toml` |
-| 2 | `toolbox connector test` needs a portal; scaffold had none | A | **Deferred** — portal stub in scaffold |
-| 3 | No one-shot entities export; hand-built stdio JSON | A | **Deferred** |
-| 4 | `Source::version()` reports connect crate version | A | **Deferred** — SDK |
-| 5 | Env vs `portal/toolbox.yaml` must stay in sync for tenant switch | A | **Deferred** |
+| 2 | `toolbox connector test` needs a portal; scaffold had none | A | **Fixed** — portal stub in scaffold + `examples/connector-scaffold/` (D01M83FFM2K6XS4EAVHVP92TBDZ) |
+| 3 | No one-shot entities export; hand-built stdio JSON | A | **Fixed** — `toolbox connector drive` + `author-connector` skill |
+| 4 | `Source::version()` reports connect crate version | A | **Fixed** — `version()` required on every `Source` |
+| 5 | Env vs `portal/toolbox.yaml` must stay in sync for tenant switch | A | **Fixed in docs/skill** — call out in RUN.md / author-connector |
 | 6 | Ocean pin needs fastapi; unusable offline | B | **Deferred** — document shim / pin deps |
 | 7 | `httpx` in requirements but installs discouraged | B | **Deferred** — stdlib-only scaffold |
 | 8 | Single `OUT/entities.ndjson` overwrites on tenant flip | B, C | **Deferred** — per-tenant OUT |

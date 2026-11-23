@@ -1214,6 +1214,10 @@ impl Source for Workspace {
         "workspace"
     }
 
+    fn version(&self) -> &str {
+        env!("CARGO_PKG_VERSION")
+    }
+
     fn capabilities(&self) -> Value {
         // Only the kinds this configuration produces.
         let on = [

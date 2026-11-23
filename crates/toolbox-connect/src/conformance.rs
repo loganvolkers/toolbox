@@ -269,3 +269,51 @@ pub async fn run(
     check("keeps serving after cancel", still, String::new());
     results
 }
+
+/// Drive a connector binary through one `resync` of `kinds` and return every message until
+/// `complete`. Used by `toolbox connector drive` so authors do not hand-build stdio JSON.
+pub async fn drive_resync(
+    program: &str,
+    args: &[String],
+    envs: &[(String, String)],
+    kinds: &[String],
+) -> Result<Vec<Value>, String> {
+    let mut child = Command::new(program)
+        .args(args)
+        .envs(envs.iter().cloned())
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::inherit())
+        .kill_on_drop(true)
+        .spawn()
+        .map_err(|e| format!("cannot start {program}: {e}"))?;
+    let stdin = child.stdin.take().unwrap();
+    let lines = BufReader::new(child.stdout.take().unwrap()).lines();
+    let mut conn = Conn {
+        _child: child,
+        stdin,
+        lines,
+    };
+    let t = Duration::from_secs(60);
+    let reg = conn
+        .read(t)
+        .await
+        .ok_or_else(|| "connector did not register".to_owned())?;
+    if reg["type"] != "register" {
+        return Err(format!("first message was {}, expected register", reg["type"]));
+    }
+    let id = "drive_resync";
+    let msgs = conn
+        .exchange(
+            &command(
+                id,
+                json!({"command": "resync", "kinds": kinds}),
+            ),
+            t,
+        )
+        .await;
+    if msgs.is_empty() {
+        return Err("no messages for resync".into());
+    }
+    Ok(msgs)
+}

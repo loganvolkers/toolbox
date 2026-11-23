@@ -43,8 +43,8 @@ ARM = {
     "A": """## Your setup (Toolbox)
 
 - Scaffold Cargo project at {arm_dir}; `toolbox-connect` is a path dependency.
-- You may read only: {toolbox}/crates/toolbox-connect/, {toolbox}/crates/toolbox-connector-github/src/main.rs, {toolbox}/crates/toolbox-connector-git-files/src/main.rs, {toolbox}/docs/design/connector-control.md, {toolbox}/docs/design/connector-standards.md, {toolbox}/docs/v1-spec.md (connector sections), {toolbox}/schema/connector-messages.schema.json, {toolbox}/plugins/toolbox-operator/skills/connector-test/.
-- `export PATH={ab}/bin:$PATH` for `toolbox` if present.
+- You may read only: {toolbox}/crates/toolbox-connect/, {toolbox}/crates/toolbox-connector-github/src/main.rs, {toolbox}/crates/toolbox-connector-git-files/src/main.rs, {toolbox}/docs/design/connector-control.md, {toolbox}/docs/design/connector-standards.md, {toolbox}/docs/v1-spec.md (connector sections), {toolbox}/schema/connector-messages.schema.json, {toolbox}/plugins/toolbox-operator/skills/connector-test/, {toolbox}/plugins/toolbox-operator/skills/author-connector/, {toolbox}/plugins/toolbox-operator/skills/connector-drive/, {toolbox}/examples/connector-scaffold/, {toolbox}/site/src/content/docs/authors/connectors.md.
+- `export PATH={ab}/bin:$PATH` for `toolbox` if present. Prefer `toolbox connector drive` over hand-built stdio JSON; a portal stub is already under portal/.
 - Do **not** read Ocean or Backstage trees under {ab}/pins/.
 - Required shape: a stdio connector using `run_stdio` / `Source` that emits `record` + `snapshot_complete`, and OUT/entities.ndjson.""",
     "B": """## Your setup (Port Ocean)

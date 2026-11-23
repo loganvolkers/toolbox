@@ -147,6 +147,10 @@ impl Source for GitFiles {
         "git-files"
     }
 
+    fn version(&self) -> &str {
+        env!("CARGO_PKG_VERSION")
+    }
+
     fn capabilities(&self) -> Value {
         json!({"refresh": {"catalog-info": ["external_ids"]}, "resync": ["catalog-info"], "max_concurrency": 1})
     }
