@@ -105,3 +105,12 @@ Product fixes on branch `cursor/connector-learning-dx-530d` (D01M83FFM2K6XS4EAVH
 - A: bc-b47814f4-02b0-50eb-ac8b-4982b595992e
 - B: bc-6dc960be-1911-5cb4-9488-94306bf56b1d
 - C: bc-2ba70fad-eb2e-5cb3-a509-03d80ece9c6c
+
+### Phase 4 v2 + C2
+| Arm | Calls | Truth |
+|---|---|---|
+| A | 15 | pass |
+| B | 17 | pass |
+| C | 15 | pass |
+
+**C2 fails** — A not strictly fewer than both (tied with C at 15). v1 was A15/B15/C16.
