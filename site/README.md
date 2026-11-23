@@ -10,22 +10,18 @@ npm run build
 
 ## CLI reference
 
-`src/content/docs/start/cli.md` is **generated** from the `toolbox` binary
-(`toolbox describe` plus each leaf command’s `--help`). Do not edit that page by hand.
+`src/content/docs/start/cli.mdx` is a Starlight page that renders Astro/TypeScript
+components. At build time it loads the live `toolbox` binary (`toolbox describe`
+plus each leaf command’s `--help`) — not a committed markdown dump.
 
-From the repository root:
-
-```bash
-python3 scripts/generate-cli-docs.py
-python3 scripts/generate-cli-docs.py --check   # exit 1 if the committed page is stale
-```
-
-From `site/`:
+Drift guard: a fingerprint of the catalog is committed at
+`src/data/cli-catalog.fingerprint.json`. Refresh and check:
 
 ```bash
-npm run generate:cli-docs
-npm run check:cli-docs
+# from site/ (needs TOOLBOX_BIN or ../target/debug/toolbox)
+npm run generate:cli-docs   # write fingerprint
+npm run check:cli-docs      # exit 1 if fingerprint is stale
 ```
 
-Optional: `TOOLBOX_BIN=/path/to/toolbox` to skip the default `target/debug/toolbox` lookup.
-The pages workflow runs `--check` after building `toolbox`, so a stale page fails CI.
+Optional: `TOOLBOX_BIN=/path/to/toolbox`. The pages workflow runs `check:cli-docs`
+after building `toolbox` and before `astro build`.

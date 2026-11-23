@@ -1,0 +1,1083 @@
+{
+  "commands": [
+    {
+      "name": "actions",
+      "about": "Actions available on an entity",
+      "mcpTool": "list_actions",
+      "args": [
+        {
+          "name": "id",
+          "long": null,
+          "positional": true
+        },
+        {
+          "name": "url",
+          "long": "url",
+          "positional": false
+        },
+        {
+          "name": "token",
+          "long": "token",
+          "positional": false
+        },
+        {
+          "name": "as_user",
+          "long": "as",
+          "positional": false
+        },
+        {
+          "name": "output",
+          "long": "output",
+          "positional": false
+        }
+      ],
+      "usage": "toolbox actions [OPTIONS] <ID>"
+    },
+    {
+      "name": "assess brief",
+      "about": "What to judge an entity on: the rubric's criteria, the entity's facts, its subject hash, and a template and file path for the assessment",
+      "mcpTool": null,
+      "args": [
+        {
+          "name": "entity",
+          "long": null,
+          "positional": true
+        },
+        {
+          "name": "rubric",
+          "long": "rubric",
+          "positional": false
+        },
+        {
+          "name": "portal",
+          "long": "portal",
+          "positional": false
+        },
+        {
+          "name": "fixtures",
+          "long": "fixtures",
+          "positional": false
+        },
+        {
+          "name": "skip",
+          "long": "skip",
+          "positional": false
+        },
+        {
+          "name": "output",
+          "long": "output",
+          "positional": false
+        }
+      ],
+      "usage": "toolbox assess brief [OPTIONS] <ENTITY>"
+    },
+    {
+      "name": "assess check",
+      "about": "Validate the portal's assessments/ files and list, per rubric, which entities are assessed (fresh), assessed against an older version (stale), or not assessed (missing)",
+      "mcpTool": null,
+      "args": [
+        {
+          "name": "portal",
+          "long": null,
+          "positional": true
+        },
+        {
+          "name": "fixtures",
+          "long": "fixtures",
+          "positional": false
+        },
+        {
+          "name": "skip",
+          "long": "skip",
+          "positional": false
+        },
+        {
+          "name": "output",
+          "long": "output",
+          "positional": false
+        }
+      ],
+      "usage": "toolbox assess check [OPTIONS] [PORTAL]"
+    },
+    {
+      "name": "assess submit",
+      "about": "Validate assessment files and push them to a running server as `assessment` records of a remote connector (for portals whose assessments live in Postgres, not in a repository)",
+      "mcpTool": null,
+      "args": [
+        {
+          "name": "files",
+          "long": null,
+          "positional": true
+        },
+        {
+          "name": "portal",
+          "long": "portal",
+          "positional": false
+        },
+        {
+          "name": "url",
+          "long": "url",
+          "positional": false
+        },
+        {
+          "name": "connector",
+          "long": "connector",
+          "positional": false
+        },
+        {
+          "name": "token",
+          "long": "token",
+          "positional": false
+        }
+      ],
+      "usage": "toolbox assess submit [OPTIONS] <FILES>..."
+    },
+    {
+      "name": "campaign",
+      "about": "One campaign's progress over existing scorecards (entities still missing the goal). Without a name, lists the campaigns",
+      "mcpTool": "campaign_report",
+      "args": [
+        {
+          "name": "name",
+          "long": null,
+          "positional": true
+        },
+        {
+          "name": "portal",
+          "long": "portal",
+          "positional": false
+        },
+        {
+          "name": "baseline",
+          "long": "baseline",
+          "positional": false
+        },
+        {
+          "name": "skip",
+          "long": "skip",
+          "positional": false
+        },
+        {
+          "name": "url",
+          "long": "url",
+          "positional": false
+        },
+        {
+          "name": "token",
+          "long": "token",
+          "positional": false
+        },
+        {
+          "name": "as_user",
+          "long": "as",
+          "positional": false
+        },
+        {
+          "name": "output",
+          "long": "output",
+          "positional": false
+        }
+      ],
+      "usage": "toolbox campaign [OPTIONS] [NAME]"
+    },
+    {
+      "name": "connector drive",
+      "about": "Drive a connector binary over stdio: one `resync` of the named kinds, print each `record` as NDJSON (`kind`, `externalId`, `data`). No portal required — for local dumps while authoring. Pass config with --config (JSON) or rely on TOOLBOX_CONNECTOR_CONFIG in the environment. Use `--format catalog` to emit harness-shaped `{kind,id,data}` lines (catalog `id` = `externalId` with a leading `{kind}:` stripped) and `--out` to write a file",
+      "mcpTool": null,
+      "args": [
+        {
+          "name": "kinds",
+          "long": "kinds",
+          "positional": false
+        },
+        {
+          "name": "config",
+          "long": "config",
+          "positional": false
+        },
+        {
+          "name": "format",
+          "long": "format",
+          "positional": false
+        },
+        {
+          "name": "out",
+          "long": "out",
+          "positional": false
+        },
+        {
+          "name": "program",
+          "long": null,
+          "positional": true
+        }
+      ],
+      "usage": "toolbox connector drive [OPTIONS] -- <PROGRAM>..."
+    },
+    {
+      "name": "connector records",
+      "about": "Run one resync of a portal's connector and print its records (NDJSON): what a tool reported before any rule reads it. Lint records carry `command`, which reproduces their findings with the tool alone",
+      "mcpTool": null,
+      "args": [
+        {
+          "name": "name",
+          "long": "name",
+          "positional": false
+        },
+        {
+          "name": "portal",
+          "long": "portal",
+          "positional": false
+        }
+      ],
+      "usage": "toolbox connector records [OPTIONS] --name <NAME>"
+    },
+    {
+      "name": "connector test",
+      "about": "Run the conformance kit against a connector binary in in-image (stdio) mode. Its config comes from the portal manifest (with --config overriding it as JSON)",
+      "mcpTool": null,
+      "args": [
+        {
+          "name": "name",
+          "long": "name",
+          "positional": false
+        },
+        {
+          "name": "portal",
+          "long": "portal",
+          "positional": false
+        },
+        {
+          "name": "config",
+          "long": "config",
+          "positional": false
+        },
+        {
+          "name": "program",
+          "long": null,
+          "positional": true
+        }
+      ],
+      "usage": "toolbox connector test [OPTIONS] --name <NAME> -- <PROGRAM>..."
+    },
+    {
+      "name": "derive",
+      "about": "Recompute derived state from fixtures and print a summary, or write the reference-format files (expected/*.json, authz/tuples.expected.json) to --out",
+      "mcpTool": null,
+      "args": [
+        {
+          "name": "path",
+          "long": null,
+          "positional": true
+        },
+        {
+          "name": "out",
+          "long": "out",
+          "positional": false
+        }
+      ],
+      "usage": "toolbox derive [OPTIONS] [PATH]"
+    },
+    {
+      "name": "describe portal",
+      "about": "Every part of portals as records — `kind`, `field`, `connector`, `scorecard`, `rule`: manifest facts, content hashes, usage, CEL size and loops, test coverage, outcomes over fixtures and (with --results) on real data",
+      "mcpTool": null,
+      "args": [
+        {
+          "name": "portals",
+          "long": null,
+          "positional": true
+        },
+        {
+          "name": "results",
+          "long": "results",
+          "positional": false
+        }
+      ],
+      "usage": "toolbox describe portal [OPTIONS] <PORTALS>..."
+    },
+    {
+      "name": "doctor",
+      "about": "Check that every in-image connector resolves and every declared tool is at its pinned version; exit 1 when something is missing",
+      "mcpTool": null,
+      "args": [
+        {
+          "name": "path",
+          "long": null,
+          "positional": true
+        },
+        {
+          "name": "mise",
+          "long": "mise",
+          "positional": false
+        }
+      ],
+      "usage": "toolbox doctor [OPTIONS] [PATH]"
+    },
+    {
+      "name": "explain",
+      "about": "Why a field has its value (--field) or why a rule passes or fails (--rule scorecard/rule)",
+      "mcpTool": "explain",
+      "args": [
+        {
+          "name": "id",
+          "long": null,
+          "positional": true
+        },
+        {
+          "name": "field",
+          "long": "field",
+          "positional": false
+        },
+        {
+          "name": "rule",
+          "long": "rule",
+          "positional": false
+        },
+        {
+          "name": "url",
+          "long": "url",
+          "positional": false
+        },
+        {
+          "name": "token",
+          "long": "token",
+          "positional": false
+        },
+        {
+          "name": "as_user",
+          "long": "as",
+          "positional": false
+        },
+        {
+          "name": "output",
+          "long": "output",
+          "positional": false
+        }
+      ],
+      "usage": "toolbox explain [OPTIONS] <ID>"
+    },
+    {
+      "name": "get",
+      "about": "Read one entity (fields and where each came from)",
+      "mcpTool": "get",
+      "args": [
+        {
+          "name": "id",
+          "long": null,
+          "positional": true
+        },
+        {
+          "name": "fields",
+          "long": "fields",
+          "positional": false
+        },
+        {
+          "name": "url",
+          "long": "url",
+          "positional": false
+        },
+        {
+          "name": "token",
+          "long": "token",
+          "positional": false
+        },
+        {
+          "name": "as_user",
+          "long": "as",
+          "positional": false
+        },
+        {
+          "name": "output",
+          "long": "output",
+          "positional": false
+        }
+      ],
+      "usage": "toolbox get [OPTIONS] <ID>"
+    },
+    {
+      "name": "graph",
+      "about": "Neighbours of an entity",
+      "mcpTool": "graph",
+      "args": [
+        {
+          "name": "id",
+          "long": null,
+          "positional": true
+        },
+        {
+          "name": "depth",
+          "long": "depth",
+          "positional": false
+        },
+        {
+          "name": "url",
+          "long": "url",
+          "positional": false
+        },
+        {
+          "name": "token",
+          "long": "token",
+          "positional": false
+        },
+        {
+          "name": "as_user",
+          "long": "as",
+          "positional": false
+        },
+        {
+          "name": "output",
+          "long": "output",
+          "positional": false
+        }
+      ],
+      "usage": "toolbox graph [OPTIONS] <ID>"
+    },
+    {
+      "name": "install",
+      "about": "Download the portal's released executable connectors (`github:owner/repo[/app]@version`) for this platform, verify them against toolbox.lock (pinning them the first time), and unpack them into the cache",
+      "mcpTool": null,
+      "args": [
+        {
+          "name": "path",
+          "long": null,
+          "positional": true
+        },
+        {
+          "name": "frozen",
+          "long": "frozen",
+          "positional": false
+        }
+      ],
+      "usage": "toolbox install [OPTIONS] [PATH]"
+    },
+    {
+      "name": "mcp",
+      "about": "A stdio MCP server bridging to the portal's /mcp endpoint",
+      "mcpTool": null,
+      "args": [
+        {
+          "name": "url",
+          "long": "url",
+          "positional": false
+        },
+        {
+          "name": "token",
+          "long": "token",
+          "positional": false
+        },
+        {
+          "name": "as_user",
+          "long": "as",
+          "positional": false
+        },
+        {
+          "name": "output",
+          "long": "output",
+          "positional": false
+        }
+      ],
+      "usage": "toolbox mcp [OPTIONS]"
+    },
+    {
+      "name": "owner",
+      "about": "Who owns an entity and why (CODEOWNERS evidence)",
+      "mcpTool": "owner_of",
+      "args": [
+        {
+          "name": "id",
+          "long": null,
+          "positional": true
+        },
+        {
+          "name": "url",
+          "long": "url",
+          "positional": false
+        },
+        {
+          "name": "token",
+          "long": "token",
+          "positional": false
+        },
+        {
+          "name": "as_user",
+          "long": "as",
+          "positional": false
+        },
+        {
+          "name": "output",
+          "long": "output",
+          "positional": false
+        }
+      ],
+      "usage": "toolbox owner [OPTIONS] <ID>"
+    },
+    {
+      "name": "plan",
+      "about": "Show what a manifest change would do: two recomputes over the same inputs, then a diff",
+      "mcpTool": null,
+      "args": [
+        {
+          "name": "path",
+          "long": null,
+          "positional": true
+        },
+        {
+          "name": "base",
+          "long": "base",
+          "positional": false
+        },
+        {
+          "name": "local",
+          "long": "local",
+          "positional": false
+        },
+        {
+          "name": "format",
+          "long": "format",
+          "positional": false
+        }
+      ],
+      "usage": "toolbox plan [OPTIONS] --base <BASE> [PATH]"
+    },
+    {
+      "name": "push",
+      "about": "Send a portal's fixtures to a running server through the ingest API (one batch per connector, then native values), and wait for the snapshot that contains them",
+      "mcpTool": null,
+      "args": [
+        {
+          "name": "path",
+          "long": null,
+          "positional": true
+        },
+        {
+          "name": "url",
+          "long": "url",
+          "positional": false
+        }
+      ],
+      "usage": "toolbox push [OPTIONS] [PATH]"
+    },
+    {
+      "name": "query",
+      "about": "Entities of a kind matching a CEL filter over `entity` (and `scores`)",
+      "mcpTool": "query",
+      "args": [
+        {
+          "name": "kind",
+          "long": "kind",
+          "positional": false
+        },
+        {
+          "name": "filter",
+          "long": "filter",
+          "positional": false
+        },
+        {
+          "name": "fields",
+          "long": "fields",
+          "positional": false
+        },
+        {
+          "name": "url",
+          "long": "url",
+          "positional": false
+        },
+        {
+          "name": "token",
+          "long": "token",
+          "positional": false
+        },
+        {
+          "name": "as_user",
+          "long": "as",
+          "positional": false
+        },
+        {
+          "name": "output",
+          "long": "output",
+          "positional": false
+        }
+      ],
+      "usage": "toolbox query [OPTIONS] --kind <KIND>"
+    },
+    {
+      "name": "refresh",
+      "about": "Ask the connectors behind an entity to re-read it, and wait for the fresh snapshot",
+      "mcpTool": "refresh_entity",
+      "args": [
+        {
+          "name": "id",
+          "long": null,
+          "positional": true
+        },
+        {
+          "name": "url",
+          "long": "url",
+          "positional": false
+        },
+        {
+          "name": "token",
+          "long": "token",
+          "positional": false
+        },
+        {
+          "name": "as_user",
+          "long": "as",
+          "positional": false
+        },
+        {
+          "name": "output",
+          "long": "output",
+          "positional": false
+        }
+      ],
+      "usage": "toolbox refresh [OPTIONS] <ID>"
+    },
+    {
+      "name": "report",
+      "about": "Score a repository locally: run the portal's in-image connectors once (or use its fixtures), recompute, and print every scorecard with the evidence for failing rules. With --baseline, compare against a committed results file (a ratchet): regressions exit 1, --update records improvements, --ci also fails when the file is out of date",
+      "mcpTool": null,
+      "args": [
+        {
+          "name": "path",
+          "long": null,
+          "positional": true
+        },
+        {
+          "name": "fixtures",
+          "long": "fixtures",
+          "positional": false
+        },
+        {
+          "name": "skip",
+          "long": "skip",
+          "positional": false
+        },
+        {
+          "name": "output",
+          "long": "output",
+          "positional": false
+        },
+        {
+          "name": "out",
+          "long": "out",
+          "positional": false
+        },
+        {
+          "name": "html",
+          "long": "html",
+          "positional": false
+        },
+        {
+          "name": "baseline",
+          "long": "baseline",
+          "positional": false
+        },
+        {
+          "name": "update",
+          "long": "update",
+          "positional": false
+        },
+        {
+          "name": "ci",
+          "long": "ci",
+          "positional": false
+        },
+        {
+          "name": "fail_on_unknown",
+          "long": "fail-on-unknown",
+          "positional": false
+        },
+        {
+          "name": "accept",
+          "long": "accept",
+          "positional": false
+        },
+        {
+          "name": "keep_campaigns",
+          "long": "keep-campaigns",
+          "positional": false
+        },
+        {
+          "name": "verdict",
+          "long": "verdict",
+          "positional": false
+        },
+        {
+          "name": "all",
+          "long": "all",
+          "positional": false
+        },
+        {
+          "name": "against",
+          "long": "against",
+          "positional": false
+        }
+      ],
+      "usage": "toolbox report [OPTIONS] [PATH]"
+    },
+    {
+      "name": "score",
+      "about": "Scorecard levels and rule outcomes for one entity",
+      "mcpTool": "scorecard_status",
+      "args": [
+        {
+          "name": "id",
+          "long": null,
+          "positional": true
+        },
+        {
+          "name": "url",
+          "long": "url",
+          "positional": false
+        },
+        {
+          "name": "token",
+          "long": "token",
+          "positional": false
+        },
+        {
+          "name": "as_user",
+          "long": "as",
+          "positional": false
+        },
+        {
+          "name": "output",
+          "long": "output",
+          "positional": false
+        }
+      ],
+      "usage": "toolbox score [OPTIONS] <ID>"
+    },
+    {
+      "name": "scorecard",
+      "about": "One scorecard across every entity: level counts, failing rules and evidence (a work list). Without a name, lists the scorecards",
+      "mcpTool": "scorecard_report",
+      "args": [
+        {
+          "name": "name",
+          "long": null,
+          "positional": true
+        },
+        {
+          "name": "rule",
+          "long": "rule",
+          "positional": false
+        },
+        {
+          "name": "outcome",
+          "long": "outcome",
+          "positional": false
+        },
+        {
+          "name": "level",
+          "long": "level",
+          "positional": false
+        },
+        {
+          "name": "url",
+          "long": "url",
+          "positional": false
+        },
+        {
+          "name": "token",
+          "long": "token",
+          "positional": false
+        },
+        {
+          "name": "as_user",
+          "long": "as",
+          "positional": false
+        },
+        {
+          "name": "output",
+          "long": "output",
+          "positional": false
+        }
+      ],
+      "usage": "toolbox scorecard [OPTIONS] [NAME]"
+    },
+    {
+      "name": "search",
+      "about": "Find entities by name or title",
+      "mcpTool": "search",
+      "args": [
+        {
+          "name": "query",
+          "long": null,
+          "positional": true
+        },
+        {
+          "name": "url",
+          "long": "url",
+          "positional": false
+        },
+        {
+          "name": "token",
+          "long": "token",
+          "positional": false
+        },
+        {
+          "name": "as_user",
+          "long": "as",
+          "positional": false
+        },
+        {
+          "name": "output",
+          "long": "output",
+          "positional": false
+        }
+      ],
+      "usage": "toolbox search [OPTIONS] <QUERY>"
+    },
+    {
+      "name": "serve",
+      "about": "Run the server: snapshot loop + REST API. Uses Postgres when --database-url (or DATABASE_URL) is set, otherwise an in-memory store (optionally preloaded with fixtures)",
+      "mcpTool": null,
+      "args": [
+        {
+          "name": "path",
+          "long": null,
+          "positional": true
+        },
+        {
+          "name": "listen",
+          "long": "listen",
+          "positional": false
+        },
+        {
+          "name": "database_url",
+          "long": "database-url",
+          "positional": false
+        },
+        {
+          "name": "fixtures",
+          "long": "fixtures",
+          "positional": false
+        }
+      ],
+      "usage": "toolbox serve [OPTIONS] [PATH]"
+    },
+    {
+      "name": "test",
+      "about": "Recompute derived state from the portal's fixtures and run its expectation files (tests/*.test.yaml). Exit code 1 if any expectation fails",
+      "mcpTool": null,
+      "args": [
+        {
+          "name": "path",
+          "long": null,
+          "positional": true
+        },
+        {
+          "name": "format",
+          "long": "format",
+          "positional": false
+        }
+      ],
+      "usage": "toolbox test [OPTIONS] [PATH]"
+    },
+    {
+      "name": "token create",
+      "about": "Create a token for a user (the subject: a login or an email) and print it once",
+      "mcpTool": null,
+      "args": [
+        {
+          "name": "user",
+          "long": "user",
+          "positional": false
+        },
+        {
+          "name": "label",
+          "long": "label",
+          "positional": false
+        },
+        {
+          "name": "database_url",
+          "long": "database-url",
+          "positional": false
+        }
+      ],
+      "usage": "toolbox token create [OPTIONS] --user <USER> --database-url <DATABASE_URL>"
+    },
+    {
+      "name": "tools config",
+      "about": "Print an installer's input from the portal's pins: a mise `[tools]` table, an aqua.yaml package list, or PyPI requirements (for uv, pipx or pip)",
+      "mcpTool": null,
+      "args": [
+        {
+          "name": "path",
+          "long": null,
+          "positional": true
+        },
+        {
+          "name": "installer",
+          "long": "for",
+          "positional": false
+        }
+      ],
+      "usage": "toolbox tools config --for <INSTALLER> [PATH]"
+    },
+    {
+      "name": "tools find",
+      "about": "List the tools a repository already uses (config files, CI and hook commands, package manifests), whether each is in the portal's box, and the slot that would carry it. Evidence for an agent to check (skill find-tools), not a verdict",
+      "mcpTool": null,
+      "args": [
+        {
+          "name": "path",
+          "long": null,
+          "positional": true
+        },
+        {
+          "name": "portal",
+          "long": "portal",
+          "positional": false
+        },
+        {
+          "name": "format",
+          "long": "format",
+          "positional": false
+        }
+      ],
+      "usage": "toolbox tools find [OPTIONS] [PATH]"
+    },
+    {
+      "name": "tools install",
+      "about": "Install every tool the portal pins that isn't already on the PATH at its version, by running an installer: mise, uv, pipx or pip (auto: the first available that the tool declares an id for). Then run `toolbox doctor`",
+      "mcpTool": null,
+      "args": [
+        {
+          "name": "path",
+          "long": null,
+          "positional": true
+        },
+        {
+          "name": "via",
+          "long": "via",
+          "positional": false
+        },
+        {
+          "name": "dry_run",
+          "long": "dry-run",
+          "positional": false
+        }
+      ],
+      "usage": "toolbox tools install [OPTIONS] [PATH]"
+    },
+    {
+      "name": "validate",
+      "about": "Validate a portal: manifest schema, cross-references, action input forms, CEL, files and fixtures. Exit code 0 when valid, 1 when there are errors, 2 when it can't be loaded",
+      "mcpTool": null,
+      "args": [
+        {
+          "name": "path",
+          "long": null,
+          "positional": true
+        },
+        {
+          "name": "format",
+          "long": "format",
+          "positional": false
+        }
+      ],
+      "usage": "toolbox validate [OPTIONS] [PATH]"
+    },
+    {
+      "name": "vendor",
+      "about": "Copy a package into the portal (`<portal>/packages/<name>`, without its tests) so the portal needs no network: from a directory, or a `github:` package `toolbox install` cached",
+      "mcpTool": null,
+      "args": [
+        {
+          "name": "spec",
+          "long": null,
+          "positional": true
+        },
+        {
+          "name": "portal",
+          "long": "portal",
+          "positional": false
+        }
+      ],
+      "usage": "toolbox vendor [OPTIONS] <SPEC>"
+    }
+  ],
+  "mcpTools": [
+    {
+      "name": "action_options",
+      "cliCommands": []
+    },
+    {
+      "name": "assessment_brief",
+      "cliCommands": []
+    },
+    {
+      "name": "campaign_report",
+      "cliCommands": [
+        "campaign"
+      ]
+    },
+    {
+      "name": "explain",
+      "cliCommands": [
+        "explain"
+      ]
+    },
+    {
+      "name": "get",
+      "cliCommands": [
+        "get"
+      ]
+    },
+    {
+      "name": "graph",
+      "cliCommands": [
+        "graph"
+      ]
+    },
+    {
+      "name": "list_actions",
+      "cliCommands": [
+        "actions"
+      ]
+    },
+    {
+      "name": "owner_of",
+      "cliCommands": [
+        "owner"
+      ]
+    },
+    {
+      "name": "preview_action",
+      "cliCommands": []
+    },
+    {
+      "name": "query",
+      "cliCommands": [
+        "query"
+      ]
+    },
+    {
+      "name": "refresh_entity",
+      "cliCommands": [
+        "refresh"
+      ]
+    },
+    {
+      "name": "scorecard_report",
+      "cliCommands": [
+        "scorecard"
+      ]
+    },
+    {
+      "name": "scorecard_status",
+      "cliCommands": [
+        "score"
+      ]
+    },
+    {
+      "name": "search",
+      "cliCommands": [
+        "search"
+      ]
+    }
+  ]
+}

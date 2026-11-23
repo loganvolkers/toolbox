@@ -5,7 +5,7 @@ sidebar:
   order: 1
 ---
 
-The reads are the same on each surface. The person or agent making the call is a [user of a portal](/toolbox/users/). Command names, flags, and MCP tool names are on the [CLI reference](/toolbox/start/cli/) (generated from the binary).
+The reads are the same on each surface. The person or agent making the call is a [user of a portal](/toolbox/users/). Command names, flags, and MCP tool names are on the [CLI reference](/toolbox/start/cli/) (built from the live CLI at site build time).
 
 | Read | What it answers |
 |---|---|
