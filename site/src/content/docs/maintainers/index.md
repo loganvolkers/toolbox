@@ -40,7 +40,7 @@ toolbox test portal
 
 `toolbox test portal` runs this repository's own expectations: the rules, scored against fixture entities, both the passing cases and the failing ones. Acceptance scripts for milestones M2, M3 and M4 need Postgres 16. M3 and M4 also need OpenFGA (`TOOLBOX_OPENFGA_BIN`). M4 needs Node and Playwright for the browser check.
 
-The toolchain is pinned in `rust-toolchain.toml`. YAML in the repository is formatted with Yamark 0.6.1 (`yamark format --check`).
+The toolchain is pinned in `rust-toolchain.toml`. YAML in the repository is formatted with Yamark 0.6.1 (`yamark format --check`). The public [CLI reference](/toolbox/start/cli/) is generated from the binary (`python3 scripts/generate-cli-docs.py`); the pages workflow fails if that page is stale.
 
 ## Stop a standard from regressing
 

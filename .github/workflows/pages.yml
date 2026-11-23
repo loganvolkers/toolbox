@@ -32,6 +32,11 @@ jobs:
           target/debug/toolbox tools install portal --via pipx   # the pins in the portal's tools:
           target/debug/toolbox doctor portal
           target/debug/toolbox report portal --skip runner,github-actions -o web --out site/public/report
+      # CLI reference is generated from clap (`toolbox describe` + --help); fail if stale.
+      - name: CLI docs up to date
+        run: |
+          export TOOLBOX_BIN="${PWD}/target/debug/toolbox"
+          python3 scripts/generate-cli-docs.py --check
       - name: setup node
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
