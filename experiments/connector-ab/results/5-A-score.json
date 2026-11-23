@@ -1,0 +1,27 @@
+{
+  "arm": "/tmp/connector-ab/arms/A",
+  "path": "/tmp/connector-ab/arms/A/OUT/read-answers.md",
+  "checks": [
+    {
+      "check": "projects",
+      "ok": true
+    },
+    {
+      "check": "issues",
+      "ok": true
+    },
+    {
+      "check": "assignee",
+      "ok": true
+    },
+    {
+      "check": "component",
+      "ok": true
+    },
+    {
+      "check": "config",
+      "ok": true
+    }
+  ],
+  "ok": true
+}

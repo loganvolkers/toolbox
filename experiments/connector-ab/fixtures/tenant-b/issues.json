@@ -1,0 +1,22 @@
+[
+  {
+    "id": "20001",
+    "key": "GAMMA-1",
+    "fields": {
+      "summary": "Onboard tenant",
+      "status": {"name": "To Do"},
+      "project": {"key": "GAMMA"},
+      "assignee": {"accountId": "u-cara", "displayName": "Cara"}
+    }
+  },
+  {
+    "id": "20002",
+    "key": "GAMMA-2",
+    "fields": {
+      "summary": "Rotate tokens",
+      "status": {"name": "In Progress"},
+      "project": {"key": "GAMMA"},
+      "assignee": null
+    }
+  }
+]

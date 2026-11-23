@@ -1,0 +1,348 @@
+diff -ruN '--exclude=OUT' '--exclude=FORGE.md' '--exclude=OCEAN_ROOT.txt' experiments/connector-ab/scaffolds/ocean/forge_client.py /tmp/connector-ab/arms/B/forge_client.py
+--- experiments/connector-ab/scaffolds/ocean/forge_client.py	1970-01-01 00:00:00.000000000 +0000
++++ /tmp/connector-ab/arms/B/forge_client.py	2026-11-23 02:58:59.054992355 +0000
+@@ -0,0 +1,62 @@
++"""Minimal Forge (Jira Cloud-shaped) HTTP client using stdlib only."""
++
++from __future__ import annotations
++
++import json
++import urllib.error
++import urllib.parse
++import urllib.request
++from collections.abc import Iterator
++from typing import Any
++
++PAGE_SIZE = 50
++
++
++class ForgeClient:
++    def __init__(self, base_url: str, token: str) -> None:
++        self.base_url = base_url.rstrip("/")
++        self.token = token
++
++    def _get(self, path: str, params: dict[str, Any]) -> dict[str, Any]:
++        query = urllib.parse.urlencode(params)
++        url = f"{self.base_url}{path}?{query}"
++        req = urllib.request.Request(
++            url,
++            headers={"Authorization": f"Bearer {self.token}", "Accept": "application/json"},
++            method="GET",
++        )
++        try:
++            with urllib.request.urlopen(req, timeout=30) as resp:
++                return json.loads(resp.read().decode("utf-8"))
++        except urllib.error.HTTPError as exc:
++            body = exc.read().decode("utf-8", errors="replace")
++            raise RuntimeError(f"Forge GET {url} -> {exc.code}: {body}") from exc
++
++    def iter_projects(self) -> Iterator[list[dict[str, Any]]]:
++        start_at = 0
++        while True:
++            payload = self._get(
++                "/rest/api/3/project",
++                {"startAt": start_at, "maxResults": PAGE_SIZE},
++            )
++            values = payload.get("values") or []
++            if values:
++                yield values
++            if payload.get("isLast", True) or not values:
++                break
++            start_at += len(values)
++
++    def iter_issues(self) -> Iterator[list[dict[str, Any]]]:
++        start_at = 0
++        while True:
++            payload = self._get(
++                "/rest/api/3/search",
++                {"startAt": start_at, "maxResults": PAGE_SIZE},
++            )
++            issues = payload.get("issues") or []
++            if issues:
++                yield issues
++            total = int(payload.get("total", 0))
++            start_at += len(issues)
++            if not issues or start_at >= total:
++                break
+diff -ruN '--exclude=OUT' '--exclude=FORGE.md' '--exclude=OCEAN_ROOT.txt' experiments/connector-ab/scaffolds/ocean/integration.py /tmp/connector-ab/arms/B/integration.py
+--- experiments/connector-ab/scaffolds/ocean/integration.py	2026-11-23 02:42:06.970457653 +0000
++++ /tmp/connector-ab/arms/B/integration.py	2026-11-23 02:59:24.895062764 +0000
+@@ -1,15 +1,45 @@
+-"""Scaffold: Ocean-style Forge integration.
++"""Ocean-style Forge integration: project and issue resync handlers.
+ 
+-Implement `@ocean.on_resync` handlers for project and issue (and component from
+-phase 3). You may import from the Ocean pin listed in OCEAN_ROOT.txt for types
+-and patterns (read fake-integration and jira only).
+-
+-Because this benchmark does not talk to Port SaaS, also provide `resync.py` that
+-calls your handlers against Forge and writes OUT/entities.ndjson.
++Uses a local `ocean_shim` because the Ocean pin's `port_ocean` package needs
++fastapi and other deps that are not installed in this arm. Handlers still use
++the `@ocean.on_resync` shape from integrations/jira and fake-integration.
+ """
+ 
+-# from port_ocean.context.ocean import ocean
+-# @ocean.on_resync("project")
+-# async def on_resync_projects(kind: str):
+-#     ...
+-#     yield batch
++from __future__ import annotations
++
++import os
++from collections.abc import AsyncIterator
++from typing import Any
++
++from forge_client import ForgeClient
++from ocean_shim import ocean
++
++KindBatch = AsyncIterator[list[dict[str, Any]]]
++
++
++def _client() -> ForgeClient:
++    base_url = (
++        ocean.integration_config.get("baseUrl")
++        or os.environ.get("FORGE_BASE_URL")
++        or "http://127.0.0.1:9743"
++    )
++    token = (
++        ocean.integration_config.get("token")
++        or os.environ.get("FORGE_TOKEN")
++        or "tenant-a-token"
++    )
++    return ForgeClient(base_url, token)
++
++
++@ocean.on_resync("project")
++async def on_resync_projects(kind: str) -> KindBatch:
++    client = _client()
++    for batch in client.iter_projects():
++        yield batch
++
++
++@ocean.on_resync("issue")
++async def on_resync_issues(kind: str) -> KindBatch:
++    client = _client()
++    for batch in client.iter_issues():
++        yield batch
+diff -ruN '--exclude=OUT' '--exclude=FORGE.md' '--exclude=OCEAN_ROOT.txt' experiments/connector-ab/scaffolds/ocean/ocean_shim.py /tmp/connector-ab/arms/B/ocean_shim.py
+--- experiments/connector-ab/scaffolds/ocean/ocean_shim.py	1970-01-01 00:00:00.000000000 +0000
++++ /tmp/connector-ab/arms/B/ocean_shim.py	2026-11-23 02:58:33.006920905 +0000
+@@ -0,0 +1,38 @@
++"""Thin Ocean-compatible decorator shim.
++
++Full `port_ocean` needs fastapi and other deps not present in this arm; the
++scaffold allows vendoring the `@ocean.on_resync` pattern so handlers stay in
++integration.py and resync.py can invoke them without Port SaaS.
++"""
++
++from __future__ import annotations
++
++from collections.abc import Awaitable, Callable
++from typing import Any
++
++ResyncHandler = Callable[[str], Any]
++
++
++class _OceanShim:
++    def __init__(self) -> None:
++        self.resync_handlers: dict[str, ResyncHandler] = {}
++        self.integration_config: dict[str, Any] = {}
++
++    def on_resync(
++        self, kind: str | None = None
++    ) -> Callable[[ResyncHandler], ResyncHandler]:
++        def decorator(fn: ResyncHandler) -> ResyncHandler:
++            key = kind if kind is not None else "*"
++            self.resync_handlers[key] = fn
++            return fn
++
++        return decorator
++
++    def on_start(self) -> Callable[[Callable[[], Awaitable[None]]], Callable[[], Awaitable[None]]]:
++        def decorator(fn: Callable[[], Awaitable[None]]) -> Callable[[], Awaitable[None]]:
++            return fn
++
++        return decorator
++
++
++ocean = _OceanShim()
+diff -ruN '--exclude=OUT' '--exclude=FORGE.md' '--exclude=OCEAN_ROOT.txt' experiments/connector-ab/scaffolds/ocean/.port/spec.yaml /tmp/connector-ab/arms/B/.port/spec.yaml
+--- experiments/connector-ab/scaffolds/ocean/.port/spec.yaml	2026-11-23 02:52:31.069838208 +0000
++++ /tmp/connector-ab/arms/B/.port/spec.yaml	2026-11-23 03:00:07.107062316 +0000
+@@ -1,10 +1,18 @@
+-# Fill in: kinds, configuration (baseUrl, token as sensitive).
+-description: Forge integration scaffold for the connector A/B
++description: Forge (mock Jira Cloud) Ocean-style connector for the DX Benchmark
+ icon: atlassian
+ configurations:
+-  - {name: baseUrl, required: true, type: url, description: Forge base URL}
++  - name: baseUrl
++    required: true
++    type: url
++    description: Forge base URL (tenant A default http://127.0.0.1:9743)
+   - name: token
+     required: true
+     type: string
+     sensitive: true
+-    description: Bearer token
++    description: Bearer token (tenant A default tenant-a-token)
++features:
++  - type: exporter
++    section: Project management
++    resources:
++      - kind: project
++      - kind: issue
+Binary files experiments/connector-ab/scaffolds/ocean/__pycache__/forge_client.cpython-312.pyc and /tmp/connector-ab/arms/B/__pycache__/forge_client.cpython-312.pyc differ
+Binary files experiments/connector-ab/scaffolds/ocean/__pycache__/integration.cpython-312.pyc and /tmp/connector-ab/arms/B/__pycache__/integration.cpython-312.pyc differ
+Binary files experiments/connector-ab/scaffolds/ocean/__pycache__/ocean_shim.cpython-312.pyc and /tmp/connector-ab/arms/B/__pycache__/ocean_shim.cpython-312.pyc differ
+diff -ruN '--exclude=OUT' '--exclude=FORGE.md' '--exclude=OCEAN_ROOT.txt' experiments/connector-ab/scaffolds/ocean/resync.py /tmp/connector-ab/arms/B/resync.py
+--- experiments/connector-ab/scaffolds/ocean/resync.py	2026-11-23 02:43:25.534888259 +0000
++++ /tmp/connector-ab/arms/B/resync.py	2026-11-23 03:00:37.918947448 +0000
+@@ -1,18 +1,99 @@
+ #!/usr/bin/env python3
+-"""Entry point the harness / agent uses without Port SaaS.
+-
+-Call your resync handlers against Forge (see FORGE.md) and write mapped entities
+-to OUT/entities.ndjson in the common schema from the experiment README.
+-"""
++"""Run Forge resync handlers and write OUT/entities.ndjson (no Port SaaS)."""
+ 
+ from __future__ import annotations
+ 
++import asyncio
++import json
++import os
+ import sys
++from pathlib import Path
++from typing import Any
++
++from ocean_shim import ocean
++
++# Registers @ocean.on_resync handlers.
++import integration  # noqa: F401
++
++OUT_PATH = Path(__file__).resolve().parent / "OUT" / "entities.ndjson"
++
++
++def map_project(raw: dict[str, Any]) -> dict[str, Any]:
++    key = raw["key"]
++    return {
++        "kind": "project",
++        "id": key,
++        "data": {
++            "key": key,
++            "name": raw.get("name", ""),
++            "type": raw.get("projectTypeKey") or raw.get("type") or "",
++        },
++    }
++
++
++def map_issue(raw: dict[str, Any]) -> dict[str, Any]:
++    key = raw["key"]
++    fields = raw.get("fields") or {}
++    status_obj = fields.get("status") or {}
++    status = status_obj.get("name") if isinstance(status_obj, dict) else status_obj
++    project_obj = fields.get("project") or {}
++    project_key = (
++        project_obj.get("key") if isinstance(project_obj, dict) else project_obj
++    )
++    assignee_obj = fields.get("assignee")
++    assignee = None
++    if isinstance(assignee_obj, dict):
++        assignee = assignee_obj.get("accountId")
++    return {
++        "kind": "issue",
++        "id": key,
++        "data": {
++            "key": key,
++            "summary": fields.get("summary", ""),
++            "status": status or "",
++            "project": project_key or "",
++            "assignee": assignee,
++        },
++    }
++
++
++async def _collect(kind: str, mapper) -> list[dict[str, Any]]:
++    handler = ocean.resync_handlers.get(kind)
++    if handler is None:
++        raise RuntimeError(f"no @ocean.on_resync handler registered for kind={kind!r}")
++    entities: list[dict[str, Any]] = []
++    agen = handler(kind)
++    async for batch in agen:
++        for raw in batch:
++            entities.append(mapper(raw))
++    return entities
++
++
++_KIND_ORDER = {"project": 0, "issue": 1, "component": 2}
++
++
++async def run_resync() -> list[dict[str, Any]]:
++    ocean.integration_config["baseUrl"] = os.environ.get(
++        "FORGE_BASE_URL", "http://127.0.0.1:9743"
++    )
++    ocean.integration_config["token"] = os.environ.get("FORGE_TOKEN", "tenant-a-token")
++    projects = await _collect("project", map_project)
++    issues = await _collect("issue", map_issue)
++    entities = projects + issues
++    # Kind order matches the experiment schema example: project, issue, component.
++    entities.sort(key=lambda e: (_KIND_ORDER.get(e["kind"], 99), e["id"]))
++    return entities
+ 
+ 
+ def main() -> int:
+-    print("scaffold: implement resync against Forge → OUT/entities.ndjson", file=sys.stderr)
+-    return 2
++    entities = asyncio.run(run_resync())
++    OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
++    with OUT_PATH.open("w", encoding="utf-8") as fh:
++        for entity in entities:
++            fh.write(json.dumps(entity, separators=(",", ":"), ensure_ascii=False))
++            fh.write("\n")
++    print(f"wrote {len(entities)} entities to {OUT_PATH}", file=sys.stderr)
++    return 0
+ 
+ 
+ if __name__ == "__main__":
+diff -ruN '--exclude=OUT' '--exclude=FORGE.md' '--exclude=OCEAN_ROOT.txt' experiments/connector-ab/scaffolds/ocean/RUN.md /tmp/connector-ab/arms/B/RUN.md
+--- experiments/connector-ab/scaffolds/ocean/RUN.md	2026-11-23 02:43:26.574898086 +0000
++++ /tmp/connector-ab/arms/B/RUN.md	2026-11-23 03:00:10.471049271 +0000
+@@ -1,5 +1,32 @@
+-# How to run (fill this in)
++# How to run (tenant A, phase 1)
+ 
+-1. How to configure baseUrl and token.
+-2. How to run `python3 resync.py` (or equivalent) to write OUT/entities.ndjson.
+-3. Which `@ocean.on_resync` kinds you implemented.
++## Configure
++
++Defaults target tenant A. Override with env:
++
++```bash
++export FORGE_BASE_URL=http://127.0.0.1:9743
++export FORGE_TOKEN=tenant-a-token
++```
++
++`.port/spec.yaml` declares the same `baseUrl` / `token` configuration fields.
++
++## Resync → OUT/entities.ndjson
++
++From this directory (stdlib only; no extra installs):
++
++```bash
++cd /tmp/connector-ab/arms/B
++python3 resync.py
++```
++
++Writes mapped `project` and `issue` entities to `OUT/entities.ndjson`, sorted by kind then id.
++
++## `@ocean.on_resync` kinds
++
++Implemented in `integration.py` (via local `ocean_shim` — full Port Ocean needs fastapi):
++
++- `project` — `GET /rest/api/3/project`
++- `issue` — `GET /rest/api/3/search`
++
++`component` is deferred to phase 3.

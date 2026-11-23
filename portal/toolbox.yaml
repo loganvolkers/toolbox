@@ -48,8 +48,8 @@ connectors:
     runtime: in-image
     config:
       root: .
-      # Generated files are the box's output, not hand-written docs or scripts: not scored.
-      exclude: [portal/STANDARD.md]
+      # Generated files / harness scaffolds are not scored as maintained packages.
+      exclude: [portal/STANDARD.md, experiments/connector-ab/**/package.json]
       docs:
         - "*.md"
         - docs/**/*.md

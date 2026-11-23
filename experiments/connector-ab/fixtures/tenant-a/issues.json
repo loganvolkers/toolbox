@@ -1,0 +1,32 @@
+[
+  {
+    "id": "10001",
+    "key": "ALPHA-1",
+    "fields": {
+      "summary": "Wire login",
+      "status": {"name": "To Do"},
+      "project": {"key": "ALPHA"},
+      "assignee": null
+    }
+  },
+  {
+    "id": "10002",
+    "key": "ALPHA-2",
+    "fields": {
+      "summary": "Fix redirect",
+      "status": {"name": "In Progress"},
+      "project": {"key": "ALPHA"},
+      "assignee": {"accountId": "u-anne", "displayName": "Anne"}
+    }
+  },
+  {
+    "id": "10003",
+    "key": "BETA-1",
+    "fields": {
+      "summary": "Invoice export",
+      "status": {"name": "Done"},
+      "project": {"key": "BETA"},
+      "assignee": {"accountId": "u-bob", "displayName": "Bob"}
+    }
+  }
+]

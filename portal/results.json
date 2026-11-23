@@ -102,6 +102,9 @@
       "benchmark:checklist-ab": {
         "level": "gold"
       },
+      "benchmark:connector-ab": {
+        "level": "gold"
+      },
       "benchmark:out-of-box": {
         "level": "gold"
       },
@@ -963,6 +966,9 @@
       "doc:docs/decisions/D01M831P5QWJQ4A2FT85N5MXJQF.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M833YAH8MT4VY2W4K1PYAEHB.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/README.md": {
         "level": "skipped"
       },
@@ -1200,6 +1206,9 @@
       "doc:experiments/build-cost/README.md": {
         "level": "silver"
       },
+      "doc:experiments/connector-ab/README.md": {
+        "level": "silver"
+      },
       "doc:experiments/derived-state-scale/README.md": {
         "level": "silver"
       },
@@ -1380,6 +1389,9 @@
         "level": "gold"
       },
       "example:experiments/build-cost/README.md": {
+        "level": "gold"
+      },
+      "example:experiments/connector-ab/README.md": {
         "level": "gold"
       },
       "example:experiments/derived-state-scale/README.md": {
