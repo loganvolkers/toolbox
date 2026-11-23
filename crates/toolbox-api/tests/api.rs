@@ -109,6 +109,47 @@ async fn ingest_then_read_with_filters() {
         "fields projection"
     );
 
+    // A required equality narrows candidates through the field index; `|| false` stops the
+    // narrowing, so both must page through the same entities.
+    let pages = |filter: &'static str| {
+        let (c, url) = (c.clone(), url.clone());
+        async move {
+            let (mut ids, mut cursor) = (Vec::new(), None::<String>);
+            loop {
+                let mut q = vec![("kind", "repository".to_owned()), ("filter", filter.into())];
+                q.push(("limit", "1".into()));
+                q.extend(cursor.take().map(|c| ("cursor", c)));
+                let r: Value = c
+                    .get(format!("{url}/v1/entities"))
+                    .query(&q)
+                    .send()
+                    .await
+                    .unwrap()
+                    .json()
+                    .await
+                    .unwrap();
+                ids.extend(
+                    r["items"]
+                        .as_array()
+                        .unwrap()
+                        .iter()
+                        .map(|e| e["id"].clone()),
+                );
+                match r["next_cursor"].as_str() {
+                    Some(c) => cursor = Some(c.to_owned()),
+                    None => return ids,
+                }
+            }
+        }
+    };
+    let narrowed = pages("entity.lifecycle == 'production'").await;
+    assert!(narrowed.len() >= 2, "{narrowed:?}");
+    assert_eq!(
+        narrowed,
+        pages("entity.lifecycle == 'production' || false").await
+    );
+    assert!(pages("entity.lifecycle == 'none'").await.is_empty());
+
     // Native value applied.
     let r: Value = c
         .get(format!(

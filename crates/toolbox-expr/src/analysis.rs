@@ -147,9 +147,69 @@ pub fn analyse(expr: &str) -> Result<Analysis, String> {
     })
 }
 
+/// The `entity.<field> == '<string>'` comparisons that `expr` requires: its top-level `&&`
+/// conjuncts of that form, either way round. An entity the expression accepts has every one of
+/// them, so a caller may narrow candidates by them before evaluating it.
+pub fn required_equalities(expr: &str) -> Vec<(String, String)> {
+    fn walk(e: &IdedExpr, out: &mut Vec<(String, String)>) {
+        let Expr::Call(c) = &e.expr else { return };
+        match (c.func_name.as_str(), c.target.is_none(), c.args.as_slice()) {
+            ("_&&_", true, [a, b]) => {
+                walk(a, out);
+                walk(b, out);
+            }
+            ("_==_", true, [a, b]) => {
+                if let Some(eq) = field_literal(a, b).or_else(|| field_literal(b, a)) {
+                    out.push(eq);
+                }
+            }
+            _ => {}
+        }
+    }
+    fn field_literal(f: &IdedExpr, l: &IdedExpr) -> Option<(String, String)> {
+        let Expr::Select(s) = &f.expr else {
+            return None;
+        };
+        let Expr::Literal(cel::common::ast::LiteralValue::String(v)) = &l.expr else {
+            return None;
+        };
+        (matches!(&s.operand.expr, Expr::Ident(root) if root == "entity") && !s.test)
+            .then(|| (s.field.clone(), v.inner().to_owned()))
+    }
+    let mut out = Vec::new();
+    if let Ok(p) = cel::Program::compile(expr) {
+        walk(p.expression(), &mut out);
+    }
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn finds_the_equalities_a_filter_requires() {
+        let eq = |f: &str, v: &str| (f.to_owned(), v.to_owned());
+        assert_eq!(
+            required_equalities("entity.owner == 'group:g3'"),
+            [eq("owner", "group:g3")]
+        );
+        assert_eq!(
+            required_equalities("'prod' == entity.tier && entity.lines > 3 && entity.a == 'x'"),
+            [eq("tier", "prod"), eq("a", "x")]
+        );
+        for none in [
+            "entity.owner == 'a' || entity.owner == 'b'",
+            "!(entity.owner == 'a')",
+            "entity.owner == other.owner",
+            "entity.size == 3",
+            "entity.meta.owner == 'a'",
+            "has(entity.owner) == 'a'",
+            "not valid CEL ((",
+        ] {
+            assert!(required_equalities(none).is_empty(), "{none}");
+        }
+    }
 
     #[test]
     fn measures_size_fields_and_loops() {

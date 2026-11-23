@@ -23,6 +23,38 @@ pub struct Published {
     /// `Some` only on the instance that wrote this snapshot's tuples: a follower can ask OpenFGA
     /// before the leader has written them, so it must not keep the answer.
     pub decisions: Option<Decisions>,
+    pub by_field: FieldIndex,
+}
+
+/// Entity ids by the string value of one declared field of one kind, built for a snapshot the
+/// first time a list filters on that field.
+#[derive(Debug, Default)]
+pub struct FieldIndex(Mutex<HashMap<(String, String), Arc<IdsByValue>>>);
+
+pub type IdsByValue = HashMap<String, Vec<String>>;
+
+impl FieldIndex {
+    /// Ids in id order for each value of `field` across entities of `kind`.
+    pub fn get(
+        &self,
+        derived: &Derived,
+        kind: &str,
+        field: &str,
+    ) -> Arc<HashMap<String, Vec<String>>> {
+        let key = (kind.to_owned(), field.to_owned());
+        if let Some(ix) = self.0.lock().unwrap().get(&key) {
+            return ix.clone();
+        }
+        let mut ix = IdsByValue::new();
+        for (id, e) in derived.entities.iter().filter(|(_, e)| e.kind == kind) {
+            if let Some(v) = e.fields.get(field).and_then(Value::as_str) {
+                ix.entry(v.to_owned()).or_default().push(id.clone());
+            }
+        }
+        let ix = Arc::new(ix);
+        self.0.lock().unwrap().insert(key, ix.clone());
+        ix
+    }
 }
 
 /// Authorization decisions made against one snapshot. Every tuple is derived, so tuples change
@@ -223,6 +255,7 @@ impl AppState {
             recompute: elapsed,
             published_at: std::time::SystemTime::now(),
             decisions: tuples_written.then(Decisions::default),
+            by_field: FieldIndex::default(),
         });
         self.current.send_replace(Some(published));
     }

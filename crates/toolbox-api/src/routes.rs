@@ -217,10 +217,44 @@ async fn list_entities(State(s): S, headers: HeaderMap, Query(q): Query<ListQuer
         .cursor
         .as_ref()
         .map_or(std::ops::Bound::Unbounded, std::ops::Bound::Excluded);
-    let candidates: Vec<&String> = p
-        .derived
-        .entities
-        .range::<String, _>((lower, std::ops::Bound::Unbounded))
+    // A filter that requires `entity.<field> == '<value>'` matches only entities whose field has
+    // that value (a redacted field is an object, never a string), so start from those.
+    let kind = q.kind.as_deref().and_then(|k| {
+        s.manifest
+            .kinds
+            .iter()
+            .find(|m| m.name.eq_ignore_ascii_case(k))
+    });
+    let posting = kind.and_then(|k| {
+        q.filter
+            .as_deref()
+            .map(toolbox_expr::analysis::required_equalities)
+            .unwrap_or_default()
+            .into_iter()
+            .filter(|(f, _)| k.fields.contains_key(f))
+            .map(|(f, v)| (p.by_field.get(&p.derived, &k.name, &f), v))
+            .min_by_key(|(ix, v)| ix.get(v).map_or(0, Vec::len))
+    });
+    let start: Box<dyn Iterator<Item = (&String, &toolbox_derive::Entity)>> = match &posting {
+        Some((ix, v)) => {
+            let ids = ix.get(v).map_or(&[][..], Vec::as_slice);
+            let from = match &lower {
+                std::ops::Bound::Excluded(c) => ids.partition_point(|id| id <= *c),
+                _ => 0,
+            };
+            Box::new(
+                ids[from..]
+                    .iter()
+                    .filter_map(|id| p.derived.entities.get_key_value(id)),
+            )
+        }
+        None => Box::new(
+            p.derived
+                .entities
+                .range::<String, _>((lower, std::ops::Bound::Unbounded)),
+        ),
+    };
+    let candidates: Vec<&String> = start
         .filter(|(_, e)| {
             q.kind
                 .as_deref()
