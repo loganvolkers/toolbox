@@ -403,7 +403,7 @@ async fn entity_page(
         "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>{title}</title>\
          <script type=\"module\" src=\"/assets/app.js\"></script>\
          <link rel=\"stylesheet\" href=\"/assets/app.css\"></head><body>\
-         <header><h1>{title}</h1><p>Owner: {owner}</p></header><div id=\"root\"></div></body></html>",
+         <header><p>{title}</p><p>Owner: {owner}</p></header><div id=\"root\"></div></body></html>",
         title = html_escape(title),
         owner = html_escape(owner),
     );
