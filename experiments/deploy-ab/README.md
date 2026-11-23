@@ -3,9 +3,12 @@
 **Question:** can a fresh agent deploy a usable portal, with Toolbox and with Backstage, when the
 only services on the machine are a local GitHub and Postgres?
 
-**Status: rerun 2026-11-23.** The bar below is the bar. It changes only if the design changes
-before a run, and then the change is recorded. The first run is [RESULTS.md](RESULTS.md).
-The rerun, and the defeat, are in [RESULTS-v2.md](RESULTS-v2.md).
+**Status: rerun 2026-11-23; inconclusive.** The bar below is the bar. It changes only if the design
+changes before a run, and then the change is recorded. The first run is [RESULTS.md](RESULTS.md),
+and the rerun is [RESULTS-v2.md](RESULTS-v2.md). Neither run held or failed. No tokens were
+recorded, and the arms were not given equal conditions, so the rerun is not a defeat
+([ADJUDICATION.md](ADJUDICATION.md), [D01M83RDWR52WVNER0MV5T84NSX](../../docs/decisions/D01M83RDWR52WVNER0MV5T84NSX.md)).
+The prompts are in [prompts/](prompts/README.md).
 
 This tests the box's deploy contract, not a tool
 ([toolbox-and-tools.md](../../docs/design/toolbox-and-tools.md)). The environment is

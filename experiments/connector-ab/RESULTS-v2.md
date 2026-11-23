@@ -1,5 +1,12 @@
 # Connector A/B Results — rerun v2 (learning-tax fixes)
 
+> **Superseded verdict (2026-11-23).** This is not a win. Between v1 and v2 only the Toolbox arm's
+> prompts and recipe changed. The phase-4 tie on the first pass fails C2, and the rerun after an
+> A-only tip replaced it. The C1 margin is inside one arm's noise. C1 and C2 are inconclusive here,
+> and C3 holds. See [ADJUDICATION.md](./ADJUDICATION.md) and
+> [D01M83RDWR52WVNER0MV5T84NSX](../../docs/decisions/D01M83RDWR52WVNER0MV5T84NSX.md). The text
+> below is the run as first written up.
+
 **Status: complete. Toolbox wins C1–C3.** Same bar as [README.md](./README.md) §6.
 Product: [D01M83FFM2K6XS4EAVHVP92TBDZ](../../docs/decisions/D01M83FFM2K6XS4EAVHVP92TBDZ.md). Baseline: [RESULTS.md](./RESULTS.md).
 

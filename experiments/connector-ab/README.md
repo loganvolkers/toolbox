@@ -6,7 +6,10 @@ less glue than Port Ocean or a Backstage entity provider, at equal correctness, 
 package-author lifecycle (author → test → change → reuse → read)?
 
 **Status: run, 2026-11-23. C1 and C2 failed; C3 held.** Full write-up: [RESULTS.md](./RESULTS.md).
-Hypotheses C1–C3 and the bar in §6 were not edited after the first arm started.
+Hypotheses C1–C3 and the bar in §6 were not edited after the first arm started. The reruns v2 and v3
+are overfitted and within noise, not wins: only the Toolbox arm changed between rounds, and the
+margin is smaller than one arm's run-to-run spread ([ADJUDICATION.md](./ADJUDICATION.md),
+[D01M83RDWR52WVNER0MV5T84NSX](../../docs/decisions/D01M83RDWR52WVNER0MV5T84NSX.md)).
 
 This measures the **package-author** layer's `build-connector` stage and neighbouring stages
 ([package-author-sdlc.md](../../docs/design/package-author-sdlc.md),

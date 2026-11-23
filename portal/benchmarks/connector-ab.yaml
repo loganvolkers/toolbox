@@ -22,9 +22,12 @@ records:
     status: complete
     ran: 2026-11-23
     outcome: >-
-      v3 (catalog-drive + composite ids, same bar): C1–C3 hold. C1 39/57/40;
-      C2 9/12/16. Large-lead target (≥10 under both rivals on C1 and C2)
-      missed (C1 vs C only −1). v2: RESULTS-v2.md; v1: RESULTS.md
+      v1, the round the bar was written for: C1 and C2 failed (calls 1+3 A 65,
+      B 63, C 46; phase 4 A 15, B 15, C 16) and C3 held. v2 and v3 are
+      overfitted and within noise, not wins: only the Toolbox arm changed
+      between rounds, a product format was shaped to the harness, and the v3
+      C1 margin of 1 call is inside Backstage's 21-call spread across rounds
+      (ADJUDICATION.md, D01M83RDWR52WVNER0MV5T84NSX)
     changed:
     - >-
       Scaffold ships rust-toolchain.toml so toolbox-connect edition2024 builds
@@ -36,13 +39,25 @@ records:
     - D01M83FFM2K6XS4EAVHVP92TBDZ
     - D01M83GQ1KP8A0WR3P2S7AG54WQ
     - D01M83H3HBH2SC205MX3ANRZYWN
+    - D01M83RDWR52WVNER0MV5T84NSX
+    - D01M83RDWQ5EVKY5SFHDWAD5HFH
     - >-
       connector drive --format catalog --out; composite catalog-id guidance
       and numeric-externalId fallback
-    servedValue: >-
-      Toolbox wins the pre-registered C1–C3 bar; further cutting change-phase
-      cost enough for a ≥10-call lead on C1 was not achieved without bar
-      changes
+    servedValue: ''
     blockedOn: ''
     readme: experiments/connector-ab/README.md
-    results: experiments/connector-ab/RESULTS-v3.md
+    results: experiments/connector-ab/ADJUDICATION.md
+    protocol: 1
+    prompts: experiments/connector-ab/prompts
+    runsPerArm: 1
+    measure: >-
+      tokens in the bar; the runtime reported none, and tool calls were
+      substituted after the run
+    designer: the agent that designed and ran it (D01M833YAH8MT4VY2W4K1PYAEHB)
+    adjudicator: >-
+      an agent that designed no arm, 2026-11-23 (ADJUDICATION.md); before
+      that, the designer
+    spread: >-
+      one run per arm per phase; Backstage's unchanged phase 1 went 29, 38, 29
+      calls across rounds

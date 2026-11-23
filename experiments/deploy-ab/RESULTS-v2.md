@@ -1,5 +1,13 @@
 # Deploy A/B, rerun (2026-11-23)
 
+> **Superseded verdict (2026-11-23).** This is inconclusive, not a defeat. The bar can't be
+> applied without tokens. The S2 probe authenticates only Toolbox. The Toolbox agent restarted a
+> container that had been built before the run. The "earlier Backstage launch" mentioned below
+> made 80 tool calls in the same workspace while the scored launch was running. See
+> [ADJUDICATION.md](ADJUDICATION.md) and
+> [D01M83RDWR52WVNER0MV5T84NSX](../../docs/decisions/D01M83RDWR52WVNER0MV5T84NSX.md). The text below
+> is the run as first written up.
+
 **deploy-usable does not hold. Defeat.** The bar in [README.md](README.md) is unchanged.
 The design is [local simulation](../../docs/design/local-simulation.md).
 The baseline is [RESULTS.md](RESULTS.md). This run changes one thing in Toolbox: the portal

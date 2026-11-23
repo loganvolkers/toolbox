@@ -1,5 +1,9 @@
 # Deploy A/B, first run (2026-11-23)
 
+> **Adjudicated (2026-11-23): inconclusive.** "Does not hold" below means neither the hold nor the
+> fail. The arms also did not get equal conditions: S2 authenticated only Toolbox, and Toolbox's
+> image and container existed before the run. See [ADJUDICATION.md](ADJUDICATION.md).
+
 **deploy-usable does not hold.** Toolbox passed S1–S3 and T1–T4. Backstage passed S1 and S3 and
 failed S2. The agent runtime returned no token counts, so the token clause was not scored. This is
 not the pre-registered fail either: Toolbox did not miss a shared probe that Backstage passed.

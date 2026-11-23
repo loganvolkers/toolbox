@@ -17,9 +17,12 @@ records:
     status: complete
     ran: 2026-11-23
     outcome: >-
-      deploy-usable does not hold, and the rerun admits defeat. Toolbox passed
-      S1–S3 and T1–T4 on both runs. Backstage passed S1 and S3 and failed S2
-      on both runs. The agent runtime returned no token counts on either run
+      Inconclusive on both runs, not a defeat. Toolbox passed S1–S3 and T1–T4,
+      Backstage passed S1 and S3 and failed S2, and the runtime recorded no
+      tokens, so neither the hold nor the fail applies. The arms were unequal:
+      S2 authenticated only Toolbox, the Toolbox image and container existed
+      before the run, and two Backstage launches overlapped in the rerun
+      (ADJUDICATION.md, D01M83RDWR52WVNER0MV5T84NSX)
     changed:
     - >-
       OpenFGA's tuple view follows the connection search_path, so a role named
@@ -28,7 +31,18 @@ records:
       The Acme portal image pushes the directory after the SCIM connector is
       listening. The rerun still failed S2 for Backstage and still had no
       tokens
+    - D01M83RDWR52WVNER0MV5T84NSX
+    - D01M83RDWQ5EVKY5SFHDWAD5HFH
     servedValue: ''
     blockedOn: ''
     readme: experiments/deploy-ab/README.md
-    results: experiments/deploy-ab/RESULTS-v2.md
+    results: experiments/deploy-ab/ADJUDICATION.md
+    protocol: 1
+    prompts: experiments/deploy-ab/prompts
+    runsPerArm: 1
+    measure: tokens; the runtime reported none on either run
+    designer: the agent that designed and ran it (local-simulation.md §9)
+    adjudicator: >-
+      an agent that designed no arm, 2026-11-23 (ADJUDICATION.md); before
+      that, the designer
+    spread: one run per arm per round

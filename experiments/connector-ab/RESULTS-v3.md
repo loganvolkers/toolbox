@@ -1,5 +1,14 @@
 # Connector A/B Results — rerun v3 (catalog-drive)
 
+> **Superseded verdict (2026-11-23).** "Holds" below is not a verdict that stands. The round
+> followed a product format made "to widen connector-ab lead", which emits the harness's own NDJSON
+> shape, and only the Toolbox arm's recipe names it. The C1 margin over Backstage is 1 call, while
+> Backstage's own C1 total moved by 21 across rounds. Its prompts and scaffold did not change in
+> those rounds. Only the shared `FORGE.md` gained notes, and every arm got them. C1 and C2 are inconclusive here, and C3 holds. The phase-3 first pass that failed was
+> Toolbox and Ocean, not Backstage. See [ADJUDICATION.md](./ADJUDICATION.md) and
+> [D01M83RDWR52WVNER0MV5T84NSX](../../docs/decisions/D01M83RDWR52WVNER0MV5T84NSX.md). The text below
+> is the run as first written up.
+
 **Status: complete.** Same bar as [README.md](./README.md) §6.
 Product: [D01M83GQ1KP8A0WR3P2S7AG54WQ](../../docs/decisions/D01M83GQ1KP8A0WR3P2S7AG54WQ.md),
 [D01M83H3HBH2SC205MX3ANRZYWN](../../docs/decisions/D01M83H3HBH2SC205MX3ANRZYWN.md).

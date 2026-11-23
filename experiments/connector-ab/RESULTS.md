@@ -1,7 +1,8 @@
 # Connector A/B Results
 
-**v1 baseline.** For the learning-tax rematch (Toolbox wins C1–C3), see
-[RESULTS-v2.md](./RESULTS-v2.md).
+**v1, the round the bar was written for: C1 and C2 failed, C3 held.** The reruns
+([RESULTS-v2.md](./RESULTS-v2.md), [RESULTS-v3.md](./RESULTS-v3.md)) are overfitted and within
+noise, not wins ([ADJUDICATION.md](./ADJUDICATION.md)).
 
 **Status: run complete, 2026-11-23.** Pre-registered bar: [README.md](./README.md) §6
 (C1–C3). Decision: [D01M833YAH8MT4VY2W4K1PYAEHB](../../docs/decisions/D01M833YAH8MT4VY2W4K1PYAEHB.md).
