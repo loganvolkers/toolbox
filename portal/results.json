@@ -89,6 +89,43 @@
         "level": "gold"
       }
     },
+    "maintainer-benchmark": {
+      "benchmark:box-ab": {
+        "level": "gold"
+      },
+      "benchmark:checklist-ab": {
+        "level": "gold"
+      },
+      "benchmark:out-of-box": {
+        "level": "gold"
+      },
+      "benchmark:ratchet-replay": {
+        "level": "gold"
+      },
+      "benchmark:security-ab": {
+        "level": "gold"
+      },
+      "benchmark:spec-ab": {
+        "failing": {
+          "results-recorded": 1
+        },
+        "level": "silver"
+      },
+      "benchmark:standards-ab": {
+        "level": "gold"
+      },
+      "benchmark:standards-ab-rerun": {
+        "level": "gold"
+      },
+      "benchmark:t4t-fresh-agent": {
+        "failing": {
+          "has-a-rival": 1,
+          "open-source-pinned": 1,
+          "pre-registered": 1
+        },
+        "level": "bronze"
+      }
+    },
     "maintainer-ci-reliability": {
       "workflow:.github/workflows/ci.yml": {
         "failing": {
@@ -914,6 +951,9 @@
       "doc:docs/decisions/D01M82E93XAPNE0WFXEPJZ59WG4.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M82X2K0DYWTCA23MQJ4CKR0Z.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/README.md": {
         "level": "skipped"
       },
@@ -957,6 +997,9 @@
         "level": "silver"
       },
       "doc:docs/design/developer-velocity.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/dx-benchmarks.md": {
         "level": "silver"
       },
       "doc:docs/design/example-standards.md": {
@@ -1454,6 +1497,9 @@
         "level": "gold"
       },
       "site-page:site/src/content/docs/concepts/catalog.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/concepts/dx-benchmarks.md": {
         "level": "gold"
       },
       "site-page:site/src/content/docs/concepts/layers.md": {
@@ -2182,6 +2228,78 @@
         "level": "gold"
       },
       "field:toolbox/Assessment.verdict": {
+        "level": "gold"
+      },
+      "field:toolbox/Benchmark.blockedOn": {
+        "level": "gold"
+      },
+      "field:toolbox/Benchmark.changeGaps": {
+        "level": "gold"
+      },
+      "field:toolbox/Benchmark.changed": {
+        "level": "gold"
+      },
+      "field:toolbox/Benchmark.declarationGaps": {
+        "level": "gold"
+      },
+      "field:toolbox/Benchmark.hash": {
+        "level": "gold"
+      },
+      "field:toolbox/Benchmark.hypotheses": {
+        "level": "gold"
+      },
+      "field:toolbox/Benchmark.hypothesisGaps": {
+        "level": "gold"
+      },
+      "field:toolbox/Benchmark.layers": {
+        "level": "gold"
+      },
+      "field:toolbox/Benchmark.missingPaths": {
+        "level": "gold"
+      },
+      "field:toolbox/Benchmark.outcome": {
+        "level": "gold"
+      },
+      "field:toolbox/Benchmark.question": {
+        "level": "gold"
+      },
+      "field:toolbox/Benchmark.ran": {
+        "level": "gold"
+      },
+      "field:toolbox/Benchmark.readme": {
+        "level": "gold"
+      },
+      "field:toolbox/Benchmark.reasonGaps": {
+        "level": "gold"
+      },
+      "field:toolbox/Benchmark.repoGaps": {
+        "level": "gold"
+      },
+      "field:toolbox/Benchmark.repos": {
+        "level": "gold"
+      },
+      "field:toolbox/Benchmark.resultGaps": {
+        "level": "gold"
+      },
+      "field:toolbox/Benchmark.results": {
+        "level": "gold"
+      },
+      "field:toolbox/Benchmark.rival": {
+        "level": "gold"
+      },
+      "field:toolbox/Benchmark.rivalGaps": {
+        "level": "gold"
+      },
+      "field:toolbox/Benchmark.servedValue": {
+        "level": "gold"
+      },
+      "field:toolbox/Benchmark.stages": {
+        "level": "gold"
+      },
+      "field:toolbox/Benchmark.status": {
+        "level": "gold"
+      },
+      "field:toolbox/Benchmark.title": {
         "level": "gold"
       },
       "field:toolbox/Command.about": {
@@ -3772,6 +3890,9 @@
       "kind:toolbox/Assessment": {
         "level": "gold"
       },
+      "kind:toolbox/Benchmark": {
+        "level": "gold"
+      },
       "kind:toolbox/Command": {
         "failing": {
           "fields-described": 9
@@ -4032,6 +4153,30 @@
         "level": "gold"
       },
       "rule:toolbox/maintainer-agent-doc/within-budget": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-benchmark/closes-the-loop": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-benchmark/declared": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-benchmark/has-a-rival": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-benchmark/open-source-pinned": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-benchmark/paths-exist": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-benchmark/pre-registered": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-benchmark/results-recorded": {
+        "level": "gold"
+      },
+      "rule:toolbox/maintainer-benchmark/says-why": {
         "level": "gold"
       },
       "rule:toolbox/maintainer-ci-reliability/cancels-superseded-runs": {
@@ -4704,6 +4849,9 @@
         "level": "gold"
       },
       "scorecard:toolbox/maintainer-agent-doc": {
+        "level": "gold"
+      },
+      "scorecard:toolbox/maintainer-benchmark": {
         "level": "gold"
       },
       "scorecard:toolbox/maintainer-ci-reliability": {

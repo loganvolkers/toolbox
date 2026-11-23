@@ -26,3 +26,5 @@ A sentence that says "SDLC" and names no layer is ambiguous, and the docs scorec
 | User SDLC | The catalog reads on CLI, MCP and HTTP, personal access tokens, snapshot ids | Typed clients, service identities, a deprecation feed. Action runs are paused |
 
 The reference portal sits on the boundary. Maintainers use it as the acceptance oracle. Its scenarios are written as user tasks: who owns a repository, why a level is redacted, refresh this, install this app.
+
+Whether each loop actually works for agents is measured, not asserted: [DX Benchmarks](/toolbox/concepts/dx-benchmarks/) run agents through a layer's work on open-source repositories, with Toolbox and with the alternatives.

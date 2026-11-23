@@ -65,6 +65,16 @@ caching) comes back only when these numbers regress (D44, [developer-velocity.md
 Each row is recorded with its result in [research-log.md](../research-log.md) when a milestone
 closes.
 
+**Above the pyramid: DX Benchmarks** ([dx-benchmarks.md](./dx-benchmarks.md),
+D01M82X2K0DYWTCA23MQJ4CKR0Z). The pyramid proves Toolbox behaves as specified. A DX Benchmark
+asks whether that specification helps the agents that use it. Fresh agents do lifecycle work on
+open-source forks, with Toolbox and with its strongest alternative, against a bar set before the
+run. They aren't run on every change: they cost 0.5M–1.3M tokens each, so run one when a claim
+needs proving or a release changes what a benchmark measured. Each benchmark measures one or more
+of the four SDLC layers, and the catalog in `portal/benchmarks/` is scored by
+`maintainer-benchmark`. They are the most effective way we have found to smooth Toolbox's rough
+edges: every one so far has produced fixes.
+
 ## 5. Local prerequisites
 
 | Tool | Used by | Note |

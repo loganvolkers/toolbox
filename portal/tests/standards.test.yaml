@@ -1052,3 +1052,51 @@ assert:
       'maintainer-openssf:Pinned-Dependencies').measures['ten'] == 6.0 &&
       score('maintainer-openssf', 'maintainer-openssf:Fuzzing').rules['ten']
       == 'unknown'
+  # DX Benchmarks (docs/design/dx-benchmarks.md, D01M82X2K0DYWTCA23MQJ4CKR0Z)
+  - name: >-
+      a run, archived DX Benchmark with a rival, bar, pinned repositories and
+      fixes reaches gold
+    expect: >-
+      score('maintainer-benchmark', 'benchmark:demo-gold').level == 'gold' &&
+      score('maintainer-benchmark', 'benchmark:demo-gold').rules['declared']
+      == 'pass' && score('maintainer-benchmark',
+      'benchmark:demo-gold').rules['paths-exist'] == 'pass' &&
+      score('maintainer-benchmark',
+      'benchmark:demo-gold').rules['has-a-rival'] == 'pass' &&
+      score('maintainer-benchmark',
+      'benchmark:demo-gold').rules['pre-registered'] == 'pass' &&
+      score('maintainer-benchmark',
+      'benchmark:demo-gold').rules['open-source-pinned'] == 'pass' &&
+      score('maintainer-benchmark', 'benchmark:demo-gold').rules['says-why']
+      == 'pass' && score('maintainer-benchmark',
+      'benchmark:demo-gold').rules['results-recorded'] == 'pass' &&
+      score('maintainer-benchmark',
+      'benchmark:demo-gold').rules['closes-the-loop'] == 'pass'
+  - name: a blocked DX Benchmark stops at silver because it hasn't run
+    expect: >-
+      score('maintainer-benchmark', 'benchmark:demo-blocked').level ==
+      'silver' && score('maintainer-benchmark',
+      'benchmark:demo-blocked').rules['results-recorded'] == 'fail' &&
+      score('maintainer-benchmark',
+      'benchmark:demo-blocked').evidence['results-recorded'] == ['not run
+      yet'] && score('maintainer-benchmark',
+      'benchmark:demo-blocked').rules['says-why'] == 'pass'
+  - name: an undeclared DX Benchmark fails every level and names each gap
+    expect: >-
+      score('maintainer-benchmark', 'benchmark:demo-bare').level == 'none' &&
+      score('maintainer-benchmark',
+      'benchmark:demo-bare').evidence['declared'] == ['no question', 'unknown
+      layer tester'] && score('maintainer-benchmark',
+      'benchmark:demo-bare').rules['paths-exist'] == 'fail' &&
+      score('maintainer-benchmark',
+      'benchmark:demo-bare').rules['has-a-rival'] == 'fail' &&
+      score('maintainer-benchmark',
+      'benchmark:demo-bare').rules['pre-registered'] == 'fail' &&
+      score('maintainer-benchmark',
+      'benchmark:demo-bare').evidence['open-source-pinned'] == ['example/repo
+      has no pinned commit'] && score('maintainer-benchmark',
+      'benchmark:demo-bare').evidence['says-why'] == ['archived without
+      servedValue'] && score('maintainer-benchmark',
+      'benchmark:demo-bare').evidence['results-recorded'] == ['no outcome',
+      'no results path'] && score('maintainer-benchmark',
+      'benchmark:demo-bare').rules['closes-the-loop'] == 'fail'

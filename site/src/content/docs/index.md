@@ -18,12 +18,17 @@ Four groups build with Toolbox. Each group has its own loop, and a command belon
 
 [The four SDLC layers](/toolbox/concepts/layers/) is how those loops meet, and which parts run today.
 
+## Measured, not claimed
+
+Toolbox benchmarks its own developer experience. Coding agents do real work on open-source repositories, once with Toolbox and once with the alternatives: hand-written glue, a checklist, an agent building from scratch, or OpenSSF Scorecard. The bar is set before each run, and the losses are published. See [DX Benchmarks](/toolbox/concepts/dx-benchmarks/).
+
 ## Start
 
 - [Install a release](/toolbox/start/install/)
 - [Run Toolbox locally](/toolbox/start/run/)
 - [The catalog](/toolbox/concepts/catalog/)
 - [Scorecards](/toolbox/concepts/scorecards/)
+- [DX Benchmarks](/toolbox/concepts/dx-benchmarks/)
 - [This repository, scored](/toolbox/demo/report/)
 
 The source of this site is in the [Toolbox repository](https://github.com/loganvolkers/toolbox). The pages you are reading are catalogued and scored with the rest of the repository.

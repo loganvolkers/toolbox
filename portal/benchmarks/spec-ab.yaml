@@ -1,0 +1,20 @@
+# DX Benchmark catalog entry (docs/design/dx-benchmarks.md §6), scored by maintainer-benchmark.
+records:
+  - id: spec-ab
+    title: Results by hand, with Toolbox, or on Backstage (R7)
+    question: >-
+      With a well-specified results format, can agents produce and consume
+      results without Toolbox, and what does building on Backstage cost?
+    layers: [user, operator]
+    stages: [operator/author, user/build]
+    hypotheses: [R7]
+    rival: The spec alone by hand; building on Backstage with Tech Insights
+    repos: [loganvolkers/posthog@153f1b8d]
+    status: blocked
+    ran: ''
+    outcome: ''
+    changed: []
+    servedValue: ''
+    blockedOn: Q17 (write the spec) and Q18 (approve the Backstage spike)
+    readme: experiments/spec-ab/README.md
+    results: ''

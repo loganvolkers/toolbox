@@ -38,6 +38,21 @@ Scorecard `review-assessment` over `Assessment` entities, owned by group:maintai
 | `passes-review` | silver | `entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0` | Revise the assessment where the review found it unsupported or incomplete, then have it reviewed again. |
 | `no-doubts` | gold | `entity.reviewState == 'fresh' && entity.reviewUnsure.size() == 0` | Resolve what the reviewer was unsure of, usually by citing the source a verdict rests on. |
 
+## maintainer-benchmark
+
+Scorecard `maintainer-benchmark` over `Benchmark` entities, owned by group:maintainers. `toolbox report` lists what fails now.
+
+| Rule | Level | Passes when | Fix |
+|---|---|---|---|
+| `declared` | bronze | `entity.declarationGaps.size() == 0` | Give the entry a one-sentence question, the SDLC layers it measures (maintainer, package-author, operator, user) and a status (designed, blocked, complete, archived). |
+| `paths-exist` | bronze | `entity.missingPaths.size() == 0` | Point readme at the benchmark's pre-registration and results at its published results, as paths that exist in the repository. |
+| `has-a-rival` | silver | `entity.rivalGaps.size() == 0` | Name the arm without Toolbox: an agent from scratch, a checklist, hand-written glue, an existing standard or another platform (dx-benchmarks.md §4, step 3). |
+| `pre-registered` | silver | `entity.hypothesisGaps.size() == 0` | Name the hypotheses the benchmark tests, each with a bar written in its README before it ran (dx-benchmarks.md §4, step 5). |
+| `open-source-pinned` | silver | `entity.repoGaps.size() == 0` | Run on open-source repositories we didn't write and list each as owner/name@commit, so the run can be reproduced. |
+| `says-why` | silver | `entity.reasonGaps.size() == 0` | Say why an archived benchmark has served its value (servedValue), or what a blocked one waits on (blockedOn). |
+| `results-recorded` | gold | `entity.resultGaps.size() == 0` | Run it, then record the outcome against the bar as written and the path of the published results (dx-benchmarks.md §4, step 9). |
+| `closes-the-loop` | gold | `entity.changeGaps.size() == 0` | List what the benchmark changed in Toolbox: the friction fixes and the decisions it produced (dx-benchmarks.md §4, step 10). |
+
 ## operator-cli
 
 Scorecard `operator-cli` over `Command` entities, owned by group:maintainers. `toolbox report` lists what fails now.

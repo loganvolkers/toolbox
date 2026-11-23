@@ -10,6 +10,8 @@ The public docs are a Starlight site in [site/](site/src/content/docs/index.md),
 
 **Status:** v1 implementation in progress: M0–M4 are done (validate, derived state, Postgres store and REST reads, authentication and OpenFGA facets, MCP, CLI, minimal UI and connectors); M5 (actions) is paused for a review of self-service coordination (D64) ([docs/v1-spec.md](docs/v1-spec.md) §3). Toolbox also runs on itself: [portal/](portal/README.md) scores this repo's crates, docs, CLI and MCP tools against the three SDLC layers (D65).
 
+**DX Benchmarks ([docs/design/dx-benchmarks.md](docs/design/dx-benchmarks.md)):** Toolbox measures its own developer experience in public. Fresh coding agents do real lifecycle work on open-source repositories (OpenFGA, Codex, gh-aw, PostHog), once with Toolbox and once with the strongest alternative: hand-written glue, a checklist, an agent building from scratch, or OpenSSF Scorecard. The bar is set before each run, and the losses are published with the wins. Every benchmark so far has changed Toolbox. The catalog is [portal/benchmarks/](portal/benchmarks).
+
 **SDLC has four layers** ([docs/sdlc.md](docs/sdlc.md)): the *maintainer* SDLC for building Toolbox, the *package author* SDLC for publishing packages and connectors others consume, the *operator* SDLC for building a portal, and the *user* SDLC for building apps on a portal.
 
 **Install (v0.1.1):** see [docs/RELEASING.md](docs/RELEASING.md) and [Install a release](site/src/content/docs/start/install.md). For a repo portal without compiling:
@@ -37,7 +39,8 @@ cargo build && target/debug/toolbox validate examples/reference-portal
 - [docs/principal-review.md](docs/principal-review.md) — principal-engineer review: security, consistency, scope holes and proposed ADRs
 - [docs/adversarial-critique.md](docs/adversarial-critique.md) — adversarial critique: should Toolbox be built at all? Hypotheses, alternatives, kill criteria
 - [docs/technology-critique.md](docs/technology-critique.md) — technology-only critique: sprawl, replaceability by generic components, the Backstage compatibility claim, a minimal architecture
-- [experiments/](experiments/) — small reproducible experiments cited by the docs
+- [docs/design/dx-benchmarks.md](docs/design/dx-benchmarks.md) — DX Benchmarks: how we benchmark agents' developer experience with Toolbox against the alternatives on open source, the prior art, and the catalog
+- [experiments/](experiments/) — small reproducible experiments cited by the docs, and the DX Benchmarks' harnesses
 - Detailed designs:
   - [design/meta-catalog.md](docs/design/meta-catalog.md): the portal catalogs, owns and scores itself
   - [design/incremental-computation.md](docs/design/incremental-computation.md): DBSP incremental circuit + DBOS-model durable workflows over one change log

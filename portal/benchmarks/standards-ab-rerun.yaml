@@ -1,0 +1,30 @@
+# DX Benchmark catalog entry (docs/design/dx-benchmarks.md §6), scored by maintainer-benchmark.
+records:
+  - id: standards-ab-rerun
+    title: Standards lifecycle rerun after the fixes (B')
+    question: >-
+      After the measured friction is fixed, does Toolbox cost fewer tokens
+      than bespoke scripts over a standard's lifecycle?
+    layers: [package-author, operator]
+    stages: [package-author/author, package-author/package, operator/monitor]
+    hypotheses: [R3]
+    rival: Bespoke scripts (round two's arm A)
+    repos:
+    - loganvolkers/posthog@153f1b8d
+    - loganvolkers/codex@859dbe27
+    - loganvolkers/openfga@7d89a566
+    status: archived
+    ran: 2026-11-21
+    outcome: >-
+      510k tokens against 445k at equal correctness: R3 closed as failed
+      (D01M7Z2ZZ97VZQNTDT4QQHM3HQD)
+    changed:
+    - packages/file-size and packages/pattern-count
+    - one history walk for lastChange
+    - ratchet and report fixes
+    servedValue: >-
+      R3 is closed, and the box A/B asks the better question: one place for
+      many tools, not building a tool
+    blockedOn: ''
+    readme: experiments/standards-ab/README.md
+    results: experiments/standards-ab/rerun/usage.tsv

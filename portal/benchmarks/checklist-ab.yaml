@@ -1,0 +1,25 @@
+# DX Benchmark catalog entry (docs/design/dx-benchmarks.md §6), scored by maintainer-benchmark.
+records:
+  - id: checklist-ab
+    title: Checklist or toolbox report (R3, first round)
+    question: >-
+      Does a coding agent raise a repository's standards further with toolbox
+      report and its ratchet than with the same standards written down?
+    layers: [operator]
+    stages: [operator/monitor]
+    hypotheses: [R3]
+    rival: >-
+      The same rules and fix texts as a written checklist, naming the same
+      tools
+    repos: [loganvolkers/openfga@7d89a566, loganvolkers/codex@859dbe27]
+    status: archived
+    ran: 2026-11-21
+    outcome: >-
+      The checklist fixed as much or more (86% against 83%, 100% against 82%);
+      R3's bar of 15 points was not met
+    changed:
+    - R3 reframed over a standard's whole lifecycle, as the standards A/B
+    servedValue: Its hypothesis failed and was retested more fully by the standards A/B
+    blockedOn: ''
+    readme: experiments/out-of-box/ab/README.md
+    results: experiments/out-of-box/ab/README.md

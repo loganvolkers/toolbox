@@ -1,0 +1,29 @@
+# DX Benchmark catalog entry (docs/design/dx-benchmarks.md §6), scored by maintainer-benchmark.
+records:
+  - id: ratchet-replay
+    title: Ratchet replay over upstream history (R4)
+    question: >-
+      Does the ratchet catch real regressions in other people's commits
+      without flagging intended changes?
+    layers: [operator]
+    stages: [operator/monitor]
+    hypotheses: [R4]
+    rival: "Upstream's own judgement: every first-parent commit was merged"
+    repos:
+    - loganvolkers/openfga@7d89a566
+    - loganvolkers/codex@859dbe27
+    - loganvolkers/gh-aw@f9c40ded
+    - loganvolkers/posthog@153f1b8d
+    status: complete
+    ran: 2026-11-21
+    outcome: >-
+      141 commits: 133 pass, 3 regressed (one real supply-chain regression,
+      one probable, one noise), 5 stale (3.5%)
+    changed:
+    - >-
+      Low-severity zizmor notes at gold identified as noise; stale
+      improvements under --ci measured
+    servedValue: ''
+    blockedOn: ''
+    readme: experiments/out-of-box/README.md
+    results: experiments/out-of-box/replay-openfga.tsv

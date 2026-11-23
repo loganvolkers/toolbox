@@ -1,0 +1,31 @@
+# DX Benchmark catalog entry (docs/design/dx-benchmarks.md §6), scored by maintainer-benchmark.
+records:
+  - id: out-of-box
+    title: Out of the box on four forks (R2)
+    question: >-
+      Do the starter and packages, untuned, give true findings worth fixing on
+      repositories we didn't write?
+    layers: [operator, package-author]
+    stages: [operator/author, operator/validate, package-author/adopt]
+    hypotheses: [R2]
+    rival: >-
+      A triage of every failing (entity, rule) pair by hand: true and worth
+      fixing, true but not worth it, or false
+    repos:
+    - loganvolkers/openfga@7d89a566
+    - loganvolkers/codex@859dbe27
+    - loganvolkers/gh-aw@f9c40ded
+    - loganvolkers/posthog@153f1b8d
+    status: complete
+    ran: 2026-11-21
+    outcome: >-
+      The first run failed on all four forks. After the fixes, 939 of 940
+      failing pairs were true and 70% of those worth fixing: R2's bar was met
+    changed:
+    - 'Missing run data scored unknown (D01M7Y5VWKW5TDS0VQWZFPRQ27N, PR #24)'
+    - Link checking for root-relative, base-path and extensionless links
+    - pnpm frozen-lockfile and toolchain rules
+    servedValue: ''
+    blockedOn: ''
+    readme: experiments/out-of-box/README.md
+    results: docs/research-log.md

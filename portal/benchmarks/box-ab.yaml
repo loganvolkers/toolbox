@@ -1,0 +1,26 @@
+# DX Benchmark catalog entry (docs/design/dx-benchmarks.md §6), scored by maintainer-benchmark.
+records:
+  - id: box-ab
+    title: 'Several tools: one box or hand-written glue (R6)'
+    question: >-
+      When a repository already runs several tools, does keeping them in
+      Toolbox's box cost an agent less than hand-written CI glue?
+    layers: [operator]
+    stages: [operator/author, operator/test, operator/monitor]
+    hypotheses: [R6]
+    rival: Hand-written CI glue around the same tools
+    repos: [loganvolkers/posthog@153f1b8d]
+    status: complete
+    ran: 2026-11-22
+    outcome: >-
+      Equal correctness and less glue (306 lines against 341), but 11% more
+      tokens (679k against 610k): failed on tokens
+    changed:
+    - >-
+      DX fixes in 5a29892: nested array merges, vendor's portable source,
+      --fail-on-unknown, --keep-campaigns, campaign lines, a pinned CI snippet
+    - Skills for campaigns and reports
+    servedValue: ''
+    blockedOn: ''
+    readme: experiments/box-ab/README.md
+    results: experiments/box-ab/results

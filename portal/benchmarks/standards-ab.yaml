@@ -1,0 +1,27 @@
+# DX Benchmark catalog entry (docs/design/dx-benchmarks.md §6), scored by maintainer-benchmark.
+records:
+  - id: standards-ab
+    title: 'Standards lifecycle: bespoke scripts or Toolbox (R3, second round)'
+    question: >-
+      Over a standard's life (write, enforce, campaign, change, reuse, read),
+      does Toolbox cost an agent less than bespoke scripts at equal
+      correctness?
+    layers: [package-author, operator]
+    stages: [package-author/author, package-author/package, operator/monitor]
+    hypotheses: [R3]
+    rival: Bespoke scripts written by the same agent
+    repos:
+    - loganvolkers/posthog@153f1b8d
+    - loganvolkers/codex@859dbe27
+    - loganvolkers/openfga@7d89a566
+    status: archived
+    ran: 2026-11-21
+    outcome: Both exact in every phase; Toolbox 582k tokens against 445k for scripts
+    changed:
+    - >-
+      18 friction items, among them a numeric ratchet, parameterised packages,
+      a connector reference and the starter (D01M7Z2ZZ97VZQNTDT4QQHM3HQD)
+    servedValue: Superseded by its own rerun after the fixes (standards-ab-rerun)
+    blockedOn: ''
+    readme: experiments/standards-ab/README.md
+    results: experiments/standards-ab/usage.tsv

@@ -23,6 +23,10 @@ python3 scripts/validate-parity.py
 
 A change that moves one field in the output fails the byte compare. Regenerate `expected/` only after reading the diff.
 
+## Benchmark a claim about developer experience
+
+Tests prove that Toolbox behaves as specified. A DX Benchmark asks whether that helps the agents that use it. Fresh agents do lifecycle work on open-source forks, with Toolbox and with its strongest alternative, against a bar written before the run. A claim that Toolbox makes something easier needs one. Each benchmark has an entry in `portal/benchmarks/`, which `maintainer-benchmark` scores, and is archived once it has served its value. See [DX Benchmarks](/toolbox/concepts/dx-benchmarks/).
+
 ## Keep the inner loop short
 
 On a 4 vCPU container with warm caches, after milestone M4, the recorded times are: rebuild after editing `toolbox-derive` 2.1 s, `cargo test` 3.6 s, `toolbox test examples/reference-portal` 0.2 s, `cargo clippy --all-targets -- -D warnings` 4.7 s. The acceptance script that drives Postgres, OpenFGA, the connectors and a browser (`scripts/m4-acceptance.sh`) is 7.9 s.

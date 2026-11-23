@@ -23,6 +23,14 @@ is decided once both are proven. Say which end you work on. Self-service actions
 4. **User SDLC**: developers and agents building *apps* on a portal's context and actions
    ([user-sdlc.md](./docs/design/user-sdlc.md)).
 
+**DX Benchmarks ([docs/design/dx-benchmarks.md](./docs/design/dx-benchmarks.md), D01M82X2K0DYWTCA23MQJ4CKR0Z)
+are how we find Toolbox's rough edges and prove its claims.** In each, fresh coding agents do real
+lifecycle work on open-source forks, once with Toolbox and once with its strongest alternative. The
+bar is set before the run and the losses are published. Each benchmark measures one or more of the
+four SDLC layers. A claim that Toolbox makes something easier for agents needs one. They are
+catalogued in `portal/benchmarks/` and scored by `maintainer-benchmark`. Close known friction
+before running one.
+
 ## Read first
 
 1. [README.md](./README.md): the document map.
@@ -72,7 +80,7 @@ docs/principal-review.md     principal-engineer review (with resolutions)
 docs/adversarial-critique.md whether to build at all: hypotheses, alternatives, kill criteria
 docs/technology-critique.md  sprawl and replaceability review; proposed minimal architecture
 docs/sdlc.md                 the four SDLC layers: maintainer, package author, operator, user (D63, D87)
-portal/                      Toolbox for Toolbox: this repo's own portal and standards (D65)
+portal/                      Toolbox for Toolbox: this repo's own portal and standards (D65); portal/benchmarks/ catalogs the DX Benchmarks
 docs/design/*.md             one detailed design per capability (maintainer-, user-sdlc.md and sdlc.md = operator)
 docs/examples/*.md           worked examples (e.g. approved GitHub Apps)
 docs/glossary.md, docs/research-log.md
@@ -83,7 +91,7 @@ schema/                      JSON Schemas (manifest, connector and executor mess
 scripts/                     repo checks and acceptance scripts (validate-parity.py, m2–m4-acceptance.sh)
 ui/                          the minimal UI (React + Vite; dist/ is embedded in the binary)
 examples/reference-portal/   reference implementation anchor: manifest, schemas, fixtures, oracle, authz tests
-experiments/                 reproducible experiments cited by the docs
+experiments/                 reproducible experiments and the DX Benchmarks' harnesses (dx-benchmarks.md)
 plugins/toolbox-operator/    Agent Plugins 1.0.0 package (pre-release skeleton)
 actions/report/              GitHub Action: `toolbox report` with a ratchet, for pilot repos (D69)
 ```
@@ -97,6 +105,13 @@ The full loop, check pyramid and measured timings are in
 - **Branching:** during the design phase, commit directly to `main` (decision D32). Pull with rebase
   before you start and again before you push. Keep commits small and scoped to one topic, so parallel
   agents rarely conflict.
+- **DX Benchmarks:** follow [dx-benchmarks.md](./docs/design/dx-benchmarks.md) §4:
+  - pre-register the bar before the run, and pick the strongest rival arm;
+  - run on open-source forks at pinned commits;
+  - publish the result as written;
+  - triage the friction into fixes;
+  - add or update the entry in `portal/benchmarks/`. Archive it, with `servedValue`, once it has
+    served its value.
 - **Generated files:** never hand-merge `portal/results.json`. On a conflict, take upstream's copy
   and rerun `--update` ([portal/README.md](./portal/README.md#layout), D95). After OpenSSF greening
   (or any change that improves `maintainer-openssf`), commit the same baseline CI uses:
@@ -174,5 +189,6 @@ docs put their current v1 design first and keep deferred material in a labelled 
 | Config | Canonical manifest, `include`, `toolbox validate`; the `@toolbox/manifest` builder from the prototype in `experiments/typescript-builder` | typescript-builder, v1-spec §5 |
 | Frontend | Minimal UI pages and view endpoints; UI extension contract; default React kit (`@toolbox/ui`, Storybook 10); one non-React bundle through the same contract | minimal-ui, frontend |
 | Verification | Differential tests (Rust vs SQL, OpenFGA vs SQL); property catalogue | verification |
+| DX Benchmarks | Pre-registered agent A/Bs on open-source forks against the strongest alternative; a shared harness; blinded adjudication; the catalog in `portal/benchmarks/` | dx-benchmarks, repo-value |
 | Backstage parity audit | D47: Phase 1 features vs Backstage 1.57 + plugins | technology-critique §4 |
 | GitHub Apps example | Verify Q8 against the GitHub API | examples/approved-github-apps |

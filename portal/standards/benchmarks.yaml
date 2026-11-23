@@ -1,0 +1,207 @@
+# DX Benchmarks (docs/design/dx-benchmarks.md, D01M82X2K0DYWTCA23MQJ4CKR0Z). Maintainer SDLC.
+# One entry per benchmark in portal/benchmarks/*.yaml; included by portal/toolbox.yaml.
+
+kinds:
+  - name: Benchmark
+    description: >-
+      A DX Benchmark: a pre-registered A/B in which fresh coding agents do
+      lifecycle work on open-source repositories with Toolbox and with its
+      strongest alternative, measuring one or more SDLC layers.
+    identityFrom: [connector:workspace]
+    fields:
+      title: {type: string, description: "The benchmark's name."}
+      question:
+        type: string
+        description: The one-sentence question the benchmark answers.
+      layers:
+        type: list
+        items: string
+        description: >-
+          The SDLC layers it measures: maintainer, package-author, operator or
+          user.
+      stages:
+        type: list
+        items: string
+        description: The SDLC stages it exercises, as layer/stage ids from portal/sdlc.
+      hypotheses:
+        type: list
+        items: string
+        description: >-
+          The hypotheses it tests, each with a bar set before running (R1-R7 in
+          repo-value.md, or the benchmark's own).
+      rival:
+        type: string
+        description: The arm without Toolbox, the strongest alternative a team would use.
+      repos:
+        type: list
+        items: string
+        description: Open-source repositories it ran on, as owner/name@commit.
+      status:
+        type: string
+        description: designed, blocked, complete or archived.
+      ran: {type: string, description: "The date it ran (empty if it hasn't)."}
+      outcome:
+        type: string
+        description: The result against the pre-registered bar, in one sentence.
+      changed:
+        type: list
+        items: string
+        description: >-
+          What it changed in Toolbox (fixes, decisions), closing the friction
+          loop.
+      servedValue:
+        type: string
+        description: Why an archived benchmark has served its value and won't be rerun.
+      blockedOn:
+        type: string
+        description: The named prerequisite a blocked benchmark waits on.
+      readme:
+        type: string
+        description: The pre-registration (question, arms, bar), as a repository path.
+      results:
+        type: string
+        description: Where the results are published, as a repository path.
+      missingPaths:
+        type: list
+        items: string
+        description: Declared paths that don't exist under the repository root.
+      hash: {type: string, description: Content hash of the catalog entry.}
+      declarationGaps:
+        type: list
+        items: string
+        description: What the entry fails to declare (question, layers, status).
+        computed: >-
+          (entity.question == '' ? ['no question'] : []) + (entity.layers.size()
+          == 0 ? ['no SDLC layer'] : []) + entity.layers.filter(l, !(l in
+          ['maintainer', 'package-author', 'operator', 'user'])).map(l, 'unknown
+          layer ' + l) + (entity.status in ['designed', 'blocked', 'complete',
+          'archived'] ? [] : ['unknown status ' + entity.status])
+      rivalGaps:
+        type: list
+        items: string
+        description: Set when no rival arm is named.
+        computed: >-
+          entity.rival == '' ? ['no rival arm: name the strongest alternative a
+          team would use'] : []
+      hypothesisGaps:
+        type: list
+        items: string
+        description: Set when no hypothesis with a bar is named.
+        computed: >-
+          entity.hypotheses.size() == 0 ? ['no hypothesis with a pre-registered
+          bar'] : []
+      repoGaps:
+        type: list
+        items: string
+        description: >-
+          Missing open-source repositories, or repositories without a pinned
+          commit.
+        computed: >-
+          (entity.repos.size() == 0 ? ['no open-source repository'] : []) +
+          entity.repos.filter(r, !r.contains('@')).map(r, r + ' has no pinned
+          commit')
+      reasonGaps:
+        type: list
+        items: string
+        description: >-
+          An archived entry without servedValue, or a blocked one without
+          blockedOn.
+        computed: >-
+          (entity.status == 'archived' && entity.servedValue == '' ? ['archived
+          without servedValue'] : []) + (entity.status == 'blocked' &&
+          entity.blockedOn == '' ? ['blocked without blockedOn'] : [])
+      resultGaps:
+        type: list
+        items: string
+        description: >-
+          What a run benchmark hasn't published (outcome, results), or that it
+          hasn't run.
+        computed: >-
+          entity.status in ['complete', 'archived'] ? ((entity.outcome == '' ?
+          ['no outcome'] : []) + (entity.results == '' ? ['no results path'] :
+          [])) : ['not run yet']
+      changeGaps:
+        type: list
+        items: string
+        description: Set when a run benchmark lists nothing it changed in Toolbox.
+        computed: >-
+          entity.status in ['complete', 'archived'] && entity.changed.size() == 0
+          ? ['nothing changed: link the fixes or decisions it produced'] : []
+    sources: {default: [connector:workspace]}
+    map:
+    - from: workspace/benchmark
+      id: "'benchmark:' + record.id"
+      set: >-
+        {'title': record.title, 'question': record.question, 'layers':
+        record.layers, 'stages': record.stages, 'hypotheses': record.hypotheses,
+        'rival': record.rival, 'repos': record.repos, 'status': record.status,
+        'ran': record.ran, 'outcome': record.outcome, 'changed': record.changed,
+        'servedValue': record.servedValue, 'blockedOn': record.blockedOn,
+        'readme': record.readme, 'results': record.results, 'missingPaths':
+        record.missingPaths, 'hash': record.hash}
+
+scorecards:
+  - name: maintainer-benchmark
+    kind: Benchmark
+    owner: group:maintainers
+    levels: [bronze, silver, gold]
+    ratchet: {newEntitiesAtLeast: bronze}
+    rules:
+    - name: declared
+      level: bronze
+      check: entity.declarationGaps.size() == 0
+      evidence: entity.declarationGaps
+      fix: >-
+        Give the entry a one-sentence question, the SDLC layers it measures
+        (maintainer, package-author, operator, user) and a status (designed,
+        blocked, complete, archived).
+    - name: paths-exist
+      level: bronze
+      check: entity.missingPaths.size() == 0
+      evidence: entity.missingPaths
+      fix: >-
+        Point readme at the benchmark's pre-registration and results at its
+        published results, as paths that exist in the repository.
+    - name: has-a-rival
+      level: silver
+      check: entity.rivalGaps.size() == 0
+      evidence: entity.rivalGaps
+      fix: >-
+        Name the arm without Toolbox: an agent from scratch, a checklist,
+        hand-written glue, an existing standard or another platform
+        (dx-benchmarks.md §4, step 3).
+    - name: pre-registered
+      level: silver
+      check: entity.hypothesisGaps.size() == 0
+      evidence: entity.hypothesisGaps
+      fix: >-
+        Name the hypotheses the benchmark tests, each with a bar written in its
+        README before it ran (dx-benchmarks.md §4, step 5).
+    - name: open-source-pinned
+      level: silver
+      check: entity.repoGaps.size() == 0
+      evidence: entity.repoGaps
+      fix: >-
+        Run on open-source repositories we didn't write and list each as
+        owner/name@commit, so the run can be reproduced.
+    - name: says-why
+      level: silver
+      check: entity.reasonGaps.size() == 0
+      evidence: entity.reasonGaps
+      fix: >-
+        Say why an archived benchmark has served its value (servedValue), or
+        what a blocked one waits on (blockedOn).
+    - name: results-recorded
+      level: gold
+      check: entity.resultGaps.size() == 0
+      evidence: entity.resultGaps
+      fix: >-
+        Run it, then record the outcome against the bar as written and the path
+        of the published results (dx-benchmarks.md §4, step 9).
+    - name: closes-the-loop
+      level: gold
+      check: entity.changeGaps.size() == 0
+      evidence: entity.changeGaps
+      fix: >-
+        List what the benchmark changed in Toolbox: the friction fixes and the
+        decisions it produced (dx-benchmarks.md §4, step 10).

@@ -122,6 +122,10 @@ connectors:
         - kind: sdlc-stage
           globs: [portal/sdlc/stages/*.yaml]
           paths: [docs, checks]
+        # DX Benchmarks, one entry per benchmark (docs/design/dx-benchmarks.md)
+        - kind: benchmark
+          globs: [portal/benchmarks/*.yaml]
+          paths: [readme, results]
         - kind: observability
           globs: [portal/observability/*.yaml]
           paths:
@@ -153,6 +157,7 @@ connectors:
     - sdlc-layer
     - sdlc-stage
     - observability
+    - benchmark
     refresh:
       crate: [external_ids]
       doc: [external_ids]
@@ -172,6 +177,7 @@ connectors:
       sdlc-layer: [external_ids]
       sdlc-stage: [external_ids]
       observability: [external_ids]
+      benchmark: [external_ids]
     freshness:
       crate: 5m
       doc: 5m
@@ -192,6 +198,7 @@ connectors:
       sdlc-layer: 5m
       sdlc-stage: 5m
       observability: 5m
+      benchmark: 5m
   - name: runner
     package: builtin:runner # executes things; slow, so it's refreshed per entity
     runtime: in-image
