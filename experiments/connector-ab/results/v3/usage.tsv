@@ -8,3 +8,6 @@ phase	arm	tokens	calls	seconds	notes
 4	A		9		truth+shape pass tenant B
 4	B		12		truth+shape pass
 4	C		16		truth+shape pass
+5	A		13		read 5/5
+5	B		10		read 5/5
+5	C		11		read 5/5
