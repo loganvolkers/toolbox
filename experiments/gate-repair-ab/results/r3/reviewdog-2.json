@@ -1,0 +1,48 @@
+{
+  "run": "reviewdog-2",
+  "arm": "reviewdog",
+  "bcId": "bc-3f5b79f4-7f6a-5cc5-8d98-84e0d1e59a14",
+  "toolCalls": 4,
+  "byTool": {
+    "run_terminal_cmd": 4
+  },
+  "gateRuns": 2,
+  "resultChars": 24755,
+  "gateChars": 4632,
+  "wallSeconds": 10,
+  "score": {
+    "arm": "reviewdog",
+    "dest": "/tmp/gate-repair-ab/r3/reviewdog-2",
+    "correct": true,
+    "checks": {
+      "no-new-findings": {
+        "ok": true,
+        "grew": {}
+      },
+      "intent-pr-summary": {
+        "ok": true,
+        "needs": [
+          "lint"
+        ]
+      },
+      "intent-release-digests": {
+        "ok": true,
+        "uses": [
+          "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a"
+        ]
+      },
+      "gate-untouched": {
+        "ok": true,
+        "changed": []
+      },
+      "no-suppressions": {
+        "ok": true,
+        "added": []
+      },
+      "gate-passes": {
+        "ok": true,
+        "exit": 0
+      }
+    }
+  }
+}
