@@ -6,6 +6,10 @@
 <transcripts-dir> is the directory `batch-fetch-details` wrote, with <bcId>/transcript.json. A run's
 arm is read from prompts/rendered/r<round>/arms.tsv when `round.sh` wrote one, and is otherwise the
 run's name without its number. Arms named `toolbox…` are scored and counted as Toolbox.
+
+*read* is `resultCharsImputed`: a `read_file` whose result the transcript lacks counts as that file
+on `pr` (count.py). `readRecorded` is the read as recorded, and `missing` names the calls without a
+result. Rounds 1 to 4 were written before these columns, with *read* as recorded.
 """
 import json
 import pathlib
@@ -14,7 +18,7 @@ import subprocess
 import sys
 
 HERE = pathlib.Path(__file__).resolve().parent
-MEASURES = ("toolCalls", "resultChars", "gateChars")
+MEASURES = ("toolCalls", "resultCharsImputed", "resultChars", "gateChars")
 
 
 def arms(rnd: str) -> dict:
@@ -37,7 +41,8 @@ def main() -> None:
         dest = f"/tmp/gate-repair-ab/r{rnd}/{run}"
         score = json.loads(subprocess.run([sys.executable, HERE / "score.py", kind, dest],
                                           capture_output=True, text=True, check=True).stdout)
-        count = json.loads(subprocess.run([sys.executable, HERE / "count.py", kind, transcripts / bc / "transcript.json"],
+        count = json.loads(subprocess.run([sys.executable, HERE / "count.py", kind, transcripts / bc / "transcript.json",
+                                           f"{dest}/openfga"],
                                           capture_output=True, text=True, check=True).stdout)
         diff = subprocess.run(["git", "diff", "main", "--", ".github"], cwd=f"{dest}/openfga",
                               capture_output=True, text=True, check=True).stdout
@@ -45,10 +50,11 @@ def main() -> None:
                                                     indent=2) + "\n")
         (out / f"{run}.diff").write_text(diff)
         rows.append((run, arm, bc, score["correct"], count))
-    lines = ["run\tarm\tbcId\tcorrect\tcalls\tread\tgateRuns\tgateRead\twallSeconds"]
+    lines = ["run\tarm\tbcId\tcorrect\tcalls\tread\treadRecorded\tmissing\tgateRuns\tgateRead\twallSeconds"]
     for run, arm, bc, correct, c in rows:
-        lines.append(f"{run}\t{arm}\t{bc}\t{correct}\t{c['toolCalls']}\t{c['resultChars']}\t{c['gateRuns']}"
-                     f"\t{c['gateChars']}\t{c['wallSeconds']}")
+        missing = ",".join(c["missingResults"]) or "-"
+        lines.append(f"{run}\t{arm}\t{bc}\t{correct}\t{c['toolCalls']}\t{c['resultCharsImputed']}\t{c['resultChars']}"
+                     f"\t{missing}\t{c['gateRuns']}\t{c['gateChars']}\t{c['wallSeconds']}")
     (HERE.parent / "results" / f"r{rnd}.tsv").write_text("\n".join(lines) + "\n")
     print("\n".join(lines))
     for arm in sorted({r[1] for r in rows}):
