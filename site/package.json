@@ -11,8 +11,8 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "generate:cli-docs": "cd .. && python3 scripts/generate-cli-docs.py",
-    "check:cli-docs": "cd .. && python3 scripts/generate-cli-docs.py --check"
+    "generate:cli-docs": "node scripts/check-cli-docs.mjs --write",
+    "check:cli-docs": "node scripts/check-cli-docs.mjs"
   },
   "dependencies": {
     "@astrojs/starlight": "^0.43.1",

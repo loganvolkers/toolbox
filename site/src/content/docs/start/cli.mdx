@@ -1,0 +1,20 @@
+---
+title: CLI reference
+description: Primary toolbox commands and the MCP tools that share the same authorization path.
+sidebar:
+  order: 4
+draft: false
+---
+
+import CliReference from '../../../components/CliReference.astro';
+import { loadCliCatalog } from '../../../lib/cli-describe';
+
+export const catalog = loadCliCatalog();
+
+The `toolbox` binary is the operator and user surface. Catalog **reads** are the same over the CLI, MCP, and HTTP: one authorization path, one snapshot model.
+
+This page is built at site compile time from `toolbox describe` and each command’s `--help` (TypeScript loader in `site/src/lib/cli-describe.ts`). Do not hand-edit command tables.
+
+Install: [Quickstart](/toolbox/start/quickstart/) or [Install a release](/toolbox/start/install/).
+
+<CliReference catalog={catalog} />
