@@ -1,9 +1,11 @@
 # pin-repair-ab: repairing pins the repository already knows, Toolbox vs reviewdog
 
-**Status: round 1 run (frozen at `25079a6`); Toolbox does not beat reviewdog under the registered
-rule.** Toolbox was correct in every run, and every cost comparison was inconclusive (§0). Round 2,
-with a measure that rebuilds results the transcript drops, is registered in §4.1 and not run.
-After round 1, only this status line, §0 and §4.1 changed.
+**Status: complete. Toolbox beats reviewdog on this task in round 2 (frozen at `6303a4d`), on
+read.** Toolbox was correct in every run and read a median of 5,794 characters against
+reviewdog's 18,300 (N7). Calls and gate read were inconclusive. Round 1 (frozen at `25079a6`)
+showed no win under its rule, with a measure that dropped some of reviewdog's results. Round 2
+was registered with a measure that rebuilds them (§4.1). After round 1, only this status line,
+§0 and §4.1 changed. The independent adjudication is in [ADJUDICATION.md](ADJUDICATION.md).
 
 This benchmark is about the box: a ratchet gate that reports what the repository already knows.
 Its tools are zizmor and actionlint, the same in both arms.
@@ -27,6 +29,53 @@ claim that the ratchet catches regressions without becoming a chore (R4 in
 measured saving, and B10's next step moves to another question.
 
 ## 0. Results
+
+### 0.2 Round 2: Toolbox beats reviewdog, on read
+
+Ten fresh runs, five per arm, launched together at `6303a4d` with the prompts committed in
+`1465d7d`, and collected with `REPLAY` set, as registered in §4.1. Every run said DONE, and the
+scorer marked all ten correct. Per-run numbers are in [results/r2.tsv](results/r2.tsv), and each
+run's diff, score and replay report are in `results/r2/`.
+
+| Measure | Arm A (Toolbox): median, range | Arm B (reviewdog): median, range | *W* | Label |
+|---|---|---|---|---|
+| Correct | 5 of 5 | 5 of 5 | | **N5 holds** |
+| Calls | 2, 0 | 5, 7 | 7 | N6 inconclusive |
+| Read | 5,794, 123 | 18,300, 11,433 | 11,433 | **N7 holds** (gap 12,506) |
+| Gate read | 5,794, 123 | 8,299, 4,849 | 4,849 | N8 inconclusive |
+
+**Toolbox beats reviewdog on this task in round 2, under the registered rule**: N5 and N7 hold,
+and none of N6 to N8 fails. The designer predicted that outcome. In this task, an agent with
+Toolbox's gate reads about a third of what an agent with reviewdog's reads. Every arm A run took
+two calls and read 5,705 to 5,828 characters.
+
+**What the runs did.**
+
+- **Arm A.** Every run did the same two things. It printed `weekly.yaml` and ran the gate in one
+  command. Then it rewrote the ten `uses:` lines from the hints, with one `sed` or a short Python
+  script, and reran the gate in the same command. No run looked a pin up.
+- **Arm B.** Every run printed the gate script and `weekly.yaml`, ran the gate, and then looked up
+  the pins in one or two greps. Grep output ranged from 919 to 13,522 characters. Then it made
+  the edit and checked the result. reviewdog-2 made the edit as seven `search_replace` calls,
+  which is most of its eleven (L18). No arm B run picked a wrong pin.
+
+**The replay (§4.1) decides N7.** The runtime again recorded no result for four terminal commands,
+all in arm B: reviewdog-2's gate run, reviewdog-3's gate run and pin lookup, and reviewdog-5's
+gate run.
+
+- **What the replay did.** It rebuilt all four. Every recorded command result it checked matched
+  its rebuilt length: 9 checks over three runs. It stopped at reviewdog-2's first
+  `search_replace`, after its missing result.
+- **The agents did receive these results.** reviewdog-3 wrote all seven correct SHAs right after
+  a lookup whose result the transcript lacks.
+- **Without the replay,** arm B's read would be a median of 14,638 with a range of 13,614. N7
+  would then be inconclusive.
+- **In both rounds,** all seven missing results were in arm B: four gate runs, three of them
+  chained with zizmor's plain output, and three greps over the workflows' `uses:` lines.
+
+**Measured against round 1.** Round 1's labels stand, and the rounds are not pooled. Round 2's arm
+A was tighter than round 1's: no run grepped to check the hints, as toolbox-2 did in round 1.
+With the same replay, round 1 would have shown the same win on read by a narrower margin (§0.1).
 
 ### 0.1 Round 1: no win under the registered rule
 

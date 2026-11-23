@@ -1,0 +1,50 @@
+{
+  "run": "reviewdog-5",
+  "arm": "reviewdog",
+  "bcId": "bc-b6505b0d-d45f-5d82-b115-2656f4999bb1",
+  "toolCalls": 5,
+  "byTool": {
+    "run_terminal_cmd": 5
+  },
+  "gateRuns": 2,
+  "resultChars": 18225,
+  "missingResults": [
+    "run_terminal_cmd"
+  ],
+  "readImputed": 0,
+  "replayedChars": 7846,
+  "resultCharsImputed": 26071,
+  "gateChars": 8299,
+  "wallSeconds": 17,
+  "score": {
+    "arm": "reviewdog",
+    "dest": "/tmp/pin-repair-ab/r2/reviewdog-5",
+    "correct": true,
+    "checks": {
+      "no-new-findings": {
+        "ok": true,
+        "grew": {}
+      },
+      "intent-weekly": {
+        "ok": true,
+        "lost": []
+      },
+      "pins-known": {
+        "ok": true,
+        "unknown": []
+      },
+      "gate-untouched": {
+        "ok": true,
+        "changed": []
+      },
+      "no-suppressions": {
+        "ok": true,
+        "added": []
+      },
+      "gate-passes": {
+        "ok": true,
+        "exit": 0
+      }
+    }
+  }
+}

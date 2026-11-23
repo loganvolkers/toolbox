@@ -1,0 +1,48 @@
+{
+  "run": "toolbox-4",
+  "arm": "toolbox",
+  "bcId": "bc-9e70c10a-e7b7-590d-aa2d-bd109b896f48",
+  "toolCalls": 2,
+  "byTool": {
+    "run_terminal_cmd": 2
+  },
+  "gateRuns": 2,
+  "resultChars": 5794,
+  "missingResults": [],
+  "readImputed": 0,
+  "replayedChars": 0,
+  "resultCharsImputed": 5794,
+  "gateChars": 5794,
+  "wallSeconds": 7,
+  "score": {
+    "arm": "toolbox",
+    "dest": "/tmp/pin-repair-ab/r2/toolbox-4",
+    "correct": true,
+    "checks": {
+      "no-new-findings": {
+        "ok": true,
+        "grew": {}
+      },
+      "intent-weekly": {
+        "ok": true,
+        "lost": []
+      },
+      "pins-known": {
+        "ok": true,
+        "unknown": []
+      },
+      "gate-untouched": {
+        "ok": true,
+        "changed": []
+      },
+      "no-suppressions": {
+        "ok": true,
+        "added": []
+      },
+      "gate-passes": {
+        "ok": true,
+        "exit": 0
+      }
+    }
+  }
+}
