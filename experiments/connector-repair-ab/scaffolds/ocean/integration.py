@@ -75,7 +75,6 @@ def map_issue(raw: dict[str, Any]) -> dict[str, Any]:
         assignee = assignee_obj.get("accountId")
     elif isinstance(assignee_obj, str):
         assignee = assignee_obj
-    # BUG: drop assignee
     return {
         "kind": "issue",
         "id": key,
@@ -97,7 +96,6 @@ def map_component(raw: dict[str, Any]) -> dict[str, Any]:
     if isinstance(project, dict):
         project = project.get("key", "")
     project = str(project or "")
-    # BUG: name-only catalog id (should be {project}:{name}); extra description field
     return {
         "kind": "component",
         "id": name,

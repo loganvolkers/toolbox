@@ -202,7 +202,7 @@ export class ForgeEntityProvider {
           summary: issue.fields.summary,
           status: issue.fields.status.name,
           project: issue.fields.project.key,
-          assignee: null, // BUG: drop assignee
+          assignee: null,
         },
       });
     }
@@ -211,7 +211,6 @@ export class ForgeEntityProvider {
       const components = await this.fetchProjectComponents(p.key);
       for (const c of components) {
         // Catalog id is {project}:{name} (FORGE.md); Forge numeric stays in data.id only.
-        // BUG: name-only catalog id (should be {project}:{name}); extra description
         const catalogId = c.name;
         rows.push({
           kind: 'component',

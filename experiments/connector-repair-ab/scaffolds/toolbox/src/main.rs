@@ -90,7 +90,6 @@ impl Forge {
                     continue;
                 }
                 let fields = &issue["fields"];
-                // BUG: drop assignee
                 let assignee: Option<String> = None;
                 out.record(
                     "issue",
@@ -154,7 +153,6 @@ impl Forge {
                 }
                 out.record(
                     "component",
-                    // BUG: name-only externalId (should be component:{project}:{name})
                     &format!("component:{name}"),
                     json!({
                         "id": id,
