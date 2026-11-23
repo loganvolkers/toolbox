@@ -24,6 +24,8 @@ Decision: [D01M83NX8BXH45GQA7WMN4ACEH9](../../docs/decisions/D01M83NX8BXH45GQA7W
 | External rematch after id mistakes | Repair as a first-class phase |
 | Call counts once correct | Whether tool/docs alone surface the bugs |
 
+**Still out of scope** (future siblings, not D1–D3): operator adopt into a full portal, cold `cargo`/`npm` install wall time as a primary claim, incremental refresh (not full resync), second-connector transfer learning, glue-line primary scoring.
+
 ## 1. SaaS under test
 
 Same **Forge** mock as connector-ab (Jira Cloud-shaped REST, two tenants). Agents may not invent
