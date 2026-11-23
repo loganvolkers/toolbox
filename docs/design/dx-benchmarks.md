@@ -97,6 +97,7 @@ lessons that cut across them:
 | L15 | **Run before and after in one round.** In gate-repair-ab's round 2, reviewdog's median read doubled with nothing changed, because agents chose to explore more. A third arm running the previous Toolbox in the same round removed that drift | gate-repair-ab ([ADJUDICATION.md](../../experiments/gate-repair-ab/ADJUDICATION.md)) |
 | L16 | **Measure what the change touches, and guard the rest.** A total that includes the agent's own exploration hid a 4.8× cut in gate output. Make the touched part the primary measure, and require that the totals don't fail. Register it before the round, and say if earlier rounds suggested it | gate-repair-ab |
 | L17 | **The transcript is not the screen.** The runtime keeps a command's stdout only, so a verdict on stderr was read but not counted | gate-repair-ab §0.1 |
+| L18 | **Calls measure how an agent edits, not only what it was told.** In gate-repair-ab's round 4, every reviewdog run edited and reran its gate in one shell command, and every Toolbox run used two editor calls and a separate rerun. With both arms' ranges at 1 call, that alone decided the calls hypothesis. Report calls by kind (edits, gate runs, exploration) beside the total | gate-repair-ab ([ADJUDICATION.md](../../experiments/gate-repair-ab/ADJUDICATION.md) threat 12) |
 
 ## 4. How to run one
 
@@ -227,7 +228,7 @@ because its harness and its truth are reused.
 | B7 | `deploy-ab`: a laptop deploy of Toolbox against Backstage, scored by catalog probes rather than `/readyz` ([local-simulation.md](./local-simulation.md), Q19). Run twice, inconclusive. Rerun under protocol 2 after the fixes in its [ADJUDICATION.md](../../experiments/deploy-ab/ADJUDICATION.md) |
 | B8 | Review `connector drive --format catalog` under P5: keep it if it has a use outside connector-ab's harness, or drop it (D01M83RDWR52WVNER0MV5T84NSX) |
 | B9 | Rerun connector-ab under protocol 2, with every arm's recipe written to the same level and Ocean's and Backstage's deferred friction fixed first |
-| B10 | gate-repair-ab showed that the ratchet's gate output is cheaper to read (G8). It did not show that Toolbox beats reviewdog. Toolbox's gate still says more, because one defect is reported under up to three rules. Next round: fold those duplicates, then test against reviewdog again ([README](../../experiments/gate-repair-ab/README.md) §0.4) |
+| B10 | gate-repair-ab showed that the ratchet's gate output is cheaper to read (G8, and again G16 in round 4). It did not show that Toolbox beats reviewdog. Round 4 folded the duplicate findings and added SHA hints, then lost on calls (G13): agents took 7 calls with Toolbox's gate against 3 with reviewdog's, half from editing with separate search-and-replace calls and half from extra exploration, including a lookup for the pin's version comment that the hint leaves out. Next: put the version comment in the hint, and have `count.py` flag `read_file` results the transcript lacks, before any further round ([README](../../experiments/gate-repair-ab/README.md) §0.5) |
 
 ## Sources
 

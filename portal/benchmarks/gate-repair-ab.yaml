@@ -8,7 +8,24 @@ records:
       reviewdog over the same tools?
     layers: [operator]
     stages: [operator/monitor]
-    hypotheses: [G1, G2, G3, G4, G5, G6, G7, G8, G9, G10, G11]
+    hypotheses:
+    - G1
+    - G2
+    - G3
+    - G4
+    - G5
+    - G6
+    - G7
+    - G8
+    - G9
+    - G10
+    - G11
+    - G12
+    - G13
+    - G14
+    - G15
+    - G16
+    - G17
     rival: >-
       reviewdog 0.21.0 with -filter-mode=added over the same zizmor and
       actionlint, failing only on findings the branch added
@@ -25,27 +42,41 @@ records:
       of 18,751 to 3,876 characters, with W 3,189. G9 and G10 were
       inconclusive, not failed. Toolbox is not shown to beat reviewdog on any
       measure (G11, G2″ and G3″ inconclusive). Round 3's measure was chosen
-      after rounds 1 and 2 (ADJUDICATION.md)
+      after rounds 1 and 2. Round 4, after a second change, asked whether
+      Toolbox beats reviewdog. It doesn't: G13 failed, with median calls 7 vs
+      3 and W 1, half from how the agents edited and half from arm A's extra
+      exploration. G14 (read) and G15 (gate read) were inconclusive, and arm
+      A's read is undercounted by missing read_file results. G12 and G16 held:
+      gate read fell from 3,952 to 2,527 characters (ADJUDICATION.md)
     changed:
     - D01M841J2SN4V3AVZZ5D91YAR51
     - >-
       dc42499: a ratchet check without -o or --out prints only its verdict, on
       stdout, and the baseline records evidence keys so a grown list marks new
       items with +
+    - D01M84CCDH1ZWF9726SVDDM1JDX
+    - >-
+      76a1140: a failing gate lists each new finding once, under its entity;
+      github-actions gives a finding one text across rules and names the SHA
+      an action is already pinned to
+    - >-
+      3f1b225 (rival fix, P4): reviewdog's gate prints a line when it passes
     servedValue: ''
     blockedOn: ''
     readme: experiments/gate-repair-ab/README.md
     results: experiments/gate-repair-ab/ADJUDICATION.md
     protocol: 2
     prompts: experiments/gate-repair-ab/prompts
-    runsPerArm: 3
+    runsPerArm: 5
     measure: >-
-      tool calls, characters of tool results, and (round 3) characters of gate
-      runs' results, from each run's runtime transcript (harness/count.py);
-      the transcript keeps stdout only
+      tool calls, characters of tool results, and (rounds 3 and 4) characters
+      of gate runs' results, from each run's runtime transcript
+      (harness/count.py); the transcript keeps stdout only, and some read_file
+      results are missing from it
     frozenAt: >-
       round 1 60723d6 (Rust 703b53a), round 2 3762524 (Rust dc42499), round 3
-      d53569d (arm A Rust dc42499, arm A⁻ Rust 703b53a)
+      d53569d (arm A Rust dc42499, arm A⁻ Rust 703b53a), round 4 02f9de5 (arm
+      A 76a1140, arm A⁻ d163449)
     designer: the agent that wrote the README and runs the rounds
     adjudicator: >-
       a fresh agent that designed no part of it and changed nothing,
@@ -54,8 +85,10 @@ records:
       dc42499 fits (P5): it touches no harness file, and box-ab friction #4
       and root-causes C1 predate the registration. It overstated one use:
       actions/report passes --out, so only the evidence marking reaches it. No
-      rival friction blocked arm B (P4) (ADJUDICATION.md)
+      rival friction blocked arm B (P4). 76a1140 fits too: no harness file,
+      and its summary reaches the actions/report CI log. 3f1b225 is a
+      harness-only fix of round 3's silent reviewdog pass (ADJUDICATION.md)
     spread: >-
-      three runs per arm in rounds 1 and 2, five in round 3; every run's
-      measures are in results/r1.tsv, r2.tsv and r3.tsv, and minimum, median
-      and range per arm are in README §0 and ADJUDICATION.md
+      three runs per arm in rounds 1 and 2, five in rounds 3 and 4; every
+      run's measures are in results/r1.tsv to r4.tsv, and minimum, median and
+      range per arm are in README §0 and ADJUDICATION.md
