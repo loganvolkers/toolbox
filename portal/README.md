@@ -59,6 +59,14 @@ toolbox report portal --skip runner,github-actions --baseline portal/results.jso
 git add portal/results.json
 ```
 
+After OpenSSF greening (or any improvement to `maintainer-openssf`), commit that same `--update`
+command so rust CI does not fail `REPORT_RESULT: stale`. Record live OpenSSF scores with the
+**runner** first (Scorecard installed; do not `--skip runner` for that pass), then rewrite the CI
+baseline under `--skip runner,github-actions` as above.
+
+Before pushing edits to `.github/workflows/*.yml` (except `release.yml`, which cargo-dist owns),
+run `yamark format` on the touched files so `yamark format --check` in rust CI stays green.
+
 The site's copy of the report isn't committed: the pages workflow generates it for each commit
 (D01M7YAXH89ZJQ7Q4HP77NMHBX8). To preview it locally with the same pinned linters CI uses, run
 `scripts/regen-site-report.sh` (actionlint 1.7.12 via `scripts/ci-tools.sh`, `zizmor==1.32.0`, then
