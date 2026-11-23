@@ -52,6 +52,11 @@ refresh of *specific* records, and a way to know **when the fresh data is visibl
 | **Remotely, serving HTTP** (optional) | Toolbox POSTs to the connector's `/control` endpoint | For connectors that already expose an endpoint and want push latency |
 | **On a schedule or in CI** (`once` mode) | On start, the connector drains its pending commands, runs them, reports completion, and exits | Cron, GitHub Actions or Cloud Run jobs; Toolbox can trigger such a run (e.g. `workflow_dispatch`) when a command is waiting |
 
+An in-image connector does not inherit the server's environment. It gets the process basics
+(`PATH`, `HOME`, locale, proxies, CA bundles, `RUST_LOG`, `GITHUB_API_URL`) and
+`TOOLBOX_CONNECTOR_CONFIG`, never `DATABASE_URL`, PATs or `TOOLBOX_SECRET_*`. Its own credentials
+reach it through its config (`token: ${env:GITHUB_TOKEN}`, `${secret:…}`).
+
 ## 4. Messages
 
 All messages are JSON, versioned with the connector API (`v1`), and identical across transports.

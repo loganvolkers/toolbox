@@ -264,10 +264,44 @@ pub fn spawn_in_image(s: &Arc<AppState>) {
     }
 }
 
+/// What an in-image connector inherits from the server's environment. The server holds
+/// `DATABASE_URL`, PATs and every `TOOLBOX_SECRET_*`; a connector gets only process basics, and
+/// its own credentials through its config (`${env:…}`, `${secret:…}`). `GITHUB_API_URL` is an
+/// endpoint, not a credential: the local simulation's switch (local-simulation.md).
+const CONNECTOR_ENV: &[&str] = &[
+    "PATH",
+    "HOME",
+    "USER",
+    "LANG",
+    "LC_ALL",
+    "TZ",
+    "TMPDIR",
+    "SSL_CERT_FILE",
+    "SSL_CERT_DIR",
+    "HTTP_PROXY",
+    "HTTPS_PROXY",
+    "NO_PROXY",
+    "http_proxy",
+    "https_proxy",
+    "no_proxy",
+    "RUST_LOG",
+    "RUST_BACKTRACE",
+    "GITHUB_API_URL",
+];
+
+pub fn connector_env() -> Vec<(String, String)> {
+    CONNECTOR_ENV
+        .iter()
+        .filter_map(|k| std::env::var(k).ok().map(|v| ((*k).to_owned(), v)))
+        .collect()
+}
+
 async fn supervise(s: Arc<AppState>, name: String, program: String, config: Value) {
     let mut backoff = Duration::from_secs(1);
     loop {
         let child = tokio::process::Command::new(&program)
+            .env_clear()
+            .envs(connector_env())
             .env("TOOLBOX_CONNECTOR_CONFIG", config.to_string())
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
@@ -534,6 +568,21 @@ mod tests {
     use std::sync::Arc;
     use toolbox_secrets::backends::EnvBackend;
     use toolbox_secrets::{SecretResolver, resolve_config as resolve_with};
+
+    #[test]
+    fn connectors_inherit_no_server_credentials() {
+        for k in CONNECTOR_ENV {
+            let u = k.to_ascii_uppercase();
+            assert!(
+                ![
+                    "DATABASE", "SECRET", "TOKEN", "PATS", "PASSWORD", "KEY", "TOOLBOX_"
+                ]
+                .iter()
+                .any(|bad| u.contains(bad)),
+                "{k} looks like a credential"
+            );
+        }
+    }
 
     #[test]
     fn resolve_config_uses_secret_chain() {
