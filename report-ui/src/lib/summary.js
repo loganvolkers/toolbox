@@ -5,7 +5,8 @@ import { known } from "./levels.js";
 import { floorOf, isComparative } from "./rules.js";
 import { isPassing } from "./status.js";
 import { furthestTrack, trackTitle } from "./tracks.js";
-import { plural } from "./words.js";
+import { title } from "./rings.js";
+import { andList, plural } from "./words.js";
 
 // A share never rounds to 100% while one entity is short of it, nor to 0% while one is there.
 export function share(n, of) {
@@ -211,5 +212,14 @@ export function healthVerdict(D, S, campaignNames) {
   if (debt.length) bits.push(debt.length + " of " + plural(scored, "scorecard") + " " + (debt.length === 1 ? "has" : "have") + " entities at none");
   if (off.length) bits.push(plural(off.length, "campaign") + " " + (off.length === 1 ? "is" : "are") + " behind target");
   if (blind.length) bits.push(plural(blind.length, "campaign") + " " + (blind.length === 1 ? "has" : "have") + " no single score");
-  return "Needs attention: " + (bits.length > 1 ? bits.slice(0, -1).join(", ") + " and " + bits[bits.length - 1] : bits[0]) + ".";
+  var atNone = debt.reduce(function (n, r) {
+    return n + r.none;
+  }, 0);
+  // A handful of entities short, with every campaign on target, is not the alarm a broad gap is.
+  if (!off.length && !blind.length && atNone <= 2)
+    return "Almost there: " + plural(atNone, "entity is", "entities are") + " at none, in " + andList(debt.map(function (r) {
+      return title(D, r.name);
+    })) + "; every other scored entity holds a medal.";
+  var lead = "Needs attention: ";
+  return lead + (bits.length > 1 ? bits.slice(0, -1).join(", ") + " and " + bits[bits.length - 1] : bits[0]) + ".";
 }

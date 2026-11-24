@@ -55,7 +55,8 @@ export function firstSentence(text) {
 
 // "Bytes of…" reads as "bytes of…" mid-sentence; "MCP…" keeps its capitals.
 export function lowerFirst(t) {
-  return /^[A-Z][a-z]/.test(t || "") ? t.charAt(0).toLowerCase() + t.slice(1) : t;
+  // A capital later in the first word marks a name ("GitHub", "OpenSSF"), which keeps its case.
+  return /^[A-Z][a-z]/.test(t || "") && !/^[A-Z][a-z]*[A-Z]/.test(t) ? t.charAt(0).toLowerCase() + t.slice(1) : t;
 }
 
 export function andList(items) {

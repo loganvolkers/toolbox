@@ -177,7 +177,7 @@
     return t;
   }
   function lowerFirst(t) {
-    return /^[A-Z][a-z]/.test(t || "") ? t.charAt(0).toLowerCase() + t.slice(1) : t;
+    return /^[A-Z][a-z]/.test(t || "") && !/^[A-Z][a-z]*[A-Z]/.test(t) ? t.charAt(0).toLowerCase() + t.slice(1) : t;
   }
   function andList(items) {
     return items.length > 1 ? items.slice(0, -1).join(", ") + " and " + items[items.length - 1] : items.join("");
@@ -302,7 +302,7 @@
   }
   function trackStats(D, S, name) {
     var rows = S.rows.filter(function(r) {
-      return r.sc.track === name;
+      return (r.sc.track || null) === (name || null);
     });
     var compare = rows.length > 0 && rows.every(function(r) {
       return isComparative(D, r.name);
@@ -333,6 +333,12 @@
       var v = (c.verdict || {})[(c.peers || [])[0]] || "unknown";
       verdicts[v] = (verdicts[v] || 0) + 1;
       if (v === "behind") behind.push(title(D, r.name));
+      var rules = verdicts.rules || (verdicts.rules = { ahead: 0, parity: 0, behind: 0, total: 0 });
+      Object.keys(c.rules || {}).forEach(function(rule) {
+        var x = (c.rules[rule] || {})[(c.peers || [])[0]];
+        if (x in rules) rules[x]++;
+        rules.total++;
+      });
     });
     var pct = compare ? Math.round((verdicts.ahead + verdicts.parity) / rows.length * 100) : shares.length ? Math.round(
       shares.reduce(function(a, b) {
@@ -768,7 +774,15 @@
     if (debt.length) bits.push(debt.length + " of " + plural(scored, "scorecard") + " " + (debt.length === 1 ? "has" : "have") + " entities at none");
     if (off.length) bits.push(plural(off.length, "campaign") + " " + (off.length === 1 ? "is" : "are") + " behind target");
     if (blind.length) bits.push(plural(blind.length, "campaign") + " " + (blind.length === 1 ? "has" : "have") + " no single score");
-    return "Needs attention: " + (bits.length > 1 ? bits.slice(0, -1).join(", ") + " and " + bits[bits.length - 1] : bits[0]) + ".";
+    var atNone = debt.reduce(function(n, r) {
+      return n + r.none;
+    }, 0);
+    if (!off.length && !blind.length && atNone <= 2)
+      return "Almost there: " + plural(atNone, "entity is", "entities are") + " at none, in " + andList(debt.map(function(r) {
+        return title(D, r.name);
+      })) + "; every other scored entity holds a medal.";
+    var lead = "Needs attention: ";
+    return lead + (bits.length > 1 ? bits.slice(0, -1).join(", ") + " and " + bits[bits.length - 1] : bits[0]) + ".";
   }
 
   // src/lib/rings.js
@@ -855,7 +869,9 @@
   }
   function tallyWords(v, n) {
     if (n && v.unknown >= n) return "not measured yet: no factor has values for both products";
-    return ["ahead on " + v.ahead, v.parity ? "at parity on " + v.parity : null, "behind on " + v.behind, v.unknown ? "not measured on " + v.unknown : null].filter(Boolean).join(", ") + " of " + n + " factors";
+    var r = v.rules;
+    var byRule = r && r.total ? "; by rule, " + r.ahead + " ahead and " + r.behind + " behind of " + r.total : "";
+    return ["ahead on " + v.ahead, v.parity ? "at parity on " + v.parity : null, "behind on " + v.behind, v.unknown ? "not measured on " + v.unknown : null].filter(Boolean).join(", ") + " of " + n + " factors" + byRule;
   }
   function shortId(id) {
     var s = String(id || "");
@@ -1108,15 +1124,15 @@
     }
     return null;
   }
-  function nextMedalEl(D, cards) {
+  function nextMedalEl(D, cards, label) {
     var nm = nextMedal(D, cards);
     if (!nm) return null;
     return el(
       "div",
       { className: "nextmedal" },
-      el("b", { textContent: "Next medal: " }),
+      el("b", { textContent: label || "Next medal: " }),
       link("scorecard/" + enc(nm.name), "", title(D, nm.name)),
-      " to " + nm.up + ". " + plural(nm.low, "entity", "entities") + " at " + nm.floor + " to lift" + (nm.rule ? "; " + nm.n + " need " : "."),
+      " to " + nm.up + ". " + plural(nm.low, "entity", "entities") + " at " + nm.floor + " to lift" + (nm.rule ? "; " + nm.n + (nm.n === 1 ? " needs " : " need ") : "."),
       nm.rule ? link("rule/" + enc(nm.name) + "/" + enc(nm.rule), "", ruleTitle(nm.name, nm.rule)) : null,
       nm.rule ? " " : null,
       nm.rule ? basisBadge(basisOf((((D.scorecards || {})[nm.name] || {}).rules || {})[nm.rule]), "tip") : null,
@@ -2068,9 +2084,12 @@
       if (!R) {
         var at = verdict.indexOf(": ");
         var needs = at > 0 && verdict.indexOf("Needs") === 0;
-        var plain = el("section", { className: "hero plain", style: "--lvl:" + fill(needs ? "none" : "gold") + ";--lvl-ink:" + ink(needs ? "none" : "gold") }, el("div", {}, el("div", { className: "kicker", textContent: "Status" }), el("h2", { className: "levelword", textContent: at > 0 ? verdict.slice(0, at) : verdict }), at > 0 ? el("p", { className: "verdict", textContent: verdict.slice(at + 2).replace(/^./, function(ch) {
+        var almost = at > 0 && verdict.indexOf("Almost") === 0;
+        var tone = needs ? "none" : almost ? "bronze" : "gold";
+        var next = needs || almost ? nextMedalEl(D, trackStats(D, S, furthestTrack(D, S) || void 0).cards, "Next: ") : null;
+        var plain = el("section", { className: "hero plain", style: "--lvl:" + fill(tone) + ";--lvl-ink:" + ink(tone) }, el("div", {}, el("div", { className: "kicker", textContent: "Status" }), el("h2", { className: "levelword", textContent: at > 0 ? verdict.slice(0, at) : verdict }), at > 0 ? el("p", { className: "verdict", textContent: verdict.slice(at + 2).replace(/^./, function(ch) {
           return ch.toUpperCase();
-        }) }) : null));
+        }) }) : null, next));
         plain.setAttribute("aria-label", "Status");
         return plain;
       }
@@ -2621,6 +2640,12 @@
       var sc = D.scorecards[active];
       var rows = Object.entries(D.scores[active] || {});
       var order = levelOrder(sc.levels);
+      var offBy = function(r) {
+        return Object.keys(r.rules || {}).reduce(function(n, rule) {
+          var v = (r.measures || {})[rule];
+          return n + (isFailing(r.rules[rule]) && typeof v === "number" ? v : 0);
+        }, 0);
+      };
       var parts = tallyLevels(rows, order);
       var cardSearch = el("input", { type: "search", placeholder: "Find a scorecard by name or id…", ariaLabel: "Find a scorecard" });
       var cardNav = el("nav", { className: "rank", ariaLabel: "Scorecards, most debt first" });
@@ -2815,7 +2840,10 @@
             return isPassing(o) || o === "skipped";
           });
         }).sort(function(a, b) {
-          return order.indexOf(a[1].level) - order.indexOf(b[1].level) || a[0].localeCompare(b[0]);
+          return order.indexOf(a[1].level) - order.indexOf(b[1].level) || offBy(b[1]) - offBy(a[1]) || a[0].localeCompare(b[0]);
+        });
+        var sized = shown.some(function(pair) {
+          return offBy(pair[1]) > 0;
         });
         if (!rows.length) {
           list.replaceChildren(el("div", { className: "empty", textContent: "No " + kindTitle(D, sc.kind).toLowerCase() + " has been collected yet. Run toolbox report in the repository with its connectors enabled; toolbox doctor lists any that is missing." }));
@@ -2831,7 +2859,7 @@
         var outOfScope = rows.filter(function(pair) {
           return pair[1].level === "skipped";
         }).length;
-        list.replaceChildren(el("div", { className: "sub", style: "margin:6px 0", textContent: plural(shown.length, "entity", "entities") + (outcomeFilter === "failing" ? " failing a rule" : outcomeFilter === "passing" ? " passing every rule" : "") + (outOfScope && levelFilter === "all" && outcomeFilter === "all" && !ruleFilter && !q ? " in scope, of " + kindCount(D, sc.kind, rows.length) : "") + ", lowest level first" }));
+        list.replaceChildren(el("div", { className: "sub", style: "margin:6px 0", textContent: plural(shown.length, "entity", "entities") + (outcomeFilter === "failing" ? " failing a rule" : outcomeFilter === "passing" ? " passing every rule" : "") + (outOfScope && levelFilter === "all" && outcomeFilter === "all" && !ruleFilter && !q ? " in scope, of " + kindCount(D, sc.kind, rows.length) : "") + ", lowest level first" + (sized ? ", then furthest off" : "") }));
         var facts = function(pair) {
           var r = pair[1];
           var outs = Object.entries(r.rules || {});
@@ -3619,6 +3647,28 @@
               needFix[common[0]].def.rationale ? el("span", { className: "why", style: "display:block;margin-top:4px" }, el("b", { textContent: "Why: " }), ...rich(needFix[common[0]].def.rationale)) : null
             )
           );
+        var size = {};
+        var said = {};
+        gaps.forEach(function(pair) {
+          (pair[1].gaps || []).forEach(function(g) {
+            var m = /^(.+?):atLeast (\S+) \((\S+)\)$/.exec(g);
+            var one = !m && /^(.+?):rule (.+) \((\S+)\)$/.exec(g);
+            var on = m || one;
+            var gsc = on && (D.scorecards || {})[on[1]];
+            var score = on && ((D.scores || {})[on[1]] || {})[pair[0]];
+            if (gsc && score)
+              (m ? blockers(gsc, score, m[2]) : [one[2]]).forEach(function(r) {
+                var v = (score.measures || {})[r];
+                if (typeof v === "number") size[pair[0]] = (size[pair[0]] || 0) + v;
+                var ev = (score.evidence || {})[r];
+                if (!said[pair[0]] && ev) said[pair[0]] = String(Array.isArray(ev) ? ev[0] : ev).split("\n")[0];
+              });
+          });
+        });
+        if (Object.keys(size).length)
+          gaps.sort(function(a, b) {
+            return (size[b[0]] || 0) - (size[a[0]] || 0) || a[0].localeCompare(b[0]);
+          });
         gaps.forEach(function(pair) {
           var bases = {};
           (pair[1].gaps || []).forEach(function(g) {
@@ -3644,7 +3694,8 @@
                 Object.keys(bases).length ? " " : "",
                 (pair[1].gaps || []).map(function(g) {
                   return gapText(D, g, pair[0]);
-                }).join("; ")
+                }).join("; "),
+                said[pair[0]] ? el("div", { className: "sub", style: "font-size:12px", textContent: "Found: " + said[pair[0]] }) : null
               )
             )
           );
@@ -3701,7 +3752,7 @@
           state === "empty" ? null : marks,
           el("h3", { textContent: "Goal" }),
           includes,
-          el("h3", { textContent: state === "empty" ? "Progress" : "Not meeting yet" + (gaps.length ? " (" + gaps.length + ")" : "") }),
+          el("h3", { textContent: state === "empty" ? "Progress" : "Not meeting yet" + (gaps.length ? " (" + gaps.length + ")" : "") + (Object.keys(size || {}).length ? ", furthest first" : "") }),
           gapList
         )
       );
@@ -4554,7 +4605,7 @@
             best ? el("span", { textContent: "widest lead: " + lowerFirst(measureLabel(c, best.r)) + ", " + (best.ratio >= 10 ? Math.round(best.ratio).toLocaleString("en-US") : best.ratio.toFixed(1)) + "× " + best.word }) : null
           ) : null;
           var a = link("compare/" + enc(n), "factor", [
-            el("div", { className: "fh" }, el("span", { textContent: def.title || n }), standingChip(v, v === "ahead" && counts.ahead * 2 < total ? "narrowly ahead" : null)),
+            el("div", { className: "fh" }, el("span", { textContent: def.title || n }), standingChip(v, v === "ahead" && counts.ahead * 2 < total ? "narrowly ahead" : v === "behind" && counts.ahead ? "behind, mixed" : null)),
             fx,
             def.rationale || def.description ? el("p", {}, ...rich(firstSentence(def.rationale || def.description))) : null,
             el("div", { className: "fbar" }, bar, el("span", { className: "fc", textContent: tallyText }))
@@ -4665,7 +4716,11 @@
             el("b", { className: "parity", textContent: ruleCounts.parity + " at parity" }),
             " · ",
             el("b", { className: "behind", textContent: ruleCounts.behind + " behind" }),
-            ". Factors are not weighted, so the factor count is a tally, not an overall score."
+            ". A factor counts as behind if any one of its rules is behind" + (names.some(function(n) {
+              return verdictOf(n) === "behind" && Object.keys(all[n].rules || {}).some(function(r) {
+                return (all[n].rules[r] || {})[peer] === "ahead";
+              });
+            }) ? ", so a factor marked “behind, mixed” is ahead on some of its rules too" : "") + ". Factors are not weighted, so the factor count is a tally, not an overall score."
           ),
           el(
             "details",
@@ -4732,7 +4787,10 @@
                 return vals[i] == null ? null : el("span", { style: "display:block" }, el("span", { className: "sub", textContent: who(id) + ": " }), show(vals[i]));
               })
             ),
-            fields[f] ? el("small", { textContent: firstSentence(fields[f]), title: fields[f] }) : null
+            fields[f] ? el("small", { textContent: firstSentence(fields[f]), title: fields[f] }) : null,
+            vals.some(function(v) {
+              return /\+uncommitted\b/.test(String(v));
+            }) ? el("small", { className: "warn-note", textContent: "“+uncommitted”: the harness had local changes when it ran, so this exact code is not in the repository and a rerun from the commit may differ." }) : null
           );
         })
       );

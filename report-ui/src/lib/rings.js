@@ -91,7 +91,10 @@ export function tallyRing(v, n, size, bare) {
 
 export function tallyWords(v, n) {
   if (n && v.unknown >= n) return "not measured yet: no factor has values for both products";
-  return ["ahead on " + v.ahead, v.parity ? "at parity on " + v.parity : null, "behind on " + v.behind, v.unknown ? "not measured on " + v.unknown : null].filter(Boolean).join(", ") + " of " + n + " factors";
+  var r = v.rules;
+  // A factor is behind if any one rule is, so the rule split keeps the factor count from reading harsher than it is.
+  var byRule = r && r.total ? "; by rule, " + r.ahead + " ahead and " + r.behind + " behind of " + r.total : "";
+  return ["ahead on " + v.ahead, v.parity ? "at parity on " + v.parity : null, "behind on " + v.behind, v.unknown ? "not measured on " + v.unknown : null].filter(Boolean).join(", ") + " of " + n + " factors" + byRule;
 }
 
 export function shortId(id) {

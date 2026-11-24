@@ -197,6 +197,13 @@ export const scorecardsViews = {
     var sc = D.scorecards[active];
     var rows = Object.entries(D.scores[active] || {});
     var order = levelOrder(sc.levels);
+    // How far off an entity is: the measures of the rules it fails (lines over a limit, findings).
+    var offBy = function (r) {
+      return Object.keys(r.rules || {}).reduce(function (n, rule) {
+        var v = (r.measures || {})[rule];
+        return n + (isFailing(r.rules[rule]) && typeof v === "number" ? v : 0);
+      }, 0);
+    };
     var parts = tallyLevels(rows, order);
 
     var cardSearch = el("input", { type: "search", placeholder: "Find a scorecard by name or id…", ariaLabel: "Find a scorecard" });
@@ -403,8 +410,11 @@ export const scorecardsViews = {
               });
         })
         .sort(function (a, b) {
-          return order.indexOf(a[1].level) - order.indexOf(b[1].level) || a[0].localeCompare(b[0]);
+          return order.indexOf(a[1].level) - order.indexOf(b[1].level) || offBy(b[1]) - offBy(a[1]) || a[0].localeCompare(b[0]);
         });
+      var sized = shown.some(function (pair) {
+        return offBy(pair[1]) > 0;
+      });
       if (!rows.length) {
         list.replaceChildren(el("div", { className: "empty", textContent: "No " + kindTitle(D, sc.kind).toLowerCase() + " has been collected yet. Run toolbox report in the repository with its connectors enabled; toolbox doctor lists any that is missing." }));
         return;
@@ -419,7 +429,7 @@ export const scorecardsViews = {
       var outOfScope = rows.filter(function (pair) {
         return pair[1].level === "skipped";
       }).length;
-      list.replaceChildren(el("div", { className: "sub", style: "margin:6px 0", textContent: plural(shown.length, "entity", "entities") + (outcomeFilter === "failing" ? " failing a rule" : outcomeFilter === "passing" ? " passing every rule" : "") + (outOfScope && levelFilter === "all" && outcomeFilter === "all" && !ruleFilter && !q ? " in scope, of " + kindCount(D, sc.kind, rows.length) : "") + ", lowest level first" }));
+      list.replaceChildren(el("div", { className: "sub", style: "margin:6px 0", textContent: plural(shown.length, "entity", "entities") + (outcomeFilter === "failing" ? " failing a rule" : outcomeFilter === "passing" ? " passing every rule" : "") + (outOfScope && levelFilter === "all" && outcomeFilter === "all" && !ruleFilter && !q ? " in scope, of " + kindCount(D, sc.kind, rows.length) : "") + ", lowest level first" + (sized ? ", then furthest off" : "") }));
       var facts = function (pair) {
         var r = pair[1];
         var outs = Object.entries(r.rules || {});

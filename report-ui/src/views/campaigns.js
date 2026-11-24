@@ -120,6 +120,29 @@ export const campaignsViews = {
             needFix[common[0]].def.rationale ? el("span", { className: "why", style: "display:block;margin-top:4px" }, el("b", { textContent: "Why: " }), ...rich(needFix[common[0]].def.rationale)) : null,
           ),
         );
+      // How far off each entity is, from its blocking rules' measures and evidence, so the furthest lead.
+      var size = {};
+      var said = {};
+      gaps.forEach(function (pair) {
+        (pair[1].gaps || []).forEach(function (g) {
+          var m = /^(.+?):atLeast (\S+) \((\S+)\)$/.exec(g);
+          var one = !m && /^(.+?):rule (.+) \((\S+)\)$/.exec(g);
+          var on = m || one;
+          var gsc = on && (D.scorecards || {})[on[1]];
+          var score = on && ((D.scores || {})[on[1]] || {})[pair[0]];
+          if (gsc && score)
+            (m ? blockers(gsc, score, m[2]) : [one[2]]).forEach(function (r) {
+              var v = (score.measures || {})[r];
+              if (typeof v === "number") size[pair[0]] = (size[pair[0]] || 0) + v;
+              var ev = (score.evidence || {})[r];
+              if (!said[pair[0]] && ev) said[pair[0]] = String(Array.isArray(ev) ? ev[0] : ev).split("\n")[0];
+            });
+        });
+      });
+      if (Object.keys(size).length)
+        gaps.sort(function (a, b) {
+          return (size[b[0]] || 0) - (size[a[0]] || 0) || a[0].localeCompare(b[0]);
+        });
       gaps.forEach(function (pair) {
         var bases = {};
         (pair[1].gaps || []).forEach(function (g) {
@@ -146,6 +169,7 @@ export const campaignsViews = {
                 }),
               Object.keys(bases).length ? " " : "",
               (pair[1].gaps || []).map(function (g) { return gapText(D, g, pair[0]); }).join("; "),
+              said[pair[0]] ? el("div", { className: "sub", style: "font-size:12px", textContent: "Found: " + said[pair[0]] }) : null,
             ),
           ),
         );
@@ -204,7 +228,7 @@ export const campaignsViews = {
         state === "empty" ? null : marks,
         el("h3", { textContent: "Goal" }),
         includes,
-        el("h3", { textContent: state === "empty" ? "Progress" : "Not meeting yet" + (gaps.length ? " (" + gaps.length + ")" : "") }),
+        el("h3", { textContent: state === "empty" ? "Progress" : "Not meeting yet" + (gaps.length ? " (" + gaps.length + ")" : "") + (Object.keys(size || {}).length ? ", furthest first" : "") }),
         gapList,
       ),
     );

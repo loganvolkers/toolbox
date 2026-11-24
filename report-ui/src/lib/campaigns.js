@@ -51,15 +51,15 @@ export function nextMedal(D, cards) {
   return null;
 }
 
-export function nextMedalEl(D, cards) {
+export function nextMedalEl(D, cards, label) {
   var nm = nextMedal(D, cards);
   if (!nm) return null;
   return el(
     "div",
     { className: "nextmedal" },
-    el("b", { textContent: "Next medal: " }),
+    el("b", { textContent: label || "Next medal: " }),
     link("scorecard/" + enc(nm.name), "", title(D, nm.name)),
-    " to " + nm.up + ". " + plural(nm.low, "entity", "entities") + " at " + nm.floor + " to lift" + (nm.rule ? "; " + nm.n + " need " : "."),
+    " to " + nm.up + ". " + plural(nm.low, "entity", "entities") + " at " + nm.floor + " to lift" + (nm.rule ? "; " + nm.n + (nm.n === 1 ? " needs " : " need ") : "."),
     nm.rule ? link("rule/" + enc(nm.name) + "/" + enc(nm.rule), "", ruleTitle(nm.name, nm.rule)) : null,
     nm.rule ? " " : null,
     nm.rule ? basisBadge(basisOf((((D.scorecards || {})[nm.name] || {}).rules || {})[nm.rule]), "tip") : null,

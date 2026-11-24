@@ -85,7 +85,7 @@ export const compareViews = {
               )
             : null;
           var a = link("compare/" + enc(n), "factor", [
-            el("div", { className: "fh" }, el("span", { textContent: def.title || n }), standingChip(v, v === "ahead" && counts.ahead * 2 < total ? "narrowly ahead" : null)),
+            el("div", { className: "fh" }, el("span", { textContent: def.title || n }), standingChip(v, v === "ahead" && counts.ahead * 2 < total ? "narrowly ahead" : v === "behind" && counts.ahead ? "behind, mixed" : null)),
             fx,
             def.rationale || def.description ? el("p", {}, ...rich(firstSentence(def.rationale || def.description))) : null,
             el("div", { className: "fbar" }, bar, el("span", { className: "fc", textContent: tallyText })),
@@ -216,7 +216,13 @@ export const compareViews = {
           el("b", { className: "parity", textContent: ruleCounts.parity + " at parity" }),
           " · ",
           el("b", { className: "behind", textContent: ruleCounts.behind + " behind" }),
-          ". Factors are not weighted, so the factor count is a tally, not an overall score.",
+          ". A factor counts as behind if any one of its rules is behind" + (names.some(function (n) {
+            return verdictOf(n) === "behind" && Object.keys(all[n].rules || {}).some(function (r) {
+              return (all[n].rules[r] || {})[peer] === "ahead";
+            });
+          })
+            ? ", so a factor marked “behind, mixed” is ahead on some of its rules too"
+            : "") + ". Factors are not weighted, so the factor count is a tally, not an overall score.",
         ),
         el(
           "details",
@@ -290,6 +296,11 @@ export const compareViews = {
                   }),
                 ),
             fields[f] ? el("small", { textContent: firstSentence(fields[f]), title: fields[f] }) : null,
+            vals.some(function (v) {
+              return /\+uncommitted\b/.test(String(v));
+            })
+              ? el("small", { className: "warn-note", textContent: "“+uncommitted”: the harness had local changes when it ran, so this exact code is not in the repository and a rerun from the commit may differ." })
+              : null,
           );
         }),
     );

@@ -15,7 +15,7 @@ export function trackTitle(D, name) {
 // over its scorecards; for comparisons, the factors at parity or ahead.
 export function trackStats(D, S, name) {
   var rows = S.rows.filter(function (r) {
-    return r.sc.track === name;
+    return (r.sc.track || null) === (name || null);
   });
   var compare =
     rows.length > 0 &&
@@ -50,6 +50,12 @@ export function trackStats(D, S, name) {
     var v = (c.verdict || {})[(c.peers || [])[0]] || "unknown";
     verdicts[v] = (verdicts[v] || 0) + 1;
     if (v === "behind") behind.push(title(D, r.name));
+    var rules = verdicts.rules || (verdicts.rules = { ahead: 0, parity: 0, behind: 0, total: 0 });
+    Object.keys(c.rules || {}).forEach(function (rule) {
+      var x = (c.rules[rule] || {})[(c.peers || [])[0]];
+      if (x in rules) rules[x]++;
+      rules.total++;
+    });
   });
   var pct = compare
     ? Math.round(((verdicts.ahead + verdicts.parity) / rows.length) * 100)

@@ -1,7 +1,7 @@
 // hero, tiles, campaignCard, scorecardTable, overview: methods of <toolbox-report>, installed on its prototype by element.js.
 import { badge, barEl, levelLegend, medal, splitUnassessed } from "../lib/bars.js";
 import { lockIcon } from "../lib/basis.js";
-import { campaignStanding, campaignState, goalBar, includeProgress, kpiBar, kpiPips, scCaption, stuckNote } from "../lib/campaigns.js";
+import { campaignStanding, campaignState, goalBar, includeProgress, kpiBar, kpiPips, nextMedalEl, scCaption, stuckNote } from "../lib/campaigns.js";
 import { cardName, num } from "../lib/compare.js";
 import { el, enc, link } from "../lib/dom.js";
 import { kindDescription, kindGroupsOf, kindTitle } from "../lib/kinds.js";
@@ -10,7 +10,7 @@ import { ring, title, topNote } from "../lib/rings.js";
 import { floorOf, floorPill } from "../lib/rules.js";
 import { daysLeft } from "../lib/status.js";
 import { campaignNamesSorted, healthVerdict, noFacts, share as shareOf } from "../lib/summary.js";
-import { furthestTrack, trackTitle, tracksSorted } from "../lib/tracks.js";
+import { furthestTrack, trackStats, trackTitle, tracksSorted } from "../lib/tracks.js";
 import { fmt, plural, scPurpose } from "../lib/words.js";
 
 export const overviewViews = {
@@ -45,7 +45,11 @@ export const overviewViews = {
     if (!R) {
       var at = verdict.indexOf(": ");
       var needs = at > 0 && verdict.indexOf("Needs") === 0;
-      var plain = el("section", { className: "hero plain", style: "--lvl:" + fill(needs ? "none" : "gold") + ";--lvl-ink:" + ink(needs ? "none" : "gold") }, el("div", {}, el("div", { className: "kicker", textContent: "Status" }), el("h2", { className: "levelword", textContent: at > 0 ? verdict.slice(0, at) : verdict }), at > 0 ? el("p", { className: "verdict", textContent: verdict.slice(at + 2).replace(/^./, function (ch) { return ch.toUpperCase(); }) }) : null));
+      var almost = at > 0 && verdict.indexOf("Almost") === 0;
+      var tone = needs ? "none" : almost ? "bronze" : "gold";
+      // The furthest track's lowest scorecard, as its track card names it; with no tracks, every scorecard's.
+      var next = needs || almost ? nextMedalEl(D, trackStats(D, S, furthestTrack(D, S) || undefined).cards, "Next: ") : null;
+      var plain = el("section", { className: "hero plain", style: "--lvl:" + fill(tone) + ";--lvl-ink:" + ink(tone) }, el("div", {}, el("div", { className: "kicker", textContent: "Status" }), el("h2", { className: "levelword", textContent: at > 0 ? verdict.slice(0, at) : verdict }), at > 0 ? el("p", { className: "verdict", textContent: verdict.slice(at + 2).replace(/^./, function (ch) { return ch.toUpperCase(); }) }) : null, next));
       plain.setAttribute("aria-label", "Status");
       return plain;
     }
