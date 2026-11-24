@@ -18,3 +18,14 @@ pub use diagnostics::{Diagnostic, Report};
 pub use load::{LoadError, Source};
 pub use manifest::Manifest;
 pub use validate::{validate_manifest, validate_portal, validate_source};
+
+/// A hint for a key that is the tail of a value: in `{reason: Replaced by x, which is better.}`
+/// the comma ends the value, and YAML reads `which is better.` as a key with no value.
+pub fn split_value_hint(key: &str, value: &serde_json::Value) -> Option<String> {
+    (value.is_null() && key.contains(char::is_whitespace)).then(|| {
+        format!(
+            "{key:?} looks like the rest of a value cut at a comma: quote values that contain \
+             commas inside {{…}}"
+        )
+    })
+}

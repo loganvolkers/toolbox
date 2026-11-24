@@ -57,10 +57,12 @@ pub fn validate_inputs(
         .unwrap_or_default();
     for (k, v) in inputs {
         let Some(spec) = props.get(k) else {
-            errors.push(format!(
-                "{k} is not an input of {name} (inputs: {})",
-                props.keys().cloned().collect::<Vec<_>>().join(", ")
-            ));
+            errors.push(toolbox_model::split_value_hint(k, v).unwrap_or_else(|| {
+                format!(
+                    "{k} is not an input of {name} (inputs: {})",
+                    props.keys().cloned().collect::<Vec<_>>().join(", ")
+                )
+            }));
             continue;
         };
         if spec.get("enumFrom").is_some() {

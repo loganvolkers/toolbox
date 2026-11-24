@@ -691,10 +691,18 @@ impl Checker {
             .filter(|k| !KEYS.contains(k) && !(closed && *k == "additionalProperties"))
             .collect();
         if !bad.is_empty() {
+            let hints: Vec<String> = bad
+                .iter()
+                .filter_map(|k| crate::split_value_hint(k, &obj[*k]))
+                .collect();
             self.push(
                 "form.subset",
                 ptr.to_string(),
-                format!("{label}: keywords outside the form subset: {bad:?}"),
+                if hints.is_empty() {
+                    format!("{label}: keywords outside the form subset: {bad:?}")
+                } else {
+                    format!("{label}: {}", hints.join("; "))
+                },
             );
         }
         match obj.get("type").and_then(Value::as_str) {
