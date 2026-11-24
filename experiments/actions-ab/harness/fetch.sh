@@ -3,8 +3,9 @@
 # the arm's release into <dir>/backstage-docs: the whole docs/ tree of backstage/backstage at
 # v1.57.0, and the scaffolder and catalog backends' OpenAPI specs, uncurated. The gha arm's docs go
 # into <dir>/gha-docs, whole subtrees at pinned commits (triage G1): from github/docs, the Actions
-# pages, branch rules, code owners, the Actions reusables and the REST reference for actions,
-# deployments and repos; act's README at the binary's tag; and the act user guide's src/.
+# pages, branch rules, code owners, teams, the Actions reusables and the REST reference for actions,
+# deployments, repos and teams (fit audit r8, correction 4); act's README at the binary's tag;
+# and the act user guide's src/.
 #   fetch.sh <dir>
 set -euo pipefail
 dir=$1 here=$(cd "$(dirname "$0")" && pwd)
@@ -31,8 +32,10 @@ if [ ! -d "$dir/gha-docs" ]; then
   git -C "$t/github-docs" sparse-checkout set --no-cone /content/actions/ \
     /content/repositories/configuring-branches-and-merges-in-your-repository/ \
     /content/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners.md \
+    /content/organizations/organizing-members-into-teams/ \
     /data/reusables/actions/ /src/rest/data/fpt-2022-11-28/actions.json \
-    /src/rest/data/fpt-2022-11-28/deployments.json /src/rest/data/fpt-2022-11-28/repos.json
+    /src/rest/data/fpt-2022-11-28/deployments.json /src/rest/data/fpt-2022-11-28/repos.json \
+    /src/rest/data/fpt-2022-11-28/teams.json
   git -C "$t/github-docs" fetch -q --depth 1 --filter=blob:none origin "$gh"
   git -C "$t/github-docs" checkout -q FETCH_HEAD
   rm -rf "$t/github-docs/.git"
