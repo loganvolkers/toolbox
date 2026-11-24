@@ -179,8 +179,10 @@ mod tests {
     use std::net::TcpListener;
     use std::sync::{Arc, Mutex};
 
+    type Seen = Arc<Mutex<Vec<(String, String)>>>;
+
     /// A GitHub API double: 204 for a dispatch, the given runs for a list. Records each request.
-    fn fake(runs: Value) -> (String, Arc<Mutex<Vec<(String, String)>>>) {
+    fn fake(runs: Value) -> (String, Seen) {
         let l = TcpListener::bind("127.0.0.1:0").unwrap();
         let api = format!("http://{}", l.local_addr().unwrap());
         let seen = Arc::new(Mutex::new(vec![]));
