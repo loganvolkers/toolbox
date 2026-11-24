@@ -70,6 +70,7 @@ The baseline records only files that violate, so adding clean files never makes 
 | `kind` | `SizedFile` | The kind (PascalCase). Include the package twice with different `name` and `kind` for two standards |
 | `title`, `owner`, `fix` | | The scorecard's heading, owner and fix text |
 | `root` | `.` | The checkout, relative to where `toolbox report` runs |
+| `track` | none | The portal track its scorecard and campaign belong to; leave unset if the portal has no tracks |
 
 ## What a pull request sees
 

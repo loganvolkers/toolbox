@@ -44,6 +44,7 @@ scorecards:
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/toolbox-and-tools.md
     kind: ${param:kind}
     owner: ${param:owner}
+    track: ${param:track}
     levels: [within-limit]
     # A file new since the baseline (or renamed) must arrive within the limit.
     ratchet: {newEntitiesAtLeast: within-limit}
@@ -67,6 +68,7 @@ campaigns:
   - name: ${param:name}-zero
     title: "${param:title}: no file over ${param:limit} lines"
     owner: ${param:owner}
+    track: ${param:track}
     description: >-
       Every measured file within ${param:limit} lines. Progress is counted
       from the start the baseline records: files over the limit, and lines

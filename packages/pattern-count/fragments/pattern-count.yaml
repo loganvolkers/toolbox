@@ -50,6 +50,7 @@ scorecards:
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/toolbox-and-tools.md
     kind: ${param:kind}
     owner: ${param:owner}
+    track: ${param:track}
     levels: [clean]
     # A file new since the baseline (or renamed) must arrive without matches.
     ratchet: {newEntitiesAtLeast: clean}
@@ -71,6 +72,7 @@ campaigns:
   - name: ${param:name}-zero
     title: "${param:title}: to zero"
     owner: ${param:owner}
+    track: ${param:track}
     description: >-
       No matches in any scanned file. Progress is counted from the start the
       baseline records: files with matches, and matches.
