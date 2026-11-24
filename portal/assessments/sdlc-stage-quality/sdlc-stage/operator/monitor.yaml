@@ -2,39 +2,63 @@ apiVersion: toolbox.dev/assessment/v1
 entity: sdlc-stage:operator/monitor
 rubric: sdlc-stage-quality
 subjectHash: b7ece568fc20
-assessor: {kind: agent, name: cursor-composer, model: composer}
-at: 2026-11-22
+assessor: {kind: agent, name: cursor-cloud-agent, model: claude-opus-5.5}
+at: 2026-11-24
 verdicts:
   - criterion: executable-exit
     verdict: pass
     reason: >-
-      scripts/m4-acceptance.sh exercises serve health, readiness and the
-      metrics endpoint; experiments/otel-testbed/scripts/score.sh (CI job
-      otel-testbed) asserts OTLP export of http.server.request spans, catalog
-      metric names, service.name and log/trace_id correlation against a pinned
-      otelcol-contrib file exporter. Exit criterion's lag/catalog signals are
-      toolbox_snapshot_lag_seconds and related series on /metrics and OTLP.
+      scripts/m4-acceptance.sh, the listed check, reads connector freshness
+      from /v1/views/ops and derivation diagnostics from /v1/ops/derived
+      (lines 44-60). It does not touch /metrics or OTLP; that half is gated by
+      experiments/otel-testbed/scripts/score.sh in the otel-testbed job of
+      .github/workflows/ci.yml (lines 114-127), which fails when
+      toolbox_snapshot_lag_seconds or the catalog is missing from either. The
+      stage's checks should list score.sh.
   - criterion: agent-can-complete
     verdict: pass
     reason: >-
-      An agent runs toolbox serve with OTEL_EXPORTER_OTLP_ENDPOINT and
-      experiments/otel-testbed/scripts/score.sh (or docker compose + the same
-      rubric) using only docs/design/observability.md and the testbed README.
-      Remaining gap is the Grafana / toolbox-ops pack, not the observability
-      contract itself.
+      One command, experiments/otel-testbed/scripts/score.sh, starts a pinned
+      collector, serves a portal with OTEL_* set and scores the rubric, using
+      only experiments/otel-testbed/README.md and
+      docs/design/observability.md. The open gap is the Grafana pack, not the
+      exit criterion.
   - criterion: reuses-artifacts
-    verdict: pass
+    verdict: fail
     reason: >-
-      Monitoring uses the released toolbox binary's /metrics and OTLP export;
-      the testbed pins otelcol-contrib from its GitHub release (SHA-256 in
-      pin.env). Operators do not rebuild Toolbox to observe lag.
+      The collector is SHA-256-pinned (experiments/otel-testbed/pin.env), but
+      no released Toolbox can be monitored: toolbox-telemetry
+      (crates/toolbox-telemetry) landed on 2026-11-22 in 28f1cf6, after
+      v0.1.1, and no image has been built, so /metrics and OTLP need a source
+      build. score.sh runs `cargo build` when TOOLBOX is unset (lines 43-48).
+    suggestion: >-
+      Cut a release that includes toolbox-telemetry and build its image, and
+      let score.sh take a released binary through scripts/install-release.sh
+      before it falls back to cargo.
   - criterion: decoupled-from-core
     verdict: pass
     reason: >-
-      An operator configures OTEL_* and scrape targets against a deployed
-      portal; they do not add crates or builtins to this repository to monitor
-      freshness.
+      An operator sets OTEL_* and a scrape target on a running portal
+      (docs/design/observability.md); monitoring adds no crate, builtin or
+      schema to this repository.
+  - criterion: fast-feedback
+    verdict: pass
+    reason: >-
+      docs/design/maintainer-sdlc.md §3 measures scripts/m4-acceptance.sh, the
+      stage's check, at 7.9 s locally (Postgres, OpenFGA, three connectors,
+      Chromium). score.sh is unmeasured.
+  - criterion: beyond-one-reference
+    verdict: fail
+    reason: >-
+      Both gates serve one portal: scripts/m4-acceptance.sh sets
+      PORTAL=examples/reference-portal (line 11), and
+      experiments/otel-testbed/scripts/score.sh serves
+      examples/reference-portal with --fixtures (line 93).
+    suggestion: >-
+      Run score.sh (or an ops-view check) over a second portal, such as
+      portal/ or examples/repo-portal-starter, so the metric catalog and
+      freshness are not fitted to the reference portal's connectors.
 summary: >-
-  Snapshot lag and catalog metrics are observable via /metrics and OTLP.
-  The local collector testbed and CI score gate prove export completeness;
-  Grafana pack remains deferred.
+  Freshness, diagnostics, lag and the metric catalog are checked in CI,
+  but only on the reference portal, and no release carries the telemetry
+  yet.

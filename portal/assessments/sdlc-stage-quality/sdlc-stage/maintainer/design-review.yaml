@@ -1,0 +1,71 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: sdlc-stage:maintainer/design-review
+rubric: sdlc-stage-quality
+subjectHash: e303d41d3cfa
+assessor: {kind: agent, name: cursor-cloud-agent, model: claude-opus-5.5}
+at: 2026-11-24
+verdicts:
+  - criterion: executable-exit
+    verdict: pass
+    reason: >-
+      The machine half is gated: the report-ui job in .github/workflows/ci.yml
+      (lines 271-289) fails when `npm run check` finds the bundle stale or
+      `npm run probe` finds a failing story. The panel half is judgement by
+      design (docs/design/design-audit.md §1), and nothing in CI checks that a
+      round is recorded in docs/audits/, but the guidance only fails a stage
+      when no check would fail.
+  - criterion: agent-can-complete
+    verdict: pass
+    reason: >-
+      Every step is a command or an agent task: npm ci, check, build-storybook
+      and probe (report-ui/README.md), then capture and a panel of three fresh
+      agent auditors with a fixed brief
+      (plugins/toolbox-operator/skills/design-audit/SKILL.md steps 3-4). No
+      secret or person is needed; the five-real-reader step in
+      docs/design/design-audit.md §5 sits outside the exit criterion.
+      report-ui/scripts/fixtures.sh needs the tools `toolbox doctor` lists,
+      which the stage names.
+  - criterion: reuses-artifacts
+    verdict: fail
+    reason: >-
+      The probe path is pinned: npm ci from report-ui/package-lock.json
+      (Storybook 10.6.8, Playwright 1.65.1, axe-core 4.14.1). The audit path
+      is not: capture installs unpinned playwright and axe-core by hand
+      (plugins/toolbox-operator/skills/design-audit/scripts/capture.cjs line
+      6, SKILL.md line 62), and report-ui/scripts/fixtures.sh compiles Toolbox
+      and needs staticcheck and zizmor installed by hand, which
+      scripts/ci-tools.sh does not provide.
+    suggestion: >-
+      Run capture.cjs with NODE_PATH=report-ui/node_modules so it uses the
+      lockfile's Playwright and axe-core, and have fixtures.sh install its
+      linters from pins (`toolbox tools install`, scripts/ci-tools.sh) before
+      rendering.
+  - criterion: decoupled-from-core
+    verdict: pass
+    reason: >-
+      Judging Toolbox's own report is the maintainer's job, and the stage adds
+      no crate, builtin or schema. The audit half ships as an operator skill
+      (plugins/toolbox-operator/skills/design-audit/SKILL.md) whose capture
+      takes any served page (`--url`), so an operator can audit a custom view
+      the same way.
+  - criterion: fast-feedback
+    verdict: pass
+    reason: >-
+      docs/design/maintainer-sdlc.md §3 measures build-storybook at 1.5 s and
+      the probe at 33 s (212 checks, 4 workers); report-ui/README.md says
+      about 35 s. Here `npm --prefix report-ui run check` took 0.4 s,
+      build-storybook 1.9 s, and the probe passed 212 of 212 in 45 s while
+      another benchmark loaded the machine.
+  - criterion: beyond-one-reference
+    verdict: pass
+    reason: >-
+      Stories render five fixtures from three portals: portal/ (t4t.json),
+      examples/openfga-portal over OpenFGA v1.23.0 (openfga.json,
+      openfga-unmeasured.json) and examples/repo-portal-starter (starter.json,
+      starter-empty.json), per report-ui/README.md and report-ui/stories/. The
+      design-audit skill requires a task on the second portal. All three are
+      repository portals, and ui/ has no stories (a stage gap).
+summary: >-
+  The probe gate is fast, runs in CI and covers three portals. The audit
+  half installs Playwright and axe-core unpinned for capture, and the
+  fixtures need hand-installed linters.

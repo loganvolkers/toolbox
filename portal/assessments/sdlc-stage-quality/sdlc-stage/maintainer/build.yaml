@@ -2,37 +2,61 @@ apiVersion: toolbox.dev/assessment/v1
 entity: sdlc-stage:maintainer/build
 rubric: sdlc-stage-quality
 subjectHash: f09419482056
-assessor: {kind: agent, name: cursor-grok, model: grok-4.7}
-at: 2026-11-20
+assessor: {kind: agent, name: cursor-cloud-agent, model: claude-opus-5.5}
+at: 2026-11-24
 verdicts:
   - criterion: executable-exit
     verdict: pass
     reason: >-
-      .github/workflows/ci.yml runs cargo build --locked in the rust job, and
-      the ui job fails when ui/dist does not match the source (`git diff
-      --exit-code -- dist`).
+      .github/workflows/ci.yml runs `cargo build --locked` in the rust job
+      (line 39), with the toolchain from rust-toolchain.toml (1.97.0), and the
+      ui job fails when ui/dist differs from its source (`npm run build && git
+      diff --exit-code -- dist`, line 270).
   - criterion: agent-can-complete
     verdict: pass
     reason: >-
-      The commands are in AGENTS.md and rust-toolchain.toml pins the
-      toolchain. No secret or manual step is required to compile.
+      Both commands are in AGENTS.md and docs/design/maintainer-sdlc.md §2;
+      rust-toolchain.toml pins the compiler and ui/package-lock.json the UI
+      dependencies. Compiling needs no secret and no manual step.
   - criterion: reuses-artifacts
     verdict: fail
     reason: >-
-      OpenFGA, actionlint and the fga CLI now come from releases
-      (scripts/ci-tools.sh) and cargo is cached (Swatinem/rust-cache in
-      ci.yml). The report-action job still builds Toolbox from source, and
-      scale-budget runs cargo run --release, so the stage still compiles
-      Toolbox more than once.
+      Third-party tools come from SHA-pinned releases (scripts/ci-tools.sh)
+      and cargo is cached (Swatinem/rust-cache), but .github/workflows/ci.yml
+      compiles Toolbox separately in the rust, otel-testbed (line 125),
+      acceptance (line 139) and report-action jobs; report-action builds from
+      the action's source because it sets neither toolbox-dir nor
+      toolbox-version (lines 193-199, actions/report/action.yml lines
+      119-129).
     suggestion: >-
-      Point report-action at the binary the rust job already built, and keep
-      the scale job on the cached release target.
+      Build once in the rust job, upload target/debug's binaries as an
+      artifact, and have otel-testbed, acceptance and report-action download
+      it (report-action through toolbox-dir).
   - criterion: decoupled-from-core
     verdict: pass
     reason: >-
       Building Toolbox is the maintainer's own job
-      (docs/design/maintainer-sdlc.md); nothing outside this repository is
-      needed.
+      (docs/design/maintainer-sdlc.md); it adds no crate, builtin or schema
+      and needs nothing outside this repository.
+  - criterion: fast-feedback
+    verdict: pass
+    reason: >-
+      docs/design/maintainer-sdlc.md §3 measures a rebuild after editing
+      toolbox-api at 1.4 s and toolbox-derive at 2.1 s on 4 vCPU with warm
+      caches, so a local `cargo build` answers in seconds before CI.
+  - criterion: beyond-one-reference
+    verdict: fail
+    reason: >-
+      Every build in .github/workflows/ci.yml runs on ubuntu-latest (Linux
+      x86_64). dist-workspace.toml targets four more platforms (macOS arm64
+      and x86_64, Linux arm64, Windows), but .github/workflows/release.yml
+      compiles them only on a tag; on pull requests it runs dist's plan mode,
+      and commits go straight to main (D32). A platform-specific break shows
+      up first at release time.
+    suggestion: >-
+      Add a `cargo build --locked` (or `cargo check`) job on macos-latest and
+      windows-latest to ci.yml, or set dist's pr-run-mode to upload, so a
+      second platform builds before a tag.
 summary: >-
-  Correct and agent-runnable. Third-party tools are downloaded; Toolbox
-  itself is still compiled in more than one job.
+  Correct, agent-runnable and fast locally. Toolbox is still compiled in
+  four CI jobs, and only Linux x86_64 is built before a release.
