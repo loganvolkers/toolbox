@@ -121,16 +121,16 @@ kinds:
         description: Browse and filter the catalog.
       capOwnership:
         type: boolean
-        description: "Show who owns what, through groups."
+        description: Show who owns what, through groups.
       capGraph:
         type: boolean
-        description: "Show an entity's relations as a graph."
+        description: Show an entity's relations as a graph.
       capDocsSearch:
         type: boolean
         description: Search the catalog and documentation by any word.
       capDocs:
         type: boolean
-        description: "Read a component's documentation in the portal."
+        description: Read a component's documentation in the portal.
       capTemplates:
         type: boolean
         description: Create a component from a template.
@@ -140,7 +140,7 @@ kinds:
       capApiDocs: {type: boolean, description: Render an API's OpenAPI or AsyncAPI definition.}
       capKubernetes:
         type: boolean
-        description: "Show a component's Kubernetes workloads."
+        description: Show a component's Kubernetes workloads.
       capNotifications: {type: boolean, description: Notify users of events.}
       capPermissionRule:
         type: boolean
@@ -148,7 +148,7 @@ kinds:
       capMcpRead: {type: boolean, description: Read the catalog over MCP.}
       contributors:
         type: number
-        description: "Contributors to its repository, anonymous included."
+        description: Contributors to its repository, anonymous included.
     sources: {default: [connector:workspace]}
     map:
     - from: workspace/product

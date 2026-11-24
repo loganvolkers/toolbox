@@ -234,7 +234,8 @@ environment and does not claim to isolate them (its threat model).
 - **A rule falls back to outcomes when a value is missing**, as D01M857ZB468ZM2YS6GNSEG6YB9 says;
   the README said a missing value is unknown. No rule in this run lacks a value on either side.
 - **Two harness YAML files were reformatted after rounds 1 and 2** (`yamark format`, D97). Both
-  parse to the same data as at `dfeeea4`.
+  parse to the same data as at `dfeeea4`. After round 3, the same was done to the frozen standard
+  and the two snapshots that `snapshot.py` wrote. All three parse to the same data as at `581be50`.
 - **Round 2 follows a product change made after round 1's results**, and round 3 follows two more
   (credential isolation), as the protocol allows when the change names a use outside the harness
   and touches no harness file (P5).
