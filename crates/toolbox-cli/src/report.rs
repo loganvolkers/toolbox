@@ -1285,6 +1285,37 @@ fn campaign_defs(
         .collect()
 }
 
+/// Per scorecard with judged rules, the scored entities no assessment points at. Their judged
+/// rules were decided with no judgement to read, so a pass there means "nothing found yet".
+fn unassessed(m: &toolbox_model::Manifest, d: &Derived) -> Map<String, Value> {
+    let kinds = crate::judged::assessment_kinds(m);
+    let cards: BTreeSet<String> = crate::judged::judged_rules(m)
+        .into_iter()
+        .map(|(sc, _)| sc)
+        .collect();
+    let assessed = |id: &str| {
+        d.entities.get(id).is_some_and(|e| {
+            e.inbound.values().flatten().any(|src| {
+                d.entities
+                    .get(src)
+                    .is_some_and(|s| kinds.contains(s.kind.as_str()))
+            })
+        })
+    };
+    cards
+        .iter()
+        .filter_map(|card| {
+            let ids: Vec<&String> = d
+                .scores
+                .get(card)?
+                .keys()
+                .filter(|id| !is_peer(d, card, id) && !assessed(id))
+                .collect();
+            (!ids.is_empty()).then(|| (card.clone(), json!(ids)))
+        })
+        .collect()
+}
+
 /// The report document the element renders: portal, snapshot, catalog, scorecards, campaigns, scores.
 fn report_json(m: &toolbox_model::Manifest, d: &Derived, starts: &Map<String, Value>) -> String {
     let tracks: Map<String, Value> = m
@@ -1338,6 +1369,7 @@ fn report_json(m: &toolbox_model::Manifest, d: &Derived, starts: &Map<String, Va
         "campaigns": campaign_defs(m, d, starts),
         "scorecards": scorecard_defs(m),
         "scores": own_scores(d),
+        "unassessed": unassessed(m, d),
         "comparisons": comparison_defs(m, d),
         "repoRollup": m.policies.get("repoRollup").cloned().unwrap_or(Value::Null),
     })
@@ -2273,5 +2305,64 @@ mod tests {
         assert!(page.contains("<toolbox-report>"));
         assert!(page.contains(data));
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn unassessed_lists_entities_no_assessment_points_at() {
+        let m: toolbox_model::Manifest = serde_norway::from_str(
+            r"
+apiVersion: toolbox.dev/v1alpha1
+portal: {name: t, owner: group:a, toolbox: '>=0.1'}
+kinds:
+  - name: Crate
+    identityFrom: [connector:ws]
+    sources: {default: [connector:ws]}
+    fields:
+      reviewFailing:
+        type: list
+        computed: 'inbound.assesses.size() == 0 ? [] : inbound.assesses[0].failing'
+    map: [{from: ws/crate, id: record.id, set: record}]
+  - name: Assessment
+    identityFrom: [connector:ws]
+    sources: {default: [connector:ws]}
+    fields:
+      failing: {type: list}
+    relations:
+      assesses: {to: Crate}
+    map: [{from: ws/assessment, id: record.id, set: record, relations: {assesses: '[record.of]'}}]
+scorecards:
+  - name: crate
+    kind: Crate
+    owner: group:a
+    levels: [bronze]
+    rules:
+      - {name: reviewed, level: bronze, check: entity.reviewFailing.size() == 0}
+",
+        )
+        .unwrap();
+        let rec = |kind: &str, data: Value| toolbox_store::Record {
+            connector: "ws".into(),
+            kind: kind.into(),
+            external_id: data["id"].as_str().unwrap().into(),
+            data,
+        };
+        let inputs = toolbox_store::InputSnapshot {
+            version: 1,
+            records: vec![
+                rec("crate", json!({"id": "crate:a"})),
+                rec("crate", json!({"id": "crate:b"})),
+                rec(
+                    "assessment",
+                    json!({"id": "assessment:a", "of": "crate:a", "failing": []}),
+                ),
+            ],
+            native: vec![],
+        };
+        let d = FullRecompute.recompute(&m, &inputs);
+        assert_eq!(d.scores["crate"]["crate:b"].level, "bronze");
+        assert_eq!(
+            Value::Object(unassessed(&m, &d)),
+            json!({"crate": ["crate:b"]})
+        );
     }
 }

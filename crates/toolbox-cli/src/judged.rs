@@ -6,14 +6,18 @@
 use std::collections::BTreeSet;
 use toolbox_model::Manifest;
 
-/// `(scorecard, rule)` for every judged rule in `m`.
-pub fn judged_rules(m: &Manifest) -> BTreeSet<(String, String)> {
-    let assessed: BTreeSet<&str> = m
-        .kinds
+/// The kinds whose entities are mapped from `assessment` records.
+pub fn assessment_kinds(m: &Manifest) -> BTreeSet<&str> {
+    m.kinds
         .iter()
         .filter(|k| k.map.iter().any(|r| r.from_parts().1 == "assessment"))
         .map(|k| k.name.as_str())
-        .collect();
+        .collect()
+}
+
+/// `(scorecard, rule)` for every judged rule in `m`.
+pub fn judged_rules(m: &Manifest) -> BTreeSet<(String, String)> {
+    let assessed = assessment_kinds(m);
     let mut out = BTreeSet::new();
     if assessed.is_empty() {
         return out;

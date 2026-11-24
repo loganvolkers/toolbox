@@ -38,8 +38,9 @@ D01M85MK7FCRXH2TRMRKXTNA5GT and was judged by the same blind design audit
    not weighted.
 6. **Contract.** Everything here is additive. The report JSON gains `kindGroups`, `kinds` (each
    kind's description), `rationale`, `links` and `basis` on scorecards and rules, `links` on
-   tracks, and `facts`, `reads` and `fields` on comparisons. Existing fields and deep links are
-   unchanged.
+   tracks, `facts`, `reads` and `fields` on comparisons, and `unassessed` (per scorecard with
+   judged rules, the scored entities no assessment points at, whose judged passes mean nothing
+   was looked at). Existing fields and deep links are unchanged.
 7. **Reopen when** a judged rule is found that the reading of assessment relations misclasses,
    or readers on the audit's tasks still need the benchmark docs to understand a comparison.
 
