@@ -354,6 +354,11 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 - The Compare verdict names what Toolbox lacks when one factor is behind, not just the factor.
 - Evidence speaks to the reader: a connector that did not run reads "Not measured", and repeated
   evidence points to the rule it repeats.
+- A long list is summarised: each track's group on the Scorecards index shows its weakest four and a
+  count per level, and opens the rest in place. Scorecards at one level sort by their share at the
+  top level, so "weakest" is the same scorecard on every card and list.
+- "Provisional" means only that checks were not run; a level that rests on a missing assessment
+  "may not hold". A track ring that averages scorecards says each one counts once.
 
 Not built: a change since the last snapshot beside each track ring. The report carries one snapshot
 and the committed baseline, which equals it on every published build; a pages build that also scored
