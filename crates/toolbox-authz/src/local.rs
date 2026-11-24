@@ -145,16 +145,16 @@ mod tests {
     fn members_directly_and_through_nested_groups() {
         let m = to_json(GROUPS).unwrap();
         let tuples = vec![
-            t("user:dave", "member", "group:release"),
-            t("group:leads#member", "member", "group:release"),
+            t("user:dave", "member", "group:security"),
+            t("group:leads#member", "member", "group:security"),
             t("user:erin", "member", "group:leads"),
-            t("group:release#member", "member", "group:leads"),
+            t("group:security#member", "member", "group:leads"),
         ];
         let l = Local::new(&m, &tuples);
-        assert!(l.check("user:dave", "member", "group:release").unwrap());
-        assert!(l.check("user:Erin", "member", "group:release").unwrap());
+        assert!(l.check("user:dave", "member", "group:security").unwrap());
+        assert!(l.check("user:Erin", "member", "group:security").unwrap());
         assert!(l.check("user:dave", "member", "group:leads").unwrap());
-        assert!(!l.check("user:carol", "member", "group:release").unwrap());
+        assert!(!l.check("user:carol", "member", "group:security").unwrap());
         assert!(!l.check("user:dave", "member", "group:other").unwrap());
     }
 
@@ -189,15 +189,15 @@ mod tests {
             "model\n  schema 1.1\ntype user\ntype group\n  relations\n    define blocked: [user]\n    define member: [user] but not blocked\n",
         )
         .unwrap();
-        let tuples = vec![t("user:dave", "member", "group:release")];
+        let tuples = vec![t("user:dave", "member", "group:security")];
         let l = Local::new(&m, &tuples);
         assert!(
-            l.check("user:dave", "member", "group:release")
+            l.check("user:dave", "member", "group:security")
                 .unwrap_err()
                 .contains("but not")
         );
         assert!(
-            l.check("user:dave", "admin", "group:release")
+            l.check("user:dave", "admin", "group:security")
                 .unwrap_err()
                 .contains("no relation admin")
         );

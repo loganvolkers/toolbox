@@ -315,24 +315,24 @@ authz:
   model: groups.fga
   tuples:
     - static:
-        - {user: user:dave, relation: member, object: group:release}
-        - {user: group:leads#member, relation: member, object: group:release}
+        - {user: user:dave, relation: member, object: group:security}
+        - {user: group:leads#member, relation: member, object: group:security}
         - {user: user:erin, relation: member, object: group:leads}
 YAML
 "$BIN/toolbox" validate "$WORK/gitorg" | tail -1
 git -C "$WORK/review/mini" pull -q origin main
-sed -i "s/approval: .*/approval: \"['group:release']\"/" "$WORK/review/mini/.toolbox/actions/add-code-of-conduct.yaml"
-git -C "$WORK/review/mini" "${G[@]}" commit -qam "group:release approves" && git -C "$WORK/review/mini" push -q origin main
-COC=(add-code-of-conduct --entity portal:mini -i contact=release@acme.dev)
+sed -i "s/approval: .*/approval: \"['group:security']\"/" "$WORK/review/mini/.toolbox/actions/add-code-of-conduct.yaml"
+git -C "$WORK/review/mini" "${G[@]}" commit -qam "group:security approves" && git -C "$WORK/review/mini" push -q origin main
+COC=(add-code-of-conduct --entity portal:mini -i contact=security@acme.dev)
 set +e; OUT=$(run "$WORK/gitorg" "${COC[@]}" --as dave --yes); CODE=$?; set -e
 RID=$(echo "$OUT" | field "['id']")
 [ $CODE = 3 ] || fail "a group-approved request should await approval ($CODE): $OUT"
 for who in dave carol; do
   set +e; run "$WORK/gitorg" --approve "$RID" --as $who >/dev/null 2>&1; CODE=$?; set -e
-  [ $CODE = 2 ] || fail "$who should not be able to approve for group:release ($CODE)"
+  [ $CODE = 2 ] || fail "$who should not be able to approve for group:security ($CODE)"
 done
-OUT=$(run "$WORK/gitorg" --approve "$RID" --as erin --wait) || fail "erin, in group:release through group:leads: $OUT"
+OUT=$(run "$WORK/gitorg" --approve "$RID" --as erin --wait) || fail "erin, in group:security through group:leads: $OUT"
 [ "$(echo "$OUT" | field "['state']")" = succeeded ] || fail "approved by a nested member: $OUT"
 git --git-dir "$WORK/hosts/mini.git" log -1 --format=%B main | grep -q "Approved-By: user:erin" || fail "no Approved-By trailer for erin"
-echo "   add-code-of-conduct needing group:release: dave (the requester) and carol (not a member) refused; erin, a member through group:leads, approved and it landed"
+echo "   add-code-of-conduct needing group:security: dave (the requester) and carol (not a member) refused; erin, a member through group:leads, approved and it landed"
 echo "M5 acceptance: all checks passed"

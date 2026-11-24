@@ -90,7 +90,7 @@ struct Case {
     /// People who approve the run, in order.
     #[serde(default)]
     approve: Vec<String>,
-    /// Each group's members for this case (`group:release: [user:dave]`), standing in for the
+    /// Each group's members for this case (`group:security: [user:dave]`), standing in for the
     /// portal that decides approvals, usually the org's. Groups the portal's own authorization
     /// model resolves count as well.
     #[serde(default)]
@@ -553,11 +553,11 @@ runs:
         let g: Suite = serde_norway::from_str(
             "name: groups
 runs:
-  - {name: a member, action: a, members: {'group:release': [user:dave]}, expect: {state: succeeded}}",
+  - {name: a member, action: a, members: {'group:security': [user:dave]}, expect: {state: succeeded}}",
         )
         .unwrap();
         let g = g.cases("t.yaml", "alpha").unwrap();
-        assert_eq!(g[0].members["group:release"], ["user:dave"]);
+        assert_eq!(g[0].members["group:security"], ["user:dave"]);
         let bad: Suite =
             serde_norway::from_str("name: s\ndefaults: {aprove: [user:bob]}\nruns: [{name: n, action: a, expect: {state: x}}]")
                 .unwrap();

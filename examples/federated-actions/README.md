@@ -77,8 +77,8 @@ Everything an action or a federation needs; `toolbox validate` checks the rest a
 |---|---|
 | `actions[].name`, `kind`, `description` | Required. `kind: Portal` targets the repository itself |
 | `actions[].inputs` | Required JSON Schema; `required`, `pattern`, `minLength`, `maxLength`, `enum`, `additionalProperties: false` and `default` are checked before a preview. Each input reaches the command as `TOOLBOX_INPUT_<NAME>` |
-| `actions[].approval` | CEL list of approvers: `"['user:ann']"` needs ann, `"[['user:ann', 'user:bob']]"` needs either, `"['group:release']"` needs a member. The requester never counts |
-| `authz` | Parent: `{model: groups.fga, tuples: [{static: [{user: user:dave, relation: member, object: group:release}]}]}` defines the groups approvals name, once for every child; nested groups (`group:leads#member`) count. A checkout and a server read the same model |
+| `actions[].approval` | CEL list of approvers: `"['user:ann']"` needs ann, `"[['user:ann', 'user:bob']]"` needs either, `"['group:security']"` needs a member. The requester never counts |
+| `authz` | Parent: `{model: groups.fga, tuples: [{static: [{user: user:sam, relation: member, object: group:security}]}]}` defines the groups approvals name, once for every child; nested groups (`group:leads#member`) count. A checkout and a server read the same model |
 | `actions[].preconditions` | A list of CEL over `entity` and `inputs`; one that is false blocks the run |
 | `actions[].executor.type` | `change` (a commit), `command` (a shell command in the checkout), `github-workflow`, `http`, `webhook`, `in-image` |
 | `executor.run` | `command` and `change`: the shell command. A `change` runs it in a fresh worktree of `base` |
@@ -86,7 +86,7 @@ Everything an action or a federation needs; `toolbox validate` checks the rest a
 | `executor.base`, `branch`, `message`, `remote` | `change`: the branch to start from and verify on, the proposal branch (`toolbox/{action}/{run}`), the commit message, the remote (`origin`). `message` takes `{action}`, `{run}`, `{entity}` and `{inputs.<name>}`; `branch` takes only `{action}` and `{run}` |
 | `executor.secrets` | Environment variables the executor gets; it starts with a cleared environment |
 | `actions[].expect` | `{postcondition: <CEL>, within: 30s}`: what must hold after the run for `succeeded`. A `land: push` change needs none: its commit on `base` is the check |
-| `tests` | Test files; a file's `runs:` cases request, approve and run an action in a scratch copy (`as`, `inputs`, `approve`, `members`, `rejectPush`, `expect: {state, files, refused, error}`; `members: {'group:release': [user:dave]}` stands in for the org's groups), each starting from the file's `defaults`; `{portal}` in a value is the portal under test |
+| `tests` | Test files; a file's `runs:` cases request, approve and run an action in a scratch copy (`as`, `inputs`, `approve`, `members`, `rejectPush`, `expect: {state, files, refused, error}`; `members: {'group:security': [user:sam]}` stands in for the org's groups), each starting from the file's `defaults`; `{portal}` in a value is the portal under test |
 | `federation.children` | Parent: `[{git: <url or path>, branch: main, key: <name>}]`; each is offered as `portal:<key>` |
 | `federation.acceptApprovalsFrom` | Child: `[{portal: <parent name>, key: ed25519:…}]`, the key the parent prints |
 | `federation.signingKey` | Parent: the variable holding the signing seed, for servers that share runs. Without it Toolbox keeps one |
