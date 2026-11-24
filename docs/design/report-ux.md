@@ -21,7 +21,7 @@ not a quality judgement.
 | Mode | Job | Primary content |
 |---|---|---|
 | **Overview** (default) | Fleet health verdict | The repository level as a medal, a one-sentence verdict, the next level and the ladder of repository standards that hold it; tiles for checks passing, gold entities, scorecards at `none` and campaigns on target; campaign cards with progress rings; scorecards that need attention, with the clear ones collapsed; catalog kinds as chips |
-| **Tracks** | Lines of work | One card per track, furthest from its goal first: a ring for the share of entities at the top level, the weakest scorecard, and the track's description; a track page lists its scorecards and comparisons |
+| **Tracks** | Lines of work | One card per track, furthest from its goal first: a ring for the share of entities at the top level, the weakest scorecard, and the track's description; a comparison track gets a segmented ring instead, one segment per factor coloured ahead, at parity or behind, so it is never read as a share; a key above the cards replaces the colour prose; a track page lists its scorecards and comparisons |
 | **Catalog** | What exists | Kinds in their `kindGroups`, then the scored kinds' lists with one column per scorecard → entity ids (short name primary) → that entity's scores across every scorecard |
 | **Campaigns** | Time-bound focus | Lowest progress first; progress vs target; milestones; entities not meeting includes ([campaigns.md](./campaigns.md), D01M7Y11G0YZT23W26Z9D3XW68Y) |
 | **Scorecards** | Standards debt and proof | Ranked debt list (not equal pills); defaults to highest `none`; what each level needs; most common failures; level and outcome filters; every rule outcome on expand |
@@ -130,7 +130,9 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
   stripped from prose, which readers can't resolve.
 - An agent-judged pass on an entity no agent has assessed reads "passes, not assessed yet", never a
   plain pass. Catalog columns mark agent-judged scorecards with the sparkle and tag such levels
-  "not assessed".
+  "not assessed", drawn as a dashed pill: a provisional level, not an earned one. The notice above a
+  scorecard with unassessed entities names which judged rules pass for want of anything to read and
+  which fail until an assessment exists.
 - Kind titles are human ("SDLC layer"); the kind id stays as muted monospace. Counts in running text
   use the plural title ("15 action dependencies"), and say how many are in scope when that differs.
 - Compare defines its words in the hero: what *ahead* means on a rule and on a factor.
