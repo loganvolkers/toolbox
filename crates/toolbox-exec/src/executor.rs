@@ -1285,15 +1285,15 @@ mod tests {
 
     fn landing(cwd: &Path) -> (Executor, Context) {
         let exec = Executor::parse(&json!({"type": "change", "base": "main", "land": "push",
-            "message": "Deprecate {entity}: {inputs.reason}",
-            "run": "printf 'Deprecated: %s\\n' \"$TOOLBOX_INPUT_REASON\" > DEPRECATED.md"}))
+            "message": "Publish support for {entity}: {inputs.channel}",
+            "run": "printf 'Support: %s\\n' \"$TOOLBOX_INPUT_CHANNEL\" > SUPPORT.md"}))
         .unwrap();
         let mut inputs = Map::new();
-        inputs.insert("reason".into(), json!("use v2"));
+        inputs.insert("channel".into(), json!("#help-work"));
         let ctx = Context {
             run_id: Some("run_land1".into()),
             portal: "repo".into(),
-            action: "mark-deprecated".into(),
+            action: "publish-support".into(),
             action_version: "sha256:x".into(),
             entity: json!({"id": "repository:work"}),
             inputs,
@@ -1321,12 +1321,12 @@ mod tests {
         let (exec, ctx) = landing(&work);
         assert!(matches!(exec, Executor::Change { push: true, .. }));
         let p = exec.preview(&ctx).unwrap();
-        assert_eq!(p.effects[0]["resource"], "file:DEPRECATED.md");
+        assert_eq!(p.effects[0]["resource"], "file:SUPPORT.md");
         assert!(
             p.effects[0]["diff"]
                 .as_str()
                 .unwrap()
-                .contains("+Deprecated: use v2")
+                .contains("+Support: #help-work")
         );
         assert_eq!(p.effects[1]["operation"], "push");
         assert_eq!(p.effects[1]["resource"], "branch:main");
@@ -1336,19 +1336,19 @@ mod tests {
         let run = as_run(&ctx, &out);
         let files = landed(&work, &run).unwrap();
         assert_eq!(files.len(), 1);
-        assert_eq!(files[0]["path"], "DEPRECATED.md");
+        assert_eq!(files[0]["path"], "SUPPORT.md");
         assert_eq!(files[0]["matches"], true);
         let body = git(&work, &["log", "-1", "--format=%B", "origin/main"]).unwrap();
         assert!(
-            body.starts_with("Deprecate repository:work: use v2\n"),
+            body.starts_with("Publish support for repository:work: #help-work\n"),
             "{body}"
         );
         assert!(
             body.contains("Requested-By: user:alice\nApproved-By: user:bob"),
             "{body}"
         );
-        let shown = git(&root.join("origin.git"), &["show", "main:DEPRECATED.md"]).unwrap();
-        assert_eq!(shown, "Deprecated: use v2");
+        let shown = git(&root.join("origin.git"), &["show", "main:SUPPORT.md"]).unwrap();
+        assert_eq!(shown, "Support: #help-work");
         let _ = std::fs::remove_dir_all(root);
     }
 
@@ -1359,7 +1359,7 @@ mod tests {
         let p = exec.preview(&ctx).unwrap();
         sh(
             &work,
-            "echo theirs > DEPRECATED.md && git add . && git commit -qm moved && \
+            "echo theirs > SUPPORT.md && git add . && git commit -qm moved && \
              git push -q origin HEAD:main",
         );
         let before = git(&root.join("origin.git"), &["rev-parse", "main"]).unwrap();
@@ -1367,7 +1367,7 @@ mod tests {
         assert_eq!(out.status, "failed");
         let err = out.error.unwrap();
         assert!(
-            err.contains("DEPRECATED.md") && err.contains("preview"),
+            err.contains("SUPPORT.md") && err.contains("preview"),
             "{err}"
         );
         let after = git(&root.join("origin.git"), &["rev-parse", "main"]).unwrap();
@@ -1415,7 +1415,7 @@ mod tests {
         );
         sh(
             &work,
-            "git fetch -q origin && git checkout -q origin/main && echo theirs > DEPRECATED.md && \
+            "git fetch -q origin && git checkout -q origin/main && echo theirs > SUPPORT.md && \
              git commit -qam moved && git push -q origin HEAD:main",
         );
         let err = unchanged(&work, &run).unwrap_err();

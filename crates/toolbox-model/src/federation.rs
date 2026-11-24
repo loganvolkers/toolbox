@@ -245,7 +245,7 @@ mod tests {
 
     #[test]
     fn keys_come_from_the_url() {
-        assert_eq!(default_key("../origins/alpha.git"), "alpha");
+        assert_eq!(default_key("../repos/alpha.git"), "alpha");
         assert_eq!(
             default_key("https://github.com/acme/Pay-Svc.git/"),
             "pay-svc"
@@ -257,14 +257,14 @@ mod tests {
     fn children_declare_a_connector_a_kind_and_the_local_runner() {
         let root = Path::new("/org");
         let mut doc = json!({"portal": {"name": "org", "owner": "group:p"},
-            "federation": {"children": [{"git": "../origins/alpha.git"},
+            "federation": {"children": [{"git": "../repos/alpha.git"},
                                         {"git": "https://x/acme/beta.git", "branch": "trunk", "key": "b"}]}});
         expand(root, &mut doc);
         let c = &doc["connectors"][0];
         assert_eq!(c["name"], "federation");
         assert_eq!(
             c["config"]["git"][0],
-            json!({"key": "alpha", "url": "/origins/alpha.git", "branch": "main"})
+            json!({"key": "alpha", "url": "/repos/alpha.git", "branch": "main"})
         );
         assert_eq!(c["config"]["git"][1]["url"], "https://x/acme/beta.git");
         assert_eq!(c["config"]["git"][1]["branch"], "trunk");

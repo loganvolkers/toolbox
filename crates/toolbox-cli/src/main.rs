@@ -30,9 +30,8 @@ use std::process::ExitCode;
     name = "toolbox",
     version,
     about = "Agent-first internal developer portal",
-    after_help = "Each command has an agent skill of the same name. To add a self-service action that \
-                  repositories own and offer from one org portal, follow the operator skill \
-                  `add-action` alone: it is the whole path, from the files to an approved run."
+    after_help = "Each command has an agent skill of the same name. Task skills, such as `add-action`, \
+                  `add-scorecard` and `author-connector`, cover work that spans commands."
 )]
 struct Cli {
     #[command(subcommand)]

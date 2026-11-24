@@ -23,7 +23,7 @@ description: >-
 
 ```
 toolbox serve portal --fixtures
-toolbox serve org --listen 127.0.0.1:7100 --detach
+toolbox serve org --listen 127.0.0.1:8080 --detach
 toolbox serve org --stop
 toolbox serve portal --database-url "$DATABASE_URL" --listen 127.0.0.1:8080
 ```

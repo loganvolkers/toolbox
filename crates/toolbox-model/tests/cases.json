@@ -26,6 +26,6 @@
     {"name": "freshness for undeclared record kind", "set": {"/connectors/0/freshness/pull-request": "5m"}, "code": "xref.connector-record", "python": false},
     {"name": "fixture record kind not declared by its connector", "fixture": {"file": "fixtures/idp.ndjson", "line": {"type": "record", "kind": "device", "externalId": "idp:device/1", "data": {}}}, "code": "fixture.record-kind", "python": false},
     {"name": "missing authz model file", "set": {"/authz/model": "authz/missing.fga"}, "code": "file.missing", "python": false},
-    {"name": "change message with an unknown placeholder", "set": {"/actions/0/executor": {"type": "change", "run": "true", "message": "Deprecate: use {successor}"}}, "code": "action.executor", "python": false}
+    {"name": "change message with an unknown placeholder", "set": {"/actions/0/executor": {"type": "change", "run": "true", "message": "Publish: {contact}"}}, "code": "action.executor", "python": false}
   ]
 }

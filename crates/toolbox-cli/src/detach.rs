@@ -243,7 +243,7 @@ pub fn stop(path: &Path) -> ExitCode {
 mod tests {
     #[test]
     fn a_wildcard_listen_address_is_reached_on_loopback() {
-        assert_eq!(super::reach("0.0.0.0:7100"), "127.0.0.1:7100");
-        assert_eq!(super::reach("127.0.0.1:7100"), "127.0.0.1:7100");
+        assert_eq!(super::reach("0.0.0.0:8443"), "127.0.0.1:8443");
+        assert_eq!(super::reach("127.0.0.1:8443"), "127.0.0.1:8443");
     }
 }
