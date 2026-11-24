@@ -5251,6 +5251,9 @@
         },
         "level": "bronze"
       },
+      "example:experiments/actions-ab/results/r2/README.md": {
+        "level": "gold"
+      },
       "example:experiments/actions-ab/results/r2dry/README.md": {
         "failing": {
           "says-how-to-check": 1
