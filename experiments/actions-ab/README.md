@@ -206,6 +206,7 @@ when C1 and P1 to P11 all hold or are credited.
 | `harness/backstage/app-config.local.yaml`, `build-app.sh` | The Backstage arm's overlay; how its app is built |
 | `harness/score.py`, `count.py` | The measures |
 | `harness/isolation.py` | From round 8: tool calls that name another run's workspace or list the round's directory |
+| `harness/prompt_check.py`, `measure.sh` | From round 8: whether a run's first message is its committed prompt; one run's measures in one command, run as soon as it ends (probes change the workspace) |
 | `harness/tally.py` | §6 from the adjudicator's records: medians, W, H1 to H3 and the bar |
 | `prompts/` | The tasks (`task.md` for rounds 0–7, `task-notice.md` for round 8), each arm's platform section, the adjudicator's prompt, and the rendered prompts per round |
 | `results/triage/` | Rival-arm friction from rounds 6 and 7, with the fixes applied before round 8 |
