@@ -67,6 +67,42 @@ export function nextMedalEl(D, cards, label, why) {
     el("b", { textContent: label || "Next medal: " }),
     ...body,
     el("span", { className: "sub" }, isTop(D, nm.name, nm.up) ? " That is its top level." : " Its top level is " + top + (Object.keys(D.tracks || {}).length ? ": the track's percentage moves when they reach it." : ".") + (why || "")),
+    isTop(D, nm.name, nm.up) || !Object.keys(D.tracks || {}).length ? null : ringMoverEl(D, cards),
+  );
+}
+
+// The step that raises a track's ring most: the scorecard whose entities one level below the top
+// are the largest share of it, since the ring averages each scorecard's share at its top level.
+function ringMoverEl(D, cards) {
+  var rows = cards
+    .map(function (c) {
+      return c.row;
+    })
+    .filter(function (r) {
+      return !r.compare && r.scored;
+    });
+  var best = null;
+  rows.forEach(function (r) {
+    var lv = (r.sc.levels || []).filter(function (l) {
+      return l !== "none";
+    });
+    if (lv.length < 1 || r.topShare >= 100) return;
+    var below = lv.length > 1 ? lv[lv.length - 2] : "none";
+    var p = (r.parts || []).find(function (x) {
+      return x.level === below;
+    });
+    var n = p ? p.n : 0;
+    var gain = n ? (n / r.scored) * 100 / rows.length : 0;
+    if (gain > (best ? best.gain : 0)) best = { r: r, n: n, below: below, top: lv[lv.length - 1], gain: gain };
+  });
+  if (!best || best.gain < 1) return null;
+  return el(
+    "div",
+    { className: "sub mover" },
+    el("b", { textContent: "Moves the track's percentage most: " }),
+    "lift " + plural(best.n, "entity", "entities") + " from " + levelName(best.below) + " to " + levelName(best.top) + " on ",
+    link("scorecard/" + enc(best.r.name), "", title(D, best.r.name)),
+    ", about " + Math.round(best.gain) + (Math.round(best.gain) === 1 ? " point." : " points."),
   );
 }
 

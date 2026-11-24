@@ -1176,7 +1176,38 @@
       { className: "nextmedal" },
       el("b", { textContent: label || "Next medal: " }),
       ...body,
-      el("span", { className: "sub" }, isTop(D, nm.name, nm.up) ? " That is its top level." : " Its top level is " + top + (Object.keys(D.tracks || {}).length ? ": the track's percentage moves when they reach it." : ".") + (why || ""))
+      el("span", { className: "sub" }, isTop(D, nm.name, nm.up) ? " That is its top level." : " Its top level is " + top + (Object.keys(D.tracks || {}).length ? ": the track's percentage moves when they reach it." : ".") + (why || "")),
+      isTop(D, nm.name, nm.up) || !Object.keys(D.tracks || {}).length ? null : ringMoverEl(D, cards)
+    );
+  }
+  function ringMoverEl(D, cards) {
+    var rows = cards.map(function(c) {
+      return c.row;
+    }).filter(function(r) {
+      return !r.compare && r.scored;
+    });
+    var best = null;
+    rows.forEach(function(r) {
+      var lv = (r.sc.levels || []).filter(function(l) {
+        return l !== "none";
+      });
+      if (lv.length < 1 || r.topShare >= 100) return;
+      var below = lv.length > 1 ? lv[lv.length - 2] : "none";
+      var p = (r.parts || []).find(function(x) {
+        return x.level === below;
+      });
+      var n = p ? p.n : 0;
+      var gain = n ? n / r.scored * 100 / rows.length : 0;
+      if (gain > (best ? best.gain : 0)) best = { r, n, below, top: lv[lv.length - 1], gain };
+    });
+    if (!best || best.gain < 1) return null;
+    return el(
+      "div",
+      { className: "sub mover" },
+      el("b", { textContent: "Moves the track's percentage most: " }),
+      "lift " + plural(best.n, "entity", "entities") + " from " + levelName(best.below) + " to " + levelName(best.top) + " on ",
+      link("scorecard/" + enc(best.r.name), "", title(D, best.r.name)),
+      ", about " + Math.round(best.gain) + (Math.round(best.gain) === 1 ? " point." : " points.")
     );
   }
   function ownerName(o) {
@@ -1636,6 +1667,7 @@
     ".rung a:hover{border-color:var(--accent)}",
     ".rung a.done{border-color:color-mix(in srgb,var(--pass) 45%,var(--line))}",
     ".rung .topmark{display:block;font-size:12px;font-weight:650;color:var(--pass);margin-top:2px}",
+    ".nextmedal .mover{display:block;margin-top:6px}",
     ".elevel .topmark{font-size:14px;font-weight:650;color:var(--pass);text-transform:none;letter-spacing:0}",
     ".rung .capmark{display:block;font-size:12px;font-weight:650;color:var(--unknown);margin-top:2px}.rung a.capped{border-color:var(--unknown);border-left-width:3px}.weakest .topmark{color:var(--pass);font-weight:650}.weakest .capnote{color:var(--unknown);font-weight:650}.capnote svg,.capmark svg,.debt svg{vertical-align:-1px}.tcap{display:block;font-size:13px;font-weight:500;line-height:1.4;margin-top:4px}",
     ".rung .empty{font-size:12px}",

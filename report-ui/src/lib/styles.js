@@ -58,6 +58,7 @@ export var CSS = [
   ".rung a:hover{border-color:var(--accent)}",
   ".rung a.done{border-color:color-mix(in srgb,var(--pass) 45%,var(--line))}",
   ".rung .topmark{display:block;font-size:12px;font-weight:650;color:var(--pass);margin-top:2px}",
+  ".nextmedal .mover{display:block;margin-top:6px}",
   ".elevel .topmark{font-size:14px;font-weight:650;color:var(--pass);text-transform:none;letter-spacing:0}",
   ".rung .capmark{display:block;font-size:12px;font-weight:650;color:var(--unknown);margin-top:2px}.rung a.capped{border-color:var(--unknown);border-left-width:3px}.weakest .topmark{color:var(--pass);font-weight:650}.weakest .capnote{color:var(--unknown);font-weight:650}.capnote svg,.capmark svg,.debt svg{vertical-align:-1px}.tcap{display:block;font-size:13px;font-weight:500;line-height:1.4;margin-top:4px}",
   ".rung .empty{font-size:12px}",
