@@ -217,12 +217,22 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
   the title, stretched over the card, with the chips above it.
 - A track card and its page end with a "Next medal" line: the weakest scorecard that can still
   rise, how many entities it has to lift, and the rule most of them need.
-- On a scorecard or factor whose rules all share the measured basis, rows keep the icon and drop
-  the word, which the header states once. Agent-judged badges always keep their word.
-- A hollow level carries its reason in words, beside it or in its column's header; on a phone, where
-  the header is hidden, beside every pill. No text describes outline styles.
+- A basis badge has one form: icon and word. On a scorecard or factor whose rules are all
+  measured, the measured badge goes quiet (no border or fill) but keeps its word. A level column
+  whose rules share a basis says "All 5" or "1 rule" before the badge.
+- A hollow level carries a glyph inside the pill, ✦ for not assessed and ◌ for checks not run, and
+  its reason in words beside it or in its column's header; on a phone, beside every pill.
 - A campaign whose scorecards rate different kinds leads with its open work per scorecard; why it
-  has no single percentage is a collapsed note for portal authors.
+  has no single percentage is a collapsed note.
+- A tab switch opens the new view at the top. Changes inside a view (filters, expands) keep the
+  scroll position, and Back restores it.
+- Track links use a slug of the track's title; the manifest name still resolves.
+- A level name outside none, bronze, silver and gold that is its scorecard's top level reads
+  "(top level)" in track summaries. Track cards size to their content.
+- A scorecard page lists its entities before "What each level needs".
+- A factor page restates the setup under its title ("Measured on: corpus … · runs … · version …").
+  The Compare hero names the widest measured lead after the behind line, and on a phone the
+  counters follow the headline.
 - When a ceiling caps the repository level, the hero sentence names it first; there is no second
   "capped" box.
 - A comparison's method sentence separates timed factors from capability and fact factors and
