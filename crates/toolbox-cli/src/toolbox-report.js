@@ -250,7 +250,7 @@
     ".track{position:relative;display:flex;flex-direction:column;gap:10px;padding:16px;border:1px solid var(--line);border-radius:14px;color:var(--fg);text-decoration:none;transition:transform .15s,border-color .15s;",
     "background:linear-gradient(160deg,color-mix(in srgb,var(--tc) 13%,var(--card)) 0%,var(--card) 62%)}",
     ".track:hover{border-color:var(--accent);transform:translateY(-2px)}.track:focus-within{border-color:var(--accent)}",
-    "a.tlink{color:inherit;text-decoration:none}a.tlink::after{content:\"\";position:absolute;inset:0;border-radius:14px}a.tlink:focus-visible{outline:none}.track:has(a.tlink:focus-visible){outline:2px solid var(--accent);outline-offset:2px}",
+    "a.tlink{display:inline-block;min-height:24px;color:inherit;text-decoration:none}a.tlink::after{content:\"\";position:absolute;inset:0;border-radius:14px}a.tlink:focus-visible{outline:none}.track:has(a.tlink:focus-visible){outline:2px solid var(--accent);outline-offset:2px}",
     ".track .medals a,.track .nextmedal a{position:relative;z-index:1}.track .medals>li{border-radius:10px}.medals a{color:inherit;text-decoration:none}.medals a:hover span:first-of-type{text-decoration:underline}.medals .lw{color:var(--muted)}",
     ".basis.tip:hover::after,.basis.tip:focus::after,abbr.gloss:hover::after,abbr.gloss:focus::after{left:var(--tipx,0);max-width:min(280px,calc(100vw - 24px))}",
     ".allmeasured .basis.measured:is(.mini,.ctl) .bl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}.allmeasured .basis.measured:is(.mini,.ctl){padding-right:4px}.allmeasured .need-basis .basis.measured .bl{position:static;width:auto;height:auto;overflow:visible;clip:auto}.allmeasured .need-basis .basis.measured{padding-right:8px}",
