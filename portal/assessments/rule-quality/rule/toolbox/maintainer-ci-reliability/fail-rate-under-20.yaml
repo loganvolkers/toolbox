@@ -1,15 +1,15 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/maintainer-ci-reliability/fail-rate-under-20
 rubric: rule-quality
-subjectHash: 8c8919c8ba7e
+subjectHash: 625283ec5521
 assessor: {kind: agent, name: cursor-cloud-agent, model: claude-opus-5.5}
-at: 2026-11-23
+at: 2026-11-24
 verdicts:
   - criterion: measures-intent
     verdict: pass
     reason: >-
       The check now reads firstTryFailRate
-      (packages/github-actions/fragments/github-actions.yaml:270-273), which
+      (packages/github-actions/fragments/github-actions.yaml:349-352), which
       counts a run that passed only on a later attempt as failed
       (crates/toolbox-connector-github/src/runs.rs:59-65 and :82), so it is
       the share of runs on the branch that went red, not the share left red
@@ -64,10 +64,14 @@ verdicts:
       2026-11-20 to 2026-11-23), says each level halves it, and explains why
       the rate counts first attempts and why only silver and gold need 10
       runs. The number is a package parameter
-      (packages/github-actions/toolbox-package.yaml:20-26).
+      (packages/github-actions/toolbox-package.yaml:26-32).
 summary: >-
-  Measures the right thing now that re-runs count as failures, with a
-  stated threshold. Two gaps remain: `|| echo` or an event-name `if:`
-  still hides a failure from failures-visible, and runs that passed on a
-  re-run raise the rate without appearing in the evidence the fix points
-  to.
+  Re-assessed after the rule gained a rationale: its check, evidence, fix
+  and level are the same as on main, as is the code the reasons cite, so
+  the verdicts stand; line numbers are updated for the rationale lines
+  inserted above them. The rationale states the why without claiming more
+  than the check sees. Measures the right thing now that re-runs count as
+  failures, with a stated threshold. Two gaps remain: `|| echo` or an
+  event-name `if:` still hides a failure from failures-visible, and runs
+  that passed on a re-run raise the rate without appearing in the evidence
+  the fix points to.

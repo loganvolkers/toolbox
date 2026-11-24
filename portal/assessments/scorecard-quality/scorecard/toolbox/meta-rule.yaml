@@ -1,58 +1,62 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: scorecard:toolbox/meta-rule
 rubric: scorecard-quality
-subjectHash: f292543d2677
+subjectHash: 82b106097aa4
 assessor: {kind: agent, name: cursor-cloud-agent, model: claude-opus-5.5}
 at: 2026-11-24
 verdicts:
   - criterion: one-concern
     verdict: pass
     reason: >-
-      All ten rules (portal/standards/meta.yaml:369-458) judge one thing, a
-      rule's form (explained, tested both ways, decided on fixtures, with
-      evidence that tracks the check, readable CEL, a fix that names a place),
-      for one audience, the authors of standards. The description says gold is
-      "well-formed, not good" and leaves quality to review-rule
-      (meta.yaml:361-364, D01M831P5QWJQ4A2FT85N5MXJQF). The new `title:`
-      changes no rule.
+      All eleven rules (portal/standards/meta.yaml:407-566) judge one thing, a
+      rule's form (explained how to fix and why, tested both ways, decided on
+      fixtures, with evidence that tracks the check, readable CEL, a fix that
+      names a place), for one audience, the authors of standards. The new
+      `explains-why` asks for a `rationale:`, which is form too: it reads
+      `explained`, whether the field is filled
+      (crates/toolbox-cli/src/meta.rs:262), not whether the reason is right,
+      which review-rule judges (D01M831P5QWJQ4A2FT85N5MXJQF). The scorecard's
+      own rationale and track (meta.yaml:388-403) change no rule.
   - criterion: levels-are-a-ladder
     verdict: pass
     reason: >-
-      `readable` is a guard at silver (docs/design/thresholds.md:41), and gold
-      asks for `pins-both-outcomes` (meta.yaml:436-448, thresholds.md:42),
-      which builds on bronze `tested` and silver `both-outcomes-on-fixtures`
-      and isn't implied by them. In portal/results.json the 270 rules spread
-      21 none, 6 bronze, 44 silver and 199 gold, with 71 failing
-      pins-both-outcomes, so every level separates rules. Silver
-      `always-explains` is the prerequisite of gold `evidence-tracks-check`,
-      which reads `hasEvidence` (meta.yaml:117-121), per thresholds.md:22-23.
+      `explains-why` sits at bronze beside `explains-fix` (meta.yaml:407-434),
+      and the ratchet holds new rules to bronze (meta.yaml:405), so a new rule
+      must say why from its first commit; every one of the 272 rules has a
+      rationale today, so bronze is reachable now. `readable` is a guard at
+      silver (docs/design/thresholds.md:41), and gold asks for
+      `pins-both-outcomes` (meta.yaml:534-550), which builds on bronze
+      `tested` and silver `both-outcomes-on-fixtures`. In the report the 272
+      rules spread 21 none, 6 bronze, 44 silver and 201 gold, with 71 failing
+      pins-both-outcomes, so every level separates rules.
   - criterion: no-obvious-gap
     verdict: pass
     reason: >-
-      Lesson L4, tests that pin both outcomes
-      (docs/design/scorecards-for-scorecards.md:84), is `pins-both-outcomes`,
-      fed by `testedOutcomes` from crates/toolbox-cli/src/meta.rs:30-73, where
-      comparing evidence pins `fail` and a bare mention pins nothing. The L11
-      redundancy inside the card is gone: shows-evidence was dropped as
-      implied by always-explains (scorecards-for-scorecards.md:104). What's
-      left in scorecards-for-scorecards.md:139-144 (rationale, type checks,
-      cross-rule redundancy, volatility, timing) is listed as next, and
-      redundancy is a property of a scorecard's rules together rather than of
-      one rule's form.
+      Rationale was the first item scorecards-for-scorecards.md listed as not
+      built; it is now built as `explains-why` here and on meta-scorecard
+      (docs/design/scorecards-for-scorecards.md:139). L4, tests that pin both
+      outcomes (:84), is `pins-both-outcomes`, fed by `testedOutcomes` in
+      crates/toolbox-cli/src/meta.rs. What :139-144 still lists (thresholds
+      with a source, type checks, cross-rule redundancy, volatility, timing)
+      is next, and redundancy is a property of a scorecard's rules together
+      rather than one rule's form. Whether a rationale overclaims is left to
+      review-rule's `measures-intent`, which is the right owner for it.
   - criterion: actionable
     verdict: pass
     reason: >-
-      I tried rule:toolbox/maintainer-ci-reliability/every-job-has-timeout,
-      silver and failing only pins-both-outcomes (portal/results.json). Its
-      fix gives the expectation's shape and file (meta.yaml:443-448). In a
-      scratch worktree I added one expectation, that
-      workflow:.github/workflows/demo/steady.yml passes the rule; `toolbox
-      test portal` passed and the rule's brief went from testedOutcomes [fail]
-      to [fail, pass]. The evidence doesn't name which fixture entity passes,
-      so finding one took a guess checked with `toolbox test`.
+      I removed the rationale from rule:toolbox/maintainer-site/titled
+      (portal/standards/site.yaml) in the working tree and ran `toolbox report
+      portal --skip runner,github-actions -o json`: the rule fell from gold to
+      none with evidence `rule maintainer-site/titled has no rationale`, and
+      the fix (meta.yaml:424-426) names the field to add. Restoring the
+      rationale put it back at gold. The fixture test pins both outcomes of
+      explains-why (portal/tests/standards.test.yaml:253-262). Earlier I also
+      raised every-job-has-timeout's tests to pin both outcomes in a scratch
+      copy using only its fix (meta.yaml:541-546) and `toolbox test`.
 summary: >-
-  Re-assessed after the scorecard gained a human title. One concern and a
-  real ladder: readable guards at silver, and gold asks for tests that pin
-  both outcomes, which 71 rules don't yet have. I raised one rule's tests
-  to pin both outcomes in a scratch copy using only the fix and toolbox
-  test.
+  Re-assessed after the scorecard gained a rationale, links, a track and a
+  bronze `explains-why` rule. It is still one concern with a real ladder:
+  every rule says why from its first commit, and gold asks for tests that
+  pin both outcomes, which 71 rules don't yet have. Dropping one rule's
+  rationale dropped it to none with evidence naming it, and restoring it
+  brought it back to gold.

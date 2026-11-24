@@ -1,9 +1,9 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/maintainer-skill/no-hidden-instructions
 rubric: rule-quality
-subjectHash: f05da68fea0b
+subjectHash: 32216086ef1b
 assessor: {kind: agent, name: cursor-cloud-agent, model: claude-opus-5.5}
-at: 2026-11-23
+at: 2026-11-24
 verdicts:
   - criterion: measures-intent
     verdict: fail
@@ -32,7 +32,7 @@ verdicts:
       rename the label to `[x]: # (do X)`. It is just as invisible, the filter
       at crates/toolbox-connector-workspace/src/hygiene.rs:146-149 only
       matches three labels, so hiddenChars stays 0 and the check at
-      portal/standards/skills.yaml:144 passes.
+      portal/standards/skills.yaml:207 passes.
     suggestion: >-
       Same change as for measures-intent: detect unused link-reference labels
       in general rather than a list of conventional ones, with a test in
@@ -43,7 +43,7 @@ verdicts:
     reason: >-
       The fix lists every class the scan counts, including both Markdown
       comment forms, says to re-save non-UTF-8 text files, and says which
-      files aren't scanned (portal/standards/skills.yaml:148-154). Removing
+      files aren't scanned (portal/standards/skills.yaml:211-217). Removing
       what it lists zeroes the count. The evidence is a total with no file or
       line, so an agent must search, but the fix says what to search for.
   - criterion: threshold-justified
@@ -54,6 +54,10 @@ verdicts:
       D01M83G9F4EEGN1GTP14HEYB8B6, citing SkillBench's hard F for hidden
       Unicode.
 summary: >-
-  The binary-asset false positive and the `[//]: #` comment are fixed, but
-  any other unused link-reference label still hides text uncounted, and
-  `<!--` inside a code fence still counts.
+  Re-assessed after the rule gained a rationale: its check, evidence, fix
+  and level are the same as on main, as is the code the reasons cite, so
+  the verdicts stand; line numbers are updated for the rationale lines
+  inserted above them. The rationale states the why without claiming more
+  than the check sees. The binary-asset false positive and the `[//]: #`
+  comment are fixed, but any other unused link-reference label still hides
+  text uncounted, and `<!--` inside a code fence still counts.

@@ -1,28 +1,31 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: scorecard:toolbox/review-crate
 rubric: scorecard-quality
-subjectHash: aef040be0f1c
+subjectHash: cfdc4529b4c9
 assessor: {kind: agent, name: cursor-cloud-agent, model: claude-opus-5.5}
 at: 2026-11-24
 verdicts:
   - criterion: one-concern
     verdict: pass
     reason: >-
-      All five rules (portal/standards/crates.yaml:271-324) read one thing,
+      All five rules (portal/standards/crates.yaml:351-425) read one thing,
       the crate-design assessment of a crate and its review, for one audience,
       maintainers. The card is advisory (`ratchet: {advisory: true}`,
-      crates.yaml:268), as D79 and D01M831P5QWJQ4A2FT85N5MXJQF set out. The
-      new `title:` changes no rule.
+      crates.yaml:348), as D79 and D01M831P5QWJQ4A2FT85N5MXJQF set out, and
+      its new rationale gives the reason: "a review that goes stale on every
+      change must not gate the ratchet" (crates.yaml:331-337). The rationale,
+      links and track change no rule.
   - criterion: levels-are-a-ladder
     verdict: pass
     reason: >-
-      Bronze is no open finding, stale ones included (crates.yaml:271-280).
-      Silver is a current review (crates.yaml:281-288). Every gold rule also
+      Bronze is no open finding, stale ones included (crates.yaml:351-364).
+      Silver is a current review (crates.yaml:365-376). Every gold rule also
       needs a current review and adds something more: clean and cited, no
       doubts, and a second assessor's grounded review of the assessment
-      (`independently-reviewed`, crates.yaml:312-324), as
-      docs/design/thresholds.md:55 states. Fixtures reach none and gold
-      (portal/tests/standards.test.yaml:896-920). No fixture sits at silver,
+      (`independently-reviewed`, crates.yaml:408-425), as
+      docs/design/thresholds.md:55 states and the scorecard's rationale now
+      repeats. Fixtures reach none and gold
+      (portal/tests/standards.test.yaml:916-941). No fixture sits at silver,
       so that rung is untested, but it is still a coherent step.
   - criterion: no-obvious-gap
     verdict: pass
@@ -35,19 +38,23 @@ verdicts:
       `source_hash` in crates/toolbox-connector-workspace/src/rust.rs:395).
       Assessor identity is still a self-chosen name, which thresholds.md:63-70
       records as not checked, and why: git can't tell the agents apart either.
+      The independently-reviewed rationale's claim that one of three
+      assessment reviews was self-review when the rule was added is the
+      finding D01M831P5QWJQ4A2FT85N5MXJQF records.
   - criterion: actionable
     verdict: pass
     reason: >-
       I tried crate:toolbox-expr, the one crate with a live assessment
       (portal/assessments/crate-design/crate/toolbox-expr.yaml). The fix for
       `independently-reviewed` gives the exact brief command
-      (crates.yaml:320-324). I ran `toolbox assess brief
+      (crates.yaml:416-420). I ran `toolbox assess brief
       assessment:crate-design/crate:toolbox-expr --portal portal`, and it
       printed the assessment-quality rubric and the file to write. The bronze
       and silver fixes point at the failing criteria's suggestions and the
-      crate brief (crates.yaml:277-288).
+      crate brief (crates.yaml:357-372).
 summary: >-
-  Re-assessed after the scorecard gained a human title. Independence is
-  required at gold and the hash description is right, so the ladder has no
-  obvious gap. It is still untested at silver, and assessor identity is a
+  Re-assessed after the scorecard gained a rationale, links and a track.
+  Independence is required at gold, the hash description is right, and the
+  rationale says why the card is advisory, so the ladder has no obvious
+  gap. It is still untested at silver, and assessor identity is a
   self-declared name, which is a documented limit.

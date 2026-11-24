@@ -1,18 +1,18 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/review-assessment/passes-review
 rubric: rule-quality
-subjectHash: 9b9e5cd0b480
+subjectHash: 034d09fb6e29
 assessor: {kind: agent, name: cursor-cloud-agent, model: claude-opus-5.5}
-at: 2026-11-23
+at: 2026-11-24
 verdicts:
   - criterion: measures-intent
     verdict: pass
     reason: >-
       The check needs a current review with no failing criterion, no uncited
       reason, and grounding in the assessment it reviews
-      (portal/standards/assessments.yaml:221-231, with reviewUncited and
+      (portal/standards/assessments.yaml:268-282, with reviewUncited and
       reviewGrounded at :88-104). Self-review is held back by silver
-      `assessed` (assessments.yaml:210-217) and doubts by `no-doubts`, so the
+      `assessed` (assessments.yaml:253-264) and doubts by `no-doubts`, so the
       card's gold matches the ladder in docs/design/thresholds.md:55.
   - criterion: hard-to-game
     verdict: fail
@@ -39,7 +39,7 @@ verdicts:
       failed (revise the assessment) from items marked "fix the review" (the
       review's reasons must cite what they rest on, including this
       assessment's file or its sources), matching the evidence's labels
-      (portal/standards/assessments.yaml:226-237).
+      (portal/standards/assessments.yaml:277-288).
   - criterion: threshold-justified
     verdict: pass
     reason: >-
@@ -48,6 +48,10 @@ verdicts:
       resolves", and for an assessment `groundedIn`). It asks for more than
       bronze and silver do.
 summary: >-
-  The fix now points at the right file and grounding closes the "cite any
-  file" route, but citing only the reviewed assessment's own path still
-  grounds an all-pass rubber stamp.
+  Re-assessed after the rule gained a rationale: its check, evidence, fix
+  and level are the same as on main, as is the code the reasons cite, so
+  the verdicts stand; line numbers are updated for the rationale lines
+  inserted above them. The rationale states the why without claiming more
+  than the check sees. The fix now points at the right file and grounding
+  closes the "cite any file" route, but citing only the reviewed
+  assessment's own path still grounds an all-pass rubber stamp.
