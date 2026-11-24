@@ -1,0 +1,709 @@
+# Toolbox against Backstage, beyond DX (docs/design/backstage-comparison.md). Comparative
+# scorecards (D01M857ZB468ZM2YS6GNSEG6YB9): each scores both products on the same rules and says,
+# rule by rule, where Toolbox stands. Products are the records experiments/backstage-compare
+# writes into portal/comparisons/; rerun the harness rather than editing them.
+
+kinds:
+  - name: Product
+    description: >-
+      A product measured by experiments/backstage-compare: one run of its
+      harness, at one commit, on one corpus.
+    identityFrom: [connector:workspace]
+    fields:
+      title: {type: string, description: "The product's name."}
+      version: {type: string, description: The version or install measured.}
+      harness: {type: string, description: The harness commit that measured it.}
+      corpus:
+        type: number
+        description: Components in the catalog the performance runs used.
+      runs: {type: number, description: Runs per product the medians are over.}
+      readyS: {type: number, description: Seconds from exec to ready (median).}
+      catalogReadableS:
+        type: number
+        description: Seconds from exec until every component is readable (median).
+      getP95Ms:
+        type: number
+        description: p95 milliseconds to read one entity by id (median).
+      getRps:
+        type: number
+        description: Entity reads by id per second at 16 connections (median).
+      listP95Ms:
+        type: number
+        description: p95 milliseconds to list 100 components of one owner (median).
+      listRps:
+        type: number
+        description: Filtered lists per second at 16 connections (median).
+      recoveredS:
+        type: number
+        description: >-
+          Seconds from a restart after kill -9 until every component is readable
+          again (median).
+      rssIdleMb:
+        type: number
+        description: Resident memory of the process tree when ready (median).
+      rssLoadedMb:
+        type: number
+        description: Resident memory of the process tree with the catalog loaded (median).
+      installMb: {type: number, description: Megabytes on disk to run it.}
+      adopterFiles:
+        type: number
+        description: Files the adopter keeps in their repository for a first portal.
+      adopterLines: {type: number, description: Lines in those files.}
+      thirdPartyPackages:
+        type: number
+        description: Third-party packages in its lockfile.
+      knownVulns:
+        type: number
+        description: Known vulnerabilities in its lockfile (osv-scanner).
+      highVulns: {type: number, description: Those rated high or critical.}
+      provenancePercent:
+        type: number
+        description: Percent of its release artifacts with verifiable provenance.
+      anonymousReadRefused:
+        type: boolean
+        description: A catalog read without credentials is refused.
+      forgedIdentityRefused:
+        type: boolean
+        description: A read that claims an identity without proving it is refused.
+      anonymousMcpRefused:
+        type: boolean
+        description: An MCP call without credentials is refused.
+      clientCannotDelete:
+        type: boolean
+        description: A client's credential cannot delete a catalog entity.
+      loopbackByDefault:
+        type: boolean
+        description: The server listens on loopback unless told otherwise.
+      ownerOnlyFields:
+        type: boolean
+        description: Fields can be shown to owners only, and filters cannot probe them.
+      extensionProcessIsolated:
+        type: boolean
+        description: An extension runs outside the server's process.
+      extensionCredentialIsolated:
+        type: boolean
+        description: An extension gets none of the server's credentials.
+      offlineValidate:
+        type: boolean
+        description: The catalog and config validate with no running instance.
+      changePreview:
+        type: boolean
+        description: A change's effect on entities and access is shown before deploy.
+      upgradeLinesPerRelease:
+        type: number
+        description: Lines the adopter changes per release to upgrade.
+      rollbackManualStepsPerRelease:
+        type: number
+        description: Manual steps per release to roll back to the previous version.
+      repoScopedWithoutServer:
+        type: boolean
+        description: One repository can be scored with no server.
+      federates:
+        type: boolean
+        description: Two instances join into one catalog.
+      mcpByDefault:
+        type: boolean
+        description: The default install serves MCP.
+      mcpToolsListBytes:
+        type: number
+        description: Bytes of the MCP tools/list response.
+      mcpGetEntityBytes:
+        type: number
+        description: Bytes of the MCP response that reads one entity.
+      extensionAnyLanguage:
+        type: boolean
+        description: An extension can be written in any language.
+      extensionWithoutRebuild:
+        type: boolean
+        description: An extension is added without rebuilding the server.
+      capCatalogBrowse:
+        type: boolean
+        description: Browse and filter the catalog.
+      capOwnership:
+        type: boolean
+        description: "Show who owns what, through groups."
+      capGraph:
+        type: boolean
+        description: "Show an entity's relations as a graph."
+      capDocsSearch:
+        type: boolean
+        description: Search the catalog and documentation by any word.
+      capDocs:
+        type: boolean
+        description: "Read a component's documentation in the portal."
+      capTemplates:
+        type: boolean
+        description: Create a component from a template.
+      capScorecards:
+        type: boolean
+        description: Score entities against standards.
+      capApiDocs: {type: boolean, description: Render an API's OpenAPI or AsyncAPI definition.}
+      capKubernetes:
+        type: boolean
+        description: "Show a component's Kubernetes workloads."
+      capNotifications: {type: boolean, description: Notify users of events.}
+      capPermissionRule:
+        type: boolean
+        description: Write a custom permission rule.
+      capMcpRead: {type: boolean, description: Read the catalog over MCP.}
+      contributors:
+        type: number
+        description: "Contributors to its repository, anonymous included."
+    sources: {default: [connector:workspace]}
+    map:
+    - from: workspace/product
+      id: "'product:' + record.id"
+      set: >-
+        {'title': record.title, 'version': record.version, 'harness':
+        record.harness, 'corpus': record.corpus, 'runs': record.runs, 'readyS':
+        record.readyS, 'catalogReadableS': record.catalogReadableS, 'getP95Ms':
+        record.getP95Ms, 'getRps': record.getRps, 'listP95Ms': record.listP95Ms,
+        'listRps': record.listRps, 'recoveredS': record.recoveredS, 'rssIdleMb':
+        record.rssIdleMb, 'rssLoadedMb': record.rssLoadedMb, 'installMb':
+        record.installMb, 'adopterFiles': record.adopterFiles, 'adopterLines':
+        record.adopterLines, 'thirdPartyPackages': record.thirdPartyPackages,
+        'knownVulns': record.knownVulns, 'highVulns': record.highVulns,
+        'provenancePercent': record.provenancePercent, 'anonymousReadRefused':
+        record.anonymousReadRefused, 'forgedIdentityRefused':
+        record.forgedIdentityRefused, 'anonymousMcpRefused':
+        record.anonymousMcpRefused, 'clientCannotDelete':
+        record.clientCannotDelete, 'loopbackByDefault':
+        record.loopbackByDefault, 'ownerOnlyFields': record.ownerOnlyFields,
+        'extensionProcessIsolated': record.extensionProcessIsolated,
+        'extensionCredentialIsolated': record.extensionCredentialIsolated,
+        'offlineValidate': record.offlineValidate, 'changePreview':
+        record.changePreview, 'upgradeLinesPerRelease':
+        record.upgradeLinesPerRelease, 'rollbackManualStepsPerRelease':
+        record.rollbackManualStepsPerRelease, 'repoScopedWithoutServer':
+        record.repoScopedWithoutServer, 'federates': record.federates,
+        'mcpByDefault': record.mcpByDefault, 'mcpToolsListBytes':
+        record.mcpToolsListBytes, 'mcpGetEntityBytes': record.mcpGetEntityBytes,
+        'extensionAnyLanguage': record.extensionAnyLanguage,
+        'extensionWithoutRebuild': record.extensionWithoutRebuild,
+        'capCatalogBrowse': record.capCatalogBrowse, 'capOwnership':
+        record.capOwnership, 'capGraph': record.capGraph, 'capDocsSearch':
+        record.capDocsSearch, 'capDocs': record.capDocs, 'capTemplates':
+        record.capTemplates, 'capScorecards': record.capScorecards,
+        'capApiDocs': record.capApiDocs, 'capKubernetes': record.capKubernetes,
+        'capNotifications': record.capNotifications, 'capPermissionRule':
+        record.capPermissionRule, 'capMcpRead': record.capMcpRead,
+        'contributors': record.contributors}
+
+scorecards:
+  - name: vs-backstage-performance
+    kind: Product
+    description: >-
+      Start, read and recover on a 10k-component catalog, with every read
+      authorized (Toolbox through OpenFGA, Backstage under allow-all). ISO
+      25010 performance efficiency and reliability.
+    owner: group:maintainers
+    levels: [bronze]
+    compare: {subject: product:toolbox, peers: [product:backstage]}
+    rules:
+    - name: ready
+      level: bronze
+      check: entity.readyS <= 10.0
+      value: entity.readyS
+      better: lower
+      unit: s
+      tolerance: 0.1
+      evidence: "['ready after ' + string(entity.readyS) + ' s']"
+      fix: >-
+        Profile startup with `RUST_LOG=debug toolbox serve`, then rerun
+        experiments/backstage-compare/run.sh.
+    - name: catalog-readable
+      level: bronze
+      check: entity.catalogReadableS <= 60.0
+      value: entity.catalogReadableS
+      better: lower
+      unit: s
+      tolerance: 0.1
+      evidence: >-
+        ['every component readable after ' + string(entity.catalogReadableS) + '
+        s']
+      fix: >-
+        Time ingest and recompute in `toolbox serve` logs and the derive laps,
+        then rerun experiments/backstage-compare/run.sh.
+    - name: get-latency
+      level: bronze
+      check: entity.getP95Ms <= 50.0
+      value: entity.getP95Ms
+      better: lower
+      unit: ms
+      tolerance: 0.1
+      evidence: "['p95 ' + string(entity.getP95Ms) + ' ms to read one entity']"
+      fix: >-
+        Profile GET /v1/entities/{id} in crates/toolbox-api/src/routes.rs, then
+        rerun experiments/backstage-compare/run.sh.
+    - name: get-throughput
+      level: bronze
+      check: entity.getRps >= 1000.0
+      value: entity.getRps
+      better: higher
+      unit: rps
+      tolerance: 0.1
+      evidence: "[string(entity.getRps) + ' entity reads per second']"
+      fix: >-
+        Profile GET /v1/entities/{id} in crates/toolbox-api/src/routes.rs, then
+        rerun experiments/backstage-compare/run.sh.
+    - name: list-latency
+      level: bronze
+      check: entity.listP95Ms <= 500.0
+      value: entity.listP95Ms
+      better: lower
+      unit: ms
+      tolerance: 0.1
+      evidence: "['p95 ' + string(entity.listP95Ms) + ' ms to list 100 components']"
+      fix: >-
+        Profile the filtered list in crates/toolbox-api/src/routes.rs
+        (list_entities), then rerun experiments/backstage-compare/run.sh.
+    - name: list-throughput
+      level: bronze
+      check: entity.listRps >= 20.0
+      value: entity.listRps
+      better: higher
+      unit: rps
+      tolerance: 0.1
+      evidence: "[string(entity.listRps) + ' filtered lists per second']"
+      fix: >-
+        Profile the filtered list in crates/toolbox-api/src/routes.rs
+        (list_entities), then rerun experiments/backstage-compare/run.sh.
+    - name: recovery
+      level: bronze
+      check: entity.recoveredS <= 60.0
+      value: entity.recoveredS
+      better: lower
+      unit: s
+      tolerance: 0.1
+      evidence: "['readable again ' + string(entity.recoveredS) + ' s after kill -9']"
+      fix: >-
+        Time the restart path in crates/toolbox-api/src/state.rs (the first
+        recompute from Postgres), then rerun
+        experiments/backstage-compare/run.sh.
+    facets: {summary: public, details: public}
+
+  - name: vs-backstage-footprint
+    kind: Product
+    description: >-
+      What it costs to run and to own: memory, disk, and the files an adopter
+      keeps for a first portal. Charter goal 1 (simple deployment).
+    owner: group:maintainers
+    levels: [bronze]
+    compare: {subject: product:toolbox, peers: [product:backstage]}
+    rules:
+    - name: idle-memory
+      level: bronze
+      check: entity.rssIdleMb <= 512.0
+      value: entity.rssIdleMb
+      better: lower
+      unit: MB
+      tolerance: 0.1
+      evidence: "[string(entity.rssIdleMb) + ' MB resident when ready']"
+      fix: >-
+        Measure the server and its co-processes with
+        experiments/backstage-compare/measure.py and trim what starts eagerly.
+    - name: loaded-memory
+      level: bronze
+      check: entity.rssLoadedMb <= 1024.0
+      value: entity.rssLoadedMb
+      better: lower
+      unit: MB
+      tolerance: 0.1
+      evidence: "[string(entity.rssLoadedMb) + ' MB resident with the catalog loaded']"
+      fix: >-
+        Measure with experiments/backstage-compare/measure.py and shrink the
+        derived state's copies in crates/toolbox-api/src/state.rs.
+    - name: install-size
+      level: bronze
+      check: entity.installMb <= 1000.0
+      value: entity.installMb
+      better: lower
+      unit: MB
+      tolerance: 0.1
+      evidence: "[string(entity.installMb) + ' MB on disk']"
+      fix: >-
+        Measure with experiments/backstage-compare/footprint.py and drop what
+        the release archives carry but do not run.
+    - name: adopter-files
+      level: bronze
+      check: entity.adopterFiles <= 10.0
+      value: entity.adopterFiles
+      better: lower
+      unit: files
+      tolerance: 0.1
+      evidence: "[string(entity.adopterFiles) + ' files to keep for a first portal']"
+      fix: >-
+        Move what examples/repo-portal-starter asks an adopter to keep into
+        packages they include.
+    - name: adopter-lines
+      level: bronze
+      check: entity.adopterLines <= 500.0
+      value: entity.adopterLines
+      better: lower
+      unit: lines
+      tolerance: 0.1
+      evidence: "[string(entity.adopterLines) + ' lines to keep for a first portal']"
+      fix: >-
+        Move what examples/repo-portal-starter asks an adopter to keep into
+        packages they include.
+    facets: {summary: public, details: public}
+
+  - name: vs-backstage-security
+    kind: Product
+    description: >-
+      Secure by default, as installed: what an unauthenticated or forging
+      client gets, what a client token can destroy, and what an extension can
+      reach. ISO 25010 security.
+    owner: group:maintainers
+    levels: [bronze]
+    compare: {subject: product:toolbox, peers: [product:backstage]}
+    rules:
+    - name: anonymous-read
+      level: bronze
+      check: entity.anonymousReadRefused
+      evidence: "['anonymousReadRefused is ' + string(entity.anonymousReadRefused)]"
+      fix: >-
+        Refuse a read without credentials outside dev mode in
+        crates/toolbox-authz/src/authn.rs.
+    - name: forged-identity
+      level: bronze
+      check: entity.forgedIdentityRefused
+      evidence: "['forgedIdentityRefused is ' + string(entity.forgedIdentityRefused)]"
+      fix: >-
+        Trust identity headers only in dev mode, in
+        crates/toolbox-authz/src/authn.rs.
+    - name: anonymous-mcp
+      level: bronze
+      check: entity.anonymousMcpRefused
+      evidence: "['anonymousMcpRefused is ' + string(entity.anonymousMcpRefused)]"
+      fix: >-
+        Authenticate /mcp as the REST API does, in
+        crates/toolbox-api/src/mcp.rs.
+    - name: client-cannot-delete
+      level: bronze
+      check: entity.clientCannotDelete
+      evidence: "['clientCannotDelete is ' + string(entity.clientCannotDelete)]"
+      fix: >-
+        Keep entity writes to connectors' ingest; offer no DELETE in
+        crates/toolbox-api/src/routes.rs.
+    - name: loopback-by-default
+      level: bronze
+      check: entity.loopbackByDefault
+      evidence: "['loopbackByDefault is ' + string(entity.loopbackByDefault)]"
+      fix: >-
+        Bind 127.0.0.1 unless `--listen` says otherwise, in
+        crates/toolbox-cli/src/main.rs.
+    - name: owner-only-fields
+      level: bronze
+      check: entity.ownerOnlyFields
+      evidence: "['ownerOnlyFields is ' + string(entity.ownerOnlyFields)]"
+      fix: >-
+        Keep facets and their filter guard in crates/toolbox-api/src/access.rs,
+        pinned by crates/toolbox-api/tests/authz.rs.
+    - name: extension-process-isolated
+      level: bronze
+      check: entity.extensionProcessIsolated
+      evidence: >-
+        ['extensionProcessIsolated is ' +
+        string(entity.extensionProcessIsolated)]
+      fix: >-
+        Run every connector as its own process, as
+        docs/design/connector-control.md says.
+    - name: extension-credential-isolated
+      level: bronze
+      check: entity.extensionCredentialIsolated
+      evidence: >-
+        ['extensionCredentialIsolated is ' +
+        string(entity.extensionCredentialIsolated)]
+      fix: >-
+        Start connectors with a cleared environment and an allowlist, in
+        crates/toolbox-api/src/connectors.rs.
+    facets: {summary: public, details: public}
+
+  - name: vs-backstage-supply-chain
+    kind: Product
+    description: >-
+      What an adopter inherits: third-party packages, their known
+      vulnerabilities, and whether the release can be verified. OpenSSF and
+      SLSA build provenance.
+    owner: group:maintainers
+    levels: [bronze]
+    compare: {subject: product:toolbox, peers: [product:backstage]}
+    rules:
+    - name: packages
+      level: bronze
+      check: entity.thirdPartyPackages <= 1000.0
+      value: entity.thirdPartyPackages
+      better: lower
+      unit: packages
+      tolerance: 0.1
+      evidence: "[string(entity.thirdPartyPackages) + ' third-party packages']"
+      fix: >-
+        List the heaviest dependencies with `cargo tree -e normal`, and drop or
+        feature-gate them in Cargo.toml.
+    - name: known-vulnerabilities
+      level: bronze
+      check: entity.knownVulns == 0.0
+      value: entity.knownVulns
+      better: lower
+      unit: vulnerabilities
+      tolerance: 0.1
+      evidence: "[string(entity.knownVulns) + ' known vulnerabilities']"
+      fix: >-
+        Run `osv-scanner scan source --lockfile Cargo.lock` and update or
+        replace the listed packages.
+    - name: high-vulnerabilities
+      level: bronze
+      check: entity.highVulns == 0.0
+      value: entity.highVulns
+      better: lower
+      unit: vulnerabilities
+      tolerance: 0.1
+      evidence: "[string(entity.highVulns) + ' high or critical vulnerabilities']"
+      fix: >-
+        Run `osv-scanner scan source --lockfile Cargo.lock` and update or
+        replace the listed packages first.
+    - name: provenance
+      level: bronze
+      check: entity.provenancePercent == 100.0
+      value: entity.provenancePercent
+      better: higher
+      unit: "%"
+      tolerance: 0.1
+      evidence: >-
+        [string(entity.provenancePercent) + '% of release artifacts with
+        provenance']
+      fix: >-
+        Attest every artifact in .github/workflows/release.yml, and check with
+        `gh attestation verify`.
+    facets: {summary: public, details: public}
+
+  - name: vs-backstage-change-safety
+    kind: Product
+    description: >-
+      Changing a portal safely: validate before deploy, preview the effect,
+      upgrade without merging, roll back without surgery. ISO 25010
+      maintainability; DORA change failure rate and recovery time.
+    owner: group:maintainers
+    levels: [bronze]
+    compare: {subject: product:toolbox, peers: [product:backstage]}
+    rules:
+    - name: offline-validate
+      level: bronze
+      check: entity.offlineValidate
+      evidence: "['offlineValidate is ' + string(entity.offlineValidate)]"
+      fix: >-
+        Keep `toolbox validate` and `toolbox test` working with no server or
+        database.
+    - name: change-preview
+      level: bronze
+      check: entity.changePreview
+      evidence: "['changePreview is ' + string(entity.changePreview)]"
+      fix: >-
+        Keep `toolbox plan --local --base <manifest>` diffing entities, scores
+        and tuples.
+    - name: upgrade-lines
+      level: bronze
+      check: entity.upgradeLinesPerRelease <= 10.0
+      value: entity.upgradeLinesPerRelease
+      better: lower
+      unit: lines
+      tolerance: 0.1
+      evidence: "[string(entity.upgradeLinesPerRelease) + ' lines to change per release']"
+      fix: >-
+        Keep examples/repo-portal-starter passing `toolbox validate` and
+        `toolbox test` across releases
+        (experiments/backstage-compare/upgrade.py).
+    - name: rollback-steps
+      level: bronze
+      check: entity.rollbackManualStepsPerRelease == 0.0
+      value: entity.rollbackManualStepsPerRelease
+      better: lower
+      unit: steps
+      tolerance: 0.1
+      evidence: >-
+        [string(entity.rollbackManualStepsPerRelease) + ' manual steps per
+        release to roll back']
+      fix: >-
+        Keep the store's migrations readable by the previous release, as
+        experiments/backstage-compare/upgrade.py checks.
+    facets: {summary: public, details: public}
+
+  - name: vs-backstage-org-fit
+    kind: Product
+    description: >-
+      Fitting how an organisation is built: one repository with no server
+      first, then many portals joined. Conway's law and Team Topologies.
+    owner: group:maintainers
+    levels: [bronze]
+    compare: {subject: product:toolbox, peers: [product:backstage]}
+    rules:
+    - name: repo-scoped
+      level: bronze
+      check: entity.repoScopedWithoutServer
+      evidence: "['repoScopedWithoutServer is ' + string(entity.repoScopedWithoutServer)]"
+      fix: >-
+        Keep `toolbox report` scoring a repository with no server, as
+        actions/report does.
+    - name: federation
+      level: bronze
+      check: entity.federates
+      evidence: "['federates is ' + string(entity.federates)]"
+      fix: Build federation as docs/design/federation.md designs it (D68).
+    facets: {summary: public, details: public}
+
+  - name: vs-backstage-agent-surface
+    kind: Product
+    description: >-
+      What a coding agent gets: MCP by default, and how many tokens it spends
+      to learn the tools and read one entity.
+    owner: group:maintainers
+    levels: [bronze]
+    compare: {subject: product:toolbox, peers: [product:backstage]}
+    rules:
+    - name: mcp-by-default
+      level: bronze
+      check: entity.mcpByDefault
+      evidence: "['mcpByDefault is ' + string(entity.mcpByDefault)]"
+      fix: Serve /mcp from `toolbox serve` and stdio from `toolbox mcp`.
+    - name: tools-list-size
+      level: bronze
+      check: entity.mcpToolsListBytes <= 32768.0
+      value: entity.mcpToolsListBytes
+      better: lower
+      unit: bytes
+      tolerance: 0.1
+      evidence: "[string(entity.mcpToolsListBytes) + ' bytes in tools/list']"
+      fix: >-
+        Shorten tool descriptions and schemas in
+        crates/toolbox-api/src/mcp.rs.
+    - name: get-entity-size
+      level: bronze
+      check: entity.mcpGetEntityBytes <= 4096.0
+      value: entity.mcpGetEntityBytes
+      better: lower
+      unit: bytes
+      tolerance: 0.1
+      evidence: "[string(entity.mcpGetEntityBytes) + ' bytes to read one entity']"
+      fix: >-
+        Trim the get tool's response in crates/toolbox-api/src/mcp.rs to the
+        fields an agent asks for.
+    facets: {summary: public, details: public}
+
+  - name: vs-backstage-extensibility
+    kind: Product
+    description: >-
+      What it takes to add an integration: which languages, and whether the
+      server is rebuilt. ISO 25010 modifiability.
+    owner: group:maintainers
+    levels: [bronze]
+    compare: {subject: product:toolbox, peers: [product:backstage]}
+    rules:
+    - name: any-language
+      level: bronze
+      check: entity.extensionAnyLanguage
+      evidence: "['extensionAnyLanguage is ' + string(entity.extensionAnyLanguage)]"
+      fix: >-
+        Keep the connector protocol language-neutral, as
+        schema/connector-messages.schema.json defines it.
+    - name: without-rebuild
+      level: bronze
+      check: entity.extensionWithoutRebuild
+      evidence: "['extensionWithoutRebuild is ' + string(entity.extensionWithoutRebuild)]"
+      fix: >-
+        Keep remote connectors pushing to /v1/ingest with their own token
+        (docs/design/connector-control.md).
+    facets: {summary: public, details: public}
+
+  - name: vs-backstage-capabilities
+    kind: Product
+    description: >-
+      What a portal does out of the box, by configuration alone. The scenarios
+      come from the Backstage parity audit (D47), so they favour what
+      Backstage ships.
+    owner: group:maintainers
+    levels: [bronze]
+    compare: {subject: product:toolbox, peers: [product:backstage]}
+    rules:
+    - name: catalog-browse
+      level: bronze
+      check: entity.capCatalogBrowse
+      evidence: "['capCatalogBrowse is ' + string(entity.capCatalogBrowse)]"
+      fix: Keep the catalog pages in ui/src and `toolbox query`.
+    - name: ownership
+      level: bronze
+      check: entity.capOwnership
+      evidence: "['capOwnership is ' + string(entity.capOwnership)]"
+      fix: Keep `toolbox owner` and the owner_of MCP tool.
+    - name: graph
+      level: bronze
+      check: entity.capGraph
+      evidence: "['capGraph is ' + string(entity.capGraph)]"
+      fix: Keep `toolbox graph` and /v1/entities/{id}/graph.
+    - name: docs-search
+      level: bronze
+      check: entity.capDocsSearch
+      evidence: "['capDocsSearch is ' + string(entity.capDocsSearch)]"
+      fix: >-
+        Index documentation text with the entities that `toolbox search` reads
+        (docs/v1-spec.md, full-text search).
+    - name: docs
+      level: bronze
+      check: entity.capDocs
+      evidence: "['capDocs is ' + string(entity.capDocs)]"
+      fix: >-
+        Carry a documentation tool's built site per component, as
+        docs/design/toolbox-and-tools.md carries tools.
+    - name: templates
+      level: bronze
+      check: entity.capTemplates
+      evidence: "['capTemplates is ' + string(entity.capTemplates)]"
+      fix: >-
+        Build self-service actions (v1-spec M5) once D64 lifts the pause
+        (docs/design/action-runs.md).
+    - name: scorecards
+      level: bronze
+      check: entity.capScorecards
+      evidence: "['capScorecards is ' + string(entity.capScorecards)]"
+      fix: Keep scorecards in the manifest, as docs/v1-spec.md §5 defines them.
+    - name: api-docs
+      level: bronze
+      check: entity.capApiDocs
+      evidence: "['capApiDocs is ' + string(entity.capApiDocs)]"
+      fix: Render an API entity's definition through a UI extension in ui/src.
+    - name: kubernetes
+      level: bronze
+      check: entity.capKubernetes
+      evidence: "['capKubernetes is ' + string(entity.capKubernetes)]"
+      fix: >-
+        Add a connector that reads workloads from the Kubernetes API
+        (docs/design/connector-control.md).
+    - name: notifications
+      level: bronze
+      check: entity.capNotifications
+      evidence: "['capNotifications is ' + string(entity.capNotifications)]"
+      fix: >-
+        Notify owners of score changes through a connector or webhook
+        (docs/design/campaigns.md).
+    - name: permission-rule
+      level: bronze
+      check: entity.capPermissionRule
+      evidence: "['capPermissionRule is ' + string(entity.capPermissionRule)]"
+      fix: Keep the OpenFGA model in the manifest (docs/authorization.md).
+    - name: mcp-read
+      level: bronze
+      check: entity.capMcpRead
+      evidence: "['capMcpRead is ' + string(entity.capMcpRead)]"
+      fix: Keep the read tools in crates/toolbox-api/src/mcp.rs.
+    - name: community
+      level: bronze
+      check: entity.contributors >= 10.0
+      value: entity.contributors
+      better: higher
+      unit: contributors
+      tolerance: 0.1
+      evidence: "[string(entity.contributors) + ' contributors']"
+      fix: >-
+        Make a first contribution easy: CONTRIBUTING.md, good first issues, and
+        a green `cargo test` on a fresh clone.
+    facets: {summary: public, details: public}
