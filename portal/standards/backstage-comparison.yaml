@@ -781,7 +781,7 @@ scorecards:
       level: bronze
       check: entity.federates
       evidence: "['federates is ' + string(entity.federates)]"
-      fix: Build federation as docs/design/federation.md designs it (D68).
+      fix: Build federation as its design describes.
       rationale: >-
         Without federation, a large organisation runs one catalog for everyone
         or many that never join, and neither fits teams that own their portals.
@@ -906,8 +906,8 @@ scorecards:
     description: >-
       What a portal does out of the box, by configuration alone, and the
       community that keeps it going: 12 rules are features and one, community,
-      counts contributors. The scenarios come from the Backstage parity audit
-      (D47), so they favour what Backstage ships.
+      counts contributors. The scenarios come from the Backstage parity audit,
+      so they favour what Backstage ships.
     rationale: >-
       Functional completeness is the first question in a portal evaluation: a
       team will not adopt a portal that lacks what its developers use every
@@ -927,7 +927,7 @@ scorecards:
       level: bronze
       check: entity.capCatalogBrowse
       evidence: "['capCatalogBrowse is ' + string(entity.capCatalogBrowse)]"
-      fix: Keep the catalog pages in ui/src and `toolbox query`.
+      fix: Keep the catalog pages in the UI and `toolbox query`.
       rationale: >-
         Browsing and filtering the catalog is a portal's base job; without it,
         people and agents cannot find a service or the team behind it.
@@ -953,42 +953,50 @@ scorecards:
       check: entity.capDocsSearch
       evidence: "['capDocsSearch is ' + string(entity.capDocsSearch)]"
       fix: >-
-        Index documentation text with the entities that `toolbox search` reads
-        (docs/v1-spec.md, full-text search).
+        Index documentation text with the entities, so `toolbox search` finds
+        answers inside documents as well as names and titles.
       rationale: >-
         Developers search for answers in documentation, not only for entity
         names; a portal whose search stops at names and titles sends them to
         another tool.
+      links:
+      - title: Search in the v1 scope
+        url: https://github.com/loganvolkers/toolbox/blob/main/docs/v1-spec.md#2-scope
     - name: docs
       level: bronze
       check: entity.capDocs
       evidence: "['capDocs is ' + string(entity.capDocs)]"
       fix: >-
-        Carry a documentation tool's built site per component, as
-        docs/design/toolbox-and-tools.md carries tools.
+        Carry each component's site, as its own documentation tool builds it,
+        the way the box carries other tools' output.
       rationale: >-
         Without a component's docs in the portal, developers switch to a
         separate docs site, and the portal stops being the one place to learn
         about a service.
+      links:
+      - title: The box and the tools it carries
+        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/toolbox-and-tools.md
     - name: templates
       level: bronze
       check: entity.capTemplates
       evidence: "['capTemplates is ' + string(entity.capTemplates)]"
       fix: >-
-        Build self-service actions (v1-spec M5) once D64 lifts the pause
-        (docs/design/action-runs.md).
+        Build self-service actions, the v1 milestone that runs them, once the
+        decision that paused them is lifted.
       rationale: >-
         Templates are how a platform spreads its defaults to new services;
         without them, each service starts as a copy of an old one. Toolbox's
-        self-service actions are paused (D64).
+        self-service actions are paused while their coordination is reviewed.
       links:
       - title: 'Decision: self-service actions are paused'
         url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7VTP0HG0000000000000000.md
+      - title: How an action run would work
+        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/action-runs.md
     - name: scorecards
       level: bronze
       check: entity.capScorecards
       evidence: "['capScorecards is ' + string(entity.capScorecards)]"
-      fix: Keep scorecards in the manifest, as docs/v1-spec.md §5 defines them.
+      fix: Keep scorecards in the manifest, as the v1 spec defines them.
       rationale: >-
         Scorecards turn standards into what each team must fix next; without
         them, standards live in documents nobody checks. Backstage passes
@@ -997,37 +1005,44 @@ scorecards:
       level: bronze
       check: entity.capApiDocs
       evidence: "['capApiDocs is ' + string(entity.capApiDocs)]"
-      fix: Render an API entity's definition through a UI extension in ui/src.
+      fix: Render an API entity's definition in the UI through a UI extension.
       rationale: >-
         A rendered API definition lets a consumer read a service's contract
         where they found the service; otherwise it sits unread in the provider's
         repository.
+      links:
+      - title: UI extensions
+        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/frontend.md#3-the-architecture-three-tiers-of-action-ui-one-design-system
     - name: kubernetes
       level: bronze
       check: entity.capKubernetes
       evidence: "['capKubernetes is ' + string(entity.capKubernetes)]"
-      fix: >-
-        Add a connector that reads workloads from the Kubernetes API
-        (docs/design/connector-control.md).
+      fix: Add a connector that reads workloads from the Kubernetes API.
       rationale: >-
         Seeing a component's workloads lets its owner check what runs where
         without cluster access; without it, on-call leaves the portal for
         kubectl at the first question.
+      links:
+      - title: How connectors run
+        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/connector-control.md
     - name: notifications
       level: bronze
       check: entity.capNotifications
       evidence: "['capNotifications is ' + string(entity.capNotifications)]"
       fix: >-
-        Notify owners of score changes through a connector or webhook
-        (docs/design/campaigns.md).
+        Notify owners when a score or what they own changes, through a connector
+        or a webhook.
       rationale: >-
         Without notifications, a score drop or a change to what a team owns is
         noticed only when someone happens to open the portal.
+      links:
+      - title: Campaigns, which would send them
+        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/campaigns.md
     - name: permission-rule
       level: bronze
       check: entity.capPermissionRule
       evidence: "['capPermissionRule is ' + string(entity.capPermissionRule)]"
-      fix: Keep the OpenFGA model in the manifest (docs/authorization.md).
+      fix: Keep the OpenFGA model in the manifest.
       rationale: >-
         Organisations differ in who may see and do what; without custom rules, a
         portal's access model is too open or forked. Backstage's rule is
@@ -1036,7 +1051,7 @@ scorecards:
       level: bronze
       check: entity.capMcpRead
       evidence: "['capMcpRead is ' + string(entity.capMcpRead)]"
-      fix: Keep the read tools in crates/toolbox-api/src/mcp.rs.
+      fix: Keep the MCP read tools.
       rationale: >-
         Without MCP read tools, an agent cannot ask the portal who owns what,
         and guesses from code and commit history instead.
@@ -1055,4 +1070,7 @@ scorecards:
         Contributors fix bugs, review changes and keep a project alive when a
         maintainer leaves; with a handful, the adopter carries the risk that it
         stalls.
+      links:
+      - title: Setting up a project for healthy contributions
+        url: https://docs.github.com/en/communities/setting-up-your-project-for-healthy-contributions
     facets: {summary: public, details: public}
