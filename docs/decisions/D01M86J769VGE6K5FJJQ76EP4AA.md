@@ -75,6 +75,17 @@ a list of repositories and a repo's action is its inputs, its approvers and its 
     will be committed. In round 3, toolbox-2 repeated a request whose content was already on
     main, got `unverified` ("no postcondition"), and spent five calls redesigning the action
     around it.
+15. **`toolbox test` runs action cases.** A test file's `runs:` requests an action as someone,
+    approves it as others, optionally makes the origin reject the push, and expects a state,
+    refused approvals, error text and the files on the base. Each case runs the real lifecycle
+    in a scratch clone whose origin is a scratch copy of the base, so nothing lands and nothing
+    is recorded ([federated-actions.md](../design/federated-actions.md) §6.5). In round 3 every
+    Toolbox run rehearsed invalid inputs, self-approval, carol's approval and a rejected push
+    against the live org portal and the real origins, about ten tool calls, with a hook added to
+    the real origin and removed again; the vanilla arm tested the same on a scratch copy in one
+    call. Rejected: a `--dry-run` that stops before the push (it would not show the rejected
+    push or the check on the base), and testing through a served portal (it needs the key
+    pinned and the server up, and leaves runs in the history).
 
 Rejected: a hosted registry of children (a second source of truth beside git), and cloning on
 every request (slow, and a network failure would hide every action).

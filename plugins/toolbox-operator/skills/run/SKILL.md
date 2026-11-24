@@ -6,6 +6,10 @@ description: >-
 
 # toolbox run
 
+Test a new action before anyone runs it: `toolbox test` runs cases (requester, approvers, a
+rejected push) in a scratch copy of the repository, so the real origin and run history stay
+clean (the `test` skill has the format).
+
 1. Run it with no action to list what this portal offers, with each action's inputs.
 2. Preview first. Read the effects, blockers and approvers, and keep the confirm token.
 3. Run with `--confirm <token>` within ten minutes. A stale token exits 1: preview again. A served

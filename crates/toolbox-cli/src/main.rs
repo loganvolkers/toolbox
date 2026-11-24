@@ -1,5 +1,6 @@
 //! The `toolbox` binary (docs/v1-spec.md §7.7).
 
+mod action_tests;
 mod assess;
 mod causes;
 mod client;
@@ -780,11 +781,15 @@ fn test(path: &std::path::Path, format: Format) -> ExitCode {
         Err(e) => return fail(e),
     };
     let derived = std::sync::Arc::new(local.derived);
-    let results =
+    let mut results =
         match toolbox_derive::testing::run(&local.root, &local.manifest.tests, derived.clone()) {
             Ok(r) => r,
             Err(e) => return fail(e),
         };
+    match action_tests::run(path, &local.root, &local.manifest.tests) {
+        Ok(r) => results.extend(r),
+        Err(e) => return fail(e),
+    }
     let authz_tests = local
         .manifest
         .authz
@@ -815,11 +820,21 @@ fn test(path: &std::path::Path, format: Format) -> ExitCode {
         }
         println!("{} passed, {failed} failed", results.len() - failed);
     }
+    let authz_failed = authz_failures(&local.root, &authz_tests);
+    if failed == 0 && authz_failed == 0 {
+        ExitCode::SUCCESS
+    } else {
+        ExitCode::from(1)
+    }
+}
+
+/// Run the `.fga.yaml` files through the Authorizer, printing each; how many failed.
+fn authz_failures(root: &std::path::Path, tests: &[String]) -> usize {
     let mut authz_failed = 0;
-    if !authz_tests.is_empty() {
+    if !tests.is_empty() {
         let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
-        for t in &authz_tests {
-            match rt.block_on(toolbox_authz::fgatest::run_file(&local.root.join(t))) {
+        for t in tests {
+            match rt.block_on(toolbox_authz::fgatest::run_file(&root.join(t))) {
                 Ok(r) => {
                     for f in &r.failures {
                         println!(
@@ -846,11 +861,7 @@ fn test(path: &std::path::Path, format: Format) -> ExitCode {
             }
         }
     }
-    if failed == 0 && authz_failed == 0 {
-        ExitCode::SUCCESS
-    } else {
-        ExitCode::from(1)
-    }
+    authz_failed
 }
 
 fn plan(path: &std::path::Path, base: &std::path::Path, format: PlanFormat) -> ExitCode {

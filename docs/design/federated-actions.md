@@ -303,6 +303,25 @@ children pin; `--stop` stops it.
 | Check | `--verify <id>`, `--runs` | `GET /v1/runs/{id}`, `POST /v1/runs/{id}/verify`, `GET /v1/runs` | `get_run`, `list_runs` |
 | Cancel | — | `POST /v1/runs/{id}/cancel` | — |
 
+### 6.5 Testing an action before anyone runs it
+
+An action's owners test it the way they test a scorecard: with cases in a test file the manifest
+lists, run by `toolbox test`. A case under `runs:` names the action, the requester (`as`), the
+inputs, who approves (`approve`, in order) and, optionally, a push the origin refuses
+(`rejectPush: <message>`). It expects a state (a run state, or `invalid`, `blocked`, `refused`),
+the approvals that were refused, text in the error, and each file's content on the base (`null`:
+absent).
+
+Each case runs the same `prepare`, approval and `execute` code a served portal does, in a scratch
+clone of the repository whose origin is a scratch copy of the base (the remote's `<remote>/<base>`,
+else the local branch). Nothing reaches the real origin, no run is recorded and no audit entry is
+written, so testing a refusal or a rejected push needs no live server, no throwaway runs in the
+history and no hook on the real origin. A case may test `change` and `command` actions; a child's
+action is tested in the child, and a postcondition is checked against the portal's fixtures. In
+round 3 of the actions benchmark, every Toolbox run spent about ten tool calls rehearsing those
+refusals against the live org portal, where the vanilla arm spent one call on a scratch copy
+(D01M86J769VGE6K5FJJQ76EP4AA §15).
+
 ## 7. What is built, and what is deferred
 
 ### 7.1 Acceptance
@@ -321,7 +340,7 @@ network and no Postgres.
 | 6 | A fleet change: one org action, three pull requests, three verified runs | S3 |
 | 7 | The served org: a child without a runner is refused; a child that pins no key is flagged before approval; a reused confirm token, the requester, someone not listed and a forged grant are refused; another maintainer's approval is signed, accepted by the child and verified; MCP offers no approval tool, and its run records `via: mcp`; concurrent approvals and cancels run a run at most once | S5, S6, S7 (T1, T5, T6) |
 | 8 | `toolbox run --url`: a `land: push` change waits for approval (exit 3) and pushes nothing; `--approve` by another maintainer lands it on the child's main, where the child observes it; the run is listed again after the server restarts | S5, S7 (T4, T6, T8) |
-| 9 | An org portal that lists four children by git URL: their actions are offered with no connector, kind or key declared; a request to a child that hasn't pinned the kept key is refused with the line to pin; once pinned and pushed, the minimal repo's action previews, waits for bob (the requester and carol refused), lands with its trailers and is recorded; a push the origin rejects fails with the origin's message | S5, S6, S7 (T5, T6, T8) |
+| 9 | An org portal that lists four children by git URL: the minimal repo's `toolbox test` cases (approval, refusals, a rejected push) pass in a scratch copy and leave its origin unchanged; the children's actions are offered with no connector, kind or key declared; a request to a child that hasn't pinned the kept key is refused with the line to pin; once pinned and pushed, the minimal repo's action previews, waits for bob (the requester and carol refused), lands with its trailers and is recorded; a push the origin rejects fails with the origin's message | S5, S6, S7 (T5, T6, T8) |
 
 ### 7.2 Deferred, with the reason
 

@@ -22,7 +22,10 @@ you write.
    repository itself. Its `inputs` are a JSON Schema, checked before any preview. `approval` names
    who may approve, and the requester never counts. A `change` executor with `land: push` runs
    your command in a fresh clone, commits and pushes to `base`, and succeeds only when that commit
-   is on the origin.
+   is on the origin. Its [test file](minimal-repo/.toolbox/tests/add-code-of-conduct.test.yaml)
+   checks the approvals, an invalid input and a rejected push: `toolbox test .toolbox` runs each
+   case in a scratch copy of the repository and its origin's `main`, so nothing real changes and
+   no server is needed.
 2. **The org portal** lists the repositories, like [`git-org`](git-org/toolbox.yaml). Nothing
    else is needed: each child is offered as `portal:<name>`, where the name is the last part of
    its URL.
@@ -77,6 +80,7 @@ Everything an action or a federation needs; `toolbox validate` checks the rest a
 | `executor.base`, `branch`, `message`, `remote` | `change`: the branch to start from and verify on, the proposal branch (`toolbox/{action}/{run}`), the commit message, the remote (`origin`). `message` takes `{action}`, `{run}`, `{entity}` and `{inputs.<name>}`; `branch` takes only `{action}` and `{run}` |
 | `executor.secrets` | Environment variables the executor gets; it starts with a cleared environment |
 | `actions[].expect` | `{postcondition: <CEL>, within: 30s}`: what must hold after the run for `succeeded`. A `land: push` change needs none: its commit on `base` is the check |
+| `tests` | Test files; a file's `runs:` cases request, approve and run an action in a scratch copy (`as`, `inputs`, `approve`, `rejectPush`, `expect: {state, files, refused, error}`) |
 | `federation.children` | Parent: `[{git: <url or path>, branch: main, key: <name>}]`; each is offered as `portal:<key>` |
 | `federation.acceptApprovalsFrom` | Child: `[{portal: <parent name>, key: ed25519:…}]`, the key the parent prints |
 | `federation.signingKey` | Parent: the variable holding the signing seed, for servers that share runs. Without it the server keeps one |

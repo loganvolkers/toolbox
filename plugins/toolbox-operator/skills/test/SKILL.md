@@ -1,17 +1,51 @@
 ---
 name: test
 description: >-
-  Recomputes a portal from its fixtures and runs tests/*.test.yaml. Use when scorecard rules, fixtures or expectations changed, and after validate has passed.
+  Recomputes a portal from its fixtures and runs its test files: CEL expectations, and action cases that request, approve and run an action in a scratch copy of the repository. Use when scorecard rules, fixtures, expectations or an action changed, and after validate has passed.
 ---
 
 # toolbox test
 
 1. Validate the portal first, so a schema error is not reported as a failed expectation.
-2. Run the command on the portal directory. Each expectation prints pass or fail.
-3. Fix the rule, the fixture or the expectation that failed, then run the command again.
+2. Run the command on the portal directory. Each expectation and case prints pass or fail.
+3. Fix the rule, the action, the fixture or the expectation that failed, then run it again.
 
 ```
 toolbox test portal
+toolbox test .toolbox
 ```
 
-Do not weaken an expectation to make it pass. If it fails, the check or the fixture is wrong.
+An action case goes under `runs:` in a file the manifest lists in `tests`. It runs the real
+preview, approvals, change and check on the base in a scratch clone whose origin is a copy of
+the base: nothing reaches the real origin and no run is recorded, so test refusals and a
+rejected push here, not against a live portal.
+
+```yaml
+name: add-security-policy
+runs:
+  - name: bob approves ann's request, and SECURITY.md lands on main
+    action: add-security-policy
+    as: user:ann
+    inputs: {contact: security@acme.dev}
+    approve: [user:bob]
+    expect: {state: succeeded, files: {SECURITY.md: "# Security\n\nReport a vulnerability to security@acme.dev.\n"}}
+  - name: ann and carol cannot approve
+    action: add-security-policy
+    as: user:ann
+    inputs: {contact: security@acme.dev}
+    approve: [user:ann, user:carol]
+    expect: {state: awaiting_approval, refused: [user:ann, user:carol]}
+  - name: a rejected push fails the run
+    action: add-security-policy
+    as: user:ann
+    inputs: {contact: security@acme.dev}
+    approve: [user:bob]
+    rejectPush: main is protected
+    expect: {state: failed, error: main is protected, files: {SECURITY.md: null}}
+```
+
+`expect.state` is a run state, or `invalid` (inputs refused), `blocked` or `refused`. `files`
+gives each file's exact content on the base afterwards; `null` means absent.
+
+Do not weaken an expectation to make it pass. If it fails, the check, the action or the fixture
+is wrong.

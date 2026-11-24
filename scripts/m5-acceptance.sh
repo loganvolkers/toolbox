@@ -207,6 +207,10 @@ export TOOLBOX_STATE_DIR=$WORK/state-git; unset TOOLBOX_APPROVAL_KEY
 git init -q --bare -b main "$WORK/hosts/mini.git" && git clone -q "$WORK/hosts/mini.git" "$WORK/review/mini" 2>/dev/null
 cp -r "$EX/minimal-repo/.toolbox" "$WORK/review/mini/"
 git -C "$WORK/review/mini" add -A && git -C "$WORK/review/mini" "${G[@]}" commit -qm init && git -C "$WORK/review/mini" push -q -u origin main
+BEFORE=$(git --git-dir "$WORK/hosts/mini.git" rev-parse main)
+OUT=$(cd "$WORK/review/mini" && "$BIN/toolbox" test .toolbox) || fail "the minimal repo's action cases: $OUT"
+echo "$OUT" | grep -q "4 passed, 0 failed" || fail "the minimal repo should run 4 action cases: $OUT"
+[ "$(git --git-dir "$WORK/hosts/mini.git" rev-parse main)" = "$BEFORE" ] || fail "toolbox test changed the real origin"
 mkdir -p "$WORK/gitorg"
 sed 's#- git: https://github.com/acme/\([a-z]*\)\.git#- {git: ../origin-\1.git, key: \1}#' "$EX/git-org/toolbox.yaml" >"$WORK/gitorg/toolbox.yaml"
 echo "    - git: ../hosts/mini.git" >>"$WORK/gitorg/toolbox.yaml"
@@ -265,6 +269,7 @@ set +e; OUT=$("${TB2[@]}" add-code-of-conduct --entity portal:mini -i contact=ot
 RID=$(echo "$OUT" | field "['id']")
 set +e; OUT=$("${TB2[@]}" --approve "$RID" --as bob --wait 2>&1); CODE=$?; set -e
 [ $CODE = 1 ] && echo "$OUT" | grep -q "main is protected" || fail "a rejected push should fail the run with the origin's message ($CODE): $OUT"
+echo "   minimal-repo: toolbox test ran its 4 action cases in a scratch copy, leaving its origin as it was"
 echo "   minimal-repo: previewed, awaited bob (ann and carol refused), pushed CODE_OF_CONDUCT.md with trailers, recorded; a rejected push failed with the origin's message"
 echo "   no connector, kind or key declared: 16 actions from 4 git children; a pull request branch on beta's origin; alpha pinned the generated key on its origin, the clone followed, and bob's approval pushed SECURITY.md to alpha's main"
 echo "M5 acceptance: all checks passed"

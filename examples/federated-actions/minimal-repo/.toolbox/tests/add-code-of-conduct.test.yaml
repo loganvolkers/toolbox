@@ -1,0 +1,41 @@
+# `toolbox test .toolbox` runs each case through the real lifecycle (preview, request, approvals,
+# the change, the check on main) in a scratch copy of this repository and its origin's main.
+# Nothing reaches the real origin, and no run is recorded.
+name: add-code-of-conduct
+runs:
+  - name: ann requests, bob approves, and CODE_OF_CONDUCT.md lands on main
+    action: add-code-of-conduct
+    as: user:ann
+    inputs: {contact: conduct@acme.dev}
+    approve: [user:bob]
+    expect:
+      state: succeeded
+      files:
+        CODE_OF_CONDUCT.md: |
+          # Code of conduct
+
+          Report conduct issues to conduct@acme.dev.
+  - name: a contact that is not an email address is refused, and nothing changes
+    action: add-code-of-conduct
+    as: user:ann
+    inputs: {contact: nobody}
+    expect: {state: invalid, files: {CODE_OF_CONDUCT.md: null}}
+  - name: ann cannot approve her own run, and carol is not an approver
+    action: add-code-of-conduct
+    as: user:ann
+    inputs: {contact: conduct@acme.dev}
+    approve: [user:ann, user:carol]
+    expect:
+      state: awaiting_approval
+      refused: [user:ann, user:carol]
+      files: {CODE_OF_CONDUCT.md: null}
+  - name: a push the origin rejects fails the run with the origin's message
+    action: add-code-of-conduct
+    as: user:ann
+    inputs: {contact: conduct@acme.dev}
+    approve: [user:bob]
+    rejectPush: main is protected
+    expect:
+      state: failed
+      error: main is protected
+      files: {CODE_OF_CONDUCT.md: null}

@@ -540,7 +540,10 @@ plus every milestone exit in §3.
 
 - `tests/*.test.yaml`: `name` + `assert[] {name, expect}`; `expect` is CEL with `entity(id)`,
   `score(scorecard, id)`, `options(action, id)` and `orphans()`. `toolbox test` evaluates them
-  against the fixtures listed by the portal (default `fixtures/`).
+  against the fixtures listed by the portal (default `fixtures/`). The same file may hold
+  `runs[] {name, action, entity?, as?, inputs, approve[], rejectPush?, expect {state, files?,
+  refused?, error?}}`: action cases, each run through the real lifecycle in a scratch copy of the
+  repository and its base ([federated-actions.md](./design/federated-actions.md) §6.5).
 - `authz/*.fga.yaml`: OpenFGA's test format, with tuples taken from the derived output.
 - Executor cassettes: recorded HTTP interactions per executor test.
 

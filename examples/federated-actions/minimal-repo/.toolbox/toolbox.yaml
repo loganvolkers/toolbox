@@ -8,6 +8,8 @@ federation:
   acceptApprovalsFrom:
     - portal: org
       key: ed25519:0000000000000000000000000000000000000000000000000000000000000000
+# Cases for `toolbox test .toolbox`: approvals, invalid inputs and a rejected push, in a scratch copy.
+tests: [tests/add-code-of-conduct.test.yaml]
 actions:
   # kind: Portal is the repository's own portal: no connector or kind to declare.
   - name: add-code-of-conduct
