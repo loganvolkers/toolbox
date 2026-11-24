@@ -7,6 +7,10 @@ from project to org. The designs under test are [forges.md](../../docs/design/fo
 [actions-ab](../actions-ab/README.md), which ran on local bare origins, to a real GitLab. Results
 are in [results/](./results/).*
 
+**Result (round 1): the bar passes.** All six runs fully pass; Toolbox's medians are 247 lines to
+maintain against 1,076 and 38 tool calls against 78, each lower by more than *W*. Read the labels
+in [results/r1](./results/r1/README.md) before quoting the numbers.
+
 ## 1. Question
 
 **On an org whose code lives only on GitLab, can a fresh coding agent deliver a self-service action

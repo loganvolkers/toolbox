@@ -328,8 +328,15 @@ The benchmark's dry run found a ninth, also in Toolbox: a checkout could not tel
 so the Toolbox arm wrapped `toolbox run` to ask GitLab who owned each person's token.
 `forges[].identity` (§4.6, step 9) does that in the product.
 
+Round 1 found a tenth: a loopback `toolbox serve` took the header's word on an `identity: true`
+portal (§4.6 now refuses run writes there).
+
 The benchmark [experiments/actions-gitlab](../../experiments/actions-gitlab/README.md) runs
-fresh agents against the same harness.
+fresh agents against the same harness. Round 1 passed its pre-registered bar against GitLab CE
+on its own: all six runs fully passed the probes, and Toolbox's medians were 247 lines to maintain
+against 1,076 (*W* 642) and 38 tool calls against 78 (*W* 19), with 1 to 3 GitLab settings changed
+against 14 to 19 ([results/r1](../../experiments/actions-gitlab/results/r1/README.md), with its
+labels: the identity fix came from this task's dry run).
 
 ## 7. Deferred
 
