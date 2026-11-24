@@ -3551,6 +3551,9 @@
     },
     "vs-backstage-security": {
       "product:toolbox": {
+        "extension-credential-isolated": [
+          "0bb2c087"
+        ],
         "loopback-by-default": [
           "84162ce5"
         ]
@@ -10076,6 +10079,7 @@
     "vs-backstage-security": {
       "product:toolbox": {
         "failing": {
+          "extension-credential-isolated": 1,
           "loopback-by-default": 1
         },
         "level": "none"
