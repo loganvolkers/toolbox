@@ -57,7 +57,7 @@ scorecards:
       and free of hidden instructions or credentials (D72,
       docs/design/skill-standards.md).
     owner: group:maintainers
-    track: maintainer
+    track: operator
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze}
     rules:

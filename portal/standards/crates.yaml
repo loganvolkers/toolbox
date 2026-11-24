@@ -146,6 +146,7 @@ scorecards:
       its size, passing, clippy-clean, and kept small and simple (D65,
       docs/design/toolbox-for-toolbox.md).
     owner: group:maintainers
+    track: maintainer
     levels: [bronze, silver, gold]
     appliesTo: entity.codeLines >= 50 # placeholder crates (toolbox-durable, toolbox-exec) are skipped
     rules:
@@ -264,6 +265,7 @@ scorecards:
       that judgement; a change to src/, tests/ or Cargo.toml makes a review
       stale (D79, D01M831P5QWJQ4A2FT85N5MXJQF).
     owner: group:maintainers
+    track: maintainer
     levels: [bronze, silver, gold]
     ratchet: {advisory: true}
     appliesTo: entity.codeLines >= 50

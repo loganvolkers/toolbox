@@ -147,6 +147,7 @@ scorecards:
       assessor, suggestions for findings and citations that resolve in the
       repository (D80).
     owner: group:maintainers
+    track: standards
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze} # a new assessment must name its assessor and suggest fixes
     rules:
@@ -195,6 +196,7 @@ scorecards:
       advisory; reviews of reviews are not made (D80,
       D01M831P5QWJQ4A2FT85N5MXJQF).
     owner: group:maintainers
+    track: standards
     levels: [bronze, silver, gold]
     ratchet: {advisory: true}
     appliesTo: entity.rubric != 'assessment-quality'

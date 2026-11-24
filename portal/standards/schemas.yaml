@@ -37,6 +37,7 @@ scorecards:
       titled and described, wired into the binary, with local $refs only and
       no credentials (D77).
     owner: group:maintainers
+    track: maintainer
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze}
     rules:

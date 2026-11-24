@@ -79,6 +79,7 @@ scorecards:
       Each design and reference doc: links that resolve, its SDLC layer named,
       cited decisions that exist, a status banner and its sources (D84).
     owner: group:maintainers
+    track: docs
     levels: [bronze, silver]
     appliesTo: >-
       !(entity.path in policy.historicalDocs) &&

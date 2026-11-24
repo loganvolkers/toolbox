@@ -46,6 +46,7 @@ scorecards:
       pointing at it, links and commands that work in CI, and no hidden text
       or credentials (D75, D82, D83).
     owner: group:maintainers
+    track: docs
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze}
     rules:

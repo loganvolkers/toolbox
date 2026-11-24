@@ -69,6 +69,7 @@ scorecards:
       an agent harness can install, with its skills scored by maintainer-skill
       (docs/design/plugin-standards.md).
     owner: group:maintainers
+    track: operator
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze}
     rules:

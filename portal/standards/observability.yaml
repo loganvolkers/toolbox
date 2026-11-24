@@ -95,6 +95,7 @@ scorecards:
       structured logs, alert stubs and an exported trace, each a file that
       exists (docs/design/observability.md).
     owner: group:maintainers
+    track: maintainer
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze}
     rules:

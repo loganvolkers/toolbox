@@ -38,6 +38,7 @@ scorecards:
       locked to one version across the workspace, and shared ones inherited
       from the workspace (D74).
     owner: group:maintainers
+    track: maintainer
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze}
     rules:

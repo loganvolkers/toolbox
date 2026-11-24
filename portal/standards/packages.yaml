@@ -42,6 +42,7 @@ scorecards:
       and free of credentials, so installs are reproducible
       (docs/design/package-standards.md).
     owner: group:maintainers
+    track: maintainer
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze}
     rules:

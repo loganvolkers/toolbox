@@ -239,6 +239,7 @@ scorecards:
       open-source repositories, and run with results and the fixes it produced
       (D01M82X2K0DYWTCA23MQJ4CKR0Z).
     owner: group:maintainers
+    track: evidence
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze}
     rules:

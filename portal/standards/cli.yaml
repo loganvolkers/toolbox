@@ -80,6 +80,7 @@ scorecards:
       every argument and exercised by a test, so an agent can use it without
       reading the source (operator SDLC).
     owner: group:maintainers
+    track: operator
     levels: [bronze, silver]
     appliesTo: entity.layer == 'operator'
     rules:
@@ -123,6 +124,7 @@ scorecards:
       structured output and a test that runs it, so scripts can depend on it
       (user SDLC).
     owner: group:maintainers
+    track: operator
     levels: [bronze, silver]
     appliesTo: entity.layer == 'user'
     rules:
@@ -187,6 +189,7 @@ scorecards:
       Each built-in MCP tool: described inputs and a contract test that calls
       it successfully, so agents can rely on its schema (user SDLC).
     owner: group:maintainers
+    track: operator
     levels: [bronze, silver, gold]
     rules:
     - name: described

@@ -33,6 +33,7 @@ scorecards:
       the check it names, and no credentials (D78,
       docs/design/example-standards.md).
     owner: group:maintainers
+    track: docs
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze}
     rules:

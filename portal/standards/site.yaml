@@ -61,6 +61,7 @@ scorecards:
       sidebar, free of credentials, and not sharing its title
       (docs/design/site-standards.md).
     owner: group:maintainers
+    track: docs
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze}
     rules:

@@ -52,6 +52,7 @@ scorecards:
       conformance kit checks, and free of credentials in shipped code (D73,
       docs/design/connector-standards.md).
     owner: group:maintainers
+    track: maintainer
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze}
     rules:

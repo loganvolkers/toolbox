@@ -148,6 +148,7 @@ scorecards:
       doc that exists, commands that resolve, checks CI runs, and status built
       (D87, docs/sdlc.md).
     owner: group:maintainers
+    track: evidence
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: none} # a newly identified stage may start missing; that is the point
     rules:
@@ -211,6 +212,7 @@ scorecards:
       Each SDLC layer as a whole: every stage declared, none missing in fact,
       and all built (D87, docs/sdlc.md).
     owner: group:maintainers
+    track: evidence
     levels: [bronze, silver, gold]
     rules:
     - name: stages-declared
@@ -245,6 +247,7 @@ scorecards:
       advisory: an open finding is none, a current review is silver, a clean
       and cited one is gold (D79, D01M831P5QWJQ4A2FT85N5MXJQF).
     owner: group:maintainers
+    track: evidence
     levels: [bronze, silver, gold]
     ratchet: {advisory: true}
     rules:

@@ -198,6 +198,7 @@ scorecards:
       authorized (Toolbox through OpenFGA, Backstage under allow-all). ISO
       25010 performance efficiency and reliability.
     owner: group:maintainers
+    track: vs-backstage
     levels: [bronze]
     compare: {subject: product:toolbox, peers: [product:backstage]}
     rules:
@@ -290,6 +291,7 @@ scorecards:
       What it costs to run and to own: memory, disk, and the files an adopter
       keeps for a first portal. Charter goal 1 (simple deployment).
     owner: group:maintainers
+    track: vs-backstage
     levels: [bronze]
     compare: {subject: product:toolbox, peers: [product:backstage]}
     rules:
@@ -358,6 +360,7 @@ scorecards:
       client gets, what a client token can destroy, and what an extension can
       reach. ISO 25010 security.
     owner: group:maintainers
+    track: vs-backstage
     levels: [bronze]
     compare: {subject: product:toolbox, peers: [product:backstage]}
     rules:
@@ -431,6 +434,7 @@ scorecards:
       vulnerabilities, and whether the release can be verified. OpenSSF and
       SLSA build provenance.
     owner: group:maintainers
+    track: vs-backstage
     levels: [bronze]
     compare: {subject: product:toolbox, peers: [product:backstage]}
     rules:
@@ -490,6 +494,7 @@ scorecards:
       upgrade without merging, roll back without surgery. ISO 25010
       maintainability; DORA change failure rate and recovery time.
     owner: group:maintainers
+    track: vs-backstage
     levels: [bronze]
     compare: {subject: product:toolbox, peers: [product:backstage]}
     rules:
@@ -541,6 +546,7 @@ scorecards:
       Fitting how an organisation is built: one repository with no server
       first, then many portals joined. Conway's law and Team Topologies.
     owner: group:maintainers
+    track: vs-backstage
     levels: [bronze]
     compare: {subject: product:toolbox, peers: [product:backstage]}
     rules:
@@ -565,6 +571,7 @@ scorecards:
       What a coding agent gets: MCP by default, and how many tokens it spends
       to learn the tools and read one entity.
     owner: group:maintainers
+    track: vs-backstage
     levels: [bronze]
     compare: {subject: product:toolbox, peers: [product:backstage]}
     rules:
@@ -604,6 +611,7 @@ scorecards:
       What it takes to add an integration: which languages, and whether the
       server is rebuilt. ISO 25010 modifiability.
     owner: group:maintainers
+    track: vs-backstage
     levels: [bronze]
     compare: {subject: product:toolbox, peers: [product:backstage]}
     rules:
@@ -631,6 +639,7 @@ scorecards:
       come from the Backstage parity audit (D47), so they favour what
       Backstage ships.
     owner: group:maintainers
+    track: vs-backstage
     levels: [bronze]
     compare: {subject: product:toolbox, peers: [product:backstage]}
     rules:

@@ -64,6 +64,7 @@ scorecards:
       dependency updates, beside what OpenSSF Scorecard carries (D85,
       D01M82E93XAPNE0WFXEPJZ59WG4).
     owner: group:maintainers
+    track: delivery
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze}
     rules:
@@ -105,6 +106,7 @@ scorecards:
       scorecards, so one weak area holds the whole repository back (D86,
       docs/design/repo-level.md).
     owner: group:maintainers
+    track: maintainer
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze}
     rules:
