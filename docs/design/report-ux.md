@@ -323,6 +323,8 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
   view, and the tracks legend folds under "How to read the rings, bars and medals".
 - A scorecard whose rules are all agent-judged says that the assessment is the evidence, so
   whether one exists and still holds counts too.
+- A comparison rule that is behind links to what to read right after its why, on the Compare
+  summary as on its factor page; a yes/no rule shows both products' answers on one line.
 
 Not built: a change since the last snapshot beside each track ring. The report carries one snapshot
 and the committed baseline, which equals it on every published build; a pages build that also scored
