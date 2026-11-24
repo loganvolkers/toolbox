@@ -97,7 +97,7 @@ enum Command {
     /// `toolbox run` lists the actions, `toolbox run <action> --input k=v` previews (effects and a
     /// confirm token), `--confirm <token>` runs it and verifies its postcondition, and a child
     /// portal's actions are dispatched to the child (federation).
-    Run(run::Options),
+    Run(Box<run::Options>),
     /// Send a portal's fixtures to a running server through the ingest API (one batch per
     /// connector, then native values), and wait for the snapshot that contains them.
     Push {
