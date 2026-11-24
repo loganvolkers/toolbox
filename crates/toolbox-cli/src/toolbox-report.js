@@ -366,7 +366,10 @@
 
   // Manifest prose (a rule's fix) marks code with backticks.
   // Decision ids belong in a standard's links, not in the sentence a reader is reading.
-  var DECISION_REFS = /\s*\((?:D\d+|D0[0-9A-Z]{20,})(?:[,;] ?(?:D\d+|D0[0-9A-Z]{20,}))*\)/g;
+  // A parenthetical made only of citations a reader can't resolve here: decision, question and
+  // lesson ids, doc paths and plan sections. The standard's links carry the sources.
+  var CITATION = "(?:D\\d+|D0[0-9A-Z]{20,}|Q\\d+|lessons? L\\d+(?: and L\\d+)?|plan §[\\d.]+|[\\w./-]+\\.md(?:#[\\w-]+| §[\\d.]+)?(?: for [a-z ]+)?|step \\d+)";
+  var DECISION_REFS = new RegExp("\\s*\\(" + CITATION + "(?:[,;] ?" + CITATION + ")*\\)", "g");
   function prose(s) {
     return String(s || "").replace(DECISION_REFS, "");
   }
