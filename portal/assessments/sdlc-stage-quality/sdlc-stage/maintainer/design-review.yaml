@@ -8,76 +8,71 @@ verdicts:
   - criterion: executable-exit
     verdict: pass
     reason: >-
-      The machine half of the exit criterion is a CI gate: the report-ui job
-      in .github/workflows/ci.yml runs `npm run check` (lines 282-283) and
-      `npm run probe` over every story (lines 285-289), so CI fails if either
-      is not met. The panel half is judgement by design: the stage exists to
-      collect a blind panel's verdict (design-audit SKILL.md lines 38-57).
-      Nothing checks that a docs/audits/ record exists for a change readers
-      see; rg finds no reference to docs/audits in .github/, scripts/ or
-      crates/.
+      The machine half of the exit criterion is gated: the report-ui job in
+      .github/workflows/ci.yml (lines 271-289) fails when `npm run check`
+      finds the bundle stale (282-283) or `npm run probe` finds a failing
+      story (286-289). The panel half is judgement by design
+      (plugins/toolbox-operator/skills/design-audit/SKILL.md lines 39-53), and
+      no CI step checks that a reader-visible change has a docs/audits/
+      record, but the rubric fails only when nothing in checks would fail.
   - criterion: agent-can-complete
     verdict: pass
     reason: >-
-      I ran check, build-storybook and probe with no secret or manual step.
-      The panel is three fresh agents given the auditor brief in design-audit
-      SKILL.md (lines 76-87), with capture commands at lines 64-74.
-      Regenerating fixtures needs scorecard 5.7.0 installed by hand; an agent
-      can do that from scripts/ci-tools.sh line 23, so it is counted under
-      reuses-artifacts, not here.
+      I ran every listed command without a secret or a person: `check` passed
+      in 0.15 s, `build-storybook` in 1.4 s, `probe` reported "53 stories × 4
+      views: 212 passed, 0 failed" in 33.7 s, and fixtures.sh rewrote all five
+      fixtures. The panel step is scripted: capture.cjs over
+      pages-openfga--overview from the Storybook build wrote five screenshots
+      and metrics.json in 5.6 s, and the skill gives the auditor brief
+      (SKILL.md lines 61-86). Chromium's install is in the docs
+      (maintainer-sdlc.md line 93, SKILL.md line 64), not in the stage's
+      commands.
   - criterion: reuses-artifacts
-    verdict: fail
+    verdict: pass
     reason: >-
-      Capture is fixed: capture.cjs (lines 5-7) and design-audit SKILL.md
-      (lines 61-66) resolve Playwright 1.65.1 and axe-core 4.14.1 from
-      report-ui's exact pins (package.json lines 19-24). Fixtures are not:
-      scripts/fixtures.sh lines 11-13 say `toolbox tools install <portal>`
-      installs the linters, but scorecard declares no install id
-      (packages/openssf-scorecard/fragments/openssf-scorecard.yaml line 21).
-      Measured: `toolbox tools install portal --dry-run` prints `SKIP
-      scorecard 5.7.0`, `tools config --for mise` and `--for aqua` both note
-      that scorecard declares no id, and `toolbox doctor portal` exits 1. The
-      script runs under `set -e` and stops at line 24 until scorecard is
-      installed by hand. staticcheck's only id, `mise:
-      go:honnef.co/go/tools/cmd/staticcheck`, builds it from source with a Go
-      toolchain. Line 16's `cargo build` is justified, because a fixture must
-      be this checkout's report output.
-    suggestion: >-
-      Declare an install id for scorecard in the openssf-scorecard fragment
-      (aqua/mise `ossf/scorecard`, if the aqua registry carries it; not
-      verified), or have fixtures.sh install scorecard and actionlint through
-      scripts/ci-tools.sh, as scripts/regen-site-report.sh line 16 already
-      does. Then fix the comment at lines 11-13 so it names an install path
-      that works.
+      With ~/go/bin and /tmp/toolbox-ci-tools off PATH and TOOLBOX_CI_TOOLS
+      set to a fresh empty directory, report-ui/scripts/fixtures.sh exited 0
+      in 15.7 s and installed actionlint, scorecard and staticcheck itself as
+      SHA-256-pinned releases (scripts/ci-tools.sh lines 15-27); zizmor and
+      ruff come from portal/'s pins through `toolbox tools install` (line 27;
+      dry run: pip install ruff==0.14.0, zizmor==1.32.0). npm deps are
+      lockfile-pinned and CI's report-ui job compiles no Rust. The one build,
+      `cargo build --locked` (fixtures.sh line 17), is the renderer under
+      change, which the fixtures must come from.
   - criterion: decoupled-from-core
     verdict: pass
     reason: >-
-      The stage adds no crate, builtin or schema. Probes and stories live in
-      report-ui/, and the audit skill ships in the operator plugin for any
-      rendered surface ("the hosted report, the minimal UI, a custom view",
-      SKILL.md lines 4-5). capture.cjs documents an install outside this repo
-      (lines 7-8), so an operator can audit their own custom view.
+      Nothing in the stage adds a crate, builtin or schema
+      (portal/sdlc/stages/maintainer.yaml lines 61-91). Its audit tier works
+      on any served page: capture.cjs takes a --url or --storybook, and
+      outside this repo the skill installs playwright@1.65.1 and
+      axe-core@4.14.1 at pins (design-audit/SKILL.md lines 61-74;
+      docs/design/design-audit.md lines 9-11 cover any custom view). The probe
+      tier covers only report-ui's own stories, so a third party's view gets
+      the panel but not the probe.
   - criterion: fast-feedback
     verdict: pass
     reason: >-
-      Measured on this VM: `npm run check` took 0.2 s, `npm run
-      build-storybook` 1.6 s, and `npm run probe` 33.9 s ("53 stories × 4
-      views: 212 passed, 0 failed"). These match
-      docs/design/maintainer-sdlc.md lines 47-48 (1.5 s and 33 s) and
-      report-ui/README.md lines 26-27. All three run locally before CI.
+      The fastest gate, `npm --prefix report-ui run check`, took 0.15 s here
+      and the full probe 33.7 s, both local; docs/design/maintainer-sdlc.md
+      lines 46-48 record 0.1 s, 1.5 s and 33 s, and report-ui/README.md lines
+      22-28 give the same loop.
   - criterion: beyond-one-reference
     verdict: pass
     reason: >-
-      Stories load five fixtures from three portals (report-ui/README.md lines
-      41-47; stories/*.stories.js import each one). The second reference is
-      examples/openfga-portal over OpenFGA v1.23.0, and the third is
-      repo-portal-starter. In my probe output, page stories split 56 views on
-      OpenFGA, 56 on Toolbox for Toolbox and 40 on the starter. design-audit
-      SKILL.md line 25 also requires a task on the second portal.
+      The probe ran 53 stories over five fixtures from three portals
+      (report-ui/README.md lines 41-47): Toolbox for Toolbox, the OpenFGA
+      portal over openfga/openfga at d67ba7b (examples/openfga-portal/fetch.sh
+      line 9), and repo-portal-starter. The panel must put at least one task
+      on the second portal (design-audit/SKILL.md lines 22-25). All three are
+      repository portals (docs/design/design-audit.md lines 92-93), and ui/
+      has no stories.
 summary: >-
-  The probe gate is fast, local, CI-enforced and runs over three portals,
-  and capture now uses report-ui's pinned Playwright and axe-core. Two
-  gaps remain. Regenerating fixtures still needs scorecard installed by
-  hand, because `toolbox tools install` has no id for it. The panel half
-  of the exit criterion is recorded, not checked. design-audit.md line 109
-  still cites axe-core 4.10 for capture, which now uses 4.14.1.
+  Fast, runnable by an agent, released and pinned tools, three reference
+  portals. The stage's own gap shows when you run it: fixtures.sh on this
+  tree changed t4t.json and starter.json (`git diff --stat`: 2 files, 2
+  insertions, 2 deletions; links-resolve on
+  docs/audits/toolbox-report-2026-11-24-3.md went pass to fail mid-edit),
+  and no CI step catches that drift. Nothing checks that a reader-visible
+  change carries a docs/audits/ record, and the minimal UI in ui/ has
+  neither stories nor probes.
