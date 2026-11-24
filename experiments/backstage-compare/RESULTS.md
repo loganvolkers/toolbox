@@ -1,41 +1,100 @@
 # Results: Toolbox against Backstage, beyond DX
 
-*Run 2026-11-23 on the harness frozen at `dfeeea4`, by the README's pre-registration. Round 1
-measured Toolbox at `5ef6263` and lost on filtered lists at 10k components. Round 2 measured
-`916f596`, which adds one product fix. Raw results for both rounds are in [results/](./results);
-the product records the scorecards read are [portal/comparisons/](../../portal/comparisons).*
+*Round 3 ran 2026-11-23 on the harness frozen at `e66526c`, with the scorecards frozen at `581be50`,
+and measured Toolbox at `581be50`. Rounds 1 and 2 ran on the harness frozen at `dfeeea4`. The
+adjudication of rounds 1 and 2 is [ADJUDICATION.md](./ADJUDICATION.md); round 3 answers it. Raw
+results for every round are in [results/](./results); the product records the scorecards read are
+[portal/comparisons/](../../portal/comparisons).*
 
 ## Verdict
 
-**After round 2, Toolbox is ahead of Backstage on eight of the nine factors and behind on one,
-capabilities.** In round 1 it was behind on performance as well, for one reason: filtered lists
-at 10k components. This is the Compare view of the Toolbox for Toolbox report, with values from
-round 2:
+**After round 3, Toolbox is ahead of Backstage on seven of the eight pre-registered factors and
+behind on one, capabilities.** Extensibility, which the README counts inside capabilities, is
+scored as a ninth scorecard (a deviation, below); Toolbox is ahead on it. This is the Compare view
+of the Toolbox for Toolbox report:
 
 | Factor (scorecard) | Standing | Rules ahead / parity / behind |
 |---|---|---|
-| Performance (`vs-backstage-performance`) | **ahead** (round 1: **behind**) | 7 / 0 / 0 (round 1: 6 / 0 / 1) |
+| Performance (`vs-backstage-performance`) | **ahead** | 7 / 0 / 0 |
 | Footprint (`vs-backstage-footprint`) | **ahead** | 5 / 0 / 0 |
-| Security (`vs-backstage-security`) | **ahead** | 5 / 3 / 0 |
+| Security (`vs-backstage-security`) | **ahead** | 3 / 5 / 0 |
 | Supply chain (`vs-backstage-supply-chain`) | **ahead** | 4 / 0 / 0 |
 | Change safety (`vs-backstage-change-safety`) | **ahead** | 4 / 0 / 0 |
 | Org fit (`vs-backstage-org-fit`) | **ahead** | 1 / 1 / 0 (federation: neither) |
 | Agent surface (`vs-backstage-agent-surface`) | **ahead** | 2 / 1 / 0 |
 | Extensibility (`vs-backstage-extensibility`) | **ahead** | 2 / 0 / 0 |
-| Capabilities (`vs-backstage-capabilities`) | **behind** | 1 / 5 / 7 |
+| Capabilities (`vs-backstage-capabilities`) | **behind** | 0 / 6 / 7 |
 
 The capabilities Toolbox lacks are docs search, docs, templates, API docs, Kubernetes,
 notifications and community (4 contributors against 2,826). Templates are self-service actions,
-which are paused (D64). Toolbox's own bars fail in three places: two known vulnerabilities, no
-federation, and the capabilities above. Each is published as a loss, not waived.
+which are paused (D64). Toolbox's own bars fail in four places: five known vulnerabilities, no
+federation, listening on every interface in its image, and the capabilities above. Each is
+published as a loss, not waived.
+
+**What changed since round 2.** Three corrections from the adjudication, each against Toolbox,
+and one harness defect that flattered Backstage:
+
+- **Backstage's lists were empty in rounds 1 and 2.** Its filter named the owner as
+  `group:default/g3`; `spec.owner` holds `group:g3`, so every list returned no items, fast. Round 3
+  filters on the stored value, and an equivalence gate now stops a run unless both products page out
+  the same owner and component pairs. With real items, Backstage's 10k list fell from 1,279 to 474
+  req/s: round 1's loss on lists stands at 2.4× rather than 6×, and round 2's margin was
+  understated.
+- **Loopback is judged on the image.** The image sets `PORT=8080`, so Toolbox listens on every
+  interface, like Backstage. The rule is now *parity*, both failing, not *ahead*.
+- **Scorecards count add-ons.** Backstage's Tech Insights community plugin counts, as the brief
+  says, so the scorecards rule is *parity*, not *ahead*.
+- **The client token is read-only.** Backstage's static token now carries `accessRestrictions` for
+  catalog reads, so its client can no longer delete an entity: *parity*, not *ahead*. MCP gets a
+  second, unrestricted token, because Backstage does not delegate a restricted token to the plugins
+  MCP calls; an agent token that can use MCP cannot be made read-only.
+
+Credential isolation was *ahead* in rounds 1 and 2 on evidence the adjudicator found too thin: a
+same-user connector could read the server's environment through `/proc`, and OpenFGA got the
+datastore URI on its command line. Two Toolbox changes made before the round 3 freeze close both
+(below), so it stays *ahead*, with residuals stated.
 
 ## Performance and memory
 
 Medians of 5 runs per arm, arms alternating, oha 1.10.0 at 16 connections for 10 s per read, on
 one 4-vCPU VM. Toolbox checks every read in OpenFGA; Backstage runs its template's `allow-all`
-policy.
+policy. Round 3 spreads reads over 1,000 ids and all 50 owners; rounds 1 and 2 read one id and one
+owner each.
 
-### Round 1: Toolbox at `5ef6263`
+### Round 3: Toolbox at `581be50`
+
+| Fact | Size | Toolbox min / median / max (n) | Backstage min / median / max (n) |
+|---|---|---|---|
+| `readyS` | 1000 | 0.9 / 0.92 / 0.93 (5) | 3.24 / 3.3 / 3.33 (5) |
+| `catalogReadableS` | 1000 | 1.53 / 1.54 / 1.55 (5) | 6.27 / 6.43 / 6.48 (5) |
+| `rssIdleMb` | 1000 | 89.4 / 89.8 / 90.7 (5) | 439.0 / 451.8 / 453.4 (5) |
+| `rssLoadedMb` | 1000 | 118.9 / 125.2 / 128.2 (5) | 536.9 / 543.7 / 545.6 (5) |
+| `recoveredS` | 1000 | 0.77 / 0.77 / 0.77 (5) | 2.23 / 2.25 / 2.28 (5) |
+| `getP95Ms` | 1000 | 0.23 / 0.23 / 0.24 (5) | 5.81 / 5.9 / 6.32 (5) |
+| `getRps` | 1000 | 145340.1 / 147346.9 / 147711.5 (5) | 3864.2 / 4088.7 / 4119.2 (5) |
+| `listP95Ms` | 1000 | 1.04 / 1.05 / 1.06 (5) | 72.41 / 75.98 / 81.7 (5) |
+| `listRps` | 1000 | 24014.4 / 24191.7 / 24394.0 (5) | 310.5 / 331.9 / 376.3 (5) |
+| `readyS` | 10000 | 0.89 / 0.9 / 0.92 (5) | 3.21 / 3.33 / 3.39 (5) |
+| `catalogReadableS` | 10000 | 2.13 / 2.15 / 2.17 (5) | 26.3 / 26.61 / 27.03 (5) |
+| `rssIdleMb` | 10000 | 89.1 / 89.4 / 90.4 (5) | 438.5 / 451.5 / 453.6 (5) |
+| `rssLoadedMb` | 10000 | 164.1 / 166.4 / 168.1 (5) | 803.8 / 805.7 / 849.9 (5) |
+| `recoveredS` | 10000 | 1.13 / 1.13 / 1.13 (5) | 2.26 / 2.28 / 2.29 (5) |
+| `getP95Ms` | 10000 | 0.45 / 0.49 / 0.53 (5) | 5.63 / 5.82 / 5.89 (5) |
+| `getRps` | 10000 | 48759.5 / 56546.9 / 57953.7 (5) | 4033.2 / 4150.7 / 4245.8 (5) |
+| `listP95Ms` | 10000 | 6.47 / 6.59 / 6.7 (5) | 58.29 / 59.06 / 305.81 (5) |
+| `listRps` | 10000 | 3718.6 / 3789.8 / 3883.8 (5) | 116.9 / 473.6 / 482.4 (5) |
+
+Every run of both arms passed the equivalence gate, with one digest per corpus size. One Backstage run at 10k
+listed at 117 req/s with a 306 ms p95; the median is unaffected. Toolbox's medians moved by no more
+than run-to-run spread from round 2, apart from the 10k get (58.6k to 56.5k req/s), which now reads
+1,000 ids instead of one.
+
+**Rounds 1 and 2 below measured Backstage's lists on empty responses** (the filter defect above).
+Their Backstage `listP95Ms` and `listRps` rows are not comparable with round 3. Round 1's list loss
+stands, at a smaller margin: Toolbox's 198 req/s at 10k is behind the 474 req/s Backstage reaches
+with real items, 2.4× rather than 6×. The fix in `916f596` took Toolbox's 10k list to 3,900 req/s.
+
+### Round 1: Toolbox at `5ef6263` (Backstage lists empty)
 
 | Fact | Size | Toolbox min / median / max (n) | Backstage min / median / max (n) |
 |---|---|---|---|
@@ -58,8 +117,9 @@ policy.
 | **`listP95Ms`** | 10000 | **113.81 / 118.05 / 126.76 (5)** | 18.21 / 21.09 / 22.14 (5) |
 | **`listRps`** | 10000 | **189.2 / 197.6 / 204.9 (5)** | 1153.2 / 1207.2 / 1268.9 (5) |
 
-**The loss.** A filtered list of one owner's components at 10k was 6× slower than Backstage, while
-every other measure was ahead by 3× or more. The cause: the filter `entity.owner == 'group:g3'`
+**The loss, as recorded then.** A filtered list of one owner's components at 10k was 6× slower than
+Backstage's, while every other measure was ahead by 3× or more. Backstage's side returned no items,
+so the comparison was not like for like; Toolbox's own 118 ms p95 was still a defect. The cause: the filter `entity.owner == 'group:g3'`
 was evaluated in CEL against every component, 10,000 evaluations per page, where Backstage's
 catalog answers the same query from an indexed table.
 
@@ -68,10 +128,10 @@ catalog answers the same query from an indexed table.
 values. The index is built once per snapshot, the first time a list filters on that field. The
 full filter still runs on every candidate. A redacted field is an object, never a string, so a
 filter still cannot probe a hidden facet (`a_filter_cannot_probe_a_hidden_facet` passes
-unchanged). The use outside the benchmark is owner and team pages, the MCP `query` tool and
-`toolbox query`, which all filter on an owner or a team. It touches no harness file.
+unchanged). The uses outside the benchmark are the MCP `query` tool, `toolbox query` and the UI
+catalog filter, which filter on an owner or a team. It touches no harness file.
 
-### Round 2: Toolbox at `916f596`
+### Round 2: Toolbox at `916f596` (Backstage lists empty)
 
 | Fact | Size | Toolbox min / median / max (n) | Backstage min / median / max (n) |
 |---|---|---|---|
@@ -94,43 +154,70 @@ unchanged). The use outside the benchmark is owner and team pages, the MCP `quer
 | `listP95Ms` | 10000 | 5.89 / 6.01 / 6.55 (5) | 17.27 / 17.68 / 18.94 (5) |
 | `listRps` | 10000 | 3487.6 / 3899.5 / 3960.3 (5) | 1251.4 / 1279.0 / 1332.5 (5) |
 
-At 10k, filtered lists went from 198 to 3,900 req/s, and p95 from 118 to 6.0 ms: 3× Backstage's
-throughput at a third of its latency. The 1k list went from 2,003 to 24,800 req/s. No other median
+At 10k, Toolbox's filtered lists went from 198 to 3,900 req/s, and p95 from 118 to 6.0 ms. The 1k list went from 2,003 to 24,800 req/s. No other median
 moved by more than run-to-run spread.
 
 ## Static facts and single-run probes
 
-These do not vary between runs, so they were run once per round. Both rounds gave the same values.
+These do not vary between runs, so they were run once per round. Round 3's values, with what
+changed from rounds 1 and 2:
 
 | Fact | Toolbox | Backstage | Source |
 |---|---|---|---|
 | Unauthenticated catalog read | 401 | 401 | surface.py |
-| Forged identity header | 401 | 401 | surface.py |
+| Forged identity header | 401 | 401 (guest sign-in 403) | surface.py |
 | Unauthenticated MCP | 401 | 401 | surface.py |
-| A client deletes an entity | 405, entity still there | 204, entity gone | surface.py |
+| The read client deletes an entity | 405, entity still there | 403, entity still there (rounds 1 and 2, unrestricted token: 204, entity gone) | surface.py |
 | MCP tools (read-only) | 14 (13) | 13 (9) | surface.py |
 | `tools/list` bytes | 6,473 | 20,500 | surface.py |
 | One entity over MCP, bytes | 253 | 580 | surface.py |
 | Install on disk | 121.1 MB | 709.9 MB | footprint.py |
 | Adopter files / lines for a first portal | 2 / 230 | 44 / 1,357 | footprint.py |
-| Third-party packages | 388 | 2,791 | footprint.py (Cargo.lock; yarn.lock) |
-| Known vulnerabilities (high) | 2 (0) | 34 (16) | footprint.py, osv-scanner 2.2.4 |
+| Third-party packages | 605: 388 crates, 142 Go modules in OpenFGA, 75 npm packages in the UI (rounds 1 and 2: crates only) | 2,791 | footprint.py |
+| Known vulnerabilities (high) | 5 (0) (rounds 1 and 2: 2 (0)) | 34 (16) | footprint.py, osv-scanner 2.2.4 |
 | Release artifacts with provenance | 100% | 0% | footprint.py |
-| Adopter lines changed per release | 0 (v0.1.1..HEAD) | 47.3 (v1.51.0..v1.57.1) | upgrade.py |
-| Manual rollback steps per release | 0 | 1.5 (9 Knex migrations over 6 releases) | upgrade.py |
+| Adopter lines changed per release | 0 (v0.1.0..HEAD) | 47.3 (v1.51.0..v1.57.1) | upgrade.py |
+| Manual rollback steps per release | 0 (from v0.1.1) | 1.5 (9 Knex migrations over 6 releases) | upgrade.py |
 
-Toolbox's two known vulnerabilities are RUSTSEC-2026-0543 and RUSTSEC-2026-0555: `chrono` and
-`chrono-tz` are unmaintained, through `cel`'s default `chrono` feature. Neither is a code
-vulnerability. Removing them drops CEL's `timestamp()` and `duration()`, which rules use (for
-example `duration('180d')` in [meta-catalog.md](../../docs/design/meta-catalog.md)), so they stay
-until `cel` moves off `chrono`. The rule is still ahead on value (2 against 34), and fails its own
-`== 0` bar.
+Toolbox's five known vulnerabilities:
+
+- RUSTSEC-2026-0543 and RUSTSEC-2026-0555: `chrono` and `chrono-tz` are unmaintained, through
+  `cel`'s default `chrono` feature. Neither is a code vulnerability. Removing them drops CEL's
+  `timestamp()` and `duration()`, which rules use (for example `duration('180d')` in
+  [meta-catalog.md](../../docs/design/meta-catalog.md)), so they stay until `cel` moves off `chrono`.
+- GO-2026-6859 (Go standard library 1.27.3), GO-2026-6860 and GO-2026-6866 (`golang.org/x/net`
+  0.60.0), in the OpenFGA 1.22.1 binary the image carries; none is rated. OpenFGA 1.23.0
+  (2026-11-20) is the upgrade path, not yet taken or checked.
+
+The rule is still ahead on value (5 against 34) and fails its own `== 0` bar. The UI's npm packages
+have none.
 
 The facts in [facts.yaml](./facts.yaml) (loopback, owner-only fields, extension isolation, offline
 validate, change preview, repo scope, federation, extension language and rebuild, the twelve
-capability scenarios, contributors) each carry their evidence. Where the definition was
-ambiguous, they are scored in Backstage's favour. For example, a permission rule counts as a
-capability for Backstage although its policy is TypeScript code, not configuration.
+capability scenarios, contributors) each carry their evidence. Round 3 judges each product as it
+ships to production: Toolbox's image, Backstage's create-app Dockerfile configuration. One fact is
+scored in Backstage's favour: a permission rule counts as a capability although its policy is
+TypeScript code, not configuration. Three were scored in Toolbox's favour in rounds 1 and 2
+(loopback, credential isolation, scorecards) and are corrected or re-evidenced above.
+
+### Credential isolation, round 3
+
+Two Toolbox changes made before the round 3 freeze, each for any deployment that runs connectors
+beside the server (`71d8655`, `26b77f3`):
+
+- The server makes itself non-dumpable at start, so a process of the same user can no longer read
+  `/proc/<pid>/environ` or its memory (`crates/toolbox-cli/tests/serve.rs`; the previous binary
+  leaked a probe variable to the same test).
+- OpenFGA starts with a cleared environment plus an allowlist. Its datastore URI is no longer on its
+  command line, which every local user can read; it is in a `0600` file in a `0700` directory,
+  removed once OpenFGA is healthy. Every call needs a preshared key minted per start, so a connector
+  that finds OpenFGA's port gets 401 (`openfga_gets_no_server_credentials`).
+
+Residuals: with `kernel.yama.ptrace_scope=0` a same-user connector can still attach to OpenFGA, which
+Toolbox cannot make non-dumpable, and read the URI from its memory; under the usual default of 1 it
+cannot, because it is not OpenFGA's ancestor. A connector can write any file the server's user can.
+A remote connector holds only its own token. Backstage runs plugins in one process with one
+environment and does not claim to isolate them (its threat model).
 
 ## Deviations from the pre-registration
 
@@ -139,12 +226,22 @@ capability for Backstage although its policy is TypeScript code, not configurati
   ≤ 10 upgrade lines, ≤ 1,000 packages and `knownVulns == 0`, and a community bar of ≥ 10
   contributors. These bars decide pass or fail only. Both products have a value on each of those
   rules, so the values decide the standing, and no standing depends on them.
-- **`snapshot.py` and `facts.yaml` were written during round 1**, not frozen with the harness.
-  Neither measures anything: one takes medians and merges, and the other records evidence.
-- **Two harness YAML files were reformatted after the runs** (`yamark format`, D97). Both parse to
-  the same data as at `dfeeea4`.
-- **Round 2 follows a product change made after round 1's results**, as the protocol allows when the
-  change names a use outside the harness and touches no harness file (P5).
+- **The scorecards, `snapshot.py` and `facts.yaml` were not frozen in rounds 1 and 2.** They were
+  written during round 1. Round 3 froze all three (`e66526c`, `581be50`) before it ran. `facts.yaml`
+  decides 24 of the 48 rules.
+- **Extensibility is its own scorecard.** The README counts extension cost inside capabilities; the
+  scorecards split it out. Capabilities is behind either way, and the verdict counts eight factors.
+- **A rule falls back to outcomes when a value is missing**, as D01M857ZB468ZM2YS6GNSEG6YB9 says;
+  the README said a missing value is unknown. No rule in this run lacks a value on either side.
+- **Two harness YAML files were reformatted after rounds 1 and 2** (`yamark format`, D97). Both
+  parse to the same data as at `dfeeea4`.
+- **Round 2 follows a product change made after round 1's results**, and round 3 follows two more
+  (credential isolation), as the protocol allows when the change names a use outside the harness
+  and touches no harness file (P5).
+- **Round 3 changed the harness after seeing results**: the equivalence gate, spread reads, the list
+  filter, the production config, equal log levels, the read-only token, wider supply chain and
+  upgrade window. Each answers a finding of the adjudication; each moves a measure toward Backstage
+  or toward like-for-like.
 
 ## Not measured yet
 

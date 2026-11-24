@@ -1,0 +1,57 @@
+# Backstage, as measured by experiments/backstage-compare at e66526c.
+# Written by snapshot.py; rerun the harness rather than editing it.
+records:
+- id: backstage
+  title: Backstage
+  version: create-app 0.9.4 (Backstage 1.57.0), Node 24.22.3
+  harness: e66526c
+  corpus: 10000
+  runs: 5
+  readyS: 3.33
+  catalogReadableS: 26.61
+  rssIdleMb: 451.5
+  rssLoadedMb: 805.7
+  recoveredS: 2.28
+  getP95Ms: 5.82
+  getRps: 4150.7
+  listP95Ms: 59.06
+  listRps: 473.6
+  anonymousReadRefused: true
+  forgedIdentityRefused: true
+  anonymousMcpRefused: true
+  clientCannotDelete: true
+  mcpToolsListBytes: 20500
+  mcpGetEntityBytes: 580
+  installMb: 709.9
+  adopterFiles: 44
+  adopterLines: 1357
+  thirdPartyPackages: 2791
+  knownVulns: 34
+  highVulns: 16
+  provenancePercent: 0
+  upgradeLinesPerRelease: 47.3
+  rollbackManualStepsPerRelease: 1.5
+  loopbackByDefault: false
+  ownerOnlyFields: false
+  extensionProcessIsolated: false
+  extensionCredentialIsolated: false
+  offlineValidate: false
+  changePreview: false
+  repoScopedWithoutServer: false
+  federates: false
+  mcpByDefault: true
+  extensionAnyLanguage: false
+  extensionWithoutRebuild: false
+  capCatalogBrowse: true
+  capOwnership: true
+  capGraph: true
+  capDocsSearch: true
+  capDocs: true
+  capTemplates: true
+  capScorecards: true
+  capApiDocs: true
+  capKubernetes: true
+  capNotifications: true
+  capPermissionRule: true
+  capMcpRead: true
+  contributors: 2826
