@@ -36,12 +36,15 @@ and 5 stand. The red team and its triage are [graphify-red-team.md](../graphify-
    open-world with ids that change between builds, so a scorecard can't be computed over it.
 3. **Reopen when** any of these happens. Each reruns graphify-ab's harness on Toolbox under
    D01M85G2YXV2VRTZWQJ33MHXCKN.
-   - **Cost.** A round with billed tokens per run (or, if Q21 answers no, calls and read registered
-     together), `affected` named in Graphify's rule (and `graph --relation` in a Toolbox arm's, if the round
-     has one), and the
-     `--update` cost measured over ten real commits, shows at least 20% fewer tokens per session,
-     including the amortized update cost, at equal coverage. That adopts Graphify in Toolbox for
-     Toolbox.
+   - **Cost.** A round shows at least 20% fewer tokens per session for Graphify, including the
+     amortized update cost, at equal coverage. That adopts Graphify in Toolbox for Toolbox. The
+     round must:
+     - measure billed tokens per run (or, if Q21 answers no, register calls and read together);
+     - name `affected` in Graphify's rule, and `graph --relation` in a Toolbox arm's if the round
+       has one;
+     - run a code-only Graphify arm beside the full build, because only Toolbox, with the largest
+       document layer, separated, so the saving may or may not need the LLM layer;
+     - measure the `--update` cost over ten real commits.
    - **Headroom.** A cheaper model, or a question set that leaves the baseline headroom, shows a
      coverage gain under no turn cap.
    - **Maintenance.** Graphify, or a tool like it, keeps the document layer current without an

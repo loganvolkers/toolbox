@@ -338,10 +338,11 @@ What stays open:
 - **A portal may carry Graphify** as a standalone tool, with its own command, ignore file and rule.
   Toolbox doesn't wrap it, and no scorecard reads its graph.
 - **Reopen** on a cost result: a round on Toolbox with billed tokens (or calls and read together,
-  [Q21](../questions.md)), `affected` named in Graphify's rule, and the `--update` cost per commit
-  measured, showing at least 20% fewer tokens per session at equal coverage. Also reopen if a
-  cheaper model or a question set with headroom shows a coverage gain without a turn cap, or if a
-  code-graph tool keeps its document layer current without an LLM pass per changed document.
+  [Q21](../questions.md)), `affected` named in Graphify's rule, a code-only Graphify arm beside the
+  full build, and the `--update` cost per commit measured, showing at least 20% fewer tokens per
+  session at equal coverage. Also reopen if a cheaper model or a question set with headroom shows a
+  coverage gain without a turn cap, or if a code-graph tool keeps its document layer current
+  without an LLM pass per changed document.
   graphify-monorepo-ab tried to write a question set with headroom on a large monorepo and
   couldn't (§6.1).
 

@@ -40,8 +40,9 @@ records:
     servedValue: >-
       It answered the adoption question under the vendor's own integration,
       which no independent study had tested. A second round on Toolbox runs
-      when billed tokens can be measured (Q21), with `affected` named and the
-      per-commit update cost counted (D01M85G2ZXXPQRXWKQF7TWV2RTP)
+      when billed tokens can be measured (Q21), with `affected` named, a
+      code-only Graphify arm beside the full build, and the per-commit update
+      cost counted (D01M85G2ZXXPQRXWKQF7TWV2RTP)
     blockedOn: ''
     readme: experiments/graphify-ab/README.md
     results: experiments/graphify-ab/ADJUDICATION.md

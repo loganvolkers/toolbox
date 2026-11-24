@@ -73,6 +73,32 @@ What changes:
 | R14 | **Accept, low** | One version (0.9.118) and one harness | Both catalog entries pin the version already; a reopen reruns on the then-current one |
 | R15 | **Accept** | "Answered by `rg` in a call or two" overreaches: the monorepo's questions took a median of 56 calls for four. The survey omitted CAFE(S) and six independent studies, most of which support the token conclusion | The survey is corrected and extended; the new decision drops the sentence |
 
+### 3.1 Arm configuration: code-only against the LLM-semantic build
+
+The red team raises this only in its doc-claims table (§3, "Beyond code": "no ablation separates
+it from the code layer"). It deserves a finding of its own, and I **accept** it. The build differed
+by repository, and so did the result:
+
+| Repository | Graphify build | Documents in the graph | Cost result (post hoc) |
+|---|---|---|---|
+| Toolbox `a8f7e03` | Code plus LLM document layer, 17 subagents | 355 | B lower on calls and read, complete separation |
+| OpenFGA `7d89a566` | Code plus LLM document layer, 3 subagents | 21 | Calls lower (p = 0.14), read higher |
+| Codex `859dbe27` | Code only, no LLM | none | No difference (p ≥ 0.22) |
+
+The only saving appeared where the document layer was largest, and the one code-only build showed
+nothing. So the saving may come from the document layer. That layer is the part that costs an LLM
+pass to build and to keep current (R5). Or the saving may come from the code layer, which
+`graphify update` keeps current for free. The rounds can't tell these apart. Repository is also
+confounded with memorization (R8), and with the questions, which on Toolbox often need a document
+or a decision. The ablation is cheap to run. graphify-monorepo-ab already built a code-only graph
+with no model, and `graphify update <path>` "re-extract[s] code files … (no LLM needed)" (its
+0.9.118 CLI help, run hands-on).
+
+**Action:** D01M85G2ZXXPQRXWKQF7TWV2RTP's cost trigger requires a code-only Graphify arm beside
+the full build on Toolbox. If the code-only arm keeps the saving, adoption needs no LLM pass and
+the maintenance question disappears. If only the full build saves, the per-commit `--update` cost
+decides it.
+
 ## 4. The P2 change cuts both ways
 
 Changing a rule because it hid a rival's win needs the same rule applied to Toolbox's own results.
