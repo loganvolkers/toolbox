@@ -38,10 +38,14 @@ description: >-
 
    Inputs reach the command as `TOOLBOX_INPUT_<NAME>`. Toolbox checks them, previews the diff,
    holds the approval, commits with `Toolbox-Run`, `Requested-By` and `Approved-By` trailers,
-   and verifies the files on the fetched base. Write no script for any of that.
+   and verifies the files on the fetched base. Write no script for any of that. A rule the
+   schema can't state goes in `preconditions`, a list of CEL over `inputs` and `entity`; a false
+   one blocks the run (`preconditions: ["inputs.contact != 'nobody@acme.dev'"]`).
 2. **Test it** before anyone runs it: `toolbox validate .toolbox && toolbox test .toolbox`. The
    `test` skill has the case format: the approval, invalid inputs, self-approval, someone who
    may not approve, and a push the origin rejects, each run in a scratch copy of the repository.
+   The cases run the code `toolbox serve` runs, so a passing case needs no live rehearsal: cite
+   it in your handoff instead.
 3. **Offer it from one place.** An org portal lists the repositories; each is offered as
    `portal:<last part of its URL>`. `git` takes anything `git clone` does, including a path
    relative to the org's `toolbox.yaml`.
@@ -71,5 +75,7 @@ description: >-
    ```
 
 Exit codes: 0 succeeded, 1 failed, 2 invalid or refused, 3 waiting for approval, 4 unverified.
+The record (`--verify -o json`) has `requested_by`, `inputs`, `approval.approved_by`, `state`,
+`events` (each with `at`) and `verification`.
 A rejected push fails the run with the origin's message; a run whose content the base already
 has succeeds without a commit. The `run` skill covers the rest of the run lifecycle.
