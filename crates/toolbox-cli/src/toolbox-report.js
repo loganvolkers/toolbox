@@ -249,6 +249,7 @@
     ".trackstrip{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin-top:28px;padding-top:16px;border-top:1px solid var(--line)}",
     ".trackstrip a{display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:4px 12px 4px 4px;border:1px solid var(--line);border-radius:999px;color:var(--fg);text-decoration:none;font-size:13px}",
     ".trackstrip a{transition:border-color .15s,transform .15s,box-shadow .15s}.trackstrip a:hover,.trackstrip a.far:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 4px 12px color-mix(in srgb,var(--fg) 10%,transparent)}",
+    ".climb{margin-top:12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card)}.climb-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:4px 10px;font-weight:650}.climb-bar{height:6px;margin:8px 0;border-radius:3px;background:var(--faint);overflow:hidden}.climb-bar span{display:block;height:100%;border-radius:3px}.climb ul{list-style:none;margin:0;padding:0;display:grid;gap:4px;font-size:14px}.climb li{display:grid;grid-template-columns:auto 1fr;align-items:baseline;gap:4px}.climb .box{width:12px;height:12px;border:1.5px solid var(--muted);border-radius:3px;margin-right:4px;transform:translateY(1px)}.climb li.stuck .box{border-color:var(--unknown);border-style:dashed}",
     ".trackstrip.lead{margin-top:4px;padding-top:0;border-top:0}",
     ".trackstrip.lead a{padding:6px 14px 6px 6px;border-radius:14px;background:var(--card)}",
     ".trackstrip small{display:block;font-size:12px;color:var(--muted)}",
@@ -1743,9 +1744,36 @@
                 " a " +
                 R.next +
                 " level." +
-                (liftNames.length ? " The rest of the work toward " + R.next + ": lift " + liftNames.join(", ") + "." : ""),
+                (liftNames.length ? " The rest of the work is in the checklist below." : ""),
             )
-          : el("div", { className: "next" }, el("b", { textContent: "Next: " }), "reach ", badge(R.next), " by lifting " + holdingNames.join(", ") + " to " + R.next + ".");
+          : el("div", { className: "next" }, el("b", { textContent: "Next: " }), "reach ", badge(R.next), " by lifting " + plural(holdingNames.length, "standard") + " to " + R.next + ", listed below.");
+      var climb = null;
+      if (R.next) {
+        var rank = function (l) {
+          return R.ladder.indexOf(l);
+        };
+        var there = R.constituents.filter(function (c) {
+          return rank(c.level) >= rank(R.next);
+        }).length;
+        var share = Math.round((100 * there) / Math.max(1, R.constituents.length));
+        var bar = el("div", { className: "climb-bar" }, el("span", { style: "width:" + share + "%;background:" + fill(R.next) }));
+        bar.setAttribute("role", "img");
+        bar.setAttribute("aria-label", there + " of " + R.constituents.length + " repository standards at " + R.next + " or above");
+        climb = el(
+          "div",
+          { className: "climb" },
+          el("div", { className: "climb-head" }, el("span", {}, "Toward ", badge(R.next)), el("span", { className: "sub", textContent: there + " of " + R.constituents.length + " standards there" })),
+          bar,
+          el(
+            "ul",
+            {},
+            ...R.holding.map(function (c) {
+              var stuck = c.level === c.top;
+              return el("li", { className: stuck ? "stuck" : "" }, el("span", { className: "box", ariaHidden: "true" }), el("span", {}, link("scorecard/" + enc(c.name), "", title(D, c.name)), el("span", { className: "sub", textContent: stuck ? " needs a " + R.next + " level first" : " lift from " + c.level + " to " + R.next })));
+            }),
+          ),
+        );
+      }
       var left = el(
         "div",
         {},
@@ -1758,6 +1786,7 @@
         el("p", { className: "verdict", textContent: sentence }),
         wins.length ? el("p", { className: "wins" }, el("b", { textContent: "✓ Already: " }), wins.join(" · ")) : null,
         nextBox,
+        climb,
         el("p", { className: "sub", style: "margin:12px 0 0", textContent: verdict }),
       );
       var ladder = el("div", { className: "ladder", style: "--steps:" + R.ladder.length });
