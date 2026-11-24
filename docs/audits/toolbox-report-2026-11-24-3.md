@@ -144,6 +144,33 @@ The panel's severity-2 findings that two or more auditors raised were fixed in t
 A scorecard whose ladder stops below gold still counts in OpenFGA's ring, and is still left out of
 Toolbox's where it caps the repository level. The card now names it in both portals.
 
+## Round 5: what the panel found
+
+The probes passed 212 of 212 and every median held, with Coherence (U6) and Behavioural joy (J2)
+still at 2. All six tasks succeeded for all three auditors, the first round with no partial. Three
+severity-3 findings were open, so the round did not pass:
+
+| Finding (auditors) | Box or portal | Fix |
+|---|---|---|
+| The ratio tiles added in round 4 for where a product is behind used the lead's green, so "16× lower" and "707× fewer" read as wins (B; A at severity 2) | Box | Gaps are drawn in the behind red with ▼, on the tiles and on the "Widest gap" line |
+| Naming the counting rule beside the tally was not enough: the same 4 / 1 / 1 still reads as one measure across portals (A, B, C) | Box | Every comparison now also states its tally under the other rule ("Counted the other way, where a factor is behind if any one of its rules is behind, it would be ahead on 2 and behind on 4"), or that it is the same. The hero counts mixed factors under each figure and shows the rule tally (15 / 9 / 6) at the same size as the factor tally |
+| One pass/fail split was drawn three ways: level colours on the scorecard, green and red on the rule page, grey on the campaign (A) | Box | The rule page draws a pass in the colour of the rule's level, as the scorecard does, and says so. The campaign bar keeps its grey-until-target encoding, which its caption explains |
+
+Severity-2 findings fixed in the same pass:
+
+- the "Next" line leads with the work ("10 entities at none need Every job has timeout to reach bronze on CI reliability") and says when the track's percentage moves;
+- fix commands on an entity page name that entity (`toolbox assess brief crate:toolbox-cli`);
+- the first run says connectors are the ones listed under `connectors:` in the portal's `toolbox.yaml`;
+- a campaign rendered without its baseline says so, instead of contradicting its own description.
+
+Declined, with reasons:
+
+- **Product names in the not-measured state.** They come from the comparison records, so before the
+  harness runs there is no name to show. The ids stay.
+- **Toolbox design links on OpenFGA's Go scorecards.** They belong to the `file-size` package the
+  portal includes, and the package is Toolbox's.
+- **A report-wide entity search.** It is a feature, not a fix, and is left for its own change.
+
 ## Comparisons are generic
 
 The OpenFGA portal compares OpenFGA v1.23.0 with SpiceDB v1.57.1 through the same comparative
