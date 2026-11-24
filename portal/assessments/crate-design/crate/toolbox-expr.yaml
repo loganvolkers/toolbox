@@ -1,7 +1,7 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: crate:toolbox-expr
 rubric: crate-design
-subjectHash: 1703d8857e04
+subjectHash: c89cc824bc80
 assessor: {kind: agent, name: cursor-cloud-agent, model: claude-opus-5.5}
 at: 2026-11-23
 verdicts:
@@ -17,7 +17,7 @@ verdicts:
       the API can narrow a list before evaluating it; that is still CEL
       analysis, and the crate docs now name that use too. The row's "error
       mapping to `unknown`" happens in the caller
-      (crates/toolbox-derive/src/lib.rs:756), which is the right place but
+      (crates/toolbox-derive/src/lib.rs:832), which is the right place but
       isn't what the spec row says.
   - criterion: small-contract
     verdict: pass
@@ -25,13 +25,14 @@ verdicts:
       Callers use only re-exported, documented items: toolbox-derive
       (crates/toolbox-derive/src/lib.rs:15,
       crates/toolbox-derive/src/testing.rs:10) and toolbox-api
-      (crates/toolbox-api/src/routes.rs:16,
+      (crates/toolbox-api/src/routes.rs:17,
       crates/toolbox-api/src/actions.rs:15) use Expr, ExprValue, Env, Scope,
-      with_vars, with_vals and lazy_map. toolbox-model uses check, Site and
-      CelIssue (crates/toolbox-model/src/validate.rs:756-760), and toolbox-cli
-      uses analysis::analyse (crates/toolbox-cli/src/meta.rs:183). The one
-      addition, analysis::required_equalities, takes a string and returns
-      (field, value) string pairs, so no cel type crosses it
+      with_vars, with_vals and lazy_map. toolbox-model imports Site
+      (crates/toolbox-model/src/validate.rs:13) and calls check, matching on
+      CelIssue (validate.rs:775-779), and toolbox-cli calls analysis::analyse
+      (crates/toolbox-cli/src/meta.rs:183, crates/toolbox-cli/src/model.rs:28,
+      160). The one addition, analysis::required_equalities, takes a string
+      and returns (field, value) string pairs, so no cel type crosses it
       (crates/toolbox-api/src/routes.rs:212). All 28 public items are
       documented.
   - criterion: replaceable-defaults
@@ -49,31 +50,29 @@ verdicts:
     verdict: pass
     reason: >-
       The riskiest paths are the JSON-CEL conversion every score goes through,
-      lazy lists, the declared-function probe, the static checks and, new, the
-      equalities the API trusts to narrow a list: a wrong one would hide
-      entities a filter accepts. Each has a direct test: u64 above i64::MAX,
-      floats, int compared with double, non-finite floats, a duration with no
-      JSON form and a one-line compile error
-      (crates/toolbox-expr/src/eval.rs:320-341), round trips (eval.rs:275),
-      lazy size, iteration, indexing and out of bounds (eval.rs:250), Env
-      functions (eval.rs:296), `declared` (analysis.rs:228), the site checks
-      (lib.rs:150-189), and required_equalities both ways round under `&&` and
-      refusing `||`, `!`, a non-literal, a number, a nested field, has() and
-      invalid CEL (analysis.rs:190-212). All 11 pass. Small gaps remain: a
-      lazy list indexed by a string or negative number
-      (crates/toolbox-expr/src/lazy.rs:80-90), non-string map keys
-      (eval.rs:93-95), and check()'s undeclared-function branch
-      (lib.rs:113-124) is tested only through analysis. CEL conformance is
-      still unmeasured (docs/questions.md:18).
+      lazy lists, the static checks and, new, the equalities the API trusts to
+      narrow a list: a wrong one would hide entities a filter accepts. Each
+      branch has a direct test: u64 above i64::MAX, floats, int compared with
+      double, non-finite floats, a duration with no JSON form and a one-line
+      compile error (crates/toolbox-expr/src/eval.rs:339-360); int, uint and
+      bool map keys (eval.rs:284-291, the branch at eval.rs:93-95); round
+      trips (eval.rs:294); lazy size, iteration, indexing, out of bounds and a
+      string or negative index (eval.rs:249-282, the branch at
+      crates/toolbox-expr/src/lazy.rs:80-90); Env functions (eval.rs:315);
+      `declared` (analysis.rs:228); check()'s variable, syntax and
+      undeclared-function branches (lib.rs:149-200, the last at 177-185); and
+      required_equalities both ways round under `&&` and refusing `||`, `!`, a
+      non-literal, a number, a nested field, has() and invalid CEL
+      (analysis.rs:190-212). All 13 pass under `cargo test -p toolbox-expr`.
+      What stays unmeasured is cel-rust itself against the CEL spec, an open
+      question the project tracks (docs/questions.md:18), not a branch of this
+      crate.
     suggestion: >-
-      To close the remaining gaps: add a test indexing a lazy list with `'a'`
-      and `-1`, one converting `{1: 'x'}` to JSON, and a check() case for
-      `entity.xs.join(',')` expecting UndeclaredFunctions. Then run a slice of
-      the cel-spec conformance suite (Q10) and record it in
-      docs/research-log.md.
+      Run a slice of the cel-spec conformance suite through Expr (Q10) and
+      record the result in docs/research-log.md.
 summary: >-
   One job, a small documented contract, and cel-rust fully behind it. The
   new required_equalities stays inside that contract (strings in, strings
   out) and is tested against the shapes that would make list narrowing
-  unsound. Only minor error branches and CEL conformance (Q10) stay
-  untested.
+  unsound; the error branches the previous review left open now have
+  tests. Only CEL conformance (Q10) stays unmeasured.
