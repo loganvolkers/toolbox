@@ -89,7 +89,7 @@
     ".row .num{text-align:right;font-variant-numeric:tabular-nums}",
     ".row .num strong{display:block;font-size:18px;line-height:1.1}",
     ".row .num.bad strong{color:var(--fail)}.row .num.ok strong{color:var(--pass)}",
-    ".row .num span{font-size:11px;color:var(--muted)}",
+    ".row .num span{font-size:12px;color:var(--muted)}",
     ".rows-head{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(0,2.4fr) 90px;gap:16px;padding:0 10px 6px;font-size:12px;color:var(--muted);font-weight:600}",
     ".rows-head span:last-child{text-align:right}",
     ".cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}",
@@ -135,7 +135,7 @@
     ".rule.unknown{border-left-color:var(--unknown)}.rule.waived{border-left-color:var(--bronze)}.rule.unassessed{border-left-color:var(--judged)}",
     ".cmp-prov{margin:6px 0 0;display:grid;gap:2px}.cmp-src{display:flex;flex-wrap:wrap;align-items:center;gap:2px 10px}.cmp-src .refs{margin:0;line-height:22px}.cmp-brief>summary{cursor:pointer;width:max-content;max-width:100%;padding:3px 0;color:var(--accent)}",
     ".kpi-bar{flex:0 0 46px;height:10px;border-radius:5px;background:var(--line);overflow:hidden}.kpi-bar span{display:block;height:100%;background:var(--pass)}.kpi-pips{flex:0 0 46px;display:flex;flex-wrap:wrap;gap:4px}.kpi-pips span{width:10px;height:10px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--faint)}.kpi-pips span.on{background:var(--pass);box-shadow:none}",
-    ".cprog{flex:0 0 76px;display:grid;gap:3px}.cprog b{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}.cprog small{font-size:11px;color:var(--muted)}.cprog .gb{position:relative;height:8px;border-radius:4px;background:var(--line)}.cprog .gb>span{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--muted)}.cprog.on .gb>span{background:var(--pass)}.cprog .gb>i{position:absolute;top:-3px;bottom:-3px;width:2px;border-radius:1px;background:var(--fg)}.cprog.big{flex-basis:120px}.cprog.big b{font-size:28px}",
+    ".cprog{flex:0 0 76px;display:grid;gap:3px}.cprog b{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}.cprog small{font-size:12px;color:var(--muted)}.cprog .gb{position:relative;height:8px;border-radius:4px;background:var(--line)}.cprog .gb>span{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--muted)}.cprog.on .gb>span{background:var(--pass)}.cprog .gb>i{position:absolute;top:-3px;bottom:-3px;width:2px;border-radius:1px;background:var(--fg)}.cprog.big{flex-basis:120px}.cprog.big b{font-size:28px}",
     ".hollow-key{display:flex;flex-wrap:wrap;align-items:center;gap:4px 16px;padding:6px 10px;font-size:13px;color:var(--muted);background:var(--tint);border-radius:8px;margin:4px 0}.hollow-key>span{display:inline-flex;align-items:center;gap:6px}.hollow-key b{color:var(--fg);font-weight:600}",
     ".rid{font:12px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);overflow-wrap:anywhere}.rule .rn{font-weight:650;font-size:inherit;margin:0;display:inline}.sc-block h3.sct{display:inline;margin:0;font-size:16px}",
     ".rule .fix{margin-top:4px;font-size:14px}",
@@ -150,7 +150,7 @@
     ".passes{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px}",
     ".passes>span:not(.lvl){font-size:12px;padding:2px 8px 2px 6px;border-radius:999px;background:color-mix(in srgb,var(--pass) 12%,transparent);color:var(--pass);font-weight:600}",
     ".passes>span:not(.lvl)::before{content:'\\2713  '}",
-    ".passes>span:not(.lvl){display:inline-flex;align-items:center;gap:2px}.passes>span a{color:inherit;text-decoration:none}.passes>span a:hover{text-decoration:underline}",
+    ".passes>span:not(.lvl){display:inline-flex;align-items:center;gap:2px}.passes>span a{color:inherit;text-decoration:none}.passes .basis.measured .bl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}.passes .basis.measured{padding:0;min-width:24px;justify-content:center}.passes>span a:hover{text-decoration:underline}",
     ".passes .basis.mini{border:0;background:none;padding:0;min-width:0;color:inherit}.passes>span.judged:not(.lvl){background:var(--judged-bg);color:var(--judged)}",
     ".passes em{font-style:normal;font-size:12px;color:var(--muted);margin-right:4px}",
     ".callout{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:10px;background:var(--accent-bg);font-size:14px;margin:8px 0}",
@@ -193,8 +193,8 @@
     "code.kid{display:block;font:12px ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:400;color:var(--muted)}",
     ".kchips{display:grid;grid-template-columns:minmax(9rem,12rem) 1fr;gap:4px 12px;align-items:baseline;padding:6px 0;border-top:1px solid var(--line)}.kchips-g{font-size:12px;font-weight:650;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}.kchips .box a{display:inline-flex;align-items:center;min-height:28px}.kchips .box a[aria-current=true]{border-color:var(--accent);background:var(--card);font-weight:650}",
     ".ehdr{display:grid;gap:12px;padding:6px 8px;font-size:12px;font-weight:650;color:var(--muted)}.ehdr span{overflow-wrap:break-word}",
-    ".weakest{display:block;margin-top:3px;font-size:12px;color:var(--muted)}.weakest .lvl{font-size:11px}",
-    ".vhatch{display:inline-block;width:9px;height:9px;margin-left:5px;border-radius:2px;vertical-align:-1px;background:repeating-linear-gradient(135deg,var(--judged) 0 1.5px,transparent 1.5px 3.5px);box-shadow:inset 0 0 0 1px var(--judged)}.unassessed-tag .vhatch{margin:0 4px 0 0}.ecell{font-size:12px}.unassessed-tag{display:block;margin-top:2px;font-size:11px;color:var(--judged)}.unassessed-tag.unrun{color:var(--unknown)}.lvl.vacuous{background:transparent;border-style:dashed}.lvl.vacuous.unjudged{border-color:var(--judged)}.lvl.vacuous.unrun{border-style:dotted;border-color:var(--unknown)}.unassessed-tag svg{vertical-align:-1px}.lvl.vacuous.unjudged .vglyph{color:var(--judged)}.lvl.vacuous.unrun .vglyph{color:var(--unknown)}.pillwrap{display:inline-flex;flex-direction:column;align-items:flex-start;vertical-align:middle}",
+    ".weakest{display:block;margin-top:3px;font-size:12px;color:var(--muted)}.weakest .lvl{font-size:12px}",
+    ".vhatch{display:inline-block;width:9px;height:9px;margin-left:5px;border-radius:2px;vertical-align:-1px;background:repeating-linear-gradient(135deg,var(--judged) 0 1.5px,transparent 1.5px 3.5px);box-shadow:inset 0 0 0 1px var(--judged)}.unassessed-tag .vhatch{margin:0 4px 0 0}.ecell{font-size:12px}.unassessed-tag{display:block;margin-top:2px;font-size:12px;color:var(--judged)}.unassessed-tag.unrun{color:var(--unknown)}.lvl.vacuous{background:transparent;border-style:dashed}.lvl.vacuous.unjudged{border-color:var(--judged)}.lvl.vacuous.unrun{border-style:dotted;border-color:var(--unknown)}.unassessed-tag svg{vertical-align:-1px}.lvl.vacuous.unjudged .vglyph{color:var(--judged)}.lvl.vacuous.unrun .vglyph{color:var(--unknown)}.pillwrap{display:inline-flex;flex-direction:column;align-items:flex-start;vertical-align:middle}",
     "@media (max-width:820px){.unassessed-tag{display:inline;margin:0}}",
     ".pillwrap .unassessed-tag.quiet{display:none}",
     ".crumb{font-size:13px;color:var(--muted);margin-bottom:12px}",
@@ -214,7 +214,7 @@
     ".rank.more{mask-image:linear-gradient(to bottom,#000 calc(100% - 14px),transparent)}.rank.less{mask-image:linear-gradient(to bottom,transparent,#000 14px)}.rank.less.more{mask-image:linear-gradient(to bottom,transparent,#000 14px,#000 calc(100% - 14px),transparent)}",
     ".rank a{display:flex;justify-content:space-between;gap:12px;align-items:baseline;padding:8px 10px;border-radius:8px;color:var(--fg);text-decoration:none}",
     ".rank a:hover{background:var(--tint)}",
-    ".rank-head{font-size:11px;font-weight:650;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:10px 10px 4px}",
+    ".rank-head{font-size:12px;font-weight:650;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:10px 10px 4px}",
     ".rank a[aria-current=true]{background:var(--accent-bg);font-weight:650}",
     ".rank .debt{font-size:12px;color:var(--muted);white-space:nowrap}",
     ".rank .debt.bad{color:var(--fail);font-weight:650}.rank .debt.ok{color:var(--pass)}",
@@ -229,7 +229,7 @@
     ":where(section a:not([class]),section a[class=\"\"]){display:inline-block;padding:4px 0;margin:-4px 0}",
     ".more{margin-top:10px}",
     ".milestones{position:relative;height:18px;margin-top:2px}",
-    ".milestones span{position:absolute;top:0;transform:translateX(-50%);font-size:11px;color:var(--muted);white-space:nowrap}",
+    ".milestones span{position:absolute;top:0;transform:translateX(-50%);font-size:12px;color:var(--muted);white-space:nowrap}",
     ".milestones span::before{content:'';display:block;width:2px;height:6px;background:var(--faint);margin:0 auto 1px}",
     ".milestones span.met{color:var(--pass);font-weight:650}",
     ".tablewrap{overflow-x:auto}",
@@ -245,7 +245,7 @@
     ".value{display:block;font-size:12px;color:var(--muted);margin-top:2px}",
     ".basis{display:inline-flex;align-items:center;gap:4px;padding:0 7px 0 5px;border-radius:6px;font-size:12px;font-weight:650;white-space:nowrap;line-height:20px;border:1px solid var(--line);color:var(--muted);background:var(--card);vertical-align:1px;text-transform:none;letter-spacing:0}",
     ".basis.judged{color:var(--judged);border-color:color-mix(in srgb,var(--judged) 45%,transparent);background:var(--judged-bg)}",
-    ".basis.mini{padding:0 5px 0 3px;gap:3px;font-size:11px;font-weight:600;line-height:18px}",
+    ".basis.mini{padding:0 5px 0 3px;gap:3px;font-size:12px;font-weight:600;line-height:18px}",
     ".basis.tip.mini{min-height:24px;align-items:center;vertical-align:middle}",
     ".basis svg{display:block;flex:none}",
     ".basis-key{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px 18px;padding:10px 12px;border-radius:10px;border:1px dashed var(--line);font-size:13px;color:var(--muted);margin:10px 0}",
@@ -255,7 +255,7 @@
     ".why>b{font-weight:650}",
     ".refs{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;margin:4px 0 2px;font-size:13px;line-height:26px}",
     ".refs a{text-underline-offset:2px}",
-    ".refs a .ext{font-size:11px}",
+    ".refs a .ext{font-size:12px}",
     ".rationale{margin:6px 0 12px;padding:10px 14px;border-left:3px solid var(--accent);background:var(--tint);border-radius:0 10px 10px 0;max-width:80ch;font-size:14px}",
     ".rationale>b{display:block;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}",
     ".cel{margin:6px 0;padding:10px 12px;border-radius:8px;background:var(--tint);overflow-x:auto;font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;overflow-wrap:anywhere}",
@@ -306,7 +306,7 @@
     ".cmp-lead{margin:8px 0 0;font-size:15px}.cmp-lead .lead-x{font-size:inherit;line-height:inherit}",
     ".parity-fold{margin-top:8px;border-top:1px solid var(--line);padding-top:8px}.parity-fold>summary{cursor:pointer;color:var(--accent);font-size:14px;min-height:24px;display:flex;align-items:center}",
     ".method-lede{max-width:80ch;margin:0 0 12px;font-size:15px;line-height:1.55}",
-    ".cmp-side{display:grid;gap:12px;justify-items:center}.h2h{display:grid;gap:2px;width:300px;font-size:12px}.h2h-head,.h2h-row{display:grid;grid-template-columns:110px 1fr 1fr;align-items:center;gap:0}.h2h-head{color:var(--muted);font-weight:650}.h2h-head .behind{text-align:right;padding-right:6px;color:var(--fail)}.h2h-head .ahead{padding-left:6px;color:var(--pass)}.h2h-row{min-height:24px;color:var(--fg);text-decoration:none;border-radius:6px;padding:0 2px}.h2h-row:hover,.h2h-row:focus-visible{background:color-mix(in srgb,var(--accent) 10%,transparent)}.h2h-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:6px}.h2h-l,.h2h-r{display:flex;height:10px}.h2h-l{justify-content:flex-end;border-right:1.5px solid var(--muted)}.h2h-l span{background:var(--fail);border-radius:3px 0 0 3px}.h2h-r span{background:var(--pass);border-radius:0 3px 3px 0}.h2h-foot{color:var(--muted);font-size:11px;text-align:center;margin-top:2px}",
+    ".cmp-side{display:grid;gap:12px;justify-items:center}.h2h{display:grid;gap:2px;width:300px;font-size:12px}.h2h-head,.h2h-row{display:grid;grid-template-columns:110px 1fr 1fr;align-items:center;gap:0}.h2h-head{color:var(--muted);font-weight:650}.h2h-head .behind{text-align:right;padding-right:6px;color:var(--fail)}.h2h-head .ahead{padding-left:6px;color:var(--pass)}.h2h-row{min-height:24px;color:var(--fg);text-decoration:none;border-radius:6px;padding:0 2px}.h2h-row:hover,.h2h-row:focus-visible{background:color-mix(in srgb,var(--accent) 10%,transparent)}.h2h-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:6px}.h2h-l,.h2h-r{display:flex;height:10px}.h2h-l{justify-content:flex-end;border-right:1.5px solid var(--muted)}.h2h-l span{background:var(--fail);border-radius:3px 0 0 3px}.h2h-r span{background:var(--pass);border-radius:0 3px 3px 0}.h2h-foot{color:var(--muted);font-size:12px;text-align:center;margin-top:2px}",
     ".tally3{display:flex;gap:18px;text-align:center}.rule-tally{margin:6px 0 0;font-size:14px}.rule-tally .ahead{color:var(--pass)}.rule-tally .behind{color:var(--fail)}.rule-tally .parity{color:var(--muted)}",
     ".tally3 strong{display:block;font-size:28px;line-height:1.1;font-variant-numeric:tabular-nums}",
     ".tally3 span{font-size:12px;color:var(--muted);font-weight:650;text-transform:uppercase;letter-spacing:.05em}",
@@ -346,7 +346,7 @@
     ".elevel strong{display:block;font-size:28px;line-height:1.1;font-weight:750;text-transform:capitalize;letter-spacing:-.01em}",
     ".elevel .sub{display:block}.elevel strong .pv-head{font-size:18px;font-weight:600;text-transform:none;letter-spacing:0;color:var(--unknown)}",
     "@media (max-width:600px){main{padding:18px 12px 56px}.hero .levelword{font-size:28px}",
-    ".modes{gap:0}.modes button{padding:10px 8px}.modes .count{min-width:0;margin-left:4px;padding:0 5px;font-size:11px}",
+    ".modes{gap:0}.modes button{padding:10px 8px}.modes .count{min-width:0;margin-left:4px;padding:0 5px;font-size:12px}",
     ".kinds{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}a.kind{padding:9px}.fail-row{grid-template-columns:minmax(0,1fr) 64px}.fail-row .bar{display:none}",
     "a.row,.rows-head{grid-template-columns:minmax(0,1fr) 64px}.row .dist,.rows-head .dist{display:none}",
     ".ladder{grid-template-columns:1fr 1fr}.rung{min-height:0}.rung.vacant{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:6px 10px}.rung.vacant .rh{margin:0}.rung.vacant .empty{padding:0;margin:0}",
@@ -492,7 +492,8 @@
   }
 
   // Dots mean "no result"; stripes are kept for "not assessed by an agent yet".
-  var UNSCORED = "radial-gradient(circle,var(--faint) 1.3px,transparent 1.7px) 0 0/5px 5px";
+  var UNSCORED = "repeating-linear-gradient(90deg,var(--faint) 0 1.5px,transparent 1.5px 4.5px)";
+  var UNRUN = "radial-gradient(circle,var(--faint) 1.3px,transparent 1.7px) 0 0/5px 5px";
 
   function fill(l) {
     if (l === "unscored") return UNSCORED;
@@ -812,7 +813,7 @@
       svg("circle", { cx: s / 2, cy: s / 2, r: r, fill: "none", stroke: "var(--line)", "stroke-width": 6 }),
       pct == null ? null : arc,
       target,
-      o.bare ? null : svg("text", { x: "50%", y: "50%", "text-anchor": "middle", "dominant-baseline": "central", style: s > 70 ? "font-size:18px" : label.length > 3 ? "font-size:11px" : "" }, label),
+      o.bare ? null : svg("text", { x: "50%", y: "50%", "text-anchor": "middle", "dominant-baseline": "central", style: s > 70 ? "font-size:18px" : label.length > 3 ? "font-size:12px" : "" }, label),
     );
     if (pct != null) {
       requestAnimationFrame(function () {
@@ -856,7 +857,7 @@
       "svg",
       { class: "ring tally", width: s, height: s, viewBox: "0 0 " + s + " " + s, role: "img", "aria-label": tallyWords(v, n) },
       ...segs,
-      bare ? null : svg("text", { x: "50%", y: "50%", "text-anchor": "middle", "dominant-baseline": "central", style: s > 70 ? "font-size:18px" : text.length > 3 ? "font-size:11px" : "" }, text),
+      bare ? null : svg("text", { x: "50%", y: "50%", "text-anchor": "middle", "dominant-baseline": "central", style: s > 70 ? "font-size:18px" : text.length > 3 ? "font-size:12px" : "" }, text),
     );
   }
 
@@ -1278,7 +1279,7 @@
           }),
           el("span", { className: "avg" }),
         ),
-        "one per scorecard, its share at the top level (point at them, or tab to them, for names); dashed: their average, the ring",
+        "one per scorecard, its share at the top level (hover or focus the strip to name them); dashed: their average, the ring",
       ),
       compare ? el("b", { textContent: "Segmented ring, one per factor:" }) : null,
       compare ? sw(standingColor("ahead"), "ahead") : null,
@@ -2263,14 +2264,8 @@
       var holdingNames = R.holding.map(function (c) {
         return title(D, c.name);
       });
-      var sentence =
-        (D.portal || "This repository") +
-        " is at " +
-        level +
-        ": the lowest level among " +
-        plural(R.constituents.length, "repository standard") +
-        ". " +
-        (R.next ? plural(R.holding.length, "standard holds", "standards hold") + " it there." : "Every standard is at the top level.");
+      var rated = " The repository is rated by the weakest of its " + plural(R.constituents.length, "standard") + ".";
+      var sentence = R.next ? "Held at " + level + " by " + plural(R.holding.length, "standard") + ", listed below." + rated : "Every one of its " + plural(R.constituents.length, "standard") + " is at the top level.";
       var wins = R.ladder
         .slice()
         .reverse()
@@ -2296,22 +2291,20 @@
         });
       if (R.next && capped.length)
         sentence =
-          (D.portal || "This repository") +
-          " is at " +
+          "Held at " +
           level +
-          ", the lowest level among " +
-          plural(R.constituents.length, "repository standard") +
-          ", and capped there: " +
+          " by " +
           capped
             .map(function (c) {
               return title(D, c.name);
             })
             .join(", ") +
-          (capped.length === 1 ? " has" : " have") +
+          (capped.length === 1 ? ", which has" : ", which have") +
           " no " +
           R.next +
           " level yet." +
-          (liftNames.length ? " Once " + (capped.length === 1 ? "it does" : "they do") + ", " + plural(liftNames.length, "more standard needs", "more standards need") + " " + R.next + "." : "");
+          (liftNames.length ? " After that, " + plural(liftNames.length, "more standard needs", "more standards need") + " " + R.next + "." : "") +
+          rated;
       var nextBox = !R.next
         ? el("div", { className: "next" }, el("b", { textContent: "Top of the ladder. " }), "Every repository standard is at its highest level.")
         : capped.length
@@ -2682,12 +2675,16 @@
               { className: "more" },
               el("button", {
                 className: "link",
+                ariaExpanded: "false",
                 textContent: "Show the other " + fmt(attention.length - attFold) + " that need attention",
                 onclick: function () {
-                  var full = self.scorecardTable(D, attention);
-                  attTable.replaceWith(full);
-                  attMore.remove();
-                  var next = full.querySelectorAll("a.row")[attFold];
+                  var open = this.getAttribute("aria-expanded") !== "true";
+                  var shown = open ? self.scorecardTable(D, attention) : self.scorecardTable(D, attention.slice(0, attFold));
+                  attTable.replaceWith(shown);
+                  attTable = shown;
+                  this.setAttribute("aria-expanded", String(open));
+                  this.textContent = open ? "Show only the first " + attFold : "Show the other " + fmt(attention.length - attFold) + " that need attention";
+                  var next = open && shown.querySelectorAll("a.row")[attFold];
                   if (next) next.focus();
                 },
               }),
@@ -2816,7 +2813,7 @@
             { className: "shelf", role: "img", ariaLabel: "Scorecards by their weakest entity's level: " + shelfOrder.map(function (l) { return shelf[l] + " " + l; }).join(", ") },
             el("span", { className: "sub", textContent: "Medals:" }),
             ...shelfOrder.map(function (l) {
-              return el("span", { className: "sh" }, medal(l === "not scored" ? "none" : l, 20), el("b", { textContent: String(shelf[l]) }), " " + levelName(l) + (shelfTop[l] && LADDER.indexOf(l) < 0 ? " ✓ top" : ""));
+              return el("span", { className: "sh" }, medal(l === "not scored" ? "none" : l, 20), el("b", { textContent: String(shelf[l]) }), " " + levelName(l) + (shelfTop[l] && !ONLY_LEVEL.has(l) ? " ✓ top" : ""));
             }),
           ),
         );
@@ -2873,7 +2870,7 @@
         el(
           "section",
           {},
-          el("div", { className: "head" }, el("h2", { textContent: "Tracks" }), el("span", { className: "sub", textContent: "Furthest from its goal first" })),
+          el("div", { className: "head" }, el("h2", { textContent: "Tracks" }), el("span", { className: "sub", textContent: "Lowest share at the top level first" })),
           el("p", { className: "lede", textContent: "A track is a long-running line of work: the scorecards that measure it and the campaigns that push on it. Its goal is every entity at the top level." }),
           trackKey(all),
           this.trackGrid(
@@ -3655,17 +3652,19 @@
       var cards = Object.keys(D.scorecards || {}).filter(function (name) {
         return D.scores[name] && D.scores[name][id];
       });
-      var total = { pass: 0, all: 0 };
+      var total = { pass: 0, hollow: 0, all: 0 };
       var bases = { measured: 0, judged: 0 };
       cards.forEach(function (n) {
         if (isComparative(D, n)) return;
         var rules = D.scores[n][id].rules || {};
+        var unread = unassessedIn(D, n, id);
         Object.keys(rules).forEach(function (r) {
           var o = rules[r];
           if (o === "skipped") return;
           total.all++;
           bases[basisOf((D.scorecards[n].rules || {})[r])]++;
-          if (isPassing(o)) total.pass++;
+          if (isPassing(o) && unread && basisOf((D.scorecards[n].rules || {})[r]) === "judged") total.hollow++;
+          else if (isPassing(o)) total.pass++;
         });
       });
       var judgedAt = [];
@@ -3763,7 +3762,7 @@
                   {},
                   el("strong", { style: "color:" + ink(S.worst[id]) }, S.worst[id], provisional.length ? el("span", { className: "pv-head", textContent: " (provisional)" }) : null),
                   provisional.length ? el("span", { className: "provisional", style: "display:block;font-size:13px", title: "The level holds only if the checks not run in this build pass and an agent's assessment finds nothing; the scorecards below name them.", textContent: provisional.join(", ") }) : null,
-                  el("span", { className: "sub", textContent: (cards.length > 1 ? "lowest of " + cards.length + " scorecards · " : "") + total.pass + " of " + total.all + " checks pass" }),
+                  el("span", { className: "sub", textContent: (cards.length > 1 ? "lowest of " + cards.length + " scorecards · " : "") + total.pass + " of " + total.all + " checks pass on evidence" + (total.hollow ? " · " + total.hollow + " more only because nothing was assessed" : "") }),
                 ),
               )
             : null,
@@ -3795,7 +3794,7 @@
       var parts = [
         { k: "pass", n: tally.pass + tally.waived, c: "var(--pass)", t: "pass" },
         { k: "fail", n: tally.fail, c: "var(--fail)", t: "fail" },
-        { k: "unknown", n: tally.unknown, c: UNSCORED, t: "not run in this build" },
+        { k: "unknown", n: tally.unknown, c: UNRUN, t: "not run in this build" },
       ].filter(function (p) {
         return p.n;
       });
@@ -4868,7 +4867,7 @@
                   onclick: function () {
                     search.value = "";
                     levelFilter = "all";
-                    outcomeFilter = "all";
+                    if (outcomeFilter === "passing") outcomeFilter = "all";
                     ruleFilter = f[0];
                     limit = 25;
                     redrawFilters();
