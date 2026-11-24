@@ -136,6 +136,22 @@ async fn prepared(
             };
             problem(code, "not-offered", e)
         })?;
+    // A server previews and runs child code only where the child said it may: an undeclared
+    // runner would run the child's commands with this server's credentials.
+    if let Some(c) = &off.child
+        && c.runner["type"].as_str().is_none()
+    {
+        return Err(problem(
+            StatusCode::CONFLICT,
+            "no-runner",
+            format!(
+                "portal {} declares no federation.runner, so its actions run only from a checkout: toolbox run {} --portal {}",
+                c.portal,
+                c.action,
+                c.path.display()
+            ),
+        ));
+    }
     let permission = off.action.permission.clone();
     match s.allowed(caller, &permission, &entity).await? {
         true => {}

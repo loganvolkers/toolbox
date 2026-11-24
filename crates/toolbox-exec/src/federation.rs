@@ -22,7 +22,8 @@ pub struct Child {
     pub path: PathBuf,
     /// The action's name in the child.
     pub action: String,
-    /// How the parent reaches the child (`{type: local}` or `{type: github-workflow, …}`).
+    /// How the child lets a parent reach it (`{type: local}` or `{type: github-workflow, …}`);
+    /// null when it declares nothing, which a checkout runs locally and a server refuses.
     pub runner: Value,
     /// The child's approval rule, evaluated by the child when it previews.
     pub approval: Option<String>,
@@ -137,12 +138,7 @@ pub fn offered(m: &Manifest, d: &Derived) -> Vec<Offered> {
                 .or_else(|| e.fields.get("path").and_then(Value::as_str))
                 .unwrap_or("."),
         );
-        let runner = e
-            .fields
-            .get("runner")
-            .cloned()
-            .filter(|r| !r.is_null())
-            .unwrap_or_else(|| json!({"type": "local"}));
+        let runner = e.fields.get("runner").cloned().unwrap_or(Value::Null);
         for def in e
             .fields
             .get("actions")
