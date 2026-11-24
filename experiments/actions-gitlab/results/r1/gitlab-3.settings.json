@@ -1,0 +1,90 @@
+{
+ "changed": 19,
+ "items": [
+  {
+   "what": "group acme-w16 access_tokens",
+   "added": "r1-gitlab-3-set-codeowners-bot"
+  },
+  {
+   "what": "group acme-w16 members",
+   "added": "group_167_bot_3988c1a9ab791a2926a5ff3272593da9:40"
+  },
+  {
+   "what": "group acme-w16 variables",
+   "added": "SET_CODEOWNERS_BOT_TOKEN"
+  },
+  {
+   "what": "project acme-w16/alpha environments",
+   "added": "codeowners"
+  },
+  {
+   "what": "project acme-w16/alpha protected_branches",
+   "added": "{\"force\": false, \"merge\": [30], \"name\": \"self-service\", \"push\": [0]}"
+  },
+  {
+   "what": "project acme-w16/alpha ci_config_path",
+   "from": null,
+   "to": ".gitlab-ci.yml@acme-w16/alpha:main"
+  },
+  {
+   "what": "project acme-w16/alpha ci_pipeline_variables_minimum_override_role",
+   "from": "developer",
+   "to": "no_one_allowed"
+  },
+  {
+   "what": "project acme-w16/alpha restrict_user_defined_variables",
+   "from": false,
+   "to": true
+  },
+  {
+   "what": "project acme-w16/beta environments",
+   "added": "codeowners"
+  },
+  {
+   "what": "project acme-w16/beta protected_branches",
+   "added": "{\"force\": false, \"merge\": [30], \"name\": \"self-service\", \"push\": [0]}"
+  },
+  {
+   "what": "project acme-w16/beta ci_config_path",
+   "from": null,
+   "to": ".gitlab-ci.yml@acme-w16/beta:main"
+  },
+  {
+   "what": "project acme-w16/beta ci_pipeline_variables_minimum_override_role",
+   "from": "developer",
+   "to": "no_one_allowed"
+  },
+  {
+   "what": "project acme-w16/beta restrict_user_defined_variables",
+   "from": false,
+   "to": true
+  },
+  {
+   "what": "project acme-w16/gamma environments",
+   "added": "codeowners"
+  },
+  {
+   "what": "project acme-w16/gamma protected_branches",
+   "added": "{\"force\": false, \"merge\": [30], \"name\": \"self-service\", \"push\": [0]}"
+  },
+  {
+   "what": "project acme-w16/gamma ci_config_path",
+   "from": null,
+   "to": ".gitlab-ci.yml@acme-w16/gamma:main"
+  },
+  {
+   "what": "project acme-w16/gamma ci_pipeline_variables_minimum_override_role",
+   "from": "developer",
+   "to": "no_one_allowed"
+  },
+  {
+   "what": "project acme-w16/gamma restrict_user_defined_variables",
+   "from": false,
+   "to": true
+  },
+  {
+   "what": "project acme-w16/org protected_branches",
+   "added": "{\"force\": false, \"merge\": [40], \"name\": \"main\", \"push\": [40]}"
+  }
+ ]
+}
