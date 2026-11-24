@@ -280,6 +280,7 @@
     ".cmp-hero .kicker{font-size:12px;font-weight:650;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}",
     ".parity-fold{margin-top:8px;border-top:1px solid var(--line);padding-top:8px}.parity-fold>summary{cursor:pointer;color:var(--accent);font-size:14px;min-height:24px;display:flex;align-items:center}",
     ".method-lede{max-width:80ch;margin:0 0 12px;font-size:15px;line-height:1.55}",
+    ".cmp-side{display:grid;gap:12px;justify-items:center}.h2h{display:grid;gap:2px;width:300px;font-size:12px}.h2h-head,.h2h-row{display:grid;grid-template-columns:110px 1fr 1fr;align-items:center;gap:0}.h2h-head{color:var(--muted);font-weight:650}.h2h-head .behind{text-align:right;padding-right:6px;color:var(--fail)}.h2h-head .ahead{padding-left:6px;color:var(--pass)}.h2h-row{min-height:24px;color:var(--fg);text-decoration:none;border-radius:6px;padding:0 2px}.h2h-row:hover,.h2h-row:focus-visible{background:color-mix(in srgb,var(--accent) 10%,transparent)}.h2h-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:6px}.h2h-l,.h2h-r{display:flex;height:10px}.h2h-l{justify-content:flex-end;border-right:1.5px solid var(--muted)}.h2h-l span{background:var(--fail);border-radius:3px 0 0 3px}.h2h-r span{background:var(--pass);border-radius:0 3px 3px 0}.h2h-foot{color:var(--muted);font-size:11px;text-align:center;margin-top:2px}",
     ".tally3{display:flex;gap:18px;text-align:center}.rule-tally{margin:6px 0 0;font-size:14px}.rule-tally .ahead{color:var(--pass)}.rule-tally .behind{color:var(--fail)}.rule-tally .parity{color:var(--muted)}",
     ".tally3 strong{display:block;font-size:30px;line-height:1.1;font-variant-numeric:tabular-nums}",
     ".tally3 span{font-size:12px;color:var(--muted);font-weight:650;text-transform:uppercase;letter-spacing:.05em}",
@@ -325,7 +326,7 @@
     ".ladder{grid-template-columns:1fr 1fr}.rung{min-height:0}.rung.vacant{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:6px 10px}.rung.vacant .rh{margin:0}.rung.vacant .empty{padding:0;margin:0}",
     "details.ent>summary{grid-template-columns:76px minmax(0,1fr)}details.ent>summary .tally{grid-column:2;text-align:left}",
     ".ent-body{padding-left:6px}.gap{grid-template-columns:1fr}.hide-sm{display:none}",
-    ".kchips{grid-template-columns:1fr}.boxrow{grid-template-columns:1fr;gap:6px}.measure{grid-template-columns:1fr}.measure .ms{text-align:left}.cmp-hero{grid-template-columns:1fr}",
+    ".kchips{grid-template-columns:1fr}.boxrow{grid-template-columns:1fr;gap:6px}.measure{grid-template-columns:1fr}.measure .ms{text-align:left}.cmp-hero{grid-template-columns:1fr}.h2h{display:none}",
     ".ehdr{display:none}a.erow.cols{grid-template-columns:1fr!important;gap:4px}.ecell{display:flex;gap:6px;align-items:center}.ecell::before{content:attr(data-sc);color:var(--muted)}.ecell[data-judged]::before{content:attr(data-sc) \" \\2726\"}",
     ".behind-row{grid-template-columns:1fr}.val{grid-template-columns:76px minmax(0,1fr) auto}}",
     ".skip{position:absolute;left:8px;top:-48px;z-index:10;padding:8px 12px;border:0;border-radius:8px;background:var(--fg);color:var(--bg);font:inherit;font-weight:650;cursor:pointer}.skip:focus{top:8px}",
@@ -3231,6 +3232,43 @@
       );
     }
 
+    // One row per factor: the share of its rules behind grows left of the axis, ahead grows right; parity is the gap.
+    headToHead(D, all, names, peer) {
+      var rows = names
+        .map(function (n) {
+          var c = { ahead: 0, parity: 0, behind: 0, total: 0 };
+          Object.keys(all[n].rules || {}).forEach(function (r) {
+            var v = ((all[n].rules[r] || {})[peer]) || "unknown";
+            if (v in c) c[v]++;
+            c.total++;
+          });
+          return { n: n, c: c };
+        })
+        .sort(function (a, b) {
+          return b.c.behind / Math.max(1, b.c.total) - a.c.behind / Math.max(1, a.c.total) || a.c.ahead / Math.max(1, a.c.total) - b.c.ahead / Math.max(1, b.c.total);
+        });
+      var pct = function (k, c) {
+        return Math.round((100 * c[k]) / Math.max(1, c.total));
+      };
+      var box = el(
+        "div",
+        { className: "h2h" },
+        el("div", { className: "h2h-head", ariaHidden: "true" }, el("span", {}), el("span", { className: "behind", textContent: STANDING_MARK.behind + " behind" }), el("span", { className: "ahead", textContent: "ahead " + STANDING_MARK.ahead })),
+        ...rows.map(function (r) {
+          var a = link("compare/" + enc(r.n), "h2h-row", [
+            el("span", { className: "h2h-name", textContent: title(D, r.n) }),
+            el("span", { className: "h2h-l" }, el("span", { style: "width:" + pct("behind", r.c) + "%" })),
+            el("span", { className: "h2h-r" }, el("span", { style: "width:" + pct("ahead", r.c) + "%" })),
+          ]);
+          a.setAttribute("aria-label", title(D, r.n) + ": " + r.c.behind + " behind, " + r.c.parity + " at parity, " + r.c.ahead + " ahead, of " + r.c.total + " rules");
+          a.title = r.c.behind + " behind · " + r.c.parity + " at parity · " + r.c.ahead + " ahead, of " + r.c.total + " rules";
+          return a;
+        }),
+        el("div", { className: "h2h-foot", textContent: "Share of each factor's rules; the gap is parity" }),
+      );
+      return box;
+    }
+
     compare(D, name) {
       var all = D.comparisons || {};
       var names = Object.keys(all).sort();
@@ -3308,10 +3346,15 @@
         ),
         el(
           "div",
-          { className: "tally3" },
-          ...["ahead", "parity", "behind"].map(function (k) {
-            return el("div", {}, el("strong", { textContent: String(counts[k]), style: "color:" + standingColor(k) }), el("span", { textContent: STANDING_MARK[k] + " " + k }));
-          }),
+          { className: "cmp-side" },
+          el(
+            "div",
+            { className: "tally3" },
+            ...["ahead", "parity", "behind"].map(function (k) {
+              return el("div", {}, el("strong", { textContent: String(counts[k]), style: "color:" + standingColor(k) }), el("span", { textContent: STANDING_MARK[k] + " " + k }));
+            }),
+          ),
+          this.headToHead(D, all, names, peer),
         ),
       );
       hero.style.setProperty("--st", standingColor(lean));
