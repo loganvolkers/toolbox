@@ -390,8 +390,8 @@ scorecards:
       and an untested or unexplained rule can pass everything, or fail for the
       wrong reason, unnoticed. Bronze is the floor every new rule must meet
       (tested, explained, decided on fixtures); silver adds both outcomes,
-      evidence and a cost bound; gold asks that the evidence and fix lead an
-      agent to the change.
+      evidence and a cost bound; gold asks for tests that pin both outcomes
+      and for evidence and a fix that lead an agent to the change.
     links:
     - title: Scorecards for scorecards
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md
