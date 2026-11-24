@@ -68,7 +68,7 @@ Everything an action or a federation needs; `toolbox validate` checks the rest a
 | Field | What it says |
 |---|---|
 | `actions[].name`, `kind`, `description` | Required. `kind: Portal` targets the repository itself |
-| `actions[].inputs` | Required JSON Schema; `required`, `pattern`, `minLength`, `enum` and `default` are checked before a preview. Each input reaches the command as `TOOLBOX_INPUT_<NAME>` |
+| `actions[].inputs` | Required JSON Schema; `required`, `pattern`, `minLength`, `maxLength`, `enum`, `additionalProperties: false` and `default` are checked before a preview. Each input reaches the command as `TOOLBOX_INPUT_<NAME>` |
 | `actions[].approval` | CEL list of approvers: `"['user:ann']"` needs ann, `"[['user:ann', 'user:bob']]"` needs either. The requester never counts |
 | `actions[].preconditions` | A list of CEL over `entity` and `inputs`; one that is false blocks the run |
 | `actions[].executor.type` | `change` (a commit), `command` (a shell command in the checkout), `github-workflow`, `http`, `webhook`, `in-image` |

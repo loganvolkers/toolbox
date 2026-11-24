@@ -221,6 +221,8 @@ git --git-dir "$WORK/origin-beta.git" rev-parse -q --verify "$(echo "$OUT" | fie
 API2=127.0.0.1:$((${API_PORT:-18095} + 1)); TB2=("$BIN/toolbox" run --url "http://$API2" -o json)
 OUT=$("$BIN/toolbox" serve "$WORK/gitorg" --listen "$API2" --detach) || fail "serve --detach: $OUT"; DETACHED=$WORK/gitorg
 KEY=$(echo "$OUT" | sed -n 's/^approval key: \(ed25519:[0-9a-f]*\).*/\1/p')
+N=$("${TB2[@]}" --as ann | field "['actions'].__len__()")
+[ "$N" -gt 0 ] || fail "once --detach returns, the children's actions should be listed without waiting ($N)"
 [ -n "$KEY" ] && [ "$KEY" = "$("${TB2[@]}" --as ann | field "['approval_key']")" ] || fail "--detach should print the key the server signs with: $OUT"
 [ "$(stat -c %a "$TOOLBOX_STATE_DIR/served/org/signing-key")" = 600 ] || fail "the kept signing key should be private"
 git -C "$WORK/review/alpha" pull -q origin main

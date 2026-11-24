@@ -63,6 +63,11 @@ a list of repositories and a repo's action is its inputs, its approvers and its 
     input can hold what a branch name cannot. `toolbox validate` refuses any other placeholder,
     since it would be committed literally. A dry run before round 3 wrote `{successor}` in a
     message and committed a second time to take it out.
+13. **Ready means the children are read.** A portal with `federation.children` answers
+    `/readyz` only once its snapshot holds the first read of them (successful or not), and a
+    preview or run that arrives before then waits for it. So `serve --detach`, which returns on
+    `/readyz`, is followed by a preview that finds the children's actions; in the same dry run
+    one got `404 not-offered`, and the agent wrote a start script that polled for the actions.
 
 Rejected: a hosted registry of children (a second source of truth beside git), and cloning on
 every request (slow, and a network failure would hide every action).

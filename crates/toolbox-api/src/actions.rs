@@ -289,7 +289,25 @@ async fn fresh_children(s: &AppState, user: &str) {
         .federation
         .as_ref()
         .is_some_and(|f| !f.children.is_empty());
-    if !has_children || !s.hub.can_refresh(connector, "portal", "external_ids") {
+    if !has_children {
+        return;
+    }
+    if s.hub.first_sync(connector, "portal").is_none() {
+        if !crate::connectors::reads_children(s) {
+            return;
+        }
+        let deadline = tokio::time::Instant::now() + Duration::from_secs(30);
+        while s.hub.first_sync(connector, "portal").is_none()
+            && tokio::time::Instant::now() < deadline
+        {
+            tokio::time::sleep(Duration::from_millis(100)).await;
+        }
+        if let Some(v) = s.hub.first_sync(connector, "portal") {
+            let _ = s.wait_for(v, Duration::from_secs(10)).await;
+        }
+        return;
+    }
+    if !s.hub.can_refresh(connector, "portal", "external_ids") {
         return;
     }
     let Some(p) = s.snapshot() else {

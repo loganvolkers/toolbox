@@ -127,6 +127,8 @@ struct Inner {
     seen: HashMap<(String, String), BTreeSet<String>>,
     /// (connector, kind) → last successful full read or refresh (epoch secs).
     last_read: HashMap<(String, String), u64>,
+    /// The input version that holds each (connector, kind)'s first finished sync, successful or not.
+    tried: HashMap<(String, String), u64>,
 }
 
 #[derive(Default)]
@@ -309,9 +311,11 @@ impl Hub {
                         _ => Status::Failed,
                     };
                     let mut read = Vec::new();
+                    let mut tried = Vec::new();
                     if let Some(c) = g.commands.get_mut(&cid) {
+                        tried.extend(c.kind.iter().cloned().chain(c.kinds.iter().cloned()));
                         if status == Status::Succeeded {
-                            read.extend(c.kind.iter().cloned().chain(c.kinds.iter().cloned()));
+                            read.extend(tried.iter().cloned());
                         }
                         c.status = status;
                         c.completed_version = Some(version);
@@ -320,6 +324,9 @@ impl Hub {
                     }
                     for k in read {
                         g.last_read.insert((connector.to_owned(), k), now());
+                    }
+                    for k in tried {
+                        g.tried.entry((connector.to_owned(), k)).or_insert(version);
                     }
                 }
                 _ => {}
@@ -371,6 +378,16 @@ impl Hub {
             .lock()
             .unwrap()
             .last_read
+            .get(&(connector.to_owned(), kind.to_owned()))
+            .copied()
+    }
+
+    /// The input version holding `connector`'s first finished sync of `kind`, if one has finished.
+    pub fn first_sync(&self, connector: &str, kind: &str) -> Option<u64> {
+        self.inner
+            .lock()
+            .unwrap()
+            .tried
             .get(&(connector.to_owned(), kind.to_owned()))
             .copied()
     }
