@@ -65,7 +65,7 @@ element or `report_json` must follow it. `maintainer-skill` scores the file like
 "tracks": { "maintainer": { "title": "…", "owner": "…" } },
 "campaigns": { "skill-silver": { "status": "active", "percent": 88, "includes": [], "entities": {} } },
 "scorecards": { "maintainer-skill": { "title": "Agent skills", "description": "…", "rationale": "…", "links": [],
-  "levels": [], "rules": { "has-example": { "basis": "measured", "rationale": "…", "links": [] } } } },
+  "levels": [], "rules": { "has-example": { "title": "…", "basis": "measured", "rationale": "…", "links": [] } } } },
 "kindGroups": [{ "name": "code", "title": "Code", "description": "…", "kinds": ["Crate"] }],
 "kinds": { "Crate": { "title": null, "description": "…" } },
 "comparisons": { "vs-backstage-capabilities": { "facts": {}, "reads": {}, "fields": {} } },
@@ -83,7 +83,7 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 ## 6. Interaction rules
 
 - Default hash is Overview (`#` / `#overview`).
-- Deep links: `#tracks`, `#track/<name>`, `#catalog`, `#catalog/<Kind>`, `#entity/<id>`, `#campaign/<name>`,
+- Deep links: `#tracks`, `#track/<name>`, `#scorecards`, `#catalog`, `#catalog/<Kind>`, `#entity/<id>`, `#campaign/<name>`,
   `#scorecard/<name>`, `#rule/<scorecard>/<rule>`, `#compare`, `#compare/<name>`. A scorecard's filters
   ride in the hash (`#scorecard/<name>?level=none&outcome=failing&rule=<rule>&q=<text>`), so a work list
   can be shared; so does the catalog's name filter (`#catalog/<Kind>?q=<text>`).
@@ -93,7 +93,7 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 - Every row is one link or one `<summary>`, never a clickable row that contains a link (axe
   `nested-interactive`).
 - Unknown scorecards, campaigns, kinds and entity ids show a Not found state with a way back.
-- Scorecards mode opens the highest-`none` card; Campaigns opens lowest progress; Catalog prefers scored kinds.
+- Scorecards mode opens the index of standards; Campaigns opens lowest progress; Catalog prefers scored kinds.
 - Scorecard picker is a ranked debt list, not an equal-weight pill wall.
 - Scorecard entity rows sort worst-first (`none` → bronze → … → gold).
 - Outcome filter defaults to **all**; "Failing" is one click for a work list; empty filters offer Clear.
@@ -101,7 +101,7 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 - Passing rules render as compact chips grouped by level ("Bronze: all 5 met"); failing rules keep fix + evidence.
 - "What each level needs" shows each rule with its rationale (its fix when it has none) and the rule's own links,
   so a level's requirements read as sentences, not ids, and the evidence behind a rule is one click away.
-- An entity row leads with what its next level needs ("Silver needs: has-example", with each rule's basis icon), then counts the failures above
+- An entity row leads with what its next level needs ("Silver needs: Has example", with each rule's basis icon), then counts the failures above
   that level. Red is kept for entities at `none`.
 - Each scorecard names its biggest lever: the rule holding the most entities at the lowest occupied level.
 - Fix text renders backticks as code.
@@ -119,7 +119,9 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
   so a level is never colour-only. Each level has a fill colour and a darker ink colour for text
   that passes WCAG AA. Custom level names borrow the colour of the standard level at the same
   height from the top.
-- Scorecards and campaigns show their human `title`; the code name stays as muted monospace.
+- Scorecards, campaigns and rules show their human `title`; the code name stays as muted monospace.
+  A rule without a `title` spells its name out ("public-api-documented" reads "Public API documented"),
+  and its page and failing rows show the name beside it.
 - Skipped entities take no length in a distribution bar; the legend counts them as "not in scope".
 - A campaign with nothing in scope says that it cannot be measured, instead of showing 0%.
 - Motion (bars growing, rings filling) respects `prefers-reduced-motion`.
@@ -146,7 +148,9 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 - Links and buttons in text have hit areas of at least 24 px.
 - No page scrolls sideways at 390 px; the design-audit capture records `mobileOverflow` per route.
 - A link title that still leads with a decision id renders as "Decision: <claim>", with the id on hover; long entity ids in rows are cut to one line, with the full id on hover.
-- Track rings use one ordered ramp (red, bronze, olive, green) for the share at the top level.
+- Track rings use one ordered ramp (red below 50%, olive, green from 80%) for the share at the top
+  level. The ramp avoids the bronze, silver and gold hues, which belong to medals, and parity is
+  neutral grey, not link blue.
 - A kind's `title`, when the manifest sets one, is its reader-facing name; otherwise the name is split
   into words. A kind page whose scorecards leave some of its entities out says how many and why,
   with each scorecard's `appliesTo` one click away.
@@ -210,13 +214,13 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
   A track card says what its percentage averages over ("averaged over N scorecards").
 - Stripes mean "not assessed" and nothing else; an entity with no result is a dotted fill.
 - A scorecard id left in a lede or rationale links to that scorecard under its title.
-- An entity one rule from its next level says so ("One rule from gold · pass has-evals"), and the
+- An entity one rule from its next level says so ("One rule from gold · pass “Has evals”"), and the
   scorecard's lever counts how many entities are within reach that way.
 - A track card shows its entity levels as a bar beside the ring, which stays the share at the top
-  level. Each scorecard chip names its level in words and opens its scorecard: the card link is
-  the title, stretched over the card, with the chips above it.
-- A track card and its page end with a "Next medal" line: the weakest scorecard that can still
-  rise, how many entities it has to lift, and the rule most of them need.
+  level. Beneath them a medal shelf counts its scorecards by their weakest entity's level, and one
+  "Next medal" line names the weakest scorecard that can still rise and how many entities it has to
+  lift. The card link is the title, stretched over the card. The track page lists every scorecard
+  and names the rule most of the lifted entities need.
 - A basis badge has one form: icon and word. On a scorecard or factor whose rules are all
   measured, the measured badge goes quiet (no border or fill) but keeps its word. A level column
   whose rules share a basis says "All 5" or "1 rule" before the badge.
@@ -239,6 +243,21 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
   carries any bias in the scenarios; the method section names who checked it and when.
 - Below 820px an open kind is picked from a grouped select, not chips. On wider screens the tab bar
   sticks to the top. Tooltips shift left rather than run past the viewport.
+- `#scorecards` opens an index of every standard, grouped by track and weakest first within each,
+  with a search that rides in the hash (`#scorecards?q=…`). A scorecard page's breadcrumb returns
+  to it. Comparison factors stay on Compare.
+- Rings mean one thing: a track's share at the top level. A campaign is a bar with a tick at its
+  target, which turns green once the bar passes it; the overview's tiles use a bar and pips.
+- A custom level name is quoted ("“ten”") wherever it is counted, so it reads as a name.
+- The overview's needs-attention line says it covers the whole box ("8 of 39 scorecards have
+  entities at none"), apart from the repository ladder above it.
+- A standard that caps the repository names its owner as the one to add the missing level, and
+  links to its levels.
+- A basis badge outside a link is a focus stop with its description on focus, even when small.
+  A catalog table with hollow levels shows both hollow pills with their meaning above its rows.
+- A factor with no timed rule reads "Probed once on" and leaves out the run count and corpus, which
+  only timed factors used. The Compare hero carries one provenance line: the setup it was measured
+  on and the evidence links (results, how it was run, adjudication, design).
 
 Not built: a change since the last snapshot beside each track ring. The report carries one snapshot
 and the committed baseline, which equals it on every published build; a pages build that also scored

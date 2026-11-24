@@ -130,7 +130,11 @@
     ".callout.judged-note{background:var(--judged-bg)}",
     ".bar span.hollow{background:repeating-linear-gradient(135deg,var(--seg) 0 3px,transparent 3px 7px);box-shadow:inset 0 0 0 1.5px var(--judged)}.unjudged-n,.judged-n{color:var(--judged)}.dot.hatch{border-radius:2px;background:repeating-linear-gradient(135deg,var(--seg) 0 2px,transparent 2px 4px);box-shadow:inset 0 0 0 1.5px var(--judged)}.judged-list{margin:8px 0 0}",
     ".rule.unknown{border-left-color:var(--unknown)}.rule.waived{border-left-color:var(--bronze)}.rule.unassessed{border-left-color:var(--judged)}",
-    ".rule .rn{font-weight:650;font-size:inherit;margin:0;display:inline}.sc-block h3.sct{display:inline;margin:0;font-size:16px}",
+    ".cmp-prov{margin:6px 0 0;display:grid;gap:2px}.cmp-src{display:flex;flex-wrap:wrap;align-items:center;gap:2px 10px}.cmp-src .refs{margin:0;line-height:22px}",
+    ".kpi-bar{flex:0 0 46px;height:10px;border-radius:5px;background:var(--line);overflow:hidden}.kpi-bar span{display:block;height:100%;background:var(--pass)}.kpi-pips{flex:0 0 46px;display:flex;flex-wrap:wrap;gap:4px}.kpi-pips span{width:10px;height:10px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--faint)}.kpi-pips span.on{background:var(--pass);box-shadow:none}",
+    ".cprog{flex:0 0 76px;display:grid;gap:3px}.cprog b{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}.cprog small{font-size:11px;color:var(--muted)}.cprog .gb{position:relative;height:8px;border-radius:4px;background:var(--line)}.cprog .gb>span{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--muted)}.cprog.on .gb>span{background:var(--pass)}.cprog .gb>i{position:absolute;top:-3px;bottom:-3px;width:2px;border-radius:1px;background:var(--fg)}.cprog.big{flex-basis:120px}.cprog.big b{font-size:28px}",
+    ".hollow-key{display:flex;flex-wrap:wrap;align-items:center;gap:4px 16px;padding:6px 10px;font-size:12.5px;color:var(--muted);background:var(--tint);border-radius:8px;margin:4px 0}.hollow-key>span{display:inline-flex;align-items:center;gap:6px}.hollow-key b{color:var(--fg);font-weight:600}",
+    ".rid{font:11.5px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);overflow-wrap:anywhere}.rule .rn{font-weight:650;font-size:inherit;margin:0;display:inline}.sc-block h3.sct{display:inline;margin:0;font-size:16px}",
     ".rule .fix{margin-top:4px;font-size:14px}",
     ".rule ul{margin:6px 0 0;padding-left:18px;font-size:13px;color:var(--muted)}",
     ".rule li{overflow-wrap:anywhere}",
@@ -189,6 +193,9 @@
     "@media (max-width:820px){.unassessed-tag{display:inline;margin:0}}",
     ".pillwrap .unassessed-tag.quiet{display:none}",
     ".crumb{font-size:13px;color:var(--muted);margin-bottom:12px}",
+    ".sc-group{margin-top:20px}.sc-group h3{margin:0 0 4px}.sc-group h3 .sub{font-weight:400;text-transform:none;letter-spacing:0}.sc-index input[type=search]{max-width:420px}",
+    ".sc-rows{border-top:1px solid var(--line)}.sc-row{display:grid;grid-template-columns:26px minmax(0,1.25fr) minmax(0,1.6fr) 104px;gap:12px;align-items:center;padding:7px 8px;border-bottom:1px solid var(--line);color:var(--fg);text-decoration:none}.sc-row:hover{background:var(--tint)}.sc-row .sc-name{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;min-width:0}.sc-row .sc-name .t{font-weight:600}.sc-row .sc-name .c{font-size:11.5px;color:var(--muted)}.sc-row .sc-dist small{display:block;font-size:12px;color:var(--muted);margin-top:3px}.sc-head{display:grid;grid-template-columns:26px minmax(0,1.25fr) minmax(0,1.6fr) 104px;gap:12px;padding:4px 8px;font-size:11.5px;color:var(--muted);border-bottom:1px solid var(--line)}.sc-head span:last-child{text-align:right}.sc-row .sc-weak{display:flex;flex-direction:column;align-items:flex-end;gap:1px}.sc-row .sc-weak small{font-size:12px}.sc-row .sc-weak .bad{color:var(--fail);font-weight:600}",
+    "@media (max-width:640px){.sc-head{display:none}.sc-row{grid-template-columns:26px minmax(0,1fr) auto;row-gap:4px}.sc-row .sc-weak{grid-column:3;grid-row:1}.sc-row .sc-dist{grid-column:2/4;grid-row:2}.sc-row svg{grid-row:1}}",
     ".crumb a{color:var(--muted);display:inline-block;padding:4px 0;margin:-4px 0}",
     "a.rl{display:inline-flex;align-items:center;min-height:24px;vertical-align:middle}.refs a{display:inline-flex;align-items:center;min-height:26px}",
     ".passes>span a{display:inline-block;padding:4px 0;margin:-4px 0}",
@@ -229,7 +236,7 @@
     ".standing{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12px;font-weight:650;background:var(--tint);color:var(--muted)}",
     ".standing.ahead{background:color-mix(in srgb,var(--pass) 16%,transparent);color:var(--pass)}",
     ".standing.behind{background:color-mix(in srgb,var(--fail) 14%,transparent);color:var(--fail)}",
-    ".standing.parity{background:var(--accent-bg);color:var(--accent)}",
+    ".standing.parity{background:var(--tint);color:var(--fg);box-shadow:inset 0 0 0 1px var(--line)}",
     ".value{display:block;font-size:12px;color:var(--muted);margin-top:2px}",
     ".basis{display:inline-flex;align-items:center;gap:4px;padding:0 7px 0 5px;border-radius:6px;font-size:12px;font-weight:650;white-space:nowrap;line-height:20px;border:1px solid var(--line);color:var(--muted);background:var(--card);vertical-align:1px;text-transform:none;letter-spacing:0}",
     ".basis.judged{color:var(--judged);border-color:color-mix(in srgb,var(--judged) 45%,transparent);background:var(--judged-bg)}",
@@ -251,7 +258,8 @@
     "background:linear-gradient(160deg,color-mix(in srgb,var(--tc) 13%,var(--card)) 0%,var(--card) 62%)}",
     ".track:hover{border-color:var(--accent);transform:translateY(-2px)}.track:focus-within{border-color:var(--accent)}",
     "a.tlink{display:inline-block;min-height:24px;color:inherit;text-decoration:none}a.tlink::after{content:\"\";position:absolute;inset:0;border-radius:14px}a.tlink:focus-visible{outline:none}.track:has(a.tlink:focus-visible){outline:2px solid var(--accent);outline-offset:2px}",
-    ".track .medals a,.track .nextmedal a{position:relative;z-index:1}.track .medals>li{border-radius:10px}.medals a{color:inherit;text-decoration:none}.medals a:hover span:first-of-type{text-decoration:underline}.medals .lw{color:var(--muted)}",
+    ".shelf{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;font-size:13px;color:var(--muted)}.shelf .sh{display:inline-flex;align-items:center;gap:3px;white-space:nowrap}.shelf .sh b{color:var(--fg);font-size:14px}.tnext{font-size:13px;color:var(--muted)}.tnext b{color:var(--fg)}.tnext.good{color:var(--pass)}",
+    ".track .medals a,.track .nextmedal a,.track .tnext a{position:relative;z-index:1}.track .medals>li{border-radius:10px}.medals a{color:inherit;text-decoration:none}.medals a:hover span:first-of-type{text-decoration:underline}.medals .lw{color:var(--muted)}",
     ".basis.tip:hover::after,.basis.tip:focus::after,abbr.gloss:hover::after,abbr.gloss:focus::after{left:var(--tipx,0);max-width:min(280px,calc(100vw - 24px))}",
     ".allmeasured .basis.measured:is(.mini,.ctl){border-color:transparent;background:none;font-weight:500}",
     ".medal-col{display:flex;gap:10px;align-items:center}.medal-col>svg{flex:0 0 30px}.mix{display:grid;gap:4px}.mix .bar{height:8px}.mix small{font-size:12px;color:var(--muted)}.nextmedal{font-size:13px;padding:8px 10px;border-radius:8px;background:var(--tint)}.nextmedal b{color:var(--fg)}",
@@ -338,7 +346,7 @@
     ".ladder{grid-template-columns:1fr 1fr}.rung{min-height:0}.rung.vacant{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:6px 10px}.rung.vacant .rh{margin:0}.rung.vacant .empty{padding:0;margin:0}",
     "details.ent>summary{grid-template-columns:76px minmax(0,1fr)}details.ent>summary .tally{grid-column:2;text-align:left}",
     ".ent-body{padding-left:6px}.gap{grid-template-columns:1fr}.hide-sm{display:none}",
-    ".kchips{grid-template-columns:1fr}.boxrow{grid-template-columns:1fr;gap:6px}.measure{grid-template-columns:1fr}.measure .ms{text-align:left}.cmp-hero{grid-template-columns:1fr;gap:10px}.cmp-main{display:contents}.cmp-side{order:1}.cmp-hero .cmp-lead,.cmp-hero .rule-tally{order:2}.cmp-hero .cmp-def{order:3}.cmp-hero .cmp-method{order:4}.h2h{display:none}",
+    ".kchips{grid-template-columns:1fr}.boxrow{grid-template-columns:1fr;gap:6px}.measure{grid-template-columns:1fr}.measure .ms{text-align:left}.cmp-hero{grid-template-columns:1fr;gap:10px}.cmp-main{display:contents}.cmp-side{order:1}.cmp-hero .cmp-lead,.cmp-hero .rule-tally,.cmp-hero .cmp-prov{order:2}.cmp-hero .cmp-def{order:3}.cmp-hero .cmp-method{order:4}.h2h{display:none}",
     ".ehdr{display:none}a.erow.cols{grid-template-columns:1fr!important;gap:4px}.ecell{display:flex;gap:6px;align-items:center}.ecell::before{content:attr(data-sc);color:var(--muted)}.ecell[data-judged]::before{content:attr(data-sc) \" \\2726\"}",
     ".behind-row{grid-template-columns:1fr}.val{grid-template-columns:76px minmax(0,1fr) auto}.pillwrap .unassessed-tag.quiet{display:inline}}",
     ".skip{position:absolute;left:8px;top:-48px;z-index:10;padding:8px 12px;border:0;border-radius:8px;background:var(--fg);color:var(--bg);font:inherit;font-weight:650;cursor:pointer}.skip:focus{top:8px}",
@@ -880,6 +888,12 @@
   function basisBadge(b, mini, inControl) {
     // Mini badges sit inside links and dense rows: the same word, smaller, joins the row's accessible name
     // rather than adding a focus stop of its own, and the page's key explains it in full.
+    // A mini badge outside any link ("tip") is its own focus stop, so its meaning opens on focus or tap.
+    if (mini === "tip") {
+      var tip = el("span", { className: "basis tip " + b + " mini", tabIndex: 0 }, basisIcon(b), el("span", { className: "bl", textContent: BASIS[b].label }), el("span", { className: "sr", textContent: ": " + BASIS[b].desc }));
+      tip.dataset.tip = BASIS[b].label + ": " + BASIS[b].desc;
+      return tip;
+    }
     if (mini) return el("span", { className: "basis " + b + " mini", title: BASIS[b].label + ": " + BASIS[b].desc }, basisIcon(b), el("span", {}, el("span", { className: "sr", textContent: " (" }), el("span", { className: "bl", textContent: BASIS[b].label }), el("span", { className: "sr", textContent: ")" })));
     if (inControl) return el("span", { className: "basis ctl " + b, title: BASIS[b].label + ": " + BASIS[b].desc }, basisIcon(b), el("span", { className: "sr", textContent: " (" }), el("span", { className: "bl", textContent: BASIS[b].label }), el("span", { className: "sr", textContent: ")" }));
     // A full badge stands on its own, so keyboard and touch readers can open what it means.
@@ -963,8 +977,40 @@
     return el("div", { className: "why" }, def.rationale ? el("b", { textContent: label || "Why: " }) : null, ...(def.rationale ? rich(def.rationale) : []), refs(def.links));
   }
 
+  var RULE_TITLE = new Map();
+  var RULE_WORDS = { api: "API", ci: "CI", id: "ID", ids: "IDs", mcp: "MCP", sdlc: "SDLC", sha: "SHA", otel: "OTel", otlp: "OTLP", cel: "CEL", url: "URL", ui: "UI", kubernetes: "Kubernetes" };
+  var SC_NAME = new WeakMap();
+  function ruleTitles(D) {
+    RULE_TITLE.clear();
+    Object.entries(D.scorecards || {}).forEach(function (e) {
+      if (e[1] && typeof e[1] === "object") SC_NAME.set(e[1], e[0]);
+      Object.entries(e[1].rules || {}).forEach(function (r) {
+        if (r[1] && r[1].title) RULE_TITLE.set(e[0] + "\u0000" + r[0], r[1].title);
+      });
+    });
+  }
+  // A rule's id (public-api-documented) in the reader's words (Public API documented), unless it names a title.
+  function ruleTitle(scName, rule) {
+    var t = RULE_TITLE.get(scName + "\u0000" + rule);
+    if (t) return t;
+    return String(rule)
+      .split("-")
+      .map(function (w, i) {
+        if (Object.prototype.hasOwnProperty.call(RULE_WORDS, w)) return RULE_WORDS[w];
+        return i ? w : w.charAt(0).toUpperCase() + w.slice(1);
+      })
+      .join(" ");
+  }
+
+  // The same, from the scorecard's definition rather than its name.
+  function ruleTitleOf(sc, rule) {
+    return ruleTitle(SC_NAME.get(sc) || "", rule);
+  }
+
   function ruleLink(scName, rule, text) {
-    return link("rule/" + enc(scName) + "/" + enc(rule), "rl", text || rule);
+    var a = link("rule/" + enc(scName) + "/" + enc(rule), "rl", text || ruleTitle(scName, rule));
+    if (!text) a.title = rule;
+    return a;
   }
 
   function isComparative(D, name) {
@@ -1131,8 +1177,7 @@
       "div",
       { className: "legend trackkey" },
       el("b", { textContent: "Ring, share at the top level:" }),
-      sw(RAMP[3], "below 25%"),
-      sw(RAMP[2], "25–49%"),
+      sw(RAMP[2], "below 50%"),
       sw(RAMP[1], "50–79%"),
       sw(RAMP[0], "80–100%"),
       compare ? el("b", { textContent: "Segmented ring, one per factor:" }) : null,
@@ -1150,13 +1195,14 @@
     return t ? t.name : null;
   }
 
-  // One ordered ramp, red to green, for a share at the top level; blue is left for parity.
-  var RAMP = ["var(--pass)", "color-mix(in srgb,var(--pass) 55%,var(--gold))", "var(--bronze)", "var(--fail)"];
+  // One ordered ramp, red to green, for a share at the top level. It skips bronze, silver and gold, which
+  // belong to medals.
+  var RAMP = ["var(--pass)", "color-mix(in srgb,var(--pass) 55%,var(--gold))", "var(--fail)"];
 
   function trackColor(t) {
     if (t.compare) return "var(--accent)";
     if (t.pct == null) return "var(--faint)";
-    return RAMP[t.pct >= 80 ? 0 : t.pct >= 50 ? 1 : t.pct >= 25 ? 2 : 3];
+    return RAMP[t.pct >= 80 ? 0 : t.pct >= 50 ? 1 : 2];
   }
 
   var STANDING_MARK = { ahead: "▲", parity: "=", behind: "▼", unknown: "?" };
@@ -1175,7 +1221,7 @@
   }
 
   function standingColor(s) {
-    return s === "ahead" ? "var(--pass)" : s === "behind" ? "var(--fail)" : s === "parity" ? "var(--accent)" : "var(--unknown)";
+    return s === "ahead" ? "var(--pass)" : s === "behind" ? "var(--fail)" : s === "parity" ? "var(--muted)" : "var(--unknown)";
   }
 
   // Kinds in their declared groups, then any kind no group names.
@@ -1257,6 +1303,8 @@
   }
 
   // The setup facts no rule reads, as one line: "corpus 10,000 · runs 5 · version Toolbox … vs Backstage …".
+  var TIMED_UNITS = ["ms", "s", "rps", "seconds", "minutes", "req/s"];
+
   function setupBrief(context, ids, facts, who) {
     var show = function (v) {
       return typeof v === "number" ? num(v) : typeof v === "boolean" ? (v ? "yes" : "no") : String(v);
@@ -1336,7 +1384,7 @@
       ...ids.map(function (id, i) {
         var outcome = (((c.scores || {})[id] || {}).rules || {})[r] || "unknown";
         var v = vals[i];
-        var color = id === leader ? "var(--pass)" : st === "parity" ? "var(--accent)" : "var(--faint)";
+        var color = id === leader ? "var(--pass)" : st === "parity" ? "var(--muted)" : "var(--faint)";
         var text =
           v == null
             ? outcome === "pass"
@@ -1395,10 +1443,10 @@
       var sc = (D.scorecards || {})[m[1]];
       var score = ((D.scores || {})[m[1]] || {})[id];
       var need = sc && score ? blockers(sc, score, m[2]) : [];
-      return (need.length ? "Needs " + need.join(", ") + " for " + m[2] : m[2].charAt(0).toUpperCase() + m[2].slice(1) + " is the goal") + " on " + title(D, m[1]) + "; " + m[3] + " now.";
+      return (need.length ? "Needs " + need.map(function (r) { return "“" + ruleTitle(m[1], r) + "”"; }).join(", ") + " for " + m[2] : m[2].charAt(0).toUpperCase() + m[2].slice(1) + " is the goal") + " on " + title(D, m[1]) + "; " + m[3] + " now.";
     }
     m = /^(.+?):rule (.+) \((\S+)\)$/.exec(g);
-    if (m) return title(D, m[1]) + ": rule " + m[2] + " is " + m[3] + ".";
+    if (m) return title(D, m[1]) + ": rule “" + ruleTitle(m[1], m[2]) + "” is " + m[3] + ".";
     m = /^(.+?): unknown scorecard$/.exec(g);
     if (m) return "Scorecard " + m[1] + " is unknown.";
     return g;
@@ -1479,11 +1527,16 @@
             var ls = ((D.scorecards || {})[c.row.name] || {}).levels || [];
             return ls.indexOf(l) < 0 || ls[ls.length - 1] === l;
           });
-        return { level: l, n: tally[l], label: top ? l + " (top level)" : l };
+        return { level: l, n: tally[l], label: top ? levelName(l) + " (top level)" : levelName(l) };
       });
   }
 
   // The first scorecard on a track that can still rise, with the rule most of its lowest entities need.
+  // A scorecard's own level name ("ten", "clean") is quoted so it reads as a name, not a stray word.
+  function levelName(l) {
+    return l === "none" || l === "not scored" || LADDER.indexOf(l) >= 0 ? l : "“" + l + "”";
+  }
+
   function nextMedal(D, cards) {
     for (var i = 0; i < cards.length; i++) {
       var c = cards[i];
@@ -1516,11 +1569,57 @@
       el("b", { textContent: "Next medal: " }),
       link("scorecard/" + enc(nm.name), "", title(D, nm.name)),
       " to " + nm.up + ". " + plural(nm.low, "entity", "entities") + " at " + nm.floor + " to lift" + (nm.rule ? "; " + nm.n + " need " : "."),
-      nm.rule ? link("rule/" + enc(nm.name) + "/" + enc(nm.rule), "", nm.rule) : null,
+      nm.rule ? link("rule/" + enc(nm.name) + "/" + enc(nm.rule), "", ruleTitle(nm.name, nm.rule)) : null,
       nm.rule ? " " : null,
-      nm.rule ? basisBadge(basisOf((((D.scorecards || {})[nm.name] || {}).rules || {})[nm.rule]), true) : null,
+      nm.rule ? basisBadge(basisOf((((D.scorecards || {})[nm.name] || {}).rules || {})[nm.rule]), "tip") : null,
       nm.rule ? "." : null,
     );
+  }
+
+  function ownerName(o) {
+    return String(o || "").replace(/^(group|user):/, "");
+  }
+
+  // A standard capped at its top level is unblocked by whoever owns it adding the next level.
+  function stuckNote(D, name, next) {
+    var owner = ownerName(((D.scorecards || {})[name] || {}).owner);
+    return el("span", { className: "sub" }, " needs a " + next + " level defined" + (owner ? " by its owner, " + owner : "") + ": ", link("scorecard/" + enc(name), "", "see its levels →"));
+  }
+
+  // Campaigns measure progress to a target, so they get a bar with a target tick; rings are kept for
+  // a track's share at the top level.
+  function goalBar(state, pct, target, big) {
+    var empty = state === "empty";
+    var g = el(
+      "div",
+      { className: "cprog" + (big ? " big" : "") + (state === "on" ? " on" : "") },
+      el("b", { textContent: empty ? "—" : pct + "%" }),
+      el("div", { className: "gb" }, empty ? null : el("span", { style: "width:" + Math.max(0, Math.min(100, pct)) + "%" }), el("i", { style: "left:calc(" + target + "% - 1px)" })),
+      el("small", { textContent: empty ? "no single score" : "target " + target + "%" }),
+    );
+    g.setAttribute("role", "img");
+    g.setAttribute("aria-label", empty ? "no single score" : pct + "% of entities meet the goal; target " + target + "%");
+    return g;
+  }
+
+  function kpiBar(pct, label) {
+    var g = el("div", { className: "kpi-bar" }, el("span", { style: "width:" + Math.max(0, Math.min(100, pct || 0)) + "%" }));
+    g.setAttribute("role", "img");
+    g.setAttribute("aria-label", label);
+    return g;
+  }
+
+  function kpiPips(on, total, label) {
+    var g = el(
+      "div",
+      { className: "kpi-pips" },
+      ...Array.from({ length: Math.min(total, 12) }, function (_, i) {
+        return el("span", { className: i < on ? "on" : "" });
+      }),
+    );
+    g.setAttribute("role", "img");
+    g.setAttribute("aria-label", label);
+    return g;
   }
 
   function nextLevel(sc, level) {
@@ -1690,10 +1789,13 @@
     if (!campaignNames.length && !S.rows.length) return "No campaigns or scorecards in this snapshot.";
     if (!off.length && !debt.length && !blind.length) return "On track: every active campaign meets its target, and no scorecard has entities at none.";
     var bits = [];
-    if (debt.length) bits.push(plural(debt.length, "scorecard") + " with entities at none");
-    if (off.length) bits.push(plural(off.length, "campaign") + " behind target");
-    if (blind.length) bits.push(plural(blind.length, "campaign") + " with no single score");
-    return "Needs attention: " + (bits.length > 1 ? bits.slice(0, -1).join(", ") + " and " + bits[bits.length - 1] : bits[0]) + ".";
+    var scored = S.rows.filter(function (r) {
+      return !r.compare;
+    }).length;
+    if (debt.length) bits.push(debt.length + " of " + plural(scored, "scorecard") + " " + (debt.length === 1 ? "has" : "have") + " entities at none");
+    if (off.length) bits.push(plural(off.length, "campaign") + " " + (off.length === 1 ? "is" : "are") + " behind target");
+    if (blind.length) bits.push(plural(blind.length, "campaign") + " " + (blind.length === 1 ? "has" : "have") + " no single score");
+    return "Needs attention across the whole box: " + (bits.length > 1 ? bits.slice(0, -1).join(", ") + " and " + bits[bits.length - 1] : bits[0]) + ".";
   }
 
   function parseHash() {
@@ -1729,7 +1831,7 @@
     if (h === "compare") return { mode: "compare" };
     if (h.indexOf("compare/") === 0) return { mode: "compare", name: decodeURIComponent(h.slice(8)) };
     if (h.indexOf("scorecard/") === 0) return { mode: "scorecard", name: decodeURIComponent(h.slice(10)) };
-    if (h === "scorecards") return { mode: "scorecard" };
+    if (h === "scorecards") return { mode: "scorecards" };
     return { mode: "scorecard", name: decodeURIComponent(h), bare: true };
   }
 
@@ -1830,6 +1932,7 @@
     mount(root, D) {
       var self = this;
       aliasLevels(D);
+      ruleTitles(D);
       var S = summarize(D);
       root.getElementById("top").replaceChildren(boxLogo(), el("h1", { textContent: D.portal || "Toolbox report" }));
       root.getElementById("meta").textContent =
@@ -1896,7 +1999,7 @@
           label: "Scorecards",
           id: "scorecards",
           count: S.rows.length,
-          path: S.rows[0] ? "scorecard/" + enc(S.rows[0].name) : "overview",
+          path: "scorecards",
         },
       );
       var comparisons = Object.keys(D.comparisons || {});
@@ -1907,7 +2010,6 @@
       tabs.forEach(function (t) {
         if (t.id === "scorecards") {
           t.count = levelCards.length;
-          if (levelCards[0]) t.path = "scorecard/" + enc(levelCards[0].name);
         }
       });
       modes.replaceChildren(
@@ -1965,6 +2067,7 @@
       else if (route.mode === "compare") view = this.compare(D, route.name);
       else if (route.mode === "tracks") view = this.tracks(D, S, route.name);
       else if (route.mode === "rule") view = this.rule(D, S, route.scorecard, route.rule);
+      else if (route.mode === "scorecards") view = this.scorecardIndex(D, S, route.query);
       else view = this.scorecard(D, S, route.name, route.query);
       view.classList.add("view");
       body.replaceChildren(view);
@@ -2083,12 +2186,12 @@
           "div",
           { className: "climb" + (blockedBy ? " blocked" : "") },
           el("div", { className: "climb-head" }, el("span", {}, "Toward ", badge(R.next)), el("span", { className: "sub", textContent: there + " of " + R.constituents.length + " standards there (" + share + "%)" })),
-          blockedBy ? el("div", { className: "climb-track" }, bar, el("span", { className: "climb-lock", title: "No " + R.next + " level exists yet on " + blockedBy }, lockIcon(), " blocked")) : bar,          el(
+          blockedBy ? el("div", { className: "climb-track" }, bar, el("span", { className: "climb-lock", title: "No " + R.next + " level exists yet on " + blockedBy }, lockIcon(), " blocked by a missing level")) : bar,          el(
             "ul",
             {},
             ...R.holding.map(function (c) {
               var stuck = c.level === c.top;
-              return el("li", { className: stuck ? "stuck" : "" }, el("span", { className: "mark", ariaHidden: "true", textContent: stuck ? "⊘" : "↑" }), el("span", {}, link("scorecard/" + enc(c.name), "", title(D, c.name)), el("span", { className: "sub", textContent: stuck ? " needs a " + R.next + " level first" : " lift from " + c.level + " to " + R.next })));
+              return el("li", { className: stuck ? "stuck" : "" }, el("span", { className: "mark", ariaHidden: "true", textContent: stuck ? "⊘" : "↑" }), el("span", {}, link("scorecard/" + enc(c.name), "", title(D, c.name)), stuck ? stuckNote(D, c.name, R.next) : el("span", { className: "sub", textContent: " lift from " + c.level + " to " + R.next })));
             }),
           ),
         );
@@ -2182,10 +2285,10 @@
       return el(
         "div",
         { className: "tiles" },
-        tile("scorecards", "good", ring(pct, { size: 46, color: "var(--pass)", text: "", label: pct + "% of checks pass" }), pct + "%", fmt(c.pass) + " of " + fmt(total) + " checks pass" + (c.unknown ? " (" + fmt(c.unknown) + " unknown)" : "")),
+        tile("scorecards", "good", kpiBar(pct, pct + "% of checks pass"), pct + "%", fmt(c.pass) + " of " + fmt(total) + " checks pass" + (c.unknown ? " (" + fmt(c.unknown) + " unknown)" : "")),
         tile("catalog", "", medal("gold", 40), fmt(golden), "of " + fmt(scoredEntities) + " scored entities are gold on every scorecard"),
         tile("scorecards", debt ? "bad" : "good", medal(debt ? "none" : "gold", 40), String(debt), debt ? "scorecards have entities at none" : "scorecards with entities at none"),
-        tile("campaigns", on === campaignNames.length ? "good" : "", ring(campaignNames.length ? Math.round((on / campaignNames.length) * 100) : null, { size: 46, color: "var(--pass)", text: "", label: on + " of " + campaignNames.length + " campaigns on target" }), on + " of " + campaignNames.length, "campaigns on target"),
+        tile("campaigns", on === campaignNames.length ? "good" : "", kpiPips(on, campaignNames.length, on + " of " + campaignNames.length + " campaigns on target"), on + " of " + campaignNames.length, "campaigns on target"),
       );
     }
 
@@ -2195,7 +2298,6 @@
       var pct = c.percent == null ? 0 : c.percent;
       var target = c.targetPercent == null ? 100 : c.targetPercent;
       var days = daysLeft(c.end);
-      var color = state === "on" ? "var(--pass)" : state === "empty" ? "var(--faint)" : "var(--muted)";
       var status =
         state === "empty"
           ? el("span", { className: "pill unknown", textContent: "no single score" })
@@ -2203,7 +2305,7 @@
             ? el("span", { className: "pill good", textContent: "on target" })
             : el("span", { className: "pill bad", textContent: (c.inScope || 0) - (c.meeting || 0) + " to go" });
       var a = link("campaign/" + enc(name), "card", [
-        ring(state === "empty" ? null : pct, { color: color, target: target, label: state === "empty" ? "no single score" : pct + "% of " + target + "% target" }),
+        goalBar(state, pct, target),
         el(
           "div",
           {},
@@ -2230,6 +2332,93 @@
         );
       });
       return wrap;
+    }
+
+    scorecardIndex(D, S, query) {
+      var self = this;
+      var standards = S.rows.filter(function (r) {
+        return !r.compare;
+      });
+      var factors = S.rows.length - standards.length;
+      var groups = tracksSorted(D, S)
+        .filter(function (t) {
+          return !t.compare && t.cards.length;
+        })
+        .map(function (t) {
+          return { name: t.name, title: t.def.title || t.name, rows: t.cards.map(function (c) { return c.row; }) };
+        });
+      var placed = {};
+      groups.forEach(function (g) {
+        g.rows.forEach(function (r) {
+          placed[r.name] = true;
+        });
+      });
+      var loose = standards.filter(function (r) {
+        return !placed[r.name];
+      });
+      if (loose.length) groups.push({ name: null, title: "Not in a track", rows: loose });
+      var search = el("input", { type: "search", placeholder: "Find a scorecard by name, id or kind…", ariaLabel: "Find a scorecard", value: (query || {}).q || "" });
+      var list = el("div");
+      var row = function (r) {
+        var floor = floorOf(D, r.name);
+        var note = (r.sc.kind ? kindCount(D, r.sc.kind, r.total) : plural(r.total, "entity", "entities")) + " · " + r.topShare + "% " + (r.top || "top");
+        return link("scorecard/" + enc(r.name), "sc-row", [
+          medal(floor || "none", 26),
+          el("div", { className: "sc-name" }, ...cardName(D, r.name)),
+          el("div", { className: "sc-dist" }, barEl(splitUnassessed(D, r.name, r.parts)), el("small", { textContent: note + (unassessedOf(D, r.name) ? " · " + fmt(unassessedOf(D, r.name)) + " not assessed" : "") })),
+          el("div", { className: "sc-weak" }, floor ? badge(floor) : el("span", { className: "sub", textContent: "not scored" }), r.none ? el("small", { className: "bad", textContent: fmt(r.none) + " at none" }) : null),
+        ]);
+      };
+      var draw = function () {
+        var q = search.value.toLowerCase();
+        var hit = function (r) {
+          return !q || r.name.toLowerCase().indexOf(q) >= 0 || title(D, r.name).toLowerCase().indexOf(q) >= 0 || kindTitle(D, r.sc.kind || "").toLowerCase().indexOf(q) >= 0;
+        };
+        var shown = groups
+          .map(function (g) {
+            return { g: g, rows: g.rows.filter(hit) };
+          })
+          .filter(function (x) {
+            return x.rows.length;
+          });
+        var want = "#scorecards" + (search.value ? "?q=" + encodeURIComponent(search.value) : "");
+        if (location.hash !== want && history.replaceState) history.replaceState(history.state, "", want);
+        if (!shown.length) {
+          list.replaceChildren(
+            el("div", { className: "empty" }, "No scorecards match “" + search.value + "”. ", el("button", {
+              className: "link",
+              textContent: "Clear search",
+              onclick: function () {
+                search.value = "";
+                draw();
+                search.focus();
+              },
+            })),
+          );
+          return;
+        }
+        list.replaceChildren(
+          ...shown.map(function (x) {
+            return el(
+              "div",
+              { className: "sc-group" },
+              el("h3", {}, x.g.name ? link(trackPath(D, x.g.name), "", x.g.title) : x.g.title, el("span", { className: "sub", textContent: " · " + plural(x.rows.length, "scorecard") + (x.g.name ? ", weakest first" : "") })),
+              el("div", { className: "sc-rows" }, el("div", { className: "sc-head", ariaHidden: "true" }, el("span"), el("span", { textContent: "Scorecard" }), el("span", { textContent: "Entities by level" }), el("span", { textContent: "Weakest entity" })), ...x.rows.map(row)),
+            );
+          }),
+        );
+      };
+      search.oninput = draw;
+      draw();
+      return el(
+        "section",
+        { className: "sc-index" },
+        el("div", { className: "head" }, el("h2", { textContent: "Scorecards" }), el("span", { className: "sub", textContent: plural(standards.length, "standard") + " in " + plural(groups.length, "group") })),
+        el("p", { className: "lede" }, "Each scorecard rates every entity of one kind against levels of rules; the medal is its weakest entity's level, and the bar shows where the rest stand. They are grouped by track, the line of work each one serves. Open one for its failures, entities and what each level needs.", factors ? el("span", {}, " The " + plural(factors, "comparison factor") + " against a rival are on ", link("compare", "", "the Compare tab"), ".") : null),
+        levelLegend(D, standards),
+        search,
+        list,
+      );
     }
 
     overview(D, S) {
@@ -2395,17 +2584,38 @@
           ),
         );
       } else if (t.cards.length) {
-        var MAX = 5;
-        var medals = el(
-          "ul",
-          { className: "medals" },
-          ...t.cards.slice(0, MAX).map(function (c) {
-            return el("li", { title: "Lowest entity at " + (c.floor || "not scored") }, link("scorecard/" + enc(c.row.name), "", [medal(c.floor || "none", 18), el("span", { textContent: title(D, c.row.name) }), judgedMark(D, c.row.name), el("span", { className: "lw", textContent: " · " + (c.floor || "not scored") })]));
-          }),
-          t.cards.length > MAX ? el("li", { className: "more", textContent: "+" + (t.cards.length - MAX) + " more on the track page" }) : null,
+        var shelf = {};
+        var shelfTop = {};
+        var shelfOrder = [];
+        t.cards.forEach(function (c) {
+          var l = c.floor || "not scored";
+          if (!shelf[l]) {
+            shelf[l] = 0;
+            shelfTop[l] = true;
+            shelfOrder.push(l);
+          }
+          shelf[l]++;
+          shelfTop[l] = shelfTop[l] && !!c.floor && isTop(D, c.row.name, c.floor);
+        });
+        shelfOrder.sort(function (a, b) {
+          return rankLevel(a === "not scored" ? null : a) - rankLevel(b === "not scored" ? null : b);
+        });
+        kids.push(
+          el(
+            "div",
+            { className: "shelf", role: "img", ariaLabel: "Scorecards by their weakest entity's level: " + shelfOrder.map(function (l) { return shelf[l] + " " + l; }).join(", ") },
+            el("span", { className: "sub", textContent: "Medals:" }),
+            ...shelfOrder.map(function (l) {
+              return el("span", { className: "sh" }, medal(l === "not scored" ? "none" : l, 20), el("b", { textContent: String(shelf[l]) }), " " + levelName(l) + (shelfTop[l] && LADDER.indexOf(l) < 0 ? " (top)" : ""));
+            }),
+          ),
         );
-        kids.push(medals);
-        kids.push(nextMedalEl(D, t.cards));
+        var nm = nextMedal(D, t.cards);
+        kids.push(
+          nm
+            ? el("div", { className: "tnext" }, el("b", { textContent: "Next medal: " }), link("scorecard/" + enc(nm.name), "", title(D, nm.name)), " to " + nm.up + " · " + plural(nm.low, "entity", "entities") + " to lift")
+            : el("div", { className: "tnext good", textContent: "✓ Every scorecard is at its top level" }),
+        );
       }
       var weakest = !t.compare && t.cards[0] && t.cards[0].floor ? title(D, t.cards[0].row.name) + " at " + t.cards[0].floor + (capsRepo(D, t.cards[0].row.name, t.cards[0].floor) ? ", its top level, which caps the repository" : isTop(D, t.cards[0].row.name, t.cards[0].floor) ? ", its top level" : "") : null;
       kids.push(
@@ -2413,7 +2623,7 @@
           "div",
           { className: "foot" },
           el("span", { textContent: plural(t.rows.length, t.compare ? "factor" : "scorecard") + (t.campaigns.length ? " · " + plural(t.campaigns.length, "campaign") : "") }),
-          el("span", { textContent: t.compare ? (t.behind.length ? "behind on " + t.behind.join(", ") : "never behind") : weakest ? "weakest: " + weakest : "" }),
+          t.compare ? el("span", { textContent: t.behind.length ? "behind on " + t.behind.join(", ") : "never behind" }) : null,
         ),
       );
       var tl = kids[1].lastChild.firstChild;
@@ -2741,7 +2951,7 @@
             "div",
             { className: "ehead" },
             el("div", {}, el("h2", { textContent: c.title || selected }), el("div", { className: "sub" }, c.status || "", track ? el("span", {}, " · track ", link(trackPath(D, c.track), "", track)) : null, c.owner ? " · owned by " + c.owner.replace(/^group:/, "") : null)),
-            ring(state === "empty" ? null : pct, { size: 84, color: state === "on" ? "var(--pass)" : "var(--muted)", target: target, label: state === "empty" ? "no single score" : pct + "% of " + target + "% target" }),
+            goalBar(state, pct, target, true),
           ),
           c.description ? el("p", { className: "lede" }, ...rich(c.description)) : null,
           state === "empty"
@@ -2750,7 +2960,7 @@
                 "p",
                 { style: "margin:8px 0 6px" },
                 el("b", { textContent: (c.meeting || 0) + " of " + (c.inScope || 0) }),
-                " entities meet the goal · target " + target + "%" + (c.end ? " by " + c.end : "") + (days != null && days >= 0 ? " (" + plural(days, "day") + " left)" : "") + ". The ring turns green once it reaches the target.",
+                " entities meet the goal · target " + target + "%" + (c.end ? " by " + c.end : "") + (days != null && days >= 0 ? " (" + plural(days, "day") + " left)" : "") + ". The bar turns green once it passes the target tick.",
               ),
           state === "empty" ? null : bar,
           state === "empty" ? null : marks,
@@ -2934,7 +3144,19 @@
         var unrunCols = cols.filter(function (n) {
           return allUnrun[n];
         });
-        var dashed = (unrunCols.length ? " Every level on the " + unrunCols.map(function (n) { return title(D, n); }).join(" and ") + (unrunCols.length > 1 ? " scorecards" : " scorecard") + " is provisional here: checks it needs were not run in this build." : "") + (list.querySelector(".lvl.vacuous") ? " A hollow level may not hold: ✦ means no agent has assessed it, ◌ means checks it needs were not run." : "");
+        var dashed = unrunCols.length ? " Every level on the " + unrunCols.map(function (n) { return title(D, n); }).join(" and ") + (unrunCols.length > 1 ? " scorecards" : " scorecard") + " is provisional here: checks it needs were not run in this build." : "";
+        var hollowJ = list.querySelector(".lvl.vacuous.unjudged");
+        var hollowR = list.querySelector(".lvl.vacuous.unrun");
+        if ((hollowJ || hollowR) && header)
+          header.after(
+            el(
+              "div",
+              { className: "hollow-key" },
+              el("b", { textContent: "Hollow levels may not hold:" }),
+              hollowJ ? el("span", {}, levelPill("bronze", true, null).firstChild, " no agent has reviewed it yet") : null,
+              hollowR ? el("span", {}, levelPill("bronze", false, ["a check"], true).firstChild, " checks it needs were not run in this build") : null,
+            ),
+          );
         if (judgedCols.length || dashed)
           list.prepend(
             el(
@@ -3106,6 +3328,7 @@
                 "div",
                 { style: "display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center" },
                 el("h4", { className: "rn" }, scName ? ruleLink(scName, n) : n),
+                scName ? el("code", { className: "rid", textContent: n }) : null,
                 el("span", { className: "outcome unassessed", style: "margin:0", textContent: "passes, not assessed yet" }),
                 basisBadge("judged"),
                 rule.level ? el("span", { className: "sub", textContent: "counts for " + rule.level }) : "",
@@ -3118,7 +3341,7 @@
         }
         if (o === "pass") {
           var lv = rule.level || "";
-          (passed[lv] = passed[lv] || []).push(el("span", { className: basisOf(rule) === "judged" ? "judged" : "", title: rule.rationale || rule.fix || rule.check || "" }, scName ? ruleLink(scName, n) : n, " ", basisBadge(basisOf(rule), true)));
+          (passed[lv] = passed[lv] || []).push(el("span", { className: basisOf(rule) === "judged" ? "judged" : "", title: rule.rationale || rule.fix || rule.check || "" }, scName ? ruleLink(scName, n) : n, " ", basisBadge(basisOf(rule), "tip")));
           npass++;
           return;
         }
@@ -3132,13 +3355,14 @@
               "div",
               { style: "display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center" },
               el("h4", { className: "rn" }, scName ? ruleLink(scName, n) : n),
+                scName ? el("code", { className: "rid", textContent: n }) : null,
               el("span", { className: "outcome " + o, style: "margin:0", textContent: o === "unknown" ? "not run in this build" : o }),
               basisBadge(basisOf(rule)),
               rule.level ? el("span", { className: "sub", textContent: "needed for " + rule.level }) : "",
             ),
             rule.fix && o !== "unknown" ? el("div", { className: "fix" }, el("b", { textContent: "Fix: " }), ...rich(rule.fix)) : "",
             whyEl(rule),
-            evidenceEl(items, seen, n),
+            evidenceEl(items, seen, scName ? "“" + ruleTitle(scName, n) + "”" : n),
           ),
         );
       });
@@ -3175,7 +3399,7 @@
         ? el(
             "div",
             { className: "callout", style: "background:color-mix(in srgb,var(--unknown) 12%,var(--card))" },
-            el("span", {}, el("b", { className: "provisional", textContent: "Provisional " + score.level + ". " }), plural(unsure.length, "check", "checks") + " this level needs " + (unsure.length === 1 ? "was" : "were") + " not run in this build (" + unsure.join(", ") + "). The level holds only if " + (unsure.length === 1 ? "it passes" : "they pass") + "."),
+            el("span", {}, el("b", { className: "provisional", textContent: "Provisional " + score.level + ". " }), plural(unsure.length, "check", "checks") + " this level needs " + (unsure.length === 1 ? "was" : "were") + " not run in this build (" + unsure.map(function (n) { return ruleTitleOf(sc, n); }).join(", ") + "). The level holds only if " + (unsure.length === 1 ? "it passes" : "they pass") + "."),
           )
         : null;
       var next = nextLevel(sc, score.level);
@@ -3185,9 +3409,9 @@
       });
       if (!need.length) return caveat;
       if (need.length === 1)
-        return el("div", {}, caveat, el("div", { className: "callout near" }, el("span", {}, el("b", { textContent: "One rule from " }), badge(next), " · pass " + need[0] + " ", basisBadge(basisOf((sc.rules || {})[need[0]]), true), " and this entity moves up a level.")));
+        return el("div", {}, caveat, el("div", { className: "callout near" }, el("span", {}, el("b", { textContent: "One rule from " }), badge(next), " · pass “" + ruleTitleOf(sc, need[0]) + "” ", basisBadge(basisOf((sc.rules || {})[need[0]]), "tip"), " and this entity moves up a level.")));
       return el("div", {}, caveat, el("div", { className: "callout" }, el("span", {}, el("b", { textContent: "Next: " }), badge(next), " needs: ", ...need.map(function (n, i) {
-        return el("span", { className: "nr" }, (i ? ", " : "") + n + " ", basisBadge(basisOf((sc.rules || {})[n]), true));
+        return el("span", { className: "nr" }, (i ? ", " : "") + ruleTitleOf(sc, n) + " ", basisBadge(basisOf((sc.rules || {})[n]), "tip"));
       }), ".")));
     }
 
@@ -3267,7 +3491,7 @@
                     if (h) h.focus({ preventScroll: true });
                   },
                 }),
-                " (" + j.rules.join(", ") + ")",
+                " (" + j.rules.map(function (r) { return ruleTitle(j.name, r); }).join(", ") + ")",
               );
             }),
           )
@@ -3394,11 +3618,11 @@
       var section = el(
         "section",
         {},
-        el("nav", { className: "crumb", ariaLabel: "Breadcrumb" }, link("scorecards", "", "Scorecards"), " / ", link("scorecard/" + enc(scName), "", title(D, scName)), " / " + ruleName),
+        el("nav", { className: "crumb", ariaLabel: "Breadcrumb" }, link("scorecards", "", "Scorecards"), " / ", link("scorecard/" + enc(scName), "", title(D, scName)), " / " + ruleTitle(scName, ruleName)),
         el(
           "div",
           { className: "ehead" },
-          el("div", {}, el("h2", { textContent: ruleName, tabIndex: -1 }), el("div", { className: "sub" }, "A rule of ", link("scorecard/" + enc(scName), "", title(D, scName)), def.level ? el("span", {}, " · needed for ", badge(def.level)) : null)),
+          el("div", {}, el("h2", { textContent: ruleTitle(scName, ruleName), tabIndex: -1 }), el("div", { className: "sub" }, el("code", { className: "rid", textContent: ruleName }), " · a rule of ", link("scorecard/" + enc(scName), "", title(D, scName)), def.level ? el("span", {}, " · needed for ", badge(def.level)) : null)),
           basisBadge(b),
         ),
         def.rationale || (def.links || []).length
@@ -3722,6 +3946,16 @@
         track ? refs(track.links) : null,
       );
       var brief = setupBrief(context, ids, facts, who);
+      var sources = track ? refs(track.links) : null;
+      if (brief.length || sources)
+        hero.firstChild.querySelector(".rule-tally").after(
+          el(
+            "p",
+            { className: "sub cmp-prov" },
+            brief.length ? el("span", {}, el("b", { textContent: "Measured on: " }), brief.join(" · ") + ".") : null,
+            sources ? el("span", { className: "cmp-src" }, el("b", { textContent: "Evidence: " }), sources) : null,
+          ),
+        );
       hero.firstChild.append(
         el(
           "p",
@@ -3900,13 +4134,22 @@
           if (!read[f] && f !== "title") context[f] = true;
         });
       });
+      // Numeric setup facts (a corpus size, a run count) parameterise timed runs; a factor with no timed
+      // rule was probed once, so only the builds it probed apply.
+      var timed = Object.values(def.rules || {}).some(function (rd) {
+        return TIMED_UNITS.indexOf(String(rd.unit || "").toLowerCase()) >= 0;
+      });
+      if (!timed)
+        Object.keys(context).forEach(function (f) {
+          if (ids.some(function (id) { return typeof ((c.facts || {})[id] || {})[f] === "number"; })) delete context[f];
+        });
       var brief = setupBrief(context, ids, c.facts || {}, who);
       var head = el(
         "section",
         { className: basisCounts(def.rules).judged || !basisCounts(def.rules).measured ? "" : "allmeasured" },
         el("nav", { className: "crumb", ariaLabel: "Breadcrumb" }, link("compare", "", "Compare"), " / " + (def.title || name)),
         el("div", { className: "head" }, el("h2", { textContent: def.title || name, tabIndex: -1 }), standingChip(v, standingPhrase(who(c.subject), v, who(peer)))),
-        brief.length ? el("p", { className: "sub provenance" }, el("b", { textContent: "Measured on: " }), brief.join(" · ") + ". ", link("compare", "", "How it was measured, and who checked it →")) : null,
+        brief.length ? el("p", { className: "sub provenance" }, el("b", { textContent: timed ? "Timed on: " : "Probed once on: " }), brief.join(" · ") + ". ", link("compare", "", "How it was measured, and who checked it →")) : null,
         def.description ? el("p", { className: "lede" }, ...rich(def.description)) : null,
         def.rationale || (def.links || []).length ? el("div", { className: "rationale" }, el("b", { textContent: "Why this factor matters" }), def.rationale ? el("div", {}, ...rich(def.rationale)) : null, refs(def.links)) : null,
         el("p", { className: "sub", textContent: "Each rule scores both products. Where both have a measured value, the better value decides; otherwise passing beats failing. " + who(c.subject) + " is behind on the factor if it is behind on any rule." }),
@@ -4170,7 +4413,7 @@
                       { className: r.level === "none" ? "bad" : "" },
                       next.charAt(0).toUpperCase() + next.slice(1) + " needs: ",
                       ...need.slice(0, 2).map(function (n, i) {
-                        return el("span", { className: "nr" }, (i ? ", " : "") + n + " ", basisBadge(basisOf((sc.rules || {})[n]), true));
+                        return el("span", { className: "nr" }, (i ? ", " : "") + ruleTitle(active, n) + " ", basisBadge(basisOf((sc.rules || {})[n]), true));
                       }),
                       need.length > 2 ? " +" + (need.length - 2) : "",
                     )
@@ -4240,7 +4483,7 @@
             { className: "sub unrun-note" },
             el("b", { className: "provisional", textContent: "Not run in this build: " }),
             ...unrunNames.map(function (n, i) {
-              return el("span", { className: "nr" }, i ? ", " : "", ruleLink(active, n), " ", basisBadge(basisOf((sc.rules || {})[n]), true), " (" + unrunCounts[n] + " of " + scored.length + ")");
+              return el("span", { className: "nr" }, i ? ", " : "", ruleLink(active, n), " ", basisBadge(basisOf((sc.rules || {})[n]), "tip"), " (" + unrunCounts[n] + " of " + scored.length + ")");
             }),
             ". A check that was not run is neither a pass nor a failure, so it is left out of the bars above and of the biggest lever. Levels that need one are provisional: they hold only if it passes.",
           )
@@ -4320,7 +4563,7 @@
                     if (chip) chip.focus({ preventScroll: true });
                   },
                 },
-                el("span", { className: "rn" }, el("span", { textContent: f[0] }), basisBadge(basisOf((sc.rules || {})[f[0]]), false, true), rl ? badge(rl) : null, lever && f[0] === leverRule ? el("span", { className: "pill", title: "The biggest lever: fixing it lifts the most entities a level", textContent: "biggest lever" }) : null),
+                el("span", { className: "rn" }, el("span", { textContent: ruleTitle(active, f[0]) }), basisBadge(basisOf((sc.rules || {})[f[0]]), false, true), rl ? badge(rl) : null, lever && f[0] === leverRule ? el("span", { className: "pill", title: "The biggest lever: fixing it lifts the most entities a level", textContent: "biggest lever" }) : null),
                 el("span", { className: "bar xs" }, fillSpan, el("span", { style: "flex-grow:" + (100 - share) + ";background:transparent" })),
                 el("span", { className: "fc", textContent: f[1] + " of " + scored.length }),
               );
@@ -4349,14 +4592,14 @@
           el(
             "div",
             { className: "need" },
-            el("div", { className: "need-head" }, badge(l), shared ? el("span", { className: "need-basis" }, names.length > 1 ? "All " + names.length : "1 rule", basisBadge(shared, true)) : null),
+            el("div", { className: "need-head" }, badge(l), shared ? el("span", { className: "need-basis" }, names.length > 1 ? "All " + names.length : "1 rule", basisBadge(shared, "tip")) : null),
             names.length
               ? el(
                   "ul",
                   {},
                   ...names.map(function (n) {
                     var rd = sc.rules[n];
-                return el("li", {}, el("span", { style: "display:inline-flex;flex-wrap:wrap;gap:4px 6px;align-items:center" }, el("b", {}, ruleLink(active, n)), shared ? null : basisBadge(basisOf(rd), true)), rd.rationale || rd.fix ? whyFirst(rd.rationale || rd.fix) : null, refs(rd.links));
+                return el("li", {}, el("span", { style: "display:inline-flex;flex-wrap:wrap;gap:4px 6px;align-items:center" }, el("b", {}, ruleLink(active, n)), shared ? null : basisBadge(basisOf(rd), "tip")), rd.rationale || rd.fix ? whyFirst(rd.rationale || rd.fix) : null, refs(rd.links));
                   }),
                 )
               : el("div", { className: "sub", textContent: "No rules at this level." }),
@@ -4432,6 +4675,7 @@
         el(
           "section",
           { className: basisCounts(sc.rules).judged || !basisCounts(sc.rules).measured ? "" : "allmeasured" },
+          el("nav", { className: "crumb", ariaLabel: "Breadcrumb" }, link("scorecards", "", "Scorecards"), " / " + title(D, active)),
           el("label", { className: "picker" }, el("span", { className: "sub", textContent: "Scorecard" }), picker),
           el("div", { className: "head" }, el("h2", { textContent: title(D, active) }), el("code", { className: "sub", textContent: active })),
           el("p", { className: "lede" }, ...richCards(D, sc.description, active)),
