@@ -288,6 +288,7 @@ export var CSS = [
   ".flag{position:absolute;top:-10px;right:14px;font-size:12px;font-weight:700;padding:1px 9px;border-radius:999px;background:var(--fail);color:var(--card)}",
   ".chips{display:flex;flex-wrap:wrap;gap:4px}",
   ".chips .standing{font-size:12px}",
+  ".rule-tag{display:inline-block;font-size:12px;line-height:1.5;border:1px dashed var(--line);border-radius:999px;padding:0 8px;color:var(--muted);margin:2px 0}",
   ".kgroup{margin-top:16px}",
   ".kgroup:first-of-type{margin-top:4px}",
   ".kgh{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline}",

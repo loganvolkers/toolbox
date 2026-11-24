@@ -9,8 +9,16 @@ import { trackPath } from "../lib/routes.js";
 import { LADDER, rankLevel } from "../lib/rules.js";
 import { ringWhy, ringWords, trackSlots } from "../lib/status.js";
 import { prose, rich } from "../lib/text.js";
-import { factorRule, furthestTrack, standingChip, trackColor, trackKey, trackStats, tracksSorted } from "../lib/tracks.js";
+import { furthestTrack, ruleTag, standingChip, trackColor, trackKey, trackStats, tracksSorted } from "../lib/tracks.js";
 import { firstSentence, plural } from "../lib/words.js";
+
+// The ring is a share at the top level; entities still at none are the other half of the story.
+function atNone(t) {
+  var n = (t.cards || []).reduce(function (sum, c) {
+    return sum + (c.row.none || 0);
+  }, 0);
+  return n ? "; " + plural(n, "entity", "entities") + " still at none" : "";
+}
 
 export const tracksViews = {
   trackCard(D, S, t, flag) {
@@ -22,7 +30,7 @@ export const tracksViews = {
         "div",
         { className: "th" },
         t.compare ? tallyRing(t.verdicts, t.rows.length, 60) : ring(t.pct, { size: 60, color: color, label: t.pct == null ? "not scored" : t.pct + "% at the top level" }),
-        el("div", {}, el("div", { className: "tt", textContent: def.title || t.name }), el("div", { className: "sub", textContent: t.compare ? "factors ahead, a segment per factor; " + factorRule(t.majority) : t.averaged > 1 ? ringWords(t) : "of entities at the top level" })),
+        el("div", {}, el("div", { className: "tt", textContent: def.title || t.name }), el("div", { className: "sub", textContent: t.compare ? "factors ahead, a segment per factor" : (t.averaged > 1 ? ringWords(t) : "of entities at the top level") + atNone(t) })),
       ),
       def.description ? el("div", { className: "td", textContent: prose(firstSentence(def.description)) }) : null,
     ];
@@ -41,6 +49,7 @@ export const tracksViews = {
             .map(function (v) {
               return standingChip(v, t.verdicts[v] + " " + v);
             }),
+          ruleTag(t.majority),
         ),
       );
     } else if (t.cards.length) {

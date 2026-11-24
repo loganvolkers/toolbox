@@ -476,6 +476,9 @@
   function factorRule(majority) {
     return majority ? "a factor is ahead when more of its rules are ahead than behind, behind when more are behind, at parity when they are even" : "a factor is behind if any one of its rules is behind";
   }
+  function ruleTag(majority) {
+    return el("span", { className: "rule-tag", title: "By this comparison's rule, " + factorRule(majority) + "." }, majority ? "counted by the majority of rules" : "behind if any rule is behind");
+  }
   function factorChip(v, counts, total) {
     if (counts.ahead && counts.behind) return v === "parity" ? "even split" : v + ", mixed";
     return v === "ahead" && counts.ahead * 2 < total ? "narrowly ahead" : null;
@@ -789,11 +792,11 @@
     if (debt.length) bits.push(debt.length + " of " + plural(scored, "scorecard") + " " + (debt.length === 1 ? "has" : "have") + " entities at none");
     if (off.length) bits.push(plural(off.length, "campaign") + " " + (off.length === 1 ? "is" : "are") + " behind target");
     if (blind.length) bits.push(plural(blind.length, "campaign") + " " + (blind.length === 1 ? "has" : "have") + " no single score");
-    var atNone = debt.reduce(function(n, r) {
+    var atNone2 = debt.reduce(function(n, r) {
       return n + r.none;
     }, 0);
-    if (!off.length && !blind.length && atNone <= 2)
-      return "Almost there: " + plural(atNone, "entity is", "entities are") + " at none, in " + andList(debt.map(function(r) {
+    if (!off.length && !blind.length && atNone2 <= 2)
+      return "Almost there: " + plural(atNone2, "entity is", "entities are") + " at none, in " + andList(debt.map(function(r) {
         return title(D, r.name);
       })) + "; every other scored entity holds a medal.";
     var lead = "Needs attention: ";
@@ -1147,7 +1150,7 @@
       { className: "nextmedal" },
       el("b", { textContent: label || "Next medal: " }),
       link("scorecard/" + enc(nm.name), "", title(D, nm.name)),
-      " to " + nm.up + (isTop(D, nm.name, nm.up) ? ", its top level" : ", a step toward " + (((D.scorecards || {})[nm.name] || {}).levels || []).slice(-1)[0] + ", the level the rings count") + ". " + plural(nm.low, "entity", "entities") + " at " + nm.floor + " to lift" + (nm.rule ? "; " + nm.n + (nm.n === 1 ? " needs " : " need ") : "."),
+      " to " + nm.up + (isTop(D, nm.name, nm.up) ? ", its top level" : " (its top level is " + (((D.scorecards || {})[nm.name] || {}).levels || []).slice(-1)[0] + ")") + ". " + plural(nm.low, "entity", "entities") + " at " + nm.floor + " to lift" + (nm.rule ? "; " + nm.n + (nm.n === 1 ? " needs " : " need ") : "."),
       nm.rule ? link("rule/" + enc(nm.name) + "/" + enc(nm.rule), "", ruleTitle(nm.name, nm.rule)) : null,
       nm.rule ? " " : null,
       nm.rule ? basisBadge(basisOf((((D.scorecards || {})[nm.name] || {}).rules || {})[nm.rule]), "tip") : null,
@@ -1451,7 +1454,7 @@
         "stroke-dasharray": none ? "4 3" : ""
       }),
       none ? null : svg("circle", { cx: 28, cy: 34, r: 12, fill: "none", stroke: "#fff", "stroke-opacity": ".55", "stroke-width": 1.5 }),
-      level === "not scored" ? svg("text", { x: 28, y: 41, "text-anchor": "middle", "font-size": 20, "font-weight": 700, fill: "var(--muted)", "font-family": "inherit" }, "?") : none ? null : svg("path", {
+      level === "not scored" ? svg("text", { x: 28, y: 41, "text-anchor": "middle", "font-size": 20, "font-weight": 700, fill: "var(--muted)", "font-family": "inherit" }, "?") : none ? null : ONLY_LEVEL.has(level) ? svg("path", { d: "M21 34.5l5 5 9.5-10", fill: "none", stroke: "#fff", "stroke-opacity": ".9", "stroke-width": 3.2, "stroke-linecap": "round", "stroke-linejoin": "round" }) : svg("path", {
         d: "M28 26.5l2.3 4.7 5.2.8-3.8 3.7.9 5.1-4.6-2.4-4.6 2.4.9-5.1-3.8-3.7 5.2-.8z",
         fill: "#fff",
         "fill-opacity": ".8"
@@ -1841,6 +1844,7 @@
     ".flag{position:absolute;top:-10px;right:14px;font-size:12px;font-weight:700;padding:1px 9px;border-radius:999px;background:var(--fail);color:var(--card)}",
     ".chips{display:flex;flex-wrap:wrap;gap:4px}",
     ".chips .standing{font-size:12px}",
+    ".rule-tag{display:inline-block;font-size:12px;line-height:1.5;border:1px dashed var(--line);border-radius:999px;padding:0 8px;color:var(--muted);margin:2px 0}",
     ".kgroup{margin-top:16px}",
     ".kgroup:first-of-type{margin-top:4px}",
     ".kgh{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline}",
@@ -3318,6 +3322,12 @@
   };
 
   // src/views/tracks.js
+  function atNone(t) {
+    var n = (t.cards || []).reduce(function(sum, c) {
+      return sum + (c.row.none || 0);
+    }, 0);
+    return n ? "; " + plural(n, "entity", "entities") + " still at none" : "";
+  }
   var tracksViews = {
     trackCard(D, S, t, flag) {
       var def = t.def;
@@ -3328,7 +3338,7 @@
           "div",
           { className: "th" },
           t.compare ? tallyRing(t.verdicts, t.rows.length, 60) : ring(t.pct, { size: 60, color, label: t.pct == null ? "not scored" : t.pct + "% at the top level" }),
-          el("div", {}, el("div", { className: "tt", textContent: def.title || t.name }), el("div", { className: "sub", textContent: t.compare ? "factors ahead, a segment per factor; " + factorRule(t.majority) : t.averaged > 1 ? ringWords(t) : "of entities at the top level" }))
+          el("div", {}, el("div", { className: "tt", textContent: def.title || t.name }), el("div", { className: "sub", textContent: t.compare ? "factors ahead, a segment per factor" : (t.averaged > 1 ? ringWords(t) : "of entities at the top level") + atNone(t) }))
         ),
         def.description ? el("div", { className: "td", textContent: prose(firstSentence(def.description)) }) : null
       ];
@@ -3344,7 +3354,8 @@
               return t.verdicts[v];
             }).map(function(v) {
               return standingChip(v, t.verdicts[v] + " " + v);
-            })
+            }),
+            ruleTag(t.majority)
           )
         );
       } else if (t.cards.length) {
@@ -4435,9 +4446,9 @@
             el(
               "div",
               {},
-              el("strong", { style: "color:" + ink(S.worst[id]) }, ownLevel(D, kind, S.worst[id]), provisional.length ? el("span", { className: "pv-head", textContent: notRun ? " (provisional)" : " (may not hold)" }) : null),
+              el("strong", { style: "color:" + ink(S.worst[id]) + (KNOWN.indexOf(ownLevel(D, kind, S.worst[id])) < 0 ? ";text-transform:none" : "") }, ownLevel(D, kind, S.worst[id]), provisional.length ? el("span", { className: "pv-head", textContent: notRun ? " (provisional)" : " (may not hold)" }) : null),
               provisional.length ? el("span", { className: "provisional", style: "display:block;font-size:13px", title: "The level holds only if the checks not run in this build pass and an agent's assessment finds nothing; the scorecards below name them.", textContent: provisional.join(", ") }) : null,
-              el("span", { className: "sub", textContent: (cards.length > 1 ? "lowest of " + cards.length + " scorecards · " : "") + total.pass + " of " + plural(total.all, "check passes", "checks pass") + " on evidence" + (total.hollow ? " · " + total.hollow + " more only because nothing was assessed" : "") })
+              el("span", { className: "sub", textContent: (cards.length > 1 ? "lowest of " + cards.length + " scorecards · " : "") + total.pass + " of " + plural(total.all, "check passes", "checks pass") + " on evidence" + (total.hollow ? " · " + total.hollow + " more " + (total.hollow === 1 ? "passes" : "pass") + " only because no agent has assessed " + (total.hollow === 1 ? "it" : "them") + " yet" : "") })
             )
           ) : null
         ),
@@ -4728,7 +4739,7 @@
         });
       });
       var unmeasured = counts.unknown >= names.length;
-      var headline = unmeasured ? "Not measured yet: none of the " + plural(names.length, "factor") + " has values for both products." : "Ahead on " + counts.ahead + " of " + plural(names.length, "factor") + " and " + ruleCounts.ahead + " of " + plural(ruleTotal, "rule") + (counts.behind ? "; behind on " + plural(counts.behind, "factor") + ", and on " + ruleCounts.behind + " of the " + plural(ruleTotal, "rule") + " overall" : "") + (counts.parity ? "; at parity on " + plural(counts.parity, "factor") : "") + (counts.unknown ? "; " + counts.unknown + " not measured" : "") + ".";
+      var headline = unmeasured ? "Not measured yet: none of the " + plural(names.length, "factor") + " has values for both products." : "Ahead on " + counts.ahead + " of " + plural(names.length, "factor") + (counts.behind ? ", behind on " + counts.behind : "") + (counts.parity ? ", at parity on " + counts.parity : "") + (counts.unknown ? ", " + counts.unknown + " not measured" : "") + ".";
       var majority = byMajority(D, names);
       var lean = counts.behind > counts.ahead ? "behind" : counts.ahead > counts.behind ? "ahead" : "parity";
       var hero = el(
@@ -4773,6 +4784,7 @@
           "div",
           { className: "cmp-side" },
           el("div", { className: "kicker", textContent: "Factors" }),
+          ruleTag(majority),
           el(
             "div",
             { className: "tally3" },
@@ -5101,7 +5113,7 @@
         { className: basisCounts(def.rules).judged || !basisCounts(def.rules).measured ? "" : "allmeasured" },
         el("nav", { className: "crumb", ariaLabel: "Breadcrumb" }, link("compare", "", "Compare"), " / " + (def.title || name)),
         el("div", { className: "head" }, el("h2", { textContent: def.title || name, tabIndex: -1 }), standingChip(v, rules.length && (tallyBy.get("unknown") || 0) === rules.length ? tallyNote.slice(3) : standingPhrase(who(c.subject), v, who(peer)) + tallyNote)),
-        brief.length ? el("p", { className: "sub provenance" }, el("b", { textContent: timed ? "Timed on: " : "Probed once on: " }), brief.join(" · ") + ". ", link("compare", "", "How it was measured, and who checked it →")) : null,
+        brief.length ? el("p", { className: "sub provenance" }, el("b", { textContent: timed ? "Timed on: " : "Probed once on: " }), brief.join(" · ") + ". ", /\+uncommitted\b/.test(brief.join(" ")) ? "“+uncommitted” means the harness had local changes when it ran, so a rerun from that commit may differ. " : "", link("compare", "", "How it was measured, and who checked it →")) : null,
         def.description ? el("p", { className: "lede" }, ...rich(def.description)) : null,
         def.rationale || (def.links || []).length ? el("div", { className: "rationale" }, el("b", { textContent: "Why this factor matters" }), def.rationale ? el("div", {}, ...rich(def.rationale)) : null, refs(def.links)) : null,
         el("p", { className: "sub", textContent: "Each rule scores both products. Where both have a measured value, the better value decides; otherwise passing beats failing. " + who(c.subject) + (c.verdictRule === "majority" ? " is ahead on the factor when more of its rules are ahead than behind, and behind when more are behind." : " is behind on the factor if it is behind on any rule.") }),

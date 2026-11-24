@@ -250,6 +250,8 @@ export function medal(level, size) {
       ? svg("text", { x: 28, y: 41, "text-anchor": "middle", "font-size": 20, "font-weight": 700, fill: "var(--muted)", "font-family": "inherit" }, "?")
       : none
       ? null
+      : ONLY_LEVEL.has(level)
+      ? svg("path", { d: "M21 34.5l5 5 9.5-10", fill: "none", stroke: "#fff", "stroke-opacity": ".9", "stroke-width": 3.2, "stroke-linecap": "round", "stroke-linejoin": "round" })
       : svg("path", {
           d: "M28 26.5l2.3 4.7 5.2.8-3.8 3.7.9 5.1-4.6-2.4-4.6 2.4.9-5.1-3.8-3.7 5.2-.8z",
           fill: "#fff",

@@ -8,7 +8,7 @@ import { shortId, title } from "../lib/rings.js";
 import { trackPath } from "../lib/routes.js";
 import { ruleTitle } from "../lib/rules.js";
 import { rich } from "../lib/text.js";
-import { STANDING_MARK, byMajority, factorChip, factorRule, standingChip, standingColor, standingPhrase } from "../lib/tracks.js";
+import { STANDING_MARK, byMajority, factorChip, factorRule, ruleTag, standingChip, standingColor, standingPhrase } from "../lib/tracks.js";
 import { andList, firstSentence, lowerFirst, plural, sentences } from "../lib/words.js";
 
 // The number a factor leads with: rules behind, else ahead, else at parity; both when it is ahead on some and behind on
@@ -183,13 +183,9 @@ export const compareViews = {
       counts.ahead +
       " of " +
       plural(names.length, "factor") +
-      " and " +
-      ruleCounts.ahead +
-      " of " +
-      plural(ruleTotal, "rule") +
-      (counts.behind ? "; behind on " + plural(counts.behind, "factor") + ", and on " + ruleCounts.behind + " of the " + plural(ruleTotal, "rule") + " overall" : "") +
-      (counts.parity ? "; at parity on " + plural(counts.parity, "factor") : "") +
-      (counts.unknown ? "; " + counts.unknown + " not measured" : "") +
+      (counts.behind ? ", behind on " + counts.behind : "") +
+      (counts.parity ? ", at parity on " + counts.parity : "") +
+      (counts.unknown ? ", " + counts.unknown + " not measured" : "") +
       ".";
     var majority = byMajority(D, names);
     var lean = counts.behind > counts.ahead ? "behind" : counts.ahead > counts.behind ? "ahead" : "parity";
@@ -241,6 +237,7 @@ export const compareViews = {
         "div",
         { className: "cmp-side" },
         el("div", { className: "kicker", textContent: "Factors" }),
+        ruleTag(majority),
         el(
           "div",
           { className: "tally3" },
@@ -592,7 +589,7 @@ export const compareViews = {
       { className: basisCounts(def.rules).judged || !basisCounts(def.rules).measured ? "" : "allmeasured" },
       el("nav", { className: "crumb", ariaLabel: "Breadcrumb" }, link("compare", "", "Compare"), " / " + (def.title || name)),
       el("div", { className: "head" }, el("h2", { textContent: def.title || name, tabIndex: -1 }), standingChip(v, rules.length && (tallyBy.get("unknown") || 0) === rules.length ? tallyNote.slice(3) : standingPhrase(who(c.subject), v, who(peer)) + tallyNote)),
-      brief.length ? el("p", { className: "sub provenance" }, el("b", { textContent: timed ? "Timed on: " : "Probed once on: " }), brief.join(" · ") + ". ", link("compare", "", "How it was measured, and who checked it →")) : null,
+      brief.length ? el("p", { className: "sub provenance" }, el("b", { textContent: timed ? "Timed on: " : "Probed once on: " }), brief.join(" · ") + ". ", /\+uncommitted\b/.test(brief.join(" ")) ? "“+uncommitted” means the harness had local changes when it ran, so a rerun from that commit may differ. " : "", link("compare", "", "How it was measured, and who checked it →")) : null,
       def.description ? el("p", { className: "lede" }, ...rich(def.description)) : null,
       def.rationale || (def.links || []).length ? el("div", { className: "rationale" }, el("b", { textContent: "Why this factor matters" }), def.rationale ? el("div", {}, ...rich(def.rationale)) : null, refs(def.links)) : null,
       el("p", { className: "sub", textContent: "Each rule scores both products. Where both have a measured value, the better value decides; otherwise passing beats failing. " + who(c.subject) + (c.verdictRule === "majority" ? " is ahead on the factor when more of its rules are ahead than behind, and behind when more are behind." : " is behind on the factor if it is behind on any rule.") }),

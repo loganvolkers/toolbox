@@ -226,6 +226,12 @@ export function factorRule(majority) {
 }
 
 // The chip for a factor whose rules split both ways, or that leads on under half of them.
+// The tally a comparison declared, named where its factor verdicts are shown, so two portals that
+// count differently never look alike.
+export function ruleTag(majority) {
+  return el("span", { className: "rule-tag", title: "By this comparison's rule, " + factorRule(majority) + "." }, majority ? "counted by the majority of rules" : "behind if any rule is behind");
+}
+
 export function factorChip(v, counts, total) {
   if (counts.ahead && counts.behind) return v === "parity" ? "even split" : v + ", mixed";
   return v === "ahead" && counts.ahead * 2 < total ? "narrowly ahead" : null;
