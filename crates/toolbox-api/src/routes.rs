@@ -196,12 +196,15 @@ fn list_candidates<'a>(s: &AppState, p: &'a Published, q: &ListQuery) -> Vec<&'a
         .as_ref()
         .map_or(std::ops::Bound::Unbounded, std::ops::Bound::Excluded);
     // A filter that requires `entity.<field> == '<value>'` matches only entities whose field has
-    // that value (a redacted field is an object, never a string), so start from those.
+    // that value (a redacted field is an object, never a string), so start from those. Only when
+    // `kind` names exactly one kind, and never for `id`, which the filter sees as the entity id.
     let kind = q.kind.as_deref().and_then(|k| {
-        s.manifest
+        let mut named = s
+            .manifest
             .kinds
             .iter()
-            .find(|m| m.name.eq_ignore_ascii_case(k))
+            .filter(|m| m.name.eq_ignore_ascii_case(k));
+        named.next().filter(|_| named.next().is_none())
     });
     let posting = kind.and_then(|k| {
         q.filter
@@ -209,7 +212,7 @@ fn list_candidates<'a>(s: &AppState, p: &'a Published, q: &ListQuery) -> Vec<&'a
             .map(toolbox_expr::analysis::required_equalities)
             .unwrap_or_default()
             .into_iter()
-            .filter(|(f, _)| k.fields.contains_key(f))
+            .filter(|(f, _)| f != "id" && k.fields.contains_key(f))
             .map(|(f, v)| (p.by_field.get(&p.derived, &k.name, &f), v))
             .min_by_key(|(ix, v)| ix.get(v).map_or(0, Vec::len))
     });

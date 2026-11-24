@@ -11,7 +11,11 @@ fn portal() -> PathBuf {
 }
 
 async fn start() -> String {
-    let src = toolbox_model::load::load(&portal()).unwrap();
+    start_at(&portal()).await
+}
+
+async fn start_at(root: &Path) -> String {
+    let src = toolbox_model::load::load(root).unwrap();
     let (m, errors) = toolbox_model::validate_manifest(&src.document, "toolbox.yaml");
     assert!(errors.is_empty());
     let store = Arc::new(SharedMem(Mutex::new(toolbox_store::MemStore::new())));
@@ -227,4 +231,87 @@ async fn ingest_then_read_with_filters() {
         .await
         .unwrap();
     assert_eq!(r.status(), 401);
+}
+
+const EDGES: &str = r#"
+apiVersion: toolbox.dev/v1alpha1
+portal: {name: edges, title: Edges, owner: group:maintainers, toolbox: "0.1"}
+connectors:
+  - {name: things, package: builtin:git-files, runtime: remote, records: [thing, other]}
+kinds:
+  - name: Thing
+    identityFrom: [connector:things]
+    fields:
+      id: {type: string}
+      team: {type: string}
+    sources: {default: [connector:things]}
+    map:
+      - {from: things/thing, id: "'thing:' + record.name", set: "{'id': 'alias-' + record.name, 'team': record.team}"}
+  - name: THING
+    identityFrom: [connector:things]
+    fields:
+      team: {type: string}
+    sources: {default: [connector:things]}
+    map:
+      - {from: things/other, id: "'other:' + record.name", set: "{'team': record.team}"}
+"#;
+
+#[tokio::test]
+async fn field_index_narrowing_respects_kind_case_and_the_entity_id() {
+    let dir = std::env::temp_dir().join(format!("toolbox-api-edges-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("toolbox.yaml"), EDGES).unwrap();
+    let url = start_at(&dir).await;
+    let c = reqwest::Client::new();
+    let record = |kind: &str, name: &str| {
+        serde_json::json!({"type": "record", "kind": kind, "externalId": format!("{kind}:{name}"),
+                           "data": {"name": name, "team": "a"}})
+    };
+    let batch = vec![
+        record("thing", "x"),
+        record("thing", "y"),
+        record("other", "z"),
+    ];
+    let r: Value = c
+        .post(format!("{url}/v1/ingest"))
+        .header("x-toolbox-connector", "things")
+        .json(&batch)
+        .send()
+        .await
+        .unwrap()
+        .json()
+        .await
+        .unwrap();
+    let v = r["input_version"].as_u64().unwrap().to_string();
+    let ids = |kind: &'static str, filter: &'static str| {
+        let (c, url, v) = (c.clone(), url.clone(), v.clone());
+        async move {
+            let r: Value = c
+                .get(format!("{url}/v1/entities"))
+                .header("x-toolbox-user", "dave")
+                .query(&[("kind", kind), ("filter", filter), ("min_snapshot", &v)])
+                .send()
+                .await
+                .unwrap()
+                .json()
+                .await
+                .unwrap();
+            let items = r["items"].as_array().unwrap_or_else(|| panic!("{r}"));
+            items
+                .iter()
+                .map(|e| e["id"].as_str().unwrap().to_owned())
+                .collect::<Vec<_>>()
+        }
+    };
+    assert_eq!(
+        ids("thing", "entity.team == 'a'").await,
+        ["other:z", "thing:x", "thing:y"],
+        "`thing` names both kinds"
+    );
+    assert_eq!(
+        ids("Thing", "entity.id == 'thing:x'").await,
+        ["thing:x"],
+        "a filter sees the entity id, not the field"
+    );
+    let _ = std::fs::remove_dir_all(&dir);
 }
