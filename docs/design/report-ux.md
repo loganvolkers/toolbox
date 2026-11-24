@@ -342,6 +342,13 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 - Each pattern has one meaning: hatched is not assessed, dotted is provisional, thin vertical
   stripes are not scored.
 - Adding a filter keeps the filters it does not contradict.
+- A list scrolls to its current item only when that item is out of view, and then offers a way back
+  to the top; a tab strip centres its current tab.
+- Compare's first method sentence is its seal: both versions, the runs, the corpus and who checked
+  it. A factor page ends with the head-to-head chart, not the full grid of factor cards.
+- Where both axes appear, they are named: "How it's decided" (measured or agent-judged) and "Has it
+  run" (provisional when a check was not run). A row blocked by rules carries those rules' basis.
+- Every bar, even at 0%, draws at least 3px, so zero reads as a value and not a gap.
 
 Not built: a change since the last snapshot beside each track ring. The report carries one snapshot
 and the committed baseline, which equals it on every published build; a pages build that also scored
