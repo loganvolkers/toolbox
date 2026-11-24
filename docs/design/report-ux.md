@@ -212,7 +212,8 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 - Comparison tracks sit apart from the other tracks, under "Measured against a rival": their ring
   counts factors led, which is not a share of entities, so they take no place in the order.
   A track card says what its percentage averages over ("averaged over N scorecards").
-- Stripes mean "not assessed" and nothing else; an entity with no result is a dotted fill.
+- Stripes mean "not assessed" and nothing else; an entity with no result is a dotted fill, and so
+  is a level that rests on checks not run in this build, outlined in the provisional colour.
 - A scorecard id left in a lede or rationale links to that scorecard under its title.
 - An entity one rule from its next level says so ("One rule from gold · pass “Has evals”"), and the
   scorecard's lever counts how many entities are within reach that way.
@@ -258,6 +259,20 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 - A factor with no timed rule reads "Probed once on" and leaves out the run count and corpus, which
   only timed factors used. The Compare hero carries one provenance line: the setup it was measured
   on and the evidence links (results, how it was run, adjudication, design).
+- Every list of scorecards uses one caption: entities, how many are in scope, the share at the top
+  level with that level named ("27% at the top level (gold)"), and how many are provisional or not
+  assessed. A level bar draws entities whose level rests on checks not run dotted, as it draws
+  unassessed ones hatched, and a medal fades with the hollow pill's glyph when at least half the
+  entities holding the weakest level are hatched or dotted. A list never reads better than the
+  scorecard's page.
+- A scorecard page opens with its status under the title: the medal, the weakest level, how many
+  entities are at the top level, the biggest lever, and the level bar. The description and a
+  "why" clamped to three lines (with "Read the full why") follow.
+- A ratio uses the comparative a reader would say for its unit: fewer files, faster seconds, smaller
+  megabytes; the measure comes first ("files the adopter keeps …, 22× fewer"). A factor page's
+  standing chip carries its rule tally ("7 of 13 rules behind").
+- A track card names its weakest scorecard and its level; when that scorecard is also the next
+  medal, one line says both.
 
 Not built: a change since the last snapshot beside each track ring. The report carries one snapshot
 and the committed baseline, which equals it on every published build; a pages build that also scored
