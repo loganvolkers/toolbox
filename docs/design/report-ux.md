@@ -1,7 +1,10 @@
 # Hosted report UX
 
 *Status: decided 2026-11-21 (D01M7XY1QYKW2D0HMSG50R0XTQH); redesigned after a blind design audit
-on 2026-11-24 (D01M85MK7FCRXH2TRMRKXTNA5GT, [audit](../audits/toolbox-report-2026-11-24.md)).
+on 2026-11-24 (D01M85MK7FCRXH2TRMRKXTNA5GT, [audit](../audits/toolbox-report-2026-11-24.md)); tracks,
+kind groups, rationale and measured vs agent-judged results added after a second audit the same day
+(D01M868BY0KJNEYE9WBFZYEYFYH, [audit](../audits/toolbox-report-2026-11-24-2.md)). This document is
+about the box: how it reports what the tools found.
 Amends the static page in [repo-portals.md](./repo-portals.md) §4. The agent skill is
 [`report-ux`](../../plugins/toolbox-operator/skills/report-ux/SKILL.md); changes are judged with
 [`design-audit`](./design-audit.md).*
@@ -18,9 +21,11 @@ not a quality judgement.
 | Mode | Job | Primary content |
 |---|---|---|
 | **Overview** (default) | Fleet health verdict | The repository level as a medal, a one-sentence verdict, the next level and the ladder of repository standards that hold it; tiles for checks passing, gold entities, scorecards at `none` and campaigns on target; campaign cards with progress rings; scorecards that need attention, with the clear ones collapsed; catalog kinds as chips |
-| **Catalog** | What exists | Scored kinds first → entity ids (short name primary) → that entity's scores across every scorecard |
+| **Tracks** | Lines of work | One card per track, furthest from its goal first: a ring for the share of entities at the top level, the weakest scorecard, and the track's description; a track page lists its scorecards and comparisons |
+| **Catalog** | What exists | Kinds in their `kindGroups`, then the scored kinds' lists with one column per scorecard → entity ids (short name primary) → that entity's scores across every scorecard |
 | **Campaigns** | Time-bound focus | Lowest progress first; progress vs target; milestones; entities not meeting includes ([campaigns.md](./campaigns.md), D01M7Y11G0YZT23W26Z9D3XW68Y) |
 | **Scorecards** | Standards debt and proof | Ranked debt list (not equal pills); defaults to highest `none`; what each level needs; most common failures; level and outcome filters; every rule outcome on expand |
+| **Compare** | Head to head | A verdict sentence (ahead, parity, behind as a tally of factors, which are not weighted), how it was measured, one card per factor; a factor page shows each rule, what it reads and both products' values |
 
 ## 2. Why the previous page failed the VP test
 
@@ -59,7 +64,11 @@ element or `report_json` must follow it. `maintainer-skill` scores the file like
 "catalog": { "Crate": ["crate:toolbox-cli", "..."], "Skill": ["..."] },
 "tracks": { "maintainer": { "title": "…", "owner": "…" } },
 "campaigns": { "skill-silver": { "status": "active", "percent": 88, "includes": [], "entities": {} } },
-"scorecards": { "maintainer-skill": { "title": "Agent skills", "description": "…", "levels": [], "rules": {} } }
+"scorecards": { "maintainer-skill": { "title": "Agent skills", "description": "…", "rationale": "…", "links": [],
+  "levels": [], "rules": { "has-example": { "basis": "measured", "rationale": "…", "links": [] } } } },
+"kindGroups": [{ "name": "code", "title": "Code", "description": "…", "kinds": ["Crate"] }],
+"kinds": { "Crate": { "description": "…" } },
+"comparisons": { "vs-backstage-capabilities": { "facts": {}, "reads": {}, "fields": {} } }
 ```
 
 Ids are sorted. Full entity fields stay out of the static page (size and facet caveats in
@@ -69,7 +78,8 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 ## 6. Interaction rules
 
 - Default hash is Overview (`#` / `#overview`).
-- Deep links: `#catalog`, `#catalog/<Kind>`, `#entity/<id>`, `#campaign/<name>`, `#scorecard/<name>`.
+- Deep links: `#tracks`, `#track/<name>`, `#catalog`, `#catalog/<Kind>`, `#entity/<id>`, `#campaign/<name>`,
+  `#scorecard/<name>`, `#rule/<scorecard>/<rule>`, `#compare`, `#compare/<name>`.
 - Mode chrome uses `role="tab"` / `aria-selected` with arrow-key movement.
 - Every row is one link or one `<summary>`, never a clickable row that contains a link (axe
   `nested-interactive`).
@@ -103,11 +113,20 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 - Skipped entities take no length in a distribution bar; the legend counts them as "not in scope".
 - A campaign with nothing in scope says that it cannot be measured, instead of showing 0%.
 - Motion (bars growing, rings filling) respects `prefers-reduced-motion`.
+- Every rule and result carries its basis: **Measured** (a gauge icon, neutral) or **Agent-judged** (a
+  sparkle, violet). Lists too dense for text show the icon or tint the chip, and a key above the list
+  names both.
+- A rule shows **Why** (its rationale) beside its fix, and a link to the long story. Decision ids are
+  stripped from prose, which readers can't resolve.
+- Kind titles are human ("SDLC layer"); the kind id stays as muted monospace.
+- A level resting on checks that were not run says "Provisional" and names them.
+- Links and buttons in text have hit areas of at least 24 px.
 
 ## Sources
 
 - [design-audit.md](./design-audit.md) and its rubric; the baseline and re-audit in
-  [toolbox-report-2026-11-24.md](../audits/toolbox-report-2026-11-24.md).
+  [toolbox-report-2026-11-24.md](../audits/toolbox-report-2026-11-24.md), and the second loop in
+  [toolbox-report-2026-11-24-2.md](../audits/toolbox-report-2026-11-24-2.md).
 - OpsLevel Maturity Report docs; Cortex Bird's eye and All Scorecards docs; Port scorecards guide;
   OpenSSF Scorecard viewer (`scorecard.dev/viewer`); Bach et al., *Dashboard Design Patterns*
   (arXiv:2205.00757); [repo-portals.md](./repo-portals.md); [minimal-ui.md](./minimal-ui.md).
