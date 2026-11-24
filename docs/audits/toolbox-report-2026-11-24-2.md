@@ -591,8 +591,8 @@ bar, so the loop goes round again.
 | F10 (U10). The mobile tab strip clipped the active label | The active tab is centred in the strip |
 | F11. "No single score" looked like a warning | A neutral solid pill |
 
-F3 (naming the two axes, how a rule is decided and whether it ran) is kept as is: the key already
-groups them under "Decided by" and "Not decided". F4 (a why on every Scorecards row) is kept for the
+F3 (naming the two axes): where both appear, the catalog now labels them "How it's decided" and
+"Has it run". F4 (a why on every Scorecards row) is kept for the
 reason given in round 23. F12 (rules without a link of their own) is content, not layout: a rule
 inherits its scorecard's links.
 
