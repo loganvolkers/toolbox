@@ -90,6 +90,9 @@ scorecards:
         A harness that cannot parse the frontmatter, or finds a name that does
         not match the directory, does not load the skill, so every later rule is
         moot.
+      links:
+      - title: Agent Skills specification
+        url: https://agentskills.io/specification
     - name: description-says-when
       level: bronze
       check: >-
@@ -103,6 +106,11 @@ scorecards:
         Only the name and description are loaded at startup, so the description
         alone decides whether a router picks the skill. Below 20 characters it
         cannot say when; above 1024 the spec rejects it.
+      links:
+      - title: Agent Skills specification
+        url: https://agentskills.io/specification
+      - title: Anthropic skill best practices (writing effective descriptions)
+        url: https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/best-practices
     - name: third-person
       level: bronze
       check: entity.descriptionChars > 0 && entity.pronouns.size() == 0
@@ -201,6 +209,9 @@ scorecards:
         A skill that names no limit, prerequisite or error path leaves the agent
         to push on when a step fails, or to use the skill where it does not
         apply.
+      links:
+      - title: Anthropic skill best practices (error handling)
+        url: https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/best-practices
     - name: has-evals
       level: gold
       check: entity.evalCases >= 3

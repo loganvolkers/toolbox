@@ -244,6 +244,9 @@ scorecards:
         Clippy's lints catch common bugs and unidiomatic code before review, and
         CI runs it with `-D warnings`, so a warning here would fail the build
         anyway.
+      links:
+      - title: Clippy documentation
+        url: https://doc.rust-lang.org/clippy/
     - name: public-api-documented
       level: silver
       check: entity.docCoverage >= 80
@@ -253,6 +256,9 @@ scorecards:
         Other crates and agents use a crate through its public items; an
         undocumented one makes them read the implementation, which a public API
         is meant to spare them.
+      links:
+      - title: 'Rust API Guidelines: documentation'
+        url: https://rust-lang.github.io/api-guidelines/documentation.html
     - name: no-huge-functions
       level: silver
       check: entity.maxFnLines <= 150
@@ -264,6 +270,9 @@ scorecards:
         A very long function is hard to review and can't be tested in parts, so
         a change inside it risks effects far from the edit. Silver catches the
         outliers; gold's short-functions tightens the limit.
+      links:
+      - title: Clippy lints (too_many_lines)
+        url: https://rust-lang.github.io/rust-clippy/master/index.html
     - name: bounded-complexity
       level: silver
       check: entity.maxComplexity <= 30
@@ -277,6 +286,9 @@ scorecards:
         Cyclomatic complexity counts the independent paths through a function,
         and each needs a test of its own; past the bound a function has more
         paths than its tests are likely to cover.
+      links:
+      - title: NIST SP 500-235, Structured Testing (cyclomatic complexity)
+        url: https://www.nist.gov/publications/structured-testing-testing-methodology-using-cyclomatic-complexity-metric
     - name: fully-documented
       level: gold
       check: entity.docCoverage == 100
@@ -285,6 +297,9 @@ scorecards:
       rationale: >-
         At gold no public item has to be read in source to be used, so an agent
         can work with the crate through its API without loading its internals.
+      links:
+      - title: 'Rust API Guidelines: documentation'
+        url: https://rust-lang.github.io/api-guidelines/documentation.html
     - name: short-functions
       level: gold
       check: entity.longFunctions.size() == 0
@@ -294,6 +309,9 @@ scorecards:
         A function short enough to read in one sitting can be reviewed, tested
         and replaced as a unit; longer ones usually mix several steps that
         deserve names of their own.
+      links:
+      - title: Clippy lints (too_many_lines)
+        url: https://rust-lang.github.io/rust-clippy/master/index.html
     - name: simple-functions
       level: gold
       check: entity.complexFunctions.size() == 0
@@ -305,6 +323,9 @@ scorecards:
         At the gold bound a function has few enough paths that each can be
         tested and reasoned about; more branching than that is usually clearer
         as named helpers.
+      links:
+      - title: NIST SP 500-235, Structured Testing (cyclomatic complexity)
+        url: https://www.nist.gov/publications/structured-testing-testing-methodology-using-cyclomatic-complexity-metric
     - name: few-unwraps
       level: gold
       check: entity.unwraps * 100 <= entity.codeLines
@@ -318,6 +339,9 @@ scorecards:
         Each unwrap or expect outside tests panics if its assumption fails,
         crashing the process instead of returning an error the caller can
         handle; keeping them rare makes each one a deliberate invariant.
+      links:
+      - title: 'The Rust Book: to panic! or not to panic!'
+        url: https://doc.rust-lang.org/book/ch09-03-to-panic-or-not-to-panic.html
     facets: {summary: public, details: public}
 
   - name: review-crate
