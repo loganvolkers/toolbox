@@ -35,11 +35,6 @@
   },
   "evidence": {
     "maintainer-benchmark": {
-      "benchmark:actions-ab": {
-        "results-recorded": [
-          "dcc0d7a5"
-        ]
-      },
       "benchmark:box-ab": {
         "sound-method": [
           "9a88adff"
@@ -646,6 +641,11 @@
         "cites-the-design": [
           "a1817f31"
         ],
+        "says-how-to-check": [
+          "825aff0c"
+        ]
+      },
+      "example:experiments/actions-ab/results/r8/README.md": {
         "says-how-to-check": [
           "825aff0c"
         ]
@@ -3709,10 +3709,7 @@
     },
     "maintainer-benchmark": {
       "benchmark:actions-ab": {
-        "failing": {
-          "results-recorded": 1
-        },
-        "level": "silver"
+        "level": "gold"
       },
       "benchmark:backstage-compare": {
         "level": "gold"
@@ -5308,6 +5305,12 @@
       "example:experiments/actions-ab/results/r7/README.md": {
         "failing": {
           "cites-the-design": 1,
+          "says-how-to-check": 1
+        },
+        "level": "bronze"
+      },
+      "example:experiments/actions-ab/results/r8/README.md": {
+        "failing": {
           "says-how-to-check": 1
         },
         "level": "bronze"

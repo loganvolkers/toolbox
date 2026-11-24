@@ -371,7 +371,15 @@ network and no Postgres.
 ## 8. Against the alternatives
 
 The benchmark [experiments/actions-ab](../../experiments/actions-ab/README.md) measures this table
-with agents. This is the designer's reading, not a result.
+with agents. **Result (round 8, held-out task, [write-up](../../experiments/actions-ab/results/r8/README.md)):**
+Toolbox passes the pre-registered bar. All twelve runs, three per arm, delivered every
+probe. Toolbox's median lines to maintain were 241, against GitHub Actions 1330, Backstage 1882
+and a vanilla app 952, each gap wider than both arms' spreads. Its tool calls (median 36) beat
+Backstage's (81), and against GitHub Actions (52) and vanilla (20) the gap is inside the spread.
+The calls carry the fit audit's label: Toolbox's agents had a shipped skill tuned on earlier
+rounds.
+
+The table below is the designer's reading, not a result.
 
 | Property | Toolbox | GitHub Actions (`workflow_dispatch`) | Backstage scaffolder | A vanilla app |
 |---|---|---|---|---|

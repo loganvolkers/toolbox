@@ -5,6 +5,11 @@ the box: running a declared action, remembering its run, and carrying it from re
 design under test is [federated-actions.md](../../docs/design/federated-actions.md). Results are in
 [results/](./results/); the adjudicator's verdict goes in `ADJUDICATION.md`.*
 
+**Outcome: Toolbox passes the bar in round 8, on a held-out task**
+([results/r8/README.md](./results/r8/README.md)). All twelve runs fully pass. H2 holds against
+every rival, and H3 holds against Backstage and is inconclusive against GitHub Actions and
+vanilla. The calls results carry the round 8 fit audit's label.
+
 ## 1. Question
 
 **Can a fresh coding agent deliver a self-service action that repositories own, that is validated,
