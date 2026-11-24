@@ -308,9 +308,10 @@ scorecards:
     title: SDLC stages, reviewed by agents
     kind: SdlcStage
     description: >-
-      Agents' judgement of each SDLC stage against sdlc-stage-quality,
-      advisory: an open finding is none, a current review is silver, a clean
-      and cited one is gold (D79, D01M831P5QWJQ4A2FT85N5MXJQF).
+      An agent reviews whether each SDLC stage does what it claims: an open
+      finding is none, a current review is silver, and a clean, cited one is
+      gold. The card advises rather than gates (D79,
+      D01M831P5QWJQ4A2FT85N5MXJQF).
     rationale: >-
       The sdlc-stage card sees that a stage is declared and gated, not whether
       an agent can carry it out with released artifacts and without changing

@@ -360,7 +360,7 @@ Scorecard `maintainer-crate` over `Crate` entities, owned by group:maintainers. 
 
 ## Crates, reviewed by agents
 
-Agents' judgement of each crate against crate-design, advisory, with the same ladder as review-rule plus, at gold, a second assessor's review of that judgement; a change to src/, tests/ or Cargo.toml makes a review stale (D79, D01M831P5QWJQ4A2FT85N5MXJQF).
+An agent reviews each crate's design: no open finding is bronze, a current review is silver, and a clean review that a second agent checked is gold. Any change to the crate's code makes its review stale, and the card advises rather than gates (D79, D01M831P5QWJQ4A2FT85N5MXJQF).
 
 **Why:** Deterministic rules measure a crate's form; whether it is well designed for its place takes judgement, so agents assess it against crate-design. Open findings come first at bronze, silver needs a review of the current sources, and gold a passing, grounded review checked by a second assessor. It is advisory, because a review that goes stale on every change must not gate the ratchet.
 
@@ -432,7 +432,7 @@ Scorecard `maintainer-example` over `Example` entities, owned by group:maintaine
 
 ## Rules are well-formed
 
-Each rule's form: explained, tested, decided both ways on fixtures, with evidence, readable CEL. Gold means well-formed, not good: quality is judged by review-rule (D71, D01M831P5QWJQ4A2FT85N5MXJQF).
+Whether each rule is built properly: explained, tested, seen both passing and failing on fixtures, with evidence and a readable check. Gold here means well-formed, not good; whether a rule is good is the agents' review, Rules, reviewed by agents (D71, D01M831P5QWJQ4A2FT85N5MXJQF).
 
 **Why:** Every score in the portal is only as trustworthy as the rule behind it, and an untested or unexplained rule can pass everything, or fail for the wrong reason, unnoticed. Bronze is the floor every new rule must meet (tested, explained, decided on fixtures); silver adds both outcomes, evidence and a cost bound; gold asks for tests that pin both outcomes and for evidence and a fix that lead an agent to the change.
 
@@ -544,7 +544,7 @@ Scorecard `review-rule` over `Rule` entities, owned by group:maintainers. `toolb
 
 ## Scorecards, reviewed by agents
 
-Agents' judgement of each scorecard against scorecard-quality, advisory, with the same ladder as review-rule (D79, D01M831P5QWJQ4A2FT85N5MXJQF).
+An agent reviews whether each scorecard measures one concern and climbs a real ladder: no open finding is bronze, a current review is silver, and a clean, cited one with no doubts is gold. The card advises rather than gates (D79, D01M831P5QWJQ4A2FT85N5MXJQF).
 
 **Why:** Form checks can't tell whether a scorecard measures one concern, climbs a real ladder or leaves an obvious gap; an adversarial review failed every meta-gold scorecard it sampled. The ladder and advisory status match review-rule: open findings first, and never gating, because a review goes stale when the scorecard changes.
 
@@ -729,7 +729,7 @@ Scorecard `sdlc-layer` over `SdlcLayer` entities, owned by group:maintainers. `t
 
 ## SDLC stages, reviewed by agents
 
-Agents' judgement of each SDLC stage against sdlc-stage-quality, advisory: an open finding is none, a current review is silver, a clean and cited one is gold (D79, D01M831P5QWJQ4A2FT85N5MXJQF).
+An agent reviews whether each SDLC stage does what it claims: an open finding is none, a current review is silver, and a clean, cited one is gold. The card advises rather than gates (D79, D01M831P5QWJQ4A2FT85N5MXJQF).
 
 **Why:** The sdlc-stage card sees that a stage is declared and gated, not whether an agent can carry it out with released artifacts and without changing Toolbox's core; only judgement answers that. It is advisory because a review goes stale whenever the stage changes, and an open finding drops the stage to none so it is acted on, not buried.
 
@@ -779,7 +779,7 @@ Scorecard `maintainer-skill` over `Skill` entities, owned by group:maintainers. 
 | `description-says-when` | bronze | measured | `entity.descriptionChars >= 20 && entity.descriptionChars <= 1024 && entity.triggerCues.size() > 0` | Only the name and description are loaded at startup, so the description alone decides whether a router picks the skill. Below 20 characters it cannot say when; above 1024 the spec rejects it. | Say what the skill does and when to use it in the description (20 to 1024 characters), including when, whenever, before, or after. |
 | `third-person` | bronze | measured | `entity.descriptionChars > 0 && entity.pronouns.size() == 0` | The description is injected into the agent's system prompt beside every other skill's, and a first- or second-person voice there blurs who is speaking and can hurt discovery. [Anthropic skill best practices](https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/best-practices) | Rewrite the description in third person. Drop you, your, I, we, my, and our; the description is loaded into the agent's prompt. |
 | `has-procedure` | silver | measured | `entity.numberedSteps >= 3` | Prose without numbered steps leaves the order of work to the model, which can skip or reorder a step without noticing. | Write at least three numbered steps in SKILL.md so an agent can follow the procedure. |
-| `has-example` | silver | measured | `entity.codeFences > 0` | A concrete command or output shows the agent exactly what to run and what success looks like; a description alone invites a plausible but wrong invocation. | Add a fenced code block in SKILL.md with a concrete command, input, or output. |
+| `has-example` | silver | measured | `entity.codeFences > 0` | A concrete command or output shows the agent exactly what to run and what success looks like; a description alone invites a plausible but wrong invocation. [Anthropic skill best practices (examples pattern)](https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/best-practices) | Add a fenced code block in SKILL.md with a concrete command, input, or output. |
 | `links-resolve` | silver | measured | `entity.missingFiles.size() == 0` | An agent follows a skill's links mid-task; a broken one sends it to a file that is not there, and it carries on without the detail the author moved out. | Fix or remove the relative links in the evidence. Paths are relative to the file that contains them. |
 | `within-body-budget` | silver | measured | `entity.bodyLines <= 500 && entity.estimatedTokens <= 5000` | The whole body enters the context window when the skill is selected, crowding out the task. The spec's guidance is under 500 lines and about 5000 tokens; tokens here are estimated as characters divided by 4. | Keep the SKILL.md body under 500 lines and about 5000 tokens (characters divided by 4). Move detail into references/. |
 | `portable-paths` | silver | measured | `entity.windowsPaths.size() == 0` | Skills are installed on macOS and Linux as well as Windows; a backslash path does not resolve there, so the agent cannot open the file it was told to read. | Replace the Windows paths in the evidence with forward-slash paths relative to the skill directory. |

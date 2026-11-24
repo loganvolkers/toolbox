@@ -72,15 +72,15 @@ tracks:
     owner: group:maintainers
     description: >-
       Measured by script on one 4 vCPU VM with one Postgres 16, as medians of
-      5 runs on a 10,000-component catalog, Toolbox (a release build after
-      v0.1.1) against Backstage 1.57.0, and re-checked on 2026-11-23 by an
-      independent agent that upheld the verdict. Each product is installed as
-      its project documents (exact builds: see Version on the Compare page) on
-      an Intel Xeon with Linux 6.12, and both are scored on the same rules,
-      factor by factor; the load generator shares the same 4 vCPU, and probes
-      and facts with evidence cover what timing cannot. The checking agent
-      designed no part of the benchmark: it recomputed the numbers from the
-      raw results and checked the scoring, and it scored no rule itself.
+      5 runs on a 10,000-component catalog, Toolbox 581be50 (a release build
+      after v0.1.1) against Backstage 1.57.0, and re-checked on 2026-11-23 by
+      an independent agent that upheld the verdict. Each product is installed
+      as its project documents on an Intel Xeon with Linux 6.12, and both are
+      scored on the same rules, factor by factor; the load generator shares
+      the same 4 vCPU, and probes and facts with evidence cover what timing
+      cannot. The checking agent designed no part of the benchmark: it
+      recomputed the numbers from the raw results and checked the scoring, and
+      it scored no rule itself.
     links:
     - title: Results
       url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md

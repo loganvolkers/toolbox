@@ -4,10 +4,9 @@
 kinds:
   - name: Scorecard
     description: >-
-      A scorecard. The count adds three groups: this portal's standards (the
-      Scorecards tab), its comparison factors (the Compare tab), and the
-      scorecards of the example portals it describes (the starter's `repo/…`
-      and the reference portal's `acme/…`).
+      A named set of rules, in levels, that rates every entity of one kind, in
+      this portal or in an example portal it describes (`repo/…` and
+      `acme/…`).
     identityFrom: [connector:surfaces]
     fields:
       portal: {type: string}
@@ -388,9 +387,11 @@ scorecards:
     title: Rules are well-formed
     kind: Rule
     description: >-
-      Each rule's form: explained, tested, decided both ways on fixtures, with
-      evidence, readable CEL. Gold means well-formed, not good: quality is
-      judged by review-rule (D71, D01M831P5QWJQ4A2FT85N5MXJQF).
+      Whether each rule is built properly: explained, tested, seen both
+      passing and failing on fixtures, with evidence and a readable check.
+      Gold here means well-formed, not good; whether a rule is good is the
+      agents' review, Rules, reviewed by agents (D71,
+      D01M831P5QWJQ4A2FT85N5MXJQF).
     rationale: >-
       Every score in the portal is only as trustworthy as the rule behind it,
       and an untested or unexplained rule can pass everything, or fail for the
@@ -989,8 +990,10 @@ scorecards:
     title: Scorecards, reviewed by agents
     kind: Scorecard
     description: >-
-      Agents' judgement of each scorecard against scorecard-quality, advisory,
-      with the same ladder as review-rule (D79, D01M831P5QWJQ4A2FT85N5MXJQF).
+      An agent reviews whether each scorecard measures one concern and climbs
+      a real ladder: no open finding is bronze, a current review is silver,
+      and a clean, cited one with no doubts is gold. The card advises rather
+      than gates (D79, D01M831P5QWJQ4A2FT85N5MXJQF).
     rationale: >-
       Form checks can't tell whether a scorecard measures one concern, climbs
       a real ladder or leaves an obvious gap; an adversarial review failed

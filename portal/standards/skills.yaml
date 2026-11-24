@@ -140,6 +140,9 @@ scorecards:
         A concrete command or output shows the agent exactly what to run and
         what success looks like; a description alone invites a plausible but
         wrong invocation.
+      links:
+      - title: Anthropic skill best practices (examples pattern)
+        url: https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/best-practices
     - name: links-resolve
       level: silver
       check: entity.missingFiles.size() == 0
