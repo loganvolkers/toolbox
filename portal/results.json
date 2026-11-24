@@ -5274,6 +5274,9 @@
       "example:experiments/actions-ab/results/r4/README.md": {
         "level": "gold"
       },
+      "example:experiments/actions-ab/results/r5/README.md": {
+        "level": "gold"
+      },
       "example:experiments/backstage-compare/README.md": {
         "level": "gold"
       },
