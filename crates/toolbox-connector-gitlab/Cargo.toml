@@ -1,0 +1,29 @@
+[package]
+name = "toolbox-connector-gitlab"
+description = "Toolbox connector: GitLab groups with their members, and projects (docs/design/forges.md §4.6)."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+reqwest.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+toolbox-connect = { path = "../toolbox-connect" }
+
+[lints]
+workspace = true
+
+[package.metadata.dist]
+dist = true
+
+[package.metadata.binstall]
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-{ target-triple }{ archive-suffix }"
+bin-dir = "{ name }-{ target-triple }/{ bin }{ binary-ext }"
+pkg-fmt = "txz"
+
+[package.metadata.binstall.overrides.x86_64-pc-windows-msvc]
+pkg-fmt = "zip"

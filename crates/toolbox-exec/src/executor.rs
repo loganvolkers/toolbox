@@ -358,8 +358,10 @@ impl Executor {
                 ..Preview::default()
             }),
             Executor::GitlabPipeline(p) => Ok(Preview {
-                effects: vec![json!({"resource": format!("gitlab:{}/pipelines", p.project),
-                    "operation": "dispatch", "ref": p.git_ref})],
+                effects: vec![
+                    json!({"resource": format!("gitlab:{}/pipelines", p.project),
+                    "operation": "dispatch", "ref": p.git_ref}),
+                ],
                 ..Preview::default()
             }),
             Executor::Toolbox {
@@ -1098,7 +1100,11 @@ fn change_run(
         .zip(review)
         .and_then(|(u, fs)| forge::resolve(fs, u));
     let title = msg.lines().next().unwrap_or("");
-    let body = format!("{trailers}\n\nOpened by Toolbox for {} on {}.", ctx.action, ctx.entity["id"].as_str().unwrap_or(""));
+    let body = format!(
+        "{trailers}\n\nOpened by Toolbox for {} on {}.",
+        ctx.action,
+        ctx.entity["id"].as_str().unwrap_or("")
+    );
     let mut opened = Value::Null;
     let pushed = match (&has_remote, on.as_ref().map(|f| f.kind)) {
         (None, _) => false,
@@ -1190,7 +1196,16 @@ pub fn merged(cwd: &Path, run: &crate::run::Run) -> Result<bool, String> {
     let found = git(
         &repo,
         &[
-            "log", "-n", "1", "--format=%H", "-F", "--grep", &trailer, "--grep", &subject, base,
+            "log",
+            "-n",
+            "1",
+            "--format=%H",
+            "-F",
+            "--grep",
+            &trailer,
+            "--grep",
+            &subject,
+            base,
             "--",
         ],
     )?;

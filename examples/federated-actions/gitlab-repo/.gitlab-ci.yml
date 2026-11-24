@@ -11,49 +11,30 @@ spec:
       description: The action to run (empty in every pipeline a parent didn't start).
       default: ""
       regex: ^([a-z][a-z0-9-]*)?$
-    inputs:
-      description: The run's inputs, as JSON.
-      default: "{}"
+    inputs: {description: "The run's inputs, as JSON.", default: "{}"}
     requested_by:
       description: Who asked, as the parent recorded them.
       default: ""
-    toolbox_run:
-      description: The parent's run id.
-      default: ""
-    parent_run:
-      description: <parent portal>/<run id>.
-      default: ""
+    toolbox_run: {description: "The parent's run id.", default: ""}
+    parent_run: {description: <parent portal>/<run id>., default: ""}
     grant:
       description: The parent's signed approvals, empty when there are none.
       default: ""
 ---
 toolbox:
-  rules:
-    - if: '"$[[ inputs.action ]]" != ""'
+  rules: [{if: '"$[[ inputs.action ]]" != ""'}]
   variables:
     TOOLBOX_ACTION: $[[ inputs.action ]]
-    TOOLBOX_INPUTS:
-      value: $[[ inputs.inputs ]]
-      expand: false
-    TOOLBOX_REQUESTED_BY:
-      value: $[[ inputs.requested_by ]]
-      expand: false
-    TOOLBOX_PARENT_RUN:
-      value: $[[ inputs.parent_run ]]
-      expand: false
-    TOOLBOX_GRANT:
-      value: $[[ inputs.grant ]]
-      expand: false
+    TOOLBOX_INPUTS: {value: '$[[ inputs.inputs ]]', expand: false}
+    TOOLBOX_REQUESTED_BY: {value: '$[[ inputs.requested_by ]]', expand: false}
+    TOOLBOX_PARENT_RUN: {value: '$[[ inputs.parent_run ]]', expand: false}
+    TOOLBOX_GRANT: {value: '$[[ inputs.grant ]]', expand: false}
   script:
     - >-
-      toolbox run "$TOOLBOX_ACTION" --portal .toolbox --inputs "$TOOLBOX_INPUTS"
-      --as "$TOOLBOX_REQUESTED_BY" --parent-run "$TOOLBOX_PARENT_RUN"
-      --grant "$TOOLBOX_GRANT" --yes --record toolbox-run.json -o json
+      toolbox run "$TOOLBOX_ACTION" --portal .toolbox --inputs
+      "$TOOLBOX_INPUTS" --as "$TOOLBOX_REQUESTED_BY" --parent-run
+      "$TOOLBOX_PARENT_RUN" --grant "$TOOLBOX_GRANT" --yes --record
+      toolbox-run.json -o json
   # 4 is an unverified run (done, with no postcondition to check): a warning, not a failure.
-  allow_failure:
-    exit_codes: [4]
-  artifacts:
-    when: always
-    paths:
-      - toolbox-run.json
-    expire_in: 30 days
+  allow_failure: {exit_codes: [4]}
+  artifacts: {when: always, paths: [toolbox-run.json], expire_in: 30 days}

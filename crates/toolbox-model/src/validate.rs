@@ -604,7 +604,11 @@ impl Checker {
                     .get("forge")
                     .and_then(Value::as_str)
                     .unwrap_or("https://gitlab.com");
-                let project = a.executor.get("project").and_then(Value::as_str).unwrap_or("x");
+                let project = a
+                    .executor
+                    .get("project")
+                    .and_then(Value::as_str)
+                    .unwrap_or("x");
                 let url = format!("{}/{project}.git", forge.trim_end_matches('/'));
                 if crate::forge::resolve(&m.forges, &url)
                     .is_none_or(|r| r.kind != crate::forge::Kind::Gitlab)

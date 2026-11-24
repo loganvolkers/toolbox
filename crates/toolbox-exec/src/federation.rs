@@ -84,7 +84,10 @@ impl Child {
                 .map(str::to_owned)
                 .collect(),
             branch: self.branch.clone(),
-            review: self.git.as_deref().and_then(|g| forge::resolve(&self.forges, g)),
+            review: self
+                .git
+                .as_deref()
+                .and_then(|g| forge::resolve(&self.forges, g)),
         }
     }
 
@@ -217,7 +220,12 @@ impl Child {
                 self.portal, f.project, f.url
             ));
         }
-        let s = |k: &str| self.runner.get(k).and_then(Value::as_str).map(str::to_owned);
+        let s = |k: &str| {
+            self.runner
+                .get(k)
+                .and_then(Value::as_str)
+                .map(str::to_owned)
+        };
         let git_ref = s("ref")
             .or_else(|| self.branch.clone())
             .unwrap_or_else(|| "main".into());
@@ -430,7 +438,10 @@ fn broken(d: &Derived, only: Option<&str>) -> String {
         .iter()
         .filter(|(id, e)| e.fields.contains_key("actions") && only.is_none_or(|o| o == id.as_str()))
         .filter_map(|(id, e)| {
-            Some(format!("; {id} offers no actions: {}", e.fields.get("error")?.as_str()?))
+            Some(format!(
+                "; {id} offers no actions: {}",
+                e.fields.get("error")?.as_str()?
+            ))
         })
         .collect()
 }
@@ -637,14 +648,27 @@ mod tests {
     fn a_ci_runner_starts_the_ci_of_the_project_the_parent_cloned() {
         let bin = Path::new("toolbox");
         let ci = json!({"type": "ci"});
-        let Ok(Executor::GitlabPipeline(p)) =
-            cloned(ci.clone(), "https://gitlab.com/acme/platform/pay.git", vec![]).executor(bin)
-        else {
+        let Ok(Executor::GitlabPipeline(p)) = cloned(
+            ci.clone(),
+            "https://gitlab.com/acme/platform/pay.git",
+            vec![],
+        )
+        .executor(bin) else {
             panic!("a gitlab.com child should get a pipeline");
         };
         assert_eq!(
-            (p.project.as_str(), p.git_ref.as_str(), p.api.as_str(), p.token_env.as_str()),
-            ("acme/platform/pay", "trunk", "https://gitlab.com/api/v4", "GITLAB_TOKEN")
+            (
+                p.project.as_str(),
+                p.git_ref.as_str(),
+                p.api.as_str(),
+                p.token_env.as_str()
+            ),
+            (
+                "acme/platform/pay",
+                "trunk",
+                "https://gitlab.com/api/v4",
+                "GITLAB_TOKEN"
+            )
         );
         assert_eq!(p.federated.as_deref(), Some("deploy"));
         assert_eq!(p.clone.as_deref(), Some(Path::new("/org/team/pay")));
@@ -653,7 +677,10 @@ mod tests {
         else {
             panic!("a github.com child should get a workflow");
         };
-        assert_eq!((w.repo.as_str(), w.workflow.as_str()), ("acme/web", "toolbox.yml"));
+        assert_eq!(
+            (w.repo.as_str(), w.workflow.as_str()),
+            ("acme/web", "toolbox.yml")
+        );
         let ghes = Forge {
             url: "https://ghe.acme.dev".into(),
             kind: Some("github".into()),
@@ -670,8 +697,18 @@ mod tests {
             panic!("an Enterprise Server child should get a workflow");
         };
         assert_eq!(
-            (w.api.as_str(), w.token_env.as_str(), w.workflow.as_str(), w.git_ref.as_str()),
-            ("https://ghe.acme.dev/api/v3", "GHES_TOKEN", "fleet.yml", "main")
+            (
+                w.api.as_str(),
+                w.token_env.as_str(),
+                w.workflow.as_str(),
+                w.git_ref.as_str()
+            ),
+            (
+                "https://ghe.acme.dev/api/v3",
+                "GHES_TOKEN",
+                "fleet.yml",
+                "main"
+            )
         );
     }
 
@@ -679,7 +716,10 @@ mod tests {
     fn a_ci_runner_refuses_what_the_child_cannot_choose() {
         let bin = Path::new("toolbox");
         let on = |runner: Value, git: &str, forges: Vec<Forge>| {
-            cloned(runner, git, forges).executor(bin).map(|_| ()).unwrap_err()
+            cloned(runner, git, forges)
+                .executor(bin)
+                .map(|_| ())
+                .unwrap_err()
         };
         for k in ["project", "repo", "api", "url", "token", "forge"] {
             let mut r = json!({"type": "ci"});
@@ -688,8 +728,12 @@ mod tests {
         }
         assert!(on(json!({"type": "ci"}), "/srv/git/tools.git", vec![]).contains("plain git"));
         assert!(
-            on(json!({"type": "ci"}), "https://gitlab.acme.dev/acme/pay.git", vec![])
-                .contains("forges:")
+            on(
+                json!({"type": "ci"}),
+                "https://gitlab.acme.dev/acme/pay.git",
+                vec![]
+            )
+            .contains("forges:")
         );
         let narrow = Forge {
             url: "https://gitlab.acme.dev".into(),
@@ -699,17 +743,30 @@ mod tests {
             projects: Some(vec!["acme/*".into()]),
         };
         assert!(
-            on(json!({"type": "ci"}), "https://gitlab.acme.dev/acme/platform/pay.git", vec![narrow.clone()])
-                .contains("projects:")
+            on(
+                json!({"type": "ci"}),
+                "https://gitlab.acme.dev/acme/platform/pay.git",
+                vec![narrow.clone()]
+            )
+            .contains("projects:")
         );
         assert!(
-            cloned(json!({"type": "ci"}), "https://gitlab.acme.dev/acme/pay.git", vec![narrow])
-                .executor(bin)
-                .is_ok()
+            cloned(
+                json!({"type": "ci"}),
+                "https://gitlab.acme.dev/acme/pay.git",
+                vec![narrow]
+            )
+            .executor(bin)
+            .is_ok()
         );
         let mut c = child(json!({"type": "ci"}), json!({}));
         c.child.as_mut().unwrap().git = None;
-        assert!(c.executor(bin).map(|_| ()).unwrap_err().contains("federation.children"));
+        assert!(
+            c.executor(bin)
+                .map(|_| ())
+                .unwrap_err()
+                .contains("federation.children")
+        );
     }
 
     #[test]

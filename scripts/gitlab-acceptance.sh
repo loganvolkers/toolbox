@@ -69,8 +69,8 @@ git init -q --bare -b main "$WORK/hosts/delta.git" && cp -r "$EX/minimal-repo" "
 sed -i 's/name: minimal-repo/name: delta/' "$WORK/src/delta/.toolbox/toolbox.yaml"
 git -C "$WORK/src/delta" init -q && git -C "$WORK/src/delta" add -A && git -C "$WORK/src/delta" commit -qm init
 git -C "$WORK/src/delta" push -q "$WORK/hosts/delta.git" HEAD:main
-mkdir -p "$WORK/org"
-sed "s#https://gitlab.acme.dev#$GITLAB_URL#; s#acme/#$ORG/#g" "$EX/gitlab-org/toolbox.yaml" > "$WORK/org/toolbox.yaml"
+cp -r "$EX/gitlab-org" "$WORK/org"
+sed "s#https://gitlab.acme.dev#$GITLAB_URL#; s#acme/#$ORG/#g; s#group: acme\$#group: $ORG#" "$EX/gitlab-org/toolbox.yaml" > "$WORK/org/toolbox.yaml"
 echo "    - git: ../hosts/delta.git" >> "$WORK/org/toolbox.yaml"
 export GITLAB_TOKEN=$BOT_TOKEN
 "$BIN/toolbox" validate "$WORK/org" | tail -1
@@ -204,4 +204,27 @@ gl GET "/projects/$DEPLOY/jobs/$JOB/trace" | grep -q "deploying to staging for $
 set +e; OUT=$(run "$WORK/org" deploy --entity portal:gamma -i environment=moon --as ann --yes 2>&1); CODE=$?; set -e
 [ $CODE = 1 ] && echo "$OUT" | grep -q "moon" || fail "an input the pipeline refuses should fail with GitLab's reason ($CODE): $OUT"
 echo "   deploy: a pipeline with typed inputs, its job saw them; an option GitLab refuses failed the run with its reason"
+echo "8. approvers are a GitLab group: the org portal reads it with its gitlab connector"
+RELEASE=$(gl POST /groups --data name=release --data path=release --data "parent_id=$G" --data visibility=private | field "['id']")
+for u in dave erin; do gl POST "/groups/$RELEASE/members" --data "user_id=$(user $u)" --data access_level=30 >/dev/null; done
+gl POST "/groups/$RELEASE/members" --data "user_id=$(user carol)" --data access_level=10 >/dev/null
+"$BIN/toolbox" connector test --name gitlab --portal "$WORK/org" -- "$BIN/toolbox-connector-gitlab" | tail -1
+git -C "$WORK/review/delta" pull -q
+sed -i "s#approval: .*#approval: \"['group:$ORG/release']\"#" "$WORK/review/delta/.toolbox/actions/add-code-of-conduct.yaml"
+git -C "$WORK/review/delta" commit -qam "the release group approves" && git -C "$WORK/review/delta" push -q
+set +e; OUT=$(run "$WORK/org" add-code-of-conduct --entity portal:delta -i contact=release@acme.dev --as dave --yes); CODE=$?; set -e
+RID=$(echo "$OUT" | field "['id']")
+[ $CODE = 3 ] || fail "a group-approved request should await approval ($CODE): $OUT"
+for who in dave carol; do
+  set +e; run "$WORK/org" --approve "$RID" --as $who >/dev/null 2>&1; CODE=$?; set -e
+  [ $CODE = 2 ] || fail "$who should not approve for $ORG/release ($CODE)"
+done
+gl DELETE "/groups/$RELEASE/members/$(user erin)" >/dev/null
+set +e; run "$WORK/org" --approve "$RID" --as erin >/dev/null 2>&1; CODE=$?; set -e
+[ $CODE = 2 ] || fail "erin, removed from $ORG/release in GitLab, should not approve ($CODE)"
+gl POST "/groups/$RELEASE/members" --data "user_id=$(user erin)" --data access_level=30 >/dev/null
+OUT=$(run "$WORK/org" --approve "$RID" --as erin --wait) || fail "erin, back in $ORG/release: $OUT"
+[ "$(echo "$OUT" | field "['state']")" = succeeded ] || fail "approved by a GitLab group member: $OUT"
+git --git-dir "$WORK/hosts/delta.git" log -1 --format=%B main | grep -q "Approved-By: user:erin" || fail "no Approved-By trailer for erin"
+echo "   group:$ORG/release from GitLab: dave (the requester) and carol (a Guest) refused; erin refused once removed in GitLab, then approved once re-added, and it landed"
 echo "GitLab acceptance: all checks passed"

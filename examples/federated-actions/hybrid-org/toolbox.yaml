@@ -1,5 +1,9 @@
 apiVersion: toolbox.dev/v1alpha1
-portal: {name: org, title: One org portal over five kinds of host, owner: group:platform, toolbox: "0.1"}
+portal:
+  name: org
+  title: One org portal over five kinds of host
+  owner: group:platform
+  toolbox: "0.1"
 # github.com and gitlab.com are known: no entry, and their tokens are GITHUB_TOKEN and
 # GITLAB_TOKEN. A self-hosted forge is one entry with its URL and type. A token is the name of
 # an environment variable; Toolbox sends it only to that forge's API, never to an action.

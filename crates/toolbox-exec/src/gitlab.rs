@@ -58,7 +58,9 @@ impl Pipeline {
         let git = format!("{}/{project}.git", url.trim_end_matches('/'));
         let f = forge::resolve(forges, &git)
             .filter(|f| f.kind == Kind::Gitlab)
-            .ok_or_else(|| format!("{url} is not a GitLab forge: list it under forges: with type: gitlab"))?;
+            .ok_or_else(|| {
+                format!("{url} is not a GitLab forge: list it under forges: with type: gitlab")
+            })?;
         Ok(Self {
             project: f.project,
             git_ref: s("ref").unwrap_or_else(|| "main".into()),
@@ -71,12 +73,20 @@ impl Pipeline {
     }
 
     fn token(&self) -> Result<String, String> {
-        std::env::var(&self.token_env)
-            .map_err(|_| format!("set {} to start pipelines in {}", self.token_env, self.project))
+        std::env::var(&self.token_env).map_err(|_| {
+            format!(
+                "set {} to start pipelines in {}",
+                self.token_env, self.project
+            )
+        })
     }
 
     fn base(&self) -> String {
-        format!("{}/projects/{}", self.api.trim_end_matches('/'), encode(&self.project))
+        format!(
+            "{}/projects/{}",
+            self.api.trim_end_matches('/'),
+            encode(&self.project)
+        )
     }
 
     /// The inputs the pipeline receives. All are strings: a pipeline declares each in
@@ -91,7 +101,12 @@ impl Pipeline {
         }
         let mut m = serde_json::Map::new();
         for (k, v) in &ctx.inputs {
-            m.insert(k.clone(), v.as_str().map_or_else(|| v.to_string(), str::to_owned).into());
+            m.insert(
+                k.clone(),
+                v.as_str()
+                    .map_or_else(|| v.to_string(), str::to_owned)
+                    .into(),
+            );
         }
         m.insert("toolbox_run".into(), run.into());
         Value::Object(m)
@@ -115,7 +130,10 @@ impl Pipeline {
                         .map(Some)
                         .map_err(|e| format!("GET {url}: {e}"))
                 }
-                s => Err(format!("GET {url}: HTTP {s}: {}", r.text().await.unwrap_or_default())),
+                s => Err(format!(
+                    "GET {url}: HTTP {s}: {}",
+                    r.text().await.unwrap_or_default()
+                )),
             }
         })?
     }
@@ -151,7 +169,9 @@ impl Pipeline {
             Ok(Ok((st, text))) if st.is_success() => {
                 let p: Value = serde_json::from_str(&text).unwrap_or(Value::Null);
                 let Some(id) = p["id"].as_u64() else {
-                    return fail(format!("GitLab created a pipeline but returned no id: {text}"));
+                    return fail(format!(
+                        "GitLab created a pipeline but returned no id: {text}"
+                    ));
                 };
                 Outcome {
                     status: "dispatched".into(),
@@ -223,7 +243,13 @@ impl Pipeline {
 
 /// Open a merge request for a branch already pushed, through the API with the forge's token:
 /// `{forge, url, iid}`, or `{forge, error}` with the branch left pushed.
-pub fn open_merge(f: &forge::Resolved, source: &str, target: &str, title: &str, body: &str) -> Value {
+pub fn open_merge(
+    f: &forge::Resolved,
+    source: &str,
+    target: &str,
+    title: &str,
+    body: &str,
+) -> Value {
     let Ok(token) = std::env::var(&f.token) else {
         return json!({"forge": "gitlab", "error": format!(
             "set {} to open a merge request; the branch is pushed", f.token)});
@@ -374,9 +400,16 @@ mod tests {
     #[test]
     fn creates_a_pipeline_with_inputs_and_tracks_it_by_id() {
         let (api, seen) = fake(vec![
-            ("/projects/acme%2Fplatform%2Fpay/pipeline", 201,
-             json!({"id": 9, "status": "created", "web_url": "https://gitlab.acme.dev/acme/platform/pay/-/pipelines/9"})),
-            ("/projects/acme%2Fplatform%2Fpay/pipelines/9", 200, json!({"id": 9, "status": "running"})),
+            (
+                "/projects/acme%2Fplatform%2Fpay/pipeline",
+                201,
+                json!({"id": 9, "status": "created", "web_url": "https://gitlab.acme.dev/acme/platform/pay/-/pipelines/9"}),
+            ),
+            (
+                "/projects/acme%2Fplatform%2Fpay/pipelines/9",
+                200,
+                json!({"id": 9, "status": "running"}),
+            ),
         ]);
         let p = Pipeline::parse(
             &json!({"project": "acme/platform/pay", "forge": "https://gitlab.acme.dev", "ref": "trunk"}),
@@ -387,7 +420,10 @@ mod tests {
         assert_eq!(out.status, "dispatched", "{:?}", out.error);
         assert_eq!(out.outputs["pipeline_id"], 9);
         let (line, token, body) = seen.lock().unwrap()[0].clone();
-        assert_eq!(line, "POST /api/v4/projects/acme%2Fplatform%2Fpay/pipeline HTTP/1.1");
+        assert_eq!(
+            line,
+            "POST /api/v4/projects/acme%2Fplatform%2Fpay/pipeline HTTP/1.1"
+        );
         assert_eq!(token, std::env::var("PATH").unwrap());
         assert_eq!(
             serde_json::from_str::<Value>(&body).unwrap(),
@@ -402,9 +438,16 @@ mod tests {
         let record = json!({"id": "run_c1", "state": "succeeded", "verification": {"by": "base"}});
         let (api, seen) = fake(vec![
             ("/projects/acme%2Fpay/pipeline", 201, json!({"id": 3})),
-            ("/projects/acme%2Fpay/pipelines/3/jobs", 200,
-             json!([{"id": 11, "name": "lint"}, {"id": 12, "name": "toolbox"}])),
-            ("/projects/acme%2Fpay/jobs/12/artifacts/toolbox-run.json", 200, record.clone()),
+            (
+                "/projects/acme%2Fpay/pipelines/3/jobs",
+                200,
+                json!([{"id": 11, "name": "lint"}, {"id": 12, "name": "toolbox"}]),
+            ),
+            (
+                "/projects/acme%2Fpay/jobs/12/artifacts/toolbox-run.json",
+                200,
+                record.clone(),
+            ),
         ]);
         let mut p = Pipeline::parse(
             &json!({"project": "acme/pay", "forge": "https://gitlab.acme.dev"}),
@@ -440,18 +483,29 @@ mod tests {
             ..p
         };
         let n = seen.lock().unwrap().len();
-        assert!(p.dispatch(&ctx()).error.unwrap().contains("TOOLBOX_TEST_NO_SUCH_VAR"));
+        assert!(
+            p.dispatch(&ctx())
+                .error
+                .unwrap()
+                .contains("TOOLBOX_TEST_NO_SUCH_VAR")
+        );
         assert_eq!(seen.lock().unwrap().len(), n);
     }
 
     #[test]
     fn only_a_gitlab_forge_takes_a_pipeline() {
         assert!(Pipeline::parse(&json!({"project": "a/b"}), &[]).is_ok());
-        let e = Pipeline::parse(&json!({"project": "a/b", "forge": "https://git.example"}), &[])
-            .unwrap_err();
+        let e = Pipeline::parse(
+            &json!({"project": "a/b", "forge": "https://git.example"}),
+            &[],
+        )
+        .unwrap_err();
         assert!(e.contains("forges:"));
-        let e = Pipeline::parse(&json!({"project": "a/b", "forge": "https://github.com"}), &[])
-            .unwrap_err();
+        let e = Pipeline::parse(
+            &json!({"project": "a/b", "forge": "https://github.com"}),
+            &[],
+        )
+        .unwrap_err();
         assert!(e.contains("not a GitLab forge"));
     }
 }

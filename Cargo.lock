@@ -3332,6 +3332,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "toolbox-connector-gitlab"
+version = "0.1.1"
+dependencies = [
+ "reqwest",
+ "serde_json",
+ "tokio",
+ "toolbox-connect",
+]
+
+[[package]]
 name = "toolbox-connector-runner"
 version = "0.1.1"
 dependencies = [

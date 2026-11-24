@@ -60,7 +60,7 @@ Each row was checked against the running GitLab (§6) or its documentation at
 | The job's own push | `GITHUB_TOKEN` with `contents: write` | `CI_JOB_TOKEN`, once the project allows job-token pushes (`ci_push_repository_for_job_token_allowed`) | A child's pipeline lands its own change with no extra secret |
 | Who started it | `github.actor` | `GITLAB_USER_LOGIN` | Recorded as the forge's actor; the requester is still the parent's principal |
 | Gates in the host | Environments with required reviewers, self-review prevention (all plans for public repositories) | Protected environments and approval rules (Premium); protected branches by role (CE) | On CE the gates are Toolbox's. On Premium, a pipeline's protected environment still applies after Toolbox's approval |
-| Groups of people | Teams | Groups and subgroups, with members by role | A `gitlab` connector would report memberships for the org's model to turn into approvers (designed, §4.6) |
+| Groups of people | Teams | Groups and subgroups, with members by role | The `gitlab` connector reports each group's members for the org's model to turn into approvers (§4.6) |
 
 ## 3. Stories
 
@@ -75,7 +75,7 @@ numbers are in brackets.
 | **F3** | As a **release manager on GitLab**, I want a federated run to execute in the project's own pipeline, with the project's runner and credentials, never the org's | The parent dispatches a pipeline to the project it cloned, with its own token; the child's job runs `toolbox run` with the parent's signed grant; the parent tracks the pipeline by id and takes the child's verification from the job's artifact; inputs with quotes, `$VARS`, `$(…)`, newlines and `$[[ ]]` reach the job as data [3, 4] | Built |
 | **F4** | As a **security owner**, I want a child to be unable to point the parent's dispatch at another project or host | A child that names `project`, `repo`, `api`, `url` or `token` in its runner is refused: the schema refuses all but `repo` (which `github-workflow` uses) and the parent says the child's manifest is invalid when the action isn't offered, and the parent refuses all six before it dispatches; a project outside the forge's `projects` is refused; a push the host's branch protection refuses fails the run with the host's words [5] | Built |
 | **F5** | As a **platform engineer in a hybrid organisation**, I run one fleet change across GitHub, Enterprise Server, GitLab and bare repositories | Each child's run goes to its own forge with that forge's token; one parent lists them all | Built. GitLab and a bare repository side by side against real hosts [6]; routing by unit tests: `cargo test -p toolbox-model forge` resolves every child of [`hybrid-org`](../../examples/federated-actions/hybrid-org/toolbox.yaml) (github.com, Enterprise Server, gitlab.com, self-managed by https and ssh, a bare repository) to its driver, API, token and project, and `-p toolbox-exec ci_runner` builds each dispatch, and GitHub dispatch as in the M5 script |
-| **F6** | As an **approver**, I want "someone in release" to mean the GitLab group, so people are managed in one place | The `gitlab` connector reports `acme/release`'s members; removing someone from the GitLab group removes their approval on the next read | Designed (§4.6): approvers are named or come from the portal's groups today |
+| **F6** | As an **approver**, I want "someone in release" to mean the GitLab group, so people are managed in one place | The `gitlab` connector reports `acme/release`'s members; the requester and a Guest are refused, someone removed from the GitLab group is refused on the next read, and a member approves [8] | Built (§4.6) |
 | **F7** | As a **repo owner moving from GitHub to GitLab**, I want my `.toolbox/` to move unchanged | The child's runner is `{type: ci}` on both; only the parent's `git:` URL changes | Built (the runner type is forge-neutral) |
 | **F8** | As a **platform engineer**, I start the org's own pipeline (a deploy, a release) from the portal, with typed inputs | A `gitlab-pipeline` executor sends the run's inputs as pipeline inputs; an input GitLab refuses fails the run with GitLab's reason [7] | Built |
 | **F9** | As a **forge author**, I add a forge Toolbox has never seen | One driver implementing the capabilities it has; no change to the lifecycle, the trust rules or the manifest | Designed (§5) |
@@ -210,12 +210,39 @@ the title Toolbox sets ends that way, so the third covers it.
 
 Approvers are the portal's principals (T6), whatever forge a child is on. A GitLab-only
 organisation usually signs in with GitLab itself (GitLab is an OIDC provider), so a principal
-`user:dave` is GitLab's `dave`. Today an approver is named in the action (`user:ann`) or comes
-from the portal's own groups. The design for GitLab groups, not built: a `gitlab` connector
-reports each group's members by username (`member` records: group path, username, access level),
-and the org's model maps them to `group:` tuples, so `group:release` is the GitLab group
-`acme/release` and changes when GitLab does. It is the SCIM connector's shape with GitLab's
-`GET /groups/:id/members/all` as the source, so it needs no new contract.
+`user:dave` is GitLab's `dave`. An approver is named in the action (`user:ann`) or is a member
+of one of the portal's groups, and on GitLab those groups can be GitLab's own. The `gitlab`
+connector (`builtin:gitlab`, `crates/toolbox-connector-gitlab`) reports a group and its
+subgroups as `group` records: the full path, the parent, and the usernames of direct members at
+Developer or above (`minAccess`), with each member's access level. The org's model maps them to
+`group:` tuples:
+
+```yaml
+connectors:
+  - {name: gitlab, package: builtin:gitlab, runtime: in-image,
+     config: {group: acme, url: "https://gitlab.acme.dev"}, records: [group, project]}
+kinds:
+  - name: Group
+    identityFrom: [connector:gitlab]
+    fields: {members: {type: list, items: string}}
+    sources: {default: [connector:gitlab]}
+    map: [{from: gitlab/group, id: "'group:' + record.slug", set: "{'members': record.members}"}]
+authz:
+  model: groups.fga                    # type group, define member: [user, group#member]
+  tuples:
+    - kind: Group
+      emit: "entity.members.map(m, {'user': 'user:' + m, 'relation': 'member', 'object': entity.id})"
+```
+
+An action then asks for `['group:acme/release']`. In a checkout, `toolbox run` and `--approve`
+run the connector each time, so an approval follows GitLab's membership at the moment it is
+given. On a server, the connector's `freshness` sets how stale it may be. GitLab's inheritance
+runs down (a parent group's members belong to its subgroups), the opposite of the reference
+portal's `parent` tuple, so the connector reports direct members only and a model that wants
+inheritance maps `parent` itself. No existing tool covers this fact: SCIM covers groups an
+identity provider owns, and an organisation that syncs GitLab from one should use `builtin:scim`
+instead; `glab api` returns raw pages, not records. The connector also reports `project` records
+(path, default branch, archived) for a catalog; it doesn't choose children (§7).
 The forge's own actor (`GITLAB_USER_LOGIN`, the dispatch token's owner) is recorded on the run.
 It never replaces the requester.
 
@@ -257,18 +284,24 @@ A driver that lacks a capability gets these fallbacks:
 `scripts/gitlab/harness.sh up` starts GitLab CE and a GitLab Runner (shell executor, host
 network, Toolbox's binaries mounted) in Docker and prints a root token. First boot takes
 several minutes (the script waits up to ten); after that the containers are reused.
-`scripts/gitlab-acceptance.sh` builds a fresh organisation in it on every run: two users and a
+`scripts/gitlab-acceptance.sh` builds a fresh organisation in it on every run: five users and a
 bot, a group with a subgroup, private projects with repo portals (one with `runner: {type: ci}`
 and the shipped `.gitlab-ci.yml`), a bare repository beside them and an org portal that lists
-them all by URL. Its steps are the bracketed numbers in §3. It needs Docker, not Postgres, and
-took 46 seconds against a warm harness on a 4-CPU machine. CI runs it in its own job
+them all by URL; step 8 adds a `release` group and the `gitlab` connector, and runs the
+connector conformance kit against the real API. Its steps are the bracketed numbers in §3. It
+needs Docker, not Postgres, and took 52 seconds against a warm harness on a 4-CPU machine. CI runs it in its own job
 (`gitlab-acceptance` in `.github/workflows/ci.yml`).
 
 Real runs found seven things a test double had not: a password GitLab refuses, a `local` child
 on a self-managed GitLab opening no merge request, mergeability computed after the API returns,
 a squash dropping the trailer, a `ci` child dispatched without its approvers (the parent had no
 preview of it), the merge request API not yet seeing a just-pushed branch, and an error that
-didn't say a child's manifest was invalid. Each is fixed and covered by a step.
+didn't say a child's manifest was invalid. Each is fixed and covered by a step. Building the
+`gitlab` connector found an eighth, in Toolbox rather than GitLab: `toolbox connector test`
+passed `${env:…}` references to the connector unresolved, so a connector whose token is a
+reference failed the kit while `serve` and `run` worked, and the kit's report didn't say why.
+The kit now resolves references as `serve` does (falling back to the text as written when they
+can't resolve, as against a mock) and prints the connector's error.
 
 The benchmark [experiments/actions-gitlab](../../experiments/actions-gitlab/README.md) runs
 fresh agents against the same harness.
@@ -282,7 +315,6 @@ fresh agents against the same harness.
 | Mapping one person across forges (`ann` on GitHub, `ann.smith` on GitLab) | Principals come from the portal's sign-in. A mapping belongs with identity resolution ([identity-resolution.md](./identity-resolution.md)) |
 | Who merged a merge request (F21 on GitLab) | As on GitHub: T7 trusts the host's branch protection |
 | Origin, Gitea, Bitbucket drivers | §5 |
-| A `gitlab` connector for groups and members (F6) | §4.6. The SCIM connector's shape; nothing in the run lifecycle waits on it |
 | GitLab Premium's gates (approval rules, protected environments) in the harness | CE has none of them, so the harness can't show Toolbox's approvals composing with them. A Premium pipeline's protected environment applies after Toolbox's approval, by GitLab's own rules |
 
 ## 8. Open questions

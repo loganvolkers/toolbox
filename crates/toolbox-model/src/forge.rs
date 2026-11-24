@@ -123,8 +123,12 @@ fn project_from(path: &str, prefix: &str) -> Option<String> {
     } else {
         path.strip_prefix(prefix)?.trim_start_matches('/')
     };
-    let p = path.strip_suffix(".git").unwrap_or(path).trim_end_matches('/');
-    (!p.is_empty() && !p.split('/').any(|s| s.is_empty() || s == "." || s == "..")).then(|| p.into())
+    let p = path
+        .strip_suffix(".git")
+        .unwrap_or(path)
+        .trim_end_matches('/');
+    (!p.is_empty() && !p.split('/').any(|s| s.is_empty() || s == "." || s == ".."))
+        .then(|| p.into())
 }
 
 /// The forge a git URL is on, and the project it names there. Declared forges come first; a
@@ -132,8 +136,10 @@ fn project_from(path: &str, prefix: &str) -> Option<String> {
 pub fn resolve(forges: &[Forge], git: &str) -> Option<Resolved> {
     let (host, path, web) = split_git(git)?;
     let declared = forges.iter().filter_map(|f| Some((f, kind_of(f)?)));
-    let known = KNOWN.iter().filter(|(u, _)| !forges.iter().any(|f| trim(&f.url) == *u)).map(
-        |(u, k)| {
+    let known = KNOWN
+        .iter()
+        .filter(|(u, _)| !forges.iter().any(|f| trim(&f.url) == *u))
+        .map(|(u, k)| {
             (
                 Forge {
                     url: (*u).into(),
@@ -144,8 +150,7 @@ pub fn resolve(forges: &[Forge], git: &str) -> Option<Resolved> {
                 },
                 *k,
             )
-        },
-    );
+        });
     let mut all: Vec<(Forge, Kind)> = declared.map(|(f, k)| (f.clone(), k)).chain(known).collect();
     all.sort_by_key(|(f, _)| std::cmp::Reverse(trim(&f.url).len()));
     for (f, kind) in all {
@@ -156,7 +161,11 @@ pub fn resolve(forges: &[Forge], git: &str) -> Option<Resolved> {
         let same_host = if web {
             fhost.eq_ignore_ascii_case(&host)
         } else {
-            fhost.split(':').next().unwrap_or("").eq_ignore_ascii_case(host.split(':').next().unwrap_or(""))
+            fhost
+                .split(':')
+                .next()
+                .unwrap_or("")
+                .eq_ignore_ascii_case(host.split(':').next().unwrap_or(""))
         };
         if !same_host {
             continue;
@@ -167,7 +176,10 @@ pub fn resolve(forges: &[Forge], git: &str) -> Option<Resolved> {
         return Some(Resolved {
             kind,
             api: f.api.clone().unwrap_or_else(|| default_api(kind, &f.url)),
-            token: f.token.clone().unwrap_or_else(|| default_token(kind).into()),
+            token: f
+                .token
+                .clone()
+                .unwrap_or_else(|| default_token(kind).into()),
             projects: f.projects.clone(),
             url: trim(&f.url).into(),
             project,
@@ -179,7 +191,8 @@ pub fn resolve(forges: &[Forge], git: &str) -> Option<Resolved> {
 /// A project glob: `*` matches within one path segment, so `acme/*` matches `acme/pay` but not
 /// `acme/platform/pay`.
 pub fn path_glob(pattern: &str, path: &str) -> bool {
-    let (ps, ss): (Vec<&str>, Vec<&str>) = (pattern.split('/').collect(), path.split('/').collect());
+    let (ps, ss): (Vec<&str>, Vec<&str>) =
+        (pattern.split('/').collect(), path.split('/').collect());
     ps.len() == ss.len() && ps.iter().zip(&ss).all(|(p, s)| segment(p, s))
 }
 
@@ -188,8 +201,7 @@ fn segment(p: &str, s: &str) -> bool {
         None => p == s,
         Some((head, rest)) => {
             s.starts_with(head)
-                && (head.len()..=s.len())
-                    .any(|i| s.is_char_boundary(i) && segment(rest, &s[i..]))
+                && (head.len()..=s.len()).any(|i| s.is_char_boundary(i) && segment(rest, &s[i..]))
         }
     }
 }
@@ -213,12 +225,22 @@ mod tests {
         let r = resolve(&[], "https://github.com/acme/web.git").unwrap();
         assert_eq!(
             (r.kind, r.api.as_str(), r.token.as_str(), r.project.as_str()),
-            (Kind::Github, "https://api.github.com", "GITHUB_TOKEN", "acme/web")
+            (
+                Kind::Github,
+                "https://api.github.com",
+                "GITHUB_TOKEN",
+                "acme/web"
+            )
         );
         let r = resolve(&[], "git@gitlab.com:acme/platform/pay.git").unwrap();
         assert_eq!(
             (r.kind, r.api.as_str(), r.token.as_str(), r.project.as_str()),
-            (Kind::Gitlab, "https://gitlab.com/api/v4", "GITLAB_TOKEN", "acme/platform/pay")
+            (
+                Kind::Gitlab,
+                "https://gitlab.com/api/v4",
+                "GITLAB_TOKEN",
+                "acme/platform/pay"
+            )
         );
         assert!(resolve(&[], "/srv/git/tools.git").is_none());
         assert!(resolve(&[], "https://git.example/acme/x.git").is_none());
@@ -259,13 +281,19 @@ mod tests {
         let r = resolve(&fs, "https://code.acme.dev/gitlab/acme/pay.git").unwrap();
         assert_eq!(r.project, "acme/pay");
         assert!(resolve(&fs, "https://code.acme.dev/other/acme/pay.git").is_none());
-        assert_eq!(resolve(&fs, "https://github.com/a/b").unwrap().token, "ORG_TOKEN");
+        assert_eq!(
+            resolve(&fs, "https://github.com/a/b").unwrap().token,
+            "ORG_TOKEN"
+        );
         assert!(resolve(&fs, "https://github.com/a/../b").is_none());
     }
 
     #[test]
     fn the_hybrid_example_routes_each_child_to_its_own_forge() {
-        let dir = concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/federated-actions/hybrid-org");
+        let dir = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../examples/federated-actions/hybrid-org"
+        );
         let src = crate::load::load(std::path::Path::new(dir)).unwrap();
         let m: crate::manifest::Manifest = serde_json::from_value(src.document).unwrap();
         let routes: Vec<_> = m
@@ -281,16 +309,52 @@ mod tests {
             })
             .collect();
         let r = |k, api: &str, token: &str, project: &str, admits| {
-            Some((k, api.to_owned(), token.to_owned(), project.to_owned(), admits))
+            Some((
+                k,
+                api.to_owned(),
+                token.to_owned(),
+                project.to_owned(),
+                admits,
+            ))
         };
         assert_eq!(
             routes,
             [
-                r(Kind::Github, "https://api.github.com", "GITHUB_TOKEN", "acme/web", true),
-                r(Kind::Github, "https://ghe.acme.dev/api/v3", "ACME_GHES_TOKEN", "platform/ledger", true),
-                r(Kind::Gitlab, "https://gitlab.com/api/v4", "GITLAB_TOKEN", "acme/mobile", true),
-                r(Kind::Gitlab, "https://gitlab.acme.dev/api/v4", "ACME_GITLAB_TOKEN", "acme/platform/pay", true),
-                r(Kind::Gitlab, "https://gitlab.acme.dev/api/v4", "ACME_GITLAB_TOKEN", "acme/tools", true),
+                r(
+                    Kind::Github,
+                    "https://api.github.com",
+                    "GITHUB_TOKEN",
+                    "acme/web",
+                    true
+                ),
+                r(
+                    Kind::Github,
+                    "https://ghe.acme.dev/api/v3",
+                    "ACME_GHES_TOKEN",
+                    "platform/ledger",
+                    true
+                ),
+                r(
+                    Kind::Gitlab,
+                    "https://gitlab.com/api/v4",
+                    "GITLAB_TOKEN",
+                    "acme/mobile",
+                    true
+                ),
+                r(
+                    Kind::Gitlab,
+                    "https://gitlab.acme.dev/api/v4",
+                    "ACME_GITLAB_TOKEN",
+                    "acme/platform/pay",
+                    true
+                ),
+                r(
+                    Kind::Gitlab,
+                    "https://gitlab.acme.dev/api/v4",
+                    "ACME_GITLAB_TOKEN",
+                    "acme/tools",
+                    true
+                ),
                 None,
             ]
         );

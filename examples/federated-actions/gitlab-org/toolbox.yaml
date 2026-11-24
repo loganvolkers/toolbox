@@ -1,5 +1,37 @@
 apiVersion: toolbox.dev/v1alpha1
-portal: {name: org, title: Org portal on GitLab, owner: group:platform, toolbox: "0.1"}
+portal:
+  name: org
+  title: Org portal on GitLab
+  owner: group:platform
+  toolbox: "0.1"
+# Approvers can be GitLab groups: the gitlab connector reads acme's groups and their members
+# (Developer or above), and the model turns them into group: tuples, so an action that asks for
+# ['group:acme/release'] follows GitLab's membership (docs/design/forges.md §4.6).
+connectors:
+  - name: gitlab
+    package: builtin:gitlab
+    runtime: in-image
+    config:
+      group: acme
+      url: https://gitlab.acme.dev
+      token: ${env:GITLAB_TOKEN}
+    records: [group, project]
+kinds:
+  - name: Group
+    identityFrom: [connector:gitlab]
+    fields: {title: {type: string}, members: {type: list, items: string}}
+    sources: {default: [connector:gitlab]}
+    map:
+    - from: gitlab/group
+      id: "'group:' + record.slug"
+      set: "{'title': record.name, 'members': record.members}"
+authz:
+  model: groups.fga
+  tuples:
+    - kind: Group
+      emit: >-
+        entity.members.map(m, {'user': 'user:' + m, 'relation': 'member',
+        'object': entity.id})
 # A self-managed GitLab. gitlab.com and github.com need no entry; any other host does, with its
 # type. Toolbox reads the token from this environment variable and sends it only to `url`'s API,
 # never to an action. `projects` limits which projects this portal will start a pipeline in.
