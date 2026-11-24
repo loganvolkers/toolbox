@@ -349,6 +349,11 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 - Where both axes appear, they are named: "How it's decided" (measured or agent-judged) and "Has it
   run" (provisional when a check was not run). A row blocked by rules carries those rules' basis.
 - Every bar, even at 0%, draws at least 3px, so zero reads as a value and not a gap.
+- A tooltip is one element above the page, fixed to the viewport, so no collapsed or scrolling box
+  clips it; it stays open while the pointer moves onto it and closes on Escape.
+- The Compare verdict names what Toolbox lacks when one factor is behind, not just the factor.
+- Evidence speaks to the reader: a connector that did not run reads "Not measured", and repeated
+  evidence points to the rule it repeats.
 
 Not built: a change since the last snapshot beside each track ring. The report carries one snapshot
 and the committed baseline, which equals it on every published build; a pages build that also scored
