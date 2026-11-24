@@ -125,7 +125,17 @@ ends with the key the org portal signs approvals with:
 Toolbox keeps the key, the children's clones and the runs under `$TOOLBOX_STATE_DIR` (default
 `~/.local/state/toolbox`); use the same one for every command, and name it in your handoff if you
 set it. Paste the key into the standard file, then copy it to every repository, test, commit and
-push. `toolbox serve org --detach` serves the same portal (UI, REST, MCP) with the same key, for
+push, stopping at the first failure:
+
+```sh
+(set -e; for r in alpha beta gamma; do
+  [ $r = alpha ] || cp -r alpha/.toolbox/actions alpha/.toolbox/tests $r/.toolbox/
+  (cd $r && toolbox validate .toolbox && toolbox test .toolbox && git add .toolbox &&
+    git commit -qm "Add the add-code-of-conduct action" && git push -q origin HEAD)
+done)
+```
+
+`toolbox serve org --detach` serves the same portal (UI, REST, MCP) with the same key, for
 approvers on other machines; nothing below needs it.
 
 ## 5. Request, approve, check

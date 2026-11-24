@@ -6,10 +6,10 @@ description: >-
 
 # toolbox run
 
-To declare a new action and offer it from an org portal, follow the `add-action` skill. Test it
-before anyone runs it: `toolbox test` runs cases (requester, approvers, a rejected push) in a
-scratch copy of the repository, so the real origin and run history stay clean (the `test` skill
-has the format).
+To declare a new action and offer it from an org portal, follow the `add-action` skill alone: it
+has the files, their test cases, the org portal and the commands below, with no server. `toolbox
+test` runs the cases (requester, approvers, a rejected push) in a scratch copy of the repository,
+so the real origin and run history stay clean.
 
 1. Run it with no action to list what this portal offers, with each action's inputs.
 2. Preview first. Read the effects, blockers and approvers, and keep the confirm token.
