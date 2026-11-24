@@ -10,17 +10,20 @@ tracks:
       connectors, scripts and runtime signals, and the repository level they
       roll up to.
     links:
-    - {title: Maintainer SDLC, url: "https://github.com/loganvolkers/toolbox/blob/main/docs/design/maintainer-sdlc.md"}
-    - {title: Toolbox for Toolbox, url: "https://github.com/loganvolkers/toolbox/blob/main/docs/design/toolbox-for-toolbox.md"}
+    - title: Maintainer SDLC
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/maintainer-sdlc.md
+    - title: Toolbox for Toolbox
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/toolbox-for-toolbox.md
   - name: delivery
     title: CI and supply chain
     owner: group:maintainers
     description: >-
-      How a change ships: workflows that are secure, reliable and fast,
-      pinned actions, OpenSSF checks and the repository's security settings.
+      How a change ships: workflows that are secure, reliable and fast, pinned
+      actions, OpenSSF checks and the repository's security settings.
     links:
-    - {title: GitHub Actions standards, url: "https://github.com/loganvolkers/toolbox/blob/main/docs/design/github-actions-standards.md"}
-    - {title: OpenSSF Scorecard, url: "https://scorecard.dev/"}
+    - title: GitHub Actions standards
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/github-actions-standards.md
+    - {title: OpenSSF Scorecard, url: https://scorecard.dev/}
   - name: docs
     title: Docs people and agents read
     owner: group:maintainers
@@ -28,16 +31,19 @@ tracks:
       Design docs, the public site, examples agents copy and the agent
       instruction files: each current, linked and readable.
     links:
-    - {title: Writing style rules, url: "https://github.com/loganvolkers/toolbox/blob/main/AGENTS.md"}
+    - title: Writing style rules
+      url: https://github.com/loganvolkers/toolbox/blob/main/AGENTS.md
   - name: operator
     title: Operator experience
     owner: group:maintainers
     description: >-
-      What portal authors and their agents touch: CLI commands, MCP tools,
-      and the agent skills and plugins that teach them.
+      What portal authors and their agents touch: CLI commands, MCP tools, and
+      the agent skills and plugins that teach them.
     links:
-    - {title: Operator SDLC, url: "https://github.com/loganvolkers/toolbox/blob/main/docs/design/sdlc.md"}
-    - {title: Agent plugins, url: "https://github.com/loganvolkers/toolbox/blob/main/docs/design/agent-plugins.md"}
+    - title: Operator SDLC
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/sdlc.md
+    - title: Agent plugins
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/agent-plugins.md
   - name: standards
     title: Standards that check themselves
     owner: group:maintainers
@@ -45,8 +51,10 @@ tracks:
       The portal's scorecards, rules, kinds and assessments, scored for form
       by deterministic checks and for quality by independent agent reviews.
     links:
-    - {title: Scorecards for scorecards, url: "https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md"}
-    - {title: Do the meta scorecards measure anything?, url: "https://github.com/loganvolkers/toolbox/blob/main/docs/design/meta-standards-review.md"}
+    - title: Scorecards for scorecards
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md
+    - title: Do the meta scorecards measure anything?
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/meta-standards-review.md
   - name: evidence
     title: Proving value
     owner: group:maintainers
@@ -55,8 +63,10 @@ tracks:
       covered, and DX Benchmarks run on real forks against the strongest
       alternative.
     links:
-    - {title: The four SDLC layers, url: "https://github.com/loganvolkers/toolbox/blob/main/docs/sdlc.md"}
-    - {title: DX Benchmarks, url: "https://github.com/loganvolkers/toolbox/blob/main/docs/design/dx-benchmarks.md"}
+    - title: The four SDLC layers
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/sdlc.md
+    - title: DX Benchmarks
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/dx-benchmarks.md
   - name: vs-backstage
     title: Against Backstage
     owner: group:maintainers
@@ -68,10 +78,14 @@ tracks:
       agent adjudicated the result. Toolbox is behind on a factor if it is
       behind on any of its rules.
     links:
-    - {title: Results, url: "https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md"}
-    - {title: How it was run, url: "https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/README.md"}
-    - {title: Adjudication, url: "https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/ADJUDICATION.md"}
-    - {title: Design, url: "https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md"}
+    - title: Results
+      url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md
+    - title: How it was run
+      url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/README.md
+    - title: Adjudication
+      url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/ADJUDICATION.md
+    - title: Design
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md
 
 campaigns:
   - name: skill-silver

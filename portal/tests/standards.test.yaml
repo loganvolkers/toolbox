@@ -250,7 +250,9 @@ assert:
       && score('meta-rule',
       'rule:demo/sprawling/everything').evidence['explains-fix'] == ['fix has
       2 words']
-  - name: a rule with a rationale explains why; one without fails bronze, naming itself
+  - name: >-
+      a rule with a rationale explains why; one without fails bronze, naming
+      itself
     expect: >-
       score('meta-rule',
       'rule:toolbox/maintainer-ci-security/no-medium-findings').rules['explains-why']

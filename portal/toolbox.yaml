@@ -46,7 +46,9 @@ policies:
 kindGroups:
   - name: code
     title: Code
-    description: The Rust crates, their dependencies, and the other code and schemas we maintain.
+    description: >-
+      The Rust crates, their dependencies, and the other code and schemas we
+      maintain.
     kinds: [Crate, Dependency, PackageJson, PythonScript, JsonSchema]
   - name: surfaces
     title: Agent and user surfaces
@@ -63,8 +65,8 @@ kindGroups:
   - name: delivery
     title: CI and supply chain
     description: >-
-      How changes ship: workflows, the actions they use, OpenSSF checks and the
-      repository's settings.
+      How changes ship: workflows, the actions they use, OpenSSF checks and
+      the repository's settings.
     kinds: [Workflow, ActionDependency, OpenSSFCheck, Repository]
   - name: standards
     title: Standards and judgement
