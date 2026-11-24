@@ -191,6 +191,7 @@ kinds:
 
 scorecards:
   - name: vs-backstage-performance
+    title: Performance
     kind: Product
     description: >-
       Start, read and recover on a 10k-component catalog, with every read
@@ -283,6 +284,7 @@ scorecards:
     facets: {summary: public, details: public}
 
   - name: vs-backstage-footprint
+    title: Footprint
     kind: Product
     description: >-
       What it costs to run and to own: memory, disk, and the files an adopter
@@ -349,6 +351,7 @@ scorecards:
     facets: {summary: public, details: public}
 
   - name: vs-backstage-security
+    title: Security defaults
     kind: Product
     description: >-
       Secure by default, as installed: what an unauthenticated or forging
@@ -421,6 +424,7 @@ scorecards:
     facets: {summary: public, details: public}
 
   - name: vs-backstage-supply-chain
+    title: Supply chain
     kind: Product
     description: >-
       What an adopter inherits: third-party packages, their known
@@ -479,6 +483,7 @@ scorecards:
     facets: {summary: public, details: public}
 
   - name: vs-backstage-change-safety
+    title: Change safety
     kind: Product
     description: >-
       Changing a portal safely: validate before deploy, preview the effect,
@@ -530,6 +535,7 @@ scorecards:
     facets: {summary: public, details: public}
 
   - name: vs-backstage-org-fit
+    title: Org fit
     kind: Product
     description: >-
       Fitting how an organisation is built: one repository with no server
@@ -553,6 +559,7 @@ scorecards:
     facets: {summary: public, details: public}
 
   - name: vs-backstage-agent-surface
+    title: Agent surface
     kind: Product
     description: >-
       What a coding agent gets: MCP by default, and how many tokens it spends
@@ -591,6 +598,7 @@ scorecards:
     facets: {summary: public, details: public}
 
   - name: vs-backstage-extensibility
+    title: Extensibility
     kind: Product
     description: >-
       What it takes to add an integration: which languages, and whether the
@@ -616,6 +624,7 @@ scorecards:
     facets: {summary: public, details: public}
 
   - name: vs-backstage-capabilities
+    title: Capabilities
     kind: Product
     description: >-
       What a portal does out of the box, by configuration alone. The scenarios
