@@ -1,44 +1,44 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: scorecard:toolbox/meta-rule
 rubric: scorecard-quality
-subjectHash: 82b106097aa4
+subjectHash: 5b0e4166143c
 assessor: {kind: agent, name: cursor-cloud-agent, model: claude-opus-5.5}
 at: 2026-11-24
 verdicts:
   - criterion: one-concern
     verdict: pass
     reason: >-
-      All eleven rules (portal/standards/meta.yaml:407-566) judge one thing, a
+      All eleven rules (portal/standards/meta.yaml:413-573) judge one thing, a
       rule's form (explained how to fix and why, tested both ways, decided on
       fixtures, with evidence that tracks the check, readable CEL, a fix that
-      names a place), for one audience, the authors of standards. The new
-      `explains-why` asks for a `rationale:`, which is form too: it reads
-      `explained`, whether the field is filled
-      (crates/toolbox-cli/src/meta.rs:262), not whether the reason is right,
-      which review-rule judges (D01M831P5QWJQ4A2FT85N5MXJQF). The scorecard's
-      own rationale and track (meta.yaml:388-403) change no rule.
+      names a place), for one audience, the authors of standards.
+      `explains-why` (meta.yaml:426) reads `explained`, whether the rationale
+      is filled (crates/toolbox-cli/src/meta.rs:263), not whether the reason
+      is right, which Rules, reviewed by agents judges
+      (D01M831P5QWJQ4A2FT85N5MXJQF). The rewritten description
+      (meta.yaml:389-394) says the same in plain words and changes no rule.
   - criterion: levels-are-a-ladder
     verdict: pass
     reason: >-
-      `explains-why` sits at bronze beside `explains-fix` (meta.yaml:407-434),
-      and the ratchet holds new rules to bronze (meta.yaml:405), so a new rule
-      must say why from its first commit; every one of the 272 rules has a
-      rationale today, so bronze is reachable now. `readable` is a guard at
-      silver (docs/design/thresholds.md:41), and gold asks for
-      `pins-both-outcomes` (meta.yaml:534-550), which builds on bronze
-      `tested` and silver `both-outcomes-on-fixtures`. In the report the 272
-      rules spread 21 none, 6 bronze, 44 silver and 201 gold, with 71 failing
-      pins-both-outcomes, so every level separates rules.
+      `explains-fix` and `explains-why` sit at bronze (meta.yaml:414-441), and
+      the ratchet holds new rules to bronze (meta.yaml:412), so a new rule
+      must say why from its first commit; no rule fails explains-why today, so
+      bronze is reachable now. `readable` is a guard at silver (meta.yaml:496;
+      docs/design/thresholds.md:41), and gold asks for `pins-both-outcomes`
+      (meta.yaml:541-557), which builds on bronze `tested` and silver
+      `both-outcomes-on-fixtures`. In this build the 272 rules spread 21 none,
+      6 bronze, 44 silver and 201 gold, with 71 failing pins-both-outcomes, so
+      every level separates rules.
   - criterion: no-obvious-gap
     verdict: pass
     reason: >-
       Rationale was the first item scorecards-for-scorecards.md listed as not
       built; it is now built as `explains-why` here and on meta-scorecard
-      (docs/design/scorecards-for-scorecards.md:139). L4, tests that pin both
+      (docs/design/scorecards-for-scorecards.md:138). L4, tests that pin both
       outcomes (:84), is `pins-both-outcomes`, fed by `testedOutcomes` in
-      crates/toolbox-cli/src/meta.rs. What :139-144 still lists (thresholds
-      with a source, type checks, cross-rule redundancy, volatility, timing)
-      is next, and redundancy is a property of a scorecard's rules together
+      crates/toolbox-cli/src/meta.rs. What :139-143 still lists (type checks,
+      cross-rule redundancy, volatility, timing, evidence that names items) is
+      next, and redundancy is a property of a scorecard's rules together
       rather than one rule's form. Whether a rationale overclaims is left to
       review-rule's `measures-intent`, which is the right owner for it.
   - criterion: actionable
@@ -46,17 +46,16 @@ verdicts:
     reason: >-
       I removed the rationale from rule:toolbox/maintainer-site/titled
       (portal/standards/site.yaml) in the working tree and ran `toolbox report
-      portal --skip runner,github-actions -o json`: the rule fell from gold to
-      none with evidence `rule maintainer-site/titled has no rationale`, and
-      the fix (meta.yaml:424-426) names the field to add. Restoring the
-      rationale put it back at gold. The fixture test pins both outcomes of
-      explains-why (portal/tests/standards.test.yaml:253-262). Earlier I also
-      raised every-job-has-timeout's tests to pin both outcomes in a scratch
-      copy using only its fix (meta.yaml:541-546) and `toolbox test`.
+      portal --skip runner,github-actions -o json`: on this card the rule fell
+      from gold to none with evidence `rule maintainer-site/titled has no
+      rationale`, and the fix (meta.yaml:431-433) names the field to add.
+      Restoring the file put it back at gold. The fixture test pins both
+      outcomes of explains-why (portal/tests/standards.test.yaml:256-262).
 summary: >-
-  Re-assessed after the scorecard gained a rationale, links, a track and a
-  bronze `explains-why` rule. It is still one concern with a real ladder:
-  every rule says why from its first commit, and gold asks for tests that
-  pin both outcomes, which 71 rules don't yet have. Dropping one rule's
-  rationale dropped it to none with evidence naming it, and restoring it
-  brought it back to gold.
+  Re-assessed after the description was rewritten in plain words (it now
+  names Rules, reviewed by agents instead of the id review-rule); no rule
+  changed. It is still one concern with a real ladder: every rule says why
+  from its first commit, and gold asks for tests that pin both outcomes,
+  which 71 rules don't yet have. Dropping one rule's rationale dropped it
+  to none with evidence naming it, and restoring it brought it back to
+  gold.
