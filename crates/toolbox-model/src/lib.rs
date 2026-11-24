@@ -7,6 +7,7 @@
 
 pub mod diagnostics;
 pub mod federation;
+pub mod forge;
 pub mod load;
 pub mod manifest;
 pub mod messages;

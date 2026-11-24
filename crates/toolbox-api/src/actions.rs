@@ -108,7 +108,8 @@ pub fn served_dir(portal: &str) -> std::path::PathBuf {
 /// failed with that said, rather than left `running` forever or started again.
 fn interrupted(r: &mut Run) -> bool {
     if !["previewed", "approved", "dispatched", "running"].contains(&r.state.as_str())
-        || (r.state == "dispatched" && r.executor == "github-workflow")
+        || (r.state == "dispatched"
+            && matches!(r.executor.as_str(), "github-workflow" | "gitlab-pipeline"))
     {
         return false;
     }
@@ -1090,6 +1091,7 @@ mod tests {
             ("awaiting_approval", "command"),
             ("proposed", "change"),
             ("dispatched", "github-workflow"),
+            ("dispatched", "gitlab-pipeline"),
             ("verifying", "command"),
             ("succeeded", "command"),
         ] {

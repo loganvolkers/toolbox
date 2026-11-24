@@ -1,0 +1,56 @@
+# A child portal's federated runs in its own GitLab pipeline (docs/design/forges.md §4.4).
+# Copy it to .gitlab-ci.yml. In a project that has one, put the spec: block at the top of it
+# (pipeline inputs are read only from that file, not from an include) and add the job.
+# A parent whose federation.children lists this project, with `federation.runner: {type: ci}`
+# in .toolbox/toolbox.yaml here, starts a pipeline with these inputs. The job runs
+# `toolbox run` with the parent's signed grant and keeps the run record for the parent to read.
+# Every input reaches the script as a job variable (expand: false), never as script text.
+spec:
+  inputs:
+    action:
+      description: The action to run (empty in every pipeline a parent didn't start).
+      default: ""
+      regex: ^([a-z][a-z0-9-]*)?$
+    inputs:
+      description: The run's inputs, as JSON.
+      default: "{}"
+    requested_by:
+      description: Who asked, as the parent recorded them.
+      default: ""
+    toolbox_run:
+      description: The parent's run id.
+      default: ""
+    parent_run:
+      description: <parent portal>/<run id>.
+      default: ""
+    grant:
+      description: The parent's signed approvals, empty when there are none.
+      default: ""
+---
+toolbox:
+  rules:
+    - if: '"$[[ inputs.action ]]" != ""'
+  variables:
+    TOOLBOX_ACTION: $[[ inputs.action ]]
+    TOOLBOX_INPUTS:
+      value: $[[ inputs.inputs ]]
+      expand: false
+    TOOLBOX_REQUESTED_BY:
+      value: $[[ inputs.requested_by ]]
+      expand: false
+    TOOLBOX_PARENT_RUN:
+      value: $[[ inputs.parent_run ]]
+      expand: false
+    TOOLBOX_GRANT:
+      value: $[[ inputs.grant ]]
+      expand: false
+  script:
+    - >-
+      toolbox run "$TOOLBOX_ACTION" --portal .toolbox --inputs "$TOOLBOX_INPUTS"
+      --as "$TOOLBOX_REQUESTED_BY" --parent-run "$TOOLBOX_PARENT_RUN"
+      --grant "$TOOLBOX_GRANT" --yes --record toolbox-run.json -o json
+  artifacts:
+    when: always
+    paths:
+      - toolbox-run.json
+    expire_in: 30 days

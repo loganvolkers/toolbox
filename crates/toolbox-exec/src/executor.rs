@@ -8,6 +8,7 @@
 //! | `in-image` | executor protocol v1 `preview` over stdio | protocol `run`: `accepted`, `progress`, `result` |
 //! | `change` | the command in a throwaway git worktree; the effects are the files it changed, with their diffs | the same, committed and pushed to a new branch: the run is `proposed` until its commit is on the base. With `land: push`, pushed to the base once approved (never forced) and done when the base is seen to have it |
 //! | `github-workflow` | the Toolbox layer only | `workflow_dispatch`, then the run is tracked by its `run-name` |
+//! | `gitlab-pipeline` | the Toolbox layer only | a pipeline with the inputs, tracked by its id |
 //! | `toolbox` | the child portal's own preview | the child portal's own run (federated dispatch) |
 //!
 //! A command gets the run's context as JSON on stdin and in the environment: `TOOLBOX_PHASE`,
@@ -22,6 +23,8 @@ use serde_json::{Map, Value, json};
 use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
+use toolbox_model::forge::{self, Kind};
+use toolbox_model::manifest::Forge;
 
 /// What an executor is told about a run.
 #[derive(Debug, Clone)]
@@ -103,8 +106,13 @@ pub enum Executor {
         /// `land: push`: push the commit to the base once approved, instead of proposing a
         /// branch for review. The action's approval rule is then the only review.
         push: bool,
+        /// Open a review for a proposed branch on the remote's forge (`review`, default true).
+        review: bool,
+        /// The portal's forges, which the remote's URL is matched against.
+        forges: Vec<Forge>,
     },
     GithubWorkflow(crate::github::Workflow),
+    GitlabPipeline(crate::gitlab::Pipeline),
     /// Dispatch to a child portal (federation): the child previews, runs and verifies.
     Toolbox {
         portal: PathBuf,
@@ -196,8 +204,13 @@ fn argv(v: Option<&Value>, what: &str) -> Result<Vec<String>, String> {
 }
 
 impl Executor {
-    /// Parse an action's `executor:` value.
+    /// Parse an action's `executor:` value, with no forges but the known hosts.
     pub fn parse(v: &Value) -> Result<Self, String> {
+        Self::parse_in(v, &[])
+    }
+
+    /// Parse an action's `executor:` value in a portal that declares `forges`.
+    pub fn parse_in(v: &Value, forges: &[Forge]) -> Result<Self, String> {
         let ty = v.get("type").and_then(Value::as_str).unwrap_or("command");
         let s = |k: &str| v.get(k).and_then(Value::as_str).map(str::to_owned);
         Ok(match ty {
@@ -226,11 +239,16 @@ impl Executor {
                         ));
                     }
                 },
+                review: v.get("review").and_then(Value::as_bool).unwrap_or(true),
+                forges: forges.to_vec(),
             },
             "github-workflow" => Executor::GithubWorkflow(crate::github::Workflow::parse(v)?),
+            "gitlab-pipeline" => {
+                Executor::GitlabPipeline(crate::gitlab::Pipeline::parse(v, forges)?)
+            }
             other => {
                 return Err(format!(
-                    "unknown executor type {other} (command, in-image, change, github-workflow)"
+                    "unknown executor type {other} (command, in-image, change, github-workflow, gitlab-pipeline)"
                 ));
             }
         })
@@ -243,6 +261,7 @@ impl Executor {
             Executor::InImage { .. } => "in-image",
             Executor::Change { .. } => "change",
             Executor::GithubWorkflow(_) => "github-workflow",
+            Executor::GitlabPipeline(_) => "gitlab-pipeline",
             Executor::Toolbox { .. } => "toolbox",
         }
     }
@@ -327,6 +346,11 @@ impl Executor {
                 ],
                 ..Preview::default()
             }),
+            Executor::GitlabPipeline(p) => Ok(Preview {
+                effects: vec![json!({"resource": format!("gitlab:{}/pipelines", p.project),
+                    "operation": "dispatch", "ref": p.git_ref})],
+                ..Preview::default()
+            }),
             Executor::Toolbox {
                 portal,
                 action,
@@ -390,6 +414,8 @@ impl Executor {
                 message,
                 env,
                 push,
+                review,
+                forges,
                 ..
             } => change_run(
                 run,
@@ -400,9 +426,11 @@ impl Executor {
                 message.as_deref(),
                 env,
                 confirmed,
+                review.then_some(forges.as_slice()),
             )
             .unwrap_or_else(Outcome::failed),
             Executor::GithubWorkflow(w) => w.dispatch(ctx),
+            Executor::GitlabPipeline(p) => p.dispatch(ctx),
             Executor::Toolbox {
                 portal,
                 action,
@@ -720,6 +748,51 @@ fn stdio_run(command: &[String], ctx: &Context, confirmed: &[Value], env: &[Stri
     }
 }
 
+/// A remote URL as a run record keeps it: without the password a URL may carry.
+fn without_password(url: &str) -> String {
+    let Some((scheme, rest)) = url.split_once("://") else {
+        return url.to_owned();
+    };
+    let (auth, tail) = rest.split_once('/').unwrap_or((rest, ""));
+    match auth.rsplit_once('@') {
+        Some((user, host)) => {
+            let user = user.split(':').next().unwrap_or("");
+            format!("{scheme}://{user}@{host}/{tail}")
+        }
+        None => url.to_owned(),
+    }
+}
+
+/// The merge request GitLab names after a push with `merge_request.create`.
+fn merge_request_url(said: &str) -> Option<String> {
+    said.lines()
+        .map(|l| l.trim_start_matches("remote:").trim())
+        .filter(|l| l.contains("/-/merge_requests/"))
+        .find_map(|l| l.split_whitespace().find(|w| w.starts_with("http")))
+        .map(str::to_owned)
+}
+
+/// `git` that returns what the remote said (stderr) as well as stdout.
+fn git_said(dir: &Path, args: &[&str]) -> Result<String, String> {
+    let mut cmd = Command::new("git");
+    clean_env(&mut cmd, &[]);
+    let out = cmd
+        .arg("-C")
+        .arg(dir)
+        .args(args)
+        .output()
+        .map_err(|e| format!("git: {e}"))?;
+    let said = format!(
+        "{}{}",
+        String::from_utf8_lossy(&out.stdout),
+        String::from_utf8_lossy(&out.stderr)
+    );
+    if !out.status.success() {
+        return Err(format!("git {}: {}", args.join(" "), said.trim()));
+    }
+    Ok(said)
+}
+
 fn git(dir: &Path, args: &[&str]) -> Result<String, String> {
     let mut cmd = Command::new("git");
     clean_env(&mut cmd, &[]);
@@ -896,6 +969,7 @@ fn change_run(
     message: Option<&str>,
     env: &[String],
     confirmed: &[Value],
+    review: Option<&[Forge]>,
 ) -> Result<Outcome, String> {
     let wt = Worktree::new(&ctx.cwd, base, remote)?;
     let out = spawn(run, ctx, "run", &wt.dir, env)?;
@@ -959,7 +1033,8 @@ fn change_run(
     git(&root, &args)?;
     let commit = git(&root, &["rev-parse", "HEAD"])?;
     // From the main checkout: a relative remote URL resolves against it, not the worktree.
-    let has_remote = git(&wt.repo, &["remote", "get-url", "--", remote]).ok();
+    let url = git(&wt.repo, &["remote", "get-url", "--", remote]).ok();
+    let has_remote = url.as_deref().map(without_password);
     let files: Vec<Value> = files
         .iter()
         .map(|(op, p)| json!({"operation": op, "path": p}))
@@ -986,17 +1061,57 @@ fn change_run(
             child: None,
         });
     };
-    let pushed = match &has_remote {
-        Some(_) => {
-            git(&wt.repo, &["push", "-q", remote, branch])?;
+    let target = base_branch(&wt.base, remote);
+    let on = url
+        .as_deref()
+        .zip(review)
+        .and_then(|(u, fs)| forge::resolve(fs, u));
+    let title = msg.lines().next().unwrap_or("");
+    let body = format!("{trailers}\n\nOpened by Toolbox for {} on {}.", ctx.action, ctx.entity["id"].as_str().unwrap_or(""));
+    let mut opened = Value::Null;
+    let pushed = match (&has_remote, on.as_ref().map(|f| f.kind)) {
+        (None, _) => false,
+        // GitLab opens a merge request from push options: no API token, and git's own
+        // credentials decide who opens it.
+        (Some(_), Some(Kind::Gitlab)) => {
+            let said = git_said(
+                &wt.repo,
+                &[
+                    "push",
+                    "-o",
+                    "merge_request.create",
+                    "-o",
+                    &format!("merge_request.target={target}"),
+                    "-o",
+                    &format!("merge_request.title={}", title.replace('\n', " ")),
+                    "--",
+                    remote,
+                    branch,
+                ],
+            )?;
+            opened = match merge_request_url(&said) {
+                Some(u) => json!({"forge": "gitlab", "url": u}),
+                None => json!({"forge": "gitlab",
+                    "error": "GitLab opened no merge request (it says so on push); the branch is pushed"}),
+            };
             true
         }
-        None => false,
+        (Some(_), kind) => {
+            git(&wt.repo, &["push", "-q", remote, branch])?;
+            if let (Some(Kind::Github), Some(f)) = (kind, &on) {
+                opened = crate::github::open_pull(f, branch, target, title, &body);
+            }
+            true
+        }
     };
+    let mut outputs = json!({"branch": branch, "base": wt.base, "commit": commit, "pushed": pushed,
+        "remote": has_remote, "files": files});
+    if !opened.is_null() {
+        outputs["review"] = opened;
+    }
     Ok(Outcome {
         status: "proposed".into(),
-        outputs: json!({"branch": branch, "base": wt.base, "commit": commit, "pushed": pushed,
-            "remote": has_remote, "files": files}),
+        outputs,
         error: None,
         progress: vec![],
         child: None,

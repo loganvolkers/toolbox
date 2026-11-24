@@ -680,6 +680,91 @@ pub fn recheck(
                 }
             }
         }
+        Executor::GitlabPipeline(p) if run.state == "dispatched" => {
+            if let (Some(child), Some(clone)) = (run.child.clone(), &p.clone)
+                && child["state"] == "proposed"
+            {
+                child_proposal(run, &child, clone);
+                return run.state != before;
+            }
+            match p.track(&run.outputs) {
+                Ok(Some(t)) if t.status == "completed" => {
+                    if let (Some(u), Some(o)) = (&t.url, run.outputs.as_object_mut()) {
+                        o.insert("pipeline".into(), json!(u));
+                    }
+                    let ok = t.conclusion.as_deref() == Some("success");
+                    let concluded = t.conclusion.as_deref().unwrap_or("unknown").to_owned();
+                    if p.federated.is_some() {
+                        match p.collect(&run.outputs) {
+                            Ok(Some(v)) => {
+                                child_record(run, v, t.url.as_deref());
+                                if let (Some(child), Some(clone)) = (run.child.clone(), &p.clone)
+                                    && child["state"] == "proposed"
+                                {
+                                    child_proposal(run, &child, clone);
+                                }
+                            }
+                            Ok(None) if ok => run.set(
+                                "unverified",
+                                None,
+                                Some(format!(
+                                    "the pipeline succeeded, but no job named {} kept {}, so the child's own verification is unknown",
+                                    crate::gitlab::JOB,
+                                    crate::gitlab::RECORD
+                                )),
+                            ),
+                            Ok(None) => run.fail(format!(
+                                "the pipeline concluded {concluded}, and no job named {} kept {}",
+                                crate::gitlab::JOB,
+                                crate::gitlab::RECORD
+                            )),
+                            Err(e) => {
+                                run.progress.push(
+                                    json!({"at": rfc3339(now_secs()), "note": format!("reading the child's run record: {e}")}),
+                                );
+                                return false;
+                            }
+                        }
+                        return run.state != before;
+                    }
+                    if ok {
+                        run.set("executor_succeeded", None, t.url.clone());
+                        if expect.is_none() {
+                            run.set("unverified", None, None);
+                            return true;
+                        }
+                    } else {
+                        run.fail(format!("the pipeline concluded {concluded}"));
+                        return true;
+                    }
+                }
+                Ok(t) => {
+                    if run.deadline.is_some_and(|dl| now_secs() >= dl) {
+                        run.set(
+                            "timed_out",
+                            None,
+                            Some(match t {
+                                None => "the pipeline was not found".into(),
+                                Some(t) => format!("the pipeline was still {}", t.status),
+                            }),
+                        );
+                        run.error = Some("the pipeline did not finish before the deadline".into());
+                    } else if let Some(t) = t.filter(|t| t.status == "waiting")
+                        && !run.progress.iter().any(|p| p["waiting"] == true)
+                    {
+                        run.progress.push(json!({"at": rfc3339(now_secs()), "waiting": true,
+                            "note": format!("the pipeline waits for someone to start a manual job: {}",
+                                t.url.unwrap_or_default())}));
+                    }
+                    return run.state != before;
+                }
+                Err(e) => {
+                    run.progress
+                        .push(json!({"at": rfc3339(now_secs()), "note": e}));
+                    return false;
+                }
+            }
+        }
         // A proposed change is done only once its commit is on the base branch: the base
         // satisfying the postcondition by other means is not this run's effect.
         Executor::Change { .. } if run.state == "proposed" => {
@@ -731,6 +816,62 @@ pub fn recheck(
         }
     }
     run.state != before
+}
+
+/// Take a child's run record, as its pipeline kept it, as this run's outcome (T8: the child
+/// verifies). A change the child proposed leaves this run `dispatched` until the parent sees it
+/// on the base ([`child_proposal`]).
+fn child_record(run: &mut Run, v: Value, pipeline: Option<&str>) {
+    let state = v["state"].as_str().unwrap_or("failed").to_owned();
+    let error = v["error"].as_str().unwrap_or("").to_owned();
+    match state.as_str() {
+        "succeeded" | "unverified" => {
+            run.verification = Some(json!({"by": "child pipeline", "child_run": v["id"],
+                "pipeline": pipeline, "child": v["verification"]}));
+            run.set(&state, None, None);
+        }
+        "proposed" => {
+            let review = v["outputs"]["review"]["url"]
+                .as_str()
+                .or(v["outputs"]["branch"].as_str())
+                .unwrap_or("a branch")
+                .to_owned();
+            run.progress.push(json!({"at": rfc3339(now_secs()),
+                "note": format!("the child proposed {review}; waiting for it on {}",
+                    v["outputs"]["base"].as_str().unwrap_or("its base"))}));
+        }
+        "awaiting_approval" => run.fail(format!(
+            "the child's run waits for approval in its pipeline, where nobody can give it: this portal's grant did not meet its rule{}",
+            if error.is_empty() { String::new() } else { format!(" ({error})") }
+        )),
+        _ => run.fail(format!("child run {state}: {error}")),
+    }
+    run.child = Some(v);
+}
+
+/// A change a child proposed from its pipeline, looked for on its base in the parent's clone of
+/// the child: merged, fast-forwarded, or squashed or rebased with its `Toolbox-Run` trailer.
+fn child_proposal(run: &mut Run, child: &Value, clone: &std::path::Path) {
+    let Ok(record) = serde_json::from_value::<Run>(child.clone()) else {
+        run.fail("the child's run record does not parse");
+        return;
+    };
+    match crate::executor::merged(clone, &record) {
+        Ok(true) => {
+            run.verification = Some(json!({"by": "parent", "merged": true,
+                "child_run": record.id, "base": record.outputs["base"],
+                "commit": record.outputs["commit"], "review": record.outputs["review"]}));
+            run.set("succeeded", None, None);
+        }
+        Ok(false) => {
+            if run.deadline.is_some_and(|dl| now_secs() >= dl) {
+                run.fail("the change the child proposed was not merged before the deadline");
+            }
+        }
+        Err(e) => run
+            .progress
+            .push(json!({"at": rfc3339(now_secs()), "note": e})),
+    }
 }
 
 #[cfg(test)]
