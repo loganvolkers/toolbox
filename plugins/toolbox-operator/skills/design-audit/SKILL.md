@@ -1,0 +1,84 @@
+---
+name: design-audit
+description: >-
+  Runs an independent design audit of a rendered portal UI (the hosted report, the minimal UI,
+  a custom view): evidence capture, a blind heuristic and task review, severity-ranked usability
+  fixes, prioritised joy opportunities, and a blind re-audit that shows the change moved the
+  scores. Use before redesigning a page, after a UI change lands, or whenever readers say a page
+  is hard to understand or dull.
+---
+
+# Design audit
+
+An audit judges what a reader sees, not what the code intends. The auditor is independent: a
+fresh agent or person who did not write the change, who sees only rendered evidence, the reader
+jobs and the rubric. The implementer never scores their own work. Scores are 0–4 per dimension
+in [references/rubric.md](references/rubric.md): ten usability dimensions (U1–U10), four joy
+dimensions (J1–J4), and named reader tasks.
+
+## Procedure
+
+1. **Name the readers and their tasks.** Three to six tasks, each with a reader, a question and
+   what counts as the answer ("VP: what level is the repository at, and what holds it there?").
+   Write them before looking at the page so the tasks are not fitted to the design.
+2. **Capture evidence.** Serve the page and run the capture script over every route a task
+   touches. It writes screenshots (desktop and mobile, light and dark), a full-page desktop
+   shot, and `metrics.json` with axe-core violations and visual-variety counts.
+3. **Audit blind.** Give a fresh auditor the tasks, the rubric, the screenshots and
+   `metrics.json`, and nothing else: not the source, not the diff, not earlier scores. The
+   auditor walks each task (cognitive walkthrough: will the reader know what to do, see how,
+   and know it worked?), scores every dimension with cited evidence, and lists findings with
+   severity 1–4.
+4. **Prioritise.** Usability first: every severity 3–4 finding is a must, then by reach and
+   effort. Joy second: Kano delighters that reinforce a task (progress, achievement, identity).
+   Record the ranked list in the audit file with the reason for each cut.
+5. **Fix.** Implement in priority order. Keep the data contract stable or extend it; never
+   drop information a task needs to make a view prettier.
+6. **Re-audit blind.** Recapture with the same routes and viewports, then give a new auditor
+   the same inputs as step 3. Compare the two score tables and the metrics. The change is done
+   when no U score fell, the targeted scores rose, and serious axe violations did not grow.
+7. **Publish.** Commit the audit file with both score tables, the task outcomes, the metric
+   deltas, the fixes made and the findings left open.
+
+```bash
+npm i --prefix /tmp/audit playwright axe-core && npx --prefix /tmp/audit playwright install chromium
+NODE_PATH=/tmp/audit/node_modules node scripts/capture.cjs \
+  --url http://127.0.0.1:8765/index.html \
+  --routes '#overview,#catalog,#campaigns,#scorecards' --ready section --out /tmp/audit/before
+```
+
+## Auditor brief
+
+Send the auditor this, with the tasks and file paths filled in:
+
+```text
+You are an independent UX auditor. Judge only the attached screenshots and metrics.json; do not
+read source code. Readers and tasks: <tasks>. Use the rubric: <rubric>. For each task give
+outcome (success/partial/fail), steps from the landing view, and the biggest obstacle. Score
+U1–U10 and J1–J4 from 0 to 4, citing a screenshot or metric for each. List findings as
+id | dimension | severity 1–4 | evidence | recommendation, most severe first. Then name the
+three joy opportunities with the most reach.
+```
+
+## Audit file
+
+| Section | Content |
+|---|---|
+| Scope | Surface, commit, routes, viewports, readers and tasks |
+| Scores | U1–U10, J1–J4, task outcomes; before and after side by side once re-audited |
+| Metrics | `metrics.json` summary: serious axe nodes, monospace share, distinct font sizes and hues, words above the fold |
+| Findings | Ranked, with severity, evidence and the fix or the reason it stays open |
+| Joy | Opportunities taken and declined |
+
+## Boundaries
+
+- Never let the implementer score the work, and never show the re-auditor the first scores:
+  anchoring inflates both.
+- Do not trade a usability score for a joy score. A delighter that hides data, slows a task or
+  fails contrast is a regression.
+- Visual-variety metrics describe the page; they are not targets. More hues or font sizes is
+  not better on its own.
+- Limitation: an agent auditor is a proxy for readers. For a release-defining change, add five
+  real readers on the same tasks (Nielsen's five-user rule) and record what they did.
+- Prerequisite: the page must render from a local server or file URL. On error (the capture
+  prints `not ready`), fix the load or the `--ready` selector before auditing a blank page.
