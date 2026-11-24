@@ -1,0 +1,43 @@
+{
+  "arm": "backstage",
+  "components": 1000,
+  "readyS": 3.27,
+  "catalogReadableS": 6.27,
+  "rssIdleMb": 453.4,
+  "rssLoadedMb": 545.6,
+  "rssAfterLoadMb": 639.8,
+  "recoveredS": 2.25,
+  "ownersDigest": "d35083868bd20f8ac9b6a8fa550a3807f7a29c0f167d96dcd3a7b09c2eb59013",
+  "reads": [
+    {
+      "url": "get",
+      "distinct": 1000,
+      "rps": 4103.4,
+      "p50ms": 3.55,
+      "p95ms": 5.81,
+      "p99ms": 7.35,
+      "ok": 1.0,
+      "codes": {
+        "200": 41028
+      },
+      "errors": {
+        "aborted due to deadline": 16
+      }
+    },
+    {
+      "url": "list",
+      "distinct": 50,
+      "rps": 360.9,
+      "p50ms": 42.57,
+      "p95ms": 75.98,
+      "p99ms": 85.52,
+      "ok": 1.0,
+      "codes": {
+        "200": 3593
+      },
+      "errors": {
+        "aborted due to deadline": 16
+      }
+    }
+  ]
+}
