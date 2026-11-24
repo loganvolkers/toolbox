@@ -1164,17 +1164,17 @@
   function nextMedalEl(D, cards, label) {
     var nm = nextMedal(D, cards);
     if (!nm) return null;
+    var top = (((D.scorecards || {})[nm.name] || {}).levels || []).slice(-1)[0];
+    var card = link("scorecard/" + enc(nm.name), "", title(D, nm.name));
+    var rule = nm.rule ? [link("rule/" + enc(nm.name) + "/" + enc(nm.rule), "", ruleTitle(nm.name, nm.rule)), " ", basisBadge(basisOf((((D.scorecards || {})[nm.name] || {}).rules || {})[nm.rule]), "tip")] : [];
+    var entities = plural(nm.low, "entity", "entities") + " at " + nm.floor;
+    var body = nm.rule && nm.n === nm.low ? [entities + (nm.low === 1 ? " needs " : " need "), ...rule, " to reach " + nm.up + " on ", card, "."] : ["lift " + entities + " to " + nm.up + " on ", card, ...nm.rule ? ["; " + nm.n + (nm.n === 1 ? " needs " : " need "), ...rule, " first."] : ["."]];
     return el(
       "div",
       { className: "nextmedal" },
       el("b", { textContent: label || "Next medal: " }),
-      link("scorecard/" + enc(nm.name), "", title(D, nm.name)),
-      " to " + nm.up + (isTop(D, nm.name, nm.up) ? ", its top level" : " (its top level is " + (((D.scorecards || {})[nm.name] || {}).levels || []).slice(-1)[0] + ")") + ". " + plural(nm.low, "entity", "entities") + " at " + nm.floor + " to lift" + (nm.rule ? "; " + nm.n + (nm.n === 1 ? " needs " : " need ") : "."),
-      nm.rule ? link("rule/" + enc(nm.name) + "/" + enc(nm.rule), "", ruleTitle(nm.name, nm.rule)) : null,
-      nm.rule ? " " : null,
-      nm.rule ? basisBadge(basisOf((((D.scorecards || {})[nm.name] || {}).rules || {})[nm.rule]), "tip") : null,
-      nm.rule ? "." : null,
-      !isTop(D, nm.name, nm.up) && Object.keys(D.tracks || {}).length ? el("span", { className: "sub" }, " This takes them off " + nm.floor + "; the track's percentage moves when they reach " + (((D.scorecards || {})[nm.name] || {}).levels || []).slice(-1)[0] + ".") : null
+      ...body,
+      el("span", { className: "sub" }, isTop(D, nm.name, nm.up) ? " That is its top level." : " Its top level is " + top + (Object.keys(D.tracks || {}).length ? ": the track's percentage moves when they reach it." : "."))
     );
   }
   function ownerName(o) {
@@ -1884,7 +1884,7 @@
     ".cmp-side{display:grid;gap:12px;justify-items:center}.h2h{display:grid;gap:2px;width:300px;font-size:12px}.h2h-head,.h2h-row{display:grid;grid-template-columns:110px 1fr 1fr;align-items:center;gap:0}.h2h-head{color:var(--muted);font-weight:650}.h2h-head .behind{text-align:right;padding-right:6px;color:var(--fail)}.h2h-head .ahead{padding-left:6px;color:var(--pass)}.h2h-row{min-height:24px;color:var(--fg);text-decoration:none;border-radius:6px;padding:0 2px}.h2h-row:hover,.h2h-row:focus-visible{background:color-mix(in srgb,var(--accent) 10%,transparent)}.h2h-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:6px}.h2h-l,.h2h-r{display:flex;height:10px}.h2h-l{justify-content:flex-end;border-right:1.5px solid var(--muted)}.h2h-l span{background:var(--fail);border-radius:3px 0 0 3px}.h2h-r span{background:var(--pass);border-radius:0 3px 3px 0}.h2h-foot{color:var(--muted);font-size:12px;text-align:center;margin-top:2px}",
     ".tally3{display:flex;gap:18px;text-align:center}.rule-tally{margin:6px 0 0;font-size:14px}.rule-tally .ahead{color:var(--pass)}.rule-tally .behind{color:var(--fail)}.rule-tally .parity{color:var(--muted)}",
     ".tally3 strong{display:block;font-size:28px;line-height:1.1;font-variant-numeric:tabular-nums}",
-    ".tally3 span{font-size:12px;color:var(--muted);font-weight:650;text-transform:uppercase;letter-spacing:.05em}",
+    ".tally3 span{font-size:12px;color:var(--muted);font-weight:650;text-transform:uppercase;letter-spacing:.05em}.tally3 .mixed{display:block;font-size:12px;color:var(--muted)}.tally3>div{display:flex;flex-direction:column}",
     ".setup{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin:10px 0;align-items:start}",
     ".setup>div{padding:10px 12px;border-radius:10px;background:var(--tint);font-size:14px}",
     ".setup b{display:block;font-size:12px;color:var(--muted);font-weight:650;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}",
@@ -3614,7 +3614,7 @@
   // src/views/campaigns.js
   function sinceLine(c) {
     var s = c.sinceStart;
-    if (!s) return el("p", { className: "sub", style: "margin:0 0 6px", textContent: "This report has no saved starting point, so the bar shows where the campaign stands today, not how far it has come." });
+    if (!s) return el("p", { className: "sub", style: "margin:0 0 6px", textContent: "This report was built without the campaign's baseline, so the bar shows where the campaign stands today, not how far it has come since its starting point." });
     var parts = [["entitiesShort", "entities short"], ["measure", "total shortfall"]].filter(function(k) {
       return s[k[0]];
     }).map(function(k) {
@@ -4531,7 +4531,7 @@
       });
       var all = tally.pass + tally.waived + tally.fail + tally.unknown;
       var parts = [
-        { k: "pass", n: tally.pass + tally.waived, c: "var(--pass)", t: "pass" },
+        { k: "pass", n: tally.pass + tally.waived, c: def.level ? fill(def.level) : "var(--pass)", t: def.level ? "pass, toward " + def.level : "pass" },
         { k: "fail", n: tally.fail, c: "var(--fail)", t: "fail" },
         { k: "unknown", n: tally.unknown, c: UNRUN, t: "not run in this build" }
       ].filter(function(p) {
@@ -4610,6 +4610,7 @@
         def.fix ? el("h3", { textContent: "How to fix a failure" }) : null,
         def.fix ? el("p", { style: "margin:0" }, ...rich(def.fix)) : null,
         el("h3", { textContent: "Outcomes" }),
+        all && def.level ? el("p", { className: "sub", style: "margin:0 0 6px", textContent: "A pass is drawn in the colour of " + def.level + ", the level this rule belongs to, as on the scorecard's bars." }) : null,
         all ? bar : el("p", { className: "empty", textContent: "No entity is in scope." }),
         all ? el(
           "div",
@@ -4853,7 +4854,21 @@
             "div",
             { className: "tally3" },
             ...["ahead", "parity", "behind"].map(function(k) {
-              return el("div", {}, el("strong", { textContent: unmeasured ? "—" : String(counts[k]), style: "color:" + (unmeasured ? "var(--muted)" : standingColor(k)) }), el("span", { textContent: STANDING_MARK[k] + " " + k }));
+              var mixed = unmeasured ? 0 : names.filter(function(n) {
+                var vs = Object.keys(all[n].rules || {}).map(function(r) {
+                  return (all[n].rules[r] || {})[peer];
+                });
+                return verdictOf(n) === k && vs.indexOf("ahead") >= 0 && vs.indexOf("behind") >= 0;
+              }).length;
+              return el("div", {}, el("strong", { textContent: unmeasured ? "—" : String(counts[k]), style: "color:" + (unmeasured ? "var(--muted)" : standingColor(k)) }), el("span", { textContent: STANDING_MARK[k] + " " + k }), mixed ? el("small", { className: "mixed", textContent: mixed + " mixed" }) : null);
+            })
+          ),
+          unmeasured ? null : el("div", { className: "kicker", style: "margin-top:10px", textContent: "Rules" }),
+          unmeasured ? null : el(
+            "div",
+            { className: "tally3 rules" },
+            ...["ahead", "parity", "behind"].map(function(k) {
+              return el("div", {}, el("strong", { textContent: String(ruleCounts[k]), style: "color:" + standingColor(k) }), el("span", { textContent: STANDING_MARK[k] + " " + k }));
             })
           ),
           this.headToHead(D, all, names, peer)

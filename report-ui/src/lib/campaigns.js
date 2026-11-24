@@ -54,19 +54,19 @@ export function nextMedal(D, cards) {
 export function nextMedalEl(D, cards, label) {
   var nm = nextMedal(D, cards);
   if (!nm) return null;
+  var top = (((D.scorecards || {})[nm.name] || {}).levels || []).slice(-1)[0];
+  var card = link("scorecard/" + enc(nm.name), "", title(D, nm.name));
+  var rule = nm.rule ? [link("rule/" + enc(nm.name) + "/" + enc(nm.rule), "", ruleTitle(nm.name, nm.rule)), " ", basisBadge(basisOf((((D.scorecards || {})[nm.name] || {}).rules || {})[nm.rule]), "tip")] : [];
+  var entities = plural(nm.low, "entity", "entities") + " at " + nm.floor;
+  var body = nm.rule && nm.n === nm.low
+    ? [entities + (nm.low === 1 ? " needs " : " need "), ...rule, " to reach " + nm.up + " on ", card, "."]
+    : ["lift " + entities + " to " + nm.up + " on ", card, ...(nm.rule ? ["; " + nm.n + (nm.n === 1 ? " needs " : " need "), ...rule, " first."] : ["."])];
   return el(
     "div",
     { className: "nextmedal" },
     el("b", { textContent: label || "Next medal: " }),
-    link("scorecard/" + enc(nm.name), "", title(D, nm.name)),
-    " to " + nm.up + (isTop(D, nm.name, nm.up) ? ", its top level" : " (its top level is " + (((D.scorecards || {})[nm.name] || {}).levels || []).slice(-1)[0] + ")") + ". " + plural(nm.low, "entity", "entities") + " at " + nm.floor + " to lift" + (nm.rule ? "; " + nm.n + (nm.n === 1 ? " needs " : " need ") : "."),
-    nm.rule ? link("rule/" + enc(nm.name) + "/" + enc(nm.rule), "", ruleTitle(nm.name, nm.rule)) : null,
-    nm.rule ? " " : null,
-    nm.rule ? basisBadge(basisOf((((D.scorecards || {})[nm.name] || {}).rules || {})[nm.rule]), "tip") : null,
-    nm.rule ? "." : null,
-    !isTop(D, nm.name, nm.up) && Object.keys(D.tracks || {}).length
-      ? el("span", { className: "sub" }, " This takes them off " + nm.floor + "; the track's percentage moves when they reach " + (((D.scorecards || {})[nm.name] || {}).levels || []).slice(-1)[0] + ".")
-      : null,
+    ...body,
+    el("span", { className: "sub" }, isTop(D, nm.name, nm.up) ? " That is its top level." : " Its top level is " + top + (Object.keys(D.tracks || {}).length ? ": the track's percentage moves when they reach it." : ".")),
   );
 }
 

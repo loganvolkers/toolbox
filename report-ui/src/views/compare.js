@@ -272,9 +272,27 @@ export const compareViews = {
           "div",
           { className: "tally3" },
           ...["ahead", "parity", "behind"].map(function (k) {
-            return el("div", {}, el("strong", { textContent: unmeasured ? "—" : String(counts[k]), style: "color:" + (unmeasured ? "var(--muted)" : standingColor(k)) }), el("span", { textContent: STANDING_MARK[k] + " " + k }));
+            var mixed = unmeasured
+              ? 0
+              : names.filter(function (n) {
+                  var vs = Object.keys(all[n].rules || {}).map(function (r) {
+                    return (all[n].rules[r] || {})[peer];
+                  });
+                  return verdictOf(n) === k && vs.indexOf("ahead") >= 0 && vs.indexOf("behind") >= 0;
+                }).length;
+            return el("div", {}, el("strong", { textContent: unmeasured ? "—" : String(counts[k]), style: "color:" + (unmeasured ? "var(--muted)" : standingColor(k)) }), el("span", { textContent: STANDING_MARK[k] + " " + k }), mixed ? el("small", { className: "mixed", textContent: mixed + " mixed" }) : null);
           }),
         ),
+        unmeasured ? null : el("div", { className: "kicker", style: "margin-top:10px", textContent: "Rules" }),
+        unmeasured
+          ? null
+          : el(
+              "div",
+              { className: "tally3 rules" },
+              ...["ahead", "parity", "behind"].map(function (k) {
+                return el("div", {}, el("strong", { textContent: String(ruleCounts[k]), style: "color:" + standingColor(k) }), el("span", { textContent: STANDING_MARK[k] + " " + k }));
+              }),
+            ),
         this.headToHead(D, all, names, peer),
       ),
     );

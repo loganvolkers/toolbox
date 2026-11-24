@@ -17,7 +17,7 @@ import { fmt, plural } from "../lib/words.js";
 // How far the campaign has come since the start the baseline saved; without one, the bar is only where it stands.
 function sinceLine(c) {
   var s = c.sinceStart;
-  if (!s) return el("p", { className: "sub", style: "margin:0 0 6px", textContent: "This report has no saved starting point, so the bar shows where the campaign stands today, not how far it has come." });
+  if (!s) return el("p", { className: "sub", style: "margin:0 0 6px", textContent: "This report was built without the campaign's baseline, so the bar shows where the campaign stands today, not how far it has come since its starting point." });
   var parts = [["entitiesShort", "entities short"], ["measure", "total shortfall"]]
     .filter(function (k) {
       return s[k[0]];

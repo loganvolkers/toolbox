@@ -2,7 +2,7 @@
 import { badge, grow } from "../lib/bars.js";
 import { BASIS, basisBadge, basisOf, refs } from "../lib/basis.js";
 import { el, enc, link } from "../lib/dom.js";
-import { UNRUN } from "../lib/levels.js";
+import { fill, UNRUN } from "../lib/levels.js";
 import { shortId, title } from "../lib/rings.js";
 import { ruleTitle } from "../lib/rules.js";
 import { isPassing } from "../lib/status.js";
@@ -40,7 +40,7 @@ export const ruleViews = {
     });
     var all = tally.pass + tally.waived + tally.fail + tally.unknown;
     var parts = [
-      { k: "pass", n: tally.pass + tally.waived, c: "var(--pass)", t: "pass" },
+      { k: "pass", n: tally.pass + tally.waived, c: def.level ? fill(def.level) : "var(--pass)", t: def.level ? "pass, toward " + def.level : "pass" },
       { k: "fail", n: tally.fail, c: "var(--fail)", t: "fail" },
       { k: "unknown", n: tally.unknown, c: UNRUN, t: "not run in this build" },
     ].filter(function (p) {
@@ -123,6 +123,7 @@ export const ruleViews = {
       def.fix ? el("h3", { textContent: "How to fix a failure" }) : null,
       def.fix ? el("p", { style: "margin:0" }, ...rich(def.fix)) : null,
       el("h3", { textContent: "Outcomes" }),
+      all && def.level ? el("p", { className: "sub", style: "margin:0 0 6px", textContent: "A pass is drawn in the colour of " + def.level + ", the level this rule belongs to, as on the scorecard's bars." }) : null,
       all ? bar : el("p", { className: "empty", textContent: "No entity is in scope." }),
       all
         ? el(
