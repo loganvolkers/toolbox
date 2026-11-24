@@ -1272,9 +1272,7 @@
       "div",
       { className: "legend trackkey" },
       el("b", { textContent: "Ring, share at the top level:" }),
-      sw(RAMP[2], "below 50%"),
-      sw(RAMP[1], "50–79%"),
-      sw(RAMP[0], "80–100%"),
+      sw(RAMP, "the green arc's length is the share; grey is not scored"),
       el(
         "span",
         { className: "slot-key" },
@@ -1283,7 +1281,7 @@
           "span",
           { className: "slots mini", ariaHidden: "true", style: "--avg:55%" },
           ...[80, 30, 55].map(function (p) {
-            return el("span", { className: "slot", style: "--h:" + p + "%;--c:" + RAMP[p >= 80 ? 0 : p >= 50 ? 1 : 2] });
+            return el("span", { className: "slot", style: "--h:" + p + "%;--c:" + RAMP });
           }),
           el("span", { className: "avg" }),
         ),
@@ -1306,14 +1304,14 @@
     return t ? t.name : null;
   }
 
-  // One sequential ramp, grey to green, for a share at the top level. Red stays the none level and
-  // "behind", and bronze, silver and gold belong to medals.
-  var RAMP = ["var(--pass)", "color-mix(in srgb,var(--pass) 55%,var(--faint))", "var(--faint)"];
+  // One hue for a share at the top level, so arc length alone carries it. Grey stays "not scored" and
+  // parity, red the none level and "behind", and bronze, silver and gold belong to medals.
+  var RAMP = "var(--pass)";
 
   function trackColor(t) {
     if (t.compare) return "var(--accent)";
     if (t.pct == null) return "var(--faint)";
-    return RAMP[t.pct >= 80 ? 0 : t.pct >= 50 ? 1 : 2];
+    return RAMP;
   }
 
   var STANDING_MARK = { ahead: "▲", parity: "=", behind: "▼", unknown: "?" };
@@ -1654,7 +1652,7 @@
         { className: "slots", role: "img", tabIndex: 0, ariaLabel: "Share at the top level, per scorecard: " + said.join("; ") + ". Average " + t.pct + "%.", style: "--avg:" + t.pct + "%" },
         ...cards.map(function (c) {
           var p = c.row.topShare;
-          return el("span", { className: "slot", style: "--h:" + p + "%;--c:" + RAMP[p >= 80 ? 0 : p >= 50 ? 1 : 2] });
+          return el("span", { className: "slot", style: "--h:" + p + "%;--c:" + RAMP });
         }),
         el("span", { className: "avg", ariaHidden: "true" }),
       ),
@@ -2616,9 +2614,9 @@
           return;
         }
         // Without a search, scorecards whose every entity is at the top level fold under one row, so the
-        // work left leads each group.
+        // work left leads each group. One that caps the repository stays out: its top level is the blocker.
         var doneOf = function (r) {
-          return !q && r.scored > 0 && r.topShare === 100;
+          return !q && r.scored > 0 && r.topShare === 100 && !capsRepo(D, r.name, floorOf(D, r.name));
         };
         list.replaceChildren(
           ...shown.map(function (x) {
@@ -2794,7 +2792,7 @@
               "section",
               {},
               el("div", { className: "head" }, el("h2", { textContent: "Tracks" }), link("tracks", "", "All tracks →")),
-              el("p", { className: "lede", textContent: "Long-running lines of work, furthest from its goal first: the ring is how much of what each scorecard rates is at the top level, on average, so a small scorecard counts as much as a large one." + (tracksSorted(D, S).some(function (t) {
+              el("p", { className: "lede", textContent: "Long-running lines of work, furthest from its goal first: the ring is the average of each scorecard's share of entities at the top level, so a small scorecard counts as much as a large one." + (tracksSorted(D, S).some(function (t) {
                   return t.compare;
                 })
                   ? " A comparison track comes last, and its ring counts factors ahead of a rival instead."
@@ -2864,7 +2862,7 @@
           "div",
           { className: "th" },
           t.compare ? tallyRing(t.verdicts, t.rows.length, 60) : ring(t.pct, { size: 60, color: color, label: t.pct == null ? "not scored" : t.pct + "% at the top level" }),
-          el("div", {}, el("div", { className: "tt", textContent: def.title || t.name }), el("div", { className: "sub", textContent: t.compare ? "factors ahead, a segment per factor" : t.averaged > 1 ? "of what each of its " + fmt(t.averaged) + " scorecards rates is at the top level, on average" : "of entities at the top level" })),
+          el("div", {}, el("div", { className: "tt", textContent: def.title || t.name }), el("div", { className: "sub", textContent: t.compare ? "factors ahead, a segment per factor" : t.averaged > 1 ? "average share at the top level, across its " + fmt(t.averaged) + " scorecards" : "of entities at the top level" })),
         ),
         def.description ? el("div", { className: "td", textContent: prose(firstSentence(def.description)) }) : null,
       ];
@@ -2934,7 +2932,7 @@
       tl.replaceChildren(tlink);
       var a = el("div", { className: "track" }, ...kids);
       a.style.setProperty("--tc", color);
-      var standing = t.compare ? tallyWords(t.verdicts, t.rows.length) : t.pct == null ? "not scored" : (t.averaged > 1 ? t.pct + "% of what each of its " + fmt(t.averaged) + " scorecards rates is at the top level, on average" : t.pct + "% of entities at the top level");
+      var standing = t.compare ? tallyWords(t.verdicts, t.rows.length) : t.pct == null ? "not scored" : (t.averaged > 1 ? t.pct + "% average share at the top level, across its " + fmt(t.averaged) + " scorecards" : t.pct + "% of entities at the top level");
       tlink.setAttribute("aria-label", (def.title || t.name) + ": " + standing + (flag ? ". " + flag : "") + (weakest ? ". Weakest: " + weakest : ""));
       return a;
     }

@@ -148,9 +148,9 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 - Links and buttons in text have hit areas of at least 24 px.
 - No page scrolls sideways at 390 px; the design-audit capture records `mobileOverflow` per route.
 - A link title that still leads with a decision id renders as "Decision: <claim>", with the id on hover; long entity ids in rows are cut to one line, with the full id on hover.
-- Track rings use one ordered ramp (red below 50%, olive, green from 80%) for the share at the top
-  level. The ramp avoids the bronze, silver and gold hues, which belong to medals, and parity is
-  neutral grey, not link blue.
+- Track rings draw the share at the top level in one green, so the arc's length carries it. Green
+  avoids the bronze, silver and gold hues, which belong to medals; grey is kept for not scored and
+  parity, which is neutral grey, not link blue.
 - A kind's `title`, when the manifest sets one, is its reader-facing name; otherwise the name is split
   into words. A kind page whose scorecards leave some of its entities out says how many and why,
   with each scorecard's `appliesTo` one click away.
@@ -299,8 +299,8 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 - A kind's bar in the catalog splits each level the way the table below it does: hatched where its
   scorecards' agent-judged rules have not been assessed, dotted where it is provisional, with both
   named in the catalog legend.
-- A track's ring and bars run on one ramp, grey to green; red is kept for entities at none and for
-  factors behind a rival. The bars are explained once, in the tracks legend, not under every card.
+- A track's ring and bars are one green, never a grey that reads as dormant; red is kept for
+  entities at none and for factors behind a rival. The bars are explained once, in the tracks legend, not under every card.
 - A comparison factor that is behind says why it matters and what would close it on its row and
   at the top of its page, not only inside "How it is scored".
 - A campaign with no single score draws no bar.
@@ -358,7 +358,8 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
   count per level, and opens the rest in place. Scorecards at one level sort by their share at the
   top level, so "weakest" is the same scorecard on every card and list.
 - "Provisional" means only that checks were not run; a level that rests on a missing assessment
-  "may not hold". A track ring that averages scorecards says each one counts once.
+  "may not hold". A track ring that averages scorecards says so ("average share at the top level,
+  across its 4 scorecards"), and the Tracks lede says each one counts once.
 - On a phone every tab stays visible (two rows of three), and legends fold under "How to read".
 - Rationale and captions are at least 13px ("Why" lines 14px); 12px is for ids, legends and counts.
 - One phrase for a standard that holds the repository at its only level: "at its top level, so it
@@ -366,6 +367,8 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 - Bars use two textures: hatched for not assessed by an agent, dotted for checks not run. Not scored
   is a plain pale fill. A kind card writes its bar's counts under it, and a catalog group header
   counts each kind, so a reader can total one kind without adding by eye.
+- A standard that caps the repository never folds into "every entity at the top level" on the
+  Scorecards index: its top level is the blocker, so its row stays in view.
 
 Not built: a change since the last snapshot beside each track ring. The report carries one snapshot
 and the committed baseline, which equals it on every published build; a pages build that also scored
