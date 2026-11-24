@@ -49,7 +49,12 @@ enum Command {
         format: Format,
     },
     /// Recompute derived state from the portal's fixtures and run its expectation files
-    /// (tests/*.test.yaml). Exit code 1 if any expectation fails.
+    /// (tests/*.test.yaml), and the action cases its manifest lists under `tests`. Exit code 1 if
+    /// any expectation fails.
+    ///
+    /// An action case runs the real lifecycle (requester, approvers, an origin that rejects the
+    /// push) in a scratch clone of the repository, so nothing reaches its origin. The operator
+    /// skill `add-action` shows the format.
     Test {
         /// A portal directory (containing toolbox.yaml) or a manifest file.
         #[arg(default_value = ".")]
@@ -99,6 +104,11 @@ enum Command {
     /// `toolbox run` lists the actions, `toolbox run <action> --input k=v` previews (effects and a
     /// confirm token), `--confirm <token>` runs it and verifies its postcondition, and a child
     /// portal's actions are dispatched to the child (federation).
+    ///
+    /// A parent portal (`federation.children`) holds approvals in its checkout: `--as <person>`
+    /// requests, `--approve <run>` or `--reject <run>` decides, and the last approval signs the
+    /// grant with the key `toolbox run` lists and runs the child. The operator skill `add-action`
+    /// walks through declaring, testing and offering an action.
     Run(Box<run::Options>),
     /// Send a portal's fixtures to a running server through the ingest API (one batch per
     /// connector, then native values), and wait for the snapshot that contains them.

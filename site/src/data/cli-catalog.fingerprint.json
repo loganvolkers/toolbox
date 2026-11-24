@@ -1003,7 +1003,7 @@
     },
     {
       "name": "test",
-      "about": "Recompute derived state from the portal's fixtures and run its expectation files (tests/*.test.yaml). Exit code 1 if any expectation fails",
+      "about": "Recompute derived state from the portal's fixtures and run its expectation files (tests/*.test.yaml), and the action cases its manifest lists under `tests`. Exit code 1 if any expectation fails",
       "mcpTool": null,
       "args": [
         {
