@@ -42,15 +42,20 @@ succeeds only when its effect is observed.**
 
 The research brief read 13 product families first-hand: Backstage, Port, Cortex, OpsLevel, Roadie,
 Spotify Portal, Compass, HCP Terraform, Humanitec/Score, Kratix/Crossplane, GitHub, GitLab and
-ITSM. Its findings:
+ITSM. DX's self-service workflows (part of DX Fabric) were read afterwards from its docs, making
+14. Its findings:
 
-1. **Every IDP defines actions centrally** (Port, Cortex, OpsLevel, Compass). Repo-declared actions
+1. **Every IDP defines actions centrally** (Port, Cortex, OpsLevel, Compass, DX). Repo-declared actions
    reach a portal only through gated doors: Backstage's catalog rules reject the `Template` kind
    by default, and Cortex accepts workflows from git only in a dedicated, allowlisted repository.
+   A DX workflow is created in DX's UI or by `workflows.create`, by a Self-Service Admin.
 2. **The per-repo action already exists: it is the repo's CI workflow.** Port's GitHub backend,
-   Backstage's `github:actions:dispatch` and OpsLevel's CI templates are front doors to it.
+   Backstage's `github:actions:dispatch`, OpsLevel's CI templates and DX's "Running CI" example
+   (an HTTP request to `workflow_dispatch`) are front doors to it.
 3. **"Dispatched" is the market's meaning of "done".** Port, OpsLevel and Backstage report a run
-   finished when the backend says so. Only control planes (Crossplane `Ready`, Kratix) and Spotify's
+   finished when the backend says so. A DX "simple" workflow is complete when its HTTP request
+   returns 2XX, and an "event-driven" one when the external system calls
+   `workflowRuns.changeStatus`. Only control planes (Crossplane `Ready`, Kratix) and Spotify's
    Fleetshift (a Soundcheck check flips to passing) observe the effect.
 4. **Templates drift.** Backstage #14416 and #31361 ("update components generated from templates")
    were closed *not planned*. The tools that solve drift are repo-level: `copier update`,
@@ -64,22 +69,27 @@ ITSM. Its findings:
    scaffolder runs with elevated permissions. Running a repo-declared action with a portal-wide
    credential is the dangerous combination.
 8. **One definition for UI, API and MCP is table stakes** (Backstage Actions Registry, Port
-   Workflows as MCP tools, Roadie Actions).
+   Workflows as MCP tools, Roadie Actions, DX's CLI with its agent skill).
+9. **Approval is a named list, and scope is owner-based.** DX's "All users with approval" holds a
+   run until one of the workflow's listed approvers accepts it. "Entity owners only" limits an
+   entity-scoped workflow to the entity's owners, and DX's docs advise making the entity type
+   API-only so nobody can make themselves an owner in the UI. The docs don't say whether the
+   requester may approve their own run.
 
 **The rule we draw from it.** Put an action's *definition* at the level that owns the decision it
 hides (Parnas), and its *run* where the credentials and gates already are.
 
-| Action (families documenting it, of 13) | Definition home | Run place | Toolbox shape | Story |
+| Action (families documenting it, of 14) | Definition home | Run place | Toolbox shape | Story |
 |---|---|---|---|---|
-| Create a service from a template (7) | Company or org | Central: no repo exists yet | A `create` action in the company portal | S8 |
+| Create a service from a template (8) | Company or org | Central: no repo exists yet | A `create` action in the company portal | S8 |
 | Deploy, promote, roll back (7) | Repo pipeline, under org policy | Repo CI, behind its environments | `github-workflow` executor in the repo portal | S4 |
-| Trigger a pipeline (6) | Repo | Repo CI | `github-workflow` executor | S4 |
+| Trigger a pipeline (7) | Repo | Repo CI | `github-workflow` executor | S4 |
 | Add a capability to a repo by PR (6) | Org or company package | The target repo | A package `change` action | S3, S9 |
-| Provision a resource (6) | Platform defines; repo requests | Platform executor | A central action over a repo-declared request | S11 (deferred) |
+| Provision a resource (7) | Platform defines; repo requests | Platform executor | A central action over a repo-declared request | S11 (deferred) |
 | Fix a scorecard failure (5) | The standard's owner | Each repo, by PR | A package `change` action whose postcondition is the rule | S3 |
 | Request access, with expiry (4) | Company | Central, as the user | A company action with approvers | S5 |
-| Incident and on-call (4) | Company integration | Central | A company action on the owner's entity | S5 |
-| Restart, scale, flags, day-2 runbooks (2 each) | Repo or team | Repo CI or a team package | Repo `command` or team package actions | S1, S10 |
+| Incident and on-call, deploy freezes (5) | Company integration | Central | A company action on the owner's entity | S5 |
+| Restart, scale, flags, day-2 runbooks (3 each) | Repo or team | Repo CI or a team package | Repo `command` or team package actions | S1, S10 |
 | Decommission (2, weak evidence) | Repo initiates; platform tears down | Central and repo | Deferred until users ask | S12 (deferred) |
 | Rotate a secret (0 found) | Unknown | — | Not designed | — |
 
@@ -415,6 +425,11 @@ The table below is the designer's reading, not a result.
     [workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax)
     and [environments](https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments);
   - Spotify Portal's Fleetshift documentation; copier, cruft, projen and Nx documentation;
+  - DX's [self-service overview](https://docs.getdx.com/self-service/overview/),
+    [example workflows](https://docs.getdx.com/self-service/examples/),
+    [`workflows.create`](https://docs.getdx.com/webapi/methods/workflows.create/) and
+    [Fabric start guide](https://docs.getdx.com/fabric-start-guide/), read 2026-11-24 (added
+    after the brief: primary);
   - DORA's [platform engineering capability](https://dora.dev/capabilities/platform-engineering/);
     Team Topologies key concepts; Parnas (1972); Conway (1968); Vogels (2006).
 - Toolbox: [federation.md](./federation.md), [action-runs.md](./action-runs.md),
