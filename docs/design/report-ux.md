@@ -170,6 +170,29 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
   weighted. Only the leading value on a rule is coloured.
 - A link to a hash that matches nothing says so and selects no tab.
 - A factor's "How it is scored" says in words what the harness recorded for each product and which value is ahead, then the expression, then, where Toolbox is behind, what would close the gap.
+- A check not run is neither a pass nor a failure. It is left out of the failure bars, the biggest
+  lever, the failing filter and row tallies; a note under the bars names each not-run rule and its
+  count, and the scorecard says how many entities' levels are provisional because of it. A kind
+  column whose levels are all provisional says so once in its header.
+- Cards (tracks, kinds, factors) show a description's first sentence whole, never a clamp that cuts
+  mid-word; the rest is on the page the card opens.
+- A factor card leads with the same kind of number on every card: "N of M rules behind", else
+  ahead, else at parity, with the widest measured lead beneath. On a factor page, three or more
+  rules at parity fold under one toggle.
+- A comparison track's description opens with one plain sentence on how it was measured (machine,
+  runs, corpus, versions, who re-checked it and when). The Compare hero shows that sentence as its
+  method; commit hashes stay in the setup cards.
+- An entity whose agent-judged rules no agent has assessed is drawn hatched in the scorecard's bar,
+  outlined in the agent-judged colour, and counted beside it; the level key names the hatching.
+- A route change opens the new page at its header when its focus target is near the top, and moves
+  focus to the page's heading either way.
+- An entity page names its agent-judged rules under the basis key, each linked to its scorecard's
+  section, and each scorecard section counts its measured and agent-judged rules.
+- A list of rules that all share one basis says so in one line; the two-column key appears only
+  when both bases are present.
+- An open kind replaces the grid of kind cards with one row of kind chips per group.
+- Entity rows are a grid with a minimum width for the name, so a long "needs" list wraps below it
+  rather than squeezing it.
 
 ## Sources
 
