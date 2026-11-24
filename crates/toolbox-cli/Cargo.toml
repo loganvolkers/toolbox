@@ -23,6 +23,7 @@ sha2.workspace = true
 toolbox-expr = { path = "../toolbox-expr" }
 toolbox-model.workspace = true
 toolbox-derive.workspace = true
+toolbox-exec.workspace = true
 toolbox-store.workspace = true
 toolbox-api.workspace = true
 toolbox-authz.workspace = true

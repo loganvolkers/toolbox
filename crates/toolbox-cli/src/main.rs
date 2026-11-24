@@ -9,6 +9,7 @@ mod meta;
 mod model;
 mod portal;
 mod report;
+mod run;
 mod server;
 mod tools;
 
@@ -92,6 +93,11 @@ enum Command {
     /// compare against a committed results file (a ratchet): regressions exit 1, --update records
     /// improvements, --ci also fails when the file is out of date.
     Report(report::Options),
+    /// Preview and run a self-service action without a server, in a repo or parent portal:
+    /// `toolbox run` lists the actions, `toolbox run <action> --input k=v` previews (effects and a
+    /// confirm token), `--confirm <token>` runs it and verifies its postcondition, and a child
+    /// portal's actions are dispatched to the child (federation).
+    Run(run::Options),
     /// Send a portal's fixtures to a running server through the ingest API (one batch per
     /// connector, then native values), and wait for the snapshot that contains them.
     Push {
@@ -701,6 +707,7 @@ fn main() -> ExitCode {
             remote,
         } => campaign_command(&portal, name, baseline, &skip, &remote),
         Command::Report(o) => report::run(&o),
+        Command::Run(o) => run::run(&o),
         Command::Mcp { remote } => client::bridge(&remote.target()),
         Command::Connector {
             command:
