@@ -106,8 +106,8 @@ change follows `report-ux` and then a `design-audit` pass.
 - N. Kano et al., "Attractive quality and must-be quality" (1984).
 - S. Few, *Information Dashboard Design* (2nd ed., 2013); E. Tufte, *The Visual Display of
   Quantitative Information* (2001).
-- W3C, *Web Content Accessibility Guidelines 2.2* (2023); Deque axe-core 4.10 (capture) and 4.14
-  (story probes).
+- W3C, *Web Content Accessibility Guidelines 2.2* (2023); Deque axe-core 4.14
+  (story probes and capture).
 - B. Bach et al., *Dashboard Design Patterns* (arXiv:2205.00757).
 - [report-ux.md](./report-ux.md), [maintainer-sdlc.md](./maintainer-sdlc.md),
   [report-ui/README.md](../../report-ui/README.md).

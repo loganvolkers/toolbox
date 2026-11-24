@@ -8,9 +8,10 @@
 #   starter.json             examples/repo-portal-starter over this repository
 #   starter-empty.json       the starter with no connector run: a portal before its first data
 #
-# Needs the tools `toolbox doctor` lists for portal/ and examples/openfga-portal (actionlint,
-# zizmor, ruff, scorecard, staticcheck) at their pins; `toolbox tools install <portal>` installs
-# them. The script stops if one is missing, since rules would read `unknown` and drift from CI.
+# Installs the tools `toolbox doctor` lists for portal/ and examples/openfga-portal at their pins:
+# actionlint, scorecard and staticcheck as SHA-256-pinned release binaries (scripts/ci-tools.sh),
+# zizmor and ruff from portal/'s `tools:` (toolbox tools install). It stops if one is still
+# missing, since rules would read `unknown` and drift from CI. Linux x86_64, like CI.
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 cargo build --locked -q
@@ -19,6 +20,11 @@ out="$PWD/report-ui/fixtures"
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 mkdir -p "$out"
+
+TOOLS="${TOOLBOX_CI_TOOLS:-${TMPDIR:-/tmp}/toolbox-ci-tools}"
+scripts/ci-tools.sh "$TOOLS" actionlint scorecard staticcheck >/dev/null
+export PATH="$TOOLS:${HOME}/.local/bin:$PATH"
+"$tb" tools install portal >/dev/null
 
 examples/openfga-portal/fetch.sh >/dev/null
 "$tb" doctor portal >/dev/null
