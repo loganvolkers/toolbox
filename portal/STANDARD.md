@@ -198,7 +198,7 @@ Scorecard `vs-backstage-extensibility` over `Product` entities, owned by group:m
 
 ## Capabilities
 
-What a portal does out of the box, by configuration alone. The scenarios come from the Backstage parity audit (D47), so they favour what Backstage ships.
+What a portal does out of the box, by configuration alone, and the community that keeps it going: 12 rules are features and one, community, counts contributors. The scenarios come from the Backstage parity audit (D47), so they favour what Backstage ships.
 
 **Why:** Functional completeness is the first question in a portal evaluation: a team will not adopt a portal that lacks what its developers use every day. Toolbox is expected to lose here, and each missing capability is published as a loss rather than dropped.
 
