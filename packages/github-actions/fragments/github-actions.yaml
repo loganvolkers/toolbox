@@ -375,9 +375,11 @@ scorecards:
         Re-enable the workflow (`gh workflow enable <file>`, or the Actions
         tab), or delete its file from .github/workflows/ if it is retired.
       rationale: >-
-        GitHub disables a workflow after 60 days without activity, and its old
-        run history then reads green, so a disabled workflow would pass every
-        run-history rule while checking nothing.
+        A disabled workflow's old run history still reads green, so it would
+        pass every run-history rule while checking nothing. GitHub disables
+        scheduled workflows in a public repository after 60 days without
+        activity, and anyone can disable one by hand. A workflow whose triggers
+        simply stop matching stays active and is not caught here.
       links:
       - title: GitHub on disabling workflows
         url: https://docs.github.com/en/actions/how-tos/manage-workflow-runs/disable-and-enable-workflows
