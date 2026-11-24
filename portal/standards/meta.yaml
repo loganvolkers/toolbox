@@ -908,10 +908,10 @@ scorecards:
       doubts is gold (D79, D01M831P5QWJQ4A2FT85N5MXJQF).
     rationale: >-
       Form checks can't tell whether a rule measures its intent or can be
-      gamed, and none of 19 meta-gold rules and scorecards that agents
-      reviewed passed. Open findings rank lowest so they head the report; the
-      card is advisory because a review goes stale whenever its subject
-      changes, and gating on it would block every edit.
+      gamed: of 19 rules and scorecards that reached gold on the form checks
+      and that agents reviewed, none passed. Open findings rank lowest so they
+      head the report; the card is advisory because a review goes stale
+      whenever its subject changes, and gating on it would block every edit.
     links:
     - title: Judgement pushed by agents
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#6-judgement-pushed-by-coding-agents-d79
@@ -997,9 +997,9 @@ scorecards:
     rationale: >-
       Form checks can't tell whether a scorecard measures one concern, climbs
       a real ladder or leaves an obvious gap; an adversarial review failed
-      every meta-gold scorecard it sampled. The ladder and advisory status
-      match review-rule: open findings first, and never gating, because a
-      review goes stale when the scorecard changes.
+      every scorecard it sampled that had reached gold on the form checks. The
+      ladder and advisory status match review-rule: open findings first, and
+      never gating, because a review goes stale when the scorecard changes.
     links:
     - title: Judgement pushed by agents
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#6-judgement-pushed-by-coding-agents-d79
