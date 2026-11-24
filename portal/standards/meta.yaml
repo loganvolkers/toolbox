@@ -4,8 +4,10 @@
 kinds:
   - name: Scorecard
     description: >-
-      A scorecard one of the described portals declares (this one, the starter
-      or the reference portal).
+      A scorecard one of the described portals declares: this portal's own
+      scorecards and its comparison factors (ids `toolbox/…`), the starter's
+      (`repo/…`) and the reference portal's (`acme/…`). The header counts this
+      portal's scorecards and comparison factors only.
     identityFrom: [connector:surfaces]
     fields:
       portal: {type: string}

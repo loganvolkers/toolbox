@@ -64,10 +64,11 @@ scorecards:
   - name: ${param:name}
     title: ${param:title}
     description: >-
-      OpenSSF Scorecard's checks, as Scorecard scores them. The box adds only
-      the ratchet: a check's gap to 10 is the measure, so a score that drops
-      fails a pull request and one that rises is an improvement. A check
-      Scorecard adds in a new release doesn't fail the gate.
+      OpenSSF Scorecard's checks, as Scorecard scores them. Its one level,
+      ten, means a check scores 10 out of 10. The box adds only the ratchet: a
+      check's gap to 10 is the measure, so a score that drops fails a pull
+      request and one that rises is an improvement. A check Scorecard adds in
+      a new release doesn't fail the gate.
     rationale: >-
       OpenSSF Scorecard is an established, openly governed standard for
       supply-chain security, so the portal carries its checks as OpenSSF

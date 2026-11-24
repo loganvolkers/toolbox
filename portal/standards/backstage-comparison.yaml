@@ -341,12 +341,13 @@ scorecards:
     kind: Product
     description: >-
       What it costs to run and to own: memory, disk, and the files an adopter
-      keeps for a first portal. Charter goal 1 (simple deployment).
+      keeps for a first portal.
     rationale: >-
       Memory, disk and the files an adopter keeps are paid for on every
       instance, preview environment and upgrade, and they decide the smallest
-      machine and team that can run a portal. Charter goal 1 promises one
-      image plus Postgres; a heavy footprint would break that promise.
+      machine and team that can run a portal. Toolbox promises a deployment of
+      one container image plus Postgres; a heavy footprint would break that
+      promise.
     links:
     - title: Static facts
       url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#static-facts-and-single-run-probes

@@ -79,9 +79,9 @@ Scorecard `vs-backstage-performance` over `Product` entities, owned by group:mai
 
 ## Footprint
 
-What it costs to run and to own: memory, disk, and the files an adopter keeps for a first portal. Charter goal 1 (simple deployment).
+What it costs to run and to own: memory, disk, and the files an adopter keeps for a first portal.
 
-**Why:** Memory, disk and the files an adopter keeps are paid for on every instance, preview environment and upgrade, and they decide the smallest machine and team that can run a portal. Charter goal 1 promises one image plus Postgres; a heavy footprint would break that promise.
+**Why:** Memory, disk and the files an adopter keeps are paid for on every instance, preview environment and upgrade, and they decide the smallest machine and team that can run a portal. Toolbox promises a deployment of one container image plus Postgres; a heavy footprint would break that promise.
 
 See [Static facts](https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#static-facts-and-single-run-probes), [Factor definitions: installability and footprint](https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors).
 
@@ -860,7 +860,7 @@ Scorecard `maintainer-action-deps` over `ActionDependency` entities, owned by gr
 
 ## OpenSSF Scorecard
 
-OpenSSF Scorecard's checks, as Scorecard scores them. The box adds only the ratchet: a check's gap to 10 is the measure, so a score that drops fails a pull request and one that rises is an improvement. A check Scorecard adds in a new release doesn't fail the gate.
+OpenSSF Scorecard's checks, as Scorecard scores them. Its one level, ten, means a check scores 10 out of 10. The box adds only the ratchet: a check's gap to 10 is the measure, so a score that drops fails a pull request and one that rises is an improvement. A check Scorecard adds in a new release doesn't fail the gate.
 
 **Why:** OpenSSF Scorecard is an established, openly governed standard for supply-chain security, so the portal carries its checks as OpenSSF defines them rather than writing weaker copies that would compete with it. Its one level is Scorecard's own maximum, and the ratchet stops any check from falling while the gap is paid down.
 
