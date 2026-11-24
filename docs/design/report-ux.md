@@ -405,6 +405,14 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 - A rule's own links point to the primary source for its threshold or practice (a specification,
   a lint, NIST SP 500-235 for cyclomatic complexity), so the scorecard's links are not the only way
   to read further.
+- A hatched segment is a pale tint of its level under purple stripes, so an unassessed bar never
+  reads as solid bronze. A campaign scorecard with unassessed entities leads with the share at its
+  goal on an agent's assessment, then the share counting those not assessed yet, and hatches the
+  difference on its bar. The Overview's "no entity at none" line names the scorecards that are
+  clear only because some of their entities are unassessed.
+- A track card's caption names its lowest and highest bars at rest. The Scorecards index finds
+  scorecards by how they are decided ("agent-judged", "measured") and offers both as one-tap
+  filters. Compare's method reads as one point per sentence.
 
 Not built: a change since the last snapshot beside each track ring. The report carries one snapshot
 and the committed baseline, which equals it on every published build; a pages build that also scored

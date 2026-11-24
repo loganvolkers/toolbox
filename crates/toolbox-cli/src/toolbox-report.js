@@ -129,12 +129,12 @@
     "details[open]>summary .chev{transform:rotate(90deg)}",
     ".rule{padding:10px 12px;border-radius:8px;border:1px solid var(--line);border-left:4px solid var(--fail);margin-top:8px;background:var(--card)}",
     ".callout.judged-note{background:var(--judged-bg)}",
-    ".bar span.unscored,.dot.unscored{background:var(--card);box-shadow:inset 0 0 0 1.5px var(--faint)}.bar span.hollow{background:repeating-linear-gradient(135deg,var(--seg) 0 3px,transparent 3px 7px);box-shadow:inset 0 0 0 1.5px var(--judged)}.unjudged-n,.judged-n{color:var(--judged)}.dot.hatch{border-radius:2px;background:repeating-linear-gradient(135deg,var(--seg) 0 2px,transparent 2px 4px);box-shadow:inset 0 0 0 1.5px var(--judged)}.judged-list{margin:8px 0 0}",
+    ".bar span.unscored,.dot.unscored{background:var(--card);box-shadow:inset 0 0 0 1.5px var(--faint)}.bar span.hollow{background:repeating-linear-gradient(135deg,var(--judged) 0 1.5px,transparent 1.5px 6px),color-mix(in srgb,var(--seg) 30%,var(--card));box-shadow:inset 0 0 0 1.5px var(--judged)}.unjudged-n,.judged-n{color:var(--judged)}.dot.hatch{border-radius:2px;background:repeating-linear-gradient(135deg,var(--judged) 0 1px,transparent 1px 3.5px),color-mix(in srgb,var(--seg) 30%,var(--card));box-shadow:inset 0 0 0 1.5px var(--judged)}.judged-list{margin:8px 0 0}",
     ".sc-status{display:flex;gap:14px;align-items:flex-start;margin:4px 0 14px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--tint)}.sc-status>svg{flex:none}.sc-status-b{flex:1;min-width:0}.sc-status-t{display:flex;flex-wrap:wrap;align-items:center;gap:2px 6px;margin-bottom:8px;font-size:14px}.sc-status-t .topmark{color:var(--pass);font-weight:650}.sc-status .legend{margin-top:6px}.sc-status-t .sep{color:var(--muted)}@media (max-width:640px){.sc-status-t .sep{display:none}.sc-status-t .fact{flex-basis:100%}}.why-text.clamped{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}.why-more{margin-top:2px;min-height:24px}",
     ".bar span.unrun{background:radial-gradient(circle,var(--seg) 1.6px,transparent 1.9px) 0 0/6px 6px;box-shadow:inset 0 0 0 1.5px var(--unknown)}.dot.dots{border-radius:2px;background:radial-gradient(circle,var(--seg) 1.2px,transparent 1.5px) 0 0/4px 4px;box-shadow:inset 0 0 0 1.5px var(--unknown)}",
     ".rule.unknown{border-left-color:var(--unknown)}.rule.waived{border-left-color:var(--bronze)}.rule.unassessed{border-left-color:var(--judged)}",
     ".basis-note p{margin:0 0 4px}.h2h-wide{max-width:560px}.h2h-wide .h2h{width:100%;font-size:13px}.h2h-wide .h2h-head,.h2h-wide .h2h-row{grid-template-columns:160px 1fr 1fr}.h2h-row[aria-current]{font-weight:700;background:var(--accent-bg);border-radius:6px}.rank-top:not([hidden]){display:block;margin:8px 0 0;font-size:13px}.cmp-prov{margin:6px 0 0;display:grid;gap:2px}.cmp-src{display:flex;flex-wrap:wrap;align-items:center;gap:2px 10px}.cmp-src .refs{margin:0;line-height:22px}.cmp-brief>summary{cursor:pointer;width:max-content;max-width:100%;padding:3px 0;color:var(--accent)}",
-    ".why.incl{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}.kpi-bar{flex:0 0 46px;height:10px;border-radius:5px;background:var(--line);overflow:hidden}.kpi-bar span{display:block;height:100%;background:var(--pass)}.kpi-bar.short span{background:var(--muted)}.kpi-pips{flex:0 0 46px;display:flex;flex-wrap:wrap;gap:4px}.kpi-pips span{width:10px;height:10px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--faint)}.kpi-pips span.on{background:var(--pass);box-shadow:none}",
+    ".why.incl{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}.kpi-bar{display:flex;flex:0 0 46px;height:10px;border-radius:5px;background:var(--line);overflow:hidden}.why.incl .kpi-bar{flex-basis:90px}.kpi-bar span.hollow{background:repeating-linear-gradient(135deg,var(--judged) 0 1.5px,transparent 1.5px 4px);box-shadow:inset 0 0 0 1px var(--judged)}.kpi-bar span{display:block;height:100%;background:var(--pass)}.kpi-bar.short span{background:var(--muted)}.kpi-pips{flex:0 0 46px;display:flex;flex-wrap:wrap;gap:4px}.kpi-pips span{width:10px;height:10px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--faint)}.kpi-pips span.on{background:var(--pass);box-shadow:none}",
     ".cprog{flex:0 0 76px;display:grid;gap:3px}.cprog b{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}.cprog small{font-size:13px;color:var(--muted)}.cprog .gb{position:relative;height:8px;border-radius:4px;background:var(--line)}.cprog .gb>span{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--muted)}.cprog.on .gb>span{background:var(--pass)}.cprog .gb>i{position:absolute;top:-3px;bottom:-3px;width:2px;border-radius:1px;background:var(--fg)}.cprog.big{flex-basis:120px}.cprog.big b{font-size:28px}",
     ".hollow-key{display:flex;flex-wrap:wrap;align-items:center;gap:4px 16px;padding:6px 10px;font-size:13px;color:var(--muted);background:var(--tint);border-radius:8px;margin:4px 0}.hollow-key>span{display:inline-flex;align-items:center;gap:6px}.hollow-key b{color:var(--fg);font-weight:600}",
     ".rid{font:12px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);overflow-wrap:anywhere}.rule .rn{font-weight:650;font-size:inherit;margin:0;display:inline}.sc-block h3.sct{display:inline;margin:0;font-size:16px}",
@@ -306,7 +306,7 @@
     ".cmp-hero .kicker{font-size:12px;font-weight:650;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}",
     ".cmp-lead{margin:8px 0 0;font-size:15px}.cmp-lead .lead-x{font-size:inherit;line-height:inherit}",
     ".nowrap{white-space:nowrap}.parity-fold{margin-top:8px;border-top:1px solid var(--line);padding-top:8px}.parity-fold>summary{cursor:pointer;color:var(--accent);font-size:14px;min-height:24px;display:flex;align-items:center;text-decoration:underline;text-underline-offset:2px}",
-    ".method-lede{max-width:80ch;margin:0 0 12px;font-size:15px;line-height:1.55}",
+    ".method-lede{max-width:80ch;margin:0 0 12px;padding-left:20px;font-size:15px;line-height:1.55}.method-lede li+li{margin-top:4px}",
     ".cmp-side{display:grid;gap:12px;justify-items:center}.h2h{display:grid;gap:2px;width:300px;font-size:12px}.h2h-head,.h2h-row{display:grid;grid-template-columns:110px 1fr 1fr;align-items:center;gap:0}.h2h-head{color:var(--muted);font-weight:650}.h2h-head .behind{text-align:right;padding-right:6px;color:var(--fail)}.h2h-head .ahead{padding-left:6px;color:var(--pass)}.h2h-row{min-height:24px;color:var(--fg);text-decoration:none;border-radius:6px;padding:0 2px}.h2h-row:hover,.h2h-row:focus-visible{background:color-mix(in srgb,var(--accent) 10%,transparent)}.h2h-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:6px}.h2h-l,.h2h-r{display:flex;height:10px}.h2h-l{justify-content:flex-end;border-right:1.5px solid var(--muted)}.h2h-l span{background:var(--fail);border-radius:3px 0 0 3px}.h2h-r span{background:var(--pass);border-radius:0 3px 3px 0}.h2h-foot{color:var(--muted);font-size:12px;text-align:center;margin-top:2px}",
     ".tally3{display:flex;gap:18px;text-align:center}.rule-tally{margin:6px 0 0;font-size:14px}.rule-tally .ahead{color:var(--pass)}.rule-tally .behind{color:var(--fail)}.rule-tally .parity{color:var(--muted)}",
     ".tally3 strong{display:block;font-size:28px;line-height:1.1;font-variant-numeric:tabular-nums}",
@@ -531,6 +531,17 @@
       first = firstSentence(rest);
     }
     return null;
+  }
+
+  function sentences(text) {
+    var out = [];
+    var t = String(text || "").trim();
+    while (t) {
+      var f = firstSentence(t);
+      out.push(f);
+      t = t.slice(f.length).trim();
+    }
+    return out;
   }
 
   function firstSentence(text) {
@@ -1755,7 +1766,13 @@
     var low = cards.reduce(function (a, c, i) {
       return left(c) || (a >= 0 && cards[a].row.topShare <= c.row.topShare) ? a : i;
     }, -1);
-    var rest = (low >= 0 ? "Lowest bar, " + named(cards[low]) : "Each bar is one scorecard") + " · dashed line: their average, " + t.pct + "%";
+    var high = cards.reduce(function (a, c, i) {
+      return left(c) || (a >= 0 && cards[a].row.topShare >= c.row.topShare) ? a : i;
+    }, -1);
+    var rest =
+      (low >= 0 ? "Lowest bar, " + named(cards[low]) : "Each bar is one scorecard") +
+      (high >= 0 && high !== low && cards[high].row.topShare > cards[low].row.topShare ? " · highest, " + named(cards[high]) : "") +
+      " · dashed line: their average, " + t.pct + "%";
     var cap = el("div", { className: "slotcap", ariaHidden: "true", textContent: rest });
     var bars = cards.map(function (c, i) {
       return el("span", {
@@ -1910,8 +1927,17 @@
     return g;
   }
 
-  function kpiBar(pct, label, short) {
-    var g = el("div", { className: "kpi-bar" + (short ? " short" : "") }, el("span", { style: "width:" + Math.max(0, Math.min(100, pct || 0)) + "%" }));
+  // hollowPct is the part of pct that passes only because no agent has assessed it; it is hatched.
+  function kpiBar(pct, label, short, hollowPct) {
+    var clamp = function (v) {
+      return Math.max(0, Math.min(100, v || 0));
+    };
+    var g = el(
+      "div",
+      { className: "kpi-bar" + (short ? " short" : "") },
+      el("span", { style: "width:" + clamp(pct - (hollowPct || 0)) + "%" }),
+      hollowPct ? el("span", { className: "hollow", style: "width:" + clamp(hollowPct) + "%" }) : null,
+    );
     g.setAttribute("role", "img");
     g.setAttribute("aria-label", label);
     return g;
@@ -2795,7 +2821,22 @@
         return !placed[r.name];
       });
       if (loose.length) groups.push({ name: null, title: "Not in a track", rows: loose });
-      var search = el("input", { type: "search", placeholder: "Find a scorecard by name, id or kind…", ariaLabel: "Find a scorecard", value: (query || {}).q || "" });
+      var search = el("input", { type: "search", placeholder: "Find a scorecard by name, id, kind, or how it's decided…", ariaLabel: "Find a scorecard", value: (query || {}).q || "" });
+      var only = function (b) {
+        return el(
+          "button",
+          {
+            className: "link",
+            onclick: function () {
+              search.value = BASIS[b].label.toLowerCase();
+              search.oninput();
+            },
+          },
+          basisIcon(b),
+          " " + BASIS[b].label,
+        );
+      };
+      var basisPick = el("p", { className: "sub", style: "margin:6px 0 0" }, "Show only: ", only("judged"), " · ", only("measured"));
       var list = el("div");
       var row = function (r) {
         var floor = floorOf(D, r.name);
@@ -2811,7 +2852,8 @@
       var draw = function () {
         var q = search.value.toLowerCase();
         var hit = function (r) {
-          return !q || r.name.toLowerCase().indexOf(q) >= 0 || title(D, r.name).toLowerCase().indexOf(q) >= 0 || kindTitle(D, r.sc.kind || "").toLowerCase().indexOf(q) >= 0;
+          var basisWords = basisCounts(r.sc.rules).judged ? "agent-judged judged by an agent assessed" : "measured deterministic mechanical";
+          return !q || r.name.toLowerCase().indexOf(q) >= 0 || title(D, r.name).toLowerCase().indexOf(q) >= 0 || kindTitle(D, r.sc.kind || "").toLowerCase().indexOf(q) >= 0 || basisWords.indexOf(q) >= 0;
         };
         var shown = groups
           .map(function (g) {
@@ -2924,6 +2966,7 @@
         el("p", { className: "lede" }, "Each scorecard rates every entity of one kind against levels of rules; the medal is its weakest entity's level, and the bar shows where the rest stand. They are grouped by track, the line of work each one serves. Open one for its failures, entities and what each level needs.", factors ? el("span", {}, " The " + plural(factors, "comparison factor") + " against a rival are on ", link("compare", "", "the Compare tab"), ".") : null),
         el("details", { className: "keyd", open: !matchMedia("(max-width:640px)").matches }, el("summary", { textContent: "How to read the bars" }), levelLegend(D, standards)),
         search,
+        basisPick,
         list,
       );
     }
@@ -2938,6 +2981,22 @@
       var clear = S.rows.filter(function (r) {
         return r.none === 0 && !r.compare;
       });
+      var clearHollow = clear.filter(function (r) {
+        return splitUnassessed(D, r.name, r.parts).some(function (p) {
+          return p.hollow;
+        });
+      });
+      var clearLine = el(
+        "span",
+        {},
+        "✓ " + plural(clear.length - clearHollow.length, "scorecard has", "scorecards have") + " no entity at none",
+        clearHollow.length
+          ? el("span", { className: "unjudged-n" }, "; " + fmt(clearHollow.length) + " more only because no agent has assessed some of their entities yet (", ...clearHollow.flatMap(function (r, i) {
+              return [i ? ", " : "", link("scorecard/" + enc(r.name), "", title(D, r.name))];
+            }), ")")
+          : null,
+        ". ",
+      );
       var showAll = false;
       var clearWrap = el("div");
       var drawClear = function () {
@@ -2949,7 +3008,7 @@
                 el(
                   "p",
                   { className: "empty good" },
-                  "✓ " + plural(clear.length, "scorecard has", "scorecards have") + " no entity at none. ",
+                  clearLine,
                   el("button", {
                     className: "link",
                     textContent: "Hide them",
@@ -2967,7 +3026,7 @@
             : el(
                 "p",
                 { className: "empty good" },
-                "✓ " + plural(clear.length, "scorecard has", "scorecards have") + " no entity at none. ",
+                clearLine,
                 el("button", {
                   className: "link",
                   textContent: "Show them",
@@ -3132,7 +3191,12 @@
             el("span", { className: "sub", textContent: "Medals:" }),
             ...shelfOrder.map(function (l) {
               var own = ONLY_LEVEL.has(l) && LADDER.indexOf(l) < 0;
-              return el("span", { className: "sh" }, medal(l === "not scored" ? "none" : l, 20), el("b", { textContent: String(shelf[l]) }), " " + levelName(l) + (own ? ", its only level ✓" : shelfTop[l] === shelf[l] || ONLY_LEVEL.has(l) ? " ✓ top" : shelfTop[l] ? " (" + shelfTop[l] + " ✓ top)" : ""));
+              var owner = own
+                ? t.cards.find(function (c) {
+                    return c.floor === l;
+                  })
+                : null;
+              return el("span", { className: "sh" }, medal(l === "not scored" ? "none" : l, 20), el("b", { textContent: String(shelf[l]) }), " " + levelName(l) + (own ? ", the one level " + (owner ? title(D, owner.row.name) : "its scorecard") + " has ✓" : shelfTop[l] === shelf[l] || ONLY_LEVEL.has(l) ? " ✓ top" : shelfTop[l] ? " (" + shelfTop[l] + " ✓ top)" : ""));
             }),
           ),
         );
@@ -3372,6 +3436,7 @@
         });
         var openRows = includeProgress(D, c).map(function (p) {
           var kind = ((D.scorecards || {})[p.name] || {}).kind;
+          var evPct = p.rated ? Math.floor((100 * (p.rated - p.below - p.hollow)) / p.rated) : 0;
           return el(
             "div",
             { className: "gap" },
@@ -3379,9 +3444,9 @@
             el(
               "div",
               { className: "why incl" },
-              p.known ? kpiBar(p.pct, p.pct + "% at " + p.goal + " or above; target " + target + "%", !p.met) : null,
-              el("span", { textContent: p.known ? p.pct + "% at " + p.goal + " or above · " + (p.met ? "✓ at target" : fmt(p.below) + " of " + (kind ? kindCount(D, kind, p.rated) : fmt(p.rated)) + " to lift") : "not in this report" }),
-              p.hollow ? el("span", { className: "unjudged-n", style: "flex-basis:100%;font-size:13px" }, el("span", { className: "vhatch", ariaHidden: "true", style: "margin:0 5px 0 0" }), fmt(p.hollow) + " of those " + fmt(p.rated - p.below) + " pass only because no agent has assessed them yet") : null,
+              p.known ? kpiBar(p.pct, p.pct + "% at " + p.goal + " or above" + (p.hollow ? ", " + evPct + "% on an agent's assessment" : "") + "; target " + target + "%", !p.met, p.pct - evPct) : null,
+              el("span", { textContent: p.known ? (p.hollow ? evPct + "% at " + p.goal + " or above on an agent's assessment; " + p.pct + "% counting those not assessed yet" : p.pct + "% at " + p.goal + " or above") + " · " + (p.met ? "✓ at target" : fmt(p.below) + " of " + (kind ? kindCount(D, kind, p.rated) : fmt(p.rated)) + " to lift") : "not in this report" }),
+              p.hollow ? el("span", { className: "unjudged-n", style: "flex-basis:100%;font-size:13px" }, el("span", { className: "vhatch", ariaHidden: "true", style: "margin:0 5px 0 0" }), fmt(p.hollow) + " pass only because no agent has assessed them yet (hatched)") : null,
             ),
           );
         });
@@ -4583,7 +4648,9 @@
         "section",
         {},
         el("div", { className: "head" }, el("h2", { textContent: "How it was measured" }), track ? link(trackPath(D, trackName), "", "Track: " + (track.title || trackName) + " →") : null),
-        rest ? el("p", { className: "method-lede" }, ...rich(rest)) : null,
+        rest ? el("ul", { className: "method-lede" }, ...sentences(rest).map(function (x) {
+          return el("li", {}, ...rich(x));
+        })) : null,
         Object.keys(context).length ? setup : null,
         basisKey(bases),
       );
