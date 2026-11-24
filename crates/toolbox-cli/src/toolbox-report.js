@@ -492,8 +492,9 @@
     return KNOWN.indexOf(l) >= 0 ? l : ALIAS[l] || null;
   }
 
-  // Dots mean "no result"; stripes are kept for "not assessed by an agent yet".
-  var UNSCORED = "repeating-linear-gradient(90deg,var(--faint) 0 1.5px,transparent 1.5px 4.5px)";
+  // Two textures only: hatched for "not assessed by an agent yet", dotted for "checks not run".
+  // Not scored is absence, so it is a plain pale fill.
+  var UNSCORED = "color-mix(in srgb,var(--faint) 45%,var(--bg))";
   var UNRUN = "radial-gradient(circle,var(--faint) 1.3px,transparent 1.7px) 0 0/5px 5px";
 
   function fill(l) {
@@ -3345,7 +3346,7 @@
           return el(
             "div",
             { className: "kgroup" },
-            el("div", { className: "kgh" }, el("h3", { textContent: g.title }), el("span", { className: "sub", textContent: plural(g.count, "entity", "entities") + " in " + plural(g.kinds.length, "kind") })),
+            el("div", { className: "kgh" }, el("h3", { textContent: g.title }), el("span", { className: "sub", textContent: plural(g.count, "entity", "entities") + (g.kinds.length > 1 ? ": " + g.kinds.map(function (k) { return fmt(((D.catalog || {})[k] || []).length) + " " + kindTitle(D, k); }).join(" · ") : "") })),
             g.description ? el("p", { className: "sub kgd", textContent: g.description }) : null,
             el("div", { className: "kinds" }, ...g.kinds.map(tile)),
           );
