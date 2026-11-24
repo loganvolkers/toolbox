@@ -186,7 +186,7 @@
     ".box a:hover{border-color:var(--accent)}",
     ".box a b{font-variant-numeric:tabular-nums;margin-left:4px;color:var(--muted);font-weight:600}",
     "a.erow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 8px;border-top:1px solid var(--line);color:var(--fg);text-decoration:none;border-radius:8px}",
-    "a.erow:hover{background:var(--tint)}",
+    "a.erow:hover{background:var(--tint)}.egroup>summary{display:grid;gap:12px;align-items:center;padding:10px 8px;border-top:1px solid var(--line);border-radius:8px;cursor:pointer;list-style:none}.egroup>summary::-webkit-details-marker{display:none}.egroup>summary:hover{background:var(--tint)}.egroup>summary .name{font-weight:600;min-width:0}.egroup>summary .name small{display:block;font-size:12px;color:var(--muted);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.egroup>summary .chev{display:inline-block;transition:transform .15s}.egroup[open]>summary .chev{transform:rotate(90deg)}.egroup-members{margin-left:10px;padding-left:10px;border-left:2px solid var(--line)}",
     "a.erow .name{font-weight:600;overflow-wrap:anywhere;min-width:0}",
     "a.erow .name small{display:block;font:12px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}",
     "a.erow .badges{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end}",
@@ -269,7 +269,7 @@
     ".basis.tip:hover::after,.basis.tip:focus::after,abbr.gloss:hover::after,abbr.gloss:focus::after{content:none}",
     ".ftip{position:fixed;z-index:50;width:max-content;max-width:min(280px,calc(100vw - 24px));padding:6px 9px;border-radius:8px;background:var(--fg);color:var(--bg);font-size:13px;font-weight:450;line-height:1.4;box-shadow:0 4px 14px rgba(0,0,0,.18)}.ftip[hidden]{display:none}",
     ".allmeasured .basis.measured:is(.mini,.ctl){border-color:transparent;background:none;font-weight:500}",
-    ".medal-col{display:flex;gap:10px;align-items:center}.medal-col>svg{flex:0 0 30px}.mix{display:grid;gap:4px}.slots{position:relative;display:flex;gap:3px;align-items:flex-end;height:30px;padding-bottom:1px;border-bottom:1px solid var(--line)}.slot{position:relative;flex:1 1 0;max-width:30px;height:100%;border-radius:3px 3px 0 0;background:var(--tint);overflow:hidden}.slot::after{content:'';position:absolute;left:0;right:0;bottom:0;height:max(var(--h),3px);background:var(--c)}.slots[data-tip]{cursor:help}.slots[data-tip]:hover::after,.slots[data-tip]:focus::after{content:attr(data-tip);position:absolute;left:0;bottom:calc(100% + 6px);z-index:5;width:max-content;max-width:min(320px,calc(100vw - 48px));padding:6px 9px;border-radius:8px;background:var(--fg);color:var(--bg);font-size:12px;font-weight:500;line-height:1.5;white-space:pre-line;box-shadow:var(--shadow)}.slots .avg{position:absolute;left:0;right:0;bottom:var(--avg);border-top:1.5px dashed var(--fg);opacity:.7}.slot-key{display:inline-flex;align-items:center;gap:5px}.sc-done>summary{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px;padding:10px 8px 10px 28px;list-style:none;min-height:24px;cursor:pointer;border-bottom:1px solid var(--line);font-size:14px}.sc-done>summary:hover{background:var(--tint)}.sc-done>summary small{color:var(--muted);font-size:13px}.sc-done>summary::-webkit-details-marker{display:none}.sc-done>summary::before{content:'\\25B8';color:var(--muted);width:12px}.sc-done[open]>summary::before{content:'\\25BE'}.sc-done .topmark{color:var(--pass);font-weight:650}.slots.mini{display:inline-flex;width:30px;height:14px;gap:2px}.slots.mini .slot{border-radius:1px 1px 0 0}.mix small{font-size:12px;color:var(--muted)}.nextmedal{font-size:13px;padding:8px 10px;border-radius:8px;background:var(--tint)}.nextmedal b{color:var(--fg)}",
+    ".medal-col{display:flex;gap:10px;align-items:center}.medal-col>svg{flex:0 0 30px}.mix{display:grid;gap:4px}.slots{position:relative;display:flex;gap:3px;align-items:flex-end;height:30px;padding-bottom:1px;border-bottom:1px solid var(--line)}.slot{position:relative;flex:1 1 0;max-width:30px;height:100%;border-radius:3px 3px 0 0;background:var(--tint);overflow:hidden}.slot::after{content:'';position:absolute;left:0;right:0;bottom:0;height:max(var(--h),3px);background:var(--c)}.slots .slot{cursor:pointer}.slots .slot.on{outline:2px solid var(--fg);outline-offset:1px}.slotcap{font-size:12px;color:var(--muted);margin-top:4px;min-height:18px;line-height:1.5}.slots[data-tip]:hover::after,.slots[data-tip]:focus::after{content:attr(data-tip);position:absolute;left:0;bottom:calc(100% + 6px);z-index:5;width:max-content;max-width:min(320px,calc(100vw - 48px));padding:6px 9px;border-radius:8px;background:var(--fg);color:var(--bg);font-size:12px;font-weight:500;line-height:1.5;white-space:pre-line;box-shadow:var(--shadow)}.slots .avg{position:absolute;left:0;right:0;bottom:var(--avg);border-top:1.5px dashed var(--fg);opacity:.7}.slot-key{display:inline-flex;align-items:center;gap:5px}.sc-done>summary{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px;padding:10px 8px 10px 28px;list-style:none;min-height:24px;cursor:pointer;border-bottom:1px solid var(--line);font-size:14px}.sc-done>summary:hover{background:var(--tint)}.sc-done>summary small{color:var(--muted);font-size:13px}.sc-done>summary::-webkit-details-marker{display:none}.sc-done>summary::before{content:'\\25B8';color:var(--muted);width:12px}.sc-done[open]>summary::before{content:'\\25BE'}.sc-done .topmark{color:var(--pass);font-weight:650}.slots.mini{display:inline-flex;width:30px;height:14px;gap:2px}.slots.mini .slot{border-radius:1px 1px 0 0}.mix small{font-size:12px;color:var(--muted)}.nextmedal{font-size:13px;padding:8px 10px;border-radius:8px;background:var(--tint)}.nextmedal b{color:var(--fg)}",
     ".track .th{display:flex;gap:14px;align-items:center}",
     ".track .tt{font-weight:700;font-size:16px;line-height:1.25}",
     ".track .td{font-size:13px;color:var(--muted)}",
@@ -321,7 +321,7 @@
     "a.factor[aria-current=true]{box-shadow:0 0 0 1px var(--accent)}",
     ".factor .fh{display:flex;justify-content:space-between;gap:8px;align-items:center;font-weight:700}",
     ".factor p{margin:0;font-size:13px;color:var(--muted)}.fx{display:flex;flex-direction:column;gap:1px;line-height:1.2}.fx b{font-size:24px;font-weight:750;color:var(--st);font-variant-numeric:tabular-nums}.fx span{font-size:13px;color:var(--muted)}",
-    ".factor .fc{font-size:13px;color:var(--muted)}.fbar{display:flex;align-items:center;gap:10px}.fbar>.bar{flex:1 1 auto;min-width:0}.fbar>.fc{flex:none}.cmp-method{font-size:14px;line-height:1.5}",
+    ".factor .fc{font-size:13px;color:var(--muted)}.fbar{display:flex;align-items:center;gap:10px}.fbar>.bar{flex:1 1 auto;min-width:0}.fbar>.fc{flex:none}.cmp-method{font-size:14px;line-height:1.5}.bh-fix{margin-top:4px}",
     ".measure{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr) minmax(130px,auto);gap:10px 18px;align-items:center;padding:14px 4px;border-top:1px solid var(--line)}",
     ".measure .mt{font-weight:650;line-height:1.35}",
     ".measure .mt small{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;font-weight:400;color:var(--muted);font-size:12px;margin-top:4px}",
@@ -354,7 +354,7 @@
     "details.ent>summary{grid-template-columns:76px minmax(0,1fr)}details.ent>summary .tally{grid-column:2;text-align:left}",
     ".ent-body{padding-left:6px}.gap{grid-template-columns:1fr}.hide-sm{display:none}",
     ".kchips{grid-template-columns:1fr}.boxrow{grid-template-columns:1fr;gap:6px}.measure{grid-template-columns:1fr}.measure .ms{text-align:left}.cmp-hero{grid-template-columns:1fr;gap:10px}.cmp-main{display:contents}.cmp-side{order:1}.cmp-hero .cmp-lead,.cmp-hero .rule-tally,.cmp-hero .cmp-prov{order:2}.cmp-hero .cmp-def{order:3}.cmp-hero .cmp-method{order:4}.h2h{display:none}",
-    ".ehdr{display:none}a.erow.cols{grid-template-columns:1fr!important;gap:4px}.ecell{display:flex;gap:6px;align-items:center}.ecell::before{content:attr(data-sc);color:var(--muted)}.ecell[data-judged]::before{content:attr(data-sc) \" \\2726\"}",
+    ".ehdr{display:none}a.erow.cols,.egroup>summary.erow.cols{grid-template-columns:1fr!important;gap:4px}.ecell{display:flex;gap:6px;align-items:center}.ecell::before{content:attr(data-sc);color:var(--muted)}.ecell[data-judged]::before{content:attr(data-sc) \" \\2726\"}",
     ".behind-row{grid-template-columns:1fr}.val{grid-template-columns:76px minmax(0,1fr) auto}.pillwrap .unassessed-tag.quiet{display:inline}}",
     ".skip{position:absolute;left:8px;top:-48px;z-index:10;padding:8px 12px;border:0;border-radius:8px;background:var(--fg);color:var(--bg);font:inherit;font-weight:650;cursor:pointer}.skip:focus{top:8px}",
     "@media (min-width:601px){.modes{position:sticky;top:0;z-index:6;background:var(--bg);margin-top:8px;padding-top:12px}.split>section:first-child{top:72px}h2,h3,section,details,.filters,[id]{scroll-margin-top:76px}}",
@@ -1071,13 +1071,22 @@
 
   var RULE_TITLE = new Map();
   var RULE_WORDS = { api: "API", ci: "CI", id: "ID", ids: "IDs", mcp: "MCP", sdlc: "SDLC", sha: "SHA", otel: "OTel", otlp: "OTLP", cel: "CEL", url: "URL", ui: "UI", kubernetes: "Kubernetes" };
+  var RULE_WHY = new Map();
   var SC_NAME = new WeakMap();
   function ruleTitles(D) {
     RULE_TITLE.clear();
+    RULE_WHY.clear();
     Object.entries(D.scorecards || {}).forEach(function (e) {
       if (e[1] && typeof e[1] === "object") SC_NAME.set(e[1], e[0]);
       Object.entries(e[1].rules || {}).forEach(function (r) {
         if (r[1] && r[1].title) RULE_TITLE.set(e[0] + "\u0000" + r[0], r[1].title);
+        if (r[1] && r[1].rationale)
+          RULE_WHY.set(
+            e[0] + "\u0000" + r[0],
+            firstSentence(r[1].rationale)
+              .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+              .replace(/`/g, ""),
+          );
       });
     });
   }
@@ -1099,9 +1108,14 @@
     return ruleTitle(SC_NAME.get(sc) || "", rule);
   }
 
-  function ruleLink(scName, rule, text) {
+  // `shown`: the rule's why is already printed beside the link, so it gets no tooltip.
+  function ruleLink(scName, rule, text, shown) {
     var a = link("rule/" + enc(scName) + "/" + enc(rule), "rl", text || ruleTitle(scName, rule));
-    if (!text) a.title = rule;
+    var why = !shown && RULE_WHY.get(scName + "\u0000" + rule);
+    if (why) {
+      a.dataset.tip = "Why: " + why + (text ? "" : " (" + rule + ")");
+      a.setAttribute("aria-description", "Why: " + why);
+    } else if (!text) a.title = rule;
     return a;
   }
 
@@ -1204,7 +1218,7 @@
       return { row: r, floor: r.compare ? null : floorOf(D, r.name) };
     });
     cards.sort(function (a, b) {
-      return rankLevel(a.floor) - rankLevel(b.floor) || b.row.none - a.row.none || (a.row.topShare || 0) - (b.row.topShare || 0) || title(D, a.row.name).localeCompare(title(D, b.row.name));
+      return rankLevel(a.floor) - rankLevel(b.floor) || (a.row.topShare || 0) - (b.row.topShare || 0) || b.row.none - a.row.none || title(D, a.row.name).localeCompare(title(D, b.row.name));
     });
     var verdicts = { ahead: 0, parity: 0, behind: 0, unknown: 0 };
     var behind = [];
@@ -1710,24 +1724,66 @@
     var said = cards.map(function (c) {
       return title(D, c.row.name) + ": " + c.row.topShare + "% at the top level (" + levelName(c.row.top || "top") + ")" + (left(c) ? ", left out of the average because it caps the repository" : "");
     });
+    var named = function (c) {
+      var top = c.row.top || "top";
+      return title(D, c.row.name) + ": " + c.row.topShare + "%" + (top === "gold" ? "" : " at " + levelName(top)) + (left(c) ? ", caps the repository, left out of the average" : "");
+    };
+    var low = cards.reduce(function (a, c, i) {
+      return left(c) || (a >= 0 && cards[a].row.topShare <= c.row.topShare) ? a : i;
+    }, -1);
+    var rest = low >= 0 ? "Lowest bar, " + named(cards[low]) : "Each bar is one scorecard";
+    var cap = el("div", { className: "slotcap", ariaHidden: "true", textContent: rest });
+    var bars = cards.map(function (c, i) {
+      return el("span", {
+        className: "slot" + (left(c) ? " capped" : ""),
+        style: "--h:" + c.row.topShare + "%;--c:" + (left(c) ? "var(--unknown)" : RAMP),
+        onpointerenter: function () {
+          show(i);
+        },
+        onclick: function () {
+          show(i);
+        },
+      });
+    });
+    var on = -1;
+    var show = function (i) {
+      if (on >= 0) bars[on].classList.remove("on");
+      on = i;
+      if (i < 0) {
+        cap.textContent = rest;
+        return;
+      }
+      bars[i].classList.add("on");
+      cap.textContent = named(cards[i]);
+    };
     var wrap = el(
       "div",
       { className: "mix" },
       el(
         "div",
-        { className: "slots", role: "img", tabIndex: 0, ariaLabel: "Share at the top level, per scorecard: " + said.join("; ") + ". Average " + t.pct + "%.", style: "--avg:" + t.pct + "%" },
-        ...cards.map(function (c) {
-          var p = c.row.topShare;
-          return el("span", { className: "slot" + (left(c) ? " capped" : ""), style: "--h:" + p + "%;--c:" + (left(c) ? "var(--unknown)" : RAMP) });
-        }),
+        {
+          className: "slots",
+          role: "img",
+          tabIndex: 0,
+          ariaLabel: "Share at the top level, per scorecard: " + said.join("; ") + ". Average " + t.pct + "%.",
+          style: "--avg:" + t.pct + "%",
+          onpointerleave: function () {
+            show(-1);
+          },
+          onblur: function () {
+            show(-1);
+          },
+          onkeydown: function (e) {
+            if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+            e.preventDefault();
+            show(on < 0 ? (e.key === "ArrowRight" ? 0 : bars.length - 1) : (on + (e.key === "ArrowRight" ? 1 : bars.length - 1)) % bars.length);
+          },
+        },
+        ...bars,
         el("span", { className: "avg", ariaHidden: "true" }),
       ),
+      cap,
     );
-    var tip = cards.map(function (c) {
-      var top = c.row.top || "top";
-      return title(D, c.row.name) + ": " + c.row.topShare + "%" + (top === "gold" ? "" : " at " + levelName(top)) + (left(c) ? ", caps the repository, left out" : "");
-    });
-    wrap.firstChild.dataset.tip = "Left to right, each scorecard's share of entities at its top level, drawn green (the top level is gold unless named):\n" + tip.join("\n") + "\nDashed line: their average, " + t.pct + "%";
     return wrap;
   }
 
@@ -2201,7 +2257,7 @@
       };
       var showTip = function (e) {
         if (e.target === ftip) return clearTimeout(tipTimer);
-        var t = e.target && e.target.closest && e.target.closest(".basis.tip,abbr.gloss");
+        var t = e.target && e.target.closest && e.target.closest(".basis.tip,abbr.gloss,a.rl[data-tip]");
         if (t === tipFor) clearTimeout(tipTimer);
         if (!t || !t.dataset.tip || t === tipFor) return;
         clearTimeout(tipTimer);
@@ -3037,10 +3093,10 @@
         );
         var nm = nextMedal(D, t.cards);
         var wk = t.cards[0] && t.cards[0].floor && !isTop(D, t.cards[0].row.name, t.cards[0].floor) ? t.cards[0] : null;
-        if (wk && (!nm || nm.name !== wk.row.name)) kids.push(el("div", { className: "tnext" }, el("b", { textContent: "Weakest: " }), link("scorecard/" + enc(wk.row.name), "", title(D, wk.row.name)), " at ", badge(wk.floor)));
+        if (wk && (!nm || nm.name !== wk.row.name)) kids.push(el("div", { className: "tnext" }, el("b", { textContent: "Lowest level: " }), link("scorecard/" + enc(wk.row.name), "", title(D, wk.row.name)), " at ", badge(wk.floor)));
         kids.push(
           nm
-            ? el("div", { className: "tnext" }, el("b", { textContent: wk && nm.name === wk.row.name ? "Weakest, and the next medal: " : "Next medal: " }), link("scorecard/" + enc(nm.name), "", title(D, nm.name)), wk && nm.name === wk.row.name ? el("span", {}, " at ", badge(wk.floor), " → " + nm.up) : " to " + nm.up, " · " + plural(nm.low, "entity", "entities") + " to lift")
+            ? el("div", { className: "tnext" }, el("b", { textContent: wk && nm.name === wk.row.name ? "Lowest level, and the next medal: " : "Next medal: " }), link("scorecard/" + enc(nm.name), "", title(D, nm.name)), wk && nm.name === wk.row.name ? el("span", {}, " at ", badge(wk.floor), " → " + nm.up) : " to " + nm.up, " · " + plural(nm.low, "entity", "entities") + " to lift")
             : el("div", { className: "tnext good", textContent: "✓ Every scorecard is at its top level" }),
         );
       }
@@ -3059,7 +3115,7 @@
       var a = el("div", { className: "track" }, ...kids);
       a.style.setProperty("--tc", color);
       var standing = t.compare ? tallyWords(t.verdicts, t.rows.length) : t.pct == null ? "not scored" : (t.averaged > 1 ? t.pct + "% " + ringWords(t) : t.pct + "% of entities at the top level") + (t.capped.length ? ". " + ringWhy(D, t) : "");
-      tlink.setAttribute("aria-label", (def.title || t.name) + ": " + standing + (flag ? ". " + flag : "") + (weakest ? ". Weakest: " + weakest : ""));
+      tlink.setAttribute("aria-label", (def.title || t.name) + ": " + standing + (flag ? ". " + flag : "") + (weakest ? ". Lowest level: " + weakest : ""));
       return a;
     }
 
@@ -3174,7 +3230,7 @@
           el(
             "section",
             {},
-            el("div", { className: "head" }, el("h2", { textContent: "Scorecards" }), el("span", { className: "sub", textContent: "Weakest first" })),
+            el("div", { className: "head" }, el("h2", { textContent: "Scorecards" }), el("span", { className: "sub", textContent: "Lowest level first" })),
             levelLegend(D, rows),
             this.scorecardTable(D, rows, true),
           ),
@@ -3554,41 +3610,80 @@
               }),
             )
           : null;
-        list.replaceChildren.apply(
-          list,
-          (header ? [header] : []).concat(
-            shown.map(function (id) {
-              var short = shortId(id);
-              var r = link("entity/" + enc(id), "erow cols", [
-                el("div", { className: "name" }, short, short !== id ? el("small", { textContent: id, title: id }) : null),
-                ...(cols.length
-                  ? cols.map(function (n) {
-                      var sc = D.scores[n] && D.scores[n][id];
-                      var lv = sc && sc.level !== "skipped" ? sc.level : null;
-                      var cell = el(
-                        "div",
-                        { className: "ecell" },
-                        lv ? levelPill(lv, unassessedIn(D, n, id), unrunIn(D.scorecards[n], sc), allUnrun[n]) : el("span", { className: "sub", title: "Not in this scorecard's scope", textContent: "not in scope" }),
-                      );
-                      cell.dataset.sc = title(D, n);
-                      if (basisCounts(((D.scorecards || {})[n] || {}).rules).judged) cell.dataset.judged = "";
-                      return cell;
-                    })
-                  : [el("div", { className: "badges" }, el("span", { className: "sub", textContent: "not scored" }))]),
-              ]);
-              r.style.gridTemplateColumns = tpl;
-              var lvls = cols
-                .filter(function (n) {
-                  return D.scores[n] && D.scores[n][id] && D.scores[n][id].level !== "skipped";
+        var rowOf = function (id) {
+          var short = shortId(id);
+          var r = link("entity/" + enc(id), "erow cols", [
+            el("div", { className: "name" }, short, short !== id ? el("small", { textContent: id, title: id }) : null),
+            ...(cols.length
+              ? cols.map(function (n) {
+                  var sc = D.scores[n] && D.scores[n][id];
+                  var lv = sc && sc.level !== "skipped" ? sc.level : null;
+                  var cell = el(
+                    "div",
+                    { className: "ecell" },
+                    lv ? levelPill(lv, unassessedIn(D, n, id), unrunIn(D.scorecards[n], sc), allUnrun[n]) : el("span", { className: "sub", title: "Not in this scorecard's scope", textContent: "not in scope" }),
+                  );
+                  cell.dataset.sc = title(D, n);
+                  if (basisCounts(((D.scorecards || {})[n] || {}).rules).judged) cell.dataset.judged = "";
+                  return cell;
                 })
-                .map(function (n) {
-                  return title(D, n) + ": " + D.scores[n][id].level;
-                });
-              if (lvls.length) r.setAttribute("aria-label", short + ". " + lvls.join(", "));
-              return r;
+              : [el("div", { className: "badges" }, el("span", { className: "sub", textContent: "not scored" }))]),
+          ]);
+          r.style.gridTemplateColumns = tpl;
+          var lvls = cols
+            .filter(function (n) {
+              return D.scores[n] && D.scores[n][id] && D.scores[n][id].level !== "skipped";
+            })
+            .map(function (n) {
+              return title(D, n) + ": " + D.scores[n][id].level;
+            });
+          if (lvls.length) r.setAttribute("aria-label", short + ". " + lvls.join(", "));
+          return r;
+        };
+        var built = shown.map(function (id) {
+          var r = rowOf(id);
+          return {
+            id: id,
+            r: r,
+            sig: Array.prototype.map
+              .call(r.querySelectorAll(".ecell"), function (c) {
+                return c.innerHTML;
+              })
+              .join("|"),
+          };
+        });
+        var sigCount = {};
+        built.forEach(function (b) {
+          sigCount[b.sig] = (sigCount[b.sig] || 0) + 1;
+        });
+        var grouped = {};
+        var rowsOut = [];
+        built.forEach(function (b) {
+          if (!cols.length || sigCount[b.sig] < 5) {
+            rowsOut.push(b.r);
+            return;
+          }
+          if (grouped[b.sig]) return;
+          grouped[b.sig] = true;
+          var members = built.filter(function (x) {
+            return x.sig === b.sig;
+          });
+          var names = members.map(function (x) {
+            return shortId(x.id);
+          });
+          var sum = el(
+            "summary",
+            { className: "erow cols", style: "grid-template-columns:" + tpl },
+            el("div", { className: "name" }, kindCount(D, selected, members.length) + " with the same result ", el("span", { className: "chev", ariaHidden: "true", textContent: "›" }), el("small", { title: names.join(", "), textContent: names.slice(0, 3).join(", ") + (names.length > 3 ? " and " + (names.length - 3) + " more" : "") })),
+            ...Array.prototype.map.call(b.r.querySelectorAll(".ecell"), function (c) {
+              return c.cloneNode(true);
             }),
-          ),
-        );
+          );
+          rowsOut.push(el("details", { className: "egroup" }, sum, el("div", { className: "egroup-members" }, ...members.map(function (x) {
+            return x.r;
+          }))));
+        });
+        list.replaceChildren.apply(list, (header ? [header] : []).concat(rowsOut));
         var judgedCols = cols.filter(function (n) {
           return basisCounts(((D.scorecards || {})[n] || {}).rules).judged > 0;
         });
@@ -3603,7 +3698,7 @@
             el(
               "div",
               { className: "hollow-key" },
-              el("b", { textContent: "Hollow levels may not hold:" }),
+              el("b", { textContent: "Levels that may not hold:" }),
               hollowJ ? el("span", {}, levelPill("bronze", true, null).firstChild, " no agent has reviewed it yet") : null,
               hollowR ? el("span", {}, levelPill("bronze", false, ["a check"], true).firstChild, " checks it needs were not run in this build") : null,
             ),
@@ -3775,7 +3870,7 @@
               el(
                 "div",
                 { style: "display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center" },
-                el("h4", { className: "rn" }, scName ? ruleLink(scName, n) : n),
+                el("h4", { className: "rn" }, scName ? ruleLink(scName, n, null, true) : n),
                 scName ? el("code", { className: "rid", textContent: n }) : null,
                 el("span", { className: "outcome unassessed", style: "margin:0", textContent: "passes, not assessed yet" }),
                 basisBadge("judged"),
@@ -3789,7 +3884,7 @@
         }
         if (o === "pass") {
           var lv = rule.level || "";
-          (passed[lv] = passed[lv] || []).push(el("span", { className: basisOf(rule) === "judged" ? "judged" : "", title: rule.rationale || rule.fix || rule.check || "" }, scName ? ruleLink(scName, n) : n, " ", basisBadge(basisOf(rule), "tip")));
+          (passed[lv] = passed[lv] || []).push(el("span", { className: basisOf(rule) === "judged" ? "judged" : "", title: scName ? "" : rule.rationale || rule.fix || rule.check || "" }, scName ? ruleLink(scName, n) : n, " ", basisBadge(basisOf(rule), "tip")));
           npass++;
           return;
         }
@@ -3810,7 +3905,7 @@
                 el("span", { className: "sub", textContent: "needed for " + rule.level }),
                 rule.rationale ? el("span", { className: "rwhy", textContent: "Why: " + firstSentence(rule.rationale).replace(/`/g, "") }) : null,
               ),
-              scName ? el("div", { className: "sub" }, "Rule page: ", ruleLink(scName, n), " ", el("code", { className: "rid", textContent: n })) : null,
+              scName ? el("div", { className: "sub" }, "Rule page: ", ruleLink(scName, n, null, true), " ", el("code", { className: "rid", textContent: n })) : null,
               rule.fix && o !== "unknown" ? el("div", { className: "fix" }, el("b", { textContent: "Fix: " }), ...rich(rule.fix)) : "",
               whyEl(rule),
               evidenceEl(items, seen, scName ? "“" + ruleTitle(scName, n) + "”" : n),
@@ -3825,7 +3920,7 @@
             el(
               "div",
               { style: "display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center" },
-              el("h4", { className: "rn" }, scName ? ruleLink(scName, n) : n),
+              el("h4", { className: "rn" }, scName ? ruleLink(scName, n, null, true) : n),
                 scName ? el("code", { className: "rid", textContent: n }) : null,
               el("span", { className: "outcome " + o, style: "margin:0", textContent: o === "unknown" ? "not run in this build" : o }),
               basisBadge(basisOf(rule)),
@@ -4502,6 +4597,7 @@
                 "div",
                 {},
                 rd.rationale ? el("p", { className: "why" }, el("b", { textContent: "Why it matters: " }), ...rich(rd.rationale), (rd.links || []).length ? " " : null, refs(rd.links)) : null,
+                rd.fix ? el("p", { className: "why bh-fix" }, el("b", { textContent: "To close it: " }), ...rich(rd.fix)) : null,
               ),
             ),
           );
@@ -4517,7 +4613,7 @@
               { className: "sub" },
               plural(behindRows.length, "rule") + (oneBasis ? ", all " : ""),
               oneBasis ? basisBadge(oneBasis, true) : null,
-              "; what would close each: ",
+              "; in full: ",
               ...behindIn.flatMap(function (n, i) {
                 return [i ? ", " : "", link("compare/" + enc(n), "", title(D, n) + " →")];
               }),
@@ -5102,7 +5198,7 @@
             ...unrunNames.map(function (n, i) {
               return el("span", { className: "nr" }, i ? ", " : "", ruleLink(active, n), " ", basisBadge(basisOf((sc.rules || {})[n]), "tip"), " (" + unrunCounts[n] + " of " + scored.length + ")");
             }),
-            ". A check that was not run is neither a pass nor a failure, so it is left out of the bars above and of the biggest lever. Levels that need one are provisional: they hold only if it passes.",
+            ". A check that was not run is neither a pass nor a failure, so it is left out of the bars above and of which rule to fix first. Levels that need one are provisional: they hold only if it passes.",
           )
         : null;
       var provisionalNote = provisionalN
@@ -5180,7 +5276,7 @@
                     if (chip) chip.focus({ preventScroll: true });
                   },
                 },
-                el("span", { className: "rn" }, el("span", { textContent: ruleTitle(active, f[0]) }), basisBadge(basisOf((sc.rules || {})[f[0]]), false, true), rl ? badge(rl) : null, lever && f[0] === leverRule ? el("span", { className: "pill", title: "The biggest lever: fixing it lifts the most entities a level", textContent: "biggest lever" }) : null),
+                el("span", { className: "rn" }, el("span", { textContent: ruleTitle(active, f[0]) }), basisBadge(basisOf((sc.rules || {})[f[0]]), false, true), rl ? badge(rl) : null, lever && f[0] === leverRule ? el("span", { className: "pill", title: "Fixing it lifts the most entities a level", textContent: "fix first" }) : null),
                 el("span", { className: "bar xs" }, fillSpan, el("span", { style: "flex-grow:" + (100 - share) + ";background:transparent" })),
                 el("span", { className: "fc", textContent: f[1] + " of " + scored.length }),
               );
@@ -5216,7 +5312,7 @@
                   {},
                   ...names.map(function (n) {
                     var rd = sc.rules[n];
-                return el("li", {}, el("span", { style: "display:inline-flex;flex-wrap:wrap;gap:4px 6px;align-items:center" }, el("b", {}, ruleLink(active, n)), shared ? null : basisBadge(basisOf(rd), "tip")), rd.rationale || rd.fix ? whyFirst(rd.rationale || rd.fix) : null, refs(rd.links));
+                return el("li", {}, el("span", { style: "display:inline-flex;flex-wrap:wrap;gap:4px 6px;align-items:center" }, el("b", {}, ruleLink(active, n, null, true)), shared ? null : basisBadge(basisOf(rd), "tip")), rd.rationale || rd.fix ? whyFirst(rd.rationale || rd.fix) : null, refs(rd.links));
                   }),
                 )
               : el("div", { className: "sub", textContent: "No rules at this level." }),
@@ -5306,7 +5402,7 @@
             topHere && scored.length ? el("span", { className: "sep", ariaHidden: "true", textContent: "·" }) : null,
             topHere && scored.length ? el("span", { className: "fact", textContent: fmt(atTop) + " of " + fmt(scored.length) + " at the top level (" + levelName(topHere) + ")" }) : null,
             leverRule ? el("span", { className: "sep", ariaHidden: "true", textContent: "·" }) : null,
-            leverRule ? el("span", { className: "fact" }, "biggest lever ", el("button", { className: "link", textContent: ruleTitle(active, leverRule), onclick: function () {
+            leverRule ? el("span", { className: "fact" }, "fix first: ", el("button", { className: "link", textContent: ruleTitle(active, leverRule), onclick: function () {
               hStand.scrollIntoView({ block: "start", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
               hStand.focus({ preventScroll: true });
             } })) : null,
