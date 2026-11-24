@@ -5,6 +5,7 @@ pub mod access;
 pub mod actions;
 pub mod artifacts;
 pub mod assess;
+pub mod confine;
 pub mod connectors;
 pub mod http_trace;
 pub mod mcp;

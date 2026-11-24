@@ -300,15 +300,16 @@ pub fn connector_env() -> Vec<(String, String)> {
 async fn supervise(s: Arc<AppState>, name: String, program: String, config: Value) {
     let mut backoff = Duration::from_secs(1);
     loop {
-        let child = tokio::process::Command::new(&program)
-            .env_clear()
-            .envs(connector_env())
-            .env("TOOLBOX_CONNECTOR_CONFIG", config.to_string())
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::inherit())
-            .kill_on_drop(true)
-            .spawn();
+        let child = crate::confine::spawn(
+            tokio::process::Command::new(&program)
+                .env_clear()
+                .envs(connector_env())
+                .env("TOOLBOX_CONNECTOR_CONFIG", config.to_string())
+                .stdin(Stdio::piped())
+                .stdout(Stdio::piped())
+                .stderr(Stdio::inherit())
+                .kill_on_drop(true),
+        );
         let mut child = match child {
             Ok(c) => c,
             Err(e) => {
