@@ -6,17 +6,16 @@ description: >-
 
 # Add an action
 
-This skill is the whole path, for one repository or a fleet: you need no other skill, example or
-`--help` to follow it, and no server.
+An action a repository owns is a file in that repository's `.toolbox/`. An org portal lists the
+repositories and offers all their actions in one place, where people request, approve and check
+runs. This skill covers the whole path, for one repository or many:
 
 1. Write the org portal over the repositories, and take the key it signs approvals with.
-2. Declare the action, with that key: inputs, approvers, preconditions and the change it makes.
+2. Declare the action, pinned to that key: inputs, approvers, preconditions and the change it makes.
 3. Write its test cases.
-4. Copy the standard files to every repository, then validate, test, commit and push them.
+4. Copy the files to each repository, then validate, test, commit and push them.
 5. Request, approve and check runs from the org portal's directory.
-6. Hand it off.
-
-Steps 1 to 3 are one shell command, writing every file with heredocs at once; step 4 is one loop.
+6. Tell the people who will request and approve runs how to do it.
 
 ## 1. Lay it out, starting with the org portal
 
@@ -25,39 +24,41 @@ byte, in every repository. Write them once and copy them. Only `toolbox.yaml` is
 repository's own.
 
 ```
-<repo>/.toolbox/toolbox.yaml                     # this repository: its name, owner and include
-<repo>/.toolbox/actions/add-code-of-conduct.yaml # the action: the same file in every repository
+<repo>/.toolbox/toolbox.yaml                        # this repository: its name, owner and include
+<repo>/.toolbox/actions/add-code-of-conduct.yaml    # the action: the same file in every repository
 <repo>/.toolbox/tests/add-code-of-conduct.test.yaml # its cases: the same file too
-org/toolbox.yaml                                 # the org portal: lists the repositories
+<org>/toolbox.yaml                                  # the org portal: lists the repositories
 ```
 
 ```yaml
 # <repo>/.toolbox/toolbox.yaml
 apiVersion: toolbox.dev/v1alpha1
-portal: {name: alpha, owner: group:alpha-maintainers, toolbox: "0.1"}
+portal: {name: web, owner: group:web-maintainers, toolbox: "0.1"}
 include: [actions/*.yaml]
 ```
 
 ```yaml
-# org/toolbox.yaml
+# <org>/toolbox.yaml
 apiVersion: toolbox.dev/v1alpha1
 portal: {name: org, owner: group:platform, toolbox: "0.1"}
 federation:
-  children: [{git: ../origins/alpha.git}, {git: https://github.com/acme/beta.git}]
+  children:
+    - git: https://github.com/acme/web.git          # offered as portal:web
+    - {git: git@github.com:acme/api.git, branch: trunk}
 ```
 
-Each child is offered as `portal:<last part of its URL>`; `git` takes anything `git clone` does,
-including a path relative to this file. `toolbox run` in `org/` lists every child's actions and
-ends with the key the org portal signs approvals with. It prints the key before any child has an
-action, so take it first and write it into the action file below:
+Each child is offered as `portal:<last part of its URL>`. `git` takes anything `git clone` does,
+including a path relative to this file. `toolbox run` in the org portal's directory lists every
+child's actions and ends with the key the org portal signs approvals with. It prints the key
+before any child has an action, so take it before you write the action file:
 
 ```sh
-KEY=$(cd org && toolbox run | grep -o 'ed25519:[0-9a-f]*' | head -1)   # made once, then reused
+KEY=$(cd <org> && toolbox run | grep -o 'ed25519:[0-9a-f]*' | head -1)   # made once, then reused
 ```
 
 Toolbox keeps the key, the children's clones and the runs under `$TOOLBOX_STATE_DIR` (default
-`~/.local/state/toolbox`); use the same one for every command, and name it in your handoff if you
-set it.
+`~/.local/state/toolbox`). Use the same one for every command, and tell the people who run the
+action if you set it.
 
 ## 2. Declare the action
 
@@ -88,9 +89,8 @@ actions:
         "$TOOLBOX_INPUT_CONTACT" > CODE_OF_CONDUCT.md
 ```
 
-Write it with a quoted heredoc (`<<'EOF'`), so `$TOOLBOX_INPUT_CONTACT` stays as written, then
-fill in the key in the same command:
-`sed -i "s/ed25519:<key>/$KEY/" alpha/.toolbox/actions/add-code-of-conduct.yaml`.
+Replace `ed25519:<key>` with the key from step 1. If you write the file with a shell heredoc, quote
+it (`<<'EOF'`), so `$TOOLBOX_INPUT_CONTACT` stays as written.
 
 Inputs reach the command as `TOOLBOX_INPUT_<NAME>`. Toolbox checks them against the schema
 (`pattern`, `minLength`, `maxLength`, `enum`, `required`), previews the diff, holds the approval,
@@ -99,6 +99,36 @@ the fetched base. Write no script for any of that. A rule the schema can't state
 `preconditions`, CEL over `inputs` and `entity`; a false one blocks the run. `entity.name` is the
 name of the repository that holds the file, so a standard never names its repository.
 
+`approval` is a list of entries, each of which must approve: a user (`user:ann`), a group
+(`group:security`), or a list meaning any one of them. The requester never counts, and each
+person approves once.
+
+A group's members come from the authorization model of the portal that decides approvals, the
+org portal here, so define each group once there rather than in every repository:
+
+```yaml
+# <org>/toolbox.yaml, beside federation
+authz:
+  model: groups.fga
+  tuples:
+    - static:
+        - {user: user:ann, relation: member, object: group:security}
+        - {user: group:sre#member, relation: member, object: group:security} # everyone in sre
+```
+
+```
+# <org>/groups.fga
+model
+  schema 1.1
+type user
+type group
+  relations
+    define member: [user, group#member]
+```
+
+The org portal's checkout and its server read the same model. A group nobody can be shown to be
+in can't approve: without a model, no group is ever met.
+
 ## 3. Write its test cases
 
 ```yaml
@@ -106,7 +136,7 @@ name of the repository that holds the file, so a standard never names its reposi
 name: add-code-of-conduct
 defaults: {action: add-code-of-conduct, as: user:ann, inputs: {contact: conduct@acme.dev}, approve: [user:bob]}
 runs:
-  - name: ann requests, bob approves, and CODE_OF_CONDUCT.md lands on main
+  - name: an approved run lands CODE_OF_CONDUCT.md on main
     expect: {state: succeeded, files: {CODE_OF_CONDUCT.md: "# Code of conduct\n\nReport conduct issues to conduct@acme.dev.\n"}}
   - name: an invalid contact is refused
     inputs: {contact: nobody}
@@ -114,9 +144,9 @@ runs:
   - name: the repository's own address is blocked
     inputs: {contact: '{portal}@acme.dev'}
     expect: {state: blocked}
-  - name: ann cannot approve her own run, and carol is not an approver
-    approve: [user:ann, user:carol]
-    expect: {state: awaiting_approval, refused: [user:ann, user:carol]}
+  - name: neither the requester nor someone unlisted can approve
+    approve: [user:ann, user:dana]
+    expect: {state: awaiting_approval, refused: [user:ann, user:dana]}
   - name: a push the origin rejects fails the run
     rejectPush: main is protected
     expect: {state: failed, error: main is protected, files: {CODE_OF_CONDUCT.md: null}}
@@ -126,35 +156,36 @@ runs:
 the code `toolbox serve` runs, in a scratch copy of the repository and its origin's `main`, before
 you commit. Nothing reaches the real origin. `{portal}` is the repository under test. Inputs
 merge into `defaults` key by key (`null` leaves one out); quote a value with a comma inside
-`{…}`. A passing case needs no live rehearsal: cite it in your handoff.
+`{…}`. The last two cases are the refusals every approved action should have: the requester,
+someone the rule doesn't list, and a protected branch. A repository's cases run without the org
+portal, so a case that approves as a group member says who is in it:
+`members: {'group:security': [user:ann]}`.
 
 ## 4. Copy, test, commit and push
 
-Copy the standard files to every repository, test, commit and push, stopping at the first
-failure:
+Copy the standard files from the first repository to the others, then test, commit and push each,
+stopping at the first failure:
 
 ```sh
-(set -e; for r in alpha beta gamma; do
-  [ $r = alpha ] || cp -r alpha/.toolbox/actions alpha/.toolbox/tests $r/.toolbox/
-  (cd $r && toolbox validate .toolbox && toolbox test .toolbox && git add .toolbox &&
+REPOS="web api docs"; first=${REPOS%% *}
+(set -e; for r in $REPOS; do
+  [ "$r" = "$first" ] || cp -r "$first/.toolbox/actions" "$first/.toolbox/tests" "$r/.toolbox/"
+  (cd "$r" && toolbox validate .toolbox && toolbox test .toolbox && git add .toolbox &&
     git commit -qm "Add the add-code-of-conduct action" && git push -q origin HEAD)
 done)
 ```
 
-`toolbox serve org --detach` serves the same portal (UI, REST, MCP) with the same key, for
-approvers on other machines; nothing below needs it.
-
 ## 5. Request, approve, check
 
-From `org/`; `-o json` works on every command.
+From the org portal's directory; `-o json` works on every command.
 
 ```sh
-toolbox run --as ann                                                                        # every repository's actions
-toolbox run --as ann add-code-of-conduct --entity portal:alpha -i contact=conduct@acme.dev        # preview: the diff
-toolbox run --as ann add-code-of-conduct --entity portal:alpha -i contact=conduct@acme.dev --yes  # exit 3; prints the run id
-toolbox run --as bob --approve <run-id> --wait                                              # exit 0 once main has it
-toolbox run --as ann --verify <run-id>                                                      # the record
-toolbox run --as ann --runs                                                                 # every run
+toolbox run --as ann                                                                       # every repository's actions
+toolbox run --as ann add-code-of-conduct --entity portal:web -i contact=conduct@acme.dev        # preview: the diff
+toolbox run --as ann add-code-of-conduct --entity portal:web -i contact=conduct@acme.dev --yes  # exit 3; prints the run id
+toolbox run --as bob --approve <run-id> --wait                                             # exit 0 once main has it
+toolbox run --as ann --verify <run-id>                                                     # the record
+toolbox run --as ann --runs                                                                # every run
 ```
 
 Exit codes: 0 succeeded, 1 failed, 2 invalid, blocked or refused, 3 waiting for approval, 4 unverified.
@@ -163,10 +194,15 @@ With `-o json`, `--yes`, `--approve` and `--verify` print the run's record: `id`
 and `verification`. The org portal applies the approval rule: the requester and anyone not listed
 are refused (exit 2), and the last approval pushes, then verifies on the repository's `main`. A
 rejected push fails the run with the origin's message. A run whose content the base already has
-succeeds without a commit. The test cases already cover refusals and a rejected push; one real
-run is enough.
+succeeds without a commit.
 
-## 6. Hand it off
+**Who may say `--as`.** A checkout takes `--as` on trust: whoever can use its state directory
+holds the signing key anyway. That suits one operator, a trial, or a CI job or bastion host that
+alone holds the state directory. For a team, serve the portal behind sign-in instead
+(`toolbox serve <org>` with a proxy or OIDC, see the `serve` skill): there an approval needs an
+interactive sign-in, and `toolbox run --url <server>` requests and checks runs.
 
-Say where each file is, the `TOOLBOX_STATE_DIR` if you set one, and the commands in step 5; name
-the test cases that cover refusals and a rejected push.
+## 6. Tell people how to use it
+
+Give requesters and approvers the commands in step 5, the `TOOLBOX_STATE_DIR` if you set one, and
+where the action and its test cases live, so they can change the action by changing those files.

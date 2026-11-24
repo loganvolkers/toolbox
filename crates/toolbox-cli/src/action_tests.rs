@@ -90,6 +90,11 @@ struct Case {
     /// People who approve the run, in order.
     #[serde(default)]
     approve: Vec<String>,
+    /// Each group's members for this case (`group:release: [user:dave]`), standing in for the
+    /// portal that decides approvals, usually the org's. Groups the portal's own authorization
+    /// model resolves count as well.
+    #[serde(default)]
+    members: BTreeMap<String, Vec<String>>,
     /// The scratch origin refuses pushes with this message (a `pre-receive` hook).
     #[serde(default)]
     reject_push: Option<String>,
@@ -181,7 +186,8 @@ fn one(root: &Path, m: &Manifest, d: &Derived, all: &[Offered], c: &Case) -> Res
     };
     let repo = portal_repo_dir(root);
     let s = Scratch::new(&repo, &remote, base.as_deref(), c.reject_push.as_deref())?;
-    let got = attempt(m, d, c, &s.work, &program);
+    let model = crate::run::authz_model(root, m)?;
+    let got = attempt(m, d, model.as_ref(), c, &s.work, &program);
     let files: BTreeMap<String, Option<String>> = c
         .expect
         .files
@@ -192,7 +198,14 @@ fn one(root: &Path, m: &Manifest, d: &Derived, all: &[Offered], c: &Case) -> Res
     compare(&c.expect, &got, &files)
 }
 
-fn attempt(m: &Manifest, d: &Derived, c: &Case, work: &Path, program: &Path) -> Got {
+fn attempt(
+    m: &Manifest,
+    d: &Derived,
+    model: Option<&Value>,
+    c: &Case,
+    work: &Path,
+    program: &Path,
+) -> Got {
     let req = Request {
         action: &c.action,
         entity: c.entity.as_deref(),
@@ -220,8 +233,17 @@ fn attempt(m: &Manifest, d: &Derived, c: &Case, work: &Path, program: &Path) -> 
     if !p.approvers.is_empty() {
         run.set("awaiting_approval", None, None);
     }
+    let local = model.map(|model| toolbox_authz::local::Local::new(model, &d.tuples));
     for who in &c.approve {
-        if let Err(e) = run.approve(who, |_| false) {
+        let member_of = |g: &str| {
+            c.members
+                .get(g)
+                .is_some_and(|us| us.iter().any(|u| u.eq_ignore_ascii_case(who)))
+                || local
+                    .as_ref()
+                    .is_some_and(|l| l.check(who, "member", g).unwrap_or(false))
+        };
+        if let Err(e) = run.approve(who, member_of) {
             g.refused.push(who.clone());
             g.errors.push(e);
         }
@@ -526,7 +548,16 @@ runs:
         assert_eq!(inputs(2), r#"{"x":"1"}"#);
         assert_eq!((c[0].as_user.as_str(), c[0].approve.len()), ("user:ann", 1));
         assert!(c[2].approve.is_empty());
+        assert!(c[0].members.is_empty());
         assert_eq!((c[3].action.as_str(), c[0].action.as_str()), ("b", "a"));
+        let g: Suite = serde_norway::from_str(
+            "name: groups
+runs:
+  - {name: a member, action: a, members: {'group:release': [user:dave]}, expect: {state: succeeded}}",
+        )
+        .unwrap();
+        let g = g.cases("t.yaml", "alpha").unwrap();
+        assert_eq!(g[0].members["group:release"], ["user:dave"]);
         let bad: Suite =
             serde_norway::from_str("name: s\ndefaults: {aprove: [user:bob]}\nruns: [{name: n, action: a, expect: {state: x}}]")
                 .unwrap();
@@ -542,15 +573,15 @@ runs:
     fn portal_in_a_case_is_the_name_of_the_portal_under_test() {
         let s: Suite = serde_norway::from_str(
             "name: s
-defaults: {action: a, inputs: {successor: 'acme/{portal}'}}
+defaults: {action: a, inputs: {contact: '{portal}@acme.dev'}}
 runs:
-  - name: '{portal} is not its own successor'
+  - name: '{portal} cannot be its own contact'
     expect: {state: blocked, error: '{portal}', files: {OWNER.md: 'owned by {portal}'}}",
         )
         .unwrap();
         let c = &s.cases("t.yaml", "beta").unwrap()[0];
-        assert_eq!(c.name, "beta is not its own successor");
-        assert_eq!(c.inputs["successor"], "acme/beta");
+        assert_eq!(c.name, "beta cannot be its own contact");
+        assert_eq!(c.inputs["contact"], "beta@acme.dev");
         assert_eq!(c.expect.error.as_deref(), Some("beta"));
         assert_eq!(c.expect.files["OWNER.md"].as_deref(), Some("owned by beta"));
     }

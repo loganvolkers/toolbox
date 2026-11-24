@@ -636,6 +636,11 @@
         "says-how-to-check": [
           "825aff0c"
         ]
+      },
+      "example:experiments/actions-ab/results/r6/README.md": {
+        "says-how-to-check": [
+          "825aff0c"
+        ]
       }
     },
     "maintainer-package": {
@@ -4727,6 +4732,9 @@
       "doc:docs/decisions/D01M86WAVQQXYF9DFHCP3G035MA.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M8727W7FEED6VVRY6MB3JFR3.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/README.md": {
         "level": "skipped"
       },
@@ -5279,6 +5287,12 @@
       },
       "example:experiments/actions-ab/results/r5/README.md": {
         "level": "gold"
+      },
+      "example:experiments/actions-ab/results/r6/README.md": {
+        "failing": {
+          "says-how-to-check": 1
+        },
+        "level": "bronze"
       },
       "example:experiments/backstage-compare/README.md": {
         "level": "gold"

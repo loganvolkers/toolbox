@@ -459,8 +459,8 @@ impl Drop for Lock {
 }
 
 /// `--approve` / `--reject` without a server: the same rules the server applies (a pending
-/// approver, not the requester, each person once). Without an authorization model nobody is known
-/// to be in a group, so only a named user approves here.
+/// approver, not the requester, each person once). A group's members come from the portal's
+/// authorization model and derived tuples; without a model nobody is known to be in a group.
 fn decide(o: &Options, portal: &Path, id: &str) -> ExitCode {
     if !toolbox_exec::executor::is_run_id(id) {
         return error(o, 2, format!("expected a run id (run_…), not {id:?}"));
@@ -469,7 +469,7 @@ fn decide(o: &Options, portal: &Path, id: &str) -> ExitCode {
         Ok(l) => l,
         Err(e) => return error(o, 1, e),
     };
-    let (_, m, d) = match crate::report::live(portal, o.fixtures, &o.skip) {
+    let (root, m, d) = match crate::report::live(portal, o.fixtures, &o.skip) {
         Ok(x) => x,
         Err(e) => return error(o, 2, e),
     };
@@ -478,12 +478,10 @@ fn decide(o: &Options, portal: &Path, id: &str) -> ExitCode {
         Err(e) => return error(o, 2, e),
     };
     let who = actor(o);
-    let member: Vec<String> = run
-        .pending_approvers()
-        .iter()
-        .flat_map(|a| a.split('|').map(str::to_owned).collect::<Vec<_>>())
-        .filter(|g| g.eq_ignore_ascii_case(&who))
-        .collect();
+    let member = match memberships(&root, &m, &d, &run, &who) {
+        Ok(member) => member,
+        Err(e) => return error(o, 2, e),
+    };
     if o.reject.is_some() {
         if run.state != "awaiting_approval" || member.is_empty() {
             let why = run.refuse(&who, format!("{who} cannot reject run {id}"));
@@ -520,6 +518,55 @@ fn decide(o: &Options, portal: &Path, id: &str) -> ExitCode {
             finish(o, &run, 1)
         }
     }
+}
+
+/// The pending approvers (users, or groups) `who` counts as. A group counts when the portal's
+/// model, checked over its derived tuples, makes `who` a `member` of it.
+fn memberships(
+    root: &Path,
+    m: &Manifest,
+    d: &toolbox_derive::Derived,
+    run: &Run,
+    who: &str,
+) -> Result<Vec<String>, String> {
+    let pending: Vec<String> = run
+        .pending_approvers()
+        .iter()
+        .flat_map(|a| a.split('|').map(str::to_owned).collect::<Vec<_>>())
+        .collect();
+    let model = match pending.iter().any(|g| g.starts_with("group:")) {
+        true => authz_model(root, m)?,
+        false => None,
+    };
+    let local = model
+        .as_ref()
+        .map(|model| toolbox_authz::local::Local::new(model, &d.tuples));
+    let (mut member, mut unknown) = (Vec::new(), None);
+    for g in pending {
+        let counts = g.eq_ignore_ascii_case(who)
+            || match (&local, g.starts_with("group:")) {
+                (Some(l), true) => l.check(who, "member", &g).unwrap_or_else(|e| {
+                    unknown.get_or_insert(format!("cannot tell who is in {g}: {e}"));
+                    false
+                }),
+                _ => false,
+            };
+        if counts {
+            member.push(g);
+        }
+    }
+    match unknown {
+        Some(e) if member.is_empty() => Err(e),
+        _ => Ok(member),
+    }
+}
+
+/// The portal's authorization model in its JSON form, if it declares one.
+pub(crate) fn authz_model(root: &Path, m: &Manifest) -> Result<Option<Value>, String> {
+    let Some(a) = &m.authz else { return Ok(None) };
+    let dsl =
+        std::fs::read_to_string(root.join(&a.model)).map_err(|e| format!("{}: {e}", a.model))?;
+    toolbox_authz::fga_dsl::to_json(&dsl).map(Some)
 }
 
 /// The run `id` this portal recorded, from the state directory.

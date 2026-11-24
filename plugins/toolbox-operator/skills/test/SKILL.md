@@ -43,7 +43,9 @@ key by key; an input set to `null` is left out. `expect.state` is a run state, o
 exact content on the base afterwards; `null` means absent. Quote any value with a comma inside
 `{…}`: YAML ends the value at the comma. `{portal}` in any value is the name of the portal under
 test, so one test file serves every repository that includes the same action
-(`inputs: {successor: 'acme/{portal}'}`).
+(`inputs: {contact: '{portal}@acme.dev'}`). A group approver counts a member of the group
+in the portal's own authorization model, or one the case lists in `members`
+(`members: {'group:security': [user:bob]}`), which stands in for an org portal's groups.
 
 Do not weaken an expectation to make it pass. If it fails, the check, the action or the fixture
 is wrong.
