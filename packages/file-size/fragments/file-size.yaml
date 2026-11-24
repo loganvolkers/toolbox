@@ -71,6 +71,6 @@ campaigns:
     track: ${param:track}
     description: >-
       Every measured file within ${param:limit} lines. Progress is counted
-      from the start the baseline records: files over the limit, and lines
-      over it.
+      from the starting point saved in the baseline: files over the limit, and
+      lines over it.
     includes: [{scorecard: '${param:name}', rules: [within-limit]}]

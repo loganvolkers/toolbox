@@ -5,7 +5,7 @@
 any tool that prints SARIF 2.1.0, and gives it:
 - a home: a connector, a record per file, and the tool pinned under `tools:` for `toolbox doctor`;
 - a ratchet: a new finding, or a new file with findings, fails a pull request;
-- a campaign to zero, counted from the start the baseline records.
+- a campaign to zero, counted from the starting point saved in the baseline.
 
 The tool keeps its own configuration file and runs exactly as it would alone. Every record's
 `command` reruns that file's check with the tool by itself, and `scripts/take-it-out.py` checks

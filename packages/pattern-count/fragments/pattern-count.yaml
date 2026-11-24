@@ -74,6 +74,6 @@ campaigns:
     owner: ${param:owner}
     track: ${param:track}
     description: >-
-      No matches in any scanned file. Progress is counted from the start the
-      baseline records: files with matches, and matches.
+      No matches in any scanned file. Progress is counted from the starting
+      point saved in the baseline: files with matches, and matches.
     includes: [{scorecard: '${param:name}', rules: [no-matches]}]
