@@ -115,6 +115,35 @@ Toolbox for Toolbox keeps the stricter rule against Backstage. The independent a
 OpenFGA run ([ADJUDICATION.md](../../experiments/openfga-spicedb-compare/ADJUDICATION.md) §5, §7)
 asked for the same change.
 
+## Round 4: what the panel found
+
+The probes passed 212 of 212. Every median held: the same ten 3s and two 2s as round 3, with
+Coherence (U6) and Behavioural joy (J2) at 2. All six tasks succeeded for two auditors and T6 was
+partial for the third. Four severity-3 findings were open, so the round did not pass:
+
+| Finding (auditors) | Box or portal | Fix |
+|---|---|---|
+| The two portals now count factors by different rules under the same ring and the same words, and only body text says so (A, B, C) | Box | The rule is named where the tally is shown: a "counted by the majority of rules" or "behind if any rule is behind" tag beside the factor counts on the compare hero and on every comparison track card, and the headline ends with the rule |
+| "Not covered" sat at the bottom of a 2,900 px page, not beside the method (A) | Box | A track description's "Not covered:" sentence moves up into the compare hero, under Method |
+| Custom top levels ("within-limit", "ten") were painted as gold medals, and the entity page title-cased them as "Within-Limit" (A) | Box | A one-level scorecard's medal carries a check, not the gold star, and custom level names keep their own case and quotes |
+| The track ring averaged shares at the top level beside "Medals: 3 none", with nothing to reconcile them (A) | Box | The card adds "51 entities still at none" under the ring, and the medal row says "with no medal yet" |
+| The behind side had no ratios: "Widest lead: 3.0× smaller" but the 16× gap only on the factor page (B) | Box | "Widest gap" sits beside "Widest lead", and "Where OpenFGA is behind" opens with the same ratio tiles as the leads |
+| The starter's "Repository standards" title met "this portal names no repository standards" (C) | Box and portal | The note now says the portal does not combine its scorecards into one level. The starter's scorecards (and OpenFGA's copies) no longer describe "a pilot repository (examples/repo-portal-starter)" |
+
+The panel's severity-2 findings that two or more auditors raised were fixed in the same pass:
+
+- campaigns show progress since the saved start, or say there is none;
+- campaign goals name rule titles, not ids ("rules ten");
+- the not-measured state says "not measured", not "? openfga unknown", and no longer doubles its badge;
+- the empty portal hides level legends, filters and an empty Campaigns tab;
+- grouped rows name their furthest-off member ("tuples.go, 2629 lines, 1829 over the limit of 800");
+- same-named members show their paths;
+- `+uncommitted` is explained on the factor page;
+- the header reads "facts snapshot #7", or "no facts collected yet".
+
+A scorecard whose ladder stops below gold still counts in OpenFGA's ring, and is still left out of
+Toolbox's where it caps the repository level. The card now names it in both portals.
+
 ## Comparisons are generic
 
 The OpenFGA portal compares OpenFGA v1.23.0 with SpiceDB v1.57.1 through the same comparative
