@@ -170,3 +170,127 @@ impl Workflow {
             }))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::Map;
+    use std::io::{BufRead, BufReader, Read, Write};
+    use std::net::TcpListener;
+    use std::sync::{Arc, Mutex};
+
+    /// A GitHub API double: 204 for a dispatch, the given runs for a list. Records each request.
+    fn fake(runs: Value) -> (String, Arc<Mutex<Vec<(String, String)>>>) {
+        let l = TcpListener::bind("127.0.0.1:0").unwrap();
+        let api = format!("http://{}", l.local_addr().unwrap());
+        let seen = Arc::new(Mutex::new(vec![]));
+        let log = seen.clone();
+        std::thread::spawn(move || {
+            for s in l.incoming().flatten() {
+                let mut r = BufReader::new(s.try_clone().unwrap());
+                let mut line = String::new();
+                r.read_line(&mut line).unwrap();
+                let mut len = 0;
+                loop {
+                    let mut h = String::new();
+                    r.read_line(&mut h).unwrap();
+                    if h.trim().is_empty() {
+                        break;
+                    }
+                    if let Some(v) = h.to_ascii_lowercase().strip_prefix("content-length:") {
+                        len = v.trim().parse().unwrap();
+                    }
+                }
+                let mut body = vec![0; len];
+                r.read_exact(&mut body).unwrap();
+                log.lock()
+                    .unwrap()
+                    .push((line.trim().to_owned(), String::from_utf8(body).unwrap()));
+                let reply = if line.starts_with("POST") {
+                    "HTTP/1.1 204 No Content\r\nconnection: close\r\n\r\n".to_owned()
+                } else {
+                    let b = runs.to_string();
+                    format!(
+                        "HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ncontent-length: {}\r\nconnection: close\r\n\r\n{b}",
+                        b.len()
+                    )
+                };
+                let mut s = s;
+                s.write_all(reply.as_bytes()).unwrap();
+            }
+        });
+        (api, seen)
+    }
+
+    fn ctx() -> Context {
+        Context {
+            run_id: Some("run_7".into()),
+            portal: "org".into(),
+            action: "deploy".into(),
+            action_version: "v1".into(),
+            entity: json!({"id": "repository:alpha"}),
+            inputs: serde_json::from_value(json!({"env": "staging", "replicas": 2})).unwrap(),
+            actor: "user:ann".into(),
+            related: Map::new(),
+            approvals: vec![],
+            cwd: std::env::temp_dir(),
+        }
+    }
+
+    #[test]
+    fn dispatches_with_string_inputs_and_tracks_by_run_name() {
+        let (api, seen) = fake(json!({"workflow_runs": [
+            {"name": "toolbox run_6", "status": "completed", "conclusion": "failure"},
+            {"display_title": "toolbox run_7", "status": "completed", "conclusion": "success",
+             "html_url": "https://example.test/runs/7"}]}));
+        let w = Workflow::parse(
+            &json!({"repo": "acme/alpha", "workflow": "deploy.yml", "api": api, "token": "PATH"}),
+        )
+        .unwrap();
+        let out = w.dispatch(&ctx());
+        assert_eq!(out.status, "dispatched", "{:?}", out.error);
+        let (line, body) = seen.lock().unwrap()[0].clone();
+        assert_eq!(
+            line,
+            "POST /repos/acme/alpha/actions/workflows/deploy.yml/dispatches HTTP/1.1"
+        );
+        let body: Value = serde_json::from_str(&body).unwrap();
+        assert_eq!(
+            body,
+            json!({"ref": "main", "inputs": {"env": "staging", "replicas": "2", "toolbox_run": "run_7"}})
+        );
+        let t = w.track("run_7").unwrap().unwrap();
+        assert_eq!(t.conclusion.as_deref(), Some("success"));
+        assert_eq!(t.url.as_deref(), Some("https://example.test/runs/7"));
+        assert!(w.track("run_8").unwrap().is_none());
+    }
+
+    #[test]
+    fn a_federated_dispatch_sends_the_child_action_and_who_asked() {
+        let (api, seen) = fake(json!({"workflow_runs": []}));
+        let mut w = Workflow::parse(
+            &json!({"repo": "acme/beta", "workflow": "toolbox.yml", "ref": "trunk", "api": api, "token": "PATH"}),
+        )
+        .unwrap();
+        w.federated = Some("set-owners".into());
+        assert_eq!(w.dispatch(&ctx()).status, "dispatched");
+        let body: Value = serde_json::from_str(&seen.lock().unwrap()[0].1).unwrap();
+        assert_eq!(body["ref"], "trunk");
+        assert_eq!(body["inputs"]["action"], "set-owners");
+        assert_eq!(body["inputs"]["requested_by"], "user:ann");
+        let inputs: Value =
+            serde_json::from_str(body["inputs"]["inputs"].as_str().unwrap()).unwrap();
+        assert_eq!(inputs, json!({"env": "staging", "replicas": 2}));
+    }
+
+    #[test]
+    fn a_missing_token_fails_before_any_request() {
+        let w = Workflow::parse(
+            &json!({"repo": "a/b", "workflow": "w.yml", "token": "TOOLBOX_TEST_NO_SUCH_VAR"}),
+        )
+        .unwrap();
+        let out = w.dispatch(&ctx());
+        assert_eq!(out.status, "failed");
+        assert!(out.error.unwrap().contains("TOOLBOX_TEST_NO_SUCH_VAR"));
+    }
+}
