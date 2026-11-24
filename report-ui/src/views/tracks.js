@@ -9,7 +9,7 @@ import { trackPath } from "../lib/routes.js";
 import { LADDER, rankLevel } from "../lib/rules.js";
 import { ringWhy, ringWords, trackSlots } from "../lib/status.js";
 import { prose, rich } from "../lib/text.js";
-import { furthestTrack, standingChip, trackColor, trackKey, trackStats, tracksSorted } from "../lib/tracks.js";
+import { factorRule, furthestTrack, standingChip, trackColor, trackKey, trackStats, tracksSorted } from "../lib/tracks.js";
 import { firstSentence, plural } from "../lib/words.js";
 
 export const tracksViews = {
@@ -22,7 +22,7 @@ export const tracksViews = {
         "div",
         { className: "th" },
         t.compare ? tallyRing(t.verdicts, t.rows.length, 60) : ring(t.pct, { size: 60, color: color, label: t.pct == null ? "not scored" : t.pct + "% at the top level" }),
-        el("div", {}, el("div", { className: "tt", textContent: def.title || t.name }), el("div", { className: "sub", textContent: t.compare ? "factors ahead, a segment per factor; a factor is behind if any one of its rules is" : t.averaged > 1 ? ringWords(t) : "of entities at the top level" })),
+        el("div", {}, el("div", { className: "tt", textContent: def.title || t.name }), el("div", { className: "sub", textContent: t.compare ? "factors ahead, a segment per factor; " + factorRule(t.majority) : t.averaged > 1 ? ringWords(t) : "of entities at the top level" })),
       ),
       def.description ? el("div", { className: "td", textContent: prose(firstSentence(def.description)) }) : null,
     ];

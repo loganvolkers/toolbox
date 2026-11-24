@@ -8,7 +8,7 @@ import { shortId, title } from "../lib/rings.js";
 import { trackPath } from "../lib/routes.js";
 import { ruleTitle } from "../lib/rules.js";
 import { rich } from "../lib/text.js";
-import { STANDING_MARK, standingChip, standingColor, standingPhrase } from "../lib/tracks.js";
+import { STANDING_MARK, byMajority, factorChip, factorRule, standingChip, standingColor, standingPhrase } from "../lib/tracks.js";
 import { andList, firstSentence, lowerFirst, plural, sentences } from "../lib/words.js";
 
 // The number a factor leads with: rules behind, else ahead, else at parity; both when it is ahead on some and behind on
@@ -87,7 +87,7 @@ export const compareViews = {
               )
             : null;
           var a = link("compare/" + enc(n), "factor", [
-            el("div", { className: "fh" }, el("span", { textContent: def.title || n }), standingChip(v, v === "ahead" && counts.ahead * 2 < total ? "narrowly ahead" : v === "behind" && counts.ahead ? "behind, mixed" : null)),
+            el("div", { className: "fh" }, el("span", { textContent: def.title || n }), standingChip(v, factorChip(v, counts, total))),
             fx,
             def.rationale || def.description ? el("p", {}, ...rich(firstSentence(def.rationale || def.description))) : null,
             el("div", { className: "fbar" }, bar, el("span", { className: "fc", textContent: tallyText })),
@@ -187,10 +187,11 @@ export const compareViews = {
       ruleCounts.ahead +
       " of " +
       plural(ruleTotal, "rule") +
-      (counts.behind ? "; behind on " + plural(counts.behind, "factor") + " and " + plural(ruleCounts.behind, "rule") : "") +
+      (counts.behind ? "; behind on " + plural(counts.behind, "factor") + ", and on " + ruleCounts.behind + " of the " + plural(ruleTotal, "rule") + " overall" : "") +
       (counts.parity ? "; at parity on " + plural(counts.parity, "factor") : "") +
       (counts.unknown ? "; " + counts.unknown + " not measured" : "") +
       ".";
+    var majority = byMajority(D, names);
     var lean = counts.behind > counts.ahead ? "behind" : counts.ahead > counts.behind ? "ahead" : "parity";
     var hero = el(
       "section",
@@ -218,19 +219,22 @@ export const compareViews = {
           el("b", { className: "parity", textContent: ruleCounts.parity + " at parity" }),
           " · ",
           el("b", { className: "behind", textContent: ruleCounts.behind + " behind" }),
-          ". A factor counts as behind if any one of its rules is behind" + (names.some(function (n) {
-            return verdictOf(n) === "behind" && Object.keys(all[n].rules || {}).some(function (r) {
-              return (all[n].rules[r] || {})[peer] === "ahead";
+          ". By this comparison's rule, " + factorRule(majority) + (names.some(function (n) {
+            var rs = Object.keys(all[n].rules || {}).map(function (r) {
+              return (all[n].rules[r] || {})[peer];
             });
+            return rs.indexOf("ahead") >= 0 && rs.indexOf("behind") >= 0;
           })
-            ? ", so a factor marked “behind, mixed” is ahead on some of its rules too"
+            ? ", so a factor marked “mixed” is ahead on some of its rules and behind on others"
             : "") + ". Factors are not weighted, so the factor count is a tally, not an overall score.",
         ),
         el(
           "details",
           { className: "sub cmp-def cmp-brief", style: "margin:6px 0 0" },
           el("summary", { textContent: "How a factor and a rule are counted" }),
-          "A factor is a scorecard that scores both products on the same rules. On a rule, a product is ahead when its measured value is better (within the rule's tolerance is parity) or it passes a bar the other misses. " + who(subject) + " is behind on a factor if it is behind on any one of its rules, and ahead if it is ahead on some and behind on none; “narrowly ahead” means ahead on fewer than half of that factor's rules, at parity on the rest.",
+          "A factor is a scorecard that scores both products on the same rules. On a rule, a product is ahead when its measured value is better (within the rule's tolerance is parity) or it passes a bar the other misses. " + who(subject) + (majority
+            ? " is ahead on a factor when it is ahead on more of its rules than it is behind on, behind when it is behind on more, and at parity when they are even; a factor with any unmeasured rule is not measured. “Mixed” means ahead on some rules and behind on others; “narrowly ahead” means ahead on fewer than half of that factor's rules, at parity on the rest."
+            : " is behind on a factor if it is behind on any one of its rules, and ahead if it is ahead on some and behind on none; “narrowly ahead” means ahead on fewer than half of that factor's rules, at parity on the rest."),
         ),
       ),
       el(
@@ -582,7 +586,7 @@ export const compareViews = {
       brief.length ? el("p", { className: "sub provenance" }, el("b", { textContent: timed ? "Timed on: " : "Probed once on: " }), brief.join(" · ") + ". ", link("compare", "", "How it was measured, and who checked it →")) : null,
       def.description ? el("p", { className: "lede" }, ...rich(def.description)) : null,
       def.rationale || (def.links || []).length ? el("div", { className: "rationale" }, el("b", { textContent: "Why this factor matters" }), def.rationale ? el("div", {}, ...rich(def.rationale)) : null, refs(def.links)) : null,
-      el("p", { className: "sub", textContent: "Each rule scores both products. Where both have a measured value, the better value decides; otherwise passing beats failing. " + who(c.subject) + " is behind on the factor if it is behind on any rule." }),
+      el("p", { className: "sub", textContent: "Each rule scores both products. Where both have a measured value, the better value decides; otherwise passing beats failing. " + who(c.subject) + (c.verdictRule === "majority" ? " is ahead on the factor when more of its rules are ahead than behind, and behind when more are behind." : " is behind on the factor if it is behind on any rule.") }),
       basisKey(basisCounts(def.rules)),
       el("div", {}, ...(fold ? rows.slice(0, rows.length - atParity) : rows)),
       fold

@@ -3,7 +3,7 @@ import { basisBadge, basisOf } from "./basis.js";
 import { el, enc, link } from "./dom.js";
 import { kindCount, scorecardSplit } from "./kinds.js";
 import { known } from "./levels.js";
-import { title } from "./rings.js";
+import { isTop, title } from "./rings.js";
 import { LADDER, ruleTitle } from "./rules.js";
 import { blockers } from "./status.js";
 import { unassessedIn } from "./tracks.js";
@@ -59,7 +59,7 @@ export function nextMedalEl(D, cards, label) {
     { className: "nextmedal" },
     el("b", { textContent: label || "Next medal: " }),
     link("scorecard/" + enc(nm.name), "", title(D, nm.name)),
-    " to " + nm.up + ". " + plural(nm.low, "entity", "entities") + " at " + nm.floor + " to lift" + (nm.rule ? "; " + nm.n + (nm.n === 1 ? " needs " : " need ") : "."),
+    " to " + nm.up + (isTop(D, nm.name, nm.up) ? ", its top level" : ", a step toward " + (((D.scorecards || {})[nm.name] || {}).levels || []).slice(-1)[0] + ", the level the rings count") + ". " + plural(nm.low, "entity", "entities") + " at " + nm.floor + " to lift" + (nm.rule ? "; " + nm.n + (nm.n === 1 ? " needs " : " need ") : "."),
     nm.rule ? link("rule/" + enc(nm.name) + "/" + enc(nm.rule), "", ruleTitle(nm.name, nm.rule)) : null,
     nm.rule ? " " : null,
     nm.rule ? basisBadge(basisOf((((D.scorecards || {})[nm.name] || {}).rules || {})[nm.rule]), "tip") : null,

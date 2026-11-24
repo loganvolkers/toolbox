@@ -69,7 +69,10 @@ export function trackStats(D, S, name) {
   var campaigns = Object.keys(D.campaigns || {}).filter(function (n) {
     return D.campaigns[n].track === name;
   });
-  return { name: name, def: (D.tracks || {})[name] || {}, rows: rows, cards: cards, compare: compare, none: none, pct: pct, averaged: shares.length, scoredRows: scoredRows, capped: capped, verdicts: verdicts, behind: behind, campaigns: campaigns };
+  var majority = compare && byMajority(D, rows.map(function (r) {
+    return r.name;
+  }));
+  return { name: name, def: (D.tracks || {})[name] || {}, rows: rows, cards: cards, compare: compare, majority: majority, none: none, pct: pct, averaged: shares.length, scoredRows: scoredRows, capped: capped, verdicts: verdicts, behind: behind, campaigns: campaigns };
 }
 
 export function tracksSorted(D, S) {
@@ -204,6 +207,28 @@ export var STANDING_MARK = { ahead: "▲", parity: "=", behind: "▼", unknown: 
 export function standingChip(s, text) {
   var v = s || "unknown";
   return el("span", { className: "standing " + v, textContent: STANDING_MARK[v] + " " + (text || v) });
+}
+
+// Whether every named comparison tallies its factors by the majority of rules rather than behind-on-any
+// (D01M87WF2QZVPTD8CGDZKY133CD).
+export function byMajority(D, names) {
+  return (
+    names.length > 0 &&
+    names.every(function (n) {
+      return ((D.comparisons || {})[n] || {}).verdictRule === "majority";
+    })
+  );
+}
+
+// How a factor's standing follows from its rules, as a clause.
+export function factorRule(majority) {
+  return majority ? "a factor is ahead when more of its rules are ahead than behind, behind when more are behind, at parity when they are even" : "a factor is behind if any one of its rules is behind";
+}
+
+// The chip for a factor whose rules split both ways, or that leads on under half of them.
+export function factorChip(v, counts, total) {
+  if (counts.ahead && counts.behind) return v === "parity" ? "even split" : v + ", mixed";
+  return v === "ahead" && counts.ahead * 2 < total ? "narrowly ahead" : null;
 }
 
 // "Toolbox is behind Backstage", in words that read as a sentence.

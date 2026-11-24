@@ -148,7 +148,10 @@ scorecards:
     owner: group:openfga-maintainers
     track: vs-spicedb
     levels: [bronze]
-    compare: {subject: product:openfga, peers: [product:spicedb]}
+    compare:
+      subject: product:openfga
+      peers: [product:spicedb]
+      verdict: majority
     rules:
     - name: ready
       level: bronze
@@ -226,7 +229,10 @@ scorecards:
     owner: group:openfga-maintainers
     track: vs-spicedb
     levels: [bronze]
-    compare: {subject: product:openfga, peers: [product:spicedb]}
+    compare:
+      subject: product:openfga
+      peers: [product:spicedb]
+      verdict: majority
     rules:
     - name: binary-size
       level: bronze
@@ -279,7 +285,10 @@ scorecards:
     owner: group:openfga-maintainers
     track: vs-spicedb
     levels: [bronze]
-    compare: {subject: product:openfga, peers: [product:spicedb]}
+    compare:
+      subject: product:openfga
+      peers: [product:spicedb]
+      verdict: majority
     rules:
     - name: go-modules
       level: bronze
@@ -336,7 +345,10 @@ scorecards:
     owner: group:openfga-maintainers
     track: vs-spicedb
     levels: [bronze]
-    compare: {subject: product:openfga, peers: [product:spicedb]}
+    compare:
+      subject: product:openfga
+      peers: [product:spicedb]
+      verdict: majority
     rules:
     - name: conditions
       level: bronze
@@ -431,7 +443,10 @@ scorecards:
     owner: group:openfga-maintainers
     track: vs-spicedb
     levels: [bronze]
-    compare: {subject: product:openfga, peers: [product:spicedb]}
+    compare:
+      subject: product:openfga
+      peers: [product:spicedb]
+      verdict: majority
     rules:
     - name: prometheus-metrics
       level: bronze
@@ -492,7 +507,10 @@ scorecards:
     owner: group:openfga-maintainers
     track: vs-spicedb
     levels: [bronze]
-    compare: {subject: product:openfga, peers: [product:spicedb]}
+    compare:
+      subject: product:openfga
+      peers: [product:spicedb]
+      verdict: majority
     rules:
     - name: contributors
       level: bronze

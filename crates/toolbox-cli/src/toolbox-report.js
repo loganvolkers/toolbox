@@ -348,7 +348,10 @@
     var campaigns = Object.keys(D.campaigns || {}).filter(function(n) {
       return D.campaigns[n].track === name;
     });
-    return { name, def: (D.tracks || {})[name] || {}, rows, cards, compare, none, pct, averaged: shares.length, scoredRows, capped, verdicts, behind, campaigns };
+    var majority = compare && byMajority(D, rows.map(function(r) {
+      return r.name;
+    }));
+    return { name, def: (D.tracks || {})[name] || {}, rows, cards, compare, majority, none, pct, averaged: shares.length, scoredRows, capped, verdicts, behind, campaigns };
   }
   function tracksSorted(D, S) {
     return Object.keys(D.tracks || {}).map(function(n) {
@@ -464,6 +467,18 @@
   function standingChip(s, text) {
     var v = s || "unknown";
     return el("span", { className: "standing " + v, textContent: STANDING_MARK[v] + " " + (text || v) });
+  }
+  function byMajority(D, names) {
+    return names.length > 0 && names.every(function(n) {
+      return ((D.comparisons || {})[n] || {}).verdictRule === "majority";
+    });
+  }
+  function factorRule(majority) {
+    return majority ? "a factor is ahead when more of its rules are ahead than behind, behind when more are behind, at parity when they are even" : "a factor is behind if any one of its rules is behind";
+  }
+  function factorChip(v, counts, total) {
+    if (counts.ahead && counts.behind) return v === "parity" ? "even split" : v + ", mixed";
+    return v === "ahead" && counts.ahead * 2 < total ? "narrowly ahead" : null;
   }
   function standingPhrase(a, s, b) {
     if (s === "ahead") return a + " ahead of " + b;
@@ -1132,7 +1147,7 @@
       { className: "nextmedal" },
       el("b", { textContent: label || "Next medal: " }),
       link("scorecard/" + enc(nm.name), "", title(D, nm.name)),
-      " to " + nm.up + ". " + plural(nm.low, "entity", "entities") + " at " + nm.floor + " to lift" + (nm.rule ? "; " + nm.n + (nm.n === 1 ? " needs " : " need ") : "."),
+      " to " + nm.up + (isTop(D, nm.name, nm.up) ? ", its top level" : ", a step toward " + (((D.scorecards || {})[nm.name] || {}).levels || []).slice(-1)[0] + ", the level the rings count") + ". " + plural(nm.low, "entity", "entities") + " at " + nm.floor + " to lift" + (nm.rule ? "; " + nm.n + (nm.n === 1 ? " needs " : " need ") : "."),
       nm.rule ? link("rule/" + enc(nm.name) + "/" + enc(nm.rule), "", ruleTitle(nm.name, nm.rule)) : null,
       nm.rule ? " " : null,
       nm.rule ? basisBadge(basisOf((((D.scorecards || {})[nm.name] || {}).rules || {})[nm.rule]), "tip") : null,
@@ -3305,7 +3320,7 @@
           "div",
           { className: "th" },
           t.compare ? tallyRing(t.verdicts, t.rows.length, 60) : ring(t.pct, { size: 60, color, label: t.pct == null ? "not scored" : t.pct + "% at the top level" }),
-          el("div", {}, el("div", { className: "tt", textContent: def.title || t.name }), el("div", { className: "sub", textContent: t.compare ? "factors ahead, a segment per factor; a factor is behind if any one of its rules is" : t.averaged > 1 ? ringWords(t) : "of entities at the top level" }))
+          el("div", {}, el("div", { className: "tt", textContent: def.title || t.name }), el("div", { className: "sub", textContent: t.compare ? "factors ahead, a segment per factor; " + factorRule(t.majority) : t.averaged > 1 ? ringWords(t) : "of entities at the top level" }))
         ),
         def.description ? el("div", { className: "td", textContent: prose(firstSentence(def.description)) }) : null
       ];
@@ -4606,7 +4621,7 @@
             best ? el("span", { textContent: "widest lead: " + lowerFirst(measureLabel(c, best.r)) + ", " + (best.ratio >= 10 ? Math.round(best.ratio).toLocaleString("en-US") : best.ratio.toFixed(1)) + "× " + best.word }) : null
           ) : null;
           var a = link("compare/" + enc(n), "factor", [
-            el("div", { className: "fh" }, el("span", { textContent: def.title || n }), standingChip(v, v === "ahead" && counts.ahead * 2 < total ? "narrowly ahead" : v === "behind" && counts.ahead ? "behind, mixed" : null)),
+            el("div", { className: "fh" }, el("span", { textContent: def.title || n }), standingChip(v, factorChip(v, counts, total))),
             fx,
             def.rationale || def.description ? el("p", {}, ...rich(firstSentence(def.rationale || def.description))) : null,
             el("div", { className: "fbar" }, bar, el("span", { className: "fc", textContent: tallyText }))
@@ -4691,7 +4706,8 @@
         });
       });
       var unmeasured = counts.unknown >= names.length;
-      var headline = unmeasured ? "Not measured yet: none of the " + plural(names.length, "factor") + " has values for both products." : "Ahead on " + counts.ahead + " of " + plural(names.length, "factor") + " and " + ruleCounts.ahead + " of " + plural(ruleTotal, "rule") + (counts.behind ? "; behind on " + plural(counts.behind, "factor") + " and " + plural(ruleCounts.behind, "rule") : "") + (counts.parity ? "; at parity on " + plural(counts.parity, "factor") : "") + (counts.unknown ? "; " + counts.unknown + " not measured" : "") + ".";
+      var headline = unmeasured ? "Not measured yet: none of the " + plural(names.length, "factor") + " has values for both products." : "Ahead on " + counts.ahead + " of " + plural(names.length, "factor") + " and " + ruleCounts.ahead + " of " + plural(ruleTotal, "rule") + (counts.behind ? "; behind on " + plural(counts.behind, "factor") + ", and on " + ruleCounts.behind + " of the " + plural(ruleTotal, "rule") + " overall" : "") + (counts.parity ? "; at parity on " + plural(counts.parity, "factor") : "") + (counts.unknown ? "; " + counts.unknown + " not measured" : "") + ".";
+      var majority = byMajority(D, names);
       var lean = counts.behind > counts.ahead ? "behind" : counts.ahead > counts.behind ? "ahead" : "parity";
       var hero = el(
         "section",
@@ -4717,17 +4733,18 @@
             el("b", { className: "parity", textContent: ruleCounts.parity + " at parity" }),
             " · ",
             el("b", { className: "behind", textContent: ruleCounts.behind + " behind" }),
-            ". A factor counts as behind if any one of its rules is behind" + (names.some(function(n) {
-              return verdictOf(n) === "behind" && Object.keys(all[n].rules || {}).some(function(r) {
-                return (all[n].rules[r] || {})[peer] === "ahead";
+            ". By this comparison's rule, " + factorRule(majority) + (names.some(function(n) {
+              var rs = Object.keys(all[n].rules || {}).map(function(r) {
+                return (all[n].rules[r] || {})[peer];
               });
-            }) ? ", so a factor marked “behind, mixed” is ahead on some of its rules too" : "") + ". Factors are not weighted, so the factor count is a tally, not an overall score."
+              return rs.indexOf("ahead") >= 0 && rs.indexOf("behind") >= 0;
+            }) ? ", so a factor marked “mixed” is ahead on some of its rules and behind on others" : "") + ". Factors are not weighted, so the factor count is a tally, not an overall score."
           ),
           el(
             "details",
             { className: "sub cmp-def cmp-brief", style: "margin:6px 0 0" },
             el("summary", { textContent: "How a factor and a rule are counted" }),
-            "A factor is a scorecard that scores both products on the same rules. On a rule, a product is ahead when its measured value is better (within the rule's tolerance is parity) or it passes a bar the other misses. " + who(subject) + " is behind on a factor if it is behind on any one of its rules, and ahead if it is ahead on some and behind on none; “narrowly ahead” means ahead on fewer than half of that factor's rules, at parity on the rest."
+            "A factor is a scorecard that scores both products on the same rules. On a rule, a product is ahead when its measured value is better (within the rule's tolerance is parity) or it passes a bar the other misses. " + who(subject) + (majority ? " is ahead on a factor when it is ahead on more of its rules than it is behind on, behind when it is behind on more, and at parity when they are even; a factor with any unmeasured rule is not measured. “Mixed” means ahead on some rules and behind on others; “narrowly ahead” means ahead on fewer than half of that factor's rules, at parity on the rest." : " is behind on a factor if it is behind on any one of its rules, and ahead if it is ahead on some and behind on none; “narrowly ahead” means ahead on fewer than half of that factor's rules, at parity on the rest.")
           )
         ),
         el(
@@ -5057,7 +5074,7 @@
         brief.length ? el("p", { className: "sub provenance" }, el("b", { textContent: timed ? "Timed on: " : "Probed once on: " }), brief.join(" · ") + ". ", link("compare", "", "How it was measured, and who checked it →")) : null,
         def.description ? el("p", { className: "lede" }, ...rich(def.description)) : null,
         def.rationale || (def.links || []).length ? el("div", { className: "rationale" }, el("b", { textContent: "Why this factor matters" }), def.rationale ? el("div", {}, ...rich(def.rationale)) : null, refs(def.links)) : null,
-        el("p", { className: "sub", textContent: "Each rule scores both products. Where both have a measured value, the better value decides; otherwise passing beats failing. " + who(c.subject) + " is behind on the factor if it is behind on any rule." }),
+        el("p", { className: "sub", textContent: "Each rule scores both products. Where both have a measured value, the better value decides; otherwise passing beats failing. " + who(c.subject) + (c.verdictRule === "majority" ? " is ahead on the factor when more of its rules are ahead than behind, and behind when more are behind." : " is behind on the factor if it is behind on any rule.") }),
         basisKey(basisCounts(def.rules)),
         el("div", {}, ...fold ? rows.slice(0, rows.length - atParity) : rows),
         fold ? el(
