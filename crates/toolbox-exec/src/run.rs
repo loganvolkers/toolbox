@@ -191,10 +191,20 @@ pub struct Event {
 pub struct Approval {
     pub required: bool,
     pub approvers: Vec<Value>,
+    /// The people who approved, in order.
     #[serde(default)]
     pub approved_by: Vec<String>,
+    /// Which approver entry each approval met.
+    #[serde(default)]
+    pub satisfied: Vec<Satisfied>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rejected_by: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct Satisfied {
+    pub approver: String,
+    pub by: String,
 }
 
 /// One run: its request, every state it passed through, and what was observed at the end.
@@ -281,12 +291,7 @@ impl Run {
         if same(who, &self.requested_by) {
             return Err("a requester cannot approve their own run".into());
         }
-        if self
-            .approval
-            .approved_by
-            .iter()
-            .any(|x| x.rsplit_once('=').is_some_and(|(_, w)| same(w, who)))
-        {
+        if self.approval.approved_by.iter().any(|w| same(w, who)) {
             return Err(format!(
                 "{who} has already approved run {}; another approver must approve the rest",
                 self.id
@@ -301,7 +306,11 @@ impl Run {
             ));
         };
         let which = which.clone();
-        self.approval.approved_by.push(format!("{which}={who}"));
+        self.approval.approved_by.push(who.into());
+        self.approval.satisfied.push(Satisfied {
+            approver: which.clone(),
+            by: who.into(),
+        });
         self.events.push(Event {
             at: rfc3339(now_secs()),
             state: "approved".into(),
@@ -316,13 +325,7 @@ impl Run {
             .approvers
             .iter()
             .filter_map(Value::as_str)
-            .filter(|a| {
-                !self
-                    .approval
-                    .approved_by
-                    .iter()
-                    .any(|x| x.split('=').next() == Some(a))
-            })
+            .filter(|a| !self.approval.satisfied.iter().any(|x| x.approver == *a))
             .map(str::to_owned)
             .collect()
     }
@@ -800,12 +803,13 @@ mod tests {
             "the entry is met"
         );
         assert_eq!(r.approve("user:dan", |_| false), Ok(true));
+        assert_eq!(r.approval.approved_by, vec!["user:eve", "user:dan"]);
         assert_eq!(
-            r.approval.approved_by,
-            vec![
-                "user:bob|user:carol|group:sre=user:eve",
-                "user:dan=user:dan"
-            ]
+            r.approval.satisfied[0],
+            Satisfied {
+                approver: "user:bob|user:carol|group:sre".into(),
+                by: "user:eve".into()
+            }
         );
     }
 

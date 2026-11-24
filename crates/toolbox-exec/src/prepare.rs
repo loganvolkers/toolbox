@@ -243,16 +243,7 @@ impl Prepared {
     pub fn context(&self, run: &Run) -> Context {
         let mut ctx = self.ctx.clone();
         ctx.run_id = Some(run.id.clone());
-        ctx.approved_by = run
-            .approval
-            .approved_by
-            .iter()
-            .map(|a| {
-                a.rsplit_once('=')
-                    .map_or(a.as_str(), |(_, who)| who)
-                    .to_owned()
-            })
-            .collect();
+        ctx.approved_by = run.approval.approved_by.clone();
         ctx
     }
 
@@ -275,7 +266,12 @@ impl Prepared {
             inputs: child["inputs"].as_object().cloned().unwrap_or_default(),
             effects: crate::grant::effects_hash(&self.preview.effects),
             requested_by: run.requested_by.clone(),
-            approvals: run.approval.approved_by.clone(),
+            approvals: run
+                .approval
+                .satisfied
+                .iter()
+                .map(|x| format!("{}={}", x.approver, x.by))
+                .collect(),
             expires: run::now_secs() + crate::grant::GRANT_TTL_SECS,
         };
         crate::grant::sign(&g, seed).map(Some)
