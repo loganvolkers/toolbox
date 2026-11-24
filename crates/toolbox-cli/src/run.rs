@@ -43,10 +43,10 @@ pub struct Options {
     /// Preview and run in one step (scripts and dispatched runs; the preview is still recorded).
     #[arg(long, conflicts_with_all = ["preview", "confirm"])]
     pub yes: bool,
-    /// Re-check a `proposed` or `dispatched` run from its record file (written by --record),
-    /// and update the file.
-    #[arg(long, conflicts_with_all = ["preview", "confirm", "yes"])]
-    pub verify: Option<PathBuf>,
+    /// Re-check a `proposed` or `dispatched` run: its id (every run is saved under
+    /// `$XDG_STATE_HOME/toolbox/runs/`) or a record file written by --record
+    #[arg(long, value_name = "RUN", conflicts_with_all = ["preview", "confirm", "yes"])]
+    pub verify: Option<String>,
     /// With --verify: keep checking until the postcondition holds or the run's deadline passes.
     #[arg(long, requires = "verify")]
     pub wait: bool,
@@ -237,7 +237,13 @@ fn list(o: &Options, portal: &Path, all: &[Offered], d: &toolbox_derive::Derived
 pub fn run(o: &Options) -> ExitCode {
     let portal = default_portal(o.portal.as_deref());
     if let Some(f) = &o.verify {
-        return verify_file(o, &portal, f);
+        let path = Path::new(f);
+        let file = if path.is_file() {
+            path.to_path_buf()
+        } else {
+            runs_dir().join(format!("{f}.json"))
+        };
+        return verify_file(o, &portal, &file);
     }
     let (_, m, d) = match crate::report::live(&portal, o.fixtures, &o.skip) {
         Ok(x) => x,
@@ -247,10 +253,9 @@ pub fn run(o: &Options) -> ExitCode {
         let all = federation::offered(&m, &d);
         return list(o, &portal, &all, &d);
     };
-    let schema = federation::offered(&m, &d)
-        .into_iter()
-        .find(|x| &x.action.name == name)
-        .map(|x| x.action.inputs)
+    let all = federation::offered(&m, &d);
+    let schema = federation::resolve(&all, &d, name, o.entity.as_deref())
+        .map(|(x, _)| x.action.inputs.clone())
         .unwrap_or(Value::Null);
     let inputs = match parse_inputs(o, &schema) {
         Ok(i) => i,
@@ -269,10 +274,9 @@ pub fn run(o: &Options) -> ExitCode {
     let p = match prepare(&m, &d, req) {
         Ok(p) => p,
         Err(Refused::Invalid(errors)) => {
-            let action = federation::offered(&m, &d)
-                .into_iter()
-                .find(|x| &x.action.name == name)
-                .map(|x| x.action);
+            let action = federation::resolve(&all, &d, name, o.entity.as_deref())
+                .ok()
+                .map(|(x, _)| x.action.clone());
             let line = action
                 .as_ref()
                 .map(federation::inputs_line)
@@ -440,10 +444,26 @@ fn preview_md(name: &str, entity: &str, portal: &str, p: &Value, next: &str) -> 
     s
 }
 
+/// Where every run's record is kept, so `--verify <id>` finds it: `TOOLBOX_STATE_DIR/runs`, else
+/// `$XDG_STATE_HOME/toolbox/runs`, else `~/.local/state/toolbox/runs`.
+fn runs_dir() -> PathBuf {
+    let base = std::env::var_os("TOOLBOX_STATE_DIR")
+        .map(PathBuf::from)
+        .or_else(|| std::env::var_os("XDG_STATE_HOME").map(|d| PathBuf::from(d).join("toolbox")))
+        .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".local/state/toolbox")))
+        .unwrap_or_else(|| std::env::temp_dir().join("toolbox"));
+    base.join("runs")
+}
+
 fn finish(o: &Options, run: &Run, code: u8) -> ExitCode {
     let doc = serde_json::to_value(run).unwrap_or_default();
+    let text = serde_json::to_string_pretty(&doc).unwrap_or_default();
+    let dir = runs_dir();
+    if std::fs::create_dir_all(&dir).is_ok() {
+        let _ = std::fs::write(dir.join(format!("{}.json", run.id)), &text);
+    }
     if let Some(p) = &o.record
-        && let Err(e) = std::fs::write(p, serde_json::to_string_pretty(&doc).unwrap_or_default())
+        && let Err(e) = std::fs::write(p, &text)
     {
         eprintln!("error: {}: {e}", p.display());
     }
@@ -467,8 +487,13 @@ fn run_md(run: &Run) -> String {
     }
     match run.state.as_str() {
         "proposed" => s.push_str(&format!(
-            "The change is on branch {}; it is done when merged and observed. Check with: toolbox run --verify <record file>\n",
-            run.outputs["branch"].as_str().unwrap_or("?")
+            "The change is on branch {}; it is done when merged and observed. Check with: toolbox run --verify {}\n",
+            run.outputs["branch"].as_str().unwrap_or("?"),
+            run.id
+        )),
+        "dispatched" => s.push_str(&format!(
+            "Dispatched; it is done when observed. Check with: toolbox run --verify {}\n",
+            run.id
         )),
         "awaiting_approval" => {
             if let Some(n) = run.events.last().and_then(|e| e.note.as_ref()) {
@@ -497,7 +522,9 @@ fn verify_file(o: &Options, portal: &Path, file: &Path) -> ExitCode {
         Err(e) => return error(o, 2, e),
     };
     let all = federation::offered(&m, &d);
-    let Some(off) = all.iter().find(|x| x.action.name == run.action) else {
+    let Some(off) = all.iter().find(|x| {
+        x.action.name == run.action && x.entity.as_ref().is_none_or(|e| e == &run.entity)
+    }) else {
         return error(
             o,
             2,
