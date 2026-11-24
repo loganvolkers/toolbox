@@ -179,9 +179,9 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 - A factor card leads with the same kind of number on every card: "N of M rules behind", else
   ahead, else at parity, with the widest measured lead beneath. On a factor page, three or more
   rules at parity fold under one toggle.
-- A comparison track's description opens with one plain sentence on how it was measured (machine,
-  runs, corpus, versions, who re-checked it and when). The Compare hero shows that sentence as its
-  method; commit hashes stay in the setup cards.
+- A comparison track's description opens with one plain sentence on how each kind of factor was
+  measured, and goes on to the machine, versions, and who re-checked it and when. The Compare hero
+  shows the first sentence as its method; commit hashes stay in the setup cards.
 - An entity whose agent-judged rules no agent has assessed is drawn hatched in the scorecard's bar,
   outlined in the agent-judged colour, and counted beside it; the level key names the hatching.
 - A route change opens the new page at its header when its focus target is near the top, and moves
@@ -212,6 +212,23 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 - A scorecard id left in a lede or rationale links to that scorecard under its title.
 - An entity one rule from its next level says so ("One rule from gold · pass has-evals"), and the
   scorecard's lever counts how many entities are within reach that way.
+- A track card shows its entity levels as a bar beside the ring, which stays the share at the top
+  level. Each scorecard chip names its level in words and opens its scorecard: the card link is
+  the title, stretched over the card, with the chips above it.
+- A track card and its page end with a "Next medal" line: the weakest scorecard that can still
+  rise, how many entities it has to lift, and the rule most of them need.
+- On a scorecard or factor whose rules all share the measured basis, rows keep the icon and drop
+  the word, which the header states once. Agent-judged badges always keep their word.
+- A hollow level carries its reason in words, beside it or in its column's header; on a phone, where
+  the header is hidden, beside every pill. No text describes outline styles.
+- A campaign whose scorecards rate different kinds leads with its open work per scorecard; why it
+  has no single percentage is a collapsed note for portal authors.
+- When a ceiling caps the repository level, the hero sentence names it first; there is no second
+  "capped" box.
+- A comparison's method sentence separates timed factors from capability and fact factors and
+  carries any bias in the scenarios; the method section names who checked it and when.
+- Below 820px an open kind is picked from a grouped select, not chips. On wider screens the tab bar
+  sticks to the top. Tooltips shift left rather than run past the viewport.
 
 Not built: a change since the last snapshot beside each track ring. The report carries one snapshot
 and the committed baseline, which equals it on every published build; a pages build that also scored
