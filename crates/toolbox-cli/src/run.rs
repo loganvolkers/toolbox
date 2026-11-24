@@ -404,7 +404,11 @@ pub fn run(o: &Options) -> ExitCode {
         &mut obs,
         Duration::from_secs(2),
     );
-    let code = if run.state == "failed" { 1 } else { 0 };
+    let code = if matches!(run.state.as_str(), "failed" | "timed_out") {
+        1
+    } else {
+        0
+    };
     finish(o, &run, code)
 }
 
@@ -581,7 +585,15 @@ fn verify_file(o: &Options, portal: &Path, file: &Path) -> ExitCode {
         Err(e) => return error(o, 2, format!("{}: not a run record: {e}", file.display())),
     };
     if run.is_terminal() {
-        return finish(o, &run, if run.state == "failed" { 1 } else { 0 });
+        return finish(
+            o,
+            &run,
+            if matches!(run.state.as_str(), "failed" | "timed_out") {
+                1
+            } else {
+                0
+            },
+        );
     }
     let (_, m, d) = match crate::report::live(portal, o.fixtures, &o.skip) {
         Ok(x) => x,
@@ -614,12 +626,17 @@ fn verify_file(o: &Options, portal: &Path, file: &Path) -> ExitCode {
             off.action.expect.as_ref(),
             &m.policies,
             &mut obs,
+            portal,
         );
         if !o.wait || run.is_terminal() {
             break;
         }
         std::thread::sleep(Duration::from_secs(5));
     }
-    let code = if run.state == "failed" { 1 } else { 0 };
+    let code = if matches!(run.state.as_str(), "failed" | "timed_out") {
+        1
+    } else {
+        0
+    };
     finish(o, &run, code)
 }

@@ -74,13 +74,13 @@ pub fn builtin_tools() -> Value {
              "action": {"type": "string", "description": "Action name, as list_actions reports it"},
              "input": {"type": "string", "description": "Name of one of the action's input properties"},
              "id": id}), &["action", "input", "id"])},
-        {"name": "preview_action", "description": "Preview an action: validation, effects, blockers, the approval path and a confirm_token for run_action. Has no side effects.",
+        {"name": "preview_action", "description": "Preview an action: validation, effects, blockers, the approval path and a confirm_token for run_action. Changes nothing; the action's own preview step runs.",
          "annotations": {"readOnlyHint": true},
          "inputSchema": s(json!({
              "action": {"type": "string", "description": "Action name, as list_actions reports it"},
              "id": id,
              "inputs": {"type": "object", "description": "Proposed input values, keyed by input property name"}}), &["action", "id"])},
-        {"name": "run_action", "description": "Run a previewed action with the same inputs and the preview's confirm_token (valid 10 minutes). Returns the run: it may wait for approval, a pull request merge or a workflow; follow it with get_run.",
+        {"name": "run_action", "description": "Run a previewed action with the same inputs and the preview's confirm_token (valid 10 minutes, once). Returns the run: it may wait for approval, a pull request merge or a workflow; follow it with get_run.",
          "annotations": {"readOnlyHint": false, "destructiveHint": true, "openWorldHint": true},
          "inputSchema": s(json!({
              "action": {"type": "string", "description": "Action name, as list_actions reports it"},
@@ -93,13 +93,7 @@ pub fn builtin_tools() -> Value {
          "annotations": {"readOnlyHint": true},
          "inputSchema": s(json!({
              "id": {"type": "string", "description": "Only runs on this entity"},
-             "state": {"type": "string", "description": "Only runs in this state: awaiting_approval, proposed, dispatched, succeeded, unverified, failed, rejected or cancelled"}}), &[])},
-        {"name": "approve_run", "description": "Approve or reject a run awaiting your approval. The last approval starts it.",
-         "annotations": {"readOnlyHint": false},
-         "inputSchema": s(json!({
-             "run": run,
-             "decision": {"type": "string", "enum": ["approve", "reject"], "description": "approve (default) or reject"},
-             "note": {"type": "string", "description": "Why, recorded on the run"}}), &["run"])}
+             "state": {"type": "string", "description": "Only runs in this state: awaiting_approval, proposed, dispatched, succeeded, unverified, failed, rejected or cancelled"}}), &[])}
     ])
 }
 
@@ -134,6 +128,8 @@ async fn call_rest(
         None => req.body(Body::empty()),
     }
     .unwrap();
+    let mut req = req;
+    req.extensions_mut().insert(crate::actions::Via("mcp"));
     let resp = router(state.clone()).oneshot(req).await.unwrap();
     let status = resp.status();
     let bytes = to_bytes(resp.into_body(), 16 << 20)
@@ -463,7 +459,7 @@ async fn run_tool(
         }
         "run_action" => {
             let body = json!({"entity": arg(a, "id"), "inputs": a.get("inputs").cloned().unwrap_or(json!({})),
-                "confirm_token": arg(a, "confirm_token"), "via": "mcp"});
+                "confirm_token": arg(a, "confirm_token")});
             call_rest(
                 state,
                 h,
@@ -486,12 +482,6 @@ async fn run_tool(
             }
             let path = format!("/v1/runs?{}", q.join("&"));
             call_rest(state, h, Method::GET, path, None).await
-        }
-        "approve_run" => {
-            let body = json!({"decision": a.get("decision").cloned().unwrap_or(json!("approve")),
-                "note": a.get("note").cloned()});
-            let path = format!("/v1/runs/{}/approvals", enc(arg(a, "run")));
-            call_rest(state, h, Method::POST, path, Some(body)).await
         }
         other => return (format!("Unknown tool `{other}`."), Value::Null, true),
     };
@@ -525,7 +515,7 @@ fn write_run(s: &mut String, v: &Value) {
         .collect();
     let next = match state {
         "awaiting_approval" => format!(
-            "waiting for approval by {}: they call approve_run with this run id",
+            "waiting for approval by {}: a person approves it in the portal's UI (approvals are not tools)",
             pending.join(", ")
         ),
         "proposed" => format!(
@@ -970,7 +960,7 @@ fn markdown(name: &str, a: &Value, v: &Value) -> String {
                 );
             }
         }
-        "run_action" | "get_run" | "approve_run" => write_run(&mut s, v),
+        "run_action" | "get_run" => write_run(&mut s, v),
         "list_runs" => {
             let runs = v["runs"].as_array().cloned().unwrap_or_default();
             if runs.is_empty() {

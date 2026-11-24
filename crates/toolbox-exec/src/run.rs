@@ -2,7 +2,7 @@
 //! portal's `toolbox run` and the server:
 //!
 //! ```text
-//! previewed → [awaiting_approval] → dispatched → running → verifying → succeeded
+//! previewed → [awaiting_approval → approved] → dispatched → running → verifying → succeeded
 //!                                         ↘ proposed (a change under review) ↗
 //!                                         ↘ failed | unverified | cancelled | rejected
 //! ```
@@ -76,19 +76,27 @@ pub fn basis(entity: &Value, related: &Map<String, Value>) -> String {
         .to_owned()
 }
 
-/// `ct_<issued>_<hash>`: stateless, so a repo portal's preview and run can be two commands.
-pub fn confirm_token(
-    version: &str,
-    inputs: &Map<String, Value>,
-    effects: &[Value],
-    basis: &str,
-    issued: u64,
-) -> String {
+/// What a confirm token is bound to: the preview a person saw, who saw it, and on what.
+#[derive(Clone, Copy)]
+pub struct Confirmed<'a> {
+    pub version: &'a str,
+    pub inputs: &'a Map<String, Value>,
+    pub effects: &'a [Value],
+    pub basis: &'a str,
+    pub actor: &'a str,
+    pub entity: &'a str,
+}
+
+/// `ct_<issued>_<hash>`: stateless, so a repo portal's preview and run can be two commands. A
+/// server also spends each token once.
+pub fn confirm_token(c: &Confirmed<'_>, issued: u64) -> String {
     let h = sha(&[
-        version,
-        &Value::Object(inputs.clone()).to_string(),
-        &Value::Array(effects.to_vec()).to_string(),
-        basis,
+        c.version,
+        &Value::Object(c.inputs.clone()).to_string(),
+        &Value::Array(c.effects.to_vec()).to_string(),
+        c.basis,
+        c.actor,
+        c.entity,
         &issued.to_string(),
     ]);
     format!("ct_{issued}_{}", &h[..24])
@@ -114,29 +122,35 @@ impl std::fmt::Display for TokenError {
     }
 }
 
-/// Check `token` against the preview as it is now (P10).
-pub fn check_token(
-    token: &str,
-    version: &str,
-    inputs: &Map<String, Value>,
-    effects: &[Value],
-    basis: &str,
-) -> Result<(), TokenError> {
+/// When `token` was issued, if it is shaped like a confirm token.
+pub fn token_issued(token: &str) -> Option<u64> {
     let mut parts = token.splitn(3, '_');
     let (Some("ct"), Some(issued), Some(_)) = (parts.next(), parts.next(), parts.next()) else {
-        return Err(TokenError::Malformed);
+        return None;
     };
-    let issued: u64 = issued.parse().map_err(|_| TokenError::Malformed)?;
-    if now_secs().saturating_sub(issued) > TOKEN_TTL_SECS {
+    issued.parse().ok()
+}
+
+/// Check `token` against the preview as it is now (P10), for the same person and entity.
+pub fn check_token(token: &str, c: &Confirmed<'_>) -> Result<(), TokenError> {
+    let issued = token_issued(token).ok_or(TokenError::Malformed)?;
+    let now = now_secs();
+    if issued > now + 60 {
+        return Err(TokenError::Malformed);
+    }
+    if now.saturating_sub(issued) > TOKEN_TTL_SECS {
         return Err(TokenError::Expired);
     }
-    if confirm_token(version, inputs, effects, basis, issued) != token {
+    if confirm_token(c, issued) != token {
         return Err(TokenError::Stale);
     }
     Ok(())
 }
 
 /// `30s`, `2m`, `1h`, `7d`.
+/// How long a run with no postcondition waits on a review or a workflow before it times out.
+pub const UNOBSERVED_WITHIN: &str = "7d";
+
 pub fn parse_within(s: &str) -> Duration {
     let s = s.trim();
     let (num, unit) = s.split_at(s.find(|c: char| !c.is_ascii_digit()).unwrap_or(s.len()));
@@ -200,9 +214,20 @@ pub struct Run {
     /// Epoch seconds by which verification must succeed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub deadline: Option<u64>,
+    /// The postcondition already held when the run was previewed, so observing it later does not
+    /// show this run's effect.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub held_before: bool,
 }
 
-pub const TERMINAL: &[&str] = &["succeeded", "failed", "unverified", "cancelled", "rejected"];
+pub const TERMINAL: &[&str] = &[
+    "succeeded",
+    "failed",
+    "timed_out",
+    "unverified",
+    "cancelled",
+    "rejected",
+];
 
 impl Run {
     pub fn is_terminal(&self) -> bool {
@@ -346,8 +371,17 @@ pub fn verify(
             Ok(true) => {
                 run.verification =
                     Some(json!({"postcondition": expect.postcondition, "held": true,
-                    "snapshot": snapshot, "after_secs": started.elapsed().as_secs()}));
-                run.set("succeeded", None, None);
+                    "snapshot": snapshot, "after_secs": started.elapsed().as_secs(),
+                    "held_before": run.held_before}));
+                if run.held_before {
+                    run.set(
+                        "unverified",
+                        None,
+                        Some("the postcondition already held before the run, so observing it does not show the run's effect".into()),
+                    );
+                } else {
+                    run.set("succeeded", None, None);
+                }
                 return;
             }
             Ok(false) => {
@@ -425,9 +459,8 @@ pub fn execute(
         }
         "proposed" | "dispatched" | "awaiting_approval" => {
             run.set(&status, None, error);
-            if let Some(e) = expect {
-                run.deadline = Some(now_secs() + parse_within(&e.within).as_secs());
-            }
+            let within = expect.map_or(UNOBSERVED_WITHIN, |e| e.within.as_str());
+            run.deadline = Some(now_secs() + parse_within(within).as_secs());
             return;
         }
         _ => run.set("executor_succeeded", None, None),
@@ -451,6 +484,7 @@ pub fn recheck(
     expect: Option<&Expect>,
     policies: &Map<String, Value>,
     obs: &mut dyn Observer,
+    cwd: &std::path::Path,
 ) -> bool {
     use crate::executor::Executor;
     if run.is_terminal() || run.state == "awaiting_approval" {
@@ -475,7 +509,7 @@ pub fn recheck(
                                     "child_run": v["id"], "child": v["verification"]}));
                                 run.set(&state, None, None);
                             }
-                            "failed" | "cancelled" | "rejected" => run.fail(format!(
+                            "failed" | "timed_out" | "cancelled" | "rejected" => run.fail(format!(
                                 "child run {state}: {}",
                                 v["error"].as_str().unwrap_or("")
                             )),
@@ -491,34 +525,67 @@ pub fn recheck(
             }
             return run.state != before;
         }
-        Executor::GithubWorkflow(w) if run.state == "dispatched" => match w.track(&run.id) {
-            Ok(Some(t)) if t.status == "completed" => {
-                if let Some(u) = &t.url
-                    && let Some(o) = run.outputs.as_object_mut()
-                {
-                    o.insert("workflow_run".into(), json!(u));
-                }
-                if t.conclusion.as_deref() == Some("success") {
-                    run.set("executor_succeeded", None, t.url.clone());
-                    if expect.is_none() {
-                        run.set("unverified", None, None);
+        Executor::GithubWorkflow(w) if run.state == "dispatched" => {
+            match w.track(&run.id, &run.outputs) {
+                Ok(Some(t)) if t.status == "completed" => {
+                    if let Some(u) = &t.url
+                        && let Some(o) = run.outputs.as_object_mut()
+                    {
+                        o.insert("workflow_run".into(), json!(u));
+                    }
+                    if t.conclusion.as_deref() == Some("success") {
+                        run.set("executor_succeeded", None, t.url.clone());
+                        if expect.is_none() {
+                            run.set("unverified", None, None);
+                            return true;
+                        }
+                    } else {
+                        run.fail(format!(
+                            "workflow concluded {}",
+                            t.conclusion.as_deref().unwrap_or("unknown")
+                        ));
                         return true;
                     }
-                } else {
-                    run.fail(format!(
-                        "workflow concluded {}",
-                        t.conclusion.as_deref().unwrap_or("unknown")
-                    ));
-                    return true;
+                }
+                Ok(t) => {
+                    if run.deadline.is_some_and(|dl| now_secs() >= dl) {
+                        run.set(
+                            "timed_out",
+                            None,
+                            Some(match t {
+                                None => "the dispatched workflow run never appeared".into(),
+                                Some(t) => format!("the workflow run was still {}", t.status),
+                            }),
+                        );
+                        run.error = Some("the workflow did not finish before the deadline".into());
+                    }
+                    return run.state != before;
+                }
+                Err(e) => {
+                    run.progress
+                        .push(json!({"at": rfc3339(now_secs()), "note": e}));
+                    return false;
                 }
             }
-            Ok(_) => {}
-            Err(e) => {
-                run.progress
-                    .push(json!({"at": rfc3339(now_secs()), "note": e}));
-                return false;
+        }
+        // A proposed change is done only once its commit is on the base branch: the base
+        // satisfying the postcondition by other means is not this run's effect.
+        Executor::Change { .. } if run.state == "proposed" => {
+            match crate::executor::merged(cwd, run) {
+                Ok(true) => {}
+                Ok(false) => {
+                    if run.deadline.is_some_and(|dl| now_secs() >= dl) {
+                        run.fail("the proposed change was not merged before the deadline");
+                    }
+                    return run.state != before;
+                }
+                Err(e) => {
+                    run.progress
+                        .push(json!({"at": rfc3339(now_secs()), "note": e}));
+                    return false;
+                }
             }
-        },
+        }
         _ => {}
     }
     let Some(expect) = expect else {
@@ -530,8 +597,13 @@ pub fn recheck(
     verify(run, expect, policies, obs, Duration::from_secs(0), false);
     if run.state == "verifying" {
         if run.deadline.is_some_and(|dl| now_secs() >= dl) {
+            let merged = if run.executor == "change" {
+                " (the change is merged, but the facts this portal reads never showed its effect)"
+            } else {
+                ""
+            };
             run.fail(format!(
-                "postcondition not met within {}: {}",
+                "postcondition not met within {}{merged}: {}",
                 expect.within, expect.postcondition
             ));
         } else if before != "executor_succeeded" {
@@ -573,6 +645,7 @@ mod tests {
             child: None,
             progress: vec![],
             deadline: None,
+            held_before: false,
         }
     }
 
@@ -581,25 +654,41 @@ mod tests {
         let mut inputs = Map::new();
         inputs.insert("bump".into(), "minor".into());
         let fx = vec![json!({"resource": "tag:v1.3.0"})];
-        let t = confirm_token("v1", &inputs, &fx, "b", now_secs());
-        assert_eq!(check_token(&t, "v1", &inputs, &fx, "b"), Ok(()));
-        assert_eq!(
-            check_token(&t, "v1", &inputs, &[], "b"),
-            Err(TokenError::Stale)
-        );
-        assert_eq!(
-            check_token(&t, "v1", &inputs, &fx, "other facts"),
-            Err(TokenError::Stale)
-        );
-        let old = confirm_token("v1", &inputs, &fx, "b", now_secs() - TOKEN_TTL_SECS - 1);
-        assert_eq!(
-            check_token(&old, "v1", &inputs, &fx, "b"),
-            Err(TokenError::Expired)
-        );
-        assert_eq!(
-            check_token("nope", "v1", &inputs, &fx, "b"),
-            Err(TokenError::Malformed)
-        );
+        let base = Confirmed {
+            version: "v1",
+            inputs: &inputs,
+            effects: &fx,
+            basis: "b",
+            actor: "user:ann",
+            entity: "repository:a",
+        };
+        let t = confirm_token(&base, now_secs());
+        assert_eq!(check_token(&t, &base), Ok(()));
+        for other in [
+            Confirmed {
+                effects: &[],
+                ..base
+            },
+            Confirmed {
+                basis: "other facts",
+                ..base
+            },
+            Confirmed {
+                actor: "user:bob",
+                ..base
+            },
+            Confirmed {
+                entity: "repository:b",
+                ..base
+            },
+        ] {
+            assert_eq!(check_token(&t, &other), Err(TokenError::Stale));
+        }
+        let old = confirm_token(&base, now_secs() - TOKEN_TTL_SECS - 1);
+        assert_eq!(check_token(&old, &base), Err(TokenError::Expired));
+        let future = confirm_token(&base, now_secs() + 3600);
+        assert_eq!(check_token(&future, &base), Err(TokenError::Malformed));
+        assert_eq!(check_token("nope", &base), Err(TokenError::Malformed));
     }
 
     #[test]

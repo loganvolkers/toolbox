@@ -1,7 +1,9 @@
 //! The `github-workflow` executor (docs/v1-spec.md §7.5): `workflow_dispatch` with the action's
-//! inputs as strings plus `toolbox_run`, then the run is found by its `run-name`, which the
-//! workflow sets to include `toolbox_run` (`run-name: toolbox ${{ inputs.toolbox_run }}`).
-//! GitHub's dispatch API answers 204 with no run id, so the name is the only join.
+//! inputs as strings plus `toolbox_run`, asking for the run's id (`return_run_details`). The run
+//! is then tracked by that id. A server that answers 204 with no id (GitHub Enterprise Server
+//! before the feature) falls back to the `run-name`, which the workflow sets to include
+//! `toolbox_run` (`run-name: toolbox ${{ inputs.toolbox_run }}`): exactly one run of that name,
+//! on the dispatched ref, created after the dispatch.
 //!
 //! The token comes from the environment variable named by `token` (default `GITHUB_TOKEN`) and is
 //! never written to a run record. `api` points at GitHub Enterprise Server or a test double.
@@ -107,70 +109,123 @@ impl Workflow {
             self.repo,
             self.workflow
         );
+        let dispatched_at = crate::run::now_secs();
+        let post = |body: Value| {
+            let (url, token) = (url.clone(), token.clone());
+            block(async move {
+                let r = reqwest::Client::new()
+                    .post(url)
+                    .bearer_auth(token)
+                    .header("accept", "application/vnd.github+json")
+                    .header("user-agent", "toolbox")
+                    .json(&body)
+                    .send()
+                    .await
+                    .map_err(|e| e.to_string())?;
+                let status = r.status();
+                let text = r.text().await.unwrap_or_default();
+                Ok::<_, String>((status, text))
+            })
+        };
         let body = json!({"ref": self.git_ref, "inputs": self.dispatch_inputs(ctx)});
-        let res = block(async move {
-            let r = reqwest::Client::new()
-                .post(url)
-                .bearer_auth(token)
-                .header("accept", "application/vnd.github+json")
-                .header("user-agent", "toolbox")
-                .json(&body)
-                .send()
-                .await
-                .map_err(|e| e.to_string())?;
-            let status = r.status();
-            let text = r.text().await.unwrap_or_default();
-            Ok::<_, String>((status, text))
-        });
+        let mut asked = body.clone();
+        asked["return_run_details"] = json!(true);
+        let mut res = post(asked);
+        if let Ok(Ok((st, text))) = &res
+            && st.as_u16() == 422
+            && text.contains("return_run_details")
+        {
+            res = post(body);
+        }
         match res {
-            Ok(Ok((st, _))) if st.is_success() => Outcome {
-                status: "dispatched".into(),
-                outputs: json!({"repo": self.repo, "workflow": self.workflow, "ref": self.git_ref}),
-                error: None,
-                progress: vec![],
-                child: None,
-            },
+            Ok(Ok((st, text))) if st.is_success() => {
+                let details: Value = serde_json::from_str(&text).unwrap_or(Value::Null);
+                let mut outputs = json!({"repo": self.repo, "workflow": self.workflow,
+                    "ref": self.git_ref, "dispatched_at": dispatched_at});
+                if let Some(id) = details["workflow_run_id"].as_u64() {
+                    outputs["workflow_run_id"] = json!(id);
+                }
+                if let Some(u) = details["html_url"].as_str() {
+                    outputs["workflow_run"] = json!(u);
+                }
+                Outcome {
+                    status: "dispatched".into(),
+                    outputs,
+                    error: None,
+                    progress: vec![],
+                    child: None,
+                }
+            }
             Ok(Ok((st, text))) => fail(format!("workflow_dispatch answered {st}: {text}")),
             Ok(Err(e)) | Err(e) => fail(format!("workflow_dispatch: {e}")),
         }
     }
 
-    /// Find the dispatched run whose name carries `run_id`. `Ok(None)` until GitHub lists it.
-    pub fn track(&self, run_id: &str) -> Result<Option<Tracked>, String> {
+    /// Find the run a dispatch started: by the id GitHub returned, else the one run whose name
+    /// carries `run_id`, on the dispatched ref, created after the dispatch. `Ok(None)` until
+    /// GitHub lists it; an error when more than one run matches.
+    pub fn track(&self, run_id: &str, outputs: &Value) -> Result<Option<Tracked>, String> {
         let token = self.token()?;
-        let url = format!(
-            "{}/repos/{}/actions/workflows/{}/runs?event=workflow_dispatch&per_page=50",
-            self.api.trim_end_matches('/'),
-            self.repo,
-            self.workflow
-        );
-        let v: Value = block(async move {
-            reqwest::Client::new()
-                .get(url)
-                .bearer_auth(token)
-                .header("accept", "application/vnd.github+json")
-                .header("user-agent", "toolbox")
-                .send()
-                .await
-                .map_err(|e| e.to_string())?
-                .json::<Value>()
-                .await
-                .map_err(|e| e.to_string())
-        })??;
-        Ok(v["workflow_runs"]
+        let api = self.api.trim_end_matches('/');
+        let get = |url: String| {
+            let token = token.clone();
+            block(async move {
+                let r = reqwest::Client::new()
+                    .get(url)
+                    .bearer_auth(token)
+                    .header("accept", "application/vnd.github+json")
+                    .header("user-agent", "toolbox")
+                    .send()
+                    .await
+                    .map_err(|e| e.to_string())?;
+                if r.status().as_u16() == 404 {
+                    return Ok(Value::Null);
+                }
+                r.json::<Value>().await.map_err(|e| e.to_string())
+            })?
+        };
+        let tracked = |r: &Value| Tracked {
+            status: r["status"].as_str().unwrap_or("queued").into(),
+            conclusion: r["conclusion"].as_str().map(str::to_owned),
+            url: r["html_url"].as_str().map(str::to_owned),
+        };
+        if let Some(id) = outputs["workflow_run_id"].as_u64() {
+            let r = get(format!("{api}/repos/{}/actions/runs/{id}", self.repo))?;
+            return Ok((!r.is_null()).then(|| tracked(&r)));
+        }
+        let since = outputs["dispatched_at"]
+            .as_u64()
+            .unwrap_or(0)
+            .saturating_sub(60);
+        let v = get(format!(
+            "{api}/repos/{}/actions/workflows/{}/runs?event=workflow_dispatch&per_page=50",
+            self.repo, self.workflow
+        ))?;
+        let found: Vec<&Value> = v["workflow_runs"]
             .as_array()
             .into_iter()
             .flatten()
-            .find(|r| {
+            .filter(|r| {
                 ["name", "display_title"]
                     .iter()
                     .any(|k| r[k].as_str().is_some_and(|n| n.contains(run_id)))
             })
-            .map(|r| Tracked {
-                status: r["status"].as_str().unwrap_or("queued").into(),
-                conclusion: r["conclusion"].as_str().map(str::to_owned),
-                url: r["html_url"].as_str().map(str::to_owned),
-            }))
+            .filter(|r| r["head_branch"].as_str().is_none_or(|b| b == self.git_ref))
+            .filter(|r| {
+                r["created_at"]
+                    .as_str()
+                    .and_then(toolbox_connect::hub::parse_rfc3339)
+                    .is_none_or(|t| t >= since)
+            })
+            .collect();
+        match found.as_slice() {
+            [] => Ok(None),
+            [r] => Ok(Some(tracked(r))),
+            _ => Err(format!(
+                "{} workflow runs are named for {run_id}; refusing to guess which is this run's",
+                found.len()
+            )),
+        }
     }
 }
 
@@ -186,6 +241,11 @@ mod tests {
 
     /// A GitHub API double: 204 for a dispatch, the given runs for a list. Records each request.
     fn fake(runs: Value) -> (String, Seen) {
+        fake_with(runs, None)
+    }
+
+    /// As `fake`, answering a dispatch with `details` (200) when given.
+    fn fake_with(runs: Value, details: Option<Value>) -> (String, Seen) {
         let l = TcpListener::bind("127.0.0.1:0").unwrap();
         let api = format!("http://{}", l.local_addr().unwrap());
         let seen = Arc::new(Mutex::new(vec![]));
@@ -211,10 +271,16 @@ mod tests {
                 log.lock()
                     .unwrap()
                     .push((line.trim().to_owned(), String::from_utf8(body).unwrap()));
-                let reply = if line.starts_with("POST") {
+                let reply = if line.starts_with("POST") && details.is_none() {
                     "HTTP/1.1 204 No Content\r\nconnection: close\r\n\r\n".to_owned()
                 } else {
-                    let b = runs.to_string();
+                    let b = if line.starts_with("POST") {
+                        details.clone().unwrap().to_string()
+                    } else if line.contains("/actions/runs/") {
+                        runs["workflow_runs"][0].to_string()
+                    } else {
+                        runs.to_string()
+                    };
                     format!(
                         "HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ncontent-length: {}\r\nconnection: close\r\n\r\n{b}",
                         b.len()
@@ -262,12 +328,56 @@ mod tests {
         let body: Value = serde_json::from_str(&body).unwrap();
         assert_eq!(
             body,
-            json!({"ref": "main", "inputs": {"env": "staging", "replicas": "2", "toolbox_run": "run_7"}})
+            json!({"ref": "main", "return_run_details": true,
+                "inputs": {"env": "staging", "replicas": "2", "toolbox_run": "run_7"}})
         );
-        let t = w.track("run_7").unwrap().unwrap();
+        let t = w.track("run_7", &out.outputs).unwrap().unwrap();
         assert_eq!(t.conclusion.as_deref(), Some("success"));
         assert_eq!(t.url.as_deref(), Some("https://example.test/runs/7"));
-        assert!(w.track("run_8").unwrap().is_none());
+        assert!(w.track("run_8", &out.outputs).unwrap().is_none());
+    }
+
+    #[test]
+    fn a_returned_run_id_is_tracked_by_id() {
+        let (api, seen) = fake_with(
+            json!({"workflow_runs": [{"id": 42, "status": "in_progress"}]}),
+            Some(json!({"workflow_run_id": 42, "html_url": "https://example.test/runs/42"})),
+        );
+        let w = Workflow::parse(
+            &json!({"repo": "acme/alpha", "workflow": "deploy.yml", "api": api, "token": "PATH"}),
+        )
+        .unwrap();
+        let out = w.dispatch(&ctx());
+        assert_eq!(out.outputs["workflow_run_id"], 42);
+        let t = w.track("run_7", &out.outputs).unwrap().unwrap();
+        assert_eq!(t.status, "in_progress");
+        assert_eq!(
+            seen.lock().unwrap()[1].0,
+            "GET /repos/acme/alpha/actions/runs/42 HTTP/1.1"
+        );
+    }
+
+    #[test]
+    fn name_matching_refuses_old_runs_other_refs_and_ambiguity() {
+        let old = json!({"name": "toolbox run_7", "status": "completed", "conclusion": "success",
+            "head_branch": "main", "created_at": "2020-01-01T00:00:00Z"});
+        let other_ref = json!({"name": "toolbox run_7", "status": "completed",
+            "conclusion": "success", "head_branch": "evil"});
+        let (api, _) = fake(json!({"workflow_runs": [old, other_ref]}));
+        let w = Workflow::parse(
+            &json!({"repo": "acme/alpha", "workflow": "deploy.yml", "api": api, "token": "PATH"}),
+        )
+        .unwrap();
+        let outputs = json!({"dispatched_at": crate::run::now_secs()});
+        assert!(w.track("run_7", &outputs).unwrap().is_none());
+        let twin = json!({"name": "toolbox run_7", "status": "queued", "head_branch": "main"});
+        let (api, _) = fake(json!({"workflow_runs": [twin.clone(), twin]}));
+        let w = Workflow { api, ..w };
+        assert!(
+            w.track("run_7", &outputs)
+                .unwrap_err()
+                .contains("refusing to guess")
+        );
     }
 
     #[test]

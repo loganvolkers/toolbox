@@ -75,7 +75,11 @@ git -C "$WORK/alpha" log -1 --format=%B "origin/$BRANCH" 2>/dev/null | grep -q "
 [ "$(run "$WORK/alpha" --verify "$RID" | field "['state']")" = proposed ] || fail "unmerged change should stay proposed"
 merge alpha "$BRANCH"
 [ "$(run "$WORK/alpha" --verify "$RID" | field "['state']")" = succeeded ] || fail "merged change not observed"
-echo "   $BRANCH proposed, merged, succeeded"
+OUT=$(run "$WORK/beta" add-license -i spdx=MIT --yes); RID=$(echo "$OUT" | field "['id']")
+echo "MIT License" > "$WORK/review/beta/LICENSE"
+git -C "$WORK/review/beta" add LICENSE && git -C "$WORK/review/beta" "${G[@]}" commit -qm "a licence, by hand" && git -C "$WORK/review/beta" push -q origin main
+[ "$(run "$WORK/beta" --verify "$RID" | field "['state']")" = proposed ] || fail "an unmerged change succeeded because the base already had a licence"
+echo "   $BRANCH proposed, merged, succeeded; on beta, a licence pushed by hand does not complete the unmerged run"
 
 echo "5. the org portal offers every child's actions, packages included"
 N=$(run "$WORK/org" | field "['actions'].__len__()")
@@ -120,6 +124,8 @@ TOKEN=$(rest ann POST /v1/actions/set-owners/previews -d "$BODY" | field "['conf
 OUT=$(rest ann POST /v1/actions/set-owners/runs -d "{\"entity\":\"portal:gamma\",\"inputs\":{\"team\":\"@acme/gamma\"},\"confirm_token\":\"$TOKEN\"}")
 [ "$(echo "$OUT" | field "['state']")" = awaiting_approval ] || fail "set-owners via the org: $OUT"
 RID=$(echo "$OUT" | field "['id']")
+OUT=$(rest ann POST /v1/actions/set-owners/runs -d "{\"entity\":\"portal:gamma\",\"inputs\":{\"team\":\"@acme/gamma\"},\"confirm_token\":\"$TOKEN\"}")
+[ "$(echo "$OUT" | field "['code']")" = token-used ] || fail "a confirm token started a second run: $OUT"
 [ "$(rest ann POST "/v1/runs/$RID/approvals" -d '{}' | field "['code']")" = not-an-approver ] || fail "self-approval accepted"
 [ "$(rest carol POST "/v1/runs/$RID/approvals" -d '{}' | field "['code']")" = not-an-approver ] || fail "an approval by someone not listed was accepted"
 set +e; OUT=$(cd "$WORK/gamma" && "$BIN/toolbox" run set-owners -i team=@acme/gamma --yes --parent-run org/run_forged --grant 00.00 -o json); CODE=$?; set -e
@@ -129,9 +135,11 @@ for _ in $(seq 60); do
   STATE=$(rest ann GET "/v1/runs/$RID" | field "['state']"); case $STATE in succeeded|failed|unverified) break;; esac; sleep 0.5
 done
 [ "$STATE" = succeeded ] || fail "approved set-owners ended $STATE: $(rest ann GET "/v1/runs/$RID")"
-echo "   set-owners on gamma: blocked until gamma pinned the org's key; ann (the requester), carol (not listed) and a forged grant refused; approved by bob in the org portal, signed, succeeded in gamma"
+echo "   set-owners on gamma: blocked until gamma pinned the org's key; a reused confirm token, ann (the requester), carol (not listed) and a forged grant refused; approved by bob in the org portal, signed, succeeded in gamma"
 mcp() { curl -s -X POST -H 'x-toolbox-user: ann' -H 'content-type: application/json' "$URL/mcp" \
   -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"$1\",\"arguments\":$2}}"; }
+curl -s -X POST -H 'x-toolbox-user: bob' -H 'content-type: application/json' "$URL/mcp" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | grep -q approve_run && fail "MCP should offer no approval tool (D57)"
 ARGS='{"action":"write-readme","id":"portal:gamma","inputs":{"text":"Gamma, written by an agent over MCP."}}'
 TOKEN=$(mcp preview_action "$ARGS" | field "['result']['structuredContent']['confirm_token']")
 RID=$(mcp run_action "${ARGS%\}},\"confirm_token\":\"$TOKEN\"}" | field "['result']['structuredContent']['id']")
@@ -139,5 +147,6 @@ for _ in $(seq 60); do
   TEXT=$(mcp get_run "{\"run\":\"$RID\"}" | field "['result']['content'][0]['text']"); echo "$TEXT" | grep -q '\*\*succeeded\*\*' && break; sleep 0.5
 done
 echo "$TEXT" | grep -q '\*\*succeeded\*\*' || fail "MCP run: $TEXT"
+[ "$(rest ann GET "/v1/runs/$RID" | field "['via']")" = mcp ] || fail "the MCP run should record via mcp"
 echo "   MCP: preview_action, run_action, get_run → $(echo "$TEXT" | head -1)"
 echo "M5 acceptance: all checks passed"

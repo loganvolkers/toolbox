@@ -12,7 +12,7 @@ use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
 use serde::Deserialize;
 use serde_json::{Map, Value, json};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use toolbox_exec::federation;
@@ -21,21 +21,52 @@ use toolbox_exec::run::{self as lifecycle, Observer, Run};
 use toolbox_model::manifest::Expect;
 
 /// Runs this instance holds, by id. Runs live in memory: a restart loses runs in flight, and
-/// their effects are still observed by the scorecards that read the same facts.
+/// their effects are still observed by the scorecards that read the same facts. Every change
+/// that depends on a run's current state (approve, reject, cancel) happens under one lock, and a
+/// run that has ended is never overwritten.
 #[derive(Debug, Default)]
-pub struct Runs(Mutex<BTreeMap<String, Run>>);
+pub struct Runs {
+    runs: Mutex<BTreeMap<String, Run>>,
+    /// Confirm tokens already spent, with when they were issued.
+    spent: Mutex<HashMap<String, u64>>,
+}
 
 impl Runs {
-    fn put(&self, r: &Run) {
-        self.0.lock().unwrap().insert(r.id.clone(), r.clone());
+    /// Store `r`, unless the stored run has already ended (a cancel wins over a late result).
+    fn save(&self, r: &Run) {
+        let mut m = self.runs.lock().unwrap();
+        if m.get(&r.id).is_some_and(Run::is_terminal) {
+            return;
+        }
+        m.insert(r.id.clone(), r.clone());
     }
     fn get(&self, id: &str) -> Option<Run> {
-        self.0.lock().unwrap().get(id).cloned()
+        self.runs.lock().unwrap().get(id).cloned()
     }
     fn all(&self) -> Vec<Run> {
-        self.0.lock().unwrap().values().cloned().collect()
+        self.runs.lock().unwrap().values().cloned().collect()
+    }
+    /// Change the stored run in place, atomically: `f` sees the current record.
+    fn update<T>(&self, id: &str, f: impl FnOnce(&mut Run) -> T) -> Option<(T, Run)> {
+        let mut m = self.runs.lock().unwrap();
+        let r = m.get_mut(id)?;
+        let out = f(r);
+        Some((out, r.clone()))
+    }
+    /// Spend a confirm token: `false` when it was spent before.
+    fn spend(&self, token: &str) -> bool {
+        let mut m = self.spent.lock().unwrap();
+        let now = lifecycle::now_secs();
+        m.retain(|_, issued| now.saturating_sub(*issued) <= lifecycle::TOKEN_TTL_SECS + 60);
+        let issued = lifecycle::token_issued(token).unwrap_or(now);
+        m.insert(token.to_owned(), issued).is_none()
     }
 }
+
+/// Set on requests the MCP endpoint makes on a caller's behalf, so a run records `via: mcp`. A
+/// request extension, not a header or body field, so no network caller can claim it.
+#[derive(Clone, Copy, Debug)]
+pub struct Via(pub &'static str);
 
 fn program() -> std::path::PathBuf {
     std::env::current_exe().unwrap_or_else(|_| "toolbox".into())
@@ -119,8 +150,6 @@ pub struct RunBody {
     #[serde(default)]
     inputs: Map<String, Value>,
     confirm_token: Option<String>,
-    /// `api` (default) or `mcp`, recorded on the run.
-    via: Option<String>,
 }
 
 /// Authorize and prepare: the shared step of a preview and a run.
@@ -271,7 +300,6 @@ struct Served {
 
 impl Observer for Served {
     fn observe(&mut self, run: &Run, _: &Expect) -> Result<(Value, String), String> {
-        self.s.runs.put(run);
         let p = self.s.snapshot().ok_or("no snapshot")?;
         if let Some(e) = p.derived.entities.get(&run.entity) {
             for (connector, kind, ext) in &e.records {
@@ -315,7 +343,7 @@ fn start(s: &Arc<AppState>, p: Prepared, mut run: Run, grant: Option<String>) {
             &mut obs,
             Duration::from_secs(2),
         );
-        s.runs.put(&run);
+        s.runs.save(&run);
     });
 }
 
@@ -323,6 +351,7 @@ fn start(s: &Arc<AppState>, p: Prepared, mut run: Run, grant: Option<String>) {
 /// preview of the same inputs, effects and facts, less than ten minutes old.
 pub async fn create_run(
     State(s): State<Arc<AppState>>,
+    via: Option<axum::Extension<Via>>,
     headers: HeaderMap,
     Path(name): Path<String>,
     Json(body): Json<RunBody>,
@@ -353,7 +382,14 @@ pub async fn create_run(
     if !p.blockers.is_empty() {
         return problem(StatusCode::CONFLICT, "blocked", p.blockers.join("; "));
     }
-    let via = body.via.clone().unwrap_or_else(|| "api".into());
+    if !s.runs.spend(&token) {
+        return problem(
+            StatusCode::CONFLICT,
+            "token-used",
+            "this confirm token already started a run; preview again to run the action again",
+        );
+    }
+    let via = via.map_or("api", |v| v.0.0).to_owned();
     let mut run = p.new_run(
         lifecycle::new_id("run"),
         &caller.user,
@@ -370,10 +406,10 @@ pub async fn create_run(
                 run.pending_approvers().join(", ")
             )),
         );
-        s.runs.put(&run);
+        s.runs.save(&run);
         return (StatusCode::ACCEPTED, Json(run_doc(&run))).into_response();
     }
-    s.runs.put(&run);
+    s.runs.save(&run);
     start(&s, p, run.clone(), None);
     (StatusCode::ACCEPTED, Json(run_doc(&run))).into_response()
 }
@@ -470,8 +506,9 @@ pub struct ApprovalBody {
 }
 
 /// `POST /v1/runs/{id}/approvals` — approve or reject a run awaiting approval. The approver must
-/// be one of the pending approvers (a user, or a member of a group) and not the requester. The
-/// last approval starts the run.
+/// be one of the pending approvers (a user, or a member of a group), not the requester, and signed
+/// in interactively (D57): a personal access token or an MCP session can't approve. The last
+/// approval starts the run.
 pub async fn approve(
     State(s): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -482,7 +519,22 @@ pub async fn approve(
         Ok(c) => c,
         Err(r) => return r,
     };
-    let mut run = match visible_run(&s, &caller, &id).await {
+    let interactive = match caller.method {
+        "iap" | "oidc" => true,
+        "dev" => s.config.auth_mode == "dev",
+        _ => false,
+    };
+    if !interactive {
+        return problem(
+            StatusCode::FORBIDDEN,
+            "approval-needs-a-person",
+            format!(
+                "approvals need an interactive sign-in (proxy or OIDC), not a {} credential: approve in the portal's UI",
+                caller.method
+            ),
+        );
+    }
+    let run = match visible_run(&s, &caller, &id).await {
         Ok(r) => r,
         Err(r) => return r,
     };
@@ -494,7 +546,7 @@ pub async fn approve(
         .iter()
         .flat_map(|a| a.split('|').map(str::to_owned).collect::<Vec<_>>())
     {
-        if g == caller.user {
+        if g.eq_ignore_ascii_case(&caller.user) {
             member.push(g);
             continue;
         }
@@ -507,33 +559,34 @@ pub async fn approve(
             Err(r) => return r,
         }
     }
-    if body.decision.as_deref() == Some("reject") {
-        if run.state != "awaiting_approval" || member.is_empty() {
-            return problem(
-                StatusCode::FORBIDDEN,
-                "not-an-approver",
-                format!("{} cannot reject run {id}", caller.user),
-            );
+    let reject = body.decision.as_deref() == Some("reject");
+    let decided = s.runs.update(&id, |run| -> Result<bool, String> {
+        if reject {
+            if run.state != "awaiting_approval" || member.is_empty() {
+                return Err(format!("{} cannot reject run {id}", caller.user));
+            }
+            run.approval.rejected_by = Some(caller.user.clone());
+            run.set("rejected", Some(&caller.user), body.note.clone());
+            return Ok(false);
         }
-        run.approval.rejected_by = Some(caller.user.clone());
-        run.set("rejected", Some(&caller.user), body.note.clone());
-        s.runs.put(&run);
-        return Json(run_doc(&run)).into_response();
-    }
-    let done = match run.approve(&caller.user, |g| member.iter().any(|m| m == g)) {
-        Ok(d) => d,
-        Err(e) => return problem(StatusCode::FORBIDDEN, "not-an-approver", e),
+        let done = run.approve(&caller.user, |g| member.iter().any(|m| m == g))?;
+        if done {
+            // Out of awaiting_approval under the lock, so a second approval can't start it twice.
+            run.state = "approved".into();
+        }
+        Ok(done)
+    });
+    let mut run = match decided {
+        None => return problem(StatusCode::NOT_FOUND, "not-found", format!("no run {id}")),
+        Some((Err(e), _)) => return problem(StatusCode::FORBIDDEN, "not-an-approver", e),
+        Some((Ok(false), run)) => return Json(run_doc(&run)).into_response(),
+        Some((Ok(true), run)) => run,
     };
-    s.runs.put(&run);
-    if !done {
-        return Json(run_doc(&run)).into_response();
-    }
     // Re-prepare against today's facts: an approval does not freeze a stale preview.
     let rb = RunBody {
         entity: Some(run.entity.clone()),
         inputs: run.inputs.clone(),
         confirm_token: None,
-        via: None,
     };
     let requester = crate::access::Caller {
         user: run.requested_by.clone(),
@@ -543,13 +596,13 @@ pub async fn approve(
         Ok((p, _)) => p,
         Err(r) => {
             run.fail("could not prepare the approved run again");
-            s.runs.put(&run);
+            s.runs.save(&run);
             return r;
         }
     };
     if !p.blockers.is_empty() {
         run.fail(format!("blocked after approval: {}", p.blockers.join("; ")));
-        s.runs.put(&run);
+        s.runs.save(&run);
         return Json(run_doc(&run)).into_response();
     }
     // The approvers approved a definition and its effects; if either changed since, their
@@ -558,7 +611,7 @@ pub async fn approve(
         run.fail(
             "preview_stale: the action or its effects changed after it was approved; preview and request it again",
         );
-        s.runs.put(&run);
+        s.runs.save(&run);
         return Json(run_doc(&run)).into_response();
     }
     let grant = match signing_seed(&s).map(|seed| p.grant(&run, &seed)) {
@@ -567,11 +620,12 @@ pub async fn approve(
             run.fail(format!(
                 "could not sign the approvals for the child portal: {e}"
             ));
-            s.runs.put(&run);
+            s.runs.save(&run);
             return Json(run_doc(&run)).into_response();
         }
         None => None,
     };
+    s.runs.save(&run);
     start(&s, p, run.clone(), grant);
     Json(run_doc(&run)).into_response()
 }
@@ -587,7 +641,7 @@ pub async fn cancel(
         Ok(c) => c,
         Err(r) => return r,
     };
-    let mut run = match visible_run(&s, &caller, &id).await {
+    let run = match visible_run(&s, &caller, &id).await {
         Ok(r) => r,
         Err(r) => return r,
     };
@@ -598,22 +652,33 @@ pub async fn cancel(
             "only the requester can cancel a run",
         );
     }
-    if !["awaiting_approval", "proposed", "dispatched"].contains(&run.state.as_str()) {
-        return problem(
+    // Cancelling stops Toolbox from carrying the run further; a pull request or workflow it
+    // already started is closed where it lives.
+    let cancelled = s.runs.update(&id, |run| {
+        let ok = ["awaiting_approval", "proposed", "dispatched"].contains(&run.state.as_str());
+        if ok {
+            run.set("cancelled", Some(&caller.user), None);
+        }
+        ok
+    });
+    match cancelled {
+        Some((true, run)) => Json(run_doc(&run)).into_response(),
+        Some((false, run)) => problem(
             StatusCode::CONFLICT,
             "not-cancellable",
             format!("run {id} is {}", run.state),
-        );
+        ),
+        None => problem(StatusCode::NOT_FOUND, "not-found", format!("no run {id}")),
     }
-    run.set("cancelled", Some(&caller.user), None);
-    s.runs.put(&run);
-    Json(run_doc(&run)).into_response()
 }
+
+/// States in which a run waits on the world and is looked at again.
+const WAITING: [&str; 4] = ["proposed", "dispatched", "executor_succeeded", "verifying"];
 
 /// Re-check one waiting run now; `true` when it changed.
 fn recheck_one(s: &Arc<AppState>, run: &mut Run) -> bool {
     // Any other state belongs to the thread still executing the run.
-    if !["proposed", "dispatched"].contains(&run.state.as_str()) {
+    if !WAITING.contains(&run.state.as_str()) {
         return false;
     }
     let Some(p) = s.snapshot() else {
@@ -635,6 +700,7 @@ fn recheck_one(s: &Arc<AppState>, run: &mut Run) -> bool {
         off.action.expect.as_ref(),
         &s.manifest.policies,
         &mut obs,
+        &cwd(),
     )
 }
 
@@ -657,7 +723,7 @@ pub async fn verify(
     let run = tokio::task::spawn_blocking(move || {
         let mut run = run;
         if recheck_one(&s2, &mut run) {
-            s2.runs.put(&run);
+            s2.runs.save(&run);
         }
         run
     })
@@ -674,7 +740,7 @@ pub async fn runs_loop(s: Arc<AppState>) {
             .runs
             .all()
             .into_iter()
-            .filter(|r| ["proposed", "dispatched"].contains(&r.state.as_str()))
+            .filter(|r| WAITING.contains(&r.state.as_str()))
             .collect();
         if waiting.is_empty() {
             continue;
@@ -683,7 +749,7 @@ pub async fn runs_loop(s: Arc<AppState>) {
         let _ = tokio::task::spawn_blocking(move || {
             for mut r in waiting {
                 if recheck_one(&s2, &mut r) {
-                    s2.runs.put(&r);
+                    s2.runs.save(&r);
                 }
             }
         })

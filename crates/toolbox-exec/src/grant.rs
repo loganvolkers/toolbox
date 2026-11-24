@@ -34,7 +34,8 @@ fn hex(b: &[u8]) -> String {
 }
 
 fn unhex(s: &str) -> Option<Vec<u8>> {
-    s.len().is_multiple_of(2)
+    s.len()
+        .is_multiple_of(2)
         .then(|| {
             (0..s.len())
                 .step_by(2)

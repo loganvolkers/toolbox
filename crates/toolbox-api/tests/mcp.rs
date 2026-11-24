@@ -105,8 +105,7 @@ async fn tools_list_describes_every_input() {
             "preview_action",
             "run_action",
             "get_run",
-            "list_runs",
-            "approve_run"
+            "list_runs"
         ]
     );
     for t in tools.as_array().unwrap() {

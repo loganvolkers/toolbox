@@ -852,6 +852,49 @@ fn change_run(
     })
 }
 
+/// Whether a proposed change run's commit is on its base branch: merged (an ancestor of the base)
+/// or squashed or rebased with its `Toolbox-Run` trailer. The base is fetched first when it is a
+/// remote branch.
+pub fn merged(cwd: &Path, run: &crate::run::Run) -> Result<bool, String> {
+    let base = run.outputs["base"].as_str().unwrap_or("");
+    let commit = run.outputs["commit"].as_str().unwrap_or("");
+    let safe = |s: &str| {
+        !s.is_empty()
+            && !s.starts_with(['-', '/'])
+            && !s.contains("..")
+            && s.chars()
+                .all(|c| c.is_ascii_alphanumeric() || "-_./".contains(c))
+    };
+    if !safe(base) || !commit.chars().all(|c| c.is_ascii_hexdigit()) || commit.is_empty() {
+        return Err("the run records no base branch and commit to look for".into());
+    }
+    let repo = PathBuf::from(git(cwd, &["rev-parse", "--show-toplevel"])?);
+    if let Some((remote, branch)) = base.split_once('/')
+        && git(&repo, &["remote", "get-url", "--", remote]).is_ok()
+    {
+        let _ = git(&repo, &["fetch", "-q", "--", remote, branch]);
+    }
+    if git(&repo, &["merge-base", "--is-ancestor", commit, base]).is_ok() {
+        return Ok(true);
+    }
+    let trailer = format!("Toolbox-Run: {}", run.id);
+    let found = git(
+        &repo,
+        &[
+            "log",
+            "-n",
+            "1",
+            "--format=%H",
+            "-F",
+            "--grep",
+            &trailer,
+            base,
+            "--",
+        ],
+    )?;
+    Ok(!found.is_empty())
+}
+
 /// Whether `id` is a run id as `crate::run::new_id` makes them.
 pub fn is_run_id(id: &str) -> bool {
     id.strip_prefix("run_").is_some_and(|r| {

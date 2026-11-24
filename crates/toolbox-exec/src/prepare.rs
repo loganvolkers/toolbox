@@ -50,6 +50,8 @@ pub struct Prepared {
     pub token: String,
     /// Review of the proposed change is the approval (the executor, or the child's, is `change`).
     pub reviewed: bool,
+    /// The postcondition already held at preview (see `Run::held_before`).
+    pub held_before: bool,
 }
 
 /// Who asks, and from where.
@@ -107,12 +109,13 @@ pub fn prepare(m: &Manifest, d: &Derived, req: Request<'_>) -> Result<Prepared, 
         },
     };
     let mut warnings = preview.warnings.clone();
-    if let Some(e) = &action.expect
-        && run::postcondition_holds(e, &checked.entity, &inputs, &m.policies, &json!({}))
+    let held_before = action.expect.as_ref().is_some_and(|e| {
+        run::postcondition_holds(e, &checked.entity, &inputs, &m.policies, &json!({}))
             .unwrap_or(false)
-    {
+    });
+    if let Some(e) = action.expect.as_ref().filter(|_| held_before) {
         warnings.push(format!(
-            "the postcondition already holds ({}): running it may change nothing",
+            "the postcondition already holds ({}): running it may change nothing, and the run ends unverified",
             e.postcondition
         ));
     }
@@ -136,7 +139,17 @@ pub fn prepare(m: &Manifest, d: &Derived, req: Request<'_>) -> Result<Prepared, 
     }
     let basis = run::basis(&checked.entity, &checked.related);
     let version = ctx.action_version.clone();
-    let token = run::confirm_token(&version, &inputs, &preview.effects, &basis, run::now_secs());
+    let token = run::confirm_token(
+        &run::Confirmed {
+            version: &version,
+            inputs: &inputs,
+            effects: &preview.effects,
+            basis: &basis,
+            actor: req.actor,
+            entity: &entity,
+        },
+        run::now_secs(),
+    );
     let reviewed = matches!(exec, Executor::Change { .. })
         || off.child.as_ref().is_some_and(|c| c.executor == "change");
     Ok(Prepared {
@@ -154,6 +167,7 @@ pub fn prepare(m: &Manifest, d: &Derived, req: Request<'_>) -> Result<Prepared, 
         basis,
         token,
         reviewed,
+        held_before,
     })
 }
 
@@ -179,10 +193,14 @@ impl Prepared {
     pub fn confirm(&self, token: &str) -> Result<(), TokenError> {
         run::check_token(
             token,
-            &self.version,
-            &self.inputs,
-            &self.preview.effects,
-            &self.basis,
+            &run::Confirmed {
+                version: &self.version,
+                inputs: &self.inputs,
+                effects: &self.preview.effects,
+                basis: &self.basis,
+                actor: &self.ctx.actor,
+                entity: &self.entity,
+            },
         )
     }
 
@@ -213,6 +231,7 @@ impl Prepared {
             child: None,
             progress: vec![],
             deadline: None,
+            held_before: self.held_before,
         };
         r.set("previewed", Some(by), None);
         r.set("confirmed", Some(by), None);
