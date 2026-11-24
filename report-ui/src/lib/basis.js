@@ -7,8 +7,8 @@ import { plural } from "./words.js";
 
 export var BASIS = {
   measured: {
-    label: "Measured",
-    desc: "A tool, connector or script read the fact. The same input gives the same result.",
+    label: "Tool-checked",
+    desc: "A tool, connector or script decides it from the facts it reads. The same input gives the same result.",
   },
   judged: {
     label: "Agent-judged",

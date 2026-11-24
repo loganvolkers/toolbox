@@ -88,6 +88,7 @@ export function catalogKindsSorted(D) {
 export function summarize(D) {
   var rows = scorecardRows(D);
   var byEntity = {};
+  var shortOfTop = new Set();
   var marks = new Map();
   var checks = { pass: 0, fail: 0, unknown: 0, vacuous: 0 };
   rows.forEach(function (r) {
@@ -102,6 +103,7 @@ export function summarize(D) {
       var rank = order.indexOf(s.level);
       var norm = ["none", "bronze", "silver", "gold"].indexOf(s.level) >= 0 ? s.level : rank <= 0 ? "none" : "gold";
       if (!cur || ["none", "bronze", "silver", "gold"].indexOf(norm) < ["none", "bronze", "silver", "gold"].indexOf(cur)) byEntity[id] = norm;
+      if (s.level !== (r.sc.levels || []).slice(-1)[0]) shortOfTop.add(id);
       var st = unassessed.has(id) ? "hollow" : unrunIn(r.sc, s).length ? "unrun" : "";
       if (st) (marks.get(id) || marks.set(id, []).get(id)).push([norm, st]);
       Object.keys(s.rules || {}).forEach(function (rule) {
@@ -138,7 +140,11 @@ export function summarize(D) {
         : "";
     if (st) worstState.set(id, st);
   });
-  return { rows: rows, worst: byEntity, worstState: worstState, checks: checks, entityCount: entityCount, kindOf: kindOf, repo: repoLevel(D) };
+  // At the top level of every scorecard that rates it, whatever that scorecard calls its top.
+  var atTop = Object.keys(byEntity).filter(function (id) {
+    return !shortOfTop.has(id);
+  });
+  return { rows: rows, worst: byEntity, atTop: atTop, worstState: worstState, checks: checks, entityCount: entityCount, kindOf: kindOf, repo: repoLevel(D) };
 }
 
 export function repoLevel(D) {

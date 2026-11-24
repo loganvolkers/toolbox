@@ -73,7 +73,7 @@ export var CSS = [
   ".legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted);margin-top:6px}",
   ".legend b{color:var(--fg);font-weight:650;font-variant-numeric:tabular-nums}",
   ".dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:-1px}.legend.trackkey{margin:2px 0 18px}.medal-key{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}",
-  ".lvl{display:inline-flex;align-items:center;gap:5px;padding:1px 8px 1px 6px;border-radius:999px;font-size:12px;font-weight:650;text-transform:capitalize;white-space:nowrap;",
+  ".lvl{display:inline-flex;align-items:center;gap:5px;padding:1px 8px 1px 6px;border-radius:999px;font-size:12px;font-weight:650;white-space:nowrap;",
   "color:var(--ink);background:color-mix(in srgb,var(--fill) 18%,transparent);border:1px solid color-mix(in srgb,var(--fill) 50%,transparent)}",
   ".lvl i{width:8px;height:8px;border-radius:50%;background:var(--fill);display:inline-block}",
   ".lvl.none i{background:transparent;border:1.5px solid var(--fill)}",

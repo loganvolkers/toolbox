@@ -119,7 +119,7 @@ export const catalogViews = {
         );
         return;
       }
-      var shown = ids.slice(0, limit);
+      var shown = ids;
       var kindCards = Object.keys(D.scorecards || {})
         .filter(function (n) {
           return (catalog[selected] || []).some(function (id) {
@@ -207,7 +207,7 @@ export const catalogViews = {
       var rowsOut = [];
       built.forEach(function (b) {
         if (!cols.length || sigCount[b.sig] < 5) {
-          rowsOut.push(b.r);
+          rowsOut.push({ nodes: [b.r], n: 1 });
           return;
         }
         if (grouped[b.sig]) return;
@@ -223,16 +223,30 @@ export const catalogViews = {
             return c.cloneNode(true);
           }),
         );
-        rowsOut.push(
-          el("details", { className: "egroup" }, sum, el("div", { className: "egroup-members" }, ...members.map(function (x) {
-            return x.r;
-          }))),
-          memberLinks(members.map(function (x) {
-            return x.id;
-          })),
-        );
+        rowsOut.push({
+          nodes: [
+            el("details", { className: "egroup" }, sum, el("div", { className: "egroup-members" }, ...members.map(function (x) {
+              return x.r;
+            }))),
+            memberLinks(members.map(function (x) {
+              return x.id;
+            })),
+          ],
+          n: members.length,
+        });
       });
-      list.replaceChildren.apply(list, (header ? [header] : []).concat(rowsOut));
+      var paged = rowsOut.slice(0, limit);
+      var hidden = rowsOut.slice(paged.length).reduce(function (n, o) {
+        return n + o.n;
+      }, 0);
+      list.replaceChildren.apply(
+        list,
+        (header ? [header] : []).concat(
+          paged.flatMap(function (o) {
+            return o.nodes;
+          }),
+        ),
+      );
       var judgedCols = cols.filter(function (n) {
         return basisCounts(((D.scorecards || {})[n] || {}).rules).judged > 0;
       });
@@ -265,7 +279,7 @@ export const catalogViews = {
                   ...cols.flatMap(function (n, i) {
                     var bc = basisCounts(((D.scorecards || {})[n] || {}).rules);
                     var all = bc.measured + bc.judged;
-                    return [i ? " · " : "", title(D, n) + " ", basisBadge(bc.judged ? "judged" : "measured"), " " + (bc.judged === all || !bc.judged ? "all " + plural(all, "rule") : bc.judged + " of " + plural(all, "rule") + ", the rest measured")];
+                    return [i ? " · " : "", title(D, n) + " ", basisBadge(bc.judged ? "judged" : "measured"), " " + (bc.judged === all || !bc.judged ? "all " + plural(all, "rule") : bc.judged + " of " + plural(all, "rule") + ", the rest tool-checked")];
                   }),
                 )
               : null,
@@ -274,14 +288,14 @@ export const catalogViews = {
         );
       if (kindCards.length > cols.length)
         list.append(el("p", { className: "sub", textContent: plural(kindCards.length - cols.length, "more scorecard") + " rate " + selected + "; open an entity to see them." }));
-      if (ids.length > limit) {
+      if (hidden) {
         list.append(
           el(
             "div",
             { className: "more" },
             el("button", {
               className: "link",
-              textContent: "Show all " + fmt(ids.length) + " (" + fmt(ids.length - limit) + " more)",
+              textContent: "Show all " + fmt(ids.length) + " (" + fmt(hidden) + " more)",
               onclick: function () {
                 limit = Infinity;
                 drawList();
@@ -297,7 +311,9 @@ export const catalogViews = {
       drawList();
     };
     drawList();
-    var levels = scored[selected] ? kindParts(S, catalog[selected] || []) : [];
+    var levels = (scored[selected] ? kindParts(S, catalog[selected] || []) : []).map(function (p) {
+      return Object.assign({}, p, { label: ownLevel(D, selected, p.level) });
+    });
     var nScored = (catalog[selected] || []).filter(function (id) {
       return S.worst[id];
     }).length;

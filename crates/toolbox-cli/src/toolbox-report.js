@@ -657,6 +657,7 @@
   function summarize(D) {
     var rows = scorecardRows(D);
     var byEntity = {};
+    var shortOfTop = /* @__PURE__ */ new Set();
     var marks = /* @__PURE__ */ new Map();
     var checks = { pass: 0, fail: 0, unknown: 0, vacuous: 0 };
     rows.forEach(function(r) {
@@ -671,6 +672,7 @@
         var rank = order.indexOf(s.level);
         var norm = ["none", "bronze", "silver", "gold"].indexOf(s.level) >= 0 ? s.level : rank <= 0 ? "none" : "gold";
         if (!cur || ["none", "bronze", "silver", "gold"].indexOf(norm) < ["none", "bronze", "silver", "gold"].indexOf(cur)) byEntity[id] = norm;
+        if (s.level !== (r.sc.levels || []).slice(-1)[0]) shortOfTop.add(id);
         var st = unassessed.has(id) ? "hollow" : unrunIn(r.sc, s).length ? "unrun" : "";
         if (st) (marks.get(id) || marks.set(id, []).get(id)).push([norm, st]);
         Object.keys(s.rules || {}).forEach(function(rule) {
@@ -702,7 +704,10 @@
       }) ? "hollow" : at.length ? "unrun" : "";
       if (st) worstState.set(id, st);
     });
-    return { rows, worst: byEntity, worstState, checks, entityCount, kindOf, repo: repoLevel(D) };
+    var atTop = Object.keys(byEntity).filter(function(id) {
+      return !shortOfTop.has(id);
+    });
+    return { rows, worst: byEntity, atTop, worstState, checks, entityCount, kindOf, repo: repoLevel(D) };
   }
   function repoLevel(D) {
     var rollup = Array.isArray(D.repoRollup) ? D.repoRollup : [];
@@ -880,8 +885,8 @@
   // src/lib/basis.js
   var BASIS = {
     measured: {
-      label: "Measured",
-      desc: "A tool, connector or script read the fact. The same input gives the same result."
+      label: "Tool-checked",
+      desc: "A tool, connector or script decides it from the facts it reads. The same input gives the same result."
     },
     judged: {
       label: "Agent-judged",
@@ -1246,7 +1251,7 @@
       return p.level !== "skipped";
     });
     var spans = parts.map(function(p) {
-      return p.hollow ? el("span", { className: "hollow", style: "flex-grow:0;flex-basis:0;--seg:" + fill(p.level), title: p.level + ": " + p.n + ", not assessed by an agent yet" }) : p.unrun ? el("span", { className: "unrun", style: "flex-grow:0;flex-basis:0;--seg:" + fill(p.level), title: p.level + ": " + p.n + ", provisional: checks it needs were not run in this build" }) : p.level === "unscored" ? el("span", { className: "unscored", style: "flex-grow:0;flex-basis:0", title: "not scored: " + p.n }) : el("span", { style: "flex-grow:0;flex-basis:0;background:" + fill(p.level), title: p.level + ": " + p.n });
+      return p.hollow ? el("span", { className: "hollow", style: "flex-grow:0;flex-basis:0;--seg:" + fill(p.level), title: (p.label || p.level) + ": " + p.n + ", not assessed by an agent yet" }) : p.unrun ? el("span", { className: "unrun", style: "flex-grow:0;flex-basis:0;--seg:" + fill(p.level), title: (p.label || p.level) + ": " + p.n + ", provisional: checks it needs were not run in this build" }) : p.level === "unscored" ? el("span", { className: "unscored", style: "flex-grow:0;flex-basis:0", title: "not scored: " + p.n }) : el("span", { style: "flex-grow:0;flex-basis:0;background:" + fill(p.level), title: (p.label || p.level) + ": " + p.n });
     });
     grow(
       spans,
@@ -1259,7 +1264,7 @@
     bar.setAttribute(
       "aria-label",
       label || parts.map(function(p) {
-        return p.n + " " + p.level + (p.hollow ? " not assessed" : p.unrun ? " provisional" : "");
+        return p.n + " " + (p.label || p.level) + (p.hollow ? " not assessed" : p.unrun ? " provisional" : "");
       }).join(", ") || "no entities scored yet"
     );
     return bar;
@@ -1271,10 +1276,19 @@
     var unrun = (rows || []).some(function(r) {
       return !r.compare && provisionalOf(D, r.name);
     });
+    var used = /* @__PURE__ */ new Set();
+    (rows || []).forEach(function(r) {
+      if (!r.compare)
+        ((r.sc || {}).levels || []).forEach(function(l) {
+          used.add(known(l) || "gold");
+        });
+    });
     return el(
       "div",
       { className: "legend", style: "margin-bottom:8px" },
-      ...["none", "bronze", "silver", "gold"].map(function(l) {
+      ...["none", "bronze", "silver", "gold"].filter(function(l) {
+        return l === "none" || !used.size || used.has(l);
+      }).map(function(l) {
         return el("span", {}, el("span", { className: "dot", style: "background:" + fill(l) }), l);
       }),
       hollow ? el("span", {}, el("span", { className: "dot hatch", style: "--seg:" + fill("bronze") }), "hatched, on a bar or a pill: not assessed by an agent yet") : null,
@@ -1337,7 +1351,7 @@
           {},
           el("span", { className: "dot" + (p.hollow ? " hatch" : p.unrun ? " dots" : ""), style: p.hollow || p.unrun ? "--seg:" + fill(p.level) : "background:" + fill(p.level) }),
           el("b", { textContent: fmt(p.n) }),
-          " " + p.level + (p.hollow ? " not assessed" : p.unrun ? " ◌ provisional" : "")
+          " " + (p.label || p.level) + (p.hollow ? " not assessed" : p.unrun ? " ◌ provisional" : "")
         );
       })
     );
@@ -1581,7 +1595,7 @@
     ".legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted);margin-top:6px}",
     ".legend b{color:var(--fg);font-weight:650;font-variant-numeric:tabular-nums}",
     ".dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:-1px}.legend.trackkey{margin:2px 0 18px}.medal-key{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}",
-    ".lvl{display:inline-flex;align-items:center;gap:5px;padding:1px 8px 1px 6px;border-radius:999px;font-size:12px;font-weight:650;text-transform:capitalize;white-space:nowrap;",
+    ".lvl{display:inline-flex;align-items:center;gap:5px;padding:1px 8px 1px 6px;border-radius:999px;font-size:12px;font-weight:650;white-space:nowrap;",
     "color:var(--ink);background:color-mix(in srgb,var(--fill) 18%,transparent);border:1px solid color-mix(in srgb,var(--fill) 50%,transparent)}",
     ".lvl i{width:8px;height:8px;border-radius:50%;background:var(--fill);display:inline-block}",
     ".lvl.none i{background:transparent;border:1.5px solid var(--fill)}",
@@ -2203,9 +2217,15 @@
         return r.none > 0 && !r.compare;
       }).length;
       var scoredEntities = Object.keys(S.worst).length;
-      var goldIds = Object.keys(S.worst).filter(function(id) {
-        return S.worst[id] === "gold";
-      });
+      var tops = new Set(
+        S.rows.filter(function(r) {
+          return !r.compare;
+        }).map(function(r) {
+          return known((r.sc.levels || []).slice(-1)[0]) || "gold";
+        })
+      );
+      var topMedal = tops.size === 1 ? Array.from(tops)[0] : "gold";
+      var goldIds = S.atTop;
       var golden = goldIds.length;
       var unjudged = /* @__PURE__ */ new Set();
       Object.keys(D.unassessed || {}).forEach(function(card) {
@@ -2222,8 +2242,8 @@
       };
       var shown = [
         total ? tile("scorecards", "good", kpiBar(pct, pct + "% of checks pass"), pct + "%", [fmt(c.pass) + " of " + fmt(total) + " checks pass on evidence", checkNote.length ? el("small", { className: "tile-note", textContent: checkNote.join("; ") }) : null]) : null,
-        scoredEntities ? tile("catalog", "", medal("gold", 40), fmt(golden), ["of " + fmt(scoredEntities) + " scored entities are at the top level of every scorecard that rates them", goldUnjudged ? el("small", { className: "tile-note", textContent: fmt(goldUnjudged) + " of those still await an agent's assessment" }) : null]) : null,
-        scoredEntities ? tile("scorecards", debt ? "bad" : "good", medal(debt ? "none" : "gold", 40), String(debt), debt ? "scorecards have entities at none" : "scorecards with entities at none") : null,
+        scoredEntities ? tile("catalog", "", medal(topMedal, 40), fmt(golden), ["of " + fmt(scoredEntities) + " scored entities are at the top level of every scorecard that rates them", goldUnjudged ? el("small", { className: "tile-note", textContent: fmt(goldUnjudged) + " of those still await an agent's assessment" }) : null]) : null,
+        scoredEntities ? tile("scorecards", debt ? "bad" : "good", medal(debt ? "none" : "gold", 40), String(debt), debt === 1 ? "scorecard has entities at none" : debt ? "scorecards have entities at none" : "scorecards with entities at none") : null,
         campaignNames.length ? tile("campaigns", on === campaignNames.length ? "good" : "", kpiPips(on, campaignNames.length, on + " of " + campaignNames.length + " campaigns on target"), on + " of " + campaignNames.length, "campaigns on target") : null
       ].filter(Boolean);
       return shown.length ? el("div", { className: "tiles" }, ...shown) : null;
@@ -2263,7 +2283,7 @@
           link("scorecard/" + enc(r.name), "row", [
             floors ? el("div", { className: "medal-col" }, medal(floorOf(D, r.name) || "none", 30), el("div", {}, ...cardName(D, r.name), el("span", { className: "weakest" }, "weakest ", floorOf(D, r.name) ? floorPill(D, r.name) : "not scored", topNote(D, r.name, floorOf(D, r.name))))) : el("div", {}, ...cardName(D, r.name)),
             el("div", { className: "dist" }, barEl(splitUnassessed(D, r.name, r.parts)), el("div", { className: "sub", style: "font-size:12px;margin-top:4px" }, ...scCaption(D, r, true))),
-            el("div", { className: "num" + (r.none ? " bad" : "") }, el("strong", { textContent: r.scored ? String(r.none) : "—" }), el("span", { textContent: "at none" })),
+            el("div", { className: "num" + (r.none ? " bad" : "") }, el("strong", { textContent: r.scored ? String(r.none) : "—" }), el("span", { textContent: r.scored ? "at none" : "not scored" })),
             why(r, floors)
           ])
         );
@@ -2394,7 +2414,7 @@
             "div",
             { className: "head" },
             el("h2", { id: "need-att", textContent: attention.length ? "Scorecards that need attention" : "Scorecards" }),
-            el("span", { className: "sub", textContent: "Needs attention first" })
+            attention.length ? el("span", { className: "sub", textContent: "Needs attention first" }) : null
           ),
           el("p", { className: "lede", textContent: "Each scorecard rates every entity of one kind against levels of rules. An entity is at none until it passes every rule of the first level." }),
           levelLegend(D, S.rows),
@@ -3795,7 +3815,7 @@
           );
           return;
         }
-        var shown = ids.slice(0, limit);
+        var shown = ids;
         var kindCards = Object.keys(D.scorecards || {}).filter(function(n) {
           return (catalog[selected] || []).some(function(id) {
             return D.scores[n] && D.scores[n][id] && D.scores[n][id].level !== "skipped";
@@ -3872,7 +3892,7 @@
         var rowsOut = [];
         built.forEach(function(b) {
           if (!cols.length || sigCount[b.sig] < 5) {
-            rowsOut.push(b.r);
+            rowsOut.push({ nodes: [b.r], n: 1 });
             return;
           }
           if (grouped[b.sig]) return;
@@ -3888,16 +3908,30 @@
               return c.cloneNode(true);
             })
           );
-          rowsOut.push(
-            el("details", { className: "egroup" }, sum, el("div", { className: "egroup-members" }, ...members.map(function(x) {
-              return x.r;
-            }))),
-            memberLinks(members.map(function(x) {
-              return x.id;
-            }))
-          );
+          rowsOut.push({
+            nodes: [
+              el("details", { className: "egroup" }, sum, el("div", { className: "egroup-members" }, ...members.map(function(x) {
+                return x.r;
+              }))),
+              memberLinks(members.map(function(x) {
+                return x.id;
+              }))
+            ],
+            n: members.length
+          });
         });
-        list.replaceChildren.apply(list, (header ? [header] : []).concat(rowsOut));
+        var paged = rowsOut.slice(0, limit);
+        var hidden = rowsOut.slice(paged.length).reduce(function(n, o) {
+          return n + o.n;
+        }, 0);
+        list.replaceChildren.apply(
+          list,
+          (header ? [header] : []).concat(
+            paged.flatMap(function(o) {
+              return o.nodes;
+            })
+          )
+        );
         var judgedCols = cols.filter(function(n) {
           return basisCounts(((D.scorecards || {})[n] || {}).rules).judged > 0;
         });
@@ -3931,7 +3965,7 @@
                 ...cols.flatMap(function(n, i) {
                   var bc = basisCounts(((D.scorecards || {})[n] || {}).rules);
                   var all = bc.measured + bc.judged;
-                  return [i ? " · " : "", title(D, n) + " ", basisBadge(bc.judged ? "judged" : "measured"), " " + (bc.judged === all || !bc.judged ? "all " + plural(all, "rule") : bc.judged + " of " + plural(all, "rule") + ", the rest measured")];
+                  return [i ? " · " : "", title(D, n) + " ", basisBadge(bc.judged ? "judged" : "measured"), " " + (bc.judged === all || !bc.judged ? "all " + plural(all, "rule") : bc.judged + " of " + plural(all, "rule") + ", the rest tool-checked")];
                 })
               ) : null,
               dashed ? el("p", {}, el("b", { textContent: "Has it run: " }), dashed) : null
@@ -3939,14 +3973,14 @@
           );
         if (kindCards.length > cols.length)
           list.append(el("p", { className: "sub", textContent: plural(kindCards.length - cols.length, "more scorecard") + " rate " + selected + "; open an entity to see them." }));
-        if (ids.length > limit) {
+        if (hidden) {
           list.append(
             el(
               "div",
               { className: "more" },
               el("button", {
                 className: "link",
-                textContent: "Show all " + fmt(ids.length) + " (" + fmt(ids.length - limit) + " more)",
+                textContent: "Show all " + fmt(ids.length) + " (" + fmt(hidden) + " more)",
                 onclick: function() {
                   limit = Infinity;
                   drawList();
@@ -3962,7 +3996,9 @@
         drawList();
       };
       drawList();
-      var levels = scored[selected] ? kindParts(S, catalog[selected] || []) : [];
+      var levels = (scored[selected] ? kindParts(S, catalog[selected] || []) : []).map(function(p) {
+        return Object.assign({}, p, { label: ownLevel(D, selected, p.level) });
+      });
       var nScored = (catalog[selected] || []).filter(function(id) {
         return S.worst[id];
       }).length;

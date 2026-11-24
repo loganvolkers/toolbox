@@ -5,7 +5,7 @@ import { campaignStanding, campaignState, goalBar, includeProgress, kpiBar, kpiP
 import { cardName, num } from "../lib/compare.js";
 import { el, enc, link } from "../lib/dom.js";
 import { kindDescription, kindGroupsOf, kindTitle } from "../lib/kinds.js";
-import { fill, ink } from "../lib/levels.js";
+import { fill, ink, known } from "../lib/levels.js";
 import { ring, title, topNote } from "../lib/rings.js";
 import { floorOf, floorPill } from "../lib/rules.js";
 import { daysLeft } from "../lib/status.js";
@@ -230,9 +230,17 @@ export const overviewViews = {
       return r.none > 0 && !r.compare;
     }).length;
     var scoredEntities = Object.keys(S.worst).length;
-    var goldIds = Object.keys(S.worst).filter(function (id) {
-      return S.worst[id] === "gold";
-    });
+    var tops = new Set(
+      S.rows
+        .filter(function (r) {
+          return !r.compare;
+        })
+        .map(function (r) {
+          return known((r.sc.levels || []).slice(-1)[0]) || "gold";
+        }),
+    );
+    var topMedal = tops.size === 1 ? Array.from(tops)[0] : "gold";
+    var goldIds = S.atTop;
     var golden = goldIds.length;
     var unjudged = new Set();
     Object.keys(D.unassessed || {}).forEach(function (card) {
@@ -249,8 +257,8 @@ export const overviewViews = {
     };
     var shown = [
       total ? tile("scorecards", "good", kpiBar(pct, pct + "% of checks pass"), pct + "%", [fmt(c.pass) + " of " + fmt(total) + " checks pass on evidence", checkNote.length ? el("small", { className: "tile-note", textContent: checkNote.join("; ") }) : null]) : null,
-      scoredEntities ? tile("catalog", "", medal("gold", 40), fmt(golden), ["of " + fmt(scoredEntities) + " scored entities are at the top level of every scorecard that rates them", goldUnjudged ? el("small", { className: "tile-note", textContent: fmt(goldUnjudged) + " of those still await an agent's assessment" }) : null]) : null,
-      scoredEntities ? tile("scorecards", debt ? "bad" : "good", medal(debt ? "none" : "gold", 40), String(debt), debt ? "scorecards have entities at none" : "scorecards with entities at none") : null,
+      scoredEntities ? tile("catalog", "", medal(topMedal, 40), fmt(golden), ["of " + fmt(scoredEntities) + " scored entities are at the top level of every scorecard that rates them", goldUnjudged ? el("small", { className: "tile-note", textContent: fmt(goldUnjudged) + " of those still await an agent's assessment" }) : null]) : null,
+      scoredEntities ? tile("scorecards", debt ? "bad" : "good", medal(debt ? "none" : "gold", 40), String(debt), debt === 1 ? "scorecard has entities at none" : debt ? "scorecards have entities at none" : "scorecards with entities at none") : null,
       campaignNames.length ? tile("campaigns", on === campaignNames.length ? "good" : "", kpiPips(on, campaignNames.length, on + " of " + campaignNames.length + " campaigns on target"), on + " of " + campaignNames.length, "campaigns on target") : null,
     ].filter(Boolean);
     return shown.length ? el("div", { className: "tiles" }, ...shown) : null;
@@ -301,7 +309,7 @@ export const overviewViews = {
             ? el("div", { className: "medal-col" }, medal(floorOf(D, r.name) || "none", 30), el("div", {}, ...cardName(D, r.name), el("span", { className: "weakest" }, "weakest ", floorOf(D, r.name) ? floorPill(D, r.name) : "not scored", topNote(D, r.name, floorOf(D, r.name)))))
             : el("div", {}, ...cardName(D, r.name)),
           el("div", { className: "dist" }, barEl(splitUnassessed(D, r.name, r.parts)), el("div", { className: "sub", style: "font-size:12px;margin-top:4px" }, ...scCaption(D, r, true))),
-          el("div", { className: "num" + (r.none ? " bad" : "") }, el("strong", { textContent: r.scored ? String(r.none) : "—" }), el("span", { textContent: "at none" })),
+          el("div", { className: "num" + (r.none ? " bad" : "") }, el("strong", { textContent: r.scored ? String(r.none) : "—" }), el("span", { textContent: r.scored ? "at none" : "not scored" })),
           why(r, floors),
         ]),
       );
@@ -446,7 +454,7 @@ export const overviewViews = {
           "div",
           { className: "head" },
           el("h2", { id: "need-att", textContent: attention.length ? "Scorecards that need attention" : "Scorecards" }),
-          el("span", { className: "sub", textContent: "Needs attention first" }),
+          attention.length ? el("span", { className: "sub", textContent: "Needs attention first" }) : null,
         ),
         el("p", { className: "lede", textContent: "Each scorecard rates every entity of one kind against levels of rules. An entity is at none until it passes every rule of the first level." }),
         levelLegend(D, S.rows),

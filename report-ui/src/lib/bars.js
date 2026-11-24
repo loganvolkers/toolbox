@@ -41,12 +41,12 @@ export function barEl(all, cls, label) {
   });
   var spans = parts.map(function (p) {
     return p.hollow
-      ? el("span", { className: "hollow", style: "flex-grow:0;flex-basis:0;--seg:" + fill(p.level), title: p.level + ": " + p.n + ", not assessed by an agent yet" })
+      ? el("span", { className: "hollow", style: "flex-grow:0;flex-basis:0;--seg:" + fill(p.level), title: (p.label || p.level) + ": " + p.n + ", not assessed by an agent yet" })
       : p.unrun
-        ? el("span", { className: "unrun", style: "flex-grow:0;flex-basis:0;--seg:" + fill(p.level), title: p.level + ": " + p.n + ", provisional: checks it needs were not run in this build" })
+        ? el("span", { className: "unrun", style: "flex-grow:0;flex-basis:0;--seg:" + fill(p.level), title: (p.label || p.level) + ": " + p.n + ", provisional: checks it needs were not run in this build" })
         : p.level === "unscored"
           ? el("span", { className: "unscored", style: "flex-grow:0;flex-basis:0", title: "not scored: " + p.n })
-          : el("span", { style: "flex-grow:0;flex-basis:0;background:" + fill(p.level), title: p.level + ": " + p.n });
+          : el("span", { style: "flex-grow:0;flex-basis:0;background:" + fill(p.level), title: (p.label || p.level) + ": " + p.n });
   });
   grow(
     spans,
@@ -61,7 +61,7 @@ export function barEl(all, cls, label) {
     label ||
       parts
         .map(function (p) {
-          return p.n + " " + p.level + (p.hollow ? " not assessed" : p.unrun ? " provisional" : "");
+          return p.n + " " + (p.label || p.level) + (p.hollow ? " not assessed" : p.unrun ? " provisional" : "");
         })
         .join(", ") ||
       "no entities scored yet",
@@ -78,12 +78,24 @@ export function levelLegend(D, rows) {
   var unrun = (rows || []).some(function (r) {
     return !r.compare && provisionalOf(D, r.name);
   });
+  // Only the levels some scorecard here defines, so a portal that stops at bronze shows no silver or gold.
+  var used = new Set();
+  (rows || []).forEach(function (r) {
+    if (!r.compare)
+      ((r.sc || {}).levels || []).forEach(function (l) {
+        used.add(known(l) || "gold");
+      });
+  });
   return el(
     "div",
     { className: "legend", style: "margin-bottom:8px" },
-    ...["none", "bronze", "silver", "gold"].map(function (l) {
-      return el("span", {}, el("span", { className: "dot", style: "background:" + fill(l) }), l);
-    }),
+    ...["none", "bronze", "silver", "gold"]
+      .filter(function (l) {
+        return l === "none" || !used.size || used.has(l);
+      })
+      .map(function (l) {
+        return el("span", {}, el("span", { className: "dot", style: "background:" + fill(l) }), l);
+      }),
     hollow ? el("span", {}, el("span", { className: "dot hatch", style: "--seg:" + fill("bronze") }), "hatched, on a bar or a pill: not assessed by an agent yet") : null,
     unrun ? el("span", {}, el("span", { className: "dot dots", style: "--seg:" + fill("silver") }), "◌ dotted, or on a pill: provisional, checks not run in this build") : null,
   );
@@ -149,7 +161,7 @@ export function legendEl(parts) {
         {},
         el("span", { className: "dot" + (p.hollow ? " hatch" : p.unrun ? " dots" : ""), style: p.hollow || p.unrun ? "--seg:" + fill(p.level) : "background:" + fill(p.level) }),
         el("b", { textContent: fmt(p.n) }),
-        " " + p.level + (p.hollow ? " not assessed" : p.unrun ? " ◌ provisional" : ""),
+        " " + (p.label || p.level) + (p.hollow ? " not assessed" : p.unrun ? " ◌ provisional" : ""),
       );
     }),
   );
