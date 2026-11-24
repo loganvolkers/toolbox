@@ -80,11 +80,14 @@ tracks:
       Xeon VM with Linux 6.12 and one Postgres 16, and the load generator
       shares the same 4 vCPU. Capability and fact factors are probes and facts
       with evidence, and the capability scenarios come from the Backstage
-      parity audit, so they favour what Backstage ships. Both products are
-      scored on the same rules, factor by factor. The adjudicator was a fresh
-      coding agent outside the benchmark: it designed none of it and decides
-      no rule, so every rule stays measured; it recomputed the numbers from
-      the raw results and checked the scoring.
+      parity audit, so they favour what Backstage ships. Toolbox's maintainers
+      chose the factors from ISO/IEC 25010's quality characteristics, each
+      with a rule that could show Toolbox worse, and set every rule's bar
+      before the run. Both products are scored on the same rules, factor by
+      factor. The adjudicator was a fresh coding agent outside the benchmark:
+      it designed none of it and decides no rule, so every rule stays
+      measured; it recomputed the numbers from the raw results and checked the
+      scoring.
     links:
     - title: Results
       url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md
