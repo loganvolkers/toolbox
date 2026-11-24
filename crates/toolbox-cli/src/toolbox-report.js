@@ -1269,7 +1269,8 @@
       compare ? sw(standingColor("ahead"), "ahead") : null,
       compare ? sw(standingColor("parity"), "at parity") : null,
       compare ? sw(standingColor("behind"), "behind") : null,
-      el("span", { className: "medal-key" }, el("b", { textContent: "Medal:" }), medal("bronze", 16), "its weakest entity's level ·", medal("none", 16), "none", quoted ? " · a quoted level such as " + levelName(quoted) + " is its scorecard's own name for a level" : null),
+      el("span", { className: "medal-key" }, el("b", { textContent: "Medal:" }), medal("bronze", 16), "its weakest entity's level ·", medal("none", 16), "none"),
+      quoted ? el("span", {}, "A quoted level such as " + levelName(quoted) + " is its scorecard's own name for a level.") : null,
     );
   }
 
