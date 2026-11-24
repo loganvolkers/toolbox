@@ -1135,7 +1135,12 @@
             clickableRow(
               "compare/" + encodeURIComponent(n),
               go,
-              el("td", {}, el("strong", { textContent: def.title || n }), el("span", { className: "id-full", textContent: n })),
+              el(
+                "td",
+                {},
+                el("strong", { textContent: def.title || n }),
+                def.title ? el("span", { className: "id-full", textContent: n }) : null,
+              ),
               el("td", { textContent: title(c, peer) }),
               el("td", {}, standingEl(c.verdict[peer])),
               ...standings.map(function (s) {
