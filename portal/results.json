@@ -4707,6 +4707,9 @@
       "doc:docs/decisions/D01M86BY3YQX3SA1W99QXF1QA1H.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M86J769VGE6K5FJJQ76EP4AA.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/README.md": {
         "level": "skipped"
       },
@@ -4956,6 +4959,9 @@
       "doc:examples/connector-scaffold/README.md": {
         "level": "silver"
       },
+      "doc:examples/federated-actions/README.md": {
+        "level": "silver"
+      },
       "doc:examples/reference-portal/README.md": {
         "level": "silver"
       },
@@ -5193,6 +5199,9 @@
         "level": "bronze"
       },
       "example:examples/connector-scaffold/README.md": {
+        "level": "gold"
+      },
+      "example:examples/federated-actions/README.md": {
         "level": "gold"
       },
       "example:examples/reference-portal/README.md": {
