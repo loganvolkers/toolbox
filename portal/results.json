@@ -368,30 +368,6 @@
         "no-huge-functions": [
           "29b2a3c3"
         ],
-        "public-api-documented": [
-          "0130c390",
-          "01ef9d94",
-          "03ae64ef",
-          "0e6e91f8",
-          "2d804db3",
-          "4149e4c0",
-          "4537a919",
-          "46df0eec",
-          "6839dd0a",
-          "6d8b2fa4",
-          "719aa220",
-          "88873bfa",
-          "96afc524",
-          "9835773b",
-          "ba70ccf8",
-          "bdabbb5b",
-          "c0364cb7",
-          "d8024b86",
-          "dfb9155c",
-          "e171fb65",
-          "f02aa0c7",
-          "fdd7344b"
-        ],
         "short-functions": [
           "0a00b1c3",
           "29b2a3c3",
@@ -4085,7 +4061,6 @@
           "bounded-complexity": 1,
           "fully-documented": 22,
           "no-huge-functions": 1,
-          "public-api-documented": 22,
           "short-functions": 3,
           "simple-functions": 2
         },
@@ -4719,6 +4694,9 @@
         "level": "skipped"
       },
       "doc:docs/decisions/D01M87QHJWYKGNH0182XQ5NKHMB.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M87T16JRH53YV6VVWM8PH169.md": {
         "level": "skipped"
       },
       "doc:docs/decisions/README.md": {

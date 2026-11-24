@@ -1,9 +1,8 @@
 //! GitLab, gitlab.com or self-managed: merge requests from push options (no API token; git's own
-//! credentials decide who opens it) or through the API with the forge's token, and GitLab CI as
-//! a child's CI. The token is sent as `PRIVATE-TOKEN`.
+//! credentials decide who opens it) or through the API with the forge's token. The token is sent
+//! as `PRIVATE-TOKEN`. GitLab CI is a CI host (`crate::ci::gitlab`).
 
 use super::{ForgeDriver, Proposal};
-use crate::ci::{CiDriver, gitlab::Pipeline};
 use crate::executor::git_said;
 use reqwest::RequestBuilder;
 use serde_json::{Value, json};
@@ -121,15 +120,6 @@ impl ForgeDriver for Gitlab {
             Some(u) => json!({"forge": "gitlab", "url": u}),
             None => json!({"forge": "gitlab",
                 "error": "GitLab opened no merge request (it says so on push); the branch is pushed"}),
-        })
-    }
-
-    fn ci(&self, f: Resolved, _: &Value, git_ref: String) -> Box<dyn CiDriver> {
-        Box::new(Pipeline {
-            project: f.project,
-            git_ref,
-            api: f.api,
-            token_env: f.token,
         })
     }
 }

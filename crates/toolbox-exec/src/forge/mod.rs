@@ -1,12 +1,12 @@
 //! Forges (docs/design/forges.md): where a portal's repositories live, and what Toolbox asks of
-//! them: open a review for a pushed branch, say whose a token is, and start the CI a child
-//! portal on that forge runs through. One [`ForgeDriver`] per `forge::Kind`; the manifest side
-//! (`forges:`, resolving a URL to a forge) is `toolbox_model::forge`.
+//! them: open a review for a pushed branch, and say whose a token is. One [`ForgeDriver`] per
+//! `forge::Kind`; the manifest side (`forges:`, resolving a URL to a forge) is
+//! `toolbox_model::forge`. CI is not a forge capability: `crate::ci` starts runs on the CI host
+//! a forge's entry names, or on the forge's own CI.
 
 pub mod github;
 pub mod gitlab;
 
-use crate::ci::CiDriver;
 use crate::executor::git;
 use reqwest::RequestBuilder;
 use serde_json::Value;
@@ -44,11 +44,6 @@ pub trait ForgeDriver: Sync {
         git(p.repo, &["push", "-q", p.remote, p.branch])?;
         Ok(self.open_review(f, p.branch, p.target, p.title, p.body))
     }
-
-    /// The CI a `runner: {type: ci}` child on `f` runs through, on `git_ref`. `runner` is the
-    /// child's `federation.runner`, which may name what the forge lets a project choose (GitHub:
-    /// its `workflow`).
-    fn ci(&self, f: Resolved, runner: &Value, git_ref: String) -> Box<dyn CiDriver>;
 }
 
 /// The driver for a forge type.

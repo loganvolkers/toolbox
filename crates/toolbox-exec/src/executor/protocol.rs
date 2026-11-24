@@ -12,7 +12,7 @@ use std::io::{BufRead, BufReader, Write};
 use std::path::Path;
 use std::process::{Command, Stdio};
 use std::sync::Arc;
-use toolbox_model::manifest::Forge;
+use toolbox_model::ci::Hosts;
 
 /// How messages reach the executor.
 #[derive(Debug, Clone)]
@@ -42,7 +42,7 @@ pub struct Protocol {
 
 /// An `in-image` executor: `command`, or a released `package` whose binary gets `command` as
 /// its arguments.
-pub(crate) fn parse_in_image(v: &Value, _: &[Forge]) -> Result<Arc<dyn Executor>, String> {
+pub(crate) fn parse_in_image(v: &Value, _: &Hosts) -> Result<Arc<dyn Executor>, String> {
     let package = v.get("package").and_then(Value::as_str).map(str::to_owned);
     let command = match &package {
         Some(p) => {
@@ -68,7 +68,7 @@ pub(crate) fn parse_in_image(v: &Value, _: &[Forge]) -> Result<Arc<dyn Executor>
 }
 
 /// An `http` executor: `url`, and `token`, the variable holding a bearer token.
-pub(crate) fn parse_http(v: &Value, _: &[Forge]) -> Result<Arc<dyn Executor>, String> {
+pub(crate) fn parse_http(v: &Value, _: &Hosts) -> Result<Arc<dyn Executor>, String> {
     let s = |k: &str| v.get(k).and_then(Value::as_str).map(str::to_owned);
     Ok(Arc::new(Protocol {
         transport: Transport::Http {
@@ -297,7 +297,7 @@ fn stdio(
     Ok(out)
 }
 
-fn post(url: &str, token_env: Option<&str>, msg: &Value) -> Result<Vec<Value>, String> {
+pub(crate) fn post(url: &str, token_env: Option<&str>, msg: &Value) -> Result<Vec<Value>, String> {
     let mut req = crate::http::client().post(url).json(msg);
     if let Some(var) = token_env {
         let token = std::env::var(var).map_err(|_| format!("set {var} to reach {url}"))?;
@@ -583,7 +583,11 @@ esac
                 json!([{"type": "accepted", "run_id": "run_7", "executor_run_id": "ex_9"}]),
             )],
         );
-        let p = parse_http(&json!({"url": format!("{url}/exec"), "token": "PATH"}), &[]).unwrap();
+        let p = parse_http(
+            &json!({"url": format!("{url}/exec"), "token": "PATH"}),
+            &Hosts::default(),
+        )
+        .unwrap();
         assert_eq!(p.kind(), "http");
         let out = p.run(&ctx(), &[]);
         assert_eq!(out.status, "dispatched", "{:?}", out.error);
@@ -600,7 +604,7 @@ esac
                 json!({"type": "result", "run_id": "run_7", "status": "succeeded", "outputs": {"ok": 1}}),
             )],
         );
-        let p = parse_http(&json!({"url": format!("{url}/exec")}), &[]).unwrap();
+        let p = parse_http(&json!({"url": format!("{url}/exec")}), &Hosts::default()).unwrap();
         let mut run = as_run(&out);
         assert!(matches!(
             p.recheck(&mut run, false, Path::new(".")),

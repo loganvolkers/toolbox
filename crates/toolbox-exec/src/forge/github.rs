@@ -1,8 +1,7 @@
 //! GitHub and GitHub Enterprise Server: pull requests through the REST API with the forge's
-//! token, and GitHub Actions as a child's CI.
+//! token. GitHub Actions is a CI host (`crate::ci::github`).
 
 use super::ForgeDriver;
-use crate::ci::{CiDriver, github::Workflow};
 use reqwest::RequestBuilder;
 use serde_json::{Value, json};
 use toolbox_model::forge::{Kind, Resolved};
@@ -43,18 +42,5 @@ impl ForgeDriver for Github {
             }
             Err(e) => json!({"forge": "github", "error": e}),
         }
-    }
-
-    fn ci(&self, f: Resolved, runner: &Value, git_ref: String) -> Box<dyn CiDriver> {
-        Box::new(Workflow {
-            repo: f.project,
-            workflow: runner["workflow"]
-                .as_str()
-                .unwrap_or("toolbox.yml")
-                .to_owned(),
-            git_ref,
-            api: f.api,
-            token_env: f.token,
-        })
     }
 }

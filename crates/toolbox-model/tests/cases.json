@@ -34,6 +34,13 @@
     {"name": "in-image package a release cannot pin", "set": {"/actions/0/executor": {"type": "in-image", "package": "github:acme/exec"}}, "code": "action.executor", "python": false},
     {"name": "http executor without url", "set": {"/actions/0/executor": {"type": "http"}}, "code": "action.executor", "python": false},
     {"name": "webhook executor without url", "set": {"/actions/0/executor": {"type": "webhook"}}, "code": "action.executor", "python": false},
-    {"name": "two forges that say who people are", "set": {"/forges": [{"url": "https://github.com", "identity": true}, {"url": "https://gitlab.com", "identity": true}]}, "code": "forge", "python": false}
+    {"name": "two forges that say who people are", "set": {"/forges": [{"url": "https://github.com", "identity": true}, {"url": "https://gitlab.com", "identity": true}]}, "code": "forge", "python": false},
+    {"name": "ci host of an unknown type", "set": {"/ci": [{"name": "bk", "type": "buildkite"}]}, "code": "schema", "python": true},
+    {"name": "forge sends its children to an undeclared ci host", "set": {"/forges": [{"url": "https://github.com", "ci": "buildkite"}]}, "code": "ci", "python": false},
+    {"name": "two ci hosts with one name", "set": {"/ci": [{"name": "gl", "type": "gitlab-ci"}, {"name": "gl", "type": "github-actions"}]}, "code": "ci", "python": false},
+    {"name": "http ci host without url", "set": {"/ci": [{"name": "bk", "type": "http"}]}, "code": "ci", "python": false},
+    {"name": "ci host project with an unknown placeholder", "set": {"/ci": [{"name": "gl", "type": "gitlab-ci", "project": "mirrors/{repo}"}]}, "code": "ci", "python": false},
+    {"name": "gitlab-pipeline names a github-actions ci host", "set": {"/ci": [{"name": "gha", "type": "github-actions"}], "/actions/0/executor": {"type": "gitlab-pipeline", "project": "a/b", "ci": "gha"}}, "code": "action.executor", "python": false},
+    {"name": "github-workflow names both ci and api", "set": {"/ci": [{"name": "gha", "type": "github-actions"}], "/actions/0/executor": {"type": "github-workflow", "repo": "a/b", "workflow": "w.yml", "ci": "gha", "api": "https://ghe.example/api/v3"}}, "code": "action.executor", "python": false}
   ]
 }

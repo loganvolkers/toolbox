@@ -11,8 +11,8 @@ use crate::forge::ForgeDriver;
 use crate::forge::gitlab::{Gitlab, encode, reason};
 use serde_json::{Value, json};
 use std::sync::Arc;
+use toolbox_model::ci::{CiType, Hosts};
 use toolbox_model::forge::{self, Kind};
-use toolbox_model::manifest::Forge;
 
 /// The job whose artifact holds the child's run record.
 pub const JOB: &str = "toolbox";
@@ -29,20 +29,30 @@ pub struct Pipeline {
     pub token_env: String,
 }
 
-/// A `gitlab-pipeline` executor: `project`, `ref` (default main), and the forge's `url` as
-/// `forges:` lists it (default https://gitlab.com), whose API and token it uses.
-pub(crate) fn parse(v: &Value, forges: &[Forge]) -> Result<Arc<dyn Executor>, String> {
-    Ok(Arc::new(Ci::new(Box::new(Pipeline::parse(v, forges)?))))
+/// A `gitlab-pipeline` executor: `project`, `ref` (default main), and either a `gitlab-ci` host
+/// (`ci`) or the forge's `url` as `forges:` lists it (default https://gitlab.com), whose API and
+/// token it uses.
+pub(crate) fn parse(v: &Value, hosts: &Hosts) -> Result<Arc<dyn Executor>, String> {
+    Ok(Arc::new(Ci::new(Box::new(Pipeline::parse(v, hosts)?))))
 }
 
 impl Pipeline {
-    /// Reads a `gitlab-pipeline` executor, resolving its `forge:` against the manifest's forges.
-    pub fn parse(v: &Value, forges: &[Forge]) -> Result<Self, String> {
+    /// Reads a `gitlab-pipeline` executor, resolving its `ci:` or `forge:` against the manifest.
+    pub fn parse(v: &Value, hosts: &Hosts) -> Result<Self, String> {
         let s = |k: &str| v.get(k).and_then(Value::as_str).map(str::to_owned);
         let project = s("project").ok_or("executor.project (group/project) is required")?;
+        if let Some(name) = s("ci") {
+            let t = super::host_target(hosts, &name, CiType::GitlabCi, &project)?;
+            return Ok(Self {
+                project,
+                git_ref: s("ref").unwrap_or_else(|| "main".into()),
+                api: t.api,
+                token_env: t.token.unwrap_or_default(),
+            });
+        }
         let url = s("forge").unwrap_or_else(|| "https://gitlab.com".into());
         let git = format!("{}/{project}.git", url.trim_end_matches('/'));
-        let f = forge::resolve(forges, &git)
+        let f = forge::resolve(&hosts.forges, &git)
             .filter(|f| f.kind == Kind::Gitlab)
             .ok_or_else(|| {
                 format!("{url} is not a GitLab forge: list it under forges: with type: gitlab")
@@ -212,6 +222,7 @@ mod tests {
     use crate::ci::fake;
     use crate::executor::Context;
     use serde_json::Map;
+    use toolbox_model::manifest::{CiHost, Forge};
 
     fn fake(routes: Vec<(&'static str, u16, Value)>) -> (String, fake::Seen) {
         fake::serve("/api/v4", routes)
@@ -233,15 +244,17 @@ mod tests {
         }
     }
 
-    fn forges(api: &str) -> Vec<Forge> {
-        vec![Forge {
-            url: "https://gitlab.acme.dev".into(),
-            kind: Some("gitlab".into()),
-            api: Some(api.into()),
-            token: Some("PATH".into()),
-            projects: None,
-            identity: false,
-        }]
+    fn forges(api: &str) -> Hosts {
+        Hosts {
+            forges: vec![Forge {
+                url: "https://gitlab.acme.dev".into(),
+                kind: Some("gitlab".into()),
+                api: Some(api.into()),
+                token: Some("PATH".into()),
+                ..Forge::default()
+            }],
+            ci: vec![],
+        }
     }
 
     #[test]
@@ -369,18 +382,54 @@ mod tests {
 
     #[test]
     fn only_a_gitlab_forge_takes_a_pipeline() {
-        assert!(Pipeline::parse(&json!({"project": "a/b"}), &[]).is_ok());
+        let none = Hosts::default();
+        assert!(Pipeline::parse(&json!({"project": "a/b"}), &none).is_ok());
         let e = Pipeline::parse(
             &json!({"project": "a/b", "forge": "https://git.example"}),
-            &[],
+            &none,
         )
         .unwrap_err();
         assert!(e.contains("forges:"));
         let e = Pipeline::parse(
             &json!({"project": "a/b", "forge": "https://github.com"}),
-            &[],
+            &none,
         )
         .unwrap_err();
         assert!(e.contains("not a GitLab forge"));
+    }
+
+    #[test]
+    fn a_ci_host_supplies_the_endpoint_and_token() {
+        let hosts = Hosts {
+            forges: vec![],
+            ci: vec![
+                CiHost {
+                    name: "mirror".into(),
+                    kind: "gitlab-ci".into(),
+                    url: Some("https://gitlab.acme.dev".into()),
+                    token: Some("ACME_GITLAB_TOKEN".into()),
+                    projects: Some(vec!["mirrors/*".into()]),
+                    ..CiHost::default()
+                },
+                CiHost {
+                    name: "gha".into(),
+                    kind: "github-actions".into(),
+                    ..CiHost::default()
+                },
+            ],
+        };
+        let p =
+            Pipeline::parse(&json!({"project": "mirrors/web", "ci": "mirror"}), &hosts).unwrap();
+        assert_eq!(
+            (p.api.as_str(), p.token_env.as_str()),
+            ("https://gitlab.acme.dev/api/v4", "ACME_GITLAB_TOKEN")
+        );
+        let e =
+            Pipeline::parse(&json!({"project": "acme/web", "ci": "mirror"}), &hosts).unwrap_err();
+        assert!(e.contains("projects"), "{e}");
+        let e = Pipeline::parse(&json!({"project": "a/b", "ci": "gha"}), &hosts).unwrap_err();
+        assert!(e.contains("gitlab-ci"), "{e}");
+        let e = Pipeline::parse(&json!({"project": "a/b", "ci": "nope"}), &hosts).unwrap_err();
+        assert!(e.contains("not declared"), "{e}");
     }
 }

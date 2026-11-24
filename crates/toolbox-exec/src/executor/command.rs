@@ -4,7 +4,7 @@
 use super::{Context, Executor, Outcome, Preview, argv, names, outputs_from, spawn};
 use serde_json::{Value, json};
 use std::sync::Arc;
-use toolbox_model::manifest::Forge;
+use toolbox_model::ci::Hosts;
 
 /// A `command` executor: runs one command in the checkout.
 #[derive(Debug, Clone)]
@@ -14,7 +14,7 @@ pub struct Command {
     pub env: Vec<String>,
 }
 
-pub(crate) fn parse(v: &Value, _: &[Forge]) -> Result<Arc<dyn Executor>, String> {
+pub(crate) fn parse(v: &Value, _: &Hosts) -> Result<Arc<dyn Executor>, String> {
     Ok(Arc::new(Command {
         run: argv(v.get("run"), "executor.run")?,
         preview: v.get("preview").and_then(Value::as_bool).unwrap_or(false),

@@ -628,9 +628,102 @@ impl Checker {
         }
     }
 
+    /// CI hosts: unique names, an endpoint for a service, a project template with only
+    /// `{project}` in it, and every `forges[].ci` naming one (docs/design/forges.md §4.7).
+    fn ci_hosts(&mut self, m: &Manifest) {
+        let mut seen = BTreeSet::new();
+        for (i, h) in m.ci.iter().enumerate() {
+            if h.name == crate::ci::NONE || !seen.insert(h.name.as_str()) {
+                self.push(
+                    "ci",
+                    format!("/ci/{i}/name"),
+                    format!("ci {}: the name is taken (none, or listed twice)", h.name),
+                );
+            }
+            if let Err(e) = crate::ci::target(h, "x") {
+                self.push("ci", format!("/ci/{i}"), e);
+            }
+            if let Some(p) = &h.project
+                && p.replace("{project}", "").contains(['{', '}'])
+            {
+                self.push(
+                    "ci",
+                    format!("/ci/{i}/project"),
+                    format!("ci {}: project {p} may hold only {{project}}", h.name),
+                );
+            }
+        }
+        for (i, f) in m.forges.iter().enumerate() {
+            if let Some(c) = &f.ci
+                && c != crate::ci::NONE
+                && !m.ci.iter().any(|h| &h.name == c)
+            {
+                self.push(
+                    "ci",
+                    format!("/forges/{i}/ci"),
+                    format!(
+                        "forge {}: ci {c} is not declared under ci: (or say none)",
+                        f.url
+                    ),
+                );
+            }
+        }
+    }
+
+    /// An executor's `ci:` names a declared host of the type it speaks, instead of `forge`,
+    /// `api` or `token`.
+    fn executor_ci(&mut self, m: &Manifest, ai: usize, t: &crate::executors::ExecutorType) {
+        let a = &m.actions[ai];
+        let Some(name) = a.executor.get("ci").and_then(Value::as_str) else {
+            return;
+        };
+        let at = format!("/actions/{ai}/executor/ci");
+        let Some(want) = t.ci else {
+            self.push(
+                "action.executor",
+                at,
+                format!("action {}: a {} executor names no ci", a.name, t.name),
+            );
+            return;
+        };
+        match m.ci.iter().find(|h| h.name == name) {
+            Some(h) if h.kind == want.name() => {}
+            Some(h) => self.push(
+                "action.executor",
+                at.clone(),
+                format!(
+                    "action {}: ci {name} is {}, and a {} executor needs {}",
+                    a.name,
+                    h.kind,
+                    t.name,
+                    want.name()
+                ),
+            ),
+            None => self.push(
+                "action.executor",
+                at.clone(),
+                format!("action {}: ci {name} is not declared under ci:", a.name),
+            ),
+        }
+        if let Some(k) = ["forge", "api", "token"]
+            .into_iter()
+            .find(|k| a.executor.get(*k).is_some())
+        {
+            self.push(
+                "action.executor",
+                at,
+                format!(
+                    "action {}: name ci or {k}, not both; ci {name} supplies the endpoint and token",
+                    a.name
+                ),
+            );
+        }
+    }
+
     /// Each executor type's own required fields (docs/design/federated-actions.md §5).
     fn executors(&mut self, m: &Manifest) {
         self.forges(m);
+        self.ci_hosts(m);
         for (ai, a) in m.actions.iter().enumerate() {
             let ty = a
                 .executor
@@ -641,7 +734,8 @@ impl Checker {
             let Some(t) = crate::executors::get(ty) else {
                 continue;
             };
-            if let Some(kind) = t.forge {
+            self.executor_ci(m, ai, t);
+            if let Some(kind) = t.forge.filter(|_| a.executor.get("ci").is_none()) {
                 let forge = a
                     .executor
                     .get("forge")

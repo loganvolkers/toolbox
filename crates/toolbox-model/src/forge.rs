@@ -56,6 +56,8 @@ pub struct Resolved {
     pub projects: Option<Vec<String>>,
     /// `owner/repo`, or `group/subgroup/project`.
     pub project: String,
+    /// The forge entry's `ci:`: the CI host its children run on, `none`, or its own CI.
+    pub ci: Option<String>,
 }
 
 impl Resolved {
@@ -195,6 +197,7 @@ pub fn resolve(forges: &[Forge], git: &str) -> Option<Resolved> {
             projects: f.projects.clone(),
             url: trim(&f.url).into(),
             project,
+            ci: f.ci.clone(),
         });
     }
     None
@@ -230,6 +233,7 @@ mod tests {
             token: None,
             projects: None,
             identity: false,
+            ci: None,
         }
     }
 

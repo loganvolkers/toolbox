@@ -5,7 +5,7 @@
 use super::{Context, Executor, Outcome, Preview};
 use serde_json::{Value, json};
 use std::sync::Arc;
-use toolbox_model::manifest::Forge;
+use toolbox_model::ci::Hosts;
 
 /// A `webhook` executor.
 #[derive(Debug, Clone)]
@@ -15,7 +15,7 @@ pub struct Webhook {
     pub token_env: Option<String>,
 }
 
-pub(crate) fn parse(v: &Value, _: &[Forge]) -> Result<Arc<dyn Executor>, String> {
+pub(crate) fn parse(v: &Value, _: &Hosts) -> Result<Arc<dyn Executor>, String> {
     let s = |k: &str| v.get(k).and_then(Value::as_str).map(str::to_owned);
     Ok(Arc::new(Webhook {
         url: s("url").ok_or("executor.url is required")?,
@@ -88,7 +88,7 @@ mod tests {
     #[test]
     fn delivers_the_run_message_and_fails_on_a_refusal() {
         let (url, seen) = fake::serve("", vec![("POST /hook", 202, json!({}))]);
-        let w = parse(&json!({"url": format!("{url}/hook")}), &[]).unwrap();
+        let w = parse(&json!({"url": format!("{url}/hook")}), &Hosts::default()).unwrap();
         let out = w.run(&ctx(), &[]);
         assert_eq!(out.status, "succeeded", "{:?}", out.error);
         assert_eq!(out.outputs, json!({"delivered": 202}));
@@ -97,11 +97,15 @@ mod tests {
             toolbox_model::schema::executor_messages().is_valid(&body),
             "{body}"
         );
-        let w = parse(&json!({"url": format!("{url}/elsewhere")}), &[]).unwrap();
+        let w = parse(
+            &json!({"url": format!("{url}/elsewhere")}),
+            &Hosts::default(),
+        )
+        .unwrap();
         assert_eq!(w.run(&ctx(), &[]).status, "failed");
         let w = parse(
             &json!({"url": url, "token": "TOOLBOX_TEST_NO_SUCH_VAR"}),
-            &[],
+            &Hosts::default(),
         )
         .unwrap();
         assert!(
