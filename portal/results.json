@@ -627,6 +627,14 @@
           "825aff0c"
         ]
       },
+      "example:experiments/actions-ab/results/r1/README.md": {
+        "cites-the-design": [
+          "a1817f31"
+        ],
+        "says-how-to-check": [
+          "825aff0c"
+        ]
+      },
       "example:experiments/actions-ab/results/r2dry/README.md": {
         "says-how-to-check": [
           "825aff0c"
@@ -5234,6 +5242,13 @@
         "level": "gold"
       },
       "example:experiments/actions-ab/results/r0/README.md": {
+        "failing": {
+          "cites-the-design": 1,
+          "says-how-to-check": 1
+        },
+        "level": "bronze"
+      },
+      "example:experiments/actions-ab/results/r1/README.md": {
         "failing": {
           "cites-the-design": 1,
           "says-how-to-check": 1
