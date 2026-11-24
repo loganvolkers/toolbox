@@ -2305,7 +2305,7 @@ mod tests {
         assert!(page.contains("Overview"));
         assert!(page.contains("Catalog"));
         assert!(page.contains("Campaigns"));
-        assert!(page.contains("Fleet health"));
+        assert!(page.contains(r#"setAttribute("aria-label", "Status")"#));
         assert!(page.contains("Needs attention first"));
         assert!(page.contains("Most entities at none first"));
         assert!(page.contains("role: \"tab\""));
