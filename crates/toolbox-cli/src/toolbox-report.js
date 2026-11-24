@@ -162,7 +162,9 @@
     "a.erow .name small{display:block;font:12px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);font-weight:400}",
     "a.erow .badges{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end}",
     ".crumb{font-size:13px;color:var(--muted);margin-bottom:12px}",
-    ".crumb a{color:var(--muted)}",
+    ".crumb a{color:var(--muted);display:inline-block;padding:4px 0;margin:-4px 0}",
+    "a.rl,.refs a{display:inline-block;padding:4px 0;margin:-4px 0}",
+    ".passes>span a{display:inline-block;padding:4px 0;margin:-4px 0}",
     ".ehead{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between}",
     ".ehead h2{font-size:24px}",
     ".ehead code{font:12.5px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);overflow-wrap:anywhere}",
@@ -209,7 +211,7 @@
     ".why{margin-top:6px;font-size:13.5px;line-height:1.5}",
     ".why>b{font-weight:650}",
     ".refs{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:4px;font-size:13px}",
-    ".refs a{display:inline-block;padding:2px 0;text-underline-offset:2px}",
+    ".refs a{text-underline-offset:2px}",
     ".refs a::after{content:' \\2197';font-size:11px}",
     ".rationale{margin:6px 0 12px;padding:10px 14px;border-left:3px solid var(--accent);background:var(--tint);border-radius:0 10px 10px 0;max-width:80ch;font-size:14px}",
     ".rationale>b{display:block;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}",
@@ -648,7 +650,7 @@
   }
 
   function ruleLink(scName, rule, text) {
-    return link("rule/" + enc(scName) + "/" + enc(rule), "", text || rule);
+    return link("rule/" + enc(scName) + "/" + enc(rule), "rl", text || rule);
   }
 
   function isComparative(D, name) {
@@ -2356,7 +2358,15 @@
           basisBadge(b),
         ),
         def.rationale || (def.links || []).length
-          ? el("div", { className: "rationale" }, el("b", { textContent: "Why it exists" }), def.rationale ? el("div", {}, ...rich(def.rationale)) : null, refs(def.links))
+          ? el(
+              "div",
+              { className: "rationale" },
+              el("b", { textContent: "Why it exists" }),
+              def.rationale ? el("div", {}, ...rich(def.rationale)) : null,
+              refs(def.links),
+              !(def.links || []).length && (sc.links || []).length ? el("div", { className: "sub", style: "margin-top:6px" }, "Read more, from the ", link("scorecard/" + enc(scName), "", title(D, scName)), " standard:") : null,
+              !(def.links || []).length ? refs(sc.links) : null,
+            )
           : el("p", { className: "sub", textContent: "This rule has no rationale yet." }),
         el("h3", { textContent: "How it is decided" }),
         el("p", { style: "margin:0" }, basisBadge(b), " ", BASIS[b].desc),
