@@ -2110,7 +2110,11 @@
               el("b", { textContent: "Next: " }),
               "run ",
               el("code", { textContent: "toolbox report" }),
-              " in the repository with its connectors enabled. ",
+              " in the repository. It runs the connectors listed under ",
+              el("code", { textContent: "connectors:" }),
+              " in the portal's ",
+              el("code", { textContent: "toolbox.yaml" }),
+              ", and ",
               el("code", { textContent: "toolbox doctor" }),
               " lists any connector or tool that is missing. The " + plural(S.rows.length, "scorecard") + " below will fill in."
             )
@@ -2892,7 +2896,7 @@
           return offBy(pair[1]) > 0;
         });
         if (!rows.length) {
-          list.replaceChildren(el("div", { className: "empty" }, "No " + kindTitle(D, sc.kind).toLowerCase() + " has been collected yet. Run ", el("code", { textContent: "toolbox report" }), " in the repository with its connectors enabled; ", el("code", { textContent: "toolbox doctor" }), " lists any that is missing."));
+          list.replaceChildren(el("div", { className: "empty" }, "No " + kindTitle(D, sc.kind).toLowerCase() + " has been collected yet. Run ", el("code", { textContent: "toolbox report" }), " in the repository with a connector for it listed under ", el("code", { textContent: "connectors:" }), " in the portal's ", el("code", { textContent: "toolbox.yaml" }), "; ", el("code", { textContent: "toolbox doctor" }), " lists any that is missing."));
           return;
         }
         if (!shown.length) {
