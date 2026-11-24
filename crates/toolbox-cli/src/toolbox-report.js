@@ -1033,7 +1033,7 @@
       });
     var names = function (rs) {
       return rs.map(function (r) {
-        return ruleLink(card, r);
+        return el("span", { className: "nr" }, ruleLink(card, r), " ", basisBadge("judged", true));
       });
     };
     var list = function (rs) {
