@@ -150,8 +150,8 @@ pub fn prepare(m: &Manifest, d: &Derived, req: Request<'_>) -> Result<Prepared, 
         },
         run::now_secs(),
     );
-    let reviewed = matches!(exec, Executor::Change { .. })
-        || off.child.as_ref().is_some_and(|c| c.executor == "change");
+    let reviewed = matches!(exec, Executor::Change { push: false, .. })
+        || off.child.as_ref().is_some_and(|c| c.reviewed);
     Ok(Prepared {
         offered: off,
         entity,

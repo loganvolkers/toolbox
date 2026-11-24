@@ -30,8 +30,11 @@ pub struct Child {
     pub runner: Value,
     /// The child's approval rule, evaluated by the child when it previews.
     pub approval: Option<String>,
-    /// The child's executor type (`change` runs are approved by review in the child's repo).
+    /// The child's executor type.
     pub executor: String,
+    /// Whether the child's runs are approved by review in its repo: a `change` that proposes a
+    /// branch. A `change` with `land: push` lands once approved, so the parent's approvals apply.
+    pub reviewed: bool,
     /// The parent's `federation.runners`: the credentials and allowlists it dispatches with.
     pub runners: Value,
 }
@@ -285,6 +288,7 @@ pub fn offered(m: &Manifest, d: &Derived) -> Vec<Offered> {
                             .and_then(Value::as_str)
                             .unwrap_or("command")
                             .to_owned(),
+                        reviewed: def["executor"] == "change" && def["land"] != "push",
                         runners: runners.clone(),
                     }),
                     action: a,
@@ -369,16 +373,19 @@ pub fn resolve<'a>(
 
 /// A one-line summary of an action's inputs: `bump (patch|minor|major, required)`.
 pub fn inputs_line(a: &Action) -> String {
-    let req: Vec<&str> = a
-        .inputs
+    schema_line(&a.inputs)
+}
+
+/// [`inputs_line`] from an inputs JSON Schema, as `GET /v1/actions` returns it.
+pub fn schema_line(inputs: &Value) -> String {
+    let req: Vec<&str> = inputs
         .get("required")
         .and_then(Value::as_array)
         .into_iter()
         .flatten()
         .filter_map(Value::as_str)
         .collect();
-    let props = a
-        .inputs
+    let props = inputs
         .get("properties")
         .and_then(Value::as_object)
         .cloned()
@@ -478,6 +485,7 @@ mod tests {
                 runner,
                 approval: None,
                 executor: "command".into(),
+                reviewed: false,
                 runners,
             }),
         }

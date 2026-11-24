@@ -6,7 +6,7 @@
 //! |---|---|---|
 //! | `command` | the same command with `TOOLBOX_PHASE=preview`, when `preview: true` | the command; its last JSON line is the outputs |
 //! | `in-image` | executor protocol v1 `preview` over stdio | protocol `run`: `accepted`, `progress`, `result` |
-//! | `change` | the command in a throwaway git worktree; the effects are the files it changed | the same, committed to a new branch and pushed: the run is `proposed` until its postcondition is observed on the base branch |
+//! | `change` | the command in a throwaway git worktree; the effects are the files it changed, with their diffs | the same, committed and pushed to a new branch: the run is `proposed` until its commit is on the base. With `land: push`, pushed to the base once approved (never forced) and done when the base is seen to have it |
 //! | `github-workflow` | the Toolbox layer only | `workflow_dispatch`, then the run is tracked by its `run-name` |
 //! | `toolbox` | the child portal's own preview | the child portal's own run (federated dispatch) |
 //!
@@ -98,6 +98,9 @@ pub enum Executor {
         branch: Option<String>,
         message: Option<String>,
         env: Vec<String>,
+        /// `land: push`: push the commit to the base once approved, instead of proposing a
+        /// branch for review. The action's approval rule is then the only review.
+        push: bool,
     },
     GithubWorkflow(crate::github::Workflow),
     /// Dispatch to a child portal (federation): the child previews, runs and verifies.
@@ -209,6 +212,15 @@ impl Executor {
                 branch: s("branch"),
                 message: s("message"),
                 env: names(v, "secrets"),
+                push: match s("land").as_deref() {
+                    None | Some("propose") => false,
+                    Some("push") => true,
+                    Some(other) => {
+                        return Err(format!(
+                            "executor.land is propose (a branch for review) or push (straight to the base once approved), not {other}"
+                        ));
+                    }
+                },
             },
             "github-workflow" => Executor::GithubWorkflow(crate::github::Workflow::parse(v)?),
             other => {
@@ -261,6 +273,7 @@ impl Executor {
                 base,
                 remote,
                 env,
+                push,
                 ..
             } => {
                 let wt = Worktree::new(&ctx.cwd, base.as_deref(), remote)?;
@@ -271,11 +284,20 @@ impl Executor {
                 let files = wt.changes()?;
                 let mut effects: Vec<Value> = files
                     .iter()
-                    .map(|(op, path)| json!({"resource": format!("file:{path}"), "operation": op}))
+                    .map(|(op, path)| {
+                        json!({"resource": format!("file:{path}"), "operation": op,
+                        "diff": wt.diff(path)})
+                    })
                     .collect();
                 let mut warnings = Vec::new();
                 if effects.is_empty() {
                     warnings.push("the change command changed no files".into());
+                } else if *push {
+                    effects.push(
+                        json!({"resource": format!("branch:{}", base_branch(&wt.base, remote)),
+                        "operation": "push", "base": wt.base,
+                        "description": "one commit, pushed once approved (never forced)"}),
+                    );
                 } else {
                     effects.push(
                         json!({"resource": format!("branch:{}", branch_name(self, ctx)),
@@ -356,13 +378,14 @@ impl Executor {
                 remote,
                 message,
                 env,
+                push,
                 ..
             } => change_run(
                 run,
                 ctx,
                 base.as_deref(),
                 remote,
-                &branch_name(self, ctx),
+                (!push).then(|| branch_name(self, ctx)).as_deref(),
                 message.as_deref(),
                 env,
             )
@@ -748,6 +771,20 @@ impl Worktree {
         d
     }
 
+    /// The staged diff of one changed file, as a preview shows it (cut at 4,000 bytes).
+    fn diff(&self, path: &str) -> String {
+        let mut d = git(&self.root(), &["diff", "--cached", "--", path]).unwrap_or_default();
+        if d.len() > 4000 {
+            let mut end = 4000;
+            while !d.is_char_boundary(end) {
+                end -= 1;
+            }
+            d.truncate(end);
+            d.push_str("\n… (cut)");
+        }
+        d
+    }
+
     /// `(operation, path)` for every file the command changed.
     fn changes(&self) -> Result<Vec<(String, String)>, String> {
         let root = self.root();
@@ -778,12 +815,21 @@ impl Drop for Worktree {
     }
 }
 
+/// The branch a base names: `origin/main` → `main`.
+fn base_branch<'a>(base: &'a str, remote: &str) -> &'a str {
+    base.strip_prefix(remote)
+        .and_then(|b| b.strip_prefix('/'))
+        .unwrap_or(base)
+}
+
+/// Make the change in a worktree from the base and commit it; then propose it on `branch`, or,
+/// without one (`land: push`), push it to the base.
 fn change_run(
     run: &[String],
     ctx: &Context,
     base: Option<&str>,
     remote: &str,
-    branch: &str,
+    branch: Option<&str>,
     message: Option<&str>,
     env: &[String],
 ) -> Result<Outcome, String> {
@@ -806,7 +852,9 @@ fn change_run(
         });
     }
     let root = wt.root();
-    git(&root, &["switch", "-c", branch])?;
+    if let Some(branch) = branch {
+        git(&root, &["switch", "-c", branch])?;
+    }
     let msg = message.map_or_else(
         || {
             format!(
@@ -834,7 +882,33 @@ fn change_run(
     git(&root, &args)?;
     let commit = git(&root, &["rev-parse", "HEAD"])?;
     // From the main checkout: a relative remote URL resolves against it, not the worktree.
-    let has_remote = git(&wt.repo, &["remote", "get-url", remote]).ok();
+    let has_remote = git(&wt.repo, &["remote", "get-url", "--", remote]).ok();
+    let files: Vec<Value> = files
+        .iter()
+        .map(|(op, p)| json!({"operation": op, "path": p}))
+        .collect();
+    let Some(branch) = branch else {
+        let target = base_branch(&wt.base, remote);
+        if has_remote.is_none() {
+            return Ok(Outcome::failed(format!(
+                "land: push needs the remote {remote}, and this repository has none"
+            )));
+        }
+        let refspec = format!("{commit}:refs/heads/{target}");
+        if let Err(e) = git(&wt.repo, &["push", "-q", "--", remote, &refspec]) {
+            return Ok(Outcome::failed(format!(
+                "the push to {remote} {target} was refused, so nothing landed: {e}"
+            )));
+        }
+        return Ok(Outcome {
+            status: "succeeded".into(),
+            outputs: json!({"landed": true, "base": wt.base, "commit": commit,
+                "remote": has_remote, "files": files}),
+            error: None,
+            progress: vec![],
+            child: None,
+        });
+    };
     let pushed = match &has_remote {
         Some(_) => {
             git(&wt.repo, &["push", "-q", remote, branch])?;
@@ -845,7 +919,7 @@ fn change_run(
     Ok(Outcome {
         status: "proposed".into(),
         outputs: json!({"branch": branch, "base": wt.base, "commit": commit, "pushed": pushed,
-            "remote": has_remote, "files": files.iter().map(|(op, p)| json!({"operation": op, "path": p})).collect::<Vec<_>>()}),
+            "remote": has_remote, "files": files}),
         error: None,
         progress: vec![],
         child: None,
@@ -893,6 +967,37 @@ pub fn merged(cwd: &Path, run: &crate::run::Run) -> Result<bool, String> {
         ],
     )?;
     Ok(!found.is_empty())
+}
+
+/// Whether a landed change is on its base as it was pushed: the commit is there (fetched again,
+/// so a hook that took it back is seen) and each changed file has the content the commit wrote.
+/// Returns the paths that differ.
+pub fn landed(cwd: &Path, run: &crate::run::Run) -> Result<Vec<String>, String> {
+    if !merged(cwd, run)? {
+        return Err(format!(
+            "the commit is not on {}: the push did not land",
+            run.outputs["base"].as_str().unwrap_or("the base")
+        ));
+    }
+    let repo = PathBuf::from(git(cwd, &["rev-parse", "--show-toplevel"])?);
+    let base = run.outputs["base"].as_str().unwrap_or("");
+    let commit = run.outputs["commit"].as_str().unwrap_or("");
+    let blob = |rev: &str, path: &str| {
+        git(
+            &repo,
+            &["rev-parse", "-q", "--verify", &format!("{rev}:{path}")],
+        )
+        .ok()
+    };
+    Ok(run.outputs["files"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|f| f["path"].as_str())
+        .filter(|p| !p.starts_with('-') && !p.contains(".."))
+        .filter(|p| blob(commit, p) != blob(base, p))
+        .map(str::to_owned)
+        .collect())
 }
 
 /// Whether `id` is a run id as `crate::run::new_id` makes them.
@@ -1022,6 +1127,113 @@ mod tests {
             "{name} reached an executor that did not ask for it"
         );
         assert!(seen(std::slice::from_ref(&name)));
+    }
+
+    fn sh(dir: &Path, script: &str) {
+        let ok = Command::new("sh")
+            .args(["-c", script])
+            .current_dir(dir)
+            .env("GIT_AUTHOR_NAME", "t")
+            .env("GIT_AUTHOR_EMAIL", "t@t")
+            .env("GIT_COMMITTER_NAME", "t")
+            .env("GIT_COMMITTER_EMAIL", "t@t")
+            .status()
+            .unwrap()
+            .success();
+        assert!(ok, "{script}");
+    }
+
+    /// A clone of a bare origin with one commit on main; `hook` becomes the origin's
+    /// `post-receive` (or `pre-receive` when it starts with `pre:`).
+    fn clone_with(hook: &str) -> (PathBuf, PathBuf) {
+        let root = std::env::temp_dir().join(crate::run::new_id("landtest"));
+        std::fs::create_dir_all(&root).unwrap();
+        sh(
+            &root,
+            "git init -q --bare -b main origin.git && git init -q -b main seed && cd seed && \
+             echo hi > README.md && git add . && git commit -qm init && \
+             git push -q ../origin.git main && cd .. && git clone -q origin.git work",
+        );
+        if let Some((kind, body)) = hook.split_once(':') {
+            let path = root.join(format!("origin.git/hooks/{kind}-receive"));
+            std::fs::write(&path, format!("#!/bin/sh\n{body}\n")).unwrap();
+            sh(&root, &format!("chmod +x {}", path.display()));
+        }
+        (root.clone(), root.join("work"))
+    }
+
+    fn landing(cwd: &Path) -> (Executor, Context) {
+        let exec = Executor::parse(&json!({"type": "change", "base": "main", "land": "push",
+            "run": "printf 'Deprecated: %s\\n' \"$TOOLBOX_INPUT_REASON\" > DEPRECATED.md"}))
+        .unwrap();
+        let mut inputs = Map::new();
+        inputs.insert("reason".into(), json!("use v2"));
+        let ctx = Context {
+            run_id: Some("run_land1".into()),
+            portal: "repo".into(),
+            action: "mark-deprecated".into(),
+            action_version: "sha256:x".into(),
+            entity: json!({"id": "repository:work"}),
+            inputs,
+            actor: "user:alice".into(),
+            related: Map::new(),
+            grant: None,
+            cwd: cwd.to_path_buf(),
+        };
+        (exec, ctx)
+    }
+
+    fn as_run(ctx: &Context, out: &Outcome) -> crate::run::Run {
+        serde_json::from_value(json!({"id": ctx.run_id, "action": ctx.action,
+            "action_version": ctx.action_version, "entity": "repository:work", "inputs": {},
+            "requested_by": ctx.actor, "via": "cli", "portal": "repo", "executor": "change",
+            "state": "running", "outputs": out.outputs, "effects": [], "events": [],
+            "snapshot": "", "approval": {"required": false, "approvers": []}}))
+        .unwrap()
+    }
+
+    #[test]
+    fn a_landing_change_pushes_to_its_base_and_is_seen_there() {
+        let (root, work) = clone_with("");
+        let (exec, ctx) = landing(&work);
+        assert!(matches!(exec, Executor::Change { push: true, .. }));
+        let p = exec.preview(&ctx).unwrap();
+        assert_eq!(p.effects[0]["resource"], "file:DEPRECATED.md");
+        assert!(
+            p.effects[0]["diff"]
+                .as_str()
+                .unwrap()
+                .contains("+Deprecated: use v2")
+        );
+        assert_eq!(p.effects[1]["operation"], "push");
+        assert_eq!(p.effects[1]["resource"], "branch:main");
+        let out = exec.run(&ctx, &p.effects);
+        assert_eq!(out.status, "succeeded", "{:?}", out.error);
+        assert_eq!(out.outputs["landed"], true);
+        let run = as_run(&ctx, &out);
+        assert_eq!(landed(&work, &run).unwrap(), Vec::<String>::new());
+        let shown = git(&root.join("origin.git"), &["show", "main:DEPRECATED.md"]).unwrap();
+        assert_eq!(shown, "Deprecated: use v2");
+        let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn a_refused_or_undone_push_is_not_a_landed_change() {
+        let (root, work) = clone_with("pre:echo protected >&2; exit 1");
+        let (exec, ctx) = landing(&work);
+        let out = exec.run(&ctx, &[]);
+        assert_eq!(out.status, "failed");
+        assert!(out.error.unwrap().contains("refused"));
+        let _ = std::fs::remove_dir_all(root);
+
+        let (root, work) =
+            clone_with("post:while read old new ref; do git update-ref \"$ref\" \"$old\"; done");
+        let (exec, ctx) = landing(&work);
+        let out = exec.run(&ctx, &[]);
+        assert_eq!(out.status, "succeeded", "{:?}", out.error);
+        let err = landed(&work, &as_run(&ctx, &out)).unwrap_err();
+        assert!(err.contains("did not land"), "{err}");
+        let _ = std::fs::remove_dir_all(root);
     }
 
     #[test]

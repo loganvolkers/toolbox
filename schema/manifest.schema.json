@@ -1235,6 +1235,13 @@
               "type": "string",
               "description": "change: the commit message."
             },
+            "land": {
+              "enum": [
+                "propose",
+                "push"
+              ],
+              "description": "change: propose (default) pushes a branch for review, and review is the approval; push lands the commit on the base once the action's approval rule is met, never forced, and the run is done when the base is seen to have it."
+            },
             "repo": {
               "type": "string",
               "description": "github-workflow: owner/name."
@@ -1363,6 +1370,23 @@
           "required": [
             "unverified"
           ]
+        },
+        {
+          "required": [
+            "executor"
+          ],
+          "properties": {
+            "executor": {
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "const": "change"
+                }
+              }
+            }
+          }
         }
       ]
     },

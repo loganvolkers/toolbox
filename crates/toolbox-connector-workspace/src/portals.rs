@@ -33,6 +33,7 @@ fn summary(a: &Value) -> Value {
         "permission": a["permission"],
         "approval": a.get("approval").cloned().unwrap_or(Value::Null),
         "executor": a["executor"]["type"].as_str().unwrap_or("command"),
+        "land": a["executor"]["land"],
         "verified": a.get("expect").is_some_and(Value::is_object),
         "postcondition": a["expect"]["postcondition"],
         "annotations": a.get("annotations").cloned().unwrap_or(Value::Null),

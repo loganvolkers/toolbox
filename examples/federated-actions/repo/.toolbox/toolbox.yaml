@@ -161,3 +161,24 @@ actions:
     expect:
       postcondition: has(entity.codeowners) && inputs.team in entity.owners
       within: 30s
+  - name: add-security-policy
+    kind: Repository
+    scope: day2
+    description: >-
+      Publish a SECURITY.md with the team's contact, straight to main once a
+      maintainer approves (no pull request).
+    inputs:
+      type: object
+      required: [contact]
+      properties: {contact: {type: string, pattern: '^[^@\s]+@[^@\s]+$'}}
+    permission: can_run_actions
+    approval: "[['user:ann', 'user:bob']]"
+    # land: push commits to main and pushes, never forced, once approved; the run is done when
+    # main is seen to have the commit, so it needs no postcondition.
+    executor:
+      type: change
+      land: push
+      base: main
+      run: >-
+        printf '# Security\n\nReport a vulnerability to %s.\n'
+        "$TOOLBOX_INPUT_CONTACT" > SECURITY.md

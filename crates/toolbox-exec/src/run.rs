@@ -478,13 +478,58 @@ pub fn execute(
         }
         _ => run.set("executor_succeeded", None, None),
     }
+    if run.outputs["landed"] == true && !on_base(run, &ctx.cwd) {
+        return;
+    }
+    done(run, expect, policies, obs, every, true);
+}
+
+/// A landed change is observed on its base: the commit is there and every file it changed has
+/// the content it wrote. Fails the run otherwise.
+fn on_base(run: &mut Run, cwd: &std::path::Path) -> bool {
+    match crate::executor::landed(cwd, run) {
+        Err(e) => run.fail(e),
+        Ok(differ) if !differ.is_empty() => run.fail(format!(
+            "the push landed, but {} on {} differ from what it wrote",
+            differ.join(", "),
+            run.outputs["base"].as_str().unwrap_or("the base")
+        )),
+        Ok(_) => {
+            run.verification = Some(json!({"by": "base", "base": run.outputs["base"],
+                "commit": run.outputs["commit"], "files": run.outputs["files"]}));
+            return true;
+        }
+    }
+    false
+}
+
+/// After the executor: check the postcondition, if the action declares one. A change observed on
+/// its base needs none: its effect is the commit, and the base has it.
+fn done(
+    run: &mut Run,
+    expect: Option<&Expect>,
+    policies: &Map<String, Value>,
+    obs: &mut dyn Observer,
+    every: Duration,
+    wait: bool,
+) {
+    let on_base = run.verification.take();
     match expect {
+        None if on_base.is_some() => {
+            run.verification = on_base;
+            run.set("succeeded", None, None);
+        }
         None => run.set(
             "unverified",
             None,
             Some("the action declares no postcondition (expect)".into()),
         ),
-        Some(e) => verify(run, e, policies, obs, every, true),
+        Some(e) => {
+            verify(run, e, policies, obs, every, wait);
+            if let (Some(b), Some(Value::Object(v))) = (on_base, run.verification.as_mut()) {
+                v.insert("on_base".into(), b);
+            }
+        }
     }
 }
 
@@ -585,6 +630,12 @@ pub fn recheck(
         // satisfying the postcondition by other means is not this run's effect.
         Executor::Change { .. } if run.state == "proposed" => {
             match crate::executor::merged(cwd, run) {
+                Ok(true) if expect.is_none() => {
+                    run.verification = Some(json!({"by": "base", "merged": true,
+                        "base": run.outputs["base"], "commit": run.outputs["commit"]}));
+                    run.set("succeeded", None, None);
+                    return true;
+                }
                 Ok(true) => {}
                 Ok(false) => {
                     if run.deadline.is_some_and(|dl| now_secs() >= dl) {
