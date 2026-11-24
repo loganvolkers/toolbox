@@ -925,14 +925,6 @@
         ]
       }
     },
-    "meta-assessment": {
-      "assessment:sdlc-stage-quality/sdlc-stage:operator/monitor": {
-        "cites-everything": [
-          "46cbaf23",
-          "a618985e"
-        ]
-      }
-    },
     "meta-connector": {
       "connector:acme/git-files": {
         "refreshable": [
@@ -3318,7 +3310,8 @@
     "sdlc-layer": {
       "sdlc:maintainer": {
         "every-stage-built": [
-          "178a9d22"
+          "178a9d22",
+          "efca52d2"
         ]
       },
       "sdlc:operator": {
@@ -3356,6 +3349,12 @@
       }
     },
     "sdlc-stage": {
+      "sdlc-stage:maintainer/design-review": {
+        "built": [
+          "298a233a",
+          "5ee8575e"
+        ]
+      },
       "sdlc-stage:maintainer/plan": {
         "agent-operable": [
           "5bcc3f87"
@@ -4300,7 +4299,13 @@
       "doc:docs/adversarial-critique.md": {
         "level": "skipped"
       },
+      "doc:docs/audits/design-loop-efficiency-2026-11-24.md": {
+        "level": "silver"
+      },
       "doc:docs/audits/toolbox-report-2026-11-24-2.md": {
+        "level": "silver"
+      },
+      "doc:docs/audits/toolbox-report-2026-11-24-3.md": {
         "level": "silver"
       },
       "doc:docs/audits/toolbox-report-2026-11-24.md": {
@@ -4756,6 +4761,9 @@
       "doc:docs/decisions/D01M87FMCVSQCQJMGDSN2MCTH5W.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M87PSM9YQGGW3YQ5X4XCJP63.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/D01M87QHJWYKGNH0182XQ5NKHMB.md": {
         "level": "skipped"
       },
@@ -5020,6 +5028,9 @@
       "doc:examples/federated-actions/README.md": {
         "level": "silver"
       },
+      "doc:examples/openfga-portal/README.md": {
+        "level": "silver"
+      },
       "doc:examples/reference-portal/README.md": {
         "level": "silver"
       },
@@ -5066,6 +5077,9 @@
         "level": "silver"
       },
       "doc:experiments/graphify-monorepo-ab/README.md": {
+        "level": "silver"
+      },
+      "doc:experiments/openfga-spicedb-compare/README.md": {
         "level": "silver"
       },
       "doc:experiments/otel-testbed/README.md": {
@@ -5268,6 +5282,9 @@
       "example:examples/federated-actions/README.md": {
         "level": "gold"
       },
+      "example:examples/openfga-portal/README.md": {
+        "level": "gold"
+      },
       "example:examples/reference-portal/README.md": {
         "level": "gold"
       },
@@ -5391,6 +5408,9 @@
       "example:experiments/graphify-monorepo-ab/README.md": {
         "level": "gold"
       },
+      "example:experiments/openfga-spicedb-compare/README.md": {
+        "level": "gold"
+      },
       "example:experiments/otel-testbed/README.md": {
         "level": "gold"
       },
@@ -5460,6 +5480,9 @@
           "engines-declared": 1
         },
         "level": "silver"
+      },
+      "package-json:report-ui/package.json": {
+        "level": "gold"
       },
       "package-json:scripts/playwright-ci/package.json": {
         "level": "gold"
@@ -5942,6 +5965,9 @@
       "assessment:sdlc-stage-quality/sdlc-stage:maintainer/build": {
         "level": "gold"
       },
+      "assessment:sdlc-stage-quality/sdlc-stage:maintainer/design-review": {
+        "level": "gold"
+      },
       "assessment:sdlc-stage-quality/sdlc-stage:maintainer/release": {
         "level": "gold"
       },
@@ -5949,10 +5975,7 @@
         "level": "gold"
       },
       "assessment:sdlc-stage-quality/sdlc-stage:operator/monitor": {
-        "failing": {
-          "cites-everything": 2
-        },
-        "level": "silver"
+        "level": "gold"
       },
       "assessment:sdlc-stage-quality/sdlc-stage:package-author/distribute": {
         "level": "gold"
@@ -9948,7 +9971,7 @@
     "sdlc-layer": {
       "sdlc:maintainer": {
         "failing": {
-          "every-stage-built": 1
+          "every-stage-built": 2
         },
         "level": "silver"
       },
@@ -9975,6 +9998,12 @@
     "sdlc-stage": {
       "sdlc-stage:maintainer/build": {
         "level": "gold"
+      },
+      "sdlc-stage:maintainer/design-review": {
+        "failing": {
+          "built": 2
+        },
+        "level": "silver"
       },
       "sdlc-stage:maintainer/monitor": {
         "level": "gold"

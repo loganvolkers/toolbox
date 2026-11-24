@@ -893,6 +893,7 @@ Change a standard by changing these parameters in the portal's `toolbox.yaml`.
 - `../packages/github-actions`
   - `githubOrg`: `"loganvolkers"`
   - `githubRepo`: `"toolbox"`
+  - `prefix`: `"maintainer-"`
   - `track`: `"delivery"`
 - `../packages/openssf-scorecard`
   - `command`: `["scorecard","--local",".","--format","json","--show-details","--checks=Binary-Artifacts,Dangerous-Workflow,Dependency-Update-Tool,Fuzzing,License,Packaging,Pinned-Dependencies,SAST,Security-Policy,Token-Permissions"]`
@@ -917,8 +918,8 @@ Change a standard by changing these parameters in the portal's `toolbox.yaml`.
 - **Skills to silver** (`skill-silver`): Every shipped agent skill reaches silver on maintainer-skill.
 - **CLI skills present** (`cli-skill-coverage`): Every CLI command that needs a skill has one (cli-skill bronze).
 - **Close the open review findings** (`close-review-findings`): Act on every current rule-quality and scorecard-quality finding: fix the standard, or answer the finding in a new, independent assessment (docs/design/meta-standards-review.md).
-- **OpenSSF Scorecard: every check at 10** (`maintainer-openssf-ten`): Every Scorecard check at its maximum. Progress is counted from the start the baseline records, in checks below 10 and in points short.
-- **Python we maintain passes ruff: to zero** (`maintainer-python-zero`): No ruff findings in any file. Progress is counted from the start the baseline records.
+- **OpenSSF Scorecard: every check at 10** (`maintainer-openssf-ten`): Every Scorecard check at its maximum. Progress is counted from the starting point saved in the baseline, in checks below 10 and in points short.
+- **Python we maintain passes ruff: to zero** (`maintainer-python-zero`): No ruff findings in any file. Progress is counted from the starting point saved in the baseline.
 
 ## Commands
 
