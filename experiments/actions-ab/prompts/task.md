@@ -5,7 +5,7 @@ You are a platform engineer at Acme. Work only inside {DEST}: do not read or sea
 - Three repositories: `alpha`, `beta` and `gamma`. Each has a bare origin at `{DEST}/origins/<name>.git`, which plays the code host (its `main` is where changes land), and a checkout at `{DEST}/<name>` that tracks it.
 - `{DEST}/org` is the org-level place. Its origin is `{DEST}/origins/org.git`.
 - People: **ann** and **bob** maintain all three repositories. **carol** is a developer, not a maintainer. There are no passwords in this sandbox, so saying who you are is enough to act as someone, but your system must record who did what and enforce the approval rules below.
-- If you start a server, listen on port {PORT} (or {PORT2} for a second one).
+- If you start a server, listen on port {PORT} (or {PORT2} for a second one). Other workspaces share this machine: start the name of any tmux session or other named resource with `{RUN}-`.
 
 ## The task
 

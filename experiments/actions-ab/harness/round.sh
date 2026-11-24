@@ -19,11 +19,11 @@ for n in $(seq 1 "$runs_per_arm"); do
     i=$((i + 1))
     dest="$runs/$arm-$n" port=$((${PORT_BASE:-7100} + 10 * i))
     "$here/setup.sh" "$arm" "$dest" "$src" "$port" >/dev/null
-    python3 - "$here/../prompts" "$arm" "$dest" "$port" > "$rendered/$arm-$n.md" <<'EOF'
+    python3 - "$here/../prompts" "$arm" "$dest" "$port" "r$round-$arm-$n" > "$rendered/$arm-$n.md" <<'EOF'
 import sys
-d, arm, dest, port = sys.argv[1:]
+d, arm, dest, port, run = sys.argv[1:]
 body = open(f"{d}/task.md").read().replace("{PLATFORM}", open(f"{d}/platform-{arm}.md").read().strip())
-print(body.replace("{DEST}", dest).replace("{PORT2}", str(int(port) + 1)).replace("{PORT}", port), end="")
+print(body.replace("{RUN}", run).replace("{DEST}", dest).replace("{PORT2}", str(int(port) + 1)).replace("{PORT}", port), end="")
 EOF
     printf '%s\t%s\t%s\t%s\n' "$arm-$n" "$arm" "$dest" "$port" >> "$rendered/arms.tsv"
   done
