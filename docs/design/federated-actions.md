@@ -154,9 +154,9 @@ connector over clones it keeps under the state directory, the `Portal` kind,
 `federation.portals` and `runners.local.portals`. A served parent reads its children again
 before it lists, previews or runs an action, and brings a child's clone to its origin branch
 before the child previews or runs, so a key a child has just pinned and pushed counts on the next
-request. Without `federation.signingKey`, a served parent keeps its own key at
-`<state>/served/<portal>/signing-key` and returns it as `approval_key`; `toolbox run --url
-<server>` prints the line to pin. A child that can't be read is listed as `unreadable` with its
+request. Without `federation.signingKey`, a parent keeps its own key at
+`<state>/served/<portal>/signing-key`, served or not, and returns it as `approval_key`; `toolbox
+run` in its checkout, or with `--url <server>`, prints the line to pin. A child that can't be read is listed as `unreadable` with its
 error. In a child, an action on `kind: Portal` targets the repository's own portal, with no kind
 to declare.
 
@@ -198,9 +198,9 @@ previews. A child whose manifest fails validation offers nothing, and its record
 | T1 | **The parent owns how it reaches a child.** A child's `federation.runner` names only a type, a repository, a workflow and a ref. The parent runs it only if its own `federation.runners` allows it: `local` for checkouts whose key matches `runners.local.portals`, `github-workflow` for repositories matching `runners.github-workflow.repos`, with the parent's token and API. Otherwise `409 runner-not-allowed` | `toolbox serve` and `toolbox run` in the parent |
 | T2 | **Executors see only what they declare.** Every executor and child process starts with a cleared environment: a fixed base set (`PATH`, `HOME`, locale, proxies, git identity, `TOOLBOX_*` directories) plus the action's own `secrets`. A served parent's tokens never reach a child's command, including at preview | The executors (`clean_env`) |
 | T3 | **The child previews.** A parent's preview is the child's preview, so blockers, effects and approvals are the child's | Both previews come from one `prepare` |
-| T4 | **A repo portal holds no approvals of its own.** An action with approvers ends `awaiting_approval` (exit 3) in a checkout | `toolbox run` |
+| T4 | **A repo portal holds no approvals of its own; a parent does, served or not.** An action with approvers ends `awaiting_approval` (exit 3) in a repository's checkout. A parent's checkout records the run in its state directory, takes `--approve`/`--reject` there under the rules of T6, and signs the grant with the key it keeps, the one a served parent uses (D01M86WAVQQXYF9DFHCP3G035MA) | `toolbox run` |
 | T5 | **A child accepts only approvals a parent signed.** On the last approval the parent signs a grant: parent, parent run, action, action version, entity, inputs, effects hash, requester, approvers, and an expiry 600 s ahead (Ed25519). The child checks every field against its own preview and the key it pinned in `acceptApprovalsFrom: [{portal, key}]`. A child that pins no key for this parent makes the parent's preview say so (`child-refuses-approvals`) before anyone approves | `toolbox run --grant` in the child; the parent's preview |
-| T6 | **Nobody approves their own run, an approver is a person, and each person approves once.** Each approval entry is a user, a group, or a list meaning any one of them. Principals compare without case. A group needs an authorization model to know its members; without one it can't be met, rather than meaning anyone. Approvals need an interactive sign-in (proxy or OIDC, D57): not a personal access token, and not MCP | The run lifecycle and `toolbox serve` (`not-an-approver`, `approval-needs-a-person`) |
+| T6 | **Nobody approves their own run, an approver is a person, and each person approves once.** Each approval entry is a user, a group, or a list meaning any one of them. Principals compare without case. A group needs an authorization model to know its members; without one it can't be met, rather than meaning anyone. A served portal takes approvals only from an interactive sign-in (proxy or OIDC, D57): not a personal access token, and not MCP. A parent's checkout takes `--as`, as a dev server on a loopback address does: whoever can use its state directory holds its signing key anyway | The run lifecycle, `toolbox serve` (`not-an-approver`, `approval-needs-a-person`) and `toolbox run` |
 | T7 | **Review is a change's approval.** A `change` action's approvers approve by reviewing and merging its pull request, behind the repo's branch protection; the run waits as `proposed`, not `awaiting_approval` | `by_review` in the preview |
 | T8 | **The child verifies, and only its own effect counts.** A federated run's verification is the child's, recorded as `{by: child portal, child_run, child}`. A change counts only once its commit is on the base (by ancestry or its `Toolbox-Run` trailer). A postcondition that held before the run ends `unverified` | `recheck` |
 
@@ -289,7 +289,9 @@ actions:
 ### 6.4 Interfaces
 
 The CLI works on a checkout (repo or parent, no server) or, with `--url <server>`, on a served
-portal through its REST API, with the same flags, output and exit codes. `--wait` follows a run
+portal through its REST API, with the same flags, output and exit codes. A parent's checkout
+covers the whole loop, approvals included; a server adds sign-in, the UI, REST and MCP, and keeps
+its runs apart from the checkout's. `--wait` follows a run
 until it succeeds, fails or waits for a person. `toolbox serve <portal> --detach` starts the
 served portal in the background and returns once it is ready, printing the approval key its
 children pin; `--stop` stops it.
@@ -299,7 +301,7 @@ children pin; `--stop` stops it.
 | List | `toolbox run` | `GET /v1/actions` | `list_actions` |
 | Preview | `toolbox run <action> -i k=v` | `POST /v1/actions/{name}/previews` | `preview_action` |
 | Run | `--confirm <token>`, or `--yes` | `POST /v1/actions/{name}/runs` | `run_action` |
-| Approve | `--url … --approve <id>` (a checkout holds none, T4) | `POST /v1/runs/{id}/approvals`, interactive sign-in only (T6) | — (D57) |
+| Approve | `--approve <id>` / `--reject <id>`, in the parent's checkout or with `--url` (a repository's holds none, T4) | `POST /v1/runs/{id}/approvals`, interactive sign-in only (T6) | — (D57) |
 | Check | `--verify <id>`, `--runs` | `GET /v1/runs/{id}`, `POST /v1/runs/{id}/verify`, `GET /v1/runs` | `get_run`, `list_runs` |
 | Cancel | — | `POST /v1/runs/{id}/cancel` | — |
 
@@ -347,6 +349,7 @@ network and no Postgres.
 | 7 | The served org: a child without a runner is refused; a child that pins no key is flagged before approval; a reused confirm token, the requester, someone not listed and a forged grant are refused; another maintainer's approval is signed, accepted by the child and verified; MCP offers no approval tool, and its run records `via: mcp`; concurrent approvals and cancels run a run at most once | S5, S6, S7 (T1, T5, T6) |
 | 8 | `toolbox run --url`: a `land: push` change waits for approval (exit 3) and pushes nothing; `--approve` by another maintainer lands it on the child's main, where the child observes it; the run is listed again after the server restarts | S5, S7 (T4, T6, T8) |
 | 9 | An org portal that lists four children by git URL: the minimal repo's `toolbox test` cases (approval, refusals, a rejected push) pass in a scratch copy and leave its origin unchanged; the children's actions are offered with no connector, kind or key declared; a request to a child that hasn't pinned the kept key is refused with the line to pin; once pinned and pushed, the minimal repo's action previews, waits for bob (the requester and carol refused), lands with its trailers and is recorded; a push the origin rejects fails with the origin's message | S5, S6, S7 (T5, T6, T8) |
+| 10 | The same org portal with no server: its checkout prints the kept key, records a request (exit 3, naming `--approve`), refuses the requester and carol, signs bob's approval with the kept key so the child lands and verifies it, refuses a second approval of the finished run, and a rejected run lands nothing | S5, S6 (T4, T5, T6) |
 
 ### 7.2 Deferred, with the reason
 

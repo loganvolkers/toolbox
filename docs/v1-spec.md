@@ -405,7 +405,7 @@ token and API are the portal's, never a child manifest's.
 | `toolbox token create --user U` | Create a personal access token (printed once) |
 | `toolbox get|query|search|graph|owner|explain|score|refresh|actions` | Read commands, each calling the MCP tool of the same purpose (`-o md|json|yaml`) |
 | `toolbox mcp` | Stdio MCP server bridging to a portal's `/mcp` (for agent harnesses) |
-| `toolbox run [<action>] [--entity ID] [-i k=v] [--confirm TOKEN \| --yes] [--verify ID] [--runs] [--wait] [--url URL [--approve\|--reject ID]]` | Actions: list, preview, run and verify in a checkout, or with `--url` on a served portal (federated-actions §6.4) |
+| `toolbox run [<action>] [--entity ID] [-i k=v] [--confirm TOKEN \| --yes] [--verify ID] [--runs] [--wait] [--approve\|--reject ID] [--url URL]` | Actions: list, preview, run, approve and verify in a checkout (a parent's holds approvals), or with `--url` on a served portal (federated-actions §6.4) |
 | `toolbox connector refresh|resync|test` | Connector operations and the conformance kit |
 | `toolbox login` | OIDC device flow or PAT |
 

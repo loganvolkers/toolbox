@@ -6,15 +6,18 @@ description: >-
 
 # Add an action
 
-This skill is the whole path, for one repository or a fleet. The `test`, `run` and `serve` skills
-go deeper, and `examples/federated-actions/minimal-repo` holds the same files.
+This skill is the whole path, for one repository or a fleet: you need no other skill, example or
+`--help` to follow it, and no server.
 
 1. Lay out one standard action file and one test file, the same in every repository.
 2. Declare the action: inputs, approvers, preconditions and the change it makes.
 3. Test it in each repository with `toolbox test .toolbox`.
-4. Serve an org portal over the repositories, and pin its key in the standard file.
-5. Request, approve and check runs from the org portal.
+4. Write an org portal over the repositories, and pin its key in the standard file.
+5. Request, approve and check runs from the org portal's directory.
 6. Hand it off.
+
+Each step is one shell command: write every file with heredocs at once, then copy the standard
+files to each repository, then validate, test, commit and push all of them in one loop.
 
 ## 1. Lay it out
 
@@ -41,7 +44,7 @@ include: [actions/*.yaml]
 ```yaml
 # <repo>/.toolbox/actions/add-code-of-conduct.yaml
 federation:
-  runner: {type: local} # the served org portal runs it in its clone of this repository
+  runner: {type: local} # the org portal runs it in its clone of this repository
   acceptApprovalsFrom: [{portal: org, key: "ed25519:<the key the org portal prints>"}]
 tests: [tests/add-code-of-conduct.test.yaml]
 actions:
@@ -112,22 +115,22 @@ federation:
 ```
 
 Each child is offered as `portal:<last part of its URL>`; `git` takes anything `git clone` does,
-including a path relative to this file. Serve it first, to get the key:
+including a path relative to this file. `toolbox run` in `org/` lists every child's actions and
+ends with the key the org portal signs approvals with:
 
 ```sh
-toolbox serve org --listen 127.0.0.1:7100 --detach   # returns once ready; prints approval key: ed25519:…
-toolbox serve org --stop
+(cd org && toolbox run) | grep -o 'ed25519:[0-9a-f]*' | head -1   # made once, then reused
 ```
 
-The server keeps its key, runs, pid and log under `$TOOLBOX_STATE_DIR/served/org/` (default
-`~/.local/state/toolbox`) and reuses them on restart. Paste the key into the standard file, then
-copy it to every repository, test, commit and push. A server started with another
-`TOOLBOX_STATE_DIR` makes a new key, which the repositories refuse: put the one you used in your
-handoff.
+Toolbox keeps the key, the children's clones and the runs under `$TOOLBOX_STATE_DIR` (default
+`~/.local/state/toolbox`); use the same one for every command, and name it in your handoff if you
+set it. Paste the key into the standard file, then copy it to every repository, test, commit and
+push. `toolbox serve org --detach` serves the same portal (UI, REST, MCP) with the same key, for
+approvers on other machines; nothing below needs it.
 
 ## 5. Request, approve, check
 
-Set `TOOLBOX_URL=http://127.0.0.1:7100`; `-o json` works on every command.
+From `org/`; `-o json` works on every command.
 
 ```sh
 toolbox run --as ann                                                                        # every repository's actions
@@ -141,10 +144,13 @@ toolbox run --as ann --runs                                                     
 Exit codes: 0 succeeded, 1 failed, 2 invalid or refused, 3 waiting for approval, 4 unverified.
 With `-o json`, `--yes`, `--approve` and `--verify` print the run's record: `id`, `state`,
 `requested_by`, `inputs`, `approval.approved_by`, `effects` (the diff), `events` (each with `at`)
-and `verification`. A rejected push fails the run with the origin's message. A run whose content
-the base already has succeeds without a commit, so test a rejected push with new inputs.
+and `verification`. The org portal applies the approval rule: the requester and anyone not listed
+are refused (exit 2), and the last approval pushes, then verifies on the repository's `main`. A
+rejected push fails the run with the origin's message. A run whose content the base already has
+succeeds without a commit. The test cases already cover refusals and a rejected push; one real
+run is enough.
 
 ## 6. Hand it off
 
-Say where each file is, the `TOOLBOX_STATE_DIR` and serve command, the URL, and the commands in
-step 5; name the test cases that cover refusals and a rejected push.
+Say where each file is, the `TOOLBOX_STATE_DIR` if you set one, and the commands in step 5; name
+the test cases that cover refusals and a rejected push.
