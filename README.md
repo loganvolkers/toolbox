@@ -71,6 +71,7 @@ cargo build && target/debug/toolbox validate examples/reference-portal
   - [design/connector-control.md](docs/design/connector-control.md): commands to connectors (scoped refresh, resync) and read-your-writes
   - [design/secret-vault.md](docs/design/secret-vault.md): connector `${secret:…}` backends (env, file, Vault, AWS/GCP/Azure)
   - [design/context-lake.md](docs/design/context-lake.md): context lakes, and how the catalog, knowledge and security graphs overlap
+  - [design/knowledge-graphs.md](docs/design/knowledge-graphs.md): knowledge graphs as agent context: Graphify, its alternatives, the foundations, and why Toolbox doesn't build a code graph
   - [design/source-of-truth.md](docs/design/source-of-truth.md): field-level source of truth, and when Toolbox owns the data
   - [design/verification.md](docs/design/verification.md): TDD, deterministic simulation, reference models, differential and configuration-space testing
 - Worked examples:

@@ -1,0 +1,5 @@
+- **Q1.** When a client calls the Check API, which resolvers does the request pass through before relationship tuples are read, in what order, and what decides whether each one is present? Name the types and the code that builds the chain.
+- **Q2.** Which types implement the storage method `ReadUserTuple`, and which production code (not tests or mocks) calls it? If its signature changed, what else would have to change?
+- **Q3.** After tuples are written, how does OpenFGA decide that a cached Check result is stale? Describe the mechanism, where it lives, and its limits.
+- **Q4.** What constraints does OpenFGA place on the tupleset relation of a tuple-to-userset rewrite (`X from Y`), and where in the code are they enforced when a model is written?
+- **Q5.** How does OpenFGA limit concurrent datastore reads during a single Check, and how does an operator configure that limit?

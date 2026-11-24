@@ -1,0 +1,99 @@
+# Arm C's repo portal for openai/codex (README §2): the starter's Repository and Doc kinds
+# (examples/repo-portal-starter, without its scorecards) plus the Crate kind's facts from
+# portal/standards/crates.yaml, read by a second workspace connector rooted at the Cargo workspace
+# in codex-rs/. Copied to `.toolbox/toolbox.yaml` in each arm C workspace.
+apiVersion: toolbox.dev/v1alpha1
+
+portal:
+  name: codex
+  title: Codex repository
+  owner: group:maintainers
+  toolbox: "0.1"
+
+connectors:
+  - name: workspace
+    package: builtin:workspace
+    runtime: in-image
+    config:
+      root: .
+      crates: false
+      repo: true
+      docs: ["*.md", docs/**/*.md, codex-rs/**/*.md]
+      lastChange: false
+    records: [repo, doc]
+    refresh: {repo: [external_ids], doc: [external_ids]}
+    freshness: {repo: 1h, doc: 1h}
+  - name: cargo
+    package: builtin:workspace
+    runtime: in-image
+    config: {root: codex-rs, crates: true, repo: false, lastChange: false}
+    records: [crate]
+    refresh: {crate: [external_ids]}
+    freshness: {crate: 1h}
+
+kinds:
+  - name: Repository
+    identityFrom: [connector:workspace]
+    fields:
+      name: {type: string}
+      files: {type: list, items: string}
+      readme: {type: string}
+      license: {type: string}
+      codeowners: {type: object}
+      owners: {type: list, items: string}
+    sources: {default: [connector:workspace]}
+    map:
+    - from: workspace/repo
+      id: "'repository:' + record.name"
+      set: >-
+        {'name': record.name, 'files': record.files, 'readme': record.readme,
+         'license': record.license, 'codeowners': record.codeowners, 'owners':
+         record.owners}
+
+  - name: Doc
+    identityFrom: [connector:workspace]
+    fields: {path: {type: string}, title: {type: string}}
+    sources: {default: [connector:workspace]}
+    map:
+    - from: workspace/doc
+      id: "'doc:' + record.path"
+      set: "{'path': record.path, 'title': record.title}"
+
+  - name: Crate
+    description: >-
+      A package in the Cargo workspace under codex-rs/ (path is relative to
+      codex-rs/): its internal dependencies, size, functions and tests.
+    identityFrom: [connector:cargo]
+    fields:
+      path: {type: string}
+      description: {type: string}
+      targets: {type: list, items: string}
+      externalDeps: {type: integer}
+      crateDoc: {type: boolean}
+      codeLines: {type: integer}
+      testCodeLines: {type: integer}
+      pubItems: {type: integer}
+      functions: {type: list, items: object}
+      maxFnLines: {type: integer}
+      maxComplexity: {type: integer}
+      unitTests: {type: integer}
+      integrationTests: {type: integer}
+      dependents:
+        type: list
+        items: string
+        description: Workspace crates that depend on this one directly (normal dependencies).
+        computed: inbound.dependsOn.map(c, c.id)
+      dependentCount: {type: integer, computed: inbound.dependsOn.size()}
+    relations: {dependsOn: {to: Crate, many: true}}
+    sources: {default: [connector:cargo]}
+    map:
+    - from: cargo/crate
+      id: "'crate:' + record.name"
+      set: >-
+        {'path': record.path, 'description': record.description, 'targets': record.targets,
+         'externalDeps': record.externalDeps, 'crateDoc': record.crateDoc,
+         'codeLines': record.codeLines, 'testCodeLines': record.testCodeLines,
+         'pubItems': record.pubItems, 'functions': record.functions,
+         'maxFnLines': record.maxFnLines, 'maxComplexity': record.maxComplexity,
+         'unitTests': record.unitTests, 'integrationTests': record.integrationTests}
+      relations: {dependsOn: "record.dependsOn.map(d, 'crate:' + d)"}

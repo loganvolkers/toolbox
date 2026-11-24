@@ -1,0 +1,10 @@
+# Generated experiment outputs, rendered prompts and scaffolds; the experiment READMEs, results and adjudications stay.
+experiments/*/results/
+experiments/*/prompts/
+experiments/*/scaffolds/
+experiments/*/rerun/
+experiments/*/bugs/
+experiments/*/data/
+experiments/out-of-box/ab/
+LICENSES/
+**/requirements*.txt

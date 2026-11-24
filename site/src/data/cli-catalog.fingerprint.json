@@ -410,6 +410,16 @@
           "positional": false
         },
         {
+          "name": "relation",
+          "long": "relation",
+          "positional": false
+        },
+        {
+          "name": "direction",
+          "long": "direction",
+          "positional": false
+        },
+        {
           "name": "url",
           "long": "url",
           "positional": false

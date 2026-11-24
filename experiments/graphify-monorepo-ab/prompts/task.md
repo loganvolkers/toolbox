@@ -1,0 +1,13 @@
+You are answering questions about the {REPO} repository, checked out at {DEST}. The project root is {DEST}.
+
+Rules:
+- Work offline. Don't use the web or any network tool, except a server on 127.0.0.1 that a rule below names.
+- Read only files under {DEST}. Don't read or search anything elsewhere on this machine, except your own scratch files.
+- Don't change any file under {DEST}, except to write {DEST}/ANSWERS.md. Put any scratch files in {SCRATCH}, and nowhere else.
+- Don't start subagents.
+{RULE}
+Answer the four questions below in {DEST}/ANSWERS.md, with one `## Qn` heading per question. In each answer, state the facts and cite where they come from: the file, and the function, type or crate. Answer from the code as it is in {DEST}. Where you are not sure, say so instead of guessing. Don't describe how you searched.
+
+{QUESTIONS}
+
+When ANSWERS.md is written, reply with one line: DONE.
