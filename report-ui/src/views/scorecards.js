@@ -241,7 +241,7 @@ export const scorecardsViews = {
       var items = [];
       shown.forEach(function (r, i) {
         if (i === 0 && !r.compare) items.push(el("div", { className: "rank-head", textContent: plural(nStd, "scorecard") }));
-        if (r.compare && (i === 0 || !shown[i - 1].compare)) items.push(el("div", { className: "rank-head", textContent: plural(shown.length - nStd, "comparison factor") + ", also on the Compare tab" }));
+        if (r.compare && (i === 0 || !shown[i - 1].compare)) items.push(el("div", { className: "rank-head" }, plural(shown.length - nStd, "comparison factor") + " · ", link("compare", "", "Compare →")));
         var c = r.compare ? (D.comparisons || {})[r.name] || {} : null;
         var verdict = c ? (c.verdict || {})[(c.peers || [])[0]] || "unknown" : null;
         var debt = c ? (verdict === "unknown" ? "not measured" : verdict) : r.none > 0 ? r.none + " at none" : r.bronze > 0 ? r.bronze + " at bronze" : r.scored && r.topShare === 100 ? "✓ top level" : r.scored ? "✓ clear" : "not scored";
@@ -811,7 +811,7 @@ export const scorecardsViews = {
     var status = el(
       "div",
       { className: "sc-status" },
-      medal(floorHere || "none", 44),
+      medal(floorHere || (scored.length ? "none" : "not scored"), 44),
       el(
         "div",
         { className: "sc-status-b" },
@@ -868,7 +868,9 @@ export const scorecardsViews = {
         "section",
         {},
         el("div", { className: "head" }, el("h2", { textContent: "Scorecards" })),
-        el("p", { className: "sub", style: "margin:0" }, "Most entities at none first", anyJudged ? el("span", {}, " · ", el("span", { className: "bicon judged" }, basisIcon("judged")), " has agent-judged rules · ", el("span", { className: "bicon" }, basisIcon("measured")), " every rule measured") : null),
+        el("p", { className: "sub", style: "margin:0" }, ranked.some(function (r) {
+          return r.scored;
+        }) ? "Most entities at none first" : "Nothing is scored yet", anyJudged ? el("span", {}, " · ", el("span", { className: "bicon judged" }, basisIcon("judged")), " has agent-judged rules · ", el("span", { className: "bicon" }, basisIcon("measured")), " every rule measured") : null),
         cardSearch,
         toTop,
         cardNav,

@@ -1668,6 +1668,7 @@
     ".rung a.done{border-color:color-mix(in srgb,var(--pass) 45%,var(--line))}",
     ".rung .topmark{display:block;font-size:12px;font-weight:650;color:var(--pass);margin-top:2px}",
     ".nextmedal .mover{display:block;margin-top:6px}",
+    "details.ent>summary .lvl{flex-wrap:wrap;max-width:100%}details.ent>summary .lvl-top{flex-basis:100%;padding-left:14px}",
     ".elevel .topmark{font-size:14px;font-weight:650;color:var(--pass);text-transform:none;letter-spacing:0}",
     ".rung .capmark{display:block;font-size:12px;font-weight:650;color:var(--unknown);margin-top:2px}.rung a.capped{border-color:var(--unknown);border-left-width:3px}.weakest .topmark{color:var(--pass);font-weight:650}.weakest .capnote{color:var(--unknown);font-weight:650}.capnote svg,.capmark svg,.debt svg{vertical-align:-1px}.tcap{display:block;font-size:13px;font-weight:500;line-height:1.4;margin-top:4px}",
     ".rung .empty{font-size:12px}",
@@ -1724,7 +1725,7 @@
     ".view>*{animation:enter .3s cubic-bezier(.2,.7,.2,1) both}.view>:nth-child(2){animation-delay:.04s}.view>:nth-child(3){animation-delay:.08s}.view>:nth-child(n+4){animation-delay:.12s}",
     ".seg button[aria-pressed=true]{background:var(--accent-bg);color:var(--accent);font-weight:650}",
     "details.ent{border-top:1px solid var(--line)}",
-    "details.ent>summary{cursor:pointer;display:grid;grid-template-columns:86px minmax(min(14rem,100%),1fr) auto;gap:12px;align-items:center;padding:10px 6px;list-style:none;border-radius:8px}",
+    "details.ent>summary{cursor:pointer;display:grid;grid-template-columns:112px minmax(min(14rem,100%),1fr) auto;gap:12px;align-items:center;padding:10px 6px;list-style:none;border-radius:8px}",
     "details.ent>summary:hover{background:var(--tint)}",
     "details.ent>summary::-webkit-details-marker{display:none}",
     "details.ent>summary .name{font-weight:600;overflow-wrap:anywhere;min-width:0}details.ent>summary .name .tail{white-space:nowrap}details.ent>summary .name .tail.long{white-space:normal}",
@@ -2770,7 +2771,7 @@
         var items = [];
         shown.forEach(function(r, i) {
           if (i === 0 && !r.compare) items.push(el("div", { className: "rank-head", textContent: plural(nStd, "scorecard") }));
-          if (r.compare && (i === 0 || !shown[i - 1].compare)) items.push(el("div", { className: "rank-head", textContent: plural(shown.length - nStd, "comparison factor") + ", also on the Compare tab" }));
+          if (r.compare && (i === 0 || !shown[i - 1].compare)) items.push(el("div", { className: "rank-head" }, plural(shown.length - nStd, "comparison factor") + " · ", link("compare", "", "Compare →")));
           var c = r.compare ? (D.comparisons || {})[r.name] || {} : null;
           var verdict = c ? (c.verdict || {})[(c.peers || [])[0]] || "unknown" : null;
           var debt = c ? verdict === "unknown" ? "not measured" : verdict : r.none > 0 ? r.none + " at none" : r.bronze > 0 ? r.bronze + " at bronze" : r.scored && r.topShare === 100 ? "✓ top level" : r.scored ? "✓ clear" : "not scored";
@@ -3303,7 +3304,7 @@
       var status = el(
         "div",
         { className: "sc-status" },
-        medal(floorHere || "none", 44),
+        medal(floorHere || (scored.length ? "none" : "not scored"), 44),
         el(
           "div",
           { className: "sc-status-b" },
@@ -3358,7 +3359,9 @@
           "section",
           {},
           el("div", { className: "head" }, el("h2", { textContent: "Scorecards" })),
-          el("p", { className: "sub", style: "margin:0" }, "Most entities at none first", anyJudged ? el("span", {}, " · ", el("span", { className: "bicon judged" }, basisIcon("judged")), " has agent-judged rules · ", el("span", { className: "bicon" }, basisIcon("measured")), " every rule measured") : null),
+          el("p", { className: "sub", style: "margin:0" }, ranked.some(function(r) {
+            return r.scored;
+          }) ? "Most entities at none first" : "Nothing is scored yet", anyJudged ? el("span", {}, " · ", el("span", { className: "bicon judged" }, basisIcon("judged")), " has agent-judged rules · ", el("span", { className: "bicon" }, basisIcon("measured")), " every rule measured") : null),
           cardSearch,
           toTop,
           cardNav
