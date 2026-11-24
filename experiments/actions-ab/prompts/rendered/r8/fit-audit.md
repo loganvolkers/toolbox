@@ -3,7 +3,7 @@ You are the independent fit auditor of a pre-registered benchmark (`docs/design/
 stake in which arm wins. Be strict: a rule holds only when the evidence shows it holds.
 
 The benchmark is `/agent/repos/toolbox/experiments/actions-ab/`. Read its `README.md` (all of it,
-especially §4 Protocol 2, §7 limits and §§8) and the previous audit,
+especially §4 Protocol 2, §7 limits and §8) and the previous audit,
 `results/FIT-AUDIT.md`. That audit judged rounds 0 to 7 up to `ce8210f`. It found P5 (no
 harness-shaped product) holding only with 15 corrections, and P4 (symmetric arms) failing: the
 Toolbox arm had a task-fitted recipe and the rivals had neither fair docs nor triaged friction.
