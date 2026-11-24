@@ -22,6 +22,7 @@ description: >-
 On a served portal, add `--url <server>` (and `--token`, or `--as` on a server listening on a
 loopback address) to every command: the same flags, output and exit codes, with the server's
 authorization and approvals. `--runs` lists runs, and `--verify <run id>` prints one's record.
+`TOOLBOX_URL` and `TOOLBOX_AS` set them for every command, so a script needs no wrapper.
 
 To offer several repositories' actions from one place, list them in an org portal
 (`federation.children: [{git: <url>}]`), serve it, and pin the key that `toolbox run --url

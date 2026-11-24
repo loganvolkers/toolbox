@@ -58,7 +58,7 @@ pub struct Options {
     pub runs: bool,
     /// Run through a served portal (`toolbox serve`) at this URL instead of a checkout: the same
     /// preview, confirm, run and verify, with the server's authorization, approvals and runners.
-    #[arg(long, value_name = "URL")]
+    #[arg(long, value_name = "URL", env = "TOOLBOX_URL")]
     pub url: Option<String>,
     /// With --url: a personal access token.
     #[arg(long, env = "TOOLBOX_TOKEN", requires = "url", hide_env_values = true)]
@@ -77,7 +77,7 @@ pub struct Options {
     #[arg(long)]
     pub record: Option<PathBuf>,
     /// Who is asking, recorded on the run (default: `user:$USER`).
-    #[arg(long = "as")]
+    #[arg(long = "as", env = "TOOLBOX_AS")]
     pub as_user: Option<String>,
     /// Connectors not to run when reading facts (comma-separated).
     #[arg(long, value_delimiter = ',')]
