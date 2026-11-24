@@ -24,13 +24,15 @@ evidence and fix. Never hide the bar the portal already clears.
 ## Procedure
 
 1. Name the primary reader for the change (VP, platform owner, entity owner, agent).
-2. Check the first viewport answers one decision: overall health (verdict sentence + debt stats), not inventory vanity.
+2. Check the first viewport answers one decision: the repository level, what holds it there and the next level, not inventory vanity.
 3. Confirm modes exist and deep-link: Overview, Catalog, Campaigns, Scorecards.
 4. Confirm Scorecards opens ranked by `none` debt (not an equal pill wall) and Campaigns by lowest progress.
 5. Confirm an expanded entity lists pass, fail, unknown, and skipped outcomes.
 6. Confirm failing rules still lead with fix text and evidence; passing rules stay compact.
 7. Confirm filters cover level and outcome, empty states offer Clear, and search matches short or full entity id or any rule name.
-8. Reject a layout that is only scorecard pills plus fail-only rows, or Overview that leads with Catalog-by-kind.
+8. Confirm labels read as words: scorecard titles before code names, one level badge everywhere, rule lists labelled with the outcome they contain, each level's rules shown with what they ask for, and row failures led by the next level's blocker.
+9. Reject a layout that is only scorecard pills plus fail-only rows, an Overview that leads with Catalog-by-kind, a row that nests a link inside a clickable row, a 0% shown for a campaign with nothing in scope, or a bar that leaves unscored entities out.
+10. Judge the change with the `design-audit` skill: a blind auditor scores before and after, and the change is done when no usability score falls.
 
 ```
 toolbox report portal --skip runner,github-actions -o web --out site/public/report

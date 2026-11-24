@@ -9,7 +9,7 @@ description: >-
 1. Skip connectors that need a network or a long run when the baseline was built that way.
 2. Compare with --baseline. A new failure, larger evidence or a larger `measure` is a regression and the exit code is 1. A rule whose connector was skipped is `unknown` and is not a regression. An unknown whose connector ran still fails `--ci` and `--update`. A plain check passes it, so a gate that must not run without its tools (a kit's `optional: true` tool not installed) adds `--fail-on-unknown`.
 3. Write the baseline with --update only after reading the diff. --ci fails when the file is stale. The ratchet verdict is the gate. The pages workflow generates the HTML and does not commit it.
-4. Refresh the hosted page with `-o web --out DIR`. The page has Overview, Catalog, and Scorecards; follow the `report-ux` skill when changing that UI.
+4. Refresh the hosted page with `-o web --out DIR`. The page has Overview, Catalog, Campaigns and Scorecards; follow the `report-ux` skill when changing that UI, then judge it with `design-audit`.
 
 ```
 toolbox report portal --skip runner,github-actions --baseline portal/results.json

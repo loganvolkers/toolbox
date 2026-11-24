@@ -30,6 +30,7 @@ scorecards:
   # The binary compiles these with Draft 2020-12 and does not fetch `$ref`s, so a schema that
   # names another dialect or a remote schema is not the contract the server runs.
   - name: maintainer-schema
+    title: JSON Schemas
     kind: JsonSchema
     description: >-
       Each JSON Schema compiled into the binary: Draft 2020-12 with an $id,

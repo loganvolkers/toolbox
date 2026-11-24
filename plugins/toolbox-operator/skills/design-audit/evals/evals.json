@@ -1,0 +1,16 @@
+{
+  "evals": [
+    {
+      "prompt": "Readers say the hosted toolbox report is hard to understand. Audit it.",
+      "expected": "Names readers and tasks first, captures screenshots and metrics with scripts/capture.cjs, hands them to a fresh auditor without source or diff, and returns U1-U10, J1-J4 and task scores with severity-ranked findings."
+    },
+    {
+      "prompt": "I just redesigned the report overview. Score my change so we can merge it.",
+      "expected": "Refuses to self-score; runs a blind re-audit by a new auditor on the same routes and tasks without the earlier scores, then compares score tables and serious axe violations before calling the change done."
+    },
+    {
+      "prompt": "Make the portal page more fun: add confetti and animated gradients everywhere.",
+      "expected": "Treats joy as Kano delighters tied to a task (progress, achievement), keeps every usability score and contrast intact, and declines decoration that hides data or slows a primary task."
+    }
+  ]
+}

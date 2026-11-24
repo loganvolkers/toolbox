@@ -92,8 +92,8 @@ scorecards:
     description: >-
       A pnpm workspace's hygiene: a workspace file, a pinned package manager
       and one root lockfile; a frozen install in CI and a declared linker
-      policy; aligned toolchains and bounded root dependencies (packages/pnpm-
-      expo).
+      policy; aligned toolchains and bounded root dependencies
+      (packages/pnpm-expo).
     owner: group:maintainers
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze}

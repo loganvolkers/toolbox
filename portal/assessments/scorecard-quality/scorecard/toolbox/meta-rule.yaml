@@ -1,42 +1,41 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: scorecard:toolbox/meta-rule
 rubric: scorecard-quality
-subjectHash: c2315d58bdf4
+subjectHash: f292543d2677
 assessor: {kind: agent, name: cursor-cloud-agent, model: claude-opus-5.5}
-at: 2026-11-23
+at: 2026-11-24
 verdicts:
   - criterion: one-concern
     verdict: pass
     reason: >-
-      All ten rules (portal/standards/meta.yaml:368-457) judge one thing, a
+      All ten rules (portal/standards/meta.yaml:369-458) judge one thing, a
       rule's form (explained, tested both ways, decided on fixtures, with
-      evidence that tracks the check, readable CEL), for one audience, the
-      authors of standards. The description says gold is "well-formed, not
-      good" and leaves quality to review-rule (meta.yaml:360-363,
-      D01M831P5QWJQ4A2FT85N5MXJQF).
+      evidence that tracks the check, readable CEL, a fix that names a place),
+      for one audience, the authors of standards. The description says gold is
+      "well-formed, not good" and leaves quality to review-rule
+      (meta.yaml:361-364, D01M831P5QWJQ4A2FT85N5MXJQF). The new `title:`
+      changes no rule.
   - criterion: levels-are-a-ladder
     verdict: pass
     reason: >-
-      The earlier fail is fixed: `readable` moved to silver as a guard
-      (docs/design/thresholds.md:41), and gold gained `pins-both-outcomes`
-      (meta.yaml:435-446), which builds on bronze `tested` and silver
-      `both-outcomes-on-fixtures` and isn't implied by them. In
-      portal/results.json the 222 rules now spread 21 none, 6 bronze, 44
-      silver and 151 gold, with 71 failing pins-both-outcomes, so every level
-      separates rules. Silver `always-explains` is the prerequisite of gold
-      `evidence-tracks-check`, which reads `hasEvidence` (meta.yaml:117-121),
-      per the prerequisite principle in thresholds.md:22-23.
+      `readable` is a guard at silver (docs/design/thresholds.md:41), and gold
+      asks for `pins-both-outcomes` (meta.yaml:436-448, thresholds.md:42),
+      which builds on bronze `tested` and silver `both-outcomes-on-fixtures`
+      and isn't implied by them. In portal/results.json the 270 rules spread
+      21 none, 6 bronze, 44 silver and 199 gold, with 71 failing
+      pins-both-outcomes, so every level separates rules. Silver
+      `always-explains` is the prerequisite of gold `evidence-tracks-check`,
+      which reads `hasEvidence` (meta.yaml:117-121), per thresholds.md:22-23.
   - criterion: no-obvious-gap
     verdict: pass
     reason: >-
-      Both gaps the last review named are closed. Lesson L4, tests that pin
-      both outcomes (docs/design/scorecards-for-scorecards.md:84), is
-      `pins-both-outcomes`, fed by `testedOutcomes` from
-      crates/toolbox-cli/src/meta.rs:36-60, where comparing evidence pins
-      `fail` and a bare mention pins nothing. The L11 redundancy inside the
-      card is gone: shows-evidence was dropped as implied by always-explains
-      (scorecards-for-scorecards.md:104). What's left in §3.2
-      (scorecards-for-scorecards.md:139-144: rationale, type checks,
+      Lesson L4, tests that pin both outcomes
+      (docs/design/scorecards-for-scorecards.md:84), is `pins-both-outcomes`,
+      fed by `testedOutcomes` from crates/toolbox-cli/src/meta.rs:30-73, where
+      comparing evidence pins `fail` and a bare mention pins nothing. The L11
+      redundancy inside the card is gone: shows-evidence was dropped as
+      implied by always-explains (scorecards-for-scorecards.md:104). What's
+      left in scorecards-for-scorecards.md:139-144 (rationale, type checks,
       cross-rule redundancy, volatility, timing) is listed as next, and
       redundancy is a property of a scorecard's rules together rather than of
       one rule's form.
@@ -45,15 +44,15 @@ verdicts:
     reason: >-
       I tried rule:toolbox/maintainer-ci-reliability/every-job-has-timeout,
       silver and failing only pins-both-outcomes (portal/results.json). Its
-      fix gives the expectation's shape and file (meta.yaml:442-446). In a
-      scratch copy I added one expectation, that
-      workflow:.github/workflows/demo/steady.yml passes the rule (it is in
-      portal/fixtures/), `toolbox test portal` passed, and the report no
-      longer listed the rule under pins-both-outcomes. The evidence doesn't
-      name which fixture entity passes, so finding one took a guess checked
-      with `toolbox test`.
+      fix gives the expectation's shape and file (meta.yaml:443-448). In a
+      scratch worktree I added one expectation, that
+      workflow:.github/workflows/demo/steady.yml passes the rule; `toolbox
+      test portal` passed and the rule's brief went from testedOutcomes [fail]
+      to [fail, pass]. The evidence doesn't name which fixture entity passes,
+      so finding one took a guess checked with `toolbox test`.
 summary: >-
-  One concern, and now a real ladder: readable guards at silver, and gold
-  asks for tests that pin both outcomes, which 71 rules don't yet have. I
-  raised one rule to gold in a scratch copy using only the fix and toolbox
+  Re-assessed after the scorecard gained a human title. One concern and a
+  real ladder: readable guards at silver, and gold asks for tests that pin
+  both outcomes, which 71 rules don't yet have. I raised one rule's tests
+  to pin both outcomes in a scratch copy using only the fix and toolbox
   test.

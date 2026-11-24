@@ -1128,6 +1128,8 @@ fn scorecard_defs(m: &toolbox_model::Manifest) -> Map<String, Value> {
                 })
                 .collect();
             let mut def = json!({
+                "title": sc.title,
+                "description": sc.description.as_deref().map(str::trim),
                 "kind": sc.kind,
                 "levels": sc.levels,
                 "owner": sc.owner,
@@ -1136,8 +1138,6 @@ fn scorecard_defs(m: &toolbox_model::Manifest) -> Map<String, Value> {
             });
             if let Some(c) = &sc.compare {
                 def["compare"] = json!(c);
-                def["title"] = json!(sc.title);
-                def["description"] = json!(sc.description);
             }
             (sc.name.clone(), def)
         })
@@ -2122,7 +2122,7 @@ mod tests {
         assert!(page.contains("Campaigns"));
         assert!(page.contains("Fleet health"));
         assert!(page.contains("Needs attention first"));
-        assert!(page.contains("Highest none debt first"));
+        assert!(page.contains("Most entities at none first"));
         assert!(page.contains("role: \"tab\""));
         assert!(!page.contains("{{"));
     }
