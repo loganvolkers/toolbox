@@ -68,6 +68,19 @@ scorecards:
       the ratchet: a check's gap to 10 is the measure, so a score that drops
       fails a pull request and one that rises is an improvement. A check
       Scorecard adds in a new release doesn't fail the gate.
+    rationale: >-
+      OpenSSF Scorecard is an established, openly governed standard for
+      supply-chain security, so the portal carries its checks as OpenSSF
+      defines them rather than writing weaker copies that would compete with
+      it. Its one level is Scorecard's own maximum, and the ratchet stops any
+      check from falling while the gap is paid down.
+    links:
+    - title: Scorecard checks
+      url: https://github.com/ossf/scorecard/blob/main/docs/checks.md
+    - title: OpenSSF as the template
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/openssf-template.md
+    - title: Carry OpenSSF Scorecard decision
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M82E93XAPNE0WFXEPJZ59WG4.md
     kind: ${param:kind}
     owner: ${param:owner}
     track: ${param:track}
@@ -86,6 +99,10 @@ scorecards:
       fix: >-
         Follow the check's documentation (in the evidence). The check, its
         scoring and its remediation are OpenSSF's.
+      rationale: >-
+        Each point below 10 is a supply-chain weakness OpenSSF documents with
+        its risk and remediation; holding every check at its current score keeps
+        a regression from slipping in unnoticed.
     facets: {summary: public, details: public}
 
 campaigns:
