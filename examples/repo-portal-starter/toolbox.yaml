@@ -68,6 +68,7 @@ kinds:
 
 scorecards:
   - name: repo-hygiene
+    title: Repository basics
     kind: Repository
     description: >-
       A pilot repository's basics: a README and CODEOWNERS, then a catch-all
@@ -154,6 +155,7 @@ scorecards:
     facets: {summary: public, details: public}
 
   - name: docs
+    title: Docs with working links
     kind: Doc
     description: >-
       Each Markdown document in a pilot repository: links that resolve
