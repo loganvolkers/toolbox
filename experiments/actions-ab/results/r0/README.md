@@ -42,4 +42,4 @@ reference example for a landing change is `add-security-policy` in
 ## What round 1 tests
 
 Round 1 runs every arm three times at a frozen commit that includes these fixes, with prompts
-committed first (P1). The bar is the README's §6, unchanged.
+committed first (P1). The bar is [the README's §6](../../README.md#6-hypotheses-and-bar), unchanged.

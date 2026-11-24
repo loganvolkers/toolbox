@@ -18,6 +18,7 @@ use toolbox_exec::prepare::{Refused, Request, prepare};
 use toolbox_exec::run::{self as lifecycle, Observer, Run};
 use toolbox_model::manifest::Expect;
 
+/// `toolbox run`'s flags.
 #[derive(clap::Args)]
 pub struct Options {
     /// The action to preview or run. Without it, list the actions this portal offers.
@@ -281,6 +282,8 @@ fn list_md(portal: &str, actions: &[Value], via: &str) -> String {
     s
 }
 
+/// Lists, previews, runs or verifies an action: in the checkout, or with `--url` on a served
+/// portal. The exit code follows the run's state (`exit_code`).
 pub fn run(o: &Options) -> ExitCode {
     if let Some(url) = &o.url {
         return remote::run(o, url.trim_end_matches('/'));
@@ -306,12 +309,25 @@ pub fn run(o: &Options) -> ExitCode {
         Ok(x) => x,
         Err(e) => return error(o, 2, e),
     };
-    let Some(name) = &o.action else {
-        let all = federation::offered(&m, &d);
-        return list(o, &portal, &all, &d);
-    };
     let all = federation::offered(&m, &d);
-    let schema = federation::resolve(&all, &d, name, o.entity.as_deref())
+    match &o.action {
+        None => list(o, &portal, &all, &d),
+        Some(name) => act(o, &portal, &m, &d, &all, name),
+    }
+}
+
+type Manifest = toolbox_model::Manifest;
+type Prepared = toolbox_exec::prepare::Prepared;
+
+fn act(
+    o: &Options,
+    portal: &Path,
+    m: &Manifest,
+    d: &toolbox_derive::Derived,
+    all: &[Offered],
+    name: &str,
+) -> ExitCode {
+    let schema = federation::resolve(all, d, name, o.entity.as_deref())
         .map(|(x, _)| x.action.inputs.clone())
         .unwrap_or(Value::Null);
     let inputs = match parse_inputs(o, &schema) {
@@ -325,63 +341,17 @@ pub fn run(o: &Options) -> ExitCode {
         entity: o.entity.as_deref(),
         inputs,
         actor: &requested_by,
-        cwd: toolbox_exec::executor::portal_repo_dir(&portal_dir(&portal)),
+        cwd: toolbox_exec::executor::portal_repo_dir(&portal_dir(portal)),
         program: &program,
     };
-    let p = match prepare(&m, &d, req) {
+    let p = match prepare(m, d, req) {
         Ok(p) => p,
-        Err(Refused::Invalid(errors)) => {
-            let action = federation::resolve(&all, &d, name, o.entity.as_deref())
-                .ok()
-                .map(|(x, _)| x.action.clone());
-            let line = action
-                .as_ref()
-                .map(federation::inputs_line)
-                .unwrap_or_default();
-            let doc = json!({"action": name, "errors": errors, "inputs": schema});
-            emit(o, &doc, || {
-                format!(
-                    "Invalid inputs for {name}:\n{}Inputs: {line}\n",
-                    errors
-                        .iter()
-                        .map(|e| format!("  - {e}\n"))
-                        .collect::<String>()
-                )
-            });
-            return ExitCode::from(2);
-        }
-        Err(e @ Refused::Executor(_)) => return error(o, 1, e.to_string()),
-        Err(e) => return error(o, 2, e.to_string()),
-    };
-    let entity = p.entity.clone();
-    let portal_arg = portal.display().to_string();
-    let input_args: String = p
-        .inputs
-        .iter()
-        .map(|(k, v)| {
-            let s = v.as_str().map_or_else(|| v.to_string(), str::to_owned);
-            format!(" --input {k}={}", shell_quote(&s))
-        })
-        .collect();
-    let next = format!(
-        "toolbox run {name} --portal {portal_arg} --entity {entity}{input_args} --confirm {}",
-        p.token
-    );
-    let mut preview_doc = p.doc(&m.portal.name);
-    preview_doc["accepts_approvals_from"] = json!(
-        m.federation
-            .as_ref()
-            .map(|f| f.accept_approvals_from.clone())
-            .unwrap_or_default()
-    );
-    preview_doc["next"] = if p.blockers.is_empty() {
-        Value::String(next.clone())
-    } else {
-        Value::Null
+        Err(e) => return refused(o, all, d, name, &schema, e),
     };
     if o.confirm.is_none() && !o.yes {
-        emit(o, &preview_doc, || {
-            preview_md(name, &entity, &m.portal.name, &preview_doc, &next)
+        let (doc, next) = preview(portal, m, &p, name);
+        emit(o, &doc, || {
+            preview_md(name, &p.entity, &m.portal.name, &doc, &next)
         });
         return ExitCode::SUCCESS;
     }
@@ -408,37 +378,101 @@ pub fn run(o: &Options) -> ExitCode {
         &m.portal.name,
         &d.snapshot,
     );
-    if !p.approvers.is_empty() {
-        let mut refused = None;
-        if let Some(g) = o.grant.as_deref().filter(|g| !g.is_empty()) {
-            match granted(o, &m, &p, &requested_by, g) {
-                Ok(approvals) => {
-                    run.state = "awaiting_approval".into();
-                    for a in &approvals {
-                        let (which, who) = a.split_once('=').unwrap_or((a, a));
-                        let _ = run.approve(who, |g| g == which);
-                    }
+    if !p.approvers.is_empty() && !approved(o, m, &p, &requested_by, &mut run) {
+        return finish(o, &run, 3);
+    }
+    execute(o, portal, m, &p, run)
+}
+
+fn refused(
+    o: &Options,
+    all: &[Offered],
+    d: &toolbox_derive::Derived,
+    name: &str,
+    schema: &Value,
+    e: Refused,
+) -> ExitCode {
+    let errors = match e {
+        Refused::Invalid(errors) => errors,
+        e @ Refused::Executor(_) => return error(o, 1, e.to_string()),
+        e => return error(o, 2, e.to_string()),
+    };
+    let line = federation::resolve(all, d, name, o.entity.as_deref())
+        .map(|(x, _)| federation::inputs_line(&x.action))
+        .unwrap_or_default();
+    let doc = json!({"action": name, "errors": errors, "inputs": schema});
+    emit(o, &doc, || {
+        format!(
+            "Invalid inputs for {name}:\n{}Inputs: {line}\n",
+            errors
+                .iter()
+                .map(|e| format!("  - {e}\n"))
+                .collect::<String>()
+        )
+    });
+    ExitCode::from(2)
+}
+
+/// The preview document and the command that confirms it.
+fn preview(portal: &Path, m: &Manifest, p: &Prepared, name: &str) -> (Value, String) {
+    let next = format!(
+        "toolbox run {name} --portal {} --entity {}{} --confirm {}",
+        portal.display(),
+        p.entity,
+        input_args(&p.inputs),
+        p.token
+    );
+    let mut doc = p.doc(&m.portal.name);
+    doc["accepts_approvals_from"] = json!(
+        m.federation
+            .as_ref()
+            .map(|f| f.accept_approvals_from.clone())
+            .unwrap_or_default()
+    );
+    doc["next"] = if p.blockers.is_empty() {
+        Value::String(next.clone())
+    } else {
+        Value::Null
+    };
+    (doc, next)
+}
+
+/// Applies a parent's signed grant, if one came, and reports whether the run may go ahead. If
+/// approvers are still pending (and review is not the approval), the run waits for them.
+fn approved(o: &Options, m: &Manifest, p: &Prepared, requested_by: &str, run: &mut Run) -> bool {
+    let mut refused = None;
+    if let Some(g) = o.grant.as_deref().filter(|g| !g.is_empty()) {
+        match granted(o, m, p, requested_by, g) {
+            Ok(approvals) => {
+                run.state = "awaiting_approval".into();
+                for a in &approvals {
+                    let (which, who) = a.split_once('=').unwrap_or((a, a));
+                    let _ = run.approve(who, |g| g == which);
                 }
-                Err(e) => refused = Some(e),
             }
-        }
-        let pending = run.pending_approvers();
-        if !pending.is_empty() && !p.reviewed {
-            let why = refused.map_or_else(
-                || "a repo portal holds no approvals, so run it through a portal that does (a parent with `toolbox serve`), or make it a `change` executor that proposes a branch so review is the approval".to_owned(),
-                |e| format!("the parent's approvals were refused: {e}"),
-            );
-            run.set(
-                "awaiting_approval",
-                None,
-                Some(format!("needs approval by {}: {why}", pending.join(", "))),
-            );
-            return finish(o, &run, 3);
+            Err(e) => refused = Some(e),
         }
     }
+    let pending = run.pending_approvers();
+    if pending.is_empty() || p.reviewed {
+        return true;
+    }
+    let why = refused.map_or_else(
+        || "a repo portal holds no approvals, so run it through a portal that does (a parent with `toolbox serve`), or make it a `change` executor that proposes a branch so review is the approval".to_owned(),
+        |e| format!("the parent's approvals were refused: {e}"),
+    );
+    run.set(
+        "awaiting_approval",
+        None,
+        Some(format!("needs approval by {}: {why}", pending.join(", "))),
+    );
+    false
+}
+
+fn execute(o: &Options, portal: &Path, m: &Manifest, p: &Prepared, mut run: Run) -> ExitCode {
     let ctx = p.context(&run);
     let mut obs = Local {
-        portal: portal.clone(),
+        portal: portal.to_path_buf(),
         fixtures: o.fixtures,
         skip: o.skip.clone(),
     };
@@ -455,7 +489,7 @@ pub fn run(o: &Options) -> ExitCode {
         let file = runs_dir().join(format!("{}.json", run.id));
         let _ = std::fs::create_dir_all(runs_dir());
         let _ = std::fs::write(&file, serde_json::to_string(&run).unwrap_or_default());
-        return verify_file(o, &portal, &file);
+        return verify_file(o, portal, &file);
     }
     finish(o, &run, exit_code(&run.state))
 }
@@ -551,6 +585,17 @@ fn granted(
         ));
     }
     Ok(g.approvals)
+}
+
+/// `--input k=v` for each input, quoted for a shell.
+fn input_args(inputs: &Map<String, Value>) -> String {
+    inputs
+        .iter()
+        .map(|(k, v)| {
+            let s = v.as_str().map_or_else(|| v.to_string(), str::to_owned);
+            format!(" --input {k}={}", shell_quote(&s))
+        })
+        .collect()
 }
 
 fn shell_quote(s: &str) -> String {
@@ -854,6 +899,7 @@ mod remote {
         s
     }
 
+    /// `toolbox run --url`: the same requests as in a checkout, made to a served portal's API.
     pub fn run(o: &Options, url: &str) -> ExitCode {
         let api = Api {
             o,
@@ -865,58 +911,65 @@ mod remote {
             rt: tokio::runtime::Runtime::new().expect("tokio runtime"),
             client: reqwest::Client::new(),
         };
-        let q = |e: &str| e.replace(':', "%3A").replace('/', "%2F");
-        if o.runs {
-            let mut path = "/v1/runs".to_owned();
-            if let Some(e) = &o.entity {
-                path.push_str(&format!("?entity={}", q(e)));
-            }
-            return match api.call("GET", &path, None) {
-                Ok(v) => {
-                    let runs: Vec<Value> = v["runs"]
-                        .as_array()
-                        .into_iter()
-                        .flatten()
-                        .filter(|r| o.action.as_ref().is_none_or(|a| r["action"] == a.as_str()))
-                        .cloned()
-                        .collect();
-                    emit(o, &json!({"runs": runs}), || runs_md(&runs));
-                    ExitCode::SUCCESS
-                }
-                Err(e) => api.fail(e),
-            };
-        }
         let decided = o
             .approve
             .as_ref()
             .map(|id| (id, "approve"))
             .or(o.reject.as_ref().map(|id| (id, "reject")));
-        if let Some((id, decision)) = decided {
+        let done = if o.runs {
+            runs(&api)
+        } else if let Some((id, decision)) = decided {
             let body = json!({"decision": decision, "note": o.note});
-            return match api.call("POST", &format!("/v1/runs/{id}/approvals"), Some(body)) {
-                Ok(run) => api.show(run),
-                Err(e) => api.fail(e),
-            };
-        }
-        if let Some(id) = &o.verify {
-            return match api.call("POST", &format!("/v1/runs/{id}/verify"), None) {
-                Ok(run) => api.show(run),
-                Err(e) => api.fail(e),
-            };
-        }
-        let Some(name) = &o.action else {
-            let path = o.entity.as_ref().map_or("/v1/actions".to_owned(), |e| {
-                format!("/v1/actions?entity={}", q(e))
-            });
-            return match api.call("GET", &path, None) {
-                Ok(v) => {
-                    let actions = v["actions"].as_array().cloned().unwrap_or_default();
-                    emit(o, &v, || list_md(url, &actions, &format!(" --url {url}")));
-                    ExitCode::SUCCESS
-                }
-                Err(e) => api.fail(e),
-            };
+            api.call("POST", &format!("/v1/runs/{id}/approvals"), Some(body))
+                .map(|run| api.show(run))
+        } else if let Some(id) = &o.verify {
+            api.call("POST", &format!("/v1/runs/{id}/verify"), None)
+                .map(|run| api.show(run))
+        } else if let Some(name) = &o.action {
+            act(&api, url, name)
+        } else {
+            list(&api, url)
         };
+        done.unwrap_or_else(|e| api.fail(e))
+    }
+
+    fn query(e: &str) -> String {
+        e.replace(':', "%3A").replace('/', "%2F")
+    }
+
+    fn runs(api: &Api) -> Result<ExitCode, (u8, String)> {
+        let o = api.o;
+        let mut path = "/v1/runs".to_owned();
+        if let Some(e) = &o.entity {
+            path.push_str(&format!("?entity={}", query(e)));
+        }
+        let v = api.call("GET", &path, None)?;
+        let runs: Vec<Value> = v["runs"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter(|r| o.action.as_ref().is_none_or(|a| r["action"] == a.as_str()))
+            .cloned()
+            .collect();
+        emit(o, &json!({"runs": runs}), || runs_md(&runs));
+        Ok(ExitCode::SUCCESS)
+    }
+
+    fn list(api: &Api, url: &str) -> Result<ExitCode, (u8, String)> {
+        let path = api.o.entity.as_ref().map_or("/v1/actions".to_owned(), |e| {
+            format!("/v1/actions?entity={}", query(e))
+        });
+        let v = api.call("GET", &path, None)?;
+        let actions = v["actions"].as_array().cloned().unwrap_or_default();
+        emit(api.o, &v, || {
+            list_md(url, &actions, &format!(" --url {url}"))
+        });
+        Ok(ExitCode::SUCCESS)
+    }
+
+    /// Preview, or run with --confirm or --yes (which previews first, as the checkout does).
+    fn act(api: &Api, url: &str, name: &str) -> Result<ExitCode, (u8, String)> {
+        let o = api.o;
         let schema = api
             .call("GET", "/v1/actions", None)
             .ok()
@@ -924,49 +977,34 @@ mod remote {
                 v["actions"]
                     .as_array()?
                     .iter()
-                    .find(|a| a["name"] == name.as_str())
+                    .find(|a| a["name"] == name)
                     .map(|a| a["inputs"].clone())
             })
             .unwrap_or(Value::Null);
-        let inputs = match parse_inputs(o, &schema) {
-            Ok(i) => i,
-            Err(e) => return error(o, 2, e),
-        };
+        let inputs = parse_inputs(o, &schema).map_err(|e| (2, e))?;
         let body = |token: Option<&str>| json!({"entity": o.entity, "inputs": inputs, "confirm_token": token});
         let action = format!("/v1/actions/{name}");
-        let token = match (&o.confirm, o.yes) {
-            (Some(t), _) => t.clone(),
-            (None, yes) => {
-                let mut p = match api.call("POST", &format!("{action}/previews"), Some(body(None)))
-                {
-                    Ok(p) => p,
-                    Err(e) => return api.fail(e),
-                };
+        let token = match &o.confirm {
+            Some(t) => t.clone(),
+            None => {
+                let mut p = api.call("POST", &format!("{action}/previews"), Some(body(None)))?;
                 let entity = p["entity"].as_str().unwrap_or("").to_owned();
-                let input_args: String = inputs
-                    .iter()
-                    .map(|(k, v)| {
-                        let s = v.as_str().map_or_else(|| v.to_string(), str::to_owned);
-                        format!(" --input {k}={}", shell_quote(&s))
-                    })
-                    .collect();
                 let token = p["confirm_token"].as_str().unwrap_or("").to_owned();
                 let next = format!(
-                    "toolbox run {name} --url {url} --entity {entity}{input_args} --confirm {token}"
+                    "toolbox run {name} --url {url} --entity {entity}{} --confirm {token}",
+                    input_args(&inputs)
                 );
                 let blocked = p["blockers"].as_array().is_some_and(|b| !b.is_empty());
                 p["next"] = if blocked { Value::Null } else { json!(next) };
-                if !yes {
+                if !o.yes {
                     let portal = p["portal"].as_str().unwrap_or(url).to_owned();
                     emit(o, &p, || preview_md(name, &entity, &portal, &p, &next));
-                    return ExitCode::SUCCESS;
+                    return Ok(ExitCode::SUCCESS);
                 }
                 token
             }
         };
-        match api.call("POST", &format!("{action}/runs"), Some(body(Some(&token)))) {
-            Ok(run) => api.show(run),
-            Err(e) => api.fail(e),
-        }
+        let run = api.call("POST", &format!("{action}/runs"), Some(body(Some(&token))))?;
+        Ok(api.show(run))
     }
 }

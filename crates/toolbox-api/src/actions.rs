@@ -127,39 +127,9 @@ fn interrupted(r: &mut Run) -> bool {
 /// Load the runs and spent tokens a previous start wrote, then write every later change out.
 /// Returns how many runs were loaded.
 pub async fn restore(s: &AppState) -> Result<usize, String> {
-    let since = lifecycle::now_secs().saturating_sub(lifecycle::TOKEN_TTL_SECS + 60);
     let dir = runs_dir(&s.manifest.portal.name);
-    let (docs, spent): (Vec<String>, Vec<(String, u64)>) = match &s.pg {
-        Some(pg) => (
-            pg.runs().await.map_err(|e| e.to_string())?,
-            pg.spent(since as i64)
-                .await
-                .map_err(|e| e.to_string())?
-                .into_iter()
-                .map(|(t, i)| (t, i.max(0) as u64))
-                .collect(),
-        ),
-        None => {
-            let docs = std::fs::read_dir(&dir)
-                .into_iter()
-                .flatten()
-                .flatten()
-                .filter(|e| e.path().extension().is_some_and(|x| x == "json"))
-                .filter_map(|e| std::fs::read_to_string(e.path()).ok())
-                .collect();
-            let spent = std::fs::read_to_string(dir.join("spent-tokens"))
-                .unwrap_or_default()
-                .lines()
-                .filter_map(|l| {
-                    let (t, i) = l.split_once(' ')?;
-                    Some((t.to_owned(), i.parse().ok()?))
-                })
-                .filter(|(_, i)| *i >= since)
-                .collect();
-            (docs, spent)
-        }
-    };
-    let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<Persist>();
+    let (docs, spent) = stored(s, &dir).await?;
+    let (tx, rx) = tokio::sync::mpsc::unbounded_channel::<Persist>();
     let mut loaded = 0;
     {
         let mut runs = s.runs.runs.lock().unwrap();
@@ -179,41 +149,77 @@ pub async fn restore(s: &AppState) -> Result<usize, String> {
     if s.pg.is_none() {
         std::fs::create_dir_all(&dir).map_err(|e| format!("{}: {e}", dir.display()))?;
     }
-    let pg = s.pg.clone();
-    tokio::spawn(async move {
-        while let Some(p) = rx.recv().await {
-            let res = match (&pg, p) {
-                (Some(pg), Persist::Run(r)) => pg
-                    .put_run(&r.id, &serde_json::to_string(&r).unwrap_or_default())
-                    .await
-                    .map_err(|e| e.to_string()),
-                (Some(pg), Persist::Spent(t, i)) => {
-                    pg.put_spent(&t, i as i64).await.map_err(|e| e.to_string())
-                }
-                (None, Persist::Run(r)) => {
-                    let file = dir.join(format!("{}.json", r.id));
-                    let tmp = dir.join(format!(".{}.tmp", r.id));
-                    std::fs::write(&tmp, serde_json::to_string_pretty(&r).unwrap_or_default())
-                        .and_then(|()| std::fs::rename(&tmp, &file))
-                        .map_err(|e| format!("{}: {e}", file.display()))
-                }
-                (None, Persist::Spent(t, i)) => {
-                    use std::io::Write as _;
-                    std::fs::OpenOptions::new()
-                        .create(true)
-                        .append(true)
-                        .open(dir.join("spent-tokens"))
-                        .and_then(|mut f| writeln!(f, "{t} {i}"))
-                        .map_err(|e| e.to_string())
-                }
-            };
-            if let Err(e) = res {
-                tracing::error!(error = %e, "could not store a run");
-            }
-        }
-    });
+    tokio::spawn(write_out(s.pg.clone(), dir, rx));
     let _ = s.runs.out.set(tx);
     Ok(loaded)
+}
+
+type Stored = (Vec<String>, Vec<(String, u64)>);
+
+/// The stored run records and the tokens spent within a token's lifetime.
+async fn stored(s: &AppState, dir: &std::path::Path) -> Result<Stored, String> {
+    let since = lifecycle::now_secs().saturating_sub(lifecycle::TOKEN_TTL_SECS + 60);
+    if let Some(pg) = &s.pg {
+        let docs = pg.runs().await.map_err(|e| e.to_string())?;
+        let spent = pg.spent(since as i64).await.map_err(|e| e.to_string())?;
+        let spent = spent.into_iter().map(|(t, i)| (t, i.max(0) as u64));
+        return Ok((docs, spent.collect()));
+    }
+    let docs = std::fs::read_dir(dir)
+        .into_iter()
+        .flatten()
+        .flatten()
+        .filter(|e| e.path().extension().is_some_and(|x| x == "json"))
+        .filter_map(|e| std::fs::read_to_string(e.path()).ok())
+        .collect();
+    let spent = std::fs::read_to_string(dir.join("spent-tokens"))
+        .unwrap_or_default()
+        .lines()
+        .filter_map(|l| {
+            let (t, i) = l.split_once(' ')?;
+            Some((t.to_owned(), i.parse().ok()?))
+        })
+        .filter(|(_, i)| *i >= since)
+        .collect();
+    Ok((docs, spent))
+}
+
+/// The single writer: every run change and spent token, in order, to Postgres or the directory.
+async fn write_out(
+    pg: Option<toolbox_store::pg::PgStore>,
+    dir: std::path::PathBuf,
+    mut rx: tokio::sync::mpsc::UnboundedReceiver<Persist>,
+) {
+    while let Some(p) = rx.recv().await {
+        let res = match (&pg, p) {
+            (Some(pg), Persist::Run(r)) => pg
+                .put_run(&r.id, &serde_json::to_string(&r).unwrap_or_default())
+                .await
+                .map_err(|e| e.to_string()),
+            (Some(pg), Persist::Spent(t, i)) => {
+                pg.put_spent(&t, i as i64).await.map_err(|e| e.to_string())
+            }
+            (None, Persist::Run(r)) => {
+                let file = dir.join(format!("{}.json", r.id));
+                let tmp = dir.join(format!(".{}.tmp", r.id));
+                std::fs::write(&tmp, serde_json::to_string_pretty(&r).unwrap_or_default())
+                    .and_then(|()| std::fs::rename(&tmp, &file))
+                    .map_err(|e| format!("{}: {e}", file.display()))
+            }
+            (None, Persist::Spent(t, i)) => {
+                use std::io::Write as _;
+                std::fs::OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open(dir.join("spent-tokens"))
+                    .and_then(|mut f| writeln!(f, "{t} {i}"))
+                    .map_err(|e| e.to_string())
+            }
+        };
+        if let Err(e) = res {
+            tracing::error!(error = %e, "could not store a run");
+        }
+    }
 }
 
 /// Set on requests the MCP endpoint makes on a caller's behalf, so a run records `via: mcp`. A
@@ -337,21 +343,7 @@ async fn prepared(
     {
         return Err(problem(StatusCode::CONFLICT, code, e));
     }
-    let permission = off.action.permission.clone();
-    match s.allowed(caller, &permission, &entity).await? {
-        true => {}
-        false => {
-            let mut r = problem(
-                StatusCode::FORBIDDEN,
-                "forbidden",
-                format!("{user} lacks `{permission}` on {entity}"),
-            );
-            if let Ok(h) = permission.parse() {
-                r.headers_mut().insert("x-toolbox-missing-relation", h);
-            }
-            return Err(r);
-        }
-    }
+    authorize(s, caller, user, &off.action.permission, &entity).await?;
     let manifest = s.manifest.clone();
     let derived = p.derived.clone();
     let (name, entity, inputs, user) = (
@@ -377,20 +369,43 @@ async fn prepared(
     })
     .await
     .map_err(|e| problem(StatusCode::INTERNAL_SERVER_ERROR, "internal", e.to_string()))?;
-    match result {
-        Ok(mut x) => {
-            if let Some(b) = refuses_approvals(s, &x) {
-                x.blockers.push(b);
-            }
-            Ok((x, p.snapshot_id.clone()))
-        }
-        Err(Refused::Invalid(e)) => Err(problem(
+    let mut x = result.map_err(refusal)?;
+    if let Some(b) = refuses_approvals(s, &x) {
+        x.blockers.push(b);
+    }
+    Ok((x, p.snapshot_id.clone()))
+}
+
+async fn authorize(
+    s: &AppState,
+    caller: &crate::access::Caller,
+    user: &str,
+    permission: &str,
+    entity: &str,
+) -> Result<(), Response> {
+    if s.allowed(caller, permission, entity).await? {
+        return Ok(());
+    }
+    let mut r = problem(
+        StatusCode::FORBIDDEN,
+        "forbidden",
+        format!("{user} lacks `{permission}` on {entity}"),
+    );
+    if let Ok(h) = permission.parse() {
+        r.headers_mut().insert("x-toolbox-missing-relation", h);
+    }
+    Err(r)
+}
+
+fn refusal(e: Refused) -> Response {
+    match e {
+        Refused::Invalid(e) => problem(
             StatusCode::UNPROCESSABLE_ENTITY,
             "invalid-inputs",
             e.join("; "),
-        )),
-        Err(Refused::Unknown(e)) => Err(problem(StatusCode::NOT_FOUND, "not-found", e)),
-        Err(Refused::Executor(e)) => Err(problem(StatusCode::BAD_GATEWAY, "executor", e)),
+        ),
+        Refused::Unknown(e) => problem(StatusCode::NOT_FOUND, "not-found", e),
+        Refused::Executor(e) => problem(StatusCode::BAD_GATEWAY, "executor", e),
     }
 }
 
@@ -691,27 +706,10 @@ pub async fn approve(
         Ok(r) => r,
         Err(r) => return r,
     };
-    // Groups the caller is in. Without an authorization model nobody is known to be in a group,
-    // so a group approver can't be satisfied: an approval must not mean "anyone".
-    let mut member = Vec::new();
-    for g in run
-        .pending_approvers()
-        .iter()
-        .flat_map(|a| a.split('|').map(str::to_owned).collect::<Vec<_>>())
-    {
-        if g.eq_ignore_ascii_case(&caller.user) {
-            member.push(g);
-            continue;
-        }
-        if s.authz.is_none() || !g.starts_with("group:") {
-            continue;
-        }
-        match s.allowed(&caller, "member", &g).await {
-            Ok(true) => member.push(g),
-            Ok(false) => {}
-            Err(r) => return r,
-        }
-    }
+    let member = match memberships(&s, &caller, &run).await {
+        Ok(m) => m,
+        Err(r) => return r,
+    };
     let reject = body.decision.as_deref() == Some("reject");
     let decided = s.runs.update(&id, |run| -> Result<bool, String> {
         if reject {
@@ -729,12 +727,45 @@ pub async fn approve(
         }
         Ok(done)
     });
-    let mut run = match decided {
-        None => return problem(StatusCode::NOT_FOUND, "not-found", format!("no run {id}")),
-        Some((Err(e), _)) => return problem(StatusCode::FORBIDDEN, "not-an-approver", e),
-        Some((Ok(false), run)) => return Json(run_doc(&run)).into_response(),
-        Some((Ok(true), run)) => run,
-    };
+    match decided {
+        None => problem(StatusCode::NOT_FOUND, "not-found", format!("no run {id}")),
+        Some((Err(e), _)) => problem(StatusCode::FORBIDDEN, "not-an-approver", e),
+        Some((Ok(false), run)) => Json(run_doc(&run)).into_response(),
+        Some((Ok(true), run)) => start_approved(&s, &caller, run).await,
+    }
+}
+
+/// The pending approvers (users, or groups) the caller counts as. Without an authorization model
+/// nobody is known to be in a group, so a group approver can't be satisfied: an approval must not
+/// mean "anyone".
+async fn memberships(
+    s: &AppState,
+    caller: &crate::access::Caller,
+    run: &Run,
+) -> Result<Vec<String>, Response> {
+    let mut member = Vec::new();
+    for g in run
+        .pending_approvers()
+        .iter()
+        .flat_map(|a| a.split('|').map(str::to_owned).collect::<Vec<_>>())
+    {
+        let counts = g.eq_ignore_ascii_case(&caller.user)
+            || (s.authz.is_some()
+                && g.starts_with("group:")
+                && s.allowed(caller, "member", &g).await?);
+        if counts {
+            member.push(g);
+        }
+    }
+    Ok(member)
+}
+
+/// Start a run its last approval released, if it is still the run that was approved.
+async fn start_approved(
+    s: &Arc<AppState>,
+    caller: &crate::access::Caller,
+    mut run: Run,
+) -> Response {
     // Re-prepare against today's facts: an approval does not freeze a stale preview.
     let rb = RunBody {
         entity: Some(run.entity.clone()),
@@ -745,7 +776,7 @@ pub async fn approve(
         user: run.requested_by.clone(),
         ..caller.clone()
     };
-    let p = match prepared(&s, &run.requested_by.clone(), &requester, &run.action, &rb).await {
+    let p = match prepared(s, &run.requested_by.clone(), &requester, &run.action, &rb).await {
         Ok((p, _)) => p,
         Err(r) => {
             run.fail("could not prepare the approved run again");
@@ -767,7 +798,7 @@ pub async fn approve(
         s.runs.save(&run);
         return Json(run_doc(&run)).into_response();
     }
-    let grant = match signing_seed(&s).map(|seed| p.grant(&run, &seed)) {
+    let grant = match signing_seed(s).map(|seed| p.grant(&run, &seed)) {
         Some(Ok(g)) => g,
         Some(Err(e)) => {
             run.fail(format!(
@@ -779,7 +810,7 @@ pub async fn approve(
         None => None,
     };
     s.runs.save(&run);
-    start(&s, p, run.clone(), grant);
+    start(s, p, run.clone(), grant);
     Json(run_doc(&run)).into_response()
 }
 
