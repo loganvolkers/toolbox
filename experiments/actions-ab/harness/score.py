@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """Measures a run's workspace (README §5), from the filesystem, not the transcript.
 
-    score.py snapshot <dest>          baseline at setup (setup.sh writes <dest>/.baseline.json)
+    score.py snapshot <dest>          baseline at setup (setup.sh writes <dest>.baseline.json)
     score.py lines <dest>             lines to maintain: authored code and configuration
-    score.py check <dest>             the final state on each origin's main (probe C1)
+    score.py check <dest>             the final state on each origin's main (probe C1), for the
+                                      task in <dest>.task (round.sh writes it; default `task`)
 
 **Lines to maintain** are the non-blank lines of code and configuration the run added: whole new
 files, and the added lines of changed ones, in every file under <dest> except the origins (whose
 commits are also in the checkouts), the arm's platform copies (`bin/`, `toolbox-docs/`,
-`backstage/node_modules`), nested `.git` directories, and Markdown (HANDOFF.md, the effect itself).
+`backstage-docs/`, `backstage/node_modules`), nested `.git` directories, and Markdown (HANDOFF.md, the effect itself).
 A file whose content is already in the baseline, or in a checkout or `org/`, is a copy and is not
 counted again. Data a system wrote at run time (run records, audit logs, databases) is not code:
 `lines` lists every counted file so the adjudicator can strike those, and records each strike.
@@ -22,7 +23,7 @@ import sys
 
 SKIP_DIRS = {".git", "node_modules", "__pycache__", ".yarn", "dist", "dist-types", ".venv", "venv",
              ".cache", "target", ".pytest_cache", ".mypy_cache"}
-SKIP_TOP = {"origins", "bin", "toolbox-docs"}
+SKIP_TOP = {"origins", "bin", "toolbox-docs", "backstage-docs", "gha-docs"}
 CODE = {".py", ".js", ".mjs", ".cjs", ".ts", ".tsx", ".jsx", ".go", ".rs", ".sh", ".bash", ".yaml",
         ".yml", ".toml", ".json", ".ini", ".cfg", ".conf", ".env", ".sql", ".tmpl", ".njk", ".j2",
         ".hbs", ".fga", ".cel", ".txt", ""}
@@ -82,7 +83,7 @@ def counted(rel: str) -> bool:
 
 
 def lines(dest: str) -> None:
-    base = json.load(open(os.path.join(dest, ".baseline.json")))
+    base = json.load(open(dest.rstrip("/") + ".baseline.json"))
     known = {v["sha"] for v in base.values()}
     seen: dict[str, str] = {}
     per_file = {}
@@ -111,7 +112,41 @@ def lines(dest: str) -> None:
     print()
 
 
+NOTICES = {
+    "alpha": ("Warning", "This proxy is frozen while the v2 rewrite lands; please file new issues against v2."),
+    "beta": ("Info", "Releases now ship on the shared release train every second Tuesday."),
+    "gamma": ("Info", "Graph extraction now lives in graphify-core; this package re-exports it."),
+}
+
+
+def git(origin: str, *args: str) -> subprocess.CompletedProcess:
+    return subprocess.run(["git", "--git-dir", origin, *args], capture_output=True, text=True)
+
+
+def check_notice(dest: str) -> None:
+    """Each root README on main is exactly the notice, a blank line, and the imported README."""
+    out = {}
+    for r in REPOS:
+        origin = os.path.join(dest, "origins", f"{r}.git")
+        root = git(origin, "rev-list", "--max-parents=0", "main").stdout.split()[-1]
+        name = next(n for n in git(origin, "ls-tree", "--name-only", root).stdout.split()
+                    if n.lower() == "readme.md")
+        before = git(origin, "show", f"{root}:{name}").stdout
+        got = git(origin, "show", f"main:{name}")
+        level, message = NOTICES[r]
+        want = f"> **{level}:** {message}\n\n{before}"
+        body = got.stdout if got.returncode == 0 else ""
+        out[r] = {"readme": name, "present": got.returncode == 0,
+                  "firstLine": body.split("\n", 1)[0] == want.split("\n", 1)[0], "exact": body == want}
+    out["pass"] = all(v["exact"] for v in out.values())
+    json.dump(out, sys.stdout, indent=1)
+    print()
+
+
 def check(dest: str) -> None:
+    task_file = dest.rstrip("/") + ".task"
+    if os.path.exists(task_file) and open(task_file).read().strip() == "task-notice":
+        return check_notice(dest)
     out = {}
     for r in REPOS:
         origin = os.path.join(dest, "origins", f"{r}.git")

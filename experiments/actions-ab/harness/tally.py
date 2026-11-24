@@ -9,11 +9,12 @@ Reads `adjudication/<run>.json` (linesAfterStrikes, fullyPasses) and `<run>.coun
 """
 import json
 import pathlib
+import re
 import statistics
 import sys
 
 ARMS = ["toolbox", "gha", "backstage", "vanilla"]
-PROBES = ["C1"] + [f"P{i}" for i in range(1, 11)]
+PROBES = ["C1"]
 
 
 def verdict(v) -> str:
@@ -22,8 +23,10 @@ def verdict(v) -> str:
 
 def load(d: pathlib.Path):
     runs = {}
-    for adj in sorted((d / "adjudication").glob("*-*.json")):
-        a = json.loads(adj.read_text())
+    records = [json.loads(p.read_text()) for p in sorted((d / "adjudication").glob("*-*.json"))]
+    found = {k for a in records for k in a if re.fullmatch(r"P\d+", k)}
+    PROBES[1:] = sorted(found, key=lambda k: int(k[1:]))
+    for a, adj in zip(records, sorted((d / "adjudication").glob("*-*.json"))):
         name = a.get("run", adj.stem)
         count = json.loads((d / f"{name}.count.json").read_text())
         runs[name] = {
