@@ -29,26 +29,26 @@ The tasks were written before the first capture and kept for every audit:
 
 ## Scores
 
-| Id | Baseline | Round 1 | Round 2 | Round 3 | Round 4 | Round 5 | Round 6 | Round 7 | Round 8 | Round 9 | Round 10 | Round 11 | Round 12 | Round 13 | Round 14 | Round 15 | Round 16 |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| U1 Answer first | 3 | 4 | 4 | 4 | 3 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 |
-| U2 Reader's language | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
-| U3 Recognition over recall | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 4 |
-| U4 Hierarchy and scent | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
-| U5 Data integrity | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 3 | 3 | 4 |
-| U6 Consistency | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 4 |
-| U7 Wayfinding and control | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 4 | 4 | 3 | 4 | 4 | 3 | 4 | 4 | 4 |
-| U8 Honest states | 1 | 3 | 2 | 3 | 3 | 3 | 3 | 4 | 3 | 2 | 3 | 3 | 4 | 4 | 4 | 3 | 3 |
-| U9 Accessibility | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 4 | 4 | 4 |
-| U10 Density and responsiveness | 2 | 3 | 3 | 3 | 4 | 3 | 3 | 3 | 3 | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 4 |
-| **Usability total** | **23** | **31** | **30** | **31** | **31** | **31** | **31** | **33** | **32** | **30** | **31** | **32** | **33** | **34** | **35** | **33** | **37** |
-| J1 Visceral | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
-| J2 Behavioral | 2 | 2 | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 3 | 3 |
-| J3 Reflective | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 3 | 3 | 4 |
-| J4 Voice | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
-| **Joy total** | **10** | **11** | **11** | **12** | **12** | **12** | **12** | **12** | **12** | **12** | **12** | **12** | **12** | **13** | **13** | **12** | **13** |
-| Tasks succeeded | 1 of 6 (4 partial, 1 fail) | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 |
-| Serious axe-core nodes | 0 | 0 | 0 | 0 (5 in the capture, from an entry fade; see round 3) | 0 | 0 | 0 | 0 (WCAG 2.2 `target-size` found by the auditor; see round 7) | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included |
+| Id | Baseline | Round 1 | Round 2 | Round 3 | Round 4 | Round 5 | Round 6 | Round 7 | Round 8 | Round 9 | Round 10 | Round 11 | Round 12 | Round 13 | Round 14 | Round 15 | Round 16 | Round 17 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| U1 Answer first | 3 | 4 | 4 | 4 | 3 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 |
+| U2 Reader's language | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| U3 Recognition over recall | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 3 |
+| U4 Hierarchy and scent | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| U5 Data integrity | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 3 | 3 | 4 | 3 |
+| U6 Consistency | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 3 |
+| U7 Wayfinding and control | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 4 | 4 | 3 | 4 | 4 | 3 | 4 | 4 | 4 | 4 |
+| U8 Honest states | 1 | 3 | 2 | 3 | 3 | 3 | 3 | 4 | 3 | 2 | 3 | 3 | 4 | 4 | 4 | 3 | 3 | 4 |
+| U9 Accessibility | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 4 | 4 | 4 | 4 |
+| U10 Density and responsiveness | 2 | 3 | 3 | 3 | 4 | 3 | 3 | 3 | 3 | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 3 |
+| **Usability total** | **23** | **31** | **30** | **31** | **31** | **31** | **31** | **33** | **32** | **30** | **31** | **32** | **33** | **34** | **35** | **33** | **37** | **34** |
+| J1 Visceral | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| J2 Behavioral | 2 | 2 | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 3 | 3 | 3 |
+| J3 Reflective | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 3 | 3 | 4 | 4 |
+| J4 Voice | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| **Joy total** | **10** | **11** | **11** | **12** | **12** | **12** | **12** | **12** | **12** | **12** | **12** | **12** | **12** | **13** | **13** | **12** | **13** | **13** |
+| Tasks succeeded | 1 of 6 (4 partial, 1 fail) | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 |
+| Serious axe-core nodes | 0 | 0 | 0 | 0 (5 in the capture, from an entry fade; see round 3) | 0 | 0 | 0 | 0 (WCAG 2.2 `target-size` found by the auditor; see round 7) | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included |
 
 ## Round 1: the baseline's findings
 
@@ -398,10 +398,35 @@ same page's tooltip says pass "for want of anything to read".
 F4 (snapshot wording and non-metal top levels), F5 (the ring and the medals on one track card),
 F6 (the Assessed rule's badge) and F10 (13 font sizes) are severity 1 or 2 and left for now.
 
+## Round 17: the honest overlays had become a vocabulary, so the loop goes round again
+
+Every task succeeded and Q1 to Q5 were yes, with no severity-3 finding. U8 reached 4 for the first
+time since round 14, but U3, U5, U6 and U10 fell back to 3: the track ring and its pooled level bar
+measured different things, four overlay codes had to be held at once, measured scorecards went
+unmarked in lists, and entity and scorecard pages ran to 2,800 to 3,000px.
+
+| Finding | Fix |
+|---|---|
+| F1 (U5, U3). The track ring and its pooled entity bar disagreed (96% over a mostly silver bar) | A bar per scorecard, filled to its share at its top level, with a dashed line at their average, which is the ring |
+| F3 (U2, U3). Four overlay codes: hatched, dotted, faded medal and hollow chips | Two states, each with one look. Medals are always plain; when at least half the entities at the weakest level are unassessed or unrun, the weakest-level pill beside the medal is hollow with ✦ or ◌ and says the level may not hold |
+| F4 (U3, Q4). List rows showed the what, not the why | A scorecard index row leads with the first sentence of its rationale ("Why: …") |
+| F5 (U6, Q5). Lists marked only agent-judged scorecards | Every listed scorecard carries its basis: Agent-judged, or Measured when every rule is measured; the sidebar uses the icon, with its meaning under the sidebar title |
+| F7 (U6). "1 rule ✦", "All 3 ✦" | Level grids say "All 3 rules" or "1 rule" before the badge |
+| F8 (U4). The checks tile packed its caveats into the headline | The number and its sentence on one line, the caveats on a second, quieter line |
+| F9 (J4). "made by toolbox report from data snapshot 5"; "Runner-backed cards are left out" | "generated by toolbox report from snapshot 5 of the portal's data"; the repository standard's why says "scorecards that need the CI runner" |
+| F10 (U6). "Ten" and "Clean" passed for gold | A level that is its scorecard's only level reads "Ten ✓ top" inside its chip, and the separate "✓ top level" mark is dropped there |
+| U10. Entity page 2,847px, scorecard pages about 3,000px | Rules needed beyond the next level fold into closed rows that keep outcome, basis and level; three or more entities with the same result share one row. The toolbox-cli entity page is 2,094px and Crates, reviewed by agents 2,388px |
+
+F11 (the track card's focus ring) needed no change: the card's main link already outlines the whole
+card, and the auditor's ring was on the inner "Next medal" link, a separate stop. F2 (the why on a
+loss explains impact, not cause) and F6 (two Toolbox versions on one line) are data written by the
+benchmark harness and stay open under *Findings still open*.
+
 ## Findings still open
 
 | Finding | Why it is open |
 |---|---|
+| A loss's "Why" on Compare explains the capability's value; only templates says why Toolbox lacks it | The text is the comparison's rule rationale, written with the benchmark; a status per lost rule (planned, paused, by design) with its decision belongs in the comparison data, not the report |
 | Red means both "under 50%" on a track ring and "behind on a factor" on the comparison ring | Both mean "furthest from the goal"; the ring ramp no longer shares a hue with a medal |
 | The Toolbox version in Compare's setup cards is a commit, not a release | The hero names the release build, but the facts are written by the benchmark harness; the next run should record the release |
 | Internal shorthand in rationale text beyond the four glossary terms | The report defines ratchet, CEL, fixture and harness on hover; other terms are data in each standard and need a pass over the standards |

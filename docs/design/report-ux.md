@@ -217,8 +217,9 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 - A scorecard id left in a lede or rationale links to that scorecard under its title.
 - An entity one rule from its next level says so ("One rule from gold · pass “Has evals”"), and the
   scorecard's lever counts how many entities are within reach that way.
-- A track card shows its entity levels as a bar beside the ring, which stays the share at the top
-  level. Beneath them a medal shelf counts its scorecards by their weakest entity's level, and one
+- A track card draws a bar per scorecard, filled to that scorecard's share at its top level, with a
+  dashed line at their average, which is the ring's number, so the ring and the bars cannot
+  disagree. Beneath them a medal shelf counts its scorecards by their weakest entity's level, and one
   "Next medal" line names the weakest scorecard that can still rise and how many entities it has to
   lift. The card link is the title, stretched over the card. The track page lists every scorecard
   and names the rule most of the lifted entities need.
@@ -262,9 +263,10 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 - Every list of scorecards uses one caption: entities, how many are in scope, the share at the top
   level with that level named ("27% at the top level (gold)"), and how many are provisional or not
   assessed. A level bar draws entities whose level rests on checks not run dotted, as it draws
-  unassessed ones hatched, and a medal fades with the hollow pill's glyph when at least half the
-  entities holding the weakest level are hatched or dotted. A list never reads better than the
-  scorecard's page.
+  unassessed ones hatched. A medal is always drawn plain; when at least half the entities holding
+  the weakest level are hatched or dotted, the weakest-level pill beside it is hollow, with its
+  glyph, and says the level may not hold. The report has two overlay states, not assessed and not
+  run, each with one look. A list never reads better than the scorecard's page.
 - A scorecard page opens with its status under the title: the medal, the weakest level, how many
   entities are at the top level, the biggest lever, and the level bar. The description and a
   "why" clamped to three lines (with "Read the full why") follow.
@@ -276,9 +278,19 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 - A headline share of passing checks counts only passes on evidence. An agent-judged rule that
   passes on an entity no agent has assessed is counted apart ("346 more pass only because no agent
   has assessed them yet"), beside the checks not run.
-- A row in the scorecard index carries its standard's purpose: the first sentence of its
-  description, on one line, in full on hover.
+- A row in the scorecard index carries its standard's why: the first sentence of its rationale
+  ("Why: …"), on one line, in full on hover; the description stands in only where there is no
+  rationale.
 - An external link's ↗ belongs to its text and wraps with the last word.
+- Every scorecard in a list carries its basis: the Agent-judged badge when an agent's judgement
+  decides some rules, else the Measured badge. The scorecard sidebar shows the same as an icon,
+  with its meaning under the sidebar's title.
+- On an entity's card and in a scorecard's entity rows, rules needed beyond the next level are
+  folded: one closed row each with its outcome, basis and level, which opens to the fix and the
+  why. Three or more entities with the same result share one row, which opens to them.
+- A level name that is its scorecard's only level carries "✓ top" inside its chip, so it never
+  passes for a gold of another name.
+- A tile states its number on one line and its caveats on a second, quieter one.
 
 Not built: a change since the last snapshot beside each track ring. The report carries one snapshot
 and the committed baseline, which equals it on every published build; a pages build that also scored
