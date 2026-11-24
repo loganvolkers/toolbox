@@ -1,0 +1,19 @@
+{
+ "linesToMaintain": 1308,
+ "files": {
+  "alpha/.github/environments/deprecation.json": 7,
+  "alpha/.github/rulesets/protect-main.json": 28,
+  "alpha/.github/self-service/apply-github-settings.sh": 39,
+  "alpha/.github/self-service/mark-deprecated.json": 26,
+  "alpha/.github/self-service/mark_deprecated.py": 226,
+  "alpha/.github/workflows/mark-deprecated.yml": 77,
+  "alpha/CODEOWNERS": 5,
+  "beta/.github/CODEOWNERS": 5,
+  "org/.gitignore": 4,
+  "org/bin/acme-actions": 452,
+  "org/catalog.json": 10,
+  "org/runs/run-0001.json": 143,
+  "org/runs/run-0002.json": 143,
+  "org/runs/run-0003.json": 143
+ }
+}
