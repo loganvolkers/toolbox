@@ -368,7 +368,12 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
   is a plain pale fill. A kind card writes its bar's counts under it, and a catalog group header
   counts each kind, so a reader can total one kind without adding by eye.
 - A standard that caps the repository never folds into "every entity at the top level" on the
-  Scorecards index: its top level is the blocker, so its row stays in view.
+  Scorecards index: its top level is the blocker, so its row stays in view. Medal counts on a track
+  and group counts on the Scorecards index say how many at a level are already at their top level
+  ("4 bronze (1 ✓ top)").
+- A campaign whose scorecards rate different kinds has no shared scope, so it is measured per
+  scorecard: "0 of 2 scorecards at target", a bar and a count to lift for each, and it counts as
+  behind or on target like any other campaign.
 
 Not built: a change since the last snapshot beside each track ring. The report carries one snapshot
 and the committed baseline, which equals it on every published build; a pages build that also scored
