@@ -97,7 +97,8 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 - Outcome filter defaults to **all**; "Failing" is one click for a work list; empty filters offer Clear.
 - Entity ids show a short label first; the full id stays muted beside it.
 - Passing rules render as compact chips grouped by level ("Bronze: all 5 met"); failing rules keep fix + evidence.
-- "What each level needs" shows each rule with its fix text, so a level's requirements read as sentences, not ids.
+- "What each level needs" shows each rule with its rationale (its fix when it has none) and the rule's own links,
+  so a level's requirements read as sentences, not ids, and the evidence behind a rule is one click away.
 - An entity row leads with what its next level needs ("Silver needs: has-example", with each rule's basis icon), then counts the failures above
   that level. Red is kept for entities at `none`.
 - Each scorecard names its biggest lever: the rule holding the most entities at the lowest occupied level.
