@@ -334,6 +334,7 @@ fresh agents against the same harness.
 | Mapping one person across forges (`ann` on GitHub, `ann.smith` on GitLab) | Principals come from the portal's sign-in. A mapping belongs with identity resolution ([identity-resolution.md](./identity-resolution.md)) |
 | Who merged a merge request (F21 on GitLab) | As on GitHub: T7 trusts the host's branch protection |
 | Origin, Gitea, Bitbucket drivers | §5 |
+| Giving Toolbox's own clones and pushes the forge token | They use git's own credential helpers, so a checkout's bot needs a `HOME` with its credentials (the benchmark's dry run wrote one). The token can't go in git's configuration (`GIT_CONFIG_*` reaches action commands, D01M87AXG095Q0Z0DGGTKYYAM7Y); an askpass helper that only Toolbox's own git calls see would do it |
 | GitLab Premium's gates (approval rules, protected environments) in the harness | CE has none of them, so the harness can't show Toolbox's approvals composing with them. A Premium pipeline's protected environment applies after Toolbox's approval, by GitLab's own rules |
 
 ## 8. Open questions
