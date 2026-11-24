@@ -94,6 +94,27 @@ portals open on a status (A): that portal has a repository standard and they do 
 carries the same status sentence. The unmeasured comparison still shows short ids ("openfga vs
 spicedb") (A, B): a product's name lives in its record, and before the first run there is none.
 
+## Round 3: what the panel found
+
+The probes passed 212 of 212. Every targeted median held or rose: Consistency (U5) from 2 to 3,
+the rest unchanged at 3, with Coherence (U6) still at 2. Five of the six tasks succeeded for all
+three auditors; T6, reading the portals side by side, was partial for two. Four severity-3 findings
+were open, so the round did not pass:
+
+| Finding (auditors) | Box or portal | Fix |
+|---|---|---|
+| The OpenFGA comparison led with "behind on 4 of 6 factors" in red, where its own rules split 15 ahead and 6 behind and the experiment's pre-registered tally reads ahead on 4 (A, B) | Box | A comparison declares its verdict rule, `anyBehind` by default or `majority` ([D01M87WF2QZVPTD8CGDZKY133CD](../decisions/D01M87WF2QZVPTD8CGDZKY133CD.md)); derive applies it, and the report states it wherever it counts factors. The OpenFGA portal declares the majority it pre-registered. A factor with rules on both sides reads "ahead, mixed", "behind, mixed" or "even split", and leads with both counts |
+| "Next: CI reliability to bronze" sat under a ring that counts only the top level, so the step did not say what it changes (A) | Box | The line names the top level the rings count: "to bronze, a step toward gold, the level the rings count", or "its top level" |
+| A bronze-only scorecard was left out of Toolbox's CI average but counted in OpenFGA's (B, C) | Box | The exclusion has a reason that holds on both portals: on Toolbox's portal the scorecard caps the repository level, so its 100% is a ceiling, not progress. OpenFGA has no repository level, so nothing is capped, and the page says "No repository level: this portal names no repository standards" |
+| Three hero shapes: a level board on Toolbox, a status on the others (B, C) | Box | One skeleton on every portal: verdict, the sentence behind it, then what needs attention, then the next step. The repository hero keeps its level board below that |
+
+The first finding is the third time a panel scored the factor count severity 3. Each earlier fix
+explained the rule better. This round's fix changed it: the rule is now part of a comparison's
+definition, beside its subject and peers, so a pre-registered A/B leads with its own tally and
+Toolbox for Toolbox keeps the stricter rule against Backstage. The independent adjudication of the
+OpenFGA run ([ADJUDICATION.md](../../experiments/openfga-spicedb-compare/ADJUDICATION.md) §5, §7)
+asked for the same change.
+
 ## Comparisons are generic
 
 The OpenFGA portal compares OpenFGA v1.23.0 with SpiceDB v1.57.1 through the same comparative
@@ -109,8 +130,8 @@ went in as portal configuration:
 | A state for a comparison whose records have not landed: "not measured yet", and every section agreeing with it | `report-ui/src/views/compare.js` | Box |
 | Product names when a record is missing, instead of `product:openfga` | `report-ui/src/views/compare.js` | Box |
 
-No Rust changed for it: the comparison engine, the facts, the verdict rule and the rendering are the
-ones Toolbox for Toolbox already had. The one gap was a state Toolbox's own portal never reaches, a
+No Rust changed to add it: the comparison engine, the facts and the rendering are the ones Toolbox
+for Toolbox already had. The one gap was a state Toolbox's own portal never reaches, a
 comparison defined before it is measured. The second portal found it, the first panel scored it
 severity 4, and the box now handles it for any portal. The same pages then rendered the measured
 comparison without change: the factor cards, the rules OpenFGA is behind on with what would close
@@ -118,10 +139,14 @@ each, the largest leads, and how it was measured. The measured result and its ad
 [RESULTS.md](../../experiments/openfga-spicedb-compare/RESULTS.md) and the independent adjudication
 beside it in [experiments/openfga-spicedb-compare](../../experiments/openfga-spicedb-compare/).
 
-The report's verdict rule is stricter than the experiment's pre-registered tally. A product is
-behind on a factor if it is behind on any rule, so the headline reads "ahead on 2 of 6 factors"
-where the tally gives four ahead, one at parity and one behind. The page states the rule beside every
-factor, and all thirty rule standings agree with the harness.
+The second gap showed only once the comparison was measured. The report's one verdict rule, behind
+if any rule is behind, was stricter than the experiment's pre-registered tally, so the headline read
+"ahead on 2 of 6 factors" where the tally gives four ahead, one at parity and one behind. All thirty
+rule standings agreed with the harness; only the count differed. A comparison now declares its
+rule (`compare.verdict`, D01M87WF2QZVPTD8CGDZKY133CD): one optional field in the model, the schema
+and derive, which the OpenFGA portal sets and Toolbox for Toolbox does not. The adjudication upheld
+the verdict and corrected two of SpiceDB's facts in SpiceDB's favour, neither of which changes a
+factor.
 
 ## Sources
 
