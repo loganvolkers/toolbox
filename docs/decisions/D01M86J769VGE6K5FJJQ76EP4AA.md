@@ -86,6 +86,18 @@ a list of repositories and a repo's action is its inputs, its approvers and its 
     call. Rejected: a `--dry-run` that stops before the push (it would not show the rejected
     push or the check on the base), and testing through a served portal (it needs the key
     pinned and the server up, and leaves runs in the history).
+16. **A test file's `defaults` holds what every case shares.** Each case starts from them; its
+    own fields replace them, except `inputs`, which merge key by key, and an input set to `null`
+    is left out. Misspelt keys are refused in `defaults` as in a case. In round 4 the test files
+    were the largest part of every Toolbox run, 66 to 74 lines per repository, most of it the
+    action, requester, inputs and approvers repeated in each case. Rejected: YAML anchors
+    (agents rarely write them, and `<<` merges are not in YAML 1.2), and a per-case `extends`
+    (one shared base covers the cases seen so far).
+17. **An unknown key that is the tail of a value says so.** When an unknown input or schema
+    keyword contains whitespace and has no value, the error adds that the value was probably
+    cut at a comma inside unquoted `{…}`. In round 4 a flow mapping such as
+    `{reason: Replaced by x, which is better.}` produced `which is better. is not an input`,
+    and agents spent retries finding the comma.
 
 Rejected: a hosted registry of children (a second source of truth beside git), and cloning on
 every request (slow, and a network failure would hide every action).
