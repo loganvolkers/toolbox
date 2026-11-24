@@ -69,6 +69,25 @@ fn listed(list: &Value, key: &str, s: &str) -> bool {
 }
 
 impl Child {
+    /// The child's own `toolbox run`, in this portal's clone or checkout of it.
+    fn local(&self, program: &Path) -> Executor {
+        Executor::Toolbox {
+            portal: self.path.clone(),
+            action: self.action.clone(),
+            entity: String::new(),
+            program: program.to_path_buf(),
+            env: self.runners["local"]["env"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter_map(Value::as_str)
+                .map(str::to_owned)
+                .collect(),
+            branch: self.branch.clone(),
+            review: self.git.as_deref().and_then(|g| forge::resolve(&self.forges, g)),
+        }
+    }
+
     /// Whether a server may run this child's actions: the child declares how it may be reached
     /// (`federation.runner`), and the parent's `federation.runners` admits it. A checkout runs a
     /// child as the person who ran `toolbox run`, so it needs neither.
@@ -122,21 +141,8 @@ impl Offered {
             .and_then(Value::as_str)
             .unwrap_or("local")
         {
-            "local" => Ok(Executor::Toolbox {
-                portal: c.path.clone(),
-                action: c.action.clone(),
-                entity: String::new(),
-                program: program.to_path_buf(),
-                env: c.runners["local"]["env"]
-                    .as_array()
-                    .into_iter()
-                    .flatten()
-                    .filter_map(Value::as_str)
-                    .map(str::to_owned)
-                    .collect(),
-                branch: c.branch.clone(),
-            }),
-            "ci" => c.ci(),
+            "local" => Ok(c.local(program)),
+            "ci" => c.ci(program),
             "github-workflow" => {
                 // The child names its workflow; the parent supplies the endpoint and the token, so
                 // a child can't make the parent send its credentials anywhere.
@@ -168,6 +174,7 @@ impl Offered {
                 }
                 let mut w = crate::github::Workflow::parse(&spec)?;
                 w.federated = Some(c.action.clone());
+                w.preview = Some(Box::new(c.local(program)));
                 Ok(Executor::GithubWorkflow(w))
             }
             other => Err(format!(
@@ -181,8 +188,9 @@ impl Offered {
 impl Child {
     /// `runner: {type: ci}` (docs/design/forges.md §4.3): the child's own CI, on the forge and
     /// project the parent cloned it from, with that forge's API and token. The child names at
-    /// most its `workflow` (GitHub) and `ref`.
-    fn ci(&self) -> Result<Executor, String> {
+    /// most its `workflow` (GitHub) and `ref`. The child previews in this portal's clone, as a
+    /// local child does, so its approvers and effects are known and the grant can bind them.
+    fn ci(&self, program: &Path) -> Result<Executor, String> {
         for k in ["project", "repo", "api", "url", "token", "forge"] {
             if self.runner.get(k).is_some() {
                 return Err(format!(
@@ -221,6 +229,7 @@ impl Child {
                 api: f.api,
                 token_env: f.token,
                 federated: Some(self.action.clone()),
+                preview: Some(Box::new(self.local(program))),
             }),
             Kind::Gitlab => Executor::GitlabPipeline(crate::gitlab::Pipeline {
                 project: f.project,
@@ -229,6 +238,7 @@ impl Child {
                 token_env: f.token,
                 federated: Some(self.action.clone()),
                 clone: Some(self.path.clone()),
+                preview: Some(Box::new(self.local(program))),
             }),
         })
     }

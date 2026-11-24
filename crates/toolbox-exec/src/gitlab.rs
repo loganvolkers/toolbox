@@ -32,6 +32,9 @@ pub struct Pipeline {
     /// For a federated dispatch: the parent's clone of the child, where a change the child
     /// proposed is looked for on its base.
     pub clone: Option<PathBuf>,
+    /// For a federated dispatch: the child's own preview, in that clone, which gives the
+    /// approvers and effects the grant binds.
+    pub preview: Option<Box<crate::executor::Executor>>,
 }
 
 /// A project path in a URL path segment: `acme/pay` is `acme%2Fpay`.
@@ -63,6 +66,7 @@ impl Pipeline {
             token_env: f.token,
             federated: None,
             clone: None,
+            preview: None,
         })
     }
 
@@ -214,6 +218,58 @@ impl Pipeline {
             return Ok(None);
         };
         self.get(&format!("/jobs/{job}/artifacts/{RECORD}"))
+    }
+}
+
+/// Open a merge request for a branch already pushed, through the API with the forge's token:
+/// `{forge, url, iid}`, or `{forge, error}` with the branch left pushed.
+pub fn open_merge(f: &forge::Resolved, source: &str, target: &str, title: &str, body: &str) -> Value {
+    let Ok(token) = std::env::var(&f.token) else {
+        return json!({"forge": "gitlab", "error": format!(
+            "set {} to open a merge request; the branch is pushed", f.token)});
+    };
+    let url = format!(
+        "{}/projects/{}/merge_requests",
+        f.api.trim_end_matches('/'),
+        encode(&f.project)
+    );
+    let req = json!({"source_branch": source, "target_branch": target, "title": title,
+        "description": body, "remove_source_branch": true});
+    let post = || {
+        let (url, token, req) = (url.clone(), token.clone(), req.clone());
+        block(async move {
+            let r = reqwest::Client::new()
+                .post(url)
+                .header("private-token", token)
+                .header("user-agent", "toolbox")
+                .json(&req)
+                .send()
+                .await
+                .map_err(|e| e.to_string())?;
+            let st = r.status();
+            Ok::<_, String>((st, r.text().await.unwrap_or_default()))
+        })
+    };
+    // GitLab takes in a push before it knows the branch: until then it says the source branch
+    // does not exist.
+    let mut res = post();
+    for _ in 0..20 {
+        match &res {
+            Ok(Ok((st, text))) if st.as_u16() == 400 && text.contains("source_branch") => {
+                std::thread::sleep(std::time::Duration::from_millis(500));
+                res = post();
+            }
+            _ => break,
+        }
+    }
+    match res {
+        Ok(Ok((st, text))) if st.is_success() => {
+            let v: Value = serde_json::from_str(&text).unwrap_or(Value::Null);
+            json!({"forge": "gitlab", "url": v["web_url"], "iid": v["iid"]})
+        }
+        Ok(Ok((st, text))) => json!({"forge": "gitlab",
+            "error": format!("GitLab refused the merge request ({st}): {}", pipeline_error(&text))}),
+        Ok(Err(e)) | Err(e) => json!({"forge": "gitlab", "error": e}),
     }
 }
 

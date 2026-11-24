@@ -123,6 +123,9 @@ pub enum Executor {
         /// A child cloned from git (`federation.children`): the branch its clone is brought to
         /// before each preview and run, so the definition that runs is the one committed there.
         branch: Option<String>,
+        /// The forge the child was cloned from, as this portal resolves it: a branch the child
+        /// proposes without opening a review gets one here, with this portal's token.
+        review: Option<forge::Resolved>,
     },
 }
 
@@ -339,6 +342,14 @@ impl Executor {
                     ..Preview::default()
                 })
             }
+            Executor::GithubWorkflow(crate::github::Workflow {
+                preview: Some(child),
+                ..
+            })
+            | Executor::GitlabPipeline(crate::gitlab::Pipeline {
+                preview: Some(child),
+                ..
+            }) => child.preview(ctx),
             Executor::GithubWorkflow(w) => Ok(Preview {
                 effects: vec![
                     json!({"resource": format!("github:{}/actions/workflows/{}", w.repo, w.workflow),
@@ -358,6 +369,7 @@ impl Executor {
                 program,
                 env,
                 branch,
+                ..
             } => {
                 sync_clone(portal, branch.as_deref())?;
                 let v = child_run(program, portal, action, entity, ctx, &["--preview"], env)?;
@@ -438,19 +450,38 @@ impl Executor {
                 program,
                 env,
                 branch,
+                review,
             } => match sync_clone(portal, branch.as_deref())
                 .and_then(|()| child_run(program, portal, action, entity, ctx, &["--yes"], env))
             {
                 Err(e) => Outcome::failed(e),
                 Ok(v) => {
                     let state = v.get("state").and_then(Value::as_str).unwrap_or("failed");
+                    let mut outputs = v.get("outputs").cloned().unwrap_or(json!({}));
+                    if let Some(f) = review
+                        && state == "proposed"
+                        && outputs["pushed"] == true
+                        && outputs.get("review").is_none()
+                        && let Some(head) = outputs["branch"].as_str()
+                    {
+                        let base = outputs["base"].as_str().unwrap_or("main");
+                        let base = base.strip_prefix("origin/").unwrap_or(base);
+                        let title = outputs["title"].as_str().unwrap_or(action);
+                        let body = format!(
+                            "Toolbox-Run: {}\n\nOpened by Toolbox for {action}, run {} of portal {}.",
+                            v["id"].as_str().unwrap_or(""),
+                            ctx.run_id.as_deref().unwrap_or(""),
+                            ctx.portal
+                        );
+                        outputs["review"] = open_review(f, head, base, title, &body);
+                    }
                     Outcome {
                         status: match state {
                             "succeeded" | "unverified" => "succeeded".into(),
                             "proposed" | "awaiting_approval" => state.into(),
                             _ => "failed".into(),
                         },
-                        outputs: v.get("outputs").cloned().unwrap_or(json!({})),
+                        outputs,
                         error: v
                             .get("error")
                             .and_then(Value::as_str)
@@ -1099,13 +1130,13 @@ fn change_run(
         (Some(_), kind) => {
             git(&wt.repo, &["push", "-q", remote, branch])?;
             if let (Some(Kind::Github), Some(f)) = (kind, &on) {
-                opened = crate::github::open_pull(f, branch, target, title, &body);
+                opened = open_review(f, branch, target, title, &body);
             }
             true
         }
     };
     let mut outputs = json!({"branch": branch, "base": wt.base, "commit": commit, "pushed": pushed,
-        "remote": has_remote, "files": files});
+        "remote": has_remote, "files": files, "title": title});
     if !opened.is_null() {
         outputs["review"] = opened;
     }
@@ -1118,9 +1149,18 @@ fn change_run(
     })
 }
 
+/// Open a pull or merge request for `head`, already pushed, on `f`'s project, with its token.
+pub fn open_review(f: &forge::Resolved, head: &str, base: &str, title: &str, body: &str) -> Value {
+    match f.kind {
+        Kind::Github => crate::github::open_pull(f, head, base, title, body),
+        Kind::Gitlab => crate::gitlab::open_merge(f, head, base, title, body),
+    }
+}
+
 /// Whether a proposed change run's commit is on its base branch: merged (an ancestor of the base)
-/// or squashed or rebased with its `Toolbox-Run` trailer. The base is fetched first when it is a
-/// remote branch.
+/// or squashed or rebased with its `Toolbox-Run` trailer, or with the `(toolbox run <id>)` of
+/// its default subject, which a squash that keeps only the title (GitLab's default) still has.
+/// The base is fetched first when it is a remote branch.
 pub fn merged(cwd: &Path, run: &crate::run::Run) -> Result<bool, String> {
     let base = run.outputs["base"].as_str().unwrap_or("");
     let commit = run.outputs["commit"].as_str().unwrap_or("");
@@ -1146,17 +1186,11 @@ pub fn merged(cwd: &Path, run: &crate::run::Run) -> Result<bool, String> {
         return Ok(true);
     }
     let trailer = format!("Toolbox-Run: {}", run.id);
+    let subject = format!("(toolbox run {})", run.id);
     let found = git(
         &repo,
         &[
-            "log",
-            "-n",
-            "1",
-            "--format=%H",
-            "-F",
-            "--grep",
-            &trailer,
-            base,
+            "log", "-n", "1", "--format=%H", "-F", "--grep", &trailer, "--grep", &subject, base,
             "--",
         ],
     )?;
@@ -1538,6 +1572,31 @@ mod tests {
         std::fs::rename(root.join("origin.git"), root.join("gone.git")).unwrap();
         let err = unchanged(&work, &run).unwrap_err();
         assert!(err.contains("cannot fetch"), "{err}");
+        let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn a_proposal_squashed_to_its_title_is_still_seen_merged() {
+        let (root, work) = clone_with("");
+        let exec = Executor::parse(&json!({"type": "change", "base": "main",
+            "run": "echo MIT > LICENSE"}))
+        .unwrap();
+        let (_, ctx) = landing(&work);
+        let out = exec.run(&ctx, &[]);
+        assert_eq!(out.status, "proposed", "{:?}", out.error);
+        let title = out.outputs["title"].as_str().unwrap().to_owned();
+        assert!(title.ends_with("(toolbox run run_land1)"), "{title}");
+        let run = as_run(&ctx, &out);
+        assert!(!merged(&work, &run).unwrap());
+        sh(
+            &work,
+            &format!(
+                "git checkout -q -B squash origin/main && git checkout -q origin/{} -- LICENSE && \
+                 git commit -qm '{title}' && git push -q origin squash:main",
+                out.outputs["branch"].as_str().unwrap()
+            ),
+        );
+        assert!(merged(&work, &run).unwrap());
         let _ = std::fs::remove_dir_all(root);
     }
 

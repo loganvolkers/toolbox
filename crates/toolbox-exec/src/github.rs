@@ -21,6 +21,9 @@ pub struct Workflow {
     /// For a federated dispatch: the child action's name. The workflow then gets `action`,
     /// `inputs` (JSON) and `toolbox_run`, and runs `toolbox run` itself.
     pub federated: Option<String>,
+    /// For a federated dispatch: the child's own preview, in this portal's clone of it, which
+    /// gives the approvers and effects the grant binds.
+    pub preview: Option<Box<crate::executor::Executor>>,
 }
 
 /// A tracked workflow run.
@@ -57,6 +60,7 @@ impl Workflow {
             api: s("api").unwrap_or_else(|| "https://api.github.com".into()),
             token_env: s("token").unwrap_or_else(|| "GITHUB_TOKEN".into()),
             federated: None,
+            preview: None,
         })
     }
 

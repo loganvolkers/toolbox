@@ -1,0 +1,17 @@
+apiVersion: toolbox.dev/v1alpha1
+portal: {name: org, title: Org portal on GitLab, owner: group:platform, toolbox: "0.1"}
+# A self-managed GitLab. gitlab.com and github.com need no entry; any other host does, with its
+# type. Toolbox reads the token from this environment variable and sends it only to `url`'s API,
+# never to an action. `projects` limits which projects this portal will start a pipeline in.
+forges:
+  - url: https://gitlab.acme.dev
+    type: gitlab
+    token: GITLAB_TOKEN
+    projects: [acme/*, acme/*/*]
+# Each child is a project with a .toolbox/toolbox.yaml. A child whose runner is `{type: ci}`
+# (../gitlab-repo) runs in its own pipeline; one whose runner is `{type: local}` runs in this
+# portal's clone of it. Either way a change is a merge request on the child's forge.
+federation:
+  children:
+    - git: https://gitlab.acme.dev/acme/alpha.git
+    - git: https://gitlab.acme.dev/acme/platform/gamma.git
