@@ -103,7 +103,7 @@
     ".ring text{font:700 13px system-ui,sans-serif;fill:var(--fg)}",
     ".pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12px;font-weight:600;background:var(--tint);color:var(--muted)}",
     ".pill.good{background:color-mix(in srgb,var(--pass) 16%,transparent);color:var(--pass)}",
-    ".pill.bad{background:color-mix(in srgb,var(--fail) 14%,transparent);color:var(--fail)}.pill.unknown{background:transparent;border:1px dashed var(--unknown);color:var(--unknown)}",
+    ".pill.bad{background:color-mix(in srgb,var(--fail) 14%,transparent);color:var(--fail)}.pill.unknown{background:transparent;border:1px dashed var(--unknown);color:var(--unknown)}.pill.neutral{background:var(--tint);border:1px solid var(--line);color:var(--muted)}",
     "input[type=search]{width:100%;margin:10px 0;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);font:inherit}",
     ".filters{display:flex;flex-wrap:wrap;gap:8px 16px;margin:12px 0 4px;align-items:center}",
     ".seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}",
@@ -133,7 +133,7 @@
     ".sc-status{display:flex;gap:14px;align-items:flex-start;margin:4px 0 14px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--tint)}.sc-status>svg{flex:none}.sc-status-b{flex:1;min-width:0}.sc-status-t{display:flex;flex-wrap:wrap;align-items:center;gap:2px 6px;margin-bottom:8px;font-size:14px}.sc-status-t .topmark{color:var(--pass);font-weight:650}.sc-status .legend{margin-top:6px}.sc-status-t .sep{color:var(--muted)}@media (max-width:640px){.sc-status-t .sep{display:none}.sc-status-t .fact{flex-basis:100%}}.why-text.clamped{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}.why-more{margin-top:2px;min-height:24px}",
     ".bar span.unrun{background:radial-gradient(circle,var(--seg) 1.6px,transparent 1.9px) 0 0/6px 6px;box-shadow:inset 0 0 0 1.5px var(--unknown)}.dot.dots{border-radius:2px;background:radial-gradient(circle,var(--seg) 1.2px,transparent 1.5px) 0 0/4px 4px;box-shadow:inset 0 0 0 1.5px var(--unknown)}",
     ".rule.unknown{border-left-color:var(--unknown)}.rule.waived{border-left-color:var(--bronze)}.rule.unassessed{border-left-color:var(--judged)}",
-    ".cmp-prov{margin:6px 0 0;display:grid;gap:2px}.cmp-src{display:flex;flex-wrap:wrap;align-items:center;gap:2px 10px}.cmp-src .refs{margin:0;line-height:22px}.cmp-brief>summary{cursor:pointer;width:max-content;max-width:100%;padding:3px 0;color:var(--accent)}",
+    ".basis-note p{margin:0 0 4px}.h2h-wide{max-width:560px}.h2h-wide .h2h{width:100%;font-size:13px}.h2h-wide .h2h-head,.h2h-wide .h2h-row{grid-template-columns:160px 1fr 1fr}.h2h-row[aria-current]{font-weight:700;background:var(--accent-bg);border-radius:6px}.rank-top:not([hidden]){display:block;margin:8px 0 0;font-size:13px}.cmp-prov{margin:6px 0 0;display:grid;gap:2px}.cmp-src{display:flex;flex-wrap:wrap;align-items:center;gap:2px 10px}.cmp-src .refs{margin:0;line-height:22px}.cmp-brief>summary{cursor:pointer;width:max-content;max-width:100%;padding:3px 0;color:var(--accent)}",
     ".kpi-bar{flex:0 0 46px;height:10px;border-radius:5px;background:var(--line);overflow:hidden}.kpi-bar span{display:block;height:100%;background:var(--pass)}.kpi-pips{flex:0 0 46px;display:flex;flex-wrap:wrap;gap:4px}.kpi-pips span{width:10px;height:10px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--faint)}.kpi-pips span.on{background:var(--pass);box-shadow:none}",
     ".cprog{flex:0 0 76px;display:grid;gap:3px}.cprog b{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}.cprog small{font-size:12px;color:var(--muted)}.cprog .gb{position:relative;height:8px;border-radius:4px;background:var(--line)}.cprog .gb>span{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--muted)}.cprog.on .gb>span{background:var(--pass)}.cprog .gb>i{position:absolute;top:-3px;bottom:-3px;width:2px;border-radius:1px;background:var(--fg)}.cprog.big{flex-basis:120px}.cprog.big b{font-size:28px}",
     ".hollow-key{display:flex;flex-wrap:wrap;align-items:center;gap:4px 16px;padding:6px 10px;font-size:13px;color:var(--muted);background:var(--tint);border-radius:8px;margin:4px 0}.hollow-key>span{display:inline-flex;align-items:center;gap:6px}.hollow-key b{color:var(--fg);font-weight:600}",
@@ -268,7 +268,7 @@
     ".track .medals a,.track .nextmedal a,.track .tnext a{position:relative;z-index:1}.track .medals>li{border-radius:10px}.medals a{color:inherit;text-decoration:none}.medals a:hover span:first-of-type{text-decoration:underline}.medals .lw{color:var(--muted)}",
     ".basis.tip:hover::after,.basis.tip:focus::after,abbr.gloss:hover::after,abbr.gloss:focus::after{left:var(--tipx,0);max-width:min(280px,calc(100vw - 24px))}",
     ".allmeasured .basis.measured:is(.mini,.ctl){border-color:transparent;background:none;font-weight:500}",
-    ".medal-col{display:flex;gap:10px;align-items:center}.medal-col>svg{flex:0 0 30px}.mix{display:grid;gap:4px}.slots{position:relative;display:flex;gap:3px;align-items:flex-end;height:30px;padding-bottom:1px;border-bottom:1px solid var(--line)}.slot{position:relative;flex:1 1 0;max-width:30px;height:100%;border-radius:3px 3px 0 0;background:var(--tint);overflow:hidden}.slot::after{content:'';position:absolute;left:0;right:0;bottom:0;height:var(--h);background:var(--c)}.slots[data-tip]{cursor:help}.slots[data-tip]:hover::after,.slots[data-tip]:focus::after{content:attr(data-tip);position:absolute;left:0;top:calc(100% + 6px);z-index:5;width:max-content;max-width:min(320px,calc(100vw - 48px));padding:6px 9px;border-radius:8px;background:var(--fg);color:var(--bg);font-size:12px;font-weight:500;line-height:1.5;white-space:pre-line;box-shadow:var(--shadow)}.slots .avg{position:absolute;left:0;right:0;bottom:var(--avg);border-top:1.5px dashed var(--fg);opacity:.7}.slot-key{display:inline-flex;align-items:center;gap:5px}.sc-done>summary{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px;padding:10px 8px 10px 28px;list-style:none;min-height:24px;cursor:pointer;border-bottom:1px solid var(--line);font-size:14px}.sc-done>summary:hover{background:var(--tint)}.sc-done>summary small{color:var(--muted);font-size:12px}.sc-done>summary::-webkit-details-marker{display:none}.sc-done>summary::before{content:'\\25B8';color:var(--muted);width:12px}.sc-done[open]>summary::before{content:'\\25BE'}.sc-done .topmark{color:var(--pass);font-weight:650}.slots.mini{display:inline-flex;width:30px;height:14px;gap:2px}.slots.mini .slot{border-radius:1px 1px 0 0}.mix small{font-size:12px;color:var(--muted)}.nextmedal{font-size:13px;padding:8px 10px;border-radius:8px;background:var(--tint)}.nextmedal b{color:var(--fg)}",
+    ".medal-col{display:flex;gap:10px;align-items:center}.medal-col>svg{flex:0 0 30px}.mix{display:grid;gap:4px}.slots{position:relative;display:flex;gap:3px;align-items:flex-end;height:30px;padding-bottom:1px;border-bottom:1px solid var(--line)}.slot{position:relative;flex:1 1 0;max-width:30px;height:100%;border-radius:3px 3px 0 0;background:var(--tint);overflow:hidden}.slot::after{content:'';position:absolute;left:0;right:0;bottom:0;height:max(var(--h),3px);background:var(--c)}.slots[data-tip]{cursor:help}.slots[data-tip]:hover::after,.slots[data-tip]:focus::after{content:attr(data-tip);position:absolute;left:0;top:calc(100% + 6px);z-index:5;width:max-content;max-width:min(320px,calc(100vw - 48px));padding:6px 9px;border-radius:8px;background:var(--fg);color:var(--bg);font-size:12px;font-weight:500;line-height:1.5;white-space:pre-line;box-shadow:var(--shadow)}.slots .avg{position:absolute;left:0;right:0;bottom:var(--avg);border-top:1.5px dashed var(--fg);opacity:.7}.slot-key{display:inline-flex;align-items:center;gap:5px}.sc-done>summary{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px;padding:10px 8px 10px 28px;list-style:none;min-height:24px;cursor:pointer;border-bottom:1px solid var(--line);font-size:14px}.sc-done>summary:hover{background:var(--tint)}.sc-done>summary small{color:var(--muted);font-size:12px}.sc-done>summary::-webkit-details-marker{display:none}.sc-done>summary::before{content:'\\25B8';color:var(--muted);width:12px}.sc-done[open]>summary::before{content:'\\25BE'}.sc-done .topmark{color:var(--pass);font-weight:650}.slots.mini{display:inline-flex;width:30px;height:14px;gap:2px}.slots.mini .slot{border-radius:1px 1px 0 0}.mix small{font-size:12px;color:var(--muted)}.nextmedal{font-size:13px;padding:8px 10px;border-radius:8px;background:var(--tint)}.nextmedal b{color:var(--fg)}",
     ".track .th{display:flex;gap:14px;align-items:center}",
     ".track .tt{font-weight:700;font-size:16px;line-height:1.25}",
     ".track .td{font-size:13px;color:var(--muted)}",
@@ -1638,7 +1638,7 @@
         { className: "slots", role: "img", tabIndex: 0, ariaLabel: "Share at the top level, per scorecard: " + said.join("; ") + ". Average " + t.pct + "%.", style: "--avg:" + t.pct + "%" },
         ...cards.map(function (c) {
           var p = c.row.topShare;
-          return el("span", { className: "slot", style: "--h:" + Math.max(p, 2) + "%;--c:" + RAMP[p >= 80 ? 0 : p >= 50 ? 1 : 2] });
+          return el("span", { className: "slot", style: "--h:" + p + "%;--c:" + RAMP[p >= 80 ? 0 : p >= 50 ? 1 : 2] });
         }),
         el("span", { className: "avg", ariaHidden: "true" }),
       ),
@@ -2189,7 +2189,10 @@
       );
       requestAnimationFrame(function () {
         var cur = modes.querySelector('[aria-selected="true"]');
-        if (cur && modes.scrollWidth > modes.clientWidth) modes.scrollLeft = Math.max(0, cur.offsetLeft - modes.clientWidth / 3);
+        if (cur && modes.scrollWidth > modes.clientWidth) {
+          var at = cur.getBoundingClientRect().left - modes.getBoundingClientRect().left + modes.scrollLeft;
+          modes.scrollLeft = Math.max(0, at + cur.offsetWidth / 2 - modes.clientWidth / 2);
+        }
         var fade = function () {
           modes.classList.toggle("more", modes.scrollLeft + modes.clientWidth < modes.scrollWidth - 4);
           modes.classList.toggle("less", modes.scrollLeft > 4);
@@ -2445,7 +2448,7 @@
         "div",
         { className: "tiles" },
         tile("scorecards", "good", kpiBar(pct, pct + "% of checks pass"), pct + "%", [fmt(c.pass) + " of " + fmt(total) + " checks pass on evidence", checkNote.length ? el("small", { className: "tile-note", textContent: checkNote.join("; ") }) : null]),
-        tile("catalog", "", medal("gold", 40), fmt(golden), ["of " + fmt(scoredEntities) + " scored entities are gold on every scorecard", goldUnjudged ? el("small", { className: "tile-note", textContent: fmt(goldUnjudged) + " of those still await an agent's assessment" }) : null]),
+        tile("catalog", "", medal("gold", 40), fmt(golden), ["of " + fmt(scoredEntities) + " scored entities are gold on every scorecard that rates them", goldUnjudged ? el("small", { className: "tile-note", textContent: fmt(goldUnjudged) + " of those still await an agent's assessment" }) : null]),
         tile("scorecards", debt ? "bad" : "good", medal(debt ? "none" : "gold", 40), String(debt), debt ? "scorecards have entities at none" : "scorecards with entities at none"),
         tile("campaigns", on === campaignNames.length ? "good" : "", kpiPips(on, campaignNames.length, on + " of " + campaignNames.length + " campaigns on target"), on + " of " + campaignNames.length, "campaigns on target"),
       );
@@ -2459,7 +2462,7 @@
       var days = daysLeft(c.end);
       var status =
         state === "empty"
-          ? el("span", { className: "pill unknown", textContent: "no single score" })
+          ? el("span", { className: "pill neutral", textContent: "no single score" })
           : state === "on"
             ? el("span", { className: "pill good", textContent: "on target" })
             : el("span", { className: "pill bad", textContent: (c.inScope || 0) - (c.meeting || 0) + " to go" });
@@ -3112,12 +3115,32 @@
             ),
           );
         gaps.forEach(function (pair) {
+          var bases = {};
+          (pair[1].gaps || []).forEach(function (g) {
+            var m = /^(.+?):atLeast (\S+) \((\S+)\)$/.exec(g);
+            var gsc = m && (D.scorecards || {})[m[1]];
+            var score = m && ((D.scores || {})[m[1]] || {})[pair[0]];
+            if (gsc && score)
+              blockers(gsc, score, m[2]).forEach(function (r) {
+                bases[basisOf((gsc.rules || {})[r] || {})] = true;
+              });
+          });
           gapList.append(
             el(
               "div",
               { className: "gap" },
               el("div", {}, link("entity/" + enc(pair[0]), "", shortId(pair[0])), el("div", { className: "sub", style: "font-size:12px", textContent: pair[0] })),
-              el("div", { className: "why", textContent: (pair[1].gaps || []).map(function (g) { return gapText(D, g, pair[0]); }).join("; ") }),
+              el(
+                "div",
+                { className: "why" },
+                ...Object.keys(bases)
+                  .sort()
+                  .map(function (b) {
+                    return basisBadge(b, true);
+                  }),
+                Object.keys(bases).length ? " " : "",
+                (pair[1].gaps || []).map(function (g) { return gapText(D, g, pair[0]); }).join("; "),
+              ),
             ),
           );
         });
@@ -3350,7 +3373,7 @@
         var unrunCols = cols.filter(function (n) {
           return allUnrun[n];
         });
-        var dashed = unrunCols.length ? " Every level on the " + unrunCols.map(function (n) { return title(D, n); }).join(" and ") + (unrunCols.length > 1 ? " scorecards" : " scorecard") + " is provisional here: checks it needs were not run in this build." : "";
+        var dashed = unrunCols.length ? "Every level on the " + unrunCols.map(function (n) { return title(D, n); }).join(" and ") + (unrunCols.length > 1 ? " scorecards" : " scorecard") + " is provisional here: checks it needs were not run in this build." : "";
         var hollowJ = list.querySelector(".lvl.vacuous.unjudged");
         var hollowR = list.querySelector(".lvl.vacuous.unrun");
         if ((hollowJ || hollowR) && header)
@@ -3366,20 +3389,26 @@
         if (judgedCols.length || dashed)
           list.prepend(
             el(
-              "p",
+              "div",
               { className: "sub basis-note" },
-              judgedCols.length ? basisBadge("judged") : null,
-              (judgedCols.length
-                ? " " +
-                  judgedCols
-                    .map(function (n) {
-                      return title(D, n);
-                    })
-                    .join(", ") +
-                  " " +
-                  (judgedCols.length === 1 ? "has" : "have") +
-                  " agent-judged rules: an agent's assessment decides them."
-                : "") + dashed,
+              judgedCols.length
+                ? el(
+                    "p",
+                    {},
+                    el("b", { textContent: "How it's decided: " }),
+                    basisBadge("judged"),
+                    " " +
+                      judgedCols
+                        .map(function (n) {
+                          return title(D, n);
+                        })
+                        .join(", ") +
+                      " " +
+                      (judgedCols.length === 1 ? "has" : "have") +
+                      " agent-judged rules: an agent's assessment decides them; the rest are measured.",
+                  )
+                : null,
+              dashed ? el("p", {}, el("b", { textContent: "Has it run: " }), dashed) : null,
             ),
           );
         if (kindCards.length > cols.length)
@@ -3980,7 +4009,7 @@
     }
 
     // One row per factor: the share of its rules behind grows left of the axis, ahead grows right; parity is the gap.
-    headToHead(D, all, names, peer) {
+    headToHead(D, all, names, peer, current) {
       var rows = names
         .map(function (n) {
           var c = { ahead: 0, parity: 0, behind: 0, total: 0 };
@@ -4009,6 +4038,7 @@
           ]);
           a.setAttribute("aria-label", title(D, r.n) + ": " + r.c.behind + " behind, " + r.c.parity + " at parity, " + r.c.ahead + " ahead, of " + r.c.total + " rules");
           a.title = r.c.behind + " behind · " + r.c.parity + " at parity · " + r.c.ahead + " ahead, of " + r.c.total + " rules";
+          if (r.n === current) a.setAttribute("aria-current", "true");
           return a;
         }),
         el("div", { className: "h2h-foot", textContent: "Share of each factor's rules; the gap is parity" }),
@@ -4094,7 +4124,7 @@
           el(
             "p",
             { className: "sub cmp-def", style: "margin:8px 0 0" },
-            "A factor is a scorecard that scores both products on the same rules. On a rule, a product is ahead when its measured value is better (within the rule's tolerance is parity) or it passes a bar the other misses. " + who(subject) + " is behind on a factor if it is behind on any one of its rules, and ahead if it is ahead on some and behind on none.",
+            "A factor is a scorecard that scores both products on the same rules. On a rule, a product is ahead when its measured value is better (within the rule's tolerance is parity) or it passes a bar the other misses. " + who(subject) + " is behind on a factor if it is behind on any one of its rules, and ahead if it is ahead on some and behind on none; “narrowly ahead” means ahead on fewer than half of that factor's rules, at parity on the rest.",
           ),
         ),
         el(
@@ -4423,7 +4453,7 @@
           : null,
       );
       head.dataset.focus = "";
-      return el("div", {}, head, el("section", {}, el("div", { className: "head" }, el("h2", { textContent: "Every factor" }), link("compare", "", "← Back to the summary")), this.factorCards(D, names, name)));
+      return el("div", {}, head, el("section", {}, el("div", { className: "head" }, el("h2", { textContent: "Every factor" }), link("compare", "", "← Back to the summary")), el("div", { className: "h2h-wide" }, this.headToHead(D, D.comparisons, names, peer, name))));
     }
 
     scorecard(D, S, name, query) {
@@ -4480,14 +4510,28 @@
         edges();
       };
       drawCards();
+      var toTop = el("button", {
+        className: "link rank-top",
+        hidden: true,
+        textContent: "↑ Back to the top of the list",
+        onclick: function () {
+          cardNav.scrollTop = 0;
+          var first = cardNav.querySelector("a");
+          if (first) first.focus({ preventScroll: true });
+        },
+      });
       var edges = function () {
         cardNav.classList.toggle("more", cardNav.scrollTop + cardNav.clientHeight < cardNav.scrollHeight - 4);
         cardNav.classList.toggle("less", cardNav.scrollTop > 4);
+        toTop.hidden = cardNav.scrollTop <= 4;
       };
       cardNav.onscroll = edges;
       requestAnimationFrame(function () {
         var cur = cardNav.querySelector("[aria-current]");
-        if (cur && cardNav.scrollHeight > cardNav.clientHeight) cardNav.scrollTop = cur.offsetTop - cardNav.clientHeight / 3;
+        if (cur) {
+          var at = cur.getBoundingClientRect().top - cardNav.getBoundingClientRect().top + cardNav.scrollTop;
+          if (at + cur.offsetHeight > cardNav.clientHeight) cardNav.scrollTop = at - cardNav.clientHeight / 3;
+        }
         edges();
       });
 
@@ -5046,6 +5090,7 @@
           el("div", { className: "head" }, el("h2", { textContent: "Scorecards" })),
           el("p", { className: "sub", style: "margin:0" }, "Most entities at none first · ", el("span", { className: "bicon judged" }, basisIcon("judged")), " some rules agent-judged · ", el("span", { className: "bicon" }, basisIcon("measured")), " all measured"),
           cardSearch,
+          toTop,
           cardNav,
         ),
         el(
@@ -5072,7 +5117,7 @@
           standNotes.length ? hStand : null,
           ...standNotes,
           hFail,
-          failChart ? el("p", { className: "sub", style: "margin:0 0 6px", textContent: "Each bar is the share of entities failing the rule, coloured by the level the rule is needed for." }) : null,
+          failChart ? el("p", { className: "sub", style: "margin:0 0 6px", textContent: "Each bar is the share of entities failing the rule; the pill beside it names the level the rule is needed for." }) : null,
           failChart,
           unrunNote,
           hList,
