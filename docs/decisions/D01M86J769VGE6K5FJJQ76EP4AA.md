@@ -98,6 +98,19 @@ a list of repositories and a repo's action is its inputs, its approvers and its 
     cut at a comma inside unquoted `{…}`. In round 4 a flow mapping such as
     `{reason: Replaced by x, which is better.}` produced `which is better. is not an input`,
     and agents spent retries finding the comma.
+18. **An action several repositories offer is a standard file, the same in each.** A
+    repository's `toolbox.yaml` keeps its name, owner and an `include`; the included
+    `actions/<name>.yaml` holds `federation`, `tests` and the action, and the parent reads a
+    child's `federation` from the merged manifest. A precondition refers to the repository as
+    `entity.name`, and `{portal}` in a test case is the portal under test, so neither file names
+    its repository (stories S3, S10: a fleet adopts one standard, and drift shows as a
+    different file). In round 5 every Toolbox run kept three near-copies of each file, which
+    differed only in the portal's name, a precondition naming the repository and test inputs,
+    so each copy counted as lines to maintain. The `add-action` skill now covers the whole path,
+    from layout to handoff: each run had spent five to seven calls reading the skills, the
+    example and `--help` before writing anything. Rejected: a default portal name from the
+    directory (a manifest names itself, and a parent tells children apart by key), and
+    distributing the standard as a package (pins and installs add steps before the first run).
 
 Rejected: a hosted registry of children (a second source of truth beside git), and cloning on
 every request (slow, and a network failure would hide every action).
