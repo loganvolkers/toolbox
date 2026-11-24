@@ -113,4 +113,95 @@ PIPE=$(echo "$OUT" | field "['outputs']['pipeline']")
 gl GET "/projects/$GAMMA/repository/files/CODE_OF_CONDUCT.md/raw?ref=main" | grep -q conduct@acme.dev || fail "CODE_OF_CONDUCT.md is not on gamma's main"
 echo "$OUT" | field "['verification']['by']" | grep -qx "child pipeline" || fail "the verification should be the child pipeline's: $OUT"
 echo "   $PIPE: ann requested, bob approved, gamma's own job ran it and pushed to main; the org read the record from the job's artifact"
+
+echo "4. inputs reach the child's job as data: quotes, \$VARS, \$(commands), newlines and GitLab's own \$[[ ]]"
+cat > "$WORK/review/gamma/.toolbox/actions/fingerprint.yaml" <<'YAML'
+actions:
+  - name: fingerprint
+    kind: Portal
+    description: Print the SHA-256 of the text it was given.
+    unverified: true
+    inputs: {type: object, required: [text], properties: {text: {type: string}}}
+    executor:
+      type: command
+      run: >-
+        printf '{"sha256": "%s"}\n'
+        "$(printf '%s' "$TOOLBOX_INPUT_TEXT" | sha256sum | cut -c1-64)"
+YAML
+git -C "$WORK/review/gamma" pull -q --rebase && git -C "$WORK/review/gamma" add -A
+git -C "$WORK/review/gamma" commit -qm fingerprint && git -C "$WORK/review/gamma" push -q 2>/dev/null
+TEXT=$(printf '%s\n%s' "it's \"quoted\" \$HOME \$(id) \`id\` \$[[ inputs.grant ]] %s {a: [b]}" 'second line: # not a comment')
+set +e; OUT=$(run "$WORK/org" fingerprint --entity portal:gamma -i "text=$TEXT" --as ann --yes --wait); CODE=$?; set -e
+[ $CODE = 4 ] && [ "$(echo "$OUT" | field "['state']")" = unverified ] || fail "fingerprint on gamma should end unverified ($CODE): $OUT"
+WANT=$(printf '%s' "$TEXT" | sha256sum | cut -c1-64)
+[ "$(echo "$OUT" | field "['child']['outputs']['sha256']")" = "$WANT" ] || fail "the job saw other text than was sent: $OUT"
+PID=$(echo "$OUT" | field "['outputs']['pipeline_id']")
+[ "$(gl GET "/projects/$GAMMA/pipelines/$PID" | field "['status']")" = success ] || fail "an unverified run should not fail its pipeline"
+echo "   the job hashed exactly the text sent; unverified (exit 4: the job is a warning, the pipeline passed)"
+
+echo "5. what a child can't choose, a project the forge entry doesn't admit, and a protected main"
+sed -i 's/runner: {type: ci}/runner: {type: ci, project: someone\/else}/' "$WORK/review/gamma/.toolbox/toolbox.yaml"
+git -C "$WORK/review/gamma" commit -qam "point the runner elsewhere" && git -C "$WORK/review/gamma" push -q 2>/dev/null
+COC=(add-code-of-conduct --entity portal:gamma -i contact=other@acme.dev --as ann)
+set +e; OUT=$(run "$WORK/org" "${COC[@]}" --yes 2>&1); CODE=$?; set -e
+[ $CODE = 2 ] && echo "$OUT" | grep -q "portal:gamma offers no actions: .*project" || fail "a child naming its own project should be refused ($CODE): $OUT"
+git -C "$WORK/review/gamma" revert --no-edit HEAD >/dev/null && git -C "$WORK/review/gamma" push -q 2>/dev/null
+sed -i "s#projects: \[$ORG/\*, $ORG/\*/\*\]#projects: [$ORG/*]#" "$WORK/org/toolbox.yaml"
+set +e; OUT=$(run "$WORK/org" "${COC[@]}" --yes 2>&1); CODE=$?; set -e
+[ $CODE = 1 ] && echo "$OUT" | grep -q "does not list" || fail "a project outside forges[].projects should be refused ($CODE): $OUT"
+sed -i "s#projects: \[$ORG/\*\]#projects: [$ORG/*, $ORG/*/*]#" "$WORK/org/toolbox.yaml"
+gl DELETE "/projects/$GAMMA/protected_branches/main" >/dev/null
+gl POST "/projects/$GAMMA/protected_branches" --data name=main --data push_access_level=0 --data merge_access_level=40 >/dev/null
+set +e; OUT=$(run "$WORK/org" "${COC[@]}" --yes); CODE=$?; set -e
+RID=$(echo "$OUT" | field "['id']")
+set +e; OUT=$(run "$WORK/org" --approve "$RID" --as bob --wait 2>&1); CODE=$?; set -e
+[ $CODE = 1 ] && echo "$OUT" | grep -qi "protected branch" || fail "a push GitLab refuses should fail the run with GitLab's message ($CODE): $OUT"
+gl GET "/projects/$GAMMA/repository/files/CODE_OF_CONDUCT.md/raw?ref=main" | grep -q other@acme.dev && fail "the refused push landed"
+echo "   refused: a child naming its project (its manifest is invalid, exit 2), a project outside projects: (exit 1),"
+echo "   and a push to a protected main failed the run with GitLab's words: $(echo "$OUT" | grep -o "GitLab: [^\\]*" | head -1)"
+
+echo "6. one org, two kinds of host: the plain git child runs in the org's clone"
+git clone -q "$WORK/hosts/delta.git" "$WORK/review/delta"
+sed -i "s/ed25519:0\{64\}/$KEY/" "$WORK/review/delta/.toolbox/actions/add-code-of-conduct.yaml"
+git -C "$WORK/review/delta" commit -qam "accept the org portal's approvals" && git -C "$WORK/review/delta" push -q
+set +e; OUT=$(run "$WORK/org" add-code-of-conduct --entity portal:delta -i contact=conduct@acme.dev --as ann --yes); set -e
+RID=$(echo "$OUT" | field "['id']")
+OUT=$(run "$WORK/org" --approve "$RID" --as bob --wait) || fail "approve on delta: $OUT"
+[ "$(echo "$OUT" | field "['state']")" = succeeded ] || fail "add-code-of-conduct on delta: $OUT"
+git --git-dir "$WORK/hosts/delta.git" show main:CODE_OF_CONDUCT.md | grep -q conduct@acme.dev || fail "CODE_OF_CONDUCT.md is not on delta's main"
+echo "   delta (a bare repository, no forge): approved by bob, pushed and verified from the same org portal"
+
+echo "7. the org portal's own action starts a pipeline: the gitlab-pipeline executor"
+DEPLOY=$(project "$G" deploy); mkdir -p "$WORK/src/deploy"
+cat > "$WORK/src/deploy/.gitlab-ci.yml" <<'YAML'
+spec:
+  inputs:
+    environment: {options: [staging, production]}
+    toolbox_run: {default: ""}
+---
+deploy:
+  variables:
+    ENVIRONMENT: $[[ inputs.environment ]]
+    RUN: $[[ inputs.toolbox_run ]]
+  script:
+    - echo "deploying to $ENVIRONMENT for $RUN"
+YAML
+publish "$WORK/src/deploy" "$ORG/deploy"
+cat >> "$WORK/org/toolbox.yaml" <<YAML
+actions:
+  - name: deploy
+    kind: Portal
+    description: Deploy a project, in the deploy project's pipeline.
+    unverified: true
+    inputs: {type: object, required: [environment], properties: {environment: {type: string}}}
+    executor: {type: gitlab-pipeline, forge: "$GITLAB_URL", project: $ORG/deploy}
+YAML
+"$BIN/toolbox" validate "$WORK/org" | tail -1
+set +e; OUT=$(run "$WORK/org" deploy --entity portal:gamma -i environment=staging --as ann --yes --wait); CODE=$?; set -e
+[ $CODE = 4 ] && [ "$(echo "$OUT" | field "['state']")" = unverified ] || fail "deploy to staging ($CODE): $OUT"
+JOB=$(gl GET "/projects/$DEPLOY/pipelines/$(echo "$OUT" | field "['outputs']['pipeline_id']")/jobs" | field "[0]['id']")
+gl GET "/projects/$DEPLOY/jobs/$JOB/trace" | grep -q "deploying to staging for $(echo "$OUT" | field "['id']")" || fail "the job did not get the inputs"
+set +e; OUT=$(run "$WORK/org" deploy --entity portal:gamma -i environment=moon --as ann --yes 2>&1); CODE=$?; set -e
+[ $CODE = 1 ] && echo "$OUT" | grep -q "moon" || fail "an input the pipeline refuses should fail with GitLab's reason ($CODE): $OUT"
+echo "   deploy: a pipeline with typed inputs, its job saw them; an option GitLab refuses failed the run with its reason"
 echo "GitLab acceptance: all checks passed"

@@ -423,6 +423,18 @@ pub fn on_entity<'a>(all: &'a [Offered], d: &Derived, entity: Option<&str>) -> V
         .collect()
 }
 
+/// `; <child> offers no actions: <why>` for each child portal (or just `only`) whose manifest
+/// does not load, which offers nothing, so a missing action may be its.
+fn broken(d: &Derived, only: Option<&str>) -> String {
+    d.entities
+        .iter()
+        .filter(|(id, e)| e.fields.contains_key("actions") && only.is_none_or(|o| o == id.as_str()))
+        .filter_map(|(id, e)| {
+            Some(format!("; {id} offers no actions: {}", e.fields.get("error")?.as_str()?))
+        })
+        .collect()
+}
+
 /// Pick the action `name` for `entity`, or the only entity it can apply to.
 pub fn resolve<'a>(
     all: &'a [Offered],
@@ -433,8 +445,13 @@ pub fn resolve<'a>(
     let named: Vec<&Offered> = all.iter().filter(|o| o.action.name == name).collect();
     if named.is_empty() {
         let mut names: Vec<&str> = all.iter().map(|o| o.action.name.as_str()).collect();
+        names.sort_unstable();
         names.dedup();
-        return Err(format!("no action {name} (actions: {})", names.join(", ")));
+        return Err(format!(
+            "no action {name} (actions: {}){}",
+            names.join(", "),
+            broken(d, None)
+        ));
     }
     let targets = |o: &Offered| -> Vec<String> {
         match &o.entity {
@@ -455,8 +472,9 @@ pub fn resolve<'a>(
             .ok_or_else(|| {
                 let all: Vec<String> = named.iter().flat_map(|o| targets(o)).collect();
                 format!(
-                    "{name} is not offered on {id} (it is on: {})",
-                    all.join(", ")
+                    "{name} is not offered on {id} (it is on: {}){}",
+                    all.join(", "),
+                    broken(d, Some(id))
                 )
             });
     }

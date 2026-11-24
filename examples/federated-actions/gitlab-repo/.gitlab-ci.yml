@@ -49,6 +49,9 @@ toolbox:
       toolbox run "$TOOLBOX_ACTION" --portal .toolbox --inputs "$TOOLBOX_INPUTS"
       --as "$TOOLBOX_REQUESTED_BY" --parent-run "$TOOLBOX_PARENT_RUN"
       --grant "$TOOLBOX_GRANT" --yes --record toolbox-run.json -o json
+  # 4 is an unverified run (done, with no postcondition to check): a warning, not a failure.
+  allow_failure:
+    exit_codes: [4]
   artifacts:
     when: always
     paths:
