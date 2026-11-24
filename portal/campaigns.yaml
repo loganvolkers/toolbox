@@ -74,9 +74,11 @@ tracks:
       Toolbox and Backstage 1.57, installed as each project documents and run
       on the same machine and Postgres 16, scored on the same rules, factor by
       factor. A scripted harness measures both: medians of 5 runs on a
-      10,000-component catalog, plus probes and facts with evidence. A fresh
-      agent adjudicated the result. Toolbox is behind on a factor if it is
-      behind on any of its rules.
+      10,000-component catalog, plus probes and facts with evidence. An agent
+      that designed no part of the benchmark then recomputed the numbers from
+      the raw results and checked the scoring, and upheld the verdict; it
+      scored no rule itself. Toolbox is behind on a factor if it is behind on
+      any of its rules.
     links:
     - title: Results
       url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md

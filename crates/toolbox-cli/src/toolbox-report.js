@@ -105,6 +105,11 @@
     ".seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}",
     ".seg button{border:0;border-right:1px solid var(--line);background:var(--card);color:var(--fg);padding:6px 12px;font:inherit;font-size:13px;cursor:pointer;min-height:32px;text-transform:capitalize}",
     ".seg button:last-child{border-right:0}",
+    ".chip-filter{display:inline-flex;align-items:center;gap:4px;min-height:32px;padding:4px 12px;border:1px solid var(--accent);border-radius:999px;background:var(--tint);color:var(--fg);font:inherit;font-size:13px;cursor:pointer}",
+    ".chip-filter:hover{background:var(--card)}",
+    "a.card,a.track,a.kind,a.tile,a.factor,a.erow,a.row,.rung a,.box a,.rank a,.fail-row,.seg button,.modes button,details.ent>summary,.chip-filter{transition:background-color .15s,border-color .15s,color .15s,transform .15s,box-shadow .15s}",
+    "@keyframes enter{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}",
+    ".view>*{animation:enter .22s ease-out both}",
     ".seg button[aria-pressed=true]{background:var(--accent-bg);color:var(--accent);font-weight:650}",
     "details.ent{border-top:1px solid var(--line)}",
     "details.ent>summary{cursor:pointer;display:grid;grid-template-columns:86px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 6px;list-style:none;border-radius:8px}",
@@ -119,14 +124,15 @@
     ".chev{display:inline-block;transition:transform .15s;color:var(--faint);margin-left:6px}",
     "details[open]>summary .chev{transform:rotate(90deg)}",
     ".rule{padding:10px 12px;border-radius:8px;border:1px solid var(--line);border-left:4px solid var(--fail);margin-top:8px;background:var(--card)}",
-    ".rule.unknown{border-left-color:var(--unknown)}.rule.waived{border-left-color:var(--bronze)}",
+    ".callout.judged-note{background:var(--judged-bg)}",
+    ".rule.unknown{border-left-color:var(--unknown)}.rule.waived{border-left-color:var(--bronze)}.rule.unassessed{border-left-color:var(--judged)}",
     ".rule .rn{font-weight:650}",
     ".rule .fix{margin-top:4px;font-size:14px}",
     ".rule ul{margin:6px 0 0;padding-left:18px;font-size:13px;color:var(--muted)}",
     ".rule li{overflow-wrap:anywhere}",
     ".rule code,.evid code{font:12.5px ui-monospace,SFMono-Regular,Menlo,monospace;overflow-wrap:anywhere}",
     ".outcome{font-size:12px;font-weight:650;margin-left:6px}",
-    ".outcome.fail{color:var(--fail)}.outcome.unknown{color:var(--unknown)}.outcome.waived{color:var(--bronze-ink)}.outcome.skipped{color:var(--muted)}",
+    ".outcome.fail{color:var(--fail)}.outcome.unknown{color:var(--unknown)}.outcome.waived{color:var(--bronze-ink)}.outcome.skipped{color:var(--muted)}.outcome.unassessed{color:var(--judged)}",
     ".passes{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px}",
     ".passes>span:not(.lvl){font-size:12px;padding:2px 8px 2px 6px;border-radius:999px;background:color-mix(in srgb,var(--pass) 12%,transparent);color:var(--pass);font-weight:600}",
     ".passes>span:not(.lvl)::before{content:'\\2713  '}",
@@ -231,8 +237,10 @@
     ".track .tt{font-weight:700;font-size:16px;line-height:1.25}",
     ".track .td{font-size:13px;color:var(--muted)}",
     ".track .foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 10px;font-size:12px;color:var(--muted);margin-top:auto}",
-    ".medals{display:flex;flex-wrap:wrap;gap:2px;align-items:center}",
-    ".medals>span{display:inline-flex}",
+    ".medals{display:flex;flex-wrap:wrap;gap:4px;margin:0;padding:0;list-style:none}",
+    ".medals>li{display:inline-flex;align-items:center;gap:4px;padding:2px 8px 2px 3px;border-radius:999px;background:var(--tint);font-size:12px;line-height:1.3}",
+    ".sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}",
+    ".medals>li.more{padding:2px 8px;color:var(--muted)}",
     ".flag{position:absolute;top:-10px;right:14px;font-size:12px;font-weight:700;padding:1px 9px;border-radius:999px;background:var(--fail);color:var(--card)}",
     ".chips{display:flex;flex-wrap:wrap;gap:4px}",
     ".chips .standing{font-size:12px}",
@@ -296,7 +304,7 @@
     ".boxrow{grid-template-columns:1fr;gap:6px}.measure{grid-template-columns:1fr}.measure .ms{text-align:left}.cmp-hero{grid-template-columns:1fr}",
     ".ehdr{display:none}a.erow.cols{grid-template-columns:1fr!important;gap:4px}.ecell{display:flex;gap:6px;align-items:center}.ecell::before{content:attr(data-sc);color:var(--muted)}",
     ".behind-row{grid-template-columns:1fr}.val{grid-template-columns:76px minmax(0,1fr) auto}}",
-    "@media (prefers-reduced-motion:reduce){*{transition:none!important}}",
+    "@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}",
   ].join("");
 
   var template = document.createElement("template");
@@ -774,8 +782,32 @@
       });
   }
 
+  function unassessedNote(D, card, scored) {
+    var ids = (D.unassessed || {})[card] || [];
+    var inScope = ids.filter(function (id) {
+      return ((D.scores[card] || {})[id] || {}).level !== "skipped";
+    }).length;
+    if (!inScope) return null;
+    return el(
+      "div",
+      { className: "callout judged-note" },
+      el("span", {}, el("b", { textContent: (inScope === scored ? "No entity here has an" : fmt(inScope) + " of " + fmt(scored) + " entities have no") + " agent's assessment yet. " }), "Their agent-judged rules pass only because there is nothing to fail on, so a level here means nothing has been found, not that a review found nothing."),
+    );
+  }
+
+  function unassessedIn(D, card, id) {
+    return ((D.unassessed || {})[card] || []).indexOf(id) >= 0;
+  }
+
+  function furthestTrack(D, S) {
+    var t = tracksSorted(D, S).find(function (t) {
+      return !t.compare && t.pct != null && t.pct < 100;
+    });
+    return t ? t.name : null;
+  }
+
   function trackColor(t) {
-    if (t.compare) return t.verdicts.behind ? "var(--bronze)" : "var(--pass)";
+    if (t.compare) return t.verdicts.behind ? "var(--fail)" : "var(--pass)";
     if (t.pct == null) return "var(--faint)";
     return t.pct >= 80 ? "var(--pass)" : t.pct >= 50 ? "var(--accent)" : t.pct >= 25 ? "var(--bronze)" : "var(--fail)";
   }
@@ -843,6 +875,14 @@
         return i ? w.toLowerCase() : w;
       })
       .join(" ");
+  }
+
+  // "15 action dependencies", "26 SDLC stages": a count of a kind, in running text.
+  function kindCount(D, k, n) {
+    var t = kindTitle(D, k);
+    if (!/^[A-Z]{2,}|^OpenSSF/.test(t)) t = t.charAt(0).toLowerCase() + t.slice(1);
+    if (n !== 1) t = /[^aeiou]y$/.test(t) ? t.slice(0, -1) + "ies" : /(s|x|ch|sh)$/.test(t) ? t + "es" : t + "s";
+    return fmt(n) + " " + t;
   }
 
   function humanize(s) {
@@ -1028,6 +1068,7 @@
           top: top,
           topShare: scored ? Math.round((count(top) / scored) * 100) : 0,
           scored: scored,
+          total: ents.length,
           weight: isComparative(D, name) ? -1 : count("none") * 1000 + count("bronze"),
         };
       })
@@ -1156,6 +1197,20 @@
 
   function parseHash() {
     var h = (location.hash || "").replace(/^#/, "");
+    var query = {};
+    var qi = h.indexOf("?");
+    if (qi >= 0) {
+      new URLSearchParams(h.slice(qi + 1)).forEach(function (v, k) {
+        query[k] = v;
+      });
+      h = h.slice(0, qi);
+    }
+    var route = parsePath(h);
+    route.query = query;
+    return route;
+  }
+
+  function parsePath(h) {
     if (!h || h === "overview") return { mode: "overview" };
     if (h === "catalog") return { mode: "catalog" };
     if (h.indexOf("catalog/") === 0) return { mode: "catalog", kind: decodeURIComponent(h.slice(8)) };
@@ -1341,7 +1396,7 @@
             return b.getAttribute("aria-selected") === "true";
           });
         var next = dir === "home" ? 0 : dir === "end" ? buttons.length - 1 : (i + dir + buttons.length) % buttons.length;
-        buttons[next].focus();
+        self._tabFocus = true;
         buttons[next].click();
       };
       var view;
@@ -1354,10 +1409,15 @@
       else if (route.mode === "compare") view = this.compare(D, route.name);
       else if (route.mode === "tracks") view = this.tracks(D, S, route.name);
       else if (route.mode === "rule") view = this.rule(D, S, route.scorecard, route.rule);
-      else view = this.scorecard(D, S, route.name);
+      else view = this.scorecard(D, S, route.name, route.query);
+      view.classList.add("view");
       body.replaceChildren(view);
       var target = view.querySelector("[data-focus]");
-      if (target && this._lastRoute !== location.hash) {
+      if (this._tabFocus) {
+        this._tabFocus = false;
+        var sel = modes.querySelector('[aria-selected="true"]');
+        if (sel) sel.focus();
+      } else if (target && this._lastRoute !== location.hash) {
         // A view that opens on its focus keeps the tabs in sight.
         (target === view.firstElementChild || target.parentNode === view.firstElementChild && !target.previousElementSibling ? modes : target).scrollIntoView({ block: "start" });
         var heading = target.querySelector("h2");
@@ -1521,7 +1581,7 @@
             floors
               ? el("div", { style: "display:flex;gap:10px;align-items:center" }, medal(floorOf(D, r.name) || "none", 30), el("div", {}, ...cardName(D, r.name), el("span", { className: "c", textContent: "weakest: " + (levelLabel(floorOf(D, r.name)) || "not scored") })))
               : el("div", {}, ...cardName(D, r.name)),
-            el("div", { className: "dist" }, barEl(r.parts, "", r.parts.map(function (p) { return p.n + " " + p.level; }).join(", ")), el("div", { className: "sub", style: "font-size:12px;margin-top:4px", textContent: r.scored + " " + (r.sc.kind || "entities") + " · " + r.topShare + "% " + (r.top || "top") })),
+            el("div", { className: "dist" }, barEl(r.parts, "", r.parts.map(function (p) { return p.n + " " + p.level; }).join(", ")), el("div", { className: "sub", style: "font-size:12px;margin-top:4px", textContent: (r.sc.kind ? kindCount(D, r.sc.kind, r.total) : r.total + " entities") + (r.total > r.scored ? ", " + fmt(r.scored) + " in scope" : "") + " · " + r.topShare + "% " + (r.top || "top") })),
             el("div", { className: "num " + (r.none ? "bad" : "ok") }, el("strong", { textContent: String(r.none) }), el("span", { textContent: r.none ? "at none" : "all clear" })),
           ]),
         );
@@ -1574,7 +1634,7 @@
               "section",
               {},
               el("div", { className: "head" }, el("h2", { textContent: "Tracks" }), link("tracks", "", "All tracks →")),
-              el("p", { className: "lede", textContent: "Long-running lines of work, furthest from its goal first. The ring is the share of entities at the top level: green from 80%, blue from 50%, orange from 25%, red below. Each medal is one scorecard at its weakest entity's level; hover one to name it." }),
+              el("p", { className: "lede", textContent: "Long-running lines of work, furthest from its goal first. The ring is the share of entities at the top level: green from 80%, blue from 50%, orange from 25%, red below. A comparison track's ring counts factors at parity or ahead: green when behind on none, red when behind on any. Each medal is one scorecard, worst first, at its weakest entity's level." }),
               this.trackGrid(D, S, tracksSorted(D, S)),
             )
           : null,
@@ -1582,7 +1642,7 @@
           ? el(
               "section",
               {},
-              el("div", { className: "head" }, el("h2", { textContent: "Campaigns" }), el("span", { className: "sub", textContent: "Time-bound goals · behind target first" })),
+              el("div", { className: "head" }, el("h2", { textContent: "Campaigns" }), el("span", { className: "sub", textContent: "Time-bound goals, behind target first; a ring turns green once it reaches its target" })),
               el(
                 "div",
                 { className: "cards" },
@@ -1663,16 +1723,14 @@
           ),
         );
       } else if (t.cards.length) {
+        var MAX = 5;
         var medals = el(
-          "div",
+          "ul",
           { className: "medals" },
-          ...t.cards.map(function (c) {
-            var lv = c.floor || "none";
-            var m = el("span", { title: title(D, c.row.name) + ": lowest entity at " + (c.floor || "not scored") }, medal(lv, 22));
-            m.setAttribute("role", "img");
-            m.setAttribute("aria-label", title(D, c.row.name) + ", lowest level " + (c.floor || "not scored"));
-            return m;
+          ...t.cards.slice(0, MAX).map(function (c) {
+            return el("li", { title: "Lowest entity at " + (c.floor || "not scored") }, medal(c.floor || "none", 18), el("span", { textContent: title(D, c.row.name) }), el("span", { className: "sr", textContent: ", lowest level " + (c.floor || "not scored") }));
           }),
+          t.cards.length > MAX ? el("li", { className: "more", textContent: "+" + (t.cards.length - MAX) + " more" }) : null,
         );
         kids.push(medals);
       }
@@ -1690,19 +1748,14 @@
       return a;
     }
 
-    trackGrid(D, S, all) {
+    trackGrid(D, S, shown) {
       var self = this;
-      var flagged = false;
+      var furthest = furthestTrack(D, S);
       return el(
         "div",
         { className: "tracks" },
-        ...all.map(function (t) {
-          var flag = null;
-          if (!flagged && !t.compare && t.pct != null && t.pct < 100) {
-            flag = "Furthest from goal";
-            flagged = true;
-          }
-          return self.trackCard(D, S, t, flag);
+        ...shown.map(function (t) {
+          return self.trackCard(D, S, t, t.name === furthest ? "Furthest from goal" : null);
         }),
       );
     }
@@ -1724,7 +1777,7 @@
           el("p", {
             className: "lede",
             textContent:
-              "A track is a long-running line of work. It gathers the scorecards that measure it and the campaigns that push on it. Its goal is every entity at the top level of each of its scorecards; the ring shows how far along it is (green from 80% at the top level, blue from 50%, orange from 25%, red below), and each medal is one scorecard at its weakest entity's level. A comparison track counts the factors where Toolbox is at parity or ahead instead: green when it is behind on none, orange when it is behind on any.",
+              "A track is a long-running line of work. It gathers the scorecards that measure it and the campaigns that push on it. Its goal is every entity at the top level of each of its scorecards; the ring shows how far along it is (green from 80% at the top level, blue from 50%, orange from 25%, red below), and each medal is one scorecard, worst first, at its weakest entity's level. A comparison track counts the factors where Toolbox is at parity or ahead instead: green when it is behind on none, red when it is behind on any.",
           }),
           this.trackGrid(D, S, all),
         ),
@@ -1878,7 +1931,7 @@
               "div",
               { className: "gap" },
               link("scorecard/" + enc(i.scorecard), "", title(D, i.scorecard)),
-              el("div", { className: "why", textContent: row ? plural(below, "entity", "entities") + " below " + (order[goal] || "the goal") + " of " + fmt(row.scored) + " " + (row.sc.kind || "") : "not in this report" }),
+              el("div", { className: "why", textContent: row ? plural(below, "entity", "entities") + " below " + (order[goal] || "the goal") + " of " + (row.sc.kind ? kindCount(D, row.sc.kind, row.scored) : fmt(row.scored)) : "not in this report" }),
             );
           }),
           el("p", { className: "sub", textContent: "To measure it, include scorecards that rate the same kind." }),
@@ -1896,7 +1949,7 @@
             if (gsc && score)
               blockers(gsc, score, m[2]).forEach(function (r) {
                 needCounts[r] = (needCounts[r] || 0) + 1;
-                needFix[r] = ((gsc.rules || {})[r] || {}).fix || "";
+                needFix[r] = { sc: m[1], def: (gsc.rules || {})[r] || {} };
               });
           });
         });
@@ -1909,8 +1962,12 @@
               "div",
               { className: "next", style: "margin:0 0 10px" },
               el("b", { textContent: "Biggest lever: " }),
-              common[0] + " blocks " + common[1] + " of " + gaps.length + (gaps.length === 1 ? " entity" : " entities") + ". ",
-              ...rich(needFix[common[0]]),
+              ruleLink(needFix[common[0]].sc, common[0]),
+              " ",
+              basisBadge(basisOf(needFix[common[0]].def)),
+              " blocks " + common[1] + " of " + gaps.length + (gaps.length === 1 ? " entity" : " entities") + ". ",
+              ...rich(needFix[common[0]].def.fix || ""),
+              needFix[common[0]].def.rationale ? el("span", { className: "why", style: "display:block;margin-top:4px" }, el("b", { textContent: "Why: " }), ...rich(needFix[common[0]].def.rationale)) : null,
             ),
           );
         gaps.forEach(function (pair) {
@@ -1971,7 +2028,7 @@
                 "p",
                 { style: "margin:8px 0 6px" },
                 el("b", { textContent: (c.meeting || 0) + " of " + (c.inScope || 0) }),
-                " entities meet the goal · target " + target + "%" + (c.end ? " by " + c.end : "") + (days != null && days >= 0 ? " (" + plural(days, "day") + " left)" : ""),
+                " entities meet the goal · target " + target + "%" + (c.end ? " by " + c.end : "") + (days != null && days >= 0 ? " (" + plural(days, "day") + " left)" : "") + ". The ring turns green once it reaches the target.",
               ),
           state === "empty" ? null : bar,
           state === "empty" ? null : marks,
@@ -2187,7 +2244,7 @@
       );
     }
 
-    rulesFor(sc, score, scName) {
+    rulesFor(sc, score, scName, unjudged) {
       var wrap = el("div");
       var rules = Object.entries(score.rules || {});
       var rank = function (o) {
@@ -2205,6 +2262,25 @@
         var n = ro[0];
         var o = ro[1];
         var rule = (sc.rules && sc.rules[n]) || {};
+        if (o === "pass" && unjudged && basisOf(rule) === "judged") {
+          wrap.append(
+            el(
+              "div",
+              { className: "rule unassessed" },
+              el(
+                "div",
+                { style: "display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center" },
+                el("span", { className: "rn" }, scName ? ruleLink(scName, n) : n),
+                el("span", { className: "outcome unassessed", style: "margin:0", textContent: "passes, not assessed yet" }),
+                basisBadge("judged"),
+                rule.level ? el("span", { className: "sub", textContent: "counts for " + rule.level }) : "",
+              ),
+              el("div", { className: "fix" }, "No agent has assessed this entity, so there is nothing for this rule to fail on: it passes because nothing has been looked at, not because a review found nothing."),
+              whyEl(rule),
+            ),
+          );
+          return;
+        }
         if (o === "pass") {
           var lv = rule.level || "";
           (passed[lv] = passed[lv] || []).push(el("span", { className: basisOf(rule) === "judged" ? "judged" : "", title: rule.rationale || rule.fix || rule.check || "" }, scName ? ruleLink(scName, n) : n, " ", basisBadge(basisOf(rule), true)));
@@ -2282,7 +2358,9 @@
         return unsure.indexOf(n) < 0;
       });
       if (!need.length) return caveat;
-      return el("div", {}, caveat, el("div", { className: "callout" }, el("span", {}, el("b", { textContent: "Next: " }), badge(next), " needs " + need.join(", ") + ".")));
+      return el("div", {}, caveat, el("div", { className: "callout" }, el("span", {}, el("b", { textContent: "Next: " }), badge(next), " needs: ", ...need.map(function (n, i) {
+        return el("span", { className: "nr" }, (i ? ", " : "") + n + " ", basisBadge(basisOf((sc.rules || {})[n]), true));
+      }), ".")));
     }
 
     entity(D, S, id) {
@@ -2324,7 +2402,7 @@
           { className: "sc-block" },
           el("div", { className: "head" }, el("div", {}, link("scorecard/" + enc(name), "", title(D, name)), " ", badge(score.level)), el("span", { className: "sub", textContent: name })),
           score.level === "skipped" ? el("div", { className: "sub", textContent: "Not in this scorecard's scope." }) : self.nextStep(sc, score),
-          self.rulesFor(sc, score, name),
+          self.rulesFor(sc, score, name, unassessedIn(D, name, id)),
         );
       });
       var short = shortId(id);
@@ -2600,7 +2678,7 @@
           el(
             "p",
             { className: "sub", style: "margin:8px 0 0" },
-            "A factor is a scorecard that scores both products on the same rules; " + who(subject) + " is behind on a factor if it is behind on any one of its rules. ",
+            "A factor is a scorecard that scores both products on the same rules. On a rule, a product is ahead when its measured value is better (within the rule's tolerance is parity) or it passes a bar the other misses. " + who(subject) + " is behind on a factor if it is behind on any one of its rules, and ahead if it is ahead on some and behind on none. ",
             el("b", { textContent: "Factors are not weighted" }),
             ": the count is a tally, not a score, so read the factors that matter to you" +
               (behindNames.length
@@ -2812,7 +2890,8 @@
       return el("div", {}, head, el("section", {}, el("div", { className: "head" }, el("h2", { textContent: "Every factor" }), link("compare", "", "Back to the summary →")), this.factorCards(D, names, name)));
     }
 
-    scorecard(D, S, name) {
+    scorecard(D, S, name, query) {
+      query = query || {};
       var ranked = S.rows;
       var active = name && D.scorecards[name] ? name : ranked[0] && ranked[0].name;
       if (!active) return el("section", {}, el("div", { className: "empty", textContent: "No scorecards in this report." }));
@@ -2861,9 +2940,21 @@
         if (cur && cardNav.scrollHeight > cardNav.clientHeight) cardNav.scrollTop = cur.offsetTop - cardNav.clientHeight / 3;
       });
 
-      var levelFilter = "all";
-      var outcomeFilter = "all";
-      var search = el("input", { type: "search", placeholder: "Filter by entity or rule…", ariaLabel: "Filter entities" });
+      var levelFilter = query.level && (order.indexOf(query.level) >= 0 || query.level === "skipped") ? query.level : "all";
+      var outcomeFilter = query.outcome === "failing" || query.outcome === "passing" ? query.outcome : "all";
+      var ruleFilter = query.rule && (sc.rules || {})[query.rule] ? query.rule : null;
+      var search = el("input", { type: "search", placeholder: "Filter by entity or rule…", ariaLabel: "Filter entities", value: query.q || "" });
+      var keepInUrl = function () {
+        var qs = new URLSearchParams();
+        if (levelFilter !== "all") qs.set("level", levelFilter);
+        if (outcomeFilter !== "all") qs.set("outcome", outcomeFilter);
+        if (ruleFilter) qs.set("rule", ruleFilter);
+        if (search.value) qs.set("q", search.value);
+        var tail = qs.toString();
+        if (!tail && location.hash.indexOf("?") < 0) return;
+        var want = "#scorecard/" + enc(active) + (tail ? "?" + tail : "");
+        if (location.hash !== want && history.replaceState) history.replaceState(null, "", want);
+      };
       var filters = el("div", { className: "filters" });
       var list = el("div");
       var limit = 25;
@@ -2890,6 +2981,7 @@
       var clearFilters = function () {
         levelFilter = "all";
         outcomeFilter = "all";
+        ruleFilter = null;
         search.value = "";
         redrawFilters();
         draw();
@@ -2925,9 +3017,27 @@
               outcomeFilter = v;
             },
           ),
+          ruleFilter
+            ? el(
+                "button",
+                {
+                  className: "chip-filter",
+                  ariaLabel: "Remove filter: failing " + ruleFilter,
+                  onclick: function () {
+                    ruleFilter = null;
+                    redrawFilters();
+                    draw();
+                  },
+                },
+                "Failing ",
+                el("b", { textContent: ruleFilter }),
+                el("span", { ariaHidden: "true", textContent: " ×" }),
+              )
+            : null,
         );
       };
       var draw = function () {
+        keepInUrl();
         var q = search.value.toLowerCase();
         var shown = rows
           .filter(function (pair) {
@@ -2942,6 +3052,11 @@
             return Object.keys(pair[1].rules || {}).some(function (rn) {
               return rn.toLowerCase().indexOf(q) >= 0;
             });
+          })
+          .filter(function (pair) {
+            if (!ruleFilter) return true;
+            var o = (pair[1].rules || {})[ruleFilter];
+            return o != null && !isPassing(o) && o !== "skipped";
           })
           .filter(function (pair) {
             if (outcomeFilter === "all") return true;
@@ -2967,7 +3082,7 @@
         var outOfScope = rows.filter(function (pair) {
           return pair[1].level === "skipped";
         }).length;
-        list.replaceChildren(el("div", { className: "sub", style: "margin:6px 0", textContent: plural(shown.length, "entity", "entities") + (outOfScope && levelFilter === "all" && outcomeFilter === "all" && !q ? " in scope, of " + fmt(rows.length) + " " + sc.kind + " entities" : "") + ", lowest level first" }));
+        list.replaceChildren(el("div", { className: "sub", style: "margin:6px 0", textContent: plural(shown.length, "entity", "entities") + (outOfScope && levelFilter === "all" && outcomeFilter === "all" && !ruleFilter && !q ? " in scope, of " + kindCount(D, sc.kind, rows.length) : "") + ", lowest level first" }));
         shown.slice(0, limit).forEach(function (pair) {
           var id = pair[0];
           var r = pair[1];
@@ -2994,10 +3109,15 @@
                 "span",
                 { className: "tally" },
                 need.length
-                  ? el("b", {
-                      className: r.level === "none" ? "bad" : "",
-                      textContent: next.charAt(0).toUpperCase() + next.slice(1) + " needs " + need.slice(0, 2).join(", ") + (need.length > 2 ? " +" + (need.length - 2) : ""),
-                    })
+                  ? el(
+                      "b",
+                      { className: r.level === "none" ? "bad" : "" },
+                      next.charAt(0).toUpperCase() + next.slice(1) + " needs: ",
+                      ...need.slice(0, 2).map(function (n, i) {
+                        return el("span", { className: "nr" }, (i ? ", " : "") + n + " ", basisBadge(basisOf((sc.rules || {})[n]), true));
+                      }),
+                      need.length > 2 ? " +" + (need.length - 2) : "",
+                    )
                   : failing.length
                     ? ""
                     : "✓ all pass",
@@ -3015,7 +3135,7 @@
                 "div",
                 { className: "ent-body" },
                 self.nextStep(sc, r),
-                self.rulesFor(sc, r, active),
+                self.rulesFor(sc, r, active, unassessedIn(D, active, id)),
                 el("p", { style: "margin:12px 0 0" }, link("entity/" + enc(id), "", "Open " + short + " across every scorecard →")),
               ),
             );
@@ -3107,11 +3227,16 @@
                   className: "fail-row",
                   title: ((sc.rules || {})[f[0]] || {}).fix || "",
                   onclick: function () {
-                    search.value = f[0];
-                    outcomeFilter = "failing";
+                    search.value = "";
+                    levelFilter = "all";
+                    outcomeFilter = "all";
+                    ruleFilter = f[0];
+                    limit = 25;
                     redrawFilters();
                     draw();
-                    list.scrollIntoView({ block: "start", behavior: "smooth" });
+                    filters.scrollIntoView({ block: "start", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+                    var chip = filters.querySelector(".chip-filter");
+                    if (chip) chip.focus({ preventScroll: true });
                   },
                 },
                 el("span", { className: "rn" }, el("span", { textContent: f[0] }), basisBadge(basisOf((sc.rules || {})[f[0]])), rl ? badge(rl) : null, lever && f[0] === leverRule ? el("span", { className: "pill", title: "The biggest lever: fixing it lifts the most entities a level", textContent: "biggest lever" }) : null),
@@ -3184,11 +3309,12 @@
           el(
             "div",
             { className: "sub" },
-            "Rates every " + sc.kind + (owner ? " · owned by " + owner : ""),
+            "Rates every " + kindTitle(D, sc.kind) + (owner ? " · owned by " + owner : ""),
             sc.track ? el("span", {}, " · track ", link("track/" + enc(sc.track), "", trackTitle(D, sc.track))) : null,
           ),
           isComparative(D, active) ? el("div", { className: "callout" }, el("span", {}, "This scorecard compares products rather than levelling them. ", link("compare/" + enc(active), "", "See how they stand →"))) : null,
           basisKey(basisCounts(sc.rules)),
+          unassessedNote(D, active, scored.length),
           el("h3", { textContent: "Where entities stand" }),
           barEl(parts, "lg"),
           legendEl(parts),

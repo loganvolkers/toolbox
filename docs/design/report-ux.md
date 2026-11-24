@@ -68,8 +68,13 @@ element or `report_json` must follow it. `maintainer-skill` scores the file like
   "levels": [], "rules": { "has-example": { "basis": "measured", "rationale": "…", "links": [] } } } },
 "kindGroups": [{ "name": "code", "title": "Code", "description": "…", "kinds": ["Crate"] }],
 "kinds": { "Crate": { "description": "…" } },
-"comparisons": { "vs-backstage-capabilities": { "facts": {}, "reads": {}, "fields": {} } }
+"comparisons": { "vs-backstage-capabilities": { "facts": {}, "reads": {}, "fields": {} } },
+"unassessed": { "review-crate": ["crate:toolbox-api", "..."] }
 ```
+
+`unassessed` lists, per scorecard with judged rules, the scored entities no assessment points at.
+Their judged rules pass for want of anything to fail on, so the element shows those passes as
+"passes, not assessed yet" and says how many entities a scorecard's levels rest on no judgement.
 
 Ids are sorted. Full entity fields stay out of the static page (size and facet caveats in
 repo-portals §4). Catalog browse and entity score rollups are computed in the element from
@@ -79,7 +84,9 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 
 - Default hash is Overview (`#` / `#overview`).
 - Deep links: `#tracks`, `#track/<name>`, `#catalog`, `#catalog/<Kind>`, `#entity/<id>`, `#campaign/<name>`,
-  `#scorecard/<name>`, `#rule/<scorecard>/<rule>`, `#compare`, `#compare/<name>`.
+  `#scorecard/<name>`, `#rule/<scorecard>/<rule>`, `#compare`, `#compare/<name>`. A scorecard's filters
+  ride in the hash (`#scorecard/<name>?level=none&outcome=failing&rule=<rule>&q=<text>`), so a work list
+  can be shared.
 - Mode chrome uses `role="tab"` / `aria-selected` with arrow-key movement.
 - Every row is one link or one `<summary>`, never a clickable row that contains a link (axe
   `nested-interactive`).
@@ -91,7 +98,7 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 - Entity ids show a short label first; the full id stays muted beside it.
 - Passing rules render as compact chips grouped by level ("Bronze: all 5 met"); failing rules keep fix + evidence.
 - "What each level needs" shows each rule with its fix text, so a level's requirements read as sentences, not ids.
-- An entity row leads with what its next level needs ("Silver needs has-example"), then counts the failures above
+- An entity row leads with what its next level needs ("Silver needs: has-example", with each rule's basis icon), then counts the failures above
   that level. Red is kept for entities at `none`.
 - Each scorecard names its biggest lever: the rule holding the most entities at the lowest occupied level.
 - Fix text renders backticks as code.
@@ -118,7 +125,11 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
   names both.
 - A rule shows **Why** (its rationale) beside its fix, and a link to the long story. Decision ids are
   stripped from prose, which readers can't resolve.
-- Kind titles are human ("SDLC layer"); the kind id stays as muted monospace.
+- An agent-judged pass on an entity no agent has assessed reads "passes, not assessed yet", never a
+  plain pass.
+- Kind titles are human ("SDLC layer"); the kind id stays as muted monospace. Counts in running text
+  use the plural title ("15 action dependencies"), and say how many are in scope when that differs.
+- Compare defines its words in the hero: what *ahead* means on a rule and on a factor.
 - A level resting on checks that were not run says "Provisional" and names them.
 - Links and buttons in text have hit areas of at least 24 px.
 
