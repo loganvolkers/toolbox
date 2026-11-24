@@ -459,7 +459,73 @@ pub fn describe(o: &Offered, d: &Derived) -> Value {
 
 #[cfg(test)]
 mod tests {
-    use super::glob;
+    use super::*;
+
+    fn child(runner: Value, runners: Value) -> Offered {
+        Offered {
+            action: serde_json::from_value(
+                json!({"name": "deploy", "kind": "Portal", "scope": "day2",
+                "description": "Deploy.", "inputs": {"type": "object"},
+                "permission": "can_run_actions", "executor": {"type": "command", "run": "true"}}),
+            )
+            .unwrap(),
+            entity: Some("portal:team/pay".into()),
+            child: Some(Child {
+                portal: "pay".into(),
+                key: "team/pay".into(),
+                path: "/org/team/pay".into(),
+                action: "deploy".into(),
+                runner,
+                approval: None,
+                executor: "command".into(),
+                runners,
+            }),
+        }
+    }
+
+    #[test]
+    fn a_server_runs_a_child_only_through_a_runner_the_parent_allows() {
+        let served = |runner, runners| child(runner, runners).child.unwrap().served();
+        assert_eq!(served(Value::Null, json!({})).unwrap_err().0, "no-runner");
+        let local = json!({"type": "local"});
+        assert_eq!(
+            served(local.clone(), json!({})).unwrap_err().0,
+            "runner-not-allowed"
+        );
+        assert_eq!(
+            served(local.clone(), json!({"local": {"portals": ["other/*"]}}))
+                .unwrap_err()
+                .0,
+            "runner-not-allowed"
+        );
+        assert!(served(local, json!({"local": {"portals": ["team/*"]}})).is_ok());
+    }
+
+    #[test]
+    fn a_child_cannot_choose_where_the_parents_token_goes() {
+        let bin = Path::new("toolbox");
+        let wf = json!({"type": "github-workflow", "repo": "acme/pay", "workflow": "toolbox.yml"});
+        let own = json!({"github-workflow": {"repos": ["acme/*"], "token": "ORG_TOKEN",
+            "api": "https://ghe.example/api/v3"}});
+        let mut evil = wf.clone();
+        evil["api"] = "http://attacker.example".into();
+        assert!(child(evil, own.clone()).executor(bin).is_err());
+        let mut evil = wf.clone();
+        evil["token"] = "PARENT_SECRET".into();
+        assert!(child(evil, own.clone()).executor(bin).is_err());
+        assert!(child(wf.clone(), json!({})).executor(bin).is_err());
+        let mut elsewhere = wf.clone();
+        elsewhere["repo"] = "victim/prod".into();
+        assert!(child(elsewhere, own.clone()).executor(bin).is_err());
+        let Ok(Executor::GithubWorkflow(w)) = child(wf, own).executor(bin) else {
+            panic!("an allowed child should dispatch");
+        };
+        assert_eq!(
+            (w.api.as_str(), w.token_env.as_str()),
+            ("https://ghe.example/api/v3", "ORG_TOKEN")
+        );
+        assert_eq!(w.federated.as_deref(), Some("deploy"));
+    }
 
     #[test]
     fn globs_match_runs_of_characters() {

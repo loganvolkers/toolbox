@@ -1005,6 +1005,26 @@ mod tests {
     use super::*;
 
     #[test]
+    fn an_executor_sees_only_the_base_environment_and_its_secrets() {
+        let allowed =
+            |n: &str| BASE_ENV.contains(&n) || BASE_PREFIXES.iter().any(|p| n.starts_with(p));
+        let Some(name) = std::env::vars().map(|(k, _)| k).find(|k| !allowed(k)) else {
+            return;
+        };
+        let seen = |extra: &[String]| {
+            let mut cmd = Command::new("env");
+            clean_env(&mut cmd, extra);
+            let out = String::from_utf8(cmd.output().unwrap().stdout).unwrap();
+            out.lines().any(|l| l.starts_with(&format!("{name}=")))
+        };
+        assert!(
+            !seen(&[]),
+            "{name} reached an executor that did not ask for it"
+        );
+        assert!(seen(std::slice::from_ref(&name)));
+    }
+
+    #[test]
     fn effects_take_every_shape() {
         assert_eq!(
             effects_from(r#"[{"resource":"a"}]"#),

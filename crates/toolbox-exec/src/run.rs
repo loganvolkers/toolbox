@@ -87,9 +87,15 @@ pub struct Confirmed<'a> {
     pub entity: &'a str,
 }
 
-/// `ct_<issued>_<hash>`: stateless, so a repo portal's preview and run can be two commands. A
-/// server also spends each token once.
+/// `ct_<issued>_<nonce>_<hash>`: stateless, so a repo portal's preview and run can be two
+/// commands. A server also spends each token once, so each preview gets a fresh nonce.
 pub fn confirm_token(c: &Confirmed<'_>, issued: u64) -> String {
+    let mut nonce = [0u8; 6];
+    aws_lc_rs::rand::fill(&mut nonce).expect("system random");
+    token_for(c, issued, &hex(&nonce))
+}
+
+fn token_for(c: &Confirmed<'_>, issued: u64, nonce: &str) -> String {
     let h = sha(&[
         c.version,
         &Value::Object(c.inputs.clone()).to_string(),
@@ -98,8 +104,9 @@ pub fn confirm_token(c: &Confirmed<'_>, issued: u64) -> String {
         c.actor,
         c.entity,
         &issued.to_string(),
+        nonce,
     ]);
-    format!("ct_{issued}_{}", &h[..24])
+    format!("ct_{issued}_{nonce}_{}", &h[..24])
 }
 
 /// Why a token does not confirm this preview.
@@ -124,16 +131,22 @@ impl std::fmt::Display for TokenError {
 
 /// When `token` was issued, if it is shaped like a confirm token.
 pub fn token_issued(token: &str) -> Option<u64> {
-    let mut parts = token.splitn(3, '_');
-    let (Some("ct"), Some(issued), Some(_)) = (parts.next(), parts.next(), parts.next()) else {
+    token_parts(token).map(|(issued, _)| issued)
+}
+
+fn token_parts(token: &str) -> Option<(u64, &str)> {
+    let mut parts = token.splitn(4, '_');
+    let (Some("ct"), Some(issued), Some(nonce), Some(_)) =
+        (parts.next(), parts.next(), parts.next(), parts.next())
+    else {
         return None;
     };
-    issued.parse().ok()
+    Some((issued.parse().ok()?, nonce))
 }
 
 /// Check `token` against the preview as it is now (P10), for the same person and entity.
 pub fn check_token(token: &str, c: &Confirmed<'_>) -> Result<(), TokenError> {
-    let issued = token_issued(token).ok_or(TokenError::Malformed)?;
+    let (issued, nonce) = token_parts(token).ok_or(TokenError::Malformed)?;
     let now = now_secs();
     if issued > now + 60 {
         return Err(TokenError::Malformed);
@@ -141,16 +154,16 @@ pub fn check_token(token: &str, c: &Confirmed<'_>) -> Result<(), TokenError> {
     if now.saturating_sub(issued) > TOKEN_TTL_SECS {
         return Err(TokenError::Expired);
     }
-    if confirm_token(c, issued) != token {
+    if token_for(c, issued, nonce) != token {
         return Err(TokenError::Stale);
     }
     Ok(())
 }
 
-/// `30s`, `2m`, `1h`, `7d`.
 /// How long a run with no postcondition waits on a review or a workflow before it times out.
 pub const UNOBSERVED_WITHIN: &str = "7d";
 
+/// `30s`, `2m`, `1h`, `7d`.
 pub fn parse_within(s: &str) -> Duration {
     let s = s.trim();
     let (num, unit) = s.split_at(s.find(|c: char| !c.is_ascii_digit()).unwrap_or(s.len()));
@@ -664,6 +677,12 @@ mod tests {
         };
         let t = confirm_token(&base, now_secs());
         assert_eq!(check_token(&t, &base), Ok(()));
+        let again = confirm_token(&base, token_issued(&t).unwrap());
+        assert_ne!(
+            again, t,
+            "two previews in one second must not share a token"
+        );
+        assert_eq!(check_token(&again, &base), Ok(()));
         for other in [
             Confirmed {
                 effects: &[],
