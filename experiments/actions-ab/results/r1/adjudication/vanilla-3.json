@@ -1,0 +1,54 @@
+{
+ "run": "vanilla-3",
+ "C1": "holds",
+ "P1": {
+  "verdict": "holds",
+  "evidence": "Before probing: `git --git-dir origins/<r>.git ls-tree -r --name-only main` shows `.acme/actions/mark-deprecated.json` and `.acme/maintainers.json` on alpha (15bb8e7), beta (577bf57) and gamma (3a9c733), added inside each repository by ann's commit 'Add mark-deprecated self-service action, owned by this repo's maintainers' (447e113, 417b14a, d88eaab). `git show main:.acme/actions/mark-deprecated.json` on alpha shows the inputs (pattern, 20-200 one-line reason, not this repository), approval (maintainers file, required 1, requesterCanApprove false), the write_file step and commit message. `preview` reports definition.commit = origin main and its lastChangedIn commit."
+ },
+ "P2": {
+  "verdict": "holds",
+  "evidence": "From org/: `bin/acme request alpha mark-deprecated --as ann -i 'successor=Acme/Bad Name' -i 'reason=This is a valid reason of enough length.'` -> exit 2, invalid_input, successor 'must be owner/name matching ^[a-z0-9-]+/[a-z0-9-]+$'. `... -i successor=acme/probe-valid -i reason=short` -> exit 2, invalid_input, reason 'must be at least 20 characters (got 5)'. No run record created. alpha main 15bb8e7b8df8e771d0e81480cf8c1f172b8bcaf5 before and after."
+ },
+ "P3": {
+  "verdict": "holds",
+  "evidence": "`bin/acme preview beta mark-deprecated --as ann -i successor=acme/probe-preview -i 'reason=Probe P3: preview shows the file and its content.'` -> exit 0, previewedBy ann, plan.changes[0] {path DEPRECATED.md, operation modify, before (valtio-store content), after '# Deprecated: use acme/probe-preview\\n\\nProbe P3: preview shows the file and its content.\\n', unified diff}, commit message. No run created. beta main 577bf5711d821af8adfb67820fcef95f4e1a2f53 before and after."
+ },
+ "P4": {
+  "verdict": "holds",
+  "evidence": "From org/: `bin/acme request gamma mark-deprecated --as ann -i successor=acme/probe-approval -i 'reason=Probe P4: approval rules are enforced here.'` -> exit 0, run-20261124-111430-f15d7f awaiting_approval, requestedBy ann, with the stored preview. gamma main 3a9c733534e5ed41f388c2b620501c91aa067152 after the request. `approve <run> --as ann` -> exit 3, forbidden 'ann requested this run and cannot approve it'. `approve <run> --as carol` -> exit 3, forbidden 'carol is not a maintainer of acme/gamma'. gamma main still 3a9c733534e5ed41f388c2b620501c91aa067152; `status <run>` -> awaiting_approval, approvals []."
+ },
+ "P5": {
+  "verdict": "holds",
+  "evidence": "`bin/acme approve run-20261124-111430-f15d7f --as bob --comment ok` -> exit 0, status succeeded, outcome 'observed expected content on main at 00ab3a4...', observation {origin origins/gamma.git, ref refs/heads/main, commit 00ab3a4, DEPRECATED.md expected sha256 == actual sha256}. `git --git-dir origins/gamma.git show main:DEPRECATED.md` -> the probe's content; gamma main 3a9c733 -> 00ab3a4 (Acme-Run/Requested-by ann/Approved-by bob trailers). Source (read for this probe only): `execute()` in org/bin/acme returns `finish(..., status=None)` only after a successful push; `finish()` then polls `observe()`, which resolves the bare origin's refs/heads/main and reads each file at that commit, and sets 'succeeded' only when every file matches; a rejected push goes straight to 'failed'."
+ },
+ "P6": {
+  "verdict": "holds",
+  "evidence": "Installed origins/alpha.git/hooks/pre-receive (prints 'P6: all pushes rejected', exit 1). `request alpha mark-deprecated --as ann -i successor=acme/probe-reject -i 'reason=Probe P6: the push to main is rejected.'` -> run-20261124-111440-eb7441. `approve <run> --as bob` -> exit 1, ok false, status failed, outcome 'push to main was rejected (exit 1): remote: P6: all pushes rejected', observation matched false at the unchanged main. `status <run>` -> failed. alpha main 15bb8e7b8df8e771d0e81480cf8c1f172b8bcaf5 before and after. Hook removed (hooks dir has only samples)."
+ },
+ "P7": {
+  "verdict": "holds",
+  "evidence": "From /tmp/actions-ab/r1/vanilla-3/org: `bin/acme list` -> exit 0, actions = [(acme/alpha, mark-deprecated), (acme/beta, mark-deprecated), (acme/gamma, mark-deprecated)], read from each origin's main. P4 was requested from org/ with `bin/acme request gamma ...`."
+ },
+ "P8": {
+  "verdict": "holds",
+  "evidence": "`bin/acme record run-20261124-111430-f15d7f` -> exit 0, run with requestedBy ann / requestedAt 11:14:30.940Z, approvals [{by bob, at 11:14:33.749Z, comment ok}], inputs {successor acme/probe-approval, reason ...}, status succeeded, outcome {status succeeded, at 11:14:33.868Z, message}, observation, execution, and timestamped events: requested(ann), approve_denied(ann), approve_denied(carol), approved(bob), execution_started, push_attempted, observed, succeeded."
+ },
+ "P9": {
+  "verdict": "holds",
+  "evidence": "Every probe step (list, preview, request, approve x3, status, record) ran as one non-interactive shell command with identity from --as, each printing one JSON document with distinct exit codes (0 ok, 1 run failed, 2 invalid input, 3 forbidden)."
+ },
+ "P10": {
+  "verdict": "holds",
+  "evidence": "Operated entirely from org/HANDOFF.md: nothing to start; the Commands and Negative tests sections worked as written from org/. No fixes needed. Source read only for P5."
+ },
+ "fixes": [],
+ "strikes": [
+  {"path": "org/state/runs/run-20261124-105634-232052.json", "lines": 123, "reason": "Run record the CLI wrote at run time (gitignored by org/.gitignore `/state/`)"},
+  {"path": "org/state/runs/run-20261124-105634-ae9bf6.json", "lines": 123, "reason": "Run record the CLI wrote at run time (gitignored by org/.gitignore `/state/`)"},
+  {"path": "org/state/runs/run-20261124-105634-e48094.json", "lines": 123, "reason": "Run record the CLI wrote at run time (gitignored by org/.gitignore `/state/`)"}
+ ],
+ "linesBeforeStrikes": 1044,
+ "linesAfterStrikes": 675,
+ "fullyPasses": true,
+ "notes": "C1 was checked with `score.py check` before any probe (pass on all three); P5 then intentionally replaced gamma's DEPRECATED.md with the probe's content, so a later C1 recheck of this workspace would fail on gamma by design of the probe. No server: nothing was started, so nothing needed stopping. org/ (bin/acme, people.json, repos.json, .gitignore, HANDOFF.md, tests/test_acme.sh) is committed to origins/org.git main. Kept, not struck: org/bin/acme (code), org/people.json and org/repos.json (configuration), org/.gitignore, org/tests/test_acme.sh (99 lines; an end-to-end test script a person would keep and rerun, not scratch output), and alpha/.acme/* (beta's and gamma's identical copies were already excluded by score.py). I did not run tests/test_acme.sh; it is not a probe. Observations, not probe failures: the commit the action pushes is authored and committed by 'Acme Actions', with requester and approver only in its trailers (as the handoff's R7 row says); a request that would change nothing is refused as no_change (exit 5), as the handoff states. The probes left two runs (succeeded on gamma, failed on alpha) in org/state/runs and a probe commit on gamma's main."
+}
