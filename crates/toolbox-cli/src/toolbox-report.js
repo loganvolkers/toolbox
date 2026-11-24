@@ -1479,6 +1479,8 @@
       link("scorecard/" + enc(nm.name), "", title(D, nm.name)),
       " to " + nm.up + ". " + plural(nm.low, "entity", "entities") + " at " + nm.floor + " to lift" + (nm.rule ? "; " + nm.n + " need " : "."),
       nm.rule ? link("rule/" + enc(nm.name) + "/" + enc(nm.rule), "", nm.rule) : null,
+      nm.rule ? " " : null,
+      nm.rule ? basisBadge(basisOf((((D.scorecards || {})[nm.name] || {}).rules || {})[nm.rule]), true) : null,
       nm.rule ? "." : null,
     );
   }
