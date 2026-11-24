@@ -5268,6 +5268,9 @@
         },
         "level": "bronze"
       },
+      "example:experiments/actions-ab/results/r3/README.md": {
+        "level": "gold"
+      },
       "example:experiments/backstage-compare/README.md": {
         "level": "gold"
       },
