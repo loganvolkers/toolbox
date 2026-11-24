@@ -291,6 +291,89 @@ fn a_finding_several_rules_report_is_one_line() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
+/// A rule an agent's assessment decides is marked as judged wherever text names it: in the gate's
+/// summary and in the markdown report, each with the legend that explains the mark.
+#[test]
+fn judged_rules_are_marked_in_the_gate_and_the_markdown() {
+    let dir = std::env::temp_dir().join(format!("toolbox-judged-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let manifest = MANIFEST
+        .replace("records: [thing], freshness: {thing: 1h}", "records: [thing, assessment], freshness: {thing: 1h, assessment: 1h}")
+        .replace(
+            "      undocumented: {type: list, items: string, description: Its undocumented parts.}\n",
+            "      undocumented: {type: list, items: string, description: Its undocumented parts.}\n      reviewFailing: {type: list, items: string, description: What its review failed., computed: \"inbound.assesses.size() == 0 ? [] : inbound.assesses[0].failing\"}\n",
+        )
+        .replace("scorecards:\n", r#"  - name: Assessment
+    description: An agent's review of a thing.
+    identityFrom: [connector:things]
+    fields:
+      failing: {type: list, items: string, description: The criteria it failed.}
+    relations:
+      assesses: {to: Thing, many: false, unresolved: ignore}
+    sources: {default: [connector:things]}
+    map:
+      - {from: things/assessment, id: "'assessment:' + record.entity", set: "{'failing': record.failing}", relations: {assesses: "[record.entity]"}}
+scorecards:
+  - name: review
+    kind: Thing
+    owner: group:maintainers
+    levels: [bronze]
+    rules:
+      - {name: passes-review, level: bronze, check: "entity.reviewFailing.size() == 0", evidence: "entity.reviewFailing"}
+"#);
+    let write = |failing: &[&str]| {
+        portal(&dir, &[("a", true, &[])]);
+        std::fs::write(dir.join("toolbox.yaml"), &manifest).unwrap();
+        let review = serde_json::json!({"type": "record", "kind": "assessment", "externalId": "assessment:thing:a",
+            "data": {"entity": "thing:a", "failing": failing}});
+        let things = dir.join("fixtures/things.ndjson");
+        let thing = std::fs::read_to_string(&things).unwrap();
+        std::fs::write(things, format!("{thing}\n{review}")).unwrap();
+    };
+    let run = |extra: &[&str]| {
+        let o = Command::new(env!("CARGO_BIN_EXE_toolbox"))
+            .arg("report")
+            .arg(&dir)
+            .args(["--fixtures", "--baseline"])
+            .arg(dir.join("results.json"))
+            .args(extra)
+            .output()
+            .expect("toolbox runs");
+        let text = |b: &[u8]| String::from_utf8_lossy(b).into_owned();
+        (
+            o.status.code().unwrap_or(-1),
+            text(&o.stdout),
+            text(&o.stderr),
+        )
+    };
+    write(&[]);
+    let (code, out, err) = run(&["--update"]);
+    assert_eq!(code, 0, "{out}{err}");
+    write(&["cites-nothing"]);
+    let (code, out, _) = run(&[]);
+    assert_eq!(code, 1, "{out}");
+    assert!(
+        out.contains("    passes-review ✦: + cites-nothing\n"),
+        "{out}"
+    );
+    assert!(
+        out.contains("✦ agent-judged: an agent's assessment decides the rule"),
+        "{out}"
+    );
+    assert!(!out.contains("tested ✦"), "{out}");
+    let (_, md, _) = run(&["-o", "md"]);
+    assert!(
+        md.contains("## review  (none: 1) · every rule agent-judged ✦"),
+        "{md}"
+    );
+    assert!(
+        md.contains("`thing:a`: passes-review ✦\n  - passes-review ✦: cites-nothing"),
+        "{md}"
+    );
+    assert!(md.contains("\n## quality  (silver: 1)\n"), "{md}");
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
 /// A repository level over `quality`: its regression names the scorecard that fell and the
 /// entity that made it fall, with that entity's evidence (docs/design/root-causes.md).
 const AGGREGATE: &str = r#"

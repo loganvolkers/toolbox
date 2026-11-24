@@ -14,7 +14,8 @@
 //! parameter's value (keeping its type when it is the whole string; inside a longer string a
 //! non-string value is written as JSON, which is also a CEL list or map literal). A parameter with `tighten`
 //! may only move in that direction from its default: a portal can make a package stricter, never
-//! weaker.
+//! weaker. A parameter whose default is `null` is optional: left unset, a mapping entry whose whole
+//! value is that parameter is dropped (a scorecard's `track:`, for a portal that has tracks).
 
 use serde_json::{Map, Value};
 use sha2::{Digest, Sha256};
@@ -169,14 +170,16 @@ fn values(
     for (name, p) in params {
         let default = p.get("default").cloned().unwrap_or(Value::Null);
         let v = with.get(name).cloned().unwrap_or_else(|| default.clone());
-        let ok = match p["type"].as_str().unwrap_or("string") {
-            "integer" => v.is_i64() || v.is_u64(),
-            "number" => v.is_number(),
-            "boolean" => v.is_boolean(),
-            "array" => v.is_array(),
-            "object" => v.is_object(),
-            _ => v.is_string(),
-        };
+        let optional = v.is_null() && p.get("default").is_some_and(Value::is_null);
+        let ok = optional
+            || match p["type"].as_str().unwrap_or("string") {
+                "integer" => v.is_i64() || v.is_u64(),
+                "number" => v.is_number(),
+                "boolean" => v.is_boolean(),
+                "array" => v.is_array(),
+                "object" => v.is_object(),
+                _ => v.is_string(),
+            };
         if !ok {
             return Err(format!("parameter `{name}` must be {}", p["type"]));
         }
@@ -226,7 +229,11 @@ fn substitute(v: &mut Value, vals: &Map<String, Value>) -> Result<(), String> {
             for (k, mut x) in std::mem::take(o) {
                 let mut key = Value::String(k);
                 substitute_text(&mut key, vals)?;
+                let whole = x.as_str().is_some_and(|s| s.starts_with("${param:"));
                 substitute(&mut x, vals)?;
+                if whole && x.is_null() {
+                    continue;
+                }
                 out.insert(key.as_str().unwrap_or_default().to_owned(), x);
             }
             *o = out;
@@ -341,6 +348,20 @@ mod tests {
             doc,
             json!({"check": "entity.n <= 10", "n": 10, "l": ["x-y"]})
         );
+    }
+
+    #[test]
+    fn an_unset_optional_parameter_drops_its_entry() {
+        let params = json!({"track": {"type": "string", "default": null}});
+        let p = params.as_object().unwrap();
+        let mut doc = json!({"name": "ci", "track": "${param:track}"});
+        substitute(&mut doc, &values(p, &Map::new()).unwrap()).unwrap();
+        assert_eq!(doc, json!({"name": "ci"}));
+        let set = values(p, json!({"track": "maintainer"}).as_object().unwrap()).unwrap();
+        let mut doc = json!({"name": "ci", "track": "${param:track}"});
+        substitute(&mut doc, &set).unwrap();
+        assert_eq!(doc, json!({"name": "ci", "track": "maintainer"}));
+        assert!(values(p, json!({"track": 1}).as_object().unwrap()).is_err());
     }
 
     #[test]

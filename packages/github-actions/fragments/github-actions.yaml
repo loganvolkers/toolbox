@@ -178,7 +178,21 @@ scorecards:
       What an attacker could do through a workflow: pinned actions, least-
       privilege tokens, no risky triggers with write access, and zizmor and
       actionlint clean (D70, docs/design/github-actions-standards.md).
+    rationale: >-
+      A workflow runs with the repository's token and secrets, so a hijacked
+      action, an injected expression or an over-broad token is a route to
+      pushing code or stealing credentials. Bronze closes the direct routes,
+      silver removes write access where untrusted events arrive, and gold
+      leaves nothing zizmor flags unexplained.
+    links:
+    - title: 'Decision: GitHub Actions standards'
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7VZ2DPR0000000000000000.md
+    - title: GitHub Actions standards design
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/github-actions-standards.md
+    - title: GitHub Actions secure use
+      url: https://docs.github.com/en/actions/reference/security/secure-use
     owner: group:maintainers
+    track: ${param:track}
     levels: [bronze, silver, gold]
     rules:
     - name: actionlint-clean
@@ -189,6 +203,13 @@ scorecards:
         entity.actionlint.findings.map(f, f.rule + ' at line ' + string(f.line)
         + ': ' + f.message)
       fix: Fix what actionlint reports (`actionlint` in the repository root).
+      rationale: >-
+        A syntax error, a mistyped expression or a wrong action input only shows
+        up when the workflow runs, and actionlint also finds script injection;
+        catching these in the file is cheaper than a broken run.
+      links:
+      - title: actionlint checks
+        url: https://github.com/rhysd/actionlint/blob/main/docs/checks.md
     - name: no-high-findings
       level: bronze
       dataFrom: ci-lint
@@ -202,6 +223,11 @@ scorecards:
       fix: >-
         Fix zizmor's high-severity findings (`zizmor --offline .github/workflows
         actions`); see https://docs.zizmor.sh/audits/.
+      rationale: >-
+        zizmor's high-severity audits, such as template injection and dangerous
+        triggers, find ways for untrusted input to run code with the workflow's
+        token. One is enough for an attacker, so they belong in the floor.
+      links: [{title: zizmor audits, url: https://docs.zizmor.sh/audits/}]
     - name: least-privilege-token
       level: bronze
       check: >-
@@ -211,6 +237,15 @@ scorecards:
       fix: >-
         Declare `permissions:` at the top of the workflow (read-only, e.g.
         `contents: read`) and grant writes per job.
+      rationale: >-
+        A job without `permissions:` gets the token's default scopes, which can
+        include write access, so any compromised step can push code or change
+        releases. Read-only by default limits what one bad step can do.
+      links:
+      - title: zizmor excessive-permissions
+        url: https://docs.zizmor.sh/audits/#excessive-permissions
+      - title: Scorecard Token-Permissions
+        url: https://github.com/ossf/scorecard/blob/main/docs/checks.md#token-permissions
     - name: pinned-to-sha
       level: bronze
       check: entity.unpinned.size() == 0
@@ -220,6 +255,15 @@ scorecards:
         `git ls-remote https://github.com/<owner>/<repo> refs/tags/<tag>` and
         peel an annotated tag (`^{}`) so the SHA is the commit, then put the tag
         in a comment. Let Dependabot update them.
+      rationale: >-
+        A tag or branch can be moved to new code after review, and that code
+        runs with the workflow's token and secrets; only a commit SHA fixes what
+        runs.
+      links:
+      - title: zizmor unpinned-uses
+        url: https://docs.zizmor.sh/audits/#unpinned-uses
+      - title: GitHub on third-party actions
+        url: https://docs.github.com/en/actions/reference/security/secure-use#using-third-party-actions
     - name: no-medium-findings
       level: silver
       dataFrom: ci-lint
@@ -231,6 +275,13 @@ scorecards:
       fix: >-
         Fix zizmor's medium findings (e.g. `artipacked`: set
         `persist-credentials: false` on checkout).
+      rationale: >-
+        Medium findings widen what one compromised step can reach: a checkout
+        token left in `.git/config`, for example, is readable by every later
+        step and by any artifact that uploads the directory.
+      links:
+      - title: zizmor artipacked
+        url: https://docs.zizmor.sh/audits/#artipacked
     - name: no-write-tokens-on-risky-triggers
       level: silver
       check: entity.riskyTriggers.size() == 0 || entity.jobsWithWrite.size() == 0
@@ -240,6 +291,17 @@ scorecards:
       fix: >-
         Don't combine pull_request_target/workflow_run/issue_comment with write
         permissions; split privileged steps into a separate workflow.
+      rationale: >-
+        These triggers run in the base repository's context on events outsiders
+        can cause, such as a fork's pull request or a comment, so a write token
+        there puts a privileged credential within reach of untrusted input.
+      links:
+      - title: zizmor dangerous-triggers
+        url: https://docs.zizmor.sh/audits/#dangerous-triggers
+      - title: Scorecard Dangerous-Workflow
+        url: https://github.com/ossf/scorecard/blob/main/docs/checks.md#dangerous-workflow
+      - title: GitHub on untrusted checkout
+        url: https://docs.github.com/en/actions/reference/security/secure-use#mitigating-the-risks-of-untrusted-code-checkout
     - name: zizmor-clean
       level: gold
       dataFrom: ci-lint
@@ -252,6 +314,11 @@ scorecards:
       fix: >-
         Resolve or explicitly ignore (with a reason) zizmor's low and
         informational findings.
+      rationale: >-
+        Low and informational findings are weak signals one by one, but each
+        fixed or ignored with a written reason lets a reviewer tell a known
+        trade-off from an oversight. That is polish beyond the direct risks, so
+        it is gold.
     facets: {summary: public, details: public}
 
   # Reliability: whether CI can be trusted to say "green means good". Run history comes from the
@@ -265,7 +332,19 @@ scorecards:
       counted, including those a re-run hid, every job bounded by a timeout,
       and a branch that rarely fails (D70; docs/design/thresholds.md for the
       tiers). Speed is maintainer-ci-speed.
+    rationale: >-
+      CI is only worth running if red means something broke and green means
+      nothing did; flaky, hidden or hung jobs teach people to ignore it.
+      Bronze makes failures visible and bounded and keeps the branch out of
+      long red streaks; silver and gold each halve the share of first-try
+      failures a reader must check, over enough runs to tell the tiers apart.
+    links:
+    - title: Thresholds and levels
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md
+    - title: GitHub Actions standards design
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/github-actions-standards.md
     owner: group:maintainers
+    track: ${param:track}
     levels: [bronze, silver, gold]
     appliesTo: entity.type == 'workflow'
     rules:
@@ -281,6 +360,10 @@ scorecards:
         Fix the default branch before anything else: open the failed runs in the
         evidence, find the failing job, and fix its cause in the code or in the
         workflow file under .github/workflows/.
+      rationale: >-
+        A default branch that keeps failing breaks everyone who branches from
+        it, and each new failure hides behind the last. Three in a row means the
+        break is not being fixed.
     - name: still-running
       level: bronze
       dataFrom: github-actions
@@ -291,6 +374,15 @@ scorecards:
       fix: >-
         Re-enable the workflow (`gh workflow enable <file>`, or the Actions
         tab), or delete its file from .github/workflows/ if it is retired.
+      rationale: >-
+        A disabled workflow's old run history still reads green, so it would
+        pass every run-history rule while checking nothing. GitHub disables
+        scheduled workflows in a public repository after 60 days without
+        activity, and anyone can disable one by hand. A workflow whose triggers
+        simply stop matching stays active and is not caught here.
+      links:
+      - title: GitHub on disabling workflows
+        url: https://docs.github.com/en/actions/how-tos/manage-workflow-runs/disable-and-enable-workflows
     - name: fail-rate-under-20
       level: bronze
       dataFrom: github-actions
@@ -310,6 +402,11 @@ scorecards:
         counts as failed, continue-on-error, `|| true` and skips on the default
         branch are caught by failures-visible, and cancelled runs are shown
         here.
+      rationale: >-
+        Every red run costs someone a look, and a re-run that turns it green
+        hides a flaky test or step; counting first-try failures stops re-runs
+        from lowering the rate. Bronze is the first step for a branch that fails
+        often.
     - name: failures-visible
       level: bronze
       check: entity.hiddenFailures.size() == 0
@@ -320,6 +417,10 @@ scorecards:
         on the default branch. If a step is expected to fail, give it an `id:`
         and check `steps.<id>.outcome` in a later step, so the failure is still
         asserted.
+      rationale: >-
+        `continue-on-error`, `|| true`, `set +e` and a skip on the default
+        branch each turn a failure into a pass, so the fail-rate rules would
+        count it green. It is their prerequisite, so it sits at bronze.
     - name: every-job-has-timeout
       level: bronze
       check: entity.jobsWithoutTimeout.size() == 0
@@ -327,6 +428,10 @@ scorecards:
       fix: >-
         Set `timeout-minutes` on every job; the default is 360 minutes of a hung
         runner.
+      rationale: >-
+        Without `timeout-minutes` a hung job holds a runner for GitHub's default
+        of 360 minutes before it fails, spending runner time and delaying the
+        signal everyone is waiting for.
     - name: fail-rate-under-10
       level: silver
       dataFrom: github-actions
@@ -344,6 +449,11 @@ scorecards:
         test (fix or quarantine it in its test file), infrastructure (pin or
         retry the step in the workflow file), or real breakage merged to the
         branch (add the missing check to the pull request workflow).
+      rationale: >-
+        At silver, failures are rare enough that each can be classified as a
+        flake, infrastructure or a break a pull request check missed. It needs a
+        minimum number of runs, because with few runs one failure moves the rate
+        across tiers.
     - name: fail-rate-under-5
       level: gold
       dataFrom: github-actions
@@ -360,6 +470,9 @@ scorecards:
         Open each failed run in the evidence and fix its cause where it lives
         (the test, the workflow file, or the check the pull request lacked), so
         that every failure on the branch is rare enough to be looked at.
+      rationale: >-
+        At gold, a red run on the default branch is rare enough that every one
+        is looked at and fixed at its cause, so red keeps its meaning.
     facets: {summary: public, details: public}
 
   - name: maintainer-ci-speed
@@ -369,7 +482,16 @@ scorecards:
       Whether CI answers quickly and spends no runner time on superseded
       commits: a cost and feedback-time concern, separate from whether CI can
       be trusted (maintainer-ci-reliability; docs/design/thresholds.md).
+    rationale: >-
+      Slow runs and runs for superseded commits cost runner minutes and queue
+      time, and make people wait or switch task for feedback. Speed is not a
+      correctness or security property, so it has its own card rather than
+      holding a reliable workflow back.
+    links:
+    - title: Thresholds and levels
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md
     owner: group:maintainers
+    track: ${param:track}
     levels: [bronze, silver]
     appliesTo: entity.type == 'workflow'
     rules:
@@ -387,6 +509,13 @@ scorecards:
               cancel-in-progress: ${{ github.event_name == 'pull_request' }}
           A new push to a pull request then cancels its old run, while every
           run on main still finishes.
+        rationale: >-
+          Without a concurrency group per ref, each push to a pull request starts
+          a new run while the old one, whose result no longer matters, keeps a
+          runner busy.
+        links:
+        - title: GitHub Actions concurrency
+          url: https://docs.github.com/en/actions/concepts/workflows-and-actions/concurrency
       - name: fast-feedback
         level: silver
         dataFrom: github-actions
@@ -395,6 +524,9 @@ scorecards:
         fix: >-
           Keep the p90 run under 15 minutes: split slow jobs, cache builds, move
           long suites off the PR path.
+        rationale: >-
+          Past the bound, developers switch to other work while they wait and come
+          back late to a failure. The bound is a chosen point, not a measured one.
     facets: {summary: public, details: public}
 
   # Supply chain: each third-party action, across every workflow that uses it (the "who uses
@@ -405,7 +537,18 @@ scorecards:
     description: >-
       Each third-party action across every workflow that uses it: pinned to a
       commit SHA everywhere (D70, docs/design/github-actions-standards.md).
+    rationale: >-
+      A compromised action reaches every workflow that runs it, so in an
+      incident the question is which workflows use it and at which refs.
+      Scoring per action answers that and shows any use still unpinned; bronze
+      is the only level because an action is either pinned everywhere or not.
+    links:
+    - title: GitHub Actions standards design
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/github-actions-standards.md
+    - title: 'Decision: GitHub Actions standards'
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7VZ2DPR0000000000000000.md
     owner: group:maintainers
+    track: ${param:track}
     levels: [bronze]
     rules:
     - name: pinned-everywhere
@@ -418,4 +561,11 @@ scorecards:
         Resolve the tag with `git ls-remote https://github.com/<owner>/<repo>
         refs/tags/<tag>` and peel an annotated tag (`^{}`) so the SHA is the
         commit.
+      rationale: >-
+        One unpinned use is enough for a moved tag to run new code with that
+        workflow's token, so an action counts as pinned only when every workflow
+        pins it.
+      links:
+      - title: zizmor unpinned-uses
+        url: https://docs.zizmor.sh/audits/#unpinned-uses
     facets: {summary: public, details: public}

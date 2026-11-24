@@ -52,6 +52,15 @@ scorecards:
       Each semgrep finding is a violation, including those suppressed with
       nosemgrep. The measure is the number of findings, so a new finding or a
       new suppression is a regression.
+    rationale: >-
+      Semgrep's rules encode the bug and security patterns a team chose to
+      enforce. Counting suppressed findings too keeps nosemgrep from becoming
+      a quiet way to pass: a suppression is a decision a reviewer should see.
+    links:
+    - title: The box and the tools
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/toolbox-and-tools.md
+    - title: 'Semgrep: ignoring findings'
+      url: https://semgrep.dev/docs/ignoring-files-folders-code
     kind: ${param:kind}
     owner: ${param:owner}
     levels: [clean]
@@ -66,6 +75,10 @@ scorecards:
         entity.findings.map(f, 'line ' + string(f.line) + ': ' + f.rule +
         (f.suppressed ? ' (suppressed)' : ''))
       fix: ${param:fix}
+      rationale: >-
+        A finding is a pattern the configured rules call a bug or a risk. A new
+        suppression hides one rather than fixing it, so both count until a
+        reviewer accepts them in the baseline.
     facets: {summary: public, details: public}
 
 campaigns:

@@ -1,91 +1,70 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: assessment:rule-quality/rule:toolbox/maintainer-crate/has-tests
 rubric: assessment-quality
-subjectHash: 465173f810f1
-assessor:
-  kind: agent
-  name: cursor-assessment-reviewer
-  model: claude-opus-5.5
-at: 2026-11-23
+subjectHash: e92240f72c74
+assessor: {kind: agent, name: cursor-review-agent-2, model: claude-opus-5.5}
+at: 2026-11-24
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
       Every citation in
       portal/assessments/rule-quality/rule/toolbox/maintainer-crate/has-tests.yaml
-      says what its reason claims. In
-      crates/toolbox-connector-workspace/src/rust.rs, helpers are built per
-      file (433, 453) and are any non-test fn that asserts (255-290). Calls
-      match on the method name or last path segment (230, 237-246). Only the
-      macros `assert*`/`debug_assert*`, `panic` and `unreachable` count
-      (214-223), and any unwrap or expect is an assert (225-235). `trivial`
-      rejects only `true`/`! false` and same-token sides (183-211). The
-      has-tests check, evidence and fix are at
-      portal/standards/crates.yaml:158-169, and testsPerKloc counts the same
-      tests (crates.yaml:42-47, 170-179). docs/design/thresholds.md:36-37
-      match too. I re-ran target/debug/toolbox-connector-workspace on a
-      scratch crate whose `add` returns `a - b`. A lone
-      `"1".parse::<i32>().unwrap()` test, `assert!(1 == 1)`, and `Vec::new()`
-      next to an unwrapping `Cfg::new` were all counted as asserting. A
-      tests/common helper and a closure-form `prop_assert!` were listed as
-      asserting nothing. Two imprecisions don't change a verdict. A block-form
-      `proptest! { #[test] fn .. }` test isn't counted at all, rather than
-      listed. A production fn that uses `?`, not only one that unwraps, also
-      becomes a helper.
+      lands where it says. In portal/standards/crates.yaml, has-tests is
+      178-193, its evidence 183-185, its fix 186-189 and tests-scale-with-code
+      194-210. In crates/toolbox-connector-workspace/src/rust.rs, the per-file
+      helper sets are 433 and 453, the macro list 214-223, unwrap/expect
+      225-235, trivial 184-211, helpers 255-290, name matching 230 and
+      237-246, and the listing 145-151. docs/design/thresholds.md:36-37 are
+      the has-tests and tests-scale-with-code rows. A scratch crate run
+      through target/debug/toolbox-connector-workspace reproduced each route
+      the reasons name. A lone `"1".parse::<i32>().unwrap()` test on a broken
+      `add` gave unitTests 1 and testsWithoutAsserts [], and `cargo test`
+      passed. `assert!(1 == 1)` counted. `Vec::new()` counted while an
+      unrelated `Cfg::new` unwrapped and was listed once it didn't.
+      `prop_assert_eq!` and a tests/common helper were listed. The "15 live
+      crates" claim holds: 17 members, toolbox-durable and toolbox-exec
+      skipped (portal/results.json), and rg finds no proptest, `ensure!` or
+      tests/common under crates/. `git diff origin/main` shows that only
+      rationales and links changed in crates.yaml, and that rust.rs and
+      thresholds.md are unchanged, as the summary says.
   - criterion: complete
     verdict: pass
     reason: >-
-      The verdicts are the ones the sources support. measures-intent and
-      hard-to-game fail on routes that
-      crates/toolbox-connector-workspace/src/rust.rs leaves open today, and
-      the rubric's "could pass while missing the intent"
-      (portal/standards/meta.yaml:811-813) makes the latent misfires enough.
-      fix-leads-to-pass holds: a direct non-trivial `assert!` sets `found` in
-      the listed test (rust.rs:214-219, 145), whatever the cause, and the fix
-      asks for one (portal/standards/crates.yaml:166-169). threshold-justified
-      rests on docs/design/thresholds.md:36. The scratch run found more of the
-      same, which only strengthens the two fails. An unwrap inside a macro's
-      tokens, such as `println!("{}", x.unwrap())`, is invisible (visit_macro
-      doesn't parse tokens, rust.rs:222). `let _ = load("x")` passes when
-      `load` uses `?` (rust.rs:250-251 via 255-290), which is a further
-      hard-to-game route. No criterion that passed should have failed.
+      The rubric names these routes, so measures-intent and hard-to-game fail
+      correctly: "could pass while missing the intent" and "a trivial test"
+      (portal/standards/meta.yaml:1151-1152, 1156-1157). fix-leads-to-pass is
+      right too. A direct non-trivial assert sets `found` (rust.rs:218-219),
+      so the test leaves the listing (rust.rs:145) whatever caused it.
+      threshold-justified is right, because thresholds.md:36 states the bar as
+      a bronze principle with a dated measurement. Rationale is not a
+      rule-quality criterion (meta.yaml:1146-1171), and the new rationale
+      (crates.yaml:190-193) claims nothing the check doesn't see.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      Each verdict rests on code or text a second assessor can read, not on
-      taste. The fails rest on
-      crates/toolbox-connector-workspace/src/rust.rs:214-235 and 433/453, and
-      they reproduce on a scratch crate through
-      target/debug/toolbox-connector-workspace. The passes rest on
-      portal/standards/crates.yaml:158-169 and
-      docs/design/thresholds.md:36-37. The one judgement call is failing
-      measures-intent when none of the 15 live crates hits a misfire. All pass
-      has-tests in portal/results.json, and the two placeholder crates are
-      skipped by appliesTo (crates.yaml:149). The rubric's guidance asks
-      whether an entity could pass or fail wrongly, though, not whether one
-      does (portal/standards/meta.yaml:811-813).
+      Each verdict rests on code or text a second assessor can read, and both
+      fails reproduce on a scratch crate in seconds. The one judgement is
+      failing measures-intent when no live crate misfires. The rubric's own
+      wording settles it: it asks whether an entity "could pass" wrongly
+      (meta.yaml:1151), and the reason labels the misfires latent.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Both suggestions in
-      portal/assessments/rule-quality/rule/toolbox/maintainer-crate/has-tests.yaml
-      target the verdict they are attached to. measures-intent's suggestion
-      names a change for each misfire its reason cites. It would collect
-      helpers per crate, replacing the per-file sets at
-      crates/toolbox-connector-workspace/src/rust.rs:433 and 453, and resolve
-      calls by path rather than by last segment (rust.rs:230, 237-246). It
-      would add `ensure!` and `prop_assert*` to the macro list
-      (rust.rs:217-218), and stop counting unwrap-only production fns as
-      helpers (rust.rs:255-290). hard-to-game's suggestion to require a crate
-      item would close the parse-unwrap and `assert!(1 == 1)` routes. Its
-      cargo-mutants slot would close what static rules can't, such as
-      `assert!(add(1, 1) >= i32::MIN)`. So the second part is what would flip
-      that verdict.
+      Each suggestion would change its own verdict. measures-intent's
+      suggestion replaces the per-file helper sets (rust.rs:433, 453) and
+      name-only matching (rust.rs:230, 242). It adds `ensure!` and
+      `prop_assert*` to the macro list (rust.rs:217) and stops treating
+      unwrap-only production functions as helpers (rust.rs:255-290). That
+      removes each misfire the reason cites. hard-to-game's suggestion would
+      reject the parse-unwrap and `assert!(1 == 1)` routes. It requires a
+      crate item and treats identifier-free conditions as trivial, and
+      cargo-mutants would catch what remains, such as `assert!(add(1, 1) ==
+      add(1, 1))`.
 summary: >-
-  The re-assessment now judges the code that exists. Every citation into
-  rust.rs, crates.yaml and thresholds.md checks out, and a scratch run of
-  the connector reproduces both failing routes: a lone parse-unwrap test,
-  and `Vec::new()` counted because of `Cfg::new`. Two details are
-  understated without changing a verdict. A block-form proptest test isn't
-  counted at all, and a production fn that only uses `?` also becomes a
-  helper, so `let _ = load("x")` passes too.
+  The corrected crates.yaml line numbers are right (has-tests 178-193,
+  evidence 183-185, fix 186-189, tests-scale-with-code 194-210). Every
+  rust.rs and thresholds.md citation also checks out. A scratch crate run
+  through the workspace connector reproduces every route the assessment
+  names. The two fails and two passes are the ones the sources support,
+  and each suggestion would change its verdict.

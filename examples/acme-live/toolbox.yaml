@@ -188,12 +188,22 @@ scorecards:
   - name: readme
     kind: Repository
     owner: group:platform
+    rationale: >-
+      A repository is where a newcomer or an agent lands first; with no README
+      nothing says what it is, who owns it or how to run it, so every reader
+      reverse-engineers it.
+    links:
+    - title: 'GitHub: about READMEs'
+      url: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes
     levels: [bronze]
     rules:
     - name: has-readme
       level: bronze
       check: has(entity.hasReadme) && entity.hasReadme
       fix: Add a README.md at the root of the repository.
+      rationale: >-
+        The README is the one file every host renders on the repository's front
+        page, so it is where readers look before anything else.
     facets: {summary: public, details: public}
 
 authz:

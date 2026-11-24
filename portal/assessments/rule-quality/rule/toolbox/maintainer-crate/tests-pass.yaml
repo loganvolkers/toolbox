@@ -1,17 +1,17 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/maintainer-crate/tests-pass
 rubric: rule-quality
-subjectHash: 5ec8c54c0c47
+subjectHash: 805f15bb72c8
 assessor: {kind: agent, name: cursor-cloud-agent, model: claude-opus-5.5}
-at: 2026-11-23
+at: 2026-11-24
 verdicts:
   - criterion: measures-intent
     verdict: pass
     reason: >-
       The check needs a passing run with no ignored and no compiled-out test
-      (portal/standards/crates.yaml:183-185). The previous gap is closed: the
+      (portal/standards/crates.yaml:213-215). The previous gap is closed: the
       runner's test job now sets TOOLBOX_REQUIRE_OPENFGA=1
-      (portal/toolbox.yaml:216-226), as CI does (.github/workflows/ci.yml:49),
+      (portal/toolbox.yaml:255-265), as CI does (.github/workflows/ci.yml:49),
       so the two tests that used to return early without OpenFGA fail instead
       (crates/toolbox-authz/tests/fga.rs:59-68,
       crates/toolbox-api/tests/authz.rs:21-27). No other test in
@@ -39,13 +39,13 @@ verdicts:
     verdict: pass
     reason: >-
       The fix's `cargo test -p <crate>` is the runner's command
-      (portal/toolbox.yaml:219-225). The evidence carries the counts, the last
+      (portal/toolbox.yaml:258-264). The evidence carries the counts, the last
       2000 characters of output on failure
       (crates/toolbox-connector-runner/src/main.rs:108-112) and each
       compiled-out test with its file and line (rust.rs:134-141). The fix
       names all three removals: failures, `#[ignore]`, the always-false
       `#[cfg(...)]`, and says to install OpenFGA (TOOLBOX_OPENFGA_BIN) since
-      the runner requires it (portal/standards/crates.yaml:192-197).
+      the runner requires it (portal/standards/crates.yaml:222-227).
   - criterion: threshold-justified
     verdict: pass
     reason: >-
@@ -54,8 +54,13 @@ verdicts:
       under `#[cfg(any())]`"), which also records the OpenFGA requirement.
       There is no other number. The fixture pins the fail outcome with both an
       ignored and a compiled-out test
-      (portal/tests/standards.test.yaml:1250-1253).
+      (portal/tests/standards.test.yaml:1270-1273).
 summary: >-
-  The runner now requires OpenFGA, so the rule and CI agree, and ignored
-  or `#[cfg(any())]` tests fail it. Hiding a failing test behind any other
-  always-false cfg on Linux (`miri`, `windows`) still passes.
+  Re-assessed after the rule gained a rationale: its check, evidence, fix
+  and level are the same as on main, as is the code the reasons cite, so
+  the verdicts stand; line numbers are updated for the rationale lines
+  inserted above them. The rationale states the why without claiming more
+  than the check sees. The runner now requires OpenFGA, so the rule and CI
+  agree, and ignored or `#[cfg(any())]` tests fail it. Hiding a failing
+  test behind any other always-false cfg on Linux (`miri`, `windows`)
+  still passes.

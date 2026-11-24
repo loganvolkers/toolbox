@@ -238,7 +238,21 @@ scorecards:
       Each DX Benchmark: declared, pre-registered against a rival on pinned
       open-source repositories, and run with results and the fixes it produced
       (D01M82X2K0DYWTCA23MQJ4CKR0Z).
+    rationale: >-
+      A claim that Toolbox makes a lifecycle easier for agents is only as good
+      as the benchmark behind it, and two benchmarks without repeated runs or
+      an independent adjudicator reached wrong results. The levels follow a
+      benchmark's life: declared, then registered so the result can't be
+      explained away, then run, published and turned into fixes.
+    links:
+    - title: DX Benchmarks design
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/dx-benchmarks.md
+    - title: DX Benchmarks decision
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M82X2K0DYWTCA23MQJ4CKR0Z.md
+    - title: Protocol 2 decision
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M83RDWQ5EVKY5SFHDWAD5HFH.md
     owner: group:maintainers
+    track: evidence
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze}
     rules:
@@ -250,6 +264,10 @@ scorecards:
         Give the entry a one-sentence question, the SDLC layers it measures
         (maintainer, package-author, operator, user) and a status (designed,
         blocked, complete, archived).
+      rationale: >-
+        Without a question and the layers it measures, a benchmark can't be tied
+        to a decision or to the SDLC stages it is meant to prove; a benchmark
+        with no decision behind it is a demo.
     - name: paths-exist
       level: bronze
       check: entity.missingPaths.size() == 0
@@ -257,6 +275,10 @@ scorecards:
       fix: >-
         Point readme at the benchmark's pre-registration and results at its
         published results, as paths that exist in the repository.
+      rationale: >-
+        The catalog entry is the index to the pre-registered bar and the
+        published result; a dead path means neither can be read or checked
+        against the other.
     - name: has-a-rival
       level: silver
       check: entity.rivalGaps.size() == 0
@@ -265,6 +287,10 @@ scorecards:
         Name the arm without Toolbox: an agent from scratch, a checklist,
         hand-written glue, an existing standard or another platform
         (dx-benchmarks.md §4, step 3).
+      rationale: >-
+        Beating a straw man proves nothing; a win counts only against the
+        alternative a capable team would really use, which our record shows is
+        often an agent with a checklist.
     - name: pre-registered
       level: silver
       check: entity.hypothesisGaps.size() == 0
@@ -272,6 +298,10 @@ scorecards:
       fix: >-
         Name the hypotheses the benchmark tests, each with a bar written in its
         README before it ran (dx-benchmarks.md §4, step 5).
+      rationale: >-
+        A bar set after the run bends to fit the result; without one, both of
+        the standards A/B's losses could have been explained away as learning
+        cost.
     - name: open-source-pinned
       level: silver
       check: entity.repoGaps.size() == 0
@@ -279,6 +309,10 @@ scorecards:
       fix: >-
         Run on open-source repositories we didn't write and list each as
         owner/name@commit, so the run can be reproduced.
+      rationale: >-
+        Repositories we wrote can be tuned to Toolbox, and an unpinned one
+        changes under the run; forks of others' code at a pinned commit keep the
+        work real and the result reproducible.
     - name: says-why
       level: silver
       check: entity.reasonGaps.size() == 0
@@ -286,6 +320,10 @@ scorecards:
       fix: >-
         Say why an archived benchmark has served its value (servedValue), or
         what a blocked one waits on (blockedOn).
+      rationale: >-
+        An archived benchmark without its reason looks abandoned, and a blocked
+        one without its prerequisite can't be unblocked; the reason is what the
+        next maintainer acts on.
     - name: method-registered
       level: silver
       check: >-
@@ -297,6 +335,13 @@ scorecards:
         prompts, plan at least three runs per arm, name the measure a dry run
         showed the runtime reports, and name a designer and a different
         adjudicator (dx-benchmarks.md §4.1).
+      rationale: >-
+        connector-ab's win came from tuning only Toolbox's arm, and deploy-ab's
+        defeat from probes that treated the arms unequally, both judged by their
+        designers. Registering the method before the run closes those routes.
+      links:
+      - title: DX Benchmark protocol 2
+        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/dx-benchmarks.md#41-protocol-2
     - name: results-recorded
       level: gold
       check: entity.resultGaps.size() == 0
@@ -304,6 +349,9 @@ scorecards:
       fix: >-
         Run it, then record the outcome against the bar as written and the path
         of the published results (dx-benchmarks.md §4, step 9).
+      rationale: >-
+        A loss we hide is a loss we repeat; until the outcome is published
+        against the bar as written, the benchmark is evidence of nothing.
     - name: closes-the-loop
       level: gold
       check: entity.changeGaps.size() == 0
@@ -311,6 +359,10 @@ scorecards:
       fix: >-
         List what the benchmark changed in Toolbox: the friction fixes and the
         decisions it produced (dx-benchmarks.md §4, step 10).
+      rationale: >-
+        Measured friction is a benchmark's most useful output; a run that
+        changed nothing in Toolbox paid its token cost without making Toolbox
+        better.
     - name: sound-method
       level: gold
       check: >-
@@ -324,3 +376,11 @@ scorecards:
         across at least three runs per arm, and the independent adjudicator's
         fit audit (dx-benchmarks.md §4.1). A protocol-1 result stays on the
         record as one sample.
+      rationale: >-
+        One run is one sample: an unchanged rival's calls moved by 21 across
+        connector-ab's rounds. A result supports a claim only with a frozen
+        commit, the spread of repeated runs and an audit of what changed between
+        rounds.
+      links:
+      - title: DX Benchmark protocol 2
+        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/dx-benchmarks.md#41-protocol-2

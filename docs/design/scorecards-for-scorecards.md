@@ -136,7 +136,7 @@ commit (L10).
 
 | Rule | Lesson | What it needs |
 |---|---|---|
-| `has-rationale` | L9 | An optional `why:` on rules (a source or reasoning); validate that thresholds in checks have one |
+| `has-rationale` | L9 | **Built** as `explains-why` on meta-rule (bronze) and meta-scorecard (silver): a `rationale:` and `links:` on every rule and scorecard (D01M868BY0KJNEYE9WBFZYEYFYH). Still open: validate that thresholds in checks have a source |
 | `fields-exist` / `types-fit` | L5 | A CEL type checker over kind schemas (Q10); today the analysis knows which fields a rule reads, not their types |
 | `not-redundant` | L11 | Outcome vectors over fixtures and live data: flag rules of the same kind whose failing sets are identical. Advisory first: tiered thresholds (fail rate 20/10/5%) legitimately coincide |
 | `ratchetable` | L7, L12 | Mark connectors `volatile: true` (run history) and derive which rules read volatile fields; skip them from the ratchet automatically instead of `--skip` by hand, and flag a rule that fails on every entity only because its source is skipped |
@@ -371,7 +371,7 @@ The assessment record carries what the deterministic card needs (`toolbox_connec
   - The ratchet caught this change too: `main` passed 150 lines, the workspace `resync` reached
     complexity 19, and new public items were undocumented. All were fixed; the baseline was not
     loosened.
-- **Not built:** agent trials, rationale, type checks, redundancy, volatility, per-rule timing
+- **Not built:** agent trials, type checks, redundancy, volatility, per-rule timing
   (§3.2, §3.4).
 
 ## Sources

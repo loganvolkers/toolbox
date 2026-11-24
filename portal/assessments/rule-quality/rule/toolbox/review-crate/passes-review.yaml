@@ -1,9 +1,9 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/review-crate/passes-review
 rubric: rule-quality
-subjectHash: a51ea32864e3
-assessor: {kind: agent, name: campaign-review-rules}
-at: 2026-11-23
+subjectHash: 0fefda714071
+assessor: {kind: agent, name: cursor-cloud-agent, model: claude-opus-5.5}
+at: 2026-11-24
 verdicts:
   - criterion: measures-intent
     verdict: pass
@@ -22,7 +22,7 @@ verdicts:
       verdicts, each "Fine; see crates/<name>/src/lib.rs." Any resolving path
       satisfies reviewUncited
       (crates/toolbox-connect/src/assessment.rs:41-47), and no rule of
-      review-crate (portal/standards/crates.yaml:234-286) asks who wrote the
+      review-crate (portal/standards/crates.yaml:284-370) asks who wrote the
       assessment or whether it was itself reviewed. docs/design/thresholds.md
       §3 says so: a crate rule can't see its assessment's review. So the
       crate's own author can earn gold with a cursory self-assessment.
@@ -35,7 +35,7 @@ verdicts:
     verdict: pass
     reason: >-
       The fix names portal/assessments/ and re-assessment
-      (crates.yaml:272-274), and the evidence lists failing criteria or
+      (crates.yaml:352-354), and the evidence lists failing criteria or
       uncited ones; for the crate card the uncited reasons are in the same
       assessment the fix points to, so re-assessing with citations passes.
   - criterion: threshold-justified
@@ -45,5 +45,10 @@ verdicts:
       docs/design/thresholds.md §3, and reviewUncited makes it ask for more
       than bronze and silver imply, so the earlier fail is fixed.
 summary: >-
-  The hash and the ladder are fixed, but a self-written all-pass
-  assessment that cites any real file still earns gold.
+  Re-assessed after the rule gained a rationale: its check, evidence, fix
+  and level are the same as on main, as is the code the reasons cite, so
+  the verdicts stand; line numbers are updated for the rationale lines
+  inserted above them. The rationale states the why without claiming more
+  than the check sees. The hash and the ladder are fixed, but a
+  self-written all-pass assessment that cites any real file still earns
+  gold.
