@@ -338,7 +338,9 @@
   var SVGNS = "http://www.w3.org/2000/svg";
   var KNOWN = ["none", "bronze", "silver", "gold", "skipped"];
 
+  var TAG = /^[a-z][a-z0-9]*$/;
   function el(t, a) {
+    if (!TAG.test(t)) throw new Error("bad tag name");
     var e = document.createElement(t);
     var kids = Array.prototype.slice.call(arguments, 2);
     Object.assign(e, a || {});
@@ -366,14 +368,6 @@
       if (k != null && k !== "") a.append(k);
     });
     return a;
-  }
-
-  // A region that scrolls sideways must take focus so a keyboard can scroll it.
-  function scroller(label, child) {
-    var d = el("div", { className: "tablewrap", tabIndex: 0 }, child);
-    d.setAttribute("role", "region");
-    d.setAttribute("aria-label", label);
-    return d;
   }
 
   function enc(s) {
@@ -1412,8 +1406,9 @@
     var query = {};
     var qi = h.indexOf("?");
     if (qi >= 0) {
-      new URLSearchParams(h.slice(qi + 1)).forEach(function (v, k) {
-        query[k] = v;
+      var params = new URLSearchParams(h.slice(qi + 1));
+      ["q", "level", "outcome", "rule"].forEach(function (k) {
+        if (params.has(k)) query[k] = params.get(k);
       });
       h = h.slice(0, qi);
     }
@@ -1501,7 +1496,6 @@
       var self = this;
       aliasLevels(D);
       var S = summarize(D);
-      var catalog = D.catalog || {};
       root.getElementById("top").replaceChildren(boxLogo(), el("h1", { textContent: D.portal || "Toolbox report" }));
       root.getElementById("meta").textContent =
         fmt(S.entityCount) +
@@ -2357,7 +2351,6 @@
           groupOf[k] = g;
         });
       });
-      var self = this;
       var tile = function (k) {
           var ids = catalog[k];
           var unscored = scored[k]
@@ -2414,11 +2407,6 @@
       var search = el("input", { type: "search", placeholder: "Filter " + selected + " by name…", ariaLabel: "Filter entities", value: query.q || "" });
       var list = el("div");
       var limit = 60;
-      var cardsFor = function (id) {
-        return Object.keys(D.scorecards || {}).filter(function (n) {
-          return D.scores[n] && D.scores[n][id] && D.scores[n][id].level !== "skipped";
-        });
-      };
       var drawList = function () {
         var q = search.value.toLowerCase();
         var ids = (catalog[selected] || []).filter(function (id) {
