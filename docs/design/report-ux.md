@@ -67,7 +67,7 @@ element or `report_json` must follow it. `maintainer-skill` scores the file like
 "scorecards": { "maintainer-skill": { "title": "Agent skills", "description": "…", "rationale": "…", "links": [],
   "levels": [], "rules": { "has-example": { "basis": "measured", "rationale": "…", "links": [] } } } },
 "kindGroups": [{ "name": "code", "title": "Code", "description": "…", "kinds": ["Crate"] }],
-"kinds": { "Crate": { "description": "…" } },
+"kinds": { "Crate": { "title": null, "description": "…" } },
 "comparisons": { "vs-backstage-capabilities": { "facts": {}, "reads": {}, "fields": {} } },
 "unassessed": { "review-crate": ["crate:toolbox-api", "..."] }
 ```
@@ -147,6 +147,18 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 - No page scrolls sideways at 390 px; the design-audit capture records `mobileOverflow` per route.
 - A link title that still leads with a decision id renders as "Decision: <claim>", with the id on hover; long entity ids in rows are cut to one line, with the full id on hover.
 - Track rings use one ordered ramp (red, bronze, olive, green) for the share at the top level.
+- A kind's `title`, when the manifest sets one, is its reader-facing name; otherwise the name is split
+  into words. A kind page whose scorecards leave some of its entities out says how many and why,
+  with each scorecard's `appliesTo` one click away.
+- A custom level name (OpenSSF's "ten") explains itself on hover and, when it is the scorecard's top
+  level, says so wherever the weakest scorecard is named. On the overview, a scorecard at its only
+  top level that still holds the repository's level is marked as the ceiling.
+- The first use of ratchet, CEL, fixture or harness in a description is a dotted term whose hover
+  defines it.
+- Long lists start short: a scorecard shows its 12 worst entities, then "Show all".
+- The hero of a comparison says how it was measured (the track's description: releases, setup,
+  runs and who checked the scoring) before the verdict.
+- A link to a hash that matches nothing says so and selects no tab.
 - A factor's "How it is scored" says in words what the harness recorded for each product and which value is ahead, then the expression, then what would close the gap.
 
 ## Sources

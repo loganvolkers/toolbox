@@ -22,7 +22,10 @@ D01M85MK7FCRXH2TRMRKXTNA5GT and was judged by the same blind design audit
 2. **Kind groups.** `kindGroups` is a list of `{name, title, description, kinds}`. Validation
    rejects unknown kinds and a kind in two groups. Kinds left out are shown under "Other kinds". T4T
    uses six groups: Code, Agent and user surfaces, Docs and examples, CI and supply chain,
-   Standards and judgement, and SDLC and evidence.
+   Standards and judgement, and SDLC and evidence. A kind may also carry a `title`, the name
+   readers see, for when two kind names would read alike (T4T: `Connector` is "Connector binary"
+   and `PortalConnector` is "Declared connector"); the report falls back to the name split into
+   words.
 3. **Measured or judged.** A rule is *judged* when its check reads, directly or through computed
    fields, a relation to entities mapped from `assessment` records (D79). Its outcome moves when
    an assessor's verdict does. Every other rule is *measured*: a tool, connector or script read
@@ -42,7 +45,8 @@ D01M85MK7FCRXH2TRMRKXTNA5GT and was judged by the same blind design audit
    kind's description), `rationale`, `links` and `basis` on scorecards and rules, `links` on
    tracks, `facts`, `reads` and `fields` on comparisons, and `unassessed` (per scorecard with
    judged rules, the scored entities no assessment points at, whose judged passes mean nothing
-   was looked at). Existing fields and deep links are unchanged.
+   was looked at), each kind's `title`, and each scorecard's `appliesTo`, so a kind page can say
+   why some of its entities are not scored. Existing fields and deep links are unchanged.
 7. **Reopen when** a judged rule is found that the reading of assessment relations misclasses,
    or readers on the audit's tasks still need the benchmark docs to understand a comparison.
 
