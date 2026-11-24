@@ -170,6 +170,17 @@ kinds:
 scorecards:
   - name: ownership
     kind: Repository
+    rationale: >-
+      The owner is who answers for a repository and, through the derived owner
+      tuple, who may see its owner-only details. Bronze accepts an inferred
+      owner; silver requires a claim backed by CODEOWNERS, a tier that
+      approvals depend on, and a protected branch, since a claim is only as
+      safe as the branch that holds it.
+    links:
+    - title: CODEOWNERS-backed claims
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/authorization.md#48-authority-of-permission-relevant-claims-codeowners
+    - title: D17 CODEOWNERS authority
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7TCJ3280000000000000000.md
     owner: group:platform
     levels: [bronze, silver]
     appliesTo: "!entity.archived"
@@ -180,26 +191,52 @@ scorecards:
       fix: >-
         Add catalog-info.yaml with spec.owner, backed by CODEOWNERS for that
         file.
+      rationale: >-
+        A repository nobody owns has nobody to fix its failing standards,
+        approve changes to it or answer for an incident.
     - name: claim-verified
       level: silver
       check: entity.ownership.status == 'verified'
       fix: >-
         Declare spec.owner in catalog-info.yaml and make that team a code owner
         of the file.
+      rationale: >-
+        Ownership grants permissions, so anyone who can edit catalog-info.yaml
+        could otherwise name any team as owner. Requiring that team to own the
+        file in CODEOWNERS means the claimed team reviews the claim.
     - name: has-tier
       level: silver
       check: has(entity.tier)
       fix: >-
         Set spec.tier in catalog-info.yaml, or ask the platform team to set it
         in Toolbox.
+      rationale: >-
+        The tier decides whether installing an approved GitHub App on the
+        repository needs security's approval; without one, the policy cannot
+        tell a critical repository from a sandbox.
     - name: branch-protected
       level: silver
       check: entity.defaultBranchProtected
       fix: Enable a ruleset protecting the default branch.
+      rationale: >-
+        Without a ruleset, anyone with write access can push to the default
+        branch unreviewed, including the CODEOWNERS and catalog-info.yaml that
+        ownership rests on.
+      links:
+      - title: GitHub rulesets
+        url: https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/about-rulesets
     facets: {summary: public, details: owner} # level public; rule details owner-only (D15)
 
   - name: github-app-hygiene
     kind: Repository
+    rationale: >-
+      Every GitHub App installed on a repository acts on it with its own
+      token, so each installation widens who can read or change the code.
+      Security keeps the approved list in policy, and a single bronze rule is
+      enough because any install outside it is a finding.
+    links:
+    - title: Approved GitHub Apps example
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/examples/approved-github-apps.md
     owner: group:security
     levels: [bronze]
     appliesTo: "!entity.archived"
@@ -210,10 +247,21 @@ scorecards:
       fix: >-
         Remove unapproved apps, or request approval with the request-new-app
         action.
+      rationale: >-
+        An app installed outside the approved list has had no security review of
+        its permissions or vendor. Toolbox's own app gets no webhook for other
+        apps' installs, so this check is how such drift is caught.
     facets: {summary: public, details: owner}
 
   - name: app-approval
     kind: GitHubApp
+    rationale: >-
+      Security approves an app's permissions as they were when it was
+      reviewed. If the app later asks for more, the approval no longer
+      describes what the app can do.
+    links:
+    - title: Approved GitHub Apps example
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/examples/approved-github-apps.md
     owner: group:security
     levels: [bronze]
     appliesTo: entity.slug in policy.approvedApps
@@ -224,6 +272,10 @@ scorecards:
       fix: >-
         The app requests permissions beyond its approved snapshot; security must
         re-approve it.
+      rationale: >-
+        A vendor can widen an app's permissions after approval. Until security
+        re-reviews them, self-service installs would grant access nobody
+        approved.
     facets: {summary: public, details: public}
 
 authz:

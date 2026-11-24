@@ -73,6 +73,17 @@ scorecards:
       A pilot repository's basics: a README and CODEOWNERS, then a catch-all
       owner, owners that are teams and a licence (examples/repo-portal-
       starter).
+    rationale: >-
+      These files tell a newcomer or an agent what the repository is, who
+      reviews changes to it, and whether its code may be reused, and they can
+      be checked in any repository with no build or network. Bronze is a
+      README and a CODEOWNERS file; silver makes ownership complete and
+      unambiguous and adds a licence.
+    links:
+    - title: Repo portals
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/repo-portals.md
+    - title: GitHub code owners
+      url: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
     owner: group:maintainers
     levels: [bronze, silver]
     rules:
@@ -85,11 +96,18 @@ scorecards:
       fix: >-
         Add a README of at least 50 words: what this is, how to run it, who owns
         it.
+      rationale: >-
+        The README is the first thing a person or an agent reads to learn what a
+        repository is and how to run it; without one they reverse-engineer it
+        from the code.
     - name: has-codeowners
       level: bronze
       check: has(entity.codeowners)
       evidence: "['no CODEOWNERS in .github/, the root or docs/']"
       fix: Add .github/CODEOWNERS so changes are routed to an owning team.
+      rationale: >-
+        Without CODEOWNERS, GitHub requests no reviewer for a pull request and
+        nothing in the repository says who owns the code.
     - name: codeowners-catch-all
       level: silver
       check: >-
@@ -97,6 +115,10 @@ scorecards:
         '*')
       evidence: "has(entity.codeowners) ? entity.codeowners.rules.map(r, r.pattern) : []"
       fix: Start CODEOWNERS with a `*` rule so every path has an owner.
+      rationale: >-
+        A path no rule matches has no owner, so changes to it get no automatic
+        reviewer. A leading catch-all gives every path a default that later,
+        more specific rules override.
     - name: owners-are-teams
       level: silver
       check: entity.owners.size() > 0 && entity.ownersOk
@@ -108,6 +130,14 @@ scorecards:
         Name teams (@org/team), or for a single-maintainer repository only
         personal handles (@user). Do not mix teams with individuals, and do not
         use emails.
+      rationale: >-
+        A team keeps ownership when people leave; a mix of teams and
+        individuals, or an email, leaves it unclear who answers for the code.
+        All-personal handles are accepted so a single-maintainer repository can
+        reach silver.
+      links:
+      - title: Personal CODEOWNERS decision
+        url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7Y57FVX0XYNGMX0A0XJ4GK9.md
     - name: has-license
       level: silver
       check: has(entity.license)
@@ -115,6 +145,12 @@ scorecards:
       fix: >-
         Add a LICENSE file (or a note in the README if the code is
         internal-only).
+      rationale: >-
+        Without a licence, default copyright applies and nobody else may legally
+        use, change or share the code, even in a public repository.
+      links:
+      - title: Licensing a repository
+        url: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/licensing-a-repository
     facets: {summary: public, details: public}
 
   - name: docs
@@ -122,6 +158,13 @@ scorecards:
     description: >-
       Each Markdown document in a pilot repository: links that resolve
       (examples/repo-portal-starter).
+    rationale: >-
+      Markdown docs are how a repository explains itself to people and agents.
+      Resolving links can be checked in any repository with no build or
+      network, so that is where the starter begins.
+    links:
+    - title: Repo portal starter
+      url: https://github.com/loganvolkers/toolbox/blob/main/examples/repo-portal-starter/README.md
     owner: group:maintainers
     levels: [bronze]
     rules:
@@ -130,6 +173,9 @@ scorecards:
       check: entity.brokenLinks.size() == 0
       evidence: entity.brokenLinks
       fix: Fix or remove the relative links in the evidence.
+      rationale: >-
+        Moving or renaming a file breaks the links to it without failing any
+        build; the reader finds out by following a dead link.
     facets: {summary: public, details: public}
 
 tests: [tests/standards.test.yaml]
