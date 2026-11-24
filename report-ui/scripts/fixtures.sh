@@ -9,7 +9,8 @@
 #   starter-empty.json       the starter with no connector run: a portal before its first data
 #
 # Needs the tools `toolbox doctor` lists for portal/ and examples/openfga-portal (actionlint,
-# zizmor, ruff, staticcheck); without them, rules read `unknown` and the fixtures drift from CI.
+# zizmor, ruff, scorecard, staticcheck) at their pins; `toolbox tools install <portal>` installs
+# them. The script stops if one is missing, since rules would read `unknown` and drift from CI.
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 cargo build --locked -q
@@ -19,8 +20,11 @@ tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 mkdir -p "$out"
 
-"$tb" report portal --skip runner,github-actions -o web --out "$tmp/t4t" >/dev/null
 examples/openfga-portal/fetch.sh >/dev/null
+"$tb" doctor portal >/dev/null
+(cd examples/openfga-portal/checkout && "$tb" doctor .. >/dev/null)
+
+"$tb" report portal --skip runner,github-actions -o web --out "$tmp/t4t" >/dev/null
 (
   cd examples/openfga-portal/checkout
   "$tb" report .. --skip github-actions -o web --out "$tmp/openfga" 2>/dev/null

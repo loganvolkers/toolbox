@@ -58,13 +58,17 @@ story probes in `report-ui` must pass before an auditor is spent (D01M87PSM9YQGG
 8. **Publish.** Commit the audit file as `docs/audits/<surface>-<yyyy-mm-dd>.md` with both
    score tables, the task outcomes, the metric deltas, the fixes made and the findings left open.
 
+In this repository, use `report-ui`'s pinned Playwright and axe-core (`npm ci` there); elsewhere,
+install them at pinned versions.
+
 ```bash
-npm i --prefix /tmp/audit playwright axe-core && npx --prefix /tmp/audit playwright install chromium
-NODE_PATH=/tmp/audit/node_modules node scripts/capture.cjs \
+npm --prefix report-ui ci && npx --prefix report-ui playwright install chromium
+export NODE_PATH="$PWD/report-ui/node_modules"   # elsewhere: npm i --prefix /tmp/audit playwright@1.65.1 axe-core@4.14.1
+node plugins/toolbox-operator/skills/design-audit/scripts/capture.cjs \
   --url http://127.0.0.1:8765/index.html \
   --routes '#overview,#catalog,#campaigns,#scorecards' --ready section --out /tmp/audit/before
 # or from a Storybook build served on 6006 (report-ui: npm run build-storybook)
-NODE_PATH=/tmp/audit/node_modules node scripts/capture.cjs \
+node plugins/toolbox-operator/skills/design-audit/scripts/capture.cjs \
   --storybook http://127.0.0.1:6006 --stories pages-openfga--overview,pages-toolbox-for-toolbox--compare \
   --out /tmp/audit/before
 ```

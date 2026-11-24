@@ -2,8 +2,9 @@
 // Evidence for a design audit: screenshots of each route at two viewports and two color
 // schemes, plus DOM metrics an auditor can compare between runs. Open shadow roots are walked.
 //
-// Prerequisite: playwright (with chromium) and axe-core resolvable from NODE_PATH, e.g.
-//   npm i --prefix /tmp/audit playwright axe-core && npx --prefix /tmp/audit playwright install chromium
+// Prerequisite: playwright (with chromium) and axe-core resolvable from NODE_PATH. In the Toolbox
+// repository, report-ui pins both: npm --prefix report-ui ci; NODE_PATH=report-ui/node_modules. Elsewhere:
+//   npm i --prefix /tmp/audit playwright@1.65.1 axe-core@4.14.1 && npx --prefix /tmp/audit playwright install chromium
 //   NODE_PATH=/tmp/audit/node_modules node capture.cjs --url URL --routes '#a,#b' --out DIR
 // or, from a served Storybook build, the stories whose ids contain any of --stories:
 //   NODE_PATH=... node capture.cjs --storybook http://127.0.0.1:6006 --stories pages-openfga,states --out DIR
