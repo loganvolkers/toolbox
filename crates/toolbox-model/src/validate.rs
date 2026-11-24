@@ -67,6 +67,7 @@ pub fn validate_manifest(doc: &Value, file: &str) -> (Option<Manifest>, Vec<Diag
     };
     v.cross_references(&manifest);
     v.form_subset(&manifest);
+    v.executors(&manifest);
     v.cel(&manifest);
     (Some(manifest), v.errors)
 }
@@ -557,6 +558,42 @@ impl Checker {
         }
     }
 
+    /// Each executor type's own required fields (docs/design/federated-actions.md §5).
+    fn executors(&mut self, m: &Manifest) {
+        for (ai, a) in m.actions.iter().enumerate() {
+            let ty = a
+                .executor
+                .get("type")
+                .and_then(Value::as_str)
+                .unwrap_or("command");
+            let needs: &[&str] = match ty {
+                "command" | "change" => &["run"],
+                "in-image" => &["command"],
+                "github-workflow" => &["repo", "workflow"],
+                _ => &[],
+            };
+            for k in needs {
+                if a.executor.get(*k).is_none() {
+                    self.push(
+                        "action.executor",
+                        format!("/actions/{ai}/executor"),
+                        format!("action {}: a {ty} executor needs `{k}`", a.name),
+                    );
+                }
+            }
+            if matches!(ty, "http" | "webhook") {
+                self.push(
+                    "action.executor",
+                    format!("/actions/{ai}/executor/type"),
+                    format!(
+                        "action {}: {ty} executors are not built yet; use command, in-image, change or github-workflow",
+                        a.name
+                    ),
+                );
+            }
+        }
+    }
+
     /// D58: action inputs must stay within the form-renderable subset (docs/design/minimal-ui.md §4).
     fn form_subset(&mut self, m: &Manifest) {
         for (ai, a) in m.actions.iter().enumerate() {
@@ -742,7 +779,7 @@ impl Checker {
                 exprs.push((
                     format!("/actions/{ai}/expect/postcondition"),
                     &x.postcondition,
-                    Site::Action,
+                    Site::Postcondition,
                 ));
                 for (ri, r) in x.refresh.iter().enumerate() {
                     if let Some(e) = &r.selector {

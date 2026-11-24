@@ -35,10 +35,28 @@ pub struct Manifest {
     pub authz: Option<Authz>,
     #[serde(default)]
     pub actions: Vec<Action>,
+    /// Federated actions: child portals' actions offered here, and how a parent reaches this one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub federation: Option<Federation>,
     pub ui: Option<Ui>,
     pub mcp: Option<Value>,
     #[serde(default)]
     pub tests: Vec<String>,
+}
+
+/// `federation:` (docs/design/federated-actions.md §5).
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Federation {
+    /// The kind whose entities are child portals (workspace `portal` records).
+    pub portals: Option<String>,
+    /// The relation a caller needs on a child portal entity (default `can_run_actions`).
+    pub permission: Option<String>,
+    /// How a parent dispatches this portal's actions: `{type: local}` or `{type: github-workflow, …}`.
+    pub runner: Option<Value>,
+    /// Parent portals whose recorded approvals this portal accepts on a dispatched run.
+    #[serde(default)]
+    pub accept_approvals_from: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

@@ -38,8 +38,10 @@ pub enum Site {
     Tuples,
     /// `actions[].inputs.**.enumFrom`
     Options,
-    /// `actions[].approval`, `.preconditions[]`, `.expect.postcondition`
+    /// `actions[].approval`, `.preconditions[]`
     Action,
+    /// `actions[].expect.postcondition`: also the executor's `outputs`
+    Postcondition,
     /// `actions[].context.*.where`
     ContextLookup,
     /// `actions[].expect.refresh[].selector` and `.ids`: record fields are bare names, so only
@@ -58,6 +60,7 @@ impl Site {
             Site::Scorecard => Some(&["entity", "policy", "cards"]),
             Site::Tuples | Site::Options => Some(&["entity", "policy"]),
             Site::Action => Some(&["entity", "inputs", "policy"]),
+            Site::Postcondition => Some(&["entity", "inputs", "policy", "outputs"]),
             Site::ContextLookup => Some(&["candidate", "entity", "inputs", "policy"]),
             Site::RefreshScope => None,
         }

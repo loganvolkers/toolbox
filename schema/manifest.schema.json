@@ -242,6 +242,59 @@
           }
         ]
       }
+    },
+    "federation": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Federated actions (docs/design/federated-actions.md): the kind whose entities are child portals, whose declared actions this portal offers and dispatches to them; and, for a child, how a parent reaches it.",
+      "properties": {
+        "portals": {
+          "$ref": "#/$defs/kindName",
+          "description": "The kind whose entities are child portals (workspace `portal` records: path, actions, results)."
+        },
+        "permission": {
+          "type": "string",
+          "description": "The relation a caller needs on the child portal entity to run its actions through this portal (default can_run_actions)."
+        },
+        "runner": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type"
+          ],
+          "description": "How a parent dispatches this portal's actions: `local` (the parent runs `toolbox run` in this checkout) or `github-workflow` (the parent dispatches the workflow, which runs `toolbox run`).",
+          "properties": {
+            "type": {
+              "enum": [
+                "local",
+                "github-workflow"
+              ]
+            },
+            "repo": {
+              "type": "string"
+            },
+            "workflow": {
+              "type": "string"
+            },
+            "ref": {
+              "type": "string"
+            },
+            "api": {
+              "type": "string"
+            },
+            "token": {
+              "type": "string"
+            }
+          }
+        },
+        "acceptApprovalsFrom": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Parent portal names whose recorded approvals satisfy this portal's approval rules when they dispatch a run here."
+        }
+      }
     }
   },
   "$defs": {
@@ -1039,9 +1092,11 @@
           "properties": {
             "type": {
               "enum": [
+                "command",
                 "in-image",
-                "http",
+                "change",
                 "github-workflow",
+                "http",
                 "webhook"
               ]
             },
@@ -1049,7 +1104,8 @@
               "type": "array",
               "items": {
                 "type": "string"
-              }
+              },
+              "description": "in-image: the executor protocol v1 program."
             },
             "url": {
               "type": "string"
@@ -1068,6 +1124,58 @@
               "items": {
                 "type": "string"
               }
+            },
+            "run": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "description": "A shell line, run by sh -c."
+                },
+                {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "description": "command and change: what to run, from the directory toolbox started in (a change runs in a worktree of the base branch)."
+            },
+            "preview": {
+              "type": "boolean",
+              "description": "command: the command supports TOOLBOX_PHASE=preview and prints its effects without changing anything."
+            },
+            "base": {
+              "type": "string",
+              "description": "change: the branch the change starts from and is verified on (default: the checked-out branch)."
+            },
+            "remote": {
+              "type": "string",
+              "description": "change: the remote the branch is pushed to when it exists (default origin)."
+            },
+            "branch": {
+              "type": "string",
+              "description": "change: the branch name; {action} and {run} are replaced (default toolbox/{action}/{run})."
+            },
+            "message": {
+              "type": "string",
+              "description": "change: the commit message."
+            },
+            "repo": {
+              "type": "string",
+              "description": "github-workflow: owner/name."
+            },
+            "ref": {
+              "type": "string",
+              "description": "github-workflow: the ref to dispatch on (default main)."
+            },
+            "api": {
+              "type": "string",
+              "description": "github-workflow: the API base URL (GitHub Enterprise Server)."
+            },
+            "token": {
+              "type": "string",
+              "description": "github-workflow: the environment variable holding the token (default GITHUB_TOKEN)."
             }
           }
         },
