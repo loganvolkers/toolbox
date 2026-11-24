@@ -390,7 +390,13 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
   basis badge.
 - The Overview puts Tracks straight under the hero, and the hero's attention line names the track
   furthest from its goal. Compare's "behind" list says the basis once when every row shares it and
-  links to the factor pages for what would close each gap, rather than repeating it per row.
+  links to the factor pages in full; each row keeps one "To close it" line beside its "Why it matters".
+- A track card names its lowest bar under the strip, and pointing at, tapping or arrowing through
+  the bars names each in that line instead of a tooltip over the card. "Lowest level" means the
+  scorecard's medal, ties broken by the lowest share at the top level, so it matches the ring.
+- A kind's table folds five or more entities with identical results into one row ("7 crates with the
+  same result"), as a scorecard page does. A rule link whose why is not printed beside it carries
+  that why in its tooltip and accessible description.
 
 Not built: a change since the last snapshot beside each track ring. The report carries one snapshot
 and the committed baseline, which equals it on every published build; a pages build that also scored
