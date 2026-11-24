@@ -1,55 +1,56 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: scorecard:toolbox/sdlc-stage
 rubric: scorecard-quality
-subjectHash: d7ae5a093637
-assessor: {kind: agent, name: campaign-review-cards}
-at: 2026-11-23
+subjectHash: aaf0206cb67f
+assessor: {kind: agent, name: cursor-cloud-agent, model: claude-opus-5.5}
+at: 2026-11-24
 verdicts:
   - criterion: one-concern
     verdict: pass
     reason: >-
-      All six rules (portal/standards/sdlc.yaml:140-190) ask whether one stage
+      All six rules (portal/standards/sdlc.yaml:154-204) ask whether one stage
       of the SDLC catalogue is defined, operable and built, for the
       maintainers who curate the catalogue (D87). The stages belong to four
-      layers, but the question and the audience are one.
+      layers, but the question and the audience are one. The new `title:`
+      changes no rule.
   - criterion: levels-are-a-ladder
     verdict: pass
     reason: >-
       Bronze is a defined stage (status, exit criterion, a doc that exists),
       silver an operable one (commands that resolve, checks a workflow runs),
       gold a built one. Gold `built` still reads the declared status, but it
-      now needs the silver facts first, and docs/design/thresholds.md:63-65
+      needs the silver facts first, and docs/design/thresholds.md:75-77
       explains why it isn't tied to a review (D01M831P5QWJQ4A2FT85N5MXJQF).
       The live levels spread (portal/results.json: 8 bronze, 12 silver, 6
       gold), so each rung separates stages.
   - criterion: no-obvious-gap
     verdict: fail
     reason: >-
-      The commands-resolve and checks-in-CI gaps are closed (agent-operable
-      and automated). The bound thresholds.md relies on for gold is weaker
-      than it says, though. Nothing asks that a stage's checks pass, or even
-      run. `notInCi` matches any mention of the path in workflow text
-      (crates/toolbox-connector-workspace/src/data.rs:168-183), and a workflow
-      path counts unconditionally (data.rs:169). maintainer/build is gold with
-      `rust-toolchain.toml` as a check (portal/sdlc/stages/maintainer.yaml),
-      which CI only names in a step title (.github/workflows/ci.yml:19). No
-      rule ties the exit criterion to a listed command or check.
+      The step-name loophole is closed: only `run:`, `uses:` and `with:` text
+      counts as run by CI now (crates/toolbox-connector-workspace/src/data.rs:
+      148-171 and the test at :313-330). But a path still counts when any run
+      line contains it (`run_by_ci`, data.rs:203-218). maintainer/build is
+      gold with `rust-toolchain.toml` as a check
+      (portal/sdlc/stages/maintainer.yaml:23), and the only run line naming it
+      hashes it into a cache key (actions/report/action.yml:98). Nothing asks
+      that a stage's checks pass, and no rule ties the exit criterion to a
+      listed command or check.
     suggestion: >-
-      Count a check as run only when a workflow `run:` or `uses:` line names
-      it, and add a gold `checks-green` rule. It should read the workflow-runs
-      record of each workflow that runs a check (failingStreak 0, from the
-      github-actions connector), and be unknown when that connector is
-      skipped.
+      Add a gold `checks-green` rule that reads the workflow-runs record of
+      each workflow running a stage's checks (failingStreak 0, from the
+      github-actions connector) and is unknown when that connector is skipped;
+      and count a check as run only when a command executes it, not when a
+      line reads the file.
   - criterion: actionable
     verdict: pass
     reason: >-
       I tried sdlc-stage:maintainer/plan, at bronze and failing agent-operable
       and automated (portal/results.json). The evidence names the stage, and
       the fixes name `commands:`, `checks:`, portal/sdlc/stages/<layer>.yaml
-      and .github/workflows, so listing a resolvable command and a check CI
-      runs raises it to silver. Only has-exit-criterion's fix names no file or
-      field (sdlc.yaml:147-153).
+      and .github/workflows (sdlc.yaml:185-199), so listing a resolvable
+      command and a check CI runs raises it to silver. Only
+      has-exit-criterion's fix names no file or field (sdlc.yaml:161-167).
 summary: >-
-  The last review's gaps are fixed, and the ladder now has fact-based
-  silver under a declared gold. A stage can still be gold when its checks
-  are only mentioned in CI, never shown to run or pass.
+  Re-assessed after the scorecard gained a human title. Step names no
+  longer count as running a check, but a stage can still be gold when its
+  checks are only read by CI, never shown to run or pass.
