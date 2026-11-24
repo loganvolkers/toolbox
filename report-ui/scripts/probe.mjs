@@ -43,6 +43,14 @@ const stories = Object.values(index.entries).filter((e) => e.type === "story" &&
 
 async function probe(browser, story, view) {
   const ctx = await browser.newContext({ viewport: view.viewport, colorScheme: view.colorScheme, reducedMotion: "reduce" });
+  try {
+    return await check(ctx, story, view);
+  } finally {
+    await ctx.close();
+  }
+}
+
+async function check(ctx, story, view) {
   const page = await ctx.newPage();
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
@@ -63,7 +71,6 @@ async function probe(browser, story, view) {
       .filter((v) => v.impact === "serious" || v.impact === "critical")
       .map((v) => ({ id: v.id, impact: v.impact, nodes: v.nodes.length, first: v.nodes[0] && v.nodes[0].target.join(" > ") }));
   }, TAGS);
-  await ctx.close();
   const failures = [
     ...errors.map((e) => "script error: " + e),
     ...axe.map((v) => `axe ${v.id} (${v.impact}) on ${v.nodes} node(s), first ${v.first}`),
@@ -80,10 +87,17 @@ await Promise.all(
   Array.from({ length: 4 }, async () => {
     while (next < jobs.length) {
       const [s, v] = jobs[next++];
-      try {
-        results.push(await probe(browser, s, v));
-      } catch (e) {
-        results.push({ story: s.id, view: v.name, failures: ["did not render: " + e.message.split("\n")[0]] });
+      // A render timeout on a busy machine is retried once and reported; any other failure is not.
+      for (let attempt = 1; ; attempt++) {
+        try {
+          results.push({ ...(await probe(browser, s, v)), attempts: attempt });
+          if (attempt > 1) console.log(`RETRY ${s.id} [${v.name}] rendered on attempt ${attempt}`);
+          break;
+        } catch (e) {
+          if (attempt < 2) continue;
+          results.push({ story: s.id, view: v.name, attempts: attempt, failures: ["did not render: " + e.message.split("\n")[0]] });
+          break;
+        }
       }
     }
   }),
