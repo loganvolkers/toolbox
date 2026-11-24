@@ -49,7 +49,7 @@ export const overviewViews = {
       var tone = needs ? "none" : almost ? "bronze" : "gold";
       // The furthest track's lowest scorecard, as its track card names it; with no tracks, every scorecard's.
       var next = needs || almost ? nextMedalEl(D, trackStats(D, S, furthestTrack(D, S) || undefined).cards, "Next: ") : null;
-      var plain = el("section", { className: "hero plain", style: "--lvl:" + fill(tone) + ";--lvl-ink:" + ink(tone) }, el("div", {}, el("div", { className: "kicker", textContent: "Status" }), el("h2", { className: "levelword", textContent: at > 0 ? verdict.slice(0, at) : verdict }), at > 0 ? el("p", { className: "verdict", textContent: verdict.slice(at + 2).replace(/^./, function (ch) { return ch.toUpperCase(); }) }) : null, next, S.rows.length ? el("p", { className: "sub", style: "margin:8px 0 0", textContent: "No repository level: this portal names no repository standards, so each scorecard stands on its own." }) : null));
+      var plain = el("section", { className: "hero plain", style: "--lvl:" + fill(tone) + ";--lvl-ink:" + ink(tone) }, el("div", {}, el("div", { className: "kicker", textContent: "Status" }), el("h2", { className: "levelword", textContent: at > 0 ? verdict.slice(0, at) : verdict }), at > 0 ? el("p", { className: "verdict", textContent: verdict.slice(at + 2).replace(/^./, function (ch) { return ch.toUpperCase(); }) }) : null, next, S.rows.length ? el("p", { className: "sub", style: "margin:8px 0 0", textContent: "No overall level: this portal does not combine its scorecards into one level for the repository, so each scorecard stands on its own." }) : null));
       plain.setAttribute("aria-label", "Status");
       return plain;
     }
@@ -226,7 +226,7 @@ export const overviewViews = {
     var c = S.checks;
     var total = c.pass + c.vacuous + c.fail + c.unknown;
     var pct = shareOf(c.pass, total);
-    var checkNote = [c.vacuous ? fmt(c.vacuous) + " more pass only because no agent has assessed them yet" : null, c.unknown ? fmt(c.unknown) + " not run" : null].filter(Boolean);
+    var checkNote = [c.vacuous ? fmt(c.vacuous) + " more pass by default, because no agent has reviewed them yet" : null, c.unknown ? fmt(c.unknown) + " not run" : null].filter(Boolean);
     var on = campaignNames.filter(function (n) {
       return campaignStanding(D, campaigns[n]) === "on";
     }).length;
@@ -281,11 +281,11 @@ export const overviewViews = {
     var status =
       state === "empty"
         ? toGo
-          ? el("span", { className: "pill bad", textContent: fmt(toGo) + " to go" })
+          ? el("span", { className: "pill bad", textContent: plural(toGo, "entity", "entities") + " to go" })
           : el("span", { className: "pill good", textContent: "on target" })
         : state === "on"
           ? el("span", { className: "pill good", textContent: "on target" })
-          : el("span", { className: "pill bad", textContent: (c.inScope || 0) - (c.meeting || 0) + " to go" });
+          : el("span", { className: "pill bad", textContent: plural((c.inScope || 0) - (c.meeting || 0), "entity", "entities") + " to go" });
     var a = link("campaign/" + enc(name), "card", [
       goalBar(state, pct, target, false, each),
       el(
@@ -441,7 +441,7 @@ export const overviewViews = {
         ? el(
             "section",
             {},
-            el("div", { className: "head" }, el("h2", { textContent: "Campaigns" }), el("span", { className: "sub", textContent: "Time-bound goals, behind target first; a bar turns green once it passes its target mark" })),
+            el("div", { className: "head" }, el("h2", { textContent: "Campaigns" }), el("span", { className: "sub", textContent: "Goals with a target, behind target first; a bar turns green once it passes its target mark" })),
             el(
               "div",
               { className: "cards" },

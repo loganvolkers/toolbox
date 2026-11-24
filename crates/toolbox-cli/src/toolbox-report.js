@@ -2108,7 +2108,7 @@
         var next = needs || almost ? nextMedalEl(D, trackStats(D, S, furthestTrack(D, S) || void 0).cards, "Next: ") : null;
         var plain = el("section", { className: "hero plain", style: "--lvl:" + fill(tone) + ";--lvl-ink:" + ink(tone) }, el("div", {}, el("div", { className: "kicker", textContent: "Status" }), el("h2", { className: "levelword", textContent: at > 0 ? verdict.slice(0, at) : verdict }), at > 0 ? el("p", { className: "verdict", textContent: verdict.slice(at + 2).replace(/^./, function(ch) {
           return ch.toUpperCase();
-        }) }) : null, next, S.rows.length ? el("p", { className: "sub", style: "margin:8px 0 0", textContent: "No repository level: this portal names no repository standards, so each scorecard stands on its own." }) : null));
+        }) }) : null, next, S.rows.length ? el("p", { className: "sub", style: "margin:8px 0 0", textContent: "No overall level: this portal does not combine its scorecards into one level for the repository, so each scorecard stands on its own." }) : null));
         plain.setAttribute("aria-label", "Status");
         return plain;
       }
@@ -2247,7 +2247,7 @@
       var c = S.checks;
       var total = c.pass + c.vacuous + c.fail + c.unknown;
       var pct = share(c.pass, total);
-      var checkNote = [c.vacuous ? fmt(c.vacuous) + " more pass only because no agent has assessed them yet" : null, c.unknown ? fmt(c.unknown) + " not run" : null].filter(Boolean);
+      var checkNote = [c.vacuous ? fmt(c.vacuous) + " more pass by default, because no agent has reviewed them yet" : null, c.unknown ? fmt(c.unknown) + " not run" : null].filter(Boolean);
       var on = campaignNames.filter(function(n) {
         return campaignStanding(D, campaigns[n]) === "on";
       }).length;
@@ -2296,7 +2296,7 @@
       var toGo = each.reduce(function(n, p) {
         return n + (p.met ? 0 : p.below);
       }, 0);
-      var status = state === "empty" ? toGo ? el("span", { className: "pill bad", textContent: fmt(toGo) + " to go" }) : el("span", { className: "pill good", textContent: "on target" }) : state === "on" ? el("span", { className: "pill good", textContent: "on target" }) : el("span", { className: "pill bad", textContent: (c.inScope || 0) - (c.meeting || 0) + " to go" });
+      var status = state === "empty" ? toGo ? el("span", { className: "pill bad", textContent: plural(toGo, "entity", "entities") + " to go" }) : el("span", { className: "pill good", textContent: "on target" }) : state === "on" ? el("span", { className: "pill good", textContent: "on target" }) : el("span", { className: "pill bad", textContent: plural((c.inScope || 0) - (c.meeting || 0), "entity", "entities") + " to go" });
       var a = link("campaign/" + enc(name), "card", [
         goalBar(state, pct, target, false, each),
         el(
@@ -2436,7 +2436,7 @@
         campaignNames.length ? el(
           "section",
           {},
-          el("div", { className: "head" }, el("h2", { textContent: "Campaigns" }), el("span", { className: "sub", textContent: "Time-bound goals, behind target first; a bar turns green once it passes its target mark" })),
+          el("div", { className: "head" }, el("h2", { textContent: "Campaigns" }), el("span", { className: "sub", textContent: "Goals with a target, behind target first; a bar turns green once it passes its target mark" })),
           el(
             "div",
             { className: "cards" },
@@ -2873,7 +2873,7 @@
           return offBy(pair[1]) > 0;
         });
         if (!rows.length) {
-          list.replaceChildren(el("div", { className: "empty", textContent: "No " + kindTitle(D, sc.kind).toLowerCase() + " has been collected yet. Run toolbox report in the repository with its connectors enabled; toolbox doctor lists any that is missing." }));
+          list.replaceChildren(el("div", { className: "empty" }, "No " + kindTitle(D, sc.kind).toLowerCase() + " has been collected yet. Run ", el("code", { textContent: "toolbox report" }), " in the repository with its connectors enabled; ", el("code", { textContent: "toolbox doctor" }), " lists any that is missing."));
           return;
         }
         if (!shown.length) {
@@ -3270,6 +3270,9 @@
           refs(sc.links)
         );
       }
+      var anyJudged = ranked.some(function(r) {
+        return basisCounts(((D.scorecards || {})[r.name] || {}).rules).judged;
+      });
       return el(
         "div",
         { className: "split" },
@@ -3277,7 +3280,7 @@
           "section",
           {},
           el("div", { className: "head" }, el("h2", { textContent: "Scorecards" })),
-          el("p", { className: "sub", style: "margin:0" }, "Most entities at none first · ", el("span", { className: "bicon judged" }, basisIcon("judged")), " has agent-judged rules · ", el("span", { className: "bicon" }, basisIcon("measured")), " every rule measured"),
+          el("p", { className: "sub", style: "margin:0" }, "Most entities at none first", anyJudged ? el("span", {}, " · ", el("span", { className: "bicon judged" }, basisIcon("judged")), " has agent-judged rules · ", el("span", { className: "bicon" }, basisIcon("measured")), " every rule measured") : null),
           cardSearch,
           toTop,
           cardNav
@@ -3306,12 +3309,12 @@
           standNotes.length ? hStand : null,
           ...standNotes,
           hFail,
-          failChart ? el("p", { className: "sub", style: "margin:0 0 6px", textContent: "Each bar is the share of entities failing the rule; the pill beside it names the level the rule is needed for." }) : null,
+          failChart && rows.length ? el("p", { className: "sub", style: "margin:0 0 6px", textContent: "Each bar is the share of entities failing the rule; the pill beside it names the level the rule is needed for." }) : null,
           failChart,
           unrunNote,
           hList,
-          filters,
-          search,
+          rows.length ? filters : null,
+          rows.length ? search : null,
           list,
           hNeeds,
           needsToggle,
@@ -4448,7 +4451,7 @@
               {},
               el("strong", { style: "color:" + ink(S.worst[id]) + (KNOWN.indexOf(ownLevel(D, kind, S.worst[id])) < 0 ? ";text-transform:none" : "") }, ownLevel(D, kind, S.worst[id]), provisional.length ? el("span", { className: "pv-head", textContent: notRun ? " (provisional)" : " (may not hold)" }) : null),
               provisional.length ? el("span", { className: "provisional", style: "display:block;font-size:13px", title: "The level holds only if the checks not run in this build pass and an agent's assessment finds nothing; the scorecards below name them.", textContent: provisional.join(", ") }) : null,
-              el("span", { className: "sub", textContent: (cards.length > 1 ? "lowest of " + cards.length + " scorecards · " : "") + total.pass + " of " + plural(total.all, "check passes", "checks pass") + " on evidence" + (total.hollow ? " · " + total.hollow + " more " + (total.hollow === 1 ? "passes" : "pass") + " only because no agent has assessed " + (total.hollow === 1 ? "it" : "them") + " yet" : "") })
+              el("span", { className: "sub", textContent: (cards.length > 1 ? "lowest of " + cards.length + " scorecards · " : "") + total.pass + " of " + plural(total.all, "check passes", "checks pass") + " on evidence" + (total.hollow ? " · " + total.hollow + " more " + (total.hollow === 1 ? "passes" : "pass") + " by default, because no agent has reviewed " + (total.hollow === 1 ? "it" : "them") + " yet" : "") })
             )
           ) : null
         ),
@@ -4739,8 +4742,8 @@
         });
       });
       var unmeasured = counts.unknown >= names.length;
-      var headline = unmeasured ? "Not measured yet: none of the " + plural(names.length, "factor") + " has values for both products." : "Ahead on " + counts.ahead + " of " + plural(names.length, "factor") + (counts.behind ? ", behind on " + counts.behind : "") + (counts.parity ? ", at parity on " + counts.parity : "") + (counts.unknown ? ", " + counts.unknown + " not measured" : "") + ".";
       var majority = byMajority(D, names);
+      var headline = unmeasured ? "Not measured yet: none of the " + plural(names.length, "factor") + " has values for both products." : "Ahead on " + counts.ahead + " of " + plural(names.length, "factor") + (counts.behind ? ", behind on " + counts.behind : "") + (counts.parity ? ", at parity on " + counts.parity : "") + (counts.unknown ? ", " + counts.unknown + " not measured" : "") + (majority ? ", each by the majority of its rules." : ", where a factor is behind if any of its rules is.");
       var lean = counts.behind > counts.ahead ? "behind" : counts.ahead > counts.behind ? "ahead" : "parity";
       var hero = el(
         "section",
@@ -4756,7 +4759,7 @@
             return (all[behindNames[0]].rules[r] || {})[peer] === "behind";
           }).sort().map(function(r) {
             return ruleTitle(behindNames[0], r);
-          })) + ". If your teams rely on those, read it first." : ": if your teams rely on what those factors measure, read them first.") : unmeasured ? " Run the comparison's harness and commit its records to fill this in." : counts.unknown ? " Not behind on any measured factor." : " Never behind."),
+          })) + ". If your teams rely on those, start with " + title(D, behindNames[0]) + "." : ": if your teams rely on what those factors measure, read them first.") : unmeasured ? " Run the comparison's harness and commit its records to fill this in." : counts.unknown ? " Not behind on any measured factor." : " Never behind."),
           unmeasured ? el("p", { className: "rule-tally", textContent: "Rule by rule: none of " + plural(ruleTotal, "rule") + " has values for both products yet." }) : el(
             "p",
             { className: "rule-tally" },
@@ -4871,6 +4874,7 @@
           return el("li", {}, ...rich(x));
         })) : null,
         Object.keys(context).length ? setup : null,
+        unmeasured ? el("p", { className: "sub", style: "margin:8px 0 0", textContent: "Nothing is measured in this build. Once the harness runs and its records are committed, the rules are decided like this:" }) : null,
         basisKey(bases)
       );
       var brief = setupBrief(context, ids, facts, who);
@@ -4880,7 +4884,7 @@
           el(
             "div",
             { className: "sub cmp-prov" },
-            sources ? el("span", { className: "cmp-src" }, el("b", { textContent: "Evidence: " }), sources) : null
+            sources ? el("span", { className: "cmp-src" }, el("b", { textContent: "Evidence: " }), sources, unmeasured ? " (no results are recorded in this build yet)" : null) : null
           )
         );
       hero.firstChild.querySelector(".rule-tally").after(
@@ -4952,46 +4956,45 @@
         ) : null),
         behindRows.length ? el("div", {}, ...behindRows) : unmeasured ? el("p", { className: "empty", textContent: "Nothing to compare yet: no rule has values for both products." }) : el("p", { className: "empty good", textContent: "✓ Not behind on any rule." })
       );
-      var leadRows = [];
-      names.forEach(function(n) {
-        var c = all[n];
-        var def = (D.scorecards || {})[n] || {};
-        Object.keys(c.rules || {}).forEach(function(r) {
-          var rd = (def.rules || {})[r] || {};
-          if ((c.rules[r] || {})[peer] !== "ahead" || !rd.better) return;
-          var a = ruleValue(c, r, subject);
-          var b = ruleValue(c, r, peer);
-          if (typeof a !== "number" || typeof b !== "number" || a <= 0 || b <= 0) return;
-          leadRows.push({ n, c, r, rd, a, b, ratio: Math.max(a, b) / Math.min(a, b) });
+      var ratioRows = function(side) {
+        var rows = [];
+        names.forEach(function(n) {
+          var c = all[n];
+          var def = (D.scorecards || {})[n] || {};
+          Object.keys(c.rules || {}).forEach(function(r) {
+            var rd = (def.rules || {})[r] || {};
+            if ((c.rules[r] || {})[peer] !== side || !rd.better) return;
+            var a = ruleValue(c, r, subject);
+            var b = ruleValue(c, r, peer);
+            if (typeof a !== "number" || typeof b !== "number" || a <= 0 || b <= 0) return;
+            rows.push({ n, c, r, rd, a, b, ratio: Math.max(a, b) / Math.min(a, b) });
+          });
         });
-      });
-      leadRows.sort(function(x, y) {
-        return y.ratio - x.ratio;
-      });
+        return rows.sort(function(x, y) {
+          return y.ratio - x.ratio;
+        });
+      };
+      var leadRows = ratioRows("ahead");
+      var gapRows = ratioRows("behind");
       var unitOf = function(rd, v) {
         return num(v) + (rd.unit ? " " + rd.unit : "");
       };
-      var top = leadRows[0];
-      if (top) {
-        var tx = top.ratio >= 10 ? Math.round(top.ratio).toLocaleString("en-US") : top.ratio.toFixed(1);
-        hero.querySelector(".verdict").after(
-          el("p", { className: "cmp-lead" }, el("b", { textContent: "Widest lead: " }), link("compare/" + enc(top.n), "", [lowerFirst(measureLabel(top.c, top.r)) + ", ", el("span", { className: "lead-x", textContent: tx + "× " + cmpWord(top.rd, top.rd.better === "lower") })]), " (" + who(subject) + " " + unitOf(top.rd, top.a) + ", " + who(peer) + " " + unitOf(top.rd, top.b) + ").")
-        );
-      }
-      var leads = leadRows.length ? el(
-        "section",
-        {},
-        el("div", { className: "head" }, el("h2", { textContent: "Where " + who(subject) + " leads by the most" }), el("span", { className: "sub", textContent: "Measured values only, largest ratio first" })),
-        el(
+      var times = function(l) {
+        return l.ratio >= 10 ? Math.round(l.ratio).toLocaleString("en-US") : l.ratio.toFixed(1);
+      };
+      var widest = function(label, l) {
+        return el("p", { className: "cmp-lead" }, el("b", { textContent: label }), link("compare/" + enc(l.n), "", [lowerFirst(measureLabel(l.c, l.r)) + ", ", el("span", { className: "lead-x", textContent: times(l) + "× " + cmpWord(l.rd, l.a < l.b) })]), " (" + who(subject) + " " + unitOf(l.rd, l.a) + ", " + who(peer) + " " + unitOf(l.rd, l.b) + ").");
+      };
+      var tiles = function(rows) {
+        return el(
           "div",
           { className: "leads" },
-          ...leadRows.slice(0, 3).map(function(l) {
-            var x = l.ratio >= 10 ? Math.round(l.ratio).toLocaleString("en-US") : l.ratio.toFixed(1);
+          ...rows.slice(0, 3).map(function(l) {
             var vs = who(subject) + " " + unitOf(l.rd, l.a) + " vs " + who(peer) + " " + unitOf(l.rd, l.b);
-            var tile = link("compare/" + enc(l.n), "lead-tile", [
-              el("span", { className: "lead-x", textContent: x + "×" }),
+            return link("compare/" + enc(l.n), "lead-tile", [
+              el("span", { className: "lead-x", textContent: times(l) + "×" }),
               " ",
-              el("span", { className: "lead-dir", textContent: cmpWord(l.rd, l.rd.better === "lower") }),
+              el("span", { className: "lead-dir", textContent: cmpWord(l.rd, l.a < l.b) }),
               el("span", { className: "sr", textContent: ":" }),
               " ",
               el("span", { className: "lead-what", textContent: measureLabel(l.c, l.r) }),
@@ -4999,9 +5002,18 @@
               " ",
               el("span", { className: "sub", textContent: vs + " · " + title(D, l.n) })
             ]);
-            return tile;
           })
-        )
+        );
+      };
+      var verdictEl = hero.querySelector(".verdict");
+      if (gapRows[0]) verdictEl.after(widest("Widest gap: ", gapRows[0]));
+      if (leadRows[0]) verdictEl.after(widest("Widest lead: ", leadRows[0]));
+      if (gapRows.length) behind.querySelector(".head").after(el("p", { className: "sub", style: "margin:0 0 6px", textContent: "Measured values only, largest ratio first; every rule behind is listed below." }), tiles(gapRows));
+      var leads = leadRows.length ? el(
+        "section",
+        {},
+        el("div", { className: "head" }, el("h2", { textContent: "Where " + who(subject) + " leads by the most" }), el("span", { className: "sub", textContent: "Measured values only, largest ratio first" })),
+        tiles(leadRows)
       ) : null;
       var factors = el("section", {}, el("div", { className: "head" }, el("h2", { textContent: "Factors" }), el("span", { className: "sub", textContent: unmeasured ? "By name" : "Behind first" })), this.factorCards(D, names));
       var jumps = [
@@ -5210,7 +5222,7 @@
           return !r.compare;
         }).length,
         "scorecard"
-      ) + (Object.keys(D.comparisons || {}).length ? " · " + plural(Object.keys(D.comparisons).length, "comparison factor") : "") + " · snapshot " + D.snapshot + " of this repository's facts";
+      ) + (Object.keys(D.comparisons || {}).length ? " · " + plural(Object.keys(D.comparisons).length, "comparison factor") : "") + (D.snapshot ? " · facts snapshot #" + D.snapshot : " · no facts collected yet");
       var settle;
       var draw = function() {
         clearTimeout(settle);

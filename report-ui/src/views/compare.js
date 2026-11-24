@@ -177,6 +177,7 @@ export const compareViews = {
     });
     // A factor count alone overstates a lead built on parity, so the headline pairs it with rules.
     var unmeasured = counts.unknown >= names.length;
+    var majority = byMajority(D, names);
     var headline = unmeasured
       ? "Not measured yet: none of the " + plural(names.length, "factor") + " has values for both products."
       : "Ahead on " +
@@ -186,8 +187,7 @@ export const compareViews = {
       (counts.behind ? ", behind on " + counts.behind : "") +
       (counts.parity ? ", at parity on " + counts.parity : "") +
       (counts.unknown ? ", " + counts.unknown + " not measured" : "") +
-      ".";
-    var majority = byMajority(D, names);
+      (majority ? ", each by the majority of its rules." : ", where a factor is behind if any of its rules is.");
     var lean = counts.behind > counts.ahead ? "behind" : counts.ahead > counts.behind ? "ahead" : "parity";
     var hero = el(
       "section",
@@ -203,7 +203,7 @@ export const compareViews = {
           return (all[behindNames[0]].rules[r] || {})[peer] === "behind";
         }).sort().map(function (r) {
           return ruleTitle(behindNames[0], r);
-        })) + ". If your teams rely on those, read it first." : ": if your teams rely on what those factors measure, read them first.") : unmeasured ? " Run the comparison's harness and commit its records to fill this in." : counts.unknown ? " Not behind on any measured factor." : " Never behind."),
+        })) + ". If your teams rely on those, start with " + title(D, behindNames[0]) + "." : ": if your teams rely on what those factors measure, read them first.") : unmeasured ? " Run the comparison's harness and commit its records to fill this in." : counts.unknown ? " Not behind on any measured factor." : " Never behind."),
         unmeasured
           ? el("p", { className: "rule-tally", textContent: "Rule by rule: none of " + plural(ruleTotal, "rule") + " has values for both products yet." })
           : el(
@@ -334,6 +334,7 @@ export const compareViews = {
         return el("li", {}, ...rich(x));
       })) : null,
       Object.keys(context).length ? setup : null,
+      unmeasured ? el("p", { className: "sub", style: "margin:8px 0 0", textContent: "Nothing is measured in this build. Once the harness runs and its records are committed, the rules are decided like this:" }) : null,
       basisKey(bases),
     );
     var brief = setupBrief(context, ids, facts, who);
@@ -343,7 +344,7 @@ export const compareViews = {
         el(
           "div",
           { className: "sub cmp-prov" },
-          sources ? el("span", { className: "cmp-src" }, el("b", { textContent: "Evidence: " }), sources) : null,
+          sources ? el("span", { className: "cmp-src" }, el("b", { textContent: "Evidence: " }), sources, unmeasured ? " (no results are recorded in this build yet)" : null) : null,
         ),
       );
     hero.firstChild.querySelector(".rule-tally").after(
@@ -418,57 +419,66 @@ export const compareViews = {
         : null),
       behindRows.length ? el("div", {}, ...behindRows) : unmeasured ? el("p", { className: "empty", textContent: "Nothing to compare yet: no rule has values for both products." }) : el("p", { className: "empty good", textContent: "✓ Not behind on any rule." }),
     );
-    var leadRows = [];
-    names.forEach(function (n) {
-      var c = all[n];
-      var def = (D.scorecards || {})[n] || {};
-      Object.keys(c.rules || {}).forEach(function (r) {
-        var rd = (def.rules || {})[r] || {};
-        if ((c.rules[r] || {})[peer] !== "ahead" || !rd.better) return;
-        var a = ruleValue(c, r, subject);
-        var b = ruleValue(c, r, peer);
-        if (typeof a !== "number" || typeof b !== "number" || a <= 0 || b <= 0) return;
-        leadRows.push({ n: n, c: c, r: r, rd: rd, a: a, b: b, ratio: Math.max(a, b) / Math.min(a, b) });
+    // Measured gaps as ratios, widest first: where the subject leads, and where it trails.
+    var ratioRows = function (side) {
+      var rows = [];
+      names.forEach(function (n) {
+        var c = all[n];
+        var def = (D.scorecards || {})[n] || {};
+        Object.keys(c.rules || {}).forEach(function (r) {
+          var rd = (def.rules || {})[r] || {};
+          if ((c.rules[r] || {})[peer] !== side || !rd.better) return;
+          var a = ruleValue(c, r, subject);
+          var b = ruleValue(c, r, peer);
+          if (typeof a !== "number" || typeof b !== "number" || a <= 0 || b <= 0) return;
+          rows.push({ n: n, c: c, r: r, rd: rd, a: a, b: b, ratio: Math.max(a, b) / Math.min(a, b) });
+        });
       });
-    });
-    leadRows.sort(function (x, y) {
-      return y.ratio - x.ratio;
-    });
+      return rows.sort(function (x, y) {
+        return y.ratio - x.ratio;
+      });
+    };
+    var leadRows = ratioRows("ahead");
+    var gapRows = ratioRows("behind");
     var unitOf = function (rd, v) {
       return num(v) + (rd.unit ? " " + rd.unit : "");
     };
-    var top = leadRows[0];
-    if (top) {
-      var tx = top.ratio >= 10 ? Math.round(top.ratio).toLocaleString("en-US") : top.ratio.toFixed(1);
-      hero.querySelector(".verdict").after(
-        el("p", { className: "cmp-lead" }, el("b", { textContent: "Widest lead: " }), link("compare/" + enc(top.n), "", [lowerFirst(measureLabel(top.c, top.r)) + ", ", el("span", { className: "lead-x", textContent: tx + "× " + cmpWord(top.rd, top.rd.better === "lower") })]), " (" + who(subject) + " " + unitOf(top.rd, top.a) + ", " + who(peer) + " " + unitOf(top.rd, top.b) + ")."),
+    var times = function (l) {
+      return l.ratio >= 10 ? Math.round(l.ratio).toLocaleString("en-US") : l.ratio.toFixed(1);
+    };
+    var widest = function (label, l) {
+      return el("p", { className: "cmp-lead" }, el("b", { textContent: label }), link("compare/" + enc(l.n), "", [lowerFirst(measureLabel(l.c, l.r)) + ", ", el("span", { className: "lead-x", textContent: times(l) + "× " + cmpWord(l.rd, l.a < l.b) })]), " (" + who(subject) + " " + unitOf(l.rd, l.a) + ", " + who(peer) + " " + unitOf(l.rd, l.b) + ").");
+    };
+    var tiles = function (rows) {
+      return el(
+        "div",
+        { className: "leads" },
+        ...rows.slice(0, 3).map(function (l) {
+          var vs = who(subject) + " " + unitOf(l.rd, l.a) + " vs " + who(peer) + " " + unitOf(l.rd, l.b);
+          return link("compare/" + enc(l.n), "lead-tile", [
+            el("span", { className: "lead-x", textContent: times(l) + "×" }),
+            " ",
+            el("span", { className: "lead-dir", textContent: cmpWord(l.rd, l.a < l.b) }),
+            el("span", { className: "sr", textContent: ":" }),
+            " ",
+            el("span", { className: "lead-what", textContent: measureLabel(l.c, l.r) }),
+            el("span", { className: "sr", textContent: "." }),
+            " ",
+            el("span", { className: "sub", textContent: vs + " · " + title(D, l.n) }),
+          ]);
+        }),
       );
-    }
+    };
+    var verdictEl = hero.querySelector(".verdict");
+    if (gapRows[0]) verdictEl.after(widest("Widest gap: ", gapRows[0]));
+    if (leadRows[0]) verdictEl.after(widest("Widest lead: ", leadRows[0]));
+    if (gapRows.length) behind.querySelector(".head").after(el("p", { className: "sub", style: "margin:0 0 6px", textContent: "Measured values only, largest ratio first; every rule behind is listed below." }), tiles(gapRows));
     var leads = leadRows.length
       ? el(
           "section",
           {},
           el("div", { className: "head" }, el("h2", { textContent: "Where " + who(subject) + " leads by the most" }), el("span", { className: "sub", textContent: "Measured values only, largest ratio first" })),
-          el(
-            "div",
-            { className: "leads" },
-            ...leadRows.slice(0, 3).map(function (l) {
-              var x = l.ratio >= 10 ? Math.round(l.ratio).toLocaleString("en-US") : l.ratio.toFixed(1);
-              var vs = who(subject) + " " + unitOf(l.rd, l.a) + " vs " + who(peer) + " " + unitOf(l.rd, l.b);
-              var tile = link("compare/" + enc(l.n), "lead-tile", [
-                el("span", { className: "lead-x", textContent: x + "×" }),
-                " ",
-                el("span", { className: "lead-dir", textContent: cmpWord(l.rd, l.rd.better === "lower") }),
-                el("span", { className: "sr", textContent: ":" }),
-                " ",
-                el("span", { className: "lead-what", textContent: measureLabel(l.c, l.r) }),
-                el("span", { className: "sr", textContent: "." }),
-                " ",
-                el("span", { className: "sub", textContent: vs + " · " + title(D, l.n) }),
-              ]);
-              return tile;
-            }),
-          ),
+          tiles(leadRows),
         )
       : null;
     var factors = el("section", {}, el("div", { className: "head" }, el("h2", { textContent: "Factors" }), el("span", { className: "sub", textContent: unmeasured ? "By name" : "Behind first" })), this.factorCards(D, names));

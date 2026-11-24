@@ -106,9 +106,7 @@ export class ToolboxReport extends HTMLElement {
         "scorecard",
       ) +
       (Object.keys(D.comparisons || {}).length ? " · " + plural(Object.keys(D.comparisons).length, "comparison factor") : "") +
-      " · snapshot " +
-      D.snapshot +
-      " of this repository's facts";
+      (D.snapshot ? " · facts snapshot #" + D.snapshot : " · no facts collected yet");
     // Each history entry keeps its scroll position, so Back returns to the same place in a long list.
     var settle;
     var draw = function () {

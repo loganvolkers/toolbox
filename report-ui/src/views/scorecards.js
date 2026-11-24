@@ -424,7 +424,7 @@ export const scorecardsViews = {
         return offBy(pair[1]) > 0;
       });
       if (!rows.length) {
-        list.replaceChildren(el("div", { className: "empty", textContent: "No " + kindTitle(D, sc.kind).toLowerCase() + " has been collected yet. Run toolbox report in the repository with its connectors enabled; toolbox doctor lists any that is missing." }));
+        list.replaceChildren(el("div", { className: "empty" }, "No " + kindTitle(D, sc.kind).toLowerCase() + " has been collected yet. Run ", el("code", { textContent: "toolbox report" }), " in the repository with its connectors enabled; ", el("code", { textContent: "toolbox doctor" }), " lists any that is missing."));
         return;
       }
       if (!shown.length) {
@@ -848,6 +848,9 @@ export const scorecardsViews = {
         refs(sc.links),
       );
     }
+    var anyJudged = ranked.some(function (r) {
+      return basisCounts(((D.scorecards || {})[r.name] || {}).rules).judged;
+    });
     return el(
       "div",
       { className: "split" },
@@ -855,7 +858,7 @@ export const scorecardsViews = {
         "section",
         {},
         el("div", { className: "head" }, el("h2", { textContent: "Scorecards" })),
-        el("p", { className: "sub", style: "margin:0" }, "Most entities at none first · ", el("span", { className: "bicon judged" }, basisIcon("judged")), " has agent-judged rules · ", el("span", { className: "bicon" }, basisIcon("measured")), " every rule measured"),
+        el("p", { className: "sub", style: "margin:0" }, "Most entities at none first", anyJudged ? el("span", {}, " · ", el("span", { className: "bicon judged" }, basisIcon("judged")), " has agent-judged rules · ", el("span", { className: "bicon" }, basisIcon("measured")), " every rule measured") : null),
         cardSearch,
         toTop,
         cardNav,
@@ -884,12 +887,12 @@ export const scorecardsViews = {
         standNotes.length ? hStand : null,
         ...standNotes,
         hFail,
-        failChart ? el("p", { className: "sub", style: "margin:0 0 6px", textContent: "Each bar is the share of entities failing the rule; the pill beside it names the level the rule is needed for." }) : null,
+        failChart && rows.length ? el("p", { className: "sub", style: "margin:0 0 6px", textContent: "Each bar is the share of entities failing the rule; the pill beside it names the level the rule is needed for." }) : null,
         failChart,
         unrunNote,
         hList,
-        filters,
-        search,
+        rows.length ? filters : null,
+        rows.length ? search : null,
         list,
         hNeeds,
         needsToggle,
