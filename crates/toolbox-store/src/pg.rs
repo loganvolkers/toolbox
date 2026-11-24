@@ -11,6 +11,7 @@ use sqlx::{Postgres, Row, Transaction};
 pub const MIGRATIONS: &[(&str, &str)] = &[
     ("0001_inputs", include_str!("../migrations/0001_inputs.sql")),
     ("0002_tokens", include_str!("../migrations/0002_tokens.sql")),
+    ("0003_runs", include_str!("../migrations/0003_runs.sql")),
 ];
 
 #[derive(Clone)]
@@ -331,6 +332,48 @@ impl PgStore {
         .await
         .ok()
         .flatten()
+    }
+
+    /// Store an action run's record (a JSON document), replacing the one with its id.
+    pub async fn put_run(&self, id: &str, doc: &str) -> Result<(), StoreError> {
+        sqlx::query(
+            "INSERT INTO toolbox.runs (id, doc) VALUES ($1, $2::jsonb)
+             ON CONFLICT (id) DO UPDATE SET doc = EXCLUDED.doc, updated_at = now()",
+        )
+        .bind(id)
+        .bind(doc)
+        .execute(&self.pool)
+        .await
+        .map_err(err)?;
+        Ok(())
+    }
+
+    /// Every stored run record.
+    pub async fn runs(&self) -> Result<Vec<String>, StoreError> {
+        sqlx::query_scalar("SELECT doc::text FROM toolbox.runs ORDER BY id")
+            .fetch_all(&self.pool)
+            .await
+            .map_err(err)
+    }
+
+    /// Record a spent confirm token.
+    pub async fn put_spent(&self, token: &str, issued: i64) -> Result<(), StoreError> {
+        sqlx::query("INSERT INTO toolbox.spent_tokens (token, issued) VALUES ($1, $2) ON CONFLICT DO NOTHING")
+            .bind(token)
+            .bind(issued)
+            .execute(&self.pool)
+            .await
+            .map_err(err)?;
+        Ok(())
+    }
+
+    /// Confirm tokens spent since `since` (seconds since the epoch).
+    pub async fn spent(&self, since: i64) -> Result<Vec<(String, i64)>, StoreError> {
+        sqlx::query_as("SELECT token, issued FROM toolbox.spent_tokens WHERE issued >= $1")
+            .bind(since)
+            .fetch_all(&self.pool)
+            .await
+            .map_err(err)
     }
 
     pub async fn tuple_count(&self) -> Result<i64, StoreError> {

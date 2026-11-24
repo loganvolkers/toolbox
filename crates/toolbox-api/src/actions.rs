@@ -20,18 +20,31 @@ use toolbox_exec::prepare::{Prepared, Refused, Request, prepare};
 use toolbox_exec::run::{self as lifecycle, Observer, Run};
 use toolbox_model::manifest::Expect;
 
-/// Runs this instance holds, by id. Runs live in memory: a restart loses runs in flight, and
-/// their effects are still observed by the scorecards that read the same facts. Every change
-/// that depends on a run's current state (approve, reject, cancel) happens under one lock, and a
-/// run that has ended is never overwritten.
+/// Runs this instance holds, by id. Every change that depends on a run's current state
+/// (approve, reject, cancel) happens under one lock, and a run that has ended is never
+/// overwritten. Once [`restore`] has run, each change is also written out, in order, to Postgres
+/// or (without a database) to files under the state directory, and read back at the next start.
+/// One instance owns its runs: a second instance on the same database does not see them live.
 #[derive(Debug, Default)]
 pub struct Runs {
     runs: Mutex<BTreeMap<String, Run>>,
     /// Confirm tokens already spent, with when they were issued.
     spent: Mutex<HashMap<String, u64>>,
+    out: std::sync::OnceLock<tokio::sync::mpsc::UnboundedSender<Persist>>,
+}
+
+#[derive(Debug)]
+enum Persist {
+    Run(Box<Run>),
+    Spent(String, u64),
 }
 
 impl Runs {
+    fn persist(&self, p: Persist) {
+        if let Some(tx) = self.out.get() {
+            let _ = tx.send(p);
+        }
+    }
     /// Store `r`, unless the stored run has already ended (a cancel wins over a late result).
     fn save(&self, r: &Run) {
         let mut m = self.runs.lock().unwrap();
@@ -39,6 +52,7 @@ impl Runs {
             return;
         }
         m.insert(r.id.clone(), r.clone());
+        self.persist(Persist::Run(Box::new(r.clone())));
     }
     fn get(&self, id: &str) -> Option<Run> {
         self.runs.lock().unwrap().get(id).cloned()
@@ -51,6 +65,7 @@ impl Runs {
         let mut m = self.runs.lock().unwrap();
         let r = m.get_mut(id)?;
         let out = f(r);
+        self.persist(Persist::Run(Box::new(r.clone())));
         Some((out, r.clone()))
     }
     /// Spend a confirm token: `false` when it was spent before.
@@ -59,8 +74,146 @@ impl Runs {
         let now = lifecycle::now_secs();
         m.retain(|_, issued| now.saturating_sub(*issued) <= lifecycle::TOKEN_TTL_SECS + 60);
         let issued = lifecycle::token_issued(token).unwrap_or(now);
-        m.insert(token.to_owned(), issued).is_none()
+        let fresh = m.insert(token.to_owned(), issued).is_none();
+        if fresh {
+            self.persist(Persist::Spent(token.to_owned(), issued));
+        }
+        fresh
     }
+}
+
+/// Where a server without a database keeps its runs: `<state dir>/served/<portal>/runs`, the
+/// state dir being `TOOLBOX_STATE_DIR`, else `$XDG_STATE_HOME/toolbox`, else
+/// `~/.local/state/toolbox`.
+fn runs_dir(portal: &str) -> std::path::PathBuf {
+    let base = std::env::var_os("TOOLBOX_STATE_DIR")
+        .map(std::path::PathBuf::from)
+        .or_else(|| {
+            std::env::var_os("XDG_STATE_HOME").map(|d| std::path::PathBuf::from(d).join("toolbox"))
+        })
+        .or_else(|| {
+            std::env::var_os("HOME")
+                .map(|h| std::path::PathBuf::from(h).join(".local/state/toolbox"))
+        })
+        .unwrap_or_else(|| std::env::temp_dir().join("toolbox"));
+    let name: String = portal
+        .chars()
+        .map(|c| {
+            if c.is_ascii_alphanumeric() || "-_.".contains(c) {
+                c
+            } else {
+                '_'
+            }
+        })
+        .collect();
+    base.join("served").join(name).join("runs")
+}
+
+/// A run cut off by a restart while its executor was working: what it did is unknown, so it is
+/// failed with that said, rather than left `running` forever or started again.
+fn interrupted(r: &mut Run) -> bool {
+    if !["previewed", "approved", "dispatched", "running"].contains(&r.state.as_str())
+        || (r.state == "dispatched" && r.executor == "github-workflow")
+    {
+        return false;
+    }
+    r.fail(format!(
+        "the server stopped while the run was {}; its effect is unknown, so check {} before running it again",
+        r.state, r.entity
+    ));
+    true
+}
+
+/// Load the runs and spent tokens a previous start wrote, then write every later change out.
+/// Returns how many runs were loaded.
+pub async fn restore(s: &AppState) -> Result<usize, String> {
+    let since = lifecycle::now_secs().saturating_sub(lifecycle::TOKEN_TTL_SECS + 60);
+    let dir = runs_dir(&s.manifest.portal.name);
+    let (docs, spent): (Vec<String>, Vec<(String, u64)>) = match &s.pg {
+        Some(pg) => (
+            pg.runs().await.map_err(|e| e.to_string())?,
+            pg.spent(since as i64)
+                .await
+                .map_err(|e| e.to_string())?
+                .into_iter()
+                .map(|(t, i)| (t, i.max(0) as u64))
+                .collect(),
+        ),
+        None => {
+            let docs = std::fs::read_dir(&dir)
+                .into_iter()
+                .flatten()
+                .flatten()
+                .filter(|e| e.path().extension().is_some_and(|x| x == "json"))
+                .filter_map(|e| std::fs::read_to_string(e.path()).ok())
+                .collect();
+            let spent = std::fs::read_to_string(dir.join("spent-tokens"))
+                .unwrap_or_default()
+                .lines()
+                .filter_map(|l| {
+                    let (t, i) = l.split_once(' ')?;
+                    Some((t.to_owned(), i.parse().ok()?))
+                })
+                .filter(|(_, i)| *i >= since)
+                .collect();
+            (docs, spent)
+        }
+    };
+    let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<Persist>();
+    let mut loaded = 0;
+    {
+        let mut runs = s.runs.runs.lock().unwrap();
+        for d in docs {
+            let Ok(mut r) = serde_json::from_str::<Run>(&d) else {
+                tracing::warn!("skipping a stored run that is not a run record");
+                continue;
+            };
+            if interrupted(&mut r) {
+                let _ = tx.send(Persist::Run(Box::new(r.clone())));
+            }
+            runs.insert(r.id.clone(), r);
+            loaded += 1;
+        }
+        s.runs.spent.lock().unwrap().extend(spent);
+    }
+    if s.pg.is_none() {
+        std::fs::create_dir_all(&dir).map_err(|e| format!("{}: {e}", dir.display()))?;
+    }
+    let pg = s.pg.clone();
+    tokio::spawn(async move {
+        while let Some(p) = rx.recv().await {
+            let res = match (&pg, p) {
+                (Some(pg), Persist::Run(r)) => pg
+                    .put_run(&r.id, &serde_json::to_string(&r).unwrap_or_default())
+                    .await
+                    .map_err(|e| e.to_string()),
+                (Some(pg), Persist::Spent(t, i)) => {
+                    pg.put_spent(&t, i as i64).await.map_err(|e| e.to_string())
+                }
+                (None, Persist::Run(r)) => {
+                    let file = dir.join(format!("{}.json", r.id));
+                    let tmp = dir.join(format!(".{}.tmp", r.id));
+                    std::fs::write(&tmp, serde_json::to_string_pretty(&r).unwrap_or_default())
+                        .and_then(|()| std::fs::rename(&tmp, &file))
+                        .map_err(|e| format!("{}: {e}", file.display()))
+                }
+                (None, Persist::Spent(t, i)) => {
+                    use std::io::Write as _;
+                    std::fs::OpenOptions::new()
+                        .create(true)
+                        .append(true)
+                        .open(dir.join("spent-tokens"))
+                        .and_then(|mut f| writeln!(f, "{t} {i}"))
+                        .map_err(|e| e.to_string())
+                }
+            };
+            if let Err(e) = res {
+                tracing::error!(error = %e, "could not store a run");
+            }
+        }
+    });
+    let _ = s.runs.out.set(tx);
+    Ok(loaded)
 }
 
 /// Set on requests the MCP endpoint makes on a caller's behalf, so a run records `via: mcp`. A
@@ -754,5 +907,39 @@ pub async fn runs_loop(s: Arc<AppState>) {
             }
         })
         .await;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_restart_fails_only_runs_whose_executor_it_cut_off() {
+        let run = |state: &str, executor: &str| -> Run {
+            serde_json::from_value(json!({"id": "run_1", "action": "a", "action_version": "v",
+                "entity": "repository:x", "inputs": {}, "requested_by": "user:ann", "via": "api",
+                "portal": "org", "executor": executor, "snapshot": "", "effects": [],
+                "approval": {"required": false, "approvers": []}, "state": state, "events": [],
+                "outputs": {}}))
+            .unwrap()
+        };
+        for st in ["previewed", "approved", "running"] {
+            let mut r = run(st, "command");
+            assert!(interrupted(&mut r));
+            assert_eq!(r.state, "failed");
+            assert!(r.error.unwrap().contains("effect is unknown"));
+        }
+        for (st, ex) in [
+            ("awaiting_approval", "command"),
+            ("proposed", "change"),
+            ("dispatched", "github-workflow"),
+            ("verifying", "command"),
+            ("succeeded", "command"),
+        ] {
+            let mut r = run(st, ex);
+            assert!(!interrupted(&mut r), "{st} {ex}");
+            assert_eq!(r.state, st);
+        }
     }
 }

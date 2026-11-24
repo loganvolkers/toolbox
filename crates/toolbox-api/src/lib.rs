@@ -66,6 +66,11 @@ pub async fn serve(state: Arc<AppState>, listener: tokio::net::TcpListener) -> s
     mcp::trace_declare();
     tokio::spawn(state.clone().run_snapshot_loop());
     tokio::spawn(connectors::freshness_loop(state.clone()));
+    match actions::restore(&state).await {
+        Ok(0) => {}
+        Ok(n) => tracing::info!(runs = n, "restored action runs"),
+        Err(e) => return Err(std::io::Error::other(format!("action runs: {e}"))),
+    }
     tokio::spawn(actions::runs_loop(state.clone()));
     if let Some(k) = actions::approval_key(&state) {
         tracing::info!(
