@@ -209,8 +209,10 @@ provides human-curated "communities".**
 ### 5.5 Federation, not replication
 - **Code intelligence** stays federated. Toolbox doesn't build or ingest a code knowledge graph
   (Graphify and the tools like it): [knowledge-graphs.md](./knowledge-graphs.md) and
-  [D01M84ZW6K2V9CV2SD644DE5M0S](../decisions/D01M84ZW6K2V9CV2SD644DE5M0S.md), after
-  [graphify-ab](../../experiments/graphify-ab/README.md) showed neither help nor harm.
+  [D01M84ZW6K2V9CV2SD644DE5M0S](../decisions/D01M84ZW6K2V9CV2SD644DE5M0S.md) and
+  [D01M85G2ZXXPQRXWKQF7TWV2RTP](../decisions/D01M85G2ZXXPQRXWKQF7TWV2RTP.md), after
+  [graphify-ab](../../experiments/graphify-ab/README.md) found no coverage gain and a cost gain
+  on Toolbox that is unmeasured in billed tokens.
 - **Security graph:** connector packages for Wiz (GraphQL) and Cartography (Neo4j/Cypher).
   - `source` imports *findings* and *bridge resources* (bounded).
   - `resolve` answers live, deep questions ("attack paths reaching `service:payments-api`") by

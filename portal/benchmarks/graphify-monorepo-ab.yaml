@@ -38,9 +38,11 @@ records:
     servedValue: >-
       It gave Graphify its home ground (a 120-crate, 950k-line Rust monorepo,
       a code-only graph, questions about calls, dependencies and a trace) and
-      a Toolbox repo portal its crate facts, and showed neither helps there.
-      It also found the CLI graph read's missing filters, now fixed. No second
-      round is planned unless a cost claim is sized for more runs per arm
+      a Toolbox repo portal its crate facts, and showed neither helps there,
+      under the registered rule or a post-hoc rank test. It also found the CLI
+      graph read's missing filters, now fixed. Graphify's `affected` was never
+      named to the agents (red team R3). No second round is planned unless a
+      cost claim is sized for more runs per arm
     blockedOn: ''
     readme: experiments/graphify-monorepo-ab/README.md
     results: experiments/graphify-monorepo-ab/ADJUDICATION.md

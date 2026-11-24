@@ -23,18 +23,25 @@ records:
       repositories (62 vs 44, W 39; 73 vs 55, W 27) and read less on Toolbox
       and more on OpenFGA, each inside W. Building the document layer took 17
       agents and 4.27M characters read for Toolbox. Toolbox for Toolbox
-      doesn't adopt Graphify (ADJUDICATION.md)
+      doesn't adopt Graphify (ADJUDICATION.md). Read post hoc with an exact
+      rank test, K5 and K6 separate completely on Toolbox (p = 0.008 each);
+      the labels stand as registered (graphify-red-team-response.md)
     changed:
     - D01M84ZW6K2V9CV2SD644DE5M0S
+    - >-
+      D01M85G2ZXXPQRXWKQF7TWV2RTP: the verdict restated as not shown, with a
+      likely cost gain on Toolbox, and a cost trigger to reopen it
+    - >-
+      D01M85G2YXV2VRTZWQJ33MHXCKN: protocol 2 decides cost hypotheses with an
+      exact rank test and five runs per arm
     - >-
       dx-benchmarks.md L21: freeze a quality measure only after the baseline
       arm shows it has headroom
     servedValue: >-
       It answered the adoption question under the vendor's own integration,
-      which no independent study had tested. No second round is planned unless
-      a code-graph tool keeps its document layer current without a full LLM
-      pass, or a question set with headroom is written
-      (D01M84ZW6K2V9CV2SD644DE5M0S)
+      which no independent study had tested. A second round on Toolbox runs
+      when billed tokens can be measured (Q21), with `affected` named and the
+      per-commit update cost counted (D01M85G2ZXXPQRXWKQF7TWV2RTP)
     blockedOn: ''
     readme: experiments/graphify-ab/README.md
     results: experiments/graphify-ab/ADJUDICATION.md

@@ -10,7 +10,10 @@ Toolbox's context lake ([context-lake.md](./context-lake.md)) builds a code know
 `013a646`). Star counts and push dates come from the GitHub API on the research date. "(vendor)" marks
 a maker's claim; "(secondary)" marks a claim from a survey agent's reading that this document did not
 re-check against the primary source. Benchmarks: [graphify-ab](../../experiments/graphify-ab/README.md)
-and [graphify-monorepo-ab](../../experiments/graphify-monorepo-ab/README.md).*
+and [graphify-monorepo-ab](../../experiments/graphify-monorepo-ab/README.md). Both, this survey and
+the decision were attacked by a red team without the designer's context
+([graphify-red-team.md](../graphify-red-team.md)), and every finding is triaged in
+[graphify-red-team-response.md](../graphify-red-team-response.md).*
 
 ---
 
@@ -18,26 +21,39 @@ and [graphify-monorepo-ab](../../experiments/graphify-monorepo-ab/README.md).*
 
 - **Toolbox for Toolbox doesn't adopt Graphify, uses no other code-graph tool, and Toolbox
   doesn't build a code knowledge graph**
-  ([D01M84ZW6K2V9CV2SD644DE5M0S](../decisions/D01M84ZW6K2V9CV2SD644DE5M0S.md)). Code intelligence
-  stays federated, as [context-lake.md](./context-lake.md) §5.5 already designs it.
-- **A Graphify DX Benchmark was worth running once, and it ran.** In
+  ([D01M84ZW6K2V9CV2SD644DE5M0S](../decisions/D01M84ZW6K2V9CV2SD644DE5M0S.md), its reasons
+  restated by [D01M85G2ZXXPQRXWKQF7TWV2RTP](../decisions/D01M85G2ZXXPQRXWKQF7TWV2RTP.md)). Code
+  intelligence stays federated, as [context-lake.md](./context-lake.md) §5.5 already designs it.
+  Graphify's value is not shown, which is not the same as absent: a cost result can reopen this.
+- **Graphify didn't make answers more complete; whether it lowers cost is open.** In
   [graphify-ab](../../experiments/graphify-ab/README.md), 20 runs on Toolbox and OpenFGA under
-  Graphify's own Cursor rule and document layer showed neither "helps" nor "hurts" (§6). Answers
-  were equally complete in both arms, and the graph's arm made fewer calls, but not by more than the
-  noise. Building the document layer for this repository took 17 agents.
-- **On its home ground it didn't help either.** In
+  Graphify's own Cursor rule and document layer tied on coverage, and every label was inconclusive
+  (§6). On Toolbox, though, every Graphify run made fewer calls and read less than every baseline
+  run: 25% fewer calls and 29% less read by median, exact p = 0.008 each when read post hoc. The
+  registered rule detects an effect that size about a quarter of the time (L23). Building the
+  document layer for this repository took 17 agents; keeping it current was never measured.
+- **On a large monorepo, nothing separated.** In
   [graphify-monorepo-ab](../../experiments/graphify-monorepo-ab/README.md), 15 runs on Codex (a
   120-crate, 950k-line Rust monorepo, a code-only graph) compared Graphify, a Toolbox repo portal and
-  nothing. No arm helped, hurt or beat another (§6.1). Every answer scored 0.981 or more, and both
-  tool arms read about a fifth less than nothing, inside the noise.
+  nothing. Every hypothesis comparing arms was inconclusive under the registered rule and under a
+  post-hoc rank test (p ≥ 0.22) (§6.1). Every answer scored 0.981 or more. Graphify's `affected`
+  command, built for these impact questions, was never named to the agents and never used.
+- **A red team found the overreach** ([graphify-red-team.md](../graphify-red-team.md), triaged in
+  [graphify-red-team-response.md](../graphify-red-team-response.md)). Earlier versions of this
+  survey said the benchmarks showed "neither helps nor hurts" and savings "inside the noise". The
+  fair reading is narrower: no coverage gain for a strong model with no turn cap, a likely cost
+  gain on a documentation-heavy repository that no model has seen, and untested impact queries,
+  billed tokens and incremental updates.
 - **Graphify and a catalog hold different facts.** Graphify extracts a symbol-and-document graph
   in an open world: a missing edge means nothing, and node ids and communities change between
   builds. Port's context lake and Toolbox hold a declared catalog in a closed world: who owns what,
   which standard an entity meets, what changed. Only the second can be scored (§2, §5).
-- **The independent evidence agrees.** No independent study shows a code graph helping a strong
-  agent answer questions about a repository. The measured gains come from facts grep can't
-  recover, such as build and test structure, test impact and ownership, pushed into the agent's
-  context. That is the catalog's side: context packs, not a code graph (§5, §7).
+- **The independent evidence mostly agrees.** No independent study shows a code graph making a
+  strong agent's answers better on average, and the billed-token studies under Graphify's hooks
+  found it costlier. The small positive signals are narrow: impact questions about a named symbol,
+  opening fewer files, and human use at the terminal (§3). The larger measured gains come from
+  facts grep can't recover, such as build and test structure, test impact and ownership, pushed
+  into the agent's context. That is the catalog's side: context packs, not a code graph (§5, §7).
 - **The foundations explain why.** Tree-sitter graphs resolve names by heuristic, Leiden
   communities are unstable unless seeded, degree centrality finds hubs rather than answers, and
   LLM-extracted entities need resolution that declared identifiers avoid (§2).
@@ -96,10 +112,24 @@ SQL grammar is not installed with the package, so SQL files add nothing.
   with corpus size. Graphify's own site now says the saving is smaller against an agent that greps
   selectively. Its code benchmark asks six questions of ERPNext from a code-only graph, caps the agent
   at 14 turns, and reports key-fact coverage of 82.0% against 70.8% for grep and read.
-- *Independent.* None shows a gain for a strong agent:
+- *Independent.* None shows a strong agent answering better on average. Most find higher cost;
+  the small positive signals are narrow (figures as read by the red team, secondary):
   - Srivastava (2026-10-16): 360 pre-registered trials on Airflow, VS Code and Spring with Claude Code
     and Codex. Grep alone scored F1 0.961 and 0.995, and the graph didn't clearly improve accuracy or
-    tokens. Agents called the optional graph tools in 1 and 4 of 36 trials.
+    tokens. Agents called the optional graph tools in 1 and 4 of 36 trials. A smaller earlier run
+    with a hook raised caller-question coverage, and a newer hook cut tokens about 13% in 15 trials
+    (direction only).
+  - hatenabase (2026-09-23): a private 3,501-file ERP, hooks and MCP, 30 runs. Input tokens +46% by
+    median and cost +19%, all answers correct in both conditions. On impact questions about a named
+    symbol, 7 of 9 answered without opening a file, against 1 of 9 without the graph.
+  - Machine Room (2026-10-22): about 70,000 more tokens per question, because each extra call
+    re-sends the context. `affected` listed callers with file and line, and the graph caught a stale
+    claim in the author's notes: value for a human at the terminal.
+  - menges.dev (2026-10-24, the author of a competing tool): higher cost, and 0 of 3 Graphify runs
+    found an auth bypass that 3 of 5 bare runs found.
+  - LanceTek: exploration tokens −11% across three repositories (−18% and −19% on the two larger
+    ones), 63–83% slower, one run per question.
+  - kubeblogs (2026-08-17) and DIY Smart Code (2026-10-17): no session-level saving.
   - Issue #4341: on 177 SWE-bench Lite issues, `query_graph` put the fixed file in its top five 38% of
     the time, against 64% for BM25.
   - Issues #985, #3307 and #3308 (users): 1.3x to 2x more tokens at equal or worse accuracy when agents
@@ -182,8 +212,9 @@ Port's "context lake", Graphify and Toolbox all sell context to agents, but they
 | Interface | CLI, rule, hooks, MCP | MCP, API | CLI, MCP, API, `assess brief` (push) |
 
 The questions an agent asks about a repository fall into three groups. *Where is X, and what calls
-it?* is answered by `rg` in one or two calls, by a language server precisely, and by Graphify
-approximately. *How does this mechanism work, and why?* needs function bodies and the documents
+it?* is answered by `rg` when X is a unique name (two hops of callers, as in graphify-monorepo-ab,
+took dozens of calls), by a language server precisely, and by Graphify approximately, in one call
+for its `affected` command. *How does this mechanism work, and why?* needs function bodies and the documents
 and decisions that explain them, which every tool here ends up reading. *Who owns this, does it meet
 the standard, and what changed?* is declared, not extractable, and is what a catalog holds.
 
@@ -223,8 +254,13 @@ answer is in documents and decisions. That is exactly how Toolbox for Toolbox wo
 | K6 | Toolbox calls | 73 | 55 | 27 | Inconclusive |
 | K7 | Every B run calls `graphify` | | 10 of 10 | | Holds |
 
-Neither "helps" nor "hurts" is shown on either repository, which is what the designer predicted.
-Three findings matter beyond the bar:
+Neither "helps" nor "hurts" is shown on either repository under the registered rule, which is what
+the designer predicted. That rule detects a two-standard-deviation effect about a quarter of the
+time at five runs per arm (L23). Read post hoc with an exact rank test, K5 and K6 separate
+completely: every B run on Toolbox read less and made fewer calls than every A run (p = 0.008
+each). The registered labels stand; the post-hoc reading is why
+[D01M85G2ZXXPQRXWKQF7TWV2RTP](../decisions/D01M85G2ZXXPQRXWKQF7TWV2RTP.md) calls the cost
+question open rather than settled. Three findings matter beyond the bar:
 
 - **Coverage saturated.** Without a turn cap, every agent found every fact, or the same facts, in
   both arms. The vendor's gain was measured under a 14-turn cap. This is lesson L21 in
@@ -232,13 +268,17 @@ Three findings matter beyond the bar:
 - **The rule changes how agents search, not what they find.** Every B run queried the graph first,
   as the rule requires. B's agents then stopped using the Grep tool (median 0 calls, against 7 on
   OpenFGA and 24 on Toolbox in arm A) and searched in the shell instead. On Toolbox they opened
-  fewer files (median 23 reads against 41). B made fewer calls in both repositories, but not by more
-  than the noise, and read less on Toolbox and more on OpenFGA. The graph also sits in the
+  fewer files (median 23 reads against 41). B made fewer calls in both repositories (by more than
+  every A run on Toolbox, within A's range on OpenFGA), and read less on Toolbox and more on
+  OpenFGA. The graph also sits in the
   workspace, so one unscoped `grep -rn` returned 580,577 characters of `graph.json`.
-- **Build cost dominates.** The AST pass takes seconds. The document layer took 17 agents for this
-  repository (413 calls, 4.27M characters read). Even at face value, B's median read saving on
-  Toolbox repays that only after about 43 sessions, and 141 of the 200 commits before the frozen
-  one changed a Markdown file.
+- **The first build is expensive; upkeep is unmeasured.** The AST pass takes seconds. The first
+  document build took 17 agents for this repository (413 calls, 4.27M characters read), which B's
+  median read saving on Toolbox repays after about 43 sessions. That counts characters, not billed
+  tokens, so it understates the saving from fewer calls. 141 of the 200 commits before the frozen
+  one changed a Markdown file, but Graphify re-extracts only changed files (about 4.9 of the
+  graph's 355 documents a commit, by the red team's count), and that per-commit cost was never
+  measured.
 
 ### 6.1 Second benchmark: a large monorepo
 
@@ -260,9 +300,12 @@ saturated the score, so it became a guard before round 1 (L21), and "helps" had 
 | B: Graphify | 0.988 | 54 (49–59) | 204,870 (198,160–256,203) |
 | C: Toolbox repo portal | 0.994 | 54 (45–73) | 206,872 (183,831–275,061) |
 
-Every hypothesis comparing arms was inconclusive. Both tool-use checks held: every Graphify run
-called `graphify` and every portal run called `toolbox`. D01M84ZW6K2V9CV2SD644DE5M0S's "Otherwise"
-case applies.
+Every hypothesis comparing arms was inconclusive, and a post-hoc rank test agrees (p ≥ 0.22 on
+calls, read and wall time). Both tool-use checks held: every Graphify run called `graphify` and
+every portal run called `toolbox`. D01M84ZW6K2V9CV2SD644DE5M0S's "Otherwise" case applies. No
+Graphify run used `affected`, the command that answers Q2 and Q3's shape in one call: the vendor's
+rule doesn't name it, and the harness didn't either, though it was triaged after the round to
+name Toolbox's own `graph --relation` (red team R3).
 
 - **Graphify oriented, then agents read the code**, as in graphify-ab. Its graph holds the Cargo
   packages, but the agents' natural-language `query` for dependents matched unrelated symbols
@@ -276,13 +319,14 @@ Harder questions didn't create headroom (L22 in [dx-benchmarks.md](./dx-benchmar
 ## 7. What Toolbox does
 
 [D01M84ZW6K2V9CV2SD644DE5M0S](../decisions/D01M84ZW6K2V9CV2SD644DE5M0S.md) records the
-verdict on the four options:
+verdict on the four options, and
+[D01M85G2ZXXPQRXWKQF7TWV2RTP](../decisions/D01M85G2ZXXPQRXWKQF7TWV2RTP.md) restates its reasons:
 
 | Option | Verdict |
 |---|---|
-| Adopt Graphify in Toolbox for Toolbox | No: not shown to help, and it costs a document build per change |
-| Use another code-graph tool | No: none has independent evidence (§4.1). Precise navigation is the harness's language server |
-| Expand Toolbox with a code graph | No: an extracted, open-world graph with unstable ids can't be scored, and grep answers its questions |
+| Adopt Graphify in Toolbox for Toolbox | Not yet: no coverage gain; a likely cost gain on Toolbox, measured in characters and post hoc; billed tokens and the cost of keeping the document graph current unmeasured |
+| Use another code-graph tool | No: none has independent evidence of agent gains (§4.1). Precise navigation is the harness's language server |
+| Expand Toolbox with a code graph | No: an extracted, open-world graph with unstable ids can't be scored |
 | Do nothing | **Yes.** Code intelligence stays federated ([context-lake.md](./context-lake.md) §5.5) |
 
 What stays open:
@@ -293,9 +337,12 @@ What stays open:
   with a question set the baseline doesn't saturate.
 - **A portal may carry Graphify** as a standalone tool, with its own command, ignore file and rule.
   Toolbox doesn't wrap it, and no scorecard reads its graph.
-- **Reopen** if a code-graph tool keeps its document layer current without a full LLM pass, or if a
-  question set with headroom shows a coverage gain without a turn cap. Rerun graphify-ab, with its
-  harness as committed. graphify-monorepo-ab tried to write such a set on a large monorepo and
+- **Reopen** on a cost result: a round on Toolbox with billed tokens (or calls and read together,
+  [Q21](../questions.md)), `affected` named in Graphify's rule, and the `--update` cost per commit
+  measured, showing at least 20% fewer tokens per session at equal coverage. Also reopen if a
+  cheaper model or a question set with headroom shows a coverage gain without a turn cap, or if a
+  code-graph tool keeps its document layer current without an LLM pass per changed document.
+  graphify-monorepo-ab tried to write a question set with headroom on a large monorepo and
   couldn't (§6.1).
 
 ## Sources
@@ -314,7 +361,22 @@ issues [#985](https://github.com/Graphify-Labs/graphify/issues/985),
 [#3307](https://github.com/Graphify-Labs/graphify/issues/3307),
 [#3308](https://github.com/Graphify-Labs/graphify/issues/3308) and
 [#4341](https://github.com/Graphify-Labs/graphify/issues/4341) (read through the GitHub API);
-[S. Srivastava, "graphify benchmark"](https://srijansriv.com/graphify-benchmark) (2026-10-16).
+[S. Srivastava, "graphify benchmark"](https://srijansriv.com/graphify-benchmark) (2026-10-16);
+the independent studies found by the red team ([graphify-red-team.md](../graphify-red-team.md)
+§2.3, secondary): [hatenabase](https://hatenabase.jp/blog/graphify-code-knowledge-graph-hands-on/)
+(2026-09-23), [Machine Room](https://themachineroom.dev/v/graphify-measured/) (2026-10-22),
+[menges.dev](https://menges.dev/writing/code-graph-mcp-servers-tested/) (2026-10-24),
+[LanceTek](https://lancetek.com/journal/graphify-code-graph-tested-on-three-repos),
+[kubeblogs](https://www.kubeblogs.com/graphify-claims-71-5x-fewer-tokens-we-tested-it-on-real-production-work/)
+(2026-08-17).
+
+**Measuring context:** Houck, Kanat-Alexander, Kalliamvakou, Storey and Forsgren, "CAFE(S): Your
+Agent Is Only As Good As Its Context", ACM Queue 24(5), 2026
+([DX copy](https://getdx.com/research/cafe-s-your-agent-is-only-as-good-as-its-context/),
+[introduction](https://newsletter.getdx.com/p/introducing-cafes-a-framework-for)). It defines
+context quality (clarity, actionability, fidelity, efficiency, security) and says it is not a
+measurement system. The graph benchmarks measure part of efficiency and an outcome proxy, not
+fidelity, security or the in-situ cost of an always-applied rule.
 
 **Code intelligence:** the repositories of codebase-memory-mcp (DeusData), CodeGraph (colbymchenry),
 code-review-graph, CodeGraphContext, code-graph-rag, GitNexus, Serena, Aider (`aider/repomap.py`),
