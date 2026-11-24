@@ -262,6 +262,12 @@ token is enough on GitLab. The token goes to the forge's API only, never to an a
 a record. A child run by its parent is exempt, since the parent's signed grant names the
 requester. Acceptance step [9] covers it.
 
+A served portal follows the same rule. A loopback `toolbox serve` signs people in by header
+(`dev`), which is only a claim, so on such a portal it serves reads but refuses to create, approve,
+reject or cancel runs (`identity-from-forge`, 403). Serve with token or OIDC sign-in to host them.
+Benchmark run `toolbox-1` in round 1 of `experiments/actions-gitlab` found the gap; the API test
+`a_dev_server_does_not_take_your_word_where_the_forge_says_who_you_are` covers it.
+
 ## 5. Adding a forge
 
 A driver is a `Kind` in `toolbox_model::forge` and one module in `toolbox-exec` (`github.rs`,

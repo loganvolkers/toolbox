@@ -630,6 +630,9 @@ pub async fn create_run(
         Ok(c) => c,
         Err(r) => return r,
     };
+    if let Some(r) = claim_only(&s, &caller) {
+        return r;
+    }
     let Some(token) = body.confirm_token.clone() else {
         return problem(
             StatusCode::UNPROCESSABLE_ENTITY,
@@ -789,6 +792,9 @@ pub async fn approve(
         Ok(c) => c,
         Err(r) => return r,
     };
+    if let Some(r) = claim_only(&s, &caller) {
+        return r;
+    }
     if !interactive(&s, &caller) {
         return problem(
             StatusCode::FORBIDDEN,
@@ -818,6 +824,22 @@ pub async fn approve(
         Some((Ok(false), run)) => Json(run_doc(&run)).into_response(),
         Some((Ok(true), run)) => start_approved(&s, &caller, run).await,
     }
+}
+
+/// Where the portal's forge says who people are (`forges[].identity: true`), a dev server's
+/// header sign-in is only a claim: it may read runs, but not request, approve, reject or cancel.
+fn claim_only(s: &AppState, caller: &crate::access::Caller) -> Option<Response> {
+    let forge = s.manifest.forges.iter().find(|f| f.identity)?;
+    (caller.method == "dev").then(|| {
+        problem(
+            StatusCode::FORBIDDEN,
+            "identity-from-forge",
+            format!(
+                "this portal takes who you are from your own token on {} (identity: true), and a dev server only takes your word for it: run toolbox run --identity-token-file <file> in the checkout, or serve with token or OIDC sign-in",
+                forge.url
+            ),
+        )
+    })
 }
 
 /// A person signed in through a proxy or OIDC, or on a dev server; never a token or MCP (D57).
@@ -951,6 +973,9 @@ pub async fn cancel(
         Ok(c) => c,
         Err(r) => return r,
     };
+    if let Some(r) = claim_only(&s, &caller) {
+        return r;
+    }
     let run = match visible_run(&s, &caller, &id).await {
         Ok(r) => r,
         Err(r) => return r,
