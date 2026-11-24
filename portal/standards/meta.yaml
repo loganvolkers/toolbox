@@ -30,7 +30,13 @@ kinds:
           when it changes.
       described:
         type: boolean
-        description: The scorecard has a non-blank `description:` saying what it is and why.
+        description: The scorecard has a non-blank `description:` saying what it is.
+      explained:
+        type: boolean
+        description: >-
+          The scorecard has a non-blank `rationale:` saying why the standard
+          exists.
+      links: {type: integer, description: "URLs under the scorecard's `links:`."}
       fixtureRealLevels:
         type: list
         items: string
@@ -77,6 +83,8 @@ kinds:
          'levels': record.levels, 'rulesPerLevel': record.rulesPerLevel, 'rules': record.rules,
          'tested': record.tested, 'meta': record.meta, 'fixtureLevels': record.fixtureLevels,
          'described': has(record.described) ? record.described : false,
+         'explained': has(record.explained) ? record.explained : false,
+         'links': has(record.links) ? record.links : 0,
          'liveEntities': has(record.liveEntities) ? record.liveEntities : null, 'hash': record.hash}
 
   - name: Rule
@@ -107,6 +115,16 @@ kinds:
         type: string
         description: The rule's evidence expression, as written.
       fixText: {type: string, description: "The rule's fix text."}
+      explained:
+        type: boolean
+        description: The rule has a non-blank `rationale:` saying why it exists.
+      links: {type: integer, description: "URLs under the rule's `links:`."}
+      basis:
+        type: enum
+        values: [measured, judged]
+        description: >-
+          judged when the check reads an assessment, directly or through computed
+          fields, so an agent's verdict decides it; measured otherwise.
       evidenceTracksCheck:
         type: boolean
         description: >-
@@ -171,7 +189,10 @@ kinds:
          'evidence': record.evidence, 'tested': record.tested, 'fixture': record.fixture,
          'testedOutcomes': has(record.testedOutcomes) ? record.testedOutcomes : [],
          'live': has(record.live) ? record.live : null, 'hash': record.hash,
-         'checkCel': record.definition.check, 'evidenceCel': record.definition.evidence, 'fixText': record.definition.fix}
+         'checkCel': record.definition.check, 'evidenceCel': record.definition.evidence, 'fixText': record.definition.fix,
+         'explained': has(record.explained) ? record.explained : false,
+         'links': has(record.links) ? record.links : 0,
+         'basis': has(record.basis) ? record.basis : 'measured'}
       relations: {ruleOf: "['scorecard:' + record.card]"}
 
   - name: Kind
@@ -363,6 +384,7 @@ scorecards:
       evidence, readable CEL. Gold means well-formed, not good: quality is
       judged by review-rule (D71, D01M831P5QWJQ4A2FT85N5MXJQF).
     owner: group:maintainers
+    track: standards
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze} # a new rule or scorecard must be tested and explained from day one
     rules:
@@ -371,6 +393,14 @@ scorecards:
       check: entity.fixWords >= 5
       evidence: "['fix has ' + string(entity.fixWords) + ' words']"
       fix: "Write a fix an agent can act on: what to change, and where."
+    - name: explains-why
+      level: bronze
+      check: entity.explained
+      evidence: >-
+        ['rule ' + entity.scorecard + '/' + entity.name + ' has no rationale']
+      fix: >-
+        Give the rule a `rationale:` saying why it exists (the risk or the cost
+        it guards against), and put the long story under `links:`.
     - name: tested
       level: bronze
       check: entity.tested
@@ -466,6 +496,7 @@ scorecards:
       climb the ladder to every level. Gold means well-formed, not good (D71,
       D01M831P5QWJQ4A2FT85N5MXJQF).
     owner: group:maintainers
+    track: standards
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze} # a new rule or scorecard must be tested and explained from day one
     rules:
@@ -488,8 +519,16 @@ scorecards:
       check: entity.described
       evidence: "['scorecard ' + entity.name + ' has no description']"
       fix: >-
-        Give the scorecard a `description:` saying what the standard is for and
-        why its levels are where they are; agents read it before any rule.
+        Give the scorecard a `description:` saying what the standard covers;
+        agents read it before any rule.
+    - name: explains-why
+      level: silver
+      check: entity.explained
+      evidence: "['scorecard ' + entity.name + ' has no rationale']"
+      fix: >-
+        Give the scorecard a `rationale:` saying why the standard exists and
+        why its levels are where they are, with `links:` to the decision or
+        design behind it.
     - name: fixtures-show-the-ladder
       level: silver
       check: >-
@@ -527,6 +566,7 @@ scorecards:
       field, since every rule reads it
       (docs/design/scorecards-for-scorecards.md §5).
     owner: group:maintainers
+    track: standards
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze} # a new kind must be in the fixtures and the tests
     rules:
@@ -570,6 +610,7 @@ scorecards:
       CEL, validation and agents know what it holds
       (docs/design/scorecards-for-scorecards.md §5).
     owner: group:maintainers
+    track: standards
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze} # a new field must have a value somewhere in the fixtures
     rules:
@@ -618,6 +659,7 @@ scorecards:
       tests, freshness declared and refresh by id
       (docs/design/scorecards-for-scorecards.md §5).
     owner: group:maintainers
+    track: standards
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze} # a new connector needs fixtures and a mapping for every record
     rules:
@@ -661,6 +703,7 @@ scorecards:
       finding is none, a current review is silver, a clean, cited one with no
       doubts is gold (D79, D01M831P5QWJQ4A2FT85N5MXJQF).
     owner: group:maintainers
+    track: standards
     levels: [bronze, silver, gold]
     ratchet: {advisory: true}
     appliesTo: entity.portal == 'toolbox' # our own rules; the starter and reference are examples
@@ -714,6 +757,7 @@ scorecards:
       Agents' judgement of each scorecard against scorecard-quality, advisory,
       with the same ladder as review-rule (D79, D01M831P5QWJQ4A2FT85N5MXJQF).
     owner: group:maintainers
+    track: standards
     levels: [bronze, silver, gold]
     ratchet: {advisory: true}
     appliesTo: entity.portal == 'toolbox'
@@ -768,6 +812,7 @@ scorecards:
       Each rubric agents judge with: described, used, guided with what counts
       as fail, and shown to discriminate on real assessments (D80).
     owner: group:maintainers
+    track: standards
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze} # a new rubric must be described and used once
     rules:
