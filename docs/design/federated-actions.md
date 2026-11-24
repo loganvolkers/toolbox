@@ -272,7 +272,8 @@ actions:
   spends each token once (`409 token-used`). Inputs are validated as JSON Schema (draft 2020-12),
   `pattern` included, plus `enumFrom`.
 - **Exit codes** (CLI, in a checkout and with `--url`): 0 succeeded, proposed or dispatched; 1
-  failed, stale, rejected or cancelled; 2 invalid inputs or refused; 3 awaiting approval.
+  failed, stale, rejected or cancelled; 2 invalid inputs or refused; 3 awaiting approval; 4
+  unverified (the executor finished, but nothing observed its effect).
 - **Records.** Every run is a JSON record, carrying who requested it, through which surface, the
   approvals with notes, every state change with time and actor, the effects, the outputs and the
   verification. `toolbox run` writes it to the state directory, and `toolbox run --verify <id>`

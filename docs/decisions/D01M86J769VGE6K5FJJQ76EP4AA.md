@@ -45,6 +45,12 @@ a list of repositories and a repo's action is its inputs, its approvers and its 
    carries `Approved-By` beside `Toolbox-Run` and `Requested-By`, and a parent's clone commits as
    Toolbox rather than the host's global git identity. The dry run before round 2 wrote a
    61-line script to re-read the file, not knowing Toolbox already did.
+10. **`toolbox run` exits 4 for an `unverified` run**, not 0: the executor finished, but nothing
+    observed its effect, and a script that checks only the exit code should not read that as
+    done. A failed fetch of the base fails a landed change rather than reading back the run's
+    own push. `toolbox run` reads `TOOLBOX_URL` and `TOOLBOX_AS`, as the read commands do. Round
+    1's toolbox-3 wrapped `--url` and `--as` in a script, and round 2's toolbox-2 wrote one to
+    tell `unverified` from `succeeded`.
 
 Rejected: a hosted registry of children (a second source of truth beside git), and cloning on
 every request (slow, and a network failure would hide every action).

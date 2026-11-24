@@ -522,6 +522,7 @@ fn exit_code(state: &str) -> u8 {
     match state {
         "failed" | "timed_out" | "rejected" | "cancelled" => 1,
         "awaiting_approval" => 3,
+        "unverified" => 4,
         _ => 0,
     }
 }
@@ -1037,5 +1038,16 @@ mod remote {
         };
         let run = api.call("POST", &format!("{action}/runs"), Some(body(Some(&token))))?;
         Ok(api.show(run))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn only_an_observed_run_exits_zero_among_finished_ones() {
+        assert_eq!(super::exit_code("succeeded"), 0);
+        assert_eq!(super::exit_code("unverified"), 4);
+        assert_eq!(super::exit_code("failed"), 1);
+        assert_eq!(super::exit_code("awaiting_approval"), 3);
     }
 }
