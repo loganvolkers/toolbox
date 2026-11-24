@@ -6,8 +6,8 @@ noise ([design-loop-efficiency-2026-11-24.md](../audits/design-loop-efficiency-2
 The agent skill is [`design-audit`](../../plugins/toolbox-operator/skills/design-audit/SKILL.md);
 the records are in [docs/audits/](../audits/).*
 
-**About:** the box. It is how the maintainer SDLC judges what the box shows readers: the hosted
-report, the minimal UI and any custom view. It wraps no tool. Playwright and axe-core are used
+**About:** the box. It is how the maintainer SDLC's `design-review` stage judges what the box
+shows readers: the hosted report, the minimal UI and any custom view. It wraps no tool. Playwright and axe-core are used
 as they ship.
 
 ---

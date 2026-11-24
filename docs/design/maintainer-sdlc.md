@@ -28,7 +28,7 @@ The inner loop takes seconds, so this stays cheap enough to run after every chan
 | **Build** | Small changes in a crate of the [workspace](../v1-spec.md) §4 | `cargo build` (toolchain pinned in `rust-toolchain.toml`) |
 | **Test** | Unit and integration tests, the differential tests, the relevant acceptance script | §4 |
 | **Review** | `cargo fmt --check`, `cargo clippy -D warnings`; read your own diff | CI |
-| **Design review** | For a change readers see: story probes, then a blind panel of three auditors over two reference portals, until the stop rule holds (D01M87PSM9YQGGW3YQ5X4XCJP63) | `report-ui` (`npm run probe`), [design-audit](./design-audit.md) |
+| **Design review** (`design-review`) | For a change readers see: story probes, then a blind panel of three auditors over two reference portals, until the stop rule holds (D01M87PSM9YQGGW3YQ5X4XCJP63) | `report-ui` (`npm run probe`), [design-audit](./design-audit.md) |
 | **Record** | Results in [research-log.md](../research-log.md); decisions in [decisions.md](../decisions/README.md); spec status in v1-spec §3 | Working rules in AGENTS.md |
 | **Ship** | Small commits straight to `main` (D32), pulled with rebase first | `git` |
 | **Monitor** | CI on every push; the scale budget and acceptance jobs catch regressions | `.github/workflows/ci.yml` |

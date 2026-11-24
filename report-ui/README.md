@@ -31,7 +31,8 @@ npm run build              # writes the embedded bundle; npm run check verifies 
 A probe fails on a script error, a serious or critical axe-core violation under WCAG 2.0–2.2 A
 and AA (which includes `target-size`, 24 px), or a page that scrolls sideways at 390 px.
 `--filter <text>` probes the stories whose id contains it, and `--out probe.json` keeps the
-results. Judgement the probe cannot make goes to a blind design audit
+results. This is the first gate of the maintainer SDLC's `design-review` stage. Judgement the
+probe cannot make goes to a blind design audit
 ([design-audit skill](../plugins/toolbox-operator/skills/design-audit/SKILL.md)), which captures
 from the same stories.
 
