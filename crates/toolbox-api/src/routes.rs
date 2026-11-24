@@ -1,7 +1,7 @@
 //! REST API (docs/v1-spec.md §7.2), M2 subset: entities, scorecards, native writes, ingest,
 //! snapshot info, health, metrics and the operator export used for differential checks.
 
-use crate::access::Visibility;
+use crate::access::{Caller, Visibility};
 use crate::state::{AppState, Published, parse_min_snapshot};
 use axum::body::Bytes;
 use axum::extract::{Path, Query, State};
@@ -256,6 +256,59 @@ fn list_candidates<'a>(s: &AppState, p: &'a Published, q: &ListQuery) -> Vec<&'a
         .collect()
 }
 
+/// A list filter, evaluated against what the caller may see of each entity.
+struct ListFilter<'a> {
+    s: &'a AppState,
+    p: &'a Published,
+    caller: &'a Caller,
+    expr: &'a Expr,
+    policy: ExprValue,
+    truthy: ExprValue,
+    wants_scores: bool,
+}
+
+impl ListFilter<'_> {
+    fn matches(&self, id: &str, v: Visibility) -> bool {
+        let (s, p) = (self.s, self.p);
+        let mut visible = Value::Object(s.visible_fields(p, self.caller, id, v, None).unwrap());
+        visible["id"] = json!(id);
+        let entity = ExprValue::from_json(&visible);
+        // `scores['<scorecard>']` = {level, rules: {rule: outcome}}, as the caller may see it.
+        let scores = if self.wants_scores {
+            ExprValue::from_json(&score_outcomes(s.shape_scores(p, self.caller, id, v)))
+        } else {
+            ExprValue::from_json(&json!({}))
+        };
+        matches!(
+            with_vars(
+                &[
+                    ("entity", &entity),
+                    ("policy", &self.policy),
+                    ("scores", &scores),
+                ],
+                |ctx| self.expr.eval_in(ctx),
+            ),
+            Ok(b) if b == self.truthy
+        )
+    }
+
+    /// What a viewer sees is the summary or the whole entity, so an entity the filter rejects in
+    /// both shapes can't match: drop it before asking the authorizer. The result is the same.
+    fn may_match(&self, id: &str) -> bool {
+        let whole = Visibility {
+            view: true,
+            details: true,
+        };
+        let summary = Visibility {
+            view: true,
+            details: false,
+        };
+        // Scores' rule outcomes are owner-only by default, so they can differ by shape too.
+        let differ = self.wants_scores || self.s.hides_details(&self.p.derived.entities[id].kind);
+        self.matches(id, whole) || (differ && self.matches(id, summary))
+    }
+}
+
 async fn list_entities(State(s): S, headers: HeaderMap, Query(q): Query<ListQuery>) -> Response {
     let caller = match s.caller(&headers).await {
         Ok(c) => c,
@@ -280,50 +333,20 @@ async fn list_entities(State(s): S, headers: HeaderMap, Query(q): Query<ListQuer
         .as_deref()
         .map(|f| f.split(',').map(str::trim).collect());
     let limit = q.limit.unwrap_or(100).clamp(1, 1000);
-    let policy = ExprValue::from_json(&Value::Object(s.manifest.policies.clone()));
     let candidates = list_candidates(&s, &p, &q);
-    let truthy = ExprValue::from_json(&Value::Bool(true));
-    let wants_scores = q.filter.as_deref().is_some_and(|f| f.contains("scores"));
-    let matches = |f: &Expr, id: &str, v: Visibility| {
-        let mut visible = Value::Object(s.visible_fields(&p, &caller, id, v, None).unwrap());
-        visible["id"] = json!(id);
-        let entity = ExprValue::from_json(&visible);
-        // `scores['<scorecard>']` = {level, rules: {rule: outcome}}, as the caller may see it.
-        let scores = if wants_scores {
-            ExprValue::from_json(&score_outcomes(s.shape_scores(&p, &caller, id, v)))
-        } else {
-            ExprValue::from_json(&json!({}))
-        };
-        matches!(
-            with_vars(
-                &[
-                    ("entity", &entity),
-                    ("policy", &policy),
-                    ("scores", &scores),
-                ],
-                |ctx| f.eval_in(ctx),
-            ),
-            Ok(b) if b == truthy
-        )
-    };
-    // What a viewer sees is the summary or the whole entity, so an entity the filter rejects in
-    // both shapes can't match: drop it before asking the authorizer. The result is the same.
-    // Lazily, so a page stops reading candidates once it is full.
-    let summary = Visibility {
-        view: true,
-        details: false,
-    };
-    let whole = Visibility {
-        view: true,
-        details: true,
-    };
-    let mut pending = candidates.into_iter().filter(|id| {
-        filter.as_ref().is_none_or(|f| {
-            // Scores' rule outcomes are owner-only by default, so they can differ by shape too.
-            let differ = wants_scores || s.hides_details(&p.derived.entities[*id].kind);
-            matches(f, id, whole) || (differ && matches(f, id, summary))
-        })
+    let matcher = filter.as_ref().map(|expr| ListFilter {
+        s: &s,
+        p: &p,
+        caller: &caller,
+        expr,
+        policy: ExprValue::from_json(&Value::Object(s.manifest.policies.clone())),
+        truthy: ExprValue::from_json(&Value::Bool(true)),
+        wants_scores: q.filter.as_deref().is_some_and(|f| f.contains("scores")),
     });
+    // Lazily, so a page stops reading candidates once it is full.
+    let mut pending = candidates
+        .into_iter()
+        .filter(|id| matcher.as_ref().is_none_or(|m| m.may_match(id)));
     let mut items: Vec<Value> = Vec::new();
     let mut next = None;
     'outer: loop {
@@ -339,8 +362,8 @@ async fn list_entities(State(s): S, headers: HeaderMap, Query(q): Query<ListQuer
             if !v.view {
                 continue;
             }
-            if let Some(f) = &filter
-                && !matches(f, id, v)
+            if let Some(m) = &matcher
+                && !m.matches(id, v)
             {
                 continue;
             }
