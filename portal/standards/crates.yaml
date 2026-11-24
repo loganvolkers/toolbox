@@ -368,8 +368,9 @@ scorecards:
       evidence: |-
         [entity.reviewState == 'stale' ? 'the crate\'s sources changed since it was assessed' : 'not assessed against crate-design']
       fix: >-
-        Run `toolbox assess brief crate:<name> --portal portal`, have your agent
-        write the assessment file it names, then `toolbox assess check portal`.
+        Have an agent review the crate's current sources: `toolbox assess brief
+        crate:<name> --portal portal` names the assessment file to write, and
+        `toolbox assess check portal` checks it.
       rationale: >-
         A review's verdict holds for the sources it read; once src/, tests/ or
         Cargo.toml change it may no longer be true, so only a review of the
