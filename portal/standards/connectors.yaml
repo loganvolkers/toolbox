@@ -4,6 +4,7 @@
 kinds:
   # First-party connectors (docs/design/connector-standards.md). Facts from the crate; thresholds below.
   - name: Connector
+    title: Connector binary
     description: >-
       A first-party connector binary we ship: its docs, transport, the kinds
       it emits, its tests and where CI runs its conformance suite.

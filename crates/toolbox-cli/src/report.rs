@@ -1240,6 +1240,9 @@ fn scorecard_defs(m: &toolbox_model::Manifest) -> Map<String, Value> {
             if let Some(c) = &sc.compare {
                 def["compare"] = json!(c);
             }
+            if let Some(a) = &sc.applies_to {
+                def["appliesTo"] = json!(a.trim());
+            }
             (sc.name.clone(), def)
         })
         .collect()
@@ -1366,7 +1369,7 @@ fn report_json(m: &toolbox_model::Manifest, d: &Derived, starts: &Map<String, Va
         .map(|k| {
             (
                 k.name.clone(),
-                json!({"description": k.description.as_deref().map(str::trim)}),
+                json!({"title": k.title, "description": k.description.as_deref().map(str::trim)}),
             )
         })
         .collect();

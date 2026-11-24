@@ -385,6 +385,7 @@ include:
     with:
       name: maintainer-python
       kind: PythonScript
+      kindTitle: Python file
       track: maintainer
       tool: ruff
       version: 0.14.0

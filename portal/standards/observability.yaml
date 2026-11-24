@@ -3,6 +3,7 @@
 
 kinds:
   - name: Observability
+    title: Telemetry checklist
     description: >-
       A declared runtime-telemetry checklist: required crate paths, metric
       catalog, alert stubs and assessment evidence for OTel/Prometheus

@@ -25,6 +25,7 @@ tools:
 
 kinds:
   - name: ${param:kind}
+    title: ${param:kindTitle}
     description: A file checked by ${param:tool}, with its SARIF findings.
     identityFrom: ["connector:${param:name}"]
     fields:

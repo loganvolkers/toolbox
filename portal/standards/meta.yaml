@@ -299,6 +299,7 @@ kinds:
       relations: {fieldOf: "['kind:' + record.portal + '/' + record.kind]"}
 
   - name: PortalConnector
+    title: Declared connector
     description: A connector one of the described portals declares.
     identityFrom: [connector:surfaces]
     fields:

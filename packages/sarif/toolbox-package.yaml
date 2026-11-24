@@ -22,6 +22,12 @@ parameters:
   kind:
     type: string
     description: The entity kind for the files (PascalCase, unique per include).
+  kindTitle:
+    type: string
+    default: null
+    description: >-
+      The kind's name as readers see it (e.g. Python file); unset, reports
+      split the kind name into words.
   tool:
     type: string
     description: >-

@@ -5,7 +5,9 @@ kinds:
   - name: Doc
     description: >-
       A markdown document: its links, status banner, sources and the SDLC
-      layer it names.
+      layer it names. Decision records and the logs whose past entries are
+      never rewritten are listed but not scored, so wording rules added later
+      don't reach back into them.
     identityFrom: [connector:workspace]
     fields:
       path: {type: string}
@@ -48,6 +50,7 @@ kinds:
         mentionsCrate: record.codeSpans.map(s, 'crate:' + s)
 
   - name: File
+    title: Test or script file
     description: >-
       A script or integration test, with the commands and MCP tools it
       exercises.

@@ -491,6 +491,10 @@
         "name": {
           "$ref": "#/$defs/kindName"
         },
+        "title": {
+          "type": "string",
+          "description": "The name readers see (reports and the UI); defaults to the kind name split into words. Set it when two kinds would otherwise read alike."
+        },
         "description": {
           "type": "string",
           "description": "What this means, for people and agents reading entities (shown by get and in the UI)."

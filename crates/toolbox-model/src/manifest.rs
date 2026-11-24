@@ -69,6 +69,9 @@ pub struct Connector {
 #[serde(rename_all = "camelCase")]
 pub struct Kind {
     pub name: String,
+    /// The name readers see; reports fall back to the kind name split into words.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub title: Option<String>,
     /// What the kind is, for people and agents.
     pub description: Option<String>,
     pub identity_from: Vec<String>,
