@@ -69,7 +69,30 @@ and the repository level fell to none in a developer's checkout while CI's fresh
 bronze. The walk now lists the files git sees (tracked, or untracked and not ignored) and falls back
 to the disk outside a work tree, so fixtures and `results.json --update` built locally match CI.
 
-ROUND_2
+## Round 2: what the panel found
+
+The probes again passed 212 of 212. Medians rose on four of the five targeted dimensions: Honesty
+(U8) from 1 to 2, Clarity (U2) and Orientation (U1) from 2 to 3. The starter's first run went from
+fail to success for all three auditors. The round did not pass, because severity 3 and 4 findings
+were still open:
+
+| Finding (auditors) | Box or portal | Fix |
+|---|---|---|
+| The starter's tile said "0 of 240 scored entities are at the top level" beside a gold medal, over "239 docs · 99% at the top level". The tile counted only entities at gold, and the starter's ladder stops at bronze (A, B, C) | Box | The tile counts entities at the top level of their own scorecard, and its medal is the top level those scorecards share, or gold where they differ: "238 of 240" |
+| A factor 3 rules ahead and 1 behind read plainly "behind", and the factor tally of 2 ahead and 4 behind outweighed the rule tally of 15 ahead and 6 behind (A, B, C) | Box | Such a factor reads "behind, mixed"; the headline states the counting rule instead of hiding it in a collapsed section; track rows add the rule split ("by rule, 15 ahead and 6 behind of 30") |
+| One level carried three names: "265 gold" in the catalog, "within-limit" on the scorecard and "Within-Limit" on pills (B, C) | Box | Kind pages use the scorecard's own level names; pills keep the level's case |
+| The catalog grouped only the rows on screen: "57 go files with the same result" where the scorecard said 265 (B) | Box | Groups are counted over every row and then paged |
+| "Measured · All 30 rules. A tool, connector or script read the fact" on a comparison with no values (A, B, C) | Box | The basis is named "Tool-checked": how a rule is decided, not whether it has run |
+| The hero named the furthest track, but the attention list led with another track's scorecard (C) | Box | The status hero ends with a "Next:" line: the furthest track's lowest scorecard, its next level, how many entities to lift and the rule most of them need |
+| The comparison did not say what it leaves out (A, C) | Portal | The OpenFGA track's description ends with what is not covered: other datastores, more than one node, sustained load and other releases |
+| Lists of failing entities on campaign pages were unsorted, with no sizes (A, B, C) | Box | Campaign and scorecard lists lead with the furthest-off entities, using each rule's measure, and campaign rows show the evidence ("2629 lines, 1829 over the limit of 800") |
+| The starter, one entity short, read "Needs attention" in red (B, C) | Box | With every campaign on target and two or fewer entities at none, the status reads "Almost there" |
+| "gitHub releases" (A) | Box | Sentence-casing a description keeps a first word with a later capital, such as GitHub or OpenSSF |
+
+Two findings were declined. Toolbox for Toolbox opens on its repository level where the other
+portals open on a status (A): that portal has a repository standard and they do not, and its hero
+carries the same status sentence. The unmeasured comparison still shows short ids ("openfga vs
+spicedb") (A, B): a product's name lives in its record, and before the first run there is none.
 
 ## Comparisons are generic
 
