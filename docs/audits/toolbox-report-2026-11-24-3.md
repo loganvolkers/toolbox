@@ -171,6 +171,37 @@ Declined, with reasons:
   portal includes, and the package is Toolbox's.
 - **A report-wide entity search.** It is a feature, not a fix, and is left for its own change.
 
+## Round 6: what the panel found
+
+The probes passed 212 of 212 and every median held: U6 and J2 at 2, the rest at 3. Every task
+succeeded, except one partial on T6 (C). Five severity-3 findings were open, and they repeat two
+themes from earlier rounds, so the round did not pass:
+
+| Finding (auditors) | Box or portal | Fix |
+|---|---|---|
+| The OpenFGA hero names the track furthest from its goal, then gives a step that does not move its percentage (A, B, C) | Box | "Next" keeps the quickest medal and says why it comes first ("CI and supply chain is the track furthest from its goal"). When that medal is not a top level, a second line names the step that moves the track's percentage most: "lift 9 entities from bronze to silver on CI speed, about 16 points" |
+| The factor tally's counting rule differs by portal, but the overview and track tallies show only the numbers (A, C; B at severity 2) | Box | Every tally names its rule. Where the other rule gives a different count, the tally also gives that count: "counted by the majority of rules (behind if any rule is behind: ahead on 2, behind on 4)". The rule stays per comparison (D01M87WF2QZVPTD8CGDZKY133CD) |
+| Third-party actions pinned counts in OpenFGA's CI ring but is left out of Toolbox's (A; B, C at severity 2) | Box | One rule in every portal: each scored scorecard counts at its own top level. A scorecard that caps the repository level gets a lock note and is no longer left out |
+
+Severity-2 findings fixed in the same pass:
+
+- the starter's all-clear line names the scorecard that still has entities below its top level;
+- the top-level tile draws the highest top level present and says when top levels differ;
+- an entity's headline level says "✓ top" when it is at the top of every scorecard;
+- the scorecard page draws a not-scored scorecard with the same "?" medal as the list, and its
+  sidebar says "Nothing is scored yet" instead of a sort order;
+- the sidebar's comparison-factor heading links to Compare;
+- level pills in entity rows wrap instead of running into the name;
+- the first-run "Next" leads with `toolbox doctor`.
+
+Declined, with reasons:
+
+- **The OpenFGA example in a crate rule's "Why".** Toolbox's own tests do use OpenFGA, so on
+  Toolbox's portal the example is about the portal's subject.
+- **Future tense in the not-measured method text.** The method is the comparison's own description
+  from the manifest, not report copy.
+- **Product names in the not-measured state** and **entity search**, as in round 5.
+
 ## Comparisons are generic
 
 The OpenFGA portal compares OpenFGA v1.23.0 with SpiceDB v1.57.1 through the same comparative
