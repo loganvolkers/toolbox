@@ -4215,6 +4215,9 @@
       "doc:docs/adversarial-critique.md": {
         "level": "skipped"
       },
+      "doc:docs/audits/toolbox-report-2026-11-24.md": {
+        "level": "silver"
+      },
       "doc:docs/authorization.md": {
         "level": "silver"
       },
@@ -4632,6 +4635,9 @@
       "doc:docs/decisions/D01M857ZB468ZM2YS6GNSEG6YB9.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M85MK7FCRXH2TRMRKXTNA5GT.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/README.md": {
         "level": "skipped"
       },
@@ -4675,6 +4681,9 @@
         "level": "silver"
       },
       "doc:docs/design/dependency-standards.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/design-audit.md": {
         "level": "silver"
       },
       "doc:docs/design/developer-velocity.md": {
@@ -4978,6 +4987,12 @@
         "level": "silver"
       },
       "doc:plugins/toolbox-operator/skills/describe-portal/SKILL.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/skills/design-audit/SKILL.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/skills/design-audit/references/rubric.md": {
         "level": "silver"
       },
       "doc:plugins/toolbox-operator/skills/doctor/SKILL.md": {
@@ -5449,6 +5464,9 @@
           "has-evals": 1
         },
         "level": "silver"
+      },
+      "skill:plugins/toolbox-operator/skills/design-audit": {
+        "level": "gold"
       },
       "skill:plugins/toolbox-operator/skills/doctor": {
         "failing": {
