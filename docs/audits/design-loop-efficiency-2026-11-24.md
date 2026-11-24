@@ -33,7 +33,7 @@ About the box: how the maintainers change the way it reports.*
 
 | Hypothesis | Verdict | Evidence |
 |---|---|---|
-| A standard web framework such as Vue would speed up development | **Not supported as stated.** Split the file into modules, with types checked and a bundle. If a framework is wanted, it is React, which D31 already chose, adopted one view at a time. | Edit-to-preview took 10 s: a 1.6 s build and an 8.5 s report. That is not where the hours went. Vue would add a second framework next to the React minimal UI and `@toolbox/ui`, against the sprawl budget (D45). The custom-element contract (D01M7X0RYD20000000000000000) is framework-agnostic, so modules keep it intact. |
+| A standard web framework such as Vue would speed up development | **Not supported as stated.** Split the file into modules and bundle them. If a framework is wanted, it is React, which D31 already chose, adopted one view at a time. | Edit-to-preview took 10 s: a 1.6 s build and an 8.5 s report. That is not where the hours went. Vue would add a second framework next to the React minimal UI and `@toolbox/ui`, against the sprawl budget (D45). The custom-element contract (D01M7X0RYD20000000000000000) is framework-agnostic, so modules keep it intact. |
 | Storybook stories for pages and components would speed up the loop | **Supported**, for the reason the loop lacked: fixtures and fast checks | Each story is a fixture an agent can render, capture and probe in seconds, without regenerating a portal. The round 35 to 36 defect would have failed a story probe. Storybook 10 is already the default kit (D31, D01M7YNZFP68W0DR24PEA6T3FVM). |
 | A second reference portal (OpenFGA) would show the design is not fitted to one portal | **Supported** | Three defects appeared on its first render, none visible on Toolbox's own portal, and two of them are in the box (see *Second-portal check*). |
 
@@ -89,10 +89,10 @@ Adopted as [D01M87PSM9YQGGW3YQ5X4XCJP63](../decisions/D01M87PSM9YQGGW3YQ5X4XCJP6
    one module per view and per shared component. esbuild bundles them into the committed
    `toolbox-report.js`, so the binary still embeds one file, and CI fails when the bundle is stale.
 2. **Stories over fixtures.** Write Storybook 10 stories for every page and shared component, over
-   committed report fixtures: Toolbox's own portal, the OpenFGA portal, and synthetic edge cases
-   (empty comparison, a single-level scorecard, everything unassessed).
+   committed report fixtures: Toolbox's own portal, the OpenFGA portal, and states the two lack
+   (a comparison not measured yet, a portal with no data).
 3. **Probes in CI.** A story probe renders every story at 1280 and 390 px and fails on serious axe
-   violations, horizontal overflow, or targets under 24 px. It replaces most per-round scripts.
+   violations (WCAG 2.2 AA, which includes 24 px targets) and horizontal overflow. It replaces most per-round scripts.
 4. **A noise-aware stop rule.** A round passes when its probes pass, no severity-3 or 4 finding is
    open, and the median of a small panel of blind auditors does not fall on any dimension the
    round targeted. The loop stops when two rounds in a row move no targeted dimension.
