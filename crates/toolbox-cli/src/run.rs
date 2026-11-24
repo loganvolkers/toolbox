@@ -7,7 +7,8 @@
 //! and its credentials runs. An action whose approval rule names approvers therefore runs here
 //! only as a `change` (the review is the approval), or dispatched by a parent portal that
 //! recorded the approval and signed it with the key this portal pinned
-//! (`federation.acceptApprovalsFrom`, `toolbox_exec::grant`).
+//! (`federation.acceptApprovalsFrom`, `toolbox_exec::grant`). A parent's checkout is such a
+//! portal: it keeps runs that wait for approval and takes `--approve` (federated-actions.md T4).
 
 use serde_json::{Map, Value, json};
 use std::path::{Path, PathBuf};
@@ -63,12 +64,14 @@ pub struct Options {
     /// With --url: a personal access token.
     #[arg(long, env = "TOOLBOX_TOKEN", requires = "url", hide_env_values = true)]
     pub token: Option<String>,
-    /// With --url: approve a run that waits for you. Approvals need an interactive sign-in; a
-    /// server with dev sign-in (the default on a loopback address) takes --as.
-    #[arg(long, value_name = "RUN_ID", requires = "url", conflicts_with_all = ["preview", "confirm", "yes", "verify", "runs", "reject"])]
+    /// Approve a run that waits for you, on the portal that recorded it: a portal that federates
+    /// children approves from its checkout, signing with its kept key; with --url, the server
+    /// does, and needs an interactive sign-in (one with dev sign-in, the default on a loopback
+    /// address, takes --as). The last approval runs it.
+    #[arg(long, value_name = "RUN_ID", conflicts_with_all = ["preview", "confirm", "yes", "verify", "runs", "reject"])]
     pub approve: Option<String>,
-    /// With --url: reject a run that waits for you.
-    #[arg(long, value_name = "RUN_ID", requires = "url", conflicts_with_all = ["preview", "confirm", "yes", "verify", "runs"])]
+    /// Reject a run that waits for you (as --approve).
+    #[arg(long, value_name = "RUN_ID", conflicts_with_all = ["preview", "confirm", "yes", "verify", "runs"])]
     pub reject: Option<String>,
     /// A note recorded with --approve or --reject.
     #[arg(long)]
@@ -121,13 +124,18 @@ fn portal_dir(p: &Path) -> PathBuf {
     }
 }
 
+/// Who is asking, as a principal: `--as ann` and `--as ann@example.com` are `user:ann`, as a
+/// served portal's dev sign-in reads them.
 fn actor(o: &Options) -> String {
-    o.as_user.clone().unwrap_or_else(|| {
-        format!(
-            "user:{}",
-            std::env::var("USER").unwrap_or_else(|_| "local".into())
-        )
-    })
+    let who = o
+        .as_user
+        .clone()
+        .unwrap_or_else(|| std::env::var("USER").unwrap_or_else(|_| "local".into()));
+    if who.contains(':') {
+        who
+    } else {
+        format!("user:{}", who.split('@').next().unwrap_or(&who))
+    }
 }
 
 fn emit(o: &Options, doc: &Value, md: impl FnOnce() -> String) {
@@ -240,10 +248,20 @@ fn list(
 ) -> ExitCode {
     let shown = federation::on_entity(all, d, o.entity.as_deref());
     let actions: Vec<Value> = shown.iter().map(|x| federation::describe(x, d)).collect();
+    let key = holds_approvals(m)
+        .then(|| toolbox_api::actions::approval_key_for(m))
+        .flatten();
     let doc = json!({"portal": portal, "actions": actions,
-        "unreadable": federation::unreadable(m, d)});
+        "unreadable": federation::unreadable(m, d), "approval_key": key});
     emit(o, &doc, || {
-        list_md(&portal.display().to_string(), &actions, "") + &unreadable_md(&doc)
+        let mut s = list_md(&portal.display().to_string(), &actions, "") + &unreadable_md(&doc);
+        if let Some(k) = &key {
+            s.push_str(&format!(
+                "\n{} approves its children's runs with key {k}: a child accepts them with federation.acceptApprovalsFrom: [{{portal: {}, key: \"{k}\"}}]\n",
+                m.portal.name, m.portal.name
+            ));
+        }
+        s
     });
     ExitCode::SUCCESS
 }
@@ -311,17 +329,13 @@ pub fn run(o: &Options) -> ExitCode {
     if let Some(url) = &o.url {
         return remote::run(o, url.trim_end_matches('/'));
     }
-    if o.approve.is_some() || o.reject.is_some() {
-        return error(
-            o,
-            2,
-            "a checkout holds no approvals: approve through the portal that recorded the run (--url)".into(),
-        );
-    }
     if o.runs {
         return saved_runs(o);
     }
     let portal = default_portal(o.portal.as_deref());
+    if let Some(id) = o.approve.as_ref().or(o.reject.as_ref()) {
+        return decide(o, &portal, id);
+    }
     if let Some(id) = &o.verify {
         if !toolbox_exec::executor::is_run_id(id) {
             return error(o, 2, format!("--verify takes a run id (run_…), not {id:?}"));
@@ -404,7 +418,158 @@ fn act(
     if !p.approvers.is_empty() && !approved(o, m, &p, &requested_by, &mut run) {
         return finish(o, &run, 3);
     }
-    execute(o, portal, m, &p, run)
+    execute(o, portal, m, &p, run, None)
+}
+
+/// Whether this portal holds approvals itself: it federates children, so it has a key to sign
+/// their grants with.
+fn holds_approvals(m: &Manifest) -> bool {
+    m.federation
+        .as_ref()
+        .is_some_and(|f| f.portals.is_some() || !f.children.is_empty())
+}
+
+/// Held while one approval decides a run, so two approvals can't both start it.
+struct Lock(PathBuf);
+
+impl Lock {
+    fn take(path: &Path) -> Result<Lock, String> {
+        if let Some(dir) = path.parent() {
+            let _ = std::fs::create_dir_all(dir);
+        }
+        match std::fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(path)
+        {
+            Ok(_) => Ok(Lock(path.to_path_buf())),
+            Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => Err(format!(
+                "another approval is deciding this run ({} exists); check it with toolbox run --verify, or remove the file if no toolbox is running",
+                path.display()
+            )),
+            Err(e) => Err(format!("{}: {e}", path.display())),
+        }
+    }
+}
+
+impl Drop for Lock {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_file(&self.0);
+    }
+}
+
+/// `--approve` / `--reject` without a server: the same rules the server applies (a pending
+/// approver, not the requester, each person once). Without an authorization model nobody is known
+/// to be in a group, so only a named user approves here.
+fn decide(o: &Options, portal: &Path, id: &str) -> ExitCode {
+    if !toolbox_exec::executor::is_run_id(id) {
+        return error(o, 2, format!("expected a run id (run_…), not {id:?}"));
+    }
+    let _lock = match Lock::take(&runs_dir().join(format!("{id}.lock"))) {
+        Ok(l) => l,
+        Err(e) => return error(o, 1, e),
+    };
+    let (_, m, d) = match crate::report::live(portal, o.fixtures, &o.skip) {
+        Ok(x) => x,
+        Err(e) => return error(o, 2, e),
+    };
+    let mut run = match waiting_run(&m, id) {
+        Ok(r) => r,
+        Err(e) => return error(o, 2, e),
+    };
+    let who = actor(o);
+    let member: Vec<String> = run
+        .pending_approvers()
+        .iter()
+        .flat_map(|a| a.split('|').map(str::to_owned).collect::<Vec<_>>())
+        .filter(|g| g.eq_ignore_ascii_case(&who))
+        .collect();
+    if o.reject.is_some() {
+        if run.state != "awaiting_approval" || member.is_empty() {
+            return error(o, 2, format!("{who} cannot reject run {id}"));
+        }
+        run.approval.rejected_by = Some(who.clone());
+        run.set("rejected", Some(&who), o.note.clone());
+        return finish(o, &run, 1);
+    }
+    let done = match run.approve(&who, |g| member.iter().any(|m| m == g)) {
+        Ok(done) => done,
+        Err(e) => return error(o, 2, e),
+    };
+    if let (Some(n), Some(e)) = (&o.note, run.events.last_mut()) {
+        e.note = Some(format!("as {}: {n}", e.note.take().unwrap_or_default()));
+    }
+    if !done {
+        let note = format!(
+            "needs approval by {}: toolbox run --as <approver> --approve {id}",
+            run.pending_approvers().join(", ")
+        );
+        run.set("awaiting_approval", None, Some(note));
+        return finish(o, &run, 3);
+    }
+    run.state = "approved".into();
+    match approved_again(portal, &m, &d, &run) {
+        Ok((p, grant)) => execute(o, portal, &m, &p, run, grant),
+        Err(e) => {
+            run.fail(e);
+            finish(o, &run, 1)
+        }
+    }
+}
+
+/// The run `id` this portal recorded, from the state directory.
+fn waiting_run(m: &Manifest, id: &str) -> Result<Run, String> {
+    let run: Run = std::fs::read_to_string(runs_dir().join(format!("{id}.json")))
+        .ok()
+        .and_then(|t| serde_json::from_str(&t).ok())
+        .ok_or_else(|| {
+            format!(
+                "no run {id} under {}: approve on the portal that recorded it (--url for a served one)",
+                runs_dir().display()
+            )
+        })?;
+    if !holds_approvals(m) || run.portal != m.portal.name {
+        return Err(format!(
+            "{} holds no approvals for run {id} (it was recorded by portal {}): approve on that portal, from its directory or with --url",
+            m.portal.name, run.portal
+        ));
+    }
+    Ok(run)
+}
+
+/// The approved run prepared again against today's facts, and the grant that carries its
+/// approvals to the child, signed with the portal's kept key. An approval binds what the
+/// approvers saw, so a changed action or changed effects refuse the run.
+fn approved_again(
+    portal: &Path,
+    m: &Manifest,
+    d: &toolbox_derive::Derived,
+    run: &Run,
+) -> Result<(Prepared, Option<String>), String> {
+    let program = std::env::current_exe().unwrap_or_else(|_| PathBuf::from("toolbox"));
+    let req = Request {
+        action: &run.action,
+        entity: Some(&run.entity),
+        inputs: run.inputs.clone(),
+        actor: &run.requested_by,
+        cwd: toolbox_exec::executor::portal_repo_dir(&portal_dir(portal)),
+        program: &program,
+    };
+    let p =
+        prepare(m, d, req).map_err(|e| format!("could not prepare the approved run again: {e}"))?;
+    if !p.blockers.is_empty() {
+        return Err(format!("blocked after approval: {}", p.blockers.join("; ")));
+    }
+    if p.version != run.action_version || p.preview.effects != run.effects {
+        return Err("preview_stale: the action or its effects changed after it was approved; preview and request it again".into());
+    }
+    let grant = match toolbox_api::actions::signing_seed(m) {
+        Some(seed) => p
+            .grant(run, &seed)
+            .map_err(|e| format!("could not sign the approvals for the child portal: {e}"))?,
+        None => None,
+    };
+    Ok((p, grant))
 }
 
 fn refused(
@@ -480,10 +645,14 @@ fn approved(o: &Options, m: &Manifest, p: &Prepared, requested_by: &str, run: &m
     if pending.is_empty() || p.reviewed {
         return true;
     }
-    let why = refused.map_or_else(
-        || "a repo portal holds no approvals, so run it through a portal that does (a parent with `toolbox serve`), or make it a `change` executor that proposes a branch so review is the approval".to_owned(),
-        |e| format!("the parent's approvals were refused: {e}"),
-    );
+    let why = match refused {
+        Some(e) => format!("the parent's approvals were refused: {e}"),
+        None if holds_approvals(m) => format!(
+            "approve with toolbox run --as <approver> --approve {}",
+            run.id
+        ),
+        None => "a repo portal holds no approvals, so run it through a portal that does (its parent), or make it a `change` executor that proposes a branch so review is the approval".to_owned(),
+    };
     run.set(
         "awaiting_approval",
         None,
@@ -492,8 +661,16 @@ fn approved(o: &Options, m: &Manifest, p: &Prepared, requested_by: &str, run: &m
     false
 }
 
-fn execute(o: &Options, portal: &Path, m: &Manifest, p: &Prepared, mut run: Run) -> ExitCode {
-    let ctx = p.context(&run);
+fn execute(
+    o: &Options,
+    portal: &Path,
+    m: &Manifest,
+    p: &Prepared,
+    mut run: Run,
+    grant: Option<String>,
+) -> ExitCode {
+    let mut ctx = p.context(&run);
+    ctx.grant = grant;
     let mut obs = Local {
         portal: portal.to_path_buf(),
         fixtures: o.fixtures,

@@ -233,8 +233,9 @@ fn cwd() -> std::path::PathBuf {
 /// The approval signing seed: from the environment variable `federation.signingKey` names; else,
 /// for a portal that federates children, one this host generates once and keeps in
 /// `<state dir>/served/<portal>/signing-key`. Servers that share runs need the variable: a kept
-/// seed is one host's, and children pin one key.
-fn signing_seed(m: &toolbox_model::Manifest) -> Option<String> {
+/// seed is one host's, and children pin one key. `toolbox run` approving without a server signs
+/// with the same seed, so children pin one key whether or not the portal is served.
+pub fn signing_seed(m: &toolbox_model::Manifest) -> Option<String> {
     let fed = m.federation.as_ref()?;
     if let Some(var) = &fed.signing_key {
         return std::env::var(var).ok().filter(|v| !v.trim().is_empty());

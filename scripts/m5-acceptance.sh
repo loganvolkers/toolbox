@@ -272,4 +272,30 @@ set +e; OUT=$("${TB2[@]}" --approve "$RID" --as bob --wait 2>&1); CODE=$?; set -
 echo "   minimal-repo: toolbox test ran its 5 action cases in a scratch copy, leaving its origin as it was"
 echo "   minimal-repo: previewed, awaited bob (ann and carol refused), pushed CODE_OF_CONDUCT.md with trailers, recorded; a rejected push failed with the origin's message"
 echo "   no connector, kind or key declared: 16 actions from 4 git children; a pull request branch on beta's origin; alpha pinned the generated key on its origin, the clone followed, and bob's approval pushed SECURITY.md to alpha's main"
+
+echo "10. no server: the org portal holds approvals in its checkout, signed with the same key"
+"$BIN/toolbox" serve "$WORK/gitorg" --stop >/dev/null; DETACHED=
+rm "$WORK/hosts/mini.git/hooks/pre-receive"
+[ "$(run "$WORK/gitorg" --as ann | field "['approval_key']")" = "$KEY" ] || fail "the checkout should sign with the key the server kept"
+COC=(add-code-of-conduct --entity portal:mini -i contact=local@acme.dev)
+set +e; OUT=$(run "$WORK/gitorg" "${COC[@]}" --as ann --yes); CODE=$?; set -e
+RID=$(echo "$OUT" | field "['id']")
+[ $CODE = 3 ] && echo "$OUT" | grep -q -- "--approve $RID" || fail "a request should await approval and say how to give it ($CODE): $OUT"
+for who in ann carol; do
+  set +e; run "$WORK/gitorg" --approve "$RID" --as $who >/dev/null 2>&1; CODE=$?; set -e
+  [ $CODE = 2 ] || fail "$who should not be able to approve in the checkout ($CODE)"
+done
+git --git-dir "$WORK/hosts/mini.git" show main:CODE_OF_CONDUCT.md | grep -q local@acme.dev && fail "pushed before approval"
+OUT=$(run "$WORK/gitorg" --approve "$RID" --as bob --note "fine offline" --wait) || fail "approve in the checkout: $OUT"
+[ "$(echo "$OUT" | field "['state']")" = succeeded ] || fail "approved in the checkout: $OUT"
+git --git-dir "$WORK/hosts/mini.git" show main:CODE_OF_CONDUCT.md | grep -q local@acme.dev || fail "CODE_OF_CONDUCT.md is not on mini's main"
+git --git-dir "$WORK/hosts/mini.git" log -1 --format=%B main | grep -q "Approved-By: user:bob" || fail "no Approved-By trailer"
+set +e; run "$WORK/gitorg" --approve "$RID" --as bob >/dev/null 2>&1; CODE=$?; set -e
+[ $CODE = 2 ] || fail "a finished run should not be approved again ($CODE)"
+set +e; OUT=$(run "$WORK/gitorg" add-code-of-conduct --entity portal:mini -i contact=never@acme.dev --as ann --yes); set -e
+RID=$(echo "$OUT" | field "['id']")
+set +e; OUT=$(run "$WORK/gitorg" --reject "$RID" --as bob); CODE=$?; set -e
+[ $CODE = 1 ] && [ "$(echo "$OUT" | field "['state']")" = rejected ] || fail "reject in the checkout ($CODE): $OUT"
+git --git-dir "$WORK/hosts/mini.git" show main:CODE_OF_CONDUCT.md | grep -q never@acme.dev && fail "a rejected run landed"
+echo "   add-code-of-conduct on mini with no server: awaited bob (ann and carol refused), signed with the kept key, pushed and verified; not approved twice; a rejected run did not land"
 echo "M5 acceptance: all checks passed"
