@@ -296,6 +296,17 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 - A level name that is its scorecard's only level carries "✓ top" inside its chip, so it never
   passes for a gold of another name.
 - A tile states its number on one line and its caveats on a second, quieter one.
+- A kind's bar in the catalog splits each level the way the table below it does: hatched where its
+  scorecards' agent-judged rules have not been assessed, dotted where it is provisional, with both
+  named in the catalog legend.
+- A track's ring and bars run on one ramp, grey to green; red is kept for entities at none and for
+  factors behind a rival. The bars are explained once, in the tracks legend, not under every card.
+- A comparison factor that is behind says why it matters and what would close it on its row and
+  at the top of its page, not only inside "How it is scored".
+- A campaign with no single score draws no bar.
+- In the scorecard index, scorecards whose every entity is at the top level fold under one row per
+  track ("✓ 4 scorecards with every entity at the top level", naming them), so open work leads;
+  a search shows every row. A row's clamped why opens in full on keyboard focus.
 
 Not built: a change since the last snapshot beside each track ring. The report carries one snapshot
 and the committed baseline, which equals it on every published build; a pages build that also scored
