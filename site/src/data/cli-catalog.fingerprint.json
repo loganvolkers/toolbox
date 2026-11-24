@@ -987,6 +987,16 @@
           "name": "fixtures",
           "long": "fixtures",
           "positional": false
+        },
+        {
+          "name": "detach",
+          "long": "detach",
+          "positional": false
+        },
+        {
+          "name": "stop",
+          "long": "stop",
+          "positional": false
         }
       ],
       "usage": "toolbox serve [OPTIONS] [PATH]"
