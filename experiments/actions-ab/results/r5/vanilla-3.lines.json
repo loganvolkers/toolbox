@@ -1,0 +1,16 @@
+{
+ "linesToMaintain": 1145,
+ "files": {
+  "alpha/.acme/actions/mark-deprecated.json": 32,
+  "beta/.acme/actions/mark-deprecated.json": 32,
+  "gamma/.acme/actions/mark-deprecated.json": 32,
+  "org/.acme-state/runs/run-20261124130512-alpha-3eb377.json": 116,
+  "org/.acme-state/runs/run-20261124130512-beta-ee2fc0.json": 116,
+  "org/.acme-state/runs/run-20261124130513-gamma-3ac876.json": 116,
+  "org/.gitignore": 2,
+  "org/acme.json": 14,
+  "org/acme/acme.py": 573,
+  "org/bin/acme": 2,
+  "org/tests/test_acme.sh": 110
+ }
+}
