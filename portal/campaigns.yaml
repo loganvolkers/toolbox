@@ -71,16 +71,17 @@ tracks:
     title: Against Backstage
     owner: group:maintainers
     description: >-
-      Measured by script on one 4 vCPU VM with one Postgres 16, as medians of
-      5 runs on a 10,000-component catalog, Toolbox 581be50 (a release build
-      after v0.1.1) against Backstage 1.57.0, and re-checked on 2026-11-23 by
-      an independent agent that upheld the verdict. Each product is installed
-      as its project documents on an Intel Xeon with Linux 6.12, and both are
-      scored on the same rules, factor by factor; the load generator shares
-      the same 4 vCPU, and probes and facts with evidence cover what timing
-      cannot. The checking agent designed no part of the benchmark: it
-      recomputed the numbers from the raw results and checked the scoring, and
-      it scored no rule itself.
+      Timed factors are medians of 5 scripted runs on a 10,000-component
+      catalog; capability and fact factors are probes and facts with evidence,
+      and the capability scenarios come from the Backstage parity audit, so
+      they favour what Backstage ships. Toolbox 581be50 (a release build after
+      v0.1.1) ran against Backstage 1.57.0, each installed as its project
+      documents on one 4 vCPU Intel Xeon VM with Linux 6.12 and one Postgres
+      16; the load generator shares the same 4 vCPU, and both products are
+      scored on the same rules, factor by factor. On 2026-11-23 the
+      benchmark's adjudicator, an agent that designed no part of it,
+      recomputed the numbers from the raw results, checked the scoring and
+      upheld the verdict; it scored no rule itself.
     links:
     - title: Results
       url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md
