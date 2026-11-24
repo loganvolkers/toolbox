@@ -3,7 +3,7 @@
 *Pre-registered 2026-11-24, before the first counted run (dx-benchmarks §4.1, protocol 2). About
 the box: running a declared action, remembering its run, and carrying it from repo to org. The
 design under test is [federated-actions.md](../../docs/design/federated-actions.md). Results are in
-[results/](./results/) and the verdict in [ADJUDICATION.md](./ADJUDICATION.md).*
+[results/](./results/); the adjudicator's verdict goes in `ADJUDICATION.md`.*
 
 ## 1. Question
 
