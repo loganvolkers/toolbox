@@ -266,7 +266,8 @@
     "a.tlink{display:inline-block;min-height:24px;color:inherit;text-decoration:none}a.tlink::after{content:\"\";position:absolute;inset:0;border-radius:14px}a.tlink:focus-visible{outline:none}.track:has(a.tlink:focus-visible){outline:2px solid var(--accent);outline-offset:2px}",
     ".shelf{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;font-size:13px;color:var(--muted)}.shelf .sh{display:inline-flex;align-items:center;gap:3px;white-space:nowrap}.shelf .sh b{color:var(--fg);font-size:14px}.tnext{font-size:13px;color:var(--muted)}.tnext b{color:var(--fg)}.tnext.good{color:var(--pass)}",
     ".track .medals a,.track .nextmedal a,.track .tnext a{position:relative;z-index:1}.track .medals>li{border-radius:10px}.medals a{color:inherit;text-decoration:none}.medals a:hover span:first-of-type{text-decoration:underline}.medals .lw{color:var(--muted)}",
-    ".basis.tip:hover::after,.basis.tip:focus::after,abbr.gloss:hover::after,abbr.gloss:focus::after{left:var(--tipx,0);max-width:min(280px,calc(100vw - 24px))}",
+    ".basis.tip:hover::after,.basis.tip:focus::after,abbr.gloss:hover::after,abbr.gloss:focus::after{content:none}",
+    ".ftip{position:fixed;z-index:50;width:max-content;max-width:min(280px,calc(100vw - 24px));padding:6px 9px;border-radius:8px;background:var(--fg);color:var(--bg);font-size:13px;font-weight:450;line-height:1.4;box-shadow:0 4px 14px rgba(0,0,0,.18)}.ftip[hidden]{display:none}",
     ".allmeasured .basis.measured:is(.mini,.ctl){border-color:transparent;background:none;font-weight:500}",
     ".medal-col{display:flex;gap:10px;align-items:center}.medal-col>svg{flex:0 0 30px}.mix{display:grid;gap:4px}.slots{position:relative;display:flex;gap:3px;align-items:flex-end;height:30px;padding-bottom:1px;border-bottom:1px solid var(--line)}.slot{position:relative;flex:1 1 0;max-width:30px;height:100%;border-radius:3px 3px 0 0;background:var(--tint);overflow:hidden}.slot::after{content:'';position:absolute;left:0;right:0;bottom:0;height:max(var(--h),3px);background:var(--c)}.slots[data-tip]{cursor:help}.slots[data-tip]:hover::after,.slots[data-tip]:focus::after{content:attr(data-tip);position:absolute;left:0;top:calc(100% + 6px);z-index:5;width:max-content;max-width:min(320px,calc(100vw - 48px));padding:6px 9px;border-radius:8px;background:var(--fg);color:var(--bg);font-size:12px;font-weight:500;line-height:1.5;white-space:pre-line;box-shadow:var(--shadow)}.slots .avg{position:absolute;left:0;right:0;bottom:var(--avg);border-top:1.5px dashed var(--fg);opacity:.7}.slot-key{display:inline-flex;align-items:center;gap:5px}.sc-done>summary{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px;padding:10px 8px 10px 28px;list-style:none;min-height:24px;cursor:pointer;border-bottom:1px solid var(--line);font-size:14px}.sc-done>summary:hover{background:var(--tint)}.sc-done>summary small{color:var(--muted);font-size:12px}.sc-done>summary::-webkit-details-marker{display:none}.sc-done>summary::before{content:'\\25B8';color:var(--muted);width:12px}.sc-done[open]>summary::before{content:'\\25BE'}.sc-done .topmark{color:var(--pass);font-weight:650}.slots.mini{display:inline-flex;width:30px;height:14px;gap:2px}.slots.mini .slot{border-radius:1px 1px 0 0}.mix small{font-size:12px;color:var(--muted)}.nextmedal{font-size:13px;padding:8px 10px;border-radius:8px;background:var(--tint)}.nextmedal b{color:var(--fg)}",
     ".track .th{display:flex;gap:14px;align-items:center}",
@@ -536,6 +537,10 @@
   // "Bytes of…" reads as "bytes of…" mid-sentence; "MCP…" keeps its capitals.
   function lowerFirst(t) {
     return /^[A-Z][a-z]/.test(t || "") ? t.charAt(0).toLowerCase() + t.slice(1) : t;
+  }
+
+  function andList(items) {
+    return items.length > 1 ? items.slice(0, -1).join(", ") + " and " + items[items.length - 1] : items.join("");
   }
 
   function plural(n, word, many) {
@@ -1011,9 +1016,11 @@
       return typeof i === "string" ? i : JSON.stringify(i);
     };
     var key = items.map(text).join("\n");
-    if (seen && seen[key]) return el("p", { className: "sub", textContent: "Evidence: the same " + plural(items.length, "item") + " as " + seen[key] + " above." });
+    if (seen && seen[key]) return el("p", { className: "sub", textContent: "Evidence: the same as for " + seen[key] + ", above." });
     if (seen) seen[key] = rule;
     var li = function (i) {
+      var off = typeof i === "string" && /^no data from connector (\S+)$/.exec(i);
+      if (off) return el("li", { className: "sub" }, "Not measured: the ", el("code", { textContent: off[1] }), " connector did not run in this build, so the facts this check reads are missing.");
       return el("li", {}, el("code", { textContent: text(i) }));
     };
     var SHOW = 3;
@@ -1721,17 +1728,17 @@
 
   // Campaigns measure progress to a target, so they get a bar with a target tick; rings are kept for
   // a track's share at the top level.
-  function goalBar(state, pct, target, big) {
+  function goalBar(state, pct, target, big, parts) {
     var empty = state === "empty";
     var g = el(
       "div",
       { className: "cprog" + (big ? " big" : "") + (state === "on" ? " on" : "") },
-      el("b", { textContent: empty ? "—" : pct + "%" }),
+      el("b", { textContent: empty ? (parts ? String(parts) : "—") : pct + "%" }),
       empty ? null : el("div", { className: "gb" }, el("span", { style: "width:" + Math.max(0, Math.min(100, pct)) + "%" }), el("i", { style: "left:calc(" + target + "% - 1px)" })),
-      el("small", { textContent: empty ? "no single score" : "target " + target + "%" }),
+      el("small", { textContent: empty ? (parts ? (parts === 1 ? "scorecard" : "scorecards") + ", each scored on its own" : "no single score") : "target " + target + "%" }),
     );
     g.setAttribute("role", "img");
-    g.setAttribute("aria-label", empty ? "no single score" : pct + "% of entities meet the goal; target " + target + "%");
+    g.setAttribute("aria-label", empty ? "no single score" + (parts ? ": " + plural(parts, "scorecard") + ", each scored on its own" : "") : pct + "% of entities meet the goal; target " + target + "%");
     return g;
   }
 
@@ -2057,15 +2064,48 @@
         body.tabIndex = -1;
         body.focus();
       });
-      // A tooltip opens rightwards from its badge; shift it left when that would run past the viewport.
-      var placeTip = function (e) {
-        var t = e.target && e.target.closest && e.target.closest(".basis.tip,abbr.gloss");
-        if (!t) return;
-        var room = document.documentElement.clientWidth - 12 - t.getBoundingClientRect().left;
-        t.style.setProperty("--tipx", Math.min(0, room - Math.min(280, document.documentElement.clientWidth - 24)) + "px");
+      // One tooltip at the top of the shadow tree, fixed to the viewport, so no collapsed or scrolling box
+      // clips it. Its trigger already carries the same words for screen readers.
+      var ftip = el("div", { className: "ftip", hidden: true, ariaHidden: "true" });
+      root.append(ftip);
+      var tipFor = null;
+      var tipTimer = 0;
+      var hideTip = function () {
+        clearTimeout(tipTimer);
+        tipFor = null;
+        ftip.hidden = true;
       };
-      root.addEventListener("mouseover", placeTip);
-      root.addEventListener("focusin", placeTip);
+      var showTip = function (e) {
+        if (e.target === ftip) return clearTimeout(tipTimer);
+        var t = e.target && e.target.closest && e.target.closest(".basis.tip,abbr.gloss");
+        if (t === tipFor) clearTimeout(tipTimer);
+        if (!t || !t.dataset.tip || t === tipFor) return;
+        clearTimeout(tipTimer);
+        tipFor = t;
+        ftip.textContent = t.dataset.tip;
+        ftip.hidden = false;
+        var r = t.getBoundingClientRect();
+        var vw = document.documentElement.clientWidth;
+        var vh = document.documentElement.clientHeight;
+        var left = Math.max(12, Math.min(r.left, vw - 12 - ftip.offsetWidth));
+        var top = r.bottom + 4 + ftip.offsetHeight > vh - 8 ? r.top - 4 - ftip.offsetHeight : r.bottom + 4;
+        ftip.style.left = left + "px";
+        ftip.style.top = Math.max(8, top) + "px";
+      };
+      root.addEventListener("mouseover", showTip);
+      root.addEventListener("focusin", showTip);
+      // A short grace period lets the pointer cross the gap onto the tooltip without it closing.
+      root.addEventListener("mouseout", function (e) {
+        if (tipFor && (e.target === ftip || tipFor.contains(e.target)) && root.activeElement !== tipFor) tipTimer = setTimeout(hideTip, 200);
+      });
+      root.addEventListener("focusout", function (e) {
+        if (tipFor && tipFor.contains(e.target)) hideTip();
+      });
+      window.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && tipFor) hideTip();
+      });
+      window.addEventListener("scroll", hideTip, { passive: true, capture: true });
+      window.addEventListener("hashchange", hideTip);
       var self = this;
       var inline = this.querySelector('script[type="application/json"]');
       var load = inline
@@ -2467,7 +2507,7 @@
             ? el("span", { className: "pill good", textContent: "on target" })
             : el("span", { className: "pill bad", textContent: (c.inScope || 0) - (c.meeting || 0) + " to go" });
       var a = link("campaign/" + enc(name), "card", [
-        goalBar(state, pct, target),
+        goalBar(state, pct, target, false, (c.includes || []).length),
         el(
           "div",
           {},
@@ -3183,7 +3223,7 @@
             "div",
             { className: "ehead" },
             el("div", {}, el("h2", { textContent: c.title || selected }), el("div", { className: "sub" }, c.status || "", track ? el("span", {}, " · track ", link(trackPath(D, c.track), "", track)) : null, c.owner ? " · owned by " + c.owner.replace(/^group:/, "") : null)),
-            goalBar(state, pct, target, true),
+            goalBar(state, pct, target, true, (c.includes || []).length),
           ),
           c.description ? el("p", { className: "lede" }, ...rich(c.description)) : null,
           state === "empty"
@@ -4109,7 +4149,11 @@
           el("h2", { className: "big", textContent: who(subject) + " vs " + who(peer) }),
           el("p", { className: "verdict", style: "margin:0;font-size:18px" }, el("b", { textContent: headline }), behindNames.length ? el("span", {}, " Behind on ", ...behindNames.map(function (n, i) {
             return el("span", {}, i ? ", " : "", link("compare/" + enc(n), "", title(D, n)), " (" + behindRules[n] + " of " + Object.keys(all[n].rules || {}).length + " rules)");
-          }), behindNames.length === 1 ? ": if your teams rely on what that factor measures, read it first." : ": if your teams rely on what those factors measure, read them first.") : " Never behind."),
+          }), behindNames.length === 1 ? ": " + andList(Object.keys(all[behindNames[0]].rules || {}).filter(function (r) {
+            return (all[behindNames[0]].rules[r] || {})[peer] === "behind";
+          }).sort().map(function (r) {
+            return ruleTitle(behindNames[0], r);
+          })) + ". If your teams rely on those, read it first." : ": if your teams rely on what those factors measure, read them first.") : " Never behind."),
           el(
             "p",
             { className: "rule-tally" },
