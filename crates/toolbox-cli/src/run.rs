@@ -82,6 +82,16 @@ pub struct Options {
     /// Who is asking, recorded on the run (default: `user:$USER`).
     #[arg(long = "as", env = "TOOLBOX_AS")]
     pub as_user: Option<String>,
+    /// A file holding your own forge token: in a checkout, you are whoever the forge says owns
+    /// it, and `--as` must agree. Required where the portal's forge says `identity: true`. The
+    /// token may also be in TOOLBOX_IDENTITY_TOKEN; it goes only to that forge.
+    #[arg(
+        long,
+        value_name = "FILE",
+        env = "TOOLBOX_IDENTITY_TOKEN_FILE",
+        conflicts_with = "url"
+    )]
+    pub identity_token_file: Option<PathBuf>,
     /// Connectors not to run when reading facts (comma-separated).
     #[arg(long, value_delimiter = ',')]
     pub skip: Vec<String>,
@@ -124,17 +134,63 @@ fn portal_dir(p: &Path) -> PathBuf {
     }
 }
 
-/// Who is asking, as a principal: `--as ann` and `--as ann@example.com` are `user:ann`, as a
-/// served portal's dev sign-in reads them.
-fn actor(o: &Options) -> String {
-    let who = o
-        .as_user
-        .clone()
-        .unwrap_or_else(|| std::env::var("USER").unwrap_or_else(|_| "local".into()));
+/// `--as ann` and `--as ann@example.com` are `user:ann`, as a served portal's dev sign-in reads
+/// them.
+fn principal(who: &str) -> String {
     if who.contains(':') {
-        who
+        who.to_owned()
     } else {
-        format!("user:{}", who.split('@').next().unwrap_or(&who))
+        format!("user:{}", who.split('@').next().unwrap_or(who))
+    }
+}
+
+/// Who is asking, as a principal. With an identity token, the forge says who; otherwise `--as`
+/// (or `$USER`) is taken on trust, unless the portal's forge says `identity: true`. A parent
+/// dispatching a child vouches for its requester with a signed grant.
+fn actor(o: &Options, m: &Manifest) -> Result<String, String> {
+    let claimed = o.as_user.as_deref().map(principal);
+    let token = match &o.identity_token_file {
+        Some(f) => Some(std::fs::read_to_string(f).map_err(|e| format!("{}: {e}", f.display()))?),
+        None => std::env::var("TOOLBOX_IDENTITY_TOKEN").ok(),
+    }
+    .filter(|t| !t.trim().is_empty());
+    let marked = m.forges.iter().find(|f| f.identity);
+    let Some(token) = token.filter(|_| o.parent_run.is_none()) else {
+        if let (Some(f), None) = (marked, &o.parent_run) {
+            return Err(format!(
+                "this portal takes who you are from your own token on {} (identity: true), not from --as: pass --identity-token-file <file> or set TOOLBOX_IDENTITY_TOKEN",
+                f.url
+            ));
+        }
+        return Ok(claimed.unwrap_or_else(|| {
+            principal(&std::env::var("USER").unwrap_or_else(|_| "local".into()))
+        }));
+    };
+    let f = match (marked, m.forges.as_slice()) {
+        (Some(f), _) | (None, [f]) => f,
+        _ => {
+            return Err(
+                "an identity token needs the forge that issued it: mark one of this portal's forges identity: true"
+                    .into(),
+            );
+        }
+    };
+    let kind =
+        toolbox_model::forge::kind_of(f).ok_or_else(|| format!("forge {}: no type", f.url))?;
+    let api = f
+        .api
+        .clone()
+        .unwrap_or_else(|| toolbox_model::forge::default_api(kind, &f.url));
+    let who = format!(
+        "user:{}",
+        toolbox_exec::executor::whoami(kind, &api, &token)?
+    );
+    match claimed {
+        Some(c) if !c.eq_ignore_ascii_case(&who) => Err(format!(
+            "--as says {c}, but {} says the identity token is {who}",
+            f.url
+        )),
+        _ => Ok(who),
     }
 }
 
@@ -372,7 +428,10 @@ fn act(
         Err(e) => return error(o, 2, e),
     };
     let program = std::env::current_exe().unwrap_or_else(|_| PathBuf::from("toolbox"));
-    let requested_by = actor(o);
+    let requested_by = match actor(o, m) {
+        Ok(a) => a,
+        Err(e) => return error(o, 2, e),
+    };
     let req = Request {
         action: name,
         entity: o.entity.as_deref(),
@@ -477,7 +536,10 @@ fn decide(o: &Options, portal: &Path, id: &str) -> ExitCode {
         Ok(r) => r,
         Err(e) => return error(o, 2, e),
     };
-    let who = actor(o);
+    let who = match actor(o, &m) {
+        Ok(a) => a,
+        Err(e) => return error(o, 2, e),
+    };
     let member = match memberships(&root, &m, &d, &run, &who) {
         Ok(member) => member,
         Err(e) => return error(o, 2, e),

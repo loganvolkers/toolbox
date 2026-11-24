@@ -78,6 +78,7 @@ numbers are in brackets.
 | **F6** | As an **approver**, I want "someone in release" to mean the GitLab group, so people are managed in one place | The `gitlab` connector reports `acme/release`'s members; the requester and a Guest are refused, someone removed from the GitLab group is refused on the next read, and a member approves [8] | Built (§4.6) |
 | **F7** | As a **repo owner moving from GitHub to GitLab**, I want my `.toolbox/` to move unchanged | The child's runner is `{type: ci}` on both; only the parent's `git:` URL changes | Built (the runner type is forge-neutral) |
 | **F8** | As a **platform engineer**, I start the org's own pipeline (a deploy, a release) from the portal, with typed inputs | A `gitlab-pipeline` executor sends the run's inputs as pipeline inputs; an input GitLab refuses fails the run with GitLab's reason [7] | Built |
+| **F10** | As an **approver in a GitLab-only organisation with no server**, I want the org's checkout to know it's me, not whoever I say I am | With `identity: true` on the forge, a request and an approval need the person's own GitLab token; `--as` alone, `--as` naming someone else and a token GitLab refuses are refused, and no record holds a token [9] | Built (§4.6) |
 | **F9** | As a **forge author**, I add a forge Toolbox has never seen | One driver implementing the capabilities it has; no change to the lifecycle, the trust rules or the manifest | Designed (§5) |
 
 ## 4. The abstraction
@@ -246,6 +247,21 @@ instead; `glab api` returns raw pages, not records. The connector also reports `
 The forge's own actor (`GITLAB_USER_LOGIN`, the dispatch token's owner) is recorded on the run.
 It never replaces the requester.
 
+A checkout has no sign-in, so it takes `--as` on trust (T6), unless a forge says who people are
+(D01M87FMCVSQCQJMGDSN2MCTH5W):
+
+```yaml
+forges:
+  - {url: "https://gitlab.acme.dev", type: gitlab, identity: true}
+```
+
+Then `toolbox run` needs each person's own token (`--identity-token-file`, or
+`TOOLBOX_IDENTITY_TOKEN`), asks the forge who owns it, and acts as that user; a `--as` naming
+someone else, a token the forge refuses, or no token at all is refused (exit 2). A `read_user`
+token is enough on GitLab. The token goes to the forge's API only, never to an action's process or
+a record. A child run by its parent is exempt, since the parent's signed grant names the
+requester. Acceptance step [9] covers it.
+
 ## 5. Adding a forge
 
 A driver is a `Kind` in `toolbox_model::forge` and one module in `toolbox-exec` (`github.rs`,
@@ -302,6 +318,9 @@ passed `${env:…}` references to the connector unresolved, so a connector whose
 reference failed the kit while `serve` and `run` worked, and the kit's report didn't say why.
 The kit now resolves references as `serve` does (falling back to the text as written when they
 can't resolve, as against a mock) and prints the connector's error.
+The benchmark's dry run found a ninth, also in Toolbox: a checkout could not tell who was asking,
+so the Toolbox arm wrapped `toolbox run` to ask GitLab who owned each person's token.
+`forges[].identity` (§4.6, step 9) does that in the product.
 
 The benchmark [experiments/actions-gitlab](../../experiments/actions-gitlab/README.md) runs
 fresh agents against the same harness.

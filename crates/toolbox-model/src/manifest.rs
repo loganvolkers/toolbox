@@ -71,7 +71,7 @@ pub struct Federation {
 }
 
 /// One entry of `forges:`. Unset fields take the forge type's defaults (`crate::forge`).
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq, Eq)]
 pub struct Forge {
     pub url: String,
     #[serde(rename = "type")]
@@ -81,6 +81,10 @@ pub struct Forge {
     pub token: Option<String>,
     /// Project paths (globs) a parent may dispatch CI to; default: the children it lists.
     pub projects: Option<Vec<String>>,
+    /// A checkout of this portal takes who you are from your own token on this forge, not from
+    /// `--as` (`toolbox run --identity-token-file`).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub identity: bool,
 }
 
 /// One entry of `federation.children`, with the defaults `crate::federation` fills in.

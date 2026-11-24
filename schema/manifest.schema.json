@@ -227,6 +227,10 @@
               "type": "string"
             },
             "description": "Project paths a parent may dispatch CI to, `*` matching within one path segment (acme/* matches acme/pay, not acme/platform/pay). Default: the children this portal lists on the forge."
+          },
+          "identity": {
+            "type": "boolean",
+            "description": "A checkout of this portal takes who you are from your own token on this forge, not from --as: toolbox run asks the forge who owns the token in --identity-token-file or TOOLBOX_IDENTITY_TOKEN, and refuses to request, approve or reject without one. At most one forge sets it. Default false."
           }
         }
       }

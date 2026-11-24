@@ -43,6 +43,9 @@ if [ ! -d "$src/gitlab-docs" ]; then
 fi
 . "$src/gitlab.env"
 gl() { local m=$1 p=$2; shift 2; curl -sf -X "$m" -H "PRIVATE-TOKEN: $GITLAB_ROOT_TOKEN" "$GITLAB_URL/api/v4$p" "$@"; }
+# Auto DevOps would start a pipeline on every push to a project with no .gitlab-ci.yml, which
+# fails on this runner and holds it: off, so the only pipelines are the ones a run starts.
+gl PUT /application/settings --data auto_devops_enabled=false >/dev/null
 for u in ann bob carol dave erin; do
   gl GET "/users?username=$u" | python3 -c 'import json,sys; sys.exit(0 if json.load(sys.stdin) else 1)' ||
     gl POST /users --data "username=$u" --data "name=$u" --data "email=$u@acme.test" \

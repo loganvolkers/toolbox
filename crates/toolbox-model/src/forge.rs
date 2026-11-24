@@ -145,10 +145,7 @@ pub fn resolve(forges: &[Forge], git: &str) -> Option<Resolved> {
             (
                 Forge {
                     url: (*u).into(),
-                    kind: None,
-                    api: None,
-                    token: None,
-                    projects: None,
+                    ..Forge::default()
                 },
                 *k,
             )
@@ -219,6 +216,7 @@ mod tests {
             api: None,
             token: None,
             projects: None,
+            identity: false,
         }
     }
 

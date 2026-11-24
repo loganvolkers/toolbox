@@ -687,6 +687,7 @@ mod tests {
             api: None,
             token: Some("GHES_TOKEN".into()),
             projects: Some(vec!["platform/*".into()]),
+            identity: false,
         };
         let Ok(Executor::GithubWorkflow(w)) = cloned(
             json!({"type": "ci", "workflow": "fleet.yml", "ref": "main"}),
@@ -741,6 +742,7 @@ mod tests {
             api: None,
             token: None,
             projects: Some(vec!["acme/*".into()]),
+            identity: false,
         };
         assert!(
             on(

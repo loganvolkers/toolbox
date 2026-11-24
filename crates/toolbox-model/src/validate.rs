@@ -580,6 +580,22 @@ impl Checker {
                 );
             }
         }
+        if let Some((i, f)) = m
+            .forges
+            .iter()
+            .enumerate()
+            .filter(|(_, f)| f.identity)
+            .nth(1)
+        {
+            self.push(
+                "forge",
+                format!("/forges/{i}/identity"),
+                format!(
+                    "forge {}: only one forge says who people are (identity: true)",
+                    f.url
+                ),
+            );
+        }
     }
 
     /// Each executor type's own required fields (docs/design/federated-actions.md §5).

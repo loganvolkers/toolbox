@@ -198,7 +198,10 @@ succeeds without a commit.
 
 **Who may say `--as`.** A checkout takes `--as` on trust: whoever can use its state directory
 holds the signing key anyway. That suits one operator, a trial, or a CI job or bastion host that
-alone holds the state directory. For a team, serve the portal behind sign-in instead
+alone holds the state directory. When everyone has a token on the forge, mark that forge
+`identity: true` in `forges:` instead: then each person runs `toolbox run --identity-token-file
+<their token file>` (no `--as`), Toolbox asks the forge who owns the token, and `--as` alone is
+refused (a `read_user` token is enough on GitLab). For a team, serve the portal behind sign-in instead
 (`toolbox serve <org>` with a proxy or OIDC, see the `serve` skill): there an approval needs an
 interactive sign-in, and `toolbox run --url <server>` requests and checks runs.
 

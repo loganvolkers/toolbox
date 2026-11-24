@@ -397,6 +397,7 @@ mod tests {
             api: Some(api.into()),
             token: Some("PATH".into()),
             projects: None,
+            identity: false,
         }]
     }
 

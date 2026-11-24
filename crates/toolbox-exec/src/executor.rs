@@ -1208,6 +1208,42 @@ fn push_for_review(
     }
 }
 
+/// Who owns `token` on a forge, as its username: GitLab's `GET /user` `username` (an active
+/// account only), GitHub's `login`. The token goes to `api` and nowhere else.
+pub fn whoami(kind: Kind, api: &str, token: &str) -> Result<String, String> {
+    let url = format!("{}/user", api.trim_end_matches('/'));
+    let token = token.trim().to_owned();
+    let res = crate::github::block(async move {
+        let req = reqwest::Client::new()
+            .get(url)
+            .header("user-agent", "toolbox");
+        let req = match kind {
+            Kind::Gitlab => req.header("private-token", token),
+            Kind::Github => req.bearer_auth(token),
+        };
+        let r = req.send().await.map_err(|e| e.to_string())?;
+        let st = r.status();
+        Ok::<_, String>((st, r.text().await.unwrap_or_default()))
+    })?;
+    let (st, text) = res?;
+    if !st.is_success() {
+        return Err(format!("{} did not accept the token ({st})", kind.name()));
+    }
+    let v: Value = serde_json::from_str(&text).unwrap_or(Value::Null);
+    let name = match kind {
+        Kind::Gitlab if v["state"].as_str().is_some_and(|s| s != "active") => {
+            return Err(format!(
+                "the token's GitLab account is {}",
+                v["state"].as_str().unwrap_or("")
+            ));
+        }
+        Kind::Gitlab => v["username"].as_str(),
+        Kind::Github => v["login"].as_str(),
+    };
+    name.map(str::to_owned)
+        .ok_or_else(|| format!("{} named no user for the token", kind.name()))
+}
+
 /// Open a pull or merge request for `head`, already pushed, on `f`'s project, with its token.
 pub fn open_review(f: &forge::Resolved, head: &str, base: &str, title: &str, body: &str) -> Value {
     match f.kind {

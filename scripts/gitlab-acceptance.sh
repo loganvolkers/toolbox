@@ -227,4 +227,28 @@ OUT=$(run "$WORK/org" --approve "$RID" --as erin --wait) || fail "erin, back in 
 [ "$(echo "$OUT" | field "['state']")" = succeeded ] || fail "approved by a GitLab group member: $OUT"
 git --git-dir "$WORK/hosts/delta.git" log -1 --format=%B main | grep -q "Approved-By: user:erin" || fail "no Approved-By trailer for erin"
 echo "   group:$ORG/release from GitLab: dave (the requester) and carol (a Guest) refused; erin refused once removed in GitLab, then approved once re-added, and it landed"
+echo "9. identity: true on the forge: who asks and who approves is whoever GitLab says owns their token"
+sed -i '/^    type: gitlab$/a\    identity: true' "$WORK/org/toolbox.yaml"
+"$BIN/toolbox" validate "$WORK/org" | tail -1
+pat() { # pat NAME: a read_user token for NAME, in a file
+  gl POST "/users/$(user "$1")/personal_access_tokens" --data name=identity --data "scopes[]=read_user" \
+    --data "expires_at=$(date -d '+2 days' +%F)" | field "['token']" > "$WORK/$1.token"
+}
+pat dave; pat erin
+NOTICE=(add-code-of-conduct --entity portal:delta -i contact=identity@acme.dev)
+set +e; OUT=$(run "$WORK/org" "${NOTICE[@]}" --as dave --yes 2>&1); CODE=$?; set -e
+[ $CODE = 2 ] && echo "$OUT" | grep -q "identity: true" || fail "--as alone should be refused ($CODE): $OUT"
+set +e; OUT=$(run "$WORK/org" "${NOTICE[@]}" --as erin --identity-token-file "$WORK/dave.token" --yes 2>&1); CODE=$?; set -e
+[ $CODE = 2 ] && echo "$OUT" | grep -q "user:dave" || fail "--as erin with dave's token should be refused ($CODE): $OUT"
+set +e; OUT=$(run "$WORK/org" "${NOTICE[@]}" --identity-token-file "$WORK/dave.token" --yes); CODE=$?; set -e
+[ $CODE = 3 ] && [ "$(echo "$OUT" | field "['requested_by']")" = user:dave ] || fail "dave's token should request as user:dave ($CODE): $OUT"
+RID=$(echo "$OUT" | field "['id']")
+set +e; run "$WORK/org" --approve "$RID" --as erin >/dev/null 2>&1; CODE=$?; set -e
+[ $CODE = 2 ] || fail "an approval with --as erin alone should be refused ($CODE)"
+set +e; TOOLBOX_IDENTITY_TOKEN=glpat-not-a-token run "$WORK/org" --approve "$RID" >/dev/null 2>&1; CODE=$?; set -e
+[ $CODE = 2 ] || fail "a token GitLab refuses should be refused ($CODE)"
+OUT=$(TOOLBOX_IDENTITY_TOKEN=$(cat "$WORK/erin.token") run "$WORK/org" --approve "$RID" --wait) || fail "erin's token: $OUT"
+[ "$(echo "$OUT" | field "['state']")" = succeeded ] || fail "approved with erin's token: $OUT"
+grep -rqs "$(cat "$WORK/erin.token")" "$TOOLBOX_STATE_DIR" && fail "a run record holds an identity token"
+echo "   --as alone refused, --as against another's token refused, a bad token refused; dave's token requested, erin's approved, and no record holds a token"
 echo "GitLab acceptance: all checks passed"
