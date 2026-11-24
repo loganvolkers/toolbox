@@ -1,0 +1,32 @@
+{
+ "linesToMaintain": 1334,
+ "files": {
+  "alpha/.github/settings.yml": 49,
+  "alpha/.github/workflows/mark-deprecated.yml": 168,
+  "alpha/CODEOWNERS": 4,
+  "beta/.github/CODEOWNERS": 4,
+  "org/.gitignore": 1,
+  "org/.state/counter": 1,
+  "org/.state/previews/gamma-20261124110206689149/out-preview/event.json": 1,
+  "org/.state/previews/gamma-20261124110206689149/out-preview/preview.json": 7,
+  "org/.state/previews/gamma-20261124110206689149/out-preview/validation.json": 5,
+  "org/.state/runs/1/out-apply/apply.json": 4,
+  "org/.state/runs/1/out-apply/event.json": 1,
+  "org/.state/runs/1/out-apply/preview.json": 7,
+  "org/.state/runs/1/out-apply/validation.json": 5,
+  "org/.state/runs/1/record.json": 140,
+  "org/.state/runs/2/out-apply/apply.json": 4,
+  "org/.state/runs/2/out-apply/event.json": 1,
+  "org/.state/runs/2/out-apply/preview.json": 7,
+  "org/.state/runs/2/out-apply/validation.json": 5,
+  "org/.state/runs/2/record.json": 140,
+  "org/.state/runs/3/out-apply/apply.json": 4,
+  "org/.state/runs/3/out-apply/preview.json": 7,
+  "org/.state/runs/3/record.json": 140,
+  "org/bin/acme-actions": 457,
+  "org/bin/apply-github-settings": 73,
+  "org/catalog.yml": 18,
+  "org/people.yml": 9,
+  "org/tests/selftest.sh": 72
+ }
+}
