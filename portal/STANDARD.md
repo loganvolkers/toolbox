@@ -326,7 +326,7 @@ Scorecard `maintainer-docs` over `Doc` entities, owned by group:maintainers. `to
 
 ## Examples and experiments
 
-Each example and experiment write-up agents copy: links that resolve, the check it names, and no credentials (D78, docs/design/example- standards.md).
+Each example and experiment write-up agents copy: links that resolve, the check it names, and no credentials (D78, docs/design/example-standards.md).
 
 Scorecard `maintainer-example` over `Example` entities, owned by group:maintainers. `toolbox report` lists what fails now.
 
@@ -374,7 +374,7 @@ Scorecard `meta-scorecard` over `Scorecard` entities, owned by group:maintainers
 
 ## Kinds are well-formed
 
-Each kind of entity: in the fixtures, tested and described with every field, since every rule reads it (docs/design/scorecards-for- scorecards.md §5).
+Each kind of entity: in the fixtures, tested and described with every field, since every rule reads it (docs/design/scorecards-for-scorecards.md §5).
 
 Scorecard `meta-kind` over `Kind` entities, owned by group:maintainers. `toolbox report` lists what fails now.
 
@@ -387,7 +387,7 @@ Scorecard `meta-kind` over `Kind` entities, owned by group:maintainers. `toolbox
 
 ## Fields are well-formed
 
-Each field: populated in the fixtures, described and given a shape, so CEL, validation and agents know what it holds (docs/design/scorecards- for-scorecards.md §5).
+Each field: populated in the fixtures, described and given a shape, so CEL, validation and agents know what it holds (docs/design/scorecards-for-scorecards.md §5).
 
 Scorecard `meta-field` over `Field` entities, owned by group:maintainers. `toolbox report` lists what fails now.
 
@@ -400,7 +400,7 @@ Scorecard `meta-field` over `Field` entities, owned by group:maintainers. `toolb
 
 ## Portal connectors are well-formed
 
-Each connector a portal configures: every record mapped, fixtures for tests, freshness declared and refresh by id (docs/design/scorecards-for- scorecards.md §5).
+Each connector a portal configures: every record mapped, fixtures for tests, freshness declared and refresh by id (docs/design/scorecards-for-scorecards.md §5).
 
 Scorecard `meta-connector` over `PortalConnector` entities, owned by group:maintainers. `toolbox report` lists what fails now.
 
@@ -599,7 +599,7 @@ Scorecard `maintainer-site` over `SitePage` entities, owned by group:maintainers
 
 ## Agent skills
 
-Each agent skill we ship: loadable, followable, honest about its limits and free of hidden instructions or credentials (D72, docs/design/skill- standards.md).
+Each agent skill we ship: loadable, followable, honest about its limits and free of hidden instructions or credentials (D72, docs/design/skill-standards.md).
 
 Scorecard `maintainer-skill` over `Skill` entities, owned by group:maintainers. `toolbox report` lists what fails now.
 
