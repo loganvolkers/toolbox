@@ -13,6 +13,7 @@ pub enum Kind {
 }
 
 impl Kind {
+    /// The kind a manifest's `type:` names, or `None` for one Toolbox has no seams for.
     pub fn parse(s: &str) -> Option<Self> {
         match s {
             "github" => Some(Kind::Github),
@@ -21,6 +22,7 @@ impl Kind {
         }
     }
 
+    /// The name `parse` accepts, as written in manifests and errors.
     pub fn name(self) -> &'static str {
         match self {
             Kind::Github => "github",

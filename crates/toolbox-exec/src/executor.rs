@@ -457,45 +457,7 @@ impl Executor {
                 .and_then(|()| child_run(program, portal, action, entity, ctx, &["--yes"], env))
             {
                 Err(e) => Outcome::failed(e),
-                Ok(v) => {
-                    let state = v.get("state").and_then(Value::as_str).unwrap_or("failed");
-                    let mut outputs = v.get("outputs").cloned().unwrap_or(json!({}));
-                    if let Some(f) = review
-                        && state == "proposed"
-                        && outputs["pushed"] == true
-                        && outputs.get("review").is_none()
-                        && let Some(head) = outputs["branch"].as_str()
-                    {
-                        let base = outputs["base"].as_str().unwrap_or("main");
-                        let base = base.strip_prefix("origin/").unwrap_or(base);
-                        let title = outputs["title"].as_str().unwrap_or(action);
-                        let body = format!(
-                            "Toolbox-Run: {}\n\nOpened by Toolbox for {action}, run {} of portal {}.",
-                            v["id"].as_str().unwrap_or(""),
-                            ctx.run_id.as_deref().unwrap_or(""),
-                            ctx.portal
-                        );
-                        outputs["review"] = open_review(f, head, base, title, &body);
-                    }
-                    Outcome {
-                        status: match state {
-                            "succeeded" | "unverified" => "succeeded".into(),
-                            "proposed" | "awaiting_approval" => state.into(),
-                            _ => "failed".into(),
-                        },
-                        outputs,
-                        error: v
-                            .get("error")
-                            .and_then(Value::as_str)
-                            .map(str::to_owned)
-                            .or_else(|| {
-                                (state != "succeeded" && state != "unverified")
-                                    .then(|| format!("child run ended {state}"))
-                            }),
-                        progress: vec![],
-                        child: Some(v),
-                    }
-                }
+                Ok(v) => child_outcome(v, review.as_ref(), action, ctx),
             },
         }
     }
@@ -779,6 +741,71 @@ fn stdio_run(command: &[String], ctx: &Context, confirmed: &[Value], env: &[Stri
             ..Outcome::failed("the executor ended without a result")
         },
     }
+}
+
+/// A federated child's run, as this run's outcome; a branch it pushed gets a review on `review`.
+fn child_outcome(
+    v: Value,
+    review: Option<&forge::Resolved>,
+    action: &str,
+    ctx: &Context,
+) -> Outcome {
+    let state = v
+        .get("state")
+        .and_then(Value::as_str)
+        .unwrap_or("failed")
+        .to_owned();
+    let mut outputs = v.get("outputs").cloned().unwrap_or(json!({}));
+    if let Some(f) = review
+        && state == "proposed"
+    {
+        review_child(f, &mut outputs, &v, action, ctx);
+    }
+    Outcome {
+        status: match state.as_str() {
+            "succeeded" | "unverified" => "succeeded".into(),
+            "proposed" | "awaiting_approval" => state.clone(),
+            _ => "failed".into(),
+        },
+        outputs,
+        error: v
+            .get("error")
+            .and_then(Value::as_str)
+            .map(str::to_owned)
+            .or_else(|| {
+                (state != "succeeded" && state != "unverified")
+                    .then(|| format!("child run ended {state}"))
+            }),
+        progress: vec![],
+        child: Some(v),
+    }
+}
+
+/// A child that pushed a branch without opening a review gets one on `f`, with this portal's
+/// token.
+fn review_child(
+    f: &forge::Resolved,
+    outputs: &mut Value,
+    child: &Value,
+    action: &str,
+    ctx: &Context,
+) {
+    if outputs["pushed"] != true || outputs.get("review").is_some() {
+        return;
+    }
+    let Some(head) = outputs["branch"].as_str() else {
+        return;
+    };
+    let base = outputs["base"].as_str().unwrap_or("main");
+    let base = base.strip_prefix("origin/").unwrap_or(base);
+    let title = outputs["title"].as_str().unwrap_or(action);
+    let body = format!(
+        "Toolbox-Run: {}\n\nOpened by Toolbox for {action}, run {} of portal {}.",
+        child["id"].as_str().unwrap_or(""),
+        ctx.run_id.as_deref().unwrap_or(""),
+        ctx.portal
+    );
+    outputs["review"] = open_review(f, head, base, title, &body);
 }
 
 /// A remote URL as a run record keeps it: without the password a URL may carry.
@@ -1073,26 +1100,7 @@ fn change_run(
         .map(|(op, p)| json!({"operation": op, "path": p}))
         .collect();
     let Some(branch) = branch else {
-        let target = base_branch(&wt.base, remote);
-        if has_remote.is_none() {
-            return Ok(Outcome::failed(format!(
-                "land: push needs the remote {remote}, and this repository has none"
-            )));
-        }
-        let refspec = format!("{commit}:refs/heads/{target}");
-        if let Err(e) = git(&wt.repo, &["push", "-q", "--", remote, &refspec]) {
-            return Ok(Outcome::failed(format!(
-                "the push to {remote} {target} was refused, so nothing landed: {e}"
-            )));
-        }
-        return Ok(Outcome {
-            status: "succeeded".into(),
-            outputs: json!({"landed": true, "base": wt.base, "commit": commit,
-                "remote": has_remote, "files": files}),
-            error: None,
-            progress: vec![],
-            child: None,
-        });
+        return Ok(land_push(&wt, remote, &commit, has_remote, files));
     };
     let target = base_branch(&wt.base, remote);
     let on = url
@@ -1105,41 +1113,10 @@ fn change_run(
         ctx.action,
         ctx.entity["id"].as_str().unwrap_or("")
     );
-    let mut opened = Value::Null;
-    let pushed = match (&has_remote, on.as_ref().map(|f| f.kind)) {
-        (None, _) => false,
-        // GitLab opens a merge request from push options: no API token, and git's own
-        // credentials decide who opens it.
-        (Some(_), Some(Kind::Gitlab)) => {
-            let said = git_said(
-                &wt.repo,
-                &[
-                    "push",
-                    "-o",
-                    "merge_request.create",
-                    "-o",
-                    &format!("merge_request.target={target}"),
-                    "-o",
-                    &format!("merge_request.title={}", title.replace('\n', " ")),
-                    "--",
-                    remote,
-                    branch,
-                ],
-            )?;
-            opened = match merge_request_url(&said) {
-                Some(u) => json!({"forge": "gitlab", "url": u}),
-                None => json!({"forge": "gitlab",
-                    "error": "GitLab opened no merge request (it says so on push); the branch is pushed"}),
-            };
-            true
-        }
-        (Some(_), kind) => {
-            git(&wt.repo, &["push", "-q", remote, branch])?;
-            if let (Some(Kind::Github), Some(f)) = (kind, &on) {
-                opened = open_review(f, branch, target, title, &body);
-            }
-            true
-        }
+    let pushed = has_remote.is_some();
+    let opened = match &has_remote {
+        Some(_) => push_for_review(&wt.repo, remote, branch, target, title, &body, on.as_ref())?,
+        None => Value::Null,
     };
     let mut outputs = json!({"branch": branch, "base": wt.base, "commit": commit, "pushed": pushed,
         "remote": has_remote, "files": files, "title": title});
@@ -1153,6 +1130,82 @@ fn change_run(
         progress: vec![],
         child: None,
     })
+}
+
+/// `land: push`: the commit pushed straight to the base, never forced.
+fn land_push(
+    wt: &Worktree,
+    remote: &str,
+    commit: &str,
+    has_remote: Option<String>,
+    files: Vec<Value>,
+) -> Outcome {
+    let target = base_branch(&wt.base, remote);
+    if has_remote.is_none() {
+        return Outcome::failed(format!(
+            "land: push needs the remote {remote}, and this repository has none"
+        ));
+    }
+    let refspec = format!("{commit}:refs/heads/{target}");
+    if let Err(e) = git(&wt.repo, &["push", "-q", "--", remote, &refspec]) {
+        return Outcome::failed(format!(
+            "the push to {remote} {target} was refused, so nothing landed: {e}"
+        ));
+    }
+    Outcome {
+        status: "succeeded".into(),
+        outputs: json!({"landed": true, "base": wt.base, "commit": commit,
+            "remote": has_remote, "files": files}),
+        error: None,
+        progress: vec![],
+        child: None,
+    }
+}
+
+/// Push a proposed branch and open its review on the remote's forge, if it has one: the review
+/// (`Null` when none was asked for).
+fn push_for_review(
+    repo: &Path,
+    remote: &str,
+    branch: &str,
+    target: &str,
+    title: &str,
+    body: &str,
+    on: Option<&forge::Resolved>,
+) -> Result<Value, String> {
+    match on {
+        // GitLab opens a merge request from push options: no API token, and git's own
+        // credentials decide who opens it.
+        Some(f) if f.kind == Kind::Gitlab => {
+            let said = git_said(
+                repo,
+                &[
+                    "push",
+                    "-o",
+                    "merge_request.create",
+                    "-o",
+                    &format!("merge_request.target={target}"),
+                    "-o",
+                    &format!("merge_request.title={}", title.replace('\n', " ")),
+                    "--",
+                    remote,
+                    branch,
+                ],
+            )?;
+            Ok(match merge_request_url(&said) {
+                Some(u) => json!({"forge": "gitlab", "url": u}),
+                None => json!({"forge": "gitlab",
+                    "error": "GitLab opened no merge request (it says so on push); the branch is pushed"}),
+            })
+        }
+        _ => {
+            git(repo, &["push", "-q", remote, branch])?;
+            Ok(match on {
+                Some(f) if f.kind == Kind::Github => open_review(f, branch, target, title, body),
+                _ => Value::Null,
+            })
+        }
+    }
 }
 
 /// Open a pull or merge request for `head`, already pushed, on `f`'s project, with its token.

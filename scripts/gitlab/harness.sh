@@ -58,9 +58,9 @@ up() {
   fi
   ready || { echo "the root token does not work" >&2; exit 1; }
   if ! $DOCKER inspect "$NAME-runner" >/dev/null 2>&1; then
-    RUNNER_TOKEN=$(curl -sf -X POST -H "PRIVATE-TOKEN: $ROOT_TOKEN" "$URL/api/v4/user/runners" \
-      --data runner_type=instance_type --data run_untagged=true --data description=toolbox-harness |
-      python3 -c 'import json,sys; print(json.load(sys.stdin)["token"])')
+    created=$(curl -sf -X POST -H "PRIVATE-TOKEN: $ROOT_TOKEN" "$URL/api/v4/user/runners" \
+      --data runner_type=instance_type --data run_untagged=true --data description=toolbox-harness)
+    RUNNER_TOKEN=$(python3 -c 'import json,sys; print(json.loads(sys.argv[1])["token"])' "$created")
     $DOCKER run -d --name "$NAME-runner" --network host -v "$BIN:/toolbox/bin:ro" \
       "gitlab/gitlab-runner:ubuntu-v$VERSION" >/dev/null
     $DOCKER exec "$NAME-runner" gitlab-runner register --non-interactive --url "$URL" \

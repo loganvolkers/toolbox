@@ -15,10 +15,12 @@ use std::path::PathBuf;
 use toolbox_model::forge::{self, Kind};
 use toolbox_model::manifest::Forge;
 
-/// The job whose artifact holds the child's run record, and the file's name in it.
+/// The job whose artifact holds the child's run record.
 pub const JOB: &str = "toolbox";
+/// The run record's file name in that artifact.
 pub const RECORD: &str = "toolbox-run.json";
 
+/// A child project's pipeline, started on its forge with the parent's token.
 #[derive(Debug, Clone)]
 pub struct Pipeline {
     /// `group/subgroup/project`.
@@ -138,6 +140,7 @@ impl Pipeline {
         })?
     }
 
+    /// Starts the child's pipeline with the run's six inputs; `dispatched` carries its id.
     pub fn dispatch(&self, ctx: &Context) -> Outcome {
         let fail = |e: String| Outcome {
             status: "failed".into(),
