@@ -197,7 +197,7 @@
     ".pillwrap .unassessed-tag.quiet{display:none}",
     ".crumb{font-size:13px;color:var(--muted);margin-bottom:12px}",
     ".sc-group{margin-top:20px}.sc-group h3{margin:0 0 4px}.sc-group h3 .sub{font-weight:400;text-transform:none;letter-spacing:0}.sc-index input[type=search]{max-width:420px}",
-    ".sc-rows{border-top:1px solid var(--line)}.sc-row{display:grid;grid-template-columns:26px minmax(0,1.25fr) minmax(0,1.6fr) 104px;gap:12px;align-items:center;padding:7px 8px;border-bottom:1px solid var(--line);color:var(--fg);text-decoration:none}.sc-row:hover{background:var(--tint)}.sc-row .sc-name{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;min-width:0}.sc-row .sc-name .t{font-weight:600}.sc-row .sc-name .c{font-size:11.5px;color:var(--muted)}.sc-row .sc-dist small{display:block;font-size:12px;color:var(--muted);margin-top:3px}.sc-head{display:grid;grid-template-columns:26px minmax(0,1.25fr) minmax(0,1.6fr) 104px;gap:12px;padding:4px 8px;font-size:11.5px;color:var(--muted);border-bottom:1px solid var(--line)}.sc-head span:last-child{text-align:right}.sc-row .sc-weak{display:flex;flex-direction:column;align-items:flex-end;gap:1px}.sc-row .sc-weak small{font-size:12px}.sc-row .sc-weak .bad{color:var(--fail);font-weight:600}.sc-row .sc-weak .topmark{color:var(--pass);font-weight:600}",
+    ".sc-rows{border-top:1px solid var(--line)}.sc-row{display:grid;grid-template-columns:26px minmax(0,1.25fr) minmax(0,1.6fr) 104px;gap:12px;align-items:center;padding:7px 8px;border-bottom:1px solid var(--line);color:var(--fg);text-decoration:none}.sc-row:hover{background:var(--tint)}.sc-row .sc-name{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;min-width:0}.sc-row .sc-name .t{font-weight:600}.sc-row .sc-name .c{font-size:11.5px;color:var(--muted)}.sc-row .sc-name .p{flex-basis:100%;min-width:0;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sc-row .sc-dist small{display:block;font-size:12px;color:var(--muted);margin-top:3px}.sc-head{display:grid;grid-template-columns:26px minmax(0,1.25fr) minmax(0,1.6fr) 104px;gap:12px;padding:4px 8px;font-size:11.5px;color:var(--muted);border-bottom:1px solid var(--line)}.sc-head span:last-child{text-align:right}.sc-row .sc-weak{display:flex;flex-direction:column;align-items:flex-end;gap:1px}.sc-row .sc-weak small{font-size:12px}.sc-row .sc-weak .bad{color:var(--fail);font-weight:600}.sc-row .sc-weak .topmark{color:var(--pass);font-weight:600}",
     "@media (max-width:640px){.sc-head{display:none}.sc-row{grid-template-columns:26px minmax(0,1fr) auto;row-gap:4px}.sc-row .sc-weak{grid-column:3;grid-row:1}.sc-row .sc-dist{grid-column:2/4;grid-row:2}.sc-row>svg,.sc-row>.medal-p{grid-row:1}}",
     ".crumb a{color:var(--muted);display:inline-block;padding:4px 0;margin:-4px 0}",
     "a.rl{display:inline-flex;align-items:center;min-height:24px;vertical-align:middle}.refs a{display:inline-flex;align-items:center;min-height:26px}",
@@ -253,7 +253,7 @@
     ".why>b{font-weight:650}",
     ".refs{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;margin:4px 0 2px;font-size:13px;line-height:26px}",
     ".refs a{text-underline-offset:2px}",
-    ".refs a::after{content:' \\2197';font-size:11px}",
+    ".refs a .ext{font-size:11px}",
     ".rationale{margin:6px 0 12px;padding:10px 14px;border-left:3px solid var(--accent);background:var(--tint);border-radius:0 10px 10px 0;max-width:80ch;font-size:14px}",
     ".rationale>b{display:block;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}",
     ".cel{margin:6px 0;padding:10px 12px;border-radius:8px;background:var(--tint);overflow-x:auto;font:12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;overflow-wrap:anywhere}",
@@ -969,7 +969,7 @@
       ...safe.map(function (l) {
         // A title that leads with a decision id reads as its claim; the id stays in the hover text.
         var m = /^(D\d+|D0[0-9A-Z]{20,}) (.+)$/.exec(l.title || "");
-        var a = el("a", { href: l.url, textContent: m ? "Decision: " + m[2] : l.title || l.url, target: "_blank", rel: "noopener" });
+        var a = el("a", { href: l.url, target: "_blank", rel: "noopener" }, el("span", {}, m ? "Decision: " + m[2] : l.title || l.url, el("span", { className: "ext", ariaHidden: "true", textContent: "\u00a0\u2197" })));
         if (m) a.title = m[1] + ": " + m[2];
         return a;
       }),
@@ -2450,9 +2450,10 @@
       var list = el("div");
       var row = function (r) {
         var floor = floorOf(D, r.name);
+        var purpose = firstSentence(r.sc.description || "").replace(/\s*\([^)]*\)/g, "");
         return link("scorecard/" + enc(r.name), "sc-row", [
           floorMedal(D, r.name, 26),
-          el("div", { className: "sc-name" }, ...cardName(D, r.name)),
+          el("div", { className: "sc-name" }, ...cardName(D, r.name), purpose ? el("span", { className: "p", title: purpose, textContent: purpose }) : null),
           el("div", { className: "sc-dist" }, barEl(splitUnassessed(D, r.name, r.parts)), el("small", {}, ...scCaption(D, r))),
           el("div", { className: "sc-weak" }, floor ? badge(floor) : el("span", { className: "sub", textContent: "not scored" }), r.none ? el("small", { className: "bad", textContent: fmt(r.none) + " at none" }) : floor && isTop(D, r.name, floor) ? el("small", { className: "topmark", textContent: "✓ top level" }) : null),
         ]);
@@ -3930,7 +3931,7 @@
           el("h2", { className: "big", textContent: who(subject) + " vs " + who(peer) }),
           el("p", { className: "verdict", style: "margin:0;font-size:17px" }, el("b", { textContent: headline }), behindNames.length ? el("span", {}, " Behind on ", ...behindNames.map(function (n, i) {
             return el("span", {}, i ? ", " : "", link("compare/" + enc(n), "", title(D, n)), " (" + behindRules[n] + " of " + Object.keys(all[n].rules || {}).length + " rules)");
-          }), behindNames.length === 1 ? ": if you need that, start there." : ": if you need those, start there.") : " Never behind."),
+          }), behindNames.length === 1 ? ": if your teams rely on what that factor measures, read it first." : ": if your teams rely on what those factors measure, read them first.") : " Never behind."),
           el(
             "p",
             { className: "rule-tally" },
