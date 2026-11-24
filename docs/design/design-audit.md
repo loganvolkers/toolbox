@@ -1,7 +1,8 @@
 # Design Audits: Independent, Rubric-Scored Reviews of Rendered UI
 
 *Status: decided 2026-11-24 (D01M85MK7FCRXH2TRMRKXTNA5GT). The agent skill is
-[`design-audit`](../../plugins/toolbox-operator/skills/design-audit/SKILL.md); the first audit is
+[`design-audit`](../../plugins/toolbox-operator/skills/design-audit/SKILL.md); the first record,
+four audits and three fix cycles of the hosted report, is
 [toolbox-report-2026-11-24.md](../audits/toolbox-report-2026-11-24.md).*
 
 **About:** the box. It is how the maintainer SDLC judges what the box shows readers: the hosted
@@ -20,13 +21,19 @@ scores. A change is done when a **second, blind audit** shows that:
 - the targeted scores rose;
 - serious axe-core violations did not grow.
 
+When a score falls, its cited evidence says why: on a view the change touched it is a regression,
+on a view it did not it is a finding the last auditor missed. Both are fixed and the page is
+audited again, by another new auditor; scores are never averaged across auditors. The first
+record needed this: its third audit fell from 29 to 27 of 40, and the fourth, after a cycle that
+fixed both kinds, scored 31.
+
 | Step | Who | Output |
 |---|---|---|
 | Name readers and tasks | Implementer, before looking | 3–6 tasks with what counts as an answer |
 | Capture | Script | Screenshots (desktop and mobile, light and dark) and `metrics.json` |
 | Audit | Fresh auditor, blind | Task outcomes, U1–U10 and J1–J4 scores, ranked findings, joy ideas |
 | Prioritise and fix | Implementer | Severity 3–4 findings first, then joy that reinforces a task |
-| Re-audit | A new auditor, blind to the first scores | A second score table |
+| Re-audit | A new auditor each time, blind to earlier scores | Another score table, until the done rule holds |
 | Publish | Implementer | `docs/audits/<surface>-<date>.md` |
 
 ## 2. Why this process, and not a checklist
