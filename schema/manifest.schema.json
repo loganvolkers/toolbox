@@ -1313,9 +1313,7 @@
                 "in-image",
                 "change",
                 "github-workflow",
-                "gitlab-pipeline",
-                "http",
-                "webhook"
+                "gitlab-pipeline"
               ]
             },
             "command": {

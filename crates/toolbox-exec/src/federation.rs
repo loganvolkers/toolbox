@@ -6,12 +6,15 @@
 //! which previews, runs and verifies it with its own executor and credentials. The parent never
 //! runs a child's code with the parent's credentials.
 
+use crate::ci::Ci;
 use crate::executor::Executor;
+use crate::executor::federated::Federated;
 use serde_json::{Map, Value, json};
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use toolbox_derive::Derived;
 use toolbox_model::Manifest;
-use toolbox_model::forge::{self, Kind};
+use toolbox_model::forge;
 use toolbox_model::manifest::{Action, Forge};
 
 /// Where a federated action really lives.
@@ -70,8 +73,8 @@ fn listed(list: &Value, key: &str, s: &str) -> bool {
 
 impl Child {
     /// The child's own `toolbox run`, in this portal's clone or checkout of it.
-    fn local(&self, program: &Path) -> Executor {
-        Executor::Toolbox {
+    fn local(&self, program: &Path) -> Federated {
+        Federated {
             portal: self.path.clone(),
             action: self.action.clone(),
             entity: String::new(),
@@ -134,9 +137,9 @@ pub struct Offered {
 impl Offered {
     /// The executor that carries out a run of this action. `program` is the `toolbox` binary a
     /// local child is run with.
-    pub fn executor(&self, program: &Path) -> Result<Executor, String> {
+    pub fn executor(&self, program: &Path) -> Result<Arc<dyn Executor>, String> {
         let Some(c) = &self.child else {
-            return Executor::parse_in(&self.action.executor, &self.forges);
+            return crate::executor::parse_in(&self.action.executor, &self.forges);
         };
         match c
             .runner
@@ -144,7 +147,7 @@ impl Offered {
             .and_then(Value::as_str)
             .unwrap_or("local")
         {
-            "local" => Ok(c.local(program)),
+            "local" => Ok(Arc::new(c.local(program))),
             "ci" => c.ci(program),
             "github-workflow" => {
                 // The child names its workflow; the parent supplies the endpoint and the token, so
@@ -175,10 +178,12 @@ impl Offered {
                         spec[k] = v.clone();
                     }
                 }
-                let mut w = crate::github::Workflow::parse(&spec)?;
-                w.federated = Some(c.action.clone());
-                w.preview = Some(Box::new(c.local(program)));
-                Ok(Executor::GithubWorkflow(w))
+                Ok(Arc::new(Ci {
+                    driver: Box::new(crate::ci::github::Workflow::parse(&spec)?),
+                    federated: Some(c.action.clone()),
+                    clone: None,
+                    preview: Some(Arc::new(c.local(program))),
+                }))
             }
             other => Err(format!(
                 "child portal {}: unknown runner {other} (local, ci, github-workflow)",
@@ -193,7 +198,7 @@ impl Child {
     /// project the parent cloned it from, with that forge's API and token. The child names at
     /// most its `workflow` (GitHub) and `ref`. The child previews in this portal's clone, as a
     /// local child does, so its approvers and effects are known and the grant can bind them.
-    fn ci(&self, program: &Path) -> Result<Executor, String> {
+    fn ci(&self, program: &Path) -> Result<Arc<dyn Executor>, String> {
         for k in ["project", "repo", "api", "url", "token", "forge"] {
             if self.runner.get(k).is_some() {
                 return Err(format!(
@@ -229,26 +234,13 @@ impl Child {
         let git_ref = s("ref")
             .or_else(|| self.branch.clone())
             .unwrap_or_else(|| "main".into());
-        Ok(match f.kind {
-            Kind::Github => Executor::GithubWorkflow(crate::github::Workflow {
-                repo: f.project,
-                workflow: s("workflow").unwrap_or_else(|| "toolbox.yml".into()),
-                git_ref,
-                api: f.api,
-                token_env: f.token,
-                federated: Some(self.action.clone()),
-                preview: Some(Box::new(self.local(program))),
-            }),
-            Kind::Gitlab => Executor::GitlabPipeline(crate::gitlab::Pipeline {
-                project: f.project,
-                git_ref,
-                api: f.api,
-                token_env: f.token,
-                federated: Some(self.action.clone()),
-                clone: Some(self.path.clone()),
-                preview: Some(Box::new(self.local(program))),
-            }),
-        })
+        let driver = crate::forge::driver(f.kind).ci(f, &self.runner, git_ref);
+        Ok(Arc::new(Ci {
+            driver,
+            federated: Some(self.action.clone()),
+            clone: Some(self.path.clone()),
+            preview: Some(Arc::new(self.local(program))),
+        }))
     }
 }
 
@@ -606,6 +598,9 @@ pub fn describe(o: &Offered, d: &Derived) -> Value {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ci::CiDriver;
+    use crate::ci::github::Workflow;
+    use crate::ci::gitlab::Pipeline;
 
     fn child(runner: Value, runners: Value) -> Offered {
         Offered {
@@ -648,14 +643,14 @@ mod tests {
     fn a_ci_runner_starts_the_ci_of_the_project_the_parent_cloned() {
         let bin = Path::new("toolbox");
         let ci = json!({"type": "ci"});
-        let Ok(Executor::GitlabPipeline(p)) = cloned(
+        let e = cloned(
             ci.clone(),
             "https://gitlab.com/acme/platform/pay.git",
             vec![],
         )
-        .executor(bin) else {
-            panic!("a gitlab.com child should get a pipeline");
-        };
+        .executor(bin)
+        .unwrap();
+        let (c, p) = ci_of::<Pipeline>(&e);
         assert_eq!(
             (
                 p.project.as_str(),
@@ -670,13 +665,12 @@ mod tests {
                 "GITLAB_TOKEN"
             )
         );
-        assert_eq!(p.federated.as_deref(), Some("deploy"));
-        assert_eq!(p.clone.as_deref(), Some(Path::new("/org/team/pay")));
-        let Ok(Executor::GithubWorkflow(w)) =
-            cloned(ci.clone(), "git@github.com:acme/web.git", vec![]).executor(bin)
-        else {
-            panic!("a github.com child should get a workflow");
-        };
+        assert_eq!(c.federated.as_deref(), Some("deploy"));
+        assert_eq!(c.clone.as_deref(), Some(Path::new("/org/team/pay")));
+        let e = cloned(ci.clone(), "git@github.com:acme/web.git", vec![])
+            .executor(bin)
+            .unwrap();
+        let (_, w) = ci_of::<Workflow>(&e);
         assert_eq!(
             (w.repo.as_str(), w.workflow.as_str()),
             ("acme/web", "toolbox.yml")
@@ -689,14 +683,14 @@ mod tests {
             projects: Some(vec!["platform/*".into()]),
             identity: false,
         };
-        let Ok(Executor::GithubWorkflow(w)) = cloned(
+        let e = cloned(
             json!({"type": "ci", "workflow": "fleet.yml", "ref": "main"}),
             "https://ghe.acme.dev/platform/ledger.git",
             vec![ghes.clone()],
         )
-        .executor(bin) else {
-            panic!("an Enterprise Server child should get a workflow");
-        };
+        .executor(bin)
+        .unwrap();
+        let (_, w) = ci_of::<Workflow>(&e);
         assert_eq!(
             (
                 w.api.as_str(),
@@ -805,14 +799,18 @@ mod tests {
         let mut elsewhere = wf.clone();
         elsewhere["repo"] = "victim/prod".into();
         assert!(child(elsewhere, own.clone()).executor(bin).is_err());
-        let Ok(Executor::GithubWorkflow(w)) = child(wf, own).executor(bin) else {
-            panic!("an allowed child should dispatch");
-        };
+        let e = child(wf, own).executor(bin).unwrap();
+        let (c, w) = ci_of::<Workflow>(&e);
         assert_eq!(
             (w.api.as_str(), w.token_env.as_str()),
             ("https://ghe.example/api/v3", "ORG_TOKEN")
         );
-        assert_eq!(w.federated.as_deref(), Some("deploy"));
+        assert_eq!(c.federated.as_deref(), Some("deploy"));
+    }
+
+    fn ci_of<T: CiDriver>(e: &Arc<dyn Executor>) -> (&Ci, &T) {
+        let c = e.downcast::<Ci>().expect("a CI executor");
+        (c, c.driver.downcast::<T>().expect("that CI's driver"))
     }
 
     #[test]

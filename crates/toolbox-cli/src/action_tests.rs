@@ -12,7 +12,9 @@ use std::process::Command;
 use std::time::Duration;
 use toolbox_derive::Derived;
 use toolbox_derive::testing::TestResult;
-use toolbox_exec::executor::{Executor, portal_repo_dir};
+use toolbox_exec::executor::change::Change;
+use toolbox_exec::executor::command::Command as CommandExecutor;
+use toolbox_exec::executor::portal_repo_dir;
 use toolbox_exec::federation::{self, Offered};
 use toolbox_exec::prepare::{Refused, Request, prepare};
 use toolbox_exec::run::{self as lifecycle, Observer, Run};
@@ -173,14 +175,18 @@ fn one(root: &Path, m: &Manifest, d: &Derived, all: &[Offered], c: &Case) -> Res
             c.action
         ));
     }
-    let (remote, base) = match off.executor(&program)? {
-        Executor::Change { remote, base, .. } => (remote, base),
-        Executor::Command { .. } => ("origin".into(), None),
-        other => {
+    let exec = off.executor(&program)?;
+    let (remote, base) = match (
+        exec.downcast::<Change>(),
+        exec.downcast::<CommandExecutor>(),
+    ) {
+        (Some(c), _) => (c.remote.clone(), c.base.clone()),
+        (None, Some(_)) => ("origin".into(), None),
+        _ => {
             return Err(format!(
                 "toolbox test runs change and command actions, and {} is {}",
                 c.action,
-                other.kind()
+                exec.kind()
             ));
         }
     };
@@ -253,7 +259,7 @@ fn attempt(
         let ctx = p.context(&run);
         lifecycle::execute(
             &mut run,
-            &p.exec,
+            p.exec.as_ref(),
             &ctx,
             p.offered.action.expect.as_ref(),
             &m.policies,

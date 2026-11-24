@@ -108,8 +108,7 @@ pub fn served_dir(portal: &str) -> std::path::PathBuf {
 /// failed with that said, rather than left `running` forever or started again.
 fn interrupted(r: &mut Run) -> bool {
     if !["previewed", "approved", "dispatched", "running"].contains(&r.state.as_str())
-        || (r.state == "dispatched"
-            && matches!(r.executor.as_str(), "github-workflow" | "gitlab-pipeline"))
+        || (r.state == "dispatched" && toolbox_model::executors::detached(&r.executor))
     {
         return false;
     }
@@ -606,7 +605,7 @@ fn start(s: &Arc<AppState>, p: Prepared, mut run: Run, grant: Option<String>) {
         let mut obs = Served { s: s.clone() };
         lifecycle::execute(
             &mut run,
-            &p.exec,
+            p.exec.as_ref(),
             &ctx,
             p.offered.action.expect.as_ref(),
             &s.manifest.policies,
@@ -1031,7 +1030,7 @@ fn recheck_one(s: &Arc<AppState>, run: &mut Run) -> bool {
     let mut obs = Served { s: s.clone() };
     lifecycle::recheck(
         run,
-        &exec,
+        exec.as_ref(),
         off.action.expect.as_ref(),
         &s.manifest.policies,
         &mut obs,
