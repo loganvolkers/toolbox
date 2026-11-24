@@ -88,6 +88,18 @@ kinds:
 
 scorecards:
   - name: pnpm-workspace
+    rationale: >-
+      A JavaScript workspace that installs differently on each machine fails
+      in ways that look like code bugs. Pinning the package manager,
+      committing one lockfile and installing it frozen in CI make every
+      install the same; aligned toolchains and bounded dependencies keep it
+      that way as the repository ages.
+    links:
+    - title: pnpm-expo package decision
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7Y6X38AERPBT0YH1AG5TBRD.md
+    - title: Monorepo semantics
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/package-standards.md#6-monorepo-semantics--do-not-reuse-this-scorecard-blindly
+    - {title: pnpm install, url: https://pnpm.io/cli/install}
     kind: JsWorkspace
     description: >-
       A pnpm workspace's hygiene: a workspace file, a pinned package manager
@@ -108,6 +120,10 @@ scorecards:
         Add pnpm-workspace.yaml (or npm/yarn workspaces in the root
         package.json) so install tools and Expo monorepo detection see a
         workspace.
+      rationale: >-
+        Without a workspace file, tools treat each package as a separate
+        project: installs duplicate dependencies, and Expo's monorepo detection
+        does not find the workspace.
     - name: package-manager-pinned
       level: bronze
       check: entity.packageManagerPinned
@@ -117,6 +133,10 @@ scorecards:
       fix: >-
         Set packageManager to pnpm@x.y.z in the root package.json (Corepack /
         pnpm/action-setup read this field).
+      rationale: >-
+        Corepack and CI setup actions read packageManager to pick a version.
+        Without it each machine uses whatever pnpm it has, and lockfile formats
+        differ between major versions.
     - name: root-lockfile
       level: bronze
       check: entity.rootLockfile != ''
@@ -124,6 +144,10 @@ scorecards:
         entity.rootLockfile != '' ? [entity.rootLockfile] : ['no pnpm-lock.yaml,
         package-lock.json or yarn.lock at the repository root']
       fix: Commit the workspace lockfile at the repository root.
+      rationale: >-
+        The lockfile is what makes an install reproducible. Without one at the
+        root, every install resolves versions afresh and two machines can run
+        different code.
     - name: ci-frozen-install
       level: silver
       check: entity.ciFrozenInstall
@@ -134,6 +158,13 @@ scorecards:
         Install with pnpm install (frozen by default in CI) or pnpm ci in GitHub
         Actions, and drop --no-frozen-lockfile, so CI cannot rewrite the
         lockfile.
+      rationale: >-
+        An install that may rewrite the lockfile lets CI test dependency
+        versions nobody committed. A frozen install fails instead, so the
+        lockfile stays the source of truth.
+      links:
+      - title: pnpm install --frozen-lockfile
+        url: https://pnpm.io/cli/install
     - name: linker-policy-declared
       level: silver
       check: >-
@@ -146,6 +177,11 @@ scorecards:
       fix: >-
         Declare an explicit pnpm linker (node-linker in .npmrc or nodeLinker in
         pnpm-workspace.yaml). When requireHoisted is true, set it to hoisted.
+      rationale: >-
+        React Native and Expo tooling expects a flat node_modules, and pnpm's
+        default isolated layout breaks some of it. The linker should be a
+        declared choice, not a default that differs between tools.
+      links: [{title: 'pnpm: node-linker', url: https://pnpm.io/npmrc}]
     - name: toolchain-aligned
       level: gold
       check: entity.toolchainAligned
@@ -157,6 +193,10 @@ scorecards:
         Pin mise.toml node and pnpm to concrete versions (not latest) that match
         packageManager and CI node-version / engines.node. Every node-version
         must be a concrete number (not ${{ matrix… }} expressions).
+      rationale: >-
+        When mise, packageManager, engines and CI name different Node or pnpm
+        versions, local runs and CI test different toolchains, and failures
+        appear on one side only.
     - name: no-unbounded-root-deps
       level: gold
       check: entity.wildcardRanges.size() == 0 && entity.gitRanges.size() == 0
@@ -164,9 +204,23 @@ scorecards:
       fix: >-
         Replace root-manifest wildcards (*, latest, x) and git/tarball URLs with
         registry versions. workspace: protocol deps are exempt.
+      rationale: >-
+        A wildcard, latest or git range resolves to whatever is newest at
+        install time, so a lockfile refresh can pull an untested major version
+        or code from an unpinned branch.
     facets: {summary: public, details: public}
 
   - name: expo-app
+    rationale: >-
+      An Expo app builds only when a handful of config files agree with each
+      other and with the SDK. These checks catch the mismatches that otherwise
+      surface in a failed EAS build or on a device: a missing config, two EAS
+      files, packages out of step with the SDK.
+    links:
+    - title: pnpm-expo package decision
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7Y6X38AERPBT0YH1AG5TBRD.md
+    - {title: 'Expo: monorepos', url: https://docs.expo.dev/guides/monorepos/}
+    - {title: 'Expo: eas.json', url: https://docs.expo.dev/build/eas-json/}
     kind: ExpoApp
     description: >-
       An Expo app's setup: the Expo dependency, an app config and one EAS
@@ -183,6 +237,9 @@ scorecards:
         entity.hasExpoDep ? ['expo@' + entity.expoVersion] : ['no expo
         dependency in package.json']
       fix: Add expo to the app's dependencies (use npx expo install).
+      rationale: >-
+        Without the expo dependency the directory is not an Expo app to any
+        tool, and expo install cannot choose SDK-compatible versions.
     - name: has-app-config
       level: bronze
       check: entity.hasAppConfig
@@ -190,6 +247,9 @@ scorecards:
         entity.hasAppConfig ? [entity.appConfig] : ['no app.json or app.config.*
         beside the app']
       fix: Add app.json or app.config.js/ts next to the Expo package.json.
+      rationale: >-
+        The app config names the app, its identifiers and its plugins. Without
+        it, builds fall back to defaults that do not match the store listing.
     - name: single-canonical-eas
       level: bronze
       check: entity.singleCanonicalEas
@@ -199,6 +259,12 @@ scorecards:
       fix: >-
         Keep a single authoritative eas.json for the app (usually under
         apps/<name>/). Remove or reconcile a divergent root eas.json.
+      rationale: >-
+        A second eas.json at the root can define different profiles from the
+        app's own, so a build may use settings nobody reviewed.
+      links:
+      - title: 'Expo: eas.json'
+        url: https://docs.expo.dev/build/eas-json/
     - name: sdk-packages-present
       level: silver
       check: entity.hasReact && entity.hasReactNative && entity.expoVersion != ''
@@ -209,6 +275,10 @@ scorecards:
       fix: >-
         Declare react, react-native and expo in the app package.json; keep them
         aligned with `npx expo install`.
+      rationale: >-
+        Each Expo SDK supports specific react and react-native versions. A
+        missing or mismatched one compiles locally and fails at runtime or in
+        the native build.
     - name: metro-uses-expo-default
       level: silver
       check: entity.metroUsesExpoDefault
@@ -216,6 +286,13 @@ scorecards:
       fix: >-
         Use Expo's default Metro config (`expo/metro-config`); avoid hand-rolled
         watchFolders on SDK 52+.
+      rationale: >-
+        Expo's Metro config handles monorepo resolution and SDK-specific
+        settings. A hand-rolled one drifts from what the SDK expects with each
+        upgrade.
+      links:
+      - title: 'Expo: monorepos'
+        url: https://docs.expo.dev/guides/monorepos/
     - name: doctor-pinned-in-ci
       level: silver
       check: entity.doctorPinnedInCi
@@ -225,6 +302,13 @@ scorecards:
       fix: >-
         Run a pinned expo-doctor in CI (e.g. npx -y expo-doctor@1.21.5) in the
         app directory.
+      rationale: >-
+        expo-doctor checks dependencies and config against the SDK, so running
+        it in CI catches incompatibilities before a native build. Pinning it
+        keeps its verdict from changing when a new release adds checks.
+      links:
+      - title: expo-doctor
+        url: https://github.com/expo/expo/tree/main/packages/expo-doctor
     - name: eas-profiles
       level: gold
       check: >-
@@ -234,4 +318,11 @@ scorecards:
       fix: >-
         Define development, preview and production profiles under build in
         eas.json.
+      rationale: >-
+        Separate development, preview and production profiles keep test builds
+        from shipping with production settings, and let each stage be built on
+        purpose.
+      links:
+      - title: 'Expo: eas.json'
+        url: https://docs.expo.dev/build/eas-json/
     facets: {summary: public, details: public}

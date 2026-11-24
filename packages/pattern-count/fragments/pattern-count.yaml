@@ -38,6 +38,16 @@ scorecards:
       Each match of the pattern is a violation. The measure is the number of
       matches, so a file that gains one is a regression and one that loses one
       is an improvement.
+    rationale: >-
+      Some code patterns are known to cause trouble in a codebase: a
+      deprecated call, a debug print, an unchecked unwrap. Counting them per
+      file turns a convention reviewers would otherwise have to remember into
+      a check that stops new ones and tracks the old ones to zero.
+    links:
+    - title: Packages
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/packages.md
+    - title: The box and the tools
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/toolbox-and-tools.md
     kind: ${param:kind}
     owner: ${param:owner}
     levels: [clean]
@@ -51,6 +61,10 @@ scorecards:
       measure: entity.matches
       evidence: entity.matchLines.map(n, 'line ' + string(n))
       fix: ${param:fix}
+      rationale: >-
+        Each match is a place the convention is broken. A new one is cheapest to
+        avoid in the change that adds it, and the count shows the old ones going
+        down.
     facets: {summary: public, details: public}
 
 campaigns:
