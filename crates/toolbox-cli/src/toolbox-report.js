@@ -129,8 +129,8 @@
     ".rule{padding:10px 12px;border-radius:8px;border:1px solid var(--line);border-left:4px solid var(--fail);margin-top:8px;background:var(--card)}",
     ".callout.judged-note{background:var(--judged-bg)}",
     ".bar span.hollow{background:repeating-linear-gradient(135deg,var(--seg) 0 3px,transparent 3px 7px);box-shadow:inset 0 0 0 1.5px var(--judged)}.unjudged-n,.judged-n{color:var(--judged)}.dot.hatch{border-radius:2px;background:repeating-linear-gradient(135deg,var(--seg) 0 2px,transparent 2px 4px);box-shadow:inset 0 0 0 1.5px var(--judged)}.judged-list{margin:8px 0 0}",
-    ".medal-p{position:relative;display:inline-flex;flex:none;align-self:flex-start}.medal-p svg{opacity:.45}.medal-p .mg{position:absolute;right:-3px;bottom:-2px;font-size:12px;line-height:1;font-weight:700;background:var(--card);border-radius:50%;padding:1px 2px}.medal-p.judged .mg{color:var(--judged)}.medal-p.unrun .mg{color:var(--unknown)}",
-    ".sc-status{display:flex;gap:14px;align-items:flex-start;margin:4px 0 14px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--tint)}.sc-status>svg,.sc-status>.medal-p{flex:none}.sc-status-b{flex:1;min-width:0}.sc-status-t{display:flex;flex-wrap:wrap;align-items:center;gap:2px 6px;margin-bottom:8px;font-size:14px}.sc-status-t .topmark{color:var(--pass);font-weight:650}.sc-status .legend{margin-top:6px}.why-text.clamped{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}.why-more{margin-top:2px;min-height:24px}",
+    ".medal-p{position:relative;display:inline-flex;flex:none;align-self:flex-start}.medal-p svg{opacity:.45}.medal-p .mg{position:absolute;right:-3px;bottom:-2px;font-size:12px;line-height:1;font-weight:700;background:var(--card);border-radius:50%;padding:1px 2px}.medal-p.judged .mg{color:var(--judged)}.medal-p.unrun .mg{color:var(--unknown)}.legend .fadedkey{display:inline-flex;align-items:center;gap:8px}.fadedkey .medal-p{align-self:center}.fadedkey .medal-p .mg{font-size:10px;right:-5px}",
+    ".sc-status{display:flex;gap:14px;align-items:flex-start;margin:4px 0 14px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--tint)}.sc-status>svg,.sc-status>.medal-p{flex:none}.sc-status-b{flex:1;min-width:0}.sc-status-t{display:flex;flex-wrap:wrap;align-items:center;gap:2px 6px;margin-bottom:8px;font-size:14px}.sc-status-t .topmark{color:var(--pass);font-weight:650}.sc-status .legend{margin-top:6px}.sc-status-t .sep{color:var(--muted)}@media (max-width:640px){.sc-status-t .sep{display:none}.sc-status-t .fact{flex-basis:100%}}.why-text.clamped{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}.why-more{margin-top:2px;min-height:24px}",
     ".bar span.unrun{background:radial-gradient(circle,var(--seg) 1.6px,transparent 1.9px) 0 0/6px 6px;box-shadow:inset 0 0 0 1.5px var(--unknown)}.dot.dots{border-radius:2px;background:radial-gradient(circle,var(--seg) 1.2px,transparent 1.5px) 0 0/4px 4px;box-shadow:inset 0 0 0 1.5px var(--unknown)}",
     ".rule.unknown{border-left-color:var(--unknown)}.rule.waived{border-left-color:var(--bronze)}.rule.unassessed{border-left-color:var(--judged)}",
     ".cmp-prov{margin:6px 0 0;display:grid;gap:2px}.cmp-src{display:flex;flex-wrap:wrap;align-items:center;gap:2px 10px}.cmp-src .refs{margin:0;line-height:22px}",
@@ -619,7 +619,7 @@
       }),
       hollow ? el("span", {}, el("span", { className: "dot hatch", style: "--seg:" + fill("bronze") }), "hatched: ✦ not assessed by an agent yet") : null,
       unrun ? el("span", {}, el("span", { className: "dot dots", style: "--seg:" + fill("silver") }), "dotted: ◌ provisional, checks not run in this build") : null,
-      faded ? el("span", {}, faded, "faded medal: most entities at that level are hatched or dotted, so it may not hold") : null,
+      faded ? el("span", { className: "fadedkey" }, faded, "faded medal: most entities at that level are hatched or dotted, so it may not hold") : null,
     );
   }
 
@@ -1782,10 +1782,11 @@
   function summarize(D) {
     var rows = scorecardRows(D);
     var byEntity = {};
-    var checks = { pass: 0, fail: 0, unknown: 0 };
+    var checks = { pass: 0, fail: 0, unknown: 0, vacuous: 0 };
     rows.forEach(function (r) {
       if (r.compare) return;
       var order = levelOrder(r.sc.levels);
+      var unassessed = new Set((D.unassessed || {})[r.name] || []);
       Object.entries((D.scores || {})[r.name] || {}).forEach(function (pair) {
         var id = pair[0];
         var s = pair[1];
@@ -1794,8 +1795,10 @@
         var rank = order.indexOf(s.level);
         var norm = ["none", "bronze", "silver", "gold"].indexOf(s.level) >= 0 ? s.level : rank <= 0 ? "none" : "gold";
         if (!cur || ["none", "bronze", "silver", "gold"].indexOf(norm) < ["none", "bronze", "silver", "gold"].indexOf(cur)) byEntity[id] = norm;
-        Object.values(s.rules || {}).forEach(function (o) {
-          if (isPassing(o)) checks.pass++;
+        Object.keys(s.rules || {}).forEach(function (rule) {
+          var o = s.rules[rule];
+          if (isPassing(o) && unassessed.has(id) && basisOf((r.sc.rules || {})[rule]) === "judged") checks.vacuous++;
+          else if (isPassing(o)) checks.pass++;
           else if (o === "fail") checks.fail++;
           else if (o === "unknown") checks.unknown++;
         });
@@ -2341,8 +2344,9 @@
     tiles(D, S, campaignNames) {
       var campaigns = D.campaigns || {};
       var c = S.checks;
-      var total = c.pass + c.fail + c.unknown;
+      var total = c.pass + c.vacuous + c.fail + c.unknown;
       var pct = total ? Math.round((c.pass / total) * 100) : 0;
+      var checkNote = [c.vacuous ? fmt(c.vacuous) + " more pass only because no agent has assessed them yet (✦)" : null, c.unknown ? fmt(c.unknown) + " not run in this build" : null].filter(Boolean);
       var on = campaignNames.filter(function (n) {
         return campaignState(campaigns[n]) === "on";
       }).length;
@@ -2350,8 +2354,19 @@
         return r.none > 0 && !r.compare;
       }).length;
       var scoredEntities = Object.keys(S.worst).length;
-      var golden = Object.keys(S.worst).filter(function (id) {
+      var goldIds = Object.keys(S.worst).filter(function (id) {
         return S.worst[id] === "gold";
+      });
+      var golden = goldIds.length;
+      var unjudged = new Set();
+      Object.keys(D.unassessed || {}).forEach(function (card) {
+        var rows = (D.scores || {})[card] || {};
+        D.unassessed[card].forEach(function (id) {
+          if (rows[id] && rows[id].level !== "skipped") unjudged.add(id);
+        });
+      });
+      var goldUnjudged = goldIds.filter(function (id) {
+        return unjudged.has(id);
       }).length;
       var tile = function (path, cls, lead, big, text) {
         return link(path, "tile " + (cls || ""), [lead, el("div", {}, el("strong", { textContent: big }), el("span", { textContent: text }))]);
@@ -2359,8 +2374,8 @@
       return el(
         "div",
         { className: "tiles" },
-        tile("scorecards", "good", kpiBar(pct, pct + "% of checks pass"), pct + "%", fmt(c.pass) + " of " + fmt(total) + " checks pass" + (c.unknown ? " (" + fmt(c.unknown) + " unknown)" : "")),
-        tile("catalog", "", medal("gold", 40), fmt(golden), "of " + fmt(scoredEntities) + " scored entities are gold on every scorecard"),
+        tile("scorecards", "good", kpiBar(pct, pct + "% of checks pass"), pct + "%", fmt(c.pass) + " of " + fmt(total) + " checks pass on evidence" + (checkNote.length ? "; " + checkNote.join("; ") : "")),
+        tile("catalog", "", medal("gold", 40), fmt(golden), "of " + fmt(scoredEntities) + " scored entities are gold on every scorecard" + (goldUnjudged ? "; " + fmt(goldUnjudged) + " of those still await an agent's assessment (✦)" : "")),
         tile("scorecards", debt ? "bad" : "good", medal(debt ? "none" : "gold", 40), String(debt), debt ? "scorecards have entities at none" : "scorecards with entities at none"),
         tile("campaigns", on === campaignNames.length ? "good" : "", kpiPips(on, campaignNames.length, on + " of " + campaignNames.length + " campaigns on target"), on + " of " + campaignNames.length, "campaigns on target"),
       );
@@ -4098,7 +4113,7 @@
       if (top) {
         var tx = top.ratio >= 10 ? Math.round(top.ratio).toLocaleString("en-US") : top.ratio.toFixed(1);
         hero.querySelector(".verdict").after(
-          el("p", { className: "cmp-lead" }, el("b", { textContent: "Widest lead: " }), link("compare/" + enc(top.n), "", lowerFirst(measureLabel(top.c, top.r))), ", ", el("span", { className: "lead-x", textContent: tx + "× " + cmpWord(top.rd, top.rd.better === "lower") }), " (" + who(subject) + " " + unitOf(top.rd, top.a) + ", " + who(peer) + " " + unitOf(top.rd, top.b) + ")."),
+          el("p", { className: "cmp-lead" }, el("b", { textContent: "Widest lead: " }), link("compare/" + enc(top.n), "", [lowerFirst(measureLabel(top.c, top.r)) + ", ", el("span", { className: "lead-x", textContent: tx + "× " + cmpWord(top.rd, top.rd.better === "lower") })]), " (" + who(subject) + " " + unitOf(top.rd, top.a) + ", " + who(peer) + " " + unitOf(top.rd, top.b) + ")."),
         );
       }
       var leads = leadRows.length
@@ -4768,8 +4783,10 @@
             el("span", { className: "sub", textContent: "Weakest entity " }),
             floorHere ? badge(floorHere) : el("b", { textContent: "not scored" }),
             floorHere && isTop(D, active, floorHere) ? el("span", { className: "topmark", textContent: " ✓ top level" }) : null,
-            topHere && scored.length ? el("span", { textContent: " · " + fmt(atTop) + " of " + fmt(scored.length) + " at the top level (" + levelName(topHere) + ")" }) : null,
-            leverRule ? el("span", {}, " · biggest lever ", el("button", { className: "link", textContent: ruleTitle(active, leverRule), onclick: function () {
+            topHere && scored.length ? el("span", { className: "sep", ariaHidden: "true", textContent: "·" }) : null,
+            topHere && scored.length ? el("span", { className: "fact", textContent: fmt(atTop) + " of " + fmt(scored.length) + " at the top level (" + levelName(topHere) + ")" }) : null,
+            leverRule ? el("span", { className: "sep", ariaHidden: "true", textContent: "·" }) : null,
+            leverRule ? el("span", { className: "fact" }, "biggest lever ", el("button", { className: "link", textContent: ruleTitle(active, leverRule), onclick: function () {
               hStand.scrollIntoView({ block: "start", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
               hStand.focus({ preventScroll: true });
             } })) : null,
