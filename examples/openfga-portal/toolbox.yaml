@@ -53,7 +53,7 @@ tracks:
     description: >-
       OpenFGA v1.23.0 against SpiceDB v1.57.1, both on the memory datastore
       and each product's gRPC API, on one VM: timed factors are medians of 5
-      scripted runs over a 23k-relationship corpus, and yes/no facts cite the
+      scripted runs over a 33k-relationship corpus, and yes/no facts cite the
       docs or source at the pinned release. Toolbox's maintainers chose the
       factors and set every bar before the run.
     links:

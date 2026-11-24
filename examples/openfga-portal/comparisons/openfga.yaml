@@ -1,0 +1,39 @@
+# OpenFGA, as measured by experiments/openfga-spicedb-compare.
+# Written by snapshot.py; rerun the harness rather than editing it.
+records:
+  - id: openfga
+    title: OpenFGA
+    version: v1.23.0
+    harness: a411799+uncommitted
+    corpus: 33200
+    runs: 5
+    readyS: 0.059
+    writeTuplesPerS: 3160
+    checkP95Ms: 20.07
+    checkRps: 1473
+    listP95Ms: 3.24
+    binaryMb: 67.4
+    rssIdleMb: 53.4
+    rssLoadedMb: 101.5
+    goModules: 142
+    knownVulns: 0
+    provenance: true
+    sbom: true
+    conditions: true
+    contextualTuples: true
+    wildcards: true
+    exclusion: true
+    listUsers: true
+    consistencyTokens: false
+    changeFeed: true
+    modelTests: true
+    multiTenant: true
+    prometheusMetrics: true
+    otelTracing: true
+    httpByDefault: true
+    migrateCommand: true
+    datastores: 2
+    contributors: 122
+    releasesLastYear: 28
+    officialSdks: 5
+    foundation: true

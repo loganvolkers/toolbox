@@ -136,7 +136,7 @@ scorecards:
     title: Performance
     kind: Product
     description: >-
-      Start, write, check and list on a 23k-relationship corpus, memory
+      Start, write, check and list on a 33k-relationship corpus, memory
       datastore, each product's gRPC API at 16 workers.
     rationale: >-
       An authorization server sits on the request path of every service that

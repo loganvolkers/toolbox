@@ -1,0 +1,16 @@
+model
+  schema 1.1
+
+type user
+
+type doc
+  relations
+    define blocked: [user]
+    define verified: [user]
+    define member: [user, user:*, user with in_hours]
+    define viewer: member but not blocked
+    define editor: member and verified
+
+condition in_hours(hour: int) {
+  hour >= 9 && hour < 17
+}

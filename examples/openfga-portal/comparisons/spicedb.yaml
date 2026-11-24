@@ -1,0 +1,39 @@
+# SpiceDB, as measured by experiments/openfga-spicedb-compare.
+# Written by snapshot.py; rerun the harness rather than editing it.
+records:
+  - id: spicedb
+    title: SpiceDB
+    version: v1.57.1
+    harness: a411799+uncommitted
+    corpus: 33200
+    runs: 5
+    readyS: 0.141
+    writeTuplesPerS: 49399
+    checkP95Ms: 2.05
+    checkRps: 15662
+    listP95Ms: 9.07
+    binaryMb: 82.3
+    rssIdleMb: 84.5
+    rssLoadedMb: 306.4
+    goModules: 190
+    knownVulns: 7
+    provenance: false
+    sbom: false
+    conditions: true
+    contextualTuples: false
+    wildcards: true
+    exclusion: true
+    listUsers: true
+    consistencyTokens: true
+    changeFeed: true
+    modelTests: true
+    multiTenant: false
+    prometheusMetrics: true
+    otelTracing: true
+    httpByDefault: false
+    migrateCommand: true
+    datastores: 4
+    contributors: 86
+    releasesLastYear: 15
+    officialSdks: 6
+    foundation: false

@@ -1,0 +1,7 @@
+# Release archives, extracted servers and the built load generator: run.sh fetches and builds them.
+downloads/
+bin/
+load/loadgen
+__pycache__/
+corpus.json
+logs/

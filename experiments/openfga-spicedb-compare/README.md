@@ -98,3 +98,24 @@ python3 snapshot.py # writes examples/openfga-portal/comparisons/{openfga,spiced
 ```
 
 Results are in [RESULTS.md](./RESULTS.md) once the run is done.
+
+## Deviations
+
+Appended after the run. No bar, arm, measure or tally rule changed. These clarify points the text
+above could not meet as written.
+
+- **Listen addresses.** "Defaults otherwise" holds except for listen addresses. The VM is shared,
+  so in the timed rounds each server listens on 127.0.0.1 ports in the 18xxx range (OpenFGA
+  `--grpc-addr`, `--http-addr`, `--metrics-addr`; SpiceDB `--grpc-addr`, `--metrics-addr`). The
+  probes that decide `httpByDefault` and `prometheusMetrics` start each server with no flags but
+  the ones in the Arms table, on its default ports.
+- **"Before any timing".** The equivalence check needs the corpus written, so it can't come before
+  `readyS` and `writeTuplesPerS` are timed. In each round it runs after the write and before the
+  check and list timings, and the run stops unless every round of either arm gives the same
+  digests.
+- **"The first check succeeds".** A check needs a model. `readyS` covers exec, then creating a
+  store and writing the model (OpenFGA) or writing the schema (SpiceDB), then the first successful
+  check, polled every 10 ms.
+- **Load on the shared VM.** Before each timed round the harness waits until the 1-minute load
+  average is below 1.0, polling every 10 s and proceeding after 10 minutes. It records the load
+  average at the start and end of each round.
