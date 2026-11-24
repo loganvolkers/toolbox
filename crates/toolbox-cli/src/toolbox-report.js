@@ -186,7 +186,7 @@
     ".box a:hover{border-color:var(--accent)}",
     ".box a b{font-variant-numeric:tabular-nums;margin-left:4px;color:var(--muted);font-weight:600}",
     "a.erow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 8px;border-top:1px solid var(--line);color:var(--fg);text-decoration:none;border-radius:8px}",
-    "a.erow:hover{background:var(--tint)}.egroup>summary{display:grid;gap:12px;align-items:center;padding:10px 8px;border-top:1px solid var(--line);border-radius:8px;cursor:pointer;list-style:none}.egroup>summary::-webkit-details-marker{display:none}.egroup>summary:hover{background:var(--tint)}.egroup>summary .name{font-weight:600;min-width:0}.egroup>summary .name small{display:block;font-size:12px;color:var(--muted);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.egroup>summary .chev{display:inline-block;transition:transform .15s}.egroup[open]>summary .chev{transform:rotate(90deg)}small.members{display:block;white-space:normal!important;overflow:visible!important;font-size:12px;font-weight:400;color:var(--muted);font-family:inherit}small.members a{color:inherit}.egroup-members{margin-left:10px;padding-left:10px;border-left:2px solid var(--line)}",
+    "a.erow:hover{background:var(--tint)}.egroup>summary{display:grid;gap:12px;align-items:center;padding:10px 8px;border-top:1px solid var(--line);border-radius:8px;cursor:pointer;list-style:none}.egroup>summary::-webkit-details-marker{display:none}.egroup>summary:hover{background:var(--tint)}.egroup>summary .name{font-weight:600;min-width:0}.egroup>summary .name small{display:block;font-size:12px;color:var(--muted);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.egroup>summary .chev{display:inline-block;transition:transform .15s}.egroup[open]>summary .chev{transform:rotate(90deg)}.members{font-size:12px;color:var(--muted);padding:0 10px 9px;margin-top:-2px;line-height:1.6}.members a{color:inherit}details[open]+.members{display:none}.egroup-members{margin-left:10px;padding-left:10px;border-left:2px solid var(--line)}",
     "a.erow .name{font-weight:600;overflow-wrap:anywhere;min-width:0}",
     "a.erow .name small{display:block;font:12px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}",
     "a.erow .badges{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end}",
@@ -1128,12 +1128,14 @@
     return a;
   }
 
-  // The members of a folded group, each a link, so a reader can open one without unfolding it.
+  // The members of a folded group, each a link, so a reader can open one without unfolding it. It sits
+  // after the details element: links inside a summary would nest interactive controls.
   function memberLinks(ids) {
     var cut = ids.length > 8 ? 6 : ids.length;
     return el(
-      "small",
+      "div",
       { className: "members" },
+      "In it: ",
       ...ids.slice(0, cut).flatMap(function (id, i) {
         return [i ? ", " : "", link("entity/" + enc(id), "", shortId(id))];
       }),
@@ -3715,16 +3717,19 @@
           var sum = el(
             "summary",
             { className: "erow cols", style: "grid-template-columns:" + tpl },
-            el("div", { className: "name" }, kindCount(D, selected, members.length) + " with the same result ", el("span", { className: "chev", ariaHidden: "true", textContent: "›" }), memberLinks(members.map(function (x) {
-              return x.id;
-            }))),
+            el("div", { className: "name" }, kindCount(D, selected, members.length) + " with the same result ", el("span", { className: "chev", ariaHidden: "true", textContent: "›" })),
             ...Array.prototype.map.call(b.r.querySelectorAll(".ecell"), function (c) {
               return c.cloneNode(true);
             }),
           );
-          rowsOut.push(el("details", { className: "egroup" }, sum, el("div", { className: "egroup-members" }, ...members.map(function (x) {
-            return x.r;
-          }))));
+          rowsOut.push(
+            el("details", { className: "egroup" }, sum, el("div", { className: "egroup-members" }, ...members.map(function (x) {
+              return x.r;
+            }))),
+            memberLinks(members.map(function (x) {
+              return x.id;
+            })),
+          );
         });
         list.replaceChildren.apply(list, (header ? [header] : []).concat(rowsOut));
         var judgedCols = cols.filter(function (n) {
@@ -5193,9 +5198,7 @@
               "summary",
               {},
               first.children[0],
-              el("span", { className: "name" }, kindCount(D, sc.kind, g.length) + " with the same result", el("span", { className: "tail" }, el("span", { className: "chev", textContent: "›" })), memberLinks(g.map(function (pair) {
-                return pair[0];
-              }))),
+              el("span", { className: "name" }, kindCount(D, sc.kind, g.length) + " with the same result", el("span", { className: "tail" }, el("span", { className: "chev", textContent: "›" }))),
               first.children[2],
             ),
           );
@@ -5205,7 +5208,12 @@
             built = true;
             grp.append(el("div", { className: "ent-members" }, ...g.map(entRow)));
           });
-          list.append(grp);
+          list.append(
+            grp,
+            memberLinks(g.map(function (pair) {
+              return pair[0];
+            })),
+          );
         });
         if (entsShown < shown.length) {
           list.append(
