@@ -72,6 +72,20 @@ enum Command {
     },
     /// Run the server: snapshot loop + REST API. Uses Postgres when --database-url (or
     /// DATABASE_URL) is set, otherwise an in-memory store (optionally preloaded with fixtures).
+    ///
+    /// Sign-in: on a loopback address callers say who they are (`--as user:<id>` on `toolbox run
+    /// --url` and the reads); elsewhere they need a token. `TOOLBOX_AUTH_MODE` overrides (`dev`,
+    /// `token`, `iap-google`, `cloudflare-access`, `oidc`).
+    ///
+    /// State: without a database, action runs are kept in `TOOLBOX_STATE_DIR` (default
+    /// `~/.local/state/toolbox`) under `served/<portal>/runs` and survive a restart. A portal with
+    /// `federation.children` keeps their clones under `federation/` there, and, unless
+    /// `federation.signingKey` names a variable, its approval signing key in
+    /// `served/<portal>/signing-key`; the key children pin is printed at start and by `toolbox run
+    /// --url <server>`.
+    ///
+    /// Stop it with Ctrl-C or SIGTERM; run it in the background with your shell (`nohup … &`) or a
+    /// process manager.
     Serve {
         /// A portal directory (containing toolbox.yaml) or a manifest file.
         #[arg(default_value = ".")]

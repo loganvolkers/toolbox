@@ -110,6 +110,9 @@ pub enum Executor {
         entity: String,
         program: PathBuf,
         env: Vec<String>,
+        /// A child cloned from git (`federation.children`): the branch its clone is brought to
+        /// before each preview and run, so the definition that runs is the one committed there.
+        branch: Option<String>,
     },
 }
 
@@ -324,7 +327,9 @@ impl Executor {
                 entity,
                 program,
                 env,
+                branch,
             } => {
+                sync_clone(portal, branch.as_deref())?;
                 let v = child_run(program, portal, action, entity, ctx, &["--preview"], env)?;
                 if let Some(e) = v.get("error").and_then(Value::as_str) {
                     return Err(format!("child portal: {e}"));
@@ -397,7 +402,10 @@ impl Executor {
                 entity,
                 program,
                 env,
-            } => match child_run(program, portal, action, entity, ctx, &["--yes"], env) {
+                branch,
+            } => match sync_clone(portal, branch.as_deref())
+                .and_then(|()| child_run(program, portal, action, entity, ctx, &["--yes"], env))
+            {
                 Err(e) => Outcome::failed(e),
                 Ok(v) => {
                     let state = v.get("state").and_then(Value::as_str).unwrap_or("failed");
@@ -1095,6 +1103,22 @@ fn child_run(
             String::from_utf8_lossy(&out.stderr).trim()
         )
     })
+}
+
+/// Bring a cloned child to the tip of `branch` on its origin. A child with no branch is a
+/// checkout someone else keeps, and is left as it is.
+fn sync_clone(portal: &Path, branch: Option<&str>) -> Result<(), String> {
+    let Some(b) = branch else {
+        return Ok(());
+    };
+    let dir = portal_repo_dir(portal);
+    let step = |args: &[&str]| {
+        git(&dir, args).map_err(|e| format!("cannot bring the child's clone to origin/{b}: {e}"))
+    };
+    step(&["fetch", "-q", "origin", "--", b])?;
+    step(&["checkout", "-q", "-B", b, "FETCH_HEAD"])?;
+    step(&["reset", "-q", "--hard", "FETCH_HEAD"])?;
+    step(&["clean", "-qfdx"]).map(drop)
 }
 
 /// A child portal's commands run from its repository root (where its connectors' `root: .`

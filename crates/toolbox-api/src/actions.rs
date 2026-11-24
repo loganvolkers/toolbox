@@ -82,20 +82,15 @@ impl Runs {
     }
 }
 
-/// Where a server without a database keeps its runs: `<state dir>/served/<portal>/runs`, the
-/// state dir being `TOOLBOX_STATE_DIR`, else `$XDG_STATE_HOME/toolbox`, else
-/// `~/.local/state/toolbox`.
+/// Where a server without a database keeps its runs: `<state dir>/served/<portal>/runs`
+/// ([`toolbox_model::federation::state_dir`]).
 fn runs_dir(portal: &str) -> std::path::PathBuf {
-    let base = std::env::var_os("TOOLBOX_STATE_DIR")
-        .map(std::path::PathBuf::from)
-        .or_else(|| {
-            std::env::var_os("XDG_STATE_HOME").map(|d| std::path::PathBuf::from(d).join("toolbox"))
-        })
-        .or_else(|| {
-            std::env::var_os("HOME")
-                .map(|h| std::path::PathBuf::from(h).join(".local/state/toolbox"))
-        })
-        .unwrap_or_else(|| std::env::temp_dir().join("toolbox"));
+    served_dir(portal).join("runs")
+}
+
+/// `<state dir>/served/<portal>`: what a server keeps on this host for one portal.
+fn served_dir(portal: &str) -> std::path::PathBuf {
+    let base = toolbox_model::federation::state_dir();
     let name: String = portal
         .chars()
         .map(|c| {
@@ -106,7 +101,7 @@ fn runs_dir(portal: &str) -> std::path::PathBuf {
             }
         })
         .collect();
-    base.join("served").join(name).join("runs")
+    base.join("served").join(name)
 }
 
 /// A run cut off by a restart while its executor was working: what it did is unknown, so it is
@@ -235,15 +230,92 @@ fn cwd() -> std::path::PathBuf {
     std::env::current_dir().unwrap_or_else(|_| ".".into())
 }
 
-/// The approval signing seed, from the environment variable `federation.signingKey` names.
+/// The approval signing seed: from the environment variable `federation.signingKey` names; else,
+/// for a portal that federates children, one this host generates once and keeps in
+/// `<state dir>/served/<portal>/signing-key`. Servers that share runs need the variable: a kept
+/// seed is one host's, and children pin one key.
 fn signing_seed(s: &AppState) -> Option<String> {
-    let var = s.manifest.federation.as_ref()?.signing_key.as_ref()?;
-    std::env::var(var).ok().filter(|v| !v.trim().is_empty())
+    let fed = s.manifest.federation.as_ref()?;
+    if let Some(var) = &fed.signing_key {
+        return std::env::var(var).ok().filter(|v| !v.trim().is_empty());
+    }
+    fed.portals.as_ref()?;
+    kept_seed(&served_dir(&s.manifest.portal.name).join("signing-key"))
+        .map_err(|e| tracing::error!(error = %e, "cannot keep an approval signing key"))
+        .ok()
+}
+
+fn kept_seed(file: &std::path::Path) -> Result<String, String> {
+    use std::io::Write;
+    if let Ok(seed) = std::fs::read_to_string(file) {
+        return Ok(seed.trim().to_owned());
+    }
+    let dir = file.parent().ok_or("no directory")?;
+    std::fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
+    let seed = toolbox_exec::grant::new_seed();
+    let mut opts = std::fs::OpenOptions::new();
+    opts.write(true).create_new(true);
+    #[cfg(unix)]
+    std::os::unix::fs::OpenOptionsExt::mode(&mut opts, 0o600);
+    match opts.open(file) {
+        Ok(mut f) => f
+            .write_all(seed.as_bytes())
+            .map(|()| seed)
+            .map_err(|e| format!("{}: {e}", file.display())),
+        // Another request wrote it first.
+        Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => std::fs::read_to_string(file)
+            .map(|s| s.trim().to_owned())
+            .map_err(|e| format!("{}: {e}", file.display())),
+        Err(e) => Err(format!("{}: {e}", file.display())),
+    }
 }
 
 /// `ed25519:<hex>`: the key children pin to accept this portal's approvals.
 pub fn approval_key(s: &AppState) -> Option<String> {
     toolbox_exec::grant::public_key(&signing_seed(s)?).ok()
+}
+
+/// A portal with git children (`federation.children`) re-reads their branches before it says
+/// what they offer or prepares a run on one, so a definition pushed a moment ago counts.
+async fn fresh_children(s: &AppState, user: &str) {
+    let connector = toolbox_model::federation::CONNECTOR;
+    let has_children = s
+        .manifest
+        .federation
+        .as_ref()
+        .is_some_and(|f| !f.children.is_empty());
+    if !has_children || !s.hub.can_refresh(connector, "portal", "external_ids") {
+        return;
+    }
+    let Some(p) = s.snapshot() else {
+        return;
+    };
+    let ids: Vec<String> = p
+        .derived
+        .entities
+        .values()
+        .flat_map(|e| &e.records)
+        .filter(|(c, k, _)| c == connector && k == "portal")
+        .map(|(_, _, x)| x.clone())
+        .collect();
+    if ids.is_empty() {
+        return;
+    }
+    let id = s.hub.enqueue(toolbox_connect::Request {
+        connector: connector.into(),
+        command: "refresh",
+        kind: Some("portal".into()),
+        kinds: vec![],
+        external_ids: ids,
+        reason: "read the children's branches".into(),
+        priority: "interactive",
+        timeout: Duration::from_secs(30),
+        requested_by: user.to_owned(),
+    });
+    let _ = s.hub.wait(&id, Duration::from_secs(30)).await;
+    let version = s.store.input_version().await.unwrap_or(0);
+    s.changed.notify_one();
+    let _ = s.wait_for(version, Duration::from_secs(10)).await;
 }
 
 /// Query of `GET /v1/actions`.
@@ -263,6 +335,7 @@ pub async fn list(
         Ok(c) => c,
         Err(r) => return r,
     };
+    fresh_children(&s, &caller.user).await;
     let Some(p) = s.snapshot() else {
         return problem(
             StatusCode::SERVICE_UNAVAILABLE,
@@ -298,8 +371,11 @@ pub async fn list(
         v["annotations"] = json!(a.annotations);
         out.push(v);
     }
-    Json(json!({"snapshot": p.snapshot_id, "actions": out, "approval_key": approval_key(&s)}))
-        .into_response()
+    Json(
+        json!({"snapshot": p.snapshot_id, "actions": out, "approval_key": approval_key(&s),
+        "unreadable": federation::unreadable(&s.manifest, &p.derived)}),
+    )
+    .into_response()
 }
 
 /// Body of a preview or a run.
@@ -319,6 +395,7 @@ async fn prepared(
     name: &str,
     body: &RunBody,
 ) -> Result<(Prepared, String), Response> {
+    fresh_children(s, user).await;
     let Some(p) = s.snapshot() else {
         return Err(problem(
             StatusCode::SERVICE_UNAVAILABLE,
@@ -721,6 +798,12 @@ pub async fn approve(
             return Ok(false);
         }
         let done = run.approve(&caller.user, |g| member.iter().any(|m| m == g))?;
+        if let (Some(n), Some(e)) = (&body.note, run.events.last_mut()) {
+            e.note = Some(match e.note.take() {
+                Some(slot) => format!("as {slot}: {n}"),
+                None => n.clone(),
+            });
+        }
         if done {
             // Out of awaiting_approval under the lock, so a second approval can't start it twice.
             run.state = "approved".into();

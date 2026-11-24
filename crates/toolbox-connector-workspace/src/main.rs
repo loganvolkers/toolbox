@@ -43,6 +43,8 @@
 //!   command that checks it (docs/design/example-standards.md);
 //! - `portal` (`portals` globs, usually `**/.toolbox/toolbox.yaml`): one per child portal a parent
 //!   federates, with the actions it declares and how to reach it (docs/design/federated-actions.md);
+//!   with `git` (`[{key, url, branch}]`, from `federation.children`), one per repository instead,
+//!   each cloned into `<root>/<key>` and read at the tip of its branch (`clones`);
 //! - `assessment` (`assessments` globs): one per assessment file (YAML or JSON, see
 //!   `schema/assessment.schema.json`): agents' judgements of entities against the portal's rubrics.
 //!
@@ -61,10 +63,11 @@
 //! "betterer"?: [glob], "skills"?: [glob], "connectors"?: [glob], "dependencies"?: false,
 //! "agentDocs"?: [glob], "plugins"?: [glob], "packages"?: [glob], "schemas"?: [glob],
 //! "examples"?: [glob], "pages"?: [glob], "assessments"?: [glob], "jsWorkspace"?: false,
-//! "expoApps"?: [glob], "storybooks"?: [glob], "portals"?: [glob]}`.
+//! "expoApps"?: [glob], "storybooks"?: [glob], "portals"?: [glob], "git"?: [{key, url, branch}]}`.
 
 mod agentsmd;
 mod betterer;
+mod clones;
 mod connectors;
 mod data;
 mod deps;
@@ -125,6 +128,8 @@ struct Workspace {
     storybooks: Vec<Regex>,
     /// Child portal manifests (`portal` records), e.g. `**/.toolbox/toolbox.yaml`.
     portals: Vec<Regex>,
+    /// Child portals by git repository, cloned under `root` (`clones`).
+    git: Vec<clones::Source>,
     captures: Vec<(String, Regex)>,
     counts: Vec<(String, Regex)>,
     crates: bool,
@@ -369,6 +374,7 @@ impl Workspace {
             expo_apps: globs(&cfg, "expoApps")?,
             storybooks: globs(&cfg, "storybooks")?,
             portals: globs(&cfg, "portals")?,
+            git: clones::sources(&cfg),
             captures: named_regexes(&cfg, "captures")?,
             counts: named_regexes(&cfg, "counts")?,
             crates: cfg["crates"].as_bool().unwrap_or(true),
@@ -806,6 +812,18 @@ impl Workspace {
         if self.portals.is_empty() || !kinds.contains(&"portal") {
             return;
         }
+        if !self.git.is_empty() {
+            let found: Vec<(String, Value)> = self
+                .git
+                .iter()
+                .map(|s| (clones::manifest(s), self.cloned_portal(s)))
+                .collect();
+            for (rel, rec) in portals::flag_duplicates(found) {
+                out.record("portal", &portals::id(&rel), rec);
+            }
+            out.snapshot_complete("portal");
+            return;
+        }
         let found: Vec<(&String, Value)> = paths
             .iter()
             .filter(|p| Self::matches(&self.portals, p))
@@ -1124,8 +1142,30 @@ impl Workspace {
         }
     }
 
+    /// A child by git repository, read at the tip of its branch.
+    fn cloned_portal(&self, s: &clones::Source) -> Value {
+        let rel = clones::manifest(s);
+        match clones::sync(&self.root, s) {
+            Err(e) => clones::broken(&self.root, s, e),
+            Ok(_) if !self.root.join(&rel).is_file() => clones::broken(
+                &self.root,
+                s,
+                format!("{} has no .toolbox/toolbox.yaml on {}", s.url, s.branch),
+            ),
+            Ok(commit) => {
+                let mut rec = portals::analyse(&self.root, &rel);
+                rec["git"] = clones::origin(s, &commit);
+                rec
+            }
+        }
+    }
+
     fn refresh_portal(&self, id: &str, out: &mut Out) {
         let rel = id.strip_prefix("portal:").unwrap_or("");
+        if let Some(s) = self.git.iter().find(|s| clones::manifest(s) == rel) {
+            out.record("portal", id, self.cloned_portal(s));
+            return;
+        }
         if Self::matches(&self.portals, rel) && self.root.join(rel).is_file() {
             out.record("portal", id, portals::analyse(&self.root, rel));
         } else {

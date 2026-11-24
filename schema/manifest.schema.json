@@ -250,7 +250,34 @@
       "properties": {
         "portals": {
           "$ref": "#/$defs/kindName",
-          "description": "The kind whose entities are child portals (workspace `portal` records: path, actions, results)."
+          "description": "The kind whose entities are child portals (workspace `portal` records: path, actions, results). Default `Portal` when `children` is set."
+        },
+        "children": {
+          "type": "array",
+          "description": "A parent's child portals, by git repository. Each is cloned into the state directory and kept at its branch: the portal offers the actions committed there, and syncs the clone again before each preview and run, so only what is on the branch counts. Listing a child also lets `toolbox serve` run it in that clone (`runners.local.portals`) unless `runners.local` is declared. Declares, unless already declared, the `federation` connector (builtin:workspace) and the `Portal` kind its records map to.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "git"
+            ],
+            "properties": {
+              "git": {
+                "type": "string",
+                "minLength": 1,
+                "description": "What `git clone` takes: a URL, or a path relative to this manifest's directory."
+              },
+              "branch": {
+                "type": "string",
+                "description": "The branch whose definitions count (default main)."
+              },
+              "key": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9._-]*$",
+                "description": "The child's identity here: its entity is `portal:<key>` (default: the URL's last segment, without `.git`). Its manifest is `.toolbox/toolbox.yaml` in the repository."
+              }
+            }
+          }
         },
         "permission": {
           "type": "string",
@@ -1114,10 +1141,8 @@
       "required": [
         "name",
         "kind",
-        "scope",
         "description",
         "inputs",
-        "permission",
         "executor"
       ],
       "properties": {
@@ -1133,7 +1158,9 @@
             "day2",
             "delete",
             "global"
-          ]
+          ],
+          "default": "day2",
+          "description": "Where the action sits in its kind's lifecycle ([action-entities.md](../docs/design/action-entities.md)); default `day2`, an action on an existing entity."
         },
         "description": {
           "type": "string",
@@ -1145,7 +1172,8 @@
         },
         "permission": {
           "type": "string",
-          "description": "OpenFGA relation checked on the target entity."
+          "description": "OpenFGA relation checked on the target entity. Default `can_run_actions`.",
+          "default": "can_run_actions"
         },
         "approval": {
           "$ref": "#/$defs/cel"

@@ -231,14 +231,37 @@ fn is_ref(s: &str) -> bool {
             .all(|c| c.is_ascii_alphanumeric() || "-_./".contains(c))
 }
 
-fn list(o: &Options, portal: &Path, all: &[Offered], d: &toolbox_derive::Derived) -> ExitCode {
+fn list(
+    o: &Options,
+    portal: &Path,
+    m: &Manifest,
+    all: &[Offered],
+    d: &toolbox_derive::Derived,
+) -> ExitCode {
     let shown = federation::on_entity(all, d, o.entity.as_deref());
     let actions: Vec<Value> = shown.iter().map(|x| federation::describe(x, d)).collect();
-    let doc = json!({"portal": portal, "actions": actions});
+    let doc = json!({"portal": portal, "actions": actions,
+        "unreadable": federation::unreadable(m, d)});
     emit(o, &doc, || {
-        list_md(&portal.display().to_string(), &actions, "")
+        list_md(&portal.display().to_string(), &actions, "") + &unreadable_md(&doc)
     });
     ExitCode::SUCCESS
+}
+
+/// The child portals that offer nothing, and why.
+fn unreadable_md(doc: &Value) -> String {
+    doc["unreadable"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .map(|u| {
+            format!(
+                "\n{} offers no actions: {}\n",
+                u["entity"].as_str().unwrap_or(""),
+                u["error"].as_str().unwrap_or("")
+            )
+        })
+        .collect()
 }
 
 /// The actions as `federation::describe` (or `GET /v1/actions`) gives them. `via` is appended to
@@ -311,7 +334,7 @@ pub fn run(o: &Options) -> ExitCode {
     };
     let all = federation::offered(&m, &d);
     match &o.action {
-        None => list(o, &portal, &all, &d),
+        None => list(o, &portal, &m, &all, &d),
         Some(name) => act(o, &portal, &m, &d, &all, name),
     }
 }
@@ -962,7 +985,11 @@ mod remote {
         let v = api.call("GET", &path, None)?;
         let actions = v["actions"].as_array().cloned().unwrap_or_default();
         emit(api.o, &v, || {
-            list_md(url, &actions, &format!(" --url {url}"))
+            let mut md = list_md(url, &actions, &format!(" --url {url}")) + &unreadable_md(&v);
+            if let Some(k) = v["approval_key"].as_str() {
+                md.push_str(&format!("\nChildren that require approval accept this portal's by pinning `{{portal: <name>, key: {k}}}` in `federation.acceptApprovalsFrom`.\n"));
+            }
+            md
         });
         Ok(ExitCode::SUCCESS)
     }

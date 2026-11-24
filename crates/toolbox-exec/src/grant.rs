@@ -59,6 +59,13 @@ fn keypair(seed_hex: &str) -> Result<Ed25519KeyPair, String> {
     Ed25519KeyPair::from_seed_unchecked(&seed).map_err(|e| format!("signing key: {e}"))
 }
 
+/// A new signing seed: 32 random bytes, hex.
+pub fn new_seed() -> String {
+    let mut seed = [0u8; 32];
+    aws_lc_rs::rand::fill(&mut seed).expect("system random");
+    hex(&seed)
+}
+
 /// `ed25519:<hex>`: the public key a child pins for this seed.
 pub fn public_key(seed_hex: &str) -> Result<String, String> {
     Ok(format!(

@@ -37,6 +37,8 @@ pub struct Child {
     pub reviewed: bool,
     /// The parent's `federation.runners`: the credentials and allowlists it dispatches with.
     pub runners: Value,
+    /// For a child cloned from git (`federation.children`), the branch whose definitions count.
+    pub branch: Option<String>,
 }
 
 /// `*` matches any run of characters; everything else matches itself.
@@ -124,6 +126,7 @@ impl Offered {
                     .filter_map(Value::as_str)
                     .map(str::to_owned)
                     .collect(),
+                branch: c.branch.clone(),
             }),
             "github-workflow" => {
                 // The child names its workflow; the parent supplies the endpoint and the token, so
@@ -203,6 +206,21 @@ fn is_name(s: &str) -> bool {
             .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
 }
 
+/// The child portals that offer nothing because their manifest does not load: `{entity, error}`.
+pub fn unreadable(m: &Manifest, d: &Derived) -> Vec<Value> {
+    let Some(kind) = m.federation.as_ref().and_then(|f| f.portals.as_ref()) else {
+        return Vec::new();
+    };
+    d.entities
+        .iter()
+        .filter(|(_, e)| &e.kind == kind)
+        .filter_map(|(id, e)| {
+            let err = e.fields.get("error")?.as_str()?;
+            Some(json!({"entity": id, "error": err}))
+        })
+        .collect()
+}
+
 /// Every action this portal offers: its own, then each child portal's. A child whose manifest
 /// does not load offers nothing, and neither does an entity that is this portal's own
 /// authorization object (`portal:<name>`).
@@ -261,6 +279,12 @@ pub fn offered(m: &Manifest, d: &Derived) -> Vec<Offered> {
                     .to_owned()
             });
         let runner = e.fields.get("runner").cloned().unwrap_or(Value::Null);
+        let branch = e
+            .fields
+            .get("git")
+            .and_then(|g| g.get("branch"))
+            .and_then(Value::as_str)
+            .map(str::to_owned);
         for def in e
             .fields
             .get("actions")
@@ -290,6 +314,7 @@ pub fn offered(m: &Manifest, d: &Derived) -> Vec<Offered> {
                             .to_owned(),
                         reviewed: def["executor"] == "change" && def["land"] != "push",
                         runners: runners.clone(),
+                        branch: branch.clone(),
                     }),
                     action: a,
                     entity: Some(id.clone()),
@@ -451,7 +476,7 @@ pub fn describe(o: &Offered, d: &Derived) -> Value {
     );
     v.insert(
         "verified".into(),
-        json!(a.expect.is_some() || o.child.is_some()),
+        json!(a.expect.is_some() || o.child.is_some() || a.executor["type"] == "change"),
     );
     v.insert("approval".into(), json!(a.approval));
     if let Some(c) = &o.child {
@@ -487,6 +512,7 @@ mod tests {
                 executor: "command".into(),
                 reviewed: false,
                 runners,
+                branch: None,
             }),
         }
     }

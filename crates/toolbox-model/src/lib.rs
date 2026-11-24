@@ -6,6 +6,7 @@
 //! cross-reference, form-subset and CEL checks, and validate fixture messages.
 
 pub mod diagnostics;
+pub mod federation;
 pub mod load;
 pub mod manifest;
 pub mod messages;

@@ -50,6 +50,9 @@ pub struct Manifest {
 pub struct Federation {
     /// The kind whose entities are child portals (workspace `portal` records).
     pub portals: Option<String>,
+    /// A parent's child portals by git repository, kept at their branch (`crate::federation`).
+    #[serde(default)]
+    pub children: Vec<GitChild>,
     /// The relation a caller needs on a child portal entity (default `can_run_actions`).
     pub permission: Option<String>,
     /// How a parent may dispatch this portal's actions: `{type: local}` or `{type: github-workflow, …}`.
@@ -62,6 +65,14 @@ pub struct Federation {
     /// Parent portals whose signed approvals this portal accepts on a dispatched run.
     #[serde(default)]
     pub accept_approvals_from: Vec<TrustedParent>,
+}
+
+/// One entry of `federation.children`, with the defaults `crate::federation` fills in.
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+pub struct GitChild {
+    pub git: String,
+    pub branch: Option<String>,
+    pub key: Option<String>,
 }
 
 /// A parent whose approvals a child accepts, pinned by its signing key.
@@ -363,13 +374,23 @@ pub enum TupleDerivation {
     },
 }
 
+fn day2() -> String {
+    "day2".into()
+}
+
+fn can_run_actions() -> String {
+    "can_run_actions".into()
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Action {
     pub name: String,
     pub kind: String,
+    #[serde(default = "day2")]
     pub scope: String,
     pub description: String,
     pub inputs: Value,
+    #[serde(default = "can_run_actions")]
     pub permission: String,
     pub approval: Option<String>,
     #[serde(default)]

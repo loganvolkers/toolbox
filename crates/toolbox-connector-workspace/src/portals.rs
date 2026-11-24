@@ -30,11 +30,11 @@ fn summary(a: &Value) -> Value {
         "scope": a.get("scope").cloned().unwrap_or(json!("day2")),
         "description": a["description"],
         "inputs": a.get("inputs").cloned().unwrap_or(json!({"type": "object"})),
-        "permission": a["permission"],
+        "permission": a.get("permission").cloned().unwrap_or(json!("can_run_actions")),
         "approval": a.get("approval").cloned().unwrap_or(Value::Null),
         "executor": a["executor"]["type"].as_str().unwrap_or("command"),
         "land": a["executor"]["land"],
-        "verified": a.get("expect").is_some_and(Value::is_object),
+        "verified": a.get("expect").is_some_and(Value::is_object) || a["executor"]["type"] == "change",
         "postcondition": a["expect"]["postcondition"],
         "annotations": a.get("annotations").cloned().unwrap_or(Value::Null),
     })
@@ -82,7 +82,8 @@ pub(crate) fn analyse(root: &Path, rel: &str) -> Value {
         .unwrap_or_default();
     let broken = |e: String| {
         json!({"name": key, "key": key, "path": path, "dir": abs, "file": rel, "error": e,
-            "actions": [], "scorecards": [], "packages": [], "runner": null})
+            "title": null, "owner": null, "actions": [], "scorecards": [], "packages": [],
+            "runner": null})
     };
     let doc = match yaml(&file) {
         Ok(d) => d,
