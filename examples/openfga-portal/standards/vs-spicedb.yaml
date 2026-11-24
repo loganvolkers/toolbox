@@ -1,0 +1,537 @@
+# OpenFGA against SpiceDB (experiments/openfga-spicedb-compare). Comparative scorecards
+# (D01M857ZB468ZM2YS6GNSEG6YB9): each scores both products on the same rules and says, rule by
+# rule, where OpenFGA stands. Products are the records the harness writes into comparisons/;
+# rerun the harness rather than editing them. Bars were registered before the run.
+
+kinds:
+  - name: Product
+    description: >-
+      An authorization server measured by experiments/openfga-spicedb-compare:
+      one release, one run of the harness, on one corpus.
+    identityFrom: [connector:portal]
+    fields:
+      title: {type: string, description: "The product's name."}
+      version: {type: string, description: The release measured.}
+      harness:
+        type: string
+        description: The commit of the harness scripts that measured it.
+      corpus:
+        type: number
+        description: Relationships written before the timed runs.
+      runs: {type: number, description: Runs per product the medians are over.}
+      readyS:
+        type: number
+        description: Seconds from exec until the first check succeeds (median).
+      writeTuplesPerS:
+        type: number
+        description: Relationships written per second, 100 per request, one writer (median).
+      checkP95Ms:
+        type: number
+        description: p95 milliseconds of one permission check at 16 workers (median).
+      checkRps:
+        type: number
+        description: Permission checks per second at 16 workers (median).
+      listP95Ms:
+        type: number
+        description: p95 milliseconds to list every document one user can view (median).
+      binaryMb: {type: number, description: Megabytes of the server binary.}
+      rssIdleMb:
+        type: number
+        description: Resident memory when ready (median).
+      rssLoadedMb:
+        type: number
+        description: Resident memory after the corpus and the check load (median).
+      goModules:
+        type: number
+        description: Go modules compiled into the server binary.
+      knownVulns:
+        type: number
+        description: govulncheck findings in code the binary calls.
+      provenance:
+        type: boolean
+        description: The release archive has signed build provenance a user can verify.
+      sbom: {type: boolean, description: The release publishes an SBOM.}
+      conditions:
+        type: boolean
+        description: >-
+          A relationship can hold only when a condition on request context is true
+          (ABAC).
+      contextualTuples:
+        type: boolean
+        description: A request can add relationships that count for that request only.
+      wildcards:
+        type: boolean
+        description: One relationship can grant every subject of a type.
+      exclusion:
+        type: boolean
+        description: A permission can subtract or intersect relations.
+      listUsers:
+        type: boolean
+        description: The server lists the subjects that hold a permission on an object.
+      consistencyTokens:
+        type: boolean
+        description: A read can be pinned to be at least as fresh as a given write.
+      changeFeed:
+        type: boolean
+        description: Clients can follow relationship changes from a position.
+      modelTests:
+        type: boolean
+        description: Assertion files about a model run from the project's CLI.
+      multiTenant:
+        type: boolean
+        description: One server holds isolated models and relationships per tenant.
+      prometheusMetrics:
+        type: boolean
+        description: The server exposes Prometheus metrics by default.
+      otelTracing:
+        type: boolean
+        description: The server exports OpenTelemetry traces when configured.
+      httpByDefault:
+        type: boolean
+        description: The default server answers HTTP/JSON as well as gRPC.
+      migrateCommand:
+        type: boolean
+        description: The binary migrates its datastore schema itself.
+      datastores:
+        type: number
+        description: Production datastores supported (memory excluded).
+      contributors:
+        type: number
+        description: Contributors to its repository, anonymous included.
+      releasesLastYear:
+        type: number
+        description: GitHub releases in the year before the run.
+      officialSdks:
+        type: number
+        description: Client SDKs the project maintains.
+      foundation:
+        type: boolean
+        description: The project is governed by a neutral foundation.
+    sources: {default: [connector:portal]}
+    map:
+    - from: portal/product
+      id: "'product:' + record.id"
+      set: >-
+        {'title': record.title, 'version': record.version, 'harness':
+        record.harness, 'corpus': record.corpus, 'runs': record.runs, 'readyS':
+        record.readyS, 'writeTuplesPerS': record.writeTuplesPerS, 'checkP95Ms':
+        record.checkP95Ms, 'checkRps': record.checkRps, 'listP95Ms':
+        record.listP95Ms, 'binaryMb': record.binaryMb, 'rssIdleMb':
+        record.rssIdleMb, 'rssLoadedMb': record.rssLoadedMb, 'goModules':
+        record.goModules, 'knownVulns': record.knownVulns, 'provenance':
+        record.provenance, 'sbom': record.sbom, 'conditions': record.conditions,
+        'contextualTuples': record.contextualTuples, 'wildcards':
+        record.wildcards, 'exclusion': record.exclusion, 'listUsers':
+        record.listUsers, 'consistencyTokens': record.consistencyTokens,
+        'changeFeed': record.changeFeed, 'modelTests': record.modelTests,
+        'multiTenant': record.multiTenant, 'prometheusMetrics':
+        record.prometheusMetrics, 'otelTracing': record.otelTracing,
+        'httpByDefault': record.httpByDefault, 'migrateCommand':
+        record.migrateCommand, 'datastores': record.datastores, 'contributors':
+        record.contributors, 'releasesLastYear': record.releasesLastYear,
+        'officialSdks': record.officialSdks, 'foundation': record.foundation}
+
+scorecards:
+  - name: vs-spicedb-performance
+    title: Performance
+    kind: Product
+    description: >-
+      Start, write, check and list on a 23k-relationship corpus, memory
+      datastore, each product's gRPC API at 16 workers.
+    rationale: >-
+      An authorization server sits on the request path of every service that
+      asks it, so its check tail is added to theirs, and its start time bounds
+      how fast a rescheduled replica serves again.
+    links:
+    - title: Pre-registration and method
+      url: https://github.com/loganvolkers/toolbox/blob/main/experiments/openfga-spicedb-compare/README.md
+    owner: group:openfga-maintainers
+    track: vs-spicedb
+    levels: [bronze]
+    compare: {subject: product:openfga, peers: [product:spicedb]}
+    rules:
+    - name: ready
+      level: bronze
+      check: entity.readyS <= 5.0
+      value: entity.readyS
+      better: lower
+      unit: s
+      tolerance: 0.1
+      evidence: "['first check answered after ' + string(entity.readyS) + ' s']"
+      fix: Profile server start, then rerun the harness.
+      rationale: >-
+        A replica that is not ready cannot answer checks, so start time is the
+        floor on recovery after a crash, a deploy or a scale-out.
+    - name: write-throughput
+      level: bronze
+      check: entity.writeTuplesPerS >= 1000.0
+      value: entity.writeTuplesPerS
+      better: higher
+      unit: /s
+      tolerance: 0.1
+      evidence: "[string(entity.writeTuplesPerS) + ' relationships written per second']"
+      fix: Profile the write path, then rerun the harness.
+      rationale: >-
+        Every grant, share and group change is a write, and a slow backfill
+        holds up a migration onto the server.
+    - name: check-latency
+      level: bronze
+      check: entity.checkP95Ms <= 10.0
+      value: entity.checkP95Ms
+      better: lower
+      unit: ms
+      tolerance: 0.1
+      evidence: "['p95 ' + string(entity.checkP95Ms) + ' ms per check']"
+      fix: Profile check resolution and its cache, then rerun the harness.
+      rationale: >-
+        A page or API call often makes several checks, so the per-check tail
+        becomes the caller's typical latency.
+    - name: check-throughput
+      level: bronze
+      check: entity.checkRps >= 2000.0
+      value: entity.checkRps
+      better: higher
+      unit: /s
+      tolerance: 0.1
+      evidence: "[string(entity.checkRps) + ' checks per second']"
+      fix: Profile check resolution under load, then rerun the harness.
+      rationale: >-
+        Checks per second on one machine decide how many replicas a given
+        request rate needs.
+    - name: list-latency
+      level: bronze
+      check: entity.listP95Ms <= 100.0
+      value: entity.listP95Ms
+      better: lower
+      unit: ms
+      tolerance: 0.1
+      evidence: |-
+        ['p95 ' + string(entity.listP95Ms) + ' ms to list one user\'s documents']
+      fix: Profile ListObjects or LookupResources, then rerun the harness.
+      rationale: >-
+        Search results and list pages filter by what the user can see, and a
+        slow reverse lookup forces callers to check each item instead.
+    facets: {summary: public, details: public}
+
+  - name: vs-spicedb-footprint
+    title: Footprint
+    kind: Product
+    description: The binary on disk and resident memory, idle and loaded.
+    rationale: >-
+      Authorization servers run as a sidecar or a small fleet next to every
+      service, so their size and memory are paid many times over.
+    links:
+    - title: Pre-registration and method
+      url: https://github.com/loganvolkers/toolbox/blob/main/experiments/openfga-spicedb-compare/README.md
+    owner: group:openfga-maintainers
+    track: vs-spicedb
+    levels: [bronze]
+    compare: {subject: product:openfga, peers: [product:spicedb]}
+    rules:
+    - name: binary-size
+      level: bronze
+      check: entity.binaryMb <= 100.0
+      value: entity.binaryMb
+      better: lower
+      unit: MB
+      tolerance: 0.05
+      evidence: "[string(entity.binaryMb) + ' MB binary']"
+      fix: Trim dependencies compiled into the server.
+      rationale: >-
+        The binary is pulled by every node that schedules a replica, so its size
+        is paid on every cold start.
+    - name: idle-memory
+      level: bronze
+      check: entity.rssIdleMb <= 100.0
+      value: entity.rssIdleMb
+      better: lower
+      unit: MB
+      tolerance: 0.1
+      evidence: "[string(entity.rssIdleMb) + ' MB resident when ready']"
+      fix: Profile the heap at start.
+      rationale: >-
+        Idle memory is the cost of every replica that is not busy, which is most
+        of them outside peak hours.
+    - name: loaded-memory
+      level: bronze
+      check: entity.rssLoadedMb <= 500.0
+      value: entity.rssLoadedMb
+      better: lower
+      unit: MB
+      tolerance: 0.1
+      evidence: "[string(entity.rssLoadedMb) + ' MB resident after load']"
+      fix: Profile the heap under load, including caches.
+      rationale: >-
+        Memory under load sets the container limit; past it the replica is
+        killed, and every check it was answering fails.
+    facets: {summary: public, details: public}
+
+  - name: vs-spicedb-supply-chain
+    title: Supply chain
+    kind: Product
+    description: What the release binary pulls in and what a user can verify about it.
+    rationale: >-
+      An authorization server decides who may do what, so a compromised or
+      vulnerable build compromises every service that trusts it.
+    links:
+    - title: SLSA build provenance
+      url: https://slsa.dev/spec/v1.0/provenance
+    owner: group:openfga-maintainers
+    track: vs-spicedb
+    levels: [bronze]
+    compare: {subject: product:openfga, peers: [product:spicedb]}
+    rules:
+    - name: go-modules
+      level: bronze
+      check: entity.goModules <= 300.0
+      value: entity.goModules
+      better: lower
+      unit: modules
+      evidence: "[string(entity.goModules) + ' modules in the binary']"
+      fix: Remove or replace dependencies the server does not need.
+      rationale: >-
+        Each module is code from another maintainer that runs with the server's
+        privileges and has to be watched for advisories.
+    - name: known-vulns
+      level: bronze
+      check: entity.knownVulns == 0.0
+      value: entity.knownVulns
+      better: lower
+      unit: findings
+      evidence: "[string(entity.knownVulns) + ' govulncheck findings in called code']"
+      fix: Upgrade the affected modules and release.
+      rationale: >-
+        govulncheck reports only vulnerable code the binary can call, so each
+        finding is reachable rather than a lockfile match.
+    - name: provenance
+      level: bronze
+      check: entity.provenance
+      evidence: "['provenance is ' + string(entity.provenance)]"
+      fix: Publish signed SLSA provenance with each release.
+      rationale: >-
+        Provenance lets a user verify that the archive was built from the tagged
+        source by the project's CI, not by whoever uploaded it.
+    - name: sbom
+      level: bronze
+      check: entity.sbom
+      evidence: "['sbom is ' + string(entity.sbom)]"
+      fix: Publish an SBOM with each release.
+      rationale: >-
+        An SBOM lets a user find out whether a new advisory affects the version
+        they run without rebuilding it.
+    facets: {summary: public, details: public}
+
+  - name: vs-spicedb-modelling
+    title: Modelling
+    kind: Product
+    description: >-
+      What a team can express and ask, each fact cited from the docs or source
+      at the pinned release, or probed against the server.
+    rationale: >-
+      A model the server cannot express ends up in application code, where it
+      is checked inconsistently and cannot be audited in one place.
+    links:
+    - title: Pre-registration and known biases
+      url: https://github.com/loganvolkers/toolbox/blob/main/experiments/openfga-spicedb-compare/README.md#known-biases
+    owner: group:openfga-maintainers
+    track: vs-spicedb
+    levels: [bronze]
+    compare: {subject: product:openfga, peers: [product:spicedb]}
+    rules:
+    - name: conditions
+      level: bronze
+      check: entity.conditions
+      evidence: "['conditions is ' + string(entity.conditions)]"
+      fix: Support conditions on relationships evaluated against request context.
+      rationale: >-
+        Time windows, IP ranges and resource attributes are part of many access
+        rules, and without conditions they move into application code.
+    - name: contextual-tuples
+      level: bronze
+      check: entity.contextualTuples
+      evidence: "['contextualTuples is ' + string(entity.contextualTuples)]"
+      fix: Accept request-scoped relationships on check and list calls.
+      rationale: >-
+        Facts the caller already knows, like the user's current organisation,
+        can then be used without being written and kept in sync.
+    - name: wildcards
+      level: bronze
+      check: entity.wildcards
+      evidence: "['wildcards is ' + string(entity.wildcards)]"
+      fix: Support a relationship to every subject of a type.
+      rationale: >-
+        Public resources would otherwise need one relationship per user, which
+        grows with the user base and misses new users.
+    - name: exclusion
+      level: bronze
+      check: entity.exclusion
+      evidence: "['exclusion is ' + string(entity.exclusion)]"
+      fix: Support exclusion and intersection operators in the model.
+      rationale: >-
+        Blocks, suspensions and "member and verified" rules need subtraction and
+        intersection, not only unions.
+    - name: list-users
+      level: bronze
+      check: entity.listUsers
+      evidence: "['listUsers is ' + string(entity.listUsers)]"
+      fix: Add an API that lists the subjects holding a permission.
+      rationale: >-
+        "Who can see this?" is the question an access review or a sharing dialog
+        asks, and it cannot be answered by checks alone.
+    - name: consistency-tokens
+      level: bronze
+      check: entity.consistencyTokens
+      evidence: "['consistencyTokens is ' + string(entity.consistencyTokens)]"
+      fix: >-
+        Return a token from each write that a read can require, as Zanzibar's
+        zookies do.
+      rationale: >-
+        Without it, a check just after a revoke can still be answered from a
+        stale cache or replica: the new-enemy problem the Zanzibar paper
+        describes.
+      links:
+      - title: Zanzibar, section 2.2 (consistency model)
+        url: https://research.google/pubs/zanzibar-googles-consistent-global-authorization-system/
+    - name: change-feed
+      level: bronze
+      check: entity.changeFeed
+      evidence: "['changeFeed is ' + string(entity.changeFeed)]"
+      fix: Expose relationship changes from a position, by stream or by page.
+      rationale: >-
+        Search indexes and caches that filter by permission need to follow
+        changes instead of re-reading everything.
+    - name: model-tests
+      level: bronze
+      check: entity.modelTests
+      evidence: "['modelTests is ' + string(entity.modelTests)]"
+      fix: Run assertion files about a model from the CLI, in CI.
+      rationale: >-
+        A model change can grant access nobody intended, and assertions in CI
+        catch it before it ships.
+    - name: multi-tenant
+      level: bronze
+      check: entity.multiTenant
+      evidence: "['multiTenant is ' + string(entity.multiTenant)]"
+      fix: Let one server hold isolated models and relationships per tenant.
+      rationale: >-
+        Without it, each tenant or environment needs its own deployment, or
+        tenants share a model and must be kept apart by naming alone.
+    facets: {summary: public, details: public}
+
+  - name: vs-spicedb-operability
+    title: Operability
+    kind: Product
+    description: Metrics, traces, protocols, datastores and migrations, as shipped.
+    rationale: >-
+      The team that runs the server needs to see it, reach it and upgrade it
+      without writing glue around it.
+    links:
+    - title: Pre-registration and method
+      url: https://github.com/loganvolkers/toolbox/blob/main/experiments/openfga-spicedb-compare/README.md
+    owner: group:openfga-maintainers
+    track: vs-spicedb
+    levels: [bronze]
+    compare: {subject: product:openfga, peers: [product:spicedb]}
+    rules:
+    - name: prometheus-metrics
+      level: bronze
+      check: entity.prometheusMetrics
+      evidence: "['prometheusMetrics is ' + string(entity.prometheusMetrics)]"
+      fix: Serve Prometheus metrics by default.
+      rationale: >-
+        Latency and error metrics are how the operator learns about a slow or
+        failing server before its callers do.
+    - name: otel-tracing
+      level: bronze
+      check: entity.otelTracing
+      evidence: "['otelTracing is ' + string(entity.otelTracing)]"
+      fix: Export OpenTelemetry traces when configured.
+      rationale: >-
+        A trace shows which part of a slow request was the authorization check,
+        across services.
+    - name: http-by-default
+      level: bronze
+      check: entity.httpByDefault
+      evidence: "['httpByDefault is ' + string(entity.httpByDefault)]"
+      fix: Serve HTTP/JSON next to gRPC in the default configuration.
+      rationale: >-
+        Shell scripts, browsers and languages without a gRPC client can call an
+        HTTP API without generated code.
+    - name: migrate-command
+      level: bronze
+      check: entity.migrateCommand
+      evidence: "['migrateCommand is ' + string(entity.migrateCommand)]"
+      fix: Ship a migrate command in the server binary.
+      rationale: >-
+        Upgrades then need only the new binary, not a separate migration tool
+        pinned to the right version.
+    - name: datastores
+      level: bronze
+      check: entity.datastores >= 3.0
+      value: entity.datastores
+      better: higher
+      unit: datastores
+      evidence: "[string(entity.datastores) + ' production datastores']"
+      fix: Support another production datastore.
+      rationale: >-
+        A team can then run the server on a database it already operates,
+        instead of adopting one for authorization alone.
+    facets: {summary: public, details: public}
+
+  - name: vs-spicedb-ecosystem
+    title: Ecosystem
+    kind: Product
+    description: Contributors, release cadence, SDKs and governance.
+    rationale: >-
+      A team adopting an authorization server depends on it for years, so who
+      maintains it, how often it ships and in which languages it can be called
+      matter as much as how it runs today.
+    links:
+    - title: Pre-registration and method
+      url: https://github.com/loganvolkers/toolbox/blob/main/experiments/openfga-spicedb-compare/README.md
+    owner: group:openfga-maintainers
+    track: vs-spicedb
+    levels: [bronze]
+    compare: {subject: product:openfga, peers: [product:spicedb]}
+    rules:
+    - name: contributors
+      level: bronze
+      check: entity.contributors >= 100.0
+      value: entity.contributors
+      better: higher
+      unit: people
+      evidence: "[string(entity.contributors) + ' contributors']"
+      fix: Lower the barrier to a first contribution.
+      rationale: >-
+        More contributors spread the bus factor and the review load.
+    - name: release-cadence
+      level: bronze
+      check: entity.releasesLastYear >= 12.0
+      value: entity.releasesLastYear
+      better: higher
+      unit: releases
+      evidence: "[string(entity.releasesLastYear) + ' releases in the last year']"
+      fix: Release at least monthly.
+      rationale: >-
+        Frequent releases ship security fixes to users without long waits or
+        backports.
+    - name: official-sdks
+      level: bronze
+      check: entity.officialSdks >= 5.0
+      value: entity.officialSdks
+      better: higher
+      unit: SDKs
+      evidence: "[string(entity.officialSdks) + ' official SDKs']"
+      fix: Maintain a client for another major language.
+      rationale: >-
+        Every service that asks for a decision needs a client in its own
+        language, and an unofficial one may lag the API.
+    - name: foundation
+      level: bronze
+      check: entity.foundation
+      evidence: "['foundation is ' + string(entity.foundation)]"
+      fix: Move governance to a neutral foundation.
+      rationale: >-
+        Neutral governance means no single vendor can relicense or abandon the
+        project the team depends on.
+    facets: {summary: public, details: public}

@@ -1,0 +1,136 @@
+# A portal for the OpenFGA repository (examples/openfga-portal/README.md): Toolbox's second
+# reference portal for design review (D01M87PSM9YQGGW3YQ5X4XCJP63), scored from inside an OpenFGA
+# checkout the way a repository's own `.toolbox/` portal is. Everything here comes from generic
+# packages or this directory; nothing is specific to Toolbox's own repository.
+apiVersion: toolbox.dev/v1alpha1
+
+portal:
+  name: openfga
+  title: OpenFGA
+  owner: group:openfga-maintainers
+  toolbox: "0.1"
+
+kindGroups:
+  - name: code
+    title: Go code
+    description: The Go source of the server, its packages and its tests.
+    kinds: [GoFile, GoPanicFile, StaticcheckFile]
+  - name: docs
+    title: Repository and docs
+    description: The repository's basics and its Markdown docs.
+    kinds: [Repository, Doc]
+  - name: delivery
+    title: CI and supply chain
+    description: GitHub Actions workflows, the actions they use, and OpenSSF checks.
+    kinds: [Workflow, ActionDependency, OpenSSFCheck]
+  - name: evidence
+    title: Comparisons
+    description: OpenFGA and SpiceDB, measured by the same harness.
+    kinds: [Product]
+
+tracks:
+  - name: code
+    title: Go code
+    owner: group:openfga-maintainers
+    description: >-
+      The server's Go code: file size, panics outside tests, and staticcheck
+      findings.
+    links: [{title: staticcheck, url: https://staticcheck.dev/docs/}]
+  - name: delivery
+    title: CI and supply chain
+    owner: group:openfga-maintainers
+    description: >-
+      How a change ships: workflows that pass zizmor and actionlint, pinned
+      actions, and OpenSSF Scorecard checks.
+    links: [{title: OpenSSF Scorecard, url: https://scorecard.dev/}]
+  - name: docs
+    title: Repository and docs
+    owner: group:openfga-maintainers
+    description: A README, CODEOWNERS and a licence, and Markdown links that resolve.
+  - name: vs-spicedb
+    title: Against SpiceDB
+    owner: group:openfga-maintainers
+    description: >-
+      OpenFGA v1.23.0 against SpiceDB v1.57.1, both on the memory datastore
+      and each product's gRPC API, on one VM: timed factors are medians of 5
+      scripted runs over a 23k-relationship corpus, and yes/no facts cite the
+      docs or source at the pinned release. Toolbox's maintainers chose the
+      factors and set every bar before the run.
+    links:
+    - title: Pre-registration and method
+      url: https://github.com/loganvolkers/toolbox/blob/main/experiments/openfga-spicedb-compare/README.md
+    - title: Results
+      url: https://github.com/loganvolkers/toolbox/blob/main/experiments/openfga-spicedb-compare/RESULTS.md
+
+connectors:
+  - name: portal
+    package: builtin:workspace # this directory: the comparison records
+    runtime: in-image
+    config: {root: .., data: [{kind: product, globs: [comparisons/*.yaml]}]}
+    records: [product]
+    refresh: {product: [external_ids]}
+    freshness: {product: 5m}
+  - name: workspace
+    package: builtin:workspace # the OpenFGA checkout
+    runtime: in-image
+    config:
+      root: .
+      repo: true
+      docs: ["*.md", docs/**/*.md]
+      workflows: [.github/workflows/*.y*ml]
+    records: [repo, doc, workflow, action-ref]
+    refresh:
+      repo: [external_ids]
+      doc: [external_ids]
+      workflow: [external_ids]
+      action-ref: [external_ids]
+    freshness: {repo: 5m, doc: 5m, workflow: 5m, action-ref: 5m}
+
+include:
+  - standards/*.yaml
+  - package: ../../packages/file-size
+    with:
+      name: go-file-size
+      kind: GoFile
+      title: Go files within 800 lines
+      owner: group:openfga-maintainers
+      files: ["**/*.go"]
+      exclude:
+        - "**/*_test.go"
+        - "**/*.pb.go"
+        - "**/*.pb.*.go"
+        - "**/mocks/**"
+        - "**/testdata/**"
+      limit: 800
+  - package: ../../packages/pattern-count
+    with:
+      name: go-panics
+      kind: GoPanicFile
+      title: No panics outside tests
+      owner: group:openfga-maintainers
+      files: ["**/*.go"]
+      exclude: ["**/*_test.go", "**/*.pb.go", "**/mocks/**", "**/testdata/**"]
+      pattern: \bpanic\(
+      fix: >-
+        Return an error instead; a panic in a request path takes the server
+        down.
+  - package: ../../packages/sarif
+    with:
+      track: code
+      name: go-staticcheck
+      kind: StaticcheckFile
+      kindTitle: Go file (staticcheck)
+      tool: staticcheck
+      version: 2026.2.2
+      versionArgs: [-version]
+      install: {mise: go:honnef.co/go/tools/cmd/staticcheck}
+      command: [staticcheck, -f, sarif, ./...]
+      title: No staticcheck findings
+      owner: group:openfga-maintainers
+  - package: ../../packages/github-actions
+    with: {githubOrg: openfga, githubRepo: openfga, track: delivery}
+  - package: ../../packages/openssf-scorecard
+    with:
+      name: openfga-openssf
+      track: delivery
+      owner: group:openfga-maintainers
