@@ -262,10 +262,9 @@ export const tracksViews = {
         var flag = lead && o.name === furthest;
         var a = link(trackPath(D, o.name), flag ? "far" : "", [
           o.compare ? tallyRing(o.verdicts, o.rows.length, 30, true) : ring(o.pct, { size: 30, color: trackColor(o), label: standing, bare: true }),
-          el("span", {}, el("span", { textContent: o.def.title || o.name }), lead ? el("small", { textContent: (o.compare ? standing : o.pct == null ? "not scored" : o.pct + "%") + (flag ? " · furthest from goal" : "") }) : null),
+          el("span", {}, el("span", { textContent: o.def.title || o.name }), lead ? el("small", { textContent: (o.compare ? standing : o.pct == null ? "not scored" : o.pct + "%") + (flag ? " · furthest from goal" : "") }) : el("span", { className: "sr", textContent: ": " + standing })),
         ]);
         a.title = standing + (o.capped && o.capped.length ? ". " + ringWhy(D, o) : "");
-        a.setAttribute("aria-label", (o.def.title || o.name) + ": " + standing + (flag ? ". Furthest from goal" : ""));
         return a;
       }),
     );

@@ -463,7 +463,7 @@ export const scorecardsViews = {
             "summary",
             {},
             r.level === "skipped" ? badge(r.level) : levelPill(r.level, unassessedIn(D, active, id), unrunIn(sc, r), !unassessedIn(D, active, id)),
-            el("span", { className: "name" }, short.replace(/[^\s\-/]+$/, ""), el("span", { className: "tail" }, (/[^\s\-/]+$/.exec(short) || [""])[0], el("span", { className: "chev", textContent: "›" })), short !== id ? el("small", { textContent: id, title: id }) : null),
+            el("span", { className: "name" }, short.replace(/[^\s\-/]+$/, ""), el("span", { className: (/[^\s\-/]{25,}$/.test(short) ? "tail long" : "tail") }, (/[^\s\-/]+$/.exec(short) || [""])[0], el("span", { className: "chev", textContent: "›" })), short !== id ? el("small", { textContent: id, title: id }) : null),
             r.level === "skipped"
               ? el("span", { className: "tally sub", textContent: "not rated: outside this scorecard's scope" })
               : el(
@@ -667,9 +667,8 @@ export const scorecardsViews = {
               },
               el("span", { className: "rn" }, el("span", { textContent: ruleTitle(active, f[0]) }), basisBadge(basisOf((sc.rules || {})[f[0]]), false, true), rl ? badge(rl) : null, lever && f[0] === leverRule ? el("span", { className: "pill", title: "Fixing it lifts the most entities a level", textContent: "fix first" }) : null),
               el("span", { className: "bar xs" }, fillSpan, el("span", { style: "flex-grow:" + (100 - share) + ";background:transparent" })),
-              el("span", { className: "fc", textContent: f[1] + " of " + scored.length }),
+              el("span", { className: "fc" }, f[1] + " of " + scored.length, el("span", { className: "sr", textContent: " fail it. Show them." })),
             );
-            b.setAttribute("aria-label", f[0] + ": fails on " + f[1] + " of " + scored.length + ". Show them.");
             return b;
           }),
         )

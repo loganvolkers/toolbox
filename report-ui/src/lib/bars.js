@@ -63,7 +63,8 @@ export function barEl(all, cls, label) {
         .map(function (p) {
           return p.n + " " + p.level + (p.hollow ? " not assessed" : p.unrun ? " provisional" : "");
         })
-        .join(", "),
+        .join(", ") ||
+      "no entities scored yet",
   );
   return bar;
 }

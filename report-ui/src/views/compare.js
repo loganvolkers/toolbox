@@ -425,11 +425,15 @@ export const compareViews = {
               var vs = who(subject) + " " + unitOf(l.rd, l.a) + " vs " + who(peer) + " " + unitOf(l.rd, l.b);
               var tile = link("compare/" + enc(l.n), "lead-tile", [
                 el("span", { className: "lead-x", textContent: x + "×" }),
+                " ",
                 el("span", { className: "lead-dir", textContent: cmpWord(l.rd, l.rd.better === "lower") }),
+                el("span", { className: "sr", textContent: ":" }),
+                " ",
                 el("span", { className: "lead-what", textContent: measureLabel(l.c, l.r) }),
+                el("span", { className: "sr", textContent: "." }),
+                " ",
                 el("span", { className: "sub", textContent: vs + " · " + title(D, l.n) }),
               ]);
-              tile.setAttribute("aria-label", x + "× " + cmpWord(l.rd, l.rd.better === "lower") + ": " + measureLabel(l.c, l.r) + ". " + vs + ". Factor: " + title(D, l.n));
               return tile;
             }),
           ),

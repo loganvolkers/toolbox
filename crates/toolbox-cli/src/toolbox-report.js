@@ -1236,7 +1236,7 @@
       "aria-label",
       label || parts.map(function(p) {
         return p.n + " " + p.level + (p.hollow ? " not assessed" : p.unrun ? " provisional" : "");
-      }).join(", ")
+      }).join(", ") || "no entities scored yet"
     );
     return bar;
   }
@@ -1598,7 +1598,7 @@
     "details.ent>summary{cursor:pointer;display:grid;grid-template-columns:86px minmax(min(14rem,100%),1fr) auto;gap:12px;align-items:center;padding:10px 6px;list-style:none;border-radius:8px}",
     "details.ent>summary:hover{background:var(--tint)}",
     "details.ent>summary::-webkit-details-marker{display:none}",
-    "details.ent>summary .name{font-weight:600;overflow-wrap:anywhere;min-width:0}details.ent>summary .name .tail{white-space:nowrap}",
+    "details.ent>summary .name{font-weight:600;overflow-wrap:anywhere;min-width:0}details.ent>summary .name .tail{white-space:nowrap}details.ent>summary .name .tail.long{white-space:normal}",
     "details.ent>summary .name small{display:block;font:12px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}",
     "details.ent>summary .tally{font-size:12px;color:var(--muted);text-align:right;min-width:0}",
     "details.ent>summary .tally b{color:var(--fg);font-weight:650}details.ent>summary .tally b.bad{color:var(--fail)}",
@@ -1653,7 +1653,7 @@
     ".need li .why{display:block;color:var(--muted);font-size:13px;line-height:1.4}.levels-need.clamped li .why .rest{display:none}.need-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 8px;margin-bottom:6px}.need-head .lvl{margin-bottom:0}.need-basis{font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:4px}.need-toggle{display:inline-flex;align-items:center;min-height:24px;font-size:13px;margin:0 0 4px}",
     "code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}",
     ".picker{display:none}",
-    ".picker select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);font:inherit;min-height:40px}",
+    ".picker select{width:100%;min-width:0;max-width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);font:inherit;min-height:40px}",
     ".kinds{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}",
     "a.kind{display:block;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--fg);text-decoration:none}",
     "a.kind:hover{border-color:var(--accent)}",
@@ -1819,7 +1819,7 @@
     ".behind-row .why{margin:0 0 6px;color:var(--muted)}.behind-row .bh-val{margin-top:6px}.behind-row .why .refs{display:inline;margin:0;line-height:inherit}.behind-row .why .refs a{min-height:0;padding:3px 0}.behind-row .why b{color:var(--fg);font-weight:600}",
     ".provisional{color:var(--unknown);font-weight:650}",
     "::slotted(*){display:block;max-width:1120px;margin:0 auto;padding:12px 20px 0;box-sizing:border-box}",
-    "@media (max-width:820px){.hero{grid-template-columns:1fr}.split{grid-template-columns:1fr}.split>section:first-child{display:none}.picker{display:flex;flex-direction:column;gap:4px;margin:0 0 16px}.kchips-wrap{display:none}}",
+    "@media (max-width:820px){.hero{grid-template-columns:1fr}.split{grid-template-columns:minmax(0,1fr)}.split>section:first-child{display:none}.picker{display:flex;flex-direction:column;gap:4px;margin:0 0 16px}.kchips-wrap{display:none}}",
     ".ering{display:flex;flex-direction:column;align-items:center;gap:4px;flex:none}",
     ".elevel{display:flex;align-items:center;gap:12px;flex:0 1 auto;min-width:0;max-width:100%}",
     ".elevel>div{min-width:0;overflow-wrap:anywhere}",
@@ -1831,7 +1831,7 @@
     "a.row,.rows-head{grid-template-columns:minmax(0,1fr) 64px}.row .dist,.rows-head .dist{display:none}",
     ".ladder{grid-template-columns:1fr 1fr}.rung{min-height:0}.rung.vacant{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:6px 10px}.rung.vacant .rh{margin:0}.rung.vacant .empty{padding:0;margin:0}",
     "details.ent>summary{grid-template-columns:76px minmax(0,1fr)}details.ent>summary .tally{grid-column:2;text-align:left}",
-    ".ent-body{padding-left:6px}.gap{grid-template-columns:1fr}.hide-sm{display:none}",
+    ".ent-body{padding-left:6px}.gap{grid-template-columns:minmax(0,1fr)}.gap .sub{overflow-wrap:anywhere}.hide-sm{display:none}",
     ".kchips{grid-template-columns:1fr}.boxrow{grid-template-columns:1fr;gap:6px}.measure{grid-template-columns:1fr}.measure .ms{text-align:left}.cmp-hero{grid-template-columns:1fr;gap:10px}.cmp-main{display:contents}.cmp-side{order:1}.cmp-hero .cmp-lead,.cmp-hero .rule-tally,.cmp-hero .cmp-method{order:2}.cmp-hero .cmp-prov{order:3}.cmp-hero .cmp-def{order:4}.h2h{display:none}",
     '.ehdr{display:none}a.erow.cols,.egroup>summary.erow.cols{grid-template-columns:1fr!important;gap:4px}.ecell{display:flex;gap:6px;align-items:center}.ecell::before{content:attr(data-sc);color:var(--muted)}.ecell[data-judged]::before{content:attr(data-sc) " \\2726"}',
     ".behind-row{grid-template-columns:1fr}.val{grid-template-columns:76px minmax(0,1fr) auto}.pillwrap .unassessed-tag.quiet{display:inline}}",
@@ -2795,7 +2795,7 @@
               "summary",
               {},
               r.level === "skipped" ? badge(r.level) : levelPill(r.level, unassessedIn(D, active, id), unrunIn(sc, r), !unassessedIn(D, active, id)),
-              el("span", { className: "name" }, short.replace(/[^\s\-/]+$/, ""), el("span", { className: "tail" }, (/[^\s\-/]+$/.exec(short) || [""])[0], el("span", { className: "chev", textContent: "›" })), short !== id ? el("small", { textContent: id, title: id }) : null),
+              el("span", { className: "name" }, short.replace(/[^\s\-/]+$/, ""), el("span", { className: /[^\s\-/]{25,}$/.test(short) ? "tail long" : "tail" }, (/[^\s\-/]+$/.exec(short) || [""])[0], el("span", { className: "chev", textContent: "›" })), short !== id ? el("small", { textContent: id, title: id }) : null),
               r.level === "skipped" ? el("span", { className: "tally sub", textContent: "not rated: outside this scorecard's scope" }) : el(
                 "span",
                 { className: "tally" },
@@ -2984,9 +2984,8 @@
             },
             el("span", { className: "rn" }, el("span", { textContent: ruleTitle(active, f[0]) }), basisBadge(basisOf((sc.rules || {})[f[0]]), false, true), rl ? badge(rl) : null, lever && f[0] === leverRule ? el("span", { className: "pill", title: "Fixing it lifts the most entities a level", textContent: "fix first" }) : null),
             el("span", { className: "bar xs" }, fillSpan, el("span", { style: "flex-grow:" + (100 - share) + ";background:transparent" })),
-            el("span", { className: "fc", textContent: f[1] + " of " + scored.length })
+            el("span", { className: "fc" }, f[1] + " of " + scored.length, el("span", { className: "sr", textContent: " fail it. Show them." }))
           );
-          b.setAttribute("aria-label", f[0] + ": fails on " + f[1] + " of " + scored.length + ". Show them.");
           return b;
         })
       ) : el("p", { className: "empty good", textContent: unrunNames.length ? "✓ No rule fails on any entity; some checks were not run." : "✓ No rule fails on any entity." });
@@ -3420,10 +3419,9 @@
           var flag = lead && o.name === furthest;
           var a = link(trackPath(D, o.name), flag ? "far" : "", [
             o.compare ? tallyRing(o.verdicts, o.rows.length, 30, true) : ring(o.pct, { size: 30, color: trackColor(o), label: standing, bare: true }),
-            el("span", {}, el("span", { textContent: o.def.title || o.name }), lead ? el("small", { textContent: (o.compare ? standing : o.pct == null ? "not scored" : o.pct + "%") + (flag ? " · furthest from goal" : "") }) : null)
+            el("span", {}, el("span", { textContent: o.def.title || o.name }), lead ? el("small", { textContent: (o.compare ? standing : o.pct == null ? "not scored" : o.pct + "%") + (flag ? " · furthest from goal" : "") }) : el("span", { className: "sr", textContent: ": " + standing }))
           ]);
           a.title = standing + (o.capped && o.capped.length ? ". " + ringWhy(D, o) : "");
-          a.setAttribute("aria-label", (o.def.title || o.name) + ": " + standing + (flag ? ". Furthest from goal" : ""));
           return a;
         })
       );
@@ -3784,7 +3782,12 @@
           }).map(function(n) {
             return title(D, n) + ": " + D.scores[n][id].level;
           });
-          if (lvls.length) r.setAttribute("aria-label", short + ". " + lvls.join(", "));
+          if (lvls.length) {
+            r.querySelectorAll(".ecell").forEach(function(c) {
+              c.setAttribute("aria-hidden", "true");
+            });
+            r.append(el("span", { className: "sr", textContent: ". " + lvls.join(", ") }));
+          }
           return r;
         };
         var built = shown.map(function(id) {
@@ -4755,11 +4758,15 @@
             var vs = who(subject) + " " + unitOf(l.rd, l.a) + " vs " + who(peer) + " " + unitOf(l.rd, l.b);
             var tile = link("compare/" + enc(l.n), "lead-tile", [
               el("span", { className: "lead-x", textContent: x + "×" }),
+              " ",
               el("span", { className: "lead-dir", textContent: cmpWord(l.rd, l.rd.better === "lower") }),
+              el("span", { className: "sr", textContent: ":" }),
+              " ",
               el("span", { className: "lead-what", textContent: measureLabel(l.c, l.r) }),
+              el("span", { className: "sr", textContent: "." }),
+              " ",
               el("span", { className: "sub", textContent: vs + " · " + title(D, l.n) })
             ]);
-            tile.setAttribute("aria-label", x + "× " + cmpWord(l.rd, l.rd.better === "lower") + ": " + measureLabel(l.c, l.r) + ". " + vs + ". Factor: " + title(D, l.n));
             return tile;
           })
         )

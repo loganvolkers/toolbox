@@ -178,7 +178,13 @@ export const catalogViews = {
           .map(function (n) {
             return title(D, n) + ": " + D.scores[n][id].level;
           });
-        if (lvls.length) r.setAttribute("aria-label", short + ". " + lvls.join(", "));
+        // The cells repeat what the column headers say; a screen reader hears one sentence instead.
+        if (lvls.length) {
+          r.querySelectorAll(".ecell").forEach(function (c) {
+            c.setAttribute("aria-hidden", "true");
+          });
+          r.append(el("span", { className: "sr", textContent: ". " + lvls.join(", ") }));
+        }
         return r;
       };
       var built = shown.map(function (id) {
