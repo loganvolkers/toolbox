@@ -1,0 +1,64 @@
+{
+ "changed": 14,
+ "items": [
+  {
+   "what": "group acme-w14 access_tokens",
+   "added": "r1-gitlab-2-set-codeowners-bot"
+  },
+  {
+   "what": "group acme-w14 members",
+   "added": "group_153_bot_32c67b9c754bd48774f49e903b229d1a:40"
+  },
+  {
+   "what": "project acme-w14/alpha job_token_allowlist",
+   "added": "acme-w14/org"
+  },
+  {
+   "what": "project acme-w14/beta job_token_allowlist",
+   "added": "acme-w14/org"
+  },
+  {
+   "what": "project acme-w14/gamma job_token_allowlist",
+   "added": "acme-w14/org"
+  },
+  {
+   "what": "project acme-w14/org environments",
+   "added": "set-codeowners/alpha"
+  },
+  {
+   "what": "project acme-w14/org environments",
+   "added": "set-codeowners/beta"
+  },
+  {
+   "what": "project acme-w14/org environments",
+   "added": "set-codeowners/gamma"
+  },
+  {
+   "what": "project acme-w14/org environments",
+   "added": "set-codeowners/org"
+  },
+  {
+   "what": "project acme-w14/org protected_branches",
+   "added": "{\"force\": false, \"merge\": [30], \"name\": \"main\", \"push\": [40]}"
+  },
+  {
+   "what": "project acme-w14/org ci_pipeline_variables_minimum_override_role",
+   "from": "developer",
+   "to": "no_one_allowed"
+  },
+  {
+   "what": "project acme-w14/org merge_requests_access_level",
+   "from": "enabled",
+   "to": "disabled"
+  },
+  {
+   "what": "project acme-w14/org restrict_user_defined_variables",
+   "from": false,
+   "to": true
+  },
+  {
+   "what": "project acme-w14/org variables",
+   "added": "ACTIONS_BOT_TOKEN"
+  }
+ ]
+}
