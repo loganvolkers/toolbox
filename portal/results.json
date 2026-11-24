@@ -682,6 +682,11 @@
           "6997dad5"
         ]
       },
+      "skill:plugins/toolbox-operator/skills/add-action": {
+        "has-evals": [
+          "6997dad5"
+        ]
+      },
       "skill:plugins/toolbox-operator/skills/add-permission": {
         "has-evals": [
           "6997dad5"
@@ -5043,6 +5048,9 @@
       "doc:plugins/toolbox-operator/skills/actions/SKILL.md": {
         "level": "silver"
       },
+      "doc:plugins/toolbox-operator/skills/add-action/SKILL.md": {
+        "level": "silver"
+      },
       "doc:plugins/toolbox-operator/skills/add-permission/SKILL.md": {
         "level": "silver"
       },
@@ -5503,6 +5511,12 @@
     },
     "maintainer-skill": {
       "skill:plugins/toolbox-operator/skills/actions": {
+        "failing": {
+          "has-evals": 1
+        },
+        "level": "silver"
+      },
+      "skill:plugins/toolbox-operator/skills/add-action": {
         "failing": {
           "has-evals": 1
         },
