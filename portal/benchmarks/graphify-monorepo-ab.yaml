@@ -1,0 +1,70 @@
+# DX Benchmark catalog entry (docs/design/dx-benchmarks.md §6), scored by maintainer-benchmark.
+records:
+  - id: graphify-monorepo-ab
+    title: Graphify vs a Toolbox repo portal vs nothing on a large Rust monorepo
+    question: >-
+      On a large monorepo, where a code graph is supposed to be strong, does
+      Graphify or a Toolbox repo portal help a coding agent answer structure
+      and code-navigation questions more completely, or for less reading and
+      fewer calls, than the agent's own search?
+    layers: [maintainer, user]
+    stages: [maintainer/plan, user/discover]
+    hypotheses: [M1, M2, M3, M4, M5, M6, M7, M8, M9, M10, M11, M12, M13]
+    rival: >-
+      the agent's own search and read tools (rg, grep, read_file, cargo), and
+      Graphify 0.9.118 with its mandatory Cursor rule, as a second tool arm
+    repos: [loganvolkers/codex@859dbe27]
+    status: archived
+    ran: 2026-11-23
+    outcome: >-
+      Neither Graphify nor a Toolbox repo portal helped or hurt, and neither
+      beat the other: M1 to M9, M12 and M13 inconclusive, M10 and M11 held.
+      Two hardenings didn't buy headroom: every answer scored 0.981 or more,
+      split only by two boundary conventions that fell across all arms. Both
+      tool arms read about a fifth less than nothing (M2 at 88% of W) and made
+      two fewer calls, inside W. Graphify oriented, then agents read the code;
+      the portal answered only Q1's direct dependents.
+      D01M84ZW6K2V9CV2SD644DE5M0S stands for large monorepos (ADJUDICATION.md)
+    changed:
+    - >-
+      toolbox graph gains --relation and --direction, so one call returns a
+      crate's transitive dependents
+    - >-
+      questions.md Q20: whether the graph read goes past 3 hops and search
+      matches field values (recommended: neither yet)
+    - >-
+      dx-benchmarks.md L22: harder questions don't buy headroom against
+      frontier agents without a turn cap; claim cost, and size W for it
+    servedValue: >-
+      It gave Graphify its home ground (a 120-crate, 950k-line Rust monorepo,
+      a code-only graph, questions about calls, dependencies and a trace) and
+      a Toolbox repo portal its crate facts, and showed neither helps there.
+      It also found the CLI graph read's missing filters, now fixed. No second
+      round is planned unless a cost claim is sized for more runs per arm
+    blockedOn: ''
+    readme: experiments/graphify-monorepo-ab/README.md
+    results: experiments/graphify-monorepo-ab/ADJUDICATION.md
+    protocol: 2
+    prompts: experiments/graphify-monorepo-ab/prompts
+    runsPerArm: 5
+    measure: >-
+      F1 over listed crates and functions and key-fact coverage, graded blind
+      against gold hashed before the run (a guard after two dry runs
+      saturated); tool calls and characters of tool results from each run's
+      runtime transcript (harness/count.py)
+    frozenAt: >-
+      round 1 efce361 (Graphify 0.9.118, graph and portal built from the
+      frozen repository; gold hash d597a2fb)
+    designer: the agent that wrote the README and ran the round
+    adjudicator: >-
+      one fresh agent that designed no part of it, graded blind, then
+      unblinded and applied the rules, 2026-11-23 (ADJUDICATION.md)
+    fitAudit: >-
+      One round. Before it was frozen, two dry runs hardened Q2 to Q4 and
+      fixed a Q3 gold item (19 to 20), and M1, M4, M12 and M13 became
+      harm-only guards per L21. After the round, toolbox graph gained
+      --relation and --direction; no prompt, question or gold changed after
+      the freeze
+    spread: >-
+      five runs per arm; every run's measures are in results/r1.tsv, and
+      minimum, median and range per arm in README §0 and ADJUDICATION.md

@@ -9,7 +9,8 @@ Toolbox's context lake ([context-lake.md](./context-lake.md)) builds a code know
 *Graphify was installed and run hands-on (graphifyy 0.9.118, source at `Graphify-Labs/graphify`
 `013a646`). Star counts and push dates come from the GitHub API on the research date. "(vendor)" marks
 a maker's claim; "(secondary)" marks a claim from a survey agent's reading that this document did not
-re-check against the primary source. Benchmark: [graphify-ab](../../experiments/graphify-ab/README.md).*
+re-check against the primary source. Benchmarks: [graphify-ab](../../experiments/graphify-ab/README.md)
+and [graphify-monorepo-ab](../../experiments/graphify-monorepo-ab/README.md).*
 
 ---
 
@@ -24,6 +25,11 @@ re-check against the primary source. Benchmark: [graphify-ab](../../experiments/
   Graphify's own Cursor rule and document layer showed neither "helps" nor "hurts" (§6). Answers
   were equally complete in both arms, and the graph's arm made fewer calls, but not by more than the
   noise. Building the document layer for this repository took 17 agents.
+- **On its home ground it didn't help either.** In
+  [graphify-monorepo-ab](../../experiments/graphify-monorepo-ab/README.md), 15 runs on Codex (a
+  120-crate, 950k-line Rust monorepo, a code-only graph) compared Graphify, a Toolbox repo portal and
+  nothing. No arm helped, hurt or beat another (§6.1). Every answer scored 0.981 or more, and both
+  tool arms read about a fifth less than nothing, inside the noise.
 - **Graphify and a catalog hold different facts.** Graphify extracts a symbol-and-document graph
   in an open world: a missing edge means nothing, and node ids and communities change between
   builds. Port's context lake and Toolbox hold a declared catalog in a closed world: who owns what,
@@ -234,6 +240,39 @@ Three findings matter beyond the bar:
   Toolbox repays that only after about 43 sessions, and 141 of the 200 commits before the frozen
   one changed a Markdown file.
 
+### 6.1 Second benchmark: a large monorepo
+
+graphify-ab gave Graphify a document-heavy repository and saturated questions.
+[graphify-monorepo-ab](../../experiments/graphify-monorepo-ab/README.md) gave it the ground its
+vendor says suits it best:
+
+- **The repository:** Codex at `859dbe27`, 120 crates and about 950k lines of Rust.
+- **The graph:** code-only, so it needs no LLM pass.
+- **The questions:** crate dependents, trait-dispatch callers, two-hop callers and a five-crate
+  execution trace.
+
+A third arm, a Toolbox repo portal over the Cargo workspace, held the crate structure. Two dry runs
+saturated the score, so it became a guard before round 1 (L21), and "helps" had to come from cost.
+
+| Arm | Score median | Calls median (range) | Read median, chars (range) |
+|---|---|---|---|
+| A: nothing | 0.994 | 56 (51–77) | 255,863 (203,379–261,195) |
+| B: Graphify | 0.988 | 54 (49–59) | 204,870 (198,160–256,203) |
+| C: Toolbox repo portal | 0.994 | 54 (45–73) | 206,872 (183,831–275,061) |
+
+Every hypothesis comparing arms was inconclusive. Both tool-use checks held: every Graphify run
+called `graphify` and every portal run called `toolbox`. D01M84ZW6K2V9CV2SD644DE5M0S's "Otherwise"
+case applies.
+
+- **Graphify oriented, then agents read the code**, as in graphify-ab. Its graph holds the Cargo
+  packages, but the agents' natural-language `query` for dependents matched unrelated symbols
+  instead. Names were ambiguous across nodes, and `path` found no directed call path.
+- **The portal answered Q1's direct dependents and nothing more.** `toolbox graph` couldn't follow
+  one relation in one direction, so agents computed transitive dependents themselves. The CLI now
+  takes `--relation` and `--direction`.
+
+Harder questions didn't create headroom (L22 in [dx-benchmarks.md](./dx-benchmarks.md)).
+
 ## 7. What Toolbox does
 
 [D01M84ZW6K2V9CV2SD644DE5M0S](../decisions/D01M84ZW6K2V9CV2SD644DE5M0S.md) records the
@@ -256,14 +295,17 @@ What stays open:
   Toolbox doesn't wrap it, and no scorecard reads its graph.
 - **Reopen** if a code-graph tool keeps its document layer current without a full LLM pass, or if a
   question set with headroom shows a coverage gain without a turn cap. Rerun graphify-ab, with its
-  harness as committed.
+  harness as committed. graphify-monorepo-ab tried to write such a set on a large monorepo and
+  couldn't (§6.1).
 
 ## Sources
 
 **Hands-on (this research):** graphifyy 0.9.118 from PyPI, installed with `uv tool`; its source at
 `Graphify-Labs/graphify` `013a646` (`graphify/skill.md`, `graphify/install.py`, `graphify/cluster.py`,
 `graphify/skills/agents/references/extraction-spec.md`); graphs built over Toolbox `a8f7e03` and
-OpenFGA `7d89a566` ([graphify-ab](../../experiments/graphify-ab/README.md)).
+OpenFGA `7d89a566` ([graphify-ab](../../experiments/graphify-ab/README.md)), and a code-only graph
+over Codex `859dbe27`, a fork of `openai/codex`
+([graphify-monorepo-ab](../../experiments/graphify-monorepo-ab/README.md)).
 
 **Graphify evidence:** Graphify's README, `BENCHMARKS.md`, `worked/karpathy-repos/review.md` and the
 `graphify-vs-local`, `verification` and `pricing` pages of graphify.com and docs.graphify.com (vendor);

@@ -1,0 +1,27 @@
+{
+  "run": "codex-13",
+  "arm": "B",
+  "bcId": "bc-e29ce6af-3c1b-58c4-8d63-af78fa784f81",
+  "answered": true,
+  "toolCalls": 58,
+  "byTool": {
+    "run_terminal_cmd": 57,
+    "search_replace": 1
+  },
+  "resultChars": 204870,
+  "missingResults": [],
+  "readImputed": 0,
+  "resultCharsImputed": 204870,
+  "graphifyCalls": 3,
+  "graphifyCommands": {
+    "explain": 2,
+    "query": 1,
+    "path": 1
+  },
+  "graphifyChars": 9023,
+  "toolboxCalls": 0,
+  "toolboxCommands": {},
+  "toolboxChars": 0,
+  "outsidePaths": [],
+  "wallSeconds": 266
+}
