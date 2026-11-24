@@ -2122,7 +2122,7 @@ mod tests {
         assert!(page.contains("Campaigns"));
         assert!(page.contains("Fleet health"));
         assert!(page.contains("Needs attention first"));
-        assert!(page.contains("Highest none debt first"));
+        assert!(page.contains("Most entities at none first"));
         assert!(page.contains("role: \"tab\""));
         assert!(!page.contains("{{"));
     }

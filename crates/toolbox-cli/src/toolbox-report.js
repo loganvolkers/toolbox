@@ -106,7 +106,7 @@
     "details.ent>summary .name{font-weight:600;overflow-wrap:anywhere}",
     "details.ent>summary .name small{display:block;font:12px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);font-weight:400}",
     "details.ent>summary .tally{font-size:12px;color:var(--muted);text-align:right;white-space:nowrap}",
-    "details.ent>summary .tally b{color:var(--fail)}",
+    "details.ent>summary .tally b{color:var(--fg);font-weight:650}details.ent>summary .tally b.bad{color:var(--fail)}",
     "details.ent[open]>summary{background:var(--tint)}",
     ".ent-body{padding:6px 6px 14px 104px}",
     ".chev{display:inline-block;transition:transform .15s;color:var(--faint);margin-left:6px}",
@@ -120,9 +120,10 @@
     ".rule code,.evid code{font:12.5px ui-monospace,SFMono-Regular,Menlo,monospace;overflow-wrap:anywhere}",
     ".outcome{font-size:12px;font-weight:650;margin-left:6px}",
     ".outcome.fail{color:var(--fail)}.outcome.unknown{color:var(--unknown)}.outcome.waived{color:var(--bronze-ink)}.outcome.skipped{color:var(--muted)}",
-    ".passes{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}",
-    ".passes span{font-size:12px;padding:2px 8px 2px 6px;border-radius:999px;background:color-mix(in srgb,var(--pass) 12%,transparent);color:var(--pass);font-weight:600}",
-    ".passes span::before{content:'\\2713  '}",
+    ".passes{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px}",
+    ".passes>span:not(.lvl){font-size:12px;padding:2px 8px 2px 6px;border-radius:999px;background:color-mix(in srgb,var(--pass) 12%,transparent);color:var(--pass);font-weight:600}",
+    ".passes>span:not(.lvl)::before{content:'\\2713  '}",
+    ".passes em{font-style:normal;font-size:12px;color:var(--muted);margin-right:4px}",
     ".callout{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:10px;background:var(--accent-bg);font-size:14px;margin:8px 0}",
     ".callout.done{background:color-mix(in srgb,var(--pass) 12%,var(--card))}",
     ".fails{display:flex;flex-direction:column;gap:2px}",
@@ -134,7 +135,11 @@
     ".need{padding:10px 12px;border-radius:10px;background:var(--tint);font-size:13px}",
     ".need .lvl{margin-bottom:6px}",
     ".need ul{margin:0;padding-left:16px}",
-    ".need li{margin:2px 0}",
+    ".need li{margin:6px 0}",
+    ".need li .why{display:block;color:var(--muted);font-size:12.5px;line-height:1.4}",
+    "code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}",
+    ".picker{display:none}",
+    ".picker select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);font:inherit;min-height:40px}",
     ".kinds{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}",
     "a.kind{display:block;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--fg);text-decoration:none}",
     "a.kind:hover{border-color:var(--accent)}",
@@ -189,14 +194,14 @@
     ".standing.parity{background:var(--accent-bg);color:var(--accent)}",
     ".value{display:block;font-size:12px;color:var(--muted);margin-top:2px}",
     "::slotted(*){display:block;max-width:1120px;margin:0 auto;padding:12px 20px 0;box-sizing:border-box}",
-    "@media (max-width:820px){.hero{grid-template-columns:1fr}.split{grid-template-columns:1fr}.split>section:first-child{position:static;order:2}.rank{max-height:none}}",
+    "@media (max-width:820px){.hero{grid-template-columns:1fr}.split{grid-template-columns:1fr}.split>section:first-child{display:none}.picker{display:flex;flex-direction:column;gap:4px;margin:0 0 16px}}",
     ".ering{display:flex;flex-direction:column;align-items:center;gap:4px;flex:none}",
     "@media (max-width:600px){main{padding:18px 12px 56px}.hero .levelword{font-size:34px}",
     ".modes{gap:0}.modes button{padding:10px 9px}.modes .count{display:none}",
     ".kinds{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}a.kind{padding:9px}.fail-row{grid-template-columns:minmax(0,1fr) 64px}.fail-row .bar{display:none}",
     "a.row,.rows-head{grid-template-columns:minmax(0,1fr) 64px}.row .dist,.rows-head .dist{display:none}",
     ".ladder{grid-template-columns:1fr 1fr}.rung{min-height:0}",
-    "details.ent>summary{grid-template-columns:76px minmax(0,1fr)}details.ent>summary .tally{grid-column:2;text-align:left}",
+    "details.ent>summary{grid-template-columns:76px minmax(0,1fr)}details.ent>summary .tally{grid-column:2;text-align:left;white-space:normal}",
     ".ent-body{padding-left:6px}.gap{grid-template-columns:1fr}.hide-sm{display:none}}",
     "@media (prefers-reduced-motion:reduce){*{transition:none!important}}",
   ].join("");
@@ -246,6 +251,15 @@
 
   function enc(s) {
     return encodeURIComponent(s);
+  }
+
+  // Manifest prose (a rule's fix) marks code with backticks.
+  function rich(s) {
+    return String(s || "")
+      .split("`")
+      .map(function (part, i) {
+        return i % 2 ? el("code", { textContent: part }) : part;
+      });
   }
 
   // Custom level names (a one-level scorecard's "ten", say) borrow the colour of the
@@ -552,7 +566,7 @@
 
   function campaignNamesSorted(D) {
     var campaigns = D.campaigns || {};
-    var rank = { off: 0, empty: 1, on: 2 };
+    var rank = { off: 0, on: 1, empty: 2 };
     return Object.keys(campaigns)
       .filter(function (n) {
         var st = campaigns[n].status;
@@ -899,7 +913,7 @@
           { className: "rung" + (l === level ? " here" : ""), style: "--lvl:" + fill(l) },
           el("div", { className: "rh" }, medal(l, 22), l, el("span", { className: "n", textContent: String(here.length) })),
         );
-        if (!here.length) rung.append(el("div", { className: "empty", textContent: l === "none" ? "Nothing at none" : "—" }));
+        if (!here.length) rung.append(l === "none" ? el("div", { className: "empty good", textContent: "✓ No standard at none" }) : el("div", { className: "empty", textContent: "—" }));
         here.forEach(function (c) {
           var a = link("scorecard/" + enc(c.name), "", title(D, c.name));
           a.title = c.name;
@@ -957,7 +971,7 @@
       var color = state === "on" ? "var(--pass)" : state === "empty" ? "var(--faint)" : "var(--accent)";
       var status =
         state === "empty"
-          ? el("span", { className: "pill", textContent: "nothing in scope" })
+          ? el("span", { className: "pill", textContent: "scope is empty" })
           : state === "on"
             ? el("span", { className: "pill good", textContent: "on target" })
             : el("span", { className: "pill bad", textContent: (c.inScope || 0) - (c.meeting || 0) + " to go" });
@@ -1148,7 +1162,8 @@
               "div",
               { className: "next", style: "margin:0 0 10px" },
               el("b", { textContent: "Biggest lever: " }),
-              common[0] + " blocks " + common[1] + " of " + gaps.length + (gaps.length === 1 ? " entity" : " entities") + ". " + needFix[common[0]],
+              common[0] + " blocks " + common[1] + " of " + gaps.length + (gaps.length === 1 ? " entity" : " entities") + ". ",
+              ...rich(needFix[common[0]]),
             ),
           );
         gaps.forEach(function (pair) {
@@ -1163,6 +1178,19 @@
         });
       }
       var track = c.track && D.tracks && D.tracks[c.track] ? D.tracks[c.track].title || c.track : c.track;
+      var picker = el(
+        "select",
+        {
+          ariaLabel: "Campaign",
+          onchange: function () {
+            location.hash = "campaign/" + enc(picker.value);
+          },
+        },
+        ...names.map(function (n) {
+          var cn = all[n];
+          return el("option", { value: n, selected: n === selected, textContent: (cn.title || n) + " (" + (campaignState(cn) === "empty" ? "scope is empty" : (cn.percent || 0) + "%") + ")" });
+        }),
+      );
       return el(
         "div",
         { className: "split" },
@@ -1182,10 +1210,11 @@
         el(
           "section",
           {},
+          el("label", { className: "picker" }, el("span", { className: "sub", textContent: "Campaign" }), picker),
           el(
             "div",
             { className: "ehead" },
-            el("div", {}, el("h2", { textContent: c.title || selected }), el("div", { className: "sub", textContent: [c.status, track ? "track: " + track : null, c.owner].filter(Boolean).join(" · ") })),
+            el("div", {}, el("h2", { textContent: c.title || selected }), el("div", { className: "sub", textContent: [c.status, track ? "track: " + track : null, c.owner ? "owned by " + c.owner.replace(/^group:/, "") : null].filter(Boolean).join(" · ") })),
             ring(state === "empty" ? null : pct, { size: 84, color: state === "on" ? "var(--pass)" : "var(--accent)", target: target, label: state === "empty" ? "no entities in scope" : pct + "% of " + target + "% target" }),
           ),
           c.description ? el("p", { className: "lede", textContent: c.description }) : null,
@@ -1347,13 +1376,16 @@
         var lb = order.indexOf(((sc.rules || {})[b[0]] || {}).level);
         return rank(a[1]) - rank(b[1]) || la - lb || a[0].localeCompare(b[0]);
       });
-      var passes = el("div", { className: "passes" });
+      var passed = {};
+      var npass = 0;
       rules.forEach(function (ro) {
         var n = ro[0];
         var o = ro[1];
         var rule = (sc.rules && sc.rules[n]) || {};
         if (o === "pass") {
-          passes.append(el("span", { title: (rule.level ? rule.level + " rule" : "") + (rule.check ? ": " + rule.check : ""), textContent: n }));
+          var lv = rule.level || "";
+          (passed[lv] = passed[lv] || []).push(el("span", { title: rule.fix || rule.check || "", textContent: n }));
+          npass++;
           return;
         }
         var ev = (score.evidence || {})[n];
@@ -1363,7 +1395,7 @@
             "div",
             { className: "rule " + o },
             el("div", {}, el("span", { className: "rn", textContent: n }), el("span", { className: "outcome " + o, textContent: o }), rule.level ? el("span", { className: "sub", textContent: " · needed for " + rule.level }) : ""),
-            rule.fix ? el("div", { className: "fix" }, el("b", { textContent: "Fix: " }), rule.fix) : "",
+            rule.fix ? el("div", { className: "fix" }, el("b", { textContent: "Fix: " }), ...rich(rule.fix)) : "",
             items.length
               ? el(
                   "ul",
@@ -1377,8 +1409,23 @@
           ),
         );
       });
-      if (passes.children.length) {
-        wrap.append(el("div", { className: "sub", style: "margin-top:10px", textContent: plural(passes.children.length, "check passes", "checks pass") }), passes);
+      if (npass) {
+        wrap.append(el("div", { className: "sub", style: "margin-top:10px", textContent: plural(npass, "check passes", "checks pass") }));
+        order.concat([""]).forEach(function (lv) {
+          if (!passed[lv]) return;
+          var all = Object.keys(sc.rules || {}).filter(function (n) {
+            return (sc.rules[n].level || "") === lv && score.rules[n] !== "skipped";
+          }).length;
+          wrap.append(
+            el(
+              "div",
+              { className: "passes" },
+              lv ? badge(lv) : null,
+              el("em", { textContent: passed[lv].length === all ? "all " + all + " met" : passed[lv].length + " of " + all }),
+              ...passed[lv],
+            ),
+          );
+        });
       }
       return wrap;
     }
@@ -1576,7 +1623,7 @@
       var order = levelOrder(sc.levels);
       var parts = tallyLevels(rows, order);
 
-      var cardSearch = el("input", { type: "search", placeholder: "Find a scorecard…", ariaLabel: "Find a scorecard" });
+      var cardSearch = el("input", { type: "search", placeholder: "Find a scorecard by name or id…", ariaLabel: "Find a scorecard" });
       var cardNav = el("nav", { className: "rank", ariaLabel: "Scorecards, most debt first" });
       var drawCards = function () {
         var q = cardSearch.value.toLowerCase();
@@ -1730,6 +1777,9 @@
             return isPassing(ro[1]);
           });
           var short = shortId(id);
+          var next = nextLevel(sc, r.level);
+          var need = next ? blockers(sc, r, next) : [];
+          var later = failing.length - need.length;
           var d = el(
             "details",
             { className: "ent" },
@@ -1741,22 +1791,15 @@
               el(
                 "span",
                 { className: "tally" },
-                failing.length
-                  ? el(
-                      "b",
-                      {
-                        textContent:
-                          "Fails " +
-                          failing
-                            .slice(0, 2)
-                            .map(function (ro) {
-                              return ro[0];
-                            })
-                            .join(", ") +
-                          (failing.length > 2 ? " +" + (failing.length - 2) : ""),
-                      },
-                    )
-                  : "✓ all pass",
+                need.length
+                  ? el("b", {
+                      className: r.level === "none" ? "bad" : "",
+                      textContent: next.charAt(0).toUpperCase() + next.slice(1) + " needs " + need.slice(0, 2).join(", ") + (need.length > 2 ? " +" + (need.length - 2) : ""),
+                    })
+                  : failing.length
+                    ? ""
+                    : "✓ all pass",
+                later > 0 ? (need.length ? " · " : "") + later + " more for higher levels" : "",
                 " · " + passing.length + " of " + outs.length + " pass",
               ),
             ),
@@ -1861,15 +1904,54 @@
                   "ul",
                   {},
                   ...names.map(function (n) {
-                    var li = el("li", { textContent: n });
-                    if (sc.rules[n].fix) li.title = sc.rules[n].fix;
-                    return li;
+                    return el("li", {}, el("b", { textContent: n }), sc.rules[n].fix ? el("span", { className: "why" }, ...rich(sc.rules[n].fix)) : null);
                   }),
                 )
               : el("div", { className: "sub", textContent: "No rules at this level." }),
           ),
         );
       });
+      // The rule that holds the most entities at the lowest occupied level below the top.
+      var lever = null;
+      var low = order.find(function (l) {
+        return l !== "skipped" && nextLevel(sc, l) && parts.some(function (p) {
+          return p.level === l;
+        });
+      });
+      if (low) {
+        var held = {};
+        var up = nextLevel(sc, low);
+        scored.forEach(function (pair) {
+          if (pair[1].level !== low) return;
+          blockers(sc, pair[1], up).forEach(function (n) {
+            held[n] = (held[n] || 0) + 1;
+          });
+        });
+        var best = Object.entries(held).sort(function (a, b) {
+          return b[1] - a[1] || a[0].localeCompare(b[0]);
+        })[0];
+        if (best)
+          lever = el(
+            "div",
+            { className: "next", style: "margin:0 0 10px" },
+            el("b", { textContent: "Biggest lever: " }),
+            best[0] + " keeps " + plural(best[1], "entity", "entities") + " at " + low + "; they need it for " + up + ". ",
+            ...rich(((sc.rules || {})[best[0]] || {}).fix),
+          );
+      }
+      var picker = el(
+        "select",
+        {
+          ariaLabel: "Scorecard",
+          onchange: function () {
+            location.hash = "scorecard/" + enc(picker.value);
+          },
+        },
+        ...ranked.map(function (r) {
+          var debt = r.none > 0 ? r.none + " at none" : r.bronze > 0 ? r.bronze + " at bronze" : "clear";
+          return el("option", { value: r.name, selected: r.name === active, textContent: title(D, r.name) + " (" + debt + ")" });
+        }),
+      );
       var owner = sc.owner ? sc.owner.replace(/^group:/, "") : "";
       return el(
         "div",
@@ -1878,13 +1960,14 @@
           "section",
           {},
           el("div", { className: "head" }, el("h2", { textContent: "Scorecards" })),
-          el("p", { className: "sub", style: "margin:0", textContent: "Highest none debt first" }),
+          el("p", { className: "sub", style: "margin:0", textContent: "Most entities at none first" }),
           cardSearch,
           cardNav,
         ),
         el(
           "section",
           {},
+          el("label", { className: "picker" }, el("span", { className: "sub", textContent: "Scorecard" }), picker),
           el("div", { className: "head" }, el("h2", { textContent: title(D, active) }), el("code", { className: "sub", textContent: active })),
           el("p", { className: "lede", textContent: sc.description || "" }),
           el("div", { className: "sub", textContent: "Rates every " + sc.kind + (owner ? " · owned by " + owner : "") + (sc.track ? " · track " + sc.track : "") }),
@@ -1894,6 +1977,7 @@
           barEl(parts, "lg"),
           legendEl(parts),
           el("h3", { textContent: "Most common failures" }),
+          lever,
           failChart,
           el("h3", { textContent: "Entities" }),
           filters,
