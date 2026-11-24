@@ -41,6 +41,8 @@
 //!   links and secret shapes (docs/design/site-standards.md);
 //! - `example` (`examples` globs): one per example or experiment write-up, with its links and the
 //!   command that checks it (docs/design/example-standards.md);
+//! - `portal` (`portals` globs, usually `**/.toolbox/toolbox.yaml`): one per child portal a parent
+//!   federates, with the actions it declares and how to reach it (docs/design/federated-actions.md);
 //! - `assessment` (`assessments` globs): one per assessment file (YAML or JSON, see
 //!   `schema/assessment.schema.json`): agents' judgements of entities against the portal's rubrics.
 //!
@@ -59,7 +61,7 @@
 //! "betterer"?: [glob], "skills"?: [glob], "connectors"?: [glob], "dependencies"?: false,
 //! "agentDocs"?: [glob], "plugins"?: [glob], "packages"?: [glob], "schemas"?: [glob],
 //! "examples"?: [glob], "pages"?: [glob], "assessments"?: [glob], "jsWorkspace"?: false,
-//! "expoApps"?: [glob], "storybooks"?: [glob]}`.
+//! "expoApps"?: [glob], "storybooks"?: [glob], "portals"?: [glob]}`.
 
 mod agentsmd;
 mod betterer;
@@ -72,6 +74,7 @@ mod hygiene;
 mod js_workspace;
 mod npm;
 mod plugins;
+mod portals;
 mod repo;
 mod rust;
 mod site;
@@ -120,6 +123,8 @@ struct Workspace {
     expo_apps: Vec<Regex>,
     /// Storybook main configs (`storybook` records), e.g. `**/.storybook/main.*`.
     storybooks: Vec<Regex>,
+    /// Child portal manifests (`portal` records), e.g. `**/.toolbox/toolbox.yaml`.
+    portals: Vec<Regex>,
     captures: Vec<(String, Regex)>,
     counts: Vec<(String, Regex)>,
     crates: bool,
@@ -363,6 +368,7 @@ impl Workspace {
             pages: globs(&cfg, "pages")?,
             expo_apps: globs(&cfg, "expoApps")?,
             storybooks: globs(&cfg, "storybooks")?,
+            portals: globs(&cfg, "portals")?,
             captures: named_regexes(&cfg, "captures")?,
             counts: named_regexes(&cfg, "counts")?,
             crates: cfg["crates"].as_bool().unwrap_or(true),
@@ -637,6 +643,7 @@ impl Workspace {
         self.emit_packages(&paths, &kinds, out);
         self.emit_schemas(&paths, &kinds, out);
         self.emit_examples(&paths, &kinds, out);
+        self.emit_portals(&paths, &kinds, out);
         self.emit_pages(&paths, &kinds, out);
         self.emit_expo_apps(&paths, &kinds, out);
         self.emit_storybooks(&paths, &kinds, out);
@@ -793,6 +800,20 @@ impl Workspace {
             );
         }
         out.snapshot_complete("example");
+    }
+
+    fn emit_portals(&self, paths: &[String], kinds: &[&str], out: &mut Out) {
+        if self.portals.is_empty() || !kinds.contains(&"portal") {
+            return;
+        }
+        for rel in paths.iter().filter(|p| Self::matches(&self.portals, p)) {
+            out.record(
+                "portal",
+                &portals::id(rel),
+                portals::analyse(&self.root, rel),
+            );
+        }
+        out.snapshot_complete("portal");
     }
 
     fn emit_pages(&self, paths: &[String], kinds: &[&str], out: &mut Out) {
@@ -1024,6 +1045,7 @@ impl Workspace {
             "package-json" => self.refresh_package(id, out),
             "json-schema" => self.refresh_schema(id, out),
             "example" => self.refresh_example(id, out),
+            "portal" => self.refresh_portal(id, out),
             "site-page" => self.refresh_page(id, out),
             "expo-app" => self.refresh_expo_app(id, out),
             "storybook" => self.refresh_storybook(id, out),
@@ -1098,6 +1120,15 @@ impl Workspace {
             out.record("example", id, examples::analyse(&self.root, rel));
         } else {
             out.not_found("example", id);
+        }
+    }
+
+    fn refresh_portal(&self, id: &str, out: &mut Out) {
+        let rel = id.strip_prefix("portal:").unwrap_or("");
+        if Self::matches(&self.portals, rel) && self.root.join(rel).is_file() {
+            out.record("portal", id, portals::analyse(&self.root, rel));
+        } else {
+            out.not_found("portal", id);
         }
     }
 
