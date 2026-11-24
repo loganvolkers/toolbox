@@ -79,7 +79,22 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 - Scorecard entity rows sort worst-first (`none` → bronze → … → gold).
 - Outcome filter defaults to **all**; "Failing" is one click for a work list; empty filters offer Clear.
 - Entity ids show a short label first; the full id stays muted beside it.
-- Passing rules render as a compact pass line; failing rules keep fix + evidence.
+- Passing rules render as compact chips grouped by level ("Bronze: all 5 met"); failing rules keep fix + evidence.
+- "What each level needs" shows each rule with its fix text, so a level's requirements read as sentences, not ids.
+- An entity row leads with what its next level needs ("Silver needs has-example"), then counts the failures above
+  that level. Red is kept for entities at `none`.
+- Each scorecard names its biggest lever: the rule holding the most entities at the lowest occupied level.
+- Fix text renders backticks as code.
+- Below 820 px the Scorecards and Campaigns lists become a select above the detail.
+- A scorecard page shows state before definitions: where entities stand and the biggest lever, then the
+  most common failures, then what each level needs. Only failures of the first level (the ones that hold
+  entities at `none`) are drawn in red.
+- Kind bars and kind headers count unscored entities as a hatched "not scored" segment, so a bar never
+  implies every entity reached a level; unscored rows say "not scored".
+- A drill-down (`#catalog/<kind>`) scrolls to and focuses the selected kind's list.
+- A campaign whose scope is empty is "can't be measured", not neutral: it says why, lists the debt of
+  each included scorecard, and counts in the overview's needs-attention line.
+- The entity page leads with the entity's level (medal and word); the check ratio is secondary text.
 - Levels are one badge component everywhere: a dot, the level's name and `aria-label="level …"`,
   so a level is never colour-only. Each level has a fill colour and a darker ink colour for text
   that passes WCAG AA. Custom level names borrow the colour of the standard level at the same

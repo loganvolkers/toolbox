@@ -37,6 +37,9 @@ dimensions (J1–J4), and named reader tasks.
 6. **Re-audit blind.** Recapture with the same routes and viewports, then give a new auditor
    the same inputs as step 3. Compare the two score tables and the metrics. The change is done
    when no U score fell, the targeted scores rose, and serious axe violations did not grow.
+   When a score falls, trace its cited evidence: on a view the change touched it is a
+   regression, and on a view it did not it is a finding the last auditor missed. Both are
+   fixed in the next cycle and the cycle is audited again; never average auditors away.
 7. **Publish.** Commit the audit file as `docs/audits/<surface>-<yyyy-mm-dd>.md` with both
    score tables, the task outcomes, the metric deltas, the fixes made and the findings left open.
 

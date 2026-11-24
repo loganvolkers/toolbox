@@ -1,28 +1,33 @@
 # Design audit: the hosted report, 2026-11-24
 
-*Status: record of two blind audits under the `design-audit` skill
+*Status: record of four blind audits and three fix cycles under the `design-audit` skill
 ([D01M85MK7FCRXH2TRMRKXTNA5GT](../decisions/D01M85MK7FCRXH2TRMRKXTNA5GT.md)). About the box: how
 it reports.*
 
-The redesign moved every usability and joy score up and none down. Usability rose from 13 to
-29 of 40 and joy from 4 to 11 of 16. Four of the five reader tasks now succeed, against two before, and
-serious axe-core nodes fell from 986 to 0. The two findings that misled readers are gone: failing
-rules listed as "passing", and a campaign shown as both 0% and met. The second audit's own
-severity-3 findings (rule ids without meanings, failure lists not ordered by level, and two
-mobile Scorecards faults) are the next cycle's must-fix list, under *Findings still open*.
+Three fix cycles took usability from 13 to 31 of 40 and joy from 4 to 12 of 16, with every
+score at 3 or above. All five reader tasks now succeed, against two before, and serious axe-core
+nodes fell from 986 to 0. The fourth auditor found no severity 3 or 4 finding. The second cycle
+was not done when audited: usability fell from 29 to 27, one fall a regression it caused and two
+findings the previous auditor missed. The third cycle fixed all three, and no usability score in
+audit 4 is below its audit-2 value. What is left is trust and fluency: counts that differ between
+views without saying why, no generation date, raw rule ids, and no momentum since the last
+snapshot (*Findings still open*).
 
 ## Scope
 
 | Item | Value |
 |---|---|
-| Surface | `<toolbox-report>` as rendered by `toolbox report portal --skip runner,github-actions -o web` for this repo's own portal (1,440 entities, 39 scorecards, 5 campaigns, snapshot 5) |
-| Before | `0dcdaae` (main at branch point) |
-| After | `c7381fd` (`3da2310` scorecard titles in report JSON, `d924e93` 37 scorecard titles, `635e6bb` element redesign) |
-| Routes | `#overview`, `#catalog`, `#catalog/Skill`, `#entity/skill:plugins/toolbox-operator/skills/actions`, `#campaigns`, `#campaign/skill-silver`, `#scorecards`, `#scorecard/maintainer-skill` |
+| Surface | `<toolbox-report>` as rendered by `toolbox report portal --skip runner,github-actions -o web` for this repo's own portal |
+| Content | Audits 1 and 2: 1,440 entities, 39 scorecards, 5 campaigns. Audits 3 and 4 ran after a rebase onto `main`, which had grown to 1,566 entities and 48 scorecards and added a Compare tab |
+| Audit 1 (before) | `0dcdaae`, `main` at the branch point |
+| Audit 2 (cycle 1) | `8ff6862` scorecard titles in report JSON, `5e3e5af` titles for every scorecard, `806a896` element redesign |
+| Audit 3 (cycle 2) | `cc6b6c5` rule meanings, failures by level, mobile pickers, the lever; `68173d9` whole paths in folded descriptions; `cf00494` Compare ported to the redesign |
+| Audit 4 (cycle 3) | `c2ca288` unscored entities, unmeasurable campaigns, drill-down focus, state before definitions, the level leading the entity page |
+| Routes | `#overview`, `#catalog`, `#catalog/Skill`, `#entity/skill:plugins/toolbox-operator/skills/actions`, `#campaigns`, `#campaign/skill-silver`, `#scorecards`, `#scorecard/maintainer-skill`; audits 3 and 4 also took their own extra screenshots |
 | Viewports | 1280×800 and 390×844, light and dark, plus a full-page desktop light shot |
-| Auditors | Two fresh local agents, one per audit. Each saw only that audit's screenshots, `metrics.json`, the tasks and [the rubric](../../plugins/toolbox-operator/skills/design-audit/references/rubric.md): no source, no diff, and the second never saw the first's scores |
+| Auditors | Four fresh local agents, one per audit. Each saw only its own capture, `metrics.json`, the tasks and [the rubric](../../plugins/toolbox-operator/skills/design-audit/references/rubric.md): no source, no diff and no earlier scores |
 
-The tasks were written before either capture:
+The tasks were written before the first capture and kept for every audit:
 
 | Task | Reader | Question |
 |---|---|---|
@@ -34,57 +39,74 @@ The tasks were written before either capture:
 
 ## Scores
 
-Scores are 0–4 per the rubric. "Before" is the first auditor's, "after" the second's.
+Scores are 0–4 per the rubric, one auditor per column.
 
-| Id | Before | After | What changed, in the auditors' words |
-|---|---|---|---|
-| U1 Answer first | 2 | **4** | "bronze" in a 13 px grey caption → medal, the word "Bronze", a one-sentence verdict and the standards holding it, all in the first viewport |
-| U2 Reader's language | 1 | **2** | Human scorecard titles; rules, kinds and decision ids still appear raw |
-| U3 Recognition over recall | 1 | **3** | No rule or level definitions → "What each level needs", counts with denominators, legends beside data |
-| U4 Hierarchy and scent | 2 | **3** | Flat identical cards → a strong hero and question headings; list rows still uniform |
-| U5 Data integrity | 1 | **3** | Failing rules listed as passing → proportional bars with counts; failures still all red |
-| U6 Consistency | 2 | **3** | Five level renderings → one badge; entity rows still have three layouts |
-| U7 Wayfinding and control | 2 | **3** | Silent wrong routes → not-found pages, highlighted selection, breadcrumbs |
-| U8 Honest states | 0 | **3** | A campaign at 0% that "meets the goal" → "nothing in scope", "not scored", "✓ clear" |
-| U9 Accessibility | 1 | **3** | 986 serious axe nodes → 0 |
-| U10 Density and responsiveness | 1 | **2** | 16,857 px catalog → paged; mobile Scorecards rows clip and the picker sits below the list |
-| **Usability total** | **13** | **29** | of 40 |
-| J1 Visceral | 1 | **3** | One card style everywhere → medal, warm hero, level columns, rings |
-| J2 Behavioral | 1 | **2** | Unstyled clickable rows → chevrons, underlined links, sticky sidebar (static evidence only) |
-| J3 Reflective | 1 | **3** | Wins looked like debt → "✓ 31 scorecards have no entity at none", "Top level reached", milestone ticks |
-| J4 Voice | 1 | **3** | "Inventory browse lives in Catalog…" → "Biggest lever", "Gold means well-formed, not good" |
-| **Joy total** | **4** | **11** | of 16 |
+| Id | Audit 1 | Audit 2 | Audit 3 | Audit 4 | What moved them, in the auditors' words |
+|---|---|---|---|---|---|
+| U1 Answer first | 2 | 4 | 3 | 4 | A grey "bronze" caption became a medal hero. Audit 3 marked it down because the level matrix pushed "Where entities stand" below the fold and the entity page led with a 92% ring |
+| U2 Reader's language | 1 | 2 | 2 | 3 | Human scorecard titles; rule ids, kind names and decision ids are still raw |
+| U3 Recognition over recall | 1 | 3 | 3 | 3 | Level definitions, denominators and legends beside the data |
+| U4 Hierarchy and scent | 2 | 3 | 3 | 3 | A strong hero and question headings over flat identical cards |
+| U5 Data integrity | 1 | 3 | 2 | 3 | Failing rules listed as passing were fixed in cycle 1. Audit 3 found kind bars that left unscored entities out; cycle 3 hatched them in |
+| U6 Consistency | 2 | 3 | 3 | 3 | One level badge everywhere |
+| U7 Wayfinding and control | 2 | 3 | 3 | 3 | Not-found pages, breadcrumbs, highlighted selection |
+| U8 Honest states | 0 | 3 | 2 | 3 | A campaign at 0% that "met the goal" was fixed in cycle 1. Audit 3 found a campaign whose empty scope hid 14 entities at none; audit 4 called its "can't be measured" state better than most dashboards |
+| U9 Accessibility | 1 | 3 | 3 | 3 | 986 serious axe-core nodes became 0 |
+| U10 Density and responsiveness | 1 | 2 | 3 | 3 | Paged lists; cycle 2 fixed the clipped mobile rows and put a picker above the detail |
+| **Usability total** | **13** | **29** | **27** | **31** | of 40 |
+| J1 Visceral | 1 | 3 | 3 | 3 | Medal, warm hero, level columns, rings |
+| J2 Behavioral | 1 | 2 | 2 | 3 | Chevrons, underlined links, a sticky sidebar; audit 4 saw hover and in-place expansion on the live page |
+| J3 Reflective | 1 | 3 | 3 | 3 | Wins celebrated: "✓ 31 scorecards have no entity at none", passes grouped by level |
+| J4 Voice | 1 | 3 | 3 | 3 | "Biggest lever", "Gold means well-formed, not good" |
+| **Joy total** | **4** | **11** | **11** | **12** | of 16 |
 
-| Task | Before | After |
+| Task | Audit 1 | Audit 2 | Audit 3 | Audit 4 |
+|---|---|---|---|---|
+| T1 VP: level and what holds it | Success, but the answer was a grey caption | Success in the first viewport | Success | Success in the first viewport |
+| T2 Platform owner: most debt and commonest failure | Partial | Success with effort: failures ranked across levels | Success with effort | Success in one click: debt, commonest failure and lever on one page |
+| T3 Entity owner: level, next step, passes | Success, but the next level was never named | Success | Success | Success in three clicks |
+| T4 Maintainer: campaign furthest behind | Partial: a contradictory campaign | Success in one click | Success | Success in one click; no pace marker |
+| T5 Newcomer: what a scorecard measures and what silver needs | Partial: no description, no rules | Partial: rules were bare ids | Success | Success |
+
+### Why audit 3 scored lower than audit 2
+
+The skill's done rule is that no usability score falls, so cycle 2 did not pass it on audit 3,
+even though every task succeeded. Each fall was traced to the evidence the auditor cited:
+
+| Score | Cause | Kind |
 |---|---|---|
-| T1 VP: level and what holds it | Success, but the answer was a grey caption | Success in the first viewport |
-| T2 Platform owner: most debt and commonest failure | Partial: the rule list was mislabelled and had to be tallied by hand | Success with effort: "Most common failures" answers it, but ranks all levels together |
-| T3 Entity owner: level, next step, passes | Success, but the next level was never named | Success: "Next: gold needs has-evals" |
-| T4 Maintainer: campaign furthest behind | Partial: it landed on a contradictory campaign | Success in one click, with the biggest lever named |
-| T5 Newcomer: what a scorecard measures and what silver needs | Partial: no description and no rules | Partial: description and level matrix, but rules are bare ids |
+| U1 4 → 3 | Cycle 2 put the level matrix, now with each rule's meaning, above the distribution: 378 and 440 words above the fold on the scorecard pages, against 187 and 184 before | Regression from cycle 2 |
+| U5 3 → 2 | The Doc kind bar was all silver although half the docs were unscored | Missed by audit 2; the view did not change in cycle 2 |
+| U8 3 → 2 | A campaign whose scorecards rate different kinds showed "scope is empty" while 14 entities sat at none; totals did not reconcile | Missed by audit 2; the view did not change in cycle 2 |
+
+Both kinds were fixed in cycle 3 and the report was audited again. The skill now says so in
+step 6: on a view the change touched a fall is a regression, on a view it did not it is a missed
+finding, and auditors are never averaged away.
 
 ## Metrics
 
-From the capture script's `metrics.json` (axe-core 4.10.2, desktop light). Visual-variety
-counts describe the page; they are not targets.
+From the capture script's `metrics.json` (axe-core 4.10.2, desktop light), one value per
+capture: before, cycle 1, cycle 2, cycle 3. Visual-variety counts describe the page; they are not
+targets. Heights after cycle 2 also reflect `main`'s growth (48 scorecards against 39).
 
-| Route | Serious axe nodes | Monospace share | Font sizes | SVG elements | Small targets | Page height (px) |
-|---|---|---|---|---|---|---|
-| overview | 0 → 0 | 31% → 4% | 6 → 11 | 0 → 15 | 1 → 2 | 3,519 → 2,179 |
-| catalog | 453 → 0 | 16% → 43% | 6 → 6 | 0 → 1 | 1,359 → 1 | 16,857 → 4,762 |
-| catalog/Skill | 40 → 0 | 9% → 55% | 6 → 6 | 0 → 1 | 120 → 0 | 2,195 → 3,584 |
-| entity (actions) | 1 → 0 | 6% → 12% | 4 → 9 | 0 → 2 | 3 → 3 | 804 → 800 |
-| campaigns | 0 → 0 | 0% → 0% | 5 → 9 | 0 → 7 | 0 → 6 | 800 → 1,077 |
-| campaign/skill-silver | 0 → 0 | 0% → 0% | 6 → 9 | 0 → 7 | 5 → 6 | 908 → 1,077 |
-| scorecards | 417 → 0 | 8% → 32% | 5 → 5 | 0 → 1 | 440 → 1 | 8,778 → 6,516 |
-| scorecard/maintainer-skill | 75 → 0 | 9% → 32% | 5 → 5 | 0 → 1 | 80 → 0 | 2,272 → 3,637 |
-| **Total** | **986 → 0** | | | **0 → 35** | **2,008 → 19** | |
+| Route | Serious axe nodes | Words above the fold | Monospace share | Page height (px) |
+|---|---|---|---|---|
+| overview | 0 · 0 · 0 · 0 | — · 190 · 192 · 202 | 31% · 4% · 4% · 7% | 3,519 · 2,179 · 2,179 · 2,443 |
+| catalog | 453 · 0 · 0 · 0 | — · 152 · 152 · 159 | 16% · 43% · 43% · 43% | 16,857 · 4,762 · 4,762 · 4,875 |
+| catalog/Skill | 40 · 0 · 0 · 0 | — · 152 · 152 · **42** | 9% · 55% · 55% · 54% | 2,195 · 3,584 · 3,584 · 3,697 |
+| entity (actions) | 1 · 0 · 0 · 0 | — · 110 · 122 · 127 | 6% · 12% · 11% · 11% | 804 · 800 · 800 · 800 |
+| campaigns | 0 · 0 · 0 · 0 | — · 189 · 191 · 195 | 0% · 0% · 0% · 0% | 800 · 1,077 · 1,077 · 1,077 |
+| campaign/skill-silver | 0 · 0 · 0 · 0 | — · 189 · 191 · 195 | 0% · 0% · 0% · 0% | 908 · 1,077 · 1,077 · 1,077 |
+| scorecards | 417 · 0 · 0 · 0 | — · 187 · 378 · **228** | 8% · 32% · 29% · 29% | 8,778 · 6,516 · 7,111 · 7,113 |
+| scorecard/maintainer-skill | 75 · 0 · 0 · 0 | — · 184 · 440 · **314** | 9% · 32% · 24% · 23% | 2,272 · 3,637 · 4,312 · 4,336 |
+| **Total** | **986 · 0 · 0 · 0** | | | |
 
-Monospace share rose on the list routes because entity rows now show a readable name with the
-full id beneath it in monospace, where they used to show only the id inside a clickable row
-that axe did not count as text.
+The first capture predates the fold-word count. `catalog/Skill` fell to 42 words above the fold
+because the drill-down now scrolls to the kind's list and focuses it. Monospace share rose on the
+list routes in cycle 1 because rows show a readable name with the full id beneath it, where they
+used to show only the id inside a row axe did not count as text.
 
-## Prioritised usability fixes
+## Cycle 1: audit 1's findings
 
 Every severity 3–4 finding was a must. The rest were ranked by the number of tasks they block,
 then by reach across routes.
@@ -92,9 +114,9 @@ then by reach across routes.
 | Rank | Finding | Sev | Fix | Status |
 |---|---|---|---|---|
 | 1 | F1 failing rules listed under "passing" | 4 | Rows say "Fails: …" in fail ink with "passes N of M"; the entity page groups failing rules before passing ones | Fixed |
-| 2 | F2 campaign at 0% and "every entity meets the goal" | 4 | An empty scope is its own state ("No entity is in scope…, check its selector"), excluded from "behind target" | Fixed |
+| 2 | F2 campaign at 0% and "every entity meets the goal" | 4 | An empty scope is its own state, excluded from "behind target" (reworded again in cycle 3) | Fixed |
 | 3 | F3 verdict in a grey caption | 3 | Overview hero: level medal, level as `h2`, one-sentence verdict and the standards that hold it | Fixed |
-| 4 | F4 internal shorthand | 3 | Human titles for 37 scorecards in the manifest, carried in report JSON; ids become secondary text | Fixed |
+| 4 | F4 internal shorthand | 3 | Human titles for every scorecard in the manifest, carried in report JSON; ids become secondary text | Fixed |
 | 5 | F5 scorecard never says what it measures | 3 | Description plus a "What each level needs" matrix (each level also needs the ones below) | Fixed |
 | 6 | F6 campaign rows name no rule | 3 | Each entity under a campaign names the rules it needs | Fixed |
 | 7 | F7 no tally of failure reasons | 3 | "Most common failures" bar chart per scorecard; a bar filters the entity list to that rule | Fixed |
@@ -111,37 +133,76 @@ then by reach across routes.
 | 18 | F22 entity rules unordered | 2 | "Next: gold needs …" callout, then failing, then passing rules | Fixed |
 | 19 | F23, F28, F29, F30 voice and link styling | 2 | Rows styled as links with chevrons; keyboard instructions and implementation notes removed from copy; fleet health split into items; plurals fixed | Fixed |
 | 20 | F11 why some scorecards do not count | 2 | The hero says how many repository standards there are and which hold the level | Fixed |
-| 21 | F24 mobile kind tiles | 2 | Tabs fit on one row and kind tiles sit two to a row, but the entity list still starts below 15 rows of tiles | Partly fixed |
+| 21 | F24 mobile kind tiles | 2 | Tabs fit on one row and kind tiles sit two to a row | Partly fixed; finished in cycle 3 |
 | 22 | F25 no level on catalog rows | 2 | Each scored row shows its lowest level badge | Fixed |
 | 23 | F31 identical cards everywhere | 1 | Hero, campaign rings and level matrix each get their own treatment | Fixed |
+
+## Cycle 2: audit 2's must-fix list
+
+Audit 2's four severity-3 findings, plus the severity-2 findings that shared their views.
+
+| Finding | Sev | Fix |
+|---|---|---|
+| A1 mobile scorecard rows clip their failure line | 3 | The tally wraps under the name at 390 px |
+| A2 mobile pickers sit below the selected item's full list | 3 | Below 820 px a select sits above the detail and the side list is hidden |
+| A3 "What each level needs" lists bare rule ids | 3 | Each rule's fix text sits beside its id, and passes are grouped by level ("all N met") |
+| A4 row failures alphabetical and all red | 3 | Rows lead with what the next level needs ("Silver needs has-example"), then "N more for higher levels"; red only at none |
+| A5 top failures ignore level | 2 | "Biggest lever" names the rule holding the most entities at the lowest occupied level |
+| A9 a stray space in a folded description path | 2 | Folded descriptions keep paths whole in four standards files |
+| A10 Markdown backticks shown raw | 2 | Backticks render as code |
+| A21 scorecard ids missing from the sidebar search | 2 | The search matches ids as well as titles |
+| A27 internal phrasing | 1 | "Most entities at none first", "owned by maintainers" |
+
+## Cycle 3: audit 3's must-fix list
+
+Audit 3's three severity-3 findings, the U1 regression, and the severity-2 findings on the same
+views.
+
+| Finding | Sev | Fix |
+|---|---|---|
+| F1 kind bars hide unscored entities; the Doc bar was all silver | 3 | A hatched "not scored" segment in every kind bar and legend, "N scored · M not scored" in the kind header, and "not scored" on rows without a scorecard |
+| F2 a campaign whose scorecards rate different kinds says "scope is empty" | 3 | It says "can't be measured" in a warning pill, explains that no entity is rated by all its scorecards, lists each scorecard's open work (entities below the goal, of how many), says how to measure it, and counts in the overview's needs-attention list |
+| F3 `#catalog/<kind>` lands above its list | 3 | The drill-down scrolls to the kind's list and focuses its heading |
+| F8 rule definitions above the distribution (the U1 regression) | 2 | Scorecard pages show where entities stand, then the lever, then the failures, then what each level needs |
+| F9 the entity page leads with a 92% ring | 2 | It leads with the level's medal and word; the check ratio is secondary |
+| F6 gold failures shown in alarm red | 2 | Only first-level failures are red; the rest are neutral |
+| F5 the lever and the commonest failure disagree without saying why | 2 | The lever reads "the rule that lifts the most entities a level" and is marked in the failure list, now headed "at any level" |
+| F17 catalog kind cards have no legend | 2 | A level legend, including "not scored", under the catalog intro |
+| F4 totals do not reconcile | 2 | Partly fixed: the header says "1,566 entities in the box (1,370 scored)" |
 
 ## Joy opportunities
 
 | Opportunity | Task | Decision |
 |---|---|---|
-| Next-level card on the entity page | T3 | Taken: "Next: gold needs has-evals", with earned rules beneath |
-| Repository medal with a path to the next level | T1 | Taken: SVG medal and the standards holding the level, linked |
-| Completed campaigns and milestone ticks | T4 | Taken: progress rings with milestone ticks, a "Done" state at 100% |
-| "One fix, many wins" per scorecard | T2, T5 | Taken as the "Most common failures" chart: `has-evals` fails on 40 of 41 skills |
-| Level ladder on the scorecard page | T5 | Taken as the "What each level needs" matrix with the entity distribution beneath |
+| Next-level card on the entity page | T3 | Taken in cycle 1: "Next: gold needs has-evals", with earned rules beneath; cycle 3 put the level medal first |
+| Repository medal with a path to the next level | T1 | Taken in cycle 1: SVG medal and the standards holding the level, linked |
+| Completed campaigns and milestone ticks | T4 | Taken in cycle 1: progress rings with milestone ticks, a "Done" state at 100% |
+| "One fix, many wins" per scorecard | T2, T5 | Taken: "Most common failures" (cycle 1) and the biggest lever (cycle 2), marked in the list (cycle 3) |
+| Level ladder on the scorecard page | T5 | Taken: the "What each level needs" matrix, with each rule's meaning since cycle 2 |
+| Passes celebrated by level | T3 | Taken in cycle 2: "all N met" per level |
 | Deltas since the last snapshot | T1, T4 | Declined: the report JSON carries one snapshot. It needs the previous baseline in the report contract, which is a separate change |
 
 ## Findings still open
 
-The second audit's findings, most severe first. Severity 3 is the next cycle's must-fix list.
+Audit 4's findings, none above severity 2. They are the next cycle's candidates; momentum and the
+generation date need the report contract to carry the previous snapshot and a timestamp.
 
 | Id | Sev | Finding | Next step |
 |---|---|---|---|
-| A1 | 3 | Mobile scorecard rows overflow and clip their failure line | Wrap the failure line under the name at 390 px |
-| A2 | 3 | On mobile the scorecard and campaign pickers sit below the selected item's full list | Put the picker above the detail on narrow screens |
-| A3 | 3 | "What each level needs" lists bare rule ids; no view says what a rule checks | Show each rule's fix text beside its id |
-| A4 | 3 | Row failures are alphabetical and all red, hiding the rule that blocks bronze | Order by level, lead with the blocker, mute failures above the next level |
-| A5–A8 | 2 | Top failures ignore level; silver rows read as failing; Scorecards renders 222 rows; raw decision ids in descriptions | |
-| A9–A10 | 2 | A stray space in a folded description path; Markdown backticks shown raw | |
-| A11–A14 | 2 | Totals that do not reconcile (39 vs 44 scorecards, 1,250 vs 1,440 entities); example rules counted as repository debt; "behind target" with no pace; "nothing in scope" unexplained | |
-| A15–A23 | 2 | Ring colours, three entity-row layouts, PascalCase kind names, colour-only kind bars, the `#catalog/<kind>` deep link landing above its list, ungrouped passes, scorecard ids missing from the sidebar, repeated monospace ids, small targets | |
-| A24 | 2 | No change since the previous snapshot | Needs the previous baseline in the report contract |
-| A25–A30 | 1 | Mobile attention table drops bars, "0% silver" caption, internal phrasing, "every rule passes" on a Rule, dark bronze and gold close in lightness, no summary above `#scorecards` | |
+| F01 | 2 | Overview attention bars are all full width, so a 1-entity scorecard looks as alarming as a 270-entity one | Show the entity count beside each bar or scale length by it; group the product comparisons |
+| F02 | 2 | "Biggest lever" and "Most common failures" still read as two answers; the bar colours have no legend | One line that relates them, and a legend for red and neutral bars |
+| F03 | 2 | Campaigns show no pace: nothing says where a campaign should be today; the half-way tick is unexplained | An expected-today marker, a status word, a labelled milestone |
+| F04, F23 | 2 | No generation date; "snapshot 5" is unexplained | Carry the generation time and commit in the report JSON and show them in the header |
+| F05 | 2 | Counts differ between views (8 workflows in the catalog, 7 rated; 53 scorecard entities, 48 scorecards) | Say when a scorecard rates a subset, and why |
+| F06 | 2 | Red "none" and bronze are hard to tell apart for colour-vision-deficient readers | A texture or separator on the none segment, counts on focus |
+| F07, F16 | 2 | A kind deep link scrolls the tabs away; an entity reached from a campaign loses that context | Sticky tabs or a breadcrumb on the list; a back link to the campaign |
+| F08 | 2 | No global entity search | A header search over names and ids |
+| F09, F10 | 2 | Decision ids in descriptions; rules shown only by kebab-case id | A sources disclosure; human rule titles, as scorecards have |
+| F11 | 2 | Catalog lists are not sorted lowest level first | The scorecard lists' sort and level filter |
+| F12, F13 | 2 | Mobile hides campaign status in the select, and the tab bar clips "Compare" without a cue | Status in the option labels; an edge fade or wrapped tabs |
+| F14 | 2 | An expanded entity row is not in the URL | Write it into the hash |
+| F15 | 2 | Six small targets on Campaigns, three on the entity page | 24 px hit areas |
+| F17–F22 | 1 | Mixed top-level captions, a blue ring beside a red pill, the sidebar sort label, missing "no deadline", silver close to the track grey, one sentence repeated per entity | |
 
 ## Sources
 
@@ -152,5 +213,5 @@ The second audit's findings, most severe first. Severity 3 is the next cycle's m
 - Norman, D. *Emotional Design* (2004); Walter, A. *Designing for Emotion* (2011); Kano, N. et
   al. *Attractive Quality and Must-Be Quality* (1984).
 - W3C, *Web Content Accessibility Guidelines (WCAG) 2.2* (2023); Deque, `axe-core` 4.10.2.
-- The before and after evidence (screenshots, `metrics.json`) was captured with
+- The evidence for each audit (screenshots, `metrics.json`) was captured with
   `plugins/toolbox-operator/skills/design-audit/scripts/capture.cjs`; it is not committed.
