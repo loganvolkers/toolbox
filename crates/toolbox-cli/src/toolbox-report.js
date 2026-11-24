@@ -296,7 +296,7 @@
     ".kgh{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline}",
     ".kgh h3{margin:0;color:var(--fg);font-size:13px}",
     ".kgd{margin:2px 0 8px;max-width:80ch}",
-    "a.kind small{display:block;color:var(--muted);font-size:13px;line-height:1.35;margin:-2px 0 6px}",
+    "a.kind small{display:block;color:var(--muted);font-size:13px;line-height:1.35;margin:-2px 0 6px}a.kind small.kmix{margin:5px 0 0}",
     ".boxrow{display:grid;grid-template-columns:200px minmax(0,1fr);gap:12px;align-items:start;padding:10px 0;border-top:1px solid var(--line)}",
     ".boxrow:first-of-type{border-top:0}",
     ".boxrow .bg{font-weight:650;font-size:14px;line-height:1.3}",
@@ -3335,6 +3335,14 @@
           if (scored[k]) {
             var parts = kindParts(S, ids);
             if (parts.length) a.append(barEl(parts, "xs"));
+            var byLevel = {};
+            parts.forEach(function (p) {
+              if (p.level !== "unscored") byLevel[p.level] = (byLevel[p.level] || 0) + p.n;
+            });
+            var mix = Object.keys(byLevel).map(function (l) {
+              return fmt(byLevel[l]) + " " + l;
+            });
+            if (mix.length) a.append(el("small", { className: "kmix", textContent: mix.join(" · "), title: "Each entity counted at its weakest level" }));
           }
           if (k === selected) a.setAttribute("aria-current", "true");
           return a;
