@@ -134,7 +134,7 @@
     ".bar span.unrun{background:radial-gradient(circle,var(--seg) 1.6px,transparent 1.9px) 0 0/6px 6px;box-shadow:inset 0 0 0 1.5px var(--unknown)}.dot.dots{border-radius:2px;background:radial-gradient(circle,var(--seg) 1.2px,transparent 1.5px) 0 0/4px 4px;box-shadow:inset 0 0 0 1.5px var(--unknown)}",
     ".rule.unknown{border-left-color:var(--unknown)}.rule.waived{border-left-color:var(--bronze)}.rule.unassessed{border-left-color:var(--judged)}",
     ".basis-note p{margin:0 0 4px}.h2h-wide{max-width:560px}.h2h-wide .h2h{width:100%;font-size:13px}.h2h-wide .h2h-head,.h2h-wide .h2h-row{grid-template-columns:160px 1fr 1fr}.h2h-row[aria-current]{font-weight:700;background:var(--accent-bg);border-radius:6px}.rank-top:not([hidden]){display:block;margin:8px 0 0;font-size:13px}.cmp-prov{margin:6px 0 0;display:grid;gap:2px}.cmp-src{display:flex;flex-wrap:wrap;align-items:center;gap:2px 10px}.cmp-src .refs{margin:0;line-height:22px}.cmp-brief>summary{cursor:pointer;width:max-content;max-width:100%;padding:3px 0;color:var(--accent)}",
-    ".why.incl{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}.kpi-bar{display:flex;flex:0 0 46px;height:10px;border-radius:5px;background:var(--line);overflow:hidden}.why.incl .kpi-bar{flex-basis:90px}.kpi-bar span.hollow{background:repeating-linear-gradient(135deg,var(--judged) 0 1.5px,transparent 1.5px 4px);box-shadow:inset 0 0 0 1px var(--judged)}.kpi-bar span{display:block;height:100%;background:var(--pass)}.kpi-bar.short span{background:var(--muted)}.kpi-pips{flex:0 0 46px;display:flex;flex-wrap:wrap;gap:4px}.kpi-pips span{width:10px;height:10px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--faint)}.kpi-pips span.on{background:var(--pass);box-shadow:none}",
+    ".why.incl{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}.kpi-bar{display:flex;flex:0 0 46px;height:10px;border-radius:5px;background:var(--line);overflow:hidden}.why.incl .kpi-bar{flex-basis:90px}.kpi-bar span.hollow,.kpi-bar.short span.hollow{background:repeating-linear-gradient(135deg,var(--judged) 0 1.5px,transparent 1.5px 4px);box-shadow:inset 0 0 0 1px var(--judged)}.kpi-bar span{display:block;height:100%;background:var(--pass)}.kpi-bar.short span{background:var(--muted)}.kpi-pips{flex:0 0 46px;display:flex;flex-wrap:wrap;gap:4px}.kpi-pips span{width:10px;height:10px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--faint)}.kpi-pips span.on{background:var(--pass);box-shadow:none}",
     ".cprog{flex:0 0 76px;display:grid;gap:3px}.cprog b{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}.cprog small{font-size:13px;color:var(--muted)}.cprog .gb{position:relative;height:8px;border-radius:4px;background:var(--line)}.cprog .gb>span{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--muted)}.cprog.on .gb>span{background:var(--pass)}.cprog .gb>i{position:absolute;top:-3px;bottom:-3px;width:2px;border-radius:1px;background:var(--fg)}.cprog.big{flex-basis:120px}.cprog.big b{font-size:28px}",
     ".hollow-key{display:flex;flex-wrap:wrap;align-items:center;gap:4px 16px;padding:6px 10px;font-size:13px;color:var(--muted);background:var(--tint);border-radius:8px;margin:4px 0}.hollow-key>span{display:inline-flex;align-items:center;gap:6px}.hollow-key b{color:var(--fg);font-weight:600}",
     ".rid{font:12px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);overflow-wrap:anywhere}.rule .rn{font-weight:650;font-size:inherit;margin:0;display:inline}.sc-block h3.sct{display:inline;margin:0;font-size:16px}",
@@ -264,7 +264,7 @@
     "background:linear-gradient(160deg,color-mix(in srgb,var(--tc) 13%,var(--card)) 0%,var(--card) 62%)}",
     ".track:hover{border-color:var(--accent);transform:translateY(-2px)}.track:focus-within{border-color:var(--accent)}",
     "a.tlink{display:inline-block;min-height:24px;color:inherit;text-decoration:none}a.tlink::after{content:\"\";position:absolute;inset:0;border-radius:14px}a.tlink:focus-visible{outline:none}.track:has(a.tlink:focus-visible){outline:2px solid var(--accent);outline-offset:2px}",
-    ".shelf{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;font-size:13px;color:var(--muted)}.shelf .sh{display:inline-flex;align-items:center;gap:3px;white-space:nowrap}.shelf .sh b{color:var(--fg);font-size:14px}.tnext{font-size:13px;color:var(--muted)}.tnext b{color:var(--fg)}.tnext.good{color:var(--pass)}",
+    ".shelf{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;font-size:13px;color:var(--muted)}.shelf .sh{display:inline-flex;align-items:center;gap:3px;white-space:nowrap}.shelf .sh.own{white-space:normal;max-width:100%}.shelf .sh b{color:var(--fg);font-size:14px}.tnext{font-size:13px;color:var(--muted)}.tnext b{color:var(--fg)}.tnext.good{color:var(--pass)}",
     ".track .medals a,.track .nextmedal a,.track .tnext a{position:relative;z-index:1}.track .medals>li{border-radius:10px}.medals a{color:inherit;text-decoration:none}.medals a:hover span:first-of-type{text-decoration:underline}.medals .lw{color:var(--muted)}",
     ".basis.tip:hover::after,.basis.tip:focus::after,abbr.gloss:hover::after,abbr.gloss:focus::after{content:none}",
     ".ftip{position:fixed;z-index:50;width:max-content;max-width:min(280px,calc(100vw - 24px));padding:6px 9px;border-radius:8px;background:var(--fg);color:var(--bg);font-size:13px;font-weight:450;line-height:1.4;box-shadow:0 4px 14px rgba(0,0,0,.18)}.ftip[hidden]{display:none}",
@@ -1372,7 +1372,7 @@
           }),
           el("span", { className: "avg" }),
         ),
-        "one per scorecard, its share at the top level (hover or focus the strip to name them); dashed: their average, the ring",
+        "one per scorecard, its share at the top level (point at, tap or arrow through a bar to name it under the strip); dashed: their average, the ring",
       ),
       tracks.some(function (t) {
         return t.capped && t.capped.length;
@@ -1782,7 +1782,8 @@
           show(i);
         },
         onclick: function () {
-          show(i);
+          if (on === i) location.hash = "scorecard/" + enc(c.row.name);
+          else show(i);
         },
       });
     });
@@ -1795,7 +1796,7 @@
         return;
       }
       bars[i].classList.add("on");
-      cap.textContent = named(cards[i]) + " · bar " + (i + 1) + " of " + cards.length;
+      cap.textContent = named(cards[i]) + " · bar " + (i + 1) + " of " + cards.length + " · click or Enter to open it";
     };
     var wrap = el(
       "div",
@@ -1811,10 +1812,17 @@
           onpointerleave: function () {
             show(-1);
           },
+          onfocus: function () {
+            if (on < 0) show(low >= 0 ? low : 0);
+          },
           onblur: function () {
             show(-1);
           },
           onkeydown: function (e) {
+            if (e.key === "Enter" && on >= 0) {
+              location.hash = "scorecard/" + enc(cards[on].row.name);
+              return;
+            }
             if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
             e.preventDefault();
             show(on < 0 ? (e.key === "ArrowRight" ? 0 : bars.length - 1) : (on + (e.key === "ArrowRight" ? 1 : bars.length - 1)) % bars.length);
@@ -3196,7 +3204,13 @@
                     return c.floor === l;
                   })
                 : null;
-              return el("span", { className: "sh" }, medal(l === "not scored" ? "none" : l, 20), el("b", { textContent: String(shelf[l]) }), " " + levelName(l) + (own ? ", the one level " + (owner ? title(D, owner.row.name) : "its scorecard") + " has ✓" : shelfTop[l] === shelf[l] || ONLY_LEVEL.has(l) ? " ✓ top" : shelfTop[l] ? " (" + shelfTop[l] + " ✓ top)" : ""));
+              var gloss = null;
+              if (own) {
+                var def = "The one level " + (owner ? title(D, owner.row.name) : "its scorecard") + " has, so reaching it is the top." + (LEVEL_DEF[l] ? " " + LEVEL_DEF[l] : "");
+                gloss = el("abbr", { className: "gloss", tabIndex: 0 }, levelName(l), el("span", { className: "sr", textContent: " (" + def + ")" }));
+                gloss.dataset.tip = def;
+              }
+              return el("span", { className: "sh" + (own ? " own" : "") }, medal(l === "not scored" ? "none" : l, 20), el("b", { textContent: String(shelf[l]) }), " ", gloss || levelName(l), (own ? " ✓ top" : shelfTop[l] === shelf[l] || ONLY_LEVEL.has(l) ? " ✓ top" : shelfTop[l] ? " (" + shelfTop[l] + " ✓ top)" : ""));
             }),
           ),
         );
