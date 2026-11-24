@@ -466,7 +466,7 @@
   var STANDING_MARK = { ahead: "▲", parity: "=", behind: "▼", unknown: "?" };
   function standingChip(s, text) {
     var v = s || "unknown";
-    return el("span", { className: "standing " + v, textContent: STANDING_MARK[v] + " " + (text || v) });
+    return el("span", { className: "standing " + v, textContent: STANDING_MARK[v] + " " + (text || (v === "unknown" ? "not measured" : v)) });
   }
   function byMajority(D, names) {
     return names.length > 0 && names.every(function(n) {
@@ -3556,6 +3556,17 @@
   };
 
   // src/views/campaigns.js
+  function sinceLine(c) {
+    var s = c.sinceStart;
+    if (!s) return el("p", { className: "sub", style: "margin:0 0 6px", textContent: "This report has no saved starting point, so the bar shows where the campaign stands today, not how far it has come." });
+    var parts = [["entitiesShort", "entities short"], ["measure", "total shortfall"]].filter(function(k) {
+      return s[k[0]];
+    }).map(function(k) {
+      var x = s[k[0]];
+      return k[1] + " " + fmt(x.from) + " → " + fmt(x.now) + (x.percentDone != null ? " (" + x.percentDone + "% of the way)" : "");
+    });
+    return el("p", { className: "sub", style: "margin:0 0 6px" }, el("b", { textContent: "Since the start" + (s.recorded ? ", " + s.recorded : "") + ": " }), parts.join("; ") || "nothing to compare yet", ".");
+  }
   var campaignsViews = {
     campaigns(D, S, name) {
       var all = D.campaigns || {};
@@ -3577,7 +3588,9 @@
             {},
             link("scorecard/" + enc(i.scorecard), "", title(D, i.scorecard)),
             i.atLeast ? el("span", {}, " at ", badge(i.atLeast), " or above") : "",
-            i.rules && i.rules.length ? el("span", { className: "sub", textContent: " · rules " + i.rules.join(", ") }) : ""
+            i.rules && i.rules.length ? el("span", {}, i.rules.length === 1 ? ": passes " : ": passes each of ", ...i.rules.map(function(r, k) {
+              return el("span", {}, k ? ", " : "", ruleLink(i.scorecard, r));
+            })) : ""
           )
         );
       });
@@ -3763,6 +3776,7 @@
             el("b", { textContent: (c.meeting || 0) + " of " + (c.inScope || 0) }),
             " entities meet the goal · target " + target + "%" + (c.end ? " by " + c.end : "") + (days != null && days >= 0 ? " (" + plural(days, "day") + " left)" : "") + ". The bar turns green once it passes the target tick."
           ),
+          state === "empty" ? null : sinceLine(c),
           state === "empty" ? null : bar,
           state === "empty" ? null : marks,
           el("h3", { textContent: "Goal" }),
@@ -4822,11 +4836,18 @@
       });
       var lead = track && track.description ? firstSentence(track.description) : "";
       var rest = lead ? track.description.trim().slice(lead.length).trim() : "";
+      var restSentences = rest ? sentences(rest) : [];
+      var scope = restSentences.filter(function(x) {
+        return /^Not (covered|measured)\s*:/i.test(x);
+      })[0];
+      restSentences = restSentences.filter(function(x) {
+        return x !== scope;
+      });
       var method = el(
         "section",
         {},
         el("div", { className: "head" }, el("h2", { textContent: "How it was measured" }), track ? link(trackPath(D, trackName), "", "Track: " + (track.title || trackName) + " →") : null),
-        rest ? el("ul", { className: "method-lede" }, ...sentences(rest).map(function(x) {
+        restSentences.length ? el("ul", { className: "method-lede" }, ...restSentences.map(function(x) {
           return el("li", {}, ...rich(x));
         })) : null,
         Object.keys(context).length ? setup : null,
@@ -4848,6 +4869,7 @@
           { className: "cmp-method", style: "margin:8px 0 0" },
           el("b", { textContent: lead ? "Method: " : "How it was measured: " }),
           ...lead ? rich(lead + " ") : [(brief.length ? brief.join(" · ") + ". " : "") + "Every rule is " + (bases.judged ? "measured or agent-judged" : "measured by script") + ". "],
+          scope ? el("span", { style: "display:block;margin-top:4px" }, el("b", { textContent: "Not covered: " }), ...rich(scope.replace(/^Not (covered|measured)\s*:\s*/i, "") + " ")) : null,
           el("button", {
             className: "link",
             textContent: track && track.description ? "The full method, and who checked it ↓" : "Versions, setup and sources ↓",
@@ -5007,7 +5029,7 @@
             el("small", {}, el("code", { textContent: r }), basisBadge(basisOf(rd), true), rd.better ? el("span", { textContent: rd.better + " is better" }) : null)
           ),
           valueLine(c, r, rd, ids, who),
-          el("div", { className: "ms" }, standingChip(st, st === "parity" ? "parity" : who(c.subject) + " " + st), magnitude(c, r, rd, who)),
+          el("div", { className: "ms" }, standingChip(st, st === "parity" ? "parity" : st === "unknown" ? "not measured" : who(c.subject) + " " + st), magnitude(c, r, rd, who)),
           el(
             "div",
             { className: "full" },
@@ -5070,7 +5092,7 @@
         "section",
         { className: basisCounts(def.rules).judged || !basisCounts(def.rules).measured ? "" : "allmeasured" },
         el("nav", { className: "crumb", ariaLabel: "Breadcrumb" }, link("compare", "", "Compare"), " / " + (def.title || name)),
-        el("div", { className: "head" }, el("h2", { textContent: def.title || name, tabIndex: -1 }), standingChip(v, standingPhrase(who(c.subject), v, who(peer)) + tallyNote)),
+        el("div", { className: "head" }, el("h2", { textContent: def.title || name, tabIndex: -1 }), standingChip(v, rules.length && (tallyBy.get("unknown") || 0) === rules.length ? tallyNote.slice(3) : standingPhrase(who(c.subject), v, who(peer)) + tallyNote)),
         brief.length ? el("p", { className: "sub provenance" }, el("b", { textContent: timed ? "Timed on: " : "Probed once on: " }), brief.join(" · ") + ". ", link("compare", "", "How it was measured, and who checked it →")) : null,
         def.description ? el("p", { className: "lede" }, ...rich(def.description)) : null,
         def.rationale || (def.links || []).length ? el("div", { className: "rationale" }, el("b", { textContent: "Why this factor matters" }), def.rationale ? el("div", {}, ...rich(def.rationale)) : null, refs(def.links)) : null,

@@ -206,7 +206,7 @@ export var STANDING_MARK = { ahead: "▲", parity: "=", behind: "▼", unknown: 
 
 export function standingChip(s, text) {
   var v = s || "unknown";
-  return el("span", { className: "standing " + v, textContent: STANDING_MARK[v] + " " + (text || v) });
+  return el("span", { className: "standing " + v, textContent: STANDING_MARK[v] + " " + (text || (v === "unknown" ? "not measured" : v)) });
 }
 
 // Whether every named comparison tallies its factors by the majority of rules rather than behind-on-any

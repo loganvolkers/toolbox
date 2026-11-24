@@ -14,6 +14,21 @@ import { campaignNamesSorted } from "../lib/summary.js";
 import { rich } from "../lib/text.js";
 import { fmt, plural } from "../lib/words.js";
 
+// How far the campaign has come since the start the baseline saved; without one, the bar is only where it stands.
+function sinceLine(c) {
+  var s = c.sinceStart;
+  if (!s) return el("p", { className: "sub", style: "margin:0 0 6px", textContent: "This report has no saved starting point, so the bar shows where the campaign stands today, not how far it has come." });
+  var parts = [["entitiesShort", "entities short"], ["measure", "total shortfall"]]
+    .filter(function (k) {
+      return s[k[0]];
+    })
+    .map(function (k) {
+      var x = s[k[0]];
+      return k[1] + " " + fmt(x.from) + " → " + fmt(x.now) + (x.percentDone != null ? " (" + x.percentDone + "% of the way)" : "");
+    });
+  return el("p", { className: "sub", style: "margin:0 0 6px" }, el("b", { textContent: "Since the start" + (s.recorded ? ", " + s.recorded : "") + ": " }), parts.join("; ") || "nothing to compare yet", ".");
+}
+
 export const campaignsViews = {
   campaigns(D, S, name) {
     var all = D.campaigns || {};
@@ -35,7 +50,11 @@ export const campaignsViews = {
           {},
           link("scorecard/" + enc(i.scorecard), "", title(D, i.scorecard)),
           i.atLeast ? el("span", {}, " at ", badge(i.atLeast), " or above") : "",
-          i.rules && i.rules.length ? el("span", { className: "sub", textContent: " · rules " + i.rules.join(", ") }) : "",
+          i.rules && i.rules.length
+            ? el("span", {}, i.rules.length === 1 ? ": passes " : ": passes each of ", ...i.rules.map(function (r, k) {
+                return el("span", {}, k ? ", " : "", ruleLink(i.scorecard, r));
+              }))
+            : "",
         ),
       );
     });
@@ -224,6 +243,7 @@ export const campaignsViews = {
               el("b", { textContent: (c.meeting || 0) + " of " + (c.inScope || 0) }),
               " entities meet the goal · target " + target + "%" + (c.end ? " by " + c.end : "") + (days != null && days >= 0 ? " (" + plural(days, "day") + " left)" : "") + ". The bar turns green once it passes the target tick.",
             ),
+        state === "empty" ? null : sinceLine(c),
         state === "empty" ? null : bar,
         state === "empty" ? null : marks,
         el("h3", { textContent: "Goal" }),
