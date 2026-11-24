@@ -62,6 +62,13 @@ Every fix but one was in the box, and every one generalises: the report now has 
 an unmeasured-comparison state and per-scorecard level names that no single portal would have
 forced. That is what the second reference portal was for.
 
+The second portal also found a box defect that no auditor could see. Its `fetch.sh` clones OpenFGA
+into `examples/openfga-portal/checkout/`, which git ignores, and the workspace connector walked every
+file on disk: Toolbox for Toolbox scored OpenFGA's `.github/instructions/*.md` as its own agent docs,
+and the repository level fell to none in a developer's checkout while CI's fresh clone stayed at
+bronze. The walk now lists the files git sees (tracked, or untracked and not ignored) and falls back
+to the disk outside a work tree, so fixtures and `results.json --update` built locally match CI.
+
 ROUND_2
 
 ## Comparisons are generic
