@@ -172,7 +172,9 @@
     "a.erow .badges{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end}",
     "code.kid{display:block;font:11.5px ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:400;color:var(--muted)}",
     ".ehdr{display:grid;gap:12px;padding:6px 8px;font-size:12px;font-weight:650;color:var(--muted)}.ehdr span{overflow-wrap:break-word}",
-    ".ecell{font-size:12px}",
+    ".weakest{display:block;margin-top:3px;font-size:12px;color:var(--muted)}.weakest .lvl{font-size:11px}",
+    ".ecell{font-size:12px}.unassessed-tag{display:block;margin-top:2px;font-size:11px;color:var(--judged)}",
+    "@media (max-width:820px){.unassessed-tag{display:inline;margin:0}}",
     ".crumb{font-size:13px;color:var(--muted);margin-bottom:12px}",
     ".crumb a{color:var(--muted);display:inline-block;padding:4px 0;margin:-4px 0}",
     "a.rl,.refs a{display:inline-block;padding:4px 0;margin:-4px 0}",
@@ -1579,10 +1581,10 @@
         wrap.append(
           link("scorecard/" + enc(r.name), "row", [
             floors
-              ? el("div", { style: "display:flex;gap:10px;align-items:center" }, medal(floorOf(D, r.name) || "none", 30), el("div", {}, ...cardName(D, r.name), el("span", { className: "c", textContent: "weakest: " + (levelLabel(floorOf(D, r.name)) || "not scored") })))
+              ? el("div", { style: "display:flex;gap:10px;align-items:center" }, medal(floorOf(D, r.name) || "none", 30), el("div", {}, ...cardName(D, r.name), el("span", { className: "weakest" }, "weakest ", floorOf(D, r.name) ? badge(floorOf(D, r.name)) : "not scored", levelLabel(floorOf(D, r.name)) !== floorOf(D, r.name) ? " " + levelLabel(floorOf(D, r.name)).replace(/^\S+ /, "") : "")))
               : el("div", {}, ...cardName(D, r.name)),
             el("div", { className: "dist" }, barEl(r.parts, "", r.parts.map(function (p) { return p.n + " " + p.level; }).join(", ")), el("div", { className: "sub", style: "font-size:12px;margin-top:4px", textContent: (r.sc.kind ? kindCount(D, r.sc.kind, r.total) : r.total + " entities") + (r.total > r.scored ? ", " + fmt(r.scored) + " in scope" : "") + " · " + r.topShare + "% " + (r.top || "top") })),
-            el("div", { className: "num " + (r.none ? "bad" : "ok") }, el("strong", { textContent: String(r.none) }), el("span", { textContent: r.none ? "at none" : "all clear" })),
+            el("div", { className: "num" + (r.none ? " bad" : "") }, el("strong", { textContent: String(r.none) }), el("span", { textContent: "at none" })),
           ]),
         );
       });
@@ -2142,7 +2144,8 @@
               { className: "ehdr", style: "grid-template-columns:" + tpl, ariaHidden: "true" },
               el("span", { textContent: kindTitle(D, selected) }),
               ...cols.map(function (n) {
-                return el("span", { title: n, textContent: title(D, n) });
+                var judged = basisCounts(((D.scorecards || {})[n] || {}).rules).judged > 0;
+                return el("span", { title: n }, title(D, n), judged ? " " : null, judged ? basisBadge("judged", true) : null);
               }),
             )
           : null;
@@ -2157,7 +2160,12 @@
                   ? cols.map(function (n) {
                       var sc = D.scores[n] && D.scores[n][id];
                       var lv = sc && sc.level !== "skipped" ? sc.level : null;
-                      var cell = el("div", { className: "ecell" }, lv ? badge(lv) : el("span", { className: "sub", title: "Not in this scorecard's scope", textContent: "not in scope" }));
+                      var cell = el(
+                        "div",
+                        { className: "ecell" },
+                        lv ? badge(lv) : el("span", { className: "sub", title: "Not in this scorecard's scope", textContent: "not in scope" }),
+                        lv && unassessedIn(D, n, id) ? el("span", { className: "unassessed-tag", title: "No agent has assessed this entity: its agent-judged rules pass because nothing has been looked at", textContent: "not assessed" }) : null,
+                      );
                       cell.dataset.sc = title(D, n);
                       return cell;
                     })
@@ -2522,7 +2530,7 @@
       var section = el(
         "section",
         {},
-        el("nav", { className: "crumb", ariaLabel: "Breadcrumb" }, link("scorecard/" + enc(scName), "", title(D, scName)), " / rule"),
+        el("nav", { className: "crumb", ariaLabel: "Breadcrumb" }, link("scorecards", "", "Scorecards"), " / ", link("scorecard/" + enc(scName), "", title(D, scName)), " / " + ruleName),
         el(
           "div",
           { className: "ehead" },
@@ -3033,7 +3041,7 @@
                 el("b", { textContent: ruleFilter }),
                 el("span", { ariaHidden: "true", textContent: " ×" }),
               )
-            : null,
+            : "",
         );
       };
       var draw = function () {

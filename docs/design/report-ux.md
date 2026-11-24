@@ -126,7 +126,8 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 - A rule shows **Why** (its rationale) beside its fix, and a link to the long story. Decision ids are
   stripped from prose, which readers can't resolve.
 - An agent-judged pass on an entity no agent has assessed reads "passes, not assessed yet", never a
-  plain pass.
+  plain pass. Catalog columns mark agent-judged scorecards with the sparkle and tag such levels
+  "not assessed".
 - Kind titles are human ("SDLC layer"); the kind id stays as muted monospace. Counts in running text
   use the plural title ("15 action dependencies"), and say how many are in scope when that differs.
 - Compare defines its words in the hero: what *ahead* means on a rule and on a factor.
