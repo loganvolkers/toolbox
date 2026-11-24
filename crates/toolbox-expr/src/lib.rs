@@ -197,6 +197,24 @@ mod tests {
     }
 
     #[test]
+    fn only_a_postcondition_reads_the_executor_outputs() {
+        assert_eq!(
+            check(
+                "outputs.branch != '' && has(entity.license)",
+                Site::Postcondition
+            ),
+            Ok(())
+        );
+        assert_eq!(
+            check("outputs.branch != ''", Site::Action),
+            Err(CelIssue::UnknownVariables {
+                found: vec!["outputs".into()],
+                allowed: vec!["entity".into(), "inputs".into(), "policy".into()]
+            })
+        );
+    }
+
+    #[test]
     fn refresh_scopes_only_check_syntax() {
         assert_eq!(check("app == inputs.app", Site::RefreshScope), Ok(()));
     }
