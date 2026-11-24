@@ -641,10 +641,13 @@ impl Checker {
             );
             return;
         };
+        // A form never sends fields it doesn't show, so closing an object is within the subset.
+        let closed = obj.get("type").and_then(Value::as_str) == Some("object")
+            && obj.get("additionalProperties") == Some(&Value::Bool(false));
         let bad: Vec<&str> = obj
             .keys()
             .map(String::as_str)
-            .filter(|k| !KEYS.contains(k))
+            .filter(|k| !KEYS.contains(k) && !(closed && *k == "additionalProperties"))
             .collect();
         if !bad.is_empty() {
             self.push(

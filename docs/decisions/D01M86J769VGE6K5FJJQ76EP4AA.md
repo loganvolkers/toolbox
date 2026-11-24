@@ -34,6 +34,10 @@ a list of repositories and a repo's action is its inputs, its approvers and its 
    existing default), and otherwise through the `TOOLBOX_AUTH_MODE` it lists.
 7. **Children that can't be read are listed**, as `unreadable` with their error, instead of
    silently offering nothing.
+8. **An action's inputs may say `additionalProperties: false`** on an object (D58's subset grows
+   by that one keyword). A form never sends fields it doesn't show, and undeclared inputs were
+   already refused; agents write it by habit, and round 1 runs deleted it to get past
+   `toolbox validate`.
 
 Rejected: a hosted registry of children (a second source of truth beside git), and cloning on
 every request (slow, and a network failure would hide every action).
