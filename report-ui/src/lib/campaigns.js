@@ -51,7 +51,7 @@ export function nextMedal(D, cards) {
   return null;
 }
 
-export function nextMedalEl(D, cards, label) {
+export function nextMedalEl(D, cards, label, why) {
   var nm = nextMedal(D, cards);
   if (!nm) return null;
   var top = (((D.scorecards || {})[nm.name] || {}).levels || []).slice(-1)[0];
@@ -66,7 +66,7 @@ export function nextMedalEl(D, cards, label) {
     { className: "nextmedal" },
     el("b", { textContent: label || "Next medal: " }),
     ...body,
-    el("span", { className: "sub" }, isTop(D, nm.name, nm.up) ? " That is its top level." : " Its top level is " + top + (Object.keys(D.tracks || {}).length ? ": the track's percentage moves when they reach it." : ".")),
+    el("span", { className: "sub" }, isTop(D, nm.name, nm.up) ? " That is its top level." : " Its top level is " + top + (Object.keys(D.tracks || {}).length ? ": the track's percentage moves when they reach it." : ".") + (why || "")),
   );
 }
 

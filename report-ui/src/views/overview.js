@@ -52,7 +52,8 @@ export const overviewViews = {
       var almost = at > 0 && verdict.indexOf("Almost") === 0;
       var tone = needs ? "none" : almost ? "bronze" : "gold";
       // The furthest track's lowest scorecard, as its track card names it; with no tracks, every scorecard's.
-      var next = needs || almost ? nextMedalEl(D, trackStats(D, S, furthestTrack(D, S) || undefined).cards, "Next: ") : null;
+      var far = furthestTrack(D, S);
+      var next = needs || almost ? nextMedalEl(D, trackStats(D, S, far || undefined).cards, "Next: ", far ? " It comes first because " + trackTitle(D, far) + " is the track furthest from its goal." : "") : null;
       var plain = el("section", { className: "hero plain", style: "--lvl:" + fill(tone) + ";--lvl-ink:" + ink(tone) }, el("div", {}, el("div", { className: "kicker", textContent: "Status" }), el("h2", { className: "levelword", textContent: at > 0 ? verdict.slice(0, at) : verdict }), at > 0 ? el("p", { className: "verdict", textContent: verdict.slice(at + 2).replace(/^./, function (ch) { return ch.toUpperCase(); }) }) : null, next, S.rows.length ? el("p", { className: "sub", style: "margin:8px 0 0", textContent: "No overall level: this portal does not combine its scorecards into one level for the repository, so each scorecard stands on its own." }) : null));
       plain.setAttribute("aria-label", "Status");
       return plain;
@@ -470,7 +471,7 @@ export const overviewViews = {
           "div",
           { className: "head" },
           el("h2", { id: "need-att", textContent: attention.length ? "Scorecards that need attention" : "Scorecards" }),
-          attention.length ? el("span", { className: "sub", textContent: "Needs attention first" }) : null,
+          attention.length ? el("span", { className: "sub", textContent: "Most entities at none first" }) : null,
         ),
         el("p", { className: "lede", textContent: "Each scorecard rates every entity of one kind against levels of rules. An entity is at none until it passes every rule of the first level." }),
         unscored.length === S.rows.length ? null : levelLegend(D, S.rows),

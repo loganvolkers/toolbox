@@ -359,6 +359,7 @@
     var majority = compare && byMajority(D, rows.map(function(r) {
       return r.name;
     }));
+    if (compare) verdicts.majority = majority;
     return { name, def: (D.tracks || {})[name] || {}, rows, cards, compare, majority, none, pct, averaged: shares.length, scoredRows, capped, short, verdicts, behind, campaigns };
   }
   function tracksSorted(D, S) {
@@ -900,7 +901,7 @@
     if (n && v.unknown >= n) return "not measured yet: no factor has values for both products";
     var r = v.rules;
     var byRule = r && r.total ? "; by rule, " + r.ahead + " ahead and " + r.behind + " behind of " + r.total : "";
-    return ["ahead on " + v.ahead, v.parity ? "at parity on " + v.parity : null, "behind on " + v.behind, v.unknown ? "not measured on " + v.unknown : null].filter(Boolean).join(", ") + " of " + n + " factors" + byRule;
+    return ["ahead on " + v.ahead, v.parity ? "at parity on " + v.parity : null, "behind on " + v.behind, v.unknown ? "not measured on " + v.unknown : null].filter(Boolean).join(", ") + " of " + n + " factors" + (v.majority == null ? "" : v.majority ? ", counted by the majority of rules" : ", behind if any rule is behind") + byRule;
   }
   function shortId(id) {
     var s = String(id || "");
@@ -1153,7 +1154,7 @@
     }
     return null;
   }
-  function nextMedalEl(D, cards, label) {
+  function nextMedalEl(D, cards, label, why) {
     var nm = nextMedal(D, cards);
     if (!nm) return null;
     var top = (((D.scorecards || {})[nm.name] || {}).levels || []).slice(-1)[0];
@@ -1166,7 +1167,7 @@
       { className: "nextmedal" },
       el("b", { textContent: label || "Next medal: " }),
       ...body,
-      el("span", { className: "sub" }, isTop(D, nm.name, nm.up) ? " That is its top level." : " Its top level is " + top + (Object.keys(D.tracks || {}).length ? ": the track's percentage moves when they reach it." : "."))
+      el("span", { className: "sub" }, isTop(D, nm.name, nm.up) ? " That is its top level." : " Its top level is " + top + (Object.keys(D.tracks || {}).length ? ": the track's percentage moves when they reach it." : ".") + (why || ""))
     );
   }
   function ownerName(o) {
@@ -2122,7 +2123,8 @@
         var needs = at > 0 && verdict.indexOf("Needs") === 0;
         var almost = at > 0 && verdict.indexOf("Almost") === 0;
         var tone = needs ? "none" : almost ? "bronze" : "gold";
-        var next = needs || almost ? nextMedalEl(D, trackStats(D, S, furthestTrack(D, S) || void 0).cards, "Next: ") : null;
+        var far = furthestTrack(D, S);
+        var next = needs || almost ? nextMedalEl(D, trackStats(D, S, far || void 0).cards, "Next: ", far ? " It comes first because " + trackTitle(D, far) + " is the track furthest from its goal." : "") : null;
         var plain = el("section", { className: "hero plain", style: "--lvl:" + fill(tone) + ";--lvl-ink:" + ink(tone) }, el("div", {}, el("div", { className: "kicker", textContent: "Status" }), el("h2", { className: "levelword", textContent: at > 0 ? verdict.slice(0, at) : verdict }), at > 0 ? el("p", { className: "verdict", textContent: verdict.slice(at + 2).replace(/^./, function(ch) {
           return ch.toUpperCase();
         }) }) : null, next, S.rows.length ? el("p", { className: "sub", style: "margin:8px 0 0", textContent: "No overall level: this portal does not combine its scorecards into one level for the repository, so each scorecard stands on its own." }) : null));
@@ -2475,7 +2477,7 @@
             "div",
             { className: "head" },
             el("h2", { id: "need-att", textContent: attention.length ? "Scorecards that need attention" : "Scorecards" }),
-            attention.length ? el("span", { className: "sub", textContent: "Needs attention first" }) : null
+            attention.length ? el("span", { className: "sub", textContent: "Most entities at none first" }) : null
           ),
           el("p", { className: "lede", textContent: "Each scorecard rates every entity of one kind against levels of rules. An entity is at none until it passes every rule of the first level." }),
           unscored.length === S.rows.length ? null : levelLegend(D, S.rows),

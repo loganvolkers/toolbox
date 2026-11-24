@@ -76,6 +76,7 @@ export function trackStats(D, S, name) {
   var majority = compare && byMajority(D, rows.map(function (r) {
     return r.name;
   }));
+  if (compare) verdicts.majority = majority;
   return { name: name, def: (D.tracks || {})[name] || {}, rows: rows, cards: cards, compare: compare, majority: majority, none: none, pct: pct, averaged: shares.length, scoredRows: scoredRows, capped: capped, short: short, verdicts: verdicts, behind: behind, campaigns: campaigns };
 }
 
