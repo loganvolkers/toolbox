@@ -383,6 +383,14 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
   folds under it, and each factor card writes its rule tally beside its bar.
 - A provisional level names the level each unrun check is needed for ("both needed for bronze"), and
   a kind card whose description says why part of it is not scored shows that sentence.
+- An entity a scorecard's scope leaves out is "not in scope" on that scorecard, in its badge, its row
+  and the level filter (`level=not-in-scope`); "not scored" is kept for an entity no scorecard rates.
+  An entity's header gives every reason its level is provisional ("2 checks not run, 1 agent-judged
+  scorecard not assessed"), and a kind page says how each of its scorecards decides, each with its
+  basis badge.
+- The Overview puts Tracks straight under the hero, and the hero's attention line names the track
+  furthest from its goal. Compare's "behind" list says the basis once when every row shares it and
+  links to the factor pages for what would close each gap, rather than repeating it per row.
 
 Not built: a change since the last snapshot beside each track ring. The report carries one snapshot
 and the committed baseline, which equals it on every published build; a pages build that also scored
