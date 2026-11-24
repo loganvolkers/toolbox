@@ -296,7 +296,11 @@ impl Executor {
                     .collect();
                 let mut warnings = Vec::new();
                 if effects.is_empty() {
-                    warnings.push("the change command changed no files".into());
+                    warnings.push(format!(
+                        "the change command changed no files: {} already has what it writes, so a \
+                         run commits nothing and is observed done once it sees the base unchanged",
+                        wt.base
+                    ));
                 } else if *push {
                     effects.push(
                         json!({"resource": format!("branch:{}", base_branch(&wt.base, remote)),
@@ -912,9 +916,10 @@ fn change_run(
         )));
     }
     if files.is_empty() {
+        let at = git(&wt.root(), &["rev-parse", "HEAD"])?;
         return Ok(Outcome {
             status: "succeeded".into(),
-            outputs: json!({"changed": false, "base": wt.base}),
+            outputs: json!({"changed": false, "base": wt.base, "at": at}),
             error: None,
             progress: vec![],
             child: None,
@@ -1041,6 +1046,30 @@ pub fn merged(cwd: &Path, run: &crate::run::Run) -> Result<bool, String> {
         ],
     )?;
     Ok(!found.is_empty())
+}
+
+/// Whether a change that committed nothing still describes its base: the base, fetched again, is
+/// the commit the command ran on, so the base already has everything the command writes.
+pub fn unchanged(cwd: &Path, run: &crate::run::Run) -> Result<(), String> {
+    let base = run.outputs["base"].as_str().unwrap_or("");
+    let at = run.outputs["at"].as_str().unwrap_or("");
+    if base.is_empty() || base.starts_with('-') || !at.chars().all(|c| c.is_ascii_hexdigit()) {
+        return Err("the run records no base and commit to compare".into());
+    }
+    let repo = PathBuf::from(git(cwd, &["rev-parse", "--show-toplevel"])?);
+    if let Some((remote, branch)) = base.split_once('/')
+        && git(&repo, &["remote", "get-url", "--", remote]).is_ok()
+    {
+        git(&repo, &["fetch", "-q", "--", remote, branch])
+            .map_err(|e| format!("cannot fetch {base} to check it: {e}"))?;
+    }
+    let now = git(&repo, &["rev-parse", "-q", "--verify", base])?;
+    if now != at {
+        return Err(format!(
+            "{base} moved from {at} to {now} while the run ran: preview and request again"
+        ));
+    }
+    Ok(())
 }
 
 /// Whether a landed change is on its base as it was pushed: the commit is there (fetched again,
@@ -1362,6 +1391,38 @@ mod tests {
         assert_eq!(out.status, "succeeded", "{:?}", out.error);
         let err = landed(&work, &as_run(&ctx, &out)).unwrap_err();
         assert!(err.contains("did not land"), "{err}");
+        let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn a_change_its_base_already_has_commits_nothing_and_is_checked_against_the_base() {
+        let (root, work) = clone_with("");
+        let (exec, ctx) = landing(&work);
+        assert_eq!(exec.run(&ctx, &[]).status, "succeeded");
+        let before = git(&root.join("origin.git"), &["rev-parse", "main"]).unwrap();
+        let p = exec.preview(&ctx).unwrap();
+        assert!(p.effects.is_empty());
+        assert!(p.warnings[0].contains("already has"), "{:?}", p.warnings);
+        let out = exec.run(&ctx, &p.effects);
+        assert_eq!(out.status, "succeeded", "{:?}", out.error);
+        assert_eq!(out.outputs["changed"], false);
+        assert_eq!(out.outputs["at"], before.as_str());
+        let run = as_run(&ctx, &out);
+        unchanged(&work, &run).unwrap();
+        assert_eq!(
+            git(&root.join("origin.git"), &["rev-parse", "main"]).unwrap(),
+            before
+        );
+        sh(
+            &work,
+            "git fetch -q origin && git checkout -q origin/main && echo theirs > DEPRECATED.md && \
+             git commit -qam moved && git push -q origin HEAD:main",
+        );
+        let err = unchanged(&work, &run).unwrap_err();
+        assert!(err.contains("moved"), "{err}");
+        std::fs::rename(root.join("origin.git"), root.join("gone.git")).unwrap();
+        let err = unchanged(&work, &run).unwrap_err();
+        assert!(err.contains("cannot fetch"), "{err}");
         let _ = std::fs::remove_dir_all(root);
     }
 

@@ -68,6 +68,13 @@ a list of repositories and a repo's action is its inputs, its approvers and its 
     preview or run that arrives before then waits for it. So `serve --detach`, which returns on
     `/readyz`, is followed by a preview that finds the children's actions; in the same dry run
     one got `404 not-offered`, and the agent wrote a start script that polled for the actions.
+14. **A change its base already has succeeds without a commit.** When the command changes no
+    files on the fetched base, the run records the commit it ran on (`outputs.at`), fetches the
+    base again, and is observed (`verification.by: base`, no files) if the base is still that
+    commit; a base that moved or cannot be fetched fails the run. The preview warns that nothing
+    will be committed. In round 3, toolbox-2 repeated a request whose content was already on
+    main, got `unverified` ("no postcondition"), and spent five calls redesigning the action
+    around it.
 
 Rejected: a hosted registry of children (a second source of truth beside git), and cloning on
 every request (slow, and a network failure would hide every action).

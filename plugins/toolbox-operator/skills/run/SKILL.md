@@ -15,7 +15,8 @@ description: >-
    held before the run, so the run proved nothing. For a `change`, Toolbox fetches the base
    and compares every file the commit changed (`verification.files`, with each blob); a change
    that would differ from the confirmed preview fails before it commits. No extra check script
-   is needed. Its commit carries `Toolbox-Run`, `Requested-By` and `Approved-By` trailers.
+   is needed. Its commit carries `Toolbox-Run`, `Requested-By` and `Approved-By` trailers. A
+   `change` its base already has commits nothing and succeeds (`outputs.changed: false`).
 5. For a `proposed` change or a `dispatched` workflow, check again later with `--verify <run id>`,
    or add `--wait` to follow the run until it ends or waits for a person.
 

@@ -485,7 +485,26 @@ pub fn execute(
     if run.outputs["landed"] == true && !on_base(run, &ctx.cwd) {
         return;
     }
+    if run.outputs["changed"] == false && !already_on_base(run, &ctx.cwd) {
+        return;
+    }
     done(run, expect, policies, obs, every, true);
+}
+
+/// A change that committed nothing is observed when its base, fetched again, is still the commit
+/// the command ran on: the base already has what the run would write. Fails the run otherwise.
+fn already_on_base(run: &mut Run, cwd: &std::path::Path) -> bool {
+    if let Err(e) = crate::executor::unchanged(cwd, run) {
+        run.fail(e);
+        return false;
+    }
+    let base = run.outputs["base"].as_str().unwrap_or("the base");
+    run.verification = Some(
+        json!({"by": "base", "base": base, "commit": run.outputs["at"],
+        "files": [], "checked": format!("fetched {base}: it already has what the change writes, \
+            so nothing was committed")}),
+    );
+    true
 }
 
 /// A landed change is observed on its base: the commit is there and every file it changed has

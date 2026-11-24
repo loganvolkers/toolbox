@@ -261,7 +261,9 @@ actions:
 - **States** are [action-runs.md](./action-runs.md) §2's, plus `proposed` for a change under
   review. A run is `succeeded` only when its effect was observed after the run: its postcondition
   held at a later snapshot, or, for a `change`, its commit is on the base. A change needs no
-  postcondition, because its effect is its diff and the base shows it; any other action with no
+  postcondition, because its effect is its diff and the base shows it. A change that changes no
+  files commits nothing and succeeds if the base, fetched again, is still the commit it ran on
+  (D01M86J769VGE6K5FJJQ76EP4AA §14). Any other action with no
   postcondition ends `unverified`, never `succeeded`. A `land: push` change has no review, so its
   approval rule applies as written (T4: in a repo portal it waits for a parent's signed grant).
 - **Preview and confirm.** A preview returns the effects, blockers, warnings, approvers and a
