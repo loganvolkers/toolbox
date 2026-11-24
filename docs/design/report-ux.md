@@ -325,6 +325,17 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
   whether one exists and still holds counts too.
 - A comparison rule that is behind links to what to read right after its why, on the Compare
   summary as on its factor page; a yes/no rule shows both products' answers on one line.
+- ✦ means agent-judged and nothing else. A level not assessed yet carries a hatched swatch, the same
+  pattern as its share of a bar.
+- Failure bars use the fail hue, whatever level the rule is for; the level is the pill beside it.
+- A list longer than the reader needs folds: the overview shows the three scorecards furthest
+  behind, and the rest expand in place with focus on the first new row.
+- Anything named only on hover is also reachable by keyboard: a track card's bars are one focusable
+  group whose tooltip names each bar.
+- Compare leads with the plain method; builds and harness commits fold under a disclosure. A factor
+  ahead on fewer than half its rules reads "narrowly ahead".
+- A collapsed rule shows the first sentence of its why until it is opened.
+- Type sizes come from one scale of whole pixels.
 
 Not built: a change since the last snapshot beside each track ring. The report carries one snapshot
 and the committed baseline, which equals it on every published build; a pages build that also scored
