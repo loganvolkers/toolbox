@@ -18,7 +18,10 @@ you write.
 ## The shortest path
 
 1. **Each repository** commits a `.toolbox/toolbox.yaml` like
-   [`minimal-repo`](minimal-repo/.toolbox/toolbox.yaml). An action on `kind: Portal` targets the
+   [`minimal-repo`](minimal-repo/.toolbox/toolbox.yaml): its name and owner, and an `include` of
+   [`actions/add-code-of-conduct.yaml`](minimal-repo/.toolbox/actions/add-code-of-conduct.yaml),
+   a standard that is the same file in every repository that offers it (`entity.name` and a
+   test's `{portal}` stand for whichever repository holds it). An action on `kind: Portal` targets the
    repository itself. Its `inputs` are a JSON Schema, checked before any preview. `approval` names
    who may approve, and the requester never counts. A `change` executor with `land: push` runs
    your command in a fresh clone, commits and pushes to `base`, and succeeds only when that commit
@@ -80,7 +83,7 @@ Everything an action or a federation needs; `toolbox validate` checks the rest a
 | `executor.base`, `branch`, `message`, `remote` | `change`: the branch to start from and verify on, the proposal branch (`toolbox/{action}/{run}`), the commit message, the remote (`origin`). `message` takes `{action}`, `{run}`, `{entity}` and `{inputs.<name>}`; `branch` takes only `{action}` and `{run}` |
 | `executor.secrets` | Environment variables the executor gets; it starts with a cleared environment |
 | `actions[].expect` | `{postcondition: <CEL>, within: 30s}`: what must hold after the run for `succeeded`. A `land: push` change needs none: its commit on `base` is the check |
-| `tests` | Test files; a file's `runs:` cases request, approve and run an action in a scratch copy (`as`, `inputs`, `approve`, `rejectPush`, `expect: {state, files, refused, error}`), each starting from the file's `defaults` |
+| `tests` | Test files; a file's `runs:` cases request, approve and run an action in a scratch copy (`as`, `inputs`, `approve`, `rejectPush`, `expect: {state, files, refused, error}`), each starting from the file's `defaults`; `{portal}` in a value is the portal under test |
 | `federation.children` | Parent: `[{git: <url or path>, branch: main, key: <name>}]`; each is offered as `portal:<key>` |
 | `federation.acceptApprovalsFrom` | Child: `[{portal: <parent name>, key: ed25519:…}]`, the key the parent prints |
 | `federation.signingKey` | Parent: the variable holding the signing seed, for servers that share runs. Without it the server keeps one |

@@ -41,7 +41,9 @@ Every case starts from `defaults`. Its own fields replace them, except `inputs`,
 key by key; an input set to `null` is left out. `expect.state` is a run state, or `invalid`
 (inputs refused), `blocked` (a precondition failed) or `refused`. `files` gives each file's
 exact content on the base afterwards; `null` means absent. Quote any value with a comma inside
-`{…}`: YAML ends the value at the comma.
+`{…}`: YAML ends the value at the comma. `{portal}` in any value is the name of the portal under
+test, so one test file serves every repository that includes the same action
+(`inputs: {successor: 'acme/{portal}'}`).
 
 Do not weaken an expectation to make it pass. If it fails, the check, the action or the fixture
 is wrong.
