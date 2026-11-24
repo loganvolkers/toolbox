@@ -6,6 +6,7 @@
 # signed grant and keeps the run record as an artifact. No Postgres.
 # Usage: scripts/gitlab-acceptance.sh   (starts the harness if it isn't running; KEEP=1 keeps $WORK)
 set -euo pipefail
+trap 'echo "FAIL: line $LINENO exited $?; last output: ${OUT:-}" >&2' ERR
 cd "$(dirname "$0")/.."
 BIN=$(cd "${TOOLBOX_BIN_DIR:-target/debug}" && pwd); EX=$PWD/examples/federated-actions; WORK=$(mktemp -d)
 export TOOLBOX_BIN_DIR=$BIN
@@ -36,9 +37,14 @@ merge() { # merge PROJECT_ID IID [curl args]: once GitLab has worked out that it
   done
   gl PUT "/projects/$1/merge_requests/$2/merge" "${@:3}" >/dev/null
 }
-publish() { # publish DIR PROJECT: push DIR's files as PROJECT's main
+publish() { # publish DIR PROJECT: push DIR's files as PROJECT's main (a new project's repository can lag)
   git -C "$1" init -q && git -C "$1" add -A && git -C "$1" commit -qm init
-  git -C "$1" push -q "$GITLAB_URL/$2.git" HEAD:main 2>&1 | grep -v "^remote:" || true
+  local out
+  for _ in $(seq 1 10); do
+    out=$(git -C "$1" push -q "$GITLAB_URL/$2.git" HEAD:main 2>&1) && return 0
+    sleep 3
+  done
+  fail "push to $2: $out"
 }
 
 ORG=acme-$(date +%s)
@@ -76,7 +82,7 @@ export GITLAB_TOKEN=$BOT_TOKEN
 "$BIN/toolbox" validate "$WORK/org" | tail -1
 
 echo "1. the org portal lists every child's actions: two private GitLab projects and a plain git repository"
-OUT=$(run "$WORK/org")
+OUT=$(run "$WORK/org") || fail "listing the org's actions: $OUT"
 N=$(echo "$OUT" | field "['actions'].__len__()")
 [ "$N" = 5 ] || fail "the org should offer 5 actions (alpha 2, gamma 2, delta 1), got $N: $OUT"
 KEY=$(echo "$OUT" | field "['approval_key']")

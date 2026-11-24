@@ -822,6 +822,11 @@
           "positional": false
         },
         {
+          "name": "identity_token_file",
+          "long": "identity-token-file",
+          "positional": false
+        },
+        {
           "name": "skip",
           "long": "skip",
           "positional": false
