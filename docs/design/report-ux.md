@@ -363,6 +363,9 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 - Rationale and captions are at least 13px ("Why" lines 14px); 12px is for ids, legends and counts.
 - One phrase for a standard that holds the repository at its only level: "at its top level, so it
   caps the repository", on every view that shows it.
+- Bars use two textures: hatched for not assessed by an agent, dotted for checks not run. Not scored
+  is a plain pale fill. A kind card writes its bar's counts under it, and a catalog group header
+  counts each kind, so a reader can total one kind without adding by eye.
 
 Not built: a change since the last snapshot beside each track ring. The report carries one snapshot
 and the committed baseline, which equals it on every published build; a pages build that also scored
