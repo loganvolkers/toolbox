@@ -5,6 +5,7 @@
 //! plus any `include`d files, D54), validate it against the embedded manifest schema, run the
 //! cross-reference, form-subset and CEL checks, and validate fixture messages.
 
+pub mod artifacts;
 pub mod diagnostics;
 pub mod executors;
 pub mod federation;

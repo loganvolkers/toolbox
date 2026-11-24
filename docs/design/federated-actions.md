@@ -249,7 +249,7 @@ actions:
     permission: can_run_actions          # OpenFGA relation on the target entity
     approval: "[['user:ann', 'user:bob']]" # CEL: each entry must approve; a list is any one of it
     executor:
-      type: command                       # or change, github-workflow, gitlab-pipeline, in-image
+      type: command                       # or change, github-workflow, gitlab-pipeline, in-image, http, webhook
       run: >-
         mkdir -p .github && printf '* %s\n' "$TOOLBOX_INPUT_TEAM" >
         .github/CODEOWNERS
@@ -267,7 +267,9 @@ actions:
 | `change` with `land: push` | The same commit, pushed to the base itself once the approval rule is met; never forced, so a protected or moved base refuses it and the run fails | The same, plus `push branch:<base>` | `succeeded` or `failed` | The fetched base has the commit and every changed file as written (a hook that undoes the push is seen), then the postcondition if one is declared |
 | `github-workflow` | `workflow_dispatch` asking for the run id (`return_run_details`), tracked by that id; without one, by the one run of that name on the dispatched ref created after the dispatch | Toolbox's | `dispatched`, then the workflow's conclusion, or `timed_out` past the deadline | The postcondition after a refresh |
 | `gitlab-pipeline` | `POST /projects/:id/pipeline` on a declared or known GitLab, with the run's inputs as typed pipeline inputs plus `toolbox_run`; tracked by the id GitLab returns. A refused pipeline (an input outside its `options`, invalid YAML) fails the run with GitLab's reason | Toolbox's | `dispatched`, then the pipeline's status (`manual` stays `dispatched`, with a note) | The postcondition after a refresh |
-| `in-image` | The executor protocol over stdio (D40) | The executor's | Its terminal message | The postcondition, or the executor's `verify` |
+| `in-image` | The executor protocol over stdio (D40): `command`, or a released `package` that `toolbox install` pins | The executor's | Its `result`; an `accepted` with an `executor_run_id` stays `dispatched` and is asked with `status` | The postcondition, or the executor's `verify` when it declares `verify: true` |
+| `http` | The same protocol, POSTed to `url` with an optional bearer `token` | The executor's | As `in-image` | As `in-image` |
+| `webhook` | The `run` message POSTed to `url`; a 2xx is delivery only | Toolbox's | Delivery | The postcondition, else `unverified` |
 | `toolbox` (federated) | The child's `toolbox run` | The child's | The child's state | The child |
 
 ### 6.3 Lifecycle, tokens and records
@@ -375,7 +377,7 @@ network and no Postgres.
 | A federated github-workflow run's verification | The parent sees the workflow's conclusion; the child's own verification needs the child's run record as a workflow artifact. On GitLab it is collected ([forges.md](./forges.md) §4.4); GitHub artifacts are zip archives |
 | Fan-out in one command | A fleet change is one run per child (a loop); `--all` waits for a use beyond scripts |
 | S8, S9, S11, S12 | §4 |
-| Executor-aware cancel (review F17) | Cancel stops Toolbox carrying the run; it does not yet close the pull request, cancel the workflow run or tell the child |
+| Executor-aware cancel (review F17) | Cancelling a dispatched run sends the protocol's `cancel`, or cancels the workflow run or pipeline (built); it does not yet close the pull request or tell a federated child |
 | `failed_after_effect` and compensation (F19) | A run whose executor succeeded but whose postcondition failed ends `failed`; the effect may have landed. The record keeps the outputs |
 | Group approvals proved against OpenFGA in the acceptance script (F20) | The script runs in dev mode; group membership is unit-tested against the authorizer |
 | Observing who merged a change (F21) | T7 trusts branch protection; reading the merger through the GitHub connector is next. A change command's side effects outside its diff are not reviewed |

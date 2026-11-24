@@ -3,7 +3,7 @@
 
 pub mod access;
 pub mod actions;
-pub mod artifacts;
+pub use toolbox_model::artifacts;
 pub mod assess;
 pub mod confine;
 pub mod connectors;

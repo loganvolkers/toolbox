@@ -1,8 +1,8 @@
-//! Executable connectors from releases (D90): a connector `package:` of the form
-//! `github:owner/repo[/app]@version` names the release asset `<app>-<target>.tar.xz` (`.zip` on
-//! Windows) at tag `v<version>`, the layout `dist` produces. `toolbox install` downloads it, checks
-//! it against the portal's `toolbox.lock`, and unpacks it into the cache, where [`installed`]
-//! finds it.
+//! Executable connectors and executors from releases (D90): a connector's or an `in-image`
+//! executor's `package:` of the form `github:owner/repo[/app]@version` names the release asset
+//! `<app>-<target>.tar.xz` (`.zip` on Windows) at tag `v<version>`, the layout `dist` produces.
+//! `toolbox install` downloads it, checks it against the portal's `toolbox.lock`, and unpacks it
+//! into the cache, where [`Spec::installed`] finds it.
 
 use std::path::PathBuf;
 

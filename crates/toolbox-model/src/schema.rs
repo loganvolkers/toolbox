@@ -63,7 +63,7 @@ pub fn errors(validator: &Validator, doc: &Value) -> Vec<(String, String)> {
                 message = format!("this value{}", &message[instance.len()..]);
             }
             if message.contains("'anyOf'") && is_action_path(&path) {
-                message = "an action must declare `expect` (a postcondition), be a `change` (observed on its base branch) or say `unverified: true` (action-runs §5)".into();
+                message = "an action must declare `expect` (a postcondition), be a `change` (observed on its base branch), have an in-image or http executor that reads back its effect (`verify: true`), or say `unverified: true` (action-runs §5)".into();
             }
             (path, message)
         })

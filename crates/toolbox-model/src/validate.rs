@@ -676,6 +676,29 @@ impl Checker {
                     );
                 }
             }
+            if !t.either.is_empty() && !t.either.iter().any(|k| a.executor.get(*k).is_some()) {
+                self.push(
+                    "action.executor",
+                    format!("/actions/{ai}/executor"),
+                    format!(
+                        "action {}: a {ty} executor needs `{}`",
+                        a.name,
+                        t.either.join("` or `")
+                    ),
+                );
+            }
+            if let Some(p) = a.executor.get("package").and_then(Value::as_str)
+                && crate::artifacts::parse(p).is_none()
+            {
+                self.push(
+                    "action.executor",
+                    format!("/actions/{ai}/executor/package"),
+                    format!(
+                        "action {}: package {p} is not github:owner/repo[/app]@version, a release toolbox install can pin",
+                        a.name
+                    ),
+                );
+            }
             if ty == "change" {
                 self.placeholders(ai, a);
             }

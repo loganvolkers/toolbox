@@ -136,6 +136,27 @@ Executors differ in how much of this they can do, and the UI shows the differenc
 A webhook or queue publish is never treated as completion: without a postcondition, its runs end as
 `unverified`.
 
+**What is built.** The messages are `schema/executor-messages.schema.json` (protocol v1), and one
+executor speaks them over either transport:
+
+- **`in-image`** runs `command`, or the binary of a released `package`
+  (`github:owner/repo[/app]@version`, installed and pinned in `toolbox.lock` by `toolbox install`,
+  D90; `command` is then its arguments). One message goes to stdin per call; the replies come back on
+  stdout, one per line.
+- **`http`** POSTs the same message to `url`, with a bearer token from the variable named by
+  `token`. The response body holds the replies: one JSON value, an array, or NDJSON.
+- **A run** that ends in `result` is synchronous. An `accepted` reply with an `executor_run_id` and
+  no `result` leaves the run `dispatched`. Each recheck then sends `status` and records new
+  `progress`, until a `result` arrives or the deadline passes.
+- **Cancel:** cancelling a `dispatched` run sends `cancel`. The CI executors call the cancel API of
+  the workflow run or pipeline instead. Cancel is best effort, and its answer becomes the
+  `cancelled` event's note.
+- **Verify:** with no postcondition, an executor that declares `verify: true` is sent `verify`. A
+  `verify_result` with `ok: true` makes the run `succeeded`, with verification `by: executor`.
+  `ok: false` fails the run. An executor that cannot answer leaves the run `unverified`, and so
+  does an action whose executor declares nothing.
+- **`webhook`** POSTs the `run` message and treats a 2xx response as delivery only.
+
 ## 6. Interfaces
 
 - **API:** `POST /v1/actions/{name}/previews` → preview + token; `POST /v1/actions/{name}/runs` with the

@@ -190,6 +190,20 @@ impl CiDriver for Pipeline {
         };
         self.get(&format!("/jobs/{job}/artifacts/{RECORD}"))
     }
+
+    fn cancel(&self, outputs: &Value) -> Result<String, String> {
+        let id = outputs["pipeline_id"]
+            .as_u64()
+            .ok_or("the run records no pipeline id")?;
+        let url = format!("{}/pipelines/{id}/cancel", self.base());
+        match crate::http::send(Gitlab.auth(crate::http::client().post(url), self.token()?))? {
+            (st, _) if st.is_success() => Ok(format!("cancelled pipeline {id}")),
+            (st, text) => Err(format!(
+                "cancelling pipeline {id} ({st}): {}",
+                reason(&text)
+            )),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -328,6 +342,29 @@ mod tests {
                 .contains("TOOLBOX_TEST_NO_SUCH_VAR")
         );
         assert_eq!(seen.lock().unwrap().len(), n);
+    }
+
+    #[test]
+    fn cancel_posts_to_the_recorded_pipeline() {
+        let (api, seen) = fake(vec![(
+            "POST /projects/acme%2Fpay/pipelines/3/cancel",
+            200,
+            json!({"id": 3, "status": "canceled"}),
+        )]);
+        let p = Pipeline::parse(
+            &json!({"project": "acme/pay", "forge": "https://gitlab.acme.dev"}),
+            &forges(&api),
+        )
+        .unwrap();
+        assert_eq!(
+            p.cancel(&json!({"pipeline_id": 3})),
+            Ok("cancelled pipeline 3".into())
+        );
+        assert_eq!(
+            seen.lock().unwrap()[0].0,
+            "POST /api/v4/projects/acme%2Fpay/pipelines/3/cancel HTTP/1.1"
+        );
+        assert!(p.cancel(&json!({})).is_err());
     }
 
     #[test]

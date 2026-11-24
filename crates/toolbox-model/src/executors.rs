@@ -10,8 +10,11 @@ pub struct ExecutorType {
     pub name: &'static str,
     /// The `executor:` fields this type needs.
     pub required: &'static [&'static str],
+    /// Fields of which this type needs at least one.
+    pub either: &'static [&'static str],
     /// A `dispatched` run is carried by a remote runner that reports later, so it outlives a
-    /// restart of the portal that dispatched it.
+    /// restart of the portal that dispatched it. An `in-image` or `http` run is `dispatched` only
+    /// when its executor answered `accepted` with an `executor_run_id` and no `result`.
     pub detached: bool,
     /// The forge type its `forge:` URL (default: that type's public host) must resolve to.
     pub forge: Option<Kind>,
@@ -22,32 +25,51 @@ pub const TYPES: &[ExecutorType] = &[
     ExecutorType {
         name: "command",
         required: &["run"],
+        either: &[],
         detached: false,
         forge: None,
     },
     ExecutorType {
         name: "in-image",
-        required: &["command"],
-        detached: false,
+        required: &[],
+        either: &["command", "package"],
+        detached: true,
         forge: None,
     },
     ExecutorType {
         name: "change",
         required: &["run"],
+        either: &[],
         detached: false,
         forge: None,
     },
     ExecutorType {
         name: "github-workflow",
         required: &["repo", "workflow"],
+        either: &[],
         detached: true,
         forge: None,
     },
     ExecutorType {
         name: "gitlab-pipeline",
         required: &["project"],
+        either: &[],
         detached: true,
         forge: Some(Kind::Gitlab),
+    },
+    ExecutorType {
+        name: "http",
+        required: &["url"],
+        either: &[],
+        detached: true,
+        forge: None,
+    },
+    ExecutorType {
+        name: "webhook",
+        required: &["url"],
+        either: &[],
+        detached: false,
+        forge: None,
     },
 ];
 

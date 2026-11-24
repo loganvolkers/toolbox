@@ -505,7 +505,7 @@ pub fn execute(
     if run.outputs["changed"] == false && !already_on_base(run, &ctx.cwd) {
         return;
     }
-    done(run, expect, policies, obs, every, true);
+    done(run, exec, expect, policies, obs, every, &ctx.cwd);
 }
 
 /// A change that committed nothing is observed when its base, fetched again, is still the commit
@@ -561,11 +561,12 @@ fn on_base(run: &mut Run, cwd: &std::path::Path) -> bool {
 /// its base needs none: its effect is the commit, and the base has it.
 fn done(
     run: &mut Run,
+    exec: &dyn Executor,
     expect: Option<&Expect>,
     policies: &Map<String, Value>,
     obs: &mut dyn Observer,
     every: Duration,
-    wait: bool,
+    cwd: &std::path::Path,
 ) {
     let on_base = run.verification.take();
     match expect {
@@ -573,17 +574,44 @@ fn done(
             run.verification = on_base;
             run.set("succeeded", None, None);
         }
-        None => run.set(
-            "unverified",
-            None,
-            Some("the action declares no postcondition (expect)".into()),
-        ),
+        None => unobserved(run, exec, cwd),
         Some(e) => {
-            verify(run, e, policies, obs, every, wait);
+            verify(run, e, policies, obs, every, true);
             if let (Some(b), Some(Value::Object(v))) = (on_base, run.verification.as_mut()) {
                 v.insert("on_base".into(), b);
             }
         }
+    }
+}
+
+/// No postcondition: the executor's own read-back (`verify`), if it has one; else `unverified`.
+/// A read-back that could not be made leaves the run unverified, not failed.
+fn unobserved(run: &mut Run, exec: &dyn Executor, cwd: &std::path::Path) {
+    let Some(said) = exec.verify(run, cwd) else {
+        run.set(
+            "unverified",
+            None,
+            Some("the action declares no postcondition (expect)".into()),
+        );
+        return;
+    };
+    run.set("verifying", None, None);
+    match said {
+        Ok((held, observed)) => {
+            run.verification = Some(json!({"by": "executor", "held": held, "observed": observed}));
+            if held {
+                run.set("succeeded", None, None);
+            } else {
+                run.fail("the executor read back the run's effect and did not find it");
+            }
+        }
+        Err(e) => run.set(
+            "unverified",
+            None,
+            Some(format!(
+                "the executor could not read back the run's effect: {e}"
+            )),
+        ),
     }
 }
 
@@ -607,6 +635,9 @@ pub fn recheck(
         return run.state != before;
     }
     let Some(expect) = expect else {
+        if run.state == "executor_succeeded" {
+            unobserved(run, exec, cwd);
+        }
         return run.state != before;
     };
     if run.state == "dispatched" {

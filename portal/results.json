@@ -349,9 +349,6 @@
           "d3f9fa9d",
           "e1c26c87",
           "f9c007c1"
-        ],
-        "simple-functions": [
-          "43bdfb8c"
         ]
       },
       "crate:toolbox-model": {
@@ -4097,8 +4094,7 @@
       "crate:toolbox-exec": {
         "failing": {
           "fully-documented": 9,
-          "short-functions": 4,
-          "simple-functions": 1
+          "short-functions": 4
         },
         "level": "silver",
         "unknown": [
