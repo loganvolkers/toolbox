@@ -278,9 +278,9 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 - A headline share of passing checks counts only passes on evidence. An agent-judged rule that
   passes on an entity no agent has assessed is counted apart ("346 more pass only because no agent
   has assessed them yet"), beside the checks not run.
-- A row in the scorecard index carries its standard's why: the first sentence of its rationale
-  ("Why: …"), clamped to two lines, in full on hover and on the scorecard's page; the description
-  stands in only where there is no rationale.
+- A row in the scorecard index carries its standard's why in full: the first sentence of its
+  rationale ("Why: …"); the description stands in only where there is no rationale. On a narrow
+  screen the row drops the scorecard's id, which its page still shows.
 - Entities at a level that is their scorecard's top level are never debt: the scorecard sidebar
   ranks and labels a card by its entities at none, then at bronze below the top, and a card whose
   every entity is at the top reads "✓ top level".
@@ -306,7 +306,16 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 - A campaign with no single score draws no bar.
 - In the scorecard index, scorecards whose every entity is at the top level fold under one row per
   track ("✓ 4 scorecards with every entity at the top level", naming them), so open work leads;
-  a search shows every row. A row's clamped why opens in full on keyboard focus.
+  a search shows every row.
+- Compare's headline pairs the factor count with the rule count ("Ahead on 8 of 9 factors and 27
+  of 48 rules; behind on 1 factor and 7 rules"), so a lead built on parity does not read as a
+  sweep.
+- An entity whose level is provisional says so in its headline ("Bronze (provisional)"), with the
+  reasons beneath.
+- Bar segments carry a thin outline in the text colour, so silver and gold keep 3:1 against the
+  page and the track.
+- A quoted level on a track card ("ten", "clean") is its scorecard's own name for a level, and the
+  tracks legend says so.
 
 Not built: a change since the last snapshot beside each track ring. The report carries one snapshot
 and the committed baseline, which equals it on every published build; a pages build that also scored
