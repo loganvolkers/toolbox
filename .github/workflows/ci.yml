@@ -300,6 +300,7 @@ jobs:
     # The <toolbox-report> element: its bundle is current, and every story over the fixture
     # portals passes the probes (D01M87PSM9YQGGW3YQ5X4XCJP63).
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     defaults: {run: {working-directory: report-ui}}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4

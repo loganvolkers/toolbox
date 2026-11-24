@@ -36,7 +36,7 @@ verify() { # dir checksums-file asset
 mkdir -p downloads/openfga downloads/spicedb downloads/cli bin raw logs
 
 say "tools"
-command -v govulncheck >/dev/null || go install golang.org/x/vuln/cmd/govulncheck@latest
+command -v govulncheck >/dev/null || go install golang.org/x/vuln/cmd/govulncheck@v1.10.0
 command -v slsa-verifier >/dev/null || go install github.com/slsa-framework/slsa-verifier/v2/cli/slsa-verifier@v2.7.1
 command -v cosign >/dev/null || go install github.com/sigstore/cosign/v2/cmd/cosign@v2.6.1
 
