@@ -86,7 +86,9 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 - Deep links: `#tracks`, `#track/<name>`, `#catalog`, `#catalog/<Kind>`, `#entity/<id>`, `#campaign/<name>`,
   `#scorecard/<name>`, `#rule/<scorecard>/<rule>`, `#compare`, `#compare/<name>`. A scorecard's filters
   ride in the hash (`#scorecard/<name>?level=none&outcome=failing&rule=<rule>&q=<text>`), so a work list
-  can be shared.
+  can be shared; so does the catalog's name filter (`#catalog/<Kind>?q=<text>`).
+- The tab title names the page ("Agent skills · Toolbox for Toolbox"), and each history entry keeps its
+  scroll position, so Back returns to the same place in a long list.
 - Mode chrome uses `role="tab"` / `aria-selected` with arrow-key movement.
 - Every row is one link or one `<summary>`, never a clickable row that contains a link (axe
   `nested-interactive`).
