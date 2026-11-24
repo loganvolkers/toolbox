@@ -1,10 +1,10 @@
-# Toolbox, as measured by experiments/backstage-compare at e66526c.
+# Toolbox, as measured by experiments/backstage-compare at 5bd608d.
 # Written by snapshot.py; rerun the harness rather than editing it.
 records:
   - id: toolbox
     title: Toolbox
     version: 581be50 (release build); install facts from v0.1.1
-    harness: e66526c
+    harness: 5bd608d
     corpus: 10000
     runs: 5
     readyS: 0.9
@@ -34,7 +34,7 @@ records:
     loopbackByDefault: false
     ownerOnlyFields: true
     extensionProcessIsolated: true
-    extensionCredentialIsolated: true
+    extensionCredentialIsolated: false
     offlineValidate: true
     changePreview: true
     repoScopedWithoutServer: true

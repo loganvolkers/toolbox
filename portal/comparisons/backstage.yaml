@@ -1,10 +1,10 @@
-# Backstage, as measured by experiments/backstage-compare at e66526c.
+# Backstage, as measured by experiments/backstage-compare at 5bd608d.
 # Written by snapshot.py; rerun the harness rather than editing it.
 records:
   - id: backstage
     title: Backstage
     version: create-app 0.9.4 (Backstage 1.57.0), Node 24.22.3
-    harness: e66526c
+    harness: 5bd608d
     corpus: 10000
     runs: 5
     readyS: 3.33
