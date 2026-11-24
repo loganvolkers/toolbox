@@ -315,13 +315,19 @@
     var shares = [];
     var scoredRows = 0;
     var capped = [];
+    var short = [];
     var cards = rows.map(function(r) {
       if (!r.compare) {
         none += r.none;
         if (r.scored) {
           scoredRows++;
           if (capsRepo(D, r.name, floorOf(D, r.name))) capped.push(r.name);
-          else shares.push(r.topShare);
+          else {
+            shares.push(r.topShare);
+            var lv = ((D.scorecards || {})[r.name] || {}).levels || [];
+            var top = lv[lv.length - 1];
+            if (top && LADDER.indexOf(top) > 0 && top !== LADDER[LADDER.length - 1]) short.push(r.name);
+          }
         }
       }
       return { row: r, floor: r.compare ? null : floorOf(D, r.name) };
@@ -355,7 +361,7 @@
     var majority = compare && byMajority(D, rows.map(function(r) {
       return r.name;
     }));
-    return { name, def: (D.tracks || {})[name] || {}, rows, cards, compare, majority, none, pct, averaged: shares.length, scoredRows, capped, verdicts, behind, campaigns };
+    return { name, def: (D.tracks || {})[name] || {}, rows, cards, compare, majority, none, pct, averaged: shares.length, scoredRows, capped, short, verdicts, behind, campaigns };
   }
   function tracksSorted(D, S) {
     return Object.keys(D.tracks || {}).map(function(n) {
@@ -519,6 +525,15 @@
   }
   function ringWords(t) {
     return t.capped.length ? "average share at the top level, across " + fmt(t.averaged) + " of its " + fmt(t.scoredRows) + " scorecards" : "average share at the top level, across its " + fmt(t.averaged) + " scorecards";
+  }
+  function shortWhy(D, t) {
+    if (!(t.short || []).length) return "";
+    return andList(
+      t.short.map(function(n) {
+        var lv = ((D.scorecards || {})[n] || {}).levels || [];
+        return title(D, n) + " (top level " + lv[lv.length - 1] + ")";
+      })
+    ) + (t.short.length === 1 ? " stops below gold, so the ring counts its share at that top level" : " stop below gold, so the ring counts each one's share at its own top level");
   }
   function ringWhy(D, t) {
     if (!t.capped.length) return "";
@@ -3361,6 +3376,7 @@
       var slots = !t.compare && trackSlots(D, t);
       if (slots) kids.push(slots);
       if (slots && t.capped.length) kids.push(el("div", { className: "capnote tcap" }, lockIcon(), " " + ringWhy(D, t)));
+      if (slots && t.short.length) kids.push(el("div", { className: "capnote tcap" }, lockIcon(), " " + shortWhy(D, t) + "."));
       if (t.compare) {
         kids.push(
           el(
@@ -3508,7 +3524,7 @@
         "p",
         {},
         el("b", { textContent: "Goal: every entity at the top level of each scorecard below. " }),
-        t.pct == null ? "Nothing is scored yet." : "On average " + t.pct + "% are there" + (t.none ? "; " + plural(t.none, "entity is", "entities are") + " still at none" : "") + "." + (t.capped.length ? " " + ringWhy(D, t) + "." : ""),
+        t.pct == null ? "Nothing is scored yet." : "On average " + t.pct + "% are there" + (t.none ? "; " + plural(t.none, "entity is", "entities are") + " still at none" : "") + "." + (t.capped.length ? " " + ringWhy(D, t) + "." : "") + (t.short.length ? " " + shortWhy(D, t) + "." : ""),
         weakest && weakest.floor ? el("span", {}, " The weakest scorecard is ", link("scorecard/" + enc(weakest.row.name), "", title(D, weakest.row.name)), ", at ", badge(weakest.floor), capsRepo(D, weakest.row.name, weakest.floor) ? ", its only top level, so it caps the repository there until it gains a higher one." : isTop(D, weakest.row.name, weakest.floor) ? ", already its top level." : ".") : null
       );
       var trackNext = t.compare ? null : nextMedalEl(D, t.cards);

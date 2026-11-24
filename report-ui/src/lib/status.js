@@ -39,6 +39,18 @@ export function ringWords(t) {
 }
 
 // Why a track's ring leaves a scorecard out: its 100% is a ladder that stops short, not progress.
+// A counted scorecard whose ladder stops below gold: its share is at its own top level, said so the
+// ring is read the same way in a portal that leaves such a scorecard out.
+export function shortWhy(D, t) {
+  if (!(t.short || []).length) return "";
+  return andList(
+    t.short.map(function (n) {
+      var lv = ((D.scorecards || {})[n] || {}).levels || [];
+      return title(D, n) + " (top level " + lv[lv.length - 1] + ")";
+    }),
+  ) + (t.short.length === 1 ? " stops below gold, so the ring counts its share at that top level" : " stop below gold, so the ring counts each one's share at its own top level");
+}
+
 export function ringWhy(D, t) {
   if (!t.capped.length) return "";
   var lv = levelName(floorOf(D, t.capped[0]));

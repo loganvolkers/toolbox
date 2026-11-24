@@ -26,6 +26,7 @@ export function trackStats(D, S, name) {
   var shares = [];
   var scoredRows = 0;
   var capped = [];
+  var short = [];
   // A scorecard that caps the repository is at its own top level only because its ladder stops short,
   // so it is left out of the average rather than counted as done.
   var cards = rows.map(function (r) {
@@ -34,7 +35,12 @@ export function trackStats(D, S, name) {
       if (r.scored) {
         scoredRows++;
         if (capsRepo(D, r.name, floorOf(D, r.name))) capped.push(r.name);
-        else shares.push(r.topShare);
+        else {
+          shares.push(r.topShare);
+          var lv = ((D.scorecards || {})[r.name] || {}).levels || [];
+          var top = lv[lv.length - 1];
+          if (top && LADDER.indexOf(top) > 0 && top !== LADDER[LADDER.length - 1]) short.push(r.name);
+        }
       }
     }
     return { row: r, floor: r.compare ? null : floorOf(D, r.name) };
@@ -72,7 +78,7 @@ export function trackStats(D, S, name) {
   var majority = compare && byMajority(D, rows.map(function (r) {
     return r.name;
   }));
-  return { name: name, def: (D.tracks || {})[name] || {}, rows: rows, cards: cards, compare: compare, majority: majority, none: none, pct: pct, averaged: shares.length, scoredRows: scoredRows, capped: capped, verdicts: verdicts, behind: behind, campaigns: campaigns };
+  return { name: name, def: (D.tracks || {})[name] || {}, rows: rows, cards: cards, compare: compare, majority: majority, none: none, pct: pct, averaged: shares.length, scoredRows: scoredRows, capped: capped, short: short, verdicts: verdicts, behind: behind, campaigns: campaigns };
 }
 
 export function tracksSorted(D, S) {

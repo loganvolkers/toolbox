@@ -7,7 +7,7 @@ import { LEVEL_DEF, ONLY_LEVEL } from "../lib/levels.js";
 import { capsRepo, isTop, ring, tallyRing, tallyWords, title } from "../lib/rings.js";
 import { trackPath } from "../lib/routes.js";
 import { LADDER, rankLevel } from "../lib/rules.js";
-import { ringWhy, ringWords, trackSlots } from "../lib/status.js";
+import { ringWhy, ringWords, shortWhy, trackSlots } from "../lib/status.js";
 import { prose, rich } from "../lib/text.js";
 import { furthestTrack, ruleTag, standingChip, trackColor, trackKey, trackStats, tracksSorted } from "../lib/tracks.js";
 import { firstSentence, plural } from "../lib/words.js";
@@ -37,6 +37,7 @@ export const tracksViews = {
     var slots = !t.compare && trackSlots(D, t);
     if (slots) kids.push(slots);
     if (slots && t.capped.length) kids.push(el("div", { className: "capnote tcap" }, lockIcon(), " " + ringWhy(D, t)));
+    if (slots && t.short.length) kids.push(el("div", { className: "capnote tcap" }, lockIcon(), " " + shortWhy(D, t) + "."));
     if (t.compare) {
       kids.push(
         el(
@@ -197,7 +198,7 @@ export const tracksViews = {
           "p",
           {},
           el("b", { textContent: "Goal: every entity at the top level of each scorecard below. " }),
-          t.pct == null ? "Nothing is scored yet." : "On average " + t.pct + "% are there" + (t.none ? "; " + plural(t.none, "entity is", "entities are") + " still at none" : "") + "." + (t.capped.length ? " " + ringWhy(D, t) + "." : ""),
+          t.pct == null ? "Nothing is scored yet." : "On average " + t.pct + "% are there" + (t.none ? "; " + plural(t.none, "entity is", "entities are") + " still at none" : "") + "." + (t.capped.length ? " " + ringWhy(D, t) + "." : "") + (t.short.length ? " " + shortWhy(D, t) + "." : ""),
           weakest && weakest.floor ? el("span", {}, " The weakest scorecard is ", link("scorecard/" + enc(weakest.row.name), "", title(D, weakest.row.name)), ", at ", badge(weakest.floor), capsRepo(D, weakest.row.name, weakest.floor) ? ", its only top level, so it caps the repository there until it gains a higher one." : isTop(D, weakest.row.name, weakest.floor) ? ", already its top level." : ".") : null,
         );
     var trackNext = t.compare ? null : nextMedalEl(D, t.cards);
