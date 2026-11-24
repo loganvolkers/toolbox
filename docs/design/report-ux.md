@@ -335,7 +335,13 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 - Compare leads with the plain method; builds and harness commits fold under a disclosure. A factor
   ahead on fewer than half its rules reads "narrowly ahead".
 - A collapsed rule shows the first sentence of its why until it is opened.
-- Type sizes come from one scale of whole pixels.
+- Type sizes come from one scale of whole pixels, the smallest 12px.
+- A count of passing checks counts only passes on evidence; a pass that holds because nothing was
+  assessed is counted beside it.
+- Every fold opens and closes, and says which with `aria-expanded`.
+- Each pattern has one meaning: hatched is not assessed, dotted is provisional, thin vertical
+  stripes are not scored.
+- Adding a filter keeps the filters it does not contradict.
 
 Not built: a change since the last snapshot beside each track ring. The report carries one snapshot
 and the committed baseline, which equals it on every published build; a pages build that also scored
