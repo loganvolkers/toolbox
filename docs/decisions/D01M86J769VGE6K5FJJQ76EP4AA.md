@@ -51,6 +51,13 @@ a list of repositories and a repo's action is its inputs, its approvers and its 
     own push. `toolbox run` reads `TOOLBOX_URL` and `TOOLBOX_AS`, as the read commands do. Round
     1's toolbox-3 wrapped `--url` and `--as` in a script, and round 2's toolbox-2 wrote one to
     tell `unverified` from `succeeded`.
+11. **`toolbox serve --detach` starts a server in the background and returns once it is
+    ready** (its first snapshot is in), printing its URL, pid, log and approval key; `--stop`
+    stops it and waits. The pid and log sit in `served/<portal>/` beside the runs and the key. The
+    federated-actions README lists every action and federation field in one table. Every Toolbox
+    run in round 2 dumped `manifest.schema.json` with Python to find those fields, and started
+    the org portal under tmux with `sleep` and a pane capture, only to read the key its children
+    pin; those calls are most of the gap to the vanilla arm's tool calls.
 
 Rejected: a hosted registry of children (a second source of truth beside git), and cloning on
 every request (slow, and a network failure would hide every action).

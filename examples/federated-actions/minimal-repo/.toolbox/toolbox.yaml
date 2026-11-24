@@ -2,7 +2,7 @@ apiVersion: toolbox.dev/v1alpha1
 portal: {name: minimal-repo, owner: group:maintainers, toolbox: "0.1"}
 # An org portal may run this portal's actions in its clone (type: local). It records approvals and
 # signs them; they count here only with the key pinned below. Replace it with the key the org
-# portal prints (`toolbox run --url <org server>`), then commit and push.
+# portal prints (`toolbox serve <org> --detach`), then commit and push.
 federation:
   runner: {type: local}
   acceptApprovalsFrom:

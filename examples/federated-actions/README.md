@@ -30,16 +30,18 @@ you write.
 
    ```sh
    toolbox validate git-org
-   toolbox serve --listen 127.0.0.1:7100 git-org &
-   toolbox run --url http://127.0.0.1:7100 --as ann   # the actions, and the key to pin
+   toolbox serve git-org --listen 127.0.0.1:7100 --detach   # returns once it answers: URL, pid, log, key
+   toolbox serve git-org --stop                             # later: stop it (start it again the same way)
    ```
 
-   The server keeps the key under `$TOOLBOX_STATE_DIR/served/org/` and reuses it on restart.
+   `--detach` prints `approval key: ed25519:…`. The server keeps the key under
+   `$TOOLBOX_STATE_DIR/served/org/`, beside its runs, pid and log, and reuses it on restart.
    Paste it into each repository's `acceptApprovalsFrom`, then commit and push: until then the
    server offers the action, but the run is refused. On a loopback address the server signs
    people in with `--as`. Anywhere else, set `TOOLBOX_AUTH_MODE` (see `toolbox serve --help`).
 4. **Request, approve, check.** Every command takes `-o json`. Exit codes: 0 succeeded, 1 failed,
-   2 refused or invalid, 3 waiting for an approval.
+   2 refused or invalid, 3 waiting for an approval, 4 unverified. `TOOLBOX_URL` and `TOOLBOX_AS`
+   stand for `--url` and `--as`.
 
    ```sh
    U=http://127.0.0.1:7100
@@ -57,6 +59,29 @@ you write.
 Without a server, `toolbox run` in the org or repository checkout lists and previews the same
 actions. A run that needs an approval stops at exit 3 there, because only a served portal keeps
 approvals.
+
+## Fields
+
+Everything an action or a federation needs; `toolbox validate` checks the rest against
+`schema/manifest.schema.json`.
+
+| Field | What it says |
+|---|---|
+| `actions[].name`, `kind`, `description` | Required. `kind: Portal` targets the repository itself |
+| `actions[].inputs` | Required JSON Schema; `required`, `pattern`, `minLength`, `enum` and `default` are checked before a preview. Each input reaches the command as `TOOLBOX_INPUT_<NAME>` |
+| `actions[].approval` | CEL list of approvers: `"['user:ann']"` needs ann, `"[['user:ann', 'user:bob']]"` needs either. The requester never counts |
+| `actions[].preconditions` | A list of CEL over `entity` and `inputs`; one that is false blocks the run |
+| `actions[].executor.type` | `change` (a commit), `command` (a shell command in the checkout), `github-workflow`, `http`, `webhook`, `in-image` |
+| `executor.run` | `command` and `change`: the shell command. A `change` runs it in a fresh worktree of `base` |
+| `executor.land` | `change`: `push` commits to `base` once approved (never forced); `propose` (default) pushes `branch` for review |
+| `executor.base`, `branch`, `message`, `remote` | `change`: the branch to start from and verify on, the proposal branch (`toolbox/{action}/{run}`), the commit message, the remote (`origin`) |
+| `executor.secrets` | Environment variables the executor gets; it starts with a cleared environment |
+| `actions[].expect` | `{postcondition: <CEL>, within: 30s}`: what must hold after the run for `succeeded`. A `land: push` change needs none: its commit on `base` is the check |
+| `federation.children` | Parent: `[{git: <url or path>, branch: main, key: <name>}]`; each is offered as `portal:<key>` |
+| `federation.acceptApprovalsFrom` | Child: `[{portal: <parent name>, key: ed25519:…}]`, the key the parent prints |
+| `federation.signingKey` | Parent: the variable holding the signing seed, for servers that share runs. Without it the server keeps one |
+| `federation.runner` | Child: `{type: local}` lets a served org portal run its actions in the org's clone of it; without it they run only from a checkout. `github-workflow` dispatches a workflow instead |
+| `federation.runners` | Parent: a portal with `children` admits each child's `local` runner itself; declare `runners.local` or `runners.github-workflow` only to narrow it or to dispatch workflows |
 
 ## Check
 

@@ -288,7 +288,9 @@ actions:
 
 The CLI works on a checkout (repo or parent, no server) or, with `--url <server>`, on a served
 portal through its REST API, with the same flags, output and exit codes. `--wait` follows a run
-until it succeeds, fails or waits for a person.
+until it succeeds, fails or waits for a person. `toolbox serve <portal> --detach` starts the
+served portal in the background and returns once it is ready, printing the approval key its
+children pin; `--stop` stops it.
 
 | Need | CLI | REST (served) | MCP (served) |
 |---|---|---|---|

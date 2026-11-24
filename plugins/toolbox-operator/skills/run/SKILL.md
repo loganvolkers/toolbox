@@ -25,9 +25,10 @@ authorization and approvals. `--runs` lists runs, and `--verify <run id>` prints
 `TOOLBOX_URL` and `TOOLBOX_AS` set them for every command, so a script needs no wrapper.
 
 To offer several repositories' actions from one place, list them in an org portal
-(`federation.children: [{git: <url>}]`), serve it, and pin the key that `toolbox run --url
-<server>` prints in each repository's `federation.acceptApprovalsFrom`. The README of
-`examples/federated-actions` in the Toolbox repository has the two manifests and every command.
+(`federation.children: [{git: <url>}]`), serve it with `toolbox serve <org> --detach`, and pin
+the key it prints in each repository's `federation.acceptApprovalsFrom`. The README of
+`examples/federated-actions` in the Toolbox repository has the two manifests, every field and
+every command.
 
 ```
 toolbox run -o json

@@ -8,18 +8,23 @@ description: >-
 
 1. Start the server on the portal directory. Without a database URL the store is in memory.
 2. Pass --fixtures to load the portal's fixtures at start.
-3. Stop the process to discard an in-memory store. Do not expect that store to survive a restart.
+3. To keep it running in the background, add `--detach`: it returns once the server answers and
+   prints its URL, pid, log and approval key. `toolbox serve <portal> --stop` stops it; start it
+   again the same way. It needs no terminal multiplexer or `nohup`.
+4. Stop the process to discard an in-memory store. Do not expect that store to survive a restart.
    Action runs do survive one: they are kept in the database, or without one under
    `$TOOLBOX_STATE_DIR/served/<portal>/runs`. A run whose executor the restart cut off is failed.
 
-4. On a loopback address, people sign in with `--as` on each request. Anywhere else, set
+5. On a loopback address, people sign in with `--as` on each request. Anywhere else, set
    `TOOLBOX_AUTH_MODE` (`toolbox serve --help` lists the modes).
-5. A portal with `federation.children` keeps a clone of each child under `$TOOLBOX_STATE_DIR`
+6. A portal with `federation.children` keeps a clone of each child under `$TOOLBOX_STATE_DIR`
    and reads it again before it lists, previews or runs an action. It signs approvals with a key
-   it keeps there too; `toolbox run --url <server>` prints it, for children to pin.
+   it keeps there too; `--detach` and `toolbox run --url <server>` print it, for children to pin.
 
 ```
 toolbox serve portal --fixtures
+toolbox serve org --listen 127.0.0.1:7100 --detach
+toolbox serve org --stop
 toolbox serve portal --database-url "$DATABASE_URL" --listen 127.0.0.1:8080
 ```
 
