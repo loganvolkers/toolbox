@@ -249,6 +249,7 @@
     ".trackstrip{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin-top:28px;padding-top:16px;border-top:1px solid var(--line)}",
     ".trackstrip a{display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:4px 12px 4px 4px;border:1px solid var(--line);border-radius:999px;color:var(--fg);text-decoration:none;font-size:13px}",
     ".trackstrip a{transition:border-color .15s,transform .15s,box-shadow .15s}.trackstrip a:hover,.trackstrip a.far:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 4px 12px color-mix(in srgb,var(--fg) 10%,transparent)}",
+    ".leads{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}a.lead-tile{display:flex;flex-direction:column;gap:4px;padding:14px 16px;border:1px solid var(--line);border-left:4px solid var(--pass);border-radius:12px;color:var(--fg);text-decoration:none;background:var(--card);transition:transform .15s,border-color .15s}a.lead-tile:hover{transform:translateY(-2px);border-color:var(--accent);border-left-color:var(--pass)}.lead-x{font-size:30px;font-weight:750;line-height:1;color:var(--pass)}.lead-dir{font-size:12px;font-weight:650;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}.lead-what{font-weight:650;line-height:1.35}",
     ".climb{margin-top:12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card)}.climb-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:4px 10px;font-weight:650}.climb-bar{height:6px;margin:8px 0;border-radius:3px;background:var(--faint);overflow:hidden}.climb-bar span{display:block;height:100%;border-radius:3px}.climb ul{list-style:none;margin:0;padding:0;display:grid;gap:4px;font-size:14px}.climb li{display:grid;grid-template-columns:auto 1fr;align-items:baseline;gap:4px}.climb .box{width:12px;height:12px;border:1.5px solid var(--muted);border-radius:3px;margin-right:4px;transform:translateY(1px)}.climb li.stuck .box{border-color:var(--unknown);border-style:dashed}",
     ".trackstrip.lead{margin-top:4px;padding-top:0;border-top:0}",
     ".trackstrip.lead a{padding:6px 14px 6px 6px;border-radius:14px;background:var(--card)}",
@@ -3241,12 +3242,55 @@
         el("div", { className: "head" }, el("h2", { textContent: "Where " + who(subject) + " is behind" }), el("span", { className: "sub", textContent: plural(behindRows.length, "rule") })),
         behindRows.length ? el("div", {}, ...behindRows) : el("p", { className: "empty good", textContent: "✓ Not behind on any rule." }),
       );
+      var leadRows = [];
+      names.forEach(function (n) {
+        var c = all[n];
+        var def = (D.scorecards || {})[n] || {};
+        Object.keys(c.rules || {}).forEach(function (r) {
+          var rd = (def.rules || {})[r] || {};
+          if ((c.rules[r] || {})[peer] !== "ahead" || !rd.better) return;
+          var a = ruleValue(c, r, subject);
+          var b = ruleValue(c, r, peer);
+          if (typeof a !== "number" || typeof b !== "number" || a <= 0 || b <= 0) return;
+          leadRows.push({ n: n, c: c, r: r, rd: rd, a: a, b: b, ratio: Math.max(a, b) / Math.min(a, b) });
+        });
+      });
+      leadRows.sort(function (x, y) {
+        return y.ratio - x.ratio;
+      });
+      var unitOf = function (rd, v) {
+        return num(v) + (rd.unit ? " " + rd.unit : "");
+      };
+      var leads = leadRows.length
+        ? el(
+            "section",
+            {},
+            el("div", { className: "head" }, el("h2", { textContent: "Where " + who(subject) + " leads by the most" }), el("span", { className: "sub", textContent: "Measured values only, largest ratio first" })),
+            el(
+              "div",
+              { className: "leads" },
+              ...leadRows.slice(0, 3).map(function (l) {
+                var x = l.ratio >= 10 ? Math.round(l.ratio).toLocaleString("en-US") : l.ratio.toFixed(1);
+                var vs = who(subject) + " " + unitOf(l.rd, l.a) + " vs " + who(peer) + " " + unitOf(l.rd, l.b);
+                var tile = link("compare/" + enc(l.n), "lead-tile", [
+                  el("span", { className: "lead-x", textContent: x + "×" }),
+                  el("span", { className: "lead-dir", textContent: l.rd.better }),
+                  el("span", { className: "lead-what", textContent: measureLabel(l.c, l.r) }),
+                  el("span", { className: "sub", textContent: vs + " · " + title(D, l.n) }),
+                ]);
+                tile.setAttribute("aria-label", x + "× " + l.rd.better + ": " + measureLabel(l.c, l.r) + ". " + vs + ". Factor: " + title(D, l.n));
+                return tile;
+              }),
+            ),
+          )
+        : null;
       return el(
         "div",
         {},
         hero,
         el("section", {}, el("div", { className: "head" }, el("h2", { textContent: "Factors" }), el("span", { className: "sub", textContent: "Behind first" })), this.factorCards(D, names)),
         behind,
+        leads,
         method,
       );
     }
