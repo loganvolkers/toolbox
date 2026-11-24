@@ -1,0 +1,66 @@
+{
+  "run": "gha-2",
+  "C1": "holds",
+  "P1": {
+    "verdict": "holds",
+    "evidence": "score.py check re-run before probing: pass true. git --git-dir origins/<r>.git ls-tree -r main: .github/workflows/mark-deprecated.yml, .github/scripts/{mark_deprecated.py,test_mark_deprecated.py,apply-github-settings.sh}, .github/environments/mark-deprecated.json (reviewers ann, bob; prevent_self_review true), .github/rulesets/protect-main.json and CODEOWNERS (alpha root, beta/gamma .github/) are on main of alpha, beta and gamma (last definition commits 8930b04, 1043c28, 6a9f4b2). The files are identical copies across the three repos. org/bin/acme discovers actions from each origin's main (`list` reports definition_sha); org/catalog.json holds only origin paths, people and act settings."
+  },
+  "P2": {
+    "verdict": "holds",
+    "evidence": "cwd org/, alpha main ff0ab405 before. `bin/acme request alpha mark-deprecated --as ann -f 'successor=Acme/Bad Name' -f 'reason=A valid reason of more than twenty characters.'` -> exit 2, state refused, validation error 'successor must be owner/name matching ^[a-z0-9-]+/[a-z0-9-]+$'. `... -f successor=acme/probe-valid -f reason=short` -> exit 2, state refused, 'reason must be 20 to 200 characters (got 5)'. Each refusal is recorded as a refused run (org/runs gained two records), nothing ran past the plan job's validate step. alpha main ff0ab405 after."
+  },
+  "P3": {
+    "verdict": "holds",
+    "evidence": "beta main 0e7c4338 before. `ACME_USER=ann bin/acme preview beta mark-deprecated -f successor=acme/probe-preview -f 'reason=Probe: preview must show the file and its content.'` (also with --as ann) -> exit 0, valid true, preview {path DEPRECATED.md, change update, base_sha 0e7c4338, unified diff, postcondition.content '# Deprecated: use acme/probe-preview\\n\\nProbe: preview must show the file and its content.\\n', sha256}. beta main 0e7c4338 after; no run record written."
+  },
+  "P4": {
+    "verdict": "holds",
+    "evidence": "From org/, gamma main 09092605 before. `bin/acme request gamma mark-deprecated --as ann -f successor=acme/probe-approval -f 'reason=Probe P4 checks the approval rules hold.'` -> exit 0, gamma-mark-deprecated-20261124t125107z-5fbf awaiting_approval with the diff; gamma 09092605. `approve <run> --as ann` -> exit 3 forbidden, reason self_review ('environment mark-deprecated prevents self-review'); gamma 09092605. `approve <run> --as carol` -> exit 3 forbidden, reason not_a_reviewer ('carol is not a required reviewer of environment mark-deprecated (ann, bob)'). `status` -> awaiting_approval, approved_by null. gamma still 09092605. Enforced locally by acme from .github/environments/mark-deprecated.json at the run's definition_sha; GitHub's environment reviewers are configured as code (apply-github-settings.sh), not run."
+  },
+  "P5": {
+    "verdict": "holds",
+    "evidence": "`bin/acme approve gamma-mark-deprecated-20261124t125107z-5fbf --as bob` -> exit 0, state succeeded, result.observed {ref refs/heads/main, sha c9ce80a2, matches true, present true}. origins/gamma.git main 09092605 -> c9ce80a2; `git show main:DEPRECATED.md` = '# Deprecated: use acme/probe-approval', blank, the P4 reason; author ann, committer mark-deprecated[bot], trailers Requested-by: ann, Approved-by: bob, Request-id. apply.jsonl shows act ran plan and apply (push, verify) with success. Source: org/bin/acme observe() (l.448-454) runs git rev-parse and reads the blob from rec['origin'] = /tmp/actions-ab/r4/gha-2/origins/gamma.git (the bare origin); cmd_approve (l.470-491) sets succeeded only if act exit 0 and the apply job succeeded AND the workflow's verify observed the file AND that independent observation matched."
+  },
+  "P6": {
+    "verdict": "holds",
+    "evidence": "Wrote origins/alpha.git/hooks/pre-receive (echo to stderr; exit 1), chmod +x. alpha main ff0ab405 before. As ann: request alpha successor acme/probe-reject -> alpha-mark-deprecated-20261124t125120z-3da3 awaiting_approval. `approve <run> --as bob` -> exit 4, state failed, jobs {plan success, apply failure}, errors '[remote rejected] (pre-receive hook declined)', observed sha ff0ab405 matches false. `status` -> failed. Hook removed (only *.sample remain). alpha main ff0ab405 after."
+  },
+  "P7": {
+    "verdict": "holds",
+    "evidence": "From org/, `bin/acme list` -> exit 0, mark-deprecated on acme/alpha, acme/beta and acme/gamma, each with its inputs, the approval settings (environment mark-deprecated, reviewers ann and bob, prevent_self_review) and the definition_sha read from the origin's main. P4 was requested from org/ with `bin/acme request gamma ...`."
+  },
+  "P8": {
+    "verdict": "holds",
+    "evidence": "`bin/acme record gamma-mark-deprecated-20261124t125107z-5fbf` -> requested_by ann, requested_at 12:51:07.958Z, approved_by bob, approved_at 12:51:08.462Z, inputs {successor acme/probe-approval, reason ...}, outcome succeeded, finished_at 12:51:08.923Z, result (jobs, apply, verify, observed with time); events requested (ann), previewed, approve_refused (ann), approve_refused (carol), approved (bob), apply_started, apply_finished, observed, succeeded, each timestamped."
+  },
+  "P9": {
+    "verdict": "holds",
+    "evidence": "Every command above ran with stdin from /dev/null and no prompts; identity by --as or $ACME_USER, inputs by -f. Every command, including refusals and the failed run, printed one JSON document with distinct exit codes (0 ok, 2 refused, 3 forbidden, 4 run failed); status carries a `next` hint."
+  },
+  "P10": {
+    "verdict": "holds",
+    "evidence": "Operated entirely from org/HANDOFF.md's Commands and 'How to test the failure paths' sections: nothing to start, no PATH or port change needed. Source read only for P5."
+  },
+  "fixes": [],
+  "strikes": [
+    {
+      "path": "org/runs/alpha-mark-deprecated-20261124t124658z-d235/record.json",
+      "lines": 155,
+      "reason": "run audit record written by org/bin/acme at run time; the agent committed it to org as the run history, but no person edits it"
+    },
+    {
+      "path": "org/runs/beta-mark-deprecated-20261124t124701z-081d/record.json",
+      "lines": 155,
+      "reason": "run audit record written by org/bin/acme at run time; the agent committed it to org as the run history, but no person edits it"
+    },
+    {
+      "path": "org/runs/gamma-mark-deprecated-20261124t124702z-0a73/record.json",
+      "lines": 155,
+      "reason": "run audit record written by org/bin/acme at run time; the agent committed it to org as the run history, but no person edits it"
+    }
+  ],
+  "linesBeforeStrikes": 1432,
+  "linesAfterStrikes": 967,
+  "fullyPasses": true,
+  "notes": "C1 was checked with score.py check before any probe (pass); P5 then replaced gamma's DEPRECATED.md with the probe content (c9ce80a2), as P5 requires, so check would now fail on gamma. The probes added four untracked records to org/runs (two refused, one succeeded, one failed) after lines.json was measured; acme does not commit them itself (the three task records were committed by the agent; org origin unchanged at 3c2c6014). The act logs (*.jsonl, *.stderr) are not counted extensions, so need no strike. Kept (967 lines): org/bin/acme (509), alpha/.github/scripts/mark_deprecated.py (239), test_mark_deprecated.py (24, a test), apply-github-settings.sh (45), alpha/.github/workflows/mark-deprecated.yml (80), environments/mark-deprecated.json (8), rulesets/protect-main.json (31), alpha/CODEOWNERS (8), beta/.github/CODEOWNERS (8), org/catalog.json (12), org/.gitignore (3); score.py counted beta's and gamma's copies once. Minor: refused requests create run records (state refused) rather than writing none; the commit trailer 'Workflow-run: https://github.com/acme/gamma/actions/runs/1' is a placeholder URL under act. Not run here and not adjudicated: apply-github-settings.sh (HANDOFF says only bash -n), environments, deploy keys, rulesets, and the HTTPS/SSH/approvals-API code paths in mark_deprecated.py. Identity is trusted from --as. No process outlived its command."
+}

@@ -13,7 +13,7 @@ pub struct Target {
 }
 
 impl Target {
-    fn request(&self, rb: reqwest::RequestBuilder) -> reqwest::RequestBuilder {
+    pub(crate) fn request(&self, rb: reqwest::RequestBuilder) -> reqwest::RequestBuilder {
         let rb = match &self.token {
             Some(t) => rb.bearer_auth(t),
             None => rb,

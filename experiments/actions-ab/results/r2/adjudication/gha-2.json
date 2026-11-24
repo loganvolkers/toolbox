@@ -1,0 +1,66 @@
+{
+  "run": "gha-2",
+  "C1": "holds",
+  "P1": {
+    "verdict": "holds",
+    "evidence": "git ls-tree -r main on origins/{alpha,beta,gamma}.git: each has .github/workflows/mark-deprecated.yml, .github/environments/deprecation.yml (required reviewers ann, bob; prevent_self_review) and .github/scripts/apply-github-settings.py, plus CODEOWNERS (alpha at the root, beta and gamma in .github/), committed on main (alpha a155bb5 + 7e77e2b, beta c9408bb, gamma 671f04c). `bin/acme-actions list` reads each definition and approval file from origin main's commit."
+  },
+  "P2": {
+    "verdict": "holds",
+    "evidence": "From org/: `bin/acme-actions request alpha -i 'successor=Acme/Bad Name' -i 'reason=Probe of input validation by the adjudicator.' --as ann` -> exit 2, kind invalid_inputs, 'successor: must match ^[a-z0-9-]+/[a-z0-9-]+$', run-0004 recorded as refused. `... -i successor=acme/probe-valid -i reason=short --as ann` -> exit 2, 'reason: must be 20 to 200 characters, got 5', run-0005 refused. runs/logs/run-0004-plan.log shows act running the workflow's 'Validate inputs' step and the job failing. alpha main ab8b2908cefc94124f819e0d9ff3a80a97844b2b before and after. `approve run-0004 --as bob` -> exit 4 wrong_state."
+  },
+  "P3": {
+    "verdict": "holds",
+    "evidence": "`bin/acme-actions preview beta -i successor=acme/probe-preview -i 'reason=Probe of the preview step by the adjudicator.' --as ann` -> exit 0, JSON valid true, preview.path DEPRECATED.md, change update, content '# Deprecated: use acme/probe-preview\\n\\nProbe of the preview step by the adjudicator.\\n' and a git diff against the current file. No run recorded (runs/ unchanged). beta main 256c376657aa34887e30f07fed344fc83cf1519d before and after."
+  },
+  "P4": {
+    "verdict": "holds",
+    "evidence": "From org/: `bin/acme-actions request gamma -i successor=acme/probe-approval -i 'reason=Probe of the approval rules by the adjudicator.' --as ann` -> exit 0, run-0006 awaiting_approval with the preview and eligible_approvers [bob]. gamma main f94ccc2f4903781b2858d5f2c6035e80b6083194 before and after the request. `approve run-0006 --as ann` -> exit 3 'ann requested this run and cannot review it (prevent_self_review)'; `approve run-0006 --as carol` -> exit 3 'carol is not a required reviewer of the deprecation environment (.github/environments/deprecation.yml: ann, bob)'; `status run-0006` -> awaiting_approval; gamma main still f94ccc2."
+  },
+  "P5": {
+    "verdict": "holds",
+    "evidence": "`bin/acme-actions approve run-0006 --as bob` -> exit 0, status succeeded, outcome.observed {commit 841dd34, present true, content_matches true}. `git -C origins/gamma.git show main:DEPRECATED.md` is exactly '# Deprecated: use acme/probe-approval\\n\\nProbe of the approval rules by the adjudicator.\\n'; commit trailers Requested-by: ann, Approved-by: bob, Run: run-0006. runs/logs/run-0006-apply.log shows act's 'Validate and preview' and 'Apply and verify' jobs succeeded. Source (org/bin/acme-actions review, lines 402-415): after act returns, it reads the origin's main head and `git --git-dir <origin> show <head>:DEPRECATED.md`, and sets succeeded only if act exited 0 and that content equals the previewed content."
+  },
+  "P6": {
+    "verdict": "holds",
+    "evidence": "Installed origins/alpha.git/hooks/pre-receive (message to stderr, exit 1). `request alpha -i successor=acme/probe-reject -i 'reason=Probe of a rejected push by the adjudicator.' --as ann` -> run-0007 awaiting_approval; `approve run-0007 --as bob` -> exit 1 after the push step's retries (about 7 s), status failed, reason 'the apply job failed', errors ['could not push DEPRECATED.md to main'], observed.content_matches false; `status run-0007` -> failed. Hook removed (only *.sample remain). alpha main ab8b290 before and after."
+  },
+  "P7": {
+    "verdict": "holds",
+    "evidence": "From org/: `bin/acme-actions list` -> exit 0, JSON actions[] with mark-deprecated for alpha, beta and gamma (inputs, definition commit, environment, required reviewers), read from each origin's main. P4's request was made from org/ with the same CLI."
+  },
+  "P8": {
+    "verdict": "holds",
+    "evidence": "`bin/acme-actions record run-0006` -> requested_by ann at 11:45:39.855Z, approved_by bob at 11:45:45.203Z, inputs {successor, reason}, status/outcome succeeded, finished_at 11:45:45.491Z, and timestamped events requested (ann), previewed, approve_refused (ann), approve_refused (carol), approved (bob), apply_started, apply_finished, observed, succeeded."
+  },
+  "P9": {
+    "verdict": "holds",
+    "evidence": "Every probe command (list, preview, request, approve, status, record) was a one-shot non-interactive call with JSON on stdout, errors included, and distinct exit codes (0, 1, 2, 3, 4)."
+  },
+  "P10": {
+    "verdict": "holds",
+    "evidence": "Operated entirely from org/HANDOFF.md's commands; no fixes were needed and nothing had to be started. The source was read only for P5's read-before-success."
+  },
+  "fixes": [],
+  "strikes": [
+    {
+      "path": "org/runs/run-0001.json",
+      "lines": 115,
+      "reason": "run record written by org/bin/acme-actions at runtime (also committed to origins/org.git as an audit trail, but generated, not edited)"
+    },
+    {
+      "path": "org/runs/run-0002.json",
+      "lines": 115,
+      "reason": "run record written by org/bin/acme-actions at runtime (also committed to origins/org.git as an audit trail, but generated, not edited)"
+    },
+    {
+      "path": "org/runs/run-0003.json",
+      "lines": 115,
+      "reason": "run record written by org/bin/acme-actions at runtime (also committed to origins/org.git as an audit trail, but generated, not edited)"
+    }
+  ],
+  "linesBeforeStrikes": 1092,
+  "linesAfterStrikes": 747,
+  "fullyPasses": true,
+  "notes": "No probe was credited: approval, self-approval and carol's refusal are enforced locally by org/bin/acme-actions from each repository's .github/environments/deprecation.yml, read live from origin main at approval time. The GitHub environment, ruleset (with GitHub Actions as bypass actor) and CODEOWNERS enforcement are configured in apply-github-settings.py but were not exercised (the handoff says it ran only with --dry-run). Run records, audit.jsonl and act logs are committed to origins/org.git (a84c265) as an audit trail; they are still runtime output and are struck. score.py counts beta's and gamma's workflow, environment file and script as copies of alpha's; left as is. act logs carry repeated harmless 'core.repositoryformatversion does not support extension: worktreeconfig' errors from the temporary clones. A rejected push takes about 7 s to fail because the push step retries twice. The probes left gamma's main at 841dd34 (P5's DEPRECATED.md) and runs run-0004..0007 in org/runs/. No long-running process; nothing to stop."
+}

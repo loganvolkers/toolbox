@@ -1,0 +1,19 @@
+{
+ "linesToMaintain": 1341,
+ "files": {
+  "alpha/.github/environments/deprecation.json": 19,
+  "alpha/.github/scripts/apply-github-settings.sh": 82,
+  "alpha/.github/workflows/mark-deprecated.yml": 269,
+  "alpha/CODEOWNERS": 4,
+  "beta/.github/CODEOWNERS": 4,
+  "org/.acme/runs/20261124T104701Z-alpha-2669/event-preview.json": 1,
+  "org/.acme/runs/20261124T104701Z-alpha-2669/record.json": 143,
+  "org/.acme/runs/20261124T104707Z-beta-3d58/event-preview.json": 1,
+  "org/.acme/runs/20261124T104707Z-beta-3d58/record.json": 143,
+  "org/.acme/runs/20261124T104709Z-gamma-0120/event-preview.json": 1,
+  "org/.acme/runs/20261124T104709Z-gamma-0120/record.json": 143,
+  "org/.gitignore": 2,
+  "org/acme.json": 13,
+  "org/bin/acme": 516
+ }
+}

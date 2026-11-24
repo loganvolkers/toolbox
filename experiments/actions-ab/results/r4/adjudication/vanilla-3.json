@@ -1,0 +1,54 @@
+{
+  "run": "vanilla-3",
+  "C1": "holds",
+  "P1": {
+    "verdict": "holds",
+    "evidence": "score.py check re-run before probing: pass true. git --git-dir origins/<r>.git ls-tree -r main: .acme/actions/mark-deprecated.json (and .acme/README.md) are on main of alpha (added b5fa559), beta (7b1fd3b) and gamma (47251b9), byte-identical across the three. The definition holds maintainers [ann, bob], the input rules (pattern, notSelf, 20-200 chars) and the effect (path, content template, commit message). bin/acme reads it from the bare origin's main and pins commit and blob per run; org/ holds the CLI, the registry acme.json and tests."
+  },
+  "P2": {
+    "verdict": "holds",
+    "evidence": "cwd org/. `bin/acme request alpha mark-deprecated --as ann -i 'successor=Acme/Bad Name' -i 'reason=A valid reason of more than twenty characters.'` -> ok false, code inputs_invalid, 'successor: must match ^[a-z0-9-]+/[a-z0-9-]+$', exit 2. `... -i successor=acme/probe-valid -i reason=short` -> inputs_invalid, 'reason: must be at least 20 characters (got 5)', exit 2. state/runs count 3 before and after. alpha main 7987903b before and after."
+  },
+  "P3": {
+    "verdict": "holds",
+    "evidence": "`ACME_ACTOR=ann bin/acme preview beta mark-deprecated -i successor=acme/probe-preview -i 'reason=Probe: preview must show the file and its content.'` -> exit 0, valid true, preview {origin, branch main, baseCommit d5a60fca, pinned definition, commitMessage, changes [{path DEPRECATED.md, operation update, beforeBlob, afterBlob, content '# Deprecated: use acme/probe-preview\\n\\nProbe: preview must show the file and its content.\\n', unified diff}]}. The same with `--as ann` also exits 0. beta main d5a60fca before and after; state/runs count unchanged (3)."
+  },
+  "P4": {
+    "verdict": "holds",
+    "evidence": "cwd org/. `bin/acme request gamma mark-deprecated --as ann -i successor=acme/probe-approval -i 'reason=Probe: approval needs a second maintainer.'` -> exit 0, run-0004 pending_approval, requestedBy ann. gamma main b3b5b2a7 before and after the request. `approve run-0004 --as ann` -> code self_approval, exit 3; `approve run-0004 --as carol` -> code not_a_maintainer, exit 3. `status run-0004` -> pending_approval, approvedBy null. gamma main still b3b5b2a7."
+  },
+  "P5": {
+    "verdict": "holds",
+    "evidence": "`bin/acme approve run-0004 --as bob` -> exit 0, status succeeded, outcome.observed {commit 670f5ebf, blob = expectedBlob 23dc9109, contentMatches true, containsRunCommit true, at 12:48:47.836Z}. origins/gamma.git main b3b5b2a7 -> 670f5ebf; `git show main:DEPRECATED.md` = '# Deprecated: use acme/probe-approval', blank, the P4 reason; author ann, committer acme-actions, trailers Acme-Run/Requested-by/Approved-by. Source (org/bin/acme execute(), lines 441-455): after the push and the scratch clone's removal it calls main_commit(origin) and blob_at(origin, observed, path) on the bare origin, plus merge-base --is-ancestor of the pushed commit, and returns succeeded only if the bytes equal the expected content and main contains the run's commit; otherwise not_observed/failed."
+  },
+  "P6": {
+    "verdict": "holds",
+    "evidence": "Wrote origins/alpha.git/hooks/pre-receive (echo to stderr; exit 1), chmod +x. As ann: request alpha successor acme/probe-reject -> run-0005. `approve run-0005 --as bob` -> exit 6, status failed, outcome {reason push_rejected, 'the origin rejected the push; main is unchanged', stderr 'remote: adjudicator: all pushes rejected'}. `status run-0005` -> failed. Hook removed (only *.sample remain). alpha main 7987903b before and after."
+  },
+  "P7": {
+    "verdict": "holds",
+    "evidence": "From org/, `bin/acme list` -> exit 0, actions [(alpha, mark-deprecated), (beta, mark-deprecated), (gamma, mark-deprecated)]. P4 was requested from org/ with `bin/acme request gamma ...`."
+  },
+  "P8": {
+    "verdict": "holds",
+    "evidence": "`bin/acme record run-0004` -> requestedBy ann, requestedAt 12:48:44.041Z, approvedBy bob, approvedAt 12:48:47.796Z, inputs {successor acme/probe-approval, reason ...} (with the 'requested' event at 12:48:44.041Z), status succeeded, outcome {commit, push log, observed with its own time}, finishedAt 12:48:47.836Z, and timestamped events requested (ann), approve_refused (ann), approve_refused (carol), approved (bob), started, succeeded. `bin/acme audit --run run-0004` returns the events as JSON."
+  },
+  "P9": {
+    "verdict": "holds",
+    "evidence": "Every command ran from a non-TTY shell with no prompts (identity by --as or $ACME_ACTOR, inputs by -i) and printed one JSON document, including refusals and a usage error (`bin/acme bogus` -> JSON {ok false, code usage}, exit 2). Exit codes 0 ok, 2 invalid, 3 forbidden, 6 run failed."
+  },
+  "P10": {
+    "verdict": "holds",
+    "evidence": "Operated entirely from org/HANDOFF.md's Commands and negative-case sections: nothing to start, no PATH or port change. Source read only for P5."
+  },
+  "fixes": [],
+  "strikes": [
+    {"path": "org/state/runs/run-0001.json", "lines": 113, "reason": "run record written by acme at run time (gitignored state)"},
+    {"path": "org/state/runs/run-0002.json", "lines": 113, "reason": "run record written by acme at run time (gitignored state)"},
+    {"path": "org/state/runs/run-0003.json", "lines": 113, "reason": "run record written by acme at run time (gitignored state)"}
+  ],
+  "linesBeforeStrikes": 1142,
+  "linesAfterStrikes": 803,
+  "fullyPasses": true,
+  "notes": "Kept: org/bin/acme (584), org/tests/test_acme.py (176, an end-to-end test suite a maintainer would keep; not run by the adjudicator, so its '10 tests, all pass' claim is unverified), org/acme.json (14), org/.gitignore (3), alpha/.acme/actions/mark-deprecated.json (26). score.py counted beta's and gamma's definitions and org/tests/mark-deprecated.json as copies of alpha's (byte-identical); org/state/audit.jsonl was not counted by score.py (extension not in its code set). P5 rewrote gamma's DEPRECATED.md to the probe content, so score.py check would now fail on gamma; C1 was checked before probing. Probe runs run-0004 (succeeded) and run-0005 (failed) were added to org/state after the lines were measured. The handoff's own example extracts the run id with [\"id\"] (top-level), which matches the output. No processes were started."
+}

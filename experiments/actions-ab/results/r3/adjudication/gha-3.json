@@ -1,0 +1,141 @@
+{
+ "run": "gha-3",
+ "C1": "holds",
+ "P1": {
+  "verdict": "holds",
+  "evidence": "git ls-tree main on origins/{alpha,beta,gamma}.git: each has .github/workflows/mark-deprecated.yml, .github/mark-deprecated/{mark_deprecated.py,configure-github.sh,ruleset-main.json}, .github/environments/mark-deprecated.json and CODEOWNERS, committed by ann in 'Add mark-deprecated self-service action' (alpha 4ca0c02, beta e17f464, gamma cf59911); all five files byte-identical across the origins. `bin/acme list` reports definition_sha = each origin's main."
+ },
+ "P2": {
+  "verdict": "holds",
+  "evidence": "alpha main 1008cbaa before. `bin/acme request --repo alpha --as ann -i 'successor=Acme/Bad Name' -i 'reason=This reason is long enough to be valid.'` -> exit 2, state refused, errors[successor] must match ^[a-z0-9-]+/[a-z0-9-]+$ (alpha-mark-deprecated-2). `... -i successor=acme/probe-valid -i reason=short` -> exit 2, state refused, errors[reason] must be 20 to 200 characters, got 5 (alpha-mark-deprecated-3). alpha main 1008cbaa after: unchanged."
+ },
+ "P3": {
+  "verdict": "holds",
+  "evidence": "beta main af33c815 before. `bin/acme preview --repo beta --as ann -i successor=acme/probe-preview -i 'reason=Probe P3 checks that the preview shows the change.'` -> exit 0, valid true, preview from the workflow's preview job: path DEPRECATED.md, change update, before, after '# Deprecated: use acme/probe-preview\\n\\nProbe P3 checks that the preview shows the change.\\n', unified diff. beta main af33c815 after: unchanged."
+ },
+ "P4": {
+  "verdict": "holds",
+  "evidence": "From org/: gamma main f30b1b40 before. `bin/acme request --repo gamma --as ann -i successor=acme/probe-approval -i 'reason=Probe P4 checks the approval rules hold.'` -> exit 0, gamma-mark-deprecated-2 waiting_for_approval with the diff (id also found via the handoff's `runs --repo gamma --state waiting_for_approval | jq -r '.runs[-1].id'`); gamma f30b1b40. `approve --as ann` -> exit 3 'prevents self-review'; gamma f30b1b40. `approve --as carol` -> exit 3 'carol is not a required reviewer'; gamma f30b1b40. status still waiting_for_approval. Enforced locally by org/bin/acme from .github/environments/mark-deprecated.json on main; GitHub environment rules are also configured as code (configure-github.sh)."
+ },
+ "P5": {
+  "verdict": "holds",
+  "evidence": "`bin/acme approve gamma-mark-deprecated-2 --as bob` -> exit 0, state succeeded, result.observation {main a8d9f259, content_matches true}. gamma main now a8d9f259 (author ann, trailers Requested-by: ann, Approved-by: bob, Action-run); `git show main:DEPRECATED.md` = the probe content. Source org/bin/acme execute() (lines 410-439): after the act apply job, mirror() fetches the bare origin (`git fetch --prune <origin> +refs/heads/*:refs/heads/*`), then rev-parse refs/heads/main and git show main:DEPRECATED.md are compared to the previewed content; ok requires act exit 0, content match and the job's own post-push observation. So success is reported only after reading the origin."
+ },
+ "P6": {
+  "verdict": "holds",
+  "evidence": "Wrote origins/alpha.git/hooks/pre-receive (exit 1). alpha main 1008cbaa. ann requested alpha-mark-deprecated-4 (successor acme/probe-reject); `approve --as bob` -> exit 5, state failed, succeeded false, failure quotes '[remote rejected] (pre-receive hook declined)' and 'DEPRECATED.md with the approved content is not on main'. alpha main 1008cbaa after. Hook removed."
+ },
+ "P7": {
+  "verdict": "holds",
+  "evidence": "From org/: `bin/acme list` -> exit 0, JSON actions[] with mark-deprecated for acme/alpha, acme/beta and acme/gamma (reviewers, prevent_self_review, definition_sha). P4's request was made from org/ with `--repo gamma`."
+ },
+ "P8": {
+  "verdict": "holds",
+  "evidence": "`bin/acme record gamma-mark-deprecated-2` -> JSON: requested_by ann, requested_at 12:36:56.768Z, approved_by bob, approved_at 12:37:00.612Z, inputs {successor acme/probe-approval, reason ...}, state succeeded, completed_at 12:37:01.102Z, result (job exit, pushed commit, observation), and timestamped events (requested ann, previewed, waiting_for_approval, approval_denied ann, approval_denied carol, approved bob, job_finished, observed_main, succeeded)."
+ },
+ "P9": {
+  "verdict": "holds",
+  "evidence": "Every step ran as a one-shot command with --as and -i flags, no prompts, one JSON document on stdout, distinct exit codes (0 ok, 2 refused inputs, 3 not allowed, 4 wrong state, 5 run failed). No server."
+ },
+ "P10": {
+  "verdict": "holds",
+  "evidence": "Followed org/HANDOFF.md alone (cd org; bin/acme list, preview, request, runs | jq, approve, status, record). Worked as written with no fixes. Source read only for P5."
+ },
+ "fixes": [],
+ "strikes": [
+  {
+   "path": "org/.acme/mirrors/alpha.git/FETCH_HEAD",
+   "lines": 1,
+   "reason": "git mirror of an origin cloned/fetched by org/bin/acme at run time (git-ignored org/.acme/)"
+  },
+  {
+   "path": "org/.acme/mirrors/alpha.git/HEAD",
+   "lines": 1,
+   "reason": "git mirror of an origin cloned/fetched by org/bin/acme at run time (git-ignored org/.acme/)"
+  },
+  {
+   "path": "org/.acme/mirrors/alpha.git/config",
+   "lines": 8,
+   "reason": "git mirror of an origin cloned/fetched by org/bin/acme at run time (git-ignored org/.acme/)"
+  },
+  {
+   "path": "org/.acme/mirrors/alpha.git/description",
+   "lines": 1,
+   "reason": "git mirror of an origin cloned/fetched by org/bin/acme at run time (git-ignored org/.acme/)"
+  },
+  {
+   "path": "org/.acme/mirrors/alpha.git/info/exclude",
+   "lines": 6,
+   "reason": "git mirror of an origin cloned/fetched by org/bin/acme at run time (git-ignored org/.acme/)"
+  },
+  {
+   "path": "org/.acme/mirrors/alpha.git/packed-refs",
+   "lines": 2,
+   "reason": "git mirror of an origin cloned/fetched by org/bin/acme at run time (git-ignored org/.acme/)"
+  },
+  {
+   "path": "org/.acme/mirrors/alpha.git/refs/heads/main",
+   "lines": 1,
+   "reason": "git mirror of an origin cloned/fetched by org/bin/acme at run time (git-ignored org/.acme/)"
+  },
+  {
+   "path": "org/.acme/mirrors/beta.git/FETCH_HEAD",
+   "lines": 1,
+   "reason": "git mirror of an origin cloned/fetched by org/bin/acme at run time (git-ignored org/.acme/)"
+  },
+  {
+   "path": "org/.acme/mirrors/beta.git/config",
+   "lines": 8,
+   "reason": "git mirror of an origin cloned/fetched by org/bin/acme at run time (git-ignored org/.acme/)"
+  },
+  {
+   "path": "org/.acme/mirrors/beta.git/packed-refs",
+   "lines": 2,
+   "reason": "git mirror of an origin cloned/fetched by org/bin/acme at run time (git-ignored org/.acme/)"
+  },
+  {
+   "path": "org/.acme/mirrors/beta.git/refs/heads/main",
+   "lines": 1,
+   "reason": "git mirror of an origin cloned/fetched by org/bin/acme at run time (git-ignored org/.acme/)"
+  },
+  {
+   "path": "org/.acme/mirrors/gamma.git/FETCH_HEAD",
+   "lines": 1,
+   "reason": "git mirror of an origin cloned/fetched by org/bin/acme at run time (git-ignored org/.acme/)"
+  },
+  {
+   "path": "org/.acme/mirrors/gamma.git/config",
+   "lines": 8,
+   "reason": "git mirror of an origin cloned/fetched by org/bin/acme at run time (git-ignored org/.acme/)"
+  },
+  {
+   "path": "org/.acme/mirrors/gamma.git/packed-refs",
+   "lines": 2,
+   "reason": "git mirror of an origin cloned/fetched by org/bin/acme at run time (git-ignored org/.acme/)"
+  },
+  {
+   "path": "org/.acme/mirrors/gamma.git/refs/heads/main",
+   "lines": 1,
+   "reason": "git mirror of an origin cloned/fetched by org/bin/acme at run time (git-ignored org/.acme/)"
+  },
+  {
+   "path": "org/runs/alpha-mark-deprecated-1.json",
+   "lines": 118,
+   "reason": "run record written by org/bin/acme at run time (auto-committed to origins/org.git as audit history, not edited by a person)"
+  },
+  {
+   "path": "org/runs/beta-mark-deprecated-1.json",
+   "lines": 118,
+   "reason": "run record written by org/bin/acme at run time (auto-committed to origins/org.git as audit history, not edited by a person)"
+  },
+  {
+   "path": "org/runs/gamma-mark-deprecated-1.json",
+   "lines": 118,
+   "reason": "run record written by org/bin/acme at run time (auto-committed to origins/org.git as audit history, not edited by a person)"
+  }
+ ],
+ "linesBeforeStrikes": 1261,
+ "linesAfterStrikes": 863,
+ "fullyPasses": true,
+ "notes": "C1 was checked with score.py check before the probes (pass); P5 then replaced gamma's DEPRECATED.md with the probe content (a8d9f259), as P5 requires. By design the probes' run records were committed and pushed to origins/org.git (now 51361a58; it was 6ecbac56). org/runs/*.json are struck although committed, because the CLI writes and commits them as audit records; no person edits them. Extra checks: re-approving a finished run -> exit 4; --as mallory -> exit 3 unknown person. The commit on main is authored as the requester (ann), with Approved-by in a trailer. Not run here and not adjudicated: configure-github.sh and ruleset-main.json against GitHub (HANDOFF says so). Identity is trusted from --as. No process outlived its command."
+}

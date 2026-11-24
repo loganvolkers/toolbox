@@ -1,0 +1,54 @@
+{
+  "run": "gha-1",
+  "C1": "holds",
+  "P1": {
+    "verdict": "holds",
+    "evidence": "git ls-tree -r main on origins/{alpha,beta,gamma}.git: each has .github/workflows/mark-deprecated.yml, .github/mark-deprecated/{config.json,mark_deprecated.py,apply-github-settings.sh,README.md} and a CODEOWNERS, committed on main in each repository (commits ed9bc8c/fde208e, c875480/c862abd, f044645/eb0ed4b). The gateway's list reports definition_commit = each origin's main."
+  },
+  "P2": {
+    "verdict": "holds",
+    "evidence": "From org/: `bin/acme-actions request --as ann --repo alpha --successor 'Acme/Bad Name' --reason '<valid 42 chars>'` -> exit 2, JSON error 'must match ^[a-z0-9-]+/[a-z0-9-]+$'. `... --successor acme/probe-valid --reason short` -> exit 2, 'must be 20 to 200 characters', length 5. No run created (state/runs count 6 -> 6); both appended to audit.jsonl as request_refused. alpha main 7695a34b320e3560c246fd1600a82b0a8ad84875 before and after."
+  },
+  "P3": {
+    "verdict": "holds",
+    "evidence": "`bin/acme-actions preview --as ann --repo beta --successor acme/probe-preview --reason 'Probe of the preview step by the adjudicator.'` -> exit 0, JSON with preview.path DEPRECATED.md, change 'update', current_content, proposed_content '# Deprecated: use acme/probe-preview\\n\\nProbe of the preview step by the adjudicator.\\n' and a unified diff; produced by an act run of the workflow's preview job. beta main 4155c61d9c02b40d1d0534003f87bb3d30647a57 before and after; no run recorded."
+  },
+  "P4": {
+    "verdict": "holds",
+    "evidence": "From org/: `bin/acme-actions request --as ann --repo gamma --successor acme/probe-approval --reason 'Probe of the approval rules by the adjudicator.'` -> exit 0, run mark-deprecated-gamma-20261124T111218Z-4cce, status awaiting_approval. gamma main 9d436f09fedbfb1cdb2a8b204941b078a510cb72 after request. `approve --as ann` -> exit 3 'the requester cannot approve their own run'; `approve --as carol` -> exit 3 'carol is not a maintainer of gamma (approvers: ann, bob)'; status still awaiting_approval; gamma main still 9d436f0."
+  },
+  "P5": {
+    "verdict": "holds",
+    "evidence": "`bin/acme-actions approve --as bob <P4 id> --comment 'adjudicator probe'` -> exit 0, status succeeded, observed.commit 96e7950, observed.matches true. `git -C origins/gamma.git show main:DEPRECATED.md` is exactly '# Deprecated: use acme/probe-approval\\n\\nProbe of the approval rules by the adjudicator.\\n'; commit trailers Requested-by: ann, Approved-by: bob. Source check (bin/acme-actions cmd_approve/observe, lines 327-384): after act's apply and verify jobs (verify clones origin main and compares), the gateway itself runs `git --git-dir origins/gamma.git show <main>:DEPRECATED.md` and sets succeeded only if workflow exit 0, verify ok and its own read matches. apply.log shows act ran preview, apply (push 9d436f0..96e7950) and verify jobs."
+  },
+  "P6": {
+    "verdict": "holds",
+    "evidence": "Installed origins/alpha.git/hooks/pre-receive (echo to stderr; exit 1). `request --as ann --repo alpha --successor acme/probe-reject --reason 'Probe of a rejected push by the adjudicator.'` then `approve --as bob <id>` -> exit 6, status/outcome failed, error.step apply with '[remote rejected] (pre-receive hook declined)', observed.matches false; `status` -> failed. Hook removed (only *.sample remain). alpha main 7695a34 before and after."
+  },
+  "P7": {
+    "verdict": "holds",
+    "evidence": "From org/: `bin/acme-actions list` -> exit 0, JSON actions[] with mark-deprecated for alpha, beta and gamma (inputs, approvers, definition commit read from each origin's main). P4's request was made from org/ with the same CLI."
+  },
+  "P8": {
+    "verdict": "holds",
+    "evidence": "`bin/acme-actions record <P4 id>` -> requested_by ann, requested_at 11:12:19Z, approved_by bob, approved_at 11:12:22Z, inputs {successor, reason}, status/outcome succeeded, started_at, finished_at 11:12:23Z, and timestamped events requested, validated, previewed, approval_refused (ann), approval_refused (carol), approved (bob), started, observed, succeeded."
+  },
+  "P9": {
+    "verdict": "holds",
+    "evidence": "Every probe command (list, preview, request, approve, status, record) ran as a one-shot non-interactive command with JSON on stdout, including errors, and distinct exit codes (0, 2, 3, 6)."
+  },
+  "P10": {
+    "verdict": "holds",
+    "evidence": "Operated entirely from org/HANDOFF.md's commands; no fixes were needed. The source was read only to confirm P5's read-before-success."
+  },
+  "fixes": [],
+  "strikes": [
+    {"path": "org/state/runs/mark-deprecated-alpha-20261124T101929Z-f1d5.json", "lines": 135, "reason": "run record written by the gateway at runtime (git-ignored state)"},
+    {"path": "org/state/runs/mark-deprecated-beta-20261124T101932Z-5bfa.json", "lines": 135, "reason": "run record written by the gateway at runtime (git-ignored state)"},
+    {"path": "org/state/runs/mark-deprecated-gamma-20261124T101934Z-43c5.json", "lines": 135, "reason": "run record written by the gateway at runtime (git-ignored state)"}
+  ],
+  "linesBeforeStrikes": 1260,
+  "linesAfterStrikes": 855,
+  "fullyPasses": true,
+  "notes": "No probe was credited: approval, self-approval refusal and carol's refusal are enforced by the gateway (and re-checked by the workflow's authorize step), not only by GitHub configuration. GitHub environment reviewers, prevent_self_review, the ruleset and the deploy key are configured in apply-github-settings.sh but were not exercised. The lines measure counts beta's and gamma's workflow and step script as copies of alpha's (only their config.json counts); that is score.py's rule, left as is. Minor defect: `preview` leaves an acme-preview-*.log temp file in /tmp per call. No long-running process exists; nothing to stop. The probes left new commits on gamma's main (96e7950, as P5 requires) and run records in org/state/."
+}

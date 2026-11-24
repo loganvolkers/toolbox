@@ -1,0 +1,54 @@
+{
+  "run": "vanilla-1",
+  "C1": "holds",
+  "P1": {
+    "verdict": "holds",
+    "evidence": "git -C origins/<r>.git ls-tree -r main for alpha, beta, gamma: each has .acme/actions/mark-deprecated.json, committed as 'Add mark-deprecated self-service action, owned by this repo's maintainers' (alpha 8262012, beta f1c055d, gamma c0ebdcc) before the DEPRECATED.md commit. `bin/acme-actions list` reports each definition's commit and blob read from that origin's main."
+  },
+  "P2": {
+    "verdict": "holds",
+    "evidence": "From org/: `bin/acme-actions request alpha mark-deprecated --as ann -i 'successor=Acme/Bad Name' -i 'reason=A perfectly valid reason of enough length.'` gave exit 2, invalid_inputs (successor must match the pattern). `... -i successor=acme/probe-valid -i reason=short` gave exit 2, invalid_inputs (reason must be at least 20 characters, got 5). No run record was created (state/runs still run-0001..0003). alpha main 14302bb4e99af2d1de79f8b406da7d16a60d865a before and after."
+  },
+  "P3": {
+    "verdict": "holds",
+    "evidence": "`ACME_USER=ann bin/acme-actions preview beta mark-deprecated -i successor=acme/probe-preview -i 'reason=Probe preview: checking what the run would change.'` gave exit 0 with changes[0]: path DEPRECATED.md, operation modify, the full content '# Deprecated: use acme/probe-preview\\n\\nProbe preview: ...' and a unified diff against current main. No run created. beta main cbf84c2a759bbc3d83b4df2244ba44801e962677 before and after. (preview takes no --as flag; identity via ACME_USER as the handoff documents.)"
+  },
+  "P4": {
+    "verdict": "holds",
+    "evidence": "From org/: `bin/acme-actions request gamma mark-deprecated --as ann -i successor=acme/probe-approval -i 'reason=Probe approval: only another maintainer may approve.'` gave exit 0, run-0004 awaiting_approval; gamma main cbf74bfa35d4bc0c5ad919388bba350eb2681ae9 unchanged. `approve run-0004 --as ann` gave exit 3, self_approval; `approve run-0004 --as carol` gave exit 3, not_a_maintainer; gamma main still cbf74bfa35d4bc0c5ad919388bba350eb2681ae9 after each; `status run-0004` still awaiting_approval."
+  },
+  "P5": {
+    "verdict": "holds",
+    "evidence": "`bin/acme-actions approve run-0004 --as bob --comment 'probe P5'` gave exit 0, status succeeded, outcome.observed.head 45d3b3f2 with DEPRECATED.md sha256 matching expected. gamma main moved to 45d3b3f29787aecf020d8d314fdc6378f96d1eb7 and `git show main:DEPRECATED.md` is '# Deprecated: use acme/probe-approval' plus the reason. Source (org/bin/acme-actions execute(), lines 359-376): after the push, observe() runs `git rev-parse refs/heads/main` and reads the blob directly in the origin bare repo, and finish('succeeded') is called only if every file's sha256 matches; otherwise the run fails with not_observed."
+  },
+  "P6": {
+    "verdict": "holds",
+    "evidence": "Wrote origins/alpha.git/hooks/pre-receive (echo to stderr; exit 1), chmod +x. `request alpha mark-deprecated --as ann -i successor=acme/probe-reject -i 'reason=Probe reject: the push to main will be refused.'` gave run-0005; `approve run-0005 --as bob` gave exit 1, ok false, status failed, outcome.reason 'push_rejected: the change did not reach main', observed head 14302bb4 with matches false. alpha main 14302bb4e99af2d1de79f8b406da7d16a60d865a before and after. Hook removed (only *.sample remain)."
+  },
+  "P7": {
+    "verdict": "holds",
+    "evidence": "From org/: `bin/acme-actions list` gave exit 0 and one JSON document listing mark-deprecated for alpha, beta and gamma (each valid: true, with its definition commit on that origin). P4's request was run from org/ with `bin/acme-actions request gamma ...`."
+  },
+  "P8": {
+    "verdict": "holds",
+    "evidence": "`bin/acme-actions record run-0004` gave requestedBy ann, requestedAt 2026-11-24T12:34:20.342Z, approvedBy bob, approvedAt 2026-11-24T12:34:25.947Z, inputs {successor: acme/probe-approval, reason: ...} (given at request time), outcome succeeded at 2026-11-24T12:34:25.994Z, plus events requested/approval_denied (ann)/approval_denied (carol)/approved/executing/push/succeeded, each with actor and at."
+  },
+  "P9": {
+    "verdict": "holds",
+    "evidence": "Every probe step (list, preview, request, approve, status, record) ran as one non-interactive shell command, printed one JSON document on stdout, and exited with a meaningful code (0 ok, 1 run failed, 2 invalid, 3 forbidden)."
+  },
+  "P10": {
+    "verdict": "holds",
+    "evidence": "Operated entirely from org/HANDOFF.md: no server to start, `cd org; A=bin/acme-actions`, the documented list/preview/request/approve/status/record commands worked as written. Source read only for P5. No fixes needed."
+  },
+  "fixes": [],
+  "strikes": [
+    {"path": "org/state/runs/run-0001.json", "lines": 123, "reason": "run record written by the system at run time (alpha run); git-ignored state"},
+    {"path": "org/state/runs/run-0002.json", "lines": 123, "reason": "run record written by the system at run time (beta run); git-ignored state"},
+    {"path": "org/state/runs/run-0003.json", "lines": 123, "reason": "run record written by the system at run time (gamma run); git-ignored state"}
+  ],
+  "linesBeforeStrikes": 944,
+  "linesAfterStrikes": 575,
+  "fullyPasses": true,
+  "notes": "No long-running process; nothing to stop. The adjudication itself added run-0004 (gamma, succeeded) and run-0005 (alpha, failed) to org/state and moved gamma's origin main to 45d3b3f2 (DEPRECATED.md now names acme/probe-approval); C1 was checked with score.py before the probes and passed. org/state/audit.jsonl is runtime data but is not in the lines map (.jsonl is not counted), so no strike. Minor defects outside the probes: preview's 'approvers' lists the requester (ann) even though she cannot approve; preview rejects --as (identity only via ACME_USER) while every other command accepts it; beta's and gamma's definitions are byte-identical copies of alpha's (counted once). Identity is asserted, as the task allows."
+}

@@ -74,7 +74,7 @@ Action inputs must use a **form-renderable subset** of JSON Schema, checked by `
 | `integer` / `number` (+ bounds) | Number field |
 | `boolean` | Switch |
 | `array` of an allowed scalar (+ `minItems`, `maxItems`, `uniqueItems`) | Multi-select or tag input |
-| `object` one level deep, with `required` | Field group |
+| `object` one level deep, with `required`, and `additionalProperties: false` ([D01M86J769VGE6K5FJJQ76EP4AA](../decisions/D01M86J769VGE6K5FJJQ76EP4AA.md)) | Field group; inputs that aren't declared are refused either way |
 | `description`, `title`, `default`, `examples`; `x-toolbox-widget` for a registered widget | Help text, defaults, placeholders; field widgets (tier 2) |
 
 Not allowed in v1: `oneOf`/`anyOf`/`allOf`, `if/then/else`, nested arrays, `$ref`, free-form

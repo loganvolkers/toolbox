@@ -63,11 +63,23 @@ pub fn errors(validator: &Validator, doc: &Value) -> Vec<(String, String)> {
                 message = format!("this value{}", &message[instance.len()..]);
             }
             if message.contains("'anyOf'") && is_action_path(&path) {
-                message = "an action must declare `expect` (a postcondition) or `unverified: true` (action-runs §5)".into();
+                message = "an action must declare `expect` (a postcondition), be a `change` (observed on its base branch) or say `unverified: true` (action-runs §5)".into();
             }
             (path, message)
         })
         .collect()
+}
+
+/// Validate an action's inputs against its `inputs` schema (draft 2020-12, so `pattern`, `format`
+/// and `items` hold), returning `(json pointer, message)` pairs. `Err` when the schema itself
+/// doesn't compile. Toolbox's own keyword `enumFrom` is ignored here; the caller checks it.
+pub fn input_errors(schema: &Value, inputs: &Value) -> Result<Vec<(String, String)>, String> {
+    let v = jsonschema::options()
+        .with_draft(jsonschema::Draft::Draft202012)
+        .should_validate_formats(true)
+        .build(schema)
+        .map_err(|e| format!("the input schema does not compile: {e}"))?;
+    Ok(errors(&v, inputs))
 }
 
 fn is_action_path(path: &str) -> bool {

@@ -1,0 +1,176 @@
+{
+ "run": "gha-2",
+ "C1": "holds",
+ "P1": {
+  "verdict": "holds",
+  "evidence": "git ls-tree main on origins/{alpha,beta,gamma}.git: each has .github/workflows/mark-deprecated.yml and .github/mark-deprecated/{mark_deprecated.py,settings.json,apply-github-settings.sh} plus CODEOWNERS, committed by ann in 'Add the mark-deprecated self-service action' (alpha c33f755, beta c4b06fd, gamma b7ca242). Workflow, script and settings script are byte-identical across origins; settings.json differs only in its own repository slug. `acme-actions list` reports definition.origin_main = each origin's main."
+ },
+ "P2": {
+  "verdict": "holds",
+  "evidence": "alpha main 6b58478b before. `bin/acme-actions request alpha mark-deprecated --as ann -f 'successor=Acme/Bad Name' -f 'reason=This reason is long enough to be valid.'` -> exit 2, status refused, errors[successor] must match ^[a-z0-9-]+/[a-z0-9-]+$. `... -f successor=acme/probe-valid -f reason=short` -> exit 2, status refused, errors[reason] must be 20 to 200 characters, got 5. alpha main 6b58478b after: unchanged."
+ },
+ "P3": {
+  "verdict": "holds",
+  "evidence": "beta main 6175b3d8 before. `bin/acme-actions preview beta mark-deprecated --as ann -f successor=acme/probe-preview -f 'reason=Probe P3 checks that the preview shows the change.'` -> exit 0, JSON preview from the workflow's plan job: path DEPRECATED.md, change update, before, after '# Deprecated: use acme/probe-preview\\n\\nProbe P3 checks that the preview shows the change.\\n', unified diff. beta main 6175b3d8 after: unchanged."
+ },
+ "P4": {
+  "verdict": "holds",
+  "evidence": "From org/: gamma main c78cb20d before. `bin/acme-actions request gamma mark-deprecated --as ann -f successor=acme/probe-approval -f 'reason=Probe P4 checks the approval rules hold.'` -> exit 0, gamma-20261124T123545Z-0e58 awaiting_approval with the diff; gamma c78cb20d. `approve gamma-20261124T123545Z-0e58 --as ann` -> exit 3 'ann requested this run and cannot approve it'; gamma c78cb20d. `approve --as carol` -> exit 3 'carol is not a maintainer of gamma'; gamma c78cb20d. status still awaiting_approval. Enforced locally by acme-actions (and by the workflow's guard step); GitHub environment reviewers + prevent_self_review are also configured as code in apply-github-settings.sh."
+ },
+ "P5": {
+  "verdict": "holds",
+  "evidence": "`bin/acme-actions approve gamma-20261124T123545Z-0e58 --as bob` -> exit 0, status succeeded, outcome 'observed DEPRECATED.md on main at 250ceb4ee1e2'. gamma main now 250ceb4e by acme-actions[bot] with Requested-by: ann / Approved-by: bob; `git show main:DEPRECATED.md` = the probe content. Source org/bin/acme-actions cmd_approve (lines 400-437): after the act apply job, observe() runs git --git-dir <bare origin> rev-parse refs/heads/main, merge-base --is-ancestor <commit> main and git show main:DEPRECATED.md compared to the approved content; status 'succeeded' is set only when there are no failures from act, the workflow's verify step, or that observation."
+ },
+ "P6": {
+  "verdict": "holds",
+  "evidence": "Wrote origins/alpha.git/hooks/pre-receive (exit 1). alpha main 6b58478b. ann requested alpha-20261124T123601Z-d625 (successor acme/probe-reject), `approve --as bob` -> exit 1, status failed, outcome 'apply: push to main was rejected'. alpha main 6b58478b after. Hook removed."
+ },
+ "P7": {
+  "verdict": "holds",
+  "evidence": "From org/: `bin/acme-actions list` -> exit 0, JSON actions[] = (alpha, mark-deprecated), (beta, mark-deprecated), (gamma, mark-deprecated), with inputs, approval and definition commit. P4's request was made from org/ by `request gamma mark-deprecated`."
+ },
+ "P8": {
+  "verdict": "holds",
+  "evidence": "`bin/acme-actions record gamma-20261124T123545Z-0e58` -> JSON: requested_by ann, requested_at 12:35:45Z, approved_by bob, approved_at 12:35:51Z, inputs {successor acme/probe-approval, reason ...}, outcome {status succeeded, at 12:35:51Z, commit, main_commit}, observed, and timestamped events (requested ann, previewed, awaiting_approval, approval_denied ann, approval_denied carol, approved bob, started, succeeded)."
+ },
+ "P9": {
+  "verdict": "holds",
+  "evidence": "Every step ran as a one-shot command with --as and -f flags, no prompts, JSON on stdout, distinct exit codes (0 ok, 1 failed, 2 refused inputs, 3 not permitted, 5 wrong state). No server."
+ },
+ "P10": {
+  "verdict": "holds",
+  "evidence": "Followed org/HANDOFF.md alone (cd org; A=bin/acme-actions; list, preview, request, approve, status, record; jq as it names). Worked as written with no fixes. Source read only for P5."
+ },
+ "fixes": [],
+ "strikes": [
+  {
+   "path": "org/state/previews/alpha-20261124T121432Z-1de1/plan-event.json",
+   "lines": 8,
+   "reason": "preview event payload / step result written by org/bin/acme-actions at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/previews/alpha-20261124T121432Z-1de1/plan/preview.json",
+   "lines": 13,
+   "reason": "preview event payload / step result written by org/bin/acme-actions at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/previews/alpha-20261124T121432Z-1de1/plan/validate.json",
+   "lines": 10,
+   "reason": "preview event payload / step result written by org/bin/acme-actions at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/previews/beta-20261124T121435Z-e273/plan-event.json",
+   "lines": 8,
+   "reason": "preview event payload / step result written by org/bin/acme-actions at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/previews/beta-20261124T121435Z-e273/plan/preview.json",
+   "lines": 13,
+   "reason": "preview event payload / step result written by org/bin/acme-actions at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/previews/beta-20261124T121435Z-e273/plan/validate.json",
+   "lines": 10,
+   "reason": "preview event payload / step result written by org/bin/acme-actions at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/previews/gamma-20261124T121436Z-794f/plan-event.json",
+   "lines": 8,
+   "reason": "preview event payload / step result written by org/bin/acme-actions at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/previews/gamma-20261124T121436Z-794f/plan/preview.json",
+   "lines": 13,
+   "reason": "preview event payload / step result written by org/bin/acme-actions at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/previews/gamma-20261124T121436Z-794f/plan/validate.json",
+   "lines": 10,
+   "reason": "preview event payload / step result written by org/bin/acme-actions at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/alpha-20261124T121433Z-fabb/apply-event.json",
+   "lines": 10,
+   "reason": "run record / act event payload / step result written by org/bin/acme-actions at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/alpha-20261124T121433Z-fabb/apply/apply.json",
+   "lines": 7,
+   "reason": "run record / act event payload / step result written by org/bin/acme-actions at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/alpha-20261124T121433Z-fabb/apply/guard.json",
+   "lines": 7,
+   "reason": "run record / act event payload / step result written by org/bin/acme-actions at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/alpha-20261124T121433Z-fabb/apply/verify.json",
+   "lines": 10,
+   "reason": "run record / act event payload / step result written by org/bin/acme-actions at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/alpha-20261124T121433Z-fabb/plan-event.json",
+   "lines": 9,
+   "reason": "run record / act event payload / step result written by org/bin/acme-actions at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/alpha-20261124T121433Z-fabb/record.json",
+   "lines": 203,
+   "reason": "run record / act event payload / step result written by org/bin/acme-actions at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/beta-20261124T121435Z-51f1/apply-event.json",
+   "lines": 10,
+   "reason": "run record / act event payload / step result written by org/bin/acme-actions at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/beta-20261124T121435Z-51f1/apply/apply.json",
+   "lines": 7,
+   "reason": "run record / act event payload / step result written by org/bin/acme-actions at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/beta-20261124T121435Z-51f1/apply/verify.json",
+   "lines": 10,
+   "reason": "run record / act event payload / step result written by org/bin/acme-actions at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/beta-20261124T121435Z-51f1/plan-event.json",
+   "lines": 9,
+   "reason": "run record / act event payload / step result written by org/bin/acme-actions at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/beta-20261124T121435Z-51f1/record.json",
+   "lines": 203,
+   "reason": "run record / act event payload / step result written by org/bin/acme-actions at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/gamma-20261124T121436Z-614e/apply-event.json",
+   "lines": 10,
+   "reason": "run record / act event payload / step result written by org/bin/acme-actions at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/gamma-20261124T121436Z-614e/apply/apply.json",
+   "lines": 7,
+   "reason": "run record / act event payload / step result written by org/bin/acme-actions at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/gamma-20261124T121436Z-614e/apply/verify.json",
+   "lines": 10,
+   "reason": "run record / act event payload / step result written by org/bin/acme-actions at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/gamma-20261124T121436Z-614e/plan-event.json",
+   "lines": 9,
+   "reason": "run record / act event payload / step result written by org/bin/acme-actions at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/gamma-20261124T121436Z-614e/record.json",
+   "lines": 203,
+   "reason": "run record / act event payload / step result written by org/bin/acme-actions at run time (git-ignored org/state/)"
+  }
+ ],
+ "linesBeforeStrikes": 1758,
+ "linesAfterStrikes": 941,
+ "fullyPasses": true,
+ "notes": "C1 was checked with score.py check before the probes (pass); P5 then replaced gamma's DEPRECATED.md with the probe content (250ceb4e), as P5 requires. org/state/audit.jsonl (runtime) is not in lines.json because .jsonl is not a counted extension, so it needs no strike. Extra checks: the handoff's refusal example (preview with Acme/X and 'short') -> exit 2 with both errors; re-approving a finished run -> exit 5; --as mallory -> exit 3 unknown person. `status` gives outcome as a one-line string, `record` has the structured outcome. Not run here and not adjudicated: apply-github-settings.sh (HANDOFF says DRY_RUN only), environments/rulesets on GitHub. Identity is trusted from --as. HANDOFF notes a killed approve leaves the run 'running'. No process outlived its command."
+}

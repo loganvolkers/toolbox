@@ -1,0 +1,22 @@
+{
+ "linesToMaintain": 1136,
+ "files": {
+  "alpha/.github/mark-deprecated/apply-github-settings.sh": 75,
+  "alpha/.github/mark-deprecated/mark_deprecated.py": 137,
+  "alpha/.github/mark-deprecated/settings.json": 30,
+  "alpha/.github/workflows/mark-deprecated.yml": 72,
+  "alpha/CODEOWNERS": 5,
+  "beta/.github/CODEOWNERS": 5,
+  "org/.gitignore": 2,
+  "org/.state/runs/alpha-20261124t131010-e4ad1b.json": 132,
+  "org/.state/runs/alpha-20261124t131010-e4ad1b/event-apply.json": 1,
+  "org/.state/runs/beta-20261124t131011-942f7f.json": 132,
+  "org/.state/runs/beta-20261124t131011-942f7f/event-apply.json": 1,
+  "org/.state/runs/gamma-20261124t131012-899a18.json": 132,
+  "org/.state/runs/gamma-20261124t131012-899a18/event-apply.json": 1,
+  "org/act/stubs/create-github-app-token/action.yml": 15,
+  "org/bin/acme": 381,
+  "org/people.json": 8,
+  "org/repos.json": 7
+ }
+}

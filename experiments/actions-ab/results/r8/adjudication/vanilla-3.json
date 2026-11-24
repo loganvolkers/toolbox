@@ -1,0 +1,70 @@
+{
+ "run": "vanilla-3",
+ "C1": "holds",
+ "P1": {
+  "verdict": "holds",
+  "evidence": "git -C origins/<r>.git ls-tree -r main: alpha, beta and gamma each commit .acme/actions/add-notice/action.json and run.py on main, inside the repository. The definition names approval group release; members are not listed in the repo."
+ },
+ "P2": {
+  "verdict": "holds",
+  "evidence": "cd org; ./bin/acme request --as ann alpha add-notice with level=urgent (exit 2, invalid_inputs 'must be one of [info, warning]'), a 200-character message (exit 2, 'must be at most 160 characters (got 200)') and a message with a literal newline (exit 2, 'must be one line'). No run created (org/runs stayed at run-0001..0003). alpha main 502be633 before and after."
+ },
+ "P3": {
+  "verdict": "holds",
+  "evidence": "./bin/acme preview --as ann beta add-notice -i level=info -i 'message=Probe: preview only, nothing should change.': exit 0, diff on readme.md replacing line 1 '> **Info:** Releases now ship...' with '> **Info:** Probe: preview only, nothing should change.', with base and expected blob ids. beta main c30e5475 before and after; no run recorded."
+ },
+ "P4": {
+  "verdict": "holds",
+  "evidence": "From org/: ./bin/acme request --as dave gamma add-notice -i level=warning -i 'message=Probe: the release group approves this one.': exit 0, run-0004 pending_approval, requestedBy dave. gamma main e830e7b2 unchanged. approve --as dave run-0004: exit 2 self_approval; --as ann: exit 2 not_in_group; --as carol: exit 2 not_in_group. gamma main still e830e7b2; status pending_approval, approvedBy null."
+ },
+ "P5": {
+  "verdict": "holds",
+  "evidence": "./bin/acme approve --as erin run-0004: exit 0, state succeeded, outcome.main ce8b10cc = origins/gamma.git main. main:README.md line 1 is '> **Warning:** Probe: the release group approves this one.', line 2 blank, lines 3+ identical (diff) to the root commit's README.md; the task's notice occurs 0 times. Source: bin/acme execute() pushes, then main_sha(origin) and blob_at(origin, main, path) read the bare origin with git --git-dir, and finish(succeeded) runs only if the observed blobs equal the approved ones; the record's 'observed' event (README.md 84f9ed86) precedes 'succeeded'."
+ },
+ "P6": {
+  "verdict": "holds",
+  "evidence": "pre-receive hook (exit 1) in origins/alpha.git/hooks. ./bin/acme request --as ann alpha ... -i level=info -i 'message=Probe: the origin rejects this push.' -> run-0005; approve --as dave run-0005: exit 1, state failed, reason push_rejected, detail quotes the hook's message. status run-0005: failed. alpha main 502be633 before and after. Hook removed."
+ },
+ "P7": {
+  "verdict": "holds",
+  "evidence": "cd org && ./bin/acme list: exit 0, JSON actions[] = (alpha, add-notice), (beta, add-notice), (gamma, add-notice), with orgCommit. P4 was requested from org/ with ./bin/acme request."
+ },
+ "P8": {
+  "verdict": "holds",
+  "evidence": "./bin/acme show run-0004: requestedBy dave at 16:03:39.912Z, approvedBy erin at 16:03:43.363Z, inputs {level: warning, message: ...}, state succeeded, outcome {result succeeded, at 16:03:43.460Z, commit, main, observed blob}, and timestamped events: requested (dave), approve_refused (dave self_approval, ann, carol), approved (erin), started, push_attempted, observed, succeeded."
+ },
+ "P9": {
+  "verdict": "holds",
+  "evidence": "Per the handoff: ./bin/acme group-remove --as dave release erin (one command, one commit on origins/org.git c7a70b0 -> 90d9ed0, groups.json 1 insertion 2 deletions; the org checkout is at 90d9ed0 afterwards). ./bin/acme request --as ann beta ... -i level=info -i 'message=Probe: erin has left the release group.' -> run-0006; approve --as erin: exit 2 not_in_group (members [dave], orgCommit 90d9ed0); beta main unchanged (c30e5475). approve --as dave: exit 0 succeeded (56dd0d4a). beta main:readme.md is the probe notice, a blank line, then the imported readme.md (diff identical); the task's notice is gone."
+ },
+ "P10": {
+  "verdict": "holds",
+  "evidence": "Every step (list, preview, request, approve, status, show, group-remove) ran as one non-interactive shell command printing JSON, with exit codes 0 ok, 1 run failed, 2 refused/invalid."
+ },
+ "P11": {
+  "verdict": "holds",
+  "evidence": "Operated entirely from org/HANDOFF.md with ./bin/acme; nothing had to be started. No fixes. Source read only for P5's evidence (execute, main_sha, blob_at in org/bin/acme)."
+ },
+ "fixes": [],
+ "strikes": [
+  {
+   "path": "org/runs/run-0001.json",
+   "lines": 96,
+   "reason": "run record written by acme at run time (git-ignored org/runs/)"
+  },
+  {
+   "path": "org/runs/run-0002.json",
+   "lines": 96,
+   "reason": "run record written by acme at run time (git-ignored org/runs/)"
+  },
+  {
+   "path": "org/runs/run-0003.json",
+   "lines": 96,
+   "reason": "run record written by acme at run time (git-ignored org/runs/)"
+  }
+ ],
+ "linesBeforeStrikes": 824,
+ "linesAfterStrikes": 536,
+ "fullyPasses": true,
+ "notes": "C1 rerun by the adjudicator with score.py check before any probe: pass. The remaining lines are the one-file engine/CLI org/bin/acme (455), groups.json, org.json, .gitignore, and alpha's action.json and run.py (beta's and gamma's identical copies are not counted again by score.py). The run wrote no automated tests (none are counted or named in the handoff). org/runs/audit.log is not counted by score.py, so needs no strike. Exit codes are coarser than the other vanilla runs: invalid inputs and forbidden approvals share exit 2, distinguished by the JSON 'error' field. Outside the probes: identity is asserted with --as and not authenticated; group changes are restricted to members of the group's managedBy group (release itself), so the last release member could remove themselves and leave nobody able to approve or change it through the CLI; a hand edit pushed to the org origin would still work (cmd_group_change has no guard; not exercised). Probe side effects left in the workspace: three new run records (run-0004 to run-0006), one commit on origins/gamma.git (P5), one on origins/beta.git (P9), one on origins/org.git (P9, erin removed), with the org checkout at it."
+}

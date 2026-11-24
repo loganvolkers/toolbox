@@ -1,0 +1,64 @@
+{
+ "run": "vanilla-2",
+ "C1": "holds",
+ "P1": {
+  "verdict": "holds",
+  "evidence": "git -C origins/<r>.git log main -- .acme: .acme/actions/mark-deprecated.json committed by Ann on main of alpha (407384a), beta (9dca9f3) and gamma (b0f035a), inside each repository; the three files are identical (inputs with pattern and 20-200 length, approvers ann and bob, write-file step). `./bin/acme list` reads them from each origin."
+ },
+ "P2": {
+  "verdict": "holds",
+  "evidence": "alpha main d174a9e before. `./bin/acme request alpha mark-deprecated --as ann --input 'successor=Acme/Bad Name' --input 'reason=<valid 42 chars>'` -> exit 2, {ok:false, code invalid_inputs, successor must match pattern}. `... --input successor=acme/probe-valid --input reason=short` -> exit 2, reason must be at least 20 characters (got 5). No new run in state/runs. alpha main d174a9e after: unchanged."
+ },
+ "P3": {
+  "verdict": "holds",
+  "evidence": "beta main 8951cea before. `./bin/acme preview beta mark-deprecated --as ann --input successor=acme/probe-preview --input 'reason=Probe: preview must show the file and content.'` -> exit 0, JSON preview: changes[{path DEPRECATED.md, operation modify, before, after '# Deprecated: use acme/probe-preview\\n\\nProbe: ...\\n'}], unified diff, commit message, approvers. No run created. beta main 8951cea after: unchanged."
+ },
+ "P4": {
+  "verdict": "holds",
+  "evidence": "From /tmp/actions-ab/r6/vanilla-2/org, gamma main ce9c5be before. `./bin/acme request gamma mark-deprecated --as ann --input successor=acme/probe-approval --input 'reason=Probe: approval must come from another maintainer.'` -> exit 0, run-0004 awaiting_approval. gamma ce9c5be after request. `./bin/acme approve run-0004 --as ann` -> exit 3 self_approval. `--as carol` -> exit 3 not_an_approver (approvers ann, bob from the pinned definition). Status still awaiting_approval; gamma main ce9c5be: unchanged."
+ },
+ "P5": {
+  "verdict": "holds",
+  "evidence": "`./bin/acme approve run-0004 --as bob` -> exit 0, status succeeded, outcome 'observed the expected content on main at 9f82044'. git -C origins/gamma.git show main:DEPRECATED.md = '# Deprecated: use acme/probe-approval\\n\\nProbe: approval must come from another maintainer.\\n'. Source: verify() (acme_actions.py 455-482) calls sync_mirror(), which `git fetch`es the origin's main into state/mirrors, reads DEPRECATED.md at the fetched head with cat-file, compares with the expected content, and only then sets status succeeded (up to 5 attempts, else failed not_observed). Events: committed, pushed, observed, succeeded."
+ },
+ "P6": {
+  "verdict": "holds",
+  "evidence": "Wrote origins/alpha.git/hooks/pre-receive (exit 1). alpha main d174a9e before. Request as ann (successor acme/probe-reject) -> run-0005; `./bin/acme approve run-0005 --as bob` -> exit 6, {ok:false, error.code push_rejected}, run status failed with the hook's output in outcome.details.pushOutput. `./bin/acme status run-0005` -> failed. alpha main d174a9e after. Hook removed."
+ },
+ "P7": {
+  "verdict": "holds",
+  "evidence": "From org/: `./bin/acme list` -> exit 0, {ok:true, actions:[alpha/mark-deprecated, beta/mark-deprecated, gamma/mark-deprecated]}. P4's request was made from org/."
+ },
+ "P8": {
+  "verdict": "holds",
+  "evidence": "`./bin/acme record run-0004` -> requestedBy ann, requestedAt 13:53:55.062Z; approval {by bob, at 13:53:58.086Z}; inputs {successor acme/probe-approval, reason ...}; outcome {status succeeded, at 13:53:58.139Z, detail with main commit}; plus verification, execution and timestamped events: requested(ann), approval_refused(ann), approval_refused(carol), approved(bob), committed, pushed, observed, succeeded."
+ },
+ "P9": {
+  "verdict": "holds",
+  "evidence": "Every probe command ran with stdin from /dev/null and printed one JSON document on stdout, including errors and even usage errors (`./bin/acme bogus` -> {ok:false, code usage}, exit 2); stable exit codes 0, 2, 3, 6."
+ },
+ "P10": {
+  "verdict": "holds",
+  "evidence": "Operated entirely from org/HANDOFF.md: nothing to start; every command and flag worked as documented. Source read only for P5. No fixes needed. The optional tests/scenarios.sh was not run (not needed by any probe)."
+ },
+ "fixes": [],
+ "strikes": [
+  {"path": "org/state/mirrors/alpha.git/FETCH_HEAD", "lines": 1, "reason": "fetch cache written by the CLI (git mirror of the origin)"},
+  {"path": "org/state/mirrors/alpha.git/HEAD", "lines": 1, "reason": "fetch cache written by the CLI (git mirror of the origin)"},
+  {"path": "org/state/mirrors/alpha.git/config", "lines": 4, "reason": "fetch cache written by the CLI (git mirror of the origin)"},
+  {"path": "org/state/mirrors/alpha.git/description", "lines": 1, "reason": "fetch cache written by the CLI (git mirror of the origin)"},
+  {"path": "org/state/mirrors/alpha.git/info/exclude", "lines": 6, "reason": "fetch cache written by the CLI (git mirror of the origin)"},
+  {"path": "org/state/mirrors/alpha.git/refs/remotes/origin/main", "lines": 1, "reason": "fetch cache written by the CLI (git mirror of the origin)"},
+  {"path": "org/state/mirrors/beta.git/FETCH_HEAD", "lines": 1, "reason": "fetch cache written by the CLI (git mirror of the origin)"},
+  {"path": "org/state/mirrors/beta.git/refs/remotes/origin/main", "lines": 1, "reason": "fetch cache written by the CLI (git mirror of the origin)"},
+  {"path": "org/state/mirrors/gamma.git/FETCH_HEAD", "lines": 1, "reason": "fetch cache written by the CLI (git mirror of the origin)"},
+  {"path": "org/state/mirrors/gamma.git/refs/remotes/origin/main", "lines": 1, "reason": "fetch cache written by the CLI (git mirror of the origin)"},
+  {"path": "org/state/runs/run-0001.json", "lines": 163, "reason": "run record written by the CLI while running (runtime state; git-ignored)"},
+  {"path": "org/state/runs/run-0002.json", "lines": 163, "reason": "run record written by the CLI while running (runtime state; git-ignored)"},
+  {"path": "org/state/runs/run-0003.json", "lines": 163, "reason": "run record written by the CLI while running (runtime state; git-ignored)"}
+ ],
+ "linesBeforeStrikes": 1291,
+ "linesAfterStrikes": 784,
+ "fullyPasses": true,
+ "notes": "A stdlib-only Python CLI (org/acme_actions.py, 630 lines, plus a 2-line wrapper) with no server. Kept: org/acme_actions.py, org/bin/acme, org/people.json, org/repos.json, org/.gitignore, org/tests/scenarios.sh (an end-to-end test script a person would keep), alpha/.acme/actions/mark-deprecated.json (beta's and gamma's identical copies are not counted by score.py). No defects found in the probes. The second P2 attempt used successor acme/probe-valid because the probe names none. The adjudicator's probes left run-0004 (gamma's main now 9f82044, successor acme/probe-approval) and run-0005 (failed) in org/state/runs/."
+}

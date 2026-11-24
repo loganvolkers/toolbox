@@ -65,7 +65,7 @@ earlier ones. Tracks in [AGENTS.md](../AGENTS.md) map onto these. Every mileston
 | **M2** ✅ | Postgres and API | `PgStore` (§8), ingest endpoint, snapshot loop, REST reads (§7.2), snapshot ids | Same outputs as M1 when fixtures arrive through `POST /v1/ingest`; `min_snapshot` read-your-writes works; restart loses nothing |
 | **M3** ✅ | Authorization | Authn (IAP JWT, OIDC, PAT), OpenFGA co-process over the tuple view, facet shaping, `toolbox test` runs `.fga.yaml` | Reference `authz/model.fga.yaml` passes through `Authorizer`; A3/A4/A10 behave as specified; a membership removal is enforced within 60 s |
 | **M4** ✅ | Agents and connectors | MCP (§7.3), CLI (§7.7), the read pages of the [minimal UI](./design/minimal-ui.md), connector runtime with control channel (§7.4), GitHub, git-files and SCIM connectors | Acceptance A1–A5 and A11; connector conformance kit passes for all three connectors |
-| **M5** ⏸ | Actions (**paused, D64**: waiting on a review of self-service coordination; and by D01M7Y46VDDBK2SW6H96ZSG89MP) | Executor protocol (§7.5), run lifecycle (§6.6), previews and tokens, approvals, verification, durable tables (§8.1), UI extension contract (§7.6), the minimal UI's action, run and approval pages, the `github-apps` executor | Acceptance A6–A10 with simulated executor and connector; failure-injection properties P9–P12 hold; the sandbox-org integration test passes |
+| **M5** 🔶 | Actions, federated (**unpaused**, D01M86BY3YQX3SA1W99QXF1QA1H, after the [self-service review](./self-service-review.md); design: [federated-actions.md](./design/federated-actions.md)) | Executor protocol (§7.5), run lifecycle (§6.6), previews and tokens, approvals, verification, federation (actions up, runs down, signed approvals), durable tables (§8.1), UI extension contract (§7.6), the minimal UI's action, run and approval pages, the `github-apps` executor. **Built:** the lifecycle in `toolbox run` and `toolbox serve` (REST, MCP), the `command`, `change`, `github-workflow`, `in-image` and federated `toolbox` executors, approvals and federation, children listed by git URL with kept clones and a kept signing key (D01M86J769VGE6K5FJJQ76EP4AA). `change` executors that propose or land (`land: push`), runs written through to Postgres (`toolbox.runs`). **Not yet:** durable steps across instances, the UI pages, the `github-apps` executor | `scripts/m5-acceptance.sh` (built); acceptance A6–A10 with simulated executor and connector; failure-injection properties P9–P12 hold; the sandbox-org integration test passes |
 | **M6** ⏸ | Ship (**paused**, D01M7Y46VDDBK2SW6H96ZSG89MP: repo-level value first, [repo-value.md](./design/repo-value.md)) | Image build, Cloud Run deployment, `plan --remote`, `verify`, the operator SDLC workflow, metrics | A12; the reference workflow runs end to end on a sandbox project; `v0.1` tagged |
 
 ## 4. Architecture and crates
@@ -225,11 +225,17 @@ inherits the most restrictive facet of the fields its CEL reads, unless the mani
 ### 6.6 Action runs
 
 Exactly as [action-runs.md](./design/action-runs.md) §2–§4: preview (Toolbox layer always, executor
-layer when supported) → confirmation token `sha256(action version, inputs, effects, snapshot id)`,
-valid 10 minutes → optional approval (durable wait) → dispatch with idempotency key → progress →
-executor result → verification (refresh commands, wait for the snapshot containing the results,
-evaluate the postcondition) → terminal state. Preconditions and permission are re-checked at
-dispatch; a changed preview returns `preview_stale`.
+layer when supported) → confirmation token `sha256(action version, inputs, effects, facts read,
+requester, entity)`, valid 10 minutes and spent once by a server → optional approval (durable
+wait; in memory until §8.1 lands) → dispatch with idempotency key → progress → executor result →
+verification (refresh commands, wait for the snapshot containing the results, evaluate the
+postcondition) → terminal state. Preconditions and permission are re-checked at dispatch; a
+changed preview returns `preview_stale`, and so does a definition or effects that changed between
+the request and the last approval. Approval is atomic: the last approval leaves
+`awaiting_approval` under one lock, and an ended run is never overwritten. A postcondition that
+held before the run ends `unverified`; a change counts only once its commit is on the base.
+Across portals, a parent signs the approvals it passes to a child, and the child checks them
+against a key it pinned ([federated-actions.md](./design/federated-actions.md) §5.3).
 
 ## 7. Interfaces and contracts
 
@@ -327,6 +333,7 @@ Errors use RFC 9457 problem details with `code`, and for authorization failures 
 | `preview_action` | `action`, `id`, `inputs` | Effects and `confirm_token` |
 | `run_action` | `action`, `id`, `inputs`, `confirm_token` | Run id; final state as an MCP task |
 | `get_run` | `run_id` | State and timeline |
+| `list_runs` | `id?`, `state?` | Runs the caller may see. There is no approval tool: approvals need an interactive sign-in (D57) |
 | promoted tools | per `mcp.promote` | Same as preview + run, specialised |
 
 Responses default to compact Markdown with a JSON option, hard size caps and continuation cursors.
@@ -351,11 +358,14 @@ webhooks for repository and push events; installation visibility per Q14), `git-
 Messages: [`schema/executor-messages.schema.json`](../schema/executor-messages.schema.json);
 semantics: [action-runs.md](./design/action-runs.md) §5. Golden conversation:
 [`protocol/install-approved-app.executor.ndjson`](../examples/reference-portal/protocol/install-approved-app.executor.ndjson).
-In-image executors are child processes over stdio, run as a separate Unix user with only their
-declared secrets in the environment (Q12). Credentials for the acting identity arrive per request in
-`identity.credentials` and are never logged. **GitHub Actions executor:** dispatch with
-`return_run_details` (verify the response schema first), track via the runs API, map conclusions
-to `result`; previews come from the Toolbox layer only.
+In-image executors are child processes over stdio, started with a cleared environment: a fixed
+base set plus only their declared secrets (built). Running them as a separate Unix user is still
+open (Q12). Credentials for the acting identity arrive per request in `identity.credentials` and
+are never logged. **GitHub Actions executor:** dispatch with `return_run_details` and track that
+run id through the runs API; a server that returns no id falls back to the one run named for the
+Toolbox run, on the dispatched ref, created after the dispatch. Conclusions map to `result`, a run
+that never finishes is `timed_out`, and previews come from the Toolbox layer only. The dispatch
+token and API are the portal's, never a child manifest's.
 
 ### 7.6 UI extension contract
 
@@ -395,7 +405,7 @@ to `result`; previews come from the Toolbox layer only.
 | `toolbox token create --user U` | Create a personal access token (printed once) |
 | `toolbox get|query|search|graph|owner|explain|score|refresh|actions` | Read commands, each calling the MCP tool of the same purpose (`-o md|json|yaml`) |
 | `toolbox mcp` | Stdio MCP server bridging to a portal's `/mcp` (for agent harnesses) |
-| `toolbox run <action> --entity ID [--preview | --confirm TOKEN]` · `toolbox runs watch ID` | Actions |
+| `toolbox run [<action>] [--entity ID] [-i k=v] [--confirm TOKEN \| --yes] [--verify ID] [--runs] [--wait] [--approve\|--reject ID] [--url URL]` | Actions: list, preview, run, approve and verify in a checkout (a parent's holds approvals), or with `--url` on a served portal (federated-actions §6.4) |
 | `toolbox connector refresh|resync|test` | Connector operations and the conformance kit |
 | `toolbox login` | OIDC device flow or PAT |
 
@@ -530,7 +540,11 @@ plus every milestone exit in §3.
 
 - `tests/*.test.yaml`: `name` + `assert[] {name, expect}`; `expect` is CEL with `entity(id)`,
   `score(scorecard, id)`, `options(action, id)` and `orphans()`. `toolbox test` evaluates them
-  against the fixtures listed by the portal (default `fixtures/`).
+  against the fixtures listed by the portal (default `fixtures/`). The same file may hold
+  `runs[] {name, action, entity?, as?, inputs, approve[], rejectPush?, expect {state, files?,
+  refused?, error?}}`: action cases, each run through the real lifecycle in a scratch copy of the
+  repository and its base ([federated-actions.md](./design/federated-actions.md) §6.5). A file's
+  `defaults` holds case fields every case starts from; a case's `inputs` merge into its inputs.
 - `authz/*.fga.yaml`: OpenFGA's test format, with tuples taken from the derived output.
 - Executor cassettes: recorded HTTP interactions per executor test.
 

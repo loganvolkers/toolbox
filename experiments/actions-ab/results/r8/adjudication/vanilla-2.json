@@ -1,0 +1,75 @@
+{
+ "run": "vanilla-2",
+ "C1": "holds",
+ "P1": {
+  "verdict": "holds",
+  "evidence": "git -C origins/<r>.git ls-tree -r main: alpha (364d467), beta (97d83b9) and gamma (3081e72) each commit .acme/actions/add-notice.json and add-notice.py on main, inside the repository. The definition names approval group release; members are not listed in the repo."
+ },
+ "P2": {
+  "verdict": "holds",
+  "evidence": "cd org; bin/acme request alpha add-notice --as ann with level=urgent (exit 2, invalid_inputs 'must be one of [info, warning]'), a 200-character message (exit 2, 'must be at most 160 characters, got 200') and a message with a literal newline (exit 2, 'must be one line of visible text'). No run created (state/runs stayed at 3). alpha main e605ccad before and after."
+ },
+ "P3": {
+  "verdict": "holds",
+  "evidence": "bin/acme preview beta add-notice --as ann -i level=info -i 'message=Probe: preview only, nothing should change.': exit 0, diff on readme.md replacing line 1 '> **Info:** Releases now ship...' with '> **Info:** Probe: preview only, nothing should change.', and the resulting blob id. beta main d4a492b2 before and after; no run recorded."
+ },
+ "P4": {
+  "verdict": "holds",
+  "evidence": "From org/: bin/acme request gamma add-notice --as dave -i level=warning -i 'message=Probe: the release group approves this one.': exit 0, run-0004 pending_approval, requestedBy dave, with the stored preview. gamma main 5e3c9260 unchanged. approve run-0004 --as dave: exit 3 self_approval; --as ann: exit 3 not_in_approval_group; --as carol: exit 3 not_in_approval_group. gamma main still 5e3c9260; status pending_approval, approvedBy null."
+ },
+ "P5": {
+  "verdict": "holds",
+  "evidence": "bin/acme approve run-0004 --as erin: exit 0, succeeded, mainCommit f19ae8c5 = origins/gamma.git main. main:README.md line 1 is '> **Warning:** Probe: the release group approves this one.', line 2 blank, lines 3+ identical (diff) to the root commit's README.md; the task's notice occurs 0 times. Source: bin/acme execute() pushes, then observe() runs git --git-dir <origin> rev-parse main and rev-parse main:<file> against the bare origin and compares blob ids; approve() sets succeeded only when observed.matches. The record's result.observed (observedAt 16:02:41.620Z, blob 84f9ed86) precedes finishedAt 16:02:41.628Z."
+ },
+ "P6": {
+  "verdict": "holds",
+  "evidence": "pre-receive hook (exit 1) in origins/alpha.git/hooks. bin/acme request alpha ... --as ann -i level=info -i 'message=Probe: the origin rejects this push.' -> run-0005; approve run-0005 --as dave: exit 6 run_failed, status failed, error quotes '[remote rejected] (pre-receive hook declined)'. status run-0005: failed. alpha main e605ccad before and after. Hook removed."
+ },
+ "P7": {
+  "verdict": "holds",
+  "evidence": "cd org && bin/acme list: exit 0, JSON actions[] = (alpha, add-notice, valid), (beta, add-notice, valid), (gamma, add-notice, valid). P4 was requested from org/ with bin/acme request."
+ },
+ "P8": {
+  "verdict": "holds",
+  "evidence": "bin/acme show run-0004: requestedBy dave at 16:02:36.523Z, approvedBy erin at 16:02:41.519Z, inputs {level: warning, message: ...}, status succeeded, finishedAt 16:02:41.628Z, result.observed (commit, blob, observedAt), and timestamped events: requested (dave), approval_denied (dave self_approval, ann, carol), approved (erin), started, succeeded."
+ },
+ "P9": {
+  "verdict": "holds",
+  "evidence": "Per the handoff: bin/acme group remove release erin --as ann (one command, one commit on origins/org.git 47373d6 -> 409bbb5, people.json 1 insertion 2 deletions; it also fast-forwarded the org checkout). bin/acme request beta ... --as ann -i level=info -i 'message=Probe: erin has left the release group.' -> run-0006; approve --as erin: exit 3 not_in_approval_group (members at org 409bbb5: [dave]); beta main unchanged (d4a492b2). approve --as dave: exit 0 succeeded (ec92b622). beta main:readme.md is the probe notice, a blank line, then the imported readme.md (diff identical); the task's notice is gone."
+ },
+ "P10": {
+  "verdict": "holds",
+  "evidence": "Every step (list, preview, request, approve, status, show, group remove) ran as one non-interactive shell command printing one JSON document, with distinct exit codes (0 ok, 2 invalid, 3 not allowed, 6 run failed)."
+ },
+ "P11": {
+  "verdict": "holds",
+  "evidence": "Operated entirely from org/HANDOFF.md with bin/acme; nothing had to be started. No fixes. Source read only for P5's evidence (observe, execute, approve in org/bin/acme)."
+ },
+ "fixes": [],
+ "strikes": [
+  {
+   "path": "org/state/next-run-id",
+   "lines": 1,
+   "reason": "run-id counter written by acme at run time (git-ignored state/)"
+  },
+  {
+   "path": "org/state/runs/run-0001.json",
+   "lines": 96,
+   "reason": "run record written by acme at run time (git-ignored state/)"
+  },
+  {
+   "path": "org/state/runs/run-0002.json",
+   "lines": 96,
+   "reason": "run record written by acme at run time (git-ignored state/)"
+  },
+  {
+   "path": "org/state/runs/run-0003.json",
+   "lines": 96,
+   "reason": "run record written by acme at run time (git-ignored state/)"
+  }
+ ],
+ "linesBeforeStrikes": 1241,
+ "linesAfterStrikes": 952,
+ "fullyPasses": true,
+ "notes": "C1 rerun by the adjudicator with score.py check before any probe: pass. The remaining lines are the one-file engine/CLI org/bin/acme (616), its end-to-end tests (200), people.json, repos.json, .gitignore, and alpha's add-notice.json and add-notice.py (beta's and gamma's identical copies and org/templates are not counted again by score.py). org/state/audit.jsonl is not counted by score.py (.jsonl), so needs no strike. Outside the probes: identity is asserted with --as and not authenticated, and any org member may change the release group (both stated in the handoff); the success event carries no separate 'observed' event in events[], but result.observed records the observation with its own timestamp; if a run produces no change, execute() returns success after observing an empty file set (not exercised). Probe side effects left in the workspace: three new run records (run-0004 to run-0006), one commit on origins/gamma.git (P5), one on origins/beta.git (P9), one on origins/org.git (P9, erin removed), with the org checkout fast-forwarded to it."
+}

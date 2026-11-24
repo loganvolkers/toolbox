@@ -12,7 +12,8 @@ use toolbox_expr::{Env, Expr};
 #[derive(Debug, Deserialize)]
 struct Suite {
     name: String,
-    #[serde(rename = "assert")]
+    /// A file may hold only action cases (`runs`), which `toolbox test` runs itself.
+    #[serde(rename = "assert", default)]
     cases: Vec<Case>,
 }
 

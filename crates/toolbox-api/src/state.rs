@@ -95,6 +95,7 @@ pub struct AppState {
     pub current: watch::Sender<Option<Arc<Published>>>,
     pub changed: Notify,
     pub config: Config,
+    pub runs: crate::actions::Runs,
 }
 
 /// Server settings from the command line and the environment.

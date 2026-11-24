@@ -1,0 +1,226 @@
+{
+ "run": "gha-1",
+ "C1": "holds",
+ "P1": {
+  "verdict": "holds",
+  "evidence": "`git --git-dir=origins/<r>.git ls-tree -r --name-only main` shows .github/workflows/mark-deprecated.yml, .github/scripts/mark_deprecated.py, .github/environments/mark-deprecated.json, .github/rulesets/main.json and .github/scripts/apply-github-settings.sh on alpha, beta and gamma main, committed inside each repository (alpha 7c08562, beta 1aa19b6, gamma f3c0fce, 'Add the mark-deprecated self-service action'), with @ann @bob CODEOWNERS entries (alpha's root CODEOWNERS, beta and gamma .github/CODEOWNERS). `bin/acme list` reports each action's definition_commit as that origin's main."
+ },
+ "P2": {
+  "verdict": "holds",
+  "evidence": "From org/: `bin/acme request alpha mark-deprecated --as ann --input 'successor=Acme/Bad Name' --input 'reason=A perfectly valid reason of enough length.'` -> exit 2, ok false, error.kind invalid_inputs, 'successor must match ^[a-z0-9-]+/[a-z0-9-]+$', status refused. `... --input successor=acme/probe-bad --input reason=short` -> exit 2, 'reason must be 20 to 200 characters (got 5)', status refused. Validation ran in the workflow's preview job under act (act_exit_code 1). Both recorded as refused runs; alpha main 7193080bf68b3dfce790df9a63dffdab6202ad1c before and after."
+ },
+ "P3": {
+  "verdict": "holds",
+  "evidence": "`bin/acme preview beta mark-deprecated --as ann --input successor=acme/probe-preview --input 'reason=Probing the preview step of mark-deprecated.'` -> exit 0, JSON preview {path DEPRECATED.md, change update, before (the valtio-store content), after '# Deprecated: use acme/probe-preview\\n\\nProbing the preview step of mark-deprecated.\\n', unified diff}, from an act dry_run of the workflow's preview job. No run recorded (state/runs 10 -> 10). beta main 645db50dec073f72e70f76cdfdb6eca1639e12d9 before and after."
+ },
+ "P4": {
+  "verdict": "holds",
+  "evidence": "From org/: `bin/acme request gamma mark-deprecated --as ann --input successor=acme/probe-approval --input 'reason=Probing the approval rules of mark-deprecated.'` -> exit 0, run gamma-20261124T144527Z-4e2f awaiting_approval with the preview stored. gamma main 0d8d92e0c5c87832a0ed6844268a141cf5fa91ba before and after the request. `bin/acme approve <id> --as ann` -> exit 3 not_permitted 'ann requested this run and environment mark-deprecated prevents self-review'. `--as carol` -> exit 3 not_permitted 'carol is not a required reviewer ... (.github/environments/mark-deprecated.json on main: ann, bob)'. `bin/acme status <id>` -> awaiting_approval. gamma main still 0d8d92e0."
+ },
+ "P5": {
+  "verdict": "holds",
+  "evidence": "`bin/acme approve gamma-20261124T144527Z-4e2f --as bob --comment 'adjudicator probe'` -> exit 0, status succeeded, outcome.observed {commit 3d88e1c, matches true, found = the approved content}. gamma main moved 0d8d92e -> 3d88e1c; `git show main:DEPRECATED.md` is exactly '# Deprecated: use acme/probe-approval\\n\\nProbing the approval rules of mark-deprecated.\\n'; commit trailers Requested-by: ann, Approved-by: bob, Action-run: <id>. Source (org/bin/acme approve path, lines 420-446; observe() 449-453; head()/show() via git --git-dir <origin>, 86-99): after act's apply job (whose verify step also re-fetches main), acme itself runs `git --git-dir origins/gamma.git rev-parse main` and `show main:DEPRECATED.md` and sets succeeded only when act exited 0, verify reported ok, and its own read matches the previewed content."
+ },
+ "P6": {
+  "verdict": "holds",
+  "evidence": "Wrote origins/alpha.git/hooks/pre-receive (echo to stderr; exit 1), chmod +x. `bin/acme request alpha ... --as ann --input successor=acme/probe-reject --input 'reason=Probing a push that the origin rejects.'` -> alpha-20261124T144547Z-a701; `bin/acme approve <id> --as bob` -> exit 1, ok false, status failed, error 'push to origin main was rejected', push_output contains '[remote rejected] (pre-receive hook declined)', observed.matches false. `bin/acme status <id>` -> failed. alpha main 7193080b before and after. Hook removed (only *.sample remain)."
+ },
+ "P7": {
+  "verdict": "holds",
+  "evidence": "From org/, `bin/acme list` (one command) -> exit 0, JSON actions[] with mark-deprecated for alpha, beta and gamma, each with inputs, approval rule (reviewers ann, bob; prevent_self_review) and definition_commit, discovered by reading each origin's main. P4's request was made from org/ with `bin/acme request gamma ...`."
+ },
+ "P8": {
+  "verdict": "holds",
+  "evidence": "`bin/acme show gamma-20261124T144527Z-4e2f` -> requested {by ann, at 14:45:27.334Z}; inputs {successor acme/probe-approval, reason ...} (also carried on the timestamped 'requested' event); approval {by bob, at 14:45:31.636Z, comment}; outcome {status succeeded, at 14:45:32.067Z, commit 3d88e1c}; execution[] preview and apply with start/finish times and act exit codes; events requested(ann), previewed, approval_denied(ann), approval_denied(carol), approved(bob), started, succeeded, each with a time."
+ },
+ "P9": {
+  "verdict": "holds",
+  "evidence": "Every probe command (list, preview, request, approve, status, show) ran as a one-shot non-interactive command with --as/--input flags, printed one JSON document on stdout including errors, and used distinct exit codes (0, 1, 2, 3)."
+ },
+ "P10": {
+  "verdict": "holds",
+  "evidence": "Operated from org/HANDOFF.md alone: `cd org`, then `bin/acme ...` as documented; nothing to start. No fixes were needed. The source was read only for P5's evidence."
+ },
+ "fixes": [],
+ "strikes": [
+  {
+   "path": "org/state/act-cache/2ff303b052863922/act/workflow/1.sh",
+   "lines": 1,
+   "reason": "act action/workflow cache written by act at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/act-cache/2ff303b052863922/act/workflow/event.json",
+   "lines": 1,
+   "reason": "act action/workflow cache written by act at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/act-cache/55e5117441b8554e/act/workflow/event.json",
+   "lines": 1,
+   "reason": "act action/workflow cache written by act at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/act-cache/b00da141c8f6ec30/act/workflow/2.sh",
+   "lines": 1,
+   "reason": "act action/workflow cache written by act at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/act-cache/b00da141c8f6ec30/act/workflow/event.json",
+   "lines": 1,
+   "reason": "act action/workflow cache written by act at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/act-cache/b00da141c8f6ec30/act/workflow/outputcmd.txt",
+   "lines": 2,
+   "reason": "act action/workflow cache written by act at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/act-cache/eac1eda9bf49b102/act/workflow/event.json",
+   "lines": 1,
+   "reason": "act action/workflow cache written by act at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/previews/preview-20261124T141536Z-5fea/preview-results/preview.json",
+   "lines": 17,
+   "reason": "preview step results written by acme at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/previews/preview-20261124T141536Z-5fea/preview-results/validate.json",
+   "lines": 10,
+   "reason": "preview step results written by acme at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/alpha-20261124T141536Z-766e.json",
+   "lines": 271,
+   "reason": "run record written by acme at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/alpha-20261124T141536Z-766e/apply-results/apply.json",
+   "lines": 7,
+   "reason": "step results of a run written by the workflow at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/alpha-20261124T141536Z-766e/apply-results/verify.json",
+   "lines": 11,
+   "reason": "step results of a run written by the workflow at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/beta-20261124T141537Z-1bfc.json",
+   "lines": 271,
+   "reason": "run record written by acme at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/beta-20261124T141537Z-1bfc/apply-results/apply.json",
+   "lines": 7,
+   "reason": "step results of a run written by the workflow at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/beta-20261124T141537Z-1bfc/apply-results/preview.json",
+   "lines": 17,
+   "reason": "step results of a run written by the workflow at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/beta-20261124T141537Z-1bfc/apply-results/validate.json",
+   "lines": 10,
+   "reason": "step results of a run written by the workflow at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/beta-20261124T141537Z-1bfc/apply-results/verify.json",
+   "lines": 11,
+   "reason": "step results of a run written by the workflow at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/beta-20261124T141646Z-9f79.json",
+   "lines": 128,
+   "reason": "run record written by acme at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/beta-20261124T141646Z-9f79/preview-results/validate.json",
+   "lines": 15,
+   "reason": "step results of a run written by the workflow at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/beta-20261124T141646Z-ec11.json",
+   "lines": 128,
+   "reason": "run record written by acme at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/beta-20261124T141646Z-ec11/preview-results/validate.json",
+   "lines": 15,
+   "reason": "step results of a run written by the workflow at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/beta-20261124T141647Z-79d9.json",
+   "lines": 161,
+   "reason": "run record written by acme at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/beta-20261124T141647Z-79d9/preview-results/preview.json",
+   "lines": 17,
+   "reason": "step results of a run written by the workflow at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/beta-20261124T141647Z-79d9/preview-results/validate.json",
+   "lines": 10,
+   "reason": "step results of a run written by the workflow at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/beta-20261124T141647Z-968e.json",
+   "lines": 128,
+   "reason": "run record written by acme at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/beta-20261124T141647Z-968e/preview-results/validate.json",
+   "lines": 15,
+   "reason": "step results of a run written by the workflow at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/gamma-20261124T141537Z-cfb7.json",
+   "lines": 271,
+   "reason": "run record written by acme at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/gamma-20261124T141537Z-cfb7/apply-results/apply.json",
+   "lines": 7,
+   "reason": "step results of a run written by the workflow at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/gamma-20261124T141537Z-cfb7/apply-results/preview.json",
+   "lines": 17,
+   "reason": "step results of a run written by the workflow at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/gamma-20261124T141537Z-cfb7/apply-results/validate.json",
+   "lines": 10,
+   "reason": "step results of a run written by the workflow at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/gamma-20261124T141537Z-cfb7/apply-results/verify.json",
+   "lines": 11,
+   "reason": "step results of a run written by the workflow at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/gamma-20261124T141647Z-1db2.json",
+   "lines": 261,
+   "reason": "run record written by acme at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/gamma-20261124T141647Z-1db2/apply-results/apply.json",
+   "lines": 8,
+   "reason": "step results of a run written by the workflow at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/gamma-20261124T141647Z-1db2/apply-results/preview.json",
+   "lines": 17,
+   "reason": "step results of a run written by the workflow at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/gamma-20261124T141647Z-1db2/apply-results/validate.json",
+   "lines": 10,
+   "reason": "step results of a run written by the workflow at run time (git-ignored org/state/)"
+  }
+ ],
+ "linesBeforeStrikes": 2827,
+ "linesAfterStrikes": 958,
+ "fullyPasses": true,
+ "notes": "C1: the recorded check.json passes, and `score.py check` rerun before any probe also passed (P5 then changed gamma's DEPRECATED.md to the probe's content, as the probe requires). No probe was credited: approval, self-review and carol's refusal are enforced by org/bin/acme from each repository's .github/environments/mark-deprecated.json on main; GitHub's environment reviewers, prevent_self_review and the main ruleset are configured (apply-github-settings.sh, rulesets/main.json) but were not exercised, and act ran the workflow's preview and apply jobs for real. Strikes: everything under org/state/ (git-ignored by org/.gitignore): act's cache and generated step scripts, preview results, run records and per-run step results. Kept: the workflow, step script, environment and ruleset JSON, settings script, CODEOWNERS entries, org/bin/acme, catalog.yaml, people.yaml, .gitignore and the agent's test suite org/tests/test_acme.py (beta's and gamma's workflow files are copies of alpha's and were not counted by score.py). The probes left run records (two refused on alpha, the P4/P5 run on gamma, the failed P6 run on alpha) and a preview directory in org/state/; they postdate the lines measure. No defects found outside the probes. No long-running process exists; nothing to stop."
+}

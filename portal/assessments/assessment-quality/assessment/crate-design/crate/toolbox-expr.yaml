@@ -1,72 +1,73 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: assessment:crate-design/crate:toolbox-expr
 rubric: assessment-quality
-subjectHash: 7c63aa734a48
-assessor: {kind: agent, name: cursor-review-agent, model: claude-opus-5.5}
-at: 2026-11-23
+subjectHash: 7d64a9447fd6
+assessor: {kind: agent, name: cursor-cloud-agent, model: claude-opus-5.5}
+at: 2026-11-24
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      Every citation now says what its reason claims. The callers are at
-      crates/toolbox-derive/src/lib.rs:15 and 832 (`Err(_) => "unknown"`),
-      testing.rs:10, crates/toolbox-api/src/routes.rs:17 and 212,
-      actions.rs:15, crates/toolbox-model/src/validate.rs:13 and 775-779,
-      crates/toolbox-cli/src/meta.rs:183 and model.rs:28, 160. The crate's own
-      lines hold: lib.rs:1-17, 16-17, 149-200 and 177-185, eval.rs:13, 93-95,
-      107, 111, 249-282, 284-291, 294, 315 and 339-360, lazy.rs:80-90, and
-      analysis.rs:150-184, 190-212 and 228. So do docs/v1-spec.md:89,
-      docs/questions.md:18 and Cargo.toml:11. The counts hold too: pubItems
-      and pubDocumented are 28, and `cargo test -q -p toolbox-expr` runs 13
-      tests that all pass. In a scratch copy, `'a'` and `-1` reach
-      LazyList::get's type-error and out-of-bounds arms. One phrase
-      overstates: "each branch has a direct test" misses to_cel's Null arm
-      (eval.rs:48), which no test feeds JSON null. It is a one-line identity
-      mapping, and the verdict doesn't rest on it.
+      The cited lines say what the reasons claim:
+      crates/toolbox-expr/src/lib.rs:1-17, 43-44, 63, 168-197 and 199-215;
+      eval.rs:13, 107, 111, 203 and the test ranges 249-282, 284-291, 293-312,
+      314-336 and 338-360; analysis.rs:13-30, 153 and 190-212;
+      docs/v1-spec.md:89; Cargo.toml:22; the callers at toolbox-model
+      validate.rs:13, 779-783 and 812-816, toolbox-derive lib.rs:15 and
+      testing.rs:10, toolbox-exec check.rs:8, 96-117, 108-116 and 193-200,
+      toolbox-api routes.rs:17 and 218, and toolbox-cli meta.rs:183 and
+      model.rs:28, 160. The reference portal's emit is at toolbox.yaml:237 and
+      its `candidate.` lookups at 273 and 301. The uncited "error mapping in
+      toolbox-derive" is at crates/toolbox-derive/src/lib.rs:832. Three
+      details are off but change no verdict. The String error is at
+      eval.rs:235, not 234. "No other Cargo.toml names `cel`" is false as
+      written, because three experiments (for example
+      experiments/full-recompute/Cargo.toml:8) do; they are outside the
+      workspace (Cargo.toml:5), so the conclusion holds. And analysis::analyse
+      and required_equalities are reached through `pub mod analysis`
+      (lib.rs:19), not through a re-export.
   - criterion: complete
     verdict: pass
     reason: >-
-      The gaps the previous review named now have direct tests. check()
-      reports UndeclaredFunctions for `join` and keeps the declared `size`
-      (lib.rs:177-185). Int, uint and bool map keys become JSON strings
-      (eval.rs:284-291). Bad lazy indexes are refused (eval.rs:272-281). No
-      other risky path in the crate is left untested. The workspace members
-      (Cargo.toml:3-5, experiments excluded) name `cel` only in
-      crates/toolbox-expr/Cargo.toml. No public signature names a cel type.
-      The spec row's "error mapping to `unknown`" sits in the caller, and
-      one-responsibility says so openly. Its rubric fails only missing, stale
-      or multi-job crate docs, and lib.rs:1-17 is none of those.
+      I found no failure the sources show that the assessment missed. Every
+      crate that depends on toolbox-expr (the Cargo.toml of api, exec, derive,
+      model and cli) is covered by small-contract. No public signature names a
+      cel type: the only pub(crate) cel fields are eval.rs:13 and 111. The
+      per-site table has direct tests for Scorecard, Action, Postcondition,
+      Computed, Options and RefreshScope (lib.rs:153-220). Map has a negative
+      case in crates/toolbox-model/tests/cases.json:21. Tuples shares its list
+      with Options (lib.rs:61), so coverage isn't "only indirect" and pass on
+      tests-match-risk is right. Smaller untested paths remain, but they are
+      documented, low-risk branches: Env's refusal to shadow a standard
+      function (eval.rs:154) and the lazy `in`, which is unsupported
+      (lazy.rs:5-7).
   - criterion: reproducible
     verdict: pass
     reason: >-
-      Each verdict follows from something the sources state, not from taste.
-      one-responsibility rests on the crate docs
-      (crates/toolbox-expr/src/lib.rs:1-17) against the spec row
-      (docs/v1-spec.md:89). small-contract rests on the callers' imports
-      (crates/toolbox-derive/src/lib.rs:15,
-      crates/toolbox-api/src/routes.rs:17,
-      crates/toolbox-model/src/validate.rs:13 and 775-779) and the brief's
-      pubItems and pubDocumented, both 28. replaceable-defaults rests on
-      crates/toolbox-expr/Cargo.toml:11 being the only workspace `cel`
-      dependency (Cargo.toml:3-5) and on the pub(crate) fields at
-      crates/toolbox-expr/src/eval.rs:13 and 111. tests-match-risk no longer
-      calls indirect coverage "small". Each branch it lists has a named test
-      (crates/toolbox-expr/src/lib.rs:177-185, eval.rs:249-291), and `cargo
-      test -q -p toolbox-expr` reports "13 passed; 0 failed". A second
-      assessor reading those files reaches pass.
+      Each verdict rests on lines a second assessor can open, and the counts
+      reproduce: `cargo test -q -p toolbox-expr` gives "14 passed; 0 failed".
+      Running `rg toolbox_expr crates` finds exactly the imports the
+      assessment lists. One step names no pattern, "a search for cel error
+      strings outside the crate finds none". I searched outside
+      crates/toolbox-expr, and in examples/, for cel-rust messages ("no such
+      key", "undeclared reference", "no such overload", ExecutionError) and
+      also found none. Calling the Tuples and ContextLookup gaps "minor" is a
+      judgement, but the rubric's unsure trigger is coverage that is only
+      indirect, and the table's mechanism is tested directly.
   - criterion: actionable
     verdict: pass
     reason: >-
-      No verdict is fail or unsure, so no suggestion has a verdict to change.
-      The one optional suggestion, a cel-spec conformance slice through Expr
-      recorded in docs/research-log.md (Q10, docs/questions.md:18), is
-      concrete. It targets the residual risk the reason names: cel-rust
-      behaviour the crate relies on, such as comparing int with double
-      (eval.rs:349-353).
+      Every verdict is pass, so no suggestion has a fail or unsure to turn.
+      The one suggestion, on tests-match-risk, targets the gaps that reason
+      names. A table-driven negative test per Site closes the Tuples and
+      ContextLookup gap (lib.rs:61, 64). A cel-spec slice recorded in
+      docs/research-log.md measures Q10 (docs/questions.md:18). Both are
+      concrete, and neither moves work onto another entity.
 summary: >-
-  A sound assessment. The citations now hold at the current commit, the
-  counts are right (28 documented public items, 13 passing tests), and the
-  new tests reach the branches the previous review said were untested,
-  which I checked by instrumenting a scratch copy. The only overstatement
-  is "each branch has a direct test", which misses to_cel's trivial Null
-  arm (eval.rs:48) and changes no verdict.
+  A trustworthy assessment. Its citations hold at the current tree, the
+  test count (14, all passing) reproduces, and its verdicts follow from
+  the crate docs, the callers' imports and the tests. Three details are
+  off: eval.rs:234 should be 235; "no other Cargo.toml names `cel`"
+  ignores the experiments that Cargo.toml:5 excludes from the workspace;
+  and the analysis:: items are public through the module, not re-exported.
+  None of them changes a verdict.

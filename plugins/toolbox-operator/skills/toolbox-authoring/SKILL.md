@@ -14,11 +14,13 @@ Work test-first. Pass the portal repo root as `workspace` to every `toolbox-dev`
 2. **Red:** write failing tests first:
    - connector-record fixtures under `fixtures/` and CEL expectations in `tests/*.test.yaml`
    - `.fga.yaml` for permission changes
-   - for actions: preview snapshots, a postcondition test, and the failure cases (stale preview,
-     executor success with the effect missing)
+   - for actions: preview snapshots, a postcondition test (a `change` is observed on its base
+     branch instead), and the failure cases (stale preview, executor success with the effect
+     missing)
 3. **Implement** in `toolbox.config.ts` with `@toolbox/manifest` if the repo has one, otherwise in
    `toolbox.yaml` and the files it `include`s. Every new definition needs an
-   `owner`. Follow the reference portal's patterns.
+   `owner`. Follow the reference portal's patterns. For a self-service action, start from the
+   README of `examples/federated-actions`: a repository's action and an org portal over many.
 4. **Check:** run `validate`, then `test`. Use `explain_error` on any diagnostic; errors include a
    suggested fix.
 5. **Plan:** run `plan` against production and read it with the `review-plan` skill. Note any tripped

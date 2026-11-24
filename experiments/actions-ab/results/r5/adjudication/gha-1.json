@@ -1,0 +1,57 @@
+{
+  "run": "gha-1",
+  "C1": "holds",
+  "P1": {
+    "verdict": "holds",
+    "evidence": "score.py check re-run before probing: pass true. `git --git-dir origins/<r>.git ls-tree -r --name-only main` lists .github/workflows/mark-deprecated.yml and .github/mark-deprecated/{mark_deprecated.py,settings.json,apply-github-settings.sh,README.md} plus CODEOWNERS (alpha root, beta/gamma .github/) on alpha (added 94c8b02), beta (ab52c59) and gamma (ffdbd04). The three copies of the workflow and settings.json are byte-identical. org.git holds only bin/acme, repos.json, people.json, the act stub and HANDOFF.md; approvers come from each repository's settings.json on main (`bin/acme list` reports reviewers ann, bob read from there with definition_sha = the origin's main)."
+  },
+  "P2": {
+    "verdict": "holds",
+    "evidence": "cwd org/. `bin/acme request --repo alpha --successor 'Acme/Bad Name' --reason 'A valid reason that is long enough here.' --as ann` -> exit 2, status refused, validation_errors [successor: must match ^[a-z0-9-]+/[a-z0-9-]+$]; the preview job ran under act and failed at validate (preview.log 'Job failed'). `bin/acme request --repo alpha --successor acme/probe-valid --reason short --as ann` -> exit 2, refused, 'reason: must be 20 to 200 characters, got 5'. alpha main 9abb6d13 before and after. Each refusal leaves a refused run record (cannot be approved)."
+  },
+  "P3": {
+    "verdict": "holds",
+    "evidence": "`bin/acme preview --repo beta --successor acme/probe-preview --reason 'Probe: preview must show the file and its content.' --as ann` -> exit 0, valid true, preview {base_sha 5e83c01a, path DEPRECATED.md, operation update, content '# Deprecated: use acme/probe-preview\\n\\nProbe: preview must show the file and its content.\\n', unified diff against the current file}. beta main 5e83c01a before and after; no run record created (only a .state/previews entry)."
+  },
+  "P4": {
+    "verdict": "holds",
+    "evidence": "cwd org/. `bin/acme request --repo gamma --successor acme/probe-approval --reason 'Probe: approval needs a second maintainer.' --as ann` -> exit 0, run gamma-20261124t132002-781d0a, status awaiting_approval, preview operation update. gamma main c9228d73 before and after the request. `bin/acme approve <id> --as ann` -> exit 3, 'ann requested this run and cannot approve it' (run twice: first attempt's exit code was masked by my pipe, so repeated; both recorded as approval_denied). `bin/acme approve <id> --as carol` -> exit 3, 'carol is not a required reviewer of environment deprecation for gamma (reviewers: ann, bob)'. `bin/acme status <id>` -> awaiting_approval, approved_by null. gamma main still c9228d73."
+  },
+  "P5": {
+    "verdict": "holds",
+    "evidence": "`bin/acme approve <id> --as bob` -> exit 0, status succeeded, observed {main_sha 4761dbe1, content = probe content, matches true}, push {base c9228d73, pushed true}. origins/gamma.git main c9228d73 -> 4761dbe1; `git show main:DEPRECATED.md` = '# Deprecated: use acme/probe-approval', blank line, the P4 reason; commit trailers Mark-Deprecated-Run, Requested-by: ann, Approved-by: bob. Source (org/bin/acme cmd_approve, lines 350-369): after act's apply job, origin_file(r, 'DEPRECATED.md') runs `git --git-dir <origin> show main:DEPRECATED.md` on the bare origin and compares it to the expected content; succeeded requires act exit 0, the workflow's verify marker matches, and this observation matches."
+  },
+  "P6": {
+    "verdict": "holds",
+    "evidence": "Wrote origins/alpha.git/hooks/pre-receive (echo to stderr; exit 1), chmod +x. `bin/acme request --repo alpha --successor acme/probe-reject --reason 'Probe: a rejected push must not succeed.' --as ann` -> awaiting_approval. `bin/acme approve <id> --as bob` -> exit 1, status failed, failure 'apply job failed (act exit 1); DEPRECATED.md on main does not have the requested content', push.pushed false with '[remote rejected] (pre-receive hook declined)', observed.matches false. `bin/acme status <id>` -> failed. Hook removed (only *.sample remain). alpha main 9abb6d13 before and after."
+  },
+  "P7": {
+    "verdict": "holds",
+    "evidence": "From org/, `bin/acme list` -> exit 0, JSON actions [alpha, beta, gamma] each with action mark-deprecated, workflow path, definition_sha, inputs and approval (environment deprecation, reviewers ann/bob, prevent_self_review true). P4 was requested from org/ with `bin/acme request --repo gamma ...`."
+  },
+  "P8": {
+    "verdict": "holds",
+    "evidence": "`bin/acme record <P4/P5 id>` -> requested_by ann, requested_at 13:20:02.102Z, approved_by bob, approved_at 13:20:08.992Z, inputs {successor acme/probe-approval, reason ...}, outcome succeeded, outcome_at 13:20:09.997Z, observed, push, and timestamped events: requested (ann), previewed, awaiting_approval, approval_denied (ann), approval_denied (carol), approval_denied (ann), approved (bob), apply_finished, observed, succeeded."
+  },
+  "P9": {
+    "verdict": "holds",
+    "evidence": "Every probe command ran from a non-TTY shell with stdin </dev/null; identity by --as, inputs by flags; act runs in host mode inside the CLI. Each printed one JSON document, including a usage error (`request --repo alpha --bogus x` -> JSON {error, usage}, exit 2) and an unknown run (exit 4). Exit codes distinct: 0 ok, 1 run failed, 2 invalid, 3 not allowed, 4 not found/wrong state."
+  },
+  "P10": {
+    "verdict": "holds",
+    "evidence": "Operated entirely from org/HANDOFF.md's Commands and Negative tests sections: nothing to start, no PATH or port change, jq present. Source read only for P5."
+  },
+  "fixes": [],
+  "strikes": [
+    {"path": "org/.state/runs/alpha-20261124t131010-e4ad1b.json", "lines": 132, "reason": "run record written by acme at run time (gitignored .state/)"},
+    {"path": "org/.state/runs/alpha-20261124t131010-e4ad1b/event-apply.json", "lines": 1, "reason": "workflow_dispatch event payload acme wrote for act at run time"},
+    {"path": "org/.state/runs/beta-20261124t131011-942f7f.json", "lines": 132, "reason": "run record written by acme at run time (gitignored .state/)"},
+    {"path": "org/.state/runs/beta-20261124t131011-942f7f/event-apply.json", "lines": 1, "reason": "workflow_dispatch event payload acme wrote for act at run time"},
+    {"path": "org/.state/runs/gamma-20261124t131012-899a18.json", "lines": 132, "reason": "run record written by acme at run time (gitignored .state/)"},
+    {"path": "org/.state/runs/gamma-20261124t131012-899a18/event-apply.json", "lines": 1, "reason": "workflow_dispatch event payload acme wrote for act at run time"}
+  ],
+  "linesBeforeStrikes": 1136,
+  "linesAfterStrikes": 737,
+  "fullyPasses": true,
+  "notes": "Kept: org/bin/acme (381), alpha/.github/mark-deprecated/{mark_deprecated.py 137, apply-github-settings.sh 75, settings.json 30}, alpha/.github/workflows/mark-deprecated.yml (72), CODEOWNERS (alpha 5, beta/.github 5), org/act/stubs/create-github-app-token/action.yml (15), org/people.json (8), org/repos.json (7), org/.gitignore (2). beta's and gamma's copies of the action are byte-identical to alpha's, so score.py counted them once. No probe was credited: approval (environment reviewers, prevent_self_review) is configured as code in settings.json/apply-github-settings.sh for GitHub and also enforced locally by acme, and every probe was observed to hold locally. Defects outside the probes: on a pre-receive rejection the apply step retries the push once (push.first_attempt) although the handoff says only a non-fast-forward rejection is retried; harmless here. Each invalid request leaves a 'refused' run record. P5 rewrote gamma's DEPRECATED.md to the probe content (as the probe requires), so score.py check would now fail on gamma; C1 was checked before probing. Probe runs were added to org/.state after the lines were measured. No processes were started (no server); none left running."
+}

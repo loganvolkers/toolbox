@@ -1,0 +1,27 @@
+{
+ "linesToMaintain": 1521,
+ "files": {
+  "alpha/.github/add-notice/notice.py": 212,
+  "alpha/.github/workflows/add-notice.yml": 163,
+  "alpha/CODEOWNERS": 3,
+  "beta/.github/CODEOWNERS": 3,
+  "org/.github/workflows/apply-settings.yml": 27,
+  "org/.gitignore": 8,
+  "org/bin/acme": 513,
+  "org/github/apply-settings.py": 95,
+  "org/org.yml": 24,
+  "org/runs/alpha-add-notice-1/logs/apply/apply.json": 17,
+  "org/runs/alpha-add-notice-1/logs/apply/preview.json": 16,
+  "org/runs/alpha-add-notice-1/logs/apply/verify.json": 11,
+  "org/runs/alpha-add-notice-1/record.json": 111,
+  "org/runs/beta-add-notice-1/logs/apply/apply.json": 17,
+  "org/runs/beta-add-notice-1/logs/apply/preview.json": 16,
+  "org/runs/beta-add-notice-1/logs/apply/verify.json": 11,
+  "org/runs/beta-add-notice-1/record.json": 111,
+  "org/runs/gamma-add-notice-1/logs/apply/apply.json": 17,
+  "org/runs/gamma-add-notice-1/logs/apply/preview.json": 16,
+  "org/runs/gamma-add-notice-1/logs/apply/verify.json": 11,
+  "org/runs/gamma-add-notice-1/record.json": 111,
+  "org/teams/release.yml": 8
+ }
+}

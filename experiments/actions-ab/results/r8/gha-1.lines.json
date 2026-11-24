@@ -1,0 +1,21 @@
+{
+ "linesToMaintain": 1774,
+ "files": {
+  "alpha/.github/add-notice/add_notice.py": 175,
+  "alpha/.github/workflows/add-notice.yml": 163,
+  "alpha/CODEOWNERS": 5,
+  "beta/.github/CODEOWNERS": 5,
+  "gamma/.github/CODEOWNERS": 5,
+  "org/.github/workflows/apply-settings.yml": 50,
+  "org/.gitignore": 2,
+  "org/.state/runs/alpha-1.json": 145,
+  "org/.state/runs/beta-1.json": 145,
+  "org/.state/runs/gamma-1.json": 145,
+  "org/bin/acme-actions": 593,
+  "org/environments.yaml": 20,
+  "org/github/apply-settings.py": 147,
+  "org/repos.yaml": 32,
+  "org/teams.yaml": 27,
+  "org/tests/e2e.sh": 115
+ }
+}

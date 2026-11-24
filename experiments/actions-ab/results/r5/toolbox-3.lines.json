@@ -1,0 +1,27 @@
+{
+ "linesToMaintain": 1709,
+ "files": {
+  "alpha/.toolbox/tests/mark-deprecated.test.yaml": 58,
+  "alpha/.toolbox/toolbox.yaml": 46,
+  "beta/.toolbox/tests/mark-deprecated.test.yaml": 58,
+  "beta/.toolbox/toolbox.yaml": 46,
+  "gamma/.toolbox/tests/mark-deprecated.test.yaml": 58,
+  "gamma/.toolbox/toolbox.yaml": 46,
+  "org/toolbox.env": 7,
+  "org/toolbox.yaml": 11,
+  "state/reject-id": 1,
+  "state/req-alpha.json": 58,
+  "state/req-beta.json": 58,
+  "state/req-gamma.json": 58,
+  "state/runs/run_2ft8i6pvq9ky.json": 104,
+  "state/runs/run_2ft8j0x3ul5k.json": 104,
+  "state/runs/run_2ft8jxh0jm24.json": 104,
+  "state/runs/run_2ft8r7ah60eq.json": 77,
+  "state/served/org/runs/run_2ft8ezkfli8m.json": 217,
+  "state/served/org/runs/run_2ft8f6me9e9g.json": 217,
+  "state/served/org/runs/run_2ft8fd7fs6m0.json": 217,
+  "state/served/org/runs/run_2ft8qwu65rrh.json": 159,
+  "state/served/org/runs/spent-tokens": 4,
+  "state/served/org/signing-key": 1
+ }
+}

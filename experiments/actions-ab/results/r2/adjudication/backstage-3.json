@@ -1,0 +1,50 @@
+{
+ "run": "backstage-3",
+ "C1": "holds",
+ "P1": {
+  "verdict": "holds",
+  "evidence": "`git --git-dir origins/<r>.git ls-tree -r --name-only main` shows .backstage/actions/mark-deprecated.yaml and catalog-info.yaml on alpha (b593a47), beta (58981e9) and gamma (be968f7), each committed inside its own repository before its DEPRECATED.md commit. The template (owner group:<repo>/maintainers, JSON Schema inputs, steps) is the definition; `bin/acme-actions --as ann list` reports definition {origin origins/<repo>.git, path, commit, branch main} for each."
+ },
+ "P2": {
+  "verdict": "holds",
+  "evidence": "As ann from org/: `bin/acme-actions --as ann request alpha mark-deprecated --successor 'Acme/Bad Name' --reason 'A perfectly valid reason of enough length.'` -> exit 1, httpStatus 400, error.code invalid-input ('successor does not match pattern'). `... --successor acme/probe-valid --reason short` -> exit 1, httpStatus 400 invalid-input ('reason does not meet minimum length of 20'). `runs --repository alpha` count 2 before and after (no run created); alpha main 9880a15912e3 before and after."
+ },
+ "P3": {
+  "verdict": "holds",
+  "evidence": "`bin/acme-actions --as ann preview beta mark-deprecated --successor acme/probe-preview --reason 'Probe preview: this reason is long enough.'` -> exit 0: changes[0] {path DEPRECATED.md, before, after '# Deprecated: use acme/probe-preview\\n\\nProbe preview: ...', changed true, unified diff, baseCommit ac8dec2}, plus the scaffolder dry-run log. beta main ac8dec269d9a before and after; beta run count 1 before and after."
+ },
+ "P4": {
+  "verdict": "holds",
+  "evidence": "From org/: `bin/acme-actions --as ann request gamma mark-deprecated --successor acme/probe-approval --reason 'Probe approval: this reason is long enough.'` -> exit 0, run eef42cdd-..., status awaiting-approval, requestedBy user:default/ann; gamma main ed9d00041951 unchanged. `approve <id>` as ann -> exit 1, httpStatus 403 code self-approval. As carol -> exit 1, httpStatus 403 code not-a-maintainer. `status` -> awaiting-approval, task null; gamma main still ed9d00041951."
+ },
+ "P5": {
+  "verdict": "holds",
+  "evidence": "`bin/acme-actions --as bob approve eef42cdd-...` -> exit 0, status running, approval.by user:default/bob; `status <id> --wait --timeout 120` -> exit 0, status succeeded, outcome.reason 'DEPRECATED.md with the approved content observed on gamma main@27e739e9', observed {present true, matches true}. gamma main moved ed9d000 -> 27e739e9; `git show main:DEPRECATED.md` is '# Deprecated: use acme/probe-approval' + the reason; author ann, trailers Acme-Run, Requested-by ann, Approved-by bob. Source: refresh (actionsPlugin.ts:344-402), once the scaffolder task is terminal, calls observe (actionsPlugin.ts:332-342), which resolves refs/heads/main of the origin from org's repositories.yaml (origins/gamma.git; registry.ts MAIN) and reads the file with `git cat-file blob` (git.ts:64-81); status is set to succeeded only if the task completed and the content equals the approved preview, otherwise failed."
+ },
+ "P6": {
+  "verdict": "holds",
+  "evidence": "Installed origins/alpha.git/hooks/pre-receive (echo, exit 1). As ann: request alpha mark-deprecated --successor acme/probe-reject -> run 9430e2b9-...; `--as bob approve` -> running, approval.by bob; `status --wait` -> exit 3, status failed, outcome.reason 'Task failed at step commit: Error: Push to alpha main was rejected: remote: adjudicator: push rejected ...', observed matches false, verify step skipped. alpha main 9880a15912e3 before and after. Hook removed afterwards (only *.sample remain)."
+ },
+ "P7": {
+  "verdict": "holds",
+  "evidence": "From org/, `bin/acme-actions --as ann list` (one command, exit 0) lists mark-deprecated for alpha, beta and gamma with owner and the origin commit of each definition. P4's request was made from org/ with `bin/acme-actions --as ann request gamma mark-deprecated ...`."
+ },
+ "P8": {
+  "verdict": "holds",
+  "evidence": "`bin/acme-actions --as ann record eef42cdd-...` -> requestedBy user:default/ann, requestedAt 12:12:49.304Z, inputs {successor acme/probe-approval, reason ...} (also on the timestamped 'requested' event), approval {by user:default/bob, at 12:12:53.578Z}, task {id, steps, createdAt, completedAt}, outcome {status succeeded, at 12:12:54.782Z, reason, observed commit}, definition commit, and events[] with at for requested, previewed, both approval-refused (ann, carol, with by and code), approved (by bob), task-started, task-finished, observed, succeeded."
+ },
+ "P9": {
+  "verdict": "holds",
+  "evidence": "Every step (list, preview, request, approve, status, status --wait, record, runs) ran non-interactively with flags and ACME_TOKEN_* environment variables only and printed one JSON document; refusals exit 1 with httpStatus and error.code, a --wait that ends failed exits 3."
+ },
+ "P10": {
+  "verdict": "holds",
+  "evidence": "Operated entirely from org/HANDOFF.md: started the backend with its Start command (PATH export included) in a tmux session, ran its readiness loop with its ACME_TOKEN_* exports (it returned 3 actions), and ran its Use and refusal commands from org/. The source was read only for P5's evidence. No fixes needed."
+ },
+ "fixes": [],
+ "strikes": [],
+ "linesBeforeStrikes": 1716,
+ "linesAfterStrikes": 1716,
+ "fullyPasses": true,
+ "notes": "C1 re-checked with score.py check before any probe ran: pass, matching backstage-3.check.json. P5 then overwrote gamma's DEPRECATED.md on main with the probe's content (27e739e9), as the probe requires, so gamma no longer shows the task's content after adjudication. The probes added runs eef42cdd (gamma, succeeded) and 9430e2b9 (alpha, failed) to backstage/.data/ sqlite (binary, never counted); every counted file is code, configuration or a manifest, so nothing was struck. The backend was started in tmux session backstage-3-adj and stopped with Ctrl-C (session killed; port 7510 closed). Outside the probes: the handoff's alternative stop command, `pkill -f 'backstage-cli package start'`, is not scoped to this workspace and would also kill any other Backstage on the machine (round 3's backstage-3 was running at the time), so I did not use it. The template adds a rule beyond the task (successor may not be acme/<self>), and approval is refused with 409 if the definition changed on main since the request. Every run pushes a commit even when the content is unchanged, so the earlier no-op caveat of other runs does not apply. The beta and gamma templates and catalog entries differ from alpha's only by name, so score.py counted all three."
+}

@@ -1,0 +1,26 @@
+{
+ "linesToMaintain": 1855,
+ "files": {
+  "alpha/.backstage/actions/add-notice.yaml": 51,
+  "alpha/catalog-info.yaml": 9,
+  "beta/.backstage/actions/add-notice.yaml": 51,
+  "beta/catalog-info.yaml": 9,
+  "gamma/.backstage/actions/add-notice.yaml": 51,
+  "gamma/catalog-info.yaml": 9,
+  "org/acme.yaml": 15,
+  "org/bin/acme": 5,
+  "org/bin/acme.mjs": 128,
+  "org/groups/maintainers.yaml": 37,
+  "org/groups/release.yaml": 13,
+  "org/people.yaml": 42,
+  "backstage/.gitignore": 1,
+  "backstage/app-config.local.yaml": 14,
+  "backstage/packages/backend/src/acme/catalogModule.ts": 158,
+  "backstage/packages/backend/src/acme/git.ts": 95,
+  "backstage/packages/backend/src/acme/notice.ts": 125,
+  "backstage/packages/backend/src/acme/org.ts": 84,
+  "backstage/packages/backend/src/acme/runsPlugin.ts": 713,
+  "backstage/packages/backend/src/acme/scaffolderModule.ts": 237,
+  "backstage/packages/backend/src/index.ts": 8
+ }
+}

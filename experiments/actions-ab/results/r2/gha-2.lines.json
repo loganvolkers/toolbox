@@ -1,0 +1,16 @@
+{
+ "linesToMaintain": 1092,
+ "files": {
+  "alpha/.github/environments/deprecation.yml": 16,
+  "alpha/.github/scripts/apply-github-settings.py": 88,
+  "alpha/.github/workflows/mark-deprecated.yml": 168,
+  "alpha/CODEOWNERS": 6,
+  "beta/.github/CODEOWNERS": 6,
+  "org/.gitignore": 3,
+  "org/bin/acme-actions": 433,
+  "org/org.yaml": 27,
+  "org/runs/run-0001.json": 115,
+  "org/runs/run-0002.json": 115,
+  "org/runs/run-0003.json": 115
+ }
+}

@@ -1,0 +1,184 @@
+apiVersion: toolbox.dev/v1alpha1
+
+portal:
+  name: example-repo
+  title: example-repo
+  owner: group:maintainers
+  toolbox: "0.1"
+
+# A parent portal may dispatch this portal's actions with `toolbox run --portal` on its own host
+# (type: local). Without a runner, a served parent refuses to run these actions; they still run
+# from a checkout. Approvals recorded by the org portal count here only when it signed them with
+# the key pinned below: replace it with the key `toolbox serve` logs for your org portal.
+federation:
+  runner: {type: local}
+  acceptApprovalsFrom:
+    - portal: org
+      key: ed25519:0000000000000000000000000000000000000000000000000000000000000000
+
+# The org's fleet actions, vendored (a git package spec works the same once installed).
+include: [{package: packages/org-actions}]
+
+connectors:
+  - name: workspace
+    package: builtin:workspace # reads the checkout; no network, no build
+    runtime: in-image
+    config:
+      root: .
+      crates: false # set true in a Rust workspace for per-crate metrics
+      repo: true # README, LICENSE, CODEOWNERS
+    records: [repo]
+    refresh: {repo: [external_ids]}
+    freshness: {repo: 5m}
+
+kinds:
+  - name: Repository
+    identityFrom: [connector:workspace]
+    fields:
+      name: {type: string}
+      files: {type: list, items: string}
+      readme: {type: string}
+      readmeWords: {type: integer}
+      license: {type: string}
+      codeowners: {type: object} # {path, rules: [{pattern, owners, line}]}
+      owners: {type: list, items: string} # every owner CODEOWNERS names (sorted, unique)
+      ownersOk:
+        type: boolean
+        description: >-
+          True when every CODEOWNERS owner is a GitHub team (@org/team), or every
+          owner is a personal handle (@user). False when empty, mixed, or an
+          email.
+    sources: {default: [connector:workspace]}
+    map:
+    - from: workspace/repo
+      id: "'repository:' + record.name"
+      set: >-
+        {'name': record.name, 'files': record.files, 'readme': record.readme,
+         'readmeWords': record.readmeWords, 'license': record.license,
+         'codeowners': record.codeowners, 'owners': record.owners, 'ownersOk':
+         record.ownersOk}
+
+scorecards:
+  - name: repo-hygiene
+    kind: Repository
+    description: >-
+      A pilot repository's basics: a README and CODEOWNERS, then a catch-all
+      owner, owners that are teams and a licence (examples/repo-portal-
+      starter).
+    owner: group:maintainers
+    levels: [bronze, silver]
+    rules:
+    - name: has-readme
+      level: bronze
+      check: has(entity.readme) && entity.readmeWords >= 50
+      evidence: >-
+        has(entity.readme) ? [entity.readme + ' has ' +
+        string(entity.readmeWords) + ' words'] : ['no README']
+      fix: >-
+        Add a README of at least 50 words: what this is, how to run it, who owns
+        it.
+    - name: has-codeowners
+      level: bronze
+      check: has(entity.codeowners)
+      evidence: "['no CODEOWNERS in .github/, the root or docs/']"
+      fix: Add .github/CODEOWNERS so changes are routed to an owning team.
+    - name: codeowners-catch-all
+      level: silver
+      check: >-
+        has(entity.codeowners) && entity.codeowners.rules.exists(r, r.pattern ==
+        '*')
+      evidence: "has(entity.codeowners) ? entity.codeowners.rules.map(r, r.pattern) : []"
+      fix: Start CODEOWNERS with a `*` rule so every path has an owner.
+    - name: owners-are-teams
+      level: silver
+      check: entity.owners.size() > 0 && entity.ownersOk
+      evidence: >-
+        entity.owners.filter(o, !o.startsWith('@')).size() > 0 ?
+        entity.owners.filter(o, !o.startsWith('@')) : entity.owners.filter(o,
+        !o.contains('/'))
+      fix: >-
+        Name teams (@org/team), or for a single-maintainer repository only
+        personal handles (@user). Do not mix teams with individuals, and do not
+        use emails.
+    - name: has-license
+      level: silver
+      check: has(entity.license)
+      evidence: "['no LICENSE or COPYING file at the root']"
+      fix: >-
+        Add a LICENSE file (or a note in the README if the code is
+        internal-only).
+    facets: {summary: public, details: public}
+
+actions:
+  - name: write-readme
+    kind: Repository
+    scope: day2
+    description: Replace the README with the given text.
+    inputs:
+      type: object
+      required: [text]
+      properties: {text: {type: string, minLength: 20}}
+    permission: can_run_actions
+    executor:
+      type: command
+      run: printf '%s\n' "$TOOLBOX_INPUT_TEXT" > README.md
+    expect:
+      postcondition: has(entity.readme) && entity.readmeWords >= 3
+      within: 30s
+  - name: add-license
+    kind: Repository
+    scope: day2
+    description: Add a LICENSE file, as a pull request.
+    inputs:
+      type: object
+      properties: {spdx: {type: string, enum: [MIT, Apache-2.0], default: MIT}}
+    permission: can_run_actions
+    approval: "['group:maintainers']"
+    executor:
+      type: change
+      run: echo "$TOOLBOX_INPUT_SPDX License" > LICENSE
+      base: main
+    expect: {postcondition: has(entity.license), within: 1h}
+  - name: set-owners
+    kind: Repository
+    scope: day2
+    description: >-
+      Make a team the owner of every path (writes CODEOWNERS directly;
+      maintainers approve).
+    inputs:
+      type: object
+      required: [team]
+      properties: {team: {type: string, pattern: "^@[a-z0-9-]+/[a-z0-9-]+$"}}
+    permission: can_run_actions
+    # A list inside the list is "any one of": ann or bob, never the requester. A group approver
+    # needs an authorization model (authz:) to know its members; without one it can't be met.
+    approval: "[['user:ann', 'user:bob']]"
+    executor:
+      type: command
+      run: >-
+        mkdir -p .github && printf '* %s\n' "$TOOLBOX_INPUT_TEAM" >
+        .github/CODEOWNERS
+    expect:
+      postcondition: has(entity.codeowners) && inputs.team in entity.owners
+      within: 30s
+  - name: add-security-policy
+    kind: Repository
+    scope: day2
+    description: >-
+      Publish a SECURITY.md with the team's contact, straight to main once a
+      maintainer approves (no pull request).
+    inputs:
+      type: object
+      required: [contact]
+      properties: {contact: {type: string, pattern: '^[^@\s]+@[^@\s]+$'}}
+    permission: can_run_actions
+    approval: "[['user:ann', 'user:bob']]"
+    # land: push commits to main and pushes, never forced, once approved; the run is done when
+    # main is seen to have the commit, so it needs no postcondition.
+    executor:
+      type: change
+      land: push
+      base: main
+      run: >-
+        printf '# Security\n\nReport a vulnerability to %s.\n'
+        "$TOOLBOX_INPUT_CONTACT" > SECURITY.md

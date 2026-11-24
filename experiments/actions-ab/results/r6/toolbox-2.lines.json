@@ -1,0 +1,24 @@
+{
+ "linesToMaintain": 1779,
+ "files": {
+  "alpha/.toolbox/actions/mark-deprecated.yaml": 42,
+  "alpha/.toolbox/tests/mark-deprecated.test.yaml": 71,
+  "alpha/.toolbox/toolbox.yaml": 5,
+  "beta/.toolbox/toolbox.yaml": 5,
+  "gamma/.toolbox/toolbox.yaml": 5,
+  "org/toolbox.yaml": 11,
+  ".toolbox-state/alpha-req.json": 58,
+  ".toolbox-state/alpha-run.json": 218,
+  ".toolbox-state/reject.json": 160,
+  ".toolbox-state/runs/run_2ftrt8qdthei.json": 104,
+  ".toolbox-state/runs/run_2ftrwf89jxyb.json": 104,
+  ".toolbox-state/runs/run_2ftrxi9eyxvg.json": 104,
+  ".toolbox-state/runs/run_2fts2trnqwc0.json": 77,
+  ".toolbox-state/served/org/runs/run_2ftrrglc3vlx.json": 217,
+  ".toolbox-state/served/org/runs/run_2ftrw9w7le7q.json": 217,
+  ".toolbox-state/served/org/runs/run_2ftrxd6l202v.json": 217,
+  ".toolbox-state/served/org/runs/run_2fts2j47nl0j.json": 159,
+  ".toolbox-state/served/org/runs/spent-tokens": 4,
+  ".toolbox-state/served/org/signing-key": 1
+ }
+}

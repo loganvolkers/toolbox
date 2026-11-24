@@ -1,0 +1,25 @@
+{
+ "linesToMaintain": 1291,
+ "files": {
+  "alpha/.acme/actions/mark-deprecated.json": 34,
+  "org/.gitignore": 2,
+  "org/acme_actions.py": 630,
+  "org/bin/acme": 2,
+  "org/people.json": 7,
+  "org/repos.json": 7,
+  "org/state/mirrors/alpha.git/FETCH_HEAD": 1,
+  "org/state/mirrors/alpha.git/HEAD": 1,
+  "org/state/mirrors/alpha.git/config": 4,
+  "org/state/mirrors/alpha.git/description": 1,
+  "org/state/mirrors/alpha.git/info/exclude": 6,
+  "org/state/mirrors/alpha.git/refs/remotes/origin/main": 1,
+  "org/state/mirrors/beta.git/FETCH_HEAD": 1,
+  "org/state/mirrors/beta.git/refs/remotes/origin/main": 1,
+  "org/state/mirrors/gamma.git/FETCH_HEAD": 1,
+  "org/state/mirrors/gamma.git/refs/remotes/origin/main": 1,
+  "org/state/runs/run-0001.json": 163,
+  "org/state/runs/run-0002.json": 163,
+  "org/state/runs/run-0003.json": 163,
+  "org/tests/scenarios.sh": 102
+ }
+}

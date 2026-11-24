@@ -72,6 +72,12 @@ pub fn router(state: Arc<AppState>) -> Router {
         .fallback(crate::ui::asset)
         .route("/v1/actions", get(crate::actions::list))
         .route("/v1/actions/{name}/previews", post(crate::actions::preview))
+        .route("/v1/actions/{name}/runs", post(crate::actions::create_run))
+        .route("/v1/runs", get(crate::actions::list_runs))
+        .route("/v1/runs/{id}", get(crate::actions::get_run))
+        .route("/v1/runs/{id}/approvals", post(crate::actions::approve))
+        .route("/v1/runs/{id}/cancel", post(crate::actions::cancel))
+        .route("/v1/runs/{id}/verify", post(crate::actions::verify))
         .layer(axum::middleware::from_fn(crate::http_trace::layer))
         .with_state(state)
 }
@@ -133,8 +139,19 @@ async fn snapshot_for(state: &AppState, min: Option<&str>) -> Result<Arc<Publish
     }
 }
 
+/// Ready once a snapshot is published and, for a portal with federation children, once that
+/// snapshot holds the first read of them, so a preview right after start finds their actions.
 async fn readyz(State(s): S) -> Response {
+    let children = crate::connectors::reads_children(&s);
+    let read = s
+        .hub
+        .first_sync(toolbox_model::federation::CONNECTOR, "portal");
     match s.snapshot() {
+        Some(p) if children && read.is_none_or(|v| p.input_version < v) => problem(
+            StatusCode::SERVICE_UNAVAILABLE,
+            "reading-children",
+            "waiting for the first read of the federation children",
+        ),
         Some(p) => Json(json!({"ready": true, "snapshot": p.snapshot_id})).into_response(),
         None => problem(
             StatusCode::SERVICE_UNAVAILABLE,

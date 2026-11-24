@@ -1,0 +1,131 @@
+{
+  "run": "gha-1",
+  "C1": "holds",
+  "P1": {
+    "verdict": "holds",
+    "evidence": "score.py check re-run before probing: pass true. git --git-dir origins/<r>.git ls-tree -r main: .github/workflows/mark-deprecated.yml, .github/self-service/{config.json,mark_deprecated.py,apply-github-settings.sh} and CODEOWNERS (alpha root, beta/gamma .github/) are on main of alpha (4def113), beta (1e99a5e) and gamma (493a51a). config.json differs per repo (slug, maintainers ann/bob, input rules, postcondition); the workflow and step script are identical copies. `list` reports the definition commit read from each origin's main; org/ holds only the CLI, self-service.json (origin paths) and people.json."
+  },
+  "P2": {
+    "verdict": "holds",
+    "evidence": "cwd org/, alpha main bef85b0c before. `bin/self-service request alpha mark-deprecated --as ann -f 'successor=Acme/Bad Name' -f 'reason=A valid reason of more than twenty characters.'` -> exit 2, error invalid_input, 'successor: must match ^[a-z0-9-]+/[a-z0-9-]+$'. `... -f successor=acme/probe-valid -f reason=short` -> exit 2, invalid_input, 'reason: must be at least 20 characters (got 5)'. .state/runs had 3 runs before and after (no record). alpha main bef85b0c after."
+  },
+  "P3": {
+    "verdict": "holds",
+    "evidence": "beta main 1eaaa17a before. `SELF_SERVICE_AS=ann bin/self-service preview beta mark-deprecated -f successor=acme/probe-preview -f 'reason=Probe: preview must show the file and its content.'` (also with --as ann) -> exit 0, valid true, preview {path DEPRECATED.md, change update, base_commit 1eaaa17a, content '# Deprecated: use acme/probe-preview\\n\\nProbe: preview must show the file and its content.\\n', unified diff against the current file}. beta main 1eaaa17a after; no record created."
+  },
+  "P4": {
+    "verdict": "holds",
+    "evidence": "From org/, gamma main 1e7d82c0 before. `bin/self-service request gamma mark-deprecated --as ann -f successor=acme/probe-approval -f 'reason=Probe P4 checks the approval rules hold.'` -> exit 0, run-20261124T124948Z-f378 awaiting_approval (act ran validate+preview; request.log). gamma 1e7d82c0. `approve <run> --as ann` -> exit 3 approval_denied 'ann requested this run and cannot approve it'; gamma 1e7d82c0. `approve <run> --as carol` -> exit 3 approval_denied 'carol is not a maintainer of gamma (maintainers: ann, bob)'. `status` -> awaiting_approval, approved_by null. gamma still 1e7d82c0. Enforced locally by the CLI (and again by the workflow's check-approval step); GitHub environment reviewers + prevent_self_review are configured as code in apply-github-settings.sh, not run."
+  },
+  "P5": {
+    "verdict": "holds",
+    "evidence": "`bin/self-service approve run-20261124T124948Z-f378 --as bob` -> exit 0, status succeeded, outcome 'observed DEPRECATED.md with the expected content on main at 2f1364cd0e9c', observed {commit 2f1364cd, expected_sha256 = observed_sha256, matches true}. origins/gamma.git main 1e7d82c0 -> 2f1364cd; `git show main:DEPRECATED.md` = '# Deprecated: use acme/probe-approval', blank, the P4 reason; commit trailers Self-Service-Run, Requested-by: ann, Approved-by: bob. apply.log shows act ran validate, preview, apply (check-approval, push, verify). Source: org/bin/self-service observe() (l.201-216) runs git rev-parse refs/heads/main and git cat-file blob on defn['definition']['origin'] (the bare origin path) and compares to the rendered template; cmd_approve (l.388-403) sets succeeded only if act exit 0 AND the workflow's verify matched AND that observation matched."
+  },
+  "P6": {
+    "verdict": "holds",
+    "evidence": "Wrote origins/alpha.git/hooks/pre-receive (echo to stderr; exit 1), chmod +x. alpha main bef85b0c before. As ann: request alpha successor acme/probe-reject -> run-20261124T125004Z-1203 awaiting_approval. `approve <run> --as bob` -> exit 1, error run_failed, status failed, reason 'push to main was rejected: ... [remote rejected] (pre-receive hook declined)', observed matches false at bef85b0c. `status` -> failed. Hook removed (only *.sample remain). alpha main bef85b0c after."
+  },
+  "P7": {
+    "verdict": "holds",
+    "evidence": "From org/, `bin/self-service list` -> exit 0, actions: (alpha, mark-deprecated), (beta, mark-deprecated), (gamma, mark-deprecated), each with maintainers [ann, bob], inputs and definition commit from the origin's main. P4 was requested from org/ with `bin/self-service request gamma ...`."
+  },
+  "P8": {
+    "verdict": "holds",
+    "evidence": "`bin/self-service show run-20261124T124948Z-f378` -> requested_by ann, requested_at 12:49:48.532Z, approved_by bob, approved_at 12:49:52.717Z, inputs {successor acme/probe-approval, reason ...}, outcome {status succeeded, at 12:49:53.437Z, reason, commit, observed}; events requested, previewed, approval_denied (ann), approval_denied (carol), approved (bob), started, succeeded, each timestamped."
+  },
+  "P9": {
+    "verdict": "holds",
+    "evidence": "Every command above ran with stdin from /dev/null and no prompts; identity by --as or $SELF_SERVICE_AS, inputs by -f. Every command, including refusals and failures, printed one JSON document, with distinct exit codes (0 ok, 1 run failed, 2 invalid, 3 not allowed)."
+  },
+  "P10": {
+    "verdict": "holds",
+    "evidence": "Operated entirely from org/HANDOFF.md's Commands and 'Testing the refusals' sections: nothing to start, no PATH or port change needed (PyYAML already installed). Source read only for P5."
+  },
+  "fixes": [],
+  "strikes": [
+    {
+      "path": "org/.state/runs/run-20261124T124415Z-5a72/apply/apply.json",
+      "lines": 9,
+      "reason": "workflow step output written by mark_deprecated.py under act at run time (gitignored .state/ ledger)"
+    },
+    {
+      "path": "org/.state/runs/run-20261124T124415Z-5a72/apply/check-approval.json",
+      "lines": 11,
+      "reason": "workflow step output written by mark_deprecated.py under act at run time (gitignored .state/ ledger)"
+    },
+    {
+      "path": "org/.state/runs/run-20261124T124415Z-5a72/apply/preview.json",
+      "lines": 11,
+      "reason": "workflow step output written by mark_deprecated.py under act at run time (gitignored .state/ ledger)"
+    },
+    {
+      "path": "org/.state/runs/run-20261124T124415Z-5a72/apply/validate.json",
+      "lines": 9,
+      "reason": "workflow step output written by mark_deprecated.py under act at run time (gitignored .state/ ledger)"
+    },
+    {
+      "path": "org/.state/runs/run-20261124T124415Z-5a72/apply/verify.json",
+      "lines": 10,
+      "reason": "workflow step output written by mark_deprecated.py under act at run time (gitignored .state/ ledger)"
+    },
+    {
+      "path": "org/.state/runs/run-20261124T124415Z-5a72/record.json",
+      "lines": 151,
+      "reason": "run record written by org/bin/self-service at run time (gitignored .state/ ledger)"
+    },
+    {
+      "path": "org/.state/runs/run-20261124T124416Z-1c6b/apply/apply.json",
+      "lines": 9,
+      "reason": "workflow step output written by mark_deprecated.py under act at run time (gitignored .state/ ledger)"
+    },
+    {
+      "path": "org/.state/runs/run-20261124T124416Z-1c6b/apply/preview.json",
+      "lines": 11,
+      "reason": "workflow step output written by mark_deprecated.py under act at run time (gitignored .state/ ledger)"
+    },
+    {
+      "path": "org/.state/runs/run-20261124T124416Z-1c6b/apply/validate.json",
+      "lines": 9,
+      "reason": "workflow step output written by mark_deprecated.py under act at run time (gitignored .state/ ledger)"
+    },
+    {
+      "path": "org/.state/runs/run-20261124T124416Z-1c6b/apply/verify.json",
+      "lines": 10,
+      "reason": "workflow step output written by mark_deprecated.py under act at run time (gitignored .state/ ledger)"
+    },
+    {
+      "path": "org/.state/runs/run-20261124T124416Z-1c6b/record.json",
+      "lines": 151,
+      "reason": "run record written by org/bin/self-service at run time (gitignored .state/ ledger)"
+    },
+    {
+      "path": "org/.state/runs/run-20261124T124416Z-816c/apply/apply.json",
+      "lines": 9,
+      "reason": "workflow step output written by mark_deprecated.py under act at run time (gitignored .state/ ledger)"
+    },
+    {
+      "path": "org/.state/runs/run-20261124T124416Z-816c/apply/preview.json",
+      "lines": 11,
+      "reason": "workflow step output written by mark_deprecated.py under act at run time (gitignored .state/ ledger)"
+    },
+    {
+      "path": "org/.state/runs/run-20261124T124416Z-816c/apply/validate.json",
+      "lines": 9,
+      "reason": "workflow step output written by mark_deprecated.py under act at run time (gitignored .state/ ledger)"
+    },
+    {
+      "path": "org/.state/runs/run-20261124T124416Z-816c/apply/verify.json",
+      "lines": 10,
+      "reason": "workflow step output written by mark_deprecated.py under act at run time (gitignored .state/ ledger)"
+    },
+    {
+      "path": "org/.state/runs/run-20261124T124416Z-816c/record.json",
+      "lines": 151,
+      "reason": "run record written by org/bin/self-service at run time (gitignored .state/ ledger)"
+    }
+  ],
+  "linesBeforeStrikes": 1476,
+  "linesAfterStrikes": 895,
+  "fullyPasses": true,
+  "notes": "C1 was checked with score.py check before any probe (pass); P5 then replaced gamma's DEPRECATED.md with the probe content (2f1364cd), as P5 requires, so check would now fail on gamma. The probes added runs run-20261124T124948Z-f378 (succeeded) and run-20261124T125004Z-1203 (failed) to org/.state after lines.json was measured. Kept (895 lines): org/bin/self-service (429), alpha/.github/self-service/{mark_deprecated.py 191, config.json 31, apply-github-settings.sh 63}, alpha/.github/workflows/mark-deprecated.yml (94), beta/gamma config.json (31 each), the three CODEOWNERS (3, 3 counted), org/people.json (7), org/self-service.json (10), org/.gitignore (2); score.py counted beta's and gamma's workflow, step script and settings script as copies of alpha's. The act logs (request.log, apply.log) are not in lines.json because .log is not a counted extension, so they need no strike. Minor: on the rejected-push run, outcome.commit names the local commit that was never on main (observed.commit correctly shows main unmoved). Not run here and not adjudicated: apply-github-settings.sh against GitHub, environment reviews, rulesets, the App-token and approvals-API steps (HANDOFF says so). Identity is trusted from --as. No process outlived its command."
+}

@@ -1,0 +1,1 @@
+{"toolCalls": 26, "byKind": {"shell": 24, "edit": 2}, "byTool": {"run_terminal_cmd": 24, "search_replace": 2}, "resultChars": 88866, "missingResults": ["run_terminal_cmd", "run_terminal_cmd", "run_terminal_cmd"], "wallSeconds": 209}
