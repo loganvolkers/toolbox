@@ -60,6 +60,17 @@ scorecards:
       Each public docs page: titled, described, linked, reachable from the
       sidebar, free of credentials, and not sharing its title
       (docs/design/site-standards.md).
+    rationale: >-
+      The site is what outside readers see of Toolbox, served from GitHub
+      Pages, so an untitled page, a dead link or a leaked credential is a
+      public defect. Bronze is a page that stands on its own; silver puts it
+      where readers can find it; gold keeps pages distinguishable in search
+      and navigation.
+    links:
+    - title: Site standards
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/site-standards.md
+    - title: D91 Starlight docs site
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7X0RYD00000000000000000.md
     owner: group:maintainers
     track: docs
     levels: [bronze, silver, gold]
@@ -75,6 +86,12 @@ scorecards:
         Set a top-level `title:` of at least 3 characters in the page's
         frontmatter. Starlight uses it as the page heading and the document
         title.
+      rationale: >-
+        An untitled page reaches readers, browser tabs and search results with
+        no name, so nobody can recognise it before opening it.
+      links:
+      - title: Starlight frontmatter
+        url: https://starlight.astro.build/reference/frontmatter/
     - name: described
       level: bronze
       check: entity.descriptionChars > 0
@@ -82,6 +99,13 @@ scorecards:
       fix: >-
         Set `description:` in the page's frontmatter. It is the summary a reader
         and a search index see.
+      rationale: >-
+        Without a description, search engines and link previews fall back to
+        whatever text they scrape, and a reader cannot judge the page before
+        opening it.
+      links:
+      - title: Starlight frontmatter
+        url: https://starlight.astro.build/reference/frontmatter/
     - name: links-resolve
       level: bronze
       check: entity.missingFiles.size() == 0
@@ -90,6 +114,10 @@ scorecards:
         Fix or remove the links in the evidence. A root-relative link must
         include the site base and name a content page, a file under site/public,
         or an Astro page under site/src/pages.
+      rationale: >-
+        GitHub Pages serves the site under /toolbox and Starlight does not
+        rewrite a link that already starts with /, so a link that misses the
+        base or names no page is a 404 for every reader.
     - name: reachable
       level: silver
       check: entity.inSidebar
@@ -97,6 +125,9 @@ scorecards:
       fix: >-
         Add the page's directory to the sidebar `autogenerate` list in
         `site/astro.config.mjs`, or link its slug there. Leave `draft` unset.
+      rationale: >-
+        The sidebar is how a reader of the site finds a page. One it does not
+        list exists only for someone who already has the URL.
     - name: no-hardcoded-secrets
       level: bronze
       check: entity.secretHits.size() == 0
@@ -104,6 +135,10 @@ scorecards:
       fix: >-
         Remove the credential in the evidence. A docs page is published to
         GitHub Pages.
+      rationale: >-
+        A credential on a page is public as soon as the site deploys, and stays
+        in the repository history after the page is fixed, so it has to be
+        revoked.
     - name: unique-title
       level: gold
       check: "!entity.duplicateTitle"
@@ -112,4 +147,7 @@ scorecards:
       fix: >-
         Give the page a `title:` no other page in site/src/content/docs uses, so
         search results and the sidebar tell them apart.
+      rationale: >-
+        Two pages with one title look the same wherever titles are listed, so
+        readers open the wrong one or assume one is a duplicate.
     facets: {summary: public, details: public}

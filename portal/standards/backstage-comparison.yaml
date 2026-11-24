@@ -197,6 +197,16 @@ scorecards:
       Start, read and recover on a 10k-component catalog, with every read
       authorized (Toolbox through OpenFGA, Backstage under allow-all). ISO
       25010 performance efficiency and reliability.
+    rationale: >-
+      Every page load, agent call and CI job reads the portal, so a slow
+      start, slow reads or a slow recovery cost all of its users at once. The
+      bars are absolute and set before the run; Toolbox authorizes every read
+      while Backstage runs allow-all, which favours Backstage.
+    links:
+    - title: Performance results
+      url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#performance-and-memory
+    - title: Factors F3 F4 F5 F14
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors
     owner: group:maintainers
     track: vs-backstage
     levels: [bronze]
@@ -213,6 +223,10 @@ scorecards:
       fix: >-
         Profile startup with `RUST_LOG=debug toolbox serve`, then rerun
         experiments/backstage-compare/run.sh.
+      rationale: >-
+        Start time bounds how soon a crashed or rescheduled instance, a preview
+        environment or a scale-from-zero deploy serves again; a slow start turns
+        each of those into an outage.
     - name: catalog-readable
       level: bronze
       check: entity.catalogReadableS <= 60.0
@@ -226,6 +240,10 @@ scorecards:
       fix: >-
         Time ingest and recompute in `toolbox serve` logs and the derive laps,
         then rerun experiments/backstage-compare/run.sh.
+      rationale: >-
+        Until ingest finishes, the portal answers from a partial catalog, and
+        people and agents read wrong owners and scores without knowing it. This
+        covers the first ingest only, not later freshness.
     - name: get-latency
       level: bronze
       check: entity.getP95Ms <= 50.0
@@ -237,6 +255,10 @@ scorecards:
       fix: >-
         Profile GET /v1/entities/{id} in crates/toolbox-api/src/routes.rs, then
         rerun experiments/backstage-compare/run.sh.
+      rationale: >-
+        An entity page fans out into many reads, so the per-call tail becomes
+        the page's typical latency (Dean and Barroso, The Tail at Scale); a slow
+        p95 makes every page and agent lookup slow.
     - name: get-throughput
       level: bronze
       check: entity.getRps >= 1000.0
@@ -248,6 +270,11 @@ scorecards:
       fix: >-
         Profile GET /v1/entities/{id} in crates/toolbox-api/src/routes.rs, then
         rerun experiments/backstage-compare/run.sh.
+      rationale: >-
+        Throughput decides how many people, agents and CI jobs one instance
+        serves before it needs replicas. Toolbox's reads here are mostly
+        authorization-cache hits, and the load shares the CPUs: a ceiling, not a
+        capacity.
     - name: list-latency
       level: bronze
       check: entity.listP95Ms <= 500.0
@@ -259,6 +286,10 @@ scorecards:
       fix: >-
         Profile the filtered list in crates/toolbox-api/src/routes.rs
         (list_entities), then rerun experiments/backstage-compare/run.sh.
+      rationale: >-
+        Filtered lists back the catalog filter, ownership views and the MCP
+        query tool, so a slow filter slows every "what does this team own"
+        question. Toolbox lost here in round 1, before the field index.
     - name: list-throughput
       level: bronze
       check: entity.listRps >= 20.0
@@ -270,6 +301,13 @@ scorecards:
       fix: >-
         Profile the filtered list in crates/toolbox-api/src/routes.rs
         (list_entities), then rerun experiments/backstage-compare/run.sh.
+      rationale: >-
+        A filter that scans every entity gets slower as the catalog grows, so a
+        portal that copes at 1k components stalls at 10k. Round 1's loss here,
+        about 2.4× behind, is published as written.
+      links:
+      - title: Round 1 list loss
+        url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#round-1-toolbox-at-5ef6263-backstage-lists-empty
     - name: recovery
       level: bronze
       check: entity.recoveredS <= 60.0
@@ -282,6 +320,10 @@ scorecards:
         Time the restart path in crates/toolbox-api/src/state.rs (the first
         recompute from Postgres), then rerun
         experiments/backstage-compare/run.sh.
+      rationale: >-
+        After a crash the portal is down until its state is back, so recovery
+        time adds to every incident (DORA failed deployment recovery time). A
+        product whose state is derived should recover by recomputing.
     facets: {summary: public, details: public}
 
   - name: vs-backstage-footprint
@@ -290,6 +332,16 @@ scorecards:
     description: >-
       What it costs to run and to own: memory, disk, and the files an adopter
       keeps for a first portal. Charter goal 1 (simple deployment).
+    rationale: >-
+      Memory, disk and the files an adopter keeps are paid for on every
+      instance, preview environment and upgrade, and they decide the smallest
+      machine and team that can run a portal. Charter goal 1 promises one
+      image plus Postgres; a heavy footprint would break that promise.
+    links:
+    - title: Static facts
+      url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#static-facts-and-single-run-probes
+    - title: Factors F2 F3
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors
     owner: group:maintainers
     track: vs-backstage
     levels: [bronze]
@@ -306,6 +358,10 @@ scorecards:
       fix: >-
         Measure the server and its co-processes with
         experiments/backstage-compare/measure.py and trim what starts eagerly.
+      rationale: >-
+        Idle memory is paid by every instance, replica and preview environment
+        whether or not anyone reads it, and sets the smallest machine a portal
+        can run on.
     - name: loaded-memory
       level: bronze
       check: entity.rssLoadedMb <= 1024.0
@@ -317,6 +373,10 @@ scorecards:
       fix: >-
         Measure with experiments/backstage-compare/measure.py and shrink the
         derived state's copies in crates/toolbox-api/src/state.rs.
+      rationale: >-
+        Memory that grows with the catalog decides when an instance runs out as
+        the organisation adds services; a portal that fits at 1k components can
+        be killed for memory at 10k.
     - name: install-size
       level: bronze
       check: entity.installMb <= 1000.0
@@ -328,6 +388,9 @@ scorecards:
       fix: >-
         Measure with experiments/backstage-compare/footprint.py and drop what
         the release archives carry but do not run.
+      rationale: >-
+        Bytes on disk are pulled on every deploy, cold start and CI job, and
+        every file shipped is one more thing to scan and patch.
     - name: adopter-files
       level: bronze
       check: entity.adopterFiles <= 10.0
@@ -339,6 +402,11 @@ scorecards:
       fix: >-
         Move what examples/repo-portal-starter asks an adopter to keep into
         packages they include.
+      rationale: >-
+        Every file an adopter keeps is theirs to merge on each upgrade, so a
+        portal that starts as a generated app makes the adopter its maintainer.
+        Toolbox counts its repo starter; its served portal gives the same
+        standing.
     - name: adopter-lines
       level: bronze
       check: entity.adopterLines <= 500.0
@@ -350,6 +418,10 @@ scorecards:
       fix: >-
         Move what examples/repo-portal-starter asks an adopter to keep into
         packages they include.
+      rationale: >-
+        Lines kept are lines someone must read, review and carry through every
+        upgrade; they set how long a first portal takes to understand and how
+        much can break when the product changes.
     facets: {summary: public, details: public}
 
   - name: vs-backstage-security
@@ -359,6 +431,17 @@ scorecards:
       Secure by default, as installed: what an unauthenticated or forging
       client gets, what a client token can destroy, and what an extension can
       reach. ISO 25010 security.
+    rationale: >-
+      A portal maps every service, its owners and how to reach them, and the
+      configuration it ships with is often the one deployed. OWASP ASVS V13
+      asks that the default be secure for use on the Internet, so each rule
+      probes the product as it ships, and a setting the adopter must remember
+      to change counts as a fail.
+    links:
+    - title: Factors F6 F7
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors
+    - title: Static facts
+      url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#static-facts-and-single-run-probes
     owner: group:maintainers
     track: vs-backstage
     levels: [bronze]
@@ -371,6 +454,9 @@ scorecards:
       fix: >-
         Refuse a read without credentials outside dev mode in
         crates/toolbox-authz/src/authn.rs.
+      rationale: >-
+        A catalog readable without credentials hands the organisation's service
+        map, owners and internal links to anyone who can reach the port.
     - name: forged-identity
       level: bronze
       check: entity.forgedIdentityRefused
@@ -378,6 +464,13 @@ scorecards:
       fix: >-
         Trust identity headers only in dev mode, in
         crates/toolbox-authz/src/authn.rs.
+      rationale: >-
+        If the server believes an identity header, any client that reaches it
+        can act as anyone, an operator included. Toolbox's image did this until
+        the comparison found it.
+      links:
+      - title: No trusted header off loopback
+        url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M857ZB3FZJZWX8G3BF5W1RNR.md
     - name: anonymous-mcp
       level: bronze
       check: entity.anonymousMcpRefused
@@ -385,6 +478,9 @@ scorecards:
       fix: >-
         Authenticate /mcp as the REST API does, in
         crates/toolbox-api/src/mcp.rs.
+      rationale: >-
+        MCP reads the same catalog as the API, so an unauthenticated MCP
+        endpoint is a side door around every access rule the API enforces.
     - name: client-cannot-delete
       level: bronze
       check: entity.clientCannotDelete
@@ -392,6 +488,13 @@ scorecards:
       fix: >-
         Keep entity writes to connectors' ingest; offer no DELETE in
         crates/toolbox-api/src/routes.rs.
+      rationale: >-
+        A read client's token ends up in scripts and agent configs; if it can
+        delete entities, a leaked token becomes lost data. Backstage is scored
+        on its read-only REST token; its MCP-capable token can still delete.
+      links:
+      - title: Two-token adjudication
+        url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/ADJUDICATION.md#r35-is-the-two-token-arrangement-fair-to-backstage-p4
     - name: loopback-by-default
       level: bronze
       check: entity.loopbackByDefault
@@ -399,6 +502,10 @@ scorecards:
       fix: >-
         Bind 127.0.0.1 unless `--listen` says otherwise, in
         crates/toolbox-cli/src/main.rs.
+      rationale: >-
+        A server bound to every interface is reachable from the whole network
+        before anyone has configured its auth. Both products' shipped images
+        listen on every interface, so both fail.
     - name: owner-only-fields
       level: bronze
       check: entity.ownerOnlyFields
@@ -406,6 +513,10 @@ scorecards:
       fix: >-
         Keep facets and their filter guard in crates/toolbox-api/src/access.rs,
         pinned by crates/toolbox-api/tests/authz.rs.
+      rationale: >-
+        Without field-level access, a sensitive field is either shown to every
+        signed-in user or kept out of the catalog; a filter that can test a
+        hidden value leaks it anyway.
     - name: extension-process-isolated
       level: bronze
       check: entity.extensionProcessIsolated
@@ -415,6 +526,10 @@ scorecards:
       fix: >-
         Run every connector as its own process, as
         docs/design/connector-control.md says.
+      rationale: >-
+        An extension inside the server's process can read its memory and crash
+        or stall it, so one bad integration takes the portal down. Backstage's
+        threat model says there is no boundary between plugins on one host.
     - name: extension-credential-isolated
       level: bronze
       check: entity.extensionCredentialIsolated
@@ -424,6 +539,16 @@ scorecards:
       fix: >-
         Start connectors with a cleared environment and an allowlist, in
         crates/toolbox-api/src/connectors.rs.
+      rationale: >-
+        An extension that holds the server's database or authorization
+        credentials can read and rewrite everything, so one compromised
+        integration is a compromised portal. Rescored to fail for both: a
+        same-user connector read OpenFGA's memory on a host without Yama.
+      links:
+      - title: Credential isolation round 3
+        url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#credential-isolation-round-3
+      - title: Adjudication R3.3
+        url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/ADJUDICATION.md#r33-credential-isolation-f7-against-581be50
     facets: {summary: public, details: public}
 
   - name: vs-backstage-supply-chain
@@ -433,6 +558,16 @@ scorecards:
       What an adopter inherits: third-party packages, their known
       vulnerabilities, and whether the release can be verified. OpenSSF and
       SLSA build provenance.
+    rationale: >-
+      An adopter inherits every package a portal ships, as attack surface and
+      as upgrade work, and runs it next to the catalog and its credentials.
+      Provenance is how they prove that what they deploy was built from the
+      published source.
+    links:
+    - title: Static facts
+      url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#static-facts-and-single-run-probes
+    - title: Factor F8
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors
     owner: group:maintainers
     track: vs-backstage
     levels: [bronze]
@@ -449,6 +584,10 @@ scorecards:
       fix: >-
         List the heaviest dependencies with `cargo tree -e normal`, and drop or
         feature-gate them in Cargo.toml.
+      rationale: >-
+        Every third-party package is code an adopter runs, scans and updates
+        without having chosen it, so more packages mean more advisories and more
+        upgrade churn. Backstage's Node runtime is not counted.
     - name: known-vulnerabilities
       level: bronze
       check: entity.knownVulns == 0.0
@@ -460,6 +599,12 @@ scorecards:
       fix: >-
         Run `osv-scanner scan source --lockfile Cargo.lock` and update or
         replace the listed packages.
+      rationale: >-
+        Each known advisory is a finding the adopter's scanner raises and
+        someone must triage, even when, like Toolbox's unmaintained chrono
+        crates, it is not exploitable.
+      links:
+      - {title: osv-scanner, url: https://github.com/google/osv-scanner}
     - name: high-vulnerabilities
       level: bronze
       check: entity.highVulns == 0.0
@@ -471,6 +616,10 @@ scorecards:
       fix: >-
         Run `osv-scanner scan source --lockfile Cargo.lock` and update or
         replace the listed packages first.
+      rationale: >-
+        High and critical advisories are the ones a security review blocks a
+        deploy on, and the ones that need a patched release fast; one in the
+        shipped lockfile can keep a portal out of production.
     - name: provenance
       level: bronze
       check: entity.provenancePercent == 100.0
@@ -484,6 +633,13 @@ scorecards:
       fix: >-
         Attest every artifact in .github/workflows/release.yml, and check with
         `gh attestation verify`.
+      rationale: >-
+        Without verifiable provenance, an adopter cannot tell a release built
+        from the published source from one swapped in the registry or the build
+        system.
+      links:
+      - title: SLSA build track
+        url: https://slsa.dev/spec/v1.2/build-track-basics
     facets: {summary: public, details: public}
 
   - name: vs-backstage-change-safety
@@ -493,6 +649,16 @@ scorecards:
       Changing a portal safely: validate before deploy, preview the effect,
       upgrade without merging, roll back without surgery. ISO 25010
       maintainability; DORA change failure rate and recovery time.
+    rationale: >-
+      A portal's bad data and outages mostly arrive with a change: a config
+      edit, a catalog edit or an upgrade. Checking and previewing a change
+      before deploy lowers the change failure rate, and rolling back without
+      database surgery shortens recovery (DORA).
+    links:
+    - title: Factors F9 F10 F14
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors
+    - title: Static facts
+      url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#static-facts-and-single-run-probes
     owner: group:maintainers
     track: vs-backstage
     levels: [bronze]
@@ -505,6 +671,10 @@ scorecards:
       fix: >-
         Keep `toolbox validate` and `toolbox test` working with no server or
         database.
+      rationale: >-
+        If validation needs a running instance, CI and pre-commit checks need
+        one too, so catalog mistakes surface after deploy. Backstage's catalog
+        validate takes `--instance`.
     - name: change-preview
       level: bronze
       check: entity.changePreview
@@ -512,6 +682,10 @@ scorecards:
       fix: >-
         Keep `toolbox plan --local --base <manifest>` diffing entities, scores
         and tuples.
+      rationale: >-
+        Without a preview, production is the first place a change shows that it
+        re-owned entities, moved scores or widened access; a diff before deploy
+        catches those in review.
     - name: upgrade-lines
       level: bronze
       check: entity.upgradeLinesPerRelease <= 10.0
@@ -524,6 +698,14 @@ scorecards:
         Keep examples/repo-portal-starter passing `toolbox validate` and
         `toolbox test` across releases
         (experiments/backstage-compare/upgrade.py).
+      rationale: >-
+        Lines an adopter edits per release are a cost paid on every release for
+        the portal's life, and adopters who skip it stay on unpatched releases.
+        Unlike measures: Toolbox counts required lines, Backstage its suggested
+        template diff.
+      links:
+      - title: Unlike measures
+        url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/ADJUDICATION.md#43-measures-that-compare-unlike-things
     - name: rollback-steps
       level: bronze
       check: entity.rollbackManualStepsPerRelease == 0.0
@@ -537,6 +719,13 @@ scorecards:
       fix: >-
         Keep the store's migrations readable by the previous release, as
         experiments/backstage-compare/upgrade.py checks.
+      rationale: >-
+        A rollback that needs hand-run database steps is slow and error-prone in
+        the incident that calls for it. Backstage documents a manual Knex
+        `migrate:down`, run from the newer version.
+      links:
+      - title: Backstage manual Knex rollback
+        url: https://github.com/backstage/backstage/blob/v1.57.1/docs/tutorials/manual-knex-rollback.md
     facets: {summary: public, details: public}
 
   - name: vs-backstage-org-fit
@@ -545,6 +734,17 @@ scorecards:
     description: >-
       Fitting how an organisation is built: one repository with no server
       first, then many portals joined. Conway's law and Team Topologies.
+    rationale: >-
+      Systems take the shape of the organisation that builds them (Conway),
+      and teams move fastest when they can test without an integrated
+      environment (DORA, loosely coupled teams). A portal that needs a central
+      server first makes every team wait for the platform team; one that
+      cannot join portals cannot grow past one.
+    links:
+    - title: Factor F12
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors
+    - title: DORA loosely coupled teams
+      url: https://dora.dev/capabilities/loosely-coupled-teams/
     owner: group:maintainers
     track: vs-backstage
     levels: [bronze]
@@ -557,11 +757,29 @@ scorecards:
       fix: >-
         Keep `toolbox report` scoring a repository with no server, as
         actions/report does.
+      rationale: >-
+        A team that can score its own repository in CI, with no server, gets
+        value before anyone runs a portal, and the platform team has nothing to
+        operate for it.
+      links:
+      - title: Repo value
+        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/repo-value.md
+      - title: D69 report as an Action
+        url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7VXK0480000000000000000.md
     - name: federation
       level: bronze
       check: entity.federates
       evidence: "['federates is ' + string(entity.federates)]"
       fix: Build federation as docs/design/federation.md designs it (D68).
+      rationale: >-
+        Without federation, a large organisation runs one catalog for everyone
+        or many that never join, and neither fits teams that own their portals.
+        Neither product federates, so this rule is parity.
+      links:
+      - title: Federation design
+        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/federation.md
+      - title: D68 federation designed
+        url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7VWS4ZJ0000000000000000.md
     facets: {summary: public, details: public}
 
   - name: vs-backstage-agent-surface
@@ -570,6 +788,16 @@ scorecards:
     description: >-
       What a coding agent gets: MCP by default, and how many tokens it spends
       to learn the tools and read one entity.
+    rationale: >-
+      Coding agents are a primary audience of a portal, and every byte a tool
+      returns is tokens they pay for and context the task loses. A portal
+      without MCP leaves each adopter to build and secure their own agent
+      integration.
+    links:
+    - title: Factor F13
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors
+    - title: Static facts
+      url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#static-facts-and-single-run-probes
     owner: group:maintainers
     track: vs-backstage
     levels: [bronze]
@@ -580,6 +808,10 @@ scorecards:
       check: entity.mcpByDefault
       evidence: "['mcpByDefault is ' + string(entity.mcpByDefault)]"
       fix: Serve /mcp from `toolbox serve` and stdio from `toolbox mcp`.
+      rationale: >-
+        If MCP is an add-on, each adopter must install, configure and secure it
+        before an agent can read the catalog. Both products serve it by default,
+        so this rule is parity.
     - name: tools-list-size
       level: bronze
       check: entity.mcpToolsListBytes <= 32768.0
@@ -591,6 +823,10 @@ scorecards:
       fix: >-
         Shorten tool descriptions and schemas in
         crates/toolbox-api/src/mcp.rs.
+      rationale: >-
+        An agent loads tools/list before it does anything, so its size is a
+        fixed token cost on every session and crowds out the task's context.
+        Backstage is measured with its unrestricted MCP token.
     - name: get-entity-size
       level: bronze
       check: entity.mcpGetEntityBytes <= 4096.0
@@ -602,6 +838,9 @@ scorecards:
       fix: >-
         Trim the get tool's response in crates/toolbox-api/src/mcp.rs to the
         fields an agent asks for.
+      rationale: >-
+        Reading an entity is an agent's routine call, so a bloated response
+        multiplies its token cost and buries the fields it asked for.
     facets: {summary: public, details: public}
 
   - name: vs-backstage-extensibility
@@ -610,6 +849,17 @@ scorecards:
     description: >-
       What it takes to add an integration: which languages, and whether the
       server is rebuilt. ISO 25010 modifiability.
+    rationale: >-
+      Extensions are where portals accrete cost: an integration built into the
+      core is rebuilt, redeployed and upgraded with it. A protocol any
+      language can speak, added without a rebuild, keeps that cost with the
+      integration's owner (Parnas). Not pre-registered on its own; the README
+      counts it inside capabilities.
+    links:
+    - title: Factor F11
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors
+    - title: Connector control
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/connector-control.md
     owner: group:maintainers
     track: vs-backstage
     levels: [bronze]
@@ -622,6 +872,10 @@ scorecards:
       fix: >-
         Keep the connector protocol language-neutral, as
         schema/connector-messages.schema.json defines it.
+      rationale: >-
+        If integrations must be written in the portal's own language and
+        framework, the teams who own the data cannot write them, and the
+        platform team becomes the bottleneck.
     - name: without-rebuild
       level: bronze
       check: entity.extensionWithoutRebuild
@@ -629,6 +883,10 @@ scorecards:
       fix: >-
         Keep remote connectors pushing to /v1/ingest with their own token
         (docs/design/connector-control.md).
+      rationale: >-
+        If adding an integration means rebuilding and redeploying the server,
+        every new data source becomes a core release, with its risk and its wait
+        in the platform team's queue.
     facets: {summary: public, details: public}
 
   - name: vs-backstage-capabilities
@@ -638,6 +896,16 @@ scorecards:
       What a portal does out of the box, by configuration alone. The scenarios
       come from the Backstage parity audit (D47), so they favour what
       Backstage ships.
+    rationale: >-
+      Functional completeness is the first question in a portal evaluation: a
+      team will not adopt a portal that lacks what its developers use every
+      day. Toolbox is expected to lose here, and each missing capability is
+      published as a loss rather than dropped.
+    links:
+    - title: Verdict
+      url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#verdict
+    - title: D47 Backstage parity audit
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7V8P2VY0000000000000000.md
     owner: group:maintainers
     track: vs-backstage
     levels: [bronze]
@@ -648,16 +916,26 @@ scorecards:
       check: entity.capCatalogBrowse
       evidence: "['capCatalogBrowse is ' + string(entity.capCatalogBrowse)]"
       fix: Keep the catalog pages in ui/src and `toolbox query`.
+      rationale: >-
+        Browsing and filtering the catalog is a portal's base job; without it,
+        people and agents cannot find a service or the team behind it.
     - name: ownership
       level: bronze
       check: entity.capOwnership
       evidence: "['capOwnership is ' + string(entity.capOwnership)]"
       fix: Keep `toolbox owner` and the owner_of MCP tool.
+      rationale: >-
+        Incident response, reviews and access requests start from who owns a
+        service; a portal that cannot answer through teams leaves people asking
+        in chat.
     - name: graph
       level: bronze
       check: entity.capGraph
       evidence: "['capGraph is ' + string(entity.capGraph)]"
       fix: Keep `toolbox graph` and /v1/entities/{id}/graph.
+      rationale: >-
+        Relations show what a change or an outage affects; without a graph,
+        impact analysis means reading descriptors one by one.
     - name: docs-search
       level: bronze
       check: entity.capDocsSearch
@@ -665,6 +943,10 @@ scorecards:
       fix: >-
         Index documentation text with the entities that `toolbox search` reads
         (docs/v1-spec.md, full-text search).
+      rationale: >-
+        Developers search for answers in documentation, not only for entity
+        names; a portal whose search stops at names and titles sends them to
+        another tool.
     - name: docs
       level: bronze
       check: entity.capDocs
@@ -672,6 +954,10 @@ scorecards:
       fix: >-
         Carry a documentation tool's built site per component, as
         docs/design/toolbox-and-tools.md carries tools.
+      rationale: >-
+        Without a component's docs in the portal, developers switch to a
+        separate docs site, and the portal stops being the one place to learn
+        about a service.
     - name: templates
       level: bronze
       check: entity.capTemplates
@@ -679,16 +965,31 @@ scorecards:
       fix: >-
         Build self-service actions (v1-spec M5) once D64 lifts the pause
         (docs/design/action-runs.md).
+      rationale: >-
+        Templates are how a platform spreads its defaults to new services;
+        without them, each service starts as a copy of an old one. Toolbox's
+        self-service actions are paused (D64).
+      links:
+      - title: D64 actions paused
+        url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7VTP0HG0000000000000000.md
     - name: scorecards
       level: bronze
       check: entity.capScorecards
       evidence: "['capScorecards is ' + string(entity.capScorecards)]"
       fix: Keep scorecards in the manifest, as docs/v1-spec.md §5 defines them.
+      rationale: >-
+        Scorecards turn standards into what each team must fix next; without
+        them, standards live in documents nobody checks. Backstage passes
+        through the Tech Insights add-on, configured in code.
     - name: api-docs
       level: bronze
       check: entity.capApiDocs
       evidence: "['capApiDocs is ' + string(entity.capApiDocs)]"
       fix: Render an API entity's definition through a UI extension in ui/src.
+      rationale: >-
+        A rendered API definition lets a consumer read a service's contract
+        where they found the service; otherwise it sits unread in the provider's
+        repository.
     - name: kubernetes
       level: bronze
       check: entity.capKubernetes
@@ -696,6 +997,10 @@ scorecards:
       fix: >-
         Add a connector that reads workloads from the Kubernetes API
         (docs/design/connector-control.md).
+      rationale: >-
+        Seeing a component's workloads lets its owner check what runs where
+        without cluster access; without it, on-call leaves the portal for
+        kubectl at the first question.
     - name: notifications
       level: bronze
       check: entity.capNotifications
@@ -703,16 +1008,26 @@ scorecards:
       fix: >-
         Notify owners of score changes through a connector or webhook
         (docs/design/campaigns.md).
+      rationale: >-
+        Without notifications, a score drop or a change to what a team owns is
+        noticed only when someone happens to open the portal.
     - name: permission-rule
       level: bronze
       check: entity.capPermissionRule
       evidence: "['capPermissionRule is ' + string(entity.capPermissionRule)]"
       fix: Keep the OpenFGA model in the manifest (docs/authorization.md).
+      rationale: >-
+        Organisations differ in who may see and do what; without custom rules, a
+        portal's access model is too open or forked. Backstage's rule is
+        TypeScript code, counted in its favour.
     - name: mcp-read
       level: bronze
       check: entity.capMcpRead
       evidence: "['capMcpRead is ' + string(entity.capMcpRead)]"
       fix: Keep the read tools in crates/toolbox-api/src/mcp.rs.
+      rationale: >-
+        Without MCP read tools, an agent cannot ask the portal who owns what,
+        and guesses from code and commit history instead.
     - name: community
       level: bronze
       check: entity.contributors >= 10.0
@@ -724,4 +1039,8 @@ scorecards:
       fix: >-
         Make a first contribution easy: CONTRIBUTING.md, good first issues, and
         a green `cargo test` on a fresh clone.
+      rationale: >-
+        Contributors fix bugs, review changes and keep a project alive when a
+        maintainer leaves; with a handful, the adopter carries the risk that it
+        stalls.
     facets: {summary: public, details: public}

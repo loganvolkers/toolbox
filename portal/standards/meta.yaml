@@ -36,7 +36,9 @@ kinds:
         description: >-
           The scorecard has a non-blank `rationale:` saying why the standard
           exists.
-      links: {type: integer, description: "URLs under the scorecard's `links:`."}
+      links:
+        type: integer
+        description: URLs under the scorecard's `links:`.
       fixtureRealLevels:
         type: list
         items: string
@@ -383,6 +385,20 @@ scorecards:
       Each rule's form: explained, tested, decided both ways on fixtures, with
       evidence, readable CEL. Gold means well-formed, not good: quality is
       judged by review-rule (D71, D01M831P5QWJQ4A2FT85N5MXJQF).
+    rationale: >-
+      Every score in the portal is only as trustworthy as the rule behind it,
+      and an untested or unexplained rule can pass everything, or fail for the
+      wrong reason, unnoticed. Bronze is the floor every new rule must meet
+      (tested, explained, decided on fixtures); silver adds both outcomes,
+      evidence and a cost bound; gold asks that the evidence and fix lead an
+      agent to the change.
+    links:
+    - title: Scorecards for scorecards
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md
+    - title: D71 one meta level
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7W0J8YR0000000000000000.md
+    - title: Meta standards review
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/meta-standards-review.md
     owner: group:maintainers
     track: standards
     levels: [bronze, silver, gold]
@@ -393,6 +409,13 @@ scorecards:
       check: entity.fixWords >= 5
       evidence: "['fix has ' + string(entity.fixWords) + ' words']"
       fix: "Write a fix an agent can act on: what to change, and where."
+      rationale: >-
+        A failing rule without a usable fix leaves the reader to
+        reverse-engineer the check. A fresh agent raised a scorecard to gold
+        using only fix texts that said what and where (lesson L1).
+      links:
+      - title: Thresholds and levels
+        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md#2-the-numbers
     - name: explains-why
       level: bronze
       check: entity.explained
@@ -401,6 +424,14 @@ scorecards:
       fix: >-
         Give the rule a `rationale:` saying why it exists (the risk or the cost
         it guards against), and put the long story under `links:`.
+      rationale: >-
+        A reader who sees a failing rule needs to know why it matters before
+        deciding to act, and a reviewer can't tell whether a check is a proxy
+        without its goal. Links carry the long story, so the portal doesn't
+        become an encyclopedia.
+      links:
+      - title: Goals for rules (GQM)
+        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/meta-standards-review.md#3-the-literature-and-where-our-meta-standard-stands
     - name: tested
       level: bronze
       check: entity.tested
@@ -412,6 +443,10 @@ scorecards:
         the rule: `score('<card>', '<entity>').rules['<rule>'] == 'fail'`, or
         its evidence compared (`.evidence['<rule>'] == [...]`). A bare mention
         doesn't count.
+      rationale: >-
+        An untested rule can change outcome after an edit with nothing to catch
+        it. The first rules here gave false positives on a numbered Sources
+        heading and a quoted "SDLC" (lesson L4).
     - name: decided-on-fixtures
       level: bronze
       check: entity.fixture.pass + entity.fixture.fail > 0
@@ -419,6 +454,10 @@ scorecards:
         [string(entity.fixture.unknown) + ' unknown, no pass or fail on the
         fixtures']
       fix: Add fixture records the rule applies to, so it evaluates in tests.
+      rationale: >-
+        A rule that is unknown on every fixture never runs its check in tests,
+        so an error in its CEL first shows on real data, as `join` and `flatten`
+        did twice (lesson L5).
     - name: both-outcomes-on-fixtures
       level: silver
       check: entity.fixture.pass > 0 && entity.fixture.fail > 0
@@ -428,6 +467,10 @@ scorecards:
       fix: >-
         Give the fixtures one entity that passes and one that fails, so both
         paths (and the evidence) are exercised.
+      rationale: >-
+        A rule seen only passing may pass everything, and one seen only failing
+        may fail everything; only both outcomes show it separates entities and
+        that its evidence reads.
     - name: no-nested-loops
       level: silver
       check: >-
@@ -439,6 +482,10 @@ scorecards:
       fix: >-
         Avoid a comprehension inside a comprehension: compute the inner list in
         the connector or a computed field.
+      rationale: >-
+        Rules are evaluated once per entity, so a loop inside a loop multiplies
+        cost with the data; the 100k-entity budget already fails on 2-vCPU
+        runners (lesson L8).
     - name: readable
       level: silver
       check: entity.check.nodes <= 30
@@ -448,11 +495,25 @@ scorecards:
       fix: >-
         Move logic into a computed field or the connector, and keep the rule a
         short comparison.
+      rationale: >-
+        A long check hides its logic from the reader deciding whether a failure
+        is fair, and costs more per entity. Logic in a computed field or the
+        connector can be named and tested on its own.
+      links:
+      - title: Thresholds and levels
+        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md#2-the-numbers
     - name: always-explains
       level: silver
       check: entity.hasEvidence
       evidence: "['no evidence expression']"
       fix: "Add `evidence:` even for simple checks: it is what an agent reads first."
+      rationale: >-
+        Without evidence, an agent needed one `explain` call per rule per entity
+        to find what failed; evidence shown with the fix removed that step
+        (lesson L2, D66).
+      links:
+      - title: D66 scorecards say why
+        url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7VWS4ZG0000000000000000.md
     - name: evidence-tracks-check
       level: gold
       check: entity.evidenceTracksCheck
@@ -463,6 +524,13 @@ scorecards:
       fix: >-
         Write `evidence:` from what the check reads (the failing list itself, or
         the value compared), so it names what failed on this entity.
+      rationale: >-
+        A fixed sentence says that a rule failed, not what failed on this
+        entity, so the reader must redo the check. Agents fixed what the
+        evidence named (lessons L1 and L2).
+      links:
+      - title: Thresholds and levels
+        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md#2-the-numbers
     - name: pins-both-outcomes
       level: gold
       check: "'pass' in entity.testedOutcomes && 'fail' in entity.testedOutcomes"
@@ -476,6 +544,10 @@ scorecards:
         '<entity>').rules['<rule>'] == 'pass'`) and one that it fails for
         another (`== 'fail'`, or its evidence compared), so a change that flips
         either outcome is caught (lesson L4).
+      rationale: >-
+        A rule whose tests pin only failing can start passing everything, and
+        the tests still pass (lesson L4). Pinning both outcomes catches a change
+        in either direction.
     - name: fix-names-a-place
       level: gold
       check: entity.fixNamesPlace
@@ -486,6 +558,10 @@ scorecards:
         Say in `fix:` where to act: the file or directory (a path), the field
         the check reads, a `toolbox` command, or "the listed …" items of an
         evidence that names them (scorecards-for-scorecards.md, lesson L1).
+      rationale: >-
+        A fix that says what but not where sends an agent searching, which is
+        where it guesses wrong. Fixes that named the file and field were what
+        let a fresh agent raise a scorecard on its own (lesson L1).
     facets: {summary: public, details: public}
 
   - name: meta-scorecard
@@ -495,6 +571,20 @@ scorecards:
       Each scorecard's form: described, tested, no empty level, fixtures that
       climb the ladder to every level. Gold means well-formed, not good (D71,
       D01M831P5QWJQ4A2FT85N5MXJQF).
+    rationale: >-
+      A scorecard is the ladder readers climb, so its levels must exist and be
+      exercised: an empty level is granted for nothing, and a level no fixture
+      reaches has never been seen to work. Bronze, tested with no empty level,
+      is the floor for every new scorecard; silver adds a description, a
+      reason, a fixture ladder and tested rules; gold has a fixture at every
+      level.
+    links:
+    - title: Scorecards for scorecards
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md
+    - title: The ladders
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md#3-the-ladders
+    - title: Meta gold is not good
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M831P5QWJQ4A2FT85N5MXJQF.md
     owner: group:maintainers
     track: standards
     levels: [bronze, silver, gold]
@@ -505,6 +595,10 @@ scorecards:
       check: entity.tested
       evidence: "['no expectation names score(' + entity.name + ', …)']"
       fix: Add at least one expectation for the scorecard in the portal's tests.
+      rationale: >-
+        A scorecard no expectation names can change its levels or lose a rule
+        with no test noticing; on the first run, `user-cli` had no test of any
+        kind.
     - name: every-level-has-rules
       level: bronze
       check: >-
@@ -514,6 +608,9 @@ scorecards:
         entity.levels.filter(l, !(l in entity.rulesPerLevel) ||
         entity.rulesPerLevel[l] == 0)
       fix: Give every level at least one rule, or drop the level.
+      rationale: >-
+        A level with no rules is granted to every entity that reaches the one
+        below it, so it tells the reader nothing about the entities at it.
     - name: described
       level: silver
       check: entity.described
@@ -521,14 +618,26 @@ scorecards:
       fix: >-
         Give the scorecard a `description:` saying what the standard covers;
         agents read it before any rule.
+      rationale: >-
+        Agents read a scorecard's description before its rules. Without one,
+        they infer the standard's purpose from its checks and may work towards
+        the wrong goal.
     - name: explains-why
       level: silver
       check: entity.explained
       evidence: "['scorecard ' + entity.name + ' has no rationale']"
       fix: >-
-        Give the scorecard a `rationale:` saying why the standard exists and
-        why its levels are where they are, with `links:` to the decision or
-        design behind it.
+        Give the scorecard a `rationale:` saying why the standard exists and why
+        its levels are where they are, with `links:` to the decision or design
+        behind it.
+      rationale: >-
+        A description says what a standard covers, not why anyone should meet
+        it. Without the risk and the reason for its levels, a reader can't weigh
+        a failure before acting, and links keep that long story out of the
+        portal so it doesn't become an encyclopedia.
+      links:
+      - title: Goals for rules (GQM)
+        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/meta-standards-review.md#3-the-literature-and-where-our-meta-standard-stands
     - name: fixtures-show-the-ladder
       level: silver
       check: >-
@@ -542,11 +651,19 @@ scorecards:
         Give the scorecard fixtures at two outcomes, one of them a real level:
         one entity at none and one at bronze or above, or two at different
         levels. Skipped entities show no ladder.
+      rationale: >-
+        Fixtures at one outcome never show the scorecard telling a better entity
+        from a worse one. A ladder of `none` and `skipped` used to pass, so one
+        real level is now required (D01M831P5QWJQ4A2FT85N5MXJQF).
     - name: every-rule-tested
       level: silver
       check: entity.untestedRules.size() == 0
       evidence: entity.untestedRules
       fix: Add an expectation for each untested rule.
+      rationale: >-
+        One untested rule is enough for a scorecard's levels to drift. A rule
+        without a test was the most common scorecard gap on the first run, in 11
+        scorecards.
     - name: fixtures-reach-every-level
       level: gold
       check: entity.fixtureRealLevels.size() == entity.levels.size()
@@ -556,6 +673,9 @@ scorecards:
       fix: >-
         Add fixture entities that reach each listed level, so every rung of the
         ladder is exercised in tests (portal/fixtures/).
+      rationale: >-
+        A level no fixture reaches is untested: its rules may never pass
+        together, and nothing shows that an entity can reach it (lesson L12).
     facets: {summary: public, details: public}
 
   - name: meta-kind
@@ -565,6 +685,17 @@ scorecards:
       Each kind of entity: in the fixtures, tested and described with every
       field, since every rule reads it
       (docs/design/scorecards-for-scorecards.md §5).
+    rationale: >-
+      Every rule reads a kind, so a kind absent from fixtures and tests leaves
+      its map rules and computed fields unexercised, and an undescribed one
+      leaves agents guessing what an entity is. Being exercised in tests is
+      the floor for a new kind; descriptions sit above it because they help
+      readers without making any score wrong.
+    links:
+    - title: Which parts need standards
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#4-holistic-review-which-parts-of-a-portal-need-standards
+    - title: D79 every part is scored
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md
     owner: group:maintainers
     track: standards
     levels: [bronze, silver, gold]
@@ -579,6 +710,9 @@ scorecards:
       fix: >-
         Add fixture records that map to the kind, so its map rules and computed
         fields run in tests.
+      rationale: >-
+        A kind with no fixture entities never runs its map rules or computed
+        fields in tests, so a mapping error first shows on live data.
     - name: tested
       level: bronze
       check: entity.tested
@@ -586,6 +720,10 @@ scorecards:
       fix: >-
         Add a test expectation about one of the kind's fixture entities (a
         field, a relation or a score).
+      rationale: >-
+        Fixture entities no expectation reads can change without any test
+        failing; one expectation pins the kind's mapping. Three kinds were in no
+        test on the first run.
     - name: described
       level: silver
       check: entity.described
@@ -593,6 +731,9 @@ scorecards:
       fix: >-
         Give the kind a `description:` saying what one entity is; agents read it
         before any field.
+      rationale: >-
+        Agents read a kind's description before its fields. Without one, they
+        infer what an entity is from field names and can act on the wrong thing.
     - name: fields-described
       level: gold
       check: entity.undescribedFields.size() == 0
@@ -600,6 +741,10 @@ scorecards:
       fix: >-
         Give each listed field a `description:`: what it means, its unit, and
         where it comes from.
+      rationale: >-
+        An undescribed field leaves its meaning, unit and origin to guesswork,
+        and every rule and agent that reads it inherits the guess; 16 kinds had
+        undescribed fields on the first run.
     facets: {summary: public, details: public}
 
   - name: meta-field
@@ -609,6 +754,17 @@ scorecards:
       Each field: populated in the fixtures, described and given a shape, so
       CEL, validation and agents know what it holds
       (docs/design/scorecards-for-scorecards.md §5).
+    rationale: >-
+      Fields are what rules, evidence and agents read: one never populated in
+      fixtures has an untested mapping, an undescribed one is guessed at, and
+      an opaque object can't be type-checked or validated. A value in some
+      fixture is the floor for a new field; a description and a declared shape
+      sit above it.
+    links:
+    - title: The rest of the model
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#5-the-rest-of-the-model-kinds-fields-connectors
+    - title: D79 every part is scored
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md
     owner: group:maintainers
     track: standards
     levels: [bronze, silver, gold]
@@ -623,6 +779,9 @@ scorecards:
       fix: >-
         Give at least one fixture record a value for the field, so its mapping
         (or computation) is exercised.
+      rationale: >-
+        A field no fixture sets has a mapping or computation that no test runs,
+        so it can be empty or wrong on every entity without anyone noticing.
     - name: described
       level: silver
       check: entity.described
@@ -630,6 +789,9 @@ scorecards:
       fix: >-
         Add a `description:` to the field: what it means, its unit, and where it
         comes from.
+      rationale: >-
+        A field's meaning, unit and source aren't visible from its name, and a
+        rule written against a misread field measures the wrong thing.
     - name: has-shape
       level: gold
       check: "!entity.opaque"
@@ -639,6 +801,10 @@ scorecards:
       fix: >-
         Replace the object with typed fields (or a list of strings), so CEL,
         validation and agents know its shape.
+      rationale: >-
+        With no declared shape, validation and CEL type checks can't see inside
+        the object, so a renamed or missing key surfaces only as a wrong outcome
+        in the rules that read it.
     - name: computed-readable
       level: gold
       check: entity.computedNodes <= 60 && entity.computedLoops <= 1
@@ -649,6 +815,13 @@ scorecards:
       fix: >-
         Split the field's `computed:` expression into simpler fields and rules,
         or move the logic into the connector, so it reads at a glance.
+      rationale: >-
+        A long or doubly nested computed field is hard to review and costs more
+        on every entity. Computed fields get twice a check's budget because they
+        are where logic belongs.
+      links:
+      - title: Thresholds and levels
+        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md#2-the-numbers
     facets: {summary: public, details: public}
 
   - name: meta-connector
@@ -658,6 +831,17 @@ scorecards:
       Each connector a portal configures: every record mapped, fixtures for
       tests, freshness declared and refresh by id
       (docs/design/scorecards-for-scorecards.md §5).
+    rationale: >-
+      Every fact enters the portal through a connector, so its gaps become the
+      portal's: unmapped records are lost, untested mappings break on live
+      data, and stale data reads as current. The starter shipped without
+      freshness or refresh, which pilots copying it would have inherited; a
+      mapping and fixtures are the floor, freshness and refresh sit above it.
+    links:
+    - title: The rest of the model
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#5-the-rest-of-the-model-kinds-fields-connectors
+    - title: D79 every part is scored
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md
     owner: group:maintainers
     track: standards
     levels: [bronze, silver, gold]
@@ -670,6 +854,9 @@ scorecards:
       fix: >-
         Map each listed record kind to a kind (`map: - from:
         <connector>/<record>`), or stop declaring it.
+      rationale: >-
+        Records of a kind no map rule reads never become entities, so the portal
+        silently lacks those facts while the connector appears to cover them.
     - name: has-fixtures
       level: bronze
       check: entity.fixtureRecords > 0
@@ -677,6 +864,9 @@ scorecards:
       fix: >-
         Add fixtures/<connector>.ndjson with representative records, so tests
         run without the live system.
+      rationale: >-
+        Without fixture records, the connector's mappings run only against the
+        live system, so tests and CI never exercise them.
     - name: freshness-declared
       level: silver
       check: entity.withoutFreshness.size() == 0
@@ -684,6 +874,9 @@ scorecards:
       fix: >-
         Declare `freshness:` for each listed record kind, so stale data shows as
         stale rather than current.
+      rationale: >-
+        With no freshness bound, data from a connector that stopped syncing
+        reads as current, and rules pass or fail on stale facts.
     - name: refreshable
       level: gold
       check: entity.records.all(r, r in entity.refreshable)
@@ -691,6 +884,10 @@ scorecards:
       fix: >-
         Support refresh by external id for each listed record kind, so an agent
         can see its fix land.
+      rationale: >-
+        An agent that fixes something needs to refresh that one entity to see
+        the rule pass; without refresh by id it waits for a full sync, or can't
+        confirm the fix at all.
     facets: {summary: public, details: public}
 
   # Advisory: reported, never gating. An assessment goes stale when its subject changes, and the
@@ -702,6 +899,19 @@ scorecards:
       Agents' judgement of each rule against rule-quality, advisory: an open
       finding is none, a current review is silver, a clean, cited one with no
       doubts is gold (D79, D01M831P5QWJQ4A2FT85N5MXJQF).
+    rationale: >-
+      Form checks can't tell whether a rule measures its intent or can be
+      gamed, and none of 19 meta-gold rules and scorecards that agents
+      reviewed passed. Open findings rank lowest so they head the report; the
+      card is advisory because a review goes stale whenever its subject
+      changes, and gating on it would block every edit.
+    links:
+    - title: Judgement pushed by agents
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#6-judgement-pushed-by-coding-agents-d79
+    - title: D79 judgement is pushed
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md
+    - title: Meta standards review
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/meta-standards-review.md
     owner: group:maintainers
     track: standards
     levels: [bronze, silver, gold]
@@ -718,6 +928,10 @@ scorecards:
         A current rule-quality assessment failed the listed criteria: act on its
         suggestions (portal/assessments/), then re-assess. If the finding is
         wrong, say why in a new assessment by another assessor.
+      rationale: >-
+        A failing review names a way the rule misleads or can be gamed. Two such
+        findings sat unacted for three days, buried among unreviewed rules, so
+        an open finding now drops the rule to none.
     - name: assessed
       level: silver
       check: entity.reviewState == 'fresh'
@@ -727,6 +941,10 @@ scorecards:
       fix: >-
         Run `toolbox assess brief <rule id> --portal portal`, have your agent
         write the assessment file it names, then `toolbox assess check portal`.
+      rationale: >-
+        Without a current review, nobody has judged whether the rule as it now
+        stands measures its intent; a verdict on an earlier version may not
+        apply to the check.
     - name: passes-review
       level: gold
       check: >-
@@ -739,6 +957,10 @@ scorecards:
       fix: >-
         Act on the failing criteria's suggestions in the assessment
         (portal/assessments/), then re-assess.
+      rationale: >-
+        A review that fails a criterion found a problem, and one whose reasons
+        cite nothing that resolves can't be checked; either way the rule isn't
+        known to be good.
     - name: no-doubts
       level: gold
       check: entity.reviewState == 'fresh' && entity.reviewUnsure.size() == 0
@@ -748,6 +970,13 @@ scorecards:
       fix: >-
         Resolve what the assessor was unsure of: usually a missing source for a
         threshold or an unstated intent.
+      rationale: >-
+        An unsure verdict usually marks a threshold with no source or an intent
+        nobody wrote down, which is where a rule drifts into a proxy (lesson
+        L9).
+      links:
+      - title: Thresholds and levels
+        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md
     facets: {summary: public, details: public}
 
   - name: review-scorecard
@@ -756,6 +985,19 @@ scorecards:
     description: >-
       Agents' judgement of each scorecard against scorecard-quality, advisory,
       with the same ladder as review-rule (D79, D01M831P5QWJQ4A2FT85N5MXJQF).
+    rationale: >-
+      Form checks can't tell whether a scorecard measures one concern, climbs
+      a real ladder or leaves an obvious gap; an adversarial review failed
+      every meta-gold scorecard it sampled. The ladder and advisory status
+      match review-rule: open findings first, and never gating, because a
+      review goes stale when the scorecard changes.
+    links:
+    - title: Judgement pushed by agents
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#6-judgement-pushed-by-coding-agents-d79
+    - title: D79 judgement is pushed
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md
+    - title: Meta standards review
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/meta-standards-review.md
     owner: group:maintainers
     track: standards
     levels: [bronze, silver, gold]
@@ -772,6 +1014,10 @@ scorecards:
         A current scorecard-quality assessment failed the listed criteria: act
         on its suggestions (portal/assessments/), then re-assess. If the finding
         is wrong, say why in a new assessment by another assessor.
+      rationale: >-
+        A failing review names a gap or a broken ladder that every entity the
+        scorecard scores inherits; dropping the scorecard to none keeps the
+        finding at the top of the report until someone acts on it.
     - name: assessed
       level: silver
       check: entity.reviewState == 'fresh'
@@ -782,6 +1028,9 @@ scorecards:
         Run `toolbox assess brief <scorecard id> --portal portal`, have your
         agent write the assessment file it names, then `toolbox assess check
         portal`.
+      rationale: >-
+        A review is tied to the scorecard's content hash; once the scorecard
+        changes, the old verdict may no longer describe its rules or levels.
     - name: passes-review
       level: gold
       check: >-
@@ -794,6 +1043,10 @@ scorecards:
       fix: >-
         Act on the failing criteria's suggestions in the assessment
         (portal/assessments/), then re-assess.
+      rationale: >-
+        A review that fails a criterion found a problem, and one whose reasons
+        cite nothing that resolves can't be checked; either way the scorecard
+        isn't known to be good.
     - name: no-doubts
       level: gold
       check: entity.reviewState == 'fresh' && entity.reviewUnsure.size() == 0
@@ -803,6 +1056,12 @@ scorecards:
       fix: >-
         Resolve what the assessor was unsure of: usually a level whose purpose
         isn't written down.
+      rationale: >-
+        An unsure verdict usually marks a level whose purpose nobody wrote down,
+        and a level nobody can justify is one readers can't trust.
+      links:
+      - title: The ladders
+        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md#3-the-ladders
     facets: {summary: public, details: public}
 
   - name: meta-rubric
@@ -811,6 +1070,16 @@ scorecards:
     description: >-
       Each rubric agents judge with: described, used, guided with what counts
       as fail, and shown to discriminate on real assessments (D80).
+    rationale: >-
+      A rubric decides what agents judge, so a vague one yields reviews that
+      disagree or pass everything. Described and used once is the floor for a
+      new rubric; guidance on what counts as fail lets assessors agree; gold
+      needs three assessments to show that each criterion can fail.
+    links:
+    - title: Assessments and rubrics
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#61-assessments-and-rubrics-are-standards-too-d80
+    - title: D80 rubrics are scored
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WJVW700000000000000000.md
     owner: group:maintainers
     track: standards
     levels: [bronze, silver, gold]
@@ -823,6 +1092,9 @@ scorecards:
       fix: >-
         Describe what the rubric judges and which sources the assessor should
         read.
+      rationale: >-
+        The assessor reads the description to learn what to judge and which
+        sources to read; without it, two assessors judge different things.
     - name: in-use
       level: bronze
       check: entity.assessments > 0
@@ -830,6 +1102,9 @@ scorecards:
       fix: >-
         Assess one entity with it (`toolbox assess brief <id> --rubric <name>`),
         or remove the rubric.
+      rationale: >-
+        A rubric no assessment has used is untried configuration: nobody knows
+        whether its questions can be answered from the sources it names.
     - name: guided
       level: silver
       check: entity.unguided.size() == 0
@@ -837,6 +1112,13 @@ scorecards:
       fix: >-
         Give each listed criterion `guidance:` saying what counts as fail, so
         assessors agree.
+      rationale: >-
+        Without guidance on what counts as fail, assessors draw the line in
+        different places and their verdicts can't be compared. Blank guidance
+        used to pass (D01M831P5QWJQ4A2FT85N5MXJQF).
+      links:
+      - title: Thresholds and levels
+        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md#2-the-numbers
     - name: discriminates
       level: gold
       check: entity.assessments >= 3 && entity.alwaysPass.size() == 0
@@ -847,6 +1129,10 @@ scorecards:
       fix: >-
         Sharpen or drop a criterion that everything passes; a question nothing
         fails asks nothing.
+      rationale: >-
+        A criterion every assessment passes costs assessor effort and tells
+        nothing apart: `rule-quality`'s `fix-leads-to-pass` passed all four of
+        its first rule assessments.
     facets: {summary: public, details: public}
 
 rubrics:

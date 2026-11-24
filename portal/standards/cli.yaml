@@ -79,6 +79,17 @@ scorecards:
       Each CLI command an operator runs on a portal: documented, with help for
       every argument and exercised by a test, so an agent can use it without
       reading the source (operator SDLC).
+    rationale: >-
+      Operators' agents run these commands at every step of changing a portal,
+      and they learn a command from its help and the docs, not from the Rust
+      source. Bronze means an agent can find and read about the command;
+      silver means it can use every flag and a test fails when the command
+      breaks.
+    links:
+    - title: Toolbox for Toolbox
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/toolbox-for-toolbox.md
+    - title: Operator SDLC
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/sdlc.md
     owner: group:maintainers
     track: operator
     levels: [bronze, silver]
@@ -93,6 +104,10 @@ scorecards:
       fix: >-
         Give the command's variant in `crates/toolbox-cli/src/main.rs` a `///`
         doc comment; clap shows it as the command's help.
+      rationale: >-
+        `--help` is the first thing an agent runs on an unfamiliar command;
+        without help text it has to guess what the command does or read the
+        source.
     - name: documented
       level: bronze
       check: entity.documentedIn.size() > 0
@@ -100,11 +115,18 @@ scorecards:
       fix: >-
         Describe `toolbox <command>` in docs/v1-spec.md §7.7 or the operator
         SDLC doc.
+      rationale: >-
+        Help is read only by someone who already knows the command exists. An
+        agent planning a change finds commands in the docs, so an undocumented
+        command goes unused.
     - name: args-described
       level: silver
       check: entity.undocumentedArgs.size() == 0
       evidence: entity.undocumentedArgs
       fix: Add a /// doc comment to each argument in the evidence.
+      rationale: >-
+        An undescribed flag leaves an agent to guess its format and default from
+        its name; a wrong guess is a failed run or a quietly different result.
     - name: exercised
       level: silver
       check: entity.exercisedBy.size() > 0
@@ -114,6 +136,9 @@ scorecards:
       fix: >-
         Run the command in an acceptance script (`scripts/m*-acceptance.sh`) or
         an integration test under `crates/toolbox-cli/tests/`.
+      rationale: >-
+        A command that no script or test runs can break without CI noticing, and
+        an operator finds out halfway through a change to their portal.
     facets: {summary: public, details: public}
 
   - name: user-cli
@@ -123,6 +148,16 @@ scorecards:
       Each CLI command a portal's users and their agents call: help,
       structured output and a test that runs it, so scripts can depend on it
       (user SDLC).
+    rationale: >-
+      Users' scripts, CI checks and apps call these commands and parse what
+      they print, so an unannounced change breaks them. Bronze means a caller
+      can find the command and parse its output; silver means every flag is
+      explained and a test runs the command.
+    links:
+    - title: User SDLC
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/user-sdlc.md
+    - title: Toolbox for Toolbox
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/toolbox-for-toolbox.md
     owner: group:maintainers
     track: operator
     levels: [bronze, silver]
@@ -137,6 +172,10 @@ scorecards:
       fix: >-
         Give the command's variant in `crates/toolbox-cli/src/main.rs` a `///`
         doc comment; clap shows it as the command's help.
+      rationale: >-
+        `--help` is the first thing an agent runs on an unfamiliar command;
+        without help text it has to guess what the command does or read the
+        source.
     - name: structured-output
       level: bronze
       check: entity.name == 'mcp' || entity.structuredOutput
@@ -144,11 +183,18 @@ scorecards:
       fix: >-
         Support `-o json` (or `--format json`) so scripts and apps can parse the
         output.
+      rationale: >-
+        A script that parses Markdown or table text breaks when the wording
+        changes; JSON gives a CI check a shape it can depend on. `toolbox mcp`
+        is exempt because it is a stdio bridge, not a read.
     - name: args-described
       level: silver
       check: entity.undocumentedArgs.size() == 0
       evidence: entity.undocumentedArgs
       fix: Add a /// doc comment to each argument in the evidence.
+      rationale: >-
+        An undescribed flag leaves an agent to guess its format and default from
+        its name; a wrong guess is a failed run or a quietly different result.
     - name: exercised
       level: silver
       check: entity.exercisedBy.size() > 0
@@ -158,6 +204,9 @@ scorecards:
       fix: >-
         Run the command in an acceptance script (`scripts/m*-acceptance.sh`) or
         an integration test under `crates/toolbox-cli/tests/`.
+      rationale: >-
+        Users' scripts depend on this command's behaviour; if no script or test
+        runs it, a regression reaches them before CI sees it.
     facets: {summary: public, details: public}
 
   # Every CLI command has a skill that names its invocation (D94). The doc capture already
@@ -168,6 +217,16 @@ scorecards:
     description: >-
       Every CLI command has an agent skill that names its invocation (D94), so
       a coding agent finds the command when it needs it.
+    rationale: >-
+      Help text is loaded only once an agent already knows the command, while
+      a skill is loaded when the task matches its description, so a command
+      with no skill is invisible to an agent that has not heard of it. One
+      level is enough: maintainer-skill scores the skill file itself.
+    links:
+    - title: CLI skills design
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/cli-skills.md
+    - title: D94 one skill per command
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7X1Y5T00000000000000000.md
     owner: group:maintainers
     track: operator
     levels: [bronze]
@@ -180,6 +239,10 @@ scorecards:
       fix: >-
         Add plugins/toolbox-operator/skills/<slug>/SKILL.md that includes the
         invocation toolbox <command>, with the flags and the exit codes.
+      rationale: >-
+        An agent that cannot find a command will not run it. The skill routes a
+        coding agent to the invocation when its task calls for it; matching the
+        leaf name keeps nested commands from hiding behind their parent.
     facets: {summary: public, details: public}
 
   - name: user-mcp
@@ -188,6 +251,18 @@ scorecards:
     description: >-
       Each built-in MCP tool: described inputs and a contract test that calls
       it successfully, so agents can rely on its schema (user SDLC).
+    rationale: >-
+      MCP tools are the contract users' agents and apps build on, and their
+      names, inputs and result shapes may change only additively within a
+      major version. Bronze means an agent can choose the tool and its client
+      can tell a read from a write; silver means it can call the tool
+      correctly; gold means a test calls it over MCP, because the first direct
+      tests found bugs the CLI path did not show.
+    links:
+    - title: User SDLC
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/user-sdlc.md
+    - title: Toolbox for Toolbox
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/toolbox-for-toolbox.md
     owner: group:maintainers
     track: operator
     levels: [bronze, silver, gold]
@@ -201,6 +276,9 @@ scorecards:
       fix: >-
         Write the tool's `description` (at least 20 characters): what it returns
         and when an agent should call it.
+      rationale: >-
+        An agent picks a tool from its `tools/list` description alone; a short
+        or vague one means the right tool is skipped or the wrong one is called.
     - name: annotated
       level: bronze
       check: has(entity.annotations.readOnlyHint)
@@ -208,6 +286,13 @@ scorecards:
       fix: >-
         Set annotations.readOnlyHint (and idempotent/openWorld hints for
         writes).
+      rationale: >-
+        Toolbox leaves prompt-injection defence to the client's approval layer
+        and owes it accurate annotations; without `readOnlyHint` a client cannot
+        tell a safe read from a call that needs the user's approval.
+      links:
+      - title: Authorization and MCP
+        url: https://github.com/loganvolkers/toolbox/blob/main/docs/authorization.md
     - name: inputs-described
       level: silver
       check: entity.undescribedProperties.size() == 0
@@ -215,6 +300,10 @@ scorecards:
       fix: >-
         Add a description to each input property in the evidence
         (crates/toolbox-api/src/mcp.rs).
+      rationale: >-
+        An agent fills a tool's inputs from the schema it is given; without
+        descriptions it guesses formats and defaults. The fresh-agent run had to
+        read the REST handlers to work out 15 of them.
     - name: documented
       level: silver
       check: "'docs/v1-spec.md' in entity.documentedIn" # common names (`get`, `query`) appear in many docs
@@ -223,6 +312,10 @@ scorecards:
         entity.documentedIn.map(d, 'documented in ' + d + ', not
         docs/v1-spec.md')
       fix: List the tool, in backticks, in docs/v1-spec.md §7.3.
+      rationale: >-
+        The v1 spec is the contract users build against, so a tool missing there
+        carries no promise. Naming that file, not any doc, stops common names
+        such as `get` passing on a stray mention.
     - name: contract-tested
       level: gold
         # Observed calls when the runner has run the contract tests; otherwise a tools/call body that
@@ -241,4 +334,11 @@ scorecards:
         Call the tool directly (tools/call) in a test, e.g.
         crates/toolbox-api/tests; the CLI path in `viaCli` doesn't pin the MCP
         contract.
+      rationale: >-
+        A tool reached only through the CLI leaves its MCP schema and
+        `structuredContent` untested, and those are what users' agents read. A
+        call that errors proves nothing, so only successful calls count.
+      links:
+      - title: Thresholds
+        url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md
     facets: {summary: public, details: public}

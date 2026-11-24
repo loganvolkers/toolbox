@@ -4,6 +4,9 @@
 kinds:
   # Example and experiment write-ups (docs/design/example-standards.md).
   - name: Example
+    description: >-
+      An example or experiment write-up that agents copy: its title, the
+      commands it names, its links and the design it cites.
     identityFrom: [connector:workspace]
     fields:
       path: {type: string}
@@ -32,6 +35,17 @@ scorecards:
       Each example and experiment write-up agents copy: links that resolve,
       the check it names, and no credentials (D78,
       docs/design/example-standards.md).
+    rationale: >-
+      Agents copy examples as working patterns, so a write-up that cannot be
+      followed or checked spreads its mistakes into every copy. Bronze is a
+      write-up a reader can follow; silver names the command that proves it
+      still works; gold ties it to the design so it does not become a second
+      source of truth.
+    links:
+    - title: Example standards
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/example-standards.md
+    - title: D78 examples catalogued
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7W5G0T00000000000000000.md
     owner: group:maintainers
     track: docs
     levels: [bronze, silver, gold]
@@ -44,6 +58,10 @@ scorecards:
       fix: >-
         Start the write-up with a level-1 heading (`# Name`) that names the
         example.
+      rationale: >-
+        The heading is the example's name. Without one, a reader scanning the
+        examples, or an agent choosing one to copy, cannot tell what it
+        demonstrates.
     - name: links-resolve
       level: bronze
       check: entity.missingFiles.size() == 0
@@ -51,6 +69,9 @@ scorecards:
       fix: >-
         Fix or remove the relative links in the evidence. An agent follows them
         to the files the example depends on.
+      rationale: >-
+        A missing target means the write-up has drifted from the files it
+        describes, so a copy made from it is incomplete or wrong.
     - name: says-how-to-check
       level: silver
       check: entity.commandLines > 0
@@ -58,6 +79,10 @@ scorecards:
       fix: >-
         Name the command that checks this example (toolbox, cargo, npm, python,
         fga, or a ./run script). A reader should be able to reproduce it.
+      rationale: >-
+        An example nobody can run is a claim, not a procedure. Naming the check
+        lets a reader confirm it still works before copying it, as the reference
+        portal's checks do for v1.
     - name: cites-the-design
       level: gold
       check: entity.citesDesign
@@ -66,6 +91,9 @@ scorecards:
         Link the write-up at the design doc (`docs/design/<topic>.md`) or the
         decision (`docs/decisions/<id>.md`) it demonstrates, so the example is
         not a second source of truth.
+      rationale: >-
+        An example that does not point at its design drifts from it unnoticed,
+        and a reader cannot tell which of the two to believe.
     - name: no-hardcoded-secrets
       level: bronze
       check: entity.secretHits.size() == 0
@@ -73,4 +101,8 @@ scorecards:
       fix: >-
         Remove the credential in the evidence. An example is copied and read by
         agents.
+      rationale: >-
+        Examples are published with the repository and copied verbatim, so a
+        credential in one is exposed to every reader and can end up reused in
+        their own setup.
     facets: {summary: public, details: public}
