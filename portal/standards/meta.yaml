@@ -4,10 +4,10 @@
 kinds:
   - name: Scorecard
     description: >-
-      A scorecard declared by this portal (ids `toolbox/…`, which the
-      Scorecards and Compare tabs count) or by an example portal it describes
-      (the starter's `repo/…` and the reference portal's `acme/…`), so this
-      kind counts more than the tabs do.
+      A scorecard. The count adds three groups: this portal's standards (the
+      Scorecards tab), its comparison factors (the Compare tab), and the
+      scorecards of the example portals it describes (the starter's `repo/…`
+      and the reference portal's `acme/…`).
     identityFrom: [connector:surfaces]
     fields:
       portal: {type: string}
