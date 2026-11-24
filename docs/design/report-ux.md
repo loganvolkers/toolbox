@@ -397,6 +397,14 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 - A kind's table folds five or more entities with identical results into one row ("7 crates with the
   same result"), as a scorecard page does. A rule link whose why is not printed beside it carries
   that why in its tooltip and accessible description.
+- A folded group names its members as links, so one can be opened without unfolding the group. A
+  campaign's per-scorecard progress says how many of the entities at the goal pass only because no
+  agent has assessed them yet. "Not scored" is an empty outlined segment, never a grey that reads
+  as silver. The Overview's attention line starts in bold and jumps to the list it summarizes, and
+  Compare has an "On this page" line; on a phone its method sentence comes before the evidence links.
+- A rule's own links point to the primary source for its threshold or practice (a specification,
+  a lint, NIST SP 500-235 for cyclomatic complexity), so the scorecard's links are not the only way
+  to read further.
 
 Not built: a change since the last snapshot beside each track ring. The report carries one snapshot
 and the committed baseline, which equals it on every published build; a pages build that also scored

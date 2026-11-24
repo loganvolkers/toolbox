@@ -48,7 +48,7 @@
     ".hero .badge-big{display:flex;align-items:center;gap:16px}",
     ".hero .kicker{font-size:12px;font-weight:650;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}",
     ".hero .levelword{font-size:42px;line-height:1.05;font-weight:750;color:var(--lvl-ink);text-transform:capitalize;letter-spacing:-.02em}",
-    ".hero .verdict{font-size:18px;line-height:1.5;margin:16px 0 0}",
+    ".hero .verdict{font-size:18px;line-height:1.5;margin:16px 0 0}.attn{margin:12px 0 0;font-size:14px;line-height:1.5}",
     ".wins{margin:8px 0 0;font-size:14px;color:var(--pass)}.wins b{font-weight:650}",
     ".next{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--tint);font-size:14px}",
     ".next b{font-weight:650}",
@@ -129,12 +129,12 @@
     "details[open]>summary .chev{transform:rotate(90deg)}",
     ".rule{padding:10px 12px;border-radius:8px;border:1px solid var(--line);border-left:4px solid var(--fail);margin-top:8px;background:var(--card)}",
     ".callout.judged-note{background:var(--judged-bg)}",
-    ".bar span.hollow{background:repeating-linear-gradient(135deg,var(--seg) 0 3px,transparent 3px 7px);box-shadow:inset 0 0 0 1.5px var(--judged)}.unjudged-n,.judged-n{color:var(--judged)}.dot.hatch{border-radius:2px;background:repeating-linear-gradient(135deg,var(--seg) 0 2px,transparent 2px 4px);box-shadow:inset 0 0 0 1.5px var(--judged)}.judged-list{margin:8px 0 0}",
+    ".bar span.unscored,.dot.unscored{background:var(--card);box-shadow:inset 0 0 0 1.5px var(--faint)}.bar span.hollow{background:repeating-linear-gradient(135deg,var(--seg) 0 3px,transparent 3px 7px);box-shadow:inset 0 0 0 1.5px var(--judged)}.unjudged-n,.judged-n{color:var(--judged)}.dot.hatch{border-radius:2px;background:repeating-linear-gradient(135deg,var(--seg) 0 2px,transparent 2px 4px);box-shadow:inset 0 0 0 1.5px var(--judged)}.judged-list{margin:8px 0 0}",
     ".sc-status{display:flex;gap:14px;align-items:flex-start;margin:4px 0 14px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--tint)}.sc-status>svg{flex:none}.sc-status-b{flex:1;min-width:0}.sc-status-t{display:flex;flex-wrap:wrap;align-items:center;gap:2px 6px;margin-bottom:8px;font-size:14px}.sc-status-t .topmark{color:var(--pass);font-weight:650}.sc-status .legend{margin-top:6px}.sc-status-t .sep{color:var(--muted)}@media (max-width:640px){.sc-status-t .sep{display:none}.sc-status-t .fact{flex-basis:100%}}.why-text.clamped{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}.why-more{margin-top:2px;min-height:24px}",
     ".bar span.unrun{background:radial-gradient(circle,var(--seg) 1.6px,transparent 1.9px) 0 0/6px 6px;box-shadow:inset 0 0 0 1.5px var(--unknown)}.dot.dots{border-radius:2px;background:radial-gradient(circle,var(--seg) 1.2px,transparent 1.5px) 0 0/4px 4px;box-shadow:inset 0 0 0 1.5px var(--unknown)}",
     ".rule.unknown{border-left-color:var(--unknown)}.rule.waived{border-left-color:var(--bronze)}.rule.unassessed{border-left-color:var(--judged)}",
     ".basis-note p{margin:0 0 4px}.h2h-wide{max-width:560px}.h2h-wide .h2h{width:100%;font-size:13px}.h2h-wide .h2h-head,.h2h-wide .h2h-row{grid-template-columns:160px 1fr 1fr}.h2h-row[aria-current]{font-weight:700;background:var(--accent-bg);border-radius:6px}.rank-top:not([hidden]){display:block;margin:8px 0 0;font-size:13px}.cmp-prov{margin:6px 0 0;display:grid;gap:2px}.cmp-src{display:flex;flex-wrap:wrap;align-items:center;gap:2px 10px}.cmp-src .refs{margin:0;line-height:22px}.cmp-brief>summary{cursor:pointer;width:max-content;max-width:100%;padding:3px 0;color:var(--accent)}",
-    ".why.incl{display:flex;align-items:center;gap:8px}.kpi-bar{flex:0 0 46px;height:10px;border-radius:5px;background:var(--line);overflow:hidden}.kpi-bar span{display:block;height:100%;background:var(--pass)}.kpi-bar.short span{background:var(--muted)}.kpi-pips{flex:0 0 46px;display:flex;flex-wrap:wrap;gap:4px}.kpi-pips span{width:10px;height:10px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--faint)}.kpi-pips span.on{background:var(--pass);box-shadow:none}",
+    ".why.incl{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}.kpi-bar{flex:0 0 46px;height:10px;border-radius:5px;background:var(--line);overflow:hidden}.kpi-bar span{display:block;height:100%;background:var(--pass)}.kpi-bar.short span{background:var(--muted)}.kpi-pips{flex:0 0 46px;display:flex;flex-wrap:wrap;gap:4px}.kpi-pips span{width:10px;height:10px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--faint)}.kpi-pips span.on{background:var(--pass);box-shadow:none}",
     ".cprog{flex:0 0 76px;display:grid;gap:3px}.cprog b{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}.cprog small{font-size:13px;color:var(--muted)}.cprog .gb{position:relative;height:8px;border-radius:4px;background:var(--line)}.cprog .gb>span{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--muted)}.cprog.on .gb>span{background:var(--pass)}.cprog .gb>i{position:absolute;top:-3px;bottom:-3px;width:2px;border-radius:1px;background:var(--fg)}.cprog.big{flex-basis:120px}.cprog.big b{font-size:28px}",
     ".hollow-key{display:flex;flex-wrap:wrap;align-items:center;gap:4px 16px;padding:6px 10px;font-size:13px;color:var(--muted);background:var(--tint);border-radius:8px;margin:4px 0}.hollow-key>span{display:inline-flex;align-items:center;gap:6px}.hollow-key b{color:var(--fg);font-weight:600}",
     ".rid{font:12px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);overflow-wrap:anywhere}.rule .rn{font-weight:650;font-size:inherit;margin:0;display:inline}.sc-block h3.sct{display:inline;margin:0;font-size:16px}",
@@ -186,7 +186,7 @@
     ".box a:hover{border-color:var(--accent)}",
     ".box a b{font-variant-numeric:tabular-nums;margin-left:4px;color:var(--muted);font-weight:600}",
     "a.erow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 8px;border-top:1px solid var(--line);color:var(--fg);text-decoration:none;border-radius:8px}",
-    "a.erow:hover{background:var(--tint)}.egroup>summary{display:grid;gap:12px;align-items:center;padding:10px 8px;border-top:1px solid var(--line);border-radius:8px;cursor:pointer;list-style:none}.egroup>summary::-webkit-details-marker{display:none}.egroup>summary:hover{background:var(--tint)}.egroup>summary .name{font-weight:600;min-width:0}.egroup>summary .name small{display:block;font-size:12px;color:var(--muted);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.egroup>summary .chev{display:inline-block;transition:transform .15s}.egroup[open]>summary .chev{transform:rotate(90deg)}.egroup-members{margin-left:10px;padding-left:10px;border-left:2px solid var(--line)}",
+    "a.erow:hover{background:var(--tint)}.egroup>summary{display:grid;gap:12px;align-items:center;padding:10px 8px;border-top:1px solid var(--line);border-radius:8px;cursor:pointer;list-style:none}.egroup>summary::-webkit-details-marker{display:none}.egroup>summary:hover{background:var(--tint)}.egroup>summary .name{font-weight:600;min-width:0}.egroup>summary .name small{display:block;font-size:12px;color:var(--muted);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.egroup>summary .chev{display:inline-block;transition:transform .15s}.egroup[open]>summary .chev{transform:rotate(90deg)}small.members{display:block;white-space:normal!important;overflow:visible!important;font-size:12px;font-weight:400;color:var(--muted);font-family:inherit}small.members a{color:inherit}.egroup-members{margin-left:10px;padding-left:10px;border-left:2px solid var(--line)}",
     "a.erow .name{font-weight:600;overflow-wrap:anywhere;min-width:0}",
     "a.erow .name small{display:block;font:12px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}",
     "a.erow .badges{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end}",
@@ -321,7 +321,7 @@
     "a.factor[aria-current=true]{box-shadow:0 0 0 1px var(--accent)}",
     ".factor .fh{display:flex;justify-content:space-between;gap:8px;align-items:center;font-weight:700}",
     ".factor p{margin:0;font-size:13px;color:var(--muted)}.fx{display:flex;flex-direction:column;gap:1px;line-height:1.2}.fx b{font-size:24px;font-weight:750;color:var(--st);font-variant-numeric:tabular-nums}.fx span{font-size:13px;color:var(--muted)}",
-    ".factor .fc{font-size:13px;color:var(--muted)}.fbar{display:flex;align-items:center;gap:10px}.fbar>.bar{flex:1 1 auto;min-width:0}.fbar>.fc{flex:none}.cmp-method{font-size:14px;line-height:1.5}.bh-fix{margin-top:4px}",
+    ".factor .fc{font-size:13px;color:var(--muted)}.fbar{display:flex;align-items:center;gap:10px}.fbar>.bar{flex:1 1 auto;min-width:0}.fbar>.fc{flex:none}.cmp-method{font-size:14px;line-height:1.5}.jump{margin:-6px 0 14px;font-size:14px}.bh-fix{margin-top:4px}",
     ".measure{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr) minmax(130px,auto);gap:10px 18px;align-items:center;padding:14px 4px;border-top:1px solid var(--line)}",
     ".measure .mt{font-weight:650;line-height:1.35}",
     ".measure .mt small{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;font-weight:400;color:var(--muted);font-size:12px;margin-top:4px}",
@@ -353,7 +353,7 @@
     ".ladder{grid-template-columns:1fr 1fr}.rung{min-height:0}.rung.vacant{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:6px 10px}.rung.vacant .rh{margin:0}.rung.vacant .empty{padding:0;margin:0}",
     "details.ent>summary{grid-template-columns:76px minmax(0,1fr)}details.ent>summary .tally{grid-column:2;text-align:left}",
     ".ent-body{padding-left:6px}.gap{grid-template-columns:1fr}.hide-sm{display:none}",
-    ".kchips{grid-template-columns:1fr}.boxrow{grid-template-columns:1fr;gap:6px}.measure{grid-template-columns:1fr}.measure .ms{text-align:left}.cmp-hero{grid-template-columns:1fr;gap:10px}.cmp-main{display:contents}.cmp-side{order:1}.cmp-hero .cmp-lead,.cmp-hero .rule-tally,.cmp-hero .cmp-prov{order:2}.cmp-hero .cmp-def{order:3}.cmp-hero .cmp-method{order:4}.h2h{display:none}",
+    ".kchips{grid-template-columns:1fr}.boxrow{grid-template-columns:1fr;gap:6px}.measure{grid-template-columns:1fr}.measure .ms{text-align:left}.cmp-hero{grid-template-columns:1fr;gap:10px}.cmp-main{display:contents}.cmp-side{order:1}.cmp-hero .cmp-lead,.cmp-hero .rule-tally,.cmp-hero .cmp-method{order:2}.cmp-hero .cmp-prov{order:3}.cmp-hero .cmp-def{order:4}.h2h{display:none}",
     ".ehdr{display:none}a.erow.cols,.egroup>summary.erow.cols{grid-template-columns:1fr!important;gap:4px}.ecell{display:flex;gap:6px;align-items:center}.ecell::before{content:attr(data-sc);color:var(--muted)}.ecell[data-judged]::before{content:attr(data-sc) \" \\2726\"}",
     ".behind-row{grid-template-columns:1fr}.val{grid-template-columns:76px minmax(0,1fr) auto}.pillwrap .unassessed-tag.quiet{display:inline}}",
     ".skip{position:absolute;left:8px;top:-48px;z-index:10;padding:8px 12px;border:0;border-radius:8px;background:var(--fg);color:var(--bg);font:inherit;font-weight:650;cursor:pointer}.skip:focus{top:8px}",
@@ -603,7 +603,9 @@
         ? el("span", { className: "hollow", style: "flex-grow:0;flex-basis:0;--seg:" + fill(p.level), title: p.level + ": " + p.n + ", not assessed by an agent yet" })
         : p.unrun
           ? el("span", { className: "unrun", style: "flex-grow:0;flex-basis:0;--seg:" + fill(p.level), title: p.level + ": " + p.n + ", provisional: checks it needs were not run in this build" })
-          : el("span", { style: "flex-grow:0;flex-basis:0;background:" + fill(p.level), title: p.level + ": " + p.n });
+          : p.level === "unscored"
+            ? el("span", { className: "unscored", style: "flex-grow:0;flex-basis:0", title: "not scored: " + p.n })
+            : el("span", { style: "flex-grow:0;flex-basis:0;background:" + fill(p.level), title: p.level + ": " + p.n });
     });
     grow(
       spans,
@@ -699,7 +701,7 @@
       { className: "legend" },
       ...parts.map(function (p) {
         if (p.level === "skipped") return el("span", {}, el("b", { textContent: fmt(p.n) }), " not in scope");
-        if (p.level === "unscored") return el("span", {}, el("span", { className: "dot", style: "background:" + UNSCORED }), el("b", { textContent: fmt(p.n) }), " not scored");
+        if (p.level === "unscored") return el("span", {}, el("span", { className: "dot unscored" }), el("b", { textContent: fmt(p.n) }), " not scored");
         return el(
           "span",
           {},
@@ -977,8 +979,15 @@
       tip.dataset.tip = BASIS[b].label + ": " + BASIS[b].desc;
       return tip;
     }
-    if (mini) return el("span", { className: "basis " + b + " mini", title: BASIS[b].label + ": " + BASIS[b].desc }, basisIcon(b), el("span", {}, el("span", { className: "sr", textContent: " (" }), el("span", { className: "bl", textContent: BASIS[b].label }), el("span", { className: "sr", textContent: ")" })));
-    if (inControl) return el("span", { className: "basis ctl " + b, title: BASIS[b].label + ": " + BASIS[b].desc }, basisIcon(b), el("span", { className: "sr", textContent: " (" }), el("span", { className: "bl", textContent: BASIS[b].label }), el("span", { className: "sr", textContent: ")" }));
+    var quiet = mini
+      ? el("span", { className: "basis " + b + " mini" }, basisIcon(b), el("span", {}, el("span", { className: "sr", textContent: " (" }), el("span", { className: "bl", textContent: BASIS[b].label }), el("span", { className: "sr", textContent: ")" })))
+      : inControl
+        ? el("span", { className: "basis ctl " + b }, basisIcon(b), el("span", { className: "sr", textContent: " (" }), el("span", { className: "bl", textContent: BASIS[b].label }), el("span", { className: "sr", textContent: ")" }))
+        : null;
+    if (quiet) {
+      quiet.dataset.tip = BASIS[b].label + ": " + BASIS[b].desc;
+      return quiet;
+    }
     // A full badge stands on its own, so keyboard and touch readers can open what it means.
     var full = el("span", { className: "basis tip " + b, tabIndex: 0 }, basisIcon(b), BASIS[b].label, el("span", { className: "sr", textContent: ": " + BASIS[b].desc }));
     full.dataset.tip = BASIS[b].desc;
@@ -1117,6 +1126,19 @@
       a.setAttribute("aria-description", "Why: " + why);
     } else if (!text) a.title = rule;
     return a;
+  }
+
+  // The members of a folded group, each a link, so a reader can open one without unfolding it.
+  function memberLinks(ids) {
+    var cut = ids.length > 8 ? 6 : ids.length;
+    return el(
+      "small",
+      { className: "members" },
+      ...ids.slice(0, cut).flatMap(function (id, i) {
+        return [i ? ", " : "", link("entity/" + enc(id), "", shortId(id))];
+      }),
+      ids.length > cut ? " and " + (ids.length - cut) + " more" : null,
+    );
   }
 
   function isComparative(D, name) {
@@ -1731,7 +1753,7 @@
     var low = cards.reduce(function (a, c, i) {
       return left(c) || (a >= 0 && cards[a].row.topShare <= c.row.topShare) ? a : i;
     }, -1);
-    var rest = low >= 0 ? "Lowest bar, " + named(cards[low]) : "Each bar is one scorecard";
+    var rest = (low >= 0 ? "Lowest bar, " + named(cards[low]) : "Each bar is one scorecard") + " · dashed line: their average, " + t.pct + "%";
     var cap = el("div", { className: "slotcap", ariaHidden: "true", textContent: rest });
     var bars = cards.map(function (c, i) {
       return el("span", {
@@ -1754,7 +1776,7 @@
         return;
       }
       bars[i].classList.add("on");
-      cap.textContent = named(cards[i]);
+      cap.textContent = named(cards[i]) + " · bar " + (i + 1) + " of " + cards.length;
     };
     var wrap = el(
       "div",
@@ -1926,14 +1948,20 @@
       var sc = (D.scorecards || {})[i.scorecard];
       var order = levelOrder(sc && sc.levels);
       var goal = i.atLeast ? order.indexOf(i.atLeast) : order.length - 2;
-      var rated = Object.values((D.scores || {})[i.scorecard] || {}).filter(function (x) {
-        return x.level !== "skipped";
+      var ratedIds = Object.keys((D.scores || {})[i.scorecard] || {}).filter(function (id) {
+        return D.scores[i.scorecard][id].level !== "skipped";
+      });
+      var rated = ratedIds.map(function (id) {
+        return D.scores[i.scorecard][id];
       });
       var below = rated.filter(function (x) {
         return order.indexOf(x.level) < goal;
       }).length;
+      var hollow = ratedIds.filter(function (id) {
+        return order.indexOf(D.scores[i.scorecard][id].level) >= goal && unassessedIn(D, i.scorecard, id);
+      }).length;
       var pct = rated.length ? Math.floor((100 * (rated.length - below)) / rated.length) : 0;
-      return { name: i.scorecard, title: title(D, i.scorecard), known: !!sc, goal: order[goal], rated: rated.length, below: below, pct: pct, met: !!sc && pct >= target };
+      return { name: i.scorecard, title: title(D, i.scorecard), known: !!sc, goal: order[goal], rated: rated.length, below: below, hollow: hollow, pct: pct, met: !!sc && pct >= target };
     });
   }
 
@@ -2257,7 +2285,7 @@
       };
       var showTip = function (e) {
         if (e.target === ftip) return clearTimeout(tipTimer);
-        var t = e.target && e.target.closest && e.target.closest(".basis.tip,abbr.gloss,a.rl[data-tip]");
+        var t = e.target && e.target.closest && e.target.closest(".basis[data-tip],abbr.gloss,a.rl[data-tip]");
         if (t === tipFor) clearTimeout(tipTimer);
         if (!t || !t.dataset.tip || t === tipFor) return;
         clearTimeout(tipTimer);
@@ -2579,7 +2607,22 @@
         wins.length ? el("p", { className: "wins" }, el("b", { textContent: "✓ Already: " }), wins.join(" · ")) : null,
         nextBox,
         climb,
-        el("p", { className: "sub", style: "margin:12px 0 0", textContent: verdict }),
+        verdict.indexOf(": ") > 0
+          ? el(
+              "p",
+              { className: "attn" },
+              el("b", { textContent: verdict.slice(0, verdict.indexOf(": ") + 1) + " " }),
+              verdict.slice(verdict.indexOf(": ") + 2) + " ",
+              el("button", {
+                className: "link",
+                textContent: "See them ↓",
+                onclick: function () {
+                  var h = this.getRootNode().querySelector("#need-att");
+                  if (h) h.scrollIntoView({ behavior: "smooth", block: "start" });
+                },
+              }),
+            )
+          : el("p", { className: "attn", textContent: verdict }),
       );
       var ladder = el("div", { className: "ladder", style: "--steps:" + R.ladder.length });
       ladder.setAttribute("aria-label", "Repository standards by lowest level");
@@ -2592,7 +2635,7 @@
           { className: "rung" + (l === level ? " here" : "") + (here.length ? "" : " vacant"), style: "--lvl:" + fill(l) },
           el("div", { className: "rh" }, medal(l, 22), l, el("span", { className: "n", textContent: String(here.length) })),
         );
-        if (!here.length) rung.append(l === "none" ? el("div", { className: "empty good", textContent: "✓ No standard at none" }) : el("div", { className: "empty", textContent: "—" }));
+        if (!here.length) rung.append(l === "none" ? el("div", { className: "empty good", textContent: "✓ No repository standard at none" }) : el("div", { className: "empty", textContent: "—" }));
         here.forEach(function (c) {
           var done = c.level === c.top;
           var caps = done && R.next && c.level === level;
@@ -3000,7 +3043,7 @@
           el(
             "div",
             { className: "head" },
-            el("h2", { textContent: attention.length ? "Scorecards that need attention" : "Scorecards" }),
+            el("h2", { id: "need-att", textContent: attention.length ? "Scorecards that need attention" : "Scorecards" }),
             el("span", { className: "sub", textContent: "Needs attention first" }),
           ),
           el("p", { className: "lede", textContent: "Each scorecard rates every entity of one kind against levels of rules. An entity is at none until it passes every rule of the first level." }),
@@ -3336,6 +3379,7 @@
               { className: "why incl" },
               p.known ? kpiBar(p.pct, p.pct + "% at " + p.goal + " or above; target " + target + "%", !p.met) : null,
               el("span", { textContent: p.known ? p.pct + "% at " + p.goal + " or above · " + (p.met ? "✓ at target" : fmt(p.below) + " of " + (kind ? kindCount(D, kind, p.rated) : fmt(p.rated)) + " to lift") : "not in this report" }),
+              p.hollow ? el("span", { className: "unjudged-n", style: "flex-basis:100%;font-size:13px" }, el("span", { className: "vhatch", ariaHidden: "true", style: "margin:0 5px 0 0" }), fmt(p.hollow) + " of those " + fmt(p.rated - p.below) + " pass only because no agent has assessed them yet") : null,
             ),
           );
         });
@@ -3548,7 +3592,7 @@
           "div",
           { className: "legend", style: "margin:0 0 12px" },
           ...["none", "bronze", "silver", "gold", "unscored"].map(function (l) {
-            return el("span", {}, el("span", { className: "dot", style: "background:" + fill(l) }), l === "unscored" ? "not scored: out of every scorecard's scope, or none has run on it" : l);
+            return el("span", {}, l === "unscored" ? el("span", { className: "dot unscored" }) : el("span", { className: "dot", style: "background:" + fill(l) }), l === "unscored" ? "not scored: out of every scorecard's scope, or none has run on it" : l);
           }),
           [...S.worstState.values()].indexOf("hollow") >= 0 ? el("span", {}, el("span", { className: "dot hatch", style: "--seg:" + fill("bronze") }), "hatched: not assessed by an agent yet") : null,
           [...S.worstState.values()].indexOf("unrun") >= 0 ? el("span", {}, el("span", { className: "dot dots", style: "--seg:" + fill("silver") }), "◌ dotted: provisional, checks not run in this build") : null,
@@ -3668,13 +3712,12 @@
           var members = built.filter(function (x) {
             return x.sig === b.sig;
           });
-          var names = members.map(function (x) {
-            return shortId(x.id);
-          });
           var sum = el(
             "summary",
             { className: "erow cols", style: "grid-template-columns:" + tpl },
-            el("div", { className: "name" }, kindCount(D, selected, members.length) + " with the same result ", el("span", { className: "chev", ariaHidden: "true", textContent: "›" }), el("small", { title: names.join(", "), textContent: names.slice(0, 3).join(", ") + (names.length > 3 ? " and " + (names.length - 3) + " more" : "") })),
+            el("div", { className: "name" }, kindCount(D, selected, members.length) + " with the same result ", el("span", { className: "chev", ariaHidden: "true", textContent: "›" }), memberLinks(members.map(function (x) {
+              return x.id;
+            }))),
             ...Array.prototype.map.call(b.r.querySelectorAll(".ecell"), function (c) {
               return c.cloneNode(true);
             }),
@@ -4516,7 +4559,7 @@
                       return vals[i] == null ? null : el("span", { style: "display:block" }, el("span", { className: "sub", textContent: who(id) + ": " }), show(vals[i]));
                     }),
                   ),
-              fields[f] ? el("small", { textContent: fields[f] }) : null,
+              fields[f] ? el("small", { textContent: firstSentence(fields[f]), title: fields[f] }) : null,
             );
           }),
       );
@@ -4538,7 +4581,6 @@
         rest ? el("p", { className: "method-lede" }, ...rich(rest)) : null,
         Object.keys(context).length ? setup : null,
         basisKey(bases),
-        track ? refs(track.links) : null,
       );
       var brief = setupBrief(context, ids, facts, who);
       var sources = track ? refs(track.links) : null;
@@ -4670,15 +4712,26 @@
             ),
           )
         : null;
-      return el(
-        "div",
-        {},
-        hero,
-        el("section", {}, el("div", { className: "head" }, el("h2", { textContent: "Factors" }), el("span", { className: "sub", textContent: "Behind first" })), this.factorCards(D, names)),
-        behind,
-        leads,
-        method,
+      var factors = el("section", {}, el("div", { className: "head" }, el("h2", { textContent: "Factors" }), el("span", { className: "sub", textContent: "Behind first" })), this.factorCards(D, names));
+      var jumps = [
+        ["Factors", factors],
+        ["Behind", behind],
+        ["Leads", leads],
+        ["Method", method],
+      ].filter(function (j) {
+        return j[1];
+      });
+      var jump = el(
+        "nav",
+        { className: "jump", ariaLabel: "On this page" },
+        el("span", { className: "sub", textContent: "On this page: " }),
+        ...jumps.map(function (j, i) {
+          return el("span", {}, i ? " · " : "", el("button", { className: "link", textContent: j[0], onclick: function () {
+            j[1].scrollIntoView({ behavior: "smooth", block: "start" });
+          } }));
+        }),
       );
+      return el("div", {}, hero, jump, factors, behind, leads, method);
     }
 
     compareDetail(D, name, names, who) {
@@ -5133,9 +5186,6 @@
           rowsShown++;
           entsShown += g.length;
           var first = entRow(g[0]).querySelector("summary");
-          var names = g.map(function (pair) {
-            return shortId(pair[0]);
-          });
           var grp = el(
             "details",
             { className: "ent ent-group" },
@@ -5143,7 +5193,9 @@
               "summary",
               {},
               first.children[0],
-              el("span", { className: "name" }, kindCount(D, sc.kind, g.length) + " with the same result", el("span", { className: "tail" }, el("span", { className: "chev", textContent: "›" })), el("small", { title: names.join(", "), textContent: names.slice(0, 3).join(", ") + (names.length > 3 ? " and " + (names.length - 3) + " more" : "") })),
+              el("span", { className: "name" }, kindCount(D, sc.kind, g.length) + " with the same result", el("span", { className: "tail" }, el("span", { className: "chev", textContent: "›" })), memberLinks(g.map(function (pair) {
+                return pair[0];
+              }))),
               first.children[2],
             ),
           );
