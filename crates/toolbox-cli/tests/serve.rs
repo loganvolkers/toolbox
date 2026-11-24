@@ -91,6 +91,14 @@ fn a_detached_server_answers_once_started_and_is_gone_once_stopped() {
             .output()
             .unwrap()
     };
+    struct Stop<F: Fn(&[&str]) -> std::process::Output>(F);
+    impl<F: Fn(&[&str]) -> std::process::Output> Drop for Stop<F> {
+        fn drop(&mut self) {
+            (self.0)(&["--stop"]);
+        }
+    }
+    let toolbox = Stop(toolbox);
+    let toolbox = |args: &[&str]| (toolbox.0)(args);
     let started = toolbox(&["--listen", &addr, "--detach"]);
     let out = String::from_utf8_lossy(&started.stdout);
     assert!(
