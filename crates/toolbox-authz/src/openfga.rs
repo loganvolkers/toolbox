@@ -60,18 +60,21 @@ pub fn binary() -> String {
 fn openfga_env() -> impl Iterator<Item = (String, String)> {
     std::env::vars().filter(|(k, _)| {
         ["PATH", "TZ", "TMPDIR", "SSL_CERT_FILE", "SSL_CERT_DIR"].contains(&k.as_str())
-            || (k.starts_with("OPENFGA_") && !k.starts_with("OPENFGA_DATASTORE_URI"))
+            || (k.starts_with("OPENFGA_")
+                && !k.starts_with("OPENFGA_DATASTORE_URI")
+                && !k.starts_with("OPENFGA_AUTHN"))
             || k.starts_with("PGSSL")
     })
 }
 
 /// A private directory holding OpenFGA's `config.yaml`, which it reads from its working directory
-/// at start-up. The datastore URI goes there rather than into argv, which every local user can
-/// read in `/proc/<pid>/cmdline`, or the environment. Removed on drop, once OpenFGA has read it.
+/// at start-up. The datastore URI and the preshared key go there rather than into argv, which
+/// every local user can read in `/proc/<pid>/cmdline`, or the environment. Removed on drop, once
+/// OpenFGA has read it.
 struct ConfigDir(std::path::PathBuf);
 
 impl ConfigDir {
-    fn new(datastore: &Datastore) -> Result<ConfigDir, String> {
+    fn new(datastore: &Datastore, key: &str) -> Result<ConfigDir, String> {
         let dir = std::env::temp_dir().join(format!(
             "toolbox-openfga-{}-{}",
             std::process::id(),
@@ -83,13 +86,17 @@ impl ConfigDir {
         builder
             .create(&dir)
             .map_err(|e| format!("{}: {e}", dir.display()))?;
-        let config = match datastore {
-            Datastore::Postgres(uri) => format!(
-                "datastore:\n  engine: postgres\n  uri: {}\n",
-                serde_json::to_string(uri).expect("a string serialises")
-            ),
+        let quote = |s: &str| serde_json::to_string(s).expect("a string serialises");
+        let mut config = match datastore {
+            Datastore::Postgres(uri) => {
+                format!("datastore:\n  engine: postgres\n  uri: {}\n", quote(uri))
+            }
             Datastore::Memory => "datastore:\n  engine: memory\n".to_owned(),
         };
+        config += &format!(
+            "authn:\n  method: preshared\n  preshared:\n    keys: [{}]\n",
+            quote(key)
+        );
         let mut options = std::fs::OpenOptions::new();
         options.write(true).create_new(true);
         #[cfg(unix)]
@@ -142,7 +149,9 @@ impl OpenFga {
         model: Value,
     ) -> Result<OpenFga, String> {
         let bin = binary();
-        let config = ConfigDir::new(&datastore)?;
+        // Any local process can reach the loopback port; only the server holds the key.
+        let key = crate::authn::new_pat().map_err(|e| format!("no random source: {e}"))?;
+        let config = ConfigDir::new(&datastore, &key)?;
         let mut args: Vec<String> = Vec::new();
         if let Datastore::Postgres(_) = &datastore {
             let out = config
@@ -182,8 +191,19 @@ impl OpenFga {
             .spawn()
             .map_err(|e| format!("cannot start {bin}: {e}"))?;
         let base = format!("http://127.0.0.1:{http_port}");
+        let mut auth = reqwest::header::HeaderValue::try_from(format!("Bearer {key}"))
+            .map_err(|e| e.to_string())?;
+        auth.set_sensitive(true);
+        let http = reqwest::Client::builder()
+            .default_headers(
+                [(reqwest::header::AUTHORIZATION, auth)]
+                    .into_iter()
+                    .collect(),
+            )
+            .build()
+            .map_err(|e| e.to_string())?;
         let mut fga = OpenFga {
-            http: reqwest::Client::new(),
+            http,
             base,
             store: String::new(),
             model_id: String::new(),
@@ -489,15 +509,16 @@ mod tests {
     }
 
     #[test]
-    fn the_datastore_uri_is_in_a_private_file_until_dropped() {
+    fn the_datastore_uri_and_key_are_in_a_private_file_until_dropped() {
         let uri = r#"postgres://u:p"w@db/x?sslmode=disable"#;
-        let dir = ConfigDir::new(&Datastore::Postgres(uri.into())).unwrap();
+        let dir = ConfigDir::new(&Datastore::Postgres(uri.into()), "k").unwrap();
         let file = dir.0.join("config.yaml");
         let text = std::fs::read_to_string(&file).unwrap();
         assert!(
             text.contains(r#"uri: "postgres://u:p\"w@db/x?sslmode=disable""#),
             "{text}"
         );
+        assert!(text.contains(r#"keys: ["k"]"#), "{text}");
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
@@ -543,6 +564,12 @@ mod tests {
             String::from_utf8_lossy(&std::fs::read(format!("/proc/{pid}/cmdline")).unwrap())
                 .into_owned();
         assert!(!cmdline.contains("datastore-uri"), "{cmdline}");
+        let anonymous = reqwest::Client::new()
+            .get(format!("{}/stores", fga.base))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(anonymous.status(), 401, "OpenFGA answers only the server");
         let cwd = std::fs::read_link(format!("/proc/{pid}/cwd")).unwrap();
         assert!(!cwd.join("config.yaml").exists(), "{}", cwd.display());
     }
