@@ -1218,9 +1218,6 @@ fn counts_as_pass(outcome: &str) -> bool {
     outcome == "pass" || outcome == "waived"
 }
 
-/// Highest level whose known rules pass or are waived. An all-unknown level stops the climb,
-/// so a card with no data at that level is not granted it. `None` when every rule is unknown
-/// (the entity is dropped from the repository rollup; the displayed level is `none`).
 /// The subject's standing against one peer on one rule. Values decide when both sides have one
 /// (within `tolerance` is parity); otherwise outcomes do (pass over waived over fail). An entity
 /// with no score, or an `unknown` outcome, makes the standing `unknown`.
@@ -1261,6 +1258,9 @@ fn rule_standing(
     }
 }
 
+/// Highest level whose known rules pass or are waived. An all-unknown level stops the climb,
+/// so a card with no data at that level is not granted it. `None` when every rule is unknown
+/// (the entity is dropped from the repository rollup; the displayed level is `none`).
 fn level_ignoring_unknown(
     sc: &toolbox_model::manifest::Scorecard,
     outcomes: &BTreeMap<String, String>,
