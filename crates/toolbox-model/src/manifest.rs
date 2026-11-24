@@ -262,10 +262,12 @@ pub enum VerdictRule {
 }
 
 impl VerdictRule {
+    /// Whether this is the default rule, which the manifest may leave unsaid.
     pub fn is_default(&self) -> bool {
         *self == Self::AnyBehind
     }
 
+    /// The rule's name as the manifest spells it.
     pub fn as_str(self) -> &'static str {
         match self {
             Self::AnyBehind => "anyBehind",
