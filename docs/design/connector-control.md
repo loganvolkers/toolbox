@@ -63,9 +63,15 @@ OpenFGA co-process gets the same kind of allowlist plus its datastore URI in a `
 `config.yaml` that is deleted once OpenFGA is up, not in its argv (`/proc/<pid>/cmdline` is
 readable by every local user). The same file gives OpenFGA a preshared key minted at start-up,
 so a local process that finds its loopback port cannot read or rewrite the authorization model.
-What remains is OpenFGA's memory: with
-`kernel.yama.ptrace_scope=0` a same-user process may attach to it. A connector that must not
-reach the database at all runs remotely, holding only its own token.
+That leaves OpenFGA's memory, which holds both: Toolbox cannot make OpenFGA non-dumpable, and
+whether a same-user process may read it is the host's Yama setting, which an image cannot
+choose. So each in-image connector starts in its own Landlock domain
+(`crates/toolbox-api/src/confine.rs`): a process in one cannot ptrace, or open `/proc/<pid>/mem`
+or `environ` of, any process outside it, OpenFGA and other connectors included. Its files and
+network are unchanged. On a kernel without Landlock the connector starts unconfined and the
+server warns. `serve` also warns when the database URL arrives on `--database-url`, since argv
+is readable by every local user. A connector can still write any file the server's user can, and
+one that must not reach the database at all runs remotely, holding only its own token.
 
 ## 4. Messages
 

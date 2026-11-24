@@ -248,6 +248,14 @@ environment and does not claim to isolate them (its threat model). To earn the p
 must lose access to its siblings' memory (its own UID, or a Landlock domain or PID namespace), and
 the canary must be rerun on the image.
 
+**After round 3, not scored.** Each in-image connector now starts in its own Landlock domain
+(`crates/toolbox-api/src/confine.rs`, for every deployment with in-image connectors), and `serve`
+warns when the database URL is on its command line. A canary connector under `toolbox serve` on the
+measurement VM, which has no Yama, opened OpenFGA's `/proc/<pid>/mem` and `environ` before the
+change, and is denied both after it; `a_confined_connector_cannot_read_a_sibling` tests the same,
+and CI requires Landlock for it. This ran on the binary, not the image, and the fact stays `false`
+until a round reruns the canary on the image.
+
 ## Deviations from the pre-registration
 
 - **Bars written after the smoke rounds.** The README gives no bar ("—") for adopter files and
