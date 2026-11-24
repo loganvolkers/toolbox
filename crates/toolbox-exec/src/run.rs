@@ -201,6 +201,7 @@ pub struct Approval {
     pub rejected_by: Option<String>,
 }
 
+/// One approval: the approver entry it met (`user:ann|user:bob`, `group:sre`) and who gave it.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Satisfied {
     pub approver: String,

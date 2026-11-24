@@ -303,32 +303,7 @@ impl Hub {
                         reconcile.push((s("kind"), seen));
                     }
                 }
-                "complete" => {
-                    let status = match s("status").as_str() {
-                        "succeeded" => Status::Succeeded,
-                        "partial" => Status::Partial,
-                        "cancelled" => Status::Cancelled,
-                        _ => Status::Failed,
-                    };
-                    let mut read = Vec::new();
-                    let mut tried = Vec::new();
-                    if let Some(c) = g.commands.get_mut(&cid) {
-                        tried.extend(c.kind.iter().cloned().chain(c.kinds.iter().cloned()));
-                        if status == Status::Succeeded {
-                            read.extend(tried.iter().cloned());
-                        }
-                        c.status = status;
-                        c.completed_version = Some(version);
-                        c.errors = m["errors"].as_array().cloned().unwrap_or_default();
-                        c.counts = m.get("counts").cloned().unwrap_or(json!({}));
-                    }
-                    for k in read {
-                        g.last_read.insert((connector.to_owned(), k), now());
-                    }
-                    for k in tried {
-                        g.tried.entry((connector.to_owned(), k)).or_insert(version);
-                    }
-                }
+                "complete" => Self::complete(&mut g, connector, &cid, m, version),
                 _ => {}
             }
         }
@@ -380,6 +355,34 @@ impl Hub {
             .last_read
             .get(&(connector.to_owned(), kind.to_owned()))
             .copied()
+    }
+
+    /// A command finished: record its outcome and the kinds it read.
+    fn complete(g: &mut Inner, connector: &str, cid: &str, m: &Value, version: u64) {
+        let status = match m.get("status").and_then(Value::as_str).unwrap_or_default() {
+            "succeeded" => Status::Succeeded,
+            "partial" => Status::Partial,
+            "cancelled" => Status::Cancelled,
+            _ => Status::Failed,
+        };
+        let mut read = Vec::new();
+        let mut tried = Vec::new();
+        if let Some(c) = g.commands.get_mut(cid) {
+            tried.extend(c.kind.iter().cloned().chain(c.kinds.iter().cloned()));
+            if status == Status::Succeeded {
+                read.extend(tried.iter().cloned());
+            }
+            c.status = status;
+            c.completed_version = Some(version);
+            c.errors = m["errors"].as_array().cloned().unwrap_or_default();
+            c.counts = m.get("counts").cloned().unwrap_or(json!({}));
+        }
+        for k in read {
+            g.last_read.insert((connector.to_owned(), k), now());
+        }
+        for k in tried {
+            g.tried.entry((connector.to_owned(), k)).or_insert(version);
+        }
     }
 
     /// The input version holding `connector`'s first finished sync of `kind`, if one has finished.

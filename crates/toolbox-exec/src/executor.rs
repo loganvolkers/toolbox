@@ -449,11 +449,6 @@ fn branch_name(e: &Executor, ctx: &Context) -> String {
     }
 }
 
-/// The placeholders a `change` executor's `branch` takes; `message` also takes
-/// [`MESSAGE_PLACEHOLDERS`]. `toolbox validate` refuses any other `{…}`.
-pub const BRANCH_PLACEHOLDERS: &[&str] = &["{action}", "{run}"];
-pub const MESSAGE_PLACEHOLDERS: &[&str] = &["{entity}", "{inputs.<name>}"];
-
 /// `branch` or `message` with its placeholders filled. Inputs go only into a message: an input
 /// can hold characters a branch name cannot.
 fn fill(t: &str, ctx: &Context, inputs: bool) -> String {

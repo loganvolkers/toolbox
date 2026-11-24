@@ -304,9 +304,6 @@
         ],
         "short-functions": [
           "39c55bc5"
-        ],
-        "simple-functions": [
-          "abf6f2a2"
         ]
       },
       "crate:toolbox-connector-github": {
@@ -4025,8 +4022,7 @@
           "fully-documented": 18,
           "no-huge-functions": 1,
           "public-api-documented": 18,
-          "short-functions": 1,
-          "simple-functions": 1
+          "short-functions": 1
         },
         "level": "bronze",
         "unknown": [
