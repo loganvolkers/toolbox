@@ -1,7 +1,8 @@
 # Workspace Connector Reference
 
 **`builtin:workspace` reads a local checkout, without building it or using the network, and
-reports one record per matching file, directory or fact.** A portal turns records into entities
+reports one record per matching file, directory or fact.** The one exception is `git`, which
+clones and fetches the repositories a parent portal lists as children. A portal turns records into entities
 with a kind's `map`. This page lists its configuration and its records' fields. For a standard
 over files, start from a package that configures it for you:
 [`file-size`](../../packages/file-size/README.md) (lines per file) or
@@ -44,6 +45,8 @@ walked.
 | `dependencies` | `false` | One `dependency` record per direct external Cargo dependency |
 | `jsWorkspace` | `false` | One `js-workspace` record: pnpm or npm workspace, lockfile, `packageManager` pin |
 | `expoApps`, `storybooks` | `[]` | Globs: `expo-app` and `storybook` records ([packages/pnpm-expo](../../packages/pnpm-expo/), [packages/storybook](../../packages/storybook/)) |
+| `portals` | `[]` | Globs, usually `*/.toolbox/toolbox.yaml`: one `portal` record per child portal found in a checkout |
+| `git` | `[]` | `[{key, url, branch}]`, written by `federation.children`: each repository is cloned into `<root>/<key>`, kept at its branch, and read as one `portal` record |
 | `data` | `[]` | `[{kind, globs, paths?}]`: entries of YAML or JSON files as records of `kind`, each with a string `id` |
 
 ## Records
@@ -55,6 +58,7 @@ The external id is `<kind>:<path>` for per-file records.
 | `file` | `path`, `extension`, `lines`, `counts`, `matchLines`, `captures`, `lastChange` |
 | `doc` | `path`, `title`, `words`, `links`, `brokenLinks`, `codeSpans`, `hasStatus`, `hasSources`, `missingDecisions`, `counts`, `captures`, `lastChange` |
 | `repo` | README, LICENSE, CODEOWNERS and `.github` facts ([repo-portals.md](../design/repo-portals.md)) |
+| `portal` | `key`, `name`, `title`, `owner`, `path`, `dir`, `file`, `actions`, `runner`, `acceptApprovalsFrom`, `scorecards`, `packages`, `packageError`, `error`; `git` for a cloned child; `warning` when two share a name ([federated-actions.md](../design/federated-actions.md) §5.2) |
 | `workflow`, `action-ref` | Triggers, permissions, timeouts, `uses:` and how each is pinned ([github-actions-standards.md](../design/github-actions-standards.md)) |
 | Others | Described in the design docs that use them (`toolbox describe portal .toolbox` lists a portal's kinds and fields) |
 

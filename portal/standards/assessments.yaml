@@ -140,6 +140,7 @@ kinds:
 scorecards:
   # Deterministic, so ratcheted: what any assessment must contain to be worth reading.
   - name: meta-assessment
+    title: Assessments are well-formed
     kind: Assessment
     description: >-
       What every assessment must contain to be worth reading: a named
@@ -187,6 +188,7 @@ scorecards:
 
   # Judgement of judgement. Stops here: reviews made with assessment-quality are not reviewed.
   - name: review-assessment
+    title: Assessments, reviewed
     kind: Assessment
     description: >-
       Each assessment reviewed against assessment-quality by another assessor,

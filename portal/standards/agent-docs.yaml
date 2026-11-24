@@ -39,6 +39,7 @@ scorecards:
   # AGENTS.md rather than become a second copy. The 500-line ceiling is the v1.1 proposal's
   # guideline, not a field the current spec requires. Frontmatter is optional and not required.
   - name: maintainer-agent-doc
+    title: Agent instruction files
     kind: AgentDoc
     description: >-
       Each agent instruction file: one canonical AGENTS.md with aliases

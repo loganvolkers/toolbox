@@ -1,0 +1,37 @@
+{
+  "arm": "toolbox",
+  "probes": {
+    "anonymousRead": 401,
+    "forgedIdentityRead": 401,
+    "anonymousMcp": 401,
+    "clientDelete": 405,
+    "entityAfterDelete": 200
+  },
+  "guestSignIn": null,
+  "anonymousReadRefused": true,
+  "forgedIdentityRefused": true,
+  "anonymousMcpRefused": true,
+  "clientCannotDelete": true,
+  "mcpTools": 14,
+  "mcpReadOnlyTools": 13,
+  "mcpToolNames": [
+    "action_options",
+    "assessment_brief",
+    "campaign_report",
+    "explain",
+    "get",
+    "graph",
+    "list_actions",
+    "owner_of",
+    "preview_action",
+    "query",
+    "refresh_entity",
+    "scorecard_report",
+    "scorecard_status",
+    "search"
+  ],
+  "mcpToolsListBytes": 6473,
+  "mcpGetEntityTool": "get",
+  "mcpGetEntityOk": true,
+  "mcpGetEntityBytes": 253
+}

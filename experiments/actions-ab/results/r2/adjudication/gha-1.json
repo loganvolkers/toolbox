@@ -1,0 +1,141 @@
+{
+  "run": "gha-1",
+  "C1": "holds",
+  "P1": {
+    "verdict": "holds",
+    "evidence": "git ls-tree -r main on origins/{alpha,beta,gamma}.git: each has .github/workflows/mark-deprecated.yml and .github/self-service/{mark_deprecated.py,mark-deprecated.json,repository-settings.json,apply-github-settings.sh} plus CODEOWNERS (alpha at the root, beta and gamma in .github/), committed on main (alpha 682902c, beta 74283ee, gamma 0bedd04). `bin/acme list` reports each definition from origin main's sha."
+  },
+  "P2": {
+    "verdict": "holds",
+    "evidence": "From org/: `bin/acme request alpha mark-deprecated -f 'successor=Acme/Bad Name' -f 'reason=Probe of input validation by the adjudicator.' --as ann` -> exit 2, JSON error kind invalid, 'successor must match ^[a-z0-9-]+/[a-z0-9-]+$', run alpha-2 recorded as refused. `... -f successor=acme/probe-valid -f reason=short --as ann` -> exit 2, 'reason must be 20 to 200 characters (got 5)', run alpha-3 refused. The refusal comes from an act run of the workflow's validate job. alpha main f83ae4027951f6db407c2f69dc2d5f42c33c8252 before and after. Approving a refused run (`approve alpha-2 --as bob`) -> exit 5 conflict."
+  },
+  "P3": {
+    "verdict": "holds",
+    "evidence": "`bin/acme preview beta mark-deprecated -f successor=acme/probe-preview -f 'reason=Probe of the preview step by the adjudicator.' --as ann` -> exit 0, JSON preview.changes[0]: path DEPRECATED.md, operation update, content '# Deprecated: use acme/probe-preview\\n\\nProbe of the preview step by the adjudicator.\\n' and a unified diff against the current file. No run created (runs dir unchanged). beta main bd214fa666da97f000aab32797afc64b5356fbee before and after."
+  },
+  "P4": {
+    "verdict": "holds",
+    "evidence": "From org/: `bin/acme request gamma mark-deprecated -f successor=acme/probe-approval -f 'reason=Probe of the approval rules by the adjudicator.' --as ann` -> exit 0, run gamma-2 awaiting_approval with the preview stored. gamma main e908b3f9160fe8a4496947e25871cb175ee87e20 before and after the request. `approve gamma-2 --as ann` -> exit 3 'ann requested run gamma-2 and cannot approve it (prevent_self_review)'; `approve gamma-2 --as carol` -> exit 3 'carol is not a required reviewer of environment deprecation (ann, bob)'; `status gamma-2` -> awaiting_approval; gamma main still e908b3f."
+  },
+  "P5": {
+    "verdict": "holds",
+    "evidence": "`bin/acme approve gamma-2 --as bob` -> exit 0, status succeeded, outcome.observed.sha e835f9b, files[0].matches true. `git -C origins/gamma.git show main:DEPRECATED.md` is exactly '# Deprecated: use acme/probe-approval\\n\\nProbe of the approval rules by the adjudicator.\\n'; commit trailers Requested-by: ann, Approved-by: bob, Run: gamma-2. execute.log shows act ran validate, preview, apply and verify, each 'Job succeeded'. Source (org/bin/acme cmd_approve, lines 453-469): after act returns, it reads main_sha and `git --git-dir <origin> show <main>:DEPRECATED.md` from the bare origin, and sets succeeded only if act exited 0, the verify job reported ok, and its own read equals the previewed content."
+  },
+  "P6": {
+    "verdict": "holds",
+    "evidence": "Installed origins/alpha.git/hooks/pre-receive (message to stderr, exit 1). `request alpha ... -f successor=acme/probe-reject -f 'reason=Probe of a rejected push by the adjudicator.' --as ann` -> alpha-4 awaiting_approval; `approve alpha-4 --as bob` -> exit 1, kind run_failed, error 'push to main was rejected: remote: adjudicator: all pushes rejected', status failed, observed.matches false; `status alpha-4` -> failed. Hook removed (only *.sample remain). alpha main f83ae40 before and after."
+  },
+  "P7": {
+    "verdict": "holds",
+    "evidence": "From org/: `bin/acme list --action mark-deprecated` -> exit 0, JSON actions[] with mark-deprecated for alpha, beta and gamma (inputs, definition sha, reviewers, owners), read from each origin's main. P4's request was made from org/ with the same CLI."
+  },
+  "P8": {
+    "verdict": "holds",
+    "evidence": "`bin/acme record gamma-2` -> requested_by ann at 11:44:20.541Z, approved_by bob at 11:44:25.883Z, inputs {successor, reason}, status/outcome succeeded, started_at, finished_at 11:44:26.470Z, and timestamped events requested (ann), previewed, awaiting_approval, approval_refused (ann), approval_refused (carol), approved (bob), started, observed, succeeded."
+  },
+  "P9": {
+    "verdict": "holds",
+    "evidence": "Every probe command (list, preview, request, approve, status, record) was a one-shot non-interactive call with JSON on stdout, errors included, and distinct exit codes (0, 1, 2, 3, 5)."
+  },
+  "P10": {
+    "verdict": "holds",
+    "evidence": "Operated entirely from org/HANDOFF.md's commands with its documented flags and exit codes; no fixes were needed and nothing had to be started. The source was read only for P5's read-before-success."
+  },
+  "fixes": [],
+  "strikes": [
+    {
+      "path": "org/.acme/runs/alpha-1/event.json",
+      "lines": 1,
+      "reason": "run state written by org/bin/acme at runtime (git-ignored org/.acme/): run record, act job outputs or event payload"
+    },
+    {
+      "path": "org/.acme/runs/alpha-1/out/apply.json",
+      "lines": 8,
+      "reason": "run state written by org/bin/acme at runtime (git-ignored org/.acme/): run record, act job outputs or event payload"
+    },
+    {
+      "path": "org/.acme/runs/alpha-1/out/preview.json",
+      "lines": 17,
+      "reason": "run state written by org/bin/acme at runtime (git-ignored org/.acme/): run record, act job outputs or event payload"
+    },
+    {
+      "path": "org/.acme/runs/alpha-1/out/validate.json",
+      "lines": 9,
+      "reason": "run state written by org/bin/acme at runtime (git-ignored org/.acme/): run record, act job outputs or event payload"
+    },
+    {
+      "path": "org/.acme/runs/alpha-1/out/verify.json",
+      "lines": 8,
+      "reason": "run state written by org/bin/acme at runtime (git-ignored org/.acme/): run record, act job outputs or event payload"
+    },
+    {
+      "path": "org/.acme/runs/alpha-1/record.json",
+      "lines": 133,
+      "reason": "run state written by org/bin/acme at runtime (git-ignored org/.acme/): run record, act job outputs or event payload"
+    },
+    {
+      "path": "org/.acme/runs/beta-1/event.json",
+      "lines": 1,
+      "reason": "run state written by org/bin/acme at runtime (git-ignored org/.acme/): run record, act job outputs or event payload"
+    },
+    {
+      "path": "org/.acme/runs/beta-1/out/apply.json",
+      "lines": 8,
+      "reason": "run state written by org/bin/acme at runtime (git-ignored org/.acme/): run record, act job outputs or event payload"
+    },
+    {
+      "path": "org/.acme/runs/beta-1/out/preview.json",
+      "lines": 17,
+      "reason": "run state written by org/bin/acme at runtime (git-ignored org/.acme/): run record, act job outputs or event payload"
+    },
+    {
+      "path": "org/.acme/runs/beta-1/out/validate.json",
+      "lines": 9,
+      "reason": "run state written by org/bin/acme at runtime (git-ignored org/.acme/): run record, act job outputs or event payload"
+    },
+    {
+      "path": "org/.acme/runs/beta-1/out/verify.json",
+      "lines": 8,
+      "reason": "run state written by org/bin/acme at runtime (git-ignored org/.acme/): run record, act job outputs or event payload"
+    },
+    {
+      "path": "org/.acme/runs/beta-1/record.json",
+      "lines": 133,
+      "reason": "run state written by org/bin/acme at runtime (git-ignored org/.acme/): run record, act job outputs or event payload"
+    },
+    {
+      "path": "org/.acme/runs/gamma-1/event.json",
+      "lines": 1,
+      "reason": "run state written by org/bin/acme at runtime (git-ignored org/.acme/): run record, act job outputs or event payload"
+    },
+    {
+      "path": "org/.acme/runs/gamma-1/out/apply.json",
+      "lines": 8,
+      "reason": "run state written by org/bin/acme at runtime (git-ignored org/.acme/): run record, act job outputs or event payload"
+    },
+    {
+      "path": "org/.acme/runs/gamma-1/out/preview.json",
+      "lines": 17,
+      "reason": "run state written by org/bin/acme at runtime (git-ignored org/.acme/): run record, act job outputs or event payload"
+    },
+    {
+      "path": "org/.acme/runs/gamma-1/out/validate.json",
+      "lines": 9,
+      "reason": "run state written by org/bin/acme at runtime (git-ignored org/.acme/): run record, act job outputs or event payload"
+    },
+    {
+      "path": "org/.acme/runs/gamma-1/out/verify.json",
+      "lines": 8,
+      "reason": "run state written by org/bin/acme at runtime (git-ignored org/.acme/): run record, act job outputs or event payload"
+    },
+    {
+      "path": "org/.acme/runs/gamma-1/record.json",
+      "lines": 133,
+      "reason": "run state written by org/bin/acme at runtime (git-ignored org/.acme/): run record, act job outputs or event payload"
+    }
+  ],
+  "linesBeforeStrikes": 1399,
+  "linesAfterStrikes": 871,
+  "fullyPasses": true,
+  "notes": "No probe was credited: approval, self-approval and carol's refusal are enforced locally by org/bin/acme against the repository's mark-deprecated.json, read at the run's pinned commit. The GitHub environment (required reviewers, prevent_self_review), ruleset, collaborators and CODEOWNERS enforcement are configured in apply-github-settings.sh / repository-settings.json but were not exercised. score.py counts beta's and gamma's workflow and scripts as copies of alpha's (gamma's CODEOWNERS likewise); left as is. The ruleset makes the GitHub Actions app a bypass actor on main so apply can push, which the handoff flags as broad. org/ is committed and pushed to origins/org.git (a6cb4f5). The probes left gamma's main at e835f9b (P5's DEPRECATED.md, as P5 requires) and run records alpha-2..4 and gamma-2 in org/.acme/. No long-running process; nothing to stop."
+}

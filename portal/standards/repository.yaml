@@ -57,6 +57,7 @@ scorecards:
   # The files that turn GitHub Advanced Security on. Alert counts need the API and are not gated.
   # This repository has none of the three bronze files, so the live entity is none until they exist.
   - name: maintainer-supply-chain
+    title: Supply-chain security settings
     kind: Repository
     description: >-
       The repository files that turn on GitHub Advanced Security and
@@ -97,6 +98,7 @@ scorecards:
   # second pass; fixture samples under /demo/ are not constituents, so the ladder fixtures do
   # not drag this score to none.
   - name: maintainer-repo
+    title: Repository level
     kind: Repository
     description: >-
       The repository's level: the lowest level among its constituent

@@ -1314,3 +1314,237 @@ assert:
       CEL nodes, loop depth 2 (60 nodes and no nested loops at most;
       docs/design/thresholds.md)'] && score('meta-field',
       'field:toolbox/Crate.codeLines').rules['computed-readable'] == 'pass'
+  # Toolbox against Backstage (docs/design/backstage-comparison.md, D01M857ZB468ZM2YS6GNSEG6YB9)
+  - name: >-
+      vs-backstage-performance: a product that meets every bar reaches bronze,
+      and one that misses every bar stays at none
+    expect: >-
+      score('vs-backstage-performance', 'product:toolbox').level == 'bronze'
+      && score('vs-backstage-performance', 'product:toolbox').rules['ready']
+      == 'pass' && score('vs-backstage-performance',
+      'product:toolbox').rules['catalog-readable'] == 'pass' &&
+      score('vs-backstage-performance',
+      'product:toolbox').rules['get-latency'] == 'pass' &&
+      score('vs-backstage-performance',
+      'product:toolbox').rules['get-throughput'] == 'pass' &&
+      score('vs-backstage-performance',
+      'product:toolbox').rules['list-latency'] == 'pass' &&
+      score('vs-backstage-performance',
+      'product:toolbox').rules['list-throughput'] == 'pass' &&
+      score('vs-backstage-performance', 'product:toolbox').rules['recovery']
+      == 'pass' && score('vs-backstage-performance',
+      'product:backstage').level == 'none' &&
+      score('vs-backstage-performance', 'product:backstage').rules['ready'] ==
+      'fail' && score('vs-backstage-performance',
+      'product:backstage').rules['catalog-readable'] == 'fail' &&
+      score('vs-backstage-performance',
+      'product:backstage').rules['get-latency'] == 'fail' &&
+      score('vs-backstage-performance',
+      'product:backstage').rules['get-throughput'] == 'fail' &&
+      score('vs-backstage-performance',
+      'product:backstage').rules['list-latency'] == 'fail' &&
+      score('vs-backstage-performance',
+      'product:backstage').rules['list-throughput'] == 'fail' &&
+      score('vs-backstage-performance', 'product:backstage').rules['recovery']
+      == 'fail'
+  - name: >-
+      vs-backstage-footprint: a product that meets every bar reaches bronze,
+      and one that misses every bar stays at none
+    expect: >-
+      score('vs-backstage-footprint', 'product:toolbox').level == 'bronze' &&
+      score('vs-backstage-footprint', 'product:toolbox').rules['idle-memory']
+      == 'pass' && score('vs-backstage-footprint',
+      'product:toolbox').rules['loaded-memory'] == 'pass' &&
+      score('vs-backstage-footprint', 'product:toolbox').rules['install-size']
+      == 'pass' && score('vs-backstage-footprint',
+      'product:toolbox').rules['adopter-files'] == 'pass' &&
+      score('vs-backstage-footprint',
+      'product:toolbox').rules['adopter-lines'] == 'pass' &&
+      score('vs-backstage-footprint', 'product:backstage').level == 'none' &&
+      score('vs-backstage-footprint',
+      'product:backstage').rules['idle-memory'] == 'fail' &&
+      score('vs-backstage-footprint',
+      'product:backstage').rules['loaded-memory'] == 'fail' &&
+      score('vs-backstage-footprint',
+      'product:backstage').rules['install-size'] == 'fail' &&
+      score('vs-backstage-footprint',
+      'product:backstage').rules['adopter-files'] == 'fail' &&
+      score('vs-backstage-footprint',
+      'product:backstage').rules['adopter-lines'] == 'fail'
+  - name: >-
+      vs-backstage-security: a product that meets every bar reaches bronze,
+      and one that misses every bar stays at none
+    expect: >-
+      score('vs-backstage-security', 'product:toolbox').level == 'bronze' &&
+      score('vs-backstage-security',
+      'product:toolbox').rules['anonymous-read'] == 'pass' &&
+      score('vs-backstage-security',
+      'product:toolbox').rules['forged-identity'] == 'pass' &&
+      score('vs-backstage-security', 'product:toolbox').rules['anonymous-mcp']
+      == 'pass' && score('vs-backstage-security',
+      'product:toolbox').rules['client-cannot-delete'] == 'pass' &&
+      score('vs-backstage-security',
+      'product:toolbox').rules['loopback-by-default'] == 'pass' &&
+      score('vs-backstage-security',
+      'product:toolbox').rules['owner-only-fields'] == 'pass' &&
+      score('vs-backstage-security',
+      'product:toolbox').rules['extension-process-isolated'] == 'pass' &&
+      score('vs-backstage-security',
+      'product:toolbox').rules['extension-credential-isolated'] == 'pass' &&
+      score('vs-backstage-security', 'product:backstage').level == 'none' &&
+      score('vs-backstage-security',
+      'product:backstage').rules['anonymous-read'] == 'fail' &&
+      score('vs-backstage-security',
+      'product:backstage').rules['forged-identity'] == 'fail' &&
+      score('vs-backstage-security',
+      'product:backstage').rules['anonymous-mcp'] == 'fail' &&
+      score('vs-backstage-security',
+      'product:backstage').rules['client-cannot-delete'] == 'fail' &&
+      score('vs-backstage-security',
+      'product:backstage').rules['loopback-by-default'] == 'fail' &&
+      score('vs-backstage-security',
+      'product:backstage').rules['owner-only-fields'] == 'fail' &&
+      score('vs-backstage-security',
+      'product:backstage').rules['extension-process-isolated'] == 'fail' &&
+      score('vs-backstage-security',
+      'product:backstage').rules['extension-credential-isolated'] == 'fail'
+  - name: >-
+      vs-backstage-supply-chain: a product that meets every bar reaches
+      bronze, and one that misses every bar stays at none
+    expect: >-
+      score('vs-backstage-supply-chain', 'product:toolbox').level == 'bronze'
+      && score('vs-backstage-supply-chain',
+      'product:toolbox').rules['packages'] == 'pass' &&
+      score('vs-backstage-supply-chain',
+      'product:toolbox').rules['known-vulnerabilities'] == 'pass' &&
+      score('vs-backstage-supply-chain',
+      'product:toolbox').rules['high-vulnerabilities'] == 'pass' &&
+      score('vs-backstage-supply-chain',
+      'product:toolbox').rules['provenance'] == 'pass' &&
+      score('vs-backstage-supply-chain', 'product:backstage').level == 'none'
+      && score('vs-backstage-supply-chain',
+      'product:backstage').rules['packages'] == 'fail' &&
+      score('vs-backstage-supply-chain',
+      'product:backstage').rules['known-vulnerabilities'] == 'fail' &&
+      score('vs-backstage-supply-chain',
+      'product:backstage').rules['high-vulnerabilities'] == 'fail' &&
+      score('vs-backstage-supply-chain',
+      'product:backstage').rules['provenance'] == 'fail'
+  - name: >-
+      vs-backstage-change-safety: a product that meets every bar reaches
+      bronze, and one that misses every bar stays at none
+    expect: >-
+      score('vs-backstage-change-safety', 'product:toolbox').level == 'bronze'
+      && score('vs-backstage-change-safety',
+      'product:toolbox').rules['offline-validate'] == 'pass' &&
+      score('vs-backstage-change-safety',
+      'product:toolbox').rules['change-preview'] == 'pass' &&
+      score('vs-backstage-change-safety',
+      'product:toolbox').rules['upgrade-lines'] == 'pass' &&
+      score('vs-backstage-change-safety',
+      'product:toolbox').rules['rollback-steps'] == 'pass' &&
+      score('vs-backstage-change-safety', 'product:backstage').level == 'none'
+      && score('vs-backstage-change-safety',
+      'product:backstage').rules['offline-validate'] == 'fail' &&
+      score('vs-backstage-change-safety',
+      'product:backstage').rules['change-preview'] == 'fail' &&
+      score('vs-backstage-change-safety',
+      'product:backstage').rules['upgrade-lines'] == 'fail' &&
+      score('vs-backstage-change-safety',
+      'product:backstage').rules['rollback-steps'] == 'fail'
+  - name: >-
+      vs-backstage-org-fit: a product that meets every bar reaches bronze, and
+      one that misses every bar stays at none
+    expect: >-
+      score('vs-backstage-org-fit', 'product:toolbox').level == 'bronze' &&
+      score('vs-backstage-org-fit', 'product:toolbox').rules['repo-scoped'] ==
+      'pass' && score('vs-backstage-org-fit',
+      'product:toolbox').rules['federation'] == 'pass' &&
+      score('vs-backstage-org-fit', 'product:backstage').level == 'none' &&
+      score('vs-backstage-org-fit', 'product:backstage').rules['repo-scoped']
+      == 'fail' && score('vs-backstage-org-fit',
+      'product:backstage').rules['federation'] == 'fail'
+  - name: >-
+      vs-backstage-agent-surface: a product that meets every bar reaches
+      bronze, and one that misses every bar stays at none
+    expect: >-
+      score('vs-backstage-agent-surface', 'product:toolbox').level == 'bronze'
+      && score('vs-backstage-agent-surface',
+      'product:toolbox').rules['mcp-by-default'] == 'pass' &&
+      score('vs-backstage-agent-surface',
+      'product:toolbox').rules['tools-list-size'] == 'pass' &&
+      score('vs-backstage-agent-surface',
+      'product:toolbox').rules['get-entity-size'] == 'pass' &&
+      score('vs-backstage-agent-surface', 'product:backstage').level == 'none'
+      && score('vs-backstage-agent-surface',
+      'product:backstage').rules['mcp-by-default'] == 'fail' &&
+      score('vs-backstage-agent-surface',
+      'product:backstage').rules['tools-list-size'] == 'fail' &&
+      score('vs-backstage-agent-surface',
+      'product:backstage').rules['get-entity-size'] == 'fail'
+  - name: >-
+      vs-backstage-extensibility: a product that meets every bar reaches
+      bronze, and one that misses every bar stays at none
+    expect: >-
+      score('vs-backstage-extensibility', 'product:toolbox').level == 'bronze'
+      && score('vs-backstage-extensibility',
+      'product:toolbox').rules['any-language'] == 'pass' &&
+      score('vs-backstage-extensibility',
+      'product:toolbox').rules['without-rebuild'] == 'pass' &&
+      score('vs-backstage-extensibility', 'product:backstage').level == 'none'
+      && score('vs-backstage-extensibility',
+      'product:backstage').rules['any-language'] == 'fail' &&
+      score('vs-backstage-extensibility',
+      'product:backstage').rules['without-rebuild'] == 'fail'
+  - name: >-
+      vs-backstage-capabilities: a product that meets every bar reaches
+      bronze, and one that misses every bar stays at none
+    expect: >-
+      score('vs-backstage-capabilities', 'product:toolbox').level == 'bronze'
+      && score('vs-backstage-capabilities',
+      'product:toolbox').rules['catalog-browse'] == 'pass' &&
+      score('vs-backstage-capabilities', 'product:toolbox').rules['ownership']
+      == 'pass' && score('vs-backstage-capabilities',
+      'product:toolbox').rules['graph'] == 'pass' &&
+      score('vs-backstage-capabilities',
+      'product:toolbox').rules['docs-search'] == 'pass' &&
+      score('vs-backstage-capabilities', 'product:toolbox').rules['docs'] ==
+      'pass' && score('vs-backstage-capabilities',
+      'product:toolbox').rules['templates'] == 'pass' &&
+      score('vs-backstage-capabilities',
+      'product:toolbox').rules['scorecards'] == 'pass' &&
+      score('vs-backstage-capabilities', 'product:toolbox').rules['api-docs']
+      == 'pass' && score('vs-backstage-capabilities',
+      'product:toolbox').rules['kubernetes'] == 'pass' &&
+      score('vs-backstage-capabilities',
+      'product:toolbox').rules['notifications'] == 'pass' &&
+      score('vs-backstage-capabilities',
+      'product:toolbox').rules['permission-rule'] == 'pass' &&
+      score('vs-backstage-capabilities', 'product:toolbox').rules['mcp-read']
+      == 'pass' && score('vs-backstage-capabilities',
+      'product:toolbox').rules['community'] == 'pass' &&
+      score('vs-backstage-capabilities', 'product:backstage').level == 'none'
+      && score('vs-backstage-capabilities',
+      'product:backstage').rules['catalog-browse'] == 'fail' &&
+      score('vs-backstage-capabilities',
+      'product:backstage').rules['ownership'] == 'fail' &&
+      score('vs-backstage-capabilities', 'product:backstage').rules['graph']
+      == 'fail' && score('vs-backstage-capabilities',
+      'product:backstage').rules['docs-search'] == 'fail' &&
+      score('vs-backstage-capabilities', 'product:backstage').rules['docs'] ==
+      'fail' && score('vs-backstage-capabilities',
+      'product:backstage').rules['templates'] == 'fail' &&
+      score('vs-backstage-capabilities',
+      'product:backstage').rules['scorecards'] == 'fail' &&
+      score('vs-backstage-capabilities',
+      'product:backstage').rules['api-docs'] == 'fail' &&
+      score('vs-backstage-capabilities',
+      'product:backstage').rules['kubernetes'] == 'fail' &&
+      score('vs-backstage-capabilities',
+      'product:backstage').rules['notifications'] == 'fail' &&
+      score('vs-backstage-capabilities',
+      'product:backstage').rules['permission-rule'] == 'fail' &&
+      score('vs-backstage-capabilities',
+      'product:backstage').rules['mcp-read'] == 'fail' &&
+      score('vs-backstage-capabilities',
+      'product:backstage').rules['community'] == 'fail'

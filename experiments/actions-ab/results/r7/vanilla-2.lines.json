@@ -1,0 +1,12 @@
+{
+ "linesToMaintain": 1019,
+ "files": {
+  "alpha/.acme/actions/mark-deprecated.json": 31,
+  "org/.acme-state/runs/run-0001.json": 134,
+  "org/.acme-state/runs/run-0002.json": 134,
+  "org/.acme-state/runs/run-0003.json": 134,
+  "org/.gitignore": 2,
+  "org/acme": 574,
+  "org/acme.json": 10
+ }
+}

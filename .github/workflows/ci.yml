@@ -44,9 +44,11 @@ jobs:
           scripts/ci-tools.sh "$RUNNER_TEMP/tools" openfga actionlint scorecard
           echo "TOOLBOX_OPENFGA_BIN=$RUNNER_TEMP/tools/openfga" >> "$GITHUB_ENV"
           echo "$RUNNER_TEMP/tools" >> "$GITHUB_PATH"
-      - name: Tests that need OpenFGA (authz, .fga.yaml through the Authorizer)
-        # A missing binary fails these tests here instead of skipping them (tests-pass).
-        env: {TOOLBOX_REQUIRE_OPENFGA: "1"}
+      - name: >-
+          Tests that need OpenFGA (authz, .fga.yaml through the Authorizer) or
+          Landlock
+        # A missing binary or a kernel without Landlock fails these tests here instead of skipping them (tests-pass).
+        env: {TOOLBOX_REQUIRE_OPENFGA: "1", TOOLBOX_REQUIRE_LANDLOCK: "1"}
         run: cargo test --locked -p toolbox-authz -p toolbox-api
       - name: toolbox validate, test and derive on the reference portal
         run: |
@@ -124,7 +126,7 @@ jobs:
       - name: OTel testbed rubric (experiments/otel-testbed/scripts/score.sh)
         run: experiments/otel-testbed/scripts/score.sh
   acceptance:
-    # The acceptance scripts (M2–M4: Postgres, OpenFGA, connectors, a browser) in their own job, so a
+    # The acceptance scripts (M2–M5: Postgres, OpenFGA, connectors, a browser, actions) in their own job, so a
     # failure here doesn't hide the checks in `rust` that run after it.
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -135,6 +137,10 @@ jobs:
         run: rustup show active-toolchain
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - run: cargo build --locked
+      - name: >-
+          M5 acceptance (self-service actions in repos and through an org portal;
+          no network, no Postgres)
+        run: scripts/m5-acceptance.sh
       - name: OpenFGA from its release, SHA-256-pinned (D90)
         run: |
           scripts/ci-tools.sh "$RUNNER_TEMP/tools" openfga

@@ -4,8 +4,8 @@
 
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
-use std::collections::BTreeSet;
-use std::sync::Arc;
+use std::collections::{BTreeSet, HashMap};
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use tokio::sync::{Notify, watch};
 use toolbox_derive::{Derived, DerivedState, FullRecompute};
@@ -20,8 +20,69 @@ pub struct Published {
     pub derived: Arc<Derived>,
     pub recompute: Duration,
     pub published_at: std::time::SystemTime,
+    /// `Some` only on the instance that wrote this snapshot's tuples: a follower can ask OpenFGA
+    /// before the leader has written them, so it must not keep the answer.
+    pub decisions: Option<Decisions>,
+    pub by_field: FieldIndex,
 }
 
+/// Entity ids by the string value of one declared field of one kind, built for a snapshot the
+/// first time a list filters on that field.
+#[derive(Debug, Default)]
+pub struct FieldIndex(Mutex<HashMap<(String, String), Arc<IdsByValue>>>);
+
+/// Entity ids, in id order, by a field's string value.
+pub type IdsByValue = HashMap<String, Vec<String>>;
+
+impl FieldIndex {
+    /// Ids in id order for each value of `field` across entities of `kind`.
+    pub fn get(
+        &self,
+        derived: &Derived,
+        kind: &str,
+        field: &str,
+    ) -> Arc<HashMap<String, Vec<String>>> {
+        let key = (kind.to_owned(), field.to_owned());
+        if let Some(ix) = self.0.lock().unwrap().get(&key) {
+            return ix.clone();
+        }
+        let mut ix = IdsByValue::new();
+        for (id, e) in derived.entities.iter().filter(|(_, e)| e.kind == kind) {
+            if let Some(v) = e.fields.get(field).and_then(Value::as_str) {
+                ix.entry(v.to_owned()).or_default().push(id.clone());
+            }
+        }
+        let ix = Arc::new(ix);
+        self.0.lock().unwrap().insert(key, ix.clone());
+        ix
+    }
+}
+
+/// Authorization decisions made against one snapshot. Every tuple is derived, so tuples change
+/// only when a snapshot is published, and a decision holds for exactly the snapshot it was made
+/// in: unlike a TTL cache, a new entity or a revoked grant is never served stale.
+#[derive(Debug, Default)]
+pub struct Decisions(Mutex<HashMap<toolbox_authz::Tuple, bool>>);
+
+impl Decisions {
+    /// Bounds memory per snapshot; past it, decisions are still made, just not kept.
+    const MAX: usize = 200_000;
+
+    /// The decision made on `t` in this snapshot, if one was kept.
+    pub fn get(&self, t: &toolbox_authz::Tuple) -> Option<bool> {
+        self.0.lock().unwrap().get(t).copied()
+    }
+
+    /// Keep the decision on `t`, unless the snapshot already holds `MAX`.
+    pub fn put(&self, t: toolbox_authz::Tuple, allowed: bool) {
+        let mut m = self.0.lock().unwrap();
+        if m.len() < Self::MAX {
+            m.insert(t, allowed);
+        }
+    }
+}
+
+/// What every request handler shares: the manifest, the store, authorization and the published snapshot.
 pub struct AppState {
     pub hub: toolbox_connect::Hub,
     pub authn: toolbox_authz::authn::Authenticator,
@@ -34,8 +95,10 @@ pub struct AppState {
     pub current: watch::Sender<Option<Arc<Published>>>,
     pub changed: Notify,
     pub config: Config,
+    pub runs: crate::actions::Runs,
 }
 
+/// Server settings from the command line and the environment.
 #[derive(Debug, Clone)]
 pub struct Config {
     /// `dev` trusts `X-Toolbox-User` / `X-Toolbox-Connector`; production modes arrive in M3.
@@ -71,6 +134,7 @@ pub fn parse_min_snapshot(s: &str) -> Option<u64> {
 }
 
 impl AppState {
+    /// The snapshot published last, if any.
     pub fn snapshot(&self) -> Option<Arc<Published>> {
         self.current.borrow().clone()
     }
@@ -117,6 +181,7 @@ impl AppState {
         let snapshot_id = format!("{input_version}.{}", self.manifest_hash);
         let elapsed = started.elapsed();
         toolbox_telemetry::catalog::record_recompute(elapsed.as_secs_f64());
+        let mut tuples_written = false;
         if let Some(pg) = pg {
             let tuples: BTreeSet<(String, String, String)> = derived
                 .tuples
@@ -156,7 +221,10 @@ impl AppState {
                 full,
             };
             match pg.publish(&publication).await {
-                Ok(()) => *previous_tuples = Some(tuples),
+                Ok(()) => {
+                    *previous_tuples = Some(tuples);
+                    tuples_written = true;
+                }
                 Err(e) => tracing::error!(error = %e, "publish failed"),
             }
         }
@@ -179,7 +247,11 @@ impl AppState {
             let added: Vec<_> = now.difference(synced).cloned().collect();
             let removed: Vec<_> = synced.difference(&now).cloned().collect();
             match authz.sync_tuples(&added, &removed).await {
-                Ok(()) => *synced = now,
+                Ok(()) => {
+                    *synced = now;
+                    // With Postgres, OpenFGA reads the tuples the publish above wrote.
+                    tuples_written |= self.pg.is_none();
+                }
                 Err(e) => tracing::error!(error = %e, "authorization tuple sync failed"),
             }
         }
@@ -189,6 +261,8 @@ impl AppState {
             derived: Arc::new(derived),
             recompute: elapsed,
             published_at: std::time::SystemTime::now(),
+            decisions: tuples_written.then(Decisions::default),
+            by_field: FieldIndex::default(),
         });
         self.current.send_replace(Some(published));
     }

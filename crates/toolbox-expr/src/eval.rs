@@ -269,6 +269,25 @@ mod tests {
             |ctx| e.eval_in(ctx),
         );
         assert!(out.is_err(), "out of bounds: {out:?}");
+        for idx in ["'a'", "-1"] {
+            let e = Expr::compile(&format!("inbound.r[{idx}]")).unwrap();
+            let items = Arc::new(vec![ExprValue::from_json(&json!(1))]);
+            let out = with_vals(
+                &[],
+                vec![("inbound", crate::lazy_map([("r".to_string(), items)]))],
+                |ctx| e.eval_in(ctx),
+            );
+            assert!(out.is_err(), "inbound.r[{idx}]: {out:?}");
+        }
+    }
+
+    #[test]
+    fn map_keys_that_are_not_strings_become_json_strings() {
+        let m = Expr::compile("{1: 'i', 2u: 'u', true: 'b'}")
+            .unwrap()
+            .eval(&[])
+            .unwrap();
+        assert_eq!(m.to_json(), Ok(json!({"1": "i", "2": "u", "true": "b"})));
     }
 
     #[test]

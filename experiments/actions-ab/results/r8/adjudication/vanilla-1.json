@@ -1,0 +1,130 @@
+{
+ "run": "vanilla-1",
+ "C1": "holds",
+ "P1": {
+  "verdict": "holds",
+  "evidence": "git -C origins/<r>.git ls-tree -r main: alpha (1d44c76), beta (1a66b00) and gamma (8b0b02b) each commit .acme/actions/add-notice/{action.json,run.py,test_run.py} on main, inside the repository. action.json declares inputs, owners ann/bob and approval group release (members not listed in the repo)."
+ },
+ "P2": {
+  "verdict": "holds",
+  "evidence": "cd org; bin/acme request alpha add-notice --as ann with level=urgent (exit 2, invalid_inputs 'must be one of [info, warning]'), a 200-character message (exit 2, 'must be at most 160 characters, got 200'), and a message with a newline, both via --inputs-json '\\n' and a literal newline in -i (exit 2, 'must be one line'). No run created (state/runs stayed at 3). alpha main ee652b64 before and after."
+ },
+ "P3": {
+  "verdict": "holds",
+  "evidence": "ACME_USER=ann bin/acme preview beta add-notice -i level=info -i 'message=Probe: preview only, nothing should change.': exit 0, changes[0].diff on readme.md replaces line 1 '> **Info:** Releases now ship...' with '> **Info:** Probe: preview only, nothing should change.', with before/after sha256. beta main 2948ecb8 before and after; no run recorded. preview has no --as option ('unrecognized arguments: --as ann', exit 2); the handoff's preview command has none, and it names ACME_USER as the other way to give identity, so this is not counted as a fix."
+ },
+ "P4": {
+  "verdict": "holds",
+  "evidence": "From org/: bin/acme request gamma add-notice --as dave -i level=warning -i 'message=Probe: the release group approves this one.': exit 0, run-0004 awaiting_approval, requested_by dave. gamma main d5342d33 unchanged. approve run-0004 --as dave: exit 3 self_approval; --as ann: exit 3 not_an_approver; --as carol: exit 3 not_an_approver. gamma main still d5342d33; status awaiting_approval, approved_by null."
+ },
+ "P5": {
+  "verdict": "holds",
+  "evidence": "bin/acme approve run-0004 --as erin: exit 0, status succeeded, commit 281877c2 = origins/gamma.git main. main:README.md line 1 is '> **Warning:** Probe: the release group approves this one.', line 2 blank, and lines 3+ are identical (diff) to the root commit's README.md; the task's notice ('Graph extraction now lives...') occurs 0 times. Source: engine.py _execute pushes, then _observe calls gitops.fetch_main (git fetch of the origin's main into state/cache) and sets succeeded only if the observed README sha256 equals the approved one and the run commit is an ancestor of main; the record's 'observed' event (sha256 967179...) precedes 'succeeded'."
+ },
+ "P6": {
+  "verdict": "holds",
+  "evidence": "pre-receive hook (exit 1) in origins/alpha.git/hooks. bin/acme request alpha ... --as ann -i level=info -i 'message=Probe: the origin rejects this push.' -> run-0005; approve run-0005 --as dave: exit 1, status failed, reason push_rejected, push_output quotes '[remote rejected] (pre-receive hook declined)'. status run-0005: failed. alpha main ee652b64 before and after. Hook removed."
+ },
+ "P7": {
+  "verdict": "holds",
+  "evidence": "cd org && bin/acme list: exit 0, JSON actions[] = (alpha, add-notice), (beta, add-notice), (gamma, add-notice), read from each origin's main. P4 was requested from org/ with bin/acme request."
+ },
+ "P8": {
+  "verdict": "holds",
+  "evidence": "bin/acme record run-0004: requested_by dave, requested_at 16:01:25.901Z, approved_by erin, approved_at 16:01:28.671Z, inputs {level: warning, message: ...}, status/outcome succeeded with main commit, outcome_at 16:01:28.779Z, plus timestamped events for each refused approval (dave, ann, carol), approval, commit, push, observation and success."
+ },
+ "P9": {
+  "verdict": "holds",
+  "evidence": "Per the handoff: bin/acme group remove release erin --as ann (one command, one commit on origins/org.git 7fa18b4 -> bd9d727 changing groups.json), then git pull --rebase. bin/acme request beta ... --as ann -i level=info -i 'message=Probe: erin has left the release group.' -> run-0006; approve --as erin: exit 3 not_an_approver (members [dave], org_commit bd9d727); beta main unchanged (2948ecb8). approve --as dave: exit 0 succeeded (ebad85f9). beta main:readme.md is the probe notice, a blank line, then the imported readme.md (diff identical); the task's notice is gone."
+ },
+ "P10": {
+  "verdict": "holds",
+  "evidence": "Every step (list, preview, request, approve, status, record, group remove) ran as one non-interactive shell command, printed one JSON document, and used distinct exit codes (0 ok, 1 run failed, 2 invalid, 3 forbidden)."
+ },
+ "P11": {
+  "verdict": "holds",
+  "evidence": "Operated entirely from org/HANDOFF.md with bin/acme; nothing had to be started. No fixes. Source was read only for P5's evidence (engine.py _execute/_observe, gitops.fetch_main)."
+ },
+ "fixes": [],
+ "strikes": [
+  {
+   "path": "org/state/cache/org.git/FETCH_HEAD",
+   "lines": 1,
+   "reason": "git cache of an origin written by acme at run time (git-ignored state/)"
+  },
+  {
+   "path": "org/state/cache/org.git/HEAD",
+   "lines": 1,
+   "reason": "git cache of an origin written by acme at run time (git-ignored state/)"
+  },
+  {
+   "path": "org/state/cache/org.git/config",
+   "lines": 4,
+   "reason": "git cache of an origin written by acme at run time (git-ignored state/)"
+  },
+  {
+   "path": "org/state/cache/org.git/description",
+   "lines": 1,
+   "reason": "git cache of an origin written by acme at run time (git-ignored state/)"
+  },
+  {
+   "path": "org/state/cache/org.git/info/exclude",
+   "lines": 6,
+   "reason": "git cache of an origin written by acme at run time (git-ignored state/)"
+  },
+  {
+   "path": "org/state/cache/org.git/refs/heads/main",
+   "lines": 1,
+   "reason": "git cache of an origin written by acme at run time (git-ignored state/)"
+  },
+  {
+   "path": "org/state/cache/repos/alpha.git/FETCH_HEAD",
+   "lines": 1,
+   "reason": "git cache of an origin written by acme at run time (git-ignored state/)"
+  },
+  {
+   "path": "org/state/cache/repos/alpha.git/refs/heads/main",
+   "lines": 1,
+   "reason": "git cache of an origin written by acme at run time (git-ignored state/)"
+  },
+  {
+   "path": "org/state/cache/repos/beta.git/FETCH_HEAD",
+   "lines": 1,
+   "reason": "git cache of an origin written by acme at run time (git-ignored state/)"
+  },
+  {
+   "path": "org/state/cache/repos/beta.git/refs/heads/main",
+   "lines": 1,
+   "reason": "git cache of an origin written by acme at run time (git-ignored state/)"
+  },
+  {
+   "path": "org/state/cache/repos/gamma.git/FETCH_HEAD",
+   "lines": 1,
+   "reason": "git cache of an origin written by acme at run time (git-ignored state/)"
+  },
+  {
+   "path": "org/state/cache/repos/gamma.git/refs/heads/main",
+   "lines": 1,
+   "reason": "git cache of an origin written by acme at run time (git-ignored state/)"
+  },
+  {
+   "path": "org/state/runs/run-0001.json",
+   "lines": 140,
+   "reason": "run record written by acme at run time (git-ignored state/)"
+  },
+  {
+   "path": "org/state/runs/run-0002.json",
+   "lines": 114,
+   "reason": "run record written by acme at run time (git-ignored state/)"
+  },
+  {
+   "path": "org/state/runs/run-0003.json",
+   "lines": 114,
+   "reason": "run record written by acme at run time (git-ignored state/)"
+  }
+ ],
+ "linesBeforeStrikes": 1548,
+ "linesAfterStrikes": 1160,
+ "fullyPasses": true,
+ "notes": "C1 rerun by the adjudicator with score.py check before any probe: pass. The remaining lines are the engine (org/acme, 783 lines: engine, cli, store, gitops), its end-to-end tests (172), org config (groups/policy/repos.json, .gitignore, bin/acme) and alpha's action.json, run.py and test_run.py (beta's and gamma's identical copies and org/templates are not counted again by score.py). The audit log org/state/audit.jsonl is not counted by score.py (.jsonl), so needs no strike. Outside the probes: identity is asserted with --as and not authenticated, as the handoff states; preview takes no --as/identity, so previews are anonymous; 'group remove' rewrites groups.json in its own JSON layout (10 insertions, 2 deletions for one removal); anyone who can push to an origin bypasses the system (stated in the handoff). bin/acme audit --verify reports the hash chain intact (54 entries). Probe side effects left in the workspace: three new run records (run-0004 to run-0006), one commit on origins/gamma.git (P5), one on origins/beta.git (P9), one on origins/org.git (P9, erin removed), and the org checkout pulled to it."
+}

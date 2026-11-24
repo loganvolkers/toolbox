@@ -139,6 +139,7 @@ kinds:
 
 scorecards:
   - name: maintainer-crate
+    title: Rust crates
     kind: Crate
     description: >-
       Each Rust crate: documented, tested with assertions and enough tests for
@@ -255,6 +256,7 @@ scorecards:
     facets: {summary: public, details: public}
 
   - name: review-crate
+    title: Crates, reviewed by agents
     kind: Crate
     description: >-
       Agents' judgement of each crate against crate-design, advisory, with the

@@ -52,6 +52,27 @@ refresh of *specific* records, and a way to know **when the fresh data is visibl
 | **Remotely, serving HTTP** (optional) | Toolbox POSTs to the connector's `/control` endpoint | For connectors that already expose an endpoint and want push latency |
 | **On a schedule or in CI** (`once` mode) | On start, the connector drains its pending commands, runs them, reports completion, and exits | Cron, GitHub Actions or Cloud Run jobs; Toolbox can trigger such a run (e.g. `workflow_dispatch`) when a command is waiting |
 
+An in-image connector does not inherit the server's environment. It gets the process basics
+(`PATH`, `HOME`, locale, proxies, CA bundles, `RUST_LOG`, `GITHUB_API_URL`) and
+`TOOLBOX_CONNECTOR_CONFIG`, never `DATABASE_URL`, PATs or `TOOLBOX_SECRET_*`. Its own credentials
+reach it through its config (`token: ${env:GITHUB_TOKEN}`, `${secret:…}`).
+
+It still runs as the server's user, and a same-user process can read `/proc/<pid>/environ` of any
+dumpable process. So on Linux `toolbox serve` makes itself non-dumpable at start-up, and the
+OpenFGA co-process gets the same kind of allowlist plus its datastore URI in a `0600`
+`config.yaml` that is deleted once OpenFGA is up, not in its argv (`/proc/<pid>/cmdline` is
+readable by every local user). The same file gives OpenFGA a preshared key minted at start-up,
+so a local process that finds its loopback port cannot read or rewrite the authorization model.
+That leaves OpenFGA's memory, which holds both: Toolbox cannot make OpenFGA non-dumpable, and
+whether a same-user process may read it is the host's Yama setting, which an image cannot
+choose. So each in-image connector starts in its own Landlock domain
+(`crates/toolbox-api/src/confine.rs`): a process in one cannot ptrace, or open `/proc/<pid>/mem`
+or `environ` of, any process outside it, OpenFGA and other connectors included. Its files and
+network are unchanged. On a kernel without Landlock the connector starts unconfined and the
+server warns. `serve` also warns when the database URL arrives on `--database-url`, since argv
+is readable by every local user. A connector can still write any file the server's user can, and
+one that must not reach the database at all runs remotely, holding only its own token.
+
 ## 4. Messages
 
 All messages are JSON, versioned with the connector API (`v1`), and identical across transports.

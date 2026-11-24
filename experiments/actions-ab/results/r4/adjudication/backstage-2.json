@@ -1,0 +1,50 @@
+{
+  "run": "backstage-2",
+  "C1": "holds",
+  "P1": {
+    "verdict": "holds",
+    "evidence": "score.py check re-run before probing: pass true (all three present, firstLine, reason). `git --git-dir origins/<r>.git ls-tree -r main` shows .backstage/mark-deprecated.yaml and catalog-info.yaml (the <repo>-maintainers group) on main of alpha (added a9f4835), beta (f853a63) and gamma (7e52191). `bin/acme-actions --as ann list` reports definedIn {origin origins/<r>.git, branch main, commit <origin main>, path .backstage/mark-deprecated.yaml} for each. The scaffolder actions the Template's steps call (acme:git:commit-files, acme:git:verify-files) and the platform input contract (contracts.ts) are code in the Backstage app."
+  },
+  "P2": {
+    "verdict": "holds",
+    "evidence": "cwd org/. `bin/acme-actions --as ann request alpha --successor 'Acme/Bad Name' --reason 'A valid reason of more than twenty characters.'` -> exit 1, HTTP 400 invalid_inputs, 'successor \"Acme/Bad Name\" must match ^[a-z0-9-]+/[a-z0-9-]+$'. `... --successor acme/probe-valid --reason short` -> exit 1, 400 invalid_inputs, 'reason must be 20 to 200 characters (got 5)'. `runs` count 7 before and after (no run created). alpha main 5952fc12 before and after."
+  },
+  "P3": {
+    "verdict": "holds",
+    "evidence": "`bin/acme-actions --as ann preview beta --successor acme/probe-preview --reason 'Probe: preview must show the file and its content.'` -> exit 0, preview {changes [{path DEPRECATED.md, change update, diff}], noop false}, baseCommit 9d21614b, template ref. The git diff shows every line of the new file ('+# Deprecated: use acme/probe-preview', the blank context line, '+Probe: preview must show the file and its content.'); there is no separate content field, but the file is three lines, so the diff is the whole content. beta main 9d21614b before and after; runs count 7 before and after."
+  },
+  "P4": {
+    "verdict": "holds",
+    "evidence": "cwd org/. `bin/acme-actions --as ann request gamma --successor acme/probe-approval --reason 'Probe: approval needs a second maintainer.'` -> exit 0, run gamma-20261124125923-5d2a44 awaiting_approval, requestedBy user:default/ann. gamma main 29cec30e before and after the request. `--as ann approve` -> exit 1, 403 self_approval; `--as carol approve` -> exit 1, 403 not_a_maintainer. `status` after 3 s -> awaiting_approval, approvedBy null. gamma main still 29cec30e."
+  },
+  "P5": {
+    "verdict": "holds",
+    "evidence": "`bin/acme-actions --as bob approve gamma-20261124125923-5d2a44` -> running, approvedBy bob; `--as ann wait ... --timeout 120` -> exit 0, succeeded, outcome 'DEPRECATED.md observed on main at d818a64b', observedAt. origins/gamma.git main 29cec30e -> d818a64b; `git show main:DEPRECATED.md` = '# Deprecated: use acme/probe-approval', blank, the P4 reason; author ann, committer Acme Backstage, trailers Acme-Run/Requested-by/Approved-by. Source (backstage/packages/backend/src/acme/plugin.ts sync lines 453-475, observe lines 422-431; git.ts branchCommit/fileAt): when the scaffolder task ends, the plugin rev-parses refs/heads/<branch> of run.origin and reads each file with `git cat-file blob`, and calls finish('succeeded') only if the task completed and every file equals the approved content. The record's target.origin is /tmp/actions-ab/r4/backstage-2/origins/gamma.git, the bare origin."
+  },
+  "P6": {
+    "verdict": "holds",
+    "evidence": "Wrote origins/alpha.git/hooks/pre-receive (echo to stderr; exit 1), chmod +x. As ann: request alpha --successor acme/probe-reject -> run alpha-20261124125943-288bdc; `--as bob approve` -> running; `wait --timeout 120` -> exit 3, status failed, outcome 'step publish failed: Error: Push to main was rejected: remote: probe P6 ...', observedCommit 5952fc12. `status` -> failed. Hook removed (rm; only *.sample remain). alpha main 5952fc12 before and after."
+  },
+  "P7": {
+    "verdict": "holds",
+    "evidence": "From org/, `bin/acme-actions --as ann list` -> exit 0, actions [alpha, beta, gamma], each mark-deprecated with owner, maintainers [ann, bob] and definedIn. P4 was requested from org/ with `bin/acme-actions --as ann request gamma ...`."
+  },
+  "P8": {
+    "verdict": "holds",
+    "evidence": "`bin/acme-actions --as ann record gamma-20261124125923-5d2a44` -> run {requestedBy user:default/ann, requestedAt 12:59:23.876Z, approvedBy user:default/bob, approvedAt 12:59:30.836Z, inputs {successor acme/probe-approval, reason ...}, status succeeded, dispatchedAt, finishedAt 12:59:31.970Z, outcome {result succeeded, message, observedCommit d818a64b, observedAt 12:59:31.966Z}, preview}, template {ref, commit, digest}, target {origin, branch, files}, task log, and timestamped events: requested (ann), previewed, approval_refused (ann), approval_refused (carol), approved (bob), dispatched, observed, succeeded."
+  },
+  "P9": {
+    "verdict": "holds",
+    "evidence": "Every command above ran from a non-TTY shell with no prompts; identity by --as, inputs by --successor/--reason flags. Every command, including refusals, printed JSON (errors as {error, message, httpStatus}) with distinct exit codes (0 ok, 1 refused, 3 wait saw failed)."
+  },
+  "P10": {
+    "verdict": "holds",
+    "evidence": "Operated entirely from org/HANDOFF.md: its 'Start it' block (ready in about 6 s), its 'Use it' commands and its rejected-push recipe, verbatim apart from the inputs. No fix needed. Source read only for P5."
+  },
+  "fixes": [],
+  "strikes": [],
+  "linesBeforeStrikes": 1591,
+  "linesAfterStrikes": 1591,
+  "fullyPasses": true,
+  "notes": "No strikes: every file in the lines map is code or configuration (TypeScript plugin, contracts, catalog and scaffolder modules, the Python org CLI, Templates, catalog-info files, repositories.yaml, sandbox-tokens.json, app-config.local.yaml additions, .gitignore). The run's runtime data (backstage/.acme-data/, .acme-backend.log) is not in the map. Extra check outside the probes, the handoff's bypass recipe (ann POSTs /api/scaffolder/v2/tasks directly for template:default/alpha-mark-deprecated): my first attempt was still 'processing' after 4 s when I stopped the backend, and stayed 'processing' after a restart (left orphaned by my stop, not a run defect); a second attempt after the restart ended failed with '... Runs must be requested and approved through acme-actions.', and alpha main stayed 5952fc12 throughout. The bypass refusal took longer than a normal run (several seconds of polling). The handoff's preview/request syntax omits the action name (`--action` defaults to mark-deprecated). P5 rewrote gamma's DEPRECATED.md to the probe content, as the probe requires, so score.py check would now fail on gamma; C1 was checked before probing. Probe runs were added to backstage/.acme-data after the lines were measured. Backend stopped (tmux session r4-backstage-2-backend killed; port 7970 down)."
+}

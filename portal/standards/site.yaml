@@ -54,6 +54,7 @@ kinds:
 scorecards:
   # A page is part of the site when it is titled, described, linked, and reachable from the sidebar.
   - name: maintainer-site
+    title: Public docs pages
     kind: SitePage
     description: >-
       Each public docs page: titled, described, linked, reachable from the

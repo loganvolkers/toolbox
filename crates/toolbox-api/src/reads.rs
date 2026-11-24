@@ -75,6 +75,7 @@ fn incoming(s: &AppState, p: &Published, id: &str) -> Vec<(String, String)> {
     out
 }
 
+/// Query of `GET /v1/entities/{id}/graph`.
 #[derive(Deserialize)]
 pub struct GraphQuery {
     relation: Option<String>,
@@ -169,6 +170,7 @@ pub async fn graph(
         .into_response()
 }
 
+/// Query of `GET /v1/entities/{id}/explain`: one field or one rule.
 #[derive(Deserialize)]
 pub struct ExplainQuery {
     field: Option<String>,
@@ -345,6 +347,7 @@ pub async fn explain(
     )
 }
 
+/// Query of an action input's options: the entity and a search string.
 #[derive(Deserialize)]
 pub struct OptionsQuery {
     entity: String,
@@ -676,6 +679,7 @@ pub async fn scorecards(State(s): S, headers: HeaderMap) -> Response {
     Json(json!({"snapshot": p.snapshot_id, "scorecards": out})).into_response()
 }
 
+/// Query of `GET /v1/scorecards/{name}`: filters on one rule's outcome or on a level.
 #[derive(Deserialize)]
 pub struct ResultsQuery {
     /// Only entities where this rule has `outcome` (default `fail` when a rule is given).

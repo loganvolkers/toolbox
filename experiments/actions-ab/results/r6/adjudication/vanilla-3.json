@@ -1,0 +1,54 @@
+{
+ "run": "vanilla-3",
+ "C1": "holds",
+ "P1": {
+  "verdict": "holds",
+  "evidence": "git -C origins/<r>.git ls-tree -r main .acme: .acme/actions/mark-deprecated.json (plus .acme/README.md) on main of alpha (d12f684), beta (7d9b9ca) and gamma (45db566), committed inside each repository; the three definitions are identical (pattern, 20-200 length, approvers ann and bob, file template, verify files-on-branch). `bin/acme list` reads them from each origin."
+ },
+ "P2": {
+  "verdict": "holds",
+  "evidence": "alpha main def9db5 before. `bin/acme request alpha mark-deprecated --as ann -i 'successor=Acme/Bad Name' -i 'reason=<valid 42 chars>'` -> exit 2, {ok:false, kind invalid_input, successor must match pattern}. `... -i successor=acme/probe-valid -i reason=short` -> exit 2, reason must be at least 20 characters (got 5). No new run in state/runs. alpha main def9db5 after: unchanged."
+ },
+ "P3": {
+  "verdict": "holds",
+  "evidence": "beta main 8cffb4e before. `ACME_ACTOR=ann bin/acme preview beta mark-deprecated -i successor=acme/probe-preview -i 'reason=Probe: preview must show the file and content.'` -> exit 0, JSON preview: changes[{path DEPRECATED.md, operation modify, before, after '# Deprecated: use acme/probe-preview\\n\\nProbe: ...\\n', diff}], planDigest, approvers. No run created. beta main 8cffb4e after: unchanged. As in the handoff's example, preview takes no `--as` (argparse rejects it); identity was given through ACME_ACTOR, which the handoff names."
+ },
+ "P4": {
+  "verdict": "holds",
+  "evidence": "From /tmp/actions-ab/r6/vanilla-3/org, gamma main f75e292 before. `bin/acme request gamma mark-deprecated --as ann -i successor=acme/probe-approval -i 'reason=Probe: approval must come from another maintainer.'` -> exit 0, run-0004 awaiting_approval. gamma f75e292 after request. `bin/acme approve run-0004 --as ann` -> exit 3 permission_denied 'the requester cannot approve their own run'. `--as carol` -> exit 3 permission_denied 'carol is not a maintainer of gamma'. `bin/acme status run-0004` -> awaiting_approval; gamma main f75e292: unchanged."
+ },
+ "P5": {
+  "verdict": "holds",
+  "evidence": "`bin/acme approve run-0004 --as bob` -> exit 0, state succeeded, outcome {commit a00da49, observedHead a00da49, 'observed expected content on main'}. git -C origins/gamma.git show main:DEPRECATED.md = '# Deprecated: use acme/probe-approval\\n\\nProbe: approval must come from another maintainer.\\n'. Source: observe() (bin/acme 433-460) takes branch_head(origin) and read_blob() via `git --git-dir <origin.git> cat-file blob`, compares bytes with the expected content, and sets succeeded only when they match and the push did not fail. Events: started, pushed, observed, succeeded."
+ },
+ "P6": {
+  "verdict": "holds",
+  "evidence": "Wrote origins/alpha.git/hooks/pre-receive (exit 1). alpha main def9db5 before. Request as ann (successor acme/probe-reject) -> run-0005; `bin/acme approve run-0005 --as bob` -> exit 5, {ok:false, kind run_failed}, state failed, outcome.detail holds the hook's rejection. `bin/acme status run-0005` -> state failed, succeeded false. alpha main def9db5 after. Hook removed."
+ },
+ "P7": {
+  "verdict": "holds",
+  "evidence": "From org/: `bin/acme list --action mark-deprecated` -> exit 0, {ok:true, actions:[alpha, beta, gamma mark-deprecated]}. P4's request was made from org/."
+ },
+ "P8": {
+  "verdict": "holds",
+  "evidence": "`bin/acme record run-0004` -> requestedBy {person ann, at 13:54:54.825Z}; approvedBy {person bob, at 13:54:55.010Z, planDigest}; inputs {successor acme/probe-approval, reason ...}; outcome {result succeeded, at 13:54:55.169Z, commit}; startedAt, finishedAt; timestamped events requested(ann), approval_denied(ann), approval_denied(carol), approved(bob), started, pushed, observed, succeeded. `bin/acme audit --run run-0004` -> chainIntact true, 8 events."
+ },
+ "P9": {
+  "verdict": "holds",
+  "evidence": "Every probe command, invoked as the handoff documents (list, preview, request, approve, status, record, runs, audit), ran with stdin from /dev/null and printed JSON on stdout with stable exit codes (0, 2, 3, 5)."
+ },
+ "P10": {
+  "verdict": "holds",
+  "evidence": "Operated entirely from org/HANDOFF.md: nothing to start; every documented command worked. Source read only for P5. No fixes needed. tests/test_acme.py was not run (not needed by any probe)."
+ },
+ "fixes": [],
+ "strikes": [
+  {"path": "org/state/runs/run-0001.json", "lines": 122, "reason": "run record written by bin/acme while running (runtime state; git-ignored)"},
+  {"path": "org/state/runs/run-0002.json", "lines": 122, "reason": "run record written by bin/acme while running (runtime state; git-ignored)"},
+  {"path": "org/state/runs/run-0003.json", "lines": 122, "reason": "run record written by bin/acme while running (runtime state; git-ignored)"}
+ ],
+ "linesBeforeStrikes": 1219,
+ "linesAfterStrikes": 853,
+ "fullyPasses": true,
+ "notes": "A stdlib-only Python CLI (org/bin/acme, 625 lines) with no server. Kept: org/bin/acme, org/acme.json, org/.gitignore, org/tests/test_acme.py (an end-to-end test suite), alpha/.acme/actions/mark-deprecated.json (beta's and gamma's identical copies, and the .acme/README.md notes, are Markdown or copies and not counted by score.py). Minor defect outside the probes: the handoff's R8 row says every command, including usage errors, prints one JSON document on stdout, but an argparse usage error (e.g. `preview --as ann`) prints plain text to stderr. The second P2 attempt used successor acme/probe-valid because the probe names none. The adjudicator's probes left run-0004 (gamma's main now a00da49, successor acme/probe-approval) and run-0005 (failed) in org/state/runs/."
+}

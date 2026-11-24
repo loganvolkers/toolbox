@@ -54,6 +54,77 @@ pub fn binary() -> String {
     std::env::var("TOOLBOX_OPENFGA_BIN").unwrap_or_else(|_| "openfga".into())
 }
 
+/// The server's environment variables OpenFGA inherits: its own `OPENFGA_*` settings, Postgres TLS
+/// settings and system basics. Not `DATABASE_URL` or `TOOLBOX_*`: in-image connectors run as the
+/// same user and can read the environment of any process they share it with.
+fn openfga_env() -> impl Iterator<Item = (String, String)> {
+    std::env::vars().filter(|(k, _)| {
+        ["PATH", "TZ", "TMPDIR", "SSL_CERT_FILE", "SSL_CERT_DIR"].contains(&k.as_str())
+            || (k.starts_with("OPENFGA_")
+                && !k.starts_with("OPENFGA_DATASTORE_URI")
+                && !k.starts_with("OPENFGA_AUTHN"))
+            || k.starts_with("PGSSL")
+    })
+}
+
+/// A private directory holding OpenFGA's `config.yaml`, which it reads from its working directory
+/// at start-up. The datastore URI and the preshared key go there rather than into argv, which
+/// every local user can read in `/proc/<pid>/cmdline`, or the environment. Removed on drop, once
+/// OpenFGA has read it.
+struct ConfigDir(std::path::PathBuf);
+
+impl ConfigDir {
+    fn new(datastore: &Datastore, key: &str) -> Result<ConfigDir, String> {
+        let dir = std::env::temp_dir().join(format!(
+            "toolbox-openfga-{}-{}",
+            std::process::id(),
+            free_port()
+        ));
+        let mut builder = std::fs::DirBuilder::new();
+        #[cfg(unix)]
+        std::os::unix::fs::DirBuilderExt::mode(&mut builder, 0o700);
+        builder
+            .create(&dir)
+            .map_err(|e| format!("{}: {e}", dir.display()))?;
+        let quote = |s: &str| serde_json::to_string(s).expect("a string serialises");
+        let mut config = match datastore {
+            Datastore::Postgres(uri) => {
+                format!("datastore:\n  engine: postgres\n  uri: {}\n", quote(uri))
+            }
+            Datastore::Memory => "datastore:\n  engine: memory\n".to_owned(),
+        };
+        config += &format!(
+            "authn:\n  method: preshared\n  preshared:\n    keys: [{}]\n",
+            quote(key)
+        );
+        let mut options = std::fs::OpenOptions::new();
+        options.write(true).create_new(true);
+        #[cfg(unix)]
+        std::os::unix::fs::OpenOptionsExt::mode(&mut options, 0o600);
+        let dir = ConfigDir(dir);
+        std::io::Write::write_all(
+            &mut options
+                .open(dir.0.join("config.yaml"))
+                .map_err(|e| format!("{}: {e}", dir.0.display()))?,
+            config.as_bytes(),
+        )
+        .map_err(|e| format!("{}: {e}", dir.0.display()))?;
+        Ok(dir)
+    }
+
+    fn command(&self, bin: &str) -> Command {
+        let mut c = Command::new(bin);
+        c.current_dir(&self.0).env_clear().envs(openfga_env());
+        c
+    }
+}
+
+impl Drop for ConfigDir {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.0);
+    }
+}
+
 /// The answers of one batch-check response, in request order. A per-check error (e.g. a datastore
 /// timeout) is not a denial: it fails the batch, so the API answers 502 instead of pretending the
 /// entity doesn't exist. An absent `allowed` with no error is `false` (proto3 omits default values).
@@ -78,16 +149,14 @@ impl OpenFga {
         model: Value,
     ) -> Result<OpenFga, String> {
         let bin = binary();
+        // Any local process can reach the loopback port; only the server holds the key.
+        let key = crate::authn::new_pat().map_err(|e| format!("no random source: {e}"))?;
+        let config = ConfigDir::new(&datastore, &key)?;
         let mut args: Vec<String> = Vec::new();
-        if let Datastore::Postgres(uri) = &datastore {
-            let out = Command::new(&bin)
-                .args([
-                    "migrate",
-                    "--datastore-engine",
-                    "postgres",
-                    "--datastore-uri",
-                    uri,
-                ])
+        if let Datastore::Postgres(_) = &datastore {
+            let out = config
+                .command(&bin)
+                .args(["migrate", "--datastore-engine", "postgres"])
                 .output()
                 .await
                 .map_err(|e| format!("cannot run {bin}: {e}"))?;
@@ -97,12 +166,7 @@ impl OpenFga {
                     String::from_utf8_lossy(&out.stderr)
                 ));
             }
-            args.extend([
-                "--datastore-engine".into(),
-                "postgres".into(),
-                "--datastore-uri".into(),
-                uri.clone(),
-            ]);
+            args.extend(["--datastore-engine".into(), "postgres".into()]);
         } else {
             args.extend(["--datastore-engine".into(), "memory".into()]);
         }
@@ -117,7 +181,8 @@ impl OpenFga {
             "--log-level".into(),
             "warn".into(),
         ]);
-        let child = Command::new(&bin)
+        let child = config
+            .command(&bin)
             .arg("run")
             .args(&args)
             .stdout(Stdio::null())
@@ -126,8 +191,19 @@ impl OpenFga {
             .spawn()
             .map_err(|e| format!("cannot start {bin}: {e}"))?;
         let base = format!("http://127.0.0.1:{http_port}");
+        let mut auth = reqwest::header::HeaderValue::try_from(format!("Bearer {key}"))
+            .map_err(|e| e.to_string())?;
+        auth.set_sensitive(true);
+        let http = reqwest::Client::builder()
+            .default_headers(
+                [(reqwest::header::AUTHORIZATION, auth)]
+                    .into_iter()
+                    .collect(),
+            )
+            .build()
+            .map_err(|e| e.to_string())?;
         let mut fga = OpenFga {
-            http: reqwest::Client::new(),
+            http,
             base,
             store: String::new(),
             model_id: String::new(),
@@ -136,6 +212,7 @@ impl OpenFga {
             _child: Some(child),
         };
         fga.wait_healthy(Duration::from_secs(20)).await?;
+        drop(config);
         fga.store = fga
             .find_or_create_store(&self::store_name(store_name))
             .await?;
@@ -338,6 +415,19 @@ pub async fn install_tuple_view(pool: &sqlx::PgPool, store: &str) -> Result<(), 
     if !store.chars().all(|c| c.is_ascii_alphanumeric()) {
         return Err(format!("unexpected OpenFGA store id {store}"));
     }
+    let schema = tuple_schema(pool).await?;
+    let sql = tuple_view_sql(&schema, store);
+    // store was validated as ASCII alphanumeric above; AssertSqlSafe is sqlx 0.9's audited bypass.
+    sqlx::raw_sql(sqlx::AssertSqlSafe(sql))
+        .execute(pool)
+        .await
+        .map_err(|e| format!("installing the tuple view: {e}"))?;
+    Ok(())
+}
+
+/// The schema of the `tuple` relation OpenFGA reads on this connection (see
+/// [`install_tuple_view`]), validated as a plain identifier.
+async fn tuple_schema(pool: &sqlx::PgPool) -> Result<String, String> {
     let found: Option<String> = sqlx::query_scalar(
         r#"SELECT n.nspname::text
            FROM pg_class c
@@ -361,7 +451,12 @@ pub async fn install_tuple_view(pool: &sqlx::PgPool, store: &str) -> Result<(), 
             "unexpected schema for OpenFGA's tuple relation: {schema}"
         ));
     }
-    let sql = format!(
+    Ok(schema)
+}
+
+/// The statements that move OpenFGA's table aside and put the view and its indexes in its place.
+fn tuple_view_sql(schema: &str, store: &str) -> String {
+    format!(
         r#"
 DO $$ BEGIN
   IF EXISTS (
@@ -386,14 +481,14 @@ CREATE OR REPLACE VIEW {schema}.tuple AS
          md5(object || '|' || relation || '|' || subject) AS ulid,
          now() AS inserted_at
   FROM toolbox.derived_tuples;
+-- OpenFGA filters on the view's computed columns; these let Postgres use an index for them
+-- instead of scanning every tuple on every read of a check.
+CREATE INDEX IF NOT EXISTS derived_tuples_by_object ON toolbox.derived_tuples
+  (split_part(object, ':', 1), substr(object, strpos(object, ':') + 1), relation);
+CREATE INDEX IF NOT EXISTS derived_tuples_by_user ON toolbox.derived_tuples
+  (split_part(object, ':', 1), relation, subject);
 "#
-    );
-    // store was validated as ASCII alphanumeric above; AssertSqlSafe is sqlx 0.9's audited bypass.
-    sqlx::raw_sql(sqlx::AssertSqlSafe(sql))
-        .execute(pool)
-        .await
-        .map_err(|e| format!("installing the tuple view: {e}"))?;
-    Ok(())
+    )
 }
 
 #[cfg(test)]
@@ -411,5 +506,71 @@ mod tests {
         assert!(batch_results(&err, &chunk).unwrap_err().contains("timeout"));
         let missing = json!({"result": {"c0": {"allowed": true}}});
         assert!(batch_results(&missing, &chunk).is_err());
+    }
+
+    #[test]
+    fn the_datastore_uri_and_key_are_in_a_private_file_until_dropped() {
+        let uri = r#"postgres://u:p"w@db/x?sslmode=disable"#;
+        let dir = ConfigDir::new(&Datastore::Postgres(uri.into()), "k").unwrap();
+        let file = dir.0.join("config.yaml");
+        let text = std::fs::read_to_string(&file).unwrap();
+        assert!(
+            text.contains(r#"uri: "postgres://u:p\"w@db/x?sslmode=disable""#),
+            "{text}"
+        );
+        assert!(text.contains(r#"keys: ["k"]"#), "{text}");
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let mode = |p: &std::path::Path| std::fs::metadata(p).unwrap().permissions().mode();
+            assert_eq!(mode(&dir.0) & 0o777, 0o700);
+            assert_eq!(mode(&file) & 0o777, 0o600);
+        }
+        let path = dir.0.clone();
+        drop(dir);
+        assert!(!path.exists());
+    }
+
+    #[cfg(target_os = "linux")]
+    #[tokio::test]
+    async fn openfga_gets_no_server_credentials() {
+        if std::process::Command::new(binary())
+            .arg("version")
+            .output()
+            .is_err()
+        {
+            assert!(
+                std::env::var_os("TOOLBOX_REQUIRE_OPENFGA").is_none(),
+                "openfga binary not found and TOOLBOX_REQUIRE_OPENFGA is set"
+            );
+            eprintln!("skipping: openfga binary not found (set TOOLBOX_OPENFGA_BIN)");
+            return;
+        }
+        let model = crate::fga_dsl::to_json(
+            "model\n  schema 1.1\ntype user\ntype doc\n  relations\n    define viewer: [user]\n",
+        )
+        .unwrap();
+        let fga = OpenFga::start(Datastore::Memory, "env-test", model)
+            .await
+            .unwrap();
+        let pid = fga._child.as_ref().and_then(Child::id).unwrap();
+        let environ = std::fs::read(format!("/proc/{pid}/environ")).unwrap();
+        let allowed: std::collections::BTreeSet<String> = openfga_env().map(|(k, _)| k).collect();
+        for var in environ.split(|b| *b == 0).filter(|v| !v.is_empty()) {
+            let key = String::from_utf8_lossy(var.split(|b| *b == b'=').next().unwrap());
+            assert!(allowed.contains(key.as_ref()), "OpenFGA inherited {key}");
+        }
+        let cmdline =
+            String::from_utf8_lossy(&std::fs::read(format!("/proc/{pid}/cmdline")).unwrap())
+                .into_owned();
+        assert!(!cmdline.contains("datastore-uri"), "{cmdline}");
+        let anonymous = reqwest::Client::new()
+            .get(format!("{}/stores", fga.base))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(anonymous.status(), 401, "OpenFGA answers only the server");
+        let cwd = std::fs::read_link(format!("/proc/{pid}/cwd")).unwrap();
+        assert!(!cwd.join("config.yaml").exists(), "{}", cwd.display());
     }
 }

@@ -45,6 +45,7 @@ scorecards:
   # and no credential is pasted into the source". Lag, error rate and permission probes need a
   # live portal; they are the meta-catalog's connector-health and are not gated here.
   - name: maintainer-connector
+    title: First-party connectors
     kind: Connector
     description: >-
       Each first-party connector: configurable, speaking the protocol the

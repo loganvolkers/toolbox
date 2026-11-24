@@ -243,3 +243,80 @@ async fn facets_actions_and_revocation() {
     }
     eprintln!("revocation enforced after {:?}", started.elapsed());
 }
+
+#[tokio::test]
+async fn a_filter_cannot_probe_a_hidden_facet() {
+    let Some(url) = start().await else { return };
+    let list = |user: &'static str| {
+        let url = url.clone();
+        async move {
+            let r = reqwest::Client::new()
+                .get(format!("{url}/v1/entities"))
+                .query(&[
+                    ("kind", "User"),
+                    ("filter", "entity.email == 'alice@acme.example'"),
+                ])
+                .header("x-toolbox-user", user)
+                .send()
+                .await
+                .unwrap();
+            let v: Value = r.json().await.unwrap();
+            v["items"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|i| i["id"].as_str().unwrap().to_owned())
+                .collect::<Vec<_>>()
+        }
+    };
+    // User.email is owner-only: erin can't see alice's, so her filter on it matches nothing.
+    assert!(list("erin").await.is_empty());
+    // A portal admin sees the facet, so the same filter finds alice.
+    assert_eq!(list("dave").await, vec!["user:alice".to_owned()]);
+}
+
+#[tokio::test]
+async fn a_decision_never_outlives_its_snapshot() {
+    let Some(url) = start().await else { return };
+    let c = reqwest::Client::new();
+    let members = |m: &[&str]| {
+        json!([{"type": "record", "kind": "group", "externalId": "idp:group/payments",
+            "data": {"slug": "payments", "displayName": "Payments", "parent": "engineering",
+                     "githubTeam": "acme/payments", "members": m}}])
+    };
+    let details = |version: u64| {
+        let url = url.clone();
+        async move {
+            let (_, r) = get(
+                &format!(
+                    "{url}/v1/entities/repository:payments-api/scorecards?min_snapshot={version}"
+                ),
+                "alice",
+            )
+            .await;
+            r["scorecards"]["ownership"]["rules"]["redacted"] != true
+        }
+    };
+    let ingest = |body: Value| {
+        let (c, url) = (c.clone(), url.clone());
+        async move {
+            let r = c
+                .post(format!("{url}/v1/ingest"))
+                .header("x-toolbox-connector", "idp")
+                .json(&body)
+                .send()
+                .await
+                .unwrap();
+            r.json::<Value>().await.unwrap()["input_version"]
+                .as_u64()
+                .unwrap()
+        }
+    };
+    // Read twice so the second answer can come from a kept decision.
+    assert!(details(0).await && details(0).await);
+    // The first read at the next snapshot already reflects each change: no TTL to wait out.
+    let v = ingest(members(&[])).await;
+    assert!(!details(v).await, "revoked membership still allowed");
+    let v = ingest(members(&["alice"])).await;
+    assert!(details(v).await, "restored membership still denied");
+}

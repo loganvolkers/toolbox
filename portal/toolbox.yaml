@@ -144,6 +144,8 @@ connectors:
           - alerts
           - monitorAssessment
           - otlpTestbed
+        # Products compared by experiments/backstage-compare (docs/design/backstage-comparison.md)
+        - {kind: product, globs: [portal/comparisons/*.yaml]}
     records:
     - crate
     - doc
@@ -165,6 +167,7 @@ connectors:
     - sdlc-stage
     - observability
     - benchmark
+    - product
     refresh:
       crate: [external_ids]
       doc: [external_ids]
@@ -185,6 +188,7 @@ connectors:
       sdlc-stage: [external_ids]
       observability: [external_ids]
       benchmark: [external_ids]
+      product: [external_ids]
     freshness:
       crate: 5m
       doc: 5m
@@ -206,6 +210,7 @@ connectors:
       sdlc-stage: 5m
       observability: 5m
       benchmark: 5m
+      product: 5m
   - name: runner
     package: builtin:runner # executes things; slow, so it's refreshed per entity
     runtime: in-image

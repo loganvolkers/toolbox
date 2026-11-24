@@ -1,0 +1,64 @@
+{
+  "run": "gha-3",
+  "C1": "holds",
+  "P1": {
+    "verdict": "holds",
+    "evidence": "score.py check re-run before probing: pass true. `git --git-dir origins/<r>.git ls-tree -r --name-only main` lists .github/workflows/mark-deprecated.yml, .github/self-service.yml (declaration and environment reviewers ann, bob, prevent_self_review true), .github/scripts/apply-github-settings.py and CODEOWNERS (alpha root, beta/gamma .github/) on alpha (added a728658), beta (6266a51) and gamma (270b7f9). The workflow and self-service.yml are byte-identical across the three. org.git holds only acme, org.yml (repos, people, act path; approvers explicitly left to each repository), tests/e2e.sh and HANDOFF.md. `./acme list` reports definition_sha = each origin's main."
+  },
+  "P2": {
+    "verdict": "holds",
+    "evidence": "cwd org/. `./acme request --repo alpha --action mark-deprecated -f 'successor=Acme/Bad Name' -f 'reason=A valid reason that is long enough here.' --as ann` -> exit 2, ok false, run 4 state invalid, errors [validate job: \"successor must match ^[a-z0-9-]+/[a-z0-9-]+$ (got 'Acme/Bad Name')\"]. `... -f successor=acme/probe-valid -f reason=short --as ann` -> exit 2, run 5 invalid, 'reason must be 20 to 200 characters (got 5)'. Validation ran in the workflow's validate job under act. alpha main 2055d802 before and after. Each refusal leaves a run record in state invalid (cannot be approved)."
+  },
+  "P3": {
+    "verdict": "holds",
+    "evidence": "`./acme preview --repo beta --action mark-deprecated -f successor=acme/probe-preview -f 'reason=Probe: preview must show the file and its content.' --as ann` -> exit 0, valid true, preview {branch main, base_sha ab95d667, path DEPRECATED.md, change update, content '# Deprecated: use acme/probe-preview\\n\\nProbe: preview must show the file and its content.\\n', unified diff} plus the step-summary markdown. beta main ab95d667 before and after; no run record created."
+  },
+  "P4": {
+    "verdict": "holds",
+    "evidence": "cwd org/. `./acme request --repo gamma --action mark-deprecated -f successor=acme/probe-approval -f 'reason=Probe: approval needs a second maintainer.' --as ann` -> exit 0, run 6 waiting_for_approval, requested_by ann, preview change update. gamma main ba19857e before and after the request. `./acme approve 6 --as ann` -> exit 3, 'ann requested this run and cannot approve it (prevent self-review)'. `./acme approve 6 --as carol` -> exit 3, \"carol is not a required reviewer of the 'deprecation' environment of acme/gamma (reviewers: ann, bob)\". `./acme status 6` -> waiting_for_approval, approved_by null. gamma main still ba19857e."
+  },
+  "P5": {
+    "verdict": "holds",
+    "evidence": "`./acme approve 6 --as bob --comment ok` -> exit 0, state succeeded, outcome {detail 'DEPRECATED.md has the expected content on main at ae323ded', main_sha ae323ded}. origins/gamma.git main ba19857e -> ae323ded; `git show main:DEPRECATED.md` = '# Deprecated: use acme/probe-approval', blank line, the P4 reason; committer github-actions[bot], trailers Requested-by: ann, Workflow-run: acme run 6. Source (org/acme execute(), lines 505-522; mirror() lines 148-158): after act's apply job it fetches the origin's main into .state/mirrors/<repo>.git, `git show <sha>:DEPRECATED.md`, compares to the previewed content; succeeded requires the gated job succeeded and this observation matches."
+  },
+  "P6": {
+    "verdict": "holds",
+    "evidence": "Wrote origins/alpha.git/hooks/pre-receive (echo to stderr; exit 1), chmod +x. `./acme request --repo alpha --action mark-deprecated -f successor=acme/probe-reject -f 'reason=Probe: a rejected push must not succeed.' --as ann` -> run 7 waiting_for_approval. `./acme approve 7 --as bob` -> exit 4, ok false, state failed, outcome 'the apply job failed (step failed: Commit and push to main)', errors include '[remote rejected] HEAD -> main (pre-receive hook declined)', main_sha 2055d802. `./acme status 7` -> failed. Hook removed (only *.sample remain). alpha main 2055d802 before and after."
+  },
+  "P7": {
+    "verdict": "holds",
+    "evidence": "From org/, `./acme list` -> exit 0, ok true, actions for acme/alpha, acme/beta and acme/gamma, each mark-deprecated with definition_sha, workflow, inputs, gated job and environment (deprecation, reviewers ann/bob, prevent_self_review). P4 was requested from org/ with `./acme request --repo gamma ...`."
+  },
+  "P8": {
+    "verdict": "holds",
+    "evidence": "`./acme record 6` -> record {requested_by ann, requested_at 13:22:52.007Z, approved_by bob, approved_at 13:22:55.829Z, inputs {successor acme/probe-approval, reason ...}, outcome {state succeeded, at 13:22:56.292Z, detail, main_sha}} and timestamped events: requested (ann), validated, previewed, waiting_for_approval, approval_denied (ann), approval_denied (carol), approved (bob), apply_started, apply_job_finished, observed, succeeded."
+  },
+  "P9": {
+    "verdict": "holds",
+    "evidence": "Every probe command ran from a non-TTY shell with stdin </dev/null; identity by --as, inputs by -f flags; act runs in host mode inside the CLI. Each printed one JSON document with ok true/false, including a usage error (`request --repo alpha --bogus` -> JSON {error, usage}, exit 2) and an unknown run (exit 5). Exit codes distinct: 0 ok, 2 invalid/usage, 3 not permitted, 4 run failed, 5 not found."
+  },
+  "P10": {
+    "verdict": "holds",
+    "evidence": "Operated entirely from org/HANDOFF.md's Commands and Testing it sections: nothing to start, no PATH or port change. Run ids came from `.run.id` of request, as the handoff's approval example shows. Source read only for P5."
+  },
+  "fixes": [],
+  "strikes": [
+    {"path": "org/.state/mirrors/alpha.git/FETCH_HEAD", "lines": 1, "reason": "git mirror acme fetches at run time (gitignored .state/)"},
+    {"path": "org/.state/mirrors/alpha.git/HEAD", "lines": 1, "reason": "git mirror acme fetches at run time"},
+    {"path": "org/.state/mirrors/alpha.git/config", "lines": 4, "reason": "git mirror acme fetches at run time"},
+    {"path": "org/.state/mirrors/alpha.git/description", "lines": 1, "reason": "git mirror acme fetches at run time"},
+    {"path": "org/.state/mirrors/alpha.git/info/exclude", "lines": 6, "reason": "git mirror acme fetches at run time"},
+    {"path": "org/.state/mirrors/alpha.git/refs/heads/main", "lines": 1, "reason": "git mirror acme fetches at run time"},
+    {"path": "org/.state/mirrors/beta.git/FETCH_HEAD", "lines": 1, "reason": "git mirror acme fetches at run time"},
+    {"path": "org/.state/mirrors/beta.git/refs/heads/main", "lines": 1, "reason": "git mirror acme fetches at run time"},
+    {"path": "org/.state/mirrors/gamma.git/FETCH_HEAD", "lines": 1, "reason": "git mirror acme fetches at run time"},
+    {"path": "org/.state/mirrors/gamma.git/refs/heads/main", "lines": 1, "reason": "git mirror acme fetches at run time"},
+    {"path": "org/.state/runs/1.json", "lines": 109, "reason": "run record written by acme at run time"},
+    {"path": "org/.state/runs/2.json", "lines": 109, "reason": "run record written by acme at run time"},
+    {"path": "org/.state/runs/3.json", "lines": 109, "reason": "run record written by acme at run time"}
+  ],
+  "linesBeforeStrikes": 1359,
+  "linesAfterStrikes": 1014,
+  "fullyPasses": true,
+  "notes": "Kept: org/acme (572), alpha/.github/workflows/mark-deprecated.yml (178), alpha/.github/scripts/apply-github-settings.py (75), alpha/.github/self-service.yml (20), CODEOWNERS (alpha 4, beta/.github 4), org/org.yml (18), org/.gitignore (2), and org/tests/e2e.sh (141), kept because it is a test script a person would keep, not scratch output. beta's and gamma's copies of the action are byte-identical to alpha's, so score.py counted them once. No probe was credited: approval is configured as code for GitHub (environment deprecation with reviewers and prevent_self_review via apply-github-settings.py) and also enforced locally by acme, and every probe held locally. tests/e2e.sh was not run by the adjudicator (not a probe). The handoff states its own limits: no blocking pull-request rule on main, so CODEOWNERS review is advisory on GitHub; an interrupted approve leaves a run in 'running' with no recovery. Each invalid request leaves an 'invalid' run record. P5 rewrote gamma's DEPRECATED.md to the probe content (as the probe requires), so score.py check would now fail on gamma; C1 was checked before probing. Probe runs 4-7 were added to org/.state after the lines were measured. No processes were started (no server); none left running."
+}

@@ -1,6 +1,7 @@
 //! REST API (docs/v1-spec.md §7.2), M2 subset: entities, scorecards, native writes, ingest,
 //! snapshot info, health, metrics and the operator export used for differential checks.
 
+use crate::access::{Caller, Visibility};
 use crate::state::{AppState, Published, parse_min_snapshot};
 use axum::body::Bytes;
 use axum::extract::{Path, Query, State};
@@ -18,6 +19,7 @@ use toolbox_store::NativeValue;
 
 type S = State<Arc<AppState>>;
 
+/// Every HTTP route the server answers: health, the REST API, `/mcp` and the UI.
 pub fn router(state: Arc<AppState>) -> Router {
     Router::new()
         .route("/healthz", get(|| async { "ok" }))
@@ -70,6 +72,12 @@ pub fn router(state: Arc<AppState>) -> Router {
         .fallback(crate::ui::asset)
         .route("/v1/actions", get(crate::actions::list))
         .route("/v1/actions/{name}/previews", post(crate::actions::preview))
+        .route("/v1/actions/{name}/runs", post(crate::actions::create_run))
+        .route("/v1/runs", get(crate::actions::list_runs))
+        .route("/v1/runs/{id}", get(crate::actions::get_run))
+        .route("/v1/runs/{id}/approvals", post(crate::actions::approve))
+        .route("/v1/runs/{id}/cancel", post(crate::actions::cancel))
+        .route("/v1/runs/{id}/verify", post(crate::actions::verify))
         .layer(axum::middleware::from_fn(crate::http_trace::layer))
         .with_state(state)
 }
@@ -131,8 +139,19 @@ async fn snapshot_for(state: &AppState, min: Option<&str>) -> Result<Arc<Publish
     }
 }
 
+/// Ready once a snapshot is published and, for a portal with federation children, once that
+/// snapshot holds the first read of them, so a preview right after start finds their actions.
 async fn readyz(State(s): S) -> Response {
+    let children = crate::connectors::reads_children(&s);
+    let read = s
+        .hub
+        .first_sync(toolbox_model::federation::CONNECTOR, "portal");
     match s.snapshot() {
+        Some(p) if children && read.is_none_or(|v| p.input_version < v) => problem(
+            StatusCode::SERVICE_UNAVAILABLE,
+            "reading-children",
+            "waiting for the first read of the federation children",
+        ),
         Some(p) => Json(json!({"ready": true, "snapshot": p.snapshot_id})).into_response(),
         None => problem(
             StatusCode::SERVICE_UNAVAILABLE,
@@ -184,6 +203,129 @@ struct ListQuery {
     min_snapshot: Option<String>,
 }
 
+/// Candidates for a list in id order from the cursor, of the kind and matching `q`. Visibility is
+/// checked later in batches; filters see only what the caller may see, so a filter can't probe
+/// hidden facets.
+fn list_candidates<'a>(s: &AppState, p: &'a Published, q: &ListQuery) -> Vec<&'a String> {
+    let needle = q.q.as_deref().map(str::to_lowercase);
+    let lower = q
+        .cursor
+        .as_ref()
+        .map_or(std::ops::Bound::Unbounded, std::ops::Bound::Excluded);
+    // A filter that requires `entity.<field> == '<value>'` matches only entities whose field has
+    // that value (a redacted field is an object, never a string), so start from those. Only when
+    // `kind` names exactly one kind, and never for `id`, which the filter sees as the entity id.
+    let kind = q.kind.as_deref().and_then(|k| {
+        let mut named = s
+            .manifest
+            .kinds
+            .iter()
+            .filter(|m| m.name.eq_ignore_ascii_case(k));
+        named.next().filter(|_| named.next().is_none())
+    });
+    let posting = kind.and_then(|k| {
+        q.filter
+            .as_deref()
+            .map(toolbox_expr::analysis::required_equalities)
+            .unwrap_or_default()
+            .into_iter()
+            .filter(|(f, _)| f != "id" && k.fields.contains_key(f))
+            .map(|(f, v)| (p.by_field.get(&p.derived, &k.name, &f), v))
+            .min_by_key(|(ix, v)| ix.get(v).map_or(0, Vec::len))
+    });
+    let start: Box<dyn Iterator<Item = (&String, &toolbox_derive::Entity)>> = match &posting {
+        Some((ix, v)) => {
+            let ids = ix.get(v).map_or(&[][..], Vec::as_slice);
+            let from = match &lower {
+                std::ops::Bound::Excluded(c) => ids.partition_point(|id| id <= *c),
+                _ => 0,
+            };
+            Box::new(
+                ids[from..]
+                    .iter()
+                    .filter_map(|id| p.derived.entities.get_key_value(id)),
+            )
+        }
+        None => Box::new(
+            p.derived
+                .entities
+                .range::<String, _>((lower, std::ops::Bound::Unbounded)),
+        ),
+    };
+    start
+        .filter(|(_, e)| {
+            q.kind
+                .as_deref()
+                .is_none_or(|k| k.eq_ignore_ascii_case(&e.kind))
+        })
+        .filter(|(id, e)| {
+            needle.as_ref().is_none_or(|n| {
+                let title = e
+                    .fields
+                    .get("title")
+                    .and_then(Value::as_str)
+                    .unwrap_or_default()
+                    .to_lowercase();
+                id.to_lowercase().contains(n) || title.contains(n)
+            })
+        })
+        .map(|(id, _)| id)
+        .collect()
+}
+
+/// A list filter, evaluated against what the caller may see of each entity.
+struct ListFilter<'a> {
+    s: &'a AppState,
+    p: &'a Published,
+    caller: &'a Caller,
+    expr: &'a Expr,
+    policy: ExprValue,
+    truthy: ExprValue,
+    wants_scores: bool,
+}
+
+impl ListFilter<'_> {
+    fn matches(&self, id: &str, v: Visibility) -> bool {
+        let (s, p) = (self.s, self.p);
+        let mut visible = Value::Object(s.visible_fields(p, self.caller, id, v, None).unwrap());
+        visible["id"] = json!(id);
+        let entity = ExprValue::from_json(&visible);
+        // `scores['<scorecard>']` = {level, rules: {rule: outcome}}, as the caller may see it.
+        let scores = if self.wants_scores {
+            ExprValue::from_json(&score_outcomes(s.shape_scores(p, self.caller, id, v)))
+        } else {
+            ExprValue::from_json(&json!({}))
+        };
+        matches!(
+            with_vars(
+                &[
+                    ("entity", &entity),
+                    ("policy", &self.policy),
+                    ("scores", &scores),
+                ],
+                |ctx| self.expr.eval_in(ctx),
+            ),
+            Ok(b) if b == self.truthy
+        )
+    }
+
+    /// What a viewer sees is the summary or the whole entity, so an entity the filter rejects in
+    /// both shapes can't match: drop it before asking the authorizer. The result is the same.
+    fn may_match(&self, id: &str) -> bool {
+        let whole = Visibility {
+            view: true,
+            details: true,
+        };
+        let summary = Visibility {
+            view: true,
+            details: false,
+        };
+        // Scores' rule outcomes are owner-only by default, so they can differ by shape too.
+        let differ = self.wants_scores || self.s.hides_details(&self.p.derived.entities[id].kind);
+        self.matches(id, whole) || (differ && self.matches(id, summary))
+    }
+}
+
 async fn list_entities(State(s): S, headers: HeaderMap, Query(q): Query<ListQuery>) -> Response {
     let caller = match s.caller(&headers).await {
         Ok(c) => c,
@@ -208,42 +350,27 @@ async fn list_entities(State(s): S, headers: HeaderMap, Query(q): Query<ListQuer
         .as_deref()
         .map(|f| f.split(',').map(str::trim).collect());
     let limit = q.limit.unwrap_or(100).clamp(1, 1000);
-    let policy = ExprValue::from_json(&Value::Object(s.manifest.policies.clone()));
-    let needle = q.q.as_deref().map(str::to_lowercase);
-    // Candidates in id order from the cursor; visibility is checked in batches; filters see only
-    // what the caller may see, so a filter can't probe hidden facets.
-    let lower = q
-        .cursor
-        .as_ref()
-        .map_or(std::ops::Bound::Unbounded, std::ops::Bound::Excluded);
-    let candidates: Vec<&String> = p
-        .derived
-        .entities
-        .range::<String, _>((lower, std::ops::Bound::Unbounded))
-        .filter(|(_, e)| {
-            q.kind
-                .as_deref()
-                .is_none_or(|k| k.eq_ignore_ascii_case(&e.kind))
-        })
-        .filter(|(id, e)| {
-            needle.as_ref().is_none_or(|n| {
-                let title = e
-                    .fields
-                    .get("title")
-                    .and_then(Value::as_str)
-                    .unwrap_or_default()
-                    .to_lowercase();
-                id.to_lowercase().contains(n) || title.contains(n)
-            })
-        })
-        .map(|(id, _)| id)
-        .collect();
-    let truthy = ExprValue::from_json(&Value::Bool(true));
-    let wants_scores = q.filter.as_deref().is_some_and(|f| f.contains("scores"));
+    let candidates = list_candidates(&s, &p, &q);
+    let matcher = filter.as_ref().map(|expr| ListFilter {
+        s: &s,
+        p: &p,
+        caller: &caller,
+        expr,
+        policy: ExprValue::from_json(&Value::Object(s.manifest.policies.clone())),
+        truthy: ExprValue::from_json(&Value::Bool(true)),
+        wants_scores: q.filter.as_deref().is_some_and(|f| f.contains("scores")),
+    });
+    // Lazily, so a page stops reading candidates once it is full.
+    let mut pending = candidates
+        .into_iter()
+        .filter(|id| matcher.as_ref().is_none_or(|m| m.may_match(id)));
     let mut items: Vec<Value> = Vec::new();
     let mut next = None;
-    'outer: for chunk in candidates.chunks(200) {
-        let ids: Vec<&str> = chunk.iter().map(|s| s.as_str()).collect();
+    'outer: loop {
+        let ids: Vec<&str> = pending.by_ref().take(200).map(String::as_str).collect();
+        if ids.is_empty() {
+            break;
+        }
         let vis = match s.visibility(&caller, &ids).await {
             Ok(v) => v,
             Err(r) => return r,
@@ -252,28 +379,10 @@ async fn list_entities(State(s): S, headers: HeaderMap, Query(q): Query<ListQuer
             if !v.view {
                 continue;
             }
-            if let Some(f) = &filter {
-                let shaped = s.shape_entity(&p, &caller, id, v, None).unwrap();
-                let mut visible = shaped["fields"].clone();
-                visible["id"] = json!(id);
-                let entity = ExprValue::from_json(&visible);
-                // `scores['<scorecard>']` = {level, rules: {rule: outcome}}, as the caller may see it.
-                let scores = if wants_scores {
-                    ExprValue::from_json(&score_outcomes(s.shape_scores(&p, &caller, id, v)))
-                } else {
-                    ExprValue::from_json(&json!({}))
-                };
-                match with_vars(
-                    &[
-                        ("entity", &entity),
-                        ("policy", &policy),
-                        ("scores", &scores),
-                    ],
-                    |ctx| f.eval_in(ctx),
-                ) {
-                    Ok(b) if b == truthy => {}
-                    _ => continue,
-                }
+            if let Some(m) = &matcher
+                && !m.matches(id, v)
+            {
+                continue;
             }
             if items.len() == limit {
                 next = items

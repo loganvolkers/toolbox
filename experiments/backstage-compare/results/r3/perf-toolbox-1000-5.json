@@ -1,0 +1,43 @@
+{
+  "arm": "toolbox",
+  "components": 1000,
+  "readyS": 0.93,
+  "catalogReadableS": 1.55,
+  "rssIdleMb": 89.8,
+  "rssLoadedMb": 127.7,
+  "rssAfterLoadMb": 125.9,
+  "recoveredS": 0.77,
+  "ownersDigest": "d35083868bd20f8ac9b6a8fa550a3807f7a29c0f167d96dcd3a7b09c2eb59013",
+  "reads": [
+    {
+      "url": "get",
+      "distinct": 1000,
+      "rps": 145340.1,
+      "p50ms": 0.09,
+      "p95ms": 0.24,
+      "p99ms": 0.37,
+      "ok": 1.0,
+      "codes": {
+        "200": 1453969
+      },
+      "errors": {
+        "aborted due to deadline": 15
+      }
+    },
+    {
+      "url": "list",
+      "distinct": 50,
+      "rps": 24014.4,
+      "p50ms": 0.65,
+      "p95ms": 1.06,
+      "p99ms": 1.88,
+      "ok": 1.0,
+      "codes": {
+        "200": 240177
+      },
+      "errors": {
+        "aborted due to deadline": 12
+      }
+    }
+  ]
+}

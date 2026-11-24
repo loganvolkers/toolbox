@@ -727,6 +727,129 @@
       "usage": "toolbox report [OPTIONS] [PATH]"
     },
     {
+      "name": "run",
+      "about": "Preview and run a self-service action without a server, in a repo or parent portal: `toolbox run` lists the actions, `toolbox run <action> --input k=v` previews (effects and a confirm token), `--confirm <token>` runs it and verifies its postcondition, and a child portal's actions are dispatched to the child (federation)",
+      "mcpTool": null,
+      "args": [
+        {
+          "name": "action",
+          "long": null,
+          "positional": true
+        },
+        {
+          "name": "portal",
+          "long": "portal",
+          "positional": false
+        },
+        {
+          "name": "entity",
+          "long": "entity",
+          "positional": false
+        },
+        {
+          "name": "input",
+          "long": "input",
+          "positional": false
+        },
+        {
+          "name": "inputs",
+          "long": "inputs",
+          "positional": false
+        },
+        {
+          "name": "preview",
+          "long": "preview",
+          "positional": false
+        },
+        {
+          "name": "confirm",
+          "long": "confirm",
+          "positional": false
+        },
+        {
+          "name": "yes",
+          "long": "yes",
+          "positional": false
+        },
+        {
+          "name": "verify",
+          "long": "verify",
+          "positional": false
+        },
+        {
+          "name": "wait",
+          "long": "wait",
+          "positional": false
+        },
+        {
+          "name": "runs",
+          "long": "runs",
+          "positional": false
+        },
+        {
+          "name": "url",
+          "long": "url",
+          "positional": false
+        },
+        {
+          "name": "token",
+          "long": "token",
+          "positional": false
+        },
+        {
+          "name": "approve",
+          "long": "approve",
+          "positional": false
+        },
+        {
+          "name": "reject",
+          "long": "reject",
+          "positional": false
+        },
+        {
+          "name": "note",
+          "long": "note",
+          "positional": false
+        },
+        {
+          "name": "record",
+          "long": "record",
+          "positional": false
+        },
+        {
+          "name": "as_user",
+          "long": "as",
+          "positional": false
+        },
+        {
+          "name": "skip",
+          "long": "skip",
+          "positional": false
+        },
+        {
+          "name": "fixtures",
+          "long": "fixtures",
+          "positional": false
+        },
+        {
+          "name": "output",
+          "long": "output",
+          "positional": false
+        },
+        {
+          "name": "parent_run",
+          "long": "parent-run",
+          "positional": false
+        },
+        {
+          "name": "grant",
+          "long": "grant",
+          "positional": false
+        }
+      ],
+      "usage": "toolbox run [OPTIONS] [ACTION]"
+    },
+    {
       "name": "score",
       "about": "Scorecard levels and rule outcomes for one entity",
       "mcpTool": "scorecard_status",
@@ -864,13 +987,23 @@
           "name": "fixtures",
           "long": "fixtures",
           "positional": false
+        },
+        {
+          "name": "detach",
+          "long": "detach",
+          "positional": false
+        },
+        {
+          "name": "stop",
+          "long": "stop",
+          "positional": false
         }
       ],
       "usage": "toolbox serve [OPTIONS] [PATH]"
     },
     {
       "name": "test",
-      "about": "Recompute derived state from the portal's fixtures and run its expectation files (tests/*.test.yaml). Exit code 1 if any expectation fails",
+      "about": "Recompute derived state from the portal's fixtures and run its expectation files (tests/*.test.yaml), and the action cases its manifest lists under `tests`. Exit code 1 if any expectation fails",
       "mcpTool": null,
       "args": [
         {
@@ -1038,6 +1171,10 @@
       ]
     },
     {
+      "name": "get_run",
+      "cliCommands": []
+    },
+    {
       "name": "graph",
       "cliCommands": [
         "graph"
@@ -1048,6 +1185,10 @@
       "cliCommands": [
         "actions"
       ]
+    },
+    {
+      "name": "list_runs",
+      "cliCommands": []
     },
     {
       "name": "owner_of",
@@ -1070,6 +1211,10 @@
       "cliCommands": [
         "refresh"
       ]
+    },
+    {
+      "name": "run_action",
+      "cliCommands": []
     },
     {
       "name": "scorecard_report",

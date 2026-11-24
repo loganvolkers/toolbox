@@ -1,0 +1,184 @@
+# Facts about each product that no script measures, each with its evidence. Backstage evidence is
+# from backstage/backstage at v1.57.1 unless it says otherwise. A capability is true when the
+# default install, a first-party package or a community add-on does it (RESEARCH.md §1.2: an
+# add-on is recorded with its source). Each product is judged as it ships to production: the
+# container image for Toolbox, the create-app Dockerfile's configuration for Backstage.
+# snapshot.py merges these with the measured facts into portal/comparisons/.
+toolbox:
+  loopbackByDefault:
+    value: false
+    evidence: >-
+      the image sets PORT=8080 (image/Dockerfile), so it binds 0.0.0.0:8080
+      (crates/toolbox-cli/src/server.rs: listen_addr); off loopback it
+      defaults to token auth (D01M857ZB3FZJZWX8G3BF5W1RNR). The bare binary
+      binds 127.0.0.1:8080, but that is not how it ships
+  ownerOnlyFields:
+    value: true
+    evidence: >-
+      facets hide fields behind can_view_details, and a filter cannot probe
+      them (crates/toolbox-api/tests/authz.rs: facets_actions_and_revocation,
+      a_filter_cannot_probe_a_hidden_facet)
+  extensionProcessIsolated:
+    value: true
+    evidence: >-
+      a connector is its own process, supervised or remote, and writes only
+      through /v1/ingest (docs/design/connector-control.md)
+  extensionCredentialIsolated:
+    value: false
+    evidence: >-
+      a supervised connector starts with a cleared environment plus an
+      allowlist (crates/toolbox-api/src/connectors.rs:
+      connectors_inherit_no_server_credentials), and the server is
+      non-dumpable (crates/toolbox-cli/tests/serve.rs). But an in-image
+      connector runs as the same user as OpenFGA, and OpenFGA is dumpable: on
+      the measurement VM, which has no Yama, a same-user process read
+      OpenFGA's memory and got the datastore password and the per-start
+      OpenFGA key, which OpenFGA accepted (ADJUDICATION.md R3.3). The image
+      cannot choose the host kernel's ptrace policy
+  offlineValidate:
+    value: true
+    evidence: >-
+      `toolbox validate` and `toolbox test` check the manifest, schemas,
+      fixtures and rules with no server (docs/v1-spec.md §7.7)
+  changePreview:
+    value: true
+    evidence: >-
+      `toolbox plan --local --base <manifest>` diffs entities, scores and
+      tuples between two manifests before a deploy
+  repoScopedWithoutServer:
+    value: true
+    evidence: >-
+      `toolbox report` scores one repository in CI with no server; the
+      actions/report GitHub Action and examples/repo-portal-starter adopt it
+      in one step (D69)
+  federates: {value: false, evidence: "federation is designed, not built (D68)"}
+  mcpByDefault:
+    value: true
+    evidence: >-
+      `toolbox serve` hosts /mcp and `toolbox mcp` bridges stdio
+      (docs/v1-spec.md §7.3)
+  extensionAnyLanguage:
+    value: true
+    evidence: >-
+      connectors speak NDJSON over stdio or HTTP
+      (schema/connector-messages.schema.json), so any language can write one
+  extensionWithoutRebuild:
+    value: true
+    evidence: >-
+      a remote connector pushes to /v1/ingest with its own token and needs no
+      change to the image; a supervised one is a binary named in the manifest
+  capCatalogBrowse:
+    value: true
+    evidence: UI catalog pages, `toolbox query`, the query MCP tool
+  capOwnership: {value: true, evidence: "`toolbox owner`, the owner MCP tool"}
+  capGraph: {value: true, evidence: "`toolbox graph`, /v1/entities/{id}/graph"}
+  capDocsSearch:
+    value: false
+    evidence: >-
+      search finds entities by name or title (crates/toolbox-api/src/mcp.rs);
+      it does not index documentation
+  capDocs: {value: false, evidence: no documentation site per component}
+  capTemplates:
+    value: false
+    evidence: self-service actions (M5) are paused (D64)
+  capScorecards:
+    value: true
+    evidence: scorecards, rules and campaigns are core (docs/v1-spec.md §5)
+  capApiDocs: {value: false, evidence: no OpenAPI or AsyncAPI rendering}
+  capKubernetes: {value: false, evidence: no Kubernetes connector or view}
+  capNotifications: {value: false, evidence: no notifications}
+  capPermissionRule:
+    value: true
+    evidence: an OpenFGA model in the manifest (docs/authorization.md)
+  capMcpRead: {value: true, evidence: "14 MCP tools, 13 read-only (surface.py)"}
+  contributors:
+    value: 4
+    evidence: >-
+      GitHub contributors to loganvolkers/toolbox, anonymous included; three
+      are agents
+backstage:
+  loopbackByDefault:
+    value: false
+    evidence: >-
+      the template's app-config.production.yaml sets `listen: ':7007'`: 'we
+      bind to all interfaces, the most permissive setting'
+  ownerOnlyFields:
+    value: false
+    evidence: >-
+      permissions decide per entity and action, not per field; 'users that are
+      signed in to Backstage generally have full access to all information and
+      actions' (docs/overview/threat-model.md)
+  extensionProcessIsolated:
+    value: false
+    evidence: >-
+      'there is no boundary between plugins that run on the same host'
+      (docs/overview/threat-model.md)
+  extensionCredentialIsolated:
+    value: false
+    evidence: >-
+      the project does not 'sandbox or limit the access of plugins'
+      (docs/overview/threat-model.md); backend plugins share one process, its
+      environment and its config
+  offlineValidate:
+    value: false
+    evidence: >-
+      `backstage-cli config:check` validates app-config offline, but
+      `backstage-cli catalog validate` takes --instance, a running Backstage
+      (backstage-cli 0.36.8)
+  changePreview:
+    value: false
+    evidence: >-
+      no backstage-cli command shows what a catalog, config or permission
+      change does to entities or access before it is deployed (backstage-cli
+      0.36.8 --help); `template dry-run` previews a template only
+  repoScopedWithoutServer:
+    value: false
+    evidence: >-
+      the catalog, permissions and every plugin run inside a Backstage
+      backend; there is no serverless or per-repository mode
+      (docs/overview/architecture-overview.md)
+  federates:
+    value: false
+    evidence: >-
+      one backend per catalog; splitting plugins across hosts shares the
+      databases (docs/overview/threat-model.md,
+      docs/backend-system/building-backends/01-index.md); nothing joins two
+      Backstage instances
+  mcpByDefault:
+    value: true
+    evidence: create-app 0.9.4 installs @backstage/plugin-mcp-actions-backend
+  extensionAnyLanguage:
+    value: false
+    evidence: >-
+      plugins are TypeScript or JavaScript packages loaded into the backend
+      process (docs/plugins/index.md)
+  extensionWithoutRebuild:
+    value: false
+    evidence: >-
+      a plugin is added to packages/backend/src/index.ts and the image
+      rebuilt; @backstage/backend-dynamic-feature-service 0.8.9 loads plugins
+      at runtime but is experimental and not in the template
+  capCatalogBrowse: {value: true, evidence: "@backstage/plugin-catalog"}
+  capOwnership: {value: true, evidence: "@backstage/plugin-org"}
+  capGraph: {value: true, evidence: "@backstage/plugin-catalog-graph"}
+  capDocsSearch:
+    value: true
+    evidence: "@backstage/plugin-search with the catalog and TechDocs collators"
+  capDocs: {value: true, evidence: "@backstage/plugin-techdocs"}
+  capTemplates: {value: true, evidence: "@backstage/plugin-scaffolder"}
+  capScorecards:
+    value: true
+    evidence: >-
+      add-on: Tech Insights (backstage/community-plugins,
+      @backstage-community/plugin-tech-insights and its backend), not in the
+      template; checks need fact retrievers registered in code
+  capApiDocs: {value: true, evidence: "@backstage/plugin-api-docs"}
+  capKubernetes: {value: true, evidence: "@backstage/plugin-kubernetes"}
+  capNotifications: {value: true, evidence: "@backstage/plugin-notifications"}
+  capPermissionRule:
+    value: true
+    evidence: a permission policy in code (docs/permissions/writing-a-policy.md)
+  capMcpRead: {value: true, evidence: "13 MCP tools, 9 read-only (surface.py)"}
+  contributors:
+    value: 2826
+    evidence: GitHub contributors to backstage/backstage, anonymous included

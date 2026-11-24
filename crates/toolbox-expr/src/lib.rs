@@ -10,7 +10,8 @@
 //! - **Lazy lists** ([`lazy`]): `inbound.<relation>` converts only the elements an expression
 //!   visits.
 //! - **Analysis** ([`analysis`]): node count, depth, loop nesting and the fields an expression
-//!   reads, for the meta standards' readability rules.
+//!   reads, for the meta standards' readability rules, and the field equalities a list filter
+//!   requires, which the API narrows candidates by.
 //!
 //! The implementation is cel-rust (a default behind this contract, charter goal 3): swapping it
 //! changes this crate only.
@@ -37,8 +38,10 @@ pub enum Site {
     Tuples,
     /// `actions[].inputs.**.enumFrom`
     Options,
-    /// `actions[].approval`, `.preconditions[]`, `.expect.postcondition`
+    /// `actions[].approval`, `.preconditions[]`
     Action,
+    /// `actions[].expect.postcondition`: also the executor's `outputs`
+    Postcondition,
     /// `actions[].context.*.where`
     ContextLookup,
     /// `actions[].expect.refresh[].selector` and `.ids`: record fields are bare names, so only
@@ -57,6 +60,7 @@ impl Site {
             Site::Scorecard => Some(&["entity", "policy", "cards"]),
             Site::Tuples | Site::Options => Some(&["entity", "policy"]),
             Site::Action => Some(&["entity", "inputs", "policy"]),
+            Site::Postcondition => Some(&["entity", "inputs", "policy", "outputs"]),
             Site::ContextLookup => Some(&["candidate", "entity", "inputs", "policy"]),
             Site::RefreshScope => None,
         }
@@ -174,11 +178,40 @@ mod tests {
     }
 
     #[test]
+    fn undeclared_functions_are_reported() {
+        assert_eq!(
+            check(
+                "entity.xs.join(',') == 'a' && size(entity.xs) > 0",
+                Site::Scorecard
+            ),
+            Err(CelIssue::UndeclaredFunctions(vec!["join".into()]))
+        );
+    }
+
+    #[test]
     fn syntax_errors_are_reported() {
         assert!(matches!(
             check("entity.(", Site::Scorecard),
             Err(CelIssue::Syntax(_))
         ));
+    }
+
+    #[test]
+    fn only_a_postcondition_reads_the_executor_outputs() {
+        assert_eq!(
+            check(
+                "outputs.branch != '' && has(entity.license)",
+                Site::Postcondition
+            ),
+            Ok(())
+        );
+        assert_eq!(
+            check("outputs.branch != ''", Site::Action),
+            Err(CelIssue::UnknownVariables {
+                found: vec!["outputs".into()],
+                allowed: vec!["entity".into(), "inputs".into(), "policy".into()]
+            })
+        );
     }
 
     #[test]

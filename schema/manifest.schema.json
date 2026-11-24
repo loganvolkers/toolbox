@@ -242,6 +242,159 @@
           }
         ]
       }
+    },
+    "federation": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Federated actions (docs/design/federated-actions.md): for a parent, the kind whose entities are child portals, whose declared actions it offers and dispatches to them, and the runners it owns; for a child, how a parent may reach it and whose approvals it accepts.",
+      "properties": {
+        "portals": {
+          "$ref": "#/$defs/kindName",
+          "description": "The kind whose entities are child portals (workspace `portal` records: path, actions, results). Default `Portal` when `children` is set."
+        },
+        "children": {
+          "type": "array",
+          "description": "A parent's child portals, by git repository. Each is cloned into the state directory and kept at its branch: the portal offers the actions committed there, and syncs the clone again before each preview and run, so only what is on the branch counts. Listing a child also lets `toolbox serve` run it in that clone (`runners.local.portals`) unless `runners.local` is declared. Declares, unless already declared, the `federation` connector (builtin:workspace) and the `Portal` kind its records map to.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "git"
+            ],
+            "properties": {
+              "git": {
+                "type": "string",
+                "minLength": 1,
+                "description": "What `git clone` takes: a URL, or a path relative to this manifest's directory."
+              },
+              "branch": {
+                "type": "string",
+                "description": "The branch whose definitions count (default main)."
+              },
+              "key": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9._-]*$",
+                "description": "The child's identity here: its entity is `portal:<key>` (default: the URL's last segment, without `.git`). Its manifest is `.toolbox/toolbox.yaml` in the repository."
+              }
+            }
+          }
+        },
+        "permission": {
+          "type": "string",
+          "description": "The relation a caller needs on the child portal entity to run its actions through this portal (default can_run_actions)."
+        },
+        "runner": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type"
+          ],
+          "description": "How a parent may dispatch this portal's actions: `local` (the parent runs `toolbox run` in this checkout) or `github-workflow` (the parent dispatches this workflow, which runs `toolbox run`). The parent supplies credentials and endpoints (`federation.runners`); a child never names them.",
+          "properties": {
+            "type": {
+              "enum": [
+                "local",
+                "github-workflow"
+              ]
+            },
+            "repo": {
+              "type": "string",
+              "description": "github-workflow: owner/name of this portal's repository."
+            },
+            "workflow": {
+              "type": "string",
+              "description": "github-workflow: the workflow file that runs `toolbox run`."
+            },
+            "ref": {
+              "type": "string",
+              "description": "github-workflow: the ref to dispatch on (default main)."
+            }
+          }
+        },
+        "acceptApprovalsFrom": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "portal",
+              "key"
+            ],
+            "properties": {
+              "portal": {
+                "type": "string",
+                "description": "The parent portal's name."
+              },
+              "key": {
+                "type": "string",
+                "pattern": "^ed25519:[0-9a-f]{64}$",
+                "description": "The parent's approval signing key, as `toolbox serve` prints it at start."
+              }
+            }
+          },
+          "description": "Parent portals whose signed approvals satisfy this portal's approval rules when they dispatch a run here. A grant counts only when its signature verifies with the pinned key and it names this run's action, version, inputs, effects and requester."
+        },
+        "runners": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "A parent's runners: which children a server may run in its own process, and the credentials it dispatches workflows with. A served parent runs a child's actions only through a runner it declares here and the child declares in `runner`.",
+          "properties": {
+            "local": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "portals"
+              ],
+              "description": "Children `toolbox serve` may run with `toolbox run` in its own checkout of them, as its own OS user.",
+              "properties": {
+                "portals": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Child keys (the directory the workspace connector found each child in), `*` matching any run of characters."
+                },
+                "env": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Environment variables passed to the child beyond the base set (PATH, HOME, locale, proxies, git identity)."
+                }
+              }
+            },
+            "github-workflow": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "repos"
+              ],
+              "description": "Workflows the parent may dispatch, and with which token.",
+              "properties": {
+                "repos": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "owner/name patterns a child's runner repo must match, `*` matching any run of characters."
+                },
+                "token": {
+                  "type": "string",
+                  "description": "The parent's environment variable holding the token (default GITHUB_TOKEN)."
+                },
+                "api": {
+                  "type": "string",
+                  "description": "The API base URL (GitHub Enterprise Server or a test double)."
+                }
+              }
+            }
+          }
+        },
+        "signingKey": {
+          "type": "string",
+          "description": "A parent's environment variable holding its approval signing key: 64 hex characters (32 random bytes, e.g. `openssl rand -hex 32`). Without it, a served parent can't pass approvals to its children."
+        }
+      }
     }
   },
   "$defs": {
@@ -610,6 +763,29 @@
         "appliesTo": {
           "$ref": "#/$defs/cel"
         },
+        "compare": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "subject",
+            "peers"
+          ],
+          "description": "Make this a comparative scorecard: score the subject and its peers on the same rules and report, per rule, whether the subject is ahead of, at parity with or behind each peer. Reports show the entities side by side.",
+          "properties": {
+            "subject": {
+              "$ref": "#/$defs/entityRef",
+              "description": "The entity the comparison is about (`product:toolbox`)."
+            },
+            "peers": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/entityRef"
+              },
+              "description": "The entities it is compared with (`product:backstage`)."
+            }
+          }
+        },
         "rules": {
           "type": "array",
           "minItems": 1,
@@ -639,6 +815,26 @@
                 "$ref": "#/$defs/cel",
                 "description": "CEL evaluated when the rule fails: a number (lines in a file, occurrences of a pattern) that `toolbox report` baselines compare instead of the evidence count. Larger is worse; campaigns sum it to measure paydown."
               },
+              "value": {
+                "$ref": "#/$defs/cel",
+                "description": "CEL evaluated for every in-scope entity, pass or fail: the number a comparative scorecard compares (seconds, megabytes, a count). Reports show it beside the outcome. Requires `better`."
+              },
+              "better": {
+                "enum": [
+                  "lower",
+                  "higher"
+                ],
+                "description": "Which way `value` improves."
+              },
+              "unit": {
+                "type": "string",
+                "description": "The unit `value` is in, for reports (`s`, `MB`, `ms`, `packages`)."
+              },
+              "tolerance": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Relative difference within which two values are at parity (0.1 = 10% of the larger magnitude). Default 0: only equal values are at parity."
+              },
               "fix": {
                 "type": "string"
               },
@@ -646,6 +842,20 @@
                 "type": "string",
                 "description": "Connector this rule reads. Skipped, its missing data is an expected unknown and is not compared."
               }
+            },
+            "dependentRequired": {
+              "value": [
+                "better"
+              ],
+              "better": [
+                "value"
+              ],
+              "tolerance": [
+                "value"
+              ],
+              "unit": [
+                "value"
+              ]
             }
           }
         },
@@ -931,10 +1141,8 @@
       "required": [
         "name",
         "kind",
-        "scope",
         "description",
         "inputs",
-        "permission",
         "executor"
       ],
       "properties": {
@@ -950,7 +1158,9 @@
             "day2",
             "delete",
             "global"
-          ]
+          ],
+          "default": "day2",
+          "description": "Where the action sits in its kind's lifecycle ([action-entities.md](../docs/design/action-entities.md)); default `day2`, an action on an existing entity."
         },
         "description": {
           "type": "string",
@@ -962,7 +1172,8 @@
         },
         "permission": {
           "type": "string",
-          "description": "OpenFGA relation checked on the target entity."
+          "description": "OpenFGA relation checked on the target entity. Default `can_run_actions`.",
+          "default": "can_run_actions"
         },
         "approval": {
           "$ref": "#/$defs/cel"
@@ -982,9 +1193,11 @@
           "properties": {
             "type": {
               "enum": [
+                "command",
                 "in-image",
-                "http",
+                "change",
                 "github-workflow",
+                "http",
                 "webhook"
               ]
             },
@@ -992,7 +1205,8 @@
               "type": "array",
               "items": {
                 "type": "string"
-              }
+              },
+              "description": "in-image: the executor protocol v1 program."
             },
             "url": {
               "type": "string"
@@ -1010,7 +1224,67 @@
               "type": "array",
               "items": {
                 "type": "string"
-              }
+              },
+              "description": "command, change and in-image: environment variables the executor gets beyond the base set (PATH, HOME, locale, proxies, git identity). Executors start with a cleared environment."
+            },
+            "run": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "description": "A shell line, run by sh -c."
+                },
+                {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "description": "command and change: what to run, from the directory toolbox started in (a change runs in a worktree of the base branch)."
+            },
+            "preview": {
+              "type": "boolean",
+              "description": "command: the command supports TOOLBOX_PHASE=preview and prints its effects without changing anything."
+            },
+            "base": {
+              "type": "string",
+              "description": "change: the branch the change starts from and is verified on (default: the checked-out branch)."
+            },
+            "remote": {
+              "type": "string",
+              "description": "change: the remote the branch is pushed to when it exists (default origin)."
+            },
+            "branch": {
+              "type": "string",
+              "description": "change: the branch name; {action} and {run} are replaced (default toolbox/{action}/{run}). Inputs are not: they go only in message."
+            },
+            "message": {
+              "type": "string",
+              "description": "change: the commit message; {action}, {run}, {entity} and {inputs.<name>} are replaced, and toolbox validate refuses any other placeholder."
+            },
+            "land": {
+              "enum": [
+                "propose",
+                "push"
+              ],
+              "description": "change: propose (default) pushes a branch for review, and review is the approval; push lands the commit on the base once the action's approval rule is met, never forced, and the run is done when the base is seen to have it."
+            },
+            "repo": {
+              "type": "string",
+              "description": "github-workflow: owner/name."
+            },
+            "ref": {
+              "type": "string",
+              "description": "github-workflow: the ref to dispatch on (default main)."
+            },
+            "api": {
+              "type": "string",
+              "description": "github-workflow: the API base URL (GitHub Enterprise Server)."
+            },
+            "token": {
+              "type": "string",
+              "description": "github-workflow: the environment variable holding the token (default GITHUB_TOKEN)."
             }
           }
         },
@@ -1124,6 +1398,23 @@
           "required": [
             "unverified"
           ]
+        },
+        {
+          "required": [
+            "executor"
+          ],
+          "properties": {
+            "executor": {
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "const": "change"
+                }
+              }
+            }
+          }
         }
       ]
     },

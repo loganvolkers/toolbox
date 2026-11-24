@@ -1,0 +1,56 @@
+{
+ "run": "backstage-2",
+ "C1": "holds",
+ "P1": {
+  "verdict": "holds",
+  "evidence": "`git --git-dir origins/<r>.git ls-tree -r --name-only main` shows .backstage/actions/mark-deprecated.yaml and catalog-info.yaml on alpha (6009812), beta (1a5e25b) and gamma (26aec6e), each committed inside its own repository before its DEPRECATED.md commit. The template (owner group:<repo>/maintainers, JSON Schema inputs, steps) is the definition; `bin/acme list` reports definedIn {origin origins/<repo>.git, branch main, path, commit} for each."
+ },
+ "P2": {
+  "verdict": "holds",
+  "evidence": "As ann from org/: `bin/acme request alpha --as ann --successor 'Acme/Bad Name' --reason 'A perfectly valid reason of enough length.'` -> exit 1, httpStatus 400 InputError 'instance.successor does not match pattern'. `... --successor acme/probe-valid --reason short` -> exit 1, httpStatus 400 'instance.reason does not meet minimum length of 20'. `runs --repo alpha` count 4 before and after (no run stored); alpha main ddaff7ed130b before and after."
+ },
+ "P3": {
+  "verdict": "holds",
+  "evidence": "`bin/acme preview beta --as ann --successor acme/probe-preview --reason 'Probe preview: this reason is long enough.'` -> exit 0: files[0] {path DEPRECATED.md, change modify, content '# Deprecated: use acme/probe-preview\\n\\nProbe preview: ...', before, unified diff}, base commit 540f204, summary 'On beta main: modify DEPRECATED.md'. beta main 540f204abde2 before and after; beta run count 1 before and after."
+ },
+ "P4": {
+  "verdict": "holds",
+  "evidence": "From org/: `bin/acme request gamma --as ann --successor acme/probe-approval --reason 'Probe approval: this reason is long enough.'` -> exit 0, run a072be6a-..., status awaiting-approval; gamma main a77325240c7b unchanged. `bin/acme approve <id> --as ann` -> exit 1, httpStatus 403 'user:default/ann requested run ... and cannot approve it'. `--as carol` -> exit 1, httpStatus 403 'user:default/carol is not a member of group:gamma/maintainers'. `status` -> awaiting-approval; gamma main still a77325240c7b."
+ },
+ "P5": {
+  "verdict": "holds",
+  "evidence": "`bin/acme approve a072be6a-... --as bob` -> exit 0, status running; `bin/acme status <id> --as ann --wait --timeout 120` -> exit 0, status succeeded, message 'Observed DEPRECATED.md with the approved content on main at 2de6d156'. gamma main moved a773252 -> 2de6d156; `git show main:DEPRECATED.md` is '# Deprecated: use acme/probe-approval' + the reason; trailers Acme-Run, Requested-by ann, Approved-by bob. Source: RunService.check (service.ts:429-458) calls observe (service.ts:393-406), which reads `git --git-dir origins/gamma.git rev-parse refs/heads/main` and `cat-file blob <head>:DEPRECATED.md` (git.ts:46-79) and compares sha256 to the previewed file; finish(..., 'succeeded') is called only when the scaffolder task completed and allMatch is true, otherwise 'failed'."
+ },
+ "P6": {
+  "verdict": "holds",
+  "evidence": "Installed origins/alpha.git/hooks/pre-receive (echo, exit 1). As ann: request alpha --successor acme/probe-reject -> run 8c9bcc52-...; `approve --as bob` -> running; `status --wait` -> exit 3, status failed, succeeded false, message 'Push to main was rejected: remote: adjudicator: push rejected ... failed to push some refs'. alpha main ddaff7ed130b before and after. Hook removed afterwards (only *.sample remain)."
+ },
+ "P7": {
+  "verdict": "holds",
+  "evidence": "From org/, `bin/acme list --as carol` (one command, exit 0) lists mark-deprecated for alpha, beta and gamma with inputs schema, owner, approvers and the origin commit each was read from. P4's request was made from org/ with `bin/acme request gamma ...`."
+ },
+ "P8": {
+  "verdict": "holds",
+  "evidence": "`bin/acme record a072be6a-... --as ann` -> requested {by user:default/ann, at 12:11:22.545Z}, inputs {successor acme/probe-approval, reason ...}, approved {by user:default/bob, at 12:11:26.154Z}, started {at, scaffolderTaskId}, finished {at 12:11:26.499Z, status succeeded, observed {commit, per-file sha256, allMatch}}, template ref and defining commit, and events[] with at/actor for requested, both approval-refused (ann, carol), approved, started, executing, succeeded."
+ },
+ "P9": {
+  "verdict": "holds",
+  "evidence": "Every step (list, preview, request, approve, status, status --wait, record, runs) ran non-interactively with flags only and printed one JSON document; refusals exit 1 with httpStatus, a --wait that ends without success exits 3."
+ },
+ "P10": {
+  "verdict": "holds",
+  "evidence": "Operated entirely from org/HANDOFF.md: started the backend with its foreground Start command (PATH export included) in a tmux session, waited on its readiness loop, and ran its Use and failure-path commands from org/. org/.acme/tokens.json, which the handoff says to recreate, was already present with exactly the content it gives, so the recreate step was not needed. The source was read only for P5's evidence. No fixes needed."
+ },
+ "fixes": [],
+ "strikes": [
+  {
+   "path": "org/.acme/real-runs.txt",
+   "lines": 3,
+   "reason": "scratch output of the agent's own runs: a list of the three task run ids, git-ignored and read by no code (grep over org/bin/acme and the plugin finds no reference)"
+  }
+ ],
+ "linesBeforeStrikes": 1727,
+ "linesAfterStrikes": 1724,
+ "fullyPasses": true,
+ "notes": "C1 re-checked with score.py check before any probe ran: pass, matching backstage-2.check.json. P5 then overwrote gamma's DEPRECATED.md on main with the probe's content (2de6d156), as the probe requires, so gamma no longer shows the task's content after adjudication. The probes added runs a072be6a (gamma, succeeded) and 8c9bcc52 (alpha, failed) to the sqlite files under backstage/.data/ (binary, never counted). org/.acme/tokens.json (1 line, git-ignored) was not struck: it is configuration the handoff tells an operator to create and that bin/acme reads. The backend was started in tmux session backstage-2-adj and stopped (Ctrl-C, session killed; port 7470 closed) before the next run; the node processes still running afterwards belong to /tmp/actions-ab/r3/backstage-3 (port 7810) and were not started by me. Outside the probes: the request response nests requester as requested.by, so top-level requestedBy is absent on that one response (status and record carry it); the plugin polls scaffolder tasks to decide success, so `approve` returns 'running' and the outcome needs `status --wait`. The beta and gamma templates and catalog entries differ from alpha's only by name, so score.py counted all three."
+}

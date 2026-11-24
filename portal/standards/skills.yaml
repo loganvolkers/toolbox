@@ -50,11 +50,12 @@ scorecards:
   # Gold is "it states its limits, has eval cases, and nothing hostile is hiding in the files".
   # Live with/without-skill runs are not a rule: they need a model and they vary (D71).
   - name: maintainer-skill
+    title: Agent skills
     kind: Skill
     description: >-
       Each agent skill we ship: loadable, followable, honest about its limits
-      and free of hidden instructions or credentials (D72, docs/design/skill-
-      standards.md).
+      and free of hidden instructions or credentials (D72,
+      docs/design/skill-standards.md).
     owner: group:maintainers
     track: maintainer
     levels: [bronze, silver, gold]

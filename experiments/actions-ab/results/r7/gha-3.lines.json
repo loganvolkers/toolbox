@@ -1,0 +1,22 @@
+{
+ "linesToMaintain": 1588,
+ "files": {
+  "alpha/.github/actions/mark-deprecated/mark_deprecated.py": 283,
+  "alpha/.github/settings/apply.sh": 71,
+  "alpha/.github/settings/environment-mark-deprecated.json": 12,
+  "alpha/.github/settings/ruleset-main.json": 23,
+  "alpha/.github/workflows/apply-settings.yml": 24,
+  "alpha/.github/workflows/mark-deprecated.yml": 99,
+  "alpha/CODEOWNERS": 5,
+  "beta/.github/CODEOWNERS": 5,
+  "org/.acme/runs/alpha-1/record.json": 126,
+  "org/.acme/runs/beta-1/record.json": 126,
+  "org/.acme/runs/gamma-1/record.json": 126,
+  "org/.gitignore": 2,
+  "org/acme.json": 15,
+  "org/bin/acme": 459,
+  "org/scripts/install-action.sh": 43,
+  "org/tests/e2e.sh": 116,
+  "org/tests/settings.sh": 53
+ }
+}

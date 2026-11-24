@@ -74,6 +74,7 @@ impl AppState {
         format!("user:{}", subject.split('@').next().unwrap_or(subject))
     }
 
+    /// The OpenFGA object for this portal, `portal:<name>`.
     pub fn portal_object(&self) -> String {
         format!("portal:{}", self.manifest.portal.name)
     }
@@ -85,10 +86,41 @@ impl AppState {
         if !fga_dsl::has_relation(authz.model(), "portal", "admin") {
             return false;
         }
-        authz
-            .check(user, "admin", &self.portal_object())
+        self.decide(&[(user.to_owned(), "admin".to_owned(), self.portal_object())])
             .await
+            .map(|r| r[0])
             .unwrap_or(false)
+    }
+
+    /// Ask the authorizer, through the current snapshot's decisions when it keeps them.
+    async fn decide(&self, checks: &[toolbox_authz::Tuple]) -> Result<Vec<bool>, String> {
+        let Some(authz) = &self.authz else {
+            return Ok(vec![true; checks.len()]);
+        };
+        let p = self.snapshot();
+        let Some(cache) = p.as_ref().and_then(|p| p.decisions.as_ref()) else {
+            return authz.batch_check(checks).await;
+        };
+        let mut out: Vec<Option<bool>> = checks.iter().map(|c| cache.get(c)).collect();
+        let misses: Vec<toolbox_authz::Tuple> = checks
+            .iter()
+            .zip(&out)
+            .filter(|(_, o)| o.is_none())
+            .map(|(c, _)| c.clone())
+            .collect();
+        if !misses.is_empty() {
+            let mut answers = authz.batch_check(&misses).await?.into_iter();
+            for (c, o) in checks.iter().zip(out.iter_mut()) {
+                if o.is_none() {
+                    let a = answers
+                        .next()
+                        .ok_or("authorizer returned too few results")?;
+                    cache.put(c.clone(), a);
+                    *o = Some(a);
+                }
+            }
+        }
+        Ok(out.into_iter().map(|o| o.unwrap_or(false)).collect())
     }
 
     /// Visibility of many entities for one caller (batched OpenFGA checks).
@@ -125,8 +157,8 @@ impl AppState {
             let details = slot("can_view_details", caller.admin);
             plan.push((view, details));
         }
-        let results = authz
-            .batch_check(&checks)
+        let results = self
+            .decide(&checks)
             .await
             .map_err(|e| problem(StatusCode::BAD_GATEWAY, "authz-unavailable", e))?;
         let pick = |s: &Result<usize, bool>| match s {
@@ -156,7 +188,8 @@ impl AppState {
         if !fga_dsl::has_relation(authz.model(), ty, relation) {
             return Ok(false);
         }
-        match authz.check(&caller.user, relation, object).await {
+        let check = (caller.user.clone(), relation.to_owned(), object.to_owned());
+        match self.decide(&[check]).await.map(|r| r[0]) {
             Ok(ok) => {
                 toolbox_telemetry::catalog::record_authz(if ok { "allow" } else { "deny" });
                 Ok(ok)
@@ -202,6 +235,33 @@ impl AppState {
         fields: Option<&[&str]>,
     ) -> Option<Value> {
         let e = p.derived.entities.get(id)?;
+        let out = self.visible_fields(p, caller, id, vis, fields)?;
+        Some(json!({"id": id, "kind": e.kind, "fields": out, "provenance": e.provenance}))
+    }
+
+    /// Whether some field of `kind` is owner-only, so the summary and whole shapes can differ.
+    pub fn hides_details(&self, kind: &str) -> bool {
+        self.manifest
+            .kinds
+            .iter()
+            .find(|k| k.name == kind)
+            .is_some_and(|k| {
+                k.fields.values().any(|f| {
+                    facet_needs(f.facet.as_deref()).is_some_and(|n| n == "can_view_details")
+                })
+            })
+    }
+
+    /// An entity's fields as `caller` may see them (hidden facets replaced by markers).
+    pub fn visible_fields(
+        &self,
+        p: &Published,
+        caller: &Caller,
+        id: &str,
+        vis: Visibility,
+        fields: Option<&[&str]>,
+    ) -> Option<serde_json::Map<String, Value>> {
+        let e = p.derived.entities.get(id)?;
         let kind = self.manifest.kinds.iter().find(|k| k.name == e.kind)?;
         let mut out = serde_json::Map::new();
         for (name, value) in &e.fields {
@@ -223,7 +283,7 @@ impl AppState {
                 },
             );
         }
-        Some(json!({"id": id, "kind": e.kind, "fields": out, "provenance": e.provenance}))
+        Some(out)
     }
 
     /// Scorecard results for one entity as `caller` may see them.

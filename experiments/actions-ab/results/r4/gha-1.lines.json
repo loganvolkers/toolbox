@@ -1,0 +1,33 @@
+{
+ "linesToMaintain": 1476,
+ "files": {
+  "alpha/.github/self-service/apply-github-settings.sh": 63,
+  "alpha/.github/self-service/config.json": 31,
+  "alpha/.github/self-service/mark_deprecated.py": 191,
+  "alpha/.github/workflows/mark-deprecated.yml": 94,
+  "alpha/CODEOWNERS": 3,
+  "beta/.github/CODEOWNERS": 3,
+  "beta/.github/self-service/config.json": 31,
+  "gamma/.github/self-service/config.json": 31,
+  "org/.gitignore": 2,
+  "org/.state/runs/run-20261124T124415Z-5a72/apply/apply.json": 9,
+  "org/.state/runs/run-20261124T124415Z-5a72/apply/check-approval.json": 11,
+  "org/.state/runs/run-20261124T124415Z-5a72/apply/preview.json": 11,
+  "org/.state/runs/run-20261124T124415Z-5a72/apply/validate.json": 9,
+  "org/.state/runs/run-20261124T124415Z-5a72/apply/verify.json": 10,
+  "org/.state/runs/run-20261124T124415Z-5a72/record.json": 151,
+  "org/.state/runs/run-20261124T124416Z-1c6b/apply/apply.json": 9,
+  "org/.state/runs/run-20261124T124416Z-1c6b/apply/preview.json": 11,
+  "org/.state/runs/run-20261124T124416Z-1c6b/apply/validate.json": 9,
+  "org/.state/runs/run-20261124T124416Z-1c6b/apply/verify.json": 10,
+  "org/.state/runs/run-20261124T124416Z-1c6b/record.json": 151,
+  "org/.state/runs/run-20261124T124416Z-816c/apply/apply.json": 9,
+  "org/.state/runs/run-20261124T124416Z-816c/apply/preview.json": 11,
+  "org/.state/runs/run-20261124T124416Z-816c/apply/validate.json": 9,
+  "org/.state/runs/run-20261124T124416Z-816c/apply/verify.json": 10,
+  "org/.state/runs/run-20261124T124416Z-816c/record.json": 151,
+  "org/bin/self-service": 429,
+  "org/people.json": 7,
+  "org/self-service.json": 10
+ }
+}

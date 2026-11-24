@@ -1,0 +1,90 @@
+{
+  "run": "backstage-3",
+  "C1": "holds",
+  "P1": {
+    "verdict": "holds",
+    "evidence": "git -C origins/<r>.git ls-tree -r main: alpha (9f088ce), beta (1a89e6b) and gamma (174754f), each authored by ann, commit .backstage/add-notice.yaml (a scaffolder Template, owner maintainers, parameters level enum [info, warning] and message 10..160 with no control characters, additionalProperties false, steps acme:notice:prepare, acme:notice:await-approval, acme:notice:publish) and .backstage/catalog-info.yaml (component and maintainers group) on main, inside the repository. bin/acme actions reports each definition's origin, path and commit."
+  },
+  "P2": {
+    "verdict": "holds",
+    "evidence": "cd org; bin/acme --as ann request alpha with --level urgent (exit 1, 400 InputError 'level must be \"info\" or \"warning\", got \"urgent\"'), a 200-character message (exit 1, 400 'message must be 10 to 160 characters, got 200') and a message with a newline (exit 1, 400 'message must be one line without control characters'). bin/acme runs stayed at 9 and the scaffolder's task list at 9 (no run or task created). alpha main 48b62e79 before and after."
+  },
+  "P3": {
+    "verdict": "holds",
+    "evidence": "bin/acme --as ann preview beta --level info --message 'Probe: preview only, nothing should change.': exit 0, JSON with sourceCommit and preview.diff, a unified diff of readme.md replacing the task's '> **Info:** Releases now ship ...' line and its blank line with '> **Info:** Probe: preview only, nothing should change.' and a blank line. beta main fc4f6433 before and after; runs and scaffolder tasks unchanged at 9."
+  },
+  "P4": {
+    "verdict": "holds",
+    "evidence": "From org/: bin/acme --as dave request gamma --level warning --message 'Probe: the release group approves this one.': exit 0, run 3ae549de awaiting-approval, requested.by dave. gamma main 8f7aafb8 unchanged. approve --as dave: exit 1, 403 'dave requested run ... and cannot approve it'; --as ann: exit 1, 403 'ann is not a member of group:default/release (members: dave, erin)'; --as carol: exit 1, 403 same. gamma main still 8f7aafb8 after a 2 s wait; status awaiting-approval, approval null."
+  },
+  "P5": {
+    "verdict": "holds",
+    "evidence": "bin/acme --as erin approve 3ae549de: exit 0 approved; bin/acme --as ann status --wait: exit 0, succeeded, outcome.pushedCommit = observedCommit 08b13292. gamma main 8f7aafb8 -> 08b13292; main:README.md equals '> **Warning:** Probe: the release group approves this one.', a blank line, and the root import commit's README.md byte for byte (cmp): one notice, the task's gone. The succeeded event's sha256 9671792... equals sha256sum of main:README.md. Source: scaffolderModule.ts acme:notice:publish calls observe(run.origin, run.branch, ...) after the push and only then runs.transition(..., 'succeeded'); notice.ts observe() reads the branch head and the README blob from the bare origin (git --git-dir <origin> cat-file blob) and throws not-observed unless path and SHA-256 match the approved preview."
+  },
+  "P6": {
+    "verdict": "holds",
+    "evidence": "pre-receive hook (echo to stderr, exit 1) in origins/alpha.git/hooks. bin/acme --as ann request alpha --level info --message 'Probe: the origin rejects this push.' -> b2359f78; bin/acme --as dave approve: approved; bin/acme --as ann status --wait: exit 1, status failed, outcome.reason push-rejected, detail '[remote rejected] (pre-receive hook declined)' with the hook's message, observedCommit null. Events: requested, previewed, awaiting-approval, approved, publishing, failed (no succeeded). alpha main 48b62e79 before and after. Hook removed after status --wait returned."
+  },
+  "P7": {
+    "verdict": "holds",
+    "evidence": "cd org; bin/acme --as ann actions: exit 0, actions[] lists add-notice for alpha, beta and gamma (template:<r>/add-notice, definedIn origin/path/commit, parameters). P4 was requested from org/ with bin/acme request."
+  },
+  "P8": {
+    "verdict": "holds",
+    "evidence": "bin/acme --as ann record 3ae549de: requested {by: dave, at: 16:45:11.658Z}; inputs {level: warning, message: ...}; approval {by: erin, at: 16:45:22.567Z}; outcome {result: succeeded, at: 16:45:22.855Z, pushedCommit, observedCommit}; events with 'at' and actor for requested, previewed, awaiting-approval, three approval-refused (dave: requester; ann, carol: not-in-group with members and groupCommit), approved (group, members, groupCommit), publishing, succeeded (observedCommit, readmePath, sha256)."
+  },
+  "P9": {
+    "verdict": "holds",
+    "evidence": "Per the handoff: in org/, deleted the '    - erin' line from catalog/release-group.yaml, git commit -am and git push origin main (org.git 7de8ccab -> 5c7d7fa3); bin/acme approvers showed members [dave], sourceCommit 5c7d7fa3, no restart. bin/acme --as ann request beta --level info --message 'Probe: erin has left the release group.' -> 9066e247. approve --as erin: exit 1, 403 'erin is not a member of group:default/release (members: dave)'; beta main unchanged (fc4f6433). approve --as dave: exit 0; status --wait: exit 0 succeeded, observedCommit 567f171b. beta main:readme.md is exactly the probe notice, a blank line and the imported readme.md (cmp)."
+  },
+  "P10": {
+    "verdict": "holds",
+    "evidence": "Every step (actions, approvers, preview, request, approve, status --wait --timeout, record, runs, group change by sed/git) ran as one non-interactive shell command. bin/acme printed one JSON document on stdout, refusals as {error: {status, name, message}}; exit codes 0 ok, 1 refused or not succeeded."
+  },
+  "P11": {
+    "verdict": "holds",
+    "evidence": "Operated entirely from org/HANDOFF.md: exported PATH and started the backend with its tmux command and whoami readiness loop (ready in about 6 s on port 7210), then used bin/acme from org/. No fixes needed. Source read only for P5's evidence (scaffolderModule.ts acme:notice:publish, notice.ts observe)."
+  },
+  "fixes": [],
+  "strikes": [
+    {
+      "path": "backstage/.work/163546dc-2813-4b6c-9770-6551931d54cd_step-publish-IYl7If/repo.git/HEAD",
+      "lines": 1,
+      "reason": "scaffolder working directory (app-config scaffolder.workingDirectory, gitignored): the scratch bare clone a publish step left behind during the agent's testing"
+    },
+    {
+      "path": "backstage/.work/163546dc-2813-4b6c-9770-6551931d54cd_step-publish-IYl7If/repo.git/config",
+      "lines": 7,
+      "reason": "git metadata of the same scaffolder scratch clone, written at run time"
+    },
+    {
+      "path": "backstage/.work/163546dc-2813-4b6c-9770-6551931d54cd_step-publish-IYl7If/repo.git/description",
+      "lines": 1,
+      "reason": "git metadata of the same scaffolder scratch clone, written at run time"
+    },
+    {
+      "path": "backstage/.work/163546dc-2813-4b6c-9770-6551931d54cd_step-publish-IYl7If/repo.git/info/exclude",
+      "lines": 6,
+      "reason": "git metadata of the same scaffolder scratch clone, written at run time"
+    },
+    {
+      "path": "backstage/.work/163546dc-2813-4b6c-9770-6551931d54cd_step-publish-IYl7If/repo.git/packed-refs",
+      "lines": 2,
+      "reason": "git metadata of the same scaffolder scratch clone, written at run time"
+    },
+    {
+      "path": "backstage/.work/final-runs",
+      "lines": 1,
+      "reason": "agent's scratch output: the three final run ids, written while running them"
+    },
+    {
+      "path": "backstage/.work/test1",
+      "lines": 1,
+      "reason": "agent's scratch output of a test: one scaffolder task id (163546dc, the clone above)"
+    }
+  ],
+  "linesBeforeStrikes": 2668,
+  "linesAfterStrikes": 2649,
+  "fullyPasses": true,
+  "notes": "C1 rerun by the adjudicator with score.py check before any probe: pass. Not struck: org/tokens.local.json (7 lines, gitignored), the CLI's local credentials configuration that a person keeps; notice.test.ts (tests). The Backstage changes are committed in the backstage app's own git repository (commits 6c91d07 and 0ef7232). Defect during the build, disclosed in the handoff: a test run on alpha was approved by carol because the agent's test script had not removed her from the group, so a test notice ('Test run: carol is no longer an approver.') landed on alpha's main (ef0bdff) and was reverted by hand (0267c20) before the final alpha run; the system behaved as configured, but alpha's history carries the stray commit and its revert, and the org history carries the add-carol commit and its revert. A request is a scaffolder task that blocks in acme:notice:await-approval; the record shows six earlier test runs besides the final three. Probe side effects left in the workspace: three new runs in backstage/.data, one more scaffolder scratch directory in backstage/.work (b2359f78, P6's rejected push), one commit on origins/gamma.git (P5, 08b13292), one on origins/beta.git (P9, 567f171b), and one on origins/org.git and the org checkout (P9, erin removed from the release group, 5c7d7fa3). The backend ran in tmux session r8-backstage-3-backend and was killed afterwards; port 7210 is free."
+}

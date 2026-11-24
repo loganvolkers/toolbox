@@ -1,0 +1,50 @@
+{
+ "run": "backstage-1",
+ "C1": "holds",
+ "P1": {
+  "verdict": "holds",
+  "evidence": "`git --git-dir origins/<r>.git ls-tree --name-only main` shows .backstage/mark-deprecated.yaml and catalog-info.yaml on alpha (39252d6), beta (5dda3aa) and gamma (6259f7b), each committed inside its own repository before its DEPRECATED.md commit. The template (namespace <repo>, owner group:<repo>/maintainers, JSON Schema inputs, steps) is the definition; `acme-actions list` reports `definedIn: git-origin:origins/<repo>.git#.backstage/mark-deprecated.yaml` for each."
+ },
+ "P2": {
+  "verdict": "holds",
+  "evidence": "As ann from org/: `bin/acme-actions --as ann request alpha --successor 'Acme/Bad Name' --reason 'A perfectly valid reason of enough length.'` -> exit 2, HTTP 400 ValidationError 'successor does not match pattern'. `... --successor acme/probe-valid --reason short` -> exit 2, HTTP 400 'reason does not meet minimum length of 20'. `runs --repo alpha` still lists the same 3 runs (no new run); alpha main 50affcb9c669 before and after."
+ },
+ "P3": {
+  "verdict": "holds",
+  "evidence": "`bin/acme-actions --as ann preview beta --successor acme/probe-preview --reason 'Probe preview: this reason is long enough.'` -> exit 0, dryRun true (scaffolder POST /v2/dry-run), path DEPRECATED.md, changeType update, full new content '# Deprecated: use acme/probe-preview\\n\\nProbe preview: ...' and a unified diff against main 989834f. beta main 989834ffe02f before and after; beta run count unchanged (3)."
+ },
+ "P4": {
+  "verdict": "holds",
+  "evidence": "From org/: `bin/acme-actions --as ann request gamma --successor acme/probe-approval --reason 'Probe approval: this reason is long enough.'` -> exit 0, run 0a2431ff-..., state awaiting-approval, stored preview; gamma main 3b48209f0f5e unchanged. `approve <id>` as ann -> exit 2, HTTP 403 'user:default/ann requested run ... and cannot approve it'. As carol -> exit 2, HTTP 403 'user:default/carol is not a maintainer of gamma'. `status` -> still awaiting-approval; gamma main still 3b48209f0f5e."
+ },
+ "P5": {
+  "verdict": "holds",
+  "evidence": "`bin/acme-actions --as bob approve 0a2431ff-... --wait` -> exit 0, state succeeded, commit a10305d5, verifiedAt 12:09:38.171Z. gamma main moved 3b48209 -> a10305d5; `git show main:DEPRECATED.md` is '# Deprecated: use acme/probe-approval' + the reason; commit author ann, committer bob, trailers Requested-by/Approved-by/Backstage-Run. Source: the template's last step acme:repo:verify-file (scaffolderActions.ts:260-282) calls POST /internal/runs/:id/verify (runsPlugin.ts:409-428), which runs readFromBranch (git.ts:53-65: `git --git-dir origins/gamma.git rev-parse refs/heads/main` then `git show <commit>:DEPRECATED.md`) and sets verified_at only if the content equals the approved content, else fails the step; deriveState (runsPlugin.ts:228-233) reports succeeded only when the task completed and verified_at is set."
+ },
+ "P6": {
+  "verdict": "holds",
+  "evidence": "Installed origins/alpha.git/hooks/pre-receive (echo, exit 1). As ann: request alpha --successor acme/probe-reject -> run 6e6f7b09-...; `--as bob approve <id> --wait` -> exit 3, state failed, succeeded false, commit null, verifiedAt null, outcome.error \"git push to alpha main was rejected: ... [remote rejected] (pre-receive hook declined)\". `status` -> failed. alpha main 50affcb9c669 before and after. Hook removed afterwards (only *.sample remain)."
+ },
+ "P7": {
+  "verdict": "holds",
+  "evidence": "From org/, `bin/acme-actions --as ann list` (one command, exit 0, after the 15 s catalog load the handoff mentions) lists mark-deprecated for alpha, beta and gamma with inputs, owner, approvers and the origin each was read from. P4's request was made from org/ with `bin/acme-actions --as ann request gamma ...`."
+ },
+ "P8": {
+  "verdict": "holds",
+  "evidence": "`bin/acme-actions --as ann record 0a2431ff-...` -> requested {by user:default/ann, at 12:09:33.392Z}, inputs {successor acme/probe-approval, reason ...} (also on the timestamped 'requested' event), approval {by user:default/bob, at 12:09:37.656Z}, push {commit, at}, verification {observedCommit, at, branch main}, outcome {state succeeded, at 12:09:38.171Z}, and events[] with at/actor for requested, previewed, both approve-refused (ann, carol), approved, apply-started, pushed, verified, outcome:succeeded."
+ },
+ "P9": {
+  "verdict": "holds",
+  "evidence": "Every step (list, preview, request, approve, approve --wait, status, record, runs) ran non-interactively with flags only (--as, --successor, --reason, --wait) and printed one JSON document; exit codes distinguish refused (2) from a --wait that ended other than succeeded (3)."
+ },
+ "P10": {
+  "verdict": "holds",
+  "evidence": "Operated entirely from org/HANDOFF.md: started the backend with its two Start commands (PATH export included in the handoff) in a tmux session, waited for 200 and the catalog load, then ran its Use and Testing commands from org/. The source was read only for P5's evidence. No fixes needed."
+ },
+ "fixes": [],
+ "strikes": [],
+ "linesBeforeStrikes": 1633,
+ "linesAfterStrikes": 1633,
+ "fullyPasses": true,
+ "notes": "C1 re-checked with score.py check before any probe ran: pass, matching backstage-1.check.json. P5 then overwrote gamma's DEPRECATED.md on main with the probe's content (a10305d5), as the probe requires, so gamma no longer shows the task's content after adjudication. The probes added runs 0a2431ff (gamma, succeeded) and 6e6f7b09 (alpha, failed) to backstage/.data/acme-runs.sqlite; the .data/ sqlite files are binary, git-ignored runtime data and were never in the counted lines, so nothing needed striking: every counted file is code, configuration or a manifest. The backend was started in tmux session backstage-1-adj and stopped (Ctrl-C, session killed; port 7430 closed) before the next run. Outside the probes: the template adds a rule beyond the task (successor may not be acme/<self>); verification compares the file content on main, not that the run's own commit is on main, so a run whose content is already present succeeds without a push (stated in the handoff as a no-op). Identity is the static token derived from --as, as the sandbox allows. The beta and gamma templates and catalog entries differ from alpha's only by name, so score.py counted all three."
+}

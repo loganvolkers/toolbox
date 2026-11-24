@@ -1,0 +1,18 @@
+{
+ "alpha": {
+  "present": true,
+  "firstLine": true,
+  "reason": true
+ },
+ "beta": {
+  "present": true,
+  "firstLine": true,
+  "reason": true
+ },
+ "gamma": {
+  "present": true,
+  "firstLine": true,
+  "reason": true
+ },
+ "pass": true
+}

@@ -434,6 +434,14 @@ boundary.**
 - Group claims in the proxy or OIDC token are used as a **ceiling**: a membership absent from a fresh
   token is treated as revoked even before the connector catches up.
 - Revocation latency is a published metric and alert ([plan.md](./plan.md) §6).
+- Toolbox keeps each OpenFGA decision with the snapshot it was made in, not for a TTL. Every tuple
+  is derived, so tuples change only when a snapshot is published, and the next snapshot starts with
+  no decisions: a revoked grant is denied by the first read of that snapshot. Only the instance that
+  wrote the snapshot's tuples keeps decisions (a follower may ask before the leader writes). OpenFGA's
+  own TTL caches stay off: with them, a new entity read through `min_snapshot` stayed hidden for the
+  10 s TTL. On the Backstage comparison's 1k catalog, kept decisions raised checked entity reads
+  from about 1,300 to about 140,000 per second
+  ([backstage-comparison.md](./design/backstage-comparison.md)).
 
 ---
 

@@ -1,0 +1,30 @@
+{
+ "linesToMaintain": 1444,
+ "files": {
+  "alpha/.github/self-service/apply-github-settings.sh": 55,
+  "alpha/.github/self-service/mark-deprecated.json": 13,
+  "alpha/.github/self-service/mark_deprecated.py": 215,
+  "alpha/.github/workflows/mark-deprecated.yml": 74,
+  "alpha/CODEOWNERS": 3,
+  "beta/.github/CODEOWNERS": 3,
+  "org/.gitignore": 2,
+  "org/bin/acme": 424,
+  "org/catalog.json": 10,
+  "org/state/counter": 1,
+  "org/state/runs/run-0001.json": 146,
+  "org/state/runs/run-0001/apply/apply.json": 6,
+  "org/state/runs/run-0001/apply/check-approval.json": 9,
+  "org/state/runs/run-0001/apply/preview.json": 13,
+  "org/state/runs/run-0001/apply/verify.json": 8,
+  "org/state/runs/run-0002.json": 146,
+  "org/state/runs/run-0002/apply/apply.json": 6,
+  "org/state/runs/run-0002/apply/preview.json": 13,
+  "org/state/runs/run-0002/apply/verify.json": 8,
+  "org/state/runs/run-0003.json": 146,
+  "org/state/runs/run-0003/apply/apply.json": 6,
+  "org/state/runs/run-0003/apply/preview.json": 13,
+  "org/state/runs/run-0003/apply/verify.json": 8,
+  "org/tests/selftest.sh": 115,
+  "scratch/cache/pip/wheels/ee/0d/b1/e03704f823abc370cdb863e8ed30342a8356d3834b1aaa4393/origin.json": 1
+ }
+}

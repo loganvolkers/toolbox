@@ -141,6 +141,7 @@ kinds:
 
 scorecards:
   - name: sdlc-stage
+    title: SDLC stages
     kind: SdlcStage
     description: >-
       Each stage of an SDLC layer, checked against facts: an exit criterion, a
@@ -204,6 +205,7 @@ scorecards:
     facets: {summary: public, details: public}
 
   - name: sdlc-layer
+    title: SDLC layers
     kind: SdlcLayer
     description: >-
       Each SDLC layer as a whole: every stage declared, none missing in fact,
@@ -236,6 +238,7 @@ scorecards:
     facets: {summary: public, details: public}
 
   - name: review-sdlc-stage
+    title: SDLC stages, reviewed by agents
     kind: SdlcStage
     description: >-
       Agents' judgement of each SDLC stage against sdlc-stage-quality,

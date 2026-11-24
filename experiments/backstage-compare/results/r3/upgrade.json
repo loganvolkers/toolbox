@@ -1,0 +1,15 @@
+{
+  "toolbox": {
+    "upgradeLinesPerRelease": 0,
+    "rollbackManualStepsPerRelease": 0,
+    "upgradeWindow": "v0.1.0..HEAD",
+    "rollbackFrom": "v0.1.1"
+  },
+  "backstage": {
+    "upgradeLinesPerRelease": 47.3,
+    "upgradeTemplateLines": 284,
+    "rollbackManualStepsPerRelease": 1.5,
+    "rollbackMigrations": 9,
+    "upgradeWindow": "v1.51.0..v1.57.1"
+  }
+}

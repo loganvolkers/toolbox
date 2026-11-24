@@ -245,9 +245,22 @@ pub fn binary_for(package: &str) -> String {
     file
 }
 
+fn disabled() -> bool {
+    std::env::var("TOOLBOX_CONNECTORS").is_ok_and(|v| v == "off")
+}
+
+/// Whether this server reads federation children itself, so their first read is worth waiting for.
+pub fn reads_children(s: &AppState) -> bool {
+    !disabled()
+        && s.manifest
+            .federation
+            .as_ref()
+            .is_some_and(|f| !f.children.is_empty())
+}
+
 /// Start a supervisor for every in-image connector (unless `TOOLBOX_CONNECTORS=off`).
 pub fn spawn_in_image(s: &Arc<AppState>) {
-    if std::env::var("TOOLBOX_CONNECTORS").is_ok_and(|v| v == "off") {
+    if disabled() {
         tracing::info!("in-image connectors disabled (TOOLBOX_CONNECTORS=off)");
         return;
     }
@@ -264,16 +277,52 @@ pub fn spawn_in_image(s: &Arc<AppState>) {
     }
 }
 
+/// What an in-image connector inherits from the server's environment. The server holds
+/// `DATABASE_URL`, PATs and every `TOOLBOX_SECRET_*`; a connector gets only process basics, and
+/// its own credentials through its config (`${env:…}`, `${secret:…}`). `GITHUB_API_URL` is an
+/// endpoint, not a credential: the local simulation's switch (local-simulation.md).
+const CONNECTOR_ENV: &[&str] = &[
+    "PATH",
+    "HOME",
+    "USER",
+    "LANG",
+    "LC_ALL",
+    "TZ",
+    "TMPDIR",
+    "SSL_CERT_FILE",
+    "SSL_CERT_DIR",
+    "HTTP_PROXY",
+    "HTTPS_PROXY",
+    "NO_PROXY",
+    "http_proxy",
+    "https_proxy",
+    "no_proxy",
+    "RUST_LOG",
+    "RUST_BACKTRACE",
+    "GITHUB_API_URL",
+];
+
+/// The variables of `CONNECTOR_ENV` this process has, for a supervised connector's environment.
+pub fn connector_env() -> Vec<(String, String)> {
+    CONNECTOR_ENV
+        .iter()
+        .filter_map(|k| std::env::var(k).ok().map(|v| ((*k).to_owned(), v)))
+        .collect()
+}
+
 async fn supervise(s: Arc<AppState>, name: String, program: String, config: Value) {
     let mut backoff = Duration::from_secs(1);
     loop {
-        let child = tokio::process::Command::new(&program)
-            .env("TOOLBOX_CONNECTOR_CONFIG", config.to_string())
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::inherit())
-            .kill_on_drop(true)
-            .spawn();
+        let child = crate::confine::spawn(
+            tokio::process::Command::new(&program)
+                .env_clear()
+                .envs(connector_env())
+                .env("TOOLBOX_CONNECTOR_CONFIG", config.to_string())
+                .stdin(Stdio::piped())
+                .stdout(Stdio::piped())
+                .stderr(Stdio::inherit())
+                .kill_on_drop(true),
+        );
         let mut child = match child {
             Ok(c) => c,
             Err(e) => {
@@ -352,6 +401,7 @@ async fn flush(s: &Arc<AppState>, name: &str, batch: &mut Vec<Value>) {
     }
 }
 
+/// Query of the long-poll command stream: how long to wait, in seconds.
 #[derive(Deserialize)]
 pub struct WaitQuery {
     wait: Option<u64>,
@@ -534,6 +584,21 @@ mod tests {
     use std::sync::Arc;
     use toolbox_secrets::backends::EnvBackend;
     use toolbox_secrets::{SecretResolver, resolve_config as resolve_with};
+
+    #[test]
+    fn connectors_inherit_no_server_credentials() {
+        for k in CONNECTOR_ENV {
+            let u = k.to_ascii_uppercase();
+            assert!(
+                ![
+                    "DATABASE", "SECRET", "TOKEN", "PATS", "PASSWORD", "KEY", "TOOLBOX_"
+                ]
+                .iter()
+                .any(|bad| u.contains(bad)),
+                "{k} looks like a credential"
+            );
+        }
+    }
 
     #[test]
     fn resolve_config_uses_secret_chain() {

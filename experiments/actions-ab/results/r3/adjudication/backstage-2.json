@@ -1,0 +1,52 @@
+{
+ "run": "backstage-2",
+ "C1": "holds",
+ "P1": {
+  "verdict": "holds",
+  "evidence": "`git --git-dir origins/<r>.git ls-tree -r main` shows `.backstage/mark-deprecated.yaml` (scaffolder Template) and `catalog-info.yaml` (component, maintainers group, Location) on alpha, beta and gamma `main`. `bin/acme --as ann actions` reports each action's source as origin/branch main/path/commit/blob; blobs 65abcf6, d1f9386, c3733f0 equal `git rev-parse main:.backstage/mark-deprecated.yaml` on each origin."
+ },
+ "P2": {
+  "verdict": "holds",
+  "evidence": "From org/: `bin/acme --as ann request alpha mark-deprecated --successor 'Acme/Bad Name' --reason <valid>` -> HTTP 400 invalid-input (successor does not match pattern), exit 1. `... --successor acme/dependabot-proxy-v2 --reason short` -> 400 invalid-input (reason below minimum length 20), exit 1. Run count 7 before and after. alpha main be5f0782a574 before and after."
+ },
+ "P3": {
+  "verdict": "holds",
+  "evidence": "`bin/acme --as ann preview beta mark-deprecated --successor acme/probe-preview --reason 'State management moves to the shared store package.'` -> exit 0, valid true, changes[0] path DEPRECATED.md, operation modify, before/after full content and unified diff against base bf68d79. beta main bf68d7976838 before and after; run count still 7."
+ },
+ "P4": {
+  "verdict": "holds",
+  "evidence": "From org/: `bin/acme --as ann request gamma mark-deprecated --successor acme/probe-approval --reason 'Graph extraction now lives in graphify-core.'` -> run 00b2d169, awaiting-approval. gamma main 4a3fbde75adc after request. `bin/acme --as ann approve <id>` -> 403 self-approval, exit 1. `bin/acme --as carol approve <id>` -> 403 not-a-maintainer, exit 1. gamma main still 4a3fbde75adc; status awaiting-approval, approvedBy null."
+ },
+ "P5": {
+  "verdict": "holds",
+  "evidence": "`bin/acme --as bob approve <id> --wait` -> exit 0, status succeeded, outcome observed true, commit 68d3626f = gamma main after; `git show main:DEPRECATED.md` on origins/gamma.git is '# Deprecated: use acme/probe-approval' + reason, commit authored by ann with Acme-Run/Requested-by/Approved-by trailers. Source: runsPlugin.ts `check()` sets 'succeeded' (line 501, the only success transition) only after the scaffolder task completed and `showFile(repo.origin, 'main', path)` (`git --git-dir <origin> show main:DEPRECATED.md`) equals the approved content; otherwise it finishes 'failed'."
+ },
+ "P6": {
+  "verdict": "holds",
+  "evidence": "Wrote origins/alpha.git/hooks/pre-receive (stderr message; exit 1), chmod +x. ann requested successor acme/probe-reject (run 1d51d450), `bin/acme --as bob approve <id> --wait` -> exit 3, status failed, outcome.error carries git's 'remote: adjudicator P6: all pushes rejected'. Status 5 s later still failed. alpha main be5f0782a574 before and after. Hook removed."
+ },
+ "P7": {
+  "verdict": "holds",
+  "evidence": "From org/, `bin/acme --as ann actions` (one command) listed mark-deprecated for alpha, beta and gamma with sources. P4 was requested from org/ with `request gamma mark-deprecated`."
+ },
+ "P8": {
+  "verdict": "holds",
+  "evidence": "`bin/acme --as ann record 00b2d169...` shows requestedBy ann + requestedAt, approvedBy bob + approvedAt, inputs, startedAt, finishedAt, outcome (succeeded, observed, observedAt, commit), and events requested (ann), approval-refused x2 (ann self-approval, carol not-a-maintainer), approved (bob), started, execution-authorized, succeeded, each with `at`."
+ },
+ "P9": {
+  "verdict": "holds",
+  "evidence": "Every step ran via `bin/acme` and `bin/backstage-start`/`bin/backstage-stop` without prompts, printing JSON; exit codes 0 ok, 1 refused, 3 waited-for run did not succeed."
+ },
+ "P10": {
+  "verdict": "holds",
+  "evidence": "`bin/backstage-start` started the backend and printed {\"started\": true, \"actions\": 3}; all commands came from HANDOFF.md; `bin/backstage-stop` stopped it (port 7770 closed). No fixes needed. Source read only for P5."
+ },
+ "fixes": [],
+ "strikes": [
+  {"path": "backstage/.acme-data/real-runs.txt", "lines": 1, "reason": "scratch output the agent wrote during its runs: the three real run ids, inside the runtime data directory next to the SQLite stores and backend.log"}
+ ],
+ "linesBeforeStrikes": 1485,
+ "linesAfterStrikes": 1484,
+ "fullyPasses": true,
+ "notes": "C1 checked with `score.py check` before probing (pass). P5 then intentionally replaced gamma's DEPRECATED.md with the probe's content (gamma main now 68d3626f), so a later `score.py check` here fails for gamma; that is the adjudication's effect. The glue (backstage/packages/backend/src/acme/, app-config.local.yaml) is not under version control, as the handoff states. Backstage's permission policy remains allow-all; the approval gate is the custom acme-runs plugin plus a one-time token checked by the scaffolder action (not exercised by the probes). Adjudicator's probe runs 00b2d169 (P4/P5, gamma, succeeded) and 1d51d450 (P6, alpha, failed) are now in the run's database."
+}

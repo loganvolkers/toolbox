@@ -1,0 +1,50 @@
+{
+ "run": "backstage-3",
+ "C1": "holds",
+ "P1": {
+  "verdict": "holds",
+  "evidence": "`git --git-dir origins/<r>.git ls-tree -r main` shows `.backstage/actions/mark-deprecated.yaml` (scaffolder Template) and `catalog-info.yaml` on alpha, beta and gamma `main`. `ACME_TOKEN=$ANN bin/acme actions` reports each definition's origin, branch main, path and definitionSha; 1fcf730, c1b6f84, b22bef1 equal `git rev-parse main:.backstage/actions/mark-deprecated.yaml` on each origin (beta's reflects its later commit 7612711, so the catalog follows the origin's `main`)."
+ },
+ "P2": {
+  "verdict": "holds",
+  "evidence": "From org/: `ACME_TOKEN=$ANN bin/acme request alpha mark-deprecated --successor 'Acme/Bad Name' --reason <valid>` -> httpStatus 400, errors[successor] does not match pattern, exit 1. `... --successor acme/dependabot-proxy-v2 --reason short` -> 400, errors[reason] below minimum length 20, exit 1. Run count 6 before and after. alpha main a1d948df526e before and after."
+ },
+ "P3": {
+  "verdict": "holds",
+  "evidence": "`ACME_TOKEN=$ANN bin/acme preview beta mark-deprecated --successor acme/probe-preview --reason 'State management moves to the shared store package.'` -> exit 0, preview path DEPRECATED.md, before, full new content '# Deprecated: use acme/probe-preview ...', unified diff, changed true, baseCommit 7612711. beta main 76127115cdc8 before and after; run count still 6."
+ },
+ "P4": {
+  "verdict": "holds",
+  "evidence": "From org/: `ACME_TOKEN=$ANN bin/acme request gamma mark-deprecated --successor acme/probe-approval --reason 'Graph extraction now lives in graphify-core.'` -> run-374d038065, awaiting-approval. gamma main 89211fce3bbc after request. `ACME_TOKEN=$ANN bin/acme approve <id>` -> 403 'ann requested run ... cannot approve it', exit 1. `ACME_TOKEN=$CAROL bin/acme approve <id>` -> 403 'carol is not a maintainer of gamma', exit 1. gamma main still 89211fce3bbc; status awaiting-approval, approvedBy null."
+ },
+ "P5": {
+  "verdict": "holds",
+  "evidence": "`ACME_TOKEN=$BOB bin/acme approve <id>` -> running; `bin/acme wait <id>` -> exit 0, succeeded, outcome.observed head 03ac6a4a = gamma main after, contentMatches true, commitOnBranch true. `git show main:DEPRECATED.md` on origins/gamma.git is '# Deprecated: use acme/probe-approval' + reason; commit authored by ann with Acme-Run/Requested-by/Approved-by trailers. Source: runsPlugin.ts `poll()` sets 'succeeded' (line 319, the only success transition) only when `observe()` returns ok, which runs `git rev-parse refs/heads/main` and reads the file at that head on the bare origin (git.ts revParse/readFileAt), requires equality with the approved preview content, and requires the run's commit to be an ancestor of main (`git merge-base --is-ancestor`)."
+ },
+ "P6": {
+  "verdict": "holds",
+  "evidence": "Wrote origins/alpha.git/hooks/pre-receive (stderr message; exit 1), chmod +x. ann requested successor acme/probe-reject (run-01c5d76bf3), bob approved -> `bin/acme wait` exit 3, status failed, message 'Scaffolder task failed at step write: ... [remote rejected] HEAD -> main (pre-receive hook declined)'. Status 5 s later still failed. alpha main a1d948df526e before and after. Hook removed."
+ },
+ "P7": {
+  "verdict": "holds",
+  "evidence": "From org/, `ACME_TOKEN=$ANN bin/acme actions` (one command) listed mark-deprecated for alpha, beta and gamma with maintainers, schema and definition source. P4 was requested from org/ with `request gamma mark-deprecated`."
+ },
+ "P8": {
+  "verdict": "holds",
+  "evidence": "`ACME_TOKEN=$ANN bin/acme record run-374d038065` shows requestedBy ann + requestedAt, approvedBy bob + approvedAt, inputs, startedAt, claimedAt, finishedAt, outcome (succeeded with observed head and observedAt), and events requested (ann), approval-denied (ann), approval-denied (carol), approved (bob), started, claimed, succeeded, each with `at`, plus the scaffolder task log."
+ },
+ "P9": {
+  "verdict": "holds",
+  "evidence": "Every step ran via `bin/acme` with `ACME_TOKEN=...` and no prompts, printing JSON; exit codes 0 ok, 1 refused, 3 `wait` ended without success."
+ },
+ "P10": {
+  "verdict": "holds",
+  "evidence": "Used the handoff's shell setup (PATH, cd org, ANN/BOB/CAROL tokens), its tmux start command and health loop (ready in ~6 s), and its stop command. The handoff's `sudo sysctl -w fs.inotify.max_user_instances=1024` was not needed: /proc/sys/fs/inotify/max_user_instances already read 1024. All commands came from HANDOFF.md. No fixes needed. Source read only for P5."
+ },
+ "fixes": [],
+ "strikes": [],
+ "linesBeforeStrikes": 1544,
+ "linesAfterStrikes": 1544,
+ "fullyPasses": true,
+ "notes": "C1 checked with `score.py check` before probing (pass). P5 then intentionally replaced gamma's DEPRECATED.md with the probe's content (gamma main now 03ac6a4a), so a later `score.py check` here fails for gamma; that is the adjudication's effect. None of the 16 counted files is runtime data: the SQLite stores in backstage/.data/ and backend.log are not counted by score.py, so nothing was struck. The run raised a machine-wide inotify limit with sudo during its session, and its handoff documents that as a step; the glue (backstage/packages/backend/src/acme/, app-config.local.yaml) is not under version control. Backstage's permission policy remains allow-all; the approval gate is the custom acme-actions plugin plus the `acme:run:claim` step (not exercised by the probes). Adjudicator's probe runs run-374d038065 (P4/P5, gamma, succeeded) and run-01c5d76bf3 (P6, alpha, failed) are now in the run's database."
+}

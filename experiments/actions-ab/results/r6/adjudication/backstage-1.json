@@ -1,0 +1,50 @@
+{
+ "run": "backstage-1",
+ "C1": "holds",
+ "P1": {
+  "verdict": "holds",
+  "evidence": "git --git-dir=origins/<r>.git ls-tree -r main: .backstage/actions/mark-deprecated.yaml and catalog-info.yaml are on main of alpha (definition commits 88e91c0, a88724f), beta (b7839f0) and gamma (2d94b48), each committed inside its own repository. `bin/acme-actions --as carol list` reports each definition's origin, path, blob and commit, read from that origin's main, with owner group:<repo>/maintainers."
+ },
+ "P2": {
+  "verdict": "holds",
+  "evidence": "alpha main 7343918 before; 7 runs in `runs`. `bin/acme-actions --as ann request alpha --successor 'Acme/Bad Name' --reason 'Probe: a bad successor must be refused.'` -> exit 1, {status 400, InputError, errors [{input successor, does not match pattern}]}. `... --successor acme/probe-valid --reason short` -> exit 1, 400, reason does not meet minimum length of 20. Still 7 runs; alpha main 7343918 after: unchanged."
+ },
+ "P3": {
+  "verdict": "holds",
+  "evidence": "beta main a2d5a48 before. `bin/acme-actions --as ann preview beta --successor acme/probe-preview --reason 'Probe: preview must show the file and content.'` -> exit 0, JSON with changes[0] {path DEPRECATED.md, change update, baseCommit a2d5a48, content '# Deprecated: use acme/probe-preview\\n\\nProbe: preview must show the file and content.\\n', unified diff} from a scaffolder dry run. Run count unchanged (7); beta main a2d5a48 after: unchanged."
+ },
+ "P4": {
+  "verdict": "holds",
+  "evidence": "From /tmp/actions-ab/r6/backstage-1/org, gamma main 7e2b8ca before. `bin/acme-actions --as ann request gamma --successor acme/probe-approval --reason 'Probe: approval must come from another maintainer.'` -> exit 0, run-d9d19f26-88df-435a-af36-5c461a26af5a, status awaiting-approval, preview stored. gamma 7e2b8ca after the request. `approve <id>` as ann -> exit 1, 403 'ann requested this run and cannot approve it; another maintainer must'. As carol -> exit 1, 403 'carol is not a maintainer of acme/gamma (approvers: ann, bob)'. Status still awaiting-approval; gamma main 7e2b8ca: unchanged."
+ },
+ "P5": {
+  "verdict": "holds",
+  "evidence": "`bin/acme-actions --as bob approve <id> --wait` -> exit 0, status succeeded. gamma main e7fe3ba; `git show main:DEPRECATED.md` = '# Deprecated: use acme/probe-approval\\n\\nProbe: approval must come from another maintainer.\\n'; commit trailers Acme-Run, Requested-by: ann, Approved-by: bob. Source: plugin.ts check() (lines 697-746) waits for the scaffolder task to end, then observe() (613-638) resolves refs/heads/main in the origin bare repo and reads the file with `git --git-dir=<origin> show <head>:DEPRECATED.md` (git.ts readFileAt), and finish(..., 'succeeded') is called only when the task completed and the content equals the approved content. The record shows an 'observed' event (commit e7fe3ba, matches true) before 'succeeded'."
+ },
+ "P6": {
+  "verdict": "holds",
+  "evidence": "Wrote origins/alpha.git/hooks/pre-receive (echo to stderr; exit 1). alpha main 7343918 before. `--as ann request alpha --successor acme/probe-reject --reason 'Probe: a rejected push must not succeed.'` -> run-77391574-e6bb-48e9-a8ed-dc8ce5fbf707; `--as bob approve <id> --wait` -> exit 3, status failed; `status` -> failed, reason 'the task failed: step deprecate: push to acme/alpha@main was rejected: remote: adjudicator: every push rejected'. alpha main 7343918 after. Hook removed (hooks/ holds only samples)."
+ },
+ "P7": {
+  "verdict": "holds",
+  "evidence": "From org/: `bin/acme-actions --as carol list` -> exit 0, JSON items mark-deprecated for acme/alpha, acme/beta and acme/gamma with inputs schema, approvers and definition provenance. P4's request was made from org/ with `bin/acme-actions --as ann request gamma ...`."
+ },
+ "P8": {
+  "verdict": "holds",
+  "evidence": "`bin/acme-actions --as bob record <P4 id>` -> requested {by ann, at 14:26:20.305Z}; approved {by bob, at 14:26:25.276Z}; inputs {successor acme/probe-approval, reason ...}; outcome {status succeeded, observation at 14:26:26.456Z on commit e7fe3ba, at 14:26:26.459Z}; finishedAt; definition provenance; events with timestamps: requested(ann), previewed, approval-refused(ann), approval-refused(carol), approved(bob), started, change-authorized, task-status, observed, succeeded."
+ },
+ "P9": {
+  "verdict": "holds",
+  "evidence": "Every probe command (whoami, list, preview, request, approve, approve --wait, status, record, runs) ran from a non-interactive shell with </dev/null and printed JSON on stdout, with documented exit codes (0 ok, 1 refused, 3 terminal-not-succeeded)."
+ },
+ "P10": {
+  "verdict": "holds",
+  "evidence": "Started the backend with the handoff's tmux command (ready in about 10 s; the readiness loop was bounded to 90 tries instead of the handoff's open-ended until, with the same check) and used every command as documented. Source read only for P5. Stopped with `tmux kill-session -t r6-backstage-1-backend`. No fixes needed."
+ },
+ "fixes": [],
+ "strikes": [],
+ "linesBeforeStrikes": 2311,
+ "linesAfterStrikes": 2311,
+ "fullyPasses": true,
+ "notes": "A Backstage backend plugin (acme-actions: HTTP API, rules, SQLite run store), a catalog entity provider reading each origin's main, two custom scaffolder actions, and a dependency-free Node CLI in org/bin. No runtime data appears in the lines map: the run records live in backstage/.data/*.sqlite and the log in backstage/.backend.log, neither counted by score.py, so nothing was struck. Every counted file is code or configuration a person would keep (app-config.local.yaml's 36 lines are the run's additions to the harness overlay). Minor defects outside the probes: 403/400 error bodies include server stack traces with absolute paths; the handoff's readiness loop never ends if the backend fails to start. The second P2 attempt used successor acme/probe-valid because the probe names none. The adjudicator's probes left a succeeded run on gamma (main now e7fe3ba, successor acme/probe-approval) and a failed run on alpha in the plugin's database."
+}
