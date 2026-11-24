@@ -24,7 +24,27 @@ records:
     status: designed
     ran: ''
     outcome: ''
-    changed: []
+    changed:
+    - D01M86BY3YQX3SA1W99QXF1QA1H
+    - D01M86J769VGE6K5FJJQ76EP4AA
+    - D01M86WAVQQXYF9DFHCP3G035MA
+    - D01M8727W7FEED6VVRY6MB3JFR3
+    - D01M87579Y5AZWR1Z29S802VP2K
+    - >-
+      rounds 2 and 3: run records list approvers as plain identities; a
+      change's commit message takes placeholders; a repeated change its base
+      already has succeeds without a commit; /readyz waits for the first read
+      of federation children
+    - >-
+      rounds 4 to 6: toolbox test runs action cases in a scratch copy with a
+      rejected push; test defaults; a hint for a value cut at a comma; a
+      child's federation from an included file; standard action files
+    - >-
+      round 7: a parent's checkout approves and rejects runs with its kept
+      key; refused approvals are recorded; a blocked run exits 2
+    - >-
+      round 8 (pre-freeze, labelled): group approvers in a parent's checkout
+      from the portal's own model (fb5dc3f)
     servedValue: ''
     blockedOn: ''
     readme: experiments/actions-ab/README.md
@@ -35,11 +55,20 @@ records:
     measure: >-
       lines of code and config to maintain (harness/score.py lines), tool
       calls by kind and characters of tool results from each run's transcript
-      (harness/count.py), and probes P1 to P10 run by the adjudicator
-    frozenAt: ''
+      (harness/count.py), and the adjudicator's probes (P1 to P10 to round 7;
+      C1 and P1 to P11 in round 8, on the held-out add-notice task)
+    frozenAt: >-
+      round 8: 8519cd5, with the twelve run prompts rendered and committed in
+      681cf8e before the first launch (013c58f)
     designer: >-
       the agent that built Toolbox's actions and federation and wrote the
       README
     adjudicator: a fresh agent that designed no part of it and changed nothing
-    fitAudit: ''
+    fitAudit: >-
+      rounds 1 to 7 (results/FIT-AUDIT.md): 15 commits fit with corrections,
+      and the Toolbox arm had a task-fitted recipe and untriaged rivals, so
+      round 7 is not a pass. Round 8 (results/FIT-AUDIT-r8.md): P4 and P5 hold
+      with corrections; 14 of 15 earlier corrections made; the effect and
+      inputs were held out but R9 was not, so Toolbox's P9 passes and its
+      calls are labelled; the example's group was renamed (38e9549)
     spread: three runs per arm per round; every run's measures go in results/
