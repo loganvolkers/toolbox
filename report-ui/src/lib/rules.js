@@ -63,7 +63,12 @@ export function memberLinks(ids) {
     { className: "members" },
     "In it: ",
     ...ids.slice(0, cut).flatMap(function (id, i) {
-      return [i ? ", " : "", link("entity/" + enc(id), "", shortId(id))];
+      var name = shortId(id);
+      // Two files named check.go are told apart by their paths.
+      var twin = ids.some(function (o) {
+        return o !== id && shortId(o) === name;
+      });
+      return [i ? " " : "", el("span", { style: "white-space:nowrap" }, link("entity/" + enc(id), "", twin ? id.replace(/^[^:]*:/, "") : name), i < cut - 1 ? "," : "")];
     }),
     ids.length > cut ? " and " + (ids.length - cut) + " more" : null,
   );

@@ -236,7 +236,11 @@
       { className: "members" },
       "In it: ",
       ...ids.slice(0, cut).flatMap(function(id, i) {
-        return [i ? ", " : "", link("entity/" + enc(id), "", shortId(id))];
+        var name = shortId(id);
+        var twin = ids.some(function(o) {
+          return o !== id && shortId(o) === name;
+        });
+        return [i ? " " : "", el("span", { style: "white-space:nowrap" }, link("entity/" + enc(id), "", twin ? id.replace(/^[^:]*:/, "") : name), i < cut - 1 ? "," : "")];
       }),
       ids.length > cut ? " and " + (ids.length - cut) + " more" : null
     );
@@ -2898,6 +2902,15 @@
             return isPassing(ro[1]);
           }).length, outs.length].join("|");
         };
+        var worstOf = function(g) {
+          var r = g[0][1];
+          if (!(offBy(r) > 0)) return "";
+          var rule = Object.keys(r.rules || {}).find(function(n) {
+            return isFailing(r.rules[n]) && typeof (r.measures || {})[n] === "number";
+          });
+          var ev = rule && (r.evidence || {})[rule];
+          return shortId(g[0][0]) + (ev ? ", " + String(Array.isArray(ev) ? ev[0] : ev).split("\n")[0] : "");
+        };
         var groups = [];
         var byFacts = /* @__PURE__ */ new Map();
         shown.forEach(function(pair) {
@@ -2941,7 +2954,7 @@
                 need.length ? el(
                   "b",
                   { className: r.level === "none" ? "bad" : "" },
-                  next.charAt(0).toUpperCase() + next.slice(1) + " needs: ",
+                  (KNOWN.indexOf(next) >= 0 ? next.charAt(0).toUpperCase() + next.slice(1) : levelName(next)) + " needs: ",
                   ...need.slice(0, 2).map(function(n, i) {
                     return el("span", { className: "nr" }, ...keepWithLast(ruleTitle(active, n), basisBadge(basisOf((sc.rules || {})[n]), true)), i < Math.min(need.length, 2) - 1 ? ", " : "");
                   }),
@@ -2992,7 +3005,7 @@
               "summary",
               {},
               first.children[0],
-              el("span", { className: "name" }, kindCount(D, sc.kind, g.length) + " with the same result", el("span", { className: "tail" }, el("span", { className: "chev", textContent: "›" }))),
+              el("span", { className: "name" }, kindCount(D, sc.kind, g.length) + " with the same result", el("span", { className: "tail" }, el("span", { className: "chev", textContent: "›" })), worstOf(g) ? el("small", { textContent: "furthest off: " + worstOf(g) }) : null),
               first.children[2]
             )
           );

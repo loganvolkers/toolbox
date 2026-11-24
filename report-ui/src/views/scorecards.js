@@ -3,7 +3,7 @@ import { badge, barEl, grow, legendEl, levelLegend, levelOrder, levelPill, medal
 import { BASIS, basisBadge, basisCounts, basisIcon, basisInline, basisKey, basisOf, lockIcon, refs, whyEl } from "../lib/basis.js";
 import { levelName, nextLevel, scCaption } from "../lib/campaigns.js";
 import { cardName, judgedMark, keepWithLast } from "../lib/compare.js";
-import { el, enc, link } from "../lib/dom.js";
+import { el, enc, KNOWN, link } from "../lib/dom.js";
 import { kindCount, kindTitle } from "../lib/kinds.js";
 import { ONLY_LEVEL, fill } from "../lib/levels.js";
 import { capsRepo, isTop, shortId, title } from "../lib/rings.js";
@@ -449,6 +449,16 @@ export const scorecardsViews = {
           return isPassing(ro[1]);
         }).length, outs.length].join("|");
       };
+      // The furthest-off member of a group (members are sorted that way), with the evidence that sizes it.
+      var worstOf = function (g) {
+        var r = g[0][1];
+        if (!(offBy(r) > 0)) return "";
+        var rule = Object.keys(r.rules || {}).find(function (n) {
+          return isFailing(r.rules[n]) && typeof (r.measures || {})[n] === "number";
+        });
+        var ev = rule && (r.evidence || {})[rule];
+        return shortId(g[0][0]) + (ev ? ", " + String(Array.isArray(ev) ? ev[0] : ev).split("\n")[0] : "");
+      };
       var groups = [];
       var byFacts = new Map();
       shown.forEach(function (pair) {
@@ -495,7 +505,7 @@ export const scorecardsViews = {
                 ? el(
                     "b",
                     { className: r.level === "none" ? "bad" : "" },
-                    next.charAt(0).toUpperCase() + next.slice(1) + " needs: ",
+                    (KNOWN.indexOf(next) >= 0 ? next.charAt(0).toUpperCase() + next.slice(1) : levelName(next)) + " needs: ",
                     ...need.slice(0, 2).map(function (n, i) {
                       return el("span", { className: "nr" }, ...keepWithLast(ruleTitle(active, n), basisBadge(basisOf((sc.rules || {})[n]), true)), i < Math.min(need.length, 2) - 1 ? ", " : "");
                     }),
@@ -549,7 +559,7 @@ export const scorecardsViews = {
             "summary",
             {},
             first.children[0],
-            el("span", { className: "name" }, kindCount(D, sc.kind, g.length) + " with the same result", el("span", { className: "tail" }, el("span", { className: "chev", textContent: "›" }))),
+            el("span", { className: "name" }, kindCount(D, sc.kind, g.length) + " with the same result", el("span", { className: "tail" }, el("span", { className: "chev", textContent: "›" })), worstOf(g) ? el("small", { textContent: "furthest off: " + worstOf(g) }) : null),
             first.children[2],
           ),
         );
