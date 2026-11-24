@@ -197,6 +197,51 @@
         "$ref": "#/$defs/action"
       }
     },
+    "forges": {
+      "type": "array",
+      "description": "The code hosts this portal reaches beyond plain git (docs/design/forges.md): where a `change` opens its review, where a `gitlab-pipeline` or `github-workflow` executor dispatches, and where a child with `runner: {type: ci}` runs. A git URL is on the forge whose `url` it starts with, or whose host an SSH URL names. `https://github.com` and `https://gitlab.com` need no entry; any other host is plain git until listed here.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "url"
+        ],
+        "properties": {
+          "url": {
+            "type": "string",
+            "pattern": "^https?://[^/\\s]+(/[^\\s]*)?$",
+            "description": "The forge's web URL, e.g. https://gitlab.acme.dev."
+          },
+          "type": {
+            "enum": [
+              "github",
+              "gitlab"
+            ],
+            "description": "The forge's driver: github (github.com, Enterprise Server) or gitlab (gitlab.com, self-managed CE and EE). Required unless url is https://github.com or https://gitlab.com."
+          },
+          "api": {
+            "type": "string",
+            "description": "The API base (default: https://api.github.com for github.com, <url>/api/v3 for Enterprise Server, <url>/api/v4 for GitLab)."
+          },
+          "token": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+            "description": "The environment variable holding the API token (default GITHUB_TOKEN or GITLAB_TOKEN). Toolbox's HTTP client reads it; no action's process gets it."
+          },
+          "projects": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Project paths a parent may dispatch CI to, `*` matching within one path segment (acme/* matches acme/pay, not acme/platform/pay). Default: the children this portal lists on the forge."
+          },
+          "identity": {
+            "type": "boolean",
+            "description": "A checkout of this portal takes who you are from your own token on this forge, not from --as: toolbox run asks the forge who owns the token in --identity-token-file or TOOLBOX_IDENTITY_TOKEN, and refuses to request, approve or reject without one. At most one forge sets it. Default false."
+          }
+        }
+      }
+    },
     "ui": {
       "type": "object",
       "additionalProperties": false,
@@ -296,11 +341,12 @@
           "required": [
             "type"
           ],
-          "description": "How a parent may dispatch this portal's actions: `local` (the parent runs `toolbox run` in this checkout) or `github-workflow` (the parent dispatches this workflow, which runs `toolbox run`). The parent supplies credentials and endpoints (`federation.runners`); a child never names them.",
+          "description": "How a parent may dispatch this portal's actions: `local` (the parent runs `toolbox run` in its clone of this repository), `ci` (the parent starts this repository's own CI on the forge it cloned it from: a GitLab pipeline, or a GitHub workflow), or `github-workflow` (the older GitHub-only form). The parent supplies the forge, project, API and token from where it cloned the child; a child never names them.",
           "properties": {
             "type": {
               "enum": [
                 "local",
+                "ci",
                 "github-workflow"
               ]
             },
@@ -310,11 +356,11 @@
             },
             "workflow": {
               "type": "string",
-              "description": "github-workflow: the workflow file that runs `toolbox run`."
+              "description": "ci on GitHub and github-workflow: the workflow file that runs `toolbox run` (ci default toolbox.yml). GitLab runs the project's .gitlab-ci.yml."
             },
             "ref": {
               "type": "string",
-              "description": "github-workflow: the ref to dispatch on (default main)."
+              "description": "ci and github-workflow: the ref to run on (ci default: the branch the parent follows; github-workflow default main)."
             }
           }
         },
@@ -1267,6 +1313,7 @@
                 "in-image",
                 "change",
                 "github-workflow",
+                "gitlab-pipeline",
                 "http",
                 "webhook"
               ]
@@ -1340,21 +1387,33 @@
               ],
               "description": "change: propose (default) pushes a branch for review, and review is the approval; push lands the commit on the base once the action's approval rule is met, never forced, and the run is done when the base is seen to have it."
             },
+            "review": {
+              "type": "boolean",
+              "description": "change with land: propose: open a review for the branch on the remote's forge (default true): a merge request on GitLab (push options, no API token), a pull request on GitHub (with the forge's token). On plain git the pushed branch is the proposal."
+            },
             "repo": {
               "type": "string",
               "description": "github-workflow: owner/name."
             },
+            "project": {
+              "type": "string",
+              "description": "gitlab-pipeline: the project path (group/subgroup/project). The forge comes from forges: (default https://gitlab.com)."
+            },
+            "forge": {
+              "type": "string",
+              "description": "gitlab-pipeline: the forge's url, as forges: lists it (default https://gitlab.com)."
+            },
             "ref": {
               "type": "string",
-              "description": "github-workflow: the ref to dispatch on (default main)."
+              "description": "github-workflow and gitlab-pipeline: the ref to run on (default main)."
             },
             "api": {
               "type": "string",
-              "description": "github-workflow: the API base URL (GitHub Enterprise Server)."
+              "description": "github-workflow: the API base URL (GitHub Enterprise Server). gitlab-pipeline takes it from forges:."
             },
             "token": {
               "type": "string",
-              "description": "github-workflow: the environment variable holding the token (default GITHUB_TOKEN)."
+              "description": "github-workflow: the environment variable holding the token (default GITHUB_TOKEN). gitlab-pipeline takes it from forges:."
             }
           }
         },

@@ -1,0 +1,54 @@
+{
+  "run": "gitlab-3",
+  "C1": "holds",
+  "P1": {
+    "verdict": "holds",
+    "evidence": "Admin read of each project's main: alpha, beta and gamma each have .gitlab-ci.yml (identical, md5 cfe2563d) and .gitlab/actions/set-codeowners/{action.yml,codeowners.py,settings.sh}. ci_config_path is pinned to '.gitlab-ci.yml@acme-w16/<project>:main' (settings.json, `./actions list`). `./actions list` links each definition on that project's main."
+  },
+  "P2": {
+    "verdict": "holds",
+    "evidence": "From org/, as ann: `./actions request alpha --pattern 'docs folder' --owners '@acme/probe' --wait` -> exit 2, GitLab 400 '`pattern` input: provided value does not match required RegEx pattern'; `--pattern '/probe-invalid/' --owners '@a @b @c @d'` -> exit 2, owners regex refused; `--owners 'carol'` -> exit 2, owners regex refused. No pipeline created (alpha's latest pipeline stayed 85). alpha main b35c84ce before and after."
+  },
+  "P3": {
+    "verdict": "holds",
+    "evidence": "As ann: `./actions preview beta --pattern '/probe-preview/' --owners '@acme/probe'` -> exit 0, {valid:true, changed:true, base main 31dd9c31, diff '@@ -1 +1,2 @@ /docs/ @acme/docs @carol +/probe-preview/ @acme/probe', proposed file}. No pipeline created (latest beta pipeline stayed 88); beta main 31dd9c31 before and after."
+  },
+  "P4": {
+    "verdict": "holds",
+    "evidence": "From org/, as dave: `./actions request gamma --pattern '/probe-approval/' --owners '@acme/probe' --wait` -> run 122 (gamma pipeline on self-service), status awaiting-approval, preview diff adds the probe line; gamma main d313bff6 unchanged. `./actions approve gamma 122 --wait`: dave -> exit 3, refused 'dave requested this run and cannot approve it'; ann -> exit 3, refused 'ann is not a direct member of acme-w16/release'; carol -> exit 3, refused 'carol is not a direct member of acme-w16/release'. Status still awaiting-approval; gamma main d313bff6 after."
+  },
+  "P5": {
+    "verdict": "holds",
+    "evidence": "As erin: `./actions approve gamma 122 --wait` -> exit 0, status succeeded, approved_by erin, outcome {status succeeded, commit 095b889e, observed_on_main true, observed_main_sha 095b889e, observed_problems []}. Admin read of gamma CODEOWNERS on main (095b889e): '/graphify/security.py @acme/security\\n/probe-approval/ @acme/probe\\n'. Source: job_verify in gamma's main .gitlab/actions/set-codeowners/codeowners.py reads main's head (GET branches/main) and CODEOWNERS at that commit, checks the first rule for the pattern is the requested one and re-applying is a no-op, and checks the applied commit is an ancestor of main (merge_base); it writes outcome.json and exits non-zero otherwise. org/actions `compute` reports 'succeeded' only when the verify job succeeded and outcome.json status is 'succeeded'."
+  },
+  "P6": {
+    "verdict": "holds",
+    "evidence": "Old protection recorded via admin GET protected_branches: main push [40], merge [40], allow_force_push false (self-service push [0], merge [30] untouched). Admin DELETE + POST name=main push_access_level=0 merge_access_level=0. As ann: `./actions request alpha --pattern '/probe-reject/' --owners '@acme/probe' --wait` -> run 123 awaiting-approval. As dave: `./actions approve alpha 123 --wait` -> exit 4, status failed, outcome reason 'GitLab refused the commit to main: HTTP 403 ... You are not allowed to push into this branch'; `./actions status alpha 123` -> failed, exit 4. alpha main b35c84ce before and after. main protection restored to push 40, merge 40, allow_force_push false (verified)."
+  },
+  "P7": {
+    "verdict": "holds",
+    "evidence": "From org/, as ann: `./actions list` -> one JSON listing set-codeowners for acme-w16/alpha, beta and gamma with input regexes, definition URL and run ref. P4's request was `./actions request gamma ...` from the org checkout."
+  },
+  "P8": {
+    "verdict": "holds",
+    "evidence": "`./actions record gamma 122` (as ann) -> requested_by dave, requested_at 19:57:55.557Z; inputs {pattern:'/probe-approval/', owners:'@acme/probe'}; approval_attempts with times (dave, ann, carol refused; erin approved at 19:58:34.663Z); approved_by erin, approved_at 19:58:34.663Z; outcome succeeded at 19:58:38Z with commit and observed main sha; plus jobs and deployments."
+  },
+  "P9": {
+    "verdict": "holds",
+    "evidence": "Admin DELETE groups/acme-w16%2Frelease/members/6 (erin) -> 204; members [dave]. Nothing in the system changed. As ann: `./actions request beta --pattern '/probe-group/' --owners '@acme/probe' --wait` -> run 124 awaiting-approval. As erin: `./actions approve beta 124 --wait` -> exit 3, refused 'erin is not a direct member of acme-w16/release'. As dave: `./actions approve beta 124 --wait` -> exit 0, succeeded, observed_on_main true. beta main 31dd9c31 -> 28662706; CODEOWNERS '/docs/ @acme/docs @carol\\n/probe-group/ @acme/probe\\n'. Afterwards erin re-added as Developer (30) with the admin token."
+  },
+  "P10": {
+    "verdict": "holds",
+    "evidence": "Every probe step was one `./actions` command with GITLAB_TOKEN set and stdin from /dev/null; JSON output and exit codes 0 ok, 2 inputs refused, 3 approval refused, 4 run failed. `--wait` blocked to the next decision without prompts."
+  },
+  "P11": {
+    "verdict": "holds",
+    "evidence": "Followed the handoff's Setup block (HOME, PATH, cd org, git pull -q origin main, PEOPLE) and 'The steps' verbatim. Nothing to start. The setup's `glab config set ... api_protocol http` line is marked 'only for the glab equivalents' and was not needed, as glab was not used. No fixes needed; source read only for P5."
+  },
+  "fixes": [],
+  "strikes": [],
+  "linesBeforeStrikes": 900,
+  "linesAfterStrikes": 900,
+  "fullyPasses": true,
+  "notes": "Every file in the lines map is pipeline, code, settings script, CLI or the task's CODEOWNERS; none is runtime data, so no strikes. Defect outside the probes: alpha's main has a committed Python bytecode cache, .gitlab/actions/set-codeowners/__pycache__/codeowners.cpython-312.pyc (committed by ops-w16 in 1f334fd6 and b35c84ce); it is runtime data, but binary, so it is not in the lines map and changes no count. Runs live on a protected 'self-service' branch in each project (push no one, merge Developers) because CE lets only users with merge rights on a pipeline's ref play its manual jobs; the definition still comes from main via ci_config_path. Approval is enforced by the apply job (reads its own job record with CI_JOB_TOKEN and the release group's direct members live) on a shared shell runner, with Premium protected environments and deployment approvals scripted in settings.sh but returning 404 on CE; no credit was needed since every probe held on CE. 19 GitLab settings changed outside files (settings.json), including a bot group access token held in a group CI variable. Verify checks the rule is in place and the commit is on main rather than full-file byte equality with the preview; apply refuses if CODEOWNERS on main changed since the preview. A refused approval fails the pipeline, so such runs cannot be canceled and stay approvable (stated in the handoff). Probe runs: gamma 122 (P4/P5), alpha 123 (P6, failed), beta 124 (P9)."
+}

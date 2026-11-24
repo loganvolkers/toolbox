@@ -1,0 +1,18 @@
+{
+ "linesToMaintain": 1076,
+ "files": {
+  "gitlab:alpha/.gitlab/actions/set-codeowners/action.json": 29,
+  "gitlab:alpha/.gitlab/actions/set-codeowners/set_codeowners.py": 91,
+  "gitlab:alpha/.gitlab/actions/set-codeowners/test_set_codeowners.py": 57,
+  "gitlab:alpha/CODEOWNERS": 1,
+  "gitlab:beta/CODEOWNERS": 1,
+  "gitlab:gamma/CODEOWNERS": 1,
+  "gitlab:org/.gitignore": 2,
+  "gitlab:org/.gitlab-ci.yml": 107,
+  "gitlab:org/bin/acme-actions": 318,
+  "gitlab:org/ci/runner.py": 274,
+  "gitlab:org/lib/acme_gitlab.py": 98,
+  "gitlab:org/setup/configure-gitlab.sh": 53,
+  "gitlab:org/setup/premium.sh": 44
+ }
+}

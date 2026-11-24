@@ -41,6 +41,9 @@ pub struct Manifest {
     /// Federated actions: child portals' actions offered here, and how a parent reaches this one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub federation: Option<Federation>,
+    /// The code hosts this portal reaches beyond plain git (`crate::forge`, docs/design/forges.md).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub forges: Vec<Forge>,
     pub ui: Option<Ui>,
     pub mcp: Option<Value>,
     #[serde(default)]
@@ -68,6 +71,23 @@ pub struct Federation {
     /// Parent portals whose signed approvals this portal accepts on a dispatched run.
     #[serde(default)]
     pub accept_approvals_from: Vec<TrustedParent>,
+}
+
+/// One entry of `forges:`. Unset fields take the forge type's defaults (`crate::forge`).
+#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq, Eq)]
+pub struct Forge {
+    pub url: String,
+    #[serde(rename = "type")]
+    pub kind: Option<String>,
+    pub api: Option<String>,
+    /// The environment variable holding the API token.
+    pub token: Option<String>,
+    /// Project paths (globs) a parent may dispatch CI to; default: the children it lists.
+    pub projects: Option<Vec<String>>,
+    /// A checkout of this portal takes who you are from your own token on this forge, not from
+    /// `--as` (`toolbox run --identity-token-file`).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub identity: bool,
 }
 
 /// One entry of `federation.children`, with the defaults `crate::federation` fills in.

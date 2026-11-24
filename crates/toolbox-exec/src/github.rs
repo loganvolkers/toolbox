@@ -21,6 +21,9 @@ pub struct Workflow {
     /// For a federated dispatch: the child action's name. The workflow then gets `action`,
     /// `inputs` (JSON) and `toolbox_run`, and runs `toolbox run` itself.
     pub federated: Option<String>,
+    /// For a federated dispatch: the child's own preview, in this portal's clone of it, which
+    /// gives the approvers and effects the grant binds.
+    pub preview: Option<Box<crate::executor::Executor>>,
 }
 
 /// A tracked workflow run.
@@ -33,7 +36,7 @@ pub struct Tracked {
     pub url: Option<String>,
 }
 
-fn block<T: Send + 'static>(
+pub(crate) fn block<T: Send + 'static>(
     f: impl std::future::Future<Output = T> + Send + 'static,
 ) -> Result<T, String> {
     std::thread::spawn(move || {
@@ -57,6 +60,7 @@ impl Workflow {
             api: s("api").unwrap_or_else(|| "https://api.github.com".into()),
             token_env: s("token").unwrap_or_else(|| "GITHUB_TOKEN".into()),
             federated: None,
+            preview: None,
         })
     }
 
@@ -226,6 +230,44 @@ impl Workflow {
                 found.len()
             )),
         }
+    }
+}
+
+/// Open a pull request for a pushed branch with the forge's token: `{forge, url}`, or `{forge,
+/// error}` when it can't (the branch stays pushed, and the run stays `proposed`).
+pub fn open_pull(
+    f: &toolbox_model::forge::Resolved,
+    head: &str,
+    base: &str,
+    title: &str,
+    body: &str,
+) -> Value {
+    let Ok(token) = std::env::var(&f.token) else {
+        return json!({"forge": "github", "error": format!(
+            "set {} to open a pull request; the branch is pushed", f.token)});
+    };
+    let url = format!("{}/repos/{}/pulls", f.api.trim_end_matches('/'), f.project);
+    let req = json!({"title": title, "head": head, "base": base, "body": body});
+    let res = block(async move {
+        let r = reqwest::Client::new()
+            .post(url)
+            .bearer_auth(token)
+            .header("accept", "application/vnd.github+json")
+            .header("user-agent", "toolbox")
+            .json(&req)
+            .send()
+            .await
+            .map_err(|e| e.to_string())?;
+        let st = r.status();
+        Ok::<_, String>((st, r.json::<Value>().await.unwrap_or(Value::Null)))
+    });
+    match res {
+        Ok(Ok((st, v))) if st.is_success() => {
+            json!({"forge": "github", "url": v["html_url"], "number": v["number"]})
+        }
+        Ok(Ok((st, v))) => json!({"forge": "github",
+            "error": format!("GitHub refused the pull request ({st}): {}", v["message"])}),
+        Ok(Err(e)) | Err(e) => json!({"forge": "github", "error": e}),
     }
 }
 

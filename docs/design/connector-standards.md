@@ -98,6 +98,7 @@ Measured with `toolbox report portal --skip runner,github-actions` after the con
 | Connector | Level | What fails above bronze |
 |---|---|---|
 | `toolbox-connector-github` | gold | — |
+| `toolbox-connector-gitlab` | gold | — (conformance runs in `scripts/gitlab-acceptance.sh` step 8, against a real GitLab) |
 | `toolbox-connector-runner` | gold | Kinds come from job config, which the rule allows |
 | `toolbox-connector-workspace` | gold | — |
 | `toolbox-connector-git-files` | bronze | No `#[test]` (silver). Conformance runs in `scripts/m4-acceptance.sh` |

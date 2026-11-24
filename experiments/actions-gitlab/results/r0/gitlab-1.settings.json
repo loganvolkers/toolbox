@@ -1,0 +1,99 @@
+{
+ "changed": 22,
+ "items": [
+  {
+   "what": "group acme-w2 access_tokens",
+   "added": "r0-gitlab-1-actions-bot"
+  },
+  {
+   "what": "group acme-w2 members",
+   "added": "group_116_bot_10386a5aa236473dad5f136336cf5c39:40"
+  },
+  {
+   "what": "group acme-w2 variables",
+   "added": "ACME_ACTIONS_BOT_TOKEN"
+  },
+  {
+   "what": "project acme-w2/alpha environments",
+   "added": "codeowners"
+  },
+  {
+   "what": "project acme-w2/alpha environments",
+   "added": "codeowners-approval"
+  },
+  {
+   "what": "project acme-w2/alpha ci_pipeline_variables_minimum_override_role",
+   "from": "developer",
+   "to": "no_one_allowed"
+  },
+  {
+   "what": "project acme-w2/alpha restrict_user_defined_variables",
+   "from": false,
+   "to": true
+  },
+  {
+   "what": "project acme-w2/alpha triggers",
+   "added": "r0-gitlab-1-actions-executor"
+  },
+  {
+   "what": "project acme-w2/alpha variables",
+   "added": "ACME_ACTIONS_TRIGGER_TOKEN"
+  },
+  {
+   "what": "project acme-w2/beta environments",
+   "added": "codeowners"
+  },
+  {
+   "what": "project acme-w2/beta environments",
+   "added": "codeowners-approval"
+  },
+  {
+   "what": "project acme-w2/beta ci_pipeline_variables_minimum_override_role",
+   "from": "developer",
+   "to": "no_one_allowed"
+  },
+  {
+   "what": "project acme-w2/beta restrict_user_defined_variables",
+   "from": false,
+   "to": true
+  },
+  {
+   "what": "project acme-w2/beta triggers",
+   "added": "r0-gitlab-1-actions-executor"
+  },
+  {
+   "what": "project acme-w2/beta variables",
+   "added": "ACME_ACTIONS_TRIGGER_TOKEN"
+  },
+  {
+   "what": "project acme-w2/gamma environments",
+   "added": "codeowners"
+  },
+  {
+   "what": "project acme-w2/gamma environments",
+   "added": "codeowners-approval"
+  },
+  {
+   "what": "project acme-w2/gamma ci_pipeline_variables_minimum_override_role",
+   "from": "developer",
+   "to": "no_one_allowed"
+  },
+  {
+   "what": "project acme-w2/gamma restrict_user_defined_variables",
+   "from": false,
+   "to": true
+  },
+  {
+   "what": "project acme-w2/gamma triggers",
+   "added": "r0-gitlab-1-actions-executor"
+  },
+  {
+   "what": "project acme-w2/gamma variables",
+   "added": "ACME_ACTIONS_TRIGGER_TOKEN"
+  },
+  {
+   "what": "project acme-w2/org protected_branches",
+   "added": "{\"force\": false, \"merge\": [40], \"name\": \"main\", \"push\": [40]}"
+  }
+ ]
+}

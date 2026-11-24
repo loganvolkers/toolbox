@@ -46,6 +46,7 @@ curl --proto '=https' --tlsv1.2 -LsSf https://github.com/loganvolkers/toolbox/re
 | `builtin:runner` | `toolbox-connector-runner` |
 | `builtin:github` | `toolbox-connector-github` |
 | `builtin:git-files` | `toolbox-connector-git-files` |
+| `builtin:gitlab` | `toolbox-connector-gitlab` |
 | `builtin:scim` | `toolbox-connector-scim` |
 
 The URL is the same shape: `…/releases/download/v0.1.1/<installer>-installer.sh`. On Windows, use `<installer>-installer.ps1` with `irm … | iex`.

@@ -1,0 +1,65 @@
+# DX Benchmark catalog entry (docs/design/dx-benchmarks.md §6), scored by maintainer-benchmark.
+records:
+  - id: actions-gitlab
+    title: >-
+      Self-service actions on a GitLab-only organisation: Toolbox vs GitLab CE
+    question: >-
+      Can a fresh coding agent give three GitLab projects and their org one
+      governed self-service action (validated inputs, preview, approval by a
+      direct member of a GitLab group other than the requester, verified
+      effect, a record, one place to find it) with less code to maintain and
+      fewer tool calls on Toolbox than on GitLab itself, its pipelines, runner
+      and API?
+    layers: [operator, user]
+    stages: [operator/author, operator/deploy, user/build]
+    hypotheses: [H1, H2, H3]
+    rival: >-
+      GitLab CE 19.6.1 with a shell runner, glab and the REST API, with
+      Premium-only features (approval rules, protected environments) credited
+      when configured as code and explained
+    repos:
+    - loganvolkers/dependabot-proxy@5f186c53
+    - loganvolkers/valtio@c97e2aa9
+    - loganvolkers/graphify@48888a7c
+    status: complete
+    ran: 2026-11-24
+    outcome: >-
+      Passes in round 1. All six runs fully pass (C1 and P1 to P11) with no
+      fixes, strikes or Premium credit, so H1 holds. H2 holds (Toolbox 247
+      lines to maintain against 1076, W 642) and H3 holds (38 tool calls
+      against 78, W 19). Toolbox changed 1 to 3 GitLab settings, the rival 14
+      to 19. Labelled: forges[].identity, which the Toolbox runs used, was
+      built from round 0's friction on this task.
+    changed:
+    - D01M87FMCVSQCQJMGDSN2MCTH5W
+    - >-
+      round 0: Auto DevOps off in the harness; forges[].identity and toolbox
+      run --identity-token-file
+    - >-
+      after round 1: a dev server refuses run writes on an identity: true
+      portal; the approval hint names --identity-token-file
+    servedValue: ''
+    blockedOn: ''
+    readme: experiments/actions-gitlab/README.md
+    results: experiments/actions-gitlab/results/r1/README.md
+    protocol: 2
+    prompts: experiments/actions-gitlab/prompts
+    runsPerArm: 3
+    measure: >-
+      lines of code and config to maintain over every project's main and the
+      workspace (harness/score.py lines), tool calls by kind from each run's
+      transcript (count.py), GitLab settings changed (settings.py), and the
+      adjudicators' probes C1 and P1 to P11
+    frozenAt: >-
+      round 1: 8c8ea2c, with the six run prompts rendered and committed before
+      the first launch
+    designer: >-
+      the agent that built Toolbox's forges and GitLab driver and wrote the
+      README
+    adjudicator: >-
+      two fresh agents that designed no part of it and changed nothing, each
+      with runs from both arms
+    spread: >-
+      round 1, lines (min, median, max): Toolbox 154, 247, 271; GitLab 900,
+      1076, 1542. Calls: Toolbox 35, 38, 54; GitLab 76, 78, 82. Every run's
+      measures are in results/r1/

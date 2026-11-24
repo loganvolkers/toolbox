@@ -168,11 +168,15 @@ pub async fn run(
         let snap = msgs
             .iter()
             .any(|m| m["type"] == "snapshot_complete" && m["kind"] == kind.as_str());
-        let complete = msgs
-            .iter()
-            .find(|m| m["type"] == "complete")
-            .map(|m| m["status"].clone())
-            .unwrap_or(Value::Null);
+        let done = msgs.iter().find(|m| m["type"] == "complete");
+        let complete = done.map(|m| m["status"].clone()).unwrap_or(Value::Null);
+        let reason: String = done
+            .and_then(|m| m["errors"].as_array())
+            .into_iter()
+            .flatten()
+            .filter_map(|e| e["message"].as_str())
+            .map(|e| format!(": {e}"))
+            .collect();
         let acked = msgs.first().is_some_and(|m| m["type"] == "ack");
         check(
             &format!("resync {kind}"),
@@ -183,7 +187,7 @@ pub async fn run(
                 && snap
                 && complete == "succeeded",
             format!(
-                "{} records, ack={acked}, snapshot_complete={snap}, complete={complete}, wrong kind={wrong_kind}, untagged={untagged}",
+                "{} records, ack={acked}, snapshot_complete={snap}, complete={complete}{reason}, wrong kind={wrong_kind}, untagged={untagged}",
                 records.len()
             ),
         );

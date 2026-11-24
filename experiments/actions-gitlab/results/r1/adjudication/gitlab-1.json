@@ -1,0 +1,54 @@
+{
+  "run": "gitlab-1",
+  "C1": "holds",
+  "P1": {
+    "verdict": "holds",
+    "evidence": "Root-token tree reads of acme-w12/{alpha,beta,gamma} main: each has .gitlab-ci.yml (spec:inputs with regexes, includes) and .gitlab/actions/set-codeowners/{action.json,set_codeowners.py,check.yml,apply.yml,settings.json,README.md}. `acme-actions list` reports each definition as '<project>:main:.gitlab/actions/set-codeowners/action.json'; org holds only the CLI and actions.json (org policy), no copy of the action."
+  },
+  "P2": {
+    "verdict": "holds",
+    "evidence": "From org/ with GITLAB_TOKEN=people/ann.token, both `./bin/acme-actions preview alpha set-codeowners ...` and `request alpha ...`: --pattern 'docs folder' --owners '@acme/probe' -> exit 2, 'invalid inputs' (must start with / or *, must not contain whitespace); --pattern /probe-invalid/ --owners '@a @b @c @d' -> exit 2, owners error; --pattern /probe-invalid/ --owners carol -> exit 2, owners error. alpha MR count 2 before and after (no run created); alpha main 197024431046e9e00818283d572bf70a95a01481 before and after."
+  },
+  "P3": {
+    "verdict": "holds",
+    "evidence": "As ann: `./bin/acme-actions preview beta set-codeowners --pattern /probe-preview/ --owners @acme/probe` -> exit 0, JSON with current, proposed and diff ('+/probe-preview/ @acme/probe' after '/docs/ @acme/docs @carol'). beta MR count 2 before and after; beta main 07d814d1f2362e0729979240e4c4fa19e5c9c1fe before and after."
+  },
+  "P4": {
+    "verdict": "holds",
+    "evidence": "Controller started per handoff (tmux r1-gitlab-1-controller, healthz ok). As dave from org/: `request gamma set-codeowners --pattern /probe-approval/ --owners @acme/probe` -> exit 0, run acme-w12/gamma!4, requested_by dave. gamma main 22afa59082cb220c85a201f4a70a295eabd7bf99 unchanged. `acme-actions approve acme-w12/gamma!4`: dave -> exit 3 'cannot approve their own run'; ann -> exit 3 'not a direct member of acme-w12/release'; carol -> exit 3, same; GitLab approvals list empty. Also tried the handoff's alternative path `glab mr approve 4 -R acme-w12/gamma` as dave, ann and carol: CE recorded the approvals, the controller logged each as approval-ignored with the right reason, status stayed awaiting-approval (eligible_approvers [erin]). gamma main still 22afa590."
+  },
+  "P5": {
+    "verdict": "holds",
+    "evidence": "As erin: `acme-actions approve acme-w12/gamma!4` -> exit 0; `status ... --wait 300` -> exit 0, status succeeded, observed_sha f5eb4897, observed_at 19:55:09Z. gamma main moved to f5eb4897fd8d; raw CODEOWNERS is '/graphify/security.py @acme/security\\n/probe-approval/ @acme/probe\\n'. Source (gamma main .gitlab/actions/set-codeowners/set_codeowners.py, Run.main lines ~438-455): after the merge it polls GET /repository/branches/main for the head sha and reads CODEOWNERS raw at that sha, and only when it equals the computed content does it post the 'succeeded' event; otherwise it fails. The CLI derives status from those bot-authored events."
+  },
+  "P6": {
+    "verdict": "holds",
+    "evidence": "Recorded alpha protection (main push 40, merge 40, allow_force_push false); root token re-protected main with push_access_level=0 merge_access_level=0. As ann: request alpha --pattern /probe-reject/ --owners @acme/probe -> acme-w12/alpha!3. As dave: approve -> exit 0. `status --wait 300` -> exit 1, status failed, reason 'GitLab refused to start the apply pipeline on main: You do not have sufficient permission to run a pipeline on main'. MR !3 closed, not merged. alpha main 197024431046 before and after. Protection restored to push 40 / merge 40 / allow_force_push false and checked."
+  },
+  "P7": {
+    "verdict": "holds",
+    "evidence": "From /tmp/actions-gitlab/r1/gitlab-1/org, `GITLAB_TOKEN=$(cat people/ann.token) ./bin/acme-actions list` (exit 0) lists set-codeowners for acme-w12/alpha, beta and gamma. P4 was requested from org/ with `request gamma ...`."
+  },
+  "P8": {
+    "verdict": "holds",
+    "evidence": "`acme-actions record acme-w12/gamma!4` (exit 0): requested {by dave, at 19:53:54Z}; inputs {pattern /probe-approval/, owners @acme/probe}; approval {by erin, at 19:55:02Z, accepted_at 19:55:03Z}; outcome {status succeeded, at 19:55:09Z, observed_sha f5eb4897}; plus approvals_now.ignored for dave/ann/carol with times and reasons, apply pipeline 118, and timestamped events (approval-ignored x3, approved, apply-started, apply-verified, succeeded)."
+  },
+  "P9": {
+    "verdict": "holds",
+    "evidence": "Root token: DELETE /groups/acme-w12%2Frelease/members/<erin> (204); direct members [dave]. No file changed in any checkout, org main 526274e unchanged, controller not restarted. As ann: request beta --pattern /probe-group/ --owners @acme/probe -> acme-w12/beta!3. erin `acme-actions approve` -> exit 3 'erin is not a direct member of acme-w12/release'; erin via `glab mr approve` recorded by CE but ignored (approvals_now.ignored: erin, 'not a direct member'), status awaiting-approval, beta main 07d814d1 unchanged. dave approve -> exit 0; `status --wait 300` -> exit 0, succeeded, observed_sha 812a126b; beta CODEOWNERS on main '/docs/ @acme/docs @carol\\n/probe-group/ @acme/probe\\n'. erin was re-added afterwards as Developer (30)."
+  },
+  "P10": {
+    "verdict": "holds",
+    "evidence": "Every step used `./bin/acme-actions <list|preview|request|approve|status --wait|record>` non-interactively; each printed one JSON document with meaningful exit codes (0 ok, 1 failed run, 2 invalid, 3 refused). Starting the controller is a single non-interactive tmux command."
+  },
+  "P11": {
+    "verdict": "holds",
+    "evidence": "Operated from HANDOFF.md on org's main (identical to results/r1/gitlab-1.HANDOFF.md): its environment block, its tmux command to start the controller on 127.0.0.1:7320, and its list/preview/request/approve/status/record commands, all verbatim. No fixes needed. Source read only for P5's evidence."
+  },
+  "fixes": [],
+  "strikes": [],
+  "linesBeforeStrikes": 1542,
+  "linesAfterStrikes": 1542,
+  "fullyPasses": true,
+  "notes": "No probe needed the Premium credit: R4 is enforced by the run's own controller and apply job on CE (settings.json also carries Premium approval rules as code, which return 404 here). Every counted file is code or configuration (CLI and controller 903 lines, per-project script 430, pipelines, action and settings JSON); beta's and gamma's identical copies are excluded by score.py as copies. Runtime data (controller.log, scratch lint1.yml and t1.json) sits in home/, outside the measure. Approvals given natively in GitLab CE (glab mr approve) are accepted by GitLab and only ignored by this system, so the GitLab MR shows approvals that do not count; the system's status and record are the source of truth. The system depends on GitLab state set outside files (a group access token with Maintainer role, masked/protected CI variables, labels, project sharing), reported by settings.py rather than lines. A long-running controller must be up for approvals to take effect (or `controller --once` after each approval). Probe side effects left on GitLab: probe MRs gamma!4 (merged), alpha!3 (closed), beta!3 (merged) and the probe lines in gamma's and beta's CODEOWNERS; alpha's protection and the release group were restored."
+}

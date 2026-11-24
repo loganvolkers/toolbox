@@ -1,0 +1,14 @@
+{
+ "linesToMaintain": 1182,
+ "files": {
+  "gitlab:alpha/.gitlab-ci.yml": 46,
+  "gitlab:alpha/.gitlab/actions/set-codeowners/action.json": 39,
+  "gitlab:alpha/.gitlab/actions/set-codeowners/pipeline.yml": 57,
+  "gitlab:alpha/.gitlab/actions/set-codeowners/set_codeowners.py": 417,
+  "gitlab:alpha/CODEOWNERS": 1,
+  "gitlab:beta/CODEOWNERS": 1,
+  "gitlab:gamma/CODEOWNERS": 1,
+  "gitlab:org/admin/setup.py": 166,
+  "gitlab:org/bin/acme-actions": 454
+ }
+}

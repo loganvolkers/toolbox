@@ -1,0 +1,26 @@
+{
+ "changed": 5,
+ "items": [
+  {
+   "what": "group acme-w1 access_tokens",
+   "added": "r0-toolbox-1-actions"
+  },
+  {
+   "what": "group acme-w1 members",
+   "added": "group_109_bot_0b4610e21106b8afc4bb8c3258830056:40"
+  },
+  {
+   "what": "group acme-w1 members",
+   "added": "group_109_bot_2ee5d87b1d8f5232c4484b447e5ff30d:40"
+  },
+  {
+   "what": "project acme-w1/beta auto_devops_enabled",
+   "from": true,
+   "to": false
+  },
+  {
+   "what": "project acme-w1/org protected_branches",
+   "added": "{\"force\": false, \"merge\": [40], \"name\": \"main\", \"push\": [40]}"
+  }
+ ]
+}

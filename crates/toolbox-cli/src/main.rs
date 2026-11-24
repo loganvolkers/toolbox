@@ -1120,7 +1120,13 @@ fn connector_test(
     let Some(c) = manifest.connectors.iter().find(|c| c.name == name) else {
         return fail(format!("no connector {name} in the manifest"));
     };
-    let mut cfg = c.config.clone().unwrap_or(serde_json::json!({}));
+    // `${env:…}` and `${secret:…}` resolve as `serve` resolves them; when they can't (a kit run
+    // against a mock, say), the connector gets the references as written.
+    let written = c.config.clone().unwrap_or(serde_json::json!({}));
+    let mut cfg = toolbox_api::connectors::resolve_config(name, &written);
+    if cfg.as_object().is_some_and(|m| m.is_empty()) {
+        cfg = written;
+    }
     if let Some(extra) = config {
         match serde_json::from_str::<serde_json::Value>(extra) {
             Ok(serde_json::Value::Object(m)) => cfg.as_object_mut().unwrap().extend(m),

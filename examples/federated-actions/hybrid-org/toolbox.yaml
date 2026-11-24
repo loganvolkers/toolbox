@@ -1,0 +1,29 @@
+apiVersion: toolbox.dev/v1alpha1
+portal:
+  name: org
+  title: One org portal over five kinds of host
+  owner: group:platform
+  toolbox: "0.1"
+# github.com and gitlab.com are known: no entry, and their tokens are GITHUB_TOKEN and
+# GITLAB_TOKEN. A self-hosted forge is one entry with its URL and type. A token is the name of
+# an environment variable; Toolbox sends it only to that forge's API, never to an action.
+forges:
+  - url: https://ghe.acme.dev
+    type: github # api defaults to <url>/api/v3
+    token: ACME_GHES_TOKEN
+    projects: [platform/*] # the only GHES repositories this portal starts workflows in
+  - url: https://gitlab.acme.dev
+    type: gitlab # api defaults to <url>/api/v4
+    token: ACME_GITLAB_TOKEN
+# Each child's runs go to its own host. A child with `runner: {type: ci}` runs in that host's CI
+# (a workflow on GitHub, a pipeline on GitLab); `{type: local}` and the bare repository run in
+# this portal's clone. A change is a pull request, a merge request, or a pushed branch.
+federation:
+  children:
+    - git: https://github.com/acme/web.git
+    - git: https://ghe.acme.dev/platform/ledger.git
+    - git: https://gitlab.com/acme/mobile.git
+    - git: https://gitlab.acme.dev/acme/platform/pay.git
+    - git: ssh://git@gitlab.acme.dev/acme/tools.git # ssh: matched to the forge by host
+    - git: ../minimal-repo-origin.git # plain git: read, write and the local runner
+      key: legacy

@@ -35,6 +35,11 @@
   },
   "evidence": {
     "maintainer-benchmark": {
+      "benchmark:actions-gitlab": {
+        "sound-method": [
+          "4be5902a"
+        ]
+      },
       "benchmark:box-ab": {
         "sound-method": [
           "9a88adff"
@@ -636,6 +641,11 @@
         ]
       },
       "example:experiments/actions-ab/results/r8/README.md": {
+        "says-how-to-check": [
+          "825aff0c"
+        ]
+      },
+      "example:experiments/actions-gitlab/results/r0/README.md": {
         "says-how-to-check": [
           "825aff0c"
         ]
@@ -3681,6 +3691,12 @@
       "benchmark:actions-ab": {
         "level": "gold"
       },
+      "benchmark:actions-gitlab": {
+        "failing": {
+          "sound-method": 1
+        },
+        "level": "silver"
+      },
       "benchmark:backstage-compare": {
         "level": "gold"
       },
@@ -3952,6 +3968,9 @@
       "connector:crates/toolbox-connector-github": {
         "level": "gold"
       },
+      "connector:crates/toolbox-connector-gitlab": {
+        "level": "gold"
+      },
       "connector:crates/toolbox-connector-runner": {
         "level": "gold"
       },
@@ -4027,6 +4046,13 @@
           "simple-functions": 1
         },
         "level": "silver",
+        "unknown": [
+          "clippy-clean",
+          "tests-pass"
+        ]
+      },
+      "crate:toolbox-connector-gitlab": {
+        "level": "gold",
         "unknown": [
           "clippy-clean",
           "tests-pass"
@@ -4718,6 +4744,12 @@
       "doc:docs/decisions/D01M87579Y5AZWR1Z29S802VP2K.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M87AXG095Q0Z0DGGTKYYAM7Y.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M87FMCVSQCQJMGDSN2MCTH5W.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/README.md": {
         "level": "skipped"
       },
@@ -4785,6 +4817,9 @@
         "level": "silver"
       },
       "doc:docs/design/finding-tools.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/forges.md": {
         "level": "silver"
       },
       "doc:docs/design/frontend.md": {
@@ -4980,6 +5015,9 @@
         "level": "silver"
       },
       "doc:experiments/actions-ab/README.md": {
+        "level": "silver"
+      },
+      "doc:experiments/actions-gitlab/README.md": {
         "level": "silver"
       },
       "doc:experiments/backstage-compare/README.md": {
@@ -5289,6 +5327,18 @@
           "says-how-to-check": 1
         },
         "level": "bronze"
+      },
+      "example:experiments/actions-gitlab/README.md": {
+        "level": "gold"
+      },
+      "example:experiments/actions-gitlab/results/r0/README.md": {
+        "failing": {
+          "says-how-to-check": 1
+        },
+        "level": "bronze"
+      },
+      "example:experiments/actions-gitlab/results/r1/README.md": {
+        "level": "gold"
       },
       "example:experiments/backstage-compare/README.md": {
         "level": "gold"

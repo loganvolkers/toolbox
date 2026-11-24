@@ -315,3 +315,38 @@ async fn field_index_narrowing_respects_kind_case_and_the_entity_id() {
     );
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[tokio::test]
+async fn a_dev_server_does_not_take_your_word_where_the_forge_says_who_you_are() {
+    let dir = std::env::temp_dir().join(format!("toolbox-api-identity-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let manifest = EDGES.to_owned()
+        + "forges:\n  - {url: \"https://gitlab.example\", type: gitlab, identity: true}\n";
+    std::fs::write(dir.join("toolbox.yaml"), manifest).unwrap();
+    let url = start_at(&dir).await;
+    let c = reqwest::Client::new();
+    for path in [
+        "/v1/actions/any/runs",
+        "/v1/runs/run_x/approvals",
+        "/v1/runs/run_x/cancel",
+    ] {
+        let r = c
+            .post(format!("{url}{path}"))
+            .header("x-toolbox-user", "dave")
+            .json(&serde_json::json!({"entity": "thing:x", "inputs": {}}))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(r.status(), 403, "{path}");
+        let body: Value = r.json().await.unwrap();
+        assert_eq!(body["code"], "identity-from-forge", "{path}: {body}");
+    }
+    let r = c
+        .get(format!("{url}/v1/runs"))
+        .header("x-toolbox-user", "dave")
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(r.status(), 200, "reads stay open");
+    let _ = std::fs::remove_dir_all(&dir);
+}

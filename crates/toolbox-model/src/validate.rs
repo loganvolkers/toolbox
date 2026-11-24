@@ -588,8 +588,49 @@ impl Checker {
         }
     }
 
+    /// Forges: a type for each host that isn't known, and one entry per URL (docs/design/forges.md).
+    fn forges(&mut self, m: &Manifest) {
+        let mut seen = BTreeSet::new();
+        for (i, f) in m.forges.iter().enumerate() {
+            if crate::forge::kind_of(f).is_none() {
+                self.push(
+                    "forge",
+                    format!("/forges/{i}/type"),
+                    format!(
+                        "forge {}: say its type (github or gitlab); only https://github.com and https://gitlab.com are known without one",
+                        f.url
+                    ),
+                );
+            }
+            if !seen.insert(f.url.trim_end_matches('/').to_ascii_lowercase()) {
+                self.push(
+                    "forge",
+                    format!("/forges/{i}/url"),
+                    format!("forge {} is listed twice", f.url),
+                );
+            }
+        }
+        if let Some((i, f)) = m
+            .forges
+            .iter()
+            .enumerate()
+            .filter(|(_, f)| f.identity)
+            .nth(1)
+        {
+            self.push(
+                "forge",
+                format!("/forges/{i}/identity"),
+                format!(
+                    "forge {}: only one forge says who people are (identity: true)",
+                    f.url
+                ),
+            );
+        }
+    }
+
     /// Each executor type's own required fields (docs/design/federated-actions.md §5).
     fn executors(&mut self, m: &Manifest) {
+        self.forges(m);
         for (ai, a) in m.actions.iter().enumerate() {
             let ty = a
                 .executor
@@ -600,8 +641,34 @@ impl Checker {
                 "command" | "change" => &["run"],
                 "in-image" => &["command"],
                 "github-workflow" => &["repo", "workflow"],
+                "gitlab-pipeline" => &["project"],
                 _ => &[],
             };
+            if ty == "gitlab-pipeline" {
+                let forge = a
+                    .executor
+                    .get("forge")
+                    .and_then(Value::as_str)
+                    .unwrap_or("https://gitlab.com");
+                let project = a
+                    .executor
+                    .get("project")
+                    .and_then(Value::as_str)
+                    .unwrap_or("x");
+                let url = format!("{}/{project}.git", forge.trim_end_matches('/'));
+                if crate::forge::resolve(&m.forges, &url)
+                    .is_none_or(|r| r.kind != crate::forge::Kind::Gitlab)
+                {
+                    self.push(
+                        "action.executor",
+                        format!("/actions/{ai}/executor/forge"),
+                        format!(
+                            "action {}: {forge} is not a GitLab forge; list it under forges: with type: gitlab",
+                            a.name
+                        ),
+                    );
+                }
+            }
             for k in needs {
                 if a.executor.get(*k).is_none() {
                     self.push(
@@ -619,7 +686,7 @@ impl Checker {
                     "action.executor",
                     format!("/actions/{ai}/executor/type"),
                     format!(
-                        "action {}: {ty} executors are not built yet; use command, in-image, change or github-workflow",
+                        "action {}: {ty} executors are not built yet; use command, in-image, change, github-workflow or gitlab-pipeline",
                         a.name
                     ),
                 );

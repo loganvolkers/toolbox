@@ -122,7 +122,7 @@ jobs:
         run: rustup show active-toolchain
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with: {key: otel-testbed}
-      - run: cargo build --locked -p toolbox-cli
+      - run: cargo build --locked -p toolbox-cli -p toolbox-connector-gitlab
       - name: OTel testbed rubric (experiments/otel-testbed/scripts/score.sh)
         run: experiments/otel-testbed/scripts/score.sh
   acceptance:
@@ -175,6 +175,34 @@ jobs:
           M4 acceptance (real connectors only, A1–A5, A11 in a browser, SCIM
           revocation, conformance kit)
         run: PGDIR=$RUNNER_TEMP/pg4 scripts/m4-acceptance.sh
+  gitlab-acceptance:
+    # Federated actions on a real GitLab: GitLab CE and a GitLab Runner in Docker on the runner
+    # (scripts/gitlab/harness.sh, docs/design/forges.md §6). Its own job, because GitLab's first
+    # boot is slow and needs memory the other acceptance scripts don't.
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: {persist-credentials: false}
+      - name: Toolchain from rust-toolchain.toml
+        run: rustup show active-toolchain
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with: {key: gitlab-acceptance}
+      - run: >-
+          cargo build --locked -p toolbox-cli -p toolbox-connector-gitlab -p
+          toolbox-connector-workspace
+      - name: GitLab CE 19.6.1 and a shell runner with toolbox mounted
+        run: scripts/gitlab/harness.sh up
+      - name: >-
+          GitLab acceptance (merge requests, a child's own pipeline with signed
+          approvals, refusals, a hybrid org, the gitlab-pipeline executor, GitLab
+          group approvers through the gitlab connector)
+        run: scripts/gitlab-acceptance.sh
+      - name: GitLab's logs, when it failed
+        if: failure()
+        run: >-
+          docker logs --tail 200 toolbox-gitlab; docker logs --tail 200
+          toolbox-gitlab-runner
   report-action:
     # The report action as a pilot repo runs it: builds toolbox from the action's own source (cached),
     # then scores a repository set up from the starter portal (D69).

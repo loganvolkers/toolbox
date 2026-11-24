@@ -1,0 +1,54 @@
+{
+  "run": "gitlab-2",
+  "C1": "holds",
+  "P1": {
+    "verdict": "holds",
+    "evidence": "Admin read of GET /projects/acme-w14%2F{alpha,beta,gamma}/repository/tree?ref=main&path=.gitlab/actions/set-codeowners: each project has action.json, set_codeowners.py, test_set_codeowners.py, README.md on its own main. `bin/acme-actions list` reports a distinct definition_commit per project (alpha 9a0ac7d, beta 03b5a35, gamma 7aaf239). The org pipeline (org/.gitlab-ci.yml, ci/runner.py) clones the project's definition from main at run time; run 114's record shows definition.project acme-w14/gamma, ref main."
+  },
+  "P2": {
+    "verdict": "holds",
+    "evidence": "As ann from org/: `bin/acme-actions request --project alpha --pattern 'docs folder' --owners '@acme/probe'` -> exit 2, {ok:false, refused:true, errors:['`pattern` input: provided value does not match required RegEx pattern']}; `--pattern '/probe-invalid/' --owners '@a @b @c @d'` -> exit 2, owners regex refused; `--pattern '/probe-invalid/' --owners 'carol'` -> exit 2, owners regex refused. GitLab refused at spec:inputs, no pipeline created (latest org pipeline stayed 106). alpha main f7bce489 before and after."
+  },
+  "P3": {
+    "verdict": "holds",
+    "evidence": "As ann: `bin/acme-actions preview --project beta --pattern '/probe-preview/' --owners '@acme/probe'` -> exit 0, {dry_run:true, valid:true, changed:true, diff:'--- a/CODEOWNERS +++ b/CODEOWNERS ... /docs/ @acme/docs @carol +/probe-preview/ @acme/probe', after:...}. No pipeline created; beta main af84bd2a before and after."
+  },
+  "P4": {
+    "verdict": "holds",
+    "evidence": "From org/, as dave: `bin/acme-actions request --project gamma --pattern '/probe-approval/' --owners '@acme/probe'` -> run 114, state awaiting_approval, preview diff adding the probe line; gamma main 221f468f unchanged. `approve 114 --wait` as dave -> exit 3, refused 'self-approval: the requester cannot approve their own run'; as ann -> exit 3, refused '@ann is not a direct member of acme-w14/release'; as carol -> exit 3, refused '@carol is not a direct member of acme-w14/release'. Status still awaiting_approval; gamma main 221f468f after."
+  },
+  "P5": {
+    "verdict": "holds",
+    "evidence": "As erin: `approve 114 --wait` -> exit 0, approved, run.state succeeded, outcome_at 19:52:41Z, MR gamma!3. Admin read of gamma CODEOWNERS on main (921b21ed): '/graphify/security.py @acme/security\\n/probe-approval/ @acme/probe\\n' (task line then probe line, trailing newline). Source: state_of in org/bin/acme-actions returns 'succeeded' only when the observe job succeeded; step_observe in org/ci/runner.py reads main's head commit and CODEOWNERS at that commit and succeeds only when byte-identical to the previewed file, else fails. Record shows observation.main_commit 921b21ed (= the merge commit) observed_at 19:52:41Z, after merged_at 19:52:37Z."
+  },
+  "P6": {
+    "verdict": "holds",
+    "evidence": "Old protection recorded via admin GET protected_branches: main push [40], merge [40], allow_force_push false. Admin DELETE + POST protected_branches name=main push_access_level=0 merge_access_level=0. As ann: request alpha '/probe-reject/' '@acme/probe' -> run 115. As dave: `approve 115 --wait` -> approved, then run.state 'failed', error {http_status:401, message:'401 Unauthorized'}, exit 4; `status 115` -> state failed, exit 4. MR alpha!2 closed, branch deleted. alpha main f7bce489 before and after. Protection restored to push 40, merge 40, allow_force_push false (verified)."
+  },
+  "P7": {
+    "verdict": "holds",
+    "evidence": "From org/, as ann: `GITLAB_TOKEN=... bin/acme-actions list` -> one JSON listing set-codeowners for acme-w14/alpha, beta and gamma with inputs and definition links. P4's request (run 114) was made with `bin/acme-actions request --project gamma` from the org checkout."
+  },
+  "P8": {
+    "verdict": "holds",
+    "evidence": "`bin/acme-actions record 114` (as ann) -> requested.by dave at 19:51:51.196Z; approved_by erin approved_at 19:52:29Z (plus the three refused attempts by dave, ann, carol, each with decided_at); inputs {pattern:'/probe-approval/', owners:'@acme/probe', project:'gamma'}; state succeeded, outcome_at 19:52:41Z; apply merge commit and observation with times."
+  },
+  "P9": {
+    "verdict": "holds",
+    "evidence": "Admin DELETE groups/acme-w14%2Frelease/members/6 (erin) -> 204; release members now [dave]. Nothing in the system changed. As ann: request beta '/probe-group/' '@acme/probe' -> run 116 awaiting_approval. As erin: `approve 116 --wait` -> exit 3, refused '@erin is not a direct member of acme-w14/release'. As dave: `approve 116 --wait` -> exit 0, approved, state succeeded. beta main af84bd2a -> a3cb77ee; CODEOWNERS on main '/docs/ @acme/docs @carol\\n/probe-group/ @acme/probe\\n'. Afterwards erin re-added to release as Developer (30) with the admin token to leave the group as found."
+  },
+  "P10": {
+    "verdict": "holds",
+    "evidence": "Every probe step was one `bin/acme-actions` command run with stdin from /dev/null and a token in GITLAB_TOKEN, printing JSON with meaningful exit codes (0 ok, 2 refused input, 3 refused approval, 4 run failed). `--wait` blocked to completion without prompts."
+  },
+  "P11": {
+    "verdict": "holds",
+    "evidence": "Followed HANDOFF.md's Commands section verbatim (export HOME/PATH, cd org, git pull, P=people; list/preview/request/approve/status/record). No server to start. No fixes needed; source read only for P5."
+  },
+  "fixes": [],
+  "strikes": [],
+  "linesBeforeStrikes": 1076,
+  "linesAfterStrikes": 1076,
+  "fullyPasses": true,
+  "notes": "No Premium credit was needed: every probe held on CE through the org pipeline's own approve job; setup/premium.sh (deployment approvals) is configured but returned 404/400 on CE, as the handoff says. Every file in the lines map is code, configuration, pipeline, setup script, test or the task's CODEOWNERS; none is runtime data. 14 GitLab settings changed outside files (settings.json), including a group access token for the bot stored as a protected CI variable. Observed outside the probes: (1) the dry-run `preview --project ...` renders locally with the caller's token rather than in a pipeline, while a requested run's preview is a pipeline artifact; both showed the diff. (2) After a refused approval the pipeline is 'failed' and cannot be canceled through GitLab, so it stays approvable indefinitely (the handoff states this); stale approvals are guarded by a check that main still matches the preview. (3) Approval is enforced by a job in org's CI on a shared shell-executor runner; org Maintainers can change the gate (stated in the handoff). Probe runs created: 114 (P4/P5), 115 (P6, failed), 116 (P9). The handoff's test-run list says 'Three test runs' but lists seven; cosmetic."
+}

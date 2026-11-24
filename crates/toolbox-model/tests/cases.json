@@ -29,6 +29,7 @@
     {"name": "kind group names an unknown kind", "set": {"/kindGroups": [{"name": "people", "kinds": ["Group", "Nobody"]}]}, "code": "xref.kind", "python": false},
     {"name": "kind in two kind groups", "set": {"/kindGroups": [{"name": "people", "kinds": ["Group", "User"]}, {"name": "teams", "kinds": ["Group"]}]}, "code": "xref.kind-group", "python": false},
     {"name": "rule link is not an absolute URL", "set": {"/scorecards/0/rules/0/links": [{"title": "Design", "url": "docs/design.md"}]}, "code": "schema", "python": true},
-    {"name": "change message with an unknown placeholder", "set": {"/actions/0/executor": {"type": "change", "run": "true", "message": "Publish: {contact}"}}, "code": "action.executor", "python": false}
+    {"name": "change message with an unknown placeholder", "set": {"/actions/0/executor": {"type": "change", "run": "true", "message": "Publish: {contact}"}}, "code": "action.executor", "python": false},
+    {"name": "two forges that say who people are", "set": {"/forges": [{"url": "https://github.com", "identity": true}, {"url": "https://gitlab.com", "identity": true}]}, "code": "forge", "python": false}
   ]
 }

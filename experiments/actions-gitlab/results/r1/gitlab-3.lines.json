@@ -1,0 +1,15 @@
+{
+ "linesToMaintain": 900,
+ "files": {
+  "gitlab:alpha/.gitlab-ci.yml": 34,
+  "gitlab:alpha/.gitlab/actions/set-codeowners/action.yml": 77,
+  "gitlab:alpha/.gitlab/actions/set-codeowners/codeowners.py": 314,
+  "gitlab:alpha/.gitlab/actions/set-codeowners/settings.sh": 69,
+  "gitlab:alpha/CODEOWNERS": 1,
+  "gitlab:beta/CODEOWNERS": 1,
+  "gitlab:gamma/CODEOWNERS": 1,
+  "gitlab:org/actions": 354,
+  "gitlab:org/setup/apply-settings.sh": 17,
+  "gitlab:org/setup/bot-token.sh": 32
+ }
+}
