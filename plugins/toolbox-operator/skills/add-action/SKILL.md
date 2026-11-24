@@ -9,17 +9,16 @@ description: >-
 This skill is the whole path, for one repository or a fleet: you need no other skill, example or
 `--help` to follow it, and no server.
 
-1. Lay out one standard action file and one test file, the same in every repository.
-2. Declare the action: inputs, approvers, preconditions and the change it makes.
-3. Test it in each repository with `toolbox test .toolbox`.
-4. Write an org portal over the repositories, and pin its key in the standard file.
+1. Write the org portal over the repositories, and take the key it signs approvals with.
+2. Declare the action, with that key: inputs, approvers, preconditions and the change it makes.
+3. Write its test cases.
+4. Copy the standard files to every repository, then validate, test, commit and push them.
 5. Request, approve and check runs from the org portal's directory.
 6. Hand it off.
 
-Each step is one shell command: write every file with heredocs at once, then copy the standard
-files to each repository, then validate, test, commit and push all of them in one loop.
+Steps 1 to 3 are one shell command, writing every file with heredocs at once; step 4 is one loop.
 
-## 1. Lay it out
+## 1. Lay it out, starting with the org portal
 
 An action that several repositories offer is a standard: two files that are the same, byte for
 byte, in every repository. Write them once and copy them. Only `toolbox.yaml` is each
@@ -39,13 +38,34 @@ portal: {name: alpha, owner: group:alpha-maintainers, toolbox: "0.1"}
 include: [actions/*.yaml]
 ```
 
+```yaml
+# org/toolbox.yaml
+apiVersion: toolbox.dev/v1alpha1
+portal: {name: org, owner: group:platform, toolbox: "0.1"}
+federation:
+  children: [{git: ../origins/alpha.git}, {git: https://github.com/acme/beta.git}]
+```
+
+Each child is offered as `portal:<last part of its URL>`; `git` takes anything `git clone` does,
+including a path relative to this file. `toolbox run` in `org/` lists every child's actions and
+ends with the key the org portal signs approvals with. It prints the key before any child has an
+action, so take it first and write it into the action file below:
+
+```sh
+KEY=$(cd org && toolbox run | grep -o 'ed25519:[0-9a-f]*' | head -1)   # made once, then reused
+```
+
+Toolbox keeps the key, the children's clones and the runs under `$TOOLBOX_STATE_DIR` (default
+`~/.local/state/toolbox`); use the same one for every command, and name it in your handoff if you
+set it.
+
 ## 2. Declare the action
 
 ```yaml
 # <repo>/.toolbox/actions/add-code-of-conduct.yaml
 federation:
   runner: {type: local} # the org portal runs it in its clone of this repository
-  acceptApprovalsFrom: [{portal: org, key: "ed25519:<the key the org portal prints>"}]
+  acceptApprovalsFrom: [{portal: org, key: "ed25519:<key>"}] # the key from step 1
 tests: [tests/add-code-of-conduct.test.yaml]
 actions:
   - name: add-code-of-conduct
@@ -68,6 +88,10 @@ actions:
         "$TOOLBOX_INPUT_CONTACT" > CODE_OF_CONDUCT.md
 ```
 
+Write it with a quoted heredoc (`<<'EOF'`), so `$TOOLBOX_INPUT_CONTACT` stays as written, then
+fill in the key in the same command:
+`sed -i "s/ed25519:<key>/$KEY/" alpha/.toolbox/actions/add-code-of-conduct.yaml`.
+
 Inputs reach the command as `TOOLBOX_INPUT_<NAME>`. Toolbox checks them against the schema
 (`pattern`, `minLength`, `maxLength`, `enum`, `required`), previews the diff, holds the approval,
 commits with `Toolbox-Run`, `Requested-By` and `Approved-By` trailers, and verifies the files on
@@ -75,7 +99,7 @@ the fetched base. Write no script for any of that. A rule the schema can't state
 `preconditions`, CEL over `inputs` and `entity`; a false one blocks the run. `entity.name` is the
 name of the repository that holds the file, so a standard never names its repository.
 
-## 3. Test it
+## 3. Write its test cases
 
 ```yaml
 # <repo>/.toolbox/tests/add-code-of-conduct.test.yaml
@@ -104,28 +128,10 @@ you commit. Nothing reaches the real origin. `{portal}` is the repository under 
 merge into `defaults` key by key (`null` leaves one out); quote a value with a comma inside
 `{…}`. A passing case needs no live rehearsal: cite it in your handoff.
 
-## 4. Offer it from one place
+## 4. Copy, test, commit and push
 
-```yaml
-# org/toolbox.yaml
-apiVersion: toolbox.dev/v1alpha1
-portal: {name: org, owner: group:platform, toolbox: "0.1"}
-federation:
-  children: [{git: ../origins/alpha.git}, {git: https://github.com/acme/beta.git}]
-```
-
-Each child is offered as `portal:<last part of its URL>`; `git` takes anything `git clone` does,
-including a path relative to this file. `toolbox run` in `org/` lists every child's actions and
-ends with the key the org portal signs approvals with:
-
-```sh
-(cd org && toolbox run) | grep -o 'ed25519:[0-9a-f]*' | head -1   # made once, then reused
-```
-
-Toolbox keeps the key, the children's clones and the runs under `$TOOLBOX_STATE_DIR` (default
-`~/.local/state/toolbox`); use the same one for every command, and name it in your handoff if you
-set it. Paste the key into the standard file, then copy it to every repository, test, commit and
-push, stopping at the first failure:
+Copy the standard files to every repository, test, commit and push, stopping at the first
+failure:
 
 ```sh
 (set -e; for r in alpha beta gamma; do
@@ -151,7 +157,7 @@ toolbox run --as ann --verify <run-id>                                          
 toolbox run --as ann --runs                                                                 # every run
 ```
 
-Exit codes: 0 succeeded, 1 failed, 2 invalid or refused, 3 waiting for approval, 4 unverified.
+Exit codes: 0 succeeded, 1 failed, 2 invalid, blocked or refused, 3 waiting for approval, 4 unverified.
 With `-o json`, `--yes`, `--approve` and `--verify` print the run's record: `id`, `state`,
 `requested_by`, `inputs`, `approval.approved_by`, `effects` (the diff), `events` (each with `at`)
 and `verification`. The org portal applies the approval rule: the requester and anyone not listed

@@ -39,7 +39,7 @@ you write.
    repository's `acceptApprovalsFrom`, then commit and push: until then the org portal offers the
    action, but the run is refused.
 4. **Request, approve, check**, in the org portal's directory. Every command takes `-o json`.
-   Exit codes: 0 succeeded, 1 failed, 2 refused or invalid, 3 waiting for an approval, 4
+   Exit codes: 0 succeeded, 1 failed, 2 refused, blocked or invalid, 3 waiting for an approval, 4
    unverified. `TOOLBOX_AS` stands for `--as`.
 
    ```sh
