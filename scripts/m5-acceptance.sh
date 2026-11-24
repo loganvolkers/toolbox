@@ -201,4 +201,38 @@ OUT=$("${TB[@]}" --runs --as ann)
 echo "$OUT" | python3 -c "import json,sys; sys.exit(not any(r['id'] == sys.argv[1] and r['state'] == 'succeeded' for r in json.load(sys.stdin)['runs']))" "$RID" \
   || fail "the run did not outlive the restart: $OUT"
 echo "   add-security-policy on gamma: awaiting bob (exit 3), approved with --approve, pushed to main, observed there; listed again after a restart"
+
+echo "9. an org portal that lists its children by git URL: Toolbox keeps the clones and the key"
+export TOOLBOX_STATE_DIR=$WORK/state-git; unset TOOLBOX_APPROVAL_KEY
+mkdir -p "$WORK/gitorg" && cat >"$WORK/gitorg/toolbox.yaml" <<'YAML'
+apiVersion: toolbox.dev/v1alpha1
+portal: {name: org, owner: group:platform, toolbox: "0.1"}
+federation:
+  children:
+    - {git: ../origin-alpha.git, key: alpha}
+    - {git: ../origin-beta.git, key: beta}
+YAML
+"$BIN/toolbox" validate "$WORK/gitorg" | tail -1
+N=$(run "$WORK/gitorg" | field "['actions'].__len__()")
+[ "$N" = 10 ] || fail "the git org should offer 10 actions (2 children x 5), got $N"
+OUT=$(run "$WORK/gitorg" add-license --entity portal:beta -i spdx=Apache-2.0 --yes)
+[ "$(echo "$OUT" | field "['state']")" = proposed ] || fail "add-license on a cloned beta: $OUT"
+git --git-dir "$WORK/origin-beta.git" rev-parse -q --verify "$(echo "$OUT" | field "['child']['outputs']['branch']")" >/dev/null \
+  || fail "the cloned child's branch is not on beta's origin: $OUT"
+API2=127.0.0.1:$((${API_PORT:-18095} + 1)); TB2=("$BIN/toolbox" run --url "http://$API2" -o json)
+(cd "$WORK/gitorg" && exec "$BIN/toolbox" serve --listen "$API2" . >"$WORK/server3.log" 2>&1) & PIDS+=($!)
+for _ in $(seq 100); do curl -fs "http://$API2/healthz" >/dev/null 2>&1 && break; sleep 0.2; done
+KEY=$("${TB2[@]}" --as ann | field "['approval_key']")
+[ "$(stat -c %a "$TOOLBOX_STATE_DIR/served/org/signing-key")" = 600 ] || fail "the kept signing key should be private"
+git -C "$WORK/review/alpha" pull -q origin main
+sed -i "s/ed25519:0\{64\}/$KEY/" "$WORK/review/alpha/.toolbox/toolbox.yaml"
+git -C "$WORK/review/alpha" "${G[@]}" commit -qam "accept the org portal's approvals" && git -C "$WORK/review/alpha" push -q origin main
+set +e; OUT=$("${TB2[@]}" add-security-policy --entity portal:alpha -i contact=security@acme.dev --as ann --yes --wait); CODE=$?; set -e
+[ $CODE = 3 ] || fail "add-security-policy on a cloned alpha should await approval ($CODE): $OUT"
+RID=$(echo "$OUT" | field "['id']")
+OUT=$("${TB2[@]}" --approve "$RID" --as bob --note "alpha is ours" --wait) || fail "approve: $OUT"
+[ "$(echo "$OUT" | field "['state']")" = succeeded ] || fail "approved add-security-policy on alpha: $OUT"
+git --git-dir "$WORK/origin-alpha.git" show main:SECURITY.md | grep -q security@acme.dev || fail "SECURITY.md is not on alpha's main"
+echo "$OUT" | grep -q "alpha is ours" || fail "the approval note was not kept: $OUT"
+echo "   no connector, kind or key declared: 10 actions from 2 git children; a pull request branch on beta's origin; alpha pinned the generated key on its origin, the clone followed, and bob's approval pushed SECURITY.md to alpha's main"
 echo "M5 acceptance: all checks passed"
