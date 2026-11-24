@@ -97,7 +97,7 @@
     "a.card:hover{border-color:var(--accent);transform:translateY(-1px)}",
     "a.card[aria-current=true]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}",
     "a.card .t{font-weight:600;line-height:1.3}",
-    "a.card .s{font-size:12px;color:var(--muted);margin-top:3px}",
+    "a.card .s{font-size:13px;color:var(--muted);margin-top:3px}",
     ".ring{flex:none}",
     ".ring circle{transition:stroke-dashoffset .8s cubic-bezier(.2,.7,.2,1)}",
     ".ring text{font:700 13px system-ui,sans-serif;fill:var(--fg)}",
@@ -135,11 +135,11 @@
     ".rule.unknown{border-left-color:var(--unknown)}.rule.waived{border-left-color:var(--bronze)}.rule.unassessed{border-left-color:var(--judged)}",
     ".basis-note p{margin:0 0 4px}.h2h-wide{max-width:560px}.h2h-wide .h2h{width:100%;font-size:13px}.h2h-wide .h2h-head,.h2h-wide .h2h-row{grid-template-columns:160px 1fr 1fr}.h2h-row[aria-current]{font-weight:700;background:var(--accent-bg);border-radius:6px}.rank-top:not([hidden]){display:block;margin:8px 0 0;font-size:13px}.cmp-prov{margin:6px 0 0;display:grid;gap:2px}.cmp-src{display:flex;flex-wrap:wrap;align-items:center;gap:2px 10px}.cmp-src .refs{margin:0;line-height:22px}.cmp-brief>summary{cursor:pointer;width:max-content;max-width:100%;padding:3px 0;color:var(--accent)}",
     ".kpi-bar{flex:0 0 46px;height:10px;border-radius:5px;background:var(--line);overflow:hidden}.kpi-bar span{display:block;height:100%;background:var(--pass)}.kpi-pips{flex:0 0 46px;display:flex;flex-wrap:wrap;gap:4px}.kpi-pips span{width:10px;height:10px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--faint)}.kpi-pips span.on{background:var(--pass);box-shadow:none}",
-    ".cprog{flex:0 0 76px;display:grid;gap:3px}.cprog b{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}.cprog small{font-size:12px;color:var(--muted)}.cprog .gb{position:relative;height:8px;border-radius:4px;background:var(--line)}.cprog .gb>span{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--muted)}.cprog.on .gb>span{background:var(--pass)}.cprog .gb>i{position:absolute;top:-3px;bottom:-3px;width:2px;border-radius:1px;background:var(--fg)}.cprog.big{flex-basis:120px}.cprog.big b{font-size:28px}",
+    ".cprog{flex:0 0 76px;display:grid;gap:3px}.cprog b{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}.cprog small{font-size:13px;color:var(--muted)}.cprog .gb{position:relative;height:8px;border-radius:4px;background:var(--line)}.cprog .gb>span{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--muted)}.cprog.on .gb>span{background:var(--pass)}.cprog .gb>i{position:absolute;top:-3px;bottom:-3px;width:2px;border-radius:1px;background:var(--fg)}.cprog.big{flex-basis:120px}.cprog.big b{font-size:28px}",
     ".hollow-key{display:flex;flex-wrap:wrap;align-items:center;gap:4px 16px;padding:6px 10px;font-size:13px;color:var(--muted);background:var(--tint);border-radius:8px;margin:4px 0}.hollow-key>span{display:inline-flex;align-items:center;gap:6px}.hollow-key b{color:var(--fg);font-weight:600}",
     ".rid{font:12px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);overflow-wrap:anywhere}.rule .rn{font-weight:650;font-size:inherit;margin:0;display:inline}.sc-block h3.sct{display:inline;margin:0;font-size:16px}",
     ".rule .fix{margin-top:4px;font-size:14px}",
-    ".tile-note{display:block;margin-top:3px;font-size:12px;color:var(--muted);line-height:1.35}",
+    ".tile-note{display:block;margin-top:3px;font-size:13px;color:var(--muted);line-height:1.35}",
     ".later-h{margin:14px 0 2px;font-size:13px;color:var(--muted)}.rule-c{padding:4px 12px;margin-top:4px}.rule-c>summary{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;min-height:28px;cursor:pointer}.rule-c>summary .rn{font-weight:600}.rule-c>summary::before{content:'\\25B8';color:var(--muted)}.rule-c[open]>summary::before{content:'\\25BE'}.rule-c[open]{padding-bottom:10px}.rule-c[open]>summary{margin-bottom:4px}.rule-c>summary .rwhy{flex-basis:100%;padding-left:18px;font-size:13px;line-height:1.4;color:var(--muted)}.rule-c[open]>summary .rwhy{display:none}",
     ".rule ul{margin:6px 0 0;padding-left:18px;font-size:13px;color:var(--muted)}",
     ".rule li{overflow-wrap:anywhere}",
@@ -193,13 +193,13 @@
     "code.kid{display:block;font:12px ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:400;color:var(--muted)}",
     ".kchips{display:grid;grid-template-columns:minmax(9rem,12rem) 1fr;gap:4px 12px;align-items:baseline;padding:6px 0;border-top:1px solid var(--line)}.kchips-g{font-size:12px;font-weight:650;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}.kchips .box a{display:inline-flex;align-items:center;min-height:28px}.kchips .box a[aria-current=true]{border-color:var(--accent);background:var(--card);font-weight:650}",
     ".ehdr{display:grid;gap:12px;padding:6px 8px;font-size:12px;font-weight:650;color:var(--muted)}.ehdr span{overflow-wrap:break-word}",
-    ".weakest{display:block;margin-top:3px;font-size:12px;color:var(--muted)}.weakest .lvl{font-size:12px}",
-    ".vhatch{display:inline-block;width:9px;height:9px;margin-left:5px;border-radius:2px;vertical-align:-1px;background:repeating-linear-gradient(135deg,var(--judged) 0 1.5px,transparent 1.5px 3.5px);box-shadow:inset 0 0 0 1px var(--judged)}.unassessed-tag .vhatch{margin:0 4px 0 0}.ecell{font-size:12px}.unassessed-tag{display:block;margin-top:2px;font-size:12px;color:var(--judged)}.unassessed-tag.unrun{color:var(--unknown)}.lvl.vacuous{background:transparent;border-style:dashed}.lvl.vacuous.unjudged{border-color:var(--judged)}.lvl.vacuous.unrun{border-style:dotted;border-color:var(--unknown)}.unassessed-tag svg{vertical-align:-1px}.lvl.vacuous.unjudged .vglyph{color:var(--judged)}.lvl.vacuous.unrun .vglyph{color:var(--unknown)}.pillwrap{display:inline-flex;flex-direction:column;align-items:flex-start;vertical-align:middle}",
+    ".weakest{display:block;margin-top:3px;font-size:13px;color:var(--muted)}.weakest .lvl{font-size:12px}",
+    ".vhatch{display:inline-block;width:9px;height:9px;margin-left:5px;border-radius:2px;vertical-align:-1px;background:repeating-linear-gradient(135deg,var(--judged) 0 1.5px,transparent 1.5px 3.5px);box-shadow:inset 0 0 0 1px var(--judged)}.unassessed-tag .vhatch{margin:0 4px 0 0}.ecell{font-size:13px}.unassessed-tag{display:block;margin-top:2px;font-size:13px;color:var(--judged)}.unassessed-tag.unrun{color:var(--unknown)}.lvl.vacuous{background:transparent;border-style:dashed}.lvl.vacuous.unjudged{border-color:var(--judged)}.lvl.vacuous.unrun{border-style:dotted;border-color:var(--unknown)}.unassessed-tag svg{vertical-align:-1px}.lvl.vacuous.unjudged .vglyph{color:var(--judged)}.lvl.vacuous.unrun .vglyph{color:var(--unknown)}.pillwrap{display:inline-flex;flex-direction:column;align-items:flex-start;vertical-align:middle}",
     "@media (max-width:820px){.unassessed-tag{display:inline;margin:0}}",
     ".pillwrap .unassessed-tag.quiet{display:none}",
     ".crumb{font-size:13px;color:var(--muted);margin-bottom:12px}",
     ".sc-group{margin-top:20px}.sc-group h3{margin:0 0 4px}.sc-group h3 .sub{font-weight:400;text-transform:none;letter-spacing:0}.sc-index input[type=search]{max-width:420px}",
-    ".sc-rows{border-top:1px solid var(--line)}.sc-row{display:grid;grid-template-columns:26px minmax(0,1.25fr) minmax(0,1.6fr) 104px;gap:12px;align-items:center;padding:7px 8px;border-bottom:1px solid var(--line);color:var(--fg);text-decoration:none}.sc-row:hover{background:var(--tint)}.sc-row .sc-name{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;min-width:0}.sc-row .sc-name .t{font-weight:600}.sc-row .sc-name .c{font-size:12px;color:var(--muted)}.sc-row{row-gap:2px}.sc-row>svg{grid-row:1/span 2}.sc-row .sc-why{grid-column:2/-1;grid-row:2;min-width:0;font-size:12px;line-height:1.4;color:var(--muted)}.sc-row .sc-dist small{display:block;font-size:12px;color:var(--muted);margin-top:3px}.sc-head{display:grid;grid-template-columns:26px minmax(0,1.25fr) minmax(0,1.6fr) 104px;gap:12px;padding:4px 8px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--line)}.sc-head span:last-child{text-align:right}.sc-row .sc-weak{display:flex;flex-direction:column;align-items:flex-end;gap:1px}.sc-row .sc-weak small{font-size:12px}.sc-row .sc-weak .bad{color:var(--fail);font-weight:600}.sc-row .sc-weak .topmark{color:var(--pass);font-weight:600}",
+    ".sc-rows{border-top:1px solid var(--line)}.sc-row{display:grid;grid-template-columns:26px minmax(0,1.25fr) minmax(0,1.6fr) 104px;gap:12px;align-items:center;padding:7px 8px;border-bottom:1px solid var(--line);color:var(--fg);text-decoration:none}.sc-row:hover{background:var(--tint)}.sc-row .sc-name{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;min-width:0}.sc-row .sc-name .t{font-weight:600}.sc-row .sc-name .c{font-size:12px;color:var(--muted)}.sc-row{row-gap:2px}.sc-row>svg{grid-row:1/span 2}.sc-row .sc-why{grid-column:2/-1;grid-row:2;min-width:0;font-size:14px;line-height:1.4;color:var(--muted)}.sc-row .sc-dist small{display:block;font-size:13px;color:var(--muted);margin-top:3px}.sc-head{display:grid;grid-template-columns:26px minmax(0,1.25fr) minmax(0,1.6fr) 104px;gap:12px;padding:4px 8px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--line)}.sc-head span:last-child{text-align:right}.sc-row .sc-weak{display:flex;flex-direction:column;align-items:flex-end;gap:1px}.sc-row .sc-weak small{font-size:13px}.sc-row .sc-weak .bad{color:var(--fail);font-weight:600}.sc-row .sc-weak .topmark{color:var(--pass);font-weight:600}",
     "@media (max-width:640px){.sc-head{display:none}.sc-row .sc-name code.c{display:none}.sc-row{grid-template-columns:26px minmax(0,1fr) auto;row-gap:4px}.sc-row .sc-weak{grid-column:3;grid-row:1}.sc-row .sc-dist{grid-column:2/4;grid-row:2}.sc-row .sc-why{grid-column:2/4;grid-row:3}.sc-row>svg{grid-row:1}}",
     ".crumb a{color:var(--muted);display:inline-block;padding:4px 0;margin:-4px 0}",
     "a.rl{display:inline-flex;align-items:center;min-height:24px;min-width:24px;vertical-align:middle}.refs a{display:inline-flex;align-items:center;min-height:26px}",
@@ -242,7 +242,7 @@
     ".standing.ahead{background:color-mix(in srgb,var(--pass) 16%,transparent);color:var(--pass)}",
     ".standing.behind{background:color-mix(in srgb,var(--fail) 14%,transparent);color:var(--fail)}",
     ".standing.parity{background:var(--tint);color:var(--fg);box-shadow:inset 0 0 0 1px var(--line)}",
-    ".value{display:block;font-size:12px;color:var(--muted);margin-top:2px}",
+    ".value{display:block;font-size:13px;color:var(--muted);margin-top:2px}",
     ".basis{display:inline-flex;align-items:center;gap:4px;padding:0 7px 0 5px;border-radius:6px;font-size:12px;font-weight:650;white-space:nowrap;line-height:20px;border:1px solid var(--line);color:var(--muted);background:var(--card);vertical-align:1px;text-transform:none;letter-spacing:0}",
     ".basis.judged{color:var(--judged);border-color:color-mix(in srgb,var(--judged) 45%,transparent);background:var(--judged-bg)}",
     ".basis.mini{padding:0 5px 0 3px;gap:3px;font-size:12px;font-weight:600;line-height:18px}",
@@ -269,7 +269,7 @@
     ".basis.tip:hover::after,.basis.tip:focus::after,abbr.gloss:hover::after,abbr.gloss:focus::after{content:none}",
     ".ftip{position:fixed;z-index:50;width:max-content;max-width:min(280px,calc(100vw - 24px));padding:6px 9px;border-radius:8px;background:var(--fg);color:var(--bg);font-size:13px;font-weight:450;line-height:1.4;box-shadow:0 4px 14px rgba(0,0,0,.18)}.ftip[hidden]{display:none}",
     ".allmeasured .basis.measured:is(.mini,.ctl){border-color:transparent;background:none;font-weight:500}",
-    ".medal-col{display:flex;gap:10px;align-items:center}.medal-col>svg{flex:0 0 30px}.mix{display:grid;gap:4px}.slots{position:relative;display:flex;gap:3px;align-items:flex-end;height:30px;padding-bottom:1px;border-bottom:1px solid var(--line)}.slot{position:relative;flex:1 1 0;max-width:30px;height:100%;border-radius:3px 3px 0 0;background:var(--tint);overflow:hidden}.slot::after{content:'';position:absolute;left:0;right:0;bottom:0;height:max(var(--h),3px);background:var(--c)}.slots[data-tip]{cursor:help}.slots[data-tip]:hover::after,.slots[data-tip]:focus::after{content:attr(data-tip);position:absolute;left:0;top:calc(100% + 6px);z-index:5;width:max-content;max-width:min(320px,calc(100vw - 48px));padding:6px 9px;border-radius:8px;background:var(--fg);color:var(--bg);font-size:12px;font-weight:500;line-height:1.5;white-space:pre-line;box-shadow:var(--shadow)}.slots .avg{position:absolute;left:0;right:0;bottom:var(--avg);border-top:1.5px dashed var(--fg);opacity:.7}.slot-key{display:inline-flex;align-items:center;gap:5px}.sc-done>summary{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px;padding:10px 8px 10px 28px;list-style:none;min-height:24px;cursor:pointer;border-bottom:1px solid var(--line);font-size:14px}.sc-done>summary:hover{background:var(--tint)}.sc-done>summary small{color:var(--muted);font-size:12px}.sc-done>summary::-webkit-details-marker{display:none}.sc-done>summary::before{content:'\\25B8';color:var(--muted);width:12px}.sc-done[open]>summary::before{content:'\\25BE'}.sc-done .topmark{color:var(--pass);font-weight:650}.slots.mini{display:inline-flex;width:30px;height:14px;gap:2px}.slots.mini .slot{border-radius:1px 1px 0 0}.mix small{font-size:12px;color:var(--muted)}.nextmedal{font-size:13px;padding:8px 10px;border-radius:8px;background:var(--tint)}.nextmedal b{color:var(--fg)}",
+    ".medal-col{display:flex;gap:10px;align-items:center}.medal-col>svg{flex:0 0 30px}.mix{display:grid;gap:4px}.slots{position:relative;display:flex;gap:3px;align-items:flex-end;height:30px;padding-bottom:1px;border-bottom:1px solid var(--line)}.slot{position:relative;flex:1 1 0;max-width:30px;height:100%;border-radius:3px 3px 0 0;background:var(--tint);overflow:hidden}.slot::after{content:'';position:absolute;left:0;right:0;bottom:0;height:max(var(--h),3px);background:var(--c)}.slots[data-tip]{cursor:help}.slots[data-tip]:hover::after,.slots[data-tip]:focus::after{content:attr(data-tip);position:absolute;left:0;top:calc(100% + 6px);z-index:5;width:max-content;max-width:min(320px,calc(100vw - 48px));padding:6px 9px;border-radius:8px;background:var(--fg);color:var(--bg);font-size:12px;font-weight:500;line-height:1.5;white-space:pre-line;box-shadow:var(--shadow)}.slots .avg{position:absolute;left:0;right:0;bottom:var(--avg);border-top:1.5px dashed var(--fg);opacity:.7}.slot-key{display:inline-flex;align-items:center;gap:5px}.sc-done>summary{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px;padding:10px 8px 10px 28px;list-style:none;min-height:24px;cursor:pointer;border-bottom:1px solid var(--line);font-size:14px}.sc-done>summary:hover{background:var(--tint)}.sc-done>summary small{color:var(--muted);font-size:13px}.sc-done>summary::-webkit-details-marker{display:none}.sc-done>summary::before{content:'\\25B8';color:var(--muted);width:12px}.sc-done[open]>summary::before{content:'\\25BE'}.sc-done .topmark{color:var(--pass);font-weight:650}.slots.mini{display:inline-flex;width:30px;height:14px;gap:2px}.slots.mini .slot{border-radius:1px 1px 0 0}.mix small{font-size:12px;color:var(--muted)}.nextmedal{font-size:13px;padding:8px 10px;border-radius:8px;background:var(--tint)}.nextmedal b{color:var(--fg)}",
     ".track .th{display:flex;gap:14px;align-items:center}",
     ".track .tt{font-weight:700;font-size:16px;line-height:1.25}",
     ".track .td{font-size:13px;color:var(--muted)}",
@@ -281,7 +281,7 @@
     ".climb-track{display:flex;align-items:center;gap:8px}.climb-track .climb-bar{flex:1}.climb-lock{display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:650;color:var(--muted);white-space:nowrap}",
     ".trackstrip.lead{margin-top:4px;padding-top:0;border-top:0}",
     ".trackstrip.lead a{padding:6px 14px 6px 6px;border-radius:14px;background:var(--card)}",
-    ".trackstrip small{display:block;font-size:12px;color:var(--muted)}",
+    ".trackstrip small{display:block;font-size:13px;color:var(--muted)}",
     ".trackstrip a.far{border-color:var(--fail)}.trackstrip a.far small{color:var(--fail);font-weight:650}",
     ".track .foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 10px;font-size:12px;color:var(--muted);margin-top:auto}",
     ".medals{display:flex;flex-wrap:wrap;gap:4px;margin:0;padding:0;list-style:none}",
@@ -296,11 +296,11 @@
     ".kgh{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline}",
     ".kgh h3{margin:0;color:var(--fg);font-size:13px}",
     ".kgd{margin:2px 0 8px;max-width:80ch}",
-    "a.kind small{display:block;color:var(--muted);font-size:12px;line-height:1.35;margin:-2px 0 6px}",
+    "a.kind small{display:block;color:var(--muted);font-size:13px;line-height:1.35;margin:-2px 0 6px}",
     ".boxrow{display:grid;grid-template-columns:200px minmax(0,1fr);gap:12px;align-items:start;padding:10px 0;border-top:1px solid var(--line)}",
     ".boxrow:first-of-type{border-top:0}",
     ".boxrow .bg{font-weight:650;font-size:14px;line-height:1.3}",
-    ".boxrow .bg small{display:block;font-weight:400;color:var(--muted);font-size:12px}",
+    ".boxrow .bg small{display:block;font-weight:400;color:var(--muted);font-size:13px}",
     ".cmp-hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:center;background:linear-gradient(135deg,color-mix(in srgb,var(--st) 14%,var(--card)) 0%,var(--card) 60%)}",
     ".cmp-hero .big{font-size:28px;line-height:1.2;font-weight:750;letter-spacing:-.01em;margin:4px 0 8px}",
     ".cmp-hero .kicker{font-size:12px;font-weight:650;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}",
@@ -314,14 +314,14 @@
     ".setup{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin:10px 0;align-items:start}",
     ".setup>div{padding:10px 12px;border-radius:10px;background:var(--tint);font-size:14px}",
     ".setup b{display:block;font-size:12px;color:var(--muted);font-weight:650;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}",
-    ".setup small{display:block;color:var(--muted);font-size:12px;margin-top:4px;line-height:1.4}",
+    ".setup small{display:block;color:var(--muted);font-size:13px;margin-top:4px;line-height:1.4}",
     ".factors{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}",
     "a.factor{display:flex;flex-direction:column;gap:8px;padding:14px;border:1px solid var(--line);border-left:5px solid var(--st);border-radius:12px;background:var(--card);color:var(--fg);text-decoration:none;transition:transform .15s,border-color .15s}",
     "a.factor:hover{border-color:var(--accent);border-left-color:var(--st);transform:translateY(-1px)}",
     "a.factor[aria-current=true]{box-shadow:0 0 0 1px var(--accent)}",
     ".factor .fh{display:flex;justify-content:space-between;gap:8px;align-items:center;font-weight:700}",
-    ".factor p{margin:0;font-size:13px;color:var(--muted)}.fx{display:flex;flex-direction:column;gap:1px;line-height:1.2}.fx b{font-size:24px;font-weight:750;color:var(--st);font-variant-numeric:tabular-nums}.fx span{font-size:12px;color:var(--muted)}",
-    ".factor .fc{font-size:12px;color:var(--muted)}",
+    ".factor p{margin:0;font-size:13px;color:var(--muted)}.fx{display:flex;flex-direction:column;gap:1px;line-height:1.2}.fx b{font-size:24px;font-weight:750;color:var(--st);font-variant-numeric:tabular-nums}.fx span{font-size:13px;color:var(--muted)}",
+    ".factor .fc{font-size:13px;color:var(--muted)}",
     ".measure{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr) minmax(130px,auto);gap:10px 18px;align-items:center;padding:14px 4px;border-top:1px solid var(--line)}",
     ".measure .mt{font-weight:650;line-height:1.35}",
     ".measure .mt small{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;font-weight:400;color:var(--muted);font-size:12px;margin-top:4px}",
@@ -335,7 +335,7 @@
     ".val .vb span{display:block;height:100%;border-radius:6px;width:0;transition:width .7s cubic-bezier(.2,.7,.2,1)}",
     ".val .v{font-variant-numeric:tabular-nums;font-weight:650;white-space:nowrap}",
     ".val .v.pass{color:var(--pass)}.val .v.fail{color:var(--fail)}",
-    ".mag{display:block;font-size:12px;color:var(--muted);margin-top:4px}",
+    ".mag{display:block;font-size:13px;color:var(--muted);margin-top:4px}",
     ".behind-row{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,3fr);gap:6px 18px;padding:12px 4px;border-top:1px solid var(--line);font-size:14px}",
     ".behind-row .why{margin:0 0 6px;color:var(--muted)}.behind-row .bh-val{margin-top:6px}.behind-row .why .refs{display:inline;margin:0;line-height:inherit}.behind-row .why .refs a{min-height:0;padding:3px 0}.behind-row .why b{color:var(--fg);font-weight:600}",
     ".provisional{color:var(--unknown);font-weight:650}",
@@ -347,7 +347,7 @@
     ".elevel strong{display:block;font-size:28px;line-height:1.1;font-weight:750;text-transform:capitalize;letter-spacing:-.01em}",
     ".elevel .sub{display:block}.elevel strong .pv-head{font-size:18px;font-weight:600;text-transform:none;letter-spacing:0;color:var(--unknown)}",
     "@media (max-width:600px){main{padding:18px 12px 56px}.hero .levelword{font-size:28px}",
-    ".modes{gap:0}.modes button{padding:10px 8px}.modes .count{min-width:0;margin-left:4px;padding:0 5px;font-size:12px}",
+    ".modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;overflow:visible}.modes.more,.modes.less{-webkit-mask-image:none;mask-image:none}.modes button{padding:9px 4px;text-align:center}.modes .count{min-width:0;margin-left:4px;padding:0 5px;font-size:12px}",
     ".kinds{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}a.kind{padding:9px}.fail-row{grid-template-columns:minmax(0,1fr) 64px}.fail-row .bar{display:none}",
     "a.row,.rows-head{grid-template-columns:minmax(0,1fr) 64px}.row .dist,.rows-head .dist{display:none}",
     ".ladder{grid-template-columns:1fr 1fr}.rung{min-height:0}.rung.vacant{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:6px 10px}.rung.vacant .rh{margin:0}.rung.vacant .empty{padding:0;margin:0}",
@@ -891,7 +891,7 @@
   }
 
   function topNote(D, name, level) {
-    if (capsRepo(D, name, level)) return el("span", { className: "capnote", textContent: " ▲ ceiling: its top level is " + level + ", so the repository can't rise above it", title: "Its top level is " + level + ", so the repository cannot rise above " + level + " until this scorecard gains a higher level" });
+    if (capsRepo(D, name, level)) return el("span", { className: "capnote", textContent: " ▲ at its top level, " + level + ", so it caps the repository", title: "Its top level is " + level + ", so the repository cannot rise above " + level + " until this scorecard gains a higher level" });
     var top = isTop(D, name, level) && !ONLY_LEVEL.has(level) ? el("span", { className: "topmark", textContent: " ✓ top level" }) : "";
     return LEVEL_DEF[level] ? el("span", {}, top, el("span", { className: "sub leveldef", textContent: " · " + LEVEL_DEF[level] })) : top;
   }
@@ -1585,7 +1585,7 @@
     var text = n.judged ? (n.measured ? n.judged + " of " + (n.judged + n.measured) + " rules are" : "Every rule is") + " agent-judged: " + BASIS.judged.desc : "Every rule is measured: " + BASIS.measured.desc;
     if (iconOnly) {
       var i = el("span", { className: "bicon " + b, title: text, role: "img" }, basisIcon(b));
-      i.setAttribute("aria-label", n.judged ? "some rules agent-judged" : "all rules measured");
+      i.setAttribute("aria-label", n.judged ? "has agent-judged rules" : "every rule measured");
       return i;
     }
     var m = basisBadge(b, true);
@@ -1736,14 +1736,15 @@
 
   // Campaigns measure progress to a target, so they get a bar with a target tick; rings are kept for
   // a track's share at the top level.
-  function goalBar(state, pct, target, big, parts) {
+  function goalBar(state, pct, target, big, names) {
     var empty = state === "empty";
+    var parts = (names || []).length;
     var g = el(
       "div",
       { className: "cprog" + (big ? " big" : "") + (state === "on" ? " on" : "") },
       el("b", { textContent: empty ? (parts ? String(parts) : "—") : pct + "%" }),
       empty ? null : el("div", { className: "gb" }, el("span", { style: "width:" + Math.max(0, Math.min(100, pct)) + "%" }), el("i", { style: "left:calc(" + target + "% - 1px)" })),
-      el("small", { textContent: empty ? (parts ? (parts === 1 ? "scorecard" : "scorecards") + ", each scored on its own" : "no single score") : "target " + target + "%" }),
+      el("small", { textContent: empty ? (parts ? (parts === 1 ? "scorecard" : "scorecards") + (big ? (parts === 1 ? ", scored on its own: " : ", each scored on its own: ") + andList(names) : "") : "no single score") : "target " + target + "%" }),
     );
     g.setAttribute("role", "img");
     g.setAttribute("aria-label", empty ? "no single score" + (parts ? ": " + plural(parts, "scorecard") + ", each scored on its own" : "") : pct + "% of entities meet the goal; target " + target + "%");
@@ -2424,7 +2425,7 @@
         here.forEach(function (c) {
           var done = c.level === c.top;
           var caps = done && R.next && c.level === level;
-          var a = link("scorecard/" + enc(c.name), caps ? "capped" : done ? "done" : "", [title(D, c.name), caps ? el("span", { className: "capmark", textContent: "▲ ceiling: the repository can't rise above it" }) : done ? el("span", { className: "topmark", textContent: "✓ top level" }) : null]);
+          var a = link("scorecard/" + enc(c.name), caps ? "capped" : done ? "done" : "", [title(D, c.name), caps ? el("span", { className: "capmark", textContent: "▲ at its top level, so it caps the repository" }) : done ? el("span", { className: "topmark", textContent: "✓ top level" }) : null]);
           a.title = caps ? c.name + ": at its only top level, " + c.level + ", which holds the repository there" : done ? c.name + ": already at its top level, " + c.level : c.name;
           rung.append(a);
         });
@@ -2510,12 +2511,12 @@
       var days = daysLeft(c.end);
       var status =
         state === "empty"
-          ? el("span", { className: "pill neutral", textContent: "no single score" })
+          ? el("span", { className: "sub", textContent: "Each scored on its own: " + andList((c.includes || []).map(function (i) { return title(D, i.scorecard); })) })
           : state === "on"
             ? el("span", { className: "pill good", textContent: "on target" })
             : el("span", { className: "pill bad", textContent: (c.inScope || 0) - (c.meeting || 0) + " to go" });
       var a = link("campaign/" + enc(name), "card", [
-        goalBar(state, pct, target, false, (c.includes || []).length),
+        goalBar(state, pct, target, false, (c.includes || []).map(function (i) { return title(D, i.scorecard); })),
         el(
           "div",
           {},
@@ -2581,7 +2582,7 @@
           medal(floor || "none", 26),
           el("div", { className: "sc-name" }, ...cardName(D, r.name)),
           el("div", { className: "sc-dist" }, barEl(splitUnassessed(D, r.name, r.parts)), el("small", {}, ...scCaption(D, r))),
-          el("div", { className: "sc-weak" }, floor ? floorPill(D, r.name) : el("span", { className: "sub", textContent: "not scored" }), r.none ? el("small", { className: "bad", textContent: fmt(r.none) + " at none" }) : floor && isTop(D, r.name, floor) && !ONLY_LEVEL.has(floor) ? el("small", { className: "topmark", textContent: "✓ top level" }) : null),
+          el("div", { className: "sc-weak" }, floor ? floorPill(D, r.name) : el("span", { className: "sub", textContent: "not scored" }), r.none ? el("small", { className: "bad", textContent: fmt(r.none) + " at none" }) : floor && capsRepo(D, r.name, floor) ? el("small", { className: "capnote", textContent: "▲ top level; caps the repository" }) : floor && isTop(D, r.name, floor) && !ONLY_LEVEL.has(floor) ? el("small", { className: "topmark", textContent: "✓ top level" }) : null),
           purpose ? el("span", { className: "sc-why", textContent: purpose }) : null,
         ]);
       };
@@ -2697,7 +2698,7 @@
         { className: "sc-index" },
         el("div", { className: "head" }, el("h2", { textContent: "Scorecards" }), el("span", { className: "sub", textContent: plural(standards.length, "scorecard") + " in " + plural(groups.length, "group") })),
         el("p", { className: "lede" }, "Each scorecard rates every entity of one kind against levels of rules; the medal is its weakest entity's level, and the bar shows where the rest stand. They are grouped by track, the line of work each one serves. Open one for its failures, entities and what each level needs.", factors ? el("span", {}, " The " + plural(factors, "comparison factor") + " against a rival are on ", link("compare", "", "the Compare tab"), ".") : null),
-        levelLegend(D, standards),
+        el("details", { className: "keyd", open: !matchMedia("(max-width:640px)").matches }, el("summary", { textContent: "How to read the bars" }), levelLegend(D, standards)),
         search,
         list,
       );
@@ -2792,7 +2793,7 @@
               "section",
               {},
               el("div", { className: "head" }, el("h2", { textContent: "Tracks" }), link("tracks", "", "All tracks →")),
-              el("p", { className: "lede", textContent: "Long-running lines of work, furthest from its goal first: the ring is the average share of entities at the top level, each scorecard counting once however many entities it rates." + (tracksSorted(D, S).some(function (t) {
+              el("p", { className: "lede", textContent: "Long-running lines of work, furthest from its goal first: the ring is how much of what each scorecard rates is at the top level, on average, so a small scorecard counts as much as a large one." + (tracksSorted(D, S).some(function (t) {
                   return t.compare;
                 })
                   ? " A comparison track comes last, and its ring counts factors ahead of a rival instead."
@@ -2862,7 +2863,7 @@
           "div",
           { className: "th" },
           t.compare ? tallyRing(t.verdicts, t.rows.length, 60) : ring(t.pct, { size: 60, color: color, label: t.pct == null ? "not scored" : t.pct + "% at the top level" }),
-          el("div", {}, el("div", { className: "tt", textContent: def.title || t.name }), el("div", { className: "sub", textContent: t.compare ? "factors ahead, a segment per factor" : t.averaged > 1 ? "average share at the top level; each of " + fmt(t.averaged) + " scorecards counts once" : "of entities at the top level" })),
+          el("div", {}, el("div", { className: "tt", textContent: def.title || t.name }), el("div", { className: "sub", textContent: t.compare ? "factors ahead, a segment per factor" : t.averaged > 1 ? "of what each of its " + fmt(t.averaged) + " scorecards rates is at the top level, on average" : "of entities at the top level" })),
         ),
         def.description ? el("div", { className: "td", textContent: prose(firstSentence(def.description)) }) : null,
       ];
@@ -2932,7 +2933,7 @@
       tl.replaceChildren(tlink);
       var a = el("div", { className: "track" }, ...kids);
       a.style.setProperty("--tc", color);
-      var standing = t.compare ? tallyWords(t.verdicts, t.rows.length) : t.pct == null ? "not scored" : (t.averaged > 1 ? t.pct + "% average share at the top level, each of " + fmt(t.averaged) + " scorecards counting once" : t.pct + "% of entities at the top level");
+      var standing = t.compare ? tallyWords(t.verdicts, t.rows.length) : t.pct == null ? "not scored" : (t.averaged > 1 ? t.pct + "% of what each of its " + fmt(t.averaged) + " scorecards rates is at the top level, on average" : t.pct + "% of entities at the top level");
       tlink.setAttribute("aria-label", (def.title || t.name) + ": " + standing + (flag ? ". " + flag : "") + (weakest ? ". Weakest: " + weakest : ""));
       return a;
     }
@@ -3272,7 +3273,7 @@
             "div",
             { className: "ehead" },
             el("div", {}, el("h2", { textContent: c.title || selected }), el("div", { className: "sub" }, c.status || "", track ? el("span", {}, " · track ", link(trackPath(D, c.track), "", track)) : null, c.owner ? " · owned by " + c.owner.replace(/^group:/, "") : null)),
-            goalBar(state, pct, target, true, (c.includes || []).length),
+            goalBar(state, pct, target, true, (c.includes || []).map(function (i) { return title(D, i.scorecard); })),
           ),
           c.description ? el("p", { className: "lede" }, ...rich(c.description)) : null,
           state === "empty"
@@ -3760,7 +3761,7 @@
       if (need.length === 1)
         return el("div", {}, caveat, el("div", { className: "callout near" }, el("span", {}, el("b", { textContent: "One rule from " }), badge(next), " · pass “" + ruleTitleOf(sc, need[0]) + "” ", basisBadge(basisOf((sc.rules || {})[need[0]]), "tip"), " and this entity moves up a level.")));
       return el("div", {}, caveat, el("div", { className: "callout" }, el("span", {}, el("b", { textContent: "Next: " }), badge(next), " needs: ", ...need.map(function (n, i) {
-        return el("span", { className: "nr" }, (i ? ", " : "") + ruleTitleOf(sc, n) + " ", basisBadge(basisOf((sc.rules || {})[n]), "tip"));
+        return el("span", { className: "nr" }, ...keepWithLast(ruleTitleOf(sc, n), basisBadge(basisOf((sc.rules || {})[n]), "tip")), i < need.length - 1 ? ", " : "");
       }), ".")));
     }
 
@@ -4826,7 +4827,7 @@
                       { className: r.level === "none" ? "bad" : "" },
                       next.charAt(0).toUpperCase() + next.slice(1) + " needs: ",
                       ...need.slice(0, 2).map(function (n, i) {
-                        return el("span", { className: "nr" }, (i ? ", " : "") + ruleTitle(active, n) + " ", basisBadge(basisOf((sc.rules || {})[n]), true));
+                        return el("span", { className: "nr" }, ...keepWithLast(ruleTitle(active, n), basisBadge(basisOf((sc.rules || {})[n]), true)), i < Math.min(need.length, 2) - 1 ? ", " : "");
                       }),
                       need.length > 2 ? " +" + (need.length - 2) : "",
                     )
@@ -5181,7 +5182,7 @@
           "section",
           {},
           el("div", { className: "head" }, el("h2", { textContent: "Scorecards" })),
-          el("p", { className: "sub", style: "margin:0" }, "Most entities at none first · ", el("span", { className: "bicon judged" }, basisIcon("judged")), " some rules agent-judged · ", el("span", { className: "bicon" }, basisIcon("measured")), " all measured"),
+          el("p", { className: "sub", style: "margin:0" }, "Most entities at none first · ", el("span", { className: "bicon judged" }, basisIcon("judged")), " has agent-judged rules · ", el("span", { className: "bicon" }, basisIcon("measured")), " every rule measured"),
           cardSearch,
           toTop,
           cardNav,

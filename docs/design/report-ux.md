@@ -359,6 +359,10 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
   top level, so "weakest" is the same scorecard on every card and list.
 - "Provisional" means only that checks were not run; a level that rests on a missing assessment
   "may not hold". A track ring that averages scorecards says each one counts once.
+- On a phone every tab stays visible (two rows of three), and legends fold under "How to read".
+- Rationale and captions are at least 13px ("Why" lines 14px); 12px is for ids, legends and counts.
+- One phrase for a standard that holds the repository at its only level: "at its top level, so it
+  caps the repository", on every view that shows it.
 
 Not built: a change since the last snapshot beside each track ring. The report carries one snapshot
 and the committed baseline, which equals it on every published build; a pages build that also scored
