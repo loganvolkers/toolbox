@@ -2488,7 +2488,8 @@
         "discriminates": [
           "25fda6a7",
           "bf0c9e31",
-          "c7a2000c"
+          "c7a2000c",
+          "f3cfea11"
         ]
       },
       "rubric:toolbox/crate-design": {
@@ -8190,7 +8191,7 @@
     "meta-rubric": {
       "rubric:toolbox/assessment-quality": {
         "failing": {
-          "discriminates": 3
+          "discriminates": 4
         },
         "level": "silver"
       },
