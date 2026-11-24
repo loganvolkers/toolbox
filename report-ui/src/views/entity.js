@@ -5,7 +5,7 @@ import { levelName, nextLevel } from "../lib/campaigns.js";
 import { keepWithLast } from "../lib/compare.js";
 import { el, enc, link } from "../lib/dom.js";
 import { kindTitle } from "../lib/kinds.js";
-import { ink } from "../lib/levels.js";
+import { ink, ownLevel } from "../lib/levels.js";
 import { shortId, title } from "../lib/rings.js";
 import { isComparative, ruleLink, ruleTitle, ruleTitleOf } from "../lib/rules.js";
 import { blockers, isPassing } from "../lib/status.js";
@@ -284,7 +284,7 @@ export const entityViews = {
               el(
                 "div",
                 {},
-                el("strong", { style: "color:" + ink(S.worst[id]) }, S.worst[id], provisional.length ? el("span", { className: "pv-head", textContent: notRun ? " (provisional)" : " (may not hold)" }) : null),
+                el("strong", { style: "color:" + ink(S.worst[id]) }, ownLevel(D, kind, S.worst[id]), provisional.length ? el("span", { className: "pv-head", textContent: notRun ? " (provisional)" : " (may not hold)" }) : null),
                 provisional.length ? el("span", { className: "provisional", style: "display:block;font-size:13px", title: "The level holds only if the checks not run in this build pass and an agent's assessment finds nothing; the scorecards below name them.", textContent: provisional.join(", ") }) : null,
                 el("span", { className: "sub", textContent: (cards.length > 1 ? "lowest of " + cards.length + " scorecards · " : "") + total.pass + " of " + total.all + " checks pass on evidence" + (total.hollow ? " · " + total.hollow + " more only because nothing was assessed" : "") }),
               ),

@@ -173,6 +173,8 @@ export class ToolboxReport extends HTMLElement {
         t.count = levelCards.length;
       }
     });
+    // On a phone the tabs form an even grid: four as two rows of two, never one left alone on a row.
+    modes.style.setProperty("--tabcols", String(tabs.length <= 3 ? tabs.length : tabs.length === 4 ? 2 : 3));
     modes.replaceChildren(
       ...tabs.map(function (t) {
         var selected = activeMode === t.id;

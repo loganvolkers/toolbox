@@ -24,6 +24,23 @@ export function aliasLevels(D) {
   });
 }
 
+// Across scorecards, levels are compared on the standard ladder; where one scorecard alone rates a
+// kind, its own level names ("within-limit") are what a reader saw on that scorecard.
+export function ownLevel(D, kind, l) {
+  var cards = Object.keys(D.scorecards || {})
+    .filter(function (n) {
+      return D.scorecards[n].kind === kind && !(D.comparisons || {})[n];
+    })
+    .map(function (n) {
+      return D.scorecards[n];
+    });
+  if (cards.length !== 1 || l === "none" || l === "unscored") return l;
+  var own = (cards[0].levels || []).find(function (x) {
+    return x === l || known(x) === l;
+  });
+  return own || l;
+}
+
 export function known(l) {
   return KNOWN.indexOf(l) >= 0 ? l : ALIAS[l] || null;
 }

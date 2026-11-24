@@ -64,6 +64,18 @@
       });
     });
   }
+  function ownLevel(D, kind, l) {
+    var cards = Object.keys(D.scorecards || {}).filter(function(n) {
+      return D.scorecards[n].kind === kind && !(D.comparisons || {})[n];
+    }).map(function(n) {
+      return D.scorecards[n];
+    });
+    if (cards.length !== 1 || l === "none" || l === "unscored") return l;
+    var own = (cards[0].levels || []).find(function(x) {
+      return x === l || known(x) === l;
+    });
+    return own || l;
+  }
   function known(l) {
     return KNOWN.indexOf(l) >= 0 ? l : ALIAS[l] || null;
   }
@@ -1838,7 +1850,7 @@
     ".elevel strong{display:block;font-size:28px;line-height:1.1;font-weight:750;text-transform:capitalize;letter-spacing:-.01em}",
     ".elevel .sub{display:block}.elevel strong .pv-head{font-size:18px;font-weight:600;text-transform:none;letter-spacing:0;color:var(--unknown)}",
     "@media (max-width:600px){main{padding:18px 12px 56px}.hero .levelword{font-size:28px}",
-    ".modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;overflow:visible}.modes.more,.modes.less{-webkit-mask-image:none;mask-image:none}.modes button{padding:9px 4px;text-align:center}.modes .count{min-width:0;margin-left:4px;padding:0 5px;font-size:12px}",
+    ".modes{display:grid;grid-template-columns:repeat(var(--tabcols,3),minmax(0,1fr));gap:0;overflow:visible}.modes.more,.modes.less{-webkit-mask-image:none;mask-image:none}.modes button{padding:9px 4px;text-align:center}.modes .count{min-width:0;margin-left:4px;padding:0 5px;font-size:12px}",
     ".kinds{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}a.kind{padding:9px}.fail-row{grid-template-columns:minmax(0,1fr) 64px}.fail-row .bar{display:none}",
     "a.row,.rows-head{grid-template-columns:minmax(0,1fr) 64px}.row .dist,.rows-head .dist{display:none}",
     ".ladder{grid-template-columns:1fr 1fr}.rung{min-height:0}.rung.vacant{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:6px 10px}.rung.vacant .rh{margin:0}.rung.vacant .empty{padding:0;margin:0}",
@@ -3720,7 +3732,7 @@
             if (p.level !== "unscored") byLevel[p.level] = (byLevel[p.level] || 0) + p.n;
           });
           var mix = Object.keys(byLevel).map(function(l) {
-            return fmt(byLevel[l]) + " " + l;
+            return fmt(byLevel[l]) + " " + ownLevel(D, k, l);
           });
           if (mix.length) a.append(el("small", { className: "kmix", textContent: mix.join(" · "), title: "Each entity counted at its weakest level" }));
         }
@@ -4297,7 +4309,7 @@
             el(
               "div",
               {},
-              el("strong", { style: "color:" + ink(S.worst[id]) }, S.worst[id], provisional.length ? el("span", { className: "pv-head", textContent: notRun ? " (provisional)" : " (may not hold)" }) : null),
+              el("strong", { style: "color:" + ink(S.worst[id]) }, ownLevel(D, kind, S.worst[id]), provisional.length ? el("span", { className: "pv-head", textContent: notRun ? " (provisional)" : " (may not hold)" }) : null),
               provisional.length ? el("span", { className: "provisional", style: "display:block;font-size:13px", title: "The level holds only if the checks not run in this build pass and an agent's assessment finds nothing; the scorecards below name them.", textContent: provisional.join(", ") }) : null,
               el("span", { className: "sub", textContent: (cards.length > 1 ? "lowest of " + cards.length + " scorecards · " : "") + total.pass + " of " + total.all + " checks pass on evidence" + (total.hollow ? " · " + total.hollow + " more only because nothing was assessed" : "") })
             )
@@ -5103,6 +5115,7 @@
           t.count = levelCards.length;
         }
       });
+      modes.style.setProperty("--tabcols", String(tabs.length <= 3 ? tabs.length : tabs.length === 4 ? 2 : 3));
       modes.replaceChildren(
         ...tabs.map(function(t) {
           var selected = activeMode === t.id;

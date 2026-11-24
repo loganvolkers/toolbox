@@ -4,7 +4,7 @@ import { basisBadge, basisCounts } from "../lib/basis.js";
 import { judgedMark } from "../lib/compare.js";
 import { el, enc, link } from "../lib/dom.js";
 import { kindCount, kindDescription, kindGroupsOf, kindTitle, scorecardSplit } from "../lib/kinds.js";
-import { fill } from "../lib/levels.js";
+import { fill, ownLevel } from "../lib/levels.js";
 import { shortId, title } from "../lib/rings.js";
 import { memberLinks } from "../lib/rules.js";
 import { template } from "../lib/styles.js";
@@ -60,7 +60,7 @@ export const catalogViews = {
             if (p.level !== "unscored") byLevel[p.level] = (byLevel[p.level] || 0) + p.n;
           });
           var mix = Object.keys(byLevel).map(function (l) {
-            return fmt(byLevel[l]) + " " + l;
+            return fmt(byLevel[l]) + " " + ownLevel(D, k, l);
           });
           if (mix.length) a.append(el("small", { className: "kmix", textContent: mix.join(" · "), title: "Each entity counted at its weakest level" }));
         }

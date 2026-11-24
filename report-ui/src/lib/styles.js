@@ -344,7 +344,7 @@ export var CSS = [
   ".elevel strong{display:block;font-size:28px;line-height:1.1;font-weight:750;text-transform:capitalize;letter-spacing:-.01em}",
   ".elevel .sub{display:block}.elevel strong .pv-head{font-size:18px;font-weight:600;text-transform:none;letter-spacing:0;color:var(--unknown)}",
   "@media (max-width:600px){main{padding:18px 12px 56px}.hero .levelword{font-size:28px}",
-  ".modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;overflow:visible}.modes.more,.modes.less{-webkit-mask-image:none;mask-image:none}.modes button{padding:9px 4px;text-align:center}.modes .count{min-width:0;margin-left:4px;padding:0 5px;font-size:12px}",
+  ".modes{display:grid;grid-template-columns:repeat(var(--tabcols,3),minmax(0,1fr));gap:0;overflow:visible}.modes.more,.modes.less{-webkit-mask-image:none;mask-image:none}.modes button{padding:9px 4px;text-align:center}.modes .count{min-width:0;margin-left:4px;padding:0 5px;font-size:12px}",
   ".kinds{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}a.kind{padding:9px}.fail-row{grid-template-columns:minmax(0,1fr) 64px}.fail-row .bar{display:none}",
   "a.row,.rows-head{grid-template-columns:minmax(0,1fr) 64px}.row .dist,.rows-head .dist{display:none}",
   ".ladder{grid-template-columns:1fr 1fr}.rung{min-height:0}.rung.vacant{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:6px 10px}.rung.vacant .rh{margin:0}.rung.vacant .empty{padding:0;margin:0}",
