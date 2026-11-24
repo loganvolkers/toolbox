@@ -46,7 +46,7 @@ cp "$EX/org/toolbox.yaml" "$WORK/org/"
 "$BIN/toolbox" validate "$WORK/org" | tail -1
 
 echo "1. repo level: list, preview, confirm, observed"
-run "$WORK/alpha" | field "['actions'].__len__()" | grep -qx 4 || fail "alpha should offer 4 actions"
+run "$WORK/alpha" | field "['actions'].__len__()" | grep -qx 5 || fail "alpha should offer 5 actions"
 TOKEN=$(run "$WORK/alpha" write-readme -i text='Alpha does one thing well.' | field "['confirm_token']")
 OUT=$(run "$WORK/alpha" write-readme -i text='Alpha does one thing well.' --confirm "$TOKEN")
 [ "$(echo "$OUT" | field "['state']")" = succeeded ] || fail "write-readme: $OUT"
@@ -64,7 +64,10 @@ echo "   preview_stale (exit 1), invalid inputs (exit 2)"
 echo "3. a repo portal holds no approvals"
 set +e; OUT=$(run "$WORK/alpha" set-owners -i team=@acme/alpha --yes); CODE=$?; set -e
 [ $CODE = 3 ] && [ "$(echo "$OUT" | field "['state']")" = awaiting_approval ] || fail "set-owners: $CODE $OUT"
-echo "   set-owners is awaiting_approval (exit 3)"
+set +e; OUT=$(run "$WORK/alpha" add-security-policy -i contact=security@acme.dev --yes); CODE=$?; set -e
+[ $CODE = 3 ] || fail "a change that lands without review needs an approval a checkout can't hold ($CODE): $OUT"
+git --git-dir "$WORK/origin-alpha.git" cat-file -e main:SECURITY.md 2>/dev/null && fail "an unapproved push landed"
+echo "   set-owners and add-security-policy (land: push) are awaiting_approval (exit 3); nothing was pushed"
 
 echo "4. a change is a pull request; review is its approval; done when merged and observed"
 OUT=$(run "$WORK/alpha" add-license -i spdx=MIT --yes)
@@ -83,7 +86,7 @@ echo "   $BRANCH proposed, merged, succeeded; on beta, a licence pushed by hand 
 
 echo "5. the org portal offers every child's actions, packages included"
 N=$(run "$WORK/org" | field "['actions'].__len__()")
-[ "$N" = 16 ] || fail "org should offer 16 actions (4 portals x 4), got $N"
+[ "$N" = 20 ] || fail "org should offer 20 actions (4 portals x 5), got $N"
 OUT=$(run "$WORK/org" write-readme --entity portal:beta -i text='Beta, run from the org portal.' --yes)
 [ "$(echo "$OUT" | field "['state']")" = succeeded ] || fail "federated write-readme: $OUT"
 [ "$(echo "$OUT" | field "['verification']['by']")" = "child portal" ] || fail "not verified by the child: $OUT"
@@ -181,4 +184,21 @@ for mode in ["bob twice"] * 4 + ["bob and a cancel"] * 4:
 print("\n".join(bad) or "   races: bob approving twice at once is accepted once and runs once; a cancel that is accepted stops the run (4 tries each)")
 sys.exit(1 if bad else 0)
 PY
+echo "8. the served client: toolbox run --url; a person approves; the push lands on main; runs outlive a restart"
+TB=("$BIN/toolbox" run --url "$URL" -o json)
+set +e; OUT=$("${TB[@]}" add-security-policy --entity portal:gamma -i contact=security@acme.dev --as ann --yes --wait); CODE=$?; set -e
+[ $CODE = 3 ] && [ "$(echo "$OUT" | field "['state']")" = awaiting_approval ] || fail "add-security-policy via --url ($CODE): $OUT"
+RID=$(echo "$OUT" | field "['id']")
+git --git-dir "$WORK/origin-gamma.git" cat-file -e main:SECURITY.md 2>/dev/null && fail "pushed before approval"
+OUT=$("${TB[@]}" --approve "$RID" --as bob --note "ship it" --wait) || fail "approve: $OUT"
+[ "$(echo "$OUT" | field "['state']")" = succeeded ] || fail "approved add-security-policy: $OUT"
+[ "$(echo "$OUT" | field "['verification']['child']['by']")" = base ] || fail "the child should observe the push on main: $OUT"
+git --git-dir "$WORK/origin-gamma.git" show main:SECURITY.md | grep -q security@acme.dev || fail "SECURITY.md is not on gamma's main"
+kill "${PIDS[-1]}"; wait "${PIDS[-1]}" 2>/dev/null || true
+(cd "$WORK/org" && exec "$BIN/toolbox" serve --listen "$API" . >"$WORK/server2.log" 2>&1) & PIDS+=($!)
+for _ in $(seq 100); do curl -fs "$URL/healthz" >/dev/null 2>&1 && break; sleep 0.2; done
+OUT=$("${TB[@]}" --runs --as ann)
+echo "$OUT" | python3 -c "import json,sys; sys.exit(not any(r['id'] == sys.argv[1] and r['state'] == 'succeeded' for r in json.load(sys.stdin)['runs']))" "$RID" \
+  || fail "the run did not outlive the restart: $OUT"
+echo "   add-security-policy on gamma: awaiting bob (exit 3), approved with --approve, pushed to main, observed there; listed again after a restart"
 echo "M5 acceptance: all checks passed"
