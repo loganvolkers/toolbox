@@ -110,7 +110,7 @@ The schema is [`schema/manifest.schema.json`](../schema/manifest.schema.json)
 | `policies` | Named values, readable in CEL as `policy.<name>` |
 | `connectors` | Package, runtime (`in-image` or `remote`), config with `${env:…}` and `${secret:…}`, record kinds, required refresh scopes, freshness per record kind |
 | `kinds` | Fields (types, facets, computed, authority), relations, identity sources, per-field source precedence, write-back, mapping rules |
-| `scorecards` | Kind, owner, ordered levels, `appliesTo`, rules (`check`, `fix`), facets; optional `track`; optional `compare: {subject, peers}`, with per-rule `value`, `better` (`lower` or `higher`), `unit` and `tolerance`, for a comparative scorecard (D01M857ZB468ZM2YS6GNSEG6YB9) |
+| `scorecards` | Kind, owner, ordered levels, `appliesTo`, rules (`check`, `fix`), facets; optional `track`; optional `compare: {subject, peers, verdict}` (`verdict`: `anyBehind` or `majority`, D01M87WF2QZVPTD8CGDZKY133CD), with per-rule `value`, `better` (`lower` or `higher`), `unit` and `tolerance`, for a comparative scorecard (D01M857ZB468ZM2YS6GNSEG6YB9) |
 | `tracks` | Long-term programs: name, owner, optional title/description (D01M7Y11G0YZT23W26Z9D3XW68Y) |
 | `campaigns` | Time-bound goals: owner, `includes` (`scorecard` + `atLeast` and/or `rules`), dates, `targetPercent`, milestones, optional `track` / `draft` / `status` |
 | `authz` | OpenFGA model and tests; tuple derivations (static or CEL per kind) |

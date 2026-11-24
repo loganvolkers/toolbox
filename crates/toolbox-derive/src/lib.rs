@@ -14,7 +14,7 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::time::{SystemTime, UNIX_EPOCH};
 use toolbox_expr::{Expr, ExprValue, Scope, lazy_map, with_vals, with_vars};
 use toolbox_model::Manifest;
-use toolbox_model::manifest::{Kind, TupleDerivation};
+use toolbox_model::manifest::{Kind, TupleDerivation, VerdictRule};
 use toolbox_store::InputSnapshot;
 
 /// Derived state, recomputed from inputs (D37).
@@ -73,9 +73,13 @@ pub struct Comparison {
     pub peers: Vec<String>,
     /// rule → peer → `ahead`, `parity`, `behind` or `unknown` (the subject's standing).
     pub rules: BTreeMap<String, BTreeMap<String, String>>,
-    /// peer → the subject's standing over every rule: `behind` if any rule is, then `unknown`,
-    /// then `ahead` if any rule is, else `parity`.
+    /// peer → the subject's standing over every rule, by `verdict_rule`.
     pub verdict: BTreeMap<String, String>,
+    /// `anyBehind`: `behind` if any rule is, then `unknown`, then `ahead` if any rule is, else
+    /// `parity`. `majority`: `unknown` if any rule is, else more rules ahead than behind is
+    /// `ahead`, fewer is `behind`, as many is `parity` (D01M87WF2QZVPTD8CGDZKY133CD).
+    #[serde(rename = "verdictRule")]
+    pub verdict_rule: String,
 }
 
 /// A problem found while deriving (never fatal: the pipeline always produces a result).
@@ -760,10 +764,19 @@ impl<'m> Pipeline<'m> {
                         v
                     })
                     .collect();
-                let overall = ["behind", "unknown", "ahead"]
-                    .into_iter()
-                    .find(|v| standings.contains(v))
-                    .unwrap_or("parity");
+                let count = |v: &str| standings.iter().filter(|s| **s == v).count();
+                let overall = match c.verdict {
+                    VerdictRule::AnyBehind => ["behind", "unknown", "ahead"]
+                        .into_iter()
+                        .find(|v| standings.contains(v))
+                        .unwrap_or("parity"),
+                    VerdictRule::Majority if count("unknown") > 0 => "unknown",
+                    VerdictRule::Majority => match count("ahead").cmp(&count("behind")) {
+                        std::cmp::Ordering::Greater => "ahead",
+                        std::cmp::Ordering::Less => "behind",
+                        std::cmp::Ordering::Equal => "parity",
+                    },
+                };
                 verdict.insert(peer.clone(), overall.to_owned());
             }
             d.comparisons.insert(
@@ -773,6 +786,7 @@ impl<'m> Pipeline<'m> {
                     peers: c.peers.clone(),
                     rules,
                     verdict,
+                    verdict_rule: c.verdict.as_str().to_owned(),
                 },
             );
         }

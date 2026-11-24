@@ -930,9 +930,14 @@ fn comparison_md(
         .collect();
     let _ = writeln!(
         s,
-        "\n## {}  ({subject}: {})\n",
+        "\n## {}  ({subject}: {}{})\n",
         sc.name,
-        verdicts.join("; ")
+        verdicts.join("; "),
+        if c.verdict_rule == "majority" {
+            ", by the majority of rules"
+        } else {
+            ""
+        }
     );
     if let Some(t) = &sc.title {
         let _ = writeln!(s, "{t}\n");
