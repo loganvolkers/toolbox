@@ -89,6 +89,7 @@ pub fn prepare(m: &Manifest, d: &Derived, req: Request<'_>) -> Result<Prepared, 
         entity: checked.entity.clone(),
         inputs: inputs.clone(),
         actor: req.actor.to_owned(),
+        approved_by: vec![],
         related: checked.related.clone(),
         grant: None,
         cwd: req.cwd,
@@ -242,6 +243,16 @@ impl Prepared {
     pub fn context(&self, run: &Run) -> Context {
         let mut ctx = self.ctx.clone();
         ctx.run_id = Some(run.id.clone());
+        ctx.approved_by = run
+            .approval
+            .approved_by
+            .iter()
+            .map(|a| {
+                a.rsplit_once('=')
+                    .map_or(a.as_str(), |(_, who)| who)
+                    .to_owned()
+            })
+            .collect();
         ctx
     }
 

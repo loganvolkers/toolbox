@@ -12,7 +12,10 @@ description: >-
    portal spends each token once (`409 token-used`), so preview again for a second run.
 4. Read the state. Only `succeeded` means the effect was observed: the postcondition held, or a
    `change`'s commit is on its base. `unverified` means no postcondition, or one that already
-   held before the run, so the run proved nothing.
+   held before the run, so the run proved nothing. For a `change`, Toolbox fetches the base
+   and compares every file the commit changed (`verification.files`, with each blob); a change
+   that would differ from the confirmed preview fails before it commits. No extra check script
+   is needed. Its commit carries `Toolbox-Run`, `Requested-By` and `Approved-By` trailers.
 5. For a `proposed` change or a `dispatched` workflow, check again later with `--verify <run id>`,
    or add `--wait` to follow the run until it ends or waits for a person.
 

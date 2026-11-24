@@ -38,6 +38,13 @@ a list of repositories and a repo's action is its inputs, its approvers and its 
    by that one keyword). A form never sends fields it doesn't show, and undeclared inputs were
    already refused; agents write it by habit, and round 1 runs deleted it to get past
    `toolbox validate`.
+9. **A landed change says what it checked, and lands only what was previewed.** The record's
+   `verification.files` lists each changed file with the blob the commit wrote and whether the
+   fetched base has it, and `checked` says so in a sentence. A `change` run whose file diffs
+   differ from the confirmed preview (the base moved) fails before it commits. Its commit
+   carries `Approved-By` beside `Toolbox-Run` and `Requested-By`, and a parent's clone commits as
+   Toolbox rather than the host's global git identity. The dry run before round 2 wrote a
+   61-line script to re-read the file, not knowing Toolbox already did.
 
 Rejected: a hosted registry of children (a second source of truth beside git), and cloning on
 every request (slow, and a network failure would hide every action).

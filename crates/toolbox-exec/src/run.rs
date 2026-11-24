@@ -487,20 +487,34 @@ pub fn execute(
 /// A landed change is observed on its base: the commit is there and every file it changed has
 /// the content it wrote. Fails the run otherwise.
 fn on_base(run: &mut Run, cwd: &std::path::Path) -> bool {
-    match crate::executor::landed(cwd, run) {
-        Err(e) => run.fail(e),
-        Ok(differ) if !differ.is_empty() => run.fail(format!(
-            "the push landed, but {} on {} differ from what it wrote",
-            differ.join(", "),
-            run.outputs["base"].as_str().unwrap_or("the base")
-        )),
-        Ok(_) => {
-            run.verification = Some(json!({"by": "base", "base": run.outputs["base"],
-                "commit": run.outputs["commit"], "files": run.outputs["files"]}));
-            return true;
+    let base = run.outputs["base"]
+        .as_str()
+        .unwrap_or("the base")
+        .to_owned();
+    let files = match crate::executor::landed(cwd, run) {
+        Err(e) => {
+            run.fail(e);
+            return false;
         }
+        Ok(files) => files,
+    };
+    let differ: Vec<&str> = files
+        .iter()
+        .filter(|f| f["matches"] != true)
+        .filter_map(|f| f["path"].as_str())
+        .collect();
+    if !differ.is_empty() {
+        run.fail(format!(
+            "the push landed, but {} on {base} differ from what it wrote",
+            differ.join(", ")
+        ));
+        return false;
     }
-    false
+    run.verification = Some(json!({"by": "base", "base": base,
+        "commit": run.outputs["commit"], "files": files,
+        "checked": format!("fetched {base}: the commit is on it, and every file it changed \
+            has the content the preview showed")}));
+    true
 }
 
 /// After the executor: check the postcondition, if the action declares one. A change observed on

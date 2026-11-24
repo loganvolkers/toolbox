@@ -60,13 +60,11 @@ pub(crate) fn sync(root: &Path, s: &Source) -> Result<String, String> {
     if !dir.join(".git").is_dir() {
         std::fs::create_dir_all(root).map_err(|e| format!("{}: {e}", root.display()))?;
         git(root, &["clone", "-q", "--", &s.url, &s.key])?;
-        // Commits a parent makes here (a `change` that lands) need an identity when the host
-        // has none configured.
-        if git(&dir, &["config", "user.name"]).is_err() {
-            git(&dir, &["config", "user.name", "Toolbox"])?;
-            git(&dir, &["config", "user.email", "toolbox@localhost"])?;
-        }
     }
+    // Commits a parent makes here (a `change` that lands) are the portal's, not whoever the
+    // host's global git config names; `GIT_AUTHOR_*` and `GIT_COMMITTER_*` still override.
+    git(&dir, &["config", "user.name", "Toolbox"])?;
+    git(&dir, &["config", "user.email", "toolbox@localhost"])?;
     git(&dir, &["fetch", "-q", "origin", "--", &s.branch])?;
     git(&dir, &["checkout", "-q", "-B", &s.branch, "FETCH_HEAD"])?;
     git(&dir, &["reset", "-q", "--hard", "FETCH_HEAD"])?;

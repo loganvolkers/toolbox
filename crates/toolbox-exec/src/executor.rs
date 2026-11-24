@@ -35,6 +35,8 @@ pub struct Context {
     pub inputs: Map<String, Value>,
     /// `user:<id>` or the portal's service identity.
     pub actor: String,
+    /// Who approved the run, once it is approved.
+    pub approved_by: Vec<String>,
     pub related: Map<String, Value>,
     /// The parent's signed approval grant (`crate::grant`), passed to a child portal on dispatch.
     pub grant: Option<String>,
@@ -393,6 +395,7 @@ impl Executor {
                 (!push).then(|| branch_name(self, ctx)).as_deref(),
                 message.as_deref(),
                 env,
+                confirmed,
             )
             .unwrap_or_else(Outcome::failed),
             Executor::GithubWorkflow(w) => w.dispatch(ctx),
@@ -830,8 +833,38 @@ fn base_branch<'a>(base: &'a str, remote: &str) -> &'a str {
         .unwrap_or(base)
 }
 
+/// The file effects whose diff differs between a confirmed preview and the run (`[]` when the
+/// confirmation carries no file diffs).
+fn drifted(confirmed: &[Value], wt: &Worktree, files: &[(String, String)]) -> Vec<String> {
+    let shown: std::collections::BTreeMap<&str, &str> = confirmed
+        .iter()
+        .filter_map(|e| {
+            Some((
+                e["resource"].as_str()?.strip_prefix("file:")?,
+                e["diff"].as_str()?,
+            ))
+        })
+        .collect();
+    if shown.is_empty() {
+        return vec![];
+    }
+    let now: std::collections::BTreeMap<&str, String> = files
+        .iter()
+        .map(|(_, p)| (p.as_str(), wt.diff(p)))
+        .collect();
+    let mut paths: std::collections::BTreeSet<&str> = shown.keys().copied().collect();
+    paths.extend(now.keys().copied());
+    paths
+        .into_iter()
+        .filter(|p| shown.get(p).copied() != now.get(p).map(String::as_str))
+        .map(str::to_owned)
+        .collect()
+}
+
 /// Make the change in a worktree from the base and commit it; then propose it on `branch`, or,
-/// without one (`land: push`), push it to the base.
+/// without one (`land: push`), push it to the base. A change that differs from the confirmed
+/// preview (the base moved) fails before anything is committed.
+#[allow(clippy::too_many_arguments)]
 fn change_run(
     run: &[String],
     ctx: &Context,
@@ -840,6 +873,7 @@ fn change_run(
     branch: Option<&str>,
     message: Option<&str>,
     env: &[String],
+    confirmed: &[Value],
 ) -> Result<Outcome, String> {
     let wt = Worktree::new(&ctx.cwd, base, remote)?;
     let out = spawn(run, ctx, "run", &wt.dir, env)?;
@@ -850,6 +884,15 @@ fn change_run(
         )));
     }
     let files = wt.changes()?;
+    let drift = drifted(confirmed, &wt, &files);
+    if !drift.is_empty() {
+        return Ok(Outcome::failed(format!(
+            "{} on {} no longer match the confirmed preview (the base moved): nothing was \
+             committed; preview and request again",
+            drift.join(", "),
+            wt.base
+        )));
+    }
     if files.is_empty() {
         return Ok(Outcome {
             status: "succeeded".into(),
@@ -885,8 +928,11 @@ fn change_run(
         args.extend(ident);
     }
     let trailer = format!("Toolbox-Run: {}", ctx.run_id.as_deref().unwrap_or(""));
-    let requested = format!("Requested-By: {}", ctx.actor);
-    args.extend(["commit", "-q", "-m", &msg, "-m", &trailer, "-m", &requested]);
+    let mut trailers = format!("{trailer}\nRequested-By: {}", ctx.actor);
+    for who in &ctx.approved_by {
+        trailers.push_str(&format!("\nApproved-By: {who}"));
+    }
+    args.extend(["commit", "-q", "-m", &msg, "-m", &trailers]);
     git(&root, &args)?;
     let commit = git(&root, &["rev-parse", "HEAD"])?;
     // From the main checkout: a relative remote URL resolves against it, not the worktree.
@@ -979,8 +1025,8 @@ pub fn merged(cwd: &Path, run: &crate::run::Run) -> Result<bool, String> {
 
 /// Whether a landed change is on its base as it was pushed: the commit is there (fetched again,
 /// so a hook that took it back is seen) and each changed file has the content the commit wrote.
-/// Returns the paths that differ.
-pub fn landed(cwd: &Path, run: &crate::run::Run) -> Result<Vec<String>, String> {
+/// Returns each changed file with the blob the commit wrote and whether the base has it.
+pub fn landed(cwd: &Path, run: &crate::run::Run) -> Result<Vec<Value>, String> {
     if !merged(cwd, run)? {
         return Err(format!(
             "the commit is not on {}: the push did not land",
@@ -1001,10 +1047,12 @@ pub fn landed(cwd: &Path, run: &crate::run::Run) -> Result<Vec<String>, String> 
         .as_array()
         .into_iter()
         .flatten()
-        .filter_map(|f| f["path"].as_str())
-        .filter(|p| !p.starts_with('-') && !p.contains(".."))
-        .filter(|p| blob(commit, p) != blob(base, p))
-        .map(str::to_owned)
+        .filter_map(|f| Some((f["path"].as_str()?, &f["operation"])))
+        .filter(|(p, _)| !p.starts_with('-') && !p.contains(".."))
+        .map(|(p, op)| {
+            let wrote = blob(commit, p);
+            json!({"path": p, "operation": op, "blob": wrote, "matches": wrote == blob(base, p)})
+        })
         .collect())
 }
 
@@ -1200,6 +1248,7 @@ mod tests {
             entity: json!({"id": "repository:work"}),
             inputs,
             actor: "user:alice".into(),
+            approved_by: vec!["user:bob".into()],
             related: Map::new(),
             grant: None,
             cwd: cwd.to_path_buf(),
@@ -1235,9 +1284,40 @@ mod tests {
         assert_eq!(out.status, "succeeded", "{:?}", out.error);
         assert_eq!(out.outputs["landed"], true);
         let run = as_run(&ctx, &out);
-        assert_eq!(landed(&work, &run).unwrap(), Vec::<String>::new());
+        let files = landed(&work, &run).unwrap();
+        assert_eq!(files.len(), 1);
+        assert_eq!(files[0]["path"], "DEPRECATED.md");
+        assert_eq!(files[0]["matches"], true);
+        let body = git(&work, &["log", "-1", "--format=%B", "origin/main"]).unwrap();
+        assert!(
+            body.contains("Requested-By: user:alice\nApproved-By: user:bob"),
+            "{body}"
+        );
         let shown = git(&root.join("origin.git"), &["show", "main:DEPRECATED.md"]).unwrap();
         assert_eq!(shown, "Deprecated: use v2");
+        let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn a_change_that_no_longer_matches_its_preview_lands_nothing() {
+        let (root, work) = clone_with("");
+        let (exec, ctx) = landing(&work);
+        let p = exec.preview(&ctx).unwrap();
+        sh(
+            &work,
+            "echo theirs > DEPRECATED.md && git add . && git commit -qm moved && \
+             git push -q origin HEAD:main",
+        );
+        let before = git(&root.join("origin.git"), &["rev-parse", "main"]).unwrap();
+        let out = exec.run(&ctx, &p.effects);
+        assert_eq!(out.status, "failed");
+        let err = out.error.unwrap();
+        assert!(
+            err.contains("DEPRECATED.md") && err.contains("preview"),
+            "{err}"
+        );
+        let after = git(&root.join("origin.git"), &["rev-parse", "main"]).unwrap();
+        assert_eq!(before, after);
         let _ = std::fs::remove_dir_all(root);
     }
 

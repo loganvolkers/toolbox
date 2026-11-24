@@ -302,6 +302,7 @@ mod tests {
             entity: json!({"id": "repository:alpha"}),
             inputs: serde_json::from_value(json!({"env": "staging", "replicas": 2})).unwrap(),
             actor: "user:ann".into(),
+            approved_by: vec![],
             related: Map::new(),
             grant: None,
             cwd: std::env::temp_dir(),
