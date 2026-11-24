@@ -31,8 +31,19 @@ struct Suite {
     runs: Vec<Map<String, Value>>,
 }
 
+/// `{portal}` in any string of a case is the name of the portal under test, so one test file can
+/// serve every repository that includes the same standard action.
+fn with_portal(v: &mut Value, portal: &str) {
+    match v {
+        Value::String(s) if s.contains("{portal}") => *s = s.replace("{portal}", portal),
+        Value::Array(xs) => xs.iter_mut().for_each(|x| with_portal(x, portal)),
+        Value::Object(o) => o.values_mut().for_each(|x| with_portal(x, portal)),
+        _ => {}
+    }
+}
+
 impl Suite {
-    fn cases(&self, file: &str) -> Result<Vec<Case>, String> {
+    fn cases(&self, file: &str, portal: &str) -> Result<Vec<Case>, String> {
         self.runs
             .iter()
             .enumerate()
@@ -54,7 +65,9 @@ impl Suite {
                         }
                     }
                 }
-                serde_json::from_value(Value::Object(c)).map_err(|e| {
+                let mut c = Value::Object(c);
+                with_portal(&mut c, portal);
+                serde_json::from_value(c).map_err(|e| {
                     let name = run.get("name").and_then(Value::as_str).unwrap_or("");
                     format!("{file}: runs[{i}] {name}: {e}")
                 })
@@ -119,9 +132,8 @@ pub fn run(portal: &Path, root: &Path, tests: &[String]) -> Result<Vec<TestResul
     for file in tests {
         let text = std::fs::read_to_string(root.join(file)).map_err(|e| format!("{file}: {e}"))?;
         let suite: Suite = serde_norway::from_str(&text).map_err(|e| format!("{file}: {e}"))?;
-        let cases = suite.cases(file)?;
-        if !cases.is_empty() {
-            suites.push((file, suite.name, cases));
+        if !suite.runs.is_empty() {
+            suites.push((file, suite));
         }
     }
     if suites.is_empty() {
@@ -131,13 +143,13 @@ pub fn run(portal: &Path, root: &Path, tests: &[String]) -> Result<Vec<TestResul
     let (m, d) = (&m, &d);
     let all = federation::offered(m, d);
     let mut out = Vec::new();
-    for (file, suite, cases) in suites {
-        for case in &cases {
+    for (file, suite) in suites {
+        for case in &suite.cases(file, &m.portal.name)? {
             let root = root.as_path();
             let error = one(root, m, d, &all, case).err();
             out.push(TestResult {
                 file: file.clone(),
-                suite: suite.clone(),
+                suite: suite.name.clone(),
                 name: case.name.clone(),
                 passed: error.is_none(),
                 error,
@@ -507,7 +519,7 @@ runs:
   - {name: another action, action: b, expect: {state: refused}}",
         )
         .unwrap();
-        let c = s.cases("t.yaml").unwrap();
+        let c = s.cases("t.yaml", "alpha").unwrap();
         let inputs = |i: usize| serde_json::to_string(&c[i].inputs).unwrap();
         assert_eq!(inputs(0), r#"{"x":"1","y":"2"}"#);
         assert_eq!(inputs(1), r#"{"x":"3","y":"2"}"#);
@@ -518,6 +530,28 @@ runs:
         let bad: Suite =
             serde_norway::from_str("name: s\ndefaults: {aprove: [user:bob]}\nruns: [{name: n, action: a, expect: {state: x}}]")
                 .unwrap();
-        assert!(bad.cases("t.yaml").err().unwrap().contains("aprove"));
+        assert!(
+            bad.cases("t.yaml", "alpha")
+                .err()
+                .unwrap()
+                .contains("aprove")
+        );
+    }
+
+    #[test]
+    fn portal_in_a_case_is_the_name_of_the_portal_under_test() {
+        let s: Suite = serde_norway::from_str(
+            "name: s
+defaults: {action: a, inputs: {successor: 'acme/{portal}'}}
+runs:
+  - name: '{portal} is not its own successor'
+    expect: {state: blocked, error: '{portal}', files: {OWNER.md: 'owned by {portal}'}}",
+        )
+        .unwrap();
+        let c = &s.cases("t.yaml", "beta").unwrap()[0];
+        assert_eq!(c.name, "beta is not its own successor");
+        assert_eq!(c.inputs["successor"], "acme/beta");
+        assert_eq!(c.expect.error.as_deref(), Some("beta"));
+        assert_eq!(c.expect.files["OWNER.md"].as_deref(), Some("owned by beta"));
     }
 }

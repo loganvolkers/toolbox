@@ -26,6 +26,10 @@ runs:
       state: awaiting_approval
       refused: [user:ann, user:carol]
       files: {CODE_OF_CONDUCT.md: null}
+  # {portal} is the name of the repository under test, so this file is the same in every one.
+  - name: the repository's own address is not a contact
+    inputs: {contact: '{portal}@acme.dev'}
+    expect: {state: blocked, files: {CODE_OF_CONDUCT.md: null}}
   - name: a push the origin rejects fails the run with the origin's message
     rejectPush: main is protected
     expect:
