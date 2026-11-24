@@ -1,66 +1,64 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: assessment:crate-design/crate:toolbox-expr
 rubric: assessment-quality
-subjectHash: 5c618d3e815c
+subjectHash: 7c63aa734a48
 assessor: {kind: agent, name: cursor-review-agent, model: claude-opus-5.5}
 at: 2026-11-23
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      Every source portal/assessments/crate-design/crate/toolbox-expr.yaml
-      cites says what its reason claims. crates/toolbox-expr/src/lib.rs:1-16
-      lists the four parts. docs/v1-spec.md:89 is the crate's row.
-      crates/toolbox-derive/src/lib.rs:756 maps an error to "unknown". The
-      callers import at the cited lines, and crates/toolbox-expr/Cargo.toml:11
-      is the only `cel` dependency. The 27 public items match the workspace
-      connector's count
-      (crates/toolbox-connector-workspace/src/rust.rs:296-302, 344), and the
-      crate's test binary runs 10 tests, all passing. One omission changes
-      nothing: toolbox-cli also calls analysis::analyse
-      (crates/toolbox-cli/src/model.rs:28, 160).
+      Every citation now says what its reason claims. The callers are at
+      crates/toolbox-derive/src/lib.rs:15 and 832 (`Err(_) => "unknown"`),
+      testing.rs:10, crates/toolbox-api/src/routes.rs:17 and 212,
+      actions.rs:15, crates/toolbox-model/src/validate.rs:13 and 775-779,
+      crates/toolbox-cli/src/meta.rs:183 and model.rs:28, 160. The crate's own
+      lines hold: lib.rs:1-17, 16-17, 149-200 and 177-185, eval.rs:13, 93-95,
+      107, 111, 249-282, 284-291, 294, 315 and 339-360, lazy.rs:80-90, and
+      analysis.rs:150-184, 190-212 and 228. So do docs/v1-spec.md:89,
+      docs/questions.md:18 and Cargo.toml:11. The counts hold too: pubItems
+      and pubDocumented are 28, and `cargo test -q -p toolbox-expr` runs 13
+      tests that all pass. In a scratch copy, `'a'` and `-1` reach
+      LazyList::get's type-error and out-of-bounds arms. One phrase
+      overstates: "each branch has a direct test" misses to_cel's Null arm
+      (eval.rs:48), which no test feeds JSON null. It is a one-line identity
+      mapping, and the verdict doesn't rest on it.
   - criterion: complete
     verdict: pass
     reason: >-
-      Each criterion holds against the rubric
-      (portal/standards/crates.yaml:331-357). No public signature names a cel
-      type: Scope wraps Context privately
-      (crates/toolbox-expr/src/eval.rs:107), and ExprValue and Lazy hold cel
-      values in pub(crate) fields (eval.rs:13, 111). So replaceable-defaults
-      passes as its guidance defines it. The sources show one behavioural tie,
-      rules relying on cel-rust comparing int with double (eval.rs:330-331).
-      It falls outside that guidance, and the assessment names it under
-      tests-match-risk.
+      The gaps the previous review named now have direct tests. check()
+      reports UndeclaredFunctions for `join` and keeps the declared `size`
+      (lib.rs:177-185). Int, uint and bool map keys become JSON strings
+      (eval.rs:284-291). Bad lazy indexes are refused (eval.rs:272-281). No
+      other risky path in the crate is left untested. The workspace members
+      (Cargo.toml:3-5, experiments excluded) name `cel` only in
+      crates/toolbox-expr/Cargo.toml. No public signature names a cel type.
+      The spec row's "error mapping to `unknown`" sits in the caller, and
+      one-responsibility says so openly. Its rubric fails only missing, stale
+      or multi-job crate docs, and lib.rs:1-17 is none of those.
   - criterion: reproducible
-    verdict: unsure
+    verdict: pass
     reason: >-
-      Three verdicts follow from what the sources state. tests-match-risk
-      passes while admitting that check()'s undeclared-function branch
-      (crates/toolbox-expr/src/lib.rs:112-123) is tested only through
-      analysis. The rubric's guidance says "unsure when coverage is only
-      indirect" (portal/standards/crates.yaml:353-357), and no test in
-      toolbox-model or toolbox-cli covers the branch directly. Calling the
-      remaining gaps "small" is a judgement a second assessor could make the
-      other way.
-    suggestion: >-
-      In portal/assessments/crate-design/crate/toolbox-expr.yaml, do one of
-      two things. Either say in the tests-match-risk reason why the indirect
-      coverage doesn't trigger the guidance: check() only filters with
-      declared(), which crates/toolbox-expr/src/analysis.rs:168-186 tests
-      directly. Or mark the criterion unsure until the check() test named in
-      its own suggestion lands (`entity.xs.join(',')` expecting
-      UndeclaredFunctions).
+      Each verdict now follows from something the sources state. The crate
+      docs and the spec row decide one-responsibility. The callers' imports
+      and pub items decide small-contract. The Cargo.toml files and the
+      pub(crate) fields decide replaceable-defaults. tests-match-risk no
+      longer rests on calling indirect coverage "small": every branch its
+      reason lists has a test that names it, so a second assessor would reach
+      pass from the same files.
   - criterion: actionable
     verdict: pass
     reason: >-
-      The one suggestion in
-      portal/assessments/crate-design/crate/toolbox-expr.yaml gives a concrete
-      input for each gap it lists. `'a'` and `-1` reach the lazy index
-      branches (crates/toolbox-expr/src/lazy.rs:80-90). `{1: 'x'}` reaches the
-      non-string key arms (eval.rs:93-95). The join case reaches
-      lib.rs:120-122. A Q10 conformance slice (docs/questions.md:18) covers
-      the rest. Following it removes the gaps that qualify the pass.
+      No verdict is fail or unsure, so no suggestion has a verdict to change.
+      The one optional suggestion, a cel-spec conformance slice through Expr
+      recorded in docs/research-log.md (Q10, docs/questions.md:18), is
+      concrete. It targets the residual risk the reason names: cel-rust
+      behaviour the crate relies on, such as comparing int with double
+      (eval.rs:349-353).
 summary: >-
-  The citations hold, and the replaceable-defaults pass is earned. The one
-  soft spot is tests-match-risk: it passes with a branch it admits is
-  covered only indirectly, which the rubric's guidance would call unsure.
+  A sound assessment. The citations now hold at the current commit, the
+  counts are right (28 documented public items, 13 passing tests), and the
+  new tests reach the branches the previous review said were untested,
+  which I checked by instrumenting a scratch copy. The only overstatement
+  is "each branch has a direct test", which misses to_cel's trivial Null
+  arm (eval.rs:48) and changes no verdict.
