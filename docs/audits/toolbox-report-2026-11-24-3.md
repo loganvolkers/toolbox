@@ -85,8 +85,8 @@ comparison defined before it is measured. The second portal found it, the first 
 severity 4, and the box now handles it for any portal. The same pages then rendered the measured
 comparison without change: the factor cards, the rules OpenFGA is behind on with what would close
 each, the largest leads, and how it was measured. The measured result and its adjudication are in
-[RESULTS.md](../../experiments/openfga-spicedb-compare/RESULTS.md) and
-[ADJUDICATION.md](../../experiments/openfga-spicedb-compare/ADJUDICATION.md).
+[RESULTS.md](../../experiments/openfga-spicedb-compare/RESULTS.md) and the independent adjudication
+beside it in [experiments/openfga-spicedb-compare](../../experiments/openfga-spicedb-compare/).
 
 The report's verdict rule is stricter than the experiment's pre-registered tally. A product is
 behind on a factor if it is behind on any rule, so the headline reads "ahead on 2 of 6 factors"
