@@ -529,7 +529,7 @@ Scorecard `meta-connector` over `PortalConnector` entities, owned by group:maint
 
 Agents' judgement of each rule against rule-quality, advisory: an open finding is none, a current review is silver, a clean, cited one with no doubts is gold (D79, D01M831P5QWJQ4A2FT85N5MXJQF).
 
-**Why:** Form checks can't tell whether a rule measures its intent or can be gamed, and none of 19 meta-gold rules and scorecards that agents reviewed passed. Open findings rank lowest so they head the report; the card is advisory because a review goes stale whenever its subject changes, and gating on it would block every edit.
+**Why:** Form checks can't tell whether a rule measures its intent or can be gamed: of 19 rules and scorecards that reached gold on the form checks and that agents reviewed, none passed. Open findings rank lowest so they head the report; the card is advisory because a review goes stale whenever its subject changes, and gating on it would block every edit.
 
 See [Judgement pushed by agents](https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#6-judgement-pushed-by-coding-agents-d79), [Decision: judgement is pushed](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md), [Meta standards review](https://github.com/loganvolkers/toolbox/blob/main/docs/design/meta-standards-review.md).
 
@@ -546,7 +546,7 @@ Scorecard `review-rule` over `Rule` entities, owned by group:maintainers. `toolb
 
 An agent reviews whether each scorecard measures one concern and climbs a real ladder: no open finding is bronze, a current review is silver, and a clean, cited one with no doubts is gold. The card advises rather than gates (D79, D01M831P5QWJQ4A2FT85N5MXJQF).
 
-**Why:** Form checks can't tell whether a scorecard measures one concern, climbs a real ladder or leaves an obvious gap; an adversarial review failed every meta-gold scorecard it sampled. The ladder and advisory status match review-rule: open findings first, and never gating, because a review goes stale when the scorecard changes.
+**Why:** Form checks can't tell whether a scorecard measures one concern, climbs a real ladder or leaves an obvious gap; an adversarial review failed every scorecard it sampled that had reached gold on the form checks. The ladder and advisory status match review-rule: open findings first, and never gating, because a review goes stale when the scorecard changes.
 
 See [Judgement pushed by agents](https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#6-judgement-pushed-by-coding-agents-d79), [Decision: judgement is pushed](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md), [Meta standards review](https://github.com/loganvolkers/toolbox/blob/main/docs/design/meta-standards-review.md).
 
