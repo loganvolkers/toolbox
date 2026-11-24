@@ -337,3 +337,213 @@ RESULTS.md:131–133 ("Where the definition was ambiguous, they are scored in Ba
      `level_ignoring_unknown`;
    - consider running connectors under their own UID, or non-dumpable, before claiming credential
      isolation.
+
+## Round 3
+
+*2026-11-23 (VM clock 2026-11-24 UTC). The same adjudicator, again independent of the design. I
+appended this section and changed nothing else in the repository; every probe wrote only under
+`/tmp/adj3`, and the only build output is `target/`. Inputs: the harness frozen at `e66526c`, the
+scorecards frozen at `581be50`, [results/r3](./results/r3), RESULTS.md and README.md at HEAD
+(`ddde8ce`), `portal/comparisons/`, and the product commits `5968a55`, `71d8655`, `26b77f3`,
+`afc8ca8` and, after the run, `d289b1a`.*
+
+### R3.1 Conclusion
+
+**I uphold the factor verdict: after round 3, Toolbox is ahead on seven of the eight pre-registered
+factors and behind on capabilities. I do not uphold one rule: `extension-credential-isolated` is not
+a pass on the benchmark's own VM.** On this VM, a process with the server's user reads OpenFGA's
+memory and gets the datastore password and the per-start OpenFGA key, and OpenFGA accepts the key
+(R3.3). Scored as a fail, that rule is at parity, and security goes from 3 / 5 / 0 to 2 / 6 / 0: still
+*ahead*, on owner-only fields and process isolation. No factor changes standing.
+
+The numbers recompute exactly, and the freeze preceded the run. The harness changes made after
+rounds 1 and 2 correct defects, and together they move the result toward Backstage, not toward
+Toolbox (R3.4). The two-token arrangement is fair to Backstage, but its stated reason is imprecise.
+Round 1's loss at 2.4× holds: I reproduced Backstage's real lists under round 1's conditions (R3.6).
+
+**I correct my own round 1–2 adjudication.** Backstage's round 1 and 2 lists were empty. Their
+filter, `spec.owner=group:default/g3`, returns 0 items (a 41-byte body) on the live install, and
+`spec.owner=group:g3` returns 20 items at 1k. My §4.2 equivalence row ("None expected … both pages
+hold 100. Unverified per response") was wrong. So were the Backstage *list* figures in my §4.2
+logging and spread probes (about 1.3k/s), which used the same filter (`/tmp/adj/rand-backstage-1.list.urls`).
+Their get figures stand. Round 1 is still *behind* on performance and round 2 still *ahead* (R3.6).
+
+| Factor | Round 3 as scored | Round 3 as adjudicated | Robust? |
+|---|---|---|---|
+| Performance | **ahead** (7 / 0 / 0) | **ahead** (7 / 0 / 0) | Yes. Smallest margin: 10k list 3,790 vs 474 req/s. Reads are still mostly decision-cache hits (R3.2, fix 7) |
+| Footprint | **ahead** (5 / 0 / 0) | **ahead** (5 / 0 / 0) | Yes |
+| Security | **ahead** (3 / 5 / 0) | **ahead** (2 / 6 / 0) | Yes. `extension-credential-isolated` is a fail on this VM, so it is at parity (R3.3) |
+| Supply chain | **ahead** (4 / 0 / 0) | **ahead** (4 / 0 / 0) | Yes, now with OpenFGA's Go modules and the UI counted |
+| Change safety | **ahead** (4 / 0 / 0) | **ahead** (4 / 0 / 0) | Yes, though `upgrade-lines` still compares unlike measures (disclosed) |
+| Org fit | **ahead** (1 / 1 / 0) | **ahead** (1 / 1 / 0) | Yes |
+| Agent surface | **ahead** (2 / 1 / 0) | **ahead** (2 / 1 / 0) | Yes, also against a plugin-scoped Backstage MCP token (14,744 vs 6,473 bytes; R3.5) |
+| Capabilities | **behind** (0 / 6 / 7) | **behind** (0 / 6 / 7) | Yes |
+| *Extensibility (not pre-registered)* | *ahead (2 / 0 / 0)* | *ahead (2 / 0 / 0)* | *Disclosed as a deviation* |
+
+### R3.2 What holds
+
+- **Recomputation.** From the 20 files in `results/r3`, every min, median and max in RESULTS.md's
+  round 3 table matches: 9 facts × 2 sizes × 2 arms. Each committed file equals its raw file in
+  `/tmp/bc/r3`. Every read has `ok` = 1.0 and `distinct` = 1,000 ids (get) or 50 owners (list).
+- **Equivalence gate.** Each size has one `ownersDigest` across both arms and all runs: `d3508386…`
+  at 1k and `d12a71a1…` at 10k.
+- **Product records and report.** `portal/comparisons/` carries the 10k medians and the probe,
+  footprint and upgrade values. `toolbox report portal --skip runner,github-actions -o md`, debug
+  build at HEAD, gives the same standing on all 48 rules as my hand derivation. RESULTS.md:17–27
+  reproduces that standing.
+- **Freeze before the run.** `e66526c` and `581be50` were committed at 00:26:59. The first raw file
+  is from 00:27:53, and the run log ends `RUN-DONE 0`. The 48 rule ids match rounds 1–2; I kept no
+  copy of the old expressions, so I cannot diff those.
+- **The measured binary.** `target/release/toolbox` was built at 00:20:59. The only later code
+  commit before the freeze is `afc8ca8`, a doc comment. I did not rebuild to prove byte identity,
+  but the binary behaves like `581be50`: it is non-dumpable and starts OpenFGA with a preshared key
+  (R3.3). `d289b1a` came after the run. It is a refactor with no behaviour change: same
+  `matches`/`may_match` logic, with the policy value now built only when a filter is present.
+- **`5968a55`** fixes both edge cases from my §3 (fix 9). Narrowing applies only when `kind` names
+  exactly one kind, and never on `id`. `field_index_narrowing_respects_kind_case_and_the_entity_id`
+  passes. It names outside uses and touches no harness file (P5). The benchmark's list (one kind,
+  field `owner`) takes the same path as before.
+- **The requested tests pass:**
+  - `TOOLBOX_OPENFGA_BIN=/tmp/tools/openfga TOOLBOX_REQUIRE_OPENFGA=1 cargo test -p toolbox-authz openfga`: 3 passed;
+  - `cargo test -p toolbox-cli --test serve`: 1 passed;
+  - `cargo test -p toolbox-api --test api`: passed.
+- **What the security probes measure.** The restricted client token gets 403 on DELETE, refresh
+  and location POST, and the entity remains.
+- **Most of the §6 fixes are applied** (table below).
+
+| §6 fix | Status at HEAD |
+|---|---|
+| 1. Round 1 tally | Applied: no tally is stated, and round 1's table is labelled |
+| 2. Eight factors | Applied (RESULTS.md:10–12, 233–234) |
+| 3. "Owner and team pages" | Applied (RESULTS.md:131–132; design doc §4) |
+| 4. Facts in Toolbox's favour | Applied for loopback and scorecards, rescored to parity. Credential isolation was re-evidenced, but the evidence does not hold (R3.3) |
+| 5. Deviations | Scorecards frozen and committed before the run; design doc committed (`586d178`, after the run); 24 of 48 rules from facts; the split; the production config. The derive fallback is disclosed (RESULTS.md:234–235), **but README.md:65 still says the opposite** |
+| 6. Pre-freeze commits | Applied, **but README.md:69–70 calls `5ef6263` "per-snapshot authorization decisions"**. `5ef6263` is "evaluate a list filter once when the kind has no owner-only fields"; per-snapshot decisions are `a62d92f`, already listed among the smoke-round fixes |
+| 7. Threats | Applied: logging (fixed in the harness), oha pinning, 10 s closed loop, supply chain (fixed), the unlike upgrade measure, the token (fixed), and the gate's limits. **Not applied: "Toolbox checks every read in OpenFGA"** (README.md:20, 105; RESULTS.md:60). Decisions are kept per snapshot, and round 3 reads 1,000 ids for 10 s at about 56k req/s, so each id is checked once and then served from cache |
+| 8. Next round | Same log level, restricted token, spread reads, gate: done. Spread is 1,000 of 10,000 ids, not all. **Security probes on the image: not done**, disclosed (README.md:114) |
+| 9. Product | Edge cases fixed (`5968a55`); doc comment fixed (`afc8ca8`); server non-dumpable (`71d8655`). `rule_standing` is unchanged and disclosed instead, which D01M857ZB468ZM2YS6GNSEG6YB9 allows. Connectors still share the UID of a dumpable OpenFGA (R3.3) |
+
+### R3.3 Credential isolation (F7), against `581be50`
+
+The rule's check is boolean: an extension gets none of the server's credentials. In the image, an
+in-image connector runs as UID 65532, like the server and OpenFGA (`image/Dockerfile`: `USER
+65532:65532`). I attacked it as such a process: same user, not an ancestor of OpenFGA.
+
+| Claim (RESULTS.md:203–220, facts.yaml) | Probe | Result |
+|---|---|---|
+| The server's environment and memory are unreadable | `/proc/<server>/environ`, release binary | **Holds**: `PermissionError`. `serve.rs` test passes |
+| OpenFGA gets an allowlisted environment, and no URI in argv | `openfga_gets_no_server_credentials`; `/proc/<openfga>/cmdline` | **Holds** |
+| The config file is gone before a connector can look | `OpenFga::start` drops it after `wait_healthy`; `spawn_in_image` needs the `AppState` built after `start_authz` (server.rs:204–221) | **Holds** |
+| OpenFGA refuses calls without the key | `GET /stores` with no header | **Holds**: 401 |
+| A same-user connector cannot read OpenFGA's memory "under the usual default of 1" | This VM has no Yama (`/proc/sys/kernel/yama` is absent). I read `/proc/<openfga>/mem` | **Does not hold here.** OpenFGA's memory has its `config.yaml` text: `uri: "postgres://postgres:S3cretProbePW@…"` and `authn: preshared: keys: ["tbx_50b5…"]`. `GET /stores` with that key returns **200**. The image cannot choose the host kernel's Yama setting; with Yama built in, the default is 1, but this host has none, and other container hosts are unverified |
+| (not claimed) argv | `/proc/<server>/cmdline` with `--database-url postgres://postgres:S3cretProbePW@…` | **Leaks to every local user**, any UID, since non-dumpable does not cover cmdline. The harness passes the URL this way (measure.py:151–152), and AGENTS.md documents `serve --database-url`. The image passes it in the environment, so it is unaffected |
+| A connector can write any file the server's user can | not probed | Unverified whether `/portal` is writable in the image |
+
+**Verdict on F7.** Toolbox now has a real barrier, and Backstage has none (plugins share one
+process). But the rule asks for a pass. On the measurement host, a connector gets the database
+password and the authorization key in a few lines of code. The pass depends on the host's kernel,
+which the image does not ship. Judged as each product ships, and on the host where it was measured,
+the fact is `false`: the rule is at parity (both fail), and security is 2 / 6 / 0, still ahead. To
+earn the pass, take the connector out of OpenFGA's reach:
+- a separate UID;
+- or a connector without `/proc` access to its siblings, such as Landlock or a PID namespace;
+
+then rerun the canary on the image. (The canary is the F7 test: can a connector reach the server's
+credentials?)
+
+### R3.4 Do the post-hoc harness changes bias the result?
+
+No. Each change answers a finding of the adjudication, and the net direction is toward Backstage:
+
+| Change | Effect on the standing | Direction |
+|---|---|---|
+| Filter fixed (`spec.owner=group:gN`) | Backstage's 10k list falls from 1,279 to 474 req/s, because it now returns items | Against Backstage, but it repairs an invalid measure: the gate shows both arms now page out the same pairs |
+| Equivalence gate | Stops a run on a mismatch | Neutral |
+| Reads spread over 1,000 ids and 50 owners | Toolbox's 10k get goes from 58.6k to 56.5k req/s; Backstage's 10k list is unchanged (my probe: 457 req/s spread, 457 median single-owner) | Neutral; still mostly cache hits for Toolbox |
+| Production config, `LOG_LEVEL=warn` | Backstage get +13% (my §4.2 probe) | Toward Backstage |
+| Read-only client token | `client-cannot-delete` goes from ahead to parity | Toward Backstage |
+| Loopback judged on the image, `capScorecards` counting add-ons | Two rules go from ahead to parity | Toward Backstage |
+| Credential isolation re-evidenced | Stays ahead | Toward Toolbox, and it does not hold (R3.3) |
+| Supply chain widened | Toolbox goes from 388 to 605 packages and from 2 to 5 vulns. Backstage's Node runtime is still not scanned | Against Toolbox |
+| Upgrade window `v0.1.0..HEAD` | 0 either way | Neutral |
+
+RESULTS.md:241–243 ("each moves a measure toward Backstage or toward like-for-like") is accurate,
+and "What changed" (RESULTS.md:36–42) says the filter fix went against Backstage.
+
+### R3.5 Is the two-token arrangement fair to Backstage (P4)?
+
+Yes, but the reason given for it is imprecise. With the restricted token, MCP's `tools/list` and
+`tools/call` return 403 ("restricted to plugin(s) 'catalog'"). Adding `{plugin: mcp-actions}` gives
+an empty tool list. The cause is `DefaultAuthService.getPluginRequestToken`
+(backend-defaults, `DefaultAuthService.cjs.js:81–103`). It delegates a restricted service token only
+when the target plugin's restriction has no permission names or attributes: "is restricted and
+cannot be delegated".
+
+I tried a plugin-scoped token, restricted to `{plugin: catalog}` and `{plugin: mcp-actions}` with
+no permission attributes. MCP works with it, listing 7 tools in 14,744 bytes, measured as
+`surface.py` measures. The same token can still DELETE an entity: 204. So:
+
+- "Backstage does not delegate a restricted token" (README.md:20, RESULTS.md:49–50, the research
+  log row) is imprecise. It does not delegate a *permission*-restricted one.
+- "an agent token that can use MCP cannot be made read-only" holds.
+- Scoring `client-cannot-delete` on the read-only REST token favours Backstage. Its MCP token can
+  delete; Toolbox uses one PAT for both, and it cannot. The unrestricted MCP token adds the five
+  scaffolder tools to Backstage's list, which a plugin-scoped token would drop (20,500 vs 14,744
+  bytes). Toolbox is ahead either way, so no standing depends on it, but say so.
+
+### R3.6 Is "round 1's list loss stands at 2.4×" fair?
+
+Yes, as an estimate, and my probe confirms it. RESULTS.md:92–95 compares Toolbox's round 1 (198
+req/s, one owner, info-level Backstage logs, no production config) with Backstage's round 3 (474
+req/s, 50 owners, warn logs, production config). I reran Backstage under round 1's conditions with
+the filter fixed:
+- the `dfeeea4` bench config;
+- default logging;
+- no `app-config.production.yaml`;
+- the unrestricted token;
+- 10k components, oha 10 s at 16 connections, two fresh starts.
+
+| Backstage, round 1 conditions, filter fixed | Run 1 | Run 2 |
+|---|---|---|
+| Owner `g3` only (round 1's URL): req/s, p95 | 482.2, 56.4 ms | 432.0, 66.7 ms |
+| 50 owners: req/s, p95 | 456.8, 59.0 ms | 453.4, 59.3 ms |
+
+So Toolbox at `5ef6263` (197.6 req/s, p95 118 ms) was behind by 2.2–2.4× on throughput and about
+2× on p95. Round 1's *behind* stands, and round 2 (3,900 req/s) is *ahead* by more than RESULTS.md
+said for round 2. The write-up should say the 2.4× is a cross-round estimate, and cite this check
+(2 runs, not 5).
+
+### R3.7 Other observations
+
+- Backstage's 1k list is slower than its 10k list: 332 against 474 req/s, p95 76 against 59 ms.
+  Both answers pass the gate. This is unexplained, possibly a query plan, and affects no standing.
+- One Backstage 10k run listed at 117 req/s with a p95 of 306 ms. The median absorbs it, and
+  RESULTS.md reports it.
+- The design doc §1, the site page ("ahead (3 rules), parity on 5") and the research-log row were
+  written before this adjudication. They state credential isolation as a win.
+
+### R3.8 Required corrections
+
+1. **`extension-credential-isolated`**: set the Toolbox fact to `false`, with R3.3's evidence, at
+   the next freeze, and regenerate the records. Security becomes 2 / 6 / 0, still ahead. Or make it
+   hold (connectors under their own UID, or without access to their siblings' `/proc`) and rerun
+   the canary on the image. Until then, correct RESULTS.md:20 and 203–220, the design doc §1, and the
+   site page's security row.
+2. **RESULTS.md:216–218**: say that the measurement VM has no Yama, and that the residual was
+   exploited there: the datastore password and the OpenFGA key came out of OpenFGA's memory, and
+   the key was accepted. Drop "usual default", or mark it unverified for container hosts.
+3. **Disclose the `--database-url` exposure.** It is world-readable in `/proc/<pid>/cmdline`, and
+   the harness uses it. Product, outside the write-up: take the URL from the environment or a file
+   only, or warn when it is on argv.
+4. **README.md:69–70**: `5ef6263` is the list-filter commit, not per-snapshot decisions (`a62d92f`).
+5. **Name `5968a55`** among round 3's product changes (README.md:81–87, RESULTS.md:239–240).
+6. **"Toolbox checks every read in OpenFGA"** (README.md:20, 105; RESULTS.md:60): say that each
+   decision is checked once per snapshot and then cached, so round 3's 1,000-id spread is mostly
+   cache hits. My round-2 probe over all 10,000 ids gave about 36–37k get/s.
+7. **The two-token reason** (README.md:20, RESULTS.md:48–50, the research-log row): Backstage
+   delegates a plugin-scoped token, not a permission-scoped one. An MCP-capable token can therefore
+   delete. With a plugin-scoped token, Backstage's tool list is 14,744 bytes.
+8. **The 2.4×** (RESULTS.md:40–41, 92–95): label it a cross-round estimate, confirmed by R3.6.
+9. **README.md:65 against RESULTS.md:234–235 and D01M857ZB468ZM2YS6GNSEG6YB9**: align the README's
+   missing-value rule at the next freeze.
+10. **Still open from §6:** run the security probes and the F7 canary on the image.
