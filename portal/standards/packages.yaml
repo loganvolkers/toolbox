@@ -35,6 +35,7 @@ scorecards:
   # Private packages are applications: npm will not publish them, and a lockfile is the pin.
   # A licence field is not required (Q1). Advisory databases are not a gate.
   - name: maintainer-package
+    title: npm manifests
     kind: PackageJson
     description: >-
       Each npm manifest we keep: private when it is an application, locked,

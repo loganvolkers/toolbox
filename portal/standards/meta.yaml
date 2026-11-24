@@ -356,6 +356,7 @@ scorecards:
   # themselves included, so there is no further level. Only deterministic facts (manifest, CEL,
   # tests, fixtures) are scored; live outcomes are shown, not scored.
   - name: meta-rule
+    title: Rules are well-formed
     kind: Rule
     description: >-
       Each rule's form: explained, tested, decided both ways on fixtures, with
@@ -458,6 +459,7 @@ scorecards:
     facets: {summary: public, details: public}
 
   - name: meta-scorecard
+    title: Scorecards are well-formed
     kind: Scorecard
     description: >-
       Each scorecard's form: described, tested, no empty level, fixtures that
@@ -518,6 +520,7 @@ scorecards:
     facets: {summary: public, details: public}
 
   - name: meta-kind
+    title: Kinds are well-formed
     kind: Kind
     description: >-
       Each kind of entity: in the fixtures, tested and described with every
@@ -560,6 +563,7 @@ scorecards:
     facets: {summary: public, details: public}
 
   - name: meta-field
+    title: Fields are well-formed
     kind: Field
     description: >-
       Each field: populated in the fixtures, described and given a shape, so
@@ -607,6 +611,7 @@ scorecards:
     facets: {summary: public, details: public}
 
   - name: meta-connector
+    title: Portal connectors are well-formed
     kind: PortalConnector
     description: >-
       Each connector a portal configures: every record mapped, fixtures for
@@ -649,6 +654,7 @@ scorecards:
   # Advisory: reported, never gating. An assessment goes stale when its subject changes, and the
   # agent that changed it should re-assess — but a stale review must not block the change.
   - name: review-rule
+    title: Rules, reviewed by agents
     kind: Rule
     description: >-
       Agents' judgement of each rule against rule-quality, advisory: an open
@@ -702,6 +708,7 @@ scorecards:
     facets: {summary: public, details: public}
 
   - name: review-scorecard
+    title: Scorecards, reviewed by agents
     kind: Scorecard
     description: >-
       Agents' judgement of each scorecard against scorecard-quality, advisory,
@@ -755,6 +762,7 @@ scorecards:
     facets: {summary: public, details: public}
 
   - name: meta-rubric
+    title: Rubrics are well-formed
     kind: Rubric
     description: >-
       Each rubric agents judge with: described, used, guided with what counts

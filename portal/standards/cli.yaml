@@ -73,6 +73,7 @@ kinds:
 
 scorecards:
   - name: operator-cli
+    title: Operator CLI commands
     kind: Command
     description: >-
       Each CLI command an operator runs on a portal: documented, with help for
@@ -115,6 +116,7 @@ scorecards:
     facets: {summary: public, details: public}
 
   - name: user-cli
+    title: User CLI commands
     kind: Command
     description: >-
       Each CLI command a portal's users and their agents call: help,
@@ -159,6 +161,7 @@ scorecards:
   # Every CLI command has a skill that names its invocation (D94). The doc capture already
   # turns `toolbox <command>` in a SKILL.md into documentedIn.
   - name: cli-skill
+    title: Every CLI command has a skill
     kind: Command
     description: >-
       Every CLI command has an agent skill that names its invocation (D94), so
@@ -178,6 +181,7 @@ scorecards:
     facets: {summary: public, details: public}
 
   - name: user-mcp
+    title: MCP tools
     kind: McpTool
     description: >-
       Each built-in MCP tool: described inputs and a contract test that calls

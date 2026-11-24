@@ -62,6 +62,7 @@ kinds:
 scorecards:
   # The marketplace installs the package. Skills inside it are scored by maintainer-skill.
   - name: maintainer-plugin
+    title: Agent plugin packages
     kind: Plugin
     description: >-
       Each agent plugin package we ship: a valid Agent Plugins 1.0.0 manifest

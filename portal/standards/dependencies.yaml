@@ -31,6 +31,7 @@ scorecards:
   # once, in [workspace.dependencies]". Advisories and licence allow-lists need a database and
   # a policy; they are not gated.
   - name: maintainer-dependency
+    title: Cargo dependencies
     kind: Dependency
     description: >-
       Each direct Cargo dependency: a bounded requirement from a registry,

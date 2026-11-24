@@ -232,6 +232,7 @@ kinds:
 
 scorecards:
   - name: maintainer-benchmark
+    title: DX Benchmarks
     kind: Benchmark
     description: >-
       Each DX Benchmark: declared, pre-registered against a rival on pinned

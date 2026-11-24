@@ -73,6 +73,7 @@ kinds:
 
 scorecards:
   - name: maintainer-docs
+    title: Design and reference docs
     kind: Doc
     description: >-
       Each design and reference doc: links that resolve, its SDLC layer named,

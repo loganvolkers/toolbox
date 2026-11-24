@@ -172,6 +172,7 @@ scorecards:
   # run, so it is operator-facing too). zizmor and actionlint rules evaluate to `unknown`, not `fail`,
   # where those tools aren't installed (`dataFrom: ci-lint`).
   - name: maintainer-ci-security
+    title: CI security
     kind: Workflow
     description: >-
       What an attacker could do through a workflow: pinned actions, least-
@@ -257,6 +258,7 @@ scorecards:
   # GitHub API (github-actions connector). When that connector is skipped, the run rules are
   # `unknown` (`dataFrom: github-actions`). An all-unknown level is not granted.
   - name: maintainer-ci-reliability
+    title: CI reliability
     kind: Workflow
     description: >-
       Whether green CI means good on the default branch: failures visible and
@@ -361,6 +363,7 @@ scorecards:
     facets: {summary: public, details: public}
 
   - name: maintainer-ci-speed
+    title: CI speed
     kind: Workflow
     description: >-
       Whether CI answers quickly and spends no runner time on superseded
@@ -397,6 +400,7 @@ scorecards:
   # Supply chain: each third-party action, across every workflow that uses it (the "who uses
   # tj-actions/changed-files?" question).
   - name: maintainer-action-deps
+    title: Third-party actions pinned
     kind: ActionDependency
     description: >-
       Each third-party action across every workflow that uses it: pinned to a

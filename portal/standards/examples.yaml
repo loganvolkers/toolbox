@@ -26,6 +26,7 @@ scorecards:
   # A write-up is useful when a reader can follow its links and run the check it names.
   # The reference portal's expected/ outputs stay the oracle; this scorecard does not regenerate them.
   - name: maintainer-example
+    title: Examples and experiments
     kind: Example
     description: >-
       Each example and experiment write-up agents copy: links that resolve,
