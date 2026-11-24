@@ -26,8 +26,8 @@
     "a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}",
     ".top{display:flex;align-items:center;gap:14px;margin-bottom:6px}",
     ".top svg{flex:none}",
-    "h1{font-size:26px;line-height:1.2;margin:0;letter-spacing:-.01em}",
-    "h2{font-size:19px;line-height:1.3;margin:0;letter-spacing:-.005em}",
+    "h1{font-size:28px;line-height:1.2;margin:0;letter-spacing:-.01em}",
+    "h2{font-size:20px;line-height:1.3;margin:0;letter-spacing:-.005em}",
     "h3{font-size:12px;margin:18px 0 8px;color:var(--muted);font-weight:650;text-transform:uppercase;letter-spacing:.06em}",
     ".meta{color:var(--muted);font-size:13px}",
     ".modes{display:flex;gap:4px;margin:20px 0 22px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}",
@@ -48,7 +48,7 @@
     ".hero .badge-big{display:flex;align-items:center;gap:16px}",
     ".hero .kicker{font-size:12px;font-weight:650;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}",
     ".hero .levelword{font-size:42px;line-height:1.05;font-weight:750;color:var(--lvl-ink);text-transform:capitalize;letter-spacing:-.02em}",
-    ".hero .verdict{font-size:17px;line-height:1.5;margin:16px 0 0}",
+    ".hero .verdict{font-size:18px;line-height:1.5;margin:16px 0 0}",
     ".wins{margin:8px 0 0;font-size:14px;color:var(--pass)}.wins b{font-weight:650}",
     ".next{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--tint);font-size:14px}",
     ".next b{font-weight:650}",
@@ -60,8 +60,8 @@
     ".rung a{display:block;font-size:13px;line-height:1.3;padding:5px 7px;margin-top:4px;border-radius:6px;background:var(--card);color:var(--fg);text-decoration:none;border:1px solid var(--line)}",
     ".rung a:hover{border-color:var(--accent)}",
     ".rung a.done{border-color:color-mix(in srgb,var(--pass) 45%,var(--line))}",
-    ".rung .topmark{display:block;font-size:11.5px;font-weight:650;color:var(--pass);margin-top:2px}",
-    ".rung .capmark{display:block;font-size:11.5px;font-weight:650;color:var(--unknown);margin-top:2px}.rung a.capped{border-color:var(--unknown);border-left-width:3px}.weakest .topmark{color:var(--pass);font-weight:650}.weakest .capnote{color:var(--unknown);font-weight:650}",
+    ".rung .topmark{display:block;font-size:12px;font-weight:650;color:var(--pass);margin-top:2px}",
+    ".rung .capmark{display:block;font-size:12px;font-weight:650;color:var(--unknown);margin-top:2px}.rung a.capped{border-color:var(--unknown);border-left-width:3px}.weakest .topmark{color:var(--pass);font-weight:650}.weakest .capnote{color:var(--unknown);font-weight:650}",
     ".rung .empty{font-size:12px}",
     ".tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:18px}",
     ".tile{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;box-shadow:var(--shadow);text-decoration:none;color:var(--fg)}",
@@ -84,7 +84,7 @@
     "a.row{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(0,2.4fr) 90px;gap:16px;align-items:center;padding:11px 10px;border-top:1px solid var(--line);color:var(--fg);text-decoration:none;border-radius:8px}",
     "a.row:hover{background:var(--tint)}",
     ".keyd>summary{display:inline-flex;align-items:center;gap:6px;min-height:24px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;list-style:none}.keyd>summary::-webkit-details-marker{display:none}.keyd>summary::before{content:'\\25B8';transition:transform .15s}.keyd[open]>summary::before{transform:rotate(90deg)}.keyd>summary:hover{color:var(--fg)}",
-    ".row .t{font-weight:600;line-height:1.3}a.row{row-gap:2px}.row .rp{grid-column:1/3;font-size:12.5px;line-height:1.4;color:var(--muted)}.row .rp.in{padding-left:40px}",
+    ".row .t{font-weight:600;line-height:1.3}a.row{row-gap:2px}.row .rp{grid-column:1/3;font-size:13px;line-height:1.4;color:var(--muted)}.row .rp.in{padding-left:40px}",
     ".row .c{display:block;font:12px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);margin-top:2px;overflow-wrap:anywhere}",
     ".row .num{text-align:right;font-variant-numeric:tabular-nums}",
     ".row .num strong{display:block;font-size:18px;line-height:1.1}",
@@ -133,18 +133,18 @@
     ".sc-status{display:flex;gap:14px;align-items:flex-start;margin:4px 0 14px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--tint)}.sc-status>svg{flex:none}.sc-status-b{flex:1;min-width:0}.sc-status-t{display:flex;flex-wrap:wrap;align-items:center;gap:2px 6px;margin-bottom:8px;font-size:14px}.sc-status-t .topmark{color:var(--pass);font-weight:650}.sc-status .legend{margin-top:6px}.sc-status-t .sep{color:var(--muted)}@media (max-width:640px){.sc-status-t .sep{display:none}.sc-status-t .fact{flex-basis:100%}}.why-text.clamped{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}.why-more{margin-top:2px;min-height:24px}",
     ".bar span.unrun{background:radial-gradient(circle,var(--seg) 1.6px,transparent 1.9px) 0 0/6px 6px;box-shadow:inset 0 0 0 1.5px var(--unknown)}.dot.dots{border-radius:2px;background:radial-gradient(circle,var(--seg) 1.2px,transparent 1.5px) 0 0/4px 4px;box-shadow:inset 0 0 0 1.5px var(--unknown)}",
     ".rule.unknown{border-left-color:var(--unknown)}.rule.waived{border-left-color:var(--bronze)}.rule.unassessed{border-left-color:var(--judged)}",
-    ".cmp-prov{margin:6px 0 0;display:grid;gap:2px}.cmp-src{display:flex;flex-wrap:wrap;align-items:center;gap:2px 10px}.cmp-src .refs{margin:0;line-height:22px}",
+    ".cmp-prov{margin:6px 0 0;display:grid;gap:2px}.cmp-src{display:flex;flex-wrap:wrap;align-items:center;gap:2px 10px}.cmp-src .refs{margin:0;line-height:22px}.cmp-brief>summary{cursor:pointer;width:max-content;max-width:100%;padding:3px 0;color:var(--accent)}",
     ".kpi-bar{flex:0 0 46px;height:10px;border-radius:5px;background:var(--line);overflow:hidden}.kpi-bar span{display:block;height:100%;background:var(--pass)}.kpi-pips{flex:0 0 46px;display:flex;flex-wrap:wrap;gap:4px}.kpi-pips span{width:10px;height:10px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--faint)}.kpi-pips span.on{background:var(--pass);box-shadow:none}",
     ".cprog{flex:0 0 76px;display:grid;gap:3px}.cprog b{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}.cprog small{font-size:11px;color:var(--muted)}.cprog .gb{position:relative;height:8px;border-radius:4px;background:var(--line)}.cprog .gb>span{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--muted)}.cprog.on .gb>span{background:var(--pass)}.cprog .gb>i{position:absolute;top:-3px;bottom:-3px;width:2px;border-radius:1px;background:var(--fg)}.cprog.big{flex-basis:120px}.cprog.big b{font-size:28px}",
-    ".hollow-key{display:flex;flex-wrap:wrap;align-items:center;gap:4px 16px;padding:6px 10px;font-size:12.5px;color:var(--muted);background:var(--tint);border-radius:8px;margin:4px 0}.hollow-key>span{display:inline-flex;align-items:center;gap:6px}.hollow-key b{color:var(--fg);font-weight:600}",
-    ".rid{font:11.5px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);overflow-wrap:anywhere}.rule .rn{font-weight:650;font-size:inherit;margin:0;display:inline}.sc-block h3.sct{display:inline;margin:0;font-size:16px}",
+    ".hollow-key{display:flex;flex-wrap:wrap;align-items:center;gap:4px 16px;padding:6px 10px;font-size:13px;color:var(--muted);background:var(--tint);border-radius:8px;margin:4px 0}.hollow-key>span{display:inline-flex;align-items:center;gap:6px}.hollow-key b{color:var(--fg);font-weight:600}",
+    ".rid{font:12px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);overflow-wrap:anywhere}.rule .rn{font-weight:650;font-size:inherit;margin:0;display:inline}.sc-block h3.sct{display:inline;margin:0;font-size:16px}",
     ".rule .fix{margin-top:4px;font-size:14px}",
-    ".tile-note{display:block;margin-top:3px;font-size:11.5px;color:var(--muted);line-height:1.35}",
-    ".later-h{margin:14px 0 2px;font-size:13px;color:var(--muted)}.rule-c{padding:4px 12px;margin-top:4px}.rule-c>summary{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;min-height:28px;cursor:pointer}.rule-c>summary .rn{font-weight:600}.rule-c>summary::before{content:'\\25B8';color:var(--muted)}.rule-c[open]>summary::before{content:'\\25BE'}.rule-c[open]{padding-bottom:10px}.rule-c[open]>summary{margin-bottom:4px}",
+    ".tile-note{display:block;margin-top:3px;font-size:12px;color:var(--muted);line-height:1.35}",
+    ".later-h{margin:14px 0 2px;font-size:13px;color:var(--muted)}.rule-c{padding:4px 12px;margin-top:4px}.rule-c>summary{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;min-height:28px;cursor:pointer}.rule-c>summary .rn{font-weight:600}.rule-c>summary::before{content:'\\25B8';color:var(--muted)}.rule-c[open]>summary::before{content:'\\25BE'}.rule-c[open]{padding-bottom:10px}.rule-c[open]>summary{margin-bottom:4px}.rule-c>summary .rwhy{flex-basis:100%;padding-left:18px;font-size:13px;line-height:1.4;color:var(--muted)}.rule-c[open]>summary .rwhy{display:none}",
     ".rule ul{margin:6px 0 0;padding-left:18px;font-size:13px;color:var(--muted)}",
     ".rule li{overflow-wrap:anywhere}",
     ".rule .evidence details{font-size:13px;color:var(--muted);margin:2px 0 0 18px}.rule .evidence details ul{margin-top:2px}.rule .evidence summary{cursor:pointer;min-height:24px;line-height:24px}",
-    ".rule code,.evid code{font:12.5px ui-monospace,SFMono-Regular,Menlo,monospace;overflow-wrap:anywhere}",
+    ".rule code,.evid code{font:13px ui-monospace,SFMono-Regular,Menlo,monospace;overflow-wrap:anywhere}",
     ".outcome{font-size:12px;font-weight:650;margin-left:6px}",
     ".outcome.fail{color:var(--fail)}.outcome.unknown{color:var(--unknown)}.outcome.waived{color:var(--bronze-ink)}.outcome.skipped{color:var(--muted)}.outcome.unassessed{color:var(--judged)}",
     ".passes{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px}",
@@ -163,15 +163,15 @@
     ".fail-row .rn{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;font-weight:600;overflow-wrap:break-word}",
     ".fail-row .fc{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}",
     ".scope-note details{display:inline}.scope-note summary{display:inline-flex;align-items:center;min-height:24px;cursor:pointer;color:var(--accent)}.scope-note details[open] div{margin-top:4px}",
-    ".basis.tip{position:relative;cursor:help;line-height:22px}.basis.tip:hover::after,.basis.tip:focus::after{content:attr(data-tip);position:absolute;left:0;top:calc(100% + 4px);z-index:5;width:max-content;max-width:min(280px,70vw);padding:6px 9px;border-radius:8px;background:var(--fg);color:var(--bg);font-size:12.5px;font-weight:450;line-height:1.4;letter-spacing:0;text-transform:none;white-space:normal;box-shadow:0 4px 14px rgba(0,0,0,.18)}",
-    "abbr.gloss{position:relative;display:inline-block;min-height:24px;line-height:24px;vertical-align:bottom;text-decoration:underline dotted;text-underline-offset:3px;cursor:help}abbr.gloss:hover::after,abbr.gloss:focus::after{content:attr(data-tip);position:absolute;left:0;top:calc(100% + 4px);z-index:5;width:max-content;max-width:min(280px,70vw);padding:6px 9px;border-radius:8px;background:var(--fg);color:var(--bg);font-size:12.5px;font-weight:450;line-height:1.4;white-space:normal;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.18)}",
+    ".basis.tip{position:relative;cursor:help;line-height:22px}.basis.tip:hover::after,.basis.tip:focus::after{content:attr(data-tip);position:absolute;left:0;top:calc(100% + 4px);z-index:5;width:max-content;max-width:min(280px,70vw);padding:6px 9px;border-radius:8px;background:var(--fg);color:var(--bg);font-size:13px;font-weight:450;line-height:1.4;letter-spacing:0;text-transform:none;white-space:normal;box-shadow:0 4px 14px rgba(0,0,0,.18)}",
+    "abbr.gloss{position:relative;display:inline-block;min-height:24px;line-height:24px;vertical-align:bottom;text-decoration:underline dotted;text-underline-offset:3px;cursor:help}abbr.gloss:hover::after,abbr.gloss:focus::after{content:attr(data-tip);position:absolute;left:0;top:calc(100% + 4px);z-index:5;width:max-content;max-width:min(280px,70vw);padding:6px 9px;border-radius:8px;background:var(--fg);color:var(--bg);font-size:13px;font-weight:450;line-height:1.4;white-space:normal;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.18)}",
     ".jumpbar{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;margin:14px 0 0;padding:6px 10px;border-radius:8px;background:var(--tint);font-size:13px}.jumpbar button.link{min-height:24px}",
     ".levels-need{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:8px 0 4px;align-items:start}",
     ".need{padding:10px 12px;border-radius:10px;background:var(--tint);font-size:13px}",
     ".need .lvl{margin-bottom:6px}.lvl-top{text-transform:none;font-weight:500}.bicon{display:inline-flex;vertical-align:-1px;color:var(--muted)}.bicon.judged{color:var(--judged)}",
     ".need ul{margin:0;padding-left:16px}",
     ".need li{margin:6px 0}",
-    ".need li .why{display:block;color:var(--muted);font-size:12.5px;line-height:1.4}.levels-need.clamped li .why .rest{display:none}.need-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 8px;margin-bottom:6px}.need-head .lvl{margin-bottom:0}.need-basis{font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:4px}.need-toggle{display:inline-flex;align-items:center;min-height:24px;font-size:13px;margin:0 0 4px}",
+    ".need li .why{display:block;color:var(--muted);font-size:13px;line-height:1.4}.levels-need.clamped li .why .rest{display:none}.need-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 8px;margin-bottom:6px}.need-head .lvl{margin-bottom:0}.need-basis{font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:4px}.need-toggle{display:inline-flex;align-items:center;min-height:24px;font-size:13px;margin:0 0 4px}",
     "code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}",
     ".picker{display:none}",
     ".picker select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);font:inherit;min-height:40px}",
@@ -190,23 +190,23 @@
     "a.erow .name{font-weight:600;overflow-wrap:anywhere;min-width:0}",
     "a.erow .name small{display:block;font:12px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}",
     "a.erow .badges{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end}",
-    "code.kid{display:block;font:11.5px ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:400;color:var(--muted)}",
+    "code.kid{display:block;font:12px ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:400;color:var(--muted)}",
     ".kchips{display:grid;grid-template-columns:minmax(9rem,12rem) 1fr;gap:4px 12px;align-items:baseline;padding:6px 0;border-top:1px solid var(--line)}.kchips-g{font-size:12px;font-weight:650;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}.kchips .box a{display:inline-flex;align-items:center;min-height:28px}.kchips .box a[aria-current=true]{border-color:var(--accent);background:var(--card);font-weight:650}",
     ".ehdr{display:grid;gap:12px;padding:6px 8px;font-size:12px;font-weight:650;color:var(--muted)}.ehdr span{overflow-wrap:break-word}",
     ".weakest{display:block;margin-top:3px;font-size:12px;color:var(--muted)}.weakest .lvl{font-size:11px}",
-    ".ecell{font-size:12px}.unassessed-tag{display:block;margin-top:2px;font-size:11px;color:var(--judged)}.unassessed-tag.unrun{color:var(--unknown)}.lvl.vacuous{background:transparent;border-style:dashed}.lvl.vacuous.unjudged{border-color:var(--judged)}.lvl.vacuous.unrun{border-style:dotted;border-color:var(--unknown)}.unassessed-tag svg{vertical-align:-1px}.lvl.vacuous.unjudged .vglyph{color:var(--judged)}.lvl.vacuous.unrun .vglyph{color:var(--unknown)}.pillwrap{display:inline-flex;flex-direction:column;align-items:flex-start;vertical-align:middle}",
+    ".vhatch{display:inline-block;width:9px;height:9px;margin-left:5px;border-radius:2px;vertical-align:-1px;background:repeating-linear-gradient(135deg,var(--judged) 0 1.5px,transparent 1.5px 3.5px);box-shadow:inset 0 0 0 1px var(--judged)}.unassessed-tag .vhatch{margin:0 4px 0 0}.ecell{font-size:12px}.unassessed-tag{display:block;margin-top:2px;font-size:11px;color:var(--judged)}.unassessed-tag.unrun{color:var(--unknown)}.lvl.vacuous{background:transparent;border-style:dashed}.lvl.vacuous.unjudged{border-color:var(--judged)}.lvl.vacuous.unrun{border-style:dotted;border-color:var(--unknown)}.unassessed-tag svg{vertical-align:-1px}.lvl.vacuous.unjudged .vglyph{color:var(--judged)}.lvl.vacuous.unrun .vglyph{color:var(--unknown)}.pillwrap{display:inline-flex;flex-direction:column;align-items:flex-start;vertical-align:middle}",
     "@media (max-width:820px){.unassessed-tag{display:inline;margin:0}}",
     ".pillwrap .unassessed-tag.quiet{display:none}",
     ".crumb{font-size:13px;color:var(--muted);margin-bottom:12px}",
     ".sc-group{margin-top:20px}.sc-group h3{margin:0 0 4px}.sc-group h3 .sub{font-weight:400;text-transform:none;letter-spacing:0}.sc-index input[type=search]{max-width:420px}",
-    ".sc-rows{border-top:1px solid var(--line)}.sc-row{display:grid;grid-template-columns:26px minmax(0,1.25fr) minmax(0,1.6fr) 104px;gap:12px;align-items:center;padding:7px 8px;border-bottom:1px solid var(--line);color:var(--fg);text-decoration:none}.sc-row:hover{background:var(--tint)}.sc-row .sc-name{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;min-width:0}.sc-row .sc-name .t{font-weight:600}.sc-row .sc-name .c{font-size:11.5px;color:var(--muted)}.sc-row{row-gap:2px}.sc-row>svg{grid-row:1/span 2}.sc-row .sc-why{grid-column:2/-1;grid-row:2;min-width:0;font-size:12px;line-height:1.4;color:var(--muted)}.sc-row .sc-dist small{display:block;font-size:12px;color:var(--muted);margin-top:3px}.sc-head{display:grid;grid-template-columns:26px minmax(0,1.25fr) minmax(0,1.6fr) 104px;gap:12px;padding:4px 8px;font-size:11.5px;color:var(--muted);border-bottom:1px solid var(--line)}.sc-head span:last-child{text-align:right}.sc-row .sc-weak{display:flex;flex-direction:column;align-items:flex-end;gap:1px}.sc-row .sc-weak small{font-size:12px}.sc-row .sc-weak .bad{color:var(--fail);font-weight:600}.sc-row .sc-weak .topmark{color:var(--pass);font-weight:600}",
+    ".sc-rows{border-top:1px solid var(--line)}.sc-row{display:grid;grid-template-columns:26px minmax(0,1.25fr) minmax(0,1.6fr) 104px;gap:12px;align-items:center;padding:7px 8px;border-bottom:1px solid var(--line);color:var(--fg);text-decoration:none}.sc-row:hover{background:var(--tint)}.sc-row .sc-name{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;min-width:0}.sc-row .sc-name .t{font-weight:600}.sc-row .sc-name .c{font-size:12px;color:var(--muted)}.sc-row{row-gap:2px}.sc-row>svg{grid-row:1/span 2}.sc-row .sc-why{grid-column:2/-1;grid-row:2;min-width:0;font-size:12px;line-height:1.4;color:var(--muted)}.sc-row .sc-dist small{display:block;font-size:12px;color:var(--muted);margin-top:3px}.sc-head{display:grid;grid-template-columns:26px minmax(0,1.25fr) minmax(0,1.6fr) 104px;gap:12px;padding:4px 8px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--line)}.sc-head span:last-child{text-align:right}.sc-row .sc-weak{display:flex;flex-direction:column;align-items:flex-end;gap:1px}.sc-row .sc-weak small{font-size:12px}.sc-row .sc-weak .bad{color:var(--fail);font-weight:600}.sc-row .sc-weak .topmark{color:var(--pass);font-weight:600}",
     "@media (max-width:640px){.sc-head{display:none}.sc-row .sc-name code.c{display:none}.sc-row{grid-template-columns:26px minmax(0,1fr) auto;row-gap:4px}.sc-row .sc-weak{grid-column:3;grid-row:1}.sc-row .sc-dist{grid-column:2/4;grid-row:2}.sc-row .sc-why{grid-column:2/4;grid-row:3}.sc-row>svg{grid-row:1}}",
     ".crumb a{color:var(--muted);display:inline-block;padding:4px 0;margin:-4px 0}",
     "a.rl{display:inline-flex;align-items:center;min-height:24px;min-width:24px;vertical-align:middle}.refs a{display:inline-flex;align-items:center;min-height:26px}",
     ".passes>span a{display:inline-block;padding:4px 0;margin:-4px 0}",
     ".ehead{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between}",
     ".ehead h2{font-size:24px}",
-    ".ehead code{font:12.5px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);overflow-wrap:anywhere}",
+    ".ehead code{font:13px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);overflow-wrap:anywhere}",
     ".sc-block{border-top:1px solid var(--line);padding-top:14px;margin-top:14px}",
     ".sc-block .head a{font-weight:650;font-size:16px;text-decoration:none}",
     ".sc-block .head a:hover{text-decoration:underline}",
@@ -251,14 +251,14 @@
     ".basis-key{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px 18px;padding:10px 12px;border-radius:10px;border:1px dashed var(--line);font-size:13px;color:var(--muted);margin:10px 0}",
     ".basis-key>div{display:flex;gap:8px;align-items:flex-start}.basis-key.one{display:block;padding:6px 12px}",
     ".basis-key b{color:var(--fg);font-weight:650}",
-    ".why{margin-top:6px;font-size:13.5px;line-height:1.5}",
+    ".why{margin-top:6px;font-size:13px;line-height:1.5}",
     ".why>b{font-weight:650}",
     ".refs{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;margin:4px 0 2px;font-size:13px;line-height:26px}",
     ".refs a{text-underline-offset:2px}",
     ".refs a .ext{font-size:11px}",
     ".rationale{margin:6px 0 12px;padding:10px 14px;border-left:3px solid var(--accent);background:var(--tint);border-radius:0 10px 10px 0;max-width:80ch;font-size:14px}",
     ".rationale>b{display:block;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}",
-    ".cel{margin:6px 0;padding:10px 12px;border-radius:8px;background:var(--tint);overflow-x:auto;font:12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;overflow-wrap:anywhere}",
+    ".cel{margin:6px 0;padding:10px 12px;border-radius:8px;background:var(--tint);overflow-x:auto;font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;overflow-wrap:anywhere}",
     ".tracks{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-top:6px;align-items:start}",
     ".track{position:relative;display:flex;flex-direction:column;gap:10px;padding:16px;border:1px solid var(--line);border-radius:14px;color:var(--fg);text-decoration:none;transition:transform .15s,border-color .15s;",
     "background:linear-gradient(160deg,color-mix(in srgb,var(--tc) 13%,var(--card)) 0%,var(--card) 62%)}",
@@ -268,14 +268,14 @@
     ".track .medals a,.track .nextmedal a,.track .tnext a{position:relative;z-index:1}.track .medals>li{border-radius:10px}.medals a{color:inherit;text-decoration:none}.medals a:hover span:first-of-type{text-decoration:underline}.medals .lw{color:var(--muted)}",
     ".basis.tip:hover::after,.basis.tip:focus::after,abbr.gloss:hover::after,abbr.gloss:focus::after{left:var(--tipx,0);max-width:min(280px,calc(100vw - 24px))}",
     ".allmeasured .basis.measured:is(.mini,.ctl){border-color:transparent;background:none;font-weight:500}",
-    ".medal-col{display:flex;gap:10px;align-items:center}.medal-col>svg{flex:0 0 30px}.mix{display:grid;gap:4px}.slots{position:relative;display:flex;gap:3px;align-items:flex-end;height:30px;padding-bottom:1px;border-bottom:1px solid var(--line)}.slot{position:relative;flex:1 1 0;max-width:30px;height:100%;border-radius:3px 3px 0 0;background:var(--tint);overflow:hidden}.slot::after{content:'';position:absolute;left:0;right:0;bottom:0;height:var(--h);background:var(--c)}.slots .avg{position:absolute;left:0;right:0;bottom:var(--avg);border-top:1.5px dashed var(--fg);opacity:.7}.slot-key{display:inline-flex;align-items:center;gap:5px}.sc-done>summary{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px;padding:10px 8px 10px 28px;list-style:none;min-height:24px;cursor:pointer;border-bottom:1px solid var(--line);font-size:14px}.sc-done>summary:hover{background:var(--tint)}.sc-done>summary small{color:var(--muted);font-size:12px}.sc-done>summary::-webkit-details-marker{display:none}.sc-done>summary::before{content:'\\25B8';color:var(--muted);width:12px}.sc-done[open]>summary::before{content:'\\25BE'}.sc-done .topmark{color:var(--pass);font-weight:650}.slots.mini{display:inline-flex;width:30px;height:14px;gap:2px}.slots.mini .slot{border-radius:1px 1px 0 0}.mix small{font-size:12px;color:var(--muted)}.nextmedal{font-size:13px;padding:8px 10px;border-radius:8px;background:var(--tint)}.nextmedal b{color:var(--fg)}",
+    ".medal-col{display:flex;gap:10px;align-items:center}.medal-col>svg{flex:0 0 30px}.mix{display:grid;gap:4px}.slots{position:relative;display:flex;gap:3px;align-items:flex-end;height:30px;padding-bottom:1px;border-bottom:1px solid var(--line)}.slot{position:relative;flex:1 1 0;max-width:30px;height:100%;border-radius:3px 3px 0 0;background:var(--tint);overflow:hidden}.slot::after{content:'';position:absolute;left:0;right:0;bottom:0;height:var(--h);background:var(--c)}.slots[data-tip]{cursor:help}.slots[data-tip]:hover::after,.slots[data-tip]:focus::after{content:attr(data-tip);position:absolute;left:0;top:calc(100% + 6px);z-index:5;width:max-content;max-width:min(320px,calc(100vw - 48px));padding:6px 9px;border-radius:8px;background:var(--fg);color:var(--bg);font-size:12px;font-weight:500;line-height:1.5;white-space:pre-line;box-shadow:var(--shadow)}.slots .avg{position:absolute;left:0;right:0;bottom:var(--avg);border-top:1.5px dashed var(--fg);opacity:.7}.slot-key{display:inline-flex;align-items:center;gap:5px}.sc-done>summary{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px;padding:10px 8px 10px 28px;list-style:none;min-height:24px;cursor:pointer;border-bottom:1px solid var(--line);font-size:14px}.sc-done>summary:hover{background:var(--tint)}.sc-done>summary small{color:var(--muted);font-size:12px}.sc-done>summary::-webkit-details-marker{display:none}.sc-done>summary::before{content:'\\25B8';color:var(--muted);width:12px}.sc-done[open]>summary::before{content:'\\25BE'}.sc-done .topmark{color:var(--pass);font-weight:650}.slots.mini{display:inline-flex;width:30px;height:14px;gap:2px}.slots.mini .slot{border-radius:1px 1px 0 0}.mix small{font-size:12px;color:var(--muted)}.nextmedal{font-size:13px;padding:8px 10px;border-radius:8px;background:var(--tint)}.nextmedal b{color:var(--fg)}",
     ".track .th{display:flex;gap:14px;align-items:center}",
     ".track .tt{font-weight:700;font-size:16px;line-height:1.25}",
     ".track .td{font-size:13px;color:var(--muted)}",
     ".trackstrip{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin-top:28px;padding-top:16px;border-top:1px solid var(--line)}",
     ".trackstrip a{display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:4px 12px 4px 4px;border:1px solid var(--line);border-radius:999px;color:var(--fg);text-decoration:none;font-size:13px}",
     ".trackstrip a{transition:border-color .15s,transform .15s,box-shadow .15s}.trackstrip a:hover,.trackstrip a.far:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 4px 12px color-mix(in srgb,var(--fg) 10%,transparent)}",
-    ".leads{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}a.lead-tile{display:flex;flex-direction:column;gap:4px;padding:14px 16px;border:1px solid var(--line);border-left:4px solid var(--pass);border-radius:12px;color:var(--fg);text-decoration:none;background:var(--card);transition:transform .15s,border-color .15s}a.lead-tile:hover{transform:translateY(-2px);border-color:var(--accent);border-left-color:var(--pass)}.lead-x{font-size:30px;font-weight:750;line-height:1;color:var(--pass)}.lead-dir{font-size:12px;font-weight:650;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}.lead-what{font-weight:650;line-height:1.35}",
+    ".leads{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}a.lead-tile{display:flex;flex-direction:column;gap:4px;padding:14px 16px;border:1px solid var(--line);border-left:4px solid var(--pass);border-radius:12px;color:var(--fg);text-decoration:none;background:var(--card);transition:transform .15s,border-color .15s}a.lead-tile:hover{transform:translateY(-2px);border-color:var(--accent);border-left-color:var(--pass)}.lead-x{font-size:28px;font-weight:750;line-height:1;color:var(--pass)}.lead-dir{font-size:12px;font-weight:650;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}.lead-what{font-weight:650;line-height:1.35}",
     ".climb{margin-top:12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card)}.climb-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:4px 10px;font-weight:650}.climb-bar{height:8px;margin:8px 0;border-radius:4px;background:var(--bg);box-shadow:inset 0 0 0 1px var(--line);overflow:hidden}.climb-bar span{display:block;height:100%;border-radius:3px}.climb ul{list-style:none;margin:0;padding:0;display:grid;gap:4px;font-size:14px}.climb li{display:grid;grid-template-columns:auto 1fr;align-items:baseline;gap:4px}.climb .mark{display:inline-block;width:16px;flex:0 0 16px;text-align:center;color:var(--muted);font-weight:700}.climb li.stuck .mark{color:var(--unknown)}",
     ".climb-track{display:flex;align-items:center;gap:8px}.climb-track .climb-bar{flex:1}.climb-lock{display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:650;color:var(--muted);white-space:nowrap}",
     ".trackstrip.lead{margin-top:4px;padding-top:0;border-top:0}",
@@ -308,7 +308,7 @@
     ".method-lede{max-width:80ch;margin:0 0 12px;font-size:15px;line-height:1.55}",
     ".cmp-side{display:grid;gap:12px;justify-items:center}.h2h{display:grid;gap:2px;width:300px;font-size:12px}.h2h-head,.h2h-row{display:grid;grid-template-columns:110px 1fr 1fr;align-items:center;gap:0}.h2h-head{color:var(--muted);font-weight:650}.h2h-head .behind{text-align:right;padding-right:6px;color:var(--fail)}.h2h-head .ahead{padding-left:6px;color:var(--pass)}.h2h-row{min-height:24px;color:var(--fg);text-decoration:none;border-radius:6px;padding:0 2px}.h2h-row:hover,.h2h-row:focus-visible{background:color-mix(in srgb,var(--accent) 10%,transparent)}.h2h-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:6px}.h2h-l,.h2h-r{display:flex;height:10px}.h2h-l{justify-content:flex-end;border-right:1.5px solid var(--muted)}.h2h-l span{background:var(--fail);border-radius:3px 0 0 3px}.h2h-r span{background:var(--pass);border-radius:0 3px 3px 0}.h2h-foot{color:var(--muted);font-size:11px;text-align:center;margin-top:2px}",
     ".tally3{display:flex;gap:18px;text-align:center}.rule-tally{margin:6px 0 0;font-size:14px}.rule-tally .ahead{color:var(--pass)}.rule-tally .behind{color:var(--fail)}.rule-tally .parity{color:var(--muted)}",
-    ".tally3 strong{display:block;font-size:30px;line-height:1.1;font-variant-numeric:tabular-nums}",
+    ".tally3 strong{display:block;font-size:28px;line-height:1.1;font-variant-numeric:tabular-nums}",
     ".tally3 span{font-size:12px;color:var(--muted);font-weight:650;text-transform:uppercase;letter-spacing:.05em}",
     ".setup{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin:10px 0;align-items:start}",
     ".setup>div{padding:10px 12px;border-radius:10px;background:var(--tint);font-size:14px}",
@@ -319,14 +319,14 @@
     "a.factor:hover{border-color:var(--accent);border-left-color:var(--st);transform:translateY(-1px)}",
     "a.factor[aria-current=true]{box-shadow:0 0 0 1px var(--accent)}",
     ".factor .fh{display:flex;justify-content:space-between;gap:8px;align-items:center;font-weight:700}",
-    ".factor p{margin:0;font-size:13px;color:var(--muted)}.fx{display:flex;flex-direction:column;gap:1px;line-height:1.2}.fx b{font-size:22px;font-weight:750;color:var(--st);font-variant-numeric:tabular-nums}.fx span{font-size:12px;color:var(--muted)}",
+    ".factor p{margin:0;font-size:13px;color:var(--muted)}.fx{display:flex;flex-direction:column;gap:1px;line-height:1.2}.fx b{font-size:24px;font-weight:750;color:var(--st);font-variant-numeric:tabular-nums}.fx span{font-size:12px;color:var(--muted)}",
     ".factor .fc{font-size:12px;color:var(--muted)}",
     ".measure{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr) minmax(130px,auto);gap:10px 18px;align-items:center;padding:14px 4px;border-top:1px solid var(--line)}",
     ".measure .mt{font-weight:650;line-height:1.35}",
     ".measure .mt small{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;font-weight:400;color:var(--muted);font-size:12px;margin-top:4px}",
     ".measure .ms{text-align:right}",
     ".measure .full{grid-column:1/-1;margin-top:-4px}",
-    ".measure details summary{cursor:pointer;font-size:12.5px;color:var(--muted);padding:4px 0;min-height:24px}",
+    ".measure details summary{cursor:pointer;font-size:13px;color:var(--muted);padding:4px 0;min-height:24px}",
     ".vals{display:flex;flex-direction:column;gap:6px}.vals.yn{flex-direction:row;flex-wrap:wrap;gap:4px 28px}.vals.yn .val{display:inline-flex;gap:8px}",
     ".val{display:grid;grid-template-columns:92px minmax(0,1fr) auto;gap:8px;align-items:center;font-size:13px}",
     ".val .who{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}",
@@ -343,9 +343,9 @@
     ".ering{display:flex;flex-direction:column;align-items:center;gap:4px;flex:none}",
     ".elevel{display:flex;align-items:center;gap:12px;flex:0 1 auto;min-width:0;max-width:100%}",
     ".elevel>div{min-width:0;overflow-wrap:anywhere}",
-    ".elevel strong{display:block;font-size:30px;line-height:1.1;font-weight:750;text-transform:capitalize;letter-spacing:-.01em}",
+    ".elevel strong{display:block;font-size:28px;line-height:1.1;font-weight:750;text-transform:capitalize;letter-spacing:-.01em}",
     ".elevel .sub{display:block}.elevel strong .pv-head{font-size:18px;font-weight:600;text-transform:none;letter-spacing:0;color:var(--unknown)}",
-    "@media (max-width:600px){main{padding:18px 12px 56px}.hero .levelword{font-size:34px}",
+    "@media (max-width:600px){main{padding:18px 12px 56px}.hero .levelword{font-size:28px}",
     ".modes{gap:0}.modes button{padding:10px 8px}.modes .count{min-width:0;margin-left:4px;padding:0 5px;font-size:11px}",
     ".kinds{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}a.kind{padding:9px}.fail-row{grid-template-columns:minmax(0,1fr) 64px}.fail-row .bar{display:none}",
     "a.row,.rows-head{grid-template-columns:minmax(0,1fr) 64px}.row .dist,.rows-head .dist{display:none}",
@@ -423,7 +423,7 @@
   var GLOSSARY = {
     ratchet: "The CI gate that compares each build with the committed results and fails when any score falls.",
     cel: "Common Expression Language: the small expression language a rule's check is written in.",
-    fixture: "A sample input in the standard's tests, built to pass or to fail a rule, so the rule is shown to decide both ways.",
+    fixture: "A sample input in the scorecard's tests, built to pass or to fail a rule, so the rule is shown to decide both ways.",
     harness: "The program that runs something: an agent harness (such as Claude Code, Cursor or Codex) runs an agent, and a benchmark harness runs and times the products it compares.",
   };
   var GLOSS_RE = /\b(ratchet|CEL|fixtures?|harness)\b/i;
@@ -621,7 +621,7 @@
       ...["none", "bronze", "silver", "gold"].map(function (l) {
         return el("span", {}, el("span", { className: "dot", style: "background:" + fill(l) }), l);
       }),
-      hollow ? el("span", {}, el("span", { className: "dot hatch", style: "--seg:" + fill("bronze") }), "✦ hatched, or on a pill: not assessed by an agent yet") : null,
+      hollow ? el("span", {}, el("span", { className: "dot hatch", style: "--seg:" + fill("bronze") }), "hatched, on a bar or a pill: not assessed by an agent yet") : null,
       unrun ? el("span", {}, el("span", { className: "dot dots", style: "--seg:" + fill("silver") }), "◌ dotted, or on a pill: provisional, checks not run in this build") : null,
     );
   }
@@ -686,7 +686,7 @@
           {},
           el("span", { className: "dot" + (p.hollow ? " hatch" : p.unrun ? " dots" : ""), style: p.hollow || p.unrun ? "--seg:" + fill(p.level) : "background:" + fill(p.level) }),
           el("b", { textContent: fmt(p.n) }),
-          " " + p.level + (p.hollow ? " ✦ not assessed" : p.unrun ? " ◌ provisional" : ""),
+          " " + p.level + (p.hollow ? " not assessed" : p.unrun ? " ◌ provisional" : ""),
         );
       }),
     );
@@ -725,13 +725,13 @@
     var pill = badge(level);
     if (!unassessed && !(unrun && unrun.length)) return pill;
     pill.classList.add("vacuous", unassessed ? "unjudged" : "unrun");
-    pill.append(el("span", { className: "vglyph", ariaHidden: "true", textContent: unassessed ? " ✦" : " ◌" }));
+    pill.append(unassessed ? el("span", { className: "vhatch", ariaHidden: "true" }) : el("span", { className: "vglyph", ariaHidden: "true", textContent: " ◌" }));
     var why = unassessed
       ? "No agent has assessed this entity, so its agent-judged rules have nothing to read: this level is provisional"
       : plural(unrun.length, "check") + " this level needs " + (unrun.length === 1 ? "was" : "were") + " not run in this build (" + unrun.join(", ") + "): the level holds only if " + (unrun.length === 1 ? "it passes" : "they pass");
     pill.setAttribute("aria-label", "level " + level + ", " + (unassessed ? "not assessed" : "provisional"));
     if (quiet) return el("span", { className: "pillwrap", title: why }, pill, el("span", { className: "unassessed-tag quiet" + (unassessed ? "" : " unrun"), ariaHidden: "true" }, unassessed ? " not assessed" : "provisional: not run"));
-    return el("span", { className: "pillwrap", title: why }, pill, el("span", { className: "unassessed-tag" + (unassessed ? "" : " unrun"), ariaHidden: "true" }, unassessed ? basisIcon("judged") : null, unassessed ? " not assessed" : "provisional: not run"));
+    return el("span", { className: "pillwrap", title: why }, pill, el("span", { className: "unassessed-tag" + (unassessed ? "" : " unrun"), ariaHidden: "true" }, unassessed ? el("span", { className: "vhatch", ariaHidden: "true" }) : null, unassessed ? " not assessed" : "provisional: not run"));
   }
 
   function medal(level, size) {
@@ -885,7 +885,7 @@
   }
 
   function topNote(D, name, level) {
-    if (capsRepo(D, name, level)) return el("span", { className: "capnote", textContent: " ▲ ceiling: its top level is " + level + ", so the repository can't rise above it", title: "Its top level is " + level + ", so the repository cannot rise above " + level + " until this standard gains a higher level" });
+    if (capsRepo(D, name, level)) return el("span", { className: "capnote", textContent: " ▲ ceiling: its top level is " + level + ", so the repository can't rise above it", title: "Its top level is " + level + ", so the repository cannot rise above " + level + " until this scorecard gains a higher level" });
     var top = isTop(D, name, level) && !ONLY_LEVEL.has(level) ? el("span", { className: "topmark", textContent: " ✓ top level" }) : "";
     return LEVEL_DEF[level] ? el("span", {}, top, el("span", { className: "sub leveldef", textContent: " · " + LEVEL_DEF[level] })) : top;
   }
@@ -1101,7 +1101,7 @@
     if (!at || (unj + unr) * 2 < at) return pill;
     var judged = unj >= unr;
     pill.classList.add("vacuous", judged ? "unjudged" : "unrun");
-    pill.append(el("span", { className: "vglyph", ariaHidden: "true", textContent: judged ? " ✦" : " ◌" }));
+    pill.append(judged ? el("span", { className: "vhatch", ariaHidden: "true" }) : el("span", { className: "vglyph", ariaHidden: "true", textContent: " ◌" }));
     pill.setAttribute("aria-label", "level " + floor + ", may not hold: " + fmt(unj + unr) + " of " + fmt(at) + (judged ? " not assessed" : " provisional"));
     pill.title = fmt(unj + unr) + " of " + fmt(at) + " entities at " + floor + (judged ? " are not assessed by an agent yet" : " rest on checks not run in this build") + ", so this level may not hold";
     return pill;
@@ -1278,7 +1278,7 @@
           }),
           el("span", { className: "avg" }),
         ),
-        "one per scorecard, its share at the top level; dashed: their average, the ring",
+        "one per scorecard, its share at the top level (point at them, or tab to them, for names); dashed: their average, the ring",
       ),
       compare ? el("b", { textContent: "Segmented ring, one per factor:" }) : null,
       compare ? sw(standingColor("ahead"), "ahead") : null,
@@ -1629,19 +1629,25 @@
     var said = cards.map(function (c) {
       return title(D, c.row.name) + ": " + c.row.topShare + "% at the top level (" + levelName(c.row.top || "top") + ")";
     });
-    return el(
+    var wrap = el(
       "div",
       { className: "mix" },
       el(
         "div",
-        { className: "slots", role: "img", ariaLabel: "Share at the top level, per scorecard: " + said.join("; ") + ". Average " + t.pct + "%.", style: "--avg:" + t.pct + "%" },
-        ...cards.map(function (c, i) {
+        { className: "slots", role: "img", tabIndex: 0, ariaLabel: "Share at the top level, per scorecard: " + said.join("; ") + ". Average " + t.pct + "%.", style: "--avg:" + t.pct + "%" },
+        ...cards.map(function (c) {
           var p = c.row.topShare;
-          return el("span", { className: "slot", title: said[i], style: "--h:" + Math.max(p, 2) + "%;--c:" + RAMP[p >= 80 ? 0 : p >= 50 ? 1 : 2] });
+          return el("span", { className: "slot", style: "--h:" + Math.max(p, 2) + "%;--c:" + RAMP[p >= 80 ? 0 : p >= 50 ? 1 : 2] });
         }),
         el("span", { className: "avg", ariaHidden: "true" }),
       ),
     );
+    var tip = cards.map(function (c) {
+      var top = c.row.top || "top";
+      return title(D, c.row.name) + ": " + c.row.topShare + "%" + (top === "gold" ? "" : " at " + levelName(top));
+    });
+    wrap.firstChild.dataset.tip = "Left to right, share at the top level (gold unless named):\n" + tip.join("\n") + "\nDashed line: their average, " + t.pct + "%";
+    return wrap;
   }
 
   // The first scorecard on a track that can still rise, with the rule most of its lowest entities need.
@@ -1659,7 +1665,7 @@
     return [
       head + " · " + r.topShare + "% at the top level (" + levelName(r.top || "top") + ")",
       prov ? el("span", { className: "provisional", title: "Their levels hold only if the checks not run in this build pass; drawn dotted in the bar", textContent: " · " + fmt(prov) + " provisional (checks not run)" }) : null,
-      unj ? el("span", { className: "unjudged-n", title: "No agent has assessed them yet, so their agent-judged rules pass or fail for want of anything to read; drawn hatched in the bar", textContent: " · " + fmt(unj) + " not assessed (✦ agent-judged)" }) : null,
+      unj ? el("span", { className: "unjudged-n", title: "No agent has assessed them yet, so their agent-judged rules pass or fail for want of anything to read; drawn hatched in the bar", textContent: " · " + fmt(unj) + " not assessed by an agent (hatched)" }) : null,
     ];
   }
 
@@ -2417,7 +2423,7 @@
       var c = S.checks;
       var total = c.pass + c.vacuous + c.fail + c.unknown;
       var pct = total ? Math.round((c.pass / total) * 100) : 0;
-      var checkNote = [c.vacuous ? fmt(c.vacuous) + " more pass only because no agent has assessed them yet (✦)" : null, c.unknown ? fmt(c.unknown) + " not run" : null].filter(Boolean);
+      var checkNote = [c.vacuous ? fmt(c.vacuous) + " more pass only because no agent has assessed them yet" : null, c.unknown ? fmt(c.unknown) + " not run" : null].filter(Boolean);
       var on = campaignNames.filter(function (n) {
         return campaignState(campaigns[n]) === "on";
       }).length;
@@ -2446,7 +2452,7 @@
         "div",
         { className: "tiles" },
         tile("scorecards", "good", kpiBar(pct, pct + "% of checks pass"), pct + "%", [fmt(c.pass) + " of " + fmt(total) + " checks pass on evidence", checkNote.length ? el("small", { className: "tile-note", textContent: checkNote.join("; ") }) : null]),
-        tile("catalog", "", medal("gold", 40), fmt(golden), ["of " + fmt(scoredEntities) + " scored entities are gold on every scorecard", goldUnjudged ? el("small", { className: "tile-note", textContent: fmt(goldUnjudged) + " of those still await an agent's assessment (✦)" }) : null]),
+        tile("catalog", "", medal("gold", 40), fmt(golden), ["of " + fmt(scoredEntities) + " scored entities are gold on every scorecard", goldUnjudged ? el("small", { className: "tile-note", textContent: fmt(goldUnjudged) + " of those still await an agent's assessment" }) : null]),
         tile("scorecards", debt ? "bad" : "good", medal(debt ? "none" : "gold", 40), String(debt), debt ? "scorecards have entities at none" : "scorecards with entities at none"),
         tile("campaigns", on === campaignNames.length ? "good" : "", kpiPips(on, campaignNames.length, on + " of " + campaignNames.length + " campaigns on target"), on + " of " + campaignNames.length, "campaigns on target"),
       );
@@ -2483,7 +2489,7 @@
         return p ? el("span", { className: "rp" + (indent ? " in" : ""), textContent: p }) : null;
       };
       var wrap = el("div", { className: "rows" });
-      wrap.append(el("div", { className: "rows-head" }, el("span", { textContent: "Standard" }), el("span", { className: "dist", textContent: "Entities by level" }), el("span", { textContent: "At none" })));
+      wrap.append(el("div", { className: "rows-head" }, el("span", { textContent: "Scorecard" }), el("span", { className: "dist", textContent: "Entities by level" }), el("span", { textContent: "At none" })));
       rows.forEach(function (r) {
         wrap.append(
           link("scorecard/" + enc(r.name), "row", [
@@ -2667,6 +2673,26 @@
         );
       };
       drawClear();
+      var attFold = attention.length > 4 ? 3 : attention.length;
+      var attTable = attention.length ? this.scorecardTable(D, attention.slice(0, attFold)) : null;
+      var attMore =
+        attention.length > attFold
+          ? el(
+              "div",
+              { className: "more" },
+              el("button", {
+                className: "link",
+                textContent: "Show the other " + fmt(attention.length - attFold) + " that need attention",
+                onclick: function () {
+                  var full = self.scorecardTable(D, attention);
+                  attTable.replaceWith(full);
+                  attMore.remove();
+                  var next = full.querySelectorAll("a.row")[attFold];
+                  if (next) next.focus();
+                },
+              }),
+            )
+          : null;
       return el(
         "div",
         {},
@@ -2710,7 +2736,8 @@
           ),
           el("p", { className: "lede", textContent: "Each scorecard rates every entity of one kind against levels of rules. An entity is at none until it passes every rule of the first level." }),
           levelLegend(D, S.rows),
-          attention.length ? this.scorecardTable(D, attention) : null,
+          attTable,
+          attMore,
           clearWrap,
         ),
         el(
@@ -3225,7 +3252,7 @@
           ...["none", "bronze", "silver", "gold", "unscored"].map(function (l) {
             return el("span", {}, el("span", { className: "dot", style: "background:" + fill(l) }), l === "unscored" ? "not scored: out of every scorecard's scope, or none has run on it" : l);
           }),
-          [...S.worstState.values()].indexOf("hollow") >= 0 ? el("span", {}, el("span", { className: "dot hatch", style: "--seg:" + fill("bronze") }), "✦ hatched: not assessed by an agent yet") : null,
+          [...S.worstState.values()].indexOf("hollow") >= 0 ? el("span", {}, el("span", { className: "dot hatch", style: "--seg:" + fill("bronze") }), "hatched: not assessed by an agent yet") : null,
           [...S.worstState.values()].indexOf("unrun") >= 0 ? el("span", {}, el("span", { className: "dot dots", style: "--seg:" + fill("silver") }), "◌ dotted: provisional, checks not run in this build") : null,
         ),
         grid,
@@ -3538,6 +3565,7 @@
                 el("span", { className: "outcome " + o, style: "margin:0", textContent: o === "unknown" ? "not run in this build" : o }),
                 basisBadge(basisOf(rule), false, true),
                 el("span", { className: "sub", textContent: "needed for " + rule.level }),
+                rule.rationale ? el("span", { className: "rwhy", textContent: "Why: " + firstSentence(rule.rationale).replace(/`/g, "") }) : null,
               ),
               scName ? el("div", { className: "sub" }, "Rule page: ", ruleLink(scName, n), " ", el("code", { className: "rid", textContent: n })) : null,
               rule.fix && o !== "unknown" ? el("div", { className: "fix" }, el("b", { textContent: "Fix: " }), ...rich(rule.fix)) : "",
@@ -3570,7 +3598,7 @@
         var further = order.filter(function (lv) {
           return laterLevels.has(lv);
         });
-        wrap.append(el("div", { className: "later-h", textContent: "Further up: " + plural(later.length, "more rule") + " needed for " + further.join(" and ") + ". Open one for its fix and why." }), ...later);
+        wrap.append(el("div", { className: "later-h", textContent: "Further up: " + plural(later.length, "more rule") + " needed for " + further.join(" and ") + ". Open one for its fix and evidence." }), ...later);
       }
       if (npass) {
         wrap.append(el("div", { className: "sub", style: "margin-top:10px", textContent: plural(npass, "check passes", "checks pass") }));
@@ -3838,7 +3866,7 @@
               el("b", { textContent: "Why it exists" }),
               def.rationale ? el("div", {}, ...rich(def.rationale)) : null,
               refs(def.links),
-              !(def.links || []).length && (sc.links || []).length ? el("div", { className: "sub", style: "margin-top:6px" }, "Read more, from the ", link("scorecard/" + enc(scName), "", title(D, scName)), " standard:") : null,
+              !(def.links || []).length && (sc.links || []).length ? el("div", { className: "sub", style: "margin-top:6px" }, "Read more, from the ", link("scorecard/" + enc(scName), "", title(D, scName)), " scorecard:") : null,
               !(def.links || []).length ? refs(sc.links) : null,
             )
           : el("p", { className: "sub", textContent: "This rule has no rationale yet." }),
@@ -3939,7 +3967,7 @@
                 )
               : null;
             var a = link("compare/" + enc(n), "factor", [
-              el("div", { className: "fh" }, el("span", { textContent: def.title || n }), standingChip(v)),
+              el("div", { className: "fh" }, el("span", { textContent: def.title || n }), standingChip(v, v === "ahead" && counts.ahead * 2 < total ? "narrowly ahead" : null)),
               fx,
               def.rationale || def.description ? el("p", {}, ...rich(firstSentence(def.rationale || def.description))) : null,
               bar,
@@ -4050,7 +4078,7 @@
           { className: "cmp-main" },
           el("div", { className: "kicker", textContent: "Head to head" }),
           el("h2", { className: "big", textContent: who(subject) + " vs " + who(peer) }),
-          el("p", { className: "verdict", style: "margin:0;font-size:17px" }, el("b", { textContent: headline }), behindNames.length ? el("span", {}, " Behind on ", ...behindNames.map(function (n, i) {
+          el("p", { className: "verdict", style: "margin:0;font-size:18px" }, el("b", { textContent: headline }), behindNames.length ? el("span", {}, " Behind on ", ...behindNames.map(function (n, i) {
             return el("span", {}, i ? ", " : "", link("compare/" + enc(n), "", title(D, n)), " (" + behindRules[n] + " of " + Object.keys(all[n].rules || {}).length + " rules)");
           }), behindNames.length === 1 ? ": if your teams rely on what that factor measures, read it first." : ": if your teams rely on what those factors measure, read them first.") : " Never behind."),
           el(
@@ -4073,6 +4101,7 @@
         el(
           "div",
           { className: "cmp-side" },
+          el("div", { className: "kicker", textContent: "Factors" }),
           el(
             "div",
             { className: "tally3" },
@@ -4162,13 +4191,13 @@
       if (brief.length || sources)
         hero.firstChild.querySelector(".rule-tally").after(
           el(
-            "p",
+            "div",
             { className: "sub cmp-prov" },
-            brief.length ? el("span", {}, el("b", { textContent: "Measured on: " }), brief.join(" · ") + ".") : null,
+            brief.length ? el("details", { className: "cmp-brief" }, el("summary", { textContent: "Builds, versions and harness measured" }), brief.join(" · ") + ".") : null,
             sources ? el("span", { className: "cmp-src" }, el("b", { textContent: "Evidence: " }), sources) : null,
           ),
         );
-      hero.firstChild.append(
+      hero.firstChild.querySelector(".rule-tally").after(
         el(
           "p",
           { className: "sub cmp-method", style: "margin:6px 0 0" },
@@ -4829,7 +4858,7 @@
             ...topFails.map(function (f) {
               var rl = ((sc.rules || {})[f[0]] || {}).level;
               var share = Math.round((f[1] / scored.length) * 100);
-              var fillSpan = el("span", { style: "flex-grow:0;background:" + (rl ? fill(rl) : "var(--faint)") });
+              var fillSpan = el("span", { style: "flex-grow:0;background:var(--fail)" });
               grow([fillSpan], [share]);
               var b = el(
                 "button",
@@ -4957,7 +4986,7 @@
       }).length;
       var split = splitUnassessed(D, active, parts);
       var statusLegend = legendEl(parts);
-      if (split.some(function (p) { return p.hollow; })) statusLegend.append(el("span", {}, el("span", { className: "dot hatch", style: "--seg:" + fill("bronze") }), "✦ hatched: not assessed"));
+      if (split.some(function (p) { return p.hollow; })) statusLegend.append(el("span", {}, el("span", { className: "dot hatch", style: "--seg:" + fill("bronze") }), "hatched: not assessed"));
       if (split.some(function (p) { return p.unrun; })) statusLegend.append(el("span", {}, el("span", { className: "dot dots", style: "--seg:" + fill("silver") }), "◌ dotted: provisional, checks not run"));
       var status = el(
         "div",
@@ -4992,7 +5021,7 @@
         whyEl = el(
           "div",
           { className: "rationale" },
-          el("b", { textContent: "Why this standard" }),
+          el("b", { textContent: "Why this scorecard" }),
           whyText,
           long
             ? el("button", {
