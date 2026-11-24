@@ -316,6 +316,13 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
   page and the track.
 - A quoted level on a track card ("ten", "clean") is its scorecard's own name for a level, and the
   tracks legend says so.
+- Wherever scorecards are listed (the overview's attention table, a track page, the Scorecards
+  tab), each row carries its why on a full-width second line, so the why never squeezes into the
+  name column.
+- On a narrow screen the tab bar scrolls sideways with an edge fade and keeps the current tab in
+  view, and the tracks legend folds under "How to read the rings, bars and medals".
+- A scorecard whose rules are all agent-judged says that the assessment is the evidence, so
+  whether one exists and still holds counts too.
 
 Not built: a change since the last snapshot beside each track ring. The report carries one snapshot
 and the committed baseline, which equals it on every published build; a pages build that also scored
