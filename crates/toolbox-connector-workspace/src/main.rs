@@ -806,12 +806,13 @@ impl Workspace {
         if self.portals.is_empty() || !kinds.contains(&"portal") {
             return;
         }
-        for rel in paths.iter().filter(|p| Self::matches(&self.portals, p)) {
-            out.record(
-                "portal",
-                &portals::id(rel),
-                portals::analyse(&self.root, rel),
-            );
+        let found: Vec<(&String, Value)> = paths
+            .iter()
+            .filter(|p| Self::matches(&self.portals, p))
+            .map(|rel| (rel, portals::analyse(&self.root, rel)))
+            .collect();
+        for (rel, rec) in portals::refuse_duplicates(found) {
+            out.record("portal", &portals::id(rel), rec);
         }
         out.snapshot_complete("portal");
     }

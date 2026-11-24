@@ -272,7 +272,6 @@ network and no Postgres.
 | Durable server runs (Postgres, D39) | Runs live in memory in `serve`; CLI runs are files. Durable runs are the durable-runtime track |
 | A `toolbox run` GitHub Action for `runner: github-workflow` children | The dispatch is built and tested against a fake API; the composite action that receives it is next |
 | A federated github-workflow run's verification | The parent sees the workflow's conclusion; the child's own verification needs the child's run record as a workflow artifact |
-| Duplicate child portal names | Two children with one name shadow each other; validation should name both |
 | Fan-out in one command | A fleet change is one run per child (a loop); `--all` waits for a use beyond scripts |
 | S8, S9, S11, S12 | §4 |
 

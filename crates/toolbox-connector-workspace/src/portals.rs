@@ -117,6 +117,31 @@ pub(crate) fn analyse(root: &Path, rel: &str) -> Value {
     })
 }
 
+/// Two child portals with one name would be one entity in the parent, so a run could reach either.
+/// Each of them gets an error naming the others' files, and offers no actions.
+pub(crate) fn refuse_duplicates<K>(found: Vec<(K, Value)>) -> Vec<(K, Value)> {
+    let mut files: std::collections::BTreeMap<String, Vec<String>> = Default::default();
+    for (_, r) in &found {
+        if let (Some(n), Some(f)) = (r["name"].as_str(), r["file"].as_str()) {
+            files.entry(n.to_owned()).or_default().push(f.to_owned());
+        }
+    }
+    found
+        .into_iter()
+        .map(|(k, mut r)| {
+            let name = r["name"].as_str().unwrap_or_default().to_owned();
+            if let Some(fs) = files.get(&name).filter(|fs| fs.len() > 1) {
+                r["error"] = json!(format!(
+                    "portal name {name} is declared by {}; rename all but one",
+                    fs.join(" and ")
+                ));
+                r["actions"] = json!([]);
+            }
+            (k, r)
+        })
+        .collect()
+}
+
 /// The record id: `portal:<manifest path>`.
 pub(crate) fn id(rel: &str) -> String {
     format!("portal:{rel}")
@@ -196,5 +221,25 @@ mod tests {
         let r = analyse(&root, "x/toolbox.yaml");
         assert!(r["error"].as_str().is_some());
         std::fs::remove_dir_all(&root).ok();
+    }
+
+    #[test]
+    fn two_portals_with_one_name_offer_nothing() {
+        let rec = |name: &str, file: &str| json!({"name": name, "file": file, "actions": [{"name": "release"}], "error": null});
+        let out = refuse_duplicates(vec![
+            (1, rec("svc", "a/.toolbox/toolbox.yaml")),
+            (2, rec("svc", "b/.toolbox/toolbox.yaml")),
+            (3, rec("web", "c/.toolbox/toolbox.yaml")),
+        ]);
+        for (_, r) in &out[..2] {
+            assert_eq!(r["actions"], json!([]));
+            let e = r["error"].as_str().unwrap();
+            assert!(
+                e.contains("a/.toolbox/toolbox.yaml and b/.toolbox/toolbox.yaml"),
+                "{e}"
+            );
+        }
+        assert_eq!(out[2].1["error"], Value::Null);
+        assert_eq!(out[2].1["actions"][0]["name"], "release");
     }
 }
