@@ -103,7 +103,7 @@ export interface ScorecardSpec<L extends string> {
   owner: string;
   levels: readonly L[];
   appliesTo?: Cel;
-  rules: readonly { name: string; level: NoInfer<L>; check: Cel; fix?: string; rationale?: string; links?: readonly Link[] }[];
+  rules: readonly { name: string; title?: string; level: NoInfer<L>; check: Cel; fix?: string; rationale?: string; links?: readonly Link[] }[];
   facets?: { summary?: Facet; details?: Facet };
 }
 type Facet = "public" | "owner" | "operator";

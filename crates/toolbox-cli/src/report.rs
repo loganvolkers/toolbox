@@ -1212,6 +1212,9 @@ fn scorecard_defs(m: &toolbox_model::Manifest) -> Map<String, Value> {
                         "check": r.check,
                         "basis": basis
                     });
+                    if let Some(t) = &r.title {
+                        def["title"] = json!(t.trim());
+                    }
                     if let Some(why) = &r.rationale {
                         def["rationale"] = json!(why.trim());
                     }

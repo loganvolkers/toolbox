@@ -302,6 +302,9 @@ pub struct Criterion {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Rule {
     pub name: String,
+    /// A short human name; reports spell out `name` when it is missing.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub title: Option<String>,
     pub level: String,
     pub check: String,
     /// CEL evaluated when the rule fails: what makes it fail (usually a list of items).

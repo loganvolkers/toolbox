@@ -670,6 +670,10 @@
               "name": {
                 "$ref": "#/$defs/name"
               },
+              "title": {
+                "type": "string",
+                "description": "A short human name for the rule; reports show it before the name and otherwise spell the name out."
+              },
               "level": {
                 "$ref": "#/$defs/name"
               },

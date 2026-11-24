@@ -46,7 +46,9 @@ D01M85MK7FCRXH2TRMRKXTNA5GT and was judged by the same blind design audit
    tracks, `facts`, `reads` and `fields` on comparisons, and `unassessed` (per scorecard with
    judged rules, the scored entities no assessment points at, whose judged passes mean nothing
    was looked at), each kind's `title`, and each scorecard's `appliesTo`, so a kind page can say
-   why some of its entities are not scored. Existing fields and deep links are unchanged.
+   why some of its entities are not scored. A rule may carry a `title` too; without one the report
+   spells its name out ("public-api-documented" reads "Public API documented") and keeps the name
+   beside it. Existing fields and deep links are unchanged, and `#scorecards` gains an index.
 7. **Reopen when** a judged rule is found that the reading of assessment relations misclasses,
    or readers on the audit's tasks still need the benchmark docs to understand a comparison.
 
