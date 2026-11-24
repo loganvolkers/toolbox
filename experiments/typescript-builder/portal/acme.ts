@@ -116,31 +116,65 @@ const GitHubAppInstallation = kind("GitHubAppInstallation", {
 
 const R = Repository.f; // typed CEL field paths: R.archived === "entity.archived"
 const ownership = scorecard("ownership", {
-  kind: Repository, owner: "group:platform", levels: ["bronze", "silver"],
+  kind: Repository,
+  rationale: `The owner is who answers for a repository and, through the derived owner tuple, who may see its
+    owner-only details. Bronze accepts an inferred owner; silver requires a claim backed by CODEOWNERS, a tier that
+    approvals depend on, and a protected branch, since a claim is only as safe as the branch that holds it.`,
+  links: [
+    { title: "CODEOWNERS-backed claims",
+      url: "https://github.com/loganvolkers/toolbox/blob/main/docs/authorization.md#48-authority-of-permission-relevant-claims-codeowners" },
+    { title: "D17 CODEOWNERS authority",
+      url: "https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7TCJ3280000000000000000.md" },
+  ],
+  owner: "group:platform", levels: ["bronze", "silver"],
   appliesTo: cel`!${R.archived}`,
   rules: [
     { name: "has-owner", level: "bronze", check: cel`${R.ownership}.status in ['verified', 'inferred']`,
-      fix: "Add catalog-info.yaml with spec.owner, backed by CODEOWNERS for that file." },
+      fix: "Add catalog-info.yaml with spec.owner, backed by CODEOWNERS for that file.",
+      rationale: "A repository nobody owns has nobody to fix its failing standards, approve changes to it or answer for an incident." },
     { name: "claim-verified", level: "silver", check: cel`${R.ownership}.status == 'verified'`,
-      fix: "Declare spec.owner in catalog-info.yaml and make that team a code owner of the file." },
+      fix: "Declare spec.owner in catalog-info.yaml and make that team a code owner of the file.",
+      rationale: `Ownership grants permissions, so anyone who can edit catalog-info.yaml could otherwise name any team as
+        owner. Requiring that team to own the file in CODEOWNERS means the claimed team reviews the claim.` },
     { name: "has-tier", level: "silver", check: cel`has(${R.tier})`,
-      fix: "Set spec.tier in catalog-info.yaml, or ask the platform team to set it in Toolbox." },
+      fix: "Set spec.tier in catalog-info.yaml, or ask the platform team to set it in Toolbox.",
+      rationale: `The tier decides whether installing an approved GitHub App on the repository needs security's approval;
+        without one, the policy cannot tell a critical repository from a sandbox.` },
     { name: "branch-protected", level: "silver", check: cel`${R.defaultBranchProtected}`,
-      fix: "Enable a ruleset protecting the default branch." },
+      fix: "Enable a ruleset protecting the default branch.",
+      rationale: `Without a ruleset, anyone with write access can push to the default branch unreviewed, including the
+        CODEOWNERS and catalog-info.yaml that ownership rests on.`,
+      links: [{ title: "GitHub rulesets",
+        url: "https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/about-rulesets" }] },
   ],
   facets: { summary: "public", details: "owner" },
 });
+const appsExample = { title: "Approved GitHub Apps example",
+  url: "https://github.com/loganvolkers/toolbox/blob/main/docs/examples/approved-github-apps.md" };
 const hygiene = scorecard("github-app-hygiene", {
-  kind: Repository, owner: "group:security", levels: ["bronze"], appliesTo: cel`!${R.archived}`,
+  kind: Repository,
+  rationale: `Every GitHub App installed on a repository acts on it with its own token, so each installation widens who
+    can read or change the code. Security keeps the approved list in policy, and a single bronze rule is enough because
+    any install outside it is a finding.`,
+  links: [appsExample],
+  owner: "group:security", levels: ["bronze"], appliesTo: cel`!${R.archived}`,
   rules: [{ name: "only-approved-apps", level: "bronze", check: cel`${R.installedApps}.all(a, a in policy.approvedApps)`,
-            fix: "Remove unapproved apps, or request approval with the request-new-app action." }],
+            fix: "Remove unapproved apps, or request approval with the request-new-app action.",
+            rationale: `An app installed outside the approved list has had no security review of its permissions or
+              vendor. Toolbox's own app gets no webhook for other apps' installs, so this check is how such drift is caught.` }],
   facets: { summary: "public", details: "owner" },
 });
 const appApproval = scorecard("app-approval", {
-  kind: GitHubApp, owner: "group:security", levels: ["bronze"], appliesTo: cel`${GitHubApp.f.slug} in policy.approvedApps`,
+  kind: GitHubApp,
+  rationale: `Security approves an app's permissions as they were when it was reviewed. If the app later asks for more,
+    the approval no longer describes what the app can do.`,
+  links: [appsExample],
+  owner: "group:security", levels: ["bronze"], appliesTo: cel`${GitHubApp.f.slug} in policy.approvedApps`,
   rules: [{ name: "permissions-match-snapshot", level: "bronze",
             check: cel`${GitHubApp.f.permissions} == policy.approvedApps[${GitHubApp.f.slug}].permissions`,
-            fix: "The app requests permissions beyond its approved snapshot; security must re-approve it." }],
+            fix: "The app requests permissions beyond its approved snapshot; security must re-approve it.",
+            rationale: `A vendor can widen an app's permissions after approval. Until security re-reviews them,
+              self-service installs would grant access nobody approved.` }],
   facets: { summary: "public", details: "public" },
 });
 

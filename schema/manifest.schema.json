@@ -69,6 +69,13 @@
         "$ref": "#/$defs/track"
       }
     },
+    "kindGroups": {
+      "type": "array",
+      "description": "Named groups of kinds that readers think of together (the docs, the code, the CI). Reports list the catalog group by group; a kind is in at most one group, and kinds in none are listed last.",
+      "items": {
+        "$ref": "#/$defs/kindGroup"
+      }
+    },
     "campaigns": {
       "type": "array",
       "description": "Time-bound goals over existing scorecards (D01M7Y11G0YZT23W26Z9D3XW68Y).",
@@ -683,6 +690,10 @@
         "name": {
           "$ref": "#/$defs/kindName"
         },
+        "title": {
+          "type": "string",
+          "description": "The name readers see (reports and the UI); defaults to the kind name split into words. Set it when two kinds would otherwise read alike."
+        },
         "description": {
           "type": "string",
           "description": "What this means, for people and agents reading entities (shown by get and in the UI)."
@@ -789,6 +800,17 @@
           "type": "string",
           "description": "What the standard is and why: shown by reports and `toolbox describe`."
         },
+        "rationale": {
+          "type": "string",
+          "description": "Why it matters: the outcome it protects or the failure it prevents, beyond what it checks and how to fix it. Reports show it beside the rule or scorecard."
+        },
+        "links": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/link"
+          },
+          "description": "Further reading behind it (decisions, design docs, outside sources)."
+        },
         "kind": {
           "$ref": "#/$defs/kindName"
         },
@@ -847,6 +869,10 @@
               "name": {
                 "$ref": "#/$defs/name"
               },
+              "title": {
+                "type": "string",
+                "description": "A short human name for the rule; reports show it before the name and otherwise spell the name out."
+              },
               "level": {
                 "$ref": "#/$defs/name"
               },
@@ -883,6 +909,17 @@
               },
               "fix": {
                 "type": "string"
+              },
+              "rationale": {
+                "type": "string",
+                "description": "Why it matters: the outcome it protects or the failure it prevents, beyond what it checks and how to fix it. Reports show it beside the rule or scorecard."
+              },
+              "links": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/link"
+                },
+                "description": "Further reading behind it (decisions, design docs, outside sources)."
               },
               "dataFrom": {
                 "type": "string",
@@ -961,6 +998,39 @@
         },
         "description": {
           "type": "string"
+        },
+        "links": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/link"
+          },
+          "description": "Further reading behind it (decisions, design docs, outside sources)."
+        }
+      }
+    },
+    "kindGroup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "kinds"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/name"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "kinds": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/kindName"
+          }
         }
       }
     },
@@ -1515,6 +1585,26 @@
               }
             }
           }
+        }
+      }
+    },
+    "link": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "url"
+      ],
+      "description": "Further reading: a decision, design doc or outside source. Reports link to it rather than repeat it.",
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "url": {
+          "type": "string",
+          "pattern": "^https?://",
+          "description": "An absolute http(s) URL, so it resolves wherever the report is hosted."
         }
       }
     }

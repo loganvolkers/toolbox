@@ -42,6 +42,45 @@ policies:
     - maintainer-plugin
     - maintainer-supply-chain
 
+# How the catalog is grouped for readers (report and UI). Every kind is in one group.
+kindGroups:
+  - name: code
+    title: Code
+    description: >-
+      The Rust crates, their dependencies, and the other code we maintain:
+      scripts, integration tests and schemas.
+    kinds: [Crate, Dependency, PackageJson, PythonScript, File, JsonSchema]
+  - name: surfaces
+    title: Agent and user surfaces
+    description: >-
+      What people and agents call: CLI commands, MCP tools, connectors, agent
+      skills and plugins.
+    kinds: [Command, McpTool, Connector, Skill, Plugin]
+  - name: docs
+    title: Docs and examples
+    description: >-
+      What people and agents read: design and reference docs, the public site,
+      examples and agent instruction files.
+    kinds: [Doc, SitePage, Example, AgentDoc]
+  - name: delivery
+    title: CI and supply chain
+    description: >-
+      How changes ship: workflows, the actions they use, OpenSSF checks and
+      the repository's settings.
+    kinds: [Workflow, ActionDependency, OpenSSFCheck, Repository]
+  - name: standards
+    title: Standards and judgement
+    description: >-
+      The portal's own model, scored like any other code: scorecards, rules,
+      kinds, fields, connectors, rubrics, and the agents' assessments.
+    kinds: [Scorecard, Rule, Kind, Field, PortalConnector, Rubric, Assessment]
+  - name: evidence
+    title: SDLC and evidence
+    description: >-
+      Whether Toolbox delivers: the SDLC layers and stages, DX Benchmarks, the
+      products compared, and runtime observability.
+    kinds: [SdlcLayer, SdlcStage, Benchmark, Product, Observability]
+
 connectors:
   - name: workspace
     package: builtin:workspace # reads files; fast, so it resyncs often
@@ -320,7 +359,7 @@ include:
   - waivers.yaml
   # Our GitHub Actions standards, as the package pilots will use (D89): connectors, tools, kinds, scorecards.
   - package: ../packages/github-actions
-    with: {githubOrg: loganvolkers, githubRepo: toolbox}
+    with: {githubOrg: loganvolkers, githubRepo: toolbox, track: delivery}
   # OpenSSF Scorecard, an existing standard and its tool, carried as it is: its checks and scores
   # are OpenSSF's; the box adds the ratchet and a campaign (docs/design/openssf-template.md).
   # It replaces this portal's own versions of SAST and Security-Policy.
@@ -330,6 +369,7 @@ include:
     with:
       name: maintainer-openssf
       kind: OpenSSFCheck
+      track: delivery
       command:
         - scorecard
         - --local
@@ -345,6 +385,8 @@ include:
     with:
       name: maintainer-python
       kind: PythonScript
+      kindTitle: Python file
+      track: maintainer
       tool: ruff
       version: 0.14.0
       install: {pypi: ruff, mise: pipx:ruff, aqua: astral-sh/ruff}

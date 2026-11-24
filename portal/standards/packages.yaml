@@ -4,6 +4,9 @@
 kinds:
   # npm manifests (docs/design/package-standards.md).
   - name: PackageJson
+    description: >-
+      An npm manifest in this repository: its version ranges, lockfile,
+      engines and the check scripts CI installs and runs.
     identityFrom: [connector:workspace]
     fields:
       path: {type: string}
@@ -41,7 +44,19 @@ scorecards:
       Each npm manifest we keep: private when it is an application, locked,
       and free of credentials, so installs are reproducible
       (docs/design/package-standards.md).
+    rationale: >-
+      These manifests decide what code npm installs into the builds this
+      repository runs, so an unbounded range, a git dependency or a missing
+      lockfile lets that code change without a review. Bronze bounds what can
+      be installed; silver pins it and gives CI something to run; gold makes
+      the package self-describing and has CI install exactly the lockfile.
+    links:
+    - title: Package standards
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/package-standards.md
+    - title: 'Decision: npm manifests are catalogued'
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7W56B7R0000000000000000.md
     owner: group:maintainers
+    track: maintainer
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze}
     rules:
@@ -52,6 +67,9 @@ scorecards:
       fix: >-
         Set name in package.json. npm uses it as the package identity, including
         when the package is private.
+      rationale: >-
+        Lockfiles, workspaces and every report refer to a package by its name;
+        an unnamed manifest cannot be depended on or told apart.
     - name: publish-intent
       level: bronze
       check: entity.private || entity.version != ''
@@ -59,6 +77,13 @@ scorecards:
       fix: >-
         Set private to true for a package this repository does not publish, or
         set version before publishing. npm refuses to publish a private package.
+      rationale: >-
+        A public package with no version is neither protected from an accidental
+        npm publish nor ready for a deliberate one. Marking an application
+        private states that it is not meant for the registry.
+      links:
+      - title: npm package.json
+        url: https://docs.npmjs.com/cli/v12/configuring-npm/package-json/
     - name: version-bounded
       level: bronze
       check: entity.wildcardRanges.size() == 0
@@ -66,6 +91,10 @@ scorecards:
       fix: >-
         Replace the ranges in the evidence. A star, x, latest or unbounded
         minimum can move without a review. Caret and tilde ranges stay bounded.
+      rationale: >-
+        An unbounded range resolves to whatever the registry serves at install
+        time, so a breaking major version or a compromised release can enter the
+        build with no change to review.
     - name: from-a-registry
       level: bronze
       check: entity.gitRanges.size() == 0
@@ -73,6 +102,9 @@ scorecards:
       fix: >-
         Depend on a registry version. The evidence names a git URL or a tarball
         URL instead of a version the registry serves.
+      rationale: >-
+        A git or tarball URL skips the registry: no version range bounds it, and
+        whoever controls that host or branch decides what gets installed.
     - name: locked
       level: silver
       check: entity.lockfile != ''
@@ -83,6 +115,13 @@ scorecards:
         Commit a lockfile beside package.json, or a workspace-root
         pnpm-lock.yaml / yarn.lock that covers this package. package-lock.json
         records an integrity hash for every installed package.
+      rationale: >-
+        Without a lockfile every install resolves the ranges again, so two
+        builds of the same commit can get different code, including transitive
+        dependencies nobody chose.
+      links:
+      - title: OpenSSF npm best practices
+        url: https://github.com/ossf/package-manager-best-practices/blob/main/published/npm.md
     - name: has-a-check
       level: silver
       check: entity.checkScripts > 0
@@ -90,6 +129,9 @@ scorecards:
       fix: >-
         Add a test, build, check or typecheck script. npm's guidance is to keep
         a smoke test, and this repository runs build and check in CI.
+      rationale: >-
+        A package with no test, build or check script gives CI nothing to run,
+        so a change that breaks it can merge unnoticed.
     - name: described
       level: gold
       check: entity.descriptionChars > 0
@@ -97,6 +139,9 @@ scorecards:
       fix: >-
         Add a description. npm's package.json document says to put a description
         in it, so a reader can tell packages apart.
+      rationale: >-
+        Without a description a reader has to open the code to learn what a
+        package is for, which matters most in a repository with several.
     - name: engines-declared
       level: gold
       check: entity.engines
@@ -104,6 +149,10 @@ scorecards:
       fix: >-
         Set engines.node to the Node version this package is developed with.
         That is the field npm documents for the runtime.
+      rationale: >-
+        Without engines.node the supported runtime is unwritten, so a
+        contributor or a CI image on another Node version hits failures that
+        look like bugs in the code.
     - name: ci-installs-from-the-lockfile
       level: gold
       check: "!entity.ciUsesInstall"
@@ -114,6 +163,13 @@ scorecards:
         Change this package's CI install in `.github/workflows/` to `npm ci`, or
         to `pnpm install --frozen-lockfile`. Those commands install the lockfile
         as written and do not rewrite it.
+      rationale: >-
+        An unlocked install can update the lockfile during the job, so CI tests
+        a dependency set that no commit records, and the lockfile's pins protect
+        nothing.
+      links:
+      - title: OpenSSF npm best practices
+        url: https://github.com/ossf/package-manager-best-practices/blob/main/published/npm.md
     - name: no-hardcoded-secrets
       level: bronze
       check: entity.secretHits.size() == 0
@@ -121,4 +177,8 @@ scorecards:
       fix: >-
         Remove the credential in the evidence. The manifest is committed and
         read by the installer.
+      rationale: >-
+        A credential in a committed manifest is readable by everyone with access
+        to the repository and stays in its history after it is removed, so it
+        has to be revoked.
     facets: {summary: public, details: public}

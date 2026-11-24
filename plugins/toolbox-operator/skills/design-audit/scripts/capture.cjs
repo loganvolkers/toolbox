@@ -75,6 +75,16 @@ function measure() {
   return out;
 }
 
+// Entry animations caught mid-way read as faded, low-contrast panels to auditors and axe.
+async function settle(page) {
+  await page.evaluate(() => {
+    const roots = [document];
+    for (let i = 0; i < roots.length; i++) for (const n of roots[i].querySelectorAll("*")) if (n.shadowRoot) roots.push(n.shadowRoot);
+    const running = roots.flatMap((r) => r.getAnimations()).filter((x) => x.effect?.getComputedTiming().endTime !== Infinity);
+    return Promise.race([Promise.all(running.map((x) => x.finished.catch(() => {}))), new Promise((r) => setTimeout(r, 3000))]);
+  });
+}
+
 async function main() {
   const a = args();
   fs.mkdirSync(a.out, { recursive: true });
@@ -97,16 +107,26 @@ async function main() {
           process.exitCode = 1;
         }
         await page.waitForTimeout(400);
+        await settle(page);
         await page.screenshot({ path: path.join(a.out, `${slug}-${vp}-${scheme}.png`) });
+        if (vp === "mobile" && scheme === "light") {
+          (metrics[slug] = metrics[slug] || {}).mobileOverflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+        }
         if (vp === "desktop" && scheme === "light") {
+          // A full-page shot resizes the viewport, which can replay entry animations mid-capture.
+          await page.emulateMedia({ reducedMotion: "reduce" });
+          await settle(page);
           await page.screenshot({ path: path.join(a.out, `${slug}-desktop-light-full.png`), fullPage: true });
+          await settle(page);
           const m = await page.evaluate(measure);
           await page.addScriptTag({ content: axeSource });
           const axe = await page.evaluate(async () => {
-            const r = await window.axe.run(document, { resultTypes: ["violations"] });
+            // axe leaves WCAG 2.2 rules such as target-size out unless their tag is asked for.
+            const tags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"];
+            const r = await window.axe.run(document, { resultTypes: ["violations"], runOnly: { type: "tag", values: tags } });
             return r.violations.map((v) => ({ id: v.id, impact: v.impact, nodes: v.nodes.length }));
           });
-          metrics[slug] = { ...m, axe };
+          metrics[slug] = { ...metrics[slug], ...m, axe };
         }
         await ctx.close();
       }
@@ -116,7 +136,7 @@ async function main() {
   const summary = Object.fromEntries(Object.entries(metrics).map(([k, m]) => [k, {
     monoShare: m.monoShare, distinctFontSizes: m.distinctFontSizes, distinctHues: m.distinctHues,
     foldWords: m.foldWords, headings: m.headings, interactive: m.interactive, smallTargets: m.smallTargets,
-    svg: m.svg, pageHeight: m.pageHeight,
+    svg: m.svg, pageHeight: m.pageHeight, mobileOverflow: m.mobileOverflow,
     axeSeriousNodes: m.axe.filter((v) => v.impact === "serious" || v.impact === "critical").reduce((n, v) => n + v.nodes, 0),
     axe: m.axe.map((v) => `${v.id}:${v.impact}x${v.nodes}`).join(" "),
   }]));

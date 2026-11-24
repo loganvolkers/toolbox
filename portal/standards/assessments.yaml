@@ -146,7 +146,21 @@ scorecards:
       What every assessment must contain to be worth reading: a named
       assessor, suggestions for findings and citations that resolve in the
       repository (D80).
+    rationale: >-
+      Agents act on assessments and review cards read them, so a malformed one
+      misleads twice: a finding without a suggestion can't be acted on, and a
+      reason without a citation can't be checked. Bronze is the ratcheted
+      floor every new assessment must meet; silver and gold ask for citations,
+      first on findings, then on every verdict.
+    links:
+    - title: 'Decision: assessments are scored'
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WJVW700000000000000000.md
+    - title: Scorecards for scorecards
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#61-assessments-and-rubrics-are-standards-too-d80
+    - title: assess-entity skill
+      url: https://github.com/loganvolkers/toolbox/blob/main/plugins/toolbox-operator/skills/assess-entity/SKILL.md
     owner: group:maintainers
+    track: standards
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze} # a new assessment must name its assessor and suggest fixes
     rules:
@@ -157,6 +171,9 @@ scorecards:
       fix: >-
         Add a `suggestion:` to each listed fail or unsure verdict: the change
         that would make it pass.
+      rationale: >-
+        A fail or unsure verdict with no suggested change leaves the reader to
+        rediscover the fix, so the finding tends to go unacted.
     - name: assessor-named
       level: bronze
       check: has(entity.assessorName) && entity.assessorName.size() > 0
@@ -164,6 +181,10 @@ scorecards:
       fix: >-
         Set `assessor.name` to the agent harness or person who made the
         assessment.
+      rationale: >-
+        An unnamed assessment can't be weighed or challenged, and
+        review-assessment needs the name to tell an independent review from a
+        self-review.
     - name: cites-for-findings
       level: silver
       check: >-
@@ -176,6 +197,10 @@ scorecards:
         repository path (`crates/x/src/lib.rs:40`), a file name only one file
         has, a decision or question id that exists (D71, Q10), or a full URL. A
         section sign or a bare number alone isn't checkable.
+      rationale: >-
+        A finding that cites nothing a reader can open can be neither verified
+        nor disputed; on the first run, 6 of 9 assessments fell below silver
+        because their reasons named a behaviour without a path or a number.
     - name: cites-everything
       level: gold
       check: entity.uncited.size() == 0
@@ -184,6 +209,10 @@ scorecards:
         Cite a source in every listed reason, passes included, in the same forms
         as cites-for-findings (a path, a unique file name, an existing decision
         or question id, a URL), so a reviewer can check the verdict.
+      rationale: >-
+        A pass is a claim too; without a citation a reviewer can't tell a
+        checked pass from a guess, and a wrong pass hides a problem the
+        assessment was meant to find.
     facets: {summary: public, details: public}
 
   # Judgement of judgement. Stops here: reviews made with assessment-quality are not reviewed.
@@ -194,7 +223,21 @@ scorecards:
       Each assessment reviewed against assessment-quality by another assessor,
       advisory; reviews of reviews are not made (D80,
       D01M831P5QWJQ4A2FT85N5MXJQF).
+    rationale: >-
+      A deterministic check sees that an assessment cites something, not that
+      the source says what the reason claims; a second assessor's review
+      checks that. Reviews stop at one level, so assessments made with
+      assessment-quality are skipped, and the card is advisory because a
+      review goes stale on every edit.
+    links:
+    - title: 'Decision: assessments are reviewed'
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WJVW700000000000000000.md
+    - title: Findings first decision
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M831P5QWJQ4A2FT85N5MXJQF.md
+    - title: Meta standards review
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/meta-standards-review.md
     owner: group:maintainers
+    track: standards
     levels: [bronze, silver, gold]
     ratchet: {advisory: true}
     appliesTo: entity.rubric != 'assessment-quality'
@@ -209,6 +252,10 @@ scorecards:
         A current assessment-quality assessment failed the listed criteria: act
         on its suggestions (portal/assessments/), then re-assess. If the finding
         is wrong, say why in a new assessment by another assessor.
+      rationale: >-
+        Failing reviews were lost among the unreviewed lines and went unacted
+        for days; putting the assessment at none makes an open finding head the
+        report until it is fixed or disputed.
     - name: assessed
       level: silver
       check: entity.reviewState == 'fresh' && !entity.selfReviewed
@@ -220,6 +267,10 @@ scorecards:
       fix: >-
         Run `toolbox assess brief <assessment id> --portal portal`; a different
         agent or person should review it.
+      rationale: >-
+        A review by the assessment's own assessor repeats its blind spots and is
+        no independent check; one of the first three assessment reviews was a
+        self-review.
     - name: passes-review
       level: gold
       check: >-
@@ -237,6 +288,10 @@ scorecards:
         then have it reviewed again. For an item marked "fix the review", the
         review file is at fault: its reasons must cite what they rest on,
         including this assessment's file or the sources it cites.
+      rationale: >-
+        Gold means an independent reviewer checked the assessment against its
+        own sources and found it sound; a review that cites only unrelated files
+        can't have checked it.
     - name: no-doubts
       level: gold
       check: entity.reviewState == 'fresh' && entity.reviewUnsure.size() == 0
@@ -246,6 +301,10 @@ scorecards:
       fix: >-
         Resolve what the reviewer was unsure of, usually by citing the source a
         verdict rests on.
+      rationale: >-
+        A reviewer's doubt usually means a verdict rests on taste rather than a
+        cited source, so a second assessor reading the same sources might reach
+        a different one.
     facets: {summary: public, details: public}
 
 rubrics:

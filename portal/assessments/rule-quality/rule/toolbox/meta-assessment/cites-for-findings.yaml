@@ -1,9 +1,9 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/meta-assessment/cites-for-findings
 rubric: rule-quality
-subjectHash: 61854bdf6cde
+subjectHash: 44ab8df68131
 assessor: {kind: agent, name: cursor-cloud-agent, model: claude-opus-5.5}
-at: 2026-11-23
+at: 2026-11-24
 verdicts:
   - criterion: measures-intent
     verdict: pass
@@ -26,7 +26,7 @@ verdicts:
       (assessment.rs:30-35). What remains is a deliberate false citation (an
       unrelated existing path, or a URL that is never fetched); that is what
       assessment-quality's `supported` criterion catches
-      (portal/standards/assessments.yaml:260-264), so the cheapest honest move
+      (portal/standards/assessments.yaml:319-323), so the cheapest honest move
       is to cite the file actually read.
   - criterion: fix-leads-to-pass
     verdict: pass
@@ -34,7 +34,7 @@ verdicts:
       The fix now names the forms the code accepts (an existing path, a unique
       file name, an existing D or Q id, a full URL) and says a section sign or
       a bare number alone doesn't count
-      (portal/standards/assessments.yaml:172-177), matching
+      (portal/standards/assessments.yaml:193-198), matching
       crates/toolbox-connect/src/assessment.rs:10-14. Following it makes a
       listed criterion leave `uncited`.
   - criterion: threshold-justified
@@ -44,8 +44,12 @@ verdicts:
       docs/design/scorecards-for-scorecards.md:295 and D80, with gold for
       every reason.
 summary: >-
-  The earlier findings are fixed: citations must resolve, a shared file
-  name or a bare `https://` no longer counts, and the fix matches the
-  code. The design doc's row at
+  Re-assessed after the rule gained a rationale: its check, evidence, fix
+  and level are the same as on main, as is the code the reasons cite, so
+  the verdicts stand; line numbers are updated for the rationale lines
+  inserted above them. The rationale states the why without claiming more
+  than the check sees. The earlier findings are fixed: citations must
+  resolve, a shared file name or a bare `https://` no longer counts, and
+  the fix matches the code. The design doc's row at
   docs/design/scorecards-for-scorecards.md:295 still offers `§4` and "a
   number" as checkable and should be updated to match the fix.

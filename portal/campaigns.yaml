@@ -3,18 +3,105 @@
 
 tracks:
   - name: maintainer
-    title: Maintainer quality
+    title: Code quality
     owner: group:maintainers
-    description: Long-term standards for building Toolbox itself.
+    description: >-
+      Toolbox's own code: the Rust crates, their dependencies, schemas,
+      connectors, scripts and runtime signals, and the repository level they
+      roll up to.
+    links:
+    - title: Maintainer SDLC
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/maintainer-sdlc.md
+    - title: Toolbox for Toolbox
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/toolbox-for-toolbox.md
+  - name: delivery
+    title: CI and supply chain
+    owner: group:maintainers
+    description: >-
+      How a change ships: workflows that are secure, reliable and fast, pinned
+      actions, OpenSSF checks and the repository's security settings.
+    links:
+    - title: GitHub Actions standards
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/github-actions-standards.md
+    - {title: OpenSSF Scorecard, url: https://scorecard.dev/}
+  - name: docs
+    title: Docs people and agents read
+    owner: group:maintainers
+    description: >-
+      Design docs, the public site, examples agents copy and the agent
+      instruction files: each current, linked and readable.
+    links:
+    - title: Writing style rules
+      url: https://github.com/loganvolkers/toolbox/blob/main/AGENTS.md
   - name: operator
     title: Operator experience
     owner: group:maintainers
-    description: Portal author and agent operator surfaces.
+    description: >-
+      What portal authors and their agents touch: CLI commands, MCP tools, and
+      the agent skills and plugins that teach them.
+    links:
+    - title: Operator SDLC
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/sdlc.md
+    - title: Agent plugins
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/agent-plugins.md
+  - name: standards
+    title: Standards that check themselves
+    owner: group:maintainers
+    description: >-
+      The portal's scorecards, rules, kinds and assessments, scored for form
+      by deterministic checks and for quality by independent agent reviews.
+    links:
+    - title: Scorecards for scorecards
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md
+    - title: Do the meta scorecards measure anything?
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/meta-standards-review.md
+  - name: evidence
+    title: Proving value
+    owner: group:maintainers
+    description: >-
+      Whether Toolbox delivers on its claims: every SDLC layer and stage
+      covered, and DX Benchmarks run on real forks against the strongest
+      alternative.
+    links:
+    - title: The four SDLC layers
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/sdlc.md
+    - title: DX Benchmarks
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/dx-benchmarks.md
+  - name: vs-backstage
+    title: Against Backstage
+    owner: group:maintainers
+    description: >-
+      Toolbox 581be50 against Backstage 1.57.0: timed factors are medians of 5
+      scripted runs on a 10,000-component catalog, and on 2026-11-23 an
+      independent agent adjudicator recomputed every number and upheld the
+      verdict. Toolbox 581be50 is a commit after v0.1.1, compiled as a release
+      build, and its install facts come from the published v0.1.1 download;
+      each product was installed as its project documents on one 4 vCPU Intel
+      Xeon VM with Linux 6.12 and one Postgres 16, and the load generator
+      shares the same 4 vCPU. Capability and fact factors are probes and facts
+      with evidence, and the capability scenarios come from the Backstage
+      parity audit, so they favour what Backstage ships. Toolbox's maintainers
+      chose the factors from ISO/IEC 25010's quality characteristics, each
+      with a rule that could show Toolbox worse, and set every rule's bar
+      before the run. Both products are scored on the same rules, factor by
+      factor. The adjudicator was a fresh coding agent outside the benchmark:
+      it designed none of it and decides no rule, so every rule stays
+      measured; it recomputed the numbers from the raw results and checked the
+      scoring.
+    links:
+    - title: Results
+      url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md
+    - title: How it was run
+      url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/README.md
+    - title: Adjudication
+      url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/ADJUDICATION.md
+    - title: Design
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md
 
 campaigns:
   - name: skill-silver
     title: Skills to silver
-    track: maintainer
+    track: operator
     owner: group:maintainers
     description: Every shipped agent skill reaches silver on maintainer-skill.
     start: 2026-11-01
@@ -33,7 +120,7 @@ campaigns:
     includes: [{scorecard: cli-skill, atLeast: bronze}]
   - name: close-review-findings
     title: Close the open review findings
-    track: maintainer
+    track: standards
     owner: group:maintainers
     description: >-
       Act on every current rule-quality and scorecard-quality finding: fix the

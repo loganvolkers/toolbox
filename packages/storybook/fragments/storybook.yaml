@@ -38,6 +38,16 @@ kinds:
 
 scorecards:
   - name: storybook-catalog
+    rationale: >-
+      A Storybook is the catalog where designers, product and agents see each
+      component in each state. It helps only if it builds, has stories and is
+      tested: an unbuilt Storybook rots quietly, and one whose accessibility
+      checks only warn lets violations ship.
+    links:
+    - title: Storybook package decision
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7YNZFP68W0DR24PEA6T3FVM.md
+    - title: 'Storybook: accessibility tests'
+      url: https://storybook.js.org/docs/writing-tests/accessibility-testing
     kind: Storybook
     description: >-
       A Storybook catalog: config, the dependency and stories; the a11y addon,
@@ -55,6 +65,9 @@ scorecards:
       fix: >-
         Add a Storybook main config (e.g. .storybook/main.ts) next to the app
         package.
+      rationale: >-
+        Without a main config Storybook cannot find stories or addons, so there
+        is no catalog to run.
     - name: has-storybook-dep
       level: bronze
       check: entity.hasStorybookDep
@@ -62,6 +75,9 @@ scorecards:
         entity.hasStorybookDep ? ['storybook@' + entity.storybookVersion] : ['no
         storybook dependency in package.json']
       fix: Add storybook to the package's dependencies or devDependencies.
+      rationale: >-
+        Without the dependency, the version is whatever a global install
+        provides, and the catalog builds differently on each machine.
     - name: has-stories
       level: bronze
       check: entity.hasStories
@@ -69,6 +85,9 @@ scorecards:
         entity.hasStories ? [string(entity.storyFileCount) + ' *.stories.*
         files'] : ['no *.stories.* files under the package']
       fix: Add at least one CSF story file (*.stories.ts or *.stories.tsx).
+      rationale: >-
+        A Storybook with no stories catalogs nothing. The first story is the one
+        later ones copy.
     - name: a11y-addon
       level: silver
       check: "!${param:requireA11yAddon} || entity.hasA11yAddon"
@@ -78,6 +97,13 @@ scorecards:
       fix: >-
         Install @storybook/addon-a11y and list it under addons in
         .storybook/main.
+      rationale: >-
+        The a11y addon runs axe on every story, so accessibility problems show
+        up next to the component that causes them, when they are cheapest to
+        fix.
+      links:
+      - title: 'Storybook: accessibility tests'
+        url: https://storybook.js.org/docs/writing-tests/accessibility-testing
     - name: telemetry-disabled
       level: silver
       check: entity.telemetryDisabled
@@ -85,6 +111,13 @@ scorecards:
         entity.telemetryDisabled ? ['core.disableTelemetry: true'] : ['Storybook
         telemetry is not disabled in main']
       fix: Set core.disableTelemetry to true in .storybook/main.
+      rationale: >-
+        Storybook sends usage data by default. Turning it off in config makes
+        the privacy choice once for everyone, instead of leaving it to each
+        developer's environment.
+      links:
+      - title: 'Storybook: telemetry'
+        url: https://storybook.js.org/docs/configure/telemetry
     - name: ci-builds-storybook
       level: silver
       check: entity.ciBuildsStorybook
@@ -94,6 +127,9 @@ scorecards:
       fix: >-
         Add a CI step that builds Storybook (e.g. pnpm storybook:build) so
         stories compile on every PR.
+      rationale: >-
+        A Storybook that CI never builds breaks unnoticed when components
+        change, and is found broken only when someone needs it.
     - name: ci-tests-stories
       level: gold
       check: entity.ciTestsStories
@@ -103,6 +139,10 @@ scorecards:
       fix: >-
         Run story tests in CI (Playwright against the static build, test-runner,
         or test:stories) so render and a11y regressions fail the gate.
+      rationale: >-
+        Building proves stories compile, not that they render. Running them as
+        tests in CI catches render errors and accessibility regressions on every
+        change.
     - name: a11y-fails-on-violation
       level: gold
       check: entity.a11yFailsOnViolation
@@ -112,4 +152,10 @@ scorecards:
       fix: >-
         In .storybook/preview, set parameters.a11y.test to 'error' so axe
         violations fail the Storybook test run.
+      rationale: >-
+        By default the a11y addon only reports. Until violations fail the test
+        run, they pile up as warnings nobody reads.
+      links:
+      - title: 'Storybook: accessibility tests'
+        url: https://storybook.js.org/docs/writing-tests/accessibility-testing
     facets: {summary: public, details: public}

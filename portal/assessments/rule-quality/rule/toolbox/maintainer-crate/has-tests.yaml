@@ -1,9 +1,9 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/maintainer-crate/has-tests
 rubric: rule-quality
-subjectHash: 2ec4a8963d60
-assessor: {kind: agent, name: cursor-rules-assessor, model: claude-opus-5.5}
-at: 2026-11-23
+subjectHash: 0b84033f7e01
+assessor: {kind: agent, name: cursor-cloud-agent, model: claude-opus-5.5}
+at: 2026-11-24
 verdicts:
   - criterion: measures-intent
     verdict: fail
@@ -38,9 +38,9 @@ verdicts:
       `.unwrap()`/`.expect()` is an assert (rust.rs:225-235). A scratch crate
       whose only test is that line, with a broken `add` returning `a - b`,
       reported unitTests 1 and testsWithoutAsserts [] from the connector, so
-      has-tests passes (portal/standards/crates.yaml:158-169), and `cargo
+      has-tests passes (portal/standards/crates.yaml:178-193), and `cargo
       test` passes too. `assert!(1 == 1)` and `Some(x).unwrap()` also count.
-      tests-scale-with-code counts the same tests (crates.yaml:170-179), so
+      tests-scale-with-code counts the same tests (crates.yaml:194-210), so
       padding with such tests passes silver.
     suggestion: >-
       Count an assert, unwrap or `?` only when the expression reaches an item
@@ -52,9 +52,9 @@ verdicts:
     verdict: pass
     reason: >-
       The evidence is either `no #[test] in src/ or tests/` or each test as
-      `path (file:line) asserts nothing` (crates.yaml:163-165,
+      `path (file:line) asserts nothing` (crates.yaml:183-185,
       rust.rs:145-151). The fix says to add a #[test] or give each listed test
-      an assert (crates.yaml:166-169). A direct non-trivial `assert!` in the
+      an assert (crates.yaml:186-189). A direct non-trivial `assert!` in the
       listed test passes, whatever caused the listing, including the
       cross-file and `ensure!` cases above.
   - criterion: threshold-justified
@@ -68,9 +68,14 @@ verdicts:
       size-relative bar is the separate silver rule, justified at
       thresholds.md:37.
 summary: >-
-  The checker now counts same-file helpers and `?`, and rejects
-  `assert!(true)` and `assert_eq!(x, x)`. It still resolves helpers per
-  file and by bare name, so cross-file, `ensure!` and `prop_assert!`
-  checks are missed and an unrelated unwrapping `new` makes `Vec::new()`
-  count. A lone `"1".parse::<i32>().unwrap()` still passes the rule on a
-  broken crate.
+  Re-assessed after the rule gained a rationale: its check, evidence, fix
+  and level are the same as on main, as is the code the reasons cite, so
+  the verdicts stand; crates.yaml line numbers are updated for the
+  scorecard's title, rationale, links and track and the rule rationales
+  inserted above them. The rationale states the why without claiming more
+  than the check sees. The checker now counts same-file helpers and `?`,
+  and rejects `assert!(true)` and `assert_eq!(x, x)`. It still resolves
+  helpers per file and by bare name, so cross-file, `ensure!` and
+  `prop_assert!` checks are missed and an unrelated unwrapping `new` makes
+  `Vec::new()` count. A lone `"1".parse::<i32>().unwrap()` still passes
+  the rule on a broken crate.

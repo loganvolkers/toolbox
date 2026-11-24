@@ -1,9 +1,9 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/meta-rule/readable
 rubric: rule-quality
-subjectHash: b175d260833a
+subjectHash: 5447c6c838bc
 assessor: {kind: agent, name: cursor-cloud-agent, model: claude-opus-5.5}
-at: 2026-11-23
+at: 2026-11-24
 verdicts:
   - criterion: measures-intent
     verdict: pass
@@ -12,20 +12,20 @@ verdicts:
       (crates/toolbox-cli/src/meta.rs:182-188, via toolbox_expr::analysis), so
       formatting and identifier length don't change it, and the number of
       nodes is a fair stand-in for how much a reader must hold at once. The
-      check is at portal/standards/meta.yaml:411-413.
+      check is at portal/standards/meta.yaml:484-490.
   - criterion: hard-to-game
     verdict: pass
     reason: >-
       Moving logic into a computed field is the intended fix, and such fields
       are scored by meta-field's `computed-readable` (at most 60 nodes, no
-      nested loops, portal/standards/meta.yaml:597-606). Splitting a check
+      nested loops, portal/standards/meta.yaml:800-813). Splitting a check
       into two rules or moving logic into the connector is also the right
       thing.
   - criterion: fix-leads-to-pass
     verdict: pass
     reason: >-
       The fix names where to move the logic (a computed field or the
-      connector, portal/standards/meta.yaml:417-419), and the evidence gives
+      connector, portal/standards/meta.yaml:494-496), and the evidence gives
       the node count against 30.
   - criterion: threshold-justified
     verdict: pass
@@ -35,7 +35,12 @@ verdicts:
       gold to silver: every rule meets it, so it is a guard, not what makes
       gold.
 summary: >-
-  The only change since the last assessment is the level, gold to silver,
-  and docs/design/thresholds.md:41 justifies it. The portal tests pin only
-  its fail outcome (portal/tests/standards.test.yaml:251-256), which
-  meta-rule's pins-both-outcomes reports separately.
+  Re-assessed after the rule gained a rationale: its check, evidence, fix
+  and level are the same as on main, as is the code the reasons cite, so
+  the verdicts stand; line numbers are updated for the rationale lines
+  inserted above them. The rationale states the why without claiming more
+  than the check sees. The only change since the last assessment is the
+  level, gold to silver, and docs/design/thresholds.md:41 justifies it.
+  The portal tests pin only its fail outcome
+  (portal/tests/standards.test.yaml:251-276), which meta-rule's
+  pins-both-outcomes reports separately.

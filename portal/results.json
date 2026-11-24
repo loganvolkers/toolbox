@@ -234,16 +234,6 @@
           "dfdeff49",
           "f282865e"
         ],
-        "public-api-documented": [
-          "0312f00e",
-          "142ff7b4",
-          "1feaa286",
-          "26869185",
-          "ab23f8b1",
-          "c9c28f18",
-          "dfdeff49",
-          "f282865e"
-        ],
         "short-functions": [
           "3b7b9576",
           "82010ee1",
@@ -2273,9 +2263,6 @@
         ]
       },
       "kind:toolbox/AgentDoc": {
-        "described": [
-          "ad5f4c25"
-        ],
         "fields-described": [
           "42d1f31e",
           "43278f89",
@@ -2303,9 +2290,6 @@
         ]
       },
       "kind:toolbox/Connector": {
-        "described": [
-          "e8a0a585"
-        ],
         "fields-described": [
           "225bdeb0",
           "346f3b69",
@@ -2356,9 +2340,6 @@
         ]
       },
       "kind:toolbox/Dependency": {
-        "described": [
-          "fa7bee79"
-        ],
         "fields-described": [
           "01987941",
           "542abc6b",
@@ -2385,9 +2366,6 @@
         ]
       },
       "kind:toolbox/Example": {
-        "described": [
-          "545ff336"
-        ],
         "fields-described": [
           "42d1f31e",
           "43278f89",
@@ -2410,9 +2388,6 @@
         ]
       },
       "kind:toolbox/JsonSchema": {
-        "described": [
-          "58298271"
-        ],
         "fields-described": [
           "127ebfb4",
           "14b92d30",
@@ -2451,9 +2426,6 @@
         ]
       },
       "kind:toolbox/PackageJson": {
-        "described": [
-          "a43acc0e"
-        ],
         "fields-described": [
           "01987941",
           "0503fc34",
@@ -2508,9 +2480,6 @@
         ]
       },
       "kind:toolbox/Skill": {
-        "described": [
-          "c20b6d47"
-        ],
         "fields-described": [
           "13ba397a",
           "1a1f15ae",
@@ -2561,7 +2530,8 @@
         "discriminates": [
           "25fda6a7",
           "bf0c9e31",
-          "c7a2000c"
+          "c7a2000c",
+          "f3cfea11"
         ]
       },
       "rubric:toolbox/crate-design": {
@@ -4040,11 +4010,10 @@
       "crate:toolbox-cli": {
         "failing": {
           "fully-documented": 8,
-          "public-api-documented": 8,
           "short-functions": 3,
           "simple-functions": 3
         },
-        "level": "bronze",
+        "level": "silver",
         "unknown": [
           "clippy-clean",
           "tests-pass"
@@ -4330,6 +4299,9 @@
       },
       "doc:docs/adversarial-critique.md": {
         "level": "skipped"
+      },
+      "doc:docs/audits/toolbox-report-2026-11-24-2.md": {
+        "level": "silver"
       },
       "doc:docs/audits/toolbox-report-2026-11-24.md": {
         "level": "silver"
@@ -4752,6 +4724,9 @@
         "level": "skipped"
       },
       "doc:docs/decisions/D01M85MK7FCRXH2TRMRKXTNA5GT.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M868BY0KJNEYE9WBFZYEYFYH.md": {
         "level": "skipped"
       },
       "doc:docs/decisions/D01M86BY3YQX3SA1W99QXF1QA1H.md": {
@@ -7688,6 +7663,9 @@
       "field:toolbox/Rubric.unguided": {
         "level": "gold"
       },
+      "field:toolbox/Rule.basis": {
+        "level": "gold"
+      },
       "field:toolbox/Rule.check": {
         "failing": {
           "described": 1,
@@ -7709,6 +7687,9 @@
         "level": "gold"
       },
       "field:toolbox/Rule.evidenceTracksCheck": {
+        "level": "gold"
+      },
+      "field:toolbox/Rule.explained": {
         "level": "gold"
       },
       "field:toolbox/Rule.fixNamesPlace": {
@@ -7744,6 +7725,9 @@
           "described": 1
         },
         "level": "bronze"
+      },
+      "field:toolbox/Rule.links": {
+        "level": "gold"
       },
       "field:toolbox/Rule.live": {
         "failing": {
@@ -7795,6 +7779,9 @@
       "field:toolbox/Scorecard.described": {
         "level": "gold"
       },
+      "field:toolbox/Scorecard.explained": {
+        "level": "gold"
+      },
       "field:toolbox/Scorecard.fixtureLevels": {
         "failing": {
           "described": 1,
@@ -7819,6 +7806,9 @@
           "described": 1
         },
         "level": "bronze"
+      },
+      "field:toolbox/Scorecard.links": {
+        "level": "gold"
       },
       "field:toolbox/Scorecard.liveEntities": {
         "failing": {
@@ -8300,10 +8290,9 @@
       },
       "kind:toolbox/AgentDoc": {
         "failing": {
-          "described": 1,
           "fields-described": 10
         },
-        "level": "bronze"
+        "level": "silver"
       },
       "kind:toolbox/Assessment": {
         "level": "gold"
@@ -8319,10 +8308,9 @@
       },
       "kind:toolbox/Connector": {
         "failing": {
-          "described": 1,
           "fields-described": 18
         },
-        "level": "bronze"
+        "level": "silver"
       },
       "kind:toolbox/Crate": {
         "failing": {
@@ -8332,10 +8320,9 @@
       },
       "kind:toolbox/Dependency": {
         "failing": {
-          "described": 1,
           "fields-described": 9
         },
-        "level": "bronze"
+        "level": "silver"
       },
       "kind:toolbox/Doc": {
         "failing": {
@@ -8345,10 +8332,9 @@
       },
       "kind:toolbox/Example": {
         "failing": {
-          "described": 1,
           "fields-described": 7
         },
-        "level": "bronze"
+        "level": "silver"
       },
       "kind:toolbox/Field": {
         "level": "gold"
@@ -8362,10 +8348,9 @@
       },
       "kind:toolbox/JsonSchema": {
         "failing": {
-          "described": 1,
           "fields-described": 10
         },
-        "level": "bronze"
+        "level": "silver"
       },
       "kind:toolbox/Kind": {
         "level": "gold"
@@ -8387,10 +8372,9 @@
       },
       "kind:toolbox/PackageJson": {
         "failing": {
-          "described": 1,
           "fields-described": 13
         },
-        "level": "bronze"
+        "level": "silver"
       },
       "kind:toolbox/Plugin": {
         "level": "gold"
@@ -8436,10 +8420,9 @@
       },
       "kind:toolbox/Skill": {
         "failing": {
-          "described": 1,
           "fields-described": 22
         },
-        "level": "bronze"
+        "level": "silver"
       },
       "kind:toolbox/Workflow": {
         "failing": {
@@ -8451,7 +8434,7 @@
     "meta-rubric": {
       "rubric:toolbox/assessment-quality": {
         "failing": {
-          "discriminates": 3
+          "discriminates": 4
         },
         "level": "silver"
       },
@@ -9167,6 +9150,9 @@
         },
         "level": "silver"
       },
+      "rule:toolbox/meta-rule/explains-why": {
+        "level": "gold"
+      },
       "rule:toolbox/meta-rule/fix-names-a-place": {
         "level": "gold"
       },
@@ -9202,6 +9188,9 @@
           "pins-both-outcomes": 1
         },
         "level": "silver"
+      },
+      "rule:toolbox/meta-scorecard/explains-why": {
+        "level": "gold"
       },
       "rule:toolbox/meta-scorecard/fixtures-reach-every-level": {
         "level": "gold"

@@ -25,6 +25,7 @@ tools:
 
 kinds:
   - name: ${param:kind}
+    title: ${param:kindTitle}
     description: A file checked by ${param:tool}, with its SARIF findings.
     identityFrom: ["connector:${param:name}"]
     fields:
@@ -50,8 +51,19 @@ scorecards:
       Every file ${param:tool} checks is clean. The measure is its findings,
       so a new finding is a regression and a fixed one an improvement; a new
       file must arrive clean.
+    rationale: >-
+      A tool's findings help only if new ones can't pile up unnoticed. The
+      tool keeps its own rules and configuration, so its findings match a run
+      outside the portal; the portal adds one level, clean, and a ratchet that
+      blocks new findings while existing ones are paid down.
+    links:
+    - title: The box and the tools
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/toolbox-and-tools.md
+    - title: SARIF 2.1.0 specification
+      url: https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html
     kind: ${param:kind}
     owner: ${param:owner}
+    track: ${param:track}
     levels: [clean]
     ratchet: {newEntitiesAtLeast: clean}
     rules:
@@ -65,12 +77,17 @@ scorecards:
         !f.suppressed).map(f, 'line ' + string(f.line) + ': ' + f.rule + ' ' +
         f.message + (f.suppressed ? ' (suppressed)' : ''))
       fix: ${param:fix}
+      rationale: >-
+        Each finding is a defect or a risk as the tool's authors define it, and
+        it is cheapest to fix in the change that introduces it, while its author
+        still has the context.
     facets: {summary: public, details: public}
 
 campaigns:
   - name: ${param:name}-zero
     title: "${param:title}: to zero"
     owner: ${param:owner}
+    track: ${param:track}
     description: >-
       No ${param:tool} findings in any file. Progress is counted from the
       start the baseline records.

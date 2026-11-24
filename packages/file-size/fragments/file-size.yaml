@@ -32,6 +32,16 @@ scorecards:
       Files with more than ${param:limit} lines violate. The measure is the
       lines over the limit, so a violating file that grows is a regression and
       one that shrinks is an improvement.
+    rationale: >-
+      A file has to fit in a reader's head, or an agent's context window, to
+      be changed safely, and long files are where review gets skimmed. A line
+      limit is a crude proxy, but it is cheap to measure and moves the right
+      way: the ratchet stops growth while existing files are split.
+    links:
+    - title: Packages
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/packages.md
+    - title: The box and the tools
+      url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/toolbox-and-tools.md
     kind: ${param:kind}
     owner: ${param:owner}
     levels: [within-limit]
@@ -47,6 +57,10 @@ scorecards:
         [string(entity.lines) + ' lines, ' + string(entity.lines -
         ${param:limit}) + ' over the limit of ${param:limit}']
       fix: ${param:fix}
+      rationale: >-
+        A file over the limit gets harder to review with every line added.
+        Measuring the lines over the limit makes each split count as progress
+        and each addition a regression.
     facets: {summary: public, details: public}
 
 campaigns:

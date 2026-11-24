@@ -1,9 +1,9 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/meta-rubric/guided
 rubric: rule-quality
-subjectHash: 3b825aeb5ae4
-assessor: {kind: agent, name: campaign-review-rules}
-at: 2026-11-23
+subjectHash: 714f90a22650
+assessor: {kind: agent, name: cursor-cloud-agent, model: claude-opus-5.5}
+at: 2026-11-24
 verdicts:
   - criterion: measures-intent
     verdict: pass
@@ -21,7 +21,7 @@ verdicts:
       model.rs:287-288 says should not count. The outcome test is a substring
       match too, so words such as "failure", "bypass" or "compass" satisfy it.
       That is cheaper than real guidance and passes
-      portal/standards/meta.yaml:767-773.
+      portal/standards/meta.yaml:1070-1087.
     suggestion: >-
       Match the outcome words as whole words, and require the guidance to name
       something besides the outcome that the question doesn't already say,
@@ -31,8 +31,8 @@ verdicts:
     verdict: pass
     reason: >-
       The evidence lists the criterion names, and the fix asks for `guidance:`
-      "saying what counts as fail" (meta.yaml:771-773), which naturally names
-      an outcome in more than five words, so following it passes.
+      "saying what counts as fail" (meta.yaml:1085-1087), which naturally
+      names an outcome in more than five words, so following it passes.
   - criterion: threshold-justified
     verdict: pass
     reason: >-
@@ -40,5 +40,9 @@ verdicts:
       the five words and the outcome word are a labelled choice in
       docs/design/thresholds.md §2 (the `explains-fix`, `guided` row).
 summary: >-
-  An empty string no longer passes, but a restated question such as "Fail
-  when the answer is no." still does.
+  Re-assessed after the rule gained a rationale: its check, evidence, fix
+  and level are the same as on main, as is the code the reasons cite, so
+  the verdicts stand; line numbers are updated for the rationale lines
+  inserted above them. The rationale states the why without claiming more
+  than the check sees. An empty string no longer passes, but a restated
+  question such as "Fail when the answer is no." still does.

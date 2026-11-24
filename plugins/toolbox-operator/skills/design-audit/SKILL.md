@@ -23,7 +23,11 @@ dimensions (J1–J4), and named reader tasks.
    Write them before looking at the page so the tasks are not fitted to the design.
 2. **Capture evidence.** Serve the page and run the capture script over every route a task
    touches. It writes screenshots (desktop and mobile, light and dark), a full-page desktop
-   shot, and `metrics.json` with axe-core violations and visual-variety counts.
+   shot, and `metrics.json` with axe-core violations (WCAG 2.0 to 2.2 AA and best practice, so
+   `target-size` counts), visual-variety counts and
+   `mobileOverflow` (pixels a 390 px page scrolls sideways; anything above 0 is a defect). It waits for
+   animations to finish and takes the full-page shot with reduced motion, so a fade caught
+   mid-way is not scored as low contrast; the auditor checks motion on the live page.
 3. **Audit blind.** Give a fresh auditor the tasks, the rubric, the screenshots and
    `metrics.json`, and nothing else: not the source, not the diff, not earlier scores. The
    auditor walks each task (cognitive walkthrough: will the reader know what to do, see how,

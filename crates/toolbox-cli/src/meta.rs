@@ -191,6 +191,12 @@ fn words(s: Option<&str>) -> usize {
     s.map_or(0, |s| s.split_whitespace().count())
 }
 
+fn read_live(f: &Path, meta_cards: &BTreeSet<String>) -> Result<RuleCounts, String> {
+    let text = std::fs::read_to_string(f).map_err(|e| format!("{}: {e}", f.display()))?;
+    let v: Value = serde_json::from_str(&text).map_err(|e| format!("{}: {e}", f.display()))?;
+    Ok(live_outcomes(&v, meta_cards))
+}
+
 /// Records for one portal: `(kind, external id, data)`.
 fn describe_portal(
     path: &Path,
@@ -208,24 +214,20 @@ fn describe_portal(
         .filter(|s| meta.contains(&s.kind))
         .map(|s| s.name.clone())
         .collect();
-    let live = match results {
-        Some(f) => {
-            let text = std::fs::read_to_string(f).map_err(|e| format!("{}: {e}", f.display()))?;
-            let v: Value =
-                serde_json::from_str(&text).map_err(|e| format!("{}: {e}", f.display()))?;
-            Some(live_outcomes(&v, &meta_cards))
-        }
-        None => None,
-    };
+    let live = results.map(|f| read_live(f, &meta_cards)).transpose()?;
+    let judged = crate::judged::judged_rules(m);
     let mut out = Vec::new();
     for sc in &m.scorecards {
-        let mut per_level = Map::new();
-        for l in &sc.levels {
-            per_level.insert(
-                l.clone(),
-                json!(sc.rules.iter().filter(|r| &r.level == l).count()),
-            );
-        }
+        let per_level: Map<String, Value> = sc
+            .levels
+            .iter()
+            .map(|l| {
+                (
+                    l.clone(),
+                    json!(sc.rules.iter().filter(|r| &r.level == l).count()),
+                )
+            })
+            .collect();
         let card_id = format!("{portal}/{}", sc.name);
         let live_entities = live
             .as_ref()
@@ -237,6 +239,8 @@ fn describe_portal(
             "appliesTo": sc.applies_to.is_some(), "tested": tested_cards.contains(&sc.name),
             "meta": meta_cards.contains(&sc.name),
             "described": crate::model::filled(&sc.description),
+            "explained": crate::model::filled(&sc.rationale),
+            "links": sc.links.len(),
             "fixtureLevels": fixture_levels.get(&sc.name).cloned().unwrap_or_default(),
         });
         if let Some(n) = live_entities {
@@ -256,6 +260,9 @@ fn describe_portal(
                 "tested": tested_rules.contains_key(&key),
                 "testedOutcomes": tested_rules.get(&key).cloned().unwrap_or_default(),
                 "fixture": {"pass": f[0], "fail": f[1], "unknown": f[2]},
+                "explained": crate::model::filled(&r.rationale),
+                "links": r.links.len(),
+                "basis": if judged.contains(&key) { "judged" } else { "measured" },
             });
             if let (Some(l), Some(n)) = (&live, live_entities) {
                 let c = l.get(&key).copied().unwrap_or_default();

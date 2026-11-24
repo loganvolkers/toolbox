@@ -11,7 +11,7 @@
 
 use crate::report::Change;
 use serde_json::{Map, Value};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use toolbox_derive::Derived;
 use toolbox_model::Manifest;
 use toolbox_model::manifest::Scorecard;
@@ -211,13 +211,38 @@ pub(crate) fn detail(d: &Derived, c: &Change) -> Vec<String> {
 /// both see an unpinned action; a gold rule's evidence repeats a bronze one's). What the baseline
 /// already had is one count at the end. A regression without items of its own (an aggregate, a
 /// level, a measure) keeps its full lines. The `--verdict` document keeps every rule's detail.
-pub(crate) fn gate(d: &Derived, regressions: &[Change]) -> Vec<String> {
+/// Rules in `judged` are marked as an agent's judgement (crate::judged::marked).
+pub(crate) fn gate(
+    d: &Derived,
+    regressions: &[Change],
+    judged: &BTreeSet<(String, String)>,
+) -> Vec<String> {
     let mut list = Findings::default();
     let mut rest = Vec::new();
+    let mut any_judged = false;
     for c in regressions {
         match new_items(d, c) {
-            Some(shown) => list.add(d, c, shown),
-            None => rest.extend(c.lines("✗ worse  ", 0)),
+            Some(mut shown) => {
+                for s in &mut shown {
+                    let rule = crate::judged::marked(judged, &c.scorecard, &s.rule);
+                    any_judged |= rule != s.rule;
+                    s.rule = rule;
+                }
+                list.add(d, c, shown);
+            }
+            None => {
+                let mut c = c.clone();
+                if let Some(rule) = c
+                    .rules
+                    .first()
+                    .filter(|r| c.message.starts_with(r.as_str()))
+                {
+                    let named = crate::judged::marked(judged, &c.scorecard, rule);
+                    any_judged |= &named != rule;
+                    c.message = format!("{named}{}", &c.message[rule.len()..]);
+                }
+                rest.extend(c.lines("✗ worse  ", 0));
+            }
         }
     }
     let mut out = list.lines();
@@ -227,6 +252,9 @@ pub(crate) fn gate(d: &Derived, regressions: &[Change]) -> Vec<String> {
             "and {} finding(s) already in the baseline",
             list.old
         ));
+    }
+    if any_judged {
+        out.push(crate::judged::LEGEND.to_owned());
     }
     out
 }

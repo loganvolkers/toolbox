@@ -250,6 +250,26 @@ assert:
       && score('meta-rule',
       'rule:demo/sprawling/everything').evidence['explains-fix'] == ['fix has
       2 words']
+  - name: >-
+      a rule with a rationale explains why; one without fails bronze, naming
+      itself
+    expect: >-
+      score('meta-rule',
+      'rule:toolbox/maintainer-ci-security/no-medium-findings').rules['explains-why']
+      == 'pass' && score('meta-rule',
+      'rule:demo/sprawling/everything').rules['explains-why'] == 'fail' &&
+      score('meta-rule',
+      'rule:demo/sprawling/everything').evidence['explains-why'] == ['rule
+      sprawling/everything has no rationale']
+  - name: a scorecard with a rationale explains why; one without fails silver
+    expect: >-
+      score('meta-scorecard',
+      'scorecard:toolbox/user-cli').rules['explains-why'] == 'pass' &&
+      score('meta-scorecard',
+      'scorecard:demo/sprawling').rules['explains-why'] == 'fail' &&
+      score('meta-scorecard',
+      'scorecard:demo/sprawling').evidence['explains-why'] == ['scorecard
+      sprawling has no rationale']
   - name: nested loops and a large check are named
     expect: >-
       score('meta-rule',
