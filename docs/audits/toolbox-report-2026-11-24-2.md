@@ -4,7 +4,7 @@
 ([D01M868BY0KJNEYE9WBFZYEYFYH](../decisions/D01M868BY0KJNEYE9WBFZYEYFYH.md)). About the box: how
 it reports what the tools found.*
 
-The loop is in progress: the baseline and round 1 are recorded below, and round 2 follows.
+ROUND_SUMMARY
 
 ## Scope
 
@@ -29,26 +29,307 @@ The tasks were written before the first capture and kept for every audit:
 
 ## Scores
 
-| Id | Baseline | Round 1 |
-|---|---|---|
-| U1 Answer first | 3 | 4 |
-| U2 Reader's language | 2 | 3 |
-| U3 Recognition over recall | 2 | 3 |
-| U4 Hierarchy and scent | 3 | 3 |
-| U5 Data integrity | 3 | 3 |
-| U6 Consistency | 2 | 3 |
-| U7 Wayfinding and control | 2 | 3 |
-| U8 Honest states | 1 | 3 |
-| U9 Accessibility | 3 | 3 |
-| U10 Density and responsiveness | 2 | 3 |
-| **Usability total** | **23** | **31** |
-| J1 Visceral | 3 | 3 |
-| J2 Behavioral | 2 | 2 |
-| J3 Reflective | 3 | 3 |
-| J4 Voice | 2 | 3 |
-| **Joy total** | **10** | **11** |
-| Tasks succeeded | 1 of 6 (4 partial, 1 fail) | 6 of 6 |
-| Serious axe-core nodes | 0 | 0 |
+| Id | Baseline | Round 1 | Round 2 | Round 3 | Round 4 | Round 5 | Round 6 | Round 7 | Round 8 | Round 9 | Round 10 | Round 11 | Round 12 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| U1 Answer first | 3 | 4 | 4 | 4 | 3 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 |
+| U2 Reader's language | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| U3 Recognition over recall | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| U4 Hierarchy and scent | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| U5 Data integrity | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| U6 Consistency | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| U7 Wayfinding and control | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 4 | 4 | 3 | 4 | 4 |
+| U8 Honest states | 1 | 3 | 2 | 3 | 3 | 3 | 3 | 4 | 3 | 2 | 3 | 3 | 4 |
+| U9 Accessibility | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| U10 Density and responsiveness | 2 | 3 | 3 | 3 | 4 | 3 | 3 | 3 | 3 | 2 | 3 | 3 | 3 |
+| **Usability total** | **23** | **31** | **30** | **31** | **31** | **31** | **31** | **33** | **32** | **30** | **31** | **32** | **33** |
+| J1 Visceral | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| J2 Behavioral | 2 | 2 | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| J3 Reflective | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| J4 Voice | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| **Joy total** | **10** | **11** | **11** | **12** | **12** | **12** | **12** | **12** | **12** | **12** | **12** | **12** | **12** |
+| Tasks succeeded | 1 of 6 (4 partial, 1 fail) | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 |
+| Serious axe-core nodes | 0 | 0 | 0 | 0 (5 in the capture, from an entry fade; see round 3) | 0 | 0 | 0 | 0 (WCAG 2.2 `target-size` found by the auditor; see round 7) | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included |
+
+## Round 1: the baseline's findings
+
+The baseline answered one task of six. Tracks did not exist as a page, kinds were an ungrouped list
+of PascalCase ids, the comparison never said how it was measured, and an agent-judged result looked
+exactly like a measured one. The model gained kind groups, a rationale and links on every rule and
+scorecard, and a basis (measured or agent-judged) computed for every rule; the report gained a Tracks
+page and track detail, catalog groups, rule pages, Measured and Agent-judged badges, and a compare
+view that states its setup and publishes its losses. Round 1 answered all six tasks.
+
+## Round 2: one regression, three severity-3 findings
+
+Round 2 scored U8 at 2, below round 1, so the loop did not pass.
+
+| Finding | Fix |
+|---|---|
+| F1 (sev 3). A track page marked a different track "Furthest from goal" than the Tracks page did | The furthest track is ranked over all tracks, on every page that marks it |
+| F2 (sev 3). Clicking a failing rule filtered on its name as text, so entities that pass it were listed | A rule filter, shown as a removable chip, lists only the entities failing that rule |
+| F3 (sev 3). An agent-judged rule passed on entities no agent had assessed, beside siblings saying "no current assessment" | The report JSON gains `unassessed`; such a pass reads "passes, not assessed yet", and the scorecard says how many entities no agent has assessed |
+| F4. Filters were lost on reload | Level, outcome, rule and text filters live in the hash (`#scorecard/x?level=silver&rule=has-example`) |
+| F5. Arrow keys between tabs dropped focus | Focus follows the selected tab |
+| F7. Bar captions used kind ids ("15 ActionDependency") | Plural kind titles ("15 action dependencies") |
+| F8. "Ahead" was undefined on Compare | The hero defines ahead, behind and parity per rule and per factor |
+| F9. Counts differed between pages without a reason | Captions give both ("8 workflows, 7 in scope") |
+| F11. Nothing moved | Short transitions on hover, filters and view changes, off under reduced motion |
+| F13. "Silver needs assessed." | "Silver needs:" followed by rule links with their basis icons |
+
+## Round 3: the loop passes
+
+A new auditor found every task successful and no severity 3 or 4 finding. No score fell below
+round 1, and Q1 to Q5 were all yes, Q4 and Q5 with caveats. Its severity 1 and 2 findings were then
+fixed where they were cheap and clear:
+
+| Finding | Fix |
+|---|---|
+| F1. A literal "null" after the outcome filter | An empty slot renders nothing |
+| F2. Catalog columns showed an unassessed agent-judged level like a measured one | Agent-judged column headers carry the ✦ icon, and unassessed cells say "not assessed" |
+| F4. "0 all clear" in green beside "0% gold" | The column reads "at none", red only above zero |
+| F9 (Q4 caveat). No rule seemed to have its own link | 69 of 260 rules do; the scorecard's "What each level needs" list now shows them beside the rationale, not only on rule pages |
+| F10. The weakest level was plain mono text | A level badge |
+| F11. The rule breadcrumb lacked its root and name | "Scorecards / Agent skills / has-example" |
+| F12. Five serious contrast nodes on Campaigns | They came from the capture, not the page: the full-page shot replayed an entry fade. The capture script now settles animations inside shadow roots and takes the full-page shot with reduced motion; axe is 0 on every route |
+| F5. "harness 5bd608d" was unexplained | The Product kind's field descriptions, shown in the setup, say what the version and the harness are |
+
+## Round 4: U1 falls, so the loop goes round again
+
+A new auditor, on the state after round 3's fixes, found every task successful, no severity 3 or 4
+finding, Q1 to Q5 all yes, and axe at 0 on all 14 routes; U10 rose to 4. But U1 fell from 4 to 3,
+citing the Tracks page, which opened with a six-line legend before any card, so by the skill's
+rule the change was not done. That finding (F8) and the caveats on the goals were fixed:
+
+| Finding | Fix |
+|---|---|
+| F1. The review-crate notice said its judged rules "pass only because there is nothing to fail on", above a list where four of the five fail | The notice names which judged rules pass for want of anything to read and which fail until an assessment exists |
+| F2. The Against Backstage ring reused the progress ring's red for a different measure | A comparison track gets a segmented ring, one segment per factor coloured ahead, at parity or behind, and a neutral card |
+| F3. Track cards announced concatenated text ("Furthest from goal13%Proving value…") | Each card has a short label: title, standing, flag and weakest scorecard |
+| F4 (Q5 caveat). Compact basis icons had only a hover title, and the ✦ vanished in the mobile catalog | Icon-only badges carry hidden text that joins their row's accessible name; the catalog explains the marker above the table; mobile cards keep the ✦ |
+| F8 (the U1 fall). The Tracks page opened with a six-line paragraph of colour thresholds | One sentence, then a key of swatches for the ring and the segmented ring |
+| F12. An unassessed "Bronze" looked earned | It is drawn as a dashed pill beside "not assessed" |
+| Q5 beyond the page | The markdown report, which the GitHub Action posts on pull requests, and the ratchet's gate summary mark agent-judged rules with ✦, count them in each scorecard heading, and print a legend line |
+
+## Round 5: U10 falls, so the loop goes round again
+
+A new auditor, on the state after round 4's fixes, found every task successful, no severity 3 or 4
+finding, Q1 to Q5 all yes, and axe at 0; U1 was back at 4. But U10 fell from 4 to 3, citing long
+pages, the full track grid repeated under "Other tracks" on every track page, and the empty "None"
+column on mobile, so the loop went round again. Those findings and the other severity 2 ones were
+fixed, with the cheap severity 1 ones:
+
+| Finding | Fix |
+|---|---|
+| F1. An unassessed agent-judged level was dashed in the catalog but solid on its scorecard and on the entity page, whose "Provisional" line ignored it | One pill everywhere: dashed with "not assessed" in catalog cells, scorecard rows and the entity's scorecard headers; the entity hero counts such scorecards beside the checks not run |
+| F2. The mobile tab bar clipped Scorecards and hid Compare | The tabs wrap to a second row on narrow screens |
+| F3 (the U10 fall). Track pages repeated the whole track grid, with the comparison's long description | "Other tracks" is a compact strip of small rings and titles; card descriptions are clamped to three lines |
+| F4. Ids as reader text: "D71 one meta level", "Factors F3 F4 F5 F14", "(lesson L5)", and "install facts from v0.1.1" | 41 links are titled by their claim ("Decision: judgement is pushed", "Factor definitions: installability and footprint"); parentheticals that only cite ids or doc paths are dropped from prose; the version field says the install facts come from the v0.1.1 release download. Four titles keep their id because an assessment pins the scorecard's text |
+| F5. The scorecard sidebar scrolled with no visible scrollbar | A thin scrollbar and fades at the edges that have more |
+| F6. The Against Backstage card said "behind on 1" | "behind on Capabilities" |
+| F7. "Most common failures" bars were red or grey with no key | Each bar takes the colour of the level its rule is needed for, and one line says so |
+| F8. The ring key named thresholds | Ranges: "80–100% · 50–79% · 25–49% · below 25%" |
+| F10. A kind card's count hid its unscored entities | "297 entities · 149 not scored" |
+| F11. Kind cards showed a CamelCase id on some cards only | The id is shown once, under the selected kind's heading |
+| F14. The empty "None" column took half the mobile width | An empty level is a single line on narrow screens |
+| Earlier rounds | The catalog filter is kept in the URL (`#catalog/Crate?q=cli`), each page sets the tab title ("Agent skills · Toolbox for Toolbox"), and Back restores the scroll position |
+
+## Round 6: U10 stays at 3, so the loop goes round again
+
+A new auditor, on the state after round 5's fixes, found every task successful, no severity 3 or 4
+finding, Q1 to Q5 all yes, and axe at 0. No score fell, but U10, the score round 5 lost, did not
+come back to 4: the entity page scrolled sideways at 390 px. So the loop went round again, and the
+capture now records `mobileOverflow` per route, so a page that scrolls sideways is a number in
+`metrics.json`, not something an auditor has to notice.
+
+| Finding | Fix |
+|---|---|
+| F1 (the U10 hold). `#entity/crate:toolbox-cli` was 540 px wide at 390 | The entity's level block may shrink and wrap; every route is 0 px over |
+| F2. Two standards sat in the Silver column although Silver is their top level, and nothing said whether the repository could reach gold | A standard at its top level is marked "✓ top level". When one caps the repository, the hero says so ("Capped at bronze: Third-party actions pinned has no level above bronze …") and lists the rest of the work |
+| F3. The catalog showed a solid Bronze that the entity page called provisional | A level whose checks did not run is dashed with "provisional" wherever it is shown, like "not assessed" |
+| F4. Compare's "How it is scored" showed a bare expression and Toolbox's to-do | It says in words what the harness recorded for each product and which value is ahead, then the expression, then "What would close it" |
+| F5. Scorecard lists on the overview and tracks had no Agent-judged mark | Every scorecard list marks a scorecard with agent-judged rules, with how many on hover |
+| F6. Row badges were a bare, hidden glyph | Compact badges show a word ("measured", "judged") beside the icon |
+| F7. Back after opening a rule returned to the top | The scroll position is saved before the click navigates |
+| F8. `#catalog` preselected a kind and a kind's list hid the way back | No kind is preselected; a kind's list starts with "Catalog / Code / Crate" |
+| F9. The ring ramp mixed blue into a progress scale | One ordered ramp from red through bronze and olive to green |
+| F10. The Tracks tab repeated the overview's track cards | The overview shows a strip of rings, furthest first; the full cards are on the Tracks tab |
+| F11. Campaign rows read "Agent skills is bronze; the goal is silver. Needs has-example." | "Needs has-example for silver on Agent skills; bronze now." |
+| F12. The compare hero named no versions | The Measured line names each differing version |
+| F13. Link titles such as "D71 one meta level", and long ids wrapping over three lines | A title that leads with a decision id renders as "Decision: one meta level", with the id on hover; ids in rows are cut to one line with the full id on hover |
+| F14. Setup cards stretched to the tallest | Cards align to the start |
+
+## Round 7: U10 stays at 3 again, so the loop goes round again
+
+A new auditor, on the state after round 6's fixes, found every task successful, no severity 3 or 4
+finding and Q1 to Q5 all yes; U7 and U8 rose to 4. U10 stayed at 3, citing scorecard pages of
+3,224 to 3,947 px and evidence repeated under two rules. The auditor also ran axe with WCAG 2.2
+tags and found `target-size` violations the capture had not counted, because axe leaves 2.2 rules
+out unless their tag is asked for. The capture now asks for them, so the next round's metrics
+count them.
+
+| Finding | Fix |
+|---|---|
+| F1. "✓ top level" on the overview, but "weakest Bronze" with no mark on a track page | Every place that names a weakest scorecard says when that level is its top one; on the overview, a scorecard at its only top level that holds the repository is marked "ceiling: caps the repository" |
+| F2. Compare named Toolbox by commit and the harness by hash | The hero's "How it was measured" leads with the track's description: Toolbox (a release build after v0.1.1) against Backstage 1.57.0 on the same machine and Postgres, medians of 5 runs on 10,000 components, and the independent agent that recomputed the numbers and upheld the verdict |
+| F3. Four spellings of the basis badge | One label pair at every size: "Measured" and "Agent-judged", smaller in dense rows |
+| F4. One dashed pill meant both "not assessed" and "provisional" | Two treatments: "not assessed" is a dashed violet outline, "provisional" a dotted olive one |
+| F5. "Ten" and "ratchet" were undefined | A custom level explains itself on hover ("ten is a level OpenSSF names itself: its only level, so reaching it is the top"); the first ratchet, CEL, fixture or harness in a description is a dotted term with its definition on hover |
+| F6. "Connector" and "Portal connector", "File" and "Python script", and "Observability" read alike or as qualities | Kinds take a `title`: "Connector binary", "Declared connector", "Test or script file", "Python file" (through the sarif package's `kindTitle`) and "Telemetry checklist" |
+| F7 (the U10 hold). Tall scorecard pages; the same evidence under two rules | Evidence lists collapse after three items and evidence shared by rules shows once; a scorecard has an "On this page" jump bar; its entity list starts with the 12 worst; scorecard pages are about 3,150 px |
+| F8. WCAG 2.2 `target-size` on inline links | Inline links and reference links are at least 24 px tall; serious axe nodes are 0 with WCAG 2.2 included |
+| F10. Enter on the selected tab dropped focus to the body | Focus stays on the tab |
+| F11. An unknown hash read as a missing scorecard, with Scorecards selected | "The link “#nope/xyz” doesn't match anything in snapshot 5", with no tab selected |
+| F12. "+5 more" on a track card did not expand | The card is one link, so its chips cannot be links too; it reads "+5 more on the track page" |
+| F13. "149 not scored" on Doc, with no reason | A kind page says how many entities its scorecards leave out and why, with each scorecard's `appliesTo` one click away; the Doc kind says decision records and append-only logs are listed but not scored |
+| F14. Equal-height level columns | Columns size to their content |
+| F9, declined. Drop the row badges on fully measured scorecards | The goal is that a rule's basis shows wherever a result is shown, so a row keeps its badge |
+
+## Round 8: U8 falls, so the loop goes round again
+
+A new auditor, on the state after round 7's fixes, found every task successful, no severity 3 or 4
+finding, Q1 to Q5 all yes, and serious axe nodes at 0 with WCAG 2.2 included. But U8 fell from 4 to
+3: the overview called a scorecard a ceiling that its track page drew as a green "✓ top level", an
+unmeasurable value wore the failing pill, and a glossary term's hover read "undefined". U10 stayed
+at 3, citing the dense level grid.
+
+| Finding | Fix |
+|---|---|
+| F1. "Ahead on 8 of 9 factors" read as an overall win | The headline names the factor it is behind on with its rule count ("Capabilities (7 of 13 rules); check it first if it matters to you"), and a rule tally follows: "27 ahead · 14 at parity · 7 behind", with a note that factors are not weighted |
+| F2. The "harness" term's hover read "undefined", and terms were hover-only | A plural finds its singular definition; a term is focusable and its definition is in its accessible name |
+| F3 (part of the U8 fall). "Ceiling" on the overview, a green "✓ top level" on the track page | A scorecard at its top level that caps the repository says "▲ ceiling: caps the repository" on every page that names it |
+| F4. 39 scorecards in the header, 53 Scorecard entities in the catalog | The Scorecard kind says its entities include the starter's and the reference portal's, by id prefix, and the comparison factors, and that the header counts this portal's only |
+| F5. Backstage's losing value was green | Only the leader's value is coloured; whether a value meets the rule's absolute bar is in its hover |
+| F6 (part of the U8 fall). "Can't be measured" wore the failing pill | A neutral dashed pill |
+| F7. "How it was measured" did not name the machine or the adjudication | One VM with 4 vCPU (Intel Xeon, Linux 6.12), one Postgres 16, the load generator on the same CPUs, and the date of the independent agent's recomputation |
+| F8 (the U10 hold). The level grid repeated a basis badge on every rule and every reason ran long | A column whose rules share a basis says so once in its header; reasons are clamped to three lines with one toggle for the full text |
+| F9. "Provisional: not run" and "unknown: not checked in this build" | One phrase, "not run in this build", and the legend says what the dotted outline means |
+| F10. Overview track chips did not respond to hover | They lift and tint like the track cards |
+| F11. "Ten" unexplained; "Charter goal 1" in the Footprint copy | The OpenSSF scorecard's description says ten means a check scores 10 out of 10; Footprint says what Toolbox promises (one container image plus Postgres) |
+| F12. "What would close it" under rules Toolbox already leads | Shown only where Toolbox is behind or the rule is unmeasured |
+| F14. No skip link | A "Skip to content" button, first in the tab order, moves focus to the page body without changing the route |
+| F13, declined. Track slugs differ from titles (`evidence` is "Proving value") | Slugs are ids that scorecards' `track` fields and existing links use; titles may change without breaking them |
+
+## Round 9: U8 and U10 fall, so the loop goes round again
+
+A new auditor, on the state after round 8's fixes, found every task successful and Q1 to Q5 all yes,
+with serious axe nodes at 0. But it went one click past the captured routes, to scorecards the
+captured pages link to, and found a severity-4 defect: a check that was not run counted as a failure.
+The Rust crates scorecard told readers to "Fix the clippy warnings" when clippy had not run, and drew
+"clippy-clean 15 of 15" failing beside crates at silver and gold. U8 fell to 2. U10 fell to 2
+because the entity table collapsed to one letter per line on five scorecards at 1280px.
+
+| Finding | Fix |
+|---|---|
+| F1 (sev 4, U8). Not-run checks counted as failures in the failure bars and the Biggest lever | A check that was not run is neither a pass nor a failure: it is left out of the bars, the lever, the failing filter and the row tallies. A note under the bars lists each not-run rule with its count, and a level that needs one is provisional: "N entities' levels rest on checks not run in this build (drawn dotted below)" |
+| F2 (sev 3, U10). The entity name column collapsed on desktop and CI reliability overflowed its card | Entity rows are a grid with a minimum name column (`minmax(min(14rem,100%),1fr)`); the tally wraps under the name on narrow screens. A probe over 13 routes found no horizontal overflow and no name narrower than its minimum |
+| F3. "Provisional: not run" on every cell of the Crate kind, missing from the scorecard and its summary | A kind column whose levels are all provisional says so once in its header and draws quiet pills; the scorecards table and the scorecard page carry the provisional count |
+| F4. 39 scorecards and 31 kinds in the header, 53 and 38 in the catalog | The Scorecard and Kind kinds say they include the example portals' (`repo/…`, `acme/…`), so they count more than the tabs do |
+| F5. Explanatory text cut mid-sentence on track, kind and factor cards | Cards show the description's first sentence whole; the clamps are gone |
+| F6. The method was a grey paragraph without its checker | "How it was measured" leads with a facts strip (corpus, harness, runs, version) and "Every rule is measured by script"; the method section opens with the setup in prose, naming the machine and the independent agent that recomputed the verdict |
+| F7. The capabilities factor and the Crate kind page were long and uniform | Rules at parity fold under "Show the N rules at parity" when there are three or more; an open kind replaces the 31-card grid with one row of kind chips per group |
+| F8. "9 scorecards" on the Against Backstage track card | "9 factors" on its card and page |
+| F9. Blue meant both "at parity" and "in progress" | In-progress campaign rings, cards and bars are ink, not accent |
+| F10. "Clamp the reasons", "caps the repository", "the bars are absolute" | "Show shorter reasons"; "▲ ceiling: its top level is bronze, so the repository can't rise above it"; "pass thresholds were fixed before the run" |
+| F11. On mobile the scoreboard followed the method prose | The method is now a one-line facts strip, so the scoreboard follows the verdict within a screen |
+| F12. Small targets; 2 headings on the entity page | Scorecard sections are `h3` and rule names `h4`; the parity fold's summary is 24px tall |
+
+Joy: each Compare factor card leads with its headline number ("7 of 13 behind", "12× lower p95").
+Momentum since the last snapshot stays unbuilt, for the reason under *Joy opportunities*.
+
+## Round 10: U7 falls, so the loop goes round again
+
+A new auditor found every task successful, Q1 to Q5 all yes, no severity-3 or -4 finding and serious
+axe nodes at 0. U8 and U10 recovered to 3, but the stop rule wants them at 4, and U7 fell to 3:
+drill-downs opened scrolled past the site header, and focus was left on the page body after a stat
+card or sidebar link.
+
+| Finding | Fix |
+|---|---|
+| F1 (U8). Review scorecards' overview rows drew unassessed entities as solid bronze | Unassessed entities are a hatched segment, outlined in the agent-judged violet, and the row says "N not assessed (✦ agent-judged)"; the level key above each scorecard table names the hatching |
+| F2 (U7). Drill-downs opened at about 110px down, hiding the portal's name | A route whose focus target sits near the top opens at the page header; a deep target still scrolls to itself |
+| F3 (U2). The Compare method line read "harness 5bd608d · install facts from v0.1.1" | The track description now opens with one plain sentence (machine, runs, corpus, versions, who re-checked it, when), which the hero shows as "Method"; hashes stay in the setup cards, and the method section continues where the sentence stops |
+| F4 (U5, U6). Factor headlines mixed ratios and counts | Every card leads with "N of M rules behind" (else ahead, else at parity), with "widest lead: 3.2× lower …" beneath when there is a measured one |
+| F5 (U7, U9). Focus stayed on the body after a stat card or sidebar link | Every route change focuses the page's heading |
+| F6 (U4). The entity page's agent-judged rules sat below six measured cards, unnamed | "Agent-judged here:" under the basis key names each scorecard's judged rules and jumps to it; each scorecard header counts its measured and agent-judged rules |
+| F7 (U3). "✓ half 50%" unexplained; "Toward silver" grey on grey | Milestones say "reached" and explain themselves on hover; the climb bar is the level's ink on an outlined track, with its percentage |
+| F8. The Scorecard kind's count was explained in a long clause | One sentence: the count adds the Scorecards tab's standards, the Compare tab's factors and the example portals' scorecards |
+| F9. No medal in the Tracks key; the hollow medal faint in dark mode | "Medal: its weakest entity's level · none" in the key; the hollow medal is outlined in the muted ink |
+| F10. "Show them" had no way back | "Hide them" collapses the list again, and both buttons say whether the list is open. Filters were already kept in the URL (`#catalog/Crate?q=cli`) |
+| F11. The catalog ended with an empty "Pick a kind" card | The lede says to pick a kind; the card is gone |
+| F12. "Every Rust crates level here is provisional" | "Every level on the Rust crates scorecard is provisional here" |
+| U10. Scorecard pages near 2,800px | A scorecard whose rules share one basis says so in one line instead of the two-column key, and level reasons clamp at two lines; the Agent skills page fell from 2,815px to 2,679px |
+
+## Round 11: U8 and U10 stay at 3, so the loop goes round again
+
+U7 recovered to 4 and U1 held at 4, with every task successful, Q1 to Q5 all yes, no severity-3 or
+-4 finding and serious axe nodes at 0. U8 stayed at 3 because three scorecard counts disagreed (39,
+48 and 53), and U10 stayed at 3 because scorecard pages stacked four boxes before their data.
+
+| Finding | Fix |
+|---|---|
+| F1 (U8). The header said 39 scorecards, the sidebar listed 48 and the catalog 53 | Wherever the Scorecard kind is counted it splits the number: "53 (39 standards, 9 comparison factors, 5 in example portals)". The sidebar groups its rows under "39 standards" and "9 comparison factors, also on the Compare tab", and a factor's row shows its verdict instead of a debt |
+| F2 (U2, J4). Scorecard descriptions named other scorecards by id | The meta-rule, review-crate, review-scorecard and review-sdlc-stage descriptions are one plain sentence each; a hyphenated scorecard id left in a lede or rationale links to that scorecard under its title. meta-rule and review-crate were re-assessed against scorecard-quality in the same change |
+| F3 (U4, U10). Four boxes before "Where entities stand" | A scorecard whose rules share one basis says so in its "Rates every …" line, the not-assessed banner moved below the level bar, and the data now starts near 600px instead of 640–765px |
+| F4 (U3, U5). "On average" undefined; the comparison track sorted among the others | Track cards say "of entities at the top level, averaged over N scorecards"; comparison tracks sit in their own section, "Measured against a rival", whose lede says why it has no place in the order |
+| F5 (U9). Basis badges explained only by `title` | Badges are focusable and show their description on hover and focus, like the glossary terms; inside a button the badge stays a plain label so no focus stop nests in a control |
+| F6 (U6). Stripes meant both "not assessed" and "not scored" | Stripes mean not assessed only; no result is a dotted fill |
+| F7, F8 (J4, U2). "See Version on the Compare page" on the Compare page; two version phrases | The vs-backstage description names "Toolbox 581be50 (a release build after v0.1.1)" once and drops the cross-reference |
+| F9 (U5). The level "Ten" undefined | A custom level name is followed by the sentence of the scorecard's description that defines it: "Its one level, ten, means a check scores 10 out of 10" |
+| F10 (U6). Title Case filters | Filter segments are sentence case |
+| F11 (U10). The row chevron wrapped alone | The last word and the chevron never break apart |
+| F12 (U2). "Scorecard: A scorecard." | "A named set of rules, in levels, that rates every entity of one kind, in this portal or in an example portal it describes" |
+| F13 (U8). "Toward silver 62%" looked reachable | When a ceiling standard caps the level, the climb bar is drawn blocked, with a lock and "blocked", and its label names the standard |
+| F14 (U7). "Back to the summary →" | "← Back to the summary" |
+| F15 (U3). Rule pages linked only the standard's sources | `has-example` has its own link (Anthropic's skill best practices), shown before the standard's; 70 of 260 rules now have their own |
+
+## Round 12: U10 stays at 3, so the loop goes round again
+
+U8 rose to 4 and U1 and U7 held at 4, with every task successful, Q1 to Q5 all yes, no severity-3 or
+-4 finding and serious axe nodes at 0. Only U10 stayed at 3: on a phone the tab counts disappeared,
+the crate list spent its first screen on the kind chips, and Compare ran past 3,200px with no way
+back to the tabs. The fixes below also take the round's severity-1 and -2 findings.
+
+| Finding | Fix |
+|---|---|
+| F13 (U10). Mobile tab counts hidden; kind chips fill a phone's first screen; no navigation on long pages | Tab counts stay on a phone, in a smaller pill. Below 820px the kind chips give way to a "Kind" select at the top of the list, grouped like the chips. On wider screens the tab bar sticks to the top of the page, and headings scroll clear of it |
+| F1 (U3). A track ring counts only the top level | Each track card has a level-mix bar under its description, "Entity levels: 3 none · 32 bronze · 27 silver · 11 gold", with the ring kept as the share at the top level |
+| F5 (U9, U3). Chip medals were colour only at 14px | Each chip names its level: "DX Benchmarks · bronze" |
+| F9 (U7, J2). A chip was not its own link | The card's title is the card link, stretched over the card; the chips, and the links in the next-medal line, sit above it and open their scorecard or rule |
+| F14 (J1) and joy idea 2. Empty space on track cards | A "Next medal" line names the weakest scorecard that can still rise, how many entities it has to lift, and the rule most of them need; the track page repeats it under its goal |
+| F15 (U6). Medal x-offsets jittered on the track scorecard table | The medal column has a fixed width |
+| F2 (U3, J4). A paragraph explained outline styles | The paragraph says only "A hollow level may not hold; the words beside it, or above its column, say why", and on a phone every hollow pill carries its words, since the column header is hidden there |
+| F7 (J4, U8). "To measure it, include scorecards that rate the same kind" shown to every reader | A campaign whose scorecards rate different kinds leads with "Open work, per scorecard" and its per-scorecard rows; the configuration hint is in a collapsed "For portal authors" note, and the pill reads "no single score" |
+| F8 (U1). Two causes for the repository level | The hero leads with the binding one: "is at bronze, the lowest level among 13 repository standards, and capped there: Third-party actions pinned has no silver level yet. Once it does, 4 more standards need silver" |
+| F4 (U3). One method sentence for timed and capability factors; the bias note only on Capabilities; an unnamed checker | The method's first sentence, in the hero, splits timed factors from capability and fact factors and says the capability scenarios come from the Backstage parity audit, so they favour what Backstage ships; the method names the benchmark's adjudicator and its date |
+| F6 (U4). "Measured" on every row of an all-measured scorecard | On a scorecard or factor whose rules are all measured, rows keep the measured icon with its name for screen readers, and the header says "Measured · all 13 rules" once; agent-judged badges always keep their word |
+| F3 (U9). Tooltips could run off a phone's screen | A tooltip shifts left when it would pass the viewport's right edge |
+| F10 (U4, U6). Rule-page entity links looked like plain text | They carry the row chevron |
+| F11 (U3). Level reasons cut mid-sentence | The short view shows each reason's first sentence whole |
+| F12 (J2). The parity toggle kept saying "Show" | It says "Hide the 6 rules at parity" when open |
+| F16 (U9). The row chevron at 3.47:1 | It uses the muted text colour |
+| J4. "check it first if it matters to you" | "Behind on Capabilities (7 of 13 rules): if you need that, start there" |
+
+## Findings still open
+
+| Finding | Why it is open |
+|---|---|
+| Red means both "under 25%" on a track ring and "behind on a factor" on the comparison ring | A palette change across tracks, campaigns and compare; worth its own loop |
+| The Toolbox version in Compare's setup cards is a commit, not a release | The hero names the release build, but the facts are written by the benchmark harness; the next run should record the release |
+| Internal shorthand in rationale text beyond the four glossary terms | The report defines ratchet, CEL, fixture and harness on hover; other terms are data in each standard and need a pass over the standards |
+| Four link titles still lead with a decision id in the data | An assessment pins those scorecards' text; the report renders them as "Decision: …", and the data changes when the assessments are next refreshed |
+| 70 of 260 rules have their own link; the rest rely on their scorecard's | A rule earns a link when there is something specific to read; adding them is per-standard work |
+| "Contributors" is a Capabilities rule | A change to the comparison's standard, which the benchmark harness regenerates |
+
+## Joy opportunities
+
+The auditors' highest-reach ideas, and what came of them:
+
+| Idea | State |
+|---|---|
+| Progress toward the next level in the Overview hero | Built: "Toward silver: 8 of 13 standards there", a bar, and a checklist of the standards still to lift, each saying whether it needs lifting or a higher level first |
+| The largest measured wins on Compare, next to the published losses | Built: "Where Toolbox leads by the most", the three largest ratios among measured rules Toolbox leads, each with both values and its factor |
+| The headline number first on each Compare factor card | Built: "7 of 13 rules behind" (rules where Backstage leads), else ahead or at parity, with the widest measured lead beneath ("widest lead: 14× higher entity reads by id per second") |
+| A change since the last snapshot beside each track ring | Not built: the report carries one snapshot and the committed baseline, which equals it on every published build, so there is no earlier state to compare with |
 
 ## Sources
 
