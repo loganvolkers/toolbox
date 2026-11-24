@@ -198,7 +198,7 @@
     ".pillwrap .unassessed-tag.quiet{display:none}",
     ".crumb{font-size:13px;color:var(--muted);margin-bottom:12px}",
     ".sc-group{margin-top:20px}.sc-group h3{margin:0 0 4px}.sc-group h3 .sub{font-weight:400;text-transform:none;letter-spacing:0}.sc-index input[type=search]{max-width:420px}",
-    ".sc-rows{border-top:1px solid var(--line)}.sc-row{display:grid;grid-template-columns:26px minmax(0,1.25fr) minmax(0,1.6fr) 104px;gap:12px;align-items:center;padding:7px 8px;border-bottom:1px solid var(--line);color:var(--fg);text-decoration:none}.sc-row:hover{background:var(--tint)}.sc-row .sc-name{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;min-width:0}.sc-row .sc-name .t{font-weight:600}.sc-row .sc-name .c{font-size:11.5px;color:var(--muted)}.sc-row .sc-name .p{flex-basis:100%;min-width:0;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sc-row .sc-dist small{display:block;font-size:12px;color:var(--muted);margin-top:3px}.sc-head{display:grid;grid-template-columns:26px minmax(0,1.25fr) minmax(0,1.6fr) 104px;gap:12px;padding:4px 8px;font-size:11.5px;color:var(--muted);border-bottom:1px solid var(--line)}.sc-head span:last-child{text-align:right}.sc-row .sc-weak{display:flex;flex-direction:column;align-items:flex-end;gap:1px}.sc-row .sc-weak small{font-size:12px}.sc-row .sc-weak .bad{color:var(--fail);font-weight:600}.sc-row .sc-weak .topmark{color:var(--pass);font-weight:600}",
+    ".sc-rows{border-top:1px solid var(--line)}.sc-row{display:grid;grid-template-columns:26px minmax(0,1.25fr) minmax(0,1.6fr) 104px;gap:12px;align-items:center;padding:7px 8px;border-bottom:1px solid var(--line);color:var(--fg);text-decoration:none}.sc-row:hover{background:var(--tint)}.sc-row .sc-name{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;min-width:0}.sc-row .sc-name .t{font-weight:600}.sc-row .sc-name .c{font-size:11.5px;color:var(--muted)}.sc-row .sc-name .p{flex-basis:100%;min-width:0;font-size:12px;line-height:1.4;color:var(--muted);overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}.sc-row .sc-dist small{display:block;font-size:12px;color:var(--muted);margin-top:3px}.sc-head{display:grid;grid-template-columns:26px minmax(0,1.25fr) minmax(0,1.6fr) 104px;gap:12px;padding:4px 8px;font-size:11.5px;color:var(--muted);border-bottom:1px solid var(--line)}.sc-head span:last-child{text-align:right}.sc-row .sc-weak{display:flex;flex-direction:column;align-items:flex-end;gap:1px}.sc-row .sc-weak small{font-size:12px}.sc-row .sc-weak .bad{color:var(--fail);font-weight:600}.sc-row .sc-weak .topmark{color:var(--pass);font-weight:600}",
     "@media (max-width:640px){.sc-head{display:none}.sc-row{grid-template-columns:26px minmax(0,1fr) auto;row-gap:4px}.sc-row .sc-weak{grid-column:3;grid-row:1}.sc-row .sc-dist{grid-column:2/4;grid-row:2}.sc-row>svg{grid-row:1}}",
     ".crumb a{color:var(--muted);display:inline-block;padding:4px 0;margin:-4px 0}",
     "a.rl{display:inline-flex;align-items:center;min-height:24px;min-width:24px;vertical-align:middle}.refs a{display:inline-flex;align-items:center;min-height:26px}",
@@ -1346,7 +1346,7 @@
       if ((D.comparisons || {})[m[2]]) cmp++;
       else own++;
     });
-    var parts = [plural(own, "standard"), cmp ? plural(cmp, "comparison factor") : null, ids.length - own - cmp ? fmt(ids.length - own - cmp) + " in example portals" : null].filter(Boolean);
+    var parts = [fmt(own) + " of this portal's own", cmp ? plural(cmp, "comparison factor") : null, ids.length - own - cmp ? fmt(ids.length - own - cmp) + " in example portals" : null].filter(Boolean);
     return parts.length > 1 ? " (" + parts.join(", ") + ")" : "";
   }
 
@@ -1726,12 +1726,12 @@
           compare: isComparative(D, name),
           parts: parts,
           none: count("none"),
-          bronze: count("bronze"),
+          bronze: top === "bronze" ? 0 : count("bronze"),
           top: top,
           topShare: scored ? Math.round((count(top) / scored) * 100) : 0,
           scored: scored,
           total: ents.length,
-          weight: isComparative(D, name) ? -1 : count("none") * 1000 + count("bronze"),
+          weight: isComparative(D, name) ? -1 : count("none") * 1000 + (top === "bronze" ? 0 : count("bronze")),
         };
       })
       .sort(function (a, b) {
@@ -2499,7 +2499,7 @@
       return el(
         "section",
         { className: "sc-index" },
-        el("div", { className: "head" }, el("h2", { textContent: "Scorecards" }), el("span", { className: "sub", textContent: plural(standards.length, "standard") + " in " + plural(groups.length, "group") })),
+        el("div", { className: "head" }, el("h2", { textContent: "Scorecards" }), el("span", { className: "sub", textContent: plural(standards.length, "scorecard") + " in " + plural(groups.length, "group") })),
         el("p", { className: "lede" }, "Each scorecard rates every entity of one kind against levels of rules; the medal is its weakest entity's level, and the bar shows where the rest stand. They are grouped by track, the line of work each one serves. Open one for its failures, entities and what each level needs.", factors ? el("span", {}, " The " + plural(factors, "comparison factor") + " against a rival are on ", link("compare", "", "the Compare tab"), ".") : null),
         levelLegend(D, standards),
         search,
@@ -3178,8 +3178,8 @@
               { className: "ehdr", style: "grid-template-columns:" + tpl, ariaHidden: "true" },
               el("span", { textContent: kindTitle(D, selected) }),
               ...cols.map(function (n) {
-                var judged = basisCounts(((D.scorecards || {})[n] || {}).rules).judged > 0;
-                return el("span", { title: n }, title(D, n), judged ? " " : null, judged ? basisBadge("judged", true) : null, allUnrun[n] ? el("span", { className: "unassessed-tag unrun", style: "display:block", title: "Every level in this column rests on checks not run in this build: it holds only if they pass" }, "all provisional: not run") : null);
+                var mark = judgedMark(D, n);
+                return el("span", { title: n }, title(D, n), mark ? " " : null, mark, allUnrun[n] ? el("span", { className: "unassessed-tag unrun", style: "display:block", title: "Every level in this column rests on checks not run in this build: it holds only if they pass" }, "all provisional: not run") : null);
               }),
             )
           : null;
@@ -4328,11 +4328,11 @@
         }).length;
         var items = [];
         shown.forEach(function (r, i) {
-          if (i === 0 && !r.compare) items.push(el("div", { className: "rank-head", textContent: plural(nStd, "standard") }));
+          if (i === 0 && !r.compare) items.push(el("div", { className: "rank-head", textContent: plural(nStd, "scorecard") }));
           if (r.compare && (i === 0 || !shown[i - 1].compare)) items.push(el("div", { className: "rank-head", textContent: plural(shown.length - nStd, "comparison factor") + ", also on the Compare tab" }));
           var c = r.compare ? (D.comparisons || {})[r.name] || {} : null;
           var verdict = c ? (c.verdict || {})[(c.peers || [])[0]] || "unknown" : null;
-          var debt = c ? (verdict === "unknown" ? "not measured" : verdict) : r.none > 0 ? r.none + " at none" : r.bronze > 0 ? r.bronze + " at bronze" : "✓ clear";
+          var debt = c ? (verdict === "unknown" ? "not measured" : verdict) : r.none > 0 ? r.none + " at none" : r.bronze > 0 ? r.bronze + " at bronze" : r.scored && r.topShare === 100 ? "✓ top level" : "✓ clear";
           var a = link("scorecard/" + enc(r.name), "", [el("span", {}, title(D, r.name), " ", judgedMark(D, r.name, true)), el("span", { className: "debt " + (c ? (verdict === "behind" ? "bad" : verdict === "ahead" ? "ok" : "") : r.none > 0 ? "bad" : r.bronze > 0 ? "" : "ok"), textContent: debt })]);
           a.title = r.name + " · " + r.sc.kind;
           if (r.name === active) a.setAttribute("aria-current", "true");
@@ -4814,10 +4814,10 @@
             if (!group.length) return null;
             return el(
               "optgroup",
-              { label: cmp ? plural(group.length, "comparison factor") : plural(group.length, "standard") },
+              { label: cmp ? plural(group.length, "comparison factor") : plural(group.length, "scorecard") },
               ...group.map(function (r) {
                 var c = cmp ? (D.comparisons || {})[r.name] || {} : null;
-                var debt = c ? (c.verdict || {})[(c.peers || [])[0]] || "not measured" : r.none > 0 ? r.none + " at none" : r.bronze > 0 ? r.bronze + " at bronze" : "clear";
+                var debt = c ? (c.verdict || {})[(c.peers || [])[0]] || "not measured" : r.none > 0 ? r.none + " at none" : r.bronze > 0 ? r.bronze + " at bronze" : r.scored && r.topShare === 100 ? "top level" : "clear";
                 return el("option", { value: r.name, selected: r.name === active, textContent: title(D, r.name) + " (" + debt + ")" });
               }),
             );
