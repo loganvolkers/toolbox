@@ -1,0 +1,54 @@
+{
+  "run": "backstage-2",
+  "C1": "holds",
+  "P1": {
+    "verdict": "holds",
+    "evidence": "git -C origins/<r>.git ls-tree -r main: alpha (fb03050), beta (6f6e7b6) and gamma (6d0f35b), each authored by ann, commit .backstage/add-notice.yaml (a scaffolder Template in the repo's own namespace, spec.owner group:default/<repo>-maintainers, parameters level enum [info, warning] and message 10..160 single line, steps acme:notice:apply and acme:notice:verify) and catalog-info.yaml on main, inside the repository."
+  },
+  "P2": {
+    "verdict": "holds",
+    "evidence": "cd org; bin/acme --as ann request alpha with --level urgent (exit 1, httpStatus 400 InputError, errors [{field: level, 'must be one of: info, warning'}]), a 200-character message (exit 1, 400 'must be 10 to 160 characters (got 200)') and a message with a newline (exit 1, 400 'must be a single line (no line breaks or control characters)'). bin/acme runs stayed at 3 (no run created). alpha main f36ad54f before and after."
+  },
+  "P3": {
+    "verdict": "holds",
+    "evidence": "bin/acme --as ann preview beta --level info --message 'Probe: preview only, nothing should change.': exit 0, JSON whose preview.diff is a unified diff of readme.md replacing the task's '> **Info:** Releases now ship ...' line with '> **Info:** Probe: preview only, nothing should change.'. beta main 521ab268 before and after; run count unchanged at 3."
+  },
+  "P4": {
+    "verdict": "holds",
+    "evidence": "From org/: bin/acme --as dave request gamma --level warning --message 'Probe: the release group approves this one.': exit 0, run fb1b61af awaiting_approval, requestedBy dave. gamma main 3ca6f08c unchanged. approve --as dave: exit 1, 403 'dave requested this run and cannot approve it'; --as ann: exit 1, 403 'ann is not in group:default/release (members at org d9eba4eeb95c: dave, erin)'; --as carol: exit 1, 403 same. gamma main still 3ca6f08c; status awaiting_approval, approvedBy null."
+  },
+  "P5": {
+    "verdict": "holds",
+    "evidence": "bin/acme --as erin approve fb1b61af --wait: exit 0, succeeded, outcome.observedCommit 0fae6ffc, observedBlob 84f9ed86 = git rev-parse main:README.md on origins/gamma.git. gamma main 3ca6f08c -> 0fae6ffc; main:README.md equals '> **Warning:** Probe: the release group approves this one.', a blank line, and the root import commit's README.md byte for byte (cmp): the task's notice is gone, one notice. The record's 'observed' event (matches true) precedes 'succeeded'. Source: runsPlugin.ts refresh() sets succeeded only when observe(run) is ok; observe() runs git --git-dir <origin> rev-parse refs/heads/main and rev-parse <commit>:<readme> on the bare origin (git.ts originMain, blobId) and compares with the previewed expected blob."
+  },
+  "P6": {
+    "verdict": "holds",
+    "evidence": "pre-receive hook (echo to stderr, exit 1) in origins/alpha.git/hooks. bin/acme --as ann request alpha --level info --message 'Probe: the origin rejects this push.' -> fc77e25f; bin/acme --as dave approve --wait: exit 3, status failed, reason 'push of a3af1de0 to .../origins/alpha.git main was rejected: remote: adjudicator: every push is rejected', observedCommit f36ad54f. Events: requested, previewed, approved, dispatched, applying, observed, failed (no succeeded). alpha main f36ad54f before and after. Hook removed."
+  },
+  "P7": {
+    "verdict": "holds",
+    "evidence": "cd org; bin/acme --as ann list: exit 0, items[] lists add-notice for alpha, beta and gamma (template:<r>/add-notice, owner group:default/<r>-maintainers, approvers). P4 was requested from org/ with bin/acme request."
+  },
+  "P8": {
+    "verdict": "holds",
+    "evidence": "bin/acme --as ann record fb1b61af: requestedBy dave, requestedAt 16:43:45.236Z; inputs {level: warning, message: ...}; approvedBy erin, approvedAt 16:43:50.651Z, approval {group, members, orgCommit}; outcome {status: succeeded, at: 16:43:51.631Z, observedCommit, observedBlob}; events with 'at' for requested, previewed, three approval_refused (dave, ann, carol), approved, dispatched, applying, pushed, observed, succeeded."
+  },
+  "P9": {
+    "verdict": "holds",
+    "evidence": "Per the handoff: in org/, sed release's spec.members [dave, erin] -> [dave] in catalog/people.yaml (erin's User has memberOf []), git commit -am and git push origin main (org.git d9eba4ee -> 772ecca2); bin/acme policy showed members [dave], no restart. bin/acme --as ann request beta --level info --message 'Probe: erin has left the release group.' -> 2e03de83. approve --as erin: exit 1, 403 'erin is not in group:default/release (members at org 772ecca24cc8: dave)'; beta main unchanged (521ab268). approve --as dave --wait: exit 0 succeeded, observedCommit 21920492. beta main:readme.md is exactly the probe notice, a blank line and the imported readme.md (cmp)."
+  },
+  "P10": {
+    "verdict": "holds",
+    "evidence": "Every step (list, policy, preview, request, approve --wait, status, record, runs, group change by sed/git) ran as one non-interactive shell command. bin/acme printed JSON on stdout, refusals as JSON with httpStatus and per-field errors; exit codes 0 ok, 1 refused, 3 run did not succeed."
+  },
+  "P11": {
+    "verdict": "holds",
+    "evidence": "Operated entirely from org/HANDOFF.md: started the backend with its tmux command and readiness loop (ready in about 6 s on port 7170), exported PATH as the Use section says, then used bin/acme from org/. No fixes needed. Source read only for P5's evidence (runsPlugin.ts refresh/observe, git.ts)."
+  },
+  "fixes": [],
+  "strikes": [],
+  "linesBeforeStrikes": 1882,
+  "linesAfterStrikes": 1882,
+  "fullyPasses": true,
+  "notes": "C1 rerun by the adjudicator with score.py check before any probe: pass. No strikes: every counted file is code, configuration or tests (the backend module and notice.test.ts, app-config.yaml additions, package.json, the repos' Templates and catalog-info, org/acme.yaml, catalog/people.yaml, the CLI, .gitignore entries). org/.tokens.json (7 lines) is untracked, but it is the CLI's local credentials configuration that a person keeps, not runtime output, so it is not struck. Runtime data (backstage/.data SQLite, .backend.log, .work) was not counted by score.py. The backend app is itself a git repository (backstage/.git). Limits the handoff states: the bare origins have no access control, and a repository's maintainers can remove the verify step from their template (the gate's own observation still decides succeeded). Probe side effects left in the workspace: three new runs in backstage/.data, one commit on origins/gamma.git (P5, 0fae6ffc), one on origins/beta.git (P9, 21920492), and one on origins/org.git and the org checkout (P9, erin removed from the release group, 772ecca2). The backend ran in tmux session r8-backstage-2-backend and was killed afterwards; ports 7170 and 7171 are free."
+}
