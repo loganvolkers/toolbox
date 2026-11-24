@@ -45,6 +45,135 @@ Scorecard `review-assessment` over `Assessment` entities, owned by group:maintai
 | `passes-review` | gold | `entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0 && entity.reviewUncited.size() == 0 && entity.reviewGrounded` | For a listed criterion, revise the assessment file in portal/assessments/ where the review found it unsupported or incomplete, then have it reviewed again. For an item marked "fix the review", the review file is at fault: its reasons must cite what they rest on, including this assessment's file or the sources it cites. |
 | `no-doubts` | gold | `entity.reviewState == 'fresh' && entity.reviewUnsure.size() == 0` | Resolve what the reviewer was unsure of, usually by citing the source a verdict rests on. |
 
+## Performance
+
+Start, read and recover on a 10k-component catalog, with every read authorized (Toolbox through OpenFGA, Backstage under allow-all). ISO 25010 performance efficiency and reliability.
+
+Scorecard `vs-backstage-performance` over `Product` entities, owned by group:maintainers. `toolbox report` lists what fails now.
+
+| Rule | Level | Passes when | Fix |
+|---|---|---|---|
+| `ready` | bronze | `entity.readyS <= 10.0` | Profile startup with `RUST_LOG=debug toolbox serve`, then rerun experiments/backstage-compare/run.sh. |
+| `catalog-readable` | bronze | `entity.catalogReadableS <= 60.0` | Time ingest and recompute in `toolbox serve` logs and the derive laps, then rerun experiments/backstage-compare/run.sh. |
+| `get-latency` | bronze | `entity.getP95Ms <= 50.0` | Profile GET /v1/entities/{id} in crates/toolbox-api/src/routes.rs, then rerun experiments/backstage-compare/run.sh. |
+| `get-throughput` | bronze | `entity.getRps >= 1000.0` | Profile GET /v1/entities/{id} in crates/toolbox-api/src/routes.rs, then rerun experiments/backstage-compare/run.sh. |
+| `list-latency` | bronze | `entity.listP95Ms <= 500.0` | Profile the filtered list in crates/toolbox-api/src/routes.rs (list_entities), then rerun experiments/backstage-compare/run.sh. |
+| `list-throughput` | bronze | `entity.listRps >= 20.0` | Profile the filtered list in crates/toolbox-api/src/routes.rs (list_entities), then rerun experiments/backstage-compare/run.sh. |
+| `recovery` | bronze | `entity.recoveredS <= 60.0` | Time the restart path in crates/toolbox-api/src/state.rs (the first recompute from Postgres), then rerun experiments/backstage-compare/run.sh. |
+
+## Footprint
+
+What it costs to run and to own: memory, disk, and the files an adopter keeps for a first portal. Charter goal 1 (simple deployment).
+
+Scorecard `vs-backstage-footprint` over `Product` entities, owned by group:maintainers. `toolbox report` lists what fails now.
+
+| Rule | Level | Passes when | Fix |
+|---|---|---|---|
+| `idle-memory` | bronze | `entity.rssIdleMb <= 512.0` | Measure the server and its co-processes with experiments/backstage-compare/measure.py and trim what starts eagerly. |
+| `loaded-memory` | bronze | `entity.rssLoadedMb <= 1024.0` | Measure with experiments/backstage-compare/measure.py and shrink the derived state's copies in crates/toolbox-api/src/state.rs. |
+| `install-size` | bronze | `entity.installMb <= 1000.0` | Measure with experiments/backstage-compare/footprint.py and drop what the release archives carry but do not run. |
+| `adopter-files` | bronze | `entity.adopterFiles <= 10.0` | Move what examples/repo-portal-starter asks an adopter to keep into packages they include. |
+| `adopter-lines` | bronze | `entity.adopterLines <= 500.0` | Move what examples/repo-portal-starter asks an adopter to keep into packages they include. |
+
+## Security defaults
+
+Secure by default, as installed: what an unauthenticated or forging client gets, what a client token can destroy, and what an extension can reach. ISO 25010 security.
+
+Scorecard `vs-backstage-security` over `Product` entities, owned by group:maintainers. `toolbox report` lists what fails now.
+
+| Rule | Level | Passes when | Fix |
+|---|---|---|---|
+| `anonymous-read` | bronze | `entity.anonymousReadRefused` | Refuse a read without credentials outside dev mode in crates/toolbox-authz/src/authn.rs. |
+| `forged-identity` | bronze | `entity.forgedIdentityRefused` | Trust identity headers only in dev mode, in crates/toolbox-authz/src/authn.rs. |
+| `anonymous-mcp` | bronze | `entity.anonymousMcpRefused` | Authenticate /mcp as the REST API does, in crates/toolbox-api/src/mcp.rs. |
+| `client-cannot-delete` | bronze | `entity.clientCannotDelete` | Keep entity writes to connectors' ingest; offer no DELETE in crates/toolbox-api/src/routes.rs. |
+| `loopback-by-default` | bronze | `entity.loopbackByDefault` | Bind 127.0.0.1 unless `--listen` says otherwise, in crates/toolbox-cli/src/main.rs. |
+| `owner-only-fields` | bronze | `entity.ownerOnlyFields` | Keep facets and their filter guard in crates/toolbox-api/src/access.rs, pinned by crates/toolbox-api/tests/authz.rs. |
+| `extension-process-isolated` | bronze | `entity.extensionProcessIsolated` | Run every connector as its own process, as docs/design/connector-control.md says. |
+| `extension-credential-isolated` | bronze | `entity.extensionCredentialIsolated` | Start connectors with a cleared environment and an allowlist, in crates/toolbox-api/src/connectors.rs. |
+
+## Supply chain
+
+What an adopter inherits: third-party packages, their known vulnerabilities, and whether the release can be verified. OpenSSF and SLSA build provenance.
+
+Scorecard `vs-backstage-supply-chain` over `Product` entities, owned by group:maintainers. `toolbox report` lists what fails now.
+
+| Rule | Level | Passes when | Fix |
+|---|---|---|---|
+| `packages` | bronze | `entity.thirdPartyPackages <= 1000.0` | List the heaviest dependencies with `cargo tree -e normal`, and drop or feature-gate them in Cargo.toml. |
+| `known-vulnerabilities` | bronze | `entity.knownVulns == 0.0` | Run `osv-scanner scan source --lockfile Cargo.lock` and update or replace the listed packages. |
+| `high-vulnerabilities` | bronze | `entity.highVulns == 0.0` | Run `osv-scanner scan source --lockfile Cargo.lock` and update or replace the listed packages first. |
+| `provenance` | bronze | `entity.provenancePercent == 100.0` | Attest every artifact in .github/workflows/release.yml, and check with `gh attestation verify`. |
+
+## Change safety
+
+Changing a portal safely: validate before deploy, preview the effect, upgrade without merging, roll back without surgery. ISO 25010 maintainability; DORA change failure rate and recovery time.
+
+Scorecard `vs-backstage-change-safety` over `Product` entities, owned by group:maintainers. `toolbox report` lists what fails now.
+
+| Rule | Level | Passes when | Fix |
+|---|---|---|---|
+| `offline-validate` | bronze | `entity.offlineValidate` | Keep `toolbox validate` and `toolbox test` working with no server or database. |
+| `change-preview` | bronze | `entity.changePreview` | Keep `toolbox plan --local --base <manifest>` diffing entities, scores and tuples. |
+| `upgrade-lines` | bronze | `entity.upgradeLinesPerRelease <= 10.0` | Keep examples/repo-portal-starter passing `toolbox validate` and `toolbox test` across releases (experiments/backstage-compare/upgrade.py). |
+| `rollback-steps` | bronze | `entity.rollbackManualStepsPerRelease == 0.0` | Keep the store's migrations readable by the previous release, as experiments/backstage-compare/upgrade.py checks. |
+
+## Org fit
+
+Fitting how an organisation is built: one repository with no server first, then many portals joined. Conway's law and Team Topologies.
+
+Scorecard `vs-backstage-org-fit` over `Product` entities, owned by group:maintainers. `toolbox report` lists what fails now.
+
+| Rule | Level | Passes when | Fix |
+|---|---|---|---|
+| `repo-scoped` | bronze | `entity.repoScopedWithoutServer` | Keep `toolbox report` scoring a repository with no server, as actions/report does. |
+| `federation` | bronze | `entity.federates` | Build federation as docs/design/federation.md designs it (D68). |
+
+## Agent surface
+
+What a coding agent gets: MCP by default, and how many tokens it spends to learn the tools and read one entity.
+
+Scorecard `vs-backstage-agent-surface` over `Product` entities, owned by group:maintainers. `toolbox report` lists what fails now.
+
+| Rule | Level | Passes when | Fix |
+|---|---|---|---|
+| `mcp-by-default` | bronze | `entity.mcpByDefault` | Serve /mcp from `toolbox serve` and stdio from `toolbox mcp`. |
+| `tools-list-size` | bronze | `entity.mcpToolsListBytes <= 32768.0` | Shorten tool descriptions and schemas in crates/toolbox-api/src/mcp.rs. |
+| `get-entity-size` | bronze | `entity.mcpGetEntityBytes <= 4096.0` | Trim the get tool's response in crates/toolbox-api/src/mcp.rs to the fields an agent asks for. |
+
+## Extensibility
+
+What it takes to add an integration: which languages, and whether the server is rebuilt. ISO 25010 modifiability.
+
+Scorecard `vs-backstage-extensibility` over `Product` entities, owned by group:maintainers. `toolbox report` lists what fails now.
+
+| Rule | Level | Passes when | Fix |
+|---|---|---|---|
+| `any-language` | bronze | `entity.extensionAnyLanguage` | Keep the connector protocol language-neutral, as schema/connector-messages.schema.json defines it. |
+| `without-rebuild` | bronze | `entity.extensionWithoutRebuild` | Keep remote connectors pushing to /v1/ingest with their own token (docs/design/connector-control.md). |
+
+## Capabilities
+
+What a portal does out of the box, by configuration alone. The scenarios come from the Backstage parity audit (D47), so they favour what Backstage ships.
+
+Scorecard `vs-backstage-capabilities` over `Product` entities, owned by group:maintainers. `toolbox report` lists what fails now.
+
+| Rule | Level | Passes when | Fix |
+|---|---|---|---|
+| `catalog-browse` | bronze | `entity.capCatalogBrowse` | Keep the catalog pages in ui/src and `toolbox query`. |
+| `ownership` | bronze | `entity.capOwnership` | Keep `toolbox owner` and the owner_of MCP tool. |
+| `graph` | bronze | `entity.capGraph` | Keep `toolbox graph` and /v1/entities/{id}/graph. |
+| `docs-search` | bronze | `entity.capDocsSearch` | Index documentation text with the entities that `toolbox search` reads (docs/v1-spec.md, full-text search). |
+| `docs` | bronze | `entity.capDocs` | Carry a documentation tool's built site per component, as docs/design/toolbox-and-tools.md carries tools. |
+| `templates` | bronze | `entity.capTemplates` | Build self-service actions (v1-spec M5) once D64 lifts the pause (docs/design/action-runs.md). |
+| `scorecards` | bronze | `entity.capScorecards` | Keep scorecards in the manifest, as docs/v1-spec.md §5 defines them. |
+| `api-docs` | bronze | `entity.capApiDocs` | Render an API entity's definition through a UI extension in ui/src. |
+| `kubernetes` | bronze | `entity.capKubernetes` | Add a connector that reads workloads from the Kubernetes API (docs/design/connector-control.md). |
+| `notifications` | bronze | `entity.capNotifications` | Notify owners of score changes through a connector or webhook (docs/design/campaigns.md). |
+| `permission-rule` | bronze | `entity.capPermissionRule` | Keep the OpenFGA model in the manifest (docs/authorization.md). |
+| `mcp-read` | bronze | `entity.capMcpRead` | Keep the read tools in crates/toolbox-api/src/mcp.rs. |
+| `community` | bronze | `entity.contributors >= 10.0` | Make a first contribution easy: CONTRIBUTING.md, good first issues, and a green `cargo test` on a fresh clone. |
+
 ## maintainer-benchmark
 
 Each DX Benchmark: declared, pre-registered against a rival on pinned open-source repositories, and run with results and the fixes it produced (D01M82X2K0DYWTCA23MQJ4CKR0Z).
