@@ -1451,7 +1451,7 @@
         "stroke-dasharray": none ? "4 3" : ""
       }),
       none ? null : svg("circle", { cx: 28, cy: 34, r: 12, fill: "none", stroke: "#fff", "stroke-opacity": ".55", "stroke-width": 1.5 }),
-      none ? null : svg("path", {
+      level === "not scored" ? svg("text", { x: 28, y: 41, "text-anchor": "middle", "font-size": 20, "font-weight": 700, fill: "var(--muted)", "font-family": "inherit" }, "?") : none ? null : svg("path", {
         d: "M28 26.5l2.3 4.7 5.2.8-3.8 3.7.9 5.1-4.6-2.4-4.6 2.4.9-5.1-3.8-3.7 5.2-.8z",
         fill: "#fff",
         "fill-opacity": ".8"
@@ -2315,7 +2315,7 @@
       rows.forEach(function(r) {
         wrap.append(
           link("scorecard/" + enc(r.name), "row", [
-            floors ? el("div", { className: "medal-col" }, medal(floorOf(D, r.name) || "none", 30), el("div", {}, ...cardName(D, r.name), el("span", { className: "weakest" }, "weakest ", floorOf(D, r.name) ? floorPill(D, r.name) : "not scored", topNote(D, r.name, floorOf(D, r.name))))) : el("div", {}, ...cardName(D, r.name)),
+            floors ? el("div", { className: "medal-col" }, medal(floorOf(D, r.name) || "not scored", 30), el("div", {}, ...cardName(D, r.name), el("span", { className: "weakest" }, "weakest ", floorOf(D, r.name) ? floorPill(D, r.name) : "not scored", topNote(D, r.name, floorOf(D, r.name))))) : el("div", {}, ...cardName(D, r.name)),
             el("div", { className: "dist" }, barEl(splitUnassessed(D, r.name, r.parts)), el("div", { className: "sub", style: "font-size:12px;margin-top:4px" }, ...scCaption(D, r, true))),
             el("div", { className: "num" + (r.none ? " bad" : "") }, el("strong", { textContent: r.scored ? String(r.none) : "—" }), el("span", { textContent: r.scored ? "at none" : "not scored" })),
             why(r, floors)
@@ -2451,7 +2451,7 @@
             attention.length ? el("span", { className: "sub", textContent: "Needs attention first" }) : null
           ),
           el("p", { className: "lede", textContent: "Each scorecard rates every entity of one kind against levels of rules. An entity is at none until it passes every rule of the first level." }),
-          levelLegend(D, S.rows),
+          unscored.length === S.rows.length ? null : levelLegend(D, S.rows),
           attTable,
           attMore,
           clear.length ? clearWrap : null,
@@ -2522,13 +2522,21 @@
           " " + BASIS[b].label
         );
       };
+      var mixedBases = standards.some(function(r) {
+        return basisCounts(r.sc.rules).judged;
+      }) && standards.some(function(r) {
+        return basisCounts(r.sc.rules).measured;
+      });
+      var anyScored = standards.some(function(r) {
+        return r.scored > 0;
+      });
       var basisPick = el("p", { className: "sub", style: "margin:6px 0 0" }, "Show only: ", only("judged"), " · ", only("measured"));
       var list = el("div");
       var row = function(r) {
         var floor = floorOf(D, r.name);
         var purpose = scPurpose(r.sc);
         return link("scorecard/" + enc(r.name), "sc-row", [
-          medal(floor || "none", 26),
+          medal(floor || "not scored", 26),
           el("div", { className: "sc-name" }, ...cardName(D, r.name)),
           el("div", { className: "sc-dist" }, barEl(splitUnassessed(D, r.name, r.parts)), el("small", {}, ...scCaption(D, r))),
           el("div", { className: "sc-weak" }, floor ? floorPill(D, r.name) : el("span", { className: "sub", textContent: "not scored" }), r.none ? el("small", { className: "bad", textContent: fmt(r.none) + " at none" }) : floor && capsRepo(D, r.name, floor) ? el("small", { className: "capnote" }, lockIcon(), " at its top level, so it caps the repository") : floor && isTop(D, r.name, floor) && !ONLY_LEVEL.has(floor) ? el("small", { className: "topmark", textContent: "✓ top level" }) : null),
@@ -2627,7 +2635,7 @@
             return el(
               "div",
               { className: "sc-group" },
-              el("h3", {}, x.g.name ? link(trackPath(D, x.g.name), "", x.g.title) : x.g.title, el("span", { className: "sub", textContent: " · " + plural(x.rows.length, "scorecard") + (x.g.name ? ", weakest first" : "") + (mix ? ": " + mix : "") })),
+              groups.length === 1 && !x.g.name ? null : el("h3", {}, x.g.name ? link(trackPath(D, x.g.name), "", x.g.title) : x.g.title, el("span", { className: "sub", textContent: " · " + plural(x.rows.length, "scorecard") + (x.g.name ? ", weakest first" : "") + (mix ? ": " + mix : "") })),
               el("div", { className: "sc-rows" }, el("div", { className: "sc-head", ariaHidden: "true" }, el("span"), el("span", { textContent: "Scorecard" }), el("span", { textContent: "Entities by level" }), el("span", { textContent: "Weakest entity" })), ...open.map(row), restRows, restBtn ? el("div", { className: "more" }, restBtn) : null, fold)
             );
           })
@@ -2638,11 +2646,11 @@
       return el(
         "section",
         { className: "sc-index" },
-        el("div", { className: "head" }, el("h2", { textContent: "Scorecards" }), el("span", { className: "sub", textContent: plural(standards.length, "scorecard") + " in " + plural(groups.length, "group") })),
+        el("div", { className: "head" }, el("h2", { textContent: "Scorecards" }), el("span", { className: "sub", textContent: plural(standards.length, "scorecard") + (groups.length > 1 ? " in " + plural(groups.length, "group") : "") })),
         el("p", { className: "lede" }, "Each scorecard rates every entity of one kind against levels of rules; the medal is its weakest entity's level, and the bar shows where the rest stand. " + (Object.keys(D.tracks || {}).length ? "They are grouped by track, the line of work each one serves. " : "") + "Open one for its failures, entities and what each level needs.", factors ? el("span", {}, " The " + plural(factors, "comparison factor") + " against a rival are on ", link("compare", "", "the Compare tab"), ".") : null),
-        el("details", { className: "keyd", open: !matchMedia("(max-width:640px)").matches }, el("summary", { textContent: "How to read the bars" }), levelLegend(D, standards)),
+        anyScored ? el("details", { className: "keyd", open: !matchMedia("(max-width:640px)").matches }, el("summary", { textContent: "How to read the bars" }), levelLegend(D, standards)) : null,
         search,
-        basisPick,
+        mixedBases ? basisPick : null,
         list
       );
     },
@@ -3374,7 +3382,7 @@
                 gloss = el("abbr", { className: "gloss", tabIndex: 0 }, levelName(l), el("span", { className: "sr", textContent: " (" + def2 + ")" }));
                 gloss.dataset.tip = def2;
               }
-              return el("span", { className: "sh" + (own ? " own" : "") }, medal(l === "not scored" ? "none" : l, 20), el("b", { textContent: String(shelf[l]) }), " ", gloss || levelName(l), own ? " ✓ top" : shelfTop[l] === shelf[l] || ONLY_LEVEL.has(l) ? " ✓ top" : shelfTop[l] ? " (" + shelfTop[l] + " ✓ top)" : "");
+              return el("span", { className: "sh" + (own ? " own" : "") }, medal(l, 20), el("b", { textContent: String(shelf[l]) }), " ", gloss || (l === "none" ? "with no medal yet" : levelName(l)), own ? " ✓ top" : shelfTop[l] === shelf[l] || ONLY_LEVEL.has(l) ? " ✓ top" : shelfTop[l] ? " (" + shelfTop[l] + " ✓ top)" : "");
             })
           )
         );
@@ -5231,9 +5239,9 @@
       ];
       var trackCount = tracksSorted(D, S).length;
       if (trackCount) tabs.push({ label: "Tracks", path: "tracks", id: "tracks", count: trackCount });
+      tabs.push({ label: "Catalog", path: "catalog", id: "catalog", count: S.entityCount });
+      if (campaigns.length || activeMode === "campaigns") tabs.push({ label: "Campaigns", path: "campaigns", id: "campaigns", count: campaigns.length });
       tabs.push(
-        { label: "Catalog", path: "catalog", id: "catalog", count: S.entityCount },
-        { label: "Campaigns", path: "campaigns", id: "campaigns", count: campaigns.length },
         {
           label: "Scorecards",
           id: "scorecards",

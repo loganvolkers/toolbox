@@ -47,9 +47,8 @@ scorecards:
     kind: Repository
     track: docs
     description: >-
-      A pilot repository's basics: a README and CODEOWNERS, then a catch-all
-      owner, owners that are teams and a licence (examples/repo-portal-
-      starter).
+      This repository's basics: a README and CODEOWNERS, then a catch-all
+      owner, owners that are teams and a licence.
     rationale: >-
       These files tell a newcomer or an agent what the repository is, who
       reviews changes to it, and whether its code may be reused, and they can
@@ -135,8 +134,7 @@ scorecards:
     kind: Doc
     track: docs
     description: >-
-      Each Markdown document in a pilot repository: links that resolve
-      (examples/repo-portal-starter).
+      Each Markdown document in this repository: links that resolve.
     rationale: >-
       Markdown docs are how a repository explains itself to people and agents.
       Resolving links can be checked in any repository with no build or

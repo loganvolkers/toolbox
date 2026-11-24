@@ -310,7 +310,7 @@ export const overviewViews = {
       wrap.append(
         link("scorecard/" + enc(r.name), "row", [
           floors
-            ? el("div", { className: "medal-col" }, medal(floorOf(D, r.name) || "none", 30), el("div", {}, ...cardName(D, r.name), el("span", { className: "weakest" }, "weakest ", floorOf(D, r.name) ? floorPill(D, r.name) : "not scored", topNote(D, r.name, floorOf(D, r.name)))))
+            ? el("div", { className: "medal-col" }, medal(floorOf(D, r.name) || "not scored", 30), el("div", {}, ...cardName(D, r.name), el("span", { className: "weakest" }, "weakest ", floorOf(D, r.name) ? floorPill(D, r.name) : "not scored", topNote(D, r.name, floorOf(D, r.name)))))
             : el("div", {}, ...cardName(D, r.name)),
           el("div", { className: "dist" }, barEl(splitUnassessed(D, r.name, r.parts)), el("div", { className: "sub", style: "font-size:12px;margin-top:4px" }, ...scCaption(D, r, true))),
           el("div", { className: "num" + (r.none ? " bad" : "") }, el("strong", { textContent: r.scored ? String(r.none) : "—" }), el("span", { textContent: r.scored ? "at none" : "not scored" })),
@@ -461,7 +461,7 @@ export const overviewViews = {
           attention.length ? el("span", { className: "sub", textContent: "Needs attention first" }) : null,
         ),
         el("p", { className: "lede", textContent: "Each scorecard rates every entity of one kind against levels of rules. An entity is at none until it passes every rule of the first level." }),
-        levelLegend(D, S.rows),
+        unscored.length === S.rows.length ? null : levelLegend(D, S.rows),
         attTable,
         attMore,
         clear.length ? clearWrap : null,

@@ -246,7 +246,9 @@ export function medal(level, size) {
       "stroke-dasharray": none ? "4 3" : "",
     }),
     none ? null : svg("circle", { cx: 28, cy: 34, r: 12, fill: "none", stroke: "#fff", "stroke-opacity": ".55", "stroke-width": 1.5 }),
-    none
+    level === "not scored"
+      ? svg("text", { x: 28, y: 41, "text-anchor": "middle", "font-size": 20, "font-weight": 700, fill: "var(--muted)", "font-family": "inherit" }, "?")
+      : none
       ? null
       : svg("path", {
           d: "M28 26.5l2.3 4.7 5.2.8-3.8 3.7.9 5.1-4.6-2.4-4.6 2.4.9-5.1-3.8-3.7 5.2-.8z",

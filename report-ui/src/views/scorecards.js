@@ -53,13 +53,21 @@ export const scorecardsViews = {
         " " + BASIS[b].label,
       );
     };
+    var mixedBases = standards.some(function (r) {
+      return basisCounts(r.sc.rules).judged;
+    }) && standards.some(function (r) {
+      return basisCounts(r.sc.rules).measured;
+    });
+    var anyScored = standards.some(function (r) {
+      return r.scored > 0;
+    });
     var basisPick = el("p", { className: "sub", style: "margin:6px 0 0" }, "Show only: ", only("judged"), " · ", only("measured"));
     var list = el("div");
     var row = function (r) {
       var floor = floorOf(D, r.name);
       var purpose = scPurpose(r.sc);
       return link("scorecard/" + enc(r.name), "sc-row", [
-        medal(floor || "none", 26),
+        medal(floor || "not scored", 26),
         el("div", { className: "sc-name" }, ...cardName(D, r.name)),
         el("div", { className: "sc-dist" }, barEl(splitUnassessed(D, r.name, r.parts)), el("small", {}, ...scCaption(D, r))),
         el("div", { className: "sc-weak" }, floor ? floorPill(D, r.name) : el("span", { className: "sub", textContent: "not scored" }), r.none ? el("small", { className: "bad", textContent: fmt(r.none) + " at none" }) : floor && capsRepo(D, r.name, floor) ? el("small", { className: "capnote" }, lockIcon(), " at its top level, so it caps the repository") : floor && isTop(D, r.name, floor) && !ONLY_LEVEL.has(floor) ? el("small", { className: "topmark", textContent: "✓ top level" }) : null),
@@ -168,7 +176,7 @@ export const scorecardsViews = {
           return el(
             "div",
             { className: "sc-group" },
-            el("h3", {}, x.g.name ? link(trackPath(D, x.g.name), "", x.g.title) : x.g.title, el("span", { className: "sub", textContent: " · " + plural(x.rows.length, "scorecard") + (x.g.name ? ", weakest first" : "") + (mix ? ": " + mix : "") })),
+            groups.length === 1 && !x.g.name ? null : el("h3", {}, x.g.name ? link(trackPath(D, x.g.name), "", x.g.title) : x.g.title, el("span", { className: "sub", textContent: " · " + plural(x.rows.length, "scorecard") + (x.g.name ? ", weakest first" : "") + (mix ? ": " + mix : "") })),
             el("div", { className: "sc-rows" }, el("div", { className: "sc-head", ariaHidden: "true" }, el("span"), el("span", { textContent: "Scorecard" }), el("span", { textContent: "Entities by level" }), el("span", { textContent: "Weakest entity" })), ...open.map(row), restRows, restBtn ? el("div", { className: "more" }, restBtn) : null, fold),
           );
         }),
@@ -179,11 +187,11 @@ export const scorecardsViews = {
     return el(
       "section",
       { className: "sc-index" },
-      el("div", { className: "head" }, el("h2", { textContent: "Scorecards" }), el("span", { className: "sub", textContent: plural(standards.length, "scorecard") + " in " + plural(groups.length, "group") })),
+      el("div", { className: "head" }, el("h2", { textContent: "Scorecards" }), el("span", { className: "sub", textContent: plural(standards.length, "scorecard") + (groups.length > 1 ? " in " + plural(groups.length, "group") : "") })),
       el("p", { className: "lede" }, "Each scorecard rates every entity of one kind against levels of rules; the medal is its weakest entity's level, and the bar shows where the rest stand. " + (Object.keys(D.tracks || {}).length ? "They are grouped by track, the line of work each one serves. " : "") + "Open one for its failures, entities and what each level needs.", factors ? el("span", {}, " The " + plural(factors, "comparison factor") + " against a rival are on ", link("compare", "", "the Compare tab"), ".") : null),
-      el("details", { className: "keyd", open: !matchMedia("(max-width:640px)").matches }, el("summary", { textContent: "How to read the bars" }), levelLegend(D, standards)),
+      anyScored ? el("details", { className: "keyd", open: !matchMedia("(max-width:640px)").matches }, el("summary", { textContent: "How to read the bars" }), levelLegend(D, standards)) : null,
       search,
-      basisPick,
+      mixedBases ? basisPick : null,
       list,
     );
   },

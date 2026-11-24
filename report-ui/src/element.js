@@ -153,9 +153,9 @@ export class ToolboxReport extends HTMLElement {
     ];
     var trackCount = tracksSorted(D, S).length;
     if (trackCount) tabs.push({ label: "Tracks", path: "tracks", id: "tracks", count: trackCount });
+    tabs.push({ label: "Catalog", path: "catalog", id: "catalog", count: S.entityCount });
+    if (campaigns.length || activeMode === "campaigns") tabs.push({ label: "Campaigns", path: "campaigns", id: "campaigns", count: campaigns.length });
     tabs.push(
-      { label: "Catalog", path: "catalog", id: "catalog", count: S.entityCount },
-      { label: "Campaigns", path: "campaigns", id: "campaigns", count: campaigns.length },
       {
         label: "Scorecards",
         id: "scorecards",

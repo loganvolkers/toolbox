@@ -78,7 +78,7 @@ export const tracksViews = {
               gloss = el("abbr", { className: "gloss", tabIndex: 0 }, levelName(l), el("span", { className: "sr", textContent: " (" + def + ")" }));
               gloss.dataset.tip = def;
             }
-            return el("span", { className: "sh" + (own ? " own" : "") }, medal(l === "not scored" ? "none" : l, 20), el("b", { textContent: String(shelf[l]) }), " ", gloss || levelName(l), (own ? " ✓ top" : shelfTop[l] === shelf[l] || ONLY_LEVEL.has(l) ? " ✓ top" : shelfTop[l] ? " (" + shelfTop[l] + " ✓ top)" : ""));
+            return el("span", { className: "sh" + (own ? " own" : "") }, medal(l, 20), el("b", { textContent: String(shelf[l]) }), " ", gloss || (l === "none" ? "with no medal yet" : levelName(l)), (own ? " ✓ top" : shelfTop[l] === shelf[l] || ONLY_LEVEL.has(l) ? " ✓ top" : shelfTop[l] ? " (" + shelfTop[l] + " ✓ top)" : ""));
           }),
         ),
       );
