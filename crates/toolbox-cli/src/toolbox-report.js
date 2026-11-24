@@ -322,7 +322,7 @@
     ".boxrow{grid-template-columns:1fr;gap:6px}.measure{grid-template-columns:1fr}.measure .ms{text-align:left}.cmp-hero{grid-template-columns:1fr}",
     ".ehdr{display:none}a.erow.cols{grid-template-columns:1fr!important;gap:4px}.ecell{display:flex;gap:6px;align-items:center}.ecell::before{content:attr(data-sc);color:var(--muted)}.ecell[data-judged]::before{content:attr(data-sc) \" \\2726\"}",
     ".behind-row{grid-template-columns:1fr}.val{grid-template-columns:76px minmax(0,1fr) auto}}",
-    ".skip{position:absolute;left:8px;top:-48px;z-index:10;padding:8px 12px;border-radius:8px;background:var(--fg);color:var(--bg);font-weight:650;text-decoration:none}.skip:focus{top:8px}",
+    ".skip{position:absolute;left:8px;top:-48px;z-index:10;padding:8px 12px;border:0;border-radius:8px;background:var(--fg);color:var(--bg);font:inherit;font-weight:650;cursor:pointer}.skip:focus{top:8px}",
     "@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}",
   ].join("");
 
@@ -331,8 +331,8 @@
     "<style>" +
     CSS +
     "</style>" +
-    '<a class="skip" href="#body" id="skip">Skip to content</a><slot name="header"></slot><slot name="nav"></slot>' +
-    '<main><div class="top" id="top"></div><div class="meta" id="meta"></div>' +
+    '<slot name="header"></slot><slot name="nav"></slot>' +
+    '<main><button type="button" class="skip" id="skip">Skip to content</button><div class="top" id="top"></div><div class="meta" id="meta"></div>' +
     '<div class="modes" id="modes" role="tablist" aria-label="Report views"></div>' +
     '<div id="body"></div></main><slot name="footer"></slot>';
 
@@ -1492,9 +1492,8 @@
       this._booted = true;
       var root = this.attachShadow({ mode: "open" });
       root.append(template.content.cloneNode(true));
-      // The hash is the route, so the skip link moves focus instead of following its href.
-      root.getElementById("skip").addEventListener("click", function (e) {
-        e.preventDefault();
+      // A button, not a link: the hash is the route, and the target is inside the shadow root.
+      root.getElementById("skip").addEventListener("click", function () {
         var body = root.getElementById("body");
         body.tabIndex = -1;
         body.focus();
