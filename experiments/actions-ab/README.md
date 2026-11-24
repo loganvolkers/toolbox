@@ -193,6 +193,9 @@ when C1 and P1 to P11 all hold or are credited.
    An independent fit audit of rounds 8 and on judges whether that change is general (P5).
 9. **The gha credit grew.** G2 says a credited step need not be rebuilt, and P9 can be credited
    through a GitHub team configured as code. This favours the gha arm, as limit 1 does.
+10. **Workspaces are not isolated from each other.** Every run can read `/tmp/actions-ab/r<n>/`,
+    where the other arms' workspaces are (the vanilla triage saw one round 7 run list it; none
+    read one). Round 8 checks each transcript with `harness/isolation.py` and reports any hit.
 
 ## Layout
 
@@ -202,6 +205,7 @@ when C1 and P1 to P11 all hold or are credited.
 | `harness/setup.sh`, `round.sh` | One workspace; one round of workspaces and rendered prompts |
 | `harness/backstage/app-config.local.yaml`, `build-app.sh` | The Backstage arm's overlay; how its app is built |
 | `harness/score.py`, `count.py` | The measures |
+| `harness/isolation.py` | From round 8: tool calls that name another run's workspace or list the round's directory |
 | `harness/tally.py` | §6 from the adjudicator's records: medians, W, H1 to H3 and the bar |
 | `prompts/` | The tasks (`task.md` for rounds 0–7, `task-notice.md` for round 8), each arm's platform section, the adjudicator's prompt, and the rendered prompts per round |
 | `results/triage/` | Rival-arm friction from rounds 6 and 7, with the fixes applied before round 8 |
