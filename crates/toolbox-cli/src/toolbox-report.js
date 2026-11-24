@@ -134,7 +134,7 @@
     ".bar span.unrun{background:radial-gradient(circle,var(--seg) 1.6px,transparent 1.9px) 0 0/6px 6px;box-shadow:inset 0 0 0 1.5px var(--unknown)}.dot.dots{border-radius:2px;background:radial-gradient(circle,var(--seg) 1.2px,transparent 1.5px) 0 0/4px 4px;box-shadow:inset 0 0 0 1.5px var(--unknown)}",
     ".rule.unknown{border-left-color:var(--unknown)}.rule.waived{border-left-color:var(--bronze)}.rule.unassessed{border-left-color:var(--judged)}",
     ".basis-note p{margin:0 0 4px}.h2h-wide{max-width:560px}.h2h-wide .h2h{width:100%;font-size:13px}.h2h-wide .h2h-head,.h2h-wide .h2h-row{grid-template-columns:160px 1fr 1fr}.h2h-row[aria-current]{font-weight:700;background:var(--accent-bg);border-radius:6px}.rank-top:not([hidden]){display:block;margin:8px 0 0;font-size:13px}.cmp-prov{margin:6px 0 0;display:grid;gap:2px}.cmp-src{display:flex;flex-wrap:wrap;align-items:center;gap:2px 10px}.cmp-src .refs{margin:0;line-height:22px}.cmp-brief>summary{cursor:pointer;width:max-content;max-width:100%;padding:3px 0;color:var(--accent)}",
-    ".kpi-bar{flex:0 0 46px;height:10px;border-radius:5px;background:var(--line);overflow:hidden}.kpi-bar span{display:block;height:100%;background:var(--pass)}.kpi-pips{flex:0 0 46px;display:flex;flex-wrap:wrap;gap:4px}.kpi-pips span{width:10px;height:10px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--faint)}.kpi-pips span.on{background:var(--pass);box-shadow:none}",
+    ".why.incl{display:flex;align-items:center;gap:8px}.kpi-bar{flex:0 0 46px;height:10px;border-radius:5px;background:var(--line);overflow:hidden}.kpi-bar span{display:block;height:100%;background:var(--pass)}.kpi-bar.short span{background:var(--muted)}.kpi-pips{flex:0 0 46px;display:flex;flex-wrap:wrap;gap:4px}.kpi-pips span{width:10px;height:10px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--faint)}.kpi-pips span.on{background:var(--pass);box-shadow:none}",
     ".cprog{flex:0 0 76px;display:grid;gap:3px}.cprog b{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}.cprog small{font-size:13px;color:var(--muted)}.cprog .gb{position:relative;height:8px;border-radius:4px;background:var(--line)}.cprog .gb>span{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--muted)}.cprog.on .gb>span{background:var(--pass)}.cprog .gb>i{position:absolute;top:-3px;bottom:-3px;width:2px;border-radius:1px;background:var(--fg)}.cprog.big{flex-basis:120px}.cprog.big b{font-size:28px}",
     ".hollow-key{display:flex;flex-wrap:wrap;align-items:center;gap:4px 16px;padding:6px 10px;font-size:13px;color:var(--muted);background:var(--tint);border-radius:8px;margin:4px 0}.hollow-key>span{display:inline-flex;align-items:center;gap:6px}.hollow-key b{color:var(--fg);font-weight:600}",
     ".rid{font:12px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);overflow-wrap:anywhere}.rule .rn{font-weight:650;font-size:inherit;margin:0;display:inline}.sc-block h3.sct{display:inline;margin:0;font-size:16px}",
@@ -1674,7 +1674,7 @@
   // One summary of a scorecard row wherever a list shows it: scope, share at its own top level, and the
   // levels that may not hold, so a list never reads better than the scorecard's page.
   function scCaption(D, r, split) {
-    var head = (r.sc.kind ? kindCount(D, r.sc.kind, r.total) + (split ? scorecardSplit(D, r.sc.kind) : "") : plural(r.total, "entity", "entities")) + (r.total > r.scored ? ", " + fmt(r.scored) + " in scope" : "");
+    var head = (r.sc.kind ? kindCount(D, r.sc.kind, r.total) + (split ? scorecardSplit(D, r.sc.kind) : "") : plural(r.total, "entity", "entities")) + (r.total > r.scored ? ", " + fmt(r.scored) + " it rates" : "");
     var prov = provisionalOf(D, r.name);
     var unj = unassessedOf(D, r.name);
     return [
@@ -1735,23 +1735,37 @@
 
   // Campaigns measure progress to a target, so they get a bar with a target tick; rings are kept for
   // a track's share at the top level.
-  function goalBar(state, pct, target, big, names) {
+  function goalWords(each) {
+    return (
+      each.filter(function (p) {
+        return p.met;
+      }).length +
+      " of " +
+      plural(each.length, "scorecard") +
+      " at target"
+    );
+  }
+
+  function goalBar(state, pct, target, big, each) {
     var empty = state === "empty";
-    var parts = (names || []).length;
+    var parts = (each || []).length;
+    var met = (each || []).filter(function (p) {
+      return p.met;
+    }).length;
     var g = el(
       "div",
-      { className: "cprog" + (big ? " big" : "") + (state === "on" ? " on" : "") },
-      el("b", { textContent: empty ? (parts ? String(parts) : "—") : pct + "%" }),
+      { className: "cprog" + (big ? " big" : "") + (state === "on" || (empty && parts && met === parts) ? " on" : "") },
+      el("b", { textContent: empty ? (parts ? met + " of " + parts : "—") : pct + "%" }),
       empty ? null : el("div", { className: "gb" }, el("span", { style: "width:" + Math.max(0, Math.min(100, pct)) + "%" }), el("i", { style: "left:calc(" + target + "% - 1px)" })),
-      el("small", { textContent: empty ? (parts ? (parts === 1 ? "scorecard" : "scorecards") + (big ? (parts === 1 ? ", scored on its own: " : ", each scored on its own: ") + andList(names) : "") : "no single score") : "target " + target + "%" }),
+      el("small", { textContent: empty ? (parts ? (big ? "scorecards at target " + target + "%" : "at target") : "no single score") : "target " + target + "%" }),
     );
     g.setAttribute("role", "img");
-    g.setAttribute("aria-label", empty ? "no single score" + (parts ? ": " + plural(parts, "scorecard") + ", each scored on its own" : "") : pct + "% of entities meet the goal; target " + target + "%");
+    g.setAttribute("aria-label", empty ? (parts ? met + " of " + plural(parts, "scorecard") + " at the target of " + target + "%, each scored on its own" : "no single score") : pct + "% of entities meet the goal; target " + target + "%");
     return g;
   }
 
-  function kpiBar(pct, label) {
-    var g = el("div", { className: "kpi-bar" }, el("span", { style: "width:" + Math.max(0, Math.min(100, pct || 0)) + "%" }));
+  function kpiBar(pct, label, short) {
+    var g = el("div", { className: "kpi-bar" + (short ? " short" : "") }, el("span", { style: "width:" + Math.max(0, Math.min(100, pct || 0)) + "%" }));
     g.setAttribute("role", "img");
     g.setAttribute("aria-label", label);
     return g;
@@ -1780,6 +1794,40 @@
   function campaignState(c) {
     if (!c.inScope && c.measure == null) return "empty";
     return c.onTarget ? "on" : "off";
+  }
+
+  // A campaign whose scorecards rate different kinds has no shared scope, so each included scorecard is
+  // measured against the campaign's target on its own.
+  function includeProgress(D, c) {
+    var target = c.targetPercent == null ? 100 : c.targetPercent;
+    return (c.includes || []).map(function (i) {
+      var sc = (D.scorecards || {})[i.scorecard];
+      var order = levelOrder(sc && sc.levels);
+      var goal = i.atLeast ? order.indexOf(i.atLeast) : order.length - 2;
+      var rated = Object.values((D.scores || {})[i.scorecard] || {}).filter(function (x) {
+        return x.level !== "skipped";
+      });
+      var below = rated.filter(function (x) {
+        return order.indexOf(x.level) < goal;
+      }).length;
+      var pct = rated.length ? Math.floor((100 * (rated.length - below)) / rated.length) : 0;
+      return { name: i.scorecard, title: title(D, i.scorecard), known: !!sc, goal: order[goal], rated: rated.length, below: below, pct: pct, met: !!sc && pct >= target };
+    });
+  }
+
+  // "on", "off" or "empty" for every campaign, judging one scored per scorecard by its scorecards.
+  function campaignStanding(D, c) {
+    var state = campaignState(c);
+    if (state !== "empty") return state;
+    var each = includeProgress(D, c).filter(function (p) {
+      return p.known;
+    });
+    if (!each.length) return "empty";
+    return each.every(function (p) {
+      return p.met;
+    })
+      ? "on"
+      : "off";
   }
 
   function scorecardRows(D) {
@@ -1828,7 +1876,7 @@
       .sort(function (a, b) {
         var ca = campaigns[a];
         var cb = campaigns[b];
-        return rank[campaignState(ca)] - rank[campaignState(cb)] || (ca.percent || 0) - (cb.percent || 0) || a.localeCompare(b);
+        return rank[campaignStanding(D, ca)] - rank[campaignStanding(D, cb)] || (ca.percent || 0) - (cb.percent || 0) || a.localeCompare(b);
       });
   }
 
@@ -1947,13 +1995,13 @@
   function healthVerdict(D, S, campaignNames) {
     var campaigns = D.campaigns || {};
     var off = campaignNames.filter(function (n) {
-      return campaignState(campaigns[n]) === "off";
+      return campaignStanding(D, campaigns[n]) === "off";
     });
     var debt = S.rows.filter(function (r) {
       return r.none > 0 && !r.compare;
     });
     var blind = campaignNames.filter(function (n) {
-      return campaignState(campaigns[n]) === "empty";
+      return campaignStanding(D, campaigns[n]) === "empty";
     });
     if (!campaignNames.length && !S.rows.length) return "No campaigns or scorecards in this snapshot.";
     if (!off.length && !debt.length && !blind.length) return "On track: every active campaign meets its target, and no scorecard has entities at none.";
@@ -2469,7 +2517,7 @@
       var pct = total ? Math.round((c.pass / total) * 100) : 0;
       var checkNote = [c.vacuous ? fmt(c.vacuous) + " more pass only because no agent has assessed them yet" : null, c.unknown ? fmt(c.unknown) + " not run" : null].filter(Boolean);
       var on = campaignNames.filter(function (n) {
-        return campaignState(campaigns[n]) === "on";
+        return campaignStanding(D, campaigns[n]) === "on";
       }).length;
       var debt = S.rows.filter(function (r) {
         return r.none > 0 && !r.compare;
@@ -2508,14 +2556,20 @@
       var pct = c.percent == null ? 0 : c.percent;
       var target = c.targetPercent == null ? 100 : c.targetPercent;
       var days = daysLeft(c.end);
+      var each = includeProgress(D, c);
+      var toGo = each.reduce(function (n, p) {
+        return n + (p.met ? 0 : p.below);
+      }, 0);
       var status =
         state === "empty"
-          ? el("span", { className: "sub", textContent: "Each scored on its own: " + andList((c.includes || []).map(function (i) { return title(D, i.scorecard); })) })
+          ? toGo
+            ? el("span", { className: "pill bad", textContent: fmt(toGo) + " to go" })
+            : el("span", { className: "pill good", textContent: "on target" })
           : state === "on"
             ? el("span", { className: "pill good", textContent: "on target" })
             : el("span", { className: "pill bad", textContent: (c.inScope || 0) - (c.meeting || 0) + " to go" });
       var a = link("campaign/" + enc(name), "card", [
-        goalBar(state, pct, target, false, (c.includes || []).map(function (i) { return title(D, i.scorecard); })),
+        goalBar(state, pct, target, false, each),
         el(
           "div",
           {},
@@ -2647,12 +2701,14 @@
                 })
               : null;
             var byLevel = {};
+            var topAt = {};
             var levelOrderSeen = [];
             x.rows.forEach(function (r) {
               var f = floorOf(D, r.name);
               if (!f) return;
               if (!byLevel[f]) levelOrderSeen.push(f);
               byLevel[f] = (byLevel[f] || 0) + 1;
+              if (isTop(D, r.name, f) && !ONLY_LEVEL.has(f) && LADDER.indexOf(f) < LADDER.length - 1) topAt[f] = (topAt[f] || 0) + 1;
             });
             var mix = q
               ? ""
@@ -2663,7 +2719,7 @@
                     return (ra < 0 ? 9 : ra) - (rb < 0 ? 9 : rb);
                   })
                   .map(function (l) {
-                    return byLevel[l] + " at " + levelName(l);
+                    return byLevel[l] + " at " + levelName(l) + (topAt[l] ? " (" + topAt[l] + " at its top level)" : "");
                   })
                   .join(" · ");
             var fold = null;
@@ -2792,10 +2848,10 @@
               "section",
               {},
               el("div", { className: "head" }, el("h2", { textContent: "Tracks" }), link("tracks", "", "All tracks →")),
-              el("p", { className: "lede", textContent: "Long-running lines of work, furthest from its goal first: the ring is the average of each scorecard's share of entities at the top level, so a small scorecard counts as much as a large one." + (tracksSorted(D, S).some(function (t) {
+              el("p", { className: "lede", textContent: (furthestTrack(D, S) ? plural(tracksSorted(D, S).length, "long-running line") + " of work; " + trackTitle(D, furthestTrack(D, S)) + " is furthest from its goal. " : "") + "Each ring is its scorecards' average share of entities at the top level." + (tracksSorted(D, S).some(function (t) {
                   return t.compare;
                 })
-                  ? " A comparison track comes last, and its ring counts factors ahead of a rival instead."
+                  ? " The comparison track's ring counts factors ahead of a rival instead."
                   : "") + " Open a track for its scorecards and campaigns." }),
               this.trackStrip(D, S, tracksSorted(D, S), "Tracks", true),
             )
@@ -2890,11 +2946,11 @@
           var l = c.floor || "not scored";
           if (!shelf[l]) {
             shelf[l] = 0;
-            shelfTop[l] = true;
+            shelfTop[l] = 0;
             shelfOrder.push(l);
           }
           shelf[l]++;
-          shelfTop[l] = shelfTop[l] && !!c.floor && isTop(D, c.row.name, c.floor);
+          if (c.floor && isTop(D, c.row.name, c.floor)) shelfTop[l]++;
         });
         shelfOrder.sort(function (a, b) {
           return rankLevel(a === "not scored" ? null : a) - rankLevel(b === "not scored" ? null : b);
@@ -2902,10 +2958,10 @@
         kids.push(
           el(
             "div",
-            { className: "shelf", role: "img", ariaLabel: "Scorecards by their weakest entity's level: " + shelfOrder.map(function (l) { return shelf[l] + " " + l; }).join(", ") },
+            { className: "shelf", role: "img", ariaLabel: "Scorecards by their weakest entity's level: " + shelfOrder.map(function (l) { return shelf[l] + " " + l + (shelfTop[l] && shelfTop[l] < shelf[l] ? ", " + shelfTop[l] + " of them at its top level" : shelfTop[l] ? ", at its top level" : ""); }).join("; ") },
             el("span", { className: "sub", textContent: "Medals:" }),
             ...shelfOrder.map(function (l) {
-              return el("span", { className: "sh" }, medal(l === "not scored" ? "none" : l, 20), el("b", { textContent: String(shelf[l]) }), " " + levelName(l) + (shelfTop[l] || ONLY_LEVEL.has(l) ? " ✓ top" : ""));
+              return el("span", { className: "sh" }, medal(l === "not scored" ? "none" : l, 20), el("b", { textContent: String(shelf[l]) }), " " + levelName(l) + (shelfTop[l] === shelf[l] || ONLY_LEVEL.has(l) ? " ✓ top" : shelfTop[l] ? " (" + shelfTop[l] + " ✓ top)" : ""));
             }),
           ),
         );
@@ -3143,29 +3199,27 @@
         var kinds = (c.includes || []).map(function (i) {
           return ((D.scorecards || {})[i.scorecard] || {}).kind;
         });
-        var openRows = (c.includes || []).map(function (i) {
-          var row = S.rows.find(function (r) {
-            return r.name === i.scorecard;
-          });
-          var order = row ? levelOrder(row.sc.levels) : [];
-          var goal = i.atLeast ? order.indexOf(i.atLeast) : order.length - 2;
-          var below = Object.values((D.scores || {})[i.scorecard] || {}).filter(function (sc) {
-            return sc.level !== "skipped" && order.indexOf(sc.level) < goal;
-          }).length;
+        var openRows = includeProgress(D, c).map(function (p) {
+          var kind = ((D.scorecards || {})[p.name] || {}).kind;
           return el(
             "div",
             { className: "gap" },
-            link("scorecard/" + enc(i.scorecard), "", title(D, i.scorecard)),
-            el("div", { className: "why", textContent: row ? plural(below, "entity", "entities") + " below " + (order[goal] || "the goal") + " of " + (row.sc.kind ? kindCount(D, row.sc.kind, row.scored) : fmt(row.scored)) : "not in this report" }),
+            link("scorecard/" + enc(p.name), "", p.title),
+            el(
+              "div",
+              { className: "why incl" },
+              p.known ? kpiBar(p.pct, p.pct + "% at " + p.goal + " or above; target " + target + "%", !p.met) : null,
+              el("span", { textContent: p.known ? p.pct + "% at " + p.goal + " or above · " + (p.met ? "✓ at target" : fmt(p.below) + " of " + (kind ? kindCount(D, kind, p.rated) : fmt(p.rated)) + " to lift") : "not in this report" }),
+            ),
           );
         });
         gapList.append(
-          el("p", { className: "next", style: "margin:0 0 10px" }, el("b", { textContent: "Open work, per scorecard. " }), "The scorecards in this campaign rate different things, so there is no single percentage; each line shows how far its own scorecard has to go."),
+          el("p", { className: "next", style: "margin:0 0 10px" }, el("b", { textContent: "Progress, per scorecard. " }), "The scorecards in this campaign rate different things, so each is measured against the target of " + target + "% on its own" + (c.end ? ", by " + c.end + (days != null && days >= 0 ? " (" + plural(days, "day") + " left)" : "") : "") + "."),
           ...openRows,
           el(
             "details",
             { className: "sub", style: "margin-top:8px" },
-            el("summary", { textContent: "Why there's no progress ring here" }),
+            el("summary", { textContent: "Why each scorecard is measured on its own" }),
             el("p", { textContent: "A campaign's scope is the entities rated by every scorecard it includes, and no entity is rated by all of these" + (kinds.length > 1 && kinds.some(function (k) { return k !== kinds[0]; }) ? " (they rate " + kinds.filter(Boolean).join(" and ") + ")" : "") + ". Include scorecards that rate the same kind to give it one." }),
           ),
         );
@@ -3245,7 +3299,7 @@
         },
         ...names.map(function (n) {
           var cn = all[n];
-          return el("option", { value: n, selected: n === selected, textContent: (cn.title || n) + " (" + (campaignState(cn) === "empty" ? "no single score" : (cn.percent || 0) + "%") + ")" });
+          return el("option", { value: n, selected: n === selected, textContent: (cn.title || n) + " (" + (campaignState(cn) === "empty" ? goalWords(includeProgress(D, cn)) : (cn.percent || 0) + "%") + ")" });
         }),
       );
       return el(
@@ -3272,7 +3326,7 @@
             "div",
             { className: "ehead" },
             el("div", {}, el("h2", { textContent: c.title || selected }), el("div", { className: "sub" }, c.status || "", track ? el("span", {}, " · track ", link(trackPath(D, c.track), "", track)) : null, c.owner ? " · owned by " + c.owner.replace(/^group:/, "") : null)),
-            goalBar(state, pct, target, true, (c.includes || []).map(function (i) { return title(D, i.scorecard); })),
+            goalBar(state, pct, target, true, includeProgress(D, c)),
           ),
           c.description ? el("p", { className: "lede" }, ...rich(c.description)) : null,
           state === "empty"
@@ -3287,7 +3341,7 @@
           state === "empty" ? null : marks,
           el("h3", { textContent: "Goal" }),
           includes,
-          el("h3", { textContent: state === "empty" ? "Scope" : "Not meeting yet" + (gaps.length ? " (" + gaps.length + ")" : "") }),
+          el("h3", { textContent: state === "empty" ? "Progress" : "Not meeting yet" + (gaps.length ? " (" + gaps.length + ")" : "") }),
           gapList,
         ),
       );
