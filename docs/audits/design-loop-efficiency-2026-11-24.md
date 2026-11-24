@@ -99,6 +99,19 @@ Adopted as [D01M87PSM9YQGGW3YQ5X4XCJP63](../decisions/D01M87PSM9YQGGW3YQ5X4XCJP6
 5. **Two reference portals.** Every design-review round renders Toolbox's own portal and the
    OpenFGA portal, and the reader tasks include at least one about the second.
 
+## Measured after the change
+
+| Step | Before (loop 2) | After |
+|---|---|---|
+| See one page in one state after an edit | 1.6 s build + 8.5 s report for the one portal | Storybook dev server hot reload; a static build of all 53 stories takes 1.5 s |
+| Mechanical checks per round | 53 s capture of 14 routes on one portal, then the auditor | 33 s probe of 212 checks (53 stories × 4 views) on three portals and two synthetic states, in CI on every push |
+| States an auditor can see | Whatever T4T's data happened to contain | Fixtures for a comparison not measured yet and a portal with no data, beside the real ones |
+| Defects found mechanically | None by a probe; WCAG 2.2 target size was found by an auditor in round 7 | 46 of 212 checks failed on the first probe: a WCAG 2.5.3 name mismatch on all three portals, an unnamed empty bar, and sideways scroll on two pages of the second and third portals only. All fixed in one commit |
+
+The second portal kept paying for itself after the first render: it also showed that the
+`github-actions` package named its scorecards with Toolbox's own `maintainer-` prefix (fixed in
+0.3.0 with a `prefix` parameter) and that the starter's two scorecards had no titles.
+
 ## Sources
 
 - [toolbox-report-2026-11-24-2.md](./toolbox-report-2026-11-24-2.md): the scores, findings and
