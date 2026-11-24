@@ -11,8 +11,16 @@ kinds:
     identityFrom: [connector:workspace]
     fields:
       title: {type: string, description: "The product's name."}
-      version: {type: string, description: The version or install measured.}
-      harness: {type: string, description: The harness commit that measured it.}
+      version:
+        type: string
+        description: >-
+          The build measured: for Toolbox a commit of a release build, for
+          Backstage the create-app and Backstage releases.
+      harness:
+        type: string
+        description: >-
+          The commit of the benchmark scripts (experiments/backstage-compare) that
+          measured it.
       corpus:
         type: number
         description: Components in the catalog the performance runs used.

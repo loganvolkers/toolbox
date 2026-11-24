@@ -3275,7 +3275,7 @@
                   {},
                   ...names.map(function (n) {
                     var rd = sc.rules[n];
-                return el("li", {}, el("span", { style: "display:inline-flex;flex-wrap:wrap;gap:4px 6px;align-items:center" }, el("b", {}, ruleLink(active, n)), basisBadge(basisOf(rd))), rd.rationale || rd.fix ? el("span", { className: "why" }, ...rich(rd.rationale || rd.fix)) : null);
+                return el("li", {}, el("span", { style: "display:inline-flex;flex-wrap:wrap;gap:4px 6px;align-items:center" }, el("b", {}, ruleLink(active, n)), basisBadge(basisOf(rd))), rd.rationale || rd.fix ? el("span", { className: "why" }, ...rich(rd.rationale || rd.fix)) : null, refs(rd.links));
                   }),
                 )
               : el("div", { className: "sub", textContent: "No rules at this level." }),
