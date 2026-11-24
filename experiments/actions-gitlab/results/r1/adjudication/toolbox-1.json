@@ -1,0 +1,54 @@
+{
+  "run": "toolbox-1",
+  "C1": "holds",
+  "P1": {
+    "verdict": "holds",
+    "evidence": "GET /projects/acme-w11%2F{alpha,beta,gamma}/repository/tree?ref=main&path=.toolbox&recursive=true (root token, read-only): each project's main has .toolbox/toolbox.yaml (include: [actions/*.yaml]), .toolbox/actions/set-codeowners.yaml, .toolbox/scripts/set-codeowners.py, .toolbox/scripts/test_set_codeowners.py and .toolbox/tests/set-codeowners.test.yaml. `toolbox run -o json` from org/ lists each action from the project's own clone (portal.path .../federation/org-3830c719/<p>/.toolbox); org/toolbox.yaml holds only federation.children git URLs, no copy of the action."
+  },
+  "P2": {
+    "verdict": "holds",
+    "evidence": "From org/ with `. ./env.sh`, as ann (--identity-token-file people/ann.token) on portal:alpha, both preview and `--yes` request for: pattern='docs folder' owners='@acme/probe' -> exit 2, errors ['pattern: \"docs folder\" does not match ...']; pattern=/probe-invalid/ owners='@a @b @c @d' -> exit 2, owners does not match; pattern=/probe-invalid/ owners=carol -> exit 2, owners does not match. Run records in home/.local/state/toolbox/runs stayed at 9 files (no run created). alpha main fea679cde791f17c08c21088408958285f0a635c before and after."
+  },
+  "P3": {
+    "verdict": "holds",
+    "evidence": "As ann: `toolbox run set-codeowners --entity portal:beta -i pattern=/probe-preview/ -i 'owners=@acme/probe' --identity-token-file people/ann.token -o json` -> exit 0, .effects[0] is the CODEOWNERS unified diff (+/probe-preview/ @acme/probe after '/docs/ @acme/docs @carol'), .effects[1] the push it would make, plus a confirm_token. No run record created (9 files). beta main f8625f96997c82201357f11ddd5ae2d1b643a666 before and after."
+  },
+  "P4": {
+    "verdict": "holds",
+    "evidence": "As dave from org/: `toolbox run set-codeowners --entity portal:gamma -i pattern=/probe-approval/ -i 'owners=@acme/probe' --yes --identity-token-file people/dave.token -o json` -> exit 3, run_2g0pqrenddkt awaiting_approval, requested_by user:dave. gamma main 271973cc076ce5a5d3938bfcddbbfd5da395da76 unchanged. `toolbox run --approve run_2g0pqrenddkt --identity-token-file <p>.token --wait -o json`: dave -> exit 2 'a requester cannot approve their own run'; ann -> exit 2 'user:ann is not one of the pending approvers [\"group:acme-w11/release\"]'; carol -> exit 2, same. `--verify` still awaiting_approval (exit 3); gamma main still 271973cc."
+  },
+  "P5": {
+    "verdict": "holds",
+    "evidence": "`toolbox run --approve run_2g0pqrenddkt --identity-token-file people/erin.token --note 'probe P5' --wait -o json` -> exit 0, state succeeded, outputs.commit 4cef8b62, verification.child.checked 'fetched origin/main: the commit is on it, and every file it changed has the content the preview showed', files[CODEOWNERS].matches true. gamma main moved to 4cef8b621d5c; raw CODEOWNERS on main is '/graphify/security.py @acme/security\\n/probe-approval/ @acme/probe\\n'. Source (crates/toolbox-exec/src/run.rs on_base -> executor.rs landed/merged): before setting succeeded it runs `git fetch -q -- origin main`, `git merge-base --is-ancestor <commit> origin/main`, and compares the CODEOWNERS blob of the commit with origin/main's; any mismatch fails the run."
+  },
+  "P6": {
+    "verdict": "holds",
+    "evidence": "Recorded alpha's protection (main: push 40 Maintainers, merge 40 Maintainers, allow_force_push false), then with the root token DELETE+POST protected_branches name=main push_access_level=0 merge_access_level=0 (No one). As ann: request pattern=/probe-reject/ owners=@acme/probe --yes -> exit 3, run_2g0q5v362s6l. As dave: --approve --wait -> exit 1, state failed, error 'the push to origin main was refused, so nothing landed: ... You are not allowed to push code to protected branches on this project'. `--verify` -> failed, exit 1; no succeeded event. alpha main fea679cde791 before and after. Protection restored to push 40 / merge 40 / allow_force_push false and checked."
+  },
+  "P7": {
+    "verdict": "holds",
+    "evidence": "From /tmp/actions-gitlab/r1/toolbox-1/org: `toolbox run -o json` (exit 0) lists set-codeowners with entities portal:alpha, portal:beta and portal:gamma. P4 (run_2g0pqrenddkt) was requested from org/ with --entity portal:gamma."
+  },
+  "P8": {
+    "verdict": "holds",
+    "evidence": "`toolbox run --verify run_2g0pqrenddkt -o json`: requested_by user:dave; approval.approved_by [user:erin]; inputs {pattern: /probe-approval/, owners: @acme/probe}; state succeeded with outputs.commit; events with `at` timestamps: previewed/confirmed by user:dave 19:51:36Z, approval_refused by dave, ann, carol 19:51:37-38Z, approved by user:erin 19:51:45Z, dispatched/running 19:51:46Z, succeeded 19:51:47Z."
+  },
+  "P9": {
+    "verdict": "holds",
+    "evidence": "Root token: DELETE /groups/acme-w11%2Frelease/members/<erin> (204); direct members now [dave]. No file in the system changed (org checkout clean, org main 28a9d06 unchanged). As ann: request on portal:beta pattern=/probe-group/ owners=@acme/probe --yes -> exit 3, run_2g0qdhorg34j. erin --approve -> exit 2 'user:erin is not one of the pending approvers'; beta main still f8625f96. dave --approve --wait -> exit 0, succeeded, approved_by [user:dave], commit f0d0d970; beta main f0d0d970 and CODEOWNERS is '/docs/ @acme/docs @carol\\n/probe-group/ @acme/probe\\n'. Afterwards erin was re-added to acme-w11/release as Developer (30) so the group is as it was."
+  },
+  "P10": {
+    "verdict": "holds",
+    "evidence": "Every step above was a single non-interactive `toolbox run ... -o json` command (list, preview, request with --yes, approve with --wait, verify), each printing JSON and a meaningful exit code (0 succeeded, 1 failed, 2 refused/invalid, 3 awaiting approval)."
+  },
+  "P11": {
+    "verdict": "holds",
+    "evidence": "Operated entirely from HANDOFF.md on org's main (identical to results/r1/toolbox-1.HANDOFF.md): `cd org && git pull -q && . ./env.sh`, then the listed list/preview/request/approve/verify commands. Nothing had to be started. No fixes needed. Source was read only for P5's evidence."
+  },
+  "fixes": [],
+  "strikes": [],
+  "linesBeforeStrikes": 271,
+  "linesAfterStrikes": 271,
+  "fullyPasses": true,
+  "notes": "Every counted file is code, configuration, a test or the task's CODEOWNERS line; beta's and gamma's identical copies of the action are already excluded by score.py as copies. Runtime data (run records, signing key, federation clones) lives under home/.local/state/toolbox and is outside the measure. The awaiting_approval event note still tells the approver to use `toolbox run --as <approver> --approve`, which the handoff says is refused under identity: true (the right path is --identity-token-file); cosmetic. Probe side effects left on GitLab: gamma's and beta's CODEOWNERS gained the probe lines (P5, P9), as the probes require; alpha's protection and the release group's membership were restored."
+}
