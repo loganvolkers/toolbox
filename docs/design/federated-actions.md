@@ -169,7 +169,7 @@ previews.
 | T3 | **The child previews.** A parent's preview is the child's preview, so blockers, effects and approvals are the child's | Both previews come from one `prepare` |
 | T4 | **A repo portal holds no approvals.** An action with approvers ends `awaiting_approval` (exit 3) in a checkout | `toolbox run` |
 | T5 | **A child trusts a parent's approvals only by name.** A run dispatched with `--parent-run org/<id> --approved-by …` counts the approvals only if `acceptApprovalsFrom` lists `org` | `toolbox run` |
-| T6 | **Nobody approves their own run** | The run lifecycle (`not-an-approver`) |
+| T6 | **Nobody approves their own run, and an approver is someone named.** Each approval entry is a user, a group, or a list meaning any one of them. A group needs an authorization model to know its members; without one it can't be met, rather than meaning anyone | The run lifecycle and `toolbox serve` (`not-an-approver`) |
 | T7 | **Review is a change's approval.** A `change` action's approvers approve by reviewing and merging its pull request, behind the repo's branch protection; the run waits as `proposed`, not `awaiting_approval` | `by_review` in the preview |
 | T8 | **The child verifies.** A federated run's verification is the child's, recorded as `{by: child portal, child_run, child}` | `recheck` asks the child |
 
@@ -198,7 +198,7 @@ actions:
       required: [team]
       properties: {team: {type: string, pattern: "^@[a-z0-9-]+/[a-z0-9-]+$"}}
     permission: can_run_actions          # OpenFGA relation on the target entity
-    approval: "['group:maintainers']"     # CEL: who may approve
+    approval: "[['user:ann', 'user:bob']]" # CEL: each entry must approve; a list is any one of it
     executor:
       type: command                       # or change, github-workflow, in-image
       run: >-
@@ -274,7 +274,6 @@ network and no Postgres.
 | A federated github-workflow run's verification | The parent sees the workflow's conclusion; the child's own verification needs the child's run record as a workflow artifact |
 | Duplicate child portal names | Two children with one name shadow each other; validation should name both |
 | Fan-out in one command | A fleet change is one run per child (a loop); `--all` waits for a use beyond scripts |
-| Development mode treats everyone as a group member | With no authorization model, `allowed()` is true. Production portals have an OpenFGA model |
 | S8, S9, S11, S12 | §4 |
 
 ## 8. Against the alternatives

@@ -448,10 +448,19 @@ pub async fn approve(
         Ok(r) => r,
         Err(r) => return r,
     };
+    // Groups the caller is in. Without an authorization model nobody is known to be in a group,
+    // so a group approver can't be satisfied: an approval must not mean "anyone".
     let mut member = Vec::new();
-    for g in run.pending_approvers() {
+    for g in run
+        .pending_approvers()
+        .iter()
+        .flat_map(|a| a.split('|').map(str::to_owned).collect::<Vec<_>>())
+    {
         if g == caller.user {
             member.push(g);
+            continue;
+        }
+        if s.authz.is_none() || !g.starts_with("group:") {
             continue;
         }
         match s.allowed(&caller, "member", &g).await {

@@ -208,7 +208,7 @@ pub fn check(
         .as_deref()
         .map(|a| eval(a, &entity, inputs, policies, None))
     {
-        Some(Ok(Value::Array(a))) => a,
+        Some(Ok(Value::Array(a))) => a.into_iter().map(any_of).collect(),
         Some(Ok(Value::Null)) | None => vec![],
         Some(Ok(other)) => vec![other],
         Some(Err(err)) => {
@@ -245,4 +245,18 @@ pub fn check(
         out.related.insert(lname.clone(), Value::Array(matches));
     }
     Ok(out)
+}
+
+/// An approval entry that is a list of principals is satisfied by any one of them; it is kept as
+/// one string, `user:ann|user:bob`, so a run records and matches it like any other approver.
+fn any_of(entry: Value) -> Value {
+    match entry {
+        Value::Array(xs) => Value::String(
+            xs.iter()
+                .map(|x| x.as_str().map_or_else(|| x.to_string(), str::to_owned))
+                .collect::<Vec<_>>()
+                .join("|"),
+        ),
+        other => other,
+    }
 }

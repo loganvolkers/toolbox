@@ -145,7 +145,9 @@ actions:
       required: [team]
       properties: {team: {type: string, pattern: "^@[a-z0-9-]+/[a-z0-9-]+$"}}
     permission: can_run_actions
-    approval: "['group:maintainers']"
+    # A list inside the list is "any one of": ann or bob, never the requester. A group approver
+    # needs an authorization model (authz:) to know its members; without one it can't be met.
+    approval: "[['user:ann', 'user:bob']]"
     executor:
       type: command
       run: >-

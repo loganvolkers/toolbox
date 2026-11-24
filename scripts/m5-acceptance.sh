@@ -114,12 +114,13 @@ OUT=$(rest ann POST /v1/actions/set-owners/runs -d "{\"entity\":\"portal:gamma\"
 [ "$(echo "$OUT" | field "['state']")" = awaiting_approval ] || fail "set-owners via the org: $OUT"
 RID=$(echo "$OUT" | field "['id']")
 [ "$(rest ann POST "/v1/runs/$RID/approvals" -d '{}' | field "['code']")" = not-an-approver ] || fail "self-approval accepted"
+[ "$(rest carol POST "/v1/runs/$RID/approvals" -d '{}' | field "['code']")" = not-an-approver ] || fail "an approval by someone not listed was accepted"
 rest bob POST "/v1/runs/$RID/approvals" -d '{"note":"gamma is ours"}' >/dev/null
 for _ in $(seq 60); do
   STATE=$(rest ann GET "/v1/runs/$RID" | field "['state']"); case $STATE in succeeded|failed|unverified) break;; esac; sleep 0.5
 done
 [ "$STATE" = succeeded ] || fail "approved set-owners ended $STATE: $(rest ann GET "/v1/runs/$RID")"
-echo "   set-owners on gamma: awaiting_approval, approved by bob in the org portal, succeeded in gamma"
+echo "   set-owners on gamma: awaiting_approval; ann (the requester) and carol (not listed) refused; approved by bob in the org portal, succeeded in gamma"
 mcp() { curl -s -X POST -H 'x-toolbox-user: ann' -H 'content-type: application/json' "$URL/mcp" \
   -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"$1\",\"arguments\":$2}}"; }
 ARGS='{"action":"write-readme","id":"portal:gamma","inputs":{"text":"Gamma, written by an agent over MCP."}}'

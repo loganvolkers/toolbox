@@ -225,8 +225,8 @@ impl Run {
         self.set("failed", None, Some(e));
     }
 
-    /// Record an approval; `true` once every approver has approved. Approvers are groups or
-    /// users; `member_of` says whether `who` satisfies one.
+    /// Record an approval; `true` once every approver has approved. Approvers are groups, users,
+    /// or `a|b|…`, satisfied by any one of them; `member_of` says whether `who` is in a group.
     pub fn approve(&mut self, who: &str, member_of: impl Fn(&str) -> bool) -> Result<bool, String> {
         if self.state != "awaiting_approval" {
             return Err(format!(
@@ -238,7 +238,10 @@ impl Run {
             return Err("a requester cannot approve their own run".into());
         }
         let pending: Vec<String> = self.pending_approvers();
-        let Some(which) = pending.iter().find(|a| *a == who || member_of(a)) else {
+        let Some(which) = pending
+            .iter()
+            .find(|a| *a == who || member_of(a) || a.split('|').any(|p| p == who || member_of(p)))
+        else {
             return Err(format!(
                 "{who} is not one of the pending approvers {pending:?}"
             ));
@@ -590,6 +593,28 @@ mod tests {
             Ok(true)
         );
         assert!(r.pending_approvers().is_empty());
+    }
+
+    #[test]
+    fn any_one_of_a_list_approves_but_never_the_requester() {
+        let mut r = run();
+        r.approval.approvers = vec![json!("user:bob|user:carol|group:sre"), json!("user:dan")];
+        assert!(r.approve("user:bob", |_| true).is_err(), "the requester");
+        assert!(r.approve("user:eve", |_| false).is_err(), "not listed");
+        assert_eq!(r.approve("user:eve", |g| g == "group:sre"), Ok(false));
+        assert_eq!(r.pending_approvers(), vec!["user:dan".to_string()]);
+        assert!(
+            r.approve("user:carol", |_| false).is_err(),
+            "the entry is met"
+        );
+        assert_eq!(r.approve("user:dan", |_| false), Ok(true));
+        assert_eq!(
+            r.approval.approved_by,
+            vec![
+                "user:bob|user:carol|group:sre=user:eve",
+                "user:dan=user:dan"
+            ]
+        );
     }
 
     #[test]
