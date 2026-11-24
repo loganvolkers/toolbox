@@ -160,6 +160,7 @@ pub struct Scorecard {
     pub levels: Vec<String>,
     pub applies_to: Option<String>,
     /// A comparative scorecard: the subject against its peers, rule by rule.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub compare: Option<Compare>,
     pub rules: Vec<Rule>,
     /// `{newEntitiesAtLeast: <level>}`: ratchet policy for entities new since the baseline.
@@ -279,12 +280,16 @@ pub struct Rule {
     /// count (lines in a file, occurrences of a pattern). Larger is worse.
     pub measure: Option<String>,
     /// CEL evaluated for every in-scope entity: the number a comparison compares.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub value: Option<String>,
     /// `lower` or `higher`: which way `value` improves.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub better: Option<String>,
     /// The unit of `value`, for reports.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub unit: Option<String>,
     /// Relative difference within which two values are at parity.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tolerance: Option<f64>,
     pub fix: Option<String>,
     /// Connector whose records this rule reads. When that connector is skipped, a missing
