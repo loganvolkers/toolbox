@@ -58,6 +58,11 @@ a list of repositories and a repo's action is its inputs, its approvers and its 
     run in round 2 dumped `manifest.schema.json` with Python to find those fields, and started
     the org portal under tmux with `sleep` and a pane capture, only to read the key its children
     pin; those calls are most of the gap to the vanilla arm's tool calls.
+12. **A change's commit message names the run.** `message` takes `{action}`, `{run}`,
+    `{entity}` and `{inputs.<name>}`; `branch` takes only `{action}` and `{run}`, because an
+    input can hold what a branch name cannot. `toolbox validate` refuses any other placeholder,
+    since it would be committed literally. A dry run before round 3 wrote `{successor}` in a
+    message and committed a second time to take it out.
 
 Rejected: a hosted registry of children (a second source of truth beside git), and cloning on
 every request (slow, and a network failure would hide every action).

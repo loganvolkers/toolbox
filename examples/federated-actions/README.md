@@ -74,7 +74,7 @@ Everything an action or a federation needs; `toolbox validate` checks the rest a
 | `actions[].executor.type` | `change` (a commit), `command` (a shell command in the checkout), `github-workflow`, `http`, `webhook`, `in-image` |
 | `executor.run` | `command` and `change`: the shell command. A `change` runs it in a fresh worktree of `base` |
 | `executor.land` | `change`: `push` commits to `base` once approved (never forced); `propose` (default) pushes `branch` for review |
-| `executor.base`, `branch`, `message`, `remote` | `change`: the branch to start from and verify on, the proposal branch (`toolbox/{action}/{run}`), the commit message, the remote (`origin`) |
+| `executor.base`, `branch`, `message`, `remote` | `change`: the branch to start from and verify on, the proposal branch (`toolbox/{action}/{run}`), the commit message, the remote (`origin`). `message` takes `{action}`, `{run}`, `{entity}` and `{inputs.<name>}`; `branch` takes only `{action}` and `{run}` |
 | `executor.secrets` | Environment variables the executor gets; it starts with a cleared environment |
 | `actions[].expect` | `{postcondition: <CEL>, within: 30s}`: what must hold after the run for `succeeded`. A `land: push` change needs none: its commit on `base` is the check |
 | `federation.children` | Parent: `[{git: <url or path>, branch: main, key: <name>}]`; each is offered as `portal:<key>` |

@@ -437,16 +437,39 @@ impl Executor {
 }
 
 fn branch_name(e: &Executor, ctx: &Context) -> String {
-    let id = ctx.run_id.as_deref().unwrap_or("<run id>");
     match e {
         Executor::Change {
             branch: Some(b), ..
-        } => b
-            .replace("{action}", &ctx.action)
-            .replace("{run}", id)
-            .replace("{run_id}", id),
-        _ => format!("toolbox/{}/{id}", ctx.action),
+        } => fill(b, ctx, false),
+        _ => format!(
+            "toolbox/{}/{}",
+            ctx.action,
+            ctx.run_id.as_deref().unwrap_or("<run id>")
+        ),
     }
+}
+
+/// The placeholders a `change` executor's `branch` takes; `message` also takes
+/// [`MESSAGE_PLACEHOLDERS`]. `toolbox validate` refuses any other `{…}`.
+pub const BRANCH_PLACEHOLDERS: &[&str] = &["{action}", "{run}"];
+pub const MESSAGE_PLACEHOLDERS: &[&str] = &["{entity}", "{inputs.<name>}"];
+
+/// `branch` or `message` with its placeholders filled. Inputs go only into a message: an input
+/// can hold characters a branch name cannot.
+fn fill(t: &str, ctx: &Context, inputs: bool) -> String {
+    let id = ctx.run_id.as_deref().unwrap_or("<run id>");
+    let mut out = t
+        .replace("{action}", &ctx.action)
+        .replace("{run}", id)
+        .replace("{run_id}", id);
+    if inputs {
+        out = out.replace("{entity}", ctx.entity["id"].as_str().unwrap_or(""));
+        for (k, v) in &ctx.inputs {
+            let v = v.as_str().map_or_else(|| v.to_string(), str::to_owned);
+            out = out.replace(&format!("{{inputs.{k}}}"), &v);
+        }
+    }
+    out
 }
 
 struct Spawned {
@@ -915,7 +938,7 @@ fn change_run(
                 ctx.run_id.as_deref().unwrap_or("")
             )
         },
-        str::to_owned,
+        |m| fill(m, ctx, true),
     );
     let ident = [
         "-c",
@@ -1238,6 +1261,7 @@ mod tests {
 
     fn landing(cwd: &Path) -> (Executor, Context) {
         let exec = Executor::parse(&json!({"type": "change", "base": "main", "land": "push",
+            "message": "Deprecate {entity}: {inputs.reason}",
             "run": "printf 'Deprecated: %s\\n' \"$TOOLBOX_INPUT_REASON\" > DEPRECATED.md"}))
         .unwrap();
         let mut inputs = Map::new();
@@ -1291,6 +1315,10 @@ mod tests {
         assert_eq!(files[0]["path"], "DEPRECATED.md");
         assert_eq!(files[0]["matches"], true);
         let body = git(&work, &["log", "-1", "--format=%B", "origin/main"]).unwrap();
+        assert!(
+            body.starts_with("Deprecate repository:work: use v2\n"),
+            "{body}"
+        );
         assert!(
             body.contains("Requested-By: user:alice\nApproved-By: user:bob"),
             "{body}"

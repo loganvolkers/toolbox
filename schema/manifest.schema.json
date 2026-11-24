@@ -1257,11 +1257,11 @@
             },
             "branch": {
               "type": "string",
-              "description": "change: the branch name; {action} and {run} are replaced (default toolbox/{action}/{run})."
+              "description": "change: the branch name; {action} and {run} are replaced (default toolbox/{action}/{run}). Inputs are not: they go only in message."
             },
             "message": {
               "type": "string",
-              "description": "change: the commit message."
+              "description": "change: the commit message; {action}, {run}, {entity} and {inputs.<name>} are replaced, and toolbox validate refuses any other placeholder."
             },
             "land": {
               "enum": [

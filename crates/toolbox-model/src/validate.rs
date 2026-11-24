@@ -581,6 +581,9 @@ impl Checker {
                     );
                 }
             }
+            if ty == "change" {
+                self.placeholders(ai, a);
+            }
             if matches!(ty, "http" | "webhook") {
                 self.push(
                     "action.executor",
@@ -590,6 +593,44 @@ impl Checker {
                         a.name
                     ),
                 );
+            }
+        }
+    }
+
+    /// A `change` executor's `branch` takes `{action}` and `{run}`; its `message` also takes
+    /// `{entity}` and `{inputs.<name>}` for a declared input. Anything else in braces would be
+    /// committed literally.
+    fn placeholders(&mut self, ai: usize, a: &crate::manifest::Action) {
+        let declared = |n: &str| a.inputs.pointer(&format!("/properties/{n}")).is_some();
+        for (field, inputs) in [("branch", false), ("message", true)] {
+            let Some(t) = a.executor.get(field).and_then(Value::as_str) else {
+                continue;
+            };
+            let mut rest = t;
+            while let Some(open) = rest.find('{') {
+                let Some(len) = rest[open..].find('}') else {
+                    break;
+                };
+                let name = &rest[open + 1..open + len];
+                rest = &rest[open + len + 1..];
+                let ok = matches!(name, "action" | "run" | "run_id")
+                    || (inputs && name == "entity")
+                    || (inputs && name.strip_prefix("inputs.").is_some_and(declared));
+                if !ok {
+                    let takes = if inputs {
+                        "{action}, {run}, {entity} and {inputs.<name>} for a declared input"
+                    } else {
+                        "{action} and {run} (inputs go only in `message`)"
+                    };
+                    self.push(
+                        "action.executor",
+                        format!("/actions/{ai}/executor/{field}"),
+                        format!(
+                            "action {}: `{field}` has the unknown placeholder {{{name}}}; it takes {takes}",
+                            a.name
+                        ),
+                    );
+                }
             }
         }
     }
