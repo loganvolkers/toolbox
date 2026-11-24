@@ -378,6 +378,26 @@ pub fn execute(
     } = exec.run(ctx, &run.effects);
     run.outputs = outputs;
     run.progress = progress;
+    // A child portal verified its own run: the parent records what the child observed.
+    if let Some(c) = &child
+        && status == "succeeded"
+    {
+        let state = c.get("state").and_then(Value::as_str).unwrap_or("");
+        run.verification = Some(json!({"by": "child portal", "child_run": c.get("id"),
+            "child": c.get("verification")}));
+        run.child = child.clone();
+        run.set("executor_succeeded", None, None);
+        run.set(
+            if state == "succeeded" {
+                "succeeded"
+            } else {
+                "unverified"
+            },
+            None,
+            None,
+        );
+        return;
+    }
     run.child = child;
     match status.as_str() {
         "failed" => {

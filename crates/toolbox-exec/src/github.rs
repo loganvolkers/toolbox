@@ -16,6 +16,9 @@ pub struct Workflow {
     pub git_ref: String,
     pub api: String,
     pub token_env: String,
+    /// For a federated dispatch: the child action's name. The workflow then gets `action`,
+    /// `inputs` (JSON) and `toolbox_run`, and runs `toolbox run` itself.
+    pub federated: Option<String>,
 }
 
 /// A tracked workflow run.
@@ -51,6 +54,7 @@ impl Workflow {
             git_ref: s("ref").unwrap_or_else(|| "main".into()),
             api: s("api").unwrap_or_else(|| "https://api.github.com".into()),
             token_env: s("token").unwrap_or_else(|| "GITHUB_TOKEN".into()),
+            federated: None,
         })
     }
 
@@ -59,8 +63,13 @@ impl Workflow {
             .map_err(|_| format!("set {} to dispatch {}", self.token_env, self.repo))
     }
 
-    /// The inputs GitHub receives: every action input as a string, and `toolbox_run`.
-    pub fn dispatch_inputs(ctx: &Context) -> Value {
+    /// The inputs GitHub receives: every action input as a string, and `toolbox_run`; for a
+    /// federated dispatch, `action`, `inputs` as JSON, `requested_by` and `toolbox_run`.
+    pub fn dispatch_inputs(&self, ctx: &Context) -> Value {
+        if let Some(action) = &self.federated {
+            return json!({"action": action, "inputs": Value::Object(ctx.inputs.clone()).to_string(),
+                "requested_by": ctx.actor, "toolbox_run": ctx.run_id.clone().unwrap_or_default()});
+        }
         let mut m = serde_json::Map::new();
         for (k, v) in &ctx.inputs {
             m.insert(
@@ -95,7 +104,7 @@ impl Workflow {
             self.repo,
             self.workflow
         );
-        let body = json!({"ref": self.git_ref, "inputs": Self::dispatch_inputs(ctx)});
+        let body = json!({"ref": self.git_ref, "inputs": self.dispatch_inputs(ctx)});
         let res = block(async move {
             let r = reqwest::Client::new()
                 .post(url)

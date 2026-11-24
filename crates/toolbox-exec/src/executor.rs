@@ -23,6 +23,8 @@ use std::process::{Command, Stdio};
 #[derive(Debug, Clone)]
 pub struct Context {
     pub run_id: Option<String>,
+    /// The portal the run was requested through; a child portal sees `--parent-run <portal>/<id>`.
+    pub portal: String,
     pub action: String,
     pub action_version: String,
     pub entity: Value,
@@ -30,7 +32,9 @@ pub struct Context {
     /// `user:<id>` or the portal's service identity.
     pub actor: String,
     pub related: Map<String, Value>,
-    /// Where commands run: the directory `toolbox` was started in, like in-image connectors.
+    /// Approvals the parent recorded (`group:x=user:y`), passed to a child portal on dispatch.
+    pub approvals: Vec<String>,
+    /// Where commands run: the portal's repository root, where its connectors' `root: .` points.
     pub cwd: PathBuf,
 }
 
@@ -180,8 +184,10 @@ impl Executor {
                 })
             }
             Executor::InImage { command } => stdio_preview(command, ctx),
-            Executor::Change { run, base, .. } => {
-                let wt = Worktree::new(&ctx.cwd, base.as_deref())?;
+            Executor::Change {
+                run, base, remote, ..
+            } => {
+                let wt = Worktree::new(&ctx.cwd, base.as_deref(), remote)?;
                 let out = spawn(run, ctx, "preview", &wt.dir)?;
                 if !out.ok {
                     return Err(format!("change command failed: {}", out.tail()));
@@ -589,10 +595,20 @@ struct Worktree {
 }
 
 impl Worktree {
-    fn new(cwd: &Path, base: Option<&str>) -> Result<Self, String> {
+    /// A change starts from the remote's base branch when there is one, so a stale or
+    /// differently named local branch does not leak into the proposal.
+    fn new(cwd: &Path, base: Option<&str>, remote: &str) -> Result<Self, String> {
         let repo = PathBuf::from(git(cwd, &["rev-parse", "--show-toplevel"])?);
         let base = match base {
-            Some(b) => b.to_owned(),
+            Some(b) => {
+                let _ = git(&repo, &["fetch", "-q", remote, b]);
+                let tracking = format!("refs/remotes/{remote}/{b}");
+                if git(&repo, &["rev-parse", "-q", "--verify", &tracking]).is_ok() {
+                    format!("{remote}/{b}")
+                } else {
+                    b.to_owned()
+                }
+            }
             None => git(&repo, &["symbolic-ref", "--short", "HEAD"]).unwrap_or("HEAD".into()),
         };
         let dir = std::env::temp_dir().join(format!(
@@ -674,7 +690,7 @@ fn change_run(
     branch: &str,
     message: Option<&str>,
 ) -> Result<Outcome, String> {
-    let wt = Worktree::new(&ctx.cwd, base)?;
+    let wt = Worktree::new(&ctx.cwd, base, remote)?;
     let out = spawn(run, ctx, "run", &wt.dir)?;
     if !out.ok {
         return Ok(Outcome::failed(format!(
@@ -720,10 +736,11 @@ fn change_run(
     args.extend(["commit", "-q", "-m", &msg, "-m", &trailer, "-m", &requested]);
     git(&root, &args)?;
     let commit = git(&root, &["rev-parse", "HEAD"])?;
-    let has_remote = git(&root, &["remote", "get-url", remote]).ok();
+    // From the main checkout: a relative remote URL resolves against it, not the worktree.
+    let has_remote = git(&wt.repo, &["remote", "get-url", remote]).ok();
     let pushed = match &has_remote {
         Some(_) => {
-            git(&root, &["push", "-q", remote, branch])?;
+            git(&wt.repo, &["push", "-q", remote, branch])?;
             true
         }
         None => false,
@@ -750,14 +767,24 @@ fn child_run(
     let mut cmd = Command::new(program);
     cmd.arg("run")
         .arg(action)
-        .arg(portal)
-        .args(["--entity", entity])
+        .arg("--portal")
+        .arg(
+            portal
+                .canonicalize()
+                .unwrap_or_else(|_| portal.to_path_buf()),
+        )
         .args(["--inputs", &Value::Object(ctx.inputs.clone()).to_string()])
         .args(["--as", &ctx.actor, "-o", "json"])
         .args(extra)
         .current_dir(&dir);
+    if !entity.is_empty() {
+        cmd.args(["--entity", entity]);
+    }
     if let Some(id) = &ctx.run_id {
-        cmd.args(["--parent-run", id]);
+        cmd.args(["--parent-run", &format!("{}/{id}", ctx.portal)]);
+    }
+    for a in ctx.approvals.iter() {
+        cmd.args(["--approved-by", a]);
     }
     let out = cmd
         .output()
