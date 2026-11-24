@@ -376,8 +376,11 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
   behind or on target like any other campaign.
 - A standard that caps the repository is at its top level only because its ladder stops short, so a
   track ring leaves it out of the average ("across 5 of its 6 scorecards, leaving out the one that
-  caps the repository") and its bar is drawn amber. The cap is marked with a lock, never ▲, which
-  means "ahead" on Compare.
+  caps the repository") and its bar is drawn amber, with one line under the bars that names it and
+  says why its 100% is not progress. The cap is marked with a lock, never ▲, which means "ahead" on
+  Compare. A medal for a scorecard's own single level reads "“ten”, its only level ✓".
+- The Compare hero carries the method sentence at body size; how factors and rules are counted
+  folds under it, and each factor card writes its rule tally beside its bar.
 - A provisional level names the level each unrun check is needed for ("both needed for bronze"), and
   a kind card whose description says why part of it is not scored shows that sentence.
 
