@@ -764,12 +764,7 @@ pub async fn approve(
         Ok(c) => c,
         Err(r) => return r,
     };
-    let interactive = match caller.method {
-        "iap" | "oidc" => true,
-        "dev" => s.config.auth_mode == "dev",
-        _ => false,
-    };
-    if !interactive {
+    if !interactive(&s, &caller) {
         return problem(
             StatusCode::FORBIDDEN,
             "approval-needs-a-person",
@@ -788,34 +783,56 @@ pub async fn approve(
         Err(r) => return r,
     };
     let reject = body.decision.as_deref() == Some("reject");
-    let decided = s.runs.update(&id, |run| -> Result<bool, String> {
-        if reject {
-            if run.state != "awaiting_approval" || member.is_empty() {
-                return Err(format!("{} cannot reject run {id}", caller.user));
-            }
-            run.approval.rejected_by = Some(caller.user.clone());
-            run.set("rejected", Some(&caller.user), body.note.clone());
-            return Ok(false);
-        }
-        let done = run.approve(&caller.user, |g| member.iter().any(|m| m == g))?;
-        if let (Some(n), Some(e)) = (&body.note, run.events.last_mut()) {
-            e.note = Some(match e.note.take() {
-                Some(slot) => format!("as {slot}: {n}"),
-                None => n.clone(),
-            });
-        }
-        if done {
-            // Out of awaiting_approval under the lock, so a second approval can't start it twice.
-            run.state = "approved".into();
-        }
-        Ok(done)
-    });
+    let note = body.note.as_ref();
+    let decided = s
+        .runs
+        .update(&id, |run| decide(run, reject, &caller.user, &member, note));
     match decided {
         None => problem(StatusCode::NOT_FOUND, "not-found", format!("no run {id}")),
         Some((Err(e), _)) => problem(StatusCode::FORBIDDEN, "not-an-approver", e),
         Some((Ok(false), run)) => Json(run_doc(&run)).into_response(),
         Some((Ok(true), run)) => start_approved(&s, &caller, run).await,
     }
+}
+
+/// A person signed in through a proxy or OIDC, or on a dev server; never a token or MCP (D57).
+fn interactive(s: &AppState, caller: &crate::access::Caller) -> bool {
+    match caller.method {
+        "iap" | "oidc" => true,
+        "dev" => s.config.auth_mode == "dev",
+        _ => false,
+    }
+}
+
+/// Records one approval or rejection on `run`, under the runs lock. `Ok(true)` when it was the
+/// last approval the rule needed: the run moves out of `awaiting_approval` here, so a second
+/// approval can't start it twice.
+fn decide(
+    run: &mut Run,
+    reject: bool,
+    user: &str,
+    member: &[String],
+    note: Option<&String>,
+) -> Result<bool, String> {
+    if reject {
+        if run.state != "awaiting_approval" || member.is_empty() {
+            return Err(format!("{user} cannot reject run {}", run.id));
+        }
+        run.approval.rejected_by = Some(user.to_owned());
+        run.set("rejected", Some(user), note.cloned());
+        return Ok(false);
+    }
+    let done = run.approve(user, |g| member.iter().any(|m| m == g))?;
+    if let (Some(n), Some(e)) = (note, run.events.last_mut()) {
+        e.note = Some(match e.note.take() {
+            Some(slot) => format!("as {slot}: {n}"),
+            None => n.clone(),
+        });
+    }
+    if done {
+        run.state = "approved".into();
+    }
+    Ok(done)
 }
 
 /// The pending approvers (users, or groups) the caller counts as. Without an authorization model

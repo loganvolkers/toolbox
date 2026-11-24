@@ -27,10 +27,10 @@ pub fn state_dir() -> PathBuf {
         .unwrap_or_else(|| std::env::temp_dir().join("toolbox"))
 }
 
-/// The kind child portals and a portal's own entity have when the author declares none.
 /// The connector `federation.children` declares.
 pub const CONNECTOR: &str = "federation";
 
+/// The kind child portals and a portal's own entity have when the author declares none.
 pub const PORTAL_KIND: &str = "Portal";
 
 /// A child's key when it names none: the URL's last segment, without `.git`.

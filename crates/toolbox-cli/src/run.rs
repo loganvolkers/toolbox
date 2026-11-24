@@ -45,8 +45,8 @@ pub struct Options {
     /// Preview and run in one step (scripts and dispatched runs; the preview is still recorded).
     #[arg(long, conflicts_with_all = ["preview", "confirm"])]
     pub yes: bool,
-    /// Re-check a `proposed` or `dispatched` run by its id (every run is saved under
-    /// `$XDG_STATE_HOME/toolbox/runs/`).
+    /// Re-check a run by its id and print its record: who asked, approved and ran it, and what
+    /// was observed (saved under `$XDG_STATE_HOME/toolbox/runs/`, or the server's with --url).
     #[arg(long, value_name = "RUN_ID", conflicts_with_all = ["preview", "confirm", "yes"])]
     pub verify: Option<String>,
     /// Keep checking until the run settles: it succeeds, fails, its deadline passes, or it waits
@@ -63,8 +63,8 @@ pub struct Options {
     /// With --url: a personal access token.
     #[arg(long, env = "TOOLBOX_TOKEN", requires = "url", hide_env_values = true)]
     pub token: Option<String>,
-    /// With --url: approve a run that waits for you. Approvals need an interactive sign-in; a dev
-    /// server (`auth.mode: dev`) takes --as.
+    /// With --url: approve a run that waits for you. Approvals need an interactive sign-in; a
+    /// server with dev sign-in (the default on a loopback address) takes --as.
     #[arg(long, value_name = "RUN_ID", requires = "url", conflicts_with_all = ["preview", "confirm", "yes", "verify", "runs", "reject"])]
     pub approve: Option<String>,
     /// With --url: reject a run that waits for you.
@@ -1023,10 +1023,14 @@ mod remote {
                 );
                 let blocked = p["blockers"].as_array().is_some_and(|b| !b.is_empty());
                 p["next"] = if blocked { Value::Null } else { json!(next) };
-                if !o.yes {
+                if !o.yes || blocked {
                     let portal = p["portal"].as_str().unwrap_or(url).to_owned();
                     emit(o, &p, || preview_md(name, &entity, &portal, &p, &next));
-                    return Ok(ExitCode::SUCCESS);
+                    return Ok(if blocked && o.yes {
+                        ExitCode::from(2)
+                    } else {
+                        ExitCode::SUCCESS
+                    });
                 }
                 token
             }
