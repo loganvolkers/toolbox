@@ -327,7 +327,7 @@
     ".measure .ms{text-align:right}",
     ".measure .full{grid-column:1/-1;margin-top:-4px}",
     ".measure details summary{cursor:pointer;font-size:12.5px;color:var(--muted);padding:4px 0;min-height:24px}",
-    ".vals{display:flex;flex-direction:column;gap:6px}",
+    ".vals{display:flex;flex-direction:column;gap:6px}.vals.yn{flex-direction:row;flex-wrap:wrap;gap:4px 28px}.vals.yn .val{display:inline-flex;gap:8px}",
     ".val{display:grid;grid-template-columns:92px minmax(0,1fr) auto;gap:8px;align-items:center;font-size:13px}",
     ".val .who{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}",
     ".val .vb{height:12px;border-radius:6px;background:var(--tint);overflow:hidden}",
@@ -336,7 +336,7 @@
     ".val .v.pass{color:var(--pass)}.val .v.fail{color:var(--fail)}",
     ".mag{display:block;font-size:12px;color:var(--muted);margin-top:4px}",
     ".behind-row{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,3fr);gap:6px 18px;padding:12px 4px;border-top:1px solid var(--line);font-size:14px}",
-    ".behind-row .why{margin:6px 0 0;color:var(--muted)}.behind-row .why b{color:var(--fg);font-weight:600}",
+    ".behind-row .why{margin:6px 0 0;color:var(--muted)}.behind-row .why .refs{display:inline;margin:0;line-height:inherit}.behind-row .why .refs a{min-height:0;padding:3px 0}.behind-row .why b{color:var(--fg);font-weight:600}",
     ".provisional{color:var(--unknown);font-weight:650}",
     "::slotted(*){display:block;max-width:1120px;margin:0 auto;padding:12px 20px 0;box-sizing:border-box}",
     "@media (max-width:820px){.hero{grid-template-columns:1fr}.split{grid-template-columns:1fr}.split>section:first-child{display:none}.picker{display:flex;flex-direction:column;gap:4px;margin:0 0 16px}.kchips-wrap{display:none}}",
@@ -1480,9 +1480,12 @@
         })
         .concat([0]),
     );
+    var yesNo = vals.every(function (v) {
+      return typeof v === "boolean";
+    });
     return el(
       "div",
-      { className: "vals" },
+      { className: "vals" + (yesNo ? " yn" : "") },
       ...ids.map(function (id, i) {
         var outcome = (((c.scores || {})[id] || {}).rules || {})[r] || "unknown";
         var v = vals[i];
@@ -4202,7 +4205,7 @@
                 "div",
                 {},
                 valueLine(c, r, rd, ids, who),
-                rd.rationale ? el("p", { className: "why" }, el("b", { textContent: "Why it matters: " }), ...rich(rd.rationale)) : null,
+                rd.rationale ? el("p", { className: "why" }, el("b", { textContent: "Why it matters: " }), ...rich(rd.rationale), (rd.links || []).length ? " " : null, refs(rd.links)) : null,
                 rd.fix ? el("p", { className: "why" }, el("b", { textContent: "What would close it: " }), ...rich(rd.fix)) : null,
               ),
             ),
