@@ -89,12 +89,19 @@ export function tallyRing(v, n, size, bare) {
   );
 }
 
+// The same factors under the other counting rule, so two portals that count differently still compare.
+function otherWay(v) {
+  var o = v.other;
+  if (v.majority == null || !o || (o.ahead === v.ahead && o.parity === v.parity && o.behind === v.behind)) return "";
+  return " (" + (v.majority ? "behind if any rule is behind" : "by the majority of rules") + ": ahead on " + o.ahead + (o.parity ? ", at parity on " + o.parity : "") + ", behind on " + o.behind + ")";
+}
+
 export function tallyWords(v, n) {
   if (n && v.unknown >= n) return "not measured yet: no factor has values for both products";
   var r = v.rules;
   // A factor is behind if any one rule is, so the rule split keeps the factor count from reading harsher than it is.
   var byRule = r && r.total ? "; by rule, " + r.ahead + " ahead and " + r.behind + " behind of " + r.total : "";
-  return ["ahead on " + v.ahead, v.parity ? "at parity on " + v.parity : null, "behind on " + v.behind, v.unknown ? "not measured on " + v.unknown : null].filter(Boolean).join(", ") + " of " + n + " factors" + (v.majority == null ? "" : v.majority ? ", counted by the majority of rules" : ", behind if any rule is behind") + byRule;
+  return ["ahead on " + v.ahead, v.parity ? "at parity on " + v.parity : null, "behind on " + v.behind, v.unknown ? "not measured on " + v.unknown : null].filter(Boolean).join(", ") + " of " + n + " factors" + (v.majority == null ? "" : v.majority ? ", counted by the majority of rules" : ", behind if any rule is behind") + otherWay(v) + byRule;
 }
 
 export function shortId(id) {

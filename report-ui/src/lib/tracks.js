@@ -55,11 +55,17 @@ export function trackStats(D, S, name) {
     verdicts[v] = (verdicts[v] || 0) + 1;
     if (v === "behind") behind.push(title(D, r.name));
     var rules = verdicts.rules || (verdicts.rules = { ahead: 0, parity: 0, behind: 0, total: 0 });
+    var k = { ahead: 0, parity: 0, behind: 0, unknown: 0 };
     Object.keys(c.rules || {}).forEach(function (rule) {
       var x = (c.rules[rule] || {})[(c.peers || [])[0]];
       if (x in rules) rules[x]++;
       rules.total++;
+      k[x in k ? x : "unknown"]++;
     });
+    var other = verdicts.other || (verdicts.other = { ahead: 0, parity: 0, behind: 0, unknown: 0 });
+    other[c.verdictRule === "majority"
+      ? k.behind ? "behind" : k.unknown ? "unknown" : k.ahead ? "ahead" : "parity"
+      : k.unknown ? "unknown" : k.ahead > k.behind ? "ahead" : k.behind > k.ahead ? "behind" : "parity"]++;
   });
   var pct = compare
     ? Math.round(((verdicts.ahead + verdicts.parity) / rows.length) * 100)

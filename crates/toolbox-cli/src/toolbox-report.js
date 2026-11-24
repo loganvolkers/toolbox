@@ -342,11 +342,15 @@
       verdicts[v] = (verdicts[v] || 0) + 1;
       if (v === "behind") behind.push(title(D, r.name));
       var rules = verdicts.rules || (verdicts.rules = { ahead: 0, parity: 0, behind: 0, total: 0 });
+      var k = { ahead: 0, parity: 0, behind: 0, unknown: 0 };
       Object.keys(c.rules || {}).forEach(function(rule) {
         var x = (c.rules[rule] || {})[(c.peers || [])[0]];
         if (x in rules) rules[x]++;
         rules.total++;
+        k[x in k ? x : "unknown"]++;
       });
+      var other = verdicts.other || (verdicts.other = { ahead: 0, parity: 0, behind: 0, unknown: 0 });
+      other[c.verdictRule === "majority" ? k.behind ? "behind" : k.unknown ? "unknown" : k.ahead ? "ahead" : "parity" : k.unknown ? "unknown" : k.ahead > k.behind ? "ahead" : k.behind > k.ahead ? "behind" : "parity"]++;
     });
     var pct = compare ? Math.round((verdicts.ahead + verdicts.parity) / rows.length * 100) : shares.length ? Math.round(
       shares.reduce(function(a, b) {
@@ -897,11 +901,16 @@
       bare ? null : svg("text", { x: "50%", y: "50%", "text-anchor": "middle", "dominant-baseline": "central", style: s > 70 ? "font-size:18px" : text.length > 3 ? "font-size:12px" : "" }, text)
     );
   }
+  function otherWay(v) {
+    var o = v.other;
+    if (v.majority == null || !o || o.ahead === v.ahead && o.parity === v.parity && o.behind === v.behind) return "";
+    return " (" + (v.majority ? "behind if any rule is behind" : "by the majority of rules") + ": ahead on " + o.ahead + (o.parity ? ", at parity on " + o.parity : "") + ", behind on " + o.behind + ")";
+  }
   function tallyWords(v, n) {
     if (n && v.unknown >= n) return "not measured yet: no factor has values for both products";
     var r = v.rules;
     var byRule = r && r.total ? "; by rule, " + r.ahead + " ahead and " + r.behind + " behind of " + r.total : "";
-    return ["ahead on " + v.ahead, v.parity ? "at parity on " + v.parity : null, "behind on " + v.behind, v.unknown ? "not measured on " + v.unknown : null].filter(Boolean).join(", ") + " of " + n + " factors" + (v.majority == null ? "" : v.majority ? ", counted by the majority of rules" : ", behind if any rule is behind") + byRule;
+    return ["ahead on " + v.ahead, v.parity ? "at parity on " + v.parity : null, "behind on " + v.behind, v.unknown ? "not measured on " + v.unknown : null].filter(Boolean).join(", ") + " of " + n + " factors" + (v.majority == null ? "" : v.majority ? ", counted by the majority of rules" : ", behind if any rule is behind") + otherWay(v) + byRule;
   }
   function shortId(id) {
     var s = String(id || "");
