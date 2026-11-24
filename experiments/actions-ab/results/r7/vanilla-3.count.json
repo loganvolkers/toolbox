@@ -1,0 +1,1 @@
+{"toolCalls": 20, "byKind": {"shell": 13, "edit": 4, "other": 3}, "byTool": {"run_terminal_cmd": 13, "search_replace": 4, "todo_write": 2, "get_mcp_tools": 1}, "resultChars": 63732, "missingResults": [], "wallSeconds": 257}
