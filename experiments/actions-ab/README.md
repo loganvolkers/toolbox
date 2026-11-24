@@ -129,5 +129,6 @@ product fixes and a new round, which reruns every arm at the new frozen commit (
 | `harness/setup.sh`, `round.sh` | One workspace; one round of workspaces and rendered prompts |
 | `harness/backstage/app-config.local.yaml` | The Backstage arm's overlay |
 | `harness/score.py`, `count.py` | The measures |
+| `harness/tally.py` | §6 from the adjudicator's records: medians, W, H1 to H3 and the bar |
 | `prompts/` | The task, each arm's platform section, and the rendered prompts per round |
 | `results/` | Per-run measures and probe records |
