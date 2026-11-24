@@ -840,7 +840,8 @@ fn decide(
 ) -> Result<bool, String> {
     if reject {
         if run.state != "awaiting_approval" || member.is_empty() {
-            return Err(format!("{user} cannot reject run {}", run.id));
+            let why = format!("{user} cannot reject run {}", run.id);
+            return Err(run.refuse(user, why));
         }
         run.approval.rejected_by = Some(user.to_owned());
         run.set("rejected", Some(user), note.cloned());

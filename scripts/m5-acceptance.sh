@@ -288,6 +288,8 @@ done
 git --git-dir "$WORK/hosts/mini.git" show main:CODE_OF_CONDUCT.md | grep -q local@acme.dev && fail "pushed before approval"
 OUT=$(run "$WORK/gitorg" --approve "$RID" --as bob --note "fine offline" --wait) || fail "approve in the checkout: $OUT"
 [ "$(echo "$OUT" | field "['state']")" = succeeded ] || fail "approved in the checkout: $OUT"
+REFUSED=$(echo "$OUT" | python3 -c "import json,sys; print(' '.join(e['by'] for e in json.load(sys.stdin)['events'] if e['state'] == 'approval_refused'))")
+[ "$REFUSED" = "user:ann user:carol" ] || fail "the refused approvals are not in the record: $REFUSED"
 git --git-dir "$WORK/hosts/mini.git" show main:CODE_OF_CONDUCT.md | grep -q local@acme.dev || fail "CODE_OF_CONDUCT.md is not on mini's main"
 git --git-dir "$WORK/hosts/mini.git" log -1 --format=%B main | grep -q "Approved-By: user:bob" || fail "no Approved-By trailer"
 set +e; run "$WORK/gitorg" --approve "$RID" --as bob >/dev/null 2>&1; CODE=$?; set -e
@@ -297,5 +299,5 @@ RID=$(echo "$OUT" | field "['id']")
 set +e; OUT=$(run "$WORK/gitorg" --reject "$RID" --as bob); CODE=$?; set -e
 [ $CODE = 1 ] && [ "$(echo "$OUT" | field "['state']")" = rejected ] || fail "reject in the checkout ($CODE): $OUT"
 git --git-dir "$WORK/hosts/mini.git" show main:CODE_OF_CONDUCT.md | grep -q never@acme.dev && fail "a rejected run landed"
-echo "   add-code-of-conduct on mini with no server: awaited bob (ann and carol refused), signed with the kept key, pushed and verified; not approved twice; a rejected run did not land"
+echo "   add-code-of-conduct on mini with no server: awaited bob (ann and carol refused, both recorded), signed with the kept key, pushed and verified; not approved twice; a rejected run did not land"
 echo "M5 acceptance: all checks passed"

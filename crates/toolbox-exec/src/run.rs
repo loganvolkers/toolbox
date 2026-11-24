@@ -274,10 +274,24 @@ impl Run {
         self.set("failed", None, Some(e));
     }
 
+    /// Records a refused approval or rejection in the run's events without changing its state,
+    /// and returns the reason. A run that has ended records nothing more.
+    pub fn refuse(&mut self, who: &str, why: String) -> String {
+        if !self.is_terminal() {
+            self.events.push(Event {
+                at: rfc3339(now_secs()),
+                state: "approval_refused".into(),
+                by: Some(who.into()),
+                note: Some(why.clone()),
+            });
+        }
+        why
+    }
+
     /// Record an approval; `true` once every approver has approved. Approvers are groups, users,
     /// or `a|b|…`, satisfied by any one of them; `member_of` says whether `who` is in a group.
     /// Each person approves once, so two approver entries take two people; principals compare
-    /// without regard to case.
+    /// without regard to case. A refusal is recorded in the events.
     pub fn approve(&mut self, who: &str, member_of: impl Fn(&str) -> bool) -> Result<bool, String> {
         if self.state != "awaiting_approval" {
             return Err(format!(
@@ -286,25 +300,28 @@ impl Run {
             ));
         }
         if !who.starts_with("user:") || who.len() == "user:".len() {
-            return Err(format!("{who} is not a person; only a user:<id> approves"));
+            return Err(self.refuse(
+                who,
+                format!("{who} is not a person; only a user:<id> approves"),
+            ));
         }
         let same = |a: &str, b: &str| a.eq_ignore_ascii_case(b);
         if same(who, &self.requested_by) {
-            return Err("a requester cannot approve their own run".into());
+            return Err(self.refuse(who, "a requester cannot approve their own run".into()));
         }
         if self.approval.approved_by.iter().any(|w| same(w, who)) {
-            return Err(format!(
+            let why = format!(
                 "{who} has already approved run {}; another approver must approve the rest",
                 self.id
-            ));
+            );
+            return Err(self.refuse(who, why));
         }
         let pending: Vec<String> = self.pending_approvers();
         let Some(which) = pending.iter().find(|a| {
             same(a, who) || member_of(a) || a.split('|').any(|p| same(p, who) || member_of(p))
         }) else {
-            return Err(format!(
-                "{who} is not one of the pending approvers {pending:?}"
-            ));
+            let why = format!("{who} is not one of the pending approvers {pending:?}");
+            return Err(self.refuse(who, why));
         };
         let which = which.clone();
         self.approval.approved_by.push(who.into());
@@ -816,6 +833,18 @@ mod tests {
         r.approval.approvers = vec![json!("user:bob|user:carol|group:sre"), json!("user:dan")];
         assert!(r.approve("user:bob", |_| true).is_err(), "the requester");
         assert!(r.approve("user:eve", |_| false).is_err(), "not listed");
+        let refused: Vec<_> = r
+            .events
+            .iter()
+            .filter(|e| e.state == "approval_refused")
+            .map(|e| e.by.as_deref().unwrap_or_default())
+            .collect();
+        assert_eq!(
+            refused,
+            ["user:bob", "user:eve"],
+            "each refusal is recorded"
+        );
+        assert_eq!(r.state, "awaiting_approval");
         assert_eq!(r.approve("user:eve", |g| g == "group:sre"), Ok(false));
         assert_eq!(r.pending_approvers(), vec!["user:dan".to_string()]);
         assert!(

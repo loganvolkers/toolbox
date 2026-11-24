@@ -400,7 +400,7 @@ fn act(
     if !p.blockers.is_empty() {
         return error(
             o,
-            1,
+            2,
             format!("{name} is blocked: {}", p.blockers.join("; ")),
         );
     }
@@ -486,7 +486,9 @@ fn decide(o: &Options, portal: &Path, id: &str) -> ExitCode {
         .collect();
     if o.reject.is_some() {
         if run.state != "awaiting_approval" || member.is_empty() {
-            return error(o, 2, format!("{who} cannot reject run {id}"));
+            let why = run.refuse(&who, format!("{who} cannot reject run {id}"));
+            save(&run);
+            return error(o, 2, why);
         }
         run.approval.rejected_by = Some(who.clone());
         run.set("rejected", Some(&who), o.note.clone());
@@ -494,7 +496,10 @@ fn decide(o: &Options, portal: &Path, id: &str) -> ExitCode {
     }
     let done = match run.approve(&who, |g| member.iter().any(|m| m == g)) {
         Ok(done) => done,
-        Err(e) => return error(o, 2, e),
+        Err(e) => {
+            save(&run);
+            return error(o, 2, e);
+        }
     };
     if let (Some(n), Some(e)) = (&o.note, run.events.last_mut()) {
         e.note = Some(format!("as {}: {n}", e.note.take().unwrap_or_default()));
@@ -875,13 +880,18 @@ fn runs_dir() -> PathBuf {
     base.join("runs")
 }
 
-fn finish(o: &Options, run: &Run, code: u8) -> ExitCode {
-    let doc = serde_json::to_value(run).unwrap_or_default();
-    let text = serde_json::to_string_pretty(&doc).unwrap_or_default();
+fn save(run: &Run) -> String {
+    let text = serde_json::to_string_pretty(run).unwrap_or_default();
     let dir = runs_dir();
     if std::fs::create_dir_all(&dir).is_ok() {
         let _ = std::fs::write(dir.join(format!("{}.json", run.id)), &text);
     }
+    text
+}
+
+fn finish(o: &Options, run: &Run, code: u8) -> ExitCode {
+    let doc = serde_json::to_value(run).unwrap_or_default();
+    let text = save(run);
     if let Some(p) = &o.record
         && let Err(e) = std::fs::write(p, &text)
     {
