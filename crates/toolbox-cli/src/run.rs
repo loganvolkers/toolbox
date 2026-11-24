@@ -12,10 +12,9 @@ use serde_json::{Map, Value, json};
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 use std::time::Duration;
-use toolbox_exec::check::{check, with_defaults};
-use toolbox_exec::executor::{Context, Executor};
 use toolbox_exec::federation::{self, Offered};
-use toolbox_exec::run::{self as lifecycle, Approval, Observer, Run};
+use toolbox_exec::prepare::{Refused, Request, prepare};
+use toolbox_exec::run::{self as lifecycle, Observer, Run};
 use toolbox_model::manifest::Expect;
 
 #[derive(clap::Args)]
@@ -244,94 +243,59 @@ pub fn run(o: &Options) -> ExitCode {
         Ok(x) => x,
         Err(e) => return error(o, 2, e),
     };
-    let all = federation::offered(&m, &d);
     let Some(name) = &o.action else {
+        let all = federation::offered(&m, &d);
         return list(o, &portal, &all, &d);
     };
-    let (off, entity) = match federation::resolve(&all, &d, name, o.entity.as_deref()) {
-        Ok(x) => x,
+    let schema = federation::offered(&m, &d)
+        .into_iter()
+        .find(|x| &x.action.name == name)
+        .map(|x| x.action.inputs)
+        .unwrap_or(Value::Null);
+    let inputs = match parse_inputs(o, &schema) {
+        Ok(i) => i,
         Err(e) => return error(o, 2, e),
     };
-    let action = &off.action;
-    let inputs = match parse_inputs(o, &action.inputs) {
-        Ok(i) => with_defaults(action, &i),
-        Err(e) => return error(o, 2, e),
-    };
-    let checked = match check(action, &d, &m.policies, &entity, &inputs) {
-        Ok(c) => c,
-        Err(e) => return error(o, 2, e),
-    };
-    if !checked.errors.is_empty() {
-        let doc = json!({"action": name, "entity": entity, "errors": checked.errors,
-            "inputs": action.inputs});
-        emit(o, &doc, || {
-            format!(
-                "Invalid inputs for {name} on {entity}:\n{}\nInputs: {}\n",
-                checked
-                    .errors
-                    .iter()
-                    .map(|e| format!("  - {e}\n"))
-                    .collect::<String>(),
-                federation::inputs_line(action)
-            )
-        });
-        return ExitCode::from(2);
-    }
     let program = std::env::current_exe().unwrap_or_else(|_| PathBuf::from("toolbox"));
-    let exec = match off.executor(&program) {
-        Ok(x) => x,
-        Err(e) => return error(o, 2, format!("{name}: {e}")),
-    };
     let requested_by = actor(o);
-    let run_id = lifecycle::new_id("run");
-    let mut ctx = Context {
-        run_id: None,
-        portal: m.portal.name.clone(),
-        action: name.clone(),
-        action_version: lifecycle::action_version(action),
-        entity: checked.entity.clone(),
-        inputs: inputs.clone(),
-        actor: requested_by.clone(),
-        related: checked.related.clone(),
-        approvals: vec![],
+    let req = Request {
+        action: name,
+        entity: o.entity.as_deref(),
+        inputs,
+        actor: &requested_by,
         cwd: toolbox_exec::executor::portal_repo_dir(&portal_dir(&portal)),
+        program: &program,
     };
-    let pv = match exec.preview(&ctx) {
+    let p = match prepare(&m, &d, req) {
         Ok(p) => p,
-        Err(e) => return error(o, 1, format!("{name}: {e}")),
+        Err(Refused::Invalid(errors)) => {
+            let action = federation::offered(&m, &d)
+                .into_iter()
+                .find(|x| &x.action.name == name)
+                .map(|x| x.action);
+            let line = action
+                .as_ref()
+                .map(federation::inputs_line)
+                .unwrap_or_default();
+            let doc = json!({"action": name, "errors": errors, "inputs": schema});
+            emit(o, &doc, || {
+                format!(
+                    "Invalid inputs for {name}:\n{}Inputs: {line}\n",
+                    errors
+                        .iter()
+                        .map(|e| format!("  - {e}\n"))
+                        .collect::<String>()
+                )
+            });
+            return ExitCode::from(2);
+        }
+        Err(e @ Refused::Executor(_)) => return error(o, 1, e.to_string()),
+        Err(e) => return error(o, 2, e.to_string()),
     };
-    let mut warnings = pv.warnings.clone();
-    if let Some(e) = &action.expect
-        && lifecycle::postcondition_holds(e, &checked.entity, &inputs, &m.policies, &json!({}))
-            .unwrap_or(false)
-    {
-        warnings.push(format!(
-            "the postcondition already holds ({}): running it may change nothing",
-            e.postcondition
-        ));
-    }
-    let mut blockers = checked.blockers.clone();
-    blockers.extend(pv.blockers.iter().cloned());
-    let mut approvers = checked.approvers.clone();
-    if let Some(c) = &pv.child {
-        approvers.extend(
-            c["approval"]["approvers"]
-                .as_array()
-                .cloned()
-                .unwrap_or_default(),
-        );
-    }
-    let basis = lifecycle::basis(&checked.entity, &checked.related);
-    let version = ctx.action_version.clone();
-    let token = lifecycle::confirm_token(
-        &version,
-        &inputs,
-        &pv.effects,
-        &basis,
-        lifecycle::now_secs(),
-    );
+    let entity = p.entity.clone();
     let portal_arg = portal.display().to_string();
-    let input_args: String = inputs
+    let input_args: String = p
+        .inputs
         .iter()
         .map(|(k, v)| {
             let s = v.as_str().map_or_else(|| v.to_string(), str::to_owned);
@@ -339,15 +303,15 @@ pub fn run(o: &Options) -> ExitCode {
         })
         .collect();
     let next = format!(
-        "toolbox run {name} --portal {portal_arg} --entity {entity}{input_args} --confirm {token}"
+        "toolbox run {name} --portal {portal_arg} --entity {entity}{input_args} --confirm {}",
+        p.token
     );
-    let preview_doc = json!({"action": name, "entity": entity, "portal": m.portal.name, "inputs": inputs,
-        "effects": pv.effects, "warnings": warnings, "blockers": blockers,
-        "approval": {"required": !approvers.is_empty(), "approvers": approvers},
-        "executor": exec.kind(), "executor_preview": pv.executed,
-        "postcondition": action.expect.as_ref().map(|e| json!({"check": e.postcondition, "within": e.within})),
-        "child": pv.child, "confirm_token": token, "expires_in_secs": lifecycle::TOKEN_TTL_SECS,
-        "next": if blockers.is_empty() { Value::String(next.clone()) } else { Value::Null }});
+    let mut preview_doc = p.doc(&m.portal.name);
+    preview_doc["next"] = if p.blockers.is_empty() {
+        Value::String(next.clone())
+    } else {
+        Value::Null
+    };
     if o.confirm.is_none() && !o.yes {
         emit(o, &preview_doc, || {
             preview_md(name, &entity, &m.portal.name, &preview_doc, &next)
@@ -355,61 +319,44 @@ pub fn run(o: &Options) -> ExitCode {
         return ExitCode::SUCCESS;
     }
     if let Some(t) = &o.confirm
-        && let Err(e) = lifecycle::check_token(t, &version, &inputs, &pv.effects, &basis)
+        && let Err(e) = p.confirm(t)
     {
         return error(o, 1, e.to_string());
     }
-    if !blockers.is_empty() {
-        return error(o, 1, format!("{name} is blocked: {}", blockers.join("; ")));
+    if !p.blockers.is_empty() {
+        return error(
+            o,
+            1,
+            format!("{name} is blocked: {}", p.blockers.join("; ")),
+        );
     }
-    let mut run = Run {
-        id: run_id.clone(),
-        action: name.clone(),
-        action_version: version,
-        entity: entity.clone(),
-        inputs: inputs.clone(),
-        requested_by: requested_by.clone(),
-        via: o
-            .parent_run
-            .as_ref()
-            .map_or_else(|| "cli".into(), |p| format!("parent:{p}")),
-        portal: m.portal.name.clone(),
-        executor: exec.kind().into(),
-        snapshot: d.snapshot.clone(),
-        effects: pv.effects.clone(),
-        approval: Approval {
-            required: !approvers.is_empty(),
-            approvers: approvers.clone(),
-            ..Approval::default()
-        },
-        state: "previewed".into(),
-        events: vec![],
-        outputs: json!({}),
-        error: None,
-        verification: None,
-        child: None,
-        progress: vec![],
-        deadline: None,
-    };
-    run.set("previewed", Some(&requested_by), None);
-    run.set("confirmed", Some(&requested_by), None);
-    if !approvers.is_empty() {
-        let trusted = o.parent_run.as_ref().is_some_and(|p| {
-            let parent = p.split('/').next().unwrap_or("");
+    let via = o
+        .parent_run
+        .as_ref()
+        .map_or_else(|| "cli".into(), |pr| format!("parent:{pr}"));
+    let mut run = p.new_run(
+        lifecycle::new_id("run"),
+        &requested_by,
+        via,
+        &m.portal.name,
+        &d.snapshot,
+    );
+    if !p.approvers.is_empty() {
+        let trusted = o.parent_run.as_ref().is_some_and(|pr| {
+            let parent = pr.split('/').next().unwrap_or("");
             m.federation
                 .as_ref()
                 .is_some_and(|f| f.accept_approvals_from.iter().any(|a| a == parent))
         });
         if trusted {
+            run.state = "awaiting_approval".into();
             for a in &o.approved_by {
                 let (which, who) = a.split_once('=').unwrap_or((a, a));
                 let _ = run.approve(who, |g| g == which);
             }
         }
         let pending = run.pending_approvers();
-        let is_change = matches!(exec, Executor::Change { .. })
-            || off.child.as_ref().is_some_and(|c| c.executor == "change");
-        if !pending.is_empty() && !is_change {
+        if !pending.is_empty() && !p.reviewed {
             run.set(
                 "awaiting_approval",
                 None,
@@ -421,8 +368,7 @@ pub fn run(o: &Options) -> ExitCode {
             return finish(o, &run, 3);
         }
     }
-    ctx.run_id = Some(run_id);
-    ctx.approvals = run.approval.approved_by.clone();
+    let ctx = p.context(&run);
     let mut obs = Local {
         portal: portal.clone(),
         fixtures: o.fixtures,
@@ -430,9 +376,9 @@ pub fn run(o: &Options) -> ExitCode {
     };
     lifecycle::execute(
         &mut run,
-        &exec,
+        &p.exec,
         &ctx,
-        action.expect.as_ref(),
+        p.offered.action.expect.as_ref(),
         &m.policies,
         &mut obs,
         Duration::from_secs(2),
@@ -461,7 +407,12 @@ fn preview_md(name: &str, entity: &str, portal: &str, p: &Value, next: &str) -> 
     for w in p["warnings"].as_array().into_iter().flatten() {
         s.push_str(&format!("Warning: {}\n", w.as_str().unwrap_or("")));
     }
-    if p["approval"]["required"] == true {
+    if p["approval"]["by_review"] == true {
+        s.push_str(&format!(
+            "Approval: {} review the proposed change (merging it is the approval)\n",
+            p["approval"]["approvers"]
+        ));
+    } else if p["approval"]["required"] == true {
         s.push_str(&format!(
             "Approval: required from {}\n",
             p["approval"]["approvers"]

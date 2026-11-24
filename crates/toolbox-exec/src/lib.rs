@@ -7,4 +7,5 @@ pub mod check;
 pub mod executor;
 pub mod federation;
 pub mod github;
+pub mod prepare;
 pub mod run;

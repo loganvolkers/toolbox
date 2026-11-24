@@ -323,7 +323,7 @@ impl Executor {
 }
 
 fn branch_name(e: &Executor, ctx: &Context) -> String {
-    let id = ctx.run_id.as_deref().unwrap_or("preview");
+    let id = ctx.run_id.as_deref().unwrap_or("<run id>");
     match e {
         Executor::Change {
             branch: Some(b), ..
