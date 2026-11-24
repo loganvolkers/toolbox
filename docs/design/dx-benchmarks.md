@@ -6,7 +6,7 @@ that use it. Maintainer SDLC ([maintainer-sdlc.md](./maintainer-sdlc.md)); each 
 one or more of the four SDLC layers ([../sdlc.md](../sdlc.md)). The catalog is in
 [portal/benchmarks/](../../portal/benchmarks), scored by `maintainer-benchmark`. Runs follow
 protocol 2 (§4.1, D01M83RDWQ5EVKY5SFHDWAD5HFH; its cost rule amended by
-D01M85G2YXV2VRTZWQJ33MHXCKN).*
+D01M85G2YXV2VRTZWQJ33MHXCKN, in effect from D01M87QHJWYKGNH0182XQ5NKHMB).*
 
 ---
 
@@ -159,7 +159,7 @@ the record as single samples: evidence of friction, not of a claim.
 | Rule | Requirement | Catalog field | Why |
 |---|---|---|---|
 | **P1. Committed prompts** | Every rendered prompt, for every arm and phase, is committed under the experiment's `prompts/` before the first arm starts. A launch whose prompt differs is void | `prompts` | deploy-ab's prompts had to be recovered from agent records |
-| **P2. Repeated runs** | At least three fresh runs per arm per phase, and five when the phase registers a cost hypothesis. Publish every run and the minimum, median and maximum. A cost hypothesis holds or fails on an exact two-sided Mann-Whitney test at α = 0.05 after a Holm correction over the round's cost hypotheses (D01M85G2YXV2VRTZWQJ33MHXCKN); otherwise it is inconclusive. The README states the smallest effect the design detects four times in five, and reports *W* (the wider arm's range), which decided rounds frozen before that decision. A run is dropped only for a harness fault named before the rerun, never for its result | `runsPerArm`, `spread`, `deterministic` | L10, L12, L23 |
+| **P2. Repeated runs** | At least three fresh runs per arm per phase, and five when the phase registers a cost hypothesis. Publish every run and the minimum, median and maximum. A cost hypothesis holds or fails on an exact two-sided Mann-Whitney test at α = 0.05 after a Holm correction over the round's cost hypotheses (D01M85G2YXV2VRTZWQJ33MHXCKN); otherwise it is inconclusive. The README states the smallest effect the design detects four times in five, and reports *W* (the wider arm's range), which decided rounds frozen before that decision reached `main` (D01M87QHJWYKGNH0182XQ5NKHMB), actions-ab's included. A run is dropped only for a harness fault named before the rerun, never for its result | `runsPerArm`, `spread`, `deterministic` | L10, L12, L23 |
 | **P3. Frozen rounds** | One commit fixes Toolbox, the harness, and every arm's scaffold, prompts and docs for the round. A fix starts a new round, and every arm reruns every scored phase | `frozenAt` | connector-ab replaced a failing phase with a rerun after an A-only tip |
 | **P4. Symmetric arms** | Every arm's scaffold gives the same level of help: a recipe for all, or for none. Rival friction is fixed before the next round as carefully as Toolbox's. Deferring it means the round is not run. Probes treat the arms alike: if one gets an identity, all do | `fitAudit` | L11, L13 |
 | **P5. No harness-shaped product** | A product change made after a benchmark names a use outside the harness and no harness file, schema or convention. The harness adapts to the product, not the reverse | `fitAudit` | L11 |
