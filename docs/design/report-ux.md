@@ -126,8 +126,9 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
   names both. Text outputs that can't show icons (`-o md`, which pull request comments carry, and
   the ratchet's gate summary) put `✦` after an agent-judged rule's name, add "every rule
   agent-judged" or "N of M rules agent-judged" to a scorecard's heading, and print one legend line.
-- A rule shows **Why** (its rationale) beside its fix, and a link to the long story. Decision ids are
-  stripped from prose, which readers can't resolve.
+- A rule shows **Why** (its rationale) beside its fix, and a link to the long story. Parentheticals that
+  only cite decision, question or lesson ids, or doc paths, are stripped from prose, which readers
+  can't resolve; links are titled by their claim ("Decision: judgement is pushed"), not by an id.
 - An agent-judged pass on an entity no agent has assessed reads "passes, not assessed yet", never a
   plain pass. Catalog columns mark agent-judged scorecards with the sparkle and tag such levels
   "not assessed", drawn as a dashed pill: a provisional level, not an earned one. The notice above a
