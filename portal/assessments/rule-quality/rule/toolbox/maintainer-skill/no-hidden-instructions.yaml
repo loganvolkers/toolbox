@@ -53,10 +53,10 @@ verdicts:
       D01M83G9F4EEGN1GTP14HEYB8B6, citing SkillBench's hard F for hidden
       Unicode. The rule's link now names that row (skills.yaml:239).
 summary: >-
-  Re-assessed after the rationale was reworded to name bronze as the lowest
-  level and the link was retitled to say what it explains; the check,
-  evidence, fix and level are unchanged, and the code the reasons cite was
-  re-read, so the verdicts stand with line numbers corrected. The
+  Re-assessed after the rationale was reworded to name bronze as the
+  lowest level and the link was retitled to say what it explains; the
+  check, evidence, fix and level are unchanged, and the code the reasons
+  cite was re-read, so the verdicts stand with line numbers corrected. The
   binary-asset false positive and the `[//]: #` comment are fixed, but any
   other unused link-reference label still hides text uncounted, and `<!--`
   inside a code fence still counts.
