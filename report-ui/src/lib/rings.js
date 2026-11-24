@@ -80,7 +80,7 @@ export function tallyRing(v, n, size, bare) {
       );
     }
   });
-  var text = v.ahead + "/" + n;
+  var text = n && v.unknown >= n ? "—" : v.ahead + "/" + n;
   return svg(
     "svg",
     { class: "ring tally", width: s, height: s, viewBox: "0 0 " + s + " " + s, role: "img", "aria-label": tallyWords(v, n) },
@@ -90,7 +90,8 @@ export function tallyRing(v, n, size, bare) {
 }
 
 export function tallyWords(v, n) {
-  return ["ahead on " + v.ahead, v.parity ? "at parity on " + v.parity : null, "behind on " + v.behind].filter(Boolean).join(", ") + " of " + n + " factors";
+  if (n && v.unknown >= n) return "not measured yet: no factor has values for both products";
+  return ["ahead on " + v.ahead, v.parity ? "at parity on " + v.parity : null, "behind on " + v.behind, v.unknown ? "not measured on " + v.unknown : null].filter(Boolean).join(", ") + " of " + n + " factors";
 }
 
 export function shortId(id) {

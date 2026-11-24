@@ -97,7 +97,7 @@ export const tracksViews = {
         "div",
         { className: "foot" },
         el("span", { textContent: plural(t.rows.length, t.compare ? "factor" : "scorecard") + (t.campaigns.length ? " · " + plural(t.campaigns.length, "campaign") : "") }),
-        t.compare ? el("span", { textContent: t.behind.length ? "behind on " + t.behind.join(", ") : "never behind" }) : null,
+        t.compare ? el("span", { textContent: t.behind.length ? "behind on " + t.behind.join(", ") : t.verdicts.unknown >= t.rows.length ? "not measured yet" : t.verdicts.unknown ? "not behind on any measured factor" : "never behind" }) : null,
       ),
     );
     var tl = kids[1].lastChild.firstChild;

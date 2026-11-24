@@ -167,8 +167,10 @@ export const compareViews = {
       });
     });
     // A factor count alone overstates a lead built on parity, so the headline pairs it with rules.
-    var headline =
-      "Ahead on " +
+    var unmeasured = counts.unknown >= names.length;
+    var headline = unmeasured
+      ? "Not measured yet: none of the " + plural(names.length, "factor") + " has values for both products."
+      : "Ahead on " +
       counts.ahead +
       " of " +
       plural(names.length, "factor") +
@@ -195,7 +197,7 @@ export const compareViews = {
           return (all[behindNames[0]].rules[r] || {})[peer] === "behind";
         }).sort().map(function (r) {
           return ruleTitle(behindNames[0], r);
-        })) + ". If your teams rely on those, read it first." : ": if your teams rely on what those factors measure, read them first.") : " Never behind."),
+        })) + ". If your teams rely on those, read it first." : ": if your teams rely on what those factors measure, read them first.") : unmeasured ? " Run the comparison's harness and commit its records to fill this in." : counts.unknown ? " Not behind on any measured factor." : " Never behind."),
         el(
           "p",
           { className: "rule-tally" },

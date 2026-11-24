@@ -818,7 +818,7 @@
         );
       }
     });
-    var text = v.ahead + "/" + n;
+    var text = n && v.unknown >= n ? "—" : v.ahead + "/" + n;
     return svg(
       "svg",
       { class: "ring tally", width: s, height: s, viewBox: "0 0 " + s + " " + s, role: "img", "aria-label": tallyWords(v, n) },
@@ -827,7 +827,8 @@
     );
   }
   function tallyWords(v, n) {
-    return ["ahead on " + v.ahead, v.parity ? "at parity on " + v.parity : null, "behind on " + v.behind].filter(Boolean).join(", ") + " of " + n + " factors";
+    if (n && v.unknown >= n) return "not measured yet: no factor has values for both products";
+    return ["ahead on " + v.ahead, v.parity ? "at parity on " + v.parity : null, "behind on " + v.behind, v.unknown ? "not measured on " + v.unknown : null].filter(Boolean).join(", ") + " of " + n + " factors";
   }
   function shortId(id) {
     var s = String(id || "");
@@ -3264,7 +3265,7 @@
           "div",
           { className: "foot" },
           el("span", { textContent: plural(t.rows.length, t.compare ? "factor" : "scorecard") + (t.campaigns.length ? " · " + plural(t.campaigns.length, "campaign") : "") }),
-          t.compare ? el("span", { textContent: t.behind.length ? "behind on " + t.behind.join(", ") : "never behind" }) : null
+          t.compare ? el("span", { textContent: t.behind.length ? "behind on " + t.behind.join(", ") : t.verdicts.unknown >= t.rows.length ? "not measured yet" : t.verdicts.unknown ? "not behind on any measured factor" : "never behind" }) : null
         )
       );
       var tl = kids[1].lastChild.firstChild;
@@ -4520,7 +4521,8 @@
           if (v === "behind") behindRules[n]++;
         });
       });
-      var headline = "Ahead on " + counts.ahead + " of " + plural(names.length, "factor") + " and " + ruleCounts.ahead + " of " + plural(ruleTotal, "rule") + (counts.behind ? "; behind on " + plural(counts.behind, "factor") + " and " + plural(ruleCounts.behind, "rule") : "") + (counts.parity ? "; at parity on " + plural(counts.parity, "factor") : "") + (counts.unknown ? "; " + counts.unknown + " not measured" : "") + ".";
+      var unmeasured = counts.unknown >= names.length;
+      var headline = unmeasured ? "Not measured yet: none of the " + plural(names.length, "factor") + " has values for both products." : "Ahead on " + counts.ahead + " of " + plural(names.length, "factor") + " and " + ruleCounts.ahead + " of " + plural(ruleTotal, "rule") + (counts.behind ? "; behind on " + plural(counts.behind, "factor") + " and " + plural(ruleCounts.behind, "rule") : "") + (counts.parity ? "; at parity on " + plural(counts.parity, "factor") : "") + (counts.unknown ? "; " + counts.unknown + " not measured" : "") + ".";
       var lean = counts.behind > counts.ahead ? "behind" : counts.ahead > counts.behind ? "ahead" : "parity";
       var hero = el(
         "section",
@@ -4536,7 +4538,7 @@
             return (all[behindNames[0]].rules[r] || {})[peer] === "behind";
           }).sort().map(function(r) {
             return ruleTitle(behindNames[0], r);
-          })) + ". If your teams rely on those, read it first." : ": if your teams rely on what those factors measure, read them first.") : " Never behind."),
+          })) + ". If your teams rely on those, read it first." : ": if your teams rely on what those factors measure, read them first.") : unmeasured ? " Run the comparison's harness and commit its records to fill this in." : counts.unknown ? " Not behind on any measured factor." : " Never behind."),
           el(
             "p",
             { className: "rule-tally" },
