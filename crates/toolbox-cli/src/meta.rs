@@ -217,6 +217,7 @@ fn describe_portal(
         }
         None => None,
     };
+    let judged = crate::judged::judged_rules(m);
     let mut out = Vec::new();
     for sc in &m.scorecards {
         let mut per_level = Map::new();
@@ -237,6 +238,8 @@ fn describe_portal(
             "appliesTo": sc.applies_to.is_some(), "tested": tested_cards.contains(&sc.name),
             "meta": meta_cards.contains(&sc.name),
             "described": crate::model::filled(&sc.description),
+            "explained": crate::model::filled(&sc.rationale),
+            "links": sc.links.len(),
             "fixtureLevels": fixture_levels.get(&sc.name).cloned().unwrap_or_default(),
         });
         if let Some(n) = live_entities {
@@ -256,6 +259,9 @@ fn describe_portal(
                 "tested": tested_rules.contains_key(&key),
                 "testedOutcomes": tested_rules.get(&key).cloned().unwrap_or_default(),
                 "fixture": {"pass": f[0], "fail": f[1], "unknown": f[2]},
+                "explained": crate::model::filled(&r.rationale),
+                "links": r.links.len(),
+                "basis": if judged.contains(&key) { "judged" } else { "measured" },
             });
             if let (Some(l), Some(n)) = (&live, live_entities) {
                 let c = l.get(&key).copied().unwrap_or_default();

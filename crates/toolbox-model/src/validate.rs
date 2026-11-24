@@ -78,6 +78,35 @@ struct Checker {
 
 impl Checker {
     /// Rubrics: the kind exists, it has the subject field, and criterion names are unique.
+    /// Each kind group names known kinds, and no kind is in two groups.
+    fn kind_groups(&mut self, m: &Manifest, kinds: &BTreeMap<&str, usize>) {
+        self.duplicates(
+            "kind group",
+            "/kindGroups",
+            m.kind_groups.iter().map(|g| g.name.as_str()),
+        );
+        let mut owner: BTreeMap<&str, &str> = BTreeMap::new();
+        for (gi, g) in m.kind_groups.iter().enumerate() {
+            for (ki, k) in g.kinds.iter().enumerate() {
+                let at = format!("/kindGroups/{gi}/kinds/{ki}");
+                if !kinds.contains_key(k.as_str()) {
+                    self.push(
+                        "xref.kind",
+                        at.clone(),
+                        format!("kind group {}: unknown kind {k}", g.name),
+                    );
+                }
+                if let Some(first) = owner.insert(k, &g.name) {
+                    self.push(
+                        "xref.kind-group",
+                        at,
+                        format!("kind {k} is in kind groups {first} and {}", g.name),
+                    );
+                }
+            }
+        }
+    }
+
     fn rubrics(&mut self, m: &Manifest, kinds: &BTreeMap<&str, usize>) {
         for (ri, r) in m.rubrics.iter().enumerate() {
             let Some(k) = kinds.get(r.kind.as_str()).map(|&i| &m.kinds[i]) else {
@@ -301,6 +330,7 @@ impl Checker {
         }
 
         self.rubrics(m, &kinds);
+        self.kind_groups(m, &kinds);
         let tracks: BTreeSet<&str> = m.tracks.iter().map(|t| t.name.as_str()).collect();
         let scorecards: BTreeMap<&str, &crate::manifest::Scorecard> =
             m.scorecards.iter().map(|s| (s.name.as_str(), s)).collect();

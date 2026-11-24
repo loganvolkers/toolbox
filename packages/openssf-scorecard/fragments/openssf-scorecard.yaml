@@ -70,6 +70,7 @@ scorecards:
       Scorecard adds in a new release doesn't fail the gate.
     kind: ${param:kind}
     owner: ${param:owner}
+    track: ${param:track}
     levels: [ten]
     ratchet: {newEntitiesAtLeast: none}
     rules:
@@ -91,6 +92,7 @@ campaigns:
   - name: ${param:name}-ten
     title: "${param:title}: every check at 10"
     owner: ${param:owner}
+    track: ${param:track}
     description: >-
       Every Scorecard check at its maximum. Progress is counted from the start
       the baseline records, in checks below 10 and in points short.

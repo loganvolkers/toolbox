@@ -5,6 +5,7 @@ mod causes;
 mod client;
 mod find;
 mod install;
+mod judged;
 mod meta;
 mod model;
 mod portal;

@@ -179,6 +179,7 @@ scorecards:
       privilege tokens, no risky triggers with write access, and zizmor and
       actionlint clean (D70, docs/design/github-actions-standards.md).
     owner: group:maintainers
+    track: ${param:track}
     levels: [bronze, silver, gold]
     rules:
     - name: actionlint-clean
@@ -266,6 +267,7 @@ scorecards:
       and a branch that rarely fails (D70; docs/design/thresholds.md for the
       tiers). Speed is maintainer-ci-speed.
     owner: group:maintainers
+    track: ${param:track}
     levels: [bronze, silver, gold]
     appliesTo: entity.type == 'workflow'
     rules:
@@ -370,6 +372,7 @@ scorecards:
       commits: a cost and feedback-time concern, separate from whether CI can
       be trusted (maintainer-ci-reliability; docs/design/thresholds.md).
     owner: group:maintainers
+    track: ${param:track}
     levels: [bronze, silver]
     appliesTo: entity.type == 'workflow'
     rules:
@@ -406,6 +409,7 @@ scorecards:
       Each third-party action across every workflow that uses it: pinned to a
       commit SHA everywhere (D70, docs/design/github-actions-standards.md).
     owner: group:maintainers
+    track: ${param:track}
     levels: [bronze]
     rules:
     - name: pinned-everywhere

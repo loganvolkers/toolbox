@@ -840,7 +840,9 @@ fn entity_md(s: &mut String, id: &str, r: &toolbox_derive::Score) {
 }
 
 /// Comparisons as the web report reads them: each with its entities' display names.
-fn comparison_defs(d: &Derived) -> Map<String, Value> {
+/// Each comparison with the compared entities' titles, scores and facts, and, per rule, the
+/// fields it reads with their descriptions, so a reader sees what was measured without the docs.
+fn comparison_defs(m: &toolbox_model::Manifest, d: &Derived) -> Map<String, Value> {
     d.comparisons
         .iter()
         .map(|(name, c)| {
@@ -850,6 +852,38 @@ fn comparison_defs(d: &Derived) -> Map<String, Value> {
                 .map(|id| (id.clone(), json!(title_of(d, id))))
                 .collect::<Map<String, Value>>()
                 .into();
+            v["facts"] = ids()
+                .filter_map(|id| Some((id.clone(), json!(d.entities.get(id)?.fields))))
+                .collect::<Map<String, Value>>()
+                .into();
+            let sc = m.scorecards.iter().find(|s| &s.name == name);
+            let kind = sc.and_then(|sc| m.kinds.iter().find(|k| k.name == sc.kind));
+            if let (Some(sc), Some(kind)) = (sc, kind) {
+                let mut described = Map::new();
+                let reads: Map<String, Value> = sc
+                    .rules
+                    .iter()
+                    .map(|r| {
+                        let mut fields: Vec<String> = std::iter::once(r.check.as_str())
+                            .chain(r.value.as_deref())
+                            .filter_map(|cel| toolbox_expr::analysis::analyse(cel).ok())
+                            .flat_map(|a| a.fields)
+                            .filter(|f| kind.fields.contains_key(f))
+                            .collect();
+                        fields.sort();
+                        fields.dedup();
+                        for f in &fields {
+                            described.insert(
+                                f.clone(),
+                                json!(kind.fields[f].description.as_deref().map(str::trim)),
+                            );
+                        }
+                        (r.name.clone(), json!(fields))
+                    })
+                    .collect();
+                v["reads"] = reads.into();
+                v["fields"] = described.into();
+            }
             let scores = d.scores.get(name);
             v["scores"] = ids()
                 .filter_map(|id| Some((id.clone(), json!(scores?.get(id)?))))
@@ -954,18 +988,37 @@ fn includes(path: &std::path::Path) -> Vec<Value> {
 
 /// One scorecard's section of STANDARD.md: what it is and its rules. No counts: the file is a
 /// function of the manifest, so it can be committed and checked like the baseline.
-fn standard_scorecard(s: &mut String, sc: &toolbox_model::manifest::Scorecard) {
+fn standard_scorecard(
+    s: &mut String,
+    sc: &toolbox_model::manifest::Scorecard,
+    judged: &BTreeSet<(String, String)>,
+) {
     use std::fmt::Write as _;
     let _ = writeln!(s, "## {}\n", sc.title.as_deref().unwrap_or(&sc.name));
     if let Some(desc) = &sc.description {
         let _ = writeln!(s, "{}\n", desc.trim());
     }
+    if let Some(why) = &sc.rationale {
+        let _ = writeln!(
+            s,
+            "**Why:** {}\n",
+            why.split_whitespace().collect::<Vec<_>>().join(" ")
+        );
+    }
+    if !sc.links.is_empty() {
+        let _ = writeln!(s, "See {}.\n", md_links(&sc.links));
+    }
     let _ = writeln!(
         s,
-        "Scorecard `{}` over `{}` entities, owned by {}. `toolbox report` lists what fails now.\n",
+        "Scorecard `{}` over `{}` entities, owned by {}. `toolbox report` lists what fails now. \
+         *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's \
+         assessment (`toolbox assess`).\n",
         sc.name, sc.kind, sc.owner
     );
-    let _ = writeln!(s, "| Rule | Level | Passes when | Fix |\n|---|---|---|---|");
+    let _ = writeln!(
+        s,
+        "| Rule | Level | Basis | Passes when | Why | Fix |\n|---|---|---|---|---|---|"
+    );
     let cell = |t: &str| {
         t.split_whitespace()
             .collect::<Vec<_>>()
@@ -973,16 +1026,34 @@ fn standard_scorecard(s: &mut String, sc: &toolbox_model::manifest::Scorecard) {
             .replace('|', "\\|")
     };
     for r in &sc.rules {
+        let basis = if judged.contains(&(sc.name.clone(), r.name.clone())) {
+            "judged"
+        } else {
+            "measured"
+        };
+        let mut why = cell(r.rationale.as_deref().unwrap_or(""));
+        if !r.links.is_empty() {
+            let _ = write!(why, " {}", md_links(&r.links));
+        }
         let _ = writeln!(
             s,
-            "| `{}` | {} | `{}` | {} |",
+            "| `{}` | {} | {basis} | `{}` | {} | {} |",
             r.name,
             r.level,
             cell(&r.check),
+            why.trim(),
             cell(r.fix.as_deref().unwrap_or(""))
         );
     }
     let _ = writeln!(s);
+}
+
+fn md_links(links: &[toolbox_model::manifest::Link]) -> String {
+    links
+        .iter()
+        .map(|l| format!("[{}]({})", l.title.replace(['[', ']', '|'], ""), l.url))
+        .collect::<Vec<_>>()
+        .join(", ")
 }
 
 /// The packages the portal includes, with the parameters it gives them.
@@ -1094,8 +1165,9 @@ fn standard(o: &Options, m: &toolbox_model::Manifest) -> String {
          don't edit it. Toolbox is the box these standards are carried in; the tools that check them \
          run on their own too (each record's `command`).\n"
     );
+    let judged = crate::judged::judged_rules(m);
     for sc in &m.scorecards {
-        standard_scorecard(&mut s, sc);
+        standard_scorecard(&mut s, sc, &judged);
     }
     let incs: Vec<Value> = includes(&o.path)
         .into_iter()
@@ -1112,6 +1184,7 @@ fn standard(o: &Options, m: &toolbox_model::Manifest) -> String {
 }
 
 fn scorecard_defs(m: &toolbox_model::Manifest) -> Map<String, Value> {
+    let judged = crate::judged::judged_rules(m);
     m.scorecards
         .iter()
         .map(|sc| {
@@ -1119,8 +1192,25 @@ fn scorecard_defs(m: &toolbox_model::Manifest) -> Map<String, Value> {
                 .rules
                 .iter()
                 .map(|r| {
-                    let mut def = json!({"level": r.level, "fix": r.fix, "check": r.check});
+                    let basis = if judged.contains(&(sc.name.clone(), r.name.clone())) {
+                        "judged"
+                    } else {
+                        "measured"
+                    };
+                    let mut def = json!({
+                        "level": r.level,
+                        "fix": r.fix,
+                        "check": r.check,
+                        "basis": basis
+                    });
+                    if let Some(why) = &r.rationale {
+                        def["rationale"] = json!(why.trim());
+                    }
+                    if !r.links.is_empty() {
+                        def["links"] = json!(r.links);
+                    }
                     if r.value.is_some() {
+                        def["value"] = json!(r.value);
                         def["better"] = json!(r.better);
                         def["unit"] = json!(r.unit);
                     }
@@ -1130,6 +1220,8 @@ fn scorecard_defs(m: &toolbox_model::Manifest) -> Map<String, Value> {
             let mut def = json!({
                 "title": sc.title,
                 "description": sc.description.as_deref().map(str::trim),
+                "rationale": sc.rationale.as_deref().map(str::trim),
+                "links": sc.links,
                 "kind": sc.kind,
                 "levels": sc.levels,
                 "owner": sc.owner,
@@ -1206,7 +1298,8 @@ fn report_json(m: &toolbox_model::Manifest, d: &Derived, starts: &Map<String, Va
                 json!({
                     "title": t.title,
                     "owner": t.owner,
-                    "description": t.description
+                    "description": t.description.as_deref().map(str::trim),
+                    "links": t.links
                 }),
             )
         })
@@ -1215,15 +1308,39 @@ fn report_json(m: &toolbox_model::Manifest, d: &Derived, starts: &Map<String, Va
     for (id, e) in &d.entities {
         catalog.entry(e.kind.clone()).or_default().push(id.clone());
     }
+    let kind_groups: Vec<Value> = m
+        .kind_groups
+        .iter()
+        .map(|g| {
+            json!({
+                "name": g.name,
+                "title": g.title,
+                "description": g.description.as_deref().map(str::trim),
+                "kinds": g.kinds
+            })
+        })
+        .collect();
+    let kinds: Map<String, Value> = m
+        .kinds
+        .iter()
+        .map(|k| {
+            (
+                k.name.clone(),
+                json!({"description": k.description.as_deref().map(str::trim)}),
+            )
+        })
+        .collect();
     json!({
         "portal": m.portal.title.as_deref().unwrap_or(&m.portal.name),
         "snapshot": d.snapshot,
         "catalog": catalog,
+        "kinds": kinds,
+        "kindGroups": kind_groups,
         "tracks": tracks,
         "campaigns": campaign_defs(m, d, starts),
         "scorecards": scorecard_defs(m),
         "scores": own_scores(d),
-        "comparisons": comparison_defs(d),
+        "comparisons": comparison_defs(m, d),
         "repoRollup": m.policies.get("repoRollup").cloned().unwrap_or(Value::Null),
     })
     .to_string()

@@ -10,6 +10,12 @@ description: >-
   and a campaign to bring every check to 10. Runs Scorecard's --local mode
   on the tracked files, so it needs no GitHub token.
 parameters:
+  track:
+    type: string
+    default: null
+    description: >-
+      The portal track its scorecards and campaigns belong to; leave unset if
+      the portal has no tracks.
   name:
     type: string
     default: openssf

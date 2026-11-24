@@ -20,6 +20,9 @@ pub struct Manifest {
     /// Long-term focus programs that group scorecards and campaigns.
     #[serde(default)]
     pub tracks: Vec<Track>,
+    /// Named groups of kinds, for readers: reports list the catalog group by group.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub kind_groups: Vec<KindGroup>,
     /// Time-bound goals over existing scorecards (D01M7Y11G0YZT23W26Z9D3XW68Y).
     #[serde(default)]
     pub campaigns: Vec<Campaign>,
@@ -159,6 +162,12 @@ pub struct Scorecard {
     pub track: Option<String>,
     pub levels: Vec<String>,
     pub applies_to: Option<String>,
+    /// Why the standard matters: the outcome it protects, for readers deciding whether to care.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rationale: Option<String>,
+    /// Further reading: the decision, design doc or outside source behind it.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub links: Vec<Link>,
     /// A comparative scorecard: the subject against its peers, rule by rule.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub compare: Option<Compare>,
@@ -182,6 +191,24 @@ pub struct Track {
     pub title: Option<String>,
     pub owner: String,
     pub description: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub links: Vec<Link>,
+}
+
+/// A titled URL: where to read more about a standard, rule or track.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Link {
+    pub title: String,
+    pub url: String,
+}
+
+/// Kinds that readers think of together (the docs, the code, the CI), listed as one group.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct KindGroup {
+    pub name: String,
+    pub title: Option<String>,
+    pub description: Option<String>,
+    pub kinds: Vec<String>,
 }
 
 /// One scorecard goal inside a campaign.
@@ -292,6 +319,12 @@ pub struct Rule {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tolerance: Option<f64>,
     pub fix: Option<String>,
+    /// Why the rule matters, beyond what it checks and how to fix it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rationale: Option<String>,
+    /// Further reading behind the rule.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub links: Vec<Link>,
     /// Connector whose records this rule reads. When that connector is skipped, a missing
     /// value is an expected `unknown` and the ratchet does not refuse `--ci` for it.
     #[serde(default, rename = "dataFrom")]

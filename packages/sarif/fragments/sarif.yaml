@@ -52,6 +52,7 @@ scorecards:
       file must arrive clean.
     kind: ${param:kind}
     owner: ${param:owner}
+    track: ${param:track}
     levels: [clean]
     ratchet: {newEntitiesAtLeast: clean}
     rules:
@@ -71,6 +72,7 @@ campaigns:
   - name: ${param:name}-zero
     title: "${param:title}: to zero"
     owner: ${param:owner}
+    track: ${param:track}
     description: >-
       No ${param:tool} findings in any file. Progress is counted from the
       start the baseline records.

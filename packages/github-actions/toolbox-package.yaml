@@ -7,6 +7,12 @@ description: >-
   Score GitHub Actions workflows and the third-party actions they use,
   with zizmor, actionlint and run history.
 parameters:
+  track:
+    type: string
+    default: null
+    description: >-
+      The portal track its scorecards and campaigns belong to; leave unset if
+      the portal has no tracks.
   githubOrg:
     type: string
     description: The GitHub organisation whose run history is read.

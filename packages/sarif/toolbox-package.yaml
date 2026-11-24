@@ -8,6 +8,12 @@ description: >-
   SARIF formatter) in the box: one record per file, a scorecard that every
   file must pass, and a campaign to zero.
 parameters:
+  track:
+    type: string
+    default: null
+    description: >-
+      The portal track its scorecards and campaigns belong to; leave unset if
+      the portal has no tracks.
   name:
     type: string
     description: >-
