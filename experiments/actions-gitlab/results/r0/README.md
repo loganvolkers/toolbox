@@ -54,3 +54,15 @@ The GitLab arm met no friction of its own beyond G1: its prompt names the Premiu
 lacks and how they are credited, and it said which steps Premium would have performed.
 
 Round 1 reruns both arms at the commit that carries these fixes.
+
+## How to check
+
+The measures are rerun from a run's transcript (fetched with `batch-fetch-details`) against the
+GitLab the harness started; the product fix T1 is checked by the acceptance script's step 9
+([D01M87FMCVSQCQJMGDSN2MCTH5W](../../../../docs/decisions/D01M87FMCVSQCQJMGDSN2MCTH5W.md),
+[forges.md](../../../../docs/design/forges.md) §4.6):
+
+```sh
+bash experiments/actions-gitlab/harness/measure.sh 0 toolbox-1 <transcript-dir>
+scripts/gitlab-acceptance.sh
+```
