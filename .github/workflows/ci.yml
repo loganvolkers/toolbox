@@ -296,6 +296,25 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - name: The embedded build (ui/dist) matches the source
         run: npm run build && git diff --exit-code -- dist
+  report-ui:
+    # The <toolbox-report> element: its bundle is current, and every story over the fixture
+    # portals passes the probes (D01M87PSM9YQGGW3YQ5X4XCJP63).
+    runs-on: ubuntu-latest
+    defaults: {run: {working-directory: report-ui}}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: {node-version: "22"}
+      - run: npm ci --no-audit --no-fund
+      - name: crates/toolbox-cli/src/toolbox-report.js is the bundle of report-ui/src
+        run: npm run check
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build-storybook
+      - name: >-
+          Every story at 1280 and 390 px, light and dark: no script error, no
+          serious axe violation (WCAG 2.2 A/AA), no sideways scroll
+        run: npm run probe
   typescript-builder:
     runs-on: ubuntu-latest
     defaults: {run: {working-directory: experiments/typescript-builder}}
