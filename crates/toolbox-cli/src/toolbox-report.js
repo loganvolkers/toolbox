@@ -146,6 +146,8 @@
     ".passes em{font-style:normal;font-size:12px;color:var(--muted);margin-right:4px}",
     ".callout{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:10px;background:var(--accent-bg);font-size:14px;margin:8px 0}",
     ".callout.done{background:color-mix(in srgb,var(--pass) 12%,var(--card))}",
+    ".callout.near{background:color-mix(in srgb,var(--pass) 7%,var(--card));border-left:3px solid var(--pass)}",
+    ".close-note{color:var(--fg)}.close-note b{color:var(--pass)}",
     ".fails{display:flex;flex-direction:column;gap:2px}",
     ".fail-row{display:grid;grid-template-columns:minmax(200px,2fr) minmax(0,3fr) 70px;gap:12px;align-items:center;padding:7px 8px;border:0;border-radius:8px;background:none;color:var(--fg);font:inherit;font-size:13px;text-align:left;cursor:pointer}",
     ".fail-row:hover{background:var(--tint)}",
@@ -2994,6 +2996,8 @@
         return unsure.indexOf(n) < 0;
       });
       if (!need.length) return caveat;
+      if (need.length === 1)
+        return el("div", {}, caveat, el("div", { className: "callout near" }, el("span", {}, el("b", { textContent: "One rule from " }), badge(next), " · pass " + need[0] + " ", basisBadge(basisOf((sc.rules || {})[need[0]]), true), " and this entity moves up a level.")));
       return el("div", {}, caveat, el("div", { className: "callout" }, el("span", {}, el("b", { textContent: "Next: " }), badge(next), " needs: ", ...need.map(function (n, i) {
         return el("span", { className: "nr" }, (i ? ", " : "") + n + " ", basisBadge(basisOf((sc.rules || {})[n]), true));
       }), ".")));
@@ -4070,6 +4074,10 @@
           return b[1] - a[1] || a[0].localeCompare(b[0]);
         })[0];
         if (best) leverRule = best[0];
+        var close = scored.filter(function (pair) {
+          var nx = pair[1].level !== "skipped" && nextLevel(sc, pair[1].level);
+          return nx && blockers(sc, pair[1], nx).length === 1;
+        }).length;
         if (best)
           lever = el(
             "div",
@@ -4082,6 +4090,7 @@
             basisBadge(basisOf((sc.rules || {})[best[0]])),
             " keeps " + plural(best[1], "entity", "entities") + " at " + low + "; they need it for " + up + ". ",
             ...rich(((sc.rules || {})[best[0]] || {}).fix),
+            close ? el("span", { className: "close-note" }, el("br"), el("b", { textContent: "Within reach: " }), plural(close, "entity is", "entities are") + " one rule from " + (close === 1 ? "its" : "their") + " next level.") : null,
           );
       }
       var topFails = Object.entries(failCounts)
