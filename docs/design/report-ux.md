@@ -151,15 +151,25 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
   into words. A kind page whose scorecards leave some of its entities out says how many and why,
   with each scorecard's `appliesTo` one click away.
 - A custom level name (OpenSSF's "ten") explains itself on hover and, when it is the scorecard's top
-  level, says so wherever the weakest scorecard is named. On the overview, a scorecard at its only
-  top level that still holds the repository's level is marked as the ceiling.
-- The first use of ratchet, CEL, fixture or harness in a description is a dotted term whose hover
-  defines it.
+  level, says so wherever the weakest scorecard is named. A scorecard at its top level that still
+  holds the repository's level is marked as the ceiling on every page that names it, never as a
+  green "top level".
+- The first use of ratchet, CEL, fixture or harness (or their plurals) in a description is a dotted
+  term that keyboard focus reaches; its definition shows on hover and focus and is in its
+  accessible name.
+- A value that cannot be measured wears a neutral dashed pill, not the failing one; a check not run
+  reads "not run in this build" everywhere.
+- In "What each level needs", a column whose rules share one basis says so once in its header, and
+  reasons are clamped to three lines behind one toggle.
+- A "Skip to content" button comes first in the tab order and moves focus to the page body without
+  changing the route.
 - Long lists start short: a scorecard shows its 12 worst entities, then "Show all".
-- The hero of a comparison says how it was measured (the track's description: releases, setup,
-  runs and who checked the scoring) before the verdict.
+- The hero of a comparison says how it was measured (the track's description: releases, machine,
+  setup, runs and who checked the scoring, with the date). Its headline names the factors it is
+  behind on with their rule counts, and a rule-by-rule tally follows, because factors are not
+  weighted. Only the leading value on a rule is coloured.
 - A link to a hash that matches nothing says so and selects no tab.
-- A factor's "How it is scored" says in words what the harness recorded for each product and which value is ahead, then the expression, then what would close the gap.
+- A factor's "How it is scored" says in words what the harness recorded for each product and which value is ahead, then the expression, then, where Toolbox is behind, what would close the gap.
 
 ## Sources
 
