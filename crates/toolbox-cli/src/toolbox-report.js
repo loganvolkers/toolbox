@@ -61,7 +61,7 @@
     ".rung a:hover{border-color:var(--accent)}",
     ".rung a.done{border-color:color-mix(in srgb,var(--pass) 45%,var(--line))}",
     ".rung .topmark{display:block;font-size:11.5px;font-weight:650;color:var(--pass);margin-top:2px}",
-    ".rung .capmark{display:block;font-size:11.5px;font-weight:650;color:var(--unknown);margin-top:2px}.rung a.capped{border-color:var(--unknown);border-left-width:3px}.weakest .topmark{color:var(--pass);font-weight:650}",
+    ".rung .capmark{display:block;font-size:11.5px;font-weight:650;color:var(--unknown);margin-top:2px}.rung a.capped{border-color:var(--unknown);border-left-width:3px}.weakest .topmark{color:var(--pass);font-weight:650}.weakest .capnote{color:var(--unknown);font-weight:650}",
     ".rung .empty{font-size:12px}",
     ".tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:18px}",
     ".tile{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;box-shadow:var(--shadow);text-decoration:none;color:var(--fg)}",
@@ -102,7 +102,7 @@
     ".ring text{font:700 13px system-ui,sans-serif;fill:var(--fg)}",
     ".pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12px;font-weight:600;background:var(--tint);color:var(--muted)}",
     ".pill.good{background:color-mix(in srgb,var(--pass) 16%,transparent);color:var(--pass)}",
-    ".pill.bad{background:color-mix(in srgb,var(--fail) 14%,transparent);color:var(--fail)}",
+    ".pill.bad{background:color-mix(in srgb,var(--fail) 14%,transparent);color:var(--fail)}.pill.unknown{background:transparent;border:1px dashed var(--unknown);color:var(--unknown)}",
     "input[type=search]{width:100%;margin:10px 0;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);font:inherit}",
     ".filters{display:flex;flex-wrap:wrap;gap:8px 16px;margin:12px 0 4px;align-items:center}",
     ".seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}",
@@ -151,14 +151,14 @@
     ".fail-row .rn{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;font-weight:600;overflow-wrap:break-word}",
     ".fail-row .fc{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}",
     ".scope-note details{display:inline}.scope-note summary{display:inline-flex;align-items:center;min-height:24px;cursor:pointer;color:var(--accent)}.scope-note details[open] div{margin-top:4px}",
-    "abbr.gloss{text-decoration:underline dotted;text-underline-offset:3px;cursor:help}",
+    "abbr.gloss{position:relative;text-decoration:underline dotted;text-underline-offset:3px;cursor:help}abbr.gloss:hover::after,abbr.gloss:focus::after{content:attr(data-tip);position:absolute;left:0;top:calc(100% + 4px);z-index:5;width:max-content;max-width:min(280px,70vw);padding:6px 9px;border-radius:8px;background:var(--fg);color:var(--bg);font-size:12.5px;font-weight:450;line-height:1.4;white-space:normal;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.18)}",
     ".jumpbar{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;margin:14px 0 0;padding:6px 10px;border-radius:8px;background:var(--tint);font-size:13px}.jumpbar button.link{min-height:24px}",
     ".levels-need{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:8px 0 4px;align-items:start}",
     ".need{padding:10px 12px;border-radius:10px;background:var(--tint);font-size:13px}",
     ".need .lvl{margin-bottom:6px}",
     ".need ul{margin:0;padding-left:16px}",
     ".need li{margin:6px 0}",
-    ".need li .why{display:block;color:var(--muted);font-size:12.5px;line-height:1.4}",
+    ".need li .why{display:block;color:var(--muted);font-size:12.5px;line-height:1.4}.levels-need.clamped li .why{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}.need-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 8px;margin-bottom:6px}.need-head .lvl{margin-bottom:0}.need-basis{font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:4px}.need-toggle{display:inline-flex;align-items:center;min-height:24px;font-size:13px;margin:0 0 4px}",
     "code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}",
     ".picker{display:none}",
     ".picker select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);font:inherit;min-height:40px}",
@@ -248,7 +248,7 @@
     ".track .td{font-size:13px;color:var(--muted);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}",
     ".trackstrip{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin-top:28px;padding-top:16px;border-top:1px solid var(--line)}",
     ".trackstrip a{display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:4px 12px 4px 4px;border:1px solid var(--line);border-radius:999px;color:var(--fg);text-decoration:none;font-size:13px}",
-    ".trackstrip a:hover{border-color:var(--accent)}",
+    ".trackstrip a{transition:border-color .15s,transform .15s,box-shadow .15s}.trackstrip a:hover,.trackstrip a.far:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 4px 12px color-mix(in srgb,var(--fg) 10%,transparent)}",
     ".trackstrip.lead{margin-top:4px;padding-top:0;border-top:0}",
     ".trackstrip.lead a{padding:6px 14px 6px 6px;border-radius:14px;background:var(--card)}",
     ".trackstrip small{display:block;font-size:12px;color:var(--muted)}",
@@ -274,7 +274,7 @@
     ".cmp-hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:center;background:linear-gradient(135deg,color-mix(in srgb,var(--st) 14%,var(--card)) 0%,var(--card) 60%)}",
     ".cmp-hero .big{font-size:28px;line-height:1.2;font-weight:750;letter-spacing:-.01em;margin:4px 0 8px}",
     ".cmp-hero .kicker{font-size:12px;font-weight:650;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}",
-    ".tally3{display:flex;gap:18px;text-align:center}",
+    ".tally3{display:flex;gap:18px;text-align:center}.rule-tally{margin:6px 0 0;font-size:14px}.rule-tally .ahead{color:var(--pass)}.rule-tally .behind{color:var(--fail)}.rule-tally .parity{color:var(--muted)}",
     ".tally3 strong{display:block;font-size:30px;line-height:1.1;font-variant-numeric:tabular-nums}",
     ".tally3 span{font-size:12px;color:var(--muted);font-weight:650;text-transform:uppercase;letter-spacing:.05em}",
     ".setup{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin:10px 0;align-items:start}",
@@ -322,6 +322,7 @@
     ".boxrow{grid-template-columns:1fr;gap:6px}.measure{grid-template-columns:1fr}.measure .ms{text-align:left}.cmp-hero{grid-template-columns:1fr}",
     ".ehdr{display:none}a.erow.cols{grid-template-columns:1fr!important;gap:4px}.ecell{display:flex;gap:6px;align-items:center}.ecell::before{content:attr(data-sc);color:var(--muted)}.ecell[data-judged]::before{content:attr(data-sc) \" \\2726\"}",
     ".behind-row{grid-template-columns:1fr}.val{grid-template-columns:76px minmax(0,1fr) auto}}",
+    ".skip{position:absolute;left:8px;top:-48px;z-index:10;padding:8px 12px;border-radius:8px;background:var(--fg);color:var(--bg);font-weight:650;text-decoration:none}.skip:focus{top:8px}",
     "@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}",
   ].join("");
 
@@ -330,7 +331,7 @@
     "<style>" +
     CSS +
     "</style>" +
-    '<slot name="header"></slot><slot name="nav"></slot>' +
+    '<a class="skip" href="#body" id="skip">Skip to content</a><slot name="header"></slot><slot name="nav"></slot>' +
     '<main><div class="top" id="top"></div><div class="meta" id="meta"></div>' +
     '<div class="modes" id="modes" role="tablist" aria-label="Report views"></div>' +
     '<div id="body"></div></main><slot name="footer"></slot>';
@@ -396,9 +397,12 @@
   function glossed(text) {
     var m = GLOSS_RE.exec(text);
     if (!m) return [text];
-    var key = m[1].toLowerCase().replace(/s$/, "");
-    if (key === "cel" && m[1] !== "CEL") return [text];
-    var term = el("abbr", { className: "gloss", title: GLOSSARY[key], textContent: m[1] });
+    var word = m[1].toLowerCase();
+    var def = GLOSSARY[word] || GLOSSARY[word.replace(/s$/, "")];
+    if (!def || (word === "cel" && m[1] !== "CEL")) return [text];
+    // Focusable, with the definition in the accessible name, so keyboard and touch readers reach it too.
+    var term = el("abbr", { className: "gloss", tabIndex: 0 }, m[1], el("span", { className: "sr", textContent: " (" + def + ")" }));
+    term.dataset.tip = def;
     return [text.slice(0, m.index), term, text.slice(m.index + m[1].length)];
   }
 
@@ -700,6 +704,18 @@
   function isTop(D, name, level) {
     var levels = ((D.scorecards || {})[name] || {}).levels || [];
     return !!level && level === levels[levels.length - 1];
+  }
+
+  // A repository standard whose only top level is the repository's level holds the repository there:
+  // that is a ceiling, not an achievement.
+  function capsRepo(D, name, level) {
+    var R = repoLevel(D);
+    return !!(R && R.next && isTop(D, name, level) && level === R.floor && (D.repoRollup || []).indexOf(name) >= 0);
+  }
+
+  function topNote(D, name, level) {
+    if (capsRepo(D, name, level)) return el("span", { className: "capnote", textContent: " ▲ ceiling: caps the repository", title: "Its top level is " + level + ", so the repository cannot rise above " + level + " until it gains a higher level" });
+    return isTop(D, name, level) ? el("span", { className: "topmark", textContent: " ✓ top level" }) : "";
   }
 
   function title(D, name) {
@@ -1153,7 +1169,8 @@
           { className: "val" },
           el("span", { className: "who", textContent: who(id), title: who(id) }),
           fillEl ? el("span", { className: "vb" }, fillEl) : el("span"),
-          el("span", { className: "v " + (outcome === "pass" || outcome === "fail" ? outcome : ""), textContent: text }),
+          // Colour marks the leader only; the rule's absolute bar, when it has one, is in the hover text.
+          el("span", { className: "v " + (id === leader ? "pass" : ""), textContent: text, title: outcome === "pass" ? "Meets the rule's bar" : outcome === "fail" ? "Misses the rule's bar" : "" }),
         );
       }),
     );
@@ -1475,6 +1492,13 @@
       this._booted = true;
       var root = this.attachShadow({ mode: "open" });
       root.append(template.content.cloneNode(true));
+      // The hash is the route, so the skip link moves focus instead of following its href.
+      root.getElementById("skip").addEventListener("click", function (e) {
+        e.preventDefault();
+        var body = root.getElementById("body");
+        body.tabIndex = -1;
+        body.focus();
+      });
       var self = this;
       var inline = this.querySelector('script[type="application/json"]');
       var load = inline
@@ -1827,7 +1851,7 @@
       var color = state === "on" ? "var(--pass)" : state === "empty" ? "var(--faint)" : "var(--accent)";
       var status =
         state === "empty"
-          ? el("span", { className: "pill bad", textContent: "can't be measured" })
+          ? el("span", { className: "pill unknown", textContent: "can't be measured" })
           : state === "on"
             ? el("span", { className: "pill good", textContent: "on target" })
             : el("span", { className: "pill bad", textContent: (c.inScope || 0) - (c.meeting || 0) + " to go" });
@@ -1851,7 +1875,7 @@
         wrap.append(
           link("scorecard/" + enc(r.name), "row", [
             floors
-              ? el("div", { style: "display:flex;gap:10px;align-items:center" }, medal(floorOf(D, r.name) || "none", 30), el("div", {}, ...cardName(D, r.name), el("span", { className: "weakest" }, "weakest ", floorOf(D, r.name) ? badge(floorOf(D, r.name)) : "not scored", isTop(D, r.name, floorOf(D, r.name)) ? el("span", { className: "topmark", textContent: " ✓ top level" }) : "")))
+              ? el("div", { style: "display:flex;gap:10px;align-items:center" }, medal(floorOf(D, r.name) || "none", 30), el("div", {}, ...cardName(D, r.name), el("span", { className: "weakest" }, "weakest ", floorOf(D, r.name) ? badge(floorOf(D, r.name)) : "not scored", topNote(D, r.name, floorOf(D, r.name)))))
               : el("div", {}, ...cardName(D, r.name)),
             el("div", { className: "dist" }, barEl(r.parts, "", r.parts.map(function (p) { return p.n + " " + p.level; }).join(", ")), el("div", { className: "sub", style: "font-size:12px;margin-top:4px", textContent: (r.sc.kind ? kindCount(D, r.sc.kind, r.total) : r.total + " entities") + (r.total > r.scored ? ", " + fmt(r.scored) + " in scope" : "") + " · " + r.topShare + "% " + (r.top || "top") })),
             el("div", { className: "num" + (r.none ? " bad" : "") }, el("strong", { textContent: String(r.none) }), el("span", { textContent: "at none" })),
@@ -2001,7 +2025,7 @@
         );
         kids.push(medals);
       }
-      var weakest = !t.compare && t.cards[0] && t.cards[0].floor ? title(D, t.cards[0].row.name) + " at " + t.cards[0].floor + (isTop(D, t.cards[0].row.name, t.cards[0].floor) ? ", its top level" : "") : null;
+      var weakest = !t.compare && t.cards[0] && t.cards[0].floor ? title(D, t.cards[0].row.name) + " at " + t.cards[0].floor + (capsRepo(D, t.cards[0].row.name, t.cards[0].floor) ? ", its top level, which caps the repository" : isTop(D, t.cards[0].row.name, t.cards[0].floor) ? ", its top level" : "") : null;
       kids.push(
         el(
           "div",
@@ -2072,7 +2096,7 @@
             {},
             el("b", { textContent: "Goal: every entity at the top level of each scorecard below. " }),
             t.pct == null ? "Nothing is scored yet." : "On average " + t.pct + "% are there" + (t.none ? "; " + plural(t.none, "entity is", "entities are") + " still at none" : "") + ".",
-            weakest && weakest.floor ? el("span", {}, " The weakest scorecard is ", link("scorecard/" + enc(weakest.row.name), "", title(D, weakest.row.name)), ", at ", badge(weakest.floor), isTop(D, weakest.row.name, weakest.floor) ? ", already its top level." : ".") : null,
+            weakest && weakest.floor ? el("span", {}, " The weakest scorecard is ", link("scorecard/" + enc(weakest.row.name), "", title(D, weakest.row.name)), ", at ", badge(weakest.floor), capsRepo(D, weakest.row.name, weakest.floor) ? ", its only top level, so it caps the repository there until it gains a higher one." : isTop(D, weakest.row.name, weakest.floor) ? ", already its top level." : ".") : null,
           );
       var section = el(
         "section",
@@ -2487,7 +2511,7 @@
         var judgedCols = cols.filter(function (n) {
           return basisCounts(((D.scorecards || {})[n] || {}).rules).judged > 0;
         });
-        var dashed = list.querySelector(".lvl.vacuous") ? " A level drawn hollow may not hold: a violet dashed outline marked “not assessed” means no agent's assessment has been read yet, and a grey dotted outline marked “provisional: not run” that a check it needs was not run in this build." : "";
+        var dashed = list.querySelector(".lvl.vacuous") ? " A level drawn hollow may not hold: a violet dashed outline marked “not assessed” means no agent's assessment has been read yet, and a dotted outline marked “provisional: not run” means a check it needs was not run in this build." : "";
         if (judgedCols.length || dashed)
           list.prepend(
             el(
@@ -2644,7 +2668,7 @@
               "div",
               { style: "display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center" },
               el("span", { className: "rn" }, scName ? ruleLink(scName, n) : n),
-              el("span", { className: "outcome " + o, style: "margin:0", textContent: o === "unknown" ? "unknown: not checked in this build" : o }),
+              el("span", { className: "outcome " + o, style: "margin:0", textContent: o === "unknown" ? "not run in this build" : o }),
               basisBadge(basisOf(rule)),
               rule.level ? el("span", { className: "sub", textContent: "needed for " + rule.level }) : "",
             ),
@@ -3006,6 +3030,17 @@
         (counts.unknown ? ", " + counts.unknown + " not measured" : "") +
         ".";
       var lean = counts.behind > counts.ahead ? "behind" : counts.ahead > counts.behind ? "ahead" : "parity";
+      var ruleCounts = { ahead: 0, parity: 0, behind: 0 };
+      var behindRules = {};
+      names.forEach(function (n) {
+        var rs = all[n].rules || {};
+        behindRules[n] = 0;
+        Object.keys(rs).forEach(function (r) {
+          var v = (rs[r] || {})[peer];
+          if (v in ruleCounts) ruleCounts[v]++;
+          if (v === "behind") behindRules[n]++;
+        });
+      });
       var hero = el(
         "section",
         { className: "cmp-hero" },
@@ -3015,27 +3050,23 @@
           el("div", { className: "kicker", textContent: "Head to head" }),
           el("h2", { className: "big", textContent: who(subject) + " vs " + who(peer) }),
           el("p", { className: "verdict", style: "margin:0;font-size:17px" }, el("b", { textContent: headline }), behindNames.length ? el("span", {}, " Behind on ", ...behindNames.map(function (n, i) {
-            return el("span", {}, i ? ", " : "", link("compare/" + enc(n), "", title(D, n)));
-          }), ".") : " Never behind."),
+            return el("span", {}, i ? ", " : "", link("compare/" + enc(n), "", title(D, n)), " (" + behindRules[n] + " of " + Object.keys(all[n].rules || {}).length + " rules)");
+          }), "; check it first if it matters to you.") : " Never behind."),
+          el(
+            "p",
+            { className: "rule-tally" },
+            "Rule by rule: ",
+            el("b", { className: "ahead", textContent: ruleCounts.ahead + " ahead" }),
+            " · ",
+            el("b", { className: "parity", textContent: ruleCounts.parity + " at parity" }),
+            " · ",
+            el("b", { className: "behind", textContent: ruleCounts.behind + " behind" }),
+            ". Factors are not weighted, so the factor count is a tally, not an overall score.",
+          ),
           el(
             "p",
             { className: "sub", style: "margin:8px 0 0" },
-            "A factor is a scorecard that scores both products on the same rules. On a rule, a product is ahead when its measured value is better (within the rule's tolerance is parity) or it passes a bar the other misses. " + who(subject) + " is behind on a factor if it is behind on any one of its rules, and ahead if it is ahead on some and behind on none. ",
-            el("b", { textContent: "Factors are not weighted" }),
-            ": the count is a tally, not a score, so read the factors that matter to you" +
-              (behindNames.length
-                ? ". Behind: " +
-                  behindNames
-                    .map(function (n) {
-                      var rs = all[n].rules || {};
-                      var nb = Object.keys(rs).filter(function (r) {
-                        return (rs[r] || {})[peer] === "behind";
-                      }).length;
-                      return title(D, n) + " on " + nb + " of " + Object.keys(rs).length + " rules";
-                    })
-                    .join(", ") +
-                  "."
-                : "."),
+            "A factor is a scorecard that scores both products on the same rules. On a rule, a product is ahead when its measured value is better (within the rule's tolerance is parity) or it passes a bar the other misses. " + who(subject) + " is behind on a factor if it is behind on any one of its rules, and ahead if it is ahead on some and behind on none.",
           ),
         ),
         el(
@@ -3242,7 +3273,7 @@
                 ". " + (rd.better ? "The " + rd.better + " value is ahead." : "Passing beats failing."),
               ),
               el("div", { className: "cel", ariaLabel: "Expression", textContent: rd.check + (rd.value ? "\nvalue: " + rd.value : "") }),
-              rd.fix ? el("p", { className: "sub", style: "margin:4px 0 0" }, el("b", { textContent: "What would close it: " }), ...rich(rd.fix)) : null,
+              rd.fix && (st === "behind" || st === "unknown") ? el("p", { className: "sub", style: "margin:4px 0 0" }, el("b", { textContent: "What would close it: " }), ...rich(rd.fix)) : null,
             ),
           ),
         );
@@ -3637,23 +3668,44 @@
             return sc.rules[n].level === l;
           })
           .sort();
+        var bases = names.map(function (n) {
+          return basisOf(sc.rules[n]);
+        });
+        var shared = bases.length && bases.every(function (b) {
+          return b === bases[0];
+        })
+          ? bases[0]
+          : null;
         needs.append(
           el(
             "div",
             { className: "need" },
-            badge(l),
+            el("div", { className: "need-head" }, badge(l), shared ? el("span", { className: "need-basis" }, names.length > 1 ? "All " : "", basisBadge(shared, true)) : null),
             names.length
               ? el(
                   "ul",
                   {},
                   ...names.map(function (n) {
                     var rd = sc.rules[n];
-                return el("li", {}, el("span", { style: "display:inline-flex;flex-wrap:wrap;gap:4px 6px;align-items:center" }, el("b", {}, ruleLink(active, n)), basisBadge(basisOf(rd), true)), rd.rationale || rd.fix ? el("span", { className: "why" }, ...rich(rd.rationale || rd.fix)) : null, refs(rd.links));
+                return el("li", {}, el("span", { style: "display:inline-flex;flex-wrap:wrap;gap:4px 6px;align-items:center" }, el("b", {}, ruleLink(active, n)), shared ? null : basisBadge(basisOf(rd), true)), rd.rationale || rd.fix ? el("span", { className: "why" }, ...rich(rd.rationale || rd.fix)) : null, refs(rd.links));
                   }),
                 )
               : el("div", { className: "sub", textContent: "No rules at this level." }),
           ),
         );
+      });
+      // Reasons are clamped to three lines so the levels read side by side; the full text stays in the
+      // accessibility tree and one toggle opens them all.
+      needs.classList.add("clamped");
+      var needsToggle = el("button", {
+        className: "link need-toggle",
+        textContent: "Show the full reasons",
+        ariaExpanded: "false",
+        onclick: function () {
+          var open = needs.classList.toggle("clamped") === false;
+          needsToggle.textContent = open ? "Clamp the reasons to three lines" : "Show the full reasons";
+          needsToggle.setAttribute("aria-expanded", String(open));
+        },
       });
       var picker = el(
         "select",
@@ -3720,6 +3772,7 @@
           failChart ? el("p", { className: "sub", style: "margin:0 0 6px", textContent: "Each bar is the share of entities failing the rule, coloured by the level the rule is needed for." }) : null,
           failChart,
           hNeeds,
+          needsToggle,
           needs,
           hList,
           filters,
