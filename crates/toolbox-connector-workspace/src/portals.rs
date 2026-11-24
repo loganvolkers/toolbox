@@ -107,6 +107,12 @@ pub(crate) fn analyse(root: &Path, rel: &str) -> Value {
             Some(e.to_string()),
         ),
     };
+    let federation = merged
+        .iter()
+        .map(|d| &d["federation"])
+        .find(|f| f.is_object())
+        .cloned()
+        .unwrap_or(Value::Null);
     let all = merged.iter();
     let mut actions = Vec::new();
     let mut scorecards = Vec::new();
@@ -129,8 +135,8 @@ pub(crate) fn analyse(root: &Path, rel: &str) -> Value {
         "dir": abs,
         "file": rel,
         "actions": actions,
-        "runner": doc["federation"]["runner"],
-        "acceptApprovalsFrom": doc["federation"]
+        "runner": federation["runner"],
+        "acceptApprovalsFrom": federation
             .get("acceptApprovalsFrom")
             .cloned()
             .unwrap_or(json!([])),
@@ -240,6 +246,29 @@ mod tests {
         assert_eq!(r["packageError"], Value::Null, "{r}");
         assert_eq!(r["actions"][0]["name"], "add-codeowners");
         assert_eq!(r["actions"][0]["executor"], "change");
+        std::fs::remove_dir_all(&root).ok();
+    }
+
+    #[test]
+    fn federation_in_an_included_standard_file_is_the_childs() {
+        let root = std::env::temp_dir().join(format!("portals-std-{}", std::process::id()));
+        let dir = root.join("svc/.toolbox");
+        std::fs::create_dir_all(dir.join("actions")).unwrap();
+        std::fs::write(
+            dir.join("toolbox.yaml"),
+            "apiVersion: toolbox.dev/v1alpha1\nportal: {name: svc, owner: group:a, toolbox: \"0.1\"}\ninclude: [actions/*.yaml]\n",
+        )
+        .unwrap();
+        std::fs::write(
+            dir.join("actions/std.yaml"),
+            "federation:\n  runner: {type: local}\n  acceptApprovalsFrom: [{portal: org, key: 'ed25519:0000000000000000000000000000000000000000000000000000000000000000'}]\nactions:\n  - {name: rotate, kind: Portal, description: Rotate the deploy key, inputs: {type: object}, executor: {type: change, land: push, base: main, run: y}}\n",
+        )
+        .unwrap();
+        let r = analyse(&root, "svc/.toolbox/toolbox.yaml");
+        assert_eq!(r["error"], Value::Null, "{r}");
+        assert_eq!(r["runner"]["type"], "local");
+        assert_eq!(r["acceptApprovalsFrom"][0]["portal"], "org");
+        assert_eq!(r["actions"][0]["name"], "rotate");
         std::fs::remove_dir_all(&root).ok();
     }
 
