@@ -192,7 +192,28 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
   when both bases are present.
 - An open kind replaces the grid of kind cards with one row of kind chips per group.
 - Entity rows are a grid with a minimum width for the name, so a long "needs" list wraps below it
-  rather than squeezing it.
+  rather than squeezing it. The last word of a row and its chevron never break apart.
+- The Scorecard kind's count is split wherever it appears: standards, comparison factors and
+  example portals' scorecards. The scorecard sidebar groups standards and comparison factors under
+  their own heads, and a factor's row shows its verdict, not a debt.
+- When a ceiling standard caps the repository level, the climb bar toward the next level is drawn
+  blocked, with a lock, and its label names the standard.
+- A custom level name (OpenSSF's "ten") is followed by the sentence of its scorecard's description
+  that defines it.
+- A basis badge is focusable and shows its description on hover and focus, like a glossary term.
+  Inside a button it is a plain label, so no focus stop sits inside another control.
+- A scorecard whose rules all share one basis says so in its "Rates every …" line rather than in a
+  separate box; the not-assessed banner sits below the level bar, so the data starts within the
+  first screen.
+- Comparison tracks sit apart from the other tracks, under "Measured against a rival": their ring
+  counts factors led, which is not a share of entities, so they take no place in the order.
+  A track card says what its percentage averages over ("averaged over N scorecards").
+- Stripes mean "not assessed" and nothing else; an entity with no result is a dotted fill.
+- A scorecard id left in a lede or rationale links to that scorecard under its title.
+
+Not built: a change since the last snapshot beside each track ring. The report carries one snapshot
+and the committed baseline, which equals it on every published build; a pages build that also scored
+the previous release would give it something to compare with.
 
 ## Sources
 
