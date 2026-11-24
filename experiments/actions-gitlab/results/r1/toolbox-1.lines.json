@@ -1,0 +1,18 @@
+{
+ "linesToMaintain": 271,
+ "files": {
+  "gitlab:alpha/.toolbox/actions/set-codeowners.yaml": 39,
+  "gitlab:alpha/.toolbox/scripts/set-codeowners.py": 42,
+  "gitlab:alpha/.toolbox/scripts/test_set_codeowners.py": 54,
+  "gitlab:alpha/.toolbox/tests/set-codeowners.test.yaml": 63,
+  "gitlab:alpha/.toolbox/toolbox.yaml": 4,
+  "gitlab:alpha/CODEOWNERS": 1,
+  "gitlab:beta/.toolbox/toolbox.yaml": 4,
+  "gitlab:beta/CODEOWNERS": 1,
+  "gitlab:gamma/.toolbox/toolbox.yaml": 4,
+  "gitlab:gamma/CODEOWNERS": 1,
+  "gitlab:org/env.sh": 10,
+  "gitlab:org/groups.fga": 6,
+  "gitlab:org/toolbox.yaml": 42
+ }
+}
