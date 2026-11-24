@@ -273,6 +273,12 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
   standing chip carries its rule tally ("7 of 13 rules behind").
 - A track card names its weakest scorecard and its level; when that scorecard is also the next
   medal, one line says both.
+- A headline share of passing checks counts only passes on evidence. An agent-judged rule that
+  passes on an entity no agent has assessed is counted apart ("346 more pass only because no agent
+  has assessed them yet"), beside the checks not run.
+- A row in the scorecard index carries its standard's purpose: the first sentence of its
+  description, on one line, in full on hover.
+- An external link's ↗ belongs to its text and wraps with the last word.
 
 Not built: a change since the last snapshot beside each track ring. The report carries one snapshot
 and the committed baseline, which equals it on every published build; a pages build that also scored
