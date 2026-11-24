@@ -50,13 +50,13 @@ Scorecards and lint findings in Toolbox prefer carrying existing tools and stand
 
 ## Measured, beyond DX
 
-We measured both products with scripts, no agent in the loop, on one VM: Toolbox's release build with OpenFGA checking every read, against Backstage 1.57 from `@backstage/create-app` 0.9.4, built as its Dockerfile does and run with its production config. The comparative scorecards in this repository's own report score the result; see the **Compare** tab of [this repository, scored](/toolbox/report-hosted/#compare). Round 3, at 10,000 components:
+We measured both products with scripts, no agent in the loop, on one VM: Toolbox's release build with OpenFGA authorizing every read (each decision checked once per snapshot, then cached), against Backstage 1.57 from `@backstage/create-app` 0.9.4, built as its Dockerfile does and run with its production config. The comparative scorecards in this repository's own report score the result; see the **Compare** tab of [this repository, scored](/toolbox/report-hosted/#compare). Round 3, at 10,000 components:
 
 | Factor | Toolbox | Backstage | Standing |
 |---|---|---|---|
 | Performance | get 56.5k req/s, owner list 3,790 req/s, ready 0.9 s, catalog readable 2.2 s | get 4.2k req/s, owner list 474 req/s, ready 3.3 s, catalog readable 26.6 s | ahead |
 | Footprint | 89 MB idle, 166 MB loaded, 121 MB installed, 2 adopter files | 452 MB idle, 806 MB loaded, 710 MB installed, 44 adopter files | ahead |
-| Security | owner-only fields; connectors are processes without the server's credentials | per-entity permissions; plugins share one process (its threat model) | ahead (3 rules), parity on 5 |
+| Security | owner-only fields; connectors are separate processes, but a same-user connector can still read OpenFGA's credentials | per-entity permissions; plugins share one process (its threat model) | ahead (2 rules), parity on 6 |
 | Supply chain | 605 packages, 5 known vulnerabilities (0 high), 100% provenance | 2,791 packages, 34 known (16 high), 0% provenance | ahead |
 | Change safety | offline validate and plan; 0 adopter lines per upgrade | 47 template lines per release; Knex migrations to roll back | ahead |
 | Org fit | repo portals without a server; no federation yet | one backend per catalog; no federation | ahead |

@@ -4,7 +4,9 @@
 and measured Toolbox at `581be50`. Rounds 1 and 2 ran on the harness frozen at `dfeeea4`. The
 adjudication of rounds 1 and 2 is [ADJUDICATION.md](./ADJUDICATION.md); round 3 answers it. Raw
 results for every round are in [results/](./results); the product records the scorecards read are
-[portal/comparisons/](../../portal/comparisons).*
+[portal/comparisons/](../../portal/comparisons). The adjudication of round 3 is
+[ADJUDICATION.md § Round 3](./ADJUDICATION.md#round-3). It upholds the factor verdict and fails one
+rule, credential isolation, which this write-up and the records now score as it found.*
 
 ## Verdict
 
@@ -17,7 +19,7 @@ of the Toolbox for Toolbox report:
 |---|---|---|
 | Performance (`vs-backstage-performance`) | **ahead** | 7 / 0 / 0 |
 | Footprint (`vs-backstage-footprint`) | **ahead** | 5 / 0 / 0 |
-| Security (`vs-backstage-security`) | **ahead** | 3 / 5 / 0 |
+| Security (`vs-backstage-security`) | **ahead** | 2 / 6 / 0 |
 | Supply chain (`vs-backstage-supply-chain`) | **ahead** | 4 / 0 / 0 |
 | Change safety (`vs-backstage-change-safety`) | **ahead** | 4 / 0 / 0 |
 | Org fit (`vs-backstage-org-fit`) | **ahead** | 1 / 1 / 0 (federation: neither) |
@@ -27,9 +29,10 @@ of the Toolbox for Toolbox report:
 
 The capabilities Toolbox lacks are docs search, docs, templates, API docs, Kubernetes,
 notifications and community (4 contributors against 2,826). Templates are self-service actions,
-which are paused (D64). Toolbox's own bars fail in four places: five known vulnerabilities, no
-federation, listening on every interface in its image, and the capabilities above. Each is
-published as a loss, not waived.
+which are paused (D64). Toolbox's own bars fail in five places: five known vulnerabilities, no
+federation, listening on every interface in its image, a connector that can read OpenFGA's
+credentials (below), and the capabilities above. Each is published as a loss, not waived.
+Security stays ahead on owner-only fields and process isolation.
 
 **What changed since round 2.** Three corrections from the adjudication, each against Toolbox,
 and one harness defect that flattered Backstage:
@@ -38,28 +41,35 @@ and one harness defect that flattered Backstage:
   `group:default/g3`; `spec.owner` holds `group:g3`, so every list returned no items, fast. Round 3
   filters on the stored value, and an equivalence gate now stops a run unless both products page out
   the same owner and component pairs. With real items, Backstage's 10k list fell from 1,279 to 474
-  req/s: round 1's loss on lists stands at 2.4× rather than 6×, and round 2's margin was
-  understated.
+  req/s: round 1's loss on lists stands at about 2.4× rather than 6×, and round 2's margin was
+  understated. The 2.4× is a cross-round estimate; the adjudicator reran Backstage under round 1's
+  conditions with the filter fixed and got 432 to 482 req/s (two runs, ADJUDICATION.md R3.6).
 - **Loopback is judged on the image.** The image sets `PORT=8080`, so Toolbox listens on every
   interface, like Backstage. The rule is now *parity*, both failing, not *ahead*.
 - **Scorecards count add-ons.** Backstage's Tech Insights community plugin counts, as the brief
   says, so the scorecards rule is *parity*, not *ahead*.
 - **The client token is read-only.** Backstage's static token now carries `accessRestrictions` for
   catalog reads, so its client can no longer delete an entity: *parity*, not *ahead*. MCP gets a
-  second, unrestricted token, because Backstage does not delegate a restricted token to the plugins
-  MCP calls; an agent token that can use MCP cannot be made read-only.
+  second, unrestricted token. Backstage delegates a token to the plugins MCP calls only when its
+  restriction names no permissions, so a read-only token gets 403 on MCP. A token scoped to
+  plugins works, but it can still delete an entity (204, ADJUDICATION.md R3.5): an agent token
+  that can use MCP cannot be made read-only. The rule is scored on the read-only REST token, which
+  favours Backstage; Toolbox uses one token for both, and it cannot delete. With a plugin-scoped
+  token, Backstage's tool list is 14,744 bytes rather than 20,500; Toolbox is ahead either way.
 
-Credential isolation was *ahead* in rounds 1 and 2 on evidence the adjudicator found too thin: a
-same-user connector could read the server's environment through `/proc`, and OpenFGA got the
-datastore URI on its command line. Two Toolbox changes made before the round 3 freeze close both
-(below), so it stays *ahead*, with residuals stated.
+Credential isolation was *ahead* in rounds 1 and 2 on evidence the adjudicator found too thin. Two
+Toolbox changes made before the round 3 freeze close the two leaks it named (below), but the round 3
+adjudication found a third: a same-user connector reads OpenFGA's memory. **The rule is a fail, so
+security is 2 / 6 / 0, not the 3 / 5 / 0 this round's records first said.**
 
 ## Performance and memory
 
 Medians of 5 runs per arm, arms alternating, oha 1.10.0 at 16 connections for 10 s per read, on
-one 4-vCPU VM. Toolbox checks every read in OpenFGA; Backstage runs its template's `allow-all`
-policy. Round 3 spreads reads over 1,000 ids and all 50 owners; rounds 1 and 2 read one id and one
-owner each.
+one 4-vCPU VM. Toolbox authorizes every read through OpenFGA, checking each decision once per
+snapshot and then serving it from a cache; Backstage runs its template's `allow-all` policy. Round 3
+spreads reads over 1,000 ids and all 50 owners; rounds 1 and 2 read one id and one owner each. So
+round 3's Toolbox reads are mostly cache hits: the adjudicator's probe over all 10,000 ids gave
+about 36,000 to 37,000 gets per second, against 56,500 here and Backstage's 4,150.
 
 ### Round 3: Toolbox at `581be50`
 
@@ -92,7 +102,9 @@ which now reads 1,000 ids instead of one.
 **Rounds 1 and 2 below measured Backstage's lists on empty responses** (the filter defect above).
 Their Backstage `listP95Ms` and `listRps` rows are not comparable with round 3. Round 1's list loss
 stands, at a smaller margin: Toolbox's 198 req/s at 10k is behind the 474 req/s Backstage reaches
-with real items, 2.4× rather than 6×. The fix in `916f596` took Toolbox's 10k list to 3,900 req/s.
+with real items, about 2.4× rather than 6×. That figure sets one round against another; the
+adjudicator confirmed it by rerunning Backstage under round 1's conditions with the filter fixed
+(432 to 482 req/s over two runs, R3.6). The fix in `916f596` took Toolbox's 10k list to 3,900 req/s.
 
 ### Round 1: Toolbox at `5ef6263` (Backstage lists empty)
 
@@ -198,7 +210,8 @@ capability scenarios, contributors) each carry their evidence. Round 3 judges ea
 ships to production: Toolbox's image, Backstage's create-app Dockerfile configuration. One fact is
 scored in Backstage's favour: a permission rule counts as a capability although its policy is
 TypeScript code, not configuration. Three were scored in Toolbox's favour in rounds 1 and 2
-(loopback, credential isolation, scorecards) and are corrected or re-evidenced above.
+(loopback, credential isolation, scorecards); all three are now corrected, credential isolation
+after the round 3 adjudication.
 
 ### Credential isolation, round 3
 
@@ -213,11 +226,27 @@ beside the server (`71d8655`, `26b77f3`):
   removed once OpenFGA is healthy. Every call needs a preshared key minted per start, so a connector
   that finds OpenFGA's port gets 401 (`openfga_gets_no_server_credentials`).
 
-Residuals: with `kernel.yama.ptrace_scope=0` a same-user connector can still attach to OpenFGA, which
-Toolbox cannot make non-dumpable, and read the URI from its memory; under the usual default of 1 it
-cannot, because it is not OpenFGA's ancestor. A connector can write any file the server's user can.
+**What still leaks (ADJUDICATION.md R3.3).** An in-image connector runs as the same user as
+OpenFGA, and Toolbox cannot make OpenFGA non-dumpable. The measurement VM has no Yama, so nothing
+stops a same-user process from reading another's memory. The adjudicator read `/proc/<openfga>/mem`
+and found the datastore password and the per-start key in OpenFGA's config text, and OpenFGA
+accepted the key (200). Hosts with Yama default to `ptrace_scope=1`, which blocks this, but the image
+cannot choose its host's kernel, and container hosts are unverified. So the fact is `false`, and the
+rule is at parity, both failing.
+
+Two more exposures:
+
+- **`--database-url` on the command line.** `/proc/<pid>/cmdline` is readable by every local user,
+  whatever the UID, and non-dumpable does not cover it. The harness passes the URL this way
+  (`measure.py`), and `toolbox serve --database-url` is documented. The image passes it in the
+  environment, so it is unaffected.
+- **Files.** A connector can write any file the server's user can; whether `/portal` is writable in
+  the image is unverified.
+
 A remote connector holds only its own token. Backstage runs plugins in one process with one
-environment and does not claim to isolate them (its threat model).
+environment and does not claim to isolate them (its threat model). To earn the pass, a connector
+must lose access to its siblings' memory (its own UID, or a Landlock domain or PID namespace), and
+the canary must be rerun on the image.
 
 ## Deviations from the pre-registration
 
@@ -236,9 +265,13 @@ environment and does not claim to isolate them (its threat model).
 - **Two harness YAML files were reformatted after rounds 1 and 2** (`yamark format`, D97). Both
   parse to the same data as at `dfeeea4`. After round 3, the same was done to the frozen standard
   and the two snapshots that `snapshot.py` wrote. All three parse to the same data as at `581be50`.
-- **Round 2 follows a product change made after round 1's results**, and round 3 follows two more
-  (credential isolation), as the protocol allows when the change names a use outside the harness
-  and touches no harness file (P5).
+- **Round 2 follows a product change made after round 1's results**, and round 3 follows three
+  more: the two credential isolation changes (`71d8655`, `26b77f3`), and `5968a55`, which narrows a
+  filter by field index only when `kind` names exactly one kind and never on `id`. The protocol
+  allows these when a change names a use outside the harness and touches no harness file (P5).
+- **`facts.yaml` changed after round 3**, to score `extensionCredentialIsolated` as the round 3
+  adjudication found it (`false`). The records were regenerated from the same raw results with
+  `snapshot.py`; no other fact changed. The change goes against Toolbox.
 - **Round 3 changed the harness after seeing results**: the equivalence gate, spread reads, the list
   filter, the production config, equal log levels, the read-only token, wider supply chain and
   upgrade window. Each answers a finding of the adjudication; each moves a measure toward Backstage

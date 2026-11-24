@@ -19,10 +19,12 @@ records:
     outcome: >-
       Round 3: Toolbox is ahead on seven of the eight pre-registered factors
       and behind on capabilities (docs search, docs, templates, API docs,
-      Kubernetes, notifications, community). Security is 3 rules ahead and 5
-      at parity; both products listen on every interface as shipped. Round 1
-      lost on filtered lists at 10k; rounds 1 and 2 measured Backstage's lists
-      on empty responses, a harness defect round 3 fixed with an equivalence
+      Kubernetes, notifications, community). Security is 2 rules ahead and 6
+      at parity; both products listen on every interface as shipped, and in
+      neither can an extension be kept from the server's credentials (the
+      round 3 adjudication read OpenFGA's key from its memory). Round 1 lost
+      on filtered lists at 10k; rounds 1 and 2 measured Backstage's lists on
+      empty responses, a harness defect round 3 fixed with an equivalence
       gate, and the round 1 loss stands at 2.4x rather than 6x (RESULTS.md)
     changed:
     - D01M857ZB3FZJZWX8G3BF5W1RNR
@@ -61,7 +63,11 @@ records:
       rounds 1 and 2: the pre-freeze commits fit but were undisclosed (now
       disclosed); 916f596 fits with its uses corrected to the MCP query tool,
       toolbox query and the UI catalog filter; three facts were scored in
-      Toolbox's favour and are corrected in round 3 (ADJUDICATION.md)
+      Toolbox's favour and are corrected in round 3 (ADJUDICATION.md). Round
+      3: the freeze preceded the run, the numbers recompute, and the post-hoc
+      harness changes move the result toward Backstage; 5968a55 fits (P5);
+      credential isolation does not hold on the measurement VM and is rescored
+      as a fail, after the run (ADJUDICATION.md R3.3)
     spread: >-
       minimum, median and maximum per arm per size for every timed fact in
       RESULTS.md; raw runs in results/r1 to r3

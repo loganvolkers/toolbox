@@ -12,7 +12,8 @@ its strongest rival.*
 ## 1. Conclusion
 
 **Toolbox is ahead of Backstage on performance, footprint, security (owner-only fields and
-extension isolation; the other secure defaults are at parity), supply chain, change safety, repo
+connectors as separate processes; the other secure defaults are at parity, and neither keeps an
+extension from the server's credentials), supply chain, change safety, repo
 scope, the agent surface and extensibility. It is at parity on federation (neither has it), and
 behind on capabilities and community.** Each claim is a rule in a comparative scorecard
 (`portal/standards/backstage-comparison.yaml`), scored on a product record written by a script
@@ -30,7 +31,8 @@ performance with authorization on. The first round's loss on filtered lists at 1
 published as written, with the fix and the rerun. So is a harness defect: Backstage's lists matched
 nothing in rounds 1 and 2, which round 3 caught with an equivalence gate
 ([RESULTS.md](../../experiments/backstage-compare/RESULTS.md)). Both products listen on every
-interface as shipped.
+interface as shipped. And the round 3 adjudication found that a same-user connector still reads
+OpenFGA's memory on a host without Yama, so credential isolation fails for both products.
 
 ## 2. Factors
 

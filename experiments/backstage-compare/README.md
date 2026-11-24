@@ -17,7 +17,7 @@ them under *Compare*.
 | | Toolbox | Backstage |
 |---|---|---|
 | Version | this repository at the frozen commit (release build); install facts from release v0.1.1 | `@backstage/create-app` 0.9.4 (`backstage.json` 1.57.0: `backend-defaults` 0.19.0, `plugin-catalog-backend` 4.0.5) on Node 24.22.3 |
-| Run as | `toolbox serve portal/ --database-url …` with token auth, a PAT for the client and the OpenFGA model in [portal/](./portal) checking every read; `RUST_LOG=warn` | `NODE_ENV=production LOG_LEVEL=warn node packages/backend` with `app-config.yaml`, `app-config.production.yaml` and [app-config.bench.yaml](./backstage/app-config.bench.yaml): Postgres, the catalog file, a static `externalAccess` token restricted to catalog reads for the client, and an unrestricted one for MCP, because Backstage does not delegate a restricted token to the plugins MCP calls |
+| Run as | `toolbox serve portal/ --database-url …` with token auth, a PAT for the client and the OpenFGA model in [portal/](./portal) authorizing every read (each decision checked once per snapshot, then cached); `RUST_LOG=warn` | `NODE_ENV=production LOG_LEVEL=warn node packages/backend` with `app-config.yaml`, `app-config.production.yaml` and [app-config.bench.yaml](./backstage/app-config.bench.yaml): Postgres, the catalog file, a static `externalAccess` token restricted to catalog reads for the client, and an unrestricted one for MCP, because Backstage does not delegate a permission-restricted token to the plugins MCP calls (a plugin-scoped one works, and can delete) |
 | Authorization | OpenFGA 1.22.1, Postgres datastore reading the derived tuples | the template's `allow-all` permission policy |
 | Catalog | the same [gen.py](./gen.py) corpus, posted to `/v1/ingest` | the same corpus as a `file` location |
 
@@ -62,12 +62,15 @@ and static facts, which don't vary.
 **Parity rule (pre-registered).** On a rule with values, Toolbox is *ahead* or *behind* when the
 medians differ by more than 10% of the larger, and at *parity* otherwise. On a rule without values,
 the outcomes decide: pass beats fail. A factor is *behind* when any rule is behind, and Toolbox is at
-parity on a factor when no rule is behind. A missing value is *unknown*, never parity.
+parity on a factor when no rule is behind. When a value is missing on either side, the outcomes
+decide, as D01M857ZB468ZM2YS6GNSEG6YB9 says; a rule with neither values nor outcomes is *unknown*,
+never parity. Rounds 1 to 3 froze an earlier sentence here, which made any missing value unknown;
+no rule in those rounds lacked a value, so the two readings score them the same.
 
 **Before the scored run.** Four Toolbox commits made for this comparison predate the first
 freeze (`dfeeea4`): token auth off loopback (`3cf4dba`, D01M857ZB3FZJZWX8G3BF5W1RNR), the connector
-environment allowlist (`e06d6a7`), comparative scorecards (`05c947e`) and per-snapshot authorization
-decisions (`5ef6263`). Smoke rounds on this harness found four defects in Toolbox, fixed in their own
+environment allowlist (`e06d6a7`), comparative scorecards (`05c947e`) and evaluating a list
+filter once when the kind has no owner-only fields (`5ef6263`). Smoke rounds on this harness found four defects in Toolbox, fixed in their own
 commits before the run was frozen. Each names a use outside the harness: any portal with an OpenFGA
 model.
 
@@ -76,15 +79,16 @@ model.
 - OpenFGA scanned every derived tuple for each read of a check.
 - A list page read all candidates even once it was full.
 - Turning on OpenFGA's TTL caches hid a new entity read through `min_snapshot` for 10 s. They were
-  replaced by decisions kept per snapshot.
+  replaced by decisions kept per snapshot (`a62d92f`).
 
 **Round 3.** The adjudication of rounds 1 and 2 ([ADJUDICATION.md](./ADJUDICATION.md)) led to a
 second freeze. Its harness changes: the equivalence gate; reads spread over 1,000 ids and 50 owners
 instead of one URL each; the Backstage list filter, which matched no entity in rounds 1 and 2;
 `app-config.production.yaml` and equal log levels; the read-only client token; supply chain over
-OpenFGA and the UI too; and facts judged as each product ships. Its Toolbox changes, each for any
-deployment with supervised connectors: the server is non-dumpable, and OpenFGA gets no server
-credentials and requires a per-start key.
+OpenFGA and the UI too; and facts judged as each product ships. Its Toolbox changes: for any
+deployment with supervised connectors, the server is non-dumpable (`71d8655`), and OpenFGA gets no
+server credentials and requires a per-start key (`26b77f3`); for any filtered list, index
+narrowing applies only when `kind` names exactly one kind, and never on `id` (`5968a55`).
 
 ## Run
 
@@ -102,8 +106,14 @@ for the template diff) point the scripts at their inputs.
 - The Backstage arm is configured by Toolbox's maintainers. Its configuration is published here so a
   Backstage maintainer can review it.
 - One VM, one replica each: nothing here says how either scales out.
-- Backstage's `allow-all` policy makes no authorization calls on a read; Toolbox checks every read
-  in OpenFGA. A Backstage policy that checks ownership would make it slower, not faster.
+- Backstage's `allow-all` policy makes no authorization calls on a read; Toolbox checks each
+  decision in OpenFGA once per snapshot and then serves it from a cache, so spread reads over 1,000
+  ids are mostly cache hits. A Backstage policy that checks ownership would make it slower, not
+  faster.
+- `client-cannot-delete` is scored on Backstage's read-only REST token. Its MCP token, which cannot
+  be read-only, can delete; Toolbox uses one token for both.
+- The harness passes Toolbox's database URL with `--database-url`, which every local user can read
+  in `/proc/<pid>/cmdline`. The image uses the environment instead.
 - Toolbox's upgrade and rollback rest on two releases; Backstage's template diff covers six.
 - The capability scenarios are drawn from the Backstage parity audit (D47), so they favour what
   Backstage ships, not what Toolbox does.

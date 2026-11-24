@@ -24,21 +24,17 @@ toolbox:
       a connector is its own process, supervised or remote, and writes only
       through /v1/ingest (docs/design/connector-control.md)
   extensionCredentialIsolated:
-    value: true
+    value: false
     evidence: >-
       a supervised connector starts with a cleared environment plus an
-      allowlist, and gets only the secrets its own config names
-      (crates/toolbox-api/src/connectors.rs:
-      connectors_inherit_no_server_credentials); the server is non-dumpable,
-      so a same-user process cannot read its environment or memory
-      (crates/toolbox-cli/tests/serve.rs); OpenFGA gets no server credentials,
-      reads its datastore URI from a private file deleted once it is healthy,
-      and refuses calls without a per-start preshared key
-      (crates/toolbox-authz/src/openfga.rs:
-      openfga_gets_no_server_credentials). Residual: with
-      kernel.yama.ptrace_scope=0 a same-user connector can still read
-      OpenFGA's memory, and it can write files the server's user can write; a
-      remote connector holds only its own token
+      allowlist (crates/toolbox-api/src/connectors.rs:
+      connectors_inherit_no_server_credentials), and the server is
+      non-dumpable (crates/toolbox-cli/tests/serve.rs). But an in-image
+      connector runs as the same user as OpenFGA, and OpenFGA is dumpable: on
+      the measurement VM, which has no Yama, a same-user process read
+      OpenFGA's memory and got the datastore password and the per-start
+      OpenFGA key, which OpenFGA accepted (ADJUDICATION.md R3.3). The image
+      cannot choose the host kernel's ptrace policy
   offlineValidate:
     value: true
     evidence: >-
