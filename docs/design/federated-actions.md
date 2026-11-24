@@ -133,13 +133,36 @@ revision keeps every other property.
 | No portal calls another at runtime | No portal *queries* another. A run is the one call that goes down, and only to a child that declared how (`federation.runner`) |
 | Packages carry kinds, scorecards and policies | Packages carry actions too. A package action runs in the child that includes it |
 | Waivers' approvals wait on M5 (FQ3) | Approvals exist: recorded on the run, by principal, with self-approval refused, and signed by the parent when they cross to a child |
-| A child is named by its own manifest | A child is keyed by where it was found (its path), so no child can claim another's entity |
+| A child is named by its own manifest | A child is keyed by where it was found (its path, or its git URL), so no child can claim another's entity |
+| Children are checkouts beside the parent | Children may also be listed by git URL (`federation.children`); Toolbox keeps their clones current ([D01M86J769VGE6K5FJJQ76EP4AA](../decisions/D01M86J769VGE6K5FJJQ76EP4AA.md)) |
 | Nothing implemented | Actions up, runs down and package actions are built (§7) |
 
 ### 5.2 The parent's view
 
-A parent names the kind whose entities are its children. The workspace connector finds each
-child's manifest and reports it as a `portal` record, packages included:
+The shortest parent lists its children by git URL, and nothing else
+([examples/federated-actions/git-org](../../examples/federated-actions/git-org/toolbox.yaml)):
+
+```yaml
+federation:
+  children:
+    - git: https://github.com/acme/alpha.git   # offered as portal:alpha
+    - {git: ../origins/beta.git, branch: trunk, key: beta}
+```
+
+Toolbox expands the list into what the longer form below declares by hand: a `federation`
+connector over clones it keeps under the state directory, the `Portal` kind,
+`federation.portals` and `runners.local.portals`. A served parent reads its children again
+before it lists, previews or runs an action, and brings a child's clone to its origin branch
+before the child previews or runs, so a key a child has just pinned and pushed counts on the next
+request. Without `federation.signingKey`, a served parent keeps its own key at
+`<state>/served/<portal>/signing-key` and returns it as `approval_key`; `toolbox run --url
+<server>` prints the line to pin. A child that can't be read is listed as `unreadable` with its
+error. In a child, an action on `kind: Portal` targets the repository's own portal, with no kind
+to declare.
+
+The longer form names the kind whose entities are its children. The workspace connector finds
+each child's manifest in sibling checkouts and reports it as a `portal` record, packages
+included:
 
 ```yaml
 # examples/federated-actions/org/toolbox.yaml (abridged)
@@ -293,6 +316,7 @@ network and no Postgres.
 | 6 | A fleet change: one org action, three pull requests, three verified runs | S3 |
 | 7 | The served org: a child without a runner is refused; a child that pins no key is flagged before approval; a reused confirm token, the requester, someone not listed and a forged grant are refused; another maintainer's approval is signed, accepted by the child and verified; MCP offers no approval tool, and its run records `via: mcp`; concurrent approvals and cancels run a run at most once | S5, S6, S7 (T1, T5, T6) |
 | 8 | `toolbox run --url`: a `land: push` change waits for approval (exit 3) and pushes nothing; `--approve` by another maintainer lands it on the child's main, where the child observes it; the run is listed again after the server restarts | S5, S7 (T4, T6, T8) |
+| 9 | An org portal that lists four children by git URL: their actions are offered with no connector, kind or key declared; a request to a child that hasn't pinned the kept key is refused with the line to pin; once pinned and pushed, the minimal repo's action previews, waits for bob (the requester and carol refused), lands with its trailers and is recorded; a push the origin rejects fails with the origin's message | S5, S6, S7 (T5, T6, T8) |
 
 ### 7.2 Deferred, with the reason
 

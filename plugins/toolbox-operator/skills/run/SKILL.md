@@ -16,9 +16,14 @@ description: >-
 5. For a `proposed` change or a `dispatched` workflow, check again later with `--verify <run id>`,
    or add `--wait` to follow the run until it ends or waits for a person.
 
-On a served portal, add `--url <server>` (and `--token`, or `--as` on a dev server) to every
-command: the same flags, output and exit codes, with the server's authorization and approvals.
-`--runs` lists runs.
+On a served portal, add `--url <server>` (and `--token`, or `--as` on a server listening on a
+loopback address) to every command: the same flags, output and exit codes, with the server's
+authorization and approvals. `--runs` lists runs, and `--verify <run id>` prints one's record.
+
+To offer several repositories' actions from one place, list them in an org portal
+(`federation.children: [{git: <url>}]`), serve it, and pin the key that `toolbox run --url
+<server>` prints in each repository's `federation.acceptApprovalsFrom`. The README of
+`examples/federated-actions` in the Toolbox repository has the two manifests and every command.
 
 ```
 toolbox run -o json

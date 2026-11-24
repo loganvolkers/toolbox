@@ -12,6 +12,12 @@ description: >-
    Action runs do survive one: they are kept in the database, or without one under
    `$TOOLBOX_STATE_DIR/served/<portal>/runs`. A run whose executor the restart cut off is failed.
 
+4. On a loopback address, people sign in with `--as` on each request. Anywhere else, set
+   `TOOLBOX_AUTH_MODE` (`toolbox serve --help` lists the modes).
+5. A portal with `federation.children` keeps a clone of each child under `$TOOLBOX_STATE_DIR`
+   and reads it again before it lists, previews or runs an action. It signs approvals with a key
+   it keeps there too; `toolbox run --url <server>` prints it, for children to pin.
+
 ```
 toolbox serve portal --fixtures
 toolbox serve portal --database-url "$DATABASE_URL" --listen 127.0.0.1:8080
