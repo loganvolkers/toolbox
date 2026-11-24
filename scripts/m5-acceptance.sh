@@ -149,4 +149,36 @@ done
 echo "$TEXT" | grep -q '\*\*succeeded\*\*' || fail "MCP run: $TEXT"
 [ "$(rest ann GET "/v1/runs/$RID" | field "['via']")" = mcp ] || fail "the MCP run should record via mcp"
 echo "   MCP: preview_action, run_action, get_run → $(echo "$TEXT" | head -1)"
+python3 - "$URL" "$WORK/state/runs" <<'PY' || fail "approvals and cancels raced"
+import glob, json, sys, threading, time, urllib.error, urllib.request
+url, runs = sys.argv[1:]
+def rest(who, method, path, body=None):
+    r = urllib.request.Request(url + path, method=method, headers={"x-toolbox-user": who,
+        "content-type": "application/json"}, data=None if body is None else json.dumps(body).encode())
+    try:
+        with urllib.request.urlopen(r) as f: return json.load(f)
+    except urllib.error.HTTPError as e: return json.load(e)
+body = {"entity": "portal:gamma", "inputs": {"team": "@acme/gamma"}}
+bad = []
+for mode in ["bob twice"] * 4 + ["bob and a cancel"] * 4:
+    token = rest("ann", "POST", "/v1/actions/set-owners/previews", body)["confirm_token"]
+    run = rest("ann", "POST", "/v1/actions/set-owners/runs", dict(body, confirm_token=token))
+    if "id" not in run: sys.exit(f"set-owners: {run}")
+    rid = run["id"]
+    calls = [("bob", "approvals"), ("bob", "approvals")] if mode == "bob twice" else [("bob", "approvals"), ("ann", "cancel")]
+    gate, ok = threading.Barrier(2), {}
+    def call(i, who, what):
+        gate.wait(); ok[i] = "code" not in rest(who, "POST", f"/v1/runs/{rid}/{what}", {})
+    threads = [threading.Thread(target=call, args=(i, *c)) for i, c in enumerate(calls)]
+    [t.start() for t in threads]; [t.join() for t in threads]
+    for _ in range(120):
+        state = rest("ann", "GET", f"/v1/runs/{rid}")["state"]
+        if state not in ("awaiting_approval", "approved", "dispatched", "executor_succeeded", "verifying"): break
+        time.sleep(0.25)
+    child = sum(f"parent:org/{rid}" in open(f).read() for f in glob.glob(f"{runs}/*.json"))
+    if child > 1 or (mode != "bob twice" and all(ok.values()) and child) or (mode == "bob twice" and all(ok.values())):
+        bad.append(f"{mode}: {rid} accepted {ok}, ran {child} times, ended {state}")
+print("\n".join(bad) or "   races: bob approving twice at once is accepted once and runs once; a cancel that is accepted stops the run (4 tries each)")
+sys.exit(1 if bad else 0)
+PY
 echo "M5 acceptance: all checks passed"
