@@ -1,0 +1,28 @@
+apiVersion: toolbox.dev/v1alpha1
+portal: {name: org, title: Org portal, owner: group:platform, toolbox: "0.1"}
+connectors:
+  - name: workspace
+    package: builtin:workspace
+    runtime: in-image
+    config: {root: .., crates: false, portals: ["*/.toolbox/toolbox.yaml"]}
+    records: [portal]
+    refresh: {portal: [external_ids]}
+    freshness: {portal: 5m}
+kinds:
+  - name: Portal
+    identityFrom: [connector:workspace]
+    fields:
+      name: {type: string}
+      path: {type: string}
+      dir: {type: string}
+      owner: {type: string}
+      actions: {type: list, items: object}
+      runner: {type: object}
+    sources: {default: [connector:workspace]}
+    map:
+    - from: workspace/portal
+      id: "'portal:' + record.name"
+      set: >-
+        {'name': record.name, 'path': record.path, 'dir': record.dir, 'owner':
+        record.owner, 'actions': record.actions, 'runner': record.runner}
+federation: {portals: Portal}

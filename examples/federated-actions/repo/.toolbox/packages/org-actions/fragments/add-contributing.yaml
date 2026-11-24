@@ -1,0 +1,18 @@
+actions:
+  - name: add-contributing
+    kind: Repository
+    scope: day2
+    description: Add a CONTRIBUTING.md that points at the owning team, as a pull request.
+    inputs:
+      type: object
+      required: [team]
+      properties: {team: {type: string, pattern: "^@[a-z0-9-]+/[a-z0-9-]+$"}}
+    permission: can_run_actions
+    executor:
+      type: change
+      run: >-
+        printf '# Contributing\n\nOpen a pull request; %s reviews it.\n'
+        "$TOOLBOX_INPUT_TEAM" > CONTRIBUTING.md
+      base: main
+      message: "docs: add CONTRIBUTING.md"
+    expect: {postcondition: "'CONTRIBUTING.md' in entity.files", within: 1h}
