@@ -164,12 +164,11 @@
       "crate:toolbox-api": {
         "bounded-complexity": [
           "1706c891",
-          "4ad52923"
+          "634dbbc4"
         ],
         "no-huge-functions": [
           "0fc05491",
           "307c1f57",
-          "c3944614",
           "f1ed5fb6"
         ],
         "short-functions": [
@@ -179,12 +178,10 @@
           "2f5e6208",
           "307c1f57",
           "6ad3e4ac",
-          "c3944614",
           "f1ed5fb6"
         ],
         "simple-functions": [
           "1706c891",
-          "4ad52923",
           "634dbbc4"
         ]
       },
@@ -223,16 +220,6 @@
       },
       "crate:toolbox-cli": {
         "fully-documented": [
-          "0312f00e",
-          "142ff7b4",
-          "1feaa286",
-          "26869185",
-          "ab23f8b1",
-          "c9c28f18",
-          "dfdeff49",
-          "f282865e"
-        ],
-        "public-api-documented": [
           "0312f00e",
           "142ff7b4",
           "1feaa286",
@@ -302,9 +289,6 @@
         ],
         "short-functions": [
           "39c55bc5"
-        ],
-        "simple-functions": [
-          "abf6f2a2"
         ]
       },
       "crate:toolbox-connector-github": {
@@ -341,6 +325,33 @@
         ],
         "simple-functions": [
           "fb7573c0"
+        ]
+      },
+      "crate:toolbox-exec": {
+        "fully-documented": [
+          "0a7f46fa",
+          "1bc9ef4a",
+          "21bf15a5",
+          "225d2f7f",
+          "23d74450",
+          "2b929aed",
+          "4d56c0f4",
+          "7c2e5de9",
+          "a86ecd43",
+          "c956286f",
+          "dac5f997",
+          "f68978d7"
+        ],
+        "short-functions": [
+          "88d7ca27",
+          "9a8fc91f",
+          "b05ec944",
+          "e1c26c87",
+          "efad373b",
+          "f9c007c1"
+        ],
+        "simple-functions": [
+          "b350e932"
         ]
       },
       "crate:toolbox-model": {
@@ -461,13 +472,6 @@
       },
       "crate:toolbox-store": {
         "fully-documented": [
-          "16e7d6ce",
-          "234eb8a2",
-          "55786f43",
-          "9059d9c6",
-          "9fffb106"
-        ],
-        "public-api-documented": [
           "16e7d6ce",
           "234eb8a2",
           "55786f43",
@@ -596,6 +600,45 @@
         "says-how-to-check": [
           "825aff0c"
         ]
+      },
+      "example:experiments/actions-ab/results/r0/README.md": {
+        "cites-the-design": [
+          "a1817f31"
+        ],
+        "says-how-to-check": [
+          "825aff0c"
+        ]
+      },
+      "example:experiments/actions-ab/results/r1/README.md": {
+        "cites-the-design": [
+          "a1817f31"
+        ],
+        "says-how-to-check": [
+          "825aff0c"
+        ]
+      },
+      "example:experiments/actions-ab/results/r2dry/README.md": {
+        "says-how-to-check": [
+          "825aff0c"
+        ]
+      },
+      "example:experiments/actions-ab/results/r6/README.md": {
+        "says-how-to-check": [
+          "825aff0c"
+        ]
+      },
+      "example:experiments/actions-ab/results/r7/README.md": {
+        "cites-the-design": [
+          "a1817f31"
+        ],
+        "says-how-to-check": [
+          "825aff0c"
+        ]
+      },
+      "example:experiments/actions-ab/results/r8/README.md": {
+        "says-how-to-check": [
+          "825aff0c"
+        ]
       }
     },
     "maintainer-package": {
@@ -638,6 +681,11 @@
     },
     "maintainer-skill": {
       "skill:plugins/toolbox-operator/skills/actions": {
+        "has-evals": [
+          "6997dad5"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/add-action": {
         "has-evals": [
           "6997dad5"
         ]
@@ -795,6 +843,11 @@
         ],
         "has-example": [
           "b2c4b1d2"
+        ]
+      },
+      "skill:plugins/toolbox-operator/skills/run": {
+        "has-evals": [
+          "6997dad5"
         ]
       },
       "skill:plugins/toolbox-operator/skills/score": {
@@ -3495,6 +3548,21 @@
         "contract-tested": [
           "0b1171d8"
         ]
+      },
+      "mcp-tool:get_run": {
+        "contract-tested": [
+          "0b1171d8"
+        ]
+      },
+      "mcp-tool:list_runs": {
+        "contract-tested": [
+          "0b1171d8"
+        ]
+      },
+      "mcp-tool:run_action": {
+        "contract-tested": [
+          "0b1171d8"
+        ]
       }
     },
     "vs-backstage-capabilities": {
@@ -3610,6 +3678,9 @@
       }
     },
     "maintainer-benchmark": {
+      "benchmark:actions-ab": {
+        "level": "gold"
+      },
       "benchmark:backstage-compare": {
         "level": "gold"
       },
@@ -3895,9 +3966,9 @@
       "crate:toolbox-api": {
         "failing": {
           "bounded-complexity": 2,
-          "no-huge-functions": 4,
-          "short-functions": 8,
-          "simple-functions": 3
+          "no-huge-functions": 3,
+          "short-functions": 7,
+          "simple-functions": 2
         },
         "level": "bronze",
         "unknown": [
@@ -3920,11 +3991,10 @@
       "crate:toolbox-cli": {
         "failing": {
           "fully-documented": 8,
-          "public-api-documented": 8,
           "short-functions": 3,
           "simple-functions": 3
         },
-        "level": "bronze",
+        "level": "silver",
         "unknown": [
           "clippy-clean",
           "tests-pass"
@@ -3936,8 +4006,7 @@
           "fully-documented": 18,
           "no-huge-functions": 1,
           "public-api-documented": 18,
-          "short-functions": 1,
-          "simple-functions": 1
+          "short-functions": 1
         },
         "level": "bronze",
         "unknown": [
@@ -4005,7 +4074,16 @@
         "level": "skipped"
       },
       "crate:toolbox-exec": {
-        "level": "skipped"
+        "failing": {
+          "fully-documented": 12,
+          "short-functions": 6,
+          "simple-functions": 1
+        },
+        "level": "silver",
+        "unknown": [
+          "clippy-clean",
+          "tests-pass"
+        ]
       },
       "crate:toolbox-expr": {
         "level": "gold",
@@ -4043,10 +4121,9 @@
       },
       "crate:toolbox-store": {
         "failing": {
-          "fully-documented": 5,
-          "public-api-documented": 5
+          "fully-documented": 5
         },
-        "level": "bronze",
+        "level": "silver",
         "unknown": [
           "clippy-clean",
           "tests-pass"
@@ -4067,6 +4144,9 @@
     },
     "maintainer-dependency": {
       "dependency:cargo:async-trait": {
+        "level": "gold"
+      },
+      "dependency:cargo:aws-lc-rs": {
         "level": "gold"
       },
       "dependency:cargo:axum": {
@@ -4623,6 +4703,21 @@
       "doc:docs/decisions/D01M868BY0KJNEYE9WBFZYEYFYH.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M86BY3YQX3SA1W99QXF1QA1H.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M86J769VGE6K5FJJQ76EP4AA.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M86WAVQQXYF9DFHCP3G035MA.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M8727W7FEED6VVRY6MB3JFR3.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M87579Y5AZWR1Z29S802VP2K.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/README.md": {
         "level": "skipped"
       },
@@ -4681,6 +4776,9 @@
         "level": "silver"
       },
       "doc:docs/design/extensibility.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/federated-actions.md": {
         "level": "silver"
       },
       "doc:docs/design/federation.md": {
@@ -4854,6 +4952,9 @@
       "doc:docs/sdlc.md": {
         "level": "silver"
       },
+      "doc:docs/self-service-review.md": {
+        "level": "silver"
+      },
       "doc:docs/technology-critique.md": {
         "level": "skipped"
       },
@@ -4866,6 +4967,9 @@
       "doc:examples/connector-scaffold/README.md": {
         "level": "silver"
       },
+      "doc:examples/federated-actions/README.md": {
+        "level": "silver"
+      },
       "doc:examples/reference-portal/README.md": {
         "level": "silver"
       },
@@ -4873,6 +4977,9 @@
         "level": "silver"
       },
       "doc:examples/secret-vault-gcp/README.md": {
+        "level": "silver"
+      },
+      "doc:experiments/actions-ab/README.md": {
         "level": "silver"
       },
       "doc:experiments/backstage-compare/README.md": {
@@ -4933,6 +5040,9 @@
         "level": "silver"
       },
       "doc:plugins/toolbox-operator/skills/actions/SKILL.md": {
+        "level": "silver"
+      },
+      "doc:plugins/toolbox-operator/skills/add-action/SKILL.md": {
         "level": "silver"
       },
       "doc:plugins/toolbox-operator/skills/add-permission/SKILL.md": {
@@ -5025,6 +5135,9 @@
       "doc:plugins/toolbox-operator/skills/review-plan/SKILL.md": {
         "level": "silver"
       },
+      "doc:plugins/toolbox-operator/skills/run/SKILL.md": {
+        "level": "silver"
+      },
       "doc:plugins/toolbox-operator/skills/score/SKILL.md": {
         "level": "silver"
       },
@@ -5099,6 +5212,9 @@
       "example:examples/connector-scaffold/README.md": {
         "level": "gold"
       },
+      "example:examples/federated-actions/README.md": {
+        "level": "gold"
+      },
       "example:examples/reference-portal/README.md": {
         "level": "gold"
       },
@@ -5119,6 +5235,60 @@
       },
       "example:experiments/README.md": {
         "level": "gold"
+      },
+      "example:experiments/actions-ab/README.md": {
+        "level": "gold"
+      },
+      "example:experiments/actions-ab/results/r0/README.md": {
+        "failing": {
+          "cites-the-design": 1,
+          "says-how-to-check": 1
+        },
+        "level": "bronze"
+      },
+      "example:experiments/actions-ab/results/r1/README.md": {
+        "failing": {
+          "cites-the-design": 1,
+          "says-how-to-check": 1
+        },
+        "level": "bronze"
+      },
+      "example:experiments/actions-ab/results/r2/README.md": {
+        "level": "gold"
+      },
+      "example:experiments/actions-ab/results/r2dry/README.md": {
+        "failing": {
+          "says-how-to-check": 1
+        },
+        "level": "bronze"
+      },
+      "example:experiments/actions-ab/results/r3/README.md": {
+        "level": "gold"
+      },
+      "example:experiments/actions-ab/results/r4/README.md": {
+        "level": "gold"
+      },
+      "example:experiments/actions-ab/results/r5/README.md": {
+        "level": "gold"
+      },
+      "example:experiments/actions-ab/results/r6/README.md": {
+        "failing": {
+          "says-how-to-check": 1
+        },
+        "level": "bronze"
+      },
+      "example:experiments/actions-ab/results/r7/README.md": {
+        "failing": {
+          "cites-the-design": 1,
+          "says-how-to-check": 1
+        },
+        "level": "bronze"
+      },
+      "example:experiments/actions-ab/results/r8/README.md": {
+        "failing": {
+          "says-how-to-check": 1
+        },
+        "level": "bronze"
       },
       "example:experiments/backstage-compare/README.md": {
         "level": "gold"
@@ -5368,6 +5538,12 @@
         },
         "level": "silver"
       },
+      "skill:plugins/toolbox-operator/skills/add-action": {
+        "failing": {
+          "has-evals": 1
+        },
+        "level": "silver"
+      },
       "skill:plugins/toolbox-operator/skills/add-permission": {
         "failing": {
           "has-evals": 1,
@@ -5543,6 +5719,12 @@
           "has-example": 1
         },
         "level": "bronze"
+      },
+      "skill:plugins/toolbox-operator/skills/run": {
+        "failing": {
+          "has-evals": 1
+        },
+        "level": "silver"
       },
       "skill:plugins/toolbox-operator/skills/score": {
         "failing": {
@@ -9655,6 +9837,9 @@
       "command:report": {
         "level": "silver"
       },
+      "command:run": {
+        "level": "silver"
+      },
       "command:score": {
         "level": "skipped"
       },
@@ -9963,6 +10148,9 @@
       "command:report": {
         "level": "skipped"
       },
+      "command:run": {
+        "level": "skipped"
+      },
       "command:score": {
         "level": "silver"
       },
@@ -10022,11 +10210,23 @@
       "mcp-tool:get": {
         "level": "gold"
       },
+      "mcp-tool:get_run": {
+        "failing": {
+          "contract-tested": 1
+        },
+        "level": "silver"
+      },
       "mcp-tool:graph": {
         "level": "gold"
       },
       "mcp-tool:list_actions": {
         "level": "gold"
+      },
+      "mcp-tool:list_runs": {
+        "failing": {
+          "contract-tested": 1
+        },
+        "level": "silver"
       },
       "mcp-tool:owner_of": {
         "level": "gold"
@@ -10039,6 +10239,12 @@
       },
       "mcp-tool:refresh_entity": {
         "level": "gold"
+      },
+      "mcp-tool:run_action": {
+        "failing": {
+          "contract-tested": 1
+        },
+        "level": "silver"
       },
       "mcp-tool:scorecard_report": {
         "level": "gold"

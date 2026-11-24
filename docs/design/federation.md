@@ -2,6 +2,14 @@
 
 *Unpaused (D01M80Y0XEK069GD08VCCNF0WB8): federation is the likely middle where bottom-up repo portals ([repo-value.md](./repo-value.md)) and the top-down central portal meet, decided once both are proven.*
 
+> **Partly built (D01M86BY3YQX3SA1W99QXF1QA1H):** [federated-actions.md](./federated-actions.md)
+> revises this design and builds two flows: *actions up* (a parent offers its children's declared
+> actions, read through the workspace connector's `portal` records) and *runs down* (a run is
+> dispatched to the child that owns the effect, through a runner the parent allows, with
+> approvals the parent signs). Children are keyed by where they are found. "No runtime coupling"
+> becomes "no portal queries another; a run is the one call that goes down". Results up and the
+> rest of this document remain design.
+
 *Status: design only, 2026-11-20 (D68). **Nothing here is implemented, and no implementation is
 planned until repo portals have been used by a few teams.** Builds on
 [repo-portals.md](./repo-portals.md) (what exists today), [ratchets.md](./ratchets.md),
@@ -172,7 +180,7 @@ and only regressions fail.
 |---|---|
 | FQ1 | **Decided (D89):** ([packages.md](./packages.md) §4: git-first with an OCI mirror, pinned by digest).** The package registry: OCI artifacts (fits "one image"), git refs (fits portal repos), or npm (fits the TS builder)? Possibly all three behind one resolver. Phase F1 can't start until this is researched |
 | FQ2 | Should a child be able to *extend* a parent kind with fields, Apollo-style, or only add its own kinds? Extension is powerful but makes the parent's schema depend on children |
-| FQ3 | How are waivers approved? This is the approvals design from M5, which is paused (D64), so revisit after the self-service review |
+| FQ3 | How are waivers approved? Approvals now exist (D01M86BY3YQX3SA1W99QXF1QA1H): a waiver can be an action whose approval rule names the approvers, and a parent's approvals reach a child as a signed grant ([federated-actions.md](./federated-actions.md) §5.3) |
 | FQ4 | Do repo portals need entity identity beyond the repo (e.g. services inside a monorepo) to merge cleanly at the parent? This is [identity-resolution.md](./identity-resolution.md) at the federation boundary |
 | FQ5 | What is the minimal parent: does a root need `serve`, or can a static site aggregate children's reports ([repo-portals.md](./repo-portals.md) §5)? |
 

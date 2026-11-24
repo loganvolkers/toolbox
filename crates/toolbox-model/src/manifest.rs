@@ -38,10 +38,52 @@ pub struct Manifest {
     pub authz: Option<Authz>,
     #[serde(default)]
     pub actions: Vec<Action>,
+    /// Federated actions: child portals' actions offered here, and how a parent reaches this one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub federation: Option<Federation>,
     pub ui: Option<Ui>,
     pub mcp: Option<Value>,
     #[serde(default)]
     pub tests: Vec<String>,
+}
+
+/// `federation:` (docs/design/federated-actions.md §5).
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Federation {
+    /// The kind whose entities are child portals (workspace `portal` records).
+    pub portals: Option<String>,
+    /// A parent's child portals by git repository, kept at their branch (`crate::federation`).
+    #[serde(default)]
+    pub children: Vec<GitChild>,
+    /// The relation a caller needs on a child portal entity (default `can_run_actions`).
+    pub permission: Option<String>,
+    /// How a parent may dispatch this portal's actions: `{type: local}` or `{type: github-workflow, …}`.
+    pub runner: Option<Value>,
+    /// A parent's runners: `local.portals` (children a server may run in-process) and
+    /// `github-workflow` (`repos`, `token`, `api`). The parent owns credentials, never the child.
+    pub runners: Option<Value>,
+    /// A parent's environment variable holding its approval signing key (64 hex characters).
+    pub signing_key: Option<String>,
+    /// Parent portals whose signed approvals this portal accepts on a dispatched run.
+    #[serde(default)]
+    pub accept_approvals_from: Vec<TrustedParent>,
+}
+
+/// One entry of `federation.children`, with the defaults `crate::federation` fills in.
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+pub struct GitChild {
+    pub git: String,
+    pub branch: Option<String>,
+    pub key: Option<String>,
+}
+
+/// A parent whose approvals a child accepts, pinned by its signing key.
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+pub struct TrustedParent {
+    pub portal: String,
+    /// `ed25519:<64 hex>`.
+    pub key: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -371,13 +413,23 @@ pub enum TupleDerivation {
     },
 }
 
+fn day2() -> String {
+    "day2".into()
+}
+
+fn can_run_actions() -> String {
+    "can_run_actions".into()
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Action {
     pub name: String,
     pub kind: String,
+    #[serde(default = "day2")]
     pub scope: String,
     pub description: String,
     pub inputs: Value,
+    #[serde(default = "can_run_actions")]
     pub permission: String,
     pub approval: Option<String>,
     #[serde(default)]

@@ -1,0 +1,30 @@
+{
+ "linesToMaintain": 1727,
+ "files": {
+  "alpha/.backstage/actions/mark-deprecated.yaml": 45,
+  "alpha/catalog-info.yaml": 25,
+  "beta/.backstage/actions/mark-deprecated.yaml": 45,
+  "beta/catalog-info.yaml": 25,
+  "gamma/.backstage/actions/mark-deprecated.yaml": 45,
+  "gamma/catalog-info.yaml": 25,
+  "org/.acme/real-runs.txt": 3,
+  "org/.acme/tokens.json": 1,
+  "org/.gitignore": 1,
+  "org/bin/acme": 142,
+  "org/catalog/people.yaml": 25,
+  "org/repositories.yaml": 10,
+  "backstage/app-config.local.yaml": 14,
+  "backstage/packages/backend/package.json": 1,
+  "backstage/packages/backend/src/index.ts": 8,
+  "backstage/plugins/acme-actions-backend/package.json": 39,
+  "backstage/plugins/acme-actions-backend/src/catalogModule.ts": 186,
+  "backstage/plugins/acme-actions-backend/src/git.ts": 92,
+  "backstage/plugins/acme-actions-backend/src/index.ts": 3,
+  "backstage/plugins/acme-actions-backend/src/model.ts": 48,
+  "backstage/plugins/acme-actions-backend/src/plugin.ts": 38,
+  "backstage/plugins/acme-actions-backend/src/router.ts": 64,
+  "backstage/plugins/acme-actions-backend/src/scaffolderModule.ts": 203,
+  "backstage/plugins/acme-actions-backend/src/service.ts": 498,
+  "backstage/plugins/acme-actions-backend/src/store.ts": 141
+ }
+}

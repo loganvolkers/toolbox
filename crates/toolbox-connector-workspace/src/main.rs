@@ -41,6 +41,10 @@
 //!   links and secret shapes (docs/design/site-standards.md);
 //! - `example` (`examples` globs): one per example or experiment write-up, with its links and the
 //!   command that checks it (docs/design/example-standards.md);
+//! - `portal` (`portals` globs, usually `**/.toolbox/toolbox.yaml`): one per child portal a parent
+//!   federates, with the actions it declares and how to reach it (docs/design/federated-actions.md);
+//!   with `git` (`[{key, url, branch}]`, from `federation.children`), one per repository instead,
+//!   each cloned into `<root>/<key>` and read at the tip of its branch (`clones`);
 //! - `assessment` (`assessments` globs): one per assessment file (YAML or JSON, see
 //!   `schema/assessment.schema.json`): agents' judgements of entities against the portal's rubrics.
 //!
@@ -59,10 +63,11 @@
 //! "betterer"?: [glob], "skills"?: [glob], "connectors"?: [glob], "dependencies"?: false,
 //! "agentDocs"?: [glob], "plugins"?: [glob], "packages"?: [glob], "schemas"?: [glob],
 //! "examples"?: [glob], "pages"?: [glob], "assessments"?: [glob], "jsWorkspace"?: false,
-//! "expoApps"?: [glob], "storybooks"?: [glob]}`.
+//! "expoApps"?: [glob], "storybooks"?: [glob], "portals"?: [glob], "git"?: [{key, url, branch}]}`.
 
 mod agentsmd;
 mod betterer;
+mod clones;
 mod connectors;
 mod data;
 mod deps;
@@ -72,6 +77,7 @@ mod hygiene;
 mod js_workspace;
 mod npm;
 mod plugins;
+mod portals;
 mod repo;
 mod rust;
 mod site;
@@ -120,6 +126,10 @@ struct Workspace {
     expo_apps: Vec<Regex>,
     /// Storybook main configs (`storybook` records), e.g. `**/.storybook/main.*`.
     storybooks: Vec<Regex>,
+    /// Child portal manifests (`portal` records), e.g. `**/.toolbox/toolbox.yaml`.
+    portals: Vec<Regex>,
+    /// Child portals by git repository, cloned under `root` (`clones`).
+    git: Vec<clones::Source>,
     captures: Vec<(String, Regex)>,
     counts: Vec<(String, Regex)>,
     crates: bool,
@@ -363,6 +373,8 @@ impl Workspace {
             pages: globs(&cfg, "pages")?,
             expo_apps: globs(&cfg, "expoApps")?,
             storybooks: globs(&cfg, "storybooks")?,
+            portals: globs(&cfg, "portals")?,
+            git: clones::sources(&cfg),
             captures: named_regexes(&cfg, "captures")?,
             counts: named_regexes(&cfg, "counts")?,
             crates: cfg["crates"].as_bool().unwrap_or(true),
@@ -637,6 +649,7 @@ impl Workspace {
         self.emit_packages(&paths, &kinds, out);
         self.emit_schemas(&paths, &kinds, out);
         self.emit_examples(&paths, &kinds, out);
+        self.emit_portals(&paths, &kinds, out);
         self.emit_pages(&paths, &kinds, out);
         self.emit_expo_apps(&paths, &kinds, out);
         self.emit_storybooks(&paths, &kinds, out);
@@ -793,6 +806,33 @@ impl Workspace {
             );
         }
         out.snapshot_complete("example");
+    }
+
+    fn emit_portals(&self, paths: &[String], kinds: &[&str], out: &mut Out) {
+        if self.portals.is_empty() || !kinds.contains(&"portal") {
+            return;
+        }
+        if !self.git.is_empty() {
+            let found: Vec<(String, Value)> = self
+                .git
+                .iter()
+                .map(|s| (clones::manifest(s), self.cloned_portal(s)))
+                .collect();
+            for (rel, rec) in portals::flag_duplicates(found) {
+                out.record("portal", &portals::id(&rel), rec);
+            }
+            out.snapshot_complete("portal");
+            return;
+        }
+        let found: Vec<(&String, Value)> = paths
+            .iter()
+            .filter(|p| Self::matches(&self.portals, p))
+            .map(|rel| (rel, portals::analyse(&self.root, rel)))
+            .collect();
+        for (rel, rec) in portals::flag_duplicates(found) {
+            out.record("portal", &portals::id(rel), rec);
+        }
+        out.snapshot_complete("portal");
     }
 
     fn emit_pages(&self, paths: &[String], kinds: &[&str], out: &mut Out) {
@@ -1024,6 +1064,7 @@ impl Workspace {
             "package-json" => self.refresh_package(id, out),
             "json-schema" => self.refresh_schema(id, out),
             "example" => self.refresh_example(id, out),
+            "portal" => self.refresh_portal(id, out),
             "site-page" => self.refresh_page(id, out),
             "expo-app" => self.refresh_expo_app(id, out),
             "storybook" => self.refresh_storybook(id, out),
@@ -1098,6 +1139,37 @@ impl Workspace {
             out.record("example", id, examples::analyse(&self.root, rel));
         } else {
             out.not_found("example", id);
+        }
+    }
+
+    /// A child by git repository, read at the tip of its branch.
+    fn cloned_portal(&self, s: &clones::Source) -> Value {
+        let rel = clones::manifest(s);
+        match clones::sync(&self.root, s) {
+            Err(e) => clones::broken(&self.root, s, e),
+            Ok(_) if !self.root.join(&rel).is_file() => clones::broken(
+                &self.root,
+                s,
+                format!("{} has no .toolbox/toolbox.yaml on {}", s.url, s.branch),
+            ),
+            Ok(commit) => {
+                let mut rec = portals::analyse(&self.root, &rel);
+                rec["git"] = clones::origin(s, &commit);
+                rec
+            }
+        }
+    }
+
+    fn refresh_portal(&self, id: &str, out: &mut Out) {
+        let rel = id.strip_prefix("portal:").unwrap_or("");
+        if let Some(s) = self.git.iter().find(|s| clones::manifest(s) == rel) {
+            out.record("portal", id, self.cloned_portal(s));
+            return;
+        }
+        if Self::matches(&self.portals, rel) && self.root.join(rel).is_file() {
+            out.record("portal", id, portals::analyse(&self.root, rel));
+        } else {
+            out.not_found("portal", id);
         }
     }
 
@@ -1250,6 +1322,7 @@ impl Source for Workspace {
             ("js-workspace", self.js_workspace),
             ("expo-app", !self.expo_apps.is_empty()),
             ("storybook", !self.storybooks.is_empty()),
+            ("portal", !self.portals.is_empty()),
         ];
         let mut kinds: Vec<&str> = on.iter().filter(|(_, b)| *b).map(|(k, _)| *k).collect();
         let declared: Vec<&str> = self.data.iter().map(|d| d.kind.as_str()).collect();

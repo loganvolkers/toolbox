@@ -85,7 +85,9 @@ KEYS = {"type", "title", "description", "default", "examples", "enum", "enumFrom
         "pattern", "format", "minimum", "maximum", "items", "minItems", "maxItems", "uniqueItems",
         "properties", "required", "x-toolbox-widget"}
 def form_ok(schema, where, depth=0):
-    bad = set(schema) - KEYS
+    # A form never sends fields it doesn't show, so closing an object is within the subset.
+    closed = schema.get("type") == "object" and schema.get("additionalProperties") is False
+    bad = set(schema) - KEYS - ({"additionalProperties"} if closed else set())
     if bad: errors.append(f"{where}: keywords outside the form subset: {sorted(bad)}")
     t = schema.get("type")
     if t == "object":

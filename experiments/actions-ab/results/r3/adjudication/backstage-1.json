@@ -1,0 +1,50 @@
+{
+ "run": "backstage-1",
+ "C1": "holds",
+ "P1": {
+  "verdict": "holds",
+  "evidence": "`git --git-dir origins/<r>.git ls-tree -r main` shows `.backstage/actions/mark-deprecated.yaml` (a scaffolder Template) and `catalog-info.yaml` on alpha, beta and gamma `main`. `bin/acme --as ann actions` reports each definition with origin, path, commit and blob; the blobs (d6b748a, fa3a19c, 2bfb8d9) equal `git rev-parse main:.backstage/actions/mark-deprecated.yaml` on each origin, so the system loads the definition from the repository's own origin `main`."
+ },
+ "P2": {
+  "verdict": "holds",
+  "evidence": "From org/: `bin/acme --as ann request mark-deprecated --repo alpha --set 'successor=Acme/Bad Name' --set reason=<valid>` -> HTTP 400 InputError, field successor does not match pattern, exit 1. `... --set successor=acme/dependabot-proxy-v2 --set reason=short` -> 400, reason below minimum length 20, exit 1. Same two via `preview` also 400. `bin/acme runs` still listed the same 4 pre-existing runs (no new run). alpha main a049b70bfdf5 before and after."
+ },
+ "P3": {
+  "verdict": "holds",
+  "evidence": "`bin/acme --as ann preview mark-deprecated --repo beta --set successor=acme/probe-preview --set reason='State management moves to the shared store package.'` -> exit 0, JSON with path DEPRECATED.md, change modify, full content '# Deprecated: use acme/probe-preview\\n\\nState management moves...' and a unified diff against base 8cc1669. beta main 8cc16692d1bd before and after; run count still 4."
+ },
+ "P4": {
+  "verdict": "holds",
+  "evidence": "From org/: `bin/acme --as ann request mark-deprecated --repo gamma --set successor=acme/probe-approval --set reason='Graph extraction now lives in graphify-core.'` -> run 4ef39de7, status awaiting-approval. gamma main a1cc65ada603 after request. `bin/acme --as ann approve <id>` -> 403 'ann requested this run and cannot approve it', exit 1. `bin/acme --as carol approve <id>` -> 403 'carol is not a maintainer of gamma', exit 1. gamma main still a1cc65ada603; status still awaiting-approval, approvedBy null."
+ },
+ "P5": {
+  "verdict": "holds",
+  "evidence": "`bin/acme --as bob approve <id>` -> running; `bin/acme --as bob status <id> --wait` -> succeeded, outcome.observedCommit 168af4db = gamma main after, expectedSha256 == foundSha256. `git show main:DEPRECATED.md` on origins/gamma.git is '# Deprecated: use acme/probe-approval' + reason; commit authored by ann with Requested-by/Approved-by trailers. Source: plugin.ts `finish(run,'succeeded',...)` is called only from `observe()` (line 195), which runs `git rev-parse refs/heads/main` and `git cat-file blob` on the bare origin (git.ts branchHead/readFileAt) and requires byte equality with the previewed content; `sync()` calls `observe()` only after the scaffolder task completes. No other code sets 'succeeded'."
+ },
+ "P6": {
+  "verdict": "holds",
+  "evidence": "Wrote origins/alpha.git/hooks/pre-receive (echo to stderr; exit 1), chmod +x. ann requested successor acme/probe-reject (run 7d4186f8), bob approved -> `status --wait` returned failed, exit 1, outcome.error 'Push to alpha/main was rejected: remote: adjudicator P6: all pushes rejected'. Re-read status 5 s later: still failed. alpha main a049b70bfdf5 before and after. Hook removed (`rm`), hooks dir has only samples."
+ },
+ "P7": {
+  "verdict": "holds",
+  "evidence": "From org/, `bin/acme --as ann actions` (one command) listed mark-deprecated for alpha, beta and gamma with owner group, approvers, definition and input schema. P4's request was made from org/ with `--repo gamma`."
+ },
+ "P8": {
+  "verdict": "holds",
+  "evidence": "`bin/acme --as ann record 4ef39de7...` shows requestedBy user:default/ann + requestedAt, approvedBy user:default/bob + approvedAt, inputs (successor, reason), status succeeded with outcome and finishedAt/observedAt, plus an event log: requested (ann), approval-denied (ann), approval-denied (carol), approved (bob), dispatched, started, succeeded, each with `at`."
+ },
+ "P9": {
+  "verdict": "holds",
+  "evidence": "Every probe step used `bin/acme` non-interactively (no prompts) and got JSON on stdout with meaningful exit codes (0 ok, 1 refused/failed); `status --wait` blocked and returned JSON."
+ },
+ "P10": {
+  "verdict": "holds",
+  "evidence": "Started the backend with the handoff's tmux command and readiness loop verbatim (ready in ~5 s with the existing .acme-data); every command used was copied from HANDOFF.md. No fixes needed. Source read only for P5."
+ },
+ "fixes": [],
+ "strikes": [],
+ "linesBeforeStrikes": 1357,
+ "linesAfterStrikes": 1357,
+ "fullyPasses": true,
+ "notes": "C1 was checked with `score.py check` before probing (pass). P5 then intentionally replaced gamma's DEPRECATED.md with the probe's content (gamma main now 168af4db), so a later `score.py check` on this workspace fails for gamma; that is the adjudication's effect, not the run's. None of the 20 counted files is runtime data: the SQLite stores in backstage/.acme-data/ and backend.log are not counted by score.py, so nothing was struck. The run's Backstage code (plugin, backend wiring, app-config.local.yaml) is not under version control (backstage/ has no origin), as the handoff states; the repository definitions and org files are committed. Backstage's permission policy is still allow-all; approval rules are enforced by the custom acme-actions plugin and the scaffolder action's one-time token (not exercised by the probes). Adjudicator's probe runs: 4ef39de7 (P4/P5, gamma, succeeded) and 7d4186f8 (P6, alpha, failed) are now in the run's database."
+}

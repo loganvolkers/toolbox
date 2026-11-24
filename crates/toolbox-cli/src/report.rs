@@ -1795,13 +1795,29 @@ fn git(dir: &std::path::Path, args: &[&str]) -> Result<String, String> {
     Ok(String::from_utf8_lossy(&out.stdout).trim().to_owned())
 }
 
-/// The portal's ratchet results at another commit: the repository checked out at `rev` in a
-/// temporary worktree, and the portal run there from the same relative directory.
+/// The portal's ratchet results at another commit.
 fn results_at(o: &Options, rev: &str) -> Result<(Value, Value), String> {
+    let (m, d) = live_at(&o.path, o.fixtures, &o.skip, rev)?;
+    let advisory = advisory(&m);
+    Ok((results(&d, &advisory), evidence_keys(&d, &advisory)))
+}
+
+/// The portal's facts at another commit: the repository checked out at `rev` in a temporary
+/// worktree, and the portal run there from the same relative directory.
+pub fn live_at(
+    path: &std::path::Path,
+    fixtures: bool,
+    skip: &[String],
+    rev: &str,
+) -> Result<(toolbox_model::Manifest, Derived), String> {
     let here = std::env::current_dir().map_err(|e| e.to_string())?;
     let prefix = git(&here, &["rev-parse", "--show-prefix"])?;
     let top = PathBuf::from(git(&here, &["rev-parse", "--show-toplevel"])?);
-    let tree = std::env::temp_dir().join(format!("toolbox-against-{}", std::process::id()));
+    let tree = std::env::temp_dir().join(format!(
+        "toolbox-at-{}-{}",
+        std::process::id(),
+        toolbox_exec::run::new_id("wt")
+    ));
     git(
         &top,
         &[
@@ -1813,18 +1829,23 @@ fn results_at(o: &Options, rev: &str) -> Result<(Value, Value), String> {
             rev,
         ],
     )?;
-    let portal = match o.path.strip_prefix(&top) {
+    let abs = if path.is_absolute() {
+        path.to_path_buf()
+    } else {
+        here.join(path)
+    };
+    let portal = match abs
+        .canonicalize()
+        .unwrap_or(abs.clone())
+        .strip_prefix(top.canonicalize().unwrap_or(top.clone()))
+    {
         Ok(rel) => tree.join(rel),
-        Err(_) if o.path.is_absolute() => o.path.clone(),
-        Err(_) => o.path.clone(),
+        Err(_) => path.to_path_buf(),
     };
     let result = std::env::set_current_dir(tree.join(&prefix))
         .map_err(|e| format!("{}: {e}", tree.display()))
-        .and_then(|()| live(&portal, o.fixtures, &o.skip))
-        .map(|(_, m, d)| {
-            let advisory = advisory(&m);
-            (results(&d, &advisory), evidence_keys(&d, &advisory))
-        });
+        .and_then(|()| live(&portal, fixtures, skip))
+        .map(|(_, m, d)| (m, d));
     let _ = std::env::set_current_dir(&here);
     let _ = git(
         &top,

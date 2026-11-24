@@ -1,0 +1,23 @@
+{
+ "toolCalls": 106,
+ "byKind": {
+  "shell": 84,
+  "edit": 19,
+  "read": 3
+ },
+ "byTool": {
+  "run_terminal_cmd": 84,
+  "search_replace": 19,
+  "read_file": 3
+ },
+ "resultChars": 258156,
+ "missingResults": [
+  "run_terminal_cmd",
+  "run_terminal_cmd",
+  "run_terminal_cmd",
+  "run_terminal_cmd",
+  "run_terminal_cmd",
+  "run_terminal_cmd"
+ ],
+ "wallSeconds": 886
+}

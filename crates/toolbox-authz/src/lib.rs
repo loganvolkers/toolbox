@@ -4,11 +4,13 @@
 //!   co-process inside the container.
 //! - [`fga_dsl`]: OpenFGA modelling language → model JSON.
 //! - [`fgatest`]: `.fga.yaml` tests through the Authorizer.
+//! - [`local`]: checks from tuples alone, for a checkout with no server.
 //! - [`authn`]: identity from an identity-aware proxy, OIDC bearer tokens, PATs or dev headers.
 
 pub mod authn;
 pub mod fga_dsl;
 pub mod fgatest;
+pub mod local;
 pub mod openfga;
 
 pub use openfga::{Datastore, OpenFga, Tuple};

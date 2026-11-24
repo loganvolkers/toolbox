@@ -1,0 +1,14 @@
+{
+ "linesToMaintain": 824,
+ "files": {
+  "alpha/.acme/actions/add-notice/action.json": 10,
+  "alpha/.acme/actions/add-notice/run.py": 45,
+  "org/.gitignore": 2,
+  "org/bin/acme": 455,
+  "org/groups.json": 10,
+  "org/org.json": 14,
+  "org/runs/run-0001.json": 96,
+  "org/runs/run-0002.json": 96,
+  "org/runs/run-0003.json": 96
+ }
+}

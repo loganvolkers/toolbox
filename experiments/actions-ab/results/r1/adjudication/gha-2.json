@@ -1,0 +1,57 @@
+{
+  "run": "gha-2",
+  "C1": "holds",
+  "P1": {
+    "verdict": "holds",
+    "evidence": "git ls-tree -r main on origins/{alpha,beta,gamma}.git: each has .github/workflows/mark-deprecated.yml (validate, preview, apply, verify jobs), .github/environments/deprecation.json (reviewers, prevent_self_review), .github/scripts/apply-github-settings.sh and a CODEOWNERS, committed on main inside each repository (43767a5, f0b5db9, 174cde1). `bin/acme list` reports the definition commit as each origin's main."
+  },
+  "P2": {
+    "verdict": "holds",
+    "evidence": "From org/: `bin/acme request alpha mark-deprecated --as ann --input 'successor=Acme/Bad Name' --input 'reason=<valid 42 chars>'` -> exit 2, invalid-input-successor. `... --input successor=acme/probe-valid --input reason=short` -> exit 2, 'reason must be 20 to 200 characters, got 5'. Each is recorded as a run with status refused; approving a refused run as bob returns not-awaiting-approval. alpha main a868675950de1c4fe9ae376b338babb5a7dddcd3 before and after."
+  },
+  "P3": {
+    "verdict": "holds",
+    "evidence": "`bin/acme preview beta mark-deprecated --as ann --input successor=acme/probe-preview --input 'reason=Probe of the preview step by the adjudicator.'` -> exit 0, preview.file DEPRECATED.md, change update, unified diff and content '# Deprecated: use acme/probe-preview\\n\\nProbe of the preview step by the adjudicator.\\n'. beta main 18c5f9cd6ac0b387b5e0db1dc97e27421fe152f5 before and after; no run recorded (5 -> 5)."
+  },
+  "P4": {
+    "verdict": "holds",
+    "evidence": "From org/: `bin/acme request gamma mark-deprecated --as ann --input successor=acme/probe-approval --input 'reason=Probe of the approval rules by the adjudicator.'` -> exit 0, run 20261124T111335Z-gamma-8ede awaiting_approval. gamma main 73642af5ef3b2488ad6ef12ac576126fb66e076a after request. `approve --as ann` -> exit 3 'ann requested this run and cannot approve it'; `approve --as carol` -> exit 3 'carol is not a required reviewer of environment deprecation'; status awaiting_approval; gamma main still 73642af."
+  },
+  "P5": {
+    "verdict": "holds",
+    "evidence": "`bin/acme approve 20261124T111335Z-gamma-8ede --as bob` -> exit 0, status succeeded, outcome.pushed true, outcome.observed {origin: origins/gamma.git, main 5bdb989, matches true}. `git -C origins/gamma.git show main:DEPRECATED.md` is exactly '# Deprecated: use acme/probe-approval\\n\\nProbe of the approval rules by the adjudicator.\\n', trailers Requested-by: ann, Approved-by: bob. Source check (bin/acme cmd_approve lines 459-495, observe lines 499-511): after the act run of apply and verify, observe() reads main:DEPRECATED.md from the bare origin, compares it with the previewed content and checks the pushed commit is an ancestor of main; outcome is succeeded only if all contract jobs succeeded and that observation matches."
+  },
+  "P6": {
+    "verdict": "holds",
+    "evidence": "Installed origins/alpha.git/hooks/pre-receive (echo to stderr; exit 1). `request alpha ... --as ann --input successor=acme/probe-reject --input 'reason=Probe of a rejected push by the adjudicator.'` then `approve <id> --as bob` -> exit 1, status failed, pushed false, problems ['job apply: failure', 'the push to main was rejected ... (pre-receive hook declined)', 'job verify: did not run', 'DEPRECATED.md on main does not have the requested content']; `status` -> failed. Hook removed. alpha main a868675 before and after."
+  },
+  "P7": {
+    "verdict": "holds",
+    "evidence": "From org/: `bin/acme list` -> exit 0, ok true, 3 actions: alpha, beta and gamma mark-deprecated, with inputs, definition commit and approval policy read from each origin's main. P4's request was made from org/ with the same CLI."
+  },
+  "P8": {
+    "verdict": "holds",
+    "evidence": "`bin/acme record 20261124T111335Z-gamma-8ede` -> inputs {successor, reason}, requested {by ann, at 11:13:35Z}, approval {by bob, at 11:13:38Z}, outcome {status succeeded, at 11:13:42Z}, and timestamped events requested, previewed, approval_denied (ann), approval_denied (carol), approved (bob), workflow_finished, succeeded."
+  },
+  "P9": {
+    "verdict": "holds",
+    "evidence": "Every probe command (list, preview, request, approve, status, record) ran as a one-shot non-interactive command printing one JSON document, errors included, with distinct exit codes (0, 1, 2, 3)."
+  },
+  "P10": {
+    "verdict": "holds",
+    "evidence": "Operated entirely from org/HANDOFF.md's commands; PyYAML 6.0.4 was already installed; no fixes were needed. The source was read only to confirm P5's read-before-success."
+  },
+  "fixes": [],
+  "strikes": [
+    {"path": "org/.acme/runs/20261124T104701Z-alpha-2669/event-preview.json", "lines": 1, "reason": "act event payload written by bin/acme for a run (git-ignored runtime state)"},
+    {"path": "org/.acme/runs/20261124T104701Z-alpha-2669/record.json", "lines": 143, "reason": "run record written by bin/acme at runtime (git-ignored state)"},
+    {"path": "org/.acme/runs/20261124T104707Z-beta-3d58/event-preview.json", "lines": 1, "reason": "act event payload written by bin/acme for a run (git-ignored runtime state)"},
+    {"path": "org/.acme/runs/20261124T104707Z-beta-3d58/record.json", "lines": 143, "reason": "run record written by bin/acme at runtime (git-ignored state)"},
+    {"path": "org/.acme/runs/20261124T104709Z-gamma-0120/event-preview.json", "lines": 1, "reason": "act event payload written by bin/acme for a run (git-ignored runtime state)"},
+    {"path": "org/.acme/runs/20261124T104709Z-gamma-0120/record.json", "lines": 143, "reason": "run record written by bin/acme at runtime (git-ignored state)"}
+  ],
+  "linesBeforeStrikes": 1341,
+  "linesAfterStrikes": 909,
+  "fullyPasses": true,
+  "notes": "No probe was credited: approval, self-review prevention and carol's denial are enforced by bin/acme (reading reviewers from each origin's deprecation.json) and re-checked by the workflow's act-only approval gate. GitHub's environment, ruleset and App-token steps are configured as code but were not exercised. Invalid requests are recorded as runs with status refused (they cannot be approved). The org CLI depends on PyYAML, which the handoff states. The lines measure counts beta's and gamma's workflow, policy and script as copies of alpha's; that is score.py's rule, left as is. No long-running process exists; nothing to stop. The probes left a new commit on gamma's main (5bdb989, as P5 requires) and run records under org/.acme/runs/."
+}

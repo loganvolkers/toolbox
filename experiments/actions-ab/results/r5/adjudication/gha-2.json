@@ -1,0 +1,76 @@
+{
+  "run": "gha-2",
+  "C1": "holds",
+  "P1": {
+    "verdict": "holds",
+    "evidence": "score.py check re-run before probing: pass true. `git --git-dir origins/<r>.git ls-tree -r --name-only main` lists .github/workflows/mark-deprecated.yml and .github/self-service/{mark-deprecated.json,mark_deprecated.py,apply-github-settings.sh} plus CODEOWNERS (alpha root, beta/gamma .github/) on alpha (added d08cc82), beta (cc8e41a) and gamma (605e0bd). The workflow is identical across the three; each manifest is per repository (approvers, input rules). org.git holds only bin/acme-actions, catalog.json (repos, people, act path; no approvers) and HANDOFF.md. `list` reports each definition's origin and main sha."
+  },
+  "P2": {
+    "verdict": "holds",
+    "evidence": "cwd org/. `bin/acme-actions request --repo alpha --as ann -f 'successor=Acme/Bad Name' -f 'reason=A valid reason that is long enough here.'` -> exit 2, ok false, invalid_inputs, 'successor: must match ^[a-z0-9-]+/[a-z0-9-]+$', 'inputs refused by the repository's validator; nothing was changed'. `... -f successor=acme/probe-valid -f reason=short` -> exit 2, 'reason: must be at least 20 characters (got 5)'. state/runs unchanged (3 runs before and after; refusals logged to state/refusals.jsonl). alpha main e32d0895 before and after."
+  },
+  "P3": {
+    "verdict": "holds",
+    "evidence": "`bin/acme-actions preview --repo beta --as ann -f successor=acme/probe-preview -f 'reason=Probe: preview must show the file and its content.'` -> exit 0, preview {path DEPRECATED.md, base_sha 13e3ee34, change update, current (old file), proposed '# Deprecated: use acme/probe-preview\\n\\nProbe: preview must show the file and its content.\\n', unified diff}. beta main 13e3ee34 before and after; no run recorded."
+  },
+  "P4": {
+    "verdict": "holds",
+    "evidence": "cwd org/. `bin/acme-actions request --repo gamma --as ann -f successor=acme/probe-approval -f 'reason=Probe: approval needs a second maintainer.'` -> exit 0, run gamma-20261124T132128Z-e5f676 awaiting_approval, requested_by ann. gamma main 52e2e4e7 before and after the request. `approve <id> --as ann` -> exit 3, self_approval. `approve <id> --as carol` -> exit 3, not_an_approver ('carol is not an approver of mark-deprecated on gamma (ann, bob)'). `status <id>` -> awaiting_approval, approved_by null. gamma main still 52e2e4e7."
+  },
+  "P5": {
+    "verdict": "holds",
+    "evidence": "`bin/acme-actions approve <id> --as bob --comment ok` -> exit 0, status succeeded, outcome {observed_main_sha 7046327e, observed_content = probe content, matches_approved_preview true, pushed_sha 7046327e, workflow_exit_code 0}. origins/gamma.git main 52e2e4e7 -> 7046327e; `git show main:DEPRECATED.md` = '# Deprecated: use acme/probe-approval', blank line, the P4 reason; author ann, committer acme-actions[bot], trailers Run/Requested-by: ann/Approved-by: bob. Source (org/bin/acme-actions cmd_approve lines 351-366, observe/mirror lines 69-81, 176-179): after act's apply job it force-fetches the origin's main into state/mirrors/<repo>.git, reads DEPRECATED.md at that sha, compares to the approved preview; succeeded requires that match, workflow exit 0 and the apply result ok."
+  },
+  "P6": {
+    "verdict": "holds",
+    "evidence": "Wrote origins/alpha.git/hooks/pre-receive (echo to stderr; exit 1), chmod +x. `request --repo alpha --as ann -f successor=acme/probe-reject -f 'reason=Probe: a rejected push must not succeed.'` -> awaiting_approval. `approve <id> --as bob` -> exit 1, ok false, status failed, reasons ['workflow exited 1', 'push to main was rejected', 'DEPRECATED.md on main does not have the approved content'], pushed_sha null. `status <id>` -> failed. Hook removed (only *.sample remain). alpha main e32d0895 before and after."
+  },
+  "P7": {
+    "verdict": "holds",
+    "evidence": "From org/, `bin/acme-actions list --action mark-deprecated` -> exit 0, ok true, actions for alpha, beta and gamma, each with title, inputs, approval and its definition (origin, ref, sha, manifest path). P4 was requested from org/ with `request --repo gamma ...`."
+  },
+  "P8": {
+    "verdict": "holds",
+    "evidence": "`bin/acme-actions record <P4/P5 id>` -> record {requested_by ann, requested_at 13:21:28.723Z, approved_by bob, approved_at 13:21:32.812Z, inputs {successor acme/probe-approval, reason ...}, preview, status succeeded, finished_at 13:21:33.768Z, outcome {...}} and timestamped events with actors: requested ann, validated, previewed, approval_refused ann, approval_refused carol, approved bob, applied, workflow_verified, observed, succeeded."
+  },
+  "P9": {
+    "verdict": "holds",
+    "evidence": "Every probe command ran from a non-TTY shell with stdin </dev/null; identity by --as, inputs by -f flags; act runs in host mode inside the CLI. Each printed one JSON document with ok true/false, including a usage error (`request --repo alpha --bogus` -> {error usage}, exit 2) and an unknown run (exit 4). Exit codes distinct: 0, 1 failed, 2 invalid/usage, 3 not allowed, 4 not found."
+  },
+  "P10": {
+    "verdict": "holds",
+    "evidence": "Operated entirely from org/HANDOFF.md's Commands and Testing the refusals sections: nothing to start, no PATH or port change. Source read only for P5."
+  },
+  "fixes": [],
+  "strikes": [
+    {"path": "org/state/mirrors/alpha.git/FETCH_HEAD", "lines": 1, "reason": "git mirror the CLI fetches at run time (gitignored state/)"},
+    {"path": "org/state/mirrors/alpha.git/HEAD", "lines": 1, "reason": "git mirror the CLI fetches at run time"},
+    {"path": "org/state/mirrors/alpha.git/config", "lines": 4, "reason": "git mirror the CLI fetches at run time"},
+    {"path": "org/state/mirrors/alpha.git/description", "lines": 1, "reason": "git mirror the CLI fetches at run time"},
+    {"path": "org/state/mirrors/alpha.git/info/exclude", "lines": 6, "reason": "git mirror the CLI fetches at run time"},
+    {"path": "org/state/mirrors/alpha.git/refs/heads/main", "lines": 1, "reason": "git mirror the CLI fetches at run time"},
+    {"path": "org/state/mirrors/beta.git/FETCH_HEAD", "lines": 1, "reason": "git mirror the CLI fetches at run time"},
+    {"path": "org/state/mirrors/beta.git/refs/heads/main", "lines": 1, "reason": "git mirror the CLI fetches at run time"},
+    {"path": "org/state/mirrors/gamma.git/FETCH_HEAD", "lines": 1, "reason": "git mirror the CLI fetches at run time"},
+    {"path": "org/state/mirrors/gamma.git/refs/heads/main", "lines": 1, "reason": "git mirror the CLI fetches at run time"},
+    {"path": "org/state/runs/alpha-20261124T130937Z-695d53/record.json", "lines": 126, "reason": "run record written at run time"},
+    {"path": "org/state/runs/alpha-20261124T130937Z-695d53/results-apply/apply.json", "lines": 24, "reason": "workflow job output written at run time"},
+    {"path": "org/state/runs/alpha-20261124T130937Z-695d53/results-apply/preview.json", "lines": 17, "reason": "workflow job output written at run time"},
+    {"path": "org/state/runs/alpha-20261124T130937Z-695d53/results-apply/validate.json", "lines": 11, "reason": "workflow job output written at run time"},
+    {"path": "org/state/runs/alpha-20261124T130937Z-695d53/results-apply/verify.json", "lines": 16, "reason": "workflow job output written at run time"},
+    {"path": "org/state/runs/beta-20261124T130945Z-7850e0/record.json", "lines": 126, "reason": "run record written at run time"},
+    {"path": "org/state/runs/beta-20261124T130945Z-7850e0/results-apply/apply.json", "lines": 24, "reason": "workflow job output written at run time"},
+    {"path": "org/state/runs/beta-20261124T130945Z-7850e0/results-apply/preview.json", "lines": 17, "reason": "workflow job output written at run time"},
+    {"path": "org/state/runs/beta-20261124T130945Z-7850e0/results-apply/validate.json", "lines": 11, "reason": "workflow job output written at run time"},
+    {"path": "org/state/runs/beta-20261124T130945Z-7850e0/results-apply/verify.json", "lines": 16, "reason": "workflow job output written at run time"},
+    {"path": "org/state/runs/gamma-20261124T130948Z-bd6c3f/record.json", "lines": 126, "reason": "run record written at run time"},
+    {"path": "org/state/runs/gamma-20261124T130948Z-bd6c3f/results-apply/apply.json", "lines": 24, "reason": "workflow job output written at run time"},
+    {"path": "org/state/runs/gamma-20261124T130948Z-bd6c3f/results-apply/preview.json", "lines": 17, "reason": "workflow job output written at run time"},
+    {"path": "org/state/runs/gamma-20261124T130948Z-bd6c3f/results-apply/validate.json", "lines": 11, "reason": "workflow job output written at run time"},
+    {"path": "org/state/runs/gamma-20261124T130948Z-bd6c3f/results-apply/verify.json", "lines": 16, "reason": "workflow job output written at run time"}
+  ],
+  "linesBeforeStrikes": 1515,
+  "linesAfterStrikes": 915,
+  "fullyPasses": true,
+  "notes": "Kept: org/bin/acme-actions (380), alpha/.github/self-service/{mark_deprecated.py 224, apply-github-settings.sh 62, mark-deprecated.json 35}, alpha/.github/workflows/mark-deprecated.yml (118), beta and gamma mark-deprecated.json (35 each; they differ from alpha's, so score.py counted them), CODEOWNERS (alpha 5, beta/.github 5), org/catalog.json (13), org/.gitignore (3). No probe was credited: approval is configured as code for GitHub (environment mark-deprecated, apply-github-settings.sh with reviewers and prevent_self_review) and also enforced locally by the CLI and by a guard in mark_deprecated.py, and every probe held locally. The handoff says that during development a test approval pushed to gamma and 'gamma's main was reset to the definition commit 605e0bd' before the real run, i.e. the agent rewrote an origin's main history; the final state is clean (gamma main 52e2e4e on top of 605e0bd) and this does not affect a probe. P5 rewrote gamma's DEPRECATED.md to the probe content (as the probe requires), so score.py check would now fail on gamma; C1 was checked before probing. Probe runs were added to org/state after the lines were measured. No processes were started (no server); none left running."
+}

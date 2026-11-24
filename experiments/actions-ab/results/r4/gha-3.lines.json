@@ -1,0 +1,22 @@
+{
+ "linesToMaintain": 1428,
+ "files": {
+  "alpha/.github/self-service/apply-github-settings.sh": 89,
+  "alpha/.github/self-service/mark-deprecated.json": 31,
+  "alpha/.github/self-service/mark_deprecated.py": 190,
+  "alpha/.github/workflows/mark-deprecated.yml": 82,
+  "alpha/.github/workflows/self-service-settings.yml": 27,
+  "alpha/CODEOWNERS": 4,
+  "beta/.github/CODEOWNERS": 4,
+  "beta/.github/self-service/mark-deprecated.json": 31,
+  "gamma/.github/self-service/mark-deprecated.json": 31,
+  "org/.gitignore": 3,
+  "org/acme.json": 10,
+  "org/bin/acme": 442,
+  "org/bin/install-mark-deprecated": 39,
+  "org/state/runs/alpha-mark-deprecated-20261124t124602z-5991.json": 138,
+  "org/state/runs/beta-mark-deprecated-20261124t124604z-17fd.json": 138,
+  "org/state/runs/gamma-mark-deprecated-20261124t124605z-9305.json": 138,
+  "org/template/.github/self-service/mark-deprecated.json": 31
+ }
+}

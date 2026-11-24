@@ -136,7 +136,7 @@ fn main() {
         ]},
         "actions": [{"name": "switch-lang", "kind": "Service", "scope": "day2", "description": "Pick a new primary language.",
                      "inputs": {"type": "object", "properties": {"lang": {"type": "string", "enumFrom": "policy.langs.filter(l, l != entity.lang)"}}},
-                     "permission": "can_edit", "executor": {"type": "webhook", "url": "https://example.invalid"}, "unverified": true}]
+                     "permission": "can_edit", "executor": {"type": "command", "run": "true"}, "unverified": true}]
     });
     let (m, errors) = toolbox_model::validate_manifest(&manifest_doc, "scale");
     assert!(errors.is_empty(), "{errors:#?}");

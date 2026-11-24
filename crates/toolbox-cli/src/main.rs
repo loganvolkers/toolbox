@@ -1,8 +1,11 @@
 //! The `toolbox` binary (docs/v1-spec.md §7.7).
 
+mod action_tests;
 mod assess;
 mod causes;
 mod client;
+#[cfg(unix)]
+mod detach;
 mod find;
 mod install;
 mod judged;
@@ -10,6 +13,7 @@ mod meta;
 mod model;
 mod portal;
 mod report;
+mod run;
 mod server;
 mod tools;
 
@@ -26,7 +30,9 @@ use std::process::ExitCode;
 #[command(
     name = "toolbox",
     version,
-    about = "Agent-first internal developer portal"
+    about = "Agent-first internal developer portal",
+    after_help = "Each command has an agent skill of the same name. Task skills, such as `add-action`, \
+                  `add-scorecard` and `author-connector`, cover work that spans commands."
 )]
 struct Cli {
     #[command(subcommand)]
@@ -46,7 +52,12 @@ enum Command {
         format: Format,
     },
     /// Recompute derived state from the portal's fixtures and run its expectation files
-    /// (tests/*.test.yaml). Exit code 1 if any expectation fails.
+    /// (tests/*.test.yaml), and the action cases its manifest lists under `tests`. Exit code 1 if
+    /// any expectation fails.
+    ///
+    /// An action case runs the real lifecycle (requester, approvers, an origin that rejects the
+    /// push) in a scratch clone of the repository, so nothing reaches its origin. The operator
+    /// skill `add-action` shows the format.
     Test {
         /// A portal directory (containing toolbox.yaml) or a manifest file.
         #[arg(default_value = ".")]
@@ -72,27 +83,36 @@ enum Command {
     },
     /// Run the server: snapshot loop + REST API. Uses Postgres when --database-url (or
     /// DATABASE_URL) is set, otherwise an in-memory store (optionally preloaded with fixtures).
-    Serve {
-        /// A portal directory (containing toolbox.yaml) or a manifest file.
-        #[arg(default_value = ".")]
-        path: PathBuf,
-        /// Address to listen on. `TOOLBOX_LISTEN` and `--listen` win. Otherwise, when
-        /// `PORT` is set, the server binds `0.0.0.0:$PORT` (the Cloud Run contract).
-        /// With neither, it binds `127.0.0.1:8080`.
-        #[arg(long, env = "TOOLBOX_LISTEN")]
-        listen: Option<String>,
-        /// Postgres URL; without it the store is in memory and lost on exit.
-        #[arg(long, env = "DATABASE_URL")]
-        database_url: Option<String>,
-        /// In-memory mode only: load the portal's fixtures at start.
-        #[arg(long)]
-        fixtures: bool,
-    },
+    ///
+    /// Sign-in: on a loopback address callers say who they are (`--as user:<id>` on `toolbox run
+    /// --url` and the reads); elsewhere they need a token. `TOOLBOX_AUTH_MODE` overrides (`dev`,
+    /// `token`, `iap-google`, `cloudflare-access`, `oidc`).
+    ///
+    /// State: without a database, action runs are kept in `TOOLBOX_STATE_DIR` (default
+    /// `~/.local/state/toolbox`) under `served/<portal>/runs` and survive a restart. A portal with
+    /// `federation.children` keeps their clones under `federation/` there, and, unless
+    /// `federation.signingKey` names a variable, its approval signing key in
+    /// `served/<portal>/signing-key`; the key children pin is printed at start and by `toolbox run
+    /// --url <server>`.
+    ///
+    /// Stop it with Ctrl-C or SIGTERM. `--detach` runs it in the background instead: it returns once
+    /// the server answers, printing its URL, pid, log and approval key, and `--stop` stops it.
+    Serve(Box<ServeArgs>),
     /// Score a repository locally: run the portal's in-image connectors once (or use its fixtures),
     /// recompute, and print every scorecard with the evidence for failing rules. With --baseline,
     /// compare against a committed results file (a ratchet): regressions exit 1, --update records
     /// improvements, --ci also fails when the file is out of date.
     Report(report::Options),
+    /// Preview and run a self-service action without a server, in a repo or parent portal:
+    /// `toolbox run` lists the actions, `toolbox run <action> --input k=v` previews (effects and a
+    /// confirm token), `--confirm <token>` runs it and verifies its postcondition, and a child
+    /// portal's actions are dispatched to the child (federation).
+    ///
+    /// A parent portal (`federation.children`) holds approvals in its checkout: `--as <person>`
+    /// requests, `--approve <run>` or `--reject <run>` decides, and the last approval signs the
+    /// grant with the key `toolbox run` lists and runs the child. The operator skill `add-action`
+    /// walks through declaring, testing and offering an action.
+    Run(Box<run::Options>),
     /// Send a portal's fixtures to a running server through the ingest API (one batch per
     /// connector, then native values), and wait for the snapshot that contains them.
     Push {
@@ -650,14 +670,44 @@ fn campaign_command(
     )
 }
 
-fn serve_command(
-    path: &std::path::Path,
-    listen: Option<&str>,
+fn serve_command(o: ServeArgs) -> ExitCode {
+    let listen = server::listen_addr(o.listen.as_deref(), std::env::var("PORT").ok().as_deref());
+    #[cfg(unix)]
+    if o.stop {
+        return detach::stop(&o.path);
+    } else if o.detach {
+        return detach::start(&o.path, &listen, o.database_url, o.fixtures);
+    }
+    #[cfg(not(unix))]
+    if o.stop || o.detach {
+        return fail("--detach and --stop need a Unix host; use a service manager");
+    }
+    server::serve(&o.path, &listen, o.database_url, o.fixtures)
+}
+
+#[derive(clap::Args)]
+struct ServeArgs {
+    /// A portal directory (containing toolbox.yaml) or a manifest file.
+    #[arg(default_value = ".")]
+    path: PathBuf,
+    /// Address to listen on. `TOOLBOX_LISTEN` and `--listen` win. Otherwise, when
+    /// `PORT` is set, the server binds `0.0.0.0:$PORT` (the Cloud Run contract).
+    /// With neither, it binds `127.0.0.1:8080`.
+    #[arg(long, env = "TOOLBOX_LISTEN")]
+    listen: Option<String>,
+    /// Postgres URL; without it the store is in memory and lost on exit.
+    #[arg(long, env = "DATABASE_URL")]
     database_url: Option<String>,
+    /// In-memory mode only: load the portal's fixtures at start.
+    #[arg(long)]
     fixtures: bool,
-) -> ExitCode {
-    let listen = server::listen_addr(listen, std::env::var("PORT").ok().as_deref());
-    server::serve(path, &listen, database_url, fixtures)
+    /// Start in the background and return once it answers. The pid and log are kept in
+    /// `served/<portal>/` under the state directory, so it survives the shell that started it.
+    #[arg(long, conflicts_with = "stop")]
+    detach: bool,
+    /// Stop the server `--detach` started for this portal, and wait for it to exit.
+    #[arg(long)]
+    stop: bool,
 }
 
 fn main() -> ExitCode {
@@ -687,12 +737,7 @@ fn main() -> ExitCode {
         Command::Doctor { path, mise } => install::doctor(&path, mise),
         Command::Tools { command } => tools_command(command),
         Command::Vendor { spec, portal } => install::vendor(&spec, &portal),
-        Command::Serve {
-            path,
-            listen,
-            database_url,
-            fixtures,
-        } => serve_command(&path, listen.as_deref(), database_url, fixtures),
+        Command::Serve(o) => serve_command(*o),
         Command::Push { path, url } => server::push(&path, &url),
         Command::Campaign {
             name,
@@ -702,6 +747,7 @@ fn main() -> ExitCode {
             remote,
         } => campaign_command(&portal, name, baseline, &skip, &remote),
         Command::Report(o) => report::run(&o),
+        Command::Run(o) => run::run(&o),
         Command::Mcp { remote } => client::bridge(&remote.target()),
         Command::Connector {
             command:
@@ -748,11 +794,15 @@ fn test(path: &std::path::Path, format: Format) -> ExitCode {
         Err(e) => return fail(e),
     };
     let derived = std::sync::Arc::new(local.derived);
-    let results =
+    let mut results =
         match toolbox_derive::testing::run(&local.root, &local.manifest.tests, derived.clone()) {
             Ok(r) => r,
             Err(e) => return fail(e),
         };
+    match action_tests::run(path, &local.root, &local.manifest.tests) {
+        Ok(r) => results.extend(r),
+        Err(e) => return fail(e),
+    }
     let authz_tests = local
         .manifest
         .authz
@@ -783,11 +833,21 @@ fn test(path: &std::path::Path, format: Format) -> ExitCode {
         }
         println!("{} passed, {failed} failed", results.len() - failed);
     }
+    let authz_failed = authz_failures(&local.root, &authz_tests);
+    if failed == 0 && authz_failed == 0 {
+        ExitCode::SUCCESS
+    } else {
+        ExitCode::from(1)
+    }
+}
+
+/// Run the `.fga.yaml` files through the Authorizer, printing each; how many failed.
+fn authz_failures(root: &std::path::Path, tests: &[String]) -> usize {
     let mut authz_failed = 0;
-    if !authz_tests.is_empty() {
+    if !tests.is_empty() {
         let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
-        for t in &authz_tests {
-            match rt.block_on(toolbox_authz::fgatest::run_file(&local.root.join(t))) {
+        for t in tests {
+            match rt.block_on(toolbox_authz::fgatest::run_file(&root.join(t))) {
                 Ok(r) => {
                     for f in &r.failures {
                         println!(
@@ -814,11 +874,7 @@ fn test(path: &std::path::Path, format: Format) -> ExitCode {
             }
         }
     }
-    if failed == 0 && authz_failed == 0 {
-        ExitCode::SUCCESS
-    } else {
-        ExitCode::from(1)
-    }
+    authz_failed
 }
 
 fn plan(path: &std::path::Path, base: &std::path::Path, format: PlanFormat) -> ExitCode {

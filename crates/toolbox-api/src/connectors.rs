@@ -245,9 +245,22 @@ pub fn binary_for(package: &str) -> String {
     file
 }
 
+fn disabled() -> bool {
+    std::env::var("TOOLBOX_CONNECTORS").is_ok_and(|v| v == "off")
+}
+
+/// Whether this server reads federation children itself, so their first read is worth waiting for.
+pub fn reads_children(s: &AppState) -> bool {
+    !disabled()
+        && s.manifest
+            .federation
+            .as_ref()
+            .is_some_and(|f| !f.children.is_empty())
+}
+
 /// Start a supervisor for every in-image connector (unless `TOOLBOX_CONNECTORS=off`).
 pub fn spawn_in_image(s: &Arc<AppState>) {
-    if std::env::var("TOOLBOX_CONNECTORS").is_ok_and(|v| v == "off") {
+    if disabled() {
         tracing::info!("in-image connectors disabled (TOOLBOX_CONNECTORS=off)");
         return;
     }

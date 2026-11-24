@@ -1,7 +1,7 @@
 ---
 name: actions
 description: >-
-  Lists the actions available on one entity. Use when an agent might change an entity through the portal, and after the server is up.
+  Lists the actions available on one entity of a running server. Use when an agent might change an entity through the portal, and after the server is up. To declare a new action, see the add-action skill.
 ---
 
 # toolbox actions

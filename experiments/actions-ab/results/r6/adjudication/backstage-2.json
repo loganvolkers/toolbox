@@ -1,0 +1,50 @@
+{
+ "run": "backstage-2",
+ "C1": "holds",
+ "P1": {
+  "verdict": "holds",
+  "evidence": "git --git-dir=origins/<r>.git ls-tree -r main: .backstage/mark-deprecated.yaml and catalog-info.yaml are on main of alpha (4f14fb8), beta (7ff10d1) and gamma (5a5bd49), each committed inside its own repository. `bin/acme-actions --as carol list` reports each definition's origin, path, commit and spec hash, read from that origin's main, with owner group:default/<repo>-maintainers."
+ },
+ "P2": {
+  "verdict": "holds",
+  "evidence": "alpha main 5499e8e before; 6 runs. `bin/acme-actions --as ann request alpha --successor 'Acme/Bad Name' --reason 'Probe: a bad successor must be refused.'` -> exit 3, {httpStatus 400, ValidationError, errors [{input successor, does not match pattern}]}. `... --successor acme/probe-valid --reason short` -> exit 3, 400, reason does not meet minimum length of 20. Still 6 runs; alpha main 5499e8e after: unchanged."
+ },
+ "P3": {
+  "verdict": "holds",
+  "evidence": "beta main d4c44c8 before. `bin/acme-actions --as ann preview beta --successor acme/probe-preview --reason 'Probe: preview must show the file and content.'` -> exit 0, JSON preview.changes[0] {path DEPRECATED.md, operation update, baseCommit d4c44c8, before, after '# Deprecated: use acme/probe-preview\\n\\nProbe: preview must show the file and content.\\n', unified diff} from a scaffolder dry run. Run count unchanged; beta main d4c44c8 after: unchanged."
+ },
+ "P4": {
+  "verdict": "holds",
+  "evidence": "From /tmp/actions-ab/r6/backstage-2/org, gamma main 21e9ab7 before. `bin/acme-actions --as ann request gamma --successor acme/probe-approval --reason 'Probe: approval must come from another maintainer.'` -> exit 0, run dbb33cc4-502b-4e16-aefd-5d937cb9c579, status awaiting_approval, preview operation update. gamma 21e9ab7 after the request. `approve <id>` as ann -> exit 4, 403 'user:default/ann requested this run and cannot approve it'. As carol -> exit 4, 403 'user:default/carol is not a maintainer of gamma'. Status still awaiting_approval; gamma main 21e9ab7: unchanged."
+ },
+ "P5": {
+  "verdict": "holds",
+  "evidence": "`bin/acme-actions --as bob approve <id>` -> exit 0, status running; `wait <id>` -> exit 0, succeeded. gamma main 0d06059; `git show main:DEPRECATED.md` = '# Deprecated: use acme/probe-approval\\n\\nProbe: approval must come from another maintainer.\\n'; trailers Acme-Run, Requested-by, Approved-by. Source: plugin.ts sync() (lines 347-395), on scaffolder task completion, reads refs/heads/main:DEPRECATED.md from the origin bare repo with `git cat-file blob` (shared.ts readFileAtRef) and calls finish(r, 'succeeded') only if it equals the content; otherwise 'failed'. The record's outcome.observed carries the origin commit 0d06059, content SHA-256 and observedAt."
+ },
+ "P6": {
+  "verdict": "holds",
+  "evidence": "Wrote origins/alpha.git/hooks/pre-receive (echo to stderr; exit 1). alpha main 5499e8e before. `--as ann request alpha --successor acme/probe-reject --reason 'Probe: a rejected push must not succeed.'` -> run 9629dc76-8d37-4a7e-acc8-5f459aba460e; `--as bob approve` -> running; `wait` -> exit 1, status failed, outcome.error quotes '(pre-receive hook declined)', scaffolderTaskStatus failed; `status` -> failed. alpha main 5499e8e after. Hook removed (hooks/ holds only samples)."
+ },
+ "P7": {
+  "verdict": "holds",
+  "evidence": "From org/: `bin/acme-actions --as carol list` -> exit 0, JSON actions mark-deprecated for alpha, beta and gamma with inputs schema, owner, maintainers and definition provenance. P4's request was made from org/ with `bin/acme-actions --as ann request gamma ...`."
+ },
+ "P8": {
+  "verdict": "holds",
+  "evidence": "`bin/acme-actions --as ann record <P4 id>` -> requestedBy user:default/ann, requestedAt 14:27:51.622Z; approvedBy user:default/bob, approvedAt 14:27:56.070Z; inputs {successor acme/probe-approval, reason ...}; status succeeded, finishedAt 14:27:56.551Z, outcome {result succeeded, observed {commit 0d06059, contentSha256, observedAt}}; events with timestamps: requested(ann), approval_denied(ann), approval_denied(carol), approved(bob), started, executing, pushed, succeeded."
+ },
+ "P9": {
+  "verdict": "holds",
+  "evidence": "Every probe command (whoami, list, preview, request, approve, wait, status, record, runs) ran from a non-interactive shell with </dev/null and printed JSON on stdout, with documented exit codes (0 ok, 1 failed, 3 invalid inputs, 4 not allowed)."
+ },
+ "P10": {
+  "verdict": "holds",
+  "evidence": "Started the backend with the handoff's tmux command (ready in a few seconds; the readiness loop was bounded instead of open-ended, same check) and used every command as documented. The handoff's commands run from the workspace root as org/bin/acme-actions; the adjudicator ran them from org/ as bin/acme-actions, as P4 and P7 require, and they worked unchanged. Source read only for P5. Stopped with `tmux kill-session -t r6-backstage-2-backend`. No fixes needed."
+ },
+ "fixes": [],
+ "strikes": [],
+ "linesBeforeStrikes": 1605,
+ "linesAfterStrikes": 1605,
+ "fullyPasses": true,
+ "notes": "A Backstage backend plugin (acme-actions: HTTP API, approval gate, SQLite run and event tables), a catalog entity provider reading each origin's main, one custom scaffolder action, shared git helpers, and a dependency-free Node CLI in org/bin. No runtime data appears in the lines map: run records live in backstage/.acme-data/ and the log in backstage/.acme-backend.log, neither counted by score.py, so nothing was struck. Every counted file is code or configuration a person would keep. Observations outside the probes: the success check compares origin main with the content the scaffolder action reported (run.report), which the action can only produce after claiming an approved run whose template and parameters match, rather than re-rendering the approved inputs itself; identities appear as entity refs (user:default/ann) rather than bare names. The second P2 attempt used successor acme/probe-valid because the probe names none. The adjudicator's probes left a succeeded run on gamma (main now 0d06059, successor acme/probe-approval) and a failed run on alpha in the plugin's database."
+}

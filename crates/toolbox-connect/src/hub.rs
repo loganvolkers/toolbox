@@ -91,6 +91,24 @@ pub fn rfc3339(secs: u64) -> String {
     format!("{y:04}-{mo:02}-{d:02}T{h:02}:{m:02}:{s:02}Z")
 }
 
+/// Epoch seconds from `YYYY-MM-DDTHH:MM:SSZ`, the inverse of `rfc3339`.
+pub fn parse_rfc3339(s: &str) -> Option<u64> {
+    let b = s.as_bytes();
+    if b.len() < 20 || b[4] != b'-' || b[10] != b'T' {
+        return None;
+    }
+    let n = |r: std::ops::Range<usize>| s.get(r)?.parse::<i64>().ok();
+    let (y, m, d) = (n(0..4)?, n(5..7)?, n(8..10)?);
+    let (hh, mm, ss) = (n(11..13)?, n(14..16)?, n(17..19)?);
+    let y = if m <= 2 { y - 1 } else { y };
+    let era = y.div_euclid(400);
+    let yoe = y - era * 400;
+    let doy = (153 * ((m + 9) % 12) + 2) / 5 + d - 1;
+    let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+    let days = era * 146_097 + doe - 719_468;
+    u64::try_from(days * 86_400 + hh * 3_600 + mm * 60 + ss).ok()
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct Registration {
     pub instance: String,
@@ -109,6 +127,8 @@ struct Inner {
     seen: HashMap<(String, String), BTreeSet<String>>,
     /// (connector, kind) → last successful full read or refresh (epoch secs).
     last_read: HashMap<(String, String), u64>,
+    /// The input version that holds each (connector, kind)'s first finished sync, successful or not.
+    tried: HashMap<(String, String), u64>,
 }
 
 #[derive(Default)]
@@ -283,27 +303,7 @@ impl Hub {
                         reconcile.push((s("kind"), seen));
                     }
                 }
-                "complete" => {
-                    let status = match s("status").as_str() {
-                        "succeeded" => Status::Succeeded,
-                        "partial" => Status::Partial,
-                        "cancelled" => Status::Cancelled,
-                        _ => Status::Failed,
-                    };
-                    let mut read = Vec::new();
-                    if let Some(c) = g.commands.get_mut(&cid) {
-                        if status == Status::Succeeded {
-                            read.extend(c.kind.iter().cloned().chain(c.kinds.iter().cloned()));
-                        }
-                        c.status = status;
-                        c.completed_version = Some(version);
-                        c.errors = m["errors"].as_array().cloned().unwrap_or_default();
-                        c.counts = m.get("counts").cloned().unwrap_or(json!({}));
-                    }
-                    for k in read {
-                        g.last_read.insert((connector.to_owned(), k), now());
-                    }
-                }
+                "complete" => Self::complete(&mut g, connector, &cid, m, version),
                 _ => {}
             }
         }
@@ -353,6 +353,44 @@ impl Hub {
             .lock()
             .unwrap()
             .last_read
+            .get(&(connector.to_owned(), kind.to_owned()))
+            .copied()
+    }
+
+    /// A command finished: record its outcome and the kinds it read.
+    fn complete(g: &mut Inner, connector: &str, cid: &str, m: &Value, version: u64) {
+        let status = match m.get("status").and_then(Value::as_str).unwrap_or_default() {
+            "succeeded" => Status::Succeeded,
+            "partial" => Status::Partial,
+            "cancelled" => Status::Cancelled,
+            _ => Status::Failed,
+        };
+        let mut read = Vec::new();
+        let mut tried = Vec::new();
+        if let Some(c) = g.commands.get_mut(cid) {
+            tried.extend(c.kind.iter().cloned().chain(c.kinds.iter().cloned()));
+            if status == Status::Succeeded {
+                read.extend(tried.iter().cloned());
+            }
+            c.status = status;
+            c.completed_version = Some(version);
+            c.errors = m["errors"].as_array().cloned().unwrap_or_default();
+            c.counts = m.get("counts").cloned().unwrap_or(json!({}));
+        }
+        for k in read {
+            g.last_read.insert((connector.to_owned(), k), now());
+        }
+        for k in tried {
+            g.tried.entry((connector.to_owned(), k)).or_insert(version);
+        }
+    }
+
+    /// The input version holding `connector`'s first finished sync of `kind`, if one has finished.
+    pub fn first_sync(&self, connector: &str, kind: &str) -> Option<u64> {
+        self.inner
+            .lock()
+            .unwrap()
+            .tried
             .get(&(connector.to_owned(), kind.to_owned()))
             .copied()
     }

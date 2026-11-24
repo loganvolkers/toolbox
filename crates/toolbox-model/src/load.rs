@@ -401,6 +401,7 @@ pub fn load(path: &Path) -> Result<Source, LoadError> {
             }
         }
     }
+    crate::federation::expand(&root, &mut document);
     Ok(Source {
         root,
         manifest_file,

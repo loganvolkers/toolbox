@@ -1,0 +1,6 @@
+apiVersion: toolbox.dev/package/v0
+name: org-actions
+description: >-
+  Fleet actions the org ships to every repository that includes this
+  package.
+fragments: [fragments/*.yaml]

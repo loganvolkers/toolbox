@@ -67,6 +67,7 @@ pub fn validate_manifest(doc: &Value, file: &str) -> (Option<Manifest>, Vec<Diag
     };
     v.cross_references(&manifest);
     v.form_subset(&manifest);
+    v.executors(&manifest);
     v.cel(&manifest);
     (Some(manifest), v.errors)
 }
@@ -587,6 +588,83 @@ impl Checker {
         }
     }
 
+    /// Each executor type's own required fields (docs/design/federated-actions.md §5).
+    fn executors(&mut self, m: &Manifest) {
+        for (ai, a) in m.actions.iter().enumerate() {
+            let ty = a
+                .executor
+                .get("type")
+                .and_then(Value::as_str)
+                .unwrap_or("command");
+            let needs: &[&str] = match ty {
+                "command" | "change" => &["run"],
+                "in-image" => &["command"],
+                "github-workflow" => &["repo", "workflow"],
+                _ => &[],
+            };
+            for k in needs {
+                if a.executor.get(*k).is_none() {
+                    self.push(
+                        "action.executor",
+                        format!("/actions/{ai}/executor"),
+                        format!("action {}: a {ty} executor needs `{k}`", a.name),
+                    );
+                }
+            }
+            if ty == "change" {
+                self.placeholders(ai, a);
+            }
+            if matches!(ty, "http" | "webhook") {
+                self.push(
+                    "action.executor",
+                    format!("/actions/{ai}/executor/type"),
+                    format!(
+                        "action {}: {ty} executors are not built yet; use command, in-image, change or github-workflow",
+                        a.name
+                    ),
+                );
+            }
+        }
+    }
+
+    /// A `change` executor's `branch` takes `{action}` and `{run}`; its `message` also takes
+    /// `{entity}` and `{inputs.<name>}` for a declared input. Anything else in braces would be
+    /// committed literally.
+    fn placeholders(&mut self, ai: usize, a: &crate::manifest::Action) {
+        let declared = |n: &str| a.inputs.pointer(&format!("/properties/{n}")).is_some();
+        for (field, inputs) in [("branch", false), ("message", true)] {
+            let Some(t) = a.executor.get(field).and_then(Value::as_str) else {
+                continue;
+            };
+            let mut rest = t;
+            while let Some(open) = rest.find('{') {
+                let Some(len) = rest[open..].find('}') else {
+                    break;
+                };
+                let name = &rest[open + 1..open + len];
+                rest = &rest[open + len + 1..];
+                let ok = matches!(name, "action" | "run" | "run_id")
+                    || (inputs && name == "entity")
+                    || (inputs && name.strip_prefix("inputs.").is_some_and(declared));
+                if !ok {
+                    let takes = if inputs {
+                        "{action}, {run}, {entity} and {inputs.<name>} for a declared input"
+                    } else {
+                        "{action} and {run} (inputs go only in `message`)"
+                    };
+                    self.push(
+                        "action.executor",
+                        format!("/actions/{ai}/executor/{field}"),
+                        format!(
+                            "action {}: `{field}` has the unknown placeholder {{{name}}}; it takes {takes}",
+                            a.name
+                        ),
+                    );
+                }
+            }
+        }
+    }
+
     /// D58: action inputs must stay within the form-renderable subset (docs/design/minimal-ui.md §4).
     fn form_subset(&mut self, m: &Manifest) {
         for (ai, a) in m.actions.iter().enumerate() {
@@ -634,16 +712,27 @@ impl Checker {
             );
             return;
         };
+        // A form never sends fields it doesn't show, so closing an object is within the subset.
+        let closed = obj.get("type").and_then(Value::as_str) == Some("object")
+            && obj.get("additionalProperties") == Some(&Value::Bool(false));
         let bad: Vec<&str> = obj
             .keys()
             .map(String::as_str)
-            .filter(|k| !KEYS.contains(k))
+            .filter(|k| !KEYS.contains(k) && !(closed && *k == "additionalProperties"))
             .collect();
         if !bad.is_empty() {
+            let hints: Vec<String> = bad
+                .iter()
+                .filter_map(|k| crate::split_value_hint(k, &obj[*k]))
+                .collect();
             self.push(
                 "form.subset",
                 ptr.to_string(),
-                format!("{label}: keywords outside the form subset: {bad:?}"),
+                if hints.is_empty() {
+                    format!("{label}: keywords outside the form subset: {bad:?}")
+                } else {
+                    format!("{label}: {}", hints.join("; "))
+                },
             );
         }
         match obj.get("type").and_then(Value::as_str) {
@@ -772,7 +861,7 @@ impl Checker {
                 exprs.push((
                     format!("/actions/{ai}/expect/postcondition"),
                     &x.postcondition,
-                    Site::Action,
+                    Site::Postcondition,
                 ));
                 for (ri, r) in x.refresh.iter().enumerate() {
                     if let Some(e) = &r.selector {

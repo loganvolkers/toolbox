@@ -1,0 +1,16 @@
+{
+ "linesToMaintain": 1241,
+ "files": {
+  "alpha/.acme/actions/add-notice.json": 36,
+  "alpha/.acme/actions/add-notice.py": 61,
+  "org/.gitignore": 2,
+  "org/bin/acme": 616,
+  "org/people.json": 18,
+  "org/repos.json": 19,
+  "org/state/next-run-id": 1,
+  "org/state/runs/run-0001.json": 96,
+  "org/state/runs/run-0002.json": 96,
+  "org/state/runs/run-0003.json": 96,
+  "org/tests/test_acme.py": 200
+ }
+}

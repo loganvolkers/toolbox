@@ -5,9 +5,16 @@
 [approved GitHub Apps example](../examples/approved-github-apps.md). Uses
 [connector-control.md](./connector-control.md) for verification.*
 
-> **Implementation status:** M3 built action listing and the Toolbox-layer preview gate (permission
-> and option checks, no side effects). Run states, confirm tokens, executors, approvals and
-> postcondition verification are milestone M5 ([v1-spec.md](../v1-spec.md) §3).
+> **Implementation status (D01M86BY3YQX3SA1W99QXF1QA1H):** built, with federation, as
+> [federated-actions.md](./federated-actions.md) describes: run states, confirm tokens, the
+> `command`, `change`, `github-workflow`, `in-image` and federated executors, approvals and
+> postcondition verification, in `toolbox run` and `toolbox serve`. The independent review that
+> D64 asked for is [self-service-review.md](../self-service-review.md); its fixes are folded in
+> here and in v1-spec §6.6 and §7.5. Built differently from this design: confirm tokens also bind
+> the requester and entity and are single-use in a server; approvals are refused over MCP and from
+> personal access tokens (D57); `timed_out` is emitted, `compensated` is not yet; a `change` can land on its base once approved
+> (`land: push`) and is verified by the base. Runs in `serve` are written through to Postgres or
+> the state directory and survive a restart; durable steps across instances are not built.
 
 ---
 

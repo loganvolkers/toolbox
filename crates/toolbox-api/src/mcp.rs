@@ -20,6 +20,8 @@ const PROTOCOL: &str = "2025-06-18";
 pub fn builtin_tools() -> Value {
     let s = |props: Value, req: &[&str]| json!({"type": "object", "properties": props, "required": req});
     let id = json!({"type": "string", "description": "Entity id, e.g. repository:payments-api"});
+    let run =
+        json!({"type": "string", "description": "Run id, as run_action or list_runs reports it"});
     json!([
         {"name": "search", "description": "Find entities by name or title.", "annotations": {"readOnlyHint": true},
          "inputSchema": s(json!({
@@ -72,12 +74,26 @@ pub fn builtin_tools() -> Value {
              "action": {"type": "string", "description": "Action name, as list_actions reports it"},
              "input": {"type": "string", "description": "Name of one of the action's input properties"},
              "id": id}), &["action", "input", "id"])},
-        {"name": "preview_action", "description": "Preview an action: validation, blockers and the approval path. Always preview before running.",
+        {"name": "preview_action", "description": "Preview an action: validation, effects, blockers, the approval path and a confirm_token for run_action. Changes nothing; the action's own preview step runs.",
          "annotations": {"readOnlyHint": true},
          "inputSchema": s(json!({
              "action": {"type": "string", "description": "Action name, as list_actions reports it"},
              "id": id,
-             "inputs": {"type": "object", "description": "Proposed input values, keyed by input property name"}}), &["action", "id"])}
+             "inputs": {"type": "object", "description": "Proposed input values, keyed by input property name"}}), &["action", "id"])},
+        {"name": "run_action", "description": "Run a previewed action with the same inputs and the preview's confirm_token (valid 10 minutes, once). Returns the run: it may wait for approval, a pull request merge or a workflow; follow it with get_run.",
+         "annotations": {"readOnlyHint": false, "destructiveHint": true, "openWorldHint": true},
+         "inputSchema": s(json!({
+             "action": {"type": "string", "description": "Action name, as list_actions reports it"},
+             "id": id,
+             "inputs": {"type": "object", "description": "The input values you previewed"},
+             "confirm_token": {"type": "string", "description": "confirm_token from preview_action"}}), &["action", "id", "confirm_token"])},
+        {"name": "get_run", "description": "A run's state, effects, approvals and verification. Looks again at a run waiting on a merge, workflow or child portal.",
+         "annotations": {"readOnlyHint": true}, "inputSchema": s(json!({"run": run}), &["run"])},
+        {"name": "list_runs", "description": "Runs you may see, newest last; filter by entity or state (e.g. awaiting_approval to find runs to review).",
+         "annotations": {"readOnlyHint": true},
+         "inputSchema": s(json!({
+             "id": {"type": "string", "description": "Only runs on this entity"},
+             "state": {"type": "string", "description": "Only runs in this state: awaiting_approval, proposed, dispatched, succeeded, unverified, failed, rejected or cancelled"}}), &[])}
     ])
 }
 
@@ -112,6 +128,8 @@ async fn call_rest(
         None => req.body(Body::empty()),
     }
     .unwrap();
+    let mut req = req;
+    req.extensions_mut().insert(crate::actions::Via("mcp"));
     let resp = router(state.clone()).oneshot(req).await.unwrap();
     let status = resp.status();
     let bytes = to_bytes(resp.into_body(), 16 << 20)
@@ -439,6 +457,32 @@ async fn run_tool(
             )
             .await
         }
+        "run_action" => {
+            let body = json!({"entity": arg(a, "id"), "inputs": a.get("inputs").cloned().unwrap_or(json!({})),
+                "confirm_token": arg(a, "confirm_token")});
+            call_rest(
+                state,
+                h,
+                Method::POST,
+                format!("/v1/actions/{}/runs", enc(arg(a, "action"))),
+                Some(body),
+            )
+            .await
+        }
+        "get_run" => {
+            let path = format!("/v1/runs/{}/verify", enc(arg(a, "run")));
+            call_rest(state, h, Method::POST, path, Some(json!({}))).await
+        }
+        "list_runs" => {
+            let mut q = Vec::new();
+            for (k, p) in [("id", "entity"), ("state", "state")] {
+                if !arg(a, k).is_empty() {
+                    q.push(format!("{p}={}", enc(arg(a, k))));
+                }
+            }
+            let path = format!("/v1/runs?{}", q.join("&"));
+            call_rest(state, h, Method::GET, path, None).await
+        }
         other => return (format!("Unknown tool `{other}`."), Value::Null, true),
     };
     if !status.is_success() {
@@ -451,6 +495,58 @@ async fn run_tool(
         return (msg, v, true);
     }
     (markdown(name, a, &v), v, false)
+}
+
+fn write_run(s: &mut String, v: &Value) {
+    use std::fmt::Write as _;
+    let state = v["state"].as_str().unwrap_or("");
+    let _ = writeln!(
+        s,
+        "Run `{}` of `{}` on `{}`: **{state}**",
+        v["id"].as_str().unwrap_or(""),
+        v["action"].as_str().unwrap_or(""),
+        v["entity"].as_str().unwrap_or("")
+    );
+    let pending: Vec<String> = v["pending_approvers"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .map(show)
+        .collect();
+    let next = match state {
+        "awaiting_approval" => format!(
+            "waiting for approval by {}: a person approves it in the portal's UI (approvals are not tools)",
+            pending.join(", ")
+        ),
+        "proposed" => format!(
+            "proposed as a change{}: it succeeds once merged and the postcondition holds; call get_run to look again",
+            v["outputs"]["url"]
+                .as_str()
+                .or(v["outputs"]["branch"].as_str())
+                .map(|b| format!(" on `{b}`"))
+                .unwrap_or_default()
+        ),
+        "dispatched" => {
+            "dispatched to a workflow or child portal: call get_run to follow it".into()
+        }
+        "succeeded" => match &v["verification"] {
+            Value::Null => "done".into(),
+            ver => format!("verified: {}", ver),
+        },
+        "unverified" => "the executor finished, but nothing checked its effect".into(),
+        _ => v["error"].as_str().unwrap_or("").to_owned(),
+    };
+    if !next.is_empty() {
+        let _ = writeln!(s, "- {next}");
+    }
+    for e in v["effects"].as_array().into_iter().flatten() {
+        let _ = writeln!(
+            s,
+            "- effect: {} `{}`",
+            e["operation"].as_str().unwrap_or("change"),
+            e["resource"].as_str().unwrap_or("")
+        );
+    }
 }
 
 fn write_campaign_report(s: &mut String, v: &Value) {
@@ -835,12 +931,64 @@ fn markdown(name: &str, a: &Value, v: &Value) -> String {
             let _ = writeln!(
                 s,
                 "- approval: {}",
-                if v["approval"]["required"] == true {
+                if v["approval"]["by_review"] == true {
+                    format!(
+                        "by review of the pull request ({})",
+                        v["approval"]["approvers"]
+                    )
+                } else if v["approval"]["required"] == true {
                     format!("required from {}", v["approval"]["approvers"])
                 } else {
                     "none".into()
                 }
             );
+            for e in v["effects"].as_array().into_iter().flatten() {
+                let _ = writeln!(
+                    s,
+                    "- effect: {} `{}`",
+                    e["operation"].as_str().unwrap_or("change"),
+                    e["resource"].as_str().unwrap_or("")
+                );
+            }
+            for w in v["warnings"].as_array().into_iter().flatten() {
+                let _ = writeln!(s, "- warning: {}", w.as_str().unwrap_or(""));
+            }
+            if let Some(t) = v["confirm_token"].as_str() {
+                let _ = writeln!(
+                    s,
+                    "\nTo run it, call run_action with the same inputs and confirm_token `{t}` within 10 minutes."
+                );
+            }
+        }
+        "run_action" | "get_run" => write_run(&mut s, v),
+        "list_runs" => {
+            let runs = v["runs"].as_array().cloned().unwrap_or_default();
+            if runs.is_empty() {
+                let _ = writeln!(s, "No runs.");
+            }
+            for r in runs {
+                let pending = r["pending_approvers"]
+                    .as_array()
+                    .cloned()
+                    .unwrap_or_default();
+                let _ = writeln!(
+                    s,
+                    "- `{}`: {} on `{}` by {}, **{}**{}",
+                    r["id"].as_str().unwrap_or(""),
+                    r["action"].as_str().unwrap_or(""),
+                    r["entity"].as_str().unwrap_or(""),
+                    r["requested_by"].as_str().unwrap_or(""),
+                    r["state"].as_str().unwrap_or(""),
+                    if pending.is_empty() {
+                        String::new()
+                    } else {
+                        format!(
+                            " (needs {})",
+                            pending.iter().map(show).collect::<Vec<_>>().join(", ")
+                        )
+                    }
+                );
+            }
         }
         _ => s = v.to_string(),
     }

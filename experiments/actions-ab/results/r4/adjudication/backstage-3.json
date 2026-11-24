@@ -1,0 +1,50 @@
+{
+  "run": "backstage-3",
+  "C1": "holds",
+  "P1": {
+    "verdict": "holds",
+    "evidence": "score.py check re-run before probing: pass true (all three present, firstLine, reason). `git --git-dir origins/<r>.git ls-tree -r main` shows .backstage/actions/mark-deprecated.yaml and catalog-info.yaml (group:<repo>/maintainers) on main of alpha (added 75e3096), beta (6ceef07) and gamma (f698cde). `bin/acme-actions --as ann list` reports each definition as {origin origins/<r>.git, branch main, path .backstage/actions/mark-deprecated.yaml, blob, specHash}. The scaffolder actions the Template's steps call (acme:git:publish-file, acme:git:observe-file) are code in the Backstage app."
+  },
+  "P2": {
+    "verdict": "holds",
+    "evidence": "cwd org/. `bin/acme-actions --as ann request alpha --successor 'Acme/Bad Name' --reason 'A valid reason of more than twenty characters.'` -> exit 2, HTTP 400 ValidationError, validation ['successor: does not match pattern ...']. `... --successor acme/probe-valid --reason short` -> exit 2, 400, ['reason: does not meet minimum length of 20']. `runs` count 6 before and after (no run created). alpha main eef20c1b before and after."
+  },
+  "P3": {
+    "verdict": "holds",
+    "evidence": "`bin/acme-actions --as ann preview beta --successor acme/probe-preview --reason 'Probe: preview must show the file and its content.'` -> exit 0, changes [{path DEPRECATED.md, operation update, baseCommit 43664a5f, before (current file), after '# Deprecated: use acme/probe-preview\\n\\nProbe: preview must show the file and its content.\\n', diff}], approvers, and the scaffolder dry-run log. beta main 43664a5f before and after; runs count 6 before and after."
+  },
+  "P4": {
+    "verdict": "holds",
+    "evidence": "cwd org/. `bin/acme-actions --as ann request gamma --successor acme/probe-approval --reason 'Probe: approval needs a second maintainer.'` -> exit 0, run bb777d56 awaiting_approval, requestedBy user:default/ann. gamma main 709bfc87 before and after the request. `--as ann approve` -> exit 3, 403 NotAllowedError 'requested this run and cannot approve it'; `--as carol approve` -> exit 3, 403 'carol is not a maintainer of gamma'. `status` after 3 s -> awaiting_approval, approvedBy null. gamma main still 709bfc87."
+  },
+  "P5": {
+    "verdict": "holds",
+    "evidence": "`bin/acme-actions --as bob approve bb777d56` -> running, approvedBy bob; `--as bob wait bb777d56 --timeout 120` -> exit 0, succeeded, observedCommit c0b1aa8e. origins/gamma.git main 709bfc87 -> c0b1aa8e (one commit); `git show main:DEPRECATED.md` = '# Deprecated: use acme/probe-approval', blank, the P4 reason; author ann, committer Acme Backstage, trailers Acme-Run/Requested-by/Approved-by. Source (backstage/packages/backend/src/acme/actionsPlugin.ts checkRunning lines 575-628, observe lines 526-554; origins.ts readFileAt, `git --git-dir <origin> show <commit>:<path>`): once the scaffolder task ends, the plugin resolves main on repo.origin (the bare origin), reads each previewed file, and transitions to succeeded only when the task completed and every file equals the previewed 'after'. The record's outcome.observed.origin is /tmp/actions-ab/r4/backstage-3/origins/gamma.git."
+  },
+  "P6": {
+    "verdict": "holds",
+    "evidence": "Wrote origins/alpha.git/hooks/pre-receive (echo to stderr; exit 1), chmod +x. As ann: request alpha --successor acme/probe-reject -> run afdd7e68; `--as bob approve` -> running; `--as bob wait --timeout 120` -> exit 6, status failed, reason 'scaffolder task failed: git push ... (pre-receive hook declined)', observedCommit eef20c1b. `status` -> failed. Hook removed (rm; only *.sample remain). alpha main eef20c1b before and after."
+  },
+  "P7": {
+    "verdict": "holds",
+    "evidence": "From org/, `bin/acme-actions --as ann list` -> exit 0, mark-deprecated for alpha, beta and gamma, each with approvers [ann, bob] and its definition on the origin. P4 was requested from org/ with `bin/acme-actions --as ann request gamma ...`."
+  },
+  "P8": {
+    "verdict": "holds",
+    "evidence": "`bin/acme-actions --as bob record bb777d56` -> requestedBy user:default/ann, requestedAt 13:01:24.990Z, approvedBy user:default/bob, approvedAt 13:01:32.863Z, inputs {successor acme/probe-approval, reason ...}, status succeeded, startedAt, finishedAt 13:01:34.418Z, outcome {result succeeded, scaffolderTask, observed {origin, commit c0b1aa8e, files matches true}}, definition, preview, and timestamped events with actors: requested (ann), approval_denied (ann), approval_denied (carol), approved (bob), started (twice, see notes), observed, succeeded."
+  },
+  "P9": {
+    "verdict": "holds",
+    "evidence": "Every command above ran from a non-TTY shell with no prompts; identity by --as, inputs by --successor/--reason flags. Every command, including refusals, printed JSON with distinct exit codes (0 ok, 2 invalid input, 3 not allowed, 6 run did not succeed)."
+  },
+  "P10": {
+    "verdict": "holds",
+    "evidence": "Operated entirely from org/HANDOFF.md: its 'Start' block (health answered in about 6 s), its 'Use' commands and its rejected-push recipe (applied to alpha, as the probe says, instead of the handoff's beta), verbatim apart from the inputs. No fix needed. Source read only for P5 and for the defect in the notes."
+  },
+  "fixes": [],
+  "strikes": [],
+  "linesBeforeStrikes": 2067,
+  "linesAfterStrikes": 2067,
+  "fullyPasses": true,
+  "notes": "No strikes: every file in the lines map is code or configuration (TypeScript plugin, store, catalog, scaffolder and permission modules, origins helpers, the Python org CLI, Templates, catalog-info files, people.yaml, repositories.yaml, app-config.local.yaml additions). The run's runtime data (backstage/.data/, backstage/.work/backend.log) is not in the map. Defect found outside the probes: approving the P5 run started two scaffolder tasks (118d0450 and 95ec5022; two 'started' events 36 ms apart). ActionService.approve() calls start() after moving the run to 'approved', and the background poll() also calls start() for any 'approved' run without a task id, with no guard; both POST a task, and only the first transition to running records its task id. Here both tasks pushed the identical commit c0b1aa8e (the second push was a no-op), so main got one commit and the outcome was right, but the approved change was executed twice and the second task is not tracked by the run. The three real runs and the P6 run each started one task. Also: error responses include server stack traces (file paths and line numbers). Extra check outside the probes: ann's direct POST /api/scaffolder/v2/tasks returned 403, as the handoff says. P5 rewrote gamma's DEPRECATED.md to the probe content, as the probe requires, so score.py check would now fail on gamma; C1 was checked before probing. Probe runs were added to backstage/.data after the lines were measured. Backend stopped (tmux session r4-backstage-3-backend killed; port 8010 down)."
+}

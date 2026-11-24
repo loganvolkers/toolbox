@@ -1,0 +1,21 @@
+{
+ "alpha": {
+  "readme": "README.md",
+  "present": true,
+  "firstLine": true,
+  "exact": true
+ },
+ "beta": {
+  "readme": "readme.md",
+  "present": true,
+  "firstLine": true,
+  "exact": true
+ },
+ "gamma": {
+  "readme": "README.md",
+  "present": true,
+  "firstLine": true,
+  "exact": true
+ },
+ "pass": true
+}

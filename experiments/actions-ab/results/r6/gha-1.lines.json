@@ -1,0 +1,21 @@
+{
+ "linesToMaintain": 1805,
+ "files": {
+  "alpha/.github/settings/apply.sh": 76,
+  "alpha/.github/settings/main-ruleset.json": 25,
+  "alpha/.github/settings/mark-deprecated-environment.json": 7,
+  "alpha/.github/workflows/apply-settings.yml": 31,
+  "alpha/.github/workflows/mark-deprecated.yml": 247,
+  "alpha/CODEOWNERS": 6,
+  "beta/.github/CODEOWNERS": 6,
+  "org/.gitignore": 1,
+  "org/.state/gitconfig": 6,
+  "org/bin/acme-actions": 673,
+  "org/people.json": 7,
+  "org/repos.json": 9,
+  "org/runs/run-0001.json": 204,
+  "org/runs/run-0002.json": 204,
+  "org/runs/run-0003.json": 204,
+  "org/tests/e2e.sh": 99
+ }
+}
