@@ -32,6 +32,20 @@ pub fn judged_rules(m: &Manifest) -> BTreeSet<(String, String)> {
     out
 }
 
+/// What text reports, which can't show the web report's icons, write after a judged rule's name.
+pub const MARK: &str = "✦";
+/// The line that explains MARK, once per text report that uses it.
+pub const LEGEND: &str = "✦ agent-judged: an agent's assessment decides the rule (`toolbox assess`); \
+     unmarked rules are measured by a tool or connector.";
+
+/// `rule` as a text report names it: with MARK when it is judged.
+pub fn marked(judged: &BTreeSet<(String, String)>, card: &str, rule: &str) -> String {
+    match judged.contains(&(card.to_owned(), rule.to_owned())) {
+        true => format!("{rule} {MARK}"),
+        false => rule.to_owned(),
+    }
+}
+
 /// Whether `cel`, evaluated on a `kind` entity, reads an assessment relation, following computed
 /// fields (`seen` stops cycles).
 fn reads_judgement(
@@ -120,6 +134,8 @@ scorecards:
         let judged = judged_rules(&m);
         let names: Vec<String> = judged.iter().map(|(s, r)| format!("{s}/{r}")).collect();
         assert_eq!(names, ["crate/clean", "crate/reviewed"]);
+        assert_eq!(marked(&judged, "crate", "reviewed"), "reviewed ✦");
+        assert_eq!(marked(&judged, "crate", "documented"), "documented");
     }
 
     #[test]

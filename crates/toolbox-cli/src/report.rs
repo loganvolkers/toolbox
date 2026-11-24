@@ -755,6 +755,10 @@ fn markdown(m: &toolbox_model::Manifest, d: &Derived, all: bool) -> String {
         "# {} — scorecards",
         m.portal.title.as_deref().unwrap_or(&m.portal.name)
     );
+    let judged = crate::judged::judged_rules(m);
+    if !judged.is_empty() {
+        let _ = writeln!(s, "\n{}", crate::judged::LEGEND);
+    }
     for sc in &m.scorecards {
         let rows = d.scores.get(&sc.name).cloned().unwrap_or_default();
         let mut tally: BTreeMap<&str, usize> = BTreeMap::new();
@@ -773,7 +777,19 @@ fn markdown(m: &toolbox_model::Manifest, d: &Derived, all: bool) -> String {
             comparison_md(&mut s, sc, c, &rows, d);
             continue;
         }
-        let _ = writeln!(s, "\n## {}  ({counts})\n", sc.name);
+        let n = judged.iter().filter(|(c, _)| *c == sc.name).count();
+        let basis = match n {
+            0 => String::new(),
+            n if n == sc.rules.len() => {
+                format!(" · every rule agent-judged {}", crate::judged::MARK)
+            }
+            n => format!(
+                " · {n} of {} rules agent-judged {}",
+                sc.rules.len(),
+                crate::judged::MARK
+            ),
+        };
+        let _ = writeln!(s, "\n## {}  ({counts}){basis}\n", sc.name);
         let shown = |r: &&toolbox_derive::Score| {
             r.level != "skipped" && (all || r.rules.iter().flatten().any(|(_, o)| o != "pass"))
         };
@@ -787,23 +803,24 @@ fn markdown(m: &toolbox_model::Manifest, d: &Derived, all: bool) -> String {
                 "{quiet} pass every rule (not listed; `--all` lists them).\n"
             );
         }
+        let name = |rule: &str| crate::judged::marked(&judged, &sc.name, rule);
         for (id, r) in rows.iter().filter(|(_, r)| shown(r)) {
-            entity_md(&mut s, id, r);
+            entity_md(&mut s, id, r, &name);
         }
     }
     s
 }
 
 /// One entity's line in the markdown report: its level, the rules it fails and up to five items
-/// of each rule's evidence.
-fn entity_md(s: &mut String, id: &str, r: &toolbox_derive::Score) {
+/// of each rule's evidence. `name` is how a rule is named (crate::judged::marked).
+fn entity_md(s: &mut String, id: &str, r: &toolbox_derive::Score, name: &dyn Fn(&str) -> String) {
     use std::fmt::Write as _;
-    let failing: Vec<&String> = r
+    let failing: Vec<String> = r
         .rules
         .iter()
         .flatten()
         .filter(|(_, o)| *o != "pass")
-        .map(|(n, _)| n)
+        .map(|(n, _)| name(n))
         .collect();
     let _ = writeln!(
         s,
@@ -812,17 +829,11 @@ fn entity_md(s: &mut String, id: &str, r: &toolbox_derive::Score) {
         if failing.is_empty() {
             String::new()
         } else {
-            format!(
-                ": {}",
-                failing
-                    .iter()
-                    .map(|f| f.as_str())
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            )
+            format!(": {}", failing.join(", "))
         }
     );
     for (rule, ev) in &r.evidence {
+        let rule = name(rule);
         let items: Vec<String> = match ev {
             Value::Array(xs) => xs
                 .iter()
@@ -1607,9 +1618,9 @@ fn check_accept(o: &Options, m: &toolbox_model::Manifest) -> Result<(), String> 
 }
 
 /// One line per change, then one per campaign with a recorded start.
-fn change_lines(v: &Verdict, d: &Derived) -> Vec<String> {
+fn change_lines(v: &Verdict, m: &toolbox_model::Manifest, d: &Derived) -> Vec<String> {
     let c = &v.comparison;
-    let mut lines = crate::causes::gate(d, &c.regressions);
+    let mut lines = crate::causes::gate(d, &c.regressions, &crate::judged::judged_rules(m));
     for (mark, changes) in [
         ("✓ accept ", &v.accepted),
         ("✓ better ", &c.improvements),
@@ -1745,7 +1756,7 @@ fn ratchet(
         v.written = true;
         text.push_str("; updated its evidence keys");
     }
-    v.summary = format!("{}\nbaseline: {text}\n", change_lines(&v, d).join("\n"));
+    v.summary = format!("{}\nbaseline: {text}\n", change_lines(&v, m, d).join("\n"));
     Ok(v)
 }
 
@@ -1845,7 +1856,7 @@ fn against(
         0 => format!("no regressions against {rev}"),
         n => format!("{n} regression(s) against {rev}"),
     };
-    v.summary = format!("{}\nagainst: {text}\n", change_lines(&v, d).join("\n"));
+    v.summary = format!("{}\nagainst: {text}\n", change_lines(&v, m, d).join("\n"));
     Ok(v)
 }
 

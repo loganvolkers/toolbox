@@ -28,7 +28,9 @@ D01M85MK7FCRXH2TRMRKXTNA5GT and was judged by the same blind design audit
    an assessor's verdict does. Every other rule is *measured*: a tool, connector or script read
    the fact, and the same input gives the same result. The class is computed
    (`crates/toolbox-cli/src/judged.rs`), never declared, so it cannot drift from the check. The
-   report JSON, `STANDARD.md` and `describe` carry it as `basis`.
+   report JSON, `STANDARD.md` and `describe` carry it as `basis`. Text that names rule results
+   (the markdown report a pull request comment carries, and the ratchet's gate summary) marks a
+   judged rule `✦` and explains the mark in one legend line.
 4. **Tracks everywhere.** Every T4T scorecard is on a track. A package scorecard takes its track
    from a package parameter. A parameter whose default is `null` is optional, so a package can
    leave the track to the portal that includes it.

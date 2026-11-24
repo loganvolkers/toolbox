@@ -123,7 +123,9 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 - Motion (bars growing, rings filling) respects `prefers-reduced-motion`.
 - Every rule and result carries its basis: **Measured** (a gauge icon, neutral) or **Agent-judged** (a
   sparkle, violet). Lists too dense for text show the icon or tint the chip, and a key above the list
-  names both.
+  names both. Text outputs that can't show icons (`-o md`, which pull request comments carry, and
+  the ratchet's gate summary) put `✦` after an agent-judged rule's name, add "every rule
+  agent-judged" or "N of M rules agent-judged" to a scorecard's heading, and print one legend line.
 - A rule shows **Why** (its rationale) beside its fix, and a link to the long story. Decision ids are
   stripped from prose, which readers can't resolve.
 - An agent-judged pass on an entity no agent has assessed reads "passes, not assessed yet", never a
