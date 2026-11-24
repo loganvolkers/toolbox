@@ -1000,7 +1000,9 @@ pub fn merged(cwd: &Path, run: &crate::run::Run) -> Result<bool, String> {
     if let Some((remote, branch)) = base.split_once('/')
         && git(&repo, &["remote", "get-url", "--", remote]).is_ok()
     {
-        let _ = git(&repo, &["fetch", "-q", "--", remote, branch]);
+        // A push updates the tracking ref itself, so an unfetched base would show the commit.
+        git(&repo, &["fetch", "-q", "--", remote, branch])
+            .map_err(|e| format!("cannot fetch {base} to check it: {e}"))?;
     }
     if git(&repo, &["merge-base", "--is-ancestor", commit, base]).is_ok() {
         return Ok(true);
@@ -1337,6 +1339,18 @@ mod tests {
         assert_eq!(out.status, "succeeded", "{:?}", out.error);
         let err = landed(&work, &as_run(&ctx, &out)).unwrap_err();
         assert!(err.contains("did not land"), "{err}");
+        let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn a_base_that_cannot_be_fetched_is_not_a_landed_change() {
+        let (root, work) = clone_with("");
+        let (exec, ctx) = landing(&work);
+        let out = exec.run(&ctx, &[]);
+        assert_eq!(out.status, "succeeded", "{:?}", out.error);
+        std::fs::rename(root.join("origin.git"), root.join("gone.git")).unwrap();
+        let err = landed(&work, &as_run(&ctx, &out)).unwrap_err();
+        assert!(err.contains("cannot fetch"), "{err}");
         let _ = std::fs::remove_dir_all(root);
     }
 
