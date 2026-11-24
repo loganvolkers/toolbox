@@ -524,8 +524,8 @@ scorecards:
     kind: Kind
     description: >-
       Each kind of entity: in the fixtures, tested and described with every
-      field, since every rule reads it (docs/design/scorecards-for-
-      scorecards.md §5).
+      field, since every rule reads it
+      (docs/design/scorecards-for-scorecards.md §5).
     owner: group:maintainers
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze} # a new kind must be in the fixtures and the tests
@@ -567,8 +567,8 @@ scorecards:
     kind: Field
     description: >-
       Each field: populated in the fixtures, described and given a shape, so
-      CEL, validation and agents know what it holds (docs/design/scorecards-
-      for-scorecards.md §5).
+      CEL, validation and agents know what it holds
+      (docs/design/scorecards-for-scorecards.md §5).
     owner: group:maintainers
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze} # a new field must have a value somewhere in the fixtures
@@ -615,8 +615,8 @@ scorecards:
     kind: PortalConnector
     description: >-
       Each connector a portal configures: every record mapped, fixtures for
-      tests, freshness declared and refresh by id (docs/design/scorecards-for-
-      scorecards.md §5).
+      tests, freshness declared and refresh by id
+      (docs/design/scorecards-for-scorecards.md §5).
     owner: group:maintainers
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze} # a new connector needs fixtures and a mapping for every record

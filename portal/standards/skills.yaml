@@ -54,8 +54,8 @@ scorecards:
     kind: Skill
     description: >-
       Each agent skill we ship: loadable, followable, honest about its limits
-      and free of hidden instructions or credentials (D72, docs/design/skill-
-      standards.md).
+      and free of hidden instructions or credentials (D72,
+      docs/design/skill-standards.md).
     owner: group:maintainers
     track: maintainer
     levels: [bronze, silver, gold]

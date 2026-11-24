@@ -30,8 +30,8 @@ scorecards:
     kind: Example
     description: >-
       Each example and experiment write-up agents copy: links that resolve,
-      the check it names, and no credentials (D78, docs/design/example-
-      standards.md).
+      the check it names, and no credentials (D78,
+      docs/design/example-standards.md).
     owner: group:maintainers
     levels: [bronze, silver, gold]
     ratchet: {newEntitiesAtLeast: bronze}
