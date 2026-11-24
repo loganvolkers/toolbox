@@ -29,26 +29,26 @@ The tasks were written before the first capture and kept for every audit:
 
 ## Scores
 
-| Id | Baseline | Round 1 | Round 2 | Round 3 | Round 4 | Round 5 | Round 6 | Round 7 | Round 8 | Round 9 | Round 10 | Round 11 | Round 12 | Round 13 | Round 14 | Round 15 | Round 16 | Round 17 | Round 18 | Round 19 | Round 20 | Round 21 | Round 22 | Round 23 | Round 24 | Round 25 |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| U1 Answer first | 3 | 4 | 4 | 4 | 3 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 3 | 4 | 4 |
-| U2 Reader's language | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
-| U3 Recognition over recall | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 3 | 4 | 3 | 3 | 3 | 4 | 3 | 3 | 3 |
-| U4 Hierarchy and scent | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 3 | 3 | 4 | 3 | 3 | 3 | 3 |
-| U5 Data integrity | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 3 | 3 | 4 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
-| U6 Consistency | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 3 | 3 | 3 | 4 | 4 | 3 | 3 | 3 | 3 |
-| U7 Wayfinding and control | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 4 | 4 | 3 | 4 | 4 | 3 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 3 | 3 | 4 |
-| U8 Honest states | 1 | 3 | 2 | 3 | 3 | 3 | 3 | 4 | 3 | 2 | 3 | 3 | 4 | 4 | 4 | 3 | 3 | 4 | 4 | 3 | 3 | 4 | 4 | 3 | 4 | 4 |
-| U9 Accessibility | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 3 | 4 | 4 | 3 | 4 | 3 |
-| U10 Density and responsiveness | 2 | 3 | 3 | 3 | 4 | 3 | 3 | 3 | 3 | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 3 | 4 | 4 | 4 | 3 | 3 | 3 | 3 | 4 |
-| **Usability total** | **23** | **31** | **30** | **31** | **31** | **31** | **31** | **33** | **32** | **30** | **31** | **32** | **33** | **34** | **35** | **33** | **37** | **34** | **37** | **34** | **34** | **36** | **35** | **30** | **33** | **34** |
-| J1 Visceral | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
-| J2 Behavioral | 2 | 2 | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 3 | 3 | 3 | 3 | 4 | 3 | 3 | 3 | 3 | 3 | 3 |
-| J3 Reflective | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 3 | 3 | 4 | 4 | 4 | 4 | 3 | 3 | 3 | 3 | 3 | 3 |
-| J4 Voice | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
-| **Joy total** | **10** | **11** | **11** | **12** | **12** | **12** | **12** | **12** | **12** | **12** | **12** | **12** | **12** | **13** | **13** | **12** | **13** | **13** | **14** | **14** | **12** | **12** | **12** | **12** | **12** | **12** |
-| Tasks succeeded | 1 of 6 (4 partial, 1 fail) | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 |
-| Serious axe-core nodes | 0 | 0 | 0 | 0 (5 in the capture, from an entry fade; see round 3) | 0 | 0 | 0 | 0 (WCAG 2.2 `target-size` found by the auditor; see round 7) | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included |
+| Id | Baseline | Round 1 | Round 2 | Round 3 | Round 4 | Round 5 | Round 6 | Round 7 | Round 8 | Round 9 | Round 10 | Round 11 | Round 12 | Round 13 | Round 14 | Round 15 | Round 16 | Round 17 | Round 18 | Round 19 | Round 20 | Round 21 | Round 22 | Round 23 | Round 24 | Round 25 | Round 26 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| U1 Answer first | 3 | 4 | 4 | 4 | 3 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 3 | 4 | 4 | 4 |
+| U2 Reader's language | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| U3 Recognition over recall | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 3 | 4 | 3 | 3 | 3 | 4 | 3 | 3 | 3 | 3 |
+| U4 Hierarchy and scent | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 3 | 3 | 4 | 3 | 3 | 3 | 3 | 3 |
+| U5 Data integrity | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 3 | 3 | 4 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| U6 Consistency | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 3 | 3 | 3 | 4 | 4 | 3 | 3 | 3 | 3 | 3 |
+| U7 Wayfinding and control | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 4 | 4 | 3 | 4 | 4 | 3 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 3 | 3 | 4 | 4 |
+| U8 Honest states | 1 | 3 | 2 | 3 | 3 | 3 | 3 | 4 | 3 | 2 | 3 | 3 | 4 | 4 | 4 | 3 | 3 | 4 | 4 | 3 | 3 | 4 | 4 | 3 | 4 | 4 | 4 |
+| U9 Accessibility | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 3 | 4 | 4 | 3 | 4 | 3 | 4 |
+| U10 Density and responsiveness | 2 | 3 | 3 | 3 | 4 | 3 | 3 | 3 | 3 | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 3 | 4 | 4 | 4 | 3 | 3 | 3 | 3 | 4 | 3 |
+| **Usability total** | **23** | **31** | **30** | **31** | **31** | **31** | **31** | **33** | **32** | **30** | **31** | **32** | **33** | **34** | **35** | **33** | **37** | **34** | **37** | **34** | **34** | **36** | **35** | **30** | **33** | **34** | **34** |
+| J1 Visceral | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| J2 Behavioral | 2 | 2 | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 3 | 3 | 3 | 3 | 4 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| J3 Reflective | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 3 | 3 | 4 | 4 | 4 | 4 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| J4 Voice | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| **Joy total** | **10** | **11** | **11** | **12** | **12** | **12** | **12** | **12** | **12** | **12** | **12** | **12** | **12** | **13** | **13** | **12** | **13** | **13** | **14** | **14** | **12** | **12** | **12** | **12** | **12** | **12** | **12** |
+| Tasks succeeded | 1 of 6 (4 partial, 1 fail) | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 | 6 of 6 |
+| Serious axe-core nodes | 0 | 0 | 0 | 0 (5 in the capture, from an entry fade; see round 3) | 0 | 0 | 0 | 0 (WCAG 2.2 `target-size` found by the auditor; see round 7) | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included | 0, WCAG 2.2 included |
 
 ## Round 1: the baseline's findings
 
@@ -612,6 +612,25 @@ rule allows no fall, so the loop goes round again. The fall traces to F2: the gl
 
 F4 (change over time) needs a second snapshot in the report and is under *Findings still open*. F5
 (low rings grey) is the ring ramp already listed there. F6 to F9 and F11 are severity 1.
+
+## Round 26: one fall, U10, from page length
+
+Every task succeeded, Q1 to Q5 were yes, there was no severity-3 finding and axe found no serious
+node. U9 came back to 4, but U10 fell from 4 to 3: the Scorecards index ran to 3,300 px of rows of
+equal weight, and Compare to 3,599 px. The stop rule allows no fall, so the loop goes round again.
+
+| Finding | Fix |
+|---|---|
+| F7 (U4, U10, J1). The Scorecards index lists every scorecard at the same weight | Each track's group shows its weakest four and a count per level ("5 at none · 3 at bronze · 2 at silver"); "Show the other 6 scorecards in …" opens the rest in place |
+| F1 (U5, U2). "Weakest, and the next medal" named the scorecard nearest a medal, not the weakest | Scorecards at the same level now sort by their share at the top level, so the weakest leads every list and card |
+| F2 (U6, U8). "Provisional" also meant "not assessed" on the entity header | The header reads "Bronze (may not hold)" when only an assessment is missing; "provisional" means checks not run |
+| F3 (U5). The track ring read like a share of entities | "average share at the top level; each of 4 scorecards counts once" |
+| F4 (U2, J4). A why-line cited a file, and a fix was a bare command | "A layer can score well stage by stage while a whole stage is missing …"; "Have an agent review the crate's current sources: …" |
+| F5 (U3, U6). The medal row showed `1 "ten"` without "✓ top" | `1 "ten" ✓ top`, as on the track page |
+| F6 (Q5). The adjudicator was not described | "The adjudicator was a fresh coding agent outside the benchmark: it designed none of it and decides no rule, so every rule stays measured" |
+| F8, F9, F10, F11 (severity 1) | Compare's behind rows carry the Measured badge and their values sit beside the name; the parity toggle is underlined; the Failing filter's count says "failing a rule"; the sidebar glyph stays with the last word |
+
+F12 (change over time) needs a second snapshot in the report and stays under *Findings still open*.
 
 ## Findings still open
 
