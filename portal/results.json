@@ -4104,6 +4104,9 @@
       "dependency:cargo:jsonwebtoken": {
         "level": "gold"
       },
+      "dependency:cargo:landlock": {
+        "level": "gold"
+      },
       "dependency:cargo:mimalloc": {
         "level": "gold"
       },
