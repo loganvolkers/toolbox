@@ -374,6 +374,12 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 - A campaign whose scorecards rate different kinds has no shared scope, so it is measured per
   scorecard: "0 of 2 scorecards at target", a bar and a count to lift for each, and it counts as
   behind or on target like any other campaign.
+- A standard that caps the repository is at its top level only because its ladder stops short, so a
+  track ring leaves it out of the average ("across 5 of its 6 scorecards, leaving out the one that
+  caps the repository") and its bar is drawn amber. The cap is marked with a lock, never ▲, which
+  means "ahead" on Compare.
+- A provisional level names the level each unrun check is needed for ("both needed for bronze"), and
+  a kind card whose description says why part of it is not scored shows that sentence.
 
 Not built: a change since the last snapshot beside each track ring. The report carries one snapshot
 and the committed baseline, which equals it on every published build; a pages build that also scored
