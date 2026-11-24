@@ -1,8 +1,10 @@
 # Hosted report UX
 
-*Status: decided 2026-11-21 (D01M7XY1QYKW2D0HMSG50R0XTQH). Amends the static page in
-[repo-portals.md](./repo-portals.md) §4. The agent skill is
-[`report-ux`](../../plugins/toolbox-operator/skills/report-ux/SKILL.md).*
+*Status: decided 2026-11-21 (D01M7XY1QYKW2D0HMSG50R0XTQH); redesigned after a blind design audit
+on 2026-11-24 (D01M85MK7FCRXH2TRMRKXTNA5GT, [audit](../audits/toolbox-report-2026-11-24.md)).
+Amends the static page in [repo-portals.md](./repo-portals.md) §4. The agent skill is
+[`report-ux`](../../plugins/toolbox-operator/skills/report-ux/SKILL.md); changes are judged with
+[`design-audit`](./design-audit.md).*
 
 ---
 
@@ -15,10 +17,10 @@ not a quality judgement.
 
 | Mode | Job | Primary content |
 |---|---|---|
-| **Overview** (default) | Fleet health verdict | One-sentence judgement; campaigns below target + scorecards with `none`; ranked campaigns and scorecards; catalog browse is a link, not a kind wall |
+| **Overview** (default) | Fleet health verdict | The repository level as a medal, a one-sentence verdict, the next level and the ladder of repository standards that hold it; tiles for checks passing, gold entities, scorecards at `none` and campaigns on target; campaign cards with progress rings; scorecards that need attention, with the clear ones collapsed; catalog kinds as chips |
 | **Catalog** | What exists | Scored kinds first → entity ids (short name primary) → that entity's scores across every scorecard |
 | **Campaigns** | Time-bound focus | Lowest progress first; progress vs target; milestones; entities not meeting includes ([campaigns.md](./campaigns.md), D01M7Y11G0YZT23W26Z9D3XW68Y) |
-| **Scorecards** | Standards debt and proof | Ranked debt list (not equal pills); defaults to highest `none`; level and outcome filters; every rule outcome on expand |
+| **Scorecards** | Standards debt and proof | Ranked debt list (not equal pills); defaults to highest `none`; what each level needs; most common failures; level and outcome filters; every rule outcome on expand |
 
 ## 2. Why the previous page failed the VP test
 
@@ -56,7 +58,8 @@ element or `report_json` must follow it. `maintainer-skill` scores the file like
 ```json
 "catalog": { "Crate": ["crate:toolbox-cli", "..."], "Skill": ["..."] },
 "tracks": { "maintainer": { "title": "…", "owner": "…" } },
-"campaigns": { "skill-silver": { "status": "active", "percent": 88, "includes": [], "entities": {} } }
+"campaigns": { "skill-silver": { "status": "active", "percent": 88, "includes": [], "entities": {} } },
+"scorecards": { "maintainer-skill": { "title": "Agent skills", "description": "…", "levels": [], "rules": {} } }
 ```
 
 Ids are sorted. Full entity fields stay out of the static page (size and facet caveats in
@@ -68,17 +71,28 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
 - Default hash is Overview (`#` / `#overview`).
 - Deep links: `#catalog`, `#catalog/<Kind>`, `#entity/<id>`, `#campaign/<name>`, `#scorecard/<name>`.
 - Mode chrome uses `role="tab"` / `aria-selected` with arrow-key movement.
-- Fleet tables are keyboard-activatable (`tabindex=0`, Enter/Space).
+- Every row is one link or one `<summary>`, never a clickable row that contains a link (axe
+  `nested-interactive`).
+- Unknown scorecards, campaigns, kinds and entity ids show a Not found state with a way back.
 - Scorecards mode opens the highest-`none` card; Campaigns opens lowest progress; Catalog prefers scored kinds.
 - Scorecard picker is a ranked debt list, not an equal-weight pill wall.
 - Scorecard entity rows sort worst-first (`none` → bronze → … → gold).
 - Outcome filter defaults to **all**; "Failing" is one click for a work list; empty filters offer Clear.
 - Entity ids show a short label first; the full id stays muted beside it.
 - Passing rules render as a compact pass line; failing rules keep fix + evidence.
-- Level labels include a text `level:` prefix so severity is not color-only.
+- Levels are one badge component everywhere: a dot, the level's name and `aria-label="level …"`,
+  so a level is never colour-only. Each level has a fill colour and a darker ink colour for text
+  that passes WCAG AA. Custom level names borrow the colour of the standard level at the same
+  height from the top.
+- Scorecards and campaigns show their human `title`; the code name stays as muted monospace.
+- Skipped entities take no length in a distribution bar; the legend counts them as "not in scope".
+- A campaign with nothing in scope says that it cannot be measured, instead of showing 0%.
+- Motion (bars growing, rings filling) respects `prefers-reduced-motion`.
 
 ## Sources
 
+- [design-audit.md](./design-audit.md) and its rubric; the baseline and re-audit in
+  [toolbox-report-2026-11-24.md](../audits/toolbox-report-2026-11-24.md).
 - OpsLevel Maturity Report docs; Cortex Bird's eye and All Scorecards docs; Port scorecards guide;
   OpenSSF Scorecard viewer (`scorecard.dev/viewer`); Bach et al., *Dashboard Design Patterns*
   (arXiv:2205.00757); [repo-portals.md](./repo-portals.md); [minimal-ui.md](./minimal-ui.md).
