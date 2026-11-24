@@ -89,7 +89,7 @@ fn runs_dir(portal: &str) -> std::path::PathBuf {
 }
 
 /// `<state dir>/served/<portal>`: what a server keeps on this host for one portal.
-fn served_dir(portal: &str) -> std::path::PathBuf {
+pub fn served_dir(portal: &str) -> std::path::PathBuf {
     let base = toolbox_model::federation::state_dir();
     let name: String = portal
         .chars()
@@ -234,13 +234,13 @@ fn cwd() -> std::path::PathBuf {
 /// for a portal that federates children, one this host generates once and keeps in
 /// `<state dir>/served/<portal>/signing-key`. Servers that share runs need the variable: a kept
 /// seed is one host's, and children pin one key.
-fn signing_seed(s: &AppState) -> Option<String> {
-    let fed = s.manifest.federation.as_ref()?;
+fn signing_seed(m: &toolbox_model::Manifest) -> Option<String> {
+    let fed = m.federation.as_ref()?;
     if let Some(var) = &fed.signing_key {
         return std::env::var(var).ok().filter(|v| !v.trim().is_empty());
     }
     fed.portals.as_ref()?;
-    kept_seed(&served_dir(&s.manifest.portal.name).join("signing-key"))
+    kept_seed(&served_dir(&m.portal.name).join("signing-key"))
         .map_err(|e| tracing::error!(error = %e, "cannot keep an approval signing key"))
         .ok()
 }
@@ -272,7 +272,12 @@ fn kept_seed(file: &std::path::Path) -> Result<String, String> {
 
 /// `ed25519:<hex>`: the key children pin to accept this portal's approvals.
 pub fn approval_key(s: &AppState) -> Option<String> {
-    toolbox_exec::grant::public_key(&signing_seed(s)?).ok()
+    approval_key_for(&s.manifest)
+}
+
+/// [`approval_key`] for a portal that is not served by this process (`toolbox serve --detach`).
+pub fn approval_key_for(m: &toolbox_model::Manifest) -> Option<String> {
+    toolbox_exec::grant::public_key(&signing_seed(m)?).ok()
 }
 
 /// A portal with git children (`federation.children`) re-reads their branches before it says
@@ -898,7 +903,7 @@ async fn start_approved(
         s.runs.save(&run);
         return Json(run_doc(&run)).into_response();
     }
-    let grant = match signing_seed(s).map(|seed| p.grant(&run, &seed)) {
+    let grant = match signing_seed(&s.manifest).map(|seed| p.grant(&run, &seed)) {
         Some(Ok(g)) => g,
         Some(Err(e)) => {
             run.fail(format!(

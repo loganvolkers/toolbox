@@ -35,7 +35,7 @@ async-trait.workspace = true
 tokio.workspace = true
 reqwest.workspace = true
 
-[target.'cfg(target_os = "linux")'.dependencies]
+[target.'cfg(unix)'.dependencies]
 rustix = { version = "1.1", default-features = false, features = ["process", "std"] }
 
 [lints]

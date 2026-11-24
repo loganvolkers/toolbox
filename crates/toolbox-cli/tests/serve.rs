@@ -74,3 +74,48 @@ fn a_same_user_process_cannot_read_the_server_environment() {
         "resident memory stays observable"
     );
 }
+
+#[test]
+fn a_detached_server_answers_once_started_and_is_gone_once_stopped() {
+    let portal = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/repo-portal-starter");
+    let state = std::env::temp_dir().join(format!("toolbox-detach-{}", std::process::id()));
+    let addr = format!("127.0.0.1:{}", free_port());
+    let toolbox = |args: &[&str]| {
+        Command::new(env!("CARGO_BIN_EXE_toolbox"))
+            .arg("serve")
+            .arg(&portal)
+            .args(args)
+            .env("TOOLBOX_STATE_DIR", &state)
+            .env("TOOLBOX_OPENFGA_BIN", "/nonexistent")
+            .env("TOOLBOX_CONNECTORS", "off")
+            .output()
+            .unwrap()
+    };
+    let started = toolbox(&["--listen", &addr, "--detach"]);
+    let out = String::from_utf8_lossy(&started.stdout);
+    assert!(
+        started.status.success(),
+        "{out}{}",
+        String::from_utf8_lossy(&started.stderr)
+    );
+    assert!(out.contains(&format!("http://{addr}")), "{out}");
+    assert!(ready(&addr), "it returns only once the server answers");
+    let again = toolbox(&["--listen", &addr, "--detach"]);
+    assert_eq!(
+        again.status.code(),
+        Some(2),
+        "one server per portal and host"
+    );
+    let stopped = toolbox(&["--stop"]);
+    assert!(
+        stopped.status.success(),
+        "{}",
+        String::from_utf8_lossy(&stopped.stderr)
+    );
+    assert!(!ready(&addr), "--stop waits for the server to exit");
+    assert!(
+        toolbox(&["--stop"]).status.success(),
+        "stopping twice is not an error"
+    );
+    let _ = std::fs::remove_dir_all(&state);
+}

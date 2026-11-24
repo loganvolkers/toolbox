@@ -3,6 +3,8 @@
 mod assess;
 mod causes;
 mod client;
+#[cfg(unix)]
+mod detach;
 mod find;
 mod install;
 mod meta;
@@ -84,24 +86,9 @@ enum Command {
     /// `served/<portal>/signing-key`; the key children pin is printed at start and by `toolbox run
     /// --url <server>`.
     ///
-    /// Stop it with Ctrl-C or SIGTERM; run it in the background with your shell (`nohup … &`) or a
-    /// process manager.
-    Serve {
-        /// A portal directory (containing toolbox.yaml) or a manifest file.
-        #[arg(default_value = ".")]
-        path: PathBuf,
-        /// Address to listen on. `TOOLBOX_LISTEN` and `--listen` win. Otherwise, when
-        /// `PORT` is set, the server binds `0.0.0.0:$PORT` (the Cloud Run contract).
-        /// With neither, it binds `127.0.0.1:8080`.
-        #[arg(long, env = "TOOLBOX_LISTEN")]
-        listen: Option<String>,
-        /// Postgres URL; without it the store is in memory and lost on exit.
-        #[arg(long, env = "DATABASE_URL")]
-        database_url: Option<String>,
-        /// In-memory mode only: load the portal's fixtures at start.
-        #[arg(long)]
-        fixtures: bool,
-    },
+    /// Stop it with Ctrl-C or SIGTERM. `--detach` runs it in the background instead: it returns once
+    /// the server answers, printing its URL, pid, log and approval key, and `--stop` stops it.
+    Serve(Box<ServeArgs>),
     /// Score a repository locally: run the portal's in-image connectors once (or use its fixtures),
     /// recompute, and print every scorecard with the evidence for failing rules. With --baseline,
     /// compare against a committed results file (a ratchet): regressions exit 1, --update records
@@ -669,14 +656,44 @@ fn campaign_command(
     )
 }
 
-fn serve_command(
-    path: &std::path::Path,
-    listen: Option<&str>,
+fn serve_command(o: ServeArgs) -> ExitCode {
+    let listen = server::listen_addr(o.listen.as_deref(), std::env::var("PORT").ok().as_deref());
+    #[cfg(unix)]
+    if o.stop {
+        return detach::stop(&o.path);
+    } else if o.detach {
+        return detach::start(&o.path, &listen, o.database_url, o.fixtures);
+    }
+    #[cfg(not(unix))]
+    if o.stop || o.detach {
+        return fail("--detach and --stop need a Unix host; use a service manager");
+    }
+    server::serve(&o.path, &listen, o.database_url, o.fixtures)
+}
+
+#[derive(clap::Args)]
+struct ServeArgs {
+    /// A portal directory (containing toolbox.yaml) or a manifest file.
+    #[arg(default_value = ".")]
+    path: PathBuf,
+    /// Address to listen on. `TOOLBOX_LISTEN` and `--listen` win. Otherwise, when
+    /// `PORT` is set, the server binds `0.0.0.0:$PORT` (the Cloud Run contract).
+    /// With neither, it binds `127.0.0.1:8080`.
+    #[arg(long, env = "TOOLBOX_LISTEN")]
+    listen: Option<String>,
+    /// Postgres URL; without it the store is in memory and lost on exit.
+    #[arg(long, env = "DATABASE_URL")]
     database_url: Option<String>,
+    /// In-memory mode only: load the portal's fixtures at start.
+    #[arg(long)]
     fixtures: bool,
-) -> ExitCode {
-    let listen = server::listen_addr(listen, std::env::var("PORT").ok().as_deref());
-    server::serve(path, &listen, database_url, fixtures)
+    /// Start in the background and return once it answers. The pid and log are kept in
+    /// `served/<portal>/` under the state directory, so it survives the shell that started it.
+    #[arg(long, conflicts_with = "stop")]
+    detach: bool,
+    /// Stop the server `--detach` started for this portal, and wait for it to exit.
+    #[arg(long)]
+    stop: bool,
 }
 
 fn main() -> ExitCode {
@@ -706,12 +723,7 @@ fn main() -> ExitCode {
         Command::Doctor { path, mise } => install::doctor(&path, mise),
         Command::Tools { command } => tools_command(command),
         Command::Vendor { spec, portal } => install::vendor(&spec, &portal),
-        Command::Serve {
-            path,
-            listen,
-            database_url,
-            fixtures,
-        } => serve_command(&path, listen.as_deref(), database_url, fixtures),
+        Command::Serve(o) => serve_command(*o),
         Command::Push { path, url } => server::push(&path, &url),
         Command::Campaign {
             name,
