@@ -43,6 +43,7 @@ kinds:
 
 scorecards:
   - name: repo-hygiene
+    title: Repository basics
     kind: Repository
     track: docs
     description: >-
@@ -130,6 +131,7 @@ scorecards:
     facets: {summary: public, details: public}
 
   - name: docs
+    title: Docs with working links
     kind: Doc
     track: docs
     description: >-
