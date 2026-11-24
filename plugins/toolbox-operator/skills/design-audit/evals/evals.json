@@ -11,6 +11,10 @@
     {
       "prompt": "Make the portal page more fun: add confetti and animated gradients everywhere.",
       "expected": "Treats joy as Kano delighters tied to a task (progress, achievement), keeps every usability score and contrast intact, and declines decoration that hides data or slows a primary task."
+    },
+    {
+      "prompt": "The last auditor scored U9 one point lower than the round before. Keep iterating on the report until nothing falls.",
+      "expected": "Does not treat one auditor's one-point move as a verdict: runs the story probes, then a blind panel of three auditors over both reference portals, compares the panel median on the targeted dimensions, and stops when two passing rounds raise no targeted median or every target is at 4."
     }
   ]
 }
