@@ -175,6 +175,17 @@ mod tests {
     }
 
     #[test]
+    fn undeclared_functions_are_reported() {
+        assert_eq!(
+            check(
+                "entity.xs.join(',') == 'a' && size(entity.xs) > 0",
+                Site::Scorecard
+            ),
+            Err(CelIssue::UndeclaredFunctions(vec!["join".into()]))
+        );
+    }
+
+    #[test]
     fn syntax_errors_are_reported() {
         assert!(matches!(
             check("entity.(", Site::Scorecard),
