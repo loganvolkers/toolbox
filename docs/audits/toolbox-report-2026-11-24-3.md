@@ -64,6 +64,35 @@ forced. That is what the second reference portal was for.
 
 ROUND_2
 
+## Comparisons are generic
+
+The OpenFGA portal compares OpenFGA v1.23.0 with SpiceDB v1.57.1 through the same comparative
+scorecards ([D01M857ZB468ZM2YS6GNSEG6YB9](../decisions/D01M857ZB468ZM2YS6GNSEG6YB9.md)) that Toolbox
+for Toolbox uses against Backstage. Six factors and thirty rules, with every bar set before the run,
+went in as portal configuration:
+
+| What it took | Where | Box or portal |
+|---|---|---|
+| Six factor scorecards, their rules, bars, "why" and "what would close it" lines | `examples/openfga-portal/standards/vs-spicedb.yaml` | Portal |
+| A track that groups them, with the method and links | `examples/openfga-portal/toolbox.yaml` | Portal |
+| Two product records, written by the harness | `examples/openfga-portal/comparisons/{openfga,spicedb}.yaml` | Portal (from `experiments/openfga-spicedb-compare`) |
+| A state for a comparison whose records have not landed: "not measured yet", and every section agreeing with it | `report-ui/src/views/compare.js` | Box |
+| Product names when a record is missing, instead of `product:openfga` | `report-ui/src/views/compare.js` | Box |
+
+No Rust changed for it: the comparison engine, the facts, the verdict rule and the rendering are the
+ones Toolbox for Toolbox already had. The one gap was a state Toolbox's own portal never reaches, a
+comparison defined before it is measured. The second portal found it, the first panel scored it
+severity 4, and the box now handles it for any portal. The same pages then rendered the measured
+comparison without change: the factor cards, the rules OpenFGA is behind on with what would close
+each, the largest leads, and how it was measured. The measured result and its adjudication are in
+[RESULTS.md](../../experiments/openfga-spicedb-compare/RESULTS.md) and
+[ADJUDICATION.md](../../experiments/openfga-spicedb-compare/ADJUDICATION.md).
+
+The report's verdict rule is stricter than the experiment's pre-registered tally. A product is
+behind on a factor if it is behind on any rule, so the headline reads "ahead on 2 of 6 factors"
+where the tally gives four ahead, one at parity and one behind. The page states the rule beside every
+factor, and all thirty rule standings agree with the harness.
+
 ## Sources
 
 - Rubric and stop rule: [design-audit SKILL.md](../../plugins/toolbox-operator/skills/design-audit/SKILL.md), [design-audit.md](../design/design-audit.md).
