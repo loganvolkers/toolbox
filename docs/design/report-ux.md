@@ -279,8 +279,13 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
   passes on an entity no agent has assessed is counted apart ("346 more pass only because no agent
   has assessed them yet"), beside the checks not run.
 - A row in the scorecard index carries its standard's why: the first sentence of its rationale
-  ("Why: …"), on one line, in full on hover; the description stands in only where there is no
-  rationale.
+  ("Why: …"), clamped to two lines, in full on hover and on the scorecard's page; the description
+  stands in only where there is no rationale.
+- Entities at a level that is their scorecard's top level are never debt: the scorecard sidebar
+  ranks and labels a card by its entities at none, then at bronze below the top, and a card whose
+  every entity is at the top reads "✓ top level".
+- A count of scorecards says "scorecards" wherever it appears; "standards" is kept for the ones
+  that set the repository level.
 - An external link's ↗ belongs to its text and wraps with the last word.
 - Every scorecard in a list carries its basis: the Agent-judged badge when an agent's judgement
   decides some rules, else the Measured badge. The scorecard sidebar shows the same as an icon,
