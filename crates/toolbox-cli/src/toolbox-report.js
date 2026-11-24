@@ -83,7 +83,8 @@
     ".rows{display:flex;flex-direction:column}",
     "a.row{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(0,2.4fr) 90px;gap:16px;align-items:center;padding:11px 10px;border-top:1px solid var(--line);color:var(--fg);text-decoration:none;border-radius:8px}",
     "a.row:hover{background:var(--tint)}",
-    ".row .t{font-weight:600;line-height:1.3}",
+    ".keyd>summary{display:inline-flex;align-items:center;gap:6px;min-height:24px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;list-style:none}.keyd>summary::-webkit-details-marker{display:none}.keyd>summary::before{content:'\\25B8';transition:transform .15s}.keyd[open]>summary::before{transform:rotate(90deg)}.keyd>summary:hover{color:var(--fg)}",
+    ".row .t{font-weight:600;line-height:1.3}a.row{row-gap:2px}.row .rp{grid-column:1/3;font-size:12.5px;line-height:1.4;color:var(--muted)}.row .rp.in{padding-left:40px}",
     ".row .c{display:block;font:12px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);margin-top:2px;overflow-wrap:anywhere}",
     ".row .num{text-align:right;font-variant-numeric:tabular-nums}",
     ".row .num strong{display:block;font-size:18px;line-height:1.1}",
@@ -198,8 +199,8 @@
     ".pillwrap .unassessed-tag.quiet{display:none}",
     ".crumb{font-size:13px;color:var(--muted);margin-bottom:12px}",
     ".sc-group{margin-top:20px}.sc-group h3{margin:0 0 4px}.sc-group h3 .sub{font-weight:400;text-transform:none;letter-spacing:0}.sc-index input[type=search]{max-width:420px}",
-    ".sc-rows{border-top:1px solid var(--line)}.sc-row{display:grid;grid-template-columns:26px minmax(0,1.25fr) minmax(0,1.6fr) 104px;gap:12px;align-items:center;padding:7px 8px;border-bottom:1px solid var(--line);color:var(--fg);text-decoration:none}.sc-row:hover{background:var(--tint)}.sc-row .sc-name{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;min-width:0}.sc-row .sc-name .t{font-weight:600}.sc-row .sc-name .c{font-size:11.5px;color:var(--muted)}.sc-row .sc-name .p{flex-basis:100%;min-width:0;font-size:12px;line-height:1.4;color:var(--muted)}.sc-row .sc-dist small{display:block;font-size:12px;color:var(--muted);margin-top:3px}.sc-head{display:grid;grid-template-columns:26px minmax(0,1.25fr) minmax(0,1.6fr) 104px;gap:12px;padding:4px 8px;font-size:11.5px;color:var(--muted);border-bottom:1px solid var(--line)}.sc-head span:last-child{text-align:right}.sc-row .sc-weak{display:flex;flex-direction:column;align-items:flex-end;gap:1px}.sc-row .sc-weak small{font-size:12px}.sc-row .sc-weak .bad{color:var(--fail);font-weight:600}.sc-row .sc-weak .topmark{color:var(--pass);font-weight:600}",
-    "@media (max-width:640px){.sc-head{display:none}.sc-row .sc-name code.c{display:none}.sc-row{grid-template-columns:26px minmax(0,1fr) auto;row-gap:4px}.sc-row .sc-weak{grid-column:3;grid-row:1}.sc-row .sc-dist{grid-column:2/4;grid-row:2}.sc-row>svg{grid-row:1}}",
+    ".sc-rows{border-top:1px solid var(--line)}.sc-row{display:grid;grid-template-columns:26px minmax(0,1.25fr) minmax(0,1.6fr) 104px;gap:12px;align-items:center;padding:7px 8px;border-bottom:1px solid var(--line);color:var(--fg);text-decoration:none}.sc-row:hover{background:var(--tint)}.sc-row .sc-name{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;min-width:0}.sc-row .sc-name .t{font-weight:600}.sc-row .sc-name .c{font-size:11.5px;color:var(--muted)}.sc-row{row-gap:2px}.sc-row>svg{grid-row:1/span 2}.sc-row .sc-why{grid-column:2/-1;grid-row:2;min-width:0;font-size:12px;line-height:1.4;color:var(--muted)}.sc-row .sc-dist small{display:block;font-size:12px;color:var(--muted);margin-top:3px}.sc-head{display:grid;grid-template-columns:26px minmax(0,1.25fr) minmax(0,1.6fr) 104px;gap:12px;padding:4px 8px;font-size:11.5px;color:var(--muted);border-bottom:1px solid var(--line)}.sc-head span:last-child{text-align:right}.sc-row .sc-weak{display:flex;flex-direction:column;align-items:flex-end;gap:1px}.sc-row .sc-weak small{font-size:12px}.sc-row .sc-weak .bad{color:var(--fail);font-weight:600}.sc-row .sc-weak .topmark{color:var(--pass);font-weight:600}",
+    "@media (max-width:640px){.sc-head{display:none}.sc-row .sc-name code.c{display:none}.sc-row{grid-template-columns:26px minmax(0,1fr) auto;row-gap:4px}.sc-row .sc-weak{grid-column:3;grid-row:1}.sc-row .sc-dist{grid-column:2/4;grid-row:2}.sc-row .sc-why{grid-column:2/4;grid-row:3}.sc-row>svg{grid-row:1}}",
     ".crumb a{color:var(--muted);display:inline-block;padding:4px 0;margin:-4px 0}",
     "a.rl{display:inline-flex;align-items:center;min-height:24px;min-width:24px;vertical-align:middle}.refs a{display:inline-flex;align-items:center;min-height:26px}",
     ".passes>span a{display:inline-block;padding:4px 0;margin:-4px 0}",
@@ -345,7 +346,7 @@
     ".elevel strong{display:block;font-size:30px;line-height:1.1;font-weight:750;text-transform:capitalize;letter-spacing:-.01em}",
     ".elevel .sub{display:block}.elevel strong .pv-head{font-size:18px;font-weight:600;text-transform:none;letter-spacing:0;color:var(--unknown)}",
     "@media (max-width:600px){main{padding:18px 12px 56px}.hero .levelword{font-size:34px}",
-    ".modes{gap:0;flex-wrap:wrap}.modes button{padding:10px 8px}.modes .count{min-width:0;margin-left:4px;padding:0 5px;font-size:11px}",
+    ".modes{gap:0}.modes button{padding:10px 8px}.modes .count{min-width:0;margin-left:4px;padding:0 5px;font-size:11px}",
     ".kinds{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}a.kind{padding:9px}.fail-row{grid-template-columns:minmax(0,1fr) 64px}.fail-row .bar{display:none}",
     "a.row,.rows-head{grid-template-columns:minmax(0,1fr) 64px}.row .dist,.rows-head .dist{display:none}",
     ".ladder{grid-template-columns:1fr 1fr}.rung{min-height:0}.rung.vacant{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:6px 10px}.rung.vacant .rh{margin:0}.rung.vacant .empty{padding:0;margin:0}",
@@ -508,6 +509,13 @@
     var first = firstSentence(text);
     var rest = String(text).trim().slice(first.length).trim();
     return el("span", { className: "why" }, ...rich(first), rest ? el("span", { className: "rest" }, " ", ...rich(rest)) : null);
+  }
+
+  function scPurpose(sc) {
+    var strip = function (t) {
+      return firstSentence(t).replace(/\s*\([^)]*\)/g, "");
+    };
+    return sc.rationale ? "Why: " + strip(sc.rationale) : strip(sc.description || "");
   }
 
   function firstSentence(text) {
@@ -944,7 +952,14 @@
   function basisInline(counts, noun) {
     var only = counts && (counts.measured || 0) + (counts.judged || 0) > 0 && !(counts.measured && counts.judged) ? (counts.measured ? "measured" : "judged") : null;
     if (!only) return null;
-    return el("span", { className: "basis-inline" }, " · ", basisBadge(only), " " + (counts[only] === 1 ? "its one " + (noun || "rule") : "all " + plural(counts[only], noun || "rule")));
+    return el(
+      "span",
+      { className: "basis-inline" },
+      " · ",
+      basisBadge(only),
+      " " + (counts[only] === 1 ? "its one " + (noun || "rule") : "all " + plural(counts[only], noun || "rule")),
+      only === "judged" ? ": an agent's assessment is the evidence, so whether one exists and still holds counts too" : null,
+    );
   }
 
   // What the two badges mean, with how many rules (or checks) each covers when counts are given.
@@ -1244,7 +1259,7 @@
         if (!quoted && c.floor && c.floor !== "none" && LADDER.indexOf(c.floor) < 0) quoted = c.floor;
       });
     });
-    return el(
+    var key = el(
       "div",
       { className: "legend trackkey" },
       el("b", { textContent: "Ring, share at the top level:" }),
@@ -1272,6 +1287,7 @@
       el("span", { className: "medal-key" }, el("b", { textContent: "Medal:" }), medal("bronze", 16), "its weakest entity's level ·", medal("none", 16), "none"),
       quoted ? el("span", {}, "A quoted level such as " + levelName(quoted) + " is its scorecard's own name for a level.") : null,
     );
+    return el("details", { className: "keyd", open: !matchMedia("(max-width:640px)").matches }, el("summary", { textContent: "How to read the rings, bars and medals" }), key);
   }
 
   function furthestTrack(D, S) {
@@ -2075,8 +2091,9 @@
           "scorecard",
         ) +
         (Object.keys(D.comparisons || {}).length ? " · " + plural(Object.keys(D.comparisons).length, "comparison factor") : "") +
-        " · read from this repository's portal, snapshot " +
-        D.snapshot;
+        " · snapshot " +
+        D.snapshot +
+        " of this repository's facts";
       // Each history entry keeps its scroll position, so Back returns to the same place in a long list.
       var settle;
       var draw = function () {
@@ -2458,6 +2475,10 @@
     }
 
     scorecardTable(D, rows, floors) {
+      var why = function (r, indent) {
+        var p = scPurpose(r.sc);
+        return p ? el("span", { className: "rp" + (indent ? " in" : ""), textContent: p }) : null;
+      };
       var wrap = el("div", { className: "rows" });
       wrap.append(el("div", { className: "rows-head" }, el("span", { textContent: "Standard" }), el("span", { className: "dist", textContent: "Entities by level" }), el("span", { textContent: "At none" })));
       rows.forEach(function (r) {
@@ -2468,6 +2489,7 @@
               : el("div", {}, ...cardName(D, r.name)),
             el("div", { className: "dist" }, barEl(splitUnassessed(D, r.name, r.parts)), el("div", { className: "sub", style: "font-size:12px;margin-top:4px" }, ...scCaption(D, r, true))),
             el("div", { className: "num" + (r.none ? " bad" : "") }, el("strong", { textContent: String(r.none) }), el("span", { textContent: "at none" })),
+            why(r, floors),
           ]),
         );
       });
@@ -2501,12 +2523,13 @@
       var list = el("div");
       var row = function (r) {
         var floor = floorOf(D, r.name);
-        var purpose = r.sc.rationale ? "Why: " + firstSentence(r.sc.rationale).replace(/\s*\([^)]*\)/g, "") : firstSentence(r.sc.description || "").replace(/\s*\([^)]*\)/g, "");
+        var purpose = scPurpose(r.sc);
         return link("scorecard/" + enc(r.name), "sc-row", [
           medal(floor || "none", 26),
-          el("div", { className: "sc-name" }, ...cardName(D, r.name), purpose ? el("span", { className: "p", title: purpose, textContent: purpose }) : null),
+          el("div", { className: "sc-name" }, ...cardName(D, r.name)),
           el("div", { className: "sc-dist" }, barEl(splitUnassessed(D, r.name, r.parts)), el("small", {}, ...scCaption(D, r))),
           el("div", { className: "sc-weak" }, floor ? floorPill(D, r.name) : el("span", { className: "sub", textContent: "not scored" }), r.none ? el("small", { className: "bad", textContent: fmt(r.none) + " at none" }) : floor && isTop(D, r.name, floor) && !ONLY_LEVEL.has(floor) ? el("small", { className: "topmark", textContent: "✓ top level" }) : null),
+          purpose ? el("span", { className: "sc-why", textContent: purpose }) : null,
         ]);
       };
       var draw = function () {
