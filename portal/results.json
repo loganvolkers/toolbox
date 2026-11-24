@@ -4723,6 +4723,12 @@
       "doc:docs/decisions/D01M857ZB468ZM2YS6GNSEG6YB9.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M85G2YXV2VRTZWQJ33MHXCKN.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M85G2ZXXPQRXWKQF7TWV2RTP.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/D01M85MK7FCRXH2TRMRKXTNA5GT.md": {
         "level": "skipped"
       },
@@ -4955,6 +4961,12 @@
         "level": "silver"
       },
       "doc:docs/glossary.md": {
+        "level": "silver"
+      },
+      "doc:docs/graphify-red-team-response.md": {
+        "level": "silver"
+      },
+      "doc:docs/graphify-red-team.md": {
         "level": "silver"
       },
       "doc:docs/ocean.md": {

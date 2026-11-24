@@ -14,6 +14,14 @@ designer's prediction on every point. Two fresh agents graded the answers blind,
 and one of them applied §5 ([ADJUDICATION.md](ADJUDICATION.md)). No run was void and no run was
 rerun.
 
+*Post hoc (2026-11-24).* The *W* rule detects a two-standard-deviation effect about a quarter of
+the time at five runs per arm. Under an exact rank test, K5 and K6 separate completely on Toolbox:
+every B run made fewer calls and read less than every A run (p = 0.008 each). The labels below
+stand as registered; [graphify-red-team-response.md](../../docs/graphify-red-team-response.md)
+and [D01M85G2ZXXPQRXWKQF7TWV2RTP](../../docs/decisions/D01M85G2ZXXPQRXWKQF7TWV2RTP.md) give the
+reading, and [D01M85G2YXV2VRTZWQJ33MHXCKN](../../docs/decisions/D01M85G2YXV2VRTZWQJ33MHXCKN.md)
+changes the rule for later rounds.
+
 | Id | Measure | Arm A median (range) | Arm B median (range) | *W* | Verdict |
 |---|---|---|---|---|---|
 | K1 | OpenFGA coverage | 0.955 (0.955–0.955) | 0.955 (0.955–0.955) | 0 | Inconclusive |
