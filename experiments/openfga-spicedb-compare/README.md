@@ -119,3 +119,21 @@ above could not meet as written.
 - **Load on the shared VM.** Before each timed round the harness waits until the 1-minute load
   average is below 1.0, polling every 10 s and proceeding after 10 minutes. It records the load
   average at the start and end of each round.
+
+Found by the [adjudication](./ADJUDICATION.md) (§1), and disclosed here after it:
+
+- **Post-run edits to pre-registered files.** `6d83040` changed the performance scorecard's
+  description and the portal's track text from "23k-relationship corpus" to "33k": descriptions
+  only, no bar. After the adjudication, the vs-spicedb scorecards gained `verdict: majority`, which
+  makes the report count factors by the tally above instead of its default
+  (D01M87WF2QZVPTD8CGDZKY133CD). It encodes the pre-registered rule; no bar or rule changed.
+- **Harness edits after the run.** `facts.py` and `load/main.go` were edited, and `load/loadgen`
+  rebuilt, after the run ended (22:11:41) and before `6d83040` committed them. The committed
+  harness is not proven to be the one that ran, though the round and facts files have exactly the
+  fields it writes.
+- **An unpinned tool.** `run.sh` installed govulncheck `@latest`. v1.10.0 ran, as recorded, and
+  `c2f7219` pinned it.
+- **Three list passes.** Each round lists every user's documents three times, which RESULTS.md
+  describes and this README did not.
+- **`sbom` was checked on the archive.** The definition above is "the release publishes an SBOM";
+  facts.py looked only at release assets, so it missed the SPDX SBOM on SpiceDB's release images.

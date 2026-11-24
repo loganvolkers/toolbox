@@ -13,8 +13,18 @@ records are
 
 **Under the pre-registered tally, OpenFGA is ahead on four factors, at parity on one and behind on
 one.** It is behind on performance, where SpiceDB answers checks about ten times faster and
-writes about fifteen times faster on the memory datastore. It leads on footprint, supply chain,
-modelling and ecosystem, and ties on operability.
+writes about fifteen times faster, as both ship, on the memory datastore. That is SpiceDB's
+on-by-default check cache over a repeated sample, against OpenFGA's off-by-default cache over a
+memory adapter its README calls development-only; the adjudication's unregistered probes reverse
+both check rules when the caches match. It leads on footprint, supply chain, modelling and
+ecosystem, and ties on operability.
+
+An independent agent recomputed every number and upheld this verdict in
+[ADJUDICATION.md](./ADJUDICATION.md). It corrects two of SpiceDB's facts in SpiceDB's favour:
+`knownVulns` is 3 in called code, not 7, and `sbom` is true, from the release images. Neither
+changes a verdict: supply chain becomes 3 ahead and 1 at parity, still ahead. The records keep the
+run's values until the harness measures both facts the corrected way; the tables below are the
+run's.
 
 | Factor | OpenFGA ahead | Parity | OpenFGA behind | OpenFGA is |
 |---|---|---|---|---|
@@ -29,7 +39,7 @@ Absolute bars, on 30 rules:
 
 - **OpenFGA fails 4:** `check-latency` (p95 20.07 ms against ≤ 10 ms), `check-throughput` (1,473/s
   against ≥ 2,000/s), `consistency-tokens` and `datastores` (2 against ≥ 3).
-- **SpiceDB fails 8:** `known-vulns` (7), `provenance`, `sbom`, `contextual-tuples`, `multi-tenant`,
+- **SpiceDB fails 8 as recorded, 7 as adjudicated (`sbom` passes):** `known-vulns` (7), `provenance`, `sbom`, `contextual-tuples`, `multi-tenant`,
   `http-by-default`, `contributors` (86 against ≥ 100) and `foundation`.
 - Both pass every performance bar except OpenFGA's two check bars, and every footprint bar.
 
@@ -57,13 +67,13 @@ Per factor:
   against 15, and CNCF governance against vendor ownership. SpiceDB has one more official SDK (6
   against 5).
 
-**The report shows a harsher headline than this tally.** Toolbox's Compare view uses its own verdict
-rule: a factor is behind if OpenFGA is behind on any one of its rules (`toolbox-report.js`). Under
-that rule only footprint and supply chain are ahead, and performance, modelling, operability and
-ecosystem show as behind. The 30 per-rule standings are identical under both rules: `toolbox
-report` on the portal agreed with `snapshot.py` on every rule. The verdict in this document is the
-pre-registered one. The gap between the two rules is a finding about the box, not about either
-product.
+**The report first showed a harsher headline than this tally.** Toolbox's derive step counted a
+factor as behind if OpenFGA was behind on any one of its rules (D01M857ZB468ZM2YS6GNSEG6YB9), so
+only footprint and supply chain were ahead. The 30 per-rule standings are identical under both
+rules: `toolbox report` on the portal agreed with `snapshot.py` on every rule. The gap was a
+finding about the box, not about either product. A comparison now declares its rule
+(D01M87WF2QZVPTD8CGDZKY133CD), and the vs-spicedb scorecards declare the pre-registered majority,
+so the report leads with this verdict.
 
 **Sensitivity.** Counting OpenFGA's SQLite engine, which its README labels beta, gives 3 datastores.
 OpenFGA would then pass the `datastores` bar but stay behind SpiceDB's 4, so no verdict changes.
@@ -217,17 +227,20 @@ versions compiled into each server binary.
   spread in SpiceDB's check p95 (1.86–5.45 ms) likely reflects that. Medians of 5 runs damp it; they
   do not remove it.
 - **Defaults include costs that are not the product's core.** Both servers log requests at info
-  level to the harness's log file. SpiceDB logged every request (about 140 MB per round). OpenFGA
+  level to the harness's log file. SpiceDB logged every request (120–217 MB per round). OpenFGA
   logged a fraction of them (4,188 Check lines for more than 46,000 checks in round 1), which is
-  consistent with log sampling (unverified). SpiceDB's `readyS` includes its startup release check
+  log sampling: OpenFGA's logger uses zap's production config, which samples 100 and then every
+100th (verified by the adjudication). SpiceDB's `readyS` includes its startup release check
   against GitHub, about 60 ms in its logs, and it schedules telemetry to telemetry.authzed.com by
   default. All of these are counted, because the bar is the default install.
 - **`knownVulns` depends on the scan date and the build.** SpiceDB v1.57.1 is ten days older than
   OpenFGA v1.23.0, and it was built with go1.27.3, while GO-2026-6859 is fixed in go1.27.4, which
-  OpenFGA was built with. Binary mode reports vulnerable symbols linked into the binary; it cannot
-  prove a call path the way source mode can.
-- **`provenance` is about the archive.** SpiceDB's container images may carry build attestations;
-  they were not checked, because the arm is the linux_amd64 archive.
+  OpenFGA was built with. Both release binaries are stripped, and on a stripped binary govulncheck's
+  binary mode reports at module precision, not by symbol. Source mode at v1.57.1, run by the
+  adjudication, finds 3 of the 7 in called code.
+- **`provenance` is about the archive.** SpiceDB's container images carry SLSA v1 provenance and an
+  SPDX SBOM, both unsigned. Unsigned provenance does not meet the `provenance` bar; the SBOM meets
+  the `sbom` one (see the adjudication).
 - **Counts depend on definitions.** `datastores` (SQLite beta excluded, MySQL "not recommended"
   included; see *Sensitivity*), `officialSdks` (repositories the org describes as official client
   libraries) and `contributors` (GitHub's contributors API, which counts commit authors on the
@@ -236,11 +249,11 @@ versions compiled into each server binary.
   OpenFGA features, and consistency tokens and the change feed are SpiceDB strengths. Six of the
   nine modelling facts are ties.
 - **The corpus is 33,200 relationships, not 23k.** The counts the README pre-registered give 33,200.
-  The vs-spicedb scorecard's description and the portal's track text say "23k-relationship corpus",
-  an arithmetic slip in those descriptions, which this experiment does not own. The records report
-  `corpus: 33200`.
+  The vs-spicedb scorecard's description and the portal's track text said "23k-relationship
+  corpus", an arithmetic slip that `6d83040` fixed after the run (a disclosed deviation). The
+  records report `corpus: 33200`.
 - **One machine, one corpus, one model shape.** Deeper nesting, larger fan-out or many more users
   could change any timed result.
-- **Adjudication is pending.** The README calls for an agent that did not run the harness to
-  recompute every number from `raw/` and uphold or rescore the verdict in `ADJUDICATION.md`. That
-  has not happened yet.
+- **Adjudicated, with two record corrections open.** [ADJUDICATION.md](./ADJUDICATION.md) upholds
+  the verdict. Its record corrections wait for a harness that runs govulncheck in source mode at
+  the tag and reads the release images' SBOM, then a rerun; records are not edited by hand.
