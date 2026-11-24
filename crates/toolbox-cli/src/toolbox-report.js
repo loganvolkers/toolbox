@@ -1877,7 +1877,7 @@
     ".cmp-hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:center;background:linear-gradient(135deg,color-mix(in srgb,var(--st) 14%,var(--card)) 0%,var(--card) 60%)}",
     ".cmp-hero .big{font-size:28px;line-height:1.2;font-weight:750;letter-spacing:-.01em;margin:4px 0 8px}",
     ".cmp-hero .kicker{font-size:12px;font-weight:650;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}",
-    ".cmp-lead{margin:8px 0 0;font-size:15px}.cmp-lead .lead-x{font-size:inherit;line-height:inherit}",
+    ".cmp-lead{margin:8px 0 0;font-size:15px}.cmp-lead .lead-x{font-size:inherit;line-height:inherit}.gaps .lead-x{color:var(--fail)}.gaps a.lead-tile,.gaps a.lead-tile:hover{border-left-color:var(--fail)}",
     ".nowrap{white-space:nowrap}.parity-fold{margin-top:8px;border-top:1px solid var(--line);padding-top:8px}.parity-fold>summary{cursor:pointer;color:var(--accent);font-size:14px;min-height:24px;display:flex;align-items:center;text-decoration:underline;text-underline-offset:2px}",
     ".method-lede{max-width:80ch;margin:0 0 12px;padding-left:20px;font-size:15px;line-height:1.55}.method-lede li+li{margin-top:4px}",
     ".cmp-side{display:grid;gap:12px;justify-items:center}.h2h{display:grid;gap:2px;width:300px;font-size:12px}.h2h-head,.h2h-row{display:grid;grid-template-columns:110px 1fr 1fr;align-items:center;gap:0}.h2h-head{color:var(--muted);font-weight:650}.h2h-head .behind{text-align:right;padding-right:6px;color:var(--fail)}.h2h-head .ahead{padding-left:6px;color:var(--pass)}.h2h-row{min-height:24px;color:var(--fg);text-decoration:none;border-radius:6px;padding:0 2px}.h2h-row:hover,.h2h-row:focus-visible{background:color-mix(in srgb,var(--accent) 10%,transparent)}.h2h-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:6px}.h2h-l,.h2h-r{display:flex;height:10px}.h2h-l{justify-content:flex-end;border-right:1.5px solid var(--muted)}.h2h-l span{background:var(--fail);border-radius:3px 0 0 3px}.h2h-r span{background:var(--pass);border-radius:0 3px 3px 0}.h2h-foot{color:var(--muted);font-size:12px;text-align:center;margin-top:2px}",
@@ -4776,6 +4776,20 @@
       });
       var unmeasured = counts.unknown >= names.length;
       var majority = byMajority(D, names);
+      var other = { ahead: 0, parity: 0, behind: 0, unknown: 0 };
+      names.forEach(function(n) {
+        var rs = all[n].rules || {};
+        var k = { ahead: 0, parity: 0, behind: 0, unknown: 0 };
+        Object.keys(rs).forEach(function(r) {
+          var v = (rs[r] || {})[peer];
+          k[v in k ? v : "unknown"]++;
+        });
+        var s = majority ? k.behind ? "behind" : k.unknown ? "unknown" : k.ahead ? "ahead" : "parity" : k.unknown ? "unknown" : k.ahead > k.behind ? "ahead" : k.behind > k.ahead ? "behind" : "parity";
+        other[s]++;
+      });
+      var otherDiffers = ["ahead", "parity", "behind"].some(function(s) {
+        return other[s] !== counts[s];
+      });
       var headline = unmeasured ? "Not measured yet: none of the " + plural(names.length, "factor") + " has values for both products." : "Ahead on " + counts.ahead + " of " + plural(names.length, "factor") + (counts.behind ? ", behind on " + counts.behind : "") + (counts.parity ? ", at parity on " + counts.parity : "") + (counts.unknown ? ", " + counts.unknown + " not measured" : "") + (majority ? ", each by the majority of its rules." : ", where a factor is behind if any of its rules is.");
       var lean = counts.behind > counts.ahead ? "behind" : counts.ahead > counts.behind ? "ahead" : "parity";
       var hero = el(
@@ -4807,7 +4821,16 @@
                 return (all[n].rules[r] || {})[peer];
               });
               return rs.indexOf("ahead") >= 0 && rs.indexOf("behind") >= 0;
-            }) ? ", so a factor marked “mixed” is ahead on some of its rules and behind on others" : "") + ". Factors are not weighted, so the factor count is a tally, not an overall score."
+            }) ? ", so a factor marked “mixed” is ahead on some of its rules and behind on others" : "") + ". ",
+            el("b", {
+              className: "other-rule",
+              textContent: "Counted the other way, where " + factorRule(!majority) + (otherDiffers ? ", it would be " + andList(["ahead", "behind", "parity"].filter(function(s) {
+                return other[s] || s === "ahead";
+              }).map(function(s) {
+                return (s === "parity" ? "at parity on " : s + " on ") + other[s];
+              })) + ". " : ", the factor tally is the same. ")
+            }),
+            "Factors are not weighted, so the factor count is a tally, not an overall score."
           ),
           el(
             "details",
@@ -5015,17 +5038,17 @@
       var times = function(l) {
         return l.ratio >= 10 ? Math.round(l.ratio).toLocaleString("en-US") : l.ratio.toFixed(1);
       };
-      var widest = function(label, l) {
-        return el("p", { className: "cmp-lead" }, el("b", { textContent: label }), link("compare/" + enc(l.n), "", [lowerFirst(measureLabel(l.c, l.r)) + ", ", el("span", { className: "lead-x", textContent: times(l) + "× " + cmpWord(l.rd, l.a < l.b) })]), " (" + who(subject) + " " + unitOf(l.rd, l.a) + ", " + who(peer) + " " + unitOf(l.rd, l.b) + ").");
+      var widest = function(label, l, gap) {
+        return el("p", { className: "cmp-lead" + (gap ? " gaps" : "") }, el("b", { textContent: label }), link("compare/" + enc(l.n), "", [lowerFirst(measureLabel(l.c, l.r)) + ", ", el("span", { className: "lead-x", textContent: (gap ? STANDING_MARK.behind + " " : "") + times(l) + "× " + cmpWord(l.rd, l.a < l.b) })]), " (" + who(subject) + " " + unitOf(l.rd, l.a) + ", " + who(peer) + " " + unitOf(l.rd, l.b) + ").");
       };
-      var tiles = function(rows) {
+      var tiles = function(rows, gap) {
         return el(
           "div",
-          { className: "leads" },
+          { className: gap ? "leads gaps" : "leads" },
           ...rows.slice(0, 3).map(function(l) {
             var vs = who(subject) + " " + unitOf(l.rd, l.a) + " vs " + who(peer) + " " + unitOf(l.rd, l.b);
             return link("compare/" + enc(l.n), "lead-tile", [
-              el("span", { className: "lead-x", textContent: times(l) + "×" }),
+              el("span", { className: "lead-x", textContent: (gap ? STANDING_MARK.behind + " " : "") + times(l) + "×" }),
               " ",
               el("span", { className: "lead-dir", textContent: cmpWord(l.rd, l.a < l.b) }),
               el("span", { className: "sr", textContent: ":" }),
@@ -5039,9 +5062,9 @@
         );
       };
       var verdictEl = hero.querySelector(".verdict");
-      if (gapRows[0]) verdictEl.after(widest("Widest gap: ", gapRows[0]));
+      if (gapRows[0]) verdictEl.after(widest("Widest gap: ", gapRows[0], true));
       if (leadRows[0]) verdictEl.after(widest("Widest lead: ", leadRows[0]));
-      if (gapRows.length) behind.querySelector(".head").after(el("p", { className: "sub", style: "margin:0 0 6px", textContent: "Measured values only, largest ratio first; every rule behind is listed below." }), tiles(gapRows));
+      if (gapRows.length) behind.querySelector(".head").after(el("p", { className: "sub", style: "margin:0 0 6px", textContent: "Measured values only, largest ratio first; every rule behind is listed below." }), tiles(gapRows, true));
       var leads = leadRows.length ? el(
         "section",
         {},
