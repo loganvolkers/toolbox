@@ -1,0 +1,17 @@
+{
+ "changed": 3,
+ "items": [
+  {
+   "what": "group acme-w13 access_tokens",
+   "added": "r1-toolbox-2-org-portal-read"
+  },
+  {
+   "what": "group acme-w13 members",
+   "added": "group_146_bot_579eea7ccc800e51ef911ea924b9644c:20"
+  },
+  {
+   "what": "project acme-w13/org protected_branches",
+   "added": "{\"force\": false, \"merge\": [40], \"name\": \"main\", \"push\": [40]}"
+  }
+ ]
+}
