@@ -1,0 +1,30 @@
+apiVersion: toolbox.dev/v1alpha1
+portal: {name: minimal-repo, owner: group:maintainers, toolbox: "0.1"}
+# An org portal may run this portal's actions in its clone (type: local). It records approvals and
+# signs them; they count here only with the key pinned below. Replace it with the key the org
+# portal prints (`toolbox run --url <org server>`), then commit and push.
+federation:
+  runner: {type: local}
+  acceptApprovalsFrom:
+    - portal: org
+      key: ed25519:0000000000000000000000000000000000000000000000000000000000000000
+actions:
+  # kind: Portal is the repository's own portal: no connector or kind to declare.
+  - name: add-code-of-conduct
+    kind: Portal
+    description: Publish a CODE_OF_CONDUCT.md with the team's contact on main.
+    # One of ann or bob, and not the person who requested the run.
+    approval: "[['user:ann', 'user:bob']]"
+    inputs:
+      type: object
+      required: [contact]
+      properties: {contact: {type: string, pattern: '^[^@\s]+@[^@\s]+$'}}
+    # Commits and pushes to main once approved, never forced. The run succeeds only when the
+    # commit is seen on the origin's main; a rejected push fails it.
+    executor:
+      type: change
+      land: push
+      base: main
+      run: >-
+        printf '# Code of conduct\n\nReport conduct issues to %s.\n'
+        "$TOOLBOX_INPUT_CONTACT" > CODE_OF_CONDUCT.md

@@ -204,17 +204,16 @@ echo "   add-security-policy on gamma: awaiting bob (exit 3), approved with --ap
 
 echo "9. an org portal that lists its children by git URL: Toolbox keeps the clones and the key"
 export TOOLBOX_STATE_DIR=$WORK/state-git; unset TOOLBOX_APPROVAL_KEY
-mkdir -p "$WORK/gitorg" && cat >"$WORK/gitorg/toolbox.yaml" <<'YAML'
-apiVersion: toolbox.dev/v1alpha1
-portal: {name: org, owner: group:platform, toolbox: "0.1"}
-federation:
-  children:
-    - {git: ../origin-alpha.git, key: alpha}
-    - {git: ../origin-beta.git, key: beta}
-YAML
+git init -q --bare -b main "$WORK/hosts/mini.git" && git clone -q "$WORK/hosts/mini.git" "$WORK/review/mini" 2>/dev/null
+cp -r "$EX/minimal-repo/.toolbox" "$WORK/review/mini/"
+git -C "$WORK/review/mini" add -A && git -C "$WORK/review/mini" "${G[@]}" commit -qm init && git -C "$WORK/review/mini" push -q -u origin main
+mkdir -p "$WORK/gitorg"
+sed 's#- git: https://github.com/acme/\([a-z]*\)\.git#- {git: ../origin-\1.git, key: \1}#' "$EX/git-org/toolbox.yaml" >"$WORK/gitorg/toolbox.yaml"
+echo "    - git: ../hosts/mini.git" >>"$WORK/gitorg/toolbox.yaml"
+grep -q "origin-gamma.git, key: gamma" "$WORK/gitorg/toolbox.yaml" || fail "git-org: the children were not rewritten"
 "$BIN/toolbox" validate "$WORK/gitorg" | tail -1
 N=$(run "$WORK/gitorg" | field "['actions'].__len__()")
-[ "$N" = 10 ] || fail "the git org should offer 10 actions (2 children x 5), got $N"
+[ "$N" = 16 ] || fail "the git org should offer 16 actions (3 children x 5, and mini's one), got $N"
 OUT=$(run "$WORK/gitorg" add-license --entity portal:beta -i spdx=Apache-2.0 --yes)
 [ "$(echo "$OUT" | field "['state']")" = proposed ] || fail "add-license on a cloned beta: $OUT"
 git --git-dir "$WORK/origin-beta.git" rev-parse -q --verify "$(echo "$OUT" | field "['child']['outputs']['branch']")" >/dev/null \
@@ -234,5 +233,33 @@ OUT=$("${TB2[@]}" --approve "$RID" --as bob --note "alpha is ours" --wait) || fa
 [ "$(echo "$OUT" | field "['state']")" = succeeded ] || fail "approved add-security-policy on alpha: $OUT"
 git --git-dir "$WORK/origin-alpha.git" show main:SECURITY.md | grep -q security@acme.dev || fail "SECURITY.md is not on alpha's main"
 echo "$OUT" | grep -q "alpha is ours" || fail "the approval note was not kept: $OUT"
-echo "   no connector, kind or key declared: 10 actions from 2 git children; a pull request branch on beta's origin; alpha pinned the generated key on its origin, the clone followed, and bob's approval pushed SECURITY.md to alpha's main"
+COC=(add-code-of-conduct --entity portal:mini -i contact=conduct@acme.dev)
+set +e; OUT=$("${TB2[@]}" "${COC[@]}" --as ann --yes 2>&1); CODE=$?; set -e
+[ $CODE = 2 ] && echo "$OUT" | grep -q "acceptApprovalsFrom" && echo "$OUT" | grep -q "$KEY" \
+  || fail "before the pin, a request should be refused with the line to pin ($CODE): $OUT"
+git -C "$WORK/review/mini" pull -q origin main
+sed -i "s/ed25519:0\{64\}/$KEY/" "$WORK/review/mini/.toolbox/toolbox.yaml"
+git -C "$WORK/review/mini" "${G[@]}" commit -qam "accept the org portal's approvals" && git -C "$WORK/review/mini" push -q origin main
+"$BIN/toolbox" run --url "http://$API2" "${COC[@]}" --as ann | grep -q "CODE_OF_CONDUCT.md" || fail "the preview should show the file"
+set +e; OUT=$("${TB2[@]}" "${COC[@]}" --as ann --yes); CODE=$?; set -e
+[ $CODE = 3 ] || fail "add-code-of-conduct should await approval ($CODE): $OUT"
+RID=$(echo "$OUT" | field "['id']")
+for who in ann carol; do
+  set +e; "${TB2[@]}" --approve "$RID" --as $who >/dev/null 2>&1; CODE=$?; set -e
+  [ $CODE = 2 ] || fail "$who should not be able to approve ($CODE)"
+done
+OUT=$("${TB2[@]}" --approve "$RID" --as bob --wait) || fail "approve: $OUT"
+[ "$(echo "$OUT" | field "['state']")" = succeeded ] || fail "approved add-code-of-conduct: $OUT"
+git --git-dir "$WORK/hosts/mini.git" show main:CODE_OF_CONDUCT.md | grep -q conduct@acme.dev || fail "CODE_OF_CONDUCT.md is not on mini's main"
+git --git-dir "$WORK/hosts/mini.git" log -1 --format=%B main | grep -q "Requested-By: user:ann" || fail "no Requested-By trailer"
+OUT=$("${TB2[@]}" --verify "$RID" --as ann) || fail "verify: $OUT"
+echo "$OUT" | grep -q "user:bob" || fail "the record should name the approver: $OUT"
+"${TB2[@]}" --runs --as ann | grep -q "$RID" || fail "the run is not listed"
+printf '#!/bin/sh\necho "main is protected"\nexit 1\n' >"$WORK/hosts/mini.git/hooks/pre-receive" && chmod +x "$WORK/hosts/mini.git/hooks/pre-receive"
+set +e; OUT=$("${TB2[@]}" add-code-of-conduct --entity portal:mini -i contact=other@acme.dev --as ann --yes); set -e
+RID=$(echo "$OUT" | field "['id']")
+set +e; OUT=$("${TB2[@]}" --approve "$RID" --as bob --wait 2>&1); CODE=$?; set -e
+[ $CODE = 1 ] && echo "$OUT" | grep -q "main is protected" || fail "a rejected push should fail the run with the origin's message ($CODE): $OUT"
+echo "   minimal-repo: previewed, awaited bob (ann and carol refused), pushed CODE_OF_CONDUCT.md with trailers, recorded; a rejected push failed with the origin's message"
+echo "   no connector, kind or key declared: 16 actions from 4 git children; a pull request branch on beta's origin; alpha pinned the generated key on its origin, the clone followed, and bob's approval pushed SECURITY.md to alpha's main"
 echo "M5 acceptance: all checks passed"
