@@ -167,7 +167,7 @@
     ".jumpbar{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;margin:14px 0 0;padding:6px 10px;border-radius:8px;background:var(--tint);font-size:13px}.jumpbar button.link{min-height:24px}",
     ".levels-need{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:8px 0 4px;align-items:start}",
     ".need{padding:10px 12px;border-radius:10px;background:var(--tint);font-size:13px}",
-    ".need .lvl{margin-bottom:6px}",
+    ".need .lvl{margin-bottom:6px}.lvl-top{text-transform:none;font-weight:500}.bicon{display:inline-flex;vertical-align:-1px;color:var(--muted)}.bicon.judged{color:var(--judged)}",
     ".need ul{margin:0;padding-left:16px}",
     ".need li{margin:6px 0}",
     ".need li .why{display:block;color:var(--muted);font-size:12.5px;line-height:1.4}.levels-need.clamped li .why .rest{display:none}.need-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 8px;margin-bottom:6px}.need-head .lvl{margin-bottom:0}.need-basis{font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:4px}.need-toggle{display:inline-flex;align-items:center;min-height:24px;font-size:13px;margin:0 0 4px}",
@@ -201,7 +201,7 @@
     ".sc-rows{border-top:1px solid var(--line)}.sc-row{display:grid;grid-template-columns:26px minmax(0,1.25fr) minmax(0,1.6fr) 104px;gap:12px;align-items:center;padding:7px 8px;border-bottom:1px solid var(--line);color:var(--fg);text-decoration:none}.sc-row:hover{background:var(--tint)}.sc-row .sc-name{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;min-width:0}.sc-row .sc-name .t{font-weight:600}.sc-row .sc-name .c{font-size:11.5px;color:var(--muted)}.sc-row .sc-name .p{flex-basis:100%;min-width:0;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sc-row .sc-dist small{display:block;font-size:12px;color:var(--muted);margin-top:3px}.sc-head{display:grid;grid-template-columns:26px minmax(0,1.25fr) minmax(0,1.6fr) 104px;gap:12px;padding:4px 8px;font-size:11.5px;color:var(--muted);border-bottom:1px solid var(--line)}.sc-head span:last-child{text-align:right}.sc-row .sc-weak{display:flex;flex-direction:column;align-items:flex-end;gap:1px}.sc-row .sc-weak small{font-size:12px}.sc-row .sc-weak .bad{color:var(--fail);font-weight:600}.sc-row .sc-weak .topmark{color:var(--pass);font-weight:600}",
     "@media (max-width:640px){.sc-head{display:none}.sc-row{grid-template-columns:26px minmax(0,1fr) auto;row-gap:4px}.sc-row .sc-weak{grid-column:3;grid-row:1}.sc-row .sc-dist{grid-column:2/4;grid-row:2}.sc-row>svg{grid-row:1}}",
     ".crumb a{color:var(--muted);display:inline-block;padding:4px 0;margin:-4px 0}",
-    "a.rl{display:inline-flex;align-items:center;min-height:24px;vertical-align:middle}.refs a{display:inline-flex;align-items:center;min-height:26px}",
+    "a.rl{display:inline-flex;align-items:center;min-height:24px;min-width:24px;vertical-align:middle}.refs a{display:inline-flex;align-items:center;min-height:26px}",
     ".passes>span a{display:inline-block;padding:4px 0;margin:-4px 0}",
     ".ehead{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between}",
     ".ehead h2{font-size:24px}",
@@ -467,6 +467,7 @@
   var ALIAS = {};
   var LEVEL_NOTE = {};
   var LEVEL_DEF = {};
+  var ONLY_LEVEL = new Set();
   function aliasLevels(D) {
     Object.entries(D.scorecards || {}).forEach(function (e) {
       var sc = e[1];
@@ -479,6 +480,7 @@
           })[0];
           if (said) LEVEL_DEF[l] = said.replace(/`/g, "");
           LEVEL_NOTE[l] = "“" + l + "” is a level " + (sc.title || e[0]) + " names itself" + (levels.length === 1 ? ": its only level, so reaching it is the top." : ", ranked like " + ALIAS[l] + ".") + (said ? " " + LEVEL_DEF[l] : "");
+          if (levels.length === 1) ONLY_LEVEL.add(l);
         }
       });
     });
@@ -666,8 +668,9 @@
   }
 
   function badge(level) {
-    var span = el("span", { className: "lvl " + level, style: "--fill:" + fill(level) + ";--ink:" + ink(level) }, el("i"), level);
-    span.setAttribute("aria-label", "level " + level);
+    var only = ONLY_LEVEL.has(level);
+    var span = el("span", { className: "lvl " + level, style: "--fill:" + fill(level) + ";--ink:" + ink(level) }, el("i"), level, only ? el("span", { className: "lvl-top", ariaHidden: "true", textContent: " ✓ top" }) : null);
+    span.setAttribute("aria-label", "level " + level + (only ? ", its scorecard's only and top level" : ""));
     if (LEVEL_NOTE[level]) span.title = LEVEL_NOTE[level];
     return span;
   }
@@ -858,7 +861,7 @@
 
   function topNote(D, name, level) {
     if (capsRepo(D, name, level)) return el("span", { className: "capnote", textContent: " ▲ ceiling: its top level is " + level + ", so the repository can't rise above it", title: "Its top level is " + level + ", so the repository cannot rise above " + level + " until this standard gains a higher level" });
-    var top = isTop(D, name, level) ? el("span", { className: "topmark", textContent: " ✓ top level" }) : "";
+    var top = isTop(D, name, level) && !ONLY_LEVEL.has(level) ? el("span", { className: "topmark", textContent: " ✓ top level" }) : "";
     return LEVEL_DEF[level] ? el("span", {}, top, el("span", { className: "sub leveldef", textContent: " · " + LEVEL_DEF[level] })) : top;
   }
 
@@ -1510,17 +1513,19 @@
   }
 
   // Beside a scorecard's name in any list: whether an agent's judgement decides some of its rules.
-  function judgedMark(D, name) {
+  function judgedMark(D, name, iconOnly) {
     var n = basisCounts(((D.scorecards || {})[name] || {}).rules);
     if (!n.judged && !n.measured) return null;
-    if (!n.judged) {
-      var m = basisBadge("measured", true);
-      m.title = "Every rule is measured: " + BASIS.measured.desc;
-      return m;
+    var b = n.judged ? "judged" : "measured";
+    var text = n.judged ? (n.measured ? n.judged + " of " + (n.judged + n.measured) + " rules are" : "Every rule is") + " agent-judged: " + BASIS.judged.desc : "Every rule is measured: " + BASIS.measured.desc;
+    if (iconOnly) {
+      var i = el("span", { className: "bicon " + b, title: text, role: "img" }, basisIcon(b));
+      i.setAttribute("aria-label", n.judged ? "some rules agent-judged" : "all rules measured");
+      return i;
     }
-    var b = basisBadge("judged", true);
-    b.title = (n.measured ? n.judged + " of " + (n.judged + n.measured) + " rules are" : "Every rule is") + " agent-judged: " + BASIS.judged.desc;
-    return b;
+    var m = basisBadge(b, true);
+    m.title = text;
+    return m;
   }
 
   function cardName(D, name) {
@@ -2447,7 +2452,7 @@
           medal(floor || "none", 26),
           el("div", { className: "sc-name" }, ...cardName(D, r.name), purpose ? el("span", { className: "p", title: purpose, textContent: purpose }) : null),
           el("div", { className: "sc-dist" }, barEl(splitUnassessed(D, r.name, r.parts)), el("small", {}, ...scCaption(D, r))),
-          el("div", { className: "sc-weak" }, floor ? floorPill(D, r.name) : el("span", { className: "sub", textContent: "not scored" }), r.none ? el("small", { className: "bad", textContent: fmt(r.none) + " at none" }) : floor && isTop(D, r.name, floor) ? el("small", { className: "topmark", textContent: "✓ top level" }) : null),
+          el("div", { className: "sc-weak" }, floor ? floorPill(D, r.name) : el("span", { className: "sub", textContent: "not scored" }), r.none ? el("small", { className: "bad", textContent: fmt(r.none) + " at none" }) : floor && isTop(D, r.name, floor) && !ONLY_LEVEL.has(floor) ? el("small", { className: "topmark", textContent: "✓ top level" }) : null),
         ]);
       };
       var draw = function () {
@@ -4328,7 +4333,7 @@
           var c = r.compare ? (D.comparisons || {})[r.name] || {} : null;
           var verdict = c ? (c.verdict || {})[(c.peers || [])[0]] || "unknown" : null;
           var debt = c ? (verdict === "unknown" ? "not measured" : verdict) : r.none > 0 ? r.none + " at none" : r.bronze > 0 ? r.bronze + " at bronze" : "✓ clear";
-          var a = link("scorecard/" + enc(r.name), "", [el("span", {}, title(D, r.name), judgedMark(D, r.name) ? " " : null, judgedMark(D, r.name)), el("span", { className: "debt " + (c ? (verdict === "behind" ? "bad" : verdict === "ahead" ? "ok" : "") : r.none > 0 ? "bad" : r.bronze > 0 ? "" : "ok"), textContent: debt })]);
+          var a = link("scorecard/" + enc(r.name), "", [el("span", {}, title(D, r.name), " ", judgedMark(D, r.name, true)), el("span", { className: "debt " + (c ? (verdict === "behind" ? "bad" : verdict === "ahead" ? "ok" : "") : r.none > 0 ? "bad" : r.bronze > 0 ? "" : "ok"), textContent: debt })]);
           a.title = r.name + " · " + r.sc.kind;
           if (r.name === active) a.setAttribute("aria-current", "true");
           items.push(a);
@@ -4859,7 +4864,7 @@
             { className: "sc-status-t" },
             el("span", { className: "sub", textContent: "Weakest entity " }),
             floorHere ? floorPill(D, active) : el("b", { textContent: "not scored" }),
-            floorHere && isTop(D, active, floorHere) ? el("span", { className: "topmark", textContent: " ✓ top level" }) : null,
+            floorHere && isTop(D, active, floorHere) && !ONLY_LEVEL.has(floorHere) ? el("span", { className: "topmark", textContent: " ✓ top level" }) : null,
             topHere && scored.length ? el("span", { className: "sep", ariaHidden: "true", textContent: "·" }) : null,
             topHere && scored.length ? el("span", { className: "fact", textContent: fmt(atTop) + " of " + fmt(scored.length) + " at the top level (" + levelName(topHere) + ")" }) : null,
             leverRule ? el("span", { className: "sep", ariaHidden: "true", textContent: "·" }) : null,
@@ -4904,7 +4909,7 @@
           "section",
           {},
           el("div", { className: "head" }, el("h2", { textContent: "Scorecards" })),
-          el("p", { className: "sub", style: "margin:0", textContent: "Most entities at none first" }),
+          el("p", { className: "sub", style: "margin:0", textContent: "Most entities at none first · ✦ some rules agent-judged, the gauge all measured" }),
           cardSearch,
           cardNav,
         ),
