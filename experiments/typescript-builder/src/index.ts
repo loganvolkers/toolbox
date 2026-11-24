@@ -95,12 +95,15 @@ export function kind<const N extends string, const F extends Record<string, Fiel
 }
 
 // ------------------------------------------------------------------------------------- scorecards
+export interface Link { title: string; url: string }
 export interface ScorecardSpec<L extends string> {
   kind: Kind<string, any>;
+  rationale?: string;
+  links?: readonly Link[];
   owner: string;
   levels: readonly L[];
   appliesTo?: Cel;
-  rules: readonly { name: string; level: NoInfer<L>; check: Cel; fix?: string }[];
+  rules: readonly { name: string; level: NoInfer<L>; check: Cel; fix?: string; rationale?: string; links?: readonly Link[] }[];
   facets?: { summary?: Facet; details?: Facet };
 }
 type Facet = "public" | "owner" | "operator";
