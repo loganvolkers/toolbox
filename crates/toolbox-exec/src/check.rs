@@ -38,20 +38,9 @@ pub fn with_defaults(action: &Action, inputs: &Map<String, Value>) -> Map<String
     out
 }
 
-fn type_ok(ty: &str, v: &Value) -> bool {
-    match ty {
-        "string" => v.is_string(),
-        "integer" => v.is_i64() || v.is_u64(),
-        "number" => v.is_number(),
-        "boolean" => v.is_boolean(),
-        "array" => v.is_array(),
-        "object" => v.is_object(),
-        _ => true,
-    }
-}
-
-/// Validate inputs: required, types, `minLength`/`maxLength`, `minimum`/`maximum`, `enum`, and
-/// `enumFrom` options computed for this entity.
+/// Validate inputs against the action's `inputs` schema (JSON Schema draft 2020-12: `pattern`,
+/// `format`, lengths, ranges, `enum`, `items`), plus what the schema can't say: no inputs it
+/// doesn't declare, and `enumFrom` options computed for this entity.
 pub fn validate_inputs(
     action: &Action,
     derived: &Derived,
@@ -66,18 +55,6 @@ pub fn validate_inputs(
         .and_then(Value::as_object)
         .cloned()
         .unwrap_or_default();
-    for req in action
-        .inputs
-        .get("required")
-        .and_then(Value::as_array)
-        .into_iter()
-        .flatten()
-        .filter_map(Value::as_str)
-    {
-        if !inputs.contains_key(req) {
-            errors.push(format!("{req} is required"));
-        }
-    }
     for (k, v) in inputs {
         let Some(spec) = props.get(k) else {
             errors.push(format!(
@@ -86,31 +63,6 @@ pub fn validate_inputs(
             ));
             continue;
         };
-        let ty = spec.get("type").and_then(Value::as_str).unwrap_or("string");
-        if !type_ok(ty, v) {
-            errors.push(format!("{k} must be a {ty}"));
-            continue;
-        }
-        if let (Some(min), Some(sv)) = (spec.get("minLength").and_then(Value::as_u64), v.as_str())
-            && (sv.chars().count() as u64) < min
-        {
-            errors.push(format!("{k} must be at least {min} characters"));
-        }
-        if let (Some(max), Some(sv)) = (spec.get("maxLength").and_then(Value::as_u64), v.as_str())
-            && (sv.chars().count() as u64) > max
-        {
-            errors.push(format!("{k} must be at most {max} characters"));
-        }
-        if let (Some(min), Some(n)) = (spec.get("minimum").and_then(Value::as_f64), v.as_f64())
-            && n < min
-        {
-            errors.push(format!("{k} must be at least {min}"));
-        }
-        if let (Some(max), Some(n)) = (spec.get("maximum").and_then(Value::as_f64), v.as_f64())
-            && n > max
-        {
-            errors.push(format!("{k} must be at most {max}"));
-        }
         if spec.get("enumFrom").is_some() {
             let opts = derived
                 .options
@@ -124,11 +76,19 @@ pub fn validate_inputs(
                 ));
             }
         }
-        if let Some(allowed) = spec.get("enum").and_then(Value::as_array)
-            && !allowed.contains(v)
-        {
-            errors.push(format!("{k}={v} is not one of {allowed:?}"));
+    }
+    match toolbox_model::schema::input_errors(&action.inputs, &Value::Object(inputs.clone())) {
+        Ok(found) => {
+            errors.extend(
+                found
+                    .into_iter()
+                    .map(|(path, msg)| match path.trim_start_matches('/') {
+                        "" => msg,
+                        p => format!("{p}: {msg}"),
+                    }),
+            )
         }
+        Err(e) => errors.push(format!("{name}: {e}")),
     }
     errors
 }
@@ -258,5 +218,46 @@ fn any_of(entry: Value) -> Value {
                 .join("|"),
         ),
         other => other,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    fn action() -> Action {
+        serde_json::from_value(json!({
+            "name": "set-owners", "kind": "Repository", "description": "d", "scope": "day2",
+            "permission": "can_run_actions", "executor": {"type": "command", "run": "x"},
+            "unverified": true,
+            "inputs": {"type": "object", "required": ["team"], "properties": {
+                "team": {"type": "string", "pattern": "^@[a-z0-9-]+/[a-z0-9-]+$"},
+                "count": {"type": "integer", "minimum": 1}}}
+        }))
+        .unwrap()
+    }
+
+    fn errs(inputs: Value) -> Vec<String> {
+        let Value::Object(m) = inputs else { panic!() };
+        validate_inputs(&action(), &Derived::default(), "repository:a", &m)
+    }
+
+    #[test]
+    fn inputs_meet_the_whole_schema() {
+        assert!(errs(json!({"team": "@acme/web"})).is_empty());
+        let e = errs(json!({"team": "@acme/web\n* @evil/takeover"}));
+        assert!(e.len() == 1 && e[0].starts_with("team: "), "{e:?}");
+        let e = errs(json!({"count": 0, "extra": 1}));
+        assert!(
+            e.iter().any(|x| x.contains("extra is not an input")),
+            "{e:?}"
+        );
+        assert!(
+            e.iter()
+                .any(|x| x.contains("\"team\" is a required property")),
+            "{e:?}"
+        );
+        assert!(e.iter().any(|x| x.starts_with("count: ")), "{e:?}");
     }
 }
