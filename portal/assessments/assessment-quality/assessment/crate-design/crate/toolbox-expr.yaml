@@ -39,13 +39,21 @@ verdicts:
   - criterion: reproducible
     verdict: pass
     reason: >-
-      Each verdict now follows from something the sources state. The crate
-      docs and the spec row decide one-responsibility. The callers' imports
-      and pub items decide small-contract. The Cargo.toml files and the
-      pub(crate) fields decide replaceable-defaults. tests-match-risk no
-      longer rests on calling indirect coverage "small": every branch its
-      reason lists has a test that names it, so a second assessor would reach
-      pass from the same files.
+      Each verdict follows from something the sources state, not from taste.
+      one-responsibility rests on the crate docs
+      (crates/toolbox-expr/src/lib.rs:1-17) against the spec row
+      (docs/v1-spec.md:89). small-contract rests on the callers' imports
+      (crates/toolbox-derive/src/lib.rs:15,
+      crates/toolbox-api/src/routes.rs:17,
+      crates/toolbox-model/src/validate.rs:13 and 775-779) and the brief's
+      pubItems and pubDocumented, both 28. replaceable-defaults rests on
+      crates/toolbox-expr/Cargo.toml:11 being the only workspace `cel`
+      dependency (Cargo.toml:3-5) and on the pub(crate) fields at
+      crates/toolbox-expr/src/eval.rs:13 and 111. tests-match-risk no longer
+      calls indirect coverage "small". Each branch it lists has a named test
+      (crates/toolbox-expr/src/lib.rs:177-185, eval.rs:249-291), and `cargo
+      test -q -p toolbox-expr` reports "13 passed; 0 failed". A second
+      assessor reading those files reaches pass.
   - criterion: actionable
     verdict: pass
     reason: >-
