@@ -4,10 +4,10 @@
 kinds:
   - name: Scorecard
     description: >-
-      A scorecard one of the described portals declares: this portal's own
-      scorecards and its comparison factors (ids `toolbox/…`), the starter's
-      (`repo/…`) and the reference portal's (`acme/…`). The header counts this
-      portal's scorecards and comparison factors only.
+      A scorecard declared by this portal (ids `toolbox/…`, which the
+      Scorecards and Compare tabs count) or by an example portal it describes
+      (the starter's `repo/…` and the reference portal's `acme/…`), so this
+      kind counts more than the tabs do.
     identityFrom: [connector:surfaces]
     fields:
       portal: {type: string}
@@ -200,7 +200,10 @@ kinds:
       relations: {ruleOf: "['scorecard:' + record.card]"}
 
   - name: Kind
-    description: A kind of entity one of the described portals declares.
+    description: >-
+      A kind of entity declared by this portal (ids `toolbox/…`, the kinds the
+      catalog lists) or by an example portal it describes (`repo/…` and
+      `acme/…`), so this kind counts more than the catalog's kinds.
     identityFrom: [connector:surfaces]
     fields:
       portal: {type: string, description: Portal that declares it.}

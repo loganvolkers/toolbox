@@ -210,7 +210,7 @@ scorecards:
     rationale: >-
       Every page load, agent call and CI job reads the portal, so a slow
       start, slow reads or a slow recovery cost all of its users at once. The
-      bars are absolute and set before the run; Toolbox authorizes every read
+      pass thresholds were fixed before the run; Toolbox authorizes every read
       while Backstage runs allow-all, which favours Backstage.
     links:
     - title: Performance results

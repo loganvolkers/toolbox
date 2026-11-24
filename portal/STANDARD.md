@@ -61,7 +61,7 @@ Scorecard `review-assessment` over `Assessment` entities, owned by group:maintai
 
 Start, read and recover on a 10k-component catalog, with every read authorized (Toolbox through OpenFGA, Backstage under allow-all). ISO 25010 performance efficiency and reliability.
 
-**Why:** Every page load, agent call and CI job reads the portal, so a slow start, slow reads or a slow recovery cost all of its users at once. The bars are absolute and set before the run; Toolbox authorizes every read while Backstage runs allow-all, which favours Backstage.
+**Why:** Every page load, agent call and CI job reads the portal, so a slow start, slow reads or a slow recovery cost all of its users at once. The pass thresholds were fixed before the run; Toolbox authorizes every read while Backstage runs allow-all, which favours Backstage.
 
 See [Performance results](https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#performance-and-memory), [Factor definitions: footprint, read latency, freshness and recovery](https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors).
 

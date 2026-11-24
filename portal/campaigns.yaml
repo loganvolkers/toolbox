@@ -71,14 +71,15 @@ tracks:
     title: Against Backstage
     owner: group:maintainers
     description: >-
-      Toolbox (a release build after v0.1.1) and Backstage 1.57.0, installed
-      as each project documents and run on one VM (4 vCPU Intel Xeon, Linux
-      6.12) against one Postgres 16, scored on the same rules, factor by
-      factor. A script measures both: medians of 5 runs on a 10,000-component
-      catalog, with the load generator on the same 4 vCPU, plus probes and
-      facts with evidence. On 2026-11-23 an agent that designed no part of the
-      benchmark recomputed the numbers from the raw results, checked the
-      scoring, and upheld the verdict; it scored no rule itself.
+      Toolbox and Backstage, each installed as its project documents (the
+      exact builds are listed under Version) and run on one VM (4 vCPU Intel
+      Xeon, Linux 6.12) against one Postgres 16, scored on the same rules,
+      factor by factor. A script measures both: medians of 5 runs on a
+      10,000-component catalog, with the load generator on the same 4 vCPU,
+      plus probes and facts with evidence. Checked by an independent agent: on
+      2026-11-23 an agent that designed no part of the benchmark recomputed
+      the numbers from the raw results, checked the scoring, and upheld the
+      verdict; it scored no rule itself.
     links:
     - title: Results
       url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md
