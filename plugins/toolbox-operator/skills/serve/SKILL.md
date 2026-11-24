@@ -9,6 +9,8 @@ description: >-
 1. Start the server on the portal directory. Without a database URL the store is in memory.
 2. Pass --fixtures to load the portal's fixtures at start.
 3. Stop the process to discard an in-memory store. Do not expect that store to survive a restart.
+   Action runs do survive one: they are kept in the database, or without one under
+   `$TOOLBOX_STATE_DIR/served/<portal>/runs`. A run whose executor the restart cut off is failed.
 
 ```
 toolbox serve portal --fixtures

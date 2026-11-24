@@ -227,7 +227,8 @@ actions:
 | Type | Runs | Preview | Ends at | Verified by |
 |---|---|---|---|---|
 | `command` | A command in the checkout, with `TOOLBOX_INPUT_*` | Toolbox's, plus the command's own when `preview: true` (`TOOLBOX_PHASE=preview`) | Its exit | Re-reading the portal's facts |
-| `change` | A command in a worktree of the remote's base; commits it to `toolbox/<action>/<run>` with `Toolbox-Run` and `Requested-By` trailers, and pushes | The files it would change | `proposed` | The facts at the base branch, once merged |
+| `change` | A command in a worktree of the remote's base; commits it to `toolbox/<action>/<run>` with `Toolbox-Run` and `Requested-By` trailers, and pushes | The files it would change, with their diffs | `proposed` | The commit on the base (ancestry or trailer), then the postcondition at the base if one is declared |
+| `change` with `land: push` | The same commit, pushed to the base itself once the approval rule is met; never forced, so a protected or moved base refuses it and the run fails | The same, plus `push branch:<base>` | `succeeded` or `failed` | The fetched base has the commit and every changed file as written (a hook that undoes the push is seen), then the postcondition if one is declared |
 | `github-workflow` | `workflow_dispatch` asking for the run id (`return_run_details`), tracked by that id; without one, by the one run of that name on the dispatched ref created after the dispatch | Toolbox's | `dispatched`, then the workflow's conclusion, or `timed_out` past the deadline | The postcondition after a refresh |
 | `in-image` | The executor protocol over stdio (D40) | The executor's | Its terminal message | The postcondition, or the executor's `verify` |
 | `toolbox` (federated) | The child's `toolbox run` | The child's | The child's state | The child |
@@ -235,8 +236,11 @@ actions:
 ### 6.3 Lifecycle, tokens and records
 
 - **States** are [action-runs.md](./action-runs.md) §2's, plus `proposed` for a change under
-  review. A run is `succeeded` only when its postcondition held at a snapshot after the run. An
-  action with no postcondition ends `unverified`, never `succeeded`.
+  review. A run is `succeeded` only when its effect was observed after the run: its postcondition
+  held at a later snapshot, or, for a `change`, its commit is on the base. A change needs no
+  postcondition, because its effect is its diff and the base shows it; any other action with no
+  postcondition ends `unverified`, never `succeeded`. A `land: push` change has no review, so its
+  approval rule applies as written (T4: in a repo portal it waits for a parent's signed grant).
 - **Preview and confirm.** A preview returns the effects, blockers, warnings, approvers and a
   confirm token, `ct_<issued>_<nonce>_<hash>`. The hash covers the action version, inputs,
   effects, the facts the preview read, the requester, the entity and a fresh nonce, so two
@@ -244,25 +248,31 @@ actions:
   changed preview is `preview_stale`: CLI exit 1, HTTP `409 preview-stale`. A served portal
   spends each token once (`409 token-used`). Inputs are validated as JSON Schema (draft 2020-12),
   `pattern` included, plus `enumFrom`.
-- **Exit codes** (CLI): 0 succeeded, proposed or dispatched; 1 failed or stale; 2 invalid inputs or
-  refused; 3 awaiting approval.
+- **Exit codes** (CLI, in a checkout and with `--url`): 0 succeeded, proposed or dispatched; 1
+  failed, stale, rejected or cancelled; 2 invalid inputs or refused; 3 awaiting approval.
 - **Records.** Every run is a JSON record, carrying who requested it, through which surface, the
   approvals with notes, every state change with time and actor, the effects, the outputs and the
   verification. `toolbox run` writes it to the state directory, and `toolbox run --verify <id>`
   checks a waiting run again; it takes only a run id, never a file, and re-derives the executor
   from the manifest. `via` is `api`, `mcp` or `parent:<portal>/<run>`, set by the surface, never
-  by the caller. A served portal keeps runs in memory for now (§7.2), and re-checks waiting ones
-  every 10 seconds.
+  by the caller. A served portal writes every run change and spent token through to Postgres
+  (`toolbox.runs`, `toolbox.spent_tokens`) or, without one, to `<state>/served/<portal>/runs`,
+  and reads them back at start. A run whose executor a restart cut off fails with that said;
+  waiting runs are re-checked every 10 seconds.
 
 ### 6.4 Interfaces
 
-| Need | CLI (repo or parent, no server) | REST (served) | MCP (served) |
+The CLI works on a checkout (repo or parent, no server) or, with `--url <server>`, on a served
+portal through its REST API, with the same flags, output and exit codes. `--wait` follows a run
+until it succeeds, fails or waits for a person.
+
+| Need | CLI | REST (served) | MCP (served) |
 |---|---|---|---|
 | List | `toolbox run` | `GET /v1/actions` | `list_actions` |
 | Preview | `toolbox run <action> -i k=v` | `POST /v1/actions/{name}/previews` | `preview_action` |
 | Run | `--confirm <token>`, or `--yes` | `POST /v1/actions/{name}/runs` | `run_action` |
-| Approve | — (T4) | `POST /v1/runs/{id}/approvals`, interactive sign-in only (T6) | — (D57) |
-| Check | `--verify <id>` | `GET /v1/runs/{id}`, `POST /v1/runs/{id}/verify` | `get_run`, `list_runs` |
+| Approve | `--url … --approve <id>` (a checkout holds none, T4) | `POST /v1/runs/{id}/approvals`, interactive sign-in only (T6) | — (D57) |
+| Check | `--verify <id>`, `--runs` | `GET /v1/runs/{id}`, `POST /v1/runs/{id}/verify`, `GET /v1/runs` | `get_run`, `list_runs` |
 | Cancel | — | `POST /v1/runs/{id}/cancel` | — |
 
 ## 7. What is built, and what is deferred
@@ -277,17 +287,18 @@ network and no Postgres.
 |---|---|---|
 | 1 | A repo action: list, preview, confirm, observed | S1 |
 | 2 | A stale token exits 1 (`preview_stale`); invalid inputs exit 2 | S1, S6 |
-| 3 | A repo portal holds no approvals: exit 3, `awaiting_approval` | S5 (T4) |
+| 3 | A repo portal holds no approvals: exit 3, `awaiting_approval`, for a command and for a `land: push` change, which pushes nothing | S5 (T4) |
 | 4 | A change is a pull request with the trailer; stays `proposed` until merged; then `succeeded`. A licence pushed to the base by hand does not complete another unmerged run | S2 (T7, T8) |
 | 5 | The org offers every child's actions, packages included; a federated run is verified by the child | S6, S10 (T1, T8) |
 | 6 | A fleet change: one org action, three pull requests, three verified runs | S3 |
-| 7 | The served org: a child without a runner is refused; a child that pins no key is flagged before approval; a reused confirm token, the requester, someone not listed and a forged grant are refused; another maintainer's approval is signed, accepted by the child and verified; MCP offers no approval tool, and its run records `via: mcp` | S5, S6, S7 (T1, T5, T6) |
+| 7 | The served org: a child without a runner is refused; a child that pins no key is flagged before approval; a reused confirm token, the requester, someone not listed and a forged grant are refused; another maintainer's approval is signed, accepted by the child and verified; MCP offers no approval tool, and its run records `via: mcp`; concurrent approvals and cancels run a run at most once | S5, S6, S7 (T1, T5, T6) |
+| 8 | `toolbox run --url`: a `land: push` change waits for approval (exit 3) and pushes nothing; `--approve` by another maintainer lands it on the child's main, where the child observes it; the run is listed again after the server restarts | S5, S7 (T4, T6, T8) |
 
 ### 7.2 Deferred, with the reason
 
 | Item | Why not now |
 |---|---|
-| Durable server runs (Postgres, D39) | Runs live in memory in `serve`; CLI runs are files. Durable runs are the durable-runtime track |
+| Runs shared by several server instances (D39) | Runs are written through and survive a restart, but one instance owns them: a second instance on the same database does not see them live, and an executor cut off by a restart is failed, not resumed. Durable steps are the durable-runtime track |
 | A `toolbox run` GitHub Action for `runner: github-workflow` children | The dispatch is built and tested against a fake API; the composite action that receives it is next |
 | A federated github-workflow run's verification | The parent sees the workflow's conclusion; the child's own verification needs the child's run record as a workflow artifact |
 | Fan-out in one command | A fleet change is one run per child (a loop); `--all` waits for a use beyond scripts |

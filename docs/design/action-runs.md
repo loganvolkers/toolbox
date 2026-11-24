@@ -12,8 +12,9 @@
 > D64 asked for is [self-service-review.md](../self-service-review.md); its fixes are folded in
 > here and in v1-spec §6.6 and §7.5. Built differently from this design: confirm tokens also bind
 > the requester and entity and are single-use in a server; approvals are refused over MCP and from
-> personal access tokens (D57); `timed_out` is emitted, `compensated` is not yet. Runs in `serve`
-> live in memory until the durable tables land.
+> personal access tokens (D57); `timed_out` is emitted, `compensated` is not yet; a `change` can land on its base once approved
+> (`land: push`) and is verified by the base. Runs in `serve` are written through to Postgres or
+> the state directory and survive a restart; durable steps across instances are not built.
 
 ---
 
