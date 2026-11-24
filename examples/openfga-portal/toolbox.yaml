@@ -90,6 +90,7 @@ include:
   - standards/*.yaml
   - package: ../../packages/file-size
     with:
+      track: code
       name: go-file-size
       kind: GoFile
       title: Go files within 800 lines
@@ -104,6 +105,7 @@ include:
       limit: 800
   - package: ../../packages/pattern-count
     with:
+      track: code
       name: go-panics
       kind: GoPanicFile
       title: No panics outside tests
@@ -125,6 +127,7 @@ include:
       versionArgs: [-version]
       install: {mise: go:honnef.co/go/tools/cmd/staticcheck}
       command: [staticcheck, -f, sarif, ./...]
+      files: ["**/*.go"]
       title: No staticcheck findings
       owner: group:openfga-maintainers
   - package: ../../packages/github-actions
