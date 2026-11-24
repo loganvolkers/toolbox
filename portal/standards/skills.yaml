@@ -129,6 +129,9 @@ scorecards:
       rationale: >-
         Prose without numbered steps leaves the order of work to the model,
         which can skip or reorder a step without noticing.
+      links:
+      - title: Anthropic skill best practices (use workflows for complex tasks)
+        url: https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/best-practices
     - name: has-example
       level: silver
       check: entity.codeFences > 0
@@ -154,6 +157,9 @@ scorecards:
         An agent follows a skill's links mid-task; a broken one sends it to a
         file that is not there, and it carries on without the detail the author
         moved out.
+      links:
+      - title: Agent Skills specification (file references)
+        url: https://agentskills.io/specification#file-references
     - name: within-body-budget
       level: silver
       check: entity.bodyLines <= 500 && entity.estimatedTokens <= 5000
@@ -167,6 +173,9 @@ scorecards:
         The whole body enters the context window when the skill is selected,
         crowding out the task. The spec's guidance is under 500 lines and about
         5000 tokens; tokens here are estimated as characters divided by 4.
+      links:
+      - title: Agent Skills specification (progressive disclosure)
+        url: https://agentskills.io/specification#progressive-disclosure
     - name: portable-paths
       level: silver
       check: entity.windowsPaths.size() == 0
@@ -178,6 +187,9 @@ scorecards:
         Skills are installed on macOS and Linux as well as Windows; a backslash
         path does not resolve there, so the agent cannot open the file it was
         told to read.
+      links:
+      - title: Anthropic skill best practices (avoid Windows-style paths)
+        url: https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/best-practices
     - name: states-boundaries
       level: gold
       check: entity.boundaryCues.size() > 0
