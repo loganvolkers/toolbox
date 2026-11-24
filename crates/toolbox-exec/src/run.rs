@@ -423,6 +423,104 @@ pub fn execute(
     }
 }
 
+/// Re-check a run that is waiting on the world: a `proposed` change (merged yet?), a `dispatched`
+/// workflow (finished yet?), or a federated run (asked of the child). One look, no waiting; a run
+/// past its deadline fails. Returns whether the run changed.
+pub fn recheck(
+    run: &mut Run,
+    exec: &crate::executor::Executor,
+    expect: Option<&Expect>,
+    policies: &Map<String, Value>,
+    obs: &mut dyn Observer,
+) -> bool {
+    use crate::executor::Executor;
+    if run.is_terminal() || run.state == "awaiting_approval" {
+        return false;
+    }
+    let before = run.state.clone();
+    let events = run.events.len();
+    match exec {
+        Executor::Toolbox {
+            portal, program, ..
+        } => {
+            if let Some(child) = run.child.clone() {
+                match crate::executor::verify_child(program, portal, &child, false) {
+                    Ok(v) => {
+                        let state = v["state"].as_str().unwrap_or("failed").to_owned();
+                        match state.as_str() {
+                            "succeeded" | "unverified" => {
+                                run.verification = Some(json!({"by": "child portal",
+                                    "child_run": v["id"], "child": v["verification"]}));
+                                run.set(&state, None, None);
+                            }
+                            "failed" | "cancelled" | "rejected" => run.fail(format!(
+                                "child run {state}: {}",
+                                v["error"].as_str().unwrap_or("")
+                            )),
+                            _ => {}
+                        }
+                        run.child = Some(v);
+                    }
+                    Err(e) => {
+                        run.progress
+                            .push(json!({"at": rfc3339(now_secs()), "note": e}));
+                    }
+                }
+            }
+            return run.state != before;
+        }
+        Executor::GithubWorkflow(w) if run.state == "dispatched" => match w.track(&run.id) {
+            Ok(Some(t)) if t.status == "completed" => {
+                if let Some(u) = &t.url
+                    && let Some(o) = run.outputs.as_object_mut()
+                {
+                    o.insert("workflow_run".into(), json!(u));
+                }
+                if t.conclusion.as_deref() == Some("success") {
+                    run.set("executor_succeeded", None, t.url.clone());
+                    if expect.is_none() {
+                        run.set("unverified", None, None);
+                        return true;
+                    }
+                } else {
+                    run.fail(format!(
+                        "workflow concluded {}",
+                        t.conclusion.as_deref().unwrap_or("unknown")
+                    ));
+                    return true;
+                }
+            }
+            Ok(_) => {}
+            Err(e) => {
+                run.progress
+                    .push(json!({"at": rfc3339(now_secs()), "note": e}));
+                return false;
+            }
+        },
+        _ => {}
+    }
+    let Some(expect) = expect else {
+        return run.state != before;
+    };
+    if run.state == "dispatched" {
+        return run.state != before;
+    }
+    verify(run, expect, policies, obs, Duration::from_secs(0), false);
+    if run.state == "verifying" {
+        if run.deadline.is_some_and(|dl| now_secs() >= dl) {
+            run.fail(format!(
+                "postcondition not met within {}: {}",
+                expect.within, expect.postcondition
+            ));
+        } else if before != "executor_succeeded" {
+            // Still waiting: keep the run as it was, without a `verifying` event per look.
+            run.state = before.clone();
+            run.events.truncate(events);
+        }
+    }
+    run.state != before
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

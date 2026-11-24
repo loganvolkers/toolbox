@@ -702,7 +702,7 @@ fn change_run(
     if files.is_empty() {
         return Ok(Outcome {
             status: "succeeded".into(),
-            outputs: json!({"changed": false}),
+            outputs: json!({"changed": false, "base": wt.base}),
             error: None,
             progress: vec![],
             child: None,
@@ -752,6 +752,43 @@ fn change_run(
         error: None,
         progress: vec![],
         child: None,
+    })
+}
+
+/// Ask a child portal to re-check one of its runs from the record it returned.
+pub fn verify_child(
+    program: &Path,
+    portal: &Path,
+    record: &Value,
+    wait: bool,
+) -> Result<Value, String> {
+    let id = record.get("id").and_then(Value::as_str).unwrap_or("run");
+    let tmp = std::env::temp_dir().join(format!("toolbox-child-{}-{id}.json", std::process::id()));
+    std::fs::write(&tmp, record.to_string()).map_err(|e| e.to_string())?;
+    let mut cmd = Command::new(program);
+    cmd.arg("run")
+        .arg("--verify")
+        .arg(&tmp)
+        .arg("--portal")
+        .arg(
+            portal
+                .canonicalize()
+                .unwrap_or_else(|_| portal.to_path_buf()),
+        )
+        .args(["-o", "json"])
+        .current_dir(portal_repo_dir(portal));
+    if wait {
+        cmd.arg("--wait");
+    }
+    let out = cmd.output();
+    let _ = std::fs::remove_file(&tmp);
+    let out = out.map_err(|e| format!("cannot start {}: {e}", program.display()))?;
+    serde_json::from_slice(&out.stdout).map_err(|_| {
+        format!(
+            "child portal {} answered no run record: {}",
+            portal.display(),
+            String::from_utf8_lossy(&out.stderr).trim()
+        )
     })
 }
 

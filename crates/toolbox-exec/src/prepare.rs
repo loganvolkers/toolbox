@@ -91,9 +91,21 @@ pub fn prepare(m: &Manifest, d: &Derived, req: Request<'_>) -> Result<Prepared, 
         approvals: vec![],
         cwd: req.cwd,
     };
-    let preview = exec
-        .preview(&ctx)
-        .map_err(|e| Refused::Executor(format!("{}: {e}", action.name)))?;
+    let preview = match exec.preview(&ctx) {
+        Ok(p) => p,
+        Err(e) if matches!(exec, Executor::InImage { .. }) && e.starts_with("cannot start ") => {
+            Preview {
+                warnings: vec![format!(
+                    "{e}: the executor is not installed here, so this preview checks inputs, preconditions and approvals only"
+                )],
+                ..Preview::default()
+            }
+        }
+        Err(e) => Preview {
+            blockers: vec![format!("the executor's preview failed: {e}")],
+            ..Preview::default()
+        },
+    };
     let mut warnings = preview.warnings.clone();
     if let Some(e) = &action.expect
         && run::postcondition_holds(e, &checked.entity, &inputs, &m.policies, &json!({}))

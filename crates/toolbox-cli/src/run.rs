@@ -504,100 +504,35 @@ fn verify_file(o: &Options, portal: &Path, file: &Path) -> ExitCode {
             format!("{} no longer has action {}", m.portal.name, run.action),
         );
     };
-    if let (Some(c), Some(child)) = (&off.child, run.child.clone()) {
-        return verify_child(o, file, run, &c.path, child);
-    }
-    let Some(expect) = &off.action.expect else {
-        run.set("unverified", None, None);
-        return finish(o, &run, 0);
+    let program = std::env::current_exe().unwrap_or_else(|_| PathBuf::from("toolbox"));
+    let exec = match off.executor(&program) {
+        Ok(x) => x,
+        Err(e) => return error(o, 2, e),
     };
     let mut obs = Local {
         portal: portal.to_path_buf(),
         fixtures: o.fixtures,
         skip: o.skip.clone(),
     };
-    lifecycle::verify(
-        &mut run,
-        expect,
-        &m.policies,
-        &mut obs,
-        Duration::from_secs(5),
-        o.wait,
-    );
-    if !o.wait && run.state == "verifying" {
-        if run.deadline.is_some_and(|dl| lifecycle::now_secs() >= dl) {
-            run.fail(format!(
-                "postcondition not met within {}: {}",
-                expect.within, expect.postcondition
-            ));
-        } else {
-            run.state = "proposed".into();
+    loop {
+        lifecycle::recheck(
+            &mut run,
+            &exec,
+            off.action.expect.as_ref(),
+            &m.policies,
+            &mut obs,
+        );
+        if !o.wait || run.is_terminal() {
+            break;
         }
+        std::thread::sleep(Duration::from_secs(5));
     }
-    let p = o.record.clone().unwrap_or_else(|| file.to_path_buf());
-    let o2 = Options {
-        record: Some(p),
-        ..clone_opts(o)
-    };
-    let code = if run.state == "failed" { 1 } else { 0 };
-    finish(&o2, &run, code)
-}
-
-/// A federated run is verified by the child portal, from the child's own run record.
-fn verify_child(o: &Options, file: &Path, mut run: Run, dir: &Path, child: Value) -> ExitCode {
-    let tmp = std::env::temp_dir().join(format!("toolbox-child-{}.json", run.id));
-    if let Err(e) = std::fs::write(&tmp, child.to_string()) {
-        return error(o, 1, e.to_string());
-    }
-    let program = std::env::current_exe().unwrap_or_else(|_| PathBuf::from("toolbox"));
-    let mut cmd = std::process::Command::new(program);
-    cmd.arg("run")
-        .arg("--verify")
-        .arg(&tmp)
-        .arg("--portal")
-        .arg(dir)
-        .args(["-o", "json"])
-        .current_dir(toolbox_exec::executor::portal_repo_dir(dir));
-    if o.wait {
-        cmd.arg("--wait");
-    }
-    let out = cmd.output();
-    let _ = std::fs::remove_file(&tmp);
-    let v: Value = match out {
-        Ok(out) => match serde_json::from_slice(&out.stdout) {
-            Ok(v) => v,
-            Err(_) => {
-                return error(
-                    o,
-                    1,
-                    format!(
-                        "child portal answered no run record: {}",
-                        String::from_utf8_lossy(&out.stderr).trim()
-                    ),
-                );
-            }
-        },
-        Err(e) => return error(o, 1, e.to_string()),
-    };
-    let state = v["state"].as_str().unwrap_or("failed").to_owned();
-    match state.as_str() {
-        "succeeded" | "unverified" => {
-            run.verification = Some(json!({"by": "child portal", "child_run": v["id"],
-                "child": v["verification"]}));
-            run.set(&state, None, None);
-        }
-        "failed" => run.fail(format!(
-            "child run failed: {}",
-            v["error"].as_str().unwrap_or("")
-        )),
-        _ => {}
-    }
-    run.child = Some(v);
     let o2 = Options {
         record: Some(o.record.clone().unwrap_or_else(|| file.to_path_buf())),
         ..clone_opts(o)
     };
-    finish(&o2, &run, if run.state == "failed" { 1 } else { 0 })
+    let code = if run.state == "failed" { 1 } else { 0 };
+    finish(&o2, &run, code)
 }
 
 fn clone_opts(o: &Options) -> Options {
