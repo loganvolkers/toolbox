@@ -80,7 +80,7 @@ Everything an action or a federation needs; `toolbox validate` checks the rest a
 | `executor.base`, `branch`, `message`, `remote` | `change`: the branch to start from and verify on, the proposal branch (`toolbox/{action}/{run}`), the commit message, the remote (`origin`). `message` takes `{action}`, `{run}`, `{entity}` and `{inputs.<name>}`; `branch` takes only `{action}` and `{run}` |
 | `executor.secrets` | Environment variables the executor gets; it starts with a cleared environment |
 | `actions[].expect` | `{postcondition: <CEL>, within: 30s}`: what must hold after the run for `succeeded`. A `land: push` change needs none: its commit on `base` is the check |
-| `tests` | Test files; a file's `runs:` cases request, approve and run an action in a scratch copy (`as`, `inputs`, `approve`, `rejectPush`, `expect: {state, files, refused, error}`) |
+| `tests` | Test files; a file's `runs:` cases request, approve and run an action in a scratch copy (`as`, `inputs`, `approve`, `rejectPush`, `expect: {state, files, refused, error}`), each starting from the file's `defaults` |
 | `federation.children` | Parent: `[{git: <url or path>, branch: main, key: <name>}]`; each is offered as `portal:<key>` |
 | `federation.acceptApprovalsFrom` | Child: `[{portal: <parent name>, key: ed25519:…}]`, the key the parent prints |
 | `federation.signingKey` | Parent: the variable holding the signing seed, for servers that share runs. Without it the server keeps one |

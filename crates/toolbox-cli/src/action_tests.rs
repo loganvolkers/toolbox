@@ -20,10 +20,47 @@ use toolbox_model::Manifest;
 use toolbox_model::manifest::Expect;
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct Suite {
     name: String,
+    /// Fields every case starts from. A case's own fields replace them, except `inputs`, which
+    /// merge key by key; an input set to `null` there is left out.
     #[serde(default)]
-    runs: Vec<Case>,
+    defaults: Map<String, Value>,
+    #[serde(default)]
+    runs: Vec<Map<String, Value>>,
+}
+
+impl Suite {
+    fn cases(&self, file: &str) -> Result<Vec<Case>, String> {
+        self.runs
+            .iter()
+            .enumerate()
+            .map(|(i, run)| {
+                let mut c = self.defaults.clone();
+                for (k, v) in run {
+                    match (k.as_str(), c.get_mut(k), v) {
+                        ("inputs", Some(Value::Object(base)), Value::Object(over)) => {
+                            for (name, value) in over {
+                                if value.is_null() {
+                                    base.remove(name);
+                                } else {
+                                    base.insert(name.clone(), value.clone());
+                                }
+                            }
+                        }
+                        _ => {
+                            c.insert(k.clone(), v.clone());
+                        }
+                    }
+                }
+                serde_json::from_value(Value::Object(c)).map_err(|e| {
+                    let name = run.get("name").and_then(Value::as_str).unwrap_or("");
+                    format!("{file}: runs[{i}] {name}: {e}")
+                })
+            })
+            .collect()
+    }
 }
 
 #[derive(Deserialize)]
@@ -82,8 +119,9 @@ pub fn run(portal: &Path, root: &Path, tests: &[String]) -> Result<Vec<TestResul
     for file in tests {
         let text = std::fs::read_to_string(root.join(file)).map_err(|e| format!("{file}: {e}"))?;
         let suite: Suite = serde_norway::from_str(&text).map_err(|e| format!("{file}: {e}"))?;
-        if !suite.runs.is_empty() {
-            suites.push((file, suite));
+        let cases = suite.cases(file)?;
+        if !cases.is_empty() {
+            suites.push((file, suite.name, cases));
         }
     }
     if suites.is_empty() {
@@ -93,13 +131,13 @@ pub fn run(portal: &Path, root: &Path, tests: &[String]) -> Result<Vec<TestResul
     let (m, d) = (&m, &d);
     let all = federation::offered(m, d);
     let mut out = Vec::new();
-    for (file, suite) in suites {
-        for case in &suite.runs {
+    for (file, suite, cases) in suites {
+        for case in &cases {
             let root = root.as_path();
             let error = one(root, m, d, &all, case).err();
             out.push(TestResult {
                 file: file.clone(),
-                suite: suite.name.clone(),
+                suite: suite.clone(),
                 name: case.name.clone(),
                 passed: error.is_none(),
                 error,
@@ -455,5 +493,31 @@ mod tests {
         .unwrap()
         .to_string();
         assert!(e.contains("aprove"), "{e}");
+    }
+
+    #[test]
+    fn cases_start_from_the_defaults_and_merge_inputs() {
+        let s: Suite = serde_norway::from_str(
+            "name: s
+defaults: {action: a, as: user:ann, inputs: {x: '1', y: '2'}, approve: [user:bob]}
+runs:
+  - {name: all of them, expect: {state: succeeded}}
+  - {name: one replaced, inputs: {x: '3'}, expect: {state: succeeded}}
+  - {name: one left out, inputs: {y: null}, approve: [], expect: {state: invalid}}
+  - {name: another action, action: b, expect: {state: refused}}",
+        )
+        .unwrap();
+        let c = s.cases("t.yaml").unwrap();
+        let inputs = |i: usize| serde_json::to_string(&c[i].inputs).unwrap();
+        assert_eq!(inputs(0), r#"{"x":"1","y":"2"}"#);
+        assert_eq!(inputs(1), r#"{"x":"3","y":"2"}"#);
+        assert_eq!(inputs(2), r#"{"x":"1"}"#);
+        assert_eq!((c[0].as_user.as_str(), c[0].approve.len()), ("user:ann", 1));
+        assert!(c[2].approve.is_empty());
+        assert_eq!((c[3].action.as_str(), c[0].action.as_str()), ("b", "a"));
+        let bad: Suite =
+            serde_norway::from_str("name: s\ndefaults: {aprove: [user:bob]}\nruns: [{name: n, action: a, expect: {state: x}}]")
+                .unwrap();
+        assert!(bad.cases("t.yaml").err().unwrap().contains("aprove"));
     }
 }

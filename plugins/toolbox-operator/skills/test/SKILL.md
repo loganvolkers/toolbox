@@ -22,30 +22,26 @@ run is recorded, so test refusals and a rejected push here, not against a live p
 
 ```yaml
 name: add-security-policy
+defaults: {action: add-security-policy, as: user:ann, inputs: {contact: security@acme.dev}, approve: [user:bob]}
 runs:
   - name: bob approves ann's request, and SECURITY.md lands on main
-    action: add-security-policy
-    as: user:ann
-    inputs: {contact: security@acme.dev}
-    approve: [user:bob]
     expect: {state: succeeded, files: {SECURITY.md: "# Security\n\nReport a vulnerability to security@acme.dev.\n"}}
+  - name: a contact that is not an email address is refused
+    inputs: {contact: nobody}
+    expect: {state: invalid, files: {SECURITY.md: null}}
   - name: ann and carol cannot approve
-    action: add-security-policy
-    as: user:ann
-    inputs: {contact: security@acme.dev}
     approve: [user:ann, user:carol]
     expect: {state: awaiting_approval, refused: [user:ann, user:carol]}
   - name: a rejected push fails the run
-    action: add-security-policy
-    as: user:ann
-    inputs: {contact: security@acme.dev}
-    approve: [user:bob]
     rejectPush: main is protected
     expect: {state: failed, error: main is protected, files: {SECURITY.md: null}}
 ```
 
-`expect.state` is a run state, or `invalid` (inputs refused), `blocked` or `refused`. `files`
-gives each file's exact content on the base afterwards; `null` means absent.
+Every case starts from `defaults`. Its own fields replace them, except `inputs`, which merge
+key by key; an input set to `null` is left out. `expect.state` is a run state, or `invalid`
+(inputs refused), `blocked` (a precondition failed) or `refused`. `files` gives each file's
+exact content on the base afterwards; `null` means absent. Quote any value with a comma inside
+`{…}`: YAML ends the value at the comma.
 
 Do not weaken an expectation to make it pass. If it fails, the check, the action or the fixture
 is wrong.

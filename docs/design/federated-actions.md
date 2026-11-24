@@ -310,7 +310,11 @@ lists, run by `toolbox test`. A case under `runs:` names the action, the request
 inputs, who approves (`approve`, in order) and, optionally, a push the origin refuses
 (`rejectPush: <message>`). It expects a state (a run state, or `invalid`, `blocked`, `refused`),
 the approvals that were refused, text in the error, and each file's content on the base (`null`:
-absent).
+absent). A file's `defaults` are the fields every case starts from: a case's own fields replace
+them, and its `inputs` merge into theirs key by key (`null` leaves one out), so a case states only
+what it varies. In round 4 of the actions benchmark the test files were the largest part of each
+Toolbox run, about 70 lines in each of three repositories, mostly the same action, requester,
+inputs and approver restated per case.
 
 Each case runs the same `prepare`, approval and `execute` code a served portal does, in a scratch
 clone of the repository whose origin holds the base as it would be pushed: the working tree,

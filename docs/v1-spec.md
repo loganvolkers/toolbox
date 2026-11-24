@@ -543,7 +543,8 @@ plus every milestone exit in §3.
   against the fixtures listed by the portal (default `fixtures/`). The same file may hold
   `runs[] {name, action, entity?, as?, inputs, approve[], rejectPush?, expect {state, files?,
   refused?, error?}}`: action cases, each run through the real lifecycle in a scratch copy of the
-  repository and its base ([federated-actions.md](./design/federated-actions.md) §6.5).
+  repository and its base ([federated-actions.md](./design/federated-actions.md) §6.5). A file's
+  `defaults` holds case fields every case starts from; a case's `inputs` merge into its inputs.
 - `authz/*.fga.yaml`: OpenFGA's test format, with tuples taken from the derived output.
 - Executor cassettes: recorded HTTP interactions per executor test.
 
