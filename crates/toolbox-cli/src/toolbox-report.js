@@ -241,6 +241,7 @@
     ".basis{display:inline-flex;align-items:center;gap:4px;padding:0 7px 0 5px;border-radius:6px;font-size:12px;font-weight:650;white-space:nowrap;line-height:20px;border:1px solid var(--line);color:var(--muted);background:var(--card);vertical-align:1px;text-transform:none;letter-spacing:0}",
     ".basis.judged{color:var(--judged);border-color:color-mix(in srgb,var(--judged) 45%,transparent);background:var(--judged-bg)}",
     ".basis.mini{padding:0 5px 0 3px;gap:3px;font-size:11px;font-weight:600;line-height:18px}",
+    ".basis.tip.mini{min-height:24px;align-items:center;vertical-align:middle}",
     ".basis svg{display:block;flex:none}",
     ".basis-key{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px 18px;padding:10px 12px;border-radius:10px;border:1px dashed var(--line);font-size:13px;color:var(--muted);margin:10px 0}",
     ".basis-key>div{display:flex;gap:8px;align-items:flex-start}.basis-key.one{display:block;padding:6px 12px}",
