@@ -1,0 +1,15 @@
+{
+ "linesToMaintain": 154,
+ "files": {
+  "gitlab:alpha/.toolbox/actions/set-codeowners.yaml": 44,
+  "gitlab:alpha/.toolbox/tests/set-codeowners.test.yaml": 45,
+  "gitlab:alpha/.toolbox/toolbox.yaml": 3,
+  "gitlab:alpha/CODEOWNERS": 1,
+  "gitlab:beta/.toolbox/toolbox.yaml": 3,
+  "gitlab:beta/CODEOWNERS": 1,
+  "gitlab:gamma/.toolbox/toolbox.yaml": 3,
+  "gitlab:gamma/CODEOWNERS": 1,
+  "gitlab:org/groups.fga": 6,
+  "gitlab:org/toolbox.yaml": 47
+ }
+}
