@@ -1,0 +1,27 @@
+{
+ "linesToMaintain": 1359,
+ "files": {
+  "alpha/.github/scripts/apply-github-settings.py": 75,
+  "alpha/.github/self-service.yml": 20,
+  "alpha/.github/workflows/mark-deprecated.yml": 178,
+  "alpha/CODEOWNERS": 4,
+  "beta/.github/CODEOWNERS": 4,
+  "org/.gitignore": 2,
+  "org/.state/mirrors/alpha.git/FETCH_HEAD": 1,
+  "org/.state/mirrors/alpha.git/HEAD": 1,
+  "org/.state/mirrors/alpha.git/config": 4,
+  "org/.state/mirrors/alpha.git/description": 1,
+  "org/.state/mirrors/alpha.git/info/exclude": 6,
+  "org/.state/mirrors/alpha.git/refs/heads/main": 1,
+  "org/.state/mirrors/beta.git/FETCH_HEAD": 1,
+  "org/.state/mirrors/beta.git/refs/heads/main": 1,
+  "org/.state/mirrors/gamma.git/FETCH_HEAD": 1,
+  "org/.state/mirrors/gamma.git/refs/heads/main": 1,
+  "org/.state/runs/1.json": 109,
+  "org/.state/runs/2.json": 109,
+  "org/.state/runs/3.json": 109,
+  "org/acme": 572,
+  "org/org.yml": 18,
+  "org/tests/e2e.sh": 141
+ }
+}
