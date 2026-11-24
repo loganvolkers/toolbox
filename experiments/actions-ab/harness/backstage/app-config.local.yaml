@@ -1,17 +1,13 @@
 # The Backstage arm's overlay on the create-app app-config.yaml (README §4.3): this run's port, and
 # one static token per person so each can call the API as themselves. backstage-cli loads this
 # file after app-config.yaml.
-app:
-  baseUrl: http://localhost:3000
+app: {baseUrl: http://localhost:3000}
 backend:
   baseUrl: http://localhost:{PORT}
   listen:
     port: {PORT}
   auth:
     externalAccess:
-      - type: static
-        options: {token: ann-token-0123456789, subject: ann}
-      - type: static
-        options: {token: bob-token-0123456789, subject: bob}
-      - type: static
-        options: {token: carol-token-0123456789, subject: carol}
+      - {type: static, options: {token: ann-token-0123456789, subject: ann}}
+      - {type: static, options: {token: bob-token-0123456789, subject: bob}}
+      - {type: static, options: {token: carol-token-0123456789, subject: carol}}
