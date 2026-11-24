@@ -35,12 +35,11 @@ export function blockers(sc, score, level) {
 // One bar per scorecard on a track, filled to its share at the top level; the dashed line is their
 // average, which is the track's ring.
 export function ringWords(t) {
-  return t.capped.length ? "average share at the top level, across " + fmt(t.averaged) + " of its " + fmt(t.scoredRows) + " scorecards" : "average share at the top level, across its " + fmt(t.averaged) + " scorecards";
+  return "average share at the top level, across its " + fmt(t.averaged) + " scorecards";
 }
 
-// Why a track's ring leaves a scorecard out: its 100% is a ladder that stops short, not progress.
-// A counted scorecard whose ladder stops below gold: its share is at its own top level, said so the
-// ring is read the same way in a portal that leaves such a scorecard out.
+// A scorecard whose ladder stops below gold: its share is at its own top level, which a reader would
+// otherwise take for gold.
 export function shortWhy(D, t) {
   if (!(t.short || []).length) return "";
   return andList(
@@ -60,9 +59,7 @@ export function ringWhy(D, t) {
         return title(D, n);
       }),
     ) +
-    (t.capped.length === 1 ? " is" : " are") +
-    " left out: " +
-    (t.capped.length === 1 ? "it holds the repository level at " + lv + " until it gains a higher level, so its 100% is a ceiling, not progress" : "each holds the repository level until it gains a higher level, so their 100% is a ceiling, not progress")
+    (t.capped.length === 1 ? " holds the repository level at " + lv + " until it gains a higher level" : " hold the repository level until they gain a higher level")
   );
 }
 
@@ -71,21 +68,18 @@ export function trackSlots(D, t) {
     return !c.row.compare && c.row.scored;
   });
   if (!cards.length || t.pct == null) return null;
-  var left = function (c) {
-    return t.capped.indexOf(c.row.name) >= 0;
-  };
   var said = cards.map(function (c) {
-    return title(D, c.row.name) + ": " + c.row.topShare + "% at the top level (" + levelName(c.row.top || "top") + ")" + (left(c) ? ", left out of the average because it caps the repository" : "");
+    return title(D, c.row.name) + ": " + c.row.topShare + "% at the top level (" + levelName(c.row.top || "top") + ")";
   });
   var named = function (c) {
     var top = c.row.top || "top";
-    return title(D, c.row.name) + ": " + c.row.topShare + "%" + (top === "gold" ? "" : " at " + levelName(top)) + (left(c) ? ", caps the repository, left out of the average" : "");
+    return title(D, c.row.name) + ": " + c.row.topShare + "%" + (top === "gold" ? "" : " at " + levelName(top));
   };
   var low = cards.reduce(function (a, c, i) {
-    return left(c) || (a >= 0 && cards[a].row.topShare <= c.row.topShare) ? a : i;
+    return a >= 0 && cards[a].row.topShare <= c.row.topShare ? a : i;
   }, -1);
   var high = cards.reduce(function (a, c, i) {
-    return left(c) || (a >= 0 && cards[a].row.topShare >= c.row.topShare) ? a : i;
+    return a >= 0 && cards[a].row.topShare >= c.row.topShare ? a : i;
   }, -1);
   var rest =
     (low >= 0 ? "Lowest bar, " + named(cards[low]) : "Each bar is one scorecard") +
@@ -94,8 +88,8 @@ export function trackSlots(D, t) {
   var cap = el("div", { className: "slotcap", ariaHidden: "true", textContent: rest });
   var bars = cards.map(function (c, i) {
     return el("span", {
-      className: "slot" + (left(c) ? " capped" : ""),
-      style: "--h:" + c.row.topShare + "%;--c:" + (left(c) ? "var(--unknown)" : RAMP),
+      className: "slot",
+      style: "--h:" + c.row.topShare + "%;--c:" + RAMP,
       onpointerenter: function () {
         show(i);
       },

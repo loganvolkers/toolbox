@@ -321,13 +321,11 @@
         none += r.none;
         if (r.scored) {
           scoredRows++;
+          shares.push(r.topShare);
           if (capsRepo(D, r.name, floorOf(D, r.name))) capped.push(r.name);
-          else {
-            shares.push(r.topShare);
-            var lv = ((D.scorecards || {})[r.name] || {}).levels || [];
-            var top = lv[lv.length - 1];
-            if (top && LADDER.indexOf(top) > 0 && top !== LADDER[LADDER.length - 1]) short.push(r.name);
-          }
+          var lv = ((D.scorecards || {})[r.name] || {}).levels || [];
+          var top = lv[lv.length - 1];
+          if (top && LADDER.indexOf(top) > 0 && top !== LADDER[LADDER.length - 1]) short.push(r.name);
         }
       }
       return { row: r, floor: r.compare ? null : floorOf(D, r.name) };
@@ -449,9 +447,6 @@
         ),
         "one per scorecard, its share at the top level (point at, tap or arrow through a bar to name it under the strip); dashed: their average, the ring"
       ),
-      tracks.some(function(t) {
-        return t.capped && t.capped.length;
-      }) ? el("span", {}, el("span", { className: "dot", style: "background:var(--unknown)" }), "a scorecard that caps the repository, left out of the average") : null,
       compare ? el("b", { textContent: "Segmented ring, one per factor:" }) : null,
       compare ? sw(standingColor("ahead"), "ahead") : null,
       compare ? sw(standingColor("parity"), "at parity") : null,
@@ -524,7 +519,7 @@
     }).sort();
   }
   function ringWords(t) {
-    return t.capped.length ? "average share at the top level, across " + fmt(t.averaged) + " of its " + fmt(t.scoredRows) + " scorecards" : "average share at the top level, across its " + fmt(t.averaged) + " scorecards";
+    return "average share at the top level, across its " + fmt(t.averaged) + " scorecards";
   }
   function shortWhy(D, t) {
     if (!(t.short || []).length) return "";
@@ -542,35 +537,32 @@
       t.capped.map(function(n) {
         return title(D, n);
       })
-    ) + (t.capped.length === 1 ? " is" : " are") + " left out: " + (t.capped.length === 1 ? "it holds the repository level at " + lv + " until it gains a higher level, so its 100% is a ceiling, not progress" : "each holds the repository level until it gains a higher level, so their 100% is a ceiling, not progress");
+    ) + (t.capped.length === 1 ? " holds the repository level at " + lv + " until it gains a higher level" : " hold the repository level until they gain a higher level");
   }
   function trackSlots(D, t) {
     var cards = t.cards.filter(function(c) {
       return !c.row.compare && c.row.scored;
     });
     if (!cards.length || t.pct == null) return null;
-    var left = function(c) {
-      return t.capped.indexOf(c.row.name) >= 0;
-    };
     var said = cards.map(function(c) {
-      return title(D, c.row.name) + ": " + c.row.topShare + "% at the top level (" + levelName(c.row.top || "top") + ")" + (left(c) ? ", left out of the average because it caps the repository" : "");
+      return title(D, c.row.name) + ": " + c.row.topShare + "% at the top level (" + levelName(c.row.top || "top") + ")";
     });
     var named = function(c) {
       var top = c.row.top || "top";
-      return title(D, c.row.name) + ": " + c.row.topShare + "%" + (top === "gold" ? "" : " at " + levelName(top)) + (left(c) ? ", caps the repository, left out of the average" : "");
+      return title(D, c.row.name) + ": " + c.row.topShare + "%" + (top === "gold" ? "" : " at " + levelName(top));
     };
     var low = cards.reduce(function(a, c, i) {
-      return left(c) || a >= 0 && cards[a].row.topShare <= c.row.topShare ? a : i;
+      return a >= 0 && cards[a].row.topShare <= c.row.topShare ? a : i;
     }, -1);
     var high = cards.reduce(function(a, c, i) {
-      return left(c) || a >= 0 && cards[a].row.topShare >= c.row.topShare ? a : i;
+      return a >= 0 && cards[a].row.topShare >= c.row.topShare ? a : i;
     }, -1);
     var rest = (low >= 0 ? "Lowest bar, " + named(cards[low]) : "Each bar is one scorecard") + (high >= 0 && high !== low && cards[high].row.topShare > cards[low].row.topShare ? " · highest, " + named(cards[high]) : "") + " · dashed line: their average, " + t.pct + "%";
     var cap = el("div", { className: "slotcap", ariaHidden: "true", textContent: rest });
     var bars = cards.map(function(c, i) {
       return el("span", {
-        className: "slot" + (left(c) ? " capped" : ""),
-        style: "--h:" + c.row.topShare + "%;--c:" + (left(c) ? "var(--unknown)" : RAMP),
+        className: "slot",
+        style: "--h:" + c.row.topShare + "%;--c:" + RAMP,
         onpointerenter: function() {
           show(i);
         },

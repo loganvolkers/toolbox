@@ -27,20 +27,18 @@ export function trackStats(D, S, name) {
   var scoredRows = 0;
   var capped = [];
   var short = [];
-  // A scorecard that caps the repository is at its own top level only because its ladder stops short,
-  // so it is left out of the average rather than counted as done.
+  // Every scored scorecard counts at its own top level, in every portal; one whose ladder stops
+  // below gold is named, and one that also caps the repository level gets a lock note.
   var cards = rows.map(function (r) {
     if (!r.compare) {
       none += r.none;
       if (r.scored) {
         scoredRows++;
+        shares.push(r.topShare);
         if (capsRepo(D, r.name, floorOf(D, r.name))) capped.push(r.name);
-        else {
-          shares.push(r.topShare);
-          var lv = ((D.scorecards || {})[r.name] || {}).levels || [];
-          var top = lv[lv.length - 1];
-          if (top && LADDER.indexOf(top) > 0 && top !== LADDER[LADDER.length - 1]) short.push(r.name);
-        }
+        var lv = ((D.scorecards || {})[r.name] || {}).levels || [];
+        var top = lv[lv.length - 1];
+        if (top && LADDER.indexOf(top) > 0 && top !== LADDER[LADDER.length - 1]) short.push(r.name);
       }
     }
     return { row: r, floor: r.compare ? null : floorOf(D, r.name) };
@@ -176,11 +174,6 @@ export function trackKey(tracks) {
       ),
       "one per scorecard, its share at the top level (point at, tap or arrow through a bar to name it under the strip); dashed: their average, the ring",
     ),
-    tracks.some(function (t) {
-      return t.capped && t.capped.length;
-    })
-      ? el("span", {}, el("span", { className: "dot", style: "background:var(--unknown)" }), "a scorecard that caps the repository, left out of the average")
-      : null,
     compare ? el("b", { textContent: "Segmented ring, one per factor:" }) : null,
     compare ? sw(standingColor("ahead"), "ahead") : null,
     compare ? sw(standingColor("parity"), "at parity") : null,
