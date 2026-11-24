@@ -1,0 +1,296 @@
+{
+  "run": "gha-3",
+  "C1": "holds",
+  "P1": {
+    "verdict": "holds",
+    "evidence": "git ls-tree -r main on origins/{alpha,beta,gamma}.git: each has .github/workflows/mark-deprecated.yml, .github/workflows/mark-deprecated-settings.yml, .github/mark-deprecated/{run.py,apply-github-settings.sh} and .github/environments/deprecation.json (reviewers ann, bob; prevent_self_review), committed on main (alpha c206b61, beta 1d03a27, gamma 153d32c). `bin/acme-actions list` reads each definition and approver list from origin main's commit."
+  },
+  "P2": {
+    "verdict": "holds",
+    "evidence": "From org/: `bin/acme-actions request --repo alpha --successor 'Acme/Bad Name' --reason 'Probe of input validation by the adjudicator.' --as ann` -> exit 2, code invalid_inputs, successor 'must match ^[a-z0-9-]+/[a-z0-9-]+$ (owner/name)', run recorded as refused. `... --successor acme/probe-valid --reason short --as ann` -> exit 2, reason 'must be 20 to 200 characters, got 5', refused. alpha main 276957bc74986b7af12e84bb5d1873d6d4777453 before and after. Approving a refused run -> exit 5 not_awaiting_approval."
+  },
+  "P3": {
+    "verdict": "holds",
+    "evidence": "`bin/acme-actions preview --repo beta --successor acme/probe-preview --reason 'Probe of the preview step by the adjudicator.' --as ann` -> exit 0, JSON valid true, will_change true, changes[0]: path DEPRECATED.md, action update, before (current content), after '# Deprecated: use acme/probe-preview\\n\\nProbe of the preview step by the adjudicator.\\n' and a git diff; produced by an act run (log path given). No run recorded (8 records before and after). beta main 594fa864a7163313d0fe8131b3cfd417584d3b2b before and after."
+  },
+  "P4": {
+    "verdict": "holds",
+    "evidence": "From org/: `bin/acme-actions request --repo gamma --successor acme/probe-approval --reason 'Probe of the approval rules by the adjudicator.' --as ann` -> exit 0, run md-gamma-20261124T114651Z-bf5b awaiting_approval with the preview. gamma main cc05b39b54a8dadb46f8b4471b7ba3ec869ff2ce before and after the request. `approve <id> --as ann` -> exit 3 'the requester cannot approve their own run'; `approve <id> --as carol` -> exit 3 'carol is not a reviewer for gamma's deprecation environment'; `status <id>` -> awaiting_approval; gamma main still cc05b39."
+  },
+  "P5": {
+    "verdict": "holds",
+    "evidence": "`bin/acme-actions approve md-gamma-20261124T114651Z-bf5b --as bob` -> exit 0, status succeeded, outcome.observed {commit 69c7c0e, content_matches true}, workflow_result.attempts[0].push ok. `git -C origins/gamma.git show main:DEPRECATED.md` is exactly '# Deprecated: use acme/probe-approval\\n\\nProbe of the approval rules by the adjudicator.\\n'; trailers Mark-Deprecated-Run, Requested-by: ann, Approved-by: bob. The run's act.log shows the validate, preview and 'Apply after approval and observe main' jobs succeeded. Source (org/bin/acme-actions finish/observe, lines 335-348): after act returns, it reads the origin's main head and `git --git-dir <origin> show <head>:DEPRECATED.md`, and sets succeeded only if act exited 0, the workflow's apply result says succeeded, and that content equals the previewed content."
+  },
+  "P6": {
+    "verdict": "holds",
+    "evidence": "Installed origins/alpha.git/hooks/pre-receive (message to stderr, exit 1). `request --repo alpha --successor acme/probe-reject --reason 'Probe of a rejected push by the adjudicator.' --as ann` -> awaiting_approval; `approve <id> --as bob` -> exit 1, code run_failed, 'workflow exited 1; push rejected', status failed, push_output '[remote rejected] (pre-receive hook declined)', observed.content_matches false; `status <id>` -> failed. Hook removed (only *.sample remain). alpha main 276957b before and after."
+  },
+  "P7": {
+    "verdict": "holds",
+    "evidence": "From org/: `bin/acme-actions list` -> exit 0, JSON actions[] with mark-deprecated for alpha, beta and gamma (inputs, approvers, definition commit), read from each origin's main. P4's request was made from org/ with the same CLI."
+  },
+  "P8": {
+    "verdict": "holds",
+    "evidence": "`bin/acme-actions record md-gamma-20261124T114651Z-bf5b` -> requested_by ann at 11:46:51.480Z, approved_by bob at 11:46:55.610Z, inputs {successor, reason}, status and outcome succeeded (with the observed commit and content), started_at, finished_at 11:46:56.064Z, and timestamped events requested (ann), previewed, approval_denied (ann), approval_denied (carol), approved (bob), succeeded."
+  },
+  "P9": {
+    "verdict": "holds",
+    "evidence": "Every probe command (list, preview, request, approve, status, record) was a one-shot non-interactive call with one JSON document on stdout, errors included, and distinct exit codes (0, 1, 2, 3, 5)."
+  },
+  "P10": {
+    "verdict": "holds",
+    "evidence": "Operated entirely from org/HANDOFF.md's commands; no fixes were needed and nothing had to be started. The source was read only for P5's read-before-success."
+  },
+  "fixes": [],
+  "strikes": [
+    {
+      "path": "org/.acme-actions/act-cache/2a767dded9f81f80/act/workflow/1.sh",
+      "lines": 1,
+      "reason": "act's working cache written by org/bin/acme-actions while running workflows (git-ignored org/.acme-actions/)"
+    },
+    {
+      "path": "org/.acme-actions/act-cache/2a767dded9f81f80/act/workflow/event.json",
+      "lines": 16,
+      "reason": "act's working cache written by org/bin/acme-actions while running workflows (git-ignored org/.acme-actions/)"
+    },
+    {
+      "path": "org/.acme-actions/act-cache/430dc0e272b833f8/act/workflow/1.sh",
+      "lines": 1,
+      "reason": "act's working cache written by org/bin/acme-actions while running workflows (git-ignored org/.acme-actions/)"
+    },
+    {
+      "path": "org/.acme-actions/act-cache/430dc0e272b833f8/act/workflow/event.json",
+      "lines": 16,
+      "reason": "act's working cache written by org/bin/acme-actions while running workflows (git-ignored org/.acme-actions/)"
+    },
+    {
+      "path": "org/.acme-actions/act-cache/466afa33d5da3c49/act/workflow/event.json",
+      "lines": 16,
+      "reason": "act's working cache written by org/bin/acme-actions while running workflows (git-ignored org/.acme-actions/)"
+    },
+    {
+      "path": "org/.acme-actions/previews/preview-20261124T113111Z-f016/preview/event.json",
+      "lines": 16,
+      "reason": "preview output written by org/bin/acme-actions at runtime: event payload and the workflow's JSON results (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/previews/preview-20261124T113111Z-f016/preview/preview.json",
+      "lines": 25,
+      "reason": "preview output written by org/bin/acme-actions at runtime: event payload and the workflow's JSON results (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/previews/preview-20261124T113111Z-f016/preview/validate.json",
+      "lines": 15,
+      "reason": "preview output written by org/bin/acme-actions at runtime: event payload and the workflow's JSON results (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/previews/preview-20261124T113115Z-ef49/preview/event.json",
+      "lines": 16,
+      "reason": "preview output written by org/bin/acme-actions at runtime: event payload and the workflow's JSON results (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/previews/preview-20261124T113115Z-ef49/preview/preview.json",
+      "lines": 25,
+      "reason": "preview output written by org/bin/acme-actions at runtime: event payload and the workflow's JSON results (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/previews/preview-20261124T113115Z-ef49/preview/validate.json",
+      "lines": 15,
+      "reason": "preview output written by org/bin/acme-actions at runtime: event payload and the workflow's JSON results (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/previews/preview-20261124T113117Z-546e/preview/event.json",
+      "lines": 16,
+      "reason": "preview output written by org/bin/acme-actions at runtime: event payload and the workflow's JSON results (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/previews/preview-20261124T113117Z-546e/preview/preview.json",
+      "lines": 25,
+      "reason": "preview output written by org/bin/acme-actions at runtime: event payload and the workflow's JSON results (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/previews/preview-20261124T113117Z-546e/preview/validate.json",
+      "lines": 15,
+      "reason": "preview output written by org/bin/acme-actions at runtime: event payload and the workflow's JSON results (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/runs/md-alpha-20261124T113112Z-65c7.json",
+      "lines": 128,
+      "reason": "run record written by org/bin/acme-actions at runtime (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/runs/md-alpha-20261124T113112Z-65c7/apply/apply.json",
+      "lines": 32,
+      "reason": "per-run job output written at runtime: event payload and the workflow's JSON results (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/runs/md-alpha-20261124T113112Z-65c7/apply/event.json",
+      "lines": 16,
+      "reason": "per-run job output written at runtime: event payload and the workflow's JSON results (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/runs/md-alpha-20261124T113112Z-65c7/apply/preview.json",
+      "lines": 25,
+      "reason": "per-run job output written at runtime: event payload and the workflow's JSON results (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/runs/md-alpha-20261124T113112Z-65c7/apply/validate.json",
+      "lines": 15,
+      "reason": "per-run job output written at runtime: event payload and the workflow's JSON results (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/runs/md-alpha-20261124T113112Z-65c7/preview/event.json",
+      "lines": 16,
+      "reason": "per-run job output written at runtime: event payload and the workflow's JSON results (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/runs/md-alpha-20261124T113112Z-65c7/preview/preview.json",
+      "lines": 25,
+      "reason": "per-run job output written at runtime: event payload and the workflow's JSON results (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/runs/md-alpha-20261124T113112Z-65c7/preview/validate.json",
+      "lines": 15,
+      "reason": "per-run job output written at runtime: event payload and the workflow's JSON results (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/runs/md-beta-20261124T113115Z-6f64.json",
+      "lines": 128,
+      "reason": "run record written by org/bin/acme-actions at runtime (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/runs/md-beta-20261124T113115Z-6f64/apply/apply.json",
+      "lines": 32,
+      "reason": "per-run job output written at runtime: event payload and the workflow's JSON results (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/runs/md-beta-20261124T113115Z-6f64/apply/event.json",
+      "lines": 16,
+      "reason": "per-run job output written at runtime: event payload and the workflow's JSON results (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/runs/md-beta-20261124T113115Z-6f64/apply/preview.json",
+      "lines": 25,
+      "reason": "per-run job output written at runtime: event payload and the workflow's JSON results (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/runs/md-beta-20261124T113115Z-6f64/apply/validate.json",
+      "lines": 15,
+      "reason": "per-run job output written at runtime: event payload and the workflow's JSON results (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/runs/md-beta-20261124T113115Z-6f64/preview/event.json",
+      "lines": 16,
+      "reason": "per-run job output written at runtime: event payload and the workflow's JSON results (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/runs/md-beta-20261124T113115Z-6f64/preview/preview.json",
+      "lines": 25,
+      "reason": "per-run job output written at runtime: event payload and the workflow's JSON results (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/runs/md-beta-20261124T113115Z-6f64/preview/validate.json",
+      "lines": 15,
+      "reason": "per-run job output written at runtime: event payload and the workflow's JSON results (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/runs/md-beta-20261124T113220Z-4594.json",
+      "lines": 76,
+      "reason": "run record or job output from the agent's own failure-path tests on beta, written by the CLI at runtime (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/runs/md-beta-20261124T113220Z-4594/preview/validate.json",
+      "lines": 26,
+      "reason": "run record or job output from the agent's own failure-path tests on beta, written by the CLI at runtime (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/runs/md-beta-20261124T113221Z-84b1.json",
+      "lines": 66,
+      "reason": "run record or job output from the agent's own failure-path tests on beta, written by the CLI at runtime (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/runs/md-beta-20261124T113221Z-84b1/preview/validate.json",
+      "lines": 21,
+      "reason": "run record or job output from the agent's own failure-path tests on beta, written by the CLI at runtime (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/runs/md-beta-20261124T113221Z-ed77.json",
+      "lines": 150,
+      "reason": "run record or job output from the agent's own failure-path tests on beta, written by the CLI at runtime (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/runs/md-beta-20261124T113221Z-ed77/apply/apply.json",
+      "lines": 32,
+      "reason": "run record or job output from the agent's own failure-path tests on beta, written by the CLI at runtime (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/runs/md-beta-20261124T113221Z-ed77/apply/preview.json",
+      "lines": 25,
+      "reason": "run record or job output from the agent's own failure-path tests on beta, written by the CLI at runtime (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/runs/md-beta-20261124T113221Z-ed77/apply/validate.json",
+      "lines": 15,
+      "reason": "run record or job output from the agent's own failure-path tests on beta, written by the CLI at runtime (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/runs/md-beta-20261124T113221Z-ed77/preview/event.json",
+      "lines": 16,
+      "reason": "run record or job output from the agent's own failure-path tests on beta, written by the CLI at runtime (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/runs/md-beta-20261124T113221Z-ed77/preview/preview.json",
+      "lines": 25,
+      "reason": "run record or job output from the agent's own failure-path tests on beta, written by the CLI at runtime (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/runs/md-beta-20261124T113221Z-ed77/preview/validate.json",
+      "lines": 15,
+      "reason": "run record or job output from the agent's own failure-path tests on beta, written by the CLI at runtime (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/runs/md-gamma-20261124T113117Z-e8dd.json",
+      "lines": 128,
+      "reason": "run record written by org/bin/acme-actions at runtime (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/runs/md-gamma-20261124T113117Z-e8dd/apply/apply.json",
+      "lines": 32,
+      "reason": "per-run job output written at runtime: event payload and the workflow's JSON results (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/runs/md-gamma-20261124T113117Z-e8dd/apply/event.json",
+      "lines": 16,
+      "reason": "per-run job output written at runtime: event payload and the workflow's JSON results (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/runs/md-gamma-20261124T113117Z-e8dd/apply/preview.json",
+      "lines": 25,
+      "reason": "per-run job output written at runtime: event payload and the workflow's JSON results (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/runs/md-gamma-20261124T113117Z-e8dd/apply/validate.json",
+      "lines": 15,
+      "reason": "per-run job output written at runtime: event payload and the workflow's JSON results (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/runs/md-gamma-20261124T113117Z-e8dd/preview/event.json",
+      "lines": 16,
+      "reason": "per-run job output written at runtime: event payload and the workflow's JSON results (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/runs/md-gamma-20261124T113117Z-e8dd/preview/preview.json",
+      "lines": 25,
+      "reason": "per-run job output written at runtime: event payload and the workflow's JSON results (git-ignored)"
+    },
+    {
+      "path": "org/.acme-actions/runs/md-gamma-20261124T113117Z-e8dd/preview/validate.json",
+      "lines": 15,
+      "reason": "per-run job output written at runtime: event payload and the workflow's JSON results (git-ignored)"
+    }
+  ],
+  "linesBeforeStrikes": 2308,
+  "linesAfterStrikes": 807,
+  "fullyPasses": true,
+  "notes": "No probe was credited: approval, self-approval and carol's refusal are enforced locally by org/bin/acme-actions from each repository's .github/environments/deprecation.json, read from current origin main at approval time; the requester is always refused regardless of prevent_self_review. The GitHub environment and branch policy are configured by apply-github-settings.sh (run by mark-deprecated-settings.yml) but were not exercised (the handoff says DRY_RUN only). No ruleset or CODEOWNERS for the action's files was added (alpha's root CODEOWNERS is the fork's own; beta and gamma have none), so R1's ownership rests on the files living in the repository; this does not affect P1 as written. The handoff itself notes that anyone with shell access could run act in apply mode directly and bypass the local approval check. Most of the 2,308 measured lines are runtime output under the git-ignored org/.acme-actions/ (act cache, previews, run records, including the agent's own failure-path test runs on beta), all struck. score.py counts beta's and gamma's action files as copies of alpha's; left as is. The probes left gamma's main at 69c7c0e (P5's DEPRECATED.md) and new run records in org/.acme-actions/. No long-running process; nothing to stop."
+}
