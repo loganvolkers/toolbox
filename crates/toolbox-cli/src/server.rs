@@ -15,6 +15,13 @@ pub fn listen_addr(explicit: Option<&str>, port: Option<&str>) -> String {
     "127.0.0.1:8080".to_owned()
 }
 
+/// Whether the database URL came from `--database-url` rather than `DATABASE_URL`. Every local
+/// user, whatever its UID, can read a process's argv in `/proc/<pid>/cmdline`, and non-dumpable
+/// does not hide it; the environment is hidden.
+pub fn url_on_command_line(database_url: Option<&str>, env: Option<&str>) -> bool {
+    database_url.is_some() && database_url != env
+}
+
 /// Whether `listen` (`host:port`) binds only the loopback interface.
 pub fn is_loopback(listen: &str) -> bool {
     if let Ok(a) = listen.parse::<std::net::SocketAddr>() {
@@ -163,6 +170,11 @@ pub fn serve(path: &Path, listen: &str, database_url: Option<String>, fixtures: 
             Ok(g) => g,
             Err(code) => return code,
         };
+        if url_on_command_line(database_url.as_deref(), std::env::var("DATABASE_URL").ok().as_deref()) {
+            tracing::warn!(
+                "--database-url is readable by every local user in /proc/<pid>/cmdline; set DATABASE_URL instead"
+            );
+        }
         let (store, pg): (Arc<dyn Store>, _) = match database_url {
             Some(url) => match toolbox_store::PgStore::connect(&url).await {
                 Ok(pg) => (Arc::new(pg.clone()), Some(pg)),
@@ -426,7 +438,16 @@ pub fn create_token(user: &str, label: Option<&str>, database_url: &str) -> Exit
 
 #[cfg(test)]
 mod tests {
-    use super::{default_auth_mode, listen_addr};
+    use super::{default_auth_mode, listen_addr, url_on_command_line};
+
+    #[test]
+    fn a_database_url_on_the_command_line_is_flagged() {
+        let url = Some("postgres://u:p@h/db");
+        assert!(url_on_command_line(url, None));
+        assert!(url_on_command_line(url, Some("postgres://other")));
+        assert!(!url_on_command_line(url, url));
+        assert!(!url_on_command_line(None, None));
+    }
 
     #[test]
     fn header_auth_is_the_default_only_on_loopback() {
