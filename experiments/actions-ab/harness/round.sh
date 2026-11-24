@@ -3,7 +3,7 @@
 # and the rendered prompts under prompts/rendered/r<round>/ (P1: commit them before the first
 # launch). Each run gets its own ports, so a batch can run every arm at once.
 #
-#   [RUNS=n] [ARMS="toolbox gha backstage vanilla"] round.sh <round> <src-dir>
+#   [RUNS=n] [ARMS="toolbox gha backstage vanilla"] [PORT_BASE=7100] round.sh <round> <src-dir>
 set -euo pipefail
 round=$1 src=$2
 runs_per_arm=${RUNS:-3}
@@ -17,7 +17,7 @@ i=0
 for n in $(seq 1 "$runs_per_arm"); do
   for arm in $arms; do
     i=$((i + 1))
-    dest="$runs/$arm-$n" port=$((7100 + 10 * i))
+    dest="$runs/$arm-$n" port=$((${PORT_BASE:-7100} + 10 * i))
     "$here/setup.sh" "$arm" "$dest" "$src" "$port" >/dev/null
     python3 - "$here/../prompts" "$arm" "$dest" "$port" > "$rendered/$arm-$n.md" <<'EOF'
 import sys
