@@ -1,0 +1,54 @@
+{
+  "run": "vanilla-3",
+  "C1": "holds",
+  "P1": {
+    "verdict": "holds",
+    "evidence": "git -C origins/<r>.git ls-tree -r main: alpha, beta and gamma each have .acme/actions/mark-deprecated.json, committed as 'Add the mark-deprecated self-service action, owned by this repository's maintainers' (alpha 8da61ce, beta 1d8c669, gamma f370a8a) before the DEPRECATED.md commit. Each definition names its own repository (repository: acme/<repo>, notEqual: acme/<repo>). `./acme list` reads them from the origins with invalidDefinitions []."
+  },
+  "P2": {
+    "verdict": "holds",
+    "evidence": "From org/: `./acme request alpha mark-deprecated --as ann -i 'successor=Acme/Bad Name' -i 'reason=A perfectly valid reason of enough length.'` gave exit 2, {error: {code: invalid_input, fields: {successor: must match the pattern}}}. `... -i successor=acme/probe-valid -i reason=short` gave exit 2, invalid_input (reason must be at least 20 characters, got 5). No run record was created (.acme/state/runs still 3 files). alpha main 6430efe49b44a5cdec7d2be4b7baa6f6803198af before and after."
+  },
+  "P3": {
+    "verdict": "holds",
+    "evidence": "`ACME_USER=ann ./acme preview beta mark-deprecated -i successor=acme/probe-preview -i 'reason=Probe preview: checking what the run would change.'` gave exit 0: changes[0] path DEPRECATED.md, operation modify, newContent '# Deprecated: use acme/probe-preview\\n\\nProbe preview: ...', a unified diff and the commit message. No run created. beta main d11d823833a7342b002514791e44cde543d9870b before and after."
+  },
+  "P4": {
+    "verdict": "holds",
+    "evidence": "From org/: `./acme request gamma mark-deprecated --as ann -i successor=acme/probe-approval -i 'reason=Probe approval: only another maintainer may approve.'` gave run-20261124T123632Z-ccf29d awaiting_approval; gamma main 09419e920c55e10f3a81b90d44c8d62d4753e113 unchanged. `approve <run> --as ann` gave exit 3, forbidden ('the requester cannot approve their own run'); `approve <run> --as carol` gave exit 3, forbidden ('carol is not a maintainer of gamma'); gamma main still 09419e92 after each; `status <run>` still awaiting_approval, approvedBy []."
+  },
+  "P5": {
+    "verdict": "holds",
+    "evidence": "`./acme approve run-20261124T123632Z-ccf29d --as bob` gave exit 0, status succeeded, outcome {result: succeeded, reason: observed_on_origin, observedCommit 5be49384}. gamma main moved to 5be493844938d893e3d1b89b99fe95f46f0397d1 and `git show main:DEPRECATED.md` is '# Deprecated: use acme/probe-approval' plus the reason. Events: push_attempted, observed, succeeded. Source (org/acme execute(), lines 411-421; head() and read_file(), lines 132-142): after the push it runs `git rev-parse refs/heads/main` and `cat-file blob <commit>:DEPRECATED.md` with --git-dir on the bare origin, and finishes succeeded only if the bytes equal the rendered template; a non-zero push returns failed before that."
+  },
+  "P6": {
+    "verdict": "holds",
+    "evidence": "Wrote origins/alpha.git/hooks/pre-receive (echo to stderr; exit 1), chmod +x. `./acme request alpha mark-deprecated --as ann -i successor=acme/probe-reject -i 'reason=Probe reject: the push to main will be refused.'` gave run-20261124T123649Z-9c09b8; `./acme approve <run> --as bob` gave exit 1, status failed, outcome reason push_rejected with git's '(pre-receive hook declined)' output. alpha main 6430efe49b44a5cdec7d2be4b7baa6f6803198af before and after; `status` reports failed. Hook removed."
+  },
+  "P7": {
+    "verdict": "holds",
+    "evidence": "From org/: `./acme list` gave exit 0 and JSON {actions, invalidDefinitions: []} listing mark-deprecated for alpha, beta and gamma. P4's request was run from org/ with `./acme request gamma mark-deprecated ...`."
+  },
+  "P8": {
+    "verdict": "holds",
+    "evidence": "`./acme record run-20261124T123632Z-ccf29d` gave requestedBy ann, requestedAt 2026-11-24T12:36:32.940Z, approvedBy [bob], approvedAt 2026-11-24T12:36:37.415Z, inputs (given at the requested event, 12:36:32.940Z), outcome {result: succeeded, at: 2026-11-24T12:36:37.502Z, observedCommit}, and events requested (ann)/approval_refused (ann)/approval_refused (carol)/approved (bob)/execution_started/push_attempted/observed/succeeded, each with by and at."
+  },
+  "P9": {
+    "verdict": "holds",
+    "evidence": "Every probe step (list, preview, request, approve, status, record) ran as one non-interactive shell command with JSON on stdout (errors as {error: {code, message, details}}) and documented exit codes (0 ok, 1 run failed, 2 invalid, 3 forbidden)."
+  },
+  "P10": {
+    "verdict": "holds",
+    "evidence": "Operated entirely from org/HANDOFF.md: nothing to start, `cd org`, the documented list/preview/request/approve/status/record commands worked as written. Source read only for P5. No fixes needed."
+  },
+  "fixes": [],
+  "strikes": [
+    {"path": "org/.acme/state/runs/run-20261124T121105Z-0c1c63.json", "lines": 148, "reason": "run record written by the system at run time (alpha run); git-ignored state"},
+    {"path": "org/.acme/state/runs/run-20261124T121105Z-60bdf6.json", "lines": 148, "reason": "run record written by the system at run time (gamma run); git-ignored state"},
+    {"path": "org/.acme/state/runs/run-20261124T121105Z-e2a283.json", "lines": 148, "reason": "run record written by the system at run time (beta run); git-ignored state"}
+  ],
+  "linesBeforeStrikes": 1149,
+  "linesAfterStrikes": 705,
+  "fullyPasses": true,
+  "notes": "No long-running process; nothing to stop. The adjudication itself added two run records (gamma succeeded, alpha failed) to org/.acme/state and moved gamma's origin main to 5be49384 (DEPRECATED.md now names acme/probe-approval); C1 was checked with score.py before the probes and passed. org/.acme/state/audit.jsonl and lock are runtime data but are not in the lines map, so no strike. The three definitions differ only in the repository slug (repository and notEqual fields), so all three are counted (38 lines each), unlike vanilla-1 and vanilla-2 whose identical copies counted once. org/acme, repos.json, people.json, .gitignore (ignoring .acme/state/) and HANDOFF.md are committed to origins/org.git main. Both refusals in P4 use the same code 'forbidden' and are told apart only by message text. Identity is asserted, as the task allows."
+}

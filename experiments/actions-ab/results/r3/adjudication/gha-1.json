@@ -1,0 +1,126 @@
+{
+ "run": "gha-1",
+ "C1": "holds",
+ "P1": {
+  "verdict": "holds",
+  "evidence": "git ls-tree main on origins/{alpha,beta,gamma}.git: each has .github/workflows/mark-deprecated.yml and .github/self-service/{mark_deprecated.py,mark-deprecated.json,apply-github-settings.sh} plus CODEOWNERS (alpha/CODEOWNERS, beta|gamma/.github/CODEOWNERS), committed by 'Add the mark-deprecated self-service action' (alpha 2fe90db + fix 12966de, beta a1a8485, gamma 2d36cb3). The four files are byte-identical across the three origins' main. `acme list` reads them from each origin's main (definition.commit = origin main)."
+ },
+ "P2": {
+  "verdict": "holds",
+  "evidence": "alpha main 495933a7 before. `acme request --as ann --repo alpha -i 'successor=Acme/Bad Name' -i 'reason=This reason is long enough to be valid.'` -> exit 2, status refused, errors[successor]: must match ^[a-z0-9-]+/[a-z0-9-]+$ (run-0004). `acme request --as ann --repo alpha -i successor=acme/probe-valid -i reason=short` -> exit 2, status refused, errors[reason]: must be 20 to 200 characters, got 5 (run-0005). alpha main 495933a7 after: unchanged."
+ },
+ "P3": {
+  "verdict": "holds",
+  "evidence": "beta main 56556958 before. `ACME_USER=ann acme preview --repo beta -i successor=acme/probe-preview -i 'reason=Probe P3 checks that the preview shows the change.'` -> exit 0, JSON preview: file DEPRECATED.md, branch main, change update, before (current content), after '# Deprecated: use acme/probe-preview\\n\\nProbe P3 checks that the preview shows the change.\\n' and a unified diff. beta main 56556958 after: unchanged. (`request` also returns the same preview; seen in P4.)"
+ },
+ "P4": {
+  "verdict": "holds",
+  "evidence": "From org/: gamma main 2d9cfd6a before. `acme request --as ann --repo gamma -i successor=acme/probe-approval -i 'reason=Probe P4 checks the approval rules hold.'` -> exit 0, run-0006 awaiting_approval with diff; gamma 2d9cfd6a. `acme approve run-0006 --as ann` -> exit 2 code self_review; gamma 2d9cfd6a. `acme approve run-0006 --as carol` -> exit 2 code not_a_reviewer; gamma 2d9cfd6a. `acme status run-0006` -> awaiting_approval. Enforced locally by org/bin/acme from the policy on the origin's main, so it holds outright rather than only being credited; GitHub environment reviewers + prevent_self_review are also configured as code (mark-deprecated.json, apply-github-settings.sh)."
+ },
+ "P5": {
+  "verdict": "holds",
+  "evidence": "`acme approve run-0006 --as bob --comment 'P5 approve'` -> exit 0, status succeeded, observation {main f1e1d5b5, content_matches true, commit_on_main true}. gamma main now f1e1d5b5 by github-actions[bot] with Requested-by: ann / Approved-by: bob trailers; `git show main:DEPRECATED.md` = '# Deprecated: use acme/probe-approval\\n\\nProbe P4 checks the approval rules hold.' state/runs/run-0006/apply.log shows act 0.2.98 ran the workflow (-P ubuntu-latest=-self-hosted). Source org/bin/acme cmd_approve (lines 403-412): after run_workflow, observe() runs `git --git-dir <origin> rev-parse refs/heads/main`, `git show <head>:DEPRECATED.md`, compares with the previewed content and checks merge-base --is-ancestor; finish('succeeded') only if rc==0 and observation ok. So success is reported only after reading the origin."
+ },
+ "P6": {
+  "verdict": "holds",
+  "evidence": "Wrote origins/alpha.git/hooks/pre-receive (echo to stderr; exit 1). alpha main 495933a7. `acme request --as ann --repo alpha -i successor=acme/probe-reject -i 'reason=Probe P6 checks that a rejected push fails.'` -> run-0007 awaiting_approval. `acme approve run-0007 --as bob` -> exit 1, status failed, outcome.reason push_rejected (message carries the hook's stderr), observation content_matches false, commit_on_main false. alpha main 495933a7 after. Hook removed (hooks/ has only samples)."
+ },
+ "P7": {
+  "verdict": "holds",
+  "evidence": "From org/: `acme list` -> exit 0, JSON actions[] with mark-deprecated for alpha, beta and gamma (inputs, approval policy, definition commit read from each origin's main). P4's request was made from org/ with `acme request --repo gamma`."
+ },
+ "P8": {
+  "verdict": "holds",
+  "evidence": "`acme record run-0006` -> JSON run: requested_by ann, requested_at 12:34:16.871Z, approved_by bob, approved_at 12:34:23.737Z, inputs {successor acme/probe-approval, reason ...}, outcome {status succeeded, at 12:34:24.196Z, observation}, plus an events list with timestamps (requested, previewed, approval_refused ann self_review, approval_refused carol not_a_reviewer, approved bob, started, observed, succeeded)."
+ },
+ "P9": {
+  "verdict": "holds",
+  "evidence": "Every probe step (list, preview, request, approve, status, record) ran as a one-shot shell command with flags or ACME_USER, no prompts, and printed JSON on stdout with distinct exit codes (0 ok, 1 failed, 2 refused). No server needed."
+ },
+ "P10": {
+  "verdict": "holds",
+  "evidence": "Followed org/HANDOFF.md alone: its commands (A=.../org/bin/acme; list, preview, request --as, approve --as, status, record) worked as written, with no fixes. Source read only for P5 (observe()/cmd_approve)."
+ },
+ "fixes": [],
+ "strikes": [
+  {
+   "path": "org/state/counter",
+   "lines": 1,
+   "reason": "run-id counter written by org/bin/acme at run time"
+  },
+  {
+   "path": "org/state/runs/run-0001.json",
+   "lines": 146,
+   "reason": "run record / step result written by org/bin/acme at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/run-0001/apply/apply.json",
+   "lines": 6,
+   "reason": "run record / step result written by org/bin/acme at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/run-0001/apply/check-approval.json",
+   "lines": 9,
+   "reason": "run record / step result written by org/bin/acme at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/run-0001/apply/preview.json",
+   "lines": 13,
+   "reason": "run record / step result written by org/bin/acme at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/run-0001/apply/verify.json",
+   "lines": 8,
+   "reason": "run record / step result written by org/bin/acme at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/run-0002.json",
+   "lines": 146,
+   "reason": "run record / step result written by org/bin/acme at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/run-0002/apply/apply.json",
+   "lines": 6,
+   "reason": "run record / step result written by org/bin/acme at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/run-0002/apply/preview.json",
+   "lines": 13,
+   "reason": "run record / step result written by org/bin/acme at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/run-0002/apply/verify.json",
+   "lines": 8,
+   "reason": "run record / step result written by org/bin/acme at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/run-0003.json",
+   "lines": 146,
+   "reason": "run record / step result written by org/bin/acme at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/run-0003/apply/apply.json",
+   "lines": 6,
+   "reason": "run record / step result written by org/bin/acme at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/run-0003/apply/preview.json",
+   "lines": 13,
+   "reason": "run record / step result written by org/bin/acme at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "org/state/runs/run-0003/apply/verify.json",
+   "lines": 8,
+   "reason": "run record / step result written by org/bin/acme at run time (git-ignored org/state/)"
+  },
+  {
+   "path": "scratch/cache/pip/wheels/ee/0d/b1/e03704f823abc370cdb863e8ed30342a8356d3834b1aaa4393/origin.json",
+   "lines": 1,
+   "reason": "pip cache metadata written while installing packages"
+  }
+ ],
+ "linesBeforeStrikes": 1444,
+ "linesAfterStrikes": 914,
+ "fullyPasses": true,
+ "notes": "C1 was checked with score.py check before any probe (pass). The probes then changed gamma's DEPRECATED.md to the P5 probe content (f1e1d5b5), as P5 requires; the probes also added runs run-0004..run-0007 to org/state (after lines.json was measured). Extra checks: re-approving a finished run -> exit 2 invalid_state; unknown person (--as mallory) -> exit 2 unknown_person. preview takes no --as/identity (not required by R3). Not run here and so not adjudicated: apply-github-settings.sh (no GitHub) and check-approval's GitHub-API branch; HANDOFF says so. Identity is trusted from --as, as the sandbox allows. Local run history in org/state is git-ignored and editable, as HANDOFF states. No process was started that outlived its command."
+}

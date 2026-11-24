@@ -1,0 +1,54 @@
+{
+  "run": "vanilla-2",
+  "C1": "holds",
+  "P1": {
+    "verdict": "holds",
+    "evidence": "git -C origins/<r>.git ls-tree -r main: alpha, beta and gamma each have .acme/actions/mark-deprecated.json, committed as 'Add the mark-deprecated self-service action, owned by this repository's maintainers' (alpha a9c0adc, beta 616f267, gamma 42e5f76) before the DEPRECATED.md commit. `./acme-actions list` reports each definition's commit and blob read from that origin's main."
+  },
+  "P2": {
+    "verdict": "holds",
+    "evidence": "From org/: `./acme-actions request --repo alpha --as ann --input 'successor=Acme/Bad Name' --input 'reason=A perfectly valid reason of enough length.'` gave exit 2, {error: invalid_inputs, successor must match the pattern}. `... --input successor=acme/probe-valid --input reason=short` gave exit 2, invalid_inputs (reason must be at least 20 characters, got 5). No run record was created (state/runs still 3 files). alpha main e05cb7e37d66f1e40439257ce22eeeafc1b3fd72 before and after."
+  },
+  "P3": {
+    "verdict": "holds",
+    "evidence": "`./acme-actions preview --repo beta --as ann --input successor=acme/probe-preview --input 'reason=Probe preview: checking what the run would change.'` gave exit 0: path DEPRECATED.md, change update, before and after content ('# Deprecated: use acme/probe-preview\\n\\nProbe preview: ...') and a unified diff. No run created. beta main d5e59b9ef6f1c929c01f3bab47b1bbe485f29ac6 before and after."
+  },
+  "P4": {
+    "verdict": "holds",
+    "evidence": "From org/: `./acme-actions request --repo gamma --as ann --input successor=acme/probe-approval --input 'reason=Probe approval: only another maintainer may approve.'` gave exit 0, run-20261124T123533Z-676dd8 awaiting_approval; gamma main c1977a93bc335f89694c5edc0266b9addbdaae8f unchanged. `approve <run> --as ann` gave exit 3, self_approval; `approve <run> --as carol` gave exit 3, not_a_maintainer; gamma main still c1977a93 after each; `status <run>` still awaiting_approval."
+  },
+  "P5": {
+    "verdict": "holds",
+    "evidence": "`./acme-actions approve run-20261124T123533Z-676dd8 --as bob` gave exit 0, status succeeded, outcome 'observed DEPRECATED.md with the expected content on main at a5cd72bc'. gamma main moved to a5cd72bc8f663f72b31090e992d117276d448e83 and `git show main:DEPRECATED.md` is '# Deprecated: use acme/probe-approval' plus the reason. Events: push_accepted, then observed (matches true), then succeeded. Source (org/acme-actions execute(), lines 333-341): after the push it runs `git --git-dir <origin> rev-parse refs/heads/main` and `cat-file blob <commit>:DEPRECATED.md` on the bare origin, and sets succeeded only if that blob equals the rendered content."
+  },
+  "P6": {
+    "verdict": "holds",
+    "evidence": "Wrote origins/alpha.git/hooks/pre-receive (echo to stderr; exit 1), chmod +x. `request --repo alpha --as ann --input successor=acme/probe-reject --input 'reason=Probe reject: the push to main will be refused.'` gave run-20261124T123545Z-a5d427; `approve <run> --as bob` gave exit 5, status failed, outcome '... was not observed on main (push rejected)', push.output '[remote rejected] (pre-receive hook declined)', observation matches false. alpha main e05cb7e37d66f1e40439257ce22eeeafc1b3fd72 before and after; `status` reports failed. Hook removed."
+  },
+  "P7": {
+    "verdict": "holds",
+    "evidence": "From org/: `./acme-actions list` gave exit 0 and JSON {org, actions} listing mark-deprecated for alpha, beta and gamma with each definition's commit on its origin. P4's request was run from org/ with `./acme-actions request --repo gamma ...`."
+  },
+  "P8": {
+    "verdict": "holds",
+    "evidence": "`./acme-actions record run-20261124T123533Z-676dd8` gave requestedBy ann, requestedAt 2026-11-24T12:35:33.771974Z, approvedBy bob, approvedAt 2026-11-24T12:35:36.866508Z, inputs (also in the 'requested' event at 12:35:33.772014Z), status succeeded, outcome text, finishedAt 2026-11-24T12:35:36.961754Z, and events requested/previewed/approval_denied (ann)/approval_denied (carol)/approved/started/planned/push_accepted/observed/succeeded, each with actor and at."
+  },
+  "P9": {
+    "verdict": "holds",
+    "evidence": "Every probe step (list, preview, request, approve, status, record) ran as one non-interactive shell command with JSON on stdout (errors as JSON too) and documented exit codes (0 ok, 2 invalid, 3 not permitted, 5 run did not succeed)."
+  },
+  "P10": {
+    "verdict": "holds",
+    "evidence": "Operated entirely from org/HANDOFF.md: nothing to start, `cd org`, the documented list/preview/request/approve/status/record commands worked as written. Source read only for P5. No fixes needed."
+  },
+  "fixes": [],
+  "strikes": [
+    {"path": "org/state/runs/run-20261124T121001Z-10682b.json", "lines": 141, "reason": "run record written by the system at run time (alpha run); git-ignored state"},
+    {"path": "org/state/runs/run-20261124T121001Z-215729.json", "lines": 141, "reason": "run record written by the system at run time (gamma run); git-ignored state"},
+    {"path": "org/state/runs/run-20261124T121001Z-ca9510.json", "lines": 141, "reason": "run record written by the system at run time (beta run); git-ignored state"}
+  ],
+  "linesBeforeStrikes": 916,
+  "linesAfterStrikes": 493,
+  "fullyPasses": true,
+  "notes": "No long-running process; nothing to stop. The adjudication itself added two run records (gamma succeeded, alpha failed) to org/state and moved gamma's origin main to a5cd72bc (DEPRECATED.md now names acme/probe-approval); C1 was checked with score.py before the probes and passed. org/state/audit.jsonl is runtime data but is not in the lines map (.jsonl is not counted), so no strike. `request` takes --repo and an optional --action (hard-coded default 'mark-deprecated' in the CLI); the handoff's commands omit --action. Success is decided purely by observation, so a run whose push is rejected but whose content is already on main would be reported succeeded; that is consistent with R5. beta's and gamma's definitions are byte-identical copies of alpha's (counted once). Identity is asserted, as the task allows."
+}
