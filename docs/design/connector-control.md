@@ -57,6 +57,14 @@ An in-image connector does not inherit the server's environment. It gets the pro
 `TOOLBOX_CONNECTOR_CONFIG`, never `DATABASE_URL`, PATs or `TOOLBOX_SECRET_*`. Its own credentials
 reach it through its config (`token: ${env:GITHUB_TOKEN}`, `${secret:…}`).
 
+It still runs as the server's user, and a same-user process can read `/proc/<pid>/environ` of any
+dumpable process. So on Linux `toolbox serve` makes itself non-dumpable at start-up, and the
+OpenFGA co-process gets the same kind of allowlist plus its datastore URI in a `0600`
+`config.yaml` that is deleted once OpenFGA is up, not in its argv (`/proc/<pid>/cmdline` is
+readable by every local user). What remains is OpenFGA's memory: with
+`kernel.yama.ptrace_scope=0` a same-user process may attach to it. A connector that must not
+reach the database at all runs remotely, holding only its own token.
+
 ## 4. Messages
 
 All messages are JSON, versioned with the connector API (`v1`), and identical across transports.

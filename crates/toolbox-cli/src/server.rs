@@ -125,7 +125,21 @@ fn init_serve_telemetry() -> Result<toolbox_telemetry::TelemetryGuard, ExitCode>
     })
 }
 
+/// Make the server non-dumpable. In-image connectors run as the server's user, and a same-user
+/// process may read `/proc/<pid>/environ` (`DATABASE_URL`, `TOOLBOX_SECRET_*`) and `/proc/<pid>/mem`
+/// of any dumpable process. A non-dumpable one is readable only by root; it also writes no core
+/// dump. Children reset the flag on exec, so connectors and OpenFGA are unaffected.
+fn harden_process() {
+    #[cfg(target_os = "linux")]
+    if let Err(e) =
+        rustix::process::set_dumpable_behavior(rustix::process::DumpableBehavior::NotDumpable)
+    {
+        tracing::warn!("cannot make the server non-dumpable: {e}");
+    }
+}
+
 pub fn serve(path: &Path, listen: &str, database_url: Option<String>, fixtures: bool) -> ExitCode {
+    harden_process();
     let report = match toolbox_model::validate_portal(path) {
         Ok(r) => r,
         Err(e) => {
