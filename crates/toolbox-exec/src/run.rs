@@ -227,6 +227,8 @@ impl Run {
 
     /// Record an approval; `true` once every approver has approved. Approvers are groups, users,
     /// or `a|b|…`, satisfied by any one of them; `member_of` says whether `who` is in a group.
+    /// Each person approves once, so two approver entries take two people; principals compare
+    /// without regard to case.
     pub fn approve(&mut self, who: &str, member_of: impl Fn(&str) -> bool) -> Result<bool, String> {
         if self.state != "awaiting_approval" {
             return Err(format!(
@@ -234,14 +236,28 @@ impl Run {
                 self.id, self.state
             ));
         }
-        if who == self.requested_by {
+        if !who.starts_with("user:") || who.len() == "user:".len() {
+            return Err(format!("{who} is not a person; only a user:<id> approves"));
+        }
+        let same = |a: &str, b: &str| a.eq_ignore_ascii_case(b);
+        if same(who, &self.requested_by) {
             return Err("a requester cannot approve their own run".into());
         }
-        let pending: Vec<String> = self.pending_approvers();
-        let Some(which) = pending
+        if self
+            .approval
+            .approved_by
             .iter()
-            .find(|a| *a == who || member_of(a) || a.split('|').any(|p| p == who || member_of(p)))
-        else {
+            .any(|x| x.rsplit_once('=').is_some_and(|(_, w)| same(w, who)))
+        {
+            return Err(format!(
+                "{who} has already approved run {}; another approver must approve the rest",
+                self.id
+            ));
+        }
+        let pending: Vec<String> = self.pending_approvers();
+        let Some(which) = pending.iter().find(|a| {
+            same(a, who) || member_of(a) || a.split('|').any(|p| same(p, who) || member_of(p))
+        }) else {
             return Err(format!(
                 "{who} is not one of the pending approvers {pending:?}"
             ));
@@ -444,10 +460,13 @@ pub fn recheck(
     let events = run.events.len();
     match exec {
         Executor::Toolbox {
-            portal, program, ..
+            portal,
+            program,
+            env,
+            ..
         } => {
             if let Some(child) = run.child.clone() {
-                match crate::executor::verify_child(program, portal, &child, false) {
+                match crate::executor::verify_child(program, portal, &child, false, env) {
                     Ok(v) => {
                         let state = v["state"].as_str().unwrap_or("failed").to_owned();
                         match state.as_str() {

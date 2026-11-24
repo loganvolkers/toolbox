@@ -13,16 +13,26 @@ kinds:
     identityFrom: [connector:workspace]
     fields:
       name: {type: string}
+      key: {type: string}
       path: {type: string}
       dir: {type: string}
       owner: {type: string}
       actions: {type: list, items: object}
       runner: {type: object}
+      error: {type: string}
     sources: {default: [connector:workspace]}
     map:
     - from: workspace/portal
-      id: "'portal:' + record.name"
+      # A child is identified by where it was found, not by the name it gives itself.
+      id: "'portal:' + record.key"
       set: >-
-        {'name': record.name, 'path': record.path, 'dir': record.dir, 'owner':
-        record.owner, 'actions': record.actions, 'runner': record.runner}
-federation: {portals: Portal}
+        {'name': record.name, 'key': record.key, 'path': record.path, 'dir':
+        record.dir, 'owner': record.owner, 'actions': record.actions, 'runner':
+        record.runner, 'error': record.error}
+# Children's actions are offered on their Portal entities. A served org portal runs the children
+# listed under runners.local in its own process, and signs the approvals it records with the key in
+# $TOOLBOX_APPROVAL_KEY (64 hex characters) so children that pin it accept them.
+federation:
+  portals: Portal
+  runners: {local: {portals: ["*"]}}
+  signingKey: TOOLBOX_APPROVAL_KEY

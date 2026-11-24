@@ -67,6 +67,13 @@ pub async fn serve(state: Arc<AppState>, listener: tokio::net::TcpListener) -> s
     tokio::spawn(state.clone().run_snapshot_loop());
     tokio::spawn(connectors::freshness_loop(state.clone()));
     tokio::spawn(actions::runs_loop(state.clone()));
+    if let Some(k) = actions::approval_key(&state) {
+        tracing::info!(
+            approval_key = %k,
+            "children accept this portal's approvals by pinning {{portal: {}, key: {k}}} in federation.acceptApprovalsFrom",
+            state.manifest.portal.name
+        );
+    }
     connectors::spawn_in_image(&state);
     axum::serve(listener, routes::router(state)).await
 }

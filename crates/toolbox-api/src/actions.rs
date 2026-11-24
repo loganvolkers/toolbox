@@ -45,6 +45,17 @@ fn cwd() -> std::path::PathBuf {
     std::env::current_dir().unwrap_or_else(|_| ".".into())
 }
 
+/// The approval signing seed, from the environment variable `federation.signingKey` names.
+fn signing_seed(s: &AppState) -> Option<String> {
+    let var = s.manifest.federation.as_ref()?.signing_key.as_ref()?;
+    std::env::var(var).ok().filter(|v| !v.trim().is_empty())
+}
+
+/// `ed25519:<hex>`: the key children pin to accept this portal's approvals.
+pub fn approval_key(s: &AppState) -> Option<String> {
+    toolbox_exec::grant::public_key(&signing_seed(s)?).ok()
+}
+
 /// Query of `GET /v1/actions`.
 #[derive(Deserialize)]
 pub struct ListQuery {
@@ -97,7 +108,8 @@ pub async fn list(
         v["annotations"] = json!(a.annotations);
         out.push(v);
     }
-    Json(json!({"snapshot": p.snapshot_id, "actions": out})).into_response()
+    Json(json!({"snapshot": p.snapshot_id, "actions": out, "approval_key": approval_key(&s)}))
+        .into_response()
 }
 
 /// Body of a preview or a run.
@@ -136,21 +148,12 @@ async fn prepared(
             };
             problem(code, "not-offered", e)
         })?;
-    // A server previews and runs child code only where the child said it may: an undeclared
-    // runner would run the child's commands with this server's credentials.
+    // A server previews and runs child code only where the child said it may and this portal's
+    // runners admit it: a preview runs the child's own commands.
     if let Some(c) = &off.child
-        && c.runner["type"].as_str().is_none()
+        && let Err((code, e)) = c.served()
     {
-        return Err(problem(
-            StatusCode::CONFLICT,
-            "no-runner",
-            format!(
-                "portal {} declares no federation.runner, so its actions run only from a checkout: toolbox run {} --portal {}",
-                c.portal,
-                c.action,
-                c.path.display()
-            ),
-        ));
+        return Err(problem(StatusCode::CONFLICT, code, e));
     }
     let permission = off.action.permission.clone();
     match s.allowed(caller, &permission, &entity).await? {
@@ -193,7 +196,12 @@ async fn prepared(
     .await
     .map_err(|e| problem(StatusCode::INTERNAL_SERVER_ERROR, "internal", e.to_string()))?;
     match result {
-        Ok(x) => Ok((x, p.snapshot_id.clone())),
+        Ok(mut x) => {
+            if let Some(b) = refuses_approvals(s, &x) {
+                x.blockers.push(b);
+            }
+            Ok((x, p.snapshot_id.clone()))
+        }
         Err(Refused::Invalid(e)) => Err(problem(
             StatusCode::UNPROCESSABLE_ENTITY,
             "invalid-inputs",
@@ -202,6 +210,34 @@ async fn prepared(
         Err(Refused::Unknown(e)) => Err(problem(StatusCode::NOT_FOUND, "not-found", e)),
         Err(Refused::Executor(e)) => Err(problem(StatusCode::BAD_GATEWAY, "executor", e)),
     }
+}
+
+/// A child whose approval rule this portal must satisfy, but that would not accept this portal's
+/// signed approvals: approving here could never start the run, so the preview says so first.
+fn refuses_approvals(s: &AppState, p: &Prepared) -> Option<String> {
+    let child = p.preview.child.as_ref()?;
+    let c = p.offered.child.as_ref()?;
+    let needs = child["approval"]["required"] == true && child["approval"]["by_review"] != true;
+    if !needs {
+        return None;
+    }
+    let ours = approval_key(s);
+    let name = &s.manifest.portal.name;
+    let pinned = child["accepts_approvals_from"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .any(|t| t["portal"] == name.as_str() && ours.as_deref().is_some_and(|k| t["key"] == k));
+    (!pinned).then(|| match ours {
+        None => format!(
+            "child-refuses-approvals: portal {} requires approval, and this portal has no signing key (federation.signingKey) to pass approvals with",
+            c.portal
+        ),
+        Some(k) => format!(
+            "child-refuses-approvals: portal {} requires approval and does not pin this portal's key; add {{portal: {name}, key: {k}}} to its federation.acceptApprovalsFrom",
+            c.portal
+        ),
+    })
 }
 
 /// `POST /v1/actions/{name}/previews` — validation, blockers, approvals, the executor's effects
@@ -262,11 +298,13 @@ impl Observer for Served {
     }
 }
 
-/// Execute a confirmed (and approved) run in the background, storing each outcome.
-fn start(s: &Arc<AppState>, p: Prepared, mut run: Run) {
+/// Execute a confirmed (and approved) run in the background, storing each outcome. `grant`
+/// carries the run's approvals to a child portal.
+fn start(s: &Arc<AppState>, p: Prepared, mut run: Run, grant: Option<String>) {
     let s = s.clone();
     tokio::task::spawn_blocking(move || {
-        let ctx = p.context(&run);
+        let mut ctx = p.context(&run);
+        ctx.grant = grant;
         let mut obs = Served { s: s.clone() };
         lifecycle::execute(
             &mut run,
@@ -336,7 +374,7 @@ pub async fn create_run(
         return (StatusCode::ACCEPTED, Json(run_doc(&run))).into_response();
     }
     s.runs.put(&run);
-    start(&s, p, run.clone());
+    start(&s, p, run.clone(), None);
     (StatusCode::ACCEPTED, Json(run_doc(&run))).into_response()
 }
 
@@ -514,7 +552,27 @@ pub async fn approve(
         s.runs.put(&run);
         return Json(run_doc(&run)).into_response();
     }
-    start(&s, p, run.clone());
+    // The approvers approved a definition and its effects; if either changed since, their
+    // approval is not for this run.
+    if p.version != run.action_version || p.preview.effects != run.effects {
+        run.fail(
+            "preview_stale: the action or its effects changed after it was approved; preview and request it again",
+        );
+        s.runs.put(&run);
+        return Json(run_doc(&run)).into_response();
+    }
+    let grant = match signing_seed(&s).map(|seed| p.grant(&run, &seed)) {
+        Some(Ok(g)) => g,
+        Some(Err(e)) => {
+            run.fail(format!(
+                "could not sign the approvals for the child portal: {e}"
+            ));
+            s.runs.put(&run);
+            return Json(run_doc(&run)).into_response();
+        }
+        None => None,
+    };
+    start(&s, p, run.clone(), grant);
     Json(run_doc(&run)).into_response()
 }
 

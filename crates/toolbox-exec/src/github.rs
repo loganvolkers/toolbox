@@ -64,11 +64,14 @@ impl Workflow {
     }
 
     /// The inputs GitHub receives: every action input as a string, and `toolbox_run`; for a
-    /// federated dispatch, `action`, `inputs` as JSON, `requested_by` and `toolbox_run`.
+    /// federated dispatch, `action`, `inputs` as JSON, `requested_by`, `toolbox_run`, `parent_run`
+    /// and `grant` (the parent's signed approvals, empty when there are none).
     pub fn dispatch_inputs(&self, ctx: &Context) -> Value {
         if let Some(action) = &self.federated {
             return json!({"action": action, "inputs": Value::Object(ctx.inputs.clone()).to_string(),
-                "requested_by": ctx.actor, "toolbox_run": ctx.run_id.clone().unwrap_or_default()});
+                "requested_by": ctx.actor, "toolbox_run": ctx.run_id.clone().unwrap_or_default(),
+                "parent_run": format!("{}/{}", ctx.portal, ctx.run_id.clone().unwrap_or_default()),
+                "grant": ctx.grant.clone().unwrap_or_default()});
         }
         let mut m = serde_json::Map::new();
         for (k, v) in &ctx.inputs {
@@ -234,7 +237,7 @@ mod tests {
             inputs: serde_json::from_value(json!({"env": "staging", "replicas": 2})).unwrap(),
             actor: "user:ann".into(),
             related: Map::new(),
-            approvals: vec![],
+            grant: None,
             cwd: std::env::temp_dir(),
         }
     }

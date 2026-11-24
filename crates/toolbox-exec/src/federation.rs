@@ -16,8 +16,11 @@ use toolbox_model::manifest::Action;
 /// Where a federated action really lives.
 #[derive(Debug, Clone)]
 pub struct Child {
-    /// The child portal's name.
+    /// The child portal's name, as it declares it: a label, not an identity.
     pub portal: String,
+    /// Where the workspace connector found the child (`repo`, `team/repo`): its identity, which
+    /// the parent's runner allowlists match.
+    pub key: String,
     /// The child portal's directory (from the record's `path`).
     pub path: PathBuf,
     /// The action's name in the child.
@@ -29,6 +32,59 @@ pub struct Child {
     pub approval: Option<String>,
     /// The child's executor type (`change` runs are approved by review in the child's repo).
     pub executor: String,
+    /// The parent's `federation.runners`: the credentials and allowlists it dispatches with.
+    pub runners: Value,
+}
+
+/// `*` matches any run of characters; everything else matches itself.
+pub fn glob(pattern: &str, s: &str) -> bool {
+    match pattern.split_once('*') {
+        None => pattern == s,
+        Some((head, rest)) => {
+            s.starts_with(head)
+                && (0..=s.len() - head.len())
+                    .any(|i| s.is_char_boundary(head.len() + i) && glob(rest, &s[head.len() + i..]))
+        }
+    }
+}
+
+fn listed(list: &Value, key: &str, s: &str) -> bool {
+    list.get(key)
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(Value::as_str)
+        .any(|p| glob(p, s))
+}
+
+impl Child {
+    /// Whether a server may run this child's actions: the child declares how it may be reached
+    /// (`federation.runner`), and the parent's `federation.runners` admits it. A checkout runs a
+    /// child as the person who ran `toolbox run`, so it needs neither.
+    pub fn served(&self) -> Result<(), (&'static str, String)> {
+        let reach = format!(
+            "its actions run only from a checkout: toolbox run {} --portal {}",
+            self.action,
+            self.path.display()
+        );
+        match self.runner.get("type").and_then(Value::as_str) {
+            None => Err((
+                "no-runner",
+                format!(
+                    "portal {} declares no federation.runner, so {reach}",
+                    self.portal
+                ),
+            )),
+            Some("local") if !listed(&self.runners["local"], "portals", &self.key) => Err((
+                "runner-not-allowed",
+                format!(
+                    "this server runs child portals in its own process only when federation.runners.local.portals lists them, and {} is not listed; {reach}",
+                    self.key
+                ),
+            )),
+            _ => Ok(()),
+        }
+    }
 }
 
 /// An action as this portal offers it.
@@ -58,9 +114,44 @@ impl Offered {
                 action: c.action.clone(),
                 entity: String::new(),
                 program: program.to_path_buf(),
+                env: c.runners["local"]["env"]
+                    .as_array()
+                    .into_iter()
+                    .flatten()
+                    .filter_map(Value::as_str)
+                    .map(str::to_owned)
+                    .collect(),
             }),
             "github-workflow" => {
-                let mut w = crate::github::Workflow::parse(&c.runner)?;
+                // The child names its workflow; the parent supplies the endpoint and the token, so
+                // a child can't make the parent send its credentials anywhere.
+                if c.runner.get("api").is_some() || c.runner.get("token").is_some() {
+                    return Err(format!(
+                        "child portal {} names an api or token in federation.runner; the parent's federation.runners.github-workflow supplies those",
+                        c.portal
+                    ));
+                }
+                let own = &c.runners["github-workflow"];
+                if own.is_null() {
+                    return Err(format!(
+                        "child portal {} runs through a GitHub workflow, and this portal declares no federation.runners.github-workflow",
+                        c.portal
+                    ));
+                }
+                let repo = c.runner.get("repo").and_then(Value::as_str).unwrap_or("");
+                if !listed(own, "repos", repo) {
+                    return Err(format!(
+                        "child portal {} dispatches to {repo}, which federation.runners.github-workflow.repos does not list",
+                        c.portal
+                    ));
+                }
+                let mut spec = c.runner.clone();
+                for k in ["api", "token"] {
+                    if let Some(v) = own.get(k) {
+                        spec[k] = v.clone();
+                    }
+                }
+                let mut w = crate::github::Workflow::parse(&spec)?;
                 w.federated = Some(c.action.clone());
                 Ok(Executor::GithubWorkflow(w))
             }
@@ -103,7 +194,15 @@ fn as_parent_action(def: &Value, kind: &str, permission: &str, portal: &str) -> 
     .ok()
 }
 
-/// Every action this portal offers: its own, then each child portal's.
+fn is_name(s: &str) -> bool {
+    s.starts_with(|c: char| c.is_ascii_lowercase())
+        && s.chars()
+            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
+}
+
+/// Every action this portal offers: its own, then each child portal's. A child whose manifest
+/// does not load offers nothing, and neither does an entity that is this portal's own
+/// authorization object (`portal:<name>`).
 pub fn offered(m: &Manifest, d: &Derived) -> Vec<Offered> {
     let mut out: Vec<Offered> = m
         .actions
@@ -121,7 +220,14 @@ pub fn offered(m: &Manifest, d: &Derived) -> Vec<Offered> {
         return out;
     };
     let permission = fed.permission.as_deref().unwrap_or("can_run_actions");
-    for (id, e) in d.entities.iter().filter(|(_, e)| &e.kind == kind) {
+    let runners = fed.runners.clone().unwrap_or(Value::Null);
+    let own = format!("portal:{}", m.portal.name);
+    for (id, e) in d
+        .entities
+        .iter()
+        .filter(|(id, e)| &e.kind == kind && **id != own)
+        .filter(|(_, e)| e.fields.get("error").is_none_or(Value::is_null))
+    {
         let portal = e
             .fields
             .get("name")
@@ -138,6 +244,19 @@ pub fn offered(m: &Manifest, d: &Derived) -> Vec<Offered> {
                 .or_else(|| e.fields.get("path").and_then(Value::as_str))
                 .unwrap_or("."),
         );
+        let rel = e.fields.get("path").and_then(Value::as_str).unwrap_or(".");
+        let key = e
+            .fields
+            .get("key")
+            .and_then(Value::as_str)
+            .map(str::to_owned)
+            .unwrap_or_else(|| {
+                rel.strip_suffix("/.toolbox")
+                    .or_else(|| rel.strip_suffix(".toolbox"))
+                    .unwrap_or(rel)
+                    .trim_end_matches('/')
+                    .to_owned()
+            });
         let runner = e.fields.get("runner").cloned().unwrap_or(Value::Null);
         for def in e
             .fields
@@ -146,10 +265,14 @@ pub fn offered(m: &Manifest, d: &Derived) -> Vec<Offered> {
             .into_iter()
             .flatten()
         {
+            if !def.get("name").and_then(Value::as_str).is_some_and(is_name) {
+                continue;
+            }
             if let Some(a) = as_parent_action(def, kind, permission, &portal) {
                 out.push(Offered {
                     child: Some(Child {
                         portal: portal.clone(),
+                        key: key.clone(),
                         path: path.clone(),
                         action: a.name.clone(),
                         runner: runner.clone(),
@@ -162,6 +285,7 @@ pub fn offered(m: &Manifest, d: &Derived) -> Vec<Offered> {
                             .and_then(Value::as_str)
                             .unwrap_or("command")
                             .to_owned(),
+                        runners: runners.clone(),
                     }),
                     action: a,
                     entity: Some(id.clone()),
@@ -327,8 +451,24 @@ pub fn describe(o: &Offered, d: &Derived) -> Value {
         v.insert("approval".into(), json!(c.approval));
         v.insert(
             "portal".into(),
-            json!({"name": c.portal, "path": c.path, "runner": c.runner, "executor": c.executor}),
+            json!({"name": c.portal, "key": c.key, "path": c.path, "runner": c.runner, "executor": c.executor}),
         );
     }
     Value::Object(v)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::glob;
+
+    #[test]
+    fn globs_match_runs_of_characters() {
+        assert!(glob("*", "team/repo"));
+        assert!(glob("team/*", "team/repo"));
+        assert!(!glob("team/*", "other/repo"));
+        assert!(glob("org/*-svc", "org/pay-svc"));
+        assert!(!glob("org/*-svc", "org/pay-svc2"));
+        assert!(glob("exact", "exact"));
+        assert!(!glob("exact", "exactly"));
+    }
 }

@@ -811,7 +811,7 @@ impl Workspace {
             .filter(|p| Self::matches(&self.portals, p))
             .map(|rel| (rel, portals::analyse(&self.root, rel)))
             .collect();
-        for (rel, rec) in portals::refuse_duplicates(found) {
+        for (rel, rec) in portals::flag_duplicates(found) {
             out.record("portal", &portals::id(rel), rec);
         }
         out.snapshot_complete("portal");

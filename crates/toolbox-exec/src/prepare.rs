@@ -88,7 +88,7 @@ pub fn prepare(m: &Manifest, d: &Derived, req: Request<'_>) -> Result<Prepared, 
         inputs: inputs.clone(),
         actor: req.actor.to_owned(),
         related: checked.related.clone(),
-        approvals: vec![],
+        grant: None,
         cwd: req.cwd,
     };
     let preview = match exec.preview(&ctx) {
@@ -162,7 +162,7 @@ impl Prepared {
     pub fn doc(&self, portal: &str) -> Value {
         let a = &self.offered.action;
         json!({
-            "action": a.name, "entity": self.entity, "portal": portal, "inputs": self.inputs,
+            "action": a.name, "action_version": self.version, "entity": self.entity, "portal": portal, "inputs": self.inputs,
             "effects": self.preview.effects, "warnings": self.warnings, "blockers": self.blockers,
             "approval": {"required": !self.approvers.is_empty(), "approvers": self.approvers,
                 "by_review": self.reviewed && !self.approvers.is_empty()},
@@ -223,7 +223,31 @@ impl Prepared {
     pub fn context(&self, run: &Run) -> Context {
         let mut ctx = self.ctx.clone();
         ctx.run_id = Some(run.id.clone());
-        ctx.approvals = run.approval.approved_by.clone();
         ctx
+    }
+
+    /// For a federated run with recorded approvals: the grant that carries them to the child,
+    /// signed with `seed` (hex), naming the child's action, version and effects as its preview
+    /// reported them. `None` when there is nothing to carry.
+    pub fn grant(&self, run: &Run, seed: &str) -> Result<Option<String>, String> {
+        let (Some(c), Some(child)) = (&self.offered.child, &self.preview.child) else {
+            return Ok(None);
+        };
+        if run.approval.approved_by.is_empty() {
+            return Ok(None);
+        }
+        let g = crate::grant::Grant {
+            parent: run.portal.clone(),
+            parent_run: run.id.clone(),
+            action: c.action.clone(),
+            action_version: child["action_version"].as_str().unwrap_or("").to_owned(),
+            entity: child["entity"].as_str().unwrap_or("").to_owned(),
+            inputs: child["inputs"].as_object().cloned().unwrap_or_default(),
+            effects: crate::grant::effects_hash(&self.preview.effects),
+            requested_by: run.requested_by.clone(),
+            approvals: run.approval.approved_by.clone(),
+            expires: run::now_secs() + crate::grant::GRANT_TTL_SECS,
+        };
+        crate::grant::sign(&g, seed).map(Some)
     }
 }

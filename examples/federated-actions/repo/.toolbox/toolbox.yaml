@@ -7,9 +7,14 @@ portal:
   toolbox: "0.1"
 
 # A parent portal may dispatch this portal's actions with `toolbox run --portal` on its own host
-# (type: local), and the org portal's approvals count here. Without a runner, a served parent
-# refuses to run these actions; they still run from a checkout.
-federation: {runner: {type: local}, acceptApprovalsFrom: [org]}
+# (type: local). Without a runner, a served parent refuses to run these actions; they still run
+# from a checkout. Approvals recorded by the org portal count here only when it signed them with
+# the key pinned below: replace it with the key `toolbox serve` logs for your org portal.
+federation:
+  runner: {type: local}
+  acceptApprovalsFrom:
+    - portal: org
+      key: ed25519:0000000000000000000000000000000000000000000000000000000000000000
 
 # The org's fleet actions, vendored (a git package spec works the same once installed).
 include: [{package: packages/org-actions}]

@@ -98,7 +98,8 @@ for r in alpha beta gamma; do
 done
 echo "   add-contributing: 3 pull requests merged, 3 runs succeeded"
 
-echo "7. the org portal served: REST runs, approvals by the parent, MCP"
+echo "7. the org portal served: REST runs, signed approvals by the parent, MCP"
+export TOOLBOX_APPROVAL_KEY=$(python3 -c 'import secrets; print(secrets.token_hex(32))')
 (cd "$WORK/org" && exec "$BIN/toolbox" serve --listen "$API" . >"$WORK/server.log" 2>&1) & PIDS+=($!)
 for _ in $(seq 100); do
   curl -fs -H 'x-toolbox-user: ann' "$URL/v1/actions" 2>/dev/null | grep -q add-contributing && break; sleep 0.2
@@ -109,18 +110,26 @@ rest() { local who=$1 method=$2 path=$3; shift 3
 OUT=$(rest ann POST /v1/actions/write-readme/previews -d '{"entity":"portal:delta","inputs":{"text":"Delta has no runner here."}}')
 [ "$(echo "$OUT" | field "['code']")" = no-runner ] || fail "delta should be refused: $OUT"
 BODY='{"entity":"portal:gamma","inputs":{"team":"@acme/gamma"}}'
+OUT=$(rest ann POST /v1/actions/set-owners/previews -d "$BODY")
+echo "$OUT" | grep -q child-refuses-approvals || fail "gamma pins another key, so the preview should say approvals here can't start it: $OUT"
+KEY=$(rest ann GET /v1/actions | field "['approval_key']")
+grep -q "$KEY" "$WORK/server.log" || fail "serve should log its approval key"
+sed -i "s/ed25519:0\{64\}/$KEY/" "$WORK/gamma/.toolbox/toolbox.yaml"
+git -C "$WORK/gamma" "${G[@]}" commit -qam "accept the org portal's approvals"
 TOKEN=$(rest ann POST /v1/actions/set-owners/previews -d "$BODY" | field "['confirm_token']")
 OUT=$(rest ann POST /v1/actions/set-owners/runs -d "{\"entity\":\"portal:gamma\",\"inputs\":{\"team\":\"@acme/gamma\"},\"confirm_token\":\"$TOKEN\"}")
 [ "$(echo "$OUT" | field "['state']")" = awaiting_approval ] || fail "set-owners via the org: $OUT"
 RID=$(echo "$OUT" | field "['id']")
 [ "$(rest ann POST "/v1/runs/$RID/approvals" -d '{}' | field "['code']")" = not-an-approver ] || fail "self-approval accepted"
 [ "$(rest carol POST "/v1/runs/$RID/approvals" -d '{}' | field "['code']")" = not-an-approver ] || fail "an approval by someone not listed was accepted"
+set +e; OUT=$(cd "$WORK/gamma" && "$BIN/toolbox" run set-owners -i team=@acme/gamma --yes --parent-run org/run_forged --grant 00.00 -o json); CODE=$?; set -e
+[ $CODE = 3 ] && echo "$OUT" | grep -q "approvals were refused" || fail "a forged grant was accepted ($CODE): $OUT"
 rest bob POST "/v1/runs/$RID/approvals" -d '{"note":"gamma is ours"}' >/dev/null
 for _ in $(seq 60); do
   STATE=$(rest ann GET "/v1/runs/$RID" | field "['state']"); case $STATE in succeeded|failed|unverified) break;; esac; sleep 0.5
 done
 [ "$STATE" = succeeded ] || fail "approved set-owners ended $STATE: $(rest ann GET "/v1/runs/$RID")"
-echo "   set-owners on gamma: awaiting_approval; ann (the requester) and carol (not listed) refused; approved by bob in the org portal, succeeded in gamma"
+echo "   set-owners on gamma: blocked until gamma pinned the org's key; ann (the requester), carol (not listed) and a forged grant refused; approved by bob in the org portal, signed, succeeded in gamma"
 mcp() { curl -s -X POST -H 'x-toolbox-user: ann' -H 'content-type: application/json' "$URL/mcp" \
   -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"$1\",\"arguments\":$2}}"; }
 ARGS='{"action":"write-readme","id":"portal:gamma","inputs":{"text":"Gamma, written by an agent over MCP."}}'

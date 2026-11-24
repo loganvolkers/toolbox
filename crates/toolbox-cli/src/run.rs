@@ -6,7 +6,8 @@
 //! A repo portal has no authorization (docs/design/repo-portals.md §2): whoever has the checkout
 //! and its credentials runs. An action whose approval rule names approvers therefore runs here
 //! only as a `change` (the review is the approval), or dispatched by a parent portal that
-//! recorded the approval and that this portal trusts (`federation.acceptApprovalsFrom`).
+//! recorded the approval and signed it with the key this portal pinned
+//! (`federation.acceptApprovalsFrom`, `toolbox_exec::grant`).
 
 use serde_json::{Map, Value, json};
 use std::path::{Path, PathBuf};
@@ -43,9 +44,9 @@ pub struct Options {
     /// Preview and run in one step (scripts and dispatched runs; the preview is still recorded).
     #[arg(long, conflicts_with_all = ["preview", "confirm"])]
     pub yes: bool,
-    /// Re-check a `proposed` or `dispatched` run: its id (every run is saved under
-    /// `$XDG_STATE_HOME/toolbox/runs/`) or a record file written by --record
-    #[arg(long, value_name = "RUN", conflicts_with_all = ["preview", "confirm", "yes"])]
+    /// Re-check a `proposed` or `dispatched` run by its id (every run is saved under
+    /// `$XDG_STATE_HOME/toolbox/runs/`).
+    #[arg(long, value_name = "RUN_ID", conflicts_with_all = ["preview", "confirm", "yes"])]
     pub verify: Option<String>,
     /// With --verify: keep checking until the postcondition holds or the run's deadline passes.
     #[arg(long, requires = "verify")]
@@ -68,9 +69,9 @@ pub struct Options {
     /// Set by a parent portal dispatching this run: `<parent portal>/<parent run id>`.
     #[arg(long, hide = true)]
     pub parent_run: Option<String>,
-    /// Set by a parent portal: an approval it recorded, `<approver>=<user>` (repeatable).
+    /// Set by a parent portal: the approvals it recorded, signed (`toolbox_exec::grant`).
     #[arg(long, hide = true)]
-    pub approved_by: Vec<String>,
+    pub grant: Option<String>,
 }
 
 fn default_portal(p: Option<&Path>) -> PathBuf {
@@ -178,10 +179,13 @@ impl Observer for Local {
     fn observe(&mut self, run: &Run, _: &Expect) -> Result<(Value, String), String> {
         let d = match run.outputs.get("base").and_then(Value::as_str) {
             Some(base) if run.executor == "change" => {
+                if !is_ref(base) {
+                    return Err(format!("{base:?} is not a branch name"));
+                }
                 if let Some((remote, branch)) = base.split_once('/') {
                     let dir = toolbox_exec::executor::portal_repo_dir(&portal_dir(&self.portal));
                     let _ = std::process::Command::new("git")
-                        .args(["fetch", "-q", remote, branch])
+                        .args(["fetch", "-q", "--", remote, branch])
                         .current_dir(dir)
                         .status();
                 }
@@ -194,6 +198,15 @@ impl Observer for Local {
             .ok_or_else(|| format!("{} is gone", run.entity))?;
         Ok((e, d.snapshot.clone()))
     }
+}
+
+/// A branch or `remote/branch` name, and nothing git would read as an option or a revision range.
+fn is_ref(s: &str) -> bool {
+    !s.is_empty()
+        && !s.starts_with(['-', '/'])
+        && !s.contains("..")
+        && s.chars()
+            .all(|c| c.is_ascii_alphanumeric() || "-_./".contains(c))
 }
 
 fn list(o: &Options, portal: &Path, all: &[Offered], d: &toolbox_derive::Derived) -> ExitCode {
@@ -236,14 +249,11 @@ fn list(o: &Options, portal: &Path, all: &[Offered], d: &toolbox_derive::Derived
 
 pub fn run(o: &Options) -> ExitCode {
     let portal = default_portal(o.portal.as_deref());
-    if let Some(f) = &o.verify {
-        let path = Path::new(f);
-        let file = if path.is_file() {
-            path.to_path_buf()
-        } else {
-            runs_dir().join(format!("{f}.json"))
-        };
-        return verify_file(o, &portal, &file);
+    if let Some(id) = &o.verify {
+        if !toolbox_exec::executor::is_run_id(id) {
+            return error(o, 2, format!("--verify takes a run id (run_…), not {id:?}"));
+        }
+        return verify_file(o, &portal, &runs_dir().join(format!("{id}.json")));
     }
     let (_, m, d) = match crate::report::live(&portal, o.fixtures, &o.skip) {
         Ok(x) => x,
@@ -311,6 +321,12 @@ pub fn run(o: &Options) -> ExitCode {
         p.token
     );
     let mut preview_doc = p.doc(&m.portal.name);
+    preview_doc["accepts_approvals_from"] = json!(
+        m.federation
+            .as_ref()
+            .map(|f| f.accept_approvals_from.clone())
+            .unwrap_or_default()
+    );
     preview_doc["next"] = if p.blockers.is_empty() {
         Value::String(next.clone())
     } else {
@@ -346,28 +362,29 @@ pub fn run(o: &Options) -> ExitCode {
         &d.snapshot,
     );
     if !p.approvers.is_empty() {
-        let trusted = o.parent_run.as_ref().is_some_and(|pr| {
-            let parent = pr.split('/').next().unwrap_or("");
-            m.federation
-                .as_ref()
-                .is_some_and(|f| f.accept_approvals_from.iter().any(|a| a == parent))
-        });
-        if trusted {
-            run.state = "awaiting_approval".into();
-            for a in &o.approved_by {
-                let (which, who) = a.split_once('=').unwrap_or((a, a));
-                let _ = run.approve(who, |g| g == which);
+        let mut refused = None;
+        if let Some(g) = o.grant.as_deref().filter(|g| !g.is_empty()) {
+            match granted(o, &m, &p, &requested_by, g) {
+                Ok(approvals) => {
+                    run.state = "awaiting_approval".into();
+                    for a in &approvals {
+                        let (which, who) = a.split_once('=').unwrap_or((a, a));
+                        let _ = run.approve(who, |g| g == which);
+                    }
+                }
+                Err(e) => refused = Some(e),
             }
         }
         let pending = run.pending_approvers();
         if !pending.is_empty() && !p.reviewed {
+            let why = refused.map_or_else(
+                || "a repo portal holds no approvals, so run it through a portal that does (a parent with `toolbox serve`), or make it a `change` executor so review is the approval".to_owned(),
+                |e| format!("the parent's approvals were refused: {e}"),
+            );
             run.set(
                 "awaiting_approval",
                 None,
-                Some(format!(
-                    "needs approval by {}: a repo portal holds no approvals, so run it through a portal that does (a parent with `toolbox serve`), or make it a `change` executor so review is the approval",
-                    pending.join(", ")
-                )),
+                Some(format!("needs approval by {}: {why}", pending.join(", "))),
             );
             return finish(o, &run, 3);
         }
@@ -389,6 +406,55 @@ pub fn run(o: &Options) -> ExitCode {
     );
     let code = if run.state == "failed" { 1 } else { 0 };
     finish(o, &run, code)
+}
+
+/// The approvals in a parent's grant, if this portal pinned the parent's key and the grant is for
+/// exactly this run: the action and its version, entity, inputs, effects and requester.
+fn granted(
+    o: &Options,
+    m: &toolbox_model::Manifest,
+    p: &toolbox_exec::prepare::Prepared,
+    requested_by: &str,
+    token: &str,
+) -> Result<Vec<String>, String> {
+    let (parent, parent_run) = o
+        .parent_run
+        .as_deref()
+        .and_then(|pr| pr.split_once('/'))
+        .ok_or("a grant comes with --parent-run <portal>/<run>")?;
+    let pin = m
+        .federation
+        .as_ref()
+        .and_then(|f| f.accept_approvals_from.iter().find(|t| t.portal == parent))
+        .ok_or_else(|| {
+            format!("this portal does not accept approvals from {parent} (federation.acceptApprovalsFrom)")
+        })?;
+    let g = toolbox_exec::grant::open(token, &pin.key, lifecycle::now_secs())?;
+    let checks = [
+        ("parent", g.parent == parent),
+        ("parent run", g.parent_run == parent_run),
+        ("action", g.action == p.offered.action.name),
+        ("action version", g.action_version == p.version),
+        ("entity", g.entity == p.entity),
+        ("inputs", g.inputs == p.inputs),
+        (
+            "effects",
+            g.effects == toolbox_exec::grant::effects_hash(&p.preview.effects),
+        ),
+        ("requester", g.requested_by == requested_by),
+    ];
+    let wrong: Vec<&str> = checks
+        .iter()
+        .filter(|(_, ok)| !ok)
+        .map(|(k, _)| *k)
+        .collect();
+    if !wrong.is_empty() {
+        return Err(format!(
+            "the grant is for a different run ({} differ); approve the run through the parent again",
+            wrong.join(", ")
+        ));
+    }
+    Ok(g.approvals)
 }
 
 fn shell_quote(s: &str) -> String {
@@ -554,32 +620,6 @@ fn verify_file(o: &Options, portal: &Path, file: &Path) -> ExitCode {
         }
         std::thread::sleep(Duration::from_secs(5));
     }
-    let o2 = Options {
-        record: Some(o.record.clone().unwrap_or_else(|| file.to_path_buf())),
-        ..clone_opts(o)
-    };
     let code = if run.state == "failed" { 1 } else { 0 };
-    finish(&o2, &run, code)
-}
-
-fn clone_opts(o: &Options) -> Options {
-    Options {
-        action: o.action.clone(),
-        portal: o.portal.clone(),
-        entity: o.entity.clone(),
-        input: o.input.clone(),
-        inputs: o.inputs.clone(),
-        preview: o.preview,
-        confirm: o.confirm.clone(),
-        yes: o.yes,
-        verify: o.verify.clone(),
-        wait: o.wait,
-        record: o.record.clone(),
-        as_user: o.as_user.clone(),
-        skip: o.skip.clone(),
-        fixtures: o.fixtures,
-        output: o.output.clone(),
-        parent_run: o.parent_run.clone(),
-        approved_by: o.approved_by.clone(),
-    }
+    finish(o, &run, code)
 }

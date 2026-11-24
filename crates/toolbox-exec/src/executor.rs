@@ -13,6 +13,10 @@
 //! A command gets the run's context as JSON on stdin and in the environment: `TOOLBOX_PHASE`,
 //! `TOOLBOX_ACTION`, `TOOLBOX_RUN_ID`, `TOOLBOX_ENTITY`, `TOOLBOX_ACTOR`, `TOOLBOX_INPUTS` (JSON)
 //! and one `TOOLBOX_INPUT_<NAME>` per input (strings as themselves, other values as JSON).
+//!
+//! Every process an executor starts gets a cleared environment: the [`BASE_ENV`] set plus the
+//! names the action lists in `secrets` (a child portal: the parent's `runners.local.env`). A
+//! server's own credentials reach an action only when its manifest names them.
 
 use serde_json::{Map, Value, json};
 use std::io::{BufRead, BufReader, Write};
@@ -32,8 +36,8 @@ pub struct Context {
     /// `user:<id>` or the portal's service identity.
     pub actor: String,
     pub related: Map<String, Value>,
-    /// Approvals the parent recorded (`group:x=user:y`), passed to a child portal on dispatch.
-    pub approvals: Vec<String>,
+    /// The parent's signed approval grant (`crate::grant`), passed to a child portal on dispatch.
+    pub grant: Option<String>,
     /// Where commands run: the portal's repository root, where its connectors' `root: .` points.
     pub cwd: PathBuf,
 }
@@ -81,9 +85,11 @@ pub enum Executor {
     Command {
         run: Vec<String>,
         preview: bool,
+        env: Vec<String>,
     },
     InImage {
         command: Vec<String>,
+        env: Vec<String>,
     },
     Change {
         run: Vec<String>,
@@ -91,6 +97,7 @@ pub enum Executor {
         remote: String,
         branch: Option<String>,
         message: Option<String>,
+        env: Vec<String>,
     },
     GithubWorkflow(crate::github::Workflow),
     /// Dispatch to a child portal (federation): the child previews, runs and verifies.
@@ -99,7 +106,67 @@ pub enum Executor {
         action: String,
         entity: String,
         program: PathBuf,
+        env: Vec<String>,
     },
+}
+
+/// Variables every executor process keeps: where it runs, who it runs as, locale, proxies, git's
+/// identity and SSH agent, and Toolbox's own directories. Nothing here is a credential.
+pub const BASE_ENV: &[&str] = &[
+    "PATH",
+    "HOME",
+    "USER",
+    "LOGNAME",
+    "SHELL",
+    "LANG",
+    "LANGUAGE",
+    "TERM",
+    "TZ",
+    "TMPDIR",
+    "SSH_AUTH_SOCK",
+    "GIT_SSH_COMMAND",
+    "HTTP_PROXY",
+    "HTTPS_PROXY",
+    "NO_PROXY",
+    "ALL_PROXY",
+    "http_proxy",
+    "https_proxy",
+    "no_proxy",
+    "all_proxy",
+    "TOOLBOX_STATE_DIR",
+    "TOOLBOX_CACHE_DIR",
+    "TOOLBOX_CONNECTORS_DIR",
+];
+const BASE_PREFIXES: &[&str] = &[
+    "LC_",
+    "XDG_",
+    "GIT_CONFIG_",
+    "GIT_AUTHOR_",
+    "GIT_COMMITTER_",
+];
+
+/// Clear `cmd`'s environment down to [`BASE_ENV`] and `extra`.
+pub fn clean_env(cmd: &mut Command, extra: &[String]) {
+    cmd.env_clear();
+    for (k, v) in std::env::vars_os() {
+        let Some(name) = k.to_str() else { continue };
+        if BASE_ENV.contains(&name)
+            || BASE_PREFIXES.iter().any(|p| name.starts_with(p))
+            || extra.iter().any(|e| e == name)
+        {
+            cmd.env(&k, v);
+        }
+    }
+}
+
+fn names(v: &Value, key: &str) -> Vec<String> {
+    v.get(key)
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(Value::as_str)
+        .map(str::to_owned)
+        .collect()
 }
 
 /// `run: [argv…]` or `run: "shell line"` (run by `sh -c`).
@@ -129,9 +196,11 @@ impl Executor {
             "command" => Executor::Command {
                 run: argv(v.get("run"), "executor.run")?,
                 preview: v.get("preview").and_then(Value::as_bool).unwrap_or(false),
+                env: names(v, "secrets"),
             },
             "in-image" => Executor::InImage {
                 command: argv(v.get("command"), "executor.command")?,
+                env: names(v, "secrets"),
             },
             "change" => Executor::Change {
                 run: argv(v.get("run"), "executor.run")?,
@@ -139,6 +208,7 @@ impl Executor {
                 remote: s("remote").unwrap_or_else(|| "origin".into()),
                 branch: s("branch"),
                 message: s("message"),
+                env: names(v, "secrets"),
             },
             "github-workflow" => Executor::GithubWorkflow(crate::github::Workflow::parse(v)?),
             other => {
@@ -160,10 +230,12 @@ impl Executor {
         }
     }
 
-    /// Preview: what the run would change. Never has side effects outside a temporary directory.
+    /// Preview: what the run would change. A command, in-image or change executor is the action
+    /// author's code and runs here, in a cleared environment; it is asked not to change anything
+    /// (`TOOLBOX_PHASE=preview`, a throwaway worktree), which only the author's code can honour.
     pub fn preview(&self, ctx: &Context) -> Result<Preview, String> {
         match self {
-            Executor::Command { run, preview } => {
+            Executor::Command { run, preview, env } => {
                 if !preview {
                     return Ok(Preview {
                         effects: vec![
@@ -173,7 +245,7 @@ impl Executor {
                         ..Preview::default()
                     });
                 }
-                let out = spawn(run, ctx, "preview", &ctx.cwd)?;
+                let out = spawn(run, ctx, "preview", &ctx.cwd, env)?;
                 if !out.ok {
                     return Err(format!("preview failed: {}", out.tail()));
                 }
@@ -183,12 +255,16 @@ impl Executor {
                     ..Preview::default()
                 })
             }
-            Executor::InImage { command } => stdio_preview(command, ctx),
+            Executor::InImage { command, env } => stdio_preview(command, ctx, env),
             Executor::Change {
-                run, base, remote, ..
+                run,
+                base,
+                remote,
+                env,
+                ..
             } => {
                 let wt = Worktree::new(&ctx.cwd, base.as_deref(), remote)?;
-                let out = spawn(run, ctx, "preview", &wt.dir)?;
+                let out = spawn(run, ctx, "preview", &wt.dir, env)?;
                 if !out.ok {
                     return Err(format!("change command failed: {}", out.tail()));
                 }
@@ -225,8 +301,9 @@ impl Executor {
                 action,
                 entity,
                 program,
+                env,
             } => {
-                let v = child_run(program, portal, action, entity, ctx, &["--preview"])?;
+                let v = child_run(program, portal, action, entity, ctx, &["--preview"], env)?;
                 if let Some(e) = v.get("error").and_then(Value::as_str) {
                     return Err(format!("child portal: {e}"));
                 }
@@ -257,7 +334,7 @@ impl Executor {
     /// Run. `confirmed` are the effects the requester confirmed.
     pub fn run(&self, ctx: &Context, confirmed: &[Value]) -> Outcome {
         match self {
-            Executor::Command { run, .. } => match spawn(run, ctx, "run", &ctx.cwd) {
+            Executor::Command { run, env, .. } => match spawn(run, ctx, "run", &ctx.cwd, env) {
                 Err(e) => Outcome::failed(e),
                 Ok(out) if !out.ok => Outcome::failed(format!(
                     "exit status {}: {}",
@@ -272,12 +349,13 @@ impl Executor {
                     child: None,
                 },
             },
-            Executor::InImage { command } => stdio_run(command, ctx, confirmed),
+            Executor::InImage { command, env } => stdio_run(command, ctx, confirmed, env),
             Executor::Change {
                 run,
                 base,
                 remote,
                 message,
+                env,
                 ..
             } => change_run(
                 run,
@@ -286,6 +364,7 @@ impl Executor {
                 remote,
                 &branch_name(self, ctx),
                 message.as_deref(),
+                env,
             )
             .unwrap_or_else(Outcome::failed),
             Executor::GithubWorkflow(w) => w.dispatch(ctx),
@@ -294,7 +373,8 @@ impl Executor {
                 action,
                 entity,
                 program,
-            } => match child_run(program, portal, action, entity, ctx, &["--yes"]) {
+                env,
+            } => match child_run(program, portal, action, entity, ctx, &["--yes"], env) {
                 Err(e) => Outcome::failed(e),
                 Ok(v) => {
                     let state = v.get("state").and_then(Value::as_str).unwrap_or("failed");
@@ -372,8 +452,15 @@ fn env_name(k: &str) -> String {
         .collect()
 }
 
-fn spawn(argv: &[String], ctx: &Context, phase: &str, cwd: &Path) -> Result<Spawned, String> {
+fn spawn(
+    argv: &[String],
+    ctx: &Context,
+    phase: &str,
+    cwd: &Path,
+    env: &[String],
+) -> Result<Spawned, String> {
     let mut cmd = Command::new(&argv[0]);
+    clean_env(&mut cmd, env);
     cmd.args(&argv[1..])
         .current_dir(cwd)
         .env("TOOLBOX_PHASE", phase)
@@ -443,8 +530,15 @@ pub fn outputs_from(stdout: &str) -> Value {
         .unwrap_or_else(|| json!({}))
 }
 
-fn stdio_session(command: &[String], ctx: &Context, msg: &Value) -> Result<Vec<Value>, String> {
-    let mut child = Command::new(&command[0])
+fn stdio_session(
+    command: &[String],
+    ctx: &Context,
+    msg: &Value,
+    env: &[String],
+) -> Result<Vec<Value>, String> {
+    let mut cmd = Command::new(&command[0]);
+    clean_env(&mut cmd, env);
+    let mut child = cmd
         .args(&command[1..])
         .current_dir(&ctx.cwd)
         .stdin(Stdio::piped())
@@ -497,11 +591,11 @@ fn protocol_context(ctx: &Context) -> Map<String, Value> {
     m
 }
 
-fn stdio_preview(command: &[String], ctx: &Context) -> Result<Preview, String> {
+fn stdio_preview(command: &[String], ctx: &Context, env: &[String]) -> Result<Preview, String> {
     let mut msg = protocol_context(ctx);
     msg.insert("type".into(), "preview".into());
     msg.insert("request_id".into(), "req_preview".into());
-    let msgs = stdio_session(command, ctx, &Value::Object(msg))?;
+    let msgs = stdio_session(command, ctx, &Value::Object(msg), env)?;
     let r = msgs
         .iter()
         .find(|m| m["type"] == "preview_result")
@@ -523,7 +617,7 @@ fn stdio_preview(command: &[String], ctx: &Context) -> Result<Preview, String> {
     })
 }
 
-fn stdio_run(command: &[String], ctx: &Context, confirmed: &[Value]) -> Outcome {
+fn stdio_run(command: &[String], ctx: &Context, confirmed: &[Value], env: &[String]) -> Outcome {
     let run_id = ctx.run_id.clone().unwrap_or_default();
     let mut msg = protocol_context(ctx);
     msg.insert("type".into(), "run".into());
@@ -538,7 +632,7 @@ fn stdio_run(command: &[String], ctx: &Context, confirmed: &[Value]) -> Outcome 
         .into(),
     );
     msg.insert("confirmed_effects".into(), Value::Array(confirmed.to_vec()));
-    let msgs = match stdio_session(command, ctx, &Value::Object(msg)) {
+    let msgs = match stdio_session(command, ctx, &Value::Object(msg), env) {
         Ok(m) => m,
         Err(e) => return Outcome::failed(e),
     };
@@ -571,7 +665,9 @@ fn stdio_run(command: &[String], ctx: &Context, confirmed: &[Value]) -> Outcome 
 }
 
 fn git(dir: &Path, args: &[&str]) -> Result<String, String> {
-    let out = Command::new("git")
+    let mut cmd = Command::new("git");
+    clean_env(&mut cmd, &[]);
+    let out = cmd
         .arg("-C")
         .arg(dir)
         .args(args)
@@ -689,9 +785,10 @@ fn change_run(
     remote: &str,
     branch: &str,
     message: Option<&str>,
+    env: &[String],
 ) -> Result<Outcome, String> {
     let wt = Worktree::new(&ctx.cwd, base, remote)?;
-    let out = spawn(run, ctx, "run", &wt.dir)?;
+    let out = spawn(run, ctx, "run", &wt.dir, env)?;
     if !out.ok {
         return Ok(Outcome::failed(format!(
             "change command failed: {}",
@@ -755,20 +852,34 @@ fn change_run(
     })
 }
 
-/// Ask a child portal to re-check one of its runs from the record it returned.
+/// Whether `id` is a run id as `crate::run::new_id` makes them.
+pub fn is_run_id(id: &str) -> bool {
+    id.strip_prefix("run_").is_some_and(|r| {
+        !r.is_empty()
+            && r.chars()
+                .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit())
+    })
+}
+
+/// Ask a child portal to re-check one of its runs. The child reads its own record by id; the
+/// parent's copy of it is never trusted.
 pub fn verify_child(
     program: &Path,
     portal: &Path,
     record: &Value,
     wait: bool,
+    env: &[String],
 ) -> Result<Value, String> {
-    let id = record.get("id").and_then(Value::as_str).unwrap_or("run");
-    let tmp = std::env::temp_dir().join(format!("toolbox-child-{}-{id}.json", std::process::id()));
-    std::fs::write(&tmp, record.to_string()).map_err(|e| e.to_string())?;
+    let id = record
+        .get("id")
+        .and_then(Value::as_str)
+        .filter(|id| is_run_id(id))
+        .ok_or("the child's run record has no valid run id")?;
     let mut cmd = Command::new(program);
+    clean_env(&mut cmd, env);
     cmd.arg("run")
         .arg("--verify")
-        .arg(&tmp)
+        .arg(id)
         .arg("--portal")
         .arg(
             portal
@@ -780,9 +891,9 @@ pub fn verify_child(
     if wait {
         cmd.arg("--wait");
     }
-    let out = cmd.output();
-    let _ = std::fs::remove_file(&tmp);
-    let out = out.map_err(|e| format!("cannot start {}: {e}", program.display()))?;
+    let out = cmd
+        .output()
+        .map_err(|e| format!("cannot start {}: {e}", program.display()))?;
     serde_json::from_slice(&out.stdout).map_err(|_| {
         format!(
             "child portal {} answered no run record: {}",
@@ -799,11 +910,12 @@ fn child_run(
     entity: &str,
     ctx: &Context,
     extra: &[&str],
+    env: &[String],
 ) -> Result<Value, String> {
     let dir = portal_repo_dir(portal);
     let mut cmd = Command::new(program);
+    clean_env(&mut cmd, env);
     cmd.arg("run")
-        .arg(action)
         .arg("--portal")
         .arg(
             portal
@@ -820,9 +932,10 @@ fn child_run(
     if let Some(id) = &ctx.run_id {
         cmd.args(["--parent-run", &format!("{}/{id}", ctx.portal)]);
     }
-    for a in ctx.approvals.iter() {
-        cmd.args(["--approved-by", a]);
+    if let Some(g) = &ctx.grant {
+        cmd.args(["--grant", g]);
     }
+    cmd.arg("--").arg(action);
     let out = cmd
         .output()
         .map_err(|e| format!("cannot start {}: {e}", program.display()))?;
@@ -899,5 +1012,20 @@ mod tests {
     #[test]
     fn inputs_become_environment_names() {
         assert_eq!(env_name("bump-part"), "BUMP_PART");
+    }
+
+    #[test]
+    fn run_ids_are_only_what_new_id_makes() {
+        assert!(is_run_id(&crate::run::new_id("run")));
+        for bad in [
+            "run_",
+            "../x",
+            "run_../../etc",
+            "run_A1",
+            "x_run_1",
+            "/tmp/r.json",
+        ] {
+            assert!(!is_run_id(bad), "{bad}");
+        }
     }
 }

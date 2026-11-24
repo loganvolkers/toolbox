@@ -52,11 +52,24 @@ pub struct Federation {
     pub portals: Option<String>,
     /// The relation a caller needs on a child portal entity (default `can_run_actions`).
     pub permission: Option<String>,
-    /// How a parent dispatches this portal's actions: `{type: local}` or `{type: github-workflow, …}`.
+    /// How a parent may dispatch this portal's actions: `{type: local}` or `{type: github-workflow, …}`.
     pub runner: Option<Value>,
-    /// Parent portals whose recorded approvals this portal accepts on a dispatched run.
+    /// A parent's runners: `local.portals` (children a server may run in-process) and
+    /// `github-workflow` (`repos`, `token`, `api`). The parent owns credentials, never the child.
+    pub runners: Option<Value>,
+    /// A parent's environment variable holding its approval signing key (64 hex characters).
+    pub signing_key: Option<String>,
+    /// Parent portals whose signed approvals this portal accepts on a dispatched run.
     #[serde(default)]
-    pub accept_approvals_from: Vec<String>,
+    pub accept_approvals_from: Vec<TrustedParent>,
+}
+
+/// A parent whose approvals a child accepts, pinned by its signing key.
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+pub struct TrustedParent {
+    pub portal: String,
+    /// `ed25519:<64 hex>`.
+    pub key: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

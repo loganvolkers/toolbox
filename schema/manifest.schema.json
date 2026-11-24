@@ -246,7 +246,7 @@
     "federation": {
       "type": "object",
       "additionalProperties": false,
-      "description": "Federated actions (docs/design/federated-actions.md): the kind whose entities are child portals, whose declared actions this portal offers and dispatches to them; and, for a child, how a parent reaches it.",
+      "description": "Federated actions (docs/design/federated-actions.md): for a parent, the kind whose entities are child portals, whose declared actions it offers and dispatches to them, and the runners it owns; for a child, how a parent may reach it and whose approvals it accepts.",
       "properties": {
         "portals": {
           "$ref": "#/$defs/kindName",
@@ -262,7 +262,7 @@
           "required": [
             "type"
           ],
-          "description": "How a parent dispatches this portal's actions: `local` (the parent runs `toolbox run` in this checkout) or `github-workflow` (the parent dispatches the workflow, which runs `toolbox run`).",
+          "description": "How a parent may dispatch this portal's actions: `local` (the parent runs `toolbox run` in this checkout) or `github-workflow` (the parent dispatches this workflow, which runs `toolbox run`). The parent supplies credentials and endpoints (`federation.runners`); a child never names them.",
           "properties": {
             "type": {
               "enum": [
@@ -271,28 +271,101 @@
               ]
             },
             "repo": {
-              "type": "string"
+              "type": "string",
+              "description": "github-workflow: owner/name of this portal's repository."
             },
             "workflow": {
-              "type": "string"
+              "type": "string",
+              "description": "github-workflow: the workflow file that runs `toolbox run`."
             },
             "ref": {
-              "type": "string"
-            },
-            "api": {
-              "type": "string"
-            },
-            "token": {
-              "type": "string"
+              "type": "string",
+              "description": "github-workflow: the ref to dispatch on (default main)."
             }
           }
         },
         "acceptApprovalsFrom": {
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "portal",
+              "key"
+            ],
+            "properties": {
+              "portal": {
+                "type": "string",
+                "description": "The parent portal's name."
+              },
+              "key": {
+                "type": "string",
+                "pattern": "^ed25519:[0-9a-f]{64}$",
+                "description": "The parent's approval signing key, as `toolbox serve` prints it at start."
+              }
+            }
           },
-          "description": "Parent portal names whose recorded approvals satisfy this portal's approval rules when they dispatch a run here."
+          "description": "Parent portals whose signed approvals satisfy this portal's approval rules when they dispatch a run here. A grant counts only when its signature verifies with the pinned key and it names this run's action, version, inputs, effects and requester."
+        },
+        "runners": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "A parent's runners: which children a server may run in its own process, and the credentials it dispatches workflows with. A served parent runs a child's actions only through a runner it declares here and the child declares in `runner`.",
+          "properties": {
+            "local": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "portals"
+              ],
+              "description": "Children `toolbox serve` may run with `toolbox run` in its own checkout of them, as its own OS user.",
+              "properties": {
+                "portals": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Child keys (the directory the workspace connector found each child in), `*` matching any run of characters."
+                },
+                "env": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Environment variables passed to the child beyond the base set (PATH, HOME, locale, proxies, git identity)."
+                }
+              }
+            },
+            "github-workflow": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "repos"
+              ],
+              "description": "Workflows the parent may dispatch, and with which token.",
+              "properties": {
+                "repos": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "owner/name patterns a child's runner repo must match, `*` matching any run of characters."
+                },
+                "token": {
+                  "type": "string",
+                  "description": "The parent's environment variable holding the token (default GITHUB_TOKEN)."
+                },
+                "api": {
+                  "type": "string",
+                  "description": "The API base URL (GitHub Enterprise Server or a test double)."
+                }
+              }
+            }
+          }
+        },
+        "signingKey": {
+          "type": "string",
+          "description": "A parent's environment variable holding its approval signing key: 64 hex characters (32 random bytes, e.g. `openssl rand -hex 32`). Without it, a served parent can't pass approvals to its children."
         }
       }
     }
@@ -1123,7 +1196,8 @@
               "type": "array",
               "items": {
                 "type": "string"
-              }
+              },
+              "description": "command, change and in-image: environment variables the executor gets beyond the base set (PATH, HOME, locale, proxies, git identity). Executors start with a cleared environment."
             },
             "run": {
               "oneOf": [
