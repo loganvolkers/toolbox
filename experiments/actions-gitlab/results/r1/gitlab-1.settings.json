@@ -1,0 +1,75 @@
+{
+ "changed": 16,
+ "items": [
+  {
+   "what": "group acme-w12 access_tokens",
+   "added": "r1-gitlab-1-actions-bot"
+  },
+  {
+   "what": "group acme-w12 members",
+   "added": "group_139_bot_4f1416e88eb4c6a87eba9f84e6b90ab7:40"
+  },
+  {
+   "what": "project acme-w12/alpha environments",
+   "added": "codeowners"
+  },
+  {
+   "what": "project acme-w12/alpha ci_pipeline_variables_minimum_override_role",
+   "from": "developer",
+   "to": "maintainer"
+  },
+  {
+   "what": "project acme-w12/alpha restrict_user_defined_variables",
+   "from": false,
+   "to": true
+  },
+  {
+   "what": "project acme-w12/alpha variables",
+   "added": "ACME_ACTIONS_TOKEN"
+  },
+  {
+   "what": "project acme-w12/beta environments",
+   "added": "codeowners"
+  },
+  {
+   "what": "project acme-w12/beta ci_pipeline_variables_minimum_override_role",
+   "from": "developer",
+   "to": "maintainer"
+  },
+  {
+   "what": "project acme-w12/beta restrict_user_defined_variables",
+   "from": false,
+   "to": true
+  },
+  {
+   "what": "project acme-w12/beta variables",
+   "added": "ACME_ACTIONS_TOKEN"
+  },
+  {
+   "what": "project acme-w12/gamma environments",
+   "added": "codeowners"
+  },
+  {
+   "what": "project acme-w12/gamma ci_pipeline_variables_minimum_override_role",
+   "from": "developer",
+   "to": "maintainer"
+  },
+  {
+   "what": "project acme-w12/gamma restrict_user_defined_variables",
+   "from": false,
+   "to": true
+  },
+  {
+   "what": "project acme-w12/gamma variables",
+   "added": "ACME_ACTIONS_TOKEN"
+  },
+  {
+   "what": "project acme-w12/org protected_branches",
+   "added": "{\"force\": false, \"merge\": [40], \"name\": \"main\", \"push\": [40]}"
+  },
+  {
+   "what": "project acme-w12/org variables",
+   "added": "ACME_ACTIONS_TOKEN"
+  }
+ ]
+}

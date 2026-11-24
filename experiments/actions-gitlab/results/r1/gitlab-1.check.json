@@ -1,0 +1,18 @@
+{
+ "alpha": {
+  "present": true,
+  "exact": true,
+  "rule": true
+ },
+ "beta": {
+  "present": true,
+  "exact": true,
+  "rule": true
+ },
+ "gamma": {
+  "present": true,
+  "exact": true,
+  "rule": true
+ },
+ "pass": true
+}
