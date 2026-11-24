@@ -660,7 +660,7 @@ Scorecard `maintainer-supply-chain` over `Repository` entities, owned by group:m
 
 The repository's level: the lowest level among its constituent scorecards, so one weak area holds the whole repository back (D86, docs/design/repo-level.md).
 
-**Why:** An average hides the weakest area, which is where the trouble is, so each level requires every counted scorecard to reach it, and the lowest names the one to raise next. Runner-backed cards are left out so that a skipped tool doesn't drop the repository to none.
+**Why:** An average hides the weakest area, which is where the trouble is, so each level requires every counted scorecard to reach it, and the lowest names the one to raise next. Scorecards that need the CI runner are left out, so that a tool skipped on a laptop doesn't drop the repository to none.
 
 See [Decision: the repository level](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WMSMS50000000000000000.md), [Repository level design](https://github.com/loganvolkers/toolbox/blob/main/docs/design/repo-level.md).
 

@@ -140,8 +140,9 @@ scorecards:
     rationale: >-
       An average hides the weakest area, which is where the trouble is, so
       each level requires every counted scorecard to reach it, and the lowest
-      names the one to raise next. Runner-backed cards are left out so that a
-      skipped tool doesn't drop the repository to none.
+      names the one to raise next. Scorecards that need the CI runner are left
+      out, so that a tool skipped on a laptop doesn't drop the repository to
+      none.
     links:
     - title: 'Decision: the repository level'
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WMSMS50000000000000000.md
