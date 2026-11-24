@@ -337,7 +337,9 @@ scorecards:
       rationale: >-
         A tool reached only through the CLI leaves its MCP schema and
         `structuredContent` untested, and those are what users' agents read. A
-        call that errors proves nothing, so only successful calls count.
+        call that errors proves nothing, so when the runner observes the tests
+        only successful calls count; the static read can only see that a test
+        names the tool.
       links:
       - title: Thresholds
         url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md

@@ -286,9 +286,10 @@ scorecards:
         doesn't count, nor does a listed doc that is missing or never names the
         stage.
       rationale: >-
-        A status is the author's own claim; requiring a doc that exists and
-        names the stage stops a layer from reporting a stage as designed when no
-        design was ever written.
+        A status is the author's own claim. Requiring a listed doc that exists
+        and names the stage means a layer can't call a stage designed on the
+        author's word alone; whether that doc really designs the stage is left
+        to review.
       links:
       - title: Meta standards review
         url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/meta-standards-review.md
