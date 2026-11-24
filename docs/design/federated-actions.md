@@ -29,10 +29,11 @@ succeeds only when its effect is observed.**
   (`toolbox run`). A served portal runs the same definition through REST and MCP. A parent runs a
   child's through the child. All three call one preparation step, so a preview means the same
   thing wherever it is asked.
-- **Trust stays with the child.** The parent never runs a child's code with its own credentials.
-  A served parent refuses a child that declared no runner. A repo portal holds no approvals of its
-  own, and accepts a parent's only when it names that parent. A change goes to review, and review
-  is its approval.
+- **Each side trusts only what it controls.** The parent owns how it reaches a child: which
+  checkouts it may run in and which repositories, tokens and API it may dispatch to. A child's
+  manifest names a runner but cannot point the parent's credentials anywhere. The child owns
+  whether it accepts a parent's approvals: only ones the parent signed, with a key the child
+  pinned. A change goes to review, and review is its approval.
 - **This fills the gap the market leaves.** Every IDP we surveyed defines actions centrally. The
   repo-level action already exists as the repo's CI workflow, but no portal discovers, governs and
   verifies repo-declared actions. Trust is the reason, and the trust rules in §5.3 are the answer.
@@ -107,7 +108,7 @@ brackets.
 | **S4** | As a **release manager**, I want deploys to run in the repo's own workflow, behind its own environment reviewers, so a portal can never bypass a gate | Repo workflow | The repo's CI | The run is `dispatched`, tracked to the workflow's conclusion, and verified by the postcondition. The repo's environment rules decide approval | Built (executor and tracking; tested against a fake GitHub API) |
 | **S5** | As a **security owner**, I want access-granting actions to need a maintainer's approval, never the requester's own | Company or repo | Where the credential is | A run is `awaiting_approval`; the requester's own approval is refused (`not-an-approver`); another maintainer's approval runs it [3, 7] | Built |
 | **S6** | As an **agent**, I want to discover, preview and run actions over MCP or the CLI, and be told "done" only when the effect is observed | Anywhere | Wherever the executor is | `preview_action` returns effects and a confirm token; `run_action` runs it; `get_run` ends `succeeded` with the verification [7] | Built |
-| **S7** | As an **approver at the org**, I want to approve a run once in the org portal and have the repo accept it, so a repo portal needs no approval service | Repo (approval rule) | The repo | The repo runs a parent's dispatch with the parent's recorded approval only when it lists the parent in `acceptApprovalsFrom` [7] | Built |
+| **S7** | As an **approver at the org**, I want to approve a run once in the org portal and have the repo accept it, so a repo portal needs no approval service | Repo (approval rule) | The repo | The repo runs a parent's dispatch only with a grant the parent signed for that run, action version, inputs and effects, verified against the key the repo pinned in `acceptApprovalsFrom`; a forged grant is refused [7] | Built |
 | **S8** | As a **platform engineer**, I want "create a service" as a versioned golden path that records its template version | Company | Central | A `create` action whose postcondition is the new repo's entity, with the template version as a field | Designed (the `create` scope exists; no reference template yet) |
 | **S9** | As a **repo owner**, I want "update from template" to open a pull request with the template's newer version, and a rule that flags drift | Template's package | The repo | A package `change` action (copier/cruft semantics), verified by the drift rule passing | Designed (S3's mechanism; no reference package yet) |
 | **S10** | As a **team lead**, I want my team's runbooks in a team package that only our repos include | Team package | Each including repo | The org portal offers the team's actions only on the repos that include the package [5] | Built (package actions flow up) |
@@ -131,7 +132,8 @@ revision keeps every other property.
 |---|---|
 | No portal calls another at runtime | No portal *queries* another. A run is the one call that goes down, and only to a child that declared how (`federation.runner`) |
 | Packages carry kinds, scorecards and policies | Packages carry actions too. A package action runs in the child that includes it |
-| Waivers' approvals wait on M5 (FQ3) | Approvals exist: recorded on the run, by principal, with self-approval refused |
+| Waivers' approvals wait on M5 (FQ3) | Approvals exist: recorded on the run, by principal, with self-approval refused, and signed by the parent when they cross to a child |
+| A child is named by its own manifest | A child is keyed by where it was found (its path), so no child can claim another's entity |
 | Nothing implemented | Actions up, runs down and package actions are built (§7) |
 
 ### 5.2 The parent's view
@@ -148,37 +150,48 @@ connectors:
     records: [portal]
 kinds:
   - name: Portal
-    fields: {name: …, path: …, actions: {type: list, items: object}, runner: {type: object}}
+    fields: {name: …, key: …, path: …, error: …, actions: {type: list, items: object}, runner: {type: object}}
     map:
     - from: workspace/portal
-      id: "'portal:' + record.name"
-federation: {portals: Portal}
+      id: "'portal:' + record.key"   # where the child was found, not what it calls itself
+federation:
+  portals: Portal
+  runners:
+    local: {portals: ["*"]}          # checkouts this server may run `toolbox run` in
+    # github-workflow: {repos: ["acme/*"], token: ORG_DISPATCH_TOKEN, api: https://api.github.com}
+  signingKey: TOOLBOX_APPROVAL_KEY   # env var holding the Ed25519 seed that signs approvals
 ```
 
 Every child action is then offered on the child's entity (`portal:beta`), with the parent's
 permission (`can_run_actions` by default) and the child's input schema. The parent drops
 `enumFrom`, because only the child can compute those options. The child validates them when it
-previews.
+previews. A child whose manifest fails validation offers nothing, and its record carries the
+`error`; two children with one name are both offered, told apart by key, with a warning.
 
 ### 5.3 Trust rules
 
 | # | Rule | Enforced by |
 |---|---|---|
-| T1 | **The parent never runs a child's code with its own credentials.** The child runs it, with its executor | The `toolbox` executor runs `toolbox run` in the child; `github-workflow` dispatches the child's workflow |
-| T2 | **A child decides whether it can be reached.** A served parent refuses a child with no `federation.runner` (`409 no-runner`), and names the checkout command | `toolbox serve` |
+| T1 | **The parent owns how it reaches a child.** A child's `federation.runner` names only a type, a repository, a workflow and a ref. The parent runs it only if its own `federation.runners` allows it: `local` for checkouts whose key matches `runners.local.portals`, `github-workflow` for repositories matching `runners.github-workflow.repos`, with the parent's token and API. Otherwise `409 runner-not-allowed` | `toolbox serve` and `toolbox run` in the parent |
+| T2 | **Executors see only what they declare.** Every executor and child process starts with a cleared environment: a fixed base set (`PATH`, `HOME`, locale, proxies, git identity, `TOOLBOX_*` directories) plus the action's own `secrets`. A served parent's tokens never reach a child's command, including at preview | The executors (`clean_env`) |
 | T3 | **The child previews.** A parent's preview is the child's preview, so blockers, effects and approvals are the child's | Both previews come from one `prepare` |
-| T4 | **A repo portal holds no approvals.** An action with approvers ends `awaiting_approval` (exit 3) in a checkout | `toolbox run` |
-| T5 | **A child trusts a parent's approvals only by name.** A run dispatched with `--parent-run org/<id> --approved-by …` counts the approvals only if `acceptApprovalsFrom` lists `org` | `toolbox run` |
-| T6 | **Nobody approves their own run, and an approver is someone named.** Each approval entry is a user, a group, or a list meaning any one of them. A group needs an authorization model to know its members; without one it can't be met, rather than meaning anyone | The run lifecycle and `toolbox serve` (`not-an-approver`) |
+| T4 | **A repo portal holds no approvals of its own.** An action with approvers ends `awaiting_approval` (exit 3) in a checkout | `toolbox run` |
+| T5 | **A child accepts only approvals a parent signed.** On the last approval the parent signs a grant: parent, parent run, action, action version, entity, inputs, effects hash, requester, approvers, and an expiry 600 s ahead (Ed25519). The child checks every field against its own preview and the key it pinned in `acceptApprovalsFrom: [{portal, key}]`. A child that pins no key for this parent makes the parent's preview say so (`child-refuses-approvals`) before anyone approves | `toolbox run --grant` in the child; the parent's preview |
+| T6 | **Nobody approves their own run, an approver is a person, and each person approves once.** Each approval entry is a user, a group, or a list meaning any one of them. Principals compare without case. A group needs an authorization model to know its members; without one it can't be met, rather than meaning anyone. Approvals need an interactive sign-in (proxy or OIDC, D57): not a personal access token, and not MCP | The run lifecycle and `toolbox serve` (`not-an-approver`, `approval-needs-a-person`) |
 | T7 | **Review is a change's approval.** A `change` action's approvers approve by reviewing and merging its pull request, behind the repo's branch protection; the run waits as `proposed`, not `awaiting_approval` | `by_review` in the preview |
-| T8 | **The child verifies.** A federated run's verification is the child's, recorded as `{by: child portal, child_run, child}` | `recheck` asks the child |
+| T8 | **The child verifies, and only its own effect counts.** A federated run's verification is the child's, recorded as `{by: child portal, child_run, child}`. A change counts only once its commit is on the base (by ancestry or its `Toolbox-Run` trailer). A postcondition that held before the run ends `unverified` | `recheck` |
+
+An approval binds what the approver saw: if the action's definition or its effects changed between
+the request and the last approval, the run fails `preview_stale` instead of running the new
+definition. The last approval moves the run out of `awaiting_approval` under one lock, so two
+approvals can't start it twice and a cancel that was accepted always wins.
 
 ### 5.4 Runners
 
-| Runner | How a parent dispatches | Where it fits | Credentials |
+| Runner (child declares) | Parent allows with | How a parent dispatches | Credentials |
 |---|---|---|---|
-| `local` | `toolbox run <action> --portal <child> --parent-run <parent>/<id> --approved-by …` in the child's checkout | A monorepo, a fleet checkout, a developer laptop, the acceptance script | The checkout's own: git push rights, local tools |
-| `github-workflow` | `workflow_dispatch` of the child's workflow with `action`, `inputs`, `requested_by` and `toolbox_run`; the workflow runs `toolbox run` | A served org portal over repos in GitHub | The repo's `GITHUB_TOKEN`, environment secrets and OIDC, behind its environment reviewers |
+| `local` | `federation.runners.local.portals` (key globs) | `toolbox run --portal <child> --parent-run <parent>/<id> [--grant <signed>] -- <action>` in the child's checkout | The checkout's own, in a cleared environment |
+| `github-workflow` (`repo`, `workflow`, `ref`) | `federation.runners.github-workflow.repos`, `token`, `api` | `workflow_dispatch` of the child's workflow with `action`, `inputs`, `requested_by`, `toolbox_run`, `parent_run` and `grant`; the workflow runs `toolbox run` | The parent's dispatch token; the workflow's own `GITHUB_TOKEN`, environment secrets and OIDC behind its environment reviewers |
 
 ## 6. One action at every level
 
@@ -215,7 +228,7 @@ actions:
 |---|---|---|---|---|
 | `command` | A command in the checkout, with `TOOLBOX_INPUT_*` | Toolbox's, plus the command's own when `preview: true` (`TOOLBOX_PHASE=preview`) | Its exit | Re-reading the portal's facts |
 | `change` | A command in a worktree of the remote's base; commits it to `toolbox/<action>/<run>` with `Toolbox-Run` and `Requested-By` trailers, and pushes | The files it would change | `proposed` | The facts at the base branch, once merged |
-| `github-workflow` | `workflow_dispatch`, tracked by run id | Toolbox's | `dispatched`, then the workflow's conclusion | The postcondition after a refresh |
+| `github-workflow` | `workflow_dispatch` asking for the run id (`return_run_details`), tracked by that id; without one, by the one run of that name on the dispatched ref created after the dispatch | Toolbox's | `dispatched`, then the workflow's conclusion, or `timed_out` past the deadline | The postcondition after a refresh |
 | `in-image` | The executor protocol over stdio (D40) | The executor's | Its terminal message | The postcondition, or the executor's `verify` |
 | `toolbox` (federated) | The child's `toolbox run` | The child's | The child's state | The child |
 
@@ -225,16 +238,21 @@ actions:
   review. A run is `succeeded` only when its postcondition held at a snapshot after the run. An
   action with no postcondition ends `unverified`, never `succeeded`.
 - **Preview and confirm.** A preview returns the effects, blockers, warnings, approvers and a
-  confirm token, `ct_<issued>_<hash>`. The hash covers the action version, inputs, effects and
-  snapshot, and the token lives for 600 seconds. A changed preview is `preview_stale`: CLI exit 1,
-  HTTP `409 preview-stale`.
+  confirm token, `ct_<issued>_<nonce>_<hash>`. The hash covers the action version, inputs,
+  effects, the facts the preview read, the requester, the entity and a fresh nonce, so two
+  previews never share a token, and the token lives for 600 seconds. A
+  changed preview is `preview_stale`: CLI exit 1, HTTP `409 preview-stale`. A served portal
+  spends each token once (`409 token-used`). Inputs are validated as JSON Schema (draft 2020-12),
+  `pattern` included, plus `enumFrom`.
 - **Exit codes** (CLI): 0 succeeded, proposed or dispatched; 1 failed or stale; 2 invalid inputs or
   refused; 3 awaiting approval.
 - **Records.** Every run is a JSON record, carrying who requested it, through which surface, the
   approvals with notes, every state change with time and actor, the effects, the outputs and the
   verification. `toolbox run` writes it to the state directory, and `toolbox run --verify <id>`
-  checks a waiting run again. A served portal keeps runs in memory for now (§7.2), and re-checks
-  waiting ones every 10 seconds.
+  checks a waiting run again; it takes only a run id, never a file, and re-derives the executor
+  from the manifest. `via` is `api`, `mcp` or `parent:<portal>/<run>`, set by the surface, never
+  by the caller. A served portal keeps runs in memory for now (§7.2), and re-checks waiting ones
+  every 10 seconds.
 
 ### 6.4 Interfaces
 
@@ -243,7 +261,7 @@ actions:
 | List | `toolbox run` | `GET /v1/actions` | `list_actions` |
 | Preview | `toolbox run <action> -i k=v` | `POST /v1/actions/{name}/previews` | `preview_action` |
 | Run | `--confirm <token>`, or `--yes` | `POST /v1/actions/{name}/runs` | `run_action` |
-| Approve | — (T4) | `POST /v1/runs/{id}/approvals` | `approve_run` |
+| Approve | — (T4) | `POST /v1/runs/{id}/approvals`, interactive sign-in only (T6) | — (D57) |
 | Check | `--verify <id>` | `GET /v1/runs/{id}`, `POST /v1/runs/{id}/verify` | `get_run`, `list_runs` |
 | Cancel | — | `POST /v1/runs/{id}/cancel` | — |
 
@@ -260,10 +278,10 @@ network and no Postgres.
 | 1 | A repo action: list, preview, confirm, observed | S1 |
 | 2 | A stale token exits 1 (`preview_stale`); invalid inputs exit 2 | S1, S6 |
 | 3 | A repo portal holds no approvals: exit 3, `awaiting_approval` | S5 (T4) |
-| 4 | A change is a pull request with the trailer; stays `proposed` until merged; then `succeeded` | S2 (T7) |
+| 4 | A change is a pull request with the trailer; stays `proposed` until merged; then `succeeded`. A licence pushed to the base by hand does not complete another unmerged run | S2 (T7, T8) |
 | 5 | The org offers every child's actions, packages included; a federated run is verified by the child | S6, S10 (T1, T8) |
 | 6 | A fleet change: one org action, three pull requests, three verified runs | S3 |
-| 7 | The served org: a child without a runner is refused; approval by the org, refused for the requester, accepted for another maintainer, accepted by the child; MCP preview, run and check | S5, S6, S7 (T2, T5, T6) |
+| 7 | The served org: a child without a runner is refused; a child that pins no key is flagged before approval; a reused confirm token, the requester, someone not listed and a forged grant are refused; another maintainer's approval is signed, accepted by the child and verified; MCP offers no approval tool, and its run records `via: mcp` | S5, S6, S7 (T1, T5, T6) |
 
 ### 7.2 Deferred, with the reason
 
@@ -274,6 +292,13 @@ network and no Postgres.
 | A federated github-workflow run's verification | The parent sees the workflow's conclusion; the child's own verification needs the child's run record as a workflow artifact |
 | Fan-out in one command | A fleet change is one run per child (a loop); `--all` waits for a use beyond scripts |
 | S8, S9, S11, S12 | §4 |
+| Executor-aware cancel (review F17) | Cancel stops Toolbox carrying the run; it does not yet close the pull request, cancel the workflow run or tell the child |
+| `failed_after_effect` and compensation (F19) | A run whose executor succeeded but whose postcondition failed ends `failed`; the effect may have landed. The record keeps the outputs |
+| Group approvals proved against OpenFGA in the acceptance script (F20) | The script runs in dev mode; group membership is unit-tested against the authorizer |
+| Observing who merged a change (F21) | T7 trusts branch protection; reading the merger through the GitHub connector is next. A change command's side effects outside its diff are not reviewed |
+| Idempotency keys across retries and a per-entity lease (F22) | A confirm token is single-use, which covers a retried request; concurrent runs of one action on one entity are allowed |
+| Signed run records and a served audit journal (F11, F18) | `--verify` reads only the state directory by id; records are still unsigned files, and refusals are answered but not journaled |
+| Temporary paths (F23) and identity canonicalisation beyond case (F24) | Low severity; tracked in [self-service-review.md](../self-service-review.md) |
 
 ## 8. Against the alternatives
 
@@ -297,7 +322,8 @@ with agents. This is the designer's reading, not a result.
 |---|---|
 | FA1 | Should a parent be able to *restrict* a child's action (who may run it from the parent) beyond `federation.permission`? Today the parent's permission and the child's approval rule both apply |
 | FA2 | Should a fleet change be one run with child runs, or N runs? N runs keeps each child's record whole; one run is easier to watch |
-| FA3 | How does a repo portal take approvals from a person without a server? Today only a parent's dispatch carries them (T5) |
+| FA3 | How does a repo portal take approvals from a person without a server? Today only a parent's signed grant carries them (T5) |
+| FA5 | How does a child rotate the parent key it pins? Today the child edits `acceptApprovalsFrom`; a key list per parent would allow overlap |
 | FA4 | Is the workspace connector the right way to find children in a large org, or should children push their `portal` record (federation.md option B)? |
 
 ## Sources
