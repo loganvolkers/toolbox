@@ -505,7 +505,7 @@
       t.capped.map(function(n) {
         return title(D, n);
       })
-    ) + (t.capped.length === 1 ? " is" : " are") + " left out: " + (t.capped.length === 1 ? "its only level is " + lv + ", so its 100% is not progress, and it caps the repository at " + lv : "each stops at its only level, so its 100% is not progress, and each caps the repository");
+    ) + (t.capped.length === 1 ? " is" : " are") + " left out: " + (t.capped.length === 1 ? "it holds the repository level at " + lv + " until it gains a higher level, so its 100% is a ceiling, not progress" : "each holds the repository level until it gains a higher level, so their 100% is a ceiling, not progress");
   }
   function trackSlots(D, t) {
     var cards = t.cards.filter(function(c) {
@@ -1855,7 +1855,7 @@
     "a.factor:hover{border-color:var(--accent);border-left-color:var(--st);transform:translateY(-1px)}",
     "a.factor[aria-current=true]{box-shadow:0 0 0 1px var(--accent)}",
     ".factor .fh{display:flex;justify-content:space-between;gap:8px;align-items:center;font-weight:700}",
-    ".factor p{margin:0;font-size:13px;color:var(--muted)}.fx{display:flex;flex-direction:column;gap:1px;line-height:1.2}.fx b{font-size:24px;font-weight:750;color:var(--st);font-variant-numeric:tabular-nums}.fx span{font-size:13px;color:var(--muted)}.fx b.unmeasured{font-size:15px;font-weight:600;color:var(--muted)}",
+    ".factor p{margin:0;font-size:13px;color:var(--muted)}.fx{display:flex;flex-direction:column;gap:1px;line-height:1.2}.fx b{font-size:24px;font-weight:750;color:var(--st);font-variant-numeric:tabular-nums}.fx span{font-size:13px;color:var(--muted)}.fx b.unmeasured{font-size:15px;font-weight:600;color:var(--muted)}.fx b.mixed{font-size:18px;color:var(--fg)}",
     ".factor .fc{font-size:13px;color:var(--muted)}.fbar{display:flex;align-items:center;gap:10px}.fbar>.bar{flex:1 1 auto;min-width:0}.fbar>.fc{flex:none}.cmp-method{font-size:14px;line-height:1.5}.jump{margin:-6px 0 14px;font-size:14px}.bh-fix{margin-top:4px}",
     ".measure{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr) minmax(130px,auto);gap:10px 18px;align-items:center;padding:14px 4px;border-top:1px solid var(--line)}",
     ".measure .mt{font-weight:650;line-height:1.35}",
@@ -2089,7 +2089,7 @@
         var next = needs || almost ? nextMedalEl(D, trackStats(D, S, furthestTrack(D, S) || void 0).cards, "Next: ") : null;
         var plain = el("section", { className: "hero plain", style: "--lvl:" + fill(tone) + ";--lvl-ink:" + ink(tone) }, el("div", {}, el("div", { className: "kicker", textContent: "Status" }), el("h2", { className: "levelword", textContent: at > 0 ? verdict.slice(0, at) : verdict }), at > 0 ? el("p", { className: "verdict", textContent: verdict.slice(at + 2).replace(/^./, function(ch) {
           return ch.toUpperCase();
-        }) }) : null, next));
+        }) }) : null, next, S.rows.length ? el("p", { className: "sub", style: "margin:8px 0 0", textContent: "No repository level: this portal names no repository standards, so each scorecard stands on its own." }) : null));
         plain.setAttribute("aria-label", "Status");
         return plain;
       }
@@ -2162,9 +2162,6 @@
           el("div", {}, el("div", { className: "kicker", textContent: "Repository level" }), el("h2", { className: "levelword", textContent: level }))
         ),
         el("p", { className: "verdict", textContent: sentence }),
-        wins.length ? el("p", { className: "wins" }, el("b", { textContent: "✓ Already: " }), wins.join(" · ")) : null,
-        nextBox,
-        climb,
         verdict.indexOf(": ") > 0 ? el(
           "p",
           { className: "attn" },
@@ -2178,7 +2175,10 @@
               if (h) h.scrollIntoView({ behavior: "smooth", block: "start" });
             }
           })
-        ) : el("p", { className: "attn", textContent: verdict })
+        ) : el("p", { className: "attn", textContent: verdict }),
+        wins.length ? el("p", { className: "wins" }, el("b", { textContent: "✓ Already: " }), wins.join(" · ")) : null,
+        nextBox,
+        climb
       );
       var ladder = el("div", { className: "ladder", style: "--steps:" + R.ladder.length });
       ladder.setAttribute("aria-label", "Repository standards by lowest level");
@@ -3305,7 +3305,7 @@
           "div",
           { className: "th" },
           t.compare ? tallyRing(t.verdicts, t.rows.length, 60) : ring(t.pct, { size: 60, color, label: t.pct == null ? "not scored" : t.pct + "% at the top level" }),
-          el("div", {}, el("div", { className: "tt", textContent: def.title || t.name }), el("div", { className: "sub", textContent: t.compare ? "factors ahead, a segment per factor" : t.averaged > 1 ? ringWords(t) : "of entities at the top level" }))
+          el("div", {}, el("div", { className: "tt", textContent: def.title || t.name }), el("div", { className: "sub", textContent: t.compare ? "factors ahead, a segment per factor; a factor is behind if any one of its rules is" : t.averaged > 1 ? ringWords(t) : "of entities at the top level" }))
         ),
         def.description ? el("div", { className: "td", textContent: prose(firstSentence(def.description)) }) : null
       ];
@@ -4543,6 +4543,7 @@
   // src/views/compare.js
   function tallyPhrase(n, total, key) {
     if (n.unknown === total) return "Not measured: none of " + plural(total, "rule") + " has values";
+    if (n.behind && n.ahead) return n.ahead + " ahead, " + n.behind + " behind, of " + plural(total, "rule");
     return (n[key] || 0) + " of " + plural(total, "rule") + " " + (key === "parity" ? "at parity" : key);
   }
   var compareViews = {
@@ -4601,7 +4602,7 @@
           var fx = total ? el(
             "div",
             { className: "fx" },
-            el("b", { className: counts.unknown === total ? "unmeasured" : "", textContent: tallyPhrase(counts, total, fxKey) }),
+            el("b", { className: counts.unknown === total ? "unmeasured" : counts.behind && counts.ahead ? "mixed" : "", textContent: tallyPhrase(counts, total, fxKey) }),
             best ? el("span", { textContent: "widest lead: " + lowerFirst(measureLabel(c, best.r)) + ", " + (best.ratio >= 10 ? Math.round(best.ratio).toLocaleString("en-US") : best.ratio.toFixed(1)) + "× " + best.word }) : null
           ) : null;
           var a = link("compare/" + enc(n), "factor", [

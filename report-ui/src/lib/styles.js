@@ -317,7 +317,7 @@ export var CSS = [
   "a.factor:hover{border-color:var(--accent);border-left-color:var(--st);transform:translateY(-1px)}",
   "a.factor[aria-current=true]{box-shadow:0 0 0 1px var(--accent)}",
   ".factor .fh{display:flex;justify-content:space-between;gap:8px;align-items:center;font-weight:700}",
-  ".factor p{margin:0;font-size:13px;color:var(--muted)}.fx{display:flex;flex-direction:column;gap:1px;line-height:1.2}.fx b{font-size:24px;font-weight:750;color:var(--st);font-variant-numeric:tabular-nums}.fx span{font-size:13px;color:var(--muted)}.fx b.unmeasured{font-size:15px;font-weight:600;color:var(--muted)}",
+  ".factor p{margin:0;font-size:13px;color:var(--muted)}.fx{display:flex;flex-direction:column;gap:1px;line-height:1.2}.fx b{font-size:24px;font-weight:750;color:var(--st);font-variant-numeric:tabular-nums}.fx span{font-size:13px;color:var(--muted)}.fx b.unmeasured{font-size:15px;font-weight:600;color:var(--muted)}.fx b.mixed{font-size:18px;color:var(--fg)}",
   ".factor .fc{font-size:13px;color:var(--muted)}.fbar{display:flex;align-items:center;gap:10px}.fbar>.bar{flex:1 1 auto;min-width:0}.fbar>.fc{flex:none}.cmp-method{font-size:14px;line-height:1.5}.jump{margin:-6px 0 14px;font-size:14px}.bh-fix{margin-top:4px}",
   ".measure{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr) minmax(130px,auto);gap:10px 18px;align-items:center;padding:14px 4px;border-top:1px solid var(--line)}",
   ".measure .mt{font-weight:650;line-height:1.35}",

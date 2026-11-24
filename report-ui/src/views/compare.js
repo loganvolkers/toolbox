@@ -11,9 +11,11 @@ import { rich } from "../lib/text.js";
 import { STANDING_MARK, standingChip, standingColor, standingPhrase } from "../lib/tracks.js";
 import { andList, firstSentence, lowerFirst, plural, sentences } from "../lib/words.js";
 
-// The number a factor leads with: rules behind, else ahead, else at parity; or, before any record, that none has values.
+// The number a factor leads with: rules behind, else ahead, else at parity; both when it is ahead on some and behind on
+// others; or, before any record, that none has values.
 function tallyPhrase(n, total, key) {
   if (n.unknown === total) return "Not measured: none of " + plural(total, "rule") + " has values";
+  if (n.behind && n.ahead) return n.ahead + " ahead, " + n.behind + " behind, of " + plural(total, "rule");
   return (n[key] || 0) + " of " + plural(total, "rule") + " " + (key === "parity" ? "at parity" : key);
 }
 
@@ -80,7 +82,7 @@ export const compareViews = {
             ? el(
                 "div",
                 { className: "fx" },
-                el("b", { className: counts.unknown === total ? "unmeasured" : "", textContent: tallyPhrase(counts, total, fxKey) }),
+                el("b", { className: counts.unknown === total ? "unmeasured" : counts.behind && counts.ahead ? "mixed" : "", textContent: tallyPhrase(counts, total, fxKey) }),
                 best ? el("span", { textContent: "widest lead: " + lowerFirst(measureLabel(c, best.r)) + ", " + (best.ratio >= 10 ? Math.round(best.ratio).toLocaleString("en-US") : best.ratio.toFixed(1)) + "× " + best.word }) : null,
               )
             : null;

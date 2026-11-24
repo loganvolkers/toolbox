@@ -49,7 +49,7 @@ export const overviewViews = {
       var tone = needs ? "none" : almost ? "bronze" : "gold";
       // The furthest track's lowest scorecard, as its track card names it; with no tracks, every scorecard's.
       var next = needs || almost ? nextMedalEl(D, trackStats(D, S, furthestTrack(D, S) || undefined).cards, "Next: ") : null;
-      var plain = el("section", { className: "hero plain", style: "--lvl:" + fill(tone) + ";--lvl-ink:" + ink(tone) }, el("div", {}, el("div", { className: "kicker", textContent: "Status" }), el("h2", { className: "levelword", textContent: at > 0 ? verdict.slice(0, at) : verdict }), at > 0 ? el("p", { className: "verdict", textContent: verdict.slice(at + 2).replace(/^./, function (ch) { return ch.toUpperCase(); }) }) : null, next));
+      var plain = el("section", { className: "hero plain", style: "--lvl:" + fill(tone) + ";--lvl-ink:" + ink(tone) }, el("div", {}, el("div", { className: "kicker", textContent: "Status" }), el("h2", { className: "levelword", textContent: at > 0 ? verdict.slice(0, at) : verdict }), at > 0 ? el("p", { className: "verdict", textContent: verdict.slice(at + 2).replace(/^./, function (ch) { return ch.toUpperCase(); }) }) : null, next, S.rows.length ? el("p", { className: "sub", style: "margin:8px 0 0", textContent: "No repository level: this portal names no repository standards, so each scorecard stands on its own." }) : null));
       plain.setAttribute("aria-label", "Status");
       return plain;
     }
@@ -148,9 +148,6 @@ export const overviewViews = {
         el("div", {}, el("div", { className: "kicker", textContent: "Repository level" }), el("h2", { className: "levelword", textContent: level })),
       ),
       el("p", { className: "verdict", textContent: sentence }),
-      wins.length ? el("p", { className: "wins" }, el("b", { textContent: "✓ Already: " }), wins.join(" · ")) : null,
-      nextBox,
-      climb,
       verdict.indexOf(": ") > 0
         ? el(
             "p",
@@ -167,6 +164,9 @@ export const overviewViews = {
             }),
           )
         : el("p", { className: "attn", textContent: verdict }),
+      wins.length ? el("p", { className: "wins" }, el("b", { textContent: "✓ Already: " }), wins.join(" · ")) : null,
+      nextBox,
+      climb,
     );
     var ladder = el("div", { className: "ladder", style: "--steps:" + R.ladder.length });
     ladder.setAttribute("aria-label", "Repository standards by lowest level");

@@ -50,7 +50,7 @@ export function ringWhy(D, t) {
     ) +
     (t.capped.length === 1 ? " is" : " are") +
     " left out: " +
-    (t.capped.length === 1 ? "its only level is " + lv + ", so its 100% is not progress, and it caps the repository at " + lv : "each stops at its only level, so its 100% is not progress, and each caps the repository")
+    (t.capped.length === 1 ? "it holds the repository level at " + lv + " until it gains a higher level, so its 100% is a ceiling, not progress" : "each holds the repository level until it gains a higher level, so their 100% is a ceiling, not progress")
   );
 }
 
