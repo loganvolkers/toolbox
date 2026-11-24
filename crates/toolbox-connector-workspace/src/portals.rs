@@ -5,8 +5,9 @@
 //! parent dispatches runs back to the child, which previews, runs and verifies them itself.
 //!
 //! No other tool reads a Toolbox manifest, so this is the one place the fact can come from.
-//! Actions contributed by packages (`include: [{package}]`) are not resolved here: the record
-//! lists the package specs, and the child's own `toolbox run` sees the full set.
+//! The manifest is loaded as the child loads it, packages included, so an action an org package
+//! ships to its repos is offered by each repo that includes it. A package that is not installed
+//! here (`toolbox install`) leaves `packageError` set and the record lists the child's own actions.
 
 use serde_json::{Value, json};
 use std::path::Path;
@@ -76,7 +77,14 @@ pub(crate) fn analyse(root: &Path, rel: &str) -> Value {
         }
     };
     let (extra, packages) = included(dir, &doc);
-    let all = std::iter::once(&doc).chain(extra.iter());
+    let (merged, package_error) = match toolbox_model::load::load(&file) {
+        Ok(src) => (vec![src.document], None),
+        Err(e) => (
+            std::iter::once(doc.clone()).chain(extra).collect(),
+            (!packages.is_empty()).then(|| e.to_string()),
+        ),
+    };
+    let all = merged.iter();
     let mut actions = Vec::new();
     let mut scorecards = Vec::new();
     for d in all {
@@ -104,6 +112,7 @@ pub(crate) fn analyse(root: &Path, rel: &str) -> Value {
             .unwrap_or(json!([])),
         "scorecards": scorecards,
         "packages": packages,
+        "packageError": package_error,
         "error": null,
     })
 }
@@ -145,7 +154,37 @@ mod tests {
         assert_eq!(r["actions"][0]["verified"], true);
         assert_eq!(r["actions"][1]["executor"], "change");
         assert_eq!(r["packages"], json!(["github:o/r@v1"]));
+        assert!(r["packageError"].as_str().is_some(), "{r}");
         assert_eq!(r["runner"]["type"], "local");
+        std::fs::remove_dir_all(&root).ok();
+    }
+
+    #[test]
+    fn package_actions_are_offered_by_the_repo_that_includes_them() {
+        let root = std::env::temp_dir().join(format!("portals-pkg-{}", std::process::id()));
+        let pkg = root.join("org-actions");
+        std::fs::create_dir_all(pkg.join("fragments")).unwrap();
+        std::fs::write(
+            pkg.join("toolbox-package.yaml"),
+            "apiVersion: toolbox.dev/package/v0\nname: org-actions\nfragments: [fragments/*.yaml]\n",
+        )
+        .unwrap();
+        std::fs::write(
+            pkg.join("fragments/fix.yaml"),
+            "actions:\n  - {name: add-codeowners, kind: Repository, description: Add CODEOWNERS, permission: can_run_actions, executor: {type: change, run: z}, expect: {postcondition: has(entity.codeowners), within: 1h}}\n",
+        )
+        .unwrap();
+        let dir = root.join("svc/.toolbox");
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(
+            dir.join("toolbox.yaml"),
+            "portal: {name: svc, owner: group:a}\ninclude: [{package: ../../org-actions}]\n",
+        )
+        .unwrap();
+        let r = analyse(&root, "svc/.toolbox/toolbox.yaml");
+        assert_eq!(r["packageError"], Value::Null, "{r}");
+        assert_eq!(r["actions"][0]["name"], "add-codeowners");
+        assert_eq!(r["actions"][0]["executor"], "change");
         std::fs::remove_dir_all(&root).ok();
     }
 

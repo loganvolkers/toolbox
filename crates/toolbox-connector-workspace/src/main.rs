@@ -1281,6 +1281,7 @@ impl Source for Workspace {
             ("js-workspace", self.js_workspace),
             ("expo-app", !self.expo_apps.is_empty()),
             ("storybook", !self.storybooks.is_empty()),
+            ("portal", !self.portals.is_empty()),
         ];
         let mut kinds: Vec<&str> = on.iter().filter(|(_, b)| *b).map(|(k, _)| *k).collect();
         let declared: Vec<&str> = self.data.iter().map(|d| d.kind.as_str()).collect();
