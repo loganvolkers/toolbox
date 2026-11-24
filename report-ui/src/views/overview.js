@@ -343,12 +343,20 @@ export const overviewViews = {
         return p.hollow;
       });
     });
+    var clearBelow = clear.filter(function (r) {
+      return clearHollow.indexOf(r) < 0 && r.topShare < 100;
+    });
     var clearLine = el(
       "span",
       {},
       "✓ " + plural(clear.length - clearHollow.length, "scorecard has", "scorecards have") + " no entity at none",
       clearHollow.length
         ? el("span", { className: "unjudged-n" }, "; " + fmt(clearHollow.length) + " more only because no agent has assessed some of their entities yet (", ...clearHollow.flatMap(function (r, i) {
+            return [i ? ", " : "", link("scorecard/" + enc(r.name), "", title(D, r.name))];
+          }), ")")
+        : null,
+      clearBelow.length
+        ? el("span", {}, "; " + (clear.length - clearHollow.length === 1 ? "it still has entities below its top level" : clearBelow.length === 1 ? "one of them still has entities below its top level" : fmt(clearBelow.length) + " of them still have entities below their top level") + " (", ...clearBelow.flatMap(function (r, i) {
             return [i ? ", " : "", link("scorecard/" + enc(r.name), "", title(D, r.name))];
           }), ")")
         : null,
