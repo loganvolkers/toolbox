@@ -121,7 +121,9 @@ async function main() {
           const m = await page.evaluate(measure);
           await page.addScriptTag({ content: axeSource });
           const axe = await page.evaluate(async () => {
-            const r = await window.axe.run(document, { resultTypes: ["violations"] });
+            // axe leaves WCAG 2.2 rules such as target-size out unless their tag is asked for.
+            const tags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"];
+            const r = await window.axe.run(document, { resultTypes: ["violations"], runOnly: { type: "tag", values: tags } });
             return r.violations.map((v) => ({ id: v.id, impact: v.impact, nodes: v.nodes.length }));
           });
           metrics[slug] = { ...metrics[slug], ...m, axe };
