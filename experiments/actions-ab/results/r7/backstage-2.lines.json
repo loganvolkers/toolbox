@@ -1,0 +1,21 @@
+{
+ "linesToMaintain": 1583,
+ "files": {
+  "alpha/.backstage/actions/mark-deprecated.yaml": 50,
+  "alpha/catalog-info.yaml": 9,
+  "beta/.backstage/actions/mark-deprecated.yaml": 50,
+  "beta/catalog-info.yaml": 9,
+  "gamma/.backstage/actions/mark-deprecated.yaml": 50,
+  "gamma/catalog-info.yaml": 9,
+  "org/bin/acme": 168,
+  "org/catalog/people.yaml": 57,
+  "org/catalog/repositories.yaml": 15,
+  "org/identities.json": 5,
+  "backstage/app-config.local.yaml": 28,
+  "backstage/packages/backend/src/acme/catalogModule.ts": 143,
+  "backstage/packages/backend/src/acme/git.ts": 155,
+  "backstage/packages/backend/src/acme/scaffolderModule.ts": 219,
+  "backstage/packages/backend/src/acme/selfServicePlugin.ts": 611,
+  "backstage/packages/backend/src/index.ts": 5
+ }
+}
