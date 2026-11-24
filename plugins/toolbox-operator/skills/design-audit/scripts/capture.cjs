@@ -109,6 +109,9 @@ async function main() {
         await page.waitForTimeout(400);
         await settle(page);
         await page.screenshot({ path: path.join(a.out, `${slug}-${vp}-${scheme}.png`) });
+        if (vp === "mobile" && scheme === "light") {
+          (metrics[slug] = metrics[slug] || {}).mobileOverflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+        }
         if (vp === "desktop" && scheme === "light") {
           // A full-page shot resizes the viewport, which can replay entry animations mid-capture.
           await page.emulateMedia({ reducedMotion: "reduce" });
@@ -121,7 +124,7 @@ async function main() {
             const r = await window.axe.run(document, { resultTypes: ["violations"] });
             return r.violations.map((v) => ({ id: v.id, impact: v.impact, nodes: v.nodes.length }));
           });
-          metrics[slug] = { ...m, axe };
+          metrics[slug] = { ...metrics[slug], ...m, axe };
         }
         await ctx.close();
       }
@@ -131,7 +134,7 @@ async function main() {
   const summary = Object.fromEntries(Object.entries(metrics).map(([k, m]) => [k, {
     monoShare: m.monoShare, distinctFontSizes: m.distinctFontSizes, distinctHues: m.distinctHues,
     foldWords: m.foldWords, headings: m.headings, interactive: m.interactive, smallTargets: m.smallTargets,
-    svg: m.svg, pageHeight: m.pageHeight,
+    svg: m.svg, pageHeight: m.pageHeight, mobileOverflow: m.mobileOverflow,
     axeSeriousNodes: m.axe.filter((v) => v.impact === "serious" || v.impact === "critical").reduce((n, v) => n + v.nodes, 0),
     axe: m.axe.map((v) => `${v.id}:${v.impact}x${v.nodes}`).join(" "),
   }]));
