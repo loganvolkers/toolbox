@@ -10,7 +10,7 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "check": "node scripts/build.mjs --check",
-    "fixtures": "node scripts/fixtures.mjs",
+    "fixtures": "scripts/fixtures.sh",
     "storybook": "storybook dev -p 6006 --no-open",
     "build-storybook": "storybook build -o storybook-static --quiet",
     "probe": "node scripts/probe.mjs storybook-static"
