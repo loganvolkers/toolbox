@@ -249,6 +249,14 @@
     return a;
   }
 
+  // A region that scrolls sideways must take focus so a keyboard can scroll it.
+  function scroller(label, child) {
+    var d = el("div", { className: "tablewrap", tabIndex: 0 }, child);
+    d.setAttribute("role", "region");
+    d.setAttribute("aria-label", label);
+    return d;
+  }
+
   function enc(s) {
     return encodeURIComponent(s);
   }
@@ -1547,7 +1555,7 @@
           textContent:
             "Each factor is a comparative scorecard: the same rules score every product, and a rule's measured value decides when both sides have one. Behind on any rule is behind on the factor.",
         }),
-        el("div", { className: "tablewrap" }, summary),
+        scroller("Factors compared", summary),
       );
       if (!name) return el("div", {}, head);
       var c = all[name];
@@ -1607,7 +1615,7 @@
             })),
           ),
           def.description ? el("p", { className: "lede", textContent: def.description }) : null,
-          el("div", { className: "tablewrap" }, detail),
+          scroller((def.title || name) + " rules", detail),
         ),
         head,
       );
