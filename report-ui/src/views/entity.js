@@ -14,8 +14,12 @@ import { standingChip, unassessedIn } from "../lib/tracks.js";
 import { firstSentence, plural } from "../lib/words.js";
 
 export const entityViews = {
-  rulesFor(sc, score, scName, unjudged) {
+  rulesFor(sc, score, scName, unjudged, id) {
     var wrap = el("div");
+    var kind = String(id || "").split(":")[0];
+    var fixFor = function (text) {
+      return id && kind ? String(text).split(kind + ":<name>").join(id) : text;
+    };
     var rules = Object.entries(score.rules || {});
     var rank = function (o) {
       return o === "fail" ? 0 : o === "unknown" ? 1 : o === "waived" ? 2 : o === "skipped" ? 3 : 4;
@@ -80,7 +84,7 @@ export const entityViews = {
               rule.rationale ? el("span", { className: "rwhy", textContent: "Why: " + firstSentence(rule.rationale).replace(/`/g, "") }) : null,
             ),
             scName ? el("div", { className: "sub" }, "Rule page: ", ruleLink(scName, n, null, true), " ", el("code", { className: "rid", textContent: n })) : null,
-            rule.fix && o !== "unknown" ? el("div", { className: "fix" }, el("b", { textContent: "Fix: " }), ...rich(rule.fix)) : "",
+            rule.fix && o !== "unknown" ? el("div", { className: "fix" }, el("b", { textContent: "Fix: " }), ...rich(fixFor(rule.fix))) : "",
             whyEl(rule),
             evidenceEl(items, seen, scName ? "“" + ruleTitle(scName, n) + "”" : n),
           ),
@@ -100,7 +104,7 @@ export const entityViews = {
             basisBadge(basisOf(rule)),
             rule.level ? el("span", { className: "sub", textContent: "needed for " + rule.level }) : "",
           ),
-          rule.fix && o !== "unknown" ? el("div", { className: "fix" }, el("b", { textContent: "Fix: " }), ...rich(rule.fix)) : "",
+          rule.fix && o !== "unknown" ? el("div", { className: "fix" }, el("b", { textContent: "Fix: " }), ...rich(fixFor(rule.fix))) : "",
           whyEl(rule),
           evidenceEl(items, seen, scName ? "“" + ruleTitle(scName, n) + "”" : n),
         ),
@@ -222,7 +226,7 @@ export const entityViews = {
           el("span", { className: "sub" }, name + " · ", here.measured ? el("span", {}, basisIcon("measured"), " " + here.measured + " measured") : null, here.measured && here.judged ? " · " : "", here.judged ? el("span", { className: "judged-n" }, basisIcon("judged"), " " + here.judged + " agent-judged") : null),
         ),
         score.level === "skipped" ? el("div", { className: "sub", textContent: "Not in this scorecard's scope." }) : self.nextStep(sc, score),
-        self.rulesFor(sc, score, name, unassessedIn(D, name, id)),
+        self.rulesFor(sc, score, name, unassessedIn(D, name, id), id),
       );
       if (judgedHere.length && score.level !== "skipped") judgedAt.push({ name: name, rules: judgedHere, block: block });
       return block;

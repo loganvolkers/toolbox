@@ -529,7 +529,7 @@ export const scorecardsViews = {
               "div",
               { className: "ent-body" },
               self.nextStep(sc, r),
-              self.rulesFor(sc, r, active, unassessedIn(D, active, id)),
+              self.rulesFor(sc, r, active, unassessedIn(D, active, id), id),
               el("p", { style: "margin:12px 0 0" }, link("entity/" + enc(id), "", "Open " + short + " across every scorecard →")),
             ),
           );

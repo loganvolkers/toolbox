@@ -1173,7 +1173,8 @@
       nm.rule ? link("rule/" + enc(nm.name) + "/" + enc(nm.rule), "", ruleTitle(nm.name, nm.rule)) : null,
       nm.rule ? " " : null,
       nm.rule ? basisBadge(basisOf((((D.scorecards || {})[nm.name] || {}).rules || {})[nm.rule]), "tip") : null,
-      nm.rule ? "." : null
+      nm.rule ? "." : null,
+      !isTop(D, nm.name, nm.up) && Object.keys(D.tracks || {}).length ? el("span", { className: "sub" }, " This takes them off " + nm.floor + "; the track's percentage moves when they reach " + (((D.scorecards || {})[nm.name] || {}).levels || []).slice(-1)[0] + ".") : null
     );
   }
   function ownerName(o) {
@@ -2994,7 +2995,7 @@
                 "div",
                 { className: "ent-body" },
                 self.nextStep(sc, r),
-                self.rulesFor(sc, r, active, unassessedIn(D, active, id)),
+                self.rulesFor(sc, r, active, unassessedIn(D, active, id), id),
                 el("p", { style: "margin:12px 0 0" }, link("entity/" + enc(id), "", "Open " + short + " across every scorecard →"))
               )
             );
@@ -4222,8 +4223,12 @@
 
   // src/views/entity.js
   var entityViews = {
-    rulesFor(sc, score, scName, unjudged) {
+    rulesFor(sc, score, scName, unjudged, id) {
       var wrap = el("div");
+      var kind = String(id || "").split(":")[0];
+      var fixFor = function(text) {
+        return id && kind ? String(text).split(kind + ":<name>").join(id) : text;
+      };
       var rules = Object.entries(score.rules || {});
       var rank = function(o) {
         return o === "fail" ? 0 : o === "unknown" ? 1 : o === "waived" ? 2 : o === "skipped" ? 3 : 4;
@@ -4288,7 +4293,7 @@
                 rule.rationale ? el("span", { className: "rwhy", textContent: "Why: " + firstSentence(rule.rationale).replace(/`/g, "") }) : null
               ),
               scName ? el("div", { className: "sub" }, "Rule page: ", ruleLink(scName, n, null, true), " ", el("code", { className: "rid", textContent: n })) : null,
-              rule.fix && o !== "unknown" ? el("div", { className: "fix" }, el("b", { textContent: "Fix: " }), ...rich(rule.fix)) : "",
+              rule.fix && o !== "unknown" ? el("div", { className: "fix" }, el("b", { textContent: "Fix: " }), ...rich(fixFor(rule.fix))) : "",
               whyEl(rule),
               evidenceEl(items, seen, scName ? "“" + ruleTitle(scName, n) + "”" : n)
             )
@@ -4308,7 +4313,7 @@
               basisBadge(basisOf(rule)),
               rule.level ? el("span", { className: "sub", textContent: "needed for " + rule.level }) : ""
             ),
-            rule.fix && o !== "unknown" ? el("div", { className: "fix" }, el("b", { textContent: "Fix: " }), ...rich(rule.fix)) : "",
+            rule.fix && o !== "unknown" ? el("div", { className: "fix" }, el("b", { textContent: "Fix: " }), ...rich(fixFor(rule.fix))) : "",
             whyEl(rule),
             evidenceEl(items, seen, scName ? "“" + ruleTitle(scName, n) + "”" : n)
           )
@@ -4422,7 +4427,7 @@
             el("span", { className: "sub" }, name + " · ", here.measured ? el("span", {}, basisIcon("measured"), " " + here.measured + " measured") : null, here.measured && here.judged ? " · " : "", here.judged ? el("span", { className: "judged-n" }, basisIcon("judged"), " " + here.judged + " agent-judged") : null)
           ),
           score.level === "skipped" ? el("div", { className: "sub", textContent: "Not in this scorecard's scope." }) : self.nextStep(sc, score),
-          self.rulesFor(sc, score, name, unassessedIn(D, name, id))
+          self.rulesFor(sc, score, name, unassessedIn(D, name, id), id)
         );
         if (judgedHere.length && score.level !== "skipped") judgedAt.push({ name, rules: judgedHere, block });
         return block;

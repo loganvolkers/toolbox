@@ -64,6 +64,9 @@ export function nextMedalEl(D, cards, label) {
     nm.rule ? " " : null,
     nm.rule ? basisBadge(basisOf((((D.scorecards || {})[nm.name] || {}).rules || {})[nm.rule]), "tip") : null,
     nm.rule ? "." : null,
+    !isTop(D, nm.name, nm.up) && Object.keys(D.tracks || {}).length
+      ? el("span", { className: "sub" }, " This takes them off " + nm.floor + "; the track's percentage moves when they reach " + (((D.scorecards || {})[nm.name] || {}).levels || []).slice(-1)[0] + ".")
+      : null,
   );
 }
 
