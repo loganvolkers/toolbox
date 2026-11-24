@@ -20,9 +20,9 @@ not a quality judgement.
 
 | Mode | Job | Primary content |
 |---|---|---|
-| **Overview** (default) | Fleet health verdict | The repository level as a medal, a one-sentence verdict, the next level and the ladder of repository standards that hold it; tiles for checks passing, gold entities, scorecards at `none` and campaigns on target; campaign cards with progress rings; scorecards that need attention, with the clear ones collapsed; catalog kinds as chips |
+| **Overview** (default) | Fleet health verdict | The repository level as a medal, a one-sentence verdict, the next level and the ladder of repository standards that hold it, with standards at their top level marked and a standard that caps the repository named in the next step; a strip of track rings, furthest from its goal first; tiles for checks passing, gold entities, scorecards at `none` and campaigns on target; campaign cards with progress rings; scorecards that need attention, with the clear ones collapsed; catalog kinds as chips |
 | **Tracks** | Lines of work | One card per track, furthest from its goal first: a ring for the share of entities at the top level, the weakest scorecard, and the track's description; a comparison track gets a segmented ring instead, one segment per factor coloured ahead, at parity or behind, so it is never read as a share; a key above the cards replaces the colour prose; the comparison card names the factors it is behind on; a track page lists its scorecards and comparisons, with the other tracks as a compact strip rather than the grid again |
-| **Catalog** | What exists | Kinds in their `kindGroups`, then the scored kinds' lists with one column per scorecard → entity ids (short name primary) → that entity's scores across every scorecard |
+| **Catalog** | What exists | Kinds in their `kindGroups`; a selected kind's list starts with a breadcrumb back to the groups, and no kind is preselected; then the scored kinds' lists with one column per scorecard → entity ids (short name primary) → that entity's scores across every scorecard |
 | **Campaigns** | Time-bound focus | Lowest progress first; progress vs target; milestones; entities not meeting includes ([campaigns.md](./campaigns.md), D01M7Y11G0YZT23W26Z9D3XW68Y) |
 | **Scorecards** | Standards debt and proof | Ranked debt list (not equal pills); defaults to highest `none`; what each level needs; most common failures; level and outcome filters; every rule outcome on expand |
 | **Compare** | Head to head | A verdict sentence (ahead, parity, behind as a tally of factors, which are not weighted), how it was measured, one card per factor; a factor page shows each rule, what it reads and both products' values |
@@ -111,7 +111,7 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
   entities at `none`) are drawn in red.
 - Kind bars and kind headers count unscored entities as a hatched "not scored" segment, so a bar never
   implies every entity reached a level; unscored rows say "not scored".
-- A drill-down (`#catalog/<kind>`) scrolls to and focuses the selected kind's list.
+- A drill-down (`#catalog/<kind>`) scrolls to and focuses the selected kind's list, which starts with "Catalog / group / kind".
 - A campaign whose scope is empty is "can't be measured", not neutral: it says why, lists the debt of
   each included scorecard, and counts in the overview's needs-attention line.
 - The entity page leads with the entity's level (medal and word); the check ratio is secondary text.
@@ -142,8 +142,12 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
   heading only. Counts in running text use the plural title ("15 action dependencies"), and say how
   many are in scope when that differs.
 - Compare defines its words in the hero: what *ahead* means on a rule and on a factor.
-- A level resting on checks that were not run says "Provisional" and names them.
+- A level resting on checks that were not run says "Provisional" and names them, and is drawn dashed with "provisional" wherever it is shown, like a level not assessed.
 - Links and buttons in text have hit areas of at least 24 px.
+- No page scrolls sideways at 390 px; the design-audit capture records `mobileOverflow` per route.
+- A link title that still leads with a decision id renders as "Decision: <claim>", with the id on hover; long entity ids in rows are cut to one line, with the full id on hover.
+- Track rings use one ordered ramp (red, bronze, olive, green) for the share at the top level.
+- A factor's "How it is scored" says in words what the harness recorded for each product and which value is ahead, then the expression, then what would close the gap.
 
 ## Sources
 
