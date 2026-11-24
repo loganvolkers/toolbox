@@ -74,16 +74,17 @@ tracks:
       Toolbox 581be50 against Backstage 1.57.0: timed factors are medians of 5
       scripted runs on a 10,000-component catalog, and on 2026-11-23 an
       independent agent adjudicator recomputed every number and upheld the
-      verdict. Toolbox 581be50 is a release build after v0.1.1; each product
-      was installed as its project documents on one 4 vCPU Intel Xeon VM with
-      Linux 6.12 and one Postgres 16, and the load generator shares the same 4
-      vCPU. Capability and fact factors are probes and facts with evidence,
-      and the capability scenarios come from the Backstage parity audit, so
-      they favour what Backstage ships. Both products are scored on the same
-      rules, factor by factor. The adjudicator was a fresh coding agent
-      outside the benchmark: it designed none of it and decides no rule, so
-      every rule stays measured; it recomputed the numbers from the raw
-      results and checked the scoring.
+      verdict. Toolbox 581be50 is a commit after v0.1.1, compiled as a release
+      build, and its install facts come from the published v0.1.1 download;
+      each product was installed as its project documents on one 4 vCPU Intel
+      Xeon VM with Linux 6.12 and one Postgres 16, and the load generator
+      shares the same 4 vCPU. Capability and fact factors are probes and facts
+      with evidence, and the capability scenarios come from the Backstage
+      parity audit, so they favour what Backstage ships. Both products are
+      scored on the same rules, factor by factor. The adjudicator was a fresh
+      coding agent outside the benchmark: it designed none of it and decides
+      no rule, so every rule stays measured; it recomputed the numbers from
+      the raw results and checked the scoring.
     links:
     - title: Results
       url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md
