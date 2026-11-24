@@ -210,6 +210,8 @@ repo-portals §4). Catalog browse and entity score rollups are computed in the e
   A track card says what its percentage averages over ("averaged over N scorecards").
 - Stripes mean "not assessed" and nothing else; an entity with no result is a dotted fill.
 - A scorecard id left in a lede or rationale links to that scorecard under its title.
+- An entity one rule from its next level says so ("One rule from gold · pass has-evals"), and the
+  scorecard's lever counts how many entities are within reach that way.
 
 Not built: a change since the last snapshot beside each track ring. The report carries one snapshot
 and the committed baseline, which equals it on every published build; a pages build that also scored
