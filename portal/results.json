@@ -626,6 +626,11 @@
         "says-how-to-check": [
           "825aff0c"
         ]
+      },
+      "example:experiments/actions-ab/results/r2dry/README.md": {
+        "says-how-to-check": [
+          "825aff0c"
+        ]
       }
     },
     "maintainer-package": {
@@ -5231,6 +5236,12 @@
       "example:experiments/actions-ab/results/r0/README.md": {
         "failing": {
           "cites-the-design": 1,
+          "says-how-to-check": 1
+        },
+        "level": "bronze"
+      },
+      "example:experiments/actions-ab/results/r2dry/README.md": {
+        "failing": {
           "says-how-to-check": 1
         },
         "level": "bronze"
