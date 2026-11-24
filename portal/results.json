@@ -166,21 +166,6 @@
           "1706c891",
           "4ad52923"
         ],
-        "fully-documented": [
-          "0084cbda",
-          "06decbbe",
-          "57872c96",
-          "5da0ed8c",
-          "86dd1aa9",
-          "9aa9fa0f",
-          "c4926fbc",
-          "ce2b6746",
-          "d3eeb712",
-          "d77f340c",
-          "e0479380",
-          "e3ac2ceb",
-          "f41754be"
-        ],
         "no-huge-functions": [
           "0fc05491",
           "307c1f57",
@@ -193,7 +178,6 @@
           "1b87e5fa",
           "2f5e6208",
           "307c1f57",
-          "3c25be81",
           "6ad3e4ac",
           "c3944614",
           "f1ed5fb6"
@@ -3532,6 +3516,52 @@
           "0b1171d8"
         ]
       }
+    },
+    "vs-backstage-capabilities": {
+      "product:toolbox": {
+        "api-docs": [
+          "7395fe09"
+        ],
+        "community": [
+          "23d964f4"
+        ],
+        "docs": [
+          "ed9204ff"
+        ],
+        "docs-search": [
+          "36d64b73"
+        ],
+        "kubernetes": [
+          "6e2306a6"
+        ],
+        "notifications": [
+          "b1be71cc"
+        ],
+        "templates": [
+          "3c9b2cc1"
+        ]
+      }
+    },
+    "vs-backstage-org-fit": {
+      "product:toolbox": {
+        "federation": [
+          "c8e56715"
+        ]
+      }
+    },
+    "vs-backstage-security": {
+      "product:toolbox": {
+        "loopback-by-default": [
+          "84162ce5"
+        ]
+      }
+    },
+    "vs-backstage-supply-chain": {
+      "product:toolbox": {
+        "known-vulnerabilities": [
+          "36612b1f"
+        ]
+      }
     }
   },
   "format": "toolbox-report/v1",
@@ -3597,6 +3627,9 @@
       }
     },
     "maintainer-benchmark": {
+      "benchmark:backstage-compare": {
+        "level": "gold"
+      },
       "benchmark:box-ab": {
         "failing": {
           "sound-method": 1
@@ -3873,9 +3906,8 @@
       "crate:toolbox-api": {
         "failing": {
           "bounded-complexity": 2,
-          "fully-documented": 13,
           "no-huge-functions": 4,
-          "short-functions": 9,
+          "short-functions": 8,
           "simple-functions": 3
         },
         "level": "bronze",
@@ -4094,6 +4126,9 @@
         "level": "silver"
       },
       "dependency:cargo:reqwest": {
+        "level": "gold"
+      },
+      "dependency:cargo:rustix": {
         "level": "gold"
       },
       "dependency:cargo:serde": {
@@ -4575,6 +4610,12 @@
       "doc:docs/decisions/D01M84X4JDHXS98K89KN4AB0RCD.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M857ZB3FZJZWX8G3BF5W1RNR.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M857ZB468ZM2YS6GNSEG6YB9.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/README.md": {
         "level": "skipped"
       },
@@ -4588,6 +4629,9 @@
         "level": "silver"
       },
       "doc:docs/design/agents-md-standards.md": {
+        "level": "silver"
+      },
+      "doc:docs/design/backstage-comparison.md": {
         "level": "silver"
       },
       "doc:docs/design/campaigns.md": {
@@ -4818,6 +4862,9 @@
       "doc:examples/secret-vault-gcp/README.md": {
         "level": "silver"
       },
+      "doc:experiments/backstage-compare/README.md": {
+        "level": "silver"
+      },
       "doc:experiments/box-ab/README.md": {
         "level": "silver"
       },
@@ -5046,6 +5093,9 @@
         "level": "gold"
       },
       "example:experiments/README.md": {
+        "level": "gold"
+      },
+      "example:experiments/backstage-compare/README.md": {
         "level": "gold"
       },
       "example:experiments/box-ab/README.md": {
@@ -7112,6 +7162,165 @@
       "field:toolbox/PortalConnector.withoutFreshness": {
         "level": "gold"
       },
+      "field:toolbox/Product.adopterFiles": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.adopterLines": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.anonymousMcpRefused": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.anonymousReadRefused": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.capApiDocs": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.capCatalogBrowse": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.capDocs": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.capDocsSearch": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.capGraph": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.capKubernetes": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.capMcpRead": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.capNotifications": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.capOwnership": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.capPermissionRule": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.capScorecards": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.capTemplates": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.catalogReadableS": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.changePreview": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.clientCannotDelete": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.contributors": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.corpus": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.extensionAnyLanguage": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.extensionCredentialIsolated": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.extensionProcessIsolated": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.extensionWithoutRebuild": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.federates": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.forgedIdentityRefused": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.getP95Ms": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.getRps": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.harness": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.highVulns": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.installMb": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.knownVulns": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.listP95Ms": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.listRps": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.loopbackByDefault": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.mcpByDefault": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.mcpGetEntityBytes": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.mcpToolsListBytes": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.offlineValidate": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.ownerOnlyFields": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.provenancePercent": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.readyS": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.recoveredS": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.repoScopedWithoutServer": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.rollbackManualStepsPerRelease": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.rssIdleMb": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.rssLoadedMb": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.runs": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.thirdPartyPackages": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.title": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.upgradeLinesPerRelease": {
+        "level": "gold"
+      },
+      "field:toolbox/Product.version": {
+        "level": "gold"
+      },
       "field:toolbox/PythonScript.active": {
         "level": "gold"
       },
@@ -7896,6 +8105,9 @@
         "level": "gold"
       },
       "kind:toolbox/PortalConnector": {
+        "level": "gold"
+      },
+      "kind:toolbox/Product": {
         "level": "gold"
       },
       "kind:toolbox/PythonScript": {
@@ -8901,6 +9113,150 @@
           "pins-both-outcomes": 1
         },
         "level": "silver"
+      },
+      "rule:toolbox/vs-backstage-agent-surface/get-entity-size": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-agent-surface/mcp-by-default": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-agent-surface/tools-list-size": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-capabilities/api-docs": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-capabilities/catalog-browse": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-capabilities/community": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-capabilities/docs": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-capabilities/docs-search": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-capabilities/graph": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-capabilities/kubernetes": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-capabilities/mcp-read": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-capabilities/notifications": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-capabilities/ownership": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-capabilities/permission-rule": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-capabilities/scorecards": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-capabilities/templates": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-change-safety/change-preview": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-change-safety/offline-validate": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-change-safety/rollback-steps": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-change-safety/upgrade-lines": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-extensibility/any-language": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-extensibility/without-rebuild": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-footprint/adopter-files": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-footprint/adopter-lines": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-footprint/idle-memory": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-footprint/install-size": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-footprint/loaded-memory": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-org-fit/federation": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-org-fit/repo-scoped": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-performance/catalog-readable": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-performance/get-latency": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-performance/get-throughput": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-performance/list-latency": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-performance/list-throughput": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-performance/ready": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-performance/recovery": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-security/anonymous-mcp": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-security/anonymous-read": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-security/client-cannot-delete": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-security/extension-credential-isolated": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-security/extension-process-isolated": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-security/forged-identity": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-security/loopback-by-default": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-security/owner-only-fields": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-supply-chain/high-vulnerabilities": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-supply-chain/known-vulnerabilities": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-supply-chain/packages": {
+        "level": "gold"
+      },
+      "rule:toolbox/vs-backstage-supply-chain/provenance": {
+        "level": "gold"
       }
     },
     "meta-scorecard": {
@@ -9143,6 +9499,33 @@
           "fixtures-reach-every-level": 1
         },
         "level": "bronze"
+      },
+      "scorecard:toolbox/vs-backstage-agent-surface": {
+        "level": "gold"
+      },
+      "scorecard:toolbox/vs-backstage-capabilities": {
+        "level": "gold"
+      },
+      "scorecard:toolbox/vs-backstage-change-safety": {
+        "level": "gold"
+      },
+      "scorecard:toolbox/vs-backstage-extensibility": {
+        "level": "gold"
+      },
+      "scorecard:toolbox/vs-backstage-footprint": {
+        "level": "gold"
+      },
+      "scorecard:toolbox/vs-backstage-org-fit": {
+        "level": "gold"
+      },
+      "scorecard:toolbox/vs-backstage-performance": {
+        "level": "gold"
+      },
+      "scorecard:toolbox/vs-backstage-security": {
+        "level": "gold"
+      },
+      "scorecard:toolbox/vs-backstage-supply-chain": {
+        "level": "gold"
       }
     },
     "operator-cli": {
@@ -9617,6 +10000,69 @@
       },
       "mcp-tool:search": {
         "level": "gold"
+      }
+    },
+    "vs-backstage-agent-surface": {
+      "product:toolbox": {
+        "level": "bronze"
+      }
+    },
+    "vs-backstage-capabilities": {
+      "product:toolbox": {
+        "failing": {
+          "api-docs": 1,
+          "community": 1,
+          "docs": 1,
+          "docs-search": 1,
+          "kubernetes": 1,
+          "notifications": 1,
+          "templates": 1
+        },
+        "level": "none"
+      }
+    },
+    "vs-backstage-change-safety": {
+      "product:toolbox": {
+        "level": "bronze"
+      }
+    },
+    "vs-backstage-extensibility": {
+      "product:toolbox": {
+        "level": "bronze"
+      }
+    },
+    "vs-backstage-footprint": {
+      "product:toolbox": {
+        "level": "bronze"
+      }
+    },
+    "vs-backstage-org-fit": {
+      "product:toolbox": {
+        "failing": {
+          "federation": 1
+        },
+        "level": "none"
+      }
+    },
+    "vs-backstage-performance": {
+      "product:toolbox": {
+        "level": "bronze"
+      }
+    },
+    "vs-backstage-security": {
+      "product:toolbox": {
+        "failing": {
+          "loopback-by-default": 1
+        },
+        "level": "none"
+      }
+    },
+    "vs-backstage-supply-chain": {
+      "product:toolbox": {
+        "failing": {
+          "known-vulnerabilities": 1
+        },
+        "level": "none"
       }
     }
   }
