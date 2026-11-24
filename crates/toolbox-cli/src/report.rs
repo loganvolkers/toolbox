@@ -839,9 +839,9 @@ fn entity_md(s: &mut String, id: &str, r: &toolbox_derive::Score) {
     }
 }
 
-/// Comparisons as the web report reads them: each with its entities' display names.
-/// Each comparison with the compared entities' titles, scores and facts, and, per rule, the
-/// fields it reads with their descriptions, so a reader sees what was measured without the docs.
+/// Comparisons as the web report reads them: the compared entities' titles, scores and facts,
+/// the fields each rule reads, and every field's description, so a reader sees what was
+/// measured, and how, without the docs.
 fn comparison_defs(m: &toolbox_model::Manifest, d: &Derived) -> Map<String, Value> {
     d.comparisons
         .iter()
@@ -859,7 +859,6 @@ fn comparison_defs(m: &toolbox_model::Manifest, d: &Derived) -> Map<String, Valu
             let sc = m.scorecards.iter().find(|s| &s.name == name);
             let kind = sc.and_then(|sc| m.kinds.iter().find(|k| k.name == sc.kind));
             if let (Some(sc), Some(kind)) = (sc, kind) {
-                let mut described = Map::new();
                 let reads: Map<String, Value> = sc
                     .rules
                     .iter()
@@ -872,17 +871,16 @@ fn comparison_defs(m: &toolbox_model::Manifest, d: &Derived) -> Map<String, Valu
                             .collect();
                         fields.sort();
                         fields.dedup();
-                        for f in &fields {
-                            described.insert(
-                                f.clone(),
-                                json!(kind.fields[f].description.as_deref().map(str::trim)),
-                            );
-                        }
                         (r.name.clone(), json!(fields))
                     })
                     .collect();
                 v["reads"] = reads.into();
-                v["fields"] = described.into();
+                v["fields"] = kind
+                    .fields
+                    .iter()
+                    .map(|(f, fd)| (f.clone(), json!(fd.description.as_deref().map(str::trim))))
+                    .collect::<Map<String, Value>>()
+                    .into();
             }
             let scores = d.scores.get(name);
             v["scores"] = ids()
