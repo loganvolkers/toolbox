@@ -38,7 +38,8 @@ def runs(results, arm, n):
     for p in sorted(results.glob(f"perf-{arm}-{n}-*.json")):
         r = json.loads(p.read_text())
         for read in r["reads"]:
-            name = "list" if "?" in read["url"] else "get"
+            name = read["url"] if read["url"] in ("get", "list") else (
+                "list" if "?" in read["url"] else "get")
             r[f"{name}P95Ms"], r[f"{name}Rps"] = read["p95ms"], read["rps"]
         out.append(r)
     return out

@@ -3,12 +3,15 @@
 the files and lines the adopter owns, known vulnerabilities, and release provenance. Prints one
 JSON object per product. Usage: footprint.py <out.json>.
 
-Toolbox is its released Linux archives (the version below) plus the OpenFGA binary the image adds.
+Toolbox is its released Linux archives (the version below) plus the OpenFGA binary the image adds;
+its packages are Cargo.lock's, the Go modules built into OpenFGA (`go version -m`) and the UI's npm
+lockfile, which is bundled into the binary.
 Backstage is a `@backstage/create-app` app (BS_SRC, as generated) and its production install
 (BS_APP: `yarn workspaces focus --all --production` plus `yarn build:backend`, as the template's
 Dockerfile does), plus the Node runtime it needs."""
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tarfile
@@ -85,6 +88,19 @@ def cargo_packages():
     return sum(1 for b in blocks if "\nsource = " in b)
 
 
+def go_modules(binary):
+    """Modules built into a Go binary, the main module and the standard library excluded."""
+    out = subprocess.run(["go", "version", "-m", str(binary)], capture_output=True, text=True,
+                         check=True).stdout
+    return sum(1 for ln in out.splitlines() if ln.split()[:1] == ["dep"])
+
+
+def npm_packages(lockfile):
+    """Third-party packages in an npm lockfile, development dependencies included."""
+    packages = json.loads(Path(lockfile).read_text())["packages"]
+    return sum(1 for k in packages if k.startswith("node_modules/"))
+
+
 def yarn_packages(lockfile):
     """Third-party resolutions in a Yarn lockfile, development dependencies included, as
     Cargo.lock counts them."""
@@ -92,9 +108,24 @@ def yarn_packages(lockfile):
     return sum(1 for ln in lines if ln.startswith("  resolution:") and "@workspace:" not in ln)
 
 
-def vulns(lockfile):
-    """High and critical advisories (CVSS ≥ 7, or GHSA severity HIGH/CRITICAL) in a lockfile."""
-    r = subprocess.run([OSV, "scan", "source", "--format", "json", "-L", str(lockfile)],
+def vulns(*targets):
+    """Advisories, and those with CVSS ≥ 7, in lockfiles and Go binaries. An advisory without a
+    score (Go's own database rates none) counts as known, not high."""
+    total = high = 0
+    for target in targets:
+        t, h = scan(Path(target))
+        total, high = total + t, high + h
+    return total, high
+
+
+def scan(target):
+    if target.suffix in (".lock", ".json"):
+        args = ["-L", str(target)]
+    else:
+        alone = Path(tempfile.mkdtemp(prefix="osv-bin-"))
+        shutil.copy(target, alone)
+        args = ["--experimental-plugins", "go/binary", "-r", str(alone)]
+    r = subprocess.run([OSV, "scan", "source", "--format", "json", *args],
                        capture_output=True, text=True)
     data = json.loads(r.stdout or "{}")
     total = high = 0
@@ -121,14 +152,15 @@ def npm_provenance():
 def main():
     tbx = toolbox_install()
     tbx_files, tbx_lines = owned(STARTER, skip=("tests", "fixtures"))
-    tbx_vulns, tbx_high = vulns(ROOT / "Cargo.lock")
+    ui_lock = ROOT / "ui" / "package-lock.json"
+    tbx_vulns, tbx_high = vulns(ROOT / "Cargo.lock", OPENFGA, ui_lock)
     bs_files, bs_lines = owned(BS_SRC)
     bs_vulns, bs_high = vulns(BS_APP / "yarn.lock")
     out = {
         "toolbox": {
             "installMb": round(tbx["installBytes"] / 1e6, 1),
             "downloadMb": round(tbx["downloadBytes"] / 1e6, 1),
-            "thirdPartyPackages": cargo_packages(),
+            "thirdPartyPackages": cargo_packages() + go_modules(OPENFGA) + npm_packages(ui_lock),
             "adopterFiles": tbx_files, "adopterLines": tbx_lines,
             "knownVulns": tbx_vulns, "highVulns": tbx_high,
             "provenancePercent": round(100 * tbx["provenanceVerified"] / tbx["artifacts"]),

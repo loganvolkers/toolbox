@@ -6,19 +6,19 @@ issues to an API client. Prints one JSON object. Usage: surface.py <arm> <catalo
 Toolbox: `toolbox serve` on 0.0.0.0 with no TOOLBOX_AUTH_MODE (its default off loopback), a
 personal access token for the client and the portal's OpenFGA model.
 Backstage: the create-app backend with app-config.yaml + app-config.production.yaml (the
-Dockerfile's CMD), plus the bench overlay (database, a static externalAccess token, the catalog)."""
+Dockerfile's CMD), plus the bench overlay (database, a read-only static externalAccess token for
+the client and an unrestricted one for MCP, the catalog)."""
 import json
 import os
 import socket
 import subprocess
 import sys
-import time
 import urllib.error
 import urllib.request
 from pathlib import Path
 
 import measure
-from measure import HERE, PG, TOKEN, kill_tree, psql, wait
+from measure import HERE, MCP_TOKEN, PG, TOKEN, kill_tree, psql, wait
 
 HOST = os.environ.get("BENCH_HOST") or socket.gethostbyname(socket.gethostname())
 
@@ -73,6 +73,7 @@ class Toolbox(measure.Toolbox):
 
     entity = property(lambda self: f"{self.base}/v1/entities/component:c1")
     mcp = property(lambda self: f"{self.base}/mcp")
+    mcp_headers = property(lambda self: self.headers)
     forged = {"x-toolbox-user": "admin"}
 
     def delete(self, headers):
@@ -92,8 +93,9 @@ class Backstage(measure.Backstage):
             psql(f'DROP DATABASE IF EXISTS "{db}"')
         cfg = HERE / "backstage" / "app-config.bench.yaml"
         env = dict(os.environ, PATH=measure.NODE_BIN + ":" + os.environ["PATH"],
-                   NODE_ENV="production", BENCH_CATALOG=str(catalog / "catalog.yaml"),
-                   BENCH_TOKEN=TOKEN, POSTGRES_HOST="127.0.0.1", POSTGRES_PORT="54350",
+                   NODE_ENV="production", LOG_LEVEL="warn",
+                   BENCH_CATALOG=str(catalog / "catalog.yaml"), BENCH_TOKEN=TOKEN,
+                   BENCH_MCP_TOKEN=MCP_TOKEN, POSTGRES_HOST="127.0.0.1", POSTGRES_PORT="54350",
                    POSTGRES_USER="postgres", POSTGRES_PASSWORD="")
         return subprocess.Popen(
             ["node", "packages/backend", "--config", "app-config.yaml",
@@ -106,6 +108,8 @@ class Backstage(measure.Backstage):
 
     entity = property(lambda self: f"{self.base}/api/catalog/entities/by-name/component/default/c1")
     mcp = property(lambda self: f"{self.base}/api/mcp-actions/v1")
+    # The read-only client token cannot reach MCP (a restricted token is not delegated).
+    mcp_headers = {"authorization": f"Bearer {MCP_TOKEN}"}
 
     @property
     def forged(self):
@@ -157,7 +161,7 @@ def main():
         probes["clientDelete"] = arm.delete(client)
         probes["entityAfterDelete"] = call("GET", arm.entity, client)[0]
 
-        status, raw = call("POST", arm.mcp, {**MCP_HEADERS, **client}, list_body)
+        status, raw = call("POST", arm.mcp, {**MCP_HEADERS, **arm.mcp_headers}, list_body)
         assert status == 200, (status, raw[:300])
         tools = rpc_result(raw)["result"]["tools"]
         listed = json.dumps(tools, separators=(",", ":")).encode()
@@ -166,7 +170,7 @@ def main():
             args = {**args, "id": "component:c2"} if "id" in args else {**args, "name": "c2"}
         call_body = {"jsonrpc": "2.0", "id": 2, "method": "tools/call",
                      "params": {"name": name, "arguments": args}}
-        status, raw = call("POST", arm.mcp, {**MCP_HEADERS, **client}, call_body)
+        status, raw = call("POST", arm.mcp, {**MCP_HEADERS, **arm.mcp_headers}, call_body)
         got = rpc_result(raw).get("result", {})
         text = "".join(c.get("text", "") for c in got.get("content", []))
         result = {

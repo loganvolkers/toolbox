@@ -1,14 +1,17 @@
 # Facts about each product that no script measures, each with its evidence. Backstage evidence is
 # from backstage/backstage at v1.57.1 unless it says otherwise. A capability is true when the
-# default install or a first-party package does it by configuration alone, without writing code.
+# default install, a first-party package or a community add-on does it (RESEARCH.md §1.2: an
+# add-on is recorded with its source). Each product is judged as it ships to production: the
+# container image for Toolbox, the create-app Dockerfile's configuration for Backstage.
 # snapshot.py merges these with the measured facts into portal/comparisons/.
 toolbox:
   loopbackByDefault:
-    value: true
+    value: false
     evidence: >-
-      `toolbox serve` binds 127.0.0.1:8080 unless --listen or TOOLBOX_LISTEN
-      says otherwise (crates/toolbox-cli/src/main.rs), and off loopback it
-      defaults to token auth (D01M857ZB3FZJZWX8G3BF5W1RNR)
+      the image sets PORT=8080 (image/Dockerfile), so it binds 0.0.0.0:8080
+      (crates/toolbox-cli/src/server.rs: listen_addr); off loopback it
+      defaults to token auth (D01M857ZB3FZJZWX8G3BF5W1RNR). The bare binary
+      binds 127.0.0.1:8080, but that is not how it ships
   ownerOnlyFields:
     value: true
     evidence: >-
@@ -26,7 +29,16 @@ toolbox:
       a supervised connector starts with a cleared environment plus an
       allowlist, and gets only the secrets its own config names
       (crates/toolbox-api/src/connectors.rs:
-      connectors_inherit_no_server_credentials)
+      connectors_inherit_no_server_credentials); the server is non-dumpable,
+      so a same-user process cannot read its environment or memory
+      (crates/toolbox-cli/tests/serve.rs); OpenFGA gets no server credentials,
+      reads its datastore URI from a private file deleted once it is healthy,
+      and refuses calls without a per-start preshared key
+      (crates/toolbox-authz/src/openfga.rs:
+      openfga_gets_no_server_credentials). Residual: with
+      kernel.yama.ptrace_scope=0 a same-user connector can still read
+      OpenFGA's memory, and it can write files the server's user can write; a
+      remote connector holds only its own token
   offlineValidate:
     value: true
     evidence: >-
@@ -61,7 +73,7 @@ toolbox:
       change to the image; a supervised one is a binary named in the manifest
   capCatalogBrowse:
     value: true
-    evidence: "UI catalog pages, `toolbox query`, the query MCP tool"
+    evidence: UI catalog pages, `toolbox query`, the query MCP tool
   capOwnership: {value: true, evidence: "`toolbox owner`, the owner MCP tool"}
   capGraph: {value: true, evidence: "`toolbox graph`, /v1/entities/{id}/graph"}
   capDocsSearch:
@@ -75,7 +87,7 @@ toolbox:
     evidence: self-service actions (M5) are paused (D64)
   capScorecards:
     value: true
-    evidence: "scorecards, rules and campaigns are core (docs/v1-spec.md §5)"
+    evidence: scorecards, rules and campaigns are core (docs/v1-spec.md §5)
   capApiDocs: {value: false, evidence: no OpenAPI or AsyncAPI rendering}
   capKubernetes: {value: false, evidence: no Kubernetes connector or view}
   capNotifications: {value: false, evidence: no notifications}
@@ -159,10 +171,11 @@ backstage:
   capDocs: {value: true, evidence: "@backstage/plugin-techdocs"}
   capTemplates: {value: true, evidence: "@backstage/plugin-scaffolder"}
   capScorecards:
-    value: false
+    value: true
     evidence: >-
-      Tech Insights lives in backstage/community-plugins and is not in the
-      template
+      add-on: Tech Insights (backstage/community-plugins,
+      @backstage-community/plugin-tech-insights and its backend), not in the
+      template; checks need fact retrievers registered in code
   capApiDocs: {value: true, evidence: "@backstage/plugin-api-docs"}
   capKubernetes: {value: true, evidence: "@backstage/plugin-kubernetes"}
   capNotifications: {value: true, evidence: "@backstage/plugin-notifications"}

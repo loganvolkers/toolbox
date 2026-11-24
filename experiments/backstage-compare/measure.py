@@ -4,13 +4,19 @@ read endpoints with oha. Prints one JSON object. Usage: measure.py <arm> <catalo
 
 Both arms read the same catalog (gen.py), from the same Postgres 16, on the same machine, through
 the same client. Each arm is started from scratch (an empty database) for every run."""
+import hashlib
 import json
 import os
+import random
 import subprocess
 import sys
+import tempfile
 import time
+import urllib.parse
 import urllib.request
 from pathlib import Path
+
+from gen import GROUPS
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
@@ -20,8 +26,10 @@ BS_APP = Path(os.environ.get("BS_APP", "/tmp/bs/prod"))
 NODE_BIN = os.environ.get("NODE_BIN", "/tmp/bs/node24/bin")
 TOOLBOX = os.environ.get("TOOLBOX", str(ROOT / "target/release/toolbox"))
 TOKEN = "bench-static-token-0123456789abcdef"
+MCP_TOKEN = "bench-mcp-token-0123456789abcdef"
 DURATION = os.environ.get("BENCH_DURATION", "10s")
 CONCURRENCY = os.environ.get("BENCH_CONCURRENCY", "16")
+SPREAD = 1000  # distinct components read per run, so neither arm answers from one cached entry
 
 
 def get(url, headers, timeout=5):
@@ -81,23 +89,47 @@ def psql(sql):
                    capture_output=True)
 
 
-def oha(urls, headers):
-    """Each URL for DURATION at CONCURRENCY connections."""
-    for url in urls:
-        cmd = [OHA, "-z", DURATION, "-c", CONCURRENCY, "--no-tui", "--output-format", "json"]
+def spread(n):
+    """The components and owners the reads cycle through: the same for both arms."""
+    return random.Random(n).sample(range(n), min(SPREAD, n)), [f"g{g}" for g in range(GROUPS)]
+
+
+def expected_owners(catalog):
+    """SHA-256 over the catalog's sorted `owner/component` pairs: what each arm must serve."""
+    pairs = []
+    for line in (catalog / "catalog.ndjson").open():
+        rec = json.loads(line)
+        if rec["kind"] == "component":
+            pairs.append(f"{rec['data']['owner']}/{rec['data']['name']}")
+    return digest(pairs)
+
+
+def digest(pairs):
+    return hashlib.sha256("\n".join(sorted(pairs)).encode()).hexdigest()
+
+
+def oha(reads, headers):
+    """Load each read with oha, cycling through its URLs."""
+    for label, urls in reads:
+        listing = Path(tempfile.mkstemp(suffix=".urls")[1])
+        listing.write_text("\n".join(urls) + "\n")
+        cmd = [OHA, "-z", DURATION, "-c", CONCURRENCY, "--no-tui", "--output-format", "json",
+               "--urls-from-file"]
         for k, v in headers.items():
             cmd += ["-H", f"{k}: {v}"]
-        out = json.loads(subprocess.run(cmd + [url], check=True, capture_output=True,
+        out = json.loads(subprocess.run(cmd + [str(listing)], check=True, capture_output=True,
                                         text=True).stdout)
+        listing.unlink()
         s = out["summary"]
         pct = out["latencyPercentiles"]
         codes = out.get("statusCodeDistribution", {})
-        ms = lambda q: None if pct.get(q) is None else round(pct[q] * 1000, 2)
+        ms = {q: None if pct.get(q) is None else round(pct[q] * 1000, 2)
+              for q in ("p50", "p95", "p99")}
         # Throughput counts only 200s: a fast error is not a read.
         ok = codes.get("200", 0) / max(sum(codes.values()), 1)
-        yield {"url": url, "rps": round(s["requestsPerSec"] * ok, 1), "p50ms": ms("p50"),
-               "p95ms": ms("p95"), "p99ms": ms("p99"), "ok": ok, "codes": codes,
-               "errors": out.get("errorDistribution", {})}
+        yield {"url": label, "distinct": len(urls), "rps": round(s["requestsPerSec"] * ok, 1),
+               "p50ms": ms["p50"], "p95ms": ms["p95"], "p99ms": ms["p99"], "ok": ok,
+               "codes": codes, "errors": out.get("errorDistribution", {})}
 
 
 class Toolbox:
@@ -133,11 +165,23 @@ class Toolbox:
     def loaded(self, n):
         return get(f"{self.base}/v1/entities/component:c{n - 1}", self.headers)[0] == 200
 
+    def list_url(self, owner):
+        q = urllib.parse.quote(f"entity.owner=='group:{owner}'")
+        return f"{self.base}/v1/entities?kind=Component&limit=100&filter={q}"
+
     def reads(self, n):
-        mid = n // 2
-        return [f"{self.base}/v1/entities/component:c{mid}",
-                f"{self.base}/v1/entities?kind=Component&limit=100"
-                f"&filter=entity.owner%3D%3D%27group%3Ag3%27"]
+        ids, owners = spread(n)
+        return [("get", [f"{self.base}/v1/entities/component:c{i}" for i in ids]),
+                ("list", [self.list_url(g) for g in owners])]
+
+    def owned(self, owner):
+        names, url = [], self.list_url(owner)
+        while url:
+            page = json.loads(get(url, self.headers)[1])
+            names += [e["id"].removeprefix("component:") for e in page["items"]]
+            cursor = page.get("next_cursor")
+            url = cursor and self.list_url(owner) + "&cursor=" + urllib.parse.quote(cursor)
+        return names
 
     @property
     def base(self):
@@ -157,12 +201,15 @@ class Backstage:
                 capture_output=True, text=True).stdout.split()
             for db in ["bench_backstage"] + plugins:
                 psql(f'DROP DATABASE IF EXISTS "{db}"')
+        # The template's production layering, and warn-level logs like the Toolbox arm's RUST_LOG.
         cfg = HERE / "backstage" / "app-config.bench.yaml"
         env = dict(os.environ, PATH=NODE_BIN + ":" + os.environ["PATH"],
-                   NODE_ENV="production", BENCH_CATALOG=str(catalog / "catalog.yaml"),
-                   BENCH_TOKEN=TOKEN)
+                   NODE_ENV="production", LOG_LEVEL="warn",
+                   BENCH_CATALOG=str(catalog / "catalog.yaml"), BENCH_TOKEN=TOKEN,
+                   BENCH_MCP_TOKEN=MCP_TOKEN)
         return subprocess.Popen(
-            ["node", "packages/backend", "--config", "app-config.yaml", "--config", str(cfg)],
+            ["node", "packages/backend", "--config", "app-config.yaml",
+             "--config", "app-config.production.yaml", "--config", str(cfg)],
             cwd=BS_APP, env=env, stdout=self.log, stderr=subprocess.STDOUT)
 
     def ready(self):
@@ -176,11 +223,26 @@ class Backstage:
                       self.headers)
         return json.loads(body)["totalItems"] >= n
 
+    def list_url(self, owner):
+        # spec.owner holds the catalog's value as written (`group:g3`), not a full ref.
+        return (f"{self.base}/api/catalog/entities/by-query?limit=100"
+                f"&filter=kind=component,spec.owner=group:{owner}")
+
     def reads(self, n):
-        mid = n // 2
-        return [f"{self.base}/api/catalog/entities/by-name/component/default/c{mid}",
-                f"{self.base}/api/catalog/entities/by-query?limit=100"
-                f"&filter=kind=component,spec.owner=group:default/g3"]
+        ids, owners = spread(n)
+        return [("get", [f"{self.base}/api/catalog/entities/by-name/component/default/c{i}"
+                         for i in ids]),
+                ("list", [self.list_url(g) for g in owners])]
+
+    def owned(self, owner):
+        names, url = [], self.list_url(owner)
+        while url:
+            page = json.loads(get(url, self.headers)[1])
+            names += [e["metadata"]["name"] for e in page["items"]]
+            cursor = page.get("pageInfo", {}).get("nextCursor")
+            url = cursor and (f"{self.base}/api/catalog/entities/by-query?limit=100"
+                              f"&cursor={urllib.parse.quote(cursor)}")
+        return names
 
     @property
     def base(self):
@@ -205,6 +267,10 @@ def main():
         loaded_s = time.monotonic() - t0
         time.sleep(2)
         rss_loaded = tree_rss_mb(proc.pid)
+        # Equivalence gate: every owner's components, as the catalog has them, before any timing.
+        served = digest(f"{g}/{c}" for g in spread(n)[1] for c in arm.owned(g))
+        if served != expected_owners(catalog):
+            raise SystemExit(f"{arm.name}: lists do not serve the catalog's owners")
         reads = list(oha(arm.reads(n), arm.headers))
         rss_peak = tree_rss_mb(proc.pid)
         # Recovery: kill -9, restart on the same database, time until the whole catalog reads.
@@ -218,7 +284,8 @@ def main():
         result = {"arm": arm.name, "components": n, "readyS": round(ready_s, 2),
                   "catalogReadableS": round(loaded_s, 2), "rssIdleMb": rss_idle,
                   "rssLoadedMb": rss_loaded, "rssAfterLoadMb": rss_peak,
-                  "recoveredS": round(recovered_s, 2), "reads": reads}
+                  "recoveredS": round(recovered_s, 2), "ownersDigest": served,
+                  "reads": reads}
     finally:
         kill_tree(proc.pid)
         proc.wait()

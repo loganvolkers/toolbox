@@ -129,7 +129,8 @@ def main():
     out = {
         "toolbox": {"upgradeLinesPerRelease": toolbox_required_lines(),
                     "rollbackManualStepsPerRelease": toolbox_rollback(),
-                    "upgradeWindow": f"{TBX_OLD}..HEAD"},
+                    "upgradeWindow": f"{TBX_OLDEST}..HEAD",
+                    "rollbackFrom": TBX_OLD},
         "backstage": {"upgradeLinesPerRelease": round(bs_lines / RELEASES, 1),
                       "upgradeTemplateLines": bs_lines,
                       "rollbackManualStepsPerRelease": round(bs_migrations / RELEASES, 1),

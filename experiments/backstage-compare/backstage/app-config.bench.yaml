@@ -1,6 +1,6 @@
 # The Backstage arm of the comparison (../README.md), layered over the create-app default
-# app-config.yaml: the same Postgres 16 as the Toolbox arm, a static token for the load client, and
-# the generated catalog in place of the examples.
+# app-config.yaml: the same Postgres 16 as the Toolbox arm, a read-only static token for the load
+# client, a token for the agent, and the generated catalog in place of the examples.
 backend:
   database:
     client: pg
@@ -8,7 +8,13 @@ backend:
     prefix: backstage_plugin_
   auth:
     externalAccess:
-      - {type: static, options: {token: '${BENCH_TOKEN}', subject: bench}}
+      - type: static
+        options: {token: '${BENCH_TOKEN}', subject: bench}
+        accessRestrictions:
+        - {plugin: catalog, permissionAttribute: {action: read}}
+      # MCP cannot delegate a restricted token, so the agent's token has no restriction.
+      - type: static
+        options: {token: '${BENCH_MCP_TOKEN}', subject: bench-agent}
 catalog:
   rules:
     - allow: [Component, System, API, Resource, Location, Group, User, Template]
