@@ -10,7 +10,8 @@
 //! - **Lazy lists** ([`lazy`]): `inbound.<relation>` converts only the elements an expression
 //!   visits.
 //! - **Analysis** ([`analysis`]): node count, depth, loop nesting and the fields an expression
-//!   reads, for the meta standards' readability rules.
+//!   reads, for the meta standards' readability rules, and the field equalities a list filter
+//!   requires, which the API narrows candidates by.
 //!
 //! The implementation is cel-rust (a default behind this contract, charter goal 3): swapping it
 //! changes this crate only.
