@@ -641,6 +641,14 @@
         "says-how-to-check": [
           "825aff0c"
         ]
+      },
+      "example:experiments/actions-ab/results/r7/README.md": {
+        "cites-the-design": [
+          "a1817f31"
+        ],
+        "says-how-to-check": [
+          "825aff0c"
+        ]
       }
     },
     "maintainer-package": {
@@ -5290,6 +5298,13 @@
       },
       "example:experiments/actions-ab/results/r6/README.md": {
         "failing": {
+          "says-how-to-check": 1
+        },
+        "level": "bronze"
+      },
+      "example:experiments/actions-ab/results/r7/README.md": {
+        "failing": {
+          "cites-the-design": 1,
           "says-how-to-check": 1
         },
         "level": "bronze"
