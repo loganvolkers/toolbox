@@ -1,0 +1,19 @@
+{
+ "linesToMaintain": 1260,
+ "files": {
+  "alpha/.github/mark-deprecated/apply-github-settings.sh": 73,
+  "alpha/.github/mark-deprecated/config.json": 25,
+  "alpha/.github/mark-deprecated/mark_deprecated.py": 203,
+  "alpha/.github/workflows/mark-deprecated.yml": 90,
+  "alpha/CODEOWNERS": 3,
+  "beta/.github/CODEOWNERS": 3,
+  "beta/.github/mark-deprecated/config.json": 25,
+  "gamma/.github/mark-deprecated/config.json": 25,
+  "org/.gitignore": 1,
+  "org/bin/acme-actions": 392,
+  "org/catalog.json": 15,
+  "org/state/runs/mark-deprecated-alpha-20261124T101929Z-f1d5.json": 135,
+  "org/state/runs/mark-deprecated-beta-20261124T101932Z-5bfa.json": 135,
+  "org/state/runs/mark-deprecated-gamma-20261124T101934Z-43c5.json": 135
+ }
+}
