@@ -52,8 +52,10 @@ export function kindTitle(D, k) {
 export function kindCount(D, k, n) {
   var t = kindTitle(D, k);
   if (!/^[A-Z]{2,}|^OpenSSF/.test(t)) t = t.charAt(0).toLowerCase() + t.slice(1);
+  var tail = (t.match(/ \([^)]*\)$/) || [""])[0];
+  t = t.slice(0, t.length - tail.length);
   if (n !== 1) t = /[^aeiou]y$/.test(t) ? t.slice(0, -1) + "ies" : /(s|x|ch|sh)$/.test(t) ? t + "es" : t + "s";
-  return fmt(n) + " " + t;
+  return fmt(n) + " " + t + tail;
 }
 
 // The Scorecard kind counts more than the Scorecards tab: say what the surplus is wherever its total appears.

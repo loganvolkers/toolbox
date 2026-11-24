@@ -1039,8 +1039,10 @@
   function kindCount(D, k, n) {
     var t = kindTitle(D, k);
     if (!/^[A-Z]{2,}|^OpenSSF/.test(t)) t = t.charAt(0).toLowerCase() + t.slice(1);
+    var tail = (t.match(/ \([^)]*\)$/) || [""])[0];
+    t = t.slice(0, t.length - tail.length);
     if (n !== 1) t = /[^aeiou]y$/.test(t) ? t.slice(0, -1) + "ies" : /(s|x|ch|sh)$/.test(t) ? t + "es" : t + "s";
-    return fmt(n) + " " + t;
+    return fmt(n) + " " + t + tail;
   }
   function scorecardSplit(D, k) {
     if (k !== "Scorecard") return "";
@@ -4311,7 +4313,7 @@
               {},
               el("strong", { style: "color:" + ink(S.worst[id]) }, ownLevel(D, kind, S.worst[id]), provisional.length ? el("span", { className: "pv-head", textContent: notRun ? " (provisional)" : " (may not hold)" }) : null),
               provisional.length ? el("span", { className: "provisional", style: "display:block;font-size:13px", title: "The level holds only if the checks not run in this build pass and an agent's assessment finds nothing; the scorecards below name them.", textContent: provisional.join(", ") }) : null,
-              el("span", { className: "sub", textContent: (cards.length > 1 ? "lowest of " + cards.length + " scorecards · " : "") + total.pass + " of " + total.all + " checks pass on evidence" + (total.hollow ? " · " + total.hollow + " more only because nothing was assessed" : "") })
+              el("span", { className: "sub", textContent: (cards.length > 1 ? "lowest of " + cards.length + " scorecards · " : "") + total.pass + " of " + plural(total.all, "check passes", "checks pass") + " on evidence" + (total.hollow ? " · " + total.hollow + " more only because nothing was assessed" : "") })
             )
           ) : null
         ),
