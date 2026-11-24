@@ -22,7 +22,7 @@ export function scCaption(D, r, split) {
   var prov = provisionalOf(D, r.name);
   var unj = unassessedOf(D, r.name);
   return [
-    head + " · " + r.topShare + "% at the top level (" + levelName(r.top || "top") + ")",
+    head + (r.scored ? " · " + r.topShare + "% at the top level (" + levelName(r.top || "top") + ")" : " · not scored yet"),
     prov ? el("span", { className: "provisional", title: "Their levels hold only if the checks not run in this build pass; drawn dotted in the bar", textContent: " · " + fmt(prov) + " provisional (checks not run)" }) : null,
     unj ? el("span", { className: "unjudged-n", title: "No agent has assessed them yet, so their agent-judged rules pass or fail for want of anything to read; drawn hatched in the bar", textContent: " · " + fmt(unj) + " not assessed by an agent (hatched)" }) : null,
   ];

@@ -163,7 +163,7 @@ export function gapText(D, g, id) {
     return (need.length ? "Needs " + need.map(function (r) { return "“" + ruleTitle(m[1], r) + "”"; }).join(", ") + " for " + m[2] : m[2].charAt(0).toUpperCase() + m[2].slice(1) + " is the goal") + " on " + title(D, m[1]) + "; " + m[3] + " now.";
   }
   m = /^(.+?):rule (.+) \((\S+)\)$/.exec(g);
-  if (m) return title(D, m[1]) + ": rule “" + ruleTitle(m[1], m[2]) + "” is " + m[3] + ".";
+  if (m) return title(D, m[1]) + ": " + ({ fail: "fails", pass: "passes", unknown: "has not run" }[m[3]] || "is " + m[3]) + " “" + ruleTitle(m[1], m[2]) + "”.";
   m = /^(.+?): unknown scorecard$/.exec(g);
   if (m) return "Scorecard " + m[1] + " is unknown.";
   return g;

@@ -24,8 +24,19 @@ export const ruleViews = {
       tally[o] = (tally[o] || 0) + 1;
       if (!isPassing(o)) failing.push(id);
     });
+    // A rule that measures how far off each entity is (lines over a limit, findings) lists the furthest first.
+    var measureOf = function (id) {
+      var m = (scores[id].measures || {})[ruleName];
+      return typeof m === "number" ? m : null;
+    };
+    var measured = failing.some(function (id) {
+      return measureOf(id) != null;
+    });
     failing.sort(function (a, c) {
-      return (scores[a].rules[ruleName] === "fail" ? 0 : 1) - (scores[c].rules[ruleName] === "fail" ? 0 : 1) || a.localeCompare(c);
+      return (scores[a].rules[ruleName] === "fail" ? 0 : 1) - (scores[c].rules[ruleName] === "fail" ? 0 : 1) || (measureOf(c) || 0) - (measureOf(a) || 0) || a.localeCompare(c);
+    });
+    var allFail = failing.every(function (id) {
+      return scores[id].rules[ruleName] === "fail";
     });
     var all = tally.pass + tally.waived + tally.fail + tally.unknown;
     var parts = [
@@ -63,7 +74,7 @@ export const ruleViews = {
           var ev = (scores[id].evidence || {})[ruleName];
           var items = ev == null ? [] : Array.isArray(ev) ? ev : [ev];
           return link("entity/" + enc(id), "erow", [
-            el("div", { className: "name" }, shortId(id), el("span", { className: "chev", ariaHidden: "true", textContent: "›" }), el("small", { textContent: items.length ? (typeof items[0] === "string" ? items[0] : JSON.stringify(items[0])) + (items.length > 1 ? " (+" + (items.length - 1) + ")" : "") : id })),
+            el("div", { className: "name" }, id.indexOf(":") > 0 ? id.slice(id.indexOf(":") + 1) : shortId(id), el("span", { className: "chev", ariaHidden: "true", textContent: "›" }), el("small", { textContent: items.length ? (typeof items[0] === "string" ? items[0] : JSON.stringify(items[0])) + (items.length > 1 ? " (+" + (items.length - 1) + ")" : "") : id })),
             el("span", { className: "outcome " + o, textContent: o === "unknown" ? "not run in this build" : o }),
           ]);
         }),
@@ -129,7 +140,7 @@ export const ruleViews = {
       {},
       section,
       failing.length
-        ? el("section", {}, el("div", { className: "head" }, el("h2", { textContent: "Not passing" }), el("span", { className: "sub", textContent: plural(failing.length, "entity", "entities") + ", failures first" })), list)
+        ? el("section", {}, el("div", { className: "head" }, el("h2", { textContent: "Not passing" }), el("span", { className: "sub", textContent: plural(failing.length, "entity", "entities") + (measured ? ", furthest off first" : allFail ? "" : ", failures first") })), list)
         : all
           ? el("section", {}, el("p", { className: "empty good", textContent: "✓ Every entity in scope passes this rule." }))
           : null,

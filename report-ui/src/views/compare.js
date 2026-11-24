@@ -3,12 +3,19 @@ import { grow } from "../lib/bars.js";
 import { basisBadge, basisCounts, basisKey, basisOf, refs, whyEl } from "../lib/basis.js";
 import { TIMED_UNITS, cmpWord, humanize, magnitude, measureLabel, num, ruleValue, setupBrief, valueLine } from "../lib/compare.js";
 import { el, enc, link } from "../lib/dom.js";
+import { UNSCORED } from "../lib/levels.js";
 import { shortId, title } from "../lib/rings.js";
 import { trackPath } from "../lib/routes.js";
 import { ruleTitle } from "../lib/rules.js";
 import { rich } from "../lib/text.js";
 import { STANDING_MARK, standingChip, standingColor, standingPhrase } from "../lib/tracks.js";
 import { andList, firstSentence, lowerFirst, plural, sentences } from "../lib/words.js";
+
+// The number a factor leads with: rules behind, else ahead, else at parity; or, before any record, that none has values.
+function tallyPhrase(n, total, key) {
+  if (n.unknown === total) return "Not measured: none of " + plural(total, "rule") + " has values";
+  return (n[key] || 0) + " of " + plural(total, "rule") + " " + (key === "parity" ? "at parity" : key);
+}
 
 export const compareViews = {
   factorCards(D, names, current) {
@@ -40,7 +47,7 @@ export const compareViews = {
             return counts[k];
           });
           var spans = segs.map(function (k) {
-            return el("span", { style: "flex-grow:0;flex-basis:0;background:" + standingColor(k) });
+            return el("span", { style: "flex-grow:0;flex-basis:0;background:" + (k === "unknown" ? UNSCORED : standingColor(k)) });
           });
           grow(
             spans,
@@ -73,7 +80,7 @@ export const compareViews = {
             ? el(
                 "div",
                 { className: "fx" },
-                el("b", { textContent: counts[fxKey] + " of " + total + " rules " + (fxKey === "parity" ? "at parity" : fxKey) }),
+                el("b", { className: counts.unknown === total ? "unmeasured" : "", textContent: tallyPhrase(counts, total, fxKey) }),
                 best ? el("span", { textContent: "widest lead: " + lowerFirst(measureLabel(c, best.r)) + ", " + (best.ratio >= 10 ? Math.round(best.ratio).toLocaleString("en-US") : best.ratio.toFixed(1)) + "× " + best.word }) : null,
               )
             : null;
@@ -138,7 +145,7 @@ export const compareViews = {
     var who = function (id) {
       for (var i = 0; i < names.length; i++) {
         var t = (all[names[i]].titles || {})[id];
-        if (t) return t;
+        if (t && t !== id) return t;
       }
       return shortId(id);
     };
@@ -198,7 +205,9 @@ export const compareViews = {
         }).sort().map(function (r) {
           return ruleTitle(behindNames[0], r);
         })) + ". If your teams rely on those, read it first." : ": if your teams rely on what those factors measure, read them first.") : unmeasured ? " Run the comparison's harness and commit its records to fill this in." : counts.unknown ? " Not behind on any measured factor." : " Never behind."),
-        el(
+        unmeasured
+          ? el("p", { className: "rule-tally", textContent: "Rule by rule: none of " + plural(ruleTotal, "rule") + " has values for both products yet." })
+          : el(
           "p",
           { className: "rule-tally" },
           "Rule by rule: ",
@@ -224,7 +233,7 @@ export const compareViews = {
           "div",
           { className: "tally3" },
           ...["ahead", "parity", "behind"].map(function (k) {
-            return el("div", {}, el("strong", { textContent: String(counts[k]), style: "color:" + standingColor(k) }), el("span", { textContent: STANDING_MARK[k] + " " + k }));
+            return el("div", {}, el("strong", { textContent: unmeasured ? "—" : String(counts[k]), style: "color:" + (unmeasured ? "var(--muted)" : standingColor(k)) }), el("span", { textContent: STANDING_MARK[k] + " " + k }));
           }),
         ),
         this.headToHead(D, all, names, peer),
@@ -384,7 +393,7 @@ export const compareViews = {
             }),
           )
         : null),
-      behindRows.length ? el("div", {}, ...behindRows) : el("p", { className: "empty good", textContent: "✓ Not behind on any rule." }),
+      behindRows.length ? el("div", {}, ...behindRows) : unmeasured ? el("p", { className: "empty", textContent: "Nothing to compare yet: no rule has values for both products." }) : el("p", { className: "empty good", textContent: "✓ Not behind on any rule." }),
     );
     var leadRows = [];
     names.forEach(function (n) {
@@ -439,7 +448,7 @@ export const compareViews = {
           ),
         )
       : null;
-    var factors = el("section", {}, el("div", { className: "head" }, el("h2", { textContent: "Factors" }), el("span", { className: "sub", textContent: "Behind first" })), this.factorCards(D, names));
+    var factors = el("section", {}, el("div", { className: "head" }, el("h2", { textContent: "Factors" }), el("span", { className: "sub", textContent: unmeasured ? "By name" : "Behind first" })), this.factorCards(D, names));
     var jumps = [
       ["Factors", factors],
       ["Behind", behind],
@@ -512,7 +521,7 @@ export const compareViews = {
             ),
             el("div", { className: "cel", ariaLabel: "Expression", textContent: rd.check + (rd.value ? "\nvalue: " + rd.value : "") }),
           ),
-          rd.fix && (st === "behind" || st === "unknown") ? el("p", { className: "sub", style: "margin:4px 0 0" }, el("b", { textContent: "What would close it: " }), ...rich(rd.fix)) : null,
+          rd.fix && st === "behind" ? el("p", { className: "sub", style: "margin:4px 0 0" }, el("b", { textContent: "What would close it: " }), ...rich(rd.fix)) : null,
         ),
       );
     });
@@ -551,7 +560,7 @@ export const compareViews = {
       tallyBy.set(s, (tallyBy.get(s) || 0) + 1);
     });
     var tallyKey = tallyBy.get("behind") ? "behind" : tallyBy.get("ahead") ? "ahead" : "parity";
-    var tallyNote = rules.length ? " · " + (tallyBy.get(tallyKey) || 0) + " of " + plural(rules.length, "rule") + " " + (tallyKey === "parity" ? "at parity" : tallyKey) : "";
+    var tallyNote = rules.length ? " · " + tallyPhrase({ unknown: tallyBy.get("unknown") || 0, behind: tallyBy.get("behind"), ahead: tallyBy.get("ahead"), parity: tallyBy.get("parity") }, rules.length, tallyKey) : "";
     var head = el(
       "section",
       { className: basisCounts(def.rules).judged || !basisCounts(def.rules).measured ? "" : "allmeasured" },

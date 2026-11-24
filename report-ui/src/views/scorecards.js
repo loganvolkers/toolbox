@@ -180,7 +180,7 @@ export const scorecardsViews = {
       "section",
       { className: "sc-index" },
       el("div", { className: "head" }, el("h2", { textContent: "Scorecards" }), el("span", { className: "sub", textContent: plural(standards.length, "scorecard") + " in " + plural(groups.length, "group") })),
-      el("p", { className: "lede" }, "Each scorecard rates every entity of one kind against levels of rules; the medal is its weakest entity's level, and the bar shows where the rest stand. They are grouped by track, the line of work each one serves. Open one for its failures, entities and what each level needs.", factors ? el("span", {}, " The " + plural(factors, "comparison factor") + " against a rival are on ", link("compare", "", "the Compare tab"), ".") : null),
+      el("p", { className: "lede" }, "Each scorecard rates every entity of one kind against levels of rules; the medal is its weakest entity's level, and the bar shows where the rest stand. " + (Object.keys(D.tracks || {}).length ? "They are grouped by track, the line of work each one serves. " : "") + "Open one for its failures, entities and what each level needs.", factors ? el("span", {}, " The " + plural(factors, "comparison factor") + " against a rival are on ", link("compare", "", "the Compare tab"), ".") : null),
       el("details", { className: "keyd", open: !matchMedia("(max-width:640px)").matches }, el("summary", { textContent: "How to read the bars" }), levelLegend(D, standards)),
       search,
       basisPick,
@@ -229,9 +229,9 @@ export const scorecardsViews = {
         if (r.compare && (i === 0 || !shown[i - 1].compare)) items.push(el("div", { className: "rank-head", textContent: plural(shown.length - nStd, "comparison factor") + ", also on the Compare tab" }));
         var c = r.compare ? (D.comparisons || {})[r.name] || {} : null;
         var verdict = c ? (c.verdict || {})[(c.peers || [])[0]] || "unknown" : null;
-        var debt = c ? (verdict === "unknown" ? "not measured" : verdict) : r.none > 0 ? r.none + " at none" : r.bronze > 0 ? r.bronze + " at bronze" : r.scored && r.topShare === 100 ? "✓ top level" : "✓ clear";
+        var debt = c ? (verdict === "unknown" ? "not measured" : verdict) : r.none > 0 ? r.none + " at none" : r.bronze > 0 ? r.bronze + " at bronze" : r.scored && r.topShare === 100 ? "✓ top level" : r.scored ? "✓ clear" : "not scored";
         var capped = !c && !r.none && !r.bronze && r.scored && r.topShare === 100 && capsRepo(D, r.name, floorOf(D, r.name));
-        var a = link("scorecard/" + enc(r.name), "", [el("span", {}, ...keepWithLast(title(D, r.name), judgedMark(D, r.name, true))), el("span", { className: "debt " + (c ? (verdict === "behind" ? "bad" : verdict === "ahead" ? "ok" : "") : r.none > 0 ? "bad" : r.bronze > 0 ? "" : capped ? "capnote" : "ok") }, ...(capped ? [lockIcon(), " caps the repository"] : [debt]))]);
+        var a = link("scorecard/" + enc(r.name), "", [el("span", {}, ...keepWithLast(title(D, r.name), judgedMark(D, r.name, true))), el("span", { className: "debt " + (c ? (verdict === "behind" ? "bad" : verdict === "ahead" ? "ok" : "") : r.none > 0 ? "bad" : r.bronze > 0 || !r.scored ? "" : capped ? "capnote" : "ok") }, ...(capped ? [lockIcon(), " caps the repository"] : [debt]))]);
         a.title = r.name + " · " + r.sc.kind;
         if (r.name === active) a.setAttribute("aria-current", "true");
         items.push(a);
@@ -405,6 +405,10 @@ export const scorecardsViews = {
         .sort(function (a, b) {
           return order.indexOf(a[1].level) - order.indexOf(b[1].level) || a[0].localeCompare(b[0]);
         });
+      if (!rows.length) {
+        list.replaceChildren(el("div", { className: "empty", textContent: "No " + kindTitle(D, sc.kind).toLowerCase() + " has been collected yet. Run toolbox report in the repository with its connectors enabled; toolbox doctor lists any that is missing." }));
+        return;
+      }
       if (!shown.length) {
         list.replaceChildren(
           el("div", { className: "empty", textContent: "No entities match these filters." }),
@@ -672,7 +676,9 @@ export const scorecardsViews = {
             return b;
           }),
         )
-      : el("p", { className: "empty good", textContent: unrunNames.length ? "✓ No rule fails on any entity; some checks were not run." : "✓ No rule fails on any entity." });
+      : !scored.length
+        ? el("p", { className: "empty", textContent: "No entity is scored yet, so no rule has failed or passed." })
+        : el("p", { className: "empty good", textContent: unrunNames.length ? "✓ No rule fails on any entity; some checks were not run." : "✓ No rule fails on any entity." });
 
     var needs = el("div", { className: "levels-need" });
     (sc.levels || []).forEach(function (l) {
@@ -739,7 +745,7 @@ export const scorecardsViews = {
             { label: cmp ? plural(group.length, "comparison factor") : plural(group.length, "scorecard") },
             ...group.map(function (r) {
               var c = cmp ? (D.comparisons || {})[r.name] || {} : null;
-              var debt = c ? (c.verdict || {})[(c.peers || [])[0]] || "not measured" : r.none > 0 ? r.none + " at none" : r.bronze > 0 ? r.bronze + " at bronze" : r.scored && r.topShare === 100 ? "top level" : "clear";
+              var debt = c ? (c.verdict || {})[(c.peers || [])[0]] || "not measured" : r.none > 0 ? r.none + " at none" : r.bronze > 0 ? r.bronze + " at bronze" : r.scored && r.topShare === 100 ? "top level" : r.scored ? "clear" : "not scored";
               return el("option", { value: r.name, selected: r.name === active, textContent: title(D, r.name) + " (" + debt + ")" });
             }),
           );

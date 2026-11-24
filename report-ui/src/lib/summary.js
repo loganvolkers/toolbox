@@ -7,6 +7,13 @@ import { isPassing } from "./status.js";
 import { furthestTrack, trackTitle } from "./tracks.js";
 import { plural } from "./words.js";
 
+// A share never rounds to 100% while one entity is short of it, nor to 0% while one is there.
+export function share(n, of) {
+  if (!of) return 0;
+  var p = Math.round((100 * n) / of);
+  return n === of ? 100 : n === 0 ? 0 : Math.min(99, Math.max(1, p));
+}
+
 export function scorecardRows(D) {
   return Object.keys(D.scorecards || {})
     .map(function (name) {
@@ -31,7 +38,7 @@ export function scorecardRows(D) {
         none: count("none"),
         bronze: top === "bronze" ? 0 : count("bronze"),
         top: top,
-        topShare: scored ? Math.round((count(top) / scored) * 100) : 0,
+        topShare: share(count(top), scored),
         scored: scored,
         total: ents.length,
         weight: isComparative(D, name) ? -1 : count("none") * 1000 + (top === "bronze" ? 0 : count("bronze")),
@@ -169,6 +176,12 @@ export function repoLevel(D) {
   };
 }
 
+// Before any connector has run, no entity has a level: an empty denominator is never a pass.
+export var NO_FACTS = "Not scored yet: no connector has delivered facts, so no entity has a level.";
+export function noFacts(S) {
+  return S.rows.length > 0 && !Object.keys(S.worst).length;
+}
+
 export function healthVerdict(D, S, campaignNames) {
   var campaigns = D.campaigns || {};
   var off = campaignNames.filter(function (n) {
@@ -181,6 +194,7 @@ export function healthVerdict(D, S, campaignNames) {
     return campaignStanding(D, campaigns[n]) === "empty";
   });
   if (!campaignNames.length && !S.rows.length) return "No campaigns or scorecards in this snapshot.";
+  if (noFacts(S)) return NO_FACTS;
   if (!off.length && !debt.length && !blind.length) return "On track: every active campaign meets its target, and no scorecard has entities at none.";
   var bits = [];
   var far = furthestTrack(D, S);
@@ -191,5 +205,5 @@ export function healthVerdict(D, S, campaignNames) {
   if (debt.length) bits.push(debt.length + " of " + plural(scored, "scorecard") + " " + (debt.length === 1 ? "has" : "have") + " entities at none");
   if (off.length) bits.push(plural(off.length, "campaign") + " " + (off.length === 1 ? "is" : "are") + " behind target");
   if (blind.length) bits.push(plural(blind.length, "campaign") + " " + (blind.length === 1 ? "has" : "have") + " no single score");
-  return "Needs attention across the whole box: " + (bits.length > 1 ? bits.slice(0, -1).join(", ") + " and " + bits[bits.length - 1] : bits[0]) + ".";
+  return "Needs attention: " + (bits.length > 1 ? bits.slice(0, -1).join(", ") + " and " + bits[bits.length - 1] : bits[0]) + ".";
 }
