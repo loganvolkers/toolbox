@@ -38,6 +38,7 @@ cargo build && target/debug/toolbox validate examples/reference-portal
 - [docs/red-team.md](docs/red-team.md) — devil's-advocate review: gaps a competitor would exploit, ranked by deal risk
 - [docs/principal-review.md](docs/principal-review.md) — principal-engineer review: security, consistency, scope holes and proposed ADRs
 - [docs/adversarial-critique.md](docs/adversarial-critique.md) — adversarial critique: should Toolbox be built at all? Hypotheses, alternatives, kill criteria
+- [docs/graphify-red-team.md](docs/graphify-red-team.md) — red team of the Graphify verdict by a session without the designer's context: CAFE(S), adopters, doc claims, methodology holes; triaged in [docs/graphify-red-team-response.md](docs/graphify-red-team-response.md)
 - [docs/technology-critique.md](docs/technology-critique.md) — technology-only critique: sprawl, replaceability by generic components, the Backstage compatibility claim, a minimal architecture
 - [docs/design/dx-benchmarks.md](docs/design/dx-benchmarks.md) — DX Benchmarks: how we benchmark agents' developer experience with Toolbox against the alternatives on open source, the prior art, and the catalog
 - [experiments/](experiments/) — small reproducible experiments cited by the docs, and the DX Benchmarks' harnesses
