@@ -5,7 +5,9 @@ carrying actions between portals, running them, remembering their runs and repor
 outcome. The tools are what actions call: CI workflows, `git`, scripts, a template engine. It
 revises [federation.md](./federation.md) (D68) and implements [action-runs.md](./action-runs.md)
 (D49), which M5 left paused (D64). The market research behind it is summarised in §2, with its
-sources at the end.*
+sources at the end. Where it says GitHub, [forges.md](./forges.md) (D01M87AXG095Q0Z0DGGTKYYAM7Y)
+generalises it: the same lifecycle on GitLab, Enterprise Server, a hybrid of hosts and plain git,
+tested against a real GitLab.*
 
 ---
 
@@ -23,7 +25,7 @@ succeeds only when its effect is observed.**
   | Standards down | Kinds, scorecards, policies, and now actions | Packages a child `include`s (D89). A package action runs in the child that includes it |
   | Results up | Scorecard results, entities | Committed reports and connector records ([federation.md](./federation.md) §4) |
   | **Actions up** | Each child's declared actions, as data | The workspace connector's `portal` records. The parent offers them on the child's entity |
-  | **Runs down** | A request to run one, with who asked and who approved | The child runs `toolbox run` in its checkout (`runner: local`) or its own CI workflow (`runner: github-workflow`) |
+  | **Runs down** | A request to run one, with who asked and who approved | The child runs `toolbox run` in its checkout (`runner: local`) or its own CI on whichever forge hosts it (`runner: ci`: a GitHub workflow or a GitLab pipeline, [forges.md](./forges.md)) |
 
 - **One action, one lifecycle, every level.** A repo portal runs its actions with no server
   (`toolbox run`). A served portal runs the same definition through REST and MCP. A parent runs a
@@ -82,8 +84,8 @@ hides (Parnas), and its *run* where the credentials and gates already are.
 | Action (families documenting it, of 14) | Definition home | Run place | Toolbox shape | Story |
 |---|---|---|---|---|
 | Create a service from a template (8) | Company or org | Central: no repo exists yet | A `create` action in the company portal | S8 |
-| Deploy, promote, roll back (7) | Repo pipeline, under org policy | Repo CI, behind its environments | `github-workflow` executor in the repo portal | S4 |
-| Trigger a pipeline (7) | Repo | Repo CI | `github-workflow` executor | S4 |
+| Deploy, promote, roll back (7) | Repo pipeline, under org policy | Repo CI, behind its environments | `github-workflow` or `gitlab-pipeline` executor in the repo portal | S4 |
+| Trigger a pipeline (7) | Repo | Repo CI | `github-workflow` or `gitlab-pipeline` executor | S4 |
 | Add a capability to a repo by PR (6) | Org or company package | The target repo | A package `change` action | S3, S9 |
 | Provision a resource (7) | Platform defines; repo requests | Platform executor | A central action over a repo-declared request | S11 (deferred) |
 | Fix a scorecard failure (5) | The standard's owner | Each repo, by PR | A package `change` action whose postcondition is the rule | S3 |
@@ -191,7 +193,7 @@ federation:
   portals: Portal
   runners:
     local: {portals: ["*"]}          # checkouts this server may run `toolbox run` in
-    # github-workflow: {repos: ["acme/*"], token: ORG_DISPATCH_TOKEN, api: https://api.github.com}
+    # children with runner {type: ci} go to their own forge; see forges.md §4.1 for forges:
   signingKey: TOOLBOX_APPROVAL_KEY   # env var holding the Ed25519 seed that signs approvals
 ```
 
@@ -205,7 +207,7 @@ previews. A child whose manifest fails validation offers nothing, and its record
 
 | # | Rule | Enforced by |
 |---|---|---|
-| T1 | **The parent owns how it reaches a child.** A child's `federation.runner` names only a type, a repository, a workflow and a ref. The parent runs it only if its own `federation.runners` allows it: `local` for checkouts whose key matches `runners.local.portals`, `github-workflow` for repositories matching `runners.github-workflow.repos`, with the parent's token and API. Otherwise `409 runner-not-allowed` | `toolbox serve` and `toolbox run` in the parent |
+| T1 | **The parent owns how it reaches a child.** A child's `federation.runner` names only a type, a workflow and a ref (and, for the older `github-workflow`, a repository). The parent runs it only if its own settings allow it: `local` for checkouts whose key matches `runners.local.portals`; `ci` for the project the parent cloned the child from, on a forge it declares or a known host, matching that forge's `projects`, with that forge's API and token ([forges.md](./forges.md) §4.3); `github-workflow` for repositories matching `runners.github-workflow.repos`. A `ci` child naming `project`, `repo`, `api`, `url`, `token` or `forge` is refused. Otherwise `409 runner-not-allowed` | `toolbox serve` and `toolbox run` in the parent |
 | T2 | **Executors see only what they declare.** Every executor and child process starts with a cleared environment: a fixed base set (`PATH`, `HOME`, locale, proxies, git identity, `TOOLBOX_*` directories) plus the action's own `secrets`. A served parent's tokens never reach a child's command, including at preview | The executors (`clean_env`) |
 | T3 | **The child previews.** A parent's preview is the child's preview, so blockers, effects and approvals are the child's | Both previews come from one `prepare` |
 | T4 | **A repo portal holds no approvals of its own; a parent does, served or not.** An action with approvers ends `awaiting_approval` (exit 3) in a repository's checkout. A parent's checkout records the run in its state directory, takes `--approve`/`--reject` there under the rules of T6, and signs the grant with the key it keeps, the one a served parent uses (D01M86WAVQQXYF9DFHCP3G035MA) | `toolbox run` |
@@ -224,6 +226,7 @@ approvals can't start it twice and a cancel that was accepted always wins.
 | Runner (child declares) | Parent allows with | How a parent dispatches | Credentials |
 |---|---|---|---|
 | `local` | `federation.runners.local.portals` (key globs) | `toolbox run --portal <child> --parent-run <parent>/<id> [--grant <signed>] -- <action>` in the child's checkout | The checkout's own, in a cleared environment |
+| `ci` (`workflow`, `ref`) | The forge the parent cloned the child from (`forges:`, or github.com and gitlab.com by default), and its `projects` | GitHub: `workflow_dispatch` as below. GitLab: a pipeline with the same six values as typed inputs, tracked by id, the child's `toolbox-run.json` read from its `toolbox` job ([forges.md](./forges.md) §4.4). The parent previews in its clone first, so the grant binds the child's effects | The forge token named in the parent's `forges:` entry; the pipeline's own job token and protected variables |
 | `github-workflow` (`repo`, `workflow`, `ref`) | `federation.runners.github-workflow.repos`, `token`, `api` | `workflow_dispatch` of the child's workflow with `action`, `inputs`, `requested_by`, `toolbox_run`, `parent_run` and `grant`; the workflow runs `toolbox run` | The parent's dispatch token; the workflow's own `GITHUB_TOKEN`, environment secrets and OIDC behind its environment reviewers |
 
 ## 6. One action at every level
@@ -246,7 +249,7 @@ actions:
     permission: can_run_actions          # OpenFGA relation on the target entity
     approval: "[['user:ann', 'user:bob']]" # CEL: each entry must approve; a list is any one of it
     executor:
-      type: command                       # or change, github-workflow, in-image
+      type: command                       # or change, github-workflow, gitlab-pipeline, in-image
       run: >-
         mkdir -p .github && printf '* %s\n' "$TOOLBOX_INPUT_TEAM" >
         .github/CODEOWNERS
@@ -263,6 +266,7 @@ actions:
 | `change` | A command in a worktree of the remote's base; commits it to `toolbox/<action>/<run>` with `Toolbox-Run`, `Requested-By` and `Approved-By` trailers, and pushes (`land: push`: to the base). A run whose diffs differ from the confirmed preview fails before it commits | The files it would change, with their diffs | `proposed` (`land: push`: `succeeded` once seen) | The commit on the base (ancestry or trailer), each changed file's blob compared with the base (`verification.files`), then the postcondition at the base if one is declared |
 | `change` with `land: push` | The same commit, pushed to the base itself once the approval rule is met; never forced, so a protected or moved base refuses it and the run fails | The same, plus `push branch:<base>` | `succeeded` or `failed` | The fetched base has the commit and every changed file as written (a hook that undoes the push is seen), then the postcondition if one is declared |
 | `github-workflow` | `workflow_dispatch` asking for the run id (`return_run_details`), tracked by that id; without one, by the one run of that name on the dispatched ref created after the dispatch | Toolbox's | `dispatched`, then the workflow's conclusion, or `timed_out` past the deadline | The postcondition after a refresh |
+| `gitlab-pipeline` | `POST /projects/:id/pipeline` on a declared or known GitLab, with the run's inputs as typed pipeline inputs plus `toolbox_run`; tracked by the id GitLab returns. A refused pipeline (an input outside its `options`, invalid YAML) fails the run with GitLab's reason | Toolbox's | `dispatched`, then the pipeline's status (`manual` stays `dispatched`, with a note) | The postcondition after a refresh |
 | `in-image` | The executor protocol over stdio (D40) | The executor's | Its terminal message | The postcondition, or the executor's `verify` |
 | `toolbox` (federated) | The child's `toolbox run` | The child's | The child's state | The child |
 
@@ -360,6 +364,7 @@ network and no Postgres.
 | 8 | `toolbox run --url`: a `land: push` change waits for approval (exit 3) and pushes nothing; `--approve` by another maintainer lands it on the child's main, where the child observes it; the run is listed again after the server restarts | S5, S7 (T4, T6, T8) |
 | 9 | An org portal that lists four children by git URL: the minimal repo's `toolbox test` cases (approval, refusals, a rejected push) pass in a scratch copy and leave its origin unchanged; the children's actions are offered with no connector, kind or key declared; a request to a child that hasn't pinned the kept key is refused with the line to pin; once pinned and pushed, the minimal repo's action previews, waits for bob (the requester and carol refused), lands with its trailers and is recorded; a push the origin rejects fails with the origin's message | S5, S6, S7 (T5, T6, T8) |
 | 10 | The same org portal with no server: its checkout prints the kept key, records a request (exit 3, naming `--approve`), refuses the requester and carol, signs bob's approval with the kept key so the child lands and verifies it, refuses a second approval of the finished run, and a rejected run lands nothing | S5, S6 (T4, T5, T6) |
+| GitLab | `scripts/gitlab-acceptance.sh`, against GitLab CE in Docker: the same lifecycle on GitLab-hosted children and a bare repository in one org ([forges.md](./forges.md) §3, §6) | F1–F5, F7, F8 (T1, T5, T8) |
 
 ### 7.2 Deferred, with the reason
 
@@ -367,7 +372,7 @@ network and no Postgres.
 |---|---|
 | Runs shared by several server instances (D39) | Runs are written through and survive a restart, but one instance owns them: a second instance on the same database does not see them live, and an executor cut off by a restart is failed, not resumed. Durable steps are the durable-runtime track |
 | A `toolbox run` GitHub Action for `runner: github-workflow` children | The dispatch is built and tested against a fake API; the composite action that receives it is next |
-| A federated github-workflow run's verification | The parent sees the workflow's conclusion; the child's own verification needs the child's run record as a workflow artifact |
+| A federated github-workflow run's verification | The parent sees the workflow's conclusion; the child's own verification needs the child's run record as a workflow artifact. On GitLab it is collected ([forges.md](./forges.md) §4.4); GitHub artifacts are zip archives |
 | Fan-out in one command | A fleet change is one run per child (a loop); `--all` waits for a use beyond scripts |
 | S8, S9, S11, S12 | §4 |
 | Executor-aware cancel (review F17) | Cancel stops Toolbox carrying the run; it does not yet close the pull request, cancel the workflow run or tell the child |

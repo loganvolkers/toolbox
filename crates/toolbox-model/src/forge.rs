@@ -264,6 +264,39 @@ mod tests {
     }
 
     #[test]
+    fn the_hybrid_example_routes_each_child_to_its_own_forge() {
+        let dir = concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/federated-actions/hybrid-org");
+        let src = crate::load::load(std::path::Path::new(dir)).unwrap();
+        let m: crate::manifest::Manifest = serde_json::from_value(src.document).unwrap();
+        let routes: Vec<_> = m
+            .federation
+            .unwrap()
+            .children
+            .iter()
+            .map(|c| {
+                resolve(&m.forges, &c.git).map(|r| {
+                    let admits = r.admits();
+                    (r.kind, r.api, r.token, r.project, admits)
+                })
+            })
+            .collect();
+        let r = |k, api: &str, token: &str, project: &str, admits| {
+            Some((k, api.to_owned(), token.to_owned(), project.to_owned(), admits))
+        };
+        assert_eq!(
+            routes,
+            [
+                r(Kind::Github, "https://api.github.com", "GITHUB_TOKEN", "acme/web", true),
+                r(Kind::Github, "https://ghe.acme.dev/api/v3", "ACME_GHES_TOKEN", "platform/ledger", true),
+                r(Kind::Gitlab, "https://gitlab.com/api/v4", "GITLAB_TOKEN", "acme/mobile", true),
+                r(Kind::Gitlab, "https://gitlab.acme.dev/api/v4", "ACME_GITLAB_TOKEN", "acme/platform/pay", true),
+                r(Kind::Gitlab, "https://gitlab.acme.dev/api/v4", "ACME_GITLAB_TOKEN", "acme/tools", true),
+                None,
+            ]
+        );
+    }
+
+    #[test]
     fn project_globs_stay_within_a_segment() {
         assert!(path_glob("acme/*", "acme/pay"));
         assert!(!path_glob("acme/*", "acme/platform/pay"));
