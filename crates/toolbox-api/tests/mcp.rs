@@ -102,7 +102,11 @@ async fn tools_list_describes_every_input() {
             "refresh_entity",
             "list_actions",
             "action_options",
-            "preview_action"
+            "preview_action",
+            "run_action",
+            "get_run",
+            "list_runs",
+            "approve_run"
         ]
     );
     for t in tools.as_array().unwrap() {

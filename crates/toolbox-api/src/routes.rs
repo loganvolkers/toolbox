@@ -72,6 +72,12 @@ pub fn router(state: Arc<AppState>) -> Router {
         .fallback(crate::ui::asset)
         .route("/v1/actions", get(crate::actions::list))
         .route("/v1/actions/{name}/previews", post(crate::actions::preview))
+        .route("/v1/actions/{name}/runs", post(crate::actions::create_run))
+        .route("/v1/runs", get(crate::actions::list_runs))
+        .route("/v1/runs/{id}", get(crate::actions::get_run))
+        .route("/v1/runs/{id}/approvals", post(crate::actions::approve))
+        .route("/v1/runs/{id}/cancel", post(crate::actions::cancel))
+        .route("/v1/runs/{id}/verify", post(crate::actions::verify))
         .layer(axum::middleware::from_fn(crate::http_trace::layer))
         .with_state(state)
 }

@@ -57,6 +57,7 @@ pub fn app_state_with(
         current,
         changed: tokio::sync::Notify::new(),
         config,
+        runs: Default::default(),
     })
 }
 
@@ -65,6 +66,7 @@ pub async fn serve(state: Arc<AppState>, listener: tokio::net::TcpListener) -> s
     mcp::trace_declare();
     tokio::spawn(state.clone().run_snapshot_loop());
     tokio::spawn(connectors::freshness_loop(state.clone()));
+    tokio::spawn(actions::runs_loop(state.clone()));
     connectors::spawn_in_image(&state);
     axum::serve(listener, routes::router(state)).await
 }
