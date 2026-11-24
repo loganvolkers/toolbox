@@ -1,0 +1,22 @@
+{
+ "linesToMaintain": 1908,
+ "files": {
+  "alpha/.github/add-notice/notice.py": 198,
+  "alpha/.github/add-notice/test_notice.py": 43,
+  "alpha/.github/workflows/add-notice.yml": 121,
+  "alpha/CODEOWNERS": 3,
+  "beta/.github/CODEOWNERS": 3,
+  "org/.github/CODEOWNERS": 5,
+  "org/.github/workflows/apply-settings.yml": 38,
+  "org/.gitignore": 3,
+  "org/act/stubs/create-github-app-token/action.yml": 12,
+  "org/bin/acme": 601,
+  "org/github/apply-settings.py": 133,
+  "org/org.yml": 48,
+  "org/state/runs/alpha-1.json": 191,
+  "org/state/runs/beta-1.json": 191,
+  "org/state/runs/gamma-1.json": 191,
+  "org/state/sequence.json": 5,
+  "org/tests/acceptance.sh": 122
+ }
+}
