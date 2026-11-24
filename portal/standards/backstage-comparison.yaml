@@ -15,7 +15,9 @@ kinds:
         type: string
         description: >-
           The build measured: for Toolbox a commit of a release build, for
-          Backstage the create-app and Backstage releases.
+          Backstage the create-app and Backstage releases. Toolbox's install size
+          and provenance are read from its published v0.1.1 release download,
+          because an adopter installs a release, not a commit.
       harness:
         type: string
         description: >-
