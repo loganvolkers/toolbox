@@ -183,6 +183,6 @@ scorecards:
         so a credential in the tree is published with it. It sits at bronze so
         such a connector cannot pass the ratchet.
       links:
-      - title: Thresholds
+      - title: 'Thresholds: why credentials sit at bronze'
         url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md
     facets: {summary: public, details: public}

@@ -233,10 +233,10 @@ scorecards:
         are not scanned.
       rationale: >-
         A model reads characters and comments that a reviewer cannot see, so
-        hidden text is a way to slip instructions past review. It sits in the
-        floor so such a skill cannot pass the ratchet.
+        hidden text is a way to slip instructions past review. It sits at
+        bronze, the lowest level, so such a skill cannot pass the ratchet.
       links:
-      - title: Thresholds
+      - title: 'Thresholds: why hidden text sits at bronze'
         url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md
     - name: no-hardcoded-secrets
       level: bronze
