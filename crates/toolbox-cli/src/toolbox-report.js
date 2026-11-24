@@ -2281,7 +2281,10 @@
           return known((r.sc.levels || []).slice(-1)[0]) || "gold";
         })
       );
-      var topMedal = tops.size === 1 ? Array.from(tops)[0] : "gold";
+      var topList = LADDER.filter(function(l) {
+        return tops.has(l);
+      });
+      var topMedal = topList[topList.length - 1] || "gold";
       var goldIds = S.atTop;
       var golden = goldIds.length;
       var unjudged = /* @__PURE__ */ new Set();
@@ -2299,7 +2302,7 @@
       };
       var shown = [
         total ? tile("scorecards", "good", kpiBar(pct, pct + "% of checks pass"), pct + "%", [fmt(c.pass) + " of " + fmt(total) + " checks pass on evidence", checkNote.length ? el("small", { className: "tile-note", textContent: checkNote.join("; ") }) : null]) : null,
-        scoredEntities ? tile("catalog", "", medal(topMedal, 40), fmt(golden), ["of " + fmt(scoredEntities) + " scored entities are at the top level of every scorecard that rates them", goldUnjudged ? el("small", { className: "tile-note", textContent: fmt(goldUnjudged) + " of those still await an agent's assessment" }) : null]) : null,
+        scoredEntities ? tile("catalog", "", medal(topMedal, 40), fmt(golden), ["of " + fmt(scoredEntities) + " scored entities are at the top level of every scorecard that rates them", topList.length > 1 ? el("small", { className: "tile-note", textContent: "Top levels differ by scorecard: " + andList(topList) + "." }) : null, goldUnjudged ? el("small", { className: "tile-note", textContent: fmt(goldUnjudged) + " of those still await an agent's assessment" }) : null]) : null,
         scoredEntities ? tile("scorecards", debt ? "bad" : "good", medal(debt ? "none" : "gold", 40), String(debt), debt === 1 ? "scorecard has entities at none" : debt ? "scorecards have entities at none" : "scorecards with entities at none") : null,
         campaignNames.length ? tile("campaigns", on === campaignNames.length ? "good" : "", kpiPips(on, campaignNames.length, on + " of " + campaignNames.length + " campaigns on target"), on + " of " + campaignNames.length, "campaigns on target") : null
       ].filter(Boolean);
