@@ -134,7 +134,7 @@ scorecards:
       links:
       - title: Decision citations
         url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/decision-citations.md
-      - title: D84 cited decisions exist
+      - title: 'Decision: cited decisions exist'
         url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WMSMS30000000000000000.md
     - name: status-banner
       level: silver

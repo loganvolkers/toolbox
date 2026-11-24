@@ -153,7 +153,7 @@ scorecards:
       floor every new assessment must meet; silver and gold ask for citations,
       first on findings, then on every verdict.
     links:
-    - title: D80 assessments are scored
+    - title: 'Decision: assessments are scored'
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WJVW700000000000000000.md
     - title: Scorecards for scorecards
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#61-assessments-and-rubrics-are-standards-too-d80
@@ -230,7 +230,7 @@ scorecards:
       assessment-quality are skipped, and the card is advisory because a
       review goes stale on every edit.
     links:
-    - title: D80 assessments are reviewed
+    - title: 'Decision: assessments are reviewed'
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WJVW700000000000000000.md
     - title: Findings first decision
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M831P5QWJQ4A2FT85N5MXJQF.md

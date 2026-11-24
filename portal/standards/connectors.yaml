@@ -64,7 +64,7 @@ scorecards:
     links:
     - title: Connector standards
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/connector-standards.md
-    - title: D73 connector scorecard
+    - title: 'Decision: a connector scorecard'
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7W4FRJR0000000000000000.md
     - title: Connector control channel
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/connector-control.md

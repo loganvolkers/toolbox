@@ -185,7 +185,7 @@ scorecards:
       silver removes write access where untrusted events arrive, and gold
       leaves nothing zizmor flags unexplained.
     links:
-    - title: D70 GitHub Actions standards
+    - title: 'Decision: GitHub Actions standards'
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7VZ2DPR0000000000000000.md
     - title: GitHub Actions standards design
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/github-actions-standards.md
@@ -545,7 +545,7 @@ scorecards:
     links:
     - title: GitHub Actions standards design
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/github-actions-standards.md
-    - title: D70 GitHub Actions standards
+    - title: 'Decision: GitHub Actions standards'
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7VZ2DPR0000000000000000.md
     owner: group:maintainers
     track: ${param:track}

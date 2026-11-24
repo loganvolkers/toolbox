@@ -213,7 +213,7 @@ scorecards:
     links:
     - title: Performance results
       url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#performance-and-memory
-    - title: Factors F3 F4 F5 F14
+    - title: 'Factor definitions: footprint, read latency, freshness and recovery'
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors
     owner: group:maintainers
     track: vs-backstage
@@ -348,7 +348,7 @@ scorecards:
     links:
     - title: Static facts
       url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#static-facts-and-single-run-probes
-    - title: Factors F2 F3
+    - title: 'Factor definitions: installability and footprint'
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors
     owner: group:maintainers
     track: vs-backstage
@@ -446,7 +446,7 @@ scorecards:
       probes the product as it ships, and a setting the adopter must remember
       to change counts as a fail.
     links:
-    - title: Factors F6 F7
+    - title: 'Factor definitions: secure defaults and extension isolation'
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors
     - title: Static facts
       url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#static-facts-and-single-run-probes
@@ -574,7 +574,7 @@ scorecards:
     links:
     - title: Static facts
       url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#static-facts-and-single-run-probes
-    - title: Factor F8
+    - title: 'Factor definition: supply chain'
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors
     owner: group:maintainers
     track: vs-backstage
@@ -663,7 +663,7 @@ scorecards:
       before deploy lowers the change failure rate, and rolling back without
       database surgery shortens recovery (DORA).
     links:
-    - title: Factors F9 F10 F14
+    - title: 'Factor definitions: upgrade cost, analysability and recoverability'
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors
     - title: Static facts
       url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#static-facts-and-single-run-probes
@@ -749,7 +749,7 @@ scorecards:
       server first makes every team wait for the platform team; one that
       cannot join portals cannot grow past one.
     links:
-    - title: Factor F12
+    - title: 'Factor definition: org fit'
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors
     - title: DORA loosely coupled teams
       url: https://dora.dev/capabilities/loosely-coupled-teams/
@@ -772,7 +772,7 @@ scorecards:
       links:
       - title: Repo value
         url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/repo-value.md
-      - title: D69 report as an Action
+      - title: 'Decision: the report as a GitHub Action'
         url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7VXK0480000000000000000.md
     - name: federation
       level: bronze
@@ -786,7 +786,7 @@ scorecards:
       links:
       - title: Federation design
         url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/federation.md
-      - title: D68 federation designed
+      - title: 'Decision: federation is designed, not built'
         url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7VWS4ZJ0000000000000000.md
     facets: {summary: public, details: public}
 
@@ -802,7 +802,7 @@ scorecards:
       without MCP leaves each adopter to build and secure their own agent
       integration.
     links:
-    - title: Factor F13
+    - title: 'Factor definition: agent surface'
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors
     - title: Static facts
       url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#static-facts-and-single-run-probes
@@ -864,7 +864,7 @@ scorecards:
       integration's owner (Parnas). Not pre-registered on its own; the README
       counts it inside capabilities.
     links:
-    - title: Factor F11
+    - title: 'Factor definition: extensibility'
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors
     - title: Connector control
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/connector-control.md
@@ -912,7 +912,7 @@ scorecards:
     links:
     - title: Verdict
       url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#verdict
-    - title: D47 Backstage parity audit
+    - title: 'Decision: the Backstage parity audit'
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7V8P2VY0000000000000000.md
     owner: group:maintainers
     track: vs-backstage
@@ -978,7 +978,7 @@ scorecards:
         without them, each service starts as a copy of an old one. Toolbox's
         self-service actions are paused (D64).
       links:
-      - title: D64 actions paused
+      - title: 'Decision: self-service actions are paused'
         url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7VTP0HG0000000000000000.md
     - name: scorecards
       level: bronze

@@ -157,7 +157,7 @@ scorecards:
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/toolbox-for-toolbox.md
     - title: Thresholds and levels
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md
-    - title: D65 Toolbox for Toolbox
+    - title: 'Decision: Toolbox for Toolbox'
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7VTP0HH0000000000000000.md
     owner: group:maintainers
     track: maintainer

@@ -70,7 +70,7 @@ scorecards:
     links:
     - title: Skill standards
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/skill-standards.md
-    - title: D72 skill scorecard
+    - title: 'Decision: a skill scorecard'
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7W3PWP00000000000000000.md
     - title: Agent Skills specification
       url: https://agentskills.io/specification

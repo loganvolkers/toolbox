@@ -57,7 +57,7 @@ scorecards:
     links:
     - title: AGENTS.md standards
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/agents-md-standards.md
-    - title: D75 instruction files
+    - title: 'Decision: agent instruction files are scored'
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7W4Y2K00000000000000000.md
     - {title: agents.md format, url: https://github.com/agentsmd/agents.md}
     owner: group:maintainers
@@ -79,7 +79,7 @@ scorecards:
         instead of pointing at AGENTS.md, the copies drift and agents in
         different harnesses follow different rules.
       links:
-      - title: D82 harness aliases
+      - title: 'Decision: harness aliases'
         url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WMSMS10000000000000000.md
     - name: links-resolve
       level: bronze
@@ -138,7 +138,7 @@ scorecards:
         anyone noticing, and passing it locally then proves nothing CI agrees
         with.
       links:
-      - title: D83 commands run in CI
+      - title: 'Decision: named commands run in CI'
         url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WMSMS20000000000000000.md
     - name: no-hardcoded-secrets
       level: bronze

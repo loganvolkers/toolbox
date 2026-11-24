@@ -105,7 +105,7 @@ scorecards:
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/observability.md
     - title: Telemetry crate decision
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M81ADN8C10EA1Z1VNRY3A5JZ.md
-    - title: D6 observability
+    - title: 'Decision: observability'
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7TCJ31X0000000000000000.md
     owner: group:maintainers
     track: maintainer

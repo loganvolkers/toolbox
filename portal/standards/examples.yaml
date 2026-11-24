@@ -44,7 +44,7 @@ scorecards:
     links:
     - title: Example standards
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/example-standards.md
-    - title: D78 examples catalogued
+    - title: 'Decision: examples are catalogued'
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7W5G0T00000000000000000.md
     owner: group:maintainers
     track: docs

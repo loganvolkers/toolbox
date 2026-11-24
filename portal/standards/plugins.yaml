@@ -78,7 +78,7 @@ scorecards:
     links:
     - title: Plugin standards
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/plugin-standards.md
-    - title: D81 plugin scorecard
+    - title: 'Decision: a plugin scorecard'
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WMSMS00000000000000000.md
     - title: Agent Plugins specification
       url: https://github.com/agentplugins/agent-plugins-spec

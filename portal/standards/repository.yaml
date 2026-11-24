@@ -70,7 +70,7 @@ scorecards:
       keeps every ecosystem updated, silver puts an owner on workflow changes,
       and gold pins the code-scanning action like any other.
     links:
-    - title: D85 supply-chain settings
+    - title: 'Decision: supply-chain settings'
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WMSMS40000000000000000.md
     - title: Supply-chain standards design
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/supply-chain-standards.md
@@ -143,7 +143,7 @@ scorecards:
       names the one to raise next. Runner-backed cards are left out so that a
       skipped tool doesn't drop the repository to none.
     links:
-    - title: D86 repository level
+    - title: 'Decision: the repository level'
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WMSMS50000000000000000.md
     - title: Repository level design
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/repo-level.md

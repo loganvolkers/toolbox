@@ -53,7 +53,7 @@ scorecards:
     links:
     - title: Package standards
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/package-standards.md
-    - title: D76 npm manifests catalogued
+    - title: 'Decision: npm manifests are catalogued'
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7W56B7R0000000000000000.md
     owner: group:maintainers
     track: maintainer

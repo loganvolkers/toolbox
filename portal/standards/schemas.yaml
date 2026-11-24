@@ -49,7 +49,7 @@ scorecards:
     links:
     - title: Schema standards
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/schema-standards.md
-    - title: D77 JSON Schemas catalogued
+    - title: 'Decision: JSON Schemas are catalogued'
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7W5BEAG0000000000000000.md
     owner: group:maintainers
     track: maintainer

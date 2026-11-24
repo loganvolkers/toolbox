@@ -8,18 +8,18 @@ Each agent instruction file: one canonical AGENTS.md with aliases pointing at it
 
 **Why:** Agents load these files as standing instructions for every change to the repository, and a second, divergent copy is followed by one harness and ignored by another. Bronze is one source whose links work, plus the two safety items; silver says how to test and fits in context; gold points at the decision log and names only checks CI runs.
 
-See [AGENTS.md standards](https://github.com/loganvolkers/toolbox/blob/main/docs/design/agents-md-standards.md), [D75 instruction files](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7W4Y2K00000000000000000.md), [agents.md format](https://github.com/agentsmd/agents.md).
+See [AGENTS.md standards](https://github.com/loganvolkers/toolbox/blob/main/docs/design/agents-md-standards.md), [Decision: agent instruction files are scored](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7W4Y2K00000000000000000.md), [agents.md format](https://github.com/agentsmd/agents.md).
 
 Scorecard `maintainer-agent-doc` over `AgentDoc` entities, owned by group:maintainers. `toolbox report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`toolbox assess`).
 
 | Rule | Level | Basis | Passes when | Why | Fix |
 |---|---|---|---|---|---|
-| `single-source` | bronze | measured | `entity.canonical \|\| entity.pointsAtAgents` | Harnesses read different filenames; when an alias restates the rules instead of pointing at AGENTS.md, the copies drift and agents in different harnesses follow different rules. [D82 harness aliases](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WMSMS10000000000000000.md) | Keep instructions in AGENTS.md. An alias such as CLAUDE.md should link to it, not restate a second set of rules. |
+| `single-source` | bronze | measured | `entity.canonical \|\| entity.pointsAtAgents` | Harnesses read different filenames; when an alias restates the rules instead of pointing at AGENTS.md, the copies drift and agents in different harnesses follow different rules. [Decision: harness aliases](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WMSMS10000000000000000.md) | Keep instructions in AGENTS.md. An alias such as CLAUDE.md should link to it, not restate a second set of rules. |
 | `links-resolve` | bronze | measured | `entity.missingFiles.size() == 0` | Instruction files push detail into linked documents; a broken link leaves the agent without the rule it was sent to read. | Fix or remove the relative links in the evidence. An agent follows them. |
 | `has-commands` | silver | measured | `!entity.canonical \|\| entity.commandLines > 0` | An agent that is not told how to build and test guesses, and either skips verification or runs the wrong check. | Name the build or test command in AGENTS.md (cargo, npm, pnpm, yarn, pytest, or toolbox). An alias inherits the canonical file's commands. |
 | `within-budget` | silver | measured | `entity.lines <= 500` | The file is loaded into every session's context, so its length is paid on every task and crowds out the work. 500 lines is a proposal's guideline, not a ratified limit. [agents.md v1.1 proposal](https://github.com/agentsmd/agents.md/issues/135) | Keep the file under 500 lines. Move detail into a linked document. The agents.md v1.1 proposal uses 500 lines as the point where a file should be split. |
 | `names-the-decision-log` | gold | measured | `!entity.canonical \|\| entity.mentionsDecisions` | AGENTS.md summarises; the decision log is the source of truth. An agent that never learns of the log acts on a summary that may be stale and records new decisions in the wrong place. | Link the canonical AGENTS.md at the decision log, so an agent edits the log instead of treating this file as the only source of truth. |
-| `checks-run-in-ci` | gold | measured | `!entity.canonical \|\| entity.ciMissingCommands.size() == 0` | A check that agents are told to run but CI never runs can break without anyone noticing, and passing it locally then proves nothing CI agrees with. [D83 commands run in CI](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WMSMS20000000000000000.md) | Run each command in the evidence from a GitHub Actions workflow, or remove it from the check procedure. Commands that appear only in a markdown table are the track index and are not required. |
+| `checks-run-in-ci` | gold | measured | `!entity.canonical \|\| entity.ciMissingCommands.size() == 0` | A check that agents are told to run but CI never runs can break without anyone noticing, and passing it locally then proves nothing CI agrees with. [Decision: named commands run in CI](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WMSMS20000000000000000.md) | Run each command in the evidence from a GitHub Actions workflow, or remove it from the check procedure. Commands that appear only in a markdown table are the track index and are not required. |
 | `no-hardcoded-secrets` | bronze | measured | `entity.secretHits.size() == 0` | The file is committed to the repository and loaded into every agent's prompt, so a credential in it is exposed to every reader and every transcript. It sits at bronze so such a file cannot pass the ratchet. [Thresholds](https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md) | Remove the credential in the evidence. An instruction file is loaded into the agent's prompt. |
 | `no-hidden-instructions` | bronze | measured | `entity.hiddenChars == 0` | Hidden characters let text reach the model that a reviewer never sees, a way to slip instructions past review into every session. It sits at bronze so such a file cannot pass the ratchet. [Thresholds](https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md) | Remove zero-width and other default-ignorable characters, bidi controls and variation selectors outside emoji from the file. They are invisible to a reviewer and visible to a model. |
 
@@ -29,7 +29,7 @@ What every assessment must contain to be worth reading: a named assessor, sugges
 
 **Why:** Agents act on assessments and review cards read them, so a malformed one misleads twice: a finding without a suggestion can't be acted on, and a reason without a citation can't be checked. Bronze is the ratcheted floor every new assessment must meet; silver and gold ask for citations, first on findings, then on every verdict.
 
-See [D80 assessments are scored](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WJVW700000000000000000.md), [Scorecards for scorecards](https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#61-assessments-and-rubrics-are-standards-too-d80), [assess-entity skill](https://github.com/loganvolkers/toolbox/blob/main/plugins/toolbox-operator/skills/assess-entity/SKILL.md).
+See [Decision: assessments are scored](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WJVW700000000000000000.md), [Scorecards for scorecards](https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#61-assessments-and-rubrics-are-standards-too-d80), [assess-entity skill](https://github.com/loganvolkers/toolbox/blob/main/plugins/toolbox-operator/skills/assess-entity/SKILL.md).
 
 Scorecard `meta-assessment` over `Assessment` entities, owned by group:maintainers. `toolbox report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`toolbox assess`).
 
@@ -46,7 +46,7 @@ Each assessment reviewed against assessment-quality by another assessor, advisor
 
 **Why:** A deterministic check sees that an assessment cites something, not that the source says what the reason claims; a second assessor's review checks that. Reviews stop at one level, so assessments made with assessment-quality are skipped, and the card is advisory because a review goes stale on every edit.
 
-See [D80 assessments are reviewed](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WJVW700000000000000000.md), [Findings first decision](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M831P5QWJQ4A2FT85N5MXJQF.md), [Meta standards review](https://github.com/loganvolkers/toolbox/blob/main/docs/design/meta-standards-review.md).
+See [Decision: assessments are reviewed](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WJVW700000000000000000.md), [Findings first decision](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M831P5QWJQ4A2FT85N5MXJQF.md), [Meta standards review](https://github.com/loganvolkers/toolbox/blob/main/docs/design/meta-standards-review.md).
 
 Scorecard `review-assessment` over `Assessment` entities, owned by group:maintainers. `toolbox report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`toolbox assess`).
 
@@ -63,7 +63,7 @@ Start, read and recover on a 10k-component catalog, with every read authorized (
 
 **Why:** Every page load, agent call and CI job reads the portal, so a slow start, slow reads or a slow recovery cost all of its users at once. The bars are absolute and set before the run; Toolbox authorizes every read while Backstage runs allow-all, which favours Backstage.
 
-See [Performance results](https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#performance-and-memory), [Factors F3 F4 F5 F14](https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors).
+See [Performance results](https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#performance-and-memory), [Factor definitions: footprint, read latency, freshness and recovery](https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors).
 
 Scorecard `vs-backstage-performance` over `Product` entities, owned by group:maintainers. `toolbox report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`toolbox assess`).
 
@@ -83,7 +83,7 @@ What it costs to run and to own: memory, disk, and the files an adopter keeps fo
 
 **Why:** Memory, disk and the files an adopter keeps are paid for on every instance, preview environment and upgrade, and they decide the smallest machine and team that can run a portal. Charter goal 1 promises one image plus Postgres; a heavy footprint would break that promise.
 
-See [Static facts](https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#static-facts-and-single-run-probes), [Factors F2 F3](https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors).
+See [Static facts](https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#static-facts-and-single-run-probes), [Factor definitions: installability and footprint](https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors).
 
 Scorecard `vs-backstage-footprint` over `Product` entities, owned by group:maintainers. `toolbox report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`toolbox assess`).
 
@@ -101,7 +101,7 @@ Secure by default, as installed: what an unauthenticated or forging client gets,
 
 **Why:** A portal maps every service, its owners and how to reach them, and the configuration it ships with is often the one deployed. OWASP ASVS V13 asks that the default be secure for use on the Internet, so each rule probes the product as it ships, and a setting the adopter must remember to change counts as a fail.
 
-See [Factors F6 F7](https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors), [Static facts](https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#static-facts-and-single-run-probes).
+See [Factor definitions: secure defaults and extension isolation](https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors), [Static facts](https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#static-facts-and-single-run-probes).
 
 Scorecard `vs-backstage-security` over `Product` entities, owned by group:maintainers. `toolbox report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`toolbox assess`).
 
@@ -122,7 +122,7 @@ What an adopter inherits: third-party packages, their known vulnerabilities, and
 
 **Why:** An adopter inherits every package a portal ships, as attack surface and as upgrade work, and runs it next to the catalog and its credentials. Provenance is how they prove that what they deploy was built from the published source.
 
-See [Static facts](https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#static-facts-and-single-run-probes), [Factor F8](https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors).
+See [Static facts](https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#static-facts-and-single-run-probes), [Factor definition: supply chain](https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors).
 
 Scorecard `vs-backstage-supply-chain` over `Product` entities, owned by group:maintainers. `toolbox report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`toolbox assess`).
 
@@ -139,7 +139,7 @@ Changing a portal safely: validate before deploy, preview the effect, upgrade wi
 
 **Why:** A portal's bad data and outages mostly arrive with a change: a config edit, a catalog edit or an upgrade. Checking and previewing a change before deploy lowers the change failure rate, and rolling back without database surgery shortens recovery (DORA).
 
-See [Factors F9 F10 F14](https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors), [Static facts](https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#static-facts-and-single-run-probes).
+See [Factor definitions: upgrade cost, analysability and recoverability](https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors), [Static facts](https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#static-facts-and-single-run-probes).
 
 Scorecard `vs-backstage-change-safety` over `Product` entities, owned by group:maintainers. `toolbox report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`toolbox assess`).
 
@@ -156,14 +156,14 @@ Fitting how an organisation is built: one repository with no server first, then 
 
 **Why:** Systems take the shape of the organisation that builds them (Conway), and teams move fastest when they can test without an integrated environment (DORA, loosely coupled teams). A portal that needs a central server first makes every team wait for the platform team; one that cannot join portals cannot grow past one.
 
-See [Factor F12](https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors), [DORA loosely coupled teams](https://dora.dev/capabilities/loosely-coupled-teams/).
+See [Factor definition: org fit](https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors), [DORA loosely coupled teams](https://dora.dev/capabilities/loosely-coupled-teams/).
 
 Scorecard `vs-backstage-org-fit` over `Product` entities, owned by group:maintainers. `toolbox report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`toolbox assess`).
 
 | Rule | Level | Basis | Passes when | Why | Fix |
 |---|---|---|---|---|---|
-| `repo-scoped` | bronze | measured | `entity.repoScopedWithoutServer` | A team that can score its own repository in CI, with no server, gets value before anyone runs a portal, and the platform team has nothing to operate for it. [Repo value](https://github.com/loganvolkers/toolbox/blob/main/docs/design/repo-value.md), [D69 report as an Action](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7VXK0480000000000000000.md) | Keep `toolbox report` scoring a repository with no server, as actions/report does. |
-| `federation` | bronze | measured | `entity.federates` | Without federation, a large organisation runs one catalog for everyone or many that never join, and neither fits teams that own their portals. Neither product federates, so this rule is parity. [Federation design](https://github.com/loganvolkers/toolbox/blob/main/docs/design/federation.md), [D68 federation designed](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7VWS4ZJ0000000000000000.md) | Build federation as docs/design/federation.md designs it (D68). |
+| `repo-scoped` | bronze | measured | `entity.repoScopedWithoutServer` | A team that can score its own repository in CI, with no server, gets value before anyone runs a portal, and the platform team has nothing to operate for it. [Repo value](https://github.com/loganvolkers/toolbox/blob/main/docs/design/repo-value.md), [Decision: the report as a GitHub Action](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7VXK0480000000000000000.md) | Keep `toolbox report` scoring a repository with no server, as actions/report does. |
+| `federation` | bronze | measured | `entity.federates` | Without federation, a large organisation runs one catalog for everyone or many that never join, and neither fits teams that own their portals. Neither product federates, so this rule is parity. [Federation design](https://github.com/loganvolkers/toolbox/blob/main/docs/design/federation.md), [Decision: federation is designed, not built](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7VWS4ZJ0000000000000000.md) | Build federation as docs/design/federation.md designs it (D68). |
 
 ## Agent surface
 
@@ -171,7 +171,7 @@ What a coding agent gets: MCP by default, and how many tokens it spends to learn
 
 **Why:** Coding agents are a primary audience of a portal, and every byte a tool returns is tokens they pay for and context the task loses. A portal without MCP leaves each adopter to build and secure their own agent integration.
 
-See [Factor F13](https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors), [Static facts](https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#static-facts-and-single-run-probes).
+See [Factor definition: agent surface](https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors), [Static facts](https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#static-facts-and-single-run-probes).
 
 Scorecard `vs-backstage-agent-surface` over `Product` entities, owned by group:maintainers. `toolbox report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`toolbox assess`).
 
@@ -187,7 +187,7 @@ What it takes to add an integration: which languages, and whether the server is 
 
 **Why:** Extensions are where portals accrete cost: an integration built into the core is rebuilt, redeployed and upgraded with it. A protocol any language can speak, added without a rebuild, keeps that cost with the integration's owner (Parnas). Not pre-registered on its own; the README counts it inside capabilities.
 
-See [Factor F11](https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors), [Connector control](https://github.com/loganvolkers/toolbox/blob/main/docs/design/connector-control.md).
+See [Factor definition: extensibility](https://github.com/loganvolkers/toolbox/blob/main/docs/design/backstage-comparison.md#2-factors), [Connector control](https://github.com/loganvolkers/toolbox/blob/main/docs/design/connector-control.md).
 
 Scorecard `vs-backstage-extensibility` over `Product` entities, owned by group:maintainers. `toolbox report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`toolbox assess`).
 
@@ -202,7 +202,7 @@ What a portal does out of the box, by configuration alone. The scenarios come fr
 
 **Why:** Functional completeness is the first question in a portal evaluation: a team will not adopt a portal that lacks what its developers use every day. Toolbox is expected to lose here, and each missing capability is published as a loss rather than dropped.
 
-See [Verdict](https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#verdict), [D47 Backstage parity audit](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7V8P2VY0000000000000000.md).
+See [Verdict](https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md#verdict), [Decision: the Backstage parity audit](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7V8P2VY0000000000000000.md).
 
 Scorecard `vs-backstage-capabilities` over `Product` entities, owned by group:maintainers. `toolbox report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`toolbox assess`).
 
@@ -213,7 +213,7 @@ Scorecard `vs-backstage-capabilities` over `Product` entities, owned by group:ma
 | `graph` | bronze | measured | `entity.capGraph` | Relations show what a change or an outage affects; without a graph, impact analysis means reading descriptors one by one. | Keep `toolbox graph` and /v1/entities/{id}/graph. |
 | `docs-search` | bronze | measured | `entity.capDocsSearch` | Developers search for answers in documentation, not only for entity names; a portal whose search stops at names and titles sends them to another tool. | Index documentation text with the entities that `toolbox search` reads (docs/v1-spec.md, full-text search). |
 | `docs` | bronze | measured | `entity.capDocs` | Without a component's docs in the portal, developers switch to a separate docs site, and the portal stops being the one place to learn about a service. | Carry a documentation tool's built site per component, as docs/design/toolbox-and-tools.md carries tools. |
-| `templates` | bronze | measured | `entity.capTemplates` | Templates are how a platform spreads its defaults to new services; without them, each service starts as a copy of an old one. Toolbox's self-service actions are paused (D64). [D64 actions paused](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7VTP0HG0000000000000000.md) | Build self-service actions (v1-spec M5) once D64 lifts the pause (docs/design/action-runs.md). |
+| `templates` | bronze | measured | `entity.capTemplates` | Templates are how a platform spreads its defaults to new services; without them, each service starts as a copy of an old one. Toolbox's self-service actions are paused (D64). [Decision: self-service actions are paused](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7VTP0HG0000000000000000.md) | Build self-service actions (v1-spec M5) once D64 lifts the pause (docs/design/action-runs.md). |
 | `scorecards` | bronze | measured | `entity.capScorecards` | Scorecards turn standards into what each team must fix next; without them, standards live in documents nobody checks. Backstage passes through the Tech Insights add-on, configured in code. | Keep scorecards in the manifest, as docs/v1-spec.md §5 defines them. |
 | `api-docs` | bronze | measured | `entity.capApiDocs` | A rendered API definition lets a consumer read a service's contract where they found the service; otherwise it sits unread in the provider's repository. | Render an API entity's definition through a UI extension in ui/src. |
 | `kubernetes` | bronze | measured | `entity.capKubernetes` | Seeing a component's workloads lets its owner check what runs where without cluster access; without it, on-call leaves the portal for kubectl at the first question. | Add a connector that reads workloads from the Kubernetes API (docs/design/connector-control.md). |
@@ -285,7 +285,7 @@ Every CLI command has an agent skill that names its invocation (D94), so a codin
 
 **Why:** Help text is loaded only once an agent already knows the command, while a skill is loaded when the task matches its description, so a command with no skill is invisible to an agent that has not heard of it. One level is enough: maintainer-skill scores the skill file itself.
 
-See [CLI skills design](https://github.com/loganvolkers/toolbox/blob/main/docs/design/cli-skills.md), [D94 one skill per command](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7X1Y5T00000000000000000.md).
+See [CLI skills design](https://github.com/loganvolkers/toolbox/blob/main/docs/design/cli-skills.md), [Decision: one skill per command](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7X1Y5T00000000000000000.md).
 
 Scorecard `cli-skill` over `Command` entities, owned by group:maintainers. `toolbox report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`toolbox assess`).
 
@@ -317,7 +317,7 @@ Each first-party connector: configurable, speaking the protocol the conformance 
 
 **Why:** Connectors hold credentials to upstream systems and feed every entity a portal derives, so one that is undocumented, off-protocol or carrying a secret harms every portal that runs it. Bronze is a connector an operator can configure, silver has the message shapes the conformance kit checks plus a test, and gold runs in CI with no credential in the tree. Lag and error rate need a live portal and are not gated.
 
-See [Connector standards](https://github.com/loganvolkers/toolbox/blob/main/docs/design/connector-standards.md), [D73 connector scorecard](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7W4FRJR0000000000000000.md), [Connector control channel](https://github.com/loganvolkers/toolbox/blob/main/docs/design/connector-control.md).
+See [Connector standards](https://github.com/loganvolkers/toolbox/blob/main/docs/design/connector-standards.md), [Decision: a connector scorecard](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7W4FRJR0000000000000000.md), [Connector control channel](https://github.com/loganvolkers/toolbox/blob/main/docs/design/connector-control.md).
 
 Scorecard `maintainer-connector` over `Connector` entities, owned by group:maintainers. `toolbox report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`toolbox assess`).
 
@@ -339,7 +339,7 @@ Each Rust crate: documented, tested with assertions and enough tests for its siz
 
 **Why:** Crates are the code Toolbox ships, and a person or an agent can only change one safely if it says what it is, has tests that can fail, passes them, and is made of functions small enough to read. Bronze is what makes a change checkable at all; silver and gold tighten documentation, size and complexity in steps, with the numbers in the manifest so raising them is a reviewed change.
 
-See [Toolbox for Toolbox design](https://github.com/loganvolkers/toolbox/blob/main/docs/design/toolbox-for-toolbox.md), [Thresholds and levels](https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md), [D65 Toolbox for Toolbox](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7VTP0HH0000000000000000.md).
+See [Toolbox for Toolbox design](https://github.com/loganvolkers/toolbox/blob/main/docs/design/toolbox-for-toolbox.md), [Thresholds and levels](https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md), [Decision: Toolbox for Toolbox](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7VTP0HH0000000000000000.md).
 
 Scorecard `maintainer-crate` over `Crate` entities, owned by group:maintainers. `toolbox report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`toolbox assess`).
 
@@ -382,7 +382,7 @@ Each direct Cargo dependency: a bounded requirement from a registry, locked to o
 
 **Why:** Every direct dependency is code the binary runs, so it should come from a known source and resolve the same way on every build. Bronze bounds the requirement and the source, silver locks one version, and gold declares a shared dependency once so its users can't drift; advisories and licences need a database and a policy, so they don't gate.
 
-See [D74 Cargo dependencies](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7W4P0S00000000000000000.md), [Dependency standards design](https://github.com/loganvolkers/toolbox/blob/main/docs/design/dependency-standards.md).
+See [Decision: Cargo dependencies are scored](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7W4P0S00000000000000000.md), [Dependency standards design](https://github.com/loganvolkers/toolbox/blob/main/docs/design/dependency-standards.md).
 
 Scorecard `maintainer-dependency` over `Dependency` entities, owned by group:maintainers. `toolbox report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`toolbox assess`).
 
@@ -408,7 +408,7 @@ Scorecard `maintainer-docs` over `Doc` entities, owned by group:maintainers. `to
 |---|---|---|---|---|---|
 | `links-resolve` | bronze | measured | `entity.brokenLinks.size() == 0` | A file move or rename breaks the links to it without failing any build, and the reader who follows one loses the context the doc relies on. | Fix or remove the relative links in the evidence. |
 | `names-sdlc-layer` | bronze | measured | `entity.counts.sdlc <= entity.counts.layeredSdlc` | Toolbox has four SDLC layers with different builders and checks, so a bare "SDLC" leaves the reader to guess whose loop the doc is about. [The four SDLC layers](https://github.com/loganvolkers/toolbox/blob/main/docs/sdlc.md) | Say which SDLC you mean: maintainer, operator or user (docs/sdlc.md, D63). |
-| `cited-decisions-exist` | bronze | measured | `entity.missingDecisions.size() == 0` | Decision files are the source of truth for what is decided. A cited id with no file makes a claim look settled when a reader cannot check what, if anything, was decided. [Decision citations](https://github.com/loganvolkers/toolbox/blob/main/docs/design/decision-citations.md), [D84 cited decisions exist](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WMSMS30000000000000000.md) | The decision ids in the evidence are not files in docs/decisions/. Cite one that exists, or add the file. Mint the id with python3 scripts/decision-id.py. |
+| `cited-decisions-exist` | bronze | measured | `entity.missingDecisions.size() == 0` | Decision files are the source of truth for what is decided. A cited id with no file makes a claim look settled when a reader cannot check what, if anything, was decided. [Decision citations](https://github.com/loganvolkers/toolbox/blob/main/docs/design/decision-citations.md), [Decision: cited decisions exist](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WMSMS30000000000000000.md) | The decision ids in the evidence are not files in docs/decisions/. Cite one that exists, or add the file. Mint the id with python3 scripts/decision-id.py. |
 | `status-banner` | silver | measured | `entity.area != 'design' \|\| entity.hasStatus` | A design doc mixes decided, built and deferred material. Without the banner a reader or agent can implement something that was deferred, and where the banner and the body disagree the banner wins. | Start the design doc under `docs/design/` with a `*Status:*` line saying what is decided and what is built. |
 | `cites-sources` | silver | measured | `entity.area != 'design' \|\| entity.hasSources` | Design docs make claims about other tools, standards and vendors. A Sources section lets a reader check them against primary sources instead of taking them on trust. [AGENTS.md working rules](https://github.com/loganvolkers/toolbox/blob/main/AGENTS.md#working-rules-maintainer-sdlc) | End the design doc with a `## Sources` section (AGENTS.md working rules). |
 
@@ -418,7 +418,7 @@ Each example and experiment write-up agents copy: links that resolve, the check 
 
 **Why:** Agents copy examples as working patterns, so a write-up that cannot be followed or checked spreads its mistakes into every copy. Bronze is a write-up a reader can follow; silver names the command that proves it still works; gold ties it to the design so it does not become a second source of truth.
 
-See [Example standards](https://github.com/loganvolkers/toolbox/blob/main/docs/design/example-standards.md), [D78 examples catalogued](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7W5G0T00000000000000000.md).
+See [Example standards](https://github.com/loganvolkers/toolbox/blob/main/docs/design/example-standards.md), [Decision: examples are catalogued](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7W5G0T00000000000000000.md).
 
 Scorecard `maintainer-example` over `Example` entities, owned by group:maintainers. `toolbox report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`toolbox assess`).
 
@@ -480,7 +480,7 @@ Each kind of entity: in the fixtures, tested and described with every field, sin
 
 **Why:** Every rule reads a kind, so a kind absent from fixtures and tests leaves its map rules and computed fields unexercised, and an undescribed one leaves agents guessing what an entity is. Being exercised in tests is the floor for a new kind; descriptions sit above it because they help readers without making any score wrong.
 
-See [Which parts need standards](https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#4-holistic-review-which-parts-of-a-portal-need-standards), [D79 every part is scored](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md).
+See [Which parts need standards](https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#4-holistic-review-which-parts-of-a-portal-need-standards), [Decision: every part is scored](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md).
 
 Scorecard `meta-kind` over `Kind` entities, owned by group:maintainers. `toolbox report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`toolbox assess`).
 
@@ -497,7 +497,7 @@ Each field: populated in the fixtures, described and given a shape, so CEL, vali
 
 **Why:** Fields are what rules, evidence and agents read: one never populated in fixtures has an untested mapping, an undescribed one is guessed at, and an opaque object can't be type-checked or validated. A value in some fixture is the floor for a new field; a description and a declared shape sit above it.
 
-See [The rest of the model](https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#5-the-rest-of-the-model-kinds-fields-connectors), [D79 every part is scored](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md).
+See [The rest of the model](https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#5-the-rest-of-the-model-kinds-fields-connectors), [Decision: every part is scored](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md).
 
 Scorecard `meta-field` over `Field` entities, owned by group:maintainers. `toolbox report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`toolbox assess`).
 
@@ -514,7 +514,7 @@ Each connector a portal configures: every record mapped, fixtures for tests, fre
 
 **Why:** Every fact enters the portal through a connector, so its gaps become the portal's: unmapped records are lost, untested mappings break on live data, and stale data reads as current. The starter shipped without freshness or refresh, which pilots copying it would have inherited; a mapping and fixtures are the floor, freshness and refresh sit above it.
 
-See [The rest of the model](https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#5-the-rest-of-the-model-kinds-fields-connectors), [D79 every part is scored](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md).
+See [The rest of the model](https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#5-the-rest-of-the-model-kinds-fields-connectors), [Decision: every part is scored](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md).
 
 Scorecard `meta-connector` over `PortalConnector` entities, owned by group:maintainers. `toolbox report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`toolbox assess`).
 
@@ -531,7 +531,7 @@ Agents' judgement of each rule against rule-quality, advisory: an open finding i
 
 **Why:** Form checks can't tell whether a rule measures its intent or can be gamed, and none of 19 meta-gold rules and scorecards that agents reviewed passed. Open findings rank lowest so they head the report; the card is advisory because a review goes stale whenever its subject changes, and gating on it would block every edit.
 
-See [Judgement pushed by agents](https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#6-judgement-pushed-by-coding-agents-d79), [D79 judgement is pushed](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md), [Meta standards review](https://github.com/loganvolkers/toolbox/blob/main/docs/design/meta-standards-review.md).
+See [Judgement pushed by agents](https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#6-judgement-pushed-by-coding-agents-d79), [Decision: judgement is pushed](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md), [Meta standards review](https://github.com/loganvolkers/toolbox/blob/main/docs/design/meta-standards-review.md).
 
 Scorecard `review-rule` over `Rule` entities, owned by group:maintainers. `toolbox report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`toolbox assess`).
 
@@ -548,7 +548,7 @@ Agents' judgement of each scorecard against scorecard-quality, advisory, with th
 
 **Why:** Form checks can't tell whether a scorecard measures one concern, climbs a real ladder or leaves an obvious gap; an adversarial review failed every meta-gold scorecard it sampled. The ladder and advisory status match review-rule: open findings first, and never gating, because a review goes stale when the scorecard changes.
 
-See [Judgement pushed by agents](https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#6-judgement-pushed-by-coding-agents-d79), [D79 judgement is pushed](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md), [Meta standards review](https://github.com/loganvolkers/toolbox/blob/main/docs/design/meta-standards-review.md).
+See [Judgement pushed by agents](https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#6-judgement-pushed-by-coding-agents-d79), [Decision: judgement is pushed](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md), [Meta standards review](https://github.com/loganvolkers/toolbox/blob/main/docs/design/meta-standards-review.md).
 
 Scorecard `review-scorecard` over `Scorecard` entities, owned by group:maintainers. `toolbox report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`toolbox assess`).
 
@@ -565,7 +565,7 @@ Each rubric agents judge with: described, used, guided with what counts as fail,
 
 **Why:** A rubric decides what agents judge, so a vague one yields reviews that disagree or pass everything. Described and used once is the floor for a new rubric; guidance on what counts as fail lets assessors agree; gold needs three assessments to show that each criterion can fail.
 
-See [Assessments and rubrics](https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#61-assessments-and-rubrics-are-standards-too-d80), [D80 rubrics are scored](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WJVW700000000000000000.md).
+See [Assessments and rubrics](https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#61-assessments-and-rubrics-are-standards-too-d80), [Decision: rubrics are scored](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WJVW700000000000000000.md).
 
 Scorecard `meta-rubric` over `Rubric` entities, owned by group:maintainers. `toolbox report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`toolbox assess`).
 
@@ -582,7 +582,7 @@ Toolbox's runtime telemetry checklist: the OTel crate, metric catalog, structure
 
 **Why:** Operators can't run a portal they can't see: without traces, metrics and logs under a stable contract, connector lag or a stuck snapshot goes unnoticed. Bronze is the crate and catalog that keep Prometheus and OTLP names from drifting, silver adds logs, alerts and a reviewed monitor stage, and gold a trace exported to a real collector.
 
-See [Observability design](https://github.com/loganvolkers/toolbox/blob/main/docs/design/observability.md), [Telemetry crate decision](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M81ADN8C10EA1Z1VNRY3A5JZ.md), [D6 observability](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7TCJ31X0000000000000000.md).
+See [Observability design](https://github.com/loganvolkers/toolbox/blob/main/docs/design/observability.md), [Telemetry crate decision](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M81ADN8C10EA1Z1VNRY3A5JZ.md), [Decision: observability](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7TCJ31X0000000000000000.md).
 
 Scorecard `maintainer-observability` over `Observability` entities, owned by group:maintainers. `toolbox report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`toolbox assess`).
 
@@ -603,7 +603,7 @@ Each npm manifest we keep: private when it is an application, locked, and free o
 
 **Why:** These manifests decide what code npm installs into the builds this repository runs, so an unbounded range, a git dependency or a missing lockfile lets that code change without a review. Bronze bounds what can be installed; silver pins it and gives CI something to run; gold makes the package self-describing and has CI install exactly the lockfile.
 
-See [Package standards](https://github.com/loganvolkers/toolbox/blob/main/docs/design/package-standards.md), [D76 npm manifests catalogued](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7W56B7R0000000000000000.md).
+See [Package standards](https://github.com/loganvolkers/toolbox/blob/main/docs/design/package-standards.md), [Decision: npm manifests are catalogued](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7W56B7R0000000000000000.md).
 
 Scorecard `maintainer-package` over `PackageJson` entities, owned by group:maintainers. `toolbox report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`toolbox assess`).
 
@@ -626,7 +626,7 @@ Each agent plugin package we ship: a valid Agent Plugins 1.0.0 manifest an agent
 
 **Why:** The package is what a plugin manager installs into an agent harness: a manifest that breaks Agent Plugins 1.0.0 is not installed at all, and a credential pasted into it ships to every machine that installs it. Bronze is installable, silver declares the MCP server portably, and gold keeps credentials and paths inside the package. Loading it in each harness is not gated.
 
-See [Plugin standards](https://github.com/loganvolkers/toolbox/blob/main/docs/design/plugin-standards.md), [D81 plugin scorecard](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WMSMS00000000000000000.md), [Agent Plugins specification](https://github.com/agentplugins/agent-plugins-spec).
+See [Plugin standards](https://github.com/loganvolkers/toolbox/blob/main/docs/design/plugin-standards.md), [Decision: a plugin scorecard](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WMSMS00000000000000000.md), [Agent Plugins specification](https://github.com/agentplugins/agent-plugins-spec).
 
 Scorecard `maintainer-plugin` over `Plugin` entities, owned by group:maintainers. `toolbox report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`toolbox assess`).
 
@@ -646,7 +646,7 @@ The repository files that turn on GitHub Advanced Security and dependency update
 
 **Why:** Dependency updates, owned workflows and pinned code scanning are switched on by files in the checkout, so they can be scored without the GitHub API, beside the checks OpenSSF Scorecard already carries. Bronze keeps every ecosystem updated, silver puts an owner on workflow changes, and gold pins the code-scanning action like any other.
 
-See [D85 supply-chain settings](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WMSMS40000000000000000.md), [Supply-chain standards design](https://github.com/loganvolkers/toolbox/blob/main/docs/design/supply-chain-standards.md), [Carry OpenSSF Scorecard decision](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M82E93XAPNE0WFXEPJZ59WG4.md).
+See [Decision: supply-chain settings](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WMSMS40000000000000000.md), [Supply-chain standards design](https://github.com/loganvolkers/toolbox/blob/main/docs/design/supply-chain-standards.md), [Carry OpenSSF Scorecard decision](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M82E93XAPNE0WFXEPJZ59WG4.md).
 
 Scorecard `maintainer-supply-chain` over `Repository` entities, owned by group:maintainers. `toolbox report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`toolbox assess`).
 
@@ -662,7 +662,7 @@ The repository's level: the lowest level among its constituent scorecards, so on
 
 **Why:** An average hides the weakest area, which is where the trouble is, so each level requires every counted scorecard to reach it, and the lowest names the one to raise next. Runner-backed cards are left out so that a skipped tool doesn't drop the repository to none.
 
-See [D86 repository level](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WMSMS50000000000000000.md), [Repository level design](https://github.com/loganvolkers/toolbox/blob/main/docs/design/repo-level.md).
+See [Decision: the repository level](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WMSMS50000000000000000.md), [Repository level design](https://github.com/loganvolkers/toolbox/blob/main/docs/design/repo-level.md).
 
 Scorecard `maintainer-repo` over `Repository` entities, owned by group:maintainers. `toolbox report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`toolbox assess`).
 
@@ -678,7 +678,7 @@ Each JSON Schema compiled into the binary: Draft 2020-12 with an $id, titled and
 
 **Why:** These documents are the configuration and protocol contracts the binary enforces, and it compiles them as Draft 2020-12 without fetching remote references. A document that departs from that, or that nothing loads, looks like a contract but is not the one the server runs. Bronze is a valid, identifiable schema; silver ties it to the code; gold keeps it self-contained.
 
-See [Schema standards](https://github.com/loganvolkers/toolbox/blob/main/docs/design/schema-standards.md), [D77 JSON Schemas catalogued](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7W5BEAG0000000000000000.md).
+See [Schema standards](https://github.com/loganvolkers/toolbox/blob/main/docs/design/schema-standards.md), [Decision: JSON Schemas are catalogued](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7W5BEAG0000000000000000.md).
 
 Scorecard `maintainer-schema` over `JsonSchema` entities, owned by group:maintainers. `toolbox report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`toolbox assess`).
 
@@ -717,7 +717,7 @@ Each SDLC layer as a whole: every stage declared, none missing in fact, and all 
 
 **Why:** Every stage can score well while a layer still lacks one altogether, as the package author SDLC, which docs/sdlc.md calls mostly missing, does. Scoring the layer exposes the hole: bronze when every stage is declared, silver when every stage is at least designed, gold when the whole loop is built.
 
-See [The four SDLC layers](https://github.com/loganvolkers/toolbox/blob/main/docs/sdlc.md), [D87 SDLC stages catalogued](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WQBZHG0000000000000000.md).
+See [The four SDLC layers](https://github.com/loganvolkers/toolbox/blob/main/docs/sdlc.md), [Decision: SDLC stages are catalogued](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WQBZHG0000000000000000.md).
 
 Scorecard `sdlc-layer` over `SdlcLayer` entities, owned by group:maintainers. `toolbox report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`toolbox assess`).
 
@@ -733,7 +733,7 @@ Agents' judgement of each SDLC stage against sdlc-stage-quality, advisory: an op
 
 **Why:** The sdlc-stage card sees that a stage is declared and gated, not whether an agent can carry it out with released artifacts and without changing Toolbox's core; only judgement answers that. It is advisory because a review goes stale whenever the stage changes, and an open finding drops the stage to none so it is acted on, not buried.
 
-See [D79 judgement is pushed](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md), [Findings first decision](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M831P5QWJQ4A2FT85N5MXJQF.md), [assess-entity skill](https://github.com/loganvolkers/toolbox/blob/main/plugins/toolbox-operator/skills/assess-entity/SKILL.md).
+See [Decision: judgement is pushed](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md), [Findings first decision](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M831P5QWJQ4A2FT85N5MXJQF.md), [assess-entity skill](https://github.com/loganvolkers/toolbox/blob/main/plugins/toolbox-operator/skills/assess-entity/SKILL.md).
 
 Scorecard `review-sdlc-stage` over `SdlcStage` entities, owned by group:maintainers. `toolbox report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`toolbox assess`).
 
@@ -750,7 +750,7 @@ Each public docs page: titled, described, linked, reachable from the sidebar, fr
 
 **Why:** The site is what outside readers see of Toolbox, served from GitHub Pages, so an untitled page, a dead link or a leaked credential is a public defect. Bronze is a page that stands on its own; silver puts it where readers can find it; gold keeps pages distinguishable in search and navigation.
 
-See [Site standards](https://github.com/loganvolkers/toolbox/blob/main/docs/design/site-standards.md), [D91 Starlight docs site](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7X0RYD00000000000000000.md).
+See [Site standards](https://github.com/loganvolkers/toolbox/blob/main/docs/design/site-standards.md), [Decision: a Starlight docs site](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7X0RYD00000000000000000.md).
 
 Scorecard `maintainer-site` over `SitePage` entities, owned by group:maintainers. `toolbox report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`toolbox assess`).
 
@@ -769,7 +769,7 @@ Each agent skill we ship: loadable, followable, honest about its limits and free
 
 **Why:** Skills are loaded into the prompts of operators' agents: an invalid or vague one is never used, and one carrying hidden text or a credential spreads it to every install. Bronze is what a harness needs to load and route a skill, plus those two safety items; silver is what an agent needs to follow it; gold adds stated limits, eval cases and a small bundle. Whether a skill raises task success needs paired model runs and is not gated.
 
-See [Skill standards](https://github.com/loganvolkers/toolbox/blob/main/docs/design/skill-standards.md), [D72 skill scorecard](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7W3PWP00000000000000000.md), [Agent Skills specification](https://agentskills.io/specification).
+See [Skill standards](https://github.com/loganvolkers/toolbox/blob/main/docs/design/skill-standards.md), [Decision: a skill scorecard](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7W3PWP00000000000000000.md), [Agent Skills specification](https://agentskills.io/specification).
 
 Scorecard `maintainer-skill` over `Skill` entities, owned by group:maintainers. `toolbox report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`toolbox assess`).
 
@@ -795,7 +795,7 @@ What an attacker could do through a workflow: pinned actions, least- privilege t
 
 **Why:** A workflow runs with the repository's token and secrets, so a hijacked action, an injected expression or an over-broad token is a route to pushing code or stealing credentials. Bronze closes the direct routes, silver removes write access where untrusted events arrive, and gold leaves nothing zizmor flags unexplained.
 
-See [D70 GitHub Actions standards](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7VZ2DPR0000000000000000.md), [GitHub Actions standards design](https://github.com/loganvolkers/toolbox/blob/main/docs/design/github-actions-standards.md), [GitHub Actions secure use](https://docs.github.com/en/actions/reference/security/secure-use).
+See [Decision: GitHub Actions standards](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7VZ2DPR0000000000000000.md), [GitHub Actions standards design](https://github.com/loganvolkers/toolbox/blob/main/docs/design/github-actions-standards.md), [GitHub Actions secure use](https://docs.github.com/en/actions/reference/security/secure-use).
 
 Scorecard `maintainer-ci-security` over `Workflow` entities, owned by group:maintainers. `toolbox report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`toolbox assess`).
 
@@ -850,7 +850,7 @@ Each third-party action across every workflow that uses it: pinned to a commit S
 
 **Why:** A compromised action reaches every workflow that runs it, so in an incident the question is which workflows use it and at which refs. Scoring per action answers that and shows any use still unpinned; bronze is the only level because an action is either pinned everywhere or not.
 
-See [GitHub Actions standards design](https://github.com/loganvolkers/toolbox/blob/main/docs/design/github-actions-standards.md), [D70 GitHub Actions standards](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7VZ2DPR0000000000000000.md).
+See [GitHub Actions standards design](https://github.com/loganvolkers/toolbox/blob/main/docs/design/github-actions-standards.md), [Decision: GitHub Actions standards](https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7VZ2DPR0000000000000000.md).
 
 Scorecard `maintainer-action-deps` over `ActionDependency` entities, owned by group:maintainers. `toolbox report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`toolbox assess`).
 

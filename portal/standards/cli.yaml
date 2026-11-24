@@ -225,7 +225,7 @@ scorecards:
     links:
     - title: CLI skills design
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/cli-skills.md
-    - title: D94 one skill per command
+    - title: 'Decision: one skill per command'
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7X1Y5T00000000000000000.md
     owner: group:maintainers
     track: operator

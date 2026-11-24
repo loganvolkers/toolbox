@@ -694,7 +694,7 @@ scorecards:
     links:
     - title: Which parts need standards
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#4-holistic-review-which-parts-of-a-portal-need-standards
-    - title: D79 every part is scored
+    - title: 'Decision: every part is scored'
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md
     owner: group:maintainers
     track: standards
@@ -763,7 +763,7 @@ scorecards:
     links:
     - title: The rest of the model
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#5-the-rest-of-the-model-kinds-fields-connectors
-    - title: D79 every part is scored
+    - title: 'Decision: every part is scored'
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md
     owner: group:maintainers
     track: standards
@@ -840,7 +840,7 @@ scorecards:
     links:
     - title: The rest of the model
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#5-the-rest-of-the-model-kinds-fields-connectors
-    - title: D79 every part is scored
+    - title: 'Decision: every part is scored'
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md
     owner: group:maintainers
     track: standards
@@ -908,7 +908,7 @@ scorecards:
     links:
     - title: Judgement pushed by agents
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#6-judgement-pushed-by-coding-agents-d79
-    - title: D79 judgement is pushed
+    - title: 'Decision: judgement is pushed'
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md
     - title: Meta standards review
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/meta-standards-review.md
@@ -994,7 +994,7 @@ scorecards:
     links:
     - title: Judgement pushed by agents
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#6-judgement-pushed-by-coding-agents-d79
-    - title: D79 judgement is pushed
+    - title: 'Decision: judgement is pushed'
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WHQA9G0000000000000000.md
     - title: Meta standards review
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/meta-standards-review.md
@@ -1078,7 +1078,7 @@ scorecards:
     links:
     - title: Assessments and rubrics
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/scorecards-for-scorecards.md#61-assessments-and-rubrics-are-standards-too-d80
-    - title: D80 rubrics are scored
+    - title: 'Decision: rubrics are scored'
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7WJVW700000000000000000.md
     owner: group:maintainers
     track: standards

@@ -69,7 +69,7 @@ scorecards:
     links:
     - title: Site standards
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/site-standards.md
-    - title: D91 Starlight docs site
+    - title: 'Decision: a Starlight docs site'
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7X0RYD00000000000000000.md
     owner: group:maintainers
     track: docs
