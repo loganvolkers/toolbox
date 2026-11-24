@@ -9,7 +9,7 @@ description: >-
 1. Start the server on the portal directory. Without a database URL the store is in memory.
 2. Pass --fixtures to load the portal's fixtures at start.
 3. To keep it running in the background, add `--detach`: it returns once the server answers and
-   prints its URL, pid, log and approval key. `toolbox serve <portal> --stop` stops it; start it
+   prints its URL, pid, log, approval key and where run records are kept. `toolbox serve <portal> --stop` stops it; start it
    again the same way. It needs no terminal multiplexer or `nohup`.
 4. Stop the process to discard an in-memory store. Do not expect that store to survive a restart.
    Action runs do survive one: they are kept in the database, or without one under

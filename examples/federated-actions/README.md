@@ -30,7 +30,7 @@ you write.
 
    ```sh
    toolbox validate git-org
-   toolbox serve git-org --listen 127.0.0.1:7100 --detach   # returns once it answers: URL, pid, log, key
+   toolbox serve git-org --listen 127.0.0.1:7100 --detach   # returns once ready: URL, pid, log, key, run records
    toolbox serve git-org --stop                             # later: stop it (start it again the same way)
    ```
 

@@ -99,6 +99,7 @@ fn a_detached_server_answers_once_started_and_is_gone_once_stopped() {
         String::from_utf8_lossy(&started.stderr)
     );
     assert!(out.contains(&format!("http://{addr}")), "{out}");
+    assert!(out.contains("run records: "), "{out}");
     assert!(ready(&addr), "it returns only once the server answers");
     let again = toolbox(&["--listen", &addr, "--detach"]);
     assert_eq!(

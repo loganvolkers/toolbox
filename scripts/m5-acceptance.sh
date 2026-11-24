@@ -9,7 +9,7 @@ BIN=$(cd "${TOOLBOX_BIN_DIR:-target/debug}" && pwd); EX=$PWD/examples/federated-
 API=127.0.0.1:${API_PORT:-18095}; URL=http://$API
 export TOOLBOX_STATE_DIR=$WORK/state TOOLBOX_CONNECTORS_DIR=$BIN
 G=(-c user.name=acceptance -c user.email=acceptance@example.com)
-PIDS=(); cleanup() { kill "${PIDS[@]}" 2>/dev/null || true; [ -n "${KEEP:-}" ] && echo "kept $WORK" || rm -rf "$WORK"; }
+PIDS=(); cleanup() { kill "${PIDS[@]}" 2>/dev/null || true; [ -n "${DETACHED:-}" ] && "$BIN/toolbox" serve "$DETACHED" --stop >/dev/null 2>&1; [ -n "${KEEP:-}" ] && echo "kept $WORK" || rm -rf "$WORK"; }
 trap cleanup EXIT
 fail() { echo "FAIL: $*" >&2; exit 1; }
 field() { python3 -c "import json,sys; d=json.load(sys.stdin); print(eval('d'+sys.argv[1]))" "$1"; }
@@ -219,9 +219,9 @@ OUT=$(run "$WORK/gitorg" add-license --entity portal:beta -i spdx=Apache-2.0 --y
 git --git-dir "$WORK/origin-beta.git" rev-parse -q --verify "$(echo "$OUT" | field "['child']['outputs']['branch']")" >/dev/null \
   || fail "the cloned child's branch is not on beta's origin: $OUT"
 API2=127.0.0.1:$((${API_PORT:-18095} + 1)); TB2=("$BIN/toolbox" run --url "http://$API2" -o json)
-(cd "$WORK/gitorg" && exec "$BIN/toolbox" serve --listen "$API2" . >"$WORK/server3.log" 2>&1) & PIDS+=($!)
-for _ in $(seq 100); do curl -fs "http://$API2/healthz" >/dev/null 2>&1 && break; sleep 0.2; done
-KEY=$("${TB2[@]}" --as ann | field "['approval_key']")
+OUT=$("$BIN/toolbox" serve "$WORK/gitorg" --listen "$API2" --detach) || fail "serve --detach: $OUT"; DETACHED=$WORK/gitorg
+KEY=$(echo "$OUT" | sed -n 's/^approval key: \(ed25519:[0-9a-f]*\).*/\1/p')
+[ -n "$KEY" ] && [ "$KEY" = "$("${TB2[@]}" --as ann | field "['approval_key']")" ] || fail "--detach should print the key the server signs with: $OUT"
 [ "$(stat -c %a "$TOOLBOX_STATE_DIR/served/org/signing-key")" = 600 ] || fail "the kept signing key should be private"
 git -C "$WORK/review/alpha" pull -q origin main
 sed -i "s/ed25519:0\{64\}/$KEY/" "$WORK/review/alpha/.toolbox/toolbox.yaml"

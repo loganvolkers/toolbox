@@ -52,7 +52,7 @@ a list of repositories and a repo's action is its inputs, its approvers and its 
     1's toolbox-3 wrapped `--url` and `--as` in a script, and round 2's toolbox-2 wrote one to
     tell `unverified` from `succeeded`.
 11. **`toolbox serve --detach` starts a server in the background and returns once it is
-    ready** (its first snapshot is in), printing its URL, pid, log and approval key; `--stop`
+    ready** (its first snapshot is in), printing its URL, pid, log, approval key and run records directory; `--stop`
     stops it and waits. The pid and log sit in `served/<portal>/` beside the runs and the key. The
     federated-actions README lists every action and federation field in one table. Every Toolbox
     run in round 2 dumped `manifest.schema.json` with Python to find those fields, and started

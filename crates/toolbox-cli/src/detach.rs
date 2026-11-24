@@ -170,6 +170,7 @@ pub fn start(path: &Path, listen: &str, database_url: Option<String>, fixtures: 
         eprintln!("error: {}: {e}", dir.display());
         return ExitCode::from(2);
     }
+    let in_memory = database_url.is_none();
     let (mut child, since) = match spawn(path, listen, database_url, fixtures, &log_file) {
         Ok(c) => c,
         Err(e) => {
@@ -196,6 +197,9 @@ pub fn start(path: &Path, listen: &str, database_url: Option<String>, fixtures: 
             "approval key: {k} (children pin `{{portal: {}, key: {k}}}` in federation.acceptApprovalsFrom)",
             m.portal.name
         );
+    }
+    if in_memory {
+        println!("run records: {}/<run id>.json", dir.join("runs").display());
     }
     println!("stop it with: toolbox serve {} --stop", path.display());
     ExitCode::SUCCESS
