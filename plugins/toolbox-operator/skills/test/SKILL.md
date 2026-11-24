@@ -16,9 +16,9 @@ toolbox test .toolbox
 ```
 
 An action case goes under `runs:` in a file the manifest lists in `tests`. It runs the real
-preview, approvals, change and check on the base in a scratch clone whose origin is a copy of
-the base: nothing reaches the real origin and no run is recorded, so test refusals and a
-rejected push here, not against a live portal.
+preview, approvals, change and check in a scratch clone whose origin holds the base with your
+working tree on top, so you can test before you commit. Nothing reaches the real origin and no
+run is recorded, so test refusals and a rejected push here, not against a live portal.
 
 ```yaml
 name: add-security-policy

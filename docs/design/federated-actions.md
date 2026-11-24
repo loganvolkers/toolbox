@@ -313,8 +313,10 @@ the approvals that were refused, text in the error, and each file's content on t
 absent).
 
 Each case runs the same `prepare`, approval and `execute` code a served portal does, in a scratch
-clone of the repository whose origin is a scratch copy of the base (the remote's `<remote>/<base>`,
-else the local branch). Nothing reaches the real origin, no run is recorded and no audit entry is
+clone of the repository whose origin holds the base as it would be pushed: the working tree,
+uncommitted edits included, committed through a scratch index on top of the remote's
+`<remote>/<base>` (else the local branch, else nothing, in a repository with no commit yet). The
+repository's own index and refs are untouched. Nothing reaches the real origin, no run is recorded and no audit entry is
 written, so testing a refusal or a rejected push needs no live server, no throwaway runs in the
 history and no hook on the real origin. A case may test `change` and `command` actions; a child's
 action is tested in the child, and a postcondition is checked against the portal's fixtures. In

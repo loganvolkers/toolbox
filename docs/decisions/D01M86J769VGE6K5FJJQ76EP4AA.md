@@ -78,8 +78,8 @@ a list of repositories and a repo's action is its inputs, its approvers and its 
 15. **`toolbox test` runs action cases.** A test file's `runs:` requests an action as someone,
     approves it as others, optionally makes the origin reject the push, and expects a state,
     refused approvals, error text and the files on the base. Each case runs the real lifecycle
-    in a scratch clone whose origin is a scratch copy of the base, so nothing lands and nothing
-    is recorded ([federated-actions.md](../design/federated-actions.md) §6.5). In round 3 every
+    in a scratch clone whose origin holds the base with the working tree on top (what a push
+    would land, uncommitted edits included), so nothing lands and nothing is recorded ([federated-actions.md](../design/federated-actions.md) §6.5). In round 3 every
     Toolbox run rehearsed invalid inputs, self-approval, carol's approval and a rejected push
     against the live org portal and the real origins, about ten tool calls, with a hook added to
     the real origin and removed again; the vanilla arm tested the same on a scratch copy in one

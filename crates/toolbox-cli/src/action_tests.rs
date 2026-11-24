@@ -256,8 +256,8 @@ impl Observer for Fixtures<'_> {
     }
 }
 
-/// A bare origin holding only the base, as the real remote has it, and a clone of it whose remote
-/// has the executor's remote name.
+/// A bare origin holding only the base as it would be pushed, and a clone of it whose remote has
+/// the executor's remote name.
 struct Scratch {
     dir: PathBuf,
     origin: PathBuf,
@@ -276,16 +276,6 @@ impl Scratch {
             Some(b) => b.to_owned(),
             None => git(repo, &["symbolic-ref", "--short", "HEAD"]).unwrap_or("main".into()),
         };
-        let at = [format!("{remote}/{branch}"), branch.clone(), "HEAD".into()]
-            .into_iter()
-            .find_map(|r| {
-                git(
-                    repo,
-                    &["rev-parse", "-q", "--verify", &format!("{r}^{{commit}}")],
-                )
-                .ok()
-            })
-            .ok_or_else(|| format!("{} has no commit to test against", repo.display()))?;
         let dir = std::env::temp_dir().join(lifecycle::new_id("toolbox-test"));
         let s = Scratch {
             origin: dir.join("origin.git"),
@@ -294,6 +284,7 @@ impl Scratch {
             branch,
         };
         std::fs::create_dir_all(&s.dir).map_err(|e| e.to_string())?;
+        let at = working_tree(repo, remote, &s.branch, &s.dir.join("index"))?;
         let origin = s.origin.to_string_lossy().into_owned();
         git(&s.dir, &["init", "-q", "--bare", &origin])?;
         git(
@@ -338,10 +329,54 @@ impl Drop for Scratch {
     }
 }
 
+/// A commit of the repository's working tree on top of its base, so cases test what would be
+/// pushed, including uncommitted edits and a repository with no commit yet. It goes through a
+/// scratch index; the repository's own index and refs are untouched.
+fn working_tree(repo: &Path, remote: &str, branch: &str, index: &Path) -> Result<String, String> {
+    let parent = [
+        format!("{remote}/{branch}"),
+        branch.to_owned(),
+        "HEAD".into(),
+    ]
+    .into_iter()
+    .find_map(|r| {
+        git(
+            repo,
+            &["rev-parse", "-q", "--verify", &format!("{r}^{{commit}}")],
+        )
+        .ok()
+    });
+    let env = [("GIT_INDEX_FILE", index.as_os_str())];
+    if let Some(p) = &parent {
+        git_env(repo, &["read-tree", p], &env)?;
+    }
+    git_env(repo, &["add", "-A"], &env)?;
+    let tree = git_env(repo, &["write-tree"], &env)?;
+    let mut args = vec![
+        "-c",
+        "user.name=toolbox test",
+        "-c",
+        "user.email=test@toolbox.invalid",
+        "commit-tree",
+        &tree,
+        "-m",
+        "toolbox test: the working tree",
+    ];
+    if let Some(p) = &parent {
+        args.extend(["-p", p]);
+    }
+    git(repo, &args)
+}
+
 /// `git` in `dir`, its stdout as given (a file's content keeps its trailing newline).
 fn git(dir: &Path, args: &[&str]) -> Result<String, String> {
+    git_env(dir, args, &[])
+}
+
+fn git_env(dir: &Path, args: &[&str], env: &[(&str, &std::ffi::OsStr)]) -> Result<String, String> {
     let out = Command::new("git")
         .args(args)
+        .envs(env.iter().copied())
         .current_dir(dir)
         .output()
         .map_err(|e| format!("git: {e}"))?;
@@ -390,6 +425,25 @@ mod tests {
         )
         .unwrap_err();
         assert_eq!(e, "A.md is not on the base");
+    }
+
+    #[test]
+    fn the_scratch_base_is_the_working_tree_even_before_the_first_commit() {
+        let dir = std::env::temp_dir().join(lifecycle::new_id("toolbox-test-repo"));
+        std::fs::create_dir_all(&dir).unwrap();
+        let repo = dir.as_path();
+        git(repo, &["init", "-q", "-b", "main"]).unwrap();
+        std::fs::write(repo.join("README.md"), "uncommitted\n").unwrap();
+        let s = Scratch::new(repo, "origin", Some("main"), None).unwrap();
+        assert_eq!(s.file("README.md").as_deref(), Some("uncommitted\n"));
+        assert!(s.work.join("README.md").exists());
+        assert!(git(repo, &["rev-parse", "-q", "--verify", "HEAD"]).is_err());
+        assert_eq!(
+            git(repo, &["status", "--porcelain"]).unwrap(),
+            "?? README.md"
+        );
+        drop(s);
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]
