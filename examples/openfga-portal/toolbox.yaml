@@ -131,7 +131,11 @@ include:
       title: No staticcheck findings
       owner: group:openfga-maintainers
   - package: ../../packages/github-actions
-    with: {githubOrg: openfga, githubRepo: openfga, track: delivery}
+    with:
+      githubOrg: openfga
+      githubRepo: openfga
+      track: delivery
+      owner: group:openfga-maintainers
   - package: ../../packages/openssf-scorecard
     with:
       name: openfga-openssf
