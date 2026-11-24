@@ -62,6 +62,15 @@ fn included(dir: &Path, doc: &Value) -> (Vec<Value>, Vec<String>) {
     (docs, packages)
 }
 
+/// The child's `federation`, from whichever of its files declares it.
+fn federation(docs: &[Value]) -> Value {
+    docs.iter()
+        .map(|d| &d["federation"])
+        .find(|f| f.is_object())
+        .cloned()
+        .unwrap_or(Value::Null)
+}
+
 pub(crate) fn analyse(root: &Path, rel: &str) -> Value {
     let file = root.join(rel);
     let dir = file.parent().unwrap_or(root);
@@ -107,12 +116,7 @@ pub(crate) fn analyse(root: &Path, rel: &str) -> Value {
             Some(e.to_string()),
         ),
     };
-    let federation = merged
-        .iter()
-        .map(|d| &d["federation"])
-        .find(|f| f.is_object())
-        .cloned()
-        .unwrap_or(Value::Null);
+    let federation = federation(&merged);
     let all = merged.iter();
     let mut actions = Vec::new();
     let mut scorecards = Vec::new();
