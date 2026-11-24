@@ -144,6 +144,15 @@ fn principal(who: &str) -> String {
     }
 }
 
+/// The command an approver runs, in the form this portal accepts.
+fn approve_hint(m: &Manifest, id: &str) -> String {
+    if m.forges.iter().any(|f| f.identity) {
+        format!("toolbox run --identity-token-file <approver's token> --approve {id}")
+    } else {
+        format!("toolbox run --as <approver> --approve {id}")
+    }
+}
+
 /// Who is asking, as a principal. With an identity token, the forge says who; otherwise `--as`
 /// (or `$USER`) is taken on trust, unless the portal's forge says `identity: true`. A parent
 /// dispatching a child vouches for its requester with a signed grant.
@@ -566,8 +575,9 @@ fn decide(o: &Options, portal: &Path, id: &str) -> ExitCode {
     }
     if !done {
         let note = format!(
-            "needs approval by {}: toolbox run --as <approver> --approve {id}",
-            run.pending_approvers().join(", ")
+            "needs approval by {}: {}",
+            run.pending_approvers().join(", "),
+            approve_hint(&m, id)
         );
         run.set("awaiting_approval", None, Some(note));
         return finish(o, &run, 3);
@@ -761,10 +771,7 @@ fn approved(o: &Options, m: &Manifest, p: &Prepared, requested_by: &str, run: &m
     }
     let why = match refused {
         Some(e) => format!("the parent's approvals were refused: {e}"),
-        None if holds_approvals(m) => format!(
-            "approve with toolbox run --as <approver> --approve {}",
-            run.id
-        ),
+        None if holds_approvals(m) => format!("approve with {}", approve_hint(m, &run.id)),
         None => "a repo portal holds no approvals, so run it through a portal that does (its parent), or make it a `change` executor that proposes a branch so review is the approval".to_owned(),
     };
     run.set(

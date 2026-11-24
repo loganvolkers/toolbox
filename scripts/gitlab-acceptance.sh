@@ -242,6 +242,7 @@ set +e; OUT=$(run "$WORK/org" "${NOTICE[@]}" --as erin --identity-token-file "$W
 [ $CODE = 2 ] && echo "$OUT" | grep -q "user:dave" || fail "--as erin with dave's token should be refused ($CODE): $OUT"
 set +e; OUT=$(run "$WORK/org" "${NOTICE[@]}" --identity-token-file "$WORK/dave.token" --yes); CODE=$?; set -e
 [ $CODE = 3 ] && [ "$(echo "$OUT" | field "['requested_by']")" = user:dave ] || fail "dave's token should request as user:dave ($CODE): $OUT"
+echo "$OUT" | grep -q -- "--identity-token-file <approver" || fail "the waiting run should say to approve with a token, not --as: $OUT"
 RID=$(echo "$OUT" | field "['id']")
 set +e; run "$WORK/org" --approve "$RID" --as erin >/dev/null 2>&1; CODE=$?; set -e
 [ $CODE = 2 ] || fail "an approval with --as erin alone should be refused ($CODE)"
