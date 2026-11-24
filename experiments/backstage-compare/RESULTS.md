@@ -84,10 +84,10 @@ owner each.
 | `listP95Ms` | 10000 | 6.47 / 6.59 / 6.7 (5) | 58.29 / 59.06 / 305.81 (5) |
 | `listRps` | 10000 | 3718.6 / 3789.8 / 3883.8 (5) | 116.9 / 473.6 / 482.4 (5) |
 
-Every run of both arms passed the equivalence gate, with one digest per corpus size. One Backstage run at 10k
-listed at 117 req/s with a 306 ms p95; the median is unaffected. Toolbox's medians moved by no more
-than run-to-run spread from round 2, apart from the 10k get (58.6k to 56.5k req/s), which now reads
-1,000 ids instead of one.
+Every run of both arms passed the equivalence gate, with one digest per corpus size. One Backstage
+run at 10k listed at 117 req/s with a 306 ms p95; the median is unaffected. Toolbox's medians moved
+by no more than run-to-run spread from round 2, apart from the 10k get (58.6k to 56.5k req/s),
+which now reads 1,000 ids instead of one.
 
 **Rounds 1 and 2 below measured Backstage's lists on empty responses** (the filter defect above).
 Their Backstage `listP95Ms` and `listRps` rows are not comparable with round 3. Round 1's list loss
