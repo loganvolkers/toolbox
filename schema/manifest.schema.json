@@ -1313,7 +1313,9 @@
                 "in-image",
                 "change",
                 "github-workflow",
-                "gitlab-pipeline"
+                "gitlab-pipeline",
+                "http",
+                "webhook"
               ]
             },
             "command": {
@@ -1321,10 +1323,19 @@
               "items": {
                 "type": "string"
               },
-              "description": "in-image: the executor protocol v1 program."
+              "description": "in-image: the executor protocol v1 program; with package, the arguments the released binary gets."
+            },
+            "package": {
+              "type": "string",
+              "description": "in-image: a released executor, github:owner/repo[/app]@version, which toolbox install downloads and pins in toolbox.lock (D90), as it does connectors."
+            },
+            "verify": {
+              "type": "boolean",
+              "description": "in-image and http: the executor answers protocol verify with a read-back of the run's effect, which Toolbox asks for when the action declares no expect."
             },
             "url": {
-              "type": "string"
+              "type": "string",
+              "description": "http: where Toolbox POSTs each protocol message and reads the replies (NDJSON or one JSON value). webhook: where it POSTs the protocol run message, and only its status counts."
             },
             "workflow": {
               "type": "string"
@@ -1411,7 +1422,7 @@
             },
             "token": {
               "type": "string",
-              "description": "github-workflow: the environment variable holding the token (default GITHUB_TOKEN). gitlab-pipeline takes it from forges:."
+              "description": "github-workflow: the environment variable holding the token (default GITHUB_TOKEN). gitlab-pipeline takes it from forges:. http and webhook: the environment variable holding a bearer token (default: none sent)."
             }
           }
         },
@@ -1525,6 +1536,34 @@
           "required": [
             "unverified"
           ]
+        },
+        {
+          "required": [
+            "executor"
+          ],
+          "properties": {
+            "executor": {
+              "required": [
+                "type",
+                "verify"
+              ],
+              "properties": {
+                "type": {
+                  "anyOf": [
+                    {
+                      "const": "in-image"
+                    },
+                    {
+                      "const": "http"
+                    }
+                  ]
+                },
+                "verify": {
+                  "const": true
+                }
+              }
+            }
+          }
         },
         {
           "required": [

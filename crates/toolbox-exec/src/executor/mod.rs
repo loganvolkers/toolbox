@@ -8,7 +8,9 @@
 //! | `type` | Preview | Run |
 //! |---|---|---|
 //! | `command` | the same command with `TOOLBOX_PHASE=preview`, when `preview: true` | the command; its last JSON line is the outputs |
-//! | `in-image` | executor protocol v1 `preview` over stdio | protocol `run`: `accepted`, `progress`, `result` |
+//! | `in-image` | executor protocol v1 `preview` over stdio ([`protocol`]) | protocol `run`: `accepted`, `progress`, `result`; an `accepted` with an `executor_run_id` and no `result` is `dispatched` and asked after with `status` |
+//! | `http` | protocol `preview`, POSTed | as `in-image`, each message POSTed |
+//! | `webhook` | the Toolbox layer only | the protocol `run` message, POSTed; delivered is not done, so the postcondition decides |
 //! | `change` | the command in a throwaway git worktree; the effects are the files it changed, with their diffs | the same, committed and pushed to a new branch: the run is `proposed` until its commit is on the base. With `land: push`, pushed to the base once approved (never forced) and done when the base is seen to have it |
 //! | `github-workflow` | the Toolbox layer only | `workflow_dispatch`, then the run is tracked by its `run-name` ([`crate::ci`]) |
 //! | `gitlab-pipeline` | the Toolbox layer only | a pipeline with the inputs, tracked by its id ([`crate::ci`]) |
@@ -25,7 +27,8 @@
 pub mod change;
 pub mod command;
 pub mod federated;
-pub mod in_image;
+pub mod protocol;
+pub mod webhook;
 
 pub use change::{landed, merged, unchanged};
 pub use federated::{portal_repo_dir, verify_child};
@@ -122,6 +125,37 @@ pub trait Executor: std::fmt::Debug + Send + Sync + Any {
     fn reviewed(&self) -> bool {
         false
     }
+
+    /// Ask the executor to stop a run it carries, best effort. `None`: it carries none, so
+    /// cancelling only stops Toolbox; otherwise what it said, or why it could not be asked.
+    fn cancel(&self, _run: &Run, _cwd: &Path) -> Option<Result<String, String>> {
+        None
+    }
+
+    /// Ask the executor to read back the run's effect, for an action with no postcondition.
+    /// `None`: it can't; otherwise whether the effect is there, and what it observed.
+    fn verify(&self, _run: &Run, _cwd: &Path) -> Option<Result<(bool, Value), String>> {
+        None
+    }
+}
+
+/// Note something on a run's timeline without changing its state.
+pub(crate) fn note(run: &mut Run, text: impl Into<String>) {
+    run.progress.push(
+        json!({"at": toolbox_connect::hub::rfc3339(crate::run::now_secs()),
+        "note": text.into()}),
+    );
+}
+
+/// A run still waiting on its executor past the deadline is `timed_out`; `seen` is what the last
+/// look found. Returns whether it was.
+pub(crate) fn timed_out(run: &mut Run, seen: String, error: String) -> bool {
+    if !run.deadline.is_some_and(|dl| crate::run::now_secs() >= dl) {
+        return false;
+    }
+    run.set("timed_out", None, Some(seen));
+    run.error = Some(error);
+    true
 }
 
 impl dyn Executor {
@@ -145,10 +179,12 @@ type Parse = fn(&Value, &[Forge]) -> Result<Arc<dyn Executor>, String>;
 /// Every `type` a manifest may name, with its parser.
 const PARSERS: &[(&str, Parse)] = &[
     ("command", command::parse),
-    ("in-image", in_image::parse),
+    ("in-image", protocol::parse_in_image),
     ("change", change::parse),
     ("github-workflow", crate::ci::github::parse),
     ("gitlab-pipeline", crate::ci::gitlab::parse),
+    ("http", protocol::parse_http),
+    ("webhook", webhook::parse),
 ];
 
 /// Parse an action's `executor:` value, with no forges but the known hosts.

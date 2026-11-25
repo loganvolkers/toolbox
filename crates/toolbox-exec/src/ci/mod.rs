@@ -16,7 +16,7 @@
 pub mod github;
 pub mod gitlab;
 
-use crate::executor::{Context, Executor, Outcome, Preview, Rechecked};
+use crate::executor::{Context, Executor, Outcome, Preview, Rechecked, note, timed_out};
 use crate::run::{Run, now_secs};
 use serde_json::{Map, Value, json};
 use std::any::Any;
@@ -69,6 +69,9 @@ pub trait CiDriver: std::fmt::Debug + Send + Sync + Any {
     fn collect(&self, _outputs: &Value) -> Result<Option<Value>, String> {
         Ok(None)
     }
+
+    /// Cancel the run `outputs` describe, where it runs.
+    fn cancel(&self, outputs: &Value) -> Result<String, String>;
 }
 
 impl dyn CiDriver {
@@ -187,7 +190,7 @@ impl Executor for Ci {
         }
     }
 
-    fn recheck(&self, run: &mut Run, expects: bool, _: &Path) -> Rechecked {
+    fn recheck(&self, run: &mut Run, _: bool, _: &Path) -> Rechecked {
         if run.state != "dispatched" {
             return Rechecked::Verify;
         }
@@ -214,24 +217,16 @@ impl Executor for Ci {
                     return Rechecked::Done;
                 }
                 run.set("executor_succeeded", None, t.url.clone());
-                if !expects {
-                    run.set("unverified", None, None);
-                    return Rechecked::Done;
-                }
                 Rechecked::Verify
             }
             Ok(t) => {
-                if run.deadline.is_some_and(|dl| now_secs() >= dl) {
-                    run.set(
-                        "timed_out",
-                        None,
-                        Some(match t {
-                            None => format!("the dispatched {noun} never appeared"),
-                            Some(t) => format!("the {noun} was still {}", t.status),
-                        }),
-                    );
-                    run.error = Some(format!("the {noun} did not finish before the deadline"));
-                } else if let Some(t) = t.filter(|t| t.status == "waiting")
+                let seen = match &t {
+                    None => format!("the dispatched {noun} never appeared"),
+                    Some(t) => format!("the {noun} was still {}", t.status),
+                };
+                let error = format!("the {noun} did not finish before the deadline");
+                if !timed_out(run, seen, error)
+                    && let Some(t) = t.filter(|t| t.status == "waiting")
                     && let Some(what) = self.driver.waits_for()
                     && !run.progress.iter().any(|p| p["waiting"] == true)
                 {
@@ -243,11 +238,14 @@ impl Executor for Ci {
                 Rechecked::Done
             }
             Err(e) => {
-                run.progress
-                    .push(json!({"at": rfc3339(now_secs()), "note": e}));
+                note(run, e);
                 Rechecked::Done
             }
         }
+    }
+
+    fn cancel(&self, run: &Run, _: &Path) -> Option<Result<String, String>> {
+        (run.state == "dispatched").then(|| self.driver.cancel(&run.outputs))
     }
 }
 

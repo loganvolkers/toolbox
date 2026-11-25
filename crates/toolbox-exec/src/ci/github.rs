@@ -176,6 +176,24 @@ impl CiDriver for Workflow {
             )),
         }
     }
+
+    /// Cancel the run by the id the dispatch returned; a run found by name has none recorded.
+    fn cancel(&self, outputs: &Value) -> Result<String, String> {
+        let id = outputs["workflow_run_id"]
+            .as_u64()
+            .ok_or("GitHub returned no workflow run id, so cancel the run on GitHub")?;
+        let url = format!(
+            "{}/repos/{}/actions/runs/{id}/cancel",
+            self.api.trim_end_matches('/'),
+            self.repo
+        );
+        match crate::http::send(self.request(reqwest::Method::POST, url, self.token()?))? {
+            (st, _) if st.is_success() => Ok(format!("cancelled workflow run {id}")),
+            (st, text) => Err(format!(
+                "cancelling workflow run {id} answered {st}: {text}"
+            )),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -313,6 +331,27 @@ mod tests {
         let inputs: Value =
             serde_json::from_str(body["inputs"]["inputs"].as_str().unwrap()).unwrap();
         assert_eq!(inputs, json!({"env": "staging", "replicas": 2}));
+    }
+
+    #[test]
+    fn cancel_posts_to_the_recorded_run_and_refuses_without_one() {
+        let (api, seen) = fake::serve("", vec![("POST /actions/runs/42/cancel", 202, json!({}))]);
+        let w = workflow(&api);
+        assert_eq!(
+            w.driver.cancel(&json!({"workflow_run_id": 42})),
+            Ok("cancelled workflow run 42".into())
+        );
+        assert_eq!(
+            seen.lock().unwrap()[0].0,
+            "POST /repos/acme/alpha/actions/runs/42/cancel HTTP/1.1"
+        );
+        assert!(
+            w.driver
+                .cancel(&json!({}))
+                .unwrap_err()
+                .contains("on GitHub")
+        );
+        assert_eq!(seen.lock().unwrap().len(), 1);
     }
 
     #[test]
