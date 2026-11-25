@@ -205,14 +205,16 @@
 		} else if (!text) a.title = rule;
 		return a;
 	}
-	function memberLinks(ids) {
+	function memberLinks(ids, sized) {
 		var cut = ids.length > 8 ? 6 : ids.length;
-		return el("div", { className: "members" }, "In it: ", ...ids.slice(0, cut).flatMap(function(id, i) {
+		return el("div", { className: "members" }, sized ? "In it, " + sized.order + ": " : "In it: ", ...ids.slice(0, cut).flatMap(function(id, i) {
 			var name = shortId(id);
 			var twin = ids.some(function(o) {
 				return o !== id && shortId(o) === name;
 			});
-			return [i ? " " : "", el("span", { style: "white-space:nowrap" }, link("entity/" + enc(id), "", twin ? id.replace(/^[^:]*:/, "") : name), i < cut - 1 ? "," : "")];
+			var a = link("entity/" + enc(id), "", twin ? id.replace(/^[^:]*:/, "") : name);
+			if (i === 0 && sized && sized.first) return [a, " (" + sized.first + ")" + (i < cut - 1 ? "," : "")];
+			return [i ? " " : "", el("span", { style: "white-space:nowrap" }, a, i < cut - 1 ? "," : "")];
 		}), ids.length > cut ? " and " + (ids.length - cut) + " more" : null);
 	}
 	function isComparative(D, name) {
@@ -350,13 +352,22 @@
 				rules.total++;
 				k[x in k ? x : "unknown"]++;
 			});
-			var other = verdicts.other || (verdicts.other = {
-				ahead: 0,
-				parity: 0,
-				behind: 0,
-				unknown: 0
+			var both = verdicts.both || (verdicts.both = {
+				strict: {
+					ahead: 0,
+					parity: 0,
+					behind: 0,
+					unknown: 0
+				},
+				majority: {
+					ahead: 0,
+					parity: 0,
+					behind: 0,
+					unknown: 0
+				}
 			});
-			other[c.verdictRule === "majority" ? k.behind ? "behind" : k.unknown ? "unknown" : k.ahead ? "ahead" : "parity" : k.unknown ? "unknown" : k.ahead > k.behind ? "ahead" : k.behind > k.ahead ? "behind" : "parity"]++;
+			both.strict[standingBy(k, false)]++;
+			both.majority[standingBy(k, true)]++;
 		});
 		var pct = compare ? Math.round((verdicts.ahead + verdicts.parity) / rows.length * 100) : shares.length ? Math.round(shares.reduce(function(a, b) {
 			return a + b;
@@ -497,17 +508,12 @@
 			return ((D.comparisons || {})[n] || {}).verdictRule === "majority";
 		});
 	}
-	function factorRule(majority) {
-		return majority ? "a factor is ahead when more of its rules are ahead than behind, behind when more are behind, at parity when they are even" : "a factor is behind if any one of its rules is behind";
-	}
-	function ruleTag(majority) {
-		return el("span", {
-			className: "rule-tag",
-			title: "By this comparison's rule, " + factorRule(majority) + "."
-		}, majority ? "counted by the majority of rules" : "behind if any rule is behind");
+	function standingBy(k, majority) {
+		if (majority) return k.unknown ? "unknown" : k.ahead > k.behind ? "ahead" : k.behind > k.ahead ? "behind" : "parity";
+		return k.behind ? "behind" : k.unknown ? "unknown" : k.ahead ? "ahead" : "parity";
 	}
 	function factorChip(v, counts, total) {
-		if (counts.ahead && counts.behind) return v === "parity" ? "even split" : v + ", mixed";
+		if (counts.ahead && counts.behind) return v + ", mixed";
 		return v === "ahead" && counts.ahead * 2 < total ? "narrowly ahead" : null;
 	}
 	function standingPhrase(a, s, b) {
@@ -965,21 +971,51 @@
 			style: s > 70 ? "font-size:18px" : text.length > 3 ? "font-size:12px" : ""
 		}, text));
 	}
-	function otherWay(v) {
-		var o = v.other;
-		if (v.majority == null || !o || o.ahead === v.ahead && o.parity === v.parity && o.behind === v.behind) return "";
-		return " (" + (v.majority ? "behind if any rule is behind" : "by the majority of rules") + ": ahead on " + o.ahead + (o.parity ? ", at parity on " + o.parity : "") + ", behind on " + o.behind + ")";
+	function countWords(c) {
+		return [
+			"ahead on " + c.ahead,
+			c.parity ? "at parity on " + c.parity : null,
+			"behind on " + c.behind,
+			c.unknown ? "not measured on " + c.unknown : null
+		].filter(Boolean).join(", ");
 	}
+	function sameCount(a, b) {
+		return a.ahead === b.ahead && a.parity === b.parity && a.behind === b.behind && a.unknown === b.unknown;
+	}
+	var COUNTS = [{
+		key: "strict",
+		label: "Strict count",
+		def: "a factor is behind if any one of its rules is behind"
+	}, {
+		key: "majority",
+		label: "Majority count",
+		def: "a factor follows whichever side more of its rules are on"
+	}];
 	function tallyWords(v, n) {
 		if (n && v.unknown >= n) return "not measured yet: no factor has values for both products";
-		var r = v.rules;
-		var byRule = r && r.total ? "; by rule, " + r.ahead + " ahead and " + r.behind + " behind of " + r.total : "";
-		return [
-			"ahead on " + v.ahead,
-			v.parity ? "at parity on " + v.parity : null,
-			"behind on " + v.behind,
-			v.unknown ? "not measured on " + v.unknown : null
-		].filter(Boolean).join(", ") + " of " + n + " factors" + (v.majority == null ? "" : v.majority ? ", counted by the majority of rules" : ", behind if any rule is behind") + otherWay(v) + byRule;
+		var b = v.both;
+		if (!b || v.majority == null) return countWords(v) + " of " + n + " factors";
+		if (sameCount(b.strict, b.majority)) return countWords(v) + " of " + n + " factors, by either count";
+		return n + " factors. " + COUNTS.map(function(c) {
+			return c.label + (c.key === "majority" === !!v.majority ? ", this comparison's verdict" : "") + ": " + countWords(b[c.key]);
+		}).join(". ");
+	}
+	function tallyShort(v, n) {
+		if (n && v.unknown >= n) return "not measured yet";
+		var b = v.both;
+		if (!b || v.majority == null || sameCount(b.strict, b.majority)) return "ahead on " + v.ahead + " of " + n + " factors" + (b ? " by either count" : "");
+		return "ahead on " + b.strict.ahead + " (strict) or " + b.majority.ahead + " (majority) of " + n + " factors; the " + (v.majority ? "majority" : "strict") + " count is the verdict";
+	}
+	function bothCounts(v, n) {
+		var b = v.both;
+		if (!b || v.majority == null || n && v.unknown >= n) return null;
+		return el("dl", { className: "both-counts" }, ...sameCount(b.strict, b.majority) ? [el("div", { className: "mine" }, el("dt", { textContent: "Strict or majority count" }), el("dd", { textContent: countWords(v) }))] : COUNTS.map(function(c) {
+			var mine = c.key === "majority" === !!v.majority;
+			return el("div", {
+				className: mine ? "mine" : "",
+				title: "The " + c.label.toLowerCase() + ": " + c.def + "."
+			}, el("dt", {}, c.label, mine ? el("small", { textContent: " · this comparison's verdict" }) : null), el("dd", { textContent: countWords(b[c.key]) }));
+		}));
 	}
 	function shortId(id) {
 		var s = String(id || "");
@@ -1443,7 +1479,53 @@
 			};
 		});
 		if (!best || best.gain < 1) return null;
-		return el("div", { className: "sub mover" }, el("b", { textContent: "Moves the track's percentage most: " }), "lift " + plural(best.n, "entity", "entities") + " from " + levelName(best.below) + " to " + levelName(best.top) + " on ", link("scorecard/" + enc(best.r.name), "", title(D, best.r.name)), ", about " + Math.round(best.gain) + (Math.round(best.gain) === 1 ? " point." : " points."));
+		var b = best;
+		var sc = (D.scorecards || {})[b.r.name] || {};
+		var held = {};
+		var unrun = {};
+		var order = sc.levels || [];
+		Object.values((D.scores || {})[b.r.name] || {}).forEach(function(s) {
+			if (s.level !== b.below) return;
+			blockers(sc, s, b.top).forEach(function(n) {
+				held[n] = (held[n] || 0) + 1;
+			});
+			Object.keys(s.rules || {}).forEach(function(n) {
+				if (s.rules[n] === "unknown" && order.indexOf(((sc.rules || {})[n] || {}).level) <= order.indexOf(b.top)) unrun[n] = (unrun[n] || 0) + 1;
+			});
+		});
+		var waits = !Object.keys(held).length && Object.entries(unrun).sort(function(x, y) {
+			return y[1] - x[1] || x[0].localeCompare(y[0]);
+		})[0];
+		var rule = Object.entries(held).sort(function(x, y) {
+			return y[1] - x[1] || x[0].localeCompare(y[0]);
+		})[0];
+		var entities = plural(b.n, "entity", "entities") + " at " + levelName(b.below);
+		var card = link("scorecard/" + enc(b.r.name), "", title(D, b.r.name));
+		var ruleEl = rule ? [
+			link("rule/" + enc(b.r.name) + "/" + enc(rule[0]), "", ruleTitle(b.r.name, rule[0])),
+			" ",
+			basisBadge(basisOf((sc.rules || {})[rule[0]]), "tip")
+		] : [];
+		return el("div", { className: "sub mover" }, el("b", { textContent: "Or, for the biggest gain in the track's percentage: " }), ...waits ? [
+			entities + " on ",
+			card,
+			" fail nothing for " + levelName(b.top) + ", but its check ",
+			link("rule/" + enc(b.r.name) + "/" + enc(waits[0]), "", ruleTitle(b.r.name, waits[0])),
+			" was not run in this build"
+		] : rule && rule[1] === b.n ? [
+			entities + (b.n === 1 ? " needs " : " need "),
+			...ruleEl,
+			" to reach " + levelName(b.top) + " on ",
+			card
+		] : [
+			"lift " + entities + " to " + levelName(b.top) + " on ",
+			card,
+			...rule ? [
+				"; " + rule[1] + (rule[1] === 1 ? " needs " : " need "),
+				...ruleEl,
+				" first"
+			] : []
+		], (waits ? "; if it passes, the track gains about " : ", about ") + Math.round(b.gain) + (Math.round(b.gain) === 1 ? " point." : " points."));
 	}
 	function ownerName(o) {
 		return String(o || "").replace(/^(group|user):/, "");
@@ -1608,9 +1690,12 @@
 			return !r.compare && provisionalOf(D, r.name);
 		});
 		var used = /* @__PURE__ */ new Set();
+		var own = {};
 		(rows || []).forEach(function(r) {
 			if (!r.compare) ((r.sc || {}).levels || []).forEach(function(l) {
-				used.add(known(l) || "gold");
+				var metal = known(l) || "gold";
+				used.add(metal);
+				if (known(l) && l !== metal && (own[metal] || (own[metal] = [])).indexOf(l) < 0) own[metal].push(l);
 			});
 		});
 		return el("div", {
@@ -1624,10 +1709,13 @@
 		].filter(function(l) {
 			return l === "none" || !used.size || used.has(l);
 		}).map(function(l) {
+			var names = (own[l] || []).sort();
 			return el("span", {}, el("span", {
 				className: "dot",
 				style: "background:" + fill(l)
-			}), l);
+			}), l + (names.length ? ", or a scorecard's own level ranked as " + l + ": " + names.map(function(n) {
+				return "“" + n + "”";
+			}).join(", ") : ""));
 		}), hollow ? el("span", {}, el("span", {
 			className: "dot hatch",
 			style: "--seg:" + fill("bronze")
@@ -2201,7 +2289,7 @@
 		".rank.more{mask-image:linear-gradient(to bottom,#000 calc(100% - 14px),transparent)}.rank.less{mask-image:linear-gradient(to bottom,transparent,#000 14px)}.rank.less.more{mask-image:linear-gradient(to bottom,transparent,#000 14px,#000 calc(100% - 14px),transparent)}",
 		".rank a{display:flex;justify-content:space-between;gap:12px;align-items:baseline;padding:8px 10px;border-radius:8px;color:var(--fg);text-decoration:none}",
 		".rank a:hover{background:var(--tint)}",
-		".rank-head{font-size:12px;font-weight:650;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:10px 10px 4px}",
+		".rank-head{font-size:12px;font-weight:650;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:10px 10px 4px}.rank .rank-head a{display:inline-flex;align-items:center;min-height:24px;padding:0 2px;color:var(--accent);text-decoration:underline;text-transform:none;letter-spacing:0}",
 		".rank a[aria-current=true]{background:var(--accent-bg);font-weight:650}",
 		".rank .debt{font-size:12px;color:var(--muted);white-space:nowrap}",
 		".rank .debt.bad{color:var(--fail);font-weight:650}.rank .debt.ok{color:var(--pass)}",
@@ -2278,7 +2366,7 @@
 		".flag{position:absolute;top:-10px;right:14px;font-size:12px;font-weight:700;padding:1px 9px;border-radius:999px;background:var(--fail);color:var(--card)}",
 		".chips{display:flex;flex-wrap:wrap;gap:4px}",
 		".chips .standing{font-size:12px}",
-		".rule-tag{display:inline-block;font-size:12px;line-height:1.5;border:1px dashed var(--line);border-radius:999px;padding:0 8px;color:var(--muted);margin:2px 0}",
+		".both-counts{margin:6px 0;display:grid;gap:2px;font-size:13px}.both-counts>div{display:flex;flex-wrap:wrap;gap:0 6px;color:var(--muted)}.both-counts dt{font-weight:650}.both-counts dt::after{content:\":\"}.both-counts dd{margin:0}.both-counts .mine{color:var(--fg)}.both-counts small{font-weight:400;color:var(--muted)}",
 		".kgroup{margin-top:16px}",
 		".kgroup:first-of-type{margin-top:4px}",
 		".kgh{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline}",
@@ -3810,7 +3898,7 @@
 			if (slots) kids.push(slots);
 			if (slots && t.capped.length) kids.push(el("div", { className: "capnote tcap" }, lockIcon(), " " + ringWhy(D, t)));
 			if (slots && t.short.length) kids.push(el("div", { className: "capnote tcap" }, lockIcon(), " " + shortWhy(D, t) + "."));
-			if (t.compare) kids.push(el("div", { className: "chips" }, ...[
+			if (t.compare) kids.push(bothCounts(t.verdicts, t.rows.length) || el("div", { className: "chips" }, ...[
 				"ahead",
 				"parity",
 				"behind",
@@ -3819,7 +3907,7 @@
 				return t.verdicts[v];
 			}).map(function(v) {
 				return standingChip(v, t.verdicts[v] + " " + v);
-			}), ruleTag(t.majority)));
+			})));
 			else if (t.cards.length) {
 				var shelf = {};
 				var shelfTop = {};
@@ -3926,7 +4014,7 @@
 			var color = trackColor(t);
 			var owner = def.owner ? def.owner.replace(/^group:/, "") : "";
 			var weakest = t.cards[0];
-			var goal = t.compare ? el("p", {}, el("b", { textContent: tallyWords(t.verdicts, t.rows.length).replace(/^a/, "A") + ". " }), link("compare", "", "Open the comparison →")) : el("p", {}, el("b", { textContent: "Goal: every entity at the top level of each scorecard below. " }), t.pct == null ? "Nothing is scored yet." : "On average " + t.pct + "% are there" + (t.none ? "; " + plural(t.none, "entity is", "entities are") + " still at none" : "") + "." + (t.capped.length ? " " + ringWhy(D, t) + "." : "") + (t.short.length ? " " + shortWhy(D, t) + "." : ""), weakest && weakest.floor ? el("span", {}, " The weakest scorecard is ", link("scorecard/" + enc(weakest.row.name), "", title(D, weakest.row.name)), ", at ", badge(weakest.floor), capsRepo(D, weakest.row.name, weakest.floor) ? ", its only top level, so it caps the repository there until it gains a higher one." : isTop(D, weakest.row.name, weakest.floor) ? ", already its top level." : ".") : null);
+			var goal = t.compare ? el("div", {}, el("p", {}, el("b", { textContent: tallyShort(t.verdicts, t.rows.length).replace(/^a/, "A") + ". " }), link("compare", "", "Open the comparison →")), bothCounts(t.verdicts, t.rows.length)) : el("p", {}, el("b", { textContent: "Goal: every entity at the top level of each scorecard below. " }), t.pct == null ? "Nothing is scored yet." : "On average " + t.pct + "% are there" + (t.none ? "; " + plural(t.none, "entity is", "entities are") + " still at none" : "") + "." + (t.capped.length ? " " + ringWhy(D, t) + "." : "") + (t.short.length ? " " + shortWhy(D, t) + "." : ""), weakest && weakest.floor ? el("span", {}, " The weakest scorecard is ", link("scorecard/" + enc(weakest.row.name), "", title(D, weakest.row.name)), ", at ", badge(weakest.floor), capsRepo(D, weakest.row.name, weakest.floor) ? ", its only top level, so it caps the repository there until it gains a higher one." : isTop(D, weakest.row.name, weakest.floor) ? ", already its top level." : ".") : null);
 			var trackNext = t.compare ? null : nextMedalEl(D, t.cards);
 			var section = el("section", {}, el("nav", {
 				className: "crumb",
@@ -3991,7 +4079,7 @@
 					color: trackColor(o),
 					label: standing,
 					bare: true
-				}), el("span", {}, el("span", { textContent: o.def.title || o.name }), lead ? el("small", { textContent: (o.compare ? standing : o.pct == null ? "not scored" : o.pct + "%") + (flag ? " · furthest from goal" : "") }) : el("span", {
+				}), el("span", {}, el("span", { textContent: o.def.title || o.name }), lead ? el("small", { textContent: (o.compare ? tallyShort(o.verdicts, o.rows.length) : o.pct == null ? "not scored" : o.pct + "%") + (flag ? " · furthest from goal" : "") }) : el("span", {
 					className: "sr",
 					textContent: ": " + standing
 				}))]);
@@ -4196,6 +4284,17 @@
 		}), picker), el("div", { className: "ehead" }, el("div", {}, el("h2", { textContent: c.title || selected }), el("div", { className: "sub" }, c.status || "", track ? el("span", {}, " · track ", link(trackPath(D, c.track), "", track)) : null, c.owner ? " · owned by " + c.owner.replace(/^group:/, "") : null)), goalBar(state, pct, target, true, includeProgress(D, c))), c.description ? el("p", { className: "lede" }, ...rich(c.description)) : null, state === "empty" ? null : el("p", { style: "margin:8px 0 6px" }, el("b", { textContent: (c.meeting || 0) + " of " + (c.inScope || 0) }), " entities meet the goal · target " + target + "%" + (c.end ? " by " + c.end : "") + (days != null && days >= 0 ? " (" + plural(days, "day") + " left)" : "") + ". The bar turns green once it passes the target tick."), state === "empty" ? null : sinceLine(c), state === "empty" ? null : bar, state === "empty" ? null : marks, el("h3", { textContent: "Goal" }), includes, el("h3", { textContent: state === "empty" ? "Progress" : "Not meeting yet" + (gaps.length ? " (" + gaps.length + ")" : "") + (Object.keys(size).length ? ", furthest first" : "") }), gapList));
 	} };
 	// src/views/catalog.ts
+	function worstEvidence(D, cols, id) {
+		for (var c of cols) {
+			var s = ((D.scores || {})[c] || {})[id];
+			if (!s) continue;
+			for (var rule of Object.keys(s.rules || {})) {
+				var ev = (s.evidence || {})[rule];
+				if (isFailing(s.rules[rule]) && typeof (s.measures || {})[rule] === "number" && ev) return String(Array.isArray(ev) ? ev[0] : ev).split("\n")[0];
+			}
+		}
+		return "";
+	}
 	var catalogViews = {
 		catalog(D, S, kind, query) {
 			query = query || {};
@@ -4293,8 +4392,8 @@
 			if (!selected) return top;
 			var search = el("input", {
 				type: "search",
-				placeholder: "Filter " + selected + " by name…",
-				ariaLabel: "Filter entities",
+				placeholder: "Filter by name…",
+				ariaLabel: "Filter " + kindTitle(D, selected) + " entities by name",
 				value: query.q || ""
 			});
 			var list = el("div");
@@ -4415,6 +4514,22 @@
 					var members = built.filter(function(x) {
 						return x.sig === b.sig;
 					});
+					var off = function(id) {
+						return cols.reduce(function(n, c) {
+							var s = ((D.scores || {})[c] || {})[id];
+							return n + Object.keys(s && s.rules || {}).reduce(function(m, rule) {
+								var v = (s.measures || {})[rule];
+								return m + (isFailing(s.rules[rule]) && typeof v === "number" ? v : 0);
+							}, 0);
+						}, 0);
+					};
+					var sized = members.some(function(x) {
+						return off(x.id) > 0;
+					});
+					if (sized) members.sort(function(x, y) {
+						return off(y.id) - off(x.id);
+					});
+					var worst = sized ? worstEvidence(D, cols, members[0].id) : "";
 					var sum = el("summary", {
 						className: "erow cols",
 						style: "grid-template-columns:" + tpl
@@ -4430,7 +4545,10 @@
 							return x.r;
 						}))), memberLinks(members.map(function(x) {
 							return x.id;
-						}))],
+						}), sized ? {
+							order: "furthest off first",
+							first: worst
+						} : void 0)],
 						n: members.length
 					});
 				});
@@ -4853,12 +4971,6 @@
 		var all = tally.pass + tally.waived + tally.fail + tally.unknown;
 		var parts = [
 			{
-				k: "pass",
-				n: tally.pass + tally.waived,
-				c: def.level ? fill(def.level) : "var(--pass)",
-				t: def.level ? "pass, toward " + def.level : "pass"
-			},
-			{
 				k: "fail",
 				n: tally.fail,
 				c: "var(--fail)",
@@ -4869,6 +4981,12 @@
 				n: tally.unknown,
 				c: UNRUN,
 				t: "not run in this build"
+			},
+			{
+				k: "pass",
+				n: tally.pass + tally.waived,
+				c: def.level ? fill(def.level) : "var(--pass)",
+				t: def.level ? "pass, toward " + def.level : "pass"
 			}
 		].filter(function(p) {
 			return p.n;
@@ -5145,11 +5263,19 @@
 			});
 			var unmeasured = counts.unknown >= names.length;
 			var majority = byMajority(D, names);
-			var other = {
-				ahead: 0,
-				parity: 0,
-				behind: 0,
-				unknown: 0
+			var both = {
+				strict: {
+					ahead: 0,
+					parity: 0,
+					behind: 0,
+					unknown: 0
+				},
+				majority: {
+					ahead: 0,
+					parity: 0,
+					behind: 0,
+					unknown: 0
+				}
 			};
 			names.forEach(function(n) {
 				var rs = all[n].rules || {};
@@ -5163,17 +5289,10 @@
 					var v = (rs[r] || {})[peer];
 					k[v in k ? v : "unknown"]++;
 				});
-				var s = majority ? k.behind ? "behind" : k.unknown ? "unknown" : k.ahead ? "ahead" : "parity" : k.unknown ? "unknown" : k.ahead > k.behind ? "ahead" : k.behind > k.ahead ? "behind" : "parity";
-				other[s]++;
+				both.strict[standingBy(k, false)]++;
+				both.majority[standingBy(k, true)]++;
 			});
-			var otherDiffers = [
-				"ahead",
-				"parity",
-				"behind"
-			].some(function(s) {
-				return other[s] !== counts[s];
-			});
-			var headline = unmeasured ? "Not measured yet: none of the " + plural(names.length, "factor") + " has values for both products." : "Ahead on " + counts.ahead + " of " + plural(names.length, "factor") + (counts.behind ? ", behind on " + counts.behind : "") + (counts.parity ? ", at parity on " + counts.parity : "") + (counts.unknown ? ", " + counts.unknown + " not measured" : "") + (majority ? ", each by the majority of its rules." : ", where a factor is behind if any of its rules is.");
+			var headline = unmeasured ? "Not measured yet: none of the " + plural(names.length, "factor") + " has values for both products." : "Ahead on " + counts.ahead + " of " + plural(names.length, "factor") + (counts.behind ? ", behind on " + counts.behind : "") + (counts.parity ? ", at parity on " + counts.parity : "") + (counts.unknown ? ", " + counts.unknown + " not measured" : "") + (majority ? " by the majority count." : " by the strict count.");
 			var lean = counts.behind > counts.ahead ? "behind" : counts.ahead > counts.behind ? "ahead" : "parity";
 			var hero = el("section", { className: "cmp-hero" }, el("div", { className: "cmp-main" }, el("div", {
 				className: "kicker",
@@ -5202,29 +5321,16 @@
 			}), " · ", el("b", {
 				className: "behind",
 				textContent: ruleCounts.behind + " behind"
-			}), ". By this comparison's rule, " + factorRule(majority) + (names.some(function(n) {
-				var rs = Object.keys(all[n].rules || {}).map(function(r) {
-					return (all[n].rules[r] || {})[peer];
-				});
-				return rs.indexOf("ahead") >= 0 && rs.indexOf("behind") >= 0;
-			}) ? ", so a factor marked “mixed” is ahead on some of its rules and behind on others" : "") + ". ", el("b", {
-				className: "other-rule",
-				textContent: "Counted the other way, where " + factorRule(!majority) + (otherDiffers ? ", it would be " + andList([
-					"ahead",
-					"behind",
-					"parity"
-				].filter(function(s) {
-					return other[s] || s === "ahead";
-				}).map(function(s) {
-					return (s === "parity" ? "at parity on " : s + " on ") + other[s];
-				})) + ". " : ", the factor tally is the same. ")
-			}), "Factors are not weighted, so the factor count is a tally, not an overall score."), el("details", {
+			}), ". Factors are not weighted, so the factor count is a tally, not an overall score."), el("details", {
 				className: "sub cmp-def cmp-brief",
 				style: "margin:6px 0 0"
 			}, el("summary", { textContent: "How a factor and a rule are counted" }), "A factor is a scorecard that scores both products on the same rules. On a rule, a product is ahead when its measured value is better (within the rule's tolerance is parity) or it passes a bar the other misses. " + who(subject) + (majority ? " is ahead on a factor when it is ahead on more of its rules than it is behind on, behind when it is behind on more, and at parity when they are even; a factor with any unmeasured rule is not measured. “Mixed” means ahead on some rules and behind on others; “narrowly ahead” means ahead on fewer than half of that factor's rules, at parity on the rest." : " is behind on a factor if it is behind on any one of its rules, and ahead if it is ahead on some and behind on none; “narrowly ahead” means ahead on fewer than half of that factor's rules, at parity on the rest."))), el("div", { className: "cmp-side" }, el("div", {
 				className: "kicker",
 				textContent: "Factors"
-			}), ruleTag(majority), el("div", { className: "tally3" }, ...[
+			}), bothCounts(Object.assign({}, counts, {
+				both,
+				majority
+			}), names.length), el("div", { className: "tally3" }, ...[
 				"ahead",
 				"parity",
 				"behind"

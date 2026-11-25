@@ -90,10 +90,14 @@ export function levelLegend(D: ReportData, rows) {
   });
   // Only the levels some scorecard here defines, so a portal that stops at bronze shows no silver or gold.
   var used = new Set();
+  // A scorecard's own level names ("within-limit", "ten") take the colour of the metal they rank as.
+  var own: Record<string, string[]> = {};
   (rows || []).forEach(function (r) {
     if (!r.compare)
       ((r.sc || {}).levels || []).forEach(function (l) {
-        used.add(known(l) || "gold");
+        var metal = known(l) || "gold";
+        used.add(metal);
+        if (known(l) && l !== metal && (own[metal] || (own[metal] = [])).indexOf(l) < 0) own[metal].push(l);
       });
   });
   return el(
@@ -104,7 +108,10 @@ export function levelLegend(D: ReportData, rows) {
         return l === "none" || !used.size || used.has(l);
       })
       .map(function (l) {
-        return el("span", {}, el("span", { className: "dot", style: "background:" + fill(l) }), l);
+        var names = (own[l] || []).sort();
+        return el("span", {}, el("span", { className: "dot", style: "background:" + fill(l) }), l + (names.length ? ", or a scorecard's own level ranked as " + l + ": " + names.map(function (n) {
+          return "“" + n + "”";
+        }).join(", ") : ""));
       }),
     hollow ? el("span", {}, el("span", { className: "dot hatch", style: "--seg:" + fill("bronze") }), "hatched, on a bar or a pill: not assessed by an agent yet") : null,
     unrun ? el("span", {}, el("span", { className: "dot dots", style: "--seg:" + fill("silver") }), "◌ dotted, or on a pill: provisional, checks not run in this build") : null,

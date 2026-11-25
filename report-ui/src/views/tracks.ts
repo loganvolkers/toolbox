@@ -7,12 +7,12 @@ import { lockIcon, refs } from "../lib/basis";
 import { levelName, nextMedal, nextMedalEl } from "../lib/campaigns";
 import { el, enc, link } from "../lib/dom";
 import { LEVEL_DEF, ONLY_LEVEL } from "../lib/levels";
-import { capsRepo, isTop, ring, tallyRing, tallyWords, title } from "../lib/rings";
+import { bothCounts, capsRepo, isTop, ring, tallyRing, tallyShort, tallyWords, title } from "../lib/rings";
 import { trackPath } from "../lib/routes";
 import { LADDER, rankLevel } from "../lib/rules";
 import { ringWhy, ringWords, shortWhy, trackSlots } from "../lib/status";
 import { prose, rich } from "../lib/text";
-import { furthestTrack, ruleTag, standingChip, trackColor, trackKey, trackStats, tracksSorted } from "../lib/tracks";
+import { furthestTrack, standingChip, trackColor, trackKey, trackStats, tracksSorted } from "../lib/tracks";
 import { firstSentence, plural } from "../lib/words";
 
 // The ring is a share at the top level; entities still at none are the other half of the story.
@@ -43,18 +43,18 @@ export const tracksViews = {
     if (slots && t.short.length) kids.push(el("div", { className: "capnote tcap" }, lockIcon(), " " + shortWhy(D, t) + "."));
     if (t.compare) {
       kids.push(
-        el(
-          "div",
-          { className: "chips" },
-          ...["ahead", "parity", "behind", "unknown"]
-            .filter(function (v) {
-              return t.verdicts[v];
-            })
-            .map(function (v) {
-              return standingChip(v, t.verdicts[v] + " " + v);
-            }),
-          ruleTag(t.majority),
-        ),
+        bothCounts(t.verdicts, t.rows.length) ||
+          el(
+            "div",
+            { className: "chips" },
+            ...["ahead", "parity", "behind", "unknown"]
+              .filter(function (v) {
+                return t.verdicts[v];
+              })
+              .map(function (v) {
+                return standingChip(v, t.verdicts[v] + " " + v);
+              }),
+          ),
       );
     } else if (t.cards.length) {
       var shelf = {};
@@ -197,7 +197,7 @@ export const tracksViews = {
     var owner = def.owner ? def.owner.replace(/^group:/, "") : "";
     var weakest = t.cards[0];
     var goal = t.compare
-      ? el("p", {}, el("b", { textContent: tallyWords(t.verdicts, t.rows.length).replace(/^a/, "A") + ". " }), link("compare", "", "Open the comparison →"))
+      ? el("div", {}, el("p", {}, el("b", { textContent: tallyShort(t.verdicts, t.rows.length).replace(/^a/, "A") + ". " }), link("compare", "", "Open the comparison →")), bothCounts(t.verdicts, t.rows.length))
       : el(
           "p",
           {},
@@ -276,7 +276,7 @@ export const tracksViews = {
         var flag = lead && o.name === furthest;
         var a = link(trackPath(D, o.name), flag ? "far" : "", [
           o.compare ? tallyRing(o.verdicts, o.rows.length, 30, true) : ring(o.pct, { size: 30, color: trackColor(o), label: standing, bare: true }),
-          el("span", {}, el("span", { textContent: o.def.title || o.name }), lead ? el("small", { textContent: (o.compare ? standing : o.pct == null ? "not scored" : o.pct + "%") + (flag ? " · furthest from goal" : "") }) : el("span", { className: "sr", textContent: ": " + standing })),
+          el("span", {}, el("span", { textContent: o.def.title || o.name }), lead ? el("small", { textContent: (o.compare ? tallyShort(o.verdicts, o.rows.length) : o.pct == null ? "not scored" : o.pct + "%") + (flag ? " · furthest from goal" : "") }) : el("span", { className: "sr", textContent: ": " + standing })),
         ]);
         a.title = standing + (o.capped && o.capped.length ? ". " + ringWhy(D, o) : "");
         return a;

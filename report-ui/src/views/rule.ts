@@ -42,10 +42,11 @@ export const ruleViews = {
       return scores[id].rules[ruleName] === "fail";
     });
     var all = tally.pass + tally.waived + tally.fail + tally.unknown;
+    // Worst on the left, as on every level bar.
     var parts = [
-      { k: "pass", n: tally.pass + tally.waived, c: def.level ? fill(def.level) : "var(--pass)", t: def.level ? "pass, toward " + def.level : "pass" },
       { k: "fail", n: tally.fail, c: "var(--fail)", t: "fail" },
       { k: "unknown", n: tally.unknown, c: UNRUN, t: "not run in this build" },
+      { k: "pass", n: tally.pass + tally.waived, c: def.level ? fill(def.level) : "var(--pass)", t: def.level ? "pass, toward " + def.level : "pass" },
     ].filter(function (p) {
       return p.n;
     });

@@ -10,11 +10,25 @@ import { kindCount, kindDescription, kindGroupsOf, kindTitle, scorecardSplit } f
 import { fill, ownLevel } from "../lib/levels";
 import { shortId, title } from "../lib/rings";
 import { memberLinks } from "../lib/rules";
+import { isFailing } from "../lib/status";
 import { template } from "../lib/styles";
 import { scoredKinds } from "../lib/summary";
 import { rich } from "../lib/text";
 import { unassessedIn } from "../lib/tracks";
 import { firstSentence, fmt, plural, unscoredWhy } from "../lib/words";
+
+// What sizes an entity's failure: the first line of evidence on its first failing measured rule.
+function worstEvidence(D: ReportData, cols: string[], id: string) {
+  for (var c of cols) {
+    var s = ((D.scores || {})[c] || {})[id];
+    if (!s) continue;
+    for (var rule of Object.keys(s.rules || {})) {
+      var ev = (s.evidence || {})[rule];
+      if (isFailing(s.rules[rule]) && typeof (s.measures || {})[rule] === "number" && ev) return String(Array.isArray(ev) ? ev[0] : ev).split("\n")[0];
+    }
+  }
+  return "";
+}
 
 export const catalogViews = {
   catalog(D: ReportData, S: Summary, kind, query) {
@@ -99,7 +113,7 @@ export const catalogViews = {
       grid,
     );
     if (!selected) return top;
-    var search = el("input", { type: "search", placeholder: "Filter " + selected + " by name…", ariaLabel: "Filter entities", value: query.q || "" });
+    var search = el("input", { type: "search", placeholder: "Filter by name…", ariaLabel: "Filter " + kindTitle(D, selected) + " entities by name", value: query.q || "" });
     var list = el("div");
     var limit = 60;
     var drawList = function () {
@@ -217,6 +231,24 @@ export const catalogViews = {
         var members = built.filter(function (x) {
           return x.sig === b.sig;
         });
+        // A group that fails a measured rule (lines over a limit, findings) lists its furthest-off member first.
+        var off = function (id) {
+          return cols.reduce(function (n, c) {
+            var s = ((D.scores || {})[c] || {})[id];
+            return n + Object.keys((s && s.rules) || {}).reduce(function (m, rule) {
+              var v = (s!.measures || {})[rule];
+              return m + (isFailing(s!.rules[rule]) && typeof v === "number" ? v : 0);
+            }, 0);
+          }, 0);
+        };
+        var sized = members.some(function (x) {
+          return off(x.id) > 0;
+        });
+        if (sized)
+          members.sort(function (x, y) {
+            return off(y.id) - off(x.id);
+          });
+        var worst = sized ? worstEvidence(D, cols, members[0].id) : "";
         var sum = el(
           "summary",
           { className: "erow cols", style: "grid-template-columns:" + tpl },
@@ -232,7 +264,7 @@ export const catalogViews = {
             }))),
             memberLinks(members.map(function (x) {
               return x.id;
-            })),
+            }), sized ? { order: "furthest off first", first: worst } : undefined),
           ],
           n: members.length,
         });

@@ -90,19 +90,54 @@ export function tallyRing(v, n, size, bare?) {
   );
 }
 
-// The same factors under the other counting rule, so two portals that count differently still compare.
-function otherWay(v) {
-  var o = v.other;
-  if (v.majority == null || !o || (o.ahead === v.ahead && o.parity === v.parity && o.behind === v.behind)) return "";
-  return " (" + (v.majority ? "behind if any rule is behind" : "by the majority of rules") + ": ahead on " + o.ahead + (o.parity ? ", at parity on " + o.parity : "") + ", behind on " + o.behind + ")";
+function countWords(c) {
+  return ["ahead on " + c.ahead, c.parity ? "at parity on " + c.parity : null, "behind on " + c.behind, c.unknown ? "not measured on " + c.unknown : null].filter(Boolean).join(", ");
 }
+
+function sameCount(a, b) {
+  return a.ahead === b.ahead && a.parity === b.parity && a.behind === b.behind && a.unknown === b.unknown;
+}
+
+// Both counting rules, always strict first and majority second, so two portals that declare
+// different rules still show the same two numbers in the same place (D01M87WF2QZVPTD8CGDZKY133CD).
+export var COUNTS = [
+  { key: "strict", label: "Strict count", def: "a factor is behind if any one of its rules is behind" },
+  { key: "majority", label: "Majority count", def: "a factor follows whichever side more of its rules are on" },
+] as const;
 
 export function tallyWords(v, n) {
   if (n && v.unknown >= n) return "not measured yet: no factor has values for both products";
-  var r = v.rules;
-  // A factor is behind if any one rule is, so the rule split keeps the factor count from reading harsher than it is.
-  var byRule = r && r.total ? "; by rule, " + r.ahead + " ahead and " + r.behind + " behind of " + r.total : "";
-  return ["ahead on " + v.ahead, v.parity ? "at parity on " + v.parity : null, "behind on " + v.behind, v.unknown ? "not measured on " + v.unknown : null].filter(Boolean).join(", ") + " of " + n + " factors" + (v.majority == null ? "" : v.majority ? ", counted by the majority of rules" : ", behind if any rule is behind") + otherWay(v) + byRule;
+  var b = v.both;
+  if (!b || v.majority == null) return countWords(v) + " of " + n + " factors";
+  if (sameCount(b.strict, b.majority)) return countWords(v) + " of " + n + " factors, by either count";
+  return n + " factors. " + COUNTS.map(function (c) {
+    return c.label + ((c.key === "majority") === !!v.majority ? ", this comparison's verdict" : "") + ": " + countWords(b[c.key]);
+  }).join(". ");
+}
+
+// The factor count in a few words, for strips and cards.
+export function tallyShort(v, n) {
+  if (n && v.unknown >= n) return "not measured yet";
+  var b = v.both;
+  if (!b || v.majority == null || sameCount(b.strict, b.majority)) return "ahead on " + v.ahead + " of " + n + " factors" + (b ? " by either count" : "");
+  return "ahead on " + b.strict.ahead + " (strict) or " + b.majority.ahead + " (majority) of " + n + " factors; the " + (v.majority ? "majority" : "strict") + " count is the verdict";
+}
+
+// The two counts as a small table, the comparison's own rule marked.
+export function bothCounts(v, n) {
+  var b = v.both;
+  if (!b || v.majority == null || (n && v.unknown >= n)) return null;
+  var same = sameCount(b.strict, b.majority);
+  return el(
+    "dl",
+    { className: "both-counts" },
+    ...(same
+      ? [el("div", { className: "mine" }, el("dt", { textContent: "Strict or majority count" }), el("dd", { textContent: countWords(v) }))]
+      : COUNTS.map(function (c) {
+          var mine = (c.key === "majority") === !!v.majority;
+          return el("div", { className: mine ? "mine" : "", title: "The " + c.label.toLowerCase() + ": " + c.def + "." }, el("dt", {}, c.label, mine ? el("small", { textContent: " · this comparison's verdict" }) : null), el("dd", { textContent: countWords(b[c.key]) }));
+        })),
+  );
 }
 
 export function shortId(id) {

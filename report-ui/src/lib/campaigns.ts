@@ -98,13 +98,39 @@ function ringMoverEl(D: ReportData, cards) {
     if (gain > (best ? best.gain : 0)) best = { r: r, n: n, below: below, top: lv[lv.length - 1], gain: gain };
   });
   if (!best || best.gain < 1) return null;
+  var b = best;
+  var sc = (D.scorecards || {})[b.r.name] || {};
+  var held: Record<string, number> = {};
+  var unrun: Record<string, number> = {};
+  var order = sc.levels || [];
+  Object.values((D.scores || {})[b.r.name] || {}).forEach(function (s) {
+    if (s.level !== b.below) return;
+    blockers(sc, s, b.top).forEach(function (n) {
+      held[n] = (held[n] || 0) + 1;
+    });
+    Object.keys(s.rules || {}).forEach(function (n) {
+      if (s.rules[n] === "unknown" && order.indexOf(((sc.rules || {})[n] || {}).level) <= order.indexOf(b.top)) unrun[n] = (unrun[n] || 0) + 1;
+    });
+  });
+  var waits = !Object.keys(held).length && Object.entries(unrun).sort(function (x, y) {
+    return y[1] - x[1] || x[0].localeCompare(y[0]);
+  })[0];
+  var rule = Object.entries(held).sort(function (x, y) {
+    return y[1] - x[1] || x[0].localeCompare(y[0]);
+  })[0];
+  var entities = plural(b.n, "entity", "entities") + " at " + levelName(b.below);
+  var card = link("scorecard/" + enc(b.r.name), "", title(D, b.r.name));
+  var ruleEl = rule ? [link("rule/" + enc(b.r.name) + "/" + enc(rule[0]), "", ruleTitle(b.r.name, rule[0])), " ", basisBadge(basisOf((sc.rules || {})[rule[0]]), "tip")] : [];
   return el(
     "div",
     { className: "sub mover" },
-    el("b", { textContent: "Moves the track's percentage most: " }),
-    "lift " + plural(best.n, "entity", "entities") + " from " + levelName(best.below) + " to " + levelName(best.top) + " on ",
-    link("scorecard/" + enc(best.r.name), "", title(D, best.r.name)),
-    ", about " + Math.round(best.gain) + (Math.round(best.gain) === 1 ? " point." : " points."),
+    el("b", { textContent: "Or, for the biggest gain in the track's percentage: " }),
+    ...(waits
+      ? [entities + " on ", card, " fail nothing for " + levelName(b.top) + ", but its check ", link("rule/" + enc(b.r.name) + "/" + enc(waits[0]), "", ruleTitle(b.r.name, waits[0])), " was not run in this build"]
+      : rule && rule[1] === b.n
+      ? [entities + (b.n === 1 ? " needs " : " need "), ...ruleEl, " to reach " + levelName(b.top) + " on ", card]
+      : ["lift " + entities + " to " + levelName(b.top) + " on ", card, ...(rule ? ["; " + rule[1] + (rule[1] === 1 ? " needs " : " need "), ...ruleEl, " first"] : [])]),
+    (waits ? "; if it passes, the track gains about " : ", about ") + Math.round(b.gain) + (Math.round(b.gain) === 1 ? " point." : " points."),
   );
 }
 

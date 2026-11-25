@@ -6,11 +6,11 @@ import { basisBadge, basisCounts, basisKey, basisOf, refs, whyEl } from "../lib/
 import { TIMED_UNITS, cmpWord, humanize, magnitude, measureLabel, num, ruleValue, setupBrief, valueLine } from "../lib/compare";
 import { el, enc, link } from "../lib/dom";
 import { UNSCORED } from "../lib/levels";
-import { shortId, title } from "../lib/rings";
+import { bothCounts, shortId, title } from "../lib/rings";
 import { trackPath } from "../lib/routes";
 import { ruleTitle } from "../lib/rules";
 import { rich } from "../lib/text";
-import { STANDING_MARK, byMajority, factorChip, factorRule, ruleTag, standingChip, standingColor, standingPhrase } from "../lib/tracks";
+import { STANDING_MARK, byMajority, factorChip, standingBy, standingChip, standingColor, standingPhrase } from "../lib/tracks";
 import { andList, firstSentence, lowerFirst, plural, sentences } from "../lib/words";
 
 // The number a factor leads with: rules behind, else ahead, else at parity; both when it is ahead on some and behind on
@@ -180,7 +180,7 @@ export const compareViews = {
     // A factor count alone overstates a lead built on parity, so the headline pairs it with rules.
     var unmeasured = counts.unknown >= names.length;
     var majority = byMajority(D, names);
-    var other = { ahead: 0, parity: 0, behind: 0, unknown: 0 };
+    var both = { strict: { ahead: 0, parity: 0, behind: 0, unknown: 0 }, majority: { ahead: 0, parity: 0, behind: 0, unknown: 0 } };
     names.forEach(function (n) {
       var rs = all[n].rules || {};
       var k = { ahead: 0, parity: 0, behind: 0, unknown: 0 };
@@ -188,13 +188,8 @@ export const compareViews = {
         var v = (rs[r] || {})[peer];
         k[v in k ? v : "unknown"]++;
       });
-      var s = majority
-        ? k.behind ? "behind" : k.unknown ? "unknown" : k.ahead ? "ahead" : "parity"
-        : k.unknown ? "unknown" : k.ahead > k.behind ? "ahead" : k.behind > k.ahead ? "behind" : "parity";
-      other[s]++;
-    });
-    var otherDiffers = ["ahead", "parity", "behind"].some(function (s) {
-      return other[s] !== counts[s];
+      both.strict[standingBy(k, false)]++;
+      both.majority[standingBy(k, true)]++;
     });
     var headline = unmeasured
       ? "Not measured yet: none of the " + plural(names.length, "factor") + " has values for both products."
@@ -205,7 +200,7 @@ export const compareViews = {
       (counts.behind ? ", behind on " + counts.behind : "") +
       (counts.parity ? ", at parity on " + counts.parity : "") +
       (counts.unknown ? ", " + counts.unknown + " not measured" : "") +
-      (majority ? ", each by the majority of its rules." : ", where a factor is behind if any of its rules is.");
+      (majority ? " by the majority count." : " by the strict count.");
     var lean = counts.behind > counts.ahead ? "behind" : counts.ahead > counts.behind ? "ahead" : "parity";
     var hero = el(
       "section",
@@ -233,28 +228,7 @@ export const compareViews = {
           el("b", { className: "parity", textContent: ruleCounts.parity + " at parity" }),
           " · ",
           el("b", { className: "behind", textContent: ruleCounts.behind + " behind" }),
-          ". By this comparison's rule, " + factorRule(majority) + (names.some(function (n) {
-            var rs = Object.keys(all[n].rules || {}).map(function (r) {
-              return (all[n].rules[r] || {})[peer];
-            });
-            return rs.indexOf("ahead") >= 0 && rs.indexOf("behind") >= 0;
-          })
-            ? ", so a factor marked “mixed” is ahead on some of its rules and behind on others"
-            : "") + ". ",
-          el("b", {
-            className: "other-rule",
-            textContent:
-              "Counted the other way, where " +
-              factorRule(!majority) +
-              (otherDiffers
-                ? ", it would be " + andList(["ahead", "behind", "parity"].filter(function (s) {
-                  return other[s] || s === "ahead";
-                }).map(function (s) {
-                  return (s === "parity" ? "at parity on " : s + " on ") + other[s];
-                })) + ". "
-                : ", the factor tally is the same. "),
-          }),
-          "Factors are not weighted, so the factor count is a tally, not an overall score.",
+          ". Factors are not weighted, so the factor count is a tally, not an overall score.",
         ),
         el(
           "details",
@@ -269,7 +243,7 @@ export const compareViews = {
         "div",
         { className: "cmp-side" },
         el("div", { className: "kicker", textContent: "Factors" }),
-        ruleTag(majority),
+        bothCounts(Object.assign({}, counts, { both: both, majority: majority }), names.length),
         el(
           "div",
           { className: "tally3" },

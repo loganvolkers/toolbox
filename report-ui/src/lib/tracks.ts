@@ -2,7 +2,7 @@ import type { Summary } from "./summary";
 import type { ReportData } from "../types";
 import type { Kid } from "./dom";
 
-type Tally = { ahead: number; parity: number; behind: number; unknown: number };
+export type Tally = { ahead: number; parity: number; behind: number; unknown: number };
 import { medal } from "./bars";
 import { basisBadge, basisOf } from "./basis";
 import { levelName } from "./campaigns";
@@ -51,7 +51,7 @@ export function trackStats(D: ReportData, S: Summary, name) {
   cards.sort(function (a, b) {
     return rankLevel(a.floor) - rankLevel(b.floor) || (a.row.topShare || 0) - (b.row.topShare || 0) || b.row.none - a.row.none || title(D, a.row.name).localeCompare(title(D, b.row.name));
   });
-  var verdicts: Tally & { rules?: { ahead: number; parity: number; behind: number; total: number }; other?: Tally; majority?: boolean } = { ahead: 0, parity: 0, behind: 0, unknown: 0 };
+  var verdicts: Tally & { rules?: { ahead: number; parity: number; behind: number; total: number }; both?: Both; majority?: boolean } = { ahead: 0, parity: 0, behind: 0, unknown: 0 };
   var behind: string[] = [];
   rows.forEach(function (r) {
     if (!r.compare) return;
@@ -67,10 +67,9 @@ export function trackStats(D: ReportData, S: Summary, name) {
       rules.total++;
       k[x in k ? x : "unknown"]++;
     });
-    var other = verdicts.other || (verdicts.other = { ahead: 0, parity: 0, behind: 0, unknown: 0 });
-    other[c.verdictRule === "majority"
-      ? k.behind ? "behind" : k.unknown ? "unknown" : k.ahead ? "ahead" : "parity"
-      : k.unknown ? "unknown" : k.ahead > k.behind ? "ahead" : k.behind > k.ahead ? "behind" : "parity"]++;
+    var both = verdicts.both || (verdicts.both = { strict: { ahead: 0, parity: 0, behind: 0, unknown: 0 }, majority: { ahead: 0, parity: 0, behind: 0, unknown: 0 } });
+    both.strict[standingBy(k, false)]++;
+    both.majority[standingBy(k, true)]++;
   });
   var pct = compare
     ? Math.round(((verdicts.ahead + verdicts.parity) / rows.length) * 100)
@@ -231,20 +230,18 @@ export function byMajority(D: ReportData, names) {
   );
 }
 
-// How a factor's standing follows from its rules, as a clause.
-export function factorRule(majority) {
-  return majority ? "a factor is ahead when more of its rules are ahead than behind, behind when more are behind, at parity when they are even" : "a factor is behind if any one of its rules is behind";
+export type Both = { strict: Tally; majority: Tally };
+
+// A factor's standing from its rules' standings under either counting rule (D01M87WF2QZVPTD8CGDZKY133CD):
+// strict is behind if any rule is behind, majority follows whichever side has more rules.
+export function standingBy(k: Tally, majority: boolean): keyof Tally {
+  if (majority) return k.unknown ? "unknown" : k.ahead > k.behind ? "ahead" : k.behind > k.ahead ? "behind" : "parity";
+  return k.behind ? "behind" : k.unknown ? "unknown" : k.ahead ? "ahead" : "parity";
 }
 
 // The chip for a factor whose rules split both ways, or that leads on under half of them.
-// The tally a comparison declared, named where its factor verdicts are shown, so two portals that
-// count differently never look alike.
-export function ruleTag(majority) {
-  return el("span", { className: "rule-tag", title: "By this comparison's rule, " + factorRule(majority) + "." }, majority ? "counted by the majority of rules" : "behind if any rule is behind");
-}
-
 export function factorChip(v, counts, total) {
-  if (counts.ahead && counts.behind) return v === "parity" ? "even split" : v + ", mixed";
+  if (counts.ahead && counts.behind) return v + ", mixed";
   return v === "ahead" && counts.ahead * 2 < total ? "narrowly ahead" : null;
 }
 

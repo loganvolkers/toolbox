@@ -57,19 +57,21 @@ export function ruleLink(scName, rule, text?, shown?) {
 
 // The members of a folded group, each a link, so a reader can open one without unfolding it. It sits
 // after the details element: links inside a summary would nest interactive controls.
-export function memberLinks(ids) {
+export function memberLinks(ids, sized?: { order: string; first: string }) {
   var cut = ids.length > 8 ? 6 : ids.length;
   return el(
     "div",
     { className: "members" },
-    "In it: ",
+    sized ? "In it, " + sized.order + ": " : "In it: ",
     ...ids.slice(0, cut).flatMap(function (id, i) {
       var name = shortId(id);
       // Two files named check.go are told apart by their paths.
       var twin = ids.some(function (o) {
         return o !== id && shortId(o) === name;
       });
-      return [i ? " " : "", el("span", { style: "white-space:nowrap" }, link("entity/" + enc(id), "", twin ? id.replace(/^[^:]*:/, "") : name), i < cut - 1 ? "," : "")];
+      var a = link("entity/" + enc(id), "", twin ? id.replace(/^[^:]*:/, "") : name);
+      if (i === 0 && sized && sized.first) return [a, " (" + sized.first + ")" + (i < cut - 1 ? "," : "")];
+      return [i ? " " : "", el("span", { style: "white-space:nowrap" }, a, i < cut - 1 ? "," : "")];
     }),
     ids.length > cut ? " and " + (ids.length - cut) + " more" : null,
   );
