@@ -4574,6 +4574,7 @@
         "level": "bronze"
       }
     },
+    "maintainer-advisories": {},
     "maintainer-agent-doc": {
       "agent-doc:.cursor/rules/toolbox-operator.mdc": {
         "level": "gold"
