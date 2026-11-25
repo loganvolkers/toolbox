@@ -66,9 +66,9 @@ records:
       Judge what readers see (the hosted report and the UI) on more than one
       portal, by machine first and then by blind auditors.
     exitCriterion: >-
-      In report-ui, npm run check and npm run probe pass over every story; for
-      a change readers see, a blind three-auditor panel round passes the
-      design-audit stop rule and is recorded in docs/audits/.
+      In report-ui, npm run check (tsc and the bundle) and npm run probe pass
+      over every story; for a change readers see, a blind three-auditor panel
+      round passes the design-audit stop rule and is recorded in docs/audits/.
     commands:
     - npm --prefix report-ui ci
     - npm --prefix report-ui run check

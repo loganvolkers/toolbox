@@ -43,8 +43,8 @@ The inner loop takes seconds, so this stays cheap enough to run after every chan
 | `toolbox test examples/reference-portal` (20 expectations + `.fga.yaml`) | 0.2 s |
 | `cargo clippy --all-targets -D warnings` | 4.7 s |
 | `scripts/m4-acceptance.sh` (Postgres, OpenFGA, three connectors, Chromium) | 7.9 s |
-| `npm run build` in `report-ui` (bundle the report element) | 0.1 s |
-| `npm run build-storybook` (53 stories over five fixtures) | 1.5 s |
+| `npm run check` in `report-ui` (`tsc`, then the Vite bundle against the committed one) | 0.5 s |
+| `npm run build-storybook` (53 stories over five fixtures) | 1.3 s |
 | `npm run probe` (53 stories × 4 views = 212 checks; 4 workers) | 33 s |
 
 The workspace has 13 crates. The deferred velocity tooling (hakari, affected-test selection, result
@@ -64,7 +64,7 @@ caching) comes back only when these numbers regress (D44, [developer-velocity.md
 | Scale | 100k entities / 2M relations / 100 rules ≤ 10 s | Budget §10.4 | `cargo run --release -p toolbox-derive --example scale` |
 | Format | Tracked `.yaml` and `.yml` match Yamark's fixed point (D97) | One style for embedded objects | `yamark format --check` |
 | Freshness | `ui/dist` matches its source | Embedded UI is current | CI `ui` job |
-| Freshness | `toolbox-report.js` is the bundle of `report-ui/src` | Embedded report is current | `npm run check` in `report-ui` |
+| Types and freshness | `report-ui/src` passes `tsc` (strict), and `toolbox-report.js` is its Vite bundle (D01M880QMWD7Z7FTGKJT99AHWBX) | The report reads the JSON `toolbox report` writes; embedded report is current | `npm run check` in `report-ui` |
 | Story probe | Every report story over the T4T, OpenFGA and starter fixtures, at 1280 and 390 px, light and dark | No serious axe violation (WCAG 2.2 AA), no sideways scroll, no script error | `npm run probe` in `report-ui` |
 | Standards | Toolbox for Toolbox scorecards over crates, docs, CLI and MCP (report, not yet a gate) | Docs, tests, clippy, size and complexity, interface contracts | `scripts/self-portal.sh report`; `toolbox test portal` |
 
