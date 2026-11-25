@@ -133,6 +133,24 @@ jobs:
       - run: cargo build --locked -p toolbox-cli -p toolbox-connector-gitlab
       - name: OTel testbed rubric (experiments/otel-testbed/scripts/score.sh)
         run: experiments/otel-testbed/scripts/score.sh
+  github-connector:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: {persist-credentials: false}
+      - name: Toolchain from rust-toolchain.toml
+        run: rustup show active-toolchain
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with: {key: github-connector}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: {node-version: "24"}
+      - run: cargo build --locked -p toolbox-connector-github
+      - run: >-
+          npm --prefix scripts/github-emulate ci --ignore-scripts --no-audit
+          --no-fund
+      - name: GitHub connector integration with Emulate
+        run: npm --prefix scripts/github-emulate test
   acceptance:
     # The acceptance scripts (M2–M5: Postgres, OpenFGA, connectors, a browser, actions) in their own job, so a
     # failure here doesn't hide the checks in `rust` that run after it.

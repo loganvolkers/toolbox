@@ -1,0 +1,15 @@
+{
+  "name": "toolbox-github-emulate-tests",
+  "private": true,
+  "description": "Integration tests for the Toolbox GitHub connector against Vercel Labs Emulate.",
+  "license": "MIT",
+  "engines": {
+    "node": "24"
+  },
+  "scripts": {
+    "test": "node --test connector.test.mjs"
+  },
+  "devDependencies": {
+    "emulate": "0.14.0"
+  }
+}
