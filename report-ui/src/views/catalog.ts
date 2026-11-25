@@ -220,10 +220,19 @@ export const catalogViews = {
         sigCount[b.sig] = (sigCount[b.sig] || 0) + 1;
       });
       var grouped = {};
-      var rowsOut: { nodes: Node[]; n: number }[] = [];
+      var rowsOut: { nodes: Node[]; n: number; rank: number }[] = [];
+      // Furthest behind first, as on a scorecard page: rows at none, then rows below their top level.
+      var rankOf = function (id) {
+        return cols.reduce(function (n, c) {
+          var s = ((D.scores || {})[c] || {})[id];
+          if (!s || s.level === "skipped") return n;
+          var lv = ((D.scorecards || {})[c] || {}).levels || [];
+          return n + (s.level === "none" ? 1000 : 0) + (lv.length && s.level !== lv[lv.length - 1] ? 1 : 0);
+        }, 0);
+      };
       built.forEach(function (b) {
         if (!cols.length || sigCount[b.sig] < 5) {
-          rowsOut.push({ nodes: [b.r], n: 1 });
+          rowsOut.push({ nodes: [b.r], n: 1, rank: rankOf(b.id) });
           return;
         }
         if (grouped[b.sig]) return;
@@ -267,7 +276,11 @@ export const catalogViews = {
             }), sized ? { order: "furthest off first", first: worst } : undefined),
           ],
           n: members.length,
+          rank: rankOf(b.id),
         });
+      });
+      rowsOut.sort(function (a, b) {
+        return b.rank - a.rank;
       });
       var paged = rowsOut.slice(0, limit);
       var hidden = rowsOut.slice(paged.length).reduce(function (n, o) {

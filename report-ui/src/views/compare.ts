@@ -366,7 +366,7 @@ export const compareViews = {
       basisKey(bases),
     );
     var brief = setupBrief(context, ids, facts, who);
-    var sources = track ? refs(track.links) : null;
+    var sources = track ? refs(track.links, false) : null;
     if (brief.length || sources)
       (hero.querySelector(".rule-tally") as HTMLElement).after(
         el(
@@ -513,7 +513,7 @@ export const compareViews = {
     var jumps = (
       [
         ["Factors", factors],
-        ["Behind", behind],
+        [unmeasured ? "Who leads" : "Behind", behind],
         ["Leads", leads],
         ["Method", method],
       ] as [string, HTMLElement | null][]

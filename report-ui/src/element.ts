@@ -123,7 +123,7 @@ export class ToolboxReport extends HTMLElement {
     part(root, "top").replaceChildren(boxLogo(), el("h1", { textContent: D.portal || "Toolbox report" }));
     part(root, "meta").textContent =
       fmt(S.entityCount) +
-      " entities in the box (" +
+      " entities tracked (" +
       fmt(Object.keys(S.worst).length) +
       " scored) · " +
       plural(
@@ -133,7 +133,7 @@ export class ToolboxReport extends HTMLElement {
         "scorecard",
       ) +
       (Object.keys(D.comparisons || {}).length ? " · " + plural(Object.keys(D.comparisons || {}).length, "comparison factor") : "") +
-      (D.snapshot ? " · facts snapshot #" + D.snapshot : " · no facts collected yet");
+      (D.snapshot ? " · data from snapshot #" + D.snapshot : " · no data collected yet");
     // Each history entry keeps its scroll position, so Back returns to the same place in a long list.
     var settle: ReturnType<typeof setTimeout> | undefined;
     var draw = function () {

@@ -1285,12 +1285,19 @@
 		});
 		return n;
 	}
-	function refs(links) {
+	function refs(links, lead = "Further reading") {
 		var safe = (links || []).filter(function(l) {
 			return l && /^https?:\/\//.test(l.url || "");
 		});
 		if (!safe.length) return null;
-		return el("span", { className: "refs" }, ...safe.map(function(l) {
+		var sources = Array.from(new Set(safe.map(function(l) {
+			var u = /^https?:\/\/([^/]+)\/?([^/]*)\/?([^/]*)/.exec(l.url) || [];
+			return u[1] === "github.com" && u[2] && u[3] ? u[2] + "/" + u[3] : u[1] || "";
+		})));
+		return el("span", { className: "refs" }, lead === false ? null : el("span", {
+			className: "sub",
+			textContent: lead + (sources.length === 1 && sources[0] ? ", from " + sources[0] : "") + ":"
+		}), ...safe.map(function(l) {
 			var m = /^(D\d+|D0[0-9A-Z]{20,}) (.+)$/.exec(l.title || "");
 			var a = el("a", {
 				href: l.url,
@@ -2162,7 +2169,7 @@
 		"*{box-sizing:border-box}",
 		"h2[tabindex='-1']:focus{outline:none}",
 		"main{max-width:1120px;margin:0 auto;padding:28px 20px 72px}",
-		"a{color:var(--accent)}",
+		"a{color:var(--accent);text-underline-offset:3px}",
 		"a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}",
 		".top{display:flex;align-items:center;gap:14px;margin-bottom:6px}",
 		".top svg{flex:none}",
@@ -2370,7 +2377,7 @@
 		".gap .why{color:var(--muted);font-size:13px;overflow-wrap:anywhere}",
 		".empty{color:var(--muted);font-size:14px;padding:10px 0}",
 		".empty.good{color:var(--pass);font-weight:600}",
-		"button.link{background:none;border:0;padding:4px 0;margin:-4px 0;color:var(--accent);font:inherit;cursor:pointer;text-decoration:underline;text-underline-offset:2px}",
+		"button.link{background:none;border:0;padding:4px 0;margin:-4px 0;color:var(--accent);font:inherit;cursor:pointer;text-decoration:underline;text-underline-offset:3px}",
 		":where(section a:not([class]),section a[class=\"\"]){display:inline-block;padding:4px 0;margin:-4px 0}",
 		".more{margin-top:10px}",
 		".milestones{position:relative;height:18px;margin-top:2px}",
@@ -2399,7 +2406,7 @@
 		".why{margin-top:6px;font-size:13px;line-height:1.5}",
 		".why>b{font-weight:650}",
 		".refs{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;margin:4px 0 2px;font-size:13px;line-height:26px}",
-		".refs a{text-underline-offset:2px}",
+		".refs a{text-underline-offset:3px}",
 		".refs a .ext{font-size:12px}",
 		".rationale{margin:6px 0 12px;padding:10px 14px;border-left:3px solid var(--accent);background:var(--tint);border-radius:0 10px 10px 0;max-width:80ch;font-size:14px}",
 		".rationale>b{display:block;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}",
@@ -2451,7 +2458,7 @@
 		".cmp-hero .big{font-size:28px;line-height:1.2;font-weight:750;letter-spacing:-.01em;margin:4px 0 8px}",
 		".cmp-hero .kicker{font-size:12px;font-weight:650;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}",
 		".cmp-lead{margin:8px 0 0;font-size:15px}.cmp-lead .lead-x{font-size:inherit;line-height:inherit}.gaps .lead-x{color:var(--fail)}.gaps a.lead-tile,.gaps a.lead-tile:hover{border-left-color:var(--fail)}",
-		".nowrap{white-space:nowrap}.parity-fold{margin-top:8px;border-top:1px solid var(--line);padding-top:8px}.parity-fold>summary{cursor:pointer;color:var(--accent);font-size:14px;min-height:24px;display:flex;align-items:center;text-decoration:underline;text-underline-offset:2px}",
+		".nowrap{white-space:nowrap}.parity-fold{margin-top:8px;border-top:1px solid var(--line);padding-top:8px}.parity-fold>summary{cursor:pointer;color:var(--accent);font-size:14px;min-height:24px;display:flex;align-items:center;text-decoration:underline;text-underline-offset:3px}",
 		".method-lede{max-width:80ch;margin:0 0 12px;padding-left:20px;font-size:15px;line-height:1.55}.method-lede li+li{margin-top:4px}",
 		".cmp-side{display:grid;gap:12px;justify-items:center}.h2h{display:grid;gap:2px;width:300px;font-size:12px}.h2h-head,.h2h-row{display:grid;grid-template-columns:110px 1fr 1fr;align-items:center;gap:0}.h2h-head{color:var(--muted);font-weight:650}.h2h-head .behind{text-align:right;padding-right:6px;color:var(--fail)}.h2h-head .ahead{padding-left:6px;color:var(--pass)}.h2h-row{min-height:24px;color:var(--fg);text-decoration:none;border-radius:6px;padding:0 2px}.h2h-row:hover,.h2h-row:focus-visible{background:color-mix(in srgb,var(--accent) 10%,transparent)}.h2h-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:6px}.h2h-l,.h2h-r{display:flex;height:10px}.h2h-l{justify-content:flex-end;border-right:1.5px solid var(--muted)}.h2h-l span{background:var(--fail);border-radius:3px 0 0 3px}.h2h-r span{background:var(--pass);border-radius:0 3px 3px 0}.h2h-foot{color:var(--muted);font-size:12px;text-align:center;margin-top:2px}",
 		".tally3{display:flex;gap:18px;text-align:center}.rule-tally{margin:6px 0 0;font-size:14px}.rule-tally .ahead{color:var(--pass)}.rule-tally .behind{color:var(--fail)}.rule-tally .parity{color:var(--muted)}",
@@ -2989,7 +2996,9 @@
 			wrap.append(el("div", { className: "rows-head" }, el("span", { textContent: "Scorecard" }), el("span", {
 				className: "dist",
 				textContent: "Entities by level"
-			}), el("span", { textContent: "At none" })));
+			}), el("span", { textContent: rows.some(function(r) {
+				return r.scored;
+			}) ? "At none" : "Status" })));
 			rows.forEach(function(r) {
 				wrap.append(link("scorecard/" + enc(r.name), "row", [
 					floors ? el("div", { className: "medal-col" }, medal(floorOf(D, r.name) || "not scored", 30), el("div", {}, ...cardName(D, r.name), el("span", { className: "weakest" }, "weakest ", floorOf(D, r.name) ? floorPill(D, r.name) : "not scored", topNote(D, r.name, floorOf(D, r.name))))) : el("div", {}, ...cardName(D, r.name)),
@@ -3356,7 +3365,7 @@
 						className: "rank-head",
 						textContent: plural(nStd, "scorecard")
 					}));
-					if (r.compare && (i === 0 || !shown[i - 1].compare)) items.push(el("div", { className: "rank-head" }, plural(shown.length - nStd, "comparison factor") + " · ", link("compare", "", "Compare →")));
+					if (r.compare && (i === 0 || !shown[i - 1].compare)) items.push(el("div", { className: "rank-head" }, plural(shown.length - nStd, "comparison factor") + ", on ", link("compare", "", "the Compare tab →")));
 					var c = r.compare ? (D.comparisons || {})[r.name] || {} : null;
 					var verdict = c ? (c.verdict || {})[(c.peers || [])[0]] || "unknown" : null;
 					var debt = c ? verdict === "unknown" ? "not measured" : verdict : r.none > 0 ? r.none + " at none" : r.bronze > 0 ? r.bronze + " at bronze" : r.scored && r.topShare === 100 ? "✓ top level" : r.scored ? "✓ clear" : "not scored";
@@ -4183,9 +4192,18 @@
 			style: "margin:0 0 6px",
 			textContent: "This report was built without a baseline (toolbox report --baseline <file>), so the bar shows where the campaign stands today, not how far it has come since its starting point."
 		});
-		var parts = [["entitiesShort", "entities short"], ["measure", "total shortfall"]].filter(function(k) {
+		var keys = [["entitiesShort", "entities short"], ["measure", "total shortfall"]].filter(function(k) {
 			return s[k[0]];
-		}).map(function(k) {
+		});
+		if (keys.length > 0 && keys.every(function(k) {
+			return s[k[0]].from === s[k[0]].now;
+		})) return el("p", {
+			className: "sub",
+			style: "margin:0 0 6px"
+		}, el("b", { textContent: "Since the start" + (s.recorded ? ", " + s.recorded : "") + ": " }), "no change yet (" + keys.map(function(k) {
+			return k[1] + " " + fmt(s[k[0]].now);
+		}).join("; ") + "). Progress appears here once a later build moves these numbers.");
+		var parts = keys.map(function(k) {
 			var x = s[k[0]];
 			return k[1] + " " + fmt(x.from) + " → " + fmt(x.now) + (x.percentDone != null ? " (" + x.percentDone + "% of the way)" : "");
 		});
@@ -4588,11 +4606,20 @@
 				});
 				var grouped = {};
 				var rowsOut = [];
+				var rankOf = function(id) {
+					return cols.reduce(function(n, c) {
+						var s = ((D.scores || {})[c] || {})[id];
+						if (!s || s.level === "skipped") return n;
+						var lv = ((D.scorecards || {})[c] || {}).levels || [];
+						return n + (s.level === "none" ? 1e3 : 0) + (lv.length && s.level !== lv[lv.length - 1] ? 1 : 0);
+					}, 0);
+				};
 				built.forEach(function(b) {
 					if (!cols.length || sigCount[b.sig] < 5) {
 						rowsOut.push({
 							nodes: [b.r],
-							n: 1
+							n: 1,
+							rank: rankOf(b.id)
 						});
 						return;
 					}
@@ -4636,8 +4663,12 @@
 							order: "furthest off first",
 							first: worst
 						} : void 0)],
-						n: members.length
+						n: members.length,
+						rank: rankOf(b.id)
 					});
+				});
+				rowsOut.sort(function(a, b) {
+					return b.rank - a.rank;
 				});
 				var paged = rowsOut.slice(0, limit);
 				var hidden = rowsOut.slice(paged.length).reduce(function(n, o) {
@@ -5592,7 +5623,7 @@
 				textContent: "Nothing is measured in this build. Once the harness runs and its records are committed, the rules are decided like this:"
 			}) : null, basisKey(bases));
 			var brief = setupBrief(context, ids, facts, who);
-			var sources = track ? refs(track.links) : null;
+			var sources = track ? refs(track.links, false) : null;
 			if (brief.length || sources) hero.querySelector(".rule-tally").after(el("div", { className: "sub cmp-prov" }, sources ? el("span", { className: "cmp-src" }, el("b", { textContent: "Evidence: " }), sources, unmeasured ? " (no results are recorded in this build yet)" : null) : null));
 			hero.querySelector(".rule-tally").after(el("p", {
 				className: "cmp-method",
@@ -5734,7 +5765,7 @@
 			})), this.factorCards(D, names));
 			var jumps = [
 				["Factors", factors],
-				["Behind", behind],
+				[unmeasured ? "Who leads" : "Behind", behind],
 				["Leads", leads],
 				["Method", method]
 			].filter(function(j) {
@@ -5934,9 +5965,9 @@
 			registerIds([].concat(...Object.values(D.catalog || {})));
 			var S = summarize(D);
 			part(root, "top").replaceChildren(boxLogo(), el("h1", { textContent: D.portal || "Toolbox report" }));
-			part(root, "meta").textContent = fmt(S.entityCount) + " entities in the box (" + fmt(Object.keys(S.worst).length) + " scored) · " + plural(S.rows.filter(function(r) {
+			part(root, "meta").textContent = fmt(S.entityCount) + " entities tracked (" + fmt(Object.keys(S.worst).length) + " scored) · " + plural(S.rows.filter(function(r) {
 				return !r.compare;
-			}).length, "scorecard") + (Object.keys(D.comparisons || {}).length ? " · " + plural(Object.keys(D.comparisons || {}).length, "comparison factor") : "") + (D.snapshot ? " · facts snapshot #" + D.snapshot : " · no facts collected yet");
+			}).length, "scorecard") + (Object.keys(D.comparisons || {}).length ? " · " + plural(Object.keys(D.comparisons || {}).length, "comparison factor") : "") + (D.snapshot ? " · data from snapshot #" + D.snapshot : " · no data collected yet");
 			var settle;
 			var draw = function() {
 				clearTimeout(settle);

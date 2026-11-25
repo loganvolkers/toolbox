@@ -103,14 +103,21 @@ export function basisCounts(rules) {
   return n;
 }
 
-export function refs(links) {
+export function refs(links, lead: string | false = "Further reading") {
   var safe = (links || []).filter(function (l) {
     return l && /^https?:\/\//.test(l.url || "");
   });
   if (!safe.length) return null;
+  // Name where the links lead, so a portal built from shared packages does not pass off a
+  // package's own docs as its own.
+  var sources = Array.from(new Set(safe.map(function (l) {
+    var u = /^https?:\/\/([^/]+)\/?([^/]*)\/?([^/]*)/.exec(l.url) || [];
+    return u[1] === "github.com" && u[2] && u[3] ? u[2] + "/" + u[3] : u[1] || "";
+  })));
   return el(
     "span",
     { className: "refs" },
+    lead === false ? null : el("span", { className: "sub", textContent: lead + (sources.length === 1 && sources[0] ? ", from " + sources[0] : "") + ":" }),
     ...safe.map(function (l) {
       // A title that leads with a decision id reads as its claim; the id stays in the hover text.
       var m = /^(D\d+|D0[0-9A-Z]{20,}) (.+)$/.exec(l.title || "");

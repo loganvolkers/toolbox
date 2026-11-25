@@ -21,10 +21,17 @@ import { fmt, plural } from "../lib/words";
 function sinceLine(c) {
   var s = c.sinceStart;
   if (!s) return el("p", { className: "sub", style: "margin:0 0 6px", textContent: "This report was built without a baseline (toolbox report --baseline <file>), so the bar shows where the campaign stands today, not how far it has come since its starting point." });
-  var parts = [["entitiesShort", "entities short"], ["measure", "total shortfall"]]
-    .filter(function (k) {
-      return s[k[0]];
-    })
+  var keys = [["entitiesShort", "entities short"], ["measure", "total shortfall"]].filter(function (k) {
+    return s[k[0]];
+  });
+  var still = keys.length > 0 && keys.every(function (k) {
+    return s[k[0]].from === s[k[0]].now;
+  });
+  // "0% of the way" on the day the baseline is saved reads as a stalled campaign.
+  if (still) return el("p", { className: "sub", style: "margin:0 0 6px" }, el("b", { textContent: "Since the start" + (s.recorded ? ", " + s.recorded : "") + ": " }), "no change yet (" + keys.map(function (k) {
+    return k[1] + " " + fmt(s[k[0]].now);
+  }).join("; ") + "). Progress appears here once a later build moves these numbers.");
+  var parts = keys
     .map(function (k) {
       var x = s[k[0]];
       return k[1] + " " + fmt(x.from) + " → " + fmt(x.now) + (x.percentDone != null ? " (" + x.percentDone + "% of the way)" : "");

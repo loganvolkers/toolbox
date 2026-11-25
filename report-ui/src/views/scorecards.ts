@@ -247,7 +247,7 @@ export const scorecardsViews = {
       var items: Node[] = [];
       shown.forEach(function (r, i) {
         if (i === 0 && !r.compare) items.push(el("div", { className: "rank-head", textContent: plural(nStd, "scorecard") }));
-        if (r.compare && (i === 0 || !shown[i - 1].compare)) items.push(el("div", { className: "rank-head" }, plural(shown.length - nStd, "comparison factor") + " · ", link("compare", "", "Compare →")));
+        if (r.compare && (i === 0 || !shown[i - 1].compare)) items.push(el("div", { className: "rank-head" }, plural(shown.length - nStd, "comparison factor") + ", on ", link("compare", "", "the Compare tab →")));
         var c = r.compare ? (D.comparisons || {})[r.name] || {} : null;
         var verdict = c ? (c.verdict || {})[(c.peers || [])[0]] || "unknown" : null;
         var debt = c ? (verdict === "unknown" ? "not measured" : verdict) : r.none > 0 ? r.none + " at none" : r.bronze > 0 ? r.bronze + " at bronze" : r.scored && r.topShare === 100 ? "✓ top level" : r.scored ? "✓ clear" : "not scored";

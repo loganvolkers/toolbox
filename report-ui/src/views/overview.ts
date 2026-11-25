@@ -330,7 +330,7 @@ export const overviewViews = {
       return p ? el("span", { className: "rp" + (indent ? " in" : ""), textContent: p }) : null;
     };
     var wrap = el("div", { className: "rows" });
-    wrap.append(el("div", { className: "rows-head" }, el("span", { textContent: "Scorecard" }), el("span", { className: "dist", textContent: "Entities by level" }), el("span", { textContent: "At none" })));
+    wrap.append(el("div", { className: "rows-head" }, el("span", { textContent: "Scorecard" }), el("span", { className: "dist", textContent: "Entities by level" }), el("span", { textContent: rows.some(function (r) { return r.scored; }) ? "At none" : "Status" })));
     rows.forEach(function (r) {
       wrap.append(
         link("scorecard/" + enc(r.name), "row", [
