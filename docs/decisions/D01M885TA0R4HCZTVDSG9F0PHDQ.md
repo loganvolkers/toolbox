@@ -36,6 +36,6 @@ loopback, `token` elsewhere.
 
 **Status:** ✅
 
-**Where:** `crates/toolbox-cli/src/server.rs` (`auth_mode`), [v1-spec.md](../v1-spec.md),
+**Where:** `crates/toolbox-cli/src/server.rs` (`auth_mode`),
 [backstage-comparison.md](../design/backstage-comparison.md) §4,
 [examples/acme-live](../../examples/acme-live/README.md).
