@@ -40,6 +40,26 @@ verdicts:
       the ratchet is the same actions/report that pilot repositories use (D69,
       examples/repo-portal-starter/README.md:3-6). Raising or adding a
       standard needs no crate, builtin or schema change.
+# Codex evaluated the two added criteria. Earlier verdicts retain their original attribution.
+  - criterion: fast-feedback
+    verdict: fail
+    reason: >-
+      portal/sdlc/stages/maintainer.yaml lists toolbox report portal --skip
+      runner,github-actions --baseline portal/results.json --ci.
+      docs/design/maintainer-sdlc.md gives no measured local time to the stage
+      exit.
+    suggestion: >-
+      Measure and record the fastest local check that demonstrates this stage
+      exit in docs/design/maintainer-sdlc.md.
+  - criterion: beyond-one-reference
+    verdict: fail
+    reason: >-
+      portal/sdlc/stages/maintainer.yaml lists .github/workflows/ci.yml as
+      evidence. The declared checks name no second exercised reference for
+      this stage exit.
+    suggestion: >-
+      Exercise this exit on a second reference and cite the result in
+      portal/sdlc/stages/maintainer.yaml.
 summary: >-
   The ratchet is a real CI gate, and it also fails when an improvement is
   not recorded, so the exit criterion is fully executable. The weak spot

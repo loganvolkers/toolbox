@@ -42,6 +42,21 @@ verdicts:
       needs no crate change either: `toolbox test portal` runs expectations in
       portal/tests/standards.test.yaml, and each package tests itself in
       packages/*/tests (ci.yml:67-71).
+# Codex evaluated the two added criteria. Earlier verdicts retain their original attribution.
+  - criterion: fast-feedback
+    verdict: fail
+    reason: >-
+      portal/sdlc/stages/maintainer.yaml lists cargo test.
+      docs/design/maintainer-sdlc.md gives no measured local time to the stage
+      exit.
+    suggestion: >-
+      Measure and record the fastest local check that demonstrates this stage
+      exit in docs/design/maintainer-sdlc.md.
+  - criterion: beyond-one-reference
+    verdict: pass
+    reason: >-
+      The reference portal and independent package fixtures both run through
+      toolbox test in .github/workflows/ci.yml.
 summary: >-
   The check pyramid is fully enforced in CI, including a guard against
   silently skipped OpenFGA tests. Locally, the stage's doc still sends

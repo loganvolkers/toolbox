@@ -48,6 +48,21 @@ verdicts:
       A package's tests are fixtures plus a mini-portal
       (package-author-sdlc.md §6.1 and §6.3, lines 222-254). Any author runs
       them with the released `toolbox test`, without a crate change.
+# Codex evaluated the two added criteria. Earlier verdicts retain their original attribution.
+  - criterion: fast-feedback
+    verdict: fail
+    reason: >-
+      portal/sdlc/stages/package-author.yaml lists toolbox test
+      packages/github-actions/tests. docs/design/package-author-sdlc.md gives
+      no measured local time to the stage exit.
+    suggestion: >-
+      Measure and record the fastest local check that demonstrates this stage
+      exit in docs/design/package-author-sdlc.md.
+  - criterion: beyond-one-reference
+    verdict: pass
+    reason: >-
+      The package loop in .github/workflows/ci.yml runs the github-actions and
+      pattern-count package test portals, among others.
 summary: >-
   An agent can test a package today on fixtures, but only against the
   workspace build, on one platform. The stage's defining fork, testing

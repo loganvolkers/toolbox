@@ -46,6 +46,25 @@ verdicts:
     suggestion: >-
       Implement the §4 contract in core once, so operators then declare
       deprecations in their manifest without further crate changes.
+# Codex evaluated the two added criteria. Earlier verdicts retain their original attribution.
+  - criterion: fast-feedback
+    verdict: fail
+    reason: >-
+      portal/sdlc/stages/user.yaml defines the stage exit but declares no
+      runnable local check for it. docs/design/user-sdlc.md documents the
+      intended workflow.
+    suggestion: >-
+      Add a runnable local check for this exit and record its measured time in
+      docs/design/user-sdlc.md.
+  - criterion: beyond-one-reference
+    verdict: fail
+    reason: >-
+      portal/sdlc/stages/user.yaml declares no executable reference for the
+      exit, and docs/design/user-sdlc.md describes the workflow without
+      supplying a second exercised reference.
+    suggestion: >-
+      Exercise this exit on a second reference and cite the result in
+      portal/sdlc/stages/user.yaml.
 summary: >-
   Designed only. There is no check, no command and no deprecation metadata
   in the manifest schema or the API, and `plan`'s removed-tool count is an
