@@ -34,8 +34,8 @@ verdicts:
     verdict: pass
     reason: >-
       Each fail cites a countable fact: the brief's split, the seven failures
-      in results.json, and the stale fix texts. A second assessor would reach
-      the same verdicts.
+      in portal/results.json, and the stale fix texts. A second assessor would
+      reach the same verdicts.
   - criterion: actionable
     verdict: fail
     reason: >-

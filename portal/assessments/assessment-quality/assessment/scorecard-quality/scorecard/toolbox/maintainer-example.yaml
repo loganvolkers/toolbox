@@ -26,7 +26,7 @@ verdicts:
       test, report, plan, build and derive, and examples.rs:38-42 is a
       substring. "Python 3.12" at experiments/actions-ab/README.md:30 matches
       the python alternative. The trial's resulting level does not.
-      results.json fails r8 only on says-how-to-check, and
+      portal/results.json fails r8 only on says-how-to-check, and
       experiments/actions-ab/results/r8/README.md:82 already cites a decision
       id, so cites-the-design already passes. Adding `python3
       harness/count.py` would reach gold, not silver.
@@ -49,9 +49,9 @@ verdicts:
   - criterion: reproducible
     verdict: pass
     reason: >-
-      The 47, 16, 11 and 36 counts are in the tree and results.json. A second
-      assessor fails one-concern and no-obvious-gap on those counts and the
-      commandLines check.
+      The 47, 16, 11 and 36 counts are in the tree and portal/results.json. A
+      second assessor fails one-concern and no-obvious-gap on those counts and
+      the commandLines check.
   - criterion: actionable
     verdict: pass
     reason: >-
@@ -60,8 +60,8 @@ verdicts:
       the notInCi detector would be the missing standard the no-obvious-gap
       reason names. Both suggestions are attached to those fails.
 summary: >-
-  The entity counts and both fails match the tree, results.json and the
-  command detector. The paper trial undershoots: r8 fails only
+  The entity counts and both fails match the tree, portal/results.json and
+  the command detector. The paper trial undershoots: r8 fails only
   says-how-to-check and already cites a decision, so the added command
   would reach gold, not silver. The secret-rule move is thresholds.md:35,
   not the CI-speed row at :34.

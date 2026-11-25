@@ -9,19 +9,21 @@ verdicts:
     verdict: pass
     reason: >-
       "Score entities against standards" (backstage-comparison.yaml:147-149)
-      is met by Toolbox's core scorecards (facts.yaml:84-86) and by Backstage
-      only through the Tech Insights community add-on (facts.yaml:169-174),
-      which the brief allows if recorded as an add-on (RESEARCH.md:126-127).
-      The brief's scenario said "scorecard with levels" (RESEARCH.md:117); the
-      rule dropped "with levels", which is what lets the add-on pass, and the
+      is met by Toolbox's core scorecards
+      (experiments/backstage-compare/facts.yaml:84-86) and by Backstage only
+      through the Tech Insights community add-on
+      (experiments/backstage-compare/facts.yaml:169-174), which the brief
+      allows if recorded as an add-on (RESEARCH.md:126-127). The brief's
+      scenario said "scorecard with levels" (RESEARCH.md:117); the rule
+      dropped "with levels", which is what lets the add-on pass, and the
       rationale says so openly (backstage-comparison.yaml:1000-1003).
   - criterion: hard-to-game
     verdict: fail
     reason: >-
-      Both sides are booleans in facts.yaml (84-86 and 169-174) merged by
-      snapshot.py:85. An earlier version of this very fact was wrong for
-      Backstage (ADJUDICATION.md:285-288), which shows how easily a
-      hand-written capability drifts.
+      Both sides are booleans in experiments/backstage-compare/facts.yaml
+      (84-86 and 169-174) merged by snapshot.py:85. An earlier version of this
+      very fact was wrong for Backstage (ADJUDICATION.md:285-288), which shows
+      how easily a hand-written capability drifts.
     suggestion: >-
       Have the harness score one corpus component on each arm (Toolbox's
       `toolbox score`, a Tech Insights check on Backstage) and set
@@ -31,7 +33,8 @@ verdicts:
     reason: >-
       The fix names the definition to keep, scorecards in the manifest as the
       v1 spec defines them (docs/v1-spec.md §5), which is the evidence
-      facts.yaml:84-86 cites; a regression there is what would flip the fact.
+      experiments/backstage-compare/facts.yaml:84-86 cites; a regression there
+      is what would flip the fact.
   - criterion: threshold-justified
     verdict: pass
     reason: >-

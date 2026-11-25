@@ -14,7 +14,7 @@ verdicts:
       - backstage-comparison.yaml:155-157 is the field.
       - RESEARCH.md:122 is "custom permission rule", and :111 says
         "configuration only, no code".
-      - facts.yaml:90-92 and 178-180 are the facts.
+      - experiments/backstage-compare/facts.yaml:90-92 and 178-180 are the facts.
       - README.md:20 runs Toolbox with the OpenFGA model in
         experiments/backstage-compare/portal/authz/model.fga.
       - docs/v1-spec.md:66 is M3.
@@ -37,8 +37,9 @@ verdicts:
     verdict: pass
     reason: >-
       The suggestion probes one denied read and one allowed read under each
-      arm's model or policy, instead of reading facts.yaml. That makes the
-      fact measured and changes hard-to-game.
+      arm's model or policy, instead of reading
+      experiments/backstage-compare/facts.yaml. That makes the fact measured
+      and changes hard-to-game.
 summary: >-
   An accurate assessment that engages with the entity. It notices that the
   harness's own Toolbox arm already runs a custom model, and that

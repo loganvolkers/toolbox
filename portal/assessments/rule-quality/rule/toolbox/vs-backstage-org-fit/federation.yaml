@@ -22,16 +22,17 @@ verdicts:
     suggestion: >-
       Define the fact as one observable flow, for example "a parent portal
       reads a child's entities and scores through the workspace connector's
-      `portal` records". Update facts.yaml:54's evidence to cite
-      D01M86BY3YQX3SA1W99QXF1QA1H, and change the rule's decision link to
-      federated-actions.md.
+      `portal` records". Update experiments/backstage-compare/facts.yaml:54's
+      evidence to cite D01M86BY3YQX3SA1W99QXF1QA1H, and change the rule's
+      decision link to federated-actions.md.
   - criterion: hard-to-game
     verdict: fail
     reason: >-
-      The outcome is a hand-written boolean (facts.yaml:54) that snapshot.py
-      copies (snapshot.py:85). With no definition of what counts, flipping it
-      to `true` on the strength of federated actions alone would be arguable,
-      and no probe would contradict it.
+      The outcome is a hand-written boolean
+      (experiments/backstage-compare/facts.yaml:54) that snapshot.py copies
+      (snapshot.py:85). With no definition of what counts, flipping it to
+      `true` on the strength of federated actions alone would be arguable, and
+      no probe would contradict it.
     suggestion: >-
       Add a two-portal probe to the harness: a parent and a child portal on
       one Postgres database, the child ingesting one entity, and the parent's
@@ -44,8 +45,8 @@ verdicts:
       design it means is 201 lines covering three flows plus a revision
       (docs/design/federation.md). With the evidence `federates is false`, an
       agent can't tell whether finishing results up, which is still design,
-      would flip the fact. The fix also omits the facts.yaml and snapshot.py
-      step.
+      would flip the fact. The fix also omits the
+      experiments/backstage-compare/facts.yaml and snapshot.py step.
     suggestion: >-
       Name the flow and the place: "Build results up
       (docs/design/federation.md §1), a parent reading children's committed

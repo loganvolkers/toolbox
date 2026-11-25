@@ -29,7 +29,8 @@ verdicts:
     verdict: pass
     reason: >-
       The fix names the CLI command and the MCP tool (`owner_of`, mcp.rs:44)
-      whose presence is the evidence in facts.yaml:73; restoring them after a
+      whose presence is the evidence in
+      experiments/backstage-compare/facts.yaml:73; restoring them after a
       regression is exactly what would make the fact true again.
   - criterion: threshold-justified
     verdict: pass
