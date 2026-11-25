@@ -1,0 +1,47 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:scorecard-quality/scorecard:repo/docs
+rubric: assessment-quality
+subjectHash: 6169b99e813d
+assessor: {kind: agent, name: cursor-reviewer-18, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/scorecard-quality/scorecard/repo/docs.yaml hold
+      except one pointer. In examples/repo-portal-starter/toolbox.yaml the
+      card is at 156-179 and the rule's evidence and fix at 171-175.
+      crates/toolbox-connector-workspace/src/main.rs:297-318 reads only inline
+      links and drops fragments. portal/results.json lists scorecard:repo/docs
+      as failing meta-scorecard `fixtures-reach-every-level`.
+      tests/standards.test.yaml:36-39 shows `docs/runbook.md`. The pointer
+      that misses: "the same failure its rationale names" cites the card's
+      rationale (toolbox.yaml:161-164), which says nothing about breakage. The
+      rule's rationale (:176-178) is what names it. The lychee and
+      markdown-link-check comparison cites no source.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The verdicts are right. One concern, a single reachable level, and an
+      actionable rule with evidence pass. Anchors are a standard link check
+      the card leaves out, so no-obvious-gap fails. The reference-style point
+      is really a defect of links-resolve's measure, not a missing rule. That
+      doesn't change the fail.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Each verdict rests on the manifest, the connector regex and
+      portal/results.json, and a second assessor would agree that anchors are
+      an obvious link-checking standard.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Resolving `#fragment` against headings, as a rule (`anchors-resolve`) or
+      inside links-resolve, flips no-obvious-gap. The passing fixture doc
+      would also clear the meta-scorecard finding the levels reason notes.
+summary: >-
+  A sound assessment. Its verdicts follow from the manifest and the
+  connector. One pointer is wrong: the breakage it attributes to the
+  card's rationale (161-164) is named by the rule's rationale (176-178).
+  The link-checker comparison has no cited source.

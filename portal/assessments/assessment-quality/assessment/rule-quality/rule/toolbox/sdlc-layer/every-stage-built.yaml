@@ -1,0 +1,50 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/sdlc-layer/every-stage-built
+rubric: assessment-quality
+subjectHash: 034e8a3060ae
+assessor: {kind: agent, name: cursor-reviewer-34, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      Most citations in
+      portal/assessments/rule-quality/rule/toolbox/sdlc-layer/every-stage-built.yaml
+      hold. portal/standards/sdlc.yaml:31 keeps only status != 'built', :237
+      also requires empty gaps, and maintainer/verify is status built with one
+      gap (portal/sdlc/stages/maintainer.yaml:59-60) while portal/results.json
+      shows it failing built. maintainer/plan is bronze there, failing
+      agent-operable and automated, with status built. The threshold citation
+      does not: docs/design/thresholds.md:58 is maintainer-ci-speed, and
+      "Every stage built" is the sdlc-layer gold cell on :59.
+    suggestion: >-
+      Cite docs/design/thresholds.md:59 for the sdlc-layer gold row.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      measures-intent and hard-to-game should fail, because a stage marked
+      built with open gaps, or with no command and no check, counts as built
+      for the layer. fix-leads-to-pass is right: the fixture evidence is
+      ['ship (partial)'] (portal/tests/standards.test.yaml:1064-1065) and
+      raising each listed stage to built empties stagesNotBuilt.
+      threshold-justified is right that gold is the ladder's "every stage
+      built", once the row is read at line 59. All four layers fail the rule
+      in portal/results.json.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The status-only filter is one computed field. A second assessor fails
+      the same two criteria from maintainer/verify and maintainer/plan and
+      passes the fix and the level.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Including gaps in stagesNotBuilt, or counting a stage only when it is
+      gold on sdlc-stage, would stop a declared-built stage with open gaps
+      from passing the layer. That changes both fails. The passes have no
+      suggestion.
+summary: >-
+  The every-stage-built verdicts match the status-only filter, and
+  maintainer/verify is a live case. The threshold citation is one row off:
+  "Every stage built" is docs/design/thresholds.md:59, and line 58 is
+  maintainer-ci-speed.

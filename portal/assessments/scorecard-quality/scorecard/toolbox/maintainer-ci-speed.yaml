@@ -1,0 +1,62 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: scorecard:toolbox/maintainer-ci-speed
+rubric: scorecard-quality
+subjectHash: b6ca381c8c70
+assessor: {kind: agent, name: cursor-assessor-12, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: >-
+      Both rules are about runner cost and time to an answer for maintainers,
+      split off from reliability on purpose
+      (packages/github-actions/fragments/github-actions.yaml:478-489;
+      docs/design/thresholds.md:34). Neither is a correctness or security
+      property, which is the card's stated reason to exist.
+  - criterion: levels-are-a-ladder
+    verdict: pass
+    reason: >-
+      Bronze is a structural one-block change, reachable now on 5 of 7
+      workflows (portal/results.json; codeql.yml and release.yml lack a
+      group). Silver, a p90 bound, costs real work (thresholds.md:34, 58).
+      Silver is never granted in the committed baseline, because fast-feedback
+      is `dataFrom: github-actions` and that connector is skipped
+      (github-actions.yaml:521; docs/design/github-actions-standards.md
+      :43-45). The fixtures reach it, though
+      (portal/tests/standards.test.yaml:201-208), and thresholds.md:71-74
+      explains where it is granted.
+  - criterion: no-obvious-gap
+    verdict: fail
+    reason: >-
+      The card says it is about "whether CI answers quickly", but nothing
+      measures the answer a developer waits for. fast-feedback reads run time
+      on main only, from `run_started_at`, so queue time is out
+      (crates/toolbox-connector-github/src/runs.rs:12-15;
+      github-actions.yaml:49-52). GitHub's own performance metrics, which the
+      design doc cites as the model, report queue time and per-job times
+      (github-actions-standards.md:64), and per-job history is open item G5
+      (:161). No rule asks for path filters or caching either; the fix
+      suggests caching, but nothing measures it.
+    suggestion: >-
+      Have the github connector report pull request runs' p90 from
+      `created_at` (queue included) and per-job p90s (G5). Point fast-feedback
+      at the PR figure, and add evidence listing the slowest jobs.
+  - criterion: actionable
+    verdict: fail
+    reason: >-
+      None to bronze works: codeql.yml's evidence says there is no concurrency
+      group, and the fix is paste-ready YAML that the unit test at
+      crates/toolbox-connector-workspace/src/workflows.rs:416-420 pins. Bronze
+      to silver doesn't. Locally the rule is unknown (every workflow in
+      results.json), and with data its evidence is one rounded number,
+      `p90Seconds / 60` (github-actions.yaml:523), naming no job. The fix's
+      "move long suites off the PR path" moves them onto the main-branch runs
+      being measured.
+    suggestion: >-
+      Add the slowest jobs to fast-feedback's evidence (G5), print seconds,
+      and drop the PR-path advice until the rule measures pull request runs.
+summary: >-
+  A cleanly separated speed card with an easy, well-tested bronze. Silver
+  measures main-branch run time without queue time rather than the
+  feedback a developer waits for, and an agent can't act on it: the
+  evidence names no job, and the fix's last option worsens the number.

@@ -1,0 +1,55 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/meta-rule/pins-both-outcomes
+rubric: assessment-quality
+subjectHash: 558eb2ddecda
+assessor: {kind: agent, name: cursor-reviewer-02, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/rule-quality/rule/toolbox/meta-rule/pins-both-outcomes.yaml
+      resolve. The regex is meta.rs:31-35, the loop over expectations 54-62,
+      the segment capture 84-93 and the unit test 306-327. The level pin is
+      standards.test.yaml:230-232 and the evidence pin 233-234. The fix is
+      meta.yaml:548-553, and thresholds.md:42 and :24-25 say what is claimed.
+      In results.json, always-explains, explains-fix, decided-on-fixtures and
+      five other meta-rule rules sit at silver, failing only
+      pins-both-outcomes. 71 of 272 fail it, the most of any meta rule. The
+      `||` route records both outcomes, because each `score(` starts its own
+      segment (meta.rs:73-97).
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      hard-to-game, fix-leads-to-pass and threshold-justified are right on the
+      cited code and docs, and I found no missed failure.
+  - criterion: reproducible
+    verdict: unsure
+    reason: >-
+      The measures-intent fail treats a level pin as a pass pin. A level pin
+      tolerates a rule turning unknown, though. The derive code ignores
+      unknown rules when granting a level unless the whole level is unknown
+      (crates/toolbox-derive/src/lib.rs:1277-1286). So `level == 'gold'` pins
+      "not fail" for each rule, the same strength as `!= 'fail'`, which the
+      detector records as no outcome by design (meta.rs:68-70, unit test
+      meta.rs:324). A second assessor could hold that level pins are rightly
+      not counted and pass measures-intent.
+    suggestion: >-
+      Address the unknown case. Either restrict the claim to a level pin that
+      catches a flip to fail, or make the suggestion count a level pin as
+      `pass` only for rules that also have data on that entity. Then say why
+      that meets the L4 intent.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Both suggestions would change their verdicts. Counting level pins, or
+      saying in the fix that they don't count, resolves the measures-intent
+      mismatch either way. Counting only comparisons under top-level `&&`
+      removes the `||` tautology route that hard-to-game cites.
+summary: >-
+  Well cited, and the `||` tautology is a real gaming route. The
+  measures-intent fail is arguable, not settled. A level pin doesn't catch
+  a rule turning unknown (derive lib.rs:1277-1286), which makes it as weak
+  as a `!=` pin, and the detector deliberately doesn't count those. So
+  reproducible is unsure.

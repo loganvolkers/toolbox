@@ -1,0 +1,65 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/meta-field/has-shape
+rubric: assessment-quality
+subjectHash: 99a18959c050
+assessor: {kind: agent, name: cursor-reviewer-03, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      One example doesn't hold. The hard-to-game reason in
+      portal/assessments/rule-quality/rule/toolbox/meta-field/has-shape.yaml
+      says Crate.tests "would reach gold with one deleted line". But
+      Crate.tests is `{type: object}` (portal/standards/crates.yaml:49), with
+      no `items:` line to delete. It also lacks a description, so a has-shape
+      pass would leave it at bronze (portal/results.json: failing `described`
+      and `has-shape`). The route itself is real for the five `list` fields
+      with `items: object`, such as Crate.functions (crates.yaml) and
+      Repository.codeowners in the reference portal. The other citations hold.
+      `opaque` is crates/toolbox-cli/src/model.rs:156, and `items` is an
+      optional free string (schema/manifest.schema.json `$defs/field`). The
+      derive codes are crates/toolbox-derive/src/lib.rs:349-735. The count of
+      160 list fields, 155 of them scalar, is right.
+    suggestion: >-
+      Use Crate.functions as the example and say it would pass has-shape, not
+      reach gold. Or note that for a `type: object` such as Crate.tests the
+      route is retyping it as `list`, which also passes.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The verdicts are right. measures-intent fails on a latent miss, which
+      the rubric's "could pass while missing the intent" covers
+      (portal/standards/meta.yaml:1160-1161). hard-to-game fails, because
+      nothing checks values against a declared type. The fix
+      (meta.yaml:808-810) names the only honest route, since Field has no key
+      schema (crates/toolbox-model/src/manifest.rs:150-162). Gold is placed at
+      docs/design/scorecards-for-scorecards.md:208.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Both fails follow from model.rs:156 and from derive having no type
+      diagnostic (crates/toolbox-derive/src/lib.rs:349-735). Any assessor can
+      confirm them in the manifest.
+  - criterion: actionable
+    verdict: fail
+    reason: >-
+      The hard-to-game suggestion in
+      portal/assessments/rule-quality/rule/toolbox/meta-field/has-shape.yaml
+      only treats lists without scalar `items` as opaque. An object field
+      still passes by being retyped `type: string` (or `integer`). Nothing
+      checks values against `type:`, as the assessment itself shows
+      (crates/toolbox-derive/src/lib.rs:349-735), so retyping is as cheap as
+      deleting `items:` was and leaves hard-to-game failing. The
+      measures-intent suggestion does close its own latent miss.
+    suggestion: >-
+      Make the hard-to-game suggestion depend on values: flag a field as
+      opaque, or mistyped, when its fixture values are JSON objects or arrays
+      of objects, whatever its declared `type`. population()
+      (crates/toolbox-cli/src/model.rs:110-122) already visits every value.
+summary: >-
+  The fails are right, but one cited example is wrong. Crate.tests is a
+  plain `object` with no `items:` line, and it would stay bronze. The
+  hard-to-game suggestion closes the deleted-`items` route while leaving
+  an equally cheap one, retyping an object as `string`, because no code
+  checks values against the declared type.

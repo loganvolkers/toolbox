@@ -1,0 +1,62 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/maintainer-agent-doc/single-source
+rubric: rule-quality
+subjectHash: 403862ad554d
+assessor: {kind: agent, name: cursor-assessor-11, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The rationale is that an alias restating the rules drifts
+      (portal/standards/agent-docs.yaml:76-80), but `pointsAtAgents` is only
+      `text.contains("AGENTS.md")`
+      (crates/toolbox-connector-workspace/src/agentsmd.rs:26). It does not
+      check whether the alias restates anything. On a scratch checkout run
+      through target/debug/toolbox-connector-workspace, a CLAUDE.md reading
+      "Do not read AGENTS.md; follow these rules instead: always push to
+      main." recorded pointsAtAgents true and so passed. The live
+      .cursor/rules/toolbox-operator.mdc says "This file points at AGENTS.md"
+      and then restates the operator-plugin paragraph of AGENTS.md:61-67 in
+      its own words. That is the drift-prone copy the rationale warns about,
+      and it scores gold.
+    suggestion: >-
+      Have agentsmd.rs report what an alias adds beyond the pointer: its
+      non-blank, non-frontmatter lines other than the line that links or
+      imports AGENTS.md (`](AGENTS.md)`, `@AGENTS.md`, or a symlink). Then
+      check that count against a small bound. The crate's own repo test
+      already asserts CLAUDE.md is at most 30 lines (agentsmd.rs:204), but the
+      rule doesn't.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      The cheapest way to pass is to write the string "AGENTS.md" anywhere in
+      a divergent alias. Any sentence containing it works, even one telling
+      the agent to ignore the file, because the check at agent-docs.yaml:70
+      reads only that substring flag (agentsmd.rs:26). Collapsing the alias
+      into a pointer costs more.
+    suggestion: >-
+      Same change as for measures-intent. Require a link or import of
+      AGENTS.md rather than a mention, and bound the alias's own content, with
+      a fixture whose alias mentions AGENTS.md but restates rules.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence is the fixed sentence "alias does not point at AGENTS.md"
+      (agent-docs.yaml:71-73), and the fix says to keep instructions in
+      AGENTS.md and link the alias to it (:74-76). A link to AGENTS.md sets
+      pointsAtAgents, so following the fix passes. The unsafe fixture shows
+      this outcome (portal/tests/standards.test.yaml:491-504).
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no number. Bronze is what D75 and D82 decide ("An alias passes
+      bronze only when it points at AGENTS.md",
+      docs/decisions/D01M7WMSMS10000000000000000.md), and
+      docs/design/agents-md-standards.md:21,65 puts it in the bronze row.
+summary: >-
+  The level and the fix are sound, but the check measures a mention, not a
+  pointer. Any alias that contains the string "AGENTS.md" passes, however
+  many rules of its own it carries. The live Cursor rule is already such a
+  partial restatement and reads gold. Bounding what an alias adds beyond
+  the pointer would make the rule mean what its rationale says.

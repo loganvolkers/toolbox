@@ -1,0 +1,55 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/vs-backstage-change-safety/rollback-steps
+rubric: rule-quality
+subjectHash: 3ca262ee74eb
+assessor: {kind: agent, name: cursor-assessor-17, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      upgrade.py:91-123 serves one database with v0.1.1, then the current
+      binary, then v0.1.1 again, and counts the steps that fail to become
+      ready and read one entity. Round 3 measured 581be50, which has the same
+      two migrations as v0.1.1 (`git ls-tree 581be50
+      crates/toolbox-store/migrations`: 0001_inputs.sql and 0002_tokens.sql).
+      So the 0 in portal/comparisons/toolbox.yaml rolled back across no schema
+      change at all. 0003_runs.sql has landed since then (2026-11-24) and is
+      untested. A count of failed serve steps (at most 3) is also not "manual
+      steps per release" (portal/standards/backstage-comparison.yaml:105-107).
+      Backstage's 1.5 is documented migrations divided by 6 releases
+      (upgrade.py:53-64).
+    suggestion: >-
+      Have upgrade.py require that the release pair differ in
+      crates/toolbox-store/migrations, or report "no migration crossed"
+      instead of 0. Exercise more than a read after rollback: an ingest and a
+      token check against the newer tables.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      The probe runs real release binaries downloaded with `gh release
+      download` against one Postgres database (upgrade.py:81-88, 100-104). The
+      cheapest way to keep 0 is migrations that an older binary tolerates,
+      such as additive tables, which is what the rule wants.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The fix, "Keep the store's migrations readable by the previous release,
+      as experiments/backstage-compare/upgrade.py checks"
+      (backstage-comparison.yaml:731-732), points at the only migrations
+      directory, crates/toolbox-store/migrations, and at the probe that
+      decides the count. Making a new migration additive and rerunning
+      upgrade.py reaches 0.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      The bar of zero manual steps was registered before the run
+      (experiments/backstage-compare/README.md:49). RESEARCH.md F14 derives it
+      from the charter claim "rollback is an image" and DORA recovery time
+      (experiments/backstage-compare/RESEARCH.md:70). The rationale cites
+      Backstage's documented manual Knex rollback (:733-739).
+summary: >-
+  A good bar and a sound probe, scored on a run that tested nothing. The
+  round 3 pair had identical migrations, so its 0 shows no rollback across
+  a schema change, and 0003_runs.sql has landed since. The fix and the
+  zero-step bar are well grounded.

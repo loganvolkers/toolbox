@@ -3456,7 +3456,6 @@ dependencies = [
  "serde_json",
  "sqlx",
  "thiserror",
- "tokio",
 ]
 
 [[package]]
@@ -3468,7 +3467,6 @@ dependencies = [
  "opentelemetry-otlp",
  "opentelemetry_sdk",
  "prometheus",
- "tempfile",
  "thiserror",
  "tracing",
  "tracing-opentelemetry",

@@ -1,0 +1,73 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/maintainer-ci-reliability/fail-rate-under-10
+rubric: rule-quality
+subjectHash: 437551b51b25
+assessor: {kind: agent, name: cursor-assessor-09, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      For a workflow that runs on the branch, the figure is the right one: a
+      run that passed only on a re-run counts as failed
+      (crates/toolbox-connector-github/src/runs.rs:59-65, 82), and the 10-run
+      floor stops one run from deciding a tier. But run history is fetched
+      with `?branch=<branch>`
+      (crates/toolbox-connector-github/src/main.rs:242), and the card applies
+      to every workflow
+      (packages/github-actions/fragments/github-actions.yaml:349). release.yml
+      runs only on tag pushes, and image.yml only through `workflow_call` or
+      dispatch, so neither ever has decided runs on main. Both fail silver
+      forever, however reliable they are.
+    suggestion: >-
+      Have the workspace connector record the branches a workflow's push or
+      schedule triggers run on, and exclude workflows that never run on the
+      scored branch (in `appliesTo`, or by making these rules `unknown` for
+      them) rather than failing them.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Cancelled runs are left out of the denominator (runs.rs:9-10). The
+      connector's own comment warns that cancelling a run about to fail would
+      lower the rate unnoticed (runs.rs:78-80). At bronze that is guarded by
+      showing the cancelled count in the evidence
+      (github-actions.yaml:390-396). This rule's evidence drops it
+      (github-actions.yaml:441-446), so at silver a cancelled failing run
+      vanishes from the evidence as well as the rate.
+    suggestion: >-
+      Carry fail-rate-under-20's clause into this evidence, "(N cancelled runs
+      not counted)", or have the connector count a cancelled run that already
+      had a failed job as failed.
+  - criterion: fix-leads-to-pass
+    verdict: fail
+    reason: >-
+      The fix covers classifying failures (flake, infrastructure or a missed
+      PR check), but the rule's other failing branch is too few decided runs.
+      The evidence then says "only 3 decided runs: at least 10 are needed"
+      (pinned in portal/tests/standards.test.yaml:192-194), and the fix gives
+      no step for it. For tag-triggered release.yml no step exists. The fix
+      also leaves out what the bronze fix says, that the rate is over a
+      rolling window of the last 50 runs (github-actions.yaml:52, 399-400), so
+      it falls only as passing runs replace failed ones.
+    suggestion: >-
+      Add a sentence for the few-runs case: the rule passes on its own once 10
+      runs have been decided on the branch, and needs no change unless the
+      workflow never runs there (see the appliesTo suggestion). Also say that
+      the rate falls as passing runs replace the failed ones in the last-50
+      window.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      docs/design/thresholds.md:31 justifies both numbers. 10% halves bronze's
+      20%, anchored on a measured 32-in-100 failure rate on main and labelled
+      as chosen. The 10-run minimum is the point where one failure is 10%, so
+      fewer runs can't separate bronze from silver. Both are parameters that
+      can only be tightened
+      (packages/github-actions/toolbox-package.yaml:33-48).
+summary: >-
+  The fail rate is well designed (re-runs counted as failures) and its
+  numbers are justified, but it fails workflows that never run on the
+  scored branch, such as tag-triggered release.yml, and its fix has
+  nothing for the too-few-runs evidence. It also drops the cancelled-run
+  count that its bronze sibling shows, which reopens the cancellation
+  loophole at silver.

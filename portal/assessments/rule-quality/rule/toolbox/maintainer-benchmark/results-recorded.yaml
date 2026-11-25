@@ -1,0 +1,48 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/maintainer-benchmark/results-recorded
+rubric: rule-quality
+subjectHash: 81291bbf60bf
+assessor: {kind: agent, name: cursor-assessor-08, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      resultGaps (benchmarks.yaml:193-202) asks a complete or archived entry
+      for an outcome and a results path, and gives `not run yet` for anything
+      else. That matches the §2 "A result, published" row
+      (docs/design/dx-benchmarks.md:75) and §4 step 9 (:140-141). The results
+      path must exist via paths-exist (portal/toolbox.yaml:174). "Against the
+      bar as written" can't be decided deterministically. The one live
+      failure, spec-ab (blocked, not run), is a true negative.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      The only way to flip it without running is to set `status: complete`
+      with a made-up outcome. That is a visible false claim in the catalog,
+      not a quiet placeholder. It also turns on sound-method, which asks a run
+      benchmark for a frozen commit, a spread and a fit audit
+      (benchmarks.yaml:366-373). `ran` is not checked, so an empty date next
+      to `complete` goes unflagged; adding it to resultGaps would make the lie
+      easier to spot.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence is `not run yet`, or `no outcome` / `no results path`
+      (pinned at portal/tests/standards.test.yaml:1191 and :1244). The fix
+      says to run it, then record the outcome and the results path
+      (benchmarks.yaml:349-351). "Run it" covers the status change, which the
+      status field's description lists as complete (benchmarks.yaml:39-41),
+      though the fix doesn't name the field.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no number. Gold is where §6 puts "A run benchmark records its
+      outcome and results" (docs/design/dx-benchmarks.md:226). Being
+      unreachable before a run is intended: a designed benchmark is evidence
+      of nothing yet (rationale, benchmarks.yaml:352-354).
+summary: >-
+  A sound gold rule. It separates run from unrun benchmarks and asks a run
+  one for a published outcome and results file. Checking `ran` and naming
+  `status: complete` in the fix would tighten it, but neither is a defect
+  in what it measures today.

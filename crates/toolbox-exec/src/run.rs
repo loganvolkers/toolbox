@@ -10,7 +10,7 @@
 //! **Done means observed:** a run with `expect` succeeds only when its postcondition holds over
 //! facts re-read after the executor finished (P9). Without `expect` it ends `unverified`.
 
-use crate::executor::{Context, Executor, Outcome};
+use crate::executor::{Context, Executor, Outcome, Rechecked};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value, json};
 use sha2::{Digest, Sha256};
@@ -447,7 +447,7 @@ pub fn verify(
 #[allow(clippy::too_many_arguments)]
 pub fn execute(
     run: &mut Run,
-    exec: &Executor,
+    exec: &dyn Executor,
     ctx: &Context,
     expect: Option<&Expect>,
     policies: &Map<String, Value>,
@@ -505,7 +505,7 @@ pub fn execute(
     if run.outputs["changed"] == false && !already_on_base(run, &ctx.cwd) {
         return;
     }
-    done(run, expect, policies, obs, every, true);
+    done(run, exec, expect, policies, obs, every, &ctx.cwd);
 }
 
 /// A change that committed nothing is observed when its base, fetched again, is still the commit
@@ -561,11 +561,12 @@ fn on_base(run: &mut Run, cwd: &std::path::Path) -> bool {
 /// its base needs none: its effect is the commit, and the base has it.
 fn done(
     run: &mut Run,
+    exec: &dyn Executor,
     expect: Option<&Expect>,
     policies: &Map<String, Value>,
     obs: &mut dyn Observer,
     every: Duration,
-    wait: bool,
+    cwd: &std::path::Path,
 ) {
     let on_base = run.verification.take();
     match expect {
@@ -573,17 +574,44 @@ fn done(
             run.verification = on_base;
             run.set("succeeded", None, None);
         }
-        None => run.set(
-            "unverified",
-            None,
-            Some("the action declares no postcondition (expect)".into()),
-        ),
+        None => unobserved(run, exec, cwd),
         Some(e) => {
-            verify(run, e, policies, obs, every, wait);
+            verify(run, e, policies, obs, every, true);
             if let (Some(b), Some(Value::Object(v))) = (on_base, run.verification.as_mut()) {
                 v.insert("on_base".into(), b);
             }
         }
+    }
+}
+
+/// No postcondition: the executor's own read-back (`verify`), if it has one; else `unverified`.
+/// A read-back that could not be made leaves the run unverified, not failed.
+fn unobserved(run: &mut Run, exec: &dyn Executor, cwd: &std::path::Path) {
+    let Some(said) = exec.verify(run, cwd) else {
+        run.set(
+            "unverified",
+            None,
+            Some("the action declares no postcondition (expect)".into()),
+        );
+        return;
+    };
+    run.set("verifying", None, None);
+    match said {
+        Ok((held, observed)) => {
+            run.verification = Some(json!({"by": "executor", "held": held, "observed": observed}));
+            if held {
+                run.set("succeeded", None, None);
+            } else {
+                run.fail("the executor read back the run's effect and did not find it");
+            }
+        }
+        Err(e) => run.set(
+            "unverified",
+            None,
+            Some(format!(
+                "the executor could not read back the run's effect: {e}"
+            )),
+        ),
     }
 }
 
@@ -592,126 +620,24 @@ fn done(
 /// past its deadline fails. Returns whether the run changed.
 pub fn recheck(
     run: &mut Run,
-    exec: &crate::executor::Executor,
+    exec: &dyn Executor,
     expect: Option<&Expect>,
     policies: &Map<String, Value>,
     obs: &mut dyn Observer,
     cwd: &std::path::Path,
 ) -> bool {
-    use crate::executor::Executor;
     if run.is_terminal() || run.state == "awaiting_approval" {
         return false;
     }
     let before = run.state.clone();
     let events = run.events.len();
-    match exec {
-        Executor::Toolbox {
-            portal,
-            program,
-            env,
-            ..
-        } => {
-            if let Some(child) = run.child.clone() {
-                match crate::executor::verify_child(program, portal, &child, false, env) {
-                    Ok(v) => {
-                        let state = v["state"].as_str().unwrap_or("failed").to_owned();
-                        match state.as_str() {
-                            "succeeded" | "unverified" => {
-                                run.verification = Some(json!({"by": "child portal",
-                                    "child_run": v["id"], "child": v["verification"]}));
-                                run.set(&state, None, None);
-                            }
-                            "failed" | "timed_out" | "cancelled" | "rejected" => run.fail(format!(
-                                "child run {state}: {}",
-                                v["error"].as_str().unwrap_or("")
-                            )),
-                            _ => {}
-                        }
-                        run.child = Some(v);
-                    }
-                    Err(e) => {
-                        run.progress
-                            .push(json!({"at": rfc3339(now_secs()), "note": e}));
-                    }
-                }
-            }
-            return run.state != before;
-        }
-        Executor::GithubWorkflow(w) if run.state == "dispatched" => {
-            match w.track(&run.id, &run.outputs) {
-                Ok(Some(t)) if t.status == "completed" => {
-                    if let Some(u) = &t.url
-                        && let Some(o) = run.outputs.as_object_mut()
-                    {
-                        o.insert("workflow_run".into(), json!(u));
-                    }
-                    if t.conclusion.as_deref() == Some("success") {
-                        run.set("executor_succeeded", None, t.url.clone());
-                        if expect.is_none() {
-                            run.set("unverified", None, None);
-                            return true;
-                        }
-                    } else {
-                        run.fail(format!(
-                            "workflow concluded {}",
-                            t.conclusion.as_deref().unwrap_or("unknown")
-                        ));
-                        return true;
-                    }
-                }
-                Ok(t) => {
-                    if run.deadline.is_some_and(|dl| now_secs() >= dl) {
-                        run.set(
-                            "timed_out",
-                            None,
-                            Some(match t {
-                                None => "the dispatched workflow run never appeared".into(),
-                                Some(t) => format!("the workflow run was still {}", t.status),
-                            }),
-                        );
-                        run.error = Some("the workflow did not finish before the deadline".into());
-                    }
-                    return run.state != before;
-                }
-                Err(e) => {
-                    run.progress
-                        .push(json!({"at": rfc3339(now_secs()), "note": e}));
-                    return false;
-                }
-            }
-        }
-        Executor::GitlabPipeline(p) if run.state == "dispatched" => {
-            if let Some(changed) = recheck_pipeline(run, p, expect.is_some()) {
-                return changed;
-            }
-        }
-        // A proposed change is done only once its commit is on the base branch: the base
-        // satisfying the postcondition by other means is not this run's effect.
-        Executor::Change { .. } if run.state == "proposed" => {
-            match crate::executor::merged(cwd, run) {
-                Ok(true) if expect.is_none() => {
-                    run.verification = Some(json!({"by": "base", "merged": true,
-                        "base": run.outputs["base"], "commit": run.outputs["commit"]}));
-                    run.set("succeeded", None, None);
-                    return true;
-                }
-                Ok(true) => {}
-                Ok(false) => {
-                    if run.deadline.is_some_and(|dl| now_secs() >= dl) {
-                        run.fail("the proposed change was not merged before the deadline");
-                    }
-                    return run.state != before;
-                }
-                Err(e) => {
-                    run.progress
-                        .push(json!({"at": rfc3339(now_secs()), "note": e}));
-                    return false;
-                }
-            }
-        }
-        _ => {}
+    if exec.recheck(run, expect.is_some(), cwd) == Rechecked::Done {
+        return run.state != before;
     }
     let Some(expect) = expect else {
+        if run.state == "executor_succeeded" {
+            unobserved(run, exec, cwd);
+        }
         return run.state != before;
     };
     if run.state == "dispatched" {
@@ -736,164 +662,6 @@ pub fn recheck(
         }
     }
     run.state != before
-}
-
-/// [`recheck`] for a `dispatched` GitLab pipeline. `Some(changed)` ends the look; `None` goes on
-/// to the postcondition, once the pipeline succeeded and the run has one.
-fn recheck_pipeline(run: &mut Run, p: &crate::gitlab::Pipeline, expects: bool) -> Option<bool> {
-    let before = run.state.clone();
-    if let (Some(child), Some(clone)) = (run.child.clone(), &p.clone)
-        && child["state"] == "proposed"
-    {
-        child_proposal(run, &child, clone);
-        return Some(run.state != before);
-    }
-    match p.track(&run.outputs) {
-        Ok(Some(t)) if t.status == "completed" => {
-            if let (Some(u), Some(o)) = (&t.url, run.outputs.as_object_mut()) {
-                o.insert("pipeline".into(), json!(u));
-            }
-            let ok = t.conclusion.as_deref() == Some("success");
-            let concluded = t.conclusion.as_deref().unwrap_or("unknown").to_owned();
-            if p.federated.is_some() {
-                return Some(
-                    pipeline_record(run, p, t.url.as_deref(), ok, &concluded)
-                        && run.state != before,
-                );
-            }
-            if !ok {
-                run.fail(format!("the pipeline concluded {concluded}"));
-                return Some(true);
-            }
-            run.set("executor_succeeded", None, t.url.clone());
-            if !expects {
-                run.set("unverified", None, None);
-                return Some(true);
-            }
-            None
-        }
-        Ok(t) => {
-            if run.deadline.is_some_and(|dl| now_secs() >= dl) {
-                run.set(
-                    "timed_out",
-                    None,
-                    Some(match t {
-                        None => "the pipeline was not found".into(),
-                        Some(t) => format!("the pipeline was still {}", t.status),
-                    }),
-                );
-                run.error = Some("the pipeline did not finish before the deadline".into());
-            } else if let Some(t) = t.filter(|t| t.status == "waiting")
-                && !run.progress.iter().any(|p| p["waiting"] == true)
-            {
-                run.progress
-                    .push(json!({"at": rfc3339(now_secs()), "waiting": true,
-                    "note": format!("the pipeline waits for someone to start a manual job: {}",
-                        t.url.unwrap_or_default())}));
-            }
-            Some(run.state != before)
-        }
-        Err(e) => {
-            run.progress
-                .push(json!({"at": rfc3339(now_secs()), "note": e}));
-            Some(false)
-        }
-    }
-}
-
-/// A federated child's finished pipeline: its kept run record is this run's outcome. Returns
-/// `false` when the record could not be read, so the next look tries again.
-fn pipeline_record(
-    run: &mut Run,
-    p: &crate::gitlab::Pipeline,
-    url: Option<&str>,
-    ok: bool,
-    concluded: &str,
-) -> bool {
-    let (job, file) = (crate::gitlab::JOB, crate::gitlab::RECORD);
-    match p.collect(&run.outputs) {
-        Ok(Some(v)) => {
-            child_record(run, v, url);
-            if let (Some(child), Some(clone)) = (run.child.clone(), &p.clone)
-                && child["state"] == "proposed"
-            {
-                child_proposal(run, &child, clone);
-            }
-        }
-        Ok(None) if ok => run.set(
-            "unverified",
-            None,
-            Some(format!(
-                "the pipeline succeeded, but no job named {job} kept {file}, so the child's own verification is unknown"
-            )),
-        ),
-        Ok(None) => run.fail(format!(
-            "the pipeline concluded {concluded}, and no job named {job} kept {file}"
-        )),
-        Err(e) => {
-            run.progress.push(
-                json!({"at": rfc3339(now_secs()), "note": format!("reading the child's run record: {e}")}),
-            );
-            return false;
-        }
-    }
-    true
-}
-
-/// Take a child's run record, as its pipeline kept it, as this run's outcome (T8: the child
-/// verifies). A change the child proposed leaves this run `dispatched` until the parent sees it
-/// on the base ([`child_proposal`]).
-fn child_record(run: &mut Run, v: Value, pipeline: Option<&str>) {
-    let state = v["state"].as_str().unwrap_or("failed").to_owned();
-    let error = v["error"].as_str().unwrap_or("").to_owned();
-    match state.as_str() {
-        "succeeded" | "unverified" => {
-            run.verification = Some(json!({"by": "child pipeline", "child_run": v["id"],
-                "pipeline": pipeline, "child": v["verification"]}));
-            run.set(&state, None, None);
-        }
-        "proposed" => {
-            let review = v["outputs"]["review"]["url"]
-                .as_str()
-                .or(v["outputs"]["branch"].as_str())
-                .unwrap_or("a branch")
-                .to_owned();
-            run.progress.push(json!({"at": rfc3339(now_secs()),
-                "note": format!("the child proposed {review}; waiting for it on {}",
-                    v["outputs"]["base"].as_str().unwrap_or("its base"))}));
-        }
-        "awaiting_approval" => run.fail(format!(
-            "the child's run waits for approval in its pipeline, where nobody can give it: this portal's grant did not meet its rule{}",
-            if error.is_empty() { String::new() } else { format!(" ({error})") }
-        )),
-        _ => run.fail(format!("child run {state}: {error}")),
-    }
-    run.child = Some(v);
-}
-
-/// A change a child proposed from its pipeline, looked for on its base in the parent's clone of
-/// the child: merged, fast-forwarded, or squashed or rebased with its `Toolbox-Run` trailer.
-fn child_proposal(run: &mut Run, child: &Value, clone: &std::path::Path) {
-    let Ok(record) = serde_json::from_value::<Run>(child.clone()) else {
-        run.fail("the child's run record does not parse");
-        return;
-    };
-    match crate::executor::merged(clone, &record) {
-        Ok(true) => {
-            run.verification = Some(json!({"by": "parent", "merged": true,
-                "child_run": record.id, "base": record.outputs["base"],
-                "commit": record.outputs["commit"], "review": record.outputs["review"]}));
-            run.set("succeeded", None, None);
-        }
-        Ok(false) => {
-            if run.deadline.is_some_and(|dl| now_secs() >= dl) {
-                run.fail("the change the child proposed was not merged before the deadline");
-            }
-        }
-        Err(e) => run
-            .progress
-            .push(json!({"at": rfc3339(now_secs()), "note": e})),
-    }
 }
 
 #[cfg(test)]

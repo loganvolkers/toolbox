@@ -1,0 +1,64 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/review-crate/independently-reviewed
+rubric: assessment-quality
+subjectHash: 41085c7805d2
+assessor: {kind: agent, name: cursor-reviewer-05, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      Almost every citation in
+      portal/assessments/rule-quality/rule/toolbox/review-crate/independently-reviewed.yaml
+      holds. portal/standards/crates.yaml has reviewIndependent at 84-92, the
+      check at 435, the evidence at 436-440, the fix at 441-445 and the
+      rationale at 446-450. crates/toolbox-connect/src/assessment.rs has
+      `link_reviews` at 232-295, the name at 240-245 and grounding at 253-270.
+      Its test (376-404) leaves the field empty for the same assessor, an
+      ungrounded review and an old hash. docs/design/thresholds.md:62-70,
+      docs/design/meta-standards-review.md:86 and
+      portal/standards/assessments.yaml:120-122 say what is claimed. One
+      citation is wrong: the hard-to-game reason cites "M8,
+      docs/design/meta-standards-review.md:167", but line 167 is M7 (findings
+      survive staleness). M8, which proposes checking a review's own
+      `uncited`, is line 168.
+    suggestion: >-
+      Cite M8 at docs/design/meta-standards-review.md:168.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      measures-intent passes correctly. The check (crates.yaml:435) reads a
+      field that link_reviews fills only for a grounded review, at the current
+      hash, by a different name (assessment.rs:289-291). hard-to-game fails
+      correctly on grounding alone. One shared path suffices
+      (assessment.rs:265-268), and the review's own `uncited` is not read.
+      fix-leads-to-pass and threshold-justified match crates.yaml:441-445 and
+      thresholds.md:55.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The fail rests on code (assessment.rs:253-295), and on a gap the design
+      itself records as unchecked (docs/design/thresholds.md:62-70). A second
+      assessor would at least fail it on the single-citation grounding route.
+  - criterion: actionable
+    verdict: unsure
+    reason: >-
+      The grounding half of the suggestion would close the single-citation
+      route: a verdict for every criterion, an empty `uncited`, and grounding
+      for each `supported` reason. The identity half proposes comparing the
+      `Co-authored-by` trailer or the agent id of the commit. In this
+      repository every recent commit carries the same trailer, "Cursor Agent
+      <cursoragent@cursor.com>", and no agent id.
+      docs/design/thresholds.md:63-64 says git can't tell assessors apart. So
+      the renamed-reviewer route that the reason names stays open, and whether
+      the verdict flips depends on whether that route still counts.
+    suggestion: >-
+      Name an identity signal that differs between agents here, such as a
+      required, distinct `assessor.model` or a signed run id. Otherwise scope
+      the fail to grounding and say that the rename is a recorded,
+      out-of-scope gap (thresholds.md:63-66).
+summary: >-
+  Mostly trustworthy. The verdicts are right, and the grounding route is a
+  real, cheap way to reach gold. The M8 citation points at M7's row, one
+  line early. The identity half of the hard-to-game suggestion relies on
+  commit signals that don't tell agents apart in this repository.

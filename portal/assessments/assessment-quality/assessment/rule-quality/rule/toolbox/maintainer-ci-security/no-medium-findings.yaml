@@ -1,0 +1,42 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-medium-findings
+rubric: assessment-quality
+subjectHash: ecc7db54c7be
+assessor: {kind: agent, name: cursor-reviewer-12, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/rule-quality/rule/toolbox/maintainer-ci-security/no-medium-findings.yaml
+      land: github-actions.yaml:270-274 and 278-281, lint.rs:158-166, 209-213
+      and 214, waivers.yaml:13-19, standards.test.yaml:149-154, and the fix
+      without a command next to no-high-findings' 223-225. zizmor 1.32.0
+      `--offline` on a scratch workflow with no permissions block and a
+      default checkout reported artipacked and excessive-permissions at
+      Medium, as claimed. The ignore-without-trace behaviour reproduces as
+      well.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      No missed failure. The check counts every medium result, but zizmor
+      1.32.0 rates `unpinned-uses` High (two tag-pinned actions on a scratch
+      workflow), so nothing here double-counts pinned-to-sha. The
+      measures-intent pass and the hard-to-game fail both match the sources.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Every verdict rests on zizmor's output or the fitting's code, which a
+      second assessor can rerun.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Running zizmor with `--no-ignores`, which restored an ignored result on
+      a scratch run, keeps an inline-ignored medium finding in
+      `counts.medium`. That flips the one fail in
+      portal/assessments/rule-quality/rule/toolbox/maintainer-ci-security/no-medium-findings.yaml.
+summary: >-
+  Trustworthy. Check and evidence agree, the medium audits it names are
+  Medium in zizmor 1.32.0, and the inline-ignore route reproduces. The
+  suggested `--no-ignores` closes it.

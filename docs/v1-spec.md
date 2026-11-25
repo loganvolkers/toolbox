@@ -23,8 +23,8 @@ One Rust server, shipped as **one container image plus Postgres** (G1), that:
    permissions and owner-only facets;
 4. runs **self-service actions** with preview, confirmation, durable execution and verification;
 5. is configured only by a **manifest in git**, with `validate`, `test`, `plan`, `build`, `deploy` and
-   `verify` as the operator SDLC (G2, layer 2 of [the three SDLC layers](./sdlc.md));
-6. gives apps built on a portal (the user SDLC, layer 3) a versioned `/v1` API, stable MCP tool
+   `verify` as the operator SDLC (G2, layer 3 of [the four SDLC layers](./sdlc.md));
+6. gives apps built on a portal (the user SDLC, layer 4) a versioned `/v1` API, stable MCP tool
    names and snapshot ids for reproducible reads; and is itself built under the maintainer SDLC
    (layer 1): every milestone below ends in executable checks
    ([maintainer-sdlc.md](./design/maintainer-sdlc.md)).
@@ -65,7 +65,7 @@ earlier ones. Tracks in [AGENTS.md](../AGENTS.md) map onto these. Every mileston
 | **M2** ✅ | Postgres and API | `PgStore` (§8), ingest endpoint, snapshot loop, REST reads (§7.2), snapshot ids | Same outputs as M1 when fixtures arrive through `POST /v1/ingest`; `min_snapshot` read-your-writes works; restart loses nothing |
 | **M3** ✅ | Authorization | Authn (IAP JWT, OIDC, PAT), OpenFGA co-process over the tuple view, facet shaping, `toolbox test` runs `.fga.yaml` | Reference `authz/model.fga.yaml` passes through `Authorizer`; A3/A4/A10 behave as specified; a membership removal is enforced within 60 s |
 | **M4** ✅ | Agents and connectors | MCP (§7.3), CLI (§7.7), the read pages of the [minimal UI](./design/minimal-ui.md), connector runtime with control channel (§7.4), GitHub, git-files and SCIM connectors | Acceptance A1–A5 and A11; connector conformance kit passes for all three connectors |
-| **M5** 🔶 | Actions, federated (**unpaused**, D01M86BY3YQX3SA1W99QXF1QA1H, after the [self-service review](./self-service-review.md); design: [federated-actions.md](./design/federated-actions.md)) | Executor protocol (§7.5), run lifecycle (§6.6), previews and tokens, approvals, verification, federation (actions up, runs down, signed approvals), durable tables (§8.1), UI extension contract (§7.6), the minimal UI's action, run and approval pages, the `github-apps` executor. **Built:** the lifecycle in `toolbox run` and `toolbox serve` (REST, MCP), the `command`, `change`, `github-workflow`, `in-image` and federated `toolbox` executors, approvals and federation, children listed by git URL with kept clones and a kept signing key (D01M86J769VGE6K5FJJQ76EP4AA). `change` executors that propose or land (`land: push`), runs written through to Postgres (`toolbox.runs`). **Not yet:** durable steps across instances, the UI pages, the `github-apps` executor | `scripts/m5-acceptance.sh` (built); acceptance A6–A10 with simulated executor and connector; failure-injection properties P9–P12 hold; the sandbox-org integration test passes |
+| **M5** 🔶 | Actions, federated (**unpaused**, D01M86BY3YQX3SA1W99QXF1QA1H, after the [self-service review](./self-service-review.md); design: [federated-actions.md](./design/federated-actions.md)) | Executor protocol (§7.5), run lifecycle (§6.6), previews and tokens, approvals, verification, federation (actions up, runs down, signed approvals), durable tables (§8.1), UI extension contract (§7.6), the minimal UI's action, run and approval pages, the `github-apps` executor. **Built:** the lifecycle in `toolbox run` and `toolbox serve` (REST, MCP), the `command`, `change`, `github-workflow`, `gitlab-pipeline`, `in-image` (a command or a pinned released `package`), `http`, `webhook` and federated `toolbox` executors, with the protocol's `status`, `cancel` and `verify` messages sent (action-runs §5), approvals and federation, children listed by git URL with kept clones and a kept signing key (D01M86J769VGE6K5FJJQ76EP4AA). `change` executors that propose or land (`land: push`), runs written through to Postgres (`toolbox.runs`). **Not yet:** durable steps across instances, the UI pages, the `github-apps` executor | `scripts/m5-acceptance.sh` (built); acceptance A6–A10 with simulated executor and connector; failure-injection properties P9–P12 hold; the sandbox-org integration test passes |
 | **M6** ⏸ | Ship (**paused**, D01M7Y46VDDBK2SW6H96ZSG89MP: repo-level value first, [repo-value.md](./design/repo-value.md)) | Image build, Cloud Run deployment, `plan --remote`, `verify`, the operator SDLC workflow, metrics | A12; the reference workflow runs end to end on a sandbox project; `v0.1` tagged |
 
 ## 4. Architecture and crates
@@ -95,7 +95,10 @@ Small, shallow workspace; heavy dependencies isolated in leaf crates (D44, D46):
 | `toolbox-exec` | `Executor` trait; stdio, HTTP, GitHub Actions, webhook implementations |
 | `toolbox-api` | axum REST + OpenAPI generation; MCP (rmcp); UI host |
 | `toolbox-cli` | The `toolbox` binary (server and CLI subcommands) |
-| `connectors/*`, `executors/*` | First-party connectors and executors as separate binaries (any language; Rust or TS) |
+| `toolbox-secrets` | Secret backends for connector `${secret:…}` resolution (D55) |
+| `toolbox-telemetry` | OpenTelemetry and Prometheus bootstrap, metric catalog, log bridge (§10.5) |
+| `toolbox-connector-*` | First-party connectors as separate binaries: `github`, `gitlab`, `git-files` and `scim` read sources; `workspace` and `runner` serve Toolbox for Toolbox. Third-party connectors may be in any language |
+| `executors/*` | First-party executors as separate binaries (any language; Rust or TS) |
 | `ui/` | Minimal UI and the default React kit (TypeScript) |
 
 ## 5. The manifest
@@ -360,12 +363,21 @@ semantics: [action-runs.md](./design/action-runs.md) §5. Golden conversation:
 [`protocol/install-approved-app.executor.ndjson`](../examples/reference-portal/protocol/install-approved-app.executor.ndjson).
 In-image executors are child processes over stdio, started with a cleared environment: a fixed
 base set plus only their declared secrets (built). Running them as a separate Unix user is still
-open (Q12). Credentials for the acting identity arrive per request in `identity.credentials` and
-are never logged. **GitHub Actions executor:** dispatch with `return_run_details` and track that
+open (Q12). `http` executors receive the same messages as POST bodies. An executor that answers
+`accepted` with an `executor_run_id` and no `result` keeps the run `dispatched`; Toolbox then asks
+after it with `status` and stops it with `cancel`. An executor that declares `verify: true` is sent
+`verify` when the action has no postcondition (built). Credentials for the acting identity arrive
+per request in `identity.credentials` and are never logged. **GitHub Actions executor:** dispatch with `return_run_details` and track that
 run id through the runs API; a server that returns no id falls back to the one run named for the
 Toolbox run, on the dispatched ref, created after the dispatch. Conclusions map to `result`, a run
 that never finishes is `timed_out`, and previews come from the Toolbox layer only. The dispatch
-token and API are the portal's, never a child manifest's.
+token and API are the portal's, never a child manifest's. **CI hosts** (D01M87T16JRH53YV6VVWM8PH169,
+[forges.md](./design/forges.md) §4.7): a manifest declares the CI systems it starts runs on under
+`ci:`, apart from `forges:`. Each is `github-actions`, `gitlab-ci`, or `http`, a service that
+speaks this protocol (`run`, `status`, `cancel`) for any other CI, with the child's run record in
+the result's `outputs.record`. `forges[].ci` picks the host a forge's `runner: {type: ci}`
+children run on, and the default is the forge's own CI. `github-workflow` and `gitlab-pipeline`
+may take their endpoint and token from a host (`ci:`) (built).
 
 ### 7.6 UI extension contract
 
@@ -399,7 +411,7 @@ token and API are the portal's, never a child manifest's.
 | `toolbox campaign [NAME]` | One campaign's progress and gaps (MCP `campaign_report`) |
 | `toolbox assess brief ID` / `assess check` / `assess submit FILE` | Brief a coding agent on an entity (MCP `assessment_brief`), validate a portal's `assessments/`, or push an assessment to a server (D79) |
 | `toolbox install [PORTAL] [--frozen]` | Download released executable connectors (`package: github:owner/repo[/app]@version`) for this platform, verify them against `toolbox.lock` (pinning new ones), and unpack them into the cache (D90) |
-| `toolbox doctor [PORTAL] [--mise]` | Check every in-image connector resolves and every declared `tools:` entry is at its pinned version; `--mise` prints the mise config that installs them (D90) |
+| `toolbox doctor [PORTAL] [--mise]` | Check every in-image connector and executor package resolves and every declared `tools:` entry is at its pinned version; `--mise` prints the mise config that installs them (D90) |
 | `include: [{package: <dir or github:owner/repo[/subdir]@ref>, with: {...}}]` | A package (D89): fragments merged with typed parameters (`${param:name}`; parameters with `tighten` may only move that way); git packages are cloned by `toolbox install` (semver tag `v…`, branch, or commit SHA) and pinned in `toolbox.lock` by content hash, checked on every load |
 | `toolbox describe` | Print Toolbox's own CLI commands and MCP tools as connector records (contract snapshots; Toolbox for Toolbox, D65) |
 | `toolbox token create --user U` | Create a personal access token (printed once) |

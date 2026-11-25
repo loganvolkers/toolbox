@@ -96,6 +96,8 @@ pub struct AppState {
     pub changed: Notify,
     pub config: Config,
     pub runs: crate::actions::Runs,
+    /// In-image connector → how its last start went (Landlock, unconfined or refused).
+    pub confinement: std::sync::Mutex<std::collections::BTreeMap<String, crate::confine::Started>>,
 }
 
 /// Server settings from the command line and the environment.
@@ -108,6 +110,8 @@ pub struct Config {
     pub debounce: Duration,
     pub max_lag: Duration,
     pub poll: Duration,
+    /// Whether an in-image connector may start without Landlock.
+    pub connector_confinement: crate::confine::Confinement,
 }
 
 impl Default for Config {
@@ -118,6 +122,7 @@ impl Default for Config {
             debounce: Duration::from_millis(500),
             max_lag: Duration::from_secs(5),
             poll: Duration::from_secs(1),
+            connector_confinement: Default::default(),
         }
     }
 }

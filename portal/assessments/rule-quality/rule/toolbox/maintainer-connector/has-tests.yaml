@@ -1,0 +1,52 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/maintainer-connector/has-tests
+rubric: rule-quality
+subjectHash: 2b4cd4a820e5
+assessor: {kind: agent, name: cursor-assessor-10, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The rationale is that a parser or record-shape regression fails CI
+      (portal/standards/connectors.yaml:155-158), but `tests` counts the regex
+      `#\[(?:[\w:]+::)*test\]` in the raw text of every .rs file
+      (crates/toolbox-connector-workspace/src/connectors.rs:177-179), so it
+      counts attributes inside string literals and comments. The workspace
+      connector's 82 includes `#[test]` inside its own fixture strings
+      (connectors.rs:338). An empty `#[test] fn t() {}` also counts, which
+      maintainer-crate's has-tests would reject for asserting nothing
+      (portal/standards/crates.yaml:178-193) on the same crates.
+    suggestion: >-
+      Reuse the crate record's syn-based unitTests and testsWithoutAsserts for
+      the connector's crate instead of a regex, and require at least one test
+      that asserts.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      A scratch connector with no test at all, only the comment `// #[test]`,
+      reported tests 1 through target/debug/toolbox-connector-workspace, so
+      silver's test rule passed.
+    suggestion: >-
+      Count only `#[test]` attributes on functions, from a parse, and only
+      tests that assert, as maintainer-crate does.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence states the count ("0 #[test] functions", pinned for
+      crates/demo/partial in portal/tests/standards.test.yaml:404-405), and
+      the fix says to add a unit test that needs no upstream API, with three
+      concrete targets (connectors.yaml:152-154). Any such test passes.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      "At least one" at silver is D73's "at least one unit test"
+      (docs/decisions/D01M7W4FRJR0000000000000000.md).
+      docs/design/connector-standards.md:90-92 explains why it isn't the
+      floor.
+summary: >-
+  It duplicates maintainer-crate's has-tests with a weaker regex count.
+  Comments, fixture strings and empty tests all count, so `// #[test]`
+  alone reaches the threshold. The fix and level are fine. Reusing the
+  crate record's parsed test facts would make the rule mean what its
+  rationale says.

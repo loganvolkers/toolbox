@@ -1,0 +1,51 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/maintainer-skill/one-level-deep
+rubric: assessment-quality
+subjectHash: e8111db5eab3
+assessor: {kind: agent, name: cursor-reviewer-01, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      One citation in
+      portal/assessments/rule-quality/rule/toolbox/maintainer-skill/one-level-deep.yaml
+      doesn't land. threshold-justified cites
+      docs/design/skill-standards.md:46 for the spec's one-hop rule, but line
+      46 is the table's `|---|` separator. "references one level deep" is the
+      spec row at line 47. The rest holds. link_depth/follow_links
+      (crates/toolbox-connector-workspace/src/skills.rs:515-548) count any
+      linked .md that exists, including ones outside the skill via resolve
+      (460-476). support_files counts every non-binary file except SKILL.md
+      (401-403, with binaries skipped at 361-374). design-audit has exactly
+      references/rubric.md, scripts/capture.cjs and evals/evals.json. In
+      portal/standards/skills.yaml, the rationale is 275-278 and the body
+      budget 173. The evidence is portal/tests/standards.test.yaml:362-363,
+      and skill-standards.md:151-152 labels SkillsBench as not re-run.
+    suggestion: Cite docs/design/skill-standards.md:47 for the spec's one-level rule.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The evals/evals.json collision with has-evals is real (skills.rs:401-403
+      against skills.yaml:217). Merging references to pass is the cheap route
+      the rubric names. The threshold unsure is right: thresholds.md has no
+      row for this rule, and the module-to-file mapping is unsourced.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The fails follow from support_files' plain count, and the unsure states
+      what could not be read (the SkillsBench paper). A second assessor would
+      reach the same verdicts.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Excluding evals/ and bounding bytes or relabelling the count addresses
+      both measures-intent findings. A size bound on references/ removes the
+      concatenation route under hard-to-game. A thresholds.md row resolves the
+      unsure. See
+      portal/assessments/rule-quality/rule/toolbox/maintainer-skill/one-level-deep.yaml.
+summary: >-
+  Sound verdicts. The evals-versus-file-limit collision is a real finding,
+  and design-audit's three files confirm it. One citation is wrong:
+  skill-standards.md:46 is a table separator, and the spec's one-level
+  rule is line 47.

@@ -628,48 +628,140 @@ impl Checker {
         }
     }
 
+    /// CI hosts: unique names, an endpoint for a service, a project template with only
+    /// `{project}` in it, and every `forges[].ci` naming one (docs/design/forges.md §4.7).
+    fn ci_hosts(&mut self, m: &Manifest) {
+        let mut seen = BTreeSet::new();
+        for (i, h) in m.ci.iter().enumerate() {
+            if h.name == crate::ci::NONE || !seen.insert(h.name.as_str()) {
+                self.push(
+                    "ci",
+                    format!("/ci/{i}/name"),
+                    format!("ci {}: the name is taken (none, or listed twice)", h.name),
+                );
+            }
+            if let Err(e) = crate::ci::target(h, "x") {
+                self.push("ci", format!("/ci/{i}"), e);
+            }
+            if let Some(p) = &h.project
+                && p.replace("{project}", "").contains(['{', '}'])
+            {
+                self.push(
+                    "ci",
+                    format!("/ci/{i}/project"),
+                    format!("ci {}: project {p} may hold only {{project}}", h.name),
+                );
+            }
+        }
+        for (i, f) in m.forges.iter().enumerate() {
+            if let Some(c) = &f.ci
+                && c != crate::ci::NONE
+                && !m.ci.iter().any(|h| &h.name == c)
+            {
+                self.push(
+                    "ci",
+                    format!("/forges/{i}/ci"),
+                    format!(
+                        "forge {}: ci {c} is not declared under ci: (or say none)",
+                        f.url
+                    ),
+                );
+            }
+        }
+    }
+
+    /// An executor's `ci:` names a declared host of the type it speaks, instead of `forge`,
+    /// `api` or `token`.
+    fn executor_ci(&mut self, m: &Manifest, ai: usize, t: &crate::executors::ExecutorType) {
+        let a = &m.actions[ai];
+        let Some(name) = a.executor.get("ci").and_then(Value::as_str) else {
+            return;
+        };
+        let at = format!("/actions/{ai}/executor/ci");
+        let Some(want) = t.ci else {
+            self.push(
+                "action.executor",
+                at,
+                format!("action {}: a {} executor names no ci", a.name, t.name),
+            );
+            return;
+        };
+        match m.ci.iter().find(|h| h.name == name) {
+            Some(h) if h.kind == want.name() => {}
+            Some(h) => self.push(
+                "action.executor",
+                at.clone(),
+                format!(
+                    "action {}: ci {name} is {}, and a {} executor needs {}",
+                    a.name,
+                    h.kind,
+                    t.name,
+                    want.name()
+                ),
+            ),
+            None => self.push(
+                "action.executor",
+                at.clone(),
+                format!("action {}: ci {name} is not declared under ci:", a.name),
+            ),
+        }
+        if let Some(k) = ["forge", "api", "token"]
+            .into_iter()
+            .find(|k| a.executor.get(*k).is_some())
+        {
+            self.push(
+                "action.executor",
+                at,
+                format!(
+                    "action {}: name ci or {k}, not both; ci {name} supplies the endpoint and token",
+                    a.name
+                ),
+            );
+        }
+    }
+
     /// Each executor type's own required fields (docs/design/federated-actions.md §5).
     fn executors(&mut self, m: &Manifest) {
         self.forges(m);
+        self.ci_hosts(m);
         for (ai, a) in m.actions.iter().enumerate() {
             let ty = a
                 .executor
                 .get("type")
                 .and_then(Value::as_str)
                 .unwrap_or("command");
-            let needs: &[&str] = match ty {
-                "command" | "change" => &["run"],
-                "in-image" => &["command"],
-                "github-workflow" => &["repo", "workflow"],
-                "gitlab-pipeline" => &["project"],
-                _ => &[],
+            // An unknown type is the schema's error: its enum is `executors::TYPES`.
+            let Some(t) = crate::executors::get(ty) else {
+                continue;
             };
-            if ty == "gitlab-pipeline" {
+            self.executor_ci(m, ai, t);
+            if let Some(kind) = t.forge.filter(|_| a.executor.get("ci").is_none()) {
                 let forge = a
                     .executor
                     .get("forge")
                     .and_then(Value::as_str)
-                    .unwrap_or("https://gitlab.com");
+                    .or_else(|| crate::forge::known_host(kind))
+                    .unwrap_or_default();
                 let project = a
                     .executor
                     .get("project")
                     .and_then(Value::as_str)
                     .unwrap_or("x");
                 let url = format!("{}/{project}.git", forge.trim_end_matches('/'));
-                if crate::forge::resolve(&m.forges, &url)
-                    .is_none_or(|r| r.kind != crate::forge::Kind::Gitlab)
-                {
+                if crate::forge::resolve(&m.forges, &url).is_none_or(|r| r.kind != kind) {
                     self.push(
                         "action.executor",
                         format!("/actions/{ai}/executor/forge"),
                         format!(
-                            "action {}: {forge} is not a GitLab forge; list it under forges: with type: gitlab",
-                            a.name
+                            "action {}: {forge} is not a {} forge; list it under forges: with type: {}",
+                            a.name,
+                            kind.title(),
+                            kind.name()
                         ),
                     );
                 }
             }
-            for k in needs {
+            for k in t.required {
                 if a.executor.get(*k).is_none() {
                     self.push(
                         "action.executor",
@@ -678,18 +770,31 @@ impl Checker {
                     );
                 }
             }
-            if ty == "change" {
-                self.placeholders(ai, a);
-            }
-            if matches!(ty, "http" | "webhook") {
+            if !t.either.is_empty() && !t.either.iter().any(|k| a.executor.get(*k).is_some()) {
                 self.push(
                     "action.executor",
-                    format!("/actions/{ai}/executor/type"),
+                    format!("/actions/{ai}/executor"),
                     format!(
-                        "action {}: {ty} executors are not built yet; use command, in-image, change, github-workflow or gitlab-pipeline",
+                        "action {}: a {ty} executor needs `{}`",
+                        a.name,
+                        t.either.join("` or `")
+                    ),
+                );
+            }
+            if let Some(p) = a.executor.get("package").and_then(Value::as_str)
+                && crate::artifacts::parse(p).is_none()
+            {
+                self.push(
+                    "action.executor",
+                    format!("/actions/{ai}/executor/package"),
+                    format!(
+                        "action {}: package {p} is not github:owner/repo[/app]@version, a release toolbox install can pin",
                         a.name
                     ),
                 );
+            }
+            if ty == "change" {
+                self.placeholders(ai, a);
             }
         }
     }

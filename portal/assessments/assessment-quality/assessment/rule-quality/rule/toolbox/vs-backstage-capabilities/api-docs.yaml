@@ -1,0 +1,47 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/api-docs
+rubric: assessment-quality
+subjectHash: 8e152823c8f1
+assessor: {kind: agent, name: cursor-reviewer-15, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      measures-intent cites RESEARCH.md:118 for "OpenAPI render". In
+      experiments/backstage-compare/RESEARCH.md, line 118 is "scorecard with
+      levels" and "OpenAPI render" is 119. The fix-leads-to-pass reason quotes
+      docs/v1-spec.md:68 "Not yet: ... the UI pages" as evidence that the UI
+      extension contract is unbuilt. Those pages are the minimal UI's action,
+      run and approval pages. The contract is unbuilt, but because §7.6 is
+      missing from the line's "Built" list. The other citations hold:
+      backstage-comparison.yaml:150, facts.yaml:87 and 175, snapshot.py:85,
+      README.md:53 and ADJUDICATION.md:114.
+    suggestion: >-
+      Cite RESEARCH.md:119. Support "unbuilt" by noting that the UI extension
+      contract (§7.6) is listed among M5's deliverables but not under "Built:"
+      in docs/v1-spec.md:68.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      Both fails are right. The fact is a typed boolean (facts.yaml:87), and
+      the fix ("through a UI extension", backstage-comparison.yaml:1008)
+      depends on an unbuilt contract. It names no source for the definition.
+      measures-intent and threshold-justified match the sources.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Both fails rest on readable facts: no harness step renders an API
+      (surface.py), and §7.6 is not in the "Built" list (docs/v1-spec.md:68).
+      A second assessor would agree.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The hard-to-game suggestion makes surface.py render a real OpenAPI
+      document. The fix suggestion names the ingest, the render and the
+      facts.yaml/snapshot.py step. Each would change its verdict.
+summary: >-
+  The verdicts are right and the suggestions are concrete. supported fails
+  on one wrong line number: RESEARCH.md:118 is the scorecard scenario, not
+  OpenAPI. The quote that is meant to show the UI extension contract
+  unbuilt also refers to different pages.

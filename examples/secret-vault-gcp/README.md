@@ -63,4 +63,4 @@ commit PEMs. Optional nightly: OIDC → SM read smoke.
 - [`toolbox.yaml`](./toolbox.yaml) — connector configs with logical `${secret:…}` only
 - [`secrets.yaml`](./secrets.yaml) — backend chain + GCP map (runtime config)
 
-Design: [`docs/design/secret-vault.md`](../../docs/design/secret-vault.md).
+Design: [`docs/design/secret-vault.md`](../../docs/design/secret-vault.md). Decision: D01M8174KFJCBKKG37B9SS8P9RF.

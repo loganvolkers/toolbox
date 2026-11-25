@@ -1,0 +1,51 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:repo/docs/links-resolve
+rubric: rule-quality
+subjectHash: 32fb10940f10
+assessor: {kind: agent, name: cursor-assessor-18, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      `brokenLinks` comes from one regex for inline links, `](target)`
+      (crates/toolbox-connector-workspace/src/main.rs:297-318). A
+      reference-style link (`[text][id]` with `[id]: ../runbook.md`) is never
+      read, so a doc whose moved target is linked that way passes. That is the
+      failure the rationale names
+      (examples/repo-portal-starter/toolbox.yaml:176-178). The `#fragment` is
+      also dropped before resolving (main.rs:298), so a renamed heading passes
+      too.
+    suggestion: >-
+      Also collect reference definitions (`^\s*\[[^\]]+\]:\s*(\S+)`) in
+      `links_in`, and add a fixture doc with a broken reference-style link.
+      Optionally resolve fragments against the target's headings.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      The cheap passes are to fix the path or delete the link, and the fix
+      allows both (examples/repo-portal-starter/toolbox.yaml:175). A link the
+      reader can't follow is better gone. Rewriting it as an absolute
+      `https://` URL is skipped (main.rs:309-311) and would also pass, but it
+      is no cheaper than finding the target's new path, which it needs to be
+      useful.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence is the list of unresolved targets (`entity.brokenLinks`,
+      examples/repo-portal-starter/toolbox.yaml:174). The entity is the doc
+      itself, so the place is known. Correcting or removing each listed target
+      empties the list. The fixture's README.md shows `docs/runbook.md`
+      (examples/repo-portal-starter/tests/standards.test.yaml).
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      The bar is zero broken links, with no allowance and no number to
+      justify. Bronze is the scorecard's only level, described in
+      examples/repo-portal-starter/README.md (scorecard table) and
+      docs/design/repo-portals.md:140.
+summary: >-
+  A useful, actionable starter rule with good evidence. Its link parser
+  reads only inline links, so a reference-style link to a moved file
+  passes, and fragments are never checked. The fixture has one doc, which
+  fails, so no fixture shows a passing doc.

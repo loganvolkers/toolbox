@@ -1,0 +1,60 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/vs-backstage-supply-chain/high-vulnerabilities
+rubric: assessment-quality
+subjectHash: fd45d6044c8f
+assessor: {kind: agent, name: cursor-reviewer-38, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/rule-quality/rule/toolbox/vs-backstage-supply-chain/high-vulnerabilities.yaml
+      hold. High is max_severity >= 7.0, and a missing score counts as known
+      (experiments/backstage-compare/footprint.py:112-113 and :134-137). The
+      scan command sets no config
+      (experiments/backstage-compare/footprint.py:128-129) and the targets are
+      Cargo.lock, the OpenFGA binary and ui/package-lock.json (:156).
+      experiments/backstage-compare/RESULTS.md:200-202 says OpenFGA's three
+      advisories are unrated. The rule, the Cargo.lock-only fix and the
+      "security review blocks" rationale are
+      portal/standards/backstage-comparison.yaml:619-633. High = 0 is
+      experiments/backstage-compare/README.md:46,
+      experiments/backstage-compare/ADJUDICATION.md:110 and
+      experiments/backstage-compare/RESEARCH.md:64 (SSDF PW.4 and SLSA). The
+      reason says the ignore-file route was not executed here.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      measures-intent fails because an unrated advisory adds to total and not
+      to high (experiments/backstage-compare/footprint.py:135-137), so the
+      unrated OpenFGA findings cannot fail this rule. hard-to-game fails
+      because the scanner is invoked with no harness config, and the rubric
+      treats a suppression as a fail (portal/standards/meta.yaml:1164-1166).
+      fix-leads-to-pass fails because following
+      portal/standards/backstage-comparison.yaml:628-629 never surfaces the
+      binary or the UI lockfile that
+      experiments/backstage-compare/footprint.py:156 scans. The zero bar is
+      pre-registered, so threshold-justified passes.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The severity default at
+      experiments/backstage-compare/footprint.py:134-137, the scan targets and
+      the fix text are in the files. A second assessor does not need to decide
+      whether a particular Go advisory is critical; the code already drops any
+      advisory whose max_severity is absent.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Taking severity from a CVE or GHSA alias, or counting an unrated
+      advisory in a shipped binary as high, would let OpenFGA fail the rule. A
+      harness-owned osv-scanner config would close the ignore route. Naming
+      the same targets as experiments/backstage-compare/footprint.py:156, and
+      the OpenFGA pin at image/Dockerfile:8-10, would make the fix cover every
+      counted advisory.
+summary: >-
+  The assessment matches the scanner and the rule. Unrated advisories
+  never count as high, the fix scans only Cargo.lock, a repo ignore file
+  is outside the command, and the zero bar is the one the README
+  registered.

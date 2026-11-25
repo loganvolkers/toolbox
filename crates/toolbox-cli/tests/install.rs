@@ -1,6 +1,6 @@
 //! Executable connectors and tools (D90), end to end through the binary: `toolbox install`
 //! downloads a released connector from a local release server, pins it in toolbox.lock, refuses a
-//! tampered archive, and `toolbox doctor` reports connectors and tools.
+//! tampered archive, and `toolbox doctor` reports connectors, executor packages and tools.
 
 use std::io::{Read, Write};
 use std::path::Path;
@@ -109,6 +109,13 @@ kinds:
     fields: {title: {type: string}}
     sources: {default: [connector:fake]}
     map: [{from: fake/thing, id: "'thing:' + record.name", set: "{'title': record.name}"}]
+actions:
+  - name: poke
+    kind: Thing
+    description: Poke a thing.
+    unverified: true
+    inputs: {type: object}
+    executor: {type: in-image, package: "github:acme/conns/fake@1.0.0"}
 tools:
   sh-tool: {version: "9.9.9", mise: "aqua:acme/sh-tool"}
 "#,
@@ -136,6 +143,10 @@ tools:
         .unwrap()
         .to_owned();
     assert_eq!(pinned.len(), 64);
+    assert_eq!(
+        lock["executors"]["github:acme/conns/fake@1.0.0"][target].as_str(),
+        Some(pinned.as_str())
+    );
     let bin = cache.join(format!("connectors/acme/conns/1.0.0/{target}/fake"));
     assert!(bin.is_file(), "{}", bin.display());
 
@@ -143,6 +154,11 @@ tools:
     let o = toolbox(&["doctor", p], &env);
     assert_eq!(o.status.code(), Some(1), "{}", text(&o));
     assert!(text(&o).contains("ok      connector fake"), "{}", text(&o));
+    assert!(
+        text(&o).contains("ok      executor github:acme/conns/fake@1.0.0 (action poke)"),
+        "{}",
+        text(&o)
+    );
     assert!(
         text(&o).contains("MISSING tool sh-tool 9.9.9"),
         "{}",

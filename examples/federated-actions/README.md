@@ -18,7 +18,7 @@ you write.
 | [`org/`](org/toolbox.yaml) | An org portal over sibling checkouts on disk, with its own fleet actions |
 | [`gitlab-org/`](gitlab-org/toolbox.yaml) | An org portal over projects on a self-managed GitLab, subgroups included |
 | [`gitlab-repo/`](gitlab-repo/.toolbox/toolbox.yaml) | A GitLab project whose federated runs go to its own pipeline ([`.gitlab-ci.yml`](gitlab-repo/.gitlab-ci.yml)) |
-| [`hybrid-org/`](hybrid-org/toolbox.yaml) | One org portal over github.com, an Enterprise Server, gitlab.com, a self-managed GitLab and a bare repository |
+| [`hybrid-org/`](hybrid-org/toolbox.yaml) | One org portal over github.com, an Enterprise Server, gitlab.com, a self-managed GitLab and a bare repository; the Enterprise Server's repositories build on Buildkite through an executor-protocol bridge declared under `ci:` (D01M87T16JRH53YV6VVWM8PH169) |
 
 ## The shortest path
 
@@ -85,7 +85,7 @@ Everything an action or a federation needs; `toolbox validate` checks the rest a
 | `actions[].approval` | CEL list of approvers: `"['user:ann']"` needs ann, `"[['user:ann', 'user:bob']]"` needs either, `"['group:security']"` needs a member. The requester never counts |
 | `authz` | Parent: `{model: groups.fga, tuples: [{static: [{user: user:sam, relation: member, object: group:security}]}]}` defines the groups approvals name, once for every child; nested groups (`group:leads#member`) count. A checkout and a server read the same model |
 | `actions[].preconditions` | A list of CEL over `entity` and `inputs`; one that is false blocks the run |
-| `actions[].executor.type` | `change` (a commit), `command` (a shell command in the checkout), `github-workflow`, `gitlab-pipeline` (`{forge: <url>, project: group/name, ref}`: a pipeline with the run's inputs as typed inputs), `http`, `webhook`, `in-image` |
+| `actions[].executor.type` | `change` (a commit), `command` (a shell command in the checkout), `github-workflow`, `gitlab-pipeline` (`{forge: <url>, project: group/name, ref}`: a pipeline with the run's inputs as typed inputs; `ci: <name>` instead of `forge` takes a `gitlab-ci` host's endpoint and token), `http`, `webhook`, `in-image` |
 | `executor.run` | `command` and `change`: the shell command. A `change` runs it in a fresh worktree of `base` |
 | `executor.land` | `change`: `push` commits to `base` once approved (never forced); `propose` (default) pushes `branch` for review |
 | `executor.base`, `branch`, `message`, `remote` | `change`: the branch to start from and verify on, the proposal branch (`toolbox/{action}/{run}`), the commit message, the remote (`origin`). `message` takes `{action}`, `{run}`, `{entity}` and `{inputs.<name>}`; `branch` takes only `{action}` and `{run}` |
@@ -95,8 +95,9 @@ Everything an action or a federation needs; `toolbox validate` checks the rest a
 | `federation.children` | Parent: `[{git: <url or path>, branch: main, key: <name>}]`; each is offered as `portal:<key>` |
 | `federation.acceptApprovalsFrom` | Child: `[{portal: <parent name>, key: ed25519:…}]`, the key the parent prints |
 | `federation.signingKey` | Parent: the variable holding the signing seed, for servers that share runs. Without it Toolbox keeps one |
-| `federation.runner` | Child: `{type: local}` lets the org portal run its actions in the org's clone of it; `{type: ci}` (GitHub: `workflow`, default `toolbox.yml`; `ref`) runs them in the child's own CI on its forge; without it they run only from the repository's checkout. A `ci` child never names its project, host or token: the parent uses where it cloned it from |
-| `forges` | Any portal: `[{url, type: github\|gitlab, api, token: <env var>, projects: [globs]}]`. github.com and gitlab.com need no entry (`GITHUB_TOKEN`, `GITLAB_TOKEN`); a self-hosted forge needs its `url` and `type`. `projects` narrows which children a parent dispatches CI to (`*` stays within one path segment) |
+| `federation.runner` | Child: `{type: local}` lets the org portal run its actions in the org's clone of it; `{type: ci}` (GitHub: `workflow`, default `toolbox.yml`; `ref`) runs them in the CI the parent's entry for its forge picks (default the forge's own); without it they run only from the repository's checkout. A `ci` child never names its project, host or token: the parent uses where it cloned it from |
+| `forges` | Any portal: `[{url, type: github\|gitlab, api, token: <env var>, projects: [globs]}]`. github.com and gitlab.com need no entry (`GITHUB_TOKEN`, `GITLAB_TOKEN`); a self-hosted forge needs its `url` and `type`. `projects` narrows which children a parent dispatches CI to (`*` stays within one path segment). `ci: <name>` (or `none`) sends its children's CI to a declared CI host |
+| `ci` | Any portal: `[{name, type: github-actions\|gitlab-ci\|http, url, api, token: <env var>, project: <template with {project}>, projects: [globs]}]`. CI hosts apart from forges; an `http` host is a service speaking the executor protocol that bridges to any CI ([forges.md](../../docs/design/forges.md) §4.7) |
 | `federation.runners` | Parent: a portal with `children` admits each child's `local` runner itself; declare `runners.local` or `runners.github-workflow` only to narrow it or to dispatch workflows |
 
 ## Check

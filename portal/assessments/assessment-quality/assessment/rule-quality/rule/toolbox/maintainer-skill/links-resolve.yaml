@@ -1,0 +1,51 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/maintainer-skill/links-resolve
+rubric: assessment-quality
+subjectHash: f41088312128
+assessor: {kind: agent, name: cursor-reviewer-01, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/rule-quality/rule/toolbox/maintainer-skill/links-resolve.yaml
+      hold. missing_files gets the SKILL.md body only
+      (crates/toolbox-connector-workspace/src/skills.rs:51), and md_targets
+      matches only inline `](target)` (453-458), so reference-style links and
+      links in references/*.md are not seen. resolve/normalize (460-491) turn
+      `../../../../docs/x.md` from a skill into `docs/x.md`, which exists in
+      the checkout. In portal/standards/skills.yaml, the fix is 161-163, the
+      rationale 164-167 and the spec link 168-170. The partial fixture's
+      evidence is portal/tests/standards.test.yaml:356-357, and silver is
+      docs/design/skill-standards.md:93. Only design-audit's SKILL.md has a
+      markdown link. One phrase is loose: the suggestion says link_depth
+      "already walks" every .md the skill ships, but it follows only linked
+      .md files (skills.rs:539-546).
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The measures-intent fail covers the three blind spots the code has. The
+      hard-to-game pass is right: the cheapest pass, deleting a dead link,
+      loses nothing an agent could use, and the fix allows it
+      (skills.yaml:161-163). fix-leads-to-pass and threshold-justified (no
+      number) are right too.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Each blind spot follows from skills.rs:51 and 453-491. The passes rest
+      on the fix text and the fixture. A second assessor would reach the same
+      verdicts.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The suggestion would resolve reference definitions, scan every .md in
+      the skill directory and treat targets outside the skill as missing, with
+      fixtures for each. That closes all three cases the measures-intent
+      reason lists in
+      portal/assessments/rule-quality/rule/toolbox/maintainer-skill/links-resolve.yaml.
+summary: >-
+  Trustworthy. The three missed link kinds follow from the code it cites,
+  the passes are right, and the suggestion closes each case. The only
+  looseness is the remark that link_depth walks every shipped .md file,
+  which changes no verdict.

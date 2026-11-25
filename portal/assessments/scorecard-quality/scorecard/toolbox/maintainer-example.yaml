@@ -1,0 +1,73 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: scorecard:toolbox/maintainer-example
+rubric: scorecard-quality
+subjectHash: fc739a3b09d2
+assessor: {kind: agent, name: cursor-assessor-08, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: one-concern
+    verdict: fail
+    reason: >-
+      The rules serve one concern: can a reader follow, check and trace an
+      example (portal/standards/examples.yaml:38-43). The entity set does not.
+      The glob `experiments/**/README.md` (portal/toolbox.yaml:154-157) also
+      catalogues 12 per-round run records (experiments/actions-ab/
+      results/r0-r8 and r2dry, actions-gitlab/results/r0-r1), 3
+      seed-repository READMEs that are demo data (examples/acme-live/seed/*)
+      and a prompts index (experiments/deploy-ab/prompts/README.md). That is
+      16 of 47 entities. 10 of the 11 entities below gold are in that group
+      (portal/results.json). The eleventh is the github-apps executor spec,
+      which example-standards.md:71 expects at bronze. Those are records for
+      benchmark readers, not procedures for copiers, so the card's level mixes
+      two audiences and its failures say little about examples.
+    suggestion: >-
+      Exclude `experiments/*/results/**`, `experiments/*/prompts/**` and
+      `examples/*/seed/**` from the examples globs in portal/toolbox.yaml, or
+      give run records their own kind if they need a standard. Record the
+      scope in docs/design/example-standards.md §3.
+  - criterion: levels-are-a-ladder
+    verdict: pass
+    reason: >-
+      Bronze is a write-up a reader can follow (heading, links, no secret),
+      silver one they can check (a command), gold one tied to its design. This
+      is D78's ladder (docs/decisions/D01M7W5G0T00000000000000000.md:9), with
+      the secret rule moved to the floor by D01M83G9F4EEGN1GTP14HEYB8B6
+      (docs/design/thresholds.md:34). All 47 live entries reach bronze and 36
+      reach gold, so each rung is reachable. No fixture sits at exactly silver
+      (the brief's fixtureRealLevels are bronze and gold), and the gold
+      detector is a substring (examples.rs:38-42), as cheap as the bronze
+      heading. Gold still asks for something the lower levels don't.
+  - criterion: no-obvious-gap
+    verdict: fail
+    reason: >-
+      The design's model example is the reference portal, whose checks are the
+      oracle (docs/design/example-standards.md:14-16, and the comment at
+      examples.yaml:29-30). Yet no rule asks that the command a write-up names
+      is run by CI or passes. Silver is satisfied by naming it, even by the
+      word "Python" in prose (experiments/actions-ab/README.md:30). The box
+      already has the detector: sdlc-stage reports `notInCi` for checks no
+      workflow executes
+      (crates/toolbox-connector-workspace/src/data.rs:150-171). Without it,
+      gold examples can rot while still reading gold.
+    suggestion: >-
+      Add a gold `checked-in-ci` rule. Have the example record list the
+      commands or scripts it names, compute `notInCi` for them with the
+      existing detector, and require it to be empty.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      I tried raising experiments/actions-ab/results/r8/README.md from bronze
+      (failing says-how-to-check with `0 command lines`). The fix
+      (examples.yaml:80-81) says to name a check, and adding the line `python3
+      harness/count.py` that the actions-ab measure cites
+      (portal/benchmarks/actions-ab.yaml) reaches silver. Every fix names what
+      to add and where. One caveat: says-how-to-check's fix says "toolbox",
+      but `toolbox run` or `toolbox assess check` don't count
+      (examples.rs:33).
+summary: >-
+  The rules form a sensible follow, check, trace ladder decided in D78,
+  and the fixes work. But a third of the catalogued entities are run
+  records and seed data, and all but one live failure is among them, so
+  the level measures the glob more than the examples. The obvious missing
+  rule is that the named check actually runs in CI, which the box already
+  detects for SDLC stages.

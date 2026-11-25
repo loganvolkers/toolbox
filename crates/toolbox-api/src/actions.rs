@@ -108,8 +108,7 @@ pub fn served_dir(portal: &str) -> std::path::PathBuf {
 /// failed with that said, rather than left `running` forever or started again.
 fn interrupted(r: &mut Run) -> bool {
     if !["previewed", "approved", "dispatched", "running"].contains(&r.state.as_str())
-        || (r.state == "dispatched"
-            && matches!(r.executor.as_str(), "github-workflow" | "gitlab-pipeline"))
+        || (r.state == "dispatched" && toolbox_model::executors::detached(&r.executor))
     {
         return false;
     }
@@ -606,7 +605,7 @@ fn start(s: &Arc<AppState>, p: Prepared, mut run: Run, grant: Option<String>) {
         let mut obs = Served { s: s.clone() };
         lifecycle::execute(
             &mut run,
-            &p.exec,
+            p.exec.as_ref(),
             &ctx,
             p.offered.action.expect.as_ref(),
             &s.manifest.policies,
@@ -987,12 +986,25 @@ pub async fn cancel(
             "only the requester can cancel a run",
         );
     }
-    // Cancelling stops Toolbox from carrying the run further; a pull request or workflow it
-    // already started is closed where it lives.
+    // Cancelling stops Toolbox from carrying the run further. A dispatched run's executor is
+    // asked to stop it too, best effort; a pull request it opened is closed where it lives.
+    let said = if run.state == "dispatched" {
+        let s2 = s.clone();
+        tokio::task::spawn_blocking(move || {
+            let exec = executor_of(&s2, &run)?;
+            exec.cancel(&run, &cwd())
+                .map(|r| r.unwrap_or_else(|e| format!("the executor was not stopped: {e}")))
+        })
+        .await
+        .ok()
+        .flatten()
+    } else {
+        None
+    };
     let cancelled = s.runs.update(&id, |run| {
         let ok = ["awaiting_approval", "proposed", "dispatched"].contains(&run.state.as_str());
         if ok {
-            run.set("cancelled", Some(&caller.user), None);
+            run.set("cancelled", Some(&caller.user), said.clone());
         }
         ok
     });
@@ -1031,12 +1043,24 @@ fn recheck_one(s: &Arc<AppState>, run: &mut Run) -> bool {
     let mut obs = Served { s: s.clone() };
     lifecycle::recheck(
         run,
-        &exec,
+        exec.as_ref(),
         off.action.expect.as_ref(),
         &s.manifest.policies,
         &mut obs,
         &cwd(),
     )
+}
+
+/// The executor a run's action has now, if it is still offered.
+fn executor_of(s: &Arc<AppState>, run: &Run) -> Option<Arc<dyn toolbox_exec::executor::Executor>> {
+    let p = s.snapshot()?;
+    federation::offered(&s.manifest, &p.derived)
+        .iter()
+        .find(|o| {
+            o.action.name == run.action && o.entity.as_ref().is_none_or(|e| e == &run.entity)
+        })?
+        .executor(&program())
+        .ok()
 }
 
 /// `POST /v1/runs/{id}/verify` — look again now at a run waiting on a merge, a workflow or a

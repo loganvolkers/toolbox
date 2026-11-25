@@ -1,0 +1,62 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/user-cli/exercised
+rubric: rule-quality
+subjectHash: edd18e196bfc
+assessor: {kind: agent, name: cursor-assessor-14, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The capture counts mentions, not runs, both ways. `mcp` reaches silver
+      only because a comment in scripts/self-portal.sh:11 says "use `toolbox
+      mcp --url …`"; no script or test starts the bridge. And `get` fails
+      although crates/toolbox-cli/tests/assess.rs:120 runs `toolbox get <id>
+      --url … -o json` against a live server, because the test calls a helper,
+      `toolbox(&["get", …])`, and the regex (portal/toolbox.yaml:111-114)
+      needs whitespace after `toolbox`. Of the 3 user commands at silver, one
+      is a false pass, and at least one of the 9 failures is a false fail.
+    suggestion: >-
+      Skip comment lines in the `commands` capture for `file` records (the
+      `tools` capture already does, portal/toolbox.yaml:115-117) and also
+      capture the first element of the argument arrays tests pass to the
+      binary. Or observe invocations as the runner does for MCP calls
+      (TOOLBOX_MCP_TRACE, portal/toolbox.yaml:282-291).
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      A comment such as `# toolbox search …` in any file under scripts/ makes
+      `search` pass, as self-portal.sh's comment does for `mcp`. That is far
+      cheaper than a test that serves a portal and runs the read, which is
+      what assess.rs does for `get` (its `wait_for` polls `get -o json` at
+      assess.rs:118-125).
+    suggestion: >-
+      Ignore comments in the capture, so only a line that runs the command
+      counts.
+  - criterion: fix-leads-to-pass
+    verdict: fail
+    reason: >-
+      The fix offers an integration test under crates/toolbox-cli/tests/, and
+      that is exactly what exists for `get` (assess.rs:120) without passing:
+      tests there run the binary through a helper or
+      `Command::new(env!("CARGO_BIN_EXE_toolbox"))` and argument arrays, which
+      the regex can't see. An agent following the fix for `query` or `search`
+      the same way stays at bronze. The acceptance-script route works:
+      scripts/m4-acceptance.sh:67-70 runs `ask owner` and `ask score`, which
+      the regex's `ask` branch catches.
+    suggestion: >-
+      Make the capture see test argument arrays, or state in the fix that a
+      Rust test must contain `toolbox <command>` literally outside a comment.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      No number: at least one run. Silver is set in
+      docs/design/toolbox-for-toolbox.md:106 ("exercised") and argued in the
+      rationale (portal/standards/cli.yaml:207-209): users' scripts depend on
+      the command's behaviour, so a regression must fail CI first.
+summary: >-
+  The right standard for commands users script against, but today's check
+  gets both directions wrong on live entities: `mcp` passes on a comment
+  and `get` fails although a test runs it with `-o json`. Its own
+  suggested route, a CLI integration test, doesn't register. Observing
+  invocations, as F9 did for MCP tools, would fix all three.

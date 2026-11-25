@@ -1,0 +1,60 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/maintainer-plugin/mcp-declared
+rubric: rule-quality
+subjectHash: 91bf8b57ec06
+assessor: {kind: agent, name: cursor-assessor-06, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The rationale is about lock-in: an MCP server declared only in a vendor
+      config (portal/standards/plugins.yaml:126-128). The check is `hasMcp &&
+      mcpSchemaOk` (plugins.yaml:119), i.e. mcp.json exists and its `$schema`
+      string matches
+      (crates/toolbox-connector-workspace/src/plugins.rs:42-43). It never
+      looks for a vendor config, so a plugin with both passes; and a
+      skills-only plugin with no server anywhere, which has no lock-in, fails
+      until it adds an empty file. mcp.json is optional in Agent Plugins 1.0.0
+      §6.1-6.2 and "an empty `mcpServers` object is valid" (§7.2.1,
+      https://github.com/agentplugins/agent-plugins-spec/blob/main/spec/1.0.0.md).
+      The server entries are not validated either: §7.2.1 makes a missing
+      `type` or a foreign field invalid, and none of that is read.
+    suggestion: >-
+      Validate mcp.json against the 1.0.0 mcp.schema.json (emit
+      `mcpSchemaErrors`), and pass a plugin with no mcp.json unless a vendor
+      MCP config (`.mcp.json`, `.cursor/mcp.json`, a reverse-domain
+      directory's server list) exists in the package.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      `{"$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json"}`
+      with no `mcpServers` passes, although the schema requires `mcpServers`;
+      and when `mcpServers` is missing, `mcp_facts` returns `commandToken:
+      true` (plugins.rs:74-76), so the same one-line file also passes
+      stdio-command and reaches silver.
+    suggestion: >-
+      Schema validation (above) rejects the one-liner; add it as a fixture
+      case beside `plugins/demo/partial`.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence is 'no mcp.json' or 'mcp.json schema is not Agent Plugins
+      1.0.0' (plugins.yaml:120-122; pinned at
+      portal/tests/standards.test.yaml:689-693), and the fix says where to put
+      the file and which schema to name. plugins/toolbox-operator/mcp.json
+      shows the result.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      No threshold. Silver comes from D81
+      (docs/decisions/D01M7WMSMS00000000000000000.md: "silver is an mcp.json
+      on the 1.0.0 schema") and docs/design/plugin-standards.md:22,46; the
+      card rationale says silver "declares the MCP server portably"
+      (plugins.yaml:75-76).
+summary: >-
+  A proxy for its own rationale: it rewards having an mcp.json with the
+  right `$schema` string, not portability. It never detects the vendor
+  config it warns about, it fails skills-only plugins the spec allows, and
+  a one-line file passes. Validate against the mcp schema and look for
+  vendor configs.

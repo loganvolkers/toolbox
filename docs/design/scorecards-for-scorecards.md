@@ -182,7 +182,7 @@ tests and fixtures, and is it already covered?
 | Tests | Too few, one-sided | Covered | `meta-rule` `tested`/`both-outcomes`, `meta-kind` `tested`; a test kind would score the scorers of the scorers |
 | Rubrics | Vague questions; criteria a check could answer | `toolbox validate` + review | Kind and subject field exist, unique criteria; a rubric is reviewed with its portal change |
 | Authorization model | Wrong access | Covered elsewhere | `fga model test` ([authorization.md](../authorization.md)) and the plan's authz diff |
-| Actions | Unsafe self-service | Paused | M5 is paused (D64); `meta-action` waits for the self-service review |
+| Actions | Unsafe self-service | Not yet | M5 is built after the self-service review (D01M86BY3YQX3SA1W99QXF1QA1H); `meta-action` is not |
 | Crates, workflows, docs | Design that a check can't see | Rubric | `crate-design` (D79); workflows and docs can follow the same pattern |
 
 **Why not a scorecard for everything?** Each meta scorecard adds config that must itself be tested

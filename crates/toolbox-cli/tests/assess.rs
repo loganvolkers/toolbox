@@ -84,12 +84,16 @@ fn stdout(o: &Output) -> String {
 }
 
 fn portal() -> PathBuf {
-    let dir = std::env::temp_dir().join(format!("toolbox-assess-{}", std::process::id()));
+    portal_with("brief", MANIFEST)
+}
+
+fn portal_with(name: &str, manifest: &str) -> PathBuf {
+    let dir = std::env::temp_dir().join(format!("toolbox-assess-{name}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     for sub in ["fixtures", "tests", "assessments/thing-review/thing"] {
         std::fs::create_dir_all(dir.join(sub)).unwrap();
     }
-    std::fs::write(dir.join("toolbox.yaml"), MANIFEST).unwrap();
+    std::fs::write(dir.join("toolbox.yaml"), manifest).unwrap();
     std::fs::write(
         dir.join("fixtures/things.ndjson"),
         r#"{"type": "record", "kind": "thing", "externalId": "thing:a", "data": {"name": "a", "hash": "0123456789ab"}}"#,
@@ -216,4 +220,75 @@ fn describe_brief_check_and_submit() {
     let _ = server.kill();
     let _ = server.wait();
     let _ = std::fs::remove_dir_all(Path::new(&dir));
+}
+
+/// A rubric for assessments reviews each first-level assessment once, and never its own reviews,
+/// so `assess check` can reach zero missing (docs/design/scorecards-for-scorecards.md §6.1).
+#[test]
+fn reviews_stop_at_one_level() {
+    let manifest = MANIFEST
+        .replace(
+            "      subjectHash: {type: string}\n",
+            "      subjectHash: {type: string}\n      rubric: {type: string}\n      hash: {type: string}\n",
+        )
+        .replace(
+            "'verdict': record.verdict}",
+            "'verdict': record.verdict, 'rubric': record.rubric, 'hash': record.hash}",
+        )
+        .replace("relations: {assesses: \"[record.entity]\"}", "relations: {assesses: \"record.entity.startsWith('thing:') ? [record.entity] : []\"}")
+        .replace(
+            "tests: [",
+            "  - name: assessment-review\n    kind: Assessment\n    criteria:\n      - {name: supported, question: Is it supported?}\ntests: [",
+        );
+    let dir = portal_with("review", &manifest);
+    let p = dir.to_str().unwrap();
+    let first = "assessment:thing-review/thing:a";
+    let review = "assessment:assessment-review/assessment:thing-review/thing:a";
+    let record = |id: &str, entity: &str, rubric: &str, hash: &str| {
+        format!(
+            r#"{{"type": "record", "kind": "assessment", "externalId": "{id}", "data": {{"entity": "{entity}", "rubric": "{rubric}", "subjectHash": "0123456789ab", "verdict": "pass", "hash": "{hash}"}}}}"#
+        )
+    };
+    std::fs::write(
+        dir.join("fixtures/assessments.ndjson"),
+        [
+            record(first, "thing:a", "thing-review", "aaaaaaaaaaaa"),
+            record(review, first, "assessment-review", "bbbbbbbbbbbb"),
+        ]
+        .join("\n"),
+    )
+    .unwrap();
+    stdout(&toolbox(&["validate", p]));
+
+    let check = stdout(&toolbox(&["assess", "check", p, "--fixtures"]));
+    assert!(
+        check.contains("assessment-review: 0 fresh, 0 stale, 1 missing"),
+        "{check}"
+    );
+    let file = dir.join("assessments/assessment-review/assessment/thing-review/thing/a.yaml");
+    std::fs::create_dir_all(file.parent().unwrap()).unwrap();
+    std::fs::write(
+        &file,
+        format!(
+            "apiVersion: toolbox.dev/assessment/v1\nentity: {first}\nrubric: assessment-review\n\
+             subjectHash: \"aaaaaaaaaaaa\"\nassessor: {{kind: agent, name: reviewer}}\nat: \"2026-11-25\"\n\
+             verdicts:\n  - {{criterion: supported, verdict: pass, reason: It cites the tin.}}\n"
+        ),
+    )
+    .unwrap();
+
+    // The review is not itself a subject of the rubric that made it.
+    let check = stdout(&toolbox(&["assess", "check", p, "--fixtures"]));
+    assert!(
+        check.contains("assessment-review: 1 fresh, 0 stale, 0 missing"),
+        "{check}"
+    );
+    let o = toolbox(&["assess", "brief", review, "--portal", p, "--fixtures"]);
+    assert_eq!(o.status.code(), Some(2));
+    assert!(
+        String::from_utf8_lossy(&o.stderr).contains("does not review its own assessments"),
+        "{}",
+        String::from_utf8_lossy(&o.stderr)
+    );
+    let _ = std::fs::remove_dir_all(&dir);
 }

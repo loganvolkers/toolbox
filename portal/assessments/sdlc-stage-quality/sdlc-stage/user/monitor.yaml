@@ -1,0 +1,53 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: sdlc-stage:user/monitor
+rubric: sdlc-stage-quality
+subjectHash: 7d33e920671a
+assessor: {kind: agent, name: cursor-assessor-22, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: executable-exit
+    verdict: fail
+    reason: >-
+      `checks: []` (portal/sdlc/stages/user.yaml:58). No crate emits a
+      Deprecation or Sunset header or an MCP notice. The only "deprecated" in
+      the server is a Prometheus alias's help text
+      (crates/toolbox-telemetry/src/metrics_prom.rs:75), and
+      schema/manifest.schema.json has no way to mark a field or action
+      deprecated.
+    suggestion: >-
+      Add `deprecated: {since, removeAfter}` to fields, actions and MCP tools
+      in the manifest. Emit it as Deprecation/Sunset headers and MCP tool
+      annotations, and assert both in crates/toolbox-api/tests/mcp.rs and an
+      m3 step.
+  - criterion: agent-can-complete
+    verdict: fail
+    reason: >-
+      There are no commands (user.yaml:57). The nearest signal is
+      operator-side: `toolbox plan` counts MCP tools and actions removed
+      (crates/toolbox-derive/src/plan.rs:89-91, 265). A user's app cannot see
+      it, and it carries no timeline.
+    suggestion: >-
+      Expose deprecations on a read surface (a `/v1/deprecations` view or MCP
+      resource), with a CLI command and skill, so an agent can poll what its
+      app depends on.
+  - criterion: reuses-artifacts
+    verdict: pass
+    reason: >-
+      Nothing is built or installed in the stage. An app would read notices
+      from the served portal it already calls (docs/design/user-sdlc.md:59,
+      "Versioned `/v1`, deprecation headers and notices").
+  - criterion: decoupled-from-core
+    verdict: fail
+    reason: >-
+      Announcing deprecations on API and MCP needs new response metadata in
+      toolbox-api and a manifest schema change, the stability contract
+      proposed in user-sdlc.md §4 (lines 61-73) and §5 item 6. Neither
+      operators nor users can add it from outside.
+    suggestion: >-
+      Implement the §4 contract in core once, so operators then declare
+      deprecations in their manifest without further crate changes.
+summary: >-
+  Designed only. There is no check, no command and no deprecation metadata
+  in the manifest schema or the API, and `plan`'s removed-tool count is an
+  operator signal users can't reach. It needs the user-sdlc.md §4
+  stability contract built in core first.

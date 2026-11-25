@@ -67,7 +67,7 @@ kindGroups:
     description: >-
       How changes ship: workflows, the actions they use, OpenSSF checks and
       the repository's settings.
-    kinds: [Workflow, ActionDependency, OpenSSFCheck, Repository]
+    kinds: [Workflow, ActionDependency, OpenSSFCheck, Repository, Lockfile]
   - name: standards
     title: Standards and judgement
     description: >-
@@ -415,6 +415,35 @@ include:
         deliberate style, ignore the rule for those files under
         `[lint.per-file-ignores]` in ruff.toml with a comment saying why. A `#
         noqa` comment doesn't help: the check runs with --ignore-noqa.
+  # Known advisories in the Cargo.lock we ship, by osv-scanner offline against the RustSec OSV
+  # export pinned in scripts/ci-tools.sh, so a result changes only when the pin moves
+  # (D01M885GT32STM506V32XKPP37G). Each accepted advisory is ignored in osv-scanner.toml with
+  # its reason. The experiments' lockfiles are archived harnesses, not shipped.
+  - package: ../packages/sarif
+    with:
+      name: maintainer-advisories
+      kind: Lockfile
+      track: maintainer
+      tool: osv-scanner
+      version: 2.7.1
+      install: {mise: aqua:google/osv-scanner, aqua: google/osv-scanner}
+      command:
+        - osv-scanner
+        - scan
+        - source
+        - --offline
+        - --format
+        - sarif
+        - --lockfile
+        - "{files}"
+      files: [Cargo.lock]
+      title: No unexplained advisories in Cargo.lock
+      fix: >-
+        Upgrade the crate past the advisory (`cargo update -p <crate>`), or,
+        when no fix exists or it doesn't apply, ignore its id under
+        `[[IgnoredVulns]]` in osv-scanner.toml with a reason that says why and
+        what ends it. Leave out `effectiveUntil`: an expiry changes the result
+        with no change to the repository.
 
 mcp:
   instructions: >-

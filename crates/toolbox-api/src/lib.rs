@@ -3,7 +3,7 @@
 
 pub mod access;
 pub mod actions;
-pub mod artifacts;
+pub use toolbox_model::artifacts;
 pub mod assess;
 pub mod confine;
 pub mod connectors;
@@ -58,6 +58,7 @@ pub fn app_state_with(
         changed: tokio::sync::Notify::new(),
         config,
         runs: Default::default(),
+        confinement: Default::default(),
     })
 }
 

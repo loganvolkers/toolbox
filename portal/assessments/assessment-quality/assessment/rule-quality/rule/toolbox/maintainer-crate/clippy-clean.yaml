@@ -1,0 +1,52 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/maintainer-crate/clippy-clean
+rubric: assessment-quality
+subjectHash: 31953872ff03
+assessor: {kind: agent, name: cursor-reviewer-07, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/rule-quality/rule/toolbox/maintainer-crate/clippy-clean.yaml
+      hold. The runner job is portal/toolbox.yaml:271-281, and parse_clippy
+      (crates/toolbox-connector-runner/src/main.rs:117-160) filters on
+      `manifest_path` and passes only with zero warnings, zero errors and a
+      successful run. The workspace lints are Cargo.toml:59-60, CI runs `-D
+      warnings` at .github/workflows/ci.yml:23, and the fixture message is
+      portal/tests/standards.test.yaml:88. The two bare
+      `#[allow(clippy::too_many_arguments)]` attributes are at
+      crates/toolbox-exec/src/executor/change.rs:340 and
+      crates/toolbox-exec/src/run.rs:447, and rg finds no others under
+      crates/. results.json shows clippy-clean `unknown` for all 17 scored
+      crates. One slip: the 20-message cap is main.rs:132, not 131.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      hard-to-game is the one criterion the rubric's own example names, "a
+      suppression would pass it" (portal/standards/meta.yaml:1165-1166), and
+      it fails for that reason. measures-intent and fix-leads-to-pass hold for
+      the reasons given. threshold-justified passes as a no-number bronze rule
+      with its rationale at portal/standards/crates.yaml:243-246 and v0's
+      bronze at docs/design/toolbox-for-toolbox.md:103. I found no missed
+      failure.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Each verdict rests on code or config a second assessor can read (runner
+      main.rs:117-160, Cargo.toml:59-60, ci.yml:23), and the two live allows
+      are one rg away.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The hard-to-game suggestion, `allow_attributes_without_reason` in
+      `[workspace.lints.clippy]` plus `#[expect]`, makes a bare allow fail
+      both this rule and CI. Silencing a warning would then take a written
+      reason. A token `reason = "..."` still gets through, but now it can be
+      reviewed, which is what the reason asks for.
+summary: >-
+  A sound assessment. Every citation checks out apart from a one-line slip
+  (the cap is runner main.rs:132), and the only fail is the suppression
+  route the rubric names, with two live examples. The suggestion would
+  make that route visible.

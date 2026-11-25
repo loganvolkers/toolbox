@@ -1,0 +1,56 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/maintainer-connector/speaks-the-protocol
+rubric: rule-quality
+subjectHash: 84386d935f59
+assessor: {kind: agent, name: cursor-assessor-10, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      transport comes from `source.contains("run_stdio")` and
+      `contains("run_remote")` over every .rs file of the crate joined
+      together, tests and comments included
+      (crates/toolbox-connector-workspace/src/connectors.rs:21-26, 125-132).
+      It already misreads a live entity: running the workspace connector over
+      this repo reports toolbox-connector-workspace as transport `both`,
+      because a unit-test fixture string contains `run_remote`
+      (connectors.rs:371), though the binary serves only stdio. The outcome is
+      still a pass, but "speaks the protocol" really means "the text appears",
+      not "main serves commands".
+    suggestion: >-
+      Skip `#[cfg(test)]` modules and comments (production_lines already does
+      the first, connectors.rs:235-246), and look for a call to
+      `run_stdio(`/`run_remote(` reachable from `main`.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      A scratch connector whose main.rs is `fn main() {}` plus the comment `//
+      TODO: call run_stdio ...` reported transport `stdio` through
+      target/debug/toolbox-connector-workspace, so the rule passed. A comment
+      is cheaper than wiring up the control channel.
+    suggestion: >-
+      Ignore comment lines and string literals when looking for the entry
+      point, or take transport from the conformance kit's `registers first`
+      check where CI runs it
+      (crates/toolbox-connect/src/conformance.rs:120-134).
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence is the transport (`none`, pinned for crates/demo/unsafe in
+      portal/tests/standards.test.yaml:418-420), and the fix names the two SDK
+      entry points to call (portal/standards/connectors.yaml:106-109). Calling
+      either one passes.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      A yes/no rule. Bronze is D73's "run_stdio or run_remote"
+      (docs/decisions/D01M7W4FRJR0000000000000000.md) and the control-channel
+      row of docs/design/connector-standards.md:45.
+summary: >-
+  The bronze rule is the right floor, but its check is a substring search
+  over all crate text. It already misreports the workspace connector as
+  `both` because of a test fixture, and a comment naming `run_stdio`
+  passes a crate that does nothing. Fix and level are fine. The check
+  should ignore tests and comments, or use the conformance kit's register
+  check.

@@ -1,0 +1,59 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:scorecard-quality/scorecard:toolbox/meta-connector
+rubric: assessment-quality
+subjectHash: e848771c44f6
+assessor: {kind: agent, name: cursor-reviewer-31, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      The rules, the manifest-only gold check and the workspace exclusion are
+      where
+      portal/assessments/scorecard-quality/scorecard/toolbox/meta-connector.yaml
+      says. portal/standards/meta.yaml:857-897 is the four rules, model.rs:220
+      and :232-233 read freshness and refresh keys, and hub.rs:409-415 is
+      can_refresh, which the check does not call. The fixture evidence is
+      standards.test.yaml:833, assessment is excluded at
+      crates/toolbox-connector-workspace/src/main.rs:1330-1333, and
+      portal/toolbox.yaml:210-230 has no assessment refresh key.
+      Connector.config is crates/toolbox-model/src/manifest.rs:146-150, not
+      line 122, which is GitChild. portal/results.json has 12 connectors and 8
+      at gold, not 7 of 11. thresholds.md:35, connectors.yaml:174-184 and
+      examples/reference-portal/toolbox.yaml:42-43 do support the missing
+      secret rule.
+    suggestion: >-
+      Cite manifest.rs:150 for Connector.config and say 8 of 12 connectors are
+      gold. The three fail verdicts still follow from the manifest-only gold
+      check and the missing secret rule.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      one-concern passes: the four rules are about a portal's connector
+      declaration (meta.yaml:836-840), and connector-crate health is
+      connectors.yaml. levels-are-a-ladder should fail because gold is a
+      refresh: key (model.rs:233) and bronze needs map rules and fixtures.
+      no-obvious-gap should fail: config can hold a credential and the
+      connector record emits none (model.rs:229-235). actionable should fail:
+      refreshable's fix (meta.yaml:891-892) names no file, and the workspace
+      evidence is the assessment kind the connector refuses to refresh. The
+      wrong count does not flip a verdict.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      A second assessor reading model.rs:229-235 and meta.yaml:887-892 fails
+      the same three criteria. 8 versus 7 is a count, not a different
+      judgement of the ladder.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Having gold read the capability hub.rs:409-415 checks would make gold
+      cost connector support, which changes levels-are-a-ladder.
+      literalSecrets plus a bronze rule would close no-obvious-gap. Naming the
+      refresh: key and the registered capability in the fix would make raising
+      workspace a change the fix text locates, which changes actionable.
+summary: >-
+  The three fails are right: gold is a manifest key, refreshable's fix
+  names no file, and config has no secret check. Two citations are not.
+  Connector.config is manifest.rs:150, not line 122, and results.json has
+  8 gold connectors out of 12, not 7 of 11.

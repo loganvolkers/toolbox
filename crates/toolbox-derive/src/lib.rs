@@ -1011,7 +1011,9 @@ impl<'m> Pipeline<'m> {
     }
 }
 
-/// Gaps for one entity against every include; `None` if the entity is out of scope (skipped).
+/// Gaps for one entity against the includes that score it; `None` if the entity is out of scope:
+/// skipped by an include, or scored by none. An include on another kind's scorecard doesn't apply
+/// to the entity, so a campaign over rules and scorecards scopes each by its own card.
 fn campaign_entity(
     id: &str,
     includes: &[toolbox_model::manifest::CampaignInclude],
@@ -1019,11 +1021,15 @@ fn campaign_entity(
     cards: &BTreeMap<&str, &toolbox_model::manifest::Scorecard>,
 ) -> Option<CampaignEntity> {
     let mut gaps = Vec::new();
+    let mut applies = false;
     for inc in includes {
-        let score = scores.get(&inc.scorecard).and_then(|m| m.get(id))?;
+        let Some(score) = scores.get(&inc.scorecard).and_then(|m| m.get(id)) else {
+            continue;
+        };
         if score.level == "skipped" {
             return None;
         }
+        applies = true;
         if let Some(at) = &inc.at_least {
             let Some(sc) = cards.get(inc.scorecard.as_str()) else {
                 gaps.push(format!("{}: unknown scorecard", inc.scorecard));
@@ -1045,7 +1051,7 @@ fn campaign_entity(
             }
         }
     }
-    Some(CampaignEntity {
+    applies.then_some(CampaignEntity {
         meeting: gaps.is_empty(),
         gaps,
     })
@@ -1387,14 +1393,6 @@ pub fn enum_from_inputs(inputs: &Value) -> Vec<(String, String)> {
         .unwrap_or_default()
 }
 
-/// Entity ids by kind, for callers that need them.
-pub fn ids_of_kind<'a>(d: &'a Derived, kind: &'a str) -> impl Iterator<Item = &'a str> + 'a {
-    d.entities
-        .iter()
-        .filter(move |(_, e)| e.kind == kind)
-        .map(|(id, _)| id.as_str())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1408,5 +1406,49 @@ mod tests {
             codeowners_for(Some(&rules), "catalog-info.yaml"),
             vec!["@b".to_string()]
         );
+    }
+
+    #[test]
+    fn a_campaign_over_two_kinds_scopes_each_entity_by_its_own_card() {
+        let score = |level: &str| Score {
+            level: level.into(),
+            rules: None,
+            evidence: BTreeMap::new(),
+            measures: BTreeMap::new(),
+            values: BTreeMap::new(),
+        };
+        let card = |name: &str| -> toolbox_model::manifest::Scorecard {
+            serde_json::from_value(
+                json!({"name": name, "kind": "K", "owner": "group:x", "levels": ["bronze"], "rules": []}),
+            )
+            .expect("a scorecard")
+        };
+        let (r, s) = (card("review-rule"), card("review-scorecard"));
+        let cards: BTreeMap<&str, _> = [("review-rule", &r), ("review-scorecard", &s)].into();
+        let mut scores = BTreeMap::new();
+        scores.insert(
+            "review-rule".to_string(),
+            BTreeMap::from([
+                ("rule:a".to_string(), score("none")),
+                ("rule:b".to_string(), score("bronze")),
+                ("rule:c".to_string(), score("skipped")),
+            ]),
+        );
+        scores.insert(
+            "review-scorecard".to_string(),
+            BTreeMap::from([("scorecard:x".to_string(), score("none"))]),
+        );
+        let includes: Vec<toolbox_model::manifest::CampaignInclude> =
+            serde_json::from_value(json!([
+                {"scorecard": "review-rule", "atLeast": "bronze"},
+                {"scorecard": "review-scorecard", "atLeast": "bronze"}
+            ]))
+            .expect("includes");
+        let of = |id: &str| campaign_entity(id, &includes, &scores, &cards).map(|e| e.meeting);
+        assert_eq!(of("rule:a"), Some(false));
+        assert_eq!(of("rule:b"), Some(true));
+        assert_eq!(of("scorecard:x"), Some(false));
+        assert_eq!(of("rule:c"), None, "skipped is out of scope");
+        assert_eq!(of("crate:z"), None, "no include scores it");
     }
 }

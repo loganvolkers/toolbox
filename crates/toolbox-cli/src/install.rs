@@ -1,10 +1,11 @@
 //! `toolbox install` and `toolbox doctor` (D90): released executable connectors and the upstream
 //! tools a portal needs, without building anything.
 //!
-//! `install` downloads every `github:owner/repo[/app]@version` connector for this platform, checks
+//! `install` downloads every `github:owner/repo[/app]@version` connector and in-image executor
+//! package for this platform, checks
 //! the archive's SHA-256 against `toolbox.lock` (recording it from the release's published `.sha256`
 //! the first time, unless `--frozen`), and unpacks the binary into the cache. `doctor` reports
-//! whether each connector resolves and each declared tool prints its pinned version; `--mise` prints
+//! whether each connector and executor package resolves and each declared tool prints its pinned version; `--mise` prints
 //! the `[tools]` section that installs them.
 
 use serde_json::{Value, json};
@@ -242,28 +243,34 @@ pub fn install(portal: &Path, frozen: bool) -> ExitCode {
     let target = artifacts::target();
     let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
     let client = reqwest::Client::new();
-    for c in &m.connectors {
-        let Some(spec) = artifacts::parse(&c.package) else {
+    let connectors = m.connectors.iter().map(|c| {
+        (
+            "connectors",
+            "connector",
+            c.name.as_str(),
+            c.package.as_str(),
+        )
+    });
+    let executors = executor_packages(&m).map(|(a, p)| ("executors", "action", a, p));
+    for (section, what, name, package) in connectors.chain(executors) {
+        let Some(spec) = artifacts::parse(package) else {
             continue;
         };
-        let pinned = lock["connectors"][&c.package][target]
-            .as_str()
-            .map(str::to_owned);
+        let pinned = lock[section][package][target].as_str().map(str::to_owned);
         if frozen && pinned.is_none() {
             return fail(format!(
-                "{}: not pinned in {LOCK} for {target} (--frozen)",
-                c.package
+                "{package}: not pinned in {LOCK} for {target} (--frozen)"
             ));
         }
         match rt.block_on(install_one(&client, &spec, pinned.as_deref())) {
             Ok(sha) => {
-                println!("{} {} → {}", c.name, c.package, spec.installed().display());
+                println!("{name} {package} → {}", spec.installed().display());
                 if pinned.is_none() {
-                    lock["connectors"][&c.package][target] = json!(sha);
+                    lock[section][package][target] = json!(sha);
                     changed = true;
                 }
             }
-            Err(e) => return fail(format!("connector {}: {e}", c.name)),
+            Err(e) => return fail(format!("{what} {name}: {e}")),
         }
     }
     if changed {
@@ -274,6 +281,13 @@ pub fn install(portal: &Path, frozen: bool) -> ExitCode {
         println!("pinned in {}", root.join(LOCK).display());
     }
     ExitCode::SUCCESS
+}
+
+/// `(action, package)` for each action whose executor runs a released binary.
+fn executor_packages(m: &toolbox_model::Manifest) -> impl Iterator<Item = (&str, &str)> {
+    m.actions
+        .iter()
+        .filter_map(|a| Some((a.name.as_str(), a.executor["package"].as_str()?)))
 }
 
 /// The version line a tool prints for its version arguments, if it runs (see `version_line`).
@@ -296,6 +310,50 @@ fn version_line(text: &str) -> String {
         .unwrap_or_default()
         .trim()
         .to_owned()
+}
+
+/// Whether this host would confine in-image connectors, under `TOOLBOX_CONNECTOR_CONFINEMENT`.
+/// Only `required` without Landlock (or a bad value) is a problem; `best-effort` without it is
+/// said, not failed (D01M88668MR8K559A1NYSNQQTX0).
+fn confinement_line(
+    landlock: bool,
+    setting: Result<toolbox_api::confine::Confinement, String>,
+) -> (bool, String) {
+    use toolbox_api::confine::Confinement;
+    match (landlock, setting) {
+        (_, Err(e)) => (true, format!("WRONG   connector confinement: {e}")),
+        (true, Ok(s)) => (
+            false,
+            format!("ok      connector confinement: Landlock ({})", s.as_str()),
+        ),
+        (false, Ok(Confinement::BestEffort)) => (
+            false,
+            format!(
+                "UNCONFINED connector confinement: no Landlock on this host, so serve starts in-image connectors unconfined ({}=best-effort; set required to refuse them)",
+                Confinement::VAR
+            ),
+        ),
+        (false, Ok(Confinement::Required)) => (
+            true,
+            format!(
+                "REFUSED connector confinement: no Landlock on this host and {}=required, so serve would not start in-image connectors",
+                Confinement::VAR
+            ),
+        ),
+    }
+}
+
+/// Print the confinement line when the portal has in-image connectors; 1 if it is a problem.
+fn doctor_confinement(m: &toolbox_model::Manifest) -> usize {
+    if !m.connectors.iter().any(|c| c.runtime == "in-image") {
+        return 0;
+    }
+    let (problem, line) = confinement_line(
+        toolbox_api::confine::available(),
+        toolbox_api::confine::Confinement::from_env(),
+    );
+    println!("{line}");
+    usize::from(problem)
 }
 
 /// `toolbox doctor`: report connectors and tools (exit 1 on problems), or print the mise config.
@@ -335,6 +393,16 @@ pub fn doctor(portal: &Path, mise: bool) -> ExitCode {
                 format!(": {bin} not found; {hint}")
             }
         );
+    }
+    problems += doctor_confinement(&m);
+    for (action, package) in executor_packages(&m) {
+        let found = artifacts::parse(package).is_some_and(|s| s.installed().is_file());
+        if found {
+            println!("ok      executor {package} (action {action})");
+        } else {
+            problems += 1;
+            println!("MISSING executor {package} (action {action}): run toolbox install");
+        }
     }
     for (name, t) in &m.tools {
         let args = t
@@ -484,6 +552,19 @@ mod tests {
     }
 
     use super::*;
+
+    #[test]
+    fn doctor_says_when_connectors_would_run_unconfined() {
+        use toolbox_api::confine::Confinement;
+        let (p, l) = confinement_line(true, Ok(Confinement::Required));
+        assert!(!p && l.starts_with("ok "), "{l}");
+        let (p, l) = confinement_line(false, Ok(Confinement::BestEffort));
+        assert!(!p && l.starts_with("UNCONFINED"), "{l}");
+        let (p, l) = confinement_line(false, Ok(Confinement::Required));
+        assert!(p && l.starts_with("REFUSED"), "{l}");
+        let (p, _) = confinement_line(true, Confinement::parse("strict"));
+        assert!(p);
+    }
 
     #[test]
     fn vendored_sources_carry_no_machine_layout() {

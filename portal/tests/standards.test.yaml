@@ -1103,6 +1103,19 @@ assert:
       score('maintainer-python',
       'maintainer-python:scripts/messy.py').evidence['no-findings'] == ['line
       3: F401 `os` imported but unused']
+  # Advisories in Cargo.lock: osv-scanner offline through the SARIF slot
+  - name: a lockfile with every advisory fixed or justified passes
+    expect: >-
+      score('maintainer-advisories',
+      'maintainer-advisories:Cargo.lock').rules['no-findings'] == 'pass'
+  - name: an advisory not in osv-scanner.toml fails, with its id as evidence
+    expect: >-
+      score('maintainer-advisories',
+      'maintainer-advisories:experiments/stale/Cargo.lock').rules['no-findings']
+      == 'fail' && score('maintainer-advisories',
+      'maintainer-advisories:experiments/stale/Cargo.lock').evidence['no-findings']
+      == ['line 0: RUSTSEC-2026-0543 Package \'chrono@0.4.45\' is vulnerable
+      to \'RUSTSEC-2026-0543\'.']
   # Runtime observability (toolbox-telemetry / OTel catalog)
   - name: a complete observability checklist reaches gold
     expect: >-
@@ -1568,3 +1581,10 @@ assert:
       'product:backstage').rules['mcp-read'] == 'fail' &&
       score('vs-backstage-capabilities',
       'product:backstage').rules['community'] == 'fail'
+  - name: >-
+      a campaign over two kinds scopes rules by review-rule and scorecards by
+      review-scorecard, rather than finding nothing in both
+    expect: >-
+      campaign('close-review-findings').inScope > 0 &&
+      campaign('close-review-findings').meeting <
+      campaign('close-review-findings').inScope

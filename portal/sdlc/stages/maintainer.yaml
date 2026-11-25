@@ -54,10 +54,10 @@ records:
     - scripts/m2-acceptance.sh
     - scripts/m3-acceptance.sh
     - scripts/m4-acceptance.sh
+    - scripts/m5-acceptance.sh
     docs: [docs/v1-spec.md]
     status: built
-    gaps:
-    - acceptance scripts for M5 and M6 don't exist yet (M5 is paused, D64)
+    gaps: ["the M6 acceptance script doesn't exist yet"]
   - id: maintainer/design-review
     layer: maintainer
     name: design-review

@@ -1,0 +1,59 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/maintainer-observability/structured-logs
+rubric: rule-quality
+subjectHash: d464f0eb6ddb
+assessor: {kind: agent, name: cursor-assessor-09, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The rationale wants JSON log lines carrying the trace id
+      (portal/standards/observability.yaml:171-174). The check is that
+      crates/toolbox-telemetry/tests/structured_logs.rs exists. That test
+      asserts only that `init` with `log_format: json` returns, and checks the
+      guard's service name and mode (structured_logs.rs:4-15). It never
+      captures a line or checks for JSON or `trace_id`. The fix's second half,
+      routing failures through tracing instead of `eprintln!`, is not checked
+      at all: crates/toolbox-cli/src/server.rs alone still has 22 `eprintln!`
+      calls (e.g. lines 130, 153, 159).
+    suggestion: >-
+      Make the test capture output from a JSON-format subscriber and assert
+      that it parses as JSON with a `trace_id` inside a span. Add a field (or
+      a ruff or clippy-style count) for `eprintln!` in server and connector
+      code paths, so the fix's second half is measured or dropped from the
+      fix.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Any file at the declared path passes, including one holding only the
+      unrelated `scrub_hides_secrets` test (structured_logs.rs:17-22). The
+      record chooses its own path (portal/observability/runtime.yaml:14), so
+      pointing it at any existing file passes as well.
+    suggestion: >-
+      Check behaviour rather than a path: assert JSON shape in the test as
+      above, require CI to run it with the data source's `ci:` option
+      (crates/toolbox-connector-workspace/src/data.rs:150), or reuse the
+      otel-testbed's log-to-trace check
+      (experiments/otel-testbed/README.md:42).
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence names the missing test path
+      (`docs/missing-structured-log-test.rs` in the demo-partial fixture,
+      portal/fixtures/workspace.ndjson:82), and adding the test the fix
+      describes passes. The `eprintln!` half isn't needed to pass, so the fix
+      asks for more than the check needs, not less.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no threshold. Silver follows the scorecard's ladder ("silver
+      adds logs, alerts and a reviewed monitor stage",
+      observability.yaml:102-103) and the Logs row of
+      docs/design/observability.md:19: logs are a contract on top of the
+      bronze crate and catalog.
+summary: >-
+  The intent, queryable logs joined to traces, is right for silver, but
+  the check only needs a file to exist, and the test it points at proves
+  only that `init` doesn't error. Half of the fix (moving off `eprintln!`)
+  is measured nowhere.

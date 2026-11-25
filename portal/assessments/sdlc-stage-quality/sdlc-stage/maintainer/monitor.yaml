@@ -1,0 +1,48 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: sdlc-stage:maintainer/monitor
+rubric: sdlc-stage-quality
+subjectHash: 6aa12ec382ac
+assessor: {kind: agent, name: cursor-assessor-21, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: executable-exit
+    verdict: pass
+    reason: >-
+      The rust job ends with the ratchet through ./actions/report
+      (.github/workflows/ci.yml:107-113) with the default mode `ci`, which
+      fails on regressions and also when the baseline is out of date or
+      missing (actions/report/action.yml:28-34). Both halves of the exit
+      criterion, "ratchet passes" and "improvements recorded in
+      portal/results.json", therefore fail the job when unmet.
+  - criterion: agent-can-complete
+    verdict: pass
+    reason: >-
+      portal/README.md:80-99 gives the check and the `--update` command, and
+      the linters the ratchet needs are installed at their pins by `toolbox
+      tools install portal --via pip` and confirmed by `toolbox doctor portal`
+      (ci.yml:78-82). OpenSSF refreshes run Scorecard with `--local`, which
+      needs no GitHub token (packages/openssf-scorecard/README.md:32, 51-55).
+      The stage's own doc lags: maintainer-sdlc.md:64 still calls the
+      standards "report, not yet a gate", while toolbox-for-toolbox.md:223
+      says the ratchet is built and gating.
+  - criterion: reuses-artifacts
+    verdict: pass
+    reason: >-
+      The ratchet step passes `toolbox-dir: target/debug` (ci.yml:108-112), so
+      it reuses the binary the same job already built instead of compiling the
+      action's own copy. zizmor, ruff and actionlint come from the pins in the
+      portal's `tools:` (ruff 0.14.0 at portal/toolbox.yaml:390-391) and the
+      SHA-256-pinned scripts/ci-tools.sh.
+  - criterion: decoupled-from-core
+    verdict: pass
+    reason: >-
+      The standards being scored are manifest files in portal/standards/, and
+      the ratchet is the same actions/report that pilot repositories use (D69,
+      examples/repo-portal-starter/README.md:3-6). Raising or adding a
+      standard needs no crate, builtin or schema change.
+summary: >-
+  The ratchet is a real CI gate, and it also fails when an improvement is
+  not recorded, so the exit criterion is fully executable. The weak spot
+  is documentation: docs/design/maintainer-sdlc.md §2 and §4 still
+  describe the standards as a report rather than a gate and point at
+  scripts/self-portal.sh. portal/README.md is the accurate guide.

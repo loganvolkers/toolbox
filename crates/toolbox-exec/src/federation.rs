@@ -6,13 +6,17 @@
 //! which previews, runs and verifies it with its own executor and credentials. The parent never
 //! runs a child's code with the parent's credentials.
 
+use crate::ci::Ci;
 use crate::executor::Executor;
+use crate::executor::federated::Federated;
 use serde_json::{Map, Value, json};
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use toolbox_derive::Derived;
 use toolbox_model::Manifest;
-use toolbox_model::forge::{self, Kind};
-use toolbox_model::manifest::{Action, Forge};
+use toolbox_model::ci::{self as ci_hosts, Hosts};
+use toolbox_model::forge;
+use toolbox_model::manifest::Action;
 
 /// Where a federated action really lives.
 #[derive(Debug, Clone)]
@@ -43,8 +47,8 @@ pub struct Child {
     pub branch: Option<String>,
     /// For a child cloned from git: the URL the parent cloned it from, which decides its forge.
     pub git: Option<String>,
-    /// The parent's `forges`.
-    pub forges: Vec<Forge>,
+    /// The parent's `forges` and `ci` hosts.
+    pub hosts: Hosts,
 }
 
 /// `*` matches any run of characters; everything else matches itself.
@@ -70,8 +74,8 @@ fn listed(list: &Value, key: &str, s: &str) -> bool {
 
 impl Child {
     /// The child's own `toolbox run`, in this portal's clone or checkout of it.
-    fn local(&self, program: &Path) -> Executor {
-        Executor::Toolbox {
+    fn local(&self, program: &Path) -> Federated {
+        Federated {
             portal: self.path.clone(),
             action: self.action.clone(),
             entity: String::new(),
@@ -87,7 +91,7 @@ impl Child {
             review: self
                 .git
                 .as_deref()
-                .and_then(|g| forge::resolve(&self.forges, g)),
+                .and_then(|g| forge::resolve(&self.hosts.forges, g)),
         }
     }
 
@@ -127,16 +131,16 @@ pub struct Offered {
     /// For a child's action: the child portal entity it is offered on.
     pub entity: Option<String>,
     pub child: Option<Child>,
-    /// The portal's `forges`, which its own executors reach.
-    pub forges: Vec<Forge>,
+    /// The portal's `forges` and `ci` hosts, which its own executors reach.
+    pub hosts: Hosts,
 }
 
 impl Offered {
     /// The executor that carries out a run of this action. `program` is the `toolbox` binary a
     /// local child is run with.
-    pub fn executor(&self, program: &Path) -> Result<Executor, String> {
+    pub fn executor(&self, program: &Path) -> Result<Arc<dyn Executor>, String> {
         let Some(c) = &self.child else {
-            return Executor::parse_in(&self.action.executor, &self.forges);
+            return crate::executor::parse_in(&self.action.executor, &self.hosts);
         };
         match c
             .runner
@@ -144,7 +148,7 @@ impl Offered {
             .and_then(Value::as_str)
             .unwrap_or("local")
         {
-            "local" => Ok(c.local(program)),
+            "local" => Ok(Arc::new(c.local(program))),
             "ci" => c.ci(program),
             "github-workflow" => {
                 // The child names its workflow; the parent supplies the endpoint and the token, so
@@ -175,10 +179,12 @@ impl Offered {
                         spec[k] = v.clone();
                     }
                 }
-                let mut w = crate::github::Workflow::parse(&spec)?;
-                w.federated = Some(c.action.clone());
-                w.preview = Some(Box::new(c.local(program)));
-                Ok(Executor::GithubWorkflow(w))
+                Ok(Arc::new(Ci {
+                    driver: Box::new(crate::ci::github::Workflow::parse(&spec)?),
+                    federated: Some(c.action.clone()),
+                    clone: None,
+                    preview: Some(Arc::new(c.local(program))),
+                }))
             }
             other => Err(format!(
                 "child portal {}: unknown runner {other} (local, ci, github-workflow)",
@@ -189,15 +195,18 @@ impl Offered {
 }
 
 impl Child {
-    /// `runner: {type: ci}` (docs/design/forges.md §4.3): the child's own CI, on the forge and
-    /// project the parent cloned it from, with that forge's API and token. The child names at
-    /// most its `workflow` (GitHub) and `ref`. The child previews in this portal's clone, as a
+    /// `runner: {type: ci}` (docs/design/forges.md §4.3, §4.7): CI for the project the parent
+    /// cloned the child from, on the CI host the parent's entry for that forge names (default:
+    /// the forge's own CI), with that host's endpoint and token. The child names at most its
+    /// `workflow` (GitHub Actions) and `ref`. The child previews in this portal's clone, as a
     /// local child does, so its approvers and effects are known and the grant can bind them.
-    fn ci(&self, program: &Path) -> Result<Executor, String> {
-        for k in ["project", "repo", "api", "url", "token", "forge"] {
+    fn ci(&self, program: &Path) -> Result<Arc<dyn Executor>, String> {
+        for k in [
+            "project", "repo", "api", "url", "token", "forge", "ci", "via",
+        ] {
             if self.runner.get(k).is_some() {
                 return Err(format!(
-                    "child portal {} names {k} in federation.runner; a ci runner goes to the project this portal cloned it from, with this portal's forge settings",
+                    "child portal {} names {k} in federation.runner; a ci runner goes to the project this portal cloned it from, on the CI this portal's forges: entry names",
                     self.portal
                 ));
             }
@@ -208,7 +217,7 @@ impl Child {
                 self.portal
             ));
         };
-        let Some(f) = forge::resolve(&self.forges, git) else {
+        let Some(f) = forge::resolve(&self.hosts.forges, git) else {
             return Err(format!(
                 "child portal {} is on {git}, which is plain git here: list its forge under forges: (url and type) to start its CI, or let it run locally",
                 self.portal
@@ -229,26 +238,26 @@ impl Child {
         let git_ref = s("ref")
             .or_else(|| self.branch.clone())
             .unwrap_or_else(|| "main".into());
-        Ok(match f.kind {
-            Kind::Github => Executor::GithubWorkflow(crate::github::Workflow {
-                repo: f.project,
-                workflow: s("workflow").unwrap_or_else(|| "toolbox.yml".into()),
-                git_ref,
-                api: f.api,
-                token_env: f.token,
-                federated: Some(self.action.clone()),
-                preview: Some(Box::new(self.local(program))),
-            }),
-            Kind::Gitlab => Executor::GitlabPipeline(crate::gitlab::Pipeline {
-                project: f.project,
-                git_ref,
-                api: f.api,
-                token_env: f.token,
-                federated: Some(self.action.clone()),
-                clone: Some(self.path.clone()),
-                preview: Some(Box::new(self.local(program))),
-            }),
-        })
+        let Some(target) = ci_hosts::for_forge(&self.hosts.ci, &f)? else {
+            return Err(format!(
+                "child portal {} is on {}, whose forges: entry says ci: none; let it run locally",
+                self.portal, f.url
+            ));
+        };
+        if !target.admits() {
+            return Err(format!(
+                "child portal {} builds as {} on ci {}, which that host's projects: does not list",
+                self.portal,
+                target.project,
+                target.host.as_deref().unwrap_or_default()
+            ));
+        }
+        Ok(Arc::new(Ci {
+            driver: crate::ci::driver(target, &self.runner, git_ref),
+            federated: Some(self.action.clone()),
+            clone: Some(self.path.clone()),
+            preview: Some(Arc::new(self.local(program))),
+        }))
     }
 }
 
@@ -315,7 +324,7 @@ pub fn offered(m: &Manifest, d: &Derived) -> Vec<Offered> {
             action: a.clone(),
             entity: None,
             child: None,
-            forges: m.forges.clone(),
+            hosts: Hosts::of(m),
         })
         .collect();
     let Some(fed) = &m.federation else {
@@ -406,11 +415,11 @@ pub fn offered(m: &Manifest, d: &Derived) -> Vec<Offered> {
                         runners: runners.clone(),
                         branch: branch.clone(),
                         git: git.clone(),
-                        forges: m.forges.clone(),
+                        hosts: Hosts::of(m),
                     }),
                     action: a,
                     entity: Some(id.clone()),
-                    forges: m.forges.clone(),
+                    hosts: Hosts::of(m),
                 });
             }
         }
@@ -606,6 +615,11 @@ pub fn describe(o: &Offered, d: &Derived) -> Value {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ci::CiDriver;
+    use crate::ci::github::Workflow;
+    use crate::ci::gitlab::Pipeline;
+    use crate::ci::service::Service;
+    use toolbox_model::manifest::{CiHost, Forge};
 
     fn child(runner: Value, runners: Value) -> Offered {
         Offered {
@@ -628,18 +642,23 @@ mod tests {
                 runners,
                 branch: None,
                 git: None,
-                forges: vec![],
+                hosts: Hosts::default(),
             }),
-            forges: vec![],
+            hosts: Hosts::default(),
         }
     }
 
     /// A child cloned from `git`, in a parent that declares `forges`.
     fn cloned(runner: Value, git: &str, forges: Vec<Forge>) -> Offered {
+        on_hosts(runner, git, Hosts { forges, ci: vec![] })
+    }
+
+    /// A child cloned from `git`, in a parent that declares `hosts`.
+    fn on_hosts(runner: Value, git: &str, hosts: Hosts) -> Offered {
         let mut o = child(runner, json!({}));
         let c = o.child.as_mut().unwrap();
         c.git = Some(git.into());
-        c.forges = forges;
+        c.hosts = hosts;
         c.branch = Some("trunk".into());
         o
     }
@@ -648,14 +667,14 @@ mod tests {
     fn a_ci_runner_starts_the_ci_of_the_project_the_parent_cloned() {
         let bin = Path::new("toolbox");
         let ci = json!({"type": "ci"});
-        let Ok(Executor::GitlabPipeline(p)) = cloned(
+        let e = cloned(
             ci.clone(),
             "https://gitlab.com/acme/platform/pay.git",
             vec![],
         )
-        .executor(bin) else {
-            panic!("a gitlab.com child should get a pipeline");
-        };
+        .executor(bin)
+        .unwrap();
+        let (c, p) = ci_of::<Pipeline>(&e);
         assert_eq!(
             (
                 p.project.as_str(),
@@ -670,13 +689,12 @@ mod tests {
                 "GITLAB_TOKEN"
             )
         );
-        assert_eq!(p.federated.as_deref(), Some("deploy"));
-        assert_eq!(p.clone.as_deref(), Some(Path::new("/org/team/pay")));
-        let Ok(Executor::GithubWorkflow(w)) =
-            cloned(ci.clone(), "git@github.com:acme/web.git", vec![]).executor(bin)
-        else {
-            panic!("a github.com child should get a workflow");
-        };
+        assert_eq!(c.federated.as_deref(), Some("deploy"));
+        assert_eq!(c.clone.as_deref(), Some(Path::new("/org/team/pay")));
+        let e = cloned(ci.clone(), "git@github.com:acme/web.git", vec![])
+            .executor(bin)
+            .unwrap();
+        let (_, w) = ci_of::<Workflow>(&e);
         assert_eq!(
             (w.repo.as_str(), w.workflow.as_str()),
             ("acme/web", "toolbox.yml")
@@ -688,15 +706,16 @@ mod tests {
             token: Some("GHES_TOKEN".into()),
             projects: Some(vec!["platform/*".into()]),
             identity: false,
+            ci: None,
         };
-        let Ok(Executor::GithubWorkflow(w)) = cloned(
+        let e = cloned(
             json!({"type": "ci", "workflow": "fleet.yml", "ref": "main"}),
             "https://ghe.acme.dev/platform/ledger.git",
             vec![ghes.clone()],
         )
-        .executor(bin) else {
-            panic!("an Enterprise Server child should get a workflow");
-        };
+        .executor(bin)
+        .unwrap();
+        let (_, w) = ci_of::<Workflow>(&e);
         assert_eq!(
             (
                 w.api.as_str(),
@@ -722,7 +741,9 @@ mod tests {
                 .map(|_| ())
                 .unwrap_err()
         };
-        for k in ["project", "repo", "api", "url", "token", "forge"] {
+        for k in [
+            "project", "repo", "api", "url", "token", "forge", "ci", "via",
+        ] {
             let mut r = json!({"type": "ci"});
             r[k] = "elsewhere".into();
             assert!(on(r, "https://gitlab.com/acme/pay.git", vec![]).contains(k));
@@ -743,6 +764,7 @@ mod tests {
             token: None,
             projects: Some(vec!["acme/*".into()]),
             identity: false,
+            ci: None,
         };
         assert!(
             on(
@@ -769,6 +791,66 @@ mod tests {
                 .unwrap_err()
                 .contains("federation.children")
         );
+    }
+
+    #[test]
+    fn a_forge_entry_sends_its_children_to_the_ci_host_it_names() {
+        let bin = Path::new("toolbox");
+        let github = |ci: &str| Forge {
+            url: "https://github.com".into(),
+            ci: Some(ci.into()),
+            ..Forge::default()
+        };
+        let hosts = |ci: &str| Hosts {
+            forges: vec![github(ci)],
+            ci: vec![
+                CiHost {
+                    name: "mirror".into(),
+                    kind: "gitlab-ci".into(),
+                    url: Some("https://gitlab.acme.dev".into()),
+                    token: Some("ACME_GITLAB_TOKEN".into()),
+                    project: Some("mirrors/{project}".into()),
+                    projects: Some(vec!["mirrors/acme/*".into()]),
+                    ..CiHost::default()
+                },
+                CiHost {
+                    name: "buildkite".into(),
+                    kind: "http".into(),
+                    url: Some("https://bk.acme.dev/toolbox".into()),
+                    token: Some("BK_TOKEN".into()),
+                    ..CiHost::default()
+                },
+            ],
+        };
+        let run =
+            |ci: &str, git: &str| on_hosts(json!({"type": "ci"}), git, hosts(ci)).executor(bin);
+        let e = run("mirror", "https://github.com/acme/web.git").unwrap();
+        let (c, p) = ci_of::<Pipeline>(&e);
+        assert_eq!(
+            (
+                p.project.as_str(),
+                p.git_ref.as_str(),
+                p.api.as_str(),
+                p.token_env.as_str()
+            ),
+            (
+                "mirrors/acme/web",
+                "trunk",
+                "https://gitlab.acme.dev/api/v4",
+                "ACME_GITLAB_TOKEN"
+            )
+        );
+        assert_eq!(c.clone.as_deref(), Some(Path::new("/org/team/pay")));
+        let e = run("buildkite", "https://github.com/acme/web.git").unwrap();
+        let (_, s) = ci_of::<Service>(&e);
+        assert_eq!(
+            (s.url.as_str(), s.token_env.as_deref(), s.project.as_str()),
+            ("https://bk.acme.dev/toolbox", Some("BK_TOKEN"), "acme/web")
+        );
+        let err = |ci: &str, git: &str| run(ci, git).map(|_| ()).unwrap_err();
+        assert!(err("mirror", "https://github.com/other/web.git").contains("projects:"));
+        assert!(err("none", "https://github.com/acme/web.git").contains("ci: none"));
+        assert!(err("gone", "https://github.com/acme/web.git").contains("does not declare"));
     }
 
     #[test]
@@ -805,14 +887,18 @@ mod tests {
         let mut elsewhere = wf.clone();
         elsewhere["repo"] = "victim/prod".into();
         assert!(child(elsewhere, own.clone()).executor(bin).is_err());
-        let Ok(Executor::GithubWorkflow(w)) = child(wf, own).executor(bin) else {
-            panic!("an allowed child should dispatch");
-        };
+        let e = child(wf, own).executor(bin).unwrap();
+        let (c, w) = ci_of::<Workflow>(&e);
         assert_eq!(
             (w.api.as_str(), w.token_env.as_str()),
             ("https://ghe.example/api/v3", "ORG_TOKEN")
         );
-        assert_eq!(w.federated.as_deref(), Some("deploy"));
+        assert_eq!(c.federated.as_deref(), Some("deploy"));
+    }
+
+    fn ci_of<T: CiDriver>(e: &Arc<dyn Executor>) -> (&Ci, &T) {
+        let c = e.downcast::<Ci>().expect("a CI executor");
+        (c, c.driver.downcast::<T>().expect("that CI's driver"))
     }
 
     #[test]

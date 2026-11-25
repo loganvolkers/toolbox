@@ -1,0 +1,65 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/review-crate/passes-review
+rubric: assessment-quality
+subjectHash: 7bd8d9909a56
+assessor: {kind: agent, name: cursor-reviewer-31, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      portal/assessments/rule-quality/rule/toolbox/review-crate/passes-review.yaml
+      cites the wrong lines, and two claims contradict the files.
+      crates/toolbox-connector-workspace/src/rust.rs:271-291 is helpers(), not
+      source_hash; that function is rust.rs:392-415 and does hash src/, tests/
+      and Cargo.toml. portal/standards/crates.yaml:43-46 is testsPerKloc, not
+      the hash field; the hash description at :51-55 already names src/,
+      tests/ and Cargo.toml, so it does not still say "src/ files".
+      crates.yaml:352-354 is the scorecard description; the passes-review fix
+      is :411-413. crates.yaml:284-370 stops before the rules, and
+      independently-reviewed at :433-453 requires a second assessor.
+      docs/design/thresholds.md:62-70 says review-crate can require that
+      review, not that a crate rule cannot see it.
+    suggestion: >-
+      Recite source_hash at rust.rs:392-415, the hash field at
+      crates.yaml:51-55, the fix at :411-413, and independently-reviewed at
+      :433-453. Drop the claim that a self-assessment earns scorecard gold.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The passes-review check is fresh, no failing criterion, and no uncited
+      reason (crates.yaml:404-406). A reason that only cites a real path
+      clears reviewUncited (crates/toolbox-connect/src/assessment.rs:44-45 and
+      cited_paths at :66), so hard-to-game should still fail for this rule.
+      measures-intent, fix-leads-to-pass and threshold-justified stay passes:
+      the check matches the rationale, the fix at :411-413 names
+      portal/assessments/, and thresholds.md:55 states the gold bar.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The hard-to-game fail follows from the check and from cites() accepting
+      any existing path. A second assessor still fails that criterion after
+      correcting the line numbers. The false "earns gold" sentence is a
+      citation error, not a different reading of the check.
+  - criterion: actionable
+    verdict: fail
+    reason: >-
+      The suggestion copies review state the connector already writes
+      (crates/toolbox-connect/src/assessment.rs:232-295) so a crate rule can
+      require an independent review. That rule already exists
+      (crates.yaml:433-453). Neither half stops "Fine; see lib.rs." from
+      passing passes-review, which is the fail the suggestion is attached to.
+      thresholds.md:63-65 also says git cannot tell agents apart, so the
+      committer alternative does not distinguish authors.
+    suggestion: >-
+      Change this rule's check so a reason must cite a path inside the crate
+      under review, not any file that exists. That would make the boilerplate
+      assessment fail passes-review.
+summary: >-
+  The hard-to-game fail is right for this rule, and the other three
+  verdicts can stand, but the write-up cites the wrong lines and denies a
+  rule that exists. source_hash is rust.rs:392-415, the hash text already
+  includes tests and Cargo.toml, and independently-reviewed at
+  crates.yaml:433-453 already blocks scorecard gold for a self-review. The
+  suggestion restates that rule and leaves boilerplate passing
+  passes-review.

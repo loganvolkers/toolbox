@@ -29,6 +29,19 @@ impl Kind {
             Kind::Gitlab => "gitlab",
         }
     }
+
+    /// The name in prose.
+    pub fn title(self) -> &'static str {
+        match self {
+            Kind::Github => "GitHub",
+            Kind::Gitlab => "GitLab",
+        }
+    }
+}
+
+/// The public host of a forge type, if it has one.
+pub fn known_host(kind: Kind) -> Option<&'static str> {
+    KNOWN.iter().find(|(_, k)| *k == kind).map(|(u, _)| *u)
 }
 
 /// A forge with its defaults filled in, and the project a git URL names on it.
@@ -43,6 +56,8 @@ pub struct Resolved {
     pub projects: Option<Vec<String>>,
     /// `owner/repo`, or `group/subgroup/project`.
     pub project: String,
+    /// The forge entry's `ci:`: the CI host its children run on, `none`, or its own CI.
+    pub ci: Option<String>,
 }
 
 impl Resolved {
@@ -182,6 +197,7 @@ pub fn resolve(forges: &[Forge], git: &str) -> Option<Resolved> {
             projects: f.projects.clone(),
             url: trim(&f.url).into(),
             project,
+            ci: f.ci.clone(),
         });
     }
     None
@@ -217,6 +233,7 @@ mod tests {
             token: None,
             projects: None,
             identity: false,
+            ci: None,
         }
     }
 

@@ -1,0 +1,59 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/maintainer-docs/status-banner
+rubric: rule-quality
+subjectHash: 1ee432aa10df
+assessor: {kind: agent, name: cursor-assessor-11, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      `hasStatus` is true when any of the first 15 lines, stripped of `>*_`
+      and spaces, starts with "Status", "Implemented" or "Layer "
+      (crates/toolbox-connector-workspace/src/main.rs:426-430). It does not
+      check that the line says what is decided and built
+      (portal/standards/docs.yaml:146-148). docs/design/sdlc.md passes on its
+      "Layer 3 of the four SDLC layers" line (:3). Its real banner,
+      "**Implementation status", at line 7, would not match. No fixture fails
+      the rule: every Doc in portal/fixtures/workspace.ndjson has hasStatus
+      true or is not a design doc, so the brief reports it untested.
+    suggestion: >-
+      Match a `Status:` label (or `Implementation status`) and require text
+      after it, e.g. at least three words. Drop the `Layer ` prefix. Add a
+      design-doc fixture without a banner, and one with an empty `*Status:*`,
+      to portal/fixtures/workspace.ndjson and
+      portal/tests/standards.test.yaml.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      An empty `*Status:*` line passes: hasStatus only asks whether one of the
+      first 15 lines, after `>`, `*` and `_` are trimmed, starts with
+      "Status", "Implemented" or "Layer "
+      (crates/toolbox-connector-workspace/src/main.rs:426-430). On a scratch
+      checkout, a design doc starting with exactly that recorded hasStatus
+      true. That is the empty-doc-comment case the rubric names: the cheapest
+      pass carries none of the "decided / built" information the rule exists
+      for.
+    suggestion: >-
+      Same change as for measures-intent: require content after the label.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence is a fixed sentence, "design doc with no *Status:* line"
+      (docs.yaml:145). The fix says to start the doc under docs/design/ with a
+      `*Status:*` line (:146-148). That line in the first 15 lines matches
+      main.rs:429, so following the fix passes.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no number. Silver is where
+      docs/design/toolbox-for-toolbox.md:104 puts design-doc banners, and the
+      scorecard's rationale says silver is "what is decided and built"
+      (docs.yaml:87-89). AGENTS.md ("where a status banner remains, it wins")
+      is why the banner matters.
+summary: >-
+  The intent and level are right, and the fix works, but the check only
+  looks for a line starting with "Status", "Implemented" or "Layer ". An
+  empty banner passes, and docs/design/sdlc.md passes on its layer line,
+  not its status. No fixture ever fails it, so a regression would go
+  unseen.

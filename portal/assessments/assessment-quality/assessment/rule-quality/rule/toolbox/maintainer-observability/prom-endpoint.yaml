@@ -1,0 +1,66 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/maintainer-observability/prom-endpoint
+rubric: assessment-quality
+subjectHash: 98b962db4fe5
+assessor: {kind: agent, name: cursor-reviewer-09, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/rule-quality/rule/toolbox/maintainer-observability/prom-endpoint.yaml
+      land:
+      - portal/standards/observability.yaml:161-163 (rationale);
+      - crates/toolbox-telemetry/tests/prom_catalog.rs:20-26, which calls
+        `metrics_text()` directly;
+      - crates/toolbox-api/src/routes.rs:27 and 173-174 (the route);
+      - data.rs:150-200 and 203-210;
+      - portal/toolbox.yaml:175-185 (`paths:` only);
+      - portal/fixtures/workspace.ndjson:83 (`docs/missing-prom-test.rs`);
+      - docs/v1-spec.md:528;
+      - D01M81ADN8C10EA1Z1VNRY3A5JZ ("Keep `GET /metrics` scrape").
+      "No crate test requests /metrics" is true: rg finds the string only at
+      routes.rs:27.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The fails are right. An empty file passes, and so does any existing
+      path, because the rule reads only `missingPromTest`. The passes are
+      right too. The reason does leave out that the route is exercised in CI:
+      experiments/otel-testbed/scripts/score.sh:110 curls `$URL/metrics`, and
+      the testbed's README:43 checks for the catalog's `# TYPE` lines. That
+      doesn't rescue the rule, which reads neither file, so no verdict
+      changes.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Each verdict follows from the computed field, prom_catalog.rs and
+      data.rs. A second assessor would reach the same two fails and two
+      passes.
+  - criterion: actionable
+    verdict: unsure
+    reason: >-
+      The measures-intent suggestion has two parts. The first declares
+      `promTest` under `ci:`. That adds nothing for this path:
+      crates/toolbox-connector-workspace/src/data.rs:207-209 counts any
+      crates/**/*.rs as run whenever CI runs `cargo test`. The assessment's
+      own hard-to-game reason says so. The second adds an API test that GETs
+      `/metrics` and points `promTest` at it. The rule would still check only
+      that the file exists, so the fail as reasoned ("neither the test's
+      content nor whether CI runs it is read") would stand. Only the
+      hard-to-game suggestion, requiring the file to assert something, reads
+      content.
+    suggestion: >-
+      Drop `ci:` from the measures-intent suggestion, or point `promTest` at
+      experiments/otel-testbed/scripts/score.sh. That script already scrapes
+      `/metrics` (line 110), lies outside crates/, and ci.yml:127 runs it, so
+      `notInCi` would fail when CI stops running it. Pair this with the
+      content check from hard-to-game.
+summary: >-
+  The verdicts are right and well cited. Its measures-intent suggestion
+  leans on a `ci:` check that data.rs:207-209 makes always true for a Rust
+  test, and it proposes an API test for a route that
+  otel-testbed/scripts/score.sh:110 already scrapes in CI. Pointing the
+  rule at score.sh would change the verdict. The suggestion as written
+  would not.

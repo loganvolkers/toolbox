@@ -1,0 +1,73 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: scorecard:toolbox/maintainer-package
+rubric: scorecard-quality
+subjectHash: ec7811bea1c0
+assessor: {kind: agent, name: cursor-assessor-06, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: >-
+      Every rule reads one npm manifest for one audience, the maintainers who
+      keep it: portal/README.md:30 files it under "1. Maintainer", it is on
+      the maintainer track (portal/standards/packages.yaml:59), and
+      docs/design/package-standards.md:58-59 says so. The rules are identity,
+      supply-chain pinning and a few self-description fields, all read from
+      package.json and the CI job that installs it; nothing serves operators
+      or users.
+  - criterion: levels-are-a-ladder
+    verdict: fail
+    reason: >-
+      The rationale says "silver pins it" (packages.yaml:50-52), but
+      ci-installs-from-the-lockfile, at gold, says that without it "the
+      lockfile's pins protect nothing" (packages.yaml:166-169). So the payoff
+      of silver's `locked` arrives only at gold, and a silver package can have
+      its lockfile rewritten in every CI run. Gold also mixes that
+      supply-chain rule with two one-line documentation fields (`described`,
+      `engines-declared`), which are cheaper than silver's lockfile. Bronze is
+      reachable (all four live manifests are at silver or gold,
+      portal/results.json maintainer-package).
+      docs/design/package-standards.md:72 still shows no-hardcoded-secrets at
+      gold, although the manifest and docs/design/thresholds.md:35 put it at
+      bronze.
+    suggestion: >-
+      Move ci-installs-from-the-lockfile to silver beside `locked` (both
+      OpenSSF application rules, recommendation 7), leave gold as description
+      and engines (tightened per their assessments), and fix
+      package-standards.md §4's table.
+  - criterion: no-obvious-gap
+    verdict: fail
+    reason: >-
+      The OpenSSF npm guide the card links
+      (https://github.com/ossf/package-manager-best-practices/blob/main/published/npm.md,
+      "Lockfiles and commands", recommendation 3) asks that a CLI run in CI be
+      a declared dependency "before being installed at build-time", and lists
+      `npx` and `npm exec` among commands that fetch unpinned code. No rule
+      covers a CI step that runs `npx <pkg>`; the install detector ignores it
+      (crates/toolbox-connector-workspace/src/npm.rs:195-204). The lockfile is
+      never read, so a transitive dependency resolved from a git or tarball
+      URL passes, though `from-a-registry` refuses the same thing for direct
+      ranges.
+    suggestion: >-
+      Add a gold rule `ci-runs-declared-tools` (no `npx`/`npm exec` of a
+      package missing from the manifest in that package's jobs), and extend
+      `from-a-registry` or `locked` to read the lockfile's `resolved` hosts
+      and fail any outside the registry.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      I traced ui/package.json, at silver and failing `described` and
+      `engines-declared` (portal/results.json). The evidence is 'no
+      description' and 'engines.node is not set', the fixes name the field and
+      the Node version to use, and CI's version is in
+      .github/workflows/ci.yml:299 (`22`), so two lines in package.json reach
+      gold; scripts/playwright-ci/package.json is exactly that. Every rule has
+      evidence, and the one fix that touches another file names
+      `.github/workflows/` (packages.yaml:162-165).
+summary: >-
+  A coherent maintainer card that agents can climb with its fixes alone.
+  The ladder is out of order: CI installing from the lockfile, which the
+  card itself says is what makes silver's lockfile mean anything, sits at
+  gold beside documentation fields. CI `npx` and lockfile `resolved` hosts
+  are uncovered, and several detectors are string matches that common
+  forms slip past (see the rule assessments).

@@ -469,11 +469,14 @@ impl Runner {
             None
         };
         let run = self
-            .run_in(&job.command, export.as_deref().unwrap_or(&self.root))
+            .run_in(
+                &job.command,
+                export
+                    .as_ref()
+                    .map_or(self.root.as_path(), |d| d.0.as_path()),
+            )
             .await;
-        if let Some(dir) = &export {
-            let _ = std::fs::remove_dir_all(dir);
-        }
+        drop(export);
         if !run.ok {
             if job.optional && run.stderr.starts_with("cannot run ") {
                 out.log(
@@ -681,10 +684,19 @@ impl Source for Runner {
 
 /// `command` with an argument that is exactly `{files}` replaced by `files`; `None` when it asks for
 /// files and there are none.
-/// An argv as one shell command line: words that need it are single-quoted.
+/// A temporary directory removed when dropped: on success, on any error after it was made, and when
+/// the job's future is cancelled, so a failed or interrupted export never accumulates on disk.
+struct TempTree(PathBuf);
+
+impl Drop for TempTree {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.0);
+    }
+}
+
 /// The git-tracked files under `root`, with their uncommitted edits (`git stash create`), exported
 /// to a new temporary directory: the tree a fresh CI checkout sees, without untracked build output.
-fn export_tracked(root: &std::path::Path) -> Result<PathBuf, String> {
+fn export_tracked(root: &std::path::Path) -> Result<TempTree, String> {
     let git = |args: &[&str]| {
         std::process::Command::new("git")
             .arg("-C")
@@ -703,9 +715,11 @@ fn export_tracked(root: &std::path::Path) -> Result<PathBuf, String> {
     let nanos = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map_or(0, |d| d.as_nanos());
-    let dir = std::env::temp_dir().join(format!("toolbox-tracked-{}-{nanos}", std::process::id()));
-    std::fs::create_dir_all(&dir).map_err(|e| format!("{}: {e}", dir.display()))?;
-    let tar = dir.join(".tracked.tar");
+    let dir = TempTree(
+        std::env::temp_dir().join(format!("toolbox-tracked-{}-{nanos}", std::process::id())),
+    );
+    std::fs::create_dir_all(&dir.0).map_err(|e| format!("{}: {e}", dir.0.display()))?;
+    let tar = dir.0.join(".tracked.tar");
     let archive = git(&[
         "archive",
         "--format=tar",
@@ -723,7 +737,7 @@ fn export_tracked(root: &std::path::Path) -> Result<PathBuf, String> {
         .arg("-xf")
         .arg(&tar)
         .arg("-C")
-        .arg(&dir)
+        .arg(&dir.0)
         .status()
         .map_err(|e| format!("tar: {e}"))?;
     let _ = std::fs::remove_file(&tar);
@@ -733,6 +747,7 @@ fn export_tracked(root: &std::path::Path) -> Result<PathBuf, String> {
     Ok(dir)
 }
 
+/// An argv as one shell command line: words that need it are single-quoted.
 fn shell_words(argv: &[String]) -> String {
     argv.iter()
         .map(|a| {
@@ -823,5 +838,25 @@ mod tests {
             (Some("fail"), Some(1))
         );
         assert_eq!(r["messages"][0], "src/lib.rs:3 clippy::needless_return x");
+    }
+
+    #[test]
+    fn a_failed_tracked_export_leaves_no_directory_behind() {
+        let tmp = std::env::temp_dir();
+        let before = |p: &str| {
+            std::fs::read_dir(&tmp)
+                .into_iter()
+                .flatten()
+                .flatten()
+                .filter(|e| e.file_name().to_string_lossy().starts_with(p))
+                .count()
+        };
+        let prefix = format!("toolbox-tracked-{}-", std::process::id());
+        let n = before(&prefix);
+        let not_git = tmp.join(format!("toolbox-not-git-{}", std::process::id()));
+        std::fs::create_dir_all(&not_git).unwrap();
+        assert!(super::export_tracked(&not_git).is_err());
+        assert_eq!(before(&prefix), n, "the export directory was removed");
+        let _ = std::fs::remove_dir_all(&not_git);
     }
 }

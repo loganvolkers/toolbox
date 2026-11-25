@@ -1,0 +1,56 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: crate:toolbox-durable
+rubric: crate-design
+subjectHash: 8448af7a27b5
+assessor: {kind: agent, name: cursor-assessor-20, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: one-responsibility
+    verdict: pass
+    reason: >-
+      The crate is a four-line placeholder whose docs name one job, "Durable
+      workflows on Postgres (§8.1, M5)", and say it has no code until its
+      milestone (crates/toolbox-durable/src/lib.rs:1-4). That matches its row
+      in docs/v1-spec.md:93 (`Durable` trait; Postgres implementation, Q4).
+      The docs are not stale: M5 is marked partly built, and v1-spec.md:68
+      still lists "durable steps across instances" under "Not yet". Run
+      records live elsewhere for now, in toolbox-store's `toolbox.runs` table
+      (crates/toolbox-store/migrations/0003_runs.sql). That is consistent with
+      §8, which lists `runs` separately from `toolbox_durable.*`
+      (docs/v1-spec.md:432-433).
+  - criterion: small-contract
+    verdict: pass
+    reason: >-
+      The crate has no public items and no dependents. The brief's facts show
+      pubItems 0 and dependents [], and a search for `toolbox_durable` in
+      crates/ finds only the crate's own Cargo.toml. So no caller can reach
+      its internals. The contract it will own is already written down as the
+      `Durable` trait in docs/v1-spec.md:273-280.
+  - criterion: replaceable-defaults
+    verdict: pass
+    reason: >-
+      The crate wraps nothing yet: it has no dependencies at all
+      (crates/toolbox-durable/Cargo.toml). The default it is meant to hide,
+      the DBOS model and schema, is still kept swappable on paper. Q4
+      (docs/questions.md) defers the SDK choice, and experiments/
+      durable-schema/README.md shows the v1 tables are a column subset of
+      DBOS's, so adopting the SDK would be a migration (docs/v1-spec.md:450).
+  - criterion: tests-match-risk
+    verdict: pass
+    reason: >-
+      There is no code, so there is no untested risky path in this crate
+      (facts: codeLines 0, unitTests 0). The risky semantics the crate will
+      need are step-once replay, idempotent start, recovery from a dead
+      instance and exactly-once notifications. They are already demonstrated
+      in SQL by experiments/durable-schema/test.sql, with results recorded in
+      its README. That README also names what is not shown: timers, a crash
+      inside a step, and the Rust implementation. maintainer-crate skips the
+      crate on purpose (portal/standards/crates.yaml:165;
+      portal/tests/standards.test.yaml:26).
+summary: >-
+  An honest placeholder. Its one-line job matches v1-spec §4, it exposes
+  nothing, and it wraps nothing, so every criterion passes trivially. What
+  matters is outside the crate. M5 shipped run persistence through
+  toolbox-store instead, so when this crate gets code, the `Durable` trait
+  should be the only way runs reach the §8.1 tables, and the experiment's
+  SQL cases should become its first tests.

@@ -1,6 +1,6 @@
-# User SDLC (Layer 3): Building Apps on a Portal
+# User SDLC (Layer 4): Building Apps on a Portal
 
-*Status: design, 2026-11-20 (D63). Layer 3 of [the three SDLC layers](../sdlc.md). A **user** is
+*Status: design, 2026-11-20 (D63). Layer 4 of [the four SDLC layers](../sdlc.md). A **user** is
 anyone who builds on a running portal rather than on Toolbox or the portal itself. Examples:*
 - *an agent answering "who owns this?";*
 - *a team's on-call bot;*
@@ -22,7 +22,7 @@ The foundations exist today:
 - snapshot ids that make reads reproducible, and read-your-writes (`min_snapshot`);
 - a dev portal that runs from fixtures.
 
-The parts that make layer 3 first-class are still to build:
+The parts that make layer 4 first-class are still to build:
 - typed clients from a per-portal OpenAPI document;
 - the generated user agent plugin;
 - service identities for apps;
@@ -60,8 +60,8 @@ The parts that make layer 3 first-class are still to build:
 
 ## 4. Stability contract (proposed)
 
-Apps break when the portal changes under them. Operators change portals often (that's layer 2), so
-layer 3 needs explicit promises:
+Apps break when the portal changes under them. Operators change portals often (that's layer 3), so
+layer 4 needs explicit promises:
 
 | Surface | Promise | Enforced by |
 |---|---|---|
@@ -89,4 +89,4 @@ Open: how users declare which portal fields they depend on, so `plan` can name t
 [v1-spec.md](../v1-spec.md) §7 (interfaces), [design/agent-plugins.md](./agent-plugins.md),
 [design/dashboards.md](./dashboards.md), [design/action-runs.md](./action-runs.md), and the
 [reference portal](../../examples/reference-portal/README.md) acceptance scenarios, which are
-written as layer-3 tasks.
+written as layer-4 tasks.

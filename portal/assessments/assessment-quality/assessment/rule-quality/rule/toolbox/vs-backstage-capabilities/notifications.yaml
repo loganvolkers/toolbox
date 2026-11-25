@@ -1,0 +1,46 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/notifications
+rubric: assessment-quality
+subjectHash: 27112c3deb97
+assessor: {kind: agent, name: cursor-reviewer-15, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/rule-quality/rule/toolbox/vs-backstage-capabilities/notifications.yaml
+      hold:
+      - backstage-comparison.yaml:154 is the field, and RESEARCH.md:121 is
+        "notifications".
+      - facts.yaml:89 and 177 are the facts.
+      - docs/v1-spec.md:50 defers notifications to Phase 2.
+      - snapshot.py:85 overlays the facts.
+      - docs/design/campaigns.md:170 sends owner notifications to
+        notifications.md, which exists and designs the webhook channel.
+      - The rule links campaigns.md (backstage-comparison.yaml:1039-1040).
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      Both fails are right. The fact is typed (facts.yaml:89). The fix
+      (backstage-comparison.yaml:1032-1034) names a channel, not a place, and
+      links the doc that defers the work. measures-intent and
+      threshold-justified match the sources.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The wrong link and the place-less fix are readable facts
+      (campaigns.md:170, backstage-comparison.yaml:1032-1040). A second
+      assessor would reach the same verdicts.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The suggested fix links notifications.md, names the snapshot loop in
+      crates/toolbox-api and adds the facts.yaml/snapshot.py step. The
+      hard-to-game suggestion adds a webhook probe. Each would change its
+      verdict.
+summary: >-
+  An accurate assessment whose best finding is checkable: the rule links
+  campaigns.md, which itself defers owner notifications to
+  docs/design/notifications.md. Both fails and their suggestions are
+  sound.

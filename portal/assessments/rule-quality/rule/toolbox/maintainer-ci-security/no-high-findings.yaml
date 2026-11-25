@@ -1,0 +1,67 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/maintainer-ci-security/no-high-findings
+rubric: rule-quality
+subjectHash: 8eba2e72ce1e
+assessor: {kind: agent, name: cursor-assessor-12, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      zizmor runs with `--offline`
+      (packages/github-actions/fragments/github-actions.yaml:17-22), and with
+      -v zizmor 1.32.0 logs that it skips impostor-commit, ref-confusion,
+      known-vulnerable-actions, stale-action-refs and ref-version-mismatch for
+      want of a token. A scratch workflow running tj-actions/changed-files
+      pinned by SHA, the action behind CVE-2025-30066 that
+      docs/design/github-actions-standards.md:145-146 names, produced no
+      results at all. So "no high findings" means no high findings from the
+      offline audits; a known-vulnerable or impostor action passes the floor
+      the rationale says one finding is enough to fail
+      (github-actions.yaml:226-229).
+    suggestion: >-
+      Say in the rule's description and rationale that it covers zizmor's
+      offline audits, and add a run of zizmor with GH_TOKEN as its own
+      connector (skipped in the ratchet like `github-actions`, with
+      `dataFrom`), feeding a rule for known-vulnerable-actions and
+      impostor-commit in the full report.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      A `# zizmor: ignore[template-injection]` comment on the line removes the
+      finding from zizmor's SARIF: on a scratch pull_request_target workflow,
+      two high results became one with the comment, and the ignored one
+      carried no SARIF `suppressions` entry, so the record's `suppressed`
+      count stays 0 (crates/toolbox-connector-runner/src/lint.rs :167-169,
+      214). One comment, no reason required, passes the floor and bypasses
+      portal/waivers.yaml, which requires a decision per waiver
+      (waivers.yaml:1-2). This repository's own ignores give a reason
+      (.github/workflows/ci.yml:108), but nothing checks that.
+    suggestion: >-
+      Run zizmor with `--no-ignores` (or count ignores from the inline
+      comments and zizmor.yml in the workspace connector) so ignored high
+      findings stay visible, and let only a portal waiver citing a decision
+      excuse a high finding.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence gives each finding's severity, audit, line and message
+      (github-actions.yaml:219-222), and the fix gives the command and the
+      audits page (:223-225). The exclusion of `unpinned-uses` is explained in
+      D01M84CCDH1ZWF9726SVDDM1JDX, so the evidence never asks for a fix
+      another rule owns. The tests pin both outcomes, including a waived
+      finding that keeps its evidence (portal/tests/standards.test.yaml
+      :120-143).
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      No number. Bronze follows docs/design/thresholds.md:19-21 (a route for
+      untrusted input to run code with the token is a killer item) and D70,
+      and github-actions-standards.md:83-84 maps dangerous triggers and
+      template injection to it.
+summary: >-
+  Well tested and well explained, with evidence that names each finding,
+  but weaker than its name. Offline zizmor skips the audits for known-
+  vulnerable and impostor actions, so a SHA-pinned vulnerable action
+  passes the floor, and a reason-less inline ignore removes a high finding
+  without trace, sidestepping the portal's decision-backed waivers.

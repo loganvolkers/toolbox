@@ -35,7 +35,7 @@ them.
 | F14 | medium | Fixed, with a residue | Tokens bind the requester and entity, a future `issued` is refused, a server spends each once (`409 token-used`), and each preview gets a fresh nonce, so two previews in one second don't share a token (found by the race check). Residue: the hash is unkeyed; it confirms a preview, it is not a credential | a93e11e, 20c5a6a |
 | F15 | medium | Fixed | Dispatch asks for `return_run_details` and tracks that run id. Without one, exactly one run of that name on the dispatched ref created after the dispatch must match, or the check refuses to guess. A run past its deadline is `timed_out` | a93e11e |
 | F16 | medium | Fixed | A child that pins no key for the parent makes the parent's preview say `child-refuses-approvals` before anyone approves | f9e158d |
-| F17 | medium | Deferred | Executor-aware cancel (§7.2) | — |
+| F17 | medium | Partly fixed | Executor-aware cancel (§7.2): a dispatched run's executor is sent `cancel`, and a workflow run or pipeline is cancelled through its API. Closing a pull request and telling a federated child remain | — |
 | F18 | medium | Partly fixed | `via` comes from the surface (a request extension the MCP endpoint sets), never from a body. The audit journal and durable runs are deferred | a93e11e |
 | F19 | medium | Deferred | `failed_after_effect` and compensation (§7.2) | — |
 | F20 | medium | Deferred | Group approvals against OpenFGA in the acceptance script (§7.2) | — |

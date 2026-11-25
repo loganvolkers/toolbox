@@ -1,0 +1,61 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/maintainer-skill/description-says-when
+rubric: rule-quality
+subjectHash: dcce3877d12a
+assessor: {kind: agent, name: cursor-assessor-01, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      triggerCues lists any occurrence of when, whenever, before or after as a
+      word anywhere in the description
+      (crates/toolbox-connector-workspace/src/skills.rs:44, 284-292), so
+      temporal prose counts as a use condition. I ran the connector over a
+      scratch skill whose description was "Use for reviewing plans; parses
+      plans written after a release." It gave triggerCues ["after"] and
+      passed, although it never says when to pick the skill. In the other
+      direction, "Use if ..." or "Use for ..." fails. The other half of the
+      fix ("what the skill does") is not checked at all. All 43 live skills
+      pass (portal/results.json has no description-says-when failure).
+    suggestion: >-
+      Count a cue only in a use clause, e.g. `\buse (it |this skill )?(when|
+      whenever|before|after|if)\b` or a sentence that starts with the cue. Add
+      "if" to the list, and add a fixture whose only cue is temporal ("written
+      after a release") that must fail.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Appending "Use when needed." (16 characters) to any description of at
+      least 4 characters passes both halves of the check
+      (portal/standards/skills.yaml:98-100). That says nothing a router can
+      match on, while the rationale says the description alone decides whether
+      a router picks the skill (skills.yaml:105-108).
+    suggestion: >-
+      Require the use clause to carry content: at least a few words after the
+      cue that are not stop words. For example, reject "Use when needed" or
+      "when appropriate" outright, and pin that case in
+      portal/tests/standards.test.yaml.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence lists the cues found and the character count, e.g. `['12
+      characters']` for the unsafe fixture
+      (portal/tests/standards.test.yaml:370). The fix gives the 20 to 1024
+      range and the four words the check looks for (skills.yaml:102-104), so
+      an agent that follows it passes.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      1024 is the Agent Skills spec's ceiling, and 20 is SkillEvaluator's hard
+      short-description deduction (docs/design/skill-standards.md:89, with
+      sources at 138-149). Bronze follows from the rationale that only the
+      name and description are loaded at startup (skill-standards.md:14-16,
+      D72).
+summary: >-
+  The bounds and the level are well sourced, and the fix leads straight to
+  a pass. But the check takes any temporal "after" or "before" as a use
+  condition, and a filler "Use when needed." satisfies it, so passing does
+  not show that a router can tell when to load the skill. All 43 live
+  skills pass, so the rule no longer separates good descriptions from weak
+  ones.

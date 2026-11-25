@@ -1,0 +1,57 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/sdlc-layer/every-stage-built
+rubric: rule-quality
+subjectHash: 5ab4b9d7c3a1
+assessor: {kind: agent, name: cursor-assessor-13, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      `stagesNotBuilt` keeps only stages whose `status != 'built'`
+      (portal/standards/sdlc.yaml:31). It ignores `gaps`, which the per-stage
+      `built` rule requires to be empty (sdlc.yaml:237). So maintainer/verify,
+      declared built with one open gap (portal/sdlc/stages/maintainer.yaml),
+      fails sdlc-stage `built` in portal/results.json but counts as built for
+      the layer. The only stage the maintainer layer's evidence names is
+      release. A layer can reach gold, "the whole loop is built"
+      (sdlc.yaml:300-303), while its stages still list open gaps.
+    suggestion: >-
+      Compute `stagesNotBuilt` as `inbound.stageOf.filter(s, s.status !=
+      'built' || s.gaps.size() > 0)`, with the gap count in the label, so the
+      layer agrees with sdlc-stage `built`.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      The cheapest pass is to set `status: built` on every stage of the layer,
+      leaving `gaps:`, commands and checks as they are. No stage-level fact is
+      read, so a stage at sdlc-stage bronze, such as maintainer/plan with no
+      command and no check (failing agent-operable and automated in
+      portal/results.json), counts as built here.
+    suggestion: >-
+      Count a stage as built only when it is gold on sdlc-stage. Bind its
+      level through `cards`-style aggregation or a computed field reading
+      `gaps`, `unresolvedCommands`, `notInCi` and `checks`, so the layer's
+      gold can't run ahead of its stages.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence lists each stage with its status, for example `ship
+      (partial)` on the fixture (portal/tests/standards.test.yaml:1064-1065).
+      The fix says to raise each to built, pointing at sdlc-stage for what it
+      lacks (sdlc.yaml:298). Doing that empties `stagesNotBuilt`. The fix
+      leads to a pass, if anything too easily (above).
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      No number. docs/design/thresholds.md:58 gives "every stage built" as
+      sdlc-layer's gold, and the rationale says why: one unbuilt stage breaks
+      the layer's loop (sdlc.yaml:300-303). All four live layers fail it
+      (portal/results.json), which is consistent with gold being the step left
+      to take.
+summary: >-
+  The right gold for a layer, but it reads only each stage's declared
+  status. A stage marked built with open gaps, or with no command or
+  check, counts as built here while sdlc-stage disagrees.
+  maintainer/verify is an example today. Setting `status: built` is the
+  cheapest way to pass.

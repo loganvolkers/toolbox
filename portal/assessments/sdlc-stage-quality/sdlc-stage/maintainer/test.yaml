@@ -1,0 +1,49 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: sdlc-stage:maintainer/test
+rubric: sdlc-stage-quality
+subjectHash: a47ade45a1d2
+assessor: {kind: agent, name: cursor-assessor-21, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: executable-exit
+    verdict: pass
+    reason: >-
+      Every clause of the exit criterion is a CI step. fmt, clippy -D warnings
+      and cargo test are at .github/workflows/ci.yml:22-24. The OpenFGA tests
+      are forced not to skip with TOOLBOX_REQUIRE_OPENFGA (ci.yml:47-52).
+      Parity is at ci.yml:38-39. Reference outputs are compared with `cmp`
+      (ci.yml:53-60), and `toolbox test portal` runs at ci.yml:61-71.
+  - criterion: agent-can-complete
+    verdict: pass
+    reason: >-
+      All four listed commands run locally without secrets. The prerequisites
+      are documented in docs/design/maintainer-sdlc.md §5 (lines 81-88). One
+      trap: without TOOLBOX_OPENFGA_BIN, the OpenFGA tests skip with a message
+      instead of failing (crates/toolbox-authz/tests/fga.rs:65-67). CI sets
+      TOOLBOX_REQUIRE_OPENFGA to close that gap.
+  - criterion: reuses-artifacts
+    verdict: fail
+    reason: >-
+      CI installs OpenFGA from its SHA-256-pinned release
+      (scripts/ci-tools.sh:17-18, ci.yml:40-45). The stage's listed doc
+      instead tells local maintainers to compile it with `go install
+      github.com/openfga/openfga/cmd/openfga@v1.22.1`
+      (docs/design/maintainer-sdlc.md:85). An agent following the stage's docs
+      builds a third-party tool from source.
+    suggestion: >-
+      Change maintainer-sdlc.md §5 to `scripts/ci-tools.sh <dir> openfga`
+      (then set TOOLBOX_OPENFGA_BIN), the same pinned release CI uses. Add
+      TOOLBOX_REQUIRE_OPENFGA=1 to the stage's commands so a local run cannot
+      pass by skipping.
+  - criterion: decoupled-from-core
+    verdict: pass
+    reason: >-
+      Testing Toolbox is the maintainer's own work. The manifest-level part
+      needs no crate change either: `toolbox test portal` runs expectations in
+      portal/tests/standards.test.yaml, and each package tests itself in
+      packages/*/tests (ci.yml:67-71).
+summary: >-
+  The check pyramid is fully enforced in CI, including a guard against
+  silently skipped OpenFGA tests. Locally, the stage's doc still sends
+  agents to `go install` for OpenFGA, and the listed `cargo test` can pass
+  by skipping, so the local route is weaker than CI.

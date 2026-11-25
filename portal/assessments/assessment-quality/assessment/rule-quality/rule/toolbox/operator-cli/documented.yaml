@@ -1,0 +1,56 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/operator-cli/documented
+rubric: assessment-quality
+subjectHash: addefdd5f357
+assessor: {kind: agent, name: cursor-reviewer-14, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/rule-quality/rule/toolbox/operator-cli/documented.yaml
+      hold. `documentedIn` is portal/standards/cli.yaml:19-22, fed by
+      `mentionsCommand` (portal/standards/docs.yaml:48). The doc globs,
+      including `plugins/**/*.md`, are portal/toolbox.yaml:95-102, and the
+      `commands` regex is 111-114. cli.yaml:236 is has-skill's bronze, F14 is
+      docs/design/toolbox-for-toolbox.md:218 and its application is :175. The
+      piped §7.7 row is docs/v1-spec.md:415. I ran the capture regex over
+      docs/v1-spec.md and docs/design/sdlc.md. All six commands the reason
+      names (`connector records`, `connector drive`, `vendor`, `tools find`,
+      `describe portal`, `assess check`) are absent from both, and each is
+      mentioned in a SKILL.md and other docs. Four more are absent too
+      (`connector test`, `tools install`, `tools config`, `assess submit`).
+      The rationale is cli.yaml:118-121.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      measures-intent fails correctly. The check is `documentedIn.size() > 0`
+      (cli.yaml:113), and has-skill filters the same list to SKILL.md
+      (cli.yaml:237), so has-skill passing implies this rule passes. Ten
+      operator commands pass without a line in either doc the fix names.
+      hard-to-game fails for the same reason. fix-leads-to-pass is right, and
+      it notes the v1-spec.md:415 trap. That trap is live: `connector test` is
+      captured there only as `connector refresh`.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The two fails rest on the regex and globs (toolbox.yaml:95-114) and on a
+      list of commands anyone can rebuild by grepping two files. The precedent
+      the reason cites, F14 (toolbox-for-toolbox.md:218), states the principle
+      "rules should name the authoritative doc", so the verdict doesn't rest
+      on taste.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The measures-intent suggestion would make passing mean what the fix
+      says: require docs/v1-spec.md or docs/design/sdlc.md, as
+      user-mcp/documented does at cli.yaml:309, and add the missing §7.7 rows.
+      It would also make hard-to-game's cheapest pass a row in one of those
+      files, which is what that suggestion says.
+summary: >-
+  A sound assessment. Every citation lands, and the claim that operator
+  commands pass without appearing in v1-spec or the operator SDLC doc
+  holds for the six it names and four more. Both fails and both passes
+  follow from the capture regex and the overlap with cli-skill, and the
+  suggested narrowing would clear them.

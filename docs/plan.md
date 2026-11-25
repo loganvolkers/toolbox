@@ -31,9 +31,11 @@ with them, they win, and [decisions.md](./decisions/README.md) records the chang
   image, not as separate Kubernetes pods or microservices to wire together. Modular deployment (split
   API and worker roles, external OpenFGA, external executors) is available but never required.
 - **G2. Agent SDLC.** Agents can **plan, build, test, deploy and monitor** at the maturity of regular
-  programming or force.com, at each of three layers ([sdlc.md](./sdlc.md), D63):
+  programming or force.com, at each of four layers ([sdlc.md](./sdlc.md), D63, D87):
   - **maintainer SDLC:** building Toolbox itself, with executable exit criteria and a reference-model
     oracle ([maintainer-sdlc.md](./design/maintainer-sdlc.md));
+  - **package author SDLC:** publishing packages, connectors and standards for others, tested against
+    released Toolbox versions ([package-author-sdlc.md](./design/package-author-sdlc.md));
   - **operator SDLC:** building a portal: local dev, tests, previews, reviewed plans, deploys,
     rollbacks, monitoring ([design/sdlc.md](./design/sdlc.md)). This is the main counterpoint to Port
     and Backstage, whose configuration lifecycles lack that maturity;
@@ -218,7 +220,8 @@ OpenFGA component), no required runtime service besides Postgres, ≤ 3 author-f
 `toolbox-derive` (full recompute behind `DerivedState`); `toolbox-changelog`, `toolbox-wasm`,
 `toolbox-graphql`, `toolbox-sim`, `toolbox-gen`, tantivy in `toolbox-search`, the language hosts in
 `toolbox-config` and every SDK except TypeScript are **deferred**; `toolbox-tcp` shrinks to the ingest
-API and the stdio executor/connector transport; `toolbox-fga` becomes the OpenFGA packaging (Q11).*
+API and the stdio executor/connector transport; `toolbox-fga` becomes the OpenFGA packaging (Q11).
+The crates that exist are listed in [v1-spec.md §4](./v1-spec.md#4-architecture-and-crates).*
 
 | Crate | Responsibility | Key dependencies |
 |---|---|---|
@@ -629,7 +632,7 @@ These designs close the gaps found in the [red-team review](./red-team.md). Each
 | **Dashboards** | No user-authored dashboards in Toolbox: Claude Artifacts / Cursor Canvas + Toolbox MCP analysis tools. Operator-only UI views in code. History archive for trends | [dashboards.md](./design/dashboards.md) |
 | **Identity resolution** | External ids, declared matchers, structural inference, unmatched/ambiguous/conflict states, PR-based link proposals, aliases for renames, merges and splits | [identity-resolution.md](./design/identity-resolution.md) |
 | **Notifications + GitHub** | Ownership-routed events; GitHub App with living dashboard issue, PR score-delta checks, fix PRs and initiative issues; email; CloudEvents webhooks; GitHub Actions for service repos (validate, push, scorecard-check, context, run-action). Slack is out of scope for now | [notifications.md](./design/notifications.md) |
-| **Operator SDLC** (layer 2) | Local → CI → PR → ephemeral preview → prod. **Remote plan** (no prod data in CI; full output on the PR, with the portal repo as the access boundary), policy gates (deletion, authz loss, operator lock-out, notification volume), signed + attested builds, verify + rollback, GitHub Actions + reusable workflow | [sdlc.md](./design/sdlc.md) |
+| **Operator SDLC** (layer 3) | Local → CI → PR → ephemeral preview → prod. **Remote plan** (no prod data in CI; full output on the PR, with the portal repo as the access boundary), policy gates (deletion, authz loss, operator lock-out, notification volume), signed + attested builds, verify + rollback, GitHub Actions + reusable workflow | [sdlc.md](./design/sdlc.md) |
 | **Local simulation** (proposal, Q19) | A customer deploy without a cloud account: a Score workload, Compose, a Helm chart on kind, Forgejo behind a GitHub façade, a live SCIM feed, and probes that require a catalog entity pushed after the agent stops. The Toolbox-vs-Backstage deploy benchmark (`deploy-ab`) ran on it twice and is inconclusive (D01M83RDWR52WVNER0MV5T84NSX) | [local-simulation.md](./design/local-simulation.md) |
 | **Context lake** | Layered lake: raw (bronze) → two-tier graph (curated catalog + bounded discovered *inventory*, joined by bridge edges, temporal validity) + catalog-anchored knowledge → derived scores/findings/context packs. Federates security graphs (Wiz, Cartography) instead of copying them; exports ownership so Toolbox is the ownership system of record; graph predicates in CEL; read-only GQL later | [context-lake.md](./design/context-lake.md) |
 | **Knowledge graphs** | Survey of code, document and enterprise graphs (Graphify and its alternatives) and their foundations. Toolbox doesn't build or ingest a code graph and Toolbox for Toolbox doesn't carry Graphify (D01M84ZW6K2V9CV2SD644DE5M0S, D01M85G2ZXXPQRXWKQF7TWV2RTP; graphify-ab found no coverage gain and a likely cost gain on Toolbox, to be retested in billed tokens); code intelligence stays federated | [knowledge-graphs.md](./design/knowledge-graphs.md) |
@@ -648,7 +651,7 @@ These designs close the gaps found in the [red-team review](./red-team.md). Each
 | **Repo portals** | Toolbox without a server: `toolbox report` in CI, rule evidence, ratchet baselines (Betterer-style), one-file HTML publishing (D66); the hosted page's Overview / Catalog / Campaigns / Scorecards / Compare explorer (D01M7XY1QYKW2D0HMSG50R0XTQH), redesigned and judged by a blind design audit (D01M85MK7FCRXH2TRMRKXTNA5GT), built from `report-ui` modules with Storybook stories over two reference portals, probed in CI and audited by a panel until a plateau (D01M87PSM9YQGGW3YQ5X4XCJP63), with tracks, kind groups, a rationale and links on every standard, and measured vs agent-judged results marked apart (D01M868BY0KJNEYE9WBFZYEYFYH); a waiver that cites a decision (D01M7Y5VWNAWB8K1DNMY31KQPQ0); missing connector data as `unknown` (D01M7Y5VWKW5TDS0VQWZFPRQ27N); the `actions/report` GitHub Action and a starter portal for one-step adoption (D69) | [repo-portals.md](./design/repo-portals.md), [report-ux.md](./design/report-ux.md), [design-audit.md](./design/design-audit.md), [ratchets.md](./design/ratchets.md), [waivers.md](./design/waivers.md), [repo-value.md](./design/repo-value.md) (the current focus) |
 | **Federation** | Standards down as versioned packages, results up as report files, graduation team → org → company with stages and waivers (D68). Actions up and runs down are built (D01M86BY3YQX3SA1W99QXF1QA1H) | [federation.md](./design/federation.md) |
 | **Federated self-service actions** | An action is declared where its effect is owned (a repo, or a package it includes); a parent offers children's actions as data and dispatches runs down through runners it allows; approvals cross portals as Ed25519-signed grants a child pins, and a parent holds them served or from its checkout (D01M86WAVQQXYF9DFHCP3G035MA), for one operator, a trial or CI, and resolves group approvers from its own model either way (D01M8727W7FEED6VVRY6MB3JFR3); done means observed. Twelve user stories from a market survey; built in `toolbox run` and `toolbox serve`; measured by the actions-ab DX benchmark (D01M86BY3YQX3SA1W99QXF1QA1H) | [federated-actions.md](./design/federated-actions.md), [self-service-review.md](./self-service-review.md) |
-| **Forges** | A forge offers up to six capabilities (read, write, propose, dispatch, track, collect); GitHub (github.com, Enterprise Server) and GitLab (gitlab.com, self-managed) are drivers behind one contract, plain git is the floor, and a capability a forge lacks falls back. A parent declares `forges:` by URL, a child says only `runner: {type: ci}`, and the parent dispatches to the project it cloned, with that forge's token. Tested against a real GitLab CE with `scripts/gitlab-acceptance.sh`; measured by the actions-gitlab DX benchmark (D01M87AXG095Q0Z0DGGTKYYAM7Y) | [forges.md](./design/forges.md) |
+| **Forges** | A forge offers up to six capabilities (read, write, propose, dispatch, track, collect); GitHub (github.com, Enterprise Server) and GitLab (gitlab.com, self-managed) are drivers behind one contract, plain git is the floor, and a capability a forge lacks falls back. A parent declares `forges:` by URL, a child says only `runner: {type: ci}`, and the parent dispatches to the project it cloned. CI hosts are declared apart (`ci:`: GitHub Actions, GitLab CI, or any CI behind an executor-protocol bridge), and a forge's entry picks the one its projects build on, defaulting to the forge's own (D01M87T16JRH53YV6VVWM8PH169). Tested against a real GitLab CE with `scripts/gitlab-acceptance.sh`; measured by the actions-gitlab DX benchmark (D01M87AXG095Q0Z0DGGTKYYAM7Y) | [forges.md](./design/forges.md) |
 | **Packages** | Shareable standards as data packages (fragments, fixtures, tests, rubrics, skills, typed parameters); git-first with an OCI mirror, pinned by digest (D89); T4T split with `include`; `oss-package` scorecard for what we publish; shareability signals; fleet rollout with `actions/report` and gh-aw | [packages.md](./design/packages.md) |
 | **Package author SDLC** | The fourth SDLC layer (D87); binary distribution for Toolbox (`dist`, installers, image), connectors outside core (executable, WASM, remote), upstream tools via mise/aqua (D90); SDLC stages catalogued and scored in T4T | [package-author-sdlc.md](./design/package-author-sdlc.md) |
 | **Scorecards for scorecards** | What makes a standard good (12 lessons); `meta-rule` and `meta-scorecard` over every portal's rules, self-applied at one level; kinds, fields and connectors scored (`meta-kind`/`-field`/`-connector`); judgement pushed by coding agents as assessments against manifest rubrics, scored (`meta-assessment`, `meta-rubric`) and reviewed once (D79, D80); CEL analysis; undeclared functions rejected; new-entity floors; LLM assessment and agent trials proposed (D71) | [scorecards-for-scorecards.md](./design/scorecards-for-scorecards.md) |
@@ -993,7 +996,7 @@ real organisation.
   - **CEL:** cel-spec conformance status (Q10) and fixture-based output validation.
   - rmcp Streamable HTTP with OAuth; identity-aware-proxy JWT verification.
   - **Backstage parity audit** (D47).
-- **Operator SDLC foundations (G2, layer 2):** `toolbox dev` (watch + full recompute over fixtures), `toolbox
+- **Operator SDLC foundations (G2, layer 3):** `toolbox dev` (watch + full recompute over fixtures), `toolbox
   test`, `toolbox plan`, preview deploys, and the dev-loop benchmark with SLOs on every PR.
 - **Verification foundations:** differential tests (Rust vs SQL, OpenFGA vs SQL) and property tests,
   with the full recompute as the reference model (D44).
@@ -1153,7 +1156,7 @@ The full, chronological log is in [decisions.md](./decisions/README.md). This se
 - Remote plan: Git is the access boundary.
 - Agent safety: delegated to client and harness layers.
 
-**Decided (2026-11-20):** charter goals G1 simple deployment, G2 agent SDLC (in three layers since D63), G3 replaceable components;
+**Decided (2026-11-20):** charter goals G1 simple deployment, G2 agent SDLC (in three layers since D63, four since D87), G3 replaceable components;
 the minimal architecture as the v1 baseline: full recompute, OpenFGA inside the container, in-process
 DBOS-model workflows, UI extension contract with React as default, in-image executors, manifest + TS
 builder, GraphQL deferred, sprawl budget (D33–D47). These supersede the 2026-11-19 lines above where they
