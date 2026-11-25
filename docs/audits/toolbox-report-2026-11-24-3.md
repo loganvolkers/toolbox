@@ -455,6 +455,29 @@ it still said "1 more not assessed" after the rows had started saying five rules
 | "silver rules that ran · all 4 met" can still be read as a silver medal (C) | Under "Rules that ran. These are not a medal." the chip is a count, not "all met" |
 | "1 of these are mixed" (A, B) | The note says "1 of these is mixed" |
 
+## Round 18: what the panel found
+
+The same model as rounds 10 to 17, Grok 4.7, scored this round, still blind to the source, the diff
+and each other. The probes passed 212 of 212. The verdict is the panel that wrote `r18-d`, `r18-e`
+and `r18-f`. A second panel (`r18-a`, `r18-b`, `r18-c`) finished later and is not in the median; it
+agreed on every median, and its severity 3 findings were treated as open.
+
+Usability rose from 29 to 30 of 40, because honest states rose from 2 to 3. No median fell.
+Judgement held at 11 of 16. One auditor marked T4 partial, so tasks succeeded 17 of 18. The round
+did not pass: severity 3 findings were still open.
+
+| Finding (auditors) | Fix |
+|---|---|
+| CI and supply chain says "15 entities still at none" while its five scorecards list 10, 2, 6, 2 and 2 (D, E) | The card says "15 entities still at none, on 22 scorecard rows" when one entity is at none on more than one scorecard. Go stays "51 entities still at none" because those two numbers match |
+| Toolbox overview: 39 scorecards, 8 at none, and a footnote whose 29 and "2 more" do not add to 39 (F) | One sentence names the parts: 8 have an entity at none, 29 have none at none, 2 have none at none only because no agent has assessed them. 8 + 29 + 2 = 39 |
+| "21 Go files with the same result" then "furthest off: tuples.go, 2629 lines" can be read as every file being 2,629 lines (F; A at severity 2) | The group is "21 Go files at none". The length is "one of them: tuples.go, …". The catalog says "one file is furthest off" |
+| toolbox-cli shows a bronze medal while No open findings is "not assessed yet", "not a pass" and "counts for bronze" (D; C asked for one block per scorecard) | An unassessed scorecard says "provisional bronze, not held" and draws no medal. The rule says "not counted toward bronze yet". Gold failures sit on their own line: they block gold, not the medal |
+| Tests pass on toolbox-cli explains itself with an OpenFGA authorization skip, while the check was not run (E) | A check that did not run does not quote the rule's why. The why stays on the rule page |
+| The unmeasured comparison chart leaves a gap the caption calls parity, so a reader can report every factor at parity (A) | When no factor has a value, the chart is replaced by "Not measured yet. No factor has a value, so there is no ahead, parity, or behind to chart." |
+| The Toolbox overview answers "what is furthest" three ways: the Proving value track, the bronze cap, and toolbox-model (A) | The status keeps the track as the primary sentence. The entity line is "One entity, apart from the repository level". The track section says which track has the lowest share, and does not reuse "furthest" |
+
+Severity 2 findings stay open. They do not block the round. The next capture is `/tmp/l5/r19`.
+
 ## Comparisons are generic
 
 The OpenFGA portal compares OpenFGA v1.23.0 with SpiceDB v1.57.1 through the same comparative

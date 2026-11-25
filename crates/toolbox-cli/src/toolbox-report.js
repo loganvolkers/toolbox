@@ -297,6 +297,7 @@
 			return isComparative(D, r.name);
 		});
 		var noneIds = {};
+		var noneRows = 0;
 		var shares = [];
 		var scoredRows = 0;
 		var capped = [];
@@ -307,6 +308,7 @@
 				Object.keys(scoredHere).forEach(function(id) {
 					if (scoredHere[id].level === "none") noneIds[id] = true;
 				});
+				noneRows += r.none || 0;
 				if (r.scored) {
 					scoredRows++;
 					shares.push(r.topShare);
@@ -390,6 +392,7 @@
 			compare,
 			majority,
 			none: Object.keys(noneIds).length,
+			noneRows,
 			pct,
 			averaged: shares.length,
 			scoredRows,
@@ -3011,7 +3014,7 @@
 			}), wins.length ? el("p", { className: "wins" }, el("b", { textContent: "✓ Already: " }), wins.join(" · ")) : null, (function() {
 				var off = furthestOff(D, S);
 				if (!off) return null;
-				return el("p", { className: "attn" }, el("b", { textContent: "Furthest from the top: " }), link("entity/" + enc(off.id), "", shortId(off.id)), " on ", link("scorecard/" + enc(off.name), "", title(D, off.name)), off.rule ? el("span", {}, off.fails ? ", held by " : ", waiting on ", link("rule/" + enc(off.name) + "/" + enc(off.rule), "", ruleTitle(off.name, off.rule)), off.fails ? ", which fails." : ", which was not run in this build.") : ".");
+				return el("p", { className: "attn" }, el("b", { textContent: "One entity, apart from the repository level: " }), link("entity/" + enc(off.id), "", shortId(off.id)), " on ", link("scorecard/" + enc(off.name), "", title(D, off.name)), off.rule ? el("span", {}, off.fails ? ", held by " : ", waiting on ", link("rule/" + enc(off.name) + "/" + enc(off.rule), "", ruleTitle(off.name, off.rule)), off.fails ? ", which fails." : ", which was not run in this build.") : ".");
 			})(), nextBox, climb);
 			var ladder = el("div", {
 				className: "ladder",
@@ -3276,11 +3279,14 @@
 			var clearBelow = clear.filter(function(r) {
 				return clearHollow.indexOf(r) < 0 && r.topShare < 100;
 			});
-			var clearLine = el("span", {}, "✓ " + plural(clear.length - clearHollow.length, "scorecard has", "scorecards have") + " no entity at none", clearHollow.length ? el("span", { className: "unjudged-n" }, "; " + fmt(clearHollow.length) + " more only because no agent has assessed some of their entities yet (", ...clearHollow.flatMap(function(r, i) {
-				return [i ? ", " : "", link("scorecard/" + enc(r.name), "", title(D, r.name))];
-			}), ")") : null, clearBelow.length ? el("span", {}, "; " + (clear.length - clearHollow.length === 1 ? "it still has entities below its top level" : clearBelow.length === 1 ? "one of them still has entities below its top level" : fmt(clearBelow.length) + " of them still have entities below their top level") + " (", ...clearBelow.flatMap(function(r, i) {
-				return [i ? ", " : "", link("scorecard/" + enc(r.name), "", title(D, r.name))];
-			}), ")") : null, ". ");
+			var accounted = attention.length + clear.length + unscored.length;
+			var clean = clear.length - clearHollow.length;
+			var named = function(rows) {
+				return rows.flatMap(function(r, i) {
+					return [i ? ", " : "", link("scorecard/" + enc(r.name), "", title(D, r.name))];
+				});
+			};
+			var clearLine = el("span", {}, "Of " + plural(accounted, "scorecard") + ", " + (attention.length ? plural(attention.length, "has an entity at none", "have an entity at none") : "none has an entity at none") + ". ", clean ? el("span", {}, plural(clean, "has no entity at none", "have no entity at none"), clearBelow.length ? el("span", {}, " (", plural(clearBelow.length, "of which still has entities below its top level", "of which still have entities below their top level"), ": ", ...named(clearBelow), ")") : null, ". ") : null, clearHollow.length ? el("span", { className: "unjudged-n" }, plural(clearHollow.length, "has no entity at none only because no agent has assessed it yet", "have no entity at none only because no agent has assessed them yet"), " (", ...named(clearHollow), "). ") : null, unscored.length ? plural(unscored.length, "is not scored yet", "are not scored yet") + ". " : null);
 			var showAll = false;
 			var clearWrap = el("div");
 			var drawClear = function() {
@@ -3326,7 +3332,7 @@
 			})) : null;
 			return el("div", {}, this.hero(D, S, campaignNames), tracksSorted(D, S).length ? el("section", {}, el("div", { className: "head" }, el("h2", { textContent: "Tracks" }), link("tracks", "", "All tracks →")), el("p", {
 				className: "lede",
-				textContent: (furthestTrack(D, S) ? plural(tracksSorted(D, S).length, "long-running line") + " of work; " + trackTitle(D, furthestTrack(D, S)) + " is furthest from its goal. " : "") + "Each ring is its scorecards' average share of entities at the top level." + (tracksSorted(D, S).some(function(t) {
+				textContent: (furthestTrack(D, S) ? plural(tracksSorted(D, S).length, "long-running line") + " of work. " + trackTitle(D, furthestTrack(D, S)) + " has the lowest share of entities at the top level. " : "") + "Each ring is its scorecards' average share of entities at the top level." + (tracksSorted(D, S).some(function(t) {
 					return t.compare;
 				}) ? " The comparison track's ring counts factors ahead of a rival instead." : "") + " Open a track for its scorecards and campaigns."
 			}), this.trackStrip(D, S, tracksSorted(D, S), "Tracks", true)) : null, this.tiles(D, S, campaignNames), campaignNames.length ? el("section", {}, el("div", { className: "head" }, el("h2", { textContent: "Campaigns" }), el("span", {
@@ -3896,10 +3902,10 @@
 					rowsShown++;
 					entsShown += g.length;
 					var first = entRow(g[0]).querySelector("summary");
-					var grp = el("details", { className: "ent ent-group" }, el("summary", {}, first.children[0], el("span", { className: "name" }, kindCount(D, sc.kind, g.length) + " with the same result", el("span", { className: "tail" }, el("span", {
+					var grp = el("details", { className: "ent ent-group" }, el("summary", {}, first.children[0], el("span", { className: "name" }, kindCount(D, sc.kind, g.length) + " at " + (g[0][1].level === "none" ? "none" : g[0][1].level), el("span", { className: "tail" }, el("span", {
 						className: "chev",
 						textContent: "›"
-					})), worstOf(g) ? el("small", { textContent: "furthest off: " + worstOf(g) }) : null), first.children[2]));
+					})), worstOf(g) ? el("small", { textContent: "one of them: " + worstOf(g) }) : null), first.children[2]));
 					var built = false;
 					grp.addEventListener("toggle", function() {
 						if (!grp.open || built) return;
@@ -4208,7 +4214,10 @@
 	// src/views/tracks.ts
 	function atNone(t) {
 		var n = t.none || 0;
-		return n ? "; " + plural(n, "entity", "entities") + " still at none" : "";
+		if (!n) return "";
+		var rows = t.noneRows || 0;
+		var both = rows > n ? ", on " + plural(rows, "scorecard row", "scorecard rows") : "";
+		return "; " + plural(n, "entity", "entities") + " still at none" + both;
 	}
 	var tracksViews = {
 		trackCard(D, S, t, flag) {
@@ -4359,7 +4368,7 @@
 			var color = trackColor(t);
 			var owner = def.owner ? def.owner.replace(/^group:/, "") : "";
 			var weakest = t.cards[0];
-			var goal = t.compare ? el("div", {}, el("p", {}, el("b", { textContent: tallyShort(t.verdicts, t.rows.length).replace(/^a/, "A") + ". " }), link("compare", "", "Open the comparison →")), bothCounts(t.verdicts, t.rows.length)) : el("p", {}, el("b", { textContent: "Goal: every entity at the top level of each scorecard below. " }), t.pct == null ? "Nothing is scored yet." : "On average " + t.pct + "% are there" + (t.none ? "; " + plural(t.none, "entity is", "entities are") + " still at none" : "") + "." + (t.capped.length ? " " + ringWhy(D, t) + "." : "") + (t.short.length ? " " + shortWhy(D, t) + "." : ""), weakest && weakest.floor ? el("span", {}, " The weakest scorecard is ", link("scorecard/" + enc(weakest.row.name), "", title(D, weakest.row.name)), ", at ", badge(weakest.floor), capsRepo(D, weakest.row.name, weakest.floor) ? ", its only top level, so it caps the repository there until it gains a higher one." : isTop(D, weakest.row.name, weakest.floor) ? ", already its top level." : ".") : null);
+			var goal = t.compare ? el("div", {}, el("p", {}, el("b", { textContent: tallyShort(t.verdicts, t.rows.length).replace(/^a/, "A") + ". " }), link("compare", "", "Open the comparison →")), bothCounts(t.verdicts, t.rows.length)) : el("p", {}, el("b", { textContent: "Goal: every entity at the top level of each scorecard below. " }), t.pct == null ? "Nothing is scored yet." : "On average " + t.pct + "% are there" + (t.none ? "; " + plural(t.none, "entity is", "entities are") + " still at none" + (t.noneRows > t.none ? ", on " + plural(t.noneRows, "scorecard row", "scorecard rows") : "") : "") + "." + (t.capped.length ? " " + ringWhy(D, t) + "." : "") + (t.short.length ? " " + shortWhy(D, t) + "." : ""), weakest && weakest.floor ? el("span", {}, " The weakest scorecard is ", link("scorecard/" + enc(weakest.row.name), "", title(D, weakest.row.name)), ", at ", badge(weakest.floor), capsRepo(D, weakest.row.name, weakest.floor) ? ", its only top level, so it caps the repository there until it gains a higher one." : isTop(D, weakest.row.name, weakest.floor) ? ", already its top level." : ".") : null);
 			var trackNext = t.compare ? null : nextMedalEl(D, t.cards);
 			var section = el("section", {}, el("nav", {
 				className: "crumb",
@@ -4896,7 +4905,13 @@
 					var sum = el("summary", {
 						className: "erow cols",
 						style: "grid-template-columns:" + tpl
-					}, el("div", { className: "name" }, kindCount(D, selected, members.length) + " with the same result ", el("span", {
+					}, el("div", { className: "name" }, kindCount(D, selected, members.length) + (cols.every(function(c) {
+						var s = ((D.scores || {})[c] || {})[members[0].id];
+						return !s || s.level === "skipped" || s.level === "none";
+					}) && cols.some(function(c) {
+						var s = ((D.scores || {})[c] || {})[members[0].id];
+						return s && s.level === "none";
+					}) ? " at none " : " at the same levels "), el("span", {
 						className: "chev",
 						ariaHidden: "true",
 						textContent: "›"
@@ -4909,7 +4924,7 @@
 						}))), memberLinks(members.map(function(x) {
 							return x.id;
 						}), sized ? {
-							order: "furthest off first",
+							order: "one file is furthest off",
 							first: worst
 						} : void 0)],
 						n: members.length,
@@ -5088,7 +5103,7 @@
 						textContent: "not assessed yet"
 					}), basisBadge("judged"), rule.level ? el("span", {
 						className: "sub",
-						textContent: "counts for " + rule.level
+						textContent: "not counted toward " + rule.level + " yet"
 					}) : ""), el("div", { className: "fix" }, "No agent has assessed this entity, so this rule has not been reviewed. It is not a pass."), whyEl(rule)));
 					return;
 				}
@@ -5115,13 +5130,13 @@
 					}), basisBadge(basisOf(rule), false, true), el("span", {
 						className: "sub",
 						textContent: "needed for " + rule.level
-					}), rule.rationale ? el("span", {
+					}), o !== "unknown" && rule.rationale ? el("span", {
 						className: "rwhy",
 						textContent: "Why: " + firstSentence(rule.rationale).replace(/`/g, "")
 					}) : null), scName ? el("div", { className: "sub" }, "Rule page: ", ruleLink(scName, n, null, true), " ", el("code", {
 						className: "rid",
 						textContent: n
-					})) : null, o === "unknown" ? el("div", { className: "fix" }, el("b", { textContent: "Next: " }), "This check was not run, so there is no evidence to fix. Run it, then ", el("code", { textContent: "toolbox report" }), " again.") : rule.fix ? el("div", { className: "fix" }, el("b", { textContent: "Fix: " }), ...rich(fixFor(rule.fix))) : "", whyEl(rule), evidenceEl(items, seen, scName ? "“" + ruleTitle(scName, n) + "”" : n)));
+					})) : null, o === "unknown" ? el("div", { className: "fix" }, el("b", { textContent: "Next: " }), "This check was not run, so there is no evidence to fix. Run it, then ", el("code", { textContent: "toolbox report" }), " again.") : rule.fix ? el("div", { className: "fix" }, el("b", { textContent: "Fix: " }), ...rich(fixFor(rule.fix))) : "", o === "unknown" ? null : whyEl(rule), evidenceEl(items, seen, scName ? "“" + ruleTitle(scName, n) + "”" : n)));
 					return;
 				}
 				wrap.append(el("div", { className: "rule " + o }, el("div", { style: "display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center" }, el("h4", { className: "rn" }, scName ? ruleLink(scName, n, null, true) : n), scName ? el("code", {
@@ -5134,7 +5149,7 @@
 				}), basisBadge(basisOf(rule)), rule.level ? el("span", {
 					className: "sub",
 					textContent: "needed for " + rule.level
-				}) : ""), o === "unknown" ? el("div", { className: "fix" }, el("b", { textContent: "Next: " }), "This check was not run, so there is no evidence to fix. Run it, then ", el("code", { textContent: "toolbox report" }), " again.") : rule.fix ? el("div", { className: "fix" }, el("b", { textContent: "Fix: " }), ...rich(fixFor(rule.fix))) : "", whyEl(rule), evidenceEl(items, seen, scName ? "“" + ruleTitle(scName, n) + "”" : n)));
+				}) : ""), o === "unknown" ? el("div", { className: "fix" }, el("b", { textContent: "Next: " }), "This check was not run, so there is no evidence to fix. Run it, then ", el("code", { textContent: "toolbox report" }), " again.") : rule.fix ? el("div", { className: "fix" }, el("b", { textContent: "Fix: " }), ...rich(fixFor(rule.fix))) : "", o === "unknown" ? null : whyEl(rule), evidenceEl(items, seen, scName ? "“" + ruleTitle(scName, n) + "”" : n)));
 			});
 			if (later.length) {
 				var further = order.filter(function(lv) {
@@ -5357,9 +5372,9 @@
 						var names = failed.map(function(k) {
 							return ruleTitleOf(sc, k);
 						});
-						failSentence = " " + (names.length === 1 ? names[0] : names.slice(0, -1).join(", ") + " and " + names[names.length - 1]) + (failed.length === 1 ? " fails" : " fail") + " on evidence. " + (levels.length === 1 ? "That blocks " + levelName(levels[0]) : "They block " + levels.join(" and ")) + ", not the medal.";
+						failSentence = (names.length === 1 ? names[0] : names.slice(0, -1).join(", ") + " and " + names[names.length - 1]) + (failed.length === 1 ? " fails" : " fail") + " on evidence. " + (levels.length === 1 ? "That blocks " + levelName(levels[0]) : "They block " + levels.join(" and ")) + ", not the medal.";
 					}
-					return el("span", { className: "held" }, mixed ? el("strong", { style: "color:var(--muted);text-transform:none" }, jumpTo(n), ": no medal") : jumpTo(n), mixed ? ". " : " is not established. ", unrunWords(sc, unrun), " This scorecard shows no medal until they run." + failSentence);
+					return [el("span", { className: "held" }, mixed ? el("strong", { style: "color:var(--muted);text-transform:none" }, jumpTo(n), ": no medal") : jumpTo(n), mixed ? ". " : " is not established. ", unrunWords(sc, unrun), " This scorecard shows no medal until they run."), failSentence ? el("span", { className: "held" }, failSentence) : null];
 				}
 				var hollow = unassessedIn(D, n, id);
 				var next = nextLevel(sc, score.level);
@@ -5367,10 +5382,7 @@
 				var holdRule = need.length === 1 ? (sc.rules || {})[need[0]] || {} : null;
 				var hold = need.length === 1 ? ". Held by " + ruleTitleOf(sc, need[0]) + (score.rules[need[0]] === "unknown" ? ", which was not run" : noReviewYet(holdRule, evidenceItems(score, need[0])) ? ", which has no assessment yet" : ", which fails") : need.length ? ". " + plural(need.length, "rule") + " short of " + levelName(next) : "";
 				var rung = ownLevel(D, kind, score.level);
-				return el("span", { className: "held" }, mixed ? el("span", { className: "mini" }, hollow ? el("span", {
-					className: "medal-hollow",
-					title: "No agent has assessed this scorecard, so this medal may not hold."
-				}, medal(score.level, 22)) : medal(score.level, 22)) : null, mixed ? el("strong", { style: "color:" + ink(score.level) + ";text-transform:none" }, jumpTo(n), ": " + rung) : jumpTo(n), mixed ? "" : " is ", mixed ? "" : rung, hollow ? ", and may not hold until an agent assesses it" : "", hold, ".");
+				return [el("span", { className: "held" }, mixed && !hollow ? el("span", { className: "mini" }, medal(score.level, 22)) : null, mixed ? el("strong", { style: (hollow ? "color:var(--muted)" : "color:" + ink(score.level)) + ";text-transform:none" }, jumpTo(n), hollow ? ": provisional " + rung + ", not held" : ": " + rung) : jumpTo(n), mixed ? "" : " is ", mixed ? "" : rung, hollow && !mixed ? ", provisional, not held until an agent assesses it" : "", hold, ".")];
 			};
 			return el("section", {}, el("nav", {
 				className: "crumb",
@@ -5384,7 +5396,7 @@
 			}, medal(shown, 52)) : medal(shown, 52), el("div", {}, unsetCards.length && setCards.length ? null : el("strong", { style: "color:" + (whollyUnset ? "var(--muted)" : ink(shown)) + (whollyUnset || KNOWN.indexOf(ownLevel(D, kind, shown)) < 0 ? ";text-transform:none" : "") }, whollyUnset ? "Not run in this build" : ownLevel(D, kind, shown), !whollyUnset && atTop ? el("span", {
 				className: "topmark",
 				textContent: " ✓ top" + (KNOWN.indexOf(shown) < 0 ? " level" : "")
-			}) : null), ...openCards.map(cardLine), el("span", {
+			}) : null), ...openCards.flatMap(cardLine), el("span", {
 				className: "sub",
 				textContent: [
 					total.pass + " of " + plural(total.all, "check passes", "checks pass") + " on evidence",
@@ -5647,6 +5659,12 @@
 			var pct = function(k, c) {
 				return Math.round(100 * c[k] / Math.max(1, c.total));
 			};
+			if (!rows.some(function(r) {
+				return r.c.ahead || r.c.behind || r.c.parity;
+			})) return el("p", {
+				className: "empty",
+				textContent: "Not measured yet. No factor has a value, so there is no ahead, parity, or behind to chart."
+			});
 			return el("div", { className: "h2h" }, el("div", {
 				className: "h2h-head",
 				ariaHidden: "true"

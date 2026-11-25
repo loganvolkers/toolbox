@@ -567,7 +567,7 @@ export const scorecardsViews = {
             "summary",
             {},
             first.children[0],
-            el("span", { className: "name" }, kindCount(D, sc.kind, g.length) + " with the same result", el("span", { className: "tail" }, el("span", { className: "chev", textContent: "›" })), worstOf(g) ? el("small", { textContent: "furthest off: " + worstOf(g) }) : null),
+            el("span", { className: "name" }, kindCount(D, sc.kind, g.length) + " at " + (g[0][1].level === "none" ? "none" : g[0][1].level), el("span", { className: "tail" }, el("span", { className: "chev", textContent: "›" })), worstOf(g) ? el("small", { textContent: "one of them: " + worstOf(g) }) : null),
             first.children[2],
           ),
         );

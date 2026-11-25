@@ -17,9 +17,12 @@ import { firstSentence, plural } from "../lib/words";
 
 // The ring is a share at the top level; entities still at none are the other half of the story.
 function atNone(t) {
-  // One entity on several scorecards counts once. Summing the rows counted the same workflow three times.
+  // One entity on several scorecards counts once. The row sum stays visible, because the cards below still add to it.
   var n = t.none || 0;
-  return n ? "; " + plural(n, "entity", "entities") + " still at none" : "";
+  if (!n) return "";
+  var rows = t.noneRows || 0;
+  var both = rows > n ? ", on " + plural(rows, "scorecard row", "scorecard rows") : "";
+  return "; " + plural(n, "entity", "entities") + " still at none" + both;
 }
 
 export const tracksViews = {
@@ -208,7 +211,7 @@ export const tracksViews = {
           "p",
           {},
           el("b", { textContent: "Goal: every entity at the top level of each scorecard below. " }),
-          t.pct == null ? "Nothing is scored yet." : "On average " + t.pct + "% are there" + (t.none ? "; " + plural(t.none, "entity is", "entities are") + " still at none" : "") + "." + (t.capped.length ? " " + ringWhy(D, t) + "." : "") + (t.short.length ? " " + shortWhy(D, t) + "." : ""),
+          t.pct == null ? "Nothing is scored yet." : "On average " + t.pct + "% are there" + (t.none ? "; " + plural(t.none, "entity is", "entities are") + " still at none" + (t.noneRows > t.none ? ", on " + plural(t.noneRows, "scorecard row", "scorecard rows") : "") : "") + "." + (t.capped.length ? " " + ringWhy(D, t) + "." : "") + (t.short.length ? " " + shortWhy(D, t) + "." : ""),
           weakest && weakest.floor ? el("span", {}, " The weakest scorecard is ", link("scorecard/" + enc(weakest.row.name), "", title(D, weakest.row.name)), ", at ", badge(weakest.floor), capsRepo(D, weakest.row.name, weakest.floor) ? ", its only top level, so it caps the repository there until it gains a higher one." : isTop(D, weakest.row.name, weakest.floor) ? ", already its top level." : ".") : null,
         );
     var trackNext = t.compare ? null : nextMedalEl(D, t.cards);

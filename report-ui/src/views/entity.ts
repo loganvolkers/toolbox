@@ -74,7 +74,7 @@ export const entityViews = {
               scName ? el("code", { className: "rid", textContent: n }) : null,
               el("span", { className: "outcome unknown", style: "margin:0", textContent: "not assessed yet" }),
               basisBadge("judged"),
-              rule.level ? el("span", { className: "sub", textContent: "counts for " + rule.level }) : "",
+              rule.level ? el("span", { className: "sub", textContent: "not counted toward " + rule.level + " yet" }) : "",
             ),
             el("div", { className: "fix" }, "No agent has assessed this entity, so this rule has not been reviewed. It is not a pass."),
             whyEl(rule),
@@ -104,7 +104,7 @@ export const entityViews = {
               el("span", { className: "outcome " + (shown === "not assessed yet" || o === "unknown" ? "unknown" : o), style: "margin:0", textContent: shown }),
               basisBadge(basisOf(rule), false, true),
               el("span", { className: "sub", textContent: "needed for " + rule.level }),
-              rule.rationale ? el("span", { className: "rwhy", textContent: "Why: " + firstSentence(rule.rationale).replace(/`/g, "") }) : null,
+              o !== "unknown" && rule.rationale ? el("span", { className: "rwhy", textContent: "Why: " + firstSentence(rule.rationale).replace(/`/g, "") }) : null,
             ),
             scName ? el("div", { className: "sub" }, "Rule page: ", ruleLink(scName, n, null, true), " ", el("code", { className: "rid", textContent: n })) : null,
             o === "unknown"
@@ -112,7 +112,7 @@ export const entityViews = {
               : rule.fix
                 ? el("div", { className: "fix" }, el("b", { textContent: "Fix: " }), ...rich(fixFor(rule.fix)))
                 : "",
-            whyEl(rule),
+            o === "unknown" ? null : whyEl(rule),
             evidenceEl(items, seen, scName ? "“" + ruleTitle(scName, n) + "”" : n),
           ),
         );
@@ -136,7 +136,7 @@ export const entityViews = {
             : rule.fix
               ? el("div", { className: "fix" }, el("b", { textContent: "Fix: " }), ...rich(fixFor(rule.fix)))
               : "",
-          whyEl(rule),
+          o === "unknown" ? null : whyEl(rule),
           evidenceEl(items, seen, scName ? "“" + ruleTitle(scName, n) + "”" : n),
         ),
       );
@@ -366,16 +366,19 @@ export const entityViews = {
             return ruleTitleOf(sc, k);
           });
           var named = names.length === 1 ? names[0] : names.slice(0, -1).join(", ") + " and " + names[names.length - 1];
-          failSentence = " " + named + (failed.length === 1 ? " fails" : " fail") + " on evidence. " + (levels.length === 1 ? "That blocks " + levelName(levels[0]) : "They block " + levels.join(" and ")) + ", not the medal.";
+          failSentence = named + (failed.length === 1 ? " fails" : " fail") + " on evidence. " + (levels.length === 1 ? "That blocks " + levelName(levels[0]) : "They block " + levels.join(" and ")) + ", not the medal.";
         }
-        return el(
-          "span",
-          { className: "held" },
-          mixed ? el("strong", { style: "color:var(--muted);text-transform:none" }, jumpTo(n), ": no medal") : jumpTo(n),
-          mixed ? ". " : " is not established. ",
-          unrunWords(sc, unrun),
-          " This scorecard shows no medal until they run." + failSentence,
-        );
+        return [
+          el(
+            "span",
+            { className: "held" },
+            mixed ? el("strong", { style: "color:var(--muted);text-transform:none" }, jumpTo(n), ": no medal") : jumpTo(n),
+            mixed ? ". " : " is not established. ",
+            unrunWords(sc, unrun),
+            " This scorecard shows no medal until they run.",
+          ),
+          failSentence ? el("span", { className: "held" }, failSentence) : null,
+        ];
       }
       var hollow = unassessedIn(D, n, id);
       var next = nextLevel(sc, score.level);
@@ -388,17 +391,19 @@ export const entityViews = {
             ? ". " + plural(need.length, "rule") + " short of " + levelName(next)
             : "";
       var rung = ownLevel(D, kind, score.level);
-      return el(
-        "span",
-        { className: "held" },
-        mixed ? el("span", { className: "mini" }, hollow ? el("span", { className: "medal-hollow", title: "No agent has assessed this scorecard, so this medal may not hold." }, medal(score.level, 22)) : medal(score.level, 22)) : null,
-        mixed ? el("strong", { style: "color:" + ink(score.level) + ";text-transform:none" }, jumpTo(n), ": " + rung) : jumpTo(n),
-        mixed ? "" : " is ",
-        mixed ? "" : rung,
-        hollow ? ", and may not hold until an agent assesses it" : "",
-        hold,
-        ".",
-      );
+      return [
+        el(
+          "span",
+          { className: "held" },
+          mixed && !hollow ? el("span", { className: "mini" }, medal(score.level, 22)) : null,
+          mixed ? el("strong", { style: (hollow ? "color:var(--muted)" : "color:" + ink(score.level)) + ";text-transform:none" }, jumpTo(n), hollow ? ": provisional " + rung + ", not held" : ": " + rung) : jumpTo(n),
+          mixed ? "" : " is ",
+          mixed ? "" : rung,
+          hollow && !mixed ? ", provisional, not held until an agent assesses it" : "",
+          hold,
+          ".",
+        ),
+      ];
     };
     return el(
       "section",
@@ -425,7 +430,7 @@ export const entityViews = {
                 unsetCards.length && setCards.length
                   ? null
                   : el("strong", { style: "color:" + (whollyUnset ? "var(--muted)" : ink(shown)) + (whollyUnset || KNOWN.indexOf(ownLevel(D, kind, shown)) < 0 ? ";text-transform:none" : "") }, whollyUnset ? "Not run in this build" : ownLevel(D, kind, shown), !whollyUnset && atTop ? el("span", { className: "topmark", textContent: " ✓ top" + (KNOWN.indexOf(shown) < 0 ? " level" : "") }) : null),
-                ...openCards.map(cardLine),
+                ...openCards.flatMap(cardLine),
                 el("span", { className: "sub", textContent: [total.pass + " of " + plural(total.all, "check passes", "checks pass") + " on evidence", total.fail ? plural(total.fail, "failure") : "", total.unrun ? plural(total.unrun, "check was not run", "checks were not run") : "", total.unassessed ? plural(total.unassessed, "check is not assessed yet", "checks are not assessed yet") + ", not counted as " + (total.unassessed === 1 ? "a pass" : "passes") : ""].filter(Boolean).join(" · ") }),
               ),
             )

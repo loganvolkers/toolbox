@@ -28,6 +28,7 @@ export function trackStats(D: ReportData, S: Summary, name) {
       return isComparative(D, r.name);
     });
   var noneIds: Record<string, boolean> = {};
+  var noneRows = 0;
   var shares: number[] = [];
   var scoredRows = 0;
   var capped: string[] = [];
@@ -40,6 +41,8 @@ export function trackStats(D: ReportData, S: Summary, name) {
       Object.keys(scoredHere).forEach(function (id) {
         if (scoredHere[id].level === "none") noneIds[id] = true;
       });
+      // The scorecard cards list a row each. Their sum is larger when one entity is at none on more than one.
+      noneRows += r.none || 0;
       if (r.scored) {
         scoredRows++;
         shares.push(r.topShare);
@@ -90,7 +93,7 @@ export function trackStats(D: ReportData, S: Summary, name) {
     return r.name;
   }));
   if (compare) verdicts.majority = majority;
-  return { name: name, def: (D.tracks || {})[name] || {}, rows: rows, cards: cards, compare: compare, majority: majority, none: Object.keys(noneIds).length, pct: pct, averaged: shares.length, scoredRows: scoredRows, capped: capped, short: short, verdicts: verdicts, behind: behind, campaigns: campaigns };
+  return { name: name, def: (D.tracks || {})[name] || {}, rows: rows, cards: cards, compare: compare, majority: majority, none: Object.keys(noneIds).length, noneRows: noneRows, pct: pct, averaged: shares.length, scoredRows: scoredRows, capped: capped, short: short, verdicts: verdicts, behind: behind, campaigns: campaigns };
 }
 
 export function tracksSorted(D: ReportData, S: Summary) {

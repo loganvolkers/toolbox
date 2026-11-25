@@ -261,7 +261,13 @@ export const catalogViews = {
         var sum = el(
           "summary",
           { className: "erow cols", style: "grid-template-columns:" + tpl },
-          el("div", { className: "name" }, kindCount(D, selected, members.length) + " with the same result ", el("span", { className: "chev", ariaHidden: "true", textContent: "›" })),
+          el("div", { className: "name" }, kindCount(D, selected, members.length) + (cols.every(function (c) {
+            var s = ((D.scores || {})[c] || {})[members[0].id];
+            return !s || s.level === "skipped" || s.level === "none";
+          }) && cols.some(function (c) {
+            var s = ((D.scores || {})[c] || {})[members[0].id];
+            return s && s.level === "none";
+          }) ? " at none " : " at the same levels "), el("span", { className: "chev", ariaHidden: "true", textContent: "›" })),
           ...Array.from(b.r.querySelectorAll(".ecell"), function (c) {
             return c.cloneNode(true);
           }),
@@ -273,7 +279,7 @@ export const catalogViews = {
             }))),
             memberLinks(members.map(function (x) {
               return x.id;
-            }), sized ? { order: "furthest off first", first: worst } : undefined),
+            }), sized ? { order: "one file is furthest off", first: worst } : undefined),
           ],
           n: members.length,
           rank: rankOf(b.id),

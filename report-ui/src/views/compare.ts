@@ -119,6 +119,11 @@ export const compareViews = {
     var pct = function (k, c) {
       return Math.round((100 * c[k]) / Math.max(1, c.total));
     };
+    if (!rows.some(function (r) {
+      return r.c.ahead || r.c.behind || r.c.parity;
+    })) {
+      return el("p", { className: "empty", textContent: "Not measured yet. No factor has a value, so there is no ahead, parity, or behind to chart." });
+    }
     var box = el(
       "div",
       { className: "h2h" },

@@ -223,7 +223,7 @@ export const overviewViews = {
         return el(
           "p",
           { className: "attn" },
-          el("b", { textContent: "Furthest from the top: " }),
+          el("b", { textContent: "One entity, apart from the repository level: " }),
           link("entity/" + enc(off.id), "", shortId(off.id)),
           " on ",
           link("scorecard/" + enc(off.name), "", title(D, off.name)),
@@ -469,21 +469,33 @@ export const overviewViews = {
     var clearBelow = clear.filter(function (r) {
       return clearHollow.indexOf(r) < 0 && r.topShare < 100;
     });
+    var accounted = attention.length + clear.length + unscored.length;
+    var clean = clear.length - clearHollow.length;
+    var named = function (rows) {
+      return rows.flatMap(function (r, i) {
+        return [i ? ", " : "", link("scorecard/" + enc(r.name), "", title(D, r.name))];
+      });
+    };
+    // Each clause is a part of the scorecard count in the header, so the parts add to it.
     var clearLine = el(
       "span",
       {},
-      "✓ " + plural(clear.length - clearHollow.length, "scorecard has", "scorecards have") + " no entity at none",
+      "Of " + plural(accounted, "scorecard") + ", " + (attention.length ? plural(attention.length, "has an entity at none", "have an entity at none") : "none has an entity at none") + ". ",
+      clean
+        ? el(
+            "span",
+            {},
+            plural(clean, "has no entity at none", "have no entity at none"),
+            clearBelow.length
+              ? el("span", {}, " (", plural(clearBelow.length, "of which still has entities below its top level", "of which still have entities below their top level"), ": ", ...named(clearBelow), ")")
+              : null,
+            ". ",
+          )
+        : null,
       clearHollow.length
-        ? el("span", { className: "unjudged-n" }, "; " + fmt(clearHollow.length) + " more only because no agent has assessed some of their entities yet (", ...clearHollow.flatMap(function (r, i) {
-            return [i ? ", " : "", link("scorecard/" + enc(r.name), "", title(D, r.name))];
-          }), ")")
+        ? el("span", { className: "unjudged-n" }, plural(clearHollow.length, "has no entity at none only because no agent has assessed it yet", "have no entity at none only because no agent has assessed them yet"), " (", ...named(clearHollow), "). ")
         : null,
-      clearBelow.length
-        ? el("span", {}, "; " + (clear.length - clearHollow.length === 1 ? "it still has entities below its top level" : clearBelow.length === 1 ? "one of them still has entities below its top level" : fmt(clearBelow.length) + " of them still have entities below their top level") + " (", ...clearBelow.flatMap(function (r, i) {
-            return [i ? ", " : "", link("scorecard/" + enc(r.name), "", title(D, r.name))];
-          }), ")")
-        : null,
-      ". ",
+      unscored.length ? plural(unscored.length, "is not scored yet", "are not scored yet") + ". " : null,
     );
     var showAll = false;
     var clearWrap = el("div");
@@ -563,7 +575,7 @@ export const overviewViews = {
             "section",
             {},
             el("div", { className: "head" }, el("h2", { textContent: "Tracks" }), link("tracks", "", "All tracks →")),
-            el("p", { className: "lede", textContent: (furthestTrack(D, S) ? plural(tracksSorted(D, S).length, "long-running line") + " of work; " + trackTitle(D, furthestTrack(D, S)) + " is furthest from its goal. " : "") + "Each ring is its scorecards' average share of entities at the top level." + (tracksSorted(D, S).some(function (t) {
+            el("p", { className: "lede", textContent: (furthestTrack(D, S) ? plural(tracksSorted(D, S).length, "long-running line") + " of work. " + trackTitle(D, furthestTrack(D, S)) + " has the lowest share of entities at the top level. " : "") + "Each ring is its scorecards' average share of entities at the top level." + (tracksSorted(D, S).some(function (t) {
                 return t.compare;
               })
                 ? " The comparison track's ring counts factors ahead of a rival instead."
