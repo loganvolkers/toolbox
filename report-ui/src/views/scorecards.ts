@@ -1,5 +1,6 @@
 import type { ToolboxReport } from "../element";
 import type { Summary } from "../lib/summary";
+import { noFacts } from "../lib/summary";
 import type { ReportData } from "../types";
 // scorecardIndex, scorecard: methods of <toolbox-report>, installed on its prototype by element.js.
 import { badge, barEl, grow, legendEl, levelLegend, levelOrder, levelPill, medal, splitUnassessed, tallyLevels, unrunIn } from "../lib/bars";
@@ -41,7 +42,7 @@ export const scorecardsViews = {
       return !placed[r.name];
     });
     if (loose.length) groups.push({ name: null, title: "Not in a track", rows: loose });
-    var search = el("input", { type: "search", placeholder: "Find a scorecard by name, id, kind, or how it's decided…", ariaLabel: "Find a scorecard", value: (query || {}).q || "" });
+    var search = el("input", { type: "search", placeholder: "Find a scorecard…", title: "Matches a scorecard's name, id, kind, or how it's decided", ariaLabel: "Find a scorecard by name, id, kind, or how it's decided", value: (query || {}).q || "" });
     var only = function (b) {
       return el(
         "button",
@@ -180,8 +181,8 @@ export const scorecardsViews = {
           return el(
             "div",
             { className: "sc-group" },
-            groups.length === 1 && !x.g.name ? null : el("h3", {}, x.g.name ? link(trackPath(D, x.g.name), "", x.g.title) : x.g.title, el("span", { className: "sub", textContent: " · " + plural(x.rows.length, "scorecard") + (x.g.name ? ", weakest first" : "") + (mix ? ": " + mix : "") })),
-            el("div", { className: "sc-rows" }, el("div", { className: "sc-head", ariaHidden: "true" }, el("span"), el("span", { textContent: "Scorecard" }), el("span", { textContent: "Entities by level" }), el("span", { textContent: "Weakest entity" })), ...open.map(row), restRows, restBtn ? el("div", { className: "more" }, restBtn) : null, fold),
+            groups.length === 1 && !x.g.name ? null : el("h3", {}, x.g.name ? link(trackPath(D, x.g.name), "", x.g.title) : x.g.title, el("span", { className: "sub", textContent: " · " + plural(x.rows.length, "scorecard") + (x.g.name ? ", weakest first" : "") + (mix ? "; by lowest level, " + mix : "") })),
+            el("div", { className: "sc-rows" }, el("div", { className: "sc-head", ariaHidden: "true" }, el("span"), el("span", { textContent: "Scorecard" }), el("span", { textContent: "Entities by level" }), el("span", { textContent: "Lowest level" })), ...open.map(row), restRows, restBtn ? el("div", { className: "more" }, restBtn) : null, fold),
           );
         }),
       );
@@ -193,6 +194,7 @@ export const scorecardsViews = {
       { className: "sc-index" },
       el("div", { className: "head" }, el("h2", { textContent: "Scorecards" }), el("span", { className: "sub", textContent: plural(standards.length, "scorecard") + (groups.length > 1 ? " in " + plural(groups.length, "group") : "") })),
       el("p", { className: "lede" }, "Each scorecard rates every entity of one kind against levels of rules; the medal is its weakest entity's level, and the bar shows where the rest stand. " + (Object.keys(D.tracks || {}).length ? "They are grouped by track, the line of work each one serves. " : "") + "Open one for its failures, entities and what each level needs.", factors ? el("span", {}, " The " + plural(factors, "comparison factor") + " against a rival are on ", link("compare", "", "the Compare tab"), ".") : null),
+      noFacts(S) ? el("div", { className: "callout", style: "overflow-wrap:anywhere;min-width:0" }, el("b", { textContent: "Nothing is scored yet. Next: " }), "run ", el("code", { textContent: "toolbox doctor" }), " to see which connector or tool is missing, then ", el("code", { textContent: "toolbox report" }), " again.") : null,
       anyScored ? el("details", { className: "keyd", open: !matchMedia("(max-width:640px)").matches }, el("summary", { textContent: "How to read the bars" }), levelLegend(D, standards)) : null,
       search,
       mixedBases ? basisPick : null,
@@ -822,8 +824,8 @@ export const scorecardsViews = {
         el(
           "div",
           { className: "sc-status-t" },
-          el("span", { className: "sub", textContent: "Weakest entity " }),
-          floorHere ? floorPill(D, active) : el("b", { textContent: "not scored" }),
+          el("span", { className: "sub", textContent: scored.length ? "Lowest level " : "" }),
+          floorHere ? floorPill(D, active) : el("b", { textContent: scored.length ? "not scored" : "No entities collected yet" }),
           floorHere && isTop(D, active, floorHere) && !ONLY_LEVEL.has(floorHere) ? el("span", { className: "topmark", textContent: " ✓ top level" }) : null,
           topHere && scored.length ? el("span", { className: "sep", ariaHidden: "true", textContent: "·" }) : null,
           topHere && scored.length ? el("span", { className: "fact", textContent: fmt(atTop) + " of " + fmt(scored.length) + " at the top level (" + levelName(topHere) + ")" }) : null,

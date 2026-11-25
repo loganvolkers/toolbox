@@ -124,9 +124,9 @@ function ringMoverEl(D: ReportData, cards) {
   return el(
     "div",
     { className: "sub mover" },
-    el("b", { textContent: "Or, for the biggest gain in the track's percentage: " }),
+    el("b", { textContent: waits ? "Unverified, run a check first: " : "Or, for the biggest gain in the track's percentage: " }),
     ...(waits
-      ? [entities + " on ", card, " fail nothing for " + levelName(b.top) + ", but its check ", link("rule/" + enc(b.r.name) + "/" + enc(waits[0]), "", ruleTitle(b.r.name, waits[0])), " was not run in this build"]
+      ? [entities + " on ", card, " may already meet " + levelName(b.top) + ", but its check ", link("rule/" + enc(b.r.name) + "/" + enc(waits[0]), "", ruleTitle(b.r.name, waits[0])), " was not run in this build, so nothing is known yet"]
       : rule && rule[1] === b.n
       ? [entities + (b.n === 1 ? " needs " : " need "), ...ruleEl, " to reach " + levelName(b.top) + " on ", card]
       : ["lift " + entities + " to " + levelName(b.top) + " on ", card, ...(rule ? ["; " + rule[1] + (rule[1] === 1 ? " needs " : " need "), ...ruleEl, " first"] : [])]),

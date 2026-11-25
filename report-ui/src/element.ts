@@ -4,6 +4,7 @@ import { boxLogo } from "./lib/bars";
 import { el, link } from "./lib/dom";
 import { aliasLevels } from "./lib/levels";
 import { missingTarget, notFound, parseHash, trackByPath } from "./lib/routes";
+import { registerIds } from "./lib/rings";
 import { ruleTitles } from "./lib/rules";
 import { template } from "./lib/styles";
 import { campaignNamesSorted, summarize } from "./lib/summary";
@@ -117,6 +118,7 @@ export class ToolboxReport extends HTMLElement {
     var self = this;
     aliasLevels(D);
     ruleTitles(D);
+    registerIds(([] as string[]).concat(...Object.values(D.catalog || {})));
     var S = summarize(D);
     part(root, "top").replaceChildren(boxLogo(), el("h1", { textContent: D.portal || "Toolbox report" }));
     part(root, "meta").textContent =

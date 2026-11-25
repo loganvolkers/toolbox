@@ -6,7 +6,7 @@ import { basisBadge, basisCounts, basisKey, basisOf, refs, whyEl } from "../lib/
 import { TIMED_UNITS, cmpWord, humanize, magnitude, measureLabel, num, ruleValue, setupBrief, valueLine } from "../lib/compare";
 import { el, enc, link } from "../lib/dom";
 import { UNSCORED } from "../lib/levels";
-import { bothCounts, shortId, title } from "../lib/rings";
+import { bothCounts, countWords, productName, shortId, title } from "../lib/rings";
 import { trackPath } from "../lib/routes";
 import { ruleTitle } from "../lib/rules";
 import { rich } from "../lib/text";
@@ -151,7 +151,7 @@ export const compareViews = {
         var t = (all[names[i]].titles || {})[id];
         if (t && t !== id) return t;
       }
-      return shortId(id);
+      return productName(D, id);
     };
     var verdictOf = function (n) {
       return ((all[n].verdict || {})[peer]) || "unknown";
@@ -201,7 +201,7 @@ export const compareViews = {
       ? "Not measured yet: none of the " + plural(names.length, "factor") + " has values for both products."
       : strictWords === majorityWords
         ? "Ahead on " + strictWords.slice("ahead on ".length) + ", by either count."
-        : "Strict count: " + strictWords + (majority ? "." : " (this comparison's verdict).") + " Majority count: " + majorityWords + (majority ? " (this comparison's verdict)." : ".");
+        : "Strict count: " + countWords(both.strict, "strict") + " of " + plural(names.length, "factor") + (majority ? "." : " (this comparison's verdict).") + " Majority count: " + majorityWords + (majority ? " (this comparison's verdict)." : ".");
     var lean = counts.behind > counts.ahead ? "behind" : counts.ahead > counts.behind ? "ahead" : "parity";
     var hero = el(
       "section",
@@ -377,7 +377,7 @@ export const compareViews = {
         { className: "cmp-method", style: "margin:8px 0 0" },
         el("b", { textContent: lead ? "Method: " : "How it was measured: " }),
         ...(lead ? rich(lead + " ") : [(brief.length ? brief.join(" · ") + ". " : "") + "Every rule is " + (bases.judged ? "measured or agent-judged" : "measured by script") + ". "]),
-        scope ? el("span", { style: "display:block;margin-top:4px" }, el("b", { textContent: "Not covered: " }), ...rich(scope.replace(/^Not (covered|measured)\s*:\s*/i, "") + " ")) : null,
+        el("span", { style: "display:block;margin-top:4px" }, el("b", { textContent: "Not covered: " }), ...(scope ? rich(scope.replace(/^Not (covered|measured)\s*:\s*/i, "") + " ") : [el("span", { className: "sub", textContent: "not stated: the track's description has no “Not covered:” sentence. " })])),
         el("button", {
           className: "link",
           textContent: track && track.description ? "The full method, and who checked it ↓" : "Versions, setup and sources ↓",
@@ -429,7 +429,7 @@ export const compareViews = {
     var behind = el(
       "section",
       {},
-      el("div", { className: "head" }, el("h2", { textContent: "Where " + who(subject) + " is behind" }), behindIn.length
+      el("div", { className: "head" }, el("h2", { textContent: unmeasured ? "Where each product leads (not measured yet)" : "Where " + who(subject) + " is behind" }), behindIn.length
         ? el(
             "span",
             { className: "sub" },
@@ -628,7 +628,7 @@ export const compareViews = {
       brief.length ? el("p", { className: "sub provenance" }, el("b", { textContent: timed ? "Timed on: " : "Probed once on: " }), brief.join(" · ") + ". ", /\+uncommitted\b/.test(brief.join(" ")) ? "“+uncommitted” means the harness had local changes when it ran, so a rerun from that commit may differ. " : "", link("compare", "", "How it was measured, and who checked it →")) : null,
       def.description ? el("p", { className: "lede" }, ...rich(def.description)) : null,
       def.rationale || (def.links || []).length ? el("div", { className: "rationale" }, el("b", { textContent: "Why this factor matters" }), def.rationale ? el("div", {}, ...rich(def.rationale)) : null, refs(def.links)) : null,
-      el("p", { className: "sub", textContent: "Each rule scores both products. Where both have a measured value, the better value decides; otherwise passing beats failing. " + who(c.subject) + (c.verdictRule === "majority" ? " is ahead on the factor when more of its rules are ahead than behind, and behind when more are behind." : " is behind on the factor if it is behind on any rule.") }),
+      el("p", { className: "sub", textContent: "Each rule scores both products. Where both have a measured value, the better value decides; otherwise passing beats failing. By the strict count, " + who(c.subject) + " is behind on the factor if it is behind on any rule; by the majority count, it follows whichever side more of the rules are on. This comparison's verdict is the " + (c.verdictRule === "majority" ? "majority" : "strict") + " count." }),
       basisKey(basisCounts(def.rules)),
       el("div", {}, ...(fold ? rows.slice(0, rows.length - atParity) : rows)),
       fold

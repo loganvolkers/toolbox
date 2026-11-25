@@ -77,7 +77,7 @@ export const tracksViews = {
         el(
           "div",
           { className: "shelf", role: "img", ariaLabel: "Scorecards by their weakest entity's level: " + shelfOrder.map(function (l) { return shelf[l] + " " + l + (shelfTop[l] && shelfTop[l] < shelf[l] ? ", " + shelfTop[l] + " of them at its top level" : shelfTop[l] ? ", at its top level" : ""); }).join("; ") },
-          el("span", { className: "sub", textContent: "Medals:" }),
+          el("span", { className: "sub", textContent: "Scorecards by medal:" }),
           ...shelfOrder.map(function (l) {
             var own = ONLY_LEVEL.has(l) && LADDER.indexOf(l) < 0;
             var owner = own

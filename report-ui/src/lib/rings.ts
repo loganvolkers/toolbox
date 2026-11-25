@@ -90,7 +90,9 @@ export function tallyRing(v, n, size, bare?) {
   );
 }
 
-function countWords(c) {
+// The strict count says what it measures, so a factor three rules ahead and one behind is not called "behind".
+export function countWords(c, key?: "strict" | "majority") {
+  if (key === "strict") return ["ahead with no rule behind on " + c.ahead, c.parity ? "at parity on " + c.parity : null, "with a rule behind on " + c.behind, c.unknown ? "not measured on " + c.unknown : null].filter(Boolean).join(", ");
   return ["ahead on " + c.ahead, c.parity ? "at parity on " + c.parity : null, "behind on " + c.behind, c.unknown ? "not measured on " + c.unknown : null].filter(Boolean).join(", ");
 }
 
@@ -111,7 +113,7 @@ export function tallyWords(v, n) {
   if (!b || v.majority == null) return countWords(v) + " of " + n + " factors";
   if (sameCount(b.strict, b.majority)) return countWords(v) + " of " + n + " factors, by either count";
   return n + " factors. " + COUNTS.map(function (c) {
-    return c.label + ((c.key === "majority") === !!v.majority ? ", this comparison's verdict" : "") + ": " + countWords(b[c.key]);
+    return c.label + ((c.key === "majority") === !!v.majority ? ", this comparison's verdict" : "") + ": " + countWords(b[c.key], c.key);
   }).join(". ");
 }
 
@@ -120,7 +122,7 @@ export function tallyShort(v, n) {
   if (n && v.unknown >= n) return "not measured yet";
   var b = v.both;
   if (!b || v.majority == null || sameCount(b.strict, b.majority)) return "ahead on " + v.ahead + " of " + n + " factors" + (b ? " by either count" : "");
-  return "ahead on " + b.strict.ahead + " (strict) or " + b.majority.ahead + " (majority) of " + n + " factors; the " + (v.majority ? "majority" : "strict") + " count is the verdict";
+  return "ahead on " + b.strict.ahead + " of " + n + " factors with no rule behind (strict), " + b.majority.ahead + " by the majority count; the " + (v.majority ? "majority" : "strict") + " count is the verdict";
 }
 
 // The two counts as a small table, the comparison's own rule marked.
@@ -135,17 +137,64 @@ export function bothCounts(v, n) {
       ? [el("div", { className: "mine" }, el("dt", { textContent: "Strict or majority count" }), el("dd", { textContent: countWords(v) }))]
       : COUNTS.map(function (c) {
           var mine = (c.key === "majority") === !!v.majority;
-          return el("div", { className: mine ? "mine" : "", title: "The " + c.label.toLowerCase() + ": " + c.def + "." }, el("dt", {}, c.label, mine ? el("small", { textContent: " · this comparison's verdict" }) : null), el("dd", { textContent: countWords(b[c.key]) }));
+          return el("div", { className: mine ? "mine" : "", title: "The " + c.label.toLowerCase() + ": " + c.def + "." }, el("dt", {}, c.label, mine ? el("small", { textContent: " · this comparison's verdict" }) : null), el("dd", { textContent: countWords(b[c.key], c.key) }));
         })),
   );
 }
 
+var UNIQUE = new Map<string, string>();
+
+function baseName(s: string) {
+  var i = Math.max(s.lastIndexOf("/"), s.lastIndexOf(":"));
+  return i >= 0 && i < s.length - 1 ? s.slice(i + 1) : s;
+}
+
+// Entities whose basenames collide (three check.go files) are named by the shortest path suffix
+// that tells them apart, wherever shortId names them.
+export function registerIds(ids: string[]) {
+  UNIQUE = new Map();
+  var byBase = new Map<string, string[]>();
+  ids.forEach(function (id) {
+    var b = baseName(id);
+    (byBase.get(b) || byBase.set(b, []).get(b)!).push(id);
+  });
+  byBase.forEach(function (group) {
+    if (group.length < 2) return;
+    var paths = group.map(function (id) {
+      var p = id.slice(id.indexOf(":") + 1);
+      return p.split("/");
+    });
+    group.forEach(function (id, k) {
+      var parts = paths[k];
+      for (var n = 2; n <= parts.length; n++) {
+        var tail = parts.slice(-n).join("/");
+        var clash = paths.some(function (q, j) {
+          return j !== k && q.slice(-n).join("/") === tail;
+        });
+        if (!clash) return UNIQUE.set(id, tail);
+      }
+    });
+  });
+}
+
 export function shortId(id) {
   var s = String(id || "");
-  var slash = s.lastIndexOf("/");
-  var colon = s.lastIndexOf(":");
-  var i = Math.max(slash, colon);
-  return i >= 0 && i < s.length - 1 ? s.slice(i + 1) : s;
+  return UNIQUE.get(s) || baseName(s);
+}
+
+// A product with no entity yet (its records are not loaded) takes the spelling the portal's own
+// track prose uses for it, so "openfga" still reads "OpenFGA".
+export function productName(D: ReportData, id, titles?: Record<string, string | null>) {
+  var t = titles && titles[id];
+  if (t && t !== id) return t;
+  var s = shortId(id);
+  var re = new RegExp("(^|[^\\w])(" + s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")(?![\\w])", "i");
+  var tracks = Object.values(D.tracks || {}) as { title?: string; description?: string }[];
+  for (var i = 0; i < tracks.length; i++) {
+    var m = ((tracks[i].title || "") + " " + (tracks[i].description || "")).match(re);
+    if (m && m[2] !== m[2].toLowerCase()) return m[2];
+  }
+  return s;
 }
 
 export function isTop(D: ReportData, name, level) {

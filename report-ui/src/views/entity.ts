@@ -9,7 +9,7 @@ import { keepWithLast } from "../lib/compare";
 import { el, enc, KNOWN, link } from "../lib/dom";
 import { kindTitle } from "../lib/kinds";
 import { ink, ownLevel } from "../lib/levels";
-import { shortId, title } from "../lib/rings";
+import { productName, shortId, title } from "../lib/rings";
 import { isComparative, ruleLink, ruleTitle, ruleTitleOf } from "../lib/rules";
 import { blockers, isPassing } from "../lib/status";
 import { rich } from "../lib/text";
@@ -181,6 +181,31 @@ export const entityViews = {
     var cards = Object.keys(D.scorecards || {}).filter(function (name) {
       return D.scores[name] && D.scores[name][id];
     });
+    var METALS = ["none", "bronze", "silver", "gold"];
+    var metalOf = function (name) {
+      var lv = D.scores[name][id].level;
+      if (METALS.indexOf(lv) >= 0) return lv;
+      return ((D.scorecards[name] || {}).levels || []).indexOf(lv) <= 0 ? "none" : "gold";
+    };
+    // Lowest level first, so the scorecard that holds the entity's level is the first one on the page.
+    var placeOf = function (name) {
+      if (isComparative(D, name)) return 9;
+      if (D.scores[name][id].level === "skipped") return 8;
+      return METALS.indexOf(metalOf(name));
+    };
+    cards = cards
+      .map(function (n, i) {
+        return { n: n, i: i };
+      })
+      .sort(function (a, b) {
+        return placeOf(a.n) - placeOf(b.n) || a.i - b.i;
+      })
+      .map(function (x) {
+        return x.n;
+      });
+    var holding = cards.filter(function (n) {
+      return placeOf(n) < 8 && metalOf(n) === S.worst[id];
+    });
     var total = { pass: 0, hollow: 0, all: 0 };
     var bases = { measured: 0, judged: 0 };
     cards.forEach(function (n) {
@@ -204,8 +229,8 @@ export const entityViews = {
         var c = (D.comparisons || {})[name];
         var peer = (c.peers || [])[0];
         var v = (c.verdict || {})[peer];
-        var whoSubject = (c.titles || {})[c.subject] || shortId(c.subject);
-        var whoPeer = (c.titles || {})[peer] || shortId(peer);
+        var whoSubject = productName(D, c.subject, c.titles);
+        var whoPeer = productName(D, peer, c.titles);
         return el(
           "div",
           { className: "sc-block" },
@@ -258,6 +283,42 @@ export const entityViews = {
           }),
         )
       : null;
+    var jumpTo = function (name) {
+      var block = blocks[cards.indexOf(name)];
+      return el("button", {
+        className: "link",
+        textContent: title(D, name),
+        onclick: function () {
+          block.scrollIntoView({ behavior: "smooth", block: "start" });
+          var h = block.querySelector<HTMLElement>("h3 a");
+          if (h) h.focus({ preventScroll: true });
+        },
+      });
+    };
+    var heldEl =
+      cards.length > 1 && holding.length && S.worst[id]
+        ? el(
+            "span",
+            { className: "held" },
+            "Held at " + ownLevel(D, kind, S.worst[id]) + " by ",
+            ...(holding.length > 2
+              ? [plural(holding.length, "scorecard") + " (the first sections below)"]
+              : holding.map(function (h, i) {
+                  var sc = D.scorecards[h];
+                  var score = D.scores[h][id];
+                  var next = nextLevel(sc, score.level);
+                  var need = next ? blockers(sc, score, next) : [];
+                  var why =
+                    need.length === 1
+                      ? ": “" + ruleTitleOf(sc, need[0]) + "” " + (score.rules[need[0]] === "unknown" ? "was not run" : "fails")
+                      : need.length
+                        ? ": " + plural(need.length, "rule") + " short of " + levelName(next)
+                        : "";
+                  return el("span", {}, i ? "; and by " : "", jumpTo(h), why);
+                })),
+            ".",
+          )
+        : null;
     var short = shortId(id);
     var notRun = 0;
     cards.forEach(function (n) {
@@ -292,13 +353,16 @@ export const entityViews = {
           ? el(
               "div",
               { className: "elevel" },
-              medal(S.worst[id], 52),
+              S.worstState.get(id) === "hollow"
+                ? el("span", { className: "medal-hollow", title: "Reached only because no agent has assessed this entity yet, so its agent-judged rules pass by default." }, medal(S.worst[id], 52))
+                : medal(S.worst[id], 52),
               el(
                 "div",
                 {},
                 el("strong", { style: "color:" + ink(S.worst[id]) + (KNOWN.indexOf(ownLevel(D, kind, S.worst[id])) < 0 ? ";text-transform:none" : "") }, ownLevel(D, kind, S.worst[id]), atTop ? el("span", { className: "topmark", textContent: " ✓ top" + (KNOWN.indexOf(S.worst[id]) < 0 ? " level" : "") }) : null, provisional.length ? el("span", { className: "pv-head", textContent: notRun ? " (provisional)" : " (may not hold)" }) : null),
                 provisional.length ? el("span", { className: "provisional", style: "display:block;font-size:13px", title: "The level holds only if the checks not run in this build pass and an agent's assessment finds nothing; the scorecards below name them.", textContent: provisional.join(", ") }) : null,
-                el("span", { className: "sub", textContent: (cards.length > 1 ? "lowest of " + cards.length + " scorecards · " : "") + total.pass + " of " + plural(total.all, "check passes", "checks pass") + " on evidence" + (total.hollow ? " · " + total.hollow + " more " + (total.hollow === 1 ? "passes" : "pass") + " by default, because no agent has reviewed " + (total.hollow === 1 ? "it" : "them") + " yet" : "") }),
+                heldEl,
+                el("span", { className: "sub", textContent: total.pass + " of " + plural(total.all, "check passes", "checks pass") + " on evidence" + (total.hollow ? " · " + total.hollow + " more " + (total.hollow === 1 ? "passes" : "pass") + " by default, because no agent has reviewed " + (total.hollow === 1 ? "it" : "them") + " yet" : "") }),
               ),
             )
           : null,
