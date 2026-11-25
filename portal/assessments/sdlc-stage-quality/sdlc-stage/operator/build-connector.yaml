@@ -1,41 +1,88 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: sdlc-stage:operator/build-connector
 rubric: sdlc-stage-quality
-subjectHash: 2a5ee852aa40
-assessor: {kind: agent, name: cursor-grok, model: grok-4.7}
-at: 2026-11-20
+subjectHash: 6f6ca4c9ca32
+assessor: {kind: agent, name: campaign-review-cards-r4}
+at: 2026-11-25
 verdicts:
   - criterion: executable-exit
     verdict: pass
     reason: >-
-      The stage's command toolbox connector test runs the kit in
-      crates/toolbox-connect/src/conformance.rs and fails on a protocol
-      violation. crates/toolbox-cli/tests/install.rs fails a tampered release
-      archive.
+      The exit criterion is that the connector passes the conformance kit and
+      runs in-image or remotely. Both halves are gated by commands. `toolbox
+      connector test` exits 1 when any kit check fails
+      (crates/toolbox-cli/src/main.rs:1138-1162, checks listed in
+      crates/toolbox-connect/src/conformance.rs:1-11). `toolbox install`
+      resolves and verifies a released executable, and
+      crates/toolbox-cli/tests/install.rs:90-92 tests that end to end. This is
+      weaker than it looks. The listed check conformance.rs has no test of its
+      own, and nothing shows the kit failing a non-conforming connector. The
+      kit runs in CI only on conforming first-party connectors, in
+      scripts/m4-acceptance.sh:33-34, which the stage doesn't list.
   - criterion: agent-can-complete
-    verdict: unsure
+    verdict: fail
     reason: >-
-      docs/design/connector-control.md and
-      schema/connector-messages.schema.json describe the protocol, and the
-      stage lists toolbox connector test, install, doctor and push. The stage
-      gap is that there is no scaffold or non-Rust SDK, and
-      connector-control.md does not say which form to choose.
+      Writing and testing a connector can be done from the docs: the scaffold
+      (examples/connector-scaffold/README.md), the author-connector skill
+      (plugins/toolbox-operator/skills/author-connector/SKILL.md) and
+      site/src/content/docs/authors/connectors.md. The second half of the exit
+      criterion, making it run in a portal, needs knowledge no doc gives. To
+      run in-image, `toolbox install` expects a GitHub release laid out as
+      `<app>-<target>.tar.xz` with a `.sha256` at tag `v<version>`
+      (crates/toolbox-model/src/artifacts.rs:1-5). Neither the skill nor the
+      site page says so, and docs/design/package-author-sdlc.md:121 suggests
+      GoReleaser, whose default archive names don't fit that layout. To run
+      remotely, the SDK has `run_remote`
+      (crates/toolbox-connect/src/sdk.rs:134-140), but the scaffold, the skill
+      and the authors page show only `run_stdio`. They don't say how to
+      declare `runtime: remote` or which token the connector needs.
+      docs/design/connector-control.md, the stage's other doc, never names the
+      stage (`notNaming` in the brief).
     suggestion: >-
-      Add toolbox connector new, as docs/design/package-author-sdlc.md
-      proposes, ending at a passing conformance run.
+      Add a "Run it in a portal" step to
+      plugins/toolbox-operator/skills/author-connector/SKILL.md and
+      site/src/content/docs/authors/connectors.md. For in-image, give the
+      release layout `toolbox install` expects (or a `dist` config that
+      produces it) and the `package: github:owner/repo@version` line. For
+      remote, show `run_remote`, `runtime: remote` and `toolbox token create`.
+      Then list a doc section that names the stage in
+      portal/sdlc/stages/operator.yaml.
   - criterion: reuses-artifacts
-    verdict: pass
+    verdict: fail
     reason: >-
-      An in-image connector can be github:owner/repo@v1, which toolbox install
-      downloads (crates/toolbox-api/src/artifacts.rs). A remote connector
-      pushes to /v1/ingest and does not compile Toolbox.
+      The `toolbox` CLI comes from a release
+      (site/src/content/docs/authors/connectors.md:12-16), but the SDK does
+      not. The workspace sets `publish = false` (Cargo.toml:11), so
+      toolbox-connect is on no registry. The scaffold depends on it by path,
+      `toolbox-connect = { path = "../../crates/toolbox-connect" }`
+      (examples/connector-scaffold/Cargo.toml), and the documented route is
+      `git clone --depth 1` of main and `cargo build`
+      (site/src/content/docs/authors/connectors.md:18-20). Every connector
+      author therefore compiles Toolbox's toolbox-connect and toolbox-model
+      from an unpinned checkout, which can differ from the CLI release they
+      test against. The page lists this as a gap (connectors.md:56).
+    suggestion: >-
+      Publish toolbox-connect (and toolbox-model) with each release, to
+      crates.io or as a documented git dependency on the release tag (`git =
+      …, tag = "v0.1.1"`). Then point examples/connector-scaffold/ Cargo.toml
+      and the authors page at that pinned version instead of a path into a
+      clone of main.
   - criterion: decoupled-from-core
     verdict: pass
     reason: >-
-      connectors.rs binary_for resolves github: packages from the install
-      cache (D90). An operator does not add a crate or a builtin to this
-      repository; builtin: remains only for the connectors that ship in the
-      image.
+      An operator adds no crate, builtin or schema change to this repository.
+      A connector is named as `github:owner/repo[/app]@version`, which
+      `binary_for` resolves from the install cache
+      (crates/toolbox-api/src/connectors.rs:214-216; D90,
+      docs/decisions/D01M7WVNEYT0000000000000000.md). Or it runs remotely
+      against /v1/ingest (docs/design/package-author-sdlc.md:123). The
+      protocol is defined by schema/connector-messages.schema.json, outside
+      any crate change. Only the connectors that ship in the image remain
+      `builtin:`.
 summary: >-
-  An operator can install a released connector without a crate change.
-  What is missing is a scaffold outside Rust.
+  A connector can be written and checked against the kit with released
+  tools and the scaffold. Two things don't use released artifacts or
+  documented steps: the SDK is compiled from an unpinned clone of main,
+  and making the connector run in a portal (the release layout `toolbox
+  install` expects, or remote mode) is written down nowhere an author
+  reads.

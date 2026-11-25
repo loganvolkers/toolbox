@@ -1,72 +1,79 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: scorecard:toolbox/sdlc-stage
 rubric: scorecard-quality
-subjectHash: 00c1715b64e4
-assessor: {kind: agent, name: campaign-review-cards-r3}
+subjectHash: 4e6680bf7ae9
+assessor: {kind: agent, name: campaign-review-cards-r4}
 at: 2026-11-25
 verdicts:
   - criterion: one-concern
     verdict: pass
     reason: >-
-      All six rules (portal/standards/sdlc.yaml:167-243) ask one question:
-      whether a catalogued SDLC stage is defined, can be carried out, and is
-      built. The audience is the maintainers who curate the catalogue (D87,
+      All six rules (portal/standards/sdlc.yaml:177-258) ask one question: is
+      a catalogued SDLC stage defined, can it be carried out, and is it built?
+      They serve one audience, the maintainers who curate the catalogue (D87,
       docs/decisions/D01M7WQBZHG0000000000000000.md). The stages span four
-      layers, but the question and the audience do not change, and the
+      layers, but the question and the audience stay the same, and the
       rationale states it as "each stage has a gate an agent can run"
-      (portal/standards/sdlc.yaml:150-154).
+      (portal/standards/sdlc.yaml:161-164).
   - criterion: levels-are-a-ladder
     verdict: pass
     reason: >-
-      Bronze is a stage that is declared and documented, silver one that an
-      agent can run and CI checks, and gold one that is built with no gaps
-      (portal/standards/sdlc.yaml:167-243). The climb stops at the first level
-      that fails, so gold needs the silver facts.
-      docs/design/meta-standards-review.md:89 names `built` as a gold rule
-      cheaper than a bronze one (a two-line edit), and
-      docs/design/thresholds.md:75-77 states and justifies leaving it that way
-      (D01M831P5QWJQ4A2FT85N5MXJQF): tying gold to a review would drop the
-      stage a level on every edit. The live spread in portal/results.json is 8
-      bronze, 12 silver and 6 gold, so each rung separates stages. No fixture
-      sits at silver (the brief's fixtureRealLevels are bronze and gold).
+      Bronze means the stage is declared and documented, silver that an agent
+      can run it and CI checks it, and gold that it is built with no gaps
+      (portal/standards/sdlc.yaml:177-258). The climb stops at the first level
+      that fails, so gold needs the silver facts. The gold `built` rule is
+      cheap to satisfy (a status edit). docs/design/thresholds.md:86-88 states
+      that and justifies it (D01M831P5QWJQ4A2FT85N5MXJQF): tying gold to a
+      review would drop the stage a level on every edit. The live spread in
+      portal/results.json is 8 bronze, 12 silver and 6 gold, so each rung
+      separates stages. No fixture sits at silver (the brief's
+      fixtureRealLevels are bronze and gold).
   - criterion: no-obvious-gap
     verdict: fail
     reason: >-
-      Nothing asks whether a stage's checks pass. Silver `automated` asks only
-      that CI names each check, and any file under .github/workflows/ counts
-      as run whatever its triggers or state
-      (crates/toolbox-connector-workspace/src/data.rs:203-204). Gold then
-      reads the declared status. So maintainer/verify, whose exit criterion is
-      "The milestone's acceptance script passes in CI"
-      (portal/sdlc/stages/maintainer.yaml:44-60), would keep its level with
-      that script red on main. That contradicts the `built` rationale, "stages
-      that work today" (portal/standards/sdlc.yaml:241-243). The two links
-      that remain are justified elsewhere: whether the checks prove the exit
-      criterion is the judged sdlc-stage-quality rubric's `executable-exit`
-      (portal/standards/sdlc.yaml:401-405), and
-      docs/design/thresholds.md:75-77 justifies only not tying gold to a
-      review, not ignoring run results.
+      The earlier finding, that nothing asks whether the checks pass, is now a
+      stated limit with a backstop. docs/design/thresholds.md:77-80 says a
+      stage can't read another entity's score, so the stage names its
+      workflows (`ciWorkflows`, from
+      crates/toolbox-connector-workspace/src/data.rs:184-198) and
+      maintainer-ci-reliability scores them. One small error there: the doc
+      says ciWorkflows appears in the gold rule's evidence, but that evidence
+      shows only gaps or the status (portal/standards/sdlc.yaml:248). What is
+      still uncaught is a "check" that checks nothing. `automated` counts any
+      `crates/**/*.rs` as run by CI whenever some workflow runs `cargo test`
+      (crates/toolbox-connector-workspace/src/data.rs:235-237). It also counts
+      any workflow that names a path, whatever triggers that workflow has
+      (data.rs:161-182). So operator/build-connector reaches silver by listing
+      crates/toolbox-connect/src/conformance.rs
+      (portal/sdlc/stages/operator.yaml:29), a source file with no test in it.
+      Its `automated` passes, and it would keep passing if the kit stopped
+      rejecting bad connectors. The `automated` rationale says CI "keeps it
+      true after every change" (portal/standards/sdlc.yaml:241-244), which
+      this doesn't deliver.
     suggestion: >-
-      Add a gold `checks-green` rule that joins each workflow running a
-      stage's checks to its workflow-runs record (failingStreak 0, from the
-      github-actions connector, so the rule is `unknown` where that connector
-      is skipped and gold is then decided by `built` alone). Pin it with a
-      demo stage whose workflow is red in portal/fixtures/.
+      In crates/toolbox-connector-workspace/src/data.rs, count a Rust check
+      only if it is a test target (under tests/) or contains a #[test]. Count
+      a workflow only if it triggers on push or pull_request, not only on
+      workflow_dispatch or workflow_call. Add a demo stage in
+      portal/fixtures/workspace.ndjson that lists a test-less source file and
+      fails `automated`. Correct docs/design/thresholds.md:79, or add
+      ciWorkflows to the `built` evidence.
   - criterion: actionable
     verdict: pass
     reason: >-
-      I traced raising sdlc-stage:maintainer/plan, at bronze with
-      agent-operable and automated failing in portal/results.json. The fixes
-      name `commands:`, `checks:`, portal/sdlc/stages/<layer>.yaml and
-      .github/workflows (portal/standards/sdlc.yaml:213-229). Adding `python3
+      I traced raising sdlc-stage:maintainer/plan, which is at bronze in
+      portal/results.json with agent-operable and automated failing, and has
+      no commands or checks (portal/sdlc/stages/maintainer.yaml:3-13). The
+      fixes name `commands:`, `checks:`, portal/sdlc/stages/<layer>.yaml and
+      .github/workflows (portal/standards/sdlc.yaml:224-238). Adding `python3
       scripts/decision-id.py` as a command (python3 is a known program,
-      crates/toolbox-connector-workspace/src/data.rs:107-128) and
-      scripts/decision-id.py as a check, which .github/workflows/ci.yml:31
-      runs, would reach silver. has-exit-criterion's fix names no file
-      (portal/standards/sdlc.yaml:182-184), but its evidence quotes the field
-      and the other fixes name the stage file.
+      crates/toolbox-connector-workspace/src/data.rs:107-128) and the script
+      as a check, which .github/workflows/ci.yml:32 runs, would reach silver.
+      The gold fix now also says where pass/fail lives (the ciWorkflows field,
+      portal/standards/sdlc.yaml:249-252).
 summary: >-
-  Same version as the last review. One concern, a ladder whose cheap gold
-  rule is a stated, justified trade-off, and fixes an agent can follow.
-  The open gap: a stage reaches gold when CI names its checks, whether or
-  not they pass, so "built" can describe a stage whose gate is red.
+  Whether a stage's checks pass is now a stated limit, handed to
+  maintainer-ci-reliability through ciWorkflows. The ladder and fixes
+  hold. The gap that remains: `automated` takes any Rust source file as a
+  check whenever CI runs `cargo test`, so build-connector reaches silver
+  on a check with no test in it.

@@ -1,76 +1,76 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: scorecard:toolbox/meta-scorecard
 rubric: scorecard-quality
-subjectHash: 76e001a81dcf
-assessor: {kind: agent, name: campaign-review-cards-r3}
+subjectHash: f3839a6aca88
+assessor: {kind: agent, name: campaign-review-cards-r4}
 at: 2026-11-25
 verdicts:
   - criterion: one-concern
     verdict: pass
     reason: >-
-      All seven rules (portal/standards/meta.yaml:600-685) are about a
-      scorecard's form: tested, no empty level, described, explained, a
-      fixture ladder, rules tested, and every level reached. They read facts
-      that crates/toolbox-cli/src/meta.rs:236-245 emits, for one audience,
-      standard authors. The description limits gold to well-formed, not good
-      (portal/standards/meta.yaml:577-580, D01M831P5QWJQ4A2FT85N5MXJQF).
-      Whether a card is good is left to review-scorecard.
+      All eight rules (portal/standards/meta.yaml:608-707) are about a
+      scorecard's form, for one audience, the authors of standards: tested, no
+      empty level, described, explained, a fixture ladder, rules tested, every
+      level reached by a fixture, and every level grantable by the ratchet.
+      They read facts that crates/toolbox-cli/src/meta.rs:262-275 emits. The
+      description limits gold to well-formed, not good
+      (portal/standards/meta.yaml:586-588, D01M831P5QWJQ4A2FT85N5MXJQF), and
+      whether a card is good is left to review-scorecard.
   - criterion: levels-are-a-ladder
     verdict: pass
     reason: >-
       Bronze (tested, every level has rules) is the floor the ratchet holds
-      new cards to (portal/standards/meta.yaml:598). Silver adds a
-      description, a rationale, a two-outcome fixture ladder and every rule
-      tested. Gold (fixtures at every level,
-      portal/standards/meta.yaml:674-685) implies silver's ladder rule and
-      asks for more, as docs/design/thresholds.md:47-48 and :60 set out. Every
-      rung is reachable: portal/results.json has 11 cards at bronze, 22 at
-      silver and 21 at gold. The card's own fixtures reach only bronze (the
-      brief's fixtureRealLevels), so it fails its own gold.
+      new cards to (portal/standards/meta.yaml:606). Silver adds a
+      description, a rationale, a fixture ladder with a real level, and every
+      rule tested. Gold adds fixtures at every level, which implies silver's
+      two-outcome ladder and asks more, and levels-grantable
+      (portal/standards/meta.yaml:682-707). The levels match
+      docs/design/thresholds.md:49-50 and :62. Every rung is reached in
+      portal/results.json: 11 cards at bronze, 23 at silver and 20 at gold.
+      The card's own fixtures reach only bronze (the brief's
+      fixtureRealLevels), so it fails its own gold, which the evidence reports
+      truthfully.
   - criterion: no-obvious-gap
-    verdict: fail
+    verdict: pass
     reason: >-
-      Same version as the last review, and its finding still holds. Lesson
-      L12, "achievable in context"
-      (docs/design/scorecards-for-scorecards.md:92), has no rule, and the rule
-      proposed for it, `ratchetable`, is still listed as next
-      (docs/design/scorecards-for-scorecards.md:142). The table at
-      docs/design/scorecards-for-scorecards.md:115 credits
-      fixtures-reach-every-level with L12, but fixtures supply the very
-      connector data that the ratchet skips, so a level whose only rules read
-      a skipped connector still passes. For example,
-      maintainer-ci-reliability's gold is a single `dataFrom: github-actions`
-      rule (packages/github-actions/fragments/github-actions.yaml:457-475).
-      docs/design/thresholds.md:71-74 argues that this one card is reachable
-      in the published report, which is a limit argued for one card, not a
-      check. crates/toolbox-cli/src/meta.rs emits no `dataFrom` fact to check
-      it against, and `liveEntities` is collected but "information only"
-      (portal/standards/meta.yaml:22), so a card that scores nothing live also
-      passes.
-    suggestion: >-
-      Emit, for each level, the connectors its rules read (`dataFrom`) from
-      crates/toolbox-cli/src/meta.rs, and add a silver `levels-decidable` rule
-      that fails when every rule of a level reads a volatile or skipped
-      connector, with evidence that names the level and the connector. Then
-      stop crediting fixtures-reach-every-level with L12 in
-      docs/design/scorecards-for-scorecards.md §3.1.
+      The earlier finding, that lesson L12 ("achievable in context") had no
+      rule, is fixed. levels-grantable (portal/standards/meta.yaml:694-707)
+      fails a level whose every rule reads a connector marked `inRatchet:
+      false` (crates/toolbox-cli/src/meta.rs:111-138, read from
+      packages/github-actions/fragments/github-actions.yaml:46 and
+      portal/toolbox.yaml:256). It is pinned in
+      portal/tests/standards.test.yaml:1604-1612 and argued in
+      docs/design/thresholds.md:50 and :73-76. The other rules of a good
+      standard in docs/design/scorecards-for-scorecards.md §2 that are about a
+      card rather than a rule (L4, L10, L12) now have rules. Two small
+      residuals don't amount to a missing standard. The design doc is stale:
+      it still credits fixtures-reach-every-level with L12, has no row for
+      levels-grantable or explains-why, and lists `ratchetable` as next
+      (docs/design/scorecards-for-scorecards.md:115, :142). And
+      `ratchet_blind_levels` has no unit test of its own: the expectation uses
+      a hand-written record in portal/fixtures/surfaces.ndjson, not a computed
+      one.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Each fix names a field or place: `description:`, `rationale:` and
-      `links:`, portal/fixtures/ (portal/standards/meta.yaml:621-685). Each
-      rule's evidence names the card, the empty levels, the untested rules or
-      the levels no fixture reaches, and
-      portal/tests/standards.test.yaml:294-319 pins them. I traced raising
-      maintainer-ci-reliability to gold: the evidence would name silver. One
-      workflow-runs record at about 8% firstTryFailRate and 10 or more decided
-      runs in portal/fixtures/github-actions.ndjson, beside a workflow record
-      in portal/fixtures/workspace.ndjson, would reach it. every-rule-tested's
-      fix names no file, but its evidence lists the rules, and the manifest's
-      `tests:` list says where expectations go.
+      Each fix names a place to act: `description:`, `rationale:` and
+      `links:`, portal/fixtures/, or the scorecard's YAML and `inRatchet:
+      false` (portal/standards/meta.yaml:629-707). Each rule's evidence names
+      the card, its empty levels, its untested rules, the levels no fixture
+      reaches, or the blind levels. I traced raising
+      maintainer-ci-reliability, which is at silver. For gold the evidence
+      names silver as unreached by a fixture, and a workflow-runs record at
+      about 8% firstTryFailRate with 10 or more decided runs in
+      portal/fixtures/github-actions.ndjson would reach it. It also names
+      silver and gold as blind, and the fix gives the change: a
+      ratchet-decidable rule at those levels. Two caveats. That fix offers no
+      honest change for a card that docs/design/thresholds.md:50 says fails
+      "truthfully", so an agent following it may pad a level with a filler
+      rule. And every-rule-tested's fix names no file, but its evidence lists
+      the rules.
 summary: >-
-  Same version as the last review. A sound, form-only ladder, and its
-  fixes lead somewhere. What is still missing is a check that a level can
-  be decided where it is read: the lesson L12 rule stays proposed, and the
-  rule that claims to cover L12 can't see the gap, because fixtures fill
-  in the data the ratchet skips.
+  The L12 gap is closed: levels-grantable fails a level the ratchet can
+  never grant, from a declared `inRatchet: false`. A sound, form-only
+  ladder whose fixes lead somewhere. What remains is housekeeping: the
+  design doc's tables predate the new rule, and the computation behind it
+  is tested only through a hand-written fixture.

@@ -1,40 +1,70 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: sdlc-stage:operator/monitor
 rubric: sdlc-stage-quality
-subjectHash: b7ece568fc20
-assessor: {kind: agent, name: cursor-composer, model: composer}
-at: 2026-11-22
+subjectHash: 46049fdea3f1
+assessor: {kind: agent, name: campaign-review-cards-r4}
+at: 2026-11-25
 verdicts:
   - criterion: executable-exit
-    verdict: pass
+    verdict: fail
     reason: >-
-      scripts/m4-acceptance.sh exercises serve health, readiness and the
-      metrics endpoint; experiments/otel-testbed/scripts/score.sh (CI job
-      otel-testbed) asserts OTLP export of http.server.request spans, catalog
-      metric names, service.name and log/trace_id correlation against a pinned
-      otelcol-contrib file exporter. Exit criterion's lag/catalog signals are
-      toolbox_snapshot_lag_seconds and related series on /metrics and OTLP.
+      The stage's only listed check, scripts/m4-acceptance.sh, would not fail
+      if most of the exit criterion broke. It fetches the ops view and prints
+      the registered connectors (scripts/m4-acceptance.sh:44-54). It compares
+      /v1/ops/derived files (:57-65). It never reads /metrics, snapshot lag,
+      diagnostics or OTLP, and its freshness wait loop ends without failing
+      when connectors never report (:44-53). The previous review said the
+      script exercises the metrics endpoint; it does not. The CI job that does
+      gate the metric half is not declared as a check of the stage:
+      experiments/otel-testbed/scripts/score.sh asserts
+      toolbox_snapshot_lag_seconds in OTLP and in the /metrics scrape
+      (score.sh:143-180), and runs as .github/workflows/ci.yml:132-133. As
+      declared, the stage's gate doesn't cover its exit criterion.
+    suggestion: >-
+      Add experiments/otel-testbed/scripts/score.sh and
+      crates/toolbox-telemetry/tests/prom_catalog.rs to `checks:` for
+      operator/monitor in portal/sdlc/stages/operator.yaml. Make
+      scripts/m4-acceptance.sh assert what the ops view shows (snapshot lag, a
+      connector's last sync and diagnostics present) instead of printing it,
+      and fail when its freshness loop times out.
   - criterion: agent-can-complete
     verdict: pass
     reason: >-
-      An agent runs toolbox serve with OTEL_EXPORTER_OTLP_ENDPOINT and
-      experiments/otel-testbed/scripts/score.sh (or docker compose + the same
-      rubric) using only docs/design/observability.md and the testbed README.
-      Remaining gap is the Grafana / toolbox-ops pack, not the observability
-      contract itself.
+      An agent can do the stage with `toolbox serve` and the docs.
+      docs/design/observability.md:13-27 gives the signals, and
+      crates/toolbox-telemetry/METRIC_CATALOG.md lists every instrument,
+      including toolbox_snapshot_lag_seconds and
+      toolbox_connector_lag_seconds. The environment variables that turn on
+      OTLP are in crates/toolbox-telemetry/README.md:19-25. The ops view and
+      its diagnostics are in docs/design/minimal-ui.md:46. Alert rules to
+      start from are in ops/alerts/snapshot-lag.yaml and
+      ops/alerts/index-freshness.yaml, and experiments/otel-testbed/README.md
+      shows a local collector. No step needs a secret or a person. The missing
+      Grafana pack (the stage's gap) is a convenience, not a step.
   - criterion: reuses-artifacts
     verdict: pass
     reason: >-
-      Monitoring uses the released toolbox binary's /metrics and OTLP export;
-      the testbed pins otelcol-contrib from its GitHub release (SHA-256 in
-      pin.env). Operators do not rebuild Toolbox to observe lag.
+      Monitoring reads what the released binary already serves (/metrics, and
+      OTLP when OTEL_EXPORTER_OTLP_ENDPOINT is set,
+      crates/toolbox-telemetry/README.md:25). The server image is built from a
+      release's archives, not from source (.github/workflows/image.yml:1). The
+      collector used to prove it is a pinned otelcol-contrib release with a
+      SHA-256 (experiments/otel-testbed/pin.env). Only the maintainers'
+      testbed builds Toolbox (experiments/otel-testbed/README.md), and an
+      operator doesn't need it.
   - criterion: decoupled-from-core
     verdict: pass
     reason: >-
-      An operator configures OTEL_* and scrape targets against a deployed
-      portal; they do not add crates or builtins to this repository to monitor
-      freshness.
+      An operator sets OTEL_* and scrape targets against a deployed portal
+      (crates/toolbox-telemetry/README.md:19-25) and loads the alert rules in
+      ops/alerts/ into their own Prometheus. None of that adds a crate, a
+      builtin or a schema change to this repository. The metric names are a
+      SemVer contract that Toolbox owns
+      (crates/toolbox-telemetry/METRIC_CATALOG.md), so dashboards built on
+      them don't need a Toolbox change either.
 summary: >-
-  Snapshot lag and catalog metrics are observable via /metrics and OTLP.
-  The local collector testbed and CI score gate prove export completeness;
-  Grafana pack remains deferred.
+  An operator can monitor a released portal with what ships today:
+  /metrics, OTLP, the ops view and alert rules to start from. The stage's
+  declared gate is the weak part. m4-acceptance.sh checks none of the
+  metrics, lag or OTLP that the exit criterion names, and the CI job that
+  does (the otel testbed) isn't listed as a check of the stage.

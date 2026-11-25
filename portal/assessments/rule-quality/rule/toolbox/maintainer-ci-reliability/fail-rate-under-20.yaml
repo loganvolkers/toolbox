@@ -1,73 +1,74 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/maintainer-ci-reliability/fail-rate-under-20
 rubric: rule-quality
-subjectHash: 625283ec5521
-assessor: {kind: agent, name: campaign-review-rules-r3}
+subjectHash: c33f0ae30d35
+assessor: {kind: agent, name: campaign-review-rules-r4}
 at: 2026-11-25
 verdicts:
   - criterion: measures-intent
     verdict: pass
     reason: >-
       The check reads firstTryFailRate
-      (packages/github-actions/fragments/github-actions.yaml:386-389), which
+      (packages/github-actions/fragments/github-actions.yaml:416-421), which
       counts a run that passed only on a later attempt as failed
-      (crates/toolbox-connector-github/src/runs.rs:59-65 and :82), so it is
-      the share of runs that went red, not the share left red after re-runs.
-      Cancelled runs are left out but shown beside it (runs.rs:78-80), and an
-      empty history gives null, so the rule is unknown rather than passing.
+      (crates/toolbox-connector-github/src/runs.rs:65-71 and :88), so it is
+      the share of runs that went red; cancelled runs are left out but shown
+      in the evidence (runs.rs:83-86). It applies only where run history is
+      read, workflows that run on the default branch
+      (crates/toolbox-connector-workspace/src/workflows.rs:60-100), which
+      docs/design/thresholds.md:31 states.
   - criterion: hard-to-game
     verdict: fail
     reason: >-
-      The rule leans on failures-visible to stop failures being hidden (its
-      fix says so, github-actions.yaml:396-403), but that detector is still a
-      list of literal strings
-      (crates/toolbox-connector-workspace/src/workflows.rs:104-111) and two
-      `!=` patterns (workflows.rs:113-126). I ran a scratch workflow through
-      target/debug/toolbox-connector-workspace: steps `cargo test ||true` (no
-      space), `cargo test || echo flaky`, a step with `shell: bash {0}` (no
-      -e, so only the last line's status counts) and a job with `if:
-      github.event_name == 'pull_request'` all gave hiddenFailures []. Each is
-      a one-line suppression that keeps a flaky job out of the rate, cheaper
-      than fixing it; none falsifies anything.
+      The rule relies on failures-visible to keep hidden failures out of the
+      rate (its fix says so, github-actions.yaml:427-433). The round-3 routes
+      are closed: on a scratch workflow run through
+      target/debug/toolbox-connector-workspace, `cargo test ||true` and
+      `shell: bash {0}` were flagged (workflows.rs:150-169). But steps `cargo
+      test | tee test.log`, `if ! cargo test; then echo flaky; fi`, `cargo
+      test || { true; }` and `cargo test || ret=$?`, and jobs with `if:
+      github.event_name != 'push'` or `if: startsWith(github.ref,
+      'refs/pull/')`, all gave hiddenFailures []. The tee pipe is the common
+      one: with no `shell:` GitHub runs `bash -e {0}` without pipefail
+      (https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstepsshell),
+      so a well-meaning author keeping a log makes every test failure green.
+      These are convenience suppressions, not deception.
     suggestion: >-
-      In masks_exit (workflows.rs:104-111), match `||` with any whitespace and
-      treat any right-hand side other than `exit <non-zero>` or `false` as
-      masking; flag a step or `defaults.run` `shell:` without `-e`; in
-      skipped_on_default, evaluate the `if:` with github.ref =
-      refs/heads/<default>, ref_name = <default> and event_name = push, and
-      flag it when it is false. Add each case to the workflows.rs tests.
+      In workflows.rs, flag a `run:` with a `|` pipeline when the effective
+      shell is the default (no pipefail) and the script doesn't `set -o
+      pipefail`; treat `||` followed by anything but `exit <non-zero>` or
+      `false` as masking; flag `if ! <cmd>; then` blocks that don't exit
+      non-zero; and in skipped_on_default (workflows.rs:172-187) evaluate the
+      `if:` with event_name push and ref refs/heads/<default> instead of
+      matching literals. Add each case to
+      masked_exits_and_default_branch_skips_hide_failures.
   - criterion: fix-leads-to-pass
-    verdict: fail
+    verdict: pass
     reason: >-
-      Unchanged since the last review: the fix says to open the failed runs in
-      the evidence, but failedRuns lists only runs whose final conclusion
-      failed (crates/toolbox-connector-github/src/runs.rs:84-89), while the
-      rate also counts runs that passed on a re-run. The portal's fixture
-      shows it: demo/slow.yml has firstTryFailRate 40 and failedRuns []
-      (portal/fixtures/github-actions.ndjson:2), so it fails the rule
-      (portal/tests/standards.test.yaml:186) and the evidence names no run to
-      open, in exactly the flaky case the first-try rate exists to catch.
-    suggestion: >-
-      In runs.rs, add the runs that passed on a later attempt to failedRuns
-      (with their first attempt's URL, `<html_url>/attempts/1`) or to a
-      `retriedRuns` list the evidence appends, and pin it with the
-      demo/slow.yml fixture in portal/tests/standards.test.yaml.
+      The round-3 finding is fixed: failedRuns now lists a run that passed on
+      a re-run by its failed first attempt (`<html_url>/attempts/1`,
+      crates/toolbox-connector-github/src/runs.rs:89-104, pinned by
+      cancelled_runs_and_reruns at runs.rs:183-213), and the evidence appends
+      it (github-actions.yaml:422-426), so the fix's "open the failed runs in
+      the evidence" names a run in the flaky case. The hand-written fixture
+      for demo/slow.yml still shows firstTryFailRate 40 with failedRuns []
+      (portal/fixtures/github-actions.ndjson:2), output the connector no
+      longer produces; that is a stale fixture, not a gap in the rule.
   - criterion: threshold-justified
     verdict: pass
     reason: >-
       docs/design/thresholds.md:31 labels 20% as chosen, anchored to a
-      measurement (`ci` on main failed 32 of its last 100 runs, 2026-11-20 to
-      2026-11-23), says each level halves it, and explains the first-attempt
-      count and the 10-run minimum for silver and gold; the number is a
-      package parameter (packages/github-actions/toolbox-package.yaml:26).
+      measurement (`ci` on main failed 32 of its last 100 runs), says each
+      level halves it and why first attempts count; the number is the package
+      parameter failRateBronze
+      (packages/github-actions/toolbox-package.yaml:26-29).
 summary: >-
-  Independent re-review; the rule and the code it reads are unchanged
-  since the last review (runs.rs last changed in 781adf9, workflows.rs
-  only reformatted since), and both findings were checked against them and
-  still hold. The rate itself is sound. A failure can still be hidden from
-  it with `||true`, `|| echo`, `shell: bash {0}` or an event-name `if:`
-  (all confirmed with the connector), and runs that passed on a re-run
-  raise the rate without appearing in the evidence the fix points to. Line
-  numbers refer to main at fb5c546; an uncommitted working-tree change to
-  runs.rs lists retried runs' first attempts, which would close the
-  fix-leads-to-pass finding once it lands.
+  Independent round-4 review of e3c0da1. Of the round-3 findings, the
+  evidence gap is fixed (re-run passes link their failed first attempt)
+  and the named suppressions (`||true`, `|| echo`, `shell: bash {0}`, a
+  pull-request-only `if:`) are now caught, confirmed with the connector.
+  Other one-line suppressions still pass, chiefly `cmd | tee log` under
+  the default shell, which a well-meaning author writes without meaning to
+  hide anything. Not verified: the runs query filters by branch only
+  (crates/toolbox-connector-github/src/main.rs:242), so pull-request runs
+  from a fork's own main branch may be counted too.

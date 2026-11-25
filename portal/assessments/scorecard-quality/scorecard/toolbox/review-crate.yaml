@@ -1,65 +1,76 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: scorecard:toolbox/review-crate
 rubric: scorecard-quality
-subjectHash: 869ea3546375
-assessor: {kind: agent, name: cursor-cloud-agent, model: claude-opus-5.5}
-at: 2026-11-24
+subjectHash: 40e122f0ca5d
+assessor: {kind: agent, name: campaign-review-cards-r4}
+at: 2026-11-25
 verdicts:
   - criterion: one-concern
     verdict: pass
     reason: >-
-      All five rules (portal/standards/crates.yaml:351-426) read one thing,
-      the crate-design assessment of a crate and its review, for one audience,
-      maintainers. The card is advisory (`ratchet: {advisory: true}`,
-      crates.yaml:348), as D79 and D01M831P5QWJQ4A2FT85N5MXJQF set out, and
-      its rationale gives the reason: "a review that goes stale on every
-      change must not gate the ratchet" (crates.yaml:331-337). The rewritten
-      description (crates.yaml:326-330) states the same ladder in plain words
-      and changes no rule.
+      All five rules (portal/standards/crates.yaml:385-466) read one thing,
+      the crate-design assessment of a crate and the review of that
+      assessment, for one audience, maintainers. The card is advisory
+      (`ratchet: {advisory: true}`, portal/standards/crates.yaml:382), as D79
+      and D01M831P5QWJQ4A2FT85N5MXJQF set out, and its rationale gives the
+      reason: "a review that goes stale on every change must not gate the
+      ratchet" (portal/standards/crates.yaml:366-371).
   - criterion: levels-are-a-ladder
     verdict: pass
     reason: >-
-      Bronze is no open finding, stale ones included (crates.yaml:351-364).
-      Silver is a current review (crates.yaml:365-377). Every gold rule also
-      needs a current review and adds something more: clean and cited, no
-      doubts, and a second assessor's grounded review of the assessment
-      (`independently-reviewed`, crates.yaml:409-426), as
-      docs/design/thresholds.md:55 states and the description now says ("a
-      clean review that a second agent checked is gold"). Fixtures reach none
-      and gold (portal/tests/standards.test.yaml:916-941). No fixture sits at
-      silver, so that rung is untested, but it is still a coherent step. In
-      this build 14 crates sit at bronze, 1 at gold and 2 are out of scope.
+      Bronze is "no open finding", stale findings included
+      (portal/standards/crates.yaml:385-398). Silver is a current review
+      (:399-411). Each gold rule also needs a current review and adds
+      something: clean and cited, and now citing the crate's own files
+      (`reviewCitesCrate`, :412-429); no doubts; and a second assessor's
+      grounded review (:445-466). That matches docs/design/thresholds.md:57.
+      Fixtures pin none, a silver-shaped crate and gold
+      (portal/tests/standards.test.yaml:920-943). One trait follows from the
+      design: an unreviewed crate holds bronze and a reviewed crate with one
+      finding drops to none. In this repository 1 of 18 crates has a review
+      (portal/assessments/crate-design/crate/toolbox-expr.yaml), so bronze
+      mostly means "not reviewed". thresholds.md:57 states this, and the card
+      is advisory, so it is not a broken rung.
   - criterion: no-obvious-gap
-    verdict: pass
+    verdict: fail
     reason: >-
-      Gold needs a current, grounded review of the crate-design assessment by
-      a different named assessor (`reviewIndependent`, crates.yaml:85-92),
-      computed by `link_reviews` in crates/toolbox-connect/src/assessment.rs
-      and unit-tested there. The hash description matches the code
-      (crates.yaml:51-54, `source_hash` in
-      crates/toolbox-connector-workspace/src/rust.rs:395). Assessor identity
-      is still a self-chosen name, which thresholds.md:63-70 records as not
-      checked, and why: git can't tell the agents apart either. The
-      independently-reviewed rationale's claim that one of three assessment
-      reviews was self-review when the rule was added is the finding
-      D01M831P5QWJQ4A2FT85N5MXJQF records.
+      Silver and gold rest on a review being current, but the staleness hash
+      misses files that crates compile in. `source_hash` hashes only `.rs`
+      files under src/ and tests/, plus Cargo.toml
+      (crates/toolbox-connector-workspace/src/rust.rs:374-383 and :513-533).
+      The field description at portal/standards/crates.yaml:54 says "src/ and
+      tests/ files". So a change to crates/toolbox-store/migrations/*.sql,
+      which crates/toolbox-store/src/pg.rs:12-14 compiles in with
+      include_str!, or to crates/toolbox-cli/src/report.html and
+      toolbox-report.js, leaves a crate-design review "fresh". The review then
+      keeps toolbox-store's silver and gold over a schema it never read.
+      docs/design/thresholds.md:64-88 doesn't list this limit. The rest is
+      covered: independence (crates/toolbox-connect/src/assessment.rs:302-334)
+      and citing the crate (:228-236) are checked, and a self-declared
+      assessor name is a stated limit (docs/design/thresholds.md:65-72).
+    suggestion: >-
+      Hash every file under crates/<name>/ (except target/), and every path
+      that an include_str!, include_bytes! or sqlx migrate! in the crate
+      names, in source_hash in crates/toolbox-connector-workspace/src/rust.rs.
+      Update the `hash` description in portal/standards/crates.yaml. Add a
+      unit test in which editing an included non-Rust file changes the hash.
   - criterion: actionable
     verdict: pass
     reason: >-
-      I tried crate:toolbox-expr, the one crate with a live assessment
-      (portal/assessments/crate-design/crate/toolbox-expr.yaml). The fix for
-      `independently-reviewed` gives the exact brief command
-      (crates.yaml:417-421). I ran `toolbox assess brief
-      assessment:crate-design/crate:toolbox-expr --portal portal`, and it
-      printed the assessment-quality rubric and the file to write. The bronze
-      and silver fixes point at the failing criteria's suggestions and the
-      crate brief (crates.yaml:357-374); the silver fix now says what to do in
-      words first ("Have an agent review the crate's current sources") and
-      then gives the same two commands, unchanged.
+      I traced crate:toolbox-expr, the one crate with a crate-design
+      assessment (portal/assessments/crate-design/crate/toolbox-expr.yaml) and
+      a review of it
+      (portal/assessments/assessment-quality/assessment/crate-design/crate/toolbox-expr.yaml).
+      The silver fix says to have an agent review the current sources and
+      gives `toolbox assess brief crate:<name> --portal portal` and `toolbox
+      assess check portal` (portal/standards/crates.yaml:404-407). The gold
+      fixes name the assessment folder, the crate's own files to cite, and the
+      brief command for the second review (:422-425, :436-441, :453-457). Each
+      gold rule's evidence names the failing criteria, the missing citation of
+      the crate, or the missing review
+      (portal/tests/standards.test.yaml:920-943).
 summary: >-
-  Re-assessed after the silver rule's fix was reworded to lead with a
-  plain instruction before its commands; no check, level or command
-  changed. Independence is required at gold, the hash description is
-  right, and the rationale says why the card is advisory, so the ladder
-  has no obvious gap. It is still untested at silver, and assessor
-  identity is a self-declared name, which is a documented limit.
+  The ladder and the fixes hold, and gold now also requires the assessment
+  to cite the crate's own files. The open gap is the staleness hash: it
+  reads only .rs files and Cargo.toml, so a change to a migration or an
+  embedded asset that the crate compiles in leaves its review current.

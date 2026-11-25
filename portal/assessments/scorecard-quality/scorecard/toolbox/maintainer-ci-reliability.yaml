@@ -1,89 +1,108 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: scorecard:toolbox/maintainer-ci-reliability
 rubric: scorecard-quality
-subjectHash: c350fd673fc2
-assessor: {kind: agent, name: campaign-review-cards-r3}
+subjectHash: 1a9b78ee52d6
+assessor: {kind: agent, name: campaign-review-cards-r4}
 at: 2026-11-25
 verdicts:
   - criterion: one-concern
     verdict: pass
     reason: >-
-      Every rule asks whether a run on the default branch can be believed:
-      streak, still running, first-try fail rate, hidden failures and job
-      timeouts
-      (packages/github-actions/fragments/github-actions.yaml:351-475), for
-      maintainers. Speed moved to its own maintainer-ci-speed card
-      (packages/github-actions/fragments/github-actions.yaml:478) for the
-      reason docs/design/thresholds.md:34 gives. every-job-has-timeout's
-      rationale argues partly from runner cost
-      (packages/github-actions/fragments/github-actions.yaml:431-434), which
-      is the speed card's argument, but a hung job also withholds the verdict,
-      so it fits here.
+      All eight rules ask one question for maintainers: whether a run on the
+      default branch can be believed. They cover the red streak, a workflow
+      still running and recently run, the first-try fail rate, hidden failures
+      and job timeouts
+      (packages/github-actions/fragments/github-actions.yaml:359-512). Speed
+      is on its own card (maintainer-ci-speed,
+      packages/github-actions/fragments/github-actions.yaml:512), for the
+      reason docs/design/thresholds.md:35 gives. The new recently-run rule
+      (packages/github-actions/fragments/github-actions.yaml:396-415) is the
+      same concern: old green history standing in for current runs.
   - criterion: levels-are-a-ladder
-    verdict: pass
+    verdict: fail
     reason: >-
-      Bronze holds the prerequisites (failures-visible and still-running,
-      which keep the rate honest, per docs/design/thresholds.md:22-23 and
-      :32-33) with a 20% bound; silver and gold tighten the same rate to 10%
-      and 5% over at least 10 decided runs
-      (packages/github-actions/toolbox-package.yaml:26-46), so gold implies
-      silver and asks more. Re-runs count as failures
-      (crates/toolbox-connector-github/src/runs.rs:58-65), so no rung is
-      cheaper than the one below. No fixture sits at silver (the brief's
-      fixtureRealLevels are bronze and gold), although
-      portal/tests/standards.test.yaml:196 pins fail-rate-under-10 passing on
-      demo/steady.yml.
+      For a workflow that never runs on the default branch, silver and gold
+      ask nothing beyond bronze. Every run rule starts with
+      `!entity.onDefaultBranch ||`, and that includes fail-rate-under-10 and
+      fail-rate-under-5, which are the whole of silver and gold
+      (packages/github-actions/fragments/github-actions.yaml:471, :494). Such
+      a workflow therefore reaches gold on the two static bronze rules alone,
+      with no run read and minDecidedRuns skipped. That goes against "Gold
+      asks for what lower levels don't already imply"
+      (docs/design/thresholds.md:24). It is what portal/results.json records:
+      the only gold workflow is .github/workflows/image.yml, which is
+      workflow_call and workflow_dispatch only. Meanwhile ci.yml, codeql.yml
+      and pages.yml, which do run on main, stay at bronze or none, because the
+      ratchet can't grant their silver or gold (ratchetBlindLevels in the
+      brief; docs/design/thresholds.md:50). So the one gold on the card is the
+      workflow whose reliability is never measured. For workflows that run on
+      main the ladder is sound: bronze holds the prerequisites, and silver and
+      gold tighten the first-try rate to 10% and 5% over at least 10 decided
+      runs (packages/github-actions/toolbox-package.yaml:26-46).
+    suggestion: >-
+      Stop granting silver and gold without run history. Either drop the
+      `!entity.onDefaultBranch ||` bypass from fail-rate-under-10 and
+      fail-rate-under-5, so an off-branch workflow stops at bronze with
+      evidence such as "no run history on the default branch", or move
+      off-branch workflows out of the run rules' scope (`skipped`). Pin it in
+      portal/tests/standards.test.yaml with
+      workflow:.github/workflows/release.yml, which the fixtures already mark
+      as off-branch, not reaching silver.
   - criterion: no-obvious-gap
     verdict: fail
     reason: >-
-      Unchanged since the last review (same hash c350fd673fc2): a workflow
-      that stops running is still not caught. still-running reads only
-      GitHub's `state`
-      (packages/github-actions/fragments/github-actions.yaml:367-385), and its
-      rationale now says that a workflow whose triggers stop matching "stays
-      active and is not caught here"
-      (packages/github-actions/fragments/github-actions.yaml:382), but no doc
-      says why that is left out. docs/design/thresholds.md:33 still says
-      GitHub disables any workflow after 60 days, though the rule's own link
-      says it only does so for scheduled ones. The connector already sends
-      `lastRunAt` (crates/toolbox-connector-github/src/runs.rs:93), and only
-      main-not-stuck-red's evidence reads it, so a push workflow whose
-      `paths:` filter no longer matches keeps its last 100 green runs and
-      passes every run rule indefinitely.
+      Both earlier findings are fixed. recently-run catches an active workflow
+      that stopped running
+      (packages/github-actions/fragments/github-actions.yaml:396-415, at
+      daysSinceLastRun in crates/toolbox-connector-github/src/runs.rs:112),
+      and docs/design/thresholds.md:33-34 now gives the correct 60-day rule.
+      Two failure modes are still not caught. First, a retry inside the run
+      hides a first-try failure just as a re-run used to. The detectors look
+      for `|| true`, `set +e`, a `shell:` without -e and the skip conditions
+      (crates/toolbox-connector-workspace/src/workflows.rs:150-157, :172-186),
+      but not for a retry action or a test runner's retry flag. The silver fix
+      even recommends "retry the step in the workflow file"
+      (packages/github-actions/fragments/github-actions.yaml:483), which
+      lowers firstTryFailRate without fixing anything. Second,
+      `onDefaultBranch` and `skipped_on_default` recognise only `main` and
+      `master` (crates/toolbox-connector-workspace/src/workflows.rs:93-98,
+      :182), although the package makes the branch a parameter
+      (packages/github-actions/toolbox-package.yaml:22-25). In a portal with
+      `branch: develop`, a `push: branches: [develop]` workflow counts as
+      off-branch and passes every run rule. docs/design/thresholds.md:64-88
+      states neither limit.
     suggestion: >-
-      Add a bronze `recently-run` rule (or extend still-running) that fails
-      when `entity.runs.lastRunAt` is older than a chosen window, with the
-      window justified in docs/design/thresholds.md, and fixtures of a stale
-      active workflow on each side in portal/fixtures/github-actions.ndjson.
-      Correct thresholds.md:33 to say that GitHub disables only scheduled
-      workflows.
+      Add retries to hiddenFailures in
+      crates/toolbox-connector-workspace/src/workflows.rs: a `uses:` of a
+      retry action, or a `run:` with a test runner's retry flag (for example
+      nextest `--retries`, pytest `--reruns`). Change the silver fix to
+      quarantine a flake rather than retry it. Pass the package's `branch`
+      parameter to the workspace connector, so `onDefaultBranch` and the skip
+      detection use it. Add a fixture of each to
+      portal/fixtures/workspace.ndjson.
   - criterion: actionable
-    verdict: fail
+    verdict: pass
     reason: >-
-      Not fixed: `failedRuns` lists only runs whose final conclusion failed
-      (crates/toolbox-connector-github/src/runs.rs:84-89), but runs that
-      passed only on a re-run also raise firstTryFailRate (runs.rs:61-65).
-      demo/slow.yml fails bronze at firstTryFailRate 40 with `failedRuns: []`
-      (portal/fixtures/github-actions.ndjson:2), so the fix "Open the failed
-      runs in the evidence"
-      (packages/github-actions/fragments/github-actions.yaml:398, :448, :470)
-      leaves the agent nothing to open. Separately, the connector reads runs
-      with `?branch=main` (crates/toolbox-connector-github/src/main.rs:55 and
-      :242). .github/workflows/release.yml runs only on pull_request and tag
-      pushes, so by my reading it never gets a run on main and its silver
-      evidence will always say "only 0 decided runs", with no fix that
-      applies.
-    suggestion: >-
-      List the runs that passed only on a re-run (with the attempt number)
-      next to failedRuns in crates/toolbox-connector-github/src/runs.rs, and
-      add them to the three fail-rate rules' evidence. Either leave workflows
-      that never run on the default branch out of the run rules (`appliesTo`,
-      or `unknown` when there were no runs on the branch), or tell the agent
-      in the silver and gold fixes how a workflow gets more decided runs.
+      Both earlier findings are fixed. failedRuns now links a re-run's failed
+      first attempt (`/attempts/1`,
+      crates/toolbox-connector-github/src/runs.rs:92-104, unit-tested at
+      :212-213), so "Open the failed runs in the evidence" leads somewhere.
+      Workflows that never run on main are no longer held to run history
+      (crates/toolbox-connector-workspace/src/workflows.rs:64-99, pinned for
+      release.yml at portal/tests/standards.test.yaml:1601-1603). I traced
+      raising workflow:.github/workflows/ci.yml from none
+      (portal/results.json: every-job-has-timeout failing on 5 jobs). The
+      evidence lists the jobs, and the fix says to set `timeout-minutes` on
+      each in the workflow file, which reaches bronze. The silver and gold
+      fixes name the test, the workflow file or the pull request check. One
+      thing is stale: the demo/slow.yml fixture still has `failedRuns: []` at
+      40% first-try failures (portal/fixtures/github-actions.ndjson:2), a
+      shape the connector no longer produces.
 summary: >-
-  Same version as the last review, and neither of its findings is fixed.
-  The card covers one concern with a sound ladder. A push workflow whose
-  triggers stop matching keeps passing on old green history. Flaky runs
-  that passed on a re-run count against a workflow but are missing from
-  the evidence the fixes point to. And a workflow that never runs on main
-  is held at bronze with nothing it can do about it.
+  The round-3 findings are closed: a workflow that stopped running is
+  caught, a re-run's failed attempt is linked, and workflows that never
+  run on main are exempt. That exemption now gives silver and gold for
+  free: the only gold workflow is one whose runs are never read. A retry
+  inside a run, which the silver fix itself recommends, hides flakes from
+  the first-try rate, and the default branch is hard-coded to main or
+  master although the package makes it a parameter.
