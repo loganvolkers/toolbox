@@ -6388,6 +6388,9 @@
       "package-json:report-ui/package.json": {
         "level": "gold"
       },
+      "package-json:scripts/github-emulate/package.json": {
+        "level": "gold"
+      },
       "package-json:scripts/playwright-ci/package.json": {
         "level": "gold"
       },
