@@ -3018,7 +3018,8 @@
 			var draw = function() {
 				var q = search.value.toLowerCase();
 				var hit = function(r) {
-					var basisWords = basisCounts(r.sc.rules).judged ? "agent-judged judged by an agent assessed" : "measured deterministic mechanical";
+					var basis = basisCounts(r.sc.rules).judged ? "judged" : "measured";
+					var basisWords = BASIS[basis].label.toLowerCase() + (basis === "judged" ? " judged by an agent assessed" : " measured deterministic mechanical");
 					return !q || r.name.toLowerCase().indexOf(q) >= 0 || title(D, r.name).toLowerCase().indexOf(q) >= 0 || kindTitle(D, r.sc.kind || "").toLowerCase().indexOf(q) >= 0 || basisWords.indexOf(q) >= 0;
 				};
 				var shown = groups.map(function(g) {
