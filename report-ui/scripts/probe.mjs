@@ -64,6 +64,27 @@ async function check(ctx, story, view) {
   }, null, { timeout: 15000 });
   await page.waitForTimeout(100);
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  // Text squeezed into a column a few letters wide ("r u n" in a flex callout) overflows nothing,
+  // so look for runs of text far taller than they are wide.
+  const stacked = await page.evaluate(() => {
+    const out = [];
+    const roots = [document];
+    document.querySelectorAll("*").forEach((n) => n.shadowRoot && roots.push(n.shadowRoot));
+    roots.forEach((root) => {
+      const walk = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      for (let t = walk.nextNode(); t; t = walk.nextNode()) {
+        const s = t.textContent.trim();
+        const p = t.parentElement;
+        if (s.length < 3 || !p || p.closest("svg,style,script,select,option")) continue;
+        const r = document.createRange();
+        r.selectNodeContents(t);
+        const b = r.getBoundingClientRect();
+        const fs = parseFloat(getComputedStyle(p).fontSize) || 14;
+        if (b.width > 0 && b.width < fs * 2.5 && b.height > fs * 4) out.push(s.slice(0, 30));
+      }
+    });
+    return out;
+  });
   await page.addScriptTag({ content: axeSource });
   const axe = await page.evaluate(async (tags) => {
     const r = await window.axe.run(document, { resultTypes: ["violations"], runOnly: { type: "tag", values: tags } });
@@ -75,6 +96,7 @@ async function check(ctx, story, view) {
     ...errors.map((e) => "script error: " + e),
     ...axe.map((v) => `axe ${v.id} (${v.impact}) on ${v.nodes} node(s), first ${v.first}`),
     ...(view.viewport.width < 600 && overflow > 0 ? ["scrolls sideways by " + overflow + " px"] : []),
+    ...(stacked.length ? ["text squeezed into a narrow column: " + stacked.slice(0, 3).map((s) => JSON.stringify(s)).join(", ")] : []),
   ];
   return { story: story.id, view: view.name, overflow, axe, errors, failures };
 }
