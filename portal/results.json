@@ -1,5 +1,11 @@
 {
   "campaigns": {
+    "ci-security-gold": {
+      "inScope": 8,
+      "recorded": "2026-11-25",
+      "short": 2,
+      "start": "2026-11-25"
+    },
     "cli-skill-coverage": {
       "inScope": 27,
       "recorded": "2026-11-21",
