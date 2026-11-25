@@ -627,13 +627,24 @@
 			style: s > 70 ? "font-size:18px" : text.length > 3 ? "font-size:12px" : ""
 		}, text));
 	}
+	function factorWord(n) {
+		return n === 1 ? "factor" : "factors";
+	}
 	function countWords(c, key) {
-		if (key === "strict") return [
-			"ahead with no rule behind on " + c.ahead,
-			c.parity ? "at parity on " + c.parity : null,
-			"with a rule behind on " + c.behind,
-			c.unknown ? "not measured on " + c.unknown : null
-		].filter(Boolean).join(", ");
+		if (key === "strict") {
+			var has = function(n) {
+				return n === 1 ? "has" : "have";
+			};
+			var is = function(n) {
+				return n === 1 ? "is" : "are";
+			};
+			return [
+				c.ahead + " " + factorWord(c.ahead) + " " + has(c.ahead) + " no rule behind",
+				c.parity ? c.parity + " " + factorWord(c.parity) + " " + is(c.parity) + " at parity" : null,
+				c.behind + " " + factorWord(c.behind) + " " + has(c.behind) + " at least one rule behind",
+				c.unknown ? c.unknown + " " + factorWord(c.unknown) + " " + is(c.unknown) + " not measured" : null
+			].filter(Boolean).join(". ");
+		}
 		return [
 			"ahead on " + c.ahead,
 			c.parity ? "at parity on " + c.parity : null,
@@ -659,8 +670,12 @@
 		if (!b || v.majority == null) return countWords(v) + " of " + n + " factors";
 		var mineKey = v.majority ? "majority" : "strict";
 		var otherKey = v.majority ? "strict" : "majority";
-		if (sameCount(b.strict, b.majority)) return countWords(v) + " of " + n + " factors, by the " + mineKey + " count, this comparison's verdict. The " + otherKey + " count agrees.";
-		return countWords(b[mineKey], mineKey) + " of " + n + " factors by the " + mineKey + " count, this comparison's verdict; by the " + otherKey + " count, " + countWords(b[otherKey], otherKey);
+		var clause = function(key) {
+			return key === "strict" ? countWords(b[key], key) : countWords(b[key], key) + " of " + n + " factors";
+		};
+		if (sameCount(b.strict, b.majority)) return clause(mineKey) + ", by the " + mineKey + " count, this comparison's verdict. The " + otherKey + " count agrees.";
+		if (mineKey === "strict") return clause("strict") + ". The strict count is this comparison's verdict. By the majority count, " + clause("majority") + ".";
+		return clause("majority") + " by the majority count, this comparison's verdict. By the strict count, " + clause("strict") + ".";
 	}
 	function tallyShort(v, n) {
 		if (n && v.unknown >= n) return "not measured yet";
@@ -1712,9 +1727,9 @@
 		var met = (each || []).filter(function(p) {
 			return p.met;
 		}).length;
-		var g = el("div", { className: "cprog" + (big ? " big" : "") + (state === "on" || empty && parts && met === parts ? " on" : "") }, el("b", { textContent: empty ? parts ? met + " of " + parts : "—" : pct + "%" }), empty ? null : el("div", { className: "gb" }, el("span", { style: "width:" + Math.max(0, Math.min(100, pct)) + "%" }), el("i", { style: "left:calc(" + target + "% - 1px)" })), el("small", { textContent: empty ? parts ? big ? "scorecards at target " + target + "%" : "at target" : "no single score" : "target " + target + "%" }));
+		var g = el("div", { className: "cprog" + (big ? " big" : "") + (state === "on" || empty && parts && met === parts ? " on" : "") }, el("b", { textContent: empty ? parts ? met + " of " + parts + (big ? " scorecards" : "") : "—" : pct + "%" }), empty ? null : el("div", { className: "gb" }, el("span", { style: "width:" + Math.max(0, Math.min(100, pct)) + "%" }), el("i", { style: "left:calc(" + target + "% - 1px)" })), el("small", { textContent: empty ? parts ? met === parts ? "at target" : "target " + target + "%" : "no single score" : "target " + target + "%" }));
 		g.setAttribute("role", "img");
-		g.setAttribute("aria-label", empty ? parts ? met + " of " + plural(parts, "scorecard") + " at the target of " + target + "%, each scored on its own" : "no single score" : pct + "% of entities meet the goal; target " + target + "%");
+		g.setAttribute("aria-label", empty ? parts ? met + " of " + plural(parts, "scorecard") + (met === parts ? " at the target of " : " toward the target of ") + target + "%, each scored on its own" : "no single score" : pct + "% of entities meet the goal; target " + target + "%");
 		return g;
 	}
 	function checkBar(parts, label) {
@@ -3175,20 +3190,34 @@
 			var toGo = each.reduce(function(n, p) {
 				return n + (p.met ? 0 : p.below);
 			}, 0);
-			var status = state === "empty" ? toGo ? el("span", {
+			var rated = each.reduce(function(n, p) {
+				return n + (p.known ? p.rated : 0);
+			}, 0);
+			var meeting = each.reduce(function(n, p) {
+				return n + (p.known ? p.rated - p.below : 0);
+			}, 0);
+			var drawn = state;
+			var drawnPct = pct;
+			var drawnEach = each;
+			if (state === "empty" && rated) {
+				drawnPct = Math.floor(100 * meeting / rated);
+				drawn = drawnPct >= target ? "on" : "off";
+				drawnEach = [];
+			}
+			var status = drawn === "empty" ? toGo ? el("span", {
 				className: "pill bad",
 				textContent: plural(toGo, "entity", "entities") + " to go"
 			}) : el("span", {
 				className: "pill good",
 				textContent: "on target"
-			}) : state === "on" ? el("span", {
+			}) : drawn === "on" ? el("span", {
 				className: "pill good",
 				textContent: "on target"
 			}) : el("span", {
 				className: "pill bad",
-				textContent: plural((c.inScope || 0) - (c.meeting || 0), "entity", "entities") + " to go"
+				textContent: plural(state === "empty" ? toGo : (c.inScope || 0) - (c.meeting || 0), "entity", "entities") + " to go"
 			});
-			var a = link("campaign/" + enc(name), "card", [goalBar(state, pct, target, false, each), el("div", {}, el("div", {
+			var a = link("campaign/" + enc(name), "card", [goalBar(drawn, drawnPct, target, false, drawnEach), el("div", {}, el("div", {
 				className: "t",
 				textContent: c.title || name
 			}), el("div", { className: "s" }, status, days != null && days >= 0 && c.status !== "ended" ? " · " + plural(days, "day") + " left" : c.status === "ended" ? " · ended" : ""))]);
@@ -5006,6 +5035,21 @@
 		}
 	};
 	// src/views/entity.ts
+	function evidenceItems(score, name) {
+		var ev = (score.evidence || {})[name];
+		return ev == null ? [] : Array.isArray(ev) ? ev : [ev];
+	}
+	function noReviewYet(rule, items) {
+		if (basisOf(rule) !== "judged" || !items.length) return false;
+		return items.every(function(s) {
+			var t = String(s).trim().toLowerCase();
+			return t.indexOf("not assessed") === 0 || t.indexOf("not reviewed") === 0 || t.indexOf("no current assessment") === 0 || t.indexOf("no current review") === 0;
+		});
+	}
+	function outcomeText(o, absent) {
+		if (o === "unknown" || o === "fail" && absent) return o === "unknown" ? "not run in this build" : "not assessed yet";
+		return o;
+	}
 	var entityViews = {
 		rulesFor(sc, score, scName, unjudged, id) {
 			var wrap = el("div");
@@ -5056,17 +5100,17 @@
 					npass++;
 					return;
 				}
-				var ev = (score.evidence || {})[n];
-				var items = ev == null ? [] : Array.isArray(ev) ? ev : [ev];
+				var items = evidenceItems(score, n);
+				var shown = outcomeText(o, noReviewYet(rule, items));
 				if (rule.level && order.indexOf(rule.level) > nextIdx) {
 					laterLevels.add(rule.level);
 					later.push(el("details", { className: "rule rule-c " + o }, el("summary", {}, el("span", {
 						className: "rn",
 						textContent: scName ? ruleTitle(scName, n) : n
 					}), el("span", {
-						className: "outcome " + o,
+						className: "outcome " + (shown === "not assessed yet" || o === "unknown" ? "unknown" : o),
 						style: "margin:0",
-						textContent: o === "unknown" ? "not run in this build" : o
+						textContent: shown
 					}), basisBadge(basisOf(rule), false, true), el("span", {
 						className: "sub",
 						textContent: "needed for " + rule.level
@@ -5083,9 +5127,9 @@
 					className: "rid",
 					textContent: n
 				}) : null, el("span", {
-					className: "outcome " + o,
+					className: "outcome " + (shown === "not assessed yet" || o === "unknown" ? "unknown" : o),
 					style: "margin:0",
-					textContent: o === "unknown" ? "not run in this build" : o
+					textContent: shown
 				}), basisBadge(basisOf(rule)), rule.level ? el("span", {
 					className: "sub",
 					textContent: "needed for " + rule.level
@@ -5100,8 +5144,12 @@
 					textContent: "Further up: " + plural(later.length, "more rule") + " needed for " + further.join(" and ") + ". Open one for its fix and evidence."
 				}), ...later);
 			}
+			var withheld = unrunIn(sc, score).length > 0;
 			if (npass) {
-				wrap.append(el("div", {
+				wrap.append(withheld ? el("div", {
+					className: "later-h",
+					textContent: "Rules that ran. These are not a medal."
+				}) : el("div", {
 					className: "sub",
 					style: "margin-top:10px",
 					textContent: plural(npass, "check passes", "checks pass")
@@ -5111,7 +5159,10 @@
 					var all = Object.keys(sc.rules || {}).filter(function(n) {
 						return (sc.rules[n].level || "") === lv && score.rules[n] !== "skipped";
 					}).length;
-					wrap.append(el("div", { className: "passes" }, lv ? badge(lv) : null, el("em", { textContent: passed[lv].length === all ? "all " + all + " met" : passed[lv].length + " of " + all }), ...passed[lv]));
+					wrap.append(el("div", { className: "passes" }, withheld ? el("span", {
+						className: "sub",
+						textContent: (lv ? levelName(lv) : "Other") + " rules that ran"
+					}) : lv ? badge(lv) : null, el("em", { textContent: passed[lv].length === all ? "all " + all + " met" : passed[lv].length + " of " + all }), ...passed[lv]));
 				});
 			}
 			return wrap;
@@ -5290,15 +5341,25 @@
 					var failed = Object.keys(score.rules || {}).filter(function(k) {
 						return score.rules[k] === "fail";
 					});
-					var failNote = failed.length ? " " + failed.map(function(k) {
-						return ruleTitleOf(sc, k);
-					}).join(" and ") + (failed.length === 1 ? " fails" : " fail") + " on evidence, under this scorecard." : "";
-					return el("span", { className: "held" }, mixed ? el("strong", { style: "color:var(--muted);text-transform:none" }, jumpTo(n), ": no medal") : jumpTo(n), mixed ? ". " : " is not established. ", unrunWords(sc, unrun), " This scorecard shows no medal." + failNote);
+					var failSentence = "";
+					if (failed.length) {
+						var levels = [];
+						failed.forEach(function(k) {
+							var lv = ((sc.rules || {})[k] || {}).level;
+							if (lv && levels.indexOf(lv) < 0) levels.push(lv);
+						});
+						var names = failed.map(function(k) {
+							return ruleTitleOf(sc, k);
+						});
+						failSentence = " " + (names.length === 1 ? names[0] : names.slice(0, -1).join(", ") + " and " + names[names.length - 1]) + (failed.length === 1 ? " fails" : " fail") + " on evidence. " + (levels.length === 1 ? "That blocks " + levelName(levels[0]) : "They block " + levels.join(" and ")) + ", not the medal.";
+					}
+					return el("span", { className: "held" }, mixed ? el("strong", { style: "color:var(--muted);text-transform:none" }, jumpTo(n), ": no medal") : jumpTo(n), mixed ? ". " : " is not established. ", unrunWords(sc, unrun), " This scorecard shows no medal until they run." + failSentence);
 				}
 				var hollow = unassessedIn(D, n, id);
 				var next = nextLevel(sc, score.level);
 				var need = next ? blockers(sc, score, next) : [];
-				var hold = need.length === 1 ? ". Held by " + ruleTitleOf(sc, need[0]) + (score.rules[need[0]] === "unknown" ? ", which was not run" : ", which fails") : need.length ? ". " + plural(need.length, "rule") + " short of " + levelName(next) : "";
+				var holdRule = need.length === 1 ? (sc.rules || {})[need[0]] || {} : null;
+				var hold = need.length === 1 ? ". Held by " + ruleTitleOf(sc, need[0]) + (score.rules[need[0]] === "unknown" ? ", which was not run" : noReviewYet(holdRule, evidenceItems(score, need[0])) ? ", which has no assessment yet" : ", which fails") : need.length ? ". " + plural(need.length, "rule") + " short of " + levelName(next) : "";
 				var rung = ownLevel(D, kind, score.level);
 				return el("span", { className: "held" }, mixed ? el("span", { className: "mini" }, hollow ? el("span", {
 					className: "medal-hollow",
@@ -5747,7 +5808,8 @@
 					style: "color:" + (unmeasured ? "var(--muted)" : standingColor(k))
 				}), el("span", { textContent: STANDING_MARK[k] + " " + k }), mixed ? el("small", {
 					className: "mixed",
-					textContent: mixed + " mixed"
+					title: "Mixed means ahead on some of this factor's rules and behind on others.",
+					textContent: mixed + " of these are mixed"
 				}) : null);
 			})), unmeasured ? null : el("div", {
 				className: "kicker",

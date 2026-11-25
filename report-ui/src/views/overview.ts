@@ -389,16 +389,32 @@ export const overviewViews = {
     var toGo = each.reduce(function (n, p) {
       return n + (p.met ? 0 : p.below);
     }, 0);
+    // A campaign with no shared scope still has a share. Draw that share like every other card,
+    // and keep "on target" for a card that has met the target.
+    var rated = each.reduce(function (n, p) {
+      return n + (p.known ? p.rated : 0);
+    }, 0);
+    var meeting = each.reduce(function (n, p) {
+      return n + (p.known ? p.rated - p.below : 0);
+    }, 0);
+    var drawn = state;
+    var drawnPct = pct;
+    var drawnEach = each;
+    if (state === "empty" && rated) {
+      drawnPct = Math.floor((100 * meeting) / rated);
+      drawn = drawnPct >= target ? "on" : "off";
+      drawnEach = [];
+    }
     var status =
-      state === "empty"
+      drawn === "empty"
         ? toGo
           ? el("span", { className: "pill bad", textContent: plural(toGo, "entity", "entities") + " to go" })
           : el("span", { className: "pill good", textContent: "on target" })
-        : state === "on"
+        : drawn === "on"
           ? el("span", { className: "pill good", textContent: "on target" })
-          : el("span", { className: "pill bad", textContent: plural((c.inScope || 0) - (c.meeting || 0), "entity", "entities") + " to go" });
+          : el("span", { className: "pill bad", textContent: plural(state === "empty" ? toGo : (c.inScope || 0) - (c.meeting || 0), "entity", "entities") + " to go" });
     var a = link("campaign/" + enc(name), "card", [
-      goalBar(state, pct, target, false, each),
+      goalBar(drawn, drawnPct, target, false, drawnEach),
       el(
         "div",
         {},

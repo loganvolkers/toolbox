@@ -16,6 +16,25 @@ import { rich } from "../lib/text";
 import { standingChip, unassessedIn } from "../lib/tracks";
 import { firstSentence, plural } from "../lib/words";
 
+function evidenceItems(score, name) {
+  var ev = (score.evidence || {})[name];
+  return ev == null ? [] : Array.isArray(ev) ? ev : [ev];
+}
+
+// A judged rule whose only evidence is that no assessment exists has not failed a review.
+function noReviewYet(rule, items) {
+  if (basisOf(rule) !== "judged" || !items.length) return false;
+  return items.every(function (s) {
+    var t = String(s).trim().toLowerCase();
+    return t.indexOf("not assessed") === 0 || t.indexOf("not reviewed") === 0 || t.indexOf("no current assessment") === 0 || t.indexOf("no current review") === 0;
+  });
+}
+
+function outcomeText(o, absent) {
+  if (o === "unknown" || (o === "fail" && absent)) return o === "unknown" ? "not run in this build" : "not assessed yet";
+  return o;
+}
+
 export const entityViews = {
   rulesFor(sc, score, scName, unjudged, id) {
     var wrap = el("div");
@@ -69,8 +88,9 @@ export const entityViews = {
         npass++;
         return;
       }
-      var ev = (score.evidence || {})[n];
-      var items = ev == null ? [] : Array.isArray(ev) ? ev : [ev];
+      var items = evidenceItems(score, n);
+      var absent = noReviewYet(rule, items);
+      var shown = outcomeText(o, absent);
       if (rule.level && order.indexOf(rule.level) > nextIdx) {
         laterLevels.add(rule.level);
         later.push(
@@ -81,7 +101,7 @@ export const entityViews = {
               "summary",
               {},
               el("span", { className: "rn", textContent: scName ? ruleTitle(scName, n) : n }),
-              el("span", { className: "outcome " + o, style: "margin:0", textContent: o === "unknown" ? "not run in this build" : o }),
+              el("span", { className: "outcome " + (shown === "not assessed yet" || o === "unknown" ? "unknown" : o), style: "margin:0", textContent: shown }),
               basisBadge(basisOf(rule), false, true),
               el("span", { className: "sub", textContent: "needed for " + rule.level }),
               rule.rationale ? el("span", { className: "rwhy", textContent: "Why: " + firstSentence(rule.rationale).replace(/`/g, "") }) : null,
@@ -107,7 +127,7 @@ export const entityViews = {
             { style: "display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center" },
             el("h4", { className: "rn" }, scName ? ruleLink(scName, n, null, true) : n),
               scName ? el("code", { className: "rid", textContent: n }) : null,
-            el("span", { className: "outcome " + o, style: "margin:0", textContent: o === "unknown" ? "not run in this build" : o }),
+            el("span", { className: "outcome " + (shown === "not assessed yet" || o === "unknown" ? "unknown" : o), style: "margin:0", textContent: shown }),
             basisBadge(basisOf(rule)),
             rule.level ? el("span", { className: "sub", textContent: "needed for " + rule.level }) : "",
           ),
@@ -127,8 +147,13 @@ export const entityViews = {
       });
       wrap.append(el("div", { className: "later-h", textContent: "Further up: " + plural(later.length, "more rule") + " needed for " + further.join(" and ") + ". Open one for its fix and evidence." }), ...later);
     }
+    var withheld = unrunIn(sc, score).length > 0;
     if (npass) {
-      wrap.append(el("div", { className: "sub", style: "margin-top:10px", textContent: plural(npass, "check passes", "checks pass") }));
+      wrap.append(
+        withheld
+          ? el("div", { className: "later-h", textContent: "Rules that ran. These are not a medal." })
+          : el("div", { className: "sub", style: "margin-top:10px", textContent: plural(npass, "check passes", "checks pass") }),
+      );
       order.concat([""]).forEach(function (lv) {
         if (!passed[lv]) return;
         var all = Object.keys(sc.rules || {}).filter(function (n) {
@@ -138,7 +163,7 @@ export const entityViews = {
           el(
             "div",
             { className: "passes" },
-            lv ? badge(lv) : null,
+            withheld ? el("span", { className: "sub", textContent: (lv ? levelName(lv) : "Other") + " rules that ran" }) : lv ? badge(lv) : null,
             el("em", { textContent: passed[lv].length === all ? "all " + all + " met" : passed[lv].length + " of " + all }),
             ...passed[lv],
           ),
@@ -326,22 +351,35 @@ export const entityViews = {
         var failed = Object.keys(score.rules || {}).filter(function (k) {
           return score.rules[k] === "fail";
         });
-        var failNote = failed.length ? " " + failed.map(function (k) { return ruleTitleOf(sc, k); }).join(" and ") + (failed.length === 1 ? " fails" : " fail") + " on evidence, under this scorecard." : "";
+        var failSentence = "";
+        if (failed.length) {
+          var levels: string[] = [];
+          failed.forEach(function (k) {
+            var lv = ((sc.rules || {})[k] || {}).level;
+            if (lv && levels.indexOf(lv) < 0) levels.push(lv);
+          });
+          var names = failed.map(function (k) {
+            return ruleTitleOf(sc, k);
+          });
+          var named = names.length === 1 ? names[0] : names.slice(0, -1).join(", ") + " and " + names[names.length - 1];
+          failSentence = " " + named + (failed.length === 1 ? " fails" : " fail") + " on evidence. " + (levels.length === 1 ? "That blocks " + levelName(levels[0]) : "They block " + levels.join(" and ")) + ", not the medal.";
+        }
         return el(
           "span",
           { className: "held" },
           mixed ? el("strong", { style: "color:var(--muted);text-transform:none" }, jumpTo(n), ": no medal") : jumpTo(n),
           mixed ? ". " : " is not established. ",
           unrunWords(sc, unrun),
-          " This scorecard shows no medal." + failNote,
+          " This scorecard shows no medal until they run." + failSentence,
         );
       }
       var hollow = unassessedIn(D, n, id);
       var next = nextLevel(sc, score.level);
       var need = next ? blockers(sc, score, next) : [];
+      var holdRule = need.length === 1 ? (sc.rules || {})[need[0]] || {} : null;
       var hold =
         need.length === 1
-          ? ". Held by " + ruleTitleOf(sc, need[0]) + (score.rules[need[0]] === "unknown" ? ", which was not run" : ", which fails")
+          ? ". Held by " + ruleTitleOf(sc, need[0]) + (score.rules[need[0]] === "unknown" ? ", which was not run" : noReviewYet(holdRule, evidenceItems(score, need[0])) ? ", which has no assessment yet" : ", which fails")
           : need.length
             ? ". " + plural(need.length, "rule") + " short of " + levelName(next)
             : "";

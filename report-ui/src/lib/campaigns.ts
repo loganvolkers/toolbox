@@ -302,12 +302,12 @@ export function goalBar(state, pct, target, big, each?) {
   var g = el(
     "div",
     { className: "cprog" + (big ? " big" : "") + (state === "on" || (empty && parts && met === parts) ? " on" : "") },
-    el("b", { textContent: empty ? (parts ? met + " of " + parts : "—") : pct + "%" }),
+    el("b", { textContent: empty ? (parts ? met + " of " + parts + (big ? " scorecards" : "") : "—") : pct + "%" }),
     empty ? null : el("div", { className: "gb" }, el("span", { style: "width:" + Math.max(0, Math.min(100, pct)) + "%" }), el("i", { style: "left:calc(" + target + "% - 1px)" })),
-    el("small", { textContent: empty ? (parts ? (big ? "scorecards at target " + target + "%" : "at target") : "no single score") : "target " + target + "%" }),
+    el("small", { textContent: empty ? (parts ? (met === parts ? "at target" : "target " + target + "%") : "no single score") : "target " + target + "%" }),
   );
   g.setAttribute("role", "img");
-  g.setAttribute("aria-label", empty ? (parts ? met + " of " + plural(parts, "scorecard") + " at the target of " + target + "%, each scored on its own" : "no single score") : pct + "% of entities meet the goal; target " + target + "%");
+  g.setAttribute("aria-label", empty ? (parts ? met + " of " + plural(parts, "scorecard") + (met === parts ? " at the target of " : " toward the target of ") + target + "%, each scored on its own" : "no single score") : pct + "% of entities meet the goal; target " + target + "%");
   return g;
 }
 

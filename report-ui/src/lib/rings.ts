@@ -90,9 +90,28 @@ export function tallyRing(v, n, size, bare?) {
   );
 }
 
-// The strict count says what it measures, so a factor three rules ahead and one behind is not called "behind".
+function factorWord(n) {
+  return n === 1 ? "factor" : "factors";
+}
+
+// The strict count is worded as factors, not as another "ahead on N", so it cannot be read as the verdict digits.
 export function countWords(c, key?: "strict" | "majority") {
-  if (key === "strict") return ["ahead with no rule behind on " + c.ahead, c.parity ? "at parity on " + c.parity : null, "with a rule behind on " + c.behind, c.unknown ? "not measured on " + c.unknown : null].filter(Boolean).join(", ");
+  if (key === "strict") {
+    var has = function (n) {
+      return n === 1 ? "has" : "have";
+    };
+    var is = function (n) {
+      return n === 1 ? "is" : "are";
+    };
+    return [
+      c.ahead + " " + factorWord(c.ahead) + " " + has(c.ahead) + " no rule behind",
+      c.parity ? c.parity + " " + factorWord(c.parity) + " " + is(c.parity) + " at parity" : null,
+      c.behind + " " + factorWord(c.behind) + " " + has(c.behind) + " at least one rule behind",
+      c.unknown ? c.unknown + " " + factorWord(c.unknown) + " " + is(c.unknown) + " not measured" : null,
+    ]
+      .filter(Boolean)
+      .join(". ");
+  }
   return ["ahead on " + c.ahead, c.parity ? "at parity on " + c.parity : null, "behind on " + c.behind, c.unknown ? "not measured on " + c.unknown : null].filter(Boolean).join(", ");
 }
 
@@ -113,8 +132,12 @@ export function tallyWords(v, n) {
   if (!b || v.majority == null) return countWords(v) + " of " + n + " factors";
   var mineKey: "strict" | "majority" = v.majority ? "majority" : "strict";
   var otherKey: "strict" | "majority" = v.majority ? "strict" : "majority";
-  if (sameCount(b.strict, b.majority)) return countWords(v) + " of " + n + " factors, by the " + mineKey + " count, this comparison's verdict. The " + otherKey + " count agrees.";
-  return countWords(b[mineKey], mineKey) + " of " + n + " factors by the " + mineKey + " count, this comparison's verdict; by the " + otherKey + " count, " + countWords(b[otherKey], otherKey);
+  var clause = function (key: "strict" | "majority") {
+    return key === "strict" ? countWords(b[key], key) : countWords(b[key], key) + " of " + n + " factors";
+  };
+  if (sameCount(b.strict, b.majority)) return clause(mineKey) + ", by the " + mineKey + " count, this comparison's verdict. The " + otherKey + " count agrees.";
+  if (mineKey === "strict") return clause("strict") + ". The strict count is this comparison's verdict. By the majority count, " + clause("majority") + ".";
+  return clause("majority") + " by the majority count, this comparison's verdict. By the strict count, " + clause("strict") + ".";
 }
 
 // The factor count in a few words, for strips and cards.

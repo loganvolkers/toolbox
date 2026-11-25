@@ -421,6 +421,23 @@ T6 partial, so tasks succeeded 14 of 18. The round did not pass:
 | The same tally is "by the majority count" on OpenFGA and "by the strict count" on Toolbox, inside the same blocks (A) | The factor tally carries one label, "Verdict: majority count" or "Verdict: strict count" |
 | The Next box names the OpenSSF checks, then repeats why the track is first. The scorecards list leads with CI reliability, which adds no points (B) | The Next box ends on the point gain and one clause: CI reliability is the lowest level and does not move the track until those entities reach the top. That scorecard's row says the same |
 
+## Round 16: what the panel found
+
+The same model as rounds 10 to 15, Grok 4.7, scored this round, still blind to the source, the diff
+and each other. The probes passed 212 of 212. Usability rose from 29 to 30 of 40, because honest
+states rose from 2 to 3. Judgement held at 11 of 16. No median fell. Every task succeeded, 18 of 18.
+The round did not pass, because five severity-3 findings were open:
+
+| Finding (auditors) | Fix |
+|---|---|
+| `toolbox-cli`: "Held by Assessed, which fails" while Assessed's evidence is "not assessed against crate-design" (A, C) | A judged failure whose evidence is that no assessment exists reads "not assessed yet", and the summary says "which has no assessment yet" |
+| Rust crates says "no medal", then the chip row says "silver · all met", and the summary lists gold failures in the same breath as the missing medal (A, B, C) | The summary names Clippy clean and Tests pass as why there is no medal, then says the gold failures block gold, not the medal. Passed rules sit under "Rules that ran. These are not a medal." |
+| "Strict count: ahead with no rule behind on 2, with a rule behind on 4" sits beside the majority verdict's 4, 1 and 1 (A, C) | The strict count is "2 factors have no rule behind. 4 factors have at least one rule behind." The majority sentence stays the verdict |
+| "Close the open review findings" shows "0 of 2" captioned "at target" and a pill "14 entities to go" (B) | That card uses the same share and "target 100%" as the other campaigns. "On target" stays on the green pill, and only when the card has met the target |
+| The compare tally prints "2 mixed" under the 4, and the definition of mixed is inside a collapsed disclosure (C) | The note reads "2 of these are mixed", with the definition on the note itself |
+
+A duplicate panel was started while these three had not yet written files. It is not the verdict.
+
 ## Comparisons are generic
 
 The OpenFGA portal compares OpenFGA v1.23.0 with SpiceDB v1.57.1 through the same comparative
