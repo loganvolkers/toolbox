@@ -88,6 +88,9 @@ Adopted as [D01M87PSM9YQGGW3YQ5X4XCJP63](../decisions/D01M87PSM9YQGGW3YQ5X4XCJP6
 1. **Modules, not a framework switch.** Split the report into ES modules under `report-ui/`, with
    one module per view and per shared component. esbuild bundles them into the committed
    `toolbox-report.js`, so the binary still embeds one file, and CI fails when the bundle is stale.
+   The modules later moved to TypeScript bundled by Vite, on the same pins as `ui/`
+   ([D01M880QMWD7Z7FTGKJT99AHWBX](../decisions/D01M880QMWD7Z7FTGKJT99AHWBX.md)); the embedded
+   file and the freshness check are unchanged.
 2. **Stories over fixtures.** Write Storybook 10 stories for every page and shared component, over
    committed report fixtures: Toolbox's own portal, the OpenFGA portal, and states the two lack
    (a comparison not measured yet, a portal with no data).
