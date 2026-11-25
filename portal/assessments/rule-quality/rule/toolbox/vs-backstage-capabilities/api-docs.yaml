@@ -11,12 +11,14 @@ verdicts:
       "Render an API's OpenAPI or AsyncAPI definition"
       (backstage-comparison.yaml:150) is the brief's "OpenAPI render" scenario
       (RESEARCH.md:118); Backstage meets it with plugin-api-docs
-      (facts.yaml:175) and Toolbox records "no OpenAPI or AsyncAPI rendering"
-      (facts.yaml:87).
+      (experiments/backstage-compare/facts.yaml:175) and Toolbox records "no
+      OpenAPI or AsyncAPI rendering"
+      (experiments/backstage-compare/facts.yaml:87).
   - criterion: hard-to-game
     verdict: fail
     reason: >-
-      `capApiDocs` is an assertion on facts.yaml:87 that snapshot.py:85 merges
+      `capApiDocs` is an assertion on
+      experiments/backstage-compare/facts.yaml:87 that snapshot.py:85 merges
       unchecked; the harness never registers an API entity or asks either
       product to render one.
     suggestion: >-
@@ -33,8 +35,8 @@ verdicts:
     suggestion: >-
       Spell out the chain: "Ingest the definition as a field of the API kind
       (git-files connector), render it on the entity page through a UI
-      extension once v1-spec §7.6 lands, then update facts.yaml and rerun
-      snapshot.py."
+      extension once v1-spec §7.6 lands, then update
+      experiments/backstage-compare/facts.yaml and rerun snapshot.py."
   - criterion: threshold-justified
     verdict: pass
     reason: >-

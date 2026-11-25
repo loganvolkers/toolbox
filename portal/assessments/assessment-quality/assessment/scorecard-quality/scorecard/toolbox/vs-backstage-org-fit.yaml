@@ -16,11 +16,12 @@ verdicts:
       many portals joined". F12 at docs/design/backstage-comparison.md:57 and
       RESEARCH.md:68 measure repo scope as services, CI time and secrets, and
       federation as propagation, staleness and skew. The scorecard's checks
-      are the two booleans. facts.yaml:48-54 sets repoScopedWithoutServer true
-      and federates false, and neither fix names that file. The federation fix
-      (backstage-comparison.yaml:784) is the one sentence "Build federation as
-      its design describes". docs/design/federation.md is 201 lines, its
-      banner says only actions up and runs down are built, and D68
+      are the two booleans. experiments/backstage-compare/facts.yaml:48-54
+      sets repoScopedWithoutServer true and federates false, and neither fix
+      names that file. The federation fix (backstage-comparison.yaml:784) is
+      the one sentence "Build federation as its design describes".
+      docs/design/federation.md is 201 lines, its banner says only actions up
+      and runs down are built, and D68
       (docs/decisions/D01M7VWS4ZJ0000000000000000.md:9) says no implementation
       until repo portals are used by a few teams. portal/results.json has
       product:toolbox at none, failing federation. The CI citation does not.
@@ -50,9 +51,9 @@ verdicts:
       Moving federation above bronze would let repo scope carry bronze, which
       is the ladder fail. Adding the F12 measures and a shared-standards rule
       would be the gap the no-obvious-gap reason names. Naming the flow, the
-      design section and facts.yaml in the federation fix would give the
-      actionable fail a place to edit. Each suggestion is attached to its
-      fail.
+      design section and experiments/backstage-compare/facts.yaml in the
+      federation fix would give the actionable fail a place to edit. Each
+      suggestion is attached to its fail.
 summary: >-
   The broken ladder, the boolean reduction of F12 and the one-line
   federation fix all match the files, and Toolbox is at none on the card.

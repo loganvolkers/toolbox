@@ -14,7 +14,7 @@ verdicts:
       - backstage-comparison.yaml:158 is the field, and RESEARCH.md:123 is
         "MCP read tool".
       - results/r3 records 13 and 9 read-only tools.
-      - facts.yaml:93 and 181 are the facts.
+      - experiments/backstage-compare/facts.yaml:93 and 181 are the facts.
       - surface.py:186-187 computes `mcpReadOnlyTools`, and
         snapshot.py:29-30 leaves it out of SURFACE.
       - builtin_tools() is mcp.rs:20-98.
@@ -23,8 +23,9 @@ verdicts:
     verdict: pass
     reason: >-
       hard-to-game fails correctly. The pipeline measures `mcpReadOnlyTools`
-      and then drops it, so the boolean in facts.yaml:93 decides. The other
-      verdicts match the sources. No failure the sources show is missed.
+      and then drops it, so the boolean in
+      experiments/backstage-compare/facts.yaml:93 decides. The other verdicts
+      match the sources. No failure the sources show is missed.
   - criterion: reproducible
     verdict: unsure
     reason: >-

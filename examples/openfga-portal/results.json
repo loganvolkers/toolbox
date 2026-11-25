@@ -1,0 +1,1145 @@
+{
+  "campaigns": {
+    "go-file-size-zero": {
+      "inScope": 286,
+      "measure": 11220,
+      "recorded": "2026-11-25",
+      "short": 21,
+      "start": null
+    },
+    "go-panics-zero": {
+      "inScope": 286,
+      "measure": 50,
+      "recorded": "2026-11-25",
+      "short": 23,
+      "start": null
+    },
+    "go-staticcheck-zero": {
+      "inScope": 493,
+      "measure": 9,
+      "recorded": "2026-11-25",
+      "short": 7,
+      "start": null
+    },
+    "openfga-openssf-ten": {
+      "inScope": 11,
+      "measure": 2,
+      "recorded": "2026-11-25",
+      "short": 2,
+      "start": null
+    }
+  },
+  "evidence": {
+    "action-deps": {
+      "action:auth0/auth0-ai-pr-analyzer-gh-action": {
+        "pinned-everywhere": [
+          "b53b0f82"
+        ]
+      },
+      "action:slsa-framework/slsa-github-generator": {
+        "pinned-everywhere": [
+          "5497d499",
+          "7727cba5"
+        ]
+      }
+    },
+    "ci-reliability": {
+      "workflow:.github/workflows/codeql.yml": {
+        "every-job-has-timeout": [
+          "8c7100d3"
+        ]
+      },
+      "workflow:.github/workflows/create-helm-release-pr.yaml": {
+        "every-job-has-timeout": [
+          "6d47ea69"
+        ]
+      },
+      "workflow:.github/workflows/create-release-tag.yaml": {
+        "every-job-has-timeout": [
+          "3c5e9e70"
+        ]
+      },
+      "workflow:.github/workflows/enforce-changelog-entry.yaml": {
+        "every-job-has-timeout": [
+          "920f75d9"
+        ]
+      },
+      "workflow:.github/workflows/main.yaml": {
+        "every-job-has-timeout": [
+          "5b22cf22"
+        ]
+      },
+      "workflow:.github/workflows/markdown-links.yaml": {
+        "every-job-has-timeout": [
+          "43d9b0de"
+        ]
+      },
+      "workflow:.github/workflows/pull_request.yaml": {
+        "every-job-has-timeout": [
+          "06dafb64",
+          "0dccdd73",
+          "5b22cf22"
+        ]
+      },
+      "workflow:.github/workflows/release-nightly.yaml": {
+        "every-job-has-timeout": [
+          "076df3fe"
+        ]
+      },
+      "workflow:.github/workflows/release.yaml": {
+        "every-job-has-timeout": [
+          "076df3fe",
+          "47d618cc",
+          "614b4aff",
+          "80b03144"
+        ],
+        "failures-visible": [
+          "1f3b666e",
+          "ceace9f0"
+        ]
+      },
+      "workflow:.github/workflows/scorecard.yml": {
+        "every-job-has-timeout": [
+          "bc250623"
+        ]
+      }
+    },
+    "ci-security": {
+      "workflow:.github/workflows/claude-code-review.yaml": {
+        "no-high-findings": [
+          "463c3e60"
+        ],
+        "no-write-tokens-on-risky-triggers": [
+          "a0fcdf0a",
+          "f3dee83a"
+        ],
+        "pinned-to-sha": [
+          "aaf1966e"
+        ],
+        "zizmor-clean": [
+          "463c3e60"
+        ]
+      },
+      "workflow:.github/workflows/codeql.yml": {
+        "no-medium-findings": [
+          "7e61491c"
+        ],
+        "zizmor-clean": [
+          "7e61491c",
+          "d507151f"
+        ]
+      },
+      "workflow:.github/workflows/create-helm-release-pr.yaml": {
+        "no-high-findings": [
+          "07b04707",
+          "d9aba137"
+        ],
+        "no-medium-findings": [
+          "7e61491c",
+          "7e61491c"
+        ],
+        "zizmor-clean": [
+          "07b04707",
+          "7e61491c",
+          "7e61491c",
+          "d9aba137"
+        ]
+      },
+      "workflow:.github/workflows/create-release-tag.yaml": {
+        "no-high-findings": [
+          "07b04707",
+          "07b04707"
+        ],
+        "no-medium-findings": [
+          "7e61491c"
+        ],
+        "zizmor-clean": [
+          "07b04707",
+          "07b04707",
+          "7e61491c"
+        ]
+      },
+      "workflow:.github/workflows/enforce-changelog-entry.yaml": {
+        "no-medium-findings": [
+          "7e61491c"
+        ],
+        "zizmor-clean": [
+          "7e61491c"
+        ]
+      },
+      "workflow:.github/workflows/main.yaml": {
+        "no-medium-findings": [
+          "7e61491c",
+          "7e61491c",
+          "7e61491c",
+          "7e61491c"
+        ],
+        "zizmor-clean": [
+          "7e61491c",
+          "7e61491c",
+          "7e61491c",
+          "7e61491c"
+        ]
+      },
+      "workflow:.github/workflows/markdown-links.yaml": {
+        "no-medium-findings": [
+          "7e61491c"
+        ],
+        "zizmor-clean": [
+          "7e61491c"
+        ]
+      },
+      "workflow:.github/workflows/pull_request.yaml": {
+        "no-high-findings": [
+          "b7d54652"
+        ],
+        "no-medium-findings": [
+          "7e61491c",
+          "7e61491c",
+          "7e61491c",
+          "7e61491c",
+          "7e61491c",
+          "7e61491c",
+          "7e61491c",
+          "7e61491c"
+        ],
+        "zizmor-clean": [
+          "4b088cf6",
+          "4b088cf6",
+          "7e61491c",
+          "7e61491c",
+          "7e61491c",
+          "7e61491c",
+          "7e61491c",
+          "7e61491c",
+          "7e61491c",
+          "7e61491c",
+          "b7d54652"
+        ]
+      },
+      "workflow:.github/workflows/release-nightly.yaml": {
+        "no-high-findings": [
+          "b7d54652"
+        ],
+        "no-medium-findings": [
+          "7e61491c"
+        ],
+        "zizmor-clean": [
+          "7e61491c",
+          "b7d54652"
+        ]
+      },
+      "workflow:.github/workflows/release.yaml": {
+        "no-high-findings": [
+          "b7d54652"
+        ],
+        "no-medium-findings": [
+          "7e61491c",
+          "7e61491c",
+          "ccafa1f5",
+          "ccafa1f5"
+        ],
+        "pinned-to-sha": [
+          "30c1831a",
+          "6d24850c"
+        ],
+        "zizmor-clean": [
+          "7e61491c",
+          "7e61491c",
+          "b7d54652",
+          "ccafa1f5",
+          "ccafa1f5"
+        ]
+      }
+    },
+    "ci-speed": {
+      "workflow:.github/workflows/create-helm-release-pr.yaml": {
+        "cancels-superseded-runs": [
+          "12d08aa6"
+        ]
+      },
+      "workflow:.github/workflows/create-release-tag.yaml": {
+        "cancels-superseded-runs": [
+          "12d08aa6"
+        ]
+      }
+    },
+    "vs-spicedb-modelling": {
+      "product:openfga": {
+        "consistency-tokens": [
+          "46877f44"
+        ]
+      }
+    },
+    "vs-spicedb-operability": {
+      "product:openfga": {
+        "datastores": [
+          "5ecf33f9"
+        ]
+      }
+    },
+    "vs-spicedb-performance": {
+      "product:openfga": {
+        "check-latency": [
+          "7b942df1"
+        ],
+        "check-throughput": [
+          "0db745e0"
+        ]
+      }
+    }
+  },
+  "format": "toolbox-report/v1",
+  "portal": "openfga",
+  "results": {
+    "action-deps": {
+      "action:actions/cache": {
+        "level": "bronze"
+      },
+      "action:actions/checkout": {
+        "level": "bronze"
+      },
+      "action:actions/create-github-app-token": {
+        "level": "bronze"
+      },
+      "action:actions/download-artifact": {
+        "level": "bronze"
+      },
+      "action:actions/setup-go": {
+        "level": "bronze"
+      },
+      "action:actions/setup-node": {
+        "level": "bronze"
+      },
+      "action:actions/upload-artifact": {
+        "level": "bronze"
+      },
+      "action:anchore/sbom-action": {
+        "level": "bronze"
+      },
+      "action:auth0/auth0-ai-pr-analyzer-gh-action": {
+        "failing": {
+          "pinned-everywhere": 1
+        },
+        "level": "none"
+      },
+      "action:benchmark-action/github-action-benchmark": {
+        "level": "bronze"
+      },
+      "action:codecov/codecov-action": {
+        "level": "bronze"
+      },
+      "action:dangoslen/changelog-enforcer": {
+        "level": "bronze"
+      },
+      "action:docker/build-push-action": {
+        "level": "bronze"
+      },
+      "action:docker/login-action": {
+        "level": "bronze"
+      },
+      "action:docker/setup-buildx-action": {
+        "level": "bronze"
+      },
+      "action:dorny/paths-filter": {
+        "level": "bronze"
+      },
+      "action:gaurav-nelson/github-action-markdown-link-check": {
+        "level": "bronze"
+      },
+      "action:github/codeql-action": {
+        "level": "bronze"
+      },
+      "action:golang/govulncheck-action": {
+        "level": "bronze"
+      },
+      "action:golangci/golangci-lint-action": {
+        "level": "bronze"
+      },
+      "action:goreleaser/goreleaser-action": {
+        "level": "bronze"
+      },
+      "action:kenchan0130/actions-system-info": {
+        "level": "bronze"
+      },
+      "action:openfga/.github": {
+        "level": "bronze"
+      },
+      "action:ossf/scorecard-action": {
+        "level": "bronze"
+      },
+      "action:peter-evans/dockerhub-description": {
+        "level": "bronze"
+      },
+      "action:sigstore/cosign-installer": {
+        "level": "bronze"
+      },
+      "action:slsa-framework/slsa-github-generator": {
+        "failing": {
+          "pinned-everywhere": 2
+        },
+        "level": "none"
+      },
+      "action:slsa-framework/slsa-verifier": {
+        "level": "bronze"
+      },
+      "action:snyk/actions": {
+        "level": "bronze"
+      }
+    },
+    "ci-reliability": {
+      "workflow:.github/workflows/claude-code-review.yaml": {
+        "level": "bronze",
+        "unknown": [
+          "fail-rate-under-10",
+          "fail-rate-under-20",
+          "fail-rate-under-5",
+          "main-not-stuck-red",
+          "still-running"
+        ]
+      },
+      "workflow:.github/workflows/codeql.yml": {
+        "failing": {
+          "every-job-has-timeout": 1
+        },
+        "level": "none",
+        "unknown": [
+          "fail-rate-under-10",
+          "fail-rate-under-20",
+          "fail-rate-under-5",
+          "main-not-stuck-red",
+          "still-running"
+        ]
+      },
+      "workflow:.github/workflows/create-helm-release-pr.yaml": {
+        "failing": {
+          "every-job-has-timeout": 1
+        },
+        "level": "none",
+        "unknown": [
+          "fail-rate-under-10",
+          "fail-rate-under-20",
+          "fail-rate-under-5",
+          "main-not-stuck-red",
+          "still-running"
+        ]
+      },
+      "workflow:.github/workflows/create-release-tag.yaml": {
+        "failing": {
+          "every-job-has-timeout": 1
+        },
+        "level": "none",
+        "unknown": [
+          "fail-rate-under-10",
+          "fail-rate-under-20",
+          "fail-rate-under-5",
+          "main-not-stuck-red",
+          "still-running"
+        ]
+      },
+      "workflow:.github/workflows/enforce-changelog-entry.yaml": {
+        "failing": {
+          "every-job-has-timeout": 1
+        },
+        "level": "none",
+        "unknown": [
+          "fail-rate-under-10",
+          "fail-rate-under-20",
+          "fail-rate-under-5",
+          "main-not-stuck-red",
+          "still-running"
+        ]
+      },
+      "workflow:.github/workflows/main.yaml": {
+        "failing": {
+          "every-job-has-timeout": 1
+        },
+        "level": "none",
+        "unknown": [
+          "fail-rate-under-10",
+          "fail-rate-under-20",
+          "fail-rate-under-5",
+          "main-not-stuck-red",
+          "still-running"
+        ]
+      },
+      "workflow:.github/workflows/markdown-links.yaml": {
+        "failing": {
+          "every-job-has-timeout": 1
+        },
+        "level": "none",
+        "unknown": [
+          "fail-rate-under-10",
+          "fail-rate-under-20",
+          "fail-rate-under-5",
+          "main-not-stuck-red",
+          "still-running"
+        ]
+      },
+      "workflow:.github/workflows/pull_request.yaml": {
+        "failing": {
+          "every-job-has-timeout": 3
+        },
+        "level": "none",
+        "unknown": [
+          "fail-rate-under-10",
+          "fail-rate-under-20",
+          "fail-rate-under-5",
+          "main-not-stuck-red",
+          "still-running"
+        ]
+      },
+      "workflow:.github/workflows/release-nightly.yaml": {
+        "failing": {
+          "every-job-has-timeout": 1
+        },
+        "level": "none",
+        "unknown": [
+          "fail-rate-under-10",
+          "fail-rate-under-20",
+          "fail-rate-under-5",
+          "main-not-stuck-red",
+          "still-running"
+        ]
+      },
+      "workflow:.github/workflows/release.yaml": {
+        "failing": {
+          "every-job-has-timeout": 4,
+          "failures-visible": 2
+        },
+        "level": "none",
+        "unknown": [
+          "fail-rate-under-10",
+          "fail-rate-under-20",
+          "fail-rate-under-5",
+          "main-not-stuck-red",
+          "still-running"
+        ]
+      },
+      "workflow:.github/workflows/scorecard.yml": {
+        "failing": {
+          "every-job-has-timeout": 1
+        },
+        "level": "none",
+        "unknown": [
+          "fail-rate-under-10",
+          "fail-rate-under-20",
+          "fail-rate-under-5",
+          "main-not-stuck-red",
+          "still-running"
+        ]
+      }
+    },
+    "ci-security": {
+      "workflow:.github/workflows/claude-code-review.yaml": {
+        "failing": {
+          "no-high-findings": 1,
+          "no-write-tokens-on-risky-triggers": 2,
+          "pinned-to-sha": 1,
+          "zizmor-clean": 1
+        },
+        "level": "none"
+      },
+      "workflow:.github/workflows/codeql.yml": {
+        "failing": {
+          "no-medium-findings": 1,
+          "zizmor-clean": 2
+        },
+        "level": "bronze"
+      },
+      "workflow:.github/workflows/create-helm-release-pr.yaml": {
+        "failing": {
+          "no-high-findings": 2,
+          "no-medium-findings": 2,
+          "zizmor-clean": 4
+        },
+        "level": "none"
+      },
+      "workflow:.github/workflows/create-release-tag.yaml": {
+        "failing": {
+          "no-high-findings": 2,
+          "no-medium-findings": 1,
+          "zizmor-clean": 3
+        },
+        "level": "none"
+      },
+      "workflow:.github/workflows/enforce-changelog-entry.yaml": {
+        "failing": {
+          "no-medium-findings": 1,
+          "zizmor-clean": 1
+        },
+        "level": "bronze"
+      },
+      "workflow:.github/workflows/main.yaml": {
+        "failing": {
+          "no-medium-findings": 4,
+          "zizmor-clean": 4
+        },
+        "level": "bronze"
+      },
+      "workflow:.github/workflows/markdown-links.yaml": {
+        "failing": {
+          "no-medium-findings": 1,
+          "zizmor-clean": 1
+        },
+        "level": "bronze"
+      },
+      "workflow:.github/workflows/pull_request.yaml": {
+        "failing": {
+          "no-high-findings": 1,
+          "no-medium-findings": 8,
+          "zizmor-clean": 11
+        },
+        "level": "none"
+      },
+      "workflow:.github/workflows/release-nightly.yaml": {
+        "failing": {
+          "no-high-findings": 1,
+          "no-medium-findings": 1,
+          "zizmor-clean": 2
+        },
+        "level": "none"
+      },
+      "workflow:.github/workflows/release.yaml": {
+        "failing": {
+          "no-high-findings": 1,
+          "no-medium-findings": 4,
+          "pinned-to-sha": 2,
+          "zizmor-clean": 5
+        },
+        "level": "none"
+      },
+      "workflow:.github/workflows/scorecard.yml": {
+        "level": "gold"
+      }
+    },
+    "ci-speed": {
+      "workflow:.github/workflows/claude-code-review.yaml": {
+        "level": "bronze",
+        "unknown": [
+          "fast-feedback"
+        ]
+      },
+      "workflow:.github/workflows/codeql.yml": {
+        "level": "bronze",
+        "unknown": [
+          "fast-feedback"
+        ]
+      },
+      "workflow:.github/workflows/create-helm-release-pr.yaml": {
+        "failing": {
+          "cancels-superseded-runs": 1
+        },
+        "level": "none",
+        "unknown": [
+          "fast-feedback"
+        ]
+      },
+      "workflow:.github/workflows/create-release-tag.yaml": {
+        "failing": {
+          "cancels-superseded-runs": 1
+        },
+        "level": "none",
+        "unknown": [
+          "fast-feedback"
+        ]
+      },
+      "workflow:.github/workflows/enforce-changelog-entry.yaml": {
+        "level": "bronze",
+        "unknown": [
+          "fast-feedback"
+        ]
+      },
+      "workflow:.github/workflows/main.yaml": {
+        "level": "bronze",
+        "unknown": [
+          "fast-feedback"
+        ]
+      },
+      "workflow:.github/workflows/markdown-links.yaml": {
+        "level": "bronze",
+        "unknown": [
+          "fast-feedback"
+        ]
+      },
+      "workflow:.github/workflows/pull_request.yaml": {
+        "level": "bronze",
+        "unknown": [
+          "fast-feedback"
+        ]
+      },
+      "workflow:.github/workflows/release-nightly.yaml": {
+        "level": "bronze",
+        "unknown": [
+          "fast-feedback"
+        ]
+      },
+      "workflow:.github/workflows/release.yaml": {
+        "level": "bronze",
+        "unknown": [
+          "fast-feedback"
+        ]
+      },
+      "workflow:.github/workflows/scorecard.yml": {
+        "level": "bronze",
+        "unknown": [
+          "fast-feedback"
+        ]
+      }
+    },
+    "docs": {
+      "doc:AGENTS.md": {
+        "level": "bronze"
+      },
+      "doc:CHANGELOG.md": {
+        "level": "bronze"
+      },
+      "doc:CLAUDE.md": {
+        "level": "bronze"
+      },
+      "doc:CONTRIBUTING.md": {
+        "level": "bronze"
+      },
+      "doc:README.md": {
+        "level": "bronze"
+      },
+      "doc:RELEASES.md": {
+        "level": "bronze"
+      },
+      "doc:SECURITY.md": {
+        "level": "bronze"
+      },
+      "doc:docs/architecture/architecture.md": {
+        "level": "bronze"
+      },
+      "doc:docs/authzen/README.md": {
+        "level": "bronze"
+      },
+      "doc:docs/authzen/implementation.md": {
+        "level": "bronze"
+      },
+      "doc:docs/authzen/pdp-capabilities-registry.md": {
+        "level": "bronze"
+      },
+      "doc:docs/caching.md": {
+        "level": "bronze"
+      },
+      "doc:docs/check/README.md": {
+        "level": "bronze"
+      },
+      "doc:docs/dependencies-policy.md": {
+        "level": "bronze"
+      },
+      "doc:docs/http/README.md": {
+        "level": "bronze"
+      },
+      "doc:docs/list_objects/example/example.md": {
+        "level": "bronze"
+      },
+      "doc:docs/list_objects/example_with_intersection_or_exclusion/example.md": {
+        "level": "bronze"
+      },
+      "doc:docs/security-self-assessment.md": {
+        "level": "bronze"
+      }
+    },
+    "go-file-size": {
+      "go-file-size:cmd/run/run.go": {
+        "failing": {
+          "within-limit": 484
+        },
+        "level": "none"
+      },
+      "go-file-size:internal/check/check.go": {
+        "failing": {
+          "within-limit": 352
+        },
+        "level": "none"
+      },
+      "go-file-size:internal/graph/check.go": {
+        "failing": {
+          "within-limit": 313
+        },
+        "level": "none"
+      },
+      "go-file-size:pkg/server/commands/list_objects.go": {
+        "failing": {
+          "within-limit": 132
+        },
+        "level": "none"
+      },
+      "go-file-size:pkg/server/commands/listusers/list_users_rpc.go": {
+        "failing": {
+          "within-limit": 379
+        },
+        "level": "none"
+      },
+      "go-file-size:pkg/server/commands/reverseexpand/reverse_expand_weighted.go": {
+        "failing": {
+          "within-limit": 12
+        },
+        "level": "none"
+      },
+      "go-file-size:pkg/server/config/config.go": {
+        "failing": {
+          "within-limit": 208
+        },
+        "level": "none"
+      },
+      "go-file-size:pkg/server/server.go": {
+        "failing": {
+          "within-limit": 434
+        },
+        "level": "none"
+      },
+      "go-file-size:pkg/server/test/reverse_expand.go": {
+        "failing": {
+          "within-limit": 566
+        },
+        "level": "none"
+      },
+      "go-file-size:pkg/storage/memory/memory.go": {
+        "failing": {
+          "within-limit": 112
+        },
+        "level": "none"
+      },
+      "go-file-size:pkg/storage/mysql/mysql.go": {
+        "failing": {
+          "within-limit": 212
+        },
+        "level": "none"
+      },
+      "go-file-size:pkg/storage/postgres/postgres.go": {
+        "failing": {
+          "within-limit": 644
+        },
+        "level": "none"
+      },
+      "go-file-size:pkg/storage/sqlcommon/sqlcommon.go": {
+        "failing": {
+          "within-limit": 490
+        },
+        "level": "none"
+      },
+      "go-file-size:pkg/storage/sqlite/sqlite.go": {
+        "failing": {
+          "within-limit": 613
+        },
+        "level": "none"
+      },
+      "go-file-size:pkg/storage/test/tuples.go": {
+        "failing": {
+          "within-limit": 1829
+        },
+        "level": "none"
+      },
+      "go-file-size:pkg/typesystem/typesystem.go": {
+        "failing": {
+          "within-limit": 931
+        },
+        "level": "none"
+      },
+      "go-file-size:tests/check/check.go": {
+        "failing": {
+          "within-limit": 615
+        },
+        "level": "none"
+      },
+      "go-file-size:tests/check/check_ttu.go": {
+        "failing": {
+          "within-limit": 483
+        },
+        "level": "none"
+      },
+      "go-file-size:tests/check/check_userset.go": {
+        "failing": {
+          "within-limit": 1233
+        },
+        "level": "none"
+      },
+      "go-file-size:tests/check/complexity_three.go": {
+        "failing": {
+          "within-limit": 122
+        },
+        "level": "none"
+      },
+      "go-file-size:tests/listobjects/matrix_usersets.go": {
+        "failing": {
+          "within-limit": 1056
+        },
+        "level": "none"
+      }
+    },
+    "go-panics": {
+      "go-panics:cmd/run/run.go": {
+        "failing": {
+          "no-matches": 3
+        },
+        "level": "none"
+      },
+      "go-panics:cmd/util/util.go": {
+        "failing": {
+          "no-matches": 2
+        },
+        "level": "none"
+      },
+      "go-panics:internal/condition/condition.go": {
+        "failing": {
+          "no-matches": 1
+        },
+        "level": "none"
+      },
+      "go-panics:internal/containers/mpmc/queue.go": {
+        "failing": {
+          "no-matches": 1
+        },
+        "level": "none"
+      },
+      "go-panics:internal/graph/graph.go": {
+        "failing": {
+          "no-matches": 1
+        },
+        "level": "none"
+      },
+      "go-panics:internal/listobjects/pipeline/internal/worker/difference.go": {
+        "failing": {
+          "no-matches": 1
+        },
+        "level": "none"
+      },
+      "go-panics:internal/listobjects/pipeline/internal/worker/difference_direct_subtract.go": {
+        "failing": {
+          "no-matches": 1
+        },
+        "level": "none"
+      },
+      "go-panics:internal/listobjects/pipeline/pipeline.go": {
+        "failing": {
+          "no-matches": 2
+        },
+        "level": "none"
+      },
+      "go-panics:internal/telemetry/tracing.go": {
+        "failing": {
+          "no-matches": 3
+        },
+        "level": "none"
+      },
+      "go-panics:pkg/logger/logger.go": {
+        "failing": {
+          "no-matches": 1
+        },
+        "level": "none"
+      },
+      "go-panics:pkg/server/commands/listusers/list_users_rpc.go": {
+        "failing": {
+          "no-matches": 1
+        },
+        "level": "none"
+      },
+      "go-panics:pkg/server/commands/reverseexpand/reverse_expand.go": {
+        "failing": {
+          "no-matches": 3
+        },
+        "level": "none"
+      },
+      "go-panics:pkg/server/server.go": {
+        "failing": {
+          "no-matches": 1
+        },
+        "level": "none"
+      },
+      "go-panics:pkg/server/test/benchmarks/check.go": {
+        "failing": {
+          "no-matches": 2
+        },
+        "level": "none"
+      },
+      "go-panics:pkg/storage/adapter/query/query.go": {
+        "failing": {
+          "no-matches": 2
+        },
+        "level": "none"
+      },
+      "go-panics:pkg/storage/adapter/sqlite/mapping.go": {
+        "failing": {
+          "no-matches": 11
+        },
+        "level": "none"
+      },
+      "go-panics:pkg/storage/adapter/sqlite/renderer.go": {
+        "failing": {
+          "no-matches": 6
+        },
+        "level": "none"
+      },
+      "go-panics:pkg/storage/cache/keys/hash.go": {
+        "failing": {
+          "no-matches": 1
+        },
+        "level": "none"
+      },
+      "go-panics:pkg/storage/sqlcommon/sqlcommon.go": {
+        "failing": {
+          "no-matches": 1
+        },
+        "level": "none"
+      },
+      "go-panics:pkg/testutils/testutils.go": {
+        "failing": {
+          "no-matches": 1
+        },
+        "level": "none"
+      },
+      "go-panics:pkg/tuple/tuple.go": {
+        "failing": {
+          "no-matches": 2
+        },
+        "level": "none"
+      },
+      "go-panics:pkg/typesystem/typesystem.go": {
+        "failing": {
+          "no-matches": 2
+        },
+        "level": "none"
+      },
+      "go-panics:tests/listobjects/matrix.go": {
+        "failing": {
+          "no-matches": 1
+        },
+        "level": "none"
+      }
+    },
+    "go-staticcheck": {
+      "go-staticcheck:cmd/run/run.go": {
+        "failing": {
+          "no-findings": 1
+        },
+        "level": "none"
+      },
+      "go-staticcheck:cmd/run/run_test.go": {
+        "failing": {
+          "no-findings": 1
+        },
+        "level": "none"
+      },
+      "go-staticcheck:internal/telemetry/tracing.go": {
+        "failing": {
+          "no-findings": 1
+        },
+        "level": "none"
+      },
+      "go-staticcheck:pkg/middleware/recovery/recovery_test.go": {
+        "failing": {
+          "no-findings": 2
+        },
+        "level": "none"
+      },
+      "go-staticcheck:pkg/server/server_test.go": {
+        "failing": {
+          "no-findings": 1
+        },
+        "level": "none"
+      },
+      "go-staticcheck:pkg/server/test/benchmarks/list_objects.go": {
+        "failing": {
+          "no-findings": 1
+        },
+        "level": "none"
+      },
+      "go-staticcheck:pkg/testutils/testutils.go": {
+        "failing": {
+          "no-findings": 2
+        },
+        "level": "none"
+      }
+    },
+    "openfga-openssf": {
+      "openfga-openssf:Binary-Artifacts": {
+        "level": "ten"
+      },
+      "openfga-openssf:Dangerous-Workflow": {
+        "level": "ten"
+      },
+      "openfga-openssf:Dependency-Update-Tool": {
+        "level": "ten"
+      },
+      "openfga-openssf:Fuzzing": {
+        "level": "ten"
+      },
+      "openfga-openssf:License": {
+        "failing": {
+          "ten": 1
+        },
+        "level": "none"
+      },
+      "openfga-openssf:Packaging": {
+        "level": "ten"
+      },
+      "openfga-openssf:Pinned-Dependencies": {
+        "failing": {
+          "ten": 1
+        },
+        "level": "none"
+      },
+      "openfga-openssf:SAST": {
+        "level": "ten"
+      },
+      "openfga-openssf:Security-Policy": {
+        "level": "ten"
+      },
+      "openfga-openssf:Token-Permissions": {
+        "level": "ten"
+      },
+      "openfga-openssf:Vulnerabilities": {
+        "level": "ten"
+      }
+    },
+    "repo-hygiene": {
+      "repository:openfga/openfga": {
+        "level": "silver"
+      }
+    },
+    "vs-spicedb-ecosystem": {
+      "product:openfga": {
+        "level": "bronze"
+      }
+    },
+    "vs-spicedb-footprint": {
+      "product:openfga": {
+        "level": "bronze"
+      }
+    },
+    "vs-spicedb-modelling": {
+      "product:openfga": {
+        "failing": {
+          "consistency-tokens": 1
+        },
+        "level": "none"
+      }
+    },
+    "vs-spicedb-operability": {
+      "product:openfga": {
+        "failing": {
+          "datastores": 1
+        },
+        "level": "none"
+      }
+    },
+    "vs-spicedb-performance": {
+      "product:openfga": {
+        "failing": {
+          "check-latency": 1,
+          "check-throughput": 1
+        },
+        "level": "none"
+      }
+    },
+    "vs-spicedb-supply-chain": {
+      "product:openfga": {
+        "level": "bronze"
+      }
+    }
+  }
+}

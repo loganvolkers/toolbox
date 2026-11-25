@@ -1,7 +1,7 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/templates
 rubric: assessment-quality
-subjectHash: 992d23921343
+subjectHash: 667f0560d2c8
 assessor: {kind: agent, name: cursor-reviewer-15, model: claude-opus-5.5}
 at: 2026-11-25
 verdicts:

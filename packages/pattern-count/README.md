@@ -76,6 +76,7 @@ match) and `fix`.
 | `kind` | `PatternFile` | The kind (PascalCase). Include the package twice with different `name` and `kind` for two patterns |
 | `title`, `owner`, `fix` | | The scorecard's heading, owner and fix text |
 | `root` | `.` | The checkout, relative to where `toolbox report` runs |
+| `track` | none | The portal track its scorecard and campaign belong to; leave unset if the portal has no tracks |
 
 ## Changing the standard
 

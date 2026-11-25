@@ -1,0 +1,3828 @@
+[
+ {
+  "config": {
+   "protocol_version": "v1.0.0",
+   "scanner_name": "govulncheck",
+   "scanner_version": "v1.10.0",
+   "db": "https://vuln.go.dev",
+   "db_last_modified": "2026-11-24T15:56:00Z",
+   "scan_level": "symbol",
+   "scan_mode": "binary"
+  }
+ },
+ {
+  "osv": {
+   "schema_version": "1.3.1",
+   "id": "GO-2026-6865",
+   "modified": "2026-11-05T22:54:32Z",
+   "published": "2026-11-05T22:54:32Z",
+   "aliases": [
+    "CVE-2026-116591",
+    "GHSA-fpmh-frq8-7rj8"
+   ],
+   "summary": "Panic on two-block frames in github.com/klauspost/compress",
+   "details": "Panic on two-block frames in github.com/klauspost/compress",
+   "affected": [
+    {
+     "package": {
+      "name": "github.com/klauspost/compress",
+      "ecosystem": "Go"
+     },
+     "ranges": [
+      {
+       "type": "SEMVER",
+       "events": [
+        {
+         "introduced": "0"
+        },
+        {
+         "fixed": "1.20.2"
+        }
+       ]
+      }
+     ],
+     "ecosystem_specific": {
+      "imports": [
+       {
+        "path": "github.com/klauspost/compress/fse",
+        "symbols": [
+         "Compress",
+         "Decompress",
+         "Scratch.readNCount",
+         "Scratch.validateNorm"
+        ]
+       },
+       {
+        "path": "github.com/klauspost/compress/huff0",
+        "symbols": [
+         "Compress1X",
+         "Compress4X",
+         "EstimateSizes",
+         "ReadTable",
+         "Scratch.AppendTable"
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "references": [
+    {
+     "type": "ADVISORY",
+     "url": "https://github.com/klauspost/compress/security/advisories/GHSA-fpmh-frq8-7rj8"
+    },
+    {
+     "type": "FIX",
+     "url": "https://github.com/klauspost/compress/commit/7f5d8528720c895a6106f201719f87eb030a565d"
+    },
+    {
+     "type": "WEB",
+     "url": "https://github.com/klauspost/compress/releases/tag/v1.20.2"
+    }
+   ],
+   "database_specific": {
+    "url": "https://pkg.go.dev/vuln/GO-2026-6865",
+    "review_status": "REVIEWED"
+   }
+  }
+ },
+ {
+  "osv": {
+   "schema_version": "1.3.1",
+   "id": "GO-2026-6975",
+   "modified": "2026-11-23T20:04:43Z",
+   "published": "2026-11-23T20:04:43Z",
+   "aliases": [
+    "CVE-2026-128086",
+    "GHSA-rrfc-gjm9-cgrj"
+   ],
+   "summary": "Memory allocation amplification in W3C baggage parsing in go.opentelemetry.io/otel",
+   "details": "Memory allocation amplification in W3C baggage parsing in go.opentelemetry.io/otel",
+   "affected": [
+    {
+     "package": {
+      "name": "go.opentelemetry.io/otel",
+      "ecosystem": "Go"
+     },
+     "ranges": [
+      {
+       "type": "SEMVER",
+       "events": [
+        {
+         "introduced": "1.0.0-RC1"
+        },
+        {
+         "fixed": "1.47.0"
+        }
+       ]
+      }
+     ],
+     "ecosystem_specific": {
+      "imports": [
+       {
+        "path": "go.opentelemetry.io/otel/baggage",
+        "symbols": [
+         "Parse",
+         "parseMember"
+        ]
+       },
+       {
+        "path": "go.opentelemetry.io/otel/propagation",
+        "symbols": [
+         "Baggage.Extract"
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "references": [
+    {
+     "type": "ADVISORY",
+     "url": "https://github.com/open-telemetry/opentelemetry-go/security/advisories/GHSA-rrfc-gjm9-cgrj"
+    },
+    {
+     "type": "FIX",
+     "url": "https://github.com/open-telemetry/opentelemetry-go/commit/f09d1de32f4ac7e5ef16394533721106b1a57b89"
+    },
+    {
+     "type": "FIX",
+     "url": "https://github.com/open-telemetry/opentelemetry-go/pull/9024"
+    },
+    {
+     "type": "WEB",
+     "url": "https://github.com/open-telemetry/opentelemetry-go/releases/tag/v1.47.0"
+    }
+   ],
+   "database_specific": {
+    "url": "https://pkg.go.dev/vuln/GO-2026-6975",
+    "review_status": "REVIEWED"
+   }
+  }
+ },
+ {
+  "osv": {
+   "schema_version": "1.3.1",
+   "id": "GO-2026-6974",
+   "modified": "2026-11-23T20:04:43Z",
+   "published": "2026-11-23T20:04:43Z",
+   "aliases": [
+    "CVE-2026-128085",
+    "GHSA-q7gw-24fr-5p69"
+   ],
+   "summary": "AttributeValueLengthLimit bypass via U+FFFD runes in go.opentelemetry.io/otel/sdk",
+   "details": "AttributeValueLengthLimit bypass via U+FFFD runes in go.opentelemetry.io/otel/sdk",
+   "affected": [
+    {
+     "package": {
+      "name": "go.opentelemetry.io/otel/sdk",
+      "ecosystem": "Go"
+     },
+     "ranges": [
+      {
+       "type": "SEMVER",
+       "events": [
+        {
+         "introduced": "1.33.0"
+        },
+        {
+         "fixed": "1.47.0"
+        }
+       ]
+      }
+     ],
+     "ecosystem_specific": {
+      "imports": [
+       {
+        "path": "go.opentelemetry.io/otel/sdk/internal/attrnorm",
+        "symbols": [
+         "Truncate",
+         "TruncateValue",
+         "truncate"
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "package": {
+      "name": "go.opentelemetry.io/otel/sdk/log",
+      "ecosystem": "Go"
+     },
+     "ranges": [
+      {
+       "type": "SEMVER",
+       "events": [
+        {
+         "introduced": "0.9.0"
+        },
+        {
+         "fixed": "1.47.0"
+        }
+       ]
+      }
+     ],
+     "ecosystem_specific": {
+      "imports": [
+       {
+        "path": "go.opentelemetry.io/otel/sdk/log/internal/attrnorm",
+        "symbols": [
+         "Truncate",
+         "TruncateValue",
+         "truncate"
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "package": {
+      "name": "go.opentelemetry.io/otel/trace",
+      "ecosystem": "Go"
+     },
+     "ranges": [
+      {
+       "type": "SEMVER",
+       "events": [
+        {
+         "introduced": "1.35.0"
+        },
+        {
+         "fixed": "1.47.0"
+        }
+       ]
+      }
+     ],
+     "ecosystem_specific": {
+      "imports": [
+       {
+        "path": "go.opentelemetry.io/otel/trace",
+        "symbols": [
+         "autoSpan.AddEvent",
+         "autoSpan.AddLink",
+         "autoSpan.RecordError",
+         "autoSpan.SetAttributes",
+         "autoTracer.Start",
+         "truncate"
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "references": [
+    {
+     "type": "ADVISORY",
+     "url": "https://github.com/open-telemetry/opentelemetry-go/security/advisories/GHSA-q7gw-24fr-5p69"
+    },
+    {
+     "type": "FIX",
+     "url": "https://github.com/open-telemetry/opentelemetry-go/commit/017b08c7f1018b619991aaf6b2299d4beb9da1d3"
+    },
+    {
+     "type": "WEB",
+     "url": "https://github.com/open-telemetry/opentelemetry-go/releases/tag/sdk/log/v1.47.0"
+    },
+    {
+     "type": "WEB",
+     "url": "https://github.com/open-telemetry/opentelemetry-go/releases/tag/sdk/v1.47.0"
+    },
+    {
+     "type": "WEB",
+     "url": "https://github.com/open-telemetry/opentelemetry-go/releases/tag/trace/v1.47.0"
+    }
+   ],
+   "database_specific": {
+    "url": "https://pkg.go.dev/vuln/GO-2026-6974",
+    "review_status": "REVIEWED"
+   }
+  }
+ },
+ {
+  "osv": {
+   "schema_version": "1.3.1",
+   "id": "GO-2026-6974",
+   "modified": "2026-11-23T20:04:43Z",
+   "published": "2026-11-23T20:04:43Z",
+   "aliases": [
+    "CVE-2026-128085",
+    "GHSA-q7gw-24fr-5p69"
+   ],
+   "summary": "AttributeValueLengthLimit bypass via U+FFFD runes in go.opentelemetry.io/otel/sdk",
+   "details": "AttributeValueLengthLimit bypass via U+FFFD runes in go.opentelemetry.io/otel/sdk",
+   "affected": [
+    {
+     "package": {
+      "name": "go.opentelemetry.io/otel/sdk",
+      "ecosystem": "Go"
+     },
+     "ranges": [
+      {
+       "type": "SEMVER",
+       "events": [
+        {
+         "introduced": "1.33.0"
+        },
+        {
+         "fixed": "1.47.0"
+        }
+       ]
+      }
+     ],
+     "ecosystem_specific": {
+      "imports": [
+       {
+        "path": "go.opentelemetry.io/otel/sdk/internal/attrnorm",
+        "symbols": [
+         "Truncate",
+         "TruncateValue",
+         "truncate"
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "package": {
+      "name": "go.opentelemetry.io/otel/sdk/log",
+      "ecosystem": "Go"
+     },
+     "ranges": [
+      {
+       "type": "SEMVER",
+       "events": [
+        {
+         "introduced": "0.9.0"
+        },
+        {
+         "fixed": "1.47.0"
+        }
+       ]
+      }
+     ],
+     "ecosystem_specific": {
+      "imports": [
+       {
+        "path": "go.opentelemetry.io/otel/sdk/log/internal/attrnorm",
+        "symbols": [
+         "Truncate",
+         "TruncateValue",
+         "truncate"
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "package": {
+      "name": "go.opentelemetry.io/otel/trace",
+      "ecosystem": "Go"
+     },
+     "ranges": [
+      {
+       "type": "SEMVER",
+       "events": [
+        {
+         "introduced": "1.35.0"
+        },
+        {
+         "fixed": "1.47.0"
+        }
+       ]
+      }
+     ],
+     "ecosystem_specific": {
+      "imports": [
+       {
+        "path": "go.opentelemetry.io/otel/trace",
+        "symbols": [
+         "autoSpan.AddEvent",
+         "autoSpan.AddLink",
+         "autoSpan.RecordError",
+         "autoSpan.SetAttributes",
+         "autoTracer.Start",
+         "truncate"
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "references": [
+    {
+     "type": "ADVISORY",
+     "url": "https://github.com/open-telemetry/opentelemetry-go/security/advisories/GHSA-q7gw-24fr-5p69"
+    },
+    {
+     "type": "FIX",
+     "url": "https://github.com/open-telemetry/opentelemetry-go/commit/017b08c7f1018b619991aaf6b2299d4beb9da1d3"
+    },
+    {
+     "type": "WEB",
+     "url": "https://github.com/open-telemetry/opentelemetry-go/releases/tag/sdk/log/v1.47.0"
+    },
+    {
+     "type": "WEB",
+     "url": "https://github.com/open-telemetry/opentelemetry-go/releases/tag/sdk/v1.47.0"
+    },
+    {
+     "type": "WEB",
+     "url": "https://github.com/open-telemetry/opentelemetry-go/releases/tag/trace/v1.47.0"
+    }
+   ],
+   "database_specific": {
+    "url": "https://pkg.go.dev/vuln/GO-2026-6974",
+    "review_status": "REVIEWED"
+   }
+  }
+ },
+ {
+  "osv": {
+   "schema_version": "1.3.1",
+   "id": "GO-2026-5932",
+   "modified": "2026-11-02T22:01:43Z",
+   "published": "2026-07-07T22:15:29Z",
+   "summary": "The golang.org/x/crypto/openpgp package is unmaintained, unsafe by design, and has known security issues",
+   "details": "The golang.org/x/crypto/openpgp package is unsafe by design, has numerous known security issues, is not maintained, and should not be used.\n\nIf you are required to interoperate with OpenPGP systems and need a maintained package, consider github.com/ProtonMail/go-crypto/openpgp which is a maintained fork that aims to be a drop-in replacement for this package.",
+   "affected": [
+    {
+     "package": {
+      "name": "golang.org/x/crypto",
+      "ecosystem": "Go"
+     },
+     "ranges": [
+      {
+       "type": "SEMVER",
+       "events": [
+        {
+         "introduced": "0"
+        },
+        {
+         "fixed": "0.58.1-0.20261009181718-2f1f834330b2"
+        }
+       ]
+      }
+     ],
+     "ecosystem_specific": {
+      "imports": [
+       {
+        "path": "golang.org/x/crypto/openpgp"
+       },
+       {
+        "path": "golang.org/x/crypto/openpgp/packet"
+       },
+       {
+        "path": "golang.org/x/crypto/openpgp/armor"
+       },
+       {
+        "path": "golang.org/x/crypto/openpgp/clearsign"
+       },
+       {
+        "path": "golang.org/x/crypto/openpgp/errors"
+       },
+       {
+        "path": "golang.org/x/crypto/openpgp/elgamal"
+       },
+       {
+        "path": "golang.org/x/crypto/openpgp/s2k"
+       }
+      ]
+     }
+    },
+    {
+     "package": {
+      "name": "golang.org/x/crypto/openpgp",
+      "ecosystem": "Go"
+     },
+     "ranges": [
+      {
+       "type": "SEMVER",
+       "events": [
+        {
+         "introduced": "0"
+        }
+       ]
+      }
+     ],
+     "ecosystem_specific": {
+      "imports": [
+       {
+        "path": "golang.org/x/crypto/openpgp"
+       },
+       {
+        "path": "golang.org/x/crypto/openpgp/packet"
+       },
+       {
+        "path": "golang.org/x/crypto/openpgp/armor"
+       },
+       {
+        "path": "golang.org/x/crypto/openpgp/clearsign"
+       },
+       {
+        "path": "golang.org/x/crypto/openpgp/errors"
+       },
+       {
+        "path": "golang.org/x/crypto/openpgp/elgamal"
+       },
+       {
+        "path": "golang.org/x/crypto/openpgp/s2k"
+       }
+      ]
+     }
+    }
+   ],
+   "references": [
+    {
+     "type": "REPORT",
+     "url": "https://go.dev/issue/44226"
+    },
+    {
+     "type": "WEB",
+     "url": "https://go.dev/issue/81227"
+    }
+   ],
+   "database_specific": {
+    "url": "https://pkg.go.dev/vuln/GO-2026-5932",
+    "review_status": "REVIEWED"
+   }
+  }
+ },
+ {
+  "osv": {
+   "schema_version": "1.3.1",
+   "id": "GO-2026-6860",
+   "modified": "2026-10-27T21:16:18Z",
+   "published": "2026-10-27T21:16:18Z",
+   "aliases": [
+    "CVE-2026-78661"
+   ],
+   "summary": "Avoid quadratic complexity when coalescing text nodes in html in golang.org/x/net",
+   "details": "When coalescing adjacent text nodes in addText and fosterParent, appending to an existing TextNode's Data via string concatenation (n.Data += text) reallocated and copied the accumulated string on every token. Inputs containing many short text runs separated by ignored end tags (such as \"a</x>\") caused O(n^2) allocations and byte copies.\n\nAccumulate coalesced text in per-node byte slices during parsing and materialize Data strings once at the end of parse.",
+   "affected": [
+    {
+     "package": {
+      "name": "golang.org/x/net",
+      "ecosystem": "Go"
+     },
+     "ranges": [
+      {
+       "type": "SEMVER",
+       "events": [
+        {
+         "introduced": "0"
+        },
+        {
+         "fixed": "0.62.0"
+        }
+       ]
+      }
+     ],
+     "ecosystem_specific": {
+      "imports": [
+       {
+        "path": "golang.org/x/net/html",
+        "symbols": [
+         "Parse",
+         "ParseFragment",
+         "ParseFragmentWithOptions",
+         "ParseWithOptions",
+         "parser.addText",
+         "parser.fosterParent",
+         "parser.parse"
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "references": [
+    {
+     "type": "FIX",
+     "url": "https://go.dev/cl/849365"
+    },
+    {
+     "type": "REPORT",
+     "url": "https://go.dev/issue/82224"
+    },
+    {
+     "type": "WEB",
+     "url": "https://groups.google.com/g/golang-announce/c/sqrs2vTx_Xs"
+    }
+   ],
+   "credits": [
+    {
+     "name": "Markus Magnuson"
+    }
+   ],
+   "database_specific": {
+    "url": "https://pkg.go.dev/vuln/GO-2026-6860",
+    "review_status": "REVIEWED"
+   }
+  }
+ },
+ {
+  "osv": {
+   "schema_version": "1.3.1",
+   "id": "GO-2026-6866",
+   "modified": "2026-10-27T21:16:18Z",
+   "published": "2026-10-27T21:16:18Z",
+   "aliases": [
+    "CVE-2026-97045"
+   ],
+   "summary": "Check all ancestor namespace transitions when rendering raw text in html in golang.org/x/net",
+   "details": "In childTextNodesAreLiteral, walking up the tree previously stopped at the nearest foreign ancestor once an HTML integration point was found. However, that integration point may itself be a descendant of an element that was foster-parented into a foreign namespace (such as <mglyph> or <malignmark> fostered under <mtext>), causing a parser to resolve the subtree in a different foreign namespace upon re-parsing the rendered output.\n\nContinue walking the full ancestor chain and verify that every transition from a non-empty namespace occurs at an HTML integration point before emitting literal text.",
+   "affected": [
+    {
+     "package": {
+      "name": "golang.org/x/net",
+      "ecosystem": "Go"
+     },
+     "ranges": [
+      {
+       "type": "SEMVER",
+       "events": [
+        {
+         "introduced": "0"
+        },
+        {
+         "fixed": "0.62.0"
+        }
+       ]
+      }
+     ],
+     "ecosystem_specific": {
+      "imports": [
+       {
+        "path": "golang.org/x/net/html",
+        "symbols": [
+         "Render",
+         "childTextNodesAreLiteral"
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "references": [
+    {
+     "type": "FIX",
+     "url": "https://go.dev/cl/855121"
+    },
+    {
+     "type": "REPORT",
+     "url": "https://go.dev/issue/82622"
+    },
+    {
+     "type": "WEB",
+     "url": "https://groups.google.com/g/golang-announce/c/sqrs2vTx_Xs"
+    }
+   ],
+   "credits": [
+    {
+     "name": "Ali Sherif (https://www.linkedin.com/in/ali-sherif-13812b276)"
+    }
+   ],
+   "database_specific": {
+    "url": "https://pkg.go.dev/vuln/GO-2026-6866",
+    "review_status": "REVIEWED"
+   }
+  }
+ },
+ {
+  "osv": {
+   "schema_version": "1.3.1",
+   "id": "GO-2026-6859",
+   "modified": "2026-11-11T02:51:11Z",
+   "published": "2026-11-11T02:51:11Z",
+   "aliases": [
+    "CVE-2026-97054"
+   ],
+   "summary": "HTTP/1 server crash due to MaxBytesReader header race in net/http",
+   "details": "For HTTP/1 servers, when MaxBytesReader's limit is exceeded, \"Connection: close\" header is automatically set without synchronization, which might race with another header being set explicitly in the server handler. As a result, an HTTP/1 server that utilizes MaxBytesReader or MaxBytesHandler can crash due to runtime panic if its handler reads the request body concurrently with writing the response header.",
+   "affected": [
+    {
+     "package": {
+      "name": "stdlib",
+      "ecosystem": "Go"
+     },
+     "ranges": [
+      {
+       "type": "SEMVER",
+       "events": [
+        {
+         "introduced": "0"
+        },
+        {
+         "fixed": "1.26.11"
+        },
+        {
+         "introduced": "1.27.0-0"
+        },
+        {
+         "fixed": "1.27.4"
+        }
+       ]
+      }
+     ],
+     "ecosystem_specific": {
+      "imports": [
+       {
+        "path": "net/http",
+        "symbols": [
+         "CanonicalHeaderKey",
+         "Client.CloseIdleConnections",
+         "Client.Do",
+         "Client.Get",
+         "Client.Head",
+         "Client.Post",
+         "Client.PostForm",
+         "ClientConn.Close",
+         "ClientConn.RoundTrip",
+         "Cookie.String",
+         "Cookie.Valid",
+         "CrossOriginProtection.AddInsecureBypassPattern",
+         "CrossOriginProtection.AddTrustedOrigin",
+         "CrossOriginProtection.Check",
+         "Dir.Open",
+         "Error",
+         "Get",
+         "Handle",
+         "HandleFunc",
+         "HandlerFunc.ServeHTTP",
+         "Head",
+         "Header.Add",
+         "Header.Del",
+         "Header.Get",
+         "Header.Set",
+         "Header.Values",
+         "Header.Write",
+         "Header.WriteSubset",
+         "ListenAndServe",
+         "ListenAndServeTLS",
+         "NewRequest",
+         "NewRequestWithContext",
+         "NotFound",
+         "ParseCookie",
+         "ParseSetCookie",
+         "ParseTime",
+         "Post",
+         "PostForm",
+         "ProxyFromEnvironment",
+         "ReadRequest",
+         "ReadResponse",
+         "Redirect",
+         "Request.AddCookie",
+         "Request.BasicAuth",
+         "Request.Cookie",
+         "Request.Cookies",
+         "Request.CookiesNamed",
+         "Request.FormFile",
+         "Request.FormValue",
+         "Request.MultipartReader",
+         "Request.ParseForm",
+         "Request.ParseMultipartForm",
+         "Request.PostFormValue",
+         "Request.Referer",
+         "Request.SetBasicAuth",
+         "Request.UserAgent",
+         "Request.Write",
+         "Request.WriteProxy",
+         "Response.Cookies",
+         "Response.Location",
+         "Response.Write",
+         "ResponseController.EnableFullDuplex",
+         "ResponseController.Flush",
+         "ResponseController.Hijack",
+         "ResponseController.SetReadDeadline",
+         "ResponseController.SetWriteDeadline",
+         "Serve",
+         "ServeContent",
+         "ServeFile",
+         "ServeFileFS",
+         "ServeMux.Handle",
+         "ServeMux.HandleFunc",
+         "ServeMux.ServeHTTP",
+         "ServeTLS",
+         "Server.Close",
+         "Server.ListenAndServe",
+         "Server.ListenAndServeTLS",
+         "Server.Serve",
+         "Server.ServeTLS",
+         "Server.SetKeepAlivesEnabled",
+         "Server.Shutdown",
+         "SetCookie",
+         "Transport.CancelRequest",
+         "Transport.Clone",
+         "Transport.CloseIdleConnections",
+         "Transport.NewClientConn",
+         "Transport.RoundTrip",
+         "body.Close",
+         "body.Read",
+         "bodyEOFSignal.Close",
+         "bodyEOFSignal.Read",
+         "bodyLocked.Read",
+         "bufioFlushWriter.Write",
+         "cancelTimerBody.Close",
+         "cancelTimerBody.Read",
+         "checkConnErrorWriter.Write",
+         "chunkWriter.Write",
+         "connReader.Read",
+         "connectMethodKey.String",
+         "expectContinueReader.Close",
+         "expectContinueReader.Read",
+         "extraHeader.Write",
+         "fileHandler.ServeHTTP",
+         "fileTransport.RoundTrip",
+         "globalOptionsHandler.ServeHTTP",
+         "gzipReader.Close",
+         "gzipReader.Read",
+         "http1ClientConn.Close",
+         "http1ClientConn.RoundTrip",
+         "http2ClientConn.RoundTrip",
+         "http2Handler.ServeHTTP",
+         "http2ResponseWriter.Flush",
+         "http2ResponseWriter.FlushError",
+         "http2ResponseWriter.Push",
+         "http2RoundTripper.RoundTrip",
+         "http3ServerHandler.ServeHTTP",
+         "initALPNRequest.ServeHTTP",
+         "loggingConn.Close",
+         "loggingConn.Read",
+         "loggingConn.Write",
+         "maxBytesReader.Close",
+         "maxBytesReader.Read",
+         "onceCloseListener.Close",
+         "persistConn.Read",
+         "persistConnWriter.ReadFrom",
+         "persistConnWriter.Write",
+         "populateResponse.Write",
+         "populateResponse.WriteHeader",
+         "readTrackingBody.Close",
+         "readTrackingBody.Read",
+         "readWriteCloserBody.CloseWrite",
+         "readWriteCloserBody.Read",
+         "redirectHandler.ServeHTTP",
+         "response.Flush",
+         "response.FlushError",
+         "response.Hijack",
+         "response.ReadFrom",
+         "response.Write",
+         "response.WriteHeader",
+         "response.WriteString",
+         "serverHandler.ServeHTTP",
+         "socksDialer.DialWithConn",
+         "socksUsernamePassword.Authenticate",
+         "stringWriter.WriteString",
+         "timeoutHandler.ServeHTTP",
+         "timeoutWriter.Write",
+         "timeoutWriter.WriteHeader",
+         "transportReadFromServerError.Error",
+         "unencryptedHTTP2Request.ServeHTTP"
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "references": [
+    {
+     "type": "FIX",
+     "url": "https://go.dev/cl/862185"
+    },
+    {
+     "type": "REPORT",
+     "url": "https://go.dev/issue/82563"
+    },
+    {
+     "type": "WEB",
+     "url": "https://groups.google.com/g/golang-announce/c/iY8TY0wWgbM"
+    }
+   ],
+   "credits": [
+    {
+     "name": "Jakub Ciolek (https://ciolek.dev)"
+    }
+   ],
+   "database_specific": {
+    "url": "https://pkg.go.dev/vuln/GO-2026-6859",
+    "review_status": "REVIEWED"
+   }
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6865",
+   "fixed_version": "v1.20.2",
+   "trace": [
+    {
+     "module": "github.com/klauspost/compress",
+     "version": "v1.19.2"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6975",
+   "fixed_version": "v1.47.0",
+   "trace": [
+    {
+     "module": "go.opentelemetry.io/otel",
+     "version": "v1.46.0"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6974",
+   "fixed_version": "v1.47.0",
+   "trace": [
+    {
+     "module": "go.opentelemetry.io/otel/sdk",
+     "version": "v1.46.0"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6974",
+   "fixed_version": "v1.47.0",
+   "trace": [
+    {
+     "module": "go.opentelemetry.io/otel/trace",
+     "version": "v1.46.0"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-5932",
+   "fixed_version": "v0.58.1-0.20261009181718-2f1f834330b2",
+   "trace": [
+    {
+     "module": "golang.org/x/crypto",
+     "version": "v0.57.0"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6860",
+   "fixed_version": "v0.62.0",
+   "trace": [
+    {
+     "module": "golang.org/x/net",
+     "version": "v0.60.0"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6866",
+   "fixed_version": "v0.62.0",
+   "trace": [
+    {
+     "module": "golang.org/x/net",
+     "version": "v0.60.0"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6865",
+   "fixed_version": "v1.20.2",
+   "trace": [
+    {
+     "module": "github.com/klauspost/compress",
+     "version": "v1.19.2",
+     "package": "github.com/klauspost/compress/fse"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6974",
+   "trace": [
+    {
+     "module": "go.opentelemetry.io/otel",
+     "version": "v1.46.0",
+     "package": "go.opentelemetry.io/otel/sdk/internal/attrnorm"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6974",
+   "fixed_version": "v1.47.0",
+   "trace": [
+    {
+     "module": "go.opentelemetry.io/otel/trace",
+     "version": "v1.46.0",
+     "package": "go.opentelemetry.io/otel/trace"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-5932",
+   "fixed_version": "v0.58.1-0.20261009181718-2f1f834330b2",
+   "trace": [
+    {
+     "module": "golang.org/x/crypto",
+     "version": "v0.57.0",
+     "package": "golang.org/x/crypto/openpgp"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-5932",
+   "fixed_version": "v0.58.1-0.20261009181718-2f1f834330b2",
+   "trace": [
+    {
+     "module": "golang.org/x/crypto",
+     "version": "v0.57.0",
+     "package": "golang.org/x/crypto/openpgp/clearsign"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-5932",
+   "fixed_version": "v0.58.1-0.20261009181718-2f1f834330b2",
+   "trace": [
+    {
+     "module": "golang.org/x/crypto",
+     "version": "v0.57.0",
+     "package": "golang.org/x/crypto/openpgp/packet"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-5932",
+   "fixed_version": "v0.58.1-0.20261009181718-2f1f834330b2",
+   "trace": [
+    {
+     "module": "golang.org/x/crypto",
+     "version": "v0.57.0",
+     "package": "golang.org/x/crypto/openpgp/armor"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-5932",
+   "fixed_version": "v0.58.1-0.20261009181718-2f1f834330b2",
+   "trace": [
+    {
+     "module": "golang.org/x/crypto",
+     "version": "v0.57.0",
+     "package": "golang.org/x/crypto/openpgp/elgamal"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-5932",
+   "fixed_version": "v0.58.1-0.20261009181718-2f1f834330b2",
+   "trace": [
+    {
+     "module": "golang.org/x/crypto",
+     "version": "v0.57.0",
+     "package": "golang.org/x/crypto/openpgp/s2k"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6865",
+   "fixed_version": "v1.20.2",
+   "trace": [
+    {
+     "module": "github.com/klauspost/compress",
+     "version": "v1.19.2",
+     "package": "github.com/klauspost/compress/huff0"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6975",
+   "fixed_version": "v1.47.0",
+   "trace": [
+    {
+     "module": "go.opentelemetry.io/otel",
+     "version": "v1.46.0",
+     "package": "go.opentelemetry.io/otel/propagation"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6975",
+   "fixed_version": "v1.47.0",
+   "trace": [
+    {
+     "module": "go.opentelemetry.io/otel",
+     "version": "v1.46.0",
+     "package": "go.opentelemetry.io/otel/baggage"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-5932",
+   "fixed_version": "v0.58.1-0.20261009181718-2f1f834330b2",
+   "trace": [
+    {
+     "module": "golang.org/x/crypto",
+     "version": "v0.57.0",
+     "package": "golang.org/x/crypto/openpgp/errors"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6860",
+   "fixed_version": "v0.62.0",
+   "trace": [
+    {
+     "module": "golang.org/x/net",
+     "version": "v0.60.0",
+     "package": "golang.org/x/net/html"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6866",
+   "fixed_version": "v0.62.0",
+   "trace": [
+    {
+     "module": "golang.org/x/net",
+     "version": "v0.60.0",
+     "package": "golang.org/x/net/html"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-5932",
+   "fixed_version": "v0.58.1-0.20261009181718-2f1f834330b2",
+   "trace": [
+    {
+     "module": "golang.org/x/crypto",
+     "version": "v0.57.0",
+     "package": "golang.org/x/crypto/openpgp/errors",
+     "function": "org/x/crypto/openpgp/errors/*",
+     "receiver": "golang"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6974",
+   "fixed_version": "v1.47.0",
+   "trace": [
+    {
+     "module": "go.opentelemetry.io/otel/trace",
+     "version": "v1.46.0",
+     "package": "go.opentelemetry.io/otel/trace",
+     "function": "Start",
+     "receiver": "autoTracer"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Handle"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Write",
+     "receiver": "Response"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "SetWriteDeadline",
+     "receiver": "ResponseController"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-5932",
+   "fixed_version": "v0.58.1-0.20261009181718-2f1f834330b2",
+   "trace": [
+    {
+     "module": "golang.org/x/crypto",
+     "version": "v0.57.0",
+     "package": "golang.org/x/crypto/openpgp/armor",
+     "function": "org/x/crypto/openpgp/armor/*",
+     "receiver": "golang"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6865",
+   "fixed_version": "v1.20.2",
+   "trace": [
+    {
+     "module": "github.com/klauspost/compress",
+     "version": "v1.19.2",
+     "package": "github.com/klauspost/compress/huff0",
+     "function": "Compress4X"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "AddInsecureBypassPattern",
+     "receiver": "CrossOriginProtection"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "ListenAndServeTLS"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "ParseMultipartForm",
+     "receiver": "Request"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Read",
+     "receiver": "body"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "RoundTrip",
+     "receiver": "http2ClientConn"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Read",
+     "receiver": "persistConn"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "FlushError",
+     "receiver": "response"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Hijack",
+     "receiver": "response"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Open",
+     "receiver": "Dir"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "EnableFullDuplex",
+     "receiver": "ResponseController"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "RoundTrip",
+     "receiver": "http1ClientConn"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Push",
+     "receiver": "http2ResponseWriter"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "WriteHeader",
+     "receiver": "timeoutWriter"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6865",
+   "fixed_version": "v1.20.2",
+   "trace": [
+    {
+     "module": "github.com/klauspost/compress",
+     "version": "v1.19.2",
+     "package": "github.com/klauspost/compress/huff0",
+     "function": "EstimateSizes"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6866",
+   "fixed_version": "v0.62.0",
+   "trace": [
+    {
+     "module": "golang.org/x/net",
+     "version": "v0.60.0",
+     "package": "golang.org/x/net/html",
+     "function": "Render"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Post",
+     "receiver": "Client"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "NotFound"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "ProxyFromEnvironment"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Write",
+     "receiver": "bufioFlushWriter"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "RoundTrip",
+     "receiver": "http2RoundTripper"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Write",
+     "receiver": "loggingConn"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Close",
+     "receiver": "maxBytesReader"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "CloseIdleConnections",
+     "receiver": "Client"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6975",
+   "fixed_version": "v1.47.0",
+   "trace": [
+    {
+     "module": "go.opentelemetry.io/otel",
+     "version": "v1.46.0",
+     "package": "go.opentelemetry.io/otel/propagation",
+     "function": "Extract",
+     "receiver": "Baggage"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Get",
+     "receiver": "Header"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "ReadResponse"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Close",
+     "receiver": "bodyEOFSignal"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Read",
+     "receiver": "expectContinueReader"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Close",
+     "receiver": "gzipReader"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "ServeHTTP",
+     "receiver": "http2Handler"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Read",
+     "receiver": "readTrackingBody"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Del",
+     "receiver": "Header"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "SetReadDeadline",
+     "receiver": "ResponseController"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Shutdown",
+     "receiver": "Server"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Read",
+     "receiver": "bodyLocked"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "FormValue",
+     "receiver": "Request"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "UserAgent",
+     "receiver": "Request"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "ServeTLS"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Set",
+     "receiver": "Header"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Location",
+     "receiver": "Response"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "ServeFileFS"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "ParseForm",
+     "receiver": "Request"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "PostFormValue",
+     "receiver": "Request"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Handle",
+     "receiver": "ServeMux"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "FlushError",
+     "receiver": "http2ResponseWriter"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6860",
+   "fixed_version": "v0.62.0",
+   "trace": [
+    {
+     "module": "golang.org/x/net",
+     "version": "v0.60.0",
+     "package": "golang.org/x/net/html",
+     "function": "ParseWithOptions"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6974",
+   "fixed_version": "v1.47.0",
+   "trace": [
+    {
+     "module": "go.opentelemetry.io/otel/trace",
+     "version": "v1.46.0",
+     "package": "go.opentelemetry.io/otel/trace",
+     "function": "RecordError",
+     "receiver": "autoSpan"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Values",
+     "receiver": "Header"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "NewRequest"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Serve",
+     "receiver": "Server"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "ServeHTTP",
+     "receiver": "fileHandler"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Flush",
+     "receiver": "response"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6974",
+   "trace": [
+    {
+     "module": "go.opentelemetry.io/otel",
+     "version": "v1.46.0",
+     "package": "go.opentelemetry.io/otel/sdk/internal/attrnorm",
+     "function": "Truncate"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6974",
+   "fixed_version": "v1.47.0",
+   "trace": [
+    {
+     "module": "go.opentelemetry.io/otel/trace",
+     "version": "v1.46.0",
+     "package": "go.opentelemetry.io/otel/trace",
+     "function": "AddLink",
+     "receiver": "autoSpan"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Head",
+     "receiver": "Client"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Cookie",
+     "receiver": "Request"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Write",
+     "receiver": "checkConnErrorWriter"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Close",
+     "receiver": "readTrackingBody"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-5932",
+   "fixed_version": "v0.58.1-0.20261009181718-2f1f834330b2",
+   "trace": [
+    {
+     "module": "golang.org/x/crypto",
+     "version": "v0.57.0",
+     "package": "golang.org/x/crypto/openpgp/clearsign",
+     "function": "org/x/crypto/openpgp/clearsign/*",
+     "receiver": "golang"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "WriteProxy",
+     "receiver": "Request"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "SetKeepAlivesEnabled",
+     "receiver": "Server"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Read",
+     "receiver": "connReader"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Close",
+     "receiver": "onceCloseListener"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6865",
+   "fixed_version": "v1.20.2",
+   "trace": [
+    {
+     "module": "github.com/klauspost/compress",
+     "version": "v1.19.2",
+     "package": "github.com/klauspost/compress/huff0",
+     "function": "ReadTable"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "RoundTrip",
+     "receiver": "ClientConn"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "WriteHeader",
+     "receiver": "response"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Close",
+     "receiver": "ClientConn"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "HandleFunc"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "RoundTrip",
+     "receiver": "Transport"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "ServeHTTP",
+     "receiver": "globalOptionsHandler"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "ServeHTTP",
+     "receiver": "timeoutHandler"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6865",
+   "fixed_version": "v1.20.2",
+   "trace": [
+    {
+     "module": "github.com/klauspost/compress",
+     "version": "v1.19.2",
+     "package": "github.com/klauspost/compress/fse",
+     "function": "Decompress"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "AddTrustedOrigin",
+     "receiver": "CrossOriginProtection"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Add",
+     "receiver": "Header"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "AddCookie",
+     "receiver": "Request"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Write",
+     "receiver": "chunkWriter"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Flush",
+     "receiver": "http2ResponseWriter"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Write",
+     "receiver": "populateResponse"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-5932",
+   "fixed_version": "v0.58.1-0.20261009181718-2f1f834330b2",
+   "trace": [
+    {
+     "module": "golang.org/x/crypto",
+     "version": "v0.57.0",
+     "package": "golang.org/x/crypto/openpgp/elgamal",
+     "function": "org/x/crypto/openpgp/elgamal/*",
+     "receiver": "golang"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "ParseSetCookie"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Check",
+     "receiver": "CrossOriginProtection"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Head"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "HandleFunc",
+     "receiver": "ServeMux"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "ServeHTTP",
+     "receiver": "initALPNRequest"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6860",
+   "fixed_version": "v0.62.0",
+   "trace": [
+    {
+     "module": "golang.org/x/net",
+     "version": "v0.60.0",
+     "package": "golang.org/x/net/html",
+     "function": "Parse"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6865",
+   "fixed_version": "v1.20.2",
+   "trace": [
+    {
+     "module": "github.com/klauspost/compress",
+     "version": "v1.19.2",
+     "package": "github.com/klauspost/compress/fse",
+     "function": "Compress"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "CanonicalHeaderKey"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "NewRequestWithContext"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "ReadRequest"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Cookies",
+     "receiver": "Response"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Authenticate",
+     "receiver": "socksUsernamePassword"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Get",
+     "receiver": "Client"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Error"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Post"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "PostForm"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Hijack",
+     "receiver": "ResponseController"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "ServeHTTP",
+     "receiver": "ServeMux"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6974",
+   "fixed_version": "v1.47.0",
+   "trace": [
+    {
+     "module": "go.opentelemetry.io/otel/trace",
+     "version": "v1.46.0",
+     "package": "go.opentelemetry.io/otel/trace",
+     "function": "AddEvent",
+     "receiver": "autoSpan"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "String",
+     "receiver": "Cookie"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "WriteSubset",
+     "receiver": "Header"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "SetBasicAuth",
+     "receiver": "Request"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Write",
+     "receiver": "extraHeader"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Close",
+     "receiver": "loggingConn"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "WriteString",
+     "receiver": "response"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-5932",
+   "fixed_version": "v0.58.1-0.20261009181718-2f1f834330b2",
+   "trace": [
+    {
+     "module": "golang.org/x/crypto",
+     "version": "v0.57.0",
+     "package": "golang.org/x/crypto/openpgp",
+     "function": "org/x/crypto/openpgp/*",
+     "receiver": "golang"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Valid",
+     "receiver": "Cookie"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Flush",
+     "receiver": "ResponseController"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "ServeTLS",
+     "receiver": "Server"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-5932",
+   "fixed_version": "v0.58.1-0.20261009181718-2f1f834330b2",
+   "trace": [
+    {
+     "module": "golang.org/x/crypto",
+     "version": "v0.57.0",
+     "package": "golang.org/x/crypto/openpgp/s2k",
+     "function": "org/x/crypto/openpgp/s2k/*",
+     "receiver": "golang"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6860",
+   "fixed_version": "v0.62.0",
+   "trace": [
+    {
+     "module": "golang.org/x/net",
+     "version": "v0.60.0",
+     "package": "golang.org/x/net/html",
+     "function": "ParseFragment"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "CookiesNamed",
+     "receiver": "Request"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "ServeContent"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "ServeHTTP",
+     "receiver": "http3ServerHandler"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "BasicAuth",
+     "receiver": "Request"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Cookies",
+     "receiver": "Request"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Clone",
+     "receiver": "Transport"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "WriteHeader",
+     "receiver": "populateResponse"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Read",
+     "receiver": "readWriteCloserBody"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "ListenAndServe",
+     "receiver": "Server"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "CancelRequest",
+     "receiver": "Transport"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Read",
+     "receiver": "bodyEOFSignal"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Close",
+     "receiver": "expectContinueReader"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Write",
+     "receiver": "Header"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "ParseCookie"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "ListenAndServeTLS",
+     "receiver": "Server"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "String",
+     "receiver": "connectMethodKey"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Read",
+     "receiver": "gzipReader"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Close",
+     "receiver": "http1ClientConn"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Read",
+     "receiver": "loggingConn"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-5932",
+   "fixed_version": "v0.58.1-0.20261009181718-2f1f834330b2",
+   "trace": [
+    {
+     "module": "golang.org/x/crypto",
+     "version": "v0.57.0",
+     "package": "golang.org/x/crypto/openpgp/packet",
+     "function": "org/x/crypto/openpgp/packet/*",
+     "receiver": "golang"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6860",
+   "fixed_version": "v0.62.0",
+   "trace": [
+    {
+     "module": "golang.org/x/net",
+     "version": "v0.60.0",
+     "package": "golang.org/x/net/html",
+     "function": "ParseFragmentWithOptions"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "PostForm",
+     "receiver": "Client"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "ServeHTTP",
+     "receiver": "redirectHandler"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "ReadFrom",
+     "receiver": "response"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6865",
+   "fixed_version": "v1.20.2",
+   "trace": [
+    {
+     "module": "github.com/klauspost/compress",
+     "version": "v1.19.2",
+     "package": "github.com/klauspost/compress/huff0",
+     "function": "Compress1X"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6974",
+   "trace": [
+    {
+     "module": "go.opentelemetry.io/otel",
+     "version": "v1.46.0",
+     "package": "go.opentelemetry.io/otel/sdk/internal/attrnorm",
+     "function": "TruncateValue"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "ParseTime"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Redirect"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "FormFile",
+     "receiver": "Request"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Referer",
+     "receiver": "Request"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "RoundTrip",
+     "receiver": "fileTransport"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "DialWithConn",
+     "receiver": "socksDialer"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6974",
+   "fixed_version": "v1.47.0",
+   "trace": [
+    {
+     "module": "go.opentelemetry.io/otel/trace",
+     "version": "v1.46.0",
+     "package": "go.opentelemetry.io/otel/trace",
+     "function": "SetAttributes",
+     "receiver": "autoSpan"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "SetCookie"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Error",
+     "receiver": "transportReadFromServerError"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "ServeHTTP",
+     "receiver": "unencryptedHTTP2Request"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "ServeHTTP",
+     "receiver": "HandlerFunc"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Serve"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "ServeFile"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "CloseIdleConnections",
+     "receiver": "Transport"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Close",
+     "receiver": "cancelTimerBody"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "ReadFrom",
+     "receiver": "persistConnWriter"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "CloseWrite",
+     "receiver": "readWriteCloserBody"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Do",
+     "receiver": "Client"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Write",
+     "receiver": "persistConnWriter"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Write",
+     "receiver": "response"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "ServeHTTP",
+     "receiver": "serverHandler"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "WriteString",
+     "receiver": "stringWriter"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6975",
+   "fixed_version": "v1.47.0",
+   "trace": [
+    {
+     "module": "go.opentelemetry.io/otel",
+     "version": "v1.46.0",
+     "package": "go.opentelemetry.io/otel/baggage",
+     "function": "Parse"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Write",
+     "receiver": "Request"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Close",
+     "receiver": "Server"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "NewClientConn",
+     "receiver": "Transport"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Read",
+     "receiver": "cancelTimerBody"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6865",
+   "fixed_version": "v1.20.2",
+   "trace": [
+    {
+     "module": "github.com/klauspost/compress",
+     "version": "v1.19.2",
+     "package": "github.com/klauspost/compress/huff0",
+     "function": "AppendTable",
+     "receiver": "Scratch"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Get"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "ListenAndServe"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "MultipartReader",
+     "receiver": "Request"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Close",
+     "receiver": "body"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Read",
+     "receiver": "maxBytesReader"
+    }
+   ]
+  }
+ },
+ {
+  "finding": {
+   "osv": "GO-2026-6859",
+   "fixed_version": "v1.27.4",
+   "trace": [
+    {
+     "module": "stdlib",
+     "version": "v1.27.3",
+     "package": "net/http",
+     "function": "Write",
+     "receiver": "timeoutWriter"
+    }
+   ]
+  }
+ }
+]

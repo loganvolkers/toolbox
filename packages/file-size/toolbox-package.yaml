@@ -8,6 +8,12 @@ description: >-
   that grows a violating file or brings a new one over the limit, and a
   campaign pays the excess down.
 parameters:
+  track:
+    type: string
+    default: null
+    description: >-
+      The portal track its scorecards and campaigns belong to; leave unset if
+      the portal has no tracks.
   name:
     type: string
     default: file-size

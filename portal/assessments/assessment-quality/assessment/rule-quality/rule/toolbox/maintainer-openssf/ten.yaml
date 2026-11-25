@@ -17,8 +17,8 @@ verdicts:
       true` line 15 with the header at 1-4 (cited 48-62). The claims
       themselves are true. The other sources land: scorecard.rs:12-40,
       .clusterfuzzlite/build.sh:6-17 (a no-op), and no workflow under
-      .github/workflows mentions fuzzing. results.json has Fuzzing at `ten`.
-      Also landing: openssf-template.md:28-32, 80 and 83-88,
+      .github/workflows mentions fuzzing. portal/results.json has Fuzzing at
+      `ten`. Also landing: openssf-template.md:28-32, 80 and 83-88,
       portal/toolbox.yaml:366-367, the fixture's line 1, and the package tests
       at 7-14.
     suggestion: >-
@@ -35,8 +35,9 @@ verdicts:
   - criterion: reproducible
     verdict: pass
     reason: >-
-      The hard-to-game fail rests on files anyone can read: build.sh and
-      results.json, plus the absence of a CFLite workflow.
+      The hard-to-game fail rests on files anyone can read:
+      .clusterfuzzlite/build.sh and portal/results.json, plus the absence of a
+      CFLite workflow.
   - criterion: actionable
     verdict: fail
     reason: >-
