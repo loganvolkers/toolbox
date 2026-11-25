@@ -387,10 +387,16 @@ export const compareViews = {
         { className: "cmp-method", style: "margin:8px 0 0" },
         el("b", { textContent: lead ? "Method: " : "How it was measured: " }),
         ...(lead ? rich(lead + " ") : [(brief.length ? brief.join(" · ") + ". " : "") + "Every rule is " + (bases.judged ? "measured or agent-judged" : "measured by script") + ". "]),
-        el("span", { style: "display:block;margin-top:4px" }, el("b", { textContent: "Not covered: " }), ...(scope ? rich(scope.replace(/^Not (covered|measured)\s*:\s*/i, "") + " ") : [el("span", { className: "sub", textContent: "not stated: the track's description has no “Not covered:” sentence. " })])),
       ),
     );
+    // The scope sits in the hero, beside the tally. A reader who stops at the verdict still sees what was not measured.
     (hero.querySelector(".rule-tally") as HTMLElement).after(
+      el(
+        "p",
+        { className: "cmp-method", style: "margin:8px 0 0" },
+        el("b", { textContent: "Not covered: " }),
+        ...(scope ? rich(scope.replace(/^Not (covered|measured)\s*:\s*/i, "")) : [el("span", { className: "sub", textContent: "not stated. The track's description has no “Not covered:” sentence." })]),
+      ),
       el("p", { className: "cmp-method", style: "margin:8px 0 0" }, el("button", {
         className: "link",
         textContent: track && track.description ? "The full method, and who checked it ↓" : "Versions, setup and sources ↓",

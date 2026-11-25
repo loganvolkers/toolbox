@@ -221,6 +221,8 @@ export function healthVerdict(D: ReportData, S: Summary, campaignNames) {
     return "Almost there: " + plural(atNone, "entity is", "entities are") + " at none, in " + andList(debt.map(function (r) {
       return title(D, r.name);
     })) + "; every other scored entity holds a medal.";
+  // One claim. A sentence that also counts scorecards and campaigns reads as three facts, and the next box carries the count.
+  if (far) return "Needs attention: the " + trackTitle(D, far) + " track is furthest from its goal.";
   var lead = "Needs attention: ";
   return lead + (bits.length > 1 ? bits.slice(0, -1).join(", ") + " and " + bits[bits.length - 1] : bits[0]) + ".";
 }

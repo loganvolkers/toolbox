@@ -1335,6 +1335,7 @@
 		if (!off.length && !blind.length && atNone <= 2) return "Almost there: " + plural(atNone, "entity is", "entities are") + " at none, in " + andList(debt.map(function(r) {
 			return title(D, r.name);
 		})) + "; every other scored entity holds a medal.";
+		if (far) return "Needs attention: the " + trackTitle(D, far) + " track is furthest from its goal.";
 		return "Needs attention: " + (bits.length > 1 ? bits.slice(0, -1).join(", ") + " and " + bits[bits.length - 1] : bits[0]) + ".";
 	}
 	// src/lib/kinds.ts
@@ -1634,9 +1635,12 @@
 		var ruleEl = rule ? [link("rule/" + enc(b.r.name) + "/" + enc(rule[0]), "", ruleWords(b.r.name, rule[0]))] : [];
 		var named = rule && rule[1] === b.n ? namedAt(D, b.r.name, b.below) : null;
 		var gain = " The track gains about " + points(b.gain) + ".";
+		var kind = ((D.scorecards || {})[b.r.name] || {}).kind;
+		var count = kind ? kindCount(D, kind, b.n) : plural(b.n, "entity", "entities");
 		if (named) return [
+			count + ", ",
 			...named,
-			" on ",
+			", on ",
 			card,
 			b.n === 1 ? " needs " : " need ",
 			...ruleEl,
@@ -2763,6 +2767,42 @@
 		})];
 	}
 	// src/views/overview.ts
+	function furthestOff(D, S) {
+		var standards = {};
+		(S.repo && S.repo.constituents || []).forEach(function(c) {
+			standards[c.name] = true;
+		});
+		var best = null;
+		Object.keys(D.scorecards || {}).forEach(function(name) {
+			if (standards[name] || isComparative(D, name)) return;
+			var sc = D.scorecards[name];
+			var levels = sc.levels || [];
+			var top = levels[levels.length - 1];
+			Object.keys((D.scores || {})[name] || {}).forEach(function(id) {
+				var score = D.scores[name][id];
+				if (!score || score.level === "skipped" || score.level === top) return;
+				var unrun = unrunIn(sc, score);
+				var idx = levels.indexOf(score.level);
+				var gap = idx < 0 ? levels.length : levels.length - 1 - idx;
+				if (unrun.length) gap += 1;
+				var fails = Object.keys(score.rules || {}).filter(function(k) {
+					return score.rules[k] === "fail";
+				});
+				var next = idx >= 0 ? levels[idx + 1] : top;
+				var held = next ? blockers(sc, score, next) : [];
+				var rule = (fails.length ? held[0] || fails[0] : unrun[0]) || null;
+				var rank = gap * 1e3 + fails.length * 10 + unrun.length;
+				if (!best || rank > best.rank || rank === best.rank && (id < best.id || id === best.id && name < best.name)) best = {
+					rank,
+					id,
+					name,
+					rule,
+					fails: !!(rule && fails.indexOf(rule) >= 0)
+				};
+			});
+		});
+		return best;
+	}
 	var overviewViews = {
 		hero(D, S, campaignNames) {
 			const R = S.repo;
@@ -2896,7 +2936,11 @@
 			})) : el("p", {
 				className: "attn",
 				textContent: verdict
-			}), wins.length ? el("p", { className: "wins" }, el("b", { textContent: "✓ Already: " }), wins.join(" · ")) : null, nextBox, climb);
+			}), wins.length ? el("p", { className: "wins" }, el("b", { textContent: "✓ Already: " }), wins.join(" · ")) : null, (function() {
+				var off = furthestOff(D, S);
+				if (!off) return null;
+				return el("p", { className: "attn" }, el("b", { textContent: "Furthest from the top: " }), link("entity/" + enc(off.id), "", shortId(off.id)), " on ", link("scorecard/" + enc(off.name), "", title(D, off.name)), off.rule ? el("span", {}, off.fails ? ", held by " : ", waiting on ", link("rule/" + enc(off.name) + "/" + enc(off.rule), "", ruleTitle(off.name, off.rule)), off.fails ? ", which fails." : ", which was not run in this build.") : ".");
+			})(), nextBox, climb);
 			var ladder = el("div", {
 				className: "ladder",
 				style: "--steps:" + R.ladder.length
@@ -4925,7 +4969,7 @@
 					}) : null), scName ? el("div", { className: "sub" }, "Rule page: ", ruleLink(scName, n, null, true), " ", el("code", {
 						className: "rid",
 						textContent: n
-					})) : null, rule.fix && o !== "unknown" ? el("div", { className: "fix" }, el("b", { textContent: "Fix: " }), ...rich(fixFor(rule.fix))) : "", whyEl(rule), evidenceEl(items, seen, scName ? "“" + ruleTitle(scName, n) + "”" : n)));
+					})) : null, o === "unknown" ? el("div", { className: "fix" }, el("b", { textContent: "Next: " }), "this check was not run. ", rule.fix ? el("span", {}, ...rich(fixFor(rule.fix))) : el("span", {}, "Run it, then ", el("code", { textContent: "toolbox report" }), " again.")) : rule.fix ? el("div", { className: "fix" }, el("b", { textContent: "Fix: " }), ...rich(fixFor(rule.fix))) : "", whyEl(rule), evidenceEl(items, seen, scName ? "“" + ruleTitle(scName, n) + "”" : n)));
 					return;
 				}
 				wrap.append(el("div", { className: "rule " + o }, el("div", { style: "display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center" }, el("h4", { className: "rn" }, scName ? ruleLink(scName, n, null, true) : n), scName ? el("code", {
@@ -4938,7 +4982,7 @@
 				}), basisBadge(basisOf(rule)), rule.level ? el("span", {
 					className: "sub",
 					textContent: "needed for " + rule.level
-				}) : ""), rule.fix && o !== "unknown" ? el("div", { className: "fix" }, el("b", { textContent: "Fix: " }), ...rich(fixFor(rule.fix))) : "", whyEl(rule), evidenceEl(items, seen, scName ? "“" + ruleTitle(scName, n) + "”" : n)));
+				}) : ""), o === "unknown" ? el("div", { className: "fix" }, el("b", { textContent: "Next: " }), "this check was not run. ", rule.fix ? el("span", {}, ...rich(fixFor(rule.fix))) : el("span", {}, "Run it, then ", el("code", { textContent: "toolbox report" }), " again.")) : rule.fix ? el("div", { className: "fix" }, el("b", { textContent: "Fix: " }), ...rich(fixFor(rule.fix))) : "", whyEl(rule), evidenceEl(items, seen, scName ? "“" + ruleTitle(scName, n) + "”" : n)));
 			});
 			if (later.length) {
 				var further = order.filter(function(lv) {
@@ -4974,7 +5018,9 @@
 			if (unsure.length) return el("div", {
 				className: "callout",
 				style: "background:color-mix(in srgb,var(--unknown) 12%,var(--card))"
-			}, el("span", {}, el("b", { textContent: "Not established. " }), unrunWords(sc, unsure), " This scorecard's level is not shown until those checks run."));
+			}, el("span", {}, unrunWords(sc, unsure), " Next: run ", ...unsure.map(function(n, i) {
+				return el("span", {}, i ? i === unsure.length - 1 ? " and " : ", " : "", ruleTitleOf(sc, n));
+			}), ", then ", el("code", { textContent: "toolbox report" }), " again. This scorecard shows no medal until they run."));
 			var next = nextLevel(sc, score.level);
 			if (!next) return el("div", { className: "callout done" }, "✓ Top level reached: every rule passes.");
 			var need = blockers(sc, score, next);
@@ -5128,16 +5174,17 @@
 				var lv = (D.scorecards[n] || {}).levels || [];
 				return D.scores[n][id].level === lv[lv.length - 1];
 			});
+			var mixed = unsetCards.length > 0 && setCards.length > 0;
 			var cardLine = function(n) {
 				var sc = D.scorecards[n];
 				var score = D.scores[n][id];
 				var unrun = unrunIn(sc, score);
-				if (unrun.length) return el("span", { className: "held" }, jumpTo(n), " is not established. ", unrunWords(sc, unrun), " This scorecard shows no medal.");
+				if (unrun.length) return el("span", { className: "held" }, mixed ? el("strong", { style: "color:var(--fg);text-transform:none" }, "Not run in this build. ") : null, jumpTo(n), mixed ? ": " : " is not established. ", unrunWords(sc, unrun), " This scorecard shows no medal.");
 				var hollow = unassessedIn(D, n, id);
 				var next = nextLevel(sc, score.level);
 				var need = next ? blockers(sc, score, next) : [];
 				var hold = need.length === 1 ? ". Held by " + ruleTitleOf(sc, need[0]) + (score.rules[need[0]] === "unknown" ? ", which was not run" : ", which fails") : need.length ? ". " + plural(need.length, "rule") + " short of " + levelName(next) : "";
-				return el("span", { className: "held" }, jumpTo(n), " is ", ownLevel(D, kind, score.level), hollow ? ", and may not hold until an agent assesses it" : "", hold, ".");
+				return el("span", { className: "held" }, mixed ? el("strong", { style: "color:" + ink(score.level) + ";text-transform:none" }, (need.length ? "Fails" : ownLevel(D, kind, score.level)) + ". ") : null, jumpTo(n), " is ", ownLevel(D, kind, score.level), hollow ? ", and may not hold until an agent assesses it" : "", hold, ".");
 			};
 			return el("section", {}, el("nav", {
 				className: "crumb",
@@ -5148,7 +5195,7 @@
 			})), shown || whollyUnset ? el("div", { className: "elevel" }, whollyUnset ? el("span", { title: "Checks this level needs were not run, so it is not established." }, medal("not scored", 52)) : shownHollow ? el("span", {
 				className: "medal-hollow",
 				title: "No agent has assessed the scorecard that sets this level, so it may not hold."
-			}, medal(shown, 52)) : medal(shown, 52), el("div", {}, unsetCards.length && setCards.length ? el("strong", { style: "color:var(--fg);text-transform:none" }, "Not at the top level") : el("strong", { style: "color:" + (whollyUnset ? "var(--muted)" : ink(shown)) + (whollyUnset || KNOWN.indexOf(ownLevel(D, kind, shown)) < 0 ? ";text-transform:none" : "") }, whollyUnset ? "Not established" : ownLevel(D, kind, shown), !whollyUnset && atTop ? el("span", {
+			}, medal(shown, 52)) : medal(shown, 52), el("div", {}, unsetCards.length && setCards.length ? null : el("strong", { style: "color:" + (whollyUnset ? "var(--muted)" : ink(shown)) + (whollyUnset || KNOWN.indexOf(ownLevel(D, kind, shown)) < 0 ? ";text-transform:none" : "") }, whollyUnset ? "Not run in this build" : ownLevel(D, kind, shown), !whollyUnset && atTop ? el("span", {
 				className: "topmark",
 				textContent: " ✓ top" + (KNOWN.indexOf(shown) < 0 ? " level" : "")
 			}) : null), ...openCards.map(cardLine), el("span", {
@@ -5676,11 +5723,14 @@
 			hero.querySelector("details.cmp-def").append(el("p", {
 				className: "cmp-method",
 				style: "margin:8px 0 0"
-			}, el("b", { textContent: lead ? "Method: " : "How it was measured: " }), ...lead ? rich(lead + " ") : [(brief.length ? brief.join(" · ") + ". " : "") + "Every rule is " + (bases.judged ? "measured or agent-judged" : "measured by script") + ". "], el("span", { style: "display:block;margin-top:4px" }, el("b", { textContent: "Not covered: " }), ...scope ? rich(scope.replace(/^Not (covered|measured)\s*:\s*/i, "") + " ") : [el("span", {
-				className: "sub",
-				textContent: "not stated: the track's description has no “Not covered:” sentence. "
-			})])));
+			}, el("b", { textContent: lead ? "Method: " : "How it was measured: " }), ...lead ? rich(lead + " ") : [(brief.length ? brief.join(" · ") + ". " : "") + "Every rule is " + (bases.judged ? "measured or agent-judged" : "measured by script") + ". "]));
 			hero.querySelector(".rule-tally").after(el("p", {
+				className: "cmp-method",
+				style: "margin:8px 0 0"
+			}, el("b", { textContent: "Not covered: " }), ...scope ? rich(scope.replace(/^Not (covered|measured)\s*:\s*/i, "")) : [el("span", {
+				className: "sub",
+				textContent: "not stated. The track's description has no “Not covered:” sentence."
+			})]), el("p", {
 				className: "cmp-method",
 				style: "margin:8px 0 0"
 			}, el("button", {

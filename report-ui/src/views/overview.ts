@@ -2,19 +2,53 @@ import type { ToolboxReport } from "../element";
 import type { Summary } from "../lib/summary";
 import type { ReportData } from "../types";
 // hero, tiles, campaignCard, scorecardTable, overview: methods of <toolbox-report>, installed on its prototype by element.js.
-import { badge, barEl, levelLegend, medal, splitUnassessed } from "../lib/bars";
+import { badge, barEl, levelLegend, medal, splitUnassessed, unrunIn } from "../lib/bars";
 import { lockIcon } from "../lib/basis";
 import { campaignStanding, campaignState, goalBar, includeProgress, kpiBar, kpiPips, nextMedalEl, scCaption, stuckNote } from "../lib/campaigns";
 import { cardName, num } from "../lib/compare";
 import { el, enc, link } from "../lib/dom";
 import { kindCount, kindDescription, kindGroupsOf, kindTitle } from "../lib/kinds";
 import { fill, ink, known } from "../lib/levels";
-import { ring, title, topNote } from "../lib/rings";
-import { LADDER, floorOf, floorPill } from "../lib/rules";
-import { daysLeft } from "../lib/status";
+import { ring, shortId, title, topNote } from "../lib/rings";
+import { LADDER, floorOf, floorPill, isComparative, ruleTitle } from "../lib/rules";
+import { blockers, daysLeft } from "../lib/status";
 import { campaignNamesSorted, healthVerdict, noFacts, share as shareOf } from "../lib/summary";
 import { furthestTrack, trackStats, trackTitle, tracksSorted } from "../lib/tracks";
 import { andList, fmt, plural, scPurpose } from "../lib/words";
+
+// The entity furthest from its own top level, outside the standards that set the repository medal.
+// The overview names it, with the rule that holds it, so a reader does not have to search the catalog.
+function furthestOff(D: ReportData, S: Summary): { rank: number; id: string; name: string; rule: string | null; fails: boolean } | null {
+  var standards: Record<string, boolean> = {};
+  ((S.repo && S.repo.constituents) || []).forEach(function (c) {
+    standards[c.name] = true;
+  });
+  var best: { rank: number; id: string; name: string; rule: string | null; fails: boolean } | null = null;
+  Object.keys(D.scorecards || {}).forEach(function (name) {
+    if (standards[name] || isComparative(D, name)) return;
+    var sc = D.scorecards[name];
+    var levels = sc.levels || [];
+    var top = levels[levels.length - 1];
+    Object.keys((D.scores || {})[name] || {}).forEach(function (id) {
+      var score = D.scores[name][id];
+      if (!score || score.level === "skipped" || score.level === top) return;
+      var unrun = unrunIn(sc, score);
+      var idx = levels.indexOf(score.level);
+      var gap = idx < 0 ? levels.length : levels.length - 1 - idx;
+      if (unrun.length) gap += 1;
+      var fails = Object.keys(score.rules || {}).filter(function (k) {
+        return score.rules[k] === "fail";
+      });
+      var next = idx >= 0 ? levels[idx + 1] : top;
+      var held = next ? blockers(sc, score, next) : [];
+      var rule = (fails.length ? held[0] || fails[0] : unrun[0]) || null;
+      var rank = gap * 1000 + fails.length * 10 + unrun.length;
+      if (!best || rank > best.rank || (rank === best.rank && (id < best.id || (id === best.id && name < best.name))))
+        best = { rank: rank, id: id, name: name, rule: rule, fails: !!(rule && fails.indexOf(rule) >= 0) };
+    });
+  });
+  return best;
+}
 
 export const overviewViews = {
   hero(D: ReportData, S: Summary, campaignNames) {
@@ -177,6 +211,21 @@ export const overviewViews = {
           )
         : el("p", { className: "attn", textContent: verdict }),
       wins.length ? el("p", { className: "wins" }, el("b", { textContent: "✓ Already: " }), wins.join(" · ")) : null,
+      (function () {
+        var off = furthestOff(D, S);
+        if (!off) return null;
+        return el(
+          "p",
+          { className: "attn" },
+          el("b", { textContent: "Furthest from the top: " }),
+          link("entity/" + enc(off.id), "", shortId(off.id)),
+          " on ",
+          link("scorecard/" + enc(off.name), "", title(D, off.name)),
+          off.rule
+            ? el("span", {}, off.fails ? ", held by " : ", waiting on ", link("rule/" + enc(off.name) + "/" + enc(off.rule), "", ruleTitle(off.name, off.rule)), off.fails ? ", which fails." : ", which was not run in this build.")
+            : ".",
+        );
+      })(),
       nextBox,
       climb,
     );
