@@ -30,10 +30,11 @@ examples/openfga-portal/fetch.sh >/dev/null
 "$tb" doctor portal >/dev/null
 (cd examples/openfga-portal/checkout && "$tb" doctor .. >/dev/null)
 
-"$tb" report portal --skip runner,github-actions -o web --out "$tmp/t4t" >/dev/null
+# With each portal's baseline, as pages CI renders it, so campaigns show progress since their start.
+"$tb" report portal --skip runner,github-actions --baseline portal/results.json -o web --out "$tmp/t4t" >/dev/null
 (
   cd examples/openfga-portal/checkout
-  "$tb" report .. --skip github-actions -o web --out "$tmp/openfga" 2>/dev/null
+  "$tb" report .. --skip github-actions --baseline ../results.json -o web --out "$tmp/openfga" 2>/dev/null
   "$tb" report .. --skip github-actions,portal -o web --out "$tmp/openfga-unmeasured" 2>/dev/null
 )
 "$tb" report examples/repo-portal-starter -o web --out "$tmp/starter" >/dev/null

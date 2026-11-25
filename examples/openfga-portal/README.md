@@ -27,8 +27,11 @@ checkout, the way a repository's own `.toolbox/` portal does.
 examples/openfga-portal/fetch.sh             # clones v1.23.0 into checkout/ (git ignores it)
 cd examples/openfga-portal/checkout
 toolbox doctor ..                           # staticcheck 2026.2.2 needs Go 1.27
-toolbox report .. -o web --out /tmp/openfga-report
+toolbox report .. --baseline ../results.json -o web --out /tmp/openfga-report
 ```
+
+`results.json` is this portal's ratchet baseline, written by `--update`. It records each
+campaign's starting point, so the report shows progress since then.
 
 `--skip github-actions` leaves out the GitHub API reads when no token is set; the runner connectors
 (staticcheck, OpenSSF Scorecard) need the tools `toolbox doctor` lists. The report-ui fixture

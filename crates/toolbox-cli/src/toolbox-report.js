@@ -4094,7 +4094,7 @@
 		if (!s) return el("p", {
 			className: "sub",
 			style: "margin:0 0 6px",
-			textContent: "This report was built without the campaign's baseline, so the bar shows where the campaign stands today, not how far it has come since its starting point."
+			textContent: "This report was built without a baseline (toolbox report --baseline <file>), so the bar shows where the campaign stands today, not how far it has come since its starting point."
 		});
 		var parts = [["entitiesShort", "entities short"], ["measure", "total shortfall"]].filter(function(k) {
 			return s[k[0]];
