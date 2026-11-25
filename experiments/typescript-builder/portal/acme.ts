@@ -179,7 +179,7 @@ const appApproval = scorecard("app-approval", {
 });
 
 const installUi = uiBundle({ name: "install-approved-app", path: "ui/install-approved-app", entry: "dist/index.js",
-                             framework: "react", mounts: [{ slot: "action:install-approved-app" }] });
+                             framework: "vue", mounts: [{ slot: "action:install-approved-app" }] });
 const executor = { type: "in-image", command: ["/portal/executors/github-apps/bin/github-apps"], identity: "user",
                    secrets: ["github-app-private-key"] } as const;
 const installationOf = { installation: { kind: GitHubAppInstallation, where: cel`candidate.app == inputs.app` } };
