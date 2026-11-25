@@ -4,7 +4,7 @@ An open-source, agent-first internal developer portal (IDP) framework: Rust core
 code, deployed by you. Catalog, scorecards, self-service actions, knowledge/context lake and search —
 exposed identically over API, MCP, CLI and UI.
 
-The public docs are a Starlight site in [site/](site/src/content/docs/index.md), published to GitHub Pages (D91).
+The public docs are a Starlight site in [site/](site/src/content/docs/index.md), published to GitHub Pages (D91). The same build publishes the [catalog report](https://loganvolkers.github.io/toolbox/report/) and [Storybook](https://loganvolkers.github.io/toolbox/storybook/).
 
 **Focus (D01M80Y0XEK069GD08VCCNF0WB8):** proving value from both ends: bottom-up at a single repository ([docs/design/repo-value.md](docs/design/repo-value.md)) and top-down at the central portal, then meeting in the middle. Federation is unpaused, and self-service actions are built with it (D01M86BY3YQX3SA1W99QXF1QA1H).
 
@@ -58,7 +58,7 @@ cargo build && target/debug/toolbox validate examples/reference-portal
   - [design/maintainer-sdlc.md](docs/design/maintainer-sdlc.md): **SDLC layer 1**, how Toolbox itself is built and verified (check pyramid, measured loop)
   - [design/user-sdlc.md](docs/design/user-sdlc.md): **SDLC layer 4**, building apps and agents on a portal's context and actions
   - [design/developer-velocity.md](docs/design/developer-velocity.md): fast inner loops for maintainers and operators (SDLC layers 1–2: build speed, selective/parallel/cached tests, watch mode)
-  - [design/frontend.md](docs/design/frontend.md): delightful code-defined action UIs, React + `@toolbox/ui`, Storybook page-level stories
+  - [design/frontend.md](docs/design/frontend.md): delightful code-defined action UIs, Astro + Vue on `@toolbox-dev/ui`, with page stories
   - [design/graphql.md](docs/design/graphql.md): read-only GraphQL with trusted documents for rich catalog pages
   - [design/agent-plugins.md](docs/design/agent-plugins.md): the operator agent plugin (in `plugins/`) and the generated user plugin
   - [design/dashboards.md](docs/design/dashboards.md): dashboards via agent artifacts + MCP; operator-only UI views; history

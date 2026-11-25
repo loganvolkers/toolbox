@@ -1,7 +1,6 @@
-import type { ToolboxReport } from "../element";
+import type { ReportViews } from "../report-view";
 import type { Summary } from "../lib/summary";
 import type { ReportData } from "../types";
-// rule: methods of <toolbox-report>, installed on its prototype by element.js.
 import { badge, grow } from "../lib/bars";
 import { BASIS, basisBadge, basisOf, refs } from "../lib/basis";
 import { el, enc, link } from "../lib/dom";
@@ -151,4 +150,4 @@ export const ruleViews = {
           : null,
     );
   },
-} satisfies ThisType<ToolboxReport>;
+} satisfies ThisType<ReportViews>;

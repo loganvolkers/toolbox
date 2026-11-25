@@ -66,8 +66,8 @@ caching) comes back only when these numbers regress (D44, [developer-velocity.md
 | Scale | 100k entities / 2M relations / 100 rules ≤ 10 s | Budget §10.4 | `cargo run --release -p toolbox-derive --example scale` |
 | Format | Tracked `.yaml` and `.yml` match Yamark's fixed point (D97) | One style for embedded objects | `yamark format --check` |
 | Freshness | `ui/dist` matches its source | Embedded UI is current | CI `ui` job |
-| Types and freshness | `report-ui/src` passes `tsc` (strict), and `toolbox-report.js` is its Vite bundle (D01M880QMWD7Z7FTGKJT99AHWBX) | The report reads the JSON `toolbox report` writes; embedded report is current | `npm run check` in `report-ui` |
-| Story probe | Every report story over the T4T, OpenFGA and starter fixtures, at 1280 and 390 px, light and dark | No serious axe violation (WCAG 2.2 AA), no sideways scroll, no script error | `npm run probe` in `report-ui` |
+| Types and freshness | Shared Vue kit, hosted UI, report and package catalog | Astro documents and embedded assets are current | `pnpm check`, `pnpm build` |
+| Story probe | Every UI story across both fixtures and viewports, in light and dark | No serious accessibility violation, sideways scroll, or script error | `pnpm storybook:build`, `pnpm storybook:probe` |
 | Standards | Toolbox for Toolbox scorecards over crates, docs, CLI and MCP (report, not yet a gate) | Docs, tests, clippy, size and complexity, interface contracts | `scripts/self-portal.sh report`; `toolbox test portal` |
 
 Each row is recorded with its result in [research-log.md](../research-log.md) when a milestone
@@ -122,7 +122,7 @@ npm --prefix scripts/github-emulate test
 | OpenFGA v1.22.1 (`TOOLBOX_OPENFGA_BIN`) | Authorization tests, M3–M4 acceptance | `go install github.com/openfga/openfga/cmd/openfga@v1.22.1` |
 | Python 3 + `tools/requirements.txt` | Reference model, parity, mock GitHub, SCIM feeder | `cel-python`, `jsonschema`, `pyyaml` |
 | yamark 0.6.1 | YAML formatting (D97) | `python3 -m pip install yamark==0.6.1` |
-| Node 22 + Playwright | UI build, A11 browser check, report stories and probes | `npm install` in `ui/`; `npm ci` and `npx playwright install chromium` in `report-ui/` |
+| Node 24 + PNPM + Playwright | Astro builds, A11 browser check, UI stories and probes | `pnpm install --frozen-lockfile`; `pnpm --filter @toolbox-dev/astro-report exec playwright install chromium` |
 
 ## 6. Standards
 

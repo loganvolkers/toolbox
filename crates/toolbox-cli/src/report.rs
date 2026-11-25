@@ -1,7 +1,7 @@
 //! `toolbox report`: score a repository locally, without a server (docs/design/toolbox-for-toolbox.md
 //! F1, F4; docs/design/ratchets.md). Runs the portal's in-image connectors once (a resync
 //! each), recomputes, and prints every scorecard with the evidence for failing rules — as Markdown,
-//! JSON, one self-contained HTML page, or a directory a host page can slot into.
+//! JSON, one self-contained HTML page, or a directory for an Astro host.
 //!
 //! With `--baseline FILE` it is a ratchet in the manner of Betterer's `.betterer.results`: the file
 //! records each entity's level and failing rules with their evidence counts. A rule that starts
@@ -30,9 +30,9 @@ pub struct Options {
     /// Output: md (default), json (scores, ratchet results and campaigns), failures (a JSON
     /// list of every failing rule: scorecard, rule, entity, path, the entity's scalar fields,
     /// measure, evidence, fix),
-    /// html (one self-contained page), or web (a directory: the `<toolbox-report>` element,
-    /// its JSON, and that page). A host fills the element's header, nav, and footer slots;
-    /// pass --out DIR for web. With --baseline or --against and neither -o nor --out, the
+    /// html (one self-contained page), or web (a directory with that page, its client
+    /// bundle, and report.json for the Astro integration). Pass --out DIR for web.
+    /// With --baseline or --against and neither -o nor --out, the
     /// verdict is the output, on stdout: a gate says what changed, not every scorecard.
     #[arg(short = 'o', long)]
     pub output: Option<String>,
@@ -1338,7 +1338,7 @@ fn unassessed(m: &toolbox_model::Manifest, d: &Derived) -> Map<String, Value> {
         .collect()
 }
 
-/// The report document the element renders: portal, snapshot, catalog, scorecards, campaigns, scores.
+/// Snapshot rendered by the Astro report.
 fn report_json(m: &toolbox_model::Manifest, d: &Derived, starts: &Map<String, Value>) -> String {
     let tracks: Map<String, Value> = m
         .tracks
@@ -1385,6 +1385,7 @@ fn report_json(m: &toolbox_model::Manifest, d: &Derived, starts: &Map<String, Va
         "portal": m.portal.title.as_deref().unwrap_or(&m.portal.name),
         "snapshot": d.snapshot,
         "catalog": catalog,
+        "entityOverview": public_entity_overviews(m, d),
         "kinds": kinds,
         "kindGroups": kind_groups,
         "tracks": tracks,
@@ -1398,13 +1399,62 @@ fn report_json(m: &toolbox_model::Manifest, d: &Derived, starts: &Map<String, Va
     .to_string()
 }
 
-/// One self-contained page: `<toolbox-report>` with the JSON inlined and the element script
-/// inlined. Host chrome is not concatenated in; a host fills the element's slots instead.
+/// Catalog presentation fields that are visible to the portal's general audience.
+fn public_entity_overviews(m: &toolbox_model::Manifest, d: &Derived) -> Map<String, Value> {
+    const FIELDS: &[&str] = &[
+        "title",
+        "displayName",
+        "name",
+        "description",
+        "owner",
+        "ownership",
+        "links",
+        "repositoryUrl",
+        "sourceUrl",
+        "docsUrl",
+        "runbookUrl",
+        "grafanaUrl",
+        "dashboardUrl",
+        "onCallUrl",
+        "registryUrl",
+    ];
+    let kinds: BTreeMap<_, _> = m
+        .kinds
+        .iter()
+        .map(|kind| (&kind.name, &kind.fields))
+        .collect();
+    d.entities
+        .iter()
+        .filter_map(|(id, entity)| {
+            let defs = kinds.get(&entity.kind)?;
+            let mut overview = Map::new();
+            for name in FIELDS {
+                let Some(field) = defs.get(*name) else {
+                    continue;
+                };
+                if !matches!(field.facet.as_deref(), None | Some("public")) {
+                    continue;
+                }
+                let Some(value) = entity.fields.get(*name) else {
+                    continue;
+                };
+                let presentation = if *name == "ownership" {
+                    json!({ "owner": value["owner"].as_str(), "status": value["status"].as_str() })
+                } else {
+                    value.clone()
+                };
+                overview.insert((*name).to_owned(), presentation);
+            }
+            (!overview.is_empty()).then(|| (id.clone(), Value::Object(overview)))
+        })
+        .collect()
+}
+
+/// A self-contained page built from the same Astro integration used by GitHub Pages.
 fn html_page(data_json: &str) -> String {
-    // `</` can't appear inside the script element.
-    let embedded = data_json.replace("</", "<\\/");
+    let embedded = data_json.replace('<', "\\u003c");
     include_str!("report.html")
-        .replace("/*ELEMENT*/", include_str!("toolbox-report.js"))
+        .replace("/*CLIENT*/", include_str!("toolbox-report.js"))
         .replace("/*DATA*/", &embedded)
 }
 
@@ -1412,8 +1462,7 @@ fn html(m: &toolbox_model::Manifest, d: &Derived, starts: &Map<String, Value>) -
     html_page(&report_json(m, d, starts))
 }
 
-/// `toolbox-report.js`, `report.json`, and the one-file `index.html`. A host page loads the
-/// first two and projects its own header, nav, and footer into the element's slots.
+/// One-file `index.html`, its client bundle, and `report.json` for an Astro host.
 fn write_web_parts(dir: &std::path::Path, data_json: &str) -> Result<(), String> {
     std::fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
     let write = |name: &str, body: &str| {
@@ -2298,44 +2347,73 @@ mod tests {
     }
 
     #[test]
-    fn the_html_page_is_the_element_with_slots_and_inlined_data() {
-        let page = html_page(
-            r#"{"portal":"Demo","snapshot":"s","catalog":{},"scorecards":{},"scores":{}}"#,
-        );
-        assert!(page.contains("<toolbox-report>"));
-        assert!(page.contains(r#"<script type="application/json">{"portal":"Demo""#));
-        // The bundler chooses the quotes of the template string, so the attribute may be escaped.
-        let has_slot = |n: &str| {
-            page.contains(&format!(r#"<slot name="{n}">"#))
-                || page.contains(&format!(r#"<slot name=\"{n}\">"#))
+    fn the_static_overview_keeps_public_metadata_and_omits_owner_only_fields() {
+        let manifest = serde_norway::from_str(
+            r"
+apiVersion: toolbox.dev/v1alpha1
+portal: {name: t, owner: group:a, toolbox: '>=0.1'}
+kinds:
+- name: Service
+  identityFrom: [connector:ws]
+  sources: {default: [connector:ws]}
+  fields:
+    title: {type: string}
+    grafanaUrl: {type: string, facet: public}
+    runbookUrl: {type: string, facet: owner}
+    ownership: {type: object}
+",
+        )
+        .unwrap();
+        let fields = json!({
+            "title": "Checkout",
+            "grafanaUrl": "https://example.com/grafana",
+            "runbookUrl": "https://example.com/private",
+            "ownership": {"owner": "group:payments", "status": "verified", "evidence": "internal"}
+        });
+        let snapshot = Derived {
+            entities: BTreeMap::from([(
+                "service:checkout".into(),
+                toolbox_derive::Entity {
+                    kind: "Service".into(),
+                    fields: fields.as_object().unwrap().clone(),
+                    provenance: BTreeMap::new(),
+                    inbound: BTreeMap::new(),
+                    records: Vec::new(),
+                },
+            )]),
+            ..Derived::default()
         };
-        assert!(has_slot("header"));
-        assert!(has_slot("nav"));
-        assert!(has_slot("footer"));
-        assert!(page.contains("Overview"));
-        assert!(page.contains("Catalog"));
-        assert!(page.contains("Campaigns"));
-        assert!(page.contains(r#"setAttribute("aria-label", "Status")"#));
-        assert!(page.contains("Most entities at none first"));
-        assert!(page.contains("role: \"tab\""));
-        assert!(!page.contains("{{"));
+        let overview = public_entity_overviews(&manifest, &snapshot);
+        assert_eq!(
+            overview["service:checkout"],
+            json!({
+                "title": "Checkout",
+                "grafanaUrl": "https://example.com/grafana",
+                "ownership": {"owner": "group:payments", "status": "verified"}
+            })
+        );
+    }
+
+    #[test]
+    fn the_html_page_contains_the_astro_mount_and_inlined_data() {
+        let data = r#"{"portal":"Demo","snapshot":"s","catalog":{},"scorecards":{},"scores":{}}"#;
+        let page = html_page(data);
+        assert!(page.contains("id=\"toolbox-report-root\""));
+        assert!(page.contains(data));
+        assert!(!page.contains("/*CLIENT*/"));
+        assert!(!page.contains("/*DATA*/"));
+        assert!(!page.contains("src=\"/_astro/"));
     }
 
     #[test]
     fn a_closing_script_tag_in_the_data_cannot_break_out_of_the_json_script() {
         let page = html_page(r#"{"portal":"</script>"}"#);
-        let json = page
-            .split(r#"<script type="application/json">"#)
-            .nth(1)
-            .unwrap()
-            .split("</script>")
-            .next()
-            .unwrap();
-        assert_eq!(json, r#"{"portal":"<\/script>"}"#);
+        assert!(page.contains(r#"{"portal":"\u003c/script>"}"#));
+        assert!(!page.contains(r#"{"portal":"</script>"}"#));
     }
 
     #[test]
-    fn web_output_writes_the_element_the_json_and_the_page() {
+    fn web_output_writes_the_client_the_json_and_the_page() {
         let dir = std::env::temp_dir().join(format!("toolbox-report-web-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         let data = r#"{"portal":"Demo"}"#;
@@ -2349,7 +2427,7 @@ mod tests {
             data
         );
         let page = std::fs::read_to_string(dir.join("index.html")).unwrap();
-        assert!(page.contains("<toolbox-report>"));
+        assert!(page.contains("id=\"toolbox-report-root\""));
         assert!(page.contains(data));
         let _ = std::fs::remove_dir_all(&dir);
     }

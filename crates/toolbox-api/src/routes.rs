@@ -467,15 +467,7 @@ struct PageQuery {
     as_user: Option<String>,
 }
 
-fn html_escape(s: &str) -> String {
-    s.replace('&', "&amp;")
-        .replace('<', "&lt;")
-        .replace('>', "&gt;")
-        .replace('"', "&quot;")
-}
-
-/// `GET /e/{id}` — the entity page as HTML, so the document itself names the entity and its
-/// owner. The SPA still hydrates `#root`. A shell with neither is what an empty index is.
+/// A deep link names the visible entity before the Astro document loads its Vue app.
 async fn entity_page(
     State(s): S,
     mut headers: HeaderMap,
@@ -503,36 +495,23 @@ async fn entity_page(
         Ok(v) => v[0],
         Err(r) => return r,
     };
-    let Some(entity) = p.derived.entities.get(&id).filter(|_| vis.view) else {
+    let Some(entity) = s
+        .shape_entity(&p, &caller, &id, vis, None)
+        .filter(|_| vis.view)
+    else {
         return problem(StatusCode::NOT_FOUND, "not-found", "no entity");
     };
-    let title = entity
-        .fields
-        .get("title")
-        .and_then(Value::as_str)
-        .unwrap_or(id.as_str());
-    let owner = entity
-        .fields
-        .get("owner")
-        .and_then(Value::as_str)
+    let fields = &entity["fields"];
+    let title = fields["title"]
+        .as_str()
+        .or_else(|| fields["displayName"].as_str())
+        .or_else(|| fields["name"].as_str())
+        .unwrap_or(&id);
+    let owner = fields["ownership"]["owner"]
+        .as_str()
+        .or_else(|| fields["owner"].as_str())
         .unwrap_or("");
-    let body = format!(
-        "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>{title}</title>\
-         <script type=\"module\" src=\"/assets/app.js\"></script>\
-         <link rel=\"stylesheet\" href=\"/assets/app.css\"></head><body>\
-         <header><p>{title}</p><p>Owner: {owner}</p></header><div id=\"root\"></div></body></html>",
-        title = html_escape(title),
-        owner = html_escape(owner),
-    );
-    (
-        [
-            (header::CONTENT_TYPE, "text/html; charset=utf-8"),
-            (header::CONTENT_SECURITY_POLICY, crate::ui::CSP),
-            (header::X_CONTENT_TYPE_OPTIONS, "nosniff"),
-        ],
-        body,
-    )
-        .into_response()
+    crate::ui::entity(title, owner)
 }
 
 async fn entity_scorecards(

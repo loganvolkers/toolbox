@@ -1,0 +1,2 @@
+packages: [ui, ui-kit, report-ui, site]
+allowBuilds: {esbuild: true}

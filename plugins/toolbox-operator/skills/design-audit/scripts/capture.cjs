@@ -104,7 +104,7 @@ async function settle(page) {
 async function main() {
   const a = args();
   fs.mkdirSync(a.out, { recursive: true });
-  const browser = await chromium.launch();
+  const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE });
   const metrics = {};
   for (const { slug, url } of await targets(a)) {
     for (const [vp, size] of Object.entries(VIEWPORTS)) {

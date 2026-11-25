@@ -368,7 +368,7 @@ ui:
     - name: install-approved-app
       path: ui/install-approved-app
       entry: dist/index.js
-      framework: react # informational; the contract is framework-agnostic (D40)
+      framework: vue # informational; the contract is framework-agnostic (D40)
       mounts: [{slot: action:install-approved-app}]
 
 mcp:

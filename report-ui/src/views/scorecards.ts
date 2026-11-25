@@ -1,8 +1,7 @@
-import type { ToolboxReport } from "../element";
+import type { ReportViews } from "../report-view";
 import type { Summary } from "../lib/summary";
 import { noFacts } from "../lib/summary";
 import type { ReportData } from "../types";
-// scorecardIndex, scorecard: methods of <toolbox-report>, installed on its prototype by element.js.
 import { badge, barEl, grow, legendEl, levelLegend, levelOrder, levelPill, medal, splitUnassessed, tallyLevels, unrunIn } from "../lib/bars";
 import { BASIS, basisBadge, basisCounts, basisIcon, basisInline, basisKey, basisOf, lockIcon, refs, whyEl } from "../lib/basis";
 import { levelName, moverBits, nextLevel, scCaption, verifiedMover } from "../lib/campaigns";
@@ -191,14 +190,39 @@ export const scorecardsViews = {
     };
     search.oninput = draw;
     draw();
+    const highestDebt = groups
+      .map(group => ({ group, atNone: group.rows.filter(row => row.none > 0).length }))
+      .sort((a, b) => b.atNone - a.atNone)[0];
+    const debtSummary = groups.length > 1 && highestDebt?.atNone
+      ? el("p", { className: "sc-debt" },
+          el("button", {
+            type: "button",
+            className: "link",
+            textContent: highestDebt.group.title,
+            onclick: () => {
+              search.value = "";
+              draw();
+              const group = list.querySelectorAll(".sc-group")[groups.indexOf(highestDebt.group)];
+              const heading = group?.querySelector("h3");
+              group?.scrollIntoView({ block: "start" });
+              if (heading) {
+                heading.tabIndex = -1;
+                heading.focus({ preventScroll: true });
+              }
+            },
+          }),
+          " has the most scorecards with an entity at none (" +
+            highestDebt.atNone + " of " + highestDebt.group.rows.length + ").")
+      : null;
     return el(
       "section",
       { className: "sc-index" },
       el("div", { className: "head" }, el("h2", { textContent: "Scorecards" }), el("span", { className: "sub", textContent: plural(standards.length, "scorecard") + (groups.length > 1 ? " in " + plural(groups.length, "group") : "") })),
+      debtSummary,
       el("p", { className: "lede" }, "Each scorecard rates every entity of one kind against levels of rules; the medal is its weakest entity's level, and the bar shows where the rest stand. " + (Object.keys(D.tracks || {}).length ? "They are grouped by track, the line of work each one serves. " : "") + "Open one for its failures, entities and what each level needs.", factors ? el("span", {}, " The " + plural(factors, "comparison factor") + " against a rival are on ", link("compare", "", "the Compare tab"), ".") : null),
       noFacts(S) ? el("div", { className: "next", style: "margin:8px 0" }, el("b", { textContent: "Nothing is scored yet. Next: " }), "run ", el("code", { textContent: "toolbox doctor" }), " to see which connector or tool is missing, then ", el("code", { textContent: "toolbox report" }), " again.") : null,
       anyScored ? el("details", { className: "keyd", open: !matchMedia("(max-width:640px)").matches }, el("summary", { textContent: "How to read the bars" }), levelLegend(D, standards)) : null,
-      search,
+      el("label", { className: "sc-search" }, el("span", { className: "sub" }, "Filter scorecards"), search),
       mixedBases ? basisPick : null,
       list,
     );
@@ -804,7 +828,7 @@ export const scorecardsViews = {
       });
     };
     var standNotes = [unassessedNote(D, active, scored.length), provisionalNote, lever ? el("div", { style: "margin-top:12px" }, lever) : null].filter(Boolean);
-    var jumpBar = el("nav", { className: "jumpbar", ariaLabel: "On this page" }, el("span", { className: "sub", textContent: "On this page:" }), standNotes.length ? jump("What holds it", hStand) : null, jump(scored.length ? "Failures" : "Results", hFail), jump("Entities (" + fmt(scored.length) + ")", hList), jump("What each level needs", hNeeds));
+    var jumpBar = el("nav", { className: "jumpbar", ariaLabel: "On this page" }, el("span", { className: "sub", textContent: "On this page:" }), standNotes.length ? jump("What holds it", hStand) : null, jump(scored.length ? "Failures" : "Results", hFail), jump("Filter entities (" + fmt(scored.length) + ")", hList), jump("What each level needs", hNeeds));
     var floorHere = floorOf(D, active);
     var topHere = order.filter(function (l) {
       return l !== "skipped" && l !== "none";
@@ -878,7 +902,7 @@ export const scorecardsViews = {
         el("div", { className: "head" }, el("h2", { textContent: "Scorecards" })),
         el("p", { className: "sub", style: "margin:0" }, ranked.some(function (r) {
           return r.scored;
-        }) ? "Most entities at none first" : "Nothing is scored yet", anyJudged ? el("span", {}, " · ", el("span", { className: "bicon judged" }, basisIcon("judged")), " has agent-judged rules · ", el("span", { className: "bicon" }, basisIcon("measured")), " every rule measured") : null),
+        }) ? "Most entities at none first" : "Nothing is scored yet", anyJudged ? el("span", {}, " · ", el("span", { className: "bicon judged" }, basisIcon("judged")), " has agent-judged rules · ", el("span", { className: "bicon" }, basisIcon("measured")), " tool checks only") : null),
         cardSearch,
         toTop,
         cardNav,
@@ -890,6 +914,7 @@ export const scorecardsViews = {
         el("label", { className: "picker" }, el("span", { className: "sub", textContent: "Scorecard" }), picker),
         el("div", { className: "head" }, el("h2", { textContent: title(D, active) }), el("code", { className: "sub", textContent: active })),
         status,
+        jumpBar,
         el("p", { className: "lede" }, ...richCards(D, sc.description, active)),
         whyEl,
         el(
@@ -903,7 +928,6 @@ export const scorecardsViews = {
         ),
         isComparative(D, active) ? el("div", { className: "callout" }, el("span", {}, "This scorecard compares products rather than levelling them. ", link("compare/" + enc(active), "", "See how they stand →"))) : null,
         basisInline(basisCounts(sc.rules)) ? null : basisKey(basisCounts(sc.rules)),
-        jumpBar,
         standNotes.length ? hStand : null,
         ...standNotes,
         hFail,
@@ -920,4 +944,4 @@ export const scorecardsViews = {
       ),
     );
   },
-} satisfies ThisType<ToolboxReport>;
+} satisfies ThisType<ReportViews>;

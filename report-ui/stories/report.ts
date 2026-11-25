@@ -1,6 +1,7 @@
-// Story helpers: a page is the whole <toolbox-report> over a fixture at one route; a component
-// is a library function's output inside a shadow root that carries the report's stylesheet.
-import { CSS } from "../src/lib/styles";
+import { h } from "vue";
+import PageFrame from "@toolbox-dev/ui/components/PageFrame.vue";
+import ReportApp from "../src/ReportApp.vue";
+import ReportContent from "../src/ReportContent.vue";
 import type { ReportData } from "../src/types";
 
 type Pins = Partial<Record<"scorecard" | "kind" | "entity" | "track" | "campaign" | "rule" | "compare", string>>;
@@ -14,15 +15,9 @@ export function fixture(json: unknown): ReportData {
 export function page(data: ReportData, route: string | null) {
   return {
     args: { route },
-    render: (args) => {
-      history.replaceState(null, "", "#" + args.route);
-      const el = document.createElement("toolbox-report");
-      const json = document.createElement("script");
-      json.type = "application/json";
-      json.textContent = JSON.stringify(data);
-      el.append(json);
-      return el;
-    },
+    render: (args: { route: string | null }) => ({
+      setup: () => () => h(ReportApp, { data, initialRoute: args.route ?? "overview" }),
+    }),
   };
 }
 
@@ -55,16 +50,10 @@ export function routes(D: ReportData, pins: Pins = {}) {
 
 export function component(build: () => Node | Node[]) {
   return {
-    render: () => {
-      const host = document.createElement("div");
-      const root = host.attachShadow({ mode: "open" });
-      const style = document.createElement("style");
-      style.textContent = CSS;
-      const main = document.createElement("main");
-      main.style.padding = "24px";
-      main.append(...([] as Node[]).concat(build()));
-      root.append(style, main);
-      return host;
-    },
+    render: () => ({
+      setup: () => () => h(PageFrame, { class: "toolbox-report" }, {
+        default: () => h(ReportContent, { build }),
+      }),
+    }),
   };
 }

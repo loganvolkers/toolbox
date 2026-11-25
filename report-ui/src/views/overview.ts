@@ -1,7 +1,6 @@
-import type { ToolboxReport } from "../element";
+import type { ReportViews } from "../report-view";
 import type { Summary } from "../lib/summary";
 import type { ReportData } from "../types";
-// hero, tiles, campaignCard, scorecardTable, overview: methods of <toolbox-report>, installed on its prototype by element.js.
 import { badge, barEl, levelLegend, medal, splitUnassessed, unrunIn } from "../lib/bars";
 import { lockIcon } from "../lib/basis";
 import { campaignStanding, campaignState, checkBar, goalBar, includeProgress, kpiPips, nextMedalEl, scCaption, stuckNote, verifiedMover } from "../lib/campaigns";
@@ -261,7 +260,7 @@ export const overviewViews = {
     var almost = at > 0 && verdict.indexOf("Almost") === 0;
     var tone = needs ? "none" : almost ? "bronze" : "gold";
     var seeThem = function (this: HTMLElement) {
-      var h = (this.getRootNode() as ParentNode).querySelector("#need-att");
+      var h = this.closest(".toolbox-report")?.querySelector("#need-att");
       if (h) h.scrollIntoView({ behavior: "smooth", block: "start" });
     };
     var statusLead = el(
@@ -637,4 +636,4 @@ export const overviewViews = {
       ),
     );
   },
-} satisfies ThisType<ToolboxReport>;
+} satisfies ThisType<ReportViews>;

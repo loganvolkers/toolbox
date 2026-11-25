@@ -1,7 +1,6 @@
-import type { ToolboxReport } from "../element";
+import type { ReportViews } from "../report-view";
 import type { Summary } from "../lib/summary";
 import type { ReportData } from "../types";
-// rulesFor, nextStep, entity: methods of <toolbox-report>, installed on its prototype by element.js.
 import { badge, levelPill, medal, unrunIn, unrunWords } from "../lib/bars";
 import { basisBadge, basisIcon, basisKey, basisOf, evidenceEl, whyEl } from "../lib/basis";
 import { levelName, nextLevel } from "../lib/campaigns";
@@ -152,7 +151,7 @@ export const entityViews = {
       wrap.append(
         withheld
           ? el("div", { className: "later-h", textContent: "Rules that ran. These are not a medal." })
-          : el("div", { className: "sub", style: "margin-top:10px", textContent: plural(npass, "check passes", "checks pass") }),
+          : el("div", { className: "sub", style: "margin-top:10px", textContent: plural(npass, "check passes", "checks pass") + (scName ? " · Open a check for evidence." : "") }),
       );
       order.concat([""]).forEach(function (lv) {
         if (!passed[lv]) return;
@@ -441,4 +440,4 @@ export const entityViews = {
       cards.length ? el("div", {}, ...blocks) : el("div", { className: "empty", textContent: "Not scored by any scorecard in this snapshot." }),
     );
   },
-} satisfies ThisType<ToolboxReport>;
+} satisfies ThisType<ReportViews>;

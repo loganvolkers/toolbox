@@ -11,8 +11,8 @@ verdicts:
       The rule is the brief's first F1 scenario, "catalog browse and filter"
       (experiments/backstage-compare/RESEARCH.md:112), and Toolbox's `true`
       rests on real surfaces: the UI's `Catalog` page with a filter parameter
-      (ui/src/main.tsx:166, 382), `toolbox query` and the query MCP tool
-      (facts.yaml:70-72).
+      (ui/src/components/PortalView.vue, ui/src/routes.ts), `toolbox query`
+      and the query MCP tool (facts.yaml:70-72).
   - criterion: hard-to-game
     verdict: fail
     reason: >-
@@ -29,8 +29,8 @@ verdicts:
     verdict: pass
     reason: >-
       For a regression, the fix names the two surfaces whose loss would flip
-      the fact, the UI catalog pages (ui/src/main.tsx) and `toolbox query`;
-      restoring them restores the evidence facts.yaml cites.
+      the fact, the UI catalog pages (ui/src/components/PortalView.vue) and
+      `toolbox query`; restoring them restores the evidence facts.yaml cites.
   - criterion: threshold-justified
     verdict: pass
     reason: >-

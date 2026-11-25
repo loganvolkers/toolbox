@@ -1,0 +1,17 @@
+---
+const { title = "Toolbox report" } = Astro.props;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+  </head>
+  <body class="toolbox-ui">
+    <slot />
+  </body>
+</html>
+<style is:global>
+  body.toolbox-ui { margin: 0; }
+</style>

@@ -13,7 +13,7 @@
 | Authorization model | **OpenFGA DSL** + `.fga.yaml` tests | Unmodified OpenFGA evaluates it |
 | Connectors | **Any language** over the connector API (stdio or HTTP) | [connector-control.md](./connector-control.md) |
 | Action logic | **Any language** as an in-image or HTTP executor | [action-runs.md](./action-runs.md) |
-| Custom UI | **Any framework** through the UI extension contract; React + `@toolbox/ui` is the default kit | [minimal-ui.md](./minimal-ui.md), v1-spec §7.6 |
+| Custom UI | **Any framework** through the UI extension contract; Astro + Vue on `@toolbox-dev/ui` is the default kit | [minimal-ui.md](./minimal-ui.md), v1-spec §7.6 |
 
 **Deferred:** the Python SDK and Pulumi-style language hosts (D41), WASM functions for in-engine
 logic (D41), a governed connector standard (D42), and Toolbox's own CEL type checker. Logic that CEL

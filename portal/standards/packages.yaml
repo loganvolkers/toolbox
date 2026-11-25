@@ -13,6 +13,12 @@ kinds:
       name: {type: string}
       version: {type: string}
       private: {type: boolean}
+      publishAccess:
+        type: string
+        description: The registry access declared for packages this repository publishes.
+      registryUrl:
+        type: string
+        description: The npm registry page for an explicitly public package.
       descriptionChars: {type: integer}
       engines: {type: boolean}
       requirements: {type: list, items: string}
@@ -28,7 +34,11 @@ kinds:
       id: "'package-json:' + record.path"
       set: >-
         {'path': record.path, 'name': record.name, 'version': record.version,
-         'private': record.private, 'descriptionChars': record.descriptionChars,
+         'private': record.private,
+         'publishAccess': has(record.publishAccess) ? record.publishAccess : '',
+         'registryUrl': !record.private && has(record.publishAccess) && record.publishAccess == 'public'
+           ? 'https://www.npmjs.com/package/' + record.name : '',
+         'descriptionChars': record.descriptionChars,
          'engines': record.engines, 'requirements': record.requirements,
          'wildcardRanges': record.wildcardRanges, 'gitRanges': record.gitRanges,
          'lockfile': record.lockfile, 'checkScripts': record.checkScripts,

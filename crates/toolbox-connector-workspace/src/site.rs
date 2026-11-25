@@ -188,6 +188,7 @@ fn site_link_exists(root: &Path, rel: &str, target: &str) -> bool {
         || base.join(&slug).join("index.mdx").is_file()
         || public_file(root, dir, &slug)
         || astro_page(root, dir, &slug)
+        || generated_page(root, dir, &slug)
 }
 
 /// A file shipped next to the site (`public/report/index.html` → `/report/`).
@@ -208,6 +209,21 @@ fn astro_page(root: &Path, site: &str, slug: &str) -> bool {
     }
     let pages = root.join(site).join("src/pages");
     pages.join(format!("{slug}.astro")).is_file() || pages.join(slug).join("index.astro").is_file()
+}
+
+/// Routes supplied by site integrations and the build rather than by files in src/pages.
+fn generated_page(root: &Path, site: &str, slug: &str) -> bool {
+    let Ok(text) = std::fs::read_to_string(root.join(site).join("src/data/site-routes.json"))
+    else {
+        return false;
+    };
+    let Ok(routes) = serde_json::from_str::<std::collections::BTreeMap<String, String>>(&text)
+    else {
+        return false;
+    };
+    routes
+        .values()
+        .any(|path| path.starts_with('/') && path.trim_matches('/') == slug)
 }
 
 fn file_exists(root: &Path, rel: &str, target: &str) -> bool {
@@ -257,6 +273,28 @@ mod tests {
             std::fs::write(path, body).unwrap();
         }
         Tmp(root)
+    }
+
+    #[test]
+    fn a_generated_page_resolves_under_the_project_base() {
+        let root = scratch(
+            "generated-page",
+            &[
+                (
+                    "site/astro.config.mjs",
+                    "export default { base: '/toolbox' };",
+                ),
+                (
+                    "site/src/data/site-routes.json",
+                    r#"{"report":"/report","storybook":"/storybook"}"#,
+                ),
+            ],
+        );
+        let from = "site/src/content/docs/index.md";
+        assert!(site_link_exists(&root.0, from, "/toolbox/report/"));
+        assert!(site_link_exists(&root.0, from, "/toolbox/storybook/"));
+        assert!(!site_link_exists(&root.0, from, "/report/"));
+        assert!(!site_link_exists(&root.0, from, "/toolbox/missing/"));
     }
 
     #[test]
