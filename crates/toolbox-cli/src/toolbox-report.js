@@ -1047,7 +1047,7 @@
 		var high = cards.reduce(function(a, c, i) {
 			return a >= 0 && cards[a].row.topShare >= c.row.topShare ? a : i;
 		}, -1);
-		var rest = (low >= 0 ? "Lowest bar, " + named(cards[low]) : "Each bar is one scorecard") + (high >= 0 && high !== low && cards[high].row.topShare > cards[low].row.topShare ? " · highest, " + named(cards[high]) : "") + " · dashed line: their average, " + t.pct + "%";
+		var rest = (low >= 0 ? "Lowest share at the top level, " + named(cards[low]) : "Each bar is one scorecard") + (high >= 0 && high !== low && cards[high].row.topShare > cards[low].row.topShare ? " · highest, " + named(cards[high]) : "") + " · dashed line: their average, " + t.pct + "%";
 		var cap = el("div", {
 			className: "slotcap",
 			ariaHidden: "true",
@@ -1479,6 +1479,17 @@
 		}
 		return null;
 	}
+	function entityLead(id) {
+		var file = shortId(id);
+		if (/^D0[0-9A-Z]{8,}\.md$/.test(file)) return {
+			label: "Decision record",
+			file
+		};
+		return {
+			label: file,
+			file: null
+		};
+	}
 	function namedAt(D, name, level) {
 		var ids = Object.keys((D.scores || {})[name] || {}).filter(function(id) {
 			return D.scores[name][id].level === level;
@@ -1487,7 +1498,12 @@
 		var bits = [];
 		ids.forEach(function(id, i) {
 			if (i) bits.push(i === ids.length - 1 ? " and " : ", ");
-			bits.push(link("entity/" + enc(id), "", shortId(id)));
+			var lead = entityLead(id);
+			bits.push(link("entity/" + enc(id), "", lead.label));
+			if (lead.file) bits.push(el("small", {
+				className: "sub",
+				textContent: " (" + lead.file + ")"
+			}));
 		});
 		return bits;
 	}
@@ -3330,10 +3346,14 @@
 							return title(D, r.name);
 						}).join(", ") })), body);
 					}
+					var lead = x.g.name ? verifiedMover(D, trackStats(D, S, x.g.name).cards) : null;
 					return el("div", { className: "sc-group" }, groups.length === 1 && !x.g.name ? null : el("h3", {}, x.g.name ? link(trackPath(D, x.g.name), "", x.g.title) : x.g.title, el("span", {
 						className: "sub",
 						textContent: " · " + plural(x.rows.length, "scorecard") + (x.g.name ? ", weakest first" : "") + (mix ? "; by lowest level, " + mix : "")
-					})), el("div", { className: "sc-rows" }, el("div", {
+					})), lead ? el("div", {
+						className: "tnext",
+						style: "margin:0 0 8px"
+					}, el("b", { textContent: "Next: " }), ...moverBits(D, lead)) : null, el("div", { className: "sc-rows" }, el("div", {
 						className: "sc-head",
 						ariaHidden: "true"
 					}, el("span"), el("span", { textContent: "Scorecard" }), el("span", { textContent: "Entities by level" }), el("span", { textContent: "Lowest level" })), ...open.map(row), restRows, restBtn ? el("div", { className: "more" }, restBtn) : null, fold));
@@ -4995,9 +5015,6 @@
 			}).map(function(x) {
 				return x.n;
 			});
-			var holding = cards.filter(function(n) {
-				return placeOf(n) < 8 && metalOf(n) === S.worst[id];
-			});
 			var total = {
 				pass: 0,
 				hollow: 0,
@@ -5090,14 +5107,6 @@
 					}
 				});
 			};
-			var heldEl = cards.length > 1 && holding.length && S.worst[id] ? el("span", { className: "held" }, "Held at " + ownLevel(D, kind, S.worst[id]) + " by ", ...holding.length > 2 ? [plural(holding.length, "scorecard") + " (the first sections below)"] : holding.map(function(h, i) {
-				var sc = D.scorecards[h];
-				var score = D.scores[h][id];
-				var next = nextLevel(sc, score.level);
-				var need = next ? blockers(sc, score, next) : [];
-				var why = need.length === 1 ? ": “" + ruleTitleOf(sc, need[0]) + "” " + (score.rules[need[0]] === "unknown" ? "was not run" : "fails") : need.length ? ": " + plural(need.length, "rule") + " short of " + levelName(next) : "";
-				return el("span", {}, i ? "; and by " : "", jumpTo(h), why);
-			}), ".") : null;
 			var short = shortId(id);
 			var openCards = cards.filter(function(n) {
 				return !isComparative(D, n) && D.scores[n][id].level !== "skipped";
@@ -5113,44 +5122,35 @@
 				return placeOf(a) - placeOf(b);
 			})[0];
 			var shown = whollyUnset ? null : worstSet ? D.scores[worstSet][id].level : S.worst[id];
-			var unsetBits = [];
-			unsetCards.forEach(function(n, i) {
-				if (i) unsetBits.push(" ");
-				var sc = D.scorecards[n];
-				unsetBits.push(title(D, n) + " is not established. " + unrunWords(sc, unrunIn(sc, D.scores[n][id])));
-			});
-			var unassessedCards = setCards.filter(function(n) {
-				return unassessedIn(D, n, id);
-			}).length;
+			var shownHollow = !!(worstSet && unassessedIn(D, worstSet, id));
 			var atTop = setCards.length > 0 && unsetCards.length === 0 && setCards.every(function(n) {
 				var lv = (D.scorecards[n] || {}).levels || [];
 				return D.scores[n][id].level === lv[lv.length - 1];
 			});
-			var provisional = [unassessedCards ? plural(unassessedCards, "agent-judged scorecard") + " not assessed" : null].filter(Boolean);
+			var cardLine = function(n) {
+				var sc = D.scorecards[n];
+				var score = D.scores[n][id];
+				var unrun = unrunIn(sc, score);
+				if (unrun.length) return el("span", { className: "held" }, jumpTo(n), " is not established. ", unrunWords(sc, unrun), " This scorecard shows no medal.");
+				var hollow = unassessedIn(D, n, id);
+				var next = nextLevel(sc, score.level);
+				var need = next ? blockers(sc, score, next) : [];
+				var hold = need.length === 1 ? ". Held by " + ruleTitleOf(sc, need[0]) + (score.rules[need[0]] === "unknown" ? ", which was not run" : ", which fails") : need.length ? ". " + plural(need.length, "rule") + " short of " + levelName(next) : "";
+				return el("span", { className: "held" }, jumpTo(n), " is ", ownLevel(D, kind, score.level), hollow ? ", and may not hold until an agent assesses it" : "", hold, ".");
+			};
 			return el("section", {}, el("nav", {
 				className: "crumb",
 				ariaLabel: "Breadcrumb"
 			}, link("catalog", "", "Catalog"), kind ? el("span", {}, " / ", link("catalog/" + enc(kind), "", kindTitle(D, kind))) : "", " / " + short), el("div", { className: "ehead" }, el("div", {}, el("h2", { textContent: short }), short !== id ? el("code", { textContent: id }) : null, el("div", {
 				className: "sub",
 				textContent: (kind ? kindTitle(D, kind) : "unknown kind") + " · " + plural(cards.length, "scorecard")
-			})), shown || whollyUnset ? el("div", { className: "elevel" }, whollyUnset ? el("span", { title: "Checks this level needs were not run, so it is not established." }, medal("not scored", 52)) : S.worstState.get(id) === "hollow" && !unsetCards.length ? el("span", {
+			})), shown || whollyUnset ? el("div", { className: "elevel" }, whollyUnset ? el("span", { title: "Checks this level needs were not run, so it is not established." }, medal("not scored", 52)) : shownHollow ? el("span", {
 				className: "medal-hollow",
-				title: "No agent has assessed this entity yet, so this level may not hold."
+				title: "No agent has assessed the scorecard that sets this level, so it may not hold."
 			}, medal(shown, 52)) : medal(shown, 52), el("div", {}, el("strong", { style: "color:" + (whollyUnset ? "var(--muted)" : ink(shown)) + (whollyUnset || KNOWN.indexOf(ownLevel(D, kind, shown)) < 0 ? ";text-transform:none" : "") }, whollyUnset ? "Not established" : ownLevel(D, kind, shown), !whollyUnset && atTop ? el("span", {
 				className: "topmark",
 				textContent: " ✓ top" + (KNOWN.indexOf(shown) < 0 ? " level" : "")
-			}) : null, !whollyUnset && provisional.length ? el("span", {
-				className: "pv-head",
-				textContent: " (may not hold)"
-			}) : null), unsetBits.length ? el("span", {
-				className: "provisional",
-				style: "display:block;font-size:13px"
-			}, ...unsetBits) : null, provisional.length ? el("span", {
-				className: "provisional",
-				style: "display:block;font-size:13px",
-				title: "The level holds only if an agent's assessment finds nothing; the scorecards below name them.",
-				textContent: provisional.join(", ")
-			}) : null, whollyUnset ? null : heldEl, el("span", {
+			}) : null), ...openCards.map(cardLine), el("span", {
 				className: "sub",
 				textContent: total.pass + " of " + plural(total.all, "check passes", "checks pass") + " on evidence" + (total.hollow ? " · " + plural(total.hollow, "more") + " not assessed yet, not counted as " + (total.hollow === 1 ? "a pass" : "passes") : "")
 			}))) : null), total.all ? basisKey(bases, "check") : null, judgedList, cards.length ? el("div", {}, ...blocks) : el("div", {
@@ -5523,11 +5523,12 @@
 			var majorityWords = tallyOf(both.majority);
 			var verdictWords = majority ? majorityWords : strictWords;
 			var countsDiffer = !unmeasured && strictWords !== majorityWords;
-			var headline = unmeasured ? "Not measured yet: none of the " + plural(names.length, "factor") + " has values for both products." : "Ahead on " + verdictWords.slice(9) + (countsDiffer ? "." : ", by either count.");
+			var countName = majority ? "majority" : "strict";
+			var headline = unmeasured ? "Not measured yet: none of the " + plural(names.length, "factor") + " has values for both products." : "Ahead on " + verdictWords.slice(9) + ", by the " + (countsDiffer ? countName + " count" : "either count") + ".";
 			var otherCount = countsDiffer ? el("p", {
 				className: "sub",
 				style: "margin:6px 0 0"
-			}, "Verdict: the " + (majority ? "majority" : "strict") + " count. By the " + (majority ? "strict" : "majority") + " count, " + (majority ? countWords(both.strict, "strict") : countWords(both.majority)) + ".") : null;
+			}, "By the " + (majority ? "strict" : "majority") + " count, " + (majority ? countWords(both.strict, "strict") : countWords(both.majority)) + ".") : null;
 			var lean = counts.behind > counts.ahead ? "behind" : counts.ahead > counts.behind ? "ahead" : "parity";
 			var hero = el("section", { className: "cmp-hero" }, el("div", { className: "cmp-main" }, el("div", {
 				className: "kicker",
@@ -5544,7 +5545,7 @@
 				return (all[behindNames[0]].rules[r] || {})[peer] === "behind";
 			}).sort().map(function(r) {
 				return ruleTitle(behindNames[0], r);
-			})) + ". If your teams rely on those, start with " + title(D, behindNames[0]) + "." : ": if your teams rely on what those factors measure, read them first.") : unmeasured ? " Run the comparison's harness and commit its records to fill this in." : counts.unknown ? " Not behind on any measured factor." : " Never behind."), unmeasured ? el("p", {
+			})) + ". If your teams rely on those, start with " + title(D, behindNames[0]) + "." : ": if your teams rely on what those factors measure, read them first.") : unmeasured ? " Run the comparison's harness and commit its records to fill this in." : counts.unknown ? " Not behind on any measured factor." : " Never behind."), otherCount, unmeasured ? el("p", {
 				className: "rule-tally",
 				textContent: "Rule by rule: none of " + plural(ruleTotal, "rule") + " has values for both products yet."
 			}) : el("p", { className: "rule-tally" }, "Rule by rule: ", el("b", {
@@ -5559,7 +5560,7 @@
 			}), ". Factors are not weighted, so the factor count is a tally, not an overall score."), el("details", {
 				className: "sub cmp-def cmp-brief",
 				style: "margin:6px 0 0"
-			}, el("summary", { textContent: "How a factor and a rule are counted" }), otherCount, "A factor is a scorecard that scores both products on the same rules. On a rule, a product is ahead when its measured value is better (within the rule's tolerance is parity) or it passes a bar the other misses. Factors are counted two ways on every portal. By the strict count, " + who(subject) + " is behind on a factor if it is behind on any one of its rules, and ahead if it is ahead on some and behind on none. By the majority count, it is ahead when it is ahead on more of the factor's rules than it is behind on, behind when it is behind on more, and at parity when they are even. Each comparison declares which count is its verdict; this one declares the " + (majority ? "majority" : "strict") + " count. A factor with any unmeasured rule is not measured. “Mixed” means ahead on some rules and behind on others; “narrowly ahead” means ahead on fewer than half of that factor's rules, at parity on the rest.")), el("div", { className: "cmp-side" }, el("div", {
+			}, el("summary", { textContent: "How a factor and a rule are counted" }), "A factor is a scorecard that scores both products on the same rules. On a rule, a product is ahead when its measured value is better (within the rule's tolerance is parity) or it passes a bar the other misses. Factors are counted two ways on every portal. By the strict count, " + who(subject) + " is behind on a factor if it is behind on any one of its rules, and ahead if it is ahead on some and behind on none. By the majority count, it is ahead when it is ahead on more of the factor's rules than it is behind on, behind when it is behind on more, and at parity when they are even. Each comparison declares which count is its verdict; this one declares the " + (majority ? "majority" : "strict") + " count. A factor with any unmeasured rule is not measured. “Mixed” means ahead on some rules and behind on others; “narrowly ahead” means ahead on fewer than half of that factor's rules, at parity on the rest.")), el("div", { className: "cmp-side" }, el("div", {
 				className: "kicker",
 				textContent: "Factors"
 			}), el("div", { className: "tally3" }, ...[
@@ -5908,13 +5909,17 @@
 				ahead: tallyBy.get("ahead"),
 				parity: tallyBy.get("parity")
 			}, rules.length, tallyKey) : "";
+			var allUnknown = rules.length > 0 && (tallyBy.get("unknown") || 0) === rules.length;
 			var head = el("section", { className: basisCounts(def.rules).judged || !basisCounts(def.rules).measured ? "" : "allmeasured" }, el("nav", {
 				className: "crumb",
 				ariaLabel: "Breadcrumb"
 			}, link("compare", "", "Compare"), " / " + (def.title || name)), el("div", { className: "head" }, el("h2", {
 				textContent: def.title || name,
 				tabIndex: -1
-			}), standingChip(v, rules.length && (tallyBy.get("unknown") || 0) === rules.length ? tallyNote.slice(3) : standingPhrase(who(c.subject), v, who(peer)) + tallyNote)), brief.length ? el("p", { className: "sub provenance" }, el("b", { textContent: timed ? "Timed on: " : "Probed once on: " }), brief.join(" · ") + ". ", /\+uncommitted\b/.test(brief.join(" ")) ? "“+uncommitted” means the harness had local changes when it ran, so a rerun from that commit may differ. " : "", link("compare", "", "How it was measured, and who checked it →")) : null, def.description ? el("p", { className: "lede" }, ...rich(def.description)) : null, def.rationale || (def.links || []).length ? el("div", { className: "rationale" }, el("b", { textContent: "Why this factor matters" }), def.rationale ? el("div", {}, ...rich(def.rationale)) : null, refs(def.links)) : null, el("p", {
+			}), standingChip(v, rules.length && (tallyBy.get("unknown") || 0) === rules.length ? tallyNote.slice(3) : standingPhrase(who(c.subject), v, who(peer)) + tallyNote)), brief.length ? el("p", { className: "sub provenance" }, el("b", { textContent: timed ? "Timed on: " : "Probed once on: " }), brief.join(" · ") + ". ", /\+uncommitted\b/.test(brief.join(" ")) ? "“+uncommitted” means the harness had local changes when it ran, so a rerun from that commit may differ. " : "", link("compare", "", "How it was measured, and who checked it →")) : null, def.description ? el("p", { className: "lede" }, ...rich(def.description)) : null, def.rationale || (def.links || []).length ? el("div", { className: "rationale" }, el("b", { textContent: "Why this factor matters" }), def.rationale ? el("div", {}, ...rich(def.rationale)) : null, refs(def.links)) : null, allUnknown ? el("p", {
+				className: "sub",
+				textContent: "None of these rules has a value for both products yet, so this factor has no verdict."
+			}) : el("p", {
 				className: "sub",
 				textContent: "Each rule scores both products. Where both have a measured value, the better value decides; otherwise passing beats failing. By the strict count, " + who(c.subject) + " is behind on the factor if it is behind on any rule; by the majority count, it follows whichever side more of the rules are on. This comparison's verdict is the " + (c.verdictRule === "majority" ? "majority" : "strict") + " count."
 			}), basisKey(basisCounts(def.rules)), el("div", {}, ...fold ? rows.slice(0, rows.length - atParity) : rows), fold ? el("details", {

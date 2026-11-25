@@ -58,6 +58,13 @@ export function nextMedal(D: ReportData, cards) {
   return null;
 }
 
+// A decision file's basename is an id. The next step leads with what it is; the filename follows in small type.
+function entityLead(id) {
+  var file = shortId(id);
+  if (/^D0[0-9A-Z]{8,}\.md$/.test(file)) return { label: "Decision record", file: file };
+  return { label: file, file: null };
+}
+
 // The entities sitting at `level` on a scorecard, named when a reader can hold the list (three or fewer).
 function namedAt(D: ReportData, name, level) {
   var ids = Object.keys((D.scores || {})[name] || {})
@@ -69,7 +76,9 @@ function namedAt(D: ReportData, name, level) {
   var bits: (HTMLElement | string)[] = [];
   ids.forEach(function (id, i) {
     if (i) bits.push(i === ids.length - 1 ? " and " : ", ");
-    bits.push(link("entity/" + enc(id), "", shortId(id)));
+    var lead = entityLead(id);
+    bits.push(link("entity/" + enc(id), "", lead.label));
+    if (lead.file) bits.push(el("small", { className: "sub", textContent: " (" + lead.file + ")" }));
   });
   return bits;
 }

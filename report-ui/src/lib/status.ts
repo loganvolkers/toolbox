@@ -83,7 +83,7 @@ export function trackSlots(D: ReportData, t) {
     return a >= 0 && cards[a].row.topShare >= c.row.topShare ? a : i;
   }, -1);
   var rest =
-    (low >= 0 ? "Lowest bar, " + named(cards[low]) : "Each bar is one scorecard") +
+    (low >= 0 ? "Lowest share at the top level, " + named(cards[low]) : "Each bar is one scorecard") +
     (high >= 0 && high !== low && cards[high].row.topShare > cards[low].row.topShare ? " · highest, " + named(cards[high]) : "") +
     " · dashed line: their average, " + t.pct + "%";
   var cap = el("div", { className: "slotcap", ariaHidden: "true", textContent: rest });

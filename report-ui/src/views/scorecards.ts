@@ -5,7 +5,7 @@ import type { ReportData } from "../types";
 // scorecardIndex, scorecard: methods of <toolbox-report>, installed on its prototype by element.js.
 import { badge, barEl, grow, legendEl, levelLegend, levelOrder, levelPill, medal, splitUnassessed, tallyLevels, unrunIn } from "../lib/bars";
 import { BASIS, basisBadge, basisCounts, basisIcon, basisInline, basisKey, basisOf, lockIcon, refs, whyEl } from "../lib/basis";
-import { levelName, nextLevel, scCaption } from "../lib/campaigns";
+import { levelName, moverBits, nextLevel, scCaption, verifiedMover } from "../lib/campaigns";
 import { cardName, judgedMark, keepWithLast } from "../lib/compare";
 import { el, enc, KNOWN, link } from "../lib/dom";
 import { kindCount, kindTitle } from "../lib/kinds";
@@ -15,7 +15,7 @@ import { trackPath } from "../lib/routes";
 import { LADDER, floorOf, floorPill, isComparative, memberLinks, ruleLink, ruleTitle } from "../lib/rules";
 import { blockers, isFailing, isPassing } from "../lib/status";
 import { rich, richCards } from "../lib/text";
-import { trackTitle, tracksSorted, unassessedIn, unassessedNote } from "../lib/tracks";
+import { trackStats, trackTitle, tracksSorted, unassessedIn, unassessedNote } from "../lib/tracks";
 import { fmt, plural, scPurpose, whyFirst } from "../lib/words";
 
 export const scorecardsViews = {
@@ -178,10 +178,12 @@ export const scorecardsViews = {
               body,
             );
           }
+          var lead = x.g.name ? verifiedMover(D, trackStats(D, S, x.g.name).cards) : null;
           return el(
             "div",
             { className: "sc-group" },
             groups.length === 1 && !x.g.name ? null : el("h3", {}, x.g.name ? link(trackPath(D, x.g.name), "", x.g.title) : x.g.title, el("span", { className: "sub", textContent: " · " + plural(x.rows.length, "scorecard") + (x.g.name ? ", weakest first" : "") + (mix ? "; by lowest level, " + mix : "") })),
+            lead ? el("div", { className: "tnext", style: "margin:0 0 8px" }, el("b", { textContent: "Next: " }), ...moverBits(D, lead)) : null,
             el("div", { className: "sc-rows" }, el("div", { className: "sc-head", ariaHidden: "true" }, el("span"), el("span", { textContent: "Scorecard" }), el("span", { textContent: "Entities by level" }), el("span", { textContent: "Lowest level" })), ...open.map(row), restRows, restBtn ? el("div", { className: "more" }, restBtn) : null, fold),
           );
         }),
