@@ -191,16 +191,17 @@ export const compareViews = {
       both.strict[standingBy(k, false)]++;
       both.majority[standingBy(k, true)]++;
     });
+    var tallyOf = function (c) {
+      return "ahead on " + c.ahead + " of " + plural(names.length, "factor") + (c.behind ? ", behind on " + c.behind : "") + (c.parity ? ", at parity on " + c.parity : "") + (c.unknown ? ", " + c.unknown + " not measured" : "");
+    };
+    var strictWords = tallyOf(both.strict);
+    var majorityWords = tallyOf(both.majority);
+    // Every portal leads with the same sentence shape, strict count first, whichever rule it declares.
     var headline = unmeasured
       ? "Not measured yet: none of the " + plural(names.length, "factor") + " has values for both products."
-      : "Ahead on " +
-      counts.ahead +
-      " of " +
-      plural(names.length, "factor") +
-      (counts.behind ? ", behind on " + counts.behind : "") +
-      (counts.parity ? ", at parity on " + counts.parity : "") +
-      (counts.unknown ? ", " + counts.unknown + " not measured" : "") +
-      (majority ? " by the majority count." : " by the strict count.");
+      : strictWords === majorityWords
+        ? "Ahead on " + strictWords.slice("ahead on ".length) + ", by either count."
+        : "Strict count: " + strictWords + (majority ? "." : " (this comparison's verdict).") + " Majority count: " + majorityWords + (majority ? " (this comparison's verdict)." : ".");
     var lean = counts.behind > counts.ahead ? "behind" : counts.ahead > counts.behind ? "ahead" : "parity";
     var hero = el(
       "section",
@@ -234,9 +235,7 @@ export const compareViews = {
           "details",
           { className: "sub cmp-def cmp-brief", style: "margin:6px 0 0" },
           el("summary", { textContent: "How a factor and a rule are counted" }),
-          "A factor is a scorecard that scores both products on the same rules. On a rule, a product is ahead when its measured value is better (within the rule's tolerance is parity) or it passes a bar the other misses. " + who(subject) + (majority
-            ? " is ahead on a factor when it is ahead on more of its rules than it is behind on, behind when it is behind on more, and at parity when they are even; a factor with any unmeasured rule is not measured. “Mixed” means ahead on some rules and behind on others; “narrowly ahead” means ahead on fewer than half of that factor's rules, at parity on the rest."
-            : " is behind on a factor if it is behind on any one of its rules, and ahead if it is ahead on some and behind on none; “narrowly ahead” means ahead on fewer than half of that factor's rules, at parity on the rest."),
+          "A factor is a scorecard that scores both products on the same rules. On a rule, a product is ahead when its measured value is better (within the rule's tolerance is parity) or it passes a bar the other misses. Factors are counted two ways on every portal. By the strict count, " + who(subject) + " is behind on a factor if it is behind on any one of its rules, and ahead if it is ahead on some and behind on none. By the majority count, it is ahead when it is ahead on more of the factor's rules than it is behind on, behind when it is behind on more, and at parity when they are even. Each comparison declares which count is its verdict; this one declares the " + (majority ? "majority" : "strict") + " count. A factor with any unmeasured rule is not measured. “Mixed” means ahead on some rules and behind on others; “narrowly ahead” means ahead on fewer than half of that factor's rules, at parity on the rest.",
         ),
       ),
       el(
