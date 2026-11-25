@@ -54,10 +54,10 @@ tracks:
       OpenFGA v1.23.0 against SpiceDB v1.57.1, both on the memory datastore
       and each product's gRPC API, on one VM: timed factors are medians of 5
       scripted runs over a 33k-relationship corpus, and yes/no facts cite the
-      docs or source at the pinned release. The benchmark is Toolbox's: its
-      maintainers chose the factors and set every bar before the run. Not
-      covered: Postgres or MySQL datastores, more than one node, sustained
-      load over hours, or any other release.
+      docs or source at the pinned release. Toolbox's maintainers, not
+      OpenFGA's or SpiceDB's, chose the factors and set every bar before the
+      run. Not covered: Postgres or MySQL datastores, more than one node,
+      sustained load over hours, or any other release.
     links:
     - title: Pre-registration and method
       url: https://github.com/loganvolkers/toolbox/blob/main/experiments/openfga-spicedb-compare/README.md
