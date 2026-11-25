@@ -1,0 +1,172 @@
+connectors:
+  - name: ${param:service}-${param:environment}-sre-readiness
+    package: builtin:runner
+    runtime: in-image
+    config:
+      root: .
+      jobs:
+        - name: readiness
+          command: ${param:command}
+          parse: ndjson
+          kinds: [readiness]
+    records: [readiness]
+    refresh: {readiness: [external_ids]}
+    freshness: {readiness: "${param:freshness}"}
+  - name: ${param:service}-${param:environment}-sre-health
+    package: builtin:runner
+    runtime: in-image
+    config:
+      root: .
+      jobs:
+        - name: health
+          command: ${param:healthCommand}
+          parse: ndjson
+          kinds: [health]
+    records: [health]
+    refresh: {health: [external_ids]}
+    freshness: {health: "${param:freshness}"}
+
+kinds:
+  - name: ${param:kind}Readiness
+    description: Versioned readiness evidence for a service journey.
+    identityFrom:
+    - connector:${param:service}-${param:environment}-sre-readiness
+    fields:
+      service: {type: string}
+      environment: {type: string}
+      owner: {type: string}
+      observedService: {type: string}
+      observedEnvironment: {type: string}
+      source: {type: string}
+      revision: {type: string}
+      observedAt: {type: string}
+      journey: {type: string}
+      slo: {type: object}
+      paging: {type: object}
+      recovery: {type: object}
+      response: {type: object}
+    sources:
+      default: ["connector:${param:service}-${param:environment}-sre-readiness"]
+    map:
+    - from: ${param:service}-${param:environment}-sre-readiness/readiness
+      id: "'sre-readiness:${param:service}@${param:environment}'"
+      set: >-
+        {'service': '${param:service}', 'environment': '${param:environment}',
+        'owner': '${param:owner}', 'observedService': record.service,
+        'observedEnvironment': record.environment, 'source': record.source,
+        'revision': record.revision, 'observedAt': record.observedAt, 'journey':
+        record.journey, 'slo': record.slo, 'paging': record.paging, 'recovery':
+        record.recovery, 'response': record.response}
+  - name: ${param:kind}Health
+    description: Read-only telemetry snapshot for a service.
+    identityFrom: ["connector:${param:service}-${param:environment}-sre-health"]
+    fields:
+      service: {type: string}
+      environment: {type: string}
+      owner: {type: string}
+      observedService: {type: string}
+      observedEnvironment: {type: string}
+      source: {type: string}
+      revision: {type: string}
+      observedAt: {type: string}
+      status: {type: string}
+      burnRate: {type: number}
+      validUntil: {type: string}
+      context: {type: object}
+    sources:
+      default: ["connector:${param:service}-${param:environment}-sre-health"]
+    map:
+    - from: ${param:service}-${param:environment}-sre-health/health
+      id: "'sre-health:${param:service}@${param:environment}'"
+      set: >-
+        {'service': '${param:service}', 'environment': '${param:environment}',
+        'owner': '${param:owner}', 'observedService': record.service,
+        'observedEnvironment': record.environment, 'source': record.source,
+        'revision': record.revision, 'observedAt': record.observedAt, 'status':
+        record.status, 'burnRate': record.burnRate, 'validUntil':
+        record.validUntil, 'context': record.context}
+
+scorecards:
+  - name: ${param:service}-${param:environment}-sre-readiness
+    title: SRE readiness for ${param:service} (${param:environment})
+    description: >-
+      Verifies evidence for the on-call and release controls required for a
+      critical journey.
+    rationale: >-
+      A readiness review should give responders a tested path from detection
+      to verified recovery.
+    kind: ${param:kind}Readiness
+    owner: ${param:owner}
+    levels: [bronze]
+    appliesTo: >-
+      entity.service == '${param:service}' && entity.environment ==
+      '${param:environment}'
+    ratchet: {newEntitiesAtLeast: bronze}
+    rules:
+    - name: evidence-identity
+      level: bronze
+      check: >-
+        entity.service == entity.observedService && entity.environment ==
+        entity.observedEnvironment && entity.revision != '' && entity.source !=
+        '' && entity.observedAt != ''
+      evidence: "[entity.source, entity.revision]"
+      fix: >-
+        Emit evidence for the configured service and environment with its
+        source, revision and observation time.
+      rationale: >-
+        Evidence must be traceable to the service and artifact it describes.
+    - name: user-journey
+      level: bronze
+      check: >-
+        entity.journey != '' && entity.slo.goodEvents != '' &&
+        entity.slo.eligibleEvents != '' && entity.slo.target > 0 &&
+        entity.slo.target < 1 && entity.slo.window != '' && entity.slo.policy !=
+        ''
+      evidence: "[entity.source, entity.revision]"
+      fix: >-
+        Define the journey, good and eligible events, an SLO target and window,
+        and an error-budget policy.
+      rationale: >-
+        A user-visible objective makes it possible to reason about service
+        impact and release risk.
+    - name: actionable-paging
+      level: bronze
+      check: >-
+        entity.paging.route != '' && entity.paging.runbook != '' &&
+        entity.paging.ruleTestsPassed && entity.paging.routeVerified
+      evidence: "[entity.source, entity.revision]"
+      fix: >-
+        Run the alert fixtures and verify that a test notification reaches the
+        team with its runbook.
+      rationale: >-
+        A page is useful when the signal is tested, reaches the right team, and
+        provides a starting point.
+    - name: safe-recovery
+      level: bronze
+      check: >-
+        entity.recovery.rolloutStopVerified && entity.recovery.fresh &&
+        entity.recovery.mitigationVerified && entity.recovery.recoveryVerified
+        && entity.recovery.drill != '' && (!${param:critical} ||
+        (entity.recovery.reducedCapacity && entity.recovery.peakLoad &&
+        entity.recovery.dependencyLoss && entity.recovery.controlledReentry))
+      evidence: "[entity.source, entity.revision]"
+      fix: >-
+        Exercise rollout stop, mitigation, and customer-visible recovery. For
+        critical services include peak load, reduced capacity, dependency loss,
+        and controlled re-entry.
+      rationale: >-
+        A normal rollout test cannot establish that a service can recover under
+        accumulated demand.
+    - name: incident-response
+      level: bronze
+      check: >-
+        entity.response.leadsDefined && entity.response.timeline != '' &&
+        entity.response.fallback != '' && entity.response.followUpPolicy != ''
+      evidence: "[entity.source, entity.revision]"
+      fix: >-
+        Document incident leads, a shared decision log, fallback communications,
+        and postmortem action tracking.
+      rationale: >-
+        A shared record and clear roles help responders coordinate and carry
+        lessons into engineering work.
+    facets: {summary: public, details: public}

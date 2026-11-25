@@ -1,0 +1,35 @@
+groups:
+  - name: checkout-slo
+    rules:
+    - record: checkout:burn_rate:5m
+      expr: >-
+        (sum(rate(checkout_attempts_total{result="error"}[5m])) or 0 *
+        sum(rate(checkout_attempts_total[5m]))) /
+        (sum(rate(checkout_attempts_total[5m])) > 0) / 0.001
+    - record: checkout:burn_rate:30m
+      expr: >-
+        (sum(rate(checkout_attempts_total{result="error"}[30m])) or 0 *
+        sum(rate(checkout_attempts_total[30m]))) /
+        (sum(rate(checkout_attempts_total[30m])) > 0) / 0.001
+    - record: checkout:burn_rate:1h
+      expr: >-
+        (sum(rate(checkout_attempts_total{result="error"}[1h])) or 0 *
+        sum(rate(checkout_attempts_total[1h]))) /
+        (sum(rate(checkout_attempts_total[1h])) > 0) / 0.001
+    - record: checkout:burn_rate:6h
+      expr: >-
+        (sum(rate(checkout_attempts_total{result="error"}[6h])) or 0 *
+        sum(rate(checkout_attempts_total[6h]))) /
+        (sum(rate(checkout_attempts_total[6h])) > 0) / 0.001
+    - alert: CheckoutFastBurn
+      expr: checkout:burn_rate:5m > 14.4 and checkout:burn_rate:1h > 14.4
+      labels: {severity: page, service: checkout}
+      annotations: {runbook_url: https://example.com/checkout/runbook}
+    - alert: CheckoutSlowBurn
+      expr: checkout:burn_rate:30m > 6 and checkout:burn_rate:6h > 6
+      labels: {severity: ticket, service: checkout}
+      annotations: {runbook_url: https://example.com/checkout/runbook}
+    - alert: CheckoutTelemetryMissing
+      expr: absent_over_time(checkout_attempts_total[5m])
+      labels: {severity: ticket, service: checkout}
+      annotations: {runbook_url: https://example.com/checkout/runbook}

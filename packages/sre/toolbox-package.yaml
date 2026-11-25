@@ -1,0 +1,37 @@
+apiVersion: toolbox.dev/package/v0
+name: sre
+version: 0.1.0
+description: >-
+  Evidence-based production readiness and incident context for one
+  critical service journey.
+parameters:
+  kind:
+    type: string
+    default: Sre
+    description: PascalCase entity kind prefix. Choose a unique prefix for each include.
+  service:
+    type: string
+    description: Stable service identifier, unique per environment.
+  owner:
+    type: string
+    description: Group accountable for the service and its error-budget policy.
+  environment:
+    type: string
+    default: production
+    description: Environment this evidence describes.
+  critical:
+    type: boolean
+    default: true
+    description: Require an overload and failover exercise with controlled re-entry.
+  freshness:
+    type: string
+    default: 5m
+    description: Refresh interval for the health evidence connector.
+  command:
+    type: array
+    description: Local command producing readiness record messages on stdout.
+  healthCommand:
+    type: array
+    default: [cat, /dev/null]
+    description: Optional read-only command producing health record messages on stdout.
+fragments: [fragments/*.yaml]
