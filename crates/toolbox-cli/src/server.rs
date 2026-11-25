@@ -38,6 +38,32 @@ pub fn is_loopback(listen: &str) -> bool {
 pub fn default_auth_mode(listen: &str) -> &'static str {
     if is_loopback(listen) { "dev" } else { "token" }
 }
+
+/// Acknowledges `dev` auth off loopback, where any client that reaches the port can claim any
+/// identity (D01M885TA0R4HCZTVDSG9F0PHDQ). Without it the server refuses to start.
+pub const ALLOW_DEV_OFF_LOOPBACK: &str = "TOOLBOX_ALLOW_DEV_AUTH_OFF_LOOPBACK";
+
+/// The auth mode to serve with: `TOOLBOX_AUTH_MODE` when set, else the default for `listen`.
+/// Explicit `dev` off loopback also needs [`ALLOW_DEV_OFF_LOOPBACK`].
+pub fn auth_mode(
+    listen: &str,
+    explicit: Option<&str>,
+    allow_dev_off_loopback: bool,
+) -> Result<String, String> {
+    let Some(mode) = explicit.map(str::trim).filter(|m| !m.is_empty()) else {
+        return Ok(default_auth_mode(listen).into());
+    };
+    if mode == "dev" && !is_loopback(listen) && !allow_dev_off_loopback {
+        return Err(format!(
+            "TOOLBOX_AUTH_MODE=dev on {listen} would let every client that can reach this address claim any identity with x-toolbox-user; refusing to start. Use a real mode (`token`, `oidc`, `iap-google`, `cloudflare-access`), bind loopback, or set {ALLOW_DEV_OFF_LOOPBACK}=1 to accept it"
+        ));
+    }
+    Ok(mode.into())
+}
+
+fn truthy(v: Option<String>) -> bool {
+    v.is_some_and(|v| matches!(v.trim(), "1" | "true" | "yes"))
+}
 use std::process::ExitCode;
 use std::sync::Arc;
 use toolbox_authz::authn::{AuthConfig, Authenticator, Mode, PatLookup};
@@ -92,21 +118,21 @@ async fn start_authz(
     Ok(Some(Arc::new(fga)))
 }
 
-fn config_from_env(listen: &str) -> toolbox_api::Config {
+fn config_from_env(listen: &str) -> Result<toolbox_api::Config, String> {
+    let mode = auth_mode(
+        listen,
+        std::env::var("TOOLBOX_AUTH_MODE").ok().as_deref(),
+        truthy(std::env::var(ALLOW_DEV_OFF_LOOPBACK).ok()),
+    )?;
+    if mode == "dev" && !is_loopback(listen) {
+        tracing::warn!(
+            "TOOLBOX_AUTH_MODE=dev on {listen} ({ALLOW_DEV_OFF_LOOPBACK} is set): every client that can reach this address can claim any identity with x-toolbox-user"
+        );
+    }
     let mut c = toolbox_api::Config {
-        auth_mode: default_auth_mode(listen).into(),
+        auth_mode: mode,
         ..Default::default()
     };
-    if let Ok(mode) = std::env::var("TOOLBOX_AUTH_MODE").map(|m| m.trim().to_owned())
-        && !mode.is_empty()
-    {
-        if mode == "dev" && !is_loopback(listen) {
-            tracing::warn!(
-                "TOOLBOX_AUTH_MODE=dev on {listen}: every client that can reach this address can claim any identity with x-toolbox-user"
-            );
-        }
-        c.auth_mode = mode;
-    }
     if let Ok(tokens) = std::env::var("TOOLBOX_CONNECTOR_TOKENS") {
         c.connector_tokens = tokens
             .split(',')
@@ -116,7 +142,7 @@ fn config_from_env(listen: &str) -> toolbox_api::Config {
             })
             .collect();
     }
-    c
+    Ok(c)
 }
 
 fn init_serve_telemetry() -> Result<toolbox_telemetry::TelemetryGuard, ExitCode> {
@@ -199,7 +225,13 @@ pub fn serve(path: &Path, listen: &str, database_url: Option<String>, fixtures: 
             }
         };
         let mode = if pg.is_some() { "postgres" } else { "in-memory" };
-        let config = config_from_env(listen);
+        let config = match config_from_env(listen) {
+            Ok(c) => c,
+            Err(e) => {
+                eprintln!("error: {e}");
+                return ExitCode::from(2);
+            }
+        };
         let auth_mode = match Mode::parse(&config.auth_mode) {
             Ok(m) => m,
             Err(e) => {
@@ -226,7 +258,7 @@ pub fn serve(path: &Path, listen: &str, database_url: Option<String>, fixtures: 
             );
             None
         } else {
-            eprintln!("error: authorization needs the `openfga` binary (TOOLBOX_OPENFGA_BIN); refusing to start in {} mode without it (on {listen}; set TOOLBOX_AUTH_MODE=dev to serve without authorization)", config.auth_mode);
+            eprintln!("error: authorization needs the `openfga` binary (TOOLBOX_OPENFGA_BIN); refusing to start in {} mode without it (on {listen}; set TOOLBOX_AUTH_MODE=dev{} to serve without authorization)", config.auth_mode, if is_loopback(listen) { String::new() } else { format!(" and {ALLOW_DEV_OFF_LOOPBACK}=1") });
             return ExitCode::from(2);
         };
         let authz_label = if authz.is_some() { "OpenFGA" } else { "none" };
@@ -438,7 +470,7 @@ pub fn create_token(user: &str, label: Option<&str>, database_url: &str) -> Exit
 
 #[cfg(test)]
 mod tests {
-    use super::{default_auth_mode, listen_addr, url_on_command_line};
+    use super::{auth_mode, default_auth_mode, listen_addr, url_on_command_line};
 
     #[test]
     fn a_database_url_on_the_command_line_is_flagged() {
@@ -480,5 +512,42 @@ mod tests {
         assert_eq!(listen_addr(None, None), "127.0.0.1:8080");
         assert_eq!(listen_addr(None, Some("")), "127.0.0.1:8080");
         assert_eq!(listen_addr(Some(""), Some("8080")), "0.0.0.0:8080");
+    }
+
+    #[test]
+    fn explicit_dev_auth_off_loopback_needs_the_acknowledgement() {
+        assert_eq!(
+            auth_mode("127.0.0.1:8080", Some("dev"), false).as_deref(),
+            Ok("dev")
+        );
+        assert_eq!(
+            auth_mode("localhost:8080", Some(" dev "), false).as_deref(),
+            Ok("dev")
+        );
+        let refused = auth_mode("0.0.0.0:8080", Some("dev"), false).unwrap_err();
+        assert!(
+            refused.contains("TOOLBOX_ALLOW_DEV_AUTH_OFF_LOOPBACK=1"),
+            "{refused}"
+        );
+        assert_eq!(
+            auth_mode("0.0.0.0:8080", Some("dev"), true).as_deref(),
+            Ok("dev")
+        );
+        assert_eq!(
+            auth_mode("0.0.0.0:8080", Some("oidc"), false).as_deref(),
+            Ok("oidc")
+        );
+        assert_eq!(
+            auth_mode("0.0.0.0:8080", None, false).as_deref(),
+            Ok("token")
+        );
+        assert_eq!(
+            auth_mode("0.0.0.0:8080", Some(""), false).as_deref(),
+            Ok("token")
+        );
+        assert_eq!(
+            auth_mode("127.0.0.1:8080", None, false).as_deref(),
+            Ok("dev")
+        );
     }
 }

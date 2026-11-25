@@ -58,6 +58,7 @@ services:
       GITHUB_API_URL: http://facade:8091
       GITHUB_TOKEN: acme-reader
       TOOLBOX_AUTH_MODE: dev
+      TOOLBOX_ALLOW_DEV_AUTH_OFF_LOOPBACK: "1"
       TOOLBOX_CONNECTOR_TOKENS: idp=idp-token
       TOOLBOX_CONNECTOR_TOKEN: idp-token
       TOOLBOX_SCIM_TOKEN: scim-token
