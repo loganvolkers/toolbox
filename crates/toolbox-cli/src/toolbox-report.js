@@ -1438,6 +1438,7 @@
 		var head = (r.sc.kind ? kindCount(D, r.sc.kind, r.total) + (split ? scorecardSplit(D, r.sc.kind) : "") : plural(r.total, "entity", "entities")) + (r.total > r.scored ? ", " + fmt(r.total - r.scored) + " not in scope" : "");
 		var prov = provisionalOf(D, r.name);
 		var unj = unassessedOf(D, r.name);
+		var idle = idleLowestMark(D, r.name);
 		return [
 			head + (r.scored ? " · " + r.topShare + "% at the top level (" + levelName(r.top || "top") + ")" : " · not scored yet"),
 			prov ? el("span", {
@@ -1449,8 +1450,33 @@
 				className: "unjudged-n",
 				title: "No agent has assessed them yet, so their agent-judged rules pass or fail for want of anything to read; drawn hatched in the bar",
 				textContent: " · " + fmt(unj) + " not assessed by an agent (hatched)"
-			}) : null
+			}) : null,
+			idle ? el("span", { textContent: " · " + idle }) : null
 		];
+	}
+	function idleLowestMark(D, name) {
+		var sc = (D.scorecards || {})[name];
+		if (!sc || !sc.track || isComparative(D, name)) return null;
+		var ranked = Object.keys(D.scorecards || {}).filter(function(n) {
+			return ((D.scorecards || {})[n] || {}).track === sc.track && !isComparative(D, n);
+		}).map(function(n) {
+			return {
+				n,
+				floor: floorOf(D, n)
+			};
+		}).filter(function(x) {
+			return x.floor && !isTop(D, x.n, x.floor);
+		});
+		ranked.sort(function(a, b) {
+			return rankLevel(a.floor) - rankLevel(b.floor) || title(D, a.n).localeCompare(title(D, b.n));
+		});
+		if (!ranked.length || ranked[0].n !== name) return null;
+		var order = ["none"].concat((sc.levels || []).filter(function(l) {
+			return l !== "none";
+		}));
+		var idx = order.indexOf(ranked[0].floor);
+		if (idx < 0 || idx >= order.length - 2) return null;
+		return "Lowest on this track; lifting it adds no points until those entities reach the top level.";
 	}
 	function nextMedal(D, cards) {
 		for (var i = 0; i < cards.length; i++) {
@@ -1689,6 +1715,22 @@
 		var g = el("div", { className: "cprog" + (big ? " big" : "") + (state === "on" || empty && parts && met === parts ? " on" : "") }, el("b", { textContent: empty ? parts ? met + " of " + parts : "—" : pct + "%" }), empty ? null : el("div", { className: "gb" }, el("span", { style: "width:" + Math.max(0, Math.min(100, pct)) + "%" }), el("i", { style: "left:calc(" + target + "% - 1px)" })), el("small", { textContent: empty ? parts ? big ? "scorecards at target " + target + "%" : "at target" : "no single score" : "target " + target + "%" }));
 		g.setAttribute("role", "img");
 		g.setAttribute("aria-label", empty ? parts ? met + " of " + plural(parts, "scorecard") + " at the target of " + target + "%, each scored on its own" : "no single score" : pct + "% of entities meet the goal; target " + target + "%");
+		return g;
+	}
+	function checkBar(parts, label) {
+		var total = parts.reduce(function(s, p) {
+			return s + p.n;
+		}, 0) || 1;
+		var g = el("div", { className: "kpi-bar parts" }, ...parts.filter(function(p) {
+			return p.n > 0;
+		}).map(function(p) {
+			return el("span", {
+				className: p.cls,
+				style: "width:" + 100 * p.n / total + "%"
+			});
+		}));
+		g.setAttribute("role", "img");
+		g.setAttribute("aria-label", label);
 		return g;
 	}
 	function kpiBar(pct, label, short, hollowPct) {
@@ -2259,7 +2301,8 @@
 		".hero .badge-big{display:flex;align-items:center;gap:16px}",
 		".hero .kicker{font-size:12px;font-weight:650;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}",
 		".hero .levelword{font-size:42px;line-height:1.05;font-weight:750;color:var(--lvl-ink);text-transform:capitalize;letter-spacing:-.02em}",
-		".hero.plain,.hero.first-run{grid-template-columns:minmax(0,1fr)}.hero.plain .levelword,.hero.first-run .levelword{text-transform:none;font-size:34px}.hero.plain .verdict,.hero.first-run .verdict{max-width:72ch}",
+		".hero.plain,.hero.first-run{grid-template-columns:minmax(0,1fr)}.hero.plain .levelword,.hero.first-run .levelword,.hero .status-lead .levelword{text-transform:none;font-size:34px}.hero.plain .verdict,.hero.first-run .verdict,.hero .status-lead .verdict{max-width:72ch}",
+		".hero .status-lead{grid-column:1/-1}",
 		".hero.first-run{--lvl:var(--muted);--lvl-ink:var(--fg)}",
 		".hero .verdict{font-size:18px;line-height:1.5;margin:16px 0 0}.attn{margin:12px 0 0;font-size:14px;line-height:1.5}",
 		".wins{margin:8px 0 0;font-size:14px;color:var(--pass)}.wins b{font-weight:650}",
@@ -2350,7 +2393,7 @@
 		".bar span.unrun{background:radial-gradient(circle,var(--seg) 1.6px,transparent 1.9px) 0 0/6px 6px;box-shadow:inset 0 0 0 1.5px var(--unknown)}.dot.dots{border-radius:2px;background:radial-gradient(circle,var(--seg) 1.2px,transparent 1.5px) 0 0/4px 4px;box-shadow:inset 0 0 0 1.5px var(--unknown)}",
 		".rule.unknown{border-left-color:var(--unknown)}.rule.waived{border-left-color:var(--bronze)}.rule.unassessed{border-left-color:var(--judged)}",
 		".basis-note p{margin:0 0 4px}.h2h-wide{max-width:560px}.h2h-wide .h2h{width:100%;font-size:13px}.h2h-wide .h2h-head,.h2h-wide .h2h-row{grid-template-columns:160px 1fr 1fr}.h2h-row[aria-current]{font-weight:700;background:var(--accent-bg);border-radius:6px}.rank-top:not([hidden]){display:block;margin:8px 0 0;font-size:13px}.cmp-prov{margin:6px 0 0;display:grid;gap:2px}.cmp-src{display:flex;flex-wrap:wrap;align-items:center;gap:2px 10px}.cmp-src .refs{margin:0;line-height:22px}.cmp-brief>summary{cursor:pointer;width:max-content;max-width:100%;padding:3px 0;color:var(--accent)}",
-		".why.incl{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}.kpi-bar{display:flex;flex:0 0 46px;height:10px;border-radius:5px;background:var(--line);overflow:hidden}.why.incl .kpi-bar{flex-basis:90px}.kpi-bar span.hollow,.kpi-bar.short span.hollow{background:repeating-linear-gradient(135deg,var(--judged) 0 1.5px,transparent 1.5px 4px);box-shadow:inset 0 0 0 1px var(--judged)}.kpi-bar span{display:block;height:100%;background:var(--pass)}.kpi-bar.short span{background:var(--muted)}.kpi-pips{flex:0 0 46px;display:flex;flex-wrap:wrap;gap:4px}.kpi-pips span{width:10px;height:10px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--faint)}.kpi-pips span.on{background:var(--pass);box-shadow:none}",
+		".why.incl{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}.kpi-bar{display:flex;flex:0 0 46px;height:10px;border-radius:5px;background:var(--line);overflow:hidden}.why.incl .kpi-bar{flex-basis:90px}.kpi-bar span.hollow,.kpi-bar.short span.hollow{background:repeating-linear-gradient(135deg,var(--judged) 0 1.5px,transparent 1.5px 4px);box-shadow:inset 0 0 0 1px var(--judged)}.kpi-bar span{display:block;height:100%;background:var(--pass)}.kpi-bar.parts span.fail{background:var(--fail)}.kpi-bar.parts span.unknown{background:repeating-linear-gradient(90deg,var(--unknown) 0 2px,transparent 2px 4px)}.kpi-bar.parts span.vacuous{background:repeating-linear-gradient(135deg,var(--judged) 0 1.5px,transparent 1.5px 4px)}.kpi-bar.short span{background:var(--muted)}.kpi-pips{flex:0 0 46px;display:flex;flex-wrap:wrap;gap:4px}.kpi-pips span{width:10px;height:10px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--faint)}.kpi-pips span.on{background:var(--pass);box-shadow:none}",
 		".cprog{flex:0 0 76px;display:grid;gap:3px}.cprog b{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}.cprog small{font-size:13px;color:var(--muted)}.cprog .gb{position:relative;height:8px;border-radius:4px;background:var(--line)}.cprog .gb>span{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--muted)}.cprog.on .gb>span{background:var(--pass)}.cprog .gb>i{position:absolute;top:-3px;bottom:-3px;width:2px;border-radius:1px;background:var(--fg)}.cprog.big{flex-basis:120px}.cprog.big b{font-size:28px}",
 		".hollow-key{display:flex;flex-wrap:wrap;align-items:center;gap:4px 16px;padding:6px 10px;font-size:13px;color:var(--muted);background:var(--tint);border-radius:8px;margin:4px 0}.hollow-key>span{display:inline-flex;align-items:center;gap:6px}.hollow-key b{color:var(--fg);font-weight:600}",
 		".rid{font:12px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);overflow-wrap:anywhere}.rule .rn{font-weight:650;font-size:inherit;margin:0;display:inline}.sc-block h3.sct{display:inline;margin:0;font-size:16px}",
@@ -2562,6 +2605,7 @@
 		".elevel{display:flex;align-items:center;gap:12px;flex:0 1 auto;min-width:0;max-width:100%}",
 		".elevel>div{min-width:0;overflow-wrap:anywhere}",
 		".elevel strong{display:block;font-size:28px;line-height:1.1;font-weight:750;text-transform:capitalize;letter-spacing:-.01em}",
+		".elevel .held strong{display:inline;font-size:22px;line-height:1.25;text-transform:none}.elevel .held .mini{display:inline-flex;vertical-align:-6px;margin-right:6px}.elevel.split{align-items:flex-start}",
 		".elevel .sub{display:block}.elevel .held{display:block;font-size:14px;margin:2px 0}.medal-hollow{display:inline-flex;border-radius:50%;outline:2px dashed var(--judged);outline-offset:2px}.medal-hollow>*{opacity:.55}.elevel strong .pv-head{font-size:18px;font-weight:600;text-transform:none;letter-spacing:0;color:var(--unknown)}",
 		"@media (max-width:600px){main{padding:18px 12px 56px}.hero .levelword{font-size:28px}",
 		".modes{display:grid;grid-template-columns:repeat(var(--tabcols,3),minmax(0,1fr));gap:0;overflow:visible}.modes.more,.modes.less{-webkit-mask-image:none;mask-image:none}.modes button{padding:9px 4px;text-align:center}.modes .count{min-width:0;margin-left:4px;padding:0 5px;font-size:12px}",
@@ -2803,6 +2847,21 @@
 		});
 		return best;
 	}
+	function absentSections(D, campaignNames) {
+		var missing = [];
+		if (!Object.keys(D.tracks || {}).length) missing.push("tracks");
+		if (!campaignNames.length) missing.push("campaigns");
+		if (!Object.keys(D.comparisons || {}).length) missing.push("a comparison");
+		if (!missing.length) return "";
+		return "This portal has no " + (missing.length === 1 ? missing[0] : missing.slice(0, -1).join(", ") + " or " + missing[missing.length - 1]) + ", so " + (missing.length === 1 ? "that section is" : "those sections are") + " not in the navigation.";
+	}
+	function idleWhy(D, cards) {
+		var lead = verifiedMover(D, cards);
+		var wk = cards[0] && cards[0].floor && !isTop(D, cards[0].row.name, cards[0].floor) ? cards[0] : null;
+		var track = wk && ((D.scorecards || {})[wk.row.name] || {}).track;
+		if (!lead || !wk || !track || lead.r.name === wk.row.name) return "";
+		return " " + title(D, wk.row.name) + " is the lowest level on this track and does not move it until those entities reach its top level.";
+	}
 	var overviewViews = {
 		hero(D, S, campaignNames) {
 			const R = S.repo;
@@ -2817,7 +2876,11 @@
 				}), el("p", {
 					className: "verdict",
 					textContent: "No connector has delivered facts, so no entity has a level."
-				}), el("div", { className: "next" }, el("b", { textContent: "Next: " }), "run ", el("code", { textContent: "toolbox doctor" }), " in the repository to see which connector or tool is missing, then ", el("code", { textContent: "toolbox report" }), " again. Connectors are listed under ", el("code", { textContent: "connectors:" }), " in the portal's ", el("code", { textContent: "toolbox.yaml" }), ". The " + plural(S.rows.length, "scorecard") + " below will fill in.")));
+				}), el("div", { className: "next" }, el("b", { textContent: "Next: " }), "run ", el("code", { textContent: "toolbox doctor" }), " in the repository to see which connector or tool is missing, then ", el("code", { textContent: "toolbox report" }), " again. Connectors are listed under ", el("code", { textContent: "connectors:" }), " in the portal's ", el("code", { textContent: "toolbox.yaml" }), ". The " + plural(S.rows.length, "scorecard") + " below will fill in."), absentSections(D, campaignNames) ? el("p", {
+					className: "sub",
+					style: "margin:8px 0 0",
+					textContent: absentSections(D, campaignNames)
+				}) : null));
 				start.setAttribute("aria-label", "Status");
 				return start;
 			}
@@ -2826,8 +2889,8 @@
 				var needs = at > 0 && verdict.indexOf("Needs") === 0;
 				var almost = at > 0 && verdict.indexOf("Almost") === 0;
 				var tone = needs ? "none" : almost ? "bronze" : "gold";
-				var far = furthestTrack(D, S);
-				var next = needs || almost ? nextMedalEl(D, trackStats(D, S, far || void 0).cards, "Next: ", far ? " It comes first because " + trackTitle(D, far) + " is the track furthest from its goal." : "") : null;
+				var farCards = trackStats(D, S, furthestTrack(D, S) || void 0).cards;
+				var next = needs || almost ? nextMedalEl(D, farCards, "Next: ", idleWhy(D, farCards)) : null;
 				var plain = el("section", {
 					className: "hero plain",
 					style: "--lvl:" + fill(tone) + ";--lvl-ink:" + ink(tone)
@@ -2846,6 +2909,10 @@
 					className: "sub",
 					style: "margin:8px 0 0",
 					textContent: "No overall level: this portal does not combine its scorecards into one level for the repository, so each scorecard stands on its own."
+				}) : null, absentSections(D, campaignNames) ? el("p", {
+					className: "sub",
+					style: "margin:8px 0 0",
+					textContent: absentSections(D, campaignNames)
 				}) : null));
 				plain.setAttribute("aria-label", "Status");
 				return plain;
@@ -2923,19 +2990,6 @@
 			}))), el("p", {
 				className: "verdict",
 				textContent: sentence
-			}), verdict.indexOf(": ") > 0 ? el("p", { className: "attn" }, el("b", { textContent: verdict.slice(0, verdict.indexOf(": ") + 1) + " " }), verdict.slice(verdict.indexOf(": ") + 2) + " ", el("button", {
-				className: "link",
-				textContent: "See them ↓",
-				onclick: function() {
-					var h = this.getRootNode().querySelector("#need-att");
-					if (h) h.scrollIntoView({
-						behavior: "smooth",
-						block: "start"
-					});
-				}
-			})) : el("p", {
-				className: "attn",
-				textContent: verdict
 			}), wins.length ? el("p", { className: "wins" }, el("b", { textContent: "✓ Already: " }), wins.join(" · ")) : null, (function() {
 				var off = furthestOff(D, S);
 				if (!off) return null;
@@ -2976,7 +3030,35 @@
 				});
 				ladder.append(rung);
 			});
-			section.append(left, el("div", {}, el("h3", {
+			var at = verdict.indexOf(": ");
+			var needs = at > 0 && verdict.indexOf("Needs") === 0;
+			var almost = at > 0 && verdict.indexOf("Almost") === 0;
+			var tone = needs ? "none" : almost ? "bronze" : "gold";
+			var seeThem = function() {
+				var h = this.getRootNode().querySelector("#need-att");
+				if (h) h.scrollIntoView({
+					behavior: "smooth",
+					block: "start"
+				});
+			};
+			var statusLead = el("div", { className: "status-lead" }, el("div", {
+				className: "kicker",
+				textContent: "Status"
+			}), el("h2", {
+				className: "levelword",
+				style: "color:" + ink(tone)
+			}, at > 0 ? verdict.slice(0, at) : verdict), at > 0 ? el("p", { className: "verdict" }, verdict.slice(at + 2).replace(/^./, function(ch) {
+				return ch.toUpperCase();
+			}) + " ", el("button", {
+				className: "link",
+				textContent: "See them ↓",
+				onclick: seeThem
+			})) : null, absentSections(D, campaignNames) ? el("p", {
+				className: "sub",
+				style: "margin:8px 0 0",
+				textContent: absentSections(D, campaignNames)
+			}) : null);
+			section.append(statusLead, left, el("div", {}, el("h3", {
 				style: "margin-top:0",
 				textContent: "Where each repository standard stands"
 			}), ladder, el("p", {
@@ -2992,7 +3074,32 @@
 			var c = S.checks;
 			var total = c.pass + c.vacuous + c.fail + c.unknown;
 			var pct = share(c.pass, total);
-			var checkNote = [c.vacuous ? fmt(c.vacuous) + " not assessed yet, not counted as passes" : null, c.unknown ? fmt(c.unknown) + " not run" : null].filter(Boolean);
+			var checkParts = [
+				{
+					cls: "pass",
+					n: c.pass,
+					name: "pass"
+				},
+				{
+					cls: "fail",
+					n: c.fail,
+					name: "fail"
+				},
+				{
+					cls: "unknown",
+					n: c.unknown,
+					name: "not run"
+				},
+				{
+					cls: "vacuous",
+					n: c.vacuous,
+					name: "not assessed"
+				}
+			];
+			var checkLine = checkParts.map(function(p) {
+				return fmt(p.n) + " " + p.name;
+			}).join(", ");
+			var checkLabel = checkLine + ", of " + fmt(total) + " checks";
 			var on = campaignNames.filter(function(n) {
 				return campaignStanding(D, campaigns[n]) === "on";
 			}).length;
@@ -3034,10 +3141,10 @@
 				return link(path, "tile " + (cls || ""), [lead, el("div", {}, el("strong", { textContent: big }), el("span", {}, ...[].concat(text)))]);
 			};
 			var shown = [
-				total ? tile("scorecards", "good", kpiBar(pct, pct + "% of checks pass"), pct + "%", [fmt(c.pass) + " of " + fmt(total) + " checks pass on evidence", checkNote.length ? el("small", {
+				total ? tile("scorecards", "good", checkBar(checkParts, checkLabel), pct + "%", [checkLine, el("small", {
 					className: "tile-note",
-					textContent: checkNote.join("; ")
-				}) : null]) : null,
+					textContent: "of " + fmt(total) + " checks. The four counts add up to that total."
+				})]) : null,
 				scoredEntities ? tile("catalog", "", medal(topMedal, 40), fmt(golden), [
 					"of " + fmt(scoredEntities) + " scored entities are at the top level of every scorecard that rates them",
 					topList.length > 1 ? el("small", {
@@ -5179,12 +5286,24 @@
 				var sc = D.scorecards[n];
 				var score = D.scores[n][id];
 				var unrun = unrunIn(sc, score);
-				if (unrun.length) return el("span", { className: "held" }, mixed ? el("strong", { style: "color:var(--fg);text-transform:none" }, "Not run in this build. ") : null, jumpTo(n), mixed ? ": " : " is not established. ", unrunWords(sc, unrun), " This scorecard shows no medal.");
+				if (unrun.length) {
+					var failed = Object.keys(score.rules || {}).filter(function(k) {
+						return score.rules[k] === "fail";
+					});
+					var failNote = failed.length ? " " + failed.map(function(k) {
+						return ruleTitleOf(sc, k);
+					}).join(" and ") + (failed.length === 1 ? " fails" : " fail") + " on evidence, under this scorecard." : "";
+					return el("span", { className: "held" }, mixed ? el("strong", { style: "color:var(--muted);text-transform:none" }, jumpTo(n), ": no medal") : jumpTo(n), mixed ? ". " : " is not established. ", unrunWords(sc, unrun), " This scorecard shows no medal." + failNote);
+				}
 				var hollow = unassessedIn(D, n, id);
 				var next = nextLevel(sc, score.level);
 				var need = next ? blockers(sc, score, next) : [];
 				var hold = need.length === 1 ? ". Held by " + ruleTitleOf(sc, need[0]) + (score.rules[need[0]] === "unknown" ? ", which was not run" : ", which fails") : need.length ? ". " + plural(need.length, "rule") + " short of " + levelName(next) : "";
-				return el("span", { className: "held" }, mixed ? el("strong", { style: "color:" + ink(score.level) + ";text-transform:none" }, (need.length ? "Fails" : ownLevel(D, kind, score.level)) + ". ") : null, jumpTo(n), " is ", ownLevel(D, kind, score.level), hollow ? ", and may not hold until an agent assesses it" : "", hold, ".");
+				var rung = ownLevel(D, kind, score.level);
+				return el("span", { className: "held" }, mixed ? el("span", { className: "mini" }, hollow ? el("span", {
+					className: "medal-hollow",
+					title: "No agent has assessed this scorecard, so this medal may not hold."
+				}, medal(score.level, 22)) : medal(score.level, 22)) : null, mixed ? el("strong", { style: "color:" + ink(score.level) + ";text-transform:none" }, jumpTo(n), ": " + rung) : jumpTo(n), mixed ? "" : " is ", mixed ? "" : rung, hollow ? ", and may not hold until an agent assesses it" : "", hold, ".");
 			};
 			return el("section", {}, el("nav", {
 				className: "crumb",
@@ -5192,7 +5311,7 @@
 			}, link("catalog", "", "Catalog"), kind ? el("span", {}, " / ", link("catalog/" + enc(kind), "", kindTitle(D, kind))) : "", " / " + short), el("div", { className: "ehead" }, el("div", {}, el("h2", { textContent: short }), short !== id ? el("code", { textContent: id }) : null, el("div", {
 				className: "sub",
 				textContent: (kind ? kindTitle(D, kind) : "unknown kind") + " · " + plural(cards.length, "scorecard")
-			})), shown || whollyUnset ? el("div", { className: "elevel" }, whollyUnset ? el("span", { title: "Checks this level needs were not run, so it is not established." }, medal("not scored", 52)) : shownHollow ? el("span", {
+			})), shown || whollyUnset ? el("div", { className: "elevel" + (mixed ? " split" : "") }, mixed ? null : whollyUnset ? el("span", { title: "Checks this level needs were not run, so it is not established." }, medal("not scored", 52)) : shownHollow ? el("span", {
 				className: "medal-hollow",
 				title: "No agent has assessed the scorecard that sets this level, so it may not hold."
 			}, medal(shown, 52)) : medal(shown, 52), el("div", {}, unsetCards.length && setCards.length ? null : el("strong", { style: "color:" + (whollyUnset ? "var(--muted)" : ink(shown)) + (whollyUnset || KNOWN.indexOf(ownLevel(D, kind, shown)) < 0 ? ";text-transform:none" : "") }, whollyUnset ? "Not run in this build" : ownLevel(D, kind, shown), !whollyUnset && atTop ? el("span", {
@@ -5611,7 +5730,7 @@
 				style: "margin:6px 0 0"
 			}, el("summary", { textContent: "How a factor and a rule are counted" }), "A factor is a scorecard that scores both products on the same rules. On a rule, a product is ahead when its measured value is better (within the rule's tolerance is parity) or it passes a bar the other misses. Factors are counted two ways on every portal. By the strict count, " + who(subject) + " is behind on a factor if it is behind on any one of its rules, and ahead if it is ahead on some and behind on none. By the majority count, it is ahead when it is ahead on more of the factor's rules than it is behind on, behind when it is behind on more, and at parity when they are even. Each comparison declares which count is its verdict; this one declares the " + countName + " count. A factor with any unmeasured rule is not measured. “Mixed” means ahead on some rules and behind on others; “narrowly ahead” means ahead on fewer than half of that factor's rules, at parity on the rest.", otherCount)), el("div", { className: "cmp-side" }, el("div", {
 				className: "kicker",
-				textContent: "Factors"
+				textContent: unmeasured ? "Factors" : "Verdict: " + countName + " count"
 			}), el("div", { className: "tally3" }, ...[
 				"ahead",
 				"parity",

@@ -252,7 +252,7 @@ export const compareViews = {
       el(
         "div",
         { className: "cmp-side" },
-        el("div", { className: "kicker", textContent: "Factors" }),
+        el("div", { className: "kicker", textContent: unmeasured ? "Factors" : "Verdict: " + countName + " count" }),
         el(
           "div",
           { className: "tally3" },

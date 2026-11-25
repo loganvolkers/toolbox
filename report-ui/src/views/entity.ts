@@ -322,16 +322,20 @@ export const entityViews = {
       var score = D.scores[n][id];
       var unrun = unrunIn(sc, score);
       // Each scorecard names its own status. One headline would blend a failure with checks that never ran.
-      if (unrun.length)
+      if (unrun.length) {
+        var failed = Object.keys(score.rules || {}).filter(function (k) {
+          return score.rules[k] === "fail";
+        });
+        var failNote = failed.length ? " " + failed.map(function (k) { return ruleTitleOf(sc, k); }).join(" and ") + (failed.length === 1 ? " fails" : " fail") + " on evidence, under this scorecard." : "";
         return el(
           "span",
           { className: "held" },
-          mixed ? el("strong", { style: "color:var(--fg);text-transform:none" }, "Not run in this build. ") : null,
-          jumpTo(n),
-          mixed ? ": " : " is not established. ",
+          mixed ? el("strong", { style: "color:var(--muted);text-transform:none" }, jumpTo(n), ": no medal") : jumpTo(n),
+          mixed ? ". " : " is not established. ",
           unrunWords(sc, unrun),
-          " This scorecard shows no medal.",
+          " This scorecard shows no medal." + failNote,
         );
+      }
       var hollow = unassessedIn(D, n, id);
       var next = nextLevel(sc, score.level);
       var need = next ? blockers(sc, score, next) : [];
@@ -341,13 +345,14 @@ export const entityViews = {
           : need.length
             ? ". " + plural(need.length, "rule") + " short of " + levelName(next)
             : "";
+      var rung = ownLevel(D, kind, score.level);
       return el(
         "span",
         { className: "held" },
-        mixed ? el("strong", { style: "color:" + ink(score.level) + ";text-transform:none" }, (need.length ? "Fails" : ownLevel(D, kind, score.level)) + ". ") : null,
-        jumpTo(n),
-        " is ",
-        ownLevel(D, kind, score.level),
+        mixed ? el("span", { className: "mini" }, hollow ? el("span", { className: "medal-hollow", title: "No agent has assessed this scorecard, so this medal may not hold." }, medal(score.level, 22)) : medal(score.level, 22)) : null,
+        mixed ? el("strong", { style: "color:" + ink(score.level) + ";text-transform:none" }, jumpTo(n), ": " + rung) : jumpTo(n),
+        mixed ? "" : " is ",
+        mixed ? "" : rung,
         hollow ? ", and may not hold until an agent assesses it" : "",
         hold,
         ".",
@@ -364,8 +369,10 @@ export const entityViews = {
         shown || whollyUnset
           ? el(
               "div",
-              { className: "elevel" },
-              whollyUnset
+              { className: "elevel" + (mixed ? " split" : "") },
+              mixed
+                ? null
+                : whollyUnset
                 ? el("span", { title: "Checks this level needs were not run, so it is not established." }, medal("not scored", 52))
                 : shownHollow
                 ? el("span", { className: "medal-hollow", title: "No agent has assessed the scorecard that sets this level, so it may not hold." }, medal(shown, 52))

@@ -5,7 +5,7 @@ import { el, enc, link } from "./dom";
 import { kindCount, scorecardSplit } from "./kinds";
 import { known } from "./levels";
 import { isTop, shortId, title } from "./rings";
-import { LADDER, ruleTitle } from "./rules";
+import { LADDER, floorOf, isComparative, rankLevel, ruleTitle } from "./rules";
 import { blockers } from "./status";
 import { unassessedIn } from "./tracks";
 import { fmt, plural } from "./words";
@@ -28,11 +28,38 @@ export function scCaption(D: ReportData, r, split?) {
   var head = (r.sc.kind ? kindCount(D, r.sc.kind, r.total) + (split ? scorecardSplit(D, r.sc.kind) : "") : plural(r.total, "entity", "entities")) + (r.total > r.scored ? ", " + fmt(r.total - r.scored) + " not in scope" : "");
   var prov = provisionalOf(D, r.name);
   var unj = unassessedOf(D, r.name);
+  var idle = idleLowestMark(D, r.name);
   return [
     head + (r.scored ? " · " + r.topShare + "% at the top level (" + levelName(r.top || "top") + ")" : " · not scored yet"),
     prov ? el("span", { className: "provisional", title: "Their levels hold only if the checks not run in this build pass; drawn dotted in the bar", textContent: " · " + fmt(prov) + " provisional (checks not run)" }) : null,
     unj ? el("span", { className: "unjudged-n", title: "No agent has assessed them yet, so their agent-judged rules pass or fail for want of anything to read; drawn hatched in the bar", textContent: " · " + fmt(unj) + " not assessed by an agent (hatched)" }) : null,
+    idle ? el("span", { textContent: " · " + idle }) : null,
   ];
+}
+
+// The weakest scorecard on a track, when it sits more than one level below its top.
+// Lifting it does not move the track's percentage, so the list says so beside the row the Next box names.
+export function idleLowestMark(D: ReportData, name) {
+  var sc = (D.scorecards || {})[name];
+  if (!sc || !sc.track || isComparative(D, name)) return null;
+  var peers = Object.keys(D.scorecards || {}).filter(function (n) {
+    return ((D.scorecards || {})[n] || {}).track === sc.track && !isComparative(D, n);
+  });
+  var ranked = peers
+    .map(function (n) {
+      return { n: n, floor: floorOf(D, n) };
+    })
+    .filter(function (x) {
+      return x.floor && !isTop(D, x.n, x.floor);
+    });
+  ranked.sort(function (a, b) {
+    return rankLevel(a.floor) - rankLevel(b.floor) || title(D, a.n).localeCompare(title(D, b.n));
+  });
+  if (!ranked.length || ranked[0].n !== name) return null;
+  var order = ["none"].concat((sc.levels || []).filter(function (l) { return l !== "none"; }));
+  var idx = order.indexOf(ranked[0].floor as string);
+  if (idx < 0 || idx >= order.length - 2) return null;
+  return "Lowest on this track; lifting it adds no points until those entities reach the top level.";
 }
 
 export function nextMedal(D: ReportData, cards) {
@@ -285,6 +312,23 @@ export function goalBar(state, pct, target, big, each?) {
 }
 
 // hollowPct is the part of pct that passes only because no agent has assessed it; it is hatched.
+// Pass, fail, not run and not assessed, each a segment, so the four counts are the whole bar.
+export function checkBar(parts: { cls: string; n: number }[], label) {
+  var total = parts.reduce(function (s, p) {
+    return s + p.n;
+  }, 0) || 1;
+  var g = el(
+    "div",
+    { className: "kpi-bar parts" },
+    ...parts.filter(function (p) { return p.n > 0; }).map(function (p) {
+      return el("span", { className: p.cls, style: "width:" + (100 * p.n) / total + "%" });
+    }),
+  );
+  g.setAttribute("role", "img");
+  g.setAttribute("aria-label", label);
+  return g;
+}
+
 export function kpiBar(pct, label, short?, hollowPct?) {
   var clamp = function (v) {
     return Math.max(0, Math.min(100, v || 0));

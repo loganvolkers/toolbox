@@ -4,12 +4,12 @@ import type { ReportData } from "../types";
 // hero, tiles, campaignCard, scorecardTable, overview: methods of <toolbox-report>, installed on its prototype by element.js.
 import { badge, barEl, levelLegend, medal, splitUnassessed, unrunIn } from "../lib/bars";
 import { lockIcon } from "../lib/basis";
-import { campaignStanding, campaignState, goalBar, includeProgress, kpiBar, kpiPips, nextMedalEl, scCaption, stuckNote } from "../lib/campaigns";
+import { campaignStanding, campaignState, checkBar, goalBar, includeProgress, kpiPips, nextMedalEl, scCaption, stuckNote, verifiedMover } from "../lib/campaigns";
 import { cardName, num } from "../lib/compare";
 import { el, enc, link } from "../lib/dom";
 import { kindCount, kindDescription, kindGroupsOf, kindTitle } from "../lib/kinds";
 import { fill, ink, known } from "../lib/levels";
-import { ring, shortId, title, topNote } from "../lib/rings";
+import { isTop, ring, shortId, title, topNote } from "../lib/rings";
 import { LADDER, floorOf, floorPill, isComparative, ruleTitle } from "../lib/rules";
 import { blockers, daysLeft } from "../lib/status";
 import { campaignNamesSorted, healthVerdict, noFacts, share as shareOf } from "../lib/summary";
@@ -50,6 +50,26 @@ function furthestOff(D: ReportData, S: Summary): { rank: number; id: string; nam
   return best;
 }
 
+// Sections the navigation omits. The status card says so, the way a first run says nothing is scored.
+function absentSections(D: ReportData, campaignNames) {
+  var missing: string[] = [];
+  if (!Object.keys(D.tracks || {}).length) missing.push("tracks");
+  if (!campaignNames.length) missing.push("campaigns");
+  if (!Object.keys(D.comparisons || {}).length) missing.push("a comparison");
+  if (!missing.length) return "";
+  var list = missing.length === 1 ? missing[0] : missing.slice(0, -1).join(", ") + " or " + missing[missing.length - 1];
+  return "This portal has no " + list + ", so " + (missing.length === 1 ? "that section is" : "those sections are") + " not in the navigation.";
+}
+
+// The weakest scorecard on these cards, when lifting it does not move the track.
+function idleWhy(D: ReportData, cards) {
+  var lead = verifiedMover(D, cards);
+  var wk = cards[0] && cards[0].floor && !isTop(D, cards[0].row.name, cards[0].floor) ? cards[0] : null;
+  var track = wk && ((D.scorecards || {})[wk.row.name] || {}).track;
+  if (!lead || !wk || !track || lead.r.name === wk.row.name) return "";
+  return " " + title(D, wk.row.name) + " is the lowest level on this track and does not move it until those entities reach its top level.";
+}
+
 export const overviewViews = {
   hero(D: ReportData, S: Summary, campaignNames) {
     const R = S.repo;
@@ -78,6 +98,7 @@ export const overviewViews = {
             el("code", { textContent: "toolbox.yaml" }),
             ". The " + plural(S.rows.length, "scorecard") + " below will fill in.",
           ),
+          absentSections(D, campaignNames) ? el("p", { className: "sub", style: "margin:8px 0 0", textContent: absentSections(D, campaignNames) }) : null,
         ),
       );
       start.setAttribute("aria-label", "Status");
@@ -90,8 +111,9 @@ export const overviewViews = {
       var tone = needs ? "none" : almost ? "bronze" : "gold";
       // The furthest track's lowest scorecard, as its track card names it; with no tracks, every scorecard's.
       var far = furthestTrack(D, S);
-      var next = needs || almost ? nextMedalEl(D, trackStats(D, S, far || undefined).cards, "Next: ", far ? " It comes first because " + trackTitle(D, far) + " is the track furthest from its goal." : "") : null;
-      var plain = el("section", { className: "hero plain", style: "--lvl:" + fill(tone) + ";--lvl-ink:" + ink(tone) }, el("div", {}, el("div", { className: "kicker", textContent: "Status" }), el("h2", { className: "levelword", textContent: at > 0 ? verdict.slice(0, at) : verdict }), at > 0 ? el("p", { className: "verdict", textContent: verdict.slice(at + 2).replace(/^./, function (ch) { return ch.toUpperCase(); }) }) : null, next, S.rows.length ? el("p", { className: "sub", style: "margin:8px 0 0", textContent: "No overall level: this portal does not combine its scorecards into one level for the repository, so each scorecard stands on its own." }) : null));
+      var farCards = trackStats(D, S, far || undefined).cards;
+      var next = needs || almost ? nextMedalEl(D, farCards, "Next: ", idleWhy(D, farCards)) : null;
+      var plain = el("section", { className: "hero plain", style: "--lvl:" + fill(tone) + ";--lvl-ink:" + ink(tone) }, el("div", {}, el("div", { className: "kicker", textContent: "Status" }), el("h2", { className: "levelword", textContent: at > 0 ? verdict.slice(0, at) : verdict }), at > 0 ? el("p", { className: "verdict", textContent: verdict.slice(at + 2).replace(/^./, function (ch) { return ch.toUpperCase(); }) }) : null, next, S.rows.length ? el("p", { className: "sub", style: "margin:8px 0 0", textContent: "No overall level: this portal does not combine its scorecards into one level for the repository, so each scorecard stands on its own." }) : null, absentSections(D, campaignNames) ? el("p", { className: "sub", style: "margin:8px 0 0", textContent: absentSections(D, campaignNames) }) : null));
       plain.setAttribute("aria-label", "Status");
       return plain;
     }
@@ -194,22 +216,6 @@ export const overviewViews = {
         el("div", {}, el("div", { className: "kicker", textContent: "Repository level" }), el("h2", { className: "levelword", textContent: level })),
       ),
       el("p", { className: "verdict", textContent: sentence }),
-      verdict.indexOf(": ") > 0
-        ? el(
-            "p",
-            { className: "attn" },
-            el("b", { textContent: verdict.slice(0, verdict.indexOf(": ") + 1) + " " }),
-            verdict.slice(verdict.indexOf(": ") + 2) + " ",
-            el("button", {
-              className: "link",
-              textContent: "See them ↓",
-              onclick: function (this: HTMLElement) {
-                var h = (this.getRootNode() as ParentNode).querySelector("#need-att");
-                if (h) h.scrollIntoView({ behavior: "smooth", block: "start" });
-              },
-            }),
-          )
-        : el("p", { className: "attn", textContent: verdict }),
       wins.length ? el("p", { className: "wins" }, el("b", { textContent: "✓ Already: " }), wins.join(" · ")) : null,
       (function () {
         var off = furthestOff(D, S);
@@ -250,7 +256,31 @@ export const overviewViews = {
       });
       ladder.append(rung);
     });
+    var at = verdict.indexOf(": ");
+    var needs = at > 0 && verdict.indexOf("Needs") === 0;
+    var almost = at > 0 && verdict.indexOf("Almost") === 0;
+    var tone = needs ? "none" : almost ? "bronze" : "gold";
+    var seeThem = function (this: HTMLElement) {
+      var h = (this.getRootNode() as ParentNode).querySelector("#need-att");
+      if (h) h.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+    var statusLead = el(
+      "div",
+      { className: "status-lead" },
+      el("div", { className: "kicker", textContent: "Status" }),
+      el("h2", { className: "levelword", style: "color:" + ink(tone) }, at > 0 ? verdict.slice(0, at) : verdict),
+      at > 0
+        ? el(
+            "p",
+            { className: "verdict" },
+            verdict.slice(at + 2).replace(/^./, function (ch) { return ch.toUpperCase(); }) + " ",
+            el("button", { className: "link", textContent: "See them ↓", onclick: seeThem }),
+          )
+        : null,
+      absentSections(D, campaignNames) ? el("p", { className: "sub", style: "margin:8px 0 0", textContent: absentSections(D, campaignNames) }) : null,
+    );
     section.append(
+      statusLead,
       left,
       el(
         "div",
@@ -287,7 +317,14 @@ export const overviewViews = {
     var c = S.checks;
     var total = c.pass + c.vacuous + c.fail + c.unknown;
     var pct = shareOf(c.pass, total);
-    var checkNote = [c.vacuous ? fmt(c.vacuous) + " not assessed yet, not counted as passes" : null, c.unknown ? fmt(c.unknown) + " not run" : null].filter(Boolean);
+    var checkParts = [
+      { cls: "pass", n: c.pass, name: "pass" },
+      { cls: "fail", n: c.fail, name: "fail" },
+      { cls: "unknown", n: c.unknown, name: "not run" },
+      { cls: "vacuous", n: c.vacuous, name: "not assessed" },
+    ];
+    var checkLine = checkParts.map(function (p) { return fmt(p.n) + " " + p.name; }).join(", ");
+    var checkLabel = checkLine + ", of " + fmt(total) + " checks";
     var on = campaignNames.filter(function (n) {
       return campaignStanding(D, campaigns[n]) === "on";
     }).length;
@@ -334,7 +371,7 @@ export const overviewViews = {
       return link(path, "tile " + (cls || ""), [lead, el("div", {}, el("strong", { textContent: big }), el("span", {}, ...[].concat(text)))]);
     };
     var shown = [
-      total ? tile("scorecards", "good", kpiBar(pct, pct + "% of checks pass"), pct + "%", [fmt(c.pass) + " of " + fmt(total) + " checks pass on evidence", checkNote.length ? el("small", { className: "tile-note", textContent: checkNote.join("; ") }) : null]) : null,
+      total ? tile("scorecards", "good", checkBar(checkParts, checkLabel), pct + "%", [checkLine, el("small", { className: "tile-note", textContent: "of " + fmt(total) + " checks. The four counts add up to that total." })]) : null,
       scoredEntities ? tile("catalog", "", medal(topMedal, 40), fmt(golden), ["of " + fmt(scoredEntities) + " scored entities are at the top level of every scorecard that rates them", topList.length > 1 ? el("small", { className: "tile-note", textContent: "Top levels differ by scorecard: " + andList(topList) + "." }) : null, goldUnjudged ? el("small", { className: "tile-note", textContent: fmt(goldUnjudged) + " of those still await an agent's assessment" }) : null, kindNote ? el("small", { className: "tile-note", textContent: kindNote }) : null]) : null,
       scoredEntities ? tile("scorecards", debt ? "bad" : "good", medal(debt ? "none" : "gold", 40), String(debt), debt === 1 ? "scorecard has entities at none" : debt ? "scorecards have entities at none" : "scorecards with entities at none") : null,
       campaignNames.length ? tile("campaigns", on === campaignNames.length ? "good" : "", kpiPips(on, campaignNames.length, on + " of " + campaignNames.length + " campaigns on target"), on + " of " + campaignNames.length, "campaigns on target") : null,
