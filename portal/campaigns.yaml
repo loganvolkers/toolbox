@@ -133,3 +133,16 @@ campaigns:
     includes:
     - {scorecard: review-rule, atLeast: bronze}
     - {scorecard: review-scorecard, atLeast: bronze}
+  - name: ci-security-gold
+    title: Workflows with no unexplained zizmor finding
+    track: delivery
+    owner: group:maintainers
+    description: >-
+      Every workflow and the report action reach gold on
+      maintainer-ci-security: each zizmor finding fixed, or ignored inline
+      with its reason, so maintainer-ci-security no longer holds the
+      repository level down. release.yml stays gold through its waivers (D98).
+    start: 2026-11-25
+    end: 2027-01-31
+    targetPercent: 100
+    includes: [{scorecard: maintainer-ci-security, atLeast: gold}]

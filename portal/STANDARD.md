@@ -917,6 +917,7 @@ Change a standard by changing these parameters in the portal's `toolbox.yaml`.
 - **Skills to silver** (`skill-silver`): Every shipped agent skill reaches silver on maintainer-skill.
 - **CLI skills present** (`cli-skill-coverage`): Every CLI command that needs a skill has one (cli-skill bronze).
 - **Close the open review findings** (`close-review-findings`): Act on every current rule-quality and scorecard-quality finding: fix the standard, or answer the finding in a new, independent assessment (docs/design/meta-standards-review.md).
+- **Workflows with no unexplained zizmor finding** (`ci-security-gold`): Every workflow and the report action reach gold on maintainer-ci-security: each zizmor finding fixed, or ignored inline with its reason, so maintainer-ci-security no longer holds the repository level down. release.yml stays gold through its waivers (D98).
 - **OpenSSF Scorecard: every check at 10** (`maintainer-openssf-ten`): Every Scorecard check at its maximum. Progress is counted from the start the baseline records, in checks below 10 and in points short.
 - **Python we maintain passes ruff: to zero** (`maintainer-python-zero`): No ruff findings in any file. Progress is counted from the start the baseline records.
 
