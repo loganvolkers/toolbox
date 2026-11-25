@@ -13,9 +13,15 @@
       "start": "2026-11-01"
     },
     "close-review-findings": {
-      "inScope": 0,
-      "recorded": "2026-11-23",
-      "short": 0,
+      "inScope": 310,
+      "recorded": "2026-11-25",
+      "restartedFrom": {
+        "inScope": 0,
+        "recorded": "2026-11-23",
+        "short": 0,
+        "start": "2026-11-23"
+      },
+      "short": 14,
       "start": "2026-11-23"
     },
     "maintainer-advisories-zero": {
@@ -3648,7 +3654,6 @@
         "level": "bronze"
       }
     },
-    "maintainer-advisories": {},
     "maintainer-agent-doc": {
       "agent-doc:.cursor/rules/toolbox-operator.mdc": {
         "level": "gold"
