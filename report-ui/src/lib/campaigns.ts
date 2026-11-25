@@ -1,11 +1,10 @@
 import type { ReportData } from "../types";
 import type { Row } from "./summary";
 import { levelOrder, medal, provisionalOf, unassessedOf } from "./bars";
-import { basisBadge, basisOf } from "./basis";
 import { el, enc, link } from "./dom";
 import { kindCount, scorecardSplit } from "./kinds";
 import { known } from "./levels";
-import { isTop, title } from "./rings";
+import { isTop, shortId, title } from "./rings";
 import { LADDER, ruleTitle } from "./rules";
 import { blockers } from "./status";
 import { unassessedIn } from "./tracks";
@@ -59,8 +58,26 @@ export function nextMedal(D: ReportData, cards) {
   return null;
 }
 
+// The entities sitting at `level` on a scorecard, named when a reader can hold the list (three or fewer).
+function namedAt(D: ReportData, name, level) {
+  var ids = Object.keys((D.scores || {})[name] || {})
+    .filter(function (id) {
+      return D.scores[name][id].level === level;
+    })
+    .sort();
+  if (!ids.length || ids.length > 3) return null;
+  var bits: (HTMLElement | string)[] = [];
+  ids.forEach(function (id, i) {
+    if (i) bits.push(i === ids.length - 1 ? " and " : ", ");
+    bits.push(link("entity/" + enc(id), "", shortId(id)));
+  });
+  return bits;
+}
+
 // A track's next step is the one that moves its percentage most; the next medal on its weakest
 // scorecard follows, with its gain stated, because a step below a scorecard's top level adds nothing.
+// The basis badge stays off this sentence: it belongs on the rule, and in the sentence it splits the
+// rule from the verb.
 export function nextMedalEl(D: ReportData, cards, label?, why?) {
   var nm = nextMedal(D, cards);
   var tracked = Object.keys(D.tracks || {}).length > 0;
@@ -75,11 +92,13 @@ export function nextMedalEl(D: ReportData, cards, label?, why?) {
   var medalBody = function () {
     if (!nm) return [];
     var card = link("scorecard/" + enc(nm.name), "", title(D, nm.name));
-    var rule = nm.rule ? [link("rule/" + enc(nm.name) + "/" + enc(nm.rule), "", ruleWords(nm.name, nm.rule)), " ", basisBadge(basisOf((((D.scorecards || {})[nm.name] || {}).rules || {})[nm.rule]), "tip")] : [];
+    var rule = nm.rule ? [link("rule/" + enc(nm.name) + "/" + enc(nm.rule), "", ruleWords(nm.name, nm.rule))] : [];
+    var named = nm.rule && nm.n === nm.low ? namedAt(D, nm.name, nm.floor) : null;
     var entities = plural(nm.low, "entity", "entities") + " at " + nm.floor;
+    if (named) return [...named, " on ", card, nm.low === 1 ? " needs " : " need ", ...rule, "."];
     return nm.rule && nm.n === nm.low
-      ? [entities + (nm.low === 1 ? " needs " : " need "), ...rule, " to reach " + nm.up + " on ", card, "."]
-      : ["lift " + entities + " to " + nm.up + " on ", card, ...(nm.rule ? ["; " + nm.n + (nm.n === 1 ? " needs " : " need "), ...rule, " first."] : ["."])];
+      ? [entities + " on ", card, nm.low === 1 ? " needs " : " need ", ...rule, "."]
+      : ["lift " + entities + " to " + nm.up + " on ", card, ...(nm.rule ? [". " + nm.n + (nm.n === 1 ? " needs " : " need "), ...rule, " first."] : ["."])];
   };
   var top = nm ? (((D.scorecards || {})[nm.name] || {}).levels || []).slice(-1)[0] : "";
   var medalAtTop = nm ? isTop(D, nm.name, nm.up) : false;
@@ -167,17 +186,33 @@ function points(g: number) {
   return p + (p === 1 ? " point" : " points");
 }
 
+// The verified step that moves a track's percentage most. The same step leads the overview and the track card.
+export function verifiedMover(D: ReportData, cards): Mover | null {
+  if (!Object.keys(D.tracks || {}).length) return null;
+  return (
+    ringMovers(D, cards).find(function (m) {
+      return !m.waits;
+    }) || null
+  );
+}
+
+export function moverBits(D: ReportData, b: Mover) {
+  return moverBody(D, b);
+}
+
 function moverBody(D: ReportData, b: Mover) {
-  var sc = (D.scorecards || {})[b.r.name] || {};
   var rule = b.rule;
   var entities = plural(b.n, "entity", "entities") + " at " + levelName(b.below);
   var card = link("scorecard/" + enc(b.r.name), "", title(D, b.r.name));
-  var ruleEl = rule ? [link("rule/" + enc(b.r.name) + "/" + enc(rule[0]), "", ruleWords(b.r.name, rule[0])), " ", basisBadge(basisOf((sc.rules || {})[rule[0]]), "tip")] : [];
+  var ruleEl = rule ? [link("rule/" + enc(b.r.name) + "/" + enc(rule[0]), "", ruleWords(b.r.name, rule[0]))] : [];
+  var named = rule && rule[1] === b.n ? namedAt(D, b.r.name, b.below) : null;
+  var gain = " The track gains about " + points(b.gain) + ".";
+  if (named) return [...named, " on ", card, b.n === 1 ? " needs " : " need ", ...ruleEl, ".", gain];
   return [
     ...(rule && rule[1] === b.n
-      ? [entities + (b.n === 1 ? " needs " : " need "), ...ruleEl, " to reach " + levelName(b.top) + " on ", card]
-      : ["lift " + entities + " to " + levelName(b.top) + " on ", card, ...(rule ? ["; " + rule[1] + (rule[1] === 1 ? " needs " : " need "), ...ruleEl, " first"] : [])]),
-    "; the track gains about " + points(b.gain) + ".",
+      ? [entities + " on ", card, b.n === 1 ? " needs " : " need ", ...ruleEl, "."]
+      : ["Lift " + entities + " to " + levelName(b.top) + " on ", card, ...(rule ? [". " + rule[1] + (rule[1] === 1 ? " needs " : " need "), ...ruleEl, " first."] : ["."])]),
+    gain,
   ];
 }
 

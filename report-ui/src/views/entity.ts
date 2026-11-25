@@ -148,31 +148,23 @@ export const entityViews = {
         return score.rules[n] === "unknown" && order.indexOf(((sc.rules || {})[n] || {}).level) <= here;
       })
       .sort();
-    var lowUnrun = unsure
-      .map(function (n) {
-        return ((sc.rules || {})[n] || {}).level;
-      })
-      .sort(function (a, b) {
-        return order.indexOf(a) - order.indexOf(b);
-      })[0];
-    var caveat = unsure.length
-      ? el(
-          "div",
-          { className: "callout", style: "background:color-mix(in srgb,var(--unknown) 12%,var(--card))" },
-          el("span", {}, el("b", { className: "provisional", textContent: "Provisional " + score.level + ". " }), unrunWords(sc, unsure) + " " + levelName(score.level).charAt(0).toUpperCase() + levelName(score.level).slice(1) + " holds only if " + (unsure.length === 1 ? "it passes" : "they pass") + (lowUnrun && lowUnrun !== score.level ? ", and so does " + levelName(lowUnrun) : "") + "."),
-        )
-      : null;
+    // A check below the reported level that did not run means the level is not established.
+    // Do not show that level, and do not offer the rules above it as the next step.
+    if (unsure.length)
+      return el(
+        "div",
+        { className: "callout", style: "background:color-mix(in srgb,var(--unknown) 12%,var(--card))" },
+        el("span", {}, el("b", { textContent: "Not established. " }), unrunWords(sc, unsure), " This scorecard's level is not shown until those checks run."),
+      );
     var next = nextLevel(sc, score.level);
-    if (!next) return el("div", {}, caveat, el("div", { className: "callout done" }, "✓ Top level reached: every rule passes."));
-    var need = blockers(sc, score, next).filter(function (n) {
-      return unsure.indexOf(n) < 0;
-    });
-    if (!need.length) return caveat;
+    if (!next) return el("div", { className: "callout done" }, "✓ Top level reached: every rule passes.");
+    var need = blockers(sc, score, next);
+    if (!need.length) return null;
     if (need.length === 1)
-      return el("div", {}, caveat, el("div", { className: "callout near" }, el("span", {}, el("b", { textContent: "One rule from " }), badge(next), " · pass “" + ruleTitleOf(sc, need[0]) + "” ", basisBadge(basisOf((sc.rules || {})[need[0]]), "tip"), " and this entity moves up a level.")));
-    return el("div", {}, caveat, el("div", { className: "callout" }, el("span", {}, el("b", { textContent: "Next: " }), badge(next), " needs: ", ...need.map(function (n, i) {
+      return el("div", { className: "callout near" }, el("span", {}, el("b", { textContent: "One rule from " }), badge(next), " · pass “" + ruleTitleOf(sc, need[0]) + "” ", basisBadge(basisOf((sc.rules || {})[need[0]]), "tip"), " and this entity moves up a level."));
+    return el("div", { className: "callout" }, el("span", {}, el("b", { textContent: "Next: " }), badge(next), " needs: ", ...need.map(function (n, i) {
       return el("span", { className: "nr" }, ...keepWithLast(ruleTitleOf(sc, n), basisBadge(basisOf((sc.rules || {})[n]), "tip")), i < need.length - 1 ? ", " : "");
-    }), ".")));
+    }), "."));
   },
 
   entity(D: ReportData, S: Summary, id) {
@@ -250,7 +242,7 @@ export const entityViews = {
         el(
           "div",
           { className: "head" },
-          el("div", {}, el("h3", { className: "sct" }, link("scorecard/" + enc(name), "", title(D, name))), " ", score.level === "skipped" ? badge(score.level) : levelPill(score.level, unassessedIn(D, name, id), unrunIn(sc, score))),
+          el("div", {}, el("h3", { className: "sct" }, link("scorecard/" + enc(name), "", title(D, name))), " ", score.level === "skipped" ? badge(score.level) : unrunIn(sc, score).length ? el("span", { className: "lvl none", title: unrunWords(sc, unrunIn(sc, score)) }, "not established") : levelPill(score.level, unassessedIn(D, name, id), unrunIn(sc, score))),
           el("span", { className: "sub" }, name + " · ", here.measured ? el("span", {}, basisIcon("measured"), " " + here.measured + " measured") : null, here.measured && here.judged ? " · " : "", here.judged ? el("span", { className: "judged-n" }, basisIcon("judged"), " " + here.judged + " agent-judged") : null),
         ),
         score.level === "skipped" ? el("div", { className: "sub", textContent: "Not in this scorecard's scope." }) : self.nextStep(sc, score),
@@ -320,27 +312,35 @@ export const entityViews = {
           )
         : null;
     var short = shortId(id);
-    var notRun = 0;
-    cards.forEach(function (n) {
+    // Each scorecard stands on its own. One unrun check does not wipe a level another scorecard has established.
+    var openCards = cards.filter(function (n) {
+      return !isComparative(D, n) && D.scores[n][id].level !== "skipped";
+    });
+    var unsetCards = openCards.filter(function (n) {
+      return unrunIn(D.scorecards[n], D.scores[n][id]).length > 0;
+    });
+    var setCards = openCards.filter(function (n) {
+      return unsetCards.indexOf(n) < 0;
+    });
+    var whollyUnset = setCards.length === 0 && unsetCards.length > 0;
+    var worstSet = setCards.slice().sort(function (a, b) {
+      return placeOf(a) - placeOf(b);
+    })[0];
+    var shown = whollyUnset ? null : worstSet ? D.scores[worstSet][id].level : S.worst[id];
+    var unsetBits: (string | HTMLElement)[] = [];
+    unsetCards.forEach(function (n, i) {
+      if (i) unsetBits.push(" ");
       var sc = D.scorecards[n];
-      var score = D.scores[n][id];
-      // An unrun check on any scorecard at or below the entity's level could still pull it down.
-      if (isComparative(D, n) || score.level === "skipped") return;
-      var here = (sc.levels || []).indexOf(S.worst[id]);
-      if (here < 0) return;
-      notRun += Object.keys(score.rules || {}).filter(function (r) {
-        return score.rules[r] === "unknown" && (sc.levels || []).indexOf(((sc.rules || {})[r] || {}).level) <= here;
-      }).length;
+      unsetBits.push(title(D, n) + " is not established. " + unrunWords(sc, unrunIn(sc, D.scores[n][id])));
     });
-    var unassessedCards = cards.filter(function (n) {
-      return !isComparative(D, n) && D.scores[n][id].level !== "skipped" && unassessedIn(D, n, id);
+    var unassessedCards = setCards.filter(function (n) {
+      return unassessedIn(D, n, id);
     }).length;
-    var atTop = cards.every(function (n) {
+    var atTop = setCards.length > 0 && unsetCards.length === 0 && setCards.every(function (n) {
       var lv = (D.scorecards[n] || {}).levels || [];
-      var at = D.scores[n][id].level;
-      return isComparative(D, n) || at === "skipped" || at === lv[lv.length - 1];
+      return D.scores[n][id].level === lv[lv.length - 1];
     });
-    var provisional = [notRun ? plural(notRun, "check") + " not run" : null, unassessedCards ? plural(unassessedCards, "agent-judged scorecard") + " not assessed" : null].filter(Boolean);
+    var provisional = [unassessedCards ? plural(unassessedCards, "agent-judged scorecard") + " not assessed" : null].filter(Boolean);
     return el(
       "section",
       {},
@@ -349,21 +349,22 @@ export const entityViews = {
         "div",
         { className: "ehead" },
         el("div", {}, el("h2", { textContent: short }), short !== id ? el("code", { textContent: id }) : null, el("div", { className: "sub", textContent: (kind ? kindTitle(D, kind) : "unknown kind") + " · " + plural(cards.length, "scorecard") })),
-        S.worst[id]
+        shown || whollyUnset
           ? el(
               "div",
               { className: "elevel" },
-              notRun
+              whollyUnset
                 ? el("span", { title: "Checks this level needs were not run, so it is not established." }, medal("not scored", 52))
-                : S.worstState.get(id) === "hollow"
-                ? el("span", { className: "medal-hollow", title: "No agent has assessed this entity yet, so this level may not hold." }, medal(S.worst[id], 52))
-                : medal(S.worst[id], 52),
+                : S.worstState.get(id) === "hollow" && !unsetCards.length
+                ? el("span", { className: "medal-hollow", title: "No agent has assessed this entity yet, so this level may not hold." }, medal(shown, 52))
+                : medal(shown, 52),
               el(
                 "div",
                 {},
-                el("strong", { style: "color:" + (notRun ? "var(--muted)" : ink(S.worst[id])) + (notRun || KNOWN.indexOf(ownLevel(D, kind, S.worst[id])) < 0 ? ";text-transform:none" : "") }, notRun ? "Not established" : ownLevel(D, kind, S.worst[id]), !notRun && atTop ? el("span", { className: "topmark", textContent: " ✓ top" + (KNOWN.indexOf(S.worst[id]) < 0 ? " level" : "") }) : null, !notRun && provisional.length ? el("span", { className: "pv-head", textContent: " (may not hold)" }) : null),
-                provisional.length ? el("span", { className: "provisional", style: "display:block;font-size:13px", title: "The level holds only if the checks not run in this build pass and an agent's assessment finds nothing; the scorecards below name them.", textContent: provisional.join(", ") }) : null,
-                heldEl,
+                el("strong", { style: "color:" + (whollyUnset ? "var(--muted)" : ink(shown)) + (whollyUnset || KNOWN.indexOf(ownLevel(D, kind, shown)) < 0 ? ";text-transform:none" : "") }, whollyUnset ? "Not established" : ownLevel(D, kind, shown), !whollyUnset && atTop ? el("span", { className: "topmark", textContent: " ✓ top" + (KNOWN.indexOf(shown) < 0 ? " level" : "") }) : null, !whollyUnset && provisional.length ? el("span", { className: "pv-head", textContent: " (may not hold)" }) : null),
+                unsetBits.length ? el("span", { className: "provisional", style: "display:block;font-size:13px" }, ...unsetBits) : null,
+                provisional.length ? el("span", { className: "provisional", style: "display:block;font-size:13px", title: "The level holds only if an agent's assessment finds nothing; the scorecards below name them.", textContent: provisional.join(", ") }) : null,
+                whollyUnset ? null : heldEl,
                 el("span", { className: "sub", textContent: total.pass + " of " + plural(total.all, "check passes", "checks pass") + " on evidence" + (total.hollow ? " · " + plural(total.hollow, "more") + " not assessed yet, not counted as " + (total.hollow === 1 ? "a pass" : "passes") : "") }),
               ),
             )

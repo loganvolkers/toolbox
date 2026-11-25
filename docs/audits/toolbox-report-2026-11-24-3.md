@@ -6,12 +6,13 @@ captures from Storybook, a blind three-auditor panel scored by median, and two r
 plus the starter. About the box: how the report shows what the tools found, whichever portal it
 serves.*
 
-Ten rounds are recorded, and the loop has not stopped. Usability medians rose from 24 to 31 of
+Eleven rounds are recorded, and the loop has not stopped. Usability medians rose from 24 to 31 of
 40 by round 8, held at round 9, and fell to 30 at round 10 when honest states fell from 4 to 3.
-Judgement rose from 10 to 11 of 16 at round 2 and has not moved since. Every reader task succeeded
-for all three auditors from round 5, except round 6 and round 9 (17 of 18 each). Round 10 did not
-pass: honest states fell, and three severity-3 findings were open. Those are fixed in the build the
-next round will score. Rounds 1 to 9 used one model; round 10 used another, which its section records.
+Round 11 held at 30. Judgement rose from 10 to 11 of 16 at round 2 and has not moved since. Every
+reader task succeeded for all three auditors from round 5, except rounds 6, 9 and 11 (17 of 18
+each). Round 11 did not pass: every median held, and three severity-3 findings were open. Those are
+fixed in the build the next round will score. Rounds 1 to 9 used one model; rounds 10 and 11 used
+another, which round 10's section records.
 
 ## Scope
 
@@ -41,25 +42,25 @@ The tasks were written before the first capture and kept for every round:
 A dimension's score is the median of the three auditors. Tasks succeeded counts each auditor
 separately, so the maximum is 18.
 
-| Dimension | R1 | R2 | R3 | R4 | R5 | R6 | R7 | R8 | R9 | R10 |
-|---|---|---|---|---|---|---|---|---|---|---|
-| U1 Answer first | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
-| U2 Reader's language | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
-| U3 Recognition over recall | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
-| U4 Hierarchy and scent | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
-| U5 Data integrity | 2 | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
-| U6 Consistency | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 3 | 3 | 3 |
-| U7 Wayfinding and control | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 3 | 3 |
-| U8 Honest states | 1 | 2 | 3 | 3 | 3 | 3 | 4 | 3 | 4 | 3 |
-| U9 Accessibility | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
-| U10 Density and responsiveness | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
-| J1 Visceral | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
-| J2 Behavioral | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 |
-| J3 Reflective | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
-| J4 Voice | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
-| U total | 24 | 27 | 29 | 29 | 29 | 29 | 30 | 31 | 31 | 30 |
-| J total | 10 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 |
-| Tasks succeeded (of 18) | 13 | 16 | 16 | 17 | 18 | 17 | 18 | 18 | 17 | 18 |
+| Dimension | R1 | R2 | R3 | R4 | R5 | R6 | R7 | R8 | R9 | R10 | R11 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| U1 Answer first | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| U2 Reader's language | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| U3 Recognition over recall | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| U4 Hierarchy and scent | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| U5 Data integrity | 2 | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| U6 Consistency | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 3 | 3 | 3 | 3 |
+| U7 Wayfinding and control | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 3 | 3 | 3 |
+| U8 Honest states | 1 | 2 | 3 | 3 | 3 | 3 | 4 | 3 | 4 | 3 | 3 |
+| U9 Accessibility | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| U10 Density and responsiveness | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| J1 Visceral | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| J2 Behavioral | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 |
+| J3 Reflective | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| J4 Voice | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| U total | 24 | 27 | 29 | 29 | 29 | 29 | 30 | 31 | 31 | 30 | 30 |
+| J total | 10 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 |
+| Tasks succeeded (of 18) | 13 | 16 | 16 | 17 | 18 | 17 | 18 | 18 | 17 | 18 | 17 |
 
 ## Round 1: what the panel found
 
@@ -343,6 +344,19 @@ severity-3 findings are not, because each one is a sentence still on the page:
 The OpenFGA overview's one undersized control, the "Ten" link at 22 px (A and C, severity 2), now
 reads "a score of 10" and next-step links have a 24 px minimum width. "Other steps" is at least 24
 px tall.
+
+## Round 11: what the panel found
+
+The same model as round 10, Grok 4.7, scored this round, still blind to the source, the diff and
+each other. The probes passed 212 of 212. Every median held, at 30 of 40 and 11 of 16. One auditor
+marked T4 partial, so tasks succeeded 17 of 18. The round did not pass, because three severity-3
+findings were open:
+
+| Finding (auditors) | Fix |
+|---|---|
+| The overview's next step is OpenSSF Scorecard, about 4 points, while the track card's first line is CI reliability, a medal that adds no points (A, B) | The track card's "Next" line is that same step, and it names the two checks: "License and Pinned-Dependencies on OpenSSF Scorecard need a score of 10. The track gains about 4 points." CI reliability is a separate "Lowest level" line, which says lifting it adds no points until its top level |
+| `toolbox-cli` is headlined "Not established" while Crates, reviewed by agents is bronze and Rust crates is drawn as provisional silver (A, C) | The header is the worst level a scorecard has established, here bronze, and names the rule that holds it (Assessed). A scorecard whose checks below the reported level did not run says "not established" and names those checks. It does not wear the higher level |
+| A Tool-checked badge sits between the rule and the verb in the next-step sentence (C) | The badge stays on the rule. The next sentence is the action, then the point gain, with nothing between the rule and the verb |
 
 ## Comparisons are generic
 

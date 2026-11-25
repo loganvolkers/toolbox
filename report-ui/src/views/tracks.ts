@@ -4,7 +4,7 @@ import type { ReportData } from "../types";
 // trackCard, trackGrid, tracks, track, trackStrip: methods of <toolbox-report>, installed on its prototype by element.js.
 import { badge, levelLegend, medal } from "../lib/bars";
 import { lockIcon, refs } from "../lib/basis";
-import { levelName, nextMedal, nextMedalEl } from "../lib/campaigns";
+import { levelName, moverBits, nextMedal, nextMedalEl, verifiedMover } from "../lib/campaigns";
 import { el, enc, link } from "../lib/dom";
 import { LEVEL_DEF, ONLY_LEVEL } from "../lib/levels";
 import { bothCounts, capsRepo, isTop, ring, tallyRing, tallyShort, tallyWords, title } from "../lib/rings";
@@ -27,6 +27,7 @@ export const tracksViews = {
   trackCard(D: ReportData, S: Summary, t, flag) {
     var def = t.def;
     var color = trackColor(t);
+    var lead: ReturnType<typeof verifiedMover> = null;
     var kids = [
       flag ? el("span", { className: "flag", textContent: flag }) : null,
       el(
@@ -97,13 +98,18 @@ export const tracksViews = {
         ),
       );
       var nm = nextMedal(D, t.cards);
+      lead = verifiedMover(D, t.cards);
       var wk = t.cards[0] && t.cards[0].floor && !isTop(D, t.cards[0].row.name, t.cards[0].floor) ? t.cards[0] : null;
-      if (wk && (!nm || nm.name !== wk.row.name)) kids.push(el("div", { className: "tnext" }, el("b", { textContent: "Lowest level: " }), link("scorecard/" + enc(wk.row.name), "", title(D, wk.row.name)), " at ", badge(wk.floor)));
-      kids.push(
-        nm
-          ? el("div", { className: "tnext" }, el("b", { textContent: wk && nm.name === wk.row.name ? "Lowest level, and the next medal: " : "Next medal: " }), link("scorecard/" + enc(nm.name), "", title(D, nm.name)), wk && nm.name === wk.row.name ? el("span", {}, " at ", badge(wk.floor), " → " + nm.up) : " to " + nm.up, " · " + plural(nm.low, "entity", "entities") + " to lift")
-          : el("div", { className: "tnext good", textContent: "✓ Every scorecard is at its top level" }),
-      );
+      // The card's first fix is the same step the overview ranks first. The lowest medal is named on its own,
+      // so a zero-point lift is not offered as the next thing to do.
+      if (lead) kids.push(el("div", { className: "tnext" }, el("b", { textContent: "Next: " }), ...moverBits(D, lead)));
+      if (wk && (!lead || lead.r.name !== wk.row.name)) kids.push(el("div", { className: "tnext" }, el("b", { textContent: "Lowest level: " }), link("scorecard/" + enc(wk.row.name), "", title(D, wk.row.name)), " at ", badge(wk.floor), lead ? ". Lifting it adds no points until those entities reach its top level." : ""));
+      if (!lead)
+        kids.push(
+          nm
+            ? el("div", { className: "tnext" }, el("b", { textContent: "Next medal: " }), link("scorecard/" + enc(nm.name), "", title(D, nm.name)), wk && nm.name === wk.row.name ? el("span", {}, " at ", badge(wk.floor), " → " + nm.up) : " to " + nm.up, " · " + plural(nm.low, "entity", "entities") + " to lift")
+            : el("div", { className: "tnext good", textContent: "✓ Every scorecard is at its top level" }),
+        );
     }
     var weakest = !t.compare && t.cards[0] && t.cards[0].floor ? title(D, t.cards[0].row.name) + " at " + t.cards[0].floor + (capsRepo(D, t.cards[0].row.name, t.cards[0].floor) ? ", its top level, which caps the repository" : isTop(D, t.cards[0].row.name, t.cards[0].floor) ? ", its top level" : "") : null;
     kids.push(
@@ -120,7 +126,8 @@ export const tracksViews = {
     var a = el("div", { className: "track" }, ...kids);
     a.style.setProperty("--tc", color);
     var standing = t.compare ? tallyWords(t.verdicts, t.rows.length) : t.pct == null ? "not scored" : (t.averaged > 1 ? t.pct + "% " + ringWords(t) : t.pct + "% of entities at the top level") + (t.capped.length ? ". " + ringWhy(D, t) : "");
-    tlink.setAttribute("aria-label", (def.title || t.name) + ": " + standing + (flag ? ". " + flag : "") + (weakest ? ". Lowest level: " + weakest : ""));
+    var leadWords = lead ? ". Next: " + title(D, lead.r.name) : "";
+    tlink.setAttribute("aria-label", (def.title || t.name) + ": " + standing + (flag ? ". " + flag : "") + leadWords + (weakest ? ". Lowest level: " + weakest : ""));
     return a;
   },
 
