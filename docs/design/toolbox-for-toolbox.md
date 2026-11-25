@@ -1,4 +1,4 @@
-# Toolbox for Toolbox: Scoring Our Own Three SDLC Layers With Toolbox
+# Toolbox for Toolbox: Scoring Our Own Four SDLC Layers With Toolbox
 
 *Status: experiment built 2026-11-20 (D65). Agent skills are catalogued and scored (D72,
 [skill-standards.md](./skill-standards.md)). First-party connectors are too (D73,
@@ -15,7 +15,7 @@ are too (D82, D83, [agents-md-standards.md](./agents-md-standards.md)), cited de
 lowest of those scorecards (D86, [repo-level.md](./repo-level.md)). Public docs pages are too
 (D91, [site-standards.md](./site-standards.md)), and the site publishes this repo's HTML report
 (D92). The portal is [`portal/`](../../portal/README.md); run
-it with `scripts/self-portal.sh`. It applies Toolbox to the [three SDLC layers](../sdlc.md) of
+it with `scripts/self-portal.sh`. It applies Toolbox to the [four SDLC layers](../sdlc.md) of
 Toolbox itself. Related: [meta-catalog.md](./meta-catalog.md) (a portal cataloguing its own
 configuration), [maintainer-sdlc.md](./maintainer-sdlc.md), [user-sdlc.md](./user-sdlc.md).*
 
@@ -52,7 +52,7 @@ What the experiment showed:
 **The generalisation.** Nothing in the two connectors is specific to Toolbox: Toolbox-specific
 behaviour lives in the manifest's config and rules. So any team can run the same scorecards their
 fleet portal applies, locally, on one repository, before they push ("shift-left scorecards"). That
-is a layer-3 use of Toolbox: developers building on its context.
+is a layer-4 (user) use of Toolbox: developers building on its context.
 
 ## 2. Why
 

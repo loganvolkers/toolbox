@@ -1,6 +1,6 @@
 # Maintainer SDLC (Layer 1): Building Toolbox Itself
 
-*Status: describes practice as of 2026-11-20 (M0–M4 done). Layer 1 of [the three SDLC
+*Status: describes practice as of 2026-11-20 (M0–M4 done). Layer 1 of [the four SDLC
 layers](../sdlc.md). Design rationale for speed and testing lives in
 [developer-velocity.md](./developer-velocity.md) and [verification.md](./verification.md); this
 document is how maintainers, mostly agents in harnesses, actually work.*
@@ -56,7 +56,8 @@ caching) comes back only when these numbers regress (D44, [developer-velocity.md
 | **Differential** | Rust pipeline output byte-identical to `tools/reference.py` (P2) | Derived-state semantics | `cargo test -p toolbox-derive` |
 | Authorization | Reference `.fga.yaml` through the Authorizer; DSL converter vs `fga model transform` | Model semantics | `cargo test -p toolbox-authz` |
 | Connector | Conformance kit against each in-image connector | Protocol behaviour | `toolbox connector test` |
-| Acceptance | One script per milestone, on real Postgres 16, OpenFGA, connectors and Chromium | Exit criteria | `scripts/m2-acceptance.sh`, `m3-…`, `m4-…` |
+| Connector smoke | Real github, git-files and SCIM connectors feeding `toolbox serve` on the in-memory store; derived outputs byte-identical to the reference. No Postgres or OpenFGA, so it runs locally in about a minute; not in CI, which runs the full M4 path | Connectors end to end | `scripts/m4-connectors-smoke.sh` |
+| Acceptance | One script per milestone, on real Postgres 16, OpenFGA, connectors and Chromium (M5 needs none of them) | Exit criteria | `scripts/m2-acceptance.sh`, `m3-…`, `m4-…`, `m5-…` |
 | Scale | 100k entities / 2M relations / 100 rules ≤ 10 s | Budget §10.4 | `cargo run --release -p toolbox-derive --example scale` |
 | Format | Tracked `.yaml` and `.yml` match Yamark's fixed point (D97) | One style for embedded objects | `yamark format --check` |
 | Freshness | `ui/dist` matches its source | Embedded UI is current | CI `ui` job |
@@ -103,7 +104,8 @@ edges: every one so far has produced fixes.
 | Workspace, pinned toolchain, fmt/clippy gates | ✅ |
 | Reference-model differential tests, parity, conformance kit | ✅ |
 | Acceptance scripts M2–M4, scale budget, UI freshness in CI | ⚠️ First observed 2026-11-20: acceptance had never run (no Postgres 16 on the runner; fixed); the scale budget fails on 2-vCPU runners (24.4 s vs 10 s; open decision). See [research-log.md](../research-log.md) |
-| Acceptance for M5–M6 | Planned with those milestones |
+| Acceptance for M5 | ✅ `scripts/m5-acceptance.sh` (no network, no Postgres) and `scripts/gitlab-acceptance.sh` (a real GitLab), both in CI |
+| Acceptance for M6 | Planned with that milestone |
 | Property tests over generated portals (P1–P13 beyond the reference portal) | Planned ([verification.md](./verification.md)) |
 | Deterministic simulation | Deferred (D44) |
 | Velocity tooling (hakari, affected tests, result cache) | Deferred until the loop regresses (D44) |

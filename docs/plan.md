@@ -31,9 +31,11 @@ with them, they win, and [decisions.md](./decisions/README.md) records the chang
   image, not as separate Kubernetes pods or microservices to wire together. Modular deployment (split
   API and worker roles, external OpenFGA, external executors) is available but never required.
 - **G2. Agent SDLC.** Agents can **plan, build, test, deploy and monitor** at the maturity of regular
-  programming or force.com, at each of three layers ([sdlc.md](./sdlc.md), D63):
+  programming or force.com, at each of four layers ([sdlc.md](./sdlc.md), D63, D87):
   - **maintainer SDLC:** building Toolbox itself, with executable exit criteria and a reference-model
     oracle ([maintainer-sdlc.md](./design/maintainer-sdlc.md));
+  - **package author SDLC:** publishing packages, connectors and standards for others, tested against
+    released Toolbox versions ([package-author-sdlc.md](./design/package-author-sdlc.md));
   - **operator SDLC:** building a portal: local dev, tests, previews, reviewed plans, deploys,
     rollbacks, monitoring ([design/sdlc.md](./design/sdlc.md)). This is the main counterpoint to Port
     and Backstage, whose configuration lifecycles lack that maturity;
@@ -218,7 +220,8 @@ OpenFGA component), no required runtime service besides Postgres, ≤ 3 author-f
 `toolbox-derive` (full recompute behind `DerivedState`); `toolbox-changelog`, `toolbox-wasm`,
 `toolbox-graphql`, `toolbox-sim`, `toolbox-gen`, tantivy in `toolbox-search`, the language hosts in
 `toolbox-config` and every SDK except TypeScript are **deferred**; `toolbox-tcp` shrinks to the ingest
-API and the stdio executor/connector transport; `toolbox-fga` becomes the OpenFGA packaging (Q11).*
+API and the stdio executor/connector transport; `toolbox-fga` becomes the OpenFGA packaging (Q11).
+The crates that exist are listed in [v1-spec.md §4](./v1-spec.md#4-architecture-and-crates).*
 
 | Crate | Responsibility | Key dependencies |
 |---|---|---|
@@ -629,7 +632,7 @@ These designs close the gaps found in the [red-team review](./red-team.md). Each
 | **Dashboards** | No user-authored dashboards in Toolbox: Claude Artifacts / Cursor Canvas + Toolbox MCP analysis tools. Operator-only UI views in code. History archive for trends | [dashboards.md](./design/dashboards.md) |
 | **Identity resolution** | External ids, declared matchers, structural inference, unmatched/ambiguous/conflict states, PR-based link proposals, aliases for renames, merges and splits | [identity-resolution.md](./design/identity-resolution.md) |
 | **Notifications + GitHub** | Ownership-routed events; GitHub App with living dashboard issue, PR score-delta checks, fix PRs and initiative issues; email; CloudEvents webhooks; GitHub Actions for service repos (validate, push, scorecard-check, context, run-action). Slack is out of scope for now | [notifications.md](./design/notifications.md) |
-| **Operator SDLC** (layer 2) | Local → CI → PR → ephemeral preview → prod. **Remote plan** (no prod data in CI; full output on the PR, with the portal repo as the access boundary), policy gates (deletion, authz loss, operator lock-out, notification volume), signed + attested builds, verify + rollback, GitHub Actions + reusable workflow | [sdlc.md](./design/sdlc.md) |
+| **Operator SDLC** (layer 3) | Local → CI → PR → ephemeral preview → prod. **Remote plan** (no prod data in CI; full output on the PR, with the portal repo as the access boundary), policy gates (deletion, authz loss, operator lock-out, notification volume), signed + attested builds, verify + rollback, GitHub Actions + reusable workflow | [sdlc.md](./design/sdlc.md) |
 | **Local simulation** (proposal, Q19) | A customer deploy without a cloud account: a Score workload, Compose, a Helm chart on kind, Forgejo behind a GitHub façade, a live SCIM feed, and probes that require a catalog entity pushed after the agent stops. The Toolbox-vs-Backstage deploy benchmark (`deploy-ab`) ran on it twice and is inconclusive (D01M83RDWR52WVNER0MV5T84NSX) | [local-simulation.md](./design/local-simulation.md) |
 | **Context lake** | Layered lake: raw (bronze) → two-tier graph (curated catalog + bounded discovered *inventory*, joined by bridge edges, temporal validity) + catalog-anchored knowledge → derived scores/findings/context packs. Federates security graphs (Wiz, Cartography) instead of copying them; exports ownership so Toolbox is the ownership system of record; graph predicates in CEL; read-only GQL later | [context-lake.md](./design/context-lake.md) |
 | **Knowledge graphs** | Survey of code, document and enterprise graphs (Graphify and its alternatives) and their foundations. Toolbox doesn't build or ingest a code graph and Toolbox for Toolbox doesn't carry Graphify (D01M84ZW6K2V9CV2SD644DE5M0S, D01M85G2ZXXPQRXWKQF7TWV2RTP; graphify-ab found no coverage gain and a likely cost gain on Toolbox, to be retested in billed tokens); code intelligence stays federated | [knowledge-graphs.md](./design/knowledge-graphs.md) |
@@ -993,7 +996,7 @@ real organisation.
   - **CEL:** cel-spec conformance status (Q10) and fixture-based output validation.
   - rmcp Streamable HTTP with OAuth; identity-aware-proxy JWT verification.
   - **Backstage parity audit** (D47).
-- **Operator SDLC foundations (G2, layer 2):** `toolbox dev` (watch + full recompute over fixtures), `toolbox
+- **Operator SDLC foundations (G2, layer 3):** `toolbox dev` (watch + full recompute over fixtures), `toolbox
   test`, `toolbox plan`, preview deploys, and the dev-loop benchmark with SLOs on every PR.
 - **Verification foundations:** differential tests (Rust vs SQL, OpenFGA vs SQL) and property tests,
   with the full recompute as the reference model (D44).
@@ -1153,7 +1156,7 @@ The full, chronological log is in [decisions.md](./decisions/README.md). This se
 - Remote plan: Git is the access boundary.
 - Agent safety: delegated to client and harness layers.
 
-**Decided (2026-11-20):** charter goals G1 simple deployment, G2 agent SDLC (in three layers since D63), G3 replaceable components;
+**Decided (2026-11-20):** charter goals G1 simple deployment, G2 agent SDLC (in three layers since D63, four since D87), G3 replaceable components;
 the minimal architecture as the v1 baseline: full recompute, OpenFGA inside the container, in-process
 DBOS-model workflows, UI extension contract with React as default, in-image executors, manifest + TS
 builder, GraphQL deferred, sprawl budget (D33–D47). These supersede the 2026-11-19 lines above where they

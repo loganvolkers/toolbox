@@ -1,6 +1,6 @@
-# Operator SDLC (Layer 2): Local → CI → PR → Ephemeral → Production
+# Operator SDLC (Layer 3): Local → CI → PR → Ephemeral → Production
 
-> **Layer 2 of [the three SDLC layers](../sdlc.md) (D63):** how operators build and change a portal.
+> **Layer 3 of [the four SDLC layers](../sdlc.md) (D63, D87):** how operators build and change a portal.
 > Building Toolbox itself is the [maintainer SDLC](./maintainer-sdlc.md); building apps on a portal
 > is the [user SDLC](./user-sdlc.md). Section numbers are stable because other documents cite them.
 >

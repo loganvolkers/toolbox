@@ -23,8 +23,8 @@ One Rust server, shipped as **one container image plus Postgres** (G1), that:
    permissions and owner-only facets;
 4. runs **self-service actions** with preview, confirmation, durable execution and verification;
 5. is configured only by a **manifest in git**, with `validate`, `test`, `plan`, `build`, `deploy` and
-   `verify` as the operator SDLC (G2, layer 2 of [the three SDLC layers](./sdlc.md));
-6. gives apps built on a portal (the user SDLC, layer 3) a versioned `/v1` API, stable MCP tool
+   `verify` as the operator SDLC (G2, layer 3 of [the four SDLC layers](./sdlc.md));
+6. gives apps built on a portal (the user SDLC, layer 4) a versioned `/v1` API, stable MCP tool
    names and snapshot ids for reproducible reads; and is itself built under the maintainer SDLC
    (layer 1): every milestone below ends in executable checks
    ([maintainer-sdlc.md](./design/maintainer-sdlc.md)).
@@ -95,7 +95,10 @@ Small, shallow workspace; heavy dependencies isolated in leaf crates (D44, D46):
 | `toolbox-exec` | `Executor` trait; stdio, HTTP, GitHub Actions, webhook implementations |
 | `toolbox-api` | axum REST + OpenAPI generation; MCP (rmcp); UI host |
 | `toolbox-cli` | The `toolbox` binary (server and CLI subcommands) |
-| `connectors/*`, `executors/*` | First-party connectors and executors as separate binaries (any language; Rust or TS) |
+| `toolbox-secrets` | Secret backends for connector `${secret:…}` resolution (D55) |
+| `toolbox-telemetry` | OpenTelemetry and Prometheus bootstrap, metric catalog, log bridge (§10.5) |
+| `toolbox-connector-*` | First-party connectors as separate binaries: `github`, `gitlab`, `git-files` and `scim` read sources; `workspace` and `runner` serve Toolbox for Toolbox. Third-party connectors may be in any language |
+| `executors/*` | First-party executors as separate binaries (any language; Rust or TS) |
 | `ui/` | Minimal UI and the default React kit (TypeScript) |
 
 ## 5. The manifest
