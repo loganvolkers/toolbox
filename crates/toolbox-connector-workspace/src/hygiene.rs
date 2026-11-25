@@ -66,6 +66,89 @@ fn placeholder(password: &str, host: &str) -> bool {
         || p.starts_with('%')
 }
 
+/// A name that says it holds a credential (`token`, `secret`, `password`, `api_key`) bound to a
+/// string literal: `let password = "…"`, `const SCIM_TOKEN: &str = "…"`, `"apiKey": "…"`,
+/// `token: "…"`. Prefixless credentials have no other shape to match.
+fn assignment() -> &'static Regex {
+    static R: OnceLock<Regex> = OnceLock::new();
+    R.get_or_init(|| {
+        Regex::new(
+            r#"(?i)\b\w*(?:token|secret|password|passwd|api_?key)\w*["']?\s*(?::\s*&?(?:'static\s+)?str\s*)?[:=]\s*["']([^"'\s]{16,})["']"#,
+        )
+        .expect("static regex")
+    })
+}
+
+/// Bits per character of `s` (Shannon entropy over its characters).
+fn entropy(s: &str) -> f64 {
+    let mut counts = std::collections::HashMap::new();
+    for c in s.chars() {
+        *counts.entry(c).or_insert(0usize) += 1;
+    }
+    let n = s.chars().count() as f64;
+    counts
+        .values()
+        .map(|&k| {
+            let p = k as f64 / n;
+            -p * p.log2()
+        })
+        .sum()
+}
+
+/// A value that reads as a fixture or a placeholder rather than a credential: it says so (`fake`,
+/// `example`, `test`, `dummy`, `placeholder`, `xxxx`), or one character repeats through it.
+fn fixture(value: &str) -> bool {
+    let v = value.to_ascii_lowercase();
+    [
+        "fake",
+        "example",
+        "test",
+        "dummy",
+        "placeholder",
+        "xxxx",
+        "redacted",
+    ]
+    .iter()
+    .any(|w| v.contains(w))
+        || v.chars()
+            .rev()
+            .take(16)
+            .collect::<std::collections::HashSet<_>>()
+            .len()
+            <= 1
+}
+
+/// Whether the literal bound to a credential-named identifier looks random enough to be one:
+/// letters and digits, no path or template syntax, and at least 3.5 bits per character.
+fn assigned_secret(line: &str) -> bool {
+    assignment().captures_iter(line).any(|c| {
+        let v = &c[1];
+        v.chars().any(|c| c.is_ascii_digit())
+            && v.chars().any(|c| c.is_ascii_alphabetic())
+            && !v.contains(['/', '.', '$', '{', '<', '%'])
+            && !fixture(v)
+            && entropy(v) >= 3.5
+    })
+}
+
+/// Whole provider tokens in test code, where fixtures are expected: a match counts unless it
+/// reads as a fixture (see [`fixture`]). A real token is published with the tree wherever it sits.
+pub fn test_secrets_in_lines<'a>(
+    rel: &str,
+    lines: impl IntoIterator<Item = (usize, &'a str)>,
+) -> Vec<String> {
+    let mut hits = Vec::new();
+    for (n, line) in lines {
+        for (kind, re) in patterns() {
+            if *kind != "url-password" && re.find_iter(line).any(|m| !fixture(m.as_str())) {
+                hits.push(format!("{rel}:{} {kind}", n + 1));
+            }
+        }
+    }
+    hits.dedup();
+    hits
+}
+
 /// `path:line kind` for each credential in `lines` (line numbers are 0-based on input).
 pub fn secrets_in_lines<'a>(
     rel: &str,
@@ -85,6 +168,9 @@ pub fn secrets_in_lines<'a>(
             if found {
                 hits.push(format!("{rel}:{} {kind}", n + 1));
             }
+        }
+        if assigned_secret(line) {
+            hits.push(format!("{rel}:{} assigned-secret", n + 1));
         }
         // A prefix split off in a comment hides nothing; whole credentials in comments still count.
         let comment = line.trim_start().starts_with("//");
@@ -192,7 +278,7 @@ mod tests {
         let fake = |p: &str| format!("{p}{}", "a".repeat(36));
         let text = [
             format!("t = \"{}\"", fake("gho_")),
-            format!("k = {}", "-----BEGIN RSA PRIVATE KEY-----"),
+            format!("k = -----BEGIN RSA {} KEY-----", "PRIVATE"),
             format!("s = sk_live_{}", "b".repeat(24)),
             "db = postgres://admin:hunter22@db.internal.corp:5432/x".to_owned(),
             "docs = postgres://postgres:password@localhost:5432/dev".to_owned(),
@@ -208,6 +294,43 @@ mod tests {
                 "f:4 url-password"
             ]
         );
+    }
+
+    #[test]
+    fn a_random_literal_bound_to_a_credential_name_is_found() {
+        let hex: String = (0..40)
+            .map(|i| b"0123456789abcdef"[(i * 7 + 3) % 16] as char)
+            .collect();
+        let mixed = ["Xk29!qPz", "7wLmN3vR"].concat();
+        for line in [
+            format!(r#"const SCIM_TOKEN: &str = "{hex}";"#),
+            format!(r#"let password = "{mixed}";"#),
+            format!(r#""apiKey": "{mixed}""#),
+        ] {
+            assert_eq!(secrets("f", &line), vec!["f:1 assigned-secret"], "{line}");
+        }
+        for line in [
+            r#"const TOKEN_ENV: &str = "TOOLBOX_CONNECTOR_TOKEN_FILE";"#,
+            r#"let token = "test-token-for-the-fixture-1";"#,
+            r#"password: "${{ secrets.DB_PASSWORD }}""#,
+            r#"let secret = "aaaaaaaaaaaaaaaaaaaa1";"#,
+        ] {
+            assert!(secrets("f", line).is_empty(), "{line}");
+        }
+    }
+
+    #[test]
+    fn a_real_token_in_test_code_counts_and_a_fixture_does_not() {
+        let real: String = (0..36)
+            .map(|i| b"aZ09bY18cX27"[(i * 5 + 1) % 12] as char)
+            .collect();
+        let line = format!(r#"let t = "ghp_{real}";"#);
+        assert_eq!(
+            test_secrets_in_lines("a.rs", [(0, line.as_str())]),
+            vec!["a.rs:1 github-token"]
+        );
+        let fake = format!(r#"let t = "ghp_{}";"#, "a".repeat(36));
+        assert!(test_secrets_in_lines("a.rs", [(0, fake.as_str())]).is_empty());
     }
 
     #[test]

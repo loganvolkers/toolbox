@@ -86,12 +86,28 @@ kinds:
       jobsWithoutPermissions: {type: list, items: string}
       jobsWithWrite: {type: list, items: string}
       concurrency: {type: boolean}
+      pushBranches:
+        type: list
+        items: string
+        description: >-
+          The branch filters of its `push` trigger as written (`*` when it has
+          none; empty when it runs on no branch push, as for tags only).
+      pushIgnores:
+        type: list
+        items: string
+        description: The `branches-ignore` of its `push` trigger.
+      scheduled: {type: boolean, description: It has a `schedule` trigger.}
       onDefaultBranch:
         type: boolean
         description: >-
-          The workflow runs on the default branch (a push there, or a schedule),
-          where run history is read. Run-history rules don't apply to one that
-          runs only on pull requests, tags or by hand.
+          The workflow runs on the default branch (`branch`, a push there or a
+          schedule), where run history is read. One that runs only on pull
+          requests, tags or by hand has no history there: run-history rules pass
+          at bronze and fail above it.
+        computed: >-
+          entity.scheduled || (('*' in entity.pushBranches || '**' in
+          entity.pushBranches || '${param:branch}' in entity.pushBranches) &&
+          !('${param:branch}' in entity.pushIgnores))
       cancelsSuperseded:
         type: boolean
         description: >-
@@ -127,7 +143,9 @@ kinds:
          'jobsWithoutTimeout': record.jobsWithoutTimeout, 'jobsWithoutPermissions': record.jobsWithoutPermissions,
          'jobsWithWrite': record.jobsWithWrite, 'concurrency': record.concurrency,
          'cancelsSuperseded': record.cancelsSuperseded, 'hiddenFailures': record.hiddenFailures,
-         'onDefaultBranch': has(record.onDefaultBranch) ? record.onDefaultBranch : true,
+         'pushBranches': has(record.pushBranches) ? record.pushBranches : ['*'],
+         'pushIgnores': has(record.pushIgnores) ? record.pushIgnores : [],
+         'scheduled': has(record.scheduled) ? record.scheduled : false,
          'unpinned': record.unpinned, 'unpinnedAt': record.unpinnedAt}
       relations: {usesAction: "record.actions.map(a, 'action:' + a)"}
     - from: ci-lint/zizmor
@@ -441,14 +459,21 @@ scorecards:
         often.
     - name: failures-visible
       level: bronze
-      check: entity.hiddenFailures.size() == 0
-      evidence: entity.hiddenFailures
+      check: >-
+        entity.hiddenFailures.filter(h, !h.matches('[(]skipped on [^)]+[)]$') ||
+        h.endsWith('(skipped on ${param:branch})') || h.endsWith('(skipped on
+        push)')).size() == 0
+      evidence: >-
+        entity.hiddenFailures.filter(h, !h.matches('[(]skipped on [^)]+[)]$') ||
+        h.endsWith('(skipped on ${param:branch})') || h.endsWith('(skipped on
+        push)'))
       fix: >-
         For each listed job or step in the workflow file: remove
-        `continue-on-error`, `|| true` (or `set +e`), or the `if:` that skips it
-        on the default branch. If a step is expected to fail, give it an `id:`
-        and check `steps.<id>.outcome` in a later step, so the failure is still
-        asserted.
+        `continue-on-error`, the exit-status mask (`|| true`, `set +e`, a pipe
+        into `tee` without `set -o pipefail`), the in-run retry, or the `if:`
+        that skips it on the default branch. If a step is expected to fail, give
+        it an `id:` and check `steps.<id>.outcome` in a later step, so the
+        failure is still asserted.
       rationale: >-
         `continue-on-error`, `|| true`, `set +e` and a skip on the default
         branch each turn a failure into a pass, so the fail-rate rules would
@@ -468,11 +493,12 @@ scorecards:
       level: silver
       dataFrom: github-actions
       check: >-
-        !entity.onDefaultBranch || (entity.runs.decided >=
-        ${param:minDecidedRuns} && entity.runs.firstTryFailRate <=
-        ${param:failRateSilver})
+        entity.onDefaultBranch && entity.runs.decided >= ${param:minDecidedRuns}
+        && entity.runs.firstTryFailRate <= ${param:failRateSilver}
       evidence: >-
-        (entity.runs.decided < ${param:minDecidedRuns} ? ['only ' +
+        !entity.onDefaultBranch ? ['runs only on pull requests, tags or by hand:
+        no history on ${param:branch} shows this tier, so the workflow stops at
+        bronze'] : (entity.runs.decided < ${param:minDecidedRuns} ? ['only ' +
         string(entity.runs.decided) + ' decided runs: at least
         ${param:minDecidedRuns} are needed to tell the tiers apart'] :
         [string(entity.runs.firstTryFailRate) + '% failed on the first
@@ -480,8 +506,9 @@ scorecards:
       fix: >-
         Open the failed runs in the evidence and classify each cause: a flaky
         test (fix or quarantine it in its test file), infrastructure (pin or
-        retry the step in the workflow file), or real breakage merged to the
-        branch (add the missing check to the pull request workflow).
+        harden the step in the workflow file, without an in-run retry, which
+        failures-visible counts as hiding the failure), or real breakage merged
+        to the branch (add the missing check to the pull request workflow).
       rationale: >-
         At silver, failures are rare enough that each can be classified as a
         flake, infrastructure or a break a pull request check missed. It needs a
@@ -491,11 +518,12 @@ scorecards:
       level: gold
       dataFrom: github-actions
       check: >-
-        !entity.onDefaultBranch || (entity.runs.decided >=
-        ${param:minDecidedRuns} && entity.runs.firstTryFailRate <=
-        ${param:failRateGold})
+        entity.onDefaultBranch && entity.runs.decided >= ${param:minDecidedRuns}
+        && entity.runs.firstTryFailRate <= ${param:failRateGold}
       evidence: >-
-        (entity.runs.decided < ${param:minDecidedRuns} ? ['only ' +
+        !entity.onDefaultBranch ? ['runs only on pull requests, tags or by hand:
+        no history on ${param:branch} shows this tier, so the workflow stops at
+        bronze'] : (entity.runs.decided < ${param:minDecidedRuns} ? ['only ' +
         string(entity.runs.decided) + ' decided runs: at least
         ${param:minDecidedRuns} are needed to tell the tiers apart'] :
         [string(entity.runs.firstTryFailRate) + '% failed on the first

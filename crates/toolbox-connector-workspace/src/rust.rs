@@ -30,6 +30,9 @@ struct Metrics {
     /// helper in the same file that asserts, and no `#[should_panic]`. `#[test] fn t() {}` passes
     /// `cargo test` and proves nothing.
     tests_without_asserts: Vec<String>,
+    /// Tests that assert but name nothing the crate defines (and run no binary of it), so they
+    /// check something other than this crate.
+    tests_not_exercising: Vec<String>,
     /// Tests compiled out by an always-false `#[cfg(any())]` or `#[cfg(not(all()))]`, on the test
     /// or a module around it: neither run nor reported as ignored.
     disabled_tests: Vec<String>,
@@ -48,13 +51,80 @@ fn is_test_fn(attrs: &[syn::Attribute]) -> bool {
 }
 
 /// An always-false `cfg`: the item is compiled out.
-fn is_cfg_disabled(attrs: &[syn::Attribute]) -> bool {
+/// Whether a `#[cfg(...)]` predicate holds when CI runs `cargo test` on Linux with the crate's
+/// default features: `Some(false)` for one that never does there (`any()`, `windows`,
+/// `target_os = "macos"`, `miri`, `not(test)`, a feature off by default), `None` when it can't
+/// tell (a custom cfg, a feature the crate doesn't declare).
+fn cfg_holds(meta: &syn::Meta, features: &HashSet<String>) -> Option<bool> {
+    let ident = |p: &syn::Path| p.get_ident().map(ToString::to_string).unwrap_or_default();
+    match meta {
+        syn::Meta::Path(p) => match ident(p).as_str() {
+            "test" | "unix" | "debug_assertions" => Some(true),
+            "windows" | "miri" => Some(false),
+            _ => None,
+        },
+        syn::Meta::NameValue(nv) => {
+            let syn::Expr::Lit(syn::ExprLit {
+                lit: syn::Lit::Str(v),
+                ..
+            }) = &nv.value
+            else {
+                return None;
+            };
+            let v = v.value();
+            match ident(&nv.path).as_str() {
+                "target_os" => Some(v == "linux"),
+                "target_family" => Some(v == "unix"),
+                "feature" if features.contains(&v) => Some(true),
+                "feature" if features.contains(&format!("!{v}")) => Some(false),
+                _ => None,
+            }
+        }
+        syn::Meta::List(l) => {
+            let args = l
+                .parse_args_with(
+                    syn::punctuated::Punctuated::<syn::Meta, syn::Token![,]>::parse_terminated,
+                )
+                .ok()?;
+            let vals: Vec<Option<bool>> = args.iter().map(|m| cfg_holds(m, features)).collect();
+            match ident(&l.path).as_str() {
+                "not" => vals.first().copied().flatten().map(|b| !b),
+                "any" if vals.contains(&Some(true)) => Some(true),
+                "any" if vals.iter().all(|v| *v == Some(false)) => Some(false),
+                "all" if vals.contains(&Some(false)) => Some(false),
+                "all" if vals.iter().all(|v| *v == Some(true)) => Some(true),
+                _ => None,
+            }
+        }
+    }
+}
+
+/// Features of a crate as [`cfg_holds`] reads them: the ones `default` turns on, and `!name` for
+/// each declared one it leaves off. `features` is `cargo metadata`'s map for the package.
+pub fn default_features(features: &serde_json::Map<String, Value>) -> HashSet<String> {
+    let mut on = HashSet::new();
+    let mut todo = vec!["default".to_owned()];
+    while let Some(f) = todo.pop() {
+        if !features.contains_key(&f) || !on.insert(f.clone()) {
+            continue;
+        }
+        let enables = features[&f].as_array().into_iter().flatten();
+        todo.extend(enables.filter_map(Value::as_str).map(str::to_owned));
+    }
+    let off: Vec<String> = features
+        .keys()
+        .filter(|k| !on.contains(*k))
+        .map(|k| format!("!{k}"))
+        .collect();
+    on.extend(off);
+    on
+}
+
+fn is_cfg_disabled(attrs: &[syn::Attribute], features: &HashSet<String>) -> bool {
     attrs.iter().any(|a| {
         a.path().is_ident("cfg")
-            && a.meta.require_list().is_ok_and(|l| {
-                let t: String = l.tokens.to_string().split_whitespace().collect();
-                matches!(t.as_str(), "any()" | "not(all())" | "miri" | "not(test)")
-            })
+            && a.parse_args::<syn::Meta>()
+                .is_ok_and(|m| cfg_holds(&m, features) == Some(false))
     })
 }
 
@@ -103,6 +173,8 @@ struct Walker<'a> {
     text: &'a str,
     items: &'a HashSet<String>,
     lib: &'a str,
+    /// The crate's features, as [`default_features`] gives them.
+    features: &'a HashSet<String>,
 }
 
 impl Walker<'_> {
@@ -137,7 +209,7 @@ impl Walker<'_> {
     ) {
         if is_test_fn(attrs) {
             self.m.unit_tests += 1;
-            if self.disabled || is_cfg_disabled(attrs) {
+            if self.disabled || is_cfg_disabled(attrs, self.features) {
                 let q = self.qualified(name);
                 self.m
                     .disabled_tests
@@ -147,7 +219,16 @@ impl Walker<'_> {
             a.visit_block(block);
             let should_panic = attrs.iter().any(|x| x.path().is_ident("should_panic"));
             let touches = exercises(self.text, span, self.items, self.lib);
-            if (!a.found && !should_panic) || !touches {
+            let asserts = a.found || should_panic;
+            if asserts && !touches {
+                let q = self.qualified(name);
+                self.m.tests_not_exercising.push(format!(
+                    "{q} ({}:{})",
+                    self.file,
+                    span.start().line
+                ));
+            }
+            if !asserts {
                 let q = self.qualified(name);
                 self.m.tests_without_asserts.push(format!(
                     "{q} ({}:{})",
@@ -318,7 +399,7 @@ impl<'ast> Visit<'ast> for Walker<'_> {
     fn visit_item_mod(&mut self, m: &'ast syn::ItemMod) {
         let (was, was_disabled) = (self.in_test, self.disabled);
         self.in_test |= is_cfg_test(&m.attrs);
-        self.disabled |= is_cfg_disabled(&m.attrs);
+        self.disabled |= is_cfg_disabled(&m.attrs, self.features);
         self.scope.push(m.ident.to_string());
         visit::visit_item_mod(self, m);
         self.scope.pop();
@@ -503,8 +584,30 @@ fn exercises(text: &str, span: proc_macro2::Span, items: &HashSet<String>, lib: 
     if body.contains("CARGO_BIN_EXE_") || body.contains(&format!("{lib}::")) {
         return true;
     }
+    // Names every crate has (`new`, `len`, `from`, …) say nothing about which crate a test calls.
+    const COMMON: [&str; 19] = [
+        "new",
+        "default",
+        "from",
+        "into",
+        "len",
+        "get",
+        "set",
+        "run",
+        "build",
+        "parse",
+        "iter",
+        "clone",
+        "fmt",
+        "main",
+        "load",
+        "read",
+        "write",
+        "is_empty",
+        "to_string",
+    ];
     body.split(|c: char| !(c.is_ascii_alphanumeric() || c == '_'))
-        .any(|w| !w.is_empty() && items.contains(w))
+        .any(|w| !w.is_empty() && !COMMON.contains(&w) && items.contains(w))
 }
 
 /// The first 12 hex digits of the SHA-256 over what a crate-design assessment judges: the crate's
@@ -533,7 +636,7 @@ fn source_hash(dir: &Path) -> String {
 }
 
 /// Metrics for the crate in `dir`; `entry` is its lib or bin root (for crate-level docs).
-pub fn analyse(dir: &Path, entry: Option<&Path>) -> Value {
+pub fn analyse(dir: &Path, entry: Option<&Path>, features: &HashSet<String>) -> Value {
     let mut m = Metrics::default();
     let mut it = Metrics::default();
     let mut crate_doc = false;
@@ -561,6 +664,7 @@ pub fn analyse(dir: &Path, entry: Option<&Path>) -> Value {
             text,
             items: &items,
             lib: &lib,
+            features,
         };
         w.visit_file(file);
     }
@@ -576,6 +680,7 @@ pub fn analyse(dir: &Path, entry: Option<&Path>) -> Value {
             text,
             items: &items,
             lib: &lib,
+            features,
         };
         w.visit_file(file);
     }
@@ -598,6 +703,7 @@ pub fn analyse(dir: &Path, entry: Option<&Path>) -> Value {
         "unitTests": m.unit_tests,
         "testsWithoutAsserts": m.tests_without_asserts.iter().chain(&it.tests_without_asserts).collect::<Vec<_>>(),
         "disabledTests": m.disabled_tests.iter().chain(&it.disabled_tests).collect::<Vec<_>>(),
+        "testsNotExercising": m.tests_not_exercising.iter().chain(&it.tests_not_exercising).collect::<Vec<_>>(),
         "integrationTests": integration_tests,
         "unwraps": m.unwraps,
         "parseErrors": m.parse_errors,
@@ -629,7 +735,14 @@ mod tests {
     #[test] fn empty() {}
     #[cfg(any())] #[test] fn off() { assert_eq!(add(1, 1), 3); }
     #[cfg(miri)] #[test] fn miri_only() { assert_eq!(add(1, 1), 3); }
+    #[cfg(windows)] #[test] fn windows_only() { assert_eq!(add(1, 1), 3); }
+    #[cfg(all(unix, target_os = "macos"))] #[test] fn mac_only() { assert_eq!(add(1, 1), 3); }
+    #[cfg(feature = "slow")] #[test] fn slow_only() { assert_eq!(add(1, 1), 3); }
+    #[cfg(feature = "fast")] #[test] fn fast_on() { assert_eq!(add(1, 1), 2); }
+    #[cfg(any(unix, windows))] #[test] fn somewhere() { assert_eq!(add(1, 1), 2); }
+    #[cfg(custom_flag)] #[test] fn unknown_cfg() { assert_eq!(add(1, 1), 2); }
     #[test] fn unrelated() { "1".parse::<i32>().unwrap(); }
+    #[test] fn commonly_named() { let s = String::new(); s.len().checked_add(1).unwrap(); }
     #[test] fn ensured() -> anyhow::Result<()> { anyhow::ensure!(add(1, 1) == 2); Ok(()) }
 }
 #[cfg(not(all()))]
@@ -637,7 +750,12 @@ mod gone { #[test] fn also_off() { assert_eq!(super::add(0, 0), 1); } }
 "#,
         )
         .unwrap();
-        let m = analyse(&dir, Some(&dir.join("src/lib.rs")));
+        let features = default_features(
+            json!({"default": ["fast"], "fast": [], "slow": []})
+                .as_object()
+                .unwrap(),
+        );
+        let m = analyse(&dir, Some(&dir.join("src/lib.rs")), &features);
         let names = |k: &str| -> Vec<String> {
             m[k].as_array()
                 .unwrap()
@@ -647,16 +765,22 @@ mod gone { #[test] fn also_off() { assert_eq!(super::add(0, 0), 1); } }
         };
         assert_eq!(
             names("testsWithoutAsserts"),
-            [
-                "tests::vacuous",
-                "tests::same_sides",
-                "tests::empty",
-                "tests::unrelated"
-            ]
+            ["tests::vacuous", "tests::same_sides", "tests::empty",]
+        );
+        assert_eq!(
+            names("testsNotExercising"),
+            ["tests::unrelated", "tests::commonly_named"]
         );
         assert_eq!(
             names("disabledTests"),
-            ["tests::off", "tests::miri_only", "gone::also_off"]
+            [
+                "tests::off",
+                "tests::miri_only",
+                "tests::windows_only",
+                "tests::mac_only",
+                "tests::slow_only",
+                "gone::also_off"
+            ]
         );
         let _ = std::fs::remove_dir_all(&dir);
     }

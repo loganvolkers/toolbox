@@ -1610,4 +1610,15 @@ assert:
       ratchet skips, so the ratchet can never grant it'] &&
       score('meta-scorecard',
       'scorecard:toolbox/operator-cli').rules['levels-grantable'] == 'pass'
+  - name: >-
+      a workflow that never runs on main stops at bronze, and a skip on
+      another branch hides nothing on main
+    expect: >-
+      score('maintainer-ci-reliability',
+      'workflow:.github/workflows/release.yml').evidence['fail-rate-under-10']
+      == ['runs only on pull requests, tags or by hand: no history on main
+      shows this tier, so the workflow stops at bronze'] &&
+      score('maintainer-ci-reliability',
+      'workflow:.github/workflows/demo/slow.yml').rules['failures-visible'] ==
+      'pass'
 

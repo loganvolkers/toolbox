@@ -32,6 +32,13 @@ kinds:
           Tests that check nothing: no assert or panic macro other than a trivial
           one (assert!(true), assert_eq!(x, x)), no unwrap, expect or ?, no call
           to an asserting helper in the same file, and no #[should_panic].
+      testsNotExercising:
+        type: list
+        items: string
+        description: >-
+          Tests that assert but name nothing this crate defines (apart from
+          names every crate has, such as new, len or from), call no helper that
+          does, and run none of its binaries: they check some other code.
       disabledTests:
         type: list
         items: string
@@ -136,6 +143,7 @@ kinds:
          'unitTests': record.unitTests, 'integrationTests': record.integrationTests,
          'testsWithoutAsserts': record.testsWithoutAsserts,
          'disabledTests': has(record.disabledTests) ? record.disabledTests : [],
+         'testsNotExercising': has(record.testsNotExercising) ? record.testsNotExercising : [],
          'unwraps': record.unwraps, 'hash': has(record.hash) ? record.hash : null}
       relations: {dependsOn: "record.dependsOn.map(d, 'crate:' + d)"}
     - from: runner/test
@@ -187,14 +195,17 @@ scorecards:
       level: bronze
       check: >-
         entity.unitTests + entity.integrationTests > 0 &&
-        entity.testsWithoutAsserts.size() == 0
+        entity.testsWithoutAsserts.size() == 0 &&
+        entity.testsNotExercising.size() == 0
       evidence: >-
         entity.unitTests + entity.integrationTests == 0 ? ['no #[test] in src/
-        or tests/'] : entity.testsWithoutAsserts.map(t, t + ' asserts nothing')
+        or tests/'] : entity.testsWithoutAsserts.map(t, t + ' asserts nothing') +
+        entity.testsNotExercising.map(t, t + ' calls nothing this crate defines')
       fix: >-
         Add a #[test] for the crate's main behaviour (or an integration test in
-        tests/), and give each listed test an assert: a test that checks nothing
-        passes whatever the code does.
+        tests/). Give a test listed as asserting nothing an assert; point a test
+        listed as calling nothing this crate defines at the crate's own code, or
+        move it to the crate it checks.
       rationale: >-
         A crate without tests can change behaviour with nothing failing, and a
         test that asserts nothing gives the same false confidence while looking

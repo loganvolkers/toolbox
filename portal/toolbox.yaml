@@ -112,9 +112,10 @@ connectors:
           (?:\btoolbox"?|\bask)\s+((?:connector|token|tools)\s+[a-z]+|assess[
           \t]+(?:brief|check|submit)|describe[
           \t]+(?:portal|scorecards)|[a-z][a-z-]*)
-        # MCP tools/call bodies, {"name": "owner_of", "arguments": …}, on lines that aren't
-        # comments: a quoted name alone, or in a comment, calls nothing.
-        tools: (?m)^[^/#*\n]*?"name"\s*:\s*"([a-z][a-z_]*)"\s*,\s*"arguments"
+        # MCP tools/call bodies passed to the contract tests' `ok`/`call` helpers, which send
+        # them (crates/toolbox-api/tests/mcp.rs), on lines that aren't comments: a quoted name
+        # alone, a literal that is never sent, or one in a comment calls nothing.
+        tools: (?m)^[^/#*\n]*?\b(?:ok|call)\(\s*&\w+,\s*json!\(\{\s*"name"\s*:\s*"([a-z][a-z_]*)"\s*,\s*"arguments"
       counts:
         sdlc: \bSDLC\b
         # A named layer (`maintainer SDLC`, `*operator* SDLC`), the layer model itself, or a quoted mention
@@ -444,6 +445,20 @@ include:
         `[[IgnoredVulns]]` in osv-scanner.toml with a reason that says why and
         what ends it. Leave out `effectiveUntil`: an expiry changes the result
         with no change to the repository.
+  # A ruff ignore hides findings from maintainer-python, so each must say why on the line above
+  # it (ruff.toml is under CODEOWNERS). A jig: a regex over one config file.
+  - package: ../packages/pattern-count
+    with:
+      name: maintainer-python-ignores
+      kind: LintConfig
+      title: Every ruff ignore says why
+      files: [ruff.toml]
+      pattern: >-
+        (?m)^[^#\n][^\n]*\n\s*(?:"[^"\n]+"\s*=\s*\[|(?:extend-)?ignore\s*=\s*\[)|\A\s*(?:"[^"\n]+"\s*=\s*\[|(?:extend-)?ignore\s*=\s*\[)
+      fix: >-
+        Put a comment on the line above each listed ignore in ruff.toml saying
+        why the rule doesn't apply to those files, or fix the findings and
+        remove the ignore.
 
 mcp:
   instructions: >-

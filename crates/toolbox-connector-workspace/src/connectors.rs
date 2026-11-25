@@ -224,25 +224,34 @@ fn secrets(root: &Path, dir: &str, sources: &[(String, String)]) -> Vec<String> 
         .flatten();
     let mut hits: Vec<String> = sources
         .iter()
-        .flat_map(|(rel, text)| crate::hygiene::secrets_in_lines(rel, production_lines(text), true))
+        .flat_map(|(rel, text)| {
+            let (prod, test) = split_test_lines(text);
+            let mut hits = crate::hygiene::secrets_in_lines(rel, prod, true);
+            hits.extend(crate::hygiene::test_secrets_in_lines(rel, test));
+            hits
+        })
         .chain(data)
         .collect();
     hits.sort();
     hits
 }
 
-/// Lines outside `#[cfg(test)]` modules. A fixture key in a unit test is not a shipped secret.
-fn production_lines(text: &str) -> Vec<(usize, &str)> {
-    let mut out = Vec::new();
+/// Lines outside `#[cfg(test)]` items, and the lines inside them. Test code is still scanned, but
+/// only for whole provider tokens that don't read as fixtures: a fixture key in a unit test is not
+/// a shipped secret, and a real one is.
+type Lines<'a> = Vec<(usize, &'a str)>;
+fn split_test_lines(text: &str) -> (Lines<'_>, Lines<'_>) {
+    let (mut prod, mut test) = (Vec::new(), Vec::new());
     let mut skip = 0i32;
     let mut arming = false;
     for (n, line) in text.lines().enumerate() {
         if take_test_module(line, &mut skip, &mut arming) {
-            continue;
+            test.push((n, line));
+        } else {
+            prod.push((n, line));
         }
-        out.push((n, line));
     }
-    out
+    (prod, test)
 }
 
 fn take_test_module(line: &str, skip: &mut i32, arming: &mut bool) -> bool {
@@ -294,7 +303,7 @@ mod tests {
         let text = format!(
             "#[cfg(test)]\nuse std::collections::HashMap;\nconst K: &str = \"{key}\";\n#[cfg(test)]\nmod tests {{\n    const T: &str = \"{key}\";\n}}\n"
         );
-        let lines: Vec<usize> = production_lines(&text).iter().map(|(n, _)| *n).collect();
+        let lines: Vec<usize> = split_test_lines(&text).0.iter().map(|(n, _)| *n).collect();
         assert_eq!(
             lines,
             vec![2],

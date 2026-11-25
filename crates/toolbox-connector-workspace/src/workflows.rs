@@ -57,45 +57,48 @@ fn triggers(on: &Value) -> Vec<String> {
     }
 }
 
-/// Whether the workflow runs on the default branch, which is where run history is read: a `push`
-/// with no branch filter or one naming `main` or `master` (as a branch, not only a tag), or a
-/// `schedule` (GitHub runs scheduled workflows on the default branch). A workflow that runs only
-/// on pull requests, tags or by hand has no run history there to score.
-fn on_default_branch(on: &Value) -> bool {
-    let push = match on {
-        Value::String(s) => return s == "push" || s == "schedule",
+/// What a workflow's `on:` says about pushes and schedules: the branch filters of `push` (`["*"]`
+/// when it has none, empty when it runs on no branch push, as for tags only), its
+/// `branches-ignore`, and whether it is scheduled. Whether it runs on the default branch, where run
+/// history is read, is decided against the configured branch (the package's `branch` parameter).
+fn push_triggers(on: &Value) -> (Vec<String>, Vec<String>, bool) {
+    let all = || vec!["*".to_string()];
+    match on {
+        Value::String(s) => (
+            if s == "push" { all() } else { vec![] },
+            vec![],
+            s == "schedule",
+        ),
         Value::Array(a) => {
-            return a
-                .iter()
-                .any(|v| v.as_str().is_some_and(|t| t == "push" || t == "schedule"));
+            let has = |t: &str| a.iter().any(|v| v.as_str() == Some(t));
+            (
+                if has("push") { all() } else { vec![] },
+                vec![],
+                has("schedule"),
+            )
         }
         Value::Object(m) => {
-            if m.contains_key("schedule") {
-                return true;
-            }
-            match m.get("push") {
-                Some(p) => p,
-                None => return false,
-            }
+            let scheduled = m.contains_key("schedule");
+            let Some(push) = m.get("push") else {
+                return (vec![], vec![], scheduled);
+            };
+            let names = |k: &str| -> Option<Vec<String>> {
+                push[k].as_array().map(|a| {
+                    a.iter()
+                        .filter_map(|v| v.as_str().map(str::to_owned))
+                        .collect()
+                })
+            };
+            let ignores = names("branches-ignore").unwrap_or_default();
+            let branches = match (names("branches"), names("tags")) {
+                (Some(b), _) => b,
+                // `tags:` alone limits a push to tags; neither key means every branch push.
+                (None, Some(_)) if ignores.is_empty() => vec![],
+                _ => all(),
+            };
+            (branches, ignores, scheduled)
         }
-        _ => return false,
-    };
-    let names = |k: &str| -> Option<Vec<String>> {
-        push[k].as_array().map(|a| {
-            a.iter()
-                .filter_map(|v| v.as_str().map(str::to_owned))
-                .collect()
-        })
-    };
-    match (names("branches"), names("tags")) {
-        (Some(b), _) => b
-            .iter()
-            .any(|b| matches!(b.as_str(), "main" | "master" | "*" | "**")),
-        // `tags:` alone limits a push to tags; neither key means every push.
-        (None, Some(_)) => push.get("branches-ignore").is_some(),
-        (None, None) => push["branches-ignore"]
-            .as_array()
-            .is_none_or(|a| !a.iter().any(|v| v == "main" || v == "master")),
+        _ => (vec![], vec![], false),
     }
 }
 
@@ -145,15 +148,43 @@ fn continues_on_error(v: &Value) -> bool {
     }
 }
 
-/// A `run:` script that swallows its own exit status: `|| true`, `|| :`, `|| exit 0` or an
-/// `|| echo`/`printf` fallback (with or without spaces), or `set +e`.
+/// A `run:` script that swallows its own exit status: `|| true`, `|| :`, `|| exit 0`, an
+/// `|| echo`/`printf` fallback, `|| { … }` or `|| ret=$?` (with or without spaces), a one-line
+/// `if ! cmd; then echo …; fi` (a multi-line `if !` that installs or exits is a real branch),
+/// `set +e`, or a pipe into `tee` without `pipefail` (the pipeline's status is `tee`'s).
 fn masks_exit(run: &str) -> bool {
     static R: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
-    R.get_or_init(|| {
-        regex::Regex::new(r"\|\|\s*(?:true\b|:(?:\s|$)|exit\s+0\b|echo\b|printf\b)|\bset\s+\+e\b")
+    static TEE: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
+    let masked = R.get_or_init(|| {
+        regex::Regex::new(
+            r"\|\|\s*(?:true\b|:(?:\s|$)|exit\s+0\b|echo\b|printf\b|\{|\w+=\$\?)|\bset\s+\+e\b|\bif\s+!\s[^;\n]*;\s*then\s+(?:echo|true|:)[^;\n]*;\s*fi\b",
+        )
+        .expect("static regex")
+    });
+    let tee = TEE.get_or_init(|| regex::Regex::new(r"[^|]\|\s*tee\b").expect("static regex"));
+    masked.is_match(run) || (tee.is_match(run) && !run.contains("pipefail"))
+}
+
+/// A step that retries inside the run, so a first-try failure never reaches the run's result: a
+/// retry action, or a test runner's retry flag (`--retries`, `--reruns`, `--retry-failed`,
+/// `retryTimes`). `curl --retry` retries a download, not a test, and isn't counted.
+fn retries(step: &Value) -> bool {
+    static R: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
+    let flag = R.get_or_init(|| {
+        regex::Regex::new(r"--retries\b|--reruns\b|--retry-failed\b|\bretryTimes\b")
             .expect("static regex")
-    })
-    .is_match(run)
+    });
+    let action = step["uses"].as_str().is_some_and(|u| {
+        let u = u.to_ascii_lowercase();
+        [
+            "nick-fields/retry",
+            "wandalen/wretry",
+            "step-security/retry",
+        ]
+        .iter()
+        .any(|a| u.starts_with(a))
+    });
+    action || step["run"].as_str().is_some_and(|r| flag.is_match(r))
 }
 
 /// A step `shell:` without `-e`: GitHub's default bash is `bash -e {0}`, so `bash {0}` or `sh {0}`
@@ -167,42 +198,60 @@ fn shell_ignores_errors(shell: &Value) -> bool {
     })
 }
 
-/// An `if:` that never runs on the default branch: literally false, or a test that the ref is not
-/// `main`/`master`.
-fn skipped_on_default(cond: &Value) -> bool {
+/// Where an `if:` keeps a job or step from running, if it does: `never runs` (literally false),
+/// `runs only on pull requests` (an event or ref test for one), `skipped on push`, or
+/// `skipped on <branch>` (a test that the ref is not that branch). The scorecard counts the last
+/// only when it is the default branch.
+fn skip_of(cond: &Value) -> Option<String> {
     let c = match cond {
-        Value::Bool(b) => return !*b,
+        Value::Bool(false) => return Some("never runs".into()),
         Value::String(s) => s.replace(' ', ""),
-        _ => return false,
+        _ => return None,
     };
     let e = c.trim_start_matches("${{").trim_end_matches("}}");
-    e == "false"
-        || e == "github.event_name=='pull_request'"
+    if e == "false" {
+        return Some("never runs".into());
+    }
+    if e == "github.event_name=='pull_request'"
         || e == "github.event_name=='pull_request_target'"
-        || ["main", "master"].iter().any(|b| {
-            e.contains(&format!("github.ref!='refs/heads/{b}'"))
-                || e.contains(&format!("github.ref_name!='{b}'"))
-        })
+        || e.contains("startsWith(github.ref,'refs/pull/')")
+    {
+        return Some("runs only on pull requests".into());
+    }
+    if e.contains("github.event_name!='push'") {
+        return Some("skipped on push".into());
+    }
+    static R: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
+    let branch = R.get_or_init(|| {
+        regex::Regex::new(r"github\.ref!='refs/heads/([^']+)'|github\.ref_name!='([^']+)'")
+            .expect("static regex")
+    });
+    branch
+        .captures(e)
+        .and_then(|c| c.get(1).or_else(|| c.get(2)))
+        .map(|b| format!("skipped on {}", b.as_str()))
 }
 
 /// Where a failure is hidden from the fail rate: a job with `continue-on-error` or skipped on the
 /// default branch; a step with `continue-on-error` whose outcome no later step of the job reads
-/// (`steps.<id>.outcome` or `.conclusion`), a step skipped on the default branch, and a step whose
+/// (`steps.<id>.outcome` or `.conclusion`), a step skipped by its `if:` (see [`skip_of`]), a step
+/// that retries inside the run, and a step whose
 /// script swallows its exit status.
 fn hidden_failures(id: &str, job: &Value) -> Vec<String> {
     let mut out = Vec::new();
     if continues_on_error(&job["continue-on-error"]) {
         out.push(format!("jobs.{id}"));
     }
-    if skipped_on_default(&job["if"]) {
-        out.push(format!("jobs.{id} (skipped on the default branch)"));
+    if let Some(skip) = skip_of(&job["if"]) {
+        out.push(format!("jobs.{id} ({skip})"));
     }
     let steps = job["steps"].as_array().cloned().unwrap_or_default();
     for (i, step) in steps.iter().enumerate() {
-        if skipped_on_default(&step["if"]) {
-            out.push(format!(
-                "jobs.{id}.steps[{i}] (skipped on the default branch)"
-            ));
+        if let Some(skip) = skip_of(&step["if"]) {
+            out.push(format!("jobs.{id}.steps[{i}] ({skip})"));
+        }
+        if retries(step) {
+            out.push(format!("jobs.{id}.steps[{i}] (retries inside the run)"));
         }
         let shell = if step.get("shell").is_some() {
             &step["shell"]
@@ -326,6 +375,7 @@ pub fn record(path: &str, text: &str) -> Value {
         }
     }
     let trig = triggers(on(&doc));
+    let push = push_triggers(on(&doc));
     let names = |pred: &dyn Fn(&Value) -> bool| -> Vec<Value> {
         jobs.iter()
             .filter(|j| pred(j))
@@ -343,7 +393,9 @@ pub fn record(path: &str, text: &str) -> Value {
         "type": if is_action { "action" } else { "workflow" },
         "name": doc["name"].as_str().unwrap_or(path),
         "triggers": trig,
-        "onDefaultBranch": !is_action && on_default_branch(on(&doc)),
+        "pushBranches": if is_action { vec![] } else { push.0 },
+        "pushIgnores": if is_action { vec![] } else { push.1 },
+        "scheduled": !is_action && push.2,
         "riskyTriggers": trig.iter().filter(|t| RISKY_TRIGGERS.contains(&t.as_str())).collect::<Vec<_>>(),
         "topPermissions": has_top_permissions,
         "topWriteScopes": write_scopes(&doc["permissions"]),
@@ -589,18 +641,38 @@ mod tests {
             {"run": "make || echo flaky"},
             {"shell": "bash {0}", "run": "a\nb"},
             {"shell": "bash -e {0}", "run": "a"},
-            {"if": "${{ github.event_name == 'pull_request' }}", "run": "z"}
+            {"if": "${{ github.event_name == 'pull_request' }}", "run": "z"},
+            {"run": "cargo test | tee log"},
+            {"run": "set -o pipefail\ncargo test | tee log"},
+            {"run": "if ! cargo test; then echo failed; fi"},
+            {"run": "cargo test || { true; }"},
+            {"run": "cargo test || ret=$?"},
+            {"if": "github.event_name != 'push'", "run": "a"},
+            {"if": "startsWith(github.ref, 'refs/pull/')", "run": "a"},
+            {"uses": "nick-fields/retry@v3", "with": {"command": "cargo test"}},
+            {"run": "cargo nextest run --retries 3"},
+            {"run": "curl --retry 3 https://example.com"},
+            {"if": "github.ref_name != 'develop'", "run": "a"}
         ]});
         assert_eq!(
             hidden_failures("t", &job),
             vec![
-                "jobs.t (skipped on the default branch)",
+                "jobs.t (skipped on main)",
                 "jobs.t.steps[0] (the script swallows its exit status)",
-                "jobs.t.steps[2] (skipped on the default branch)",
+                "jobs.t.steps[2] (never runs)",
                 "jobs.t.steps[4] (the script swallows its exit status)",
                 "jobs.t.steps[5] (the script swallows its exit status)",
                 "jobs.t.steps[6] (the script swallows its exit status)",
-                "jobs.t.steps[8] (skipped on the default branch)",
+                "jobs.t.steps[8] (runs only on pull requests)",
+                "jobs.t.steps[9] (the script swallows its exit status)",
+                "jobs.t.steps[11] (the script swallows its exit status)",
+                "jobs.t.steps[12] (the script swallows its exit status)",
+                "jobs.t.steps[13] (the script swallows its exit status)",
+                "jobs.t.steps[14] (skipped on push)",
+                "jobs.t.steps[15] (runs only on pull requests)",
+                "jobs.t.steps[16] (retries inside the run)",
+                "jobs.t.steps[17] (retries inside the run)",
+                "jobs.t.steps[19] (skipped on develop)",
             ]
         );
         assert!(!continues_on_error(&json!("${{ false }}")));
@@ -608,14 +680,29 @@ mod tests {
     }
 
     #[test]
-    fn only_pushes_to_the_default_branch_and_schedules_run_there() {
-        let on = |y: &str| on_default_branch(&serde_norway::from_str(y).unwrap());
-        assert!(on("push"));
-        assert!(on("{push: {branches: [main]}, pull_request: {}}"));
-        assert!(on("{schedule: [{cron: '0 0 * * 0'}]}"));
-        assert!(!on("{push: {tags: ['v*']}, pull_request: {}}"));
-        assert!(!on("{push: {branches: [release]}}"));
-        assert!(!on("{pull_request: {}, workflow_dispatch: {}}"));
-        assert!(!on("{push: {branches-ignore: [main]}}"));
+    fn push_branches_and_schedules_are_recorded_as_written() {
+        let on = |y: &str| push_triggers(&serde_norway::from_str(y).unwrap());
+        let v = |x: &[&str]| x.iter().map(|s| s.to_string()).collect::<Vec<_>>();
+        assert_eq!(on("push"), (v(&["*"]), v(&[]), false));
+        assert_eq!(
+            on("{push: {branches: [develop]}, pull_request: {}}"),
+            (v(&["develop"]), v(&[]), false)
+        );
+        assert_eq!(
+            on("{schedule: [{cron: '0 0 * * 0'}]}"),
+            (v(&[]), v(&[]), true)
+        );
+        assert_eq!(
+            on("{push: {tags: ['v*']}, pull_request: {}}"),
+            (v(&[]), v(&[]), false)
+        );
+        assert_eq!(
+            on("{pull_request: {}, workflow_dispatch: {}}"),
+            (v(&[]), v(&[]), false)
+        );
+        assert_eq!(
+            on("{push: {branches-ignore: [main]}}"),
+            (v(&["*"]), v(&["main"]), false)
+        );
     }
 }

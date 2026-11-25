@@ -564,7 +564,8 @@ impl Workspace {
                 .filter(normal)
                 .filter(|d| !d["name"].as_str().is_some_and(|n| members.contains(n)))
                 .count();
-            let metrics = rust::analyse(&dir, entry.as_deref());
+            let features = p["features"].as_object().map(rust::default_features);
+            let metrics = rust::analyse(&dir, entry.as_deref(), &features.unwrap_or_default());
             let mut rec = json!({
                 "name": name,
                 "path": rel,
