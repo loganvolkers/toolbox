@@ -96,6 +96,7 @@ and names its fix.
 | Fix | Factor | Use outside the benchmark |
 |---|---|---|
 | Off loopback, `serve` defaults to token auth; no trusted header (D01M857ZB3FZJZWX8G3BF5W1RNR) | F6 | every image deployment, every `serve --listen 0.0.0.0` |
+| Explicit `TOOLBOX_AUTH_MODE=dev` off loopback refuses to start without `TOOLBOX_ALLOW_DEV_AUTH_OFF_LOOPBACK=1`, like Backstage's `dangerouslyAllowOutsideDevelopment` (D01M885TA0R4HCZTVDSG9F0PHDQ). Not scored: the frozen facts predate it | F6 | every deployment that sets dev mode |
 | In-image connectors start from an allowlisted environment | F7 | every portal that runs a connector next to `DATABASE_URL` |
 | The server is non-dumpable, so a same-user process cannot read its environment or memory | F7 | every deployment with supervised connectors |
 | OpenFGA gets no server credentials: its datastore URI is in a private file removed once it is healthy, and every call needs a per-start preshared key | F7 | every deployment with an OpenFGA model and supervised connectors |

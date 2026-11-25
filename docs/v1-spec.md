@@ -508,7 +508,7 @@ The base image contains `toolbox` and the pinned OpenFGA binary.
 | `DATABASE_URL` | Postgres (Cloud SQL via connector or private IP) |
 | `TOOLBOX_MANIFEST` | Manifest path (default `/portal/toolbox.yaml`) |
 | `TOOLBOX_PUBLIC_URL` | External URL (OAuth, links) |
-| `TOOLBOX_AUTH_MODE` | `iap-google`, `cloudflare-access`, `oidc`, `token` (personal access tokens only), `dev` (trusts `x-toolbox-user`). Unset: `dev` when the server binds loopback, otherwise `token`, so the image (`PORT` binds `0.0.0.0`) never trusts a header unless told to |
+| `TOOLBOX_AUTH_MODE` | `iap-google`, `cloudflare-access`, `oidc`, `token` (personal access tokens only), `dev` (trusts `x-toolbox-user`). Unset: `dev` when the server binds loopback, otherwise `token`, so the image (`PORT` binds `0.0.0.0`) never trusts a header unless told to. Explicit `dev` off loopback also needs `TOOLBOX_ALLOW_DEV_AUTH_OFF_LOOPBACK=1`, or the server refuses to start (D01M885TA0R4HCZTVDSG9F0PHDQ) |
 | `TOOLBOX_SECRET_<NAME>` | Env backend for `${secret:…}` (uppercase, `-` → `_`) |
 | `TOOLBOX_SECRETS_DIR` | Mounted secrets directory (files named by logical secret); first hit after env |
 | `TOOLBOX_SECRETS_CONFIG` | JSON/YAML path (or inline JSON) listing backends: env, file, Vault KV, AWS/GCP/Azure secret managers, plus logical→provider maps ([secret-vault.md](./design/secret-vault.md)) |

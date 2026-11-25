@@ -11,6 +11,7 @@ containers:
       GITHUB_API_URL: http://facade:8091
       GITHUB_TOKEN: acme-reader
       TOOLBOX_AUTH_MODE: dev
+      TOOLBOX_ALLOW_DEV_AUTH_OFF_LOOPBACK: "1"
     resources: {limits: {memory: 1Gi}, requests: {memory: 256Mi}}
 service: {ports: {http: {port: 8080, targetPort: 8080}}}
 resources: {db: {type: postgres}}
