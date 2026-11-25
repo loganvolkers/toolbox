@@ -1,0 +1,1 @@
+{"type":"record","kind":"health","externalId":"sre:checkout","data":{"source":"https://example.com/checkout/readiness","revision":"fixture-v1","observedAt":"2026-11-25T12:00:00Z","service":"checkout","environment":"production","status":"burning","burnRate":15,"validUntil":"2026-11-25T12:05:00Z","context":{"dashboards":["https://example.com/checkout/health"]}}}

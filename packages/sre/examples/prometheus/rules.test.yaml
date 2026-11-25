@@ -1,0 +1,53 @@
+rule_files: [rules.yaml]
+evaluation_interval: 1m
+tests:
+  - name: sustained fast burn
+    interval: 1m
+    input_series:
+    - {series: 'checkout_attempts_total{result="error"}', values: 0+20x360}
+    - {series: 'checkout_attempts_total{result="ok"}', values: 0+980x360}
+    alert_rule_test:
+    - eval_time: 6h
+      alertname: CheckoutFastBurn
+      exp_alerts:
+      - exp_labels: {service: checkout, severity: page}
+        exp_annotations: {runbook_url: https://example.com/checkout/runbook}
+    - eval_time: 6h
+      alertname: CheckoutSlowBurn
+      exp_alerts:
+      - exp_labels: {service: checkout, severity: ticket}
+        exp_annotations: {runbook_url: https://example.com/checkout/runbook}
+    - {eval_time: 6h, alertname: CheckoutTelemetryMissing, exp_alerts: []}
+  - name: slower burn
+    interval: 1m
+    input_series:
+    - {series: 'checkout_attempts_total{result="error"}', values: 0+10x360}
+    - {series: 'checkout_attempts_total{result="ok"}', values: 0+990x360}
+    alert_rule_test:
+    - {eval_time: 6h, alertname: CheckoutFastBurn, exp_alerts: []}
+    - eval_time: 6h
+      alertname: CheckoutSlowBurn
+      exp_alerts:
+      - exp_labels: {service: checkout, severity: ticket}
+        exp_annotations: {runbook_url: https://example.com/checkout/runbook}
+    - {eval_time: 6h, alertname: CheckoutTelemetryMissing, exp_alerts: []}
+  - name: brief spike cleared
+    interval: 1m
+    input_series:
+    - series: checkout_attempts_total{result="error"}
+      values: 0+0x348 20+20x2 60+0x8
+    - {series: 'checkout_attempts_total{result="ok"}', values: 0+1000x360}
+    alert_rule_test:
+    - {eval_time: 6h, alertname: CheckoutFastBurn, exp_alerts: []}
+    - {eval_time: 6h, alertname: CheckoutSlowBurn, exp_alerts: []}
+    - {eval_time: 6h, alertname: CheckoutTelemetryMissing, exp_alerts: []}
+  - name: missing data
+    interval: 1m
+    alert_rule_test:
+    - {eval_time: 6h, alertname: CheckoutFastBurn, exp_alerts: []}
+    - {eval_time: 6h, alertname: CheckoutSlowBurn, exp_alerts: []}
+    - eval_time: 6h
+      alertname: CheckoutTelemetryMissing
+      exp_alerts:
+      - exp_labels: {service: checkout, severity: ticket}
+        exp_annotations: {runbook_url: https://example.com/checkout/runbook}
