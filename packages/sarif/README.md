@@ -47,6 +47,7 @@ a `toolbox validate` error naming the field.
 | ruff | `[ruff, check, --no-cache, --output-format, sarif, --exit-zero, "{files}"]` | Yes (0.14.0) |
 | semgrep | `[semgrep, --config, <rules>, --metrics=off, --disable-version-check, --sarif, --quiet, .]` | Yes (1.163.0); see also [`semgrep`](../semgrep/README.md) |
 | zizmor | `[zizmor, --offline, --no-exit-codes, --no-ignores, --format, sarif, .github/]` | Yes (1.32.0); see also [`github-actions`](../github-actions/README.md). Over the directory, so composite actions and `dependabot.yml` are covered; `--no-ignores` because zizmor drops ignored findings from its SARIF |
+| osv-scanner | `[osv-scanner, scan, source, --offline, --format, sarif, --lockfile, "{files}"]` | Yes (2.7.1), in Toolbox for Toolbox as `maintainer-advisories` against a pinned RustSec snapshot (D01M885GT32STM506V32XKPP37G); ignores live in `osv-scanner.toml`, which drops them from the SARIF |
 | gitleaks, ESLint with a SARIF formatter, Checkov, trivy | Their SARIF options | Not yet |
 
 ## Parameters

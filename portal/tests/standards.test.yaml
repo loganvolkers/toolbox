@@ -1103,6 +1103,19 @@ assert:
       score('maintainer-python',
       'maintainer-python:scripts/messy.py').evidence['no-findings'] == ['line
       3: F401 `os` imported but unused']
+  # Advisories in Cargo.lock: osv-scanner offline through the SARIF slot
+  - name: a lockfile with every advisory fixed or justified passes
+    expect: >-
+      score('maintainer-advisories',
+      'maintainer-advisories:Cargo.lock').rules['no-findings'] == 'pass'
+  - name: an advisory not in osv-scanner.toml fails, with its id as evidence
+    expect: >-
+      score('maintainer-advisories',
+      'maintainer-advisories:experiments/stale/Cargo.lock').rules['no-findings']
+      == 'fail' && score('maintainer-advisories',
+      'maintainer-advisories:experiments/stale/Cargo.lock').evidence['no-findings']
+      == ['line 0: RUSTSEC-2026-0543 Package \'chrono@0.4.45\' is vulnerable
+      to \'RUSTSEC-2026-0543\'.']
   # Runtime observability (toolbox-telemetry / OTel catalog)
   - name: a complete observability checklist reaches gold
     expect: >-

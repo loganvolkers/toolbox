@@ -31,8 +31,8 @@ jobs:
         env: {GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"}
         run: |
           cargo build --locked
-          scripts/ci-tools.sh "$RUNNER_TEMP/tools" actionlint scorecard
-          export PATH="$RUNNER_TEMP/tools:$PATH"
+          scripts/ci-tools.sh "$RUNNER_TEMP/tools" actionlint scorecard osv-scanner rustsec-osv
+          export PATH="$RUNNER_TEMP/tools:$PATH" OSV_SCANNER_LOCAL_DB_CACHE_DIRECTORY="$RUNNER_TEMP/tools"
           target/debug/toolbox tools install portal --via pipx   # the pins in the portal's tools:
           target/debug/toolbox doctor portal
           # On main, score live run history too; pull requests keep the deterministic report.

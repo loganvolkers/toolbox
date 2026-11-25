@@ -18,6 +18,13 @@
       "short": 0,
       "start": "2026-11-23"
     },
+    "maintainer-advisories-zero": {
+      "inScope": 1,
+      "measure": 0,
+      "recorded": "2026-11-25",
+      "short": 0,
+      "start": null
+    },
     "maintainer-openssf-ten": {
       "inScope": 11,
       "measure": 33,
@@ -1614,6 +1621,19 @@
           "9e369f06"
         ]
       },
+      "field:toolbox/Lockfile.findings": {
+        "described": [
+          "f08b4ce5"
+        ],
+        "has-shape": [
+          "b7a5b02e"
+        ]
+      },
+      "field:toolbox/Lockfile.path": {
+        "described": [
+          "aa12f33e"
+        ]
+      },
       "field:toolbox/McpTool.annotations": {
         "described": [
           "074c562e"
@@ -2345,6 +2365,12 @@
           "cfb93806",
           "e5ee57ab",
           "f9f7ac95"
+        ]
+      },
+      "kind:toolbox/Lockfile": {
+        "fields-described": [
+          "84874d36",
+          "c3eb88cf"
         ]
       },
       "kind:toolbox/McpTool": {
@@ -3622,6 +3648,7 @@
         "level": "bronze"
       }
     },
+    "maintainer-advisories": {},
     "maintainer-agent-doc": {
       "agent-doc:.cursor/rules/toolbox-operator.mdc": {
         "level": "gold"
@@ -4697,6 +4724,9 @@
         "level": "skipped"
       },
       "doc:docs/decisions/D01M87T16JRH53YV6VVWM8PH169.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M885GT32STM506V32XKPP37G.md": {
         "level": "skipped"
       },
       "doc:docs/decisions/README.md": {
@@ -5918,6 +5948,9 @@
       "connector:toolbox/github-actions": {
         "level": "gold"
       },
+      "connector:toolbox/maintainer-advisories": {
+        "level": "gold"
+      },
       "connector:toolbox/maintainer-openssf": {
         "level": "gold"
       },
@@ -7064,6 +7097,28 @@
         "level": "gold"
       },
       "field:toolbox/Kind.undescribedFields": {
+        "level": "gold"
+      },
+      "field:toolbox/Lockfile.active": {
+        "level": "gold"
+      },
+      "field:toolbox/Lockfile.command": {
+        "level": "gold"
+      },
+      "field:toolbox/Lockfile.findings": {
+        "failing": {
+          "described": 1,
+          "has-shape": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Lockfile.path": {
+        "failing": {
+          "described": 1
+        },
+        "level": "bronze"
+      },
+      "field:toolbox/Lockfile.total": {
         "level": "gold"
       },
       "field:toolbox/McpTool.annotations": {
@@ -8301,6 +8356,12 @@
       "kind:toolbox/Kind": {
         "level": "gold"
       },
+      "kind:toolbox/Lockfile": {
+        "failing": {
+          "fields-described": 2
+        },
+        "level": "silver"
+      },
       "kind:toolbox/McpTool": {
         "failing": {
           "fields-described": 9
@@ -8507,6 +8568,9 @@
           "pins-both-outcomes": 1
         },
         "level": "silver"
+      },
+      "rule:toolbox/maintainer-advisories/no-findings": {
+        "level": "gold"
       },
       "rule:toolbox/maintainer-agent-doc/checks-run-in-ci": {
         "level": "gold"
@@ -9524,6 +9588,9 @@
         "level": "gold"
       },
       "scorecard:toolbox/maintainer-action-deps": {
+        "level": "gold"
+      },
+      "scorecard:toolbox/maintainer-advisories": {
         "level": "gold"
       },
       "scorecard:toolbox/maintainer-agent-doc": {

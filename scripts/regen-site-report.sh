@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Regenerate site/public/report the same way .github/workflows/pages.yml does.
 #
-# Pages CI installs actionlint 1.7.12 (scripts/ci-tools.sh), then zizmor and ruff from the portal's
+# Pages CI installs actionlint 1.7.12, osv-scanner 2.7.1 and the pinned RustSec database
+# (scripts/ci-tools.sh), then zizmor and ruff from the portal's
 # pins (toolbox tools install),
 # runs toolbox doctor, then:
 #   toolbox report portal --skip runner,github-actions -o web --out site/public/report
@@ -13,8 +14,8 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 TOOLS="${TOOLBOX_CI_TOOLS:-${TMPDIR:-/tmp}/toolbox-ci-tools}"
-scripts/ci-tools.sh "$TOOLS" actionlint scorecard
-export PATH="$TOOLS:$PATH"
+scripts/ci-tools.sh "$TOOLS" actionlint scorecard osv-scanner rustsec-osv
+export PATH="$TOOLS:$PATH" OSV_SCANNER_LOCAL_DB_CACHE_DIRECTORY="$TOOLS"
 
 cargo build --locked
 # zizmor and ruff from the portal's own pins (tools:), with uv, pipx or pip: whichever is here.
@@ -24,6 +25,7 @@ target/debug/toolbox tools install portal
 actionlint -version
 zizmor --version
 ruff --version
+osv-scanner --version
 
 target/debug/toolbox doctor portal
 target/debug/toolbox report portal --skip runner,github-actions -o web --out site/public/report
