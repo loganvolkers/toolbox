@@ -1,0 +1,71 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:acme/app-approval/permissions-match-snapshot
+rubric: rule-quality
+subjectHash: 586d88c5ed4e
+assessor: {kind: agent, name: cursor-assessor-18, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The check is map equality (examples/reference-portal/toolbox.yaml:271),
+      but the fix and rationale (:272-278) and the design
+      (docs/examples/approved-github-apps.md:59-60) are about an app asking
+      for more than was approved. An app whose vendor drops `issues: write` or
+      downgrades `contents` to read fails as "beyond its approved snapshot"
+      while it now has less access. The connector reads the app's requested
+      permissions from `GET /apps/{slug}`
+      (crates/toolbox-connector-github/src/main.rs:221-223), which is the
+      right source; events, which the design pins too (:46), are not compared.
+    suggestion: >-
+      Check widening only: every key of `entity.permissions` is in the
+      snapshot, and its level is not `write` where the snapshot says `read`,
+      e.g. `entity.permissions.all(k, k in s && (s[k] == 'write' ||
+      entity.permissions[k] == s[k]))` with `s` the snapshot. Or keep equality
+      and change the fix to "differ from".
+  - criterion: hard-to-game
+    verdict: unsure
+    reason: >-
+      The cheapest pass is to copy the app's new permissions into
+      `policies.approvedApps.<slug>.permissions`, which is also what a real
+      re-approval looks like. Whether that is gaming depends on who may merge
+      the edit. The manifest keeps the policy inline and admits that
+      CODEOWNERS can't own a section of toolbox.yaml
+      (examples/reference-portal/toolbox.yaml:13-14). The design puts it in
+      its own file under `@acme/security`
+      (docs/examples/approved-github-apps.md:196). The reference portal has no
+      CODEOWNERS file, so I couldn't check either layout.
+    suggestion: >-
+      Move `approvedApps` to its own file (e.g. policies/approved-apps.yaml)
+      owned by security in CODEOWNERS, as the design says, so the only cheap
+      pass goes through security's review.
+  - criterion: fix-leads-to-pass
+    verdict: fail
+    reason: >-
+      The rule has no evidence (brief: hasEvidence false), so nobody sees
+      which permission changed. The fix names security but not the place to
+      change: the snapshot in examples/reference-portal/toolbox.yaml:20-25 and
+      :31. For snyk-security, the only extra permission is `administration:
+      read` (examples/reference-portal/fixtures/github.ndjson, app record).
+      Nothing on the failing score says that, and administration is one of the
+      sensitive permissions the design keeps out of self-service
+      (docs/examples/approved-github-apps.md:100-101).
+    suggestion: >-
+      Add evidence listing each differing key as `name: approved -> now`, and
+      say in the fix that security re-approves by updating
+      `policies.approvedApps.<slug>.permissions` (or by removing the app).
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no number. Bronze is the scorecard's only level, and the
+      scorecard rationale (examples/reference-portal/toolbox.yaml:258-261) and
+      the design (docs/examples/approved-github-apps.md:59-60, :158) justify
+      it: self-service for a drifted app suspends until security re-approves.
+summary: >-
+  A rule the design needs, but its equality check fails apps whose
+  permissions narrowed, while the fix says "beyond". With no evidence and
+  no named policy path, the failing score doesn't say what changed or
+  where to re-approve. Whether it can be gamed depends on who owns the
+  inline policy block, which the manifest admits CODEOWNERS can't express.
+  Its tests pin both outcomes by level
+  (examples/reference-portal/tests/apps.test.yaml), not through the rule.

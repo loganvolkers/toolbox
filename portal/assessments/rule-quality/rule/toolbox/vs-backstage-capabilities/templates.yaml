@@ -1,0 +1,52 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/vs-backstage-capabilities/templates
+rubric: rule-quality
+subjectHash: 749660ad413d
+assessor: {kind: agent, name: cursor-assessor-15, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      "Create a component from a template" (backstage-comparison.yaml:144-146)
+      is the brief's "template / self-service run" scenario (RESEARCH.md:116),
+      which Backstage meets with plugin-scaffolder (facts.yaml:168). Passing
+      the check means that capability, not merely that actions exist.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      `capTemplates` is set by hand in facts.yaml:81-83 and copied by
+      snapshot.py:85; nothing in the harness runs a template on either arm, so
+      the record flips with a one-line edit.
+    suggestion: >-
+      Add a surface.py step that runs each product's create-from-template path
+      on a scratch repository (Backstage's scaffolder, a Toolbox `change`
+      action via `toolbox run`) and derive `capTemplates` from the files it
+      produced.
+  - criterion: fix-leads-to-pass
+    verdict: fail
+    reason: >-
+      The fix is stale: it waits for D64's pause to lift, and
+      D01M86BY3YQX3SA1W99QXF1QA1H lifted it; `toolbox run` and the `change`
+      executor are built (docs/v1-spec.md:68). Yet `capTemplates` is still
+      false (portal/comparisons/toolbox.yaml) with D64 as its evidence
+      (facts.yaml:81-83), and template executors stay out of v1 scope
+      (docs/v1-spec.md:46). Its first link is to D01M7VTP0HG0000000000000000,
+      the pause.
+    suggestion: >-
+      Rewrite the fix as "Ship an action whose `change` executor creates a
+      component from a template (docs/design/action-runs.md), then update
+      facts.yaml and rerun snapshot.py", and replace the D64 link with
+      D01M86BY3YQX3SA1W99QXF1QA1H.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      Boolean, no threshold; "each capability true" was pre-registered in
+      experiments/backstage-compare/README.md:53 and the scenario list is the
+      D47 audit's (D01M7V8P2VY0000000000000000).
+summary: >-
+  The right capability to compare, but its fix and links describe a world
+  before D01M86BY3YQX3SA1W99QXF1QA1H: actions are now built and the rule
+  still points at the pause. It should name a template action on the
+  `change` executor, and its fact should come from a run rather than
+  facts.yaml.

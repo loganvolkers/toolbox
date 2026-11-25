@@ -1,0 +1,63 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:scorecard-quality/scorecard:toolbox/maintainer-repo
+rubric: assessment-quality
+subjectHash: 30cc6d8d9da1
+assessor: {kind: agent, name: cursor-reviewer-36, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      One claim in
+      portal/assessments/scorecard-quality/scorecard/toolbox/maintainer-repo.yaml
+      does not hold. no-obvious-gap says toolbox validate does not check
+      repoRollup and that only crates/toolbox-cli/src/report.rs:1391 reads it.
+      report.rs:1391 does copy the policy into the report, but the scoring
+      path reads it too: Repository.watch is policy.repoRollup when
+      watchOverride is empty (portal/standards/repository.yaml:43-45), and the
+      report UI reads that field (crates/toolbox-cli/src/toolbox-report.js:934
+      and :2139). The rest lands. Rank is the card's own level index
+      (crates/toolbox-derive/src/lib.rs:1296-1305). action-deps has only
+      bronze (github-actions.yaml:552) and docs only bronze and silver
+      (portal/standards/docs.yaml:97). repo-level.md:44-48 omits
+      maintainer-site and :55 says supply-chain is none; the live entity is
+      gold (portal/results.json) and the repository is bronze. A watch name
+      that matches no summary is dropped (lib.rs:930-934). The live list is
+      the 13 names at portal/toolbox.yaml:30-43.
+    suggestion: >-
+      Drop "only report.rs:1391 reads it". Say validate does not check that
+      each repoRollup name is a scorecard, while repository.yaml:43-45 and the
+      report both consume the list.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The verdicts stay right without that sentence. one-concern passes: three
+      rules, one audience, the lowest maintainer card. levels-are-a-ladder
+      fails because a bronze-only card has rank 1, so silver (rank >= 2)
+      cannot be reached, and docs tops out at rank 2, so gold cannot either
+      (repository.yaml:167-178, lib.rs:1296-1305). no-obvious-gap fails
+      because an unknown watch name disappears from cards (lib.rs:930-934) and
+      maintainer-python is not in the 13. actionable fails: the silver fix
+      (repository.yaml:170-172) says a bronze-only card caps the repository,
+      and there is no other step that raises it.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The rank function and the two short ladders are in the manifest. A
+      second assessor computing rank for a bronze-only card and a
+      bronze/silver card gets the same unreachable silver and gold.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The suggestions in
+      portal/assessments/scorecard-quality/scorecard/toolbox/maintainer-repo.yaml
+      treat a card at its own top as meeting higher repository levels, fail
+      when cards.size() differs from watch.size(), and then name the lagging
+      entities in the evidence. Each of those changes the verdict it is
+      attached to.
+summary: >-
+  The ladder really does stop at bronze: action-deps cannot reach rank 2
+  and docs cannot reach rank 3, and a misspelt watched name drops out of
+  the rollup. The "only report.rs reads repoRollup" sentence is wrong. The
+  watch field and the report UI both read the list. The design doc's
+  constituent list is stale, and supply-chain is gold, not none.

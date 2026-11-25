@@ -1,0 +1,63 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: scorecard:toolbox/vs-backstage-capabilities
+rubric: scorecard-quality
+subjectHash: 5bbe8c5c17be
+assessor: {kind: agent, name: cursor-assessor-15, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: one-concern
+    verdict: fail
+    reason: >-
+      Twelve rules are functional completeness (F1, RESEARCH.md:110-123), and
+      one, `community`, is project health, which the brief keeps apart
+      ("functional completeness ... and project health", RESEARCH.md:31-33)
+      and puts under F8 as OpenSSF Scorecard checks (RESEARCH.md:64). The
+      card's description admits the two concerns
+      (portal/standards/backstage-comparison.yaml:906-910), so a "behind" here
+      mixes missing features with a contributor count.
+    suggestion: >-
+      Move `community` to `vs-backstage-supply-chain` or a new project-health
+      card, leaving this one with the 12 F1 scenarios.
+  - criterion: levels-are-a-ladder
+    verdict: fail
+    reason: >-
+      One bronze level holds 13 rules of very different cost: six "keep" rules
+      Toolbox already passes, features beyond the v1 scope (template executors
+      and notifications are deferred, docs/v1-spec.md:46 and 50), and a
+      contributor count maintainers cannot set. Toolbox sits at none with
+      seven failing (portal/results.json), and nothing short of all seven,
+      Kubernetes and ten contributors included, moves the level.
+    suggestion: >-
+      Keep the comparative standing per rule, but rank the levels: bronze for
+      the v1-scope scenarios (browse, ownership, graph, scorecards, permission
+      rule, MCP read, search), silver adding docs, API docs and templates,
+      gold adding Kubernetes and notifications; move community out.
+  - criterion: no-obvious-gap
+    verdict: pass
+    reason: >-
+      All twelve scenarios the brief drew from the D47 parity audit
+      (D01M7V8P2VY0000000000000000) have a rule here, one each
+      (RESEARCH.md:110-123 against backstage-comparison.yaml:926-1057), and
+      extension cost, which the README put in this factor, has its own card
+      (RESULTS.md:269-270). Backstage's plugin breadth (RESEARCH.md:31-32) is
+      not a scenario anyone can pass or fail.
+  - criterion: actionable
+    verdict: fail
+    reason: >-
+      Raising Toolbox from none to bronze needs all seven failing rules, and
+      several fixes don't lead there: templates still waits on a pause
+      D01M86BY3YQX3SA1W99QXF1QA1H lifted, docs names a principle not a place,
+      notifications links campaigns.md instead of
+      docs/design/notifications.md, and community depends on outside people.
+      Every fact is a facts.yaml boolean that changes only when snapshot.py
+      reruns, and no fix says so.
+    suggestion: >-
+      Update the templates, docs, api-docs and notifications fixes to name
+      code and design docs, add "then update facts.yaml and rerun snapshot.py"
+      to each, and derive the facts from harness probes where one exists.
+summary: >-
+  The card faithfully encodes the pre-registered F1 scenarios and
+  publishes Toolbox's loss as promised. But it mixes project health into
+  feature completeness, puts 13 rules of very different cost on one level,
+  and several of its fixes are stale or vague, so it records the gap
+  better than it guides closing it.

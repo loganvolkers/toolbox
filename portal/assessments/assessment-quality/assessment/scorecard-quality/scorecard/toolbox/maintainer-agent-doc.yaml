@@ -1,0 +1,48 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:scorecard-quality/scorecard:toolbox/maintainer-agent-doc
+rubric: assessment-quality
+subjectHash: a528191475ea
+assessor: {kind: agent, name: cursor-reviewer-11, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/scorecard-quality/scorecard/toolbox/maintainer-agent-doc.yaml
+      hold. agents-md-standards.md:61-62 places the card in the maintainer
+      SDLC, and :30-37 is the research table. thresholds.md:19-21,35 is the
+      killer-item principle and row. The card's rationale is
+      agent-docs.yaml:51-56 ("plus the two safety items") and its rules are
+      :68-171. The fixtures at portal/fixtures/workspace.ndjson:28-30,58 are
+      focused, partial, unsafe and ok.mdc, which give gold, bronze, none and
+      gold, so no fixture sits at silver. portal/results.json agrees:
+      meta-scorecard fails fixtures-reach-every-level for this card. The
+      partial pin is standards.test.yaml:478-490. D75, D82, D83 and
+      D01M83G9F4EEGN1GTP14HEYB8B6 say what the ladder reason claims.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The four passes hold. The safety rules are the portal-wide floor, not a
+      second concern (thresholds.md:19-21). The ladder follows D75 as amended.
+      The design doc's stale gold rows for the safety rules
+      (agents-md-standards.md:72-73) and the missing silver fixture are both
+      named. The measure weaknesses belong to the rule assessments, which fail
+      them, so they are not gaps in the card.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Each verdict cites a decision or a line of the card
+      (agent-docs.yaml:51-56,68-171), and the actionable check walks one
+      fixture to gold using only its evidence and fixes.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The assessment has no fail or unsure verdicts, so there are no
+      suggestions to judge
+      (portal/assessments/scorecard-quality/scorecard/toolbox/maintainer-agent-doc.yaml).
+summary: >-
+  Well grounded: the one-concern, ladder and gap verdicts follow from D75,
+  D82, D83 and the bronze move for safety items, and the citations land.
+  It also names the missing silver fixture and the stale gold rows in
+  agents-md-standards.md, rather than hiding them behind four passes.

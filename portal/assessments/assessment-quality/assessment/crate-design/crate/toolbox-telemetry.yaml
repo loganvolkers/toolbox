@@ -1,0 +1,75 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:crate-design/crate:toolbox-telemetry
+rubric: assessment-quality
+subjectHash: 5fdee88b38df
+assessor: {kind: agent, name: cursor-reviewer-20, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      Most citations in
+      portal/assessments/crate-design/crate/toolbox-telemetry.yaml land.
+      lib.rs:3-5 is the boundary statement and analytics.rs:1 names D6.
+      METRIC_CATALOG.md:22 and 27 say "Stub until M5", and rg finds no caller
+      of the run metrics outside the crate. The callers listed are at
+      server.rs:122-123, client.rs:64, state.rs:183, routes.rs:173-174,
+      mcp.rs:1032, access.rs:194, connectors.rs:86 and http_trace.rs:21, and
+      Catalog is in the private metrics_prom module (lib.rs:17). Three more
+      claims hold. `let _ = prometheus_on;` is init.rs:114, while README.md:30
+      documents the toggle. Doc coverage is 24 of 54 items. The getters at
+      catalog.rs:59-113 return prometheus types and panic through
+      catalog.rs:46-48. The export checks hold too: ci.yml:114-127,
+      tests/prom_catalog.rs:21 and scrub.rs:19 `&value[..MAX]`, which panics
+      on a non-char boundary. One citation is off: the telemetry spec row is
+      docs/v1-spec.md:99, while :97 is toolbox-cli's row.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The verdicts are right, but the assessment misreads one branch. It calls
+      the CI/prod MissingServiceName failure "untested". In fact it is
+      unreachable. `service_name` always returns a non-empty name, because it
+      falls back to "toolbox" (resource.rs:12-23), so the
+      `name.trim().is_empty()` check in resolve_or_fail (resource.rs:95-100)
+      can never fire. That strengthens the tests-match-risk fail rather than
+      changing it. The two passes hold: callers use only the helpers, and no
+      other Cargo.toml names opentelemetry or prometheus.
+  - criterion: reproducible
+    verdict: unsure
+    reason: >-
+      replaceable-defaults fails because public getters return prometheus
+      types (catalog.rs:59-113) that no caller uses. The criterion names
+      cel-rust, OpenFGA, DBOS, Postgres and React (crates.yaml:479-480), and
+      the guidance passes a crate "when it wraps no third-party default"
+      (crates.yaml:483). Whether Prometheus and OpenTelemetry count is a
+      matter of reading, and a second assessor could pass it given that
+      callers see only `record_*` helpers. tests-match-risk and the two passes
+      rest on code facts.
+    suggestion: >-
+      State the reading: the criterion covers any third-party engine the crate
+      hides, citing crates.yaml:483 and the crate's own "helpers only"
+      contract (lib.rs:5). Then the fail follows from the public getters
+      rather than from a judgement call.
+  - criterion: actionable
+    verdict: fail
+    reason: >-
+      Most suggestions would change their verdicts: getters made `pub(crate)`,
+      char-boundary truncation with a multi-byte test, and a Ci-mode `init`
+      failure test. One would not. "Make the resource test use
+      TelemetryMode::Ci with an empty OTEL_SERVICE_NAME and assert
+      MissingServiceName" cannot pass as written, because service_name falls
+      back to "toolbox" (resource.rs:22). The new test would fail until the
+      code changes, and the suggestion doesn't say which change.
+    suggestion: >-
+      Say that MissingServiceName is unreachable. Fix resolve_or_fail so it
+      checks the explicit and environment names before the default applies, or
+      remove the error and the CI/prod promise. Then add the Ci-mode test that
+      asserts whichever behaviour is kept.
+summary: >-
+  A mostly accurate assessment. Its citations land except v1-spec.md:97,
+  which should be :99. Its fails are right: prometheus types in public
+  getters, and untested risky branches such as the scrub_value panic on
+  multi-byte input. It misreads the missing-service-name path as untested
+  when it is unreachable, so the suggested test cannot pass without a code
+  fix it doesn't name. It also fails replaceable-defaults on a reading of
+  "default" that a second assessor might not share.

@@ -1,0 +1,58 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/review-rule/passes-review
+rubric: rule-quality
+subjectHash: bd7dc9d84cfc
+assessor: {kind: agent, name: cursor-assessor-04, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      The check needs a current assessment with no failing criterion and no
+      uncited reason (portal/standards/meta.yaml:955-970; `reviewUncited` from
+      the record's `uncited`, crates/toolbox-connect/src/assessment.rs:202).
+      That is the gold cell of docs/design/thresholds.md:55 for rules ("a
+      current review that passes, cites what resolves"). Doubts are left to
+      the sibling `no-doubts`. Fixtures pin pass and fail
+      (portal/tests/standards.test.yaml:870-874, 943-949).
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Unlike review-assessment's passes-review, which needs `reviewGrounded`
+      (portal/standards/assessments.yaml:274-282), any resolvable citation
+      counts here. An all-pass rule-quality assessment whose reasons each say
+      "see portal/standards/meta.yaml" is fresh, cited and failing nothing, so
+      it is gold. That is cheaper than judging the rule.
+      D01M831P5QWJQ4A2FT85N5MXJQF records that 0 of 19 rules agents actually
+      reviewed passed.
+    suggestion: >-
+      Require the assessment to be grounded: give each Rule record the file
+      that defines it, and require the rule-quality assessment's `cited` to
+      include that file plus one other source. Or add review-crate's
+      `independently-reviewed` at gold (portal/standards/crates.yaml:433-450).
+  - criterion: fix-leads-to-pass
+    verdict: fail
+    reason: >-
+      The evidence has two kinds of item: failing criteria, and "<criterion>
+      cites nothing that resolves" (portal/standards/meta.yaml:960-963). The
+      fix covers only the first ("act on the failing criteria's suggestions",
+      meta.yaml:964-966). An uncited pass verdict has no suggestion to act on,
+      and the fix never says to add a citation. review-assessment's version
+      spells out both cases (assessments.yaml:284-290).
+    suggestion: >-
+      Add to the fix: "For a criterion listed as citing nothing, add to that
+      reason in the assessment file a path, a file name only one file has, an
+      existing decision or question id, or a URL."
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no number. Gold as a clean, cited, current review is stated in
+      docs/design/thresholds.md:55 and the scorecard description
+      (meta.yaml:905-908, D79, D01M831P5QWJQ4A2FT85N5MXJQF). It adds to silver
+      what silver doesn't imply (thresholds.md:24-25).
+summary: >-
+  It states the gold ladder for rules, but its two halves are uneven. A
+  rubber-stamp assessment citing any existing file reaches gold, because
+  this card has neither the grounding that review-assessment asks for nor
+  the second assessor that review-crate asks for. Its fix also doesn't
+  cover the "cites nothing" evidence it emits.

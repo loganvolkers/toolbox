@@ -1,0 +1,60 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/vs-backstage-performance/get-throughput
+rubric: assessment-quality
+subjectHash: 4c1bb769cccf
+assessor: {kind: agent, name: cursor-reviewer-16, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      Several citations in
+      portal/assessments/rule-quality/rule/toolbox/vs-backstage-performance/get-throughput.yaml
+      land: the rationale at backstage-comparison.yaml:283-287,
+      measure.py:30-32, 92-94 and 111-131, RESEARCH.md:60, README.md:38 and
+      120-122, and plan.md:920. Three do not hold. ADJUDICATION.md:197 is the
+      logging threat; the 36-37k/s spread is line 198. That line also says the
+      reads are cache hits after the first, so "uncached" is wrong; 540-542
+      calls a 1,000-id spread "mostly cache hits". And
+      D01M857ZB468ZM2YS6GNSEG6YB9 does not set the single bronze level
+      (backstage-comparison.yaml:222 does).
+    suggestion: >-
+      Cite ADJUDICATION.md:198, describe the 36-37k/s as a cached spread over
+      10,000 ids, and cite backstage-comparison.yaml:222 for the level.
+  - criterion: complete
+    verdict: unsure
+    reason: >-
+      measures-intent's pass leans on the "uncached" 36-37k/s. The rationale's
+      question is how many people, agents and CI jobs one instance serves
+      (backstage-comparison.yaml:284-285). The harness reads with one PAT, and
+      decisions are cached per snapshot. The only uncached figure in the
+      sources is about 1,300 checked reads/s at 1k, from a62d92f's note
+      (ADJUDICATION.md:198). That is close to the 1,000/s bar, and it predates
+      127b08e's tuple-view indexes. Many users and snapshot churn are "not
+      tested" (same line). The rationale calls the figure a ceiling, so a pass
+      is defensible, but the reason should weigh this rather than cite a
+      number that is cached.
+    suggestion: >-
+      Re-judge measures-intent with ADJUDICATION.md:198's uncached figure in
+      view. Mark it unsure unless a many-user or post-publish run shows the
+      bar holds without the cache.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      hard-to-game, fix-leads-to-pass and threshold-justified rest on
+      measure.py:128-130, routes.rs:412 and plan.md:920, which read the same
+      for anyone. Only measures-intent depends on reading the cache caveat
+      correctly. With line 198 read in full, a second assessor would reach the
+      same question.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      There are no fail or unsure verdicts in
+      portal/assessments/rule-quality/rule/toolbox/vs-backstage-performance/get-throughput.yaml,
+      so no suggestion is needed.
+summary: >-
+  hard-to-game and the fix are judged correctly: rps counts only 200s, and
+  the fix names `get_entity`. But measures-intent rests on an adjudicator
+  figure that is cited at the wrong line and mislabelled as uncached. The
+  one genuinely uncached figure, about 1,300/s, sits near the 1,000/s bar,
+  so that pass is less certain than it reads.

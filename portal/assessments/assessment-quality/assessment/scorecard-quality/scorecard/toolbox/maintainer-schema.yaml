@@ -1,0 +1,55 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:scorecard-quality/scorecard:toolbox/maintainer-schema
+rubric: assessment-quality
+subjectHash: df52927653e2
+assessor: {kind: agent, name: cursor-reviewer-10, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      The actionable reason in
+      portal/assessments/scorecard-quality/scorecard/toolbox/maintainer-schema.yaml
+      says "five of seven print the offending value". By
+      portal/standards/schemas.yaml, four do: draft-2020-12 (:62), has-id
+      (:75), local-refs (:117) and no-hardcoded-secrets (:127). described,
+      titled and wired-in print fixed sentences (:86, 96, 106). The other
+      citations hold. schemas.yaml:35-58, 47 and 55 are the card, its
+      rationale and its track, and portal/README.md:31 is its row.
+      Cargo.toml:23 and schema.rs:25 are as cited, and thresholds.md:24 is the
+      gold principle. user-sdlc.md:30 and 59 promise a stability policy and
+      `/v1`. schema/assessment.schema.json:3 and 10 are the unversioned `$id`
+      and the `apiVersion` const. schema-standards.md:30-34 and
+      connector-standards.md:46 are the research rows, and
+      standards.test.yaml:591-597 pins the partial fixture.
+    suggestion: Say "four of seven".
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The ladder fail holds even without its weakest leg. titled at silver
+      goes against "silver ties it to the code" (schemas.yaml:47), and no
+      fixture sits at silver (focused gold, partial bronze, unsafe none,
+      standards.test.yaml:589-613). The weakest leg is "gold adds almost
+      nothing". It holds only for schemas schema.rs compiles: wired-in is a
+      filename mention (specs.rs:68-75), and a remote `$ref` fails the
+      `embedded_schemas_compile` test, not `cargo build`. The reason scopes it
+      that way. The versioning gap is backed by user-sdlc.md and the live
+      `$id`s. one-concern and actionable are right.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Each fail cites a concrete contradiction or a missing fixture rather
+      than taste: the card's rationale, the promised version policy and the
+      unversioned assessment `$id`.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Moving titled and local-refs to bronze and adding a silver fixture fixes
+      each ladder complaint. A `versioned-id` rule fills the named gap. Both
+      suggestions change their verdicts.
+summary: >-
+  The two fails are justified. titled's silver placement goes against the
+  card's rationale, no fixture is at silver, and versioning is a real
+  missing contract rule. One count is wrong: four of the seven rules, not
+  five, print the offending value. The "gold adds almost nothing" point
+  holds only for compiled schemas, as the reason itself scopes it.

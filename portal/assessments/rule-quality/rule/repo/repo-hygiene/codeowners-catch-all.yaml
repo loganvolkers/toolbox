@@ -1,0 +1,53 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:repo/repo-hygiene/codeowners-catch-all
+rubric: rule-quality
+subjectHash: 178261b17680
+assessor: {kind: agent, name: cursor-assessor-18, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The check is a literal `r.pattern == '*'`
+      (examples/repo-portal-starter/toolbox.yaml:113-115). `parse_codeowners`
+      keeps rules with no owners
+      (crates/toolbox-connector-workspace/src/repo.rs:37-51), and in GitHub a
+      bare `*` line clears ownership. So `*` alone passes while no path has an
+      owner. Equivalent catch-alls such as `/**` or `**` fail while meeting
+      the intent. The check also ignores order: GitHub applies the last
+      matching rule, so a trailing `*` overrides every specific rule. The
+      fix's "Start CODEOWNERS with" warns about that, but the check doesn't
+      enforce it.
+    suggestion: >-
+      Check `entity.codeowners.rules.size() > 0 &&
+      entity.codeowners.rules[0].pattern in ['*', '/**', '**'] &&
+      entity.codeowners.rules[0].owners.size() > 0`.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      A single bare `*` line is the cheapest pass, for both this rule and
+      has-codeowners. owners-are-teams would catch it only when no other rule
+      names an owner, because owners are collected across all rules
+      (repo.rs:77-84).
+    suggestion: >-
+      Require owners on the catch-all, as above, and add a fixture whose
+      CODEOWNERS has a bare `*` line.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence lists the CODEOWNERS patterns in order
+      (examples/repo-portal-starter/toolbox.yaml:116), and the fix says to
+      start with a `*` rule "so every path has an owner" (:117). Followed as
+      written, with an owner, it passes, and it is also GitHub's recommended
+      placement.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no number. Silver is where the scorecard says ownership becomes
+      complete (examples/repo-portal-starter/toolbox.yaml:79-81), and the rule
+      rationale (:118-121) explains why a default owner matters.
+summary: >-
+  The fix is right, but the check is weaker than it. A literal `*`
+  anywhere passes, even with no owner or in last place, and `/**` fails.
+  No test asserts this rule (brief: tested false; portal/results.json
+  lists it under meta-rule `tested`), so these edges aren't pinned.

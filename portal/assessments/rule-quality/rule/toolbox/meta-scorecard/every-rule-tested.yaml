@@ -1,0 +1,55 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/meta-scorecard/every-rule-tested
+rubric: rule-quality
+subjectHash: aab1a3ef9d59
+assessor: {kind: agent, name: cursor-assessor-02, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      untestedRules is computed from the card's Rule entities whose `tested`
+      is false (portal/standards/meta.yaml:23-26). It therefore uses
+      meta-rule/tested's own-card, literal-outcome definition
+      (crates/toolbox-cli/src/meta.rs:28-35), so "no untested rule" means the
+      same thing at both levels. The fixture
+      scorecard:toolbox/maintainer-ci-security rolls up
+      `['least-privilege-token']` (portal/tests/standards.test.yaml:298-305).
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      It inherits meta-rule/tested's textual match. Adding `score('c',
+      'e').rules['<r>'] == 'fail' || true` for each listed rule empties
+      untestedRules without pinning anything (meta.rs:84-93). For
+      maintainer-crate's 6 untested rules (portal/results.json), that is
+      cheaper than writing 6 real pins.
+    suggestion: >-
+      Fix it at the source, in meta-rule/tested's detector: parse the
+      expectation and count only comparisons under top-level `&&`.
+  - criterion: fix-leads-to-pass
+    verdict: fail
+    reason: >-
+      "Add an expectation for each untested rule" (meta.yaml:668) doesn't say
+      which form counts or where expectations go. The obvious reading fails.
+      `'always-explains' in score('meta-rule', …).rules`
+      (portal/tests/standards.test.yaml:306-311) is an expectation named after
+      the rule, titled "pinned here too", and it is a bare mention that
+      meta.rs:28-30 refuses. The sibling meta-rule/tested has the fix this one
+      needs (meta.yaml:448-452).
+    suggestion: >-
+      Use meta-rule/tested's wording: "In tests/*.test.yaml, pin each listed
+      rule: `score('<card>', '<entity>').rules['<rule>'] == 'fail'` (or
+      'pass'), or compare its evidence; a bare mention doesn't count."
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      "Zero untested" is the definition. Silver is in the ladder
+      (docs/design/thresholds.md:60) and in
+      docs/design/scorecards-for-scorecards.md:114 (L4). The rationale
+      measures it as the most common gap, in 11 scorecards, on the first run
+      (meta.yaml:670-673).
+summary: >-
+  A correct roll-up of meta-rule/tested. It shares that rule's textual
+  loophole, and its terse fix leads to the bare-mention mistake the test
+  file itself makes. Live it fails 10 of 53 cards (portal/results.json).
+  Its tests pin only fail (portal/tests/standards.test.yaml:312-313).

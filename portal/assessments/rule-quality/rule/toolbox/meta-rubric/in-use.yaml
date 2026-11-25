@@ -1,0 +1,47 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/meta-rubric/in-use
+rubric: rule-quality
+subjectHash: fb623dcdbf06
+assessor: {kind: agent, name: cursor-assessor-03, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      `assessments` counts the portal's assessment files whose `rubric:` names
+      this rubric (crates/toolbox-cli/src/model.rs:240-256), so passing means
+      someone has answered its questions at least once, the rationale's claim
+      (portal/standards/meta.yaml:1114-1116). There are two latent gaps. Stale
+      files count. Assessments pushed with `toolbox assess submit`, D79's
+      server path (docs/design/scorecards-for-scorecards.md:241-246), aren't
+      files and so don't count. All three described portals commit their
+      assessments as files, so neither gap misfires today.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      The cheapest pass is one assessment file. `toolbox assess check` in CI
+      validates it against the schema and the rubric
+      (scorecards-for-scorecards.md:236-240), and meta-assessment's ratchet
+      holds a new assessment to bronze. A fabricated all-pass file gets past
+      those checks, but it is a false statement in a reviewed file, the line
+      docs/design/thresholds.md:63-67 draws for self-declared assessors.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      `toolbox assess brief <id> --rubric <name>` exists (`--rubric` is in
+      `target/debug/toolbox assess brief --help`). The brief's file path is
+      under the portal's assessments/, which rubric_record reads
+      (model.rs:241). Writing it moves rubric:demo/vague's pinned fail
+      (portal/tests/standards.test.yaml:986) to the pass pinned for
+      rule-quality (standards.test.yaml:1000-1001).
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      "More than zero", at bronze: scorecards-for-scorecards.md:295 sets it,
+      and the ratchet comment says "a new rubric must be described and used
+      once" (meta.yaml:1095).
+summary: >-
+  A sound bronze rule. Passing means the rubric has been tried, the cheap
+  route is the honest one, and the fix is a working command. Counting
+  stale files, and missing assessments submitted to a server, are latent
+  gaps that don't affect any portal described today.

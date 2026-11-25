@@ -1,0 +1,58 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: scorecard:toolbox/user-mcp
+rubric: scorecard-quality
+subjectHash: b1730f78b4e2
+assessor: {kind: agent, name: cursor-assessor-14, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: >-
+      Every rule is about one thing: the built-in MCP tools as a contract for
+      users' agents and apps (portal/standards/cli.yaml:251-260), the surface
+      docs/design/user-sdlc.md:69 promises is additive within a major version.
+      Its 17 entities come straight from `builtin_tools`
+      (crates/toolbox-api/src/mcp.rs:20-97).
+  - criterion: levels-are-a-ladder
+    verdict: pass
+    reason: >-
+      Bronze lets an agent choose a tool and a client tell a read from a
+      write; silver lets it call the tool correctly and find it in the spec;
+      gold proves a successful call over MCP (cli.yaml:256-260, 270-345;
+      docs/design/toolbox-for-toolbox.md:108). Gold's justification is in
+      docs/design/thresholds.md:49. All 17 are at silver or gold, and the 4 at
+      silver are the action-run tools (`run_action`, `get_run`, `list_runs`)
+      and `campaign_report` (portal/results.json), so gold is real work.
+  - criterion: no-obvious-gap
+    verdict: fail
+    reason: >-
+      The user SDLC's stability contract puts MCP tool names, input schemas
+      and `structuredContent` shapes under "additive within a major version",
+      enforced by tool-list snapshot tests (docs/design/user-sdlc.md:69). No
+      rule checks either: the tools declare no `outputSchema`, and nothing
+      compares the schemas with the spec. They already disagree: v1-spec §7.3
+      lists `get_run` with input `run_id` and `action_options` with `q?`
+      (docs/v1-spec.md:335-338), while the schemas take `run` and have no `q`
+      (crates/toolbox-api/src/mcp.rs:72-76, 90-91). `documented` passes both
+      because it checks the name only.
+    suggestion: >-
+      Have `toolbox describe` emit each tool's input properties and, from
+      v1-spec §7.3, the documented ones, and add a silver rule that they
+      match; and add a gold rule that each tool declares an `outputSchema` (or
+      that a committed tool-list snapshot covers it), per user-sdlc.md §4.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      A fresh agent with only the portal's CLI and MCP took this card from 4
+      silver and 7 bronze to 11 gold
+      (docs/design/toolbox-for-toolbox.md:147-158, docs/research-log.md:62).
+      The fixes name crates/toolbox-api/src/mcp.rs, docs/v1-spec.md §7.3 and
+      crates/toolbox-api/tests, and each rule has evidence. `described` and
+      `annotated` don't name the file, but their evidence names the tool, all
+      defined in one function.
+summary: >-
+  The strongest of the three CLI and MCP cards: one concern, a ladder
+  whose gold is justified in thresholds.md, and fixes proven by a fresh
+  agent. Its obvious gap is the rest of the contract it exists for: input
+  and output schemas against the spec, where §7.3 has already drifted for
+  `get_run` and `action_options`.

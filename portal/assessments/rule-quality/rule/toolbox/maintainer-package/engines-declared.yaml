@@ -1,0 +1,55 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/maintainer-package/engines-declared
+rubric: rule-quality
+subjectHash: 464877dfa352
+assessor: {kind: agent, name: cursor-assessor-06, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The fact is "engines.node is a non-empty string"
+      (crates/toolbox-connector-workspace/src/npm.rs:23), but the fix asks for
+      "the Node version this package is developed with"
+      (portal/standards/packages.yaml:149-151) and the rationale is that the
+      runtime is written down. Nothing compares the value with the version CI
+      actually uses (`node-version: "22"`, .github/workflows/ci.yml:299,310;
+      pages.yml:45). `"node": "*"` passes (a scratch manifest with it reported
+      `engines: true`) while saying nothing, and `"node": "18"` would pass on
+      a package CI builds with 22.
+    suggestion: >-
+      Emit the declared range and the setup-node version of the workflow job
+      that installs the package (already located by `ci_uses_install`), and
+      check that the CI version satisfies the range and the range is not
+      `*`/`x`.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      `"engines": {"node": "*"}` is the cheapest pass and states no runtime;
+      it is one line and needs no knowledge of the project. `engines` is true
+      for any non-empty engines.node string
+      (crates/toolbox-connector-workspace/src/npm.rs:23), and the rule checks
+      only that (portal/standards/packages.yaml:147).
+    suggestion: >-
+      Reuse `is_wildcard` (npm.rs:72) on the engines value so a wildcard
+      fails, as it does for dependencies.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence 'engines.node is not set' (packages.yaml:148; pinned at
+      portal/tests/standards.test.yaml:546-547) names the field, and setting
+      it in package.json passes. site/package.json (`">=22"`) and
+      scripts/playwright-ci/package.json (`"22"`) show the fix applied.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      No numeric threshold. Gold comes from D76
+      (docs/decisions/D01M7W56B7R0000000000000000.md) and the npm sources in
+      docs/design/package-standards.md:33-34, which note that `engines` is
+      advisory unless `engine-strict` is set, the reason it sits above the
+      silver reproducibility rules rather than with them.
+summary: >-
+  The right gold nudge, sourced to npm's docs, but its check only asks
+  whether the field is set, not whether it names the Node that CI builds
+  with. `"*"` passes. Compare it with the workflow's setup-node version
+  and reject wildcards.

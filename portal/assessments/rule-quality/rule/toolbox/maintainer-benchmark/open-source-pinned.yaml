@@ -1,0 +1,59 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/maintainer-benchmark/open-source-pinned
+rubric: rule-quality
+subjectHash: ced86db93d92
+assessor: {kind: agent, name: cursor-assessor-08, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      repoGaps only asks for one repo whose string contains `@`
+      (benchmarks.yaml:173-182). `owner/name@main`, a branch that moves,
+      passes as "pinned", and so does `git@github.com:me/x`. "Repositories we
+      didn't write" (fix, benchmarks.yaml:310-311) isn't checked at all:
+      `loganvolkers/toolbox@abc1234`, this repository, would pass. Live values
+      are all hex SHAs of forks, so this is latent, but the check is weaker
+      than its name.
+    suggestion: >-
+      Match each repo against `^[\w.-]+/[\w.-]+@[0-9a-f]{7,40}$`, and list
+      this repository's own slug (from the repo record) as a gap.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      For t4t-fresh-agent, the one live failure (`repos: []`), adding
+      `loganvolkers/toolbox@main` would pass it, although that run was dogfood
+      on our own code at no fixed commit (its servedValue says so,
+      portal/benchmarks/t4t-fresh-agent.yaml). The cheapest pass contradicts
+      the rationale, "forks of others' code at a pinned commit"
+      (benchmarks.yaml:312-315).
+    suggestion: >-
+      The SHA pattern and the own-repo exclusion above make that edit fail.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence names `no open-source repository` or `<repo> has no pinned
+      commit` (benchmarks.yaml:180-182, pinned at
+      portal/tests/standards.test.yaml:1240-1241), and listing each as
+      owner/name@commit as the fix says clears both.
+  - criterion: threshold-justified
+    verdict: fail
+    reason: >-
+      The rule's implicit number is at least one repository. The design asks
+      for "at least two open-source repositories, of different languages and
+      sizes" (docs/design/dx-benchmarks.md:122-123), and the §2 table says
+      "Forks ... (OpenFGA, Codex, gh-aw, PostHog so far)"
+      (dx-benchmarks.md:67). Neither docs/design/thresholds.md nor the
+      rationale says why one is enough. Six live entries pass with a single
+      repo: backstage-compare, box-ab, gate-repair-ab, graphify-monorepo-ab,
+      pin-repair-ab and spec-ab.
+    suggestion: >-
+      Either require `repos.size() >= 2` (allowing a declared exception such
+      as a monorepo benchmark), or add a thresholds.md row saying why one
+      pinned repository is enough at silver and change §4 step 4 to match.
+summary: >-
+  A silver rule whose check is weaker than its name. Any `@` counts as
+  pinned (so `@main` passes), nothing excludes our own repository, and it
+  asks for one repository where the design asks for two. Six live entries
+  pass on one. A SHA pattern, an own-repo exclusion and a justified count
+  would fix it.

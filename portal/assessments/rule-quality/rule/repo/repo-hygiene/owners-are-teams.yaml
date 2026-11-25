@@ -1,0 +1,53 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:repo/repo-hygiene/owners-are-teams
+rubric: rule-quality
+subjectHash: af821a319806
+assessor: {kind: agent, name: cursor-assessor-18, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The rationale allows all-personal handles "so a single-maintainer
+      repository can reach silver" and says a team keeps ownership when people
+      leave (examples/repo-portal-starter/toolbox.yaml:133-137).
+      D01M7Y57FVX0XYNGMX0A0XJ4GK9 says the same. `owners_ok` accepts any
+      number of personal handles
+      (crates/toolbox-connector-workspace/src/repo.rs:108-116), and its unit
+      test asserts `@alice @bob` passes (repo.rs:243). So a multi-person
+      repository with no team reaches silver under a rule named "teams".
+    suggestion: >-
+      Limit the personal case to one handle: `entity.owners.size() > 0 &&
+      (entity.owners.all(o, o.contains('/')) || entity.owners.size() == 1)`,
+      or rename the rule (e.g. owners-consistent) and say the trade-off in the
+      fix.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      For payments-api (`@acme/payments` plus `/migrations/ @alice`,
+      examples/repo-portal-starter/fixtures/workspace.ndjson), the evidence
+      names `@alice` (toolbox.yaml:125-128;
+      examples/repo-portal-starter/tests/standards.test.yaml), so the obvious
+      fix is to move that path to the team. Replacing the team with personal
+      handles is as cheap, as described above, but the evidence doesn't point
+      that way.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence lists emails if there are any, otherwise the individuals
+      (examples/repo-portal-starter/toolbox.yaml:125-128). The fix names the
+      two accepted forms (:130-132). Rewriting the listed owners as teams
+      passes, and so does a CODEOWNERS with only personal handles.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no number. Silver and the all-personal exception are decided in
+      D01M7Y57FVX0XYNGMX0A0XJ4GK9, linked from the rule
+      (examples/repo-portal-starter/toolbox.yaml:138-140) and restated in
+      docs/design/repo-portals.md:140.
+summary: >-
+  Clear evidence and fix, backed by a decision, but the check is broader
+  than the decision's reason. Any number of personal handles passes, so a
+  team-less multi-person repository reaches silver on a rule named
+  owners-are-teams. Limiting the personal case to one handle, or renaming
+  the rule, would align them.

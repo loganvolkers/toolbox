@@ -1,0 +1,58 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/vs-backstage-extensibility/without-rebuild
+rubric: rule-quality
+subjectHash: 2afd1aadba71
+assessor: {kind: agent, name: cursor-assessor-17, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      The field is "an extension is added without rebuilding the server"
+      (portal/standards/backstage-comparison.yaml:126-128). Toolbox's `true`
+      rests on remote connectors (facts.yaml:65-69). The bench portal declares
+      one, `catalog` with `runtime: remote`
+      (experiments/backstage-compare/portal/toolbox.yaml:11-15). It's fed with
+      a connector token through TOOLBOX_CONNECTOR_TOKENS on the release binary
+      (measure.py:146, 158-163), with nothing rebuilt. A supervised connector
+      would need its binary in the image, but the claim says "an extension",
+      and the remote path covers it. Backstage's `false` cites
+      packages/backend/src/index.ts plus a rebuild (facts.yaml:155-160).
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      The fact is facts.yaml:65-69, copied by snapshot.py:85, not something
+      the run observes. Editing that value and rerunning snapshot.py on the
+      committed results passes the rule. The same run already exercises a
+      remote connector on an unmodified binary and could set the fact itself.
+    suggestion: >-
+      Set `extensionWithoutRebuild` from the run: true when the remote
+      connector's ingest succeeds against the release binary that footprint.py
+      downloaded, unchanged. Have snapshot.py reject a facts.yaml override for
+      it.
+  - criterion: fix-leads-to-pass
+    verdict: fail
+    reason: >-
+      The fix, "Keep remote connectors pushing to /v1/ingest with their own
+      token (docs/design/connector-control.md)"
+      (backstage-comparison.yaml:894-896), names a design doc but no code.
+      Ingest auth is in crates/toolbox-api. It also omits the facts.yaml edit
+      and snapshot.py step that change the record, so after a fix the evidence
+      would still read `extensionWithoutRebuild is false`.
+    suggestion: >-
+      Name the ingest route and token check in
+      crates/toolbox-api/src/routes.rs and the record step (snapshot.py), or
+      make the fact measured so that rerunning the harness is the only step.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      The rule is boolean and has no number. RESEARCH.md F11 lists "core
+      rebuild (y/n)" as a measure
+      (experiments/backstage-compare/RESEARCH.md:67), and the README
+      registered extension cost with a bar of true (README.md:53).
+      RESULTS.md:269-270 discloses the separate scorecard.
+summary: >-
+  The claim is right and the definition fits: remote connectors push
+  without a rebuild, and the bench run does exactly that. But the score
+  comes from the hand-written facts.yaml rather than from that run, and
+  the fix names a design doc instead of code or the record step.

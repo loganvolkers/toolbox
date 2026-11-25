@@ -1,0 +1,58 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/review-sdlc-stage/no-open-findings
+rubric: rule-quality
+subjectHash: c144cc1c0308
+assessor: {kind: agent, name: cursor-assessor-05, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      `reviewFailing` is the latest sdlc-stage-quality assessment's `failing`
+      list, fresh or stale (portal/standards/sdlc.yaml:103-109). A finding
+      against a stage stays open until a new review closes it, and the
+      evidence marks stale ones (sdlc.yaml:335-337). The fixture puts
+      demo-partial/ship, with `reuses-artifacts` failing, at fail
+      (portal/tests/standards.test.yaml:1076-1080). A stage nobody has
+      reviewed passing bronze is the findings-first order of
+      D01M831P5QWJQ4A2FT85N5MXJQF, point 1, which the rationale gives
+      (sdlc.yaml:342-345).
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      The fix wants a wrong finding answered "in a new assessment by another
+      assessor" (sdlc.yaml:338-341), but the check reads only the current
+      file's `failing`. Many stages fail several criteria today, for example
+      package-author/package fails all four
+      (portal/assessments/sdlc-stage-quality/sdlc-stage/package-author/package.yaml).
+      The cheapest way back to bronze is for the same assessor to rewrite that
+      file with `pass` at the same hash, which closes four findings without
+      changing portal/sdlc/stages/package-author.yaml. Deleting the file also
+      makes the review `missing` and passes.
+    suggestion: >-
+      Keep a criterion open until the stage's hash changes or a different
+      assessor passes it, by comparing with the assessment file's previous
+      committed version in the connector. Add a demo stage with a stale
+      failing review to the fixtures; today only review-rule tests that branch
+      (standards.test.yaml:858-870).
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence names the failing criteria. Their suggestions are in the
+      assessment file under portal/assessments/, which the fix names. When
+      acting on them changes the stage's YAML entry, the review goes stale and
+      CI's `toolbox assess check portal` demands a new one
+      (.github/workflows/ci.yml:95-98). Re-assessing closes the finding.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      No number. Bronze, "no open finding, current or stale", is in the
+      review-* row of docs/design/thresholds.md:55, which names sdlc-stage.
+      Findings-first is D01M831P5QWJQ4A2FT85N5MXJQF, point 1, and change C1 in
+      docs/design/meta-standards-review.md:136, which the rule links.
+summary: >-
+  Fails on hard-to-game. The rule is the right floor and keeps stale
+  findings open. With many live stages carrying findings, the cheapest way
+  to close one is to rewrite the verdict rather than change the stage,
+  despite the fix's call for another assessor. No sdlc-stage fixture
+  covers the stale branch.

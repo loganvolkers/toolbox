@@ -1,0 +1,51 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:sdlc-stage-quality/sdlc-stage:user/monitor
+rubric: assessment-quality
+subjectHash: 3e9b799d6af0
+assessor: {kind: agent, name: cursor-reviewer-22, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      Every citation in
+      portal/assessments/sdlc-stage-quality/sdlc-stage/user/monitor.yaml
+      holds. portal/sdlc/stages/user.yaml:57-58 is `commands: []` and `checks:
+      []`. crates/toolbox-telemetry/src/metrics_prom.rs:75 is "Deprecated
+      alias for toolbox_snapshot_lag_seconds". `rg -i deprecat crates/` finds
+      nothing else but a CEL string in a scale example.
+      schema/manifest.schema.json has no "deprecat" key.
+      crates/toolbox-derive/src/plan.rs:89-91 and 265 count removed actions
+      and MCP tools. user-sdlc.md:59 is the "Hear about changes" row, and
+      lines 61-73 are the §4 stability contract.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The verdicts match the stage (user.yaml:51-61). With no check and no
+      command, executable-exit and agent-can-complete fail. Nothing is built
+      or installed, so reuses-artifacts passes, per the guidance's "pass when
+      nothing is built or installed" (portal/standards/sdlc.yaml:417-418).
+      Deprecation metadata needs a manifest schema change and toolbox-api
+      headers, so decoupled-from-core fails.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Each verdict rests on an empty list (user.yaml:57-58) or a repeatable
+      search (no Deprecation or Sunset header in crates/, no deprecation key
+      in the manifest schema). The reuses-artifacts pass follows the
+      guidance's own wording.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Each suggestion would change its verdict. `deprecated: {since,
+      removeAfter}` emitted as headers and MCP annotations, and asserted in
+      mcp.rs and m3, gives executable-exit a check (monitor.yaml lines 17-21).
+      A deprecations read surface with a CLI command and skill gives an agent
+      a command (lines 29-32). Building the §4 contract once in core lets
+      operators declare deprecations without crate changes (lines 47-48).
+summary: >-
+  Accurate and complete. Each citation lands, the claim that the only
+  "deprecated" in the server is a Prometheus alias survives a search, and
+  the fail, fail, pass, fail verdicts follow from the empty
+  `commands:`/`checks:` and the missing schema support. Each suggestion
+  would flip the verdict it is attached to.

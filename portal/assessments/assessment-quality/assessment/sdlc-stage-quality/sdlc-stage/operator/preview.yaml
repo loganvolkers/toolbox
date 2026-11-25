@@ -1,0 +1,54 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:sdlc-stage-quality/sdlc-stage:operator/preview
+rubric: assessment-quality
+subjectHash: c5201ed38dc6
+assessor: {kind: agent, name: cursor-reviewer-33, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/sdlc-stage-quality/sdlc-stage/operator/preview.yaml
+      hold. operator/preview has empty commands and checks, status designed,
+      and the exit "A preview URL per PR, torn down on merge"
+      (portal/sdlc/stages/operator.yaml:69-79). The Command enum in
+      crates/toolbox-cli/src/main.rs:43-322 has no preview subcommand.
+      `toolbox-dev/preview` and `toolbox preview gc` are
+      docs/design/sdlc.md:105, 111 and 178 (§5 and §8). The artifact sentence
+      is sdlc.md:44-45, `toolbox preview up` is line 58, and the image is
+      built from checksum-verified release archives with nothing compiled
+      (image/Dockerfile:1-4, .github/workflows/image.yml:40-57 and the attest
+      step at line 74).
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The three fails and the pass are right. Nothing in `checks:` can fail if
+      the URL is missing (operator.yaml:76), and no command exists, so
+      executable-exit and agent-can-complete fail. The design reuses the
+      released image (sdlc.md:44-45, Dockerfile:3-4), so reuses-artifacts
+      passes. Meeting the designed exit needs `toolbox-dev/preview`, `toolbox
+      preview gc` and a server-side sample export (sdlc.md:103-121), which is
+      work in this repository, so decoupled-from-core fails.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Empty commands and checks are operator.yaml:75-76, and the missing
+      subcommand is main.rs:43-322. A second assessor fails those three and
+      passes reuses-artifacts from sdlc.md:44-45 and Dockerfile:1-4.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      A CI job under `checks:` would give executable-exit something that fails
+      when the URL is absent. A documented `serve --fixtures` recipe on the
+      release image would give an agent a command that exists today, and
+      limiting core work to the redacted-sample mode would let the fixtures
+      mode be carried out without a new crate. Each suggestion in
+      portal/assessments/sdlc-stage-quality/sdlc-stage/operator/preview.yaml
+      changes the fail it is attached to.
+summary: >-
+  Preview is design only, and the three fails follow from empty commands
+  and checks plus surfaces that exist only in docs/design/sdlc.md. The
+  reuse pass is the release image the design and the Dockerfile describe.
+  The citations, including main.rs:43-322 and image.yml:40-57, match the
+  files.

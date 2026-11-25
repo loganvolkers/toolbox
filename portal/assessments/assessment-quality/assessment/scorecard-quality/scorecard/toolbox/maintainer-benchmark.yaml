@@ -1,0 +1,52 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:scorecard-quality/scorecard:toolbox/maintainer-benchmark
+rubric: assessment-quality
+subjectHash: c03207862493
+assessor: {kind: agent, name: cursor-reviewer-35, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The ten rules run from portal/standards/benchmarks.yaml:259 through
+      sound-method at 366-386. The scorecard rationale is 241-246.
+      method-registered applies only when status is designed or blocked, at
+      329-331, and its fix lists the protocol-2 fields at 333-337.
+      dx-benchmarks.md:169-171 states that split, the life-cycle table is
+      222-226, the hypothesis and research-log requirements are 64 and 75,
+      step 9 is 140-141, friction triage is 74, two repositories are step 4 at
+      122, BetterBench is 185, and archived is 211. spec-ab.yaml names
+      hypothesis R7 while experiments/spec-ab/README.md:55-61 is S1-S3.
+      hypothesisGaps is only an empty list (benchmarks.yaml:171).
+      portal/results.json has 19 benchmark entities: 2 bronze, 11 silver, 6
+      gold. maintainer-benchmark is absent from portal/README.md:10-36.
+      paths-exist's fix at 275-277 names readme and results and not prompts.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      one-concern and the ladder pass: one record, one maintainer audience,
+      and the levels follow the design table. no-obvious-gap fails because the
+      design's own table requires a bar in the README and a research-log row,
+      and no rule checks either. The spec-ab raise the actionable reason
+      describes is what method-registered's fix asks for.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The missing rules are rows in dx-benchmarks.md, and the level counts are
+      in portal/results.json. The oddity that silver means registered for an
+      unrun entry and run for a protocol-1 entry is stated at
+      dx-benchmarks.md:169-171, so passing the ladder is not taste.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Adding a rule that the hypothesis ids appear in the README, and a rule
+      that research-log.md names a run benchmark, would close the gaps the
+      no-obvious-gap reason names. Filling the protocol-2 fields the
+      method-registered fix lists would take spec-ab to silver, which is the
+      raise the actionable reason tried.
+summary: >-
+  The maintainer-benchmark assessment matches the scorecard and the
+  design. Ten rules follow a benchmark's life, the live spread is 2, 11
+  and 6, and the design's bar-in-the-README and research-log requirements
+  are unchecked. spec-ab names R7 while its README's bar is S1-S3. All
+  four review criteria pass.

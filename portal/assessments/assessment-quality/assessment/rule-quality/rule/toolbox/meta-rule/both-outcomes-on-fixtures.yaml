@@ -1,0 +1,46 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/meta-rule/both-outcomes-on-fixtures
+rubric: assessment-quality
+subjectHash: 3cf279d86699
+assessor: {kind: agent, name: cursor-reviewer-02, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/rule-quality/rule/toolbox/meta-rule/both-outcomes-on-fixtures.yaml
+      resolve. fixture_outcomes is meta.rs:131-151, unknown goes to the third
+      bucket at 141-145, and lines 253 and 262 build the `fixture` object. The
+      rationale is meta.yaml:477-480 and pins-both-outcomes is 541-557.
+      load_fixtures is crates/toolbox-store/src/lib.rs:215.
+      least-privilege-token has fixture pass 3, fail 0 (surfaces.ndjson line
+      11). L4 and the both-outcomes row are scorecards-for-scorecards.md:84
+      and :103. The only test is standards.test.yaml:235-241, a fail pin.
+      results.json has 13 failing rules.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      I found no missed failure. Only pass and fail outcomes count
+      (meta.rs:141-145), so the counts move only through fixture records of
+      the scorecard's kind that the check actually decides. Adding one is the
+      fix (meta.yaml:474-476). Leaving test pins to pins-both-outcomes matches
+      the card's split of silver and gold (meta.yaml:398-401).
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      All four passes rest on the counting code (meta.rs:131-151) and the rule
+      text (meta.yaml:468-480). The one judgement, that "the fixtures" is
+      clear enough without a path, is stated and argued from
+      toolbox-store/src/lib.rs:171-173.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      There are no fail or unsure verdicts in
+      portal/assessments/rule-quality/rule/toolbox/meta-rule/both-outcomes-on-fixtures.yaml,
+      so no suggestion is needed.
+summary: >-
+  A trustworthy all-pass assessment. Every cited line checks out, and the
+  claim that unknown outcomes can't inflate the counts holds in
+  meta.rs:141-145. The live figure of 13 failing rules matches
+  results.json.

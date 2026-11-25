@@ -1,0 +1,50 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/maintainer-docs/links-resolve
+rubric: rule-quality
+subjectHash: 771f7430868f
+assessor: {kind: agent, name: cursor-assessor-11, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      The rationale names a file move or rename
+      (portal/standards/docs.yaml:106-108), and `links_in` follows a link as a
+      reader would. It accepts the file, `.md`/`.mdx`, `index`/`README` pages,
+      directories and root-relative routes, and it skips links inside code
+      (crates/toolbox-connector-workspace/src/main.rs:291-338). A unit test
+      pins those cases (main.rs,
+      root_relative_links_resolve_from_the_repository_root). Some gaps remain.
+      Broken `#anchors`, reference-style `[x]: path` links and `<a href>` are
+      not checked: a scratch design doc with all three reported brokenLinks
+      []. All are latent here. The 7 anchored relative links in the scored
+      docs all resolve, and none of the docs use reference-style links.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      The cheap evasions are putting the link in backticks or deleting it
+      (inline code and fenced blocks are dropped before links are matched,
+      crates/toolbox-connector-workspace/src/main.rs:301-306). Both remove the
+      link a reader would follow, which the fix allows ("Fix or remove",
+      portal/standards/docs.yaml:106). Converting to reference style costs
+      more than correcting the path. So the cheapest pass is the intended one.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence lists each unresolved target as written (docs.yaml:104,
+      main.rs:313-315), e.g. ./missing.md on docs/v1-spec.md in the fixture
+      (portal/fixtures/workspace.ndjson:9;
+      portal/tests/standards.test.yaml:43-47). Fixing or removing those links
+      empties the list.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no number. Bronze is the "pointers" level in the scorecard's
+      rationale (docs.yaml:84-89) and in the ladder in
+      docs/design/toolbox-for-toolbox.md:104. AGENTS.md's writing rule asks
+      for "relative links that resolve".
+summary: >-
+  A sound bronze rule with a careful resolver that matches how GitHub and
+  a docs site follow links, and a fix that leads straight to a pass.
+  Anchors and reference-style links are unchecked, but nothing in the repo
+  depends on them today.

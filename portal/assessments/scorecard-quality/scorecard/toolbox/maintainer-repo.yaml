@@ -1,0 +1,73 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: scorecard:toolbox/maintainer-repo
+rubric: scorecard-quality
+subjectHash: 270a87bcc468
+assessor: {kind: agent, name: cursor-assessor-13, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: >-
+      All three rules ask one question at three heights: is every counted
+      constituent at this level (portal/standards/repository.yaml:156-183)?
+      The audience is the maintainers of this repository, on track
+      `maintainer` (repository.yaml:152). The 13 constituents in
+      portal/toolbox.yaml:30-43 are all maintainer-SDLC cards, so the level
+      means "this repository's weakest maintainer area", as D86
+      (D01M7WMSMS50000000000000000) defines it.
+  - criterion: levels-are-a-ladder
+    verdict: fail
+    reason: >-
+      Bronze is reached: the live repository is bronze (portal/results.json).
+      But silver and gold can't be reached by work on the constituents.
+      maintainer-action-deps has only `levels: [bronze]`
+      (packages/github-actions/fragments/github-actions.yaml:552) and
+      maintainer-docs only `[bronze, silver]` (portal/standards/docs.yaml:97),
+      and `rank` is each card's own position (crates/toolbox-derive/src/
+      lib.rs:1296-1305). So silver is blocked by one finished card and gold by
+      two. docs/design/repo-level.md:19-24 presents all three levels as
+      reachable, and its §3-§4 (lines 44-58) are stale: they omit
+      maintainer-site and say supply-chain is none, while it is gold today.
+    suggestion: >-
+      Bind each constituent's top rank and treat a card at its top as meeting
+      any higher repository level, or give the short cards higher rungs. Then
+      update repo-level.md §3-§4 with the current constituent list and levels.
+  - criterion: no-obvious-gap
+    verdict: fail
+    reason: >-
+      No rule checks that every watched name is actually scored. A misspelt or
+      renamed constituent drops out of `cards` without a trace
+      (lib.rs:930-934, 1183-1188), and `toolbox validate` doesn't check
+      `repoRollup` (only crates/toolbox-cli/src/report.rs:1391 reads it). On a
+      scratch copy, a fixture repository watching `maintainer-supply-chian`
+      went from none to gold. The rollup also leaves out the runner-backed
+      maintainer-crate (D86), and also maintainer-python, whose connector CI
+      doesn't skip (`--skip runner,github-actions` names other connectors). So
+      the "repository level" says nothing about the Rust code or the Python
+      scripts.
+    suggestion: >-
+      Add a bronze rule `every-constituent-scored`: `cards.size() ==
+      entity.watch.size()`, with the missing names as evidence. Add
+      maintainer-python to `repoRollup`, or say in repo-level.md why it is
+      left out.
+  - criterion: actionable
+    verdict: fail
+    reason: >-
+      I tried raising repo:loganvolkers/toolbox from bronze to silver. The
+      silver evidence names four cards. maintainer-skill,
+      maintainer-dependency and maintainer-example each have silver rules
+      whose fixes an agent can follow. maintainer-action-deps has no silver
+      rung, and the fix only says it "caps the repository at bronze"
+      (repository.yaml:170-172). No fix, evidence or tool gets the repository
+      to silver short of editing `repoRollup`, and the gold fix
+      (repository.yaml:180) is impossible for two cards.
+    suggestion: >-
+      Once the cap is fixed, have the evidence name the constituent's lowest
+      entities, not just the card (for example `maintainer-skill is bronze:
+      skill:x, skill:y`), so the next step is one `toolbox explain` away.
+summary: >-
+  A sound idea, the lowest constituent, aimed at one audience. As
+  configured, the ladder stops at bronze: two constituents have shorter
+  ladders, so silver and gold can't be reached by improving them. A
+  misspelt watched name silently counts as gold. The design doc's
+  constituent list and levels are out of date.

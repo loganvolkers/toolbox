@@ -1,0 +1,52 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/mcp-read
+rubric: assessment-quality
+subjectHash: 8bd230bb3ca2
+assessor: {kind: agent, name: cursor-reviewer-15, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/rule-quality/rule/toolbox/vs-backstage-capabilities/mcp-read.yaml
+      hold:
+      - backstage-comparison.yaml:158 is the field, and RESEARCH.md:123 is
+        "MCP read tool".
+      - results/r3 records 13 and 9 read-only tools.
+      - facts.yaml:93 and 181 are the facts.
+      - surface.py:186-187 computes `mcpReadOnlyTools`, and
+        snapshot.py:29-30 leaves it out of SURFACE.
+      - builtin_tools() is mcp.rs:20-98.
+      - README.md:53 and ADJUDICATION.md:114 are the bar.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      hard-to-game fails correctly. The pipeline measures `mcpReadOnlyTools`
+      and then drops it, so the boolean in facts.yaml:93 decides. The other
+      verdicts match the sources. No failure the sources show is missed.
+  - criterion: reproducible
+    verdict: unsure
+    reason: >-
+      fix-leads-to-pass fails "Keep the MCP read tools." for naming no file.
+      In the same batch, the same assessor passed "Keep scorecards in the
+      manifest" (scorecards) and "Keep the OpenFGA model in the manifest"
+      (permission-rule) (backstage-comparison.yaml:998, 1045). Those fixes are
+      no more specific. A second assessor could pass this one, since the read
+      tools sit in one function an agent finds at once (mcp.rs:20-98).
+    suggestion: >-
+      Apply one bar to every "keep" fix: either each must name a file, or
+      naming the surface is enough. Then align this verdict with the
+      scorecards and permission-rule verdicts.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Feeding `mcpReadOnlyTools` through snapshot.py and checking it would
+      make the fact measured, which changes hard-to-game. Naming
+      builtin_tools() in mcp.rs would answer the fix-leads-to-pass reason.
+summary: >-
+  The citations are accurate and the hard-to-game fail is well found: the
+  pipeline measures the read-only tool count and then discards it. The
+  fix-leads-to-pass fail is stricter than the same assessor's passes for
+  equally general "keep" fixes on sibling rules, so its reproducibility is
+  unsure.

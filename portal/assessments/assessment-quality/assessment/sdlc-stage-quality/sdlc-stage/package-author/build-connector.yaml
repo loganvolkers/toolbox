@@ -1,0 +1,52 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:sdlc-stage-quality/sdlc-stage:package-author/build-connector
+rubric: assessment-quality
+subjectHash: 0ef8bd8a1617
+assessor: {kind: agent, name: cursor-reviewer-22, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      Every citation in
+      portal/assessments/sdlc-stage-quality/sdlc-stage/package-author/build-connector.yaml
+      holds. crates/toolbox-connect/src/conformance.rs:72 is `pub async fn
+      run`, and `connector test` returns exit code 1 on any failed check
+      (crates/toolbox-cli/src/main.rs:1144-1162). ci.yml:103-105 runs it on
+      workspace, surfaces and ci-lint. crates/toolbox-cli/tests/install.rs:92
+      is install_pins_verifies_and_doctor_reports, which asserts that a
+      tampered archive "doesn't match" toolbox.lock (lines 174-180).
+      examples/connector-scaffold/Cargo.toml:13 is the path dependency, and
+      Cargo.toml:11 sets `publish = false` for the workspace. The
+      author-connector skill and the scaffold README give the
+      copy/implement/stub/test/drive steps. No workflow mentions
+      connector-scaffold. package-author-sdlc.md §3.2 starts at line 108.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The verdicts match the stage
+      (portal/sdlc/stages/package-author.yaml:20-46). The exit criterion is
+      enforced by a kit that exits non-zero, and both listed checks are real
+      tests. reuses-artifacts fails correctly: an outside Rust author must
+      build this repository's unpublished SDK, which the scaffold README
+      admits ("point `toolbox-connect` at a released Toolbox checkout or path
+      dep"). Nothing in the steps needs a secret, and remote connectors and
+      `github:` installs need no crate here.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Each verdict rests on a file a second assessor can read: the path
+      dependency (scaffold Cargo.toml:13), the publish flag (Cargo.toml:11),
+      the exit code (main.rs:1158-1162) and the CI step (ci.yml:103-105). None
+      rests on taste.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The one fail's suggestion (build-connector.yaml lines 38-40) is to
+      publish toolbox-connect and switch the scaffold to a version dependency.
+      That removes the source build that failed reuses-artifacts.
+summary: >-
+  A sound assessment. Every citation lands, including the tamper assertion
+  behind install.rs:92 and the path dependency at scaffold Cargo.toml:13.
+  The single reuses-artifacts fail is the one the sources support, and
+  publishing the SDK would flip it.

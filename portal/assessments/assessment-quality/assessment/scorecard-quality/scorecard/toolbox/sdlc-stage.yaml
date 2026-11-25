@@ -1,0 +1,54 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:scorecard-quality/scorecard:toolbox/sdlc-stage
+rubric: assessment-quality
+subjectHash: cb353e826c0d
+assessor: {kind: agent, name: cursor-reviewer-34, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      Most citations in
+      portal/assessments/scorecard-quality/scorecard/toolbox/sdlc-stage.yaml
+      hold. portal/standards/sdlc.yaml:150-154 and :167-243 are the rationale
+      and the six rules, :182-184 is the exit-criterion fix with no file, and
+      :212-230 name commands, checks and workflows.
+      docs/design/thresholds.md:75-77 explains why gold still reads status.
+      portal/results.json is 8 bronze, 12 silver and 6 gold, and
+      maintainer/plan is bronze. The "only run line" claim does not:
+      actions/report/action.yml:98 hashes rust-toolchain.toml, and :125 names
+      it again inside a run script. The run/uses/with filter is executed at
+      crates/toolbox-connector-workspace/src/data.rs:173-198, which not_in_ci
+      at :148-171 calls; the test assertion is :330.
+    suggestion: >-
+      Say the file is named by the cache-key run at action.yml:98 and by the
+      comment in the build run at :125, and cite executed at data.rs:173-198
+      for the step-name filter.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      one-concern and levels-are-a-ladder should pass: six rules, one
+      audience, bronze then silver then gold, with the live spread the report
+      shows. no-obvious-gap should fail: run_by_ci is ci.contains(path)
+      (data.rs:203-204), so a file that is only read counts, and nothing
+      requires the checks to pass or ties the exit criterion to a command.
+      actionable should pass for maintainer/plan, whose fixes name the fields
+      and the workflow directory. The second mention of rust-toolchain.toml is
+      the same kind of read, not a check that runs it.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The contains-path test and the maintainer/build check list are text. A
+      second assessor fails no-obvious-gap for a check that CI only reads, and
+      passes the other three criteria.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Counting a check only when a command executes it, and adding a
+      checks-green rule on workflow-run streaks, would change the
+      no-obvious-gap fail. The three passes have no suggestion.
+summary: >-
+  The sdlc-stage verdicts match the card: step names no longer count, but
+  a path named inside any run script still counts as executed. "The only
+  run line" is too narrow, because action.yml:125 names
+  rust-toolchain.toml as well as the cache-key line at :98.

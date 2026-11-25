@@ -1,0 +1,58 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/meta-assessment/assessor-named
+rubric: rule-quality
+subjectHash: f4ee5098e264
+assessor: {kind: agent, name: cursor-assessor-04, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      The check reads `assessorName`, mapped straight from `assessor.name`
+      (portal/standards/assessments.yaml:124), and passes when it is set and
+      non-empty (assessments.yaml:176-187). That is what the name and fix
+      claim: a named assessor, not a verified one. That the name is
+      self-declared and unverifiable is a documented limit
+      (docs/design/thresholds.md:63-70), so the rule doesn't over-claim. The
+      fixture without a name fails and 16 with one pass
+      (portal/fixtures/workspace.ndjson line 43; tests at
+      portal/tests/standards.test.yaml:960-970).
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      `size() > 0` accepts a whitespace-only name such as `name: " "`, and the
+      schema has no pattern on it (schema/assessment.schema.json:20). That is
+      the "empty doc comment" case, and D01M831P5QWJQ4A2FT85N5MXJQF already
+      ruled that blank descriptions and guidance don't count. A blank name
+      also defeats what the rationale says the name is for: `selfReviewed`
+      compares names verbatim (assessments.yaml:105-112), and link_reviews
+      treats any non-empty string as a named, different assessor
+      (crates/toolbox-connect/src/assessment.rs:289-291).
+    suggestion: >-
+      Change the check to `has(entity.assessorName) &&
+      entity.assessorName.matches('\\S')` and add `"pattern": "\\S"` to
+      `assessor.name` in schema/assessment.schema.json, with a fixture
+      assessment whose name is " " that fails the rule. Trim the name in
+      link_reviews too.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence is the fixed sentence "assessor.name is empty"
+      (assessments.yaml:180), which is all a yes/no check of 8 nodes needs
+      (docs/design/thresholds.md:46). Setting `assessor.name`, a field the
+      schema already has (schema/assessment.schema.json:20), sets
+      `assessorName` and passes the check.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no number. Bronze is set by D80 ("named assessor") and
+      docs/design/scorecards-for-scorecards.md:295. It belongs in the floor
+      because silver review-assessment's self-review check needs the name
+      (`has(entity.assessorName)` in assessments.yaml:110-112), and the
+      ratchet makes every new assessment meet it (assessments.yaml:165).
+summary: >-
+  A sound floor rule that says what it checks and sits at the right level,
+  because self-review detection depends on it. It can be gamed with a
+  whitespace-only name, which the check and the schema both accept and
+  link_reviews then treats as a distinct, named reviewer. That runs
+  against D01M831P5QWJQ4A2FT85N5MXJQF's rule that blanks don't count.

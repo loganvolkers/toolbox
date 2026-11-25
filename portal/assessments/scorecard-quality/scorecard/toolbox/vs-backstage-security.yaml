@@ -1,0 +1,72 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: scorecard:toolbox/vs-backstage-security
+rubric: scorecard-quality
+subjectHash: d52516c070e8
+assessor: {kind: agent, name: cursor-assessor-16, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: >-
+      All eight rules ask what an attacker gets from the product as shipped:
+      an unauthenticated client, a forger, a leaked client token, or a
+      malicious extension
+      (portal/standards/backstage-comparison.yaml:438-562). That covers F6
+      (secure defaults) and F7 (extension isolation), both under ISO 25010
+      security (docs/design/backstage-comparison.md:51-52). The audience is
+      the operator deciding what to deploy, and the rationale ties the card to
+      OWASP ASVS V13.
+  - criterion: levels-are-a-ladder
+    verdict: fail
+    reason: >-
+      There is one bronze level of eight booleans, and Toolbox sits at none
+      because two of them fail (portal/results.json:
+      extension-credential-isolated, loopback-by-default). Bronze mixes
+      table-stakes probes (401 on an anonymous GET) with the hardest property
+      in the card, credential isolation against a same-user canary
+      (ADJUDICATION.md:426-452). It also includes a rule the shipped image
+      cannot pass without breaking Cloud Run: PORT=8080 binds 0.0.0.0
+      (image/Dockerfile:22-24). So bronze is not reachable now, and there is
+      no higher level for isolation to anchor.
+    suggestion: >-
+      Make bronze the probes every product should pass today: anonymous-read,
+      forged-identity, anonymous-mcp, client-cannot-delete and a restated
+      loopback rule. Put owner-only-fields and extension-process-isolated at
+      silver, and extension-credential-isolated at gold.
+  - criterion: no-obvious-gap
+    verdict: fail
+    reason: >-
+      The brief pre-registered seven F6 probes (RESEARCH.md:180-187). Two have
+      no rule: P6, the frontend bundle served without auth, and P7, the config
+      changes the docs require before an Internet-facing deployment. P7 is the
+      measure closest to the ASVS V13 sentence this card's rationale quotes.
+      F7 attempt 6, an extension writing outside its own directory
+      (RESEARCH.md:204), is also missing, and RESULTS.md:243-244 leaves it
+      unverified.
+    suggestion: >-
+      Add `internet-ready-defaults` (P7, the count of required config changes,
+      lower is better, bar 0) and `extension-write-confined` (F7 attempt 6) to
+      surface.py and the scorecard.
+  - criterion: actionable
+    verdict: fail
+    reason: >-
+      Toolbox fails bronze on two rules, and neither rule's fix leads to a
+      pass. loopback-by-default names crates/toolbox-cli/src/main.rs, which
+      already binds 127.0.0.1 when no PORT is set
+      (crates/toolbox-cli/src/server.rs:8-16), while the cause is
+      image/Dockerfile:24. extension-credential-isolated asks for the cleared
+      environment that connectors.rs:316-318 already applies, while the open
+      work is Landlock confinement (crates/toolbox-api/src/confine.rs) and a
+      canary rerun on the image (RESULTS.md:250-257). Both values sit in the
+      hand-set experiments/backstage-compare/facts.yaml, which no fix
+      mentions.
+    suggestion: >-
+      Rewrite those two fixes to name the Dockerfile, confine.rs, the canary
+      rerun and facts.yaml with snapshot.py. Then retry raising Toolbox to
+      bronze from the fixes alone.
+summary: >-
+  The concern is coherent and the four live probes are strong. As a
+  standard it falls short: a single flat level mixes easy defaults with
+  the hardest isolation property, two pre-registered probes (P6 and P7)
+  are missing, and the fixes for the two rules that keep Toolbox at none
+  point at work already done.
