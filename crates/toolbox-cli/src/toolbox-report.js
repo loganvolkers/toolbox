@@ -1032,7 +1032,7 @@
 		UNIQUE = /* @__PURE__ */ new Map();
 		var byBase = /* @__PURE__ */ new Map();
 		ids.forEach(function(id) {
-			var b = baseName(id);
+			var b = id.slice(0, Math.max(id.indexOf(":"), 0)) + "|" + baseName(id);
 			(byBase.get(b) || byBase.set(b, []).get(b)).push(id);
 		});
 		byBase.forEach(function(group) {

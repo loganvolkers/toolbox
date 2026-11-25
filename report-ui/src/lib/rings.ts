@@ -154,8 +154,9 @@ function baseName(s: string) {
 export function registerIds(ids: string[]) {
   UNIQUE = new Map();
   var byBase = new Map<string, string[]>();
+  // The same file can be an entity of several kinds; only names within one kind need to differ.
   ids.forEach(function (id) {
-    var b = baseName(id);
+    var b = id.slice(0, Math.max(id.indexOf(":"), 0)) + "|" + baseName(id);
     (byBase.get(b) || byBase.set(b, []).get(b)!).push(id);
   });
   byBase.forEach(function (group) {
