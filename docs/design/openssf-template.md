@@ -87,6 +87,13 @@ advisory is published, with no change to the repository. A ratchet needs a resul
 in every environment, so Toolbox for Toolbox runs the other ten checks with Scorecard's own
 `--checks` flag. The kit's README warns other portals. The 23 advisories are real and open (O5).
 
+**Advisories that reproduce (O5, D01M885GT32STM506V32XKPP37G).** `maintainer-advisories` scores
+`Cargo.lock` with osv-scanner offline, against RustSec's OSV export at a commit pinned in
+`scripts/ci-tools.sh`, through the SARIF slot. At that pin, two advisories remain, both
+informational "unmaintained" notices for chrono and chrono-tz, which come in through cel. Both are
+justified in `osv-scanner.toml`. The 23 that Scorecard counted were from an older `Cargo.lock`,
+over the network, so the two counts can't be compared.
+
 ## 5. Is the template better than building from scratch?
 
 [experiments/security-ab](../../experiments/security-ab/RESULTS.md) asked an agent to build a
@@ -113,7 +120,7 @@ agent's extra findings is local rules beside the standard, the A + S arm that co
 | O2 | Scorecard's conformance mode (OSPS Baseline) through the same kit: a catalog, not a score |
 | O3 | Scorecard's probe format as facts, so a rule can name a probe and not only a check |
 | O4 | A second domain standard, such as observability, published as a package by the template in §3, ideally by someone other than us (R5) |
-| O5 | Vulnerabilities that reproduce: a scanner pinned to an advisory-database snapshot (osv-scanner offline, or cargo-audit with a pinned database), so a new advisory changes the result only when the snapshot moves; then pay down the 23 advisories CI found |
+| O5 | ✅ for Cargo.lock (§4, D01M885GT32STM506V32XKPP37G): osv-scanner offline against a pinned RustSec snapshot, with justifications in `osv-scanner.toml`. The npm lockfiles remain, and need a pinned GitHub advisory snapshot |
 | O6 | The A + S arm of the security A/B: Scorecard as the floor plus an agent's extra checks as local rules, ratcheted together; then native Scorecard against the kit |
 
 ## Sources

@@ -886,6 +886,20 @@ Scorecard `maintainer-python` over `PythonScript` entities, owned by group:maint
 |---|---|---|---|---|---|
 | `no-findings` | clean | measured | `(false ? entity.total : entity.active) == 0` | Each finding is a defect or a risk as the tool's authors define it, and it is cheapest to fix in the change that introduces it, while its author still has the context. | Fix ruff's findings (the record's command reruns them), or, for a deliberate style, ignore the rule for those files under `[lint.per-file-ignores]` in ruff.toml with a comment saying why. A `# noqa` comment doesn't help: the check runs with --ignore-noqa. |
 
+## No unexplained advisories in Cargo.lock
+
+Every file osv-scanner checks is clean. The measure is its findings, so a new finding is a regression and a fixed one an improvement; a new file must arrive clean.
+
+**Why:** A tool's findings help only if new ones can't pile up unnoticed. The tool keeps its own rules and configuration, so its findings match a run outside the portal; the portal adds one level, clean, and a ratchet that blocks new findings while existing ones are paid down.
+
+See [The box and the tools](https://github.com/loganvolkers/toolbox/blob/main/docs/design/toolbox-and-tools.md), [SARIF 2.1.0 specification](https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html).
+
+Scorecard `maintainer-advisories` over `Lockfile` entities, owned by group:maintainers. `toolbox report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`toolbox assess`).
+
+| Rule | Level | Basis | Passes when | Why | Fix |
+|---|---|---|---|---|---|
+| `no-findings` | clean | measured | `(false ? entity.total : entity.active) == 0` | Each finding is a defect or a risk as the tool's authors define it, and it is cheapest to fix in the change that introduces it, while its author still has the context. | Upgrade the crate past the advisory (`cargo update -p <crate>`), or, when no fix exists or it doesn't apply, ignore its id under `[[IgnoredVulns]]` in osv-scanner.toml with a reason that says why and what ends it. Leave out `effectiveUntil`: an expiry changes the result with no change to the repository. |
+
 ## Packages and their settings
 
 Change a standard by changing these parameters in the portal's `toolbox.yaml`.
@@ -911,6 +925,17 @@ Change a standard by changing these parameters in the portal's `toolbox.yaml`.
   - `tool`: `"ruff"`
   - `track`: `"maintainer"`
   - `version`: `"0.14.0"`
+- `../packages/sarif`
+  - `command`: `["osv-scanner","scan","source","--offline","--format","sarif","--lockfile","{files}"]`
+  - `files`: `["Cargo.lock"]`
+  - `fix`: ``"Upgrade the crate past the advisory (`cargo update -p <crate>`), or, when no fix exists or it doesn't apply, ignore its id under `[[IgnoredVulns]]` in osv-scanner.toml with a reason that says why and what ends it. Leave out `effectiveUntil`: an expiry changes the result with no change to the repository."``
+  - `install`: `{"aqua":"google/osv-scanner","mise":"aqua:google/osv-scanner"}`
+  - `kind`: `"Lockfile"`
+  - `name`: `"maintainer-advisories"`
+  - `title`: `"No unexplained advisories in Cargo.lock"`
+  - `tool`: `"osv-scanner"`
+  - `track`: `"maintainer"`
+  - `version`: `"2.7.1"`
 
 ## Campaigns
 
@@ -920,6 +945,7 @@ Change a standard by changing these parameters in the portal's `toolbox.yaml`.
 - **Workflows with no unexplained zizmor finding** (`ci-security-gold`): Every workflow and the report action reach gold on maintainer-ci-security: each zizmor finding fixed, or ignored inline with its reason, so maintainer-ci-security no longer holds the repository level down. release.yml stays gold through its waivers (D98).
 - **OpenSSF Scorecard: every check at 10** (`maintainer-openssf-ten`): Every Scorecard check at its maximum. Progress is counted from the start the baseline records, in checks below 10 and in points short.
 - **Python we maintain passes ruff: to zero** (`maintainer-python-zero`): No ruff findings in any file. Progress is counted from the start the baseline records.
+- **No unexplained advisories in Cargo.lock: to zero** (`maintainer-advisories-zero`): No osv-scanner findings in any file. Progress is counted from the start the baseline records.
 
 ## Commands
 

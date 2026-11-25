@@ -38,11 +38,13 @@ jobs:
       - name: M0 parity with tools/validate.py
         run: cargo build --locked && python scripts/validate-parity.py
       - name: >-
-          Install OpenFGA, actionlint and OpenSSF Scorecard from their releases,
-          SHA-256-pinned (no compile, D90)
+          Install OpenFGA, actionlint, OpenSSF Scorecard and osv-scanner from
+          their releases, SHA-256-pinned (no compile, D90), and the pinned RustSec
+          database
         run: |
-          scripts/ci-tools.sh "$RUNNER_TEMP/tools" openfga actionlint scorecard
+          scripts/ci-tools.sh "$RUNNER_TEMP/tools" openfga actionlint scorecard osv-scanner rustsec-osv
           echo "TOOLBOX_OPENFGA_BIN=$RUNNER_TEMP/tools/openfga" >> "$GITHUB_ENV"
+          echo "OSV_SCANNER_LOCAL_DB_CACHE_DIRECTORY=$RUNNER_TEMP/tools" >> "$GITHUB_ENV"
           echo "$RUNNER_TEMP/tools" >> "$GITHUB_PATH"
       - name: >-
           Tests that need OpenFGA (authz, .fga.yaml through the Authorizer) or
@@ -91,7 +93,7 @@ jobs:
           box give the same findings alone
         run: >-
           TOOLBOX=target/debug/toolbox python3 scripts/take-it-out.py portal
-          ci-lint maintainer-python maintainer-openssf
+          ci-lint maintainer-python maintainer-openssf maintainer-advisories
       - name: Toolbox for Toolbox — agent assessments are valid and briefs build (D79)
         run: |
           target/debug/toolbox assess check portal --skip runner,github-actions
