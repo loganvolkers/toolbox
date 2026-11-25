@@ -39,8 +39,8 @@ Toolbox versions and platforms, then distribute it, instead of merging into one 
 ```
 
 The reference portal ([examples/reference-portal](../examples/reference-portal/README.md)) sits on
-the boundary between the layers. It is a layer-2 portal that layer 1 uses as its acceptance oracle,
-and its acceptance scenarios are written as layer-3 tasks ("who owns X?", "refresh this", "install
+the boundary between the layers. It is a layer-3 (operator) portal that layer 1 uses as its acceptance
+oracle, and its acceptance scenarios are written as layer-4 (user) tasks ("who owns X?", "refresh this", "install
 this app").
 
 ## Toolbox scores its own layers
@@ -66,6 +66,6 @@ has no benchmark of its own yet.
 
 1. Name the layer: "maintainer SDLC", "package author SDLC", "operator SDLC" or "user SDLC", never bare "SDLC".
 2. A capability that serves several layers says how it serves each (for example, `toolbox test`
-   is a layer-2 tool that layer 1 also uses on the reference portal).
+   is a layer-3 (operator) tool that layer 1 also uses on the reference portal).
 3. Each layer document keeps an **implemented vs. planned** table, so agents can tell what they can
    rely on today.

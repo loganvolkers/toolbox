@@ -1,10 +1,7 @@
 #!/usr/bin/env node
 /**
  * Drift check: re-load CLI catalog and ensure build-time fingerprint is stable.
- * Copy to site/scripts/check-cli-docs.mjs (or wire via tsx importing cli-describe).
- *
- * Simpler path used by pages CI:
- *   node --experimental-strip-types ../path  OR  npm run check:cli-docs
+ * Pages CI runs it as `npm run check:cli-docs`.
  *
  * This script invokes toolbox describe directly (mirrors cli-describe.ts logic)
  * so it does not require a TypeScript build step.

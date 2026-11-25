@@ -480,7 +480,6 @@
           "16e7d6ce",
           "234eb8a2",
           "55786f43",
-          "9059d9c6",
           "9fffb106"
         ]
       },
@@ -572,11 +571,6 @@
       }
     },
     "maintainer-example": {
-      "example:docs/examples/secret-vault-gcp.md": {
-        "says-how-to-check": [
-          "825aff0c"
-        ]
-      },
       "example:examples/acme-live/seed/checkout-web/README.md": {
         "cites-the-design": [
           "a1817f31"
@@ -3374,7 +3368,7 @@
       },
       "sdlc-stage:maintainer/verify": {
         "built": [
-          "7953cea5"
+          "51deccd1"
         ]
       },
       "sdlc-stage:operator/author": {
@@ -4147,7 +4141,7 @@
       },
       "crate:toolbox-store": {
         "failing": {
-          "fully-documented": 5
+          "fully-documented": 4
         },
         "level": "silver",
         "unknown": [
@@ -4960,9 +4954,6 @@
       "doc:docs/examples/approved-github-apps.md": {
         "level": "silver"
       },
-      "doc:docs/examples/secret-vault-gcp.md": {
-        "level": "silver"
-      },
       "doc:docs/glossary.md": {
         "level": "silver"
       },
@@ -5231,12 +5222,6 @@
     "maintainer-example": {
       "example:docs/examples/approved-github-apps.md": {
         "level": "gold"
-      },
-      "example:docs/examples/secret-vault-gcp.md": {
-        "failing": {
-          "says-how-to-check": 1
-        },
-        "level": "bronze"
       },
       "example:examples/acme-live/README.md": {
         "level": "gold"

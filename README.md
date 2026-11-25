@@ -56,13 +56,13 @@ cargo build && target/debug/toolbox validate examples/reference-portal
   - [design/federation.md](docs/design/federation.md): standards that graduate from one repo to the company (design only)
   - [design/toolbox-for-toolbox.md](docs/design/toolbox-for-toolbox.md): Toolbox scoring its own repository
   - [design/maintainer-sdlc.md](docs/design/maintainer-sdlc.md): **SDLC layer 1**, how Toolbox itself is built and verified (check pyramid, measured loop)
-  - [design/user-sdlc.md](docs/design/user-sdlc.md): **SDLC layer 3**, building apps and agents on a portal's context and actions
+  - [design/user-sdlc.md](docs/design/user-sdlc.md): **SDLC layer 4**, building apps and agents on a portal's context and actions
   - [design/developer-velocity.md](docs/design/developer-velocity.md): fast inner loops for maintainers and operators (SDLC layers 1–2: build speed, selective/parallel/cached tests, watch mode)
   - [design/frontend.md](docs/design/frontend.md): delightful code-defined action UIs, React + `@toolbox/ui`, Storybook page-level stories
   - [design/graphql.md](docs/design/graphql.md): read-only GraphQL with trusted documents for rich catalog pages
   - [design/agent-plugins.md](docs/design/agent-plugins.md): the operator agent plugin (in `plugins/`) and the generated user plugin
   - [design/dashboards.md](docs/design/dashboards.md): dashboards via agent artifacts + MCP; operator-only UI views; history
-  - [design/sdlc.md](docs/design/sdlc.md): **SDLC layer 2 (operator)**, local → CI → PR → preview → prod, remote plan, GitHub Actions
+  - [design/sdlc.md](docs/design/sdlc.md): **SDLC layer 3 (operator)**, local → CI → PR → preview → prod, remote plan, GitHub Actions
   - [design/notifications.md](docs/design/notifications.md): ownership-routed notifications, GitHub App, Actions for service repos
   - [design/identity-resolution.md](docs/design/identity-resolution.md): matching one service across many tools
   - [design/action-entities.md](docs/design/action-entities.md): action-created entities, TTL, day-2 actions

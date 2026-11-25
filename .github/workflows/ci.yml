@@ -33,7 +33,7 @@ jobs:
         run: python3 scripts/test-apply-changesets.py
       - name: YAML is formatted (yamark 0.6.1, D97)
         run: |
-          python3 -m pip install --require-hashes -r tools/requirements-yamark.txt
+          python3 -m pip install --require-hashes -r scripts/requirements-yamark.txt
           yamark format --check $(git ls-files '*.yaml' '*.yml' ':!.github/workflows/release.yml')
       - name: M0 parity with tools/validate.py
         run: cargo build --locked && python scripts/validate-parity.py
