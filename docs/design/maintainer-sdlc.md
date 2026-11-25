@@ -60,6 +60,7 @@ caching) comes back only when these numbers regress (D44, [developer-velocity.md
 | **Differential** | Rust pipeline output byte-identical to `tools/reference.py` (P2) | Derived-state semantics | `cargo test -p toolbox-derive` |
 | Authorization | Reference `.fga.yaml` through the Authorizer; DSL converter vs `fga model transform` | Model semantics | `cargo test -p toolbox-authz` |
 | Connector | Conformance kit against each in-image connector | Protocol behaviour | `toolbox connector test` |
+| GitHub connector integration | Real GitHub connector over stdio and HTTP against a seeded Emulate instance | GitHub response mapping, stateful refresh and authentication | `npm --prefix scripts/github-emulate test` |
 | Connector smoke | Real github, git-files and SCIM connectors feeding `toolbox serve` on the in-memory store; derived outputs byte-identical to the reference. No Postgres or OpenFGA, so it runs locally in about a minute; not in CI, which runs the full M4 path | Connectors end to end | `scripts/m4-connectors-smoke.sh` |
 | Acceptance | One script per milestone, on real Postgres 16, OpenFGA, connectors and Chromium (M5 needs none of them) | Exit criteria | `scripts/m2-acceptance.sh`, `m3-…`, `m4-…`, `m5-…` |
 | Scale | 100k entities / 2M relations / 100 rules ≤ 10 s | Budget §10.4 | `cargo run --release -p toolbox-derive --example scale` |
@@ -81,6 +82,36 @@ needs proving or a release changes what a benchmark measured. Each benchmark mea
 of the four SDLC layers, and the catalog in `portal/benchmarks/` is scored by
 `maintainer-benchmark`. They are the most effective way we have found to smooth Toolbox's rough
 edges: every one so far has produced fixes.
+
+### GitHub connector test proposal
+
+Add a maintainer check for the central portal's GitHub ingestion path. Start a pinned Emulate
+GitHub service on an ephemeral loopback port with synthetic users, private repositories and a
+GitHub App. Send NDJSON refresh commands to the built `toolbox-connector-github` binary. Make
+fixture changes through Emulate's REST API so a follow-up refresh must read the new state. Run
+the check in its own `github-connector` CI job on pull requests and pushes to `main`.
+
+| Scenario | Acceptance criterion |
+|---|---|
+| Scoped repository refresh | Reports the requested repository's archive status, default branch protection and direct admin, plus `not_found` for an unknown ID. |
+| CODEOWNERS refresh | Reads `.github/CODEOWNERS` before the root and `docs/` files. Removing the preferred file changes the next refresh. A repository without CODEOWNERS returns `not_found`. |
+| GitHub App authentication | Signs a JWT with an ephemeral key, exchanges it for a selected-repository installation token and uses the token to read private content. Emulate refuses access outside the installation. |
+| Invalid token | A 401 produces an acknowledged, failed command with zero records. |
+
+Emulate 0.14.0 lacks `GET /orgs/{org}/repos`, the three App inventory reads used by the connector
+(`GET /orgs/{org}/installations`, `GET /user/installations/{id}/repositories` and `GET /apps/{slug}`),
+and a public way to seed workflow history. Its collaborator list also ignores `permission` and
+`affiliation` filters, so the Emulate tests seed only direct admins. The reference portal mock
+supplies organization, App inventory and workflow responses. Recheck these gaps when upgrading Emulate.
+
+Run the check from the repository root with Node 24 and the pinned Rust toolchain. The test
+opens only a loopback listener and uses no external credentials, Postgres or OpenFGA.
+
+```sh
+cargo build --locked -p toolbox-connector-github
+npm --prefix scripts/github-emulate ci --ignore-scripts
+npm --prefix scripts/github-emulate test
+```
 
 ## 5. Local prerequisites
 
@@ -152,4 +183,5 @@ A version tag releases everything; nothing is built by hand.
 - Milestones and exit criteria: [v1-spec.md](../v1-spec.md) §3; properties §11.3.
 - CI: [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml); acceptance scripts in
   [`scripts/`](../../scripts).
+- GitHub integration dependency and route coverage in [Emulate v0.14.0](https://github.com/vercel-labs/emulate/tree/v0.14.0/packages/%40emulators/github/src).
 - The repository's own scorecards for this layer: [toolbox-for-toolbox.md](./toolbox-for-toolbox.md).
