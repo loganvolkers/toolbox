@@ -18,8 +18,10 @@ jobs:
     timeout-minutes: 15
     permissions: {contents: write, pull-requests: write}
     steps:
+      # The token is not left in .git/config (zizmor artipacked); the push step below gets it
+      # from GH_TOKEN through gh's credential helper, for that step only.
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        with: {fetch-depth: 0}
+        with: {fetch-depth: 0, persist-credentials: false}
 
       - name: Detect pending changesets
         id: pending
@@ -56,6 +58,7 @@ jobs:
           fi
           git add -A
           git commit -m "Version packages"
+          gh auth setup-git
           git push -f origin "HEAD:$BRANCH"
           if gh pr view "$BRANCH" --json number >/dev/null 2>&1; then
             echo "Version Packages PR already open"
