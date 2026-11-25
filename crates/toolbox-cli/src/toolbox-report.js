@@ -1384,7 +1384,7 @@
 	}
 	function kindCount(D, k, n) {
 		var t = kindTitle(D, k);
-		if (!/^[A-Z]{2,}|^OpenSSF/.test(t)) t = t.charAt(0).toLowerCase() + t.slice(1);
+		if (!/^(?:[A-Z]{2,}|OpenSSF|GitHub|(?:Go|Python|Rust|Cargo|TypeScript|JavaScript)\b)/.test(t)) t = t.charAt(0).toLowerCase() + t.slice(1);
 		var tail = (t.match(/ \([^)]*\)$/) || [""])[0];
 		t = t.slice(0, t.length - tail.length);
 		if (n !== 1) t = /[^aeiou]y$/.test(t) ? t.slice(0, -1) + "ies" : /(s|x|ch|sh)$/.test(t) ? t + "es" : t + "s";
@@ -2743,9 +2743,9 @@
 			}).map(function(c) {
 				return title(D, c.name);
 			});
-			if (R.next && capped.length) sentence = "Held at " + level + " by " + capped.map(function(c) {
+			if (R.next && capped.length) sentence = "Capped at " + level + ": " + capped.map(function(c) {
 				return title(D, c.name);
-			}).join(", ") + (capped.length === 1 ? ", which has" : ", which have") + " no " + R.next + " level yet." + (liftNames.length ? " After that, " + plural(liftNames.length, "more standard needs", "more standards need") + " " + R.next + "." : "") + rated;
+			}).join(", ") + (capped.length === 1 ? " is fully met, but its top level is " : " are fully met, but their top level is ") + level + ", so the repository cannot rise until " + (capped.length === 1 ? "its owner adds" : "their owners add") + " a " + R.next + " level." + (liftNames.length ? " After that, " + plural(liftNames.length, "more standard needs", "more standards need") + " " + R.next + "." : "") + rated;
 			var nextBox = !R.next ? el("div", { className: "next" }, el("b", { textContent: "Top of the ladder. " }), "Every repository standard is at its highest level.") : capped.length ? null : el("div", { className: "next" }, el("b", { textContent: "Next: " }), "reach ", badge(R.next), " by lifting " + plural(holdingNames.length, "standard") + " to " + R.next + ", listed below.");
 			var climb = null;
 			if (R.next) {
@@ -2883,6 +2883,15 @@
 			var goldUnjudged = goldIds.filter(function(id) {
 				return unjudged.has(id);
 			}).length;
+			var perKind = {};
+			Object.keys(S.worst).forEach(function(id) {
+				var k = S.kindOf[id] || "";
+				perKind[k] = (perKind[k] || 0) + 1;
+			});
+			var bigKind = Object.entries(perKind).sort(function(a, b) {
+				return b[1] - a[1];
+			})[0];
+			var kindNote = bigKind && bigKind[0] && bigKind[1] * 3 >= scoredEntities && Object.keys(perKind).length > 1 ? "Counted per entity; the largest group is " + kindCount(D, bigKind[0], bigKind[1]) + "." : null;
 			var tile = function(path, cls, lead, big, text) {
 				return link(path, "tile " + (cls || ""), [lead, el("div", {}, el("strong", { textContent: big }), el("span", {}, ...[].concat(text)))]);
 			};
@@ -2900,6 +2909,10 @@
 					goldUnjudged ? el("small", {
 						className: "tile-note",
 						textContent: fmt(goldUnjudged) + " of those still await an agent's assessment"
+					}) : null,
+					kindNote ? el("small", {
+						className: "tile-note",
+						textContent: kindNote
 					}) : null
 				]) : null,
 				scoredEntities ? tile("scorecards", debt ? "bad" : "good", medal(debt ? "none" : "gold", 40), String(debt), debt === 1 ? "scorecard has entities at none" : debt ? "scorecards have entities at none" : "scorecards with entities at none") : null,
@@ -4328,7 +4341,7 @@
 		}))), el("section", {}, el("label", { className: "picker" }, el("span", {
 			className: "sub",
 			textContent: "Campaign"
-		}), picker), el("div", { className: "ehead" }, el("div", {}, el("h2", { textContent: c.title || selected }), el("div", { className: "sub" }, c.status || "", track ? el("span", {}, " · track ", link(trackPath(D, c.track), "", track)) : null, c.owner ? " · owned by " + c.owner.replace(/^group:/, "") : null)), goalBar(state, pct, target, true, includeProgress(D, c))), c.description ? el("p", { className: "lede" }, ...rich(c.description)) : null, state === "empty" ? null : el("p", { style: "margin:8px 0 6px" }, el("b", { textContent: (c.meeting || 0) + " of " + (c.inScope || 0) }), " entities meet the goal · target " + target + "%" + (c.end ? " by " + c.end : "") + (days != null && days >= 0 ? " (" + plural(days, "day") + " left)" : "") + ". The bar turns green once it passes the target tick."), state === "empty" ? null : sinceLine(c), state === "empty" ? null : bar, state === "empty" ? null : marks, el("h3", { textContent: "Goal" }), includes, el("h3", { textContent: state === "empty" ? "Progress" : "Not meeting yet" + (gaps.length ? " (" + gaps.length + ")" : "") + (Object.keys(size).length ? ", furthest first" : "") }), gapList));
+		}), picker), el("div", { className: "ehead" }, el("div", {}, el("h2", { textContent: c.title || selected }), el("div", { className: "sub" }, c.status || "", track ? el("span", {}, " · track ", link(trackPath(D, c.track), "", track)) : null, c.owner ? " · owned by " + c.owner.replace(/^group:/, "") : null)), goalBar(state, pct, target, true, includeProgress(D, c))), c.description ? el("p", { className: "lede" }, ...rich(c.description)) : null, state === "empty" ? null : el("p", { style: "margin:8px 0 6px" }, el("b", { textContent: (c.meeting || 0) + " of " + (c.inScope || 0) }), " entities meet the goal · target " + target + "%" + (c.end ? " by " + c.end : "") + (days != null && days >= 0 ? " (" + plural(days, "day") + " left)" : "") + ". The bar turns green once it reaches the target."), state === "empty" ? null : sinceLine(c), state === "empty" || !marks.childElementCount ? null : bar, state === "empty" || !marks.childElementCount ? null : marks, el("h3", { textContent: "Goal" }), includes, el("h3", { textContent: state === "empty" ? "Progress" : "Not meeting yet" + (gaps.length ? " (" + gaps.length + ")" : "") + (Object.keys(size).length ? ", furthest first" : "") }), gapList));
 	} };
 	// src/views/catalog.ts
 	function worstEvidence(D, cols, id) {

@@ -7,7 +7,7 @@ import { lockIcon } from "../lib/basis";
 import { campaignStanding, campaignState, goalBar, includeProgress, kpiBar, kpiPips, nextMedalEl, scCaption, stuckNote } from "../lib/campaigns";
 import { cardName, num } from "../lib/compare";
 import { el, enc, link } from "../lib/dom";
-import { kindDescription, kindGroupsOf, kindTitle } from "../lib/kinds";
+import { kindCount, kindDescription, kindGroupsOf, kindTitle } from "../lib/kinds";
 import { fill, ink, known } from "../lib/levels";
 import { ring, title, topNote } from "../lib/rings";
 import { LADDER, floorOf, floorPill } from "../lib/rules";
@@ -93,19 +93,23 @@ export const overviewViews = {
         return title(D, c.name);
       });
     if (R.next && capped.length)
+      // Lead with the cause: the capping standard is fully met, it just has no higher level to reach.
       sentence =
-        "Held at " +
+        "Capped at " +
         level +
-        " by " +
+        ": " +
         capped
           .map(function (c) {
             return title(D, c.name);
           })
           .join(", ") +
-        (capped.length === 1 ? ", which has" : ", which have") +
-        " no " +
+        (capped.length === 1 ? " is fully met, but its top level is " : " are fully met, but their top level is ") +
+        level +
+        ", so the repository cannot rise until " +
+        (capped.length === 1 ? "its owner adds" : "their owners add") +
+        " a " +
         R.next +
-        " level yet." +
+        " level." +
         (liftNames.length ? " After that, " + plural(liftNames.length, "more standard needs", "more standards need") + " " + R.next + "." : "") +
         rated;
     var nextBox = !R.next
@@ -267,12 +271,22 @@ export const overviewViews = {
     var goldUnjudged = goldIds.filter(function (id) {
       return unjudged.has(id);
     }).length;
+    // Counted per entity, one numerous kind can carry the figure; say so when it is a large share.
+    var perKind: Record<string, number> = {};
+    Object.keys(S.worst).forEach(function (id) {
+      var k = S.kindOf[id] || "";
+      perKind[k] = (perKind[k] || 0) + 1;
+    });
+    var bigKind = Object.entries(perKind).sort(function (a, b) {
+      return b[1] - a[1];
+    })[0];
+    var kindNote = bigKind && bigKind[0] && bigKind[1] * 3 >= scoredEntities && Object.keys(perKind).length > 1 ? "Counted per entity; the largest group is " + kindCount(D, bigKind[0], bigKind[1]) + "." : null;
     var tile = function (path, cls, lead, big, text) {
       return link(path, "tile " + (cls || ""), [lead, el("div", {}, el("strong", { textContent: big }), el("span", {}, ...[].concat(text)))]);
     };
     var shown = [
       total ? tile("scorecards", "good", kpiBar(pct, pct + "% of checks pass"), pct + "%", [fmt(c.pass) + " of " + fmt(total) + " checks pass on evidence", checkNote.length ? el("small", { className: "tile-note", textContent: checkNote.join("; ") }) : null]) : null,
-      scoredEntities ? tile("catalog", "", medal(topMedal, 40), fmt(golden), ["of " + fmt(scoredEntities) + " scored entities are at the top level of every scorecard that rates them", topList.length > 1 ? el("small", { className: "tile-note", textContent: "Top levels differ by scorecard: " + andList(topList) + "." }) : null, goldUnjudged ? el("small", { className: "tile-note", textContent: fmt(goldUnjudged) + " of those still await an agent's assessment" }) : null]) : null,
+      scoredEntities ? tile("catalog", "", medal(topMedal, 40), fmt(golden), ["of " + fmt(scoredEntities) + " scored entities are at the top level of every scorecard that rates them", topList.length > 1 ? el("small", { className: "tile-note", textContent: "Top levels differ by scorecard: " + andList(topList) + "." }) : null, goldUnjudged ? el("small", { className: "tile-note", textContent: fmt(goldUnjudged) + " of those still await an agent's assessment" }) : null, kindNote ? el("small", { className: "tile-note", textContent: kindNote }) : null]) : null,
       scoredEntities ? tile("scorecards", debt ? "bad" : "good", medal(debt ? "none" : "gold", 40), String(debt), debt === 1 ? "scorecard has entities at none" : debt ? "scorecards have entities at none" : "scorecards with entities at none") : null,
       campaignNames.length ? tile("campaigns", on === campaignNames.length ? "good" : "", kpiPips(on, campaignNames.length, on + " of " + campaignNames.length + " campaigns on target"), on + " of " + campaignNames.length, "campaigns on target") : null,
     ].filter(Boolean);

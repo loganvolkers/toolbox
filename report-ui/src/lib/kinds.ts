@@ -52,7 +52,7 @@ export function kindTitle(D: ReportData, k) {
 // "15 action dependencies", "26 SDLC stages": a count of a kind, in running text.
 export function kindCount(D: ReportData, k, n) {
   var t = kindTitle(D, k);
-  if (!/^[A-Z]{2,}|^OpenSSF/.test(t)) t = t.charAt(0).toLowerCase() + t.slice(1);
+  if (!/^(?:[A-Z]{2,}|OpenSSF|GitHub|(?:Go|Python|Rust|Cargo|TypeScript|JavaScript)\b)/.test(t)) t = t.charAt(0).toLowerCase() + t.slice(1);
   var tail = (t.match(/ \([^)]*\)$/) || [""])[0];
   t = t.slice(0, t.length - tail.length);
   if (n !== 1) t = /[^aeiou]y$/.test(t) ? t.slice(0, -1) + "ies" : /(s|x|ch|sh)$/.test(t) ? t + "es" : t + "s";
