@@ -2304,9 +2304,14 @@ mod tests {
         );
         assert!(page.contains("<toolbox-report>"));
         assert!(page.contains(r#"<script type="application/json">{"portal":"Demo""#));
-        assert!(page.contains(r#"<slot name="header">"#));
-        assert!(page.contains(r#"<slot name="nav">"#));
-        assert!(page.contains(r#"<slot name="footer">"#));
+        // The bundler chooses the quotes of the template string, so the attribute may be escaped.
+        let has_slot = |n: &str| {
+            page.contains(&format!(r#"<slot name="{n}">"#))
+                || page.contains(&format!(r#"<slot name=\"{n}\">"#))
+        };
+        assert!(has_slot("header"));
+        assert!(has_slot("nav"));
+        assert!(has_slot("footer"));
         assert!(page.contains("Overview"));
         assert!(page.contains("Catalog"));
         assert!(page.contains("Campaigns"));

@@ -1,27 +1,37 @@
 // Bundles src/ into the one file `toolbox report` embeds (crates/toolbox-cli/src/toolbox-report.js).
-// `--check` fails when the committed file differs from a fresh bundle.
-import { build } from "esbuild";
+// `--check` fails when the committed file differs from a fresh bundle. Type checking is `tsc`'s job;
+// this script only bundles, so the npm scripts run `tsc` first.
+import { build } from "vite";
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const here = (p) => fileURLToPath(new URL(p, import.meta.url));
+const entry = here("../src/index.ts");
 const out = here("../../crates/toolbox-cli/src/toolbox-report.js");
-const header = readFileSync(here("../src/index.js"), "utf8")
+const header = readFileSync(entry, "utf8")
   .split("\n")
   .filter((l) => l.startsWith("//"))
   .join("\n");
 
-const result = await build({
-  entryPoints: [here("../src/index.js")],
-  bundle: true,
-  format: "iife",
-  target: "es2020",
-  charset: "utf8",
-  legalComments: "none",
-  write: false,
-  banner: { js: header + "\n// Generated from report-ui/src by `npm run build`; edit the sources, not this file." },
-});
-const js = result.outputFiles[0].text;
+// Inline config, not vite.config.ts: Storybook's Vite builder reads that file, and the bundle and
+// the stories need different settings.
+const [result] = [].concat(
+  await build({
+    configFile: false,
+    publicDir: false,
+    logLevel: "warn",
+    build: {
+      write: false,
+      target: "es2020",
+      minify: false,
+      lib: { entry, formats: ["iife"], name: "ToolboxReportBundle", fileName: () => "toolbox-report.js" },
+      rollupOptions: {
+        output: { banner: header + "\n// Generated from report-ui/src by `npm run build`; edit the sources, not this file." },
+      },
+    },
+  }),
+);
+const js = result.output.find((o) => o.type === "chunk").code;
 
 if (process.argv.includes("--check")) {
   if (readFileSync(out, "utf8") !== js) {
