@@ -48,8 +48,8 @@ MCP, CLI, data model, properties) and test against
 
 **Building:** `cargo build` (toolchain pinned in `rust-toolchain.toml`), `cargo test`, `cargo clippy
 --all-targets -- -D warnings`, then `target/debug/toolbox validate examples/reference-portal`.
-`python scripts/validate-parity.py` checks `toolbox validate` against `tools/validate.py`.
-`yamark format --check` (yamark 0.6.1, D97) checks every tracked `.yaml` and `.yml` except `.github/workflows/release.yml`, which `dist plan` owns (D98). `python3 scripts/decision-id.py --self-test` checks the ULID encoding for decision ids (D01M7XKEXQH4HG5371629M50E2G).
+`python scripts/validate-parity.py` checks `toolbox validate` against `examples/reference-portal/tools/validate.py`.
+`yamark format --check` (yamark 0.6.1, D97, pinned in `scripts/requirements-yamark.txt`) checks every tracked `.yaml` and `.yml` except `.github/workflows/release.yml`, which `dist plan` owns (D98). `python3 scripts/decision-id.py --self-test` checks the ULID encoding for decision ids (D01M7XKEXQH4HG5371629M50E2G).
 `.github/workflows/ci.yml` runs all of this. **M0–M4 are done.** Commands: `validate`, `test`,
 `plan --local --base <manifest>`, `derive`, `serve [--database-url]`, `push`, `token create`, the reads
 (`get`, `query`, `search`, `graph`, `owner`, `explain`, `score`, `scorecard`, `refresh`, `actions`), `mcp` (stdio
@@ -138,9 +138,9 @@ The full loop, check pyramid and measured timings are in
 - **Verify what you can:**
   - Runnable examples (OpenFGA models, plugin manifests, skills) must be run or validated before they
     are committed. Record the result in `docs/research-log.md`.
-  - When you change the reference portal, run its three checks (`tools/validate.py`,
-    `tools/reference.py --check`, `fga model test`) and regenerate outputs with `--write` only after
-    reviewing the diff.
+  - When you change the reference portal, run its three checks from `examples/reference-portal/`
+    (`python tools/validate.py`, `python tools/reference.py --check`, `fga model test --tests
+    authz/model.fga.yaml`) and regenerate outputs with `--write` only after reviewing the diff.
 - **Plugin changes:** validate `plugin.json`/`mcp.json` against the official 1.0.0 schemas, and every
   skill with `skills-ref validate`. Use `"license": "MIT"` (D88).
 - **Writing style:** state conclusions first, then evidence. Prefer tables for comparisons. Keep docs

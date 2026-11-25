@@ -1,3 +1,0 @@
-# Hashed yamark pin for CI (OpenSSF Pinned-Dependencies).
-yamark==0.6.1 \
-    --hash=sha256:d5424fb3c22835c0b942d832fc74b2127138e8b25b33fcc89ffd7cc46496a221
