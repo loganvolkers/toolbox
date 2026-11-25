@@ -27,7 +27,7 @@ export function trackStats(D: ReportData, S: Summary, name) {
     rows.every(function (r) {
       return isComparative(D, r.name);
     });
-  var none = 0;
+  var noneIds: Record<string, boolean> = {};
   var shares: number[] = [];
   var scoredRows = 0;
   var capped: string[] = [];
@@ -36,7 +36,10 @@ export function trackStats(D: ReportData, S: Summary, name) {
   // below gold is named, and one that also caps the repository level gets a lock note.
   var cards = rows.map(function (r) {
     if (!r.compare) {
-      none += r.none;
+      var scoredHere = (D.scores || {})[r.name] || {};
+      Object.keys(scoredHere).forEach(function (id) {
+        if (scoredHere[id].level === "none") noneIds[id] = true;
+      });
       if (r.scored) {
         scoredRows++;
         shares.push(r.topShare);
@@ -87,7 +90,7 @@ export function trackStats(D: ReportData, S: Summary, name) {
     return r.name;
   }));
   if (compare) verdicts.majority = majority;
-  return { name: name, def: (D.tracks || {})[name] || {}, rows: rows, cards: cards, compare: compare, majority: majority, none: none, pct: pct, averaged: shares.length, scoredRows: scoredRows, capped: capped, short: short, verdicts: verdicts, behind: behind, campaigns: campaigns };
+  return { name: name, def: (D.tracks || {})[name] || {}, rows: rows, cards: cards, compare: compare, majority: majority, none: Object.keys(noneIds).length, pct: pct, averaged: shares.length, scoredRows: scoredRows, capped: capped, short: short, verdicts: verdicts, behind: behind, campaigns: campaigns };
 }
 
 export function tracksSorted(D: ReportData, S: Summary) {

@@ -242,7 +242,7 @@ function moverBody(D: ReportData, b: Mover) {
   var card = link("scorecard/" + enc(b.r.name), "", title(D, b.r.name));
   var ruleEl = rule ? [link("rule/" + enc(b.r.name) + "/" + enc(rule[0]), "", ruleWords(b.r.name, rule[0]))] : [];
   var named = rule && rule[1] === b.n ? namedAt(D, b.r.name, b.below) : null;
-  var gain = " The track gains about " + points(b.gain) + ".";
+  var gain = " The track gains about " + points(b.gain) + " on this track's ring.";
   // Naming the entities dropped the count, so a reader had to open the campaign to learn how many.
   var kind = ((D.scorecards || {})[b.r.name] || {}).kind;
   var count = kind ? kindCount(D, kind, b.n) : plural(b.n, "entity", "entities");

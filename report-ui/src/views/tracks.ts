@@ -17,9 +17,8 @@ import { firstSentence, plural } from "../lib/words";
 
 // The ring is a share at the top level; entities still at none are the other half of the story.
 function atNone(t) {
-  var n = (t.cards || []).reduce(function (sum, c) {
-    return sum + (c.row.none || 0);
-  }, 0);
+  // One entity on several scorecards counts once. Summing the rows counted the same workflow three times.
+  var n = t.none || 0;
   return n ? "; " + plural(n, "entity", "entities") + " still at none" : "";
 }
 

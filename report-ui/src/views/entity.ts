@@ -108,7 +108,7 @@ export const entityViews = {
             ),
             scName ? el("div", { className: "sub" }, "Rule page: ", ruleLink(scName, n, null, true), " ", el("code", { className: "rid", textContent: n })) : null,
             o === "unknown"
-              ? el("div", { className: "fix" }, el("b", { textContent: "Next: " }), "this check was not run. ", rule.fix ? el("span", {}, ...rich(fixFor(rule.fix))) : el("span", {}, "Run it, then ", el("code", { textContent: "toolbox report" }), " again."))
+              ? el("div", { className: "fix" }, el("b", { textContent: "Next: " }), "This check was not run, so there is no evidence to fix. Run it, then ", el("code", { textContent: "toolbox report" }), " again.")
               : rule.fix
                 ? el("div", { className: "fix" }, el("b", { textContent: "Fix: " }), ...rich(fixFor(rule.fix)))
                 : "",
@@ -132,7 +132,7 @@ export const entityViews = {
             rule.level ? el("span", { className: "sub", textContent: "needed for " + rule.level }) : "",
           ),
           o === "unknown"
-            ? el("div", { className: "fix" }, el("b", { textContent: "Next: " }), "this check was not run. ", rule.fix ? el("span", {}, ...rich(fixFor(rule.fix))) : el("span", {}, "Run it, then ", el("code", { textContent: "toolbox report" }), " again."))
+            ? el("div", { className: "fix" }, el("b", { textContent: "Next: " }), "This check was not run, so there is no evidence to fix. Run it, then ", el("code", { textContent: "toolbox report" }), " again.")
             : rule.fix
               ? el("div", { className: "fix" }, el("b", { textContent: "Fix: " }), ...rich(fixFor(rule.fix)))
               : "",
@@ -164,7 +164,7 @@ export const entityViews = {
             "div",
             { className: "passes" },
             withheld ? el("span", { className: "sub", textContent: (lv ? levelName(lv) : "Other") + " rules that ran" }) : lv ? badge(lv) : null,
-            el("em", { textContent: passed[lv].length === all ? "all " + all + " met" : passed[lv].length + " of " + all }),
+            el("em", { textContent: withheld ? String(passed[lv].length) : passed[lv].length === all ? "all " + all + " met" : passed[lv].length + " of " + all }),
             ...passed[lv],
           ),
         );
@@ -230,7 +230,7 @@ export const entityViews = {
       .map(function (x) {
         return x.n;
       });
-    var total = { pass: 0, hollow: 0, all: 0 };
+    var total = { pass: 0, fail: 0, unrun: 0, unassessed: 0, all: 0 };
     var bases = { measured: 0, judged: 0 };
     cards.forEach(function (n) {
       if (isComparative(D, n)) return;
@@ -240,8 +240,12 @@ export const entityViews = {
         var o = rules[r];
         if (o === "skipped") return;
         total.all++;
-        bases[basisOf((D.scorecards[n].rules || {})[r])]++;
-        if (isPassing(o) && unread && basisOf((D.scorecards[n].rules || {})[r]) === "judged") total.hollow++;
+        var rule = (D.scorecards[n].rules || {})[r] || {};
+        bases[basisOf(rule)]++;
+        var absent = (basisOf(rule) === "judged" && isPassing(o) && unread) || noReviewYet(rule, evidenceItems(D.scores[n][id], r));
+        if (absent) total.unassessed++;
+        else if (o === "unknown") total.unrun++;
+        else if (o === "fail") total.fail++;
         else if (isPassing(o)) total.pass++;
       });
     });
@@ -422,7 +426,7 @@ export const entityViews = {
                   ? null
                   : el("strong", { style: "color:" + (whollyUnset ? "var(--muted)" : ink(shown)) + (whollyUnset || KNOWN.indexOf(ownLevel(D, kind, shown)) < 0 ? ";text-transform:none" : "") }, whollyUnset ? "Not run in this build" : ownLevel(D, kind, shown), !whollyUnset && atTop ? el("span", { className: "topmark", textContent: " ✓ top" + (KNOWN.indexOf(shown) < 0 ? " level" : "") }) : null),
                 ...openCards.map(cardLine),
-                el("span", { className: "sub", textContent: total.pass + " of " + plural(total.all, "check passes", "checks pass") + " on evidence" + (total.hollow ? " · " + plural(total.hollow, "more") + " not assessed yet, not counted as " + (total.hollow === 1 ? "a pass" : "passes") : "") }),
+                el("span", { className: "sub", textContent: [total.pass + " of " + plural(total.all, "check passes", "checks pass") + " on evidence", total.fail ? plural(total.fail, "failure") : "", total.unrun ? plural(total.unrun, "check was not run", "checks were not run") : "", total.unassessed ? plural(total.unassessed, "check is not assessed yet", "checks are not assessed yet") + ", not counted as " + (total.unassessed === 1 ? "a pass" : "passes") : ""].filter(Boolean).join(" · ") }),
               ),
             )
           : null,

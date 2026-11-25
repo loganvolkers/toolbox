@@ -265,7 +265,7 @@ export const compareViews = {
                   });
                   return verdictOf(n) === k && vs.indexOf("ahead") >= 0 && vs.indexOf("behind") >= 0;
                 }).length;
-            return el("div", {}, el("strong", { textContent: unmeasured ? "—" : String(counts[k]), style: "color:" + (unmeasured ? "var(--muted)" : standingColor(k)) }), el("span", { textContent: STANDING_MARK[k] + " " + k }), mixed ? el("small", { className: "mixed", title: "Mixed means ahead on some of this factor's rules and behind on others.", textContent: mixed + " of these are mixed" }) : null);
+            return el("div", {}, el("strong", { textContent: unmeasured ? "—" : String(counts[k]), style: "color:" + (unmeasured ? "var(--muted)" : standingColor(k)) }), el("span", { textContent: STANDING_MARK[k] + " " + k }), mixed ? el("small", { className: "mixed", title: "Mixed means ahead on some of this factor's rules and behind on others.", textContent: mixed + (mixed === 1 ? " of these is mixed" : " of these are mixed") }) : null);
           }),
         ),
         unmeasured ? null : el("div", { className: "kicker", style: "margin-top:10px", textContent: "Rules" }),

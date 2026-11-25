@@ -438,6 +438,23 @@ The round did not pass, because five severity-3 findings were open:
 
 A duplicate panel was started while these three had not yet written files. It is not the verdict.
 
+## Round 17: what the panel found
+
+The same model as rounds 10 to 16, Grok 4.7, scored this round, still blind to the source, the diff
+and each other. The probes passed 212 of 212. Usability fell from 30 to 29 of 40, because honest
+states fell from 3 to 2. Judgement held at 11 of 16. One auditor marked T4 partial, so tasks
+succeeded 17 of 18. The round did not pass. The fall is on the entity summary this round changed:
+it still said "1 more not assessed" after the rows had started saying five rules were not assessed.
+
+| Finding (auditors) | Fix |
+|---|---|
+| `toolbox-cli` says "7 of 17 checks pass · 1 more not assessed yet" while five rules are each "not assessed yet", three fail and two were not run (A, C at severity 4; B) | The summary states the four outcomes: 7 pass, 3 failures, 2 checks were not run, 5 checks are not assessed yet |
+| Clippy clean and Tests pass were not run, then the next line says to fix warnings and failures in the evidence (A) | A check that did not run says there is no evidence to fix, and to run it and report again |
+| "The track gains about 4 points" can be read as OpenSSF points (A, B) | The sentence says "about 4 points on this track's ring" |
+| "22 entities still at none" on CI and supply chain adds the same workflows across scorecards (B, severity 4) | An entity at none on several scorecards of a track counts once |
+| "silver rules that ran · all 4 met" can still be read as a silver medal (C) | Under "Rules that ran. These are not a medal." the chip is a count, not "all met" |
+| "1 of these are mixed" (A, B) | The note says "1 of these is mixed" |
+
 ## Comparisons are generic
 
 The OpenFGA portal compares OpenFGA v1.23.0 with SpiceDB v1.57.1 through the same comparative

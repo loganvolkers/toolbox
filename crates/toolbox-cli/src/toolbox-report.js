@@ -296,14 +296,17 @@
 		var compare = rows.length > 0 && rows.every(function(r) {
 			return isComparative(D, r.name);
 		});
-		var none = 0;
+		var noneIds = {};
 		var shares = [];
 		var scoredRows = 0;
 		var capped = [];
 		var short = [];
 		var cards = rows.map(function(r) {
 			if (!r.compare) {
-				none += r.none;
+				var scoredHere = (D.scores || {})[r.name] || {};
+				Object.keys(scoredHere).forEach(function(id) {
+					if (scoredHere[id].level === "none") noneIds[id] = true;
+				});
 				if (r.scored) {
 					scoredRows++;
 					shares.push(r.topShare);
@@ -386,7 +389,7 @@
 			cards,
 			compare,
 			majority,
-			none,
+			none: Object.keys(noneIds).length,
 			pct,
 			averaged: shares.length,
 			scoredRows,
@@ -1675,7 +1678,7 @@
 		var card = link("scorecard/" + enc(b.r.name), "", title(D, b.r.name));
 		var ruleEl = rule ? [link("rule/" + enc(b.r.name) + "/" + enc(rule[0]), "", ruleWords(b.r.name, rule[0]))] : [];
 		var named = rule && rule[1] === b.n ? namedAt(D, b.r.name, b.below) : null;
-		var gain = " The track gains about " + points(b.gain) + ".";
+		var gain = " The track gains about " + points(b.gain) + " on this track's ring.";
 		var kind = ((D.scorecards || {})[b.r.name] || {}).kind;
 		var count = kind ? kindCount(D, kind, b.n) : plural(b.n, "entity", "entities");
 		if (named) return [
@@ -4204,9 +4207,7 @@
 	};
 	// src/views/tracks.ts
 	function atNone(t) {
-		var n = (t.cards || []).reduce(function(sum, c) {
-			return sum + (c.row.none || 0);
-		}, 0);
+		var n = t.none || 0;
 		return n ? "; " + plural(n, "entity", "entities") + " still at none" : "";
 	}
 	var tracksViews = {
@@ -5120,7 +5121,7 @@
 					}) : null), scName ? el("div", { className: "sub" }, "Rule page: ", ruleLink(scName, n, null, true), " ", el("code", {
 						className: "rid",
 						textContent: n
-					})) : null, o === "unknown" ? el("div", { className: "fix" }, el("b", { textContent: "Next: " }), "this check was not run. ", rule.fix ? el("span", {}, ...rich(fixFor(rule.fix))) : el("span", {}, "Run it, then ", el("code", { textContent: "toolbox report" }), " again.")) : rule.fix ? el("div", { className: "fix" }, el("b", { textContent: "Fix: " }), ...rich(fixFor(rule.fix))) : "", whyEl(rule), evidenceEl(items, seen, scName ? "“" + ruleTitle(scName, n) + "”" : n)));
+					})) : null, o === "unknown" ? el("div", { className: "fix" }, el("b", { textContent: "Next: " }), "This check was not run, so there is no evidence to fix. Run it, then ", el("code", { textContent: "toolbox report" }), " again.") : rule.fix ? el("div", { className: "fix" }, el("b", { textContent: "Fix: " }), ...rich(fixFor(rule.fix))) : "", whyEl(rule), evidenceEl(items, seen, scName ? "“" + ruleTitle(scName, n) + "”" : n)));
 					return;
 				}
 				wrap.append(el("div", { className: "rule " + o }, el("div", { style: "display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center" }, el("h4", { className: "rn" }, scName ? ruleLink(scName, n, null, true) : n), scName ? el("code", {
@@ -5133,7 +5134,7 @@
 				}), basisBadge(basisOf(rule)), rule.level ? el("span", {
 					className: "sub",
 					textContent: "needed for " + rule.level
-				}) : ""), o === "unknown" ? el("div", { className: "fix" }, el("b", { textContent: "Next: " }), "this check was not run. ", rule.fix ? el("span", {}, ...rich(fixFor(rule.fix))) : el("span", {}, "Run it, then ", el("code", { textContent: "toolbox report" }), " again.")) : rule.fix ? el("div", { className: "fix" }, el("b", { textContent: "Fix: " }), ...rich(fixFor(rule.fix))) : "", whyEl(rule), evidenceEl(items, seen, scName ? "“" + ruleTitle(scName, n) + "”" : n)));
+				}) : ""), o === "unknown" ? el("div", { className: "fix" }, el("b", { textContent: "Next: " }), "This check was not run, so there is no evidence to fix. Run it, then ", el("code", { textContent: "toolbox report" }), " again.") : rule.fix ? el("div", { className: "fix" }, el("b", { textContent: "Fix: " }), ...rich(fixFor(rule.fix))) : "", whyEl(rule), evidenceEl(items, seen, scName ? "“" + ruleTitle(scName, n) + "”" : n)));
 			});
 			if (later.length) {
 				var further = order.filter(function(lv) {
@@ -5162,7 +5163,7 @@
 					wrap.append(el("div", { className: "passes" }, withheld ? el("span", {
 						className: "sub",
 						textContent: (lv ? levelName(lv) : "Other") + " rules that ran"
-					}) : lv ? badge(lv) : null, el("em", { textContent: passed[lv].length === all ? "all " + all + " met" : passed[lv].length + " of " + all }), ...passed[lv]));
+					}) : lv ? badge(lv) : null, el("em", { textContent: withheld ? String(passed[lv].length) : passed[lv].length === all ? "all " + all + " met" : passed[lv].length + " of " + all }), ...passed[lv]));
 				});
 			}
 			return wrap;
@@ -5222,7 +5223,9 @@
 			});
 			var total = {
 				pass: 0,
-				hollow: 0,
+				fail: 0,
+				unrun: 0,
+				unassessed: 0,
 				all: 0
 			};
 			var bases = {
@@ -5237,8 +5240,11 @@
 					var o = rules[r];
 					if (o === "skipped") return;
 					total.all++;
-					bases[basisOf((D.scorecards[n].rules || {})[r])]++;
-					if (isPassing(o) && unread && basisOf((D.scorecards[n].rules || {})[r]) === "judged") total.hollow++;
+					var rule = (D.scorecards[n].rules || {})[r] || {};
+					bases[basisOf(rule)]++;
+					if (basisOf(rule) === "judged" && isPassing(o) && unread || noReviewYet(rule, evidenceItems(D.scores[n][id], r))) total.unassessed++;
+					else if (o === "unknown") total.unrun++;
+					else if (o === "fail") total.fail++;
 					else if (isPassing(o)) total.pass++;
 				});
 			});
@@ -5380,7 +5386,12 @@
 				textContent: " ✓ top" + (KNOWN.indexOf(shown) < 0 ? " level" : "")
 			}) : null), ...openCards.map(cardLine), el("span", {
 				className: "sub",
-				textContent: total.pass + " of " + plural(total.all, "check passes", "checks pass") + " on evidence" + (total.hollow ? " · " + plural(total.hollow, "more") + " not assessed yet, not counted as " + (total.hollow === 1 ? "a pass" : "passes") : "")
+				textContent: [
+					total.pass + " of " + plural(total.all, "check passes", "checks pass") + " on evidence",
+					total.fail ? plural(total.fail, "failure") : "",
+					total.unrun ? plural(total.unrun, "check was not run", "checks were not run") : "",
+					total.unassessed ? plural(total.unassessed, "check is not assessed yet", "checks are not assessed yet") + ", not counted as " + (total.unassessed === 1 ? "a pass" : "passes") : ""
+				].filter(Boolean).join(" · ")
 			}))) : null), total.all ? basisKey(bases, "check") : null, judgedList, cards.length ? el("div", {}, ...blocks) : el("div", {
 				className: "empty",
 				textContent: "Not scored by any scorecard in this snapshot."
@@ -5809,7 +5820,7 @@
 				}), el("span", { textContent: STANDING_MARK[k] + " " + k }), mixed ? el("small", {
 					className: "mixed",
 					title: "Mixed means ahead on some of this factor's rules and behind on others.",
-					textContent: mixed + " of these are mixed"
+					textContent: mixed + (mixed === 1 ? " of these is mixed" : " of these are mixed")
 				}) : null);
 			})), unmeasured ? null : el("div", {
 				className: "kicker",
