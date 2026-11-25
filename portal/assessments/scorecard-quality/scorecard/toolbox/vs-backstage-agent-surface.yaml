@@ -1,0 +1,51 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: scorecard:toolbox/vs-backstage-agent-surface
+rubric: scorecard-quality
+subjectHash: 0815b30122c6
+assessor: {kind: agent, name: cursor-assessor-15, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: >-
+      All three rules ask what a coding agent pays to use the portal over MCP:
+      whether MCP ships by default, the `tools/list` size and one entity read
+      (portal/standards/backstage-comparison.yaml:796-855). That is factor F13
+      alone (docs/design/backstage-comparison.md:58), judged for the platform
+      team choosing a portal.
+  - criterion: levels-are-a-ladder
+    verdict: pass
+    reason: >-
+      It has one level, bronze, as every comparative card does: each check is
+      an absolute bar fixed before the run
+      (experiments/backstage-compare/README.md:52), and the ahead, parity or
+      behind standing does the finer ranking (D01M857ZB468ZM2YS6GNSEG6YB9).
+      The three bronze rules are related and of similar cost, and Toolbox
+      reaches bronze today (portal/results.json).
+  - criterion: no-obvious-gap
+    verdict: fail
+    reason: >-
+      The brief's F13 measures more than size: schema and read-only annotation
+      coverage, and the calls and bytes needed to answer 20 scripted catalog
+      questions (experiments/backstage-compare/RESEARCH.md:275-282). The
+      design doc and RESULTS.md:295 list that call count as not measured yet,
+      so the card scores what an agent loads and leaves out how many calls a
+      real question takes.
+    suggestion: >-
+      Add a `calls-per-answer` rule fed by a surface.py oracle that answers
+      the 20 F13 questions on both arms (value: calls, better: lower), and an
+      `annotated-tools` rule from the readOnlyHint share surface.py already
+      computes (surface.py:186-187).
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Two fixes name crates/toolbox-api/src/mcp.rs, where builtin_tools() and
+      the get renderer live (lines 20-98 and 651-664), and the third names the
+      two commands that serve MCP; each evidence string prints the measured
+      value. To see a change scored, an agent must rerun surface.py and
+      snapshot.py, which these fixes, unlike the performance card's, do not
+      say.
+summary: >-
+  A focused card on one factor, with bars set before the run and fixes
+  that point at one file. Its gap is the F13 measure that matters most to
+  agents, calls per answered question, which is still unmeasured.

@@ -1,0 +1,55 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: sdlc-stage:operator/verify
+rubric: sdlc-stage-quality
+subjectHash: 670048c373c5
+assessor: {kind: agent, name: cursor-assessor-21, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: executable-exit
+    verdict: fail
+    reason: >-
+      The exit criterion is "toolbox verify passes", but `toolbox verify` does
+      not exist: it is not among the subcommands in `toolbox --help`, and the
+      stage lists no commands or checks
+      (portal/sdlc/stages/operator.yaml:94-104). The probes it should run are
+      design only (docs/design/sdlc.md:156-162).
+    suggestion: >-
+      Implement `toolbox verify --against <url>` with the sdlc.md §7 probes,
+      operator access and the MCP tool list first, and run it in CI against a
+      `toolbox serve --fixtures` instance.
+  - criterion: agent-can-complete
+    verdict: fail
+    reason: >-
+      With no verify command, an agent can only improvise partial checks. It
+      can probe `/readyz` and `/healthz`
+      (crates/toolbox-cli/src/detach.rs:114-165) and read through `toolbox
+      get`, `toolbox scorecard` and `toolbox mcp`. Confirming that the
+      deployment "matches the plan" needs a plan of the deployed state, which
+      is M6 (`plan --remote`).
+    suggestion: >-
+      Meanwhile, document a verify checklist that uses existing reads:
+      `/readyz`, `toolbox scorecard --url`, and the MCP tools/list compared
+      with `toolbox describe`.
+  - criterion: reuses-artifacts
+    verdict: pass
+    reason: >-
+      As designed, verify is a released-CLI subcommand pointed at a URL
+      (docs/design/sdlc.md:156). It builds or installs nothing, and its
+      rollback is "the previous digest" (docs/design/sdlc.md:162).
+  - criterion: decoupled-from-core
+    verdict: fail
+    reason: >-
+      Meeting the exit criterion ("toolbox verify passes",
+      portal/sdlc/stages/operator.yaml:99) needs a new `verify` subcommand in
+      toolbox-cli, whose `Command` enum has none
+      (crates/toolbox-cli/src/main.rs:43-322). An operator cannot add it from
+      their portal repository.
+    suggestion: >-
+      Ship `toolbox verify` (M6), or make "verify" a set of operator-defined
+      post-deploy checks over existing endpoints so it lives in the portal
+      repository.
+summary: >-
+  Verify is design only: its exit criterion names a command that doesn't
+  exist, so no agent can complete or check it. The readiness and read
+  endpoints it would build on already exist, and a documented interim
+  checklist over them would make the stage partly usable now.

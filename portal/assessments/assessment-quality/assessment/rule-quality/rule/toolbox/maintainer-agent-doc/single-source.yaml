@@ -1,0 +1,48 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/maintainer-agent-doc/single-source
+rubric: assessment-quality
+subjectHash: 590540ca84e9
+assessor: {kind: agent, name: cursor-reviewer-11, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The load-bearing citations in
+      portal/assessments/rule-quality/rule/toolbox/maintainer-agent-doc/single-source.yaml
+      hold. pointsAtAgents is `text.contains("AGENTS.md")` (agentsmd.rs:26),
+      and the check, evidence and fix are agent-docs.yaml:70, :71-73 and
+      :74-76. A scratch CLAUDE.md saying "Do not read AGENTS.md; follow these
+      rules instead" gave pointsAtAgents true.
+      .cursor/rules/toolbox-operator.mdc paraphrases AGENTS.md:61-67 and is
+      gold in portal/results.json. agentsmd.rs:204 asserts CLAUDE.md is at
+      most 30 lines, and D82 says "passes bronze only when it points at
+      AGENTS.md". The slips are minor. The rationale is :77-80, not 76-80. The
+      bronze row is agents-md-standards.md:66, and :65 is the table separator.
+      The unsafe fixture (standards.test.yaml:491-504) shows the failing
+      evidence, not the pass after the fix. That pass is the ok.mdc alias at
+      :669-671.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      Both fails are right. The rationale is about drift
+      (agent-docs.yaml:77-80), and the check reads a substring that a negating
+      sentence satisfies. fix-leads-to-pass and threshold-justified are right.
+      The rule is decided at bronze by D75 and D82 and has no number.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The scratch "Do not read AGENTS.md" alias settles measures-intent
+      without relying on the Cursor-rule example. Calling that example a
+      restatement is a judgement, but it is not load-bearing (agentsmd.rs:26).
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Requiring a link or `@AGENTS.md` import and bounding the alias's own
+      lines would fail the scratch alias and the restating Cursor rule,
+      flipping both verdicts. The suggestion also names a fixture to pin it.
+summary: >-
+  Right verdicts with a decisive scratch case: an alias telling the agent
+  not to read AGENTS.md still passes. A few line references are off by
+  one, and the fixture cited for the post-fix outcome shows the failing
+  case instead, but none of that changes a verdict.

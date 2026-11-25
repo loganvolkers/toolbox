@@ -1,0 +1,52 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:crate-design/crate:toolbox-exec
+rubric: assessment-quality
+subjectHash: e48ce0e47dfd
+assessor: {kind: agent, name: cursor-reviewer-24, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in portal/assessments/crate-design/crate/toolbox-exec.yaml
+      land where they say. The crate doc is one job at
+      crates/toolbox-exec/src/lib.rs:1-5, and forge/mod.rs:1-5 says CI is not
+      a forge capability. toolbox-cli assigns run.state = "approved" at
+      src/run.rs:582 and "awaiting_approval" at src/run.rs:756; toolbox-api
+      does the same at src/actions.rs:880. action_tests.rs:179-191 downcasts
+      to Change and CommandExecutor and reads Change's remote and base.
+      v1-spec.md:95 is still the Executor-trait row. The type is named
+      CommandExecutor, not Command; the cited lines show that, so the verdict
+      does not depend on the shorter name.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      small-contract and tests-match-risk are the fails the sources support.
+      Callers write state strings instead of Run::set (run.rs:261 is the event
+      recorder the reason names), and src/forge/ has no #[cfg(test)] while
+      src/ci/github.rs:257 does. one-responsibility passes because lib.rs:1-5
+      still describes one job after the forge/CI split. replaceable-defaults
+      passes for the right reason: reqwest is not one of the charter defaults,
+      and the RequestBuilder leak is already the small-contract fail
+      (forge/mod.rs:33).
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      A second reader of lib.rs, run.rs, actions.rs and action_tests.rs gets
+      the same two fails. The judgement that the spec cell lagging the crate
+      docs is not a second job is the crate doc's own sentence (lib.rs:1-5),
+      not taste.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The small-contract suggestion makes Run.state private and removes the
+      downcast at action_tests.rs:179-191. The tests-match-risk suggestion
+      names verify (run.rs:378-442) and Github::open_review
+      (forge/github.rs:26-45), which are the untested paths the fail cites.
+      Doing either would remove that fail.
+summary: >-
+  The refreshed toolbox-exec assessment matches the tree after the
+  forge/CI split. The two fails are the direct state writes and the
+  untested verify and forge HTTP paths, and both suggestions name those
+  sites. The spec row at v1-spec.md:95 is behind the crate, as the pass
+  says, and that does not make the crate two jobs.

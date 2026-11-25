@@ -32,7 +32,9 @@ repository runs the stack. A deploy uses the image, the Score file, or the chart
 them at a GitHub API and Postgres that are already running.
 
 Signed-in users are `X-Toolbox-User` while `TOOLBOX_AUTH_MODE=dev` (the stand-in for the
-identity-aware proxy). `bob` is in `group:platform` and administers the portal. `alice` is in
+identity-aware proxy). The image binds `0.0.0.0`, so the deploys also set
+`TOOLBOX_ALLOW_DEV_AUTH_OFF_LOOPBACK=1`: without it, the server refuses dev auth off loopback
+(D01M885TA0R4HCZTVDSG9F0PHDQ). `bob` is in `group:platform` and administers the portal. `alice` is in
 `group:payments`. `carol` is in no group.
 
 Entity pages are `/e/<id>`, for example `/e/component:payments-api?as=alice`.

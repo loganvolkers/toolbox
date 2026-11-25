@@ -1,0 +1,54 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/maintainer-ci-security/no-medium-findings
+rubric: rule-quality
+subjectHash: 0137a2046cea
+assessor: {kind: agent, name: cursor-assessor-12, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      The check reads zizmor's medium count and the evidence lists the same
+      medium findings (packages/github-actions/fragments/github-actions.yaml
+      :270-274); counts come from each finding's zizmor/severity property
+      (crates/toolbox-connector-runner/src/lint.rs:158-166, 209-213), so check
+      and evidence agree. On scratch workflows zizmor 1.32.0 --offline
+      reported artipacked and excessive-permissions (no permissions block) as
+      Medium, which are the risks the rationale describes (:278-281).
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      A reason-less `# zizmor: ignore[excessive-permissions]` on the flagged
+      line drops the finding from zizmor's SARIF (tried with another audit:
+      the ignored result disappears and leaves no `suppressions` entry), so
+      `counts.medium` falls to 0 and the record's `suppressed` stays 0
+      (lint.rs:214). For excessive-permissions that is cheaper than working
+      out each job's scopes, and it skips the decision a portal waiver needs
+      (portal/waivers.yaml:13-19 waives this rule only with
+      D01M7Y5VWNAWB8K1DNMY31KQPQ0).
+    suggestion: >-
+      Run zizmor with `--no-ignores` so ignored findings still count, and
+      excuse a medium finding only through portal/waivers.yaml; or record
+      inline ignores in the workspace connector and list them in this rule's
+      evidence.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence names severity, audit, line and message, and
+      portal/tests/standards.test.yaml:149-154 pins it for artipacked. The fix
+      names that remedy (`persist-credentials: false`); for other medium
+      audits the evidence's audit id leads to zizmor's page. It gives no
+      command, unlike no-high-findings (github-actions.yaml:223-225), which
+      would help but isn't needed to pass.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      No number. Silver is D70's placement ("then no medium findings"), and
+      the rationale explains why medium findings widen reach rather than open
+      a direct route, which keeps them out of the floor that
+      docs/design/thresholds.md:19-21 reserves for killer items.
+summary: >-
+  A sound silver rule whose check and evidence agree, with a fix that
+  works for the finding it names. Its weakness is shared with the other
+  zizmor rules: an inline ignore, which needs no reason, removes a medium
+  finding without trace and bypasses the portal's decision-backed waivers.

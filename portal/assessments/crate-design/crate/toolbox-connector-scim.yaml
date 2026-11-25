@@ -1,0 +1,66 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: crate:toolbox-connector-scim
+rubric: crate-design
+subjectHash: e478f8328fff
+assessor: {kind: agent, name: cursor-assessor-19, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: one-responsibility
+    verdict: pass
+    reason: >-
+      One job: a SCIM 2.0 receiver that turns an identity provider's users and
+      groups into `user` and `group` connector records and pushes them, so
+      membership removals reach authorization quickly
+      (crates/toolbox-connector-scim/src/main.rs:1-14). That is the `scim` row
+      of docs/v1-spec.md:100 and the "revocation fast path" of
+      docs/v1-spec.md:357. The record shapes are pinned to
+      examples/reference-portal/fixtures/idp.ndjson (main.rs:8-12).
+  - criterion: small-contract
+    verdict: pass
+    reason: >-
+      A binary with no dependents. Its only Toolbox dependency is the
+      connector SDK, used through four documented items: `Out`, `Source`,
+      `push` and `run_remote` (main.rs:24;
+      crates/toolbox-connect/src/sdk.rs:137-202). Toward Toolbox, its contract
+      is schema/connector-messages.schema.json and the SCIM routes
+      (main.rs:230-236). Nothing reaches into SDK internals.
+  - criterion: replaceable-defaults
+    verdict: pass
+    reason: >-
+      It wraps none of the charter defaults. Its dependencies are axum,
+      serde_json, tokio and toolbox-connect
+      (crates/toolbox-connector-scim/Cargo.toml:11-15). State is an in-process
+      map (main.rs:28-35), not Postgres.
+  - criterion: tests-match-risk
+    verdict: fail
+    reason: >-
+      The riskiest paths are bearer authentication, mapping group members to
+      logins, and the update verbs an IdP uses to remove a member. The first
+      two have direct tests (main.rs:259-301). scripts/m4-acceptance.sh:81-87,
+      run in CI (.github/workflows/ci.yml:177), times a revocation sent by
+      PUT. Three paths have no test: - PATCH is routed to the same
+      full-replace `upsert` as PUT (main.rs:234). A SCIM PatchOp body (RFC
+      7644 §3.5.2,
+      https://datatracker.ietf.org/doc/html/rfc7644#section-3.5.2) has no
+      `displayName` or `members`. Stored as the group, it yields slug "" and
+      an empty member list (main.rs:60-87), so a membership change sent as
+      PATCH writes a broken `idp:group/` record. - `fetch` (GET) never calls
+      `authorized` (main.rs:168-180), so anyone who can reach the port can
+      read provisioned users and groups. The acceptance scripts depend on that
+      unauthenticated GET for their readiness probe
+      (scripts/m4-acceptance.sh:42). - DELETE (main.rs:143-166) and losing
+      state on restart (the maps at main.rs:33-34 aren't persisted, so later
+      group updates drop members the IdP doesn't resend) are untested.
+    suggestion: >-
+      Implement PatchOp (add, remove and replace on `members` at least), or
+      answer PATCH with 501 rather than treating it as a replace. Add tests
+      that a member removal sent as PATCH yields the shorter `members` list,
+      that GET without the bearer token is 401 when TOOLBOX_SCIM_TOKEN is set,
+      and that DELETE emits a `delete` message. Then point the readiness probe
+      at an authorized request.
+summary: >-
+  A small, well-scoped push connector that sits on the SDK, matches its
+  spec row and wraps no default. Its tests cover the easy parts (token
+  comparison, record mapping) and a PUT revocation end to end. They miss
+  PATCH, which is mishandled as a full replace, and GET, which skips the
+  bearer check.

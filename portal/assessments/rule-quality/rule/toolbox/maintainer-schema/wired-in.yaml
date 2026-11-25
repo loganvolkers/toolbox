@@ -1,0 +1,54 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/maintainer-schema/wired-in
+rubric: rule-quality
+subjectHash: 47dec4e14391
+assessor: {kind: agent, name: cursor-assessor-10, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      "Wired" means one of two hardcoded files contains the schema's file name
+      as a substring (crates/toolbox-connector-workspace/src/specs.rs:13-16,
+      68-75). That is not the same as compiling it. It matches the basename
+      only, so schema/demo/manifest.schema.json would read as wired through
+      the real manifest's `include_str!`. It matches doc comments, and
+      schema.rs names every file in its `///` lines anyway
+      (crates/toolbox-model/src/schema.rs:8-16). A loader outside those two
+      files is never seen. The four live schemas are compiled for real
+      (schema.rs:9-17).
+    suggestion: >-
+      Match `include_str!("…/<full path>")` in schema.rs, or have
+      toolbox-model export the list of embedded paths and add a test that
+      every schema/*.json is in it.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      In a scratch repo where crates/toolbox-model/src/schema.rs held only `//
+      fake.schema.json is not loaded here`, the workspace connector reported
+      wired true for schema/fake.schema.json. A comment, even one denying it,
+      passes.
+    suggestion: >-
+      Ignore comment lines and require the full path inside an `include_str!`
+      (or a `schema(...)` call in validate.py).
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence names both places the check reads
+      (portal/standards/schemas.yaml:106), as pinned for schema/demo/partial
+      in portal/tests/standards.test.yaml:596-597. The fix says to compile the
+      document from schema.rs or apply it from the reference validator
+      (schemas.yaml:107-110), and doing either puts the name in the file.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      A yes/no rule. Silver is D77's "a mention in `schema.rs` or the
+      reference validator" (docs/decisions/D01M7W5BEAG0000000000000000.md),
+      matching the card's rationale that silver ties the schema to the code
+      (schemas.yaml:47).
+summary: >-
+  The most meaningful rule on the card, because a schema nothing compiles
+  isn't a contract. But it checks for the file name in two hardcoded
+  files, so a comment or a same-named file elsewhere passes. The live
+  schemas are really compiled. Fix and level are sound; matching the full
+  `include_str!` path would make the check mean what it says.

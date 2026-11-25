@@ -1,0 +1,50 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:acme/ownership/has-owner
+rubric: rule-quality
+subjectHash: 90d37878bdfa
+assessor: {kind: agent, name: cursor-assessor-18, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      `verified` and `inferred` are exactly the statuses for which the
+      manifest emits the `owner` tuple
+      (examples/reference-portal/toolbox.yaml:296-300). So passing means the
+      repository has an owner the portal applies. A claim CODEOWNERS
+      contradicts freezes to `unverified` per D17
+      (crates/toolbox-derive/src/lib.rs:981-987), so ledger fails even though
+      CODEOWNERS names a team.
+      examples/reference-portal/tests/ownership.test.yaml ("unverified claim
+      fails bronze") pins that on purpose.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      The cheapest pass is one CODEOWNERS line for catalog-info.yaml naming a
+      single team the IdP maps (`inferred` needs exactly one owning team,
+      crates/toolbox-derive/src/lib.rs:977-986; the authority's path is
+      examples/reference-portal/toolbox.yaml:99-106). That puts a real team on
+      review for the repository. A blanket owner such as `* @acme/platform`
+      everywhere would pass, but it is still a named team that answers.
+      Telling whether it is the right team takes the silver claim.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The fix (examples/reference-portal/toolbox.yaml:191-193) describes the
+      verified path, which is more than bronze needs but always passes it. For
+      ledger, adding `/catalog-info.yaml @acme/payments` backs the existing
+      `group:payments` claim. Without evidence the failing score doesn't show
+      the conflict, but `toolbox owner` returns it (docs/research-log.md:59,
+      A2).
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no number. Bronze is stated in the scorecard rationale: "Bronze
+      accepts an inferred owner"
+      (examples/reference-portal/toolbox.yaml:173-178). The rule rationale
+      (:194-196) says why an owner is the floor.
+summary: >-
+  A good bronze rule. Its pass condition is the same predicate the authz
+  tuple uses, so the score and the permissions can't disagree. It is
+  covered by five ownership tests. The fix aims at the silver path rather
+  than the cheapest bronze one, but following it always passes.

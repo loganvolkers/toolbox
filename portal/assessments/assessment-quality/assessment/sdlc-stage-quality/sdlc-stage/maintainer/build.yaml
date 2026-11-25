@@ -1,0 +1,56 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:sdlc-stage-quality/sdlc-stage:maintainer/build
+rubric: assessment-quality
+subjectHash: 7b40c90924d8
+assessor: {kind: agent, name: cursor-reviewer-36, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      The reuses-artifacts reason in
+      portal/assessments/sdlc-stage-quality/sdlc-stage/maintainer/build.yaml
+      says scale-budget runs cargo run --release. There is no scale-budget
+      job. The job is scale-gate, and it runs cargo build --release --locked
+      -p toolbox-derive --example scale (.github/workflows/ci.yml:259-275).
+      The other claims hold. The rust job runs cargo build --locked
+      (ci.yml:39). The ui job fails on git diff --exit-code -- dist
+      (ci.yml:304). OpenFGA, actionlint and the fga CLI come from
+      scripts/ci-tools.sh (ci.yml:45 and :289). Swatinem/rust-cache is on the
+      rust and scale jobs (ci.yml:21 and :268). The report-action comment says
+      that job builds Toolbox from the action's source (ci.yml:209).
+    suggestion: >-
+      Cite scale-gate and cargo build --release --locked at ci.yml:275, and
+      keep the conclusion that the stage compiles Toolbox in more than one
+      job.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The verdicts stay right. executable-exit passes: ci.yml runs the build
+      and the dist diff. agent-can-complete passes: the commands are in the
+      workflow and rust-toolchain.toml pins the compiler, with no secret.
+      reuses-artifacts still fails, because the rust job, the report-action
+      job and scale-gate each compile Toolbox. decoupled-from-core passes:
+      building this repository is the maintainer stage
+      (docs/design/maintainer-sdlc.md), and the stage file says so
+      (portal/sdlc/stages/maintainer.yaml:14-25).
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The three compile steps are jobs in ci.yml. A second assessor counting
+      rust, report-action and scale-gate reaches the same reuses-artifacts
+      fail without the old job name.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The suggestion in
+      portal/assessments/sdlc-stage-quality/sdlc-stage/maintainer/build.yaml
+      points report-action at the binary the rust job already built and stops
+      scale-gate from compiling its own release target. That removes the extra
+      compiles the fail names. The three passes need no suggestion.
+summary: >-
+  The stage is still compiled in more than one job, so the fail stands.
+  The name and the command do not: scale-budget is now scale-gate, and it
+  runs cargo build --release --locked, not cargo run --release. The ui
+  diff, the release-pinned tools and the rust cache are as the assessment
+  says.

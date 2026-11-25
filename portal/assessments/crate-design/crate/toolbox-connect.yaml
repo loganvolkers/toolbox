@@ -1,0 +1,97 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: crate:toolbox-connect
+rubric: crate-design
+subjectHash: 9d338dfa0553
+assessor: {kind: agent, name: cursor-assessor-19, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: one-responsibility
+    verdict: fail
+    reason: >-
+      The core is the connector control channel: the server-side `hub`, the
+      connector `sdk` and the `conformance` kit
+      (crates/toolbox-connect/src/lib.rs:1-2). That matches
+      docs/v1-spec.md:94. Two modules do other jobs:
+      - `assessment` (src/assessment.rs:1-4) checks that citations resolve,
+      rolls up verdicts and links reviews, for `toolbox assess` (D79). The
+      crate docs call it "the shared assessment record", but none of this is
+      connector control.
+      - `files` (src/files.rs:1-2) is glob and walk utilities; lib.rs:1-2
+      doesn't mention it at all.
+
+      `hub` also exports general date helpers (`rfc3339`, `parse_rfc3339`,
+      src/hub.rs:77-111). toolbox-exec imports them, and they are its only
+      use of this crate (crates/toolbox-exec/src/run.rs and src/ci/mod.rs).
+      The crate has become the shared-utilities home for connector-adjacent
+      code.
+    suggestion: >-
+      Move `assessment` next to the code that owns the assessment schema
+      (toolbox-model, or a small toolbox-assess crate). Move `files` and the
+      date helpers into a small shared module, or into toolbox-model, which
+      every caller already depends on. Then lib.rs's sentence again describes
+      every module.
+  - criterion: small-contract
+    verdict: fail
+    reason: >-
+      Connectors use a small surface: `Source`, `Out`, `run_stdio`,
+      `run_remote` and `push` (for example
+      crates/toolbox-connector-scim/src/main.rs:24). The core types are not
+      documented, though: 18 of 45 public items have no docs. These include
+      `Hub`, `Hub::new`, `Command`, `Status`, `Registration`
+      (src/hub.rs:12-154) and every `Out` method connectors call (`record`,
+      `delete`, `not_found`, `snapshot_complete`, `log`, src/sdk.rs:44-79).
+      `Command` exposes every field as `pub` (src/hub.rs:30-49). toolbox-api
+      and toolbox-exec reach into `hub::now` and `hub::rfc3339` for timestamps
+      that have nothing to do with the hub
+      (crates/toolbox-api/src/connectors.rs and reads.rs;
+      crates/toolbox-exec/src/executor/mod.rs).
+    suggestion: >-
+      Document `Hub`, `Command`, `Status`, `Registration` and the `Out`
+      methods. Make `Command`'s bookkeeping fields (`status`, `merged`,
+      `completed_version`) read-only through accessors. Re-export the time
+      helpers from a non-hub path, or move them, so callers depend on
+      `toolbox_connect::time` (or toolbox-model) rather than on `hub`.
+  - criterion: replaceable-defaults
+    verdict: pass
+    reason: >-
+      It wraps none of the charter defaults. Its dependencies are regex, sha2,
+      walkdir, serde, serde_json, tokio, reqwest and toolbox-model
+      (crates/toolbox-connect/Cargo.toml). The hub is in memory on purpose,
+      and its docs say so: commands are lost on restart (src/hub.rs:1-3). No
+      DBOS or Postgres type appears in its API. The wire format is Toolbox's
+      own schema/connector-messages.schema.json.
+  - criterion: tests-match-risk
+    verdict: fail
+    reason: >-
+      The riskiest paths are:
+      1. resync reconciliation, where `snapshot_complete` hands toolbox-api
+      the set of ids seen, and everything else of that kind is deleted
+      (src/hub.rs:258-311; crates/toolbox-api/src/connectors.rs:98-131);
+      2. command expiry to `TimedOut` (src/hub.rs:248-256);
+      3. the remote long-poll loop, which drops a failed result post
+      silently (src/sdk.rs:171-176);
+      4. the conformance kit itself (src/conformance.rs:71-276).
+
+      The hub has a single test, for coalescing, priority and completion
+      (src/hub.rs:444-473). Path 1 (including that a failed command skips
+      reconciliation, hub.rs:301-304) and path 2 have no test in this crate
+      or in toolbox-api's tests. The kit is exercised against real
+      connectors in CI (.github/workflows/ci.yml:103-105,
+      scripts/m4-acceptance.sh:33-34), but never against a misbehaving
+      connector, so nothing shows it catches the failures it lists
+      (src/conformance.rs:3-11). The assessment and files modules are well
+      tested (src/assessment.rs:302-405, src/files.rs:67-77).
+    suggestion: >-
+      Add hub tests for: records then `snapshot_complete` returning exactly
+      the seen ids; a failed command returning no reconciliation; an empty
+      resync; and an expired deadline turning `Pending` into `TimedOut`. Add a
+      conformance test against a tiny fake connector (a shell script or test
+      binary) that omits `not_found` and emits an undeclared kind, and assert
+      the kit fails those checks.
+summary: >-
+  The control-channel core (hub, SDK, conformance kit) is the right shape,
+  and every connector uses a narrow SDK surface. The crate has also become
+  a home for unrelated helpers (assessments, file globbing, date
+  formatting). Its central types are undocumented. Reconciliation and
+  timeouts, the hub paths that can delete data or hang a request, have no
+  direct test.

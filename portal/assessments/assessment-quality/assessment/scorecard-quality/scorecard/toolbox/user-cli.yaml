@@ -1,0 +1,62 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:scorecard-quality/scorecard:toolbox/user-cli
+rubric: assessment-quality
+subjectHash: 6b38611c261a
+assessor: {kind: agent, name: cursor-reviewer-35, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      The card and the capture mostly match. portal/standards/cli.yaml:15-18
+      computes layer user from an MCP tool or the name mcp, appliesTo is 164,
+      the rationale is 151-155, and track operator is 162. The user-cli rules
+      are has-help, structured-output, args-described and exercised at
+      166-209, with no documented rule. operator-cli's documented is at 111
+      and user-mcp's at 307. cli-skills.md:42 says user-cli scores
+      documentation. CLI_MCP_TOOLS has eleven entries at main.rs:401-413, and
+      Remote is 415-429. portal/results.json has 12 non-skipped user-cli
+      entities, 9 bronze and 3 silver. Search has query and Remote only
+      (main.rs:151-155); MCP search takes kind and limit at
+      crates/toolbox-api/src/mcp.rs:26-30. assess.rs:120 runs get as
+      toolbox(&["get", ...]), which the command regex in
+      portal/toolbox.yaml:111 does not see, and self-portal.sh:11 is a comment
+      that contains toolbox mcp. Two citations do not say what the reason
+      claims. docs/v1-spec.md:412 is the assess brief row. The shared
+      get|query|search row is v1-spec.md:418.
+      docs/design/toolbox-for-toolbox.md:210 is F7 about MCP query's fields
+      argument and the CLI's missing --fields, not search's --kind and
+      --limit.
+    suggestion: >-
+      Cite docs/v1-spec.md:418 for the shared reads row. Cite main.rs:151-155
+      and mcp.rs:26-30 for the search flag gap, and cite
+      toolbox-for-toolbox.md:210 only for the query --fields drift.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      one-concern and the ladder match the four rules and
+      toolbox-for-toolbox.md:106. no-obvious-gap fails because the rationale
+      and cli-skills.md:42 assume documentation, the card has no documented
+      rule, and CLI search does not expose kind or limit. actionable fails
+      because the exercised fix points at tests the capture does not read when
+      the call is a helper array, while a comment can satisfy mcp.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The missing documented rule is the rule list at cli.yaml:166-209. The
+      exercised miss is the regex at portal/toolbox.yaml:111 against
+      assess.rs:120 and self-portal.sh:11. Those do not depend on the
+      mis-cited F7 sentence.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Adding a documented rule and a CLI-MCP flag comparison would close the
+      gaps named under no-obvious-gap. Teaching the command capture to see
+      test argument arrays and to skip comments would make the exercised fix
+      raise query, which is the actionable fail.
+summary: >-
+  The user-cli assessment is right that the card has no documented rule
+  and that exercised misses a real get test while passing mcp on a
+  comment. It fails supported on two citations: the shared reads row is
+  v1-spec.md:418, not 412, and F7 at toolbox-for-toolbox.md:210 is query's
+  missing --fields, not search's --kind and --limit.

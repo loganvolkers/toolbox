@@ -1,0 +1,63 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/review-rule/assessed
+rubric: assessment-quality
+subjectHash: edd7236abd6c
+assessor: {kind: agent, name: cursor-reviewer-04, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/rule-quality/rule/toolbox/review-rule/assessed.yaml
+      hold. In portal/standards/meta.yaml, `reviewState` is 160-165, the rule
+      942-954, evidence 945-947, fix 948-950 and the advisory comment 900-901.
+      crates/toolbox-cli/src/meta.rs:272 hashes the rule struct `r` with
+      crates/toolbox-cli/src/model.rs:14-18, so the hash covers the rule's
+      YAML only. The crate hash covers src/, tests/ and Cargo.toml
+      (portal/standards/crates.yaml:51-55). schema/assessment.schema.json:36
+      sets a 10-character minimum on reasons.
+      portal/tests/standards.test.yaml:878-884 pins the stale evidence, and
+      crates.yaml:433-450 is review-crate's independently-reviewed.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      Both fails are backed by the sources. measures-intent fails because a
+      connector change, such as
+      crates/toolbox-connector-workspace/src/rust.rs, can change what a rule
+      means without changing its hash. hard-to-game fails because a hollow
+      file with the right hash passes. The two passes rest on the rule text at
+      meta.yaml:942-954 and docs/design/thresholds.md:55. No other failure
+      shows.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The hash scope is a code fact (meta.rs:272), and
+      portal/assessments/rule-quality/rule/toolbox/maintainer-crate/has-tests.yaml
+      shows an assessor having to check by hand that the cited code hadn't
+      changed. Hollow files passing follows from meta.yaml:944. A second
+      assessor would reach the same verdicts.
+  - criterion: actionable
+    verdict: fail
+    reason: >-
+      The measures-intent suggestion widens the rule's hash, which would
+      change this rule's verdict. The hard-to-game suggestion in
+      portal/assessments/rule-quality/rule/toolbox/review-rule/assessed.yaml
+      doesn't. It adds an `independently-reviewed` rule at gold, so a hollow
+      file is capped at silver, but `assessed` is the silver rule and still
+      passes. That is the rubric's case of "a suggestion that improves
+      something else (another rule, the scorecard)"
+      (portal/standards/assessments.yaml:344-346).
+    suggestion: >-
+      Attach a change to `assessed` itself, or move the point. For example,
+      count the review as current only when its reasons cite the file that
+      defines the rule, as review-assessment's grounding does
+      (portal/standards/assessments.yaml:97-104). Or note under hard-to-game
+      that the gap belongs to the scorecard, and raise it there
+      (portal/assessments/scorecard-quality/scorecard/toolbox/review-rule.yaml
+      already does).
+summary: >-
+  The citations, the hash-scope finding and the two passes hold. The
+  hard-to-game suggestion adds a gold rule to the card. That caps a hollow
+  assessment's level, but this silver rule's verdict stays as it is, so
+  the suggestion isn't actionable for the criterion it is attached to.

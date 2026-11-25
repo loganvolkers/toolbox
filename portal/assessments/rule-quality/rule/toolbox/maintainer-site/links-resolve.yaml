@@ -1,0 +1,62 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/maintainer-site/links-resolve
+rubric: rule-quality
+subjectHash: 299b2fdec0cc
+assessor: {kind: agent, name: cursor-assessor-13, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      A root-relative link is resolved the way Starlight serves it, under the
+      `/toolbox` base (crates/toolbox-connector-workspace/src/site.rs:
+      165-191). A relative link is not. It is resolved as a file path next to
+      the source file (site.rs:213-220), but a browser resolves it against the
+      page's URL, `/toolbox/<slug>/`. So `[c](catalog.md)` on
+      concepts/scorecards.md passes, because the file sits beside it on disk,
+      yet it 404s at /toolbox/concepts/scorecards/catalog.md: no plugin in
+      site/astro.config.mjs:8-27 rewrites it. The URL-style `../catalog/`
+      works in the browser but fails the rule. Only inline `[x](y)` links are
+      read (site.rs:136). The `#fragment` is cut off unchecked, and links in
+      reference definitions, HTML `<a href>` and MDX components are not read.
+      No live page uses a relative link today (all 30 pass), so these misses
+      are latent.
+    suggestion: >-
+      Resolve a relative target against the page's served slug (strip `.md`
+      and `index`, then join the result to the slug's directory), the same way
+      `site_link_exists` handles a root-relative one. Also check fragments
+      against the target page's heading slugs, and read reference-style
+      definitions and `href=` values.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      The cheapest way to clear a listed target is to correct its slug or
+      delete the link, and the fix allows both (portal/standards/
+      site.yaml:113-116). Writing the link as a full
+      `https://loganvolkers.github.io/toolbox/...` URL also hides it, because
+      `https` targets are skipped (site.rs:142-147). That isn't cheaper than
+      correcting the slug, though, and it stands out in review.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence lists each unresolved target (`entity.missingFiles`,
+      site.yaml:112). The fix says to fix or remove it, and spells out the
+      rule an agent most often misses: a root-relative link includes the base
+      and names a content page, a file under site/public or an Astro page
+      under site/src/pages (site.yaml:113-116, matching site.rs: 181-190). The
+      fixture's `/missing/` (portal/tests/ standards.test.yaml:778-779) passes
+      once it is removed or given the base and a real slug.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      Zero unresolved links at bronze is D91 (D01M7X0RYD00000000000000000),
+      and docs/design/site-standards.md:27-29 says why: GitHub Pages serves
+      under `/toolbox`, and Starlight doesn't rewrite a link that already
+      starts with `/`. External `https` status is excluded on purpose
+      (site-standards.md §4).
+summary: >-
+  Good at the case this site actually has, root-relative links that miss
+  the base: its fix and evidence are precise. But relative links are
+  resolved on disk, not as the browser resolves them, so the rule can pass
+  a 404 or fail a working link. Fragments, reference-style links and HTML
+  links aren't read. None of these occur on the 30 live pages yet.

@@ -1,0 +1,46 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: sdlc-stage:maintainer/verify
+rubric: sdlc-stage-quality
+subjectHash: dd86b7032794
+assessor: {kind: agent, name: cursor-assessor-21, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: executable-exit
+    verdict: pass
+    reason: >-
+      The CI `acceptance` job runs every listed script:
+      scripts/m5-acceptance.sh, then m2, m3 and m4 against Postgres 16,
+      OpenFGA and Chromium (.github/workflows/ci.yml:128-177). Each script
+      exits non-zero on a failed step. The only uncovered milestone is M6,
+      which has no script yet; the stage records that as its gap.
+  - criterion: agent-can-complete
+    verdict: pass
+    reason: >-
+      No step needs a secret. M4 runs real connectors against a mock GitHub
+      API and a local checkout (scripts/m4-acceptance.sh:2-6). M5 needs no
+      network or Postgres (scripts/m5-acceptance.sh:3-4). The scripts say what
+      is missing: no initdb at m2-acceptance.sh:11, and
+      `${TOOLBOX_OPENFGA_BIN:?...}` at m3-acceptance.sh:14. The setup
+      (Postgres 16 from PGDG, Playwright with NODE_PATH) is in ci.yml:148-173
+      and maintainer-sdlc.md §5 rather than in docs/v1-spec.md, which is the
+      only doc the stage lists.
+  - criterion: reuses-artifacts
+    verdict: pass
+    reason: >-
+      The third-party dependencies come prebuilt. OpenFGA is a SHA-256-pinned
+      release (ci.yml:144-147). Postgres 16 is a PGDG package
+      (ci.yml:148-158). Playwright and Chromium come from the lockfile in
+      scripts/playwright-ci (ci.yml:167-173). The acceptance job does compile
+      Toolbox again (ci.yml:139), with rust-cache, instead of reusing the rust
+      job's binary.
+  - criterion: decoupled-from-core
+    verdict: pass
+    reason: >-
+      Proving a milestone on the production path is the maintainer's own job
+      (docs/design/maintainer-sdlc.md:60). An acceptance script is a shell
+      script in scripts/, not a crate, builtin or schema change.
+summary: >-
+  Milestone acceptance for M2–M5 is gated in CI on real Postgres, OpenFGA
+  and a browser, with no secrets, so an agent can run it unattended. Its
+  weak points are the missing M6 script, and the setup steps living in
+  ci.yml and maintainer-sdlc.md rather than the docs the stage lists.

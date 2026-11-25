@@ -1,0 +1,54 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/vs-backstage-security/owner-only-fields
+rubric: assessment-quality
+subjectHash: 903e7a98ff95
+assessor: {kind: agent, name: cursor-reviewer-16, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      The substantive citations in
+      portal/assessments/rule-quality/rule/toolbox/vs-backstage-security/owner-only-fields.yaml
+      land. facts.yaml:15-20 is the fact. tests/authz.rs:89 is
+      `facets_actions_and_revocation` and 248 is
+      `a_filter_cannot_probe_a_hidden_facet`. ci.yml:24 runs `cargo test` and
+      ci.yml:52 runs toolbox-api with OpenFGA. access.rs:219 is `facet_needs`
+      and 243 `hides_details`. ADJUDICATION.md:164-179 and 250-254,
+      RESEARCH.md:185 (P5) and facts.yaml:105-110 also hold. The exception is
+      "Single bronze level per D01M857ZB468ZM2YS6GNSEG6YB9": that decision
+      says nothing about levels (backstage-comparison.yaml:458 does).
+    suggestion: >-
+      Cite backstage-comparison.yaml:458 for the single bronze level.
+  - criterion: complete
+    verdict: unsure
+    reason: >-
+      measures-intent cites ADJUDICATION.md:164-179 for the filter guard. The
+      same range says "Latency can differ by whether a hidden value exists"
+      (lines 179-180), because the field index reads raw `e.fields` (lines
+      165-167). A filter on a hidden field therefore narrows to a candidate
+      only when the guess is right. So "filters cannot probe them" (the fact's
+      own words, facts.yaml:18-19) holds for results but not for timing. The
+      channel is small and predates the index, so a pass may still be right,
+      but the reason should weigh it.
+    suggestion: >-
+      Name the timing channel in measures-intent and judge whether it defeats
+      "cannot probe". Or suggest that the index skip fields the caller can't
+      see, which would close it.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The passes rest on named tests that CI runs (ci.yml:24, 52) and on code
+      a second assessor reads the same way.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      There are no fail or unsure verdicts in
+      portal/assessments/rule-quality/rule/toolbox/vs-backstage-security/owner-only-fields.yaml,
+      so no suggestion is needed.
+summary: >-
+  The verdicts are well sourced. A hand-set fact backed by two CI-run
+  tests is a fair basis for hard-to-game. The measures-intent reason
+  quotes the adjudicator's guard argument but skips the timing channel
+  recorded in the same lines, and the single bronze level is attributed to
+  a decision that doesn't set levels.

@@ -1,0 +1,52 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:acme/ownership/claim-verified
+rubric: rule-quality
+subjectHash: c847f3a18109
+assessor: {kind: agent, name: cursor-assessor-18, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      `verified` is set only when the claimed group is among the owners of the
+      last CODEOWNERS rule that matches catalog-info.yaml. The owners' GitHub
+      teams map to groups through `Group.githubTeam`
+      (crates/toolbox-derive/src/lib.rs:957-989, :1313-1333). That is D17's
+      rule (D01M7TCJ3280000000000000000) as the rationale states it
+      (examples/reference-portal/toolbox.yaml:197-206).
+      examples/reference-portal/tests/ownership.test.yaml covers a catch-all
+      owner, a file-specific rule and an unbacked claim.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      The cheapest pass is to make the claim and the code owner of
+      catalog-info.yaml agree, for example claiming `group:platform` on
+      ledger, whose CODEOWNERS names `@acme/platform`
+      (examples/reference-portal/fixtures/github.ndjson). That is a consistent
+      claim, which is the intent. Claiming a team that isn't the code owner
+      needs a CODEOWNERS edit in the same change. Only review stops that, and
+      it belongs to branch-protected at the same level, not to this rule.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The fix names both places: `spec.owner` in catalog-info.yaml and
+      CODEOWNERS for that file
+      (examples/reference-portal/toolbox.yaml:200-202). Following it on ledger
+      gives `verified`. It assumes the group's IdP record carries `githubTeam`
+      (examples/reference-portal/fixtures/idp.ndjson; the authority's
+      `teamField`, toolbox.yaml:105) and doesn't say so. For each fixture
+      group it does.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no number. Silver rests on D17 and on docs/authorization.md
+      §4.8, both linked from the scorecard
+      (examples/reference-portal/toolbox.yaml:179-183). Bronze accepts an
+      inferred owner, and silver requires the claim to be backed (:173-178).
+summary: >-
+  A sound rule: the check is D17's CODEOWNERS authority, computed in
+  toolbox-derive, and the tests cover verified, file-specific, unbacked
+  and inferred cases. The fix names both files. It only works when the IdP
+  maps the group to a GitHub team, and it doesn't say so. The claim is
+  only as trustworthy as review on the branch, which this rule rightly
+  leaves to branch-protected.

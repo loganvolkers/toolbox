@@ -1,0 +1,54 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:scorecard-quality/scorecard:toolbox/maintainer-package
+rubric: assessment-quality
+subjectHash: 58d6b3c23800
+assessor: {kind: agent, name: cursor-reviewer-06, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      Every citation in
+      portal/assessments/scorecard-quality/scorecard/toolbox/maintainer-package.yaml
+      checks out. portal/README.md:30 lists the card under "1. Maintainer". In
+      portal/standards/packages.yaml, line 59 is `track: maintainer`, 50-52
+      "silver pins it", 166-169 "the lockfile's pins protect nothing" and
+      162-165 the fix naming `.github/workflows/`. docs/design/
+      package-standards.md:58-59 says maintainer SDLC, and :72 still shows
+      no-hardcoded-secrets at gold against docs/design/thresholds.md:35.
+      portal/results.json has ui at silver failing described and
+      engines-declared. .github/workflows/ci.yml:299 is the ui job's Node 22.
+      The OpenSSF npm guide's "Lockfiles and commands" lists `npm exec` and
+      `npx` among commands that don't treat the lockfile as read-only. Its
+      recommendation 3 asks that a CLI be a declared dependency before CI
+      installs it. crates/toolbox-connector-workspace/src/npm.rs:195-204
+      ignores `npx`.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The verdicts are right. One concern for maintainers. The ladder fails on
+      the card's own text: silver's pin pays off only at gold
+      (packages.yaml:50-52 against 166-169). There are uncovered gaps: CI
+      `npx`, and lockfile `resolved` hosts, since npm.rs never reads the
+      lockfile. The actionable pass was traced on ui/package.json, which needs
+      two fields to reach gold.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The ladder fail rests on two quoted lines of the scorecard
+      (packages.yaml:50-52, 166-169), and the gap fail on the guide the card
+      links (packages.yaml:123-124). Neither is taste. The point that the doc
+      fields are cheaper than a lockfile is softer, but the verdict doesn't
+      depend on it.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Moving ci-installs-from-the-lockfile to silver puts the pin and its
+      enforcement on one level, which flips levels-are-a-ladder. A
+      `ci-runs-declared-tools` rule plus a `resolved`-host check covers the
+      two named gaps, which flips no-obvious-gap.
+summary: >-
+  A sound, well-cited scorecard assessment. The ladder fail is grounded in
+  the card contradicting itself (silver "pins it", gold says the pins
+  "protect nothing" without `npm ci`). The gap fail is grounded in the
+  OpenSSF guide the card links. Each suggestion would flip its verdict.

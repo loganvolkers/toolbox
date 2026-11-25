@@ -3,7 +3,7 @@
 //! calls a model: the agent the developer already runs reads the brief (from `toolbox assess brief`
 //! or the `assessment_brief` MCP tool), assesses, and writes an assessment file or pushes it.
 
-use serde_json::{Value, json};
+use serde_json::{Map, Value, json};
 use std::fmt::Write as _;
 use toolbox_model::Manifest;
 use toolbox_model::manifest::Rubric;
@@ -38,11 +38,23 @@ pub fn rubric<'a>(m: &'a Manifest, kind: &str, name: Option<&str>) -> Result<&'a
     }
 }
 
+/// Whether `r` judges an entity with these fields. A rubric never judges an assessment made with
+/// itself, so reviews stop at one level (docs/design/scorecards-for-scorecards.md §1, §6.1).
+pub fn applies(r: &Rubric, fields: &Map<String, Value>) -> bool {
+    fields.get("rubric").and_then(Value::as_str) != Some(r.name.as_str())
+}
+
 /// The brief for `entity` (a `GET /v1/entities/{id}` body: `{id, kind, fields}`).
 pub fn brief(m: &Manifest, entity: &Value, rubric_name: Option<&str>) -> Result<Value, String> {
     let id = entity["id"].as_str().unwrap_or_default();
     let kind = entity["kind"].as_str().unwrap_or_default();
     let r = rubric(m, kind, rubric_name)?;
+    if entity["fields"].as_object().is_some_and(|f| !applies(r, f)) {
+        return Err(format!(
+            "{id} was made with rubric {}, which does not review its own assessments",
+            r.name
+        ));
+    }
     let subject = &entity["fields"][r.subject()];
     let hash = subject.as_str().map(str::to_owned).ok_or_else(|| {
         format!(

@@ -1,0 +1,45 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/meta-scorecard/fixtures-reach-every-level
+rubric: assessment-quality
+subjectHash: d5ed54494dde
+assessor: {kind: agent, name: cursor-reviewer-02, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/rule-quality/rule/toolbox/meta-scorecard/fixtures-reach-every-level.yaml
+      hold. The rationale is meta.yaml:682-684. level_ignoring_unknown
+      (crates/toolbox-derive/src/lib.rs:1261-1291) breaks only when every rule
+      at a level is unknown (1277-1282). Otherwise it requires only the known
+      rules to pass (1283-1286), so one passing rule per level climbs.
+      fixtureRealLevels is meta.yaml:43-49, fed by meta.rs:131-139. The fix
+      names portal/fixtures/ (meta.yaml:680-682), loaded by
+      toolbox-store/src/lib.rs:215. thresholds.md:48 and
+      scorecards-for-scorecards.md:115 are as cited. results.json has 28 of 53
+      cards failing, and meta-scorecard itself fails with 2 missing levels.
+      standards.test.yaml:1304-1308 pins pass and fail.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The verdicts are right. A sparse fixture that leaves the other rules
+      unknown reaches a level without exercising them together, which is the
+      case the rationale names (meta.yaml:683-684). So measures-intent and
+      hard-to-game fail, and the fix and level passes hold.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Both fails follow from the level code (derive lib.rs:1277-1286), not
+      taste. A second assessor reading those lines with the rationale reaches
+      the same conclusion.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Recording per level whether a fixture reached it with every rule decided
+      would stop sparse fixtures from counting. That changes both the
+      measures-intent and the hard-to-game verdicts.
+summary: >-
+  Trustworthy. It found a genuine gap by reading the derive code: levels
+  are granted over known rules only, so a sparse fixture fakes a rung. Its
+  live numbers match results.json, and its suggestion targets the cause.

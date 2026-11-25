@@ -1,0 +1,60 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/maintainer-skill/has-evals
+rubric: rule-quality
+subjectHash: 6a7ff16e3ad5
+assessor: {kind: agent, name: cursor-assessor-01, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The rationale calls the cases "the contract a later paired-run job will
+      execute" (portal/standards/skills.yaml:225-228), but evalCases is just
+      the length of the array
+      (crates/toolbox-connector-workspace/src/skills.rs:443-451). Elements are
+      never read. A scratch skill with evals/evals.json `[{},{},{}]` reported
+      evalCases 3 through target/debug/toolbox-connector-workspace and would
+      pass. Three copies of one prompt also count as three cases. The one live
+      skill that passes, design-audit, has real cases with `prompt` and
+      `expected`
+      (plugins/toolbox-operator/skills/design-audit/evals/evals.json).
+    suggestion: >-
+      Count only elements that are objects with a non-empty string `prompt`
+      (and `expected` where the skill-creator format has one), and distinct
+      prompts only. Add an `[{},{},{}]` fixture that must fail.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      The cheapest pass is a 10-byte file `[{},{},{}]`, which also satisfies
+      the fix text as written ("One element is one prompt",
+      skills.yaml:221-224). Nothing runs the cases, by design (D72), so a file
+      that is not usable can stand in for one that is. 42 of the 43 live
+      skills fail today (portal/results.json), so the empty-array shortcut
+      would lift almost the whole catalog by one rule.
+    suggestion: >-
+      Same shape check as above. A cheap smoke test would also help: a
+      non-gating runner job that parses each case into the paired-run format
+      skill-standards.md:105-108 names, and records the count it could parse.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence gives the count and the target ("0 cases in
+      evals/evals.json (want at least 3)",
+      portal/tests/standards.test.yaml:360-361). The fix names the file, both
+      accepted shapes and the number, and the check reads exactly that file
+      (skills.rs:432-441).
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      Three is Anthropic's authoring guidance ("at least three evaluations"),
+      cited in docs/design/skill-standards.md:47 and 97 and in the rule's
+      rationale. Gold, above the floor, is argued at
+      skill-standards.md:102-104: there were no eval cases yet, and inventing
+      them to pass a floor would not be a measurement (D72).
+summary: >-
+  The number and the level are justified, and the fix and evidence point
+  at the right file. But the check counts array elements without reading
+  them: `[{},{},{}]` passes. The rationale wants executable cases, and 42
+  of 43 live skills fail today, so the empty-array shortcut is the
+  cheapest route to gold. Checking each case for a non-empty `prompt`
+  would close it.

@@ -1,0 +1,54 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/meta-assessment/suggests-fixes
+rubric: rule-quality
+subjectHash: 21d787b2364e
+assessor: {kind: agent, name: cursor-assessor-04, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      `unsuggested` lists fail and unsure verdicts whose `suggestion` is
+      missing or blank after trimming
+      (crates/toolbox-connect/src/assessment.rs:199-201), and the check
+      requires it to be empty (portal/standards/assessments.yaml:167-175).
+      Passing means "every finding comes with a suggestion". Whether the
+      suggestion would change the verdict is left to assessment-quality's
+      `actionable` (assessments.yaml:340-346), the split D80 makes.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Any non-blank string passes, so `suggestion: TODO` or "Fix it." clears a
+      finding at no cost, while a real suggestion means working out the
+      change. The backstop is advisory and rare: review-assessment never gates
+      (assessments.yaml:242), and only 3 of 48 files under portal/assessments/
+      are assessment-quality reviews. For the same flaw in rule fixes,
+      meta-rule asks for 5 words (`explains-fix`,
+      docs/design/thresholds.md:44) and a named place.
+    suggestion: >-
+      In record_in (crates/toolbox-connect/src/assessment.rs:199-201), count a
+      suggestion as missing when it has fewer than 5 words, the explains-fix
+      floor. Add a fixture assessment with `suggestion: TODO` that fails the
+      rule.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence is `entity.unsuggested`, the criteria to fix
+      (assessments.yaml:170). The fix says to add a `suggestion:` to each one
+      (assessments.yaml:171-173). Doing that empties the list, as the unit
+      test at crates/toolbox-connect/src/assessment.rs:313 and the fixture
+      expectation at portal/tests/standards.test.yaml:960-964 show.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no number. Bronze, gated by the ratchet for new assessments
+      (assessments.yaml:165), is set in D80 and
+      docs/design/scorecards-for-scorecards.md:295. The rationale gives the
+      reason: a finding with no suggested change tends to go unacted
+      (assessments.yaml:174-175).
+summary: >-
+  A correctly placed floor rule whose check matches its name. Its weakness
+  is that any non-blank suggestion passes, so "TODO" clears it, and the
+  judged backstop (review-assessment) is advisory and has reviewed only 3
+  assessments. A minimum word count, like meta-rule's explains-fix, would
+  close the cheap route.

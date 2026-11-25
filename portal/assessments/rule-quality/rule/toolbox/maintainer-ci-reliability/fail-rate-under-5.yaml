@@ -1,0 +1,70 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/maintainer-ci-reliability/fail-rate-under-5
+rubric: rule-quality
+subjectHash: 353620b72e2e
+assessor: {kind: agent, name: cursor-assessor-09, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The rationale says a red run is rare enough that each one is looked at
+      (packages/github-actions/fragments/github-actions.yaml:473-475), and a
+      first-try rate of 5% or less is a fair proxy for that
+      (crates/toolbox-connector-github/src/runs.rs:82). But runs are read only
+      on the scored branch (crates/toolbox-connector-github/src/main.rs:242),
+      while the card applies to every workflow (github-actions.yaml:349). So
+      gold is out of reach for release.yml (tag pushes only) and image.yml
+      (workflow_call or dispatch only), 2 of this repository's 7 workflows,
+      whatever their record.
+    suggestion: >-
+      Score only workflows that run on the scored branch, using trigger
+      branches recorded by the workspace connector. Make the fail-rate tiers
+      `unknown` for the rest instead of failing them.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Gold allows at most 2 failures in the 50-run window
+      (github-actions.yaml:52), so a single failing run that is cancelled
+      before it concludes decides the tier. Cancelled runs are not decided
+      (runs.rs:9-10), and this rule's evidence, unlike bronze's
+      (github-actions.yaml:390-396 vs 463-468), doesn't show how many runs
+      were cancelled.
+    suggestion: >-
+      Show the cancelled count in the evidence as fail-rate-under-20 does, or
+      count a cancelled run with an already-failed job as a failure in
+      runs.rs.
+  - criterion: fix-leads-to-pass
+    verdict: fail
+    reason: >-
+      "Fix its cause … so that every failure on the branch is rare enough to
+      be looked at" restates the goal. It doesn't cover the too-few-runs
+      evidence (portal/tests/standards.test.yaml:192-194), and it doesn't say
+      that after a fix the rate only falls as passing runs replace the failed
+      ones in the window. At gold, with at most 2 of 50 failures allowed, that
+      wait is most of what an agent needs to know.
+    suggestion: >-
+      Say that the rate is over the last 50 decided runs and falls as they are
+      replaced, that fewer than 10 decided runs is fixed by more runs, not
+      code, and keep the concrete list of where causes live (test, workflow
+      file, missing PR check).
+  - criterion: threshold-justified
+    verdict: fail
+    reason: >-
+      The 5% bound is justified as halving silver
+      (docs/design/thresholds.md:31). The shared 10-run minimum is justified
+      only for silver: "at 10 runs one failure is 10%, the silver bound". At
+      gold, with rounding (runs.rs:73), one failure fails anywhere from 10 to
+      18 decided runs and first passes at 19 (1/19 rounds to 5%). So over that
+      range gold means zero failures, and by the doc's own argument 10 runs
+      can't tell 5% from 0%.
+    suggestion: >-
+      Give gold its own minimum (at least 20 decided runs, where one failure
+      is 5%) as a parameter, or justify reusing 10 for gold in
+      docs/design/thresholds.md.
+summary: >-
+  The gold tier of the fail-rate ladder reuses silver's machinery, and
+  with it silver's problems: workflows that never run on main can't reach
+  gold, and a cancelled failure leaves no trace. At gold the 10-run
+  minimum is too low to tell 5% from 0%, so the threshold is only half
+  justified, and the fix restates the goal rather than giving steps.

@@ -2,61 +2,55 @@ apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/maintainer-ci-speed/cancels-superseded-runs
 rubric: rule-quality
 subjectHash: e80dfa2a39d7
-assessor: {kind: agent, name: campaign-review-rules-r3}
+assessor: {kind: agent, name: cursor-assessor-12, model: claude-opus-5.5}
 at: 2026-11-25
 verdicts:
   - criterion: measures-intent
-    verdict: pass
+    verdict: fail
     reason: >-
-      The check reads cancelsSuperseded
-      (packages/github-actions/fragments/github-actions.yaml:498-500), which
-      now needs a group naming a per-ref context and a cancel-in-progress that
-      is not false
-      (crates/toolbox-connector-workspace/src/workflows.rs:73-87), at the top
-      or on every job (workflows.rs:289), so the last review's finding that
-      any concurrency key passed is closed; the unit test pins a static group,
-      `cancel-in-progress: false` and the fix's snippet
-      (workflows.rs:393-421). Live, the two failures are
-      .github/workflows/codeql.yml and .github/workflows/release.yml, both
-      triggered by pull_request with no group. The ref test is a substring
-      match, so `github.ref_type` also counts (I confirmed it on a scratch
-      workflow through target/debug/toolbox-connector-workspace); that is a
-      contrived configuration, not drift in what people write.
+      `cancels_superseded` passes when the group contains one of five ref
+      strings and `cancel-in-progress` isn't literally false
+      (crates/toolbox-connector-workspace/src/workflows.rs:76-87, 91-104).
+      So `group: ci-${{ github.ref }}-${{ github.run_id }}`, unique per run
+      and so never cancelling, passes, and so does `cancel-in-progress: ${{
+      github.event_name == 'push' }}`, which is never true on a pull
+      request: any expression other than `false` counts as truthy. Workflows
+      on `pull_request_target` are exempt
+      (packages/github-actions/fragments/github-actions.yaml:500), though a
+      push to the fork's branch supersedes their runs the same way.
+    suggestion: >-
+      In cancels_superseded, reject a group that also contains
+      `github.run_id`, `github.run_number` or `github.sha`, and treat a
+      `cancel-in-progress` expression as true only if it is `true` or mentions
+      `pull_request`; extend the check to `'pull_request_target' in
+      entity.triggers`. Add both cases to the unit test at workflows.rs
+      :393-421.
   - criterion: hard-to-game
     verdict: pass
     reason: >-
-      The cheapest pass is pasting the fix's four lines, which is the right
-      thing. `concurrency: ci` and `cancel-in-progress: false`, the routes the
-      previous review named, now fail
-      (crates/toolbox-connector-workspace/src/workflows.rs:403-410). What
-      remains is dropping the pull_request trigger, which costs the project its
-      PR checks, or an expression that is never true at run time such as
-      `cancel-in-progress: ${{ github.event_name == 'push' }}`
-      (continues_on_error accepts any non-false expression, workflows.rs:89-102).
-      That is a deliberate misconfiguration in a file .github/CODEOWNERS routes
-      to an owner, not a cheap route.
+      The cheapest pass is pasting the fix's block, which does the right
+      thing; the misfires above are mistakes, not shortcuts. The rule reads
+      the parsed YAML: cancels_superseded looks only at the `concurrency`
+      value's `group` and `cancel-in-progress`
+      (crates/toolbox-connector-workspace/src/workflows.rs:76-86), so a
+      comment or a step name can't satisfy it.
   - criterion: fix-leads-to-pass
     verdict: pass
     reason: >-
-      The snippet is now block YAML with the group quoted and
-      `cancel-in-progress: ${{ github.event_name == 'pull_request' }}`
-      (packages/github-actions/fragments/github-actions.yaml:505-512), the
-      exact form that .github/workflows/ci.yml:10-12 uses and that passes live
-      and in the unit test (crates/toolbox-connector-workspace/src/workflows.rs:416-420),
-      so the earlier unparseable snippet is fixed. The evidence tells a missing
-      group from a non-cancelling one (github-actions.yaml:501-504).
+      The fix is literal YAML (github-actions.yaml:506-511), and the unit test
+      at workflows.rs:416-420 pins that exact group and expression as
+      cancelling. The evidence tells the two failure cases apart (no group, or
+      a group that doesn't vary by ref or doesn't cancel), matching the live
+      failures on codeql.yml and release.yml in portal/results.json.
   - criterion: threshold-justified
     verdict: pass
     reason: >-
-      No number. Bronze on its own speed card, apart from reliability, is
-      stated in docs/design/thresholds.md:34 and the ladder at :58, and the
-      source is labelled as common practice in
-      docs/design/github-actions-standards.md:87.
+      No number. docs/design/thresholds.md:34 places it at bronze on the speed
+      card as a principle: it saves runner time and isn't a correctness
+      property, so it doesn't hold a reliable workflow back.
 summary: >-
-  First review since the rule moved to maintainer-ci-speed. All three
-  findings of the earlier review (in git history under
-  maintainer-ci-reliability/) are fixed: the connector reads the group and
-  cancel-in-progress, and the fix's snippet parses and passes. The check
-  measures what its name says; only contrived groups (`github.ref_type`)
-  or never-true expressions slip through. Line numbers refer to main at
-  fb5c546.
+  A cheap, well-placed rule with a copy-paste fix that its unit test pins.
+  The check is lexical: a group that also varies by run id, or a
+  cancel-in-progress expression that is never true for pull requests,
+  passes while cancelling nothing, and pull_request_target workflows are
+  exempt.

@@ -1,0 +1,46 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/vs-backstage-agent-surface/mcp-by-default
+rubric: assessment-quality
+subjectHash: c9dcc2f48c64
+assessor: {kind: agent, name: cursor-reviewer-15, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/rule-quality/rule/toolbox/vs-backstage-agent-surface/mcp-by-default.yaml
+      hold:
+      - The rationale is backstage-comparison.yaml:822-825.
+      - Toolbox's fact is experiments/backstage-compare/facts.yaml:55-59, and
+        Backstage's create-app evidence is :147-149.
+      - snapshot.py:85 overlays facts.yaml on the measured record.
+      - surface.py:164-165 asserts a 200 authenticated `tools/list` on each
+        arm, a result that never reaches `mcpByDefault`.
+      - `handle` is mcp.rs:999-1023.
+      - The bar is README.md:52 and ADJUDICATION.md:113.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      hard-to-game fails for the right reason: the value is typed into
+      facts.yaml:56. The other verdicts are right. The fix names both
+      endpoints, and the boolean bar was pre-registered. The value is true
+      today, so a "keep" fix that names the serving code is enough for
+      fix-leads-to-pass.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The hand-written boolean and the unused probe can both be read in
+      facts.yaml:55-59 and surface.py:164-166. A second assessor would reach
+      the same fail and the same passes.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The suggestion would make the fact measured rather than typed, so
+      editing a file could no longer pass the rule. It derives `mcpByDefault`
+      from surface.py's `tools/list` probe and removes it from facts.yaml.
+      That changes the hard-to-game verdict it is attached to.
+summary: >-
+  A sound assessment with accurate citations. Its one fail correctly spots
+  that the field is asserted, not probed, while surface.py already makes
+  the probe that would prove it. Its suggestion wires that probe in.

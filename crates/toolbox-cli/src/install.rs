@@ -312,6 +312,50 @@ fn version_line(text: &str) -> String {
         .to_owned()
 }
 
+/// Whether this host would confine in-image connectors, under `TOOLBOX_CONNECTOR_CONFINEMENT`.
+/// Only `required` without Landlock (or a bad value) is a problem; `best-effort` without it is
+/// said, not failed (D01M88668MR8K559A1NYSNQQTX0).
+fn confinement_line(
+    landlock: bool,
+    setting: Result<toolbox_api::confine::Confinement, String>,
+) -> (bool, String) {
+    use toolbox_api::confine::Confinement;
+    match (landlock, setting) {
+        (_, Err(e)) => (true, format!("WRONG   connector confinement: {e}")),
+        (true, Ok(s)) => (
+            false,
+            format!("ok      connector confinement: Landlock ({})", s.as_str()),
+        ),
+        (false, Ok(Confinement::BestEffort)) => (
+            false,
+            format!(
+                "UNCONFINED connector confinement: no Landlock on this host, so serve starts in-image connectors unconfined ({}=best-effort; set required to refuse them)",
+                Confinement::VAR
+            ),
+        ),
+        (false, Ok(Confinement::Required)) => (
+            true,
+            format!(
+                "REFUSED connector confinement: no Landlock on this host and {}=required, so serve would not start in-image connectors",
+                Confinement::VAR
+            ),
+        ),
+    }
+}
+
+/// Print the confinement line when the portal has in-image connectors; 1 if it is a problem.
+fn doctor_confinement(m: &toolbox_model::Manifest) -> usize {
+    if !m.connectors.iter().any(|c| c.runtime == "in-image") {
+        return 0;
+    }
+    let (problem, line) = confinement_line(
+        toolbox_api::confine::available(),
+        toolbox_api::confine::Confinement::from_env(),
+    );
+    println!("{line}");
+    usize::from(problem)
+}
+
 /// `toolbox doctor`: report connectors and tools (exit 1 on problems), or print the mise config.
 pub fn doctor(portal: &Path, mise: bool) -> ExitCode {
     let (_, m) = match manifest(portal) {
@@ -350,6 +394,7 @@ pub fn doctor(portal: &Path, mise: bool) -> ExitCode {
             }
         );
     }
+    problems += doctor_confinement(&m);
     for (action, package) in executor_packages(&m) {
         let found = artifacts::parse(package).is_some_and(|s| s.installed().is_file());
         if found {
@@ -507,6 +552,19 @@ mod tests {
     }
 
     use super::*;
+
+    #[test]
+    fn doctor_says_when_connectors_would_run_unconfined() {
+        use toolbox_api::confine::Confinement;
+        let (p, l) = confinement_line(true, Ok(Confinement::Required));
+        assert!(!p && l.starts_with("ok "), "{l}");
+        let (p, l) = confinement_line(false, Ok(Confinement::BestEffort));
+        assert!(!p && l.starts_with("UNCONFINED"), "{l}");
+        let (p, l) = confinement_line(false, Ok(Confinement::Required));
+        assert!(p && l.starts_with("REFUSED"), "{l}");
+        let (p, _) = confinement_line(true, Confinement::parse("strict"));
+        assert!(p);
+    }
 
     #[test]
     fn vendored_sources_carry_no_machine_layout() {

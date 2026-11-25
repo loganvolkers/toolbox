@@ -1,0 +1,58 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: scorecard:acme/app-approval
+rubric: scorecard-quality
+subjectHash: db7427a20264
+assessor: {kind: agent, name: cursor-assessor-18, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: >-
+      One rule, one audience: security, checking that an approved GitHub App
+      still has the permissions it was approved with. It is scoped to apps on
+      the approved list (`appliesTo`,
+      examples/reference-portal/toolbox.yaml:266-268) and owned by
+      `group:security`.
+  - criterion: levels-are-a-ladder
+    verdict: pass
+    reason: >-
+      There is a single bronze level, and the rationale explains why
+      (examples/reference-portal/toolbox.yaml:258-261): an approval either
+      still describes the app or it doesn't. Bronze is reachable today:
+      renovate reaches it and snyk-security doesn't
+      (examples/reference-portal/tests/apps.test.yaml). With one rule, no
+      level can mix unrelated rules.
+  - criterion: no-obvious-gap
+    verdict: fail
+    reason: >-
+      The policy records `reviewed` dates and a `steward` per app
+      (examples/reference-portal/toolbox.yaml:18-19, :29-30). The design names
+      a review cadence and grant expiry as part of the policy
+      (docs/examples/approved-github-apps.md:64), but no rule reads them, so
+      an approval reviewed years ago still scores bronze. The design also
+      keeps `administration` and `repository_creation` out of self-service
+      (:100-101), and no rule flags an approved snapshot that contains them.
+    suggestion: >-
+      Add a silver rule `review-current` (e.g. `timestamp(policy.approvedApps[
+      entity.slug].reviewed) > now - duration('8760h')`, with the cadence
+      justified in docs/design/thresholds.md). Consider a bronze rule
+      `no-sensitive-permissions` that fails when the snapshot includes
+      `administration` or `repository_creation`.
+  - criterion: actionable
+    verdict: fail
+    reason: >-
+      Its only rule has no evidence and doesn't name where the snapshot lives
+      (examples/reference-portal/toolbox.yaml:272-274). To raise
+      snyk-security, an agent has to diff `toolbox get
+      githubapp:snyk-security` against `policies.approvedApps.snyk-security`
+      itself to find `administration: read`. The raise is a security
+      re-approval, which an agent can prepare but not grant.
+    suggestion: >-
+      Add evidence naming each changed permission, and a fix that names
+      `policies.approvedApps.<slug>.permissions` as the place to update after
+      security's review.
+summary: >-
+  A focused, well-motivated single-rule card from the approved-apps
+  design. It leaves out the review cadence that the policy's `reviewed`
+  dates exist for. Its one rule has no evidence and names no file, so the
+  failing score doesn't say which permission drifted.

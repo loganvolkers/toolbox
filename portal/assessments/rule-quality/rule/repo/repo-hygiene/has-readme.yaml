@@ -1,0 +1,53 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:repo/repo-hygiene/has-readme
+rubric: rule-quality
+subjectHash: 994be1e8539b
+assessor: {kind: agent, name: cursor-assessor-18, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The fix promises "what this is, how to run it, who owns it"
+      (examples/repo-portal-starter/toolbox.yaml:96-97). The check counts
+      whitespace tokens in the whole file, including badges, HTML and code
+      blocks (crates/toolbox-connector-workspace/src/repo.rs:73-76). A
+      50-token badge row and a title passes with nothing on running it. The
+      README is also looked for only at the root or in .github/
+      (repo.rs:55-64), so a repository whose README lives in docs/, which
+      GitHub also displays, fails while meeting the intent.
+    suggestion: >-
+      Count prose words outside code fences, images and HTML. Also look in
+      docs/. Consider a second fact (e.g. a heading or fenced command under
+      "Usage", "Run" or "Getting started") for the "how to run it" part.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      The 50-word floor rejects the stub (legacy-tool's 12 words fail,
+      examples/repo-portal-starter/tests/standards.test.yaml). Writing two
+      real sentences on what the repository is and how to run it costs no more
+      than padding to 50 tokens. Deliberate filler is possible, but it isn't
+      the cheap path.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence gives the file and its count ("README.md has 12 words",
+      examples/repo-portal-starter/toolbox.yaml:93-94), and the fix names the
+      number and what to write. A 50-word README at the root passes.
+  - criterion: threshold-justified
+    verdict: unsure
+    reason: >-
+      Fifty words appears only in the rule and in the starter's table
+      (examples/repo-portal-starter/README.md). docs/design/thresholds.md has
+      no row for it, and docs/design/repo-portals.md:140 justifies the
+      starter's scope, not this number. I found no measurement or decision
+      behind 50.
+    suggestion: >-
+      Add a row to docs/design/thresholds.md for the 50-word floor, with a
+      source or measurement (e.g. word counts of READMEs in the pilot repos)
+      and whether it is a principle or a measured cut.
+summary: >-
+  A reasonable bronze floor with good evidence, but a token count measures
+  length, not whether the README says what the repository is and how to
+  run it. Badges and code count, docs/README.md is ignored, and the
+  50-word threshold has no stated source.

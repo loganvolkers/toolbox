@@ -508,7 +508,9 @@ The base image contains `toolbox` and the pinned OpenFGA binary.
 | `DATABASE_URL` | Postgres (Cloud SQL via connector or private IP) |
 | `TOOLBOX_MANIFEST` | Manifest path (default `/portal/toolbox.yaml`) |
 | `TOOLBOX_PUBLIC_URL` | External URL (OAuth, links) |
-| `TOOLBOX_AUTH_MODE` | `iap-google`, `cloudflare-access`, `oidc`, `token` (personal access tokens only), `dev` (trusts `x-toolbox-user`). Unset: `dev` when the server binds loopback, otherwise `token`, so the image (`PORT` binds `0.0.0.0`) never trusts a header unless told to |
+| `TOOLBOX_AUTH_MODE` | `iap-google`, `cloudflare-access`, `oidc`, `token` (personal access tokens only), `dev` (trusts `x-toolbox-user`). Unset: `dev` when the server binds loopback, otherwise `token`, so the image (`PORT` binds `0.0.0.0`) never trusts a header unless told to. Explicit `dev` off loopback also needs `TOOLBOX_ALLOW_DEV_AUTH_OFF_LOOPBACK`, or the server refuses to start (D01M885TA0R4HCZTVDSG9F0PHDQ) |
+| `TOOLBOX_ALLOW_DEV_AUTH_OFF_LOOPBACK` | `1`, `true` or `yes` acknowledges `TOOLBOX_AUTH_MODE=dev` on a non-loopback address. Without it, `serve` exits 2. Unset, `dev` still works on loopback (D01M885TA0R4HCZTVDSG9F0PHDQ) |
+| `TOOLBOX_CONNECTOR_CONFINEMENT` | `best-effort` (the default, including unset or empty) or `required`. Where the host has Landlock, in-image connectors start confined either way. Without it, `best-effort` starts them unconfined and says so in `/readyz`, `/v1/connectors`, field explain and `toolbox doctor`; `required` refuses to start them. Any other value makes `serve` exit 2 (D01M88668MR8K559A1NYSNQQTX0) |
 | `TOOLBOX_SECRET_<NAME>` | Env backend for `${secret:…}` (uppercase, `-` → `_`) |
 | `TOOLBOX_SECRETS_DIR` | Mounted secrets directory (files named by logical secret); first hit after env |
 | `TOOLBOX_SECRETS_CONFIG` | JSON/YAML path (or inline JSON) listing backends: env, file, Vault KV, AWS/GCP/Azure secret managers, plus logical→provider maps ([secret-vault.md](./design/secret-vault.md)) |

@@ -1,0 +1,56 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/sdlc-stage/agent-operable
+rubric: assessment-quality
+subjectHash: 6ea9b298bd99
+assessor: {kind: agent, name: cursor-reviewer-37, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      Two citations in
+      portal/assessments/rule-quality/rule/toolbox/sdlc-stage/agent-operable.yaml
+      do not say what the reasons claim. threshold-justified cites
+      docs/design/thresholds.md:57 for "commands that resolve" as sdlc-stage
+      silver; line 57 is the maintainer-ci-reliability row, and that phrase is
+      the sdlc-stage row at line 56. fix-leads-to-pass says the fix passes "as
+      with" demo-gap/release at portal/tests/standards.test.yaml:1051-1052,
+      and those lines assert agent-operable == 'fail'. The other citations
+      hold: the 20 programs and first-word check are
+      crates/toolbox-connector-workspace/src/data.rs:108-145, the rationale is
+      portal/standards/sdlc.yaml:217-219, the check is :206-207, and
+      maintainer/plan has commands: [] (portal/sdlc/stages/maintainer.yaml:9).
+    suggestion: >-
+      Cite thresholds.md:56 for the silver placement, and cite
+      standards.test.yaml:1051-1052 as the pinned failure the fix addresses,
+      not as a case where the fix already passes.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The two fails are what the checker does: bash or python3 with a missing
+      script resolves, and toolbox --help satisfies commands.size() > 0 with
+      no unresolved command (sdlc.yaml:206-207). The fix text does tell an
+      agent how to clear the evidence, so fix-leads-to-pass is still the right
+      pass. Silver is stated at thresholds.md:56 even though the reason
+      numbers it 57.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      PROGRAMS and unresolved are readable, and maintainer/plan's empty
+      command list is in the stage file. The line-number mistakes do not
+      change which verdict a second reading of the checker reaches.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Resolving an interpreter's script argument, and requiring a listed
+      command to appear in the exit criterion or a check, would change the two
+      fails in
+      portal/assessments/rule-quality/rule/toolbox/sdlc-stage/agent-operable.yaml.
+      The passes have no suggestion.
+summary: >-
+  The two fails are right: a command resolves when its first word is a
+  known program, so a missing script and toolbox --help both pass. The
+  assessment is not fully supported, because thresholds.md:57 is the
+  reliability row and the demo-gap/release lines show a failure, not a
+  pass after the fix. Point those citations at line 56 and at the failing
+  fixture.

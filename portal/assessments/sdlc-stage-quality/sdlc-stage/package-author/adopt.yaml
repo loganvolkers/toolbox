@@ -1,0 +1,59 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: sdlc-stage:package-author/adopt
+rubric: sdlc-stage-quality
+subjectHash: 60e1f3e2515a
+assessor: {kind: agent, name: cursor-assessor-22, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: executable-exit
+    verdict: fail
+    reason: >-
+      The only check, actions/report/action.yml, ratchets one repository's
+      report against its own baseline (lines 1-12, 154); it never runs
+      `toolbox plan` on a package upgrade and opens no PRs. plan's level diff
+      (crates/toolbox-derive/src/plan.rs:25-26, 94-106) is tested only on
+      reference-portal manifest edits
+      (crates/toolbox-derive/tests/reference.rs:73), not on an `include:
+      package` version bump, and no workflow in .github/workflows/ does a
+      fleet rollout.
+    suggestion: >-
+      Add a test that plans `github:acme/pkg@0.1.0` -> `@0.2.0` against two
+      cached package versions and asserts a level change, and list it (plus
+      the rollout workflow once it exists) under the stage's checks.
+  - criterion: agent-can-complete
+    verdict: fail
+    reason: >-
+      An agent can run `toolbox plan --local --base old.yaml` once both
+      versions are in the install cache
+      (crates/toolbox-model/src/package.rs:85-91 keys checkouts by version),
+      but nothing installs the base version for it, and the second half, one
+      PR per repository across a fleet, needs a person with cross-repo write
+      access and a workflow that does not exist (gap "no fleet rollout
+      workflow"; docs/design/federation.md:84-85 only promises it).
+    suggestion: >-
+      Ship a reusable rollout workflow (gh-aw or a matrix job) that bumps the
+      pin, runs `toolbox install` and `toolbox plan`, and opens a PR with the
+      plan as its body, and document the token it needs.
+  - criterion: reuses-artifacts
+    verdict: pass
+    reason: >-
+      Consumers run the released binary: actions/report takes
+      `toolbox-version` and runs install.sh against the release archives
+      (actions/report/action.yml:51, 85-91), and git packages are fetched by
+      tag and checked against toolbox.lock
+      (crates/toolbox-model/src/load.rs:339-351). The source build at lines
+      94-126 is only the fallback when no version is set.
+  - criterion: decoupled-from-core
+    verdict: pass
+    reason: >-
+      Nothing in the stage needs a crate change: `plan` already diffs
+      scorecard levels between any two manifests
+      (crates/toolbox-cli/src/main.rs:880-905), package includes resolve
+      through the existing loader (crates/toolbox-model/src/load.rs:325-360),
+      and a rollout workflow can live in the package author's own repository.
+summary: >-
+  Designed, not built. The parts exist in the released binary (plan's
+  level diff, versioned package cache), but no check proves an upgrade
+  plan and no fleet rollout exists, so an agent cannot finish the stage.
+  Nothing blocks a package author from building the rollout outside this
+  repository.

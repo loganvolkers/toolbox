@@ -1,0 +1,72 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: scorecard:toolbox/maintainer-benchmark
+rubric: scorecard-quality
+subjectHash: 5aefdbf4d1cf
+assessor: {kind: agent, name: cursor-assessor-08, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: >-
+      All ten rules (portal/standards/benchmarks.yaml:259-386) ask one thing
+      of one record: is this DX Benchmark's claim trustworthy, from
+      declaration through registration to a published, protocol-2 result. The
+      audience is maintainers deciding what a benchmark proves
+      (benchmarks.yaml:1, D01M82X2K0DYWTCA23MQJ4CKR0Z). The benchmarks measure
+      four layers, but the scorecard measures the benchmarks. It is missing
+      from portal/README.md's scorecard table (lines 10-36), which the rubric
+      points readers to for its layer; the header comment of benchmarks.yaml
+      is the only place that states it.
+  - criterion: levels-are-a-ladder
+    verdict: pass
+    reason: >-
+      The levels follow a benchmark's life, as the rationale says
+      (benchmarks.yaml:241-246) and dx-benchmarks.md §6 tabulates
+      (docs/design/dx-benchmarks.md:222-226). Bronze is reachable now: all 19
+      live entries are at bronze or above, 2 at bronze, 11 at silver and 6 at
+      gold (portal/results.json), so gold is reachable and worth it. One
+      oddity: method-registered applies only to unrun entries
+      (benchmarks.yaml:329-331). So blocked protocol-1 spec-ab is held at
+      bronze, while run protocol-1 entries such as box-ab sit at silver, and
+      silver means "registered" for one and "run" for the other. The design
+      states this deliberately (dx-benchmarks.md:169-171).
+  - criterion: no-obvious-gap
+    verdict: fail
+    reason: >-
+      Two requirements from the design's own table go unchecked. First,
+      "linked to a hypothesis with a bar" (docs/design/dx-benchmarks.md:64,
+      :69): pre-registered counts list entries only, and live spec-ab names R7
+      while its README's bar is S1-S3 (experiments/spec-ab/README.md:55- 61).
+      Second, "A result, published: ... a row in research-log.md"
+      (dx-benchmarks.md:75, step 9 at :140-141): no rule asks for it. Also
+      unchecked: friction triaged as fixed, deferred or rejected (:74, step
+      10), stage ids that resolve in portal/sdlc, and two repositories of
+      different languages (step 4, :122). BetterBench, which §5 cites (:185),
+      makes replication and documentation the core of benchmark quality, which
+      is what these rules would add.
+    suggestion: >-
+      Add a silver `bar-in-readme` rule: every hypothesis id appears in the
+      readme, via a connector fact built like `not_naming`
+      (crates/toolbox-connector-workspace/src/data.rs:220-233). Add a gold
+      `logged` rule: docs/research-log.md names the benchmark id once it has
+      run. Validate `stages` against the sdlc-stage records in declared.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      I tried raising spec-ab from bronze. Its evidence is `protocol 1:
+      re-register under protocol 2 (D01M83RDWQ5EVKY5SFHDWAD5HFH)` for
+      method-registered, and that fix (benchmarks.yaml:333-337) lists every
+      field, so filling protocol, prompts, runsPerArm, measure, designer and
+      adjudicator in portal/benchmarks/spec-ab.yaml would reach silver. Every
+      rule's evidence names its gap in words, and every fix names a field and
+      a section of dx-benchmarks.md. Two caveats: paths-exist's fix omits
+      `prompts`, and the four archived protocol-1 entries can rise only by
+      being rerun, which their archived status rules out
+      (dx-benchmarks.md:211).
+summary: >-
+  A well-shaped scorecard. Its levels follow a benchmark's life and
+  protocol 2's catalog fields, the live levels spread 2/11/6, and its
+  fixes are concrete. Its rules are presence checks on self-declared
+  fields. The obvious missing rule is one that ties catalog hypotheses to
+  the README's bar (spec-ab fails it today), along with the research-log
+  row the design asks for. It also has no row in portal/README.md.

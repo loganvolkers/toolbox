@@ -9,6 +9,9 @@ description: >-
 1. Run the command on the portal directory.
 2. Read each missing connector or tool. Exit 1 means something is missing.
 3. Install what it names, then run it again. Pass --mise to print the mise tools section instead of checking.
+4. Read the `connector confinement` line. `UNCONFINED` means this host has no Landlock, so serve
+   would start in-image connectors without it; that is a warning, not a failure. `REFUSED` means
+   `TOOLBOX_CONNECTOR_CONFINEMENT=required` is set as well, so serve would not start them.
 
 ```
 toolbox doctor portal

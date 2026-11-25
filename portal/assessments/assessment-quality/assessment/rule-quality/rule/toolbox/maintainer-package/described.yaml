@@ -1,0 +1,54 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/maintainer-package/described
+rubric: assessment-quality
+subjectHash: 9b8670d278d3
+assessor: {kind: agent, name: cursor-reviewer-06, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      Most citations in
+      portal/assessments/rule-quality/rule/toolbox/maintainer-package/described.yaml
+      hold: portal/standards/packages.yaml:135-144 is the rule,
+      crates/toolbox-connector-workspace/src/npm.rs:22 trims before counting,
+      portal/standards/skills.yaml:99 is the 20-1024 floor,
+      portal/tests/standards.test.yaml:544-545 pins 'no description',
+      portal/results.json lists ui and typescript-builder failing only
+      described and engines-declared, and the D76 quote is verbatim. But
+      docs/design/package-standards.md:33 is the table's separator row; "Put a
+      description in it." is line 34. And skills.yaml's floor is justified by
+      routing ("Below 20 characters it cannot say when", skills.yaml:106-108),
+      not by gaming, so "for the same reason" overstates it.
+    suggestion: >-
+      Cite package-standards.md:34, and present skills.yaml:99 as a precedent
+      for a floor rather than the same reason.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The verdicts are the ones the sources support. The rule claims only "has
+      a description" (packages.yaml:135-144) and both live passes,
+      site/package.json and scripts/playwright-ci/package.json, carry real
+      sentences, so measures-intent passes. `> 0` after a trim (npm.rs:22)
+      lets one character through, which is the trivial-pass case the rubric
+      fails (portal/standards/meta.yaml:1162-1166). Adding the field flips the
+      check, and there is no number beyond non-empty to justify.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Each verdict rests on one line of code (npm.rs:22) or the rule text
+      (packages.yaml:137-141). A second assessor reading them would reach the
+      same pass, fail, pass, pass.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The hard-to-game suggestion in the reviewed file (a 20-character floor
+      and a description not equal to the name) rejects every route its reason
+      names: " x", "TODO" and a copy of the name. That flips the verdict on
+      the reason's own terms.
+summary: >-
+  A sound assessment whose verdicts hold: the trimmed `> 0` check
+  (npm.rs:22) is cheap to pass, and the suggested floor closes the routes
+  it names. It fails `supported` only on citations:
+  package-standards.md:33 should be 34, and skills.yaml's 20-character
+  floor exists for routing, not anti-gaming.

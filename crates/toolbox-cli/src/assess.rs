@@ -113,7 +113,7 @@ pub fn check(portal: &Path, fixtures: bool, skip: &[String], output: &str) -> Ex
         let rows: Vec<Value> = d
             .entities
             .iter()
-            .filter(|(_, e)| e.kind == r.kind)
+            .filter(|(_, e)| e.kind == r.kind && assess::applies(r, &e.fields))
             .map(|(id, _)| {
                 status(
                     &d,

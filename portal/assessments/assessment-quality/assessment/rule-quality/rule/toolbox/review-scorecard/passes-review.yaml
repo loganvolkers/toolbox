@@ -1,0 +1,56 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/review-scorecard/passes-review
+rubric: assessment-quality
+subjectHash: 9f6682d531d0
+assessor: {kind: agent, name: cursor-reviewer-05, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      Most citations in
+      portal/assessments/rule-quality/rule/toolbox/review-scorecard/passes-review.yaml
+      hold. portal/standards/meta.yaml has the check at 1044-1047, the
+      evidence at 1049-1051, the fix at 1052-1054 and the rationale at
+      1055-1058. portal/tests/standards.test.yaml:897-906 has both failure
+      branches, and `cites` is at
+      crates/toolbox-connect/src/assessment.rs:10-45. "per D79" resolves
+      (docs/decisions/D01M7WHQA9G0000000000000000.md has `legacy: D79`), and
+      docs/design/meta-standards-review.md:113 calls passes-review redundant.
+      One citation is wrong: "M8 at line 167". Line 167 of
+      meta-standards-review.md is M7, and M8 is at line 168.
+    suggestion: >-
+      Cite M8 at docs/design/meta-standards-review.md:168.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      measures-intent passes correctly, and hard-to-game fails correctly.
+      Fresh comes from silver and no failing criterion from bronze, so the
+      only new condition is `reviewUncited` (meta.yaml:1047), and any path
+      that exists satisfies it (assessment.rs:44, 50-69). fix-leads-to-pass
+      and threshold-justified are right.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The gaming route can be checked against assessment.rs:15-45 and the
+      fixture at standards.test.yaml:898-902, so no taste is involved.
+  - criterion: actionable
+    verdict: fail
+    reason: >-
+      The first suggestion requires at least one cited path to be the
+      scorecard's defining file. But the route the reason gives already cites
+      that file: maintainer-ci-security is defined in
+      packages/github-actions/fragments/github-actions.yaml:174, so appending
+      "(see packages/github-actions/fragments/github-actions.yaml)" still
+      reaches gold, with no new judgement. The alternative, merging the rule
+      into no-doubts, removes the rule rather than making it pass.
+    suggestion: >-
+      Suggest a change that the named route can't meet. For example, every
+      reason must cite the defining file at the line of the rule or level it
+      judges, or a reviewer's `supported` verdict must pass. Or drop the merge
+      alternative and argue the rule's removal under M8 directly.
+summary: >-
+  The verdicts are right, but the suggestion fails. A grounded citation
+  wouldn't stop the reason's own gaming example, because that example
+  already cites the scorecard's defining file. The M8 reference is one
+  line early (it points at M7).

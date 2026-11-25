@@ -1,0 +1,43 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/vs-backstage-capabilities/permission-rule
+rubric: rule-quality
+subjectHash: 3cc81306fb3d
+assessor: {kind: agent, name: cursor-assessor-15, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      "Write a custom permission rule" (backstage-comparison.yaml:155-157) is
+      the brief's "custom permission rule" scenario (RESEARCH.md:122). Toolbox
+      passes with an OpenFGA model in the manifest (facts.yaml:90-92,
+      docs/authorization.md), Backstage with a TypeScript policy
+      (facts.yaml:178-180), which the rationale counts in Backstage's favour
+      although the brief said configuration only (RESEARCH.md:111).
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      `capPermissionRule` is asserted in facts.yaml:90-92 and merged by
+      snapshot.py:85. Yet the Toolbox arm already runs with a custom model in
+      experiments/backstage-compare/portal/authz authorizing every read
+      (README.md:20), so the harness holds the proof and ignores it.
+    suggestion: >-
+      Derive Toolbox's `capPermissionRule` in surface.py from a probe that a
+      rule in the bench model denies one read and allows another, and
+      Backstage's from a policy that does the same, instead of facts.yaml.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The fix names the artefact to keep, the OpenFGA model in the manifest,
+      which `toolbox test` runs as `.fga.yaml` (M3, docs/v1-spec.md:66); a
+      regression that dropped it is what would flip the fact.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      Boolean, no threshold; pre-registered "true" in
+      experiments/backstage-compare/README.md:53 and confirmed by
+      ADJUDICATION.md:114.
+summary: >-
+  A sound parity rule whose rationale even concedes a point to Backstage.
+  Its fact is a facts.yaml boolean although the harness's own Toolbox arm
+  runs a custom model that a probe could exercise.

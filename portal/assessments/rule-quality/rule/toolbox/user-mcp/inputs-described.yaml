@@ -1,0 +1,49 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/user-mcp/inputs-described
+rubric: rule-quality
+subjectHash: 8875e7321870
+assessor: {kind: agent, name: cursor-assessor-14, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      `undescribedProperties` lists each top-level `inputSchema` property with
+      no `description` key (crates/toolbox-cli/src/main.rs:1248-1256), which
+      is what an MCP client shows the model for each input. Passing means
+      every input the agent fills has text, the gap the fresh-agent run hit on
+      15 inputs (docs/design/toolbox-for-toolbox.md:157-158). `inputs` on
+      preview_action and run_action is an open object whose keys depend on the
+      action, so not descending into it is right.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Only the key's presence counts (`p.get("description").is_none()`,
+      main.rs:1254), so `"description": ""` passes. The live bar is already
+      thin: `get`'s `fields` says only "Comma-separated"
+      (crates/toolbox-api/src/mcp.rs:32), with no field names and no default,
+      while `query`'s `fields` says "Comma-separated fields to return
+      (default: every visible field)" (mcp.rs:37). Both pass.
+    suggestion: >-
+      Have `toolbox describe` treat a description under 10 characters, or one
+      that is empty, as missing, and fix `get.fields` to match `query.fields`
+      in the same change.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence lists the property names (pinned for the fixture `search`
+      as `['kind', 'limit', 'query']`, portal/tests/standards.test.yaml:94-98)
+      and the fix names crates/toolbox-api/src/mcp.rs; adding a description to
+      each passes.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      No number: every input. Silver, above `described` and `annotated`, is
+      set in docs/design/toolbox-for-toolbox.md:108 and justified by the
+      rationale's measurement (portal/standards/cli.yaml:303-306): a fresh
+      agent had to read the REST handlers to work out 15 inputs.
+summary: >-
+  A rule born from a measured failure, with a fix that names the file and
+  evidence that lists the inputs. It checks only that a description key
+  exists, so an empty string passes and `get.fields`' "Comma-separated"
+  shows how little the live bar asks.

@@ -1,0 +1,65 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:acme/github-app-hygiene/only-approved-apps
+rubric: rule-quality
+subjectHash: 8d4f1b24ddd0
+assessor: {kind: agent, name: cursor-assessor-18, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      Passing means every installed slug is a key of `policy.approvedApps`
+      (examples/reference-portal/toolbox.yaml:246), which is approval in
+      general, not approval for this repository. Each policy entry has an
+      `eligible` condition (:26, :32), e.g. renovate only on non-deprecated
+      repos. `rg eligible` finds no code that evaluates it, so an approved app
+      on an ineligible repository passes. `installedApps` also depends on `GET
+      /user/installations/{id}/repositories`
+      (crates/toolbox-connector-github/src/main.rs:207-215), which lists only
+      repositories the token's user can see (Q14,
+      docs/examples/approved-github-apps.md:148). Installs the token can't see
+      are missed, and the rule passes.
+    suggestion: >-
+      Evaluate each app's `eligible` expression for the repository (e.g.
+      derive an `eligibleApps` field) and check `entity.installedApps.all(a, a
+      in entity.eligibleApps)`. Record on the repository whether the
+      installation listing was complete, and return unknown when it wasn't.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      The cheap passes are removing the app, which the `remove-app` action
+      does (examples/reference-portal/toolbox.yaml:341-364), or adding its
+      slug to `approvedApps`. A bare key then falls under `app-approval`
+      (appliesTo `entity.slug in policy.approvedApps`, :268), whose check
+      reads `.permissions` and doesn't pass without a real snapshot. So
+      neither cheap path skips a security review of permissions.
+  - criterion: fix-leads-to-pass
+    verdict: fail
+    reason: >-
+      The fix sends the reader to a `request-new-app` action that the manifest
+      doesn't define: the only actions are `install-approved-app` and
+      `remove-app` (examples/reference-portal/toolbox.yaml:304-364).
+      `request-new-app` exists only in the design
+      (docs/examples/approved-github-apps.md:70). There is also no evidence,
+      so the failing score for checkout-web doesn't name `sketchy-bot`
+      (examples/reference-portal/tests/apps.test.yaml).
+    suggestion: >-
+      Add evidence `entity.installedApps.filter(a, !(a in
+      policy.approvedApps))`. Change the fix to "Remove each app in the
+      evidence with the remove-app action, or ask security to add it to
+      policies.approvedApps", until `request-new-app` exists.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no number. The scorecard rationale says one bronze rule is
+      enough because any install outside the list is a finding
+      (examples/reference-portal/toolbox.yaml:233-237), and the design lists
+      this rule first under continuous governance
+      (docs/examples/approved-github-apps.md:89-91).
+summary: >-
+  The right rule for app hygiene, but it checks only that a slug is
+  approved somewhere: the policy's per-app `eligible` condition is never
+  evaluated, and installs the connector's token can't list go unseen. Its
+  fix names a `request-new-app` action that doesn't exist, and with no
+  evidence the failing score doesn't name the app. It is pinned only by
+  level asserts, not through the rule.
