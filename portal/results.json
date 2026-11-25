@@ -885,6 +885,952 @@
       }
     },
     "meta-assessment": {
+      "assessment:assessment-quality/assessment:crate-design/crate:toolbox-connector-github": {
+        "cites-everything": [
+          "55caed82",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:crate-design/crate:toolbox-connector-scim": {
+        "cites-everything": [
+          "55caed82"
+        ]
+      },
+      "assessment:assessment-quality/assessment:crate-design/crate:toolbox-derive": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:crate-design/crate:toolbox-durable": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:crate-design/crate:toolbox-exec": {
+        "cites-everything": [
+          "55caed82"
+        ]
+      },
+      "assessment:assessment-quality/assessment:crate-design/crate:toolbox-model": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:crate-design/crate:toolbox-secrets": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:crate-design/crate:toolbox-store": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:acme/app-approval/permissions-match-snapshot": {
+        "cites-everything": [
+          "833e4fc9",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:acme/github-app-hygiene/only-approved-apps": {
+        "cites-everything": [
+          "833e4fc9",
+          "ba345f2b"
+        ],
+        "cites-for-findings": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:acme/ownership/branch-protected": {
+        "cites-everything": [
+          "55caed82",
+          "833e4fc9",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:acme/ownership/claim-verified": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:repo/docs/links-resolve": {
+        "cites-everything": [
+          "55caed82",
+          "833e4fc9",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:repo/repo-hygiene/codeowners-catch-all": {
+        "cites-everything": [
+          "55caed82",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:repo/repo-hygiene/has-codeowners": {
+        "cites-everything": [
+          "55caed82",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:repo/repo-hygiene/has-license": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:repo/repo-hygiene/has-readme": {
+        "cites-everything": [
+          "55caed82"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:repo/repo-hygiene/owners-are-teams": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-advisories/no-findings": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-agent-doc/no-hardcoded-secrets": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-benchmark/open-source-pinned": {
+        "cites-everything": [
+          "55caed82"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-benchmark/results-recorded": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-benchmark/sound-method": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-ci-reliability/still-running": {
+        "cites-everything": [
+          "55caed82",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-ci-security/actionlint-clean": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-ci-security/least-privilege-token": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-high-findings": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-medium-findings": {
+        "cites-everything": [
+          "55caed82",
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-write-tokens-on-risky-triggers": {
+        "cites-everything": [
+          "55caed82"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-ci-security/pinned-to-sha": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-ci-security/zizmor-clean": {
+        "cites-everything": [
+          "833e4fc9",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-ci-speed/fast-feedback": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-connector/closes-snapshots": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-connector/config-documented": {
+        "cites-everything": [
+          "833e4fc9",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-connector/described": {
+        "cites-everything": [
+          "55caed82",
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-connector/has-tests": {
+        "cites-everything": [
+          "833e4fc9",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-connector/names-its-kinds": {
+        "cites-everything": [
+          "55caed82",
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-connector/reports-missing-ids": {
+        "cites-everything": [
+          "833e4fc9",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-connector/speaks-the-protocol": {
+        "cites-everything": [
+          "833e4fc9",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-crate/clippy-clean": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-crate/crate-docs": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-crate/fully-documented": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-dependency/locked": {
+        "cites-everything": [
+          "833e4fc9",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-dependency/one-version": {
+        "cites-everything": [
+          "833e4fc9",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-dependency/version-bounded": {
+        "cites-everything": [
+          "55caed82",
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-docs/cites-sources": {
+        "cites-everything": [
+          "55caed82",
+          "833e4fc9",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-docs/links-resolve": {
+        "cites-everything": [
+          "55caed82",
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-docs/names-sdlc-layer": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-docs/status-banner": {
+        "cites-everything": [
+          "833e4fc9",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-example/has-a-heading": {
+        "cites-everything": [
+          "833e4fc9",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-example/links-resolve": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-example/says-how-to-check": {
+        "cites-everything": [
+          "55caed82",
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-observability/structured-logs": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-package/ci-installs-from-the-lockfile": {
+        "cites-everything": [
+          "833e4fc9",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-package/described": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-package/from-a-registry": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-package/locked": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-package/named": {
+        "cites-everything": [
+          "55caed82",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-package/version-bounded": {
+        "cites-everything": [
+          "55caed82",
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-plugin/manifest-valid": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-plugin/no-hardcoded-secrets": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-plugin/paths-stay-inside": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-plugin/portable-components": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-plugin/stdio-command": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-repo/constituents-at-least-gold": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-repo/constituents-at-least-silver": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-schema/described": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-schema/draft-2020-12": {
+        "cites-everything": [
+          "55caed82",
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-schema/no-hardcoded-secrets": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-schema/wired-in": {
+        "cites-everything": [
+          "833e4fc9",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-skill/description-says-when": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-skill/has-example": {
+        "cites-everything": [
+          "55caed82",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-skill/has-procedure": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-skill/one-level-deep": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-skill/portable-paths": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-skill/states-boundaries": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-skill/within-body-budget": {
+        "cites-everything": [
+          "55caed82"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-supply-chain/code-scanning-pinned": {
+        "cites-everything": [
+          "833e4fc9",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-supply-chain/dependabot": {
+        "cites-everything": [
+          "55caed82"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-supply-chain/workflows-have-owners": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-kind/described": {
+        "cites-everything": [
+          "55caed82",
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-kind/tested": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-rubric/discriminates": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-rubric/in-use": {
+        "cites-everything": [
+          "833e4fc9",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-rule/explains-why": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-rule/no-nested-loops": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-rule/pins-both-outcomes": {
+        "cites-everything": [
+          "55caed82",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-scorecard/described": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-scorecard/every-level-has-rules": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-scorecard/every-rule-tested": {
+        "cites-everything": [
+          "55caed82"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-scorecard/fixtures-reach-every-level": {
+        "cites-everything": [
+          "833e4fc9",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-scorecard/fixtures-show-the-ladder": {
+        "cites-everything": [
+          "55caed82",
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/operator-cli/exercised": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/review-crate/no-open-findings": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/review-crate/passes-review": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/review-scorecard/no-open-findings": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/review-sdlc-stage/no-open-findings": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/sdlc-layer/every-stage-built": {
+        "cites-everything": [
+          "833e4fc9",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/sdlc-layer/nothing-missing": {
+        "cites-everything": [
+          "833e4fc9",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/sdlc-stage/agent-operable": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/sdlc-stage/built": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/sdlc-stage/documented": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/sdlc-stage/status-known": {
+        "cites-everything": [
+          "55caed82"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/user-cli/args-described": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/user-cli/exercised": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/user-cli/structured-output": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/user-mcp/annotated": {
+        "cites-everything": [
+          "833e4fc9",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/user-mcp/contract-tested": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/user-mcp/described": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/user-mcp/inputs-described": {
+        "cites-everything": [
+          "55caed82",
+          "833e4fc9",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-agent-surface/get-entity-size": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/community": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/docs": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/docs-search": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/kubernetes": {
+        "cites-everything": [
+          "833e4fc9",
+          "ba345f2b"
+        ],
+        "cites-for-findings": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/mcp-read": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/permission-rule": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/scorecards": {
+        "cites-everything": [
+          "55caed82",
+          "833e4fc9",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-footprint/adopter-files": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-footprint/install-size": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-org-fit/federation": {
+        "cites-everything": [
+          "55caed82",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-security/anonymous-read": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-security/client-cannot-delete": {
+        "cites-everything": [
+          "55caed82",
+          "833e4fc9",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-supply-chain/known-vulnerabilities": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-supply-chain/packages": {
+        "cites-everything": [
+          "833e4fc9",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:acme/app-approval": {
+        "cites-everything": [
+          "55caed82",
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:acme/github-app-hygiene": {
+        "cites-everything": [
+          "55caed82",
+          "833e4fc9",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:acme/ownership": {
+        "cites-everything": [
+          "833e4fc9",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:repo/docs": {
+        "cites-everything": [
+          "55caed82",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:repo/repo-hygiene": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-action-deps": {
+        "cites-everything": [
+          "833e4fc9",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-advisories": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-benchmark": {
+        "cites-everything": [
+          "55caed82"
+        ]
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-ci-security": {
+        "cites-everything": [
+          "55caed82"
+        ]
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-ci-speed": {
+        "cites-everything": [
+          "55caed82",
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-connector": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-dependency": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-docs": {
+        "cites-everything": [
+          "55caed82"
+        ]
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-example": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-package": {
+        "cites-everything": [
+          "833e4fc9",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-plugin": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-repo": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-schema": {
+        "cites-everything": [
+          "833e4fc9",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-site": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-skill": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/meta-field": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/meta-rubric": {
+        "cites-everything": [
+          "833e4fc9",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/meta-rule": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/operator-cli": {
+        "cites-everything": [
+          "55caed82",
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/review-scorecard": {
+        "cites-everything": [
+          "55caed82"
+        ]
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/review-sdlc-stage": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/sdlc-stage": {
+        "cites-everything": [
+          "833e4fc9",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/user-cli": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/user-mcp": {
+        "cites-everything": [
+          "55caed82"
+        ]
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/vs-backstage-agent-surface": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/vs-backstage-capabilities": {
+        "cites-everything": [
+          "55caed82"
+        ]
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/vs-backstage-change-safety": {
+        "cites-everything": [
+          "55caed82",
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/vs-backstage-footprint": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/vs-backstage-org-fit": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/vs-backstage-security": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/vs-backstage-supply-chain": {
+        "cites-everything": [
+          "55caed82"
+        ]
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:maintainer/release": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:operator/monitor": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:operator/plan": {
+        "cites-everything": [
+          "55caed82",
+          "833e4fc9",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:operator/test": {
+        "cites-everything": [
+          "55caed82"
+        ]
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:operator/verify": {
+        "cites-everything": [
+          "55caed82",
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:package-author/adopt": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:package-author/build-connector": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:package-author/package": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:user/build": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:user/deploy": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:user/discover": {
+        "cites-everything": [
+          "833e4fc9"
+        ],
+        "cites-for-findings": [
+          "833e4fc9"
+        ]
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:user/monitor": {
+        "cites-everything": [
+          "ba345f2b"
+        ]
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:user/test": {
+        "cites-everything": [
+          "833e4fc9"
+        ]
+      },
       "assessment:sdlc-stage-quality/sdlc-stage:operator/monitor": {
         "cites-everything": [
           "46cbaf23",
@@ -2500,32 +3446,6 @@
           "8d39bde6",
           "c2e26874",
           "e407107d"
-        ]
-      }
-    },
-    "meta-rubric": {
-      "rubric:toolbox/assessment-quality": {
-        "discriminates": [
-          "25fda6a7",
-          "bf0c9e31",
-          "c7a2000c",
-          "f3cfea11"
-        ]
-      },
-      "rubric:toolbox/crate-design": {
-        "discriminates": [
-          "e4209cbb"
-        ]
-      },
-      "rubric:toolbox/rule-quality": {
-        "discriminates": [
-          "68a7c956"
-        ]
-      },
-      "rubric:toolbox/scorecard-quality": {
-        "discriminates": [
-          "90ab6dbc",
-          "f0086dcc"
         ]
       }
     },
@@ -5833,64 +6753,2614 @@
       }
     },
     "meta-assessment": {
+      "assessment:assessment-quality/assessment:crate-design/crate:toolbox-api": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:crate-design/crate:toolbox-authz": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:crate-design/crate:toolbox-cli": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:crate-design/crate:toolbox-connect": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:crate-design/crate:toolbox-connector-git-files": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:crate-design/crate:toolbox-connector-github": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:crate-design/crate:toolbox-connector-gitlab": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:crate-design/crate:toolbox-connector-runner": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:crate-design/crate:toolbox-connector-scim": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:crate-design/crate:toolbox-connector-workspace": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:crate-design/crate:toolbox-derive": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:crate-design/crate:toolbox-durable": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:crate-design/crate:toolbox-exec": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
       "assessment:assessment-quality/assessment:crate-design/crate:toolbox-expr": {
         "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:crate-design/crate:toolbox-model": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:crate-design/crate:toolbox-secrets": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:crate-design/crate:toolbox-store": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:crate-design/crate:toolbox-telemetry": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:acme/app-approval/permissions-match-snapshot": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:acme/github-app-hygiene/only-approved-apps": {
+        "failing": {
+          "cites-everything": 2,
+          "cites-for-findings": 1
+        },
+        "level": "bronze"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:acme/ownership/branch-protected": {
+        "failing": {
+          "cites-everything": 3
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:acme/ownership/claim-verified": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:acme/ownership/has-owner": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:acme/ownership/has-tier": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:repo/docs/links-resolve": {
+        "failing": {
+          "cites-everything": 3
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:repo/repo-hygiene/codeowners-catch-all": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:repo/repo-hygiene/has-codeowners": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:repo/repo-hygiene/has-license": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:repo/repo-hygiene/has-readme": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:repo/repo-hygiene/owners-are-teams": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/cli-skill/has-skill": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-action-deps/pinned-everywhere": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-advisories/no-findings": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-agent-doc/checks-run-in-ci": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-agent-doc/has-commands": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-agent-doc/links-resolve": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-agent-doc/names-the-decision-log": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-agent-doc/no-hardcoded-secrets": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-agent-doc/no-hidden-instructions": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-agent-doc/single-source": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-agent-doc/within-budget": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-benchmark/closes-the-loop": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-benchmark/declared": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-benchmark/has-a-rival": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-benchmark/method-registered": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-benchmark/open-source-pinned": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-benchmark/paths-exist": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-benchmark/pre-registered": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-benchmark/results-recorded": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-benchmark/says-why": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-benchmark/sound-method": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-ci-reliability/every-job-has-timeout": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-ci-reliability/fail-rate-under-10": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-ci-reliability/fail-rate-under-20": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-ci-reliability/fail-rate-under-5": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-ci-reliability/failures-visible": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-ci-reliability/main-not-stuck-red": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-ci-reliability/still-running": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-ci-security/actionlint-clean": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-ci-security/least-privilege-token": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-high-findings": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-medium-findings": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-write-tokens-on-risky-triggers": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-ci-security/pinned-to-sha": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-ci-security/zizmor-clean": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-ci-speed/cancels-superseded-runs": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-ci-speed/fast-feedback": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-connector/closes-snapshots": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-connector/config-documented": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-connector/described": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-connector/exercised-in-ci": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-connector/has-tests": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-connector/names-its-kinds": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-connector/no-hardcoded-secrets": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-connector/reports-missing-ids": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-connector/speaks-the-protocol": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-crate/bounded-complexity": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-crate/clippy-clean": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-crate/crate-docs": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-crate/few-unwraps": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-crate/fully-documented": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
       },
       "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-crate/has-tests": {
         "level": "gold"
       },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-crate/no-huge-functions": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-crate/public-api-documented": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-crate/short-functions": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-crate/simple-functions": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-crate/tests-pass": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-crate/tests-scale-with-code": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-dependency/from-a-registry": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-dependency/locked": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-dependency/one-version": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-dependency/shared-is-inherited": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-dependency/version-bounded": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-docs/cited-decisions-exist": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-docs/cites-sources": {
+        "failing": {
+          "cites-everything": 3
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-docs/links-resolve": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-docs/names-sdlc-layer": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-docs/status-banner": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-example/cites-the-design": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-example/has-a-heading": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-example/links-resolve": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-example/no-hardcoded-secrets": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-example/says-how-to-check": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-observability/assessed-monitor": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-observability/metric-catalog-complete": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-observability/operator-monitor-alerts": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-observability/otel-crate-present": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-observability/otlp-export-tested": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-observability/prom-endpoint": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-observability/service-name-documented": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-observability/structured-logs": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-openssf/ten": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-package/ci-installs-from-the-lockfile": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-package/described": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-package/engines-declared": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-package/from-a-registry": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-package/has-a-check": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-package/locked": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-package/named": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-package/no-hardcoded-secrets": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-package/publish-intent": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-package/version-bounded": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-plugin/manifest-valid": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-plugin/mcp-declared": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-plugin/no-hardcoded-secrets": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-plugin/no-secret-headers": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-plugin/paths-stay-inside": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-plugin/portable-components": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-plugin/stdio-command": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-python/no-findings": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-repo/constituents-at-least-bronze": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-repo/constituents-at-least-gold": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-repo/constituents-at-least-silver": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-schema/described": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-schema/draft-2020-12": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-schema/has-id": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-schema/local-refs": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-schema/no-hardcoded-secrets": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-schema/titled": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-schema/wired-in": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-site/described": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-site/links-resolve": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-site/no-hardcoded-secrets": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-site/reachable": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-site/titled": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-site/unique-title": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-skill/description-says-when": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-skill/has-evals": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-skill/has-example": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-skill/has-procedure": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-skill/links-resolve": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-skill/no-hardcoded-secrets": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-skill/no-hidden-instructions": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-skill/one-level-deep": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-skill/portable-paths": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-skill/states-boundaries": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-skill/third-person": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-skill/valid-frontmatter": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-skill/within-body-budget": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-supply-chain/code-scanning-pinned": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-supply-chain/dependabot": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/maintainer-supply-chain/workflows-have-owners": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-assessment/assessor-named": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-assessment/cites-everything": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-assessment/cites-for-findings": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-assessment/suggests-fixes": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-connector/freshness-declared": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-connector/has-fixtures": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-connector/records-mapped": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-connector/refreshable": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-field/computed-readable": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-field/described": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-field/has-shape": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-field/populated-in-fixtures": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-kind/described": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-kind/fields-described": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-kind/in-fixtures": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-kind/tested": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-rubric/described": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-rubric/discriminates": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-rubric/guided": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-rubric/in-use": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-rule/always-explains": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-rule/both-outcomes-on-fixtures": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-rule/decided-on-fixtures": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-rule/evidence-tracks-check": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-rule/explains-fix": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-rule/explains-why": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-rule/fix-names-a-place": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-rule/no-nested-loops": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-rule/pins-both-outcomes": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-rule/readable": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-rule/tested": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-scorecard/described": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-scorecard/every-level-has-rules": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-scorecard/every-rule-tested": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-scorecard/explains-why": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-scorecard/fixtures-reach-every-level": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-scorecard/fixtures-show-the-ladder": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/meta-scorecard/tested": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/operator-cli/args-described": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/operator-cli/documented": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/operator-cli/exercised": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/operator-cli/has-help": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/review-assessment/assessed": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/review-assessment/no-doubts": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/review-assessment/no-open-findings": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/review-assessment/passes-review": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/review-crate/assessed": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/review-crate/independently-reviewed": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/review-crate/no-doubts": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/review-crate/no-open-findings": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/review-crate/passes-review": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/review-rule/assessed": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/review-rule/no-doubts": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/review-rule/no-open-findings": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/review-rule/passes-review": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/review-scorecard/assessed": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/review-scorecard/no-doubts": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/review-scorecard/no-open-findings": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/review-scorecard/passes-review": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/review-sdlc-stage/assessed": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/review-sdlc-stage/no-doubts": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/review-sdlc-stage/no-open-findings": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/review-sdlc-stage/passes-review": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/sdlc-layer/every-stage-built": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/sdlc-layer/nothing-missing": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/sdlc-layer/stages-declared": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/sdlc-stage/agent-operable": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/sdlc-stage/automated": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/sdlc-stage/built": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/sdlc-stage/documented": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/sdlc-stage/has-exit-criterion": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/sdlc-stage/status-known": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/user-cli/args-described": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/user-cli/exercised": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/user-cli/has-help": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/user-cli/structured-output": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/user-mcp/annotated": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/user-mcp/contract-tested": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/user-mcp/described": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/user-mcp/documented": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/user-mcp/inputs-described": {
+        "failing": {
+          "cites-everything": 3
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-agent-surface/get-entity-size": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-agent-surface/mcp-by-default": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-agent-surface/tools-list-size": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/api-docs": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/catalog-browse": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/community": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/docs": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/docs-search": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/graph": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/kubernetes": {
+        "failing": {
+          "cites-everything": 2,
+          "cites-for-findings": 1
+        },
+        "level": "bronze"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/mcp-read": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/notifications": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/ownership": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/permission-rule": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/scorecards": {
+        "failing": {
+          "cites-everything": 3
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/templates": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-change-safety/change-preview": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-change-safety/offline-validate": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-change-safety/rollback-steps": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-change-safety/upgrade-lines": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-extensibility/any-language": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-extensibility/without-rebuild": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-footprint/adopter-files": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-footprint/adopter-lines": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-footprint/idle-memory": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-footprint/install-size": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-footprint/loaded-memory": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-org-fit/federation": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-org-fit/repo-scoped": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-performance/catalog-readable": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-performance/get-latency": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-performance/get-throughput": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-performance/list-latency": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-performance/list-throughput": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-performance/ready": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-performance/recovery": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-security/anonymous-mcp": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-security/anonymous-read": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-security/client-cannot-delete": {
+        "failing": {
+          "cites-everything": 3
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-security/extension-credential-isolated": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-security/extension-process-isolated": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-security/forged-identity": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-security/loopback-by-default": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-security/owner-only-fields": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-supply-chain/high-vulnerabilities": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-supply-chain/known-vulnerabilities": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-supply-chain/packages": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:rule-quality/rule:toolbox/vs-backstage-supply-chain/provenance": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:acme/app-approval": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:acme/github-app-hygiene": {
+        "failing": {
+          "cites-everything": 3
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:acme/ownership": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:repo/docs": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:repo/repo-hygiene": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/cli-skill": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-action-deps": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-advisories": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-agent-doc": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-benchmark": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
       "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-ci-reliability": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-ci-security": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-ci-speed": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-connector": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-crate": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-dependency": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-docs": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-example": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-observability": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-openssf": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-package": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-plugin": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-python": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-repo": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-schema": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-site": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-skill": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/maintainer-supply-chain": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/meta-assessment": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/meta-connector": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/meta-field": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/meta-kind": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/meta-rubric": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/meta-rule": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/meta-scorecard": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/operator-cli": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/review-assessment": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/review-crate": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/review-rule": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/review-scorecard": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/review-sdlc-stage": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/sdlc-layer": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/sdlc-stage": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/user-cli": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/user-mcp": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/vs-backstage-agent-surface": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/vs-backstage-capabilities": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/vs-backstage-change-safety": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/vs-backstage-extensibility": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/vs-backstage-footprint": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/vs-backstage-org-fit": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/vs-backstage-performance": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/vs-backstage-security": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:scorecard-quality/scorecard:toolbox/vs-backstage-supply-chain": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:maintainer/build": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:maintainer/monitor": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:maintainer/plan": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:maintainer/release": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:maintainer/test": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:maintainer/verify": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:operator/author": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:operator/build-connector": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:operator/deploy": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:operator/monitor": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:operator/plan": {
+        "failing": {
+          "cites-everything": 3
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:operator/preview": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:operator/test": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:operator/validate": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:operator/verify": {
+        "failing": {
+          "cites-everything": 2
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:package-author/adopt": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:package-author/author": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:package-author/build-connector": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:package-author/distribute": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:package-author/package": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:package-author/test": {
+        "level": "gold"
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:user/build": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:user/deploy": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:user/discover": {
+        "failing": {
+          "cites-everything": 1,
+          "cites-for-findings": 1
+        },
+        "level": "bronze"
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:user/monitor": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:assessment-quality/assessment:sdlc-stage-quality/sdlc-stage:user/test": {
+        "failing": {
+          "cites-everything": 1
+        },
+        "level": "silver"
+      },
+      "assessment:crate-design/crate:toolbox-api": {
+        "level": "gold"
+      },
+      "assessment:crate-design/crate:toolbox-authz": {
+        "level": "gold"
+      },
+      "assessment:crate-design/crate:toolbox-cli": {
+        "level": "gold"
+      },
+      "assessment:crate-design/crate:toolbox-connect": {
+        "level": "gold"
+      },
+      "assessment:crate-design/crate:toolbox-connector-git-files": {
+        "level": "gold"
+      },
+      "assessment:crate-design/crate:toolbox-connector-github": {
+        "level": "gold"
+      },
+      "assessment:crate-design/crate:toolbox-connector-gitlab": {
+        "level": "gold"
+      },
+      "assessment:crate-design/crate:toolbox-connector-runner": {
+        "level": "gold"
+      },
+      "assessment:crate-design/crate:toolbox-connector-scim": {
+        "level": "gold"
+      },
+      "assessment:crate-design/crate:toolbox-connector-workspace": {
+        "level": "gold"
+      },
+      "assessment:crate-design/crate:toolbox-derive": {
+        "level": "gold"
+      },
+      "assessment:crate-design/crate:toolbox-durable": {
+        "level": "gold"
+      },
+      "assessment:crate-design/crate:toolbox-exec": {
         "level": "gold"
       },
       "assessment:crate-design/crate:toolbox-expr": {
         "level": "gold"
       },
+      "assessment:crate-design/crate:toolbox-model": {
+        "level": "gold"
+      },
+      "assessment:crate-design/crate:toolbox-secrets": {
+        "level": "gold"
+      },
+      "assessment:crate-design/crate:toolbox-store": {
+        "level": "gold"
+      },
+      "assessment:crate-design/crate:toolbox-telemetry": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:acme/app-approval/permissions-match-snapshot": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:acme/github-app-hygiene/only-approved-apps": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:acme/ownership/branch-protected": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:acme/ownership/claim-verified": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:acme/ownership/has-owner": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:acme/ownership/has-tier": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:repo/docs/links-resolve": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:repo/repo-hygiene/codeowners-catch-all": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:repo/repo-hygiene/has-codeowners": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:repo/repo-hygiene/has-license": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:repo/repo-hygiene/has-readme": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:repo/repo-hygiene/owners-are-teams": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/cli-skill/has-skill": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-action-deps/pinned-everywhere": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-advisories/no-findings": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-agent-doc/checks-run-in-ci": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-agent-doc/has-commands": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-agent-doc/links-resolve": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-agent-doc/names-the-decision-log": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-agent-doc/no-hardcoded-secrets": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-agent-doc/no-hidden-instructions": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-agent-doc/single-source": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-agent-doc/within-budget": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-benchmark/closes-the-loop": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-benchmark/declared": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-benchmark/has-a-rival": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-benchmark/method-registered": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-benchmark/open-source-pinned": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-benchmark/paths-exist": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-benchmark/pre-registered": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-benchmark/results-recorded": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-benchmark/says-why": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-benchmark/sound-method": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-ci-reliability/every-job-has-timeout": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-ci-reliability/fail-rate-under-10": {
+        "level": "gold"
+      },
       "assessment:rule-quality/rule:toolbox/maintainer-ci-reliability/fail-rate-under-20": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-ci-reliability/fail-rate-under-5": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-ci-reliability/failures-visible": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-ci-reliability/main-not-stuck-red": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-ci-reliability/still-running": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-ci-security/actionlint-clean": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-ci-security/least-privilege-token": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-high-findings": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-medium-findings": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-ci-security/no-write-tokens-on-risky-triggers": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-ci-security/pinned-to-sha": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-ci-security/zizmor-clean": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-ci-speed/cancels-superseded-runs": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-ci-speed/fast-feedback": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-connector/closes-snapshots": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-connector/config-documented": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-connector/described": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-connector/exercised-in-ci": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-connector/has-tests": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-connector/names-its-kinds": {
         "level": "gold"
       },
       "assessment:rule-quality/rule:toolbox/maintainer-connector/no-hardcoded-secrets": {
         "level": "gold"
       },
+      "assessment:rule-quality/rule:toolbox/maintainer-connector/reports-missing-ids": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-connector/speaks-the-protocol": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-crate/bounded-complexity": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-crate/clippy-clean": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-crate/crate-docs": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-crate/few-unwraps": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-crate/fully-documented": {
+        "level": "gold"
+      },
       "assessment:rule-quality/rule:toolbox/maintainer-crate/has-tests": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-crate/no-huge-functions": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-crate/public-api-documented": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-crate/short-functions": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-crate/simple-functions": {
         "level": "gold"
       },
       "assessment:rule-quality/rule:toolbox/maintainer-crate/tests-pass": {
         "level": "gold"
       },
+      "assessment:rule-quality/rule:toolbox/maintainer-crate/tests-scale-with-code": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-dependency/from-a-registry": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-dependency/locked": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-dependency/one-version": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-dependency/shared-is-inherited": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-dependency/version-bounded": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-docs/cited-decisions-exist": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-docs/cites-sources": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-docs/links-resolve": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-docs/names-sdlc-layer": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-docs/status-banner": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-example/cites-the-design": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-example/has-a-heading": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-example/links-resolve": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-example/no-hardcoded-secrets": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-example/says-how-to-check": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-observability/assessed-monitor": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-observability/metric-catalog-complete": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-observability/operator-monitor-alerts": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-observability/otel-crate-present": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-observability/otlp-export-tested": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-observability/prom-endpoint": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-observability/service-name-documented": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-observability/structured-logs": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-openssf/ten": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-package/ci-installs-from-the-lockfile": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-package/described": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-package/engines-declared": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-package/from-a-registry": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-package/has-a-check": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-package/locked": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-package/named": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-package/no-hardcoded-secrets": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-package/publish-intent": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-package/version-bounded": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-plugin/manifest-valid": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-plugin/mcp-declared": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-plugin/no-hardcoded-secrets": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-plugin/no-secret-headers": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-plugin/paths-stay-inside": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-plugin/portable-components": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-plugin/stdio-command": {
+        "level": "gold"
+      },
       "assessment:rule-quality/rule:toolbox/maintainer-python/no-findings": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-repo/constituents-at-least-bronze": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-repo/constituents-at-least-gold": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-repo/constituents-at-least-silver": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-schema/described": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-schema/draft-2020-12": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-schema/has-id": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-schema/local-refs": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-schema/no-hardcoded-secrets": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-schema/titled": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-schema/wired-in": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-site/described": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-site/links-resolve": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-site/no-hardcoded-secrets": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-site/reachable": {
         "level": "gold"
       },
       "assessment:rule-quality/rule:toolbox/maintainer-site/titled": {
         "level": "gold"
       },
+      "assessment:rule-quality/rule:toolbox/maintainer-site/unique-title": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-skill/description-says-when": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-skill/has-evals": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-skill/has-example": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-skill/has-procedure": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-skill/links-resolve": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-skill/no-hardcoded-secrets": {
+        "level": "gold"
+      },
       "assessment:rule-quality/rule:toolbox/maintainer-skill/no-hidden-instructions": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-skill/one-level-deep": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-skill/portable-paths": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-skill/states-boundaries": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-skill/third-person": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-skill/valid-frontmatter": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-skill/within-body-budget": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-supply-chain/code-scanning-pinned": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-supply-chain/dependabot": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/maintainer-supply-chain/workflows-have-owners": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/meta-assessment/assessor-named": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/meta-assessment/cites-everything": {
         "level": "gold"
       },
       "assessment:rule-quality/rule:toolbox/meta-assessment/cites-for-findings": {
         "level": "gold"
       },
+      "assessment:rule-quality/rule:toolbox/meta-assessment/suggests-fixes": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/meta-connector/freshness-declared": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/meta-connector/has-fixtures": {
+        "level": "gold"
+      },
       "assessment:rule-quality/rule:toolbox/meta-connector/records-mapped": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/meta-connector/refreshable": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/meta-field/computed-readable": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/meta-field/described": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/meta-field/has-shape": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/meta-field/populated-in-fixtures": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/meta-kind/described": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/meta-kind/fields-described": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/meta-kind/in-fixtures": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/meta-kind/tested": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/meta-rubric/described": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/meta-rubric/discriminates": {
         "level": "gold"
       },
       "assessment:rule-quality/rule:toolbox/meta-rubric/guided": {
         "level": "gold"
       },
+      "assessment:rule-quality/rule:toolbox/meta-rubric/in-use": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/meta-rule/always-explains": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/meta-rule/both-outcomes-on-fixtures": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/meta-rule/decided-on-fixtures": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/meta-rule/evidence-tracks-check": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/meta-rule/explains-fix": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/meta-rule/explains-why": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/meta-rule/fix-names-a-place": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/meta-rule/no-nested-loops": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/meta-rule/pins-both-outcomes": {
+        "level": "gold"
+      },
       "assessment:rule-quality/rule:toolbox/meta-rule/readable": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/meta-rule/tested": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/meta-scorecard/described": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/meta-scorecard/every-level-has-rules": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/meta-scorecard/every-rule-tested": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/meta-scorecard/explains-why": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/meta-scorecard/fixtures-reach-every-level": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/meta-scorecard/fixtures-show-the-ladder": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/meta-scorecard/tested": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/operator-cli/args-described": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/operator-cli/documented": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/operator-cli/exercised": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/operator-cli/has-help": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/review-assessment/assessed": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/review-assessment/no-doubts": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/review-assessment/no-open-findings": {
         "level": "gold"
       },
       "assessment:rule-quality/rule:toolbox/review-assessment/passes-review": {
         "level": "gold"
       },
+      "assessment:rule-quality/rule:toolbox/review-crate/assessed": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/review-crate/independently-reviewed": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/review-crate/no-doubts": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/review-crate/no-open-findings": {
+        "level": "gold"
+      },
       "assessment:rule-quality/rule:toolbox/review-crate/passes-review": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/review-rule/assessed": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/review-rule/no-doubts": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/review-rule/no-open-findings": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/review-rule/passes-review": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/review-scorecard/assessed": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/review-scorecard/no-doubts": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/review-scorecard/no-open-findings": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/review-scorecard/passes-review": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/review-sdlc-stage/assessed": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/review-sdlc-stage/no-doubts": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/review-sdlc-stage/no-open-findings": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/review-sdlc-stage/passes-review": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/sdlc-layer/every-stage-built": {
         "level": "gold"
       },
       "assessment:rule-quality/rule:toolbox/sdlc-layer/nothing-missing": {
         "level": "gold"
       },
+      "assessment:rule-quality/rule:toolbox/sdlc-layer/stages-declared": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/sdlc-stage/agent-operable": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/sdlc-stage/automated": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/sdlc-stage/built": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/sdlc-stage/documented": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/sdlc-stage/has-exit-criterion": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/sdlc-stage/status-known": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/user-cli/args-described": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/user-cli/exercised": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/user-cli/has-help": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/user-cli/structured-output": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/user-mcp/annotated": {
+        "level": "gold"
+      },
       "assessment:rule-quality/rule:toolbox/user-mcp/contract-tested": {
         "level": "gold"
       },
+      "assessment:rule-quality/rule:toolbox/user-mcp/described": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/user-mcp/documented": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/user-mcp/inputs-described": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-agent-surface/get-entity-size": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-agent-surface/mcp-by-default": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-agent-surface/tools-list-size": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/api-docs": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/catalog-browse": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/community": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/docs": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/docs-search": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/graph": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/kubernetes": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/mcp-read": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/notifications": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/ownership": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/permission-rule": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/scorecards": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/templates": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-change-safety/change-preview": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-change-safety/offline-validate": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-change-safety/rollback-steps": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-change-safety/upgrade-lines": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-extensibility/any-language": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-extensibility/without-rebuild": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-footprint/adopter-files": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-footprint/adopter-lines": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-footprint/idle-memory": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-footprint/install-size": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-footprint/loaded-memory": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-org-fit/federation": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-org-fit/repo-scoped": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-performance/catalog-readable": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-performance/get-latency": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-performance/get-throughput": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-performance/list-latency": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-performance/list-throughput": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-performance/ready": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-performance/recovery": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-security/anonymous-mcp": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-security/anonymous-read": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-security/client-cannot-delete": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-security/extension-credential-isolated": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-security/extension-process-isolated": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-security/forged-identity": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-security/loopback-by-default": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-security/owner-only-fields": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-supply-chain/high-vulnerabilities": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-supply-chain/known-vulnerabilities": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-supply-chain/packages": {
+        "level": "gold"
+      },
+      "assessment:rule-quality/rule:toolbox/vs-backstage-supply-chain/provenance": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:acme/app-approval": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:acme/github-app-hygiene": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:acme/ownership": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:repo/docs": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:repo/repo-hygiene": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/cli-skill": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/maintainer-action-deps": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/maintainer-advisories": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/maintainer-agent-doc": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/maintainer-benchmark": {
+        "level": "gold"
+      },
       "assessment:scorecard-quality/scorecard:toolbox/maintainer-ci-reliability": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/maintainer-ci-security": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/maintainer-ci-speed": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/maintainer-connector": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/maintainer-crate": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/maintainer-dependency": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/maintainer-docs": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/maintainer-example": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/maintainer-observability": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/maintainer-openssf": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/maintainer-package": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/maintainer-plugin": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/maintainer-python": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/maintainer-repo": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/maintainer-schema": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/maintainer-site": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/maintainer-skill": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/maintainer-supply-chain": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/meta-assessment": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/meta-connector": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/meta-field": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/meta-kind": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/meta-rubric": {
         "level": "gold"
       },
       "assessment:scorecard-quality/scorecard:toolbox/meta-rule": {
@@ -5899,19 +9369,88 @@
       "assessment:scorecard-quality/scorecard:toolbox/meta-scorecard": {
         "level": "gold"
       },
+      "assessment:scorecard-quality/scorecard:toolbox/operator-cli": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/review-assessment": {
+        "level": "gold"
+      },
       "assessment:scorecard-quality/scorecard:toolbox/review-crate": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/review-rule": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/review-scorecard": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/review-sdlc-stage": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/sdlc-layer": {
         "level": "gold"
       },
       "assessment:scorecard-quality/scorecard:toolbox/sdlc-stage": {
         "level": "gold"
       },
+      "assessment:scorecard-quality/scorecard:toolbox/user-cli": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/user-mcp": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/vs-backstage-agent-surface": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/vs-backstage-capabilities": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/vs-backstage-change-safety": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/vs-backstage-extensibility": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/vs-backstage-footprint": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/vs-backstage-org-fit": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/vs-backstage-performance": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/vs-backstage-security": {
+        "level": "gold"
+      },
+      "assessment:scorecard-quality/scorecard:toolbox/vs-backstage-supply-chain": {
+        "level": "gold"
+      },
       "assessment:sdlc-stage-quality/sdlc-stage:maintainer/build": {
+        "level": "gold"
+      },
+      "assessment:sdlc-stage-quality/sdlc-stage:maintainer/monitor": {
+        "level": "gold"
+      },
+      "assessment:sdlc-stage-quality/sdlc-stage:maintainer/plan": {
         "level": "gold"
       },
       "assessment:sdlc-stage-quality/sdlc-stage:maintainer/release": {
         "level": "gold"
       },
+      "assessment:sdlc-stage-quality/sdlc-stage:maintainer/test": {
+        "level": "gold"
+      },
+      "assessment:sdlc-stage-quality/sdlc-stage:maintainer/verify": {
+        "level": "gold"
+      },
+      "assessment:sdlc-stage-quality/sdlc-stage:operator/author": {
+        "level": "gold"
+      },
       "assessment:sdlc-stage-quality/sdlc-stage:operator/build-connector": {
+        "level": "gold"
+      },
+      "assessment:sdlc-stage-quality/sdlc-stage:operator/deploy": {
         "level": "gold"
       },
       "assessment:sdlc-stage-quality/sdlc-stage:operator/monitor": {
@@ -5920,7 +9459,52 @@
         },
         "level": "silver"
       },
+      "assessment:sdlc-stage-quality/sdlc-stage:operator/plan": {
+        "level": "gold"
+      },
+      "assessment:sdlc-stage-quality/sdlc-stage:operator/preview": {
+        "level": "gold"
+      },
+      "assessment:sdlc-stage-quality/sdlc-stage:operator/test": {
+        "level": "gold"
+      },
+      "assessment:sdlc-stage-quality/sdlc-stage:operator/validate": {
+        "level": "gold"
+      },
+      "assessment:sdlc-stage-quality/sdlc-stage:operator/verify": {
+        "level": "gold"
+      },
+      "assessment:sdlc-stage-quality/sdlc-stage:package-author/adopt": {
+        "level": "gold"
+      },
+      "assessment:sdlc-stage-quality/sdlc-stage:package-author/author": {
+        "level": "gold"
+      },
+      "assessment:sdlc-stage-quality/sdlc-stage:package-author/build-connector": {
+        "level": "gold"
+      },
       "assessment:sdlc-stage-quality/sdlc-stage:package-author/distribute": {
+        "level": "gold"
+      },
+      "assessment:sdlc-stage-quality/sdlc-stage:package-author/package": {
+        "level": "gold"
+      },
+      "assessment:sdlc-stage-quality/sdlc-stage:package-author/test": {
+        "level": "gold"
+      },
+      "assessment:sdlc-stage-quality/sdlc-stage:user/build": {
+        "level": "gold"
+      },
+      "assessment:sdlc-stage-quality/sdlc-stage:user/deploy": {
+        "level": "gold"
+      },
+      "assessment:sdlc-stage-quality/sdlc-stage:user/discover": {
+        "level": "gold"
+      },
+      "assessment:sdlc-stage-quality/sdlc-stage:user/monitor": {
+        "level": "gold"
+      },
+      "assessment:sdlc-stage-quality/sdlc-stage:user/test": {
         "level": "gold"
       }
     },
@@ -8445,28 +12029,16 @@
     },
     "meta-rubric": {
       "rubric:toolbox/assessment-quality": {
-        "failing": {
-          "discriminates": 4
-        },
-        "level": "silver"
+        "level": "gold"
       },
       "rubric:toolbox/crate-design": {
-        "failing": {
-          "discriminates": 1
-        },
-        "level": "silver"
+        "level": "gold"
       },
       "rubric:toolbox/rule-quality": {
-        "failing": {
-          "discriminates": 1
-        },
-        "level": "silver"
+        "level": "gold"
       },
       "rubric:toolbox/scorecard-quality": {
-        "failing": {
-          "discriminates": 2
-        },
-        "level": "silver"
+        "level": "gold"
       },
       "rubric:toolbox/sdlc-stage-quality": {
         "level": "gold"

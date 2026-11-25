@@ -1,7 +1,7 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: crate:toolbox-derive
 rubric: crate-design
-subjectHash: 9ec1bd2f07ad
+subjectHash: c700d2b8b2f8
 assessor: {kind: agent, name: cursor-assessor-20, model: claude-opus-5.5}
 at: 2026-11-25
 verdicts:
@@ -57,7 +57,9 @@ verdicts:
       (src/pyjson.rs:127). Paths the reference portal lacks are covered from
       other crates and portals: - comparative scorecards' ahead/parity/behind
       roll-up (crates/toolbox-cli/tests/compare.rs:92-111); - campaigns, in
-      five package test portals (packages/*/tests/standards.test.yaml); - the
+      five package test portals (packages/*/tests/standards.test.yaml) and, as
+      of the include-scoping fix, a direct test that a campaign over two kinds
+      scopes each entity by its own card (lib.rs:1398); - the
       error-to-`unknown` mapping, in Toolbox for Toolbox's tests
       (portal/tests/standards.test.yaml:145-148). CI runs all of them
       (.github/workflows/ci.yml:24, 56-70). The remaining gap is that no test

@@ -1,7 +1,7 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: assessment:crate-design/crate:toolbox-derive
 rubric: assessment-quality
-subjectHash: 4a3ff22bd2b8
+subjectHash: 05de50d3426b
 assessor: {kind: agent, name: cursor-reviewer-20, model: claude-opus-5.5}
 at: 2026-11-25
 verdicts:
@@ -19,10 +19,12 @@ verdicts:
       state.rs:177, portal.rs:26, main.rs:898 and report.rs:1546 and 2399. The
       tests are at reference.rs:25-37, 39-47 (20 cases), 49-70 and 72-117, and
       pyjson.rs:127. compare.rs:92-111 is the ahead/parity/behind roll-up, and
-      five packages/*/tests files call `campaign(`. The diagnostic codes are
-      at lib.rs:349, 485, 553, 656 and 661. One claim is slightly off:
-      `utc_ymd_today` is not "used only by toolbox-cli's report". The campaign
-      code calls it too (lib.rs:786). That doesn't change any verdict.
+      five packages/*/tests files call `campaign(`, and lib.rs:1398 tests that
+      a campaign over two kinds scopes each entity by its own card. The
+      diagnostic codes are at lib.rs:349, 485, 553, 656 and 661. One claim is
+      slightly off: `utc_ymd_today` is not "used only by toolbox-cli's
+      report". The campaign code calls it too (lib.rs:786). That doesn't
+      change any verdict.
   - criterion: complete
     verdict: pass
     reason: >-
