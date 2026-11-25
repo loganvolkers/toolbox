@@ -1,0 +1,54 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/vs-backstage-security/loopback-by-default
+rubric: assessment-quality
+subjectHash: a3d0f568eca0
+assessor: {kind: agent, name: cursor-reviewer-16, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      The substantive citations in
+      portal/assessments/rule-quality/rule/toolbox/vs-backstage-security/loopback-by-default.yaml
+      hold. image/Dockerfile:22-24 sets PORT=8080 with the Cloud Run comment,
+      and server.rs:35-40 is `default_auth_mode`. server.rs:8-16 binds
+      127.0.0.1:8080 without PORT, called from main.rs:674. facts.yaml:8-14 is
+      the hand-set `false`, ADJUDICATION.md:260-265 the round 1-2 correction,
+      RESEARCH.md:181 P1, and backstage-comparison.yaml:517-519 the rationale.
+      Two references miss. RESEARCH.md:67 is F11; ASVS V13 and CISA Secure by
+      Design are F6 at line 62. And D01M857ZB468ZM2YS6GNSEG6YB9 does not set
+      the single bronze level (backstage-comparison.yaml:458 does).
+    suggestion: >-
+      Cite RESEARCH.md:62 and backstage-comparison.yaml:458.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      All three fails hold. The fix names main.rs code that already binds
+      loopback (server.rs:12-15), while the cause is Dockerfile:24. The value
+      is hand-set in facts.yaml, and its basis flipped once
+      (ADJUDICATION.md:260-265). And a container must listen off loopback,
+      while the server defaults to token auth there (server.rs:35-40), so the
+      bind address is a proxy for the harm. threshold-justified is boolean.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      fix-leads-to-pass and hard-to-game follow from the Dockerfile and
+      facts.yaml. measures-intent involves more judgement, since the rule
+      checks exactly what its name says. But the reason grounds the fail in
+      D01M857ZB3FZJZWX8G3BF5W1RNR and server.rs:35-40, which show the
+      reachable server refusing everyone, so a second assessor would follow
+      it.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Each suggestion would change its verdict. Restating the fact as "serves
+      nothing without credentials off loopback" fixes measures-intent.
+      Deriving the value from a socket probe in surface.py fixes hard-to-game.
+      Pointing the fix at image/Dockerfile and facts.yaml fixes
+      fix-leads-to-pass.
+summary: >-
+  A thorough assessment of the scorecard's weakest rule. The fix names
+  code that already binds loopback while the cause is the Dockerfile's
+  PORT, and the value is a hand-set fact that has flipped once. The ASVS
+  reference points at the wrong RESEARCH.md row (67, not 62), and the
+  level is attributed to a decision that doesn't set levels.

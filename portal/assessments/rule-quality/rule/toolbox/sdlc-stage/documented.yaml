@@ -1,0 +1,56 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/sdlc-stage/documented
+rubric: rule-quality
+subjectHash: 7aab38b2fad0
+assessor: {kind: agent, name: cursor-assessor-13, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The check is `entity.docs.size() > 0 && entity.missingPaths.size() == 0`
+      (portal/standards/sdlc.yaml:194). It asks only that a listed file
+      exists, not that it describes the stage. The connector already computes
+      `notNaming` and `namedIn` for exactly this (crates/
+      toolbox-connector-workspace/src/data.rs:220-233, 258-267;
+      sdlc.yaml:81-90), but only sdlc-layer's nothing-missing reads them
+      (sdlc.yaml:26-30). Five live stages list a doc that never names them,
+      for example maintainer/plan's docs/decisions/README.md and three of
+      package-author/build-connector's four docs. Each passes on its other
+      docs, but a stage whose only doc names it nowhere would pass too.
+    suggestion: >-
+      Check `entity.namedIn.size() > 0 && entity.missingPaths.size() == 0` and
+      add `entity.notNaming` to the evidence, so the stage rule matches what
+      nothing-missing already demands of the layer.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      `docs: [README.md]` passes for any stage, because only existence is
+      checked (data.rs:77-93). That is cheaper than writing or finding the doc
+      that describes the stage. Even with `namedIn`, the name match is a
+      case-insensitive substring (data.rs:228-229), so short stage names like
+      `test` or `plan` appear in almost any doc. It would raise the cost, not
+      close the gap.
+    suggestion: >-
+      Require `namedIn`, and match the stage name as a word in a heading or a
+      table row rather than anywhere in the text.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence is `no doc describes the stage` or `<path> does not exist`
+      for each missing doc or check path (sdlc.yaml:195-197). The fix names
+      the file and both fields, `docs:` and `checks:`, since `missingPaths`
+      covers both (portal/toolbox.yaml:167). Pointing them at files that exist
+      passes, as on the fixture demo-gap/release
+      (portal/tests/standards.test.yaml:1047).
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      No number. docs/design/thresholds.md:56 places "a doc that exists" at
+      bronze for sdlc-stage, and the rationale explains why a dangling pointer
+      is a floor defect (sdlc.yaml:201-203).
+summary: >-
+  The fix works, but the check stops at "a listed file exists". The
+  connector already knows whether the doc names the stage (`namedIn`), and
+  the layer rule uses that, so the stage rule is weaker than its own
+  layer's. Listing README.md is enough to pass.

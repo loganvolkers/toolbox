@@ -1,0 +1,69 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: scorecard:toolbox/vs-backstage-performance
+rubric: scorecard-quality
+subjectHash: 03f1172a915b
+assessor: {kind: agent, name: cursor-assessor-16, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: >-
+      All seven rules time one deployed instance as an operator evaluating a
+      portal would experience it: start, first ingest, reads and recovery
+      (portal/standards/backstage-comparison.yaml:203-337). The description
+      names two ISO 25010 characteristics, performance efficiency and
+      reliability. But recovery is measured as a time on the same harness run
+      (measure.py:276-283), and docs/design/backstage-comparison.md:48-59 maps
+      F3, F4, F5 and F14 onto this card for that reason. Rollback, the other
+      half of F14, sits in change safety. One audience, one question: how
+      fast.
+  - criterion: levels-are-a-ladder
+    verdict: fail
+    reason: >-
+      There is a single bronze level with seven rules (levels: [bronze],
+      backstage-comparison.yaml:222). Its bars are loose enough that both
+      products clear every one: Backstage's real record has readyS 3.33,
+      catalogReadableS 26.61, getP95Ms 5.82, getRps 4150.7, listP95Ms 59.06,
+      listRps 473.6 and recoveredS 2.28 (portal/comparisons/backstage.yaml).
+      So the level says nothing that separates them, and there is nothing
+      above bronze to reach. Round 1's 2.4-times list loss also passed bronze
+      (RESULTS.md:102-107). The ranking comes only from the values, under
+      D01M857ZB468ZM2YS6GNSEG6YB9.
+    suggestion: >-
+      Add a silver level at the plan's own SLOs: read p99 under 200 ms
+      (docs/plan.md:920) and the scale-slo budgets. Add a gold level at
+      today's leading values, for example ready at most 2 s and list p95 at
+      most 50 ms. Or state in the scorecard's rationale that bronze is a floor
+      and that the standing is the comparison.
+  - criterion: no-obvious-gap
+    verdict: fail
+    reason: >-
+      RESEARCH.md pre-registered freshness after the first ingest, measured
+      commit to visible, as F5 (RESEARCH.md:61, 166-175). It also listed
+      full-text search among the F4 endpoint pairs (RESEARCH.md:158) and
+      errors during a Postgres restart under load as F14(b) (RESEARCH.md:287).
+      None of these is a rule. The catalog-readable rationale admits it covers
+      only the first ingest (backstage-comparison.yaml:255-256), and
+      docs/design/backstage-comparison.md:114-120 lists F5 as not measured.
+      Freshness is the gap: the plan budgets it, webhook to visible in under
+      60 s p95 (docs/plan.md:921).
+    suggestion: >-
+      Add a `freshness` rule, commit to visible p95 under the default pull
+      mode, and a `search-latency` rule over each product's search endpoint,
+      both measured by measure.py.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Every fix names a code location: routes.rs `get_entity` or
+      `list_entities`, state.rs for restart, or a profiling command. Each also
+      names experiments/backstage-compare/run.sh, whose header (run.sh:4)
+      points to snapshot.py for the record. Evidence prints the measured value
+      with its unit. An agent can raise a Toolbox regression back to bronze
+      from these. The rerun needs Postgres, oha, Node and the Backstage
+      install (README.md:94-102), which is heavy but documented.
+summary: >-
+  A coherent scorecard of good, gate-checked timings with fixes an agent
+  can follow. As a ladder it is flat: both products pass every bronze bar,
+  so the level carries no comparison and there is nothing above it. It
+  also leaves out freshness after the first ingest and search latency,
+  both of which the research brief pre-registered.

@@ -1,0 +1,46 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/vs-backstage-security/client-cannot-delete
+rubric: assessment-quality
+subjectHash: 171f55aba81c
+assessor: {kind: agent, name: cursor-reviewer-16, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      The substantive citations in
+      portal/assessments/rule-quality/rule/toolbox/vs-backstage-security/client-cannot-delete.yaml
+      hold. backstage-comparison.yaml:502-505 is the rationale, admitting the
+      MCP token. surface.py:161-162 probes the client token and 183-184
+      requires both a non-2xx status and the entity still there.
+      ADJUDICATION.md:482-490 records a plugin-scoped MCP token deleting with
+      204. routes.rs:24-80 mounts no DELETE, and routes.rs:674-681 gates
+      ingest on a connector token. RESEARCH.md:184 is P4. The exception is
+      "Single bronze level per D01M857ZB468ZM2YS6GNSEG6YB9": that decision
+      says nothing about levels (backstage-comparison.yaml:458 does).
+    suggestion: >-
+      Cite backstage-comparison.yaml:458 for the single bronze level.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      measures-intent rightly fails. The rationale's harm is a leaked agent
+      token, and Backstage's MCP-capable token deletes
+      (ADJUDICATION.md:489-490) while the rule scores it a pass. Disclosure in
+      the rationale doesn't make the pass mean the intent. The other three
+      passes hold. Toolbox answers DELETE with 405 (RESULTS.md:182).
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The fail rests on the adjudicator's measured 204 and the rationale's own
+      sentence, not on taste.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Probing every client credential an arm needs for REST and MCP would
+      score Backstage on its MCP token too. That makes the value match the
+      rationale, which turns measures-intent into a pass.
+summary: >-
+  A sound assessment. The measures-intent fail is well grounded in the
+  adjudicator's 204 from an MCP-capable Backstage token, and the
+  hard-to-game pass correctly credits the entity-still-there check. The
+  only miss is the decision cited for the single bronze level.

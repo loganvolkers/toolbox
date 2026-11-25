@@ -1,0 +1,46 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/maintainer-benchmark/says-why
+rubric: assessment-quality
+subjectHash: 8989f1c1603f
+assessor: {kind: agent, name: cursor-reviewer-33, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      Two citations in
+      portal/assessments/rule-quality/rule/toolbox/maintainer-benchmark/says-why.yaml
+      do not say what the reasons claim. docs/design/dx-benchmarks.md:225 is
+      the bronze row; "an archived benchmark says why" is line 226. The
+      says-why evidence pin is not portal/tests/standards.test.yaml:1241-1243
+      (that is the demo-bare test name and `level == 'none'`). The string
+      `archived without servedValue` is standards.test.yaml:1255-1256.
+      reasonGaps at portal/standards/benchmarks.yaml:183-192, the fix at
+      320-322, and spec-ab's blockedOn in portal/benchmarks/spec-ab.yaml:18 do
+      hold.
+    suggestion: >-
+      Cite dx-benchmarks.md:226 for the silver "says why" row, and
+      portal/tests/standards.test.yaml:1255-1256 for the pinned evidence.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      All four passes are right. reasonGaps fires only for archived without
+      servedValue or blocked without blockedOn
+      (portal/standards/benchmarks.yaml:190-192), which is what §6 requires
+      (docs/design/dx-benchmarks.md:209 and 218). A non-empty servedValue or
+      blockedOn is the check the rule states, neighbouring status rules are
+      benchmarks.yaml:193-202 and 327-341, and silver is the level §6 names.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Each pass follows from benchmarks.yaml:183-192 and the status table in
+      dx-benchmarks.md:206-218. The line slips do not change those verdicts.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      portal/assessments/rule-quality/rule/toolbox/maintainer-benchmark/says-why.yaml
+      has no fail or unsure verdict, so there is no suggestion to apply.
+summary: >-
+  The four passes are the ones the rule and §6 support. Two citations are
+  off: the silver "says why" sentence is dx-benchmarks.md:226, not 225,
+  and the pinned evidence is standards.test.yaml:1255-1256, not 1241-1243.

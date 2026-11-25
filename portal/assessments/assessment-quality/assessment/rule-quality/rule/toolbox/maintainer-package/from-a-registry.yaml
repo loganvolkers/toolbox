@@ -1,0 +1,47 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/maintainer-package/from-a-registry
+rubric: assessment-quality
+subjectHash: 3ab56f908fe2
+assessor: {kind: agent, name: cursor-reviewer-34, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/rule-quality/rule/toolbox/maintainer-package/from-a-registry.yaml
+      match the detector. crates/toolbox-connector-workspace/src/npm.rs:94-110
+      returns true only for git+, git:, github:, gitlab:, bitbucket:, http(s)
+      or a spec containing git+, so user/repo is not remote, and :318 is the
+      caret-range test the suggestion names.
+      portal/standards/packages.yaml:100-107 is the empty gitRanges check and
+      the rationale that a git or tarball URL skips the registry.
+      portal/tests/standards.test.yaml:559-560 pins
+      ['leftpad@git+https://example.invalid/leftpad'].
+      docs/decisions/D01M7W56B7R0000000000000000.md:9 bars git and tarball
+      URLs at bronze, and docs/design/package-standards.md:66 is that row.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      measures-intent and hard-to-game should both fail: a user/repo spec
+      skips the registry and clears a github: URL, which is the case the
+      rationale names (packages.yaml:105-107). fix-leads-to-pass is right that
+      a semver range empties gitRanges. threshold-justified is right that
+      bronze is D76 and the safety floor (docs/design/thresholds.md:19-21). No
+      further miss.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      is_remote is a prefix list. A second assessor, reading npm.rs:94-110
+      against the rationale, fails the same two criteria and passes the fix
+      and the level.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Treating owner/repo as remote, the suggestion on both fails, would make
+      user/repo show up in gitRanges and would stop the left/pad rewrite from
+      clearing the evidence. The pass verdicts need nothing.
+summary: >-
+  The from-a-registry assessment is trustworthy. is_remote misses npm's
+  user/repo shorthand, so both fails follow from npm.rs:94-110, and the
+  shorthand detection it suggests would change both verdicts.

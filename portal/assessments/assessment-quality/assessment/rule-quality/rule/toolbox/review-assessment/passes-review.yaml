@@ -1,0 +1,70 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/review-assessment/passes-review
+rubric: assessment-quality
+subjectHash: 89b5712918de
+assessor: {kind: agent, name: cursor-reviewer-23, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      The central claim in
+      portal/assessments/rule-quality/rule/toolbox/review-assessment/passes-review.yaml
+      holds. link_reviews adds the subject's own `path` to what grounds a
+      review (crates/toolbox-connect/src/assessment.rs:253-270, line 258).
+      reviewUncited and reviewGrounded are
+      portal/standards/assessments.yaml:88-104, and
+      docs/design/thresholds.md:55 and 62-70 say what the reason quotes. Two
+      citations are wrong. The repo-relative path is cited at
+      crates/toolbox-connector-workspace/src/main.rs:703, which is
+      `out.snapshot_complete("assessment")`. The record_in call that passes
+      `Some(rel)` is main.rs:716, and was already there at b15820e. Second,
+      the assessments.yaml ranges are about six lines early: passes-review is
+      274-294 (check 276-278), not 268-282; assessed is 259-273, not 253-264;
+      and the fix is 285-290, not 277-288. Each cited range starts inside the
+      previous rule.
+    suggestion: >-
+      Cite crates/toolbox-connector-workspace/src/main.rs:716 for the
+      repo-relative path, and portal/standards/assessments.yaml:274-294 (fix
+      285-290) and 259-273 for the rules.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The verdicts follow from the sources. measures-intent passes because
+      passes-review's check (assessments.yaml:276-278) and no-doubts (295-297)
+      together match the gold row at thresholds.md:55. hard-to-game fails
+      correctly. A review that cites only the subject's own path is grounded
+      (assessment.rs:258, 265-268), so an all-pass "Looks right; see <file>"
+      from a differently named assessor passes gold. fix-leads-to-pass matches
+      the evidence's "(fix the review)" labels (assessments.yaml:279-290), and
+      threshold-justified rests on thresholds.md:55.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The hard-to-game fail reproduces from the code alone:
+      assessment.rs:257-258 puts the subject's path in its sources, and
+      265-268 grounds any review citing one of them. The passes rest on the
+      stated ladder at thresholds.md:55. A second assessor would reach the
+      same verdicts.
+  - criterion: actionable
+    verdict: unsure
+    reason: >-
+      The hard-to-game suggestion, to ground all-pass reviews only in a source
+      the subject cites (assessment.rs:262-270), moves the rubber stamp rather
+      than removing it. "Looks right; see <a path copied from the subject's
+      citations>" is still cheaper than checking anything, so it is unclear
+      that hard-to-game would turn to pass. thresholds.md:62-70 already
+      accepts a similar limit for self-declared reviewers.
+    suggestion: >-
+      Say whether copying a citation is meant to stay an accepted limit, and
+      if so record it beside the renamed-reviewer limit in
+      docs/design/thresholds.md:62-70. Otherwise suggest a check a copy can't
+      satisfy, such as a pass reason that cites a line range the subject
+      doesn't cite.
+summary: >-
+  The verdicts are right: grounding accepts the subject's own path
+  (assessment.rs:258), so an all-pass rubber stamp reaches gold. Two
+  citations are stale, main.rs:703 (now 716, where record_in is called)
+  and every assessments.yaml range, which is about six lines early. The
+  suggestion moves the rubber stamp to a copied citation, so it may not
+  change the verdict.

@@ -1,0 +1,49 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/maintainer-connector/names-its-kinds
+rubric: assessment-quality
+subjectHash: 52ebc2f45533
+assessor: {kind: agent, name: cursor-reviewer-37, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/rule-quality/rule/toolbox/maintainer-connector/names-its-kinds.yaml
+      match the code. kind_patterns includes `"kind": "…"`
+      (crates/toolbox-connector-workspace/src/connectors.rs:163-171) and
+      documented_kinds scans the joined sources (connectors.rs:21-25,
+      :137-145). deps.rs:145 is `"kind": "dev"` inside a test, and lint.rs:337
+      is `"kind":"syntax-check"`. generic_kinds is the two phrases at
+      connectors.rs:173-175. The runner doc contains both
+      (crates/toolbox-connector-runner/src/main.rs:9 and :11). The check is
+      size > 0 or genericKinds (portal/standards/connectors.yaml:116), and the
+      fix's "kinds come from the job config" (connectors.yaml:119-121) matches
+      neither phrase. D73 and connector-standards.md:83 place named kinds at
+      silver.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      measures-intent, hard-to-game and fix-leads-to-pass are the failures the
+      sources show: one kind is enough, a test string or a doc phrase passes,
+      and the fix's own sentence does not. threshold-justified is right for a
+      rule with no separate number. The record() pattern only matches a string
+      literal (connectors.rs:165), so a constant still fails after the fix.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      A second assessor can read the regexes and the two test strings. The
+      scratch-crate claim follows from generic_kinds: any doc containing "kind
+      `<" sets the flag (connectors.rs:173-175).
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Collecting kinds from production code, requiring every registered kind,
+      and matching the fix's wording would remove the three failures named in
+      portal/assessments/rule-quality/rule/toolbox/maintainer-connector/names-its-kinds.yaml.
+      The silver level is already justified, so it needs no suggestion.
+summary: >-
+  Trustworthy. The kind scan, the two polluted strings, the phrase match
+  and the fix that does not match it are all in the cited lines. The three
+  fails and the level pass are the verdicts those sources support, and
+  each suggestion would change its verdict.

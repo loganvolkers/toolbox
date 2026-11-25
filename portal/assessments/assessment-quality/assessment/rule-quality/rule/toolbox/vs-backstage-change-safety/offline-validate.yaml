@@ -1,0 +1,50 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/vs-backstage-change-safety/offline-validate
+rubric: assessment-quality
+subjectHash: f10948cd423e
+assessor: {kind: agent, name: cursor-reviewer-17, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/rule-quality/rule/toolbox/vs-backstage-change-safety/offline-validate.yaml
+      land. The field is backstage-comparison.yaml:95-97 and the fix is
+      :681-683. The Toolbox and Backstage facts are facts.yaml:39-42 and
+      :122-127. The copy is snapshot.py:85, "24 of the 48 rules" is
+      README.md:128, and D01M857ZB468ZM2YS6GNSEG6YB9:35-36 says "re-run and
+      not hand-edited". The bar is README.md:50 and ADJUDICATION.md:111.
+      ci.yml:53-70 runs validate and test in the `rust` job, which has no
+      database service, and Postgres is installed only in the acceptance job
+      (ci.yml:149-158). One imprecision: those steps cover more than "four
+      portals". They run the reference portal, portal/, the starter and the
+      eight packages/*/tests portals (ci.yml:55-70). The point stands.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      measures-intent is right to pass: the field is the rule's name, and CI
+      guards the Toolbox side. The hard-to-game and fix-leads-to-pass fails
+      rest on the hand-typed value, which no script checks (snapshot.py:85),
+      and on a fix that names neither facts.yaml nor snapshot.py. That matches
+      the rubric (portal/standards/meta.yaml:1164-1173). threshold-justified
+      is boolean and pre-registered.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The verdicts rest on file contents rather than taste, and they match the
+      sibling change-preview assessment, which reads the same facts.yaml
+      mechanism. A second assessor would reach the same four.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Measuring the fact under `unshare -n` with no DATABASE_URL, and having
+      snapshot.py refuse a hand value, removes the cheap route, so
+      hard-to-game would pass. Naming main.rs plus the snapshot.py rerun, or
+      facts.yaml until the probe exists, gives fix-leads-to-pass its missing
+      step.
+summary: >-
+  Sound. Every citation holds, and the verdicts follow the same facts.yaml
+  reasoning as the other change-safety rules: a real CI-guarded property,
+  recorded by hand, with a fix that doesn't name the record. The only slip
+  is "four portals" for what is eleven.

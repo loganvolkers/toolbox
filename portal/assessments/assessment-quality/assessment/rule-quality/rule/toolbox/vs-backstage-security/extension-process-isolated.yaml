@@ -1,0 +1,69 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/vs-backstage-security/extension-process-isolated
+rubric: assessment-quality
+subjectHash: ac2b05b0ea4d
+assessor: {kind: agent, name: cursor-reviewer-37, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      Most citations in
+      portal/assessments/rule-quality/rule/toolbox/vs-backstage-security/extension-process-isolated.yaml
+      hold: the rationale is
+      portal/standards/backstage-comparison.yaml:540-543, in-image connectors
+      are child processes (crates/toolbox-api/src/connectors.rs:262 and
+      :316-318), ingest requires a connector token
+      (crates/toolbox-api/src/routes.rs:674-681, route at :33), the boolean is
+      facts.yaml:21-25, and ADJUDICATION.md:273 keeps the fact a fair ahead.
+      RESEARCH.md:63 is the F7 row and :195-207 is the canary.
+      threshold-justified's "single bronze level per
+      D01M857ZB468ZM2YS6GNSEG6YB9" is not in that decision: it defines
+      comparative standings, not a one-level ladder. The scorecard's levels:
+      [bronze] is backstage-comparison.yaml:458, uncited.
+    suggestion: >-
+      Drop the decision as the source of a single bronze level, or cite
+      backstage-comparison.yaml:458 for the level list and the decision only
+      for what a comparison scorecard is.
+  - criterion: complete
+    verdict: fail
+    reason: >-
+      fix-leads-to-pass should fail. The check is
+      entity.extensionProcessIsolated (backstage-comparison.yaml:533), whose
+      value is the hand-written boolean at
+      experiments/backstage-compare/facts.yaml:21-25. The fix
+      (backstage-comparison.yaml:537-539) names connector-control.md and not
+      that file. portal/standards/meta.yaml:1172-1173 says to fail when the
+      rule needs data the fix does not mention. The pass rests on "the rule
+      passes today, so the fix only steers a regression", which the criterion
+      does not say. The other three verdicts match the process boundary and
+      the F7 write-up.
+    suggestion: >-
+      Change fix-leads-to-pass to fail, and point the fix at facts.yaml (or at
+      the harness that writes it) as well as at spawn_in_image.
+  - criterion: reproducible
+    verdict: unsure
+    reason: >-
+      measures-intent and the F7 citations are stable. The pass on
+      fix-leads-to-pass is a judgement that a currently true architectural
+      fact need not name the file the check reads. A second assessor applying
+      meta.yaml:1172-1173 would fail it; one who treats the design doc as the
+      place to keep the property would pass it.
+    suggestion: >-
+      Apply the criterion's "data the fix does not mention" test to
+      facts.yaml:21-25 and record fail or pass from that, so the verdict is
+      not whether the rule happens to pass today.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      portal/assessments/rule-quality/rule/toolbox/vs-backstage-security/extension-process-isolated.yaml
+      has no fail or unsure verdict, so there is no suggestion that has to
+      change one. The summary's remark about naming connectors.rs is not
+      attached to a verdict.
+summary: >-
+  The process-isolation pass is grounded in the child-process spawn and
+  the adjudication, but the assessment is not fully trustworthy. It
+  attributes a single bronze level to a decision that does not say that,
+  and it passes fix-leads-to-pass even though the check reads a boolean
+  the fix never names. A second assessor can reasonably fail that
+  criterion.

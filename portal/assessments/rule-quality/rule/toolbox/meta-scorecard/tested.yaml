@@ -1,0 +1,54 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/meta-scorecard/tested
+rubric: rule-quality
+subjectHash: 044012ec44e6
+assessor: {kind: agent, name: cursor-assessor-02, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      A card counts as tested for every `score('<card>'` in any expectation,
+      whatever follows (crates/toolbox-cli/src/meta.rs:44, 56-61). That is the
+      bare-mention standard D01M831P5QWJQ4A2FT85N5MXJQF removed for rules.
+      `'always-explains' in score('meta-rule', …).rules`
+      (portal/tests/standards.test.yaml:310-311) would test meta-rule on its
+      own. The rationale claims a named card can't change its levels or lose a
+      rule unnoticed (portal/standards/meta.yaml:605-608), but such a mention
+      notices neither.
+    suggestion: >-
+      Count a card as tested only when an expectation compares its `.level`
+      with a literal, or pins one of its rules the way meta-rule/tested
+      requires.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      `score('c', 'e').level != ''`, or any `.rules` membership test,
+      satisfies it and asserts nothing about levels or outcomes: every
+      `score('<card>'` match marks the card tested
+      (crates/toolbox-cli/src/meta.rs:44, 56-61), and the rule checks only
+      `entity.tested` (portal/standards/meta.yaml:600-603). It costs less than
+      a real expectation.
+    suggestion: >-
+      Same change, plus a fixture card mentioned only in that form, pinned
+      failing in portal/tests/standards.test.yaml.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence quotes the form that counts (`no expectation names
+      score(<name>, …)`, meta.yaml:603). Adding any expectation calling
+      score() on the card in the portal's test files (`tests:` in
+      portal/toolbox.yaml:441) passes.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      Bronze is the ratchet floor for new scorecards
+      (docs/design/scorecards-for-scorecards.md:117-119, 110) and the
+      meta-scorecard ladder's bronze (docs/design/thresholds.md:60). The
+      rationale cites `user-cli` having no test of any kind on the first run.
+summary: >-
+  The fix is easy and the bronze level is documented, with both outcomes
+  pinned (portal/tests/standards.test.yaml:285-289, 298-305). The check is
+  weaker than its rule-level sibling: one mention of the card in any
+  expectation counts, which is the standard D01M831P5QWJQ4A2FT85N5MXJQF
+  dropped for rules. All 53 live cards pass (portal/results.json).

@@ -1,0 +1,58 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/maintainer-plugin/paths-stay-inside
+rubric: assessment-quality
+subjectHash: 5c131730c357
+assessor: {kind: agent, name: cursor-reviewer-06, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      Most citations in
+      portal/assessments/rule-quality/rule/toolbox/maintainer-plugin/paths-stay-inside.yaml
+      hold. In crates/toolbox-connector-workspace/src/plugins.rs, `mcp_facts`
+      reads `command` and `args` and never `cwd` (80-95), line 114 rejects
+      `..` in a command, and 117-119 splits on `/` and `\`.
+      portal/tests/standards.test.yaml:707-708 pins 'dev arg', and
+      portal/standards/plugins.yaml:154 is the evidence. The spec
+      (https://github.com/agentplugins/agent-plugins-spec/blob/main/spec/1.0.0.md)
+      says this. §4.1 general item 5 makes args and env values opaque. §4.1
+      failure item 4 names `command` and `cwd`. §7.2.1 gives `cwd` three
+      forms. D81 and docs/design/plugin-standards.md:49 place the rule at
+      gold. One citation is off: docs/design/thresholds.md:23-24 is quoted for
+      the gold principle, which is lines 24-25.
+    suggestion: Cite docs/design/thresholds.md:24-25.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      No failure is missed. measures-intent fails: `cwd`, the field the spec
+      constrains, is never read (plugins.rs:80-95). hard-to-game fails:
+      `--config=../x` has no whole `..` segment (plugins.rs:118). The fix
+      passes, because dropping the listed `..` empties the list.
+  - criterion: reproducible
+    verdict: unsure
+    reason: >-
+      The threshold-justified fail rests on a chain of judgement. D81 states
+      the gold level, and the rubric reserves unsure for when "no source
+      states the number" (portal/standards/meta.yaml:1178-1180). The
+      gold-implied-by-silver principle covers only the command half. Silver
+      does not catch an arg with `..` (plugins.rs:89-94 against 111-115). So
+      the fail depends on the assessor's view that args should not be checked
+      at all, and a second assessor could pass this criterion or mark it
+      unsure.
+    suggestion: >-
+      Mark threshold-justified unsure, or pass it on D81, and keep the
+      `cwd`-at-silver placement as the suggestion.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Reading `cwd` and requiring the spec's three forms with no `..` would
+      flip measures-intent. Splitting on `=` and flagging absolute paths, or
+      checking `cwd` instead, closes the hard-to-game route. Moving a `cwd`
+      check to silver addresses the placement.
+summary: >-
+  A sharp assessment: the rule checks args, which the spec calls opaque,
+  and commands, which silver already covers, but not `cwd`. `--x=../y`
+  slips through. The threshold fail is arguable rather than sourced,
+  because D81 states the level and silver doesn't imply the args half. One
+  line citation (thresholds.md:23-24) is off by one.

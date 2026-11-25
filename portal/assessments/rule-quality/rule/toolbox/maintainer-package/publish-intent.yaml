@@ -1,0 +1,48 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/maintainer-package/publish-intent
+rubric: rule-quality
+subjectHash: 0634ad1d2f67
+assessor: {kind: agent, name: cursor-assessor-06, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      `entity.private || entity.version != ''`
+      (portal/standards/packages.yaml:73-86) is exactly the rationale's
+      dichotomy: protected from an accidental publish (npm refuses `private:
+      true`, per the npm package.json page the rule links) or ready for a
+      deliberate one. The connector reads `private` as a JSON boolean and
+      `version` trimmed (crates/toolbox-connector-workspace/src/npm.rs:20-21).
+      The edge it misreads is `"private": "true"` as a string, which npm
+      treats as truthy but the connector reads as false, so it fails a
+      protected package; that is rare and errs toward a flag.
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      The two ways to pass are the two outcomes the rule wants. Setting
+      `private: true` on a package someone does mean to publish makes `npm
+      publish` refuse it, which shows up at once; setting a version is the
+      prerequisite for publishing. Neither leaves the ambiguity the rule
+      targets. All four live manifests are private (portal/results.json,
+      maintainer-package block).
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence 'public package with no version' (packages.yaml:76) names
+      both missing facts, and the fix gives both remedies with the field
+      names. The unsafe fixture pins the failure
+      (portal/tests/standards.test.yaml:555-556); either change flips the
+      two-field check.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      No numeric threshold. Bronze is set by D76
+      (docs/decisions/D01M7W56B7R0000000000000000.md: "bronze is a name, a
+      private package or a version") and the npm source table in
+      docs/design/package-standards.md:33, which records that `private: true`
+      makes npm refuse to publish.
+summary: >-
+  A precise bronze rule: its check is the rationale stated as CEL, both
+  outcomes are tested, and the cheap ways to pass are the right ones. The
+  only misread is a string "true" for `private`, which fails safe.

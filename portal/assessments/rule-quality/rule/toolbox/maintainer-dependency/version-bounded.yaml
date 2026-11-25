@@ -1,0 +1,55 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/maintainer-dependency/version-bounded
+rubric: rule-quality
+subjectHash: e605c23ce3a6
+assessor: {kind: agent, name: cursor-assessor-07, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The rationale is about a requirement with no ceiling accepting breaking
+      releases (portal/standards/dependencies.yaml:66-69). The check reads
+      `wildcard`, which is true when any requirement is empty or starts with
+      `*` or `>` (crates/toolbox-connector-workspace/src/deps.rs:65-68). That
+      fails `>=1, <2`, which has a ceiling, while the fix itself says only "a
+      bare >=" lacks one (dependencies.yaml:63-65). It also passes `"0"`:
+      Cargo rewrites that as `^0`, which accepts 0.2, 0.3 and every later 0.x,
+      each a breaking release under Cargo's semver rules. Both cases are rare,
+      and all 33 live dependencies are plain carets (brief facts: live pass
+      33).
+    suggestion: >-
+      Parse the requirement with the `semver` crate (already in Cargo.lock as
+      a transitive dependency). Flag it when it has no upper comparator, or
+      when its ceiling spans a breaking boundary (`^0`, `0.*`). Add fixtures
+      `>=1, <2` (pass) and `0` (fail).
+  - criterion: hard-to-game
+    verdict: pass
+    reason: >-
+      The cheapest pass is to write a caret requirement such as `"1"`, which
+      is the right thing. A contrived bound like `<99` would also pass, but it
+      costs as much to write as a caret and shows up in review. Moving the
+      requirement into `[workspace.dependencies]` doesn't dodge the check,
+      because cargo metadata reports the inherited requirement as each
+      member's `req` (deps.rs:36-38).
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence is the requirement strings (dependencies.yaml:62). The
+      fixture pins `['*']` for `dependency:cargo:unsafe`
+      (portal/tests/standards.test.yaml:446-456). The fix says what to replace
+      them with: caret, tilde or exact (dependencies.yaml:63-65). Any of the
+      three passes `unbounded` (deps.rs:65-68).
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no number. Bronze is justified by
+      docs/design/dependency-standards.md:16-18 (bounded requirement and
+      registry source form the first level) and by D74
+      (docs/decisions/D01M7W4P0S00000000000000000.md). The rationale cites
+      Cargo's caret semantics through its link (dependencies.yaml:70-72).
+summary: >-
+  A cheap, actionable bronze rule that every live dependency meets. Its
+  prefix test for "unbounded" is crude: it rejects a bounded `>=1, <2`,
+  which its own fix implies is fine, and accepts `0`, which admits
+  breaking 0.x releases. Parsing the requirement would fix both.

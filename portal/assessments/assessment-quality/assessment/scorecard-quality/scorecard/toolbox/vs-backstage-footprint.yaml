@@ -1,0 +1,50 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:scorecard-quality/scorecard:toolbox/vs-backstage-footprint
+rubric: assessment-quality
+subjectHash: d042e2f489d2
+assessor: {kind: agent, name: cursor-reviewer-31, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The scorecard text is
+      portal/standards/backstage-comparison.yaml:339-360, and
+      docs/design/backstage-comparison.md:47-48 maps F2 and F3 onto it.
+      README.md:41-42 pre-registers the memory and install bars. The live
+      values in portal/comparisons/toolbox.yaml are 89.4 MB idle, 166.4 MB
+      loaded, 121.1 MB installed, 2 files and 230 lines, all inside the bronze
+      bars. measure.py records rssAfterLoadMb at :275 and :286, and
+      snapshot.py:27 drops it from PERF. F2's wall time is not measured
+      (backstage-comparison.md:116). downloadMb is set for Toolbox at
+      footprint.py:162 and left null for Backstage at :170. The idle-memory
+      fix is backstage-comparison.yaml:369-371. footprint.py:69-73 extracts
+      only executables. snapshot.py:1-4 is what writes the record.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      one-concern and levels-are-a-ladder pass: one operator cost, one bronze
+      level, and Toolbox is inside every bar. no-obvious-gap should fail
+      because RESEARCH.md:59 asks for peak RSS and CPU-seconds and neither is
+      a rule. actionable should fail because two fixes name no code and none
+      of the five names snapshot.py. The adopter-file note is a pointer, not a
+      missed criterion on this card.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The missing metrics are named in RESEARCH.md:59 and absent from
+      snapshot.py:27 and the scorecard rules. A second assessor fails
+      no-obvious-gap and actionable from those files and passes the other two.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Passing rssAfterLoadMb through snapshot.py and adding the two rules
+      would pass no-obvious-gap for the metrics the research asked for. Naming
+      the startup code and ending each fix with a rerun of run.sh and
+      snapshot.py would make the idle-memory and install-size fixes lead to a
+      change in the score, which passes actionable.
+summary: >-
+  Trustworthy. The card is one reachable bronze level, the live numbers
+  match the comparison record, and peak RSS after load is measured and
+  then dropped by snapshot.py. The two fails match those gaps, and the
+  suggestions would close them.

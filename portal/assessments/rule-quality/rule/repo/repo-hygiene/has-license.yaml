@@ -1,0 +1,52 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:repo/repo-hygiene/has-license
+rubric: rule-quality
+subjectHash: 459be139df7a
+assessor: {kind: agent, name: cursor-assessor-18, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      `license` is the first root or .github/ file whose lowercased name
+      starts with `license` or `copying`
+      (crates/toolbox-connector-workspace/src/repo.rs:55-65). A LICENCE file
+      (the British spelling this rule's own rationale uses,
+      examples/repo-portal-starter/toolbox.yaml:149) fails, though GitHub
+      recognises it as a licence. An empty LICENSE or a LICENSE-notes.txt
+      passes, though it grants nothing.
+    suggestion: >-
+      Accept the `licence` prefix too. Have the connector record a detected
+      SPDX id (e.g. from askalono or a licensee-style match) and check
+      `has(entity.licenseId)`, with the file name as evidence.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      `touch LICENSE` is the cheapest pass. Choosing a licence is a legal
+      decision, and an empty file skips it while the rule turns green
+      (repo.rs:65 reads only names).
+    suggestion: >-
+      Require a recognised licence text (an SPDX id from the connector) or at
+      least a non-empty file.
+  - criterion: fix-leads-to-pass
+    verdict: fail
+    reason: >-
+      The fix offers "a note in the README if the code is internal-only"
+      (examples/repo-portal-starter/toolbox.yaml:145-146). The check reads
+      only file names (repo.rs:65), so following that branch leaves the rule
+      failing, and the repository can't reach silver.
+    suggestion: >-
+      Drop the README alternative from the fix, or make it pass: e.g. a
+      `licenseNote` fact when the README has a "License" heading, and check
+      `has(entity.license) || entity.licenseNote`.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no number. Silver is set by the scorecard rationale
+      (examples/repo-portal-starter/toolbox.yaml:79-81), the rule's rationale
+      on default copyright (:148-150) and its GitHub link (:151-153).
+summary: >-
+  The right concern, but a file-name check: an empty LICENSE passes, a
+  LICENCE file fails, and the fix's README-note alternative can never
+  pass. Detecting the licence (an SPDX id) would close all three gaps, and
+  the fix should offer only what the check accepts.

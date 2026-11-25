@@ -1,0 +1,56 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/maintainer-ci-speed/cancels-superseded-runs
+rubric: assessment-quality
+subjectHash: 3b5f4d754ec1
+assessor: {kind: agent, name: cursor-reviewer-36, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/rule-quality/rule/toolbox/maintainer-ci-speed/cancels-superseded-runs.yaml
+      match the code. cancels_superseded accepts any of five ref substrings
+      and treats a cancel-in-progress expression as true unless it is
+      literally false
+      (crates/toolbox-connector-workspace/src/workflows.rs:76-87 and :91-104).
+      The rule exempts anything that is not pull_request
+      (packages/github-actions/fragments/github-actions.yaml:500). The fix
+      block is :505-511, and workflows.rs:415-420 pins a github.ref group with
+      that same expression as cancelling. codeql.yml and release.yml both fail
+      the rule in portal/results.json and both trigger pull_request with no
+      concurrency group. thresholds.md:34 places the rule at bronze as a speed
+      principle.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      measures-intent fails for the reasons the code shows: a group that also
+      contains github.run_id still matches github.ref (workflows.rs:77-86),
+      and any non-false expression counts (workflows.rs:91-101). hard-to-game
+      passing is right: the cheap path is the fix's concurrency block, and a
+      comment cannot satisfy a parsed group. The fix's group contains
+      github.ref and its expression is not false, so following it passes. No
+      number is involved; thresholds.md:34 states the level.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      A second assessor can replay the five ref strings and the truthiness
+      helper in workflows.rs:76-104 against the check at
+      github-actions.yaml:500. The pull_request_target exemption and the
+      run-id group follow from that text, not from taste.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The measures-intent suggestion in
+      portal/assessments/rule-quality/rule/toolbox/maintainer-ci-speed/cancels-superseded-runs.yaml
+      rejects a group that also varies by run id or sha, accepts a
+      cancel-in-progress expression only when it is true or mentions
+      pull_request, and extends the trigger test. Each of those closes a
+      misfire the reason names. The other three verdicts pass, so they need no
+      suggestion.
+summary: >-
+  The assessment holds. The checker is lexical, the copy-paste fix is
+  pinned by the unit test, and bronze is the speed principle in
+  thresholds.md. A group that also contains a run id, a cancel expression
+  that is never true on pull requests, and pull_request_target workflows
+  all pass while cancelling nothing.

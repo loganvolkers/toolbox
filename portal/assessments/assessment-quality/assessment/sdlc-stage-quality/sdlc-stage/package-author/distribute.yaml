@@ -1,0 +1,75 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:sdlc-stage-quality/sdlc-stage:package-author/distribute
+rubric: assessment-quality
+subjectHash: fd672afdd00c
+assessor: {kind: agent, name: cursor-reviewer-36, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      Three claims in
+      portal/assessments/sdlc-stage-quality/sdlc-stage/package-author/distribute.yaml
+      contradict the files they cite. executable-exit says the registry is
+      undecided (Q15 in docs/questions.md). questions.md:23 says Q15 is
+      resolved by D89, git-first with an OCI mirror. agent-can-complete says
+      no package format exists and that docs/design/packages.md §3 is only a
+      proposal. §3.2 is the layout the tree now ships (apiVersion
+      toolbox.dev/package/v0 in
+      packages/github-actions/toolbox-package.yaml:1-4), and CI tests those
+      packages. reuses-artifacts says .github/workflows/ci.yml lines 69-70 use
+      pip and go install. Those lines are the packages/*/tests loop. Pinned
+      tools are installed by scripts/ci-tools.sh (ci.yml:41-45) and toolbox
+      tools install (ci.yml:81-82).
+    suggestion: >-
+      Cite questions.md:23 as resolved, cite the package files and the test
+      loop for the format that exists, and drop the pip and go install claim.
+      Keep the fails that the empty checks and the missing OCI publish still
+      support.
+  - criterion: complete
+    verdict: fail
+    reason: >-
+      reuses-artifacts should pass. The stage installs nothing
+      (portal/sdlc/stages/package-author.yaml:98-99, commands and checks
+      empty), and a package that needs zizmor and actionlint declares them
+      with installers
+      (packages/github-actions/fragments/github-actions.yaml:57-66), which CI
+      installs from pins rather than by hand (ci.yml:81-82). The other three
+      fails stay right: checks is empty, so nothing fails when the exit is
+      missed; an agent still cannot publish the attested OCI archive the exit
+      asks for; and that mirror is not something an outside author can finish
+      without a change in this repository.
+    suggestion: >-
+      Change reuses-artifacts to pass, citing the tools: block and toolbox
+      tools install, and leave the other three fails.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      questions.md:23, ci.yml:69-70 and the empty checks list are unambiguous.
+      A second assessor reading them does not keep the hand-install fail or
+      the "registry undecided" sentence.
+  - criterion: actionable
+    verdict: fail
+    reason: >-
+      Three suggestions in
+      portal/assessments/sdlc-stage-quality/sdlc-stage/package-author/distribute.yaml
+      describe work that is already done and leave the verdicts as they are.
+      Q15 is already decided (questions.md:23). The package format v0 already
+      exists, and the stage is still missing. tools: is already declared
+      (github-actions.yaml:59-66), which is why reuses-artifacts should pass
+      rather than why a further edit would flip a real fail. Git-first
+      packages from an author's repository are already how include works, and
+      the OCI exit is still unmet. Only "make a publish dry-run the check"
+      would still change executable-exit, and that command is not what the
+      other three suggestions do.
+    suggestion: >-
+      Replace the three stale suggestions with the step that is still open: a
+      check that a tag publishes an attested archive and an OCI mirror, which
+      is the exit the stage file still has no command for.
+summary: >-
+  The stage is still missing an attested OCI publish, so three of the four
+  fails remain. The reasons do not. Q15 is resolved, the package format
+  exists and is tested, and ci.yml:69-70 is not a pip or go install.
+  reuses-artifacts should pass, because tools are declared and installed
+  from pins. The suggestions mostly repeat work that is already in the
+  tree.

@@ -1,0 +1,42 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/maintainer-schema/draft-2020-12
+rubric: assessment-quality
+subjectHash: 479c40acde21
+assessor: {kind: agent, name: cursor-reviewer-10, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/rule-quality/rule/toolbox/maintainer-schema/draft-2020-12.yaml
+      hold, including the dependency's. crates/toolbox-model/src/schema.rs:22
+      is `.with_draft(Draft202012)` and 19-26 is `compile`. In jsonschema
+      0.61.2 (the Cargo.lock version), src/options.rs:614-621 prefers an
+      explicitly set draft over detection, and :88 is `validate_schema: true`.
+      specs.rs:34 is the exact-URI comparison. schemas.yaml:62, 63-65 and
+      69-71 are the evidence, fix and spec link. standards.test.yaml:603-604
+      pins the draft-07 URI. D77 says bronze is Draft 2020-12, and
+      schema-standards.md:14-15 says the compiler forces it.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      With the draft forced, `$schema` only declares what the author meant, so
+      an exact-URI test is the right check. The 2020-12 meta-schema rejects
+      array-form `items`, so the worst leftover fails at compile. No cheaper
+      pass exists than setting the URI, and the fix gives it.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Each verdict rests on code in this repo and in the pinned jsonschema
+      source, which a second assessor reads the same way.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      There are no fail or unsure verdicts in
+      portal/assessments/rule-quality/rule/toolbox/maintainer-schema/draft-2020-12.yaml,
+      so no suggestion is needed.
+summary: >-
+  A careful all-pass assessment. It checked the jsonschema 0.61.2 source
+  to show the compiler forces 2020-12, which makes the exact-URI check the
+  right test. Every citation, including options.rs:88 and 614-621, lands.

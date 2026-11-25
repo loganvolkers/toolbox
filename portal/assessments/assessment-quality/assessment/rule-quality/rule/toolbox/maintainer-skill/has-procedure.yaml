@@ -1,0 +1,60 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/maintainer-skill/has-procedure
+rubric: assessment-quality
+subjectHash: abb50e57ad1c
+assessor: {kind: agent, name: cursor-reviewer-01, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/rule-quality/rule/toolbox/maintainer-skill/has-procedure.yaml
+      hold. numbered_steps/step_line
+      (crates/toolbox-connector-workspace/src/skills.rs:294-307) count any `N.
+      text` line and never track fences, so the fenced scratch case counts 3.
+      In my count over all 43 SKILL.md bodies, 28 have exactly three numbered
+      lines (the rest are 4, 5, 6, 7 and 13). get/SKILL.md:9-11 are its three
+      steps around one invocation. In portal/standards/skills.yaml, the
+      evidence is 133, the rationale 137-139 and the silver comment 52.
+      docs/design/skill-standards.md:91 gives no source for three.
+      docs/design/thresholds.md:13-16 is the measured-or-chosen principle, and
+      the file has no has-procedure row.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      Both fails are grounded in step_line, and threshold-justified unsure is
+      the rubric's own instruction when no source states the number
+      (portal/standards/meta.yaml:1179-1180). No live skill has numbered lines
+      inside a fence today. The reason doesn't claim one, so the
+      measures-intent fail rests on the latent route plus the observed
+      clustering.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The fenced-list misfire follows from the code. The "28 of 43 sit on the
+      bar" inference is labelled as a suggestion ("That suggests"), not stated
+      as fact. A second assessor would reach the same verdicts.
+  - criterion: actionable
+    verdict: unsure
+    reason: >-
+      Both suggestions are partial. Skipping fences and counting the longest
+      run from 1 fixes the fence case and enforces order. A numbered list of
+      options or notes would still pass, and the measures-intent reason names
+      that case. Exempting single-command skills, or limiting the bar to
+      authoring skills, removes the incentive to split one sentence into three
+      lines. But hard-to-game's other route, "number any list (options,
+      notes)", stays open for every skill the bar still applies to
+      (portal/assessments/rule-quality/rule/toolbox/maintainer-skill/has-procedure.yaml).
+    suggestion: >-
+      Say whether the remaining numbered-list route is acceptable. If it is,
+      narrow both reasons to the routes the suggestions close. If not, add a
+      check that separates steps from lists, for example requiring each step
+      to start with an imperative verb or to name a command or file, and pin a
+      three-item option list as a failing fixture.
+summary: >-
+  Every citation holds, and the 28-of-43 clustering reproduces exactly.
+  The fence misfire and the unsure on "three" are right. The suggestions
+  close the fence and one-command routes but leave the numbered
+  non-step-list route both reasons name, so it is unclear whether
+  following them would flip either fail.

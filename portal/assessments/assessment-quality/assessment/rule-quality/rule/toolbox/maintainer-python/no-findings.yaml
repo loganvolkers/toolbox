@@ -1,0 +1,61 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/maintainer-python/no-findings
+rubric: assessment-quality
+subjectHash: dc0c9b4053c1
+assessor: {kind: agent, name: cursor-reviewer-23, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      The claims hold, but the portal/toolbox.yaml citations in
+      portal/assessments/rule-quality/rule/toolbox/maintainer-python/no-findings.yaml
+      land on the wrong lines. The file has not changed since the assessment
+      (b15820e). The maintainer-python block is 384-413, not 379-401; 379 is
+      maintainer-openssf's `--show-details`. --ignore-noqa is 402, not 394-396
+      (`ruff check --no-cache`). The acme-live glob is 407, not 401 (a
+      comment). The fix is 409-413, not 403-407 (`{files}` and the globs). The
+      summary says the line numbers were updated. The sarif fragment citations
+      are each one line early: the check is
+      packages/sarif/fragments/sarif.yaml:72, the evidence 75-78, the command
+      36-38, the ratchet 68 and the description 50-53. The rest checks out.
+      The fixtures are portal/tests/standards.test.yaml:1093-1105.
+      .github/CODEOWNERS lists only `.github/`, and ruff.toml has
+      `[lint.per-file-ignores]` and nothing that checks for a reason. Every
+      tracked .py outside experiments/ matches one of the three globs.
+    suggestion: >-
+      Re-cite portal/toolbox.yaml as 384-413 (--ignore-noqa 402, globs
+      405-407, fix 409-413), and shift the sarif.yaml citations down one line.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      The verdicts match the sources. measures-intent passes: the check is
+      ruff's own count (sarif.yaml:72) over every maintained Python file
+      (portal/toolbox.yaml:405-407; `git ls-files '*.py'` finds none outside
+      them but experiments/). hard-to-game fails correctly. One line under
+      `[lint.per-file-ignores]` or `[lint] ignore` in ruff.toml removes the
+      finding from the SARIF, and only `.github/` has an owner in
+      .github/CODEOWNERS. fix-leads-to-pass passes, since the fix names the
+      command and the ruff.toml section. threshold-justified passes with no
+      tuned number, only `levels: [clean]` (sarif.yaml:67).
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Each verdict rests on a file a second assessor can read: the command
+      flags (portal/toolbox.yaml:393-403), ruff.toml, .github/CODEOWNERS and
+      sarif.yaml:67-79. The assessor also ran ruff 0.14.0 with --ignore-noqa
+      against three noqa spellings, which can be repeated.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The one fail, hard-to-game, comes with a suggestion that would turn it.
+      Putting ruff.toml under .github/CODEOWNERS puts an owner in front of the
+      one-line route. Having the connector fail on an uncommented ignore entry
+      makes the route cost the reason the fix asks for
+      (portal/toolbox.yaml:409-413).
+summary: >-
+  The verdicts are right and the hard-to-game suggestion would change its
+  verdict. ruff.toml ignores are the open route, and .github/CODEOWNERS
+  covers only .github/. Every portal/toolbox.yaml line number lands 5-6
+  lines early on unrelated content, although the summary says they were
+  updated, so supported fails on the citations alone.

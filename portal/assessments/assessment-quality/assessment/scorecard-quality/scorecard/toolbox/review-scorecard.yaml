@@ -1,0 +1,51 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:scorecard-quality/scorecard:toolbox/review-scorecard
+rubric: assessment-quality
+subjectHash: 503c8db0bc06
+assessor: {kind: agent, name: cursor-reviewer-31, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The four rules are portal/standards/meta.yaml:1015-1073, appliesTo and
+      track are :1014 and :1011, and portal/README.md:25 files the review
+      cards as advisory. The rationale at meta.yaml:997-1002 matches
+      docs/design/meta-standards-review.md:77-80. The fixtures at
+      portal/tests/standards.test.yaml:896-915 put maintainer-ci-security at
+      silver, meta-rule's no-open-findings at fail, user-cli's assessed at
+      fail with no scorecard-quality assessment in the fixtures (so bronze),
+      and operator-cli at gold. review-crate's independently-reviewed rule is
+      crates.yaml:433-453. selfReviewed is assessments.yaml:105-112 and the
+      assessed check uses it at :261. The Scorecard fields at meta.yaml:50-79
+      have no reviewIndependent. link_reviews computes independentReview at
+      crates/toolbox-connect/src/assessment.rs:232-295. The no-doubts fix is
+      meta.yaml:1065-1067 and names no file. The campaign is
+      portal/campaigns.yaml:121-135.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      one-concern and levels-are-a-ladder pass: one audience, and gold adds
+      cited reasons and no doubts on top of a fresh review. no-obvious-gap
+      should fail because review-crate requires a second assessor and this
+      card does not. actionable should fail because the no-doubts fix names no
+      file and no command. No pass should have failed.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The missing field and the vague fix are text. A second assessor
+      comparing meta.yaml:50-79 with crates.yaml:433-453 fails no-obvious-gap,
+      and reading meta.yaml:1065-1067 fails actionable.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Adding reviewIndependent and a gold independently-reviewed rule would
+      pass no-obvious-gap. Rewriting the no-doubts fix to name the assessment
+      file, the scorecard rationale and a re-assess command, as
+      crates.yaml:424-428 does for crates, would pass actionable. Both
+      suggestions attach to the fails they name.
+summary: >-
+  Trustworthy. The card has one concern and a fixture at every level, and
+  it does not require the second assessor review-crate already requires.
+  The no-doubts fix names no file. Both fails and both suggestions match
+  the sources.

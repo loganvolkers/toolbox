@@ -1,0 +1,55 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/maintainer-example/links-resolve
+rubric: assessment-quality
+subjectHash: cb3b29beb666
+assessor: {kind: agent, name: cursor-reviewer-35, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The regex at crates/toolbox-connector-workspace/src/examples.rs:45 does
+      not match a titled link, an angle-bracket target or a reference
+      definition, and resolve() at examples.rs:67-84 skips an empty leading
+      component and then appends the rest to the file's directory, so a
+      root-relative link is not resolved from the repository root. The fix is
+      portal/standards/examples.yaml:70-71, the rationale is 72-74, and the
+      nope.md pin is portal/tests/standards.test.yaml:644-645. D78 line 9 and
+      example-standards.md:59 set bronze as resolving links. All 47
+      maintainer-example entities in portal/results.json are bronze or gold,
+      so none fail the rule.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      measures-intent fails for the forms the regex misses, and that is what
+      the criterion asks. fix-leads-to-pass and threshold-justified pass: the
+      evidence is the missing-target list, and bronze is the floor in D78.
+      hard-to-game is the close call, and the assessment does engage it rather
+      than skip it.
+  - criterion: reproducible
+    verdict: unsure
+    reason: >-
+      The hard-to-game pass in
+      portal/assessments/rule-quality/rule/toolbox/maintainer-example/links-resolve.yaml
+      rests on "nobody reaches for" a titled link to hide a dead target.
+      Nothing cited states that. The rubric says to fail hard-to-game when a
+      suppression would pass, and the same assessment shows that [a](gone.md
+      "title") is not seen by examples.rs:45. A second assessor can pass or
+      fail that criterion from the same sources.
+    suggestion: >-
+      Fail hard-to-game, citing the titled and angle-bracket forms the regex
+      at examples.rs:45 misses, or cite a source that shows those forms are
+      not a practical dodge. Leave the other three verdicts as they are.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      The measures-intent suggestion, parsing links or extending the regex and
+      resolving a leading slash from the root, would make the forms the reason
+      names either fail or resolve. That is the change that flips
+      measures-intent. The other verdicts are passes and need no suggestion.
+summary: >-
+  The links-resolve assessment correctly fails measures-intent: the regex
+  misses titled, angle-bracket and reference links, and root-relative
+  links are resolved under the file. hard-to-game then passes on a
+  judgement that nobody would use that gap, which a second assessor need
+  not share, so reproducible is unsure.

@@ -1,0 +1,53 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/maintainer-observability/service-name-documented
+rubric: rule-quality
+subjectHash: 1dd07162bdd2
+assessor: {kind: agent, name: cursor-assessor-09, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The rule says `OTEL_SERVICE_NAME` is documented, but the check only asks
+      whether `serviceNameDoc` (crates/toolbox-telemetry/README.md, per
+      portal/observability/runtime.yaml:12) exists
+      (portal/standards/observability.yaml:47-52). It never reads the file.
+      The README does document it today
+      (crates/toolbox-telemetry/README.md:12, 23), but that is not what makes
+      the rule pass.
+    suggestion: >-
+      Have the workspace connector report whether the doc mentions
+      `OTEL_SERVICE_NAME`, for example a `mentions` option on `data` sources
+      like the existing `naming` check (data.rs:222-268), and fail when it
+      doesn't.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Deleting the `OTEL_SERVICE_NAME` row from the README (README.md:23), or
+      replacing the README with one line, keeps the rule green. Yet
+      D01M81ADN8C10EA1Z1VNRY3A5JZ gives the ratchet's purpose as regressing
+      "when the catalog or `service.name` disappears". Pointing
+      `serviceNameDoc` at any existing file passes as well.
+    suggestion: >-
+      Check the content as above, or add a crate test that
+      `include_str!("../README.md")` contains `OTEL_SERVICE_NAME`, and point
+      the rule at that test with the data source's `ci:` option (data.rs:150)
+      so CI must run it.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence names the missing doc path, `docs/missing-service-name.md`
+      in the demo-unsafe fixture (portal/fixtures/workspace.ndjson:83), and
+      the fix says what to write and where (the telemetry crate README).
+      Writing it passes.
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      There is no threshold. Bronze is justified because backends group every
+      signal by `service.name` (the rule links the OTel SDK configuration
+      spec), and because D01M81ADN8C10EA1Z1VNRY3A5JZ names `service.name` as
+      one of the things the ratchet must guard.
+summary: >-
+  The intent is right and justified at bronze, but the check never opens
+  the document it names. Removing the very line the decision says the
+  ratchet should catch would leave the rule passing.

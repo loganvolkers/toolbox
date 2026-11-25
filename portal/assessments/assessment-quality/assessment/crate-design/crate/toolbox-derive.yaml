@@ -1,0 +1,61 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:crate-design/crate:toolbox-derive
+rubric: assessment-quality
+subjectHash: 4a3ff22bd2b8
+assessor: {kind: agent, name: cursor-reviewer-20, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/crate-design/crate/toolbox-derive.yaml land.
+      lib.rs:1-4 is the crate doc and v1-spec.md:90 the spec row; the module
+      docs are testing.rs:1-4 and pyjson.rs:1-2. The trait is lib.rs:20-23,
+      rayon is Cargo.toml:11 and is in no other crate's Cargo.toml, and
+      `Pipeline::run` runs from lib.rs:254 to 725. That is 472 lines, and the
+      crate brief records complexity 58. The five undocumented plan items are
+      at plan.rs:11, 21, 31, 40 and 56. The FullRecompute call sites are
+      state.rs:177, portal.rs:26, main.rs:898 and report.rs:1546 and 2399. The
+      tests are at reference.rs:25-37, 39-47 (20 cases), 49-70 and 72-117, and
+      pyjson.rs:127. compare.rs:92-111 is the ahead/parity/behind roll-up, and
+      five packages/*/tests files call `campaign(`. The diagnostic codes are
+      at lib.rs:349, 485, 553, 656 and 661. One claim is slightly off:
+      `utc_ymd_today` is not "used only by toolbox-cli's report". The campaign
+      code calls it too (lib.rs:786). That doesn't change any verdict.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      All four passes match the sources. Callers use only re-exported crate
+      types (toolbox-exec's check.rs:7, prepare.rs:13 and federation.rs:15
+      read `Derived`, which the assessment doesn't list but which fits its
+      pass). The trait's signature uses Toolbox types only (lib.rs:21-23). The
+      riskiest path is pinned byte for byte, and CI cmp's the same files
+      (ci.yml:54-60). The one gap the assessment names is real: rg finds none
+      of map.error, computed.error, relation.dropped or tuples.error outside
+      lib.rs. It says so rather than hiding it, and the rubric fails only
+      untested risky paths, while these are error reporting around paths that
+      are themselves tested.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Each pass rests on things a second assessor can read: the crate doc
+      against the spec row, the call sites rg lists, and the tests in
+      tests/reference.rs. tests-match-risk involves weighing the untested
+      diagnostics, but the reason states that gap and its lines
+      (lib.rs:348-734, reference.rs:29). So a reader can see exactly what the
+      pass leaves out.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      There are no fail or unsure verdicts in
+      portal/assessments/crate-design/crate/toolbox-derive.yaml, so no
+      suggestion is needed. The summary's improvements (split Pipeline::run,
+      document plan.rs:11-56, add a diagnostic fixture) are concrete and point
+      at cited lines.
+summary: >-
+  A careful, well-grounded assessment. Every line number and count checks
+  out, including the 472-line, complexity-58 Pipeline::run. The four
+  passes follow from the sources, and the gap it admits (no test makes a
+  diagnostic fire) is real and stated. Its one slip: utc_ymd_today is also
+  used inside the crate (lib.rs:786), not only by toolbox-cli.

@@ -1,0 +1,58 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: scorecard:acme/github-app-hygiene
+rubric: scorecard-quality
+subjectHash: 2d84b325fb8f
+assessor: {kind: agent, name: cursor-assessor-18, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: >-
+      One concern for security: which GitHub Apps can act on a repository
+      (examples/reference-portal/toolbox.yaml:230-237, owner
+      `group:security`). Permission drift is kept in the separate
+      `app-approval` card on the GitHubApp kind, so this card's level means
+      one thing.
+  - criterion: levels-are-a-ladder
+    verdict: pass
+    reason: >-
+      Bronze is the only level, and the rationale argues for it: any install
+      outside the list is a finding
+      (examples/reference-portal/toolbox.yaml:235-237). Bronze is reachable
+      (platform-infra passes, checkout-web fails,
+      examples/reference-portal/tests/apps.test.yaml).
+  - criterion: no-obvious-gap
+    verdict: fail
+    reason: >-
+      The design's `github-app-hygiene` has four rules: only approved apps,
+      installation permissions match the snapshot, no grants past expiry, and
+      no unused installations (docs/examples/approved-github-apps.md:89-91).
+      Only the first exists here, and the second moved to app-approval. The
+      policy's per-app `eligible` condition
+      (examples/reference-portal/toolbox.yaml:26, :32) is evaluated nowhere
+      (`rg eligible` finds only the manifest and one test fixture), so an
+      approved app on an ineligible, e.g. deprecated, repository is never
+      flagged.
+    suggestion: >-
+      Add a bronze rule `installed-apps-eligible` that evaluates each
+      installed app's `eligible` condition for the repository. Record
+      `no-expired-grants` and `no-unused-installations` as planned rules, or
+      drop them from the design.
+  - criterion: actionable
+    verdict: fail
+    reason: >-
+      The only rule's fix names a `request-new-app` action the manifest
+      doesn't define (examples/reference-portal/toolbox.yaml:248 against the
+      actions at :304-364), and there is no evidence naming the unapproved
+      app. An agent can still raise checkout-web by working out
+      `installedApps` minus the policy keys and running `remove-app`, but the
+      scorecard doesn't tell it to.
+    suggestion: >-
+      Add evidence listing the unapproved apps, and point the fix at the
+      `remove-app` action and at a security request for the policy.
+summary: >-
+  A well-scoped security card with a clear single level, but it is a
+  quarter of what its design specifies. Eligibility, expiry and unused
+  installations are missing, and the policy's `eligible` conditions are
+  never evaluated. The one rule's fix points at an action that doesn't
+  exist.

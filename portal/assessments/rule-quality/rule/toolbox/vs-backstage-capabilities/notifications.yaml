@@ -1,0 +1,49 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/vs-backstage-capabilities/notifications
+rubric: rule-quality
+subjectHash: a44a78953eb7
+assessor: {kind: agent, name: cursor-assessor-15, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: pass
+    reason: >-
+      "Notify users of events" (backstage-comparison.yaml:154) is the brief's
+      "notifications" scenario (RESEARCH.md:121), met by Backstage's
+      plugin-notifications (facts.yaml:177) and absent in Toolbox
+      (facts.yaml:89), whose v1 scope defers notifications to Phase 2
+      (docs/v1-spec.md:50).
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      `capNotifications` is a hand-set boolean (facts.yaml:89) merged by
+      snapshot.py:85; no harness step triggers an event and waits for a
+      notification on either arm.
+    suggestion: >-
+      In surface.py, register a webhook receiver, change a component's owner
+      through ingest, and set `capNotifications` only when each product
+      delivers a notification to it.
+  - criterion: fix-leads-to-pass
+    verdict: fail
+    reason: >-
+      "Through a connector or a webhook" names a channel but no code or config
+      place, and the rule links campaigns.md although owner notifications are
+      designed in docs/design/notifications.md, which campaigns.md:170 itself
+      points to. Connectors push data in through /v1/ingest
+      (docs/design/connector-control.md), so "through a connector" would need
+      an outbound role they don't have today.
+    suggestion: >-
+      Link docs/design/notifications.md and name the first slice, e.g. "Send
+      the webhook channel of docs/design/notifications.md when an owner's
+      score or ownership changes, from the snapshot loop in
+      crates/toolbox-api, then update facts.yaml and rerun snapshot.py."
+  - criterion: threshold-justified
+    verdict: pass
+    reason: >-
+      Boolean, no threshold; "each capability true" is the pre-registered bar
+      (experiments/backstage-compare/README.md:53, ADJUDICATION.md:114).
+summary: >-
+  The capability belongs in the comparison and the loss is honest, but the
+  fix is vague and links the wrong design doc:
+  docs/design/notifications.md, not campaigns.md, is where the work is
+  described.

@@ -1,0 +1,55 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/user-mcp/annotated
+rubric: assessment-quality
+subjectHash: e15b02cb28e6
+assessor: {kind: agent, name: cursor-reviewer-14, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      Almost every citation in
+      portal/assessments/rule-quality/rule/toolbox/user-mcp/annotated.yaml
+      holds.
+      - portal/standards/cli.yaml:290-292 is the rationale.
+        docs/authorization.md:292-296 delegates prompt-injection defence and
+        promises accurate annotations.
+      - crates/toolbox-api/src/mcp.rs:20-97 is `builtin_tools`, where 15 of
+        the 17 tools carry exactly `{"readOnlyHint": true}` and only
+        `refresh_entity` (69) and `run_action` (84) differ.
+      - crates/toolbox-api/tests/mcp.rs:112 asserts only `is_boolean()`.
+      - docs/design/thresholds.md:19-21 is the safety-critical principle, and
+        docs/design/toolbox-for-toolbox.md:108 is the user-mcp row.
+      The exception is the check, cited as cli.yaml:283: that line is `level:
+      bronze`, and `has(entity.annotations.readOnlyHint)` is cli.yaml:284.
+    suggestion: >-
+      Cite the check as portal/standards/cli.yaml:284.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      measures-intent fails correctly. Passing means only that the key exists
+      (cli.yaml:284), while the rationale asks for accurate annotations
+      (290-292). Under the MCP defaults the reason cites, an absent
+      `readOnlyHint` is the safe case, and a wrong `true` passes. hard-to-game
+      fails for the same reason: copying a neighbour gives a new write tool
+      `readOnlyHint: true`. fix-leads-to-pass and threshold-justified are
+      right, and the bronze placement follows thresholds.md:19-21.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The fails rest on the check's text, the 15-of-17 count in mcp.rs:20-97
+      and the contract test at tests/mcp.rs:112. A second assessor reading
+      them reaches the same verdicts.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Emitting each tool's effect from `toolbox describe` and checking that
+      writes set `readOnlyHint: false` and reads `true` would make a wrong
+      `true` fail. That changes both measures-intent and hard-to-game. The
+      lighter alternative, asserting the hints of a listed set of write tools
+      in tests/mcp.rs, closes the copy-a-neighbour route.
+summary: >-
+  The judgement is sound. The rule checks only that `readOnlyHint` exists,
+  so the dangerous case, a write that claims to be read-only, passes. Both
+  fails come with fixes that would change them. One citation is off by a
+  line: the check is portal/standards/cli.yaml:284, not 283.

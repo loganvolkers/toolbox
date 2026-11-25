@@ -1,0 +1,64 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: rule:toolbox/maintainer-crate/public-api-documented
+rubric: rule-quality
+subjectHash: 57df34a52af2
+assessor: {kind: agent, name: cursor-assessor-07, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: measures-intent
+    verdict: fail
+    reason: >-
+      The rationale is about items other crates use
+      (portal/standards/crates.yaml:255-258). But `pubItems` counts every
+      `pub` item at any depth
+      (crates/toolbox-connector-workspace/src/rust.rs:114-125), whether or not
+      it is reachable. On a scratch crate, `mod private { pub fn
+      unreachable_pub() {} }` was listed as undocumented public API, and a
+      binary-only crate's `pub fn` counts the same, though nothing can import
+      it. Meanwhile pub fields and enum variants, which callers do touch,
+      aren't counted. And `#[doc(hidden)]`, which removes an item from the
+      public docs, counts as documented (rust.rs:40-42).
+    suggestion: >-
+      Count only items reachable from the crate root (or read rustc's
+      `missing_docs`, which already does), skip binary-only targets, and don't
+      treat `#[doc(hidden)]` as a doc.
+  - criterion: hard-to-game
+    verdict: fail
+    reason: >-
+      Two cheap passes add no documentation. Marking an item `#[doc(hidden)]`
+      both hides it from rustdoc and counts it as documented, and an empty
+      `///` counts too; both were confirmed on a scratch crate through
+      target/debug/toolbox-connector-workspace. toolbox-telemetry, at 24 of 54
+      (44%), could reach 80% this way. Narrowing an item to `pub(crate)` also
+      removes it from the count, but that genuinely shrinks the API, so it is
+      a legitimate fix.
+    suggestion: >-
+      Require a non-empty first doc line, and exclude `#[doc(hidden)]` items
+      from `pubDocumented` (or from `pubItems`, with the reason in the field's
+      description). Add a fixture with both cases.
+  - criterion: fix-leads-to-pass
+    verdict: pass
+    reason: >-
+      The evidence is the full `undocumented` list with file:line
+      (crates.yaml:253), and the fix says to add `///` docs to those items
+      (crates.yaml:254). Documenting every listed item passes. Since silver
+      needs only 80%, it does more than the rule requires, but never too
+      little.
+  - criterion: threshold-justified
+    verdict: fail
+    reason: >-
+      80% appears in docs/design/toolbox-for-toolbox.md:103 as v0's silver
+      bar, with no reason. docs/design/thresholds.md has no row for it. The
+      linked Rust API Guidelines (crates.yaml:259-261) ask for every public
+      item, not a share. Live coverage today runs from 44% (telemetry) to
+      100%, with five crates below 80 (brief facts: live fail 5), but no
+      measurement or stated choice puts the line there.
+    suggestion: >-
+      Add a thresholds.md row for 80%, either measured (the distribution
+      across crates is in the workspace records) or labelled chosen, with why
+      silver stops short of the guidelines' "all".
+summary: >-
+  An actionable silver rule with a well-placed fix, but it measures `pub`
+  keywords rather than public API. Unreachable and binary-only items
+  count, fields and variants don't, and `#[doc(hidden)]` or an empty `///`
+  passes. Nothing explains the 80% bar.

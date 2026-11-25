@@ -1,0 +1,69 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/maintainer-crate/bounded-complexity
+rubric: assessment-quality
+subjectHash: 23ceb22d7aa6
+assessor: {kind: agent, name: cursor-reviewer-07, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: fail
+    reason: >-
+      Most citations in
+      portal/assessments/rule-quality/rule/toolbox/maintainer-crate/bounded-complexity.yaml
+      land: the counter is
+      crates/toolbox-connector-workspace/src/rust.rs:74-92 and has no arm for
+      `?` (Expr::Try) or a `let ... else` divergence, and crates.yaml:279-281,
+      282-284, 285-288 and 289-291 are the evidence, fix, rationale and link.
+      A rerun of the workspace connector on this checkout gives the peaks it
+      names: toolbox-api `markdown` 51, toolbox-derive `Pipeline::run` 58 and
+      toolbox-model `Checker::cross_references` 73. change_run is reported at
+      change.rs:337 while `fn` is at 341. But measures-intent says flat lookup
+      matches inflate the count and "that is how Checker::cross_references in
+      toolbox-model reaches 73 today". It isn't.
+      crates/toolbox-model/src/validate.rs:155-577 contains no `match`. The 73
+      comes from 35 `if`, 27 `for` and 13 `&&`/`||` across 422 lines.
+    suggestion: >-
+      Drop the cross_references example, or replace it with a function whose
+      count really comes from match arms. Check toolbox-api's `markdown`
+      (src/mcp.rs:619) before citing it.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      With the example removed, measures-intent still fails on the `?` and
+      `let ... else` blind spot and on closures and nested `fn`s counting
+      towards the parent. A nested `fn`'s block is visited both by
+      `Complexity` and on its own at rust.rs:334-339. threshold-justified
+      fails correctly. NIST SP 500-235 §2.5 (printed p. 15, "Limiting
+      cyclomatic complexity to 10") is readable as the PDF. It gives 10, and
+      up to 15 only for projects with operational advantages, so nothing
+      supports 30. thresholds.md has no row for it
+      (docs/design/thresholds.md:13-16 and the table). The same report counts
+      multiway arms as arms minus one and exempts single-switch modules from
+      the limit rather than changing the count (§2.5). So the summary's "not
+      quite McCabe's" holds only for `?` and `let ... else`, not for match
+      arms.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The two fails rest on code (rust.rs:74-92) and on a missing
+      thresholds.md row, and a second assessor would reach both. The
+      hard-to-game pass separates an idiomatic `?` rewrite from an empty
+      change. That is judgement, but the rubric's examples (empty doc, rename,
+      trivial test, suppression; portal/standards/meta.yaml:1165-1166) are all
+      empty changes, so it is consistent with them.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Counting `?` and `let ... else` in `Complexity` removes the undercount
+      the measures-intent reason cites. The clippy `cognitive_complexity`
+      alternative would also stop counting each arm and double-counting nested
+      fns. A thresholds.md row, measured or labelled chosen, would turn
+      threshold-justified into a pass.
+summary: >-
+  The verdicts are right, but one cited fact is wrong:
+  Checker::cross_references reaches 73 through 35 `if`s, 27 `for`s and 13
+  boolean operators in 422 lines, not through a flat match
+  (validate.rs:155-577 has no `match`). Every other citation checks out,
+  and the three live peaks (51, 58, 73) match a rerun of the connector.
+  NIST §2.5, now read, gives 10 to 15 and nothing near 30, which supports
+  the threshold fail.

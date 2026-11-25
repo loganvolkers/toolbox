@@ -1,0 +1,56 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:rule-quality/rule:toolbox/meta-rule/fix-names-a-place
+rubric: assessment-quality
+subjectHash: 8e02f179ab01
+assessor: {kind: agent, name: cursor-reviewer-02, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/rule-quality/rule/toolbox/meta-rule/fix-names-a-place.yaml
+      hold. fixNamesPlace is meta.yaml:143-154: the description 144-149 and
+      the three arms 150-154. explains-fix's fix matches no regex arm, and its
+      evidence reads `fixWords`, so the third arm passes it (the brief shows
+      fixNamesPlace true). "and/or" matches the `[A-Za-z0-9_.-]+/...` arm.
+      decided-on-fixtures' check reads `fixture`, which its fix contains. The
+      evidence and fix are meta.yaml:561-567, thresholds.md:46 gives 217 of
+      219, and scorecards-for-scorecards.md:81-82 are L1 and L2.
+      standards.test.yaml:1309-1329 pins pass (1326) and fail (1320), and
+      results.json has two acme rules failing.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      Both fails are right. The evidence arm needs no relation between the
+      evidence and the fix, so a count like `fixWords` exempts any fix
+      (meta.yaml:153-154). That makes passing a proxy. fix-leads-to-pass holds
+      because the fix lists the accepted forms. threshold-justified has a
+      dated measurement.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      Each route can be checked by evaluating the regex and the field test at
+      meta.yaml:150-154 on the quoted strings. The verdicts rest on that
+      behaviour, not on taste.
+  - criterion: actionable
+    verdict: unsure
+    reason: >-
+      The measures-intent suggestion would flip its verdict: the evidence arm
+      only for a list the check also reads, never for a scalar or `name`. The
+      hard-to-game reason names three routes: any backtick, any slash word,
+      and a check field that the fix merely contains. Its suggestion tightens
+      only the first two. The substring arm (`entity.fixText.contains(f)` for
+      fields over 3 characters, meta.yaml:152-153) stays. A fix whose prose
+      happens to contain a field name such as `about` (has-help) would still
+      pass, so hard-to-game could remain a fail after following it.
+    suggestion: >-
+      Extend the hard-to-game suggestion to the field arm: match a checked
+      field only as a whole word or inside a code span (e.g. `about`), not as
+      a substring of prose.
+summary: >-
+  Trustworthy on the facts. Every cited line resolves, and the
+  explains-fix counterexample is real and visible in the brief. The
+  hard-to-game suggestion closes two of the three routes its reason names.
+  It leaves the substring field arm open, so it might not flip the
+  verdict.

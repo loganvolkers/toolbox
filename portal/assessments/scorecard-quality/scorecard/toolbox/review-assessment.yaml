@@ -1,0 +1,58 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: scorecard:toolbox/review-assessment
+rubric: scorecard-quality
+subjectHash: 923b37ce8648
+assessor: {kind: agent, name: cursor-assessor-04, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: one-concern
+    verdict: pass
+    reason: >-
+      All four rules read one thing: the assessment-quality review of an
+      assessment (portal/standards/assessments.yaml:244-307). The audience is
+      people and agents who act on assessments, and the card is advisory
+      (`ratchet: {advisory: true}`, assessments.yaml:242). `appliesTo` skips
+      reviews themselves (assessments.yaml:243), which is the stop D80 and
+      docs/design/scorecards-for-scorecards.md:298 describe.
+  - criterion: levels-are-a-ladder
+    verdict: pass
+    reason: >-
+      Bronze is no open finding (assessments.yaml:245-258). Silver adds a
+      current review by someone else (:259-273). Gold adds a clean, cited,
+      grounded review with no doubts (:274-307). Each level contains the one
+      below, as docs/design/thresholds.md:55 lays out. Fixtures reach none,
+      bronze and gold (portal/tests/standards.test.yaml:1002-1029). No fixture
+      sits at silver, so that rung is untested, but it is a coherent step.
+  - criterion: no-obvious-gap
+    verdict: pass
+    reason: >-
+      Peer review asks for a reviewer other than the author, a current review,
+      engagement with the sources, no open findings and no unsettled doubts.
+      The card has all five: `selfReviewed` (assessments.yaml:105-112),
+      `reviewState` (:67-73), `reviewGrounded` (:97-104), `reviewFailing` and
+      `reviewUnsure`. What is left out, disagreement between reviewers and
+      reviewer identity, is listed as not built
+      (docs/design/scorecards-for-scorecards.md:326-330) and explained at
+      docs/design/thresholds.md:63-70.
+  - criterion: actionable
+    verdict: fail
+    reason: >-
+      Three fixes name the command or the place: the brief command for
+      `assessed` (assessments.yaml:267-269), portal/assessments/ for
+      no-open-findings and passes-review (:251-254, 284-290). The no-doubts
+      fix names no place: "resolve what the reviewer was unsure of, usually by
+      citing the source a verdict rests on" (:301-302). It also leaves out the
+      re-review. Editing the assessment makes the review stale, so an agent
+      following only that fix ends at "no current review" (:298-300) and short
+      of gold.
+    suggestion: >-
+      Reword the no-doubts fix: "Cite the source each listed verdict needs in
+      the assessment file under portal/assessments/, then have another
+      assessor review it again: `toolbox assess brief <assessment id> --portal
+      portal`."
+summary: >-
+  One concern, a real ladder, and the peer-review properties that matter
+  (independence, currency, grounding, findings, doubts), with its gaps
+  documented. The no-doubts fix is the weak step: it names no place and
+  omits the re-review that editing the assessment makes necessary. Silver
+  has no fixture.

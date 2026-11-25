@@ -1,0 +1,50 @@
+apiVersion: toolbox.dev/assessment/v1
+entity: assessment:sdlc-stage-quality/sdlc-stage:operator/plan
+rubric: assessment-quality
+subjectHash: 41bf27bf4b52
+assessor: {kind: agent, name: cursor-reviewer-32, model: claude-opus-5.5}
+at: 2026-11-25
+verdicts:
+  - criterion: supported
+    verdict: pass
+    reason: >-
+      The citations in
+      portal/assessments/sdlc-stage-quality/sdlc-stage/operator/plan.yaml
+      match the stage and the command. portal/sdlc/stages/operator.yaml:56-68
+      is the plan stage: the exit criterion is a plan against the running
+      portal attached to the PR, the command is `toolbox plan --local`, and
+      checks is empty. docs/design/sdlc.md:14-15 marks `plan --remote` and the
+      portal-repo Actions as M6, and §8 (line 176) is the toolbox-dev/plan
+      sticky comment. crates/toolbox-cli/src/main.rs:75-76 requires `--base`,
+      and :80-82 adds `--format`. plan() (main.rs:880-904) prints the diff and
+      returns success, so a level drop does not fail the process.
+      sdlc.md:66-101 is the remote-plan design, including GitHub OIDC at line
+      100. The doc comment at main.rs:69 is the two-recompute diff D37 names.
+  - criterion: complete
+    verdict: pass
+    reason: >-
+      executable-exit fails because checks is empty and plan() returns success
+      after any diff (main.rs:904). agent-can-complete fails because the
+      listed command omits the required `--base` and there is no remote plan.
+      reuses-artifacts passes: the local plan only loads manifests and
+      fixtures inside the CLI. decoupled-from-core fails because the exit
+      criterion is the unbuilt server-side plan in sdlc.md:66-101, which an
+      operator's repository cannot configure into existence.
+  - criterion: reproducible
+    verdict: pass
+    reason: >-
+      The empty checks list, the required `--base` and the unconditional
+      success return are in the files. A second assessor fails the same three
+      criteria and passes reuses-artifacts.
+  - criterion: actionable
+    verdict: pass
+    reason: >-
+      Narrowing the exit criterion to a posted `plan --local --base` summary,
+      and listing that full command, would make the two local fails pass
+      without waiting for M6. Shipping `plan --remote` is the change the
+      decoupled-from-core suggestion names. Each suggestion is attached to the
+      fail it would move.
+summary: >-
+  Trustworthy. The stage's empty checks, the required `--base`, the
+  always-zero exit and the unbuilt remote plan are all where the
+  assessment says they are, and the three fails follow from them.
