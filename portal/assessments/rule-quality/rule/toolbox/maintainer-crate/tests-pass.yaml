@@ -1,68 +1,64 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/maintainer-crate/tests-pass
 rubric: rule-quality
-subjectHash: 805f15bb72c8
-assessor: {kind: agent, name: campaign-review-rules-r3}
+subjectHash: edff403c2941
+assessor: {kind: agent, name: campaign-review-rules-r4}
 at: 2026-11-25
 verdicts:
   - criterion: measures-intent
-    verdict: fail
+    verdict: pass
     reason: >-
-      The runner's test job sets only TOOLBOX_REQUIRE_OPENFGA
-      (portal/toolbox.yaml:255-266), and since the last review two security
-      tests were added that return early as passed:
-      crates/toolbox-api/src/confine.rs:82-91 skips without Landlock unless
-      TOOLBOX_REQUIRE_LANDLOCK is set, which CI sets
-      (.github/workflows/ci.yml:52-53) and the runner does not, and
-      crates/toolbox-cli/tests/serve.rs:36-41 skips whenever it runs as root,
-      with no override at all. On a host without Landlock, or as root, the
-      rule reports toolbox-api and toolbox-cli as passing while those tests
-      never ran: the case its rationale names
-      (portal/standards/crates.yaml:229-232). The last review's "no other test
-      skips itself" no longer holds.
-    suggestion: >-
-      Add TOOLBOX_REQUIRE_LANDLOCK=1 to the runner's test job in
-      portal/toolbox.yaml; give the serve.rs root skip a TOOLBOX_REQUIRE_*
-      override that fails instead; and have the runner count a fixed marker
-      line (e.g. `skipped:`) that every self-skipping test prints, failing the
-      rule when any appears.
+      The round-3 finding is fixed: the runner's test job now sets
+      TOOLBOX_REQUIRE_OPENFGA, _LANDLOCK and _UNPRIVILEGED
+      (portal/toolbox.yaml:259-273), as CI does (.github/workflows/ci.yml:25
+      and :55-57), and each self-skipping test fails under its variable
+      instead of returning (crates/toolbox-api/src/confine.rs:86-87,
+      crates/toolbox-cli/tests/serve.rs:39-43,
+      crates/toolbox-authz/tests/fga.rs:62-65). The status is cargo's exit
+      with failed and ignored counts
+      (crates/toolbox-connector-runner/src/main.rs:93-115), so a pass means
+      the tests cargo ran passed.
   - criterion: hard-to-game
     verdict: fail
     reason: >-
-      is_cfg_disabled still matches only `any()` and `not(all())`
-      (crates/toolbox-connector-workspace/src/rust.rs:50-59). A scratch crate
-      with a failing test under `#[cfg(miri)]`, run through
-      target/debug/toolbox-connector-workspace, gave disabledTests [], and
-      cargo never compiles it on Linux, so the runner reports pass
-      (crates/toolbox-connector-runner/src/main.rs:92-114). `miri` and
-      `windows` are well-known cfgs, so the unexpected_cfgs lint stays quiet.
-      An early `return` behind an environment test, the pattern above, also
-      passes. Both are one-line suppressions, not falsification.
+      is_cfg_disabled still matches four literal cfgs
+      (crates/toolbox-connector-workspace/src/rust.rs:51-59). A scratch crate
+      run through target/debug/toolbox-connector-workspace with failing tests
+      under `#[cfg(windows)]` and `#[cfg(feature = "slow")]`, and one that
+      starts `if std::env::var_os("CI").is_some() { return; }`, gave
+      disabledTests [] and testsWithoutAsserts []; cargo would report the run
+      as passing. CI runs only on ubuntu-latest (.github/workflows/ci.yml:15),
+      so a Windows-gated test never runs anywhere, and an early return is the
+      self-skip the fix forbids for three dependencies
+      (portal/standards/crates.yaml:231-238) but nothing detects for any
+      other. Both are one-line suppressions a well-meaning author writes for a
+      test that needs a tool, not falsification.
     suggestion: >-
-      List in disabledTests any `#[test]` (or its module) gated by a cfg other
-      than `test` or a declared feature; better, compare the runner's passed +
-      failed + ignored for unit and integration suites with the workspace's
-      unitTests + integrationTests, so a test cargo didn't run shows up
-      whatever hid it.
+      Compare the runner's passed + failed + ignored with the workspace's
+      unitTests + integrationTests per crate, so a test cargo didn't compile
+      shows up whatever cfg hid it; and list in disabledTests a test whose
+      body returns before its first assert unless the condition reads a
+      TOOLBOX_REQUIRE_* variable. Pin both with a fixture crate in
+      portal/fixtures/workspace.ndjson.
   - criterion: fix-leads-to-pass
     verdict: pass
     reason: >-
       The fix's `cargo test -p <crate>` is the runner's command
-      (portal/toolbox.yaml:255-266), the evidence carries counts, the output
-      tail on failure (crates/toolbox-connector-runner/src/main.rs:108-111)
-      and each compiled-out test with file and line (rust.rs:134-141), and the
-      fix names each removal: failures, `#[ignore]`, the always-false
-      `#[cfg(...)]` (portal/standards/crates.yaml:223-228).
+      (portal/toolbox.yaml:259-273); the evidence carries the counts, the
+      output tail on failure
+      (crates/toolbox-connector-runner/src/main.rs:108-113) and each
+      compiled-out test with file and line, and the fix names each removal and
+      the three variables to provide (portal/standards/crates.yaml:231-238).
   - criterion: threshold-justified
     verdict: pass
     reason: >-
-      Bronze with no ignored or compiled-out test is a stated principle in
-      docs/design/thresholds.md:38, which also records the OpenFGA
-      requirement; there is no other number.
+      Bronze with no ignored or compiled-out test is a principle in
+      docs/design/thresholds.md:39, which also lists the always-false cfgs and
+      the three required variables; there is no other number.
 summary: >-
-  Independent re-review. The rule is unchanged, but the code around it
-  moved: two self-skipping security tests (Landlock confinement, the
-  same-user environment test) arrived on 2026-11-24, and the runner job
-  requires neither, so the rule can report pass for tests that never ran.
-  `#[cfg(miri)]` on a failing test still passes (confirmed with the
-  connector).
+  Independent round-4 review of e3c0da1. Both round-3 findings are fixed
+  in what they named: the runner now requires Landlock and an unprivileged
+  user, and `cfg(miri)` and `cfg(not(test))` are listed. The detector is
+  still a list, so `cfg(windows)`, an off-by-default feature or an early
+  `return` hides a failing test (confirmed with the connector for the
+  static side).

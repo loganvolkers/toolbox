@@ -2,57 +2,54 @@ apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/user-mcp/contract-tested
 rubric: rule-quality
 subjectHash: 15beffb9beb0
-assessor: {kind: agent, name: campaign-review-rules-r3}
+assessor: {kind: agent, name: campaign-review-rules-r4}
 at: 2026-11-25
 verdicts:
   - criterion: measures-intent
     verdict: pass
     reason: >-
       In static mode, the one CI and the published report use
-      (.github/workflows/ci.yml:113, .github/workflows/pages.yml:39-41), the
-      capture needs a `"name": "<tool>", "arguments"` body on a line with no
-      `/` or `#` before it (portal/toolbox.yaml:117). Live it fails 4 of 17
-      tools, campaign_report, get_run, list_runs and run_action, which are
-      exactly the tools in crates/toolbox-api/src/mcp.rs with no tools/call
-      body in crates/*/tests (I compared the two lists). The rule is scoped to
-      reach, not depth, in docs/design/thresholds.md:49. The comment at
-      portal/standards/cli.yaml:323-324 still says the helper "asserts on each
-      result", which thresholds.md:49 corrects; stale wording only.
+      (.github/workflows/ci.yml:93-117, .github/workflows/pages.yml:39-41),
+      the capture needs a `"name": "<tool>", "arguments"` body on a line with
+      no `/`, `#` or `*` before it (portal/toolbox.yaml:117); live it passes
+      13 of 17 tools and fails four. The rule claims reach, not depth, and
+      says the static mode only sees the body, in docs/design/thresholds.md:51
+      and portal/standards/cli.yaml:321-322.
   - criterion: hard-to-game
     verdict: fail
     reason: >-
-      Unchanged capture (portal/toolbox.yaml:117): a dead literal such as `let
-      _ = json!({"name": "run_action", "arguments": {}});` in any
-      crates/*/tests/*.rs file passes without calling anything, and so does
-      the same text on a ` * ` line inside a `/* */` comment. Because the
-      runner is skipped wherever the rule is read, observed calls never
-      decide. A call that is never made is weaker than the trivial test the
-      rubric names; it costs about as much as a real `ok(&url, …)` call
-      (crates/toolbox-api/tests/mcp.rs:73-77), so the pull to game is small,
-      but it isn't the right thing.
+      Block-comment ` * ` lines are now excluded (portal/toolbox.yaml:117),
+      but a body that is never sent still counts. A scratch
+      crates/x/tests/t.rs with `let body = json!({"name": "run_action",
+      "arguments": {}}); assert_eq!(body["name"], "run_action");`, run through
+      target/debug/toolbox-connector-workspace with the portal's capture,
+      captured run_action, and a `/* … */` block whose lines don't start with
+      `*` captured get_run. A shape-only test is the rubric's trivial test,
+      and for a tool that needs a server and an executor it is cheaper than a
+      real call through the tests' `ok(` helper
+      (crates/toolbox-api/tests/mcp.rs:73-77); it falsifies nothing.
     suggestion: >-
-      Run only the runner's `mcp-calls` job in CI and the pages build
-      (portal/toolbox.yaml:283-298), still skipping the slow per-crate jobs,
-      so observed calls decide; failing that, exclude lines starting with `*`
-      and require the body to appear as an argument of `call(` or `ok(` in the
-      capture.
+      Run only the runner's mcp-calls job (portal/toolbox.yaml:287-296) in
+      ci.yml and pages.yml, still skipping the per-crate test and clippy jobs,
+      so observed calls decide; failing that, capture only bodies passed to
+      the tests' `call(` or `ok(` helpers and track `/* */` across lines.
   - criterion: fix-leads-to-pass
     verdict: pass
     reason: >-
       The fix names the place (crates/toolbox-api/tests) and the mechanism
       (tools/call) and says why `viaCli` doesn't count
       (portal/standards/cli.yaml:333-336); the static evidence spells out the
-      body shape (cli.yaml:331-332), the shape every call in
+      body shape (cli.yaml:331-332) that every call in
       crates/toolbox-api/tests/mcp.rs uses, so following it passes in both
       modes.
   - criterion: threshold-justified
     verdict: pass
     reason: >-
       Gold with one successful observed call, or a tools/call body in static
-      mode, is stated with its reasoning, including the static mode's
-      weakness, in docs/design/thresholds.md:49.
+      mode, is stated with its reasoning and the static mode's weakness in
+      docs/design/thresholds.md:51.
 summary: >-
-  Independent re-review; rule and capture are unchanged since the last
-  review. The rule discriminates live (the four untested tools are the
-  four failures), but in the static mode every reader uses, a dead `json!`
-  literal or a block-comment line still passes.
+  Independent round-4 review of e3c0da1. The block-comment half of the
+  round-3 finding is fixed; the dead-literal half is not: in the static
+  mode every reader uses, a test that builds a tools/call body and never
+  sends it passes (confirmed with the connector).

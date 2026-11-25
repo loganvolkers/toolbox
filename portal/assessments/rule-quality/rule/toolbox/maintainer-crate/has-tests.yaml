@@ -2,63 +2,70 @@ apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/maintainer-crate/has-tests
 rubric: rule-quality
 subjectHash: 0b84033f7e01
-assessor: {kind: agent, name: campaign-review-rules-r3}
+assessor: {kind: agent, name: campaign-review-rules-r4}
 at: 2026-11-25
 verdicts:
   - criterion: measures-intent
-    verdict: fail
+    verdict: pass
     reason: >-
-      The detector is unchanged since 781adf9. Helpers are collected per file
-      (crates/toolbox-connector-workspace/src/rust.rs:256-290) and matched by
-      the last path segment (rust.rs:225-247), and only macros named
-      `assert*`/`debug_assert*`, `panic` and `unreachable` count
-      (rust.rs:214-223). So a test whose check is in tests/common/mod.rs or
-      another module, or that uses `anyhow::ensure!` or `prop_assert_eq!`, is
-      listed as asserting nothing while it does, and any production function
-      in the file that merely unwraps becomes a "helper" whose name makes an
-      unrelated call count. None of the 17 live crates hits these today, so
-      the misfires are latent.
-    suggestion: >-
-      Collect helpers per crate (including tests/common) and resolve calls by
-      path rather than last segment; count `ensure!`, `prop_assert*` and
-      `bail!` as checks; count a production function as a helper only when it
-      asserts, not when it only unwraps.
+      The round-3 misfires are fixed: helpers are collected over every file of
+      the crate, tests/common included
+      (crates/toolbox-connector-workspace/src/rust.rs:266-300 and :403-422),
+      `ensure!` and `prop_assert*` count (rust.rs:219-231), and a test must
+      also name something the crate defines or run its binary
+      (rust.rs:499-510). An honest test that calls the crate and asserts is
+      counted, and one that only exercises the standard library is listed, as
+      docs/design/thresholds.md:37 says.
   - criterion: hard-to-game
     verdict: fail
     reason: >-
-      Any `.unwrap()` or `.expect()` counts as an assert (rust.rs:225-235). I
-      ran a scratch crate through target/debug/toolbox-connector-workspace
-      whose only running test is `#[test] fn smoke() {
-      "1".parse::<i32>().unwrap(); }` beside a broken `add` returning `a - b`:
-      unitTests 2 and testsWithoutAsserts [], so the check
-      (portal/standards/crates.yaml:178-182) passes on a crate whose tests
-      check nothing it defines. That is the rubric's trivial test, not
-      deception, and the same tests pad tests-scale-with-code
-      (crates.yaml:194-196).
+      "Names something the crate defines" is a bare-word match of the test's
+      text against every item name, impl methods included (rust.rs:442-481,
+      :499-510). A scratch crate whose `add` returns `a - b`, with an `impl
+      Adder { fn new() }` and the single test `let s = String::new();
+      s.len().checked_add(1).unwrap();`, run through
+      target/debug/toolbox-connector-workspace, gave testsWithoutAsserts []:
+      `String::new` matches the crate's `new`, and the unwrap counts. So did
+      `let _ = super::add(1, 2); assert!(1 + 1 == 2);`, since trivial() only
+      rejects `true` and identical sides (rust.rs:191-217). Most crates define
+      `new`, so a placeholder smoke test passes; that is the rubric's trivial
+      test, not deception.
     suggestion: >-
-      Count an assert, unwrap or `?` only when the expression reaches an item
-      the crate defines (a `crate::`/`super::` path, a `use`d crate item, or
-      the crate's name in tests/), and treat an assert whose condition has no
-      identifiers as trivial. For a measure that resists this, carry
-      cargo-mutants' missed mutants in a slot and let a rule read them.
+      In exercises(), count a crate name only as a path the crate owns
+      (`crate::`, `super::`, `Self::`, the crate's name, a `use`d item, or an
+      unqualified call), not after a foreign type such as `String::` or as a
+      bare method name; and require the assert's tokens, or the unwrapped
+      receiver, to mention such a name or a local bound from one. Add both
+      scratch tests to
+      tests_must_assert_something_that_can_fail_and_disabled_tests_are_found
+      (rust.rs:613).
   - criterion: fix-leads-to-pass
-    verdict: pass
+    verdict: fail
     reason: >-
-      The evidence names each test as `path (file:line) asserts nothing`, or
-      says there is no #[test] (portal/standards/crates.yaml:183-185,
-      rust.rs:145-151), and the fix says to add a test or give each listed
-      test an assert (crates.yaml:186-189). A direct non-trivial `assert!` in
-      the listed test passes whatever caused the listing.
+      A test that asserts but names nothing the crate defines is pushed onto
+      the same list (rust.rs:146-153) and reported as "asserts nothing"
+      (portal/standards/crates.yaml:191-193). A scratch test `assert_eq!(
+      "1".parse::<i32>().unwrap(), 1)` was listed that way. The fix says to
+      give each listed test an assert (crates.yaml:194-197), which it already
+      has; the requirement to call the crate's own code is stated only in
+      docs/design/thresholds.md:37, so following the fix and evidence alone
+      leaves the test listed.
+    suggestion: >-
+      Report the two causes apart (e.g. testsWithoutAsserts and
+      testsOfNothing, or a suffix "names nothing the crate defines"), and add
+      to the fix: "and make it call the crate's own code, or run its binary
+      with CARGO_BIN_EXE_<name>".
   - criterion: threshold-justified
     verdict: pass
     reason: >-
-      "At least one test, and every test asserts" is stated at bronze in
-      docs/design/thresholds.md:36 as a principle with a measurement (two
-      tests here asserted nothing on 2026-11-23); the size-relative bar is the
-      silver rule, justified at thresholds.md:37.
+      "At least one test, and every test asserts something that can fail" is a
+      bronze principle with a measurement in docs/design/thresholds.md:37; the
+      size-relative bar is the silver rule, measured at thresholds.md:38.
 summary: >-
-  Independent re-review; the rule and rust.rs are unchanged since the last
-  review and its findings still hold. A lone `"1".parse::<i32>().unwrap()`
-  passes on a broken crate (confirmed with the connector), and per-file,
-  bare-name helper resolution misses `ensure!`, `prop_assert!` and
-  tests/common checks.
+  Independent round-4 review of e3c0da1. The round-3 measurement gaps
+  (per-file helpers, ensure!, prop_assert!, tests/common) and the lone
+  `"1".parse::<i32>().unwrap()` test are fixed. But the crate-name check
+  matches bare words, so `String::new()` plus an unwrap passes in any
+  crate with a `new` (confirmed with the connector), and the evidence
+  calls a test that asserts on foreign code "asserts nothing", which the
+  fix can't resolve.

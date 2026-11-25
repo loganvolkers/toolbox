@@ -1,56 +1,54 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/review-crate/passes-review
 rubric: rule-quality
-subjectHash: 0fefda714071
-assessor: {kind: agent, name: campaign-review-rules-r3}
+subjectHash: b7adbaeae8eb
+assessor: {kind: agent, name: campaign-review-rules-r4}
 at: 2026-11-25
 verdicts:
   - criterion: measures-intent
     verdict: pass
     reason: >-
-      The check is a current review with no failing and no uncited criterion
-      (portal/standards/crates.yaml:402-406), which is what its rationale
-      claims, reasons that cite something real (crates.yaml:414-417). The hash
-      covers src/, tests/ and Cargo.toml
-      (crates/toolbox-connector-workspace/src/rust.rs:395-415), and the field
-      description now says so (crates.yaml:51-55), closing the last review's
-      residual note.
+      The check is a current crate-design assessment with no failing or
+      uncited criterion that cites a file inside the crate
+      (portal/standards/crates.yaml:412-416, reviewCitesCrate at :84-92),
+      which is what its rationale claims (crates.yaml:424-428); the hash
+      covers src/, tests/ and Cargo.toml (crates.yaml:51-55).
   - criterion: hard-to-game
     verdict: fail
     reason: >-
-      Partly closed: a sibling gold rule, independently-reviewed, now needs a
-      second assessor's grounded passing review
-      (portal/standards/crates.yaml:433-450,
-      crates/toolbox-connect/src/assessment.rs:285-295), so the last review's
-      "no rule asks who reviewed it" is out of date. But this rule accepts a
-      reason that cites any file that resolves (cites(), assessment.rs:15-46),
-      with no tie to the crate. Cheapest gold: an all-pass crate-design
-      assessment whose reasons say "Fine; see docs/plan.md", plus a review by
-      another name saying "Agrees; see docs/plan.md", which is grounded
-      because the assessment cites it (assessment.rs:253-270). Neither opens
-      the crate; neither falsifies anything except, if one agent writes both,
-      the assessor name, which docs/design/thresholds.md:63-66 accepts.
+      The round-3 route is closed in its literal form: an assessment citing
+      only docs/plan.md now fails, because citesSubject requires a cited path
+      under crates/<name>/ (crates/toolbox-connect/src/assessment.rs:226-236).
+      But one such path anywhere in the assessment is enough. An all-pass
+      crate-design assessment whose reason for replaceable-defaults cites
+      crates/<name>/Cargo.toml and whose other three reasons read "Fine; see
+      docs/plan.md" passes this rule, though every crate-design criterion is
+      about the crate's own code (portal/standards/crates.yaml:469-505). The
+      round-3 suggestion was per reason. It is a cursory review, not a false
+      statement; the gold sibling independently-reviewed (crates.yaml:445-464)
+      needs a second assessor, whose review can be the same kind of stamp (see
+      review-assessment/passes-review).
     suggestion: >-
-      Have the connector record, per crate-design assessment, whether each
-      reason cites a path under crates/<name>/ (or a file that crate's sources
-      name), and require it here, e.g. `entity.reviewUngrounded.size() == 0`;
-      add a fixture assessment citing only docs/plan.md that stays below gold.
+      In record_in, record per reason whether it cites a path under
+      crates/<name>/ (citedPerReason is already there), expose the criteria
+      that don't (e.g. reviewOutsideCrate), and require it empty for pass
+      verdicts here; add a fixture assessment with one crate citation and
+      three doc citations that stays below gold.
   - criterion: fix-leads-to-pass
     verdict: pass
     reason: >-
-      The fix names portal/assessments/ and re-assessment
-      (portal/standards/crates.yaml:411-413), and the evidence lists the
-      failing or uncited criteria (crates.yaml:407-410), which are in the
-      assessment the fix points to; re-assessing with citations passes.
+      The fix names portal/assessments/, re-assessment and citing
+      crates/<name>/src/ (portal/standards/crates.yaml:421-423), and the
+      evidence lists failing and uncited criteria and says when no crate file
+      is cited (crates.yaml:417-420); following it passes.
   - criterion: threshold-justified
     verdict: pass
     reason: >-
-      Gold is stated in D01M831P5QWJQ4A2FT85N5MXJQF and in the ladder at
-      docs/design/thresholds.md:55; uncited reasons make it ask for more than
-      bronze and silver imply.
+      Gold is stated in D01M831P5QWJQ4A2FT85N5MXJQF and the review-* ladder at
+      docs/design/thresholds.md:57, which names the crate citation; it asks
+      for more than bronze and silver imply.
 summary: >-
-  Independent re-review. The hash and its description are fixed, and the
-  card now needs a second assessor at gold through independently-reviewed,
-  but this rule still accepts reasons that cite any real file, so two
-  cursory assessments citing one unrelated doc reach gold without anyone
-  reading the crate.
+  Independent round-4 review of e3c0da1. A crate assessment must now cite
+  the crate, closing the "see docs/plan.md" route, but a single crate path
+  anywhere in it satisfies the rule, so one cited Cargo.toml and three
+  unsupported passes still reach gold.

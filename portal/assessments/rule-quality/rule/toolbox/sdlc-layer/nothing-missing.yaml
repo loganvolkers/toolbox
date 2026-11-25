@@ -1,56 +1,53 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/sdlc-layer/nothing-missing
 rubric: rule-quality
-subjectHash: 859d51b163b0
-assessor: {kind: agent, name: campaign-review-rules-r3}
+subjectHash: 8ac828f5e1b3
+assessor: {kind: agent, name: campaign-review-rules-r4}
 at: 2026-11-25
 verdicts:
   - criterion: measures-intent
     verdict: pass
     reason: >-
       stagesMissing counts a stage declared missing or with an empty `namedIn`
-      (portal/standards/sdlc.yaml:21-30), and the connector leaves out of
-      `namedIn` every listed doc that doesn't exist or never mentions the
-      stage's name (crates/toolbox-connector-workspace/src/data.rs:256-267,
-      tested at :331-339). The check says what the fix says
-      (sdlc.yaml:279-286), and live only package-author fails, on its two
-      `status: missing` stages (portal/sdlc/stages/package-author.yaml:83 and
-      :101).
+      (portal/standards/sdlc.yaml:21-30). A plain doc now counts only with a
+      heading or table row naming every word of the stage, and a
+      `doc.md#section` only when that heading exists
+      (crates/toolbox-connector-workspace/src/data.rs:272-311), as the field
+      says (sdlc.yaml:87-92). For an honest author that is the doc that
+      designs the stage; live, only package-author fails, on its two `status:
+      missing` stages (portal/sdlc/stages/package-author.yaml:85 and :103).
   - criterion: hard-to-game
-    verdict: fail
+    verdict: pass
     reason: >-
-      "Names the stage" is a case-insensitive substring test
-      (crates/toolbox-connector-workspace/src/data.rs:220-233), and stage
-      names are common words. Changing `status: missing` to `designed` at
-      portal/sdlc/stages/package-author.yaml:83 and :101 passes the layer:
-      their listed doc, docs/design/packages.md, contains "package" throughout
-      and "distribute" once, about other tools (docs/design/packages.md:229),
-      while the stage's own gaps say the registry is undecided
-      (package-author.yaml:103). The flip is a false claim in a committed
-      file, but it is exactly the route the rule's rationale says it closes
-      (portal/standards/sdlc.yaml:287-291), so the check does not stop it. The
-      mapping also falls back to every listed doc when the connector has no
-      `naming:` (sdlc.yaml:139).
-    suggestion: >-
-      Match the stage as a Markdown heading or a whole word near the layer's
-      name, or let `docs:` entries be `path#anchor` and check the anchor
-      exists; fall back to `[]` rather than `record.docs` at
-      portal/standards/sdlc.yaml:139.
+      The round-3 route is closed: on a scratch copy run through
+      target/debug/toolbox-connector-workspace, the `distribute` stage with
+      status flipped to designed and docs [docs/design/packages.md] gave
+      namedIn [], because no heading or table row there names it. What passes
+      is a deliberate pointer: the same stage, or a `monitor` stage, pointed
+      at docs/design/packages.md#9-open-questions got namedIn [that anchor],
+      since an anchor is checked only for existence (data.rs:288-293). That
+      takes a false status and a chosen unrelated section, and the rule states
+      it leaves whether the doc designs the stage to review
+      (sdlc.yaml:303-307; docs/design/thresholds.md:61), with
+      review-sdlc-stage as the backstop.
   - criterion: fix-leads-to-pass
     verdict: pass
     reason: >-
       The fix names the file (portal/sdlc/stages/<layer>.yaml), the `docs:`
-      and `status:` keys and their values, and both conditions the connector
-      checks (portal/standards/sdlc.yaml:281-286); the evidence says which
-      failed ("(no doc that exists and names it)", sdlc.yaml:28-30).
+      and `status:` keys, the `doc.md#section` form and both conditions the
+      connector checks (portal/standards/sdlc.yaml:296-302); the evidence says
+      which failed ("(no doc that exists and names it)", sdlc.yaml:28-30).
   - criterion: threshold-justified
     verdict: pass
     reason: >-
-      No number. docs/design/thresholds.md:59 states the sdlc-layer ladder on
-      the principle that a prerequisite sits below what depends on it
-      (thresholds.md:22-23).
+      No number. docs/design/thresholds.md:61 states the sdlc-layer ladder,
+      silver being "no stage missing in fact", on the principle that a
+      prerequisite sits below what depends on it (thresholds.md:22).
 summary: >-
-  Independent re-review; the rule and data.rs's naming test are unchanged
-  since the last review, and its finding still holds: naming is a
-  substring test on common words, so flipping a status passes when a
-  shared doc happens to contain the stage's name.
+  Independent round-4 review of e3c0da1. The round-3 finding is fixed: a
+  substring in a shared doc no longer names a stage (confirmed with the
+  connector on package-author/distribute). An anchor is checked only for
+  existence, so a stage pointed at an unrelated section passes; that needs
+  a deliberate false status and pointer, which the rule leaves to review.
+  Suggested hardening: also require the anchored section to name the
+  stage, as the plain path does.

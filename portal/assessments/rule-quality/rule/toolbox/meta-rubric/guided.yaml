@@ -1,60 +1,55 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/meta-rubric/guided
 rubric: rule-quality
-subjectHash: 714f90a22650
-assessor: {kind: agent, name: campaign-review-rules-r3}
+subjectHash: d4ab6372856b
+assessor: {kind: agent, name: campaign-review-rules-r4}
 at: 2026-11-25
 verdicts:
   - criterion: measures-intent
     verdict: pass
     reason: >-
-      guides() needs at least ten words, an outcome as a whole word and a
-      condition (crates/toolbox-cli/src/model.rs:287-302), and its test
-      rejects "failure" and "compass" (model.rs:357-372); the last review
-      described an older five-word substring check. For an honest author,
-      guidance with an outcome and a condition says when to give it. The doc
-      labels the check a lexical floor whose quality the gold `discriminates`
-      rule measures (docs/design/thresholds.md:45,
-      portal/standards/meta.yaml:1131-1137).
+      guides() now needs an outcome word, a condition and at least three
+      content words that are neither in the question nor filler
+      (crates/toolbox-cli/src/model.rs:286-358), so the round-3 padded
+      restatement fails and short real guidance such as "Fail when the fix
+      names no file." passes (test at model.rs:414-420). For an honest author
+      that is guidance saying where the line is; docs/design/thresholds.md:46
+      labels it a lexical floor.
   - criterion: hard-to-game
     verdict: fail
     reason: >-
-      Padding passes: "Fail when the answer to this question is no for this
-      entity." is twelve words with `Fail` and `when`, so guides() accepts it
-      (crates/toolbox-cli/src/model.rs:299-301), though the doc comment says a
-      restated question doesn't count (model.rs:287-289). The test pins only
-      the six-word form (model.rs:363). Padding a restatement is the rubric's
-      empty doc comment in another form, cheaper than writing real guidance;
-      nothing is falsified.
+      Generic evaluative words count as content: "Fail when the result looks
+      wrong or incomplete." has `Fail`, `when` and four words outside the
+      FILLER list (model.rs:295-336) and outside any rule-quality question, so
+      by guides()' logic it is guided for every criterion, though it tells
+      assessors nothing about where to draw the line. Writing it is cheaper
+      than real guidance and falsifies nothing. The backstop thresholds.md:46
+      names, assessors' agreement, is listed as a gap
+      (docs/design/meta-standards-review.md:127 and :163).
     suggestion: >-
-      Reject guidance whose content words, after dropping outcome, condition
-      and stop words, all appear in the criterion's question, or require it to
-      name something concrete (a code span, an example, "e.g."); add the
-      padded restatement to guidance_must_say_what_fails in model.rs.
+      Require a concrete anchor in the guidance: a code span, a quoted
+      example, "e.g.", or a noun for a place in the subject (file, fix,
+      evidence, test, field, check, doc); or add evaluative filler (wrong,
+      bad, incomplete, unclear, poor, correct, looks, result, issue, problem)
+      to FILLER. Add the sentence above to guidance_must_say_what_fails.
   - criterion: fix-leads-to-pass
-    verdict: fail
+    verdict: pass
     reason: >-
-      The fix says only to give `guidance:` "saying what counts as fail"
-      (portal/standards/meta.yaml:1121-1123), and the evidence is the bare
-      criterion names (meta.yaml:1120). Real guidance that follows it, such as
-      "Fail when the fix names no file." (seven words), stays unguided because
-      of the ten-word floor (model.rs:300), which neither the fix nor the
-      evidence mentions; only the linked page states it
-      (docs/design/thresholds.md:45).
-    suggestion: >-
-      Say the bar in the fix: "at least ten words, with an outcome (fail, pass
-      or unsure) and a condition (when, if, unless)", and have the evidence
-      say per criterion which part is missing.
+      The round-3 finding is fixed: the fix now says to state when to fail in
+      words the question doesn't use, with an example
+      (portal/standards/meta.yaml:1147-1151), and the evidence names all three
+      conditions per listed criterion (meta.yaml:1143-1146), which are the
+      three guides() tests.
   - criterion: threshold-justified
     verdict: pass
     reason: >-
-      The ten words, the outcome and the condition are a labelled choice with
-      a measurement (the shortest real guidance was 13 words) in
-      docs/design/thresholds.md:45, and silver is stated in
-      docs/design/scorecards-for-scorecards.md:296.
+      The outcome, condition and three-word bar are labelled as chosen, with
+      the two cases that motivated them, in docs/design/thresholds.md:46;
+      silver is the scorecard's "guidance lets assessors agree" step above
+      described and used (portal/standards/meta.yaml:1105-1109).
 summary: >-
-  Independent re-review. The last review's description of the check was
-  out of date: it now needs ten words, a whole-word outcome and a
-  condition. A padded restatement still passes, and the fix doesn't tell
-  an author about the ten-word floor, so short real guidance fails without
-  saying why.
+  Independent round-4 review of e3c0da1. Both round-3 findings are fixed:
+  a padded restatement is no longer guided, and the fix and evidence now
+  say the bar. Vague guidance built from generic words ("the result looks
+  wrong") still passes for any question, which only assessor calibration,
+  not yet built, would catch.

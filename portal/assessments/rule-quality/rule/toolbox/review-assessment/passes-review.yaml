@@ -1,8 +1,8 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/review-assessment/passes-review
 rubric: rule-quality
-subjectHash: 034d09fb6e29
-assessor: {kind: agent, name: campaign-review-rules-r3}
+subjectHash: 3cc92c205b47
+assessor: {kind: agent, name: campaign-review-rules-r4}
 at: 2026-11-25
 verdicts:
   - criterion: measures-intent
@@ -10,44 +10,50 @@ verdicts:
     reason: >-
       The check needs a current review with no failing criterion, no uncited
       reason, and grounding in the assessment it reviews
-      (portal/standards/assessments.yaml:274-278, reviewGrounded at :96-103).
-      Independence is held at silver, where `assessed` refuses a self-review
-      (assessments.yaml:259-264), and doubts by `no-doubts`, so the card's
-      gold matches the ladder in docs/design/thresholds.md:55.
+      (portal/standards/assessments.yaml:287-297, reviewGrounded at :108-116),
+      and independence is held at silver, where `assessed` refuses a
+      self-review (assessments.yaml:272-286). That is the gold the ladder in
+      docs/design/thresholds.md:57 describes.
   - criterion: hard-to-game
     verdict: fail
     reason: >-
-      Grounding accepts the subject's own file or anything it cites
-      (crates/toolbox-connect/src/assessment.rs:253-270, unchanged since
-      781adf9). So a second-named reviewer can mark every criterion `pass`
-      with "Consistent with docs/design/thresholds.md." and reach gold for
-      almost any rule-quality assessment, because nearly all of them cite that
-      page; citing only the assessment's own path works for the rest. Nothing
-      is falsified, the review is just cursory: the trivial-test analogue the
-      rubric names. The self-declared assessor name is a separate, documented
-      limit (docs/design/thresholds.md:63-70).
+      ground() now requires every reason to cite a source the subject cites or
+      its own file (crates/toolbox-connect/src/assessment.rs:244-292), which
+      closes one grounded reason plus any file for the rest. But it accepts
+      the same shared source for every criterion. Most rule-quality
+      assessments cite docs/design/thresholds.md for threshold-justified (for
+      example
+      portal/assessments/rule-quality/rule/toolbox/maintainer-site/titled.yaml
+      and
+      portal/assessments/rule-quality/rule/toolbox/meta-rule/readable.yaml),
+      so a review by another name whose four reasons each read "Consistent
+      with docs/design/thresholds.md." is grounded, cited and passing, and
+      reaches gold without checking anything. That is the round-3 route
+      unchanged. It is a rubber stamp, the trivial-test analogue, and states
+      nothing false; the self-declared name is the separate limit
+      thresholds.md:65-72 states.
     suggestion: >-
-      In link_reviews, for a `pass` verdict require its reason to cite a
-      source the subject cites for the same criterion (match by criterion
-      name), not any source the subject cites anywhere, and add a fixture
-      review that cites one shared page for every verdict and stays below
-      gold.
+      Ground per criterion: a review's reason for criterion C must cite a
+      source the subject's reason for C cites (other than the subject's own
+      file), or, for a fail or unsure, any source; and reject a review whose
+      reasons are identical across criteria. Add a fixture review that cites
+      one shared page for every verdict and stays below gold.
   - criterion: fix-leads-to-pass
     verdict: pass
     reason: >-
       The fix separates failed criteria (revise the assessment) from items
-      marked "fix the review" (the review must cite what it rests on),
-      matching the evidence's labels
-      (portal/standards/assessments.yaml:279-289).
+      marked "fix the review" (its reasons must cite the assessment's file or
+      its sources), matching the evidence's labels
+      (portal/standards/assessments.yaml:292-303).
   - criterion: threshold-justified
     verdict: pass
     reason: >-
-      Gold is stated in D01M831P5QWJQ4A2FT85N5MXJQF and the ladder in
-      docs/design/thresholds.md:55 (a current review that passes, cites what
-      resolves, and for an assessment `groundedIn`); it asks for more than
-      bronze and silver do.
+      Gold is stated in D01M831P5QWJQ4A2FT85N5MXJQF and in the review-* ladder
+      at docs/design/thresholds.md:57 (a current review that passes, cites
+      what resolves and is grounded); it asks for more than bronze and silver
+      do.
 summary: >-
-  Independent re-review; the rule and assessment.rs are unchanged since
-  the last review, and its finding still holds, in a cheaper form than it
-  said: a rubber stamp grounded by citing one page the assessment also
-  cites, such as docs/design/thresholds.md, reaches gold.
+  Independent round-4 review of e3c0da1. Per-reason grounding closes a
+  review that grounds one reason and cites anything for the rest, but not
+  the round-3 route: citing one page the assessment also cites, such as
+  thresholds.md, for every criterion still reaches gold.

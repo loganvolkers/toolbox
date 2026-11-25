@@ -2,55 +2,56 @@ apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/maintainer-python/no-findings
 rubric: rule-quality
 subjectHash: cb54f3333d9c
-assessor: {kind: agent, name: campaign-review-rules-r3}
+assessor: {kind: agent, name: campaign-review-rules-r4}
 at: 2026-11-25
 verdicts:
   - criterion: measures-intent
     verdict: pass
     reason: >-
       The check is ruff's own finding count from its SARIF
-      (packages/sarif/fragments/sarif.yaml:70-73), run with the repository's
-      ruff.toml and --ignore-noqa (portal/toolbox.yaml:393-403), so passing
-      means "ruff, as configured here, finds nothing". The three globs
-      (portal/toolbox.yaml:404-407) cover all 13 tracked Python files outside
-      experiments/ (git ls-files), scripts/take-it-out.py and
-      examples/acme-live/deploy/facade.py among them. A Python file added
-      elsewhere, such as under plugins/, would fall outside the scope
-      silently, but none exists today.
+      (packages/sarif/fragments/sarif.yaml:70-78), run with the repository's
+      ruff.toml and --ignore-noqa (portal/toolbox.yaml:398-407); with ruff
+      0.16.9 (not the pinned 0.14.0) I confirmed --ignore-noqa also overrides
+      a file-level `# ruff: noqa`. The globs (portal/toolbox.yaml:408-411)
+      cover all 13 tracked Python files outside experiments/ (git ls-files),
+      so passing means ruff, as configured here, finds nothing in the Python
+      we maintain. A file added outside the globs would drop out silently;
+      none is there today.
   - criterion: hard-to-game
     verdict: fail
     reason: >-
-      Inline `# noqa` no longer hides anything (--ignore-noqa,
-      portal/toolbox.yaml:400-402), but one line in ruff.toml still does: a
-      `[lint] ignore` entry or a `[lint.per-file-ignores]` line makes the
-      finding vanish from the SARIF, so it is in neither `active` nor `total`.
-      The fix asks for "a comment saying why" (portal/toolbox.yaml:409-413)
-      and the comment in portal/toolbox.yaml:400-401 says it is "reviewed with
-      a reason", but nothing checks the comment and .github/CODEOWNERS covers
-      only .github/, not ruff.toml. That is a suppression, the rubric's own
-      example of a cheap route.
+      Partly fixed: ruff.toml is now under CODEOWNERS
+      (.github/CODEOWNERS:3-4). But one line under `[lint.per-file-ignores]`
+      (ruff.toml:11-14) still removes a finding from the SARIF, so it is in
+      neither `active` nor `total`, and the fix sanctions that route "with a
+      comment saying why" (portal/toolbox.yaml:413-417) that nothing checks.
+      CODEOWNERS only requests a review on a pull request, and D32 has agents
+      commit straight to main (docs/decisions/D01M7TCJ32Q0000000000000000.md),
+      so the backstop doesn't apply to the usual change here. A per-file
+      ignore is the rubric's suppression, and cheaper than fixing a finding
+      ruff can't fix itself; it is a convenience, not deception.
     suggestion: >-
-      Add ruff.toml to .github/CODEOWNERS so an ignore needs an owner's
-      review, and have a rule fail on any `ignore` or `per-file-ignores` entry
-      in ruff.toml without a comment line above it (the workspace connector
-      can read the TOML).
+      Make the ignores visible to the ratchet: have the SARIF record (or a
+      workspace fact read from ruff.toml) carry the number of ignored rule
+      codes per file, as a measure that may not rise, or fail the rule for a
+      file whose per-file-ignores entry has no comment line above it; pin both
+      with the sarif package's tests.
   - criterion: fix-leads-to-pass
     verdict: pass
     reason: >-
       The evidence lists `line N: RULE message` per finding
-      (packages/sarif/fragments/sarif.yaml:75-78), each record's command
-      reruns ruff alone, and the fix names both routes, fixing or a per-file
-      ignore in ruff.toml, and warns that `# noqa` won't help
-      (portal/toolbox.yaml:409-413).
+      (packages/sarif/fragments/sarif.yaml:75-78), each record carries the
+      command that reruns ruff alone, and the fix names both routes and warns
+      that `# noqa` won't help (portal/toolbox.yaml:413-417).
   - criterion: threshold-justified
     verdict: pass
     reason: >-
       No tuned number: the one level, clean, means zero findings, and
       `newEntitiesAtLeast: clean` (packages/sarif/fragments/sarif.yaml:67-68)
-      matches the scorecard's description that a new file must arrive clean.
+      matches the scorecard's rationale that new findings can't pile up
+      (sarif.yaml:55-58).
 summary: >-
-  Independent re-review; rule, config and ruff.toml are unchanged since
-  the last review, and its finding still holds. A faithful carrier for
-  ruff over all the maintained Python; a one-line ignore in ruff.toml,
-  with no required reason or reviewer, still hides a finding from every
-  count.
+  Independent round-4 review of e3c0da1. ruff.toml now has a code owner,
+  which closes part of the round-3 finding, but under D32's direct commits
+  no review is requested, and a one-line per-file ignore with an unchecked
+  comment still hides a finding from every count.
