@@ -6,7 +6,14 @@ captures from Storybook, a blind three-auditor panel scored by median, and two r
 plus the starter. About the box: how the report shows what the tools found, whichever portal it
 serves.*
 
-ROUND_SUMMARY
+Nine rounds are recorded, and the loop has not stopped. Usability medians rose from 24 to 31 of
+40 by round 8 and held there at round 9. Judgement rose from 10 to 11 of 16 at round 2 and has not
+moved since. Every reader task succeeded for all three auditors from round 5, except round 6 and
+round 9 (17 of 18 each; at round 9 one auditor marked the cross-portal task partial). Consistency
+rose from 2 to 3 at round 8 and held. Honest states reached 4 at round 7, fell to 3 at round 8, and
+returned to 4 at round 9. Wayfinding reached 4 at round 8 and fell back to 3 at round 9. Round 9
+did not pass: three severity-3 findings were open, and one targeted median fell. Those three are
+fixed in the build the next round scores.
 
 ## Scope
 
@@ -16,7 +23,7 @@ ROUND_SUMMARY
 | Portals | OpenFGA (`examples/openfga-portal` over OpenFGA v1.23.0, compared with SpiceDB v1.57.1), Toolbox for Toolbox (`portal/`, compared with Backstage), the repo portal starter, and the starter before its first run |
 | Stories | 22 page stories: 12 OpenFGA, 6 Toolbox, 1 starter, 3 no-data |
 | Viewports | 1280×800 and 390×844, light and dark, plus a full-page desktop light shot |
-| Gate before auditors | `npm --prefix report-ui run probe`: axe (WCAG 2.0–2.2 A/AA), horizontal overflow at 390 px and script errors on 53 stories × 4 views |
+| Gate before auditors | `npm --prefix report-ui run probe`: axe (WCAG 2.0–2.2 A/AA), horizontal overflow at 390 px, text squeezed into a column a few letters wide, and script errors, on 53 stories × 4 views |
 | Auditors | Three fresh agents per round, each blind to source, diffs, earlier scores and each other, with [the rubric](../../plugins/toolbox-operator/skills/design-audit/references/rubric.md) and the tasks below. A dimension's score is the panel median |
 | Stop rule | Two consecutive passing rounds with no rise in the targeted medians, or every targeted median at 4. A round passes when the probes pass, no severity 3–4 finding is open and no targeted median falls |
 
@@ -33,7 +40,28 @@ The tasks were written before the first capture and kept for every round:
 
 ## Scores (panel medians)
 
-ROUND_TABLE
+A dimension's score is the median of the three auditors. Tasks succeeded counts each auditor
+separately, so the maximum is 18. Round 10 is not in this table.
+
+| Dimension | R1 | R2 | R3 | R4 | R5 | R6 | R7 | R8 | R9 |
+|---|---|---|---|---|---|---|---|---|---|
+| U1 Answer first | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| U2 Reader's language | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| U3 Recognition over recall | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| U4 Hierarchy and scent | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| U5 Data integrity | 2 | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| U6 Consistency | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 3 | 3 |
+| U7 Wayfinding and control | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 3 |
+| U8 Honest states | 1 | 2 | 3 | 3 | 3 | 3 | 4 | 3 | 4 |
+| U9 Accessibility | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| U10 Density and responsiveness | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| J1 Visceral | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| J2 Behavioral | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 |
+| J3 Reflective | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| J4 Voice | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| U total | 24 | 27 | 29 | 29 | 29 | 29 | 30 | 31 | 31 |
+| J total | 10 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 |
+| Tasks succeeded (of 18) | 13 | 16 | 16 | 17 | 18 | 17 | 18 | 18 | 17 |
 
 ## Round 1: what the panel found
 
