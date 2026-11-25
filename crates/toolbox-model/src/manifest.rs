@@ -44,6 +44,10 @@ pub struct Manifest {
     /// The code hosts this portal reaches beyond plain git (`crate::forge`, docs/design/forges.md).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub forges: Vec<Forge>,
+    /// The CI systems this portal starts runs on, apart from the forges that host the code
+    /// (`crate::ci`, docs/design/forges.md §4.7).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub ci: Vec<CiHost>,
     pub ui: Option<Ui>,
     pub mcp: Option<Value>,
     #[serde(default)]
@@ -88,6 +92,30 @@ pub struct Forge {
     /// `--as` (`toolbox run --identity-token-file`).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub identity: bool,
+    /// The `ci:` host that runs `runner: {type: ci}` children on this forge, or `none`; default:
+    /// the forge's own CI.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ci: Option<String>,
+}
+
+/// One entry of `ci:`: a CI system, named so forges and executors can point at it.
+#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq, Eq)]
+pub struct CiHost {
+    pub name: String,
+    /// `github-actions`, `gitlab-ci` or `http` (an executor-protocol service).
+    #[serde(rename = "type")]
+    pub kind: String,
+    /// The web URL (`github-actions`, `gitlab-ci`; default the public host), or the service's
+    /// endpoint (`http`, required).
+    pub url: Option<String>,
+    pub api: Option<String>,
+    /// The environment variable holding the token.
+    pub token: Option<String>,
+    /// Where a forge project's CI runs here; `{project}` is the project's path. Default
+    /// `{project}`.
+    pub project: Option<String>,
+    /// Projects (globs, after mapping) a parent may start runs in; default any.
+    pub projects: Option<Vec<String>>,
 }
 
 /// One entry of `federation.children`, with the defaults `crate::federation` fills in.

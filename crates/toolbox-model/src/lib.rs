@@ -6,6 +6,7 @@
 //! cross-reference, form-subset and CEL checks, and validate fixture messages.
 
 pub mod artifacts;
+pub mod ci;
 pub mod diagnostics;
 pub mod executors;
 pub mod federation;

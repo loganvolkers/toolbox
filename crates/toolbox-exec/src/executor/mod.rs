@@ -40,7 +40,7 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::sync::Arc;
-use toolbox_model::manifest::Forge;
+use toolbox_model::ci::Hosts;
 
 /// What an executor is told about a run.
 #[derive(Debug, Clone)]
@@ -174,7 +174,7 @@ pub enum Rechecked {
     Verify,
 }
 
-type Parse = fn(&Value, &[Forge]) -> Result<Arc<dyn Executor>, String>;
+type Parse = fn(&Value, &Hosts) -> Result<Arc<dyn Executor>, String>;
 
 /// Every `type` a manifest may name, with its parser.
 const PARSERS: &[(&str, Parse)] = &[
@@ -187,13 +187,13 @@ const PARSERS: &[(&str, Parse)] = &[
     ("webhook", webhook::parse),
 ];
 
-/// Parse an action's `executor:` value, with no forges but the known hosts.
+/// Parse an action's `executor:` value, with no forges but the known hosts and no CI hosts.
 pub fn parse(v: &Value) -> Result<Arc<dyn Executor>, String> {
-    parse_in(v, &[])
+    parse_in(v, &Hosts::default())
 }
 
-/// Parse an action's `executor:` value in a portal that declares `forges`.
-pub fn parse_in(v: &Value, forges: &[Forge]) -> Result<Arc<dyn Executor>, String> {
+/// Parse an action's `executor:` value in a portal that declares `forges:` and `ci:`.
+pub fn parse_in(v: &Value, hosts: &Hosts) -> Result<Arc<dyn Executor>, String> {
     let ty = v.get("type").and_then(Value::as_str).unwrap_or("command");
     let Some((_, parse)) = PARSERS.iter().find(|(name, _)| *name == ty) else {
         return Err(format!(
@@ -201,7 +201,7 @@ pub fn parse_in(v: &Value, forges: &[Forge]) -> Result<Arc<dyn Executor>, String
             toolbox_model::executors::names()
         ));
     };
-    parse(v, forges)
+    parse(v, hosts)
 }
 
 /// Variables every executor process keeps: where it runs, who it runs as, locale, proxies, git's

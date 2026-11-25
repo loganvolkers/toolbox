@@ -2,6 +2,7 @@
 //! validation, the server and `toolbox-exec`'s parsers all read, and that a test holds equal to
 //! the manifest schema's `executor.type` enum.
 
+use crate::ci::CiType;
 use crate::forge::Kind;
 
 /// One executor `type`.
@@ -18,6 +19,8 @@ pub struct ExecutorType {
     pub detached: bool,
     /// The forge type its `forge:` URL (default: that type's public host) must resolve to.
     pub forge: Option<Kind>,
+    /// The type of `ci:` host it may name instead, for its endpoint and token.
+    pub ci: Option<CiType>,
 }
 
 /// Every executor type; the manifest schema's `executor.type` enum must name exactly these.
@@ -28,6 +31,7 @@ pub const TYPES: &[ExecutorType] = &[
         either: &[],
         detached: false,
         forge: None,
+        ci: None,
     },
     ExecutorType {
         name: "in-image",
@@ -35,6 +39,7 @@ pub const TYPES: &[ExecutorType] = &[
         either: &["command", "package"],
         detached: true,
         forge: None,
+        ci: None,
     },
     ExecutorType {
         name: "change",
@@ -42,6 +47,7 @@ pub const TYPES: &[ExecutorType] = &[
         either: &[],
         detached: false,
         forge: None,
+        ci: None,
     },
     ExecutorType {
         name: "github-workflow",
@@ -49,6 +55,7 @@ pub const TYPES: &[ExecutorType] = &[
         either: &[],
         detached: true,
         forge: None,
+        ci: Some(CiType::GithubActions),
     },
     ExecutorType {
         name: "gitlab-pipeline",
@@ -56,6 +63,7 @@ pub const TYPES: &[ExecutorType] = &[
         either: &[],
         detached: true,
         forge: Some(Kind::Gitlab),
+        ci: Some(CiType::GitlabCi),
     },
     ExecutorType {
         name: "http",
@@ -63,6 +71,7 @@ pub const TYPES: &[ExecutorType] = &[
         either: &[],
         detached: true,
         forge: None,
+        ci: None,
     },
     ExecutorType {
         name: "webhook",
@@ -70,6 +79,7 @@ pub const TYPES: &[ExecutorType] = &[
         either: &[],
         detached: false,
         forge: None,
+        ci: None,
     },
 ];
 

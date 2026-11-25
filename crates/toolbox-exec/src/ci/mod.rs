@@ -8,13 +8,17 @@
 //! |---|---|
 //! | `github-workflow` | [`github::Workflow`]: `workflow_dispatch`, tracked by run id or `run-name` |
 //! | `gitlab-pipeline` | [`gitlab::Pipeline`]: a pipeline with typed `inputs`, tracked by id, record from the `toolbox` job's artifact |
+//! | `ci:` host of `type: http` | [`service::Service`]: the executor protocol's `run`, `status` and `cancel`, record from the result's `outputs.record` |
 //!
+//! Which CI a federated child runs on is the parent's `ci:` host its forge's entry names, or that
+//! forge's own CI ([`driver`], `toolbox_model::ci`).
 //! A repo portal's own action gets each input as a string, plus `toolbox_run`. A federated
 //! dispatch (`runner: {type: ci}` or `{type: github-workflow}`) gets the child action instead:
 //! `action`, `inputs` (JSON), `requested_by`, `toolbox_run`, `parent_run` and `grant`.
 
 pub mod github;
 pub mod gitlab;
+pub mod service;
 
 use crate::executor::{Context, Executor, Outcome, Preview, Rechecked, note, timed_out};
 use crate::run::{Run, now_secs};
@@ -23,6 +27,7 @@ use std::any::Any;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use toolbox_connect::hub::rfc3339;
+use toolbox_model::ci::{CiType, Hosts, Target};
 
 /// A CI run, in GitHub's terms.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -79,6 +84,64 @@ impl dyn CiDriver {
     pub fn downcast<T: CiDriver>(&self) -> Option<&T> {
         (self as &dyn Any).downcast_ref()
     }
+}
+
+/// The driver that starts runs on `t`, for `git_ref`. `runner` is a federated child's
+/// `federation.runner`, which may name what its CI lets a project choose (GitHub: its
+/// `workflow`).
+pub fn driver(t: Target, runner: &Value, git_ref: String) -> Box<dyn CiDriver> {
+    let token_env = t.token.unwrap_or_default();
+    match t.ty {
+        CiType::GithubActions => Box::new(github::Workflow {
+            repo: t.project,
+            workflow: runner["workflow"]
+                .as_str()
+                .unwrap_or("toolbox.yml")
+                .to_owned(),
+            git_ref,
+            api: t.api,
+            token_env,
+        }),
+        CiType::GitlabCi => Box::new(gitlab::Pipeline {
+            project: t.project,
+            git_ref,
+            api: t.api,
+            token_env,
+        }),
+        CiType::Http => Box::new(service::Service {
+            host: t.host.unwrap_or_default(),
+            url: t.api,
+            token_env: (!token_env.is_empty()).then_some(token_env),
+            project: t.project,
+            git_ref,
+        }),
+    }
+}
+
+/// The `ci:` host an executor names, which must be of type `want` and admit `project`.
+pub(crate) fn host_target(
+    hosts: &Hosts,
+    name: &str,
+    want: CiType,
+    project: &str,
+) -> Result<Target, String> {
+    let h = hosts
+        .host(name)
+        .ok_or_else(|| format!("executor.ci: {name} is not declared under ci:"))?;
+    let t = toolbox_model::ci::target(h, project)?;
+    if t.ty != want {
+        return Err(format!(
+            "executor.ci: {name} is {}, and this executor needs {}",
+            t.ty.name(),
+            want.name()
+        ));
+    }
+    if !t.admits() {
+        return Err(format!(
+            "executor.ci: {project} is not among ci {name}'s projects"
+        ));
+    }
+    Ok(t)
 }
 
 /// A run carried by a CI system.

@@ -9,6 +9,7 @@ use serde_json::{Value, json};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use toolbox_connect::hub::rfc3339;
+use toolbox_model::ci::Hosts;
 use toolbox_model::forge;
 use toolbox_model::manifest::Forge;
 
@@ -30,7 +31,7 @@ pub struct Change {
     pub forges: Vec<Forge>,
 }
 
-pub(crate) fn parse(v: &Value, forges: &[Forge]) -> Result<Arc<dyn Executor>, String> {
+pub(crate) fn parse(v: &Value, hosts: &Hosts) -> Result<Arc<dyn Executor>, String> {
     let s = |k: &str| v.get(k).and_then(Value::as_str).map(str::to_owned);
     Ok(Arc::new(Change {
         run: argv(v.get("run"), "executor.run")?,
@@ -49,7 +50,7 @@ pub(crate) fn parse(v: &Value, forges: &[Forge]) -> Result<Arc<dyn Executor>, St
             }
         },
         review: v.get("review").and_then(Value::as_bool).unwrap_or(true),
-        forges: forges.to_vec(),
+        forges: hosts.forges.clone(),
     }))
 }
 

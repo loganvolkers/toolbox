@@ -1,6 +1,7 @@
 # Forges: One Federation over GitHub, GitLab and Whatever Hosts Code Next
 
-*Status: design and v1 implementation, 2026-11-24 (D01M87AXG095Q0Z0DGGTKYYAM7Y). This is about the
+*Status: design and v1 implementation, 2026-11-24 (D01M87AXG095Q0Z0DGGTKYYAM7Y; CI hosts declared
+apart from forges, D01M87T16JRH53YV6VVWM8PH169). This is about the
 box: carrying actions and runs between portals whose repositories live on different code hosts,
 and remembering what each host did. The tools are the hosts themselves (GitHub, GitLab, Origin,
 Gitea, a bare repository) and `git`. It extends [federated-actions.md](./federated-actions.md)
@@ -11,12 +12,17 @@ against a real GitLab CE 19.6.1 and GitLab Runner 19.6.1 on one machine (§6).*
 
 ## 1. Conclusion
 
-**A forge is where a repository's git, reviews, CI and people live. Toolbox needs six things
-from one, and plain git gives two of them. A parent declares the forges it reaches by URL, and a
-child's forge is the one its git URL is on, so a child never says where the parent's credentials
-go. GitHub and GitLab are drivers behind one contract. A forge without a capability is still a
-forge: what it lacks falls back to plain git or to the parent's checkout, and the run record
-says which.**
+**A forge is where a repository's git, reviews and people live; a CI host is where its runs
+happen, and the two are declared apart (D01M87T16JRH53YV6VVWM8PH169). Toolbox needs six things
+from them, and plain git gives two. A parent declares the forges it reaches by URL, and a child's
+forge is the one its git URL is on, so a child never says where the parent's credentials go. A
+forge's projects build on the forge's own CI unless the parent's entry for it names a `ci:` host
+(§4.7). GitHub and GitLab are forge drivers; GitHub Actions, GitLab CI and any CI behind an
+executor-protocol bridge are CI drivers. A forge without a capability is still a forge: what it
+lacks falls back to plain git or to the parent's checkout, and the run record says which.**
+
+The first three rows are the forge's; the last three are the CI host's, shown here for each
+forge's own CI.
 
 | Capability | What Toolbox uses it for | Plain git | GitHub (github.com, Enterprise Server) | GitLab (gitlab.com, self-managed CE and EE) |
 |---|---|---|---|---|
@@ -39,6 +45,10 @@ says which.**
   `https://gitlab.com` needs no forge declaration: the host is known, the token is `GITHUB_TOKEN`
   or `GITLAB_TOKEN`, and a parent may dispatch to the children it lists. A self-hosted forge is
   one entry: its URL and its type.
+- **Code and CI can live apart.** GitHub repositories built on Buildkite, or on a GitLab that
+  mirrors them, are one `ci:` entry and one line on the forge (`ci: buildkite`). A CI Toolbox
+  has no driver for is reached through a service that speaks the executor protocol
+  (`type: http`), not through a new forge (§4.7).
 - **A new forge is one driver.** It implements the capabilities it has. Nothing in the run
   lifecycle, the trust rules or the manifest changes. Origin, Cursor's forge, is mapped in §5
   from its CLI's documented commands; it would arrive with *read*, *write* and *propose* and
@@ -73,12 +83,13 @@ numbers are in brackets.
 | **F1** | As a **platform engineer in a GitLab-only organisation**, I list our projects by their GitLab URLs and the org portal offers every project's actions | `toolbox run` in the org lists each child's actions, read from what is committed on GitLab; a private project is read with git's own credentials [1] | Built |
 | **F2** | As a **repo maintainer on GitLab**, I want a change to arrive as a merge request, so review is its approval | The run is `proposed` with the merge request's URL; it stays `proposed` while the request is open and is `succeeded` once GitLab merges it and the base shows it, by merge commit or squash [2] | Built |
 | **F3** | As a **release manager on GitLab**, I want a federated run to execute in the project's own pipeline, with the project's runner and credentials, never the org's | The parent dispatches a pipeline to the project it cloned, with its own token; the child's job runs `toolbox run` with the parent's signed grant; the parent tracks the pipeline by id and takes the child's verification from the job's artifact; inputs with quotes, `$VARS`, `$(…)`, newlines and `$[[ ]]` reach the job as data [3, 4] | Built |
-| **F4** | As a **security owner**, I want a child to be unable to point the parent's dispatch at another project or host | A child that names `project`, `repo`, `api`, `url` or `token` in its runner is refused: the schema refuses all but `repo` (which `github-workflow` uses) and the parent says the child's manifest is invalid when the action isn't offered, and the parent refuses all six before it dispatches; a project outside the forge's `projects` is refused; a push the host's branch protection refuses fails the run with the host's words [5] | Built |
+| **F4** | As a **security owner**, I want a child to be unable to point the parent's dispatch at another project or host | A child that names `project`, `repo`, `api`, `url` or `token` in its runner is refused: the schema refuses all but `repo` (which `github-workflow` uses) and the parent says the child's manifest is invalid when the action isn't offered, and the parent refuses all six, and `ci` and `via` (D01M87T16JRH53YV6VVWM8PH169), before it dispatches; a project outside the forge's `projects` is refused; a push the host's branch protection refuses fails the run with the host's words [5] | Built |
 | **F5** | As a **platform engineer in a hybrid organisation**, I run one fleet change across GitHub, Enterprise Server, GitLab and bare repositories | Each child's run goes to its own forge with that forge's token; one parent lists them all | Built. GitLab and a bare repository side by side against real hosts [6]; routing by unit tests: `cargo test -p toolbox-model forge` resolves every child of [`hybrid-org`](../../examples/federated-actions/hybrid-org/toolbox.yaml) (github.com, Enterprise Server, gitlab.com, self-managed by https and ssh, a bare repository) to its driver, API, token and project, and `-p toolbox-exec ci_runner` builds each dispatch, and GitHub dispatch as in the M5 script |
 | **F6** | As an **approver**, I want "someone in release" to mean the GitLab group, so people are managed in one place | The `gitlab` connector reports `acme/release`'s members; the requester and a Guest are refused, someone removed from the GitLab group is refused on the next read, and a member approves [8] | Built (§4.6) |
 | **F7** | As a **repo owner moving from GitHub to GitLab**, I want my `.toolbox/` to move unchanged | The child's runner is `{type: ci}` on both; only the parent's `git:` URL changes | Built (the runner type is forge-neutral) |
 | **F8** | As a **platform engineer**, I start the org's own pipeline (a deploy, a release) from the portal, with typed inputs | A `gitlab-pipeline` executor sends the run's inputs as pipeline inputs; an input GitLab refuses fails the run with GitLab's reason [7] | Built |
 | **F10** | As an **approver in a GitLab-only organisation with no server**, I want the org's checkout to know it's me, not whoever I say I am | With `identity: true` on the forge, a request and an approval need the person's own GitLab token; `--as` alone, `--as` naming someone else and a token GitLab refuses are refused, and no record holds a token [9] | Built (§4.6) |
+| **F11** | As a **platform engineer whose code is on GitHub and whose CI is Buildkite** (or a GitLab that mirrors it), I want `runner: {type: ci}` children to build where our builds run | The parent's entry for the forge names a `ci:` host; each child's run goes to that host, mapped to its project there, with the host's token; the child's run record comes back from the host's result; a child that names `ci` or `via` is refused, as is a project outside the host's `projects` | Built (§4.7): `cargo test -p toolbox-model ci` routes [`hybrid-org`](../../examples/federated-actions/hybrid-org/toolbox.yaml)'s Enterprise Server child to its Buildkite bridge, and `-p toolbox-exec ci::service` and `a_forge_entry_sends_its_children` dispatch, track, collect and cancel against a test double. Not yet run against a real bridge |
 | **F9** | As a **forge author**, I add a forge Toolbox has never seen | One driver implementing the capabilities it has; no change to the lifecycle, the trust rules or the manifest | Designed (§5) |
 
 ## 4. The abstraction
@@ -111,6 +122,7 @@ federation:
 | `api` | The API base | GitHub: `https://api.github.com` for github.com, else `<url>/api/v3`. GitLab: `<url>/api/v4` |
 | `token` | The environment variable holding the API token | `GITHUB_TOKEN` or `GITLAB_TOKEN` |
 | `projects` | Project paths (globs) a parent may dispatch CI to | The children the parent lists on this forge |
+| `ci` | The `ci:` host its projects build on (§4.7), or `none` | The forge's own CI, with this entry's `api` and `token` |
 
 `forges` is top-level because any portal uses it: a repo portal's `gitlab-pipeline` executor and
 its `change` reviews, as well as a parent's dispatches. Two entries with one URL fail validation.
@@ -135,11 +147,14 @@ runners from before this design keep working unchanged.
 
 T1 of [federated-actions.md](./federated-actions.md) §5.3 becomes:
 
-> **T1. The parent owns how it reaches a child.** A `ci` runner dispatches only to the project the
-> child was cloned from, on a forge the parent declares or a known host, with that forge's API
-> and token, and only if the project matches the forge's `projects`. A child whose runner names a
-> `project`, `repo`, `api`, `url`, `token` or `forge` is refused, as is a `ci` child on plain git
-> or on a forge without *dispatch*; the error says which. Such a child runs through the
+> **T1. The parent owns how it reaches a child.** A `ci` runner dispatches only for the project
+> the child was cloned from, on a forge the parent declares or a known host, and only if the
+> project matches the forge's `projects`. It runs on the CI host the parent's entry for that
+> forge names, mapped to its project there and admitted by that host's `projects`, with that
+> host's endpoint and token; with no `ci` in the entry, on the forge's own CI with the forge's
+> API and token (§4.7). A child whose runner names a `project`, `repo`, `api`, `url`, `token`,
+> `forge`, `ci` or `via` is refused, as is a `ci` child on plain git, on a forge whose entry says
+> `ci: none`, or on a forge without *dispatch*; the error says which. Such a child runs through the
 > parent's checkout with `runner: {type: local}`, when the parent's `runners.local` allows it.
 
 T2 to T8 are unchanged, and each applies the same way on every forge. The forge's token is read
@@ -268,6 +283,62 @@ reject or cancel runs (`identity-from-forge`, 403). Serve with token or OIDC sig
 Benchmark run `toolbox-1` in round 1 of `experiments/actions-gitlab` found the gap; the API test
 `a_dev_server_does_not_take_your_word_where_the_forge_says_who_you_are` covers it.
 
+### 4.7 CI hosts
+
+A forge says where code is; a CI host says where its runs happen. Most organisations use the
+forge's own CI and declare nothing. The ones that don't list their CI under `ci:` and point a
+forge at it:
+
+```yaml
+# examples/federated-actions/hybrid-org/toolbox.yaml (abridged)
+forges:
+  - url: https://ghe.acme.dev
+    type: github
+    token: ACME_GHES_TOKEN
+    projects: ["platform/*"]
+    ci: buildkite                           # its repositories build on Buildkite
+ci:
+  - name: buildkite
+    type: http                              # an executor-protocol bridge
+    url: https://buildkite-bridge.acme.dev/toolbox
+    token: ACME_BUILDKITE_BRIDGE_TOKEN
+  - name: mirror                            # a GitLab that mirrors GitHub repositories
+    type: gitlab-ci
+    url: https://gitlab.acme.dev
+    token: ACME_GITLAB_TOKEN
+    project: "mirrors/{project}"            # acme/web on GitHub builds as mirrors/acme/web
+    projects: ["mirrors/acme/*"]
+```
+
+| Field | Meaning | Default |
+|---|---|---|
+| `name` | What `forges[].ci` and an executor's `ci` call it; unique, not `none` | Required |
+| `type` | `github-actions`, `gitlab-ci`, or `http` | Required |
+| `url` | `github-actions`, `gitlab-ci`: the web URL. `http`: the service's endpoint | The public host; required for `http` |
+| `api` | The API base (`github-actions`, `gitlab-ci`) | As for `forges:` |
+| `token` | The environment variable holding the token (`http`: sent as a bearer token) | `GITHUB_TOKEN` or `GITLAB_TOKEN`; `http`: none |
+| `project` | Where a forge project builds on this host; `{project}` is its path, and nothing else may be substituted | `{project}` |
+| `projects` | Projects on this host, after mapping, a parent may start runs in | Any that a forge pointing here admits |
+
+Each type is a CI driver behind `CiDriver` (`crates/toolbox-exec/src/ci/`):
+
+| `type` | Dispatch | Track | Collect | Cancel |
+|---|---|---|---|---|
+| `github-actions` | `workflow_dispatch` with the six inputs (§4.4) | By run id, or `run-name` on an older Enterprise Server | Deferred (§7) | `POST …/actions/runs/:id/cancel` |
+| `gitlab-ci` | A pipeline with typed `inputs` | By pipeline id | The `toolbox` job's `toolbox-run.json` | `POST …/pipelines/:id/cancel` |
+| `http` | A protocol `run` message whose `inputs` are the six values and whose `entity` carries `project`, `ref` and `ci`; the service answers `accepted` with an `executor_run_id`, or a `result` at once | `status`; a `result` ends the CI part, `succeeded` or not | `status` again; the result's `outputs.record` is the child's run record, so a service answers `status` for a finished run each time it is asked | `cancel` |
+
+An `http` host is how Buildkite, Jenkins, Tekton or a CI not yet invented runs a child: the bridge
+starts a build that runs the child's `toolbox run` with the six values and keeps
+`toolbox-run.json`, as the GitLab job does, and returns that record. The bridge is a standalone
+tool: the same protocol, its own configuration, usable without Toolbox. Toolbox loads no CI code
+into its process.
+
+A repo portal's own executors take a host too: `github-workflow` and `gitlab-pipeline` may say
+`ci: <name>` (a `github-actions` or `gitlab-ci` host) for their endpoint and token, instead of
+`forge`, `api` and `token`. Validation refuses a `ci` that isn't declared, one of the wrong type,
+and one named beside `forge`, `api` or `token`.
+
 ## 5. Adding a forge
 
 A driver is a `Kind` in `toolbox_model::forge` and one module in `toolbox-exec` (`github.rs`,
@@ -279,12 +350,14 @@ variant makes the compiler list every place a driver plugs in, because each is a
 |---|---|---|
 | Name and defaults | `toolbox_model::forge` (`Kind::parse`, `default_api`, `default_token`, `KNOWN`) | Its `type:` name, API base, token variable, and its public host if it has one |
 | Propose | `toolbox_exec::executor::open_review`, and the push in `change` | Open a review for a branch; or push options, if the host takes them |
-| Dispatch | `toolbox_exec::federation::Child::ci` | Start the child's CI with the six inputs (§4.4) and return its id |
-| Track, collect | `toolbox_exec::run` (recheck) | Map the host's run states to Toolbox's; read `toolbox-run.json` |
-| A repo portal's own executor | `gitlab-pipeline`, `github-workflow` | Optional: start one named pipeline with typed inputs |
+| Its own CI | `toolbox_model::ci::CiType::of_forge` | The CI host type its projects build on when the forge's entry names none |
 
-A driver without *dispatch* answers the `ci` arm with a refusal naming `local` (T1), so a
-read-and-propose driver (Origin, below) fills in the first two rows only.
+Dispatch, track and collect are not forge seams: they belong to a CI driver
+(`toolbox_exec::ci::CiDriver`, chosen by `toolbox_exec::ci::driver` from a `toolbox_model::ci`
+target). Adding a CI is one `CiType` and one `CiDriver`: `dispatch`, `track`, `collect`,
+`cancel`. A CI that is not worth a driver is an `http` host (§4.7). A forge without its own CI
+has no `of_forge` entry; until a forge type without a driver exists, such a forge's children run
+`local` (§7).
 
 | Forge | Read, write | Propose | Dispatch, track | Collect | Notes |
 |---|---|---|---|---|---|
@@ -347,6 +420,7 @@ labels: the identity fix came from this task's dry run).
 | Mapping one person across forges (`ann` on GitHub, `ann.smith` on GitLab) | Principals come from the portal's sign-in. A mapping belongs with identity resolution ([identity-resolution.md](./identity-resolution.md)) |
 | Who merged a merge request (F21 on GitLab) | As on GitHub: T7 trusts the host's branch protection |
 | Origin, Gitea, Bitbucket drivers | §5 |
+| A CI host for a forge Toolbox has no driver for (plain git or Origin built on Buildkite) | `forges[].ci` applies to `github` and `gitlab` forges, since a forge entry needs a `type`. A forge type with read and write only, and CI from its entry, would open it (D01M87T16JRH53YV6VVWM8PH169) |
 | Giving Toolbox's own clones and pushes the forge token | They use git's own credential helpers, so a checkout's bot needs a `HOME` with its credentials (the benchmark's dry run wrote one). The token can't go in git's configuration (`GIT_CONFIG_*` reaches action commands, D01M87AXG095Q0Z0DGGTKYYAM7Y); an askpass helper that only Toolbox's own git calls see would do it |
 | GitLab Premium's gates (approval rules, protected environments) in the harness | CE has none of them, so the harness can't show Toolbox's approvals composing with them. A Premium pipeline's protected environment applies after Toolbox's approval, by GitLab's own rules |
 
@@ -372,4 +446,5 @@ labels: the identity fix came from this task's dry run).
 - Origin: `origin agent prompt` and `origin agent prompt reference` from origin
   2026.11.03-22-10-56-fbcd8ba (stable), read 2026-11-24. Not run against a repository.
 - Toolbox: [federated-actions.md](./federated-actions.md), [federation.md](./federation.md),
-  D01M86BY3YQX3SA1W99QXF1QA1H, D01M86J769VGE6K5FJJQ76EP4AA, D01M8727W7FEED6VVRY6MB3JFR3.
+  D01M86BY3YQX3SA1W99QXF1QA1H, D01M86J769VGE6K5FJJQ76EP4AA, D01M8727W7FEED6VVRY6MB3JFR3,
+  D01M87T16JRH53YV6VVWM8PH169.

@@ -12,7 +12,7 @@ use crate::executor::Executor;
 use crate::forge::ForgeDriver;
 use serde_json::{Value, json};
 use std::sync::Arc;
-use toolbox_model::manifest::Forge;
+use toolbox_model::ci::{CiType, Hosts};
 
 /// A `github-workflow` executor: dispatches a GitHub Actions workflow and follows its run.
 #[derive(Debug, Clone)]
@@ -25,8 +25,8 @@ pub struct Workflow {
 }
 
 /// A `github-workflow` executor.
-pub(crate) fn parse(v: &Value, _: &[Forge]) -> Result<Arc<dyn Executor>, String> {
-    Ok(Arc::new(Ci::new(Box::new(Workflow::parse(v)?))))
+pub(crate) fn parse(v: &Value, hosts: &Hosts) -> Result<Arc<dyn Executor>, String> {
+    Ok(Arc::new(Ci::new(Box::new(Workflow::parse_in(v, hosts)?))))
 }
 
 impl Workflow {
@@ -41,6 +41,17 @@ impl Workflow {
             api: s("api").unwrap_or_else(|| "https://api.github.com".into()),
             token_env: s("token").unwrap_or_else(|| "GITHUB_TOKEN".into()),
         })
+    }
+
+    /// As [`Workflow::parse`], with `ci`, a `github-actions` host, supplying `api` and `token`.
+    pub fn parse_in(v: &Value, hosts: &Hosts) -> Result<Self, String> {
+        let mut w = Self::parse(v)?;
+        if let Some(name) = v.get("ci").and_then(Value::as_str) {
+            let t = super::host_target(hosts, name, CiType::GithubActions, &w.repo)?;
+            w.api = t.api;
+            w.token_env = t.token.unwrap_or_default();
+        }
+        Ok(w)
     }
 
     fn token(&self) -> Result<String, String> {

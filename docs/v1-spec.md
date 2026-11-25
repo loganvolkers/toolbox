@@ -371,7 +371,13 @@ per request in `identity.credentials` and are never logged. **GitHub Actions exe
 run id through the runs API; a server that returns no id falls back to the one run named for the
 Toolbox run, on the dispatched ref, created after the dispatch. Conclusions map to `result`, a run
 that never finishes is `timed_out`, and previews come from the Toolbox layer only. The dispatch
-token and API are the portal's, never a child manifest's.
+token and API are the portal's, never a child manifest's. **CI hosts** (D01M87T16JRH53YV6VVWM8PH169,
+[forges.md](./design/forges.md) §4.7): a manifest declares the CI systems it starts runs on under
+`ci:`, apart from `forges:`. Each is `github-actions`, `gitlab-ci`, or `http`, a service that
+speaks this protocol (`run`, `status`, `cancel`) for any other CI, with the child's run record in
+the result's `outputs.record`. `forges[].ci` picks the host a forge's `runner: {type: ci}`
+children run on, and the default is the forge's own CI. `github-workflow` and `gitlab-pipeline`
+may take their endpoint and token from a host (`ci:`) (built).
 
 ### 7.6 UI extension contract
 

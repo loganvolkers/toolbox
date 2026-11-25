@@ -199,7 +199,7 @@
     },
     "forges": {
       "type": "array",
-      "description": "The code hosts this portal reaches beyond plain git (docs/design/forges.md): where a `change` opens its review, where a `gitlab-pipeline` or `github-workflow` executor dispatches, and where a child with `runner: {type: ci}` runs. A git URL is on the forge whose `url` it starts with, or whose host an SSH URL names. `https://github.com` and `https://gitlab.com` need no entry; any other host is plain git until listed here.",
+      "description": "The code hosts this portal reaches beyond plain git (docs/design/forges.md): where a `change` opens its review, where a `gitlab-pipeline` executor dispatches, and, unless the entry names a ci: host, where a child with `runner: {type: ci}` runs. A git URL is on the forge whose `url` it starts with, or whose host an SSH URL names. `https://github.com` and `https://gitlab.com` need no entry; any other host is plain git until listed here.",
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -238,6 +238,63 @@
           "identity": {
             "type": "boolean",
             "description": "A checkout of this portal takes who you are from your own token on this forge, not from --as: toolbox run asks the forge who owns the token in --identity-token-file or TOOLBOX_IDENTITY_TOKEN, and refuses to request, approve or reject without one. At most one forge sets it. Default false."
+          },
+          "ci": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$",
+            "description": "The ci: host that runs runner: {type: ci} children on this forge, or none (they run no CI for this portal). Default: the forge's own CI (GitHub Actions or GitLab CI, with this entry's api and token)."
+          }
+        }
+      }
+    },
+    "ci": {
+      "type": "array",
+      "description": "The CI systems this portal starts runs on, declared apart from the forges that host the code (docs/design/forges.md §4.7). A forge's entry points its children at one (forges[].ci); a github-workflow or gitlab-pipeline executor may take its endpoint and token from one (executor.ci). A child portal never names one.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "type"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$",
+            "description": "What forges[].ci and executor.ci call it. Not none."
+          },
+          "type": {
+            "enum": [
+              "github-actions",
+              "gitlab-ci",
+              "http"
+            ],
+            "description": "github-actions (workflow_dispatch, run tracked by id, record from the toolbox-run artifact), gitlab-ci (a pipeline with typed inputs, record from the toolbox job's artifact), or http: a service that speaks the executor protocol (run, status, cancel) and bridges to any other CI; its result's outputs.record is the child's run record."
+          },
+          "url": {
+            "type": "string",
+            "pattern": "^https?://[^\\s]+$",
+            "description": "github-actions and gitlab-ci: the web URL (default https://github.com or https://gitlab.com). http: the service's endpoint (required)."
+          },
+          "api": {
+            "type": "string",
+            "description": "github-actions and gitlab-ci: the API base (default as for forges:)."
+          },
+          "token": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+            "description": "The environment variable holding the token (default GITHUB_TOKEN or GITLAB_TOKEN; http: none sent unless named, as a bearer token)."
+          },
+          "project": {
+            "type": "string",
+            "description": "Where a forge project's CI runs on this host; {project} is the project's path on its forge (default {project}). A GitLab project that mirrors GitHub repositories might be mirrors/{project}."
+          },
+          "projects": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Projects on this host (after mapping) a parent may start runs in, `*` matching within one path segment. Default: any the forges that point here admit."
           }
         }
       }
@@ -1411,6 +1468,11 @@
             "forge": {
               "type": "string",
               "description": "gitlab-pipeline: the forge's url, as forges: lists it (default https://gitlab.com)."
+            },
+            "ci": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]*$",
+              "description": "github-workflow and gitlab-pipeline: the ci: host (github-actions or gitlab-ci) whose endpoint and token to use, instead of forge, api and token."
             },
             "ref": {
               "type": "string",
