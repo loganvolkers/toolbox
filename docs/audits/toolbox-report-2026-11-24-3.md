@@ -202,6 +202,37 @@ Declined, with reasons:
   from the manifest, not report copy.
 - **Product names in the not-measured state** and **entity search**, as in round 5.
 
+## Round 7: what the panel found
+
+Round 7 was the first round built from TypeScript sources bundled by Vite
+([D01M880QMWD7Z7FTGKJT99AHWBX](../decisions/D01M880QMWD7Z7FTGKJT99AHWBX.md)). Before capture, the
+migration was checked as a no-op on the pages: matching DOM snapshots, 212 of 212 probes and the same
+interactions. Its type check also exposed a dead filter: the Tool-checked filter on a scorecard
+showed no rules, and now shows 34. The probes passed 212 of 212. Honesty (U8) rose from 3 to 4 and
+no median fell, leaving U6 and J2 at 2. Every task succeeded for all three auditors. Three
+severity-3 findings were open, so the round did not pass:
+
+| Finding (auditors) | Box or portal | Fix |
+|---|---|---|
+| The two portals still lead with factor counts under different rules, and the other count sits mid-sentence (A, B; C at severity 2) | Box | Every tally shows both counts in the same order on every portal: strict ("behind if any rule is behind") first, then majority. The comparison's declared rule is marked "this comparison's verdict" on that row. The headline ends with the rule it used. The rule stays per comparison (D01M87WF2QZVPTD8CGDZKY133CD); the two portals now differ only in which row is marked |
+| Custom top levels ("within-limit", "clean", "ten") drawn in gold under a legend that lists only metals (B; A at severity 2) | Box | The legend names each scorecard's own levels under the metal they rank as: "gold, or a scorecard's own level ranked as gold: “clean”, “ten”, “within-limit”" |
+| The second next step ("lift 9 entities from bronze to silver on CI speed") named no rule (C; A, B at severity 2) | Box | It names the rule and how many entities fail it. If no rule fails and only an unrun check holds them, it says so: "fail nothing for silver, but its check Fast feedback was not run in this build" |
+
+Severity-2 findings fixed in the same pass:
+
+- catalog groups list their furthest-off member first, with evidence ("tuples.go (2629 lines, 1829 over the limit of 800)"), and failing groups come first;
+- the rule page's outcome bar runs fail, unknown, pass, worst on the left like every level bar;
+- the scorecard sidebar's comparison-factor link is an inline link, not a dangling heading;
+- "even split" became "parity, mixed", the word Compare uses;
+- the catalog filter says "Filter by name…", not "Filter GoFile by name…".
+
+Declined, with reasons:
+
+- **Product names in the not-measured state**, as in rounds 5 and 6.
+- **Toolbox design links on OpenFGA's Go scorecard** (B, C), as in round 5: they come from the `file-size` package.
+- **"Passes by default" on an unassessed rule** (B, C): that is how an assessed rule is scored (no open finding, no failure), and the page already marks it "not assessed yet". Changing it changes scoring, not the page.
+- **Campaigns built without a baseline** (A, B, C): the stories render the fixture without a baseline file, and the page says so. Showing momentum needs the baseline in the fixture, which is a fixture change, not a page fix.
+
 ## Comparisons are generic
 
 The OpenFGA portal compares OpenFGA v1.23.0 with SpiceDB v1.57.1 through the same comparative
