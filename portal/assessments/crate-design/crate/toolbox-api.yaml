@@ -1,8 +1,8 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: crate:toolbox-api
 rubric: crate-design
-subjectHash: e67cef600492
-assessor: {kind: agent, name: cursor-assessor-19, model: claude-opus-5.5}
+subjectHash: 5fa1725fab80
+assessor: {kind: agent, name: codex}
 at: 2026-11-25
 verdicts:
   - criterion: one-responsibility
@@ -21,10 +21,14 @@ verdicts:
 
       The docs/v1-spec.md:96 row says "axum REST + OpenAPI generation; MCP
       (rmcp); UI host". There is no OpenAPI generation, MCP is hand-written
-      JSON-RPC rather than rmcp (src/mcp.rs:1-4; no `rmcp` in any
-      Cargo.toml), and the connector runtime the spec gives to toolbox-connect
+      JSON-RPC rather than rmcp (src/mcp.rs:1-4; no `rmcp` in the workspace crate
+      manifests), and the connector runtime the spec gives to toolbox-connect
       (docs/v1-spec.md:94) is here. Neither the docs nor the spec say what
       this crate is today.
+
+      Connector confinement now belongs to the served portal as well, as
+      documented in docs/v1-spec.md and implemented in crates/toolbox-
+      api/src/confine.rs.
     suggestion: >-
       Rewrite lib.rs's doc to name the crate's actual job ("the served portal:
       REST, MCP, UI host, connector runtime and action runs over one
@@ -52,6 +56,10 @@ verdicts:
 
       So a checkout-only command links the whole server for config
       resolution and a key derivation.
+
+      The CLI now also uses the public confine module to configure serve and
+      report doctor diagnostics, as seen in crates/toolbox-cli/src/server.rs
+      and install.rs.
     suggestion: >-
       Move `resolve_config` and `binary_for` to toolbox-connect, or to
       toolbox-model next to `artifacts`. Move `signing_seed` and
@@ -74,6 +82,9 @@ verdicts:
       (src/actions.rs:166-199).
 
       Swapping Postgres would change this crate, not just toolbox-store.
+
+      The new per-connector confinement state in crates/toolbox-
+      api/src/state.rs leaves the concrete PgStore dependency in place.
     suggestion: >-
       Add run records, spent tokens and the leader lease to the `Store` trait,
       or to a small `RunStore` trait with Postgres and file implementations in
@@ -103,13 +114,18 @@ verdicts:
 
       `markdown` in src/mcp.rs:619 (complexity 51, 378 lines) is only
       checked through a few tool outputs.
+
+      The confinement policy matrix and same-user process isolation are tested
+      in crates/toolbox-api/src/confine.rs. The ingest cases above remain
+      untested.
     suggestion: >-
       Add API tests: - ingest N records, then resync with none, and assert the
       deletes are held; then resync with N-1 and assert one delete; -
-      configure a connector token and assert 401 without it, 401 with another
-      connector's token, and 202 with its own; - post a record of an
-      undeclared kind and assert 422 `invalid-messages`; - post as an
-      undeclared connector and assert 403.
+      configure connector tokens and assert 401 without a valid token. Verify
+      a valid token authenticates only as its own connector and cannot ingest
+      an undeclared record kind; - post a record of an undeclared kind and
+      assert 422 `invalid-messages`; - post as an undeclared connector and
+      assert 403.
 summary: >-
   The served-portal crate has good end-to-end tests for reads,
   authorization and MCP. Its design has drifted, though. The crate docs

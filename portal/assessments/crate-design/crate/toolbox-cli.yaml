@@ -1,8 +1,8 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: crate:toolbox-cli
 rubric: crate-design
-subjectHash: c5b5f17c77d4
-assessor: {kind: agent, name: cursor-assessor-19, model: claude-opus-5.5}
+subjectHash: 8532f05fa768
+assessor: {kind: agent, name: codex}
 at: 2026-11-25
 verdicts:
   - criterion: one-responsibility
@@ -22,6 +22,10 @@ verdicts:
       (src/main.rs:46-314).
 
       The crate doc itself is one line (src/main.rs:1).
+
+      The new dev-auth acknowledgement and connector confinement settings are
+      in server.rs, and the confinement diagnostic is in install.rs. Both fit
+      the binary’s command responsibilities.
   - criterion: small-contract
     verdict: pass
     reason: >-
@@ -33,6 +37,10 @@ verdicts:
       toolbox-api, whose surface it exposes. Read commands go through the
       server's MCP tools rather than re-implementing them (src/client.rs:1-3),
       which keeps CLI and agents on one contract.
+
+      The confinement change adds another dependency on toolbox-api internals
+      via config_from_env in server.rs. The CLI still has no downstream Rust
+      callers.
   - criterion: replaceable-defaults
     verdict: pass
     reason: >-
@@ -45,8 +53,12 @@ verdicts:
       It has no sqlx, OpenFGA or DBOS dependency of its own
       (crates/toolbox-cli/Cargo.toml). One leak: it passes PgStore's public
       `pool` field to `install_tuple_view` (src/server.rs:89-90).
+
+      The new startup settings in config_from_env are translated into toolbox-
+      api configuration, with the operating-system confinement mechanism owned
+      by the API crate.
   - criterion: tests-match-risk
-    verdict: pass
+    verdict: unsure
     reason: >-
       The commands whose mistakes cost most are tested directly. The ratchet
       gate, CI's merge check (D66), has seven integration tests: falling
@@ -59,9 +71,19 @@ verdicts:
       (tests/compare.rs:78-163). `toolbox run` has one unit test
       (src/run.rs:1347). Its lifecycle is exercised in CI by
       scripts/m5-acceptance.sh (.github/workflows/ci.yml:143), and `validate`
-      and `test` run there on four portals (ci.yml:39-70). One gap is minor:
+      and `test` run there on the reference, self and starter portals and every
+      package test portal (.github/workflows/ci.yml). One gap is minor:
       `push` (src/server.rs:285, 119 lines) is only exercised by
       scripts/m2-acceptance.sh.
+
+      The off-loopback dev-auth refusal and acknowledgement are exercised in
+      server.rs, and install.rs tests required and best-effort confinement
+      diagnostics.
+      The stdio bridge in crates/toolbox-cli/src/client.rs forwards JSON-RPC
+      and maps transport errors, but has no direct integration test.
+    suggestion: >-
+      Pipe initialize, tools/list and a representative tools/call through
+      toolbox mcp against a fixture server, including a transport-error case.
 summary: >-
   A large but orderly binary: each module is one command, defaults are
   chosen in one place behind traits, and reads reuse the server's MCP

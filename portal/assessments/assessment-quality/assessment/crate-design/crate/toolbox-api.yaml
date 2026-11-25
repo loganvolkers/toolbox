@@ -1,68 +1,42 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: assessment:crate-design/crate:toolbox-api
 rubric: assessment-quality
-subjectHash: 7e066f5d9aa7
-assessor: {kind: agent, name: cursor-reviewer-19, model: claude-opus-5.5}
+subjectHash: 42eea9d501d7
+assessor: {kind: agent, name: codex-independent-reviewer}
 at: 2026-11-25
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      The citations in portal/assessments/crate-design/crate/toolbox-api.yaml
-      hold. crates/toolbox-api/src/lib.rs:1-2 is the pre-M4 doc, lib.rs:4-15
-      the pub modules, and the Cargo description says MCP and the UI "arrive
-      in M4". docs/v1-spec.md:94 and :96 are the toolbox-connect and
-      toolbox-api rows. state.rs:90, 93 and 94 hold `dyn Authorizer`, `dyn
-      Store` and `Option<PgStore>`. `pg.try_lead` is state.rs:278, `pg.runs`
-      and `put_run`/`put_spent` are actions.rs:158-159 and 189-194, and the
-      file backend sits beside them. The CLI uses `binary_for`,
-      `resolve_config`, `approval_key_for`, `signing_seed` and `served_dir` at
-      exactly the cited lines (report.rs:162-163 and 1445-1446,
-      install.rs:331, main.rs:1126, run.rs:314 and 687, detach.rs:28 and 195).
-      DELETION_THRESHOLD (connectors.rs:22) and `connector_of`
-      (routes.rs:654-671) match no test or script, and nothing sets
-      TOOLBOX_CONNECTOR_TOKENS. The only tests in connectors.rs:580-622 cover
-      env scrubbing and secret resolution. `markdown` spans mcp.rs:619-996,
-      which is 378 lines. One aside is loose, though no verdict rests on it:
-      "no `rmcp` in any Cargo.toml" ignores
-      experiments/build-cost/Cargo.toml:17. No workspace crate uses rmcp,
-      which is the point the reason makes.
+      crates/toolbox-api/src/lib.rs and Cargo.toml still describe future
+      milestones, and the production MCP implementation in src/mcp.rs is
+      handwritten. The rmcp claim now applies to the workspace manifests. The
+      build-cost experiment declares rmcp outside that workspace.
   - criterion: complete
     verdict: pass
     reason: >-
-      All four fails are what the rubric's guidance asks for
-      (portal/standards/crates.yaml:463-492). The docs are stale, which is
-      one-responsibility's named fail. toolbox-cli reaches into
-      `connectors`/`actions` internals, which fails small-contract. A public
-      signature names `PgStore`, which fails replaceable-defaults (lib.rs:43).
-      Untested ingest guards are among the "protocol handling" risks. I found
-      no further failure the sources show. The fixture-side kind check in
-      toolbox-model/src/messages.rs:56-67 is tested (tests/cases.json:27), but
-      it is validation, not the server's ingest path, so the assessment is
-      right to call the server path untested.
+      All four crate findings follow the rubric. crates/toolbox-api/src/lib.rs
+      has stale crate docs and accepts a concrete PgStore.
+      crates/toolbox-cli/src/report.rs calls server connector helpers.
+      crates/toolbox-api/src/confine.rs tests confinement, while
+      crates/toolbox-api/tests/api.rs lacks direct tests for connector bearer
+      identity and mass deletion protection.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      Each verdict rests on something a second assessor can grep: the doc text
-      at lib.rs:1-2, the `toolbox_api::` uses in crates/toolbox-cli, the `pg:
-      Option<PgStore>` parameter at lib.rs:43, and searches for
-      DELETION_THRESHOLD and connector_tokens that match no test. None of it
-      rests on taste.
+      The public signatures in crates/toolbox-api/src/lib.rs and the caller
+      imports in crates/toolbox-cli/src/report.rs independently establish the
+      API boundary findings. The missing ingest cases can be checked against
+      crates/toolbox-api/src/routes.rs and tests/api.rs.
   - criterion: actionable
     verdict: pass
     reason: >-
-      Each suggestion in
-      portal/assessments/crate-design/crate/toolbox-api.yaml:28-112 would flip
-      its verdict. Rewriting the docs and the spec rows fixes the staleness.
-      Moving the five helpers and making the modules `pub(crate)` removes the
-      internal reach. A run-store trait drops `PgStore` from `app_state_with`.
-      The four ingest tests cover the three untested guards. One detail is
-      off: "401 with another connector's token" would authenticate as that
-      other connector (routes.rs:660-664), not return 401. The author of that
-      test would find this at once, and the rest of the suggestion stands.
+      Updating the introduction and spec would address the scope drift.
+      Extracting the shared helpers and placing storage behind a trait would
+      narrow the public server contract. The updated test proposal matches
+      connector_of in crates/toolbox-api/src/routes.rs, which authenticates
+      each configured token as its assigned connector.
 summary: >-
-  A trustworthy assessment. Its line-level citations into toolbox-api,
-  toolbox-cli and v1-spec §4 check out, the four fails follow the rubric's
-  own guidance, and the suggestions would flip them. The only slips are
-  minor and change no verdict: an aside overlooks rmcp in an experiment's
-  Cargo.toml, and one test step expects 401 for another connector's token.
+  The crate review identifies four current failures and ties them to
+  concrete documentation, API boundaries and ingest behavior. Its proposed
+  regression tests now reflect how connector bearer tokens are scoped.

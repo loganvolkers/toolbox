@@ -1,70 +1,38 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: assessment:crate-design/crate:toolbox-cli
 rubric: assessment-quality
-subjectHash: b8560b1d15a5
-assessor: {kind: agent, name: cursor-reviewer-19, model: claude-opus-5.5}
+subjectHash: 87fc90793f8f
+assessor: {kind: agent, name: codex-independent-reviewer}
 at: 2026-11-25
 verdicts:
   - criterion: supported
     verdict: pass
     reason: >-
-      The citations in portal/assessments/crate-design/crate/toolbox-cli.yaml
-      hold. The crate doc is crates/toolbox-cli/src/main.rs:1, report.rs is
-      2,406 lines, and §7.7 is docs/v1-spec.md:390-416, which lists `dev`,
-      `build`, `verify`, `login` and `serve --role`. None of those is a
-      `Command` variant (the enum is main.rs:43-322, near the cited 46-314).
-      Other citations land as stated: client.rs:1-3, `start_authz` at
-      server.rs:56-92, PgStore or MemStore at server.rs:179-196, MemStore at
-      report.rs:179, `&pg.pool` at server.rs:90, and `push` at
-      server.rs:285-403 (119 lines). The tests are where it says:
-      tests/ratchet.rs has seven tests from 78 to 479, and install.rs:92 and
-      330, serve.rs:37 and 79, assess.rs:133 and 228, compare.rs:78-163 and
-      run.rs:1347 all match. M5 runs at .github/workflows/ci.yml:143.
-      Cargo.toml has no sqlx, OpenFGA or DBOS dependency. One count is low:
-      ci.yml:39-70 runs validate and test on eleven portals (the reference,
-      T4T and starter portals plus eight packages/*/tests), not four. No
-      verdict depends on that count.
+      crates/toolbox-cli/Cargo.toml declares a binary. Its startup and doctor
+      commands own the settings described in src/server.rs and src/install.rs.
+      The CI coverage claim matches the explicit portal checks and the
+      packages/*/tests loop in .github/workflows/ci.yml.
   - criterion: complete
-    verdict: fail
+    verdict: pass
     reason: >-
-      tests-match-risk should be unsure, not pass. Protocol handling is one of
-      the rubric's named risks (portal/standards/crates.yaml:488-489). The
-      `toolbox mcp` stdio bridge, `client::bridge`
-      (crates/toolbox-cli/src/client.rs:59-100), forwards JSON-RPC, drops 202
-      replies and maps transport errors to JSON-RPC errors. No test or script
-      runs it. The read commands (`get`, `query`, `search`, `graph`, `owner`,
-      `explain`, `score`, `scorecard`, `campaign`, `refresh`, `actions`) also
-      go through client.rs, and nothing in crates/toolbox-cli/tests,
-      scripts/*.sh or .github/workflows invokes any of them. The only mentions
-      are comments in scripts/self-portal.sh:11-12. The assessment praises
-      that design (client.rs:1-3) but never looks for its tests. The other
-      three verdicts are right. small-contract and replaceable-defaults fit a
-      bin-only composition root, and one-responsibility is right because every
-      module is one command.
-    suggestion: >-
-      Mark tests-match-risk unsure and name the stdio bridge and the read
-      commands as untested. Or add a test that serves a fixture portal, pipes
-      `initialize`, `tools/list` and a `tools/call` through `toolbox mcp`, and
-      runs `toolbox get`/`score` with `-o json` against it.
+      The binary organizes commands by responsibility and has no downstream
+      crate consumers. Server startup in crates/toolbox-cli/src/server.rs
+      selects the store and authorizer, and the assessment acknowledges direct
+      use of its Postgres pool. The unsure test verdict accounts for the
+      absence of direct coverage of the stdio bridge in src/client.rs.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      The verdicts rest on things a second assessor can check: module first
-      lines, the `Command` enum against §7.7, the Cargo.toml dependency list,
-      and the test files and CI steps cited in
-      portal/assessments/crate-design/crate/toolbox-cli.yaml:50-64. A second
-      assessor reading these sources would list the same commands as tested.
-      The miss above is one of coverage, not taste.
+      The command layout, backend composition and test coverage are checkable
+      in crates/toolbox-cli/Cargo.toml, src/server.rs, src/client.rs and the
+      integration tests. The new confinement and dev-auth tests are in
+      src/install.rs and src/server.rs respectively.
   - criterion: actionable
     verdict: pass
     reason: >-
-      All four verdicts in
-      portal/assessments/crate-design/crate/toolbox-cli.yaml are pass and none
-      carries a suggestion, so there is nothing for a suggestion to change.
-      The missing tests-match-risk suggestion is counted under complete.
+      Driving initialize, tools/list and tools/call through the stdio bridge
+      would exercise the transport path in crates/toolbox-cli/src/client.rs.
+      The proposed error case also exercises the bridge's error envelope.
 summary: >-
-  The citations check out, and the design verdicts suit a bin-only
-  composition root. But tests-match-risk passes while the `toolbox mcp`
-  stdio bridge and every read command in client.rs have no test or script
-  at all. Protocol handling is a risk the rubric names, so that verdict
-  should be unsure.
+  The updated assessment accounts for the stdio integration coverage gap
+  and cites the CI portal coverage that exists today.
