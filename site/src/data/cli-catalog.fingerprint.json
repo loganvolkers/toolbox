@@ -297,7 +297,7 @@
     },
     {
       "name": "doctor",
-      "about": "Check that every in-image connector resolves and every declared tool is at its pinned version; exit 1 when something is missing",
+      "about": "Check that every in-image connector resolves, whether this host would confine it (Landlock), and that every declared tool is at its pinned version; exit 1 when something is missing",
       "mcpTool": null,
       "args": [
         {
