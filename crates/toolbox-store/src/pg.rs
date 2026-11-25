@@ -375,11 +375,4 @@ impl PgStore {
             .await
             .map_err(err)
     }
-
-    pub async fn tuple_count(&self) -> Result<i64, StoreError> {
-        sqlx::query_scalar("SELECT count(*) FROM toolbox.derived_tuples")
-            .fetch_one(&self.pool)
-            .await
-            .map_err(err)
-    }
 }

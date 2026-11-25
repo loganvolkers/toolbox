@@ -272,16 +272,6 @@ fn strip_comment(line: &str) -> &str {
     line
 }
 
-/// The type names a model defines.
-pub fn type_names(model: &Value) -> Vec<String> {
-    model["type_definitions"]
-        .as_array()
-        .into_iter()
-        .flatten()
-        .filter_map(|t| t["type"].as_str().map(str::to_owned))
-        .collect()
-}
-
 /// Whether `type_name` defines `relation`.
 pub fn has_relation(model: &Value, type_name: &str, relation: &str) -> bool {
     model["type_definitions"]

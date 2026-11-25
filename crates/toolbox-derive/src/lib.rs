@@ -1373,14 +1373,6 @@ pub fn enum_from_inputs(inputs: &Value) -> Vec<(String, String)> {
         .unwrap_or_default()
 }
 
-/// Entity ids by kind, for callers that need them.
-pub fn ids_of_kind<'a>(d: &'a Derived, kind: &'a str) -> impl Iterator<Item = &'a str> + 'a {
-    d.entities
-        .iter()
-        .filter(move |(_, e)| e.kind == kind)
-        .map(|(id, _)| id.as_str())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
