@@ -11,14 +11,16 @@ verdicts:
       "Show a component's Kubernetes workloads"
       (backstage-comparison.yaml:151-153) is the brief's "Kubernetes view"
       scenario (RESEARCH.md:120); Backstage passes on plugin-kubernetes
-      (facts.yaml:176) and Toolbox fails with "no Kubernetes connector or
-      view" (facts.yaml:88).
+      (experiments/backstage-compare/facts.yaml:176) and Toolbox fails with
+      "no Kubernetes connector or view"
+      (experiments/backstage-compare/facts.yaml:88).
   - criterion: hard-to-game
     verdict: fail
     reason: >-
-      The fact is the one-line `capKubernetes` in facts.yaml:88, merged by
-      snapshot.py:85; the harness runs no cluster, so neither arm is ever
-      asked to show a workload.
+      The fact is the one-line `capKubernetes` in
+      experiments/backstage-compare/facts.yaml:88, merged by snapshot.py:85;
+      the harness runs no cluster, so neither arm is ever asked to show a
+      workload.
     suggestion: >-
       Run a kind (Kubernetes-in-Docker) cluster in the harness with one
       Deployment labelled for component:c1, and set `capKubernetes` only when
@@ -41,4 +43,4 @@ summary: >-
   A fair capability loss with a fix that points at the right extension
   point, a connector. It would be stronger if the fix named the
   workload-to-component mapping and the fact came from a probe rather than
-  facts.yaml.
+  experiments/backstage-compare/facts.yaml.

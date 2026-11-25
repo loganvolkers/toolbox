@@ -930,9 +930,14 @@ fn comparison_md(
         .collect();
     let _ = writeln!(
         s,
-        "\n## {}  ({subject}: {})\n",
+        "\n## {}  ({subject}: {}{})\n",
         sc.name,
-        verdicts.join("; ")
+        verdicts.join("; "),
+        if c.verdict_rule == "majority" {
+            ", by the majority of rules"
+        } else {
+            ""
+        }
     );
     if let Some(t) = &sc.title {
         let _ = writeln!(s, "{t}\n");
@@ -2299,14 +2304,18 @@ mod tests {
         );
         assert!(page.contains("<toolbox-report>"));
         assert!(page.contains(r#"<script type="application/json">{"portal":"Demo""#));
-        assert!(page.contains(r#"<slot name="header">"#));
-        assert!(page.contains(r#"<slot name="nav">"#));
-        assert!(page.contains(r#"<slot name="footer">"#));
+        // The bundler chooses the quotes of the template string, so the attribute may be escaped.
+        let has_slot = |n: &str| {
+            page.contains(&format!(r#"<slot name="{n}">"#))
+                || page.contains(&format!(r#"<slot name=\"{n}\">"#))
+        };
+        assert!(has_slot("header"));
+        assert!(has_slot("nav"));
+        assert!(has_slot("footer"));
         assert!(page.contains("Overview"));
         assert!(page.contains("Catalog"));
         assert!(page.contains("Campaigns"));
-        assert!(page.contains("Fleet health"));
-        assert!(page.contains("Needs attention first"));
+        assert!(page.contains(r#"setAttribute("aria-label", "Status")"#));
         assert!(page.contains("Most entities at none first"));
         assert!(page.contains("role: \"tab\""));
         assert!(!page.contains("{{"));

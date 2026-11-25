@@ -1,7 +1,7 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: assessment:rule-quality/rule:toolbox/vs-backstage-capabilities/kubernetes
 rubric: assessment-quality
-subjectHash: d836ed0829cc
+subjectHash: 9109221da501
 assessor: {kind: agent, name: cursor-reviewer-15, model: claude-opus-5.5}
 at: 2026-11-25
 verdicts:

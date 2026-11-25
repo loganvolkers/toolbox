@@ -3,7 +3,7 @@
 name: ci
 on:
   push: {branches: [main]}
-  pull_request:
+  pull_request: {types: [opened, synchronize, reopened, labeled, unlabeled]}
 permissions: {contents: read}
 # A new push to a pull request cancels its superseded run; every run on main finishes
 # (maintainer-ci-reliability, cancels-superseded-runs).
@@ -95,8 +95,14 @@ jobs:
           TOOLBOX=target/debug/toolbox python3 scripts/take-it-out.py portal
           ci-lint maintainer-python maintainer-openssf maintainer-advisories
       - name: Toolbox for Toolbox — agent assessments are valid and briefs build (D79)
+        env:
+          REQUIRE_FRESH_ASSESSMENTS: ${{ contains(github.event.pull_request.labels.*.name, 'require-fresh-assessments') }}
         run: |
-          target/debug/toolbox assess check portal --skip runner,github-actions
+          args=()
+          if [[ "$REQUIRE_FRESH_ASSESSMENTS" == "true" ]]; then
+            args+=(--require-fresh)
+          fi
+          target/debug/toolbox assess check portal --skip runner,github-actions "${args[@]}"
           target/debug/toolbox assess brief rule:toolbox/meta-rule/tested --portal portal --fixtures -o json > /dev/null
       - name: >-
           Toolbox for Toolbox — connector conformance (the protocol checks every
@@ -302,6 +308,29 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - name: The embedded build (ui/dist) matches the source
         run: npm run build && git diff --exit-code -- dist
+  report-ui:
+    # The <toolbox-report> element: its sources type-check, its bundle is current, and every
+    # story over the fixture portals passes the probes (D01M87PSM9YQGGW3YQ5X4XCJP63,
+    # D01M880QMWD7Z7FTGKJT99AHWBX).
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults: {run: {working-directory: report-ui}}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: {node-version: "22"}
+      - run: npm ci --no-audit --no-fund
+      - name: >-
+          report-ui/src type-checks, and crates/toolbox-cli/src/toolbox-report.js
+          is its Vite bundle
+        run: npm run check
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build-storybook
+      - name: >-
+          Every story at 1280 and 390 px, light and dark: no script error, no
+          serious axe violation (WCAG 2.2 A/AA), no sideways scroll
+        run: npm run probe
   typescript-builder:
     runs-on: ubuntu-latest
     defaults: {run: {working-directory: experiments/typescript-builder}}

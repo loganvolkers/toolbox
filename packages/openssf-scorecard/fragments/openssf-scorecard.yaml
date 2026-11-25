@@ -112,6 +112,7 @@ campaigns:
     owner: ${param:owner}
     track: ${param:track}
     description: >-
-      Every Scorecard check at its maximum. Progress is counted from the start
-      the baseline records, in checks below 10 and in points short.
+      Every Scorecard check at its maximum. Progress is counted from the
+      starting point saved in the baseline, in checks below 10 and in points
+      short.
     includes: [{scorecard: '${param:name}', rules: [ten]}]

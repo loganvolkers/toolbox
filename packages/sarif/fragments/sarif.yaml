@@ -90,5 +90,5 @@ campaigns:
     track: ${param:track}
     description: >-
       No ${param:tool} findings in any file. Progress is counted from the
-      start the baseline records.
+      starting point saved in the baseline.
     includes: [{scorecard: '${param:name}', rules: [no-findings]}]

@@ -53,6 +53,25 @@ verdicts:
       Ship `plan --remote` (M6). Meanwhile, document a fixture-refresh path,
       such as exporting a snapshot to fixtures, so operators can plan over
       production-shaped data without a core change.
+# Codex evaluated the two added criteria. Earlier verdicts retain their original attribution.
+  - criterion: fast-feedback
+    verdict: fail
+    reason: >-
+      portal/sdlc/stages/operator.yaml defines the stage exit but declares no
+      runnable local check for it. docs/design/sdlc.md documents the intended
+      workflow.
+    suggestion: >-
+      Add a runnable local check for this exit and record its measured time in
+      docs/design/sdlc.md.
+  - criterion: beyond-one-reference
+    verdict: fail
+    reason: >-
+      portal/sdlc/stages/operator.yaml declares no executable reference for
+      the exit, and docs/design/sdlc.md describes the workflow without
+      supplying a second exercised reference.
+    suggestion: >-
+      Exercise this exit on a second reference and cite the result in
+      portal/sdlc/stages/operator.yaml.
 summary: >-
   `plan --local` is real and useful: it gave a clear level-drop diff on
   the starter. The stage's exit criterion, a plan over live data attached

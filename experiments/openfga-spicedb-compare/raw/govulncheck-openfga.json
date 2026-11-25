@@ -1,0 +1,13 @@
+[
+ {
+  "config": {
+   "protocol_version": "v1.0.0",
+   "scanner_name": "govulncheck",
+   "scanner_version": "v1.10.0",
+   "db": "https://vuln.go.dev",
+   "db_last_modified": "2026-11-24T15:56:00Z",
+   "scan_level": "symbol",
+   "scan_mode": "binary"
+  }
+ }
+]

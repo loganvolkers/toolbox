@@ -11,10 +11,11 @@ verdicts:
       The rationale is people who fix bugs, review and keep the project alive
       when a maintainer leaves (backstage-comparison.yaml:1069-1072), but
       `contributors` is GitHub's all-time count with anonymous and agent
-      accounts included: Toolbox's 4 has three agents (facts.yaml:94-98). A
-      bot or one-off typo fixes raise it without adding anyone who stays, and
-      the brief scored project health through OpenSSF Scorecard checks, not a
-      raw count (RESEARCH.md:31-33, 64).
+      accounts included: Toolbox's 4 has three agents
+      (experiments/backstage-compare/facts.yaml:94-98). A bot or one-off typo
+      fixes raise it without adding anyone who stays, and the brief scored
+      project health through OpenSSF Scorecard checks, not a raw count
+      (RESEARCH.md:31-33, 64).
     suggestion: >-
       Count distinct human contributors with commits in the last 90 days, or
       read OpenSSF Scorecard's Contributors and Maintained checks, as the
@@ -22,9 +23,11 @@ verdicts:
   - criterion: hard-to-game
     verdict: fail
     reason: >-
-      Agent identities already count toward the 4 (facts.yaml:96-97), so six
-      more agent or bot accounts would pass with no new person; the number is
-      also typed into facts.yaml:94-95 rather than fetched by a script.
+      Agent identities already count toward the 4
+      (experiments/backstage-compare/facts.yaml:96-97), so six more agent or
+      bot accounts would pass with no new person; the number is also typed
+      into experiments/backstage-compare/facts.yaml:94-95 rather than fetched
+      by a script.
     suggestion: >-
       Fetch the count in footprint.py from the GitHub API, excluding bot and
       agent accounts and anonymous entries, and restrict it to a recent

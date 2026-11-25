@@ -171,7 +171,7 @@ scorecards:
   # Security: what an attacker could do through a workflow or the report action (which pilot repos
   # run, so it is operator-facing too). zizmor and actionlint rules evaluate to `unknown`, not `fail`,
   # where those tools aren't installed (`dataFrom: ci-lint`).
-  - name: maintainer-ci-security
+  - name: ${param:prefix}ci-security
     title: CI security
     kind: Workflow
     description: >-
@@ -191,7 +191,7 @@ scorecards:
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/github-actions-standards.md
     - title: GitHub Actions secure use
       url: https://docs.github.com/en/actions/reference/security/secure-use
-    owner: group:maintainers
+    owner: ${param:owner}
     track: ${param:track}
     levels: [bronze, silver, gold]
     rules:
@@ -324,14 +324,14 @@ scorecards:
   # Reliability: whether CI can be trusted to say "green means good". Run history comes from the
   # GitHub API (github-actions connector). When that connector is skipped, the run rules are
   # `unknown` (`dataFrom: github-actions`). An all-unknown level is not granted.
-  - name: maintainer-ci-reliability
+  - name: ${param:prefix}ci-reliability
     title: CI reliability
     kind: Workflow
     description: >-
       Whether green CI means good on the default branch: failures visible and
       counted, including those a re-run hid, every job bounded by a timeout,
       and a branch that rarely fails (D70; docs/design/thresholds.md for the
-      tiers). Speed is maintainer-ci-speed.
+      tiers). Speed is ${param:prefix}ci-speed.
     rationale: >-
       CI is only worth running if red means something broke and green means
       nothing did; flaky, hidden or hung jobs teach people to ignore it.
@@ -343,7 +343,7 @@ scorecards:
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md
     - title: GitHub Actions standards design
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/github-actions-standards.md
-    owner: group:maintainers
+    owner: ${param:owner}
     track: ${param:track}
     levels: [bronze, silver, gold]
     appliesTo: entity.type == 'workflow'
@@ -475,13 +475,13 @@ scorecards:
         is looked at and fixed at its cause, so red keeps its meaning.
     facets: {summary: public, details: public}
 
-  - name: maintainer-ci-speed
+  - name: ${param:prefix}ci-speed
     title: CI speed
     kind: Workflow
     description: >-
       Whether CI answers quickly and spends no runner time on superseded
       commits: a cost and feedback-time concern, separate from whether CI can
-      be trusted (maintainer-ci-reliability; docs/design/thresholds.md).
+      be trusted (${param:prefix}ci-reliability; docs/design/thresholds.md).
     rationale: >-
       Slow runs and runs for superseded commits cost runner minutes and queue
       time, and make people wait or switch task for feedback. Speed is not a
@@ -490,7 +490,7 @@ scorecards:
     links:
     - title: Thresholds and levels
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/thresholds.md
-    owner: group:maintainers
+    owner: ${param:owner}
     track: ${param:track}
     levels: [bronze, silver]
     appliesTo: entity.type == 'workflow'
@@ -531,7 +531,7 @@ scorecards:
 
   # Supply chain: each third-party action, across every workflow that uses it (the "who uses
   # tj-actions/changed-files?" question).
-  - name: maintainer-action-deps
+  - name: ${param:prefix}action-deps
     title: Third-party actions pinned
     kind: ActionDependency
     description: >-
@@ -547,7 +547,7 @@ scorecards:
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/design/github-actions-standards.md
     - title: 'Decision: GitHub Actions standards'
       url: https://github.com/loganvolkers/toolbox/blob/main/docs/decisions/D01M7VZ2DPR0000000000000000.md
-    owner: group:maintainers
+    owner: ${param:owner}
     track: ${param:track}
     levels: [bronze]
     rules:

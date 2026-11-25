@@ -31,8 +31,49 @@ pub fn glob(pattern: &str) -> Result<Regex, String> {
     Regex::new(&re).map_err(|e| format!("glob {pattern}: {e}"))
 }
 
-/// Relative paths (sorted) of every file under `root`, skipping [`SKIP_DIRS`].
+/// Relative paths (sorted) of every file under `root`, skipping [`SKIP_DIRS`]. In a git work tree
+/// these are the files git sees (tracked, or untracked and not ignored), so a developer's checkout
+/// scores like a fresh clone; elsewhere, or when git lists nothing, every file on disk.
 pub fn walk(root: &Path) -> Vec<String> {
+    match git_files(root) {
+        Some(out) if !out.is_empty() => out,
+        _ => walk_disk(root),
+    }
+}
+
+fn git_files(root: &Path) -> Option<Vec<String>> {
+    let out = std::process::Command::new("git")
+        .arg("-C")
+        .arg(root)
+        .args([
+            "ls-files",
+            "-z",
+            "--cached",
+            "--others",
+            "--exclude-standard",
+        ])
+        .stderr(std::process::Stdio::null())
+        .output()
+        .ok()?;
+    if !out.status.success() {
+        return None;
+    }
+    let mut paths: Vec<String> = String::from_utf8_lossy(&out.stdout)
+        .split('\0')
+        .filter(|p| !p.is_empty())
+        .filter(|p| {
+            let dirs = p.rsplit_once('/').map_or("", |(d, _)| d);
+            !dirs.split('/').any(|seg| SKIP_DIRS.contains(&seg))
+        })
+        .filter(|p| root.join(p).is_file())
+        .map(str::to_owned)
+        .collect();
+    paths.sort();
+    paths.dedup();
+    Some(paths)
+}
+
+fn walk_disk(root: &Path) -> Vec<String> {
     let mut out: Vec<String> = walkdir::WalkDir::new(root)
         .into_iter()
         .filter_entry(|e| {
@@ -62,7 +103,40 @@ pub fn matching(root: &Path, globs: &[Regex]) -> Vec<String> {
 
 #[cfg(test)]
 mod tests {
-    use super::glob;
+    use super::{glob, walk};
+
+    #[test]
+    fn walk_skips_what_git_ignores() {
+        let dir = std::env::temp_dir().join(format!("toolbox-walk-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        for f in [
+            "AGENTS.md",
+            "checkout/AGENTS.md",
+            "node_modules/x/AGENTS.md",
+            "new.md",
+        ] {
+            let p = dir.join(f);
+            std::fs::create_dir_all(p.parent().unwrap()).unwrap();
+            std::fs::write(p, "x").unwrap();
+        }
+        std::fs::write(dir.join(".gitignore"), "checkout/\n").unwrap();
+        let disk = walk(&dir);
+        assert!(disk.contains(&"checkout/AGENTS.md".to_owned()));
+        assert!(!disk.iter().any(|p| p.starts_with("node_modules/")));
+        let git = |args: &[&str]| {
+            std::process::Command::new("git")
+                .arg("-C")
+                .arg(&dir)
+                .args(args)
+                .output()
+                .map(|o| o.status.success())
+                .unwrap_or(false)
+        };
+        if git(&["init", "-q"]) && git(&["add", "AGENTS.md", ".gitignore"]) {
+            assert_eq!(walk(&dir), [".gitignore", "AGENTS.md", "new.md"]);
+        }
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
 
     #[test]
     fn globs_match_segments() {

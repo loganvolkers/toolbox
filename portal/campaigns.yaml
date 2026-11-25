@@ -87,7 +87,10 @@ tracks:
       factor. The adjudicator was a fresh coding agent outside the benchmark:
       it designed none of it and decides no rule, so every rule stays
       measured; it recomputed the numbers from the raw results and checked the
-      scoring.
+      scoring. Not covered: more than one replica of either product, a
+      Backstage permission policy that checks ownership, load beyond a 10 s
+      closed loop at 16 connections, and wall time from a clean VM to a first
+      portal.
     links:
     - title: Results
       url: https://github.com/loganvolkers/toolbox/blob/main/experiments/backstage-compare/RESULTS.md

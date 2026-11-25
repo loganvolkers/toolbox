@@ -10,35 +10,39 @@ verdicts:
     reason: >-
       The field is "an extension is added without rebuilding the server"
       (portal/standards/backstage-comparison.yaml:126-128). Toolbox's `true`
-      rests on remote connectors (facts.yaml:65-69). The bench portal declares
-      one, `catalog` with `runtime: remote`
+      rests on remote connectors
+      (experiments/backstage-compare/facts.yaml:65-69). The bench portal
+      declares one, `catalog` with `runtime: remote`
       (experiments/backstage-compare/portal/toolbox.yaml:11-15). It's fed with
       a connector token through TOOLBOX_CONNECTOR_TOKENS on the release binary
       (measure.py:146, 158-163), with nothing rebuilt. A supervised connector
       would need its binary in the image, but the claim says "an extension",
       and the remote path covers it. Backstage's `false` cites
-      packages/backend/src/index.ts plus a rebuild (facts.yaml:155-160).
+      packages/backend/src/index.ts plus a rebuild
+      (experiments/backstage-compare/facts.yaml:155-160).
   - criterion: hard-to-game
     verdict: fail
     reason: >-
-      The fact is facts.yaml:65-69, copied by snapshot.py:85, not something
-      the run observes. Editing that value and rerunning snapshot.py on the
-      committed results passes the rule. The same run already exercises a
-      remote connector on an unmodified binary and could set the fact itself.
+      The fact is experiments/backstage-compare/facts.yaml:65-69, copied by
+      snapshot.py:85, not something the run observes. Editing that value and
+      rerunning snapshot.py on the committed results passes the rule. The same
+      run already exercises a remote connector on an unmodified binary and
+      could set the fact itself.
     suggestion: >-
       Set `extensionWithoutRebuild` from the run: true when the remote
       connector's ingest succeeds against the release binary that footprint.py
-      downloaded, unchanged. Have snapshot.py reject a facts.yaml override for
-      it.
+      downloaded, unchanged. Have snapshot.py reject a
+      experiments/backstage-compare/facts.yaml override for it.
   - criterion: fix-leads-to-pass
     verdict: fail
     reason: >-
       The fix, "Keep remote connectors pushing to /v1/ingest with their own
       token (docs/design/connector-control.md)"
       (backstage-comparison.yaml:894-896), names a design doc but no code.
-      Ingest auth is in crates/toolbox-api. It also omits the facts.yaml edit
-      and snapshot.py step that change the record, so after a fix the evidence
-      would still read `extensionWithoutRebuild is false`.
+      Ingest auth is in crates/toolbox-api. It also omits the
+      experiments/backstage-compare/facts.yaml edit and snapshot.py step that
+      change the record, so after a fix the evidence would still read
+      `extensionWithoutRebuild is false`.
     suggestion: >-
       Name the ingest route and token check in
       crates/toolbox-api/src/routes.rs and the record step (snapshot.py), or
@@ -54,5 +58,6 @@ verdicts:
 summary: >-
   The claim is right and the definition fits: remote connectors push
   without a rebuild, and the bench run does exactly that. But the score
-  comes from the hand-written facts.yaml rather than from that run, and
-  the fix names a design doc instead of code or the record step.
+  comes from the hand-written experiments/backstage-compare/facts.yaml
+  rather than from that run, and the fix names a design doc instead of
+  code or the record step.

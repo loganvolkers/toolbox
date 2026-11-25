@@ -11,15 +11,16 @@ verdicts:
       "Read a component's documentation in the portal"
       (backstage-comparison.yaml:141-143) is the brief's "TechDocs page
       render" scenario (RESEARCH.md:115), worded so a carried site counts as
-      well as TechDocs; Backstage passes on plugin-techdocs (facts.yaml:167)
-      and Toolbox fails with "no documentation site per component"
-      (facts.yaml:80).
+      well as TechDocs; Backstage passes on plugin-techdocs
+      (experiments/backstage-compare/facts.yaml:167) and Toolbox fails with
+      "no documentation site per component"
+      (experiments/backstage-compare/facts.yaml:80).
   - criterion: hard-to-game
     verdict: fail
     reason: >-
-      The fact is `capDocs: {value: false, ...}` on facts.yaml:80; one edit
-      flips it, and no harness step opens a component's docs in either
-      product.
+      The fact is `capDocs: {value: false, ...}` on
+      experiments/backstage-compare/facts.yaml:80; one edit flips it, and no
+      harness step opens a component's docs in either product.
     suggestion: >-
       Add a docs page to one gen.py component and have surface.py fetch it
       through each portal (Backstage's TechDocs route, Toolbox's carried-site

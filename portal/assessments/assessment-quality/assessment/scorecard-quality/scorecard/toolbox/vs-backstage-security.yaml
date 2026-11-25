@@ -22,8 +22,9 @@ verdicts:
       experiments/backstage-compare/RESEARCH.md:180-187 is P1-P7 and :204 is
       the write-outside-directory attempt. RESULTS.md:243-244 leaves that
       unverified, and :250-257 is the Landlock canary still open.
-      ADJUDICATION.md:426-452 is the same-user canary. facts.yaml holds both
-      failing values by hand.
+      ADJUDICATION.md:426-452 is the same-user canary.
+      experiments/backstage-compare/facts.yaml holds both failing values by
+      hand.
   - criterion: complete
     verdict: pass
     reason: >-
@@ -33,7 +34,7 @@ verdicts:
       cannot pass loopback while PORT=8080. no-obvious-gap should fail: P6 and
       P7 have no rule, nor does F7 attempt 6. actionable should fail: both
       open fixes point at code that already does what they say, and neither
-      mentions facts.yaml.
+      mentions experiments/backstage-compare/facts.yaml.
   - criterion: reproducible
     verdict: pass
     reason: >-
@@ -46,7 +47,8 @@ verdicts:
       Splitting the eight booleans onto bronze, silver and gold would change
       the ladder fail. Adding the P7 and write-confinement rules would change
       the gap fail. Rewriting the two fixes to name the Dockerfile,
-      confine.rs, the canary and facts.yaml would change the actionable fail.
+      confine.rs, the canary and experiments/backstage-compare/facts.yaml
+      would change the actionable fail.
 summary: >-
   The security-card assessment is trustworthy. The flat bronze level, the
   two missing pre-registered probes, and the two fixes that point at work

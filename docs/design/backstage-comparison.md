@@ -82,7 +82,9 @@ A comparison is a scorecard that names a subject and its peers (D01M857ZB468ZM2Y
   parity; otherwise the better side by `better` is ahead. With no value, outcomes decide.
 - A factor is behind when any rule is behind, unknown when any rule is unknown, ahead when any rule
   is ahead, and at parity otherwise. A rule with no value on either side and no outcome is unknown,
-  never parity.
+  never parity. That is the default rule; a comparison may instead set `compare.verdict: majority`,
+  which counts rules ahead against rules behind, for an A/B whose tally was fixed before the run
+  (D01M87WF2QZVPTD8CGDZKY133CD). This comparison keeps the default.
 - Peers are left out of the ratchet: a rival scoring worse is not this portal's improvement.
 
 The products are `Product` records in `portal/comparisons/`, written by

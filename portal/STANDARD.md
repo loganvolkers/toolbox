@@ -907,6 +907,7 @@ Change a standard by changing these parameters in the portal's `toolbox.yaml`.
 - `../packages/github-actions`
   - `githubOrg`: `"loganvolkers"`
   - `githubRepo`: `"toolbox"`
+  - `prefix`: `"maintainer-"`
   - `track`: `"delivery"`
 - `../packages/openssf-scorecard`
   - `command`: `["scorecard","--local",".","--format","json","--show-details","--checks=Binary-Artifacts,Dangerous-Workflow,Dependency-Update-Tool,Fuzzing,License,Packaging,Pinned-Dependencies,SAST,Security-Policy,Token-Permissions"]`
@@ -943,9 +944,9 @@ Change a standard by changing these parameters in the portal's `toolbox.yaml`.
 - **CLI skills present** (`cli-skill-coverage`): Every CLI command that needs a skill has one (cli-skill bronze).
 - **Close the open review findings** (`close-review-findings`): Act on every current rule-quality and scorecard-quality finding: fix the standard, or answer the finding in a new, independent assessment (docs/design/meta-standards-review.md).
 - **Workflows with no unexplained zizmor finding** (`ci-security-gold`): Every workflow and the report action reach gold on maintainer-ci-security: each zizmor finding fixed, or ignored inline with its reason, so maintainer-ci-security no longer holds the repository level down. release.yml stays gold through its waivers (D98).
-- **OpenSSF Scorecard: every check at 10** (`maintainer-openssf-ten`): Every Scorecard check at its maximum. Progress is counted from the start the baseline records, in checks below 10 and in points short.
-- **Python we maintain passes ruff: to zero** (`maintainer-python-zero`): No ruff findings in any file. Progress is counted from the start the baseline records.
-- **No unexplained advisories in Cargo.lock: to zero** (`maintainer-advisories-zero`): No osv-scanner findings in any file. Progress is counted from the start the baseline records.
+- **OpenSSF Scorecard: every check at 10** (`maintainer-openssf-ten`): Every Scorecard check at its maximum. Progress is counted from the starting point saved in the baseline, in checks below 10 and in points short.
+- **Python we maintain passes ruff: to zero** (`maintainer-python-zero`): No ruff findings in any file. Progress is counted from the starting point saved in the baseline.
+- **No unexplained advisories in Cargo.lock: to zero** (`maintainer-advisories-zero`): No osv-scanner findings in any file. Progress is counted from the starting point saved in the baseline.
 
 ## Commands
 

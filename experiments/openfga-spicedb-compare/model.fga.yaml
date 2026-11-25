@@ -1,0 +1,14 @@
+# Assertions about model.fga, run by `fga model test` (facts.py: modelTests).
+model_file: ./model.fga
+tuples:
+  - {user: user:anne, relation: member, object: group:eng}
+  - {user: group:eng, relation: owner, object: folder:root}
+  - {user: folder:root, relation: parent, object: folder:child}
+  - {user: folder:child, relation: folder, object: document:spec}
+  - {user: user:*, relation: viewer, object: document:pub}
+tests:
+  - name: inherited and public
+    check:
+    - {user: user:anne, object: document:spec, assertions: {viewer: true}}
+    - {user: user:bob, object: document:spec, assertions: {viewer: false}}
+    - {user: user:bob, object: document:pub, assertions: {viewer: true}}

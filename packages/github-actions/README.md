@@ -9,7 +9,7 @@ it like any consumer.
 | Connectors | `ci-lint` (zizmor and actionlint through the runner), `github-actions` (run history) |
 | Tools | zizmor 1.32.0, actionlint 1.7.12 (`toolbox doctor --mise` prints the mise config) |
 | Kinds | `Workflow`, `ActionDependency` |
-| Scorecards | `maintainer-ci-security`, `maintainer-ci-reliability`, `maintainer-ci-speed`, `maintainer-action-deps` |
+| Scorecards | `ci-security`, `ci-reliability`, `ci-speed`, `action-deps`, each after the `prefix` parameter (Toolbox for Toolbox passes `maintainer-`) |
 
 It needs a `workspace` connector with `workflows` globs.
 
@@ -18,6 +18,10 @@ It needs a `workspace` connector with `workflows` globs.
 actionlint has no SARIF output, so it comes in through a fitting (`parse: actionlint`). The box
 passes neither tool a setting the tool can't read itself. Each record's `command` field reruns
 that file's check with the tool alone.
+
+**From 0.3.0, scorecard names carry no prefix by default** (`ci-security`, not
+`maintainer-ci-security`), and `owner` sets who owns them. Pass `prefix: maintainer-` to keep
+0.2.0's names, so ratchet baselines and links still match.
 
 **From 0.2.0, actionlint's ignores live in your repository's `.github/actionlint.yaml`**, not in
 the package. [actionlint.yaml](./actionlint.yaml) is a starting point: unknown permission scopes

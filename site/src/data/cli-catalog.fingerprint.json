@@ -92,6 +92,11 @@
           "positional": false
         },
         {
+          "name": "require_fresh",
+          "long": "require-fresh",
+          "positional": false
+        },
+        {
           "name": "output",
           "long": "output",
           "positional": false

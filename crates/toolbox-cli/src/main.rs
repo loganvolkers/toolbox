@@ -361,6 +361,9 @@ enum AssessWhat {
         /// Connectors not to run (comma-separated), e.g. a slow runner.
         #[arg(long, value_delimiter = ',')]
         skip: Vec<String>,
+        /// Fail when a recorded assessment or review is stale.
+        #[arg(long)]
+        require_fresh: bool,
         /// Output: md (default) or json.
         #[arg(short = 'o', long, default_value = "md")]
         output: String,
@@ -1190,7 +1193,8 @@ fn assess_command(what: AssessWhat) -> ExitCode {
             fixtures,
             skip,
             output,
-        } => assess::check(&portal, fixtures, &skip, &output),
+            require_fresh,
+        } => assess::check(&portal, fixtures, &skip, &output, require_fresh),
         AssessWhat::Submit {
             files,
             portal,

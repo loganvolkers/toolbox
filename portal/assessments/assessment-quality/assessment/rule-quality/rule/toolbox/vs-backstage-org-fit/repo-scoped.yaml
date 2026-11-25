@@ -1,7 +1,7 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: assessment:rule-quality/rule:toolbox/vs-backstage-org-fit/repo-scoped
 rubric: assessment-quality
-subjectHash: 4c9c32488d01
+subjectHash: 2044f999dabd
 assessor: {kind: agent, name: cursor-reviewer-35, model: claude-opus-5.5}
 at: 2026-11-25
 verdicts:
@@ -12,9 +12,10 @@ verdicts:
       portal/standards/backstage-comparison.yaml:108-110, and the fix is
       769-770. Toolbox's true value and its evidence are
       experiments/backstage-compare/facts.yaml:48-53; Backstage's false value,
-      citing the architecture overview, is facts.yaml:134-139. snapshot.py:85
-      copies facts[arm] values into the record. The rust job runs toolbox
-      report portal at .github/workflows/ci.yml:89, in a job with no database
+      citing the architecture overview, is
+      experiments/backstage-compare/facts.yaml:134-139. snapshot.py:85 copies
+      facts[arm] values into the record. The rust job runs toolbox report
+      portal at .github/workflows/ci.yml:89, in a job with no database
       service; Postgres is a later job. actions/report/run.sh:21 builds the
       report arguments. README.md:51 registers repo-scoped true,
       ADJUDICATION.md:112 confirms it, and RESEARCH.md:68 is F12's DORA
@@ -27,23 +28,25 @@ verdicts:
       and CI currently exercises a serverless report. hard-to-game fails
       because the rule reads the hand-written fact. fix-leads-to-pass fails
       because restoring the command does not change the record until
-      facts.yaml and snapshot.py run, and the fix does not say so. The rule is
-      a boolean with a pre-registered bar.
+      experiments/backstage-compare/facts.yaml and snapshot.py run, and the
+      fix does not say so. The rule is a boolean with a pre-registered bar.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      The split between a true claim and a hand-edited input is in facts.yaml
-      and snapshot.py:85. A second assessor reading those two files and the
-      fix at backstage-comparison.yaml:769-770 reaches the same two fails.
+      The split between a true claim and a hand-edited input is in
+      experiments/backstage-compare/facts.yaml and snapshot.py:85. A second
+      assessor reading those two files and the fix at
+      backstage-comparison.yaml:769-770 reaches the same two fails.
   - criterion: actionable
     verdict: pass
     reason: >-
       Having the harness set the fact from a serverless toolbox report, and
-      naming facts.yaml plus snapshot.py in the fix, would make the check
-      measure the command and would tell an agent the record step. That
-      changes hard-to-game and fix-leads-to-pass.
+      naming experiments/backstage-compare/facts.yaml plus snapshot.py in the
+      fix, would make the check measure the command and would tell an agent
+      the record step. That changes hard-to-game and fix-leads-to-pass.
 summary: >-
   The repo-scoped assessment holds. The field means a repository scored
   with no server, CI does that, and the rule still reads a value typed
-  into facts.yaml and copied by snapshot.py. The fix names the command and
-  not the record step. All four review criteria pass.
+  into experiments/backstage-compare/facts.yaml and copied by snapshot.py.
+  The fix names the command and not the record step. All four review
+  criteria pass.
