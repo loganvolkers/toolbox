@@ -124,7 +124,7 @@ export var CSS = [
   "details.ent>summary .tally{font-size:12px;color:var(--muted);text-align:right;min-width:0}",
   "details.ent>summary .tally b{color:var(--fg);font-weight:650}details.ent>summary .tally b.bad{color:var(--fail)}",
   "details.ent[open]>summary{background:var(--tint)}",
-  ".ent-body{padding:6px 6px 14px 104px}.ent-members{margin:0 0 10px 24px;border-left:2px solid var(--line)}.ent-members details.ent:first-child{border-top:0}details.ent-group>summary .name small{white-space:normal;overflow-wrap:anywhere}",
+  ".ent-body{padding:6px 6px 14px 104px}.ent-members{margin:0 0 10px 24px;border-left:2px solid var(--line)}.ent-members details.ent:first-child{border-top:0}details.ent-group>summary .name small{white-space:normal;overflow-wrap:break-word}",
   ".chev{display:inline-block;transition:transform .15s;color:var(--muted);margin-left:6px}",
   "details[open]>summary .chev{transform:rotate(90deg)}",
   ".rule{padding:10px 12px;border-radius:8px;border:1px solid var(--line);border-left:4px solid var(--fail);margin-top:8px;background:var(--card)}",

@@ -111,9 +111,9 @@ export function tallyWords(v, n) {
   if (n && v.unknown >= n) return "not measured yet: no factor has values for both products";
   var b = v.both;
   if (!b || v.majority == null) return countWords(v) + " of " + n + " factors";
-  if (sameCount(b.strict, b.majority)) return countWords(v) + " of " + n + " factors, by either count";
   var mineKey: "strict" | "majority" = v.majority ? "majority" : "strict";
   var otherKey: "strict" | "majority" = v.majority ? "strict" : "majority";
+  if (sameCount(b.strict, b.majority)) return countWords(v) + " of " + n + " factors, by the " + mineKey + " count, this comparison's verdict. The " + otherKey + " count agrees.";
   return countWords(b[mineKey], mineKey) + " of " + n + " factors by the " + mineKey + " count, this comparison's verdict; by the " + otherKey + " count, " + countWords(b[otherKey], otherKey);
 }
 
@@ -121,7 +121,8 @@ export function tallyWords(v, n) {
 export function tallyShort(v, n) {
   if (n && v.unknown >= n) return "not measured yet";
   var b = v.both;
-  if (!b || v.majority == null || sameCount(b.strict, b.majority)) return "ahead on " + v.ahead + " of " + n + " factors" + (b ? " by either count" : "");
+  if (!b || v.majority == null) return "ahead on " + v.ahead + " of " + n + " factors";
+  if (sameCount(b.strict, b.majority)) return "ahead on " + v.ahead + " of " + n + " factors, by the " + (v.majority ? "majority" : "strict") + " count";
   var mine = v.majority ? b.majority : b.strict;
   return "ahead on " + mine.ahead + " of " + n + " factors, behind on " + mine.behind + " (" + (v.majority ? "majority" : "strict") + " count, the verdict)";
 }
@@ -130,16 +131,13 @@ export function tallyShort(v, n) {
 export function bothCounts(v, n) {
   var b = v.both;
   if (!b || v.majority == null || (n && v.unknown >= n)) return null;
-  var same = sameCount(b.strict, b.majority);
   return el(
     "dl",
     { className: "both-counts" },
-    ...(same
-      ? [el("div", { className: "mine" }, el("dt", { textContent: "Strict or majority count" }), el("dd", { textContent: countWords(v) }))]
-      : COUNTS.map(function (c) {
-          var mine = (c.key === "majority") === !!v.majority;
-          return el("div", { className: mine ? "mine" : "", title: "The " + c.label.toLowerCase() + ": " + c.def + "." }, el("dt", {}, c.label, mine ? el("small", { textContent: " · this comparison's verdict" }) : null), el("dd", { textContent: countWords(b[c.key], c.key) }));
-        })),
+    ...COUNTS.map(function (c) {
+      var mine = (c.key === "majority") === !!v.majority;
+      return el("div", { className: mine ? "mine" : "", title: "The " + c.label.toLowerCase() + ": " + c.def + "." }, el("dt", {}, c.label, mine ? el("small", { textContent: " · this comparison's verdict" }) : null), el("dd", { textContent: countWords(b[c.key], c.key) }));
+    }),
   );
 }
 

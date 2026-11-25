@@ -200,12 +200,18 @@ export const compareViews = {
     var verdictWords = majority ? majorityWords : strictWords;
     var countsDiffer = !unmeasured && strictWords !== majorityWords;
     var countName = majority ? "majority" : "strict";
+    var otherName = majority ? "strict" : "majority";
     var headline = unmeasured
       ? "Not measured yet: none of the " + plural(names.length, "factor") + " has values for both products."
-      : "Ahead on " + verdictWords.slice("ahead on ".length) + ", by the " + (countsDiffer ? countName + " count" : "either count") + ".";
-    var otherCount = countsDiffer
-      ? el("p", { className: "sub", style: "margin:6px 0 0" }, "By the " + (majority ? "strict" : "majority") + " count, " + (majority ? countWords(both.strict, "strict") : countWords(both.majority)) + ".")
-      : null;
+      : "Ahead on " + verdictWords.slice("ahead on ".length) + ", by the " + countName + " count.";
+    // The other count keeps its own name. It sits in the disclosure, with the method, so the hero stays the verdict.
+    var otherCount = unmeasured
+      ? null
+      : el(
+          "p",
+          { className: "sub", style: "margin:6px 0 0" },
+          countsDiffer ? "By the " + otherName + " count, " + (majority ? countWords(both.strict, "strict") : countWords(both.majority)) + "." : "The " + otherName + " count agrees.",
+        );
     var lean = counts.behind > counts.ahead ? "behind" : counts.ahead > counts.behind ? "ahead" : "parity";
     var hero = el(
       "section",
@@ -222,7 +228,6 @@ export const compareViews = {
         }).sort().map(function (r) {
           return ruleTitle(behindNames[0], r);
         })) + ". If your teams rely on those, start with " + title(D, behindNames[0]) + "." : ": if your teams rely on what those factors measure, read them first.") : unmeasured ? " Run the comparison's harness and commit its records to fill this in." : counts.unknown ? " Not behind on any measured factor." : " Never behind."),
-        otherCount,
         unmeasured
           ? el("p", { className: "rule-tally", textContent: "Rule by rule: none of " + plural(ruleTotal, "rule") + " has values for both products yet." })
           : el(
@@ -240,7 +245,8 @@ export const compareViews = {
           "details",
           { className: "sub cmp-def cmp-brief", style: "margin:6px 0 0" },
           el("summary", { textContent: "How a factor and a rule are counted" }),
-          "A factor is a scorecard that scores both products on the same rules. On a rule, a product is ahead when its measured value is better (within the rule's tolerance is parity) or it passes a bar the other misses. Factors are counted two ways on every portal. By the strict count, " + who(subject) + " is behind on a factor if it is behind on any one of its rules, and ahead if it is ahead on some and behind on none. By the majority count, it is ahead when it is ahead on more of the factor's rules than it is behind on, behind when it is behind on more, and at parity when they are even. Each comparison declares which count is its verdict; this one declares the " + (majority ? "majority" : "strict") + " count. A factor with any unmeasured rule is not measured. “Mixed” means ahead on some rules and behind on others; “narrowly ahead” means ahead on fewer than half of that factor's rules, at parity on the rest.",
+          "A factor is a scorecard that scores both products on the same rules. On a rule, a product is ahead when its measured value is better (within the rule's tolerance is parity) or it passes a bar the other misses. Factors are counted two ways on every portal. By the strict count, " + who(subject) + " is behind on a factor if it is behind on any one of its rules, and ahead if it is ahead on some and behind on none. By the majority count, it is ahead when it is ahead on more of the factor's rules than it is behind on, behind when it is behind on more, and at parity when they are even. Each comparison declares which count is its verdict; this one declares the " + countName + " count. A factor with any unmeasured rule is not measured. “Mixed” means ahead on some rules and behind on others; “narrowly ahead” means ahead on fewer than half of that factor's rules, at parity on the rest.",
+          otherCount,
         ),
       ),
       el(
@@ -375,21 +381,23 @@ export const compareViews = {
           sources ? el("span", { className: "cmp-src" }, el("b", { textContent: "Evidence: " }), sources, unmeasured ? " (no results are recorded in this build yet)" : null) : null,
         ),
       );
-    (hero.querySelector(".rule-tally") as HTMLElement).after(
+    (hero.querySelector("details.cmp-def") as HTMLElement).append(
       el(
         "p",
         { className: "cmp-method", style: "margin:8px 0 0" },
         el("b", { textContent: lead ? "Method: " : "How it was measured: " }),
         ...(lead ? rich(lead + " ") : [(brief.length ? brief.join(" · ") + ". " : "") + "Every rule is " + (bases.judged ? "measured or agent-judged" : "measured by script") + ". "]),
         el("span", { style: "display:block;margin-top:4px" }, el("b", { textContent: "Not covered: " }), ...(scope ? rich(scope.replace(/^Not (covered|measured)\s*:\s*/i, "") + " ") : [el("span", { className: "sub", textContent: "not stated: the track's description has no “Not covered:” sentence. " })])),
-        el("button", {
-          className: "link",
-          textContent: track && track.description ? "The full method, and who checked it ↓" : "Versions, setup and sources ↓",
-          onclick: function () {
-            method.scrollIntoView({ behavior: "smooth", block: "start" });
-          },
-        }),
       ),
+    );
+    (hero.querySelector(".rule-tally") as HTMLElement).after(
+      el("p", { className: "cmp-method", style: "margin:8px 0 0" }, el("button", {
+        className: "link",
+        textContent: track && track.description ? "The full method, and who checked it ↓" : "Versions, setup and sources ↓",
+        onclick: function () {
+          method.scrollIntoView({ behavior: "smooth", block: "start" });
+        },
+      })),
     );
 
     var behindRows: Node[] = [];

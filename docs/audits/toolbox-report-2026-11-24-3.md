@@ -6,14 +6,15 @@ captures from Storybook, a blind three-auditor panel scored by median, and two r
 plus the starter. About the box: how the report shows what the tools found, whichever portal it
 serves.*
 
-Twelve rounds are recorded, and the loop has not stopped. Usability medians rose from 24 to 31 of
+Thirteen rounds are recorded, and the loop has not stopped. Usability medians rose from 24 to 31 of
 40 by round 8, held at round 9, and fell to 30 at round 10 when honest states fell from 4 to 3.
-Rounds 11 and 12 held at 30. Judgement rose from 10 to 11 of 16 at round 2 and has not moved since.
-Every reader task succeeded for all three auditors from round 5, except rounds 6, 9 and 11 (17 of
-18 each) and round 12 (15 of 18: every auditor marked T4 partial). Round 12 did not pass: every
-median held, and five severity-3 findings were open. Those are fixed in the build the next round
-will score. Rounds 1 to 9 used one model; rounds 10 to 12 used another, which round 10's section
-records.
+Rounds 11 and 12 held at 30. Round 13 fell to 29, because consistency fell from 3 to 2. Judgement
+rose from 10 to 11 of 16 at round 2 and has not moved since. Every reader task succeeded for all
+three auditors from round 5, except rounds 6, 9 and 11 (17 of 18 each), round 12 (15 of 18: every
+auditor marked T4 partial) and round 13 (17 of 18: one auditor marked T3 partial). Round 13 did not
+pass: one targeted median fell, and five severity-3 findings were open. Those are fixed in the
+build the next round will score. Rounds 1 to 9 used one model; rounds 10 to 13 used another, which
+round 10's section records.
 
 ## Scope
 
@@ -373,6 +374,20 @@ severity-3 findings were open:
 | `toolbox-cli` is headlined "Bronze (may not hold)" while Rust crates is not established (A, C) | The heading is one line per scorecard. Crates, reviewed by agents names bronze, Assessed, and that the level may not hold until an agent assesses it. Rust crates says "not established" and shows no medal |
 | The scorecards list, weakest first, opens on CI reliability, which adds no points, while the next step is OpenSSF Scorecard. The track sparkline repeats "Lowest bar, CI reliability: 0%" (B) | Each track group on the scorecards page leads with the same next step as the overview. The list stays weakest first, and says so. The sparkline says "Lowest share at the top level" |
 | An unmeasured factor still states the verdict formula after saying none of its rules has values (C) | A factor with no measured rules says it has no verdict |
+
+## Round 13: what the panel found
+
+The same model as rounds 10 to 12, Grok 4.7, scored this round, still blind to the source, the diff
+and each other. The probes passed 212 of 212. Usability fell from 30 to 29 of 40, because
+consistency fell from 3 to 2. Judgement held at 11 of 16. One auditor marked T3 partial, so tasks
+succeeded 17 of 18. The round did not pass:
+
+| Finding (auditors) | Fix |
+|---|---|
+| Toolbox for Toolbox says "by the either count" while its factor page says the verdict is the strict count. OpenFGA names the majority count (A, B; C at severity 2) | The headline, the overview chip and the factor page name the declared count, strict or majority. When the other count agrees, the disclosure says so. It never says "either count" |
+| The compare hero states the verdict, the other count, the rule tally, the method and what is not covered, about 470 words above the fold (B) | The hero keeps the verdict, the tallies and a link to the method. The other count, the method and what is not covered sit in "How a factor and a rule are counted" |
+| `toolbox-cli` is headlined "Bronze" while Rust crates has no medal (B) | When one scorecard is established and another is not, the heading is "Not at the top level". Each scorecard keeps its own line |
+| The scorecard group wraps a line count in the middle of the number, so 2629 reads as 2029 (C) | The furthest-off line wraps on word boundaries, so the line count stays one token |
 
 ## Comparisons are generic
 

@@ -657,22 +657,23 @@
 		if (n && v.unknown >= n) return "not measured yet: no factor has values for both products";
 		var b = v.both;
 		if (!b || v.majority == null) return countWords(v) + " of " + n + " factors";
-		if (sameCount(b.strict, b.majority)) return countWords(v) + " of " + n + " factors, by either count";
 		var mineKey = v.majority ? "majority" : "strict";
 		var otherKey = v.majority ? "strict" : "majority";
+		if (sameCount(b.strict, b.majority)) return countWords(v) + " of " + n + " factors, by the " + mineKey + " count, this comparison's verdict. The " + otherKey + " count agrees.";
 		return countWords(b[mineKey], mineKey) + " of " + n + " factors by the " + mineKey + " count, this comparison's verdict; by the " + otherKey + " count, " + countWords(b[otherKey], otherKey);
 	}
 	function tallyShort(v, n) {
 		if (n && v.unknown >= n) return "not measured yet";
 		var b = v.both;
-		if (!b || v.majority == null || sameCount(b.strict, b.majority)) return "ahead on " + v.ahead + " of " + n + " factors" + (b ? " by either count" : "");
+		if (!b || v.majority == null) return "ahead on " + v.ahead + " of " + n + " factors";
+		if (sameCount(b.strict, b.majority)) return "ahead on " + v.ahead + " of " + n + " factors, by the " + (v.majority ? "majority" : "strict") + " count";
 		var mine = v.majority ? b.majority : b.strict;
 		return "ahead on " + mine.ahead + " of " + n + " factors, behind on " + mine.behind + " (" + (v.majority ? "majority" : "strict") + " count, the verdict)";
 	}
 	function bothCounts(v, n) {
 		var b = v.both;
 		if (!b || v.majority == null || n && v.unknown >= n) return null;
-		return el("dl", { className: "both-counts" }, ...sameCount(b.strict, b.majority) ? [el("div", { className: "mine" }, el("dt", { textContent: "Strict or majority count" }), el("dd", { textContent: countWords(v) }))] : COUNTS.map(function(c) {
+		return el("dl", { className: "both-counts" }, ...COUNTS.map(function(c) {
 			var mine = c.key === "majority" === !!v.majority;
 			return el("div", {
 				className: mine ? "mine" : "",
@@ -2335,7 +2336,7 @@
 		"details.ent>summary .tally{font-size:12px;color:var(--muted);text-align:right;min-width:0}",
 		"details.ent>summary .tally b{color:var(--fg);font-weight:650}details.ent>summary .tally b.bad{color:var(--fail)}",
 		"details.ent[open]>summary{background:var(--tint)}",
-		".ent-body{padding:6px 6px 14px 104px}.ent-members{margin:0 0 10px 24px;border-left:2px solid var(--line)}.ent-members details.ent:first-child{border-top:0}details.ent-group>summary .name small{white-space:normal;overflow-wrap:anywhere}",
+		".ent-body{padding:6px 6px 14px 104px}.ent-members{margin:0 0 10px 24px;border-left:2px solid var(--line)}.ent-members details.ent:first-child{border-top:0}details.ent-group>summary .name small{white-space:normal;overflow-wrap:break-word}",
 		".chev{display:inline-block;transition:transform .15s;color:var(--muted);margin-left:6px}",
 		"details[open]>summary .chev{transform:rotate(90deg)}",
 		".rule{padding:10px 12px;border-radius:8px;border:1px solid var(--line);border-left:4px solid var(--fail);margin-top:8px;background:var(--card)}",
@@ -5147,7 +5148,7 @@
 			})), shown || whollyUnset ? el("div", { className: "elevel" }, whollyUnset ? el("span", { title: "Checks this level needs were not run, so it is not established." }, medal("not scored", 52)) : shownHollow ? el("span", {
 				className: "medal-hollow",
 				title: "No agent has assessed the scorecard that sets this level, so it may not hold."
-			}, medal(shown, 52)) : medal(shown, 52), el("div", {}, el("strong", { style: "color:" + (whollyUnset ? "var(--muted)" : ink(shown)) + (whollyUnset || KNOWN.indexOf(ownLevel(D, kind, shown)) < 0 ? ";text-transform:none" : "") }, whollyUnset ? "Not established" : ownLevel(D, kind, shown), !whollyUnset && atTop ? el("span", {
+			}, medal(shown, 52)) : medal(shown, 52), el("div", {}, unsetCards.length && setCards.length ? el("strong", { style: "color:var(--fg);text-transform:none" }, "Not at the top level") : el("strong", { style: "color:" + (whollyUnset ? "var(--muted)" : ink(shown)) + (whollyUnset || KNOWN.indexOf(ownLevel(D, kind, shown)) < 0 ? ";text-transform:none" : "") }, whollyUnset ? "Not established" : ownLevel(D, kind, shown), !whollyUnset && atTop ? el("span", {
 				className: "topmark",
 				textContent: " ✓ top" + (KNOWN.indexOf(shown) < 0 ? " level" : "")
 			}) : null), ...openCards.map(cardLine), el("span", {
@@ -5524,11 +5525,12 @@
 			var verdictWords = majority ? majorityWords : strictWords;
 			var countsDiffer = !unmeasured && strictWords !== majorityWords;
 			var countName = majority ? "majority" : "strict";
-			var headline = unmeasured ? "Not measured yet: none of the " + plural(names.length, "factor") + " has values for both products." : "Ahead on " + verdictWords.slice(9) + ", by the " + (countsDiffer ? countName + " count" : "either count") + ".";
-			var otherCount = countsDiffer ? el("p", {
+			var otherName = majority ? "strict" : "majority";
+			var headline = unmeasured ? "Not measured yet: none of the " + plural(names.length, "factor") + " has values for both products." : "Ahead on " + verdictWords.slice(9) + ", by the " + countName + " count.";
+			var otherCount = unmeasured ? null : el("p", {
 				className: "sub",
 				style: "margin:6px 0 0"
-			}, "By the " + (majority ? "strict" : "majority") + " count, " + (majority ? countWords(both.strict, "strict") : countWords(both.majority)) + ".") : null;
+			}, countsDiffer ? "By the " + otherName + " count, " + (majority ? countWords(both.strict, "strict") : countWords(both.majority)) + "." : "The " + otherName + " count agrees.");
 			var lean = counts.behind > counts.ahead ? "behind" : counts.ahead > counts.behind ? "ahead" : "parity";
 			var hero = el("section", { className: "cmp-hero" }, el("div", { className: "cmp-main" }, el("div", {
 				className: "kicker",
@@ -5545,7 +5547,7 @@
 				return (all[behindNames[0]].rules[r] || {})[peer] === "behind";
 			}).sort().map(function(r) {
 				return ruleTitle(behindNames[0], r);
-			})) + ". If your teams rely on those, start with " + title(D, behindNames[0]) + "." : ": if your teams rely on what those factors measure, read them first.") : unmeasured ? " Run the comparison's harness and commit its records to fill this in." : counts.unknown ? " Not behind on any measured factor." : " Never behind."), otherCount, unmeasured ? el("p", {
+			})) + ". If your teams rely on those, start with " + title(D, behindNames[0]) + "." : ": if your teams rely on what those factors measure, read them first.") : unmeasured ? " Run the comparison's harness and commit its records to fill this in." : counts.unknown ? " Not behind on any measured factor." : " Never behind."), unmeasured ? el("p", {
 				className: "rule-tally",
 				textContent: "Rule by rule: none of " + plural(ruleTotal, "rule") + " has values for both products yet."
 			}) : el("p", { className: "rule-tally" }, "Rule by rule: ", el("b", {
@@ -5560,7 +5562,7 @@
 			}), ". Factors are not weighted, so the factor count is a tally, not an overall score."), el("details", {
 				className: "sub cmp-def cmp-brief",
 				style: "margin:6px 0 0"
-			}, el("summary", { textContent: "How a factor and a rule are counted" }), "A factor is a scorecard that scores both products on the same rules. On a rule, a product is ahead when its measured value is better (within the rule's tolerance is parity) or it passes a bar the other misses. Factors are counted two ways on every portal. By the strict count, " + who(subject) + " is behind on a factor if it is behind on any one of its rules, and ahead if it is ahead on some and behind on none. By the majority count, it is ahead when it is ahead on more of the factor's rules than it is behind on, behind when it is behind on more, and at parity when they are even. Each comparison declares which count is its verdict; this one declares the " + (majority ? "majority" : "strict") + " count. A factor with any unmeasured rule is not measured. “Mixed” means ahead on some rules and behind on others; “narrowly ahead” means ahead on fewer than half of that factor's rules, at parity on the rest.")), el("div", { className: "cmp-side" }, el("div", {
+			}, el("summary", { textContent: "How a factor and a rule are counted" }), "A factor is a scorecard that scores both products on the same rules. On a rule, a product is ahead when its measured value is better (within the rule's tolerance is parity) or it passes a bar the other misses. Factors are counted two ways on every portal. By the strict count, " + who(subject) + " is behind on a factor if it is behind on any one of its rules, and ahead if it is ahead on some and behind on none. By the majority count, it is ahead when it is ahead on more of the factor's rules than it is behind on, behind when it is behind on more, and at parity when they are even. Each comparison declares which count is its verdict; this one declares the " + countName + " count. A factor with any unmeasured rule is not measured. “Mixed” means ahead on some rules and behind on others; “narrowly ahead” means ahead on fewer than half of that factor's rules, at parity on the rest.", otherCount)), el("div", { className: "cmp-side" }, el("div", {
 				className: "kicker",
 				textContent: "Factors"
 			}), el("div", { className: "tally3" }, ...[
@@ -5671,13 +5673,17 @@
 			var brief = setupBrief(context, ids, facts, who);
 			var sources = track ? refs(track.links, false) : null;
 			if (brief.length || sources) hero.querySelector(".rule-tally").after(el("div", { className: "sub cmp-prov" }, sources ? el("span", { className: "cmp-src" }, el("b", { textContent: "Evidence: " }), sources, unmeasured ? " (no results are recorded in this build yet)" : null) : null));
-			hero.querySelector(".rule-tally").after(el("p", {
+			hero.querySelector("details.cmp-def").append(el("p", {
 				className: "cmp-method",
 				style: "margin:8px 0 0"
 			}, el("b", { textContent: lead ? "Method: " : "How it was measured: " }), ...lead ? rich(lead + " ") : [(brief.length ? brief.join(" · ") + ". " : "") + "Every rule is " + (bases.judged ? "measured or agent-judged" : "measured by script") + ". "], el("span", { style: "display:block;margin-top:4px" }, el("b", { textContent: "Not covered: " }), ...scope ? rich(scope.replace(/^Not (covered|measured)\s*:\s*/i, "") + " ") : [el("span", {
 				className: "sub",
 				textContent: "not stated: the track's description has no “Not covered:” sentence. "
-			})]), el("button", {
+			})])));
+			hero.querySelector(".rule-tally").after(el("p", {
+				className: "cmp-method",
+				style: "margin:8px 0 0"
+			}, el("button", {
 				className: "link",
 				textContent: track && track.description ? "The full method, and who checked it ↓" : "Versions, setup and sources ↓",
 				onclick: function() {
