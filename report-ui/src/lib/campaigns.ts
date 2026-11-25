@@ -13,6 +13,12 @@ import { fmt, plural } from "./words";
 
 // The first scorecard on a track that can still rise, with the rule most of its lowest entities need.
 // A scorecard's own level name ("ten", "clean") is quoted so it reads as a name, not a stray word.
+// "Ten" is an OpenSSF check id. In a next-step sentence it reads as a stray word, and as a link it is under 24 px wide.
+function ruleWords(name, rule) {
+  var t = ruleTitle(name, rule);
+  return t === "Ten" ? "a score of 10" : t;
+}
+
 export function levelName(l) {
   return l === "none" || l === "not scored" || LADDER.indexOf(l) >= 0 ? l : "“" + l + "”";
 }
@@ -69,7 +75,7 @@ export function nextMedalEl(D: ReportData, cards, label?, why?) {
   var medalBody = function () {
     if (!nm) return [];
     var card = link("scorecard/" + enc(nm.name), "", title(D, nm.name));
-    var rule = nm.rule ? [link("rule/" + enc(nm.name) + "/" + enc(nm.rule), "", ruleTitle(nm.name, nm.rule)), " ", basisBadge(basisOf((((D.scorecards || {})[nm.name] || {}).rules || {})[nm.rule]), "tip")] : [];
+    var rule = nm.rule ? [link("rule/" + enc(nm.name) + "/" + enc(nm.rule), "", ruleWords(nm.name, nm.rule)), " ", basisBadge(basisOf((((D.scorecards || {})[nm.name] || {}).rules || {})[nm.rule]), "tip")] : [];
     var entities = plural(nm.low, "entity", "entities") + " at " + nm.floor;
     return nm.rule && nm.n === nm.low
       ? [entities + (nm.low === 1 ? " needs " : " need "), ...rule, " to reach " + nm.up + " on ", card, "."]
@@ -78,15 +84,20 @@ export function nextMedalEl(D: ReportData, cards, label?, why?) {
   var top = nm ? (((D.scorecards || {})[nm.name] || {}).levels || []).slice(-1)[0] : "";
   var medalAtTop = nm ? isTop(D, nm.name, nm.up) : false;
   var medalNote = !nm ? "" : medalAtTop ? " That is its top level." : " Its top level is " + top + (tracked ? ", so this adds no points to the track's percentage until they reach it." : ".");
-  if (verified && !(medalAtTop && verified.r.name === nm?.name)) {
+  var leadVerified = !!(verified && !(medalAtTop && verified.r.name === nm?.name));
+  var extras = [
+    leadVerified && nm ? el("div", { className: "sub mover" }, el("b", { textContent: "Next medal: " }), ...medalBody(), medalNote) : null,
+    unverified ? moverEl(D, unverified) : null,
+  ].filter(Boolean);
+  var more = extras.length ? el("details", { className: "sub", style: "margin-top:6px" }, el("summary", { textContent: "Other steps" }), ...extras) : null;
+  if (leadVerified && verified) {
     return el(
       "div",
       { className: "nextmedal" },
       el("b", { textContent: label || "Next: " }),
       ...moverBody(D, verified),
       why ? el("span", { className: "sub" }, why) : null,
-      nm ? el("div", { className: "sub mover" }, el("b", { textContent: "Next medal: " }), ...medalBody(), medalNote) : null,
-      unverified ? moverEl(D, unverified) : null,
+      more,
     );
   }
   if (!nm) return null;
@@ -96,7 +107,7 @@ export function nextMedalEl(D: ReportData, cards, label?, why?) {
     el("b", { textContent: label || "Next medal: " }),
     ...medalBody(),
     el("span", { className: "sub" }, medalNote + (why || "")),
-    unverified ? moverEl(D, unverified) : null,
+    more,
   );
 }
 
@@ -161,7 +172,7 @@ function moverBody(D: ReportData, b: Mover) {
   var rule = b.rule;
   var entities = plural(b.n, "entity", "entities") + " at " + levelName(b.below);
   var card = link("scorecard/" + enc(b.r.name), "", title(D, b.r.name));
-  var ruleEl = rule ? [link("rule/" + enc(b.r.name) + "/" + enc(rule[0]), "", ruleTitle(b.r.name, rule[0])), " ", basisBadge(basisOf((sc.rules || {})[rule[0]]), "tip")] : [];
+  var ruleEl = rule ? [link("rule/" + enc(b.r.name) + "/" + enc(rule[0]), "", ruleWords(b.r.name, rule[0])), " ", basisBadge(basisOf((sc.rules || {})[rule[0]]), "tip")] : [];
   return [
     ...(rule && rule[1] === b.n
       ? [entities + (b.n === 1 ? " needs " : " need "), ...ruleEl, " to reach " + levelName(b.top) + " on ", card]
@@ -180,8 +191,8 @@ function moverEl(D: ReportData, b: Mover) {
     plural(b.n, "entity", "entities") + " at " + levelName(b.below) + " on ",
     card,
     " may already meet " + levelName(b.top) + ", but its check ",
-    link("rule/" + enc(b.r.name) + "/" + enc(waits[0]), "", ruleTitle(b.r.name, waits[0])),
-    " was not run in this build, so nothing is known yet; if it passes, the track gains about " + points(b.gain) + ".",
+    link("rule/" + enc(b.r.name) + "/" + enc(waits[0]), "", ruleWords(b.r.name, waits[0])),
+    " was not run in this build, so the gain is unknown until it runs.",
   );
 }
 

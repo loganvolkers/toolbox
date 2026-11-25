@@ -6,14 +6,12 @@ captures from Storybook, a blind three-auditor panel scored by median, and two r
 plus the starter. About the box: how the report shows what the tools found, whichever portal it
 serves.*
 
-Nine rounds are recorded, and the loop has not stopped. Usability medians rose from 24 to 31 of
-40 by round 8 and held there at round 9. Judgement rose from 10 to 11 of 16 at round 2 and has not
-moved since. Every reader task succeeded for all three auditors from round 5, except round 6 and
-round 9 (17 of 18 each; at round 9 one auditor marked the cross-portal task partial). Consistency
-rose from 2 to 3 at round 8 and held. Honest states reached 4 at round 7, fell to 3 at round 8, and
-returned to 4 at round 9. Wayfinding reached 4 at round 8 and fell back to 3 at round 9. Round 9
-did not pass: three severity-3 findings were open, and one targeted median fell. Those three are
-fixed in the build the next round scores.
+Ten rounds are recorded, and the loop has not stopped. Usability medians rose from 24 to 31 of
+40 by round 8, held at round 9, and fell to 30 at round 10 when honest states fell from 4 to 3.
+Judgement rose from 10 to 11 of 16 at round 2 and has not moved since. Every reader task succeeded
+for all three auditors from round 5, except round 6 and round 9 (17 of 18 each). Round 10 did not
+pass: honest states fell, and three severity-3 findings were open. Those are fixed in the build the
+next round will score. Rounds 1 to 9 used one model; round 10 used another, which its section records.
 
 ## Scope
 
@@ -41,27 +39,27 @@ The tasks were written before the first capture and kept for every round:
 ## Scores (panel medians)
 
 A dimension's score is the median of the three auditors. Tasks succeeded counts each auditor
-separately, so the maximum is 18. Round 10 is not in this table.
+separately, so the maximum is 18.
 
-| Dimension | R1 | R2 | R3 | R4 | R5 | R6 | R7 | R8 | R9 |
-|---|---|---|---|---|---|---|---|---|---|
-| U1 Answer first | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
-| U2 Reader's language | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
-| U3 Recognition over recall | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
-| U4 Hierarchy and scent | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
-| U5 Data integrity | 2 | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
-| U6 Consistency | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 3 | 3 |
-| U7 Wayfinding and control | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 3 |
-| U8 Honest states | 1 | 2 | 3 | 3 | 3 | 3 | 4 | 3 | 4 |
-| U9 Accessibility | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
-| U10 Density and responsiveness | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
-| J1 Visceral | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
-| J2 Behavioral | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 |
-| J3 Reflective | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
-| J4 Voice | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
-| U total | 24 | 27 | 29 | 29 | 29 | 29 | 30 | 31 | 31 |
-| J total | 10 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 |
-| Tasks succeeded (of 18) | 13 | 16 | 16 | 17 | 18 | 17 | 18 | 18 | 17 |
+| Dimension | R1 | R2 | R3 | R4 | R5 | R6 | R7 | R8 | R9 | R10 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| U1 Answer first | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| U2 Reader's language | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| U3 Recognition over recall | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| U4 Hierarchy and scent | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| U5 Data integrity | 2 | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| U6 Consistency | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 3 | 3 | 3 |
+| U7 Wayfinding and control | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 4 | 3 | 3 |
+| U8 Honest states | 1 | 2 | 3 | 3 | 3 | 3 | 4 | 3 | 4 | 3 |
+| U9 Accessibility | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| U10 Density and responsiveness | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| J1 Visceral | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| J2 Behavioral | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 |
+| J3 Reflective | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| J4 Voice | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| U total | 24 | 27 | 29 | 29 | 29 | 29 | 30 | 31 | 31 | 30 |
+| J total | 10 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 |
+| Tasks succeeded (of 18) | 13 | 16 | 16 | 17 | 18 | 17 | 18 | 18 | 17 | 18 |
 
 ## Round 1: what the panel found
 
@@ -325,6 +323,26 @@ Declined, with reasons:
 - **Tabs on two rows on a phone** (B, C at severity 1): below 600 px the tabs are a grid on purpose, so every view stays visible without sideways scrolling.
 - **One hero model for every portal** (A, C), as in round 8.
 - **A per-scorecard summary table on the entity page** (C at severity 2): the header already names the scorecard holding the entity and its rule. The table is a candidate for the density pass.
+
+## Round 10: what the panel found
+
+Rounds 1 to 9 were scored by Claude Opus. That model was out of weekly usage, so this round's three
+auditors were Grok 4.7, still blind to the source, the diff and each other, on the same rubric and
+the same screenshots. The probes passed 212 of 212, and every task succeeded for all three
+auditors. No median rose. Honest states (U8) fell from 4 to 3, so the usability total fell from 31
+to 30, and the round did not pass. The model change is a reason to read the drop cautiously; the
+severity-3 findings are not, because each one is a sentence still on the page:
+
+| Finding (auditors) | Fix |
+|---|---|
+| The overview's next box still offers three actions, and the unverified one claims the larger gain (A, B, C) | One "Next" line. The next medal and the unverified check sit under "Other steps". The unverified line says the gain is unknown until the check runs |
+| An unassessed rule reads "passes, not assessed yet", and a level whose checks did not run still wears its medal (A, B; C at severity 2) | The outcome is "not assessed yet" and is left out of "N of M checks pass". When a check the shown level needs did not run, the header says "Not established" and draws the unknown medal |
+| The comparison states both counts in the first sentence (B, C) | The headline is one count. The other count is the first line of "How a factor and a rule are counted" |
+| With no data, the scorecard intro still defines "at none", and the empty section is titled "Most common failures" (C) | The intro says there is nothing to show. The section is "Nothing has failed or passed" |
+
+The OpenFGA overview's one undersized control, the "Ten" link at 22 px (A and C, severity 2), now
+reads "a score of 10" and next-step links have a 24 px minimum width. "Other steps" is at least 24
+px tall.
 
 ## Comparisons are generic
 

@@ -788,7 +788,7 @@ export const scorecardsViews = {
     );
     var owner = sc.owner ? sc.owner.replace(/^group:/, "") : "";
     var hStand = el("h3", { textContent: "What holds it where it is", tabIndex: -1 });
-    var hFail = el("h3", { textContent: "Most common failures, at any level", tabIndex: -1 });
+    var hFail = el("h3", { textContent: scored.length ? "Most common failures, at any level" : "Nothing has failed or passed", tabIndex: -1 });
     var hNeeds = el("h3", { textContent: "What each level needs (each level also needs the ones below)", tabIndex: -1 });
     var hList = el("h3", { textContent: "Entities", tabIndex: -1 });
     var jump = function (label, target) {
@@ -802,7 +802,7 @@ export const scorecardsViews = {
       });
     };
     var standNotes = [unassessedNote(D, active, scored.length), provisionalNote, lever ? el("div", { style: "margin-top:12px" }, lever) : null].filter(Boolean);
-    var jumpBar = el("nav", { className: "jumpbar", ariaLabel: "On this page" }, el("span", { className: "sub", textContent: "On this page:" }), standNotes.length ? jump("What holds it", hStand) : null, jump("Failures", hFail), jump("Entities (" + fmt(scored.length) + ")", hList), jump("What each level needs", hNeeds));
+    var jumpBar = el("nav", { className: "jumpbar", ariaLabel: "On this page" }, el("span", { className: "sub", textContent: "On this page:" }), standNotes.length ? jump("What holds it", hStand) : null, jump(scored.length ? "Failures" : "Results", hFail), jump("Entities (" + fmt(scored.length) + ")", hList), jump("What each level needs", hNeeds));
     var floorHere = floorOf(D, active);
     var topHere = order.filter(function (l) {
       return l !== "skipped" && l !== "none";

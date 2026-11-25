@@ -53,11 +53,11 @@ export const entityViews = {
               { style: "display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center" },
               el("h4", { className: "rn" }, scName ? ruleLink(scName, n, null, true) : n),
               scName ? el("code", { className: "rid", textContent: n }) : null,
-              el("span", { className: "outcome unassessed", style: "margin:0", textContent: "passes, not assessed yet" }),
+              el("span", { className: "outcome unknown", style: "margin:0", textContent: "not assessed yet" }),
               basisBadge("judged"),
               rule.level ? el("span", { className: "sub", textContent: "counts for " + rule.level }) : "",
             ),
-            el("div", { className: "fix" }, "No agent has assessed this entity, so there is nothing for this rule to fail on: it passes because nothing has been looked at, not because a review found nothing."),
+            el("div", { className: "fix" }, "No agent has assessed this entity, so this rule has not been reviewed. It is not a pass."),
             whyEl(rule),
           ),
         );
@@ -353,16 +353,18 @@ export const entityViews = {
           ? el(
               "div",
               { className: "elevel" },
-              S.worstState.get(id) === "hollow"
-                ? el("span", { className: "medal-hollow", title: "Reached only because no agent has assessed this entity yet, so its agent-judged rules pass by default." }, medal(S.worst[id], 52))
+              notRun
+                ? el("span", { title: "Checks this level needs were not run, so it is not established." }, medal("not scored", 52))
+                : S.worstState.get(id) === "hollow"
+                ? el("span", { className: "medal-hollow", title: "No agent has assessed this entity yet, so this level may not hold." }, medal(S.worst[id], 52))
                 : medal(S.worst[id], 52),
               el(
                 "div",
                 {},
-                el("strong", { style: "color:" + ink(S.worst[id]) + (KNOWN.indexOf(ownLevel(D, kind, S.worst[id])) < 0 ? ";text-transform:none" : "") }, ownLevel(D, kind, S.worst[id]), atTop ? el("span", { className: "topmark", textContent: " ✓ top" + (KNOWN.indexOf(S.worst[id]) < 0 ? " level" : "") }) : null, provisional.length ? el("span", { className: "pv-head", textContent: notRun ? " (provisional)" : " (may not hold)" }) : null),
+                el("strong", { style: "color:" + (notRun ? "var(--muted)" : ink(S.worst[id])) + (notRun || KNOWN.indexOf(ownLevel(D, kind, S.worst[id])) < 0 ? ";text-transform:none" : "") }, notRun ? "Not established" : ownLevel(D, kind, S.worst[id]), !notRun && atTop ? el("span", { className: "topmark", textContent: " ✓ top" + (KNOWN.indexOf(S.worst[id]) < 0 ? " level" : "") }) : null, !notRun && provisional.length ? el("span", { className: "pv-head", textContent: " (may not hold)" }) : null),
                 provisional.length ? el("span", { className: "provisional", style: "display:block;font-size:13px", title: "The level holds only if the checks not run in this build pass and an agent's assessment finds nothing; the scorecards below name them.", textContent: provisional.join(", ") }) : null,
                 heldEl,
-                el("span", { className: "sub", textContent: total.pass + " of " + plural(total.all, "check passes", "checks pass") + " on evidence" + (total.hollow ? " · " + total.hollow + " more " + (total.hollow === 1 ? "passes" : "pass") + " by default, because no agent has reviewed " + (total.hollow === 1 ? "it" : "them") + " yet" : "") }),
+                el("span", { className: "sub", textContent: total.pass + " of " + plural(total.all, "check passes", "checks pass") + " on evidence" + (total.hollow ? " · " + plural(total.hollow, "more") + " not assessed yet, not counted as " + (total.hollow === 1 ? "a pass" : "passes") : "") }),
               ),
             )
           : null,

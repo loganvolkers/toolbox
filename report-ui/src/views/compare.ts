@@ -6,7 +6,7 @@ import { basisBadge, basisCounts, basisKey, basisOf, refs, whyEl } from "../lib/
 import { TIMED_UNITS, cmpWord, humanize, magnitude, measureLabel, num, ruleValue, setupBrief, valueLine } from "../lib/compare";
 import { el, enc, link } from "../lib/dom";
 import { UNSCORED } from "../lib/levels";
-import { bothCounts, countWords, productName, shortId, title } from "../lib/rings";
+import { countWords, productName, shortId, title } from "../lib/rings";
 import { trackPath } from "../lib/routes";
 import { ruleTitle } from "../lib/rules";
 import { rich } from "../lib/text";
@@ -201,9 +201,9 @@ export const compareViews = {
     var countsDiffer = !unmeasured && strictWords !== majorityWords;
     var headline = unmeasured
       ? "Not measured yet: none of the " + plural(names.length, "factor") + " has values for both products."
-      : "Ahead on " + verdictWords.slice("ahead on ".length) + (countsDiffer ? ", by the " + (majority ? "majority" : "strict") + " count, this comparison's verdict." : ", by either count.");
+      : "Ahead on " + verdictWords.slice("ahead on ".length) + (countsDiffer ? "." : ", by either count.");
     var otherCount = countsDiffer
-      ? el("p", { className: "sub", style: "margin:4px 0 0" }, el("span", { className: "pill", textContent: "Verdict: " + (majority ? "majority" : "strict") + " count" }), " By the " + (majority ? "strict" : "majority") + " count it is " + (majority ? countWords(both.strict, "strict") : countWords(both.majority)) + " of " + plural(names.length, "factor") + "; how each is counted is below.")
+      ? el("p", { className: "sub", style: "margin:6px 0 0" }, "Verdict: the " + (majority ? "majority" : "strict") + " count. By the " + (majority ? "strict" : "majority") + " count, " + (majority ? countWords(both.strict, "strict") : countWords(both.majority)) + ".")
       : null;
     var lean = counts.behind > counts.ahead ? "behind" : counts.ahead > counts.behind ? "ahead" : "parity";
     var hero = el(
@@ -221,7 +221,6 @@ export const compareViews = {
         }).sort().map(function (r) {
           return ruleTitle(behindNames[0], r);
         })) + ". If your teams rely on those, start with " + title(D, behindNames[0]) + "." : ": if your teams rely on what those factors measure, read them first.") : unmeasured ? " Run the comparison's harness and commit its records to fill this in." : counts.unknown ? " Not behind on any measured factor." : " Never behind."),
-        otherCount,
         unmeasured
           ? el("p", { className: "rule-tally", textContent: "Rule by rule: none of " + plural(ruleTotal, "rule") + " has values for both products yet." })
           : el(
@@ -239,6 +238,7 @@ export const compareViews = {
           "details",
           { className: "sub cmp-def cmp-brief", style: "margin:6px 0 0" },
           el("summary", { textContent: "How a factor and a rule are counted" }),
+          otherCount,
           "A factor is a scorecard that scores both products on the same rules. On a rule, a product is ahead when its measured value is better (within the rule's tolerance is parity) or it passes a bar the other misses. Factors are counted two ways on every portal. By the strict count, " + who(subject) + " is behind on a factor if it is behind on any one of its rules, and ahead if it is ahead on some and behind on none. By the majority count, it is ahead when it is ahead on more of the factor's rules than it is behind on, behind when it is behind on more, and at parity when they are even. Each comparison declares which count is its verdict; this one declares the " + (majority ? "majority" : "strict") + " count. A factor with any unmeasured rule is not measured. “Mixed” means ahead on some rules and behind on others; “narrowly ahead” means ahead on fewer than half of that factor's rules, at parity on the rest.",
         ),
       ),
@@ -246,7 +246,6 @@ export const compareViews = {
         "div",
         { className: "cmp-side" },
         el("div", { className: "kicker", textContent: "Factors" }),
-        bothCounts(Object.assign({}, counts, { both: both, majority: majority }), names.length),
         el(
           "div",
           { className: "tally3" },

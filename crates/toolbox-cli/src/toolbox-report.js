@@ -1425,6 +1425,10 @@
 		return parts.length > 1 ? " (" + parts.join(", ") + ")" : "";
 	}
 	// src/lib/campaigns.ts
+	function ruleWords(name, rule) {
+		var t = ruleTitle(name, rule);
+		return t === "Ten" ? "a score of 10" : t;
+	}
 	function levelName(l) {
 		return l === "none" || l === "not scored" || LADDER.indexOf(l) >= 0 ? l : "“" + l + "”";
 	}
@@ -1490,7 +1494,7 @@
 			if (!nm) return [];
 			var card = link("scorecard/" + enc(nm.name), "", title(D, nm.name));
 			var rule = nm.rule ? [
-				link("rule/" + enc(nm.name) + "/" + enc(nm.rule), "", ruleTitle(nm.name, nm.rule)),
+				link("rule/" + enc(nm.name) + "/" + enc(nm.rule), "", ruleWords(nm.name, nm.rule)),
 				" ",
 				basisBadge(basisOf((((D.scorecards || {})[nm.name] || {}).rules || {})[nm.rule]), "tip")
 			] : [];
@@ -1514,9 +1518,15 @@
 		var top = nm ? (((D.scorecards || {})[nm.name] || {}).levels || []).slice(-1)[0] : "";
 		var medalAtTop = nm ? isTop(D, nm.name, nm.up) : false;
 		var medalNote = !nm ? "" : medalAtTop ? " That is its top level." : " Its top level is " + top + (tracked ? ", so this adds no points to the track's percentage until they reach it." : ".");
-		if (verified && !(medalAtTop && verified.r.name === nm?.name)) return el("div", { className: "nextmedal" }, el("b", { textContent: label || "Next: " }), ...moverBody(D, verified), why ? el("span", { className: "sub" }, why) : null, nm ? el("div", { className: "sub mover" }, el("b", { textContent: "Next medal: " }), ...medalBody(), medalNote) : null, unverified ? moverEl(D, unverified) : null);
+		var leadVerified = !!(verified && !(medalAtTop && verified.r.name === nm?.name));
+		var extras = [leadVerified && nm ? el("div", { className: "sub mover" }, el("b", { textContent: "Next medal: " }), ...medalBody(), medalNote) : null, unverified ? moverEl(D, unverified) : null].filter(Boolean);
+		var more = extras.length ? el("details", {
+			className: "sub",
+			style: "margin-top:6px"
+		}, el("summary", { textContent: "Other steps" }), ...extras) : null;
+		if (leadVerified && verified) return el("div", { className: "nextmedal" }, el("b", { textContent: label || "Next: " }), ...moverBody(D, verified), why ? el("span", { className: "sub" }, why) : null, more);
 		if (!nm) return null;
-		return el("div", { className: "nextmedal" }, el("b", { textContent: label || "Next medal: " }), ...medalBody(), el("span", { className: "sub" }, medalNote + (why || "")), unverified ? moverEl(D, unverified) : null);
+		return el("div", { className: "nextmedal" }, el("b", { textContent: label || "Next medal: " }), ...medalBody(), el("span", { className: "sub" }, medalNote + (why || "")), more);
 	}
 	function ringMovers(D, cards) {
 		var rows = cards.map(function(c) {
@@ -1580,7 +1590,7 @@
 		var entities = plural(b.n, "entity", "entities") + " at " + levelName(b.below);
 		var card = link("scorecard/" + enc(b.r.name), "", title(D, b.r.name));
 		var ruleEl = rule ? [
-			link("rule/" + enc(b.r.name) + "/" + enc(rule[0]), "", ruleTitle(b.r.name, rule[0])),
+			link("rule/" + enc(b.r.name) + "/" + enc(rule[0]), "", ruleWords(b.r.name, rule[0])),
 			" ",
 			basisBadge(basisOf((sc.rules || {})[rule[0]]), "tip")
 		] : [];
@@ -1602,7 +1612,7 @@
 	function moverEl(D, b) {
 		var waits = b.waits;
 		var card = link("scorecard/" + enc(b.r.name), "", title(D, b.r.name));
-		return el("div", { className: "sub mover" }, el("b", { textContent: "Unverified, run a check first: " }), plural(b.n, "entity", "entities") + " at " + levelName(b.below) + " on ", card, " may already meet " + levelName(b.top) + ", but its check ", link("rule/" + enc(b.r.name) + "/" + enc(waits[0]), "", ruleTitle(b.r.name, waits[0])), " was not run in this build, so nothing is known yet; if it passes, the track gains about " + points(b.gain) + ".");
+		return el("div", { className: "sub mover" }, el("b", { textContent: "Unverified, run a check first: " }), plural(b.n, "entity", "entities") + " at " + levelName(b.below) + " on ", card, " may already meet " + levelName(b.top) + ", but its check ", link("rule/" + enc(b.r.name) + "/" + enc(waits[0]), "", ruleWords(b.r.name, waits[0])), " was not run in this build, so the gain is unknown until it runs.");
 	}
 	function ownerName(o) {
 		return String(o || "").replace(/^(group|user):/, "");
@@ -2169,7 +2179,7 @@
 		"*{box-sizing:border-box}",
 		"h2[tabindex='-1']:focus{outline:none}",
 		"main{max-width:1120px;margin:0 auto;padding:28px 20px 72px}",
-		"a{color:var(--accent);text-underline-offset:3px}",
+		"a{color:var(--accent);text-underline-offset:3px}.nextmedal a{display:inline-block;min-width:24px;text-align:center}.nextmedal summary{display:inline-flex;align-items:center;min-height:24px}",
 		"a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}",
 		".top{display:flex;align-items:center;gap:14px;margin-bottom:6px}",
 		".top svg{flex:none}",
@@ -2888,7 +2898,7 @@
 			var c = S.checks;
 			var total = c.pass + c.vacuous + c.fail + c.unknown;
 			var pct = share(c.pass, total);
-			var checkNote = [c.vacuous ? fmt(c.vacuous) + " more pass by default, because no agent has reviewed them yet" : null, c.unknown ? fmt(c.unknown) + " not run" : null].filter(Boolean);
+			var checkNote = [c.vacuous ? fmt(c.vacuous) + " not assessed yet, not counted as passes" : null, c.unknown ? fmt(c.unknown) + " not run" : null].filter(Boolean);
 			var on = campaignNames.filter(function(n) {
 				return campaignStanding(D, campaigns[n]) === "on";
 			}).length;
@@ -3099,7 +3109,7 @@
 				textContent: "Most entities at none first"
 			}) : null), el("p", {
 				className: "lede",
-				textContent: "Each scorecard rates every entity of one kind against levels of rules. An entity is at none until it passes every rule of the first level."
+				textContent: noFacts(S) ? "No entity has a level yet, so these scorecards have nothing to show." : "Each scorecard rates every entity of one kind against levels of rules. An entity is at none until it passes every rule of the first level."
 			}), unscored.length === S.rows.length ? null : levelLegend(D, S.rows), attTable, attMore, clear.length ? clearWrap : null, unscored.length ? el("div", {}, el("p", {
 				className: "empty",
 				textContent: plural(unscored.length, "scorecard has", "scorecards have") + " no scored entity yet:"
@@ -3831,7 +3841,7 @@
 				tabIndex: -1
 			});
 			var hFail = el("h3", {
-				textContent: "Most common failures, at any level",
+				textContent: scored.length ? "Most common failures, at any level" : "Nothing has failed or passed",
 				tabIndex: -1
 			});
 			var hNeeds = el("h3", {
@@ -3866,7 +3876,7 @@
 			}, el("span", {
 				className: "sub",
 				textContent: "On this page:"
-			}), standNotes.length ? jump("What holds it", hStand) : null, jump("Failures", hFail), jump("Entities (" + fmt(scored.length) + ")", hList), jump("What each level needs", hNeeds));
+			}), standNotes.length ? jump("What holds it", hStand) : null, jump(scored.length ? "Failures" : "Results", hFail), jump("Entities (" + fmt(scored.length) + ")", hList), jump("What each level needs", hNeeds));
 			var floorHere = floorOf(D, active);
 			var topHere = order.filter(function(l) {
 				return l !== "skipped" && l !== "none";
@@ -4819,13 +4829,13 @@
 						className: "rid",
 						textContent: n
 					}) : null, el("span", {
-						className: "outcome unassessed",
+						className: "outcome unknown",
 						style: "margin:0",
-						textContent: "passes, not assessed yet"
+						textContent: "not assessed yet"
 					}), basisBadge("judged"), rule.level ? el("span", {
 						className: "sub",
 						textContent: "counts for " + rule.level
-					}) : ""), el("div", { className: "fix" }, "No agent has assessed this entity, so there is nothing for this rule to fail on: it passes because nothing has been looked at, not because a review found nothing."), whyEl(rule)));
+					}) : ""), el("div", { className: "fix" }, "No agent has assessed this entity, so this rule has not been reviewed. It is not a pass."), whyEl(rule)));
 					return;
 				}
 				if (o === "pass") {
@@ -5085,15 +5095,15 @@
 			}, link("catalog", "", "Catalog"), kind ? el("span", {}, " / ", link("catalog/" + enc(kind), "", kindTitle(D, kind))) : "", " / " + short), el("div", { className: "ehead" }, el("div", {}, el("h2", { textContent: short }), short !== id ? el("code", { textContent: id }) : null, el("div", {
 				className: "sub",
 				textContent: (kind ? kindTitle(D, kind) : "unknown kind") + " · " + plural(cards.length, "scorecard")
-			})), S.worst[id] ? el("div", { className: "elevel" }, S.worstState.get(id) === "hollow" ? el("span", {
+			})), S.worst[id] ? el("div", { className: "elevel" }, notRun ? el("span", { title: "Checks this level needs were not run, so it is not established." }, medal("not scored", 52)) : S.worstState.get(id) === "hollow" ? el("span", {
 				className: "medal-hollow",
-				title: "Reached only because no agent has assessed this entity yet, so its agent-judged rules pass by default."
-			}, medal(S.worst[id], 52)) : medal(S.worst[id], 52), el("div", {}, el("strong", { style: "color:" + ink(S.worst[id]) + (KNOWN.indexOf(ownLevel(D, kind, S.worst[id])) < 0 ? ";text-transform:none" : "") }, ownLevel(D, kind, S.worst[id]), atTop ? el("span", {
+				title: "No agent has assessed this entity yet, so this level may not hold."
+			}, medal(S.worst[id], 52)) : medal(S.worst[id], 52), el("div", {}, el("strong", { style: "color:" + (notRun ? "var(--muted)" : ink(S.worst[id])) + (notRun || KNOWN.indexOf(ownLevel(D, kind, S.worst[id])) < 0 ? ";text-transform:none" : "") }, notRun ? "Not established" : ownLevel(D, kind, S.worst[id]), !notRun && atTop ? el("span", {
 				className: "topmark",
 				textContent: " ✓ top" + (KNOWN.indexOf(S.worst[id]) < 0 ? " level" : "")
-			}) : null, provisional.length ? el("span", {
+			}) : null, !notRun && provisional.length ? el("span", {
 				className: "pv-head",
-				textContent: notRun ? " (provisional)" : " (may not hold)"
+				textContent: " (may not hold)"
 			}) : null), provisional.length ? el("span", {
 				className: "provisional",
 				style: "display:block;font-size:13px",
@@ -5101,7 +5111,7 @@
 				textContent: provisional.join(", ")
 			}) : null, heldEl, el("span", {
 				className: "sub",
-				textContent: total.pass + " of " + plural(total.all, "check passes", "checks pass") + " on evidence" + (total.hollow ? " · " + total.hollow + " more " + (total.hollow === 1 ? "passes" : "pass") + " by default, because no agent has reviewed " + (total.hollow === 1 ? "it" : "them") + " yet" : "")
+				textContent: total.pass + " of " + plural(total.all, "check passes", "checks pass") + " on evidence" + (total.hollow ? " · " + plural(total.hollow, "more") + " not assessed yet, not counted as " + (total.hollow === 1 ? "a pass" : "passes") : "")
 			}))) : null), total.all ? basisKey(bases, "check") : null, judgedList, cards.length ? el("div", {}, ...blocks) : el("div", {
 				className: "empty",
 				textContent: "Not scored by any scorecard in this snapshot."
@@ -5472,14 +5482,11 @@
 			var majorityWords = tallyOf(both.majority);
 			var verdictWords = majority ? majorityWords : strictWords;
 			var countsDiffer = !unmeasured && strictWords !== majorityWords;
-			var headline = unmeasured ? "Not measured yet: none of the " + plural(names.length, "factor") + " has values for both products." : "Ahead on " + verdictWords.slice(9) + (countsDiffer ? ", by the " + (majority ? "majority" : "strict") + " count, this comparison's verdict." : ", by either count.");
+			var headline = unmeasured ? "Not measured yet: none of the " + plural(names.length, "factor") + " has values for both products." : "Ahead on " + verdictWords.slice(9) + (countsDiffer ? "." : ", by either count.");
 			var otherCount = countsDiffer ? el("p", {
 				className: "sub",
-				style: "margin:4px 0 0"
-			}, el("span", {
-				className: "pill",
-				textContent: "Verdict: " + (majority ? "majority" : "strict") + " count"
-			}), " By the " + (majority ? "strict" : "majority") + " count it is " + (majority ? countWords(both.strict, "strict") : countWords(both.majority)) + " of " + plural(names.length, "factor") + "; how each is counted is below.") : null;
+				style: "margin:6px 0 0"
+			}, "Verdict: the " + (majority ? "majority" : "strict") + " count. By the " + (majority ? "strict" : "majority") + " count, " + (majority ? countWords(both.strict, "strict") : countWords(both.majority)) + ".") : null;
 			var lean = counts.behind > counts.ahead ? "behind" : counts.ahead > counts.behind ? "ahead" : "parity";
 			var hero = el("section", { className: "cmp-hero" }, el("div", { className: "cmp-main" }, el("div", {
 				className: "kicker",
@@ -5496,7 +5503,7 @@
 				return (all[behindNames[0]].rules[r] || {})[peer] === "behind";
 			}).sort().map(function(r) {
 				return ruleTitle(behindNames[0], r);
-			})) + ". If your teams rely on those, start with " + title(D, behindNames[0]) + "." : ": if your teams rely on what those factors measure, read them first.") : unmeasured ? " Run the comparison's harness and commit its records to fill this in." : counts.unknown ? " Not behind on any measured factor." : " Never behind."), otherCount, unmeasured ? el("p", {
+			})) + ". If your teams rely on those, start with " + title(D, behindNames[0]) + "." : ": if your teams rely on what those factors measure, read them first.") : unmeasured ? " Run the comparison's harness and commit its records to fill this in." : counts.unknown ? " Not behind on any measured factor." : " Never behind."), unmeasured ? el("p", {
 				className: "rule-tally",
 				textContent: "Rule by rule: none of " + plural(ruleTotal, "rule") + " has values for both products yet."
 			}) : el("p", { className: "rule-tally" }, "Rule by rule: ", el("b", {
@@ -5511,13 +5518,10 @@
 			}), ". Factors are not weighted, so the factor count is a tally, not an overall score."), el("details", {
 				className: "sub cmp-def cmp-brief",
 				style: "margin:6px 0 0"
-			}, el("summary", { textContent: "How a factor and a rule are counted" }), "A factor is a scorecard that scores both products on the same rules. On a rule, a product is ahead when its measured value is better (within the rule's tolerance is parity) or it passes a bar the other misses. Factors are counted two ways on every portal. By the strict count, " + who(subject) + " is behind on a factor if it is behind on any one of its rules, and ahead if it is ahead on some and behind on none. By the majority count, it is ahead when it is ahead on more of the factor's rules than it is behind on, behind when it is behind on more, and at parity when they are even. Each comparison declares which count is its verdict; this one declares the " + (majority ? "majority" : "strict") + " count. A factor with any unmeasured rule is not measured. “Mixed” means ahead on some rules and behind on others; “narrowly ahead” means ahead on fewer than half of that factor's rules, at parity on the rest.")), el("div", { className: "cmp-side" }, el("div", {
+			}, el("summary", { textContent: "How a factor and a rule are counted" }), otherCount, "A factor is a scorecard that scores both products on the same rules. On a rule, a product is ahead when its measured value is better (within the rule's tolerance is parity) or it passes a bar the other misses. Factors are counted two ways on every portal. By the strict count, " + who(subject) + " is behind on a factor if it is behind on any one of its rules, and ahead if it is ahead on some and behind on none. By the majority count, it is ahead when it is ahead on more of the factor's rules than it is behind on, behind when it is behind on more, and at parity when they are even. Each comparison declares which count is its verdict; this one declares the " + (majority ? "majority" : "strict") + " count. A factor with any unmeasured rule is not measured. “Mixed” means ahead on some rules and behind on others; “narrowly ahead” means ahead on fewer than half of that factor's rules, at parity on the rest.")), el("div", { className: "cmp-side" }, el("div", {
 				className: "kicker",
 				textContent: "Factors"
-			}), bothCounts(Object.assign({}, counts, {
-				both,
-				majority
-			}), names.length), el("div", { className: "tally3" }, ...[
+			}), el("div", { className: "tally3" }, ...[
 				"ahead",
 				"parity",
 				"behind"

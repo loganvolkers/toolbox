@@ -238,7 +238,7 @@ export const overviewViews = {
     var c = S.checks;
     var total = c.pass + c.vacuous + c.fail + c.unknown;
     var pct = shareOf(c.pass, total);
-    var checkNote = [c.vacuous ? fmt(c.vacuous) + " more pass by default, because no agent has reviewed them yet" : null, c.unknown ? fmt(c.unknown) + " not run" : null].filter(Boolean);
+    var checkNote = [c.vacuous ? fmt(c.vacuous) + " not assessed yet, not counted as passes" : null, c.unknown ? fmt(c.unknown) + " not run" : null].filter(Boolean);
     var on = campaignNames.filter(function (n) {
       return campaignStanding(D, campaigns[n]) === "on";
     }).length;
@@ -493,7 +493,7 @@ export const overviewViews = {
           el("h2", { id: "need-att", textContent: attention.length ? "Scorecards that need attention" : "Scorecards" }),
           attention.length ? el("span", { className: "sub", textContent: "Most entities at none first" }) : null,
         ),
-        el("p", { className: "lede", textContent: "Each scorecard rates every entity of one kind against levels of rules. An entity is at none until it passes every rule of the first level." }),
+        el("p", { className: "lede", textContent: noFacts(S) ? "No entity has a level yet, so these scorecards have nothing to show." : "Each scorecard rates every entity of one kind against levels of rules. An entity is at none until it passes every rule of the first level." }),
         unscored.length === S.rows.length ? null : levelLegend(D, S.rows),
         attTable,
         attMore,

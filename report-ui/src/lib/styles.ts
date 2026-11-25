@@ -17,7 +17,7 @@ export var CSS = [
   "*{box-sizing:border-box}",
   "h2[tabindex='-1']:focus{outline:none}",
   "main{max-width:1120px;margin:0 auto;padding:28px 20px 72px}",
-  "a{color:var(--accent);text-underline-offset:3px}",
+  "a{color:var(--accent);text-underline-offset:3px}.nextmedal a{display:inline-block;min-width:24px;text-align:center}.nextmedal summary{display:inline-flex;align-items:center;min-height:24px}",
   "a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}",
   ".top{display:flex;align-items:center;gap:14px;margin-bottom:6px}",
   ".top svg{flex:none}",
