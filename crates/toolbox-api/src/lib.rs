@@ -58,6 +58,7 @@ pub fn app_state_with(
         changed: tokio::sync::Notify::new(),
         config,
         runs: Default::default(),
+        confinement: Default::default(),
     })
 }
 

@@ -264,12 +264,20 @@ pub fn spawn_in_image(s: &Arc<AppState>) {
         tracing::info!("in-image connectors disabled (TOOLBOX_CONNECTORS=off)");
         return;
     }
-    for c in s
+    let mut in_image = s
         .manifest
         .connectors
         .iter()
         .filter(|c| c.runtime == "in-image")
-    {
+        .peekable();
+    if in_image.peek().is_some() {
+        tracing::info!(
+            setting = s.config.connector_confinement.as_str(),
+            landlock = crate::confine::available(),
+            "connector confinement"
+        );
+    }
+    for c in in_image {
         let (state, name) = (s.clone(), c.name.clone());
         let program = binary_for(&c.package);
         let config = resolve_config(&c.name, c.config.as_ref().unwrap_or(&Value::Null));
@@ -310,22 +318,49 @@ pub fn connector_env() -> Vec<(String, String)> {
         .collect()
 }
 
+/// Spawn one in-image connector and record how it started. `None`: refused, because confinement
+/// is `required` and Landlock is unavailable, which a retry won't change.
+fn start(
+    s: &AppState,
+    name: &str,
+    program: &str,
+    config: &Value,
+) -> Option<std::io::Result<tokio::process::Child>> {
+    let spawned = crate::confine::spawn(
+        tokio::process::Command::new(program)
+            .env_clear()
+            .envs(connector_env())
+            .env("TOOLBOX_CONNECTOR_CONFIG", config.to_string())
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::inherit())
+            .kill_on_drop(true),
+        s.config.connector_confinement,
+    );
+    let started = match &spawned {
+        Ok((_, started)) => *started,
+        Err(e) if crate::confine::is_refused(e) => crate::confine::Started::Refused,
+        Err(_) => return Some(spawned.map(|(c, _)| c)),
+    };
+    s.confinement
+        .lock()
+        .unwrap()
+        .insert(name.to_owned(), started);
+    if started == crate::confine::Started::Refused {
+        let e = spawned.err().map(|e| e.to_string()).unwrap_or_default();
+        tracing::error!(connector = %name, error = %e, "connector not started");
+        return None;
+    }
+    Some(spawned.map(|(c, _)| c))
+}
+
 async fn supervise(s: Arc<AppState>, name: String, program: String, config: Value) {
     let mut backoff = Duration::from_secs(1);
     loop {
-        let child = crate::confine::spawn(
-            tokio::process::Command::new(&program)
-                .env_clear()
-                .envs(connector_env())
-                .env("TOOLBOX_CONNECTOR_CONFIG", config.to_string())
-                .stdin(Stdio::piped())
-                .stdout(Stdio::piped())
-                .stderr(Stdio::inherit())
-                .kill_on_drop(true),
-        );
-        let mut child = match child {
-            Ok(c) => c,
-            Err(e) => {
+        let mut child = match start(&s, &name, &program, &config) {
+            None => return,
+            Some(Ok(c)) => c,
+            Some(Err(e)) => {
                 tracing::error!(connector = %name, error = %e, program = %program, "cannot start connector");
                 tokio::time::sleep(backoff).await;
                 backoff = (backoff * 2).min(Duration::from_secs(30));
@@ -445,6 +480,7 @@ pub async fn list_connectors(State(s): State<Arc<AppState>>, headers: HeaderMap)
         Err(r) => return r,
     }
     let regs = s.hub.registrations();
+    let started = s.confinement.lock().unwrap().clone();
     let connectors: Vec<Value> = s
         .manifest
         .connectors
@@ -452,10 +488,35 @@ pub async fn list_connectors(State(s): State<Arc<AppState>>, headers: HeaderMap)
         .map(|c| {
             let last: serde_json::Map<String, Value> =
                 c.records.iter().map(|k| (k.clone(), json!(s.hub.last_read(&c.name, k).map(toolbox_connect::hub::rfc3339)))).collect();
-            json!({"name": c.name, "runtime": c.runtime, "registration": regs.get(&c.name), "last_read": last})
+            json!({"name": c.name, "runtime": c.runtime, "registration": regs.get(&c.name), "last_read": last,
+                "confinement": started.get(&c.name).map(|t| t.as_str())})
         })
         .collect();
-    Json(json!({"connectors": connectors, "pending": s.hub.pending()})).into_response()
+    Json(json!({"connectors": connectors, "pending": s.hub.pending(),
+        "confinement": confinement_summary(&s)}))
+    .into_response()
+}
+
+/// The confinement setting and the in-image connectors that started without Landlock or were
+/// refused, for `/readyz` and `/v1/connectors`.
+pub fn confinement_summary(s: &AppState) -> Value {
+    let started = s.confinement.lock().unwrap();
+    let names = |want| {
+        started
+            .iter()
+            .filter(|(_, t)| **t == want)
+            .map(|(n, _)| n.clone())
+            .collect::<Vec<_>>()
+    };
+    json!({"setting": s.config.connector_confinement.as_str(),
+        "unconfined": names(crate::confine::Started::Unconfined),
+        "refused": names(crate::confine::Started::Refused)})
+}
+
+/// How the connector behind a provenance (`connector:<name>`) last started, if it is in-image.
+pub fn source_confinement(s: &AppState, source: Option<&String>) -> Option<&'static str> {
+    let name = source?.strip_prefix("connector:")?;
+    s.confinement.lock().unwrap().get(name).map(|t| t.as_str())
 }
 
 /// `POST /v1/entities/{id}/refresh` — ask the connectors behind an entity to re-read it.

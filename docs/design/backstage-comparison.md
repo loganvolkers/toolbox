@@ -101,6 +101,7 @@ and names its fix.
 | The server is non-dumpable, so a same-user process cannot read its environment or memory | F7 | every deployment with supervised connectors |
 | OpenFGA gets no server credentials: its datastore URI is in a private file removed once it is healthy, and every call needs a per-start preshared key | F7 | every deployment with an OpenFGA model and supervised connectors |
 | After round 3: each in-image connector starts in its own Landlock domain, so it cannot read OpenFGA's or another connector's memory; `serve` warns when the database URL is on argv. Not yet scored: the fact stays `false` until a round reruns the canary on the image | F7 | every deployment with in-image connectors; every `serve --database-url` |
+| Where the host has no Landlock, `TOOLBOX_CONNECTOR_CONFINEMENT=best-effort` (the default) starts connectors unconfined and shows it in `/readyz`, `/v1/connectors`, field explain and `toolbox doctor`; `required` refuses to start them (D01M88668MR8K559A1NYSNQQTX0) | F7 | every host without Landlock (gVisor, restrictive seccomp profiles) |
 | A list filter drops candidates it rejects in both shapes before asking OpenFGA | F4 | any portal with an OpenFGA model and filtered lists |
 | OpenFGA decisions kept per snapshot, not in a TTL cache | F4 | every authorized read; no stale read after `min_snapshot` |
 | Indexes on the columns OpenFGA's tuple view computes | F4 | every check against the Postgres datastore |

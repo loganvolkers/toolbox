@@ -88,6 +88,10 @@ enum Command {
     /// --url` and the reads); elsewhere they need a token. `TOOLBOX_AUTH_MODE` overrides (`dev`,
     /// `token`, `iap-google`, `cloudflare-access`, `oidc`).
     ///
+    /// Connectors: each in-image connector starts in its own Landlock domain. On a host without
+    /// Landlock, `TOOLBOX_CONNECTOR_CONFINEMENT=best-effort` (the default) starts it unconfined
+    /// and says so in `/readyz` and `/v1/connectors`; `required` refuses to start it.
+    ///
     /// State: without a database, action runs are kept in `TOOLBOX_STATE_DIR` (default
     /// `~/.local/state/toolbox`) under `served/<portal>/runs` and survive a restart. A portal with
     /// `federation.children` keeps their clones under `federation/` there, and, unless
@@ -309,8 +313,9 @@ enum Command {
         #[command(subcommand)]
         command: ToolsCommand,
     },
-    /// Check that every in-image connector resolves and every declared tool is at its pinned
-    /// version; exit 1 when something is missing.
+    /// Check that every in-image connector resolves, whether this host would confine it
+    /// (Landlock), and that every declared tool is at its pinned version; exit 1 when something
+    /// is missing.
     Doctor {
         /// A portal directory (containing toolbox.yaml) or a manifest file.
         #[arg(default_value = ".")]

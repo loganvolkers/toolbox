@@ -152,7 +152,15 @@ async fn readyz(State(s): S) -> Response {
             "reading-children",
             "waiting for the first read of the federation children",
         ),
-        Some(p) => Json(json!({"ready": true, "snapshot": p.snapshot_id})).into_response(),
+        Some(p) => {
+            // Counts only: this endpoint is unauthenticated, and `/v1/connectors` names them.
+            let c = crate::connectors::confinement_summary(&s);
+            let count = |k: &str| c[k].as_array().map_or(0, Vec::len);
+            Json(json!({"ready": true, "snapshot": p.snapshot_id,
+                "connectors": {"confinement": c["setting"],
+                    "unconfined": count("unconfined"), "refused": count("refused")}}))
+            .into_response()
+        }
         None => problem(
             StatusCode::SERVICE_UNAVAILABLE,
             "starting",
