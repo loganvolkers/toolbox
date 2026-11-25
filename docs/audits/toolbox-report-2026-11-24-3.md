@@ -231,7 +231,41 @@ Declined, with reasons:
 - **Product names in the not-measured state**, as in rounds 5 and 6.
 - **Toolbox design links on OpenFGA's Go scorecard** (B, C), as in round 5: they come from the `file-size` package.
 - **"Passes by default" on an unassessed rule** (B, C): that is how an assessed rule is scored (no open finding, no failure), and the page already marks it "not assessed yet". Changing it changes scoring, not the page.
-- **Campaigns built without a baseline** (A, B, C): the stories render the fixture without a baseline file, and the page says so. Showing momentum needs the baseline in the fixture, which is a fixture change, not a page fix.
+- **Campaigns built without a baseline** (A, B, C): the stories render the fixture without a baseline file, and the page says so. Showing momentum needs the   baseline in the fixture, which is a fixture change, not a page fix.
+
+## Round 8: what the panel found
+
+The declined baseline item from round 7 was fixed before capture after all. The published report
+and the OpenFGA example now build with `--baseline` (the pages workflow,
+`scripts/regen-site-report.sh` and `report-ui/scripts/fixtures.sh`), and OpenFGA gains a committed
+`results.json`. Campaigns therefore show "since the start" rather than a missing-baseline note. The
+probes passed 212 of 212 and every task succeeded for all three auditors. Consistency (U6) rose from
+2 to 3 and wayfinding (U7) from 3 to 4. Honesty (U8) fell from 4 to 3, so the round did not pass.
+Three severity-3 findings were open:
+
+| Finding (auditors) | Box or portal | Fix |
+|---|---|---|
+| The strict count calls a factor 3 rules ahead and 1 behind "behind" (A; B at severity 2) | Box | The strict count says what it measures: "ahead with no rule behind on 2, with a rule behind on 4". The majority count keeps "ahead" and "behind". The order stays strict first, and the declared rule's row is still the one marked |
+| The two portals give their headline under different rules, and the factor page defines a factor win differently on each (B; C at severity 2) | Box | One headline shape on every portal: "by either count" when the counts agree, otherwise both counts, strict first, with the verdict marked. The factor page defines both counts on every portal and then names the comparison's rule |
+| The crate page says "lowest of 2 scorecards" without naming the scorecard; the one holding it comes second, about 1,700 px down (C) | Box | The header names it and its blocking rule: "Held at bronze by Crates, reviewed by agents: “Assessed” fails", a link that jumps to the section. Sections are ordered lowest level first |
+
+Severity-2 findings fixed in the same pass:
+
+- a next step that waits on an unrun check is headed "Unverified, run a check first" and says "may already meet silver … so nothing is known yet", instead of "fail nothing for silver";
+- a header medal reached only through default passes on an unassessed scorecard is drawn faded inside a dashed ring;
+- entities whose basenames collide are named by the shortest path suffix that tells them apart ("internal/check/check.go"), wherever the report shortens an id;
+- in the not-measured state, products take the spelling the portal's own track prose uses ("OpenFGA vs SpiceDB", not "openfga vs spicedb"), and the empty section reads "Where each product leads (not measured yet)";
+- every compare hero has a "Not covered:" line, and says "not stated" when the track gives none; Toolbox's comparison gained one taken from its benchmark's threats to validity;
+- the OpenFGA track says "Toolbox's maintainers, not OpenFGA's or SpiceDB's, chose the factors";
+- counts carry units ("Scorecards by medal", "by lowest level, 5 at none"), and the column is "Lowest level", not "Weakest entity";
+- the empty Scorecards tab gives the `toolbox doctor` next step, and an empty scorecard says "No entities collected yet";
+- no text below 12 px (bare `<small>` and inline `code` have a 12 px floor), and the scorecard search placeholder fits a phone.
+
+Declined, with reasons:
+
+- **Toolbox design links on OpenFGA's Go scorecard** (A), as in rounds 5 and 7.
+- **One hero model for every portal** (B): a portal that combines its scorecards into a repository level shows it; one that does not says "No overall level". The difference is the portal's configuration, and the hero names it.
+- **Shorter compare pages and track cards** (B, C at severity 1–2): deferred to a density pass. Folding them now would hide the method a reader needs before trusting the verdict.
 
 ## Comparisons are generic
 
