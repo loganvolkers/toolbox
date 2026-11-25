@@ -9,6 +9,7 @@ use crate::federation::{self, Offered};
 use crate::run::{self, Approval, Run, TokenError};
 use serde_json::{Map, Value, json};
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use toolbox_derive::Derived;
 use toolbox_model::Manifest;
 
@@ -39,7 +40,7 @@ pub struct Prepared {
     pub entity: String,
     pub inputs: Map<String, Value>,
     pub checked: Checked,
-    pub exec: Executor,
+    pub exec: Arc<dyn Executor>,
     pub ctx: Context,
     pub preview: Preview,
     pub warnings: Vec<String>,
@@ -96,14 +97,6 @@ pub fn prepare(m: &Manifest, d: &Derived, req: Request<'_>) -> Result<Prepared, 
     };
     let preview = match exec.preview(&ctx) {
         Ok(p) => p,
-        Err(e) if matches!(exec, Executor::InImage { .. }) && e.starts_with("cannot start ") => {
-            Preview {
-                warnings: vec![format!(
-                    "{e}: the executor is not installed here, so this preview checks inputs, preconditions and approvals only"
-                )],
-                ..Preview::default()
-            }
-        }
         Err(e) => Preview {
             blockers: vec![format!("the executor's preview failed: {e}")],
             ..Preview::default()
@@ -151,8 +144,7 @@ pub fn prepare(m: &Manifest, d: &Derived, req: Request<'_>) -> Result<Prepared, 
         },
         run::now_secs(),
     );
-    let reviewed = matches!(exec, Executor::Change { push: false, .. })
-        || off.child.as_ref().is_some_and(|c| c.reviewed);
+    let reviewed = exec.reviewed() || off.child.as_ref().is_some_and(|c| c.reviewed);
     Ok(Prepared {
         offered: off,
         entity,

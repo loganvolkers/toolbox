@@ -190,10 +190,7 @@ fn actor(o: &Options, m: &Manifest) -> Result<String, String> {
         .api
         .clone()
         .unwrap_or_else(|| toolbox_model::forge::default_api(kind, &f.url));
-    let who = format!(
-        "user:{}",
-        toolbox_exec::executor::whoami(kind, &api, &token)?
-    );
+    let who = format!("user:{}", toolbox_exec::forge::whoami(kind, &api, &token)?);
     match claimed {
         Some(c) if !c.eq_ignore_ascii_case(&who) => Err(format!(
             "--as says {c}, but {} says the identity token is {who}",
@@ -799,7 +796,7 @@ fn execute(
     };
     lifecycle::execute(
         &mut run,
-        &p.exec,
+        p.exec.as_ref(),
         &ctx,
         p.offered.action.expect.as_ref(),
         &m.policies,
@@ -1090,7 +1087,7 @@ fn verify_file(o: &Options, portal: &Path, file: &Path) -> ExitCode {
     loop {
         lifecycle::recheck(
             &mut run,
-            &exec,
+            exec.as_ref(),
             off.action.expect.as_ref(),
             &m.policies,
             &mut obs,

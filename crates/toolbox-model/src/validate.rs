@@ -637,39 +637,37 @@ impl Checker {
                 .get("type")
                 .and_then(Value::as_str)
                 .unwrap_or("command");
-            let needs: &[&str] = match ty {
-                "command" | "change" => &["run"],
-                "in-image" => &["command"],
-                "github-workflow" => &["repo", "workflow"],
-                "gitlab-pipeline" => &["project"],
-                _ => &[],
+            // An unknown type is the schema's error: its enum is `executors::TYPES`.
+            let Some(t) = crate::executors::get(ty) else {
+                continue;
             };
-            if ty == "gitlab-pipeline" {
+            if let Some(kind) = t.forge {
                 let forge = a
                     .executor
                     .get("forge")
                     .and_then(Value::as_str)
-                    .unwrap_or("https://gitlab.com");
+                    .or_else(|| crate::forge::known_host(kind))
+                    .unwrap_or_default();
                 let project = a
                     .executor
                     .get("project")
                     .and_then(Value::as_str)
                     .unwrap_or("x");
                 let url = format!("{}/{project}.git", forge.trim_end_matches('/'));
-                if crate::forge::resolve(&m.forges, &url)
-                    .is_none_or(|r| r.kind != crate::forge::Kind::Gitlab)
-                {
+                if crate::forge::resolve(&m.forges, &url).is_none_or(|r| r.kind != kind) {
                     self.push(
                         "action.executor",
                         format!("/actions/{ai}/executor/forge"),
                         format!(
-                            "action {}: {forge} is not a GitLab forge; list it under forges: with type: gitlab",
-                            a.name
+                            "action {}: {forge} is not a {} forge; list it under forges: with type: {}",
+                            a.name,
+                            kind.title(),
+                            kind.name()
                         ),
                     );
                 }
             }
-            for k in needs {
+            for k in t.required {
                 if a.executor.get(*k).is_none() {
                     self.push(
                         "action.executor",
@@ -680,16 +678,6 @@ impl Checker {
             }
             if ty == "change" {
                 self.placeholders(ai, a);
-            }
-            if matches!(ty, "http" | "webhook") {
-                self.push(
-                    "action.executor",
-                    format!("/actions/{ai}/executor/type"),
-                    format!(
-                        "action {}: {ty} executors are not built yet; use command, in-image, change, github-workflow or gitlab-pipeline",
-                        a.name
-                    ),
-                );
             }
         }
     }
