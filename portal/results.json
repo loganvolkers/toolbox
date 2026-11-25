@@ -139,18 +139,6 @@
         ]
       }
     },
-    "maintainer-ci-security": {
-      "workflow:.github/workflows/ci.yml": {
-        "zizmor-clean": [
-          "264319f1",
-          "264319f1",
-          "264319f1",
-          "4b088cf6",
-          "4b088cf6",
-          "4b088cf6"
-        ]
-      }
-    },
     "maintainer-ci-speed": {
       "workflow:.github/workflows/codeql.yml": {
         "cancels-superseded-runs": [
@@ -666,7 +654,6 @@
         "constituents-at-least-gold": [
           "009fcc7b",
           "0801db87",
-          "0805cafe",
           "2f6e6c1d",
           "7a96357c",
           "ca8df7cb",
@@ -3863,10 +3850,7 @@
     },
     "maintainer-ci-security": {
       "workflow:.github/workflows/ci.yml": {
-        "failing": {
-          "zizmor-clean": 6
-        },
-        "level": "silver"
+        "level": "gold"
       },
       "workflow:.github/workflows/codeql.yml": {
         "level": "gold"
@@ -5462,7 +5446,7 @@
     "maintainer-repo": {
       "repo:loganvolkers/toolbox": {
         "failing": {
-          "constituents-at-least-gold": 7,
+          "constituents-at-least-gold": 6,
           "constituents-at-least-silver": 4
         },
         "level": "bronze"

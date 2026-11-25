@@ -105,7 +105,7 @@ jobs:
           target/debug/toolbox connector test --name ci-lint --portal portal -- target/debug/toolbox-connector-runner
       # The pages workflow generates site/public/report. The ratchet verdict below is the gate.
       - name: Toolbox for Toolbox — ratchet against portal/results.json
-        uses: ./actions/report
+        uses: ./actions/report # zizmor: ignore[self-repository] actionlint 1.7.12 rejects $/
         with:
           portal: portal
           skip: runner,github-actions
@@ -220,7 +220,7 @@ jobs:
           git -C "$RUNNER_TEMP/pilot" remote add origin https://github.com/acme/pilot.git
       - name: First run creates the baseline (mode update)
         id: first
-        uses: ./actions/report
+        uses: ./actions/report # zizmor: ignore[self-repository] actionlint 1.7.12 rejects $/
         with:
           working-directory: ${{ runner.temp }}/pilot
           mode: update
@@ -228,17 +228,21 @@ jobs:
       # The passing ci path through the action is the Toolbox-for-Toolbox step above, on every run;
       # crates/toolbox-cli/tests/ratchet.rs covers every verdict through the CLI.
       - name: Check the action's outputs
+        env:
+          RESULT: ${{ steps.first.outputs.result }}
+          HTML: ${{ steps.first.outputs.html }}
+          REPORT: ${{ steps.first.outputs.report }}
         run: |
-          test "${{ steps.first.outputs.result }}" = pass
+          test "$RESULT" = pass
           test -s "$RUNNER_TEMP/pilot/.toolbox/results.json"
-          test -s "${{ steps.first.outputs.html }}"
-          grep -q "repository:acme/pilot" "${{ steps.first.outputs.report }}"
+          test -s "$HTML"
+          grep -q "repository:acme/pilot" "$REPORT"
       - name: A pull request makes something worse (an individual in CODEOWNERS)
         run: echo '/docs/ @alice' >> "$RUNNER_TEMP/pilot/.github/CODEOWNERS"
       - name: Then the ratchet fails the job (mode ci)
         id: regressed
         continue-on-error: true
-        uses: ./actions/report
+        uses: ./actions/report # zizmor: ignore[self-repository] actionlint 1.7.12 rejects $/
         with:
           working-directory: ${{ runner.temp }}/pilot
           artifact-name: pilot-regressed
