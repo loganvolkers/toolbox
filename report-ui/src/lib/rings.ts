@@ -112,9 +112,9 @@ export function tallyWords(v, n) {
   var b = v.both;
   if (!b || v.majority == null) return countWords(v) + " of " + n + " factors";
   if (sameCount(b.strict, b.majority)) return countWords(v) + " of " + n + " factors, by either count";
-  return n + " factors. " + COUNTS.map(function (c) {
-    return c.label + ((c.key === "majority") === !!v.majority ? ", this comparison's verdict" : "") + ": " + countWords(b[c.key], c.key);
-  }).join(". ");
+  var mineKey: "strict" | "majority" = v.majority ? "majority" : "strict";
+  var otherKey: "strict" | "majority" = v.majority ? "strict" : "majority";
+  return countWords(b[mineKey], mineKey) + " of " + n + " factors by the " + mineKey + " count, this comparison's verdict; by the " + otherKey + " count, " + countWords(b[otherKey], otherKey);
 }
 
 // The factor count in a few words, for strips and cards.
@@ -122,7 +122,8 @@ export function tallyShort(v, n) {
   if (n && v.unknown >= n) return "not measured yet";
   var b = v.both;
   if (!b || v.majority == null || sameCount(b.strict, b.majority)) return "ahead on " + v.ahead + " of " + n + " factors" + (b ? " by either count" : "");
-  return "ahead on " + b.strict.ahead + " of " + n + " factors with no rule behind (strict), " + b.majority.ahead + " by the majority count; the " + (v.majority ? "majority" : "strict") + " count is the verdict";
+  var mine = v.majority ? b.majority : b.strict;
+  return "ahead on " + mine.ahead + " of " + n + " factors, behind on " + mine.behind + " (" + (v.majority ? "majority" : "strict") + " count, the verdict)";
 }
 
 // The two counts as a small table, the comparison's own rule marked.

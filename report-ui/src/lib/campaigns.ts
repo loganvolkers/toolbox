@@ -53,29 +53,58 @@ export function nextMedal(D: ReportData, cards) {
   return null;
 }
 
+// A track's next step is the one that moves its percentage most; the next medal on its weakest
+// scorecard follows, with its gain stated, because a step below a scorecard's top level adds nothing.
 export function nextMedalEl(D: ReportData, cards, label?, why?) {
   var nm = nextMedal(D, cards);
+  var tracked = Object.keys(D.tracks || {}).length > 0;
+  var movers = tracked ? ringMovers(D, cards) : [];
+  var verified = movers.find(function (m) {
+    return !m.waits;
+  });
+  var unverified = movers.find(function (m) {
+    return m.waits && (!verified || m.gain > verified.gain);
+  });
+  if (!nm && !verified) return null;
+  var medalBody = function () {
+    if (!nm) return [];
+    var card = link("scorecard/" + enc(nm.name), "", title(D, nm.name));
+    var rule = nm.rule ? [link("rule/" + enc(nm.name) + "/" + enc(nm.rule), "", ruleTitle(nm.name, nm.rule)), " ", basisBadge(basisOf((((D.scorecards || {})[nm.name] || {}).rules || {})[nm.rule]), "tip")] : [];
+    var entities = plural(nm.low, "entity", "entities") + " at " + nm.floor;
+    return nm.rule && nm.n === nm.low
+      ? [entities + (nm.low === 1 ? " needs " : " need "), ...rule, " to reach " + nm.up + " on ", card, "."]
+      : ["lift " + entities + " to " + nm.up + " on ", card, ...(nm.rule ? ["; " + nm.n + (nm.n === 1 ? " needs " : " need "), ...rule, " first."] : ["."])];
+  };
+  var top = nm ? (((D.scorecards || {})[nm.name] || {}).levels || []).slice(-1)[0] : "";
+  var medalAtTop = nm ? isTop(D, nm.name, nm.up) : false;
+  var medalNote = !nm ? "" : medalAtTop ? " That is its top level." : " Its top level is " + top + (tracked ? ", so this adds no points to the track's percentage until they reach it." : ".");
+  if (verified && !(medalAtTop && verified.r.name === nm?.name)) {
+    return el(
+      "div",
+      { className: "nextmedal" },
+      el("b", { textContent: label || "Next: " }),
+      ...moverBody(D, verified),
+      why ? el("span", { className: "sub" }, why) : null,
+      nm ? el("div", { className: "sub mover" }, el("b", { textContent: "Next medal: " }), ...medalBody(), medalNote) : null,
+      unverified ? moverEl(D, unverified) : null,
+    );
+  }
   if (!nm) return null;
-  var top = (((D.scorecards || {})[nm.name] || {}).levels || []).slice(-1)[0];
-  var card = link("scorecard/" + enc(nm.name), "", title(D, nm.name));
-  var rule = nm.rule ? [link("rule/" + enc(nm.name) + "/" + enc(nm.rule), "", ruleTitle(nm.name, nm.rule)), " ", basisBadge(basisOf((((D.scorecards || {})[nm.name] || {}).rules || {})[nm.rule]), "tip")] : [];
-  var entities = plural(nm.low, "entity", "entities") + " at " + nm.floor;
-  var body = nm.rule && nm.n === nm.low
-    ? [entities + (nm.low === 1 ? " needs " : " need "), ...rule, " to reach " + nm.up + " on ", card, "."]
-    : ["lift " + entities + " to " + nm.up + " on ", card, ...(nm.rule ? ["; " + nm.n + (nm.n === 1 ? " needs " : " need "), ...rule, " first."] : ["."])];
   return el(
     "div",
     { className: "nextmedal" },
     el("b", { textContent: label || "Next medal: " }),
-    ...body,
-    el("span", { className: "sub" }, isTop(D, nm.name, nm.up) ? " That is its top level." : " Its top level is " + top + (Object.keys(D.tracks || {}).length ? ": the track's percentage moves when they reach it." : ".") + (why || "")),
-    isTop(D, nm.name, nm.up) || !Object.keys(D.tracks || {}).length ? null : ringMoverEl(D, cards),
+    ...medalBody(),
+    el("span", { className: "sub" }, medalNote + (why || "")),
+    unverified ? moverEl(D, unverified) : null,
   );
 }
 
-// The step that raises a track's ring most: the scorecard whose entities one level below the top
-// are the largest share of it, since the ring averages each scorecard's share at its top level.
-function ringMoverEl(D: ReportData, cards) {
+type Mover = { r: Row; n: number; below: string; top: string; gain: number; rule: [string, number] | undefined; waits: [string, number] | false | undefined };
+
+// Steps that raise a track's ring, largest first: lifting a scorecard's entities one level below its
+// top to the top, since the ring averages each scorecard's share at its top level.
+function ringMovers(D: ReportData, cards): Mover[] {
   var rows: Row[] = cards
     .map(function (c) {
       return c.row;
@@ -83,7 +112,7 @@ function ringMoverEl(D: ReportData, cards) {
     .filter(function (r) {
       return !r.compare && r.scored;
     });
-  var best = null as { r: Row; n: number; below: string; top: string; gain: number } | null;
+  var out: Mover[] = [];
   rows.forEach(function (r) {
     var lv = (r.sc.levels || []).filter(function (l) {
       return l !== "none";
@@ -95,42 +124,64 @@ function ringMoverEl(D: ReportData, cards) {
     });
     var n = p ? p.n : 0;
     var gain = n ? (n / r.scored) * 100 / rows.length : 0;
-    if (gain > (best ? best.gain : 0)) best = { r: r, n: n, below: below, top: lv[lv.length - 1], gain: gain };
+    if (gain < 1) return;
+    var top = lv[lv.length - 1];
+    var sc = (D.scorecards || {})[r.name] || {};
+    var held: Record<string, number> = {};
+    var unrun: Record<string, number> = {};
+    var order = sc.levels || [];
+    Object.values((D.scores || {})[r.name] || {}).forEach(function (s) {
+      if (s.level !== below) return;
+      blockers(sc, s, top).forEach(function (k) {
+        held[k] = (held[k] || 0) + 1;
+      });
+      Object.keys(s.rules || {}).forEach(function (k) {
+        if (s.rules[k] === "unknown" && order.indexOf(((sc.rules || {})[k] || {}).level) <= order.indexOf(top)) unrun[k] = (unrun[k] || 0) + 1;
+      });
+    });
+    var byCount = function (x, y) {
+      return y[1] - x[1] || x[0].localeCompare(y[0]);
+    };
+    var waits = !Object.keys(held).length && (Object.entries(unrun).sort(byCount)[0] as [string, number] | undefined);
+    var rule = Object.entries(held).sort(byCount)[0] as [string, number] | undefined;
+    out.push({ r: r, n: n, below: below, top: top, gain: gain, rule: rule, waits: waits });
   });
-  if (!best || best.gain < 1) return null;
-  var b = best;
+  return out.sort(function (a, b) {
+    return b.gain - a.gain || a.r.name.localeCompare(b.r.name);
+  });
+}
+
+function points(g: number) {
+  var p = Math.round(g);
+  return p + (p === 1 ? " point" : " points");
+}
+
+function moverBody(D: ReportData, b: Mover) {
   var sc = (D.scorecards || {})[b.r.name] || {};
-  var held: Record<string, number> = {};
-  var unrun: Record<string, number> = {};
-  var order = sc.levels || [];
-  Object.values((D.scores || {})[b.r.name] || {}).forEach(function (s) {
-    if (s.level !== b.below) return;
-    blockers(sc, s, b.top).forEach(function (n) {
-      held[n] = (held[n] || 0) + 1;
-    });
-    Object.keys(s.rules || {}).forEach(function (n) {
-      if (s.rules[n] === "unknown" && order.indexOf(((sc.rules || {})[n] || {}).level) <= order.indexOf(b.top)) unrun[n] = (unrun[n] || 0) + 1;
-    });
-  });
-  var waits = !Object.keys(held).length && Object.entries(unrun).sort(function (x, y) {
-    return y[1] - x[1] || x[0].localeCompare(y[0]);
-  })[0];
-  var rule = Object.entries(held).sort(function (x, y) {
-    return y[1] - x[1] || x[0].localeCompare(y[0]);
-  })[0];
+  var rule = b.rule;
   var entities = plural(b.n, "entity", "entities") + " at " + levelName(b.below);
   var card = link("scorecard/" + enc(b.r.name), "", title(D, b.r.name));
   var ruleEl = rule ? [link("rule/" + enc(b.r.name) + "/" + enc(rule[0]), "", ruleTitle(b.r.name, rule[0])), " ", basisBadge(basisOf((sc.rules || {})[rule[0]]), "tip")] : [];
+  return [
+    ...(rule && rule[1] === b.n
+      ? [entities + (b.n === 1 ? " needs " : " need "), ...ruleEl, " to reach " + levelName(b.top) + " on ", card]
+      : ["lift " + entities + " to " + levelName(b.top) + " on ", card, ...(rule ? ["; " + rule[1] + (rule[1] === 1 ? " needs " : " need "), ...ruleEl, " first"] : [])]),
+    "; the track gains about " + points(b.gain) + ".",
+  ];
+}
+
+function moverEl(D: ReportData, b: Mover) {
+  var waits = b.waits as [string, number];
+  var card = link("scorecard/" + enc(b.r.name), "", title(D, b.r.name));
   return el(
     "div",
     { className: "sub mover" },
-    el("b", { textContent: waits ? "Unverified, run a check first: " : "Or, for the biggest gain in the track's percentage: " }),
-    ...(waits
-      ? [entities + " on ", card, " may already meet " + levelName(b.top) + ", but its check ", link("rule/" + enc(b.r.name) + "/" + enc(waits[0]), "", ruleTitle(b.r.name, waits[0])), " was not run in this build, so nothing is known yet"]
-      : rule && rule[1] === b.n
-      ? [entities + (b.n === 1 ? " needs " : " need "), ...ruleEl, " to reach " + levelName(b.top) + " on ", card]
-      : ["lift " + entities + " to " + levelName(b.top) + " on ", card, ...(rule ? ["; " + rule[1] + (rule[1] === 1 ? " needs " : " need "), ...ruleEl, " first"] : [])]),
-    (waits ? "; if it passes, the track gains about " : ", about ") + Math.round(b.gain) + (Math.round(b.gain) === 1 ? " point." : " points."),
+    el("b", { textContent: "Unverified, run a check first: " }),
+    plural(b.n, "entity", "entities") + " at " + levelName(b.below) + " on ",
+    card,
+    " may already meet " + levelName(b.top) + ", but its check ",
+    link("rule/" + enc(b.r.name) + "/" + enc(waits[0]), "", ruleTitle(b.r.name, waits[0])),
+    " was not run in this build, so nothing is known yet; if it passes, the track gains about " + points(b.gain) + ".",
   );
 }
 

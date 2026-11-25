@@ -196,12 +196,15 @@ export const compareViews = {
     };
     var strictWords = tallyOf(both.strict);
     var majorityWords = tallyOf(both.majority);
-    // Every portal leads with the same sentence shape, strict count first, whichever rule it declares.
+    // The headline is the declared verdict; the other count follows once, as a secondary line.
+    var verdictWords = majority ? majorityWords : strictWords;
+    var countsDiffer = !unmeasured && strictWords !== majorityWords;
     var headline = unmeasured
       ? "Not measured yet: none of the " + plural(names.length, "factor") + " has values for both products."
-      : strictWords === majorityWords
-        ? "Ahead on " + strictWords.slice("ahead on ".length) + ", by either count."
-        : "Strict count: " + countWords(both.strict, "strict") + " of " + plural(names.length, "factor") + (majority ? "." : " (this comparison's verdict).") + " Majority count: " + majorityWords + (majority ? " (this comparison's verdict)." : ".");
+      : "Ahead on " + verdictWords.slice("ahead on ".length) + (countsDiffer ? ", by the " + (majority ? "majority" : "strict") + " count, this comparison's verdict." : ", by either count.");
+    var otherCount = countsDiffer
+      ? el("p", { className: "sub", style: "margin:4px 0 0" }, el("span", { className: "pill", textContent: "Verdict: " + (majority ? "majority" : "strict") + " count" }), " By the " + (majority ? "strict" : "majority") + " count it is " + (majority ? countWords(both.strict, "strict") : countWords(both.majority)) + " of " + plural(names.length, "factor") + "; how each is counted is below.")
+      : null;
     var lean = counts.behind > counts.ahead ? "behind" : counts.ahead > counts.behind ? "ahead" : "parity";
     var hero = el(
       "section",
@@ -218,6 +221,7 @@ export const compareViews = {
         }).sort().map(function (r) {
           return ruleTitle(behindNames[0], r);
         })) + ". If your teams rely on those, start with " + title(D, behindNames[0]) + "." : ": if your teams rely on what those factors measure, read them first.") : unmeasured ? " Run the comparison's harness and commit its records to fill this in." : counts.unknown ? " Not behind on any measured factor." : " Never behind."),
+        otherCount,
         unmeasured
           ? el("p", { className: "rule-tally", textContent: "Rule by rule: none of " + plural(ruleTotal, "rule") + " has values for both products yet." })
           : el(

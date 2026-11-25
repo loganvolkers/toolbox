@@ -1002,15 +1002,16 @@
 		var b = v.both;
 		if (!b || v.majority == null) return countWords(v) + " of " + n + " factors";
 		if (sameCount(b.strict, b.majority)) return countWords(v) + " of " + n + " factors, by either count";
-		return n + " factors. " + COUNTS.map(function(c) {
-			return c.label + (c.key === "majority" === !!v.majority ? ", this comparison's verdict" : "") + ": " + countWords(b[c.key], c.key);
-		}).join(". ");
+		var mineKey = v.majority ? "majority" : "strict";
+		var otherKey = v.majority ? "strict" : "majority";
+		return countWords(b[mineKey], mineKey) + " of " + n + " factors by the " + mineKey + " count, this comparison's verdict; by the " + otherKey + " count, " + countWords(b[otherKey], otherKey);
 	}
 	function tallyShort(v, n) {
 		if (n && v.unknown >= n) return "not measured yet";
 		var b = v.both;
 		if (!b || v.majority == null || sameCount(b.strict, b.majority)) return "ahead on " + v.ahead + " of " + n + " factors" + (b ? " by either count" : "");
-		return "ahead on " + b.strict.ahead + " of " + n + " factors with no rule behind (strict), " + b.majority.ahead + " by the majority count; the " + (v.majority ? "majority" : "strict") + " count is the verdict";
+		var mine = v.majority ? b.majority : b.strict;
+		return "ahead on " + mine.ahead + " of " + n + " factors, behind on " + mine.behind + " (" + (v.majority ? "majority" : "strict") + " count, the verdict)";
 	}
 	function bothCounts(v, n) {
 		var b = v.both;
@@ -1469,39 +1470,54 @@
 	}
 	function nextMedalEl(D, cards, label, why) {
 		var nm = nextMedal(D, cards);
-		if (!nm) return null;
-		var top = (((D.scorecards || {})[nm.name] || {}).levels || []).slice(-1)[0];
-		var card = link("scorecard/" + enc(nm.name), "", title(D, nm.name));
-		var rule = nm.rule ? [
-			link("rule/" + enc(nm.name) + "/" + enc(nm.rule), "", ruleTitle(nm.name, nm.rule)),
-			" ",
-			basisBadge(basisOf((((D.scorecards || {})[nm.name] || {}).rules || {})[nm.rule]), "tip")
-		] : [];
-		var entities = plural(nm.low, "entity", "entities") + " at " + nm.floor;
-		var body = nm.rule && nm.n === nm.low ? [
-			entities + (nm.low === 1 ? " needs " : " need "),
-			...rule,
-			" to reach " + nm.up + " on ",
-			card,
-			"."
-		] : [
-			"lift " + entities + " to " + nm.up + " on ",
-			card,
-			...nm.rule ? [
-				"; " + nm.n + (nm.n === 1 ? " needs " : " need "),
+		var tracked = Object.keys(D.tracks || {}).length > 0;
+		var movers = tracked ? ringMovers(D, cards) : [];
+		var verified = movers.find(function(m) {
+			return !m.waits;
+		});
+		var unverified = movers.find(function(m) {
+			return m.waits && (!verified || m.gain > verified.gain);
+		});
+		if (!nm && !verified) return null;
+		var medalBody = function() {
+			if (!nm) return [];
+			var card = link("scorecard/" + enc(nm.name), "", title(D, nm.name));
+			var rule = nm.rule ? [
+				link("rule/" + enc(nm.name) + "/" + enc(nm.rule), "", ruleTitle(nm.name, nm.rule)),
+				" ",
+				basisBadge(basisOf((((D.scorecards || {})[nm.name] || {}).rules || {})[nm.rule]), "tip")
+			] : [];
+			var entities = plural(nm.low, "entity", "entities") + " at " + nm.floor;
+			return nm.rule && nm.n === nm.low ? [
+				entities + (nm.low === 1 ? " needs " : " need "),
 				...rule,
-				" first."
-			] : ["."]
-		];
-		return el("div", { className: "nextmedal" }, el("b", { textContent: label || "Next medal: " }), ...body, el("span", { className: "sub" }, isTop(D, nm.name, nm.up) ? " That is its top level." : " Its top level is " + top + (Object.keys(D.tracks || {}).length ? ": the track's percentage moves when they reach it." : ".") + (why || "")), isTop(D, nm.name, nm.up) || !Object.keys(D.tracks || {}).length ? null : ringMoverEl(D, cards));
+				" to reach " + nm.up + " on ",
+				card,
+				"."
+			] : [
+				"lift " + entities + " to " + nm.up + " on ",
+				card,
+				...nm.rule ? [
+					"; " + nm.n + (nm.n === 1 ? " needs " : " need "),
+					...rule,
+					" first."
+				] : ["."]
+			];
+		};
+		var top = nm ? (((D.scorecards || {})[nm.name] || {}).levels || []).slice(-1)[0] : "";
+		var medalAtTop = nm ? isTop(D, nm.name, nm.up) : false;
+		var medalNote = !nm ? "" : medalAtTop ? " That is its top level." : " Its top level is " + top + (tracked ? ", so this adds no points to the track's percentage until they reach it." : ".");
+		if (verified && !(medalAtTop && verified.r.name === nm?.name)) return el("div", { className: "nextmedal" }, el("b", { textContent: label || "Next: " }), ...moverBody(D, verified), why ? el("span", { className: "sub" }, why) : null, nm ? el("div", { className: "sub mover" }, el("b", { textContent: "Next medal: " }), ...medalBody(), medalNote) : null, unverified ? moverEl(D, unverified) : null);
+		if (!nm) return null;
+		return el("div", { className: "nextmedal" }, el("b", { textContent: label || "Next medal: " }), ...medalBody(), el("span", { className: "sub" }, medalNote + (why || "")), unverified ? moverEl(D, unverified) : null);
 	}
-	function ringMoverEl(D, cards) {
+	function ringMovers(D, cards) {
 		var rows = cards.map(function(c) {
 			return c.row;
 		}).filter(function(r) {
 			return !r.compare && r.scored;
 		});
-		var best = null;
+		var out = [];
 		rows.forEach(function(r) {
 			var lv = (r.sc.levels || []).filter(function(l) {
 				return l !== "none";
@@ -1513,35 +1529,47 @@
 			});
 			var n = p ? p.n : 0;
 			var gain = n ? n / r.scored * 100 / rows.length : 0;
-			if (gain > (best ? best.gain : 0)) best = {
+			if (gain < 1) return;
+			var top = lv[lv.length - 1];
+			var sc = (D.scorecards || {})[r.name] || {};
+			var held = {};
+			var unrun = {};
+			var order = sc.levels || [];
+			Object.values((D.scores || {})[r.name] || {}).forEach(function(s) {
+				if (s.level !== below) return;
+				blockers(sc, s, top).forEach(function(k) {
+					held[k] = (held[k] || 0) + 1;
+				});
+				Object.keys(s.rules || {}).forEach(function(k) {
+					if (s.rules[k] === "unknown" && order.indexOf(((sc.rules || {})[k] || {}).level) <= order.indexOf(top)) unrun[k] = (unrun[k] || 0) + 1;
+				});
+			});
+			var byCount = function(x, y) {
+				return y[1] - x[1] || x[0].localeCompare(y[0]);
+			};
+			var waits = !Object.keys(held).length && Object.entries(unrun).sort(byCount)[0];
+			var rule = Object.entries(held).sort(byCount)[0];
+			out.push({
 				r,
 				n,
 				below,
-				top: lv[lv.length - 1],
-				gain
-			};
+				top,
+				gain,
+				rule,
+				waits
+			});
 		});
-		if (!best || best.gain < 1) return null;
-		var b = best;
+		return out.sort(function(a, b) {
+			return b.gain - a.gain || a.r.name.localeCompare(b.r.name);
+		});
+	}
+	function points(g) {
+		var p = Math.round(g);
+		return p + (p === 1 ? " point" : " points");
+	}
+	function moverBody(D, b) {
 		var sc = (D.scorecards || {})[b.r.name] || {};
-		var held = {};
-		var unrun = {};
-		var order = sc.levels || [];
-		Object.values((D.scores || {})[b.r.name] || {}).forEach(function(s) {
-			if (s.level !== b.below) return;
-			blockers(sc, s, b.top).forEach(function(n) {
-				held[n] = (held[n] || 0) + 1;
-			});
-			Object.keys(s.rules || {}).forEach(function(n) {
-				if (s.rules[n] === "unknown" && order.indexOf(((sc.rules || {})[n] || {}).level) <= order.indexOf(b.top)) unrun[n] = (unrun[n] || 0) + 1;
-			});
-		});
-		var waits = !Object.keys(held).length && Object.entries(unrun).sort(function(x, y) {
-			return y[1] - x[1] || x[0].localeCompare(y[0]);
-		})[0];
-		var rule = Object.entries(held).sort(function(x, y) {
-			return y[1] - x[1] || x[0].localeCompare(y[0]);
-		})[0];
+		var rule = b.rule;
 		var entities = plural(b.n, "entity", "entities") + " at " + levelName(b.below);
 		var card = link("scorecard/" + enc(b.r.name), "", title(D, b.r.name));
 		var ruleEl = rule ? [
@@ -1549,13 +1577,7 @@
 			" ",
 			basisBadge(basisOf((sc.rules || {})[rule[0]]), "tip")
 		] : [];
-		return el("div", { className: "sub mover" }, el("b", { textContent: waits ? "Unverified, run a check first: " : "Or, for the biggest gain in the track's percentage: " }), ...waits ? [
-			entities + " on ",
-			card,
-			" may already meet " + levelName(b.top) + ", but its check ",
-			link("rule/" + enc(b.r.name) + "/" + enc(waits[0]), "", ruleTitle(b.r.name, waits[0])),
-			" was not run in this build, so nothing is known yet"
-		] : rule && rule[1] === b.n ? [
+		return [...rule && rule[1] === b.n ? [
 			entities + (b.n === 1 ? " needs " : " need "),
 			...ruleEl,
 			" to reach " + levelName(b.top) + " on ",
@@ -1568,7 +1590,12 @@
 				...ruleEl,
 				" first"
 			] : []
-		], (waits ? "; if it passes, the track gains about " : ", about ") + Math.round(b.gain) + (Math.round(b.gain) === 1 ? " point." : " points."));
+		], "; the track gains about " + points(b.gain) + "."];
+	}
+	function moverEl(D, b) {
+		var waits = b.waits;
+		var card = link("scorecard/" + enc(b.r.name), "", title(D, b.r.name));
+		return el("div", { className: "sub mover" }, el("b", { textContent: "Unverified, run a check first: " }), plural(b.n, "entity", "entities") + " at " + levelName(b.below) + " on ", card, " may already meet " + levelName(b.top) + ", but its check ", link("rule/" + enc(b.r.name) + "/" + enc(waits[0]), "", ruleTitle(b.r.name, waits[0])), " was not run in this build, so nothing is known yet; if it passes, the track gains about " + points(b.gain) + ".");
 	}
 	function ownerName(o) {
 		return String(o || "").replace(/^(group|user):/, "");
@@ -5412,7 +5439,16 @@
 			};
 			var strictWords = tallyOf(both.strict);
 			var majorityWords = tallyOf(both.majority);
-			var headline = unmeasured ? "Not measured yet: none of the " + plural(names.length, "factor") + " has values for both products." : strictWords === majorityWords ? "Ahead on " + strictWords.slice(9) + ", by either count." : "Strict count: " + countWords(both.strict, "strict") + " of " + plural(names.length, "factor") + (majority ? "." : " (this comparison's verdict).") + " Majority count: " + majorityWords + (majority ? " (this comparison's verdict)." : ".");
+			var verdictWords = majority ? majorityWords : strictWords;
+			var countsDiffer = !unmeasured && strictWords !== majorityWords;
+			var headline = unmeasured ? "Not measured yet: none of the " + plural(names.length, "factor") + " has values for both products." : "Ahead on " + verdictWords.slice(9) + (countsDiffer ? ", by the " + (majority ? "majority" : "strict") + " count, this comparison's verdict." : ", by either count.");
+			var otherCount = countsDiffer ? el("p", {
+				className: "sub",
+				style: "margin:4px 0 0"
+			}, el("span", {
+				className: "pill",
+				textContent: "Verdict: " + (majority ? "majority" : "strict") + " count"
+			}), " By the " + (majority ? "strict" : "majority") + " count it is " + (majority ? countWords(both.strict, "strict") : countWords(both.majority)) + " of " + plural(names.length, "factor") + "; how each is counted is below.") : null;
 			var lean = counts.behind > counts.ahead ? "behind" : counts.ahead > counts.behind ? "ahead" : "parity";
 			var hero = el("section", { className: "cmp-hero" }, el("div", { className: "cmp-main" }, el("div", {
 				className: "kicker",
@@ -5429,7 +5465,7 @@
 				return (all[behindNames[0]].rules[r] || {})[peer] === "behind";
 			}).sort().map(function(r) {
 				return ruleTitle(behindNames[0], r);
-			})) + ". If your teams rely on those, start with " + title(D, behindNames[0]) + "." : ": if your teams rely on what those factors measure, read them first.") : unmeasured ? " Run the comparison's harness and commit its records to fill this in." : counts.unknown ? " Not behind on any measured factor." : " Never behind."), unmeasured ? el("p", {
+			})) + ". If your teams rely on those, start with " + title(D, behindNames[0]) + "." : ": if your teams rely on what those factors measure, read them first.") : unmeasured ? " Run the comparison's harness and commit its records to fill this in." : counts.unknown ? " Not behind on any measured factor." : " Never behind."), otherCount, unmeasured ? el("p", {
 				className: "rule-tally",
 				textContent: "Rule by rule: none of " + plural(ruleTotal, "rule") + " has values for both products yet."
 			}) : el("p", { className: "rule-tally" }, "Rule by rule: ", el("b", {
