@@ -36,6 +36,12 @@ fn is_root() -> bool {
 #[test]
 fn a_same_user_process_cannot_read_the_server_environment() {
     if is_root() {
+        // CI sets TOOLBOX_REQUIRE_UNPRIVILEGED, so running as root fails there instead of passing.
+        assert!(
+            std::env::var_os("TOOLBOX_REQUIRE_UNPRIVILEGED").is_none(),
+            "running as root, which reads every process's environment, and \
+             TOOLBOX_REQUIRE_UNPRIVILEGED is set: run the tests as a normal user"
+        );
         eprintln!("skipping: root reads every process's environment");
         return;
     }

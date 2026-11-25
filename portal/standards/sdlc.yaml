@@ -87,7 +87,16 @@ kinds:
       namedIn:
         type: list
         items: string
-        description: Declared docs that exist and mention the stage's name.
+        description: >-
+          Declared docs that describe the stage: a `doc.md#section` whose heading
+          exists, or a doc with a heading or table row naming the stage.
+      ciWorkflows:
+        type: list
+        items: string
+        description: >-
+          The workflows under .github/workflows that run the stage's checks: where
+          the run history saying whether they pass is kept, scored by
+          maintainer-ci-reliability.
       hash:
         type: string
         description: >-
@@ -136,7 +145,8 @@ kinds:
          'unresolvedCommands': has(record.unresolvedCommands) ? record.unresolvedCommands : [],
          'notInCi': has(record.notInCi) ? record.notInCi : [],
          'notNaming': has(record.notNaming) ? record.notNaming : [],
-         'namedIn': has(record.namedIn) ? record.namedIn : record.docs}
+         'namedIn': has(record.namedIn) ? record.namedIn : [],
+         'ciWorkflows': has(record.ciWorkflows) ? record.ciWorkflows : []}
       relations: {stageOf: "['sdlc:' + record.layer]"}
 
 scorecards:
@@ -236,11 +246,16 @@ scorecards:
       level: gold
       check: entity.status == 'built' && entity.gaps.size() == 0
       evidence: "entity.gaps.size() > 0 ? entity.gaps : ['status is ' + entity.status]"
-      fix: "Close the listed gaps, then set `status: built` and empty `gaps:`."
+      fix: >-
+        Close the listed gaps in the stage's file under portal/sdlc/stages/,
+        then set `status: built` and empty `gaps:`. Whether its checks pass is
+        the run history of the workflows in its `ciWorkflows` field.
       rationale: >-
         Gold is kept for stages that work today with nothing left open, so the
         report separates what agents can rely on from what is only designed or
-        partly built.
+        partly built. Whether the checks pass is scored on the workflows that
+        run them, which `ciWorkflows` names: a stage can't read another entity's
+        score (docs/design/thresholds.md).
     facets: {summary: public, details: public}
 
   - name: sdlc-layer
@@ -281,9 +296,10 @@ scorecards:
       fix: >-
         For each listed stage in portal/sdlc/stages/<layer>.yaml, write the
         design (a doc, or a section of one, that names the stage), point `docs:`
-        at it, then set `status:` to designed, partial or built. A status alone
-        doesn't count, nor does a listed doc that is missing or never names the
-        stage.
+        at it (`doc.md#section` for a section of a shared doc), then set
+        `status:` to designed, partial or built. A status alone doesn't count,
+        nor does a listed doc that is missing or has no heading or table row for
+        the stage.
       rationale: >-
         A status is the author's own claim. Requiring a listed doc that exists
         and names the stage means a layer can't call a stage designed on the

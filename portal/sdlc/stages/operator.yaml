@@ -28,7 +28,9 @@ records:
     checks:
     - crates/toolbox-connect/src/conformance.rs
     - crates/toolbox-cli/tests/install.rs
-    docs: [docs/design/connector-control.md, docs/design/package-author-sdlc.md]
+    docs:
+      - docs/design/connector-control.md
+      - docs/design/package-author-sdlc.md#32-connectors-outside-core
     status: partial
     gaps: [no scaffold or SDK outside Rust]
   - id: operator/validate
@@ -114,7 +116,7 @@ records:
       OTLP export and Prometheus /metrics both carry the catalog.
     commands: [toolbox serve]
     checks: [scripts/m4-acceptance.sh]
-    docs: [docs/design/minimal-ui.md, docs/design/observability.md]
+    docs: [docs/design/minimal-ui.md, docs/design/observability.md#signals]
     status: partial
     gaps:
     - >-

@@ -57,6 +57,48 @@ fn triggers(on: &Value) -> Vec<String> {
     }
 }
 
+/// Whether the workflow runs on the default branch, which is where run history is read: a `push`
+/// with no branch filter or one naming `main` or `master` (as a branch, not only a tag), or a
+/// `schedule` (GitHub runs scheduled workflows on the default branch). A workflow that runs only
+/// on pull requests, tags or by hand has no run history there to score.
+fn on_default_branch(on: &Value) -> bool {
+    let push = match on {
+        Value::String(s) => return s == "push" || s == "schedule",
+        Value::Array(a) => {
+            return a
+                .iter()
+                .any(|v| v.as_str().is_some_and(|t| t == "push" || t == "schedule"));
+        }
+        Value::Object(m) => {
+            if m.contains_key("schedule") {
+                return true;
+            }
+            match m.get("push") {
+                Some(p) => p,
+                None => return false,
+            }
+        }
+        _ => return false,
+    };
+    let names = |k: &str| -> Option<Vec<String>> {
+        push[k].as_array().map(|a| {
+            a.iter()
+                .filter_map(|v| v.as_str().map(str::to_owned))
+                .collect()
+        })
+    };
+    match (names("branches"), names("tags")) {
+        (Some(b), _) => b
+            .iter()
+            .any(|b| matches!(b.as_str(), "main" | "master" | "*" | "**")),
+        // `tags:` alone limits a push to tags; neither key means every push.
+        (None, Some(_)) => push.get("branches-ignore").is_some(),
+        (None, None) => push["branches-ignore"]
+            .as_array()
+            .is_none_or(|a| !a.iter().any(|v| v == "main" || v == "master")),
+    }
+}
+
 /// `write-all`, or the scopes granted `write` in a permissions block.
 fn write_scopes(p: &Value) -> Vec<String> {
     match p {
@@ -103,12 +145,26 @@ fn continues_on_error(v: &Value) -> bool {
     }
 }
 
-/// A `run:` script that swallows its own exit status: `|| true`, `|| :`, `|| exit 0` or `set +e`.
+/// A `run:` script that swallows its own exit status: `|| true`, `|| :`, `|| exit 0` or an
+/// `|| echo`/`printf` fallback (with or without spaces), or `set +e`.
 fn masks_exit(run: &str) -> bool {
-    let squashed: String = run.split_whitespace().collect::<Vec<_>>().join(" ");
-    ["|| true", "|| :", "|| exit 0", "set +e"]
-        .iter()
-        .any(|m| squashed.contains(m))
+    static R: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
+    R.get_or_init(|| {
+        regex::Regex::new(r"\|\|\s*(?:true\b|:(?:\s|$)|exit\s+0\b|echo\b|printf\b)|\bset\s+\+e\b")
+            .expect("static regex")
+    })
+    .is_match(run)
+}
+
+/// A step `shell:` without `-e`: GitHub's default bash is `bash -e {0}`, so `bash {0}` or `sh {0}`
+/// lets a failing command in the middle of the script pass.
+fn shell_ignores_errors(shell: &Value) -> bool {
+    shell.as_str().is_some_and(|s| {
+        let words: Vec<&str> = s.split_whitespace().collect();
+        words.contains(&"{0}")
+            && matches!(words.first(), Some(&"bash") | Some(&"sh"))
+            && !words.iter().any(|w| w.starts_with('-') && w.contains('e'))
+    })
 }
 
 /// An `if:` that never runs on the default branch: literally false, or a test that the ref is not
@@ -121,6 +177,8 @@ fn skipped_on_default(cond: &Value) -> bool {
     };
     let e = c.trim_start_matches("${{").trim_end_matches("}}");
     e == "false"
+        || e == "github.event_name=='pull_request'"
+        || e == "github.event_name=='pull_request_target'"
         || ["main", "master"].iter().any(|b| {
             e.contains(&format!("github.ref!='refs/heads/{b}'"))
                 || e.contains(&format!("github.ref_name!='{b}'"))
@@ -146,7 +204,14 @@ fn hidden_failures(id: &str, job: &Value) -> Vec<String> {
                 "jobs.{id}.steps[{i}] (skipped on the default branch)"
             ));
         }
-        if step["run"].as_str().is_some_and(masks_exit) {
+        let shell = if step.get("shell").is_some() {
+            &step["shell"]
+        } else {
+            &job["defaults"]["run"]["shell"]
+        };
+        if step["run"].as_str().is_some_and(masks_exit)
+            || (step.get("run").is_some() && shell_ignores_errors(shell))
+        {
             out.push(format!(
                 "jobs.{id}.steps[{i}] (the script swallows its exit status)"
             ));
@@ -278,6 +343,7 @@ pub fn record(path: &str, text: &str) -> Value {
         "type": if is_action { "action" } else { "workflow" },
         "name": doc["name"].as_str().unwrap_or(path),
         "triggers": trig,
+        "onDefaultBranch": !is_action && on_default_branch(on(&doc)),
         "riskyTriggers": trig.iter().filter(|t| RISKY_TRIGGERS.contains(&t.as_str())).collect::<Vec<_>>(),
         "topPermissions": has_top_permissions,
         "topWriteScopes": write_scopes(&doc["permissions"]),
@@ -518,7 +584,12 @@ mod tests {
             {"run": "cargo test ||   true"},
             {"run": "set -e\ncargo test"},
             {"if": false, "run": "x"},
-            {"if": "github.event_name == 'push'", "run": "y"}
+            {"if": "github.event_name == 'push'", "run": "y"},
+            {"run": "cargo test ||true"},
+            {"run": "make || echo flaky"},
+            {"shell": "bash {0}", "run": "a\nb"},
+            {"shell": "bash -e {0}", "run": "a"},
+            {"if": "${{ github.event_name == 'pull_request' }}", "run": "z"}
         ]});
         assert_eq!(
             hidden_failures("t", &job),
@@ -526,9 +597,25 @@ mod tests {
                 "jobs.t (skipped on the default branch)",
                 "jobs.t.steps[0] (the script swallows its exit status)",
                 "jobs.t.steps[2] (skipped on the default branch)",
+                "jobs.t.steps[4] (the script swallows its exit status)",
+                "jobs.t.steps[5] (the script swallows its exit status)",
+                "jobs.t.steps[6] (the script swallows its exit status)",
+                "jobs.t.steps[8] (skipped on the default branch)",
             ]
         );
         assert!(!continues_on_error(&json!("${{ false }}")));
         assert!(continues_on_error(&json!("${{ matrix.experimental }}")));
+    }
+
+    #[test]
+    fn only_pushes_to_the_default_branch_and_schedules_run_there() {
+        let on = |y: &str| on_default_branch(&serde_norway::from_str(y).unwrap());
+        assert!(on("push"));
+        assert!(on("{push: {branches: [main]}, pull_request: {}}"));
+        assert!(on("{schedule: [{cron: '0 0 * * 0'}]}"));
+        assert!(!on("{push: {tags: ['v*']}, pull_request: {}}"));
+        assert!(!on("{push: {branches: [release]}}"));
+        assert!(!on("{pull_request: {}, workflow_dispatch: {}}"));
+        assert!(!on("{push: {branches-ignore: [main]}}"));
     }
 }

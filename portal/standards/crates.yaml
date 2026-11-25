@@ -81,6 +81,14 @@ kinds:
         computed: >-
           inbound.assessesCrate.size() == 0 ? [] :
           inbound.assessesCrate[0].uncited
+      reviewCitesCrate:
+        type: boolean
+        description: >-
+          The current crate-design assessment cites a file inside the crate
+          (crates/<name>/), so it judged the code rather than citing any file.
+        computed: >-
+          inbound.assessesCrate.size() > 0 &&
+          inbound.assessesCrate[0].citesSubject
       reviewIndependent:
         type: string
         description: >-
@@ -224,8 +232,10 @@ scorecards:
         Run `cargo test -p <crate>` and fix the failures in the evidence. Remove
         `#[ignore]` from ignored tests, and the always-false `#[cfg(...)]` from
         listed tests, and make them pass: a test that doesn't run checks
-        nothing. Tests that need OpenFGA run with TOOLBOX_REQUIRE_OPENFGA set,
-        so install it (TOOLBOX_OPENFGA_BIN) rather than letting them skip.
+        nothing. Tests that need OpenFGA, Landlock or an unprivileged user run
+        with TOOLBOX_REQUIRE_OPENFGA, _LANDLOCK and _UNPRIVILEGED set, so
+        provide them (TOOLBOX_OPENFGA_BIN, a Landlock kernel, a non-root user)
+        rather than letting the tests skip.
       rationale: >-
         A failing, ignored or compiled-out test checks nothing, and an ignored
         one hides its failure from everyone; an authorization test that quietly
@@ -403,14 +413,16 @@ scorecards:
       level: gold
       check: >-
         entity.reviewState == 'fresh' && entity.reviewFailing.size() == 0 &&
-        entity.reviewUncited.size() == 0
+        entity.reviewUncited.size() == 0 && entity.reviewCitesCrate
       evidence: >-
         entity.reviewState != 'fresh' ? ['no current assessment'] :
         entity.reviewFailing + entity.reviewUncited.map(c, c + ' cites nothing
-        that resolves')
+        that resolves') + (entity.reviewCitesCrate ? [] : ['the assessment cites
+        no file inside the crate'])
       fix: >-
         Act on the failing criteria's suggestions in the assessment
-        (portal/assessments/), then re-assess.
+        (portal/assessments/), then re-assess, citing the crate's own files
+        (crates/<name>/src/…) for the verdicts they rest on.
       rationale: >-
         Gold claims the design holds up under review, so the current review must
         pass every criterion with reasons that cite something real: a reason

@@ -33,6 +33,12 @@ fn parse_rfc3339(s: &str) -> Option<i64> {
     Some(days * 86_400 + hh * 3_600 + mm * 60 + ss)
 }
 
+fn now() -> i64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| d.as_secs() as i64)
+}
+
 fn percentile(sorted: &[i64], p: usize) -> Option<i64> {
     // Nearest rank, rounding up: the p90 of three runs is the slowest.
     (!sorted.is_empty()).then(|| sorted[((sorted.len() - 1) * p).div_ceil(100)])
@@ -80,17 +86,34 @@ pub fn stats(runs: &[Value]) -> Value {
         "cancelled": completed.iter().filter(|r| conclusion(r) == "cancelled").count(),
         "failRate": pct(failed, decided.len()),
         "firstTryFailRate": pct(failed + passed_on_retry, decided.len()),
-        // Where to start: the newest failed runs, so the evidence names runs a reader can open.
+        // Where to start: the newest runs that failed on their first attempt (the fail rate's
+        // numerator), so the evidence names runs a reader can open. A run that passed on a re-run
+        // links to its failed first attempt.
         "failedRuns": decided
             .iter()
-            .filter(|r| FAILED.contains(&conclusion(r).as_str()))
-            .filter_map(|r| r["html_url"].as_str())
+            .filter_map(|r| {
+                let url = r["html_url"].as_str()?;
+                if FAILED.contains(&conclusion(r).as_str()) {
+                    Some(url.to_owned())
+                } else if r["run_attempt"].as_u64().unwrap_or(1) > 1 {
+                    Some(format!("{url}/attempts/1"))
+                } else {
+                    None
+                }
+            })
             .take(5)
             .collect::<Vec<_>>(),
         "rerunRate": pct(reruns, completed.len()),
         "failingStreak": streak,
         "lastConclusion": decided.first().map(conclusion),
         "lastRunAt": runs.first().and_then(|r| r["created_at"].as_str()),
+        // Whole days from the newest run to when the history was read: run history is live data,
+        // read at refresh, so this goes stale with it.
+        "daysSinceLastRun": runs
+            .first()
+            .and_then(|r| r["created_at"].as_str())
+            .and_then(parse_rfc3339)
+            .map(|t| (now() - t).max(0) / 86_400),
         "oldestRunAt": runs.last().and_then(|r| r["created_at"].as_str()),
         "medianSeconds": percentile(&durations, 50),
         "p90Seconds": percentile(&durations, 90),
@@ -182,6 +205,14 @@ mod tests {
             s["firstTryFailRate"], 100,
             "the only decided run passed on its second attempt"
         );
+        let mut retried = run("success", 2, "2026-01-01T00:00:00Z", "2026-01-01T00:02:00Z");
+        retried["html_url"] = json!("https://github.com/o/r/actions/runs/7");
+        let s = stats(&[retried]);
+        assert_eq!(
+            s["failedRuns"],
+            json!(["https://github.com/o/r/actions/runs/7/attempts/1"])
+        );
+        assert!(s["daysSinceLastRun"].as_i64().unwrap() > 300);
         assert!(stats(&[])["failRate"].is_null());
     }
 }

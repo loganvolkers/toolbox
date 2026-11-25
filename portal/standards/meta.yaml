@@ -32,6 +32,13 @@ kinds:
       described:
         type: boolean
         description: The scorecard has a non-blank `description:` saying what it is.
+      ratchetBlindLevels:
+        type: list
+        items: string
+        description: >-
+          Levels whose every rule reads a connector the ratchet skips (`inRatchet:
+          false`): the ratchet leaves them unknown, so it can't grant them or
+          anything above.
       explained:
         type: boolean
         description: >-
@@ -86,6 +93,7 @@ kinds:
          'levels': record.levels, 'rulesPerLevel': record.rulesPerLevel, 'rules': record.rules,
          'tested': record.tested, 'meta': record.meta, 'fixtureLevels': record.fixtureLevels,
          'described': has(record.described) ? record.described : false,
+         'ratchetBlindLevels': has(record.ratchetBlindLevels) ? record.ratchetBlindLevels : [],
          'explained': has(record.explained) ? record.explained : false,
          'links': has(record.links) ? record.links : 0,
          'liveEntities': has(record.liveEntities) ? record.liveEntities : null, 'hash': record.hash}
@@ -683,6 +691,21 @@ scorecards:
       rationale: >-
         A level no fixture reaches is untested: its rules may never pass
         together, and nothing shows that an entity can reach it (lesson L12).
+    - name: levels-grantable
+      level: gold
+      check: entity.ratchetBlindLevels.size() == 0
+      evidence: >-
+        entity.ratchetBlindLevels.map(l, l + ': every rule reads a connector the
+        ratchet skips, so the ratchet can never grant it')
+      fix: >-
+        Give each listed level a rule the ratchet can decide (one with no
+        `dataFrom`, or reading a connector that runs there), or move the live
+        rules up beside such a rule, in the scorecard's YAML. A connector the
+        ratchet skips is marked `inRatchet: false`.
+      rationale: >-
+        A level made only of rules the ratchet leaves unknown can't be reached
+        where the standard is enforced, so it is a goal no change can be held to
+        (lesson L12, achievable in context).
     facets: {summary: public, details: public}
 
   - name: meta-kind
@@ -1117,10 +1140,15 @@ scorecards:
     - name: guided
       level: silver
       check: entity.unguided.size() == 0
-      evidence: entity.unguided
+      evidence: >-
+        entity.unguided.map(c, c + ': guidance names no outcome (fail, pass or
+        unsure), no condition (when, if, unless), or fewer than three words the
+        question does not already say')
       fix: >-
-        Give each listed criterion `guidance:` saying what counts as fail, so
-        assessors agree.
+        In the rubric's YAML, give each listed criterion `guidance:` that says
+        when to fail (or pass, or be unsure) in words the question doesn't use:
+        what to look at and what result fails, e.g. "Fail when the fix names no
+        file.", so assessors draw the line in the same place.
       rationale: >-
         Without guidance on what counts as fail, assessors draw the line in
         different places and their verdicts can't be compared. Blank guidance

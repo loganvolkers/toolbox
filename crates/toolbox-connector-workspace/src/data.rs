@@ -148,7 +148,18 @@ fn unresolved(root: &Path, entry: &Value, fields: &[String]) -> Vec<String> {
 /// Paths that no workflow under `.github/workflows` or action under `actions/` executes (a
 /// workflow file itself counts as run by CI).
 fn not_in_ci(root: &Path, entry: &Value, fields: &[String]) -> Vec<String> {
-    let mut ci = String::new();
+    let ci: String = ci_texts(root).into_iter().map(|(_, t)| t).collect();
+    values(entry, fields)
+        .into_iter()
+        .filter(|p| !run_by_ci(&ci, p))
+        .map(str::to_owned)
+        .collect()
+}
+
+/// What each workflow under `.github/workflows` and action under `actions/` executes (see
+/// [`executed`]), by repo-relative file.
+fn ci_texts(root: &Path) -> Vec<(String, String)> {
+    let mut out = Vec::new();
     for dir in [".github/workflows", "actions"] {
         for e in walkdir::WalkDir::new(root.join(dir)).into_iter().flatten() {
             let yml = e
@@ -158,15 +169,32 @@ fn not_in_ci(root: &Path, entry: &Value, fields: &[String]) -> Vec<String> {
             if e.file_type().is_file() && yml {
                 let text = std::fs::read_to_string(e.path()).unwrap_or_default();
                 if let Ok(doc) = serde_norway::from_str::<Value>(&text) {
+                    let mut ci = String::new();
                     executed(&doc, false, &mut ci);
+                    let rel = e.path().strip_prefix(root).unwrap_or(e.path());
+                    out.push((rel.to_string_lossy().into_owned(), ci));
                 }
             }
         }
     }
-    values(entry, fields)
+    out.sort();
+    out
+}
+
+/// The workflow files under `.github/workflows` that run any of the entry's checks: where the run
+/// history that says whether the checks pass is kept (a stage can't read another entity's
+/// scores, so this names where to look).
+fn ci_workflows(root: &Path, entry: &Value, fields: &[String]) -> Vec<String> {
+    let checks = values(entry, fields);
+    ci_texts(root)
         .into_iter()
-        .filter(|p| !run_by_ci(&ci, p))
-        .map(str::to_owned)
+        .filter(|(file, text)| {
+            file.starts_with(".github/workflows/")
+                && checks
+                    .iter()
+                    .any(|c| *c == file.as_str() || run_by_ci(text, c))
+        })
+        .map(|(file, _)| file)
         .collect()
 }
 
@@ -217,16 +245,66 @@ fn run_by_ci(ci: &str, path: &str) -> bool {
     })
 }
 
-/// Documents in `fields` that exist but never mention the entry's `name` (case-insensitive): a
-/// shared design doc listed for a stage it doesn't describe.
+/// A heading's anchor as GitHub and Starlight make it: lower case, punctuation dropped, spaces as
+/// hyphens.
+fn slug(heading: &str) -> String {
+    heading
+        .trim()
+        .to_lowercase()
+        .chars()
+        .filter_map(|c| match c {
+            ' ' => Some('-'),
+            c if c.is_alphanumeric() || c == '-' || c == '_' => Some(c),
+            _ => None,
+        })
+        .collect()
+}
+
+/// All of a name's words, matched on one line.
+struct Words(Vec<Regex>);
+
+impl Words {
+    fn is_match(&self, line: &str) -> bool {
+        !self.0.is_empty() && self.0.iter().all(|w| w.is_match(line))
+    }
+}
+
+/// Documents in `fields` that exist but don't describe the entry: a `doc.md#section` whose heading
+/// doesn't exist, or a Markdown file with no heading or table row naming the entry's `name` (every
+/// word of it). A shared design doc that only mentions the word in passing doesn't describe the
+/// stage. Other files count a line naming it anywhere.
 fn not_naming(root: &Path, entry: &Value, fields: &[String]) -> Vec<String> {
     let name = entry["name"].as_str().unwrap_or_default().to_lowercase();
+    // Every word of the name, each as the start of a word: `build-connector` is named by "Build a
+    // connector", `monitor` by "Monitoring".
+    let words: Vec<Regex> = name
+        .split(|c: char| !c.is_alphanumeric())
+        .filter(|w| !w.is_empty())
+        .filter_map(|w| Regex::new(&format!(r"(?i)\b{}", regex::escape(w))).ok())
+        .collect();
+    let word = Words(words);
     values(entry, fields)
         .into_iter()
         .filter(|v| {
-            let path = v.split('#').next().unwrap_or(v);
-            std::fs::read_to_string(root.join(path))
-                .is_ok_and(|text| name.is_empty() || !text.to_lowercase().contains(&name))
+            let (path, anchor) = v.split_once('#').unwrap_or((v, ""));
+            let markdown = path.ends_with(".md") || path.ends_with(".mdx");
+            std::fs::read_to_string(root.join(path)).is_ok_and(|text| {
+                // `doc.md#section` says which section describes the entry: it names it when that
+                // heading exists.
+                let named = if markdown && !anchor.is_empty() {
+                    text.lines()
+                        .filter_map(|l| l.trim_start().strip_prefix('#'))
+                        .any(|h| slug(h.trim_start_matches('#')) == anchor)
+                } else if markdown {
+                    text.lines().any(|l| {
+                        let t = l.trim_start();
+                        (t.starts_with('#') || t.starts_with('|')) && word.is_match(t)
+                    })
+                } else {
+                    text.lines().any(|l| word.is_match(l))
+                };
+                !name.is_empty() && !named
+            })
         })
         .map(str::to_owned)
         .collect()
@@ -254,6 +332,7 @@ pub fn records(root: &Path, rel: &str, src: &Source) -> Result<Vec<(String, Valu
         }
         if !src.ci.is_empty() {
             data["notInCi"] = json!(not_in_ci(root, &e, &src.ci));
+            data["ciWorkflows"] = json!(ci_workflows(root, &e, &src.ci));
         }
         if !src.naming.is_empty() {
             let silent = not_naming(root, &e, &src.naming);
@@ -328,15 +407,24 @@ mod tests {
         .unwrap();
         let r = records(&dir, "ci.yaml", &ci_src).unwrap();
         assert_eq!(r[0].1["notInCi"], json!(["rust-toolchain.toml"]));
+        assert_eq!(r[0].1["ciWorkflows"], json!([".github/workflows/ci.yml"]));
         std::fs::write(
             dir.join("named.yaml"),
-            "- {id: z, name: Pack, docs: [docs/a.md, docs/pack.md, docs/gone.md]}\n",
+            "- {id: z, name: Pack, docs: [docs/a.md, docs/pack.md, docs/gone.md, 'docs/a.md#32-bundles-for-shipping', 'docs/a.md#nope']}\n",
         )
         .unwrap();
         std::fs::write(dir.join("docs/pack.md"), "# How we pack\n").unwrap();
+        std::fs::write(
+            dir.join("docs/a.md"),
+            "# A\nWe pack things in passing.\n\n## 3.2 Bundles, for shipping\n",
+        )
+        .unwrap();
         let r = records(&dir, "named.yaml", &ci_src).unwrap();
-        assert_eq!(r[0].1["notNaming"], json!(["docs/a.md"]));
-        assert_eq!(r[0].1["namedIn"], json!(["docs/pack.md"]));
+        assert_eq!(r[0].1["notNaming"], json!(["docs/a.md", "docs/a.md#nope"]));
+        assert_eq!(
+            r[0].1["namedIn"],
+            json!(["docs/pack.md", "docs/a.md#32-bundles-for-shipping"])
+        );
         std::fs::write(dir.join("bad.yaml"), "- {name: no-id}\n").unwrap();
         assert!(records(&dir, "bad.yaml", &ci_src).is_err());
         let _ = std::fs::remove_dir_all(&dir);

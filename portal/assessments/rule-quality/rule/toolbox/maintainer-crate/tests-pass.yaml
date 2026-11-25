@@ -2,65 +2,67 @@ apiVersion: toolbox.dev/assessment/v1
 entity: rule:toolbox/maintainer-crate/tests-pass
 rubric: rule-quality
 subjectHash: 805f15bb72c8
-assessor: {kind: agent, name: cursor-cloud-agent, model: claude-opus-5.5}
-at: 2026-11-24
+assessor: {kind: agent, name: campaign-review-rules-r3}
+at: 2026-11-25
 verdicts:
   - criterion: measures-intent
-    verdict: pass
+    verdict: fail
     reason: >-
-      The check needs a passing run with no ignored and no compiled-out test
-      (portal/standards/crates.yaml:213-215). The previous gap is closed: the
-      runner's test job now sets TOOLBOX_REQUIRE_OPENFGA=1
-      (portal/toolbox.yaml:255-265), as CI does (.github/workflows/ci.yml:49),
-      so the two tests that used to return early without OpenFGA fail instead
-      (crates/toolbox-authz/tests/fga.rs:59-68,
-      crates/toolbox-api/tests/authz.rs:21-27). No other test in
-      crates/*/tests skips itself. Short of deliberate evasion (see
-      hard-to-game), passing means every test ran and passed.
+      The runner's test job sets only TOOLBOX_REQUIRE_OPENFGA
+      (portal/toolbox.yaml:255-266), and since the last review two security
+      tests were added that return early as passed:
+      crates/toolbox-api/src/confine.rs:82-91 skips without Landlock unless
+      TOOLBOX_REQUIRE_LANDLOCK is set, which CI sets
+      (.github/workflows/ci.yml:52-53) and the runner does not, and
+      crates/toolbox-cli/tests/serve.rs:36-41 skips whenever it runs as root,
+      with no override at all. On a host without Landlock, or as root, the
+      rule reports toolbox-api and toolbox-cli as passing while those tests
+      never ran: the case its rationale names
+      (portal/standards/crates.yaml:229-232). The last review's "no other test
+      skips itself" no longer holds.
+    suggestion: >-
+      Add TOOLBOX_REQUIRE_LANDLOCK=1 to the runner's test job in
+      portal/toolbox.yaml; give the serve.rs root skip a TOOLBOX_REQUIRE_*
+      override that fails instead; and have the runner count a fixed marker
+      line (e.g. `skipped:`) that every self-skipping test prints, failing the
+      rule when any appears.
   - criterion: hard-to-game
     verdict: fail
     reason: >-
-      `#[ignore]`, `#[cfg(any())]` and `#[cfg(not(all()))]` are closed, but
-      is_cfg_disabled matches only those two exact spellings
-      (crates/toolbox-connector-workspace/src/rust.rs:51-59). `#[cfg(miri)]`
-      or `#[cfg(windows)]` on a failing test is just as cheap: cargo never
-      compiles it on the Linux runner, parse_cargo_test calls exit 0 `pass`
-      (crates/toolbox-connector-runner/src/main.rs:93-107), and neither name
-      trips rustc's unexpected_cfgs lint, so clippy-clean stays green too. An
-      early `return` behind a condition (an environment check like the one the
-      OpenFGA tests had) also passes, and has-tests still counts the test.
+      is_cfg_disabled still matches only `any()` and `not(all())`
+      (crates/toolbox-connector-workspace/src/rust.rs:50-59). A scratch crate
+      with a failing test under `#[cfg(miri)]`, run through
+      target/debug/toolbox-connector-workspace, gave disabledTests [], and
+      cargo never compiles it on Linux, so the runner reports pass
+      (crates/toolbox-connector-runner/src/main.rs:92-114). `miri` and
+      `windows` are well-known cfgs, so the unexpected_cfgs lint stays quiet.
+      An early `return` behind an environment test, the pattern above, also
+      passes. Both are one-line suppressions, not falsification.
     suggestion: >-
-      Flag any `#[test]` (or its module) gated by a cfg other than `test` in
-      disabledTests, unless the cfg is a declared feature. Better, have the
-      rule compare the runner's passed+failed+ignored count for unit and
-      integration suites (doc-tests apart) with the workspace's unitTests +
-      integrationTests, so a test cargo didn't run shows up whatever hid it.
+      List in disabledTests any `#[test]` (or its module) gated by a cfg other
+      than `test` or a declared feature; better, compare the runner's passed +
+      failed + ignored for unit and integration suites with the workspace's
+      unitTests + integrationTests, so a test cargo didn't run shows up
+      whatever hid it.
   - criterion: fix-leads-to-pass
     verdict: pass
     reason: >-
       The fix's `cargo test -p <crate>` is the runner's command
-      (portal/toolbox.yaml:258-264). The evidence carries the counts, the last
-      2000 characters of output on failure
-      (crates/toolbox-connector-runner/src/main.rs:108-112) and each
-      compiled-out test with its file and line (rust.rs:134-141). The fix
-      names all three removals: failures, `#[ignore]`, the always-false
-      `#[cfg(...)]`, and says to install OpenFGA (TOOLBOX_OPENFGA_BIN) since
-      the runner requires it (portal/standards/crates.yaml:222-227).
+      (portal/toolbox.yaml:255-266), the evidence carries counts, the output
+      tail on failure (crates/toolbox-connector-runner/src/main.rs:108-111)
+      and each compiled-out test with file and line (rust.rs:134-141), and the
+      fix names each removal: failures, `#[ignore]`, the always-false
+      `#[cfg(...)]` (portal/standards/crates.yaml:223-228).
   - criterion: threshold-justified
     verdict: pass
     reason: >-
       Bronze with no ignored or compiled-out test is a stated principle in
-      docs/design/thresholds.md:38 ("An ignored test never runs, nor does one
-      under `#[cfg(any())]`"), which also records the OpenFGA requirement.
-      There is no other number. The fixture pins the fail outcome with both an
-      ignored and a compiled-out test
-      (portal/tests/standards.test.yaml:1270-1273).
+      docs/design/thresholds.md:38, which also records the OpenFGA
+      requirement; there is no other number.
 summary: >-
-  Re-assessed after the rule gained a rationale: its check, evidence, fix
-  and level are the same as on main, as is the code the reasons cite, so
-  the verdicts stand; line numbers are updated for the rationale lines
-  inserted above them. The rationale states the why without claiming more
-  than the check sees. The runner now requires OpenFGA, so the rule and CI
-  agree, and ignored or `#[cfg(any())]` tests fail it. Hiding a failing
-  test behind any other always-false cfg on Linux (`miri`, `windows`)
-  still passes.
+  Independent re-review. The rule is unchanged, but the code around it
+  moved: two self-skipping security tests (Landlock confinement, the
+  same-user environment test) arrived on 2026-11-24, and the runner job
+  requires neither, so the rule can report pass for tests that never ran.
+  `#[cfg(miri)]` on a failing test still passes (confirmed with the
+  connector).

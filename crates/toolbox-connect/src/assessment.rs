@@ -218,31 +218,30 @@ pub fn record_in(doc: &Value, path: Option<&str>, root: Option<&std::path::Path>
         data["path"] = json!(p);
     }
     if let Some(root) = root {
-        let mut cited: Vec<String> = verdicts
+        let per: Vec<Vec<String>> = verdicts
             .iter()
-            .flat_map(|v| cited_paths(v["reason"].as_str().unwrap_or_default(), root))
+            .map(|v| cited_paths(v["reason"].as_str().unwrap_or_default(), root))
             .collect();
+        let mut cited: Vec<String> = per.iter().flatten().cloned().collect();
         cited.sort();
         cited.dedup();
+        // A crate-design assessment that cites nothing inside the crate judged it without
+        // reading it.
+        if let Some(name) = doc["entity"]
+            .as_str()
+            .and_then(|e| e.strip_prefix("crate:"))
+        {
+            let inside = format!("crates/{name}/");
+            data["citesSubject"] = json!(cited.iter().any(|c| c.starts_with(&inside)));
+        }
         data["cited"] = json!(cited);
+        data["citedPerReason"] = json!(per);
     }
     data
 }
 
-/// Link reviews to what they review. On each review, `groundedIn`: what it cites that its subject
-/// cites too, or the subject's own file (a review that engages with the assessment rather than
-/// citing any file). On each assessment, `independentReview`: the verdict (`pass`, `fail`,
-/// `unsure`) of a current, grounded review of it (an assessment whose entity is this assessment's
-/// external id and whose `subjectHash` is its `hash`) by a different, named assessor; empty when
-/// there is none. A scorecard on the assessed entity reads it to require a second pair of eyes,
-/// which the assessment's own fields can't show.
-pub fn link_reviews(records: &mut [(String, Value)]) {
-    let name = |d: &Value| {
-        d["assessor"]["name"]
-            .as_str()
-            .unwrap_or_default()
-            .to_owned()
-    };
+/// Set `groundedIn` and `ungroundedReasons` on every review (see [`link_reviews`]).
+fn ground(records: &mut [(String, Value)]) {
     let strings = |v: &Value| -> Vec<String> {
         v.as_array()
             .into_iter()
@@ -260,15 +259,54 @@ pub fn link_reviews(records: &mut [(String, Value)]) {
         })
         .collect();
     for (_, d) in records.iter_mut() {
-        let subject = d["entity"].as_str().unwrap_or_default();
-        if let Some(own) = sources.get(subject) {
+        let subject = d["entity"].as_str().unwrap_or_default().to_owned();
+        if let Some(own) = sources.get(&subject) {
             let grounded: Vec<String> = strings(&d["cited"])
                 .into_iter()
                 .filter(|c| own.contains(c))
                 .collect();
-            d["groundedIn"] = json!(grounded);
+            // Each reason must rest on the subject: a review whose other reasons cite unrelated
+            // files checked one thing and waved the rest through.
+            let criteria: Vec<String> = d["verdicts"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .map(|v| v["criterion"].as_str().unwrap_or_default().to_owned())
+                .collect();
+            let ungrounded: Vec<String> = d["citedPerReason"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .zip(&criteria)
+                .filter(|(c, _)| !strings(c).iter().any(|p| own.contains(p)))
+                .map(|(_, name)| name.clone())
+                .collect();
+            d["ungroundedReasons"] = json!(ungrounded);
+            if !ungrounded.is_empty() {
+                d["groundedIn"] = json!([]);
+            } else {
+                d["groundedIn"] = json!(grounded);
+            }
         }
     }
+}
+
+/// Link reviews to what they review. On each review, `groundedIn`: what it cites that its subject
+/// cites too, or the subject's own file, empty unless every reason does (`ungroundedReasons`
+/// names those that don't): a review that engages with the assessment, rather than citing one
+/// shared source and any file for the rest. On each assessment, `independentReview`: the verdict (`pass`, `fail`,
+/// `unsure`) of a current, grounded review of it (an assessment whose entity is this assessment's
+/// external id and whose `subjectHash` is its `hash`) by a different, named assessor; empty when
+/// there is none. A scorecard on the assessed entity reads it to require a second pair of eyes,
+/// which the assessment's own fields can't show.
+pub fn link_reviews(records: &mut [(String, Value)]) {
+    let name = |d: &Value| {
+        d["assessor"]["name"]
+            .as_str()
+            .unwrap_or_default()
+            .to_owned()
+    };
+    ground(records);
     type Review = (String, String, String, String, bool);
     let reviews: Vec<Review> = records
         .iter()
@@ -396,10 +434,26 @@ mod tests {
         for (by, h, cited, want) in cases {
             let mut r = rec(&review(by, h, "fail"));
             r.1["cited"] = cited.clone();
+            r.1["citedPerReason"] = json!([cited.clone()]);
             let mut rs = vec![target.clone(), r];
             link_reviews(&mut rs);
             assert_eq!(rs[0].1["independentReview"], want, "{by} {h} {cited}");
             assert_eq!(rs[1].1["independentReview"], "");
         }
+        let mut two = review("bob", &hash, "fail");
+        two["verdicts"] = json!([
+            {"criterion": "a", "verdict": "pass", "reason": "r"},
+            {"criterion": "b", "verdict": "pass", "reason": "r"}
+        ]);
+        let mut r = rec(&two);
+        r.1["cited"] = json!(["src/lib.rs", "README.md"]);
+        r.1["citedPerReason"] = json!([["src/lib.rs"], ["README.md"]]);
+        let mut rs = vec![target.clone(), r];
+        link_reviews(&mut rs);
+        assert_eq!(
+            rs[0].1["independentReview"], "",
+            "one reason cites nothing of it"
+        );
+        assert_eq!(rs[1].1["ungroundedReasons"], json!(["b"]));
     }
 }

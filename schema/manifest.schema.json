@@ -589,6 +589,10 @@
           "additionalProperties": {
             "$ref": "#/$defs/duration"
           }
+        },
+        "inRatchet": {
+          "type": "boolean",
+          "description": "false when the ratchet skips this connector (its data changes with time, like run history, or it is too slow for every change, like the runner). Rules reading it through `dataFrom` are then unknown in the ratchet, and `describe scorecards` lists the levels that can't be granted there. Default true."
         }
       }
     },

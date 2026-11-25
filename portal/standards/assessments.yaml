@@ -59,6 +59,17 @@ kinds:
         description: >-
           For a review: what it cites that its subject also cites, or the
           subject's own file. Empty for a review that cites only unrelated files.
+      ungroundedReasons:
+        type: list
+        items: string
+        description: >-
+          For a review: criteria whose reason cites neither the reviewed
+          assessment's file nor any source it cites.
+      citesSubject:
+        type: boolean
+        description: >-
+          For a crate-design assessment: it cites a file inside the crate it
+          judges.
       independentReview:
         type: string
         description: >-
@@ -129,6 +140,8 @@ kinds:
          'uncited': record.uncited, 'hash': record.hash,
          'cited': has(record.cited) ? record.cited : [],
          'groundedIn': has(record.groundedIn) ? record.groundedIn : [],
+         'ungroundedReasons': has(record.ungroundedReasons) ? record.ungroundedReasons : [],
+         'citesSubject': has(record.citesSubject) ? record.citesSubject : false,
          'independentReview': has(record.independentReview) ? record.independentReview : ''}
       relations:
         assessesAssessment: "record.entity.startsWith('assessment:') ? [record.entity] : []"
@@ -279,9 +292,9 @@ scorecards:
       evidence: >-
         entity.reviewState != 'fresh' ? ['no current review'] :
         entity.reviewFailing + entity.reviewUncited.map(c, c + ' cites nothing
-        that resolves (fix the review)') + (entity.reviewGrounded ? [] : ['the
-        review cites neither this assessment nor anything it cites (fix the
-        review)'])
+        that resolves (fix the review)') + (entity.reviewGrounded ? [] : ['a
+        reason of the review cites neither this assessment nor anything it cites
+        (fix the review)'])
       fix: >-
         For a listed criterion, revise the assessment file in
         portal/assessments/ where the review found it unsupported or incomplete,

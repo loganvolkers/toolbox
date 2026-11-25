@@ -43,6 +43,7 @@ connectors:
   - name: github-actions
     package: builtin:github # run history: changes with time, so not in the ratchet (--skip it)
     runtime: in-image
+    inRatchet: false
     config:
       org: ${param:githubOrg}
       token: ${env:GITHUB_TOKEN}
@@ -85,6 +86,12 @@ kinds:
       jobsWithoutPermissions: {type: list, items: string}
       jobsWithWrite: {type: list, items: string}
       concurrency: {type: boolean}
+      onDefaultBranch:
+        type: boolean
+        description: >-
+          The workflow runs on the default branch (a push there, or a schedule),
+          where run history is read. Run-history rules don't apply to one that
+          runs only on pull requests, tags or by hand.
       cancelsSuperseded:
         type: boolean
         description: >-
@@ -120,6 +127,7 @@ kinds:
          'jobsWithoutTimeout': record.jobsWithoutTimeout, 'jobsWithoutPermissions': record.jobsWithoutPermissions,
          'jobsWithWrite': record.jobsWithWrite, 'concurrency': record.concurrency,
          'cancelsSuperseded': record.cancelsSuperseded, 'hiddenFailures': record.hiddenFailures,
+         'onDefaultBranch': has(record.onDefaultBranch) ? record.onDefaultBranch : true,
          'unpinned': record.unpinned, 'unpinnedAt': record.unpinnedAt}
       relations: {usesAction: "record.actions.map(a, 'action:' + a)"}
     - from: ci-lint/zizmor
@@ -351,7 +359,7 @@ scorecards:
     - name: main-not-stuck-red
       level: bronze
       dataFrom: github-actions
-      check: entity.runs.failingStreak < 3
+      check: "!entity.onDefaultBranch || entity.runs.failingStreak < 3"
       evidence: >-
         [string(entity.runs.failingStreak) + ' failures in a row on ' +
         entity.runs.branch + ', last run ' + entity.runs.lastRunAt] +
@@ -367,7 +375,9 @@ scorecards:
     - name: still-running
       level: bronze
       dataFrom: github-actions
-      check: "!has(entity.runs.state) || entity.runs.state == 'active'"
+      check: >-
+        !entity.onDefaultBranch || !has(entity.runs.state) || entity.runs.state
+        == 'active'
       evidence: >-
         ['GitHub reports the workflow as ' + entity.runs.state + ', so its run
         history is old']
@@ -379,14 +389,36 @@ scorecards:
         pass every run-history rule while checking nothing. GitHub disables
         scheduled workflows in a public repository after 60 days without
         activity, and anyone can disable one by hand. A workflow whose triggers
-        simply stop matching stays active and is not caught here.
+        simply stop matching stays active; recently-run catches that.
       links:
       - title: GitHub on disabling workflows
         url: https://docs.github.com/en/actions/how-tos/manage-workflow-runs/disable-and-enable-workflows
+    - name: recently-run
+      level: bronze
+      dataFrom: github-actions
+      check: >-
+        !entity.onDefaultBranch || (entity.runs.daysSinceLastRun != null &&
+        entity.runs.daysSinceLastRun <= ${param:maxIdleDays})
+      evidence: >-
+        [entity.runs.daysSinceLastRun == null ? 'no run on ' +
+        entity.runs.branch + ' in the history read' : 'the last run on ' +
+        entity.runs.branch + ' was ' + string(entity.runs.daysSinceLastRun) + '
+        days ago (at most ${param:maxIdleDays})']
+      fix: >-
+        Find why the workflow stopped running on the default branch: its `on:`
+        triggers (branch or path filters that no longer match) in the workflow
+        file, or a branch rename. Fix the triggers, or delete the file if the
+        workflow is retired.
+      rationale: >-
+        A workflow that stays active but no longer runs, because its triggers
+        stopped matching, keeps its old green history, so every rule that reads
+        run history passes on runs that no longer say anything.
     - name: fail-rate-under-20
       level: bronze
       dataFrom: github-actions
-      check: entity.runs.firstTryFailRate <= ${param:failRateBronze}
+      check: >-
+        !entity.onDefaultBranch || entity.runs.firstTryFailRate <=
+        ${param:failRateBronze}
       evidence: >-
         [string(entity.runs.firstTryFailRate) + '% of the last ' +
         string(entity.runs.decided) + ' decided runs on ' + entity.runs.branch +
@@ -436,8 +468,9 @@ scorecards:
       level: silver
       dataFrom: github-actions
       check: >-
-        entity.runs.decided >= ${param:minDecidedRuns} &&
-        entity.runs.firstTryFailRate <= ${param:failRateSilver}
+        !entity.onDefaultBranch || (entity.runs.decided >=
+        ${param:minDecidedRuns} && entity.runs.firstTryFailRate <=
+        ${param:failRateSilver})
       evidence: >-
         (entity.runs.decided < ${param:minDecidedRuns} ? ['only ' +
         string(entity.runs.decided) + ' decided runs: at least
@@ -458,8 +491,9 @@ scorecards:
       level: gold
       dataFrom: github-actions
       check: >-
-        entity.runs.decided >= ${param:minDecidedRuns} &&
-        entity.runs.firstTryFailRate <= ${param:failRateGold}
+        !entity.onDefaultBranch || (entity.runs.decided >=
+        ${param:minDecidedRuns} && entity.runs.firstTryFailRate <=
+        ${param:failRateGold})
       evidence: >-
         (entity.runs.decided < ${param:minDecidedRuns} ? ['only ' +
         string(entity.runs.decided) + ' decided runs: at least

@@ -174,9 +174,9 @@ assert:
   - name: without run data the run rules are unknown and say which connector
     expect: >-
       score('maintainer-ci-reliability',
-      'workflow:.github/workflows/release.yml').rules['main-not-stuck-red'] ==
-      'unknown' && score('maintainer-ci-reliability',
-      'workflow:.github/workflows/release.yml').evidence['main-not-stuck-red']
+      'workflow:.github/workflows/demo/nightly.yml').rules['main-not-stuck-red']
+      == 'unknown' && score('maintainer-ci-reliability',
+      'workflow:.github/workflows/demo/nightly.yml').evidence['main-not-stuck-red']
       == ['no data from connector github-actions']
   - name: >-
       runs that passed only on a re-run count as failed, and a disabled
@@ -921,7 +921,8 @@ assert:
       score('review-crate', 'crate:toolbox-expr').evidence['no-open-findings']
       == ['replaceable-defaults'] && score('review-crate',
       'crate:toolbox-expr').evidence['passes-review'] ==
-      ['replaceable-defaults'] && score('review-crate',
+      ['replaceable-defaults', 'the assessment cites no file inside the
+      crate'] && score('review-crate',
       'crate:toolbox-expr').rules['no-doubts'] == 'fail' &&
       score('review-crate', 'crate:toolbox-derive').rules['no-doubts'] ==
       'pass' && score('review-crate',
@@ -1009,8 +1010,8 @@ assert:
       'assessment:rule-quality/rule:toolbox/user-cli/has-help').rules['no-open-findings']
       == 'fail' && score('review-assessment',
       'assessment:rule-quality/rule:toolbox/user-cli/has-help').evidence['passes-review']
-      == ['complete', 'the review cites neither this assessment nor anything
-      it cites (fix the review)'] && score('review-assessment',
+      == ['complete', 'a reason of the review cites neither this assessment
+      nor anything it cites (fix the review)'] && score('review-assessment',
       'assessment:assessment-quality/assessment:rule-quality/rule:toolbox/user-cli/has-help').level
       == 'skipped'
   - name: a review of an older version of an assessment is stale
@@ -1588,3 +1589,25 @@ assert:
       campaign('close-review-findings').inScope > 0 &&
       campaign('close-review-findings').meeting <
       campaign('close-review-findings').inScope
+  - name: >-
+      a default-branch workflow that stopped running fails recently-run, and
+      one that never runs on main isn't held to run history
+    expect: >-
+      score('maintainer-ci-reliability',
+      'workflow:.github/workflows/demo/unsafe.yml').evidence['recently-run']
+      == ['the last run on main was 200 days ago (at most 90)'] &&
+      score('maintainer-ci-reliability',
+      'workflow:.github/workflows/ci.yml').rules['recently-run'] == 'pass' &&
+      score('maintainer-ci-reliability',
+      'workflow:.github/workflows/release.yml').rules['fail-rate-under-20'] ==
+      'pass'
+  - name: a level the ratchet can't decide misses meta-scorecard gold
+    expect: >-
+      score('meta-scorecard',
+      'scorecard:toolbox/maintainer-ci-security').evidence['levels-grantable']
+      == ['silver: every rule reads a connector the ratchet skips, so the
+      ratchet can never grant it', 'gold: every rule reads a connector the
+      ratchet skips, so the ratchet can never grant it'] &&
+      score('meta-scorecard',
+      'scorecard:toolbox/operator-cli').rules['levels-grantable'] == 'pass'
+

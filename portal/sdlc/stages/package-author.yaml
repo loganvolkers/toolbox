@@ -14,7 +14,9 @@ records:
       manifest schema.
     commands: [toolbox validate]
     checks: [packages/github-actions/toolbox-package.yaml]
-    docs: [docs/design/packages.md, packages/github-actions/README.md]
+    docs:
+      - docs/design/packages.md#3-what-a-toolbox-package-looks-like
+      - packages/github-actions/README.md
     status: partial
     gaps: [no scaffold (toolbox package new)]
   - id: package-author/build-connector
@@ -34,7 +36,7 @@ records:
     docs:
     - examples/connector-scaffold/README.md
     - docs/design/connector-control.md
-    - docs/design/package-author-sdlc.md
+    - docs/design/package-author-sdlc.md#32-connectors-outside-core
     - site/src/content/docs/authors/connectors.md
     status: partial
     gaps:

@@ -3098,6 +3098,10 @@
       "scorecard:toolbox/maintainer-ci-reliability": {
         "fixtures-reach-every-level": [
           "d2da8e5e"
+        ],
+        "levels-grantable": [
+          "373a9498",
+          "7d133c79"
         ]
       },
       "scorecard:toolbox/maintainer-ci-security": {
@@ -3107,6 +3111,11 @@
         ],
         "fixtures-reach-every-level": [
           "b2c06f55"
+        ]
+      },
+      "scorecard:toolbox/maintainer-ci-speed": {
+        "levels-grantable": [
+          "7d133c79"
         ]
       },
       "scorecard:toolbox/maintainer-connector": {
@@ -3778,6 +3787,7 @@
           "fail-rate-under-20",
           "fail-rate-under-5",
           "main-not-stuck-red",
+          "recently-run",
           "still-running"
         ]
       },
@@ -3788,18 +3798,12 @@
           "fail-rate-under-20",
           "fail-rate-under-5",
           "main-not-stuck-red",
+          "recently-run",
           "still-running"
         ]
       },
       "workflow:.github/workflows/image.yml": {
-        "level": "bronze",
-        "unknown": [
-          "fail-rate-under-10",
-          "fail-rate-under-20",
-          "fail-rate-under-5",
-          "main-not-stuck-red",
-          "still-running"
-        ]
+        "level": "gold"
       },
       "workflow:.github/workflows/pages.yml": {
         "level": "bronze",
@@ -3808,6 +3812,7 @@
           "fail-rate-under-20",
           "fail-rate-under-5",
           "main-not-stuck-red",
+          "recently-run",
           "still-running"
         ]
       },
@@ -3815,14 +3820,7 @@
         "failing": {
           "every-job-has-timeout": 5
         },
-        "level": "none",
-        "unknown": [
-          "fail-rate-under-10",
-          "fail-rate-under-20",
-          "fail-rate-under-5",
-          "main-not-stuck-red",
-          "still-running"
-        ]
+        "level": "none"
       },
       "workflow:.github/workflows/scale-slo.yml": {
         "level": "bronze",
@@ -3831,6 +3829,7 @@
           "fail-rate-under-20",
           "fail-rate-under-5",
           "main-not-stuck-red",
+          "recently-run",
           "still-running"
         ]
       },
@@ -3841,6 +3840,7 @@
           "fail-rate-under-20",
           "fail-rate-under-5",
           "main-not-stuck-red",
+          "recently-run",
           "still-running"
         ]
       },
@@ -5848,6 +5848,9 @@
       "assessment:rule-quality/rule:toolbox/maintainer-ci-reliability/fail-rate-under-20": {
         "level": "gold"
       },
+      "assessment:rule-quality/rule:toolbox/maintainer-ci-speed/cancels-superseded-runs": {
+        "level": "gold"
+      },
       "assessment:rule-quality/rule:toolbox/maintainer-connector/no-hardcoded-secrets": {
         "level": "gold"
       },
@@ -6280,6 +6283,9 @@
       "field:toolbox/Assessment.cited": {
         "level": "gold"
       },
+      "field:toolbox/Assessment.citesSubject": {
+        "level": "gold"
+      },
       "field:toolbox/Assessment.entity": {
         "level": "gold"
       },
@@ -6329,6 +6335,9 @@
         "level": "gold"
       },
       "field:toolbox/Assessment.uncited": {
+        "level": "gold"
+      },
+      "field:toolbox/Assessment.ungroundedReasons": {
         "level": "gold"
       },
       "field:toolbox/Assessment.unsuggested": {
@@ -6729,6 +6738,9 @@
           "described": 1
         },
         "level": "bronze"
+      },
+      "field:toolbox/Crate.reviewCitesCrate": {
+        "level": "gold"
       },
       "field:toolbox/Crate.reviewFailing": {
         "level": "gold"
@@ -7847,6 +7859,9 @@
         },
         "level": "bronze"
       },
+      "field:toolbox/Scorecard.ratchetBlindLevels": {
+        "level": "gold"
+      },
       "field:toolbox/Scorecard.reviewFailing": {
         "level": "gold"
       },
@@ -7912,6 +7927,9 @@
         "level": "gold"
       },
       "field:toolbox/SdlcStage.checks": {
+        "level": "gold"
+      },
+      "field:toolbox/SdlcStage.ciWorkflows": {
         "level": "gold"
       },
       "field:toolbox/SdlcStage.commands": {
@@ -8181,6 +8199,9 @@
           "described": 1
         },
         "level": "bronze"
+      },
+      "field:toolbox/Workflow.onDefaultBranch": {
+        "level": "gold"
       },
       "field:toolbox/Workflow.path": {
         "failing": {
@@ -8657,6 +8678,9 @@
           "pins-both-outcomes": 1
         },
         "level": "silver"
+      },
+      "rule:toolbox/maintainer-ci-reliability/recently-run": {
+        "level": "gold"
       },
       "rule:toolbox/maintainer-ci-reliability/still-running": {
         "level": "gold"
@@ -9213,6 +9237,9 @@
       "rule:toolbox/meta-scorecard/fixtures-show-the-ladder": {
         "level": "gold"
       },
+      "rule:toolbox/meta-scorecard/levels-grantable": {
+        "level": "gold"
+      },
       "rule:toolbox/meta-scorecard/tested": {
         "level": "gold"
       },
@@ -9609,7 +9636,8 @@
       },
       "scorecard:toolbox/maintainer-ci-reliability": {
         "failing": {
-          "fixtures-reach-every-level": 1
+          "fixtures-reach-every-level": 1,
+          "levels-grantable": 2
         },
         "level": "silver"
       },
@@ -9621,7 +9649,10 @@
         "level": "bronze"
       },
       "scorecard:toolbox/maintainer-ci-speed": {
-        "level": "gold"
+        "failing": {
+          "levels-grantable": 1
+        },
+        "level": "silver"
       },
       "scorecard:toolbox/maintainer-connector": {
         "failing": {

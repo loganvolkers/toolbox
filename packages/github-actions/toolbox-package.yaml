@@ -46,6 +46,13 @@ parameters:
     tighten: higher
     description: >-
       Fewest decided runs before the silver and gold fail-rate tiers can pass.
+  maxIdleDays:
+    type: integer
+    default: 90
+    tighten: lower
+    description: >-
+      Most days since a default-branch workflow last ran before recently-run
+      fails.
   p90Seconds:
     type: integer
     default: 900

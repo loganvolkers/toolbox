@@ -273,7 +273,7 @@ fn rubric_record(portal: &str, r: &toolbox_model::manifest::Rubric, docs: &[Valu
         "portal": portal, "name": r.name, "kind": r.kind, "subject": r.subject(),
         "described": filled(&r.description),
         "criteria": r.criteria.iter().map(|c| &c.name).collect::<Vec<_>>(),
-        "unguided": r.criteria.iter().filter(|c| !guides(&c.guidance)).map(|c| &c.name).collect::<Vec<_>>(),
+        "unguided": r.criteria.iter().filter(|c| !guides(&c.guidance, &c.question)).map(|c| &c.name).collect::<Vec<_>>(),
         "assessments": used.len(), "alwaysPass": always_pass, "hash": hash(r),
     })
 }
@@ -284,20 +284,77 @@ pub(crate) fn filled(text: &Option<String>) -> bool {
     text.as_deref().is_some_and(|t| !t.trim().is_empty())
 }
 
-/// Guidance that tells assessors when to give a verdict: at least ten words, an outcome as a word
-/// (fail, pass or unsure, not "failure"), and a condition (`when`, `if`, `unless`, or "and name"),
-/// so a blank line, a restated question or "Fail when the answer is no." doesn't count as guided.
-fn guides(text: &Option<String>) -> bool {
+/// Guidance that tells assessors when to give a verdict: an outcome as a word (fail, pass or
+/// unsure, not "failure"), a condition (`when`, `if`, `unless`, or "and name"), and at least three
+/// content words that are neither in the question nor generic filler, so it says something the
+/// question doesn't. "Fail when the answer to this question is no for this entity." restates the
+/// question and isn't guided; "Fail when the fix names no file." is.
+fn guides(text: &Option<String>, question: &str) -> bool {
     static OUTCOME: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
     static CONDITION: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
+    const FILLER: [&str; 40] = [
+        "the",
+        "and",
+        "for",
+        "when",
+        "unless",
+        "fail",
+        "fails",
+        "pass",
+        "passes",
+        "unsure",
+        "answer",
+        "answers",
+        "question",
+        "criterion",
+        "entity",
+        "this",
+        "that",
+        "these",
+        "those",
+        "yes",
+        "not",
+        "any",
+        "with",
+        "its",
+        "are",
+        "was",
+        "has",
+        "have",
+        "does",
+        "doesn",
+        "should",
+        "would",
+        "could",
+        "there",
+        "here",
+        "from",
+        "into",
+        "then",
+        "than",
+        "about",
+    ];
     let outcome = OUTCOME.get_or_init(|| {
         regex::Regex::new(r"(?i)\b(fail|fails|pass|passes|unsure)\b").expect("valid regex")
     });
     let condition = CONDITION.get_or_init(|| {
         regex::Regex::new(r"(?i)\b(when|if|unless|and name)\b").expect("valid regex")
     });
+    let words = |t: &str| -> Vec<String> {
+        t.split(|c: char| !c.is_alphanumeric())
+            .filter(|w| w.chars().count() >= 3)
+            .map(str::to_lowercase)
+            .collect()
+    };
+    let asked = words(question);
     text.as_deref().is_some_and(|t| {
-        t.split_whitespace().count() >= 10 && outcome.is_match(t) && condition.is_match(t)
+        let mut new: Vec<String> = words(t)
+            .into_iter()
+            .filter(|w| !FILLER.contains(&w.as_str()) && !asked.contains(w))
+            .collect();
+        new.sort();
+        new.dedup();
+        outcome.is_match(t) && condition.is_match(t) && new.len() >= 3
     })
 }
 
@@ -356,18 +413,23 @@ mod tests {
 
     #[test]
     fn guidance_must_say_what_fails() {
-        assert!(super::guides(&Some(
+        let g = |t: &str| super::guides(&Some(t.into()), "Is the rule hard to game?");
+        assert!(g(
             "Fail when an empty doc comment, a renamed item or a trivial test would pass it."
-                .into()
-        )));
-        assert!(!super::guides(&Some("Fail when the answer is no.".into())));
-        assert!(!super::guides(&Some(
-            "Consider each failure mode and compass bearing of the rule in turn.".into()
-        )));
-        assert!(!super::guides(&Some(String::new())));
-        assert!(!super::guides(&Some("Is the rule good?".into())));
-        assert!(!super::guides(&Some(
-            "Consider the rule and its intent carefully.".into()
-        )));
+        ));
+        assert!(g("Fail when the fix names no file."));
+        assert!(!g("Fail when the answer is no."));
+        assert!(!g(
+            "Fail when the answer to this question is no for this entity."
+        ));
+        assert!(
+            !g("Fail when the rule is not hard to game."),
+            "restates the question"
+        );
+        assert!(!g(
+            "Consider each failure mode and compass bearing of the rule in turn."
+        ));
+        assert!(!g(""));
+        assert!(!super::guides(&None, "Is it?"));
     }
 }

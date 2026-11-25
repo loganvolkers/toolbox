@@ -1,2 +1,4 @@
 # Workflow and supply-chain changes have an owner (maintainer-supply-chain, silver).
 .github/ @loganvolkers
+# Lint configuration: a per-file ignore hides findings from maintainer-python, so it is reviewed.
+/ruff.toml @loganvolkers

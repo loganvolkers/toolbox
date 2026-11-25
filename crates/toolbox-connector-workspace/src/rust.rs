@@ -53,7 +53,7 @@ fn is_cfg_disabled(attrs: &[syn::Attribute]) -> bool {
         a.path().is_ident("cfg")
             && a.meta.require_list().is_ok_and(|l| {
                 let t: String = l.tokens.to_string().split_whitespace().collect();
-                t == "any()" || t == "not(all())"
+                matches!(t.as_str(), "any()" | "not(all())" | "miri" | "not(test)")
             })
     })
 }
@@ -97,8 +97,12 @@ struct Walker<'a> {
     in_test: bool,
     disabled: bool,
     scope: Vec<String>,
-    /// Functions in this file that assert (see [`helpers`]).
+    /// Functions in the crate that assert (see [`helpers`]).
     helpers: &'a HashSet<String>,
+    /// The file's source, and the crate's own names (see [`exercises`]).
+    text: &'a str,
+    items: &'a HashSet<String>,
+    lib: &'a str,
 }
 
 impl Walker<'_> {
@@ -142,7 +146,8 @@ impl Walker<'_> {
             let mut a = Asserts::new(self.helpers);
             a.visit_block(block);
             let should_panic = attrs.iter().any(|x| x.path().is_ident("should_panic"));
-            if !a.found && !should_panic {
+            let touches = exercises(self.text, span, self.items, self.lib);
+            if (!a.found && !should_panic) || !touches {
                 let q = self.qualified(name);
                 self.m.tests_without_asserts.push(format!(
                     "{q} ({}:{})",
@@ -214,7 +219,10 @@ impl<'ast> Visit<'ast> for Asserts<'_> {
     fn visit_macro(&mut self, m: &'ast syn::Macro) {
         if let Some(seg) = m.path.segments.last() {
             let n = seg.ident.to_string();
-            let asserts = n.starts_with("assert") || n.starts_with("debug_assert");
+            let asserts = n.starts_with("assert")
+                || n.starts_with("debug_assert")
+                || n.starts_with("prop_assert")
+                || n == "ensure";
             if (asserts && !trivial(&n, &m.tokens)) || n == "panic" || n == "unreachable" {
                 self.found = true;
             }
@@ -255,7 +263,7 @@ impl<'ast> Visit<'ast> for Asserts<'_> {
 
 /// Non-test functions in a file whose bodies assert (directly or through another such function):
 /// table-driven tests put their assertions in a helper like these.
-fn helpers(file: &syn::File) -> HashSet<String> {
+fn helpers(files: &[&syn::File]) -> HashSet<String> {
     struct Fns<'ast>(Vec<(String, &'ast syn::Block)>);
     impl<'ast> Visit<'ast> for Fns<'ast> {
         fn visit_item_fn(&mut self, f: &'ast syn::ItemFn) {
@@ -270,7 +278,9 @@ fn helpers(file: &syn::File) -> HashSet<String> {
         }
     }
     let mut fns = Fns(Vec::new());
-    fns.visit_file(file);
+    for file in files {
+        fns.visit_file(file);
+    }
     let mut found = HashSet::new();
     loop {
         let before = found.len();
@@ -372,7 +382,7 @@ fn rust_files(dir: &Path) -> Vec<std::path::PathBuf> {
     v
 }
 
-fn parse(path: &Path, m: &mut Metrics, rel: &str) -> Option<syn::File> {
+fn parse(path: &Path, m: &mut Metrics, rel: &str) -> Option<(syn::File, String)> {
     let text = std::fs::read_to_string(path).ok()?;
     m.files += 1;
     m.code_lines += text
@@ -381,12 +391,120 @@ fn parse(path: &Path, m: &mut Metrics, rel: &str) -> Option<syn::File> {
         .filter(|l| !l.is_empty() && !l.starts_with("//"))
         .count();
     match syn::parse_file(&text) {
-        Ok(f) => Some(f),
+        Ok(f) => Some((f, text)),
         Err(e) => {
             m.parse_errors.push(format!("{rel}: {e}"));
             None
         }
     }
+}
+
+/// The crate's own names (see [`crate_items`]) plus every helper that calls one: a test's helper
+/// (`fn errs(..)` in its module, or in `tests/common`) that calls the crate counts as the crate's,
+/// so a test calling it exercises the crate too.
+fn exercised_names(
+    src: &[(String, syn::File, String)],
+    tests: &[(String, syn::File, String)],
+    lib: &str,
+) -> HashSet<String> {
+    let mut items = crate_items(&src.iter().map(|(_, f, _)| f).collect::<Vec<_>>());
+    let mut via = Vec::new();
+    for (_, file, text) in src.iter().chain(tests) {
+        for (name, span) in fn_spans(file) {
+            if !items.contains(&name) && exercises(text, span, &items, lib) {
+                via.push(name);
+            }
+        }
+    }
+    items.extend(via);
+    items
+}
+
+/// The Rust files under `dir/sub`, parsed: `(path relative to dir, file, source)`.
+fn parse_all(dir: &Path, sub: &str, m: &mut Metrics) -> Vec<(String, syn::File, String)> {
+    let mut out = Vec::new();
+    for path in rust_files(&dir.join(sub)) {
+        let rel = path
+            .strip_prefix(dir)
+            .unwrap_or(&path)
+            .to_string_lossy()
+            .into_owned();
+        if let Some((file, text)) = parse(&path, m, &rel) {
+            out.push((rel, file, text));
+        }
+    }
+    out
+}
+
+/// Names the crate defines outside its tests (functions, types, traits, constants, modules,
+/// macros): a test that names none of them, and doesn't run the crate's binary, checks nothing
+/// this crate does.
+fn crate_items(files: &[&syn::File]) -> HashSet<String> {
+    struct Items(HashSet<String>, bool);
+    impl<'ast> Visit<'ast> for Items {
+        fn visit_item(&mut self, item: &'ast syn::Item) {
+            let name = match item {
+                syn::Item::Fn(i) if !is_test_fn(&i.attrs) => Some(i.sig.ident.to_string()),
+                syn::Item::Struct(i) => Some(i.ident.to_string()),
+                syn::Item::Enum(i) => Some(i.ident.to_string()),
+                syn::Item::Trait(i) => Some(i.ident.to_string()),
+                syn::Item::Type(i) => Some(i.ident.to_string()),
+                syn::Item::Const(i) => Some(i.ident.to_string()),
+                syn::Item::Static(i) => Some(i.ident.to_string()),
+                syn::Item::Macro(i) => i.ident.as_ref().map(|x| x.to_string()),
+                _ => None,
+            };
+            if !self.1 {
+                self.0.extend(name);
+            }
+            visit::visit_item(self, item);
+        }
+        fn visit_item_mod(&mut self, m: &'ast syn::ItemMod) {
+            let was = self.1;
+            self.1 |= is_cfg_test(&m.attrs);
+            visit::visit_item_mod(self, m);
+            self.1 = was;
+        }
+        fn visit_impl_item_fn(&mut self, f: &'ast syn::ImplItemFn) {
+            if !self.1 {
+                self.0.insert(f.sig.ident.to_string());
+            }
+            visit::visit_impl_item_fn(self, f);
+        }
+    }
+    let mut items = Items(HashSet::new(), false);
+    for f in files {
+        items.visit_file(f);
+    }
+    items.0
+}
+
+/// Every non-test function in a file (helpers included) with its span.
+fn fn_spans(file: &syn::File) -> Vec<(String, proc_macro2::Span)> {
+    struct Fns(Vec<(String, proc_macro2::Span)>);
+    impl<'ast> Visit<'ast> for Fns {
+        fn visit_item_fn(&mut self, f: &'ast syn::ItemFn) {
+            if !is_test_fn(&f.attrs) {
+                self.0.push((f.sig.ident.to_string(), f.span()));
+            }
+            visit::visit_item_fn(self, f);
+        }
+    }
+    let mut fns = Fns(Vec::new());
+    fns.visit_file(file);
+    fns.0
+}
+
+/// Whether a test's source text names something the crate defines, or runs its binary.
+fn exercises(text: &str, span: proc_macro2::Span, items: &HashSet<String>, lib: &str) -> bool {
+    let (from, to) = (span.start().line.saturating_sub(1), span.end().line);
+    let body: Vec<&str> = text.lines().skip(from).take(to - from).collect();
+    let body = body.join("\n");
+    if body.contains("CARGO_BIN_EXE_") || body.contains(&format!("{lib}::")) {
+        return true;
+    }
+    body.split(|c: char| !(c.is_ascii_alphanumeric() || c == '_'))
+        .any(|w| !w.is_empty() && items.contains(w))
 }
 
 /// The first 12 hex digits of the SHA-256 over what a crate-design assessment judges: the crate's
@@ -417,50 +535,49 @@ fn source_hash(dir: &Path) -> String {
 /// Metrics for the crate in `dir`; `entry` is its lib or bin root (for crate-level docs).
 pub fn analyse(dir: &Path, entry: Option<&Path>) -> Value {
     let mut m = Metrics::default();
+    let mut it = Metrics::default();
     let mut crate_doc = false;
-    for path in rust_files(&dir.join("src")) {
-        let rel = path
-            .strip_prefix(dir)
-            .unwrap_or(&path)
-            .to_string_lossy()
-            .into_owned();
-        let Some(file) = parse(&path, &mut m, &rel) else {
-            continue;
-        };
-        if entry.is_some_and(|e| e == path) {
-            crate_doc = has_doc(&file.attrs);
-        }
-        let helpers = helpers(&file);
+    let src = parse_all(dir, "src", &mut m);
+    if let Some(e) = entry {
+        let rel = e.strip_prefix(dir).unwrap_or(e).to_string_lossy();
+        crate_doc = src.iter().any(|(r, f, _)| *r == rel && has_doc(&f.attrs));
+    }
+    let tests = parse_all(dir, "tests", &mut it);
+    let all: Vec<&syn::File> = src.iter().chain(&tests).map(|(_, f, _)| f).collect();
+    let helpers = helpers(&all);
+    let lib = dir
+        .file_name()
+        .map(|n| n.to_string_lossy().replace('-', "_"))
+        .unwrap_or_default();
+    let items = exercised_names(&src, &tests, &lib);
+    for (rel, file, text) in &src {
         let mut w = Walker {
-            file: &rel,
+            file: rel,
             m: &mut m,
             in_test: false,
             disabled: false,
             scope: vec![],
             helpers: &helpers,
+            text,
+            items: &items,
+            lib: &lib,
         };
-        w.visit_file(&file);
+        w.visit_file(file);
     }
     let mut integration_tests = 0;
-    let mut it = Metrics::default();
-    for path in rust_files(&dir.join("tests")) {
-        let rel = path
-            .strip_prefix(dir)
-            .unwrap_or(&path)
-            .to_string_lossy()
-            .into_owned();
-        if let Some(file) = parse(&path, &mut it, &rel) {
-            let helpers = helpers(&file);
-            let mut w = Walker {
-                file: &rel,
-                m: &mut it,
-                in_test: true,
-                disabled: false,
-                scope: vec![],
-                helpers: &helpers,
-            };
-            w.visit_file(&file);
-        }
+    for (rel, file, text) in &tests {
+        let mut w = Walker {
+            file: rel,
+            m: &mut it,
+            in_test: true,
+            disabled: false,
+            scope: vec![],
+            helpers: &helpers,
+            text,
+            items: &items,
+            lib: &lib,
+        };
+        w.visit_file(file);
     }
     integration_tests += it.unit_tests;
     m.parse_errors.extend(it.parse_errors);
@@ -505,12 +622,15 @@ mod tests {
     use super::*;
     fn check(a: i32, b: i32, want: i32) { assert_eq!(add(a, b), want); }
     #[test] fn table() { for (a, b, w) in [(1, 2, 3)] { check(a, b, w); } }
-    #[test] fn fallible() -> Result<(), String> { "1".parse::<i32>().map_err(|e| e.to_string())?; Ok(()) }
+    #[test] fn fallible() -> Result<(), String> { let n: i32 = "1".parse().map_err(|_| "no".to_string())?; (add(n, 1) == 2).then_some(()).ok_or("bad".into()) }
     #[test] fn real() { assert_eq!(add(1, 1), 2); }
     #[test] fn vacuous() { assert!(true); }
     #[test] fn same_sides() { let x = add(1, 1); assert_eq!(x, x); }
     #[test] fn empty() {}
     #[cfg(any())] #[test] fn off() { assert_eq!(add(1, 1), 3); }
+    #[cfg(miri)] #[test] fn miri_only() { assert_eq!(add(1, 1), 3); }
+    #[test] fn unrelated() { "1".parse::<i32>().unwrap(); }
+    #[test] fn ensured() -> anyhow::Result<()> { anyhow::ensure!(add(1, 1) == 2); Ok(()) }
 }
 #[cfg(not(all()))]
 mod gone { #[test] fn also_off() { assert_eq!(super::add(0, 0), 1); } }
@@ -527,9 +647,17 @@ mod gone { #[test] fn also_off() { assert_eq!(super::add(0, 0), 1); } }
         };
         assert_eq!(
             names("testsWithoutAsserts"),
-            ["tests::vacuous", "tests::same_sides", "tests::empty"]
+            [
+                "tests::vacuous",
+                "tests::same_sides",
+                "tests::empty",
+                "tests::unrelated"
+            ]
         );
-        assert_eq!(names("disabledTests"), ["tests::off", "gone::also_off"]);
+        assert_eq!(
+            names("disabledTests"),
+            ["tests::off", "tests::miri_only", "gone::also_off"]
+        );
         let _ = std::fs::remove_dir_all(&dir);
     }
 }

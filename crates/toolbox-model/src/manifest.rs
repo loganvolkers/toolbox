@@ -153,6 +153,10 @@ pub struct Connector {
     pub refresh: BTreeMap<String, Vec<String>>,
     #[serde(default)]
     pub freshness: BTreeMap<String, String>,
+    /// `Some(false)` when the ratchet skips this connector (live or slow data): rules reading it
+    /// are `unknown` there. Unset means it runs in the ratchet.
+    #[serde(default, rename = "inRatchet", skip_serializing_if = "Option::is_none")]
+    pub in_ratchet: Option<bool>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

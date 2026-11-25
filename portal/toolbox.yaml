@@ -114,7 +114,7 @@ connectors:
           \t]+(?:portal|scorecards)|[a-z][a-z-]*)
         # MCP tools/call bodies, {"name": "owner_of", "arguments": …}, on lines that aren't
         # comments: a quoted name alone, or in a comment, calls nothing.
-        tools: (?m)^[^/#\n]*?"name"\s*:\s*"([a-z][a-z_]*)"\s*,\s*"arguments"
+        tools: (?m)^[^/#*\n]*?"name"\s*:\s*"([a-z][a-z_]*)"\s*,\s*"arguments"
       counts:
         sdlc: \bSDLC\b
         # A named layer (`maintainer SDLC`, `*operator* SDLC`), the layer model itself, or a quoted mention
@@ -253,15 +253,19 @@ connectors:
   - name: runner
     package: builtin:runner # executes things; slow, so it's refreshed per entity
     runtime: in-image
+    inRatchet: false # too slow for every change: CI's ratchet skips it
     config:
       root: .
       jobs:
         - name: test
           per: crate
-          # Tests that need OpenFGA fail without it instead of returning early as passed.
+          # Tests that need OpenFGA, Landlock or an unprivileged user fail without them, as in CI,
+          # instead of returning early as passed.
           command:
           - env
           - TOOLBOX_REQUIRE_OPENFGA=1
+          - TOOLBOX_REQUIRE_LANDLOCK=1
+          - TOOLBOX_REQUIRE_UNPRIVILEGED=1
           - cargo
           - test
           - -q

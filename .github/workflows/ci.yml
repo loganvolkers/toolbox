@@ -21,7 +21,8 @@ jobs:
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3 (cargo registry and target/, keyed by Cargo.lock and toolchain)
       - run: cargo fmt --all --check
       - run: cargo clippy --all-targets --locked -- -D warnings
-      - run: cargo test --locked
+      # GitHub's runners are unprivileged, so a test that needs that fails here instead of skipping.
+      - {run: cargo test --locked, env: {TOOLBOX_REQUIRE_UNPRIVILEGED: "1"}}
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with: {python-version: "3.13"}
       - run: >-
@@ -50,7 +51,10 @@ jobs:
           Tests that need OpenFGA (authz, .fga.yaml through the Authorizer) or
           Landlock
         # A missing binary or a kernel without Landlock fails these tests here instead of skipping them (tests-pass).
-        env: {TOOLBOX_REQUIRE_OPENFGA: "1", TOOLBOX_REQUIRE_LANDLOCK: "1"}
+        env:
+          TOOLBOX_REQUIRE_OPENFGA: "1"
+          TOOLBOX_REQUIRE_LANDLOCK: "1"
+          TOOLBOX_REQUIRE_UNPRIVILEGED: "1"
         run: cargo test --locked -p toolbox-authz -p toolbox-api
       - name: toolbox validate, test and derive on the reference portal
         run: |

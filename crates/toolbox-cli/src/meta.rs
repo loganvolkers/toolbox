@@ -97,6 +97,46 @@ fn score_segments(score: &regex::Regex, rule: &regex::Regex, expect: &str) -> Ve
         .collect()
 }
 
+/// How many rules each level has.
+fn rules_per_level(sc: &toolbox_model::manifest::Scorecard) -> Map<String, Value> {
+    sc.levels
+        .iter()
+        .map(|l| {
+            let n = sc.rules.iter().filter(|r| &r.level == l).count();
+            (l.clone(), json!(n))
+        })
+        .collect()
+}
+
+/// The connectors the ratchet skips (`inRatchet: false`).
+fn ratchet_skips(m: &Manifest) -> BTreeSet<&str> {
+    m.connectors
+        .iter()
+        .filter(|c| c.in_ratchet == Some(false))
+        .map(|c| c.name.as_str())
+        .collect()
+}
+
+/// Levels whose every rule reads a connector the ratchet skips (`dataFrom` naming a connector with
+/// `inRatchet: false`). There every rule is `unknown`, which stops the ladder: the level and those
+/// above it can't be granted by the ratchet (lesson L12, achievable in context).
+fn ratchet_blind_levels(
+    sc: &toolbox_model::manifest::Scorecard,
+    skipped: &BTreeSet<&str>,
+) -> Vec<String> {
+    sc.levels
+        .iter()
+        .filter(|l| {
+            let at: Vec<_> = sc.rules.iter().filter(|r| &r.level == *l).collect();
+            !at.is_empty()
+                && at
+                    .iter()
+                    .all(|r| r.data_from.as_deref().is_some_and(|c| skipped.contains(c)))
+        })
+        .cloned()
+        .collect()
+}
+
 /// Kinds that describe portals themselves (fed by `describe portal` records).
 fn meta_kinds(m: &Manifest) -> BTreeSet<String> {
     // `connector` is also a common record name (e.g. connector crates), so it counts only from a
@@ -216,18 +256,10 @@ fn describe_portal(
         .collect();
     let live = results.map(|f| read_live(f, &meta_cards)).transpose()?;
     let judged = crate::judged::judged_rules(m);
+    let skipped = ratchet_skips(m);
     let mut out = Vec::new();
     for sc in &m.scorecards {
-        let per_level: Map<String, Value> = sc
-            .levels
-            .iter()
-            .map(|l| {
-                (
-                    l.clone(),
-                    json!(sc.rules.iter().filter(|r| &r.level == l).count()),
-                )
-            })
-            .collect();
+        let per_level = rules_per_level(sc);
         let card_id = format!("{portal}/{}", sc.name);
         let live_entities = live
             .as_ref()
@@ -239,6 +271,7 @@ fn describe_portal(
             "appliesTo": sc.applies_to.is_some(), "tested": tested_cards.contains(&sc.name),
             "meta": meta_cards.contains(&sc.name),
             "described": crate::model::filled(&sc.description),
+            "ratchetBlindLevels": ratchet_blind_levels(sc, &skipped),
             "explained": crate::model::filled(&sc.rationale),
             "links": sc.links.len(),
             "fixtureLevels": fixture_levels.get(&sc.name).cloned().unwrap_or_default(),

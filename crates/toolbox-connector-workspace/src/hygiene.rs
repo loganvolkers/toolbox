@@ -18,6 +18,8 @@ fn patterns() -> &'static [(&'static str, Regex)] {
             ("github-token", r"\bgh[pousr]_[A-Za-z0-9]{36}\b"),
             ("github-token", r"\bgithub_pat_[A-Za-z0-9_]{22,}"),
             ("api-key", r"\bsk-(?:ant|proj|live)-[A-Za-z0-9_-]{20,}"),
+            ("api-key", r"\bsk-[A-Za-z0-9]{32,}\b"),
+            ("google-api-key", r"\bAIza[0-9A-Za-z_-]{35}\b"),
             ("stripe-key", r"\b(?:sk|rk)_live_[A-Za-z0-9]{16,}"),
             ("slack-token", r"\bxox[baprs]-[A-Za-z0-9-]{10,}"),
             ("private-key", r"-----BEGIN (?:[A-Z]+ )*PRIVATE KEY-----"),
@@ -43,7 +45,7 @@ fn split_prefix() -> &'static Regex {
     static R: OnceLock<Regex> = OnceLock::new();
     R.get_or_init(|| {
         Regex::new(
-            r#""(?:gh[pousr]_|github_pat_|AKIA|ASIA|sk_live_|rk_live_|sk-ant-|xox[baprs]-)""#,
+            r#""(?:gh[pousr]_|github_pat_|AKIA|ASIA|AIza|sk_live_|rk_live_|sk-ant-|sk-|xox[baprs]-)""#,
         )
         .expect("static regex")
     })
@@ -71,6 +73,8 @@ pub fn secrets_in_lines<'a>(
     code: bool,
 ) -> Vec<String> {
     let mut hits = Vec::new();
+    // A `concat!(` that spans lines: its literals are joined across them until it closes.
+    let mut open: Option<(usize, i32, String)> = None;
     for (n, line) in lines {
         for (kind, re) in patterns() {
             let found = if *kind == "url-password" {
@@ -84,26 +88,46 @@ pub fn secrets_in_lines<'a>(
         }
         // A prefix split off in a comment hides nothing; whole credentials in comments still count.
         let comment = line.trim_start().starts_with("//");
-        if code && !comment {
-            // The line's string literals joined: `concat!("gh", "p_…")` or `"gh" + "p_…"` is the
-            // credential `ghp_…`, which no single literal shows.
-            let joined: String = literal()
-                .captures_iter(line)
-                .map(|c| c[1].to_owned())
-                .collect();
-            let quoted = format!("\"{joined}\"");
-            let split = split_prefix().is_match(line)
-                || (literal().find_iter(line).count() > 1
-                    && (split_prefix().is_match(&quoted)
-                        || patterns()
-                            .iter()
-                            .any(|(k, re)| *k != "url-password" && re.is_match(&joined))));
-            if split {
-                hits.push(format!("{rel}:{} split-token-prefix", n + 1));
+        if !code || comment {
+            continue;
+        }
+        let literals: Vec<String> = literal()
+            .captures_iter(line)
+            .map(|c| c[1].to_owned())
+            .collect();
+        // The line's string literals joined: `concat!("gh", "p_…")` or `"gh" + "p_…"` is the
+        // credential `ghp_…`, which no single literal shows.
+        if split_prefix().is_match(line)
+            || (literals.len() > 1 && joins_a_token(&literals.concat()))
+        {
+            hits.push(format!("{rel}:{} split-token-prefix", n + 1));
+        }
+        let depth = |t: &str| t.matches('(').count() as i32 - t.matches(')').count() as i32;
+        if let Some((start, d, mut buf)) = open.take() {
+            buf.push_str(&literals.concat());
+            let d = d + depth(line);
+            if d > 0 {
+                open = Some((start, d, buf));
+            } else if joins_a_token(&buf) {
+                hits.push(format!("{rel}:{} split-token-prefix", start + 1));
+            }
+        } else if let Some(at) = line.find("concat!(") {
+            let d = depth(&line[at..]);
+            if d > 0 {
+                open = Some((n, d, literals.concat()));
             }
         }
     }
+    hits.dedup();
     hits
+}
+
+/// Whether literals joined together make a credential or start with a token prefix.
+fn joins_a_token(joined: &str) -> bool {
+    split_prefix().is_match(&format!("\"{joined}\""))
+        || patterns()
+            .iter()
+            .any(|(k, re)| *k != "url-password" && re.is_match(joined))
 }
 
 /// Credentials in a text file (documentation, configuration).
@@ -138,17 +162,25 @@ fn is_hidden(u: u32) -> bool {
 }
 
 /// Comments hidden in rendered Markdown and read in full by an agent: HTML comments (`<!--`) and
-/// link-reference comments (`[//]: # (...)`, `[comment]: <> (...)`), a label no link uses.
+/// link-reference definitions that point nowhere (`[//]: # (...)`, `[x]: <> (...)`, any label),
+/// outside fenced code blocks, which a reader sees as written.
 pub fn html_comments(text: &str) -> i64 {
-    let reference = text
-        .lines()
-        .map(str::trim_start)
-        .filter(|l| {
-            let l = l.to_ascii_lowercase();
-            l.starts_with("[//]:") || l.starts_with("[comment]:") || l.starts_with("[_]:")
-        })
-        .count();
-    (text.matches("<!--").count() + reference) as i64
+    static REF: OnceLock<Regex> = OnceLock::new();
+    let reference = REF.get_or_init(|| {
+        Regex::new(r"^\s{0,3}\[[^\]]+\]:\s*(?:#|<>)(?:\s|$)").expect("static regex")
+    });
+    let (mut n, mut fenced) = (0, false);
+    for line in text.lines() {
+        let t = line.trim_start();
+        if t.starts_with("```") || t.starts_with("~~~") {
+            fenced = !fenced;
+            continue;
+        }
+        if !fenced {
+            n += line.matches("<!--").count() as i64 + i64::from(reference.is_match(line));
+        }
+    }
+    n
 }
 
 #[cfg(test)]
@@ -197,6 +229,18 @@ mod tests {
                 "{line}"
             );
         }
+        let lines = [
+            (0, "let t = concat!("),
+            (1, "    \"gh\","),
+            (2, "    \"p_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\","),
+            (3, ");"),
+        ];
+        assert_eq!(
+            secrets_in_lines("a.rs", lines, true),
+            vec!["a.rs:1 split-token-prefix"]
+        );
+        let google = format!("k = \"AIza{}\"", "b".repeat(35));
+        assert_eq!(secrets("f", &google), vec!["f:1 google-api-key"]);
         let fine = r#"let p = format!("{}/{}", "gh", "pages");"#;
         assert!(secrets_in_lines("a.rs", [(0, fine)], true).is_empty());
     }
@@ -215,7 +259,7 @@ mod tests {
 
     #[test]
     fn markdown_comments_of_both_kinds_count() {
-        let text = "# Skill\n<!-- hidden -->\n[//]: # (do something else)\n  [comment]: <> (and this)\n[docs]: https://example.com\n";
-        assert_eq!(html_comments(text), 3);
+        let text = "# Skill\n<!-- hidden -->\n[//]: # (do something else)\n  [comment]: <> (and this)\n[x]: # (renamed)\n[docs]: https://example.com\n```md\n<!-- shown in a fence -->\n```\n";
+        assert_eq!(html_comments(text), 4);
     }
 }
