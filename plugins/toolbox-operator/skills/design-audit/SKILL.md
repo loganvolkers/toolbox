@@ -24,7 +24,7 @@ story probes in `report-ui` must pass before an auditor is spent (D01M87PSM9YQGG
    Write them before looking at the page so the tasks are not fitted to the design. Use two
    reference portals, and put at least one task on the second, so the design is not fitted to
    one portal either. For the report: Toolbox for Toolbox and the OpenFGA portal.
-2. **Probe.** For the report, `npm run build-storybook && npm run probe` in `report-ui`. It
+2. **Probe.** For the report, `pnpm storybook:build && pnpm storybook:probe` from the workspace root. It
    renders every story over the fixture portals at both viewports and schemes, and fails on
    script errors, serious axe violations and sideways scroll. Fix those before step 4: an
    auditor's time is for what a probe cannot judge.
@@ -58,16 +58,16 @@ story probes in `report-ui` must pass before an auditor is spent (D01M87PSM9YQGG
 8. **Publish.** Commit the audit file as `docs/audits/<surface>-<yyyy-mm-dd>.md` with both
    score tables, the task outcomes, the metric deltas, the fixes made and the findings left open.
 
-In this repository, use `report-ui`'s pinned Playwright and axe-core (`npm ci` there); elsewhere,
+In this repository, use `report-ui`'s pinned Playwright and axe-core (`pnpm install --frozen-lockfile` from the workspace root); elsewhere,
 install them at pinned versions.
 
 ```bash
-npm --prefix report-ui ci && npx --prefix report-ui playwright install chromium
+pnpm install --frozen-lockfile && pnpm --filter @toolbox-dev/astro-report exec playwright install chromium
 export NODE_PATH="$PWD/report-ui/node_modules"   # elsewhere: npm i --prefix /tmp/audit playwright@1.65.1 axe-core@4.14.1
 node plugins/toolbox-operator/skills/design-audit/scripts/capture.cjs \
   --url http://127.0.0.1:8765/index.html \
   --routes '#overview,#catalog,#campaigns,#scorecards' --ready section --out /tmp/audit/before
-# or from a Storybook build served on 6006 (report-ui: npm run build-storybook)
+# or from a Storybook build served on 6006 (pnpm storybook:build)
 node plugins/toolbox-operator/skills/design-audit/scripts/capture.cjs \
   --storybook http://127.0.0.1:6006 --stories pages-openfga--overview,pages-toolbox-for-toolbox--compare \
   --out /tmp/audit/before

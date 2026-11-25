@@ -99,7 +99,7 @@ Small, shallow workspace; heavy dependencies isolated in leaf crates (D44, D46):
 | `toolbox-telemetry` | OpenTelemetry and Prometheus bootstrap, metric catalog, log bridge (§10.5) |
 | `toolbox-connector-*` | First-party connectors as separate binaries: `github`, `gitlab`, `git-files` and `scim` read sources; `workspace` and `runner` serve Toolbox for Toolbox. Third-party connectors may be in any language |
 | `executors/*` | First-party executors as separate binaries (any language; Rust or TS) |
-| `ui/` | Minimal UI and the default React kit (TypeScript) |
+| `ui/` | Embedded Astro/Vue UI (TypeScript) |
 
 ## 5. The manifest
 
@@ -391,7 +391,7 @@ may take their endpoint and token from a host (`ci:`) (built).
   (design tokens).
 - Served same-origin under a strict CSP; the server enforces every permission, so a bundle can't
   widen access.
-- The default kit is React + `@toolbox/ui`; the minimal UI itself uses the same contract.
+- The first-party kit is Astro + Vue on `@toolbox-dev/ui`. Browser extensions use the module contract above.
 
 ### 7.7 CLI
 
@@ -485,8 +485,7 @@ instance can run workflows; `Durable::recover` reclaims those of dead instances.
   JSON responses over Streamable HTTP; no SSE streams or MCP tasks yet), whose tools call the REST
   handlers in-process. Connector commands are held in memory (lost on restart; they become durable
   with M5). The UI polls `/v1/snapshot` every 10 s for "newer data" instead of the `/v1/events`
-  SSE stream, which isn't built yet. The UI uses plain React and CSS; `@toolbox/ui` and Storybook
-  stories are still to come. The stdio conformance kit applies to in-image connectors; the
+  SSE stream, which isn't built yet. The Astro and Vue UI shares components and Storybook stories with the published report. The stdio conformance kit applies to in-image connectors; the
   push-only SCIM connector is checked end to end by `scripts/m4-acceptance.sh`.
 - **Browser sign-in:** v1 relies on the identity-aware proxy for browsers; `oidc` mode verifies bearer
   JWTs (API, MCP) but has no OAuth code flow yet.

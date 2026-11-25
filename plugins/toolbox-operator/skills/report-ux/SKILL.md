@@ -35,7 +35,7 @@ evidence and fix. Never hide the bar the portal already clears.
 10. Judge the change with the `design-audit` skill: a blind auditor scores before and after, and the change is done when no usability score falls.
 
 ```
-toolbox report portal --skip runner,github-actions -o web --out site/public/report
+toolbox report portal --skip runner,github-actions -o web --out site/.generated
 ```
 
 ## Reader jobs

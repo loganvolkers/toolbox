@@ -15,7 +15,7 @@ contract in [v1-spec.md](../v1-spec.md) §7.6. Planned here because it changes t
 
 The minimal UI is a **read-mostly single-page app** for people who aren't using an agent: find
 things, see who owns them and why, see standards and how to fix them, refresh stale data, and run,
-approve and follow actions. It is built with the default kit (React + `@toolbox/ui`), compiled into
+approve and follow actions. It is built with the default kit (Astro + Vue on `@toolbox-dev/ui`), compiled into
 the Toolbox release and served by the server. **It mounts through the same UI extension contract as
 operator bundles**, so the contract is exercised from day one.
 
@@ -82,7 +82,7 @@ objects. Actions that need more use an operator UI bundle (tier 3).
 
 ## 5. Packaging and security
 
-- Built with Vite in the Toolbox release pipeline and embedded in the binary; operators don't need
+- Built with Astro in the PNPM workspace and embedded in the binary; operators don't need
   Node unless they build their own bundles. The browser code is TypeScript, counted as the one
   front-end language outside D45's server-side budget (clarified by D56).
 - Same-origin. Sessions come from the identity-aware proxy or OIDC. Mutations require a CSRF header

@@ -1,6 +1,5 @@
-import type { ToolboxReport } from "../element";
+import type { ReportViews } from "../report-view";
 import type { Comparison, ReportData, RuleDef } from "../types";
-// factorCards, headToHead, compare, compareDetail: methods of <toolbox-report>, installed on its prototype by element.js.
 import { grow } from "../lib/bars";
 import { basisBadge, basisCounts, basisKey, basisOf, refs, whyEl } from "../lib/basis";
 import { TIMED_UNITS, cmpWord, humanize, magnitude, measureLabel, num, ruleValue, setupBrief, valueLine } from "../lib/compare";
@@ -674,4 +673,4 @@ export const compareViews = {
     head.dataset.focus = "";
     return el("div", {}, head, el("section", {}, el("div", { className: "head" }, el("h2", { textContent: "Every factor" }), link("compare", "", "← Back to the summary")), el("div", { className: "h2h-wide" }, this.headToHead(D, D.comparisons, names, peer, name))));
   },
-} satisfies ThisType<ToolboxReport>;
+} satisfies ThisType<ReportViews>;

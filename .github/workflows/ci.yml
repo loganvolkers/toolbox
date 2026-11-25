@@ -34,7 +34,7 @@ jobs:
       - name: YAML is formatted (yamark 0.6.1, D97)
         run: |
           python3 -m pip install --require-hashes -r scripts/requirements-yamark.txt
-          yamark format --check $(git ls-files '*.yaml' '*.yml' ':!.github/workflows/release.yml')
+          yamark format --check $(git ls-files '*.yaml' '*.yml' ':!.github/workflows/release.yml' ':!pnpm-lock.yaml')
       - name: M0 parity with tools/validate.py
         run: cargo build --locked && python scripts/validate-parity.py
       - name: >-
@@ -111,7 +111,7 @@ jobs:
           target/debug/toolbox connector test --name workspace --portal portal -- target/debug/toolbox-connector-workspace
           target/debug/toolbox connector test --name surfaces --portal portal -- target/debug/toolbox-connector-runner
           target/debug/toolbox connector test --name ci-lint --portal portal -- target/debug/toolbox-connector-runner
-      # The pages workflow generates site/public/report. The ratchet verdict below is the gate.
+      # The Pages workflow generates the report snapshot. The ratchet verdict below is the gate.
       - name: Toolbox for Toolbox — ratchet against portal/results.json
         uses: ./actions/report # zizmor: ignore[self-repository] actionlint 1.7.12 rejects $/
         with:
@@ -317,38 +317,31 @@ jobs:
       - run: fga model test --tests authz/model.fga.yaml
   ui:
     runs-on: ubuntu-latest
-    defaults: {run: {working-directory: ui}}
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        with: {persist-credentials: false}
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with: {node-version: "22"}
-      - run: npm ci --no-audit --no-fund
-      - name: The embedded build (ui/dist) matches the source
-        run: npm run build && git diff --exit-code -- dist
-  report-ui:
-    # The <toolbox-report> element: its sources type-check, its bundle is current, and every
-    # story over the fixture portals passes the probes (D01M87PSM9YQGGW3YQ5X4XCJP63,
-    # D01M880QMWD7Z7FTGKJT99AHWBX).
-    runs-on: ubuntu-latest
     timeout-minutes: 20
-    defaults: {run: {working-directory: report-ui}}
+    env: {ASTRO_TELEMETRY_DISABLED: "1"}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with: {persist-credentials: false}
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with: {node-version: "22"}
-      - run: npm ci --no-audit --no-fund
-      - name: >-
-          report-ui/src type-checks, and crates/toolbox-cli/src/toolbox-report.js
-          is its Vite bundle
-        run: npm run check
-      - run: npx playwright install --with-deps chromium
-      - run: npm run build-storybook
-      - name: >-
-          Every story at 1280 and 390 px, light and dark: no script error, no
-          serious axe violation (WCAG 2.2 A/AA), no sideways scroll
-        run: npm run probe
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with: {node-version: 24}
+      - run: corepack enable pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+      - name: Embedded Astro assets match the source
+        run: |
+          pnpm build
+          git diff --exit-code -- ui/dist crates/toolbox-cli/src/report.html crates/toolbox-cli/src/toolbox-report.js
+          test -z "$(git status --porcelain --untracked-files=all -- ui/dist)"
+      - name: Pack the public npm packages
+        run: >-
+          pnpm --filter @toolbox-dev/ui --filter @toolbox-dev/astro-report pack
+          --pack-destination "$RUNNER_TEMP"
+      - run: >-
+          pnpm --filter @toolbox-dev/astro-report exec playwright install
+          --with-deps chromium
+      - run: pnpm storybook:build
+      - name: Probe every story at desktop and mobile widths in light and dark mode
+        run: pnpm storybook:probe
   typescript-builder:
     runs-on: ubuntu-latest
     defaults: {run: {working-directory: experiments/typescript-builder}}

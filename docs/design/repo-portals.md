@@ -87,32 +87,16 @@ and it never goes stale relative to the commit it describes.
 | GitHub Pages | The same, in a Pages workflow on the default branch |
 | PR | Upload it as an artifact and link it from the ratchet's summary comment |
 
-**Hosting it in another site.** The page is the custom element `<toolbox-report>`. Its scorecards render in a shadow tree. A host page — an Astro page, or any HTML — projects its own chrome into three slots, and that markup is not copied into the report:
+**Hosting it in another site.** `toolbox report -o web --out DIR` writes `report.json`,
+`toolbox-report.js`, and a standalone `index.html`. An Astro site imports
+[`@toolbox-dev/astro-report`](../../report-ui/README.md) with that JSON and can supply its own Astro
+layout. The integration and the hosted portal share the Vue entity and scorecard views. The CLI
+uses the same integration to produce its offline HTML document.
 
-| Slot | Where it sits |
-|---|---|
-| `header` | Above the report |
-| `nav` | Below the header, and not the scorecard tabs (those stay inside the element) |
-| `footer` | Below the scorecards |
-
-`-o web --out DIR` writes three files: `toolbox-report.js` (the element), `report.json` (the data), and `index.html` (the one-file page, data inlined, so an artifact still opens on its own). A host loads the first two:
-
-```html
-<script src="toolbox-report.js"></script>
-<toolbox-report src="report.json">
-  <a slot="header" href="/docs">Docs</a>
-  <nav slot="nav"><a href="/standards">Standards</a></nav>
-  <p slot="footer">Published from CI.</p>
-</toolbox-report>
-```
-
-This site does that in `site/src/pages/report-hosted.astro` (D93). The data script inside the one-file page is the only interpolation, and a `</` in the JSON is escaped so it cannot close the script.
-
-**Visibility caveat.** The page shows *everything*, because `report` has no caller and applies no
-facets. That is right for a repo portal, whose readers can read the repo anyway. It is wrong for a
-central portal's data. A central portal must not publish `report` output for hidden facets. If static
-publishing of central data is ever needed, it would render *as* a principal
-(`--as group:everyone`), applying the same shaping as the API.
+**Visibility.** A local report has no caller. The entity overview exports fields declared visible
+to the general catalog audience. Other report content can include evidence and findings from the
+whole snapshot. Publish only data approved for the site's readers and use the hosted portal for
+viewer-specific permissions.
 
 ## 5. Proposed: a static site, and static federation
 

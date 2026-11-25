@@ -1,7 +1,6 @@
-import type { ToolboxReport } from "../element";
+import type { ReportViews } from "../report-view";
 import type { Summary } from "../lib/summary";
 import type { ReportData } from "../types";
-// catalog, scopeNote: methods of <toolbox-report>, installed on its prototype by element.js.
 import { barEl, kindParts, legendEl, levelPill, unrunIn } from "../lib/bars";
 import { basisBadge, basisCounts } from "../lib/basis";
 import { judgedMark } from "../lib/compare";
@@ -11,7 +10,6 @@ import { fill, ownLevel } from "../lib/levels";
 import { shortId, title } from "../lib/rings";
 import { memberLinks } from "../lib/rules";
 import { isFailing } from "../lib/status";
-import { template } from "../lib/styles";
 import { scoredKinds } from "../lib/summary";
 import { rich } from "../lib/text";
 import { unassessedIn } from "../lib/tracks";
@@ -455,4 +453,4 @@ export const catalogViews = {
       ),
     );
   },
-} satisfies ThisType<ToolboxReport>;
+} satisfies ThisType<ReportViews>;

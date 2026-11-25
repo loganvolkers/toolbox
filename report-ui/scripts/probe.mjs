@@ -28,7 +28,12 @@ const TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 const TYPES = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".css": "text/css", ".svg": "image/svg+xml", ".woff2": "font/woff2" };
 
 const server = createServer((req, res) => {
-  const path = join(dir, decodeURIComponent(new URL(req.url, "http://x").pathname));
+  const pathname = new URL(req.url, "http://x").pathname;
+  if (pathname === "/favicon.ico") {
+    res.writeHead(204).end();
+    return;
+  }
+  const path = join(dir, decodeURIComponent(pathname));
   if (!path.startsWith(dir) || !existsSync(path) || statSync(path).isDirectory()) {
     res.writeHead(404).end();
     return;
@@ -41,26 +46,27 @@ const base = "http://127.0.0.1:" + server.address().port;
 const index = JSON.parse(readFileSync(join(dir, "index.json"), "utf8"));
 const stories = Object.values(index.entries).filter((e) => e.type === "story" && (!filter || e.id.includes(filter)));
 
-async function probe(browser, story, view) {
-  const ctx = await browser.newContext({ viewport: view.viewport, colorScheme: view.colorScheme, reducedMotion: "reduce" });
+async function probe(context, story, view) {
+  const page = await context.newPage();
   try {
-    return await check(ctx, story, view);
+    return await check(page, story, view);
   } finally {
-    await ctx.close();
+    await page.close();
   }
 }
 
-async function check(ctx, story, view) {
-  const page = await ctx.newPage();
+async function check(page, story, view) {
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
-  page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
+  page.on("console", (message) => {
+    if (message.type() === "error") errors.push(message.text() + " (" + message.location().url + ")");
+  });
   await page.goto(base + "/iframe.html?viewMode=story&id=" + story.id);
   await page.waitForFunction(() => {
     const root = document.querySelector("#storybook-root");
     if (!root || !root.firstElementChild) return false;
-    const report = root.querySelector("toolbox-report");
-    return !report || (report.shadowRoot && report.shadowRoot.getElementById("body").childElementCount > 0);
+    const report = root.querySelector("#report-body");
+    return !report || !!report.querySelector(".view")?.firstElementChild;
   }, null, { timeout: 15000 });
   await page.waitForTimeout(100);
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
@@ -68,21 +74,17 @@ async function check(ctx, story, view) {
   // so look for runs of text far taller than they are wide.
   const stacked = await page.evaluate(() => {
     const out = [];
-    const roots = [document];
-    document.querySelectorAll("*").forEach((n) => n.shadowRoot && roots.push(n.shadowRoot));
-    roots.forEach((root) => {
-      const walk = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-      for (let t = walk.nextNode(); t; t = walk.nextNode()) {
-        const s = t.textContent.trim();
-        const p = t.parentElement;
-        if (s.length < 3 || !p || p.closest("svg,style,script,select,option")) continue;
-        const r = document.createRange();
-        r.selectNodeContents(t);
-        const b = r.getBoundingClientRect();
-        const fs = parseFloat(getComputedStyle(p).fontSize) || 14;
-        if (b.width > 0 && b.width < fs * 2.5 && b.height > fs * 4) out.push(s.slice(0, 30));
-      }
-    });
+    const walk = document.createTreeWalker(document, NodeFilter.SHOW_TEXT);
+    for (let t = walk.nextNode(); t; t = walk.nextNode()) {
+      const s = t.textContent.trim();
+      const p = t.parentElement;
+      if (s.length < 3 || !p || p.closest("svg,style,script,select,option")) continue;
+      const r = document.createRange();
+      r.selectNodeContents(t);
+      const b = r.getBoundingClientRect();
+      const fs = parseFloat(getComputedStyle(p).fontSize) || 14;
+      if (b.width > 0 && b.width < fs * 2.5 && b.height > fs * 4) out.push(s.slice(0, 30));
+    }
     return out;
   });
   await page.addScriptTag({ content: axeSource });
@@ -101,18 +103,22 @@ async function check(ctx, story, view) {
   return { story: story.id, view: view.name, overflow, axe, errors, failures };
 }
 
-const browser = await chromium.launch();
-const jobs = stories.flatMap((s) => VIEWS.map((v) => [s, v]));
+const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE });
+// Keep browser caches for the shared Storybook assets. Each case uses a fresh page.
+const contexts = await Promise.all(VIEWS.map(view =>
+  browser.newContext({ viewport: view.viewport, colorScheme: view.colorScheme, reducedMotion: "reduce" }),
+));
+const jobs = stories.flatMap(story => VIEWS.map((view, index) => [story, view, contexts[index]]));
 const results = [];
 let next = 0;
 await Promise.all(
   Array.from({ length: 4 }, async () => {
     while (next < jobs.length) {
-      const [s, v] = jobs[next++];
+      const [s, v, context] = jobs[next++];
       // A render timeout on a busy machine is retried once and reported; any other failure is not.
       for (let attempt = 1; ; attempt++) {
         try {
-          results.push({ ...(await probe(browser, s, v)), attempts: attempt });
+          results.push({ ...(await probe(context, s, v)), attempts: attempt });
           if (attempt > 1) console.log(`RETRY ${s.id} [${v.name}] rendered on attempt ${attempt}`);
           break;
         } catch (e) {
@@ -121,6 +127,7 @@ await Promise.all(
           break;
         }
       }
+      if (results.length % 40 === 0) console.log(`Probed ${results.length}/${jobs.length} story views`);
     }
   }),
 );

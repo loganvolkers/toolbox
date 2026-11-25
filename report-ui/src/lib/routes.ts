@@ -21,8 +21,8 @@ export interface Route {
   query?: Query;
 }
 
-export function parseHash(): Route {
-  var h = (location.hash || "").replace(/^#/, "");
+export function parseHash(hash: string): Route {
+  var h = hash.replace(/^#/, "");
   var query: Query = {};
   var qi = h.indexOf("?");
   if (qi >= 0) {
@@ -32,9 +32,11 @@ export function parseHash(): Route {
     });
     h = h.slice(0, qi);
   }
-  var route = parsePath(h);
-  route.query = query;
-  return route;
+  try {
+    return { ...parsePath(h), query };
+  } catch {
+    return { mode: "missing" };
+  }
 }
 
 export function parsePath(h: string): Route {

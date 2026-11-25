@@ -41,7 +41,7 @@ with them, they win, and [decisions.md](./decisions/README.md) records the chang
     and Backstage, whose configuration lifecycles lack that maturity;
   - **user SDLC:** building apps on a portal's context and actions, against stable contracts with
     reproducible reads ([user-sdlc.md](./design/user-sdlc.md)).
-- **G3. Replaceable components.** React, DBOS, OpenFGA's packaging, the derived-state engine and the
+- **G3. Replaceable components.** Astro and Vue, DBOS, OpenFGA's packaging, the derived-state engine and the
   monitoring vendors are good defaults, not lock-ins. Each sits behind a Toolbox-owned contract (a Rust
   trait, a protocol or a UI mount contract) with conformance tests, so it can be replaced when better
   technology arrives.
@@ -66,7 +66,7 @@ derived state by full recompute, durable workflows in-process.
    - a YAML/JSON manifest, optionally produced by a TypeScript typed builder, for configuration
    - CEL for predicates and mappings
    - any language for connectors and executors, including in-image executors over stdio (D40)
-   - custom UIs through a framework-agnostic UI extension contract, with React (TSX) on the
+   - custom UIs through a framework-agnostic UI extension contract, with Vue on the
      `@toolbox/ui` design system as the default kit ([frontend.md](./design/frontend.md))
    - deferred: Python SDK, Pulumi-style language hosts, WASM functions
 
@@ -135,7 +135,7 @@ acme-portal/
 ├── fixtures/                 # connector-record fixtures (NDJSON) + native values
 ├── tests/*.test.yaml         # CEL expectations over entities, scores, options
 ├── connectors/, executors/   # optional custom connectors and in-image executors (any language)
-├── ui/<bundle>/              # optional operator UI bundles (React by default)
+├── ui/<bundle>/              # optional operator UI bundles (Astro and Vue by default)
 ├── Dockerfile                # FROM the Toolbox base image; one image (G1)
 ├── .github/workflows/        # validate → test → plan on PRs; build → deploy → verify on main (G2)
 ├── CODEOWNERS                # owners of policies, authz and modules
@@ -173,7 +173,7 @@ flowchart LR
     AZ[AuthN/Z<br/>IAP / OIDC / PAT,<br/>facet shaping]
     API[REST + OpenAPI]
     MCP[MCP<br/>curated task tools]
-    UI[UI host<br/>default React kit +<br/>operator UI bundles]
+    UI[UI host<br/>default Vue kit +<br/>operator UI bundles]
   end
   PG[(Postgres<br/>raw records, fragments, native values,<br/>derived tables, jobs, audit)]
   EXT[External executors<br/>GitHub Actions, webhooks]
@@ -210,7 +210,7 @@ OpenFGA component), no required runtime service besides Postgres, ≤ 3 author-f
 | `DerivedState` | Full recompute in Rust | DBSP incremental circuit; Postgres materialised views (measured equal, §7.1 of the critique) |
 | `Authorizer` | OpenFGA inside the container (packaging: Q11) | External OpenFGA; another Zanzibar engine passing the `.fga.yaml` corpus |
 | `Durable` | DBOS-model workflows on Postgres (Q4) | DBOS Rust SDK; Temporal/Restate for modular deployments |
-| UI extension contract | React + `@toolbox/ui` + Storybook | Any framework that builds a static ES module / Web Component bundle |
+| UI extension contract | Astro + Vue + `@toolbox-dev/ui` + Storybook | Any framework that builds a static ES module / Web Component bundle |
 | Executor protocol (stdio / HTTP) | In-image child processes; GitHub Actions | Any executor speaking the protocol |
 | Telemetry sinks | OTel/Prometheus → Grafana; PostHog | Any OTLP or HTTP sink |
 
@@ -519,9 +519,8 @@ Every capability is declared once (kind, scorecard, action, view, query) and pro
 - The *exception* to "Rust everywhere", by design. Agents and humans build UI fastest in TS, and UI
   extensions must be web-native anyway.
 - Entity pages and lists are generated from kind schemas and declarative `view()` config.
-- **Operator-only customisation:** custom UI ships as **React (TSX) views and action UIs** on the
-  `@toolbox/ui` design system (React Aria; Storybook 10), with a Web Component island as the escape
-  hatch. Actions get three UI tiers: generated form → field widgets → custom component
+- **Operator-only customisation:** custom UI ships as Vue views and action UIs on `@toolbox-dev/ui`.
+  An operator bundle can also implement the framework-neutral browser module contract. Actions get three UI tiers: generated form → field widgets → custom component
   ([frontend.md](./design/frontend.md)). This UI ships in the portal
   repo, built by `toolbox build`, using `@toolbox/ui-sdk` (typed API client, theme, auth). Users don't
   author UI inside Toolbox ([dashboards.md](./design/dashboards.md)).
@@ -542,7 +541,7 @@ Full rationale (Backstage, Port, Salesforce, Shopify Functions) is in
 | Complex logic: rules, transforms, computed props | **WASM functions** (Shopify Functions model: deterministic, fuel-limited) | wasmtime sandbox, no I/O | TypeScript (Javy/StarlingMonkey), Rust, Go |
 | Connectors: I/O, vendor SDKs, long-running | **Toolbox Connector Protocol (TCP)**, an open HTTP+JSON spec | Separate process, container or service; least-privilege secrets | Any language. SDKs: TS, Python, Go, Rust |
 | Side-effecting actions | **Executors**: CI systems, Argo, k8s Job, PR, *or a TCP `act` capability*; durable steps optionally via DBOS SDKs | Out of process | Any |
-| Operator UI | Declarative views; **React/TSX** on `@toolbox/ui` (operators only); Web Component island escape hatch | Browser; same-origin bundle built by `toolbox build`; strict CSP; server enforces everything | TS/TSX |
+| Operator UI | Declarative views and Vue components on `@toolbox-dev/ui` (operators only) | Browser; same-origin bundle built by `toolbox build`; strict CSP; server enforces everything | Vue/TypeScript |
 
 #### Toolbox Connector Protocol (TCP)
 
@@ -673,13 +672,13 @@ These designs close the gaps found in the [red-team review](./red-team.md). Each
 | **Decision files** | One file per decision. The id is a ULID, so two agents mint ids without sharing a counter. D1–D98 keep their numbers as `legacy` (D01M7XKEXQH4HG5371629M50E2G) | [decision-files.md](./design/decision-files.md) |
 | **Supply-chain standards** | The repository record gates Dependabot, code scanning, a security policy, and a CODEOWNERS rule for CI. Alert counts stay ungated (D85) | [supply-chain-standards.md](./design/supply-chain-standards.md) |
 | **Repository level** | `maintainer-repo` is the lowest counted scorecard. Unknown rules and runner-backed cards are excluded (D86) | [repo-level.md](./design/repo-level.md) |
-| **Public docs site** | A Starlight site in `site/`, published to GitHub Pages. Each content page is a catalog entity. `maintainer-site` gates a title, a description, resolving links, sidebar reach, and no secret shape (D91). The site also publishes this repo's `toolbox report` HTML, checked byte for byte in CI (D92). The report is a custom element; a host page fills its header, nav, and footer slots (D93) | [site-standards.md](./design/site-standards.md) |
+| **Public docs site** | A Starlight site in `site/`, published to GitHub Pages. Each content page is a catalog entity. `maintainer-site` gates a title, a description, resolving links, sidebar reach, and no secret shape (D91). The site also publishes this repo's `toolbox report` HTML, checked byte for byte in CI (D92). The report is an Astro integration with a configurable site layout, and the docs build includes Storybook (D01M8A5518E6GYEY9EG8Z7FPXK2) | [site-standards.md](./design/site-standards.md) |
 | **Maintainer SDLC** (layer 1) | How Toolbox itself is built and verified: AGENTS.md harness, check pyramid (unit, contract, parity, reference-model differential, `.fga.yaml`, acceptance per milestone, scale budget), measured loop, CI | [maintainer-sdlc.md](./design/maintainer-sdlc.md) |
 | **YAML formatting** | Tracked `.yaml` and `.yml` are Yamark 0.6.1's fixed point, except `release.yml`, which `dist plan` owns (D98). A collection that fits in 80 columns is flow style, including embedded JSON Schema objects. `schema/*.json` stays JSON (D97) | [yaml-format.md](./design/yaml-format.md) |
 | **User SDLC** (layer 3) | Building apps and agents on a portal: discover via MCP/REST/CLI, develop against fixture or preview portals, deterministic tests with snapshot ids, PATs and service identities, stability and deprecation contract | [user-sdlc.md](./design/user-sdlc.md) |
 | **Developer velocity** | *v1:* small workspace, no per-portal codegen, `toolbox dev` as watch + full recompute, measured dev-loop SLOs; heavy tooling deferred (D44, D46) | [developer-velocity.md](./design/developer-velocity.md) |
 | **GraphQL** | Read-only GraphQL for rich entity pages and operator views: trusted documents only in production, generated from the manifest at runtime, batched authorization, nullable facets, cost limits; not exposed to agents | [graphql.md](./design/graphql.md) |
-| **Frontend** | React + TypeScript on `@toolbox/ui` (React Aria, tokens, domain components, typed hooks). Action UIs in three tiers (generated → field widgets → custom TSX). Option-search API with rich, permission-shaped options shared with MCP. Dry-run latency SLO. Storybook 10 for primitives *and* page-level, persona-aware stories, backed by engine-recorded fixtures; stories are tests. Vite 8 HMR inside `toolbox dev` | [frontend.md](./design/frontend.md) |
+| **Frontend** | Astro and Vue on `@toolbox-dev/ui` (shared tokens and domain components). Action UIs in three tiers (generated → field widgets → custom Vue). Option-search API with rich, permission-shaped options shared with MCP. Dry-run latency SLO. Storybook 10 for primitives *and* page-level, persona-aware stories, backed by engine-recorded fixtures; stories are tests. Vite 8 HMR inside `toolbox dev` | [frontend.md](./design/frontend.md) |
 | **Agent plugins** | Two Agent Plugins 1.0.0 packages: `toolbox-operator` (in this repo; authoring skills + local MCP) and a user plugin generated from each portal's config (production MCP URL; config-derived skills; data fetched live) | [agent-plugins.md](./design/agent-plugins.md) |
 | **Connector control** | Commands to connectors (scoped refresh, resync, cancel) over stdio, long-poll pull or push; completion with the snapshot id that holds the results; freshness policies in the manifest | [connector-control.md](./design/connector-control.md) |
 | **Secret vault** | Pluggable `${secret:…}` backends (env, file mount, Vault, AWS SM, GCP SM, Azure KV); logical names mapped by operators; D55 placeholders until runtime | [secret-vault.md](./design/secret-vault.md) |
@@ -991,7 +990,7 @@ real organisation.
     recovery of another instance's workflows after scale-in (Q13).
   - **Deployment (G1):** one image on Cloud Run + Cloud SQL with an operator UI bundle and an in-image
     executor; instance-based billing; rollback by image.
-  - **UI extension contract:** one React bundle and one non-React bundle mounted through the same
+  - **UI extension contract:** one Vue bundle and one bundle from a second framework mounted through the same
     contract.
   - **CEL:** cel-spec conformance status (Q10) and fixture-based output validation.
   - rmcp Streamable HTTP with OAuth; identity-aware-proxy JWT verification.
@@ -1028,7 +1027,7 @@ real organisation.
   minimal UI on the UI extension contract.
 - **Operations baseline:** OTel, `/metrics`, health/readiness, analytics sinks (`posthog`, `otlp`,
   `none`), `toolbox admin status|config|resync`, Grafana overview.
-- **Frontend v1:** the minimal UI and the UI extension contract; the default React kit
+- **Frontend v1:** the minimal UI and the UI extension contract; the default Vue kit
   (`@toolbox/ui` primitives, Storybook 10) for operator bundles (D40).
 - **Inner loop:** `toolbox dev` (watch, recompute over fixtures, local API/MCP/UI); `toolbox
   validate`; `toolbox test`; `plan --local` (D44).
@@ -1148,7 +1147,7 @@ The full, chronological log is in [decisions.md](./decisions/README.md). This se
 **Decided (2026-11-19):**
 - Launch languages: TypeScript, Python, YAML.
 - Predicates and mappings: typed CEL (JSONata rejected, JQ not adopted).
-- UI: React + TypeScript SPA on `@toolbox/ui` (React Aria), Storybook 10, operator-only customisation with three action-UI tiers; Web Component island as the escape hatch.
+- UI: Astro and Vue on `@toolbox-dev/ui`, Storybook 10, and operator customization through the browser module contract.
 - Dashboards: via Claude Artifacts and Cursor Canvas over MCP.
 - Derived state: DBSP. Side effects: DBOS model.
 - Authorization: embedded OpenFGA, information flow, CODEOWNERS authority.
@@ -1158,7 +1157,7 @@ The full, chronological log is in [decisions.md](./decisions/README.md). This se
 
 **Decided (2026-11-20):** charter goals G1 simple deployment, G2 agent SDLC (in three layers since D63, four since D87), G3 replaceable components;
 the minimal architecture as the v1 baseline: full recompute, OpenFGA inside the container, in-process
-DBOS-model workflows, UI extension contract with React as default, in-image executors, manifest + TS
+DBOS-model workflows, UI extension contract with Astro and Vue as the maintained stack, in-image executors, manifest + TS
 builder, GraphQL deferred, sprawl budget (D33–D47). These supersede the 2026-11-19 lines above where they
 conflict (DBSP, embedded c-archive, Python SDK, GraphQL).
 

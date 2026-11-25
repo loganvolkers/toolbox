@@ -1,13 +1,21 @@
 # Frontend: Delightful Self-Service UIs Defined in Code
 
-> **Status 2026-11-20 (D40, G3):** custom UIs ship **inside the Toolbox image** through a **framework-agnostic UI extension contract** (static bundles built by `toolbox build`, mounted as ES modules or Web Components, calling the public API through a generated typed client). React + `@toolbox/ui` + Storybook below is the **default kit**, not a requirement; this amends the "not framework-agnostic" conclusion. See [decisions.md](../decisions/README.md). The built-in pages are specified in [minimal-ui.md](./minimal-ui.md).
+*Status:* Astro and Vue are the maintained frontend stack (D01M8A5518E6GYEY9EG8Z7FPXK2).
 
-*Status: research + decisions, 2026-11-19. Worked example:
-[approved-github-apps.md](../examples/approved-github-apps.md). Related: [dashboards.md](./dashboards.md),
-[extensibility.md](./extensibility.md), [graphql.md](./graphql.md),
-[developer-velocity.md](./developer-velocity.md), [agent-plugins.md](./agent-plugins.md).*
+## Current architecture
 
----
+The box's first-party UI uses Astro and Vue under one PNPM workspace. The hosted portal builds into
+the Rust release. The static report is the `@toolbox-dev/astro-report` integration. Both use
+`@toolbox-dev/ui` for the theme, page frame, entity overview, and scorecard presentation. Customize
+through slots and props. Publish the component and page stories with the Astro docs.
+
+Operators compose the shared components in their own Astro builds. The hosted UI gets
+facet-shaped data and uses the existing Rust APIs for refresh and actions. The static report uses
+a snapshot approved for its audience. Loading independent UI modules into the hosted portal is
+part of the proposed extension design below.
+
+The sections below record the earlier self-service design. Framework recommendations there were
+superseded by [the Astro and Vue decision](../decisions/D01M8A5518E6GYEY9EG8Z7FPXK2.md).
 
 ## 1. Designer's view: the ideal "add an approved GitHub App" experience
 

@@ -1,0 +1,23 @@
+---
+import "@toolbox-dev/ui/theme.css";
+import "../app.css";
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Toolbox</title>
+  </head>
+  <body>
+    <!-- toolbox:entity -->
+    <div id="root"></div>
+    <noscript><p>Enable JavaScript to browse the Toolbox portal.</p></noscript>
+  </body>
+</html>
+<script>
+  import { createApp } from "vue";
+  import PortalApp from "../components/PortalApp.vue";
+  createApp(PortalApp).mount("#root");
+  document.getElementById("toolbox-initial-entity")?.remove();
+</script>

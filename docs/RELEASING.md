@@ -67,6 +67,16 @@ python3 scripts/test-apply-changesets.py
 
 Verify an artifact with `gh attestation verify <file> --repo <owner>/toolbox`.
 
+## Public frontend packages
+
+The [npm package catalog](../site/src/content/docs/authors/npm.mdx) lists the two packages
+distributed from the PNPM workspace. Their versions live in their package manifests.
+The frontend CI job checks the catalog and packs the same files a registry release ships.
+
+Run `pnpm check` before packing. Release `@toolbox-dev/ui` first when the Astro integration's
+dependency range requires a new UI version, then release `@toolbox-dev/astro-report`. Package
+publishing uses the maintainers' npm scope access.
+
 ## Install what a consumer needs
 
 cargo-dist publishes one installer per app. The public page is

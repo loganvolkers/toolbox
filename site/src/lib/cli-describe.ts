@@ -6,42 +6,20 @@
  */
 import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import type { CliArg, CliCatalog, CliCommand, McpTool } from './cli-catalog';
 
-const here = dirname(fileURLToPath(import.meta.url));
-/** site/src/lib → repo root is ../../.. */
-export const REPO_ROOT = resolve(here, '../../..');
-
-export type CliArg = {
-  name: string;
-  long: string | null;
-  positional: boolean;
-  described: boolean;
-  help?: string | null;
-};
-
-export type CliCommand = {
-  name: string;
-  slug: string;
-  about: string | null;
-  args: CliArg[];
-  mcpTool: string | null;
-  structuredOutput: boolean;
-  usage?: string | null;
-  helpText?: string | null;
-};
-
-export type McpTool = {
-  name: string;
-  description: string | null;
-  cliCommands: string[];
-};
-
-export type CliCatalog = {
-  commands: CliCommand[];
-  mcpTools: McpTool[];
-};
+// Astro also bundles this loader under dist/.prerender during a docs build.
+function repoRoot(start: string): string {
+  let directory = start;
+  while (directory !== dirname(directory)) {
+    if (existsSync(join(directory, "Cargo.toml")) && existsSync(join(directory, "site/package.json"))) return directory;
+    directory = dirname(directory);
+  }
+  throw new Error("Could not locate the Toolbox repository for the CLI reference");
+}
+export const REPO_ROOT = repoRoot(dirname(fileURLToPath(import.meta.url)));
 
 function resolveToolbox(): string {
   const env = process.env.TOOLBOX_BIN;
@@ -59,7 +37,7 @@ function resolveToolbox(): string {
     encoding: 'utf8',
   });
   if (build.status !== 0) {
-    throw new Error(`cargo build failed:\n${build.stderr}`);
+    throw new Error(`cargo build failed:\n${build.error?.message ?? build.stderr}`);
   }
   const bin = join(REPO_ROOT, 'target/debug/toolbox');
   if (!existsSync(bin)) throw new Error('toolbox binary missing after build');

@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Regenerate site/public/report the same way .github/workflows/pages.yml does.
+# Regenerate site/.generated the same way .github/workflows/pages.yml does.
 #
 # Pages CI installs actionlint 1.7.12, osv-scanner 2.7.1 and the pinned RustSec database
 # (scripts/ci-tools.sh), then zizmor and ruff from the portal's
 # pins (toolbox tools install),
 # runs toolbox doctor, then:
-#   toolbox report portal --skip runner,github-actions --baseline portal/results.json -o web --out site/public/report
+#   toolbox report portal --skip runner,github-actions --baseline portal/results.json -o web --out site/.generated
 # Without those pins, ci-lint rules become `unknown` and the preview diverges from CI
 # (D01M7YAXH89ZJQ7Q4HP77NMHBX8). Use this script instead of a bare report command.
 #
@@ -28,5 +28,5 @@ ruff --version
 osv-scanner --version
 
 target/debug/toolbox doctor portal
-target/debug/toolbox report portal --skip runner,github-actions --baseline portal/results.json -o web --out site/public/report
-echo "wrote site/public/report (preview only; not committed — pages CI regenerates it)"
+target/debug/toolbox report portal --skip runner,github-actions --baseline portal/results.json -o web --out site/.generated
+echo "wrote site/.generated/report.json for the Astro report integration"

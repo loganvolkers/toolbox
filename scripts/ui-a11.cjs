@@ -4,7 +4,7 @@
 const { chromium } = require("playwright");
 (async () => {
   const [url, gh] = process.argv.slice(2);
-  const browser = await chromium.launch();
+  const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE });
   const page = await browser.newPage();
   page.on("console", (m) => m.type() === "error" && console.error("  browser:", m.text()));
   // Name the failing request: a bare console error doesn't say which resource it was.

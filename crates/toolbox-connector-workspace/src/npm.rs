@@ -19,6 +19,7 @@ pub(crate) fn analyse(root: &Path, rel: &str) -> Value {
         "name": pkg["name"].as_str().unwrap_or("").trim(),
         "version": pkg["version"].as_str().unwrap_or("").trim(),
         "private": pkg["private"].as_bool().unwrap_or(false),
+        "publishAccess": pkg["publishConfig"]["access"].as_str().unwrap_or(""),
         "descriptionChars": pkg["description"].as_str().unwrap_or("").trim().chars().count() as i64,
         "engines": pkg["engines"]["node"].as_str().map(|s| !s.trim().is_empty()).unwrap_or(false),
         "requirements": requirements,
@@ -380,19 +381,25 @@ mod tests {
     }
 
     #[test]
-    fn the_packages_in_this_repo_are_private_locked_and_installed_with_npm_ci() {
+    fn this_repository_catalogues_the_public_pnpm_packages() {
         let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
         let ui = analyse(&root, "ui/package.json");
-        assert_eq!(ui["name"], "toolbox-minimal-ui");
+        assert_eq!(ui["name"], "toolbox-portal-ui");
         assert_eq!(ui["private"], true);
-        assert_eq!(ui["lockfile"], "package-lock.json");
+        assert_eq!(ui["lockfile"], "pnpm-lock.yaml");
         assert!(ui["checkScripts"].as_i64().unwrap() >= 1);
-        assert_eq!(ui["descriptionChars"], 0);
-        assert_eq!(ui["engines"], false);
+        assert!(ui["descriptionChars"].as_i64().unwrap_or_default() >= 20);
+        assert_eq!(ui["engines"], true);
         assert_eq!(ui["wildcardRanges"], json!([]));
         assert_eq!(ui["gitRanges"], json!([]));
-        // npm ci installs the lockfile as written (OpenSSF Pinned-Dependencies + maintainer-package).
+        // CI uses the frozen workspace lockfile.
         assert_eq!(ui["ciUsesInstall"], false);
+        for manifest in ["ui-kit/package.json", "report-ui/package.json"] {
+            let package = analyse(&root, manifest);
+            assert_eq!(package["private"], false);
+            assert_eq!(package["publishAccess"], "public");
+            assert_eq!(package["lockfile"], "pnpm-lock.yaml");
+        }
         let builder = analyse(&root, "experiments/typescript-builder/package.json");
         assert_eq!(builder["name"], "toolbox-manifest-builder-prototype");
         assert_eq!(builder["private"], true);

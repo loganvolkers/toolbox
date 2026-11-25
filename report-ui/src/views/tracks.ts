@@ -1,7 +1,6 @@
-import type { ToolboxReport } from "../element";
+import type { ReportViews } from "../report-view";
 import type { Summary } from "../lib/summary";
 import type { ReportData } from "../types";
-// trackCard, trackGrid, tracks, track, trackStrip: methods of <toolbox-report>, installed on its prototype by element.js.
 import { badge, levelLegend, medal } from "../lib/bars";
 import { lockIcon, refs } from "../lib/basis";
 import { levelName, moverBits, nextMedal, nextMedalEl, verifiedMover } from "../lib/campaigns";
@@ -292,4 +291,4 @@ export const tracksViews = {
       }),
     );
   },
-} satisfies ThisType<ToolboxReport>;
+} satisfies ThisType<ReportViews>;

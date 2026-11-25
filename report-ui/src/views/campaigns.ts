@@ -1,7 +1,6 @@
-import type { ToolboxReport } from "../element";
+import type { ReportViews } from "../report-view";
 import type { Summary } from "../lib/summary";
 import type { ReportData, RuleDef } from "../types";
-// campaigns: methods of <toolbox-report>, installed on its prototype by element.js.
 import { badge, grow } from "../lib/bars";
 import { basisBadge, basisOf } from "../lib/basis";
 import { campaignState, goalBar, goalWords, includeProgress, kpiBar } from "../lib/campaigns";
@@ -12,7 +11,6 @@ import { shortId, title } from "../lib/rings";
 import { trackPath } from "../lib/routes";
 import { ruleLink } from "../lib/rules";
 import { blockers, daysLeft } from "../lib/status";
-import { template } from "../lib/styles";
 import { campaignNamesSorted } from "../lib/summary";
 import { rich } from "../lib/text";
 import { fmt, plural } from "../lib/words";
@@ -264,4 +262,4 @@ export const campaignsViews = {
       ),
     );
   },
-} satisfies ThisType<ToolboxReport>;
+} satisfies ThisType<ReportViews>;

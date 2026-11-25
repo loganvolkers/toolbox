@@ -1,0 +1,19 @@
+{
+  "name": "toolbox-ui-workspace",
+  "private": true,
+  "license": "MIT",
+  "description": "The first-party Toolbox Astro, Vue, and Storybook workspace.",
+  "packageManager": "pnpm@11.25.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "pnpm --filter toolbox-portal-ui build && pnpm --filter @toolbox-dev/astro-report build",
+    "check": "pnpm --filter @toolbox-dev/ui check && pnpm --filter toolbox-portal-ui check && pnpm --filter @toolbox-dev/astro-report check && pnpm check:packages",
+    "check:packages": "node scripts/check-ui-packages.mjs",
+    "storybook": "pnpm --filter @toolbox-dev/astro-report storybook",
+    "storybook:build": "pnpm --filter @toolbox-dev/astro-report build-storybook",
+    "storybook:probe": "pnpm --filter @toolbox-dev/astro-report probe",
+    "docs:build": "pnpm --filter toolbox-site build"
+  }
+}

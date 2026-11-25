@@ -1,9 +1,9 @@
 # `install-approved-app` UI bundle (specification)
 
-A custom action UI (tier 3) built with the default React kit and mounted through the framework-agnostic
+A custom action UI (tier 3) built with the default Astro and Vue kit and mounted through the framework-agnostic
 UI extension contract (D40, [docs/v1-spec.md](../../../../docs/v1-spec.md) §7.6).
 
-- **Build:** `npm run build` in this directory emits `dist/index.js` (an ES module). `toolbox build`
+- **Build:** `pnpm build` in this directory emits `dist/index.js` (an ES module). `toolbox build`
   copies it into the image; the manifest declares it under `ui.bundles` and mounts it in the
   `action:install-approved-app` slot.
 - **Exports:** `mount(element, ctx) → { unmount() }`.

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Drift check: re-load CLI catalog and ensure build-time fingerprint is stable.
- * Pages CI runs it as `npm run check:cli-docs`.
+ * Pages CI runs it as `pnpm check:cli-docs`.
  *
  * This script invokes toolbox describe directly (mirrors cli-describe.ts logic)
  * so it does not require a TypeScript build step.
@@ -95,12 +95,12 @@ if (mode === 'write') {
 }
 
 if (!existsSync(snapshotPath)) {
-  console.error(`missing ${snapshotPath}; run: npm run generate:cli-docs`);
+  console.error(`missing ${snapshotPath}; run: pnpm generate:cli-docs`);
   process.exit(1);
 }
 const current = readFileSync(snapshotPath, 'utf8');
 if (current !== body) {
-  console.error(`${snapshotPath} is stale. Run: npm run generate:cli-docs`);
+  console.error(`${snapshotPath} is stale. Run: pnpm generate:cli-docs`);
   process.exit(1);
 }
 console.log(`${snapshotPath} is up to date`);

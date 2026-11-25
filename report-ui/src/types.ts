@@ -128,6 +128,7 @@ export interface ReportData {
   portal: string;
   snapshot?: string | number | null;
   catalog: Record<string, string[]>;
+  entityOverview?: Record<string, Record<string, unknown>>;
   kinds?: Record<string, Kind>;
   kindGroups?: KindGroup[];
   tracks?: Record<string, Track>;

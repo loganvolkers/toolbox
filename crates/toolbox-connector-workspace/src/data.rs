@@ -105,10 +105,11 @@ fn values<'a>(entry: &'a Value, fields: &[String]) -> Vec<&'a str> {
 }
 
 /// Programs a stage's command may start with, besides a path under the root.
-const PROGRAMS: [&str; 20] = [
+const PROGRAMS: [&str; 21] = [
     "toolbox",
     "cargo",
     "npm",
+    "pnpm",
     "npx",
     "node",
     "python",

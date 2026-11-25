@@ -136,7 +136,6 @@
       "workflow:.github/workflows/ci.yml": {
         "every-job-has-timeout": [
           "1d3fbde7",
-          "5c43327b",
           "8a357dfb",
           "c17fdb80",
           "f94b95c8"
@@ -614,14 +613,6 @@
     },
     "maintainer-package": {
       "package-json:experiments/typescript-builder/package.json": {
-        "described": [
-          "bc4c2610"
-        ],
-        "engines-declared": [
-          "44bb7873"
-        ]
-      },
-      "package-json:ui/package.json": {
         "described": [
           "bc4c2610"
         ],
@@ -4251,8 +4242,7 @@
     "sdlc-stage": {
       "sdlc-stage:maintainer/design-review": {
         "built": [
-          "298a233a",
-          "5ee8575e"
+          "298a233a"
         ]
       },
       "sdlc-stage:maintainer/plan": {
@@ -4692,7 +4682,7 @@
     "maintainer-ci-reliability": {
       "workflow:.github/workflows/ci.yml": {
         "failing": {
-          "every-job-has-timeout": 5
+          "every-job-has-timeout": 4
         },
         "level": "none",
         "unknown": [
@@ -5191,6 +5181,9 @@
       "doc:docs/adversarial-critique.md": {
         "level": "skipped"
       },
+      "doc:docs/audits/astro-vue-portal-2026-11-25.md": {
+        "level": "silver"
+      },
       "doc:docs/audits/design-loop-efficiency-2026-11-24.md": {
         "level": "silver"
       },
@@ -5678,6 +5671,9 @@
         "level": "skipped"
       },
       "doc:docs/decisions/D01M89TFPMD83YZWRJ2DKHCHS63.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M8A5518E6GYEY9EG8Z7FPXK2.md": {
         "level": "skipped"
       },
       "doc:docs/decisions/README.md": {
@@ -6385,6 +6381,9 @@
         },
         "level": "silver"
       },
+      "package-json:package.json": {
+        "level": "gold"
+      },
       "package-json:report-ui/package.json": {
         "level": "gold"
       },
@@ -6397,12 +6396,11 @@
       "package-json:site/package.json": {
         "level": "gold"
       },
+      "package-json:ui-kit/package.json": {
+        "level": "gold"
+      },
       "package-json:ui/package.json": {
-        "failing": {
-          "described": 1,
-          "engines-declared": 1
-        },
-        "level": "silver"
+        "level": "gold"
       }
     },
     "maintainer-plugin": {
@@ -6442,6 +6440,9 @@
         "level": "gold"
       },
       "site-page:site/src/content/docs/authors/index.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/authors/npm.mdx": {
         "level": "gold"
       },
       "site-page:site/src/content/docs/authors/secrets.md": {
@@ -10969,6 +10970,12 @@
         },
         "level": "bronze"
       },
+      "field:toolbox/PackageJson.publishAccess": {
+        "level": "gold"
+      },
+      "field:toolbox/PackageJson.registryUrl": {
+        "level": "gold"
+      },
       "field:toolbox/PackageJson.requirements": {
         "failing": {
           "described": 1
@@ -13597,7 +13604,7 @@
       },
       "sdlc-stage:maintainer/design-review": {
         "failing": {
-          "built": 2
+          "built": 1
         },
         "level": "silver"
       },

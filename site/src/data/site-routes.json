@@ -1,0 +1,5 @@
+{
+  "report": "/report",
+  "previousReport": "/report-hosted",
+  "storybook": "/storybook"
+}

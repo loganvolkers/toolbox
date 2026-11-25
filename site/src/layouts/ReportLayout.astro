@@ -1,0 +1,21 @@
+---
+import DefaultLayout from "@toolbox-dev/astro-report/default-layout.astro";
+import routes from "../data/site-routes.json";
+const { title } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+---
+<DefaultLayout title={title}>
+  <header class="site-report-nav">
+    <nav aria-label="Documentation">
+      <a href={base + "/"}>Toolbox</a>
+      <a href={base + "/demo/report/"}>About this report</a>
+      <a href={base + "/concepts/scorecards/"}>Scorecards</a>
+      <a href={base + routes.storybook + "/"}>Storybook</a>
+    </nav>
+  </header>
+  <slot />
+</DefaultLayout>
+<style>
+  .site-report-nav { max-width: 1120px; margin: 0 auto; padding: 12px 20px 0; }
+  nav { display: flex; flex-wrap: wrap; gap: 8px 16px; }
+</style>

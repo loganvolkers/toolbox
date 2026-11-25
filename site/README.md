@@ -1,27 +1,21 @@
-# Toolbox docs site
+# Toolbox docs
 
-Public documentation for Toolbox, built with [Astro Starlight](https://starlight.astro.build/)
-and published to GitHub Pages (`https://loganvolkers.github.io/toolbox/`).
+Astro Starlight publishes the official Toolbox documentation, the catalog report, and Storybook to GitHub Pages under `/toolbox/`.
 
-```bash
-npm ci
-npm run build
+```sh
+corepack enable pnpm
+pnpm install --frozen-lockfile
+pnpm docs:build
+pnpm --filter toolbox-site preview
 ```
 
-## CLI reference
+The report comes from `site/.generated/report.json` when present. Run `scripts/regen-site-report.sh` to generate it with the Pages workflow's pinned tools. A local docs build can use the checked-in Toolbox-for-Toolbox fixture. Set `TOOLBOX_REPORT_DATA` to an absolute path to use another snapshot.
 
-`src/content/docs/start/cli.mdx` is a Starlight page that renders Astro/TypeScript
-components. At build time it loads the live `toolbox` binary (`toolbox describe`
-plus each leaf command’s `--help`) — not a committed markdown dump.
+The CLI reference is built from `toolbox describe` and `toolbox <command> --help`. Set `TOOLBOX_BIN` to use a particular binary. After a CLI change, regenerate and check its documentation fingerprint.
 
-Drift guard: a fingerprint of the catalog is committed at
-`src/data/cli-catalog.fingerprint.json`. Refresh and check:
-
-```bash
-# from site/ (needs TOOLBOX_BIN or ../target/debug/toolbox)
-npm run generate:cli-docs   # write fingerprint
-npm run check:cli-docs      # exit 1 if fingerprint is stale
+```sh
+pnpm --filter toolbox-site generate:cli-docs
+pnpm --filter toolbox-site check:cli-docs
 ```
 
-Optional: `TOOLBOX_BIN=/path/to/toolbox`. The pages workflow runs `check:cli-docs`
-after building `toolbox` and before `astro build`.
+Run `pnpm check:packages --write` when a public package enters or leaves the workspace.

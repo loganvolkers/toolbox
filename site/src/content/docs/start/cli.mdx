@@ -6,7 +6,7 @@ sidebar:
 draft: false
 ---
 
-import CliReference from '../../../components/CliReference.astro';
+import CliReference from '../../../components/CliReference.vue';
 import { loadCliCatalog } from '../../../lib/cli-describe';
 
 export const catalog = loadCliCatalog();
@@ -17,4 +17,4 @@ This page is built at site compile time from `toolbox describe` and each command
 
 Install: [Quickstart](/toolbox/start/quickstart/) or [Install a release](/toolbox/start/install/).
 
-<CliReference catalog={catalog} />
+<CliReference catalog={catalog} client:load />

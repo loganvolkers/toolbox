@@ -71,7 +71,7 @@ run `yamark format` on the touched files so `yamark format --check` in rust CI s
 The site's copy of the report isn't committed: the pages workflow generates it for each commit
 (D01M7YAXH89ZJQ7Q4HP77NMHBX8). To preview it locally with the same pinned linters CI uses, run
 `scripts/regen-site-report.sh` (actionlint 1.7.12 via `scripts/ci-tools.sh`, `zizmor==1.32.0`, then
-`doctor` and `report … -o web --out site/public/report`). A bare `toolbox report … -o web` without
+`doctor` and `report … -o web --out site/.generated`). A bare `toolbox report … -o web` without
 those tools on `PATH` writes `unknown` for ci-lint rules and diverges from the pages build.
 
 ## Run it
