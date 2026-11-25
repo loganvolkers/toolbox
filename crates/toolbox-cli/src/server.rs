@@ -131,6 +131,7 @@ fn config_from_env(listen: &str) -> Result<toolbox_api::Config, String> {
     }
     let mut c = toolbox_api::Config {
         auth_mode: mode,
+        connector_confinement: toolbox_api::confine::Confinement::from_env()?,
         ..Default::default()
     };
     if let Ok(tokens) = std::env::var("TOOLBOX_CONNECTOR_TOKENS") {

@@ -68,8 +68,12 @@ whether a same-user process may read it is the host's Yama setting, which an ima
 choose. So each in-image connector starts in its own Landlock domain
 (`crates/toolbox-api/src/confine.rs`): a process in one cannot ptrace, or open `/proc/<pid>/mem`
 or `environ` of, any process outside it, OpenFGA and other connectors included. Its files and
-network are unchanged. On a kernel without Landlock the connector starts unconfined and the
-server warns. `serve` also warns when the database URL arrives on `--database-url`, since argv
+network are unchanged. On a host without Landlock, `TOOLBOX_CONNECTOR_CONFINEMENT` decides
+(D01M88668MR8K559A1NYSNQQTX0). `best-effort`, the default, starts the connector unconfined and
+says so: the server logs a warning, `/readyz` counts the connectors that started unconfined, and
+`/v1/connectors` names them. A field's explain includes `sourceConfinement` when an in-image
+connector supplied it, and `toolbox doctor` says whether the host it runs on would confine them.
+`required` refuses to start an unconfined connector. `serve` also warns when the database URL arrives on `--database-url`, since argv
 is readable by every local user. A connector can still write any file the server's user can, and
 one that must not reach the database at all runs remotely, holding only its own token.
 

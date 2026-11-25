@@ -20,6 +20,9 @@ description: >-
 6. A portal with `federation.children` keeps a clone of each child under `$TOOLBOX_STATE_DIR`
    and reads it again before it lists, previews or runs an action. It signs approvals with a key
    it keeps there too; `--detach` and `toolbox run --url <server>` print it, for children to pin.
+7. Each in-image connector starts in its own Landlock domain. Where the host has no Landlock,
+   `/readyz` counts the connectors that started unconfined, and `/v1/connectors` names them. Set
+   `TOOLBOX_CONNECTOR_CONFINEMENT=required` to refuse to start them instead.
 
 ```
 toolbox serve portal --fixtures

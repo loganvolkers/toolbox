@@ -243,6 +243,9 @@ pub async fn explain(
         if let Some(c) = &spec.computed {
             body["computed"] = json!(c);
         }
+        if let Some(t) = crate::connectors::source_confinement(&s, e.provenance.get(field)) {
+            body["sourceConfinement"] = json!(t);
+        }
         if let Some(a) = &spec.authority {
             // Ownership evidence (D17): the claim, the CODEOWNERS rules for the path, and the rule.
             let owners = toolbox_derive::codeowners_for(e.fields.get(&a.rules), &a.path);
