@@ -10,14 +10,15 @@ verdicts:
     reason: >-
       The substantive citations in
       portal/assessments/rule-quality/rule/toolbox/vs-backstage-security/owner-only-fields.yaml
-      land. facts.yaml:15-20 is the fact. tests/authz.rs:89 is
-      `facets_actions_and_revocation` and 248 is
+      land. experiments/backstage-compare/facts.yaml:15-20 is the fact.
+      tests/authz.rs:89 is `facets_actions_and_revocation` and 248 is
       `a_filter_cannot_probe_a_hidden_facet`. ci.yml:24 runs `cargo test` and
       ci.yml:52 runs toolbox-api with OpenFGA. access.rs:219 is `facet_needs`
       and 243 `hides_details`. ADJUDICATION.md:164-179 and 250-254,
-      RESEARCH.md:185 (P5) and facts.yaml:105-110 also hold. The exception is
-      "Single bronze level per D01M857ZB468ZM2YS6GNSEG6YB9": that decision
-      says nothing about levels (backstage-comparison.yaml:458 does).
+      RESEARCH.md:185 (P5) and
+      experiments/backstage-compare/facts.yaml:105-110 also hold. The
+      exception is "Single bronze level per D01M857ZB468ZM2YS6GNSEG6YB9": that
+      decision says nothing about levels (backstage-comparison.yaml:458 does).
     suggestion: >-
       Cite backstage-comparison.yaml:458 for the single bronze level.
   - criterion: complete
@@ -28,9 +29,9 @@ verdicts:
       (lines 179-180), because the field index reads raw `e.fields` (lines
       165-167). A filter on a hidden field therefore narrows to a candidate
       only when the guess is right. So "filters cannot probe them" (the fact's
-      own words, facts.yaml:18-19) holds for results but not for timing. The
-      channel is small and predates the index, so a pass may still be right,
-      but the reason should weigh it.
+      own words, experiments/backstage-compare/facts.yaml:18-19) holds for
+      results but not for timing. The channel is small and predates the index,
+      so a pass may still be right, but the reason should weigh it.
     suggestion: >-
       Name the timing channel in measures-intent and judge whether it defeats
       "cannot probe". Or suggest that the index skip fields the caller can't

@@ -41,6 +41,24 @@ verdicts:
       (crates/toolbox-model/src/package.rs:55-68). The caveat is that new
       facts still need a workspace-connector change in this repository (§6.2,
       line 234), as pnpm-expo did.
+# Codex evaluated the two added criteria. Earlier verdicts retain their original attribution.
+  - criterion: fast-feedback
+    verdict: fail
+    reason: >-
+      portal/sdlc/stages/package-author.yaml lists toolbox validate.
+      docs/design/packages.md gives no measured local time to the stage exit.
+    suggestion: >-
+      Measure and record the fastest local check that demonstrates this stage
+      exit in docs/design/packages.md.
+  - criterion: beyond-one-reference
+    verdict: fail
+    reason: >-
+      portal/sdlc/stages/package-author.yaml lists packages/github-
+      actions/toolbox-package.yaml as evidence. The declared checks name no
+      second exercised reference for this stage exit.
+    suggestion: >-
+      Exercise this exit on a second reference and cite the result in
+      portal/sdlc/stages/package-author.yaml.
 summary: >-
   An agent can author a package today: copy an existing package, validate
   and test it, with CI proving it for the packages in this repository. Two

@@ -46,6 +46,25 @@ verdicts:
       (crates/toolbox-cli/tests/install.rs:92,
       docs/design/package-author-sdlc.md §3.2), or runs remotely against
       /v1/ingest. Neither needs a crate or builtin added here.
+# Codex evaluated the two added criteria. Earlier verdicts retain their original attribution.
+  - criterion: fast-feedback
+    verdict: fail
+    reason: >-
+      portal/sdlc/stages/package-author.yaml lists toolbox connector test.
+      examples/connector-scaffold/README.md gives no measured local time to
+      the stage exit.
+    suggestion: >-
+      Measure and record the fastest local check that demonstrates this stage
+      exit in examples/connector-scaffold/README.md.
+  - criterion: beyond-one-reference
+    verdict: fail
+    reason: >-
+      portal/sdlc/stages/package-author.yaml lists crates/toolbox-
+      connect/src/conformance.rs as evidence. The declared checks name no
+      second exercised reference for this stage exit.
+    suggestion: >-
+      Exercise this exit on a second reference and cite the result in
+      portal/sdlc/stages/package-author.yaml.
 summary: >-
   An agent can build and prove a connector outside this repository with
   the released CLI and the conformance kit. The weak point is the SDK: it

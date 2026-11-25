@@ -2,7 +2,7 @@
 # zizmor and actionlint (D70). The first package extracted from Toolbox for Toolbox, which includes it.
 apiVersion: toolbox.dev/package/v0
 name: github-actions
-version: 0.2.0
+version: 0.3.0
 description: >-
   Score GitHub Actions workflows and the third-party actions they use,
   with zizmor, actionlint and run history.
@@ -13,6 +13,16 @@ parameters:
     description: >-
       The portal track its scorecards and campaigns belong to; leave unset if
       the portal has no tracks.
+  prefix:
+    type: string
+    default: ""
+    description: >-
+      Put before each scorecard's name (e.g. maintainer- gives
+      maintainer-ci-security), to match the portal's own naming.
+  owner:
+    type: string
+    default: group:maintainers
+    description: Who owns the standards in this portal.
   githubOrg:
     type: string
     description: The GitHub organisation whose run history is read.
@@ -57,5 +67,5 @@ parameters:
     type: integer
     default: 900
     tighten: lower
-    description: Max p90 run time in seconds for maintainer-ci-speed silver.
+    description: Max p90 run time in seconds for ci-speed silver.
 fragments: [fragments/*.yaml]

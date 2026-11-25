@@ -15,18 +15,21 @@ verdicts:
       (.github/workflows/ci.yml:87), and actions/report/run.sh:21 is that same
       call for pilot repositories (D69). Backstage's `false` cites the
       architecture overview: everything runs inside a backend
-      (facts.yaml:134-139). A pass means what the name says.
+      (experiments/backstage-compare/facts.yaml:134-139). A pass means what
+      the name says.
   - criterion: hard-to-game
     verdict: fail
     reason: >-
-      As with every facts.yaml rule, the value is typed into facts.yaml:48-53
-      and copied by snapshot.py:85. Nothing in the harness runs `toolbox
-      report`. Editing the value and rerunning snapshot.py on the committed
-      results would pass the rule even if `report` came to need a server.
+      As with every experiments/backstage-compare/facts.yaml rule, the value
+      is typed into experiments/backstage-compare/facts.yaml:48-53 and copied
+      by snapshot.py:85. Nothing in the harness runs `toolbox report`. Editing
+      the value and rerunning snapshot.py on the committed results would pass
+      the rule even if `report` came to need a server.
     suggestion: >-
       Have the harness run `toolbox report examples/repo-portal-starter` under
       `unshare -n` with no DATABASE_URL, and set the fact from its exit code.
-      Have snapshot.py refuse a facts.yaml value for it.
+      Have snapshot.py refuse a experiments/backstage-compare/facts.yaml value
+      for it.
   - criterion: fix-leads-to-pass
     verdict: fail
     reason: >-
@@ -34,7 +37,8 @@ verdicts:
       actions/report does" (backstage-comparison.yaml:769-770) names the
       command and the action. But if the evidence read
       `repoScopedWithoutServer is false`, restoring serverless reporting
-      wouldn't change the record until facts.yaml was edited and snapshot.py
+      wouldn't change the record until
+      experiments/backstage-compare/facts.yaml was edited and snapshot.py
       rerun, and the fix doesn't say so.
     suggestion: >-
       Name crates/toolbox-cli/src/report.rs as the place, and add the record
@@ -48,5 +52,6 @@ verdicts:
       grounds it in DORA's loosely coupled teams (RESEARCH.md:68).
 summary: >-
   A true, CI-guarded claim with a clear definition (ci.yml:87). Like the
-  other facts.yaml rules, its input is hand-written and the fix doesn't
-  name the file. Of the two org-fit rules, this one is in better shape.
+  other experiments/backstage-compare/facts.yaml rules, its input is
+  hand-written and the fix doesn't name the file. Of the two org-fit
+  rules, this one is in better shape.

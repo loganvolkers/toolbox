@@ -441,3 +441,20 @@ rubrics:
       guidance: >-
         Fail when the stage requires adding a crate, a builtin or a schema
         change to this repository.
+    - name: fast-feedback
+      question: >-
+        Does an agent learn whether its change passes the stage within minutes,
+        from a check it can run locally, before CI or a reviewer?
+      guidance: >-
+        Cite the measured time of the stage's fastest gate. Fail when the only
+        gate is a CI run, a release or a person's review, or when no doc
+        measures how long the gate takes.
+    - name: beyond-one-reference
+      question: >-
+        Is the stage proven on more than one reference (portal, repository,
+        package or platform), so it cannot pass by fitting one example?
+      guidance: >-
+        Fail when every check or fixture the stage runs uses one reference, such
+        as only Toolbox's own portal, and name it. Pass and name the second
+        reference otherwise, or when the stage produces something with no
+        example to fit, such as a release tag.

@@ -46,6 +46,25 @@ verdicts:
       (image/Dockerfile:3-4, `CMD ["serve", "/portal"]`). Deploy targets are
       the operator's own tooling (docs/design/sdlc.md:154-155), so no crate or
       schema change is needed to ship a portal.
+# Codex evaluated the two added criteria. Earlier verdicts retain their original attribution.
+  - criterion: fast-feedback
+    verdict: fail
+    reason: >-
+      portal/sdlc/stages/operator.yaml defines the stage exit but declares no
+      runnable local check for it. docs/plan.md documents the intended
+      workflow.
+    suggestion: >-
+      Add a runnable local check for this exit and record its measured time in
+      docs/plan.md.
+  - criterion: beyond-one-reference
+    verdict: fail
+    reason: >-
+      portal/sdlc/stages/operator.yaml declares no executable reference for
+      the exit, and docs/plan.md describes the workflow without supplying a
+      second exercised reference.
+    suggestion: >-
+      Exercise this exit on a second reference and cite the result in
+      portal/sdlc/stages/operator.yaml.
 summary: >-
   The pieces are closer than the stage record says: a release-built server
   image and a FROM-and-COPY recipe exist, so the gap "no published base

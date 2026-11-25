@@ -14,26 +14,29 @@ verdicts:
       - RESEARCH.md:114 is "relation graph".
       - crates/toolbox-api/src/routes.rs:46 registers
         /v1/entities/{id}/graph, and mcp.rs:39 is the `graph` tool.
-      - facts.yaml:74 and 163 are the two facts.
+      - experiments/backstage-compare/facts.yaml:74 and 163 are the two facts.
       - snapshot.py:85 overlays them.
       - README.md:53 and ADJUDICATION.md:114 are the bar.
   - criterion: complete
     verdict: pass
     reason: >-
-      hard-to-game fails correctly: the value is typed into facts.yaml:74, and
-      no harness step requests a graph. The fix names the command and the
-      route, and the value is true. So fix-leads-to-pass passes, as do
-      measures-intent and threshold-justified.
+      hard-to-game fails correctly: the value is typed into
+      experiments/backstage-compare/facts.yaml:74, and no harness step
+      requests a graph. The fix names the command and the route, and the value
+      is true. So fix-leads-to-pass passes, as do measures-intent and
+      threshold-justified.
   - criterion: reproducible
     verdict: pass
     reason: >-
-      Every verdict rests on a file a second assessor can open: facts.yaml,
-      routes.rs, snapshot.py and the README row.
+      Every verdict rests on a file a second assessor can open:
+      experiments/backstage-compare/facts.yaml, routes.rs, snapshot.py and the
+      README row.
   - criterion: actionable
     verdict: pass
     reason: >-
       The suggestion requests component:c1's graph on both arms and requires
-      the edge to its gen.py system (gen.py:29-35). That makes the fact
+      the edge to its experiments/backstage-compare/gen.py system
+      (experiments/backstage-compare/gen.py:29-35). That makes the fact
       measured and changes hard-to-game.
 summary: >-
   An accurate, consistent assessment. Its citations check out line by

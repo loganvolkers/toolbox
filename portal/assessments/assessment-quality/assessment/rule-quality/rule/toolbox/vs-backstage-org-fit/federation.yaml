@@ -1,7 +1,7 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: assessment:rule-quality/rule:toolbox/vs-backstage-org-fit/federation
 rubric: assessment-quality
-subjectHash: 93d9d7f09400
+subjectHash: f39a82320a8b
 assessor: {kind: agent, name: cursor-reviewer-34, model: claude-opus-5.5}
 at: 2026-11-25
 verdicts:

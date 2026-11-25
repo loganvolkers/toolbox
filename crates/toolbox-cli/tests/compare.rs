@@ -132,6 +132,50 @@ fn one_rule_behind_makes_the_subject_behind() {
 }
 
 #[test]
+fn a_majority_comparison_counts_rules_ahead_against_rules_behind() {
+    let dir = scratch("majority");
+    portal(
+        &dir,
+        &[
+            product("ours", 0.7, 34.0, true, false),
+            product("rival", 3.7, 36.0, false, true),
+        ],
+    );
+    let majority = MANIFEST.replace(
+        "peers: [product:rival]}",
+        "peers: [product:rival], verdict: majority}",
+    );
+    std::fs::write(dir.join("toolbox.yaml"), &majority).unwrap();
+    let v: Value = serde_json::from_str(&report(&dir, "json")).unwrap();
+    let c = &v["comparisons"]["against-rival"];
+    // Ahead on cold start and secure default, behind on federation, parity on memory.
+    assert_eq!(c["rules"]["federation"]["product:rival"], "behind");
+    assert_eq!(c["verdictRule"], "majority");
+    assert_eq!(c["verdict"]["product:rival"], "ahead");
+    let md = report(&dir, "md");
+    assert!(
+        md.contains("(OURS: ahead against RIVAL, by the majority of rules)"),
+        "{md}"
+    );
+
+    // Without values, both pass cold start: one rule ahead, one behind, so parity.
+    std::fs::write(
+        dir.join("toolbox.yaml"),
+        majority.replace(
+            "entity.coldStartS <= 5.0\", value: \"entity.coldStartS\", better: lower, unit: s,",
+            "entity.coldStartS <= 5.0\",",
+        ),
+    )
+    .unwrap();
+    let v: Value = serde_json::from_str(&report(&dir, "json")).unwrap();
+    let c = &v["comparisons"]["against-rival"];
+    assert_eq!(c["rules"]["federation"]["product:rival"], "behind");
+    assert_eq!(c["rules"]["memory"]["product:rival"], "parity");
+    assert_eq!(c["verdict"]["product:rival"], "parity", "{c}");
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
 fn a_missing_peer_is_unknown_not_parity() {
     let dir = scratch("missing");
     portal(&dir, &[product("ours", 0.7, 34.0, true, true)]);

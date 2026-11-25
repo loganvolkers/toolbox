@@ -1,0 +1,13 @@
+caveat in_hours(hour int) {
+	hour >= 9 && hour < 17
+}
+
+definition user {}
+
+definition doc {
+	relation blocked: user
+	relation verified: user
+	relation member: user | user:* | user with in_hours
+	permission viewer = member - blocked
+	permission editor = member & verified
+}

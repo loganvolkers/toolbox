@@ -51,6 +51,25 @@ verdicts:
       (crates/toolbox-cli/src/main.rs:880-905), package includes resolve
       through the existing loader (crates/toolbox-model/src/load.rs:325-360),
       and a rollout workflow can live in the package author's own repository.
+# Codex evaluated the two added criteria. Earlier verdicts retain their original attribution.
+  - criterion: fast-feedback
+    verdict: fail
+    reason: >-
+      portal/sdlc/stages/package-author.yaml lists toolbox plan --local.
+      docs/design/federation.md gives no measured local time to the stage
+      exit.
+    suggestion: >-
+      Measure and record the fastest local check that demonstrates this stage
+      exit in docs/design/federation.md.
+  - criterion: beyond-one-reference
+    verdict: fail
+    reason: >-
+      portal/sdlc/stages/package-author.yaml lists actions/report/action.yml
+      as evidence. The declared checks name no second exercised reference for
+      this stage exit.
+    suggestion: >-
+      Exercise this exit on a second reference and cite the result in
+      portal/sdlc/stages/package-author.yaml.
 summary: >-
   Designed, not built. The parts exist in the released binary (plan's
   level diff, versioned package cache), but no check proves an upgrade

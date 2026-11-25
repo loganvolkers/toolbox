@@ -1,0 +1,545 @@
+{
+ "runAt": "2026-11-24T22:11:17+00:00",
+ "tools": {
+  "go": "go version go1.27.4 linux/amd64",
+  "govulncheck": "Go: go1.27.4\nScanner: govulncheck@v1.10.0\nDB: https://vuln.go.dev\nDB updated: 2026-11-24 15:56:00 +0000 UTC",
+  "slsa-verifier": "GitVersion:    v2.7.1",
+  "cosign": "GitVersion:    v2.6.1",
+  "gh": "gh version 2.103.0 (2026-10-21)",
+  "fga": "fga version v`0.9.0` (commit: `4b10e119c40a02dac0a665c9f8516b2ea3a36291`, date: `2026-11-12T14:47:14Z`)",
+  "zed": "client: zed v1.2.1"
+ },
+ "arms": {
+  "openfga": {
+   "binaryBytes": 67387552,
+   "binaryMb": 67.4,
+   "binarySha256": "af0ca4f72c868c1011efac696f3aadd2a13892feb842cc4311fc77e69fdf594d",
+   "builtWith": "go1.27.4",
+   "goModules": 142,
+   "goModulesCommand": "go version -m bin/openfga | grep -c '^\\tdep\\t'",
+   "knownVulns": 0,
+   "knownVulnIds": [],
+   "knownVulnsCommand": "govulncheck -mode=binary -format json bin/openfga",
+   "knownVulnsExit": 0,
+   "allFindingIds": [],
+   "releasePublishedAt": "2026-11-20T20:13:43Z",
+   "releaseAssets": [
+    "checksums.txt",
+    "checksums.txt.pem",
+    "checksums.txt.sig",
+    "openfga.intoto.jsonl",
+    "openfga_1.23.0_darwin_amd64.tar.gz",
+    "openfga_1.23.0_darwin_amd64.tar.gz.sbom.json",
+    "openfga_1.23.0_darwin_arm64.tar.gz",
+    "openfga_1.23.0_darwin_arm64.tar.gz.sbom.json",
+    "openfga_1.23.0_linux_386.tar.gz",
+    "openfga_1.23.0_linux_386.tar.gz.sbom.json",
+    "openfga_1.23.0_linux_amd64.tar.gz",
+    "openfga_1.23.0_linux_amd64.tar.gz.sbom.json",
+    "openfga_1.23.0_linux_arm64.tar.gz",
+    "openfga_1.23.0_linux_arm64.tar.gz.sbom.json",
+    "openfga_1.23.0_windows_386.tar.gz",
+    "openfga_1.23.0_windows_386.tar.gz.sbom.json",
+    "openfga_1.23.0_windows_amd64.tar.gz",
+    "openfga_1.23.0_windows_amd64.tar.gz.sbom.json",
+    "openfga_1.23.0_windows_arm64.tar.gz",
+    "openfga_1.23.0_windows_arm64.tar.gz.sbom.json"
+   ],
+   "signatureAssets": [
+    "checksums.txt.pem",
+    "checksums.txt.sig",
+    "openfga.intoto.jsonl"
+   ],
+   "sbomAssets": [
+    "openfga_1.23.0_darwin_amd64.tar.gz.sbom.json",
+    "openfga_1.23.0_darwin_arm64.tar.gz.sbom.json",
+    "openfga_1.23.0_linux_386.tar.gz.sbom.json",
+    "openfga_1.23.0_linux_amd64.tar.gz.sbom.json",
+    "openfga_1.23.0_linux_arm64.tar.gz.sbom.json",
+    "openfga_1.23.0_windows_386.tar.gz.sbom.json",
+    "openfga_1.23.0_windows_amd64.tar.gz.sbom.json",
+    "openfga_1.23.0_windows_arm64.tar.gz.sbom.json"
+   ],
+   "provenance": true,
+   "provenanceChecks": [
+    {
+     "command": "gh attestation verify /agent/repos/toolbox/experiments/openfga-spicedb-compare/downloads/openfga/openfga_1.23.0_linux_amd64.tar.gz -R openfga/openfga",
+     "exit": 1,
+     "output": "Error: HTTP 404: Not Found (https://api.github.com/repos/openfga/openfga/attestations/sha256:06a02dc0034188eb35004aed0a010f41d332e31a6b4db4c75e1d89de05fc1441?per_page=30&predicate_type=https%3A%2F%2Fslsa.dev%2Fprovenance%2Fv1)"
+    },
+    {
+     "command": "slsa-verifier verify-artifact /agent/repos/toolbox/experiments/openfga-spicedb-compare/downloads/openfga/openfga_1.23.0_linux_amd64.tar.gz --provenance-path /agent/repos/toolbox/experiments/openfga-spicedb-compare/downloads/openfga/openfga.intoto.jsonl --source-uri github.com/openfga/openfga --source-tag v1.23.0",
+     "exit": 0,
+     "output": "Verified build using builder \"https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@refs/tags/v2.1.0\" at commit d67ba7b1d2eaf945cffab3a9129ca1a4c7ad5251\nVerifying artifact /agent/repos/toolbox/experiments/openfga-spicedb-compare/downloads/openfga/openfga_1.23.0_linux_amd64.tar.gz: PASSED\n\nPASSED: SLSA verification passed"
+    },
+    {
+     "command": "cosign verify-blob /agent/repos/toolbox/experiments/openfga-spicedb-compare/downloads/openfga/checksums.txt --signature /agent/repos/toolbox/experiments/openfga-spicedb-compare/downloads/openfga/checksums.txt.sig --certificate /agent/repos/toolbox/experiments/openfga-spicedb-compare/downloads/openfga/checksums.txt.pem --certificate-identity-regexp ^https://github.com/openfga/openfga/ --certificate-oidc-issuer https://token.actions.githubusercontent.com",
+     "exit": 0,
+     "output": "Verified OK"
+    }
+   ],
+   "sbom": true,
+   "sbomForArchive": [
+    "openfga_1.23.0_linux_amd64.tar.gz.sbom.json"
+   ],
+   "releasesLastYear": 28,
+   "releasesLastYearPrerelease": 0,
+   "releasesWindow": [
+    "2025-11-24T22:11:17+00:00",
+    "2026-11-24T22:11:17+00:00"
+   ],
+   "releasesLastYearTags": [
+    "v1.23.0",
+    "v1.22.1",
+    "v1.22.0",
+    "v1.21.0",
+    "v1.20.0",
+    "v1.19.0",
+    "v1.18.3",
+    "v1.18.2",
+    "v1.18.1",
+    "v1.18.0",
+    "v1.17.1",
+    "v1.17.0",
+    "v1.16.1",
+    "v1.16.0",
+    "v1.15.1",
+    "v1.15.0",
+    "v1.14.2",
+    "v1.14.1",
+    "v1.14.0",
+    "v1.13.1",
+    "v1.13.0",
+    "v1.12.1",
+    "v1.12.0",
+    "v1.11.6",
+    "v1.11.5",
+    "v1.11.4",
+    "v1.11.3",
+    "v1.11.2"
+   ],
+   "contributors": 122,
+   "contributorsAnonymous": 8,
+   "contributorsCommand": "gh api --paginate 'repos/openfga/openfga/contributors?anon=1&per_page=100'",
+   "probe": {
+    "arm": "openfga",
+    "facts": {
+     "changeFeed": {
+      "value": true,
+      "detail": "ReadChanges: 6 changes and a continuation token; after one more write, ReadChanges from that token: [TUPLE_OPERATION_WRITE doc:d4#member@user:frank] (ok)"
+     },
+     "conditions": {
+      "value": true,
+      "detail": "doc:d2#member@user:dave with in_hours; Check with context hour=10: true, hour=20: false"
+     },
+     "consistencyTokens": {
+      "value": false,
+      "detail": "WriteResponse fields: []; CheckRequest fields: [store_id tuple_key contextual_tuples authorization_model_id trace context consistency] (consistency is an enum: UNSPECIFIED, MINIMIZE_LATENCY, HIGHER_CONSISTENCY)"
+     },
+     "contextualTuples": {
+      "value": true,
+      "detail": "Check(doc:d3 viewer user:erin): false; with contextual tuple doc:d3#member@user:erin: true; again without: false"
+     },
+     "exclusion": {
+      "value": true,
+      "detail": "viewer = member but not blocked, editor = member and verified; bob (member, blocked): viewer false; carol (member, verified): viewer true, editor true; bob editor false"
+     },
+     "httpByDefault": {
+      "value": true,
+      "detail": "GET http://127.0.0.1:8080/stores: HTTP 200 {\"stores\":[{\"id\":\"01M87STAJ4WP17CQF44CM1H46D\",\"name\":\"bench\",\"created_at\":\"2026-11-24T22:11:27.940960788Z\",\"updated_at\":\"2026-11-24T22:11:27.940960788Z\",\"deleted_at\":null},{\"id\":\"01M87STAJC0357RRM8RQ9"
+     },
+     "listUsers": {
+      "value": true,
+      "detail": "ListUsers(doc:d1 viewer, filter user): [user:carol] (ok)"
+     },
+     "multiTenant": {
+      "value": true,
+      "detail": "two stores on one server, each with its own model; doc:d1#member@user:zed written to store B: Check in B true, in A false; relation viewer (only in A's model) asked in B: error: rpc error: code = Code(2000) desc = invalid relation: relation 'doc#viewer' not found"
+     },
+     "prometheusMetrics": {
+      "value": true,
+      "detail": "GET http://127.0.0.1:2112/metrics: HTTP 200, 64 Prometheus metric families (grpc_server_handled_total)"
+     },
+     "wildcards": {
+      "value": true,
+      "detail": "doc:pub#member@user:* written; Check(doc:pub viewer user:alice) = true"
+     },
+     "otelTracing": {
+      "value": true,
+      "detail": "OTLP/gRPC collector at 127.0.0.1:18317 received 978 spans after 50 checks (first: [defaultTTU checkTTU checkDirect ResolveCheck checkComputedUserset])"
+     },
+     "modelTests": {
+      "value": true,
+      "detail": "/agent/repos/toolbox/experiments/openfga-spicedb-compare/downloads/cli/fga model test --tests model.fga.yaml: exit 0; with assertions flipped: exit 1",
+      "passing": {
+       "command": "/agent/repos/toolbox/experiments/openfga-spicedb-compare/downloads/cli/fga model test --tests model.fga.yaml",
+       "exit": 0,
+       "output": "# Test Summary #\nTests 1/1 passing\nChecks 3/3 passing"
+      },
+      "flipped": {
+       "command": "/agent/repos/toolbox/experiments/openfga-spicedb-compare/downloads/cli/fga model test --tests .flipped-b0533evjmodel.fga.yaml",
+       "exit": 1,
+       "output": "(FAILING) inherited and public: Checks (0/3 passing)\n\u2179 Check(user=user:anne,relation=viewer,object=document:spec): expected=false, got=true\n\u2179 Check(user=user:bob,relation=viewer,object=document:spec): expected=true, got=false\n\u2179 Check(user=user:bob,relation=viewer,object=document:pub): expected=false, got=true\n---\n# Test Summary #\nTests 0/1 passing\nChecks 0/3 passing"
+      }
+     },
+     "migrateCommand": {
+      "value": true,
+      "detail": "/agent/repos/toolbox/experiments/openfga-spicedb-compare/bin/openfga migrate --help: exit 0; The migrate command is used to migrate the database schema needed for OpenFGA."
+     }
+    },
+    "readyS": 0.083,
+    "server": [
+     "/agent/repos/toolbox/experiments/openfga-spicedb-compare/bin/openfga",
+     "run",
+     "--datastore-engine",
+     "memory"
+    ],
+    "traceServer": [
+     "/agent/repos/toolbox/experiments/openfga-spicedb-compare/bin/openfga",
+     "run",
+     "--datastore-engine",
+     "memory",
+     "--grpc-addr",
+     "127.0.0.1:18081",
+     "--http-addr",
+     "127.0.0.1:18080",
+     "--metrics-addr",
+     "127.0.0.1:18112",
+     "--trace-enabled",
+     "--trace-otlp-endpoint",
+     "127.0.0.1:18317",
+     "--trace-sample-ratio",
+     "1"
+    ]
+   },
+   "decided": {
+    "conditions": {
+     "value": true,
+     "from": "probe:conditions"
+    },
+    "contextualTuples": {
+     "value": true,
+     "from": "probe:contextualTuples"
+    },
+    "wildcards": {
+     "value": true,
+     "from": "probe:wildcards"
+    },
+    "exclusion": {
+     "value": true,
+     "from": "probe:exclusion"
+    },
+    "listUsers": {
+     "value": true,
+     "from": "probe:listUsers"
+    },
+    "consistencyTokens": {
+     "value": false,
+     "from": "probe:consistencyTokens"
+    },
+    "changeFeed": {
+     "value": true,
+     "from": "probe:changeFeed"
+    },
+    "modelTests": {
+     "value": true,
+     "from": "probe:modelTests"
+    },
+    "multiTenant": {
+     "value": true,
+     "from": "probe:multiTenant"
+    },
+    "prometheusMetrics": {
+     "value": true,
+     "from": "probe:prometheusMetrics"
+    },
+    "otelTracing": {
+     "value": true,
+     "from": "probe:otelTracing"
+    },
+    "httpByDefault": {
+     "value": true,
+     "from": "probe:httpByDefault"
+    },
+    "migrateCommand": {
+     "value": true,
+     "from": "probe:migrateCommand"
+    },
+    "datastores": {
+     "value": 2,
+     "from": "facts.yaml"
+    },
+    "officialSdks": {
+     "value": 5,
+     "from": "facts.yaml"
+    },
+    "foundation": {
+     "value": true,
+     "from": "facts.yaml"
+    },
+    "provenance": {
+     "value": true,
+     "from": "probe:provenance"
+    },
+    "sbom": {
+     "value": true,
+     "from": "probe:sbom"
+    }
+   }
+  },
+  "spicedb": {
+   "binaryBytes": 82337952,
+   "binaryMb": 82.3,
+   "binarySha256": "1ab32536a4d2c60723dee2035a71aee46757d4a4c3a71f4f2c258798e93c620a",
+   "builtWith": "go1.27.3",
+   "goModules": 190,
+   "goModulesCommand": "go version -m bin/spicedb | grep -c '^\\tdep\\t'",
+   "knownVulns": 7,
+   "knownVulnIds": [
+    "GO-2026-5932",
+    "GO-2026-6859",
+    "GO-2026-6860",
+    "GO-2026-6865",
+    "GO-2026-6866",
+    "GO-2026-6974",
+    "GO-2026-6975"
+   ],
+   "knownVulnsCommand": "govulncheck -mode=binary -format json bin/spicedb",
+   "knownVulnsExit": 0,
+   "allFindingIds": [
+    "GO-2026-5932",
+    "GO-2026-6859",
+    "GO-2026-6860",
+    "GO-2026-6865",
+    "GO-2026-6866",
+    "GO-2026-6974",
+    "GO-2026-6975"
+   ],
+   "releasePublishedAt": "2026-11-10T19:51:44Z",
+   "releaseAssets": [
+    "checksums.txt",
+    "development.wasm",
+    "spicedb_1.57.1_darwin_amd64.tar.gz",
+    "spicedb_1.57.1_darwin_arm64.tar.gz",
+    "spicedb_1.57.1_linux_amd64.apk",
+    "spicedb_1.57.1_linux_amd64.deb",
+    "spicedb_1.57.1_linux_amd64.rpm",
+    "spicedb_1.57.1_linux_amd64.tar.gz",
+    "spicedb_1.57.1_linux_arm64.apk",
+    "spicedb_1.57.1_linux_arm64.deb",
+    "spicedb_1.57.1_linux_arm64.rpm",
+    "spicedb_1.57.1_linux_arm64.tar.gz",
+    "spicedb_1.57.1_windows_amd64.zip",
+    "windows_checksums.txt"
+   ],
+   "signatureAssets": [],
+   "sbomAssets": [],
+   "provenance": false,
+   "provenanceChecks": [
+    {
+     "command": "gh attestation verify /agent/repos/toolbox/experiments/openfga-spicedb-compare/downloads/spicedb/spicedb_1.57.1_linux_amd64.tar.gz -R authzed/spicedb",
+     "exit": 1,
+     "output": "Error: HTTP 404: Not Found (https://api.github.com/repos/authzed/spicedb/attestations/sha256:2dcce08149b432448fe4d0093e630c360134c289ac824a34b3023acbe28f4c61?per_page=30&predicate_type=https%3A%2F%2Fslsa.dev%2Fprovenance%2Fv1)"
+    }
+   ],
+   "sbom": false,
+   "sbomForArchive": [],
+   "releasesLastYear": 15,
+   "releasesLastYearPrerelease": 0,
+   "releasesWindow": [
+    "2025-11-24T22:11:17+00:00",
+    "2026-11-24T22:11:17+00:00"
+   ],
+   "releasesLastYearTags": [
+    "v1.57.1",
+    "v1.57.0",
+    "v1.56.2",
+    "v1.56.1",
+    "v1.56.0",
+    "v1.54.0",
+    "v1.53.0",
+    "v1.52.0",
+    "v1.51.1",
+    "v1.51.0",
+    "v1.50.0",
+    "v1.49.2",
+    "v1.49.1",
+    "v1.49.0",
+    "v1.48.0"
+   ],
+   "contributors": 86,
+   "contributorsAnonymous": 2,
+   "contributorsCommand": "gh api --paginate 'repos/authzed/spicedb/contributors?anon=1&per_page=100'",
+   "probe": {
+    "arm": "spicedb",
+    "facts": {
+     "changeFeed": {
+      "value": true,
+      "detail": "Watch from the first write's ZedToken; after one more write it streamed: OPERATION_TOUCH doc:d4#member@user:frank"
+     },
+     "conditions": {
+      "value": true,
+      "detail": "doc:d2#member@user:dave with caveat in_hours; CheckPermission with context hour=10: true, hour=20: false"
+     },
+     "consistencyTokens": {
+      "value": true,
+      "detail": "WriteRelationships returned written_at ZedToken \"Gh8KEzE3OTU1NTgyOTU3NjgwODEyNTASCGM1OWM4NzQ3\"; CheckPermission with at_least_as_fresh that token: true"
+     },
+     "contextualTuples": {
+      "value": false,
+      "detail": "CheckPermissionRequest fields: [consistency resource permission subject context with_tracing]; LookupResourcesRequest fields: [consistency resource_object_type permission subject context optional_limit optional_cursor with_debug]; none carries request-scoped relationships, so the probe cannot send one (Check(doc:d3 viewer user:erin) = false)"
+     },
+     "exclusion": {
+      "value": true,
+      "detail": "viewer = member - blocked, editor = member & verified; bob (member, blocked): viewer false; carol (member, verified): viewer true, editor true; bob editor false"
+     },
+     "httpByDefault": {
+      "value": false,
+      "detail": "GET http://127.0.0.1:8443/v1/schema/read: Get \"http://127.0.0.1:8443/v1/schema/read\": dial tcp 127.0.0.1:8443: connect: connection refused"
+     },
+     "listUsers": {
+      "value": true,
+      "detail": "LookupSubjects(doc:d1 viewer, subject type user): [user:carol] (ok)"
+     },
+     "multiTenant": {
+      "value": false,
+      "detail": "WriteSchemaRequest fields: [schema] (no store or tenant); a second tenant's definition can only be added to the one schema under a prefix: WriteSchema ok, ReadSchema returns one schema with 3 definitions (ok)"
+     },
+     "prometheusMetrics": {
+      "value": true,
+      "detail": "GET http://127.0.0.1:9090/metrics: HTTP 200, 185 Prometheus metric families (grpc_server_handled_total)"
+     },
+     "wildcards": {
+      "value": true,
+      "detail": "doc:pub#member@user:* written; CheckPermission(doc:pub viewer user:alice) = true"
+     },
+     "otelTracing": {
+      "value": true,
+      "detail": "OTLP/gRPC collector at 127.0.0.1:18317 received 336 spans after 50 checks (first: [ReadyState ListAllCaveats ListAllNamespaces ListAllNamespaces ListAllCaveats])"
+     },
+     "modelTests": {
+      "value": true,
+      "detail": "/agent/repos/toolbox/experiments/openfga-spicedb-compare/downloads/cli/zed validate schema.validation.yaml: exit 0; with assertions flipped: exit 1",
+      "passing": {
+       "command": "/agent/repos/toolbox/experiments/openfga-spicedb-compare/downloads/cli/zed validate schema.validation.yaml",
+       "exit": 0,
+       "output": "warning: Arrow `owner->member` under permission \"view\" references relation \"member\" on definition \"group\"; it is recommended to point to a permission (arrow-references-relation)\n  8 |   document:pub#viewer@user:*\n  9 | assertions:\n 10 |   assertTrue: [document:spec#view@user:anne, document:pub#view@user:bob]\n 11 >   assertFalse: [document:spec#view@user:bob]\n 12 | \n\ncomplete - 5 relationships loaded, 3 assertions run, 0 expected relations validated"
+      },
+      "flipped": {
+       "command": "/agent/repos/toolbox/experiments/openfga-spicedb-compare/downloads/cli/zed validate .flipped-s3na6e_dschema.validation.yaml",
+       "exit": 1,
+       "output": "error: parse error in `document:spec#view@user:bob`, line 13, column 5: Expected relation or permission document:spec#view@user:bob to exist            \n 10 |   document:pub#viewer@user:*'\n 11 | assertions:\n 12 |   assertTrue:\n 13 >   - document:spec#view@user:bob\n    >     ^~~~~~~~~~~~~~~~~~~~~~~~~~~\n 14 |   assertFalse:\n 15 |   - document:spec#view@user:anne\n\n  Explanation:\n  \u2a09 document:spec view (562.934\u00b5s)\n  \u251c\u2500\u2500 \u2a09 document:spec viewer (27.523\u00b5s)\n  \u251c\u2500\u2500 \u2a09 document:spec owner (39.471\u00b5s)\n  \u2514\u2500\u2500 \u2a09 folder:child view (373.52\u00b5s)\n      \u251c\u2500\u2500 \u2a09 folder:child viewer (3.503\u00b5s)\n      \u2514\u2500\u2500 \u2a09 folder:root view (133.715\u00b5s)\n          \u251c\u2500\u2500 \u2a09 folder:root viewer (13.378\u00b5s)\n          \u2514\u2500\u2500 \u2a09 group:eng member (23.931\u00b5s)\n  \n\n\nerror: parse error in `document:spec#view@user:anne`, line 15, column 5: Expected relation or permission document:spec#view@user:anne to not exist       \n 12 |   assertTrue:\n 13 |   - document:spec#view@user:bob\n 14 |   assertFalse:\n 15 >   - document:spec#view@user:anne\n    >     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~\n 16 |   - document:pub#view@user:bob\n 17 | \n\n  Explanation:\n  \u2713 document:spec view (301.097\u00b5s)\n  \u251c\u2500\u2500 \u2a09 document:spec viewer (8.015\u00b5s)\n  \u251c\u2500\u2500 \u2a09 document:spec owner (15.841\u00b5s)\n  \u2514\u2500\u2500 \u2713 folder:child view (172.358\u00b5s)\n      \u251c\u2500\u2500 \u2a09 folder:child viewer (5.687\u00b5s)\n      \u2514\u2500\u2500 \u2713 folder:root view (79.69\u00b5s)\n          \u251c\u2500\u2500 \u2a09 folder:root viewer (3.162\u00b5s)\n          \u2514\u2500\u2500 \u2713 group:eng member (20.217\u00b5s)\n              \u2514\u2500\u2500 user:anne \n  \n\n\nerror: parse error in `document:pub#view@user:bob`, line 16, column 5: Expected relation or permission document:pub#view@user:bob to not exist         \n 13 |   - document:spec#view@user:bob\n 14 |   assertFalse:\n 15 |   - document:spec#view@user:anne\n 16 >   - document:pub#view@user:bob\n    >     ^~~~~~~~~~~~~~~~~~~~~~~~~~\n 17 | \n\n  Explanation:\n  \u2713 document:pub view (33.464\u00b5s)\n  \u2514\u2500\u2500 \u2713 document:pub viewer (3.989\u00b5s)\n      \u2514\u2500\u2500 user:bob"
+      }
+     },
+     "migrateCommand": {
+      "value": true,
+      "detail": "/agent/repos/toolbox/experiments/openfga-spicedb-compare/bin/spicedb datastore migrate --help: exit 0; Executes datastore schema migrations for the datastore."
+     }
+    },
+    "readyS": 0.133,
+    "server": [
+     "/agent/repos/toolbox/experiments/openfga-spicedb-compare/bin/spicedb",
+     "serve",
+     "--datastore-engine",
+     "memory",
+     "--grpc-preshared-key",
+     "facts-probe-key"
+    ],
+    "traceServer": [
+     "/agent/repos/toolbox/experiments/openfga-spicedb-compare/bin/spicedb",
+     "serve",
+     "--datastore-engine",
+     "memory",
+     "--grpc-preshared-key",
+     "facts-probe-key",
+     "--grpc-addr",
+     "127.0.0.1:18051",
+     "--metrics-addr",
+     "127.0.0.1:18090",
+     "--otel-provider",
+     "otlpgrpc",
+     "--otel-endpoint",
+     "127.0.0.1:18317",
+     "--otel-insecure",
+     "--otel-sample-ratio",
+     "1"
+    ]
+   },
+   "decided": {
+    "conditions": {
+     "value": true,
+     "from": "probe:conditions"
+    },
+    "contextualTuples": {
+     "value": false,
+     "from": "probe:contextualTuples"
+    },
+    "wildcards": {
+     "value": true,
+     "from": "probe:wildcards"
+    },
+    "exclusion": {
+     "value": true,
+     "from": "probe:exclusion"
+    },
+    "listUsers": {
+     "value": true,
+     "from": "probe:listUsers"
+    },
+    "consistencyTokens": {
+     "value": true,
+     "from": "probe:consistencyTokens"
+    },
+    "changeFeed": {
+     "value": true,
+     "from": "probe:changeFeed"
+    },
+    "modelTests": {
+     "value": true,
+     "from": "probe:modelTests"
+    },
+    "multiTenant": {
+     "value": false,
+     "from": "probe:multiTenant"
+    },
+    "prometheusMetrics": {
+     "value": true,
+     "from": "probe:prometheusMetrics"
+    },
+    "otelTracing": {
+     "value": true,
+     "from": "probe:otelTracing"
+    },
+    "httpByDefault": {
+     "value": false,
+     "from": "probe:httpByDefault"
+    },
+    "migrateCommand": {
+     "value": true,
+     "from": "probe:migrateCommand"
+    },
+    "datastores": {
+     "value": 4,
+     "from": "facts.yaml"
+    },
+    "officialSdks": {
+     "value": 6,
+     "from": "facts.yaml"
+    },
+    "foundation": {
+     "value": false,
+     "from": "facts.yaml"
+    },
+    "provenance": {
+     "value": false,
+     "from": "probe:provenance"
+    },
+    "sbom": {
+     "value": false,
+     "from": "probe:sbom"
+    }
+   }
+  }
+ },
+ "disagreements": []
+}

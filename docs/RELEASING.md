@@ -18,7 +18,7 @@ Changeset frontmatter still uses logical names: package YAML `name:` for package
 2. On `main`, `.github/workflows/version-packages.yml` opens or updates a **Version Packages**
    PR that runs the applicator and deletes consumed changesets.
 3. Merge the Version Packages PR when ready.
-4. Tag and push (human step for now):
+4. Run the [assessment preflight](#assessment-preflight), then tag and push (human step for now):
 
    ```bash
    VERSION=$(python3 -c 'import tomllib,pathlib; print(tomllib.loads(pathlib.Path("Cargo.toml").read_text())["workspace"]["package"]["version"])')
@@ -50,7 +50,7 @@ python3 scripts/test-apply-changesets.py
 2. `dist plan` (cargo-dist 0.34.0) lists the archives and installers. `.github/workflows/release.yml`
    is dist's output plus hand patches kept by `allow-dirty = ["ci"]` (D98 — do not format it, and
    reapply the patches if you run `dist generate`).
-3. On a clean `main` with CI green:
+3. On a clean `main` with CI green, run the [assessment preflight](#assessment-preflight):
 
    ```bash
    git tag vX.Y.Z
@@ -125,3 +125,18 @@ line — otherwise the workflow fails before any step runs.
 - Point consumers at the tag, not at `cargo build`.
 - Homebrew, npm and aqua channels are still deferred (see `portal/sdlc/stages/maintainer.yaml` gaps).
 - cargo-binstall metadata lives on each distable crate's `Cargo.toml`.
+
+
+## Assessment preflight
+
+Build the current checkout and run the freshness gate with the same connector and tool setup used
+in CI. Then review missing independent assessments for the change with the release owner.
+
+```bash
+cargo build --locked
+target/debug/toolbox assess check portal --skip runner,github-actions --require-fresh
+```
+
+Resolve stale assessments and have a different reviewer review the refreshed judgments before
+tagging. For a high-risk pull request, apply `require-fresh-assessments` to run the strict check
+in CI. A label change triggers CI.

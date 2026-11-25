@@ -279,6 +279,33 @@ pub struct Scorecard {
 pub struct Compare {
     pub subject: String,
     pub peers: Vec<String>,
+    /// How rule standings add up to the overall standing per peer (D01M87WF2QZVPTD8CGDZKY133CD).
+    #[serde(default, skip_serializing_if = "VerdictRule::is_default")]
+    pub verdict: VerdictRule,
+}
+
+/// A comparison's verdict rule: behind if any rule is behind, or the majority of its rules.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum VerdictRule {
+    #[default]
+    AnyBehind,
+    Majority,
+}
+
+impl VerdictRule {
+    /// Whether this is the default rule, which the manifest may leave unsaid.
+    pub fn is_default(&self) -> bool {
+        *self == Self::AnyBehind
+    }
+
+    /// The rule's name as the manifest spells it.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::AnyBehind => "anyBehind",
+            Self::Majority => "majority",
+        }
+    }
 }
 
 /// A long-term focus program (Soundcheck "track").

@@ -912,6 +912,14 @@
                 "$ref": "#/$defs/entityRef"
               },
               "description": "The entities it is compared with (`product:backstage`)."
+            },
+            "verdict": {
+              "enum": [
+                "anyBehind",
+                "majority"
+              ],
+              "default": "anyBehind",
+              "description": "How rule standings add up to the subject's standing per peer. `anyBehind`: behind if any rule is behind, then unknown, then ahead if any rule is ahead, else parity. `majority`: unknown if any rule is unknown, else ahead with more rules ahead than behind, behind with fewer, parity with as many. Use `majority` for an A/B whose tally was fixed before the run (D01M87WF2QZVPTD8CGDZKY133CD)."
             }
           }
         },

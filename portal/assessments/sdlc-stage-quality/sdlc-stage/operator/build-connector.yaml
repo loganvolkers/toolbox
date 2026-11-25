@@ -1,88 +1,67 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: sdlc-stage:operator/build-connector
 rubric: sdlc-stage-quality
-subjectHash: 6f6ca4c9ca32
-assessor: {kind: agent, name: campaign-review-cards-r4}
-at: 2026-11-25
+subjectHash: 2a5ee852aa40
+assessor: {kind: agent, name: cursor-cloud-agent, model: claude-opus-5.5}
+at: 2026-11-24
 verdicts:
   - criterion: executable-exit
     verdict: pass
     reason: >-
-      The exit criterion is that the connector passes the conformance kit and
-      runs in-image or remotely. Both halves are gated by commands. `toolbox
-      connector test` exits 1 when any kit check fails
-      (crates/toolbox-cli/src/main.rs:1138-1162, checks listed in
-      crates/toolbox-connect/src/conformance.rs:1-11). `toolbox install`
-      resolves and verifies a released executable, and
-      crates/toolbox-cli/tests/install.rs:90-92 tests that end to end. This is
-      weaker than it looks. The listed check conformance.rs has no test of its
-      own, and nothing shows the kit failing a non-conforming connector. The
-      kit runs in CI only on conforming first-party connectors, in
-      scripts/m4-acceptance.sh:33-34, which the stage doesn't list.
+      `toolbox connector test` runs the kit in
+      crates/toolbox-connect/src/conformance.rs and exits non-zero on a
+      protocol violation (here 30 of 30 checks passed for the workspace
+      connector), and crates/toolbox-cli/tests/install.rs fails when a pinned
+      release archive is tampered with or doctor cannot resolve it.
   - criterion: agent-can-complete
-    verdict: fail
+    verdict: pass
     reason: >-
-      Writing and testing a connector can be done from the docs: the scaffold
-      (examples/connector-scaffold/README.md), the author-connector skill
-      (plugins/toolbox-operator/skills/author-connector/SKILL.md) and
-      site/src/content/docs/authors/connectors.md. The second half of the exit
-      criterion, making it run in a portal, needs knowledge no doc gives. To
-      run in-image, `toolbox install` expects a GitHub release laid out as
-      `<app>-<target>.tar.xz` with a `.sha256` at tag `v<version>`
-      (crates/toolbox-model/src/artifacts.rs:1-5). Neither the skill nor the
-      site page says so, and docs/design/package-author-sdlc.md:121 suggests
-      GoReleaser, whose default archive names don't fit that layout. To run
-      remotely, the SDK has `run_remote`
-      (crates/toolbox-connect/src/sdk.rs:134-140), but the scaffold, the skill
-      and the authors page show only `run_stdio`. They don't say how to
-      declare `runtime: remote` or which token the connector needs.
-      docs/design/connector-control.md, the stage's other doc, never names the
-      stage (`notNaming` in the brief).
-    suggestion: >-
-      Add a "Run it in a portal" step to
-      plugins/toolbox-operator/skills/author-connector/SKILL.md and
-      site/src/content/docs/authors/connectors.md. For in-image, give the
-      release layout `toolbox install` expects (or a `dist` config that
-      produces it) and the `package: github:owner/repo@version` line. For
-      remote, show `run_remote`, `runtime: remote` and `toolbox token create`.
-      Then list a doc section that names the stage in
-      portal/sdlc/stages/operator.yaml.
+      examples/connector-scaffold/README.md and the author-connector skill
+      (plugins/toolbox-operator/skills/author-connector/SKILL.md) take an
+      agent from copy to a passing conformance run, and in connector-ab every
+      arm's connector was correct (C3 held,
+      portal/benchmarks/connector-ab.yaml). The stage's own docs do not point
+      to the scaffold, and its gap "no scaffold" is out of date.
   - criterion: reuses-artifacts
     verdict: fail
     reason: >-
-      The `toolbox` CLI comes from a release
-      (site/src/content/docs/authors/connectors.md:12-16), but the SDK does
-      not. The workspace sets `publish = false` (Cargo.toml:11), so
-      toolbox-connect is on no registry. The scaffold depends on it by path,
-      `toolbox-connect = { path = "../../crates/toolbox-connect" }`
-      (examples/connector-scaffold/Cargo.toml), and the documented route is
-      `git clone --depth 1` of main and `cargo build`
-      (site/src/content/docs/authors/connectors.md:18-20). Every connector
-      author therefore compiles Toolbox's toolbox-connect and toolbox-model
-      from an unpinned checkout, which can differ from the CLI release they
-      test against. The page lists this as a gap (connectors.md:56).
+      Installing a connector reuses releases (`github:owner/repo@v`
+      checksum-verified by crates/toolbox-api/src/artifacts.rs), but building
+      one compiles Toolbox source: examples/connector-scaffold/Cargo.toml
+      path-depends on crates/toolbox-connect, which is not published
+      (site/src/content/docs/authors/connectors.md), and `toolbox connector
+      drive`, which the skill relies on, is not in v0.1.1.
     suggestion: >-
-      Publish toolbox-connect (and toolbox-model) with each release, to
-      crates.io or as a documented git dependency on the release tag (`git =
-      …, tag = "v0.1.1"`). Then point examples/connector-scaffold/ Cargo.toml
-      and the authors page at that pinned version instead of a path into a
-      clone of main.
+      Publish toolbox-connect with each release (crates.io, or point the
+      scaffold at a git tag instead of a path), and cut a release that
+      contains `connector drive`.
   - criterion: decoupled-from-core
     verdict: pass
     reason: >-
-      An operator adds no crate, builtin or schema change to this repository.
-      A connector is named as `github:owner/repo[/app]@version`, which
-      `binary_for` resolves from the install cache
-      (crates/toolbox-api/src/connectors.rs:214-216; D90,
-      docs/decisions/D01M7WVNEYT0000000000000000.md). Or it runs remotely
-      against /v1/ingest (docs/design/package-author-sdlc.md:123). The
-      protocol is defined by schema/connector-messages.schema.json, outside
-      any crate change. Only the connectors that ship in the image remain
-      `builtin:`.
+      binary_for in crates/toolbox-api/src/connectors.rs resolves `github:`
+      packages from the install cache (D90), and a remote connector pushes to
+      the ingest API, so an operator adds no crate or builtin; builtin: is
+      only for the connectors that ship in the image.
+  - criterion: fast-feedback
+    verdict: fail
+    reason: >-
+      The gate is local and quick: `toolbox connector test --name workspace
+      --portal portal` took 8.7 s here. But no doc measures it:
+      docs/design/connector-control.md, docs/design/maintainer-sdlc.md §3 and
+      docs/research-log.md record that conformance passed, not how long it
+      took.
+    suggestion: >-
+      Record the conformance kit's time for a first-party connector and for
+      examples/connector-scaffold in docs/design/maintainer-sdlc.md §3 or
+      docs/design/connector-control.md.
+  - criterion: beyond-one-reference
+    verdict: pass
+    reason: >-
+      The kit runs over several connectors: workspace and runner (as surfaces
+      and ci-lint) in .github/workflows/ci.yml (lines 99-105), and github and
+      git-files in scripts/m4-acceptance.sh (lines 33-34). All are Rust
+      connectors built on toolbox-connect; no non-Rust connector is tested.
 summary: >-
-  A connector can be written and checked against the kit with released
-  tools and the scaffold. Two things don't use released artifacts or
-  documented steps: the SDK is compiled from an unpinned clone of main,
-  and making the connector run in a portal (the release layout `toolbox
-  install` expects, or remote mode) is written down nowhere an author
-  reads.
+  An agent can build a connector that passes the conformance kit, and
+  installing one reuses releases. Building one still needs a Toolbox
+  checkout for the unpublished SDK, and the gate's time is not recorded.

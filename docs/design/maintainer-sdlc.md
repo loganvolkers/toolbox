@@ -1,6 +1,6 @@
 # Maintainer SDLC (Layer 1): Building Toolbox Itself
 
-*Status: describes practice as of 2026-11-20 (M0–M4 done). Layer 1 of [the four SDLC
+*Status: describes practice as of 2026-11-20 (M0–M4 done); design review added 2026-11-24 (D01M87PSM9YQGGW3YQ5X4XCJP63). Layer 1 of [the four SDLC
 layers](../sdlc.md). Design rationale for speed and testing lives in
 [developer-velocity.md](./developer-velocity.md) and [verification.md](./verification.md); this
 document is how maintainers, mostly agents in harnesses, actually work.*
@@ -28,6 +28,7 @@ The inner loop takes seconds, so this stays cheap enough to run after every chan
 | **Build** | Small changes in a crate of the [workspace](../v1-spec.md) §4 | `cargo build` (toolchain pinned in `rust-toolchain.toml`) |
 | **Test** | Unit and integration tests, the differential tests, the relevant acceptance script | §4 |
 | **Review** | `cargo fmt --check`, `cargo clippy -D warnings`; read your own diff | CI |
+| **Design review** (`design-review`) | For a change readers see: story probes, then a blind panel of three auditors over two reference portals, until the stop rule holds (D01M87PSM9YQGGW3YQ5X4XCJP63) | `report-ui` (`npm run probe`), [design-audit](./design-audit.md) |
 | **Record** | Results in [research-log.md](../research-log.md); decisions in [decisions.md](../decisions/README.md); spec status in v1-spec §3 | Working rules in AGENTS.md |
 | **Ship** | Small commits straight to `main` (D32), pulled with rebase first | `git` |
 | **Monitor** | CI on every push; the scale budget and acceptance jobs catch regressions | `.github/workflows/ci.yml` |
@@ -42,6 +43,9 @@ The inner loop takes seconds, so this stays cheap enough to run after every chan
 | `toolbox test examples/reference-portal` (20 expectations + `.fga.yaml`) | 0.2 s |
 | `cargo clippy --all-targets -D warnings` | 4.7 s |
 | `scripts/m4-acceptance.sh` (Postgres, OpenFGA, three connectors, Chromium) | 7.9 s |
+| `npm run check` in `report-ui` (`tsc`, then the Vite bundle against the committed one) | 0.5 s |
+| `npm run build-storybook` (53 stories over five fixtures) | 1.3 s |
+| `npm run probe` (53 stories × 4 views = 212 checks; 4 workers) | 33 s |
 
 The workspace has 13 crates. The deferred velocity tooling (hakari, affected-test selection, result
 caching) comes back only when these numbers regress (D44, [developer-velocity.md](./developer-velocity.md)).
@@ -56,11 +60,14 @@ caching) comes back only when these numbers regress (D44, [developer-velocity.md
 | **Differential** | Rust pipeline output byte-identical to `tools/reference.py` (P2) | Derived-state semantics | `cargo test -p toolbox-derive` |
 | Authorization | Reference `.fga.yaml` through the Authorizer; DSL converter vs `fga model transform` | Model semantics | `cargo test -p toolbox-authz` |
 | Connector | Conformance kit against each in-image connector | Protocol behaviour | `toolbox connector test` |
+| GitHub connector integration | Real GitHub connector over stdio and HTTP against a seeded Emulate instance | GitHub response mapping, stateful refresh and authentication | `npm --prefix scripts/github-emulate test` |
 | Connector smoke | Real github, git-files and SCIM connectors feeding `toolbox serve` on the in-memory store; derived outputs byte-identical to the reference. No Postgres or OpenFGA, so it runs locally in about a minute; not in CI, which runs the full M4 path | Connectors end to end | `scripts/m4-connectors-smoke.sh` |
 | Acceptance | One script per milestone, on real Postgres 16, OpenFGA, connectors and Chromium (M5 needs none of them) | Exit criteria | `scripts/m2-acceptance.sh`, `m3-…`, `m4-…`, `m5-…` |
 | Scale | 100k entities / 2M relations / 100 rules ≤ 10 s | Budget §10.4 | `cargo run --release -p toolbox-derive --example scale` |
 | Format | Tracked `.yaml` and `.yml` match Yamark's fixed point (D97) | One style for embedded objects | `yamark format --check` |
 | Freshness | `ui/dist` matches its source | Embedded UI is current | CI `ui` job |
+| Types and freshness | `report-ui/src` passes `tsc` (strict), and `toolbox-report.js` is its Vite bundle (D01M880QMWD7Z7FTGKJT99AHWBX) | The report reads the JSON `toolbox report` writes; embedded report is current | `npm run check` in `report-ui` |
+| Story probe | Every report story over the T4T, OpenFGA and starter fixtures, at 1280 and 390 px, light and dark | No serious axe violation (WCAG 2.2 AA), no sideways scroll, no script error | `npm run probe` in `report-ui` |
 | Standards | Toolbox for Toolbox scorecards over crates, docs, CLI and MCP (report, not yet a gate) | Docs, tests, clippy, size and complexity, interface contracts | `scripts/self-portal.sh report`; `toolbox test portal` |
 
 Each row is recorded with its result in [research-log.md](../research-log.md) when a milestone
@@ -76,6 +83,36 @@ of the four SDLC layers, and the catalog in `portal/benchmarks/` is scored by
 `maintainer-benchmark`. They are the most effective way we have found to smooth Toolbox's rough
 edges: every one so far has produced fixes.
 
+### GitHub connector test proposal
+
+Add a maintainer check for the central portal's GitHub ingestion path. Start a pinned Emulate
+GitHub service on an ephemeral loopback port with synthetic users, private repositories and a
+GitHub App. Send NDJSON refresh commands to the built `toolbox-connector-github` binary. Make
+fixture changes through Emulate's REST API so a follow-up refresh must read the new state. Run
+the check in its own `github-connector` CI job on pull requests and pushes to `main`.
+
+| Scenario | Acceptance criterion |
+|---|---|
+| Scoped repository refresh | Reports the requested repository's archive status, default branch protection and direct admin, plus `not_found` for an unknown ID. |
+| CODEOWNERS refresh | Reads `.github/CODEOWNERS` before the root and `docs/` files. Removing the preferred file changes the next refresh. A repository without CODEOWNERS returns `not_found`. |
+| GitHub App authentication | Signs a JWT with an ephemeral key, exchanges it for a selected-repository installation token and uses the token to read private content. Emulate refuses access outside the installation. |
+| Invalid token | A 401 produces an acknowledged, failed command with zero records. |
+
+Emulate 0.14.0 lacks `GET /orgs/{org}/repos`, the three App inventory reads used by the connector
+(`GET /orgs/{org}/installations`, `GET /user/installations/{id}/repositories` and `GET /apps/{slug}`),
+and a public way to seed workflow history. Its collaborator list also ignores `permission` and
+`affiliation` filters, so the Emulate tests seed only direct admins. The reference portal mock
+supplies organization, App inventory and workflow responses. Recheck these gaps when upgrading Emulate.
+
+Run the check from the repository root with Node 24 and the pinned Rust toolchain. The test
+opens only a loopback listener and uses no external credentials, Postgres or OpenFGA.
+
+```sh
+cargo build --locked -p toolbox-connector-github
+npm --prefix scripts/github-emulate ci --ignore-scripts
+npm --prefix scripts/github-emulate test
+```
+
 ## 5. Local prerequisites
 
 | Tool | Used by | Note |
@@ -85,7 +122,7 @@ edges: every one so far has produced fixes.
 | OpenFGA v1.22.1 (`TOOLBOX_OPENFGA_BIN`) | Authorization tests, M3–M4 acceptance | `go install github.com/openfga/openfga/cmd/openfga@v1.22.1` |
 | Python 3 + `tools/requirements.txt` | Reference model, parity, mock GitHub, SCIM feeder | `cel-python`, `jsonschema`, `pyyaml` |
 | yamark 0.6.1 | YAML formatting (D97) | `python3 -m pip install yamark==0.6.1` |
-| Node 22 + Playwright | UI build, A11 browser check | `npm install` in `ui/` |
+| Node 22 + Playwright | UI build, A11 browser check, report stories and probes | `npm install` in `ui/`; `npm ci` and `npx playwright install chromium` in `report-ui/` |
 
 ## 6. Standards
 
@@ -146,4 +183,5 @@ A version tag releases everything; nothing is built by hand.
 - Milestones and exit criteria: [v1-spec.md](../v1-spec.md) §3; properties §11.3.
 - CI: [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml); acceptance scripts in
   [`scripts/`](../../scripts).
+- GitHub integration dependency and route coverage in [Emulate v0.14.0](https://github.com/vercel-labs/emulate/tree/v0.14.0/packages/%40emulators/github/src).
 - The repository's own scorecards for this layer: [toolbox-for-toolbox.md](./toolbox-for-toolbox.md).

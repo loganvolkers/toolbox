@@ -2,9 +2,12 @@
 // Evidence for a design audit: screenshots of each route at two viewports and two color
 // schemes, plus DOM metrics an auditor can compare between runs. Open shadow roots are walked.
 //
-// Prerequisite: playwright (with chromium) and axe-core resolvable from NODE_PATH, e.g.
-//   npm i --prefix /tmp/audit playwright axe-core && npx --prefix /tmp/audit playwright install chromium
+// Prerequisite: playwright (with chromium) and axe-core resolvable from NODE_PATH. In the Toolbox
+// repository, report-ui pins both: npm --prefix report-ui ci; NODE_PATH=report-ui/node_modules. Elsewhere:
+//   npm i --prefix /tmp/audit playwright@1.65.1 axe-core@4.14.1 && npx --prefix /tmp/audit playwright install chromium
 //   NODE_PATH=/tmp/audit/node_modules node capture.cjs --url URL --routes '#a,#b' --out DIR
+// or, from a served Storybook build, the stories whose ids contain any of --stories:
+//   NODE_PATH=... node capture.cjs --storybook http://127.0.0.1:6006 --stories pages-openfga,states --out DIR
 //
 // Writes DIR/<route>-<viewport>-<scheme>.png, DIR/<route>-desktop-light-full.png and
 // DIR/metrics.json. Exit 1 when the page never renders the --ready selector.
@@ -16,9 +19,22 @@ const axeSource = fs.readFileSync(require.resolve("axe-core/axe.min.js"), "utf8"
 function args() {
   const a = { routes: "", ready: "main", out: "audit-evidence" };
   for (let i = 2; i < process.argv.length; i += 2) a[process.argv[i].replace(/^--/, "")] = process.argv[i + 1];
-  if (!a.url) throw new Error("--url is required");
+  if (!a.url && !a.storybook) throw new Error("--url or --storybook is required");
   a.routes = a.routes ? a.routes.split(",") : [""];
   return a;
+}
+
+// Each target is a page to capture: a route of --url, or a story of --storybook.
+async function targets(a) {
+  if (!a.storybook) {
+    return a.routes.map((route) => ({ slug: route.replace(/^#/, "").replace(/[^\w-]+/g, "_") || "root", url: a.url.split("#")[0] + route }));
+  }
+  const base = a.storybook.replace(/\/(index\.html)?$/, "");
+  const index = await (await fetch(base + "/index.json")).json();
+  const want = (a.stories || "").split(",").filter(Boolean);
+  return Object.values(index.entries)
+    .filter((e) => e.type === "story" && (!want.length || want.some((w) => e.id.includes(w))))
+    .map((e) => ({ slug: e.id, url: base + "/iframe.html?viewMode=story&id=" + e.id }));
 }
 
 const VIEWPORTS = { desktop: { width: 1280, height: 800 }, mobile: { width: 390, height: 844 } };
@@ -90,20 +106,19 @@ async function main() {
   fs.mkdirSync(a.out, { recursive: true });
   const browser = await chromium.launch();
   const metrics = {};
-  for (const route of a.routes) {
-    const slug = route.replace(/^#/, "").replace(/[^\w-]+/g, "_") || "root";
+  for (const { slug, url } of await targets(a)) {
     for (const [vp, size] of Object.entries(VIEWPORTS)) {
       for (const scheme of ["light", "dark"]) {
         const ctx = await browser.newContext({ viewport: size, colorScheme: scheme, deviceScaleFactor: 1 });
         const page = await ctx.newPage();
-        await page.goto(a.url.split("#")[0] + route);
+        await page.goto(url);
         try {
           await page.waitForFunction((sel) => {
             const find = (r) => r.querySelector(sel) || [...r.querySelectorAll("*")].map((n) => n.shadowRoot && find(n.shadowRoot)).find(Boolean);
             return find(document);
           }, a.ready, { timeout: 10000 });
         } catch (e) {
-          console.error(`not ready: ${route} (${a.ready})`);
+          console.error(`not ready: ${slug} (${a.ready})`);
           process.exitCode = 1;
         }
         await page.waitForTimeout(400);
@@ -140,7 +155,7 @@ async function main() {
     axeSeriousNodes: m.axe.filter((v) => v.impact === "serious" || v.impact === "critical").reduce((n, v) => n + v.nodes, 0),
     axe: m.axe.map((v) => `${v.id}:${v.impact}x${v.nodes}`).join(" "),
   }]));
-  fs.writeFileSync(path.join(a.out, "metrics.json"), JSON.stringify({ url: a.url, summary, metrics }, null, 2) + "\n");
+  fs.writeFileSync(path.join(a.out, "metrics.json"), JSON.stringify({ url: a.url || a.storybook, summary, metrics }, null, 2) + "\n");
   console.log(JSON.stringify(summary, null, 2));
 }
 

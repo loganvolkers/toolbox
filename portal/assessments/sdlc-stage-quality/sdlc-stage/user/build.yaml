@@ -45,6 +45,24 @@ verdicts:
     suggestion: >-
       Ship the OpenAPI document from the server, so users generate clients
       with off-the-shelf tools and never touch this repository.
+# Codex evaluated the two added criteria. Earlier verdicts retain their original attribution.
+  - criterion: fast-feedback
+    verdict: fail
+    reason: >-
+      portal/sdlc/stages/user.yaml lists toolbox query. docs/design/user-
+      sdlc.md gives no measured local time to the stage exit.
+    suggestion: >-
+      Measure and record the fastest local check that demonstrates this stage
+      exit in docs/design/user-sdlc.md.
+  - criterion: beyond-one-reference
+    verdict: fail
+    reason: >-
+      portal/sdlc/stages/user.yaml lists crates/toolbox-api/tests/mcp.rs as
+      evidence. The declared checks name no second exercised reference for
+      this stage exit.
+    suggestion: >-
+      Exercise this exit on a second reference and cite the result in
+      portal/sdlc/stages/user.yaml.
 summary: >-
   Partial. Apps can be built today on MCP, whose tool schemas are
   contract-tested, but the stage's exit, a typed client from per-portal

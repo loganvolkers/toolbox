@@ -1,0 +1,28 @@
+{
+  "name": "toolbox-report-ui",
+  "description": "Sources, stories and probes for <toolbox-report>, bundled into the toolbox binary",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "typecheck": "tsc -p .",
+    "build": "tsc -p . && node scripts/build.mjs",
+    "check": "tsc -p . && node scripts/build.mjs --check",
+    "fixtures": "scripts/fixtures.sh",
+    "storybook": "storybook dev -p 6006 --no-open",
+    "build-storybook": "storybook build -o storybook-static --quiet",
+    "probe": "node scripts/probe.mjs storybook-static"
+  },
+  "devDependencies": {
+    "@storybook/web-components-vite": "10.6.8",
+    "axe-core": "4.14.1",
+    "lit": "3.3.3",
+    "playwright": "1.65.1",
+    "storybook": "10.6.8",
+    "typescript": "7.0.2",
+    "vite": "8.3.5"
+  }
+}

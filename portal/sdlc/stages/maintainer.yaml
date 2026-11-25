@@ -58,10 +58,41 @@ records:
     docs: [docs/v1-spec.md]
     status: built
     gaps: ["the M6 acceptance script doesn't exist yet"]
+  - id: maintainer/design-review
+    layer: maintainer
+    name: design-review
+    order: 5
+    intent: >-
+      Judge what readers see (the hosted report and the UI) on more than one
+      portal, by machine first and then by blind auditors.
+    exitCriterion: >-
+      In report-ui, npm run check (tsc and the bundle) and npm run probe pass
+      over every story; for a change readers see, a blind three-auditor panel
+      round passes the design-audit stop rule and is recorded in docs/audits/.
+    commands:
+    - npm --prefix report-ui ci
+    - npm --prefix report-ui run check
+    - npm --prefix report-ui run build-storybook
+    - npm --prefix report-ui run probe
+    - report-ui/scripts/fixtures.sh
+    checks: [.github/workflows/ci.yml]
+    docs:
+    - docs/design/design-audit.md
+    - docs/design/maintainer-sdlc.md
+    - report-ui/README.md
+    status: partial
+    gaps:
+    - >-
+      Only the hosted report has stories and probes; the minimal UI in ui/ has
+      neither
+    - >-
+      CI probes the committed fixtures but does not regenerate them (that
+      needs zizmor, staticcheck and the OpenFGA checkout), so a fixture can
+      lag the report data it stands for
   - id: maintainer/release
     layer: maintainer
     name: release
-    order: 5
+    order: 6
     intent: >-
       Publish versioned, attested artifacts others install instead of building
       from source.
@@ -94,7 +125,7 @@ records:
   - id: maintainer/monitor
     layer: maintainer
     name: monitor
-    order: 6
+    order: 7
     intent: >-
       Score this repository against its own standards and stop regressions
       (Toolbox for Toolbox).

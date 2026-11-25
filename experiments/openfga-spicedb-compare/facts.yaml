@@ -1,0 +1,376 @@
+# The yes/no and counted facts no timed run measures, each with its evidence and primary sources
+# at the pinned release. Where a probe decides a fact (`probe:`), facts.py runs it and the probe's
+# answer wins: facts.py reports any disagreement with the value written here, and snapshot.py uses
+# the probe's value. Docs repositories are not tagged per release, so they are pinned to the commit
+# read on the run date. OpenFGA's API protos are pinned to the openfga/api commit compiled into
+# openfga v1.23.0 (`go version -m`); SpiceDB's to authzed-go v1.11.0, which spicedb v1.57.1
+# compiles in.
+pinned:
+  openfga:
+    tag: v1.23.0
+    commit: d67ba7b1d2eaf945cffab3a9129ca1a4c7ad5251
+    api: openfga/api@f153694bfc20f7be303e33cabe72b668596c5a06
+    docs: openfga/openfga.dev@a13c70e9b21d0516b3fae7a729557d371c7ccaee
+    cli: openfga/cli@v0.9.0
+  spicedb:
+    tag: v1.57.1
+    commit: 7074da7242e5aedfeb4586d93a403eca45388ada
+    api: authzed/authzed-go@v1.11.0
+    docs: authzed/docs@ff2f067f53de6e691748a82a11ad764d52435f22
+    cli: authzed/zed@v1.2.1
+
+openfga:
+  conditions:
+    value: true
+    probe: conditions
+    evidence: >-
+      A tuple can carry a condition (CEL) evaluated against request context;
+      the probe wrote one with condition in_hours and Check answered true at
+      hour=10 and false at hour=20.
+    sources:
+      - https://github.com/openfga/api/blob/f153694bfc20f7be303e33cabe72b668596c5a06/openfga/v1/openfga.proto#L88
+      - https://github.com/openfga/openfga.dev/blob/a13c70e9b21d0516b3fae7a729557d371c7ccaee/docs-site/modeling/conditions.mdx
+  contextualTuples:
+    value: true
+    probe: contextualTuples
+    evidence: >-
+      CheckRequest, ListObjectsRequest and ListUsersRequest take
+      contextual_tuples; the probe's Check turned from false to true with one
+      and back to false without it.
+    sources:
+      - https://github.com/openfga/api/blob/f153694bfc20f7be303e33cabe72b668596c5a06/openfga/v1/openfga_service.proto#L1014
+      - https://github.com/openfga/openfga.dev/blob/a13c70e9b21d0516b3fae7a729557d371c7ccaee/docs-site/interacting/contextual-tuples.mdx
+  wildcards:
+    value: true
+    probe: wildcards
+    evidence: >-
+      A type restriction `user:*` allows a tuple to every user; the corpus's
+      public documents use it, and the probe checked one.
+    sources:
+      - https://github.com/openfga/openfga.dev/blob/a13c70e9b21d0516b3fae7a729557d371c7ccaee/docs-site/modeling/public-access.mdx
+  exclusion:
+    value: true
+    probe: exclusion
+    evidence: >-
+      The DSL has `but not` (exclusion) and `and` (intersection); the probe
+      model used both.
+    sources:
+      - https://github.com/openfga/openfga.dev/blob/a13c70e9b21d0516b3fae7a729557d371c7ccaee/docs-site/configuration-language.mdx#L698
+  listUsers:
+    value: true
+    probe: listUsers
+    evidence: >-
+      The ListUsers RPC returns the users related to an object by a relation;
+      it is on by default at v1.23.0 and answered the probe.
+    sources:
+      - https://github.com/openfga/api/blob/f153694bfc20f7be303e33cabe72b668596c5a06/openfga/v1/openfga_service.proto#L942
+      - https://github.com/openfga/openfga.dev/blob/a13c70e9b21d0516b3fae7a729557d371c7ccaee/docs-site/getting-started/perform-list-users.mdx
+  consistencyTokens:
+    value: false
+    probe: consistencyTokens
+    evidence: >-
+      WriteResponse has no fields, so a write returns no token; reads take
+      only a consistency preference (MINIMIZE_LATENCY or HIGHER_CONSISTENCY,
+      which skips the cache). OpenFGA's own docs list Zanzibar's zookies as
+      future work. HIGHER_CONSISTENCY reads the datastore directly, which is
+      fresh on one primary, but it is not a token and cannot pin a read to a
+      given write.
+    sources:
+      - https://github.com/openfga/api/blob/f153694bfc20f7be303e33cabe72b668596c5a06/openfga/v1/openfga_service.proto#L1315
+      - https://github.com/openfga/api/blob/f153694bfc20f7be303e33cabe72b668596c5a06/openfga/v1/openfga_service_consistency.proto
+      - https://github.com/openfga/openfga.dev/blob/a13c70e9b21d0516b3fae7a729557d371c7ccaee/docs-site/interacting/consistency.mdx#L60-L64
+  changeFeed:
+    value: true
+    probe: changeFeed
+    evidence: >-
+      ReadChanges pages through tuple changes with a continuation token; the
+      probe read from a token and got exactly the next write.
+    sources:
+      - https://github.com/openfga/api/blob/f153694bfc20f7be303e33cabe72b668596c5a06/openfga/v1/openfga_service.proto#L787
+      - https://github.com/openfga/openfga.dev/blob/a13c70e9b21d0516b3fae7a729557d371c7ccaee/docs-site/interacting/read-tuple-changes.mdx
+  modelTests:
+    value: true
+    probe: modelTests
+    evidence: >-
+      `fga model test` (openfga/cli) runs .fga.yaml assertion files;
+      model.fga.yaml passed, and the same file with one assertion flipped
+      failed.
+    sources:
+      - https://github.com/openfga/cli/blob/v0.9.0/README.md#L460
+      - https://github.com/openfga/openfga.dev/blob/a13c70e9b21d0516b3fae7a729557d371c7ccaee/docs-site/modeling/testing.mdx
+  multiTenant:
+    value: true
+    probe: multiTenant
+    evidence: >-
+      A store holds its own models and tuples, and store data cannot be shared
+      across stores; the probe created two stores with different models on one
+      server and a tuple in one was not visible in the other.
+    sources:
+      - https://github.com/openfga/api/blob/f153694bfc20f7be303e33cabe72b668596c5a06/openfga/v1/openfga_service.proto#L806
+      - https://github.com/openfga/openfga.dev/blob/a13c70e9b21d0516b3fae7a729557d371c7ccaee/docs-site/concepts.mdx#L131-L136
+  prometheusMetrics:
+    value: true
+    probe: prometheusMetrics
+    evidence: >-
+      metrics.enabled defaults to true and serves /metrics on 0.0.0.0:2112;
+      the probe scraped it from the default server.
+    sources:
+      - https://github.com/openfga/openfga/blob/v1.23.0/pkg/server/config/config.go#L939-L941
+      - https://github.com/openfga/openfga/blob/v1.23.0/cmd/run/run.go#L270
+  otelTracing:
+    value: true
+    probe: otelTracing
+    evidence: >-
+      --trace-enabled exports OTLP/gRPC to --trace-otlp-endpoint; the probe's
+      collector received spans.
+    sources:
+      - https://github.com/openfga/openfga/blob/v1.23.0/cmd/run/run.go#L256
+      - https://github.com/openfga/openfga.dev/blob/a13c70e9b21d0516b3fae7a729557d371c7ccaee/docs-site/getting-started/configure-telemetry.mdx
+  httpByDefault:
+    value: true
+    probe: httpByDefault
+    evidence: >-
+      http.enabled defaults to true (0.0.0.0:8080); GET /stores on the default
+      server answered 200 with JSON.
+    sources:
+      - https://github.com/openfga/openfga/blob/v1.23.0/pkg/server/config/config.go#L897-L898
+      - https://github.com/openfga/openfga/blob/v1.23.0/cmd/run/run.go#L174
+  migrateCommand:
+    value: true
+    probe: migrateCommand
+    evidence: >-
+      `openfga migrate` runs the datastore schema migrations from the server
+      binary.
+    sources:
+      - https://github.com/openfga/openfga/blob/v1.23.0/cmd/migrate/migrate.go#L29
+  datastores:
+    value: 2
+    evidence: >-
+      PostgreSQL and MySQL. The engine switch also accepts sqlite, but the
+      README at the tag labels SQLite beta ("PostgreSQL 14+, MySQL 8, SQLite
+      (beta)"), so it is not counted as a production datastore. Counting it
+      gives 3.
+    sources:
+      - https://github.com/openfga/openfga/blob/v1.23.0/README.md#L226
+      - https://github.com/openfga/openfga/blob/v1.23.0/cmd/run/run.go#L530-L545
+  officialSdks:
+    value: 5
+    evidence: >-
+      Client SDKs in the openfga GitHub org, not archived: go-sdk, js-sdk,
+      python-sdk, java-sdk, dotnet-sdk. Not counted: sdk-generator (the
+      generator), spring-boot-starter (an integration over java-sdk), cli.
+    sources:
+      - https://github.com/openfga/go-sdk
+      - https://github.com/openfga/js-sdk
+      - https://github.com/openfga/python-sdk
+      - https://github.com/openfga/java-sdk
+      - https://github.com/openfga/dotnet-sdk
+  foundation:
+    value: true
+    evidence: >-
+      A CNCF project: the CNCF TOC voted to move OpenFGA from Sandbox to
+      Incubation, announced on openfga.dev on 2026-01-07.
+    sources:
+      - https://github.com/openfga/openfga.dev/blob/a13c70e9b21d0516b3fae7a729557d371c7ccaee/blog/incubation-announcement.md
+      - https://github.com/cncf/toc/issues/1287#issuecomment-3458442973
+  provenance:
+    value: true
+    probe: provenance
+    evidence: >-
+      The release attaches openfga.intoto.jsonl, SLSA v0.2 provenance from
+      slsa-github-generator's generic generator v2.1.0 covering
+      openfga_1.23.0_linux_amd64.tar.gz; slsa-verifier verify-artifact passes
+      against source github.com/openfga/openfga at tag v1.23.0. There is no
+      GitHub artifact attestation (gh attestation verify: 404).
+    sources:
+      - https://github.com/openfga/openfga/blob/v1.23.0/.github/workflows/release.yaml#L140-L176
+      - https://github.com/openfga/openfga/releases/tag/v1.23.0
+  sbom:
+    value: true
+    probe: sbom
+    evidence: >-
+      Each archive has a .sbom.json asset (syft, via GoReleaser's sboms
+      section), listed in checksums.txt.
+    sources:
+      - https://github.com/openfga/openfga/blob/v1.23.0/.goreleaser.yaml#L133-L135
+      - https://github.com/openfga/openfga/releases/tag/v1.23.0
+
+spicedb:
+  conditions:
+    value: true
+    probe: conditions
+    evidence: >-
+      Caveats: a relationship can carry a caveat (CEL) evaluated against
+      request context; the probe wrote one with caveat in_hours and
+      CheckPermission answered true at hour=10 and false at hour=20.
+    sources:
+      - https://github.com/authzed/authzed-go/blob/v1.11.0/proto/authzed/api/v1/core.pb.go#L219
+      - https://github.com/authzed/docs/blob/ff2f067f53de6e691748a82a11ad764d52435f22/app/spicedb/concepts/caveats/page.mdx
+  contextualTuples:
+    value: false
+    probe: contextualTuples
+    evidence: >-
+      CheckPermissionRequest has consistency, resource, permission, subject,
+      context and with_tracing; LookupResources and LookupSubjects likewise
+      have no field for request-scoped relationships, and neither the source
+      nor the CHANGELOG at v1.57.1 mentions contextual relationships. Caveat
+      context can feed request facts into a caveat, but only on relationships
+      already written.
+    sources:
+      - https://github.com/authzed/authzed-go/blob/v1.11.0/proto/authzed/api/v1/permission_service.pb.go#L1096
+      - https://github.com/authzed/spicedb/blob/v1.57.1/CHANGELOG.md
+  wildcards:
+    value: true
+    probe: wildcards
+    evidence: >-
+      `relation viewer: user | user:*` allows a relationship to every user;
+      the corpus's public documents use it, and the probe checked one.
+    sources:
+      - https://github.com/authzed/docs/blob/ff2f067f53de6e691748a82a11ad764d52435f22/app/spicedb/concepts/schema/page.mdx#L128-L156
+  exclusion:
+    value: true
+    probe: exclusion
+    evidence: >-
+      Permissions support union, intersection (&), exclusion (-) and arrows;
+      the probe schema used & and -.
+    sources:
+      - https://github.com/authzed/docs/blob/ff2f067f53de6e691748a82a11ad764d52435f22/app/spicedb/concepts/schema/page.mdx#L206
+  listUsers:
+    value: true
+    probe: listUsers
+    evidence: >-
+      LookupSubjects streams the subjects of a type that have a permission on
+      a resource; it answered the probe.
+    sources:
+      - https://github.com/authzed/authzed-go/blob/v1.11.0/proto/authzed/api/v1/permission_service.pb.go#L1946
+      - https://github.com/authzed/docs/blob/ff2f067f53de6e691748a82a11ad764d52435f22/app/spicedb/concepts/querying-data/page.mdx#L87
+  consistencyTokens:
+    value: true
+    probe: consistencyTokens
+    evidence: >-
+      Writes return a ZedToken (written_at) and reads accept at_least_as_fresh
+      with it; the probe checked at the token of its write.
+    sources:
+      - https://github.com/authzed/authzed-go/blob/v1.11.0/proto/authzed/api/v1/core.pb.go#L386
+      - https://github.com/authzed/docs/blob/ff2f067f53de6e691748a82a11ad764d52435f22/app/spicedb/concepts/consistency/page.mdx
+  changeFeed:
+    value: true
+    probe: changeFeed
+    evidence: >-
+      Watch streams relationship updates from an optional start cursor (a
+      ZedToken); on the memory datastore the probe received the next write.
+    sources:
+      - https://github.com/authzed/authzed-go/blob/v1.11.0/proto/authzed/api/v1/watch_service.pb.go#L83
+      - https://github.com/authzed/docs/blob/ff2f067f53de6e691748a82a11ad764d52435f22/app/spicedb/concepts/watch/page.mdx
+  modelTests:
+    value: true
+    probe: modelTests
+    evidence: >-
+      `zed validate` runs validation files with assertTrue / assertFalse
+      assertions; schema.validation.yaml passed, and the same file with one
+      assertion flipped failed.
+    sources:
+      - https://github.com/authzed/zed/blob/v1.2.1/internal/cmd/validate.go#L48
+      - https://github.com/authzed/docs/blob/ff2f067f53de6e691748a82a11ad764d52435f22/app/spicedb/modeling/validation-testing-debugging/page.mdx
+  multiTenant:
+    value: false
+    probe: multiTenant
+    evidence: >-
+      One SpiceDB datastore holds one schema: WriteSchemaRequest has only
+      `schema`, with no store or tenant, and the docs' answer for several
+      products is prefixed definitions (docs/document, iam/user) in that one
+      schema, which keeps tenants apart by naming alone. Isolated permission
+      systems are AuthZed's managed offering, not SpiceDB.
+    sources:
+      - https://github.com/authzed/authzed-go/blob/v1.11.0/proto/authzed/api/v1/schema_service.pb.go#L123
+      - https://github.com/authzed/docs/blob/ff2f067f53de6e691748a82a11ad764d52435f22/app/spicedb/concepts/schema/page.mdx#L38
+      - https://github.com/authzed/docs/blob/ff2f067f53de6e691748a82a11ad764d52435f22/app/authzed/concepts/deployments/page.mdx
+  prometheusMetrics:
+    value: true
+    probe: prometheusMetrics
+    evidence: >-
+      The metrics server is enabled by default on :9090; the probe scraped
+      /metrics from the default server.
+    sources:
+      - https://github.com/authzed/spicedb/blob/v1.57.1/pkg/cmd/serve.go#L243
+      - https://github.com/authzed/docs/blob/ff2f067f53de6e691748a82a11ad764d52435f22/app/spicedb/ops/observability/page.mdx
+  otelTracing:
+    value: true
+    probe: otelTracing
+    evidence: >-
+      --otel-provider otlpgrpc|otlphttp exports traces; the probe's collector
+      received spans.
+    sources:
+      - https://github.com/authzed/spicedb/blob/v1.57.1/pkg/cmd/server/otel.go#L51-L56
+  httpByDefault:
+    value: false
+    probe: httpByDefault
+    evidence: >-
+      The HTTP gateway is registered disabled by default (--http-enabled,
+      default false, :8443); on the default server :8443 refused the
+      connection. --http-enabled turns it on.
+    sources:
+      - https://github.com/authzed/spicedb/blob/v1.57.1/pkg/cmd/serve.go#L92
+  migrateCommand:
+    value: true
+    probe: migrateCommand
+    evidence: >-
+      `spicedb datastore migrate` runs the datastore migrations from the
+      server binary.
+    sources:
+      - https://github.com/authzed/spicedb/blob/v1.57.1/pkg/cmd/migrate.go#L39
+      - https://github.com/authzed/spicedb/blob/v1.57.1/pkg/cmd/datastore.go#L23
+  datastores:
+    value: 4
+    evidence: >-
+      CockroachDB, Cloud Spanner, PostgreSQL and MySQL. The docs mark MySQL
+      "not recommended; only use if you cannot use PostgreSQL", but it is
+      supported and not labelled beta, so it is counted.
+    sources:
+      - https://github.com/authzed/spicedb/blob/v1.57.1/README.md#L279
+      - https://github.com/authzed/docs/blob/ff2f067f53de6e691748a82a11ad764d52435f22/app/spicedb/concepts/datastores/page.mdx#L14-L18
+  officialSdks:
+    value: 6
+    evidence: >-
+      Repositories in the authzed GitHub org described as "Official SpiceDB
+      client library", not archived: authzed-go, authzed-node, authzed-py,
+      authzed-java, authzed-rb, authzed-dotnet. Not counted: gochugaru (a
+      second Go client not described as official, last pushed 2025-08) and
+      spicedb-clients-prototype.
+    sources:
+      - https://github.com/authzed/authzed-go
+      - https://github.com/authzed/authzed-node
+      - https://github.com/authzed/authzed-py
+      - https://github.com/authzed/authzed-java
+      - https://github.com/authzed/authzed-rb
+      - https://github.com/authzed/authzed-dotnet
+  foundation:
+    value: false
+    evidence: >-
+      SpiceDB is owned by AuthZed, Inc.: the NOTICE is "Copyright 2022
+      Authzed, Inc", and contributors sign AuthZed's CLA. No foundation is
+      named in the repository.
+    sources:
+      - https://github.com/authzed/spicedb/blob/v1.57.1/NOTICE
+      - https://github.com/authzed/spicedb/blob/v1.57.1/CONTRIBUTING.md#L74-L78
+  provenance:
+    value: false
+    probe: provenance
+    evidence: >-
+      The release has no provenance, signature or attestation asset (no
+      .intoto.jsonl, .sig, .pem or .bundle), gh attestation verify returns
+      404, and the GoReleaser config and release workflow at the tag have no
+      signing or provenance step.
+    sources:
+      - https://github.com/authzed/spicedb/blob/v1.57.1/.goreleaser.yml
+      - https://github.com/authzed/spicedb/blob/v1.57.1/.github/workflows/release.yaml
+      - https://github.com/authzed/spicedb/releases/tag/v1.57.1
+  sbom:
+    value: false
+    probe: sbom
+    evidence: >-
+      No SBOM asset is attached to the release, and the GoReleaser config at
+      the tag has no sboms section.
+    sources:
+      - https://github.com/authzed/spicedb/blob/v1.57.1/.goreleaser.yml
+      - https://github.com/authzed/spicedb/releases/tag/v1.57.1

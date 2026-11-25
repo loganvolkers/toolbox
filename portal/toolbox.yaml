@@ -364,7 +364,11 @@ include:
   - waivers.yaml
   # Our GitHub Actions standards, as the package pilots will use (D89): connectors, tools, kinds, scorecards.
   - package: ../packages/github-actions
-    with: {githubOrg: loganvolkers, githubRepo: toolbox, track: delivery}
+    with:
+      githubOrg: loganvolkers
+      githubRepo: toolbox
+      track: delivery
+      prefix: maintainer-
   # OpenSSF Scorecard, an existing standard and its tool, carried as it is: its checks and scores
   # are OpenSSF's; the box adds the ratchet and a campaign (docs/design/openssf-template.md).
   # It replaces this portal's own versions of SAST and Security-Policy.

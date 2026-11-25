@@ -39,6 +39,20 @@ verdicts:
       Proving a milestone on the production path is the maintainer's own job
       (docs/design/maintainer-sdlc.md:60). An acceptance script is a shell
       script in scripts/, not a crate, builtin or schema change.
+# Codex evaluated the two added criteria. Earlier verdicts retain their original attribution.
+  - criterion: fast-feedback
+    verdict: fail
+    reason: >-
+      portal/sdlc/stages/maintainer.yaml lists scripts/m4-acceptance.sh.
+      docs/v1-spec.md gives no measured local time to the stage exit.
+    suggestion: >-
+      Measure and record the fastest local check that demonstrates this stage
+      exit in docs/v1-spec.md.
+  - criterion: beyond-one-reference
+    verdict: pass
+    reason: >-
+      scripts/m3-acceptance.sh runs the reference portal and
+      scripts/m5-acceptance.sh exercises the federated actions example.
 summary: >-
   Milestone acceptance for M2–M5 is gated in CI on real Postgres, OpenFGA
   and a browser, with no secrets, so an agent can run it unattended. Its

@@ -47,6 +47,24 @@ verdicts:
       data on every start, as observed above, because the id is the input
       version plus the manifest hash
       (crates/toolbox-api/src/state.rs:180-181).
+# Codex evaluated the two added criteria. Earlier verdicts retain their original attribution.
+  - criterion: fast-feedback
+    verdict: fail
+    reason: >-
+      portal/sdlc/stages/user.yaml lists toolbox get. docs/v1-spec.md gives no
+      measured local time to the stage exit.
+    suggestion: >-
+      Measure and record the fastest local check that demonstrates this stage
+      exit in docs/v1-spec.md.
+  - criterion: beyond-one-reference
+    verdict: fail
+    reason: >-
+      portal/sdlc/stages/user.yaml lists scripts/m2-acceptance.sh as evidence.
+      The declared checks name no second exercised reference for this stage
+      exit.
+    suggestion: >-
+      Exercise this exit on a second reference and cite the result in
+      portal/sdlc/stages/user.yaml.
 summary: >-
   Partial, and the exit criterion overstates what `min_snapshot` does: it
   gives read-your-writes, not pinned reads, so m2 cannot fail on the

@@ -1,0 +1,30 @@
+name: sre-readiness
+assert:
+  - name: checkout earns readiness even while burning
+    expect: >-
+      score('checkout-production-sre-readiness',
+      'sre-readiness:checkout@production').level == 'bronze' &&
+      entity('sre-health:checkout@production').status == 'burning' &&
+      entity('sre-health:checkout@production').burnRate == 15.0 &&
+      entity('sre-health:checkout@production').observedAt ==
+      '2026-11-25T12:00:00Z'
+  - name: invalid evidence-identity evidence fails
+    expect: >-
+      score('catalog-production-sre-readiness',
+      'sre-readiness:catalog@production').rules['evidence-identity'] == 'fail'
+  - name: invalid user-journey evidence fails
+    expect: >-
+      score('catalog-production-sre-readiness',
+      'sre-readiness:catalog@production').rules['user-journey'] == 'fail'
+  - name: invalid actionable-paging evidence fails
+    expect: >-
+      score('catalog-production-sre-readiness',
+      'sre-readiness:catalog@production').rules['actionable-paging'] == 'fail'
+  - name: invalid safe-recovery evidence fails
+    expect: >-
+      score('catalog-production-sre-readiness',
+      'sre-readiness:catalog@production').rules['safe-recovery'] == 'fail'
+  - name: invalid incident-response evidence fails
+    expect: >-
+      score('catalog-production-sre-readiness',
+      'sre-readiness:catalog@production').rules['incident-response'] == 'fail'

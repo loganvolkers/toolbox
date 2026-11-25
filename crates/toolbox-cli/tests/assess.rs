@@ -183,6 +183,20 @@ fn describe_brief_check_and_submit() {
     std::fs::write(&file, ASSESSMENT).unwrap();
     let check = stdout(&toolbox(&["assess", "check", p, "--fixtures"]));
     assert!(check.contains("- fresh `thing:a` pass"), "{check}");
+    std::fs::write(&file, ASSESSMENT.replace("0123456789ab", "abcdef012345")).unwrap();
+    let check = stdout(&toolbox(&["assess", "check", p, "--fixtures"]));
+    assert!(check.contains("- stale `thing:a` pass"), "{check}");
+    let strict = toolbox(&["assess", "check", p, "--fixtures", "--require-fresh"]);
+    assert_eq!(strict.status.code(), Some(1));
+    assert!(String::from_utf8_lossy(&strict.stdout).contains("- stale `thing:a` pass"));
+    std::fs::write(&file, ASSESSMENT).unwrap();
+    stdout(&toolbox(&[
+        "assess",
+        "check",
+        p,
+        "--fixtures",
+        "--require-fresh",
+    ]));
     let bad = dir.join("assessments/thing-review/thing/bad.yaml");
     std::fs::write(&bad, ASSESSMENT.replace("useful", "pretty")).unwrap();
     let o = toolbox(&["assess", "check", p, "--fixtures"]);

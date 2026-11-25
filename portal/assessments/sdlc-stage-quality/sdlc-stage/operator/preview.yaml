@@ -51,6 +51,25 @@ verdicts:
       Make the fixtures and synthetic modes possible with the existing image
       and `serve --fixtures` alone, so only the redacted-sample mode waits on
       core changes.
+# Codex evaluated the two added criteria. Earlier verdicts retain their original attribution.
+  - criterion: fast-feedback
+    verdict: fail
+    reason: >-
+      portal/sdlc/stages/operator.yaml defines the stage exit but declares no
+      runnable local check for it. docs/design/sdlc.md documents the intended
+      workflow.
+    suggestion: >-
+      Add a runnable local check for this exit and record its measured time in
+      docs/design/sdlc.md.
+  - criterion: beyond-one-reference
+    verdict: fail
+    reason: >-
+      portal/sdlc/stages/operator.yaml declares no executable reference for
+      the exit, and docs/design/sdlc.md describes the workflow without
+      supplying a second exercised reference.
+    suggestion: >-
+      Exercise this exit on a second reference and cite the result in
+      portal/sdlc/stages/operator.yaml.
 summary: >-
   Preview is design only: no command, no check and no Action. An operator
   or agent cannot carry it out today. The intended artifact flow is sound,

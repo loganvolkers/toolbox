@@ -1,70 +1,64 @@
 apiVersion: toolbox.dev/assessment/v1
 entity: sdlc-stage:operator/monitor
 rubric: sdlc-stage-quality
-subjectHash: 46049fdea3f1
-assessor: {kind: agent, name: campaign-review-cards-r4}
-at: 2026-11-25
+subjectHash: b7ece568fc20
+assessor: {kind: agent, name: cursor-cloud-agent, model: claude-opus-5.5}
+at: 2026-11-24
 verdicts:
   - criterion: executable-exit
-    verdict: fail
+    verdict: pass
     reason: >-
-      The stage's only listed check, scripts/m4-acceptance.sh, would not fail
-      if most of the exit criterion broke. It fetches the ops view and prints
-      the registered connectors (scripts/m4-acceptance.sh:44-54). It compares
-      /v1/ops/derived files (:57-65). It never reads /metrics, snapshot lag,
-      diagnostics or OTLP, and its freshness wait loop ends without failing
-      when connectors never report (:44-53). The previous review said the
-      script exercises the metrics endpoint; it does not. The CI job that does
-      gate the metric half is not declared as a check of the stage:
-      experiments/otel-testbed/scripts/score.sh asserts
-      toolbox_snapshot_lag_seconds in OTLP and in the /metrics scrape
-      (score.sh:143-180), and runs as .github/workflows/ci.yml:132-133. As
-      declared, the stage's gate doesn't cover its exit criterion.
-    suggestion: >-
-      Add experiments/otel-testbed/scripts/score.sh and
-      crates/toolbox-telemetry/tests/prom_catalog.rs to `checks:` for
-      operator/monitor in portal/sdlc/stages/operator.yaml. Make
-      scripts/m4-acceptance.sh assert what the ops view shows (snapshot lag, a
-      connector's last sync and diagnostics present) instead of printing it,
-      and fail when its freshness loop times out.
+      scripts/m4-acceptance.sh, the listed check, reads connector freshness
+      from /v1/views/ops and derivation diagnostics from /v1/ops/derived
+      (lines 44-60). It does not touch /metrics or OTLP; that half is gated by
+      experiments/otel-testbed/scripts/score.sh in the otel-testbed job of
+      .github/workflows/ci.yml (lines 114-127), which fails when
+      toolbox_snapshot_lag_seconds or the catalog is missing from either. The
+      stage's checks should list score.sh.
   - criterion: agent-can-complete
     verdict: pass
     reason: >-
-      An agent can do the stage with `toolbox serve` and the docs.
-      docs/design/observability.md:13-27 gives the signals, and
-      crates/toolbox-telemetry/METRIC_CATALOG.md lists every instrument,
-      including toolbox_snapshot_lag_seconds and
-      toolbox_connector_lag_seconds. The environment variables that turn on
-      OTLP are in crates/toolbox-telemetry/README.md:19-25. The ops view and
-      its diagnostics are in docs/design/minimal-ui.md:46. Alert rules to
-      start from are in ops/alerts/snapshot-lag.yaml and
-      ops/alerts/index-freshness.yaml, and experiments/otel-testbed/README.md
-      shows a local collector. No step needs a secret or a person. The missing
-      Grafana pack (the stage's gap) is a convenience, not a step.
+      One command, experiments/otel-testbed/scripts/score.sh, starts a pinned
+      collector, serves a portal with OTEL_* set and scores the rubric, using
+      only experiments/otel-testbed/README.md and
+      docs/design/observability.md. The open gap is the Grafana pack, not the
+      exit criterion.
   - criterion: reuses-artifacts
-    verdict: pass
+    verdict: fail
     reason: >-
-      Monitoring reads what the released binary already serves (/metrics, and
-      OTLP when OTEL_EXPORTER_OTLP_ENDPOINT is set,
-      crates/toolbox-telemetry/README.md:25). The server image is built from a
-      release's archives, not from source (.github/workflows/image.yml:1). The
-      collector used to prove it is a pinned otelcol-contrib release with a
-      SHA-256 (experiments/otel-testbed/pin.env). Only the maintainers'
-      testbed builds Toolbox (experiments/otel-testbed/README.md), and an
-      operator doesn't need it.
+      The collector is SHA-256-pinned (experiments/otel-testbed/pin.env), but
+      no released Toolbox can be monitored: toolbox-telemetry
+      (crates/toolbox-telemetry) landed on 2026-11-22 in 28f1cf6, after
+      v0.1.1, and no image has been built, so /metrics and OTLP need a source
+      build. score.sh runs `cargo build` when TOOLBOX is unset (lines 43-48).
+    suggestion: >-
+      Cut a release that includes toolbox-telemetry and build its image, and
+      let score.sh take a released binary through scripts/install-release.sh
+      before it falls back to cargo.
   - criterion: decoupled-from-core
     verdict: pass
     reason: >-
-      An operator sets OTEL_* and scrape targets against a deployed portal
-      (crates/toolbox-telemetry/README.md:19-25) and loads the alert rules in
-      ops/alerts/ into their own Prometheus. None of that adds a crate, a
-      builtin or a schema change to this repository. The metric names are a
-      SemVer contract that Toolbox owns
-      (crates/toolbox-telemetry/METRIC_CATALOG.md), so dashboards built on
-      them don't need a Toolbox change either.
+      An operator sets OTEL_* and a scrape target on a running portal
+      (docs/design/observability.md); monitoring adds no crate, builtin or
+      schema to this repository.
+  - criterion: fast-feedback
+    verdict: pass
+    reason: >-
+      docs/design/maintainer-sdlc.md §3 measures scripts/m4-acceptance.sh, the
+      stage's check, at 7.9 s locally (Postgres, OpenFGA, three connectors,
+      Chromium). score.sh is unmeasured.
+  - criterion: beyond-one-reference
+    verdict: fail
+    reason: >-
+      Both gates serve one portal: scripts/m4-acceptance.sh sets
+      PORTAL=examples/reference-portal (line 11), and
+      experiments/otel-testbed/scripts/score.sh serves
+      examples/reference-portal with --fixtures (line 93).
+    suggestion: >-
+      Run score.sh (or an ops-view check) over a second portal, such as
+      portal/ or examples/repo-portal-starter, so the metric catalog and
+      freshness are not fitted to the reference portal's connectors.
 summary: >-
-  An operator can monitor a released portal with what ships today:
-  /metrics, OTLP, the ops view and alert rules to start from. The stage's
-  declared gate is the weak part. m4-acceptance.sh checks none of the
-  metrics, lag or OTLP that the exit criterion names, and the CI job that
-  does (the otel testbed) isn't listed as a check of the stage.
+  Freshness, diagnostics, lag and the metric catalog are checked in CI,
+  but only on the reference portal, and no release carries the telemetry
+  yet.

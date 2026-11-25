@@ -1,0 +1,11 @@
+# Assertions about schema.zed, run by `zed validate` (facts.py: modelTests).
+schemaFile: ./schema.zed
+relationships: |-
+  group:eng#member@user:anne
+  folder:root#owner@group:eng
+  folder:child#parent@folder:root
+  document:spec#folder@folder:child
+  document:pub#viewer@user:*
+assertions:
+  assertTrue: [document:spec#view@user:anne, document:pub#view@user:bob]
+  assertFalse: [document:spec#view@user:bob]

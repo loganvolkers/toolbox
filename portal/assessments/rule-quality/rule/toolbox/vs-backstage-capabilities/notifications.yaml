@@ -10,15 +10,16 @@ verdicts:
     reason: >-
       "Notify users of events" (backstage-comparison.yaml:154) is the brief's
       "notifications" scenario (RESEARCH.md:121), met by Backstage's
-      plugin-notifications (facts.yaml:177) and absent in Toolbox
-      (facts.yaml:89), whose v1 scope defers notifications to Phase 2
-      (docs/v1-spec.md:50).
+      plugin-notifications (experiments/backstage-compare/facts.yaml:177) and
+      absent in Toolbox (experiments/backstage-compare/facts.yaml:89), whose
+      v1 scope defers notifications to Phase 2 (docs/v1-spec.md:50).
   - criterion: hard-to-game
     verdict: fail
     reason: >-
-      `capNotifications` is a hand-set boolean (facts.yaml:89) merged by
-      snapshot.py:85; no harness step triggers an event and waits for a
-      notification on either arm.
+      `capNotifications` is a hand-set boolean
+      (experiments/backstage-compare/facts.yaml:89) merged by snapshot.py:85;
+      no harness step triggers an event and waits for a notification on either
+      arm.
     suggestion: >-
       In surface.py, register a webhook receiver, change a component's owner
       through ingest, and set `capNotifications` only when each product
@@ -36,7 +37,8 @@ verdicts:
       Link docs/design/notifications.md and name the first slice, e.g. "Send
       the webhook channel of docs/design/notifications.md when an owner's
       score or ownership changes, from the snapshot loop in
-      crates/toolbox-api, then update facts.yaml and rerun snapshot.py."
+      crates/toolbox-api, then update experiments/backstage-compare/facts.yaml
+      and rerun snapshot.py."
   - criterion: threshold-justified
     verdict: pass
     reason: >-

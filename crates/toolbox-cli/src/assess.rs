@@ -82,8 +82,14 @@ fn status(d: &toolbox_derive::Derived, subject: &str, a: Option<&Value>, id: &st
 }
 
 /// Validate `<portal>/assessments/` and print, per rubric, each entity's state.
-/// Exit 1 when a file is invalid or a recorded assessment is stale. A missing assessment stays non-fatal.
-pub fn check(portal: &Path, fixtures: bool, skip: &[String], output: &str) -> ExitCode {
+/// Invalid files always fail. Require freshness explicitly when the caller needs current judgments.
+pub fn check(
+    portal: &Path,
+    fixtures: bool,
+    skip: &[String],
+    output: &str,
+    require_fresh: bool,
+) -> ExitCode {
     let (root, m, d) = match crate::report::live(portal, fixtures, skip) {
         Ok(x) => x,
         Err(e) => return fail(e),
@@ -135,7 +141,7 @@ pub fn check(portal: &Path, fixtures: bool, skip: &[String], output: &str) -> Ex
         rows.as_array()
             .is_some_and(|rows| rows.iter().any(|r| r["state"] == "stale"))
     });
-    if invalid.is_empty() && !stale {
+    if invalid.is_empty() && !(require_fresh && stale) {
         ExitCode::SUCCESS
     } else {
         ExitCode::FAILURE
