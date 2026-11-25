@@ -40,6 +40,25 @@ verdicts:
       Planning produces Markdown in docs/decisions/ and docs/design/, plus a
       milestone row in docs/v1-spec.md §3. No crate, builtin or schema changes
       until the build stage.
+# Codex evaluated the two added criteria. Earlier verdicts retain their original attribution.
+  - criterion: fast-feedback
+    verdict: fail
+    reason: >-
+      portal/sdlc/stages/maintainer.yaml defines the stage exit but declares
+      no runnable local check for it. docs/decisions/README.md documents the
+      intended workflow.
+    suggestion: >-
+      Add a runnable local check for this exit and record its measured time in
+      docs/decisions/README.md.
+  - criterion: beyond-one-reference
+    verdict: fail
+    reason: >-
+      portal/sdlc/stages/maintainer.yaml declares no executable reference for
+      the exit, and docs/decisions/README.md describes the workflow without
+      supplying a second exercised reference.
+    suggestion: >-
+      Exercise this exit on a second reference and cite the result in
+      portal/sdlc/stages/maintainer.yaml.
 summary: >-
   An agent can easily follow the planning procedure, but nothing executes
   its exit criterion: with no checks listed, a change without a decision

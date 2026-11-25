@@ -268,6 +268,10 @@ for agents (the skill says so), but it is the wrong thing to block a person on.
 `ratchet: {advisory: true}` keeps such cards out of the baseline and the comparison: reported, never
 gating.
 
+Routine `toolbox assess check` reports fresh, stale and missing subjects. It fails on invalid
+files, including missing verdicts for criteria. Land rubric additions with verdicts for the
+affected assessments. Use `--require-fresh` for release preflight and high-risk review gates.
+
 **First assessments (by this session's agent, using the brief):**
 
 | Entity | Verdict | Finding |

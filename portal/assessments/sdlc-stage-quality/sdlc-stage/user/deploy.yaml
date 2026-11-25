@@ -45,6 +45,24 @@ verdicts:
       Add service principals (and, ideally, accept CI OIDC tokens such as
       GitHub Actions' as a second issuer that maps to them), so operators
       grant apps access in the manifest.
+# Codex evaluated the two added criteria. Earlier verdicts retain their original attribution.
+  - criterion: fast-feedback
+    verdict: fail
+    reason: >-
+      portal/sdlc/stages/user.yaml lists toolbox token create.
+      docs/design/user-sdlc.md gives no measured local time to the stage exit.
+    suggestion: >-
+      Measure and record the fastest local check that demonstrates this stage
+      exit in docs/design/user-sdlc.md.
+  - criterion: beyond-one-reference
+    verdict: fail
+    reason: >-
+      portal/sdlc/stages/user.yaml lists scripts/m3-acceptance.sh as evidence.
+      The declared checks name no second exercised reference for this stage
+      exit.
+    suggestion: >-
+      Exercise this exit on a second reference and cite the result in
+      portal/sdlc/stages/user.yaml.
 summary: >-
   Partial. Apps can authenticate only with a person's PAT, and minting one
   needs the portal's database URL. Service identities with scoped access

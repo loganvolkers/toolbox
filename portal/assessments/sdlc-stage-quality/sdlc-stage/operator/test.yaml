@@ -36,6 +36,20 @@ verdicts:
       (examples/repo-portal-starter) and every package (packages/*/tests, run
       by .github/workflows/ci.yml:68) test themselves this way, with no change
       to Toolbox's crates.
+# Codex evaluated the two added criteria. Earlier verdicts retain their original attribution.
+  - criterion: fast-feedback
+    verdict: fail
+    reason: >-
+      portal/sdlc/stages/operator.yaml lists toolbox test. docs/v1-spec.md
+      gives no measured local time to the stage exit.
+    suggestion: >-
+      Measure and record the fastest local check that demonstrates this stage
+      exit in docs/v1-spec.md.
+  - criterion: beyond-one-reference
+    verdict: pass
+    reason: >-
+      The starter portal and Toolbox self-portal both run through toolbox test
+      in .github/workflows/ci.yml.
 summary: >-
   Operators can pin rule meaning with CEL expectations over fixtures, and
   a failed expectation exits 1, as I confirmed. The format is specified,

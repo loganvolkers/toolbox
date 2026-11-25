@@ -37,6 +37,20 @@ verdicts:
       they declare in it, against the binary they already have. Validating a
       new portal needs no change in this repository, as
       examples/repo-portal-starter shows (ci.yml:65).
+# Codex evaluated the two added criteria. Earlier verdicts retain their original attribution.
+  - criterion: fast-feedback
+    verdict: fail
+    reason: >-
+      portal/sdlc/stages/operator.yaml lists toolbox validate. docs/v1-spec.md
+      gives no measured local time to the stage exit.
+    suggestion: >-
+      Measure and record the fastest local check that demonstrates this stage
+      exit in docs/v1-spec.md.
+  - criterion: beyond-one-reference
+    verdict: pass
+    reason: >-
+      The reference portal and starter portal both run through toolbox
+      validate in .github/workflows/ci.yml.
 summary: >-
   The cleanest operator stage. The exit criterion is the command's exit
   code, the skill is a tight loop, and errors point at the file and path.
