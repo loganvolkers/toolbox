@@ -267,6 +267,37 @@ Declined, with reasons:
 - **One hero model for every portal** (B): a portal that combines its scorecards into a repository level shows it; one that does not says "No overall level". The difference is the portal's configuration, and the hero names it.
 - **Shorter compare pages and track cards** (B, C at severity 1–2): deferred to a density pass. Folding them now would hide the method a reader needs before trusting the verdict.
 
+## Round 9: what the panel found
+
+The probes passed 212 of 212. Every task succeeded except T6 for one auditor (A, partial). Honesty
+(U8) rose back to 4. Wayfinding (U7) fell from 4 to 3, the U and J totals held at 31 and 11, and no
+targeted median fell. The round did not pass, because three severity-3 findings were open, one of
+them a regression from round 8:
+
+| Finding (auditors) | Box or portal | Fix |
+|---|---|---|
+| The no-data Scorecards callout added in round 8 lays out each inline piece as a flex column on a phone, so "run" reads "r u n" and `toolbox doctor` reads "tool box doct or" (A, B) | Box | The callout is a paragraph, styled like the overview's first-run step. The probes gained a check, run on every story and view, for text squeezed into a column a few letters wide. Run against the round 9 build, it failed exactly the two mobile views of that story |
+| The overview's "Next" fix moves the track's percentage by 0 points; the only step with a stated gain is an unverified check (C, A; B at severity 2) | Box | The next step is the verified step that moves the track's percentage most, with its gain ("the track gains about 4 points"). The next medal follows as a second line, saying it "adds no points to the track's percentage until they reach" its top level. An unverified step is shown only when it would gain more |
+| The comparison leads with the strict count while the majority count is its verdict, stated three times in the first viewport (C, B; A at severity 3 as a consistency finding) | Box | The headline is the declared verdict: "Ahead on 4 of 6 factors, behind on 1, at parity on 1, by the majority count, this comparison's verdict". A secondary line carries a "Verdict: majority count" pill and the other count once. The same order is used for the track strip and the ring's label. D01M87WF2QZVPTD8CGDZKY133CD names no order, only that the rule is stated |
+
+Severity-1 and severity-2 findings fixed in the same pass:
+
+- the header reads "entities tracked … data from snapshot #7", not "entities in the box … facts snapshot #7", on every portal;
+- a links line is headed "Further reading, from loganvolkers/toolbox:", so package docs that every portal includes say whose docs they are;
+- a repository capped by a standard that is fully met says so first: "Capped at bronze: Third-party actions pinned is fully met, but its top level is bronze…";
+- the catalog lists groups and rows furthest behind first, as a scorecard page does;
+- a baseline saved in the same build reads "no change yet … Progress appears here once a later build moves these numbers", not "0% of the way";
+- the not-measured compare page's jump link is "Who leads", matching its section;
+- a campaign page draws its percentage bar once, in the header, unless milestones need a second bar;
+- the entity-count tile names its largest kind when that kind is a third or more of the total ("the largest group is 493 Go files (staticcheck)"), and kind names keep proper nouns capitalised;
+- the no-data overview's last column is "Status", not "At none"; links have a 3 px underline offset so underscores show; the scorecard sidebar reads "6 comparison factors, on the Compare tab".
+
+Declined, with reasons:
+
+- **Tabs on two rows on a phone** (B, C at severity 1): below 600 px the tabs are a grid on purpose, so every view stays visible without sideways scrolling.
+- **One hero model for every portal** (A, C), as in round 8.
+- **A per-scorecard summary table on the entity page** (C at severity 2): the header already names the scorecard holding the entity and its rule. The table is a candidate for the density pass.
+
 ## Comparisons are generic
 
 The OpenFGA portal compares OpenFGA v1.23.0 with SpiceDB v1.57.1 through the same comparative
