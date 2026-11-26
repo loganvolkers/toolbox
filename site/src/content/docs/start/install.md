@@ -5,55 +5,56 @@ sidebar:
   order: 2
 ---
 
-Install the Seikika binaries from GitHub Releases (D90). These commands use **v0.2.0**, the first release under the Seikika name. Check [GitHub Releases](https://github.com/seikika/seikika/releases) for that tag. Until it is available, [build from source](/start/run/#try-a-repo-portal-from-source). For a first repo portal, follow [Quickstart](/start/quickstart/).
-
-The installers pick the archive for this machine, check its SHA-256, and place the binaries in `$CARGO_HOME/bin` (`~/.cargo/bin` when `CARGO_HOME` is unset). Open a new shell after installing, or export `PATH` in the current one.
-
-Two installs:
-
-| You are | Install |
-|---|---|
-| An [operator](/operators/) running a portal | The `seikika` CLI below. Add a released connector binary only when the manifest names that `builtin:` |
-| A [package author](/authors/connectors/) writing a connector | The CLI, then Rust and the scaffold on [Write a connector](/authors/connectors/) |
+Mise installs Seikika's prebuilt binaries from GitHub Releases (D90). These examples pin **v0.2.0**, the first release under the Seikika name. Until that tag appears on [GitHub Releases](https://github.com/seikika/seikika/releases), [build from source](/start/run/#try-a-repo-portal-from-source).
 
 ## Run a portal
 
-```bash
-curl --proto '=https' --tlsv1.2 -LsSf https://github.com/seikika/seikika/releases/download/v0.2.0/seikika-cli-installer.sh | sh
-export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
-seikika --version
+Install [mise](https://mise.jdx.dev/installing-mise.html) 2026.11.14 or later. Add these entries to `mise.toml` at the root of your portal repository.
+
+```toml
+[tool_alias]
+seikika = "github:seikika/seikika"
+
+[tools]
+seikika = { version = "0.2.0", matching = "seikika-cli-" }
 ```
 
-Windows (PowerShell):
+Run these commands in that repository. Mise selects and verifies the release archive for your platform. Seikika releases Linux and macOS binaries for x86-64 and ARM64, and Windows binaries for x86-64.
 
-```powershell
-powershell -ExecutionPolicy Bypass -c "irm https://github.com/seikika/seikika/releases/download/v0.2.0/seikika-cli-installer.ps1 | iex"
+```sh
+mise trust
+mise install
+mise exec -- seikika --version
 ```
 
-`seikika validate`, `seikika test`, `seikika plan` and `seikika serve --fixtures` use this binary alone. A portal that only includes packages and fixtures does too.
+`seikika validate`, `seikika test`, `seikika plan` and `seikika serve --fixtures` use this binary alone. The [quickstart](/start/quickstart/) provides a config with both the CLI and the workspace connector for a repo portal.
 
 ### Connector binaries the portal runs
 
-When the manifest says `package: builtin:<name>`, `seikika doctor` looks for `seikika-connector-<name>` next to `seikika`, on `PATH`, or in `SEIKIKA_CONNECTORS_DIR`. Install that one app from the same release. The [starter](/start/quickstart/) names `builtin:workspace`, so a repo portal adds:
+When the manifest says `package: builtin:<name>`, add `seikika-connector-<name>` to both tables in your config. For example, `builtin:runner` adds the following entries.
 
-```bash
-curl --proto '=https' --tlsv1.2 -LsSf https://github.com/seikika/seikika/releases/download/v0.2.0/seikika-connector-workspace-installer.sh | sh
+```toml
+[tool_alias]
+seikika-connector-runner = "github:seikika/seikika"
+
+[tools]
+seikika-connector-runner = { version = "0.2.0", matching = "seikika-connector-runner-" }
 ```
 
-| Manifest package | Installer |
-|---|---|
-| `builtin:workspace` | `seikika-connector-workspace` |
-| `builtin:runner` | `seikika-connector-runner` |
-| `builtin:github` | `seikika-connector-github` |
-| `builtin:git-files` | `seikika-connector-git-files` |
-| `builtin:gitlab` | `seikika-connector-gitlab` |
-| `builtin:scim` | `seikika-connector-scim` |
+Use the same pattern for `workspace`, `github`, `git-files`, `gitlab` and `scim`. Keep the CLI and connector versions in sync. Run `mise install` after editing, then `mise exec -- seikika doctor .seikika` if your portal is in `.seikika/`. Mise puts each installed connector on the command's `PATH`.
 
-The URL is the same shape: `…/releases/download/v0.2.0/<installer>-installer.sh`. On Windows, use `<installer>-installer.ps1` with `irm … | iex`.
+### Install the CLI for your user
+
+After installing mise, add the CLI to your global config to use it across projects.
+
+```sh
+mise use --global 'github:seikika/seikika[matching=seikika-cli-]@0.2.0'
+mise exec -- seikika --version
+```
 
 ## Write a connector
 
-Writing a connector is a separate install: the CLI from this page, Rust 1.97 from the scaffold's `rust-toolchain.toml`, and `cargo build`. The steps are on [Write a connector](/authors/connectors/). The first-party installers in the table above are for a portal that runs those connectors.
+Install the CLI for your user and use the Rust toolchain pinned in the scaffold. See [Write a connector](/authors/connectors/).
 
 ## In GitHub Actions
 
@@ -72,9 +73,9 @@ Pin the action ref and the binary version. With `seikika-version` set, the actio
 2. Add the workflow above (see [actions/report README](https://github.com/seikika/seikika/blob/main/actions/report/README.md)).
 3. First run with `mode: update`, commit `.seikika/results.json`.
 
-## Archives
+## Archives and standalone installers
 
-The release also has a `.tar.xz` (Windows: `.zip`) per app and platform, and a sibling `.sha256`. Unpack the `seikika*` files onto `PATH` when you want the bytes without the installer. `gh attestation verify <file> --repo seikika/seikika` checks the build provenance.
+Each release also provides shell and PowerShell installers and a `.tar.xz` (Windows: `.zip`) archive per app and platform. If you unpack an archive manually, check the sibling `.sha256` and put the binaries on `PATH`. `gh attestation verify <file> --repo seikika/seikika` checks the build provenance.
 
 ## Package registries
 

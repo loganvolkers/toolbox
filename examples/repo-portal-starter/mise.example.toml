@@ -1,0 +1,10 @@
+# Copy to mise.toml in the repository that runs the portal.
+min_version = "2026.11.14"
+
+[tool_alias]
+seikika = "github:seikika/seikika"
+seikika-connector-workspace = "github:seikika/seikika"
+
+[tools]
+seikika = { version = "0.2.0", matching = "seikika-cli-" }
+seikika-connector-workspace = { version = "0.2.0", matching = "seikika-connector-workspace-" }

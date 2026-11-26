@@ -46,7 +46,9 @@ MCP, CLI, data model, properties) and test against
 [examples/reference-portal](./examples/reference-portal/README.md): your pipeline must reproduce its
 `expected/` outputs byte for byte, and its acceptance scenarios define "done".
 
-**Building:** `cargo build` (toolchain pinned in `rust-toolchain.toml`), `cargo test`, `cargo clippy
+**Building:** run `mise trust` and `mise install` for the development toolchain (see
+[local prerequisites](./docs/design/maintainer-sdlc.md#5-local-prerequisites)). Run the checks in
+an activated mise shell or prefix them with `mise exec --`. Start with `cargo build`, `cargo test`, `cargo clippy
 --all-targets -- -D warnings`, then `target/debug/seikika validate examples/reference-portal`.
 `python scripts/validate-parity.py` checks `seikika validate` against `examples/reference-portal/tools/validate.py`.
 `yamark format --check` (yamark 0.6.1, D97, pinned in `scripts/requirements-yamark.txt`) checks every tracked `.yaml` and `.yml` except the generated `pnpm-lock.yaml` and `.github/workflows/release.yml`, which `dist plan` owns (D98). `python3 scripts/decision-id.py --self-test` checks the ULID encoding for decision ids (D01M7XKEXQH4HG5371629M50E2G).

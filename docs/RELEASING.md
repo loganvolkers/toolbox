@@ -135,23 +135,22 @@ version and provenance in the npm registry. [npm trusted publishing documentatio
 
 ## Install what a consumer needs
 
-cargo-dist publishes one installer per app. The public page is
-`site/src/content/docs/start/install.md`.
+Mise installs each app from the platform-specific cargo-dist archive. An operator installs the
+CLI and the `seikika-connector-<name>` binaries named by the portal's `builtin:<name>` packages.
+The [install guide](../site/src/content/docs/start/install.md) shows the CLI and optional connector
+entries. The [starter config](../examples/repo-portal-starter/mise.example.toml) pins the CLI and workspace
+connector together.
 
-An operator installs the CLI. A portal whose manifest names `builtin:<name>`
-also installs `seikika-connector-<name>`. A repo portal names `builtin:workspace`.
-`builtin:runner` is a second installer when that connector is enabled. A
-connector author installs the CLI and builds the scaffold with Rust
-(`site/src/content/docs/authors/connectors.md`).
+When updating the recommended operator version, update both starter pins and the matching
+examples in the public docs. After the release is published, copy the config and starter manifest
+into a test Git repository (`mise.toml` and `.seikika/seikika.yaml`) and run the release smoke check.
 
-```bash
-curl --proto '=https' --tlsv1.2 -LsSf https://github.com/seikika/seikika/releases/download/v0.2.0/seikika-cli-installer.sh | sh
-curl --proto '=https' --tlsv1.2 -LsSf https://github.com/seikika/seikika/releases/download/v0.2.0/seikika-connector-workspace-installer.sh | sh
-export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
-seikika --version   # 0.2.0
+```sh
+mise trust
+mise install
+mise exec -- seikika --version
+mise exec -- seikika doctor .seikika
 ```
-
-Windows uses the matching `*-installer.ps1` (`irm … | iex`).
 
 `scripts/install-release.sh` unpacks `seikika`, `seikika-connector-workspace`
 and `seikika-connector-runner` into one directory after checking each
@@ -189,7 +188,7 @@ line — otherwise the workflow fails before any step runs.
 ## After the first tag
 
 - Point consumers at the tag, not at `cargo build`.
-- Homebrew, npm and aqua channels are still deferred (see `portal/sdlc/stages/maintainer.yaml` gaps).
+- Homebrew and aqua registry entries for the CLI are still deferred.
 - cargo-binstall metadata lives on each distable crate's `Cargo.toml`.
 
 

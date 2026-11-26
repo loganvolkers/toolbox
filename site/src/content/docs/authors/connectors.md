@@ -9,7 +9,7 @@ A connector is a process that speaks Seikika's control channel and emits records
 
 ## Install
 
-1. Install the `seikika` CLI with the [release installers](/start/install/) or use the [source build](/start/run/#try-a-repo-portal-from-source).
+1. [Install the `seikika` CLI for your user](/start/install/#install-the-cli-for-your-user) and [activate mise in your shell](https://mise.jdx.dev/shell-setup.html), or use the [source build](/start/run/#try-a-repo-portal-from-source).
 2. Open the scaffold in a checkout. Its `rust-toolchain.toml` pins Rust 1.97, which the SDK needs.
 
 ```bash
