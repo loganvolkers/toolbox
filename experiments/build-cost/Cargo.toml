@@ -17,7 +17,7 @@ sqlx = { version = "=0.9.1", default-features = false, features = ["postgres", "
 rmcp = { version = "=3.11.0", features = ["server", "transport-streamable-http-server"] }
 cel = { git = "https://github.com/cel-rust/cel-rust.git", rev = "004a4b88b99d65a5daece2c82636e278eb671e2d" }
 dbsp = "=0.384.0"
-wasmtime = "=50.0.3"
+wasmtime = "=51.0.0"
 tantivy = "=0.27.0"
 async-graphql = { version = "=7.2.1", features = ["dynamic-schema"] }
 
