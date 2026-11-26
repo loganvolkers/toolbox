@@ -15,8 +15,9 @@ updates:
     directory: /
     schedule: {interval: weekly}
     ignore:
-    # vue-tsc needs the JavaScript compiler entry point removed in TypeScript 7.
-    - {dependency-name: typescript, versions: [">=7.0.0"]}
+    # Review compiler majors with vue-tsc. Keep security proposals eligible.
+    - dependency-name: typescript
+      update-types: [version-update:semver-major]
   - package-ecosystem: npm
     directory: /experiments/typescript-builder
     schedule: {interval: weekly}
