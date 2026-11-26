@@ -9,7 +9,7 @@ Package a standard so another portal can reuse the same rules and tests. As a pa
 
 ## Start from an existing package
 
-Use [the file-size package](https://github.com/seikika/seikika/tree/main/packages/file-size) for a numeric rule, or [the SARIF package](https://github.com/seikika/seikika/tree/main/packages/sarif) to use findings from an existing tool. To author a new data source, follow [Write a connector](/authors/connectors/).
+Use [the file-size package](/packages/file-size/) for a numeric rule or [the SARIF package](/packages/sarif/) to use findings from an existing tool. Browse all options in the [standards package directory](/packages/). To author a new data source, follow [Write a connector](/authors/connectors/).
 
 A package typically includes these files:
 

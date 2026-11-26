@@ -7,6 +7,8 @@ Seikika is an open-source framework for building an internal developer portal in
 
 Bring data into your portal from GitHub, GitLab, local tools, or an identity provider. [Browse connectors](/connectors/) · [Set up GitHub](/connectors/github/)
 
+Add ready-to-use checks for your repository or service. [Browse standards packages](/packages/)
+
 ## Start with one task
 
 | If you want to | Start here |

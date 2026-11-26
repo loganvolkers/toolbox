@@ -5255,6 +5255,9 @@
       "doc:docs/audits/internal-capabilities-2026-11-26.md": {
         "level": "silver"
       },
+      "doc:docs/audits/package-directory.md": {
+        "level": "silver"
+      },
       "doc:docs/audits/public-docs-2026-11-26.md": {
         "level": "silver"
       },
@@ -5775,6 +5778,9 @@
         "level": "skipped"
       },
       "doc:docs/decisions/D01M8CK6XW8PR5AXSA1FQEZ5YD8.md": {
+        "level": "skipped"
+      },
+      "doc:docs/decisions/D01M8CRS50G5086P5DCFQN636BA.md": {
         "level": "skipped"
       },
       "doc:docs/decisions/README.md": {
@@ -6676,6 +6682,36 @@
       "site-page:site/src/content/docs/operators/standards.md": {
         "level": "gold"
       },
+      "site-page:site/src/content/docs/packages/file-size.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/packages/github-actions.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/packages/index.mdx": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/packages/openssf-scorecard.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/packages/pattern-count.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/packages/pnpm-expo.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/packages/sarif.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/packages/semgrep.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/packages/sre.md": {
+        "level": "gold"
+      },
+      "site-page:site/src/content/docs/packages/storybook.md": {
+        "level": "gold"
+      },
       "site-page:site/src/content/docs/start/cli.mdx": {
         "level": "gold"
       },
@@ -6975,6 +7011,7 @@
         "level": "silver"
       }
     },
+    "maintainer-standard-package": {},
     "maintainer-supply-chain": {
       "repo:seikika/seikika": {
         "level": "gold"
@@ -11960,6 +11997,18 @@
         },
         "level": "bronze"
       },
+      "field:seikika/StandardPackage.name": {
+        "level": "gold"
+      },
+      "field:seikika/StandardPackage.path": {
+        "level": "gold"
+      },
+      "field:seikika/StandardPackage.publicGuide": {
+        "level": "gold"
+      },
+      "field:seikika/StandardPackage.version": {
+        "level": "gold"
+      },
       "field:seikika/Workflow.actionlint": {
         "failing": {
           "described": 1,
@@ -12265,6 +12314,9 @@
           "fields-described": 22
         },
         "level": "silver"
+      },
+      "kind:seikika/StandardPackage": {
+        "level": "gold"
       },
       "kind:seikika/Workflow": {
         "failing": {
@@ -12882,6 +12934,9 @@
         "level": "gold"
       },
       "rule:seikika/maintainer-skill/within-body-budget": {
+        "level": "gold"
+      },
+      "rule:seikika/maintainer-standard-package/public-guide": {
         "level": "gold"
       },
       "rule:seikika/maintainer-supply-chain/code-scanning-pinned": {
@@ -13534,6 +13589,9 @@
           "fixtures-reach-every-level": 1
         },
         "level": "silver"
+      },
+      "scorecard:seikika/maintainer-standard-package": {
+        "level": "gold"
       },
       "scorecard:seikika/maintainer-supply-chain": {
         "failing": {

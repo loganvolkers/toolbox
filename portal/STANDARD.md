@@ -806,6 +806,20 @@ Scorecard `maintainer-skill` over `Skill` entities, owned by group:maintainers. 
 | `no-hardcoded-secrets` | bronze | measured | `entity.secretHits.size() == 0` | A skill is published with its plugin and pasted into model prompts, so a credential in it reaches every install and every transcript. It sits at bronze so such a skill cannot pass the ratchet. [Thresholds](https://github.com/seikika/seikika/blob/main/docs/design/thresholds.md) | Remove the hardcoded credentials in the evidence. Refer to a secret by name instead of pasting it into the skill. |
 | `one-level-deep` | gold | measured | `entity.linkDepth <= 1 && entity.supportFiles <= 3` | Agents read deeply nested references only in part, so detail two hops away is easily missed. SkillsBench found focused skills with at most three modules beat larger bundles. [Anthropic skill best practices](https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/best-practices) | Keep references one hop from SKILL.md and the skill to at most three supporting files. Focused skills outperform large bundles. |
 
+## First-party standards packages
+
+Every first-party standards package has a published operator guide.
+
+**Why:** Publishing a package creates an adoption path for operators. Require a discoverable guide at bronze so they can choose an appropriate package, configure it and verify its results.
+
+See [Standards package directory decision](https://github.com/seikika/seikika/blob/main/docs/decisions/D01M8CRS50G5086P5DCFQN636BA.md).
+
+Scorecard `maintainer-standard-package` over `StandardPackage` entities, owned by group:maintainers. `seikika report` lists what fails now. *Measured* rules check facts a tool or connector read; *judged* rules pass on an agent's assessment (`seikika assess`).
+
+| Rule | Level | Basis | Passes when | Why | Fix |
+|---|---|---|---|---|---|
+| `public-guide` | bronze | measured | `entity.publicGuide != ''` | Operators need to find the package's expected inputs, configuration and results before adding checks to a portal. [Standards package directory decision](https://github.com/seikika/seikika/blob/main/docs/decisions/D01M8CRS50G5086P5DCFQN636BA.md) | Publish a titled and described guide at `site/src/content/docs/packages/<directory-name>.md`. The package directory and sidebar pick it up automatically. |
+
 ## CI security
 
 What an attacker could do through a workflow: pinned actions, least- privilege tokens, no risky triggers with write access, and zizmor and actionlint clean (D70, docs/design/github-actions-standards.md).

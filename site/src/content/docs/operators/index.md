@@ -15,6 +15,7 @@ A portal gives developers and agents a place to find software, check ownership, 
 | Learn how a running catalog works | [Explore a portal](/start/portal/) |
 | Define catalog data and rules | [Portal manifest reference](/operators/manifest/) |
 | Import repositories, tool results, or group membership | [Choose a connector](/connectors/) |
+| Apply existing checks to a repository or service | [Choose a standards package](/packages/) |
 | Review a configuration change | [Change a portal](/operators/portal/) |
 | Run a shared service | [Deploy and operate a portal](/operators/deploy/) |
 | Configure access for people and integrations | [Authentication and authorization](/operators/access/) |

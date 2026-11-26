@@ -28,6 +28,8 @@
 //!   `mcp.json` facts `maintainer-plugin` thresholds (docs/design/plugin-standards.md);
 //! - `package-json` (`packages` globs): one per npm manifest, with its ranges, lockfile and the
 //!   script CI can run (docs/design/package-standards.md);
+//! - `standard-package` (`standardPackages` globs): one per Seikika package manifest, with its
+//!   name, version and public guide route;
 //! - `js-workspace` (`"jsWorkspace": true`): one record for the checkout root — pnpm/npm workspace
 //!   file, `packageManager` pin, root lockfile, linker, mise pins and frozen CI
 //!   (packages/pnpm-expo);
@@ -61,7 +63,8 @@
 //! "docs"?: [glob], "files"?: [glob],
 //! "captures"?: {name: regex}, "counts"?: {name: regex}, "crates"?: true, "repo"?: false,
 //! "betterer"?: [glob], "skills"?: [glob], "connectors"?: [glob], "dependencies"?: false,
-//! "agentDocs"?: [glob], "plugins"?: [glob], "packages"?: [glob], "schemas"?: [glob],
+//! "agentDocs"?: [glob], "plugins"?: [glob], "packages"?: [glob], "standardPackages"?: [glob],
+//! "schemas"?: [glob],
 //! "examples"?: [glob], "pages"?: [glob], "assessments"?: [glob], "jsWorkspace"?: false,
 //! "expoApps"?: [glob], "storybooks"?: [glob], "portals"?: [glob], "git"?: [{key, url, branch}]}`.
 
@@ -116,6 +119,8 @@ struct Workspace {
     plugins: Vec<Regex>,
     /// npm manifests (`package-json` records), usually `**/package.json`.
     packages: Vec<Regex>,
+    /// Seikika manifests (`standard-package` records).
+    standard_packages: Vec<Regex>,
     /// JSON Schema documents (`json-schema` records), usually `schema/*.json`.
     schemas: Vec<Regex>,
     /// Example and experiment write-ups (`example` records).
@@ -368,6 +373,7 @@ impl Workspace {
             agent_docs: globs(&cfg, "agentDocs")?,
             plugins: globs(&cfg, "plugins")?,
             packages: globs(&cfg, "packages")?,
+            standard_packages: globs(&cfg, "standardPackages")?,
             schemas: globs(&cfg, "schemas")?,
             examples: globs(&cfg, "examples")?,
             pages: globs(&cfg, "pages")?,
@@ -864,17 +870,41 @@ impl Workspace {
     }
 
     fn emit_packages(&self, paths: &[String], kinds: &[&str], out: &mut Out) {
-        if self.packages.is_empty() || !kinds.contains(&"package-json") {
-            return;
+        for (kind, patterns) in [
+            ("package-json", &self.packages),
+            ("standard-package", &self.standard_packages),
+        ] {
+            if patterns.is_empty() || !kinds.contains(&kind) {
+                continue;
+            }
+            for rel in paths.iter().filter(|p| Self::matches(patterns, p)) {
+                out.record(
+                    kind,
+                    &format!("{kind}:{rel}"),
+                    self.package_record(kind, rel),
+                );
+            }
+            out.snapshot_complete(kind);
         }
-        for rel in paths.iter().filter(|p| Self::matches(&self.packages, p)) {
-            out.record(
-                "package-json",
-                &format!("package-json:{rel}"),
-                npm::analyse(&self.root, rel),
-            );
+    }
+
+    fn package_record(&self, kind: &str, rel: &str) -> Value {
+        if kind == "package-json" {
+            return npm::analyse(&self.root, rel);
         }
-        out.snapshot_complete("package-json");
+        let text = std::fs::read_to_string(self.root.join(rel)).unwrap_or_default();
+        let manifest: Value = serde_norway::from_str(&text).unwrap_or(Value::Null);
+        let slug = Path::new(rel)
+            .parent()
+            .and_then(Path::file_name)
+            .and_then(|name| name.to_str())
+            .unwrap_or_default();
+        json!({
+            "path": rel,
+            "name": manifest["name"].as_str().unwrap_or_default(),
+            "version": manifest["version"].as_str().unwrap_or_default(),
+            "publicGuide": site::public_guide(&self.root, "packages", slug),
+        })
     }
 
     fn expo_app_paths<'a>(&self, paths: &'a [String]) -> Vec<&'a String> {
@@ -1061,7 +1091,7 @@ impl Workspace {
             "connector" => self.refresh_connector(id, out),
             "agent-doc" => self.refresh_agent_doc(id, out),
             "plugin" => self.refresh_plugin(id, out),
-            "package-json" => self.refresh_package(id, out),
+            "package-json" | "standard-package" => self.refresh_package(kind, id, out),
             "json-schema" => self.refresh_schema(id, out),
             "example" => self.refresh_example(id, out),
             "portal" => self.refresh_portal(id, out),
@@ -1182,12 +1212,17 @@ impl Workspace {
         }
     }
 
-    fn refresh_package(&self, id: &str, out: &mut Out) {
-        let rel = id.strip_prefix("package-json:").unwrap_or("");
-        if Self::matches(&self.packages, rel) && self.root.join(rel).is_file() {
-            out.record("package-json", id, npm::analyse(&self.root, rel));
+    fn refresh_package(&self, kind: &str, id: &str, out: &mut Out) {
+        let rel = id.split_once(':').map_or("", |(_, rel)| rel);
+        let patterns = if kind == "package-json" {
+            &self.packages
         } else {
-            out.not_found("package-json", id);
+            &self.standard_packages
+        };
+        if Self::matches(patterns, rel) && self.root.join(rel).is_file() {
+            out.record(kind, id, self.package_record(kind, rel));
+        } else {
+            out.not_found(kind, id);
         }
     }
 
@@ -1315,6 +1350,7 @@ impl Source for Workspace {
             ("agent-doc", !self.agent_docs.is_empty()),
             ("plugin", !self.plugins.is_empty()),
             ("package-json", !self.packages.is_empty()),
+            ("standard-package", !self.standard_packages.is_empty()),
             ("json-schema", !self.schemas.is_empty()),
             ("example", !self.examples.is_empty()),
             ("site-page", !self.pages.is_empty()),

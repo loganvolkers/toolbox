@@ -21,7 +21,7 @@ and the [releases](https://github.com/seikika/seikika/releases) for available bi
 - **Portal operators** can [enforce standards in CI](https://seikika.com/operators/ci/)
   or [deploy a shared portal](https://seikika.com/operators/deploy/).
 - **Package authors** can [share standards and write connectors](https://seikika.com/authors/) or
-  browse the [first-party standards packages](packages/README.md).
+  browse the [first-party standards packages](https://seikika.com/packages/).
 - **Developers and agents** can [read the catalog and request actions](https://seikika.com/users/).
 - **Maintainers** can [build and check a source checkout](https://seikika.com/start/run/).
   See the [contribution workflow](AGENTS.md), [workspace crates](crates/README.md),

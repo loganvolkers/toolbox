@@ -5,7 +5,7 @@ sidebar:
   order: 1
 ---
 
-import ConnectorDirectory from '../../../components/ConnectorDirectory.astro';
+import GuideDirectory from '../../../components/GuideDirectory.astro';
 
 Connect your portal to source control, local tools, or an identity provider. A **connector** sends records, such as repository details or group membership. Your portal's manifest defines how those records become catalog entities and scorecard inputs.
 
@@ -13,7 +13,7 @@ The Seikika project maintains the connectors listed here. These guides use the 0
 
 ## Available connectors
 
-<ConnectorDirectory />
+<GuideDirectory section="connectors" />
 
 Seikika starts an `in-image` connector as a child process. You run a `remote` connector as a separate service. Each guide shows which runtime to use.
 
