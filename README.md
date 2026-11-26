@@ -1,8 +1,11 @@
 # Seikika
 
-An open-source, agent-first internal developer portal (IDP) framework: Rust core, configured entirely in
-code, deployed by you. Catalog, scorecards, self-service actions, knowledge/context lake and search —
-exposed identically over API, MCP, CLI and UI.
+Seikika is an open-source framework for building an internal developer portal in code.
+Score one repository from the command line, or serve a catalog with ownership, standards,
+and self-service actions for developers and agents.
+
+Start with the [quickstart](https://seikika.com/start/quickstart/) or
+[explore a local portal](https://seikika.com/start/portal/).
 
 See [the naming decision](docs/decisions/D01M8B8PPJ47YR81JZ3ZYHCFHCZ.md) for the shared identifiers used by the CLI, packages, and protocols.
 
@@ -16,12 +19,8 @@ The public docs are a Starlight site in [site/](site/src/content/docs/index.md),
 
 **SDLC has four layers** ([docs/sdlc.md](docs/sdlc.md)): the *maintainer* SDLC for building Seikika, the *package author* SDLC for publishing packages and connectors others consume, the *operator* SDLC for building a portal, and the *user* SDLC for building apps on a portal.
 
-**Install a Seikika release (v0.2.0 onward):** the shell and PowerShell installers on the GitHub release ([Install a release](site/src/content/docs/start/install.md), [docs/RELEASING.md](docs/RELEASING.md)). An operator running a repo portal installs the CLI and the workspace connector. Writing a connector is the CLI plus the scaffold in [examples/connector-scaffold](examples/connector-scaffold/README.md). For a repo portal:
-
-```bash
-curl --proto '=https' --tlsv1.2 -LsSf https://github.com/seikika/seikika/releases/download/v0.2.0/seikika-cli-installer.sh | sh
-curl --proto '=https' --tlsv1.2 -LsSf https://github.com/seikika/seikika/releases/download/v0.2.0/seikika-connector-workspace-installer.sh | sh
-```
+**Install Seikika:** use the [installation guide](site/src/content/docs/start/install.md) to
+choose a matching release or build the current CLI and workspace connector from source.
 
 **Build from source** (changing Seikika itself):
 

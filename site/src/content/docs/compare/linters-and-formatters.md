@@ -1,40 +1,20 @@
 ---
 title: Seikika and the linter/formatter ecosystem
-description: How Seikika carries ESLint, ruff, clippy, actionlint, zizmor, and peers — without replacing them.
+description: Use results from linters and formatters in Seikika scorecards.
 sidebar:
   order: 9
 relationship: complement
 peer: Linters and formatters
-last_verified: 2026-11-23
+last_verified: 2026-11-26
 claim_sources:
   - https://github.com/seikika/seikika/blob/main/docs/design/seikika-and-tools.md
 ---
 
-This is **not a replacement**. ESLint, ruff, clippy, rustfmt, actionlint, zizmor, and the rest of the linter and formatter ecosystem remain the tools that check and rewrite code. Seikika is the *box*: it pins them, runs them together, and remembers what they found ([seikika-and-tools](https://github.com/seikika/seikika/blob/main/docs/design/seikika-and-tools.md)).
+Linters and formatters such as ESLint, Ruff, and rustfmt keep their own commands and settings. Use Seikika when you want to report results from several tools in one place or check them against a shared baseline.
 
-## Quick glance
+1. Configure the rules in each tool's own configuration file.
+2. Pin the tool version in your Seikika portal. Run `seikika doctor` to check that it is installed.
+3. Choose a package that understands the tool's output. For example, the [SARIF package](https://github.com/seikika/seikika/tree/main/packages/sarif) reads Static Analysis Results Interchange Format, a common format for linter findings.
+4. Check the [scorecard results](/concepts/scorecards/) for evidence. Run the tool on its own when you need its original output or a code fix.
 
-| | Linter / formatter | Seikika |
-|---|---|---|
-| Owns | Rules, config file, CLI, editor integration | Which tools, versions, how they run, what findings mean for a standard |
-| Output | Tool-native or SARIF / similar | Reads standard slots (SARIF, NDJSON, …) and mappings into entities |
-| Config | `.eslintrc`, `ruff.toml`, `clippy` flags, … | `tools:` pins and package kits; tool config stays the tool's |
-| Alone | Fully useful without a portal | Useful as `report` / doctor; not a substitute for the tool's CLI |
-
-## How Seikika standardizes and carries them
-
-- **Take it out.** The command the box runs is a command you can run; configuration lives in the tool's own file when possible.
-- **Standard slots first.** Prefer SARIF (and similar) so a new tool fits without a custom extractor.
-- **Pin and doctor.** Declared versions and `seikika doctor` so missing or wrong tools are visible.
-- **Ratchet the meaning.** Scorecards and baselines decide levels and regressions; they do not rewrite the tool's findings.
-- **Kits.** Packages can ship a set of tools, pins, and scorecards (for example GitHub Actions lint kits) for other portals to include.
-
-## When to use the tool alone
-
-- You are fixing a single repository in an editor or a one-off CI job.
-- You are developing a new lint rule — that belongs in ESLint, clippy, semgrep, or another tool community.
-- You need the tool's native UX (auto-fix, IDE extensions) without a catalog.
-
-## Last verified
-
-**2026-11-23**, against [docs/design/seikika-and-tools.md](https://github.com/seikika/seikika/blob/main/docs/design/seikika-and-tools.md). Re-check package READMEs and tool pins when naming specific versions in portal config.
+Use [Gate pull requests](/operators/ci/) to apply a baseline after the tool runs reliably. See [the tool integration design](https://github.com/seikika/seikika/blob/main/docs/design/seikika-and-tools.md) for when to add a mapping or connector.

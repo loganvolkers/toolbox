@@ -1,34 +1,33 @@
 ---
 title: Scorecards
-description: A level is the highest bar whose rules all pass, with evidence and a fix on each rule.
+description: Understand how rules become levels and how a baseline catches regressions.
 ---
 
-A scorecard is a ladder of rules on one kind of entity. The levels in this repository are `none`, `bronze`, `silver` and `gold`. An entity's level is the highest one where every rule at that level and below passes.
+A scorecard groups rules for one kind of catalog entity, such as a repository or a document. If a repository passes every bronze rule and fails one silver rule, its level is bronze. A level requires every rule at that level and below to pass.
 
-Each rule carries:
+Each rule declares a check and can explain why the rule matters, what evidence to report, and what to fix. For example, the starter's `links-resolve` rule checks whether a Markdown file links to files that exist. If it fails, the report lists the missing paths.
 
-- a **check**, a short expression over the entity's facts
-- **evidence**, the items that failed
-- a **fix**, what to change
-
-An agent reads the evidence and the fix, edits the file, and refreshes that entity. The score is computed again from the facts. A missing tool or a skipped job is `unknown`. Unknown is not a pass, and the ratchet does not treat it as a regression.
+| Result | Meaning |
+|---|---|
+| Pass | The available facts satisfy the rule. |
+| Fail | The facts show a problem. Use the evidence to find it. |
+| Unknown | The check could not finish, for example because a tool did not run. Treat the result as incomplete. |
+| Skipped | The scorecard does not apply to this entity under its conditions. |
 
 ## The ratchet
 
-CI compares the current report with a committed baseline (for example `.seikika/results.json` or this repository’s `portal/results.json`). The first run with `--update` records today’s failures. Later runs fail when a rule newly fails or a failing rule’s evidence grows; improvements update the file so the bar only moves one way. A new entity must reach the floor declared for its scorecard (bronze for the standards in this repository). An existing entity may not drop a level. Missing tools yield `unknown`, which is neither a pass nor a regression.
+A **baseline** is a saved results file. The **ratchet** compares a new report against that file. It catches newly failing rules, growing evidence or numeric measures, a drop in level, and new entities below the scorecard's minimum level.
 
-That committed-results shape is what we learned from [Betterer](/compare/betterer/). Walk through recording a baseline in [Quickstart](/start/quickstart/).
+In CI, use `--ci` to catch regressions and a stale or missing baseline. For a reviewed improvement, use `--update` and commit the new baseline. A rule can be unknown because you explicitly skipped its connector. The ratchet ignores those skipped inputs when checking regressions. An unknown result from a connector that ran can fail `--ci` or `--update`. See [Gate pull requests](/operators/ci/) and the [CLI reference](/start/cli/) for command options.
 
 ## This site
 
-`maintainer-site` scores every page:
+The `maintainer-site` scorecard checks each page in the [repository report](/demo/report/).
 
-| Level | What must be true |
+| Level | What the checks require |
 |---|---|
-| Bronze | The page has a title and a description, and its links resolve |
-| Silver | It is not a draft, and the sidebar includes it |
-| Gold | It contains no secret-shaped string |
+| Bronze | A title, description, working local link targets, and no credential-shaped strings |
+| Silver | A visible page in the sidebar |
+| Gold | A title distinct from every other page |
 
-A page that is not linked from the sidebar stops at bronze. That is the catalog saying the page exists and is not yet part of the site a reader can find.
-
-The repository's own level is the lowest of its counted scorecards, not an average.
+The [documentation style guide](/maintainers/writing/) describes the checks authors do by hand, such as running examples and reviewing prose.

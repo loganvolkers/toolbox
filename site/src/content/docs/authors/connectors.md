@@ -1,60 +1,47 @@
 ---
 title: Write a connector
-description: Author a stdio connector with the Rust SDK, a portal stub, connector test, and connector drive.
+description: Build a Rust connector, test its protocol, and inspect the records it emits.
 sidebar:
   order: 2
 ---
 
-A connector is a process that speaks Seikika's control channel and emits records of named kinds. Package authors ship connectors that other portals include. Operators wire a shipped or published connector into a running portal. This page is the package-author path. An operator who runs builtins and included packages follows [Install a release](/start/install/) and [Build a portal](/operators/).
+A connector is a program that collects data and sends records to Seikika. This guide builds a sample connector that emits one record for the portal to map to a catalog entity.
 
-## Install
+## Build the scaffold
 
-1. Install the `seikika` CLI from the [v0.2.0 release](/start/install/#run-a-portal). The first-party connector installers on that page are for a portal that runs those connectors.
-2. Copy the scaffold. Its `rust-toolchain.toml` pins Rust 1.97 (edition 2024), which the SDK needs.
+You need the [Seikika source checkout and CLI](/start/install/#build-from-source) and Rust. From the checkout root, run:
 
 ```bash
-curl --proto '=https' --tlsv1.2 -LsSf https://github.com/seikika/seikika/releases/download/v0.2.0/seikika-cli-installer.sh | sh
-export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
-git clone --depth 1 https://github.com/seikika/seikika.git
-cd seikika/examples/connector-scaffold
+cd examples/connector-scaffold
 cargo build
 ```
 
-The clone is the scaffold source
-([`examples/connector-scaffold/`](https://github.com/seikika/seikika/tree/main/examples/connector-scaffold)).
-`cargo build` produces your connector. A test portal that names a `builtin:` still needs that released connector binary, the same as any other portal.
+The scaffold pins its Rust toolchain and uses the SDK from the checkout. The build produces `target/debug/example-connector`.
 
-Agents should follow the `author-connector` skill in
-[`plugins/seikika-operator/skills/author-connector/`](https://github.com/seikika/seikika/tree/main/plugins/seikika-operator/skills/author-connector).
+## Test the protocol
 
-## Loop
-
-1. Copy the scaffold (keep `rust-toolchain.toml`; the SDK needs Rust 1.97 / edition 2024).
-2. Implement `Source`: `name`, **`version` from your crate's `CARGO_PKG_VERSION`**, `capabilities`, `handle`. Call `run_stdio`.
-3. Read config only from `SEIKIKA_CONNECTOR_CONFIG` JSON.
-4. Keep a minimal `portal/seikika.yaml` that declares the connector and its `records`.
-5. Prove the protocol, then dump records without inventing stdio JSON:
+From the scaffold directory, run:
 
 ```bash
-cargo build
 seikika connector test --name example --portal portal -- target/debug/example-connector
-seikika connector drive --kinds example-item --format catalog --out OUT/entities.ndjson \
-  --config '{"seed":"alpha"}' \
-  -- target/debug/example-connector
 ```
 
-`connector test` needs the portal. `connector drive` does not: it starts the binary, sends one `resync`, and with `--format catalog` writes sorted `{"kind","id","data"}` lines (`id` = `externalId` with a leading `{kind}:` stripped). Default `--format records` still prints protocol dumps (`kind`/`externalId`/`data`).
+Seikika reads the named connector's configuration from `portal/seikika.yaml`. Look for passing checks for startup, capabilities, and resync. A resync asks the connector to send its current records.
 
-## Secrets
+## Inspect a record
 
-Put logical placeholders in example manifests (`${secret:…}`). Operators map them. See [Secrets in connector config](/authors/secrets/).
+```bash
+seikika connector drive --kinds example-item --format catalog \
+  --config '{"seed":"alpha"}' -- target/debug/example-connector
+```
 
-## What is still missing
+The driver starts the connector and requests records for `example-item`. Look for an output line with `"kind":"example-item"` and `"id":"example:alpha"`. The default `records` format shows protocol fields such as `externalId`.
 
-| Gap | State |
-|---|---|
-| Published `seikika-connect` crate on crates.io | Not yet; path-dep or git dep against a Seikika release |
-| SDKs for languages other than Rust | Protocol is language-agnostic; only the Rust SDK ships today |
-| `seikika connector new` generator | Scaffold directory is the substitute |
+## Adapt the connector
 
-Design detail: [connector-control.md](https://github.com/seikika/seikika/blob/main/docs/design/connector-control.md). Decision that closed the learning-tax gaps from the connector A/B: [D01M83FFM2K6XS4EAVHVP92TBDZ](https://github.com/seikika/seikika/blob/main/docs/decisions/D01M83FFM2K6XS4EAVHVP92TBDZ.md).
+1. Update the scaffold's SDK path if you move it outside this repository. Check the published SDK versions and [release notes](/start/versions/) when choosing a version.
+2. Implement the SDK's `Source` trait with a name, the version from `CARGO_PKG_VERSION`, capabilities, and a handler. Start it with `run_stdio`.
+3. Read connector configuration from the `SEIKIKA_CONNECTOR_CONFIG` JSON. Use [logical secret names](/authors/secrets/) for credentials.
+4. Update the example manifest's `records` and mappings. Run both commands again and check that the expected kind, ID, and fields arrive.
+
+For message formats and remote connectors, see the [connector protocol](https://github.com/seikika/seikika/blob/main/docs/design/connector-control.md) and its [JSON Schema](https://github.com/seikika/seikika/blob/main/crates/seikika-model/schema/connector-messages.schema.json). Operators can [install a first-party connector](/start/install/#install-a-connector) for a shipped data source.

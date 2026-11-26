@@ -1,24 +1,35 @@
 ---
 title: Change a portal
-description: Validate the manifest, test it against fixtures, and plan the diff before you deploy.
+description: Validate the manifest, run fixture tests, and compare the change with its base revision.
 sidebar:
   order: 2
 ---
 
-An operator changes a portal in the repository that holds its manifest. The wider job, scoring a repository and serving the catalog, is [Build a portal](/operators/). The loop is the same shape as any other change: check it, test it, look at the diff, then deploy.
+Before you merge a portal change, check the manifest, run its tests, and see whether the change moves any scores or permissions.
+
+## 1. Validate and test the candidate
+
+From your portal repository, set `portal_dir` to the relative path to the directory that contains `seikika.yaml`. Replace `portal` in this example with that directory or use `.` if the manifest is at the root.
 
 ```bash
-target/debug/seikika validate path/to/portal
-target/debug/seikika test path/to/portal
-target/debug/seikika plan --local --base path/to/portal
+portal_dir=portal
+seikika validate "$portal_dir"
+seikika test "$portal_dir"
 ```
 
-`validate` checks the manifest. `test` runs the portal's expectations against its fixtures, so a rule means the same thing tomorrow as it does today. `plan --local` recomputes the catalog twice and prints the difference.
+Look for zero validation errors and passing expectations. If validation fails, fix the file and location in the diagnostic. If an expectation fails, check the fixture and the rule against the behavior you intended.
 
-## What belongs in the manifest
+## 2. Compare against the base revision
 
-Kinds, fields, the map from connector records, and the scorecard rules. Thresholds live here. A connector that starts failing entities because a number changed in code is the wrong shape: raise the number in the manifest, and the plan shows who drops a level.
+Use a worktree to preserve any includes and related files from the base revision. In this example, the base is the fetched `origin/main`. Choose the base of your pull request if it differs.
 
-## What this site is not
+```bash
+base_dir=$(mktemp -d)
+git worktree add --detach "$base_dir" origin/main
+seikika plan "$portal_dir" --local --base "$base_dir/$portal_dir/seikika.yaml"
+git worktree remove "$base_dir"
+```
 
-This site documents Seikika. It is not a running portal, and it is not the one-file HTML report a repository can publish from `seikika report`. A portal's own UI is served by `seikika serve`.
+Read the entity, score, and access changes. The local plan compares both manifests against the candidate's fixtures. Include examples of entities that gain or lose access when reviewing an authorization change. Plan against live data remains planned.
+
+See the [manifest reference](/operators/manifest/) for configuration fields and the [deployment checks](/operators/deploy/#verify-the-rollout) for what to verify after rollout.
