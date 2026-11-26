@@ -2,7 +2,7 @@
 # with storybooks globs (facts from seikika-connector-workspace).
 apiVersion: seikika.com/package/v0
 name: storybook
-version: 0.1.0
+version: 0.2.0
 description: >-
   Storybook project hygiene: config, story files, a11y addon, telemetry
   off, CI build and story tests.

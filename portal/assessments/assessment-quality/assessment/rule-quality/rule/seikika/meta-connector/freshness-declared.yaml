@@ -17,10 +17,10 @@ verdicts:
       crates/seikika-api/src/connectors.rs:171-200, with `can_resync` at :183.
       connector_freshness (crates/seikika-api/src/reads.rs:421-429) and
       ui/src/main.tsx:278-279 show `last_read` with no bound. The duration
-      pattern is schema/manifest.schema.json:475-478, S4S's 5m bounds are
-      portal/seikika.yaml:231-252, and the undeclared-record check is
-      crates/seikika-model/src/validate.rs:196-208. acme/github's
-      ['codeowners'] evidence is pinned at
+      pattern is crates/seikika-model/schema/manifest.schema.json:475-478,
+      S4S's 5m bounds are portal/seikika.yaml:231-252, and the
+      undeclared-record check is crates/seikika-model/src/validate.rs:196-208.
+      acme/github's ['codeowners'] evidence is pinned at
       portal/tests/standards.test.yaml:830-832. In
       docs/design/scorecards-for-scorecards.md, the ladder row is :209 and the
       starter finding is :219-221. An rg over crates/ finds no other reader of

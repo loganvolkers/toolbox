@@ -1,4 +1,4 @@
-//! Executor protocol v1 (`schema/executor-messages.schema.json`, docs/design/action-runs.md §5),
+//! Executor protocol v1 (`crates/seikika-model/schema/executor-messages.schema.json`, docs/design/action-runs.md §5),
 //! over either transport: `in-image`, a program spoken to over stdio, and `http`, a service
 //! POSTed the same bodies. Both get `preview` and `run`; a run the executor `accepted` with an
 //! `executor_run_id` and no `result` stays `dispatched` and is asked after with `status`; a

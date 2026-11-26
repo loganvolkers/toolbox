@@ -2528,6 +2528,251 @@ dependencies = [
 ]
 
 [[package]]
+name = "seikika-api"
+version = "0.2.0"
+dependencies = [
+ "axum",
+ "landlock",
+ "reqwest",
+ "seikika-authz",
+ "seikika-connect",
+ "seikika-derive",
+ "seikika-exec",
+ "seikika-expr",
+ "seikika-model",
+ "seikika-secrets",
+ "seikika-store",
+ "seikika-telemetry",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tokio",
+ "tower",
+ "tracing",
+]
+
+[[package]]
+name = "seikika-authz"
+version = "0.2.0"
+dependencies = [
+ "async-trait",
+ "jsonwebtoken",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "serde_norway",
+ "sha2",
+ "sqlx",
+ "tokio",
+]
+
+[[package]]
+name = "seikika-cli"
+version = "0.2.0"
+dependencies = [
+ "async-trait",
+ "clap",
+ "mimalloc",
+ "regex",
+ "reqwest",
+ "rustix",
+ "seikika-api",
+ "seikika-authz",
+ "seikika-connect",
+ "seikika-derive",
+ "seikika-exec",
+ "seikika-expr",
+ "seikika-model",
+ "seikika-store",
+ "seikika-telemetry",
+ "serde",
+ "serde_json",
+ "serde_norway",
+ "sha2",
+ "tokio",
+ "tracing",
+ "walkdir",
+]
+
+[[package]]
+name = "seikika-connect"
+version = "0.2.0"
+dependencies = [
+ "regex",
+ "reqwest",
+ "seikika-model",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tokio",
+ "walkdir",
+]
+
+[[package]]
+name = "seikika-connector-git-files"
+version = "0.2.0"
+dependencies = [
+ "reqwest",
+ "seikika-connect",
+ "serde_json",
+ "serde_norway",
+ "tokio",
+]
+
+[[package]]
+name = "seikika-connector-github"
+version = "0.2.0"
+dependencies = [
+ "jsonwebtoken",
+ "reqwest",
+ "seikika-connect",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
+name = "seikika-connector-gitlab"
+version = "0.2.0"
+dependencies = [
+ "reqwest",
+ "seikika-connect",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
+name = "seikika-connector-runner"
+version = "0.2.0"
+dependencies = [
+ "regex",
+ "seikika-connect",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
+name = "seikika-connector-scim"
+version = "0.2.0"
+dependencies = [
+ "axum",
+ "seikika-connect",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
+name = "seikika-connector-workspace"
+version = "0.2.0"
+dependencies = [
+ "proc-macro2",
+ "regex",
+ "seikika-connect",
+ "seikika-model",
+ "serde_json",
+ "serde_norway",
+ "sha2",
+ "syn 3.0.10",
+ "tokio",
+ "walkdir",
+]
+
+[[package]]
+name = "seikika-derive"
+version = "0.2.0"
+dependencies = [
+ "mimalloc",
+ "rayon",
+ "seikika-expr",
+ "seikika-model",
+ "seikika-store",
+ "serde",
+ "serde_json",
+ "serde_norway",
+]
+
+[[package]]
+name = "seikika-durable"
+version = "0.2.0"
+
+[[package]]
+name = "seikika-exec"
+version = "0.2.0"
+dependencies = [
+ "aws-lc-rs",
+ "reqwest",
+ "seikika-connect",
+ "seikika-derive",
+ "seikika-expr",
+ "seikika-model",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tokio",
+]
+
+[[package]]
+name = "seikika-expr"
+version = "0.2.0"
+dependencies = [
+ "cel",
+ "serde_json",
+]
+
+[[package]]
+name = "seikika-model"
+version = "0.2.0"
+dependencies = [
+ "jsonschema",
+ "seikika-expr",
+ "serde",
+ "serde_json",
+ "serde_norway",
+ "sha2",
+ "thiserror",
+]
+
+[[package]]
+name = "seikika-secrets"
+version = "0.2.0"
+dependencies = [
+ "reqwest",
+ "serde",
+ "serde_json",
+ "serde_norway",
+ "tempfile",
+ "thiserror",
+ "tokio",
+ "wiremock",
+ "zeroize",
+]
+
+[[package]]
+name = "seikika-store"
+version = "0.2.0"
+dependencies = [
+ "async-trait",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "thiserror",
+]
+
+[[package]]
+name = "seikika-telemetry"
+version = "0.2.0"
+dependencies = [
+ "opentelemetry",
+ "opentelemetry-appender-tracing",
+ "opentelemetry-otlp",
+ "opentelemetry_sdk",
+ "prometheus",
+ "thiserror",
+ "tracing",
+ "tracing-opentelemetry",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "semver"
 version = "1.0.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3226,251 +3471,6 @@ dependencies = [
  "prost",
  "prost-types",
  "tonic",
-]
-
-[[package]]
-name = "seikika-api"
-version = "0.1.1"
-dependencies = [
- "axum",
- "landlock",
- "reqwest",
- "serde",
- "serde_json",
- "sha2",
- "tokio",
- "seikika-authz",
- "seikika-connect",
- "seikika-derive",
- "seikika-exec",
- "seikika-expr",
- "seikika-model",
- "seikika-secrets",
- "seikika-store",
- "seikika-telemetry",
- "tower",
- "tracing",
-]
-
-[[package]]
-name = "seikika-authz"
-version = "0.1.1"
-dependencies = [
- "async-trait",
- "jsonwebtoken",
- "reqwest",
- "serde",
- "serde_json",
- "serde_norway",
- "sha2",
- "sqlx",
- "tokio",
-]
-
-[[package]]
-name = "seikika-cli"
-version = "0.1.1"
-dependencies = [
- "async-trait",
- "clap",
- "mimalloc",
- "regex",
- "reqwest",
- "rustix",
- "serde",
- "serde_json",
- "serde_norway",
- "sha2",
- "tokio",
- "seikika-api",
- "seikika-authz",
- "seikika-connect",
- "seikika-derive",
- "seikika-exec",
- "seikika-expr",
- "seikika-model",
- "seikika-store",
- "seikika-telemetry",
- "tracing",
- "walkdir",
-]
-
-[[package]]
-name = "seikika-connect"
-version = "0.1.1"
-dependencies = [
- "regex",
- "reqwest",
- "serde",
- "serde_json",
- "sha2",
- "tokio",
- "seikika-model",
- "walkdir",
-]
-
-[[package]]
-name = "seikika-connector-git-files"
-version = "0.1.1"
-dependencies = [
- "reqwest",
- "serde_json",
- "serde_norway",
- "tokio",
- "seikika-connect",
-]
-
-[[package]]
-name = "seikika-connector-github"
-version = "0.1.1"
-dependencies = [
- "jsonwebtoken",
- "reqwest",
- "serde_json",
- "tokio",
- "seikika-connect",
-]
-
-[[package]]
-name = "seikika-connector-gitlab"
-version = "0.1.1"
-dependencies = [
- "reqwest",
- "serde_json",
- "tokio",
- "seikika-connect",
-]
-
-[[package]]
-name = "seikika-connector-runner"
-version = "0.1.1"
-dependencies = [
- "regex",
- "serde_json",
- "tokio",
- "seikika-connect",
-]
-
-[[package]]
-name = "seikika-connector-scim"
-version = "0.1.1"
-dependencies = [
- "axum",
- "serde_json",
- "tokio",
- "seikika-connect",
-]
-
-[[package]]
-name = "seikika-connector-workspace"
-version = "0.1.1"
-dependencies = [
- "proc-macro2",
- "regex",
- "serde_json",
- "serde_norway",
- "sha2",
- "syn 3.0.10",
- "tokio",
- "seikika-connect",
- "seikika-model",
- "walkdir",
-]
-
-[[package]]
-name = "seikika-derive"
-version = "0.1.1"
-dependencies = [
- "mimalloc",
- "rayon",
- "serde",
- "serde_json",
- "serde_norway",
- "seikika-expr",
- "seikika-model",
- "seikika-store",
-]
-
-[[package]]
-name = "seikika-durable"
-version = "0.1.1"
-
-[[package]]
-name = "seikika-exec"
-version = "0.1.1"
-dependencies = [
- "aws-lc-rs",
- "reqwest",
- "serde",
- "serde_json",
- "sha2",
- "tokio",
- "seikika-connect",
- "seikika-derive",
- "seikika-expr",
- "seikika-model",
-]
-
-[[package]]
-name = "seikika-expr"
-version = "0.1.1"
-dependencies = [
- "cel",
- "serde_json",
-]
-
-[[package]]
-name = "seikika-model"
-version = "0.1.1"
-dependencies = [
- "jsonschema",
- "serde",
- "serde_json",
- "serde_norway",
- "sha2",
- "thiserror",
- "seikika-expr",
-]
-
-[[package]]
-name = "seikika-secrets"
-version = "0.1.1"
-dependencies = [
- "reqwest",
- "serde",
- "serde_json",
- "serde_norway",
- "tempfile",
- "thiserror",
- "tokio",
- "wiremock",
- "zeroize",
-]
-
-[[package]]
-name = "seikika-store"
-version = "0.1.1"
-dependencies = [
- "async-trait",
- "serde",
- "serde_json",
- "sqlx",
- "thiserror",
-]
-
-[[package]]
-name = "seikika-telemetry"
-version = "0.1.1"
-dependencies = [
- "opentelemetry",
- "opentelemetry-appender-tracing",
- "opentelemetry-otlp",
- "opentelemetry_sdk",
- "prometheus",
- "thiserror",
- "tracing",
- "tracing-opentelemetry",
- "tracing-subscriber",
 ]
 
 [[package]]

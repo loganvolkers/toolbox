@@ -14,7 +14,8 @@ verdicts:
       (portal/standards/schemas.yaml:87-92). Property descriptions are
       deliberately not gated (docs/design/schema-standards.md:24-26). The four
       live roots each say which contract they are, for example
-      schema/executor-messages.schema.json at 414 characters.
+      crates/seikika-model/schema/executor-messages.schema.json at 414
+      characters.
   - criterion: hard-to-game
     verdict: fail
     reason: >-

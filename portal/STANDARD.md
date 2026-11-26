@@ -193,7 +193,7 @@ Scorecard `vs-backstage-extensibility` over `Product` entities, owned by group:m
 
 | Rule | Level | Basis | Passes when | Why | Fix |
 |---|---|---|---|---|---|
-| `any-language` | bronze | measured | `entity.extensionAnyLanguage` | If integrations must be written in the portal's own language and framework, the teams who own the data cannot write them, and the platform team becomes the bottleneck. | Keep the connector protocol language-neutral, as schema/connector-messages.schema.json defines it. |
+| `any-language` | bronze | measured | `entity.extensionAnyLanguage` | If integrations must be written in the portal's own language and framework, the teams who own the data cannot write them, and the platform team becomes the bottleneck. | Keep the connector protocol language-neutral, as crates/seikika-model/schema/connector-messages.schema.json defines it. |
 | `without-rebuild` | bronze | measured | `entity.extensionWithoutRebuild` | If adding an integration means rebuilding and redeploying the server, every new data source becomes a core release, with its risk and its wait in the platform team's queue. | Keep remote connectors pushing to /v1/ingest with their own token (docs/design/connector-control.md). |
 
 ## Capabilities

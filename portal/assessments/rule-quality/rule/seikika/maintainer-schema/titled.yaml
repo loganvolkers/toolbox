@@ -13,7 +13,7 @@ verdicts:
       fix and rationale describe: the short name editors show
       (portal/standards/schemas.yaml:97-102). All four live documents have
       real titles, e.g. "Seikika portal manifest (v1alpha1)" in
-      schema/manifest.schema.json.
+      crates/seikika-model/schema/manifest.schema.json.
   - criterion: hard-to-game
     verdict: fail
     reason: >-

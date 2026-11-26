@@ -46,7 +46,7 @@
 //!   with `git` (`[{key, url, branch}]`, from `federation.children`), one per repository instead,
 //!   each cloned into `<root>/<key>` and read at the tip of its branch (`clones`);
 //! - `assessment` (`assessments` globs): one per assessment file (YAML or JSON, see
-//!   `schema/assessment.schema.json`): agents' judgements of entities against the portal's rubrics.
+//!   `crates/seikika-model/schema/assessment.schema.json`): agents' judgements of entities against the portal's rubrics.
 //!
 //! `docs` and `file` records also carry `captures` (each configured regex's first group, unique,
 //! sorted, with runs of whitespace replaced by `-`) and `counts` (matches per configured regex),

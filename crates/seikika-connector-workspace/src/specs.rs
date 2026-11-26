@@ -151,9 +151,9 @@ mod tests {
     fn the_schemas_in_this_repo_are_draft_2020_12_and_wired_in() {
         let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
         for rel in [
-            "schema/manifest.schema.json",
-            "schema/connector-messages.schema.json",
-            "schema/executor-messages.schema.json",
+            "crates/seikika-model/schema/manifest.schema.json",
+            "crates/seikika-model/schema/connector-messages.schema.json",
+            "crates/seikika-model/schema/executor-messages.schema.json",
         ] {
             let rec = analyse(&root, rel);
             assert_eq!(rec["draft202012"], true, "{rel}");

@@ -109,7 +109,7 @@ Popular CLIs offer five or so install paths. What each costs us:
 
 The connector protocol is already language-neutral:
 - NDJSON over stdio, or long-poll for remote connectors;
-- message schemas in `schema/connector-messages.schema.json`;
+- message schemas in `crates/seikika-model/schema/connector-messages.schema.json`;
 - `seikika connector test` exercises any executable.
 
 The coupling is in **resolution**: `package: builtin:<name>` is the only way to name an in-image

@@ -43,7 +43,7 @@ ARM = {
     "A": """## Your setup (Seikika)
 
 - Scaffold Cargo project at {arm_dir}; `seikika-connect` is a path dependency.
-- You may read only: {seikika}/crates/seikika-connect/, {seikika}/crates/seikika-connector-github/src/main.rs, {seikika}/crates/seikika-connector-git-files/src/main.rs, {seikika}/docs/design/connector-control.md, {seikika}/docs/design/connector-standards.md, {seikika}/docs/v1-spec.md (connector sections), {seikika}/schema/connector-messages.schema.json, {seikika}/plugins/seikika-operator/skills/connector-test/, {seikika}/plugins/seikika-operator/skills/author-connector/, {seikika}/plugins/seikika-operator/skills/connector-drive/, {seikika}/examples/connector-scaffold/, {seikika}/site/src/content/docs/authors/connectors.md.
+- You may read only: {seikika}/crates/seikika-connect/, {seikika}/crates/seikika-connector-github/src/main.rs, {seikika}/crates/seikika-connector-git-files/src/main.rs, {seikika}/docs/design/connector-control.md, {seikika}/docs/design/connector-standards.md, {seikika}/docs/v1-spec.md (connector sections), {seikika}/crates/seikika-model/schema/connector-messages.schema.json, {seikika}/plugins/seikika-operator/skills/connector-test/, {seikika}/plugins/seikika-operator/skills/author-connector/, {seikika}/plugins/seikika-operator/skills/connector-drive/, {seikika}/examples/connector-scaffold/, {seikika}/site/src/content/docs/authors/connectors.md.
 - `export PATH={ab}/bin:$PATH` for `seikika` if present. Prefer `seikika connector drive` over hand-built stdio JSON; a portal stub is already under portal/.
 - Do **not** read Ocean or Backstage trees under {ab}/pins/.
 - Required shape: a stdio connector using `run_stdio` / `Source` that emits `record` + `snapshot_complete`, and OUT/entities.ndjson.""",

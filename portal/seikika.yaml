@@ -149,7 +149,7 @@ connectors:
       # npm manifests (docs/design/package-standards.md). One record per package.json.
       packages: ["**/package.json"]
       # JSON Schema documents (docs/design/schema-standards.md). The contracts compiled into the binary.
-      schemas: [schema/*.json]
+      schemas: [crates/seikika-model/schema/*.json]
       # Example and experiment write-ups (docs/design/example-standards.md).
       examples:
         - examples/**/README.md

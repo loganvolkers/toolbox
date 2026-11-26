@@ -15,8 +15,9 @@ verdicts:
       crates/seikika-cli/src/meta.rs:272 hashes the rule struct `r` with
       crates/seikika-cli/src/model.rs:14-18, so the hash covers the rule's
       YAML only. The crate hash covers src/, tests/ and Cargo.toml
-      (portal/standards/crates.yaml:51-55). schema/assessment.schema.json:36
-      sets a 10-character minimum on reasons.
+      (portal/standards/crates.yaml:51-55).
+      crates/seikika-model/schema/assessment.schema.json:36 sets a
+      10-character minimum on reasons.
       portal/tests/standards.test.yaml:878-884 pins the stale evidence, and
       crates.yaml:433-450 is review-crate's independently-reviewed.
   - criterion: complete

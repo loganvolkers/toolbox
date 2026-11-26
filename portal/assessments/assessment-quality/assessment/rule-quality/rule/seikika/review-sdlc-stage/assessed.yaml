@@ -19,7 +19,7 @@ verdicts:
       operator/plan has `checks: []` (65).
       portal/tests/standards.test.yaml:1081-1085 has demo-gap/release stale
       and failing, and demo-done/plan passing.
-      schema/assessment.schema.json:32-36 and
+      crates/seikika-model/schema/assessment.schema.json:32-36 and
       crates/seikika-api/src/assess.rs:157-166 are as described.
   - criterion: complete
     verdict: pass

@@ -18,10 +18,10 @@ verdicts:
       rationale and its track, and portal/README.md:31 is its row.
       Cargo.toml:23 and schema.rs:25 are as cited, and thresholds.md:24 is the
       gold principle. user-sdlc.md:30 and 59 promise a stability policy and
-      `/v1`. schema/assessment.schema.json:3 and 10 are the unversioned `$id`
-      and the `apiVersion` const. schema-standards.md:30-34 and
-      connector-standards.md:46 are the research rows, and
-      standards.test.yaml:591-597 pins the partial fixture.
+      `/v1`. crates/seikika-model/schema/assessment.schema.json:3 and 10 are
+      the unversioned `$id` and the `apiVersion` const.
+      schema-standards.md:30-34 and connector-standards.md:46 are the research
+      rows, and standards.test.yaml:591-597 pins the partial fixture.
     suggestion: Say "four of seven".
   - criterion: complete
     verdict: pass

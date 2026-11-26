@@ -1,7 +1,7 @@
 # Schema Standards: Cataloguing the JSON Schemas We Compile
 
 *Status: deterministic catalog and scorecard built, 2026-11-20 (D77). Seikika for Seikika catalogues
-each document in `schema/` and scores it with `maintainer-schema`. The schema compiler is
+each document in `crates/seikika-model/schema/` and scores it with `maintainer-schema`. The schema compiler is
 unchanged. Related: [package-standards.md](./package-standards.md),
 [seikika-for-seikika.md](./seikika-for-seikika.md).*
 
@@ -35,7 +35,7 @@ every property would fail all three documents for a standard the dialect does no
 
 ## 3. The catalog
 
-`schemas` glob: `schema/*.json`. Id `json-schema:<path>`.
+`schemas` glob: `crates/seikika-model/schema/*.json`. Id `json-schema:<path>`.
 
 | Fact | What it is |
 |---|---|
@@ -65,9 +65,9 @@ and protocol contracts of this repository.
 
 | Document | Level | Notes |
 |---|---|---|
-| `schema/manifest.schema.json` | gold | Draft 2020-12, `$id` under `seikika.com`, compiled in, local `$ref`s |
-| `schema/connector-messages.schema.json` | gold | The same |
-| `schema/executor-messages.schema.json` | gold | The same |
+| `crates/seikika-model/schema/manifest.schema.json` | gold | Draft 2020-12, `$id` under `seikika.com`, compiled in, local `$ref`s |
+| `crates/seikika-model/schema/connector-messages.schema.json` | gold | The same |
+| `crates/seikika-model/schema/executor-messages.schema.json` | gold | The same |
 
 Fixtures: `json-schema:schema/demo/focused.schema.json` at gold,
 `json-schema:schema/demo/partial.schema.json` at bronze (no title, nothing compiles it),

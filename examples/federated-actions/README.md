@@ -76,7 +76,7 @@ needs an approval stops at exit 3 there: a repository holds no approvals, its pa
 ## Fields
 
 Everything an action or a federation needs; `seikika validate` checks the rest against
-`schema/manifest.schema.json`.
+`crates/seikika-model/schema/manifest.schema.json`.
 
 | Field | What it says |
 |---|---|

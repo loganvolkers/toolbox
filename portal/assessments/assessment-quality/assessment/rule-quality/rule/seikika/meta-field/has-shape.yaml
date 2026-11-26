@@ -18,9 +18,10 @@ verdicts:
       with `items: object`, such as Crate.functions (crates.yaml) and
       Repository.codeowners in the reference portal. The other citations hold.
       `opaque` is crates/seikika-cli/src/model.rs:156, and `items` is an
-      optional free string (schema/manifest.schema.json `$defs/field`). The
-      derive codes are crates/seikika-derive/src/lib.rs:349-735. The count of
-      160 list fields, 155 of them scalar, is right.
+      optional free string (crates/seikika-model/schema/manifest.schema.json
+      `$defs/field`). The derive codes are
+      crates/seikika-derive/src/lib.rs:349-735. The count of 160 list fields,
+      155 of them scalar, is right.
     suggestion: >-
       Use Crate.functions as the example and say it would pass has-shape, not
       reach gold. Or note that for a `type: object` such as Crate.tests the

@@ -29,10 +29,11 @@ verdicts:
     verdict: fail
     reason: >-
       `freshness: {codeowners: 36500d}` matches the schema's
-      `^[0-9]+(s|m|h|d)$` (schema/manifest.schema.json:475-478), and the check
-      reads only the keys (model.rs:220). A century-long bound passes exactly
-      like S4S's 5m bounds (portal/seikika.yaml:231-252), at the same cost of
-      one line, and bounds nothing.
+      `^[0-9]+(s|m|h|d)$`
+      (crates/seikika-model/schema/manifest.schema.json:475-478), and the
+      check reads only the keys (model.rs:220). A century-long bound passes
+      exactly like S4S's 5m bounds (portal/seikika.yaml:231-252), at the same
+      cost of one line, and bounds nothing.
     suggestion: >-
       Emit each record's bound in seconds and fail bounds above a stated
       ceiling (for example 7d, recorded with its reason in

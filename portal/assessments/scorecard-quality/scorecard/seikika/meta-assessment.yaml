@@ -35,9 +35,10 @@ verdicts:
       docs/design/scorecards-for-scorecards.md:104-109 and
       docs/design/thresholds.md:46), and a suggestion is an assessment's fix.
       The schema requires only that a suggestion is a string
-      (schema/assessment.schema.json:37), and `unsuggested` accepts any
-      non-blank text (crates/seikika-connect/src/assessment.rs:199-201), so
-      "Make it better." satisfies the card.
+      (crates/seikika-model/schema/assessment.schema.json:37), and
+      `unsuggested` accepts any non-blank text
+      (crates/seikika-connect/src/assessment.rs:199-201), so "Make it better."
+      satisfies the card.
     suggestion: >-
       Add a silver rule `suggestion-names-a-place`. Have the connector record
       `unlocated`: fail or unsure criteria whose suggestion contains no path,

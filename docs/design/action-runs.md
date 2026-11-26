@@ -136,7 +136,7 @@ Executors differ in how much of this they can do, and the UI shows the differenc
 A webhook or queue publish is never treated as completion: without a postcondition, its runs end as
 `unverified`.
 
-**What is built.** The messages are `schema/executor-messages.schema.json` (protocol v1), and one
+**What is built.** The messages are `crates/seikika-model/schema/executor-messages.schema.json` (protocol v1), and one
 executor speaks them over either transport:
 
 - **`in-image`** runs `command`, or the binary of a released `package`

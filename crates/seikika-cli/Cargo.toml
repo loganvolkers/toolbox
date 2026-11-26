@@ -20,14 +20,14 @@ serde_norway.workspace = true
 regex = "1"
 serde.workspace = true
 sha2.workspace = true
-seikika-expr = { path = "../seikika-expr" }
+seikika-expr.workspace = true
 seikika-model.workspace = true
 seikika-derive.workspace = true
 seikika-exec.workspace = true
 seikika-store.workspace = true
 seikika-api.workspace = true
 seikika-authz.workspace = true
-seikika-connect = { path = "../seikika-connect" }
+seikika-connect.workspace = true
 seikika-telemetry.workspace = true
 tracing.workspace = true
 walkdir.workspace = true

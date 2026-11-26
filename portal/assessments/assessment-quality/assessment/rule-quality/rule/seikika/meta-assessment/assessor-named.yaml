@@ -13,8 +13,8 @@ verdicts:
       lands where it says. The `assessorName` mapping is at
       portal/standards/assessments.yaml:124 and the rule at 176-187, with its
       fixed evidence at 180. `selfReviewed` is at 105-112 and the ratchet at
-      165. schema/assessment.schema.json:20 gives `assessor.name` a bare
-      string type with no pattern or minLength. In
+      165. crates/seikika-model/schema/assessment.schema.json:20 gives
+      `assessor.name` a bare string type with no pattern or minLength. In
       crates/seikika-connect/src/assessment.rs:290, `!by.is_empty() && *by !=
       own` accepts any non-empty name. docs/design/thresholds.md:63-70 is the
       self-declared-name limit. Fixture line 43 of
@@ -47,9 +47,9 @@ verdicts:
       The hard-to-game suggestion in
       portal/assessments/rule-quality/rule/seikika/meta-assessment/assessor-named.yaml
       changes this rule's own check to `matches('\\S')`. It adds `"pattern":
-      "\\S"` at schema/assessment.schema.json:20 and a failing fixture. With
-      that, a blank name fails the rule, so the verdict it is attached to
-      would turn to pass.
+      "\\S"` at crates/seikika-model/schema/assessment.schema.json:20 and a
+      failing fixture. With that, a blank name fails the rule, so the verdict
+      it is attached to would turn to pass.
 summary: >-
   Trustworthy. Every line citation checks out, and the whitespace-name
   route is real: the CEL check, the schema and link_reviews all accept `"

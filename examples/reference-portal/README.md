@@ -12,7 +12,7 @@ need the Seikika binary are specified precisely enough to implement against.
 
 | Capability | Where | Decisions |
 |---|---|---|
-| Manifest as the only configuration | [`seikika.yaml`](./seikika.yaml), validated by [`schema/manifest.schema.json`](../../schema/manifest.schema.json) and by `seikika validate` | D2, D41 |
+| Manifest as the only configuration | [`seikika.yaml`](./seikika.yaml), validated by [`crates/seikika-model/schema/manifest.schema.json`](../../crates/seikika-model/schema/manifest.schema.json) and by `seikika validate` | D2, D41 |
 | Raw records mapped to entities with CEL (object construction) | `kinds[].map` | D24 |
 | Field-level sources and precedence, native values | `kinds[].sources`, [`fixtures/native.json`](./fixtures/native.json) | D13 |
 | Entities created only by identity sources; orphans reported | `identityFrom`; the `ghost-service` fixture | D13 |

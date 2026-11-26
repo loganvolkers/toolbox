@@ -2,8 +2,8 @@
 """Validate the reference portal (or the portal directory given as the first argument) against the
 JSON Schemas in the repo-root schema/ directory.
 
-- seikika.yaml against schema/manifest.schema.json
-- every fixture line against schema/connector-messages.schema.json
+- seikika.yaml against crates/seikika-model/schema/manifest.schema.json
+- every fixture line against crates/seikika-model/schema/connector-messages.schema.json
 - every protocol transcript message against the connector or executor message schema
 - cross-references: map rules name declared connectors/records, scorecards and actions name declared
   kinds, precedence lists only name sources that some map rule (or native) provides
@@ -20,7 +20,7 @@ _spec.loader.exec_module(_yamlutil)
 load_yaml = _yamlutil.load
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SCHEMAS = os.path.join(HERE, "..", "..", "schema")          # repo-root schema/
+SCHEMAS = os.path.join(HERE, "..", "..", "crates", "seikika-model", "schema")
 ROOT = os.path.abspath(sys.argv[1]) if len(sys.argv) > 1 else HERE   # portal to validate
 def schema(name):
     s = json.load(open(os.path.join(SCHEMAS, name)))

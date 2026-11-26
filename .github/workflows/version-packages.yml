@@ -52,6 +52,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -B "$BRANCH"
           python3 scripts/apply-changesets.py
+          cargo update --workspace
           if git diff --quiet && git diff --cached --quiet; then
             echo "No file changes after apply"
             exit 0

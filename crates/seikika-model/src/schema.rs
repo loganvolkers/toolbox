@@ -6,15 +6,14 @@ use serde_json::Value;
 use std::sync::OnceLock;
 
 /// `schema/manifest.schema.json`: the portal manifest.
-pub const MANIFEST_SCHEMA: &str = include_str!("../../../schema/manifest.schema.json");
+pub const MANIFEST_SCHEMA: &str = include_str!("../schema/manifest.schema.json");
 /// `schema/connector-messages.schema.json`: what connectors send.
 pub const CONNECTOR_MESSAGES_SCHEMA: &str =
-    include_str!("../../../schema/connector-messages.schema.json");
+    include_str!("../schema/connector-messages.schema.json");
 /// `schema/executor-messages.schema.json`: what action executors send.
-pub const EXECUTOR_MESSAGES_SCHEMA: &str =
-    include_str!("../../../schema/executor-messages.schema.json");
+pub const EXECUTOR_MESSAGES_SCHEMA: &str = include_str!("../schema/executor-messages.schema.json");
 /// `schema/assessment.schema.json`: an agent's assessment of one entity against a rubric.
-pub const ASSESSMENT_SCHEMA: &str = include_str!("../../../schema/assessment.schema.json");
+pub const ASSESSMENT_SCHEMA: &str = include_str!("../schema/assessment.schema.json");
 
 fn compile(source: &str) -> Validator {
     let schema: Value = serde_json::from_str(source).expect("embedded schema is valid JSON");

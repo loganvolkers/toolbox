@@ -14,7 +14,8 @@ verdicts:
       that pushes the catalog to /v1/ingest with a connector token
       (experiments/backstage-compare/measure.py:158-163), and
       scripts/m3-acceptance.sh:57 does the same with curl. The protocol is
-      JSON over stdio or HTTP (schema/connector-messages.schema.json).
+      JSON over stdio or HTTP
+      (crates/seikika-model/schema/connector-messages.schema.json).
       Backstage's `false` cites plugins being TypeScript packages
       (facts.yaml:150-154). The adjudication notes that URL locations let any
       language feed its catalog (ADJUDICATION.md:290-292), but a pull of
@@ -37,7 +38,7 @@ verdicts:
     verdict: fail
     reason: >-
       The fix says to keep the protocol language-neutral, "as
-      schema/connector-messages.schema.json defines it"
+      crates/seikika-model/schema/connector-messages.schema.json defines it"
       (backstage-comparison.yaml:883-884). The schema is the right place. But
       when the evidence reads `extensionAnyLanguage is false`, making the
       protocol neutral again changes nothing until someone edits facts.yaml

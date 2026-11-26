@@ -4,6 +4,7 @@ description = "Seikika: manifest types, loading, JSON Schema validation and cros
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 

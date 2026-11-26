@@ -13,7 +13,7 @@ verdicts:
       hold. schemas.yaml:74, 75 and 76-78 are the check, evidence and fix.
       specs.rs:29 trims `$id`. schema-standards.md:32 says `$id` should be
       absolute. standards.test.yaml:606-607 pins "no $id". The live ids are as
-      quoted: schema/assessment.schema.json:3 is
+      quoted: crates/seikika-model/schema/assessment.schema.json:3 is
       `https://seikika.com/schema/assessment.schema.json` and the other three
       are `/schemas/<name>/v1…`. A scratch schema with `"$id": "https://x"`
       gave schemaId `https://x` and passed.
@@ -27,13 +27,15 @@ verdicts:
     verdict: pass
     reason: >-
       Every verdict rests on a `startsWith` check, D77 and a scratch run. The
-      inconsistent live ids are a fact anyone can read in schema/*.json.
+      inconsistent live ids are a fact anyone can read in
+      crates/seikika-model/schema/*.json.
   - criterion: actionable
     verdict: pass
     reason: >-
       A namespace-and-version pattern rejects `https://x`, which changes the
       hard-to-game verdict. Today it would also fail
-      schema/assessment.schema.json, which the summary already flags.
+      crates/seikika-model/schema/assessment.schema.json, which the summary
+      already flags.
 summary: >-
   The citations and scratch result hold, and the verdicts are right. The
   suggested namespace pattern would close the placeholder route, and it

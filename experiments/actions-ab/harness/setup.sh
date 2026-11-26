@@ -58,7 +58,7 @@ case $arm in
     cp -r "$repo_root/plugins/seikika-operator/skills" "$dest/seikika-docs/skills"
     cp -r "$repo_root/examples/federated-actions" "$repo_root/examples/repo-portal-starter" \
       "$dest/seikika-docs/examples/"
-    cp "$repo_root/schema/manifest.schema.json" "$dest/seikika-docs/"
+    cp "$repo_root/crates/seikika-model/schema/manifest.schema.json" "$dest/seikika-docs/"
     ;;
   gha)
     mkdir -p "$dest/bin" && cp "${ACT:-/tmp/tools/act}" "$dest/bin/act"

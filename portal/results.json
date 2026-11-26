@@ -5701,6 +5701,9 @@
       "doc:docs/decisions/D01M8BBPE4KN9NF9E9K3F9ZEE4Q.md": {
         "level": "skipped"
       },
+      "doc:docs/decisions/D01M8BEC7ZX7TFBTSC47W1XQVV4.md": {
+        "level": "skipped"
+      },
       "doc:docs/decisions/README.md": {
         "level": "skipped"
       },
@@ -6444,16 +6447,16 @@
       }
     },
     "maintainer-schema": {
-      "json-schema:schema/assessment.schema.json": {
+      "json-schema:crates/seikika-model/schema/assessment.schema.json": {
         "level": "gold"
       },
-      "json-schema:schema/connector-messages.schema.json": {
+      "json-schema:crates/seikika-model/schema/connector-messages.schema.json": {
         "level": "gold"
       },
-      "json-schema:schema/executor-messages.schema.json": {
+      "json-schema:crates/seikika-model/schema/executor-messages.schema.json": {
         "level": "gold"
       },
-      "json-schema:schema/manifest.schema.json": {
+      "json-schema:crates/seikika-model/schema/manifest.schema.json": {
         "level": "gold"
       }
     },

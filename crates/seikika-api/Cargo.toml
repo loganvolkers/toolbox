@@ -4,6 +4,7 @@ description = "Seikika: the server — snapshot loop, REST API (docs/v1-spec.md 
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 
@@ -20,7 +21,7 @@ seikika-expr.workspace = true
 seikika-model.workspace = true
 seikika-store.workspace = true
 seikika-authz.workspace = true
-seikika-connect = { path = "../seikika-connect" }
+seikika-connect.workspace = true
 seikika-secrets = { workspace = true }
 seikika-telemetry.workspace = true
 tracing.workspace = true

@@ -2,7 +2,7 @@
 //! connector in in-image mode and checks, over stdio:
 //!
 //! 1. it registers first, with capabilities naming the record kinds the manifest declares;
-//! 2. every message validates against schema/connector-messages.schema.json;
+//! 2. every message validates against crates/seikika-model/schema/connector-messages.schema.json;
 //! 3. a `resync` of each declared kind emits records of that kind, `snapshot_complete` and a
 //!    successful `complete`, with every record carrying the command id;
 //! 4. a scoped `refresh` by external ids returns exactly those ids (record or `not_found`);

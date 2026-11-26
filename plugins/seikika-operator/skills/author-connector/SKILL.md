@@ -51,7 +51,7 @@ Do not skip `version()`. Do not drive stdin with a home-grown command JSON when
 conformance check fails.
 
 **externalId shape:** every record's `externalId` must match `^[a-z0-9-]+:.+$`
-(see `schema/connector-messages.schema.json`). Prefer `project:ALPHA` /
+(see `crates/seikika-model/schema/connector-messages.schema.json`). Prefer `project:ALPHA` /
 `issue:ALPHA-1`, not bare keys. Catalog entity ids in a portal `map:` can still
 be the bare key — that is a second id space.
 

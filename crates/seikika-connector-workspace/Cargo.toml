@@ -16,7 +16,7 @@ serde_norway.workspace = true
 sha2.workspace = true
 syn = { version = "3", default-features = false, features = ["full", "parsing", "visit", "printing"] }
 tokio.workspace = true
-seikika-connect = { path = "../seikika-connect" }
+seikika-connect.workspace = true
 seikika-model.workspace = true
 walkdir.workspace = true
 

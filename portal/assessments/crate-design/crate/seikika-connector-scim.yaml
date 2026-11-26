@@ -22,8 +22,8 @@ verdicts:
       connector SDK, used through four documented items: `Out`, `Source`,
       `push` and `run_remote` (main.rs:24;
       crates/seikika-connect/src/sdk.rs:137-202). Toward Seikika, its contract
-      is schema/connector-messages.schema.json and the SCIM routes
-      (main.rs:230-236). Nothing reaches into SDK internals.
+      is crates/seikika-model/schema/connector-messages.schema.json and the
+      SCIM routes (main.rs:230-236). Nothing reaches into SDK internals.
   - criterion: replaceable-defaults
     verdict: pass
     reason: >-

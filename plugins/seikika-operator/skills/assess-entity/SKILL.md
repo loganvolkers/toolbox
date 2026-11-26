@@ -25,7 +25,7 @@ and the portal stores your judgement as data that scorecards read.
 4. **Write the assessment** to the path the brief names (under the portal's `assessments/`), keeping
    `subjectHash` exactly as given. Put your harness in `assessor.name` and today's date in `at`.
 5. **Check it:** `seikika assess check <dir>` validates every file against
-   `schema/assessment.schema.json` and the rubric, and lists entities as fresh, stale or missing.
+   `crates/seikika-model/schema/assessment.schema.json` and the rubric, and lists entities as fresh, stale or missing.
 6. **Portals without a repository:** push instead of committing, with
    `seikika assess submit <file> --portal <dir> --url <server>` and the connector token in
    `SEIKIKA_CONNECTOR_TOKEN`.

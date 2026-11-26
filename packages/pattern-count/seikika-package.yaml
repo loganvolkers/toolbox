@@ -2,7 +2,7 @@
 # (D01M7Z2ZZ97VZQNTDT4QQHM3HQD).
 apiVersion: seikika.com/package/v0
 name: pattern-count
-version: 0.1.0
+version: 0.2.0
 description: >-
   Every match of a regular expression is a violation. The ratchet fails a
   pull request that adds a match to any file, and a campaign pays the
