@@ -146,9 +146,10 @@ function npmDocs() {
       const [prefix, suffix] = pattern.slice(2).split("*");
       for (const path of paths) {
         const capture = suffix === undefined ? "" : path.slice(prefix.length, path.length - suffix.length);
-        const subpath = name.replace("*", capture);
+        const subpath = name.replaceAll("*", () => capture);
         points.push(subpath);
-        if (entry.default && !existsSync(join(workspace.path, entry.default.replace("*", capture)))) {
+        const runtimeTarget = entry.default?.replaceAll("*", () => capture);
+        if (runtimeTarget && !existsSync(join(workspace.path, runtimeTarget))) {
           referenceGaps.push(`${subpath}: runtime export target ${entry.default} is missing`);
         }
         const section = readme.split(`\n### \`${subpath}\`\n`)[1]?.split(/^#{1,3} /m)[0] ?? "";
