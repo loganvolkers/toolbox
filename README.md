@@ -22,11 +22,7 @@ The public docs are a Starlight site in [site/](site/src/content/docs/index.md),
 **Install Seikika:** use the [installation guide](site/src/content/docs/start/install.md) to
 choose a matching release or build the current CLI and workspace connector from source.
 
-**Build from source** (changing Seikika itself):
-
-```bash
-cargo build && target/debug/seikika validate examples/reference-portal
-```
+**Build from source** with the checkout's pinned tools. See [Run Seikika locally](site/src/content/docs/start/run.md) to set up mise and validate the reference portal.
 
 **Start here:** [AGENTS.md](AGENTS.md) for working rules and parallel tracks, [docs/v1-spec.md](docs/v1-spec.md) for what v1 must do, [examples/reference-portal](examples/reference-portal/README.md) for the reference implementation anchor. Also: [docs/decisions/](docs/decisions/README.md) for every decision, [docs/questions.md](docs/questions.md) for open questions, [docs/glossary.md](docs/glossary.md) for vocabulary, and [docs/research-log.md](docs/research-log.md) for methods and hands-on verifications.
 

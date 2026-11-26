@@ -9,12 +9,14 @@ Build from source to work on Seikika itself. If you only need a CLI for another 
 
 ## Build and verify
 
-You need Git, Rust through rustup, and a native linker. See the [source build prerequisites](/start/install/#build-from-source) for your platform. From the root of your Seikika checkout, run:
+Install mise 2026.11.14 or later and the [source build prerequisites](/start/install/#build-from-source) for your platform. Mise reads the Rust version and components from `rust-toolchain.toml`. From the root of your Seikika checkout, run the commands below. [Mise installation](https://mise.jdx.dev/installing-mise.html)
 
 ```bash
-cargo build --locked
-target/debug/seikika validate examples/reference-portal
-target/debug/seikika test examples/reference-portal
+mise trust
+mise install
+mise exec -- cargo build --locked
+mise exec -- target/debug/seikika validate examples/reference-portal
+mise exec -- target/debug/seikika test examples/reference-portal
 ```
 
 Look for zero validation errors and passing tests. The example configures a catalog with sample ownership, scorecards, and permissions. Its expected outputs give maintainers a way to test changes against the same input.

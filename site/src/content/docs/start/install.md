@@ -9,21 +9,35 @@ Install the Seikika CLI to validate, test, and serve a portal with fixtures. Ins
 
 ## Run a portal
 
-Check [GitHub Releases](https://github.com/seikika/seikika/releases) for a release with assets named `seikika-cli-installer`. These docs use the **Seikika** command names and manifest format introduced in 0.2. The 0.1 releases use **Toolbox** names and a different manifest header. If the release you need is unavailable, [build from source](#build-from-source).
+Check [GitHub Releases](https://github.com/seikika/seikika/releases) for a release with
+`seikika-cli` binaries. These docs use the command names and manifest format introduced in
+v0.2.0. The 0.1 releases use Toolbox names and a different manifest header. Until v0.2.0 is
+available, [build from source](#build-from-source).
 
-1. Open the release you want and choose its installer for your system. The shell installer ends in `.sh` and the PowerShell installer ends in `.ps1`. The release notes list supported platforms and commands.
-2. Run the downloaded installer. It selects the archive for your platform, verifies its checksum, and adds the executable to the installer directory. Open a new terminal if the installer updated your path.
-3. Check the installed version.
+Install mise 2026.11.14 or later and activate it in your shell. Run the following to install
+the CLI for your user. [Mise installation](https://mise.jdx.dev/installing-mise.html) ·
+[Shell setup](https://mise.jdx.dev/shell-setup.html)
 
-   ```bash
-   seikika --version
-   ```
+```bash
+mise use --global 'github:seikika/seikika[matching=seikika-cli-]@0.2.0'
+seikika --version
+```
 
-The [release assets](https://github.com/seikika/seikika/releases) also include archives and checksums for manual installation. Use matching CLI and connector versions.
+To pin tools for a repo portal, copy the [starter mise config](https://github.com/seikika/seikika/blob/main/examples/repo-portal-starter/mise.example.toml)
+to the root of your Git checkout as `mise.toml`, or merge its aliases and versions into an
+existing config. It pins the CLI and workspace connector. Review the config, then run
+`mise trust` and `mise install` in that checkout.
+
+The release also supplies shell and PowerShell installers, archives, and checksum files.
+Use matching CLI and connector versions.
 
 ## Install a connector
 
-If the manifest contains `package: builtin:NAME`, install the `seikika-connector-NAME` executable. For example, the repo starter needs `seikika-connector-workspace`. Seikika looks beside the CLI, in `SEIKIKA_CONNECTORS_DIR`, and on `PATH`. Use `seikika doctor PATH_TO_PORTAL` to check what resolves, where `PATH_TO_PORTAL` is the directory containing `seikika.yaml`.
+If the manifest contains `package: builtin:NAME`, install the `seikika-connector-NAME`
+executable. The starter mise config above includes the workspace connector for the tutorial.
+Use its connector entry as a template for other connector aliases. Seikika looks beside the CLI, in
+`SEIKIKA_CONNECTORS_DIR`, and on `PATH`. Use `seikika doctor PATH_TO_PORTAL` to check
+what resolves. Pass the directory containing `seikika.yaml`.
 
 ## Build from source
 

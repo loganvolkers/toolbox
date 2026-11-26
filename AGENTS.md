@@ -46,7 +46,9 @@ MCP, CLI, data model, properties) and test against
 [examples/reference-portal](./examples/reference-portal/README.md): your pipeline must reproduce its
 `expected/` outputs byte for byte, and its acceptance scenarios define "done".
 
-**Building:** `cargo build` (toolchain pinned in `rust-toolchain.toml`), `cargo test`, `cargo clippy
+**Building:** run `mise trust` and `mise install` for the development toolchain (see
+[local prerequisites](./docs/design/maintainer-sdlc.md#5-local-prerequisites)). Run the checks in
+an activated mise shell or prefix them with `mise exec --`. Start with `cargo build`, `cargo test`, `cargo clippy
 --all-targets -- -D warnings`, then `target/debug/seikika validate examples/reference-portal`.
 `python scripts/validate-parity.py` checks `seikika validate` against `examples/reference-portal/tools/validate.py`.
 `yamark format --check` (yamark 0.6.1, D97, pinned in `scripts/requirements-yamark.txt`) checks every tracked `.yaml` and `.yml` except the generated `pnpm-lock.yaml` and `.github/workflows/release.yml`, which `dist plan` owns (D98). `python3 scripts/decision-id.py --self-test` checks the ULID encoding for decision ids (D01M7XKEXQH4HG5371629M50E2G).
@@ -87,7 +89,7 @@ docs/glossary.md, docs/research-log.md
 docs/v1-spec.md              the implementation contract for v1
 Cargo.toml, crates/          Rust workspace (v1-spec §4); `seikika-cli` builds the `seikika` binary
 yamark.toml                  YAML formatting (Yamark 0.6.1, D97)
-schema/                      JSON Schemas (manifest, connector and executor messages), compiled into the binary
+crates/seikika-model/schema/ JSON Schemas compiled into the binary (manifest, protocols, assessments)
 scripts/                     repo checks and acceptance scripts (validate-parity.py, m2–m4-acceptance.sh)
 ui/                          the minimal UI (Astro + Vue; dist/ is embedded in the binary)
 examples/reference-portal/   reference implementation anchor: manifest, schemas, fixtures, oracle, authz tests
@@ -102,9 +104,9 @@ The full loop, check pyramid and measured timings are in
 [docs/design/maintainer-sdlc.md](./docs/design/maintainer-sdlc.md).
 
 
-- **Branching:** during the design phase, commit directly to `main` (decision D32). Pull with rebase
-  before you start and again before you push. Keep commits small and scoped to one topic, so parallel
-  agents rarely conflict.
+- **Branching** (D01M8BGV74Y3HZ8FGVER94F2JXG). Start from current `main`, open a focused PR, and wait for the applicable
+  checks before merging. Keep commits scoped and update the branch when changes to its base
+  invalidate its checks.
 - **DX Benchmarks:** follow [dx-benchmarks.md](./docs/design/dx-benchmarks.md) §4:
   - pre-register the bar before the run, and pick the strongest rival arm;
   - run on open-source forks at pinned commits;

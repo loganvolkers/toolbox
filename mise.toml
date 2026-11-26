@@ -1,0 +1,20 @@
+min_version = "2026.11.14"
+
+[settings]
+idiomatic_version_file_enable_tools = ["rust"]
+
+[tools]
+node = "24"
+# Keep in sync with packageManager in package.json and the tool pins used in CI.
+pnpm = "11.25.0"
+python = "3.13"
+uv = "0.13.9"
+"pypi:yamark" = "0.6.1"
+openfga = "1.22.1"
+"github:openfga/cli" = { version = "0.8.2", matching = "fga_" }
+"aqua:rhysd/actionlint" = "1.7.12"
+ruff = "0.14.0"
+zizmor = "1.32.0"
+scorecard = "5.7.0"
+osv-scanner = "2.7.1"
+cargo-dist = "0.34.0"
